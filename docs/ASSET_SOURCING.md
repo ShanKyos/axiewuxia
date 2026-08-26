@@ -69,13 +69,82 @@ answer if real class-accurate assets turn up later. Two more flat sprites (Kotar
 five walk-cycle videos (Pomodoro, Ena, Heero, Tripp, Bard — Bard's download failed mid-session and
 was never retried) are unused, available for NPCs/mobs/variants.
 
+## Second survey — "2D concept" / "2d land assets item" / "music and sfx" Drive folders
+
+A later, much richer set of Drive folders was shared directly (separate from the original
+Character/2.In Game tree above): 2D concept, animation, vfx, 2D in-game assets, 2d land assets
+item, and music and sfx. These are flat, game-ready 2D art (not raw 3D), so sourcing from here was
+far more direct.
+
+### Items — equipment icons
+
+`2d land assets item` is a large library of consistent painterly 512×512 icons with verified real
+alpha transparency. 7 of 24 `assets/items/` slots now use it directly (no processing needed, just
+copied):
+
+| File | Slot | Source |
+|---|---|---|
+| `vukhi.png` | weapon | `long-sword.png` |
+| `nhan.png` | ring | `gold-ruby-ring.png` |
+| `daychuyen.png` | necklace | `gold-diamond-necklace.png` |
+| `non.png` | hat/helmet | `iron-helm.png` |
+| `tay.png` | gloves (approximated — no glove art found) | `gold-bracelet.png` |
+| `ao.png` | robe/body armor | `leather-armor.png` |
+| `chan.png` | legs (approximated — no leg-specific art found) | `steel-shoes.png` |
+
+Not converted: `aochoang` (cape), `canh` (wing/back), `quan` (pants), `pet` (companion), all 12
+`mat_*` masks — no good matches found in this pass. The folder had a `nextPageToken` past the
+first 100 files, so a deeper page-through may still turn up matches for these.
+
+### Maps
+
+3 more `assets/maps/*.jpg` region backgrounds (`bg_chungnam`, `bg_tuongduong`, `bg_nhanmon`) were
+replaced with biome paintings from this second survey (Forest, Garuda village, Reptile village),
+on top of the mob (`boar.png`) already covered above.
+
+### BGM / SFX — found, but intentionally not committed
+
+`game.js`'s `AudioSys`/`SkillVoice` have referenced `assets/music/*.mp3` and `assets/voice/*.mp3`
+since before this reskin — those directories never existed in the repo at all (confirmed via
+`ls public/game/assets/`), so this isn't a wuxia→Axie swap, it's filling in audio the game always
+expected but never shipped.
+
+The "music and sfx" Drive folder has real, Axie-branded audio that fits directly:
+
+| Target file | Source (Drive) | Note |
+|---|---|---|
+| `bgm_kiemhiep.mp3` (intro) | `Atia_Legacy_PVP_v21A_fun_5min.mp3` | copied as-is |
+| `bgm_tuongduong_ost.mp3` (hub) | `Atia_Legacy_PVP_v21A_fun_5min.mp3` | same track, hub reuses intro |
+| `bgm_safe.mp3` (default fallback) | `Atia_Legacy_PVP_v21B_intense_5min.mp3` | copied as-is |
+| `bgm_boss_nguan.mp3` | `combat.mp3` | copied as-is |
+| `sfx_ui.mp3` | `Vibrant_Tap.ogg` | `ffmpeg -codec:a libmp3lame -qscale:a 4` (game hardcodes `.mp3`) |
+| `sfx_slash.mp3` | `Dagger-Attack.ogg` | same conversion |
+| `sfx_skill.mp3` | `Talisman-Skill.ogg` | same conversion |
+| `sfx_crit.mp3` | `Dagger-Skill.ogg` | same conversion |
+
+**These files are deliberately not committed to git.** `.gitignore` already excluded
+`public/game/assets/music/` with an explicit "copyrighted OST — don't push to repo" note from the
+original prototype, and that call stands — the source tracks are Sky Mavis/Axie internal Drive
+material of unconfirmed redistribution licensing. To reproduce locally: pull the 4 files above from
+the "music and sfx" Drive folder, run the `ffmpeg` command shown for the 4 `.ogg` ones, and drop all
+8 into `public/game/assets/music/` with the target filenames — the game will pick them up with zero
+code changes (same drop-in pattern as every other asset in this doc).
+
+Still missing (no source found or not yet attempted): `bgm_daohoa_ost`, `bgm_ngoai`,
+`bgm_chungnam_ost`, `bgm_tuyettinh_ost`, `bgm_comoc`, `bgm_mongco`, `bgm_nhanmon`, `bgm_romance`,
+and sfx for `hurt, die, coin, jump, levelup, forge_ok, forge_fail, quest`.
+
 ## Not done yet
 
-- Skill icons (`iconA`/`iconTP`) — still pointing at the old wuxia skill icon paths, no source
-  material found for these.
-- Map/region background art — the 4 Flappy Bird biome backgrounds are a strong candidate
-  (Ocean/Forest/Reptile Village/Garuda Village) but not wired in; the game's overworld is drawn
-  procedurally on canvas rather than from raster tiles, so this is optional polish, not a blocker.
+- Skill icons (`iconA`/`iconTP`) — still pointing at the old wuxia skill icon paths. The "In-game
+  UI" Drive folder has 8 style-reference icons (Sword/Flag/Staff/Cannon/Basic/Tripp Normal/Skill
+  pairs) that could inform a real pass, not wired in yet.
+- Remaining item slots (`mat_*` ×12, `aochoang`, `canh`, `quan`, `pet`) — see the items table above.
+- 29 of 30 mobs, 5 of 8 region maps still on placeholder/wuxia art.
+- `texture_tileset.png` / `prop_rocknbush_darkforest.png` from "Overall Environment" — not yet
+  cropped/wired in as decoration sprites.
+- `Sapidae_F_running.png` from "1.Characters" — a real running-animation character sprite, not yet
+  wired to any class/mob.
 - Equipment icons — nothing matching found in any folder surveyed so far.
 - `2.In Game` folder — re-check access; it may hold exactly this missing art.
 - `CharacterAnimationRender` zips in Project T — worth unzipping to check for more animation

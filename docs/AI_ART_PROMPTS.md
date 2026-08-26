@@ -22,7 +22,11 @@ and `docs/ASSET_SOURCING.md`'s sourced sprites are the ground truth — look at 
 > is present. Bright saturated palette. Centered composition, isolated on a transparent background,
 > no drop shadow, no background scenery unless the prompt says otherwise.
 
-## Items — equipment icons (24 files, `assets/items/`)
+## Items — equipment icons (17 of 24 files remaining, `assets/items/`)
+
+7 slots are now sourced from the real "2d land assets item" Drive library — see
+`docs/ASSET_SOURCING.md` — and no longer need prompts: `ao.png`, `chan.png`, `daychuyen.png`,
+`nhan.png`, `non.png`, `tay.png`, `vukhi.png`.
 
 Template: *"[shared style guide]. A single piece of [SLOT] equipment icon for an Axie-themed RPG,
 [MATERIAL/RARITY FLAVOR] craftsmanship, no character wearing it — just the item itself, icon
@@ -30,17 +34,10 @@ framing (fills ~80% of a square canvas)."*
 
 | File | Slot | Suggested flavor |
 |---|---|---|
-| `ao.png` | robe/body armor | plain cloth, starter tier |
 | `aochoang.png` | cape/cloak | flowing, mid tier |
 | `canh.png` | wing/back accessory | leaf or shell-textured |
-| `chan.png` | leg armor | plated, matches `ao` |
-| `daychuyen.png` | necklace | simple pendant, a small crystal/shell |
-| `nhan.png` | ring | plain band with a colored gem |
-| `non.png` | hat/helmet | rounded, shell or leaf-shaped |
 | `pet.png` | companion charm | tiny chibi creature charm |
 | `quan.png` | pants/lower body | matches `ao` |
-| `tay.png` | gloves/hand armor | plated, matches `chan` |
-| `vukhi.png` | weapon (generic) | simple bladed or blunt weapon, Axie-proportioned |
 | `mat_antranai.png` | mask — "Serpent Eye" | reptile-scale motif, green |
 | `mat_bac.png` | mask — "Silver" | plain polished silver |
 | `mat_dotpha.png` | mask — "Breakthrough" | cracked/glowing seam, gold accent |
