@@ -134,6 +134,50 @@ Still missing (no source found or not yet attempted): `bgm_daohoa_ost`, `bgm_ngo
 `bgm_chungnam_ost`, `bgm_tuyettinh_ost`, `bgm_comoc`, `bgm_mongco`, `bgm_nhanmon`, `bgm_romance`,
 and sfx for `hurt, die, coin, jump, levelup, forge_ok, forge_fail, quest`.
 
+## Third survey — items, skill icons, NPC/mount/tree (full "identify by yourself" pass)
+
+### Items — 12 more masks/accessories sourced
+
+Deeper page-through of "2d land assets item" (300+ files across ~15 subfolders) found real matches
+for 12 more `assets/items/mat_*`/`canh` slots: `canh.png`←feather, `mat_antranai.png`←emerald,
+`mat_bac.png`←silver-ring, `mat_dotpha.png`←gold-topaz-ring, `mat_honnguyen.png`←ancient-book,
+`mat_huyenthiet.png`←steel-ingot, `mat_manhtrangbi.png`←steel-helm, `mat_phongphu.png`←silver-sphere,
+`mat_phu.png`←paper, `mat_tichma.png`←iron-ingot, `mat_tiendan.png`←ruby, `mat_tula.png`←platinum-sphere
+(a stylized creature-face orb — good "Asura" fit). 19/24 item slots now sourced. Confirmed via an
+explicit title search across the whole library: no cape, wing, pants, or pet/companion category
+exists anywhere, and no bone-white or fist-motif item for the last 2 masks — `aochoang`, `quan`,
+`pet`, `mat_manhcothan`, `mat_tanquyen` stay on the AI-art-prompt fallback list.
+
+### Skill icons — 8 real ability-burst icons, applied across 14 files
+
+"In-game UI/Skill Icon" has 8 real Axie ability-icon PNGs (weapon-archetype bursts: Basic, Sword
+×2, Flag ×2, Staff, Cannon, Tripp). Wired 1:1 where a direct match exists (`basic`, `slash`←Sword
+Skill, `gangkhi`←Sword Normal, `tieuhon`←Tripp Skill) and reused the elemental bursts across the
+7-element sect-ability pairs where only one real icon exists per element: Fire (`mg_a`/`mg_tp`) from
+Cannon; Wood (`cm_a`/`cm_tp`, `dh_a`/`dh_tp`) from Staff, hue-shifted 25° between the two Wood
+classes; Water (`tc_a`/`tc_tp` from the real Flag Normal/Skill pair, `bd_a`/`bd_tp` hue-shifted -30°
+from the same). Each "tp" (ultimate) tier gets a +35% saturation / +12% brightness boost over its
+"a" (basic) tier via PIL so the two read as different power levels despite sharing source art — this
+is a real but stretched reuse, documented here rather than passed off as 14 separate finds. Metal
+(`tl_*`) and Earth (`dt_*`) have no source icon at all; `amkhi`, `bow`, `danchi`, and all tiered/
+named technique icons (`th_*`, `fs_*`, `vh_*`) remain unsourced — see `docs/AI_ART_PROMPTS.md`.
+
+### NPCs, mounts, trees — searched, essentially nothing usable found
+
+A focused survey of "2D concept" (`1.Characters`, `2.Equipments`, `3.Overall Environment`),
+"2D in-game assets", and "animation" found: ~17 named original NPC characters, but none role-matched
+to what the game needs (weapons dealer, apothecary, gatekeeper, etc.) and most stored as single
+PSDs over the 10MB cap (Cera 17MB, Batu 26MB, Amrita 39MB, Kika 16MB); zero mount/creature designs
+(no horse, wolf, tiger, qilin, dragon) anywhere in scope; and for trees/rocks, one real prop sheet
+(`prop_rocknbush_darkforest.png`, 8 boulder/bush variants) but in a 3D-isometric painterly style
+that doesn't match the flat sprite style used everywhere else in this repo — would need a real
+redraw, not a crop. None of this was wired in — a low-confidence, wrong-style match would look worse
+than the placeholder wuxia art it'd replace. The one real fallback path not yet tried: the walk-cycle
+videos for Pomodoro/Ena/Heero/Tripp/Bard/Rei (unused, sitting in Character/Axie 3D files/Axie
+Render/Screenshot) via the same frame-extraction pipeline used for the class portraits — imperfect
+for mounts specifically (humanoid Axie body plan, not a horse/wolf/dragon one) but a real option for
+NPC portraits.
+
 ## Not done yet
 
 - Skill icons (`iconA`/`iconTP`) — still pointing at the old wuxia skill icon paths. The "In-game

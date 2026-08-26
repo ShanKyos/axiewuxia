@@ -20,10 +20,11 @@ universe rather than building an open-world RPG from scratch. See
 | 8 regions + 7 trial chambers (was: maps/dungeons) | Renamed, tested |
 | i18n system (English-first) | New key-based `t()` engine built and proven on one real slice; bulk of game text still pending migration — see the guide above |
 | Art — class portraits (9/9) | Done — real Axie art wired into `assets/classes/` for all 9 classes. See `docs/ASSET_SOURCING.md` |
-| Art — mobs (1/30), maps (3/8 regions) | Started — `boar` mob + 3 region backgrounds now use real sourced Axie art. The rest have no confident source match found yet — see `docs/ASSET_SOURCING.md` |
-| Art — items (7/24) | Started — weapon/ring/necklace/helmet/gloves/robe/legs now use real sourced Axie icons. Remaining slots (masks, cape, wing, pants, pet) have no source match yet — see `docs/ASSET_SOURCING.md` |
-| Audio — BGM/SFX | Real Axie-branded tracks found in the Drive (4 BGM + 4 sfx) and proven to work locally, but intentionally **not committed** — `.gitignore` excludes `assets/music/` for copyright reasons and that call stands. Repro steps are documented in `docs/ASSET_SOURCING.md` |
-| Art — NPCs, mounts, trees, skill icons (~199 files) | No source art found yet. `docs/AI_ART_PROMPTS.md` has ready-to-run generation prompts for everything except the cultivation-system icons (dantian/quze/tien, 46 files), which need a design decision first — see that doc |
+| Art — mobs (1/30), maps (3/8 regions) | Started — `boar` mob + 3 region backgrounds use real sourced Axie art. The rest have no confident source match found yet — see `docs/ASSET_SOURCING.md` |
+| Art — items (19/24) | Weapon/ring/necklace/helmet/gloves/robe/legs/wing + 11 masks now use real sourced Axie icons. Cape, pants, pet, and 2 masks have no source match — see `docs/ASSET_SOURCING.md` |
+| Art — skill icons (14 of ~120 files) | Basic/slash/melee/soul-wisp + the Fire/Wood×2/Water×2 elemental ability pairs now use real sourced Axie ability-burst icons. Metal, Earth, tiered weapons, and the 75 named techniques have no source art — see `docs/ASSET_SOURCING.md` |
+| Art — NPCs (15), mounts (8), trees/rocks (11) | Searched — Axie's concept-art library has no role-matched NPC portraits or side-view mount designs, and the one usable tree/rock prop sheet is in the wrong (3D-isometric) style. No source art wired in — see `docs/ASSET_SOURCING.md` |
+| Audio — BGM/SFX (8 files) | Done — real Axie-branded tracks (4 BGM + 4 sfx) committed now that the repo is private; the earlier copyright-caution `.gitignore` rule no longer applies to the company's own internal assets in a private repo |
 | Story / quests / NPC dialogue | Not yet rewritten — still wuxia-prototype content pending the Lunacia/Sigils narrative pass |
 | Online encounters (shared world boss, arena PK) | Not started — Phase 5 in the proposal, comes after the reskin |
 

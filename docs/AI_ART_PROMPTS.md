@@ -1,11 +1,16 @@
 # AI art prompts — everything still unsourced
 
-199 of ~290 asset files have no matching Axie source art anywhere found in the Drive survey
-(see `docs/ASSET_SOURCING.md`) or in the follow-up dig (Project T's real asset payloads — the
-1.19GB `CharacterAnimation.zip` and friends — are over this environment's 10MB download cap and
-literally can't be pulled here; the `2.In Game` folder is still unreadable via the API). The paths
-forward for these are: run these prompts through an image generator, or revisit sourcing once
-`2.In Game` is fixed or someone can grab the zips directly in the Drive UI.
+~160 of ~290 asset files have no matching Axie source art anywhere found across two Drive surveys
+(see `docs/ASSET_SOURCING.md`) — the original Character/Project T tree (Project T's real payloads,
+e.g. the 1.19GB `CharacterAnimation.zip`, are over this environment's 10MB download cap; `2.In
+Game` is still unreadable via the API) and a second, richer round (2D concept, animation, vfx, 2D
+in-game assets, 2d land assets item, music and sfx, In-game UI). NPCs and mounts in particular came
+up essentially empty — Axie's concept-art library has no wuxia-role portraits (merchant, elder,
+gatekeeper, etc.) or side-view creature-mount designs, only oversized PSDs (many >10MB) of named
+Axie characters and 3D-isometric environment props. The paths forward for what's left: run these
+prompts through an image generator, revisit sourcing once `2.In Game` is fixed or someone can grab
+the oversized files directly in the Drive UI, or (lower-fidelity fallback) extract frames from the
+unused walk-cycle videos (Pomodoro/Ena/Heero/Tripp/Bard/Rei) the way the class portraits were made.
 
 Every filename below is the exact target path under `public/game/assets/<category>/` — generate,
 crop/pad to a clean transparent PNG, and drop it in with the same filename to wire it in (no code
@@ -22,11 +27,12 @@ and `docs/ASSET_SOURCING.md`'s sourced sprites are the ground truth — look at 
 > is present. Bright saturated palette. Centered composition, isolated on a transparent background,
 > no drop shadow, no background scenery unless the prompt says otherwise.
 
-## Items — equipment icons (17 of 24 files remaining, `assets/items/`)
+## Items — equipment icons (5 of 24 files remaining, `assets/items/`)
 
-7 slots are now sourced from the real "2d land assets item" Drive library — see
-`docs/ASSET_SOURCING.md` — and no longer need prompts: `ao.png`, `chan.png`, `daychuyen.png`,
-`nhan.png`, `non.png`, `tay.png`, `vukhi.png`.
+19 slots are now sourced from the real "2d land assets item" Drive library — see
+`docs/ASSET_SOURCING.md`. A whole-Drive title search confirmed there is no cape, wing, pants, or
+pet/companion category anywhere, and no bone-white or fist-motif item for the last 2 masks — those
+5 genuinely need generated art:
 
 Template: *"[shared style guide]. A single piece of [SLOT] equipment icon for an Axie-themed RPG,
 [MATERIAL/RARITY FLAVOR] craftsmanship, no character wearing it — just the item itself, icon
@@ -35,22 +41,10 @@ framing (fills ~80% of a square canvas)."*
 | File | Slot | Suggested flavor |
 |---|---|---|
 | `aochoang.png` | cape/cloak | flowing, mid tier |
-| `canh.png` | wing/back accessory | leaf or shell-textured |
 | `pet.png` | companion charm | tiny chibi creature charm |
 | `quan.png` | pants/lower body | matches `ao` |
-| `mat_antranai.png` | mask — "Serpent Eye" | reptile-scale motif, green |
-| `mat_bac.png` | mask — "Silver" | plain polished silver |
-| `mat_dotpha.png` | mask — "Breakthrough" | cracked/glowing seam, gold accent |
-| `mat_honnguyen.png` | mask — "Primordial" | ancient stone texture, high rarity |
-| `mat_huyenthiet.png` | mask — "Dark Iron" | dark metal, angular |
 | `mat_manhcothan.png` | mask — "Bone Blade" | bone-white, jagged edges |
-| `mat_manhtrangbi.png` | mask — "Hidden Armor" | plated, defensive |
-| `mat_phongphu.png` | mask — "Wind Talisman" | light, feathered/wind-swept |
-| `mat_phu.png` | mask — "Talisman" | paper-charm motif |
 | `mat_tanquyen.png` | mask — "New Fist" | martial, fist-motif engraving |
-| `mat_tichma.png` | mask — "Accumulated" | layered/stacked plates, common tier |
-| `mat_tiendan.png` | mask — "Immortal Cinnabar" | red/gold, high rarity glow |
-| `mat_tula.png` | mask — "Asura" | fierce, horned, red |
 
 ## NPCs — portrait icons (15 files, `assets/npcs/`)
 
@@ -103,7 +97,11 @@ for scattering across a game map as scenery, no character."*
 
 3 rocks (`rock1.png`, `rock2.png`, `rock3.png`) — plain rounded boulders, 3 size/shape variants.
 
-## Skills — sect ability icons (14 files, `assets/skills/`)
+## Skills — sect ability icons (2 of 14 files remaining, `assets/skills/`)
+
+12 of 14 are now sourced (real Axie ability-burst art, see `docs/ASSET_SOURCING.md`) — Wood
+(Dusk/`cm_*`, Plant/`dh_*`) and Water (Aquatic/`tc_*`, Reptile/`bd_*`) pairs. Metal (Mech) and Earth
+(Bird) have no source art found:
 
 These already have real names/elements from `SECTS` in `game.js` — use them directly. Template:
 *"[shared style guide]. An ability icon depicting '[SKILL NAME]', a [ELEMENT]-themed martial
@@ -112,18 +110,13 @@ technique, dynamic action-burst composition, icon framing."*
 | Files | Class | Element | Skill names |
 |---|---|---|---|
 | `tl_a.png` / `tl_tp.png` | Mech | Metal | Iron Shell Slam / Overdrive Crush |
-| `tc_a.png` / `tc_tp.png` | Aquatic | Water | Tide-Cutting Wave / Seven Currents Convergence |
-| `cm_a.png` / `cm_tp.png` | Dusk | Wood | Twin Ring Cut / Hollow Moon Blade |
-| `bd_a.png` / `bd_tp.png` | Reptile | Water | Serpent Fang Toxin / Venomtide Breath |
-| `mg_a.png` / `mg_tp.png` | Beast | Fire | Sacred Flame Chain / Heaven-and-Earth Reversal |
 | `dt_a.png` / `dt_tp.png` | Bird | Earth | Sunpoint Strike / Six Pulses Barrage |
-| `dh_a.png` / `dh_tp.png` | Plant | Wood | Petalfall Dance / Tideborn Bloom |
 
-## Skills — generic weapon/tier icons (28 files, `assets/skills/`)
+## Skills — generic weapon/tier icons (4 of 28 files remaining, `assets/skills/`)
 
-7 generic combat icons (`amkhi.png`, `basic.png`, `bow.png`, `slash.png`, `gangkhi.png`,
-`tieuhon.png`, `danchi.png`) — simple universal icons: a thrown dart/hidden-weapon, a basic strike
-burst, a bow, a slash arc, a bladed melee weapon, a soul-wisp effect, a finger-flick strike.
+`basic.png`, `slash.png`, `gangkhi.png`, `tieuhon.png` are sourced. Still needed: `amkhi.png`
+(thrown dart/hidden-weapon), `bow.png`, `danchi.png` (finger-flick strike) — no source art found
+for these three anywhere searched.
 
 21 tiered weapon icons (`th_amkhi_1..7.png`, `th_bow_1..7.png`, `th_gangkhi_1..7.png`) — same 3
 weapon types as above, 7 upgrade tiers each. Template: *"[shared style guide + base weapon shape].
