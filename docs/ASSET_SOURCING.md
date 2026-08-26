@@ -203,6 +203,33 @@ have no source — no rock-shaped assets found in this folder. `bg_ngoai.jpg`, `
 was surveyed here (only 4 top-level images + 1 subfolder were found, but the folder may have more
 siblings not yet explored).
 
+## Fifth survey — Premium Axie Halloween reskins (3 more mobs)
+
+A follow-up agent dig on maps/mobs came back mostly empty (all 6 remaining region maps and most of
+the 29 remaining mob slots have no source art anywhere in the four Drive folders searched — see
+below), but surfaced one real lead: the Axie Flappy Bird project tree has an unused "Characters"
+subfolder with "Premium Axie" Halloween-costume reskins (Jiangshi, Vampire, Tengu, Witch, etc.).
+The agent's own visual-verification step self-reported a base64 corruption bug and could not
+confirm any artwork — those findings were independently re-downloaded and visually verified before
+use (2 auto-saved to disk per the usual >~150KB threshold, 2 small enough to return inline —
+extracted from the session transcript rather than retyped, per this doc's established safe-download
+practice, to avoid the base64-transcription-corruption risk documented earlier in this file).
+
+- `docyeu.png` (poison demon) <- `Jiangshii Venoki.png` — a jiangshi (Chinese hopping corpse-demon)
+- `huyetbat.png` (blood-bat, fierce) <- `Vampire.png` — bat wings, blood-red palette
+- `boss.png` (generic/bigger boss slot) <- `Tengu Buba.png` — elaborate winged costume, though tengu
+  itself is Japanese folklore, not wuxia-specific
+- `Witch Puffy.png` (jack-o-lantern/witch theme) was verified but **not** wired in — no remaining
+  mob name it fits well enough to avoid force-fitting; noted here as a candidate if a slot opens up.
+
+4/30 mobs now sourced. **Confirmed empty** after this survey: all 6 remaining region maps
+(`bg_daohoa` already sourced separately — this refers to `bg_ngoai`, `bg_mongco`, `bg_tuyettinh`,
+and 2 dungeon backgrounds — no petal, frost, steppe, or cave/lava landscape paintings exist
+anywhere searched), and the other 26 mob slots (boss variants, archer/soldier/scout archetypes, the
+qilin — no qilin/dragon-hybrid art exists in any folder searched). A found-but-unused item: `Ocean
+New.png` (a higher-res redo of the already-known Ocean biome) — doesn't thematically match any
+remaining region, not force-fit.
+
 ## Not done yet
 
 - Skill icons (`iconA`/`iconTP`) — still pointing at the old wuxia skill icon paths. The "In-game
