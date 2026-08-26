@@ -7,6 +7,5 @@ node_modules/
 dist/
 .vercel/
 
-# Assets nặng + OST bản quyền (không đưa lên repo)
-public/game/assets/music/
+# Video nặng (không đưa lên repo)
 public/game/assets/video/
