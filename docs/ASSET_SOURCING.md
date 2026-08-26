@@ -178,6 +178,31 @@ Render/Screenshot) via the same frame-extraction pipeline used for the class por
 for mounts specifically (humanoid Axie body plan, not a horse/wolf/dragon one) but a real option for
 NPC portraits.
 
+## Fourth survey — user-shared "Map New" folder (2 more maps, all 8 trees)
+
+The user shared a direct Drive link to a "Map New" folder — a different, higher-quality source
+than anything found in prior surveys: 2 finished top-down overworld paintings (`Map1.png`: ancient
+tree + torii gate + dark pine mountain; `Map2.png`: lily pond + stone dam bridge + river islands,
+both real full paintings, ~5MB, under the 10MB cap) plus an `Element` subfolder with 10 individual
+painted tree sprites in the same style (`Tree-tall-1..5`, `Tree-black-1..4`, `tree-giant` — the
+exact ancient tree with hanging lantern charms visible in `Map1`).
+
+- `bg_daohoa.jpg` <- `Map2` (lily pond) — cropped to the game's 2048x1536 background format
+  (trimming the decorative parchment-edge border baked into the source), matching "Petalshade
+  Isle"'s existing falling-petals ambience and pink lotus imagery.
+- `bg_comoc.jpg` <- `Map1` (ancient tree + torii) — matches "Hollow Roost"'s dark/mystical mood.
+- All 8 `assets/trees/<region>.png` sprites <- the `Element` subfolder's individual tree PNGs,
+  picked per-region by mood (frost-bare tree for `tuyettinh`, the giant lantern-tree for `comoc`
+  to match its own new map background, etc. — see the commit for the full per-region mapping).
+  `game.js`'s `drawTree()` scales trees by their own image aspect ratio, so no square-canvas
+  padding was needed — each sprite was just cropped to its alpha bounding box.
+
+5/8 region maps and 8/8 region trees now use real sourced Axie/painted art. `rock1/2/3.png` still
+have no source — no rock-shaped assets found in this folder. `bg_ngoai.jpg`, `bg_mongco.jpg`,
+`bg_tuyettinh.jpg` still need sourcing; worth checking whether "Map New" has more files beyond what
+was surveyed here (only 4 top-level images + 1 subfolder were found, but the folder may have more
+siblings not yet explored).
+
 ## Not done yet
 
 - Skill icons (`iconA`/`iconTP`) — still pointing at the old wuxia skill icon paths. The "In-game

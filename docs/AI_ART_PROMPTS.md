@@ -85,15 +85,13 @@ pose, no rider."*
 | `7_kylan.png` | 7 | qilin — dragon-horned deer/lion hybrid, elite glow |
 | `8_longlan.png` | 8 | dragon-serpent hybrid, top-tier, ornate |
 
-## Trees & rocks (11 files, `assets/trees/`, decoration sprites)
+## Rocks (3 files, `assets/trees/`, decoration sprites)
 
-Template: *"[shared style guide]. A single decorative [OBJECT], simple silhouette-friendly shape
-for scattering across a game map as scenery, no character."*
+All 8 region tree sprites are now sourced (real painted Axie-style trees, see
+`docs/ASSET_SOURCING.md`) — only the rocks remain unsourced.
 
-8 region-named tree variants (`chungnam.png`, `comoc.png`, `daohoa.png`, `mongco.png`, `ngoai.png`,
-`nhanmon.png`, `tuongduong.png`, `tuyettinh.png`) — vary the tree style per region's mood (e.g.
-`daohoa` = flowering/petal tree for "Petalshade Isle", `tuyettinh` = frost-touched tree for
-"Frostmire Vale") using the region descriptions in `game.js`'s `MAPS` object as a guide.
+Template: *"[shared style guide]. A single decorative rounded boulder, simple silhouette-friendly
+shape for scattering across a game map as scenery, no character."*
 
 3 rocks (`rock1.png`, `rock2.png`, `rock3.png`) — plain rounded boulders, 3 size/shape variants.
 
