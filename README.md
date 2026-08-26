@@ -24,9 +24,26 @@ universe rather than building an open-world RPG from scratch. See
 | Story / quests / NPC dialogue | Not yet rewritten — still wuxia-prototype content pending the Lunacia/Sigils narrative pass |
 | Online encounters (shared world boss, arena PK) | Not started — Phase 5 in the proposal, comes after the reskin |
 
-## Dev workflow
+## Quick start — just play the game
 
-Same as the prototype it's built on:
+`public/game/` is a self-contained static app (canvas + vanilla JS, no build step, no backend
+required for local play/testing). Clone the repo, then serve that folder with anything static:
+
+```
+git clone https://github.com/ShanKyos/axiewuxia.git
+cd axiewuxia/public/game
+python3 -m http.server 8850
+# or: npx serve -l 8850
+```
+
+Open `http://localhost:8850/` in a browser. That's the whole "does the reskin actually work"
+loop — no npm install, no `.env`, no database. Auth/cloud-save calls to `/api/*` will fail (there's
+no backend behind this static server) but the game degrades to local-only play, which is enough to
+test classes, art, combat, and the i18n flip.
+
+## Full dev workflow
+
+For the real app (auth, save, cloud sync — the Vite + Hono + tRPC + MySQL shell around the game):
 
 ```
 npm install
@@ -36,5 +53,5 @@ npm run check       # tsc -b
 npm test            # vitest
 ```
 
-The game engine itself (`public/game/`) has no build step — edit `game.js`/`i18n.js`, reload
-the page.
+The game engine itself (`public/game/`) has no build step even in this mode — edit
+`game.js`/`i18n.js`, reload the page.
