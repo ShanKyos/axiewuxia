@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Giang Hồ Huyễn Ảnh — Huyễn Ảnh Chí Tôn (PvE Webgame)</title>
+<title>Axie Wuxia — Demo (Max Mode)</title>
+<script>
+  // Bản demo nội bộ: tự động bật chế độ thử nghiệm (test/max) ngay từ đầu,
+  // không cần người xem tự gõ query string. Chỉ có trên nhánh demo-axie-showcase.
+  if (!/([?&])(test|max)=1/.test(location.search)) {
+    var sep = location.search ? '&' : '?';
+    location.replace(location.pathname + location.search + sep + 'max=1' + location.hash);
+  }
+</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -151,7 +159,7 @@
   <video id="sect-video" src="assets/video/sect_intro.mp4" style="max-width:92vw;max-height:78vh;border:1px solid rgba(201,162,39,.5);border-radius:10px;box-shadow:0 0 40px rgba(0,0,0,.8)" controls playsinline></video>
   <button id="btn-sect-video-skip" class="big-btn" style="padding:8px 26px">Bỏ Qua ▶</button>
 </div>
-<script>window.RELEASE_BUILD = true;</script>
+<script>window.RELEASE_BUILD = false; /* demo build: cho phép cheat console + max mode */</script>
 <script src="strings/en.js"></script>
 <script src="strings/vi.js"></script>
 <script src="i18n.js"></script>
