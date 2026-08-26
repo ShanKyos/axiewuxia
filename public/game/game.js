@@ -1571,13 +1571,13 @@ for (let i=1;i<MOUNT_TIERS.length;i++){
 // missing images fail gracefully to a flat-color fallback shape elsewhere in the file, so this
 // is safe to ship before art arrives.
 const SECT_ART = {
-  thieulam: { portrait:'assets/sects/thieulam.png', iconA:'assets/skills/tl_a.png', iconTP:'assets/skills/tl_tp.png' },
-  toanchan: { portrait:'assets/sects/toanchan.png', iconA:'assets/skills/tc_a.png', iconTP:'assets/skills/tc_tp.png' },
-  comoc:    { portrait:'assets/sects/comoc.png',    iconA:'assets/skills/cm_a.png', iconTP:'assets/skills/cm_tp.png' },
-  baidasan: { portrait:'assets/sects/baidasan.png', iconA:'assets/skills/bd_a.png', iconTP:'assets/skills/bd_tp.png' },
-  minhgiao: { portrait:'assets/sects/minhgiao.png', iconA:'assets/skills/mg_a.png', iconTP:'assets/skills/mg_tp.png' },
-  doanthi:  { portrait:'assets/sects/doanthi.png',  iconA:'assets/skills/dt_a.png', iconTP:'assets/skills/dt_tp.png' },
-  daohoa:   { portrait:'assets/sects/daohoa.png',   iconA:'assets/skills/dh_a.png', iconTP:'assets/skills/dh_tp.png' },
+  thieulam: { portrait:'assets/classes/thieulam.png', iconA:'assets/skills/tl_a.png', iconTP:'assets/skills/tl_tp.png' },
+  toanchan: { portrait:'assets/classes/toanchan.png', iconA:'assets/skills/tc_a.png', iconTP:'assets/skills/tc_tp.png' },
+  comoc:    { portrait:'assets/classes/comoc.png',    iconA:'assets/skills/cm_a.png', iconTP:'assets/skills/cm_tp.png' },
+  baidasan: { portrait:'assets/classes/baidasan.png', iconA:'assets/skills/bd_a.png', iconTP:'assets/skills/bd_tp.png' },
+  minhgiao: { portrait:'assets/classes/minhgiao.png', iconA:'assets/skills/mg_a.png', iconTP:'assets/skills/mg_tp.png' },
+  doanthi:  { portrait:'assets/classes/doanthi.png',  iconA:'assets/skills/dt_a.png', iconTP:'assets/skills/dt_tp.png' },
+  daohoa:   { portrait:'assets/classes/daohoa.png',   iconA:'assets/skills/dh_a.png', iconTP:'assets/skills/dh_tp.png' },
   bug:      { portrait:'assets/classes/bug.png',    iconA:'assets/classes/bug_a.png', iconTP:'assets/classes/bug_tp.png' },
   dawn:     { portrait:'assets/classes/dawn.png',   iconA:'assets/classes/dawn_a.png', iconTP:'assets/classes/dawn_tp.png' },
   vophai:   { portrait:'assets/sects/vophai.png',   iconA:'assets/skills/slash.png', iconTP:'assets/skills/basic.png' },
