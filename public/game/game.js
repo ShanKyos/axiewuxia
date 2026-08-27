@@ -1810,13 +1810,13 @@ const GANGKHI_TIERS = [ null,
 ];
 // Danh hiệu — chỉ số cộng dồn vĩnh viễn, chọn 1 để hiển thị
 const TITLES = [
-  { id:'sonhap',  name:'Sơ Nhập Giang Hồ',    color:'#7ec850', cond:p=>p.level>=30,              desc:'Đạt cấp 30',           stats:{hp:500},        vfx:'' },
+  { id:'sonhap',  name:'Sơ Nhập Lunacia',    color:'#7ec850', cond:p=>p.level>=30,              desc:'Đạt cấp 30',           stats:{hp:500},        vfx:'' },
   { id:'bachtram',name:'Bách Quái Trảm',      color:'#d8d8d8', cond:p=>p.kills>=100,             desc:'Tiêu diệt 100 quái',   stats:{atkPct:0.05},   vfx:'' },
   { id:'thientram',name:'Thiên Quái Trảm',    color:'#e84a3a', cond:p=>p.kills>=1000,            desc:'Tiêu diệt 1.000 quái', stats:{crit:10},       vfx:'máu' },
   { id:'thoren',  name:'Thợ Rèn Truyền Thuyết', color:'#5aa0e8', cond:p=>p.forged11,             desc:'Rèn thành công +11',   stats:{forgeRate:5},   vfx:'lửa' },
   { id:'honnguyen',name:'Nguyên Anh Chân Quân', color:'#7ecbff', cond:p=>p.dantian.realm>=8,     desc:'Đan Điền cảnh 8 (Nguyên Anh Hậu Kỳ)', stats:{allPct:0.10}, vfx:'long' },
   { id:'hoathan', name:'Hóa Thần Chân Nhân',   color:'#fff2b0', cond:p=>p.dantian.realm>=9,     desc:'Độ kiếp thành Hóa Thần', stats:{allPct:0.15},   vfx:'long' },
-  { id:'tuongduong',name:'Tương Dương Đệ Nhất Hiệp', color:'#ffd76a', cond:p=>p.dantian.realm>=8 && p.mount.tier>=8 && p.level>=60, desc:'Đỉnh cao mọi hệ thống', stats:{allPct:0.15}, vfx:'long' },
+  { id:'tuongduong',name:"Lunacia's Number One Trainer", color:'#ffd76a', cond:p=>p.dantian.realm>=8 && p.mount.tier>=8 && p.level>=60, desc:'Đỉnh cao mọi hệ thống', stats:{allPct:0.15}, vfx:'long' },
 ];
 const TAN_QUYEN = ['Thượng','Trung','Hạ']; // Mảnh bí kíp Huyết Ma Thôn Phệ (boss drop)
 
@@ -2213,7 +2213,7 @@ function calcDerived(){
       const _rb = player.relations[_rid].bond;
       if (_rb === 'ketbai') _kb++;
       else if (_rb === 'daolu'){ player.qireg *= 1.08; P.hpPct += 5; }   // Đạo lữ song tu
-      else if (_rb === 'suphu') P.expPct += 10;                          // Sư phụ chỉ điểm
+      else if (_rb === 'suphu') P.expPct += 10;                          // Trưởng Tộc chỉ điểm
     }
     if (_kb) P.atkPct += Math.min(_kb, 5) * 2;                           // Kết bái: +2% ST/người (tối đa 5)
   }
@@ -4591,15 +4591,15 @@ window.respawn = function(){
 function showVictory(){
   const sect = SECTS[player.sect];
   const sectLine = player.sect === 'vophai'
-    ? 'Một Tán Nhân vô danh — từ nay giang hồ sẽ nhớ mặt ngươi.'
+    ? 'Một Unclassed vô danh — từ nay khắp Lunacia sẽ nhớ mặt ngươi.'
     : `<span style="color:${sect.color}">${sect.name}</span> tự hào về đệ tử của mình.`;
   document.getElementById('overlay-inner').innerHTML = `
-    <h2>ĐỘT PHÁ BÌNH CẢNH!</h2>
+    <h2>PHÁ VỠ VỎ KÉN!</h2>
     <p>Hắc Phong Sát Thủ đã bại dưới tay ngươi.<br>
-    Từ một võ sinh vô danh, ngươi đã bước qua cánh cửa đầu tiên của giang hồ.<br><br>
+    Từ một hatchling vô danh, ngươi đã bước qua cánh cửa đầu tiên của hành trình.<br><br>
     ${sectLine}<br><br>
-    <i>Giang hồ còn dài: rèn Khai Quang +11 · độ kiếp Hóa Thần Cảnh · săn Ma Tôn mở Bảo Hạp tìm Cổ Thần Tứ Tượng · thu thập tàn quyển Huyết Ma Thôn Phệ từ Sát Thủ · đạt danh hiệu Tương Dương Đệ Nhất Hiệp!</i></p>
-    <button class="big-btn" onclick="document.getElementById('overlay').classList.add('hidden')">Tiếp Tục Lang Bạt</button>`;
+    <i>Lunacia còn dài: rèn Khai Quang +11 · độ kiếp Hóa Thần Cảnh · săn Bá Chủ mở Bảo Hạp tìm Cổ Thần Tứ Tượng · thu thập tàn quyển từ Sát Thủ · đạt danh hiệu Lunacia's Number One Trainer!</i></p>
+    <button class="big-btn" onclick="document.getElementById('overlay').classList.add('hidden')">Tiếp Tục Hành Trình</button>`;
   document.getElementById('overlay').classList.remove('hidden');
   saveGame();
 }
@@ -6443,7 +6443,7 @@ function renderDantian(){
       <div id="dantian-msg"></div>`;
   } else {
     html += `<div class="tuvi-bar"><div class="fill" style="width:100%"></div><span>Tu Vi: ${Math.floor(player.dantian.tuvi)}</span></div>
-      <div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">☯ Hóa Thần Cảnh — nội công đã đạt cảnh giới tối thượng!</div>`;
+      <div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">☯ Hóa Thần Cảnh — Chân Khí đã đạt cảnh giới tối thượng!</div>`;
   }
   CE().innerHTML = html;
 }
@@ -6531,7 +6531,7 @@ function startGame(sectKey, quze){
     addFloat(player.x, player.y-50, 'CHẾ ĐỘ THỬ NGHIỆM — Cấp 100, MỌI TÍNH NĂNG TỐI ĐA!', '#7ecbff', 16);
     addFloat(player.x, player.y-72, 'Full +11 · Tuyệt học max · Đan Điền max · M bản đồ · K kỹ năng · 1-5 tung chiêu!', '#a0ffe9', 13);
   } else {
-    addFloat(player.x, player.y-50, 'Tương Dương Thành — hãy bái kiến Quách Đại Hiệp (lại gần, nhấn E)!', '#7ecbff', 15);
+    addFloat(player.x, player.y-50, 'Lunaris City — hãy đến gặp Trưởng Lão Rell (lại gần, nhấn E)!', '#7ecbff', 15);
   }
   if (window.TEST_MODE) addFloat(player.x, player.y-95, 'TEST MODE — nhấn ` (phím dưới Esc) mở console, gõ /help xem lệnh', '#7fd4ff', 12);
   el('intro-story').classList.add('hidden');
@@ -8008,7 +8008,7 @@ el('is-skip').addEventListener('click', closeIntro);
 // ═══════════ HƯỚNG DẪN TÂN THỦ TỪNG BƯỚC ═══════════
 const TUT_STEPS = [
   { key:'move',  txt:'<b>W A S D</b> hoặc phím mũi tên để di chuyển — hãy đi một đoạn', },
-  { key:'npc',   txt:'Đến gần <b>Quách Đại Hiệp</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
+  { key:'npc',   txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
   { key:'map',   txt:'Nhấn <b>M</b> mở bản đồ → <b>Dịch Chuyển</b> tới <b>Đào Hoa Đảo</b> để săn quái' },
   { key:'kill',  txt:'Nhấn <b>SPACE</b> để đánh quái gần nhất — hãy hạ 1 con <b>Dã Trư</b>' },
   { key:'quest', txt:'Làm theo nhiệm vụ ở <b>góc phải màn hình</b> · <b>C</b> nhân vật · <b>K</b> kỹ năng · <b>B</b> túi đồ' },
@@ -8034,7 +8034,7 @@ function tutAdvance(stepKey){
     player.tutStep++;
     if (player.tutStep >= TUT_STEPS.length){
       player.tutStep = -1;
-      addFloat(player.x, player.y-70, 'Hướng dẫn hoàn tất — chúc hiệp khách phi nước đại!', '#7ecbff', 14);
+      addFloat(player.x, player.y-70, 'Hướng dẫn hoàn tất — chúc hành trình phi nước đại!', '#7ecbff', 14);
     }
     updateTut(); saveGame();
   }
@@ -8731,7 +8731,7 @@ function renderMapPanel(){
       html += `<div class="map-row map-locked">
         <span style="flex:1"><span class="m-name" style="color:#6a6255">??? Vùng Đất Chưa Biết</span>
           <span class="zone-badge" style="color:#6a6255;border-color:#6a6255">CHƯA MỞ</span>
-          <div class="m-desc" style="opacity:.55">Giang hồ chưa ai kể về vùng này với ngươi…<br>🔒 ${hints.join('<br>🔒 ')}</div></span>
+          <div class="m-desc" style="opacity:.55">Chưa ai kể cho ngươi về vùng đất này…<br>🔒 ${hints.join('<br>🔒 ')}</div></span>
         <span class="m-side"><span style="font-size:16px;opacity:.5">🔒</span></span></div>`;
       continue;
     }
@@ -9010,7 +9010,7 @@ const HC_TIERS = [
   { min:800, name:'Sinh Tử Chi Giao', color:'#ff9a5a' },
 ];
 function hcTier(s){ if (s <= -30) return { name:'Kết Thù', color:'#ff5a4a' }; let t = HC_TIERS[0]; for (const x of HC_TIERS) if (s >= x.min) t = x; return t; }
-const TT_BOND_NAME = { ketbai:'⚑ Kết Bái', daolu:'❤ Đạo Lữ', suphu:'☯ Sư Phụ', dode:'☯ Đồ Đệ', cuthu:'⚔ Cừu Nhân' };
+const TT_BOND_NAME = { ketbai:'⚑ Kết Bái', daolu:'❤ Đạo Lữ', suphu:'☯ Trưởng Tộc', dode:'☯ Hậu Bối', cuthu:'⚔ Cừu Nhân' };
 const TT_TP_POOL = ['tp_xuantam','tp_linhcam','tp_vanhanh','tp_thietbo','tp_thuathien','tp_bachhop','tp_hoigiang','tp_nhatnguyet','tp_thancong','tp_votuong','tp_lietdiem','tp_huyenamtp'];
 const TT_LINES = {
   chinh:['Giang hồ loạn lạc, kẻ sĩ nên lấy nghĩa làm đầu.','Nghe nói Ngũ Ấn lại xao động — ngươi định xông pha chứ?','Đao kiếm vô tình, nhân tâm hữu nghĩa.'],
@@ -9130,7 +9130,7 @@ function renderTanTuDlg(n){
     if (rel.bond === 'none' && rel.score >= 600) btns.push(`<button class="mini-btn" style="border-color:#ffb15c" onclick="ttAct('ketbai')">⚑ Kết Bái huynh đệ / tỷ muội</button>`);
     if (opp && !player.daolu && (rel.bond === 'none' || rel.bond === 'ketbai') && rel.score >= 250 && rel.love >= 60) btns.push(`<button class="mini-btn" style="border-color:#ffb8d0" onclick="ttAct('totinh')">❤ Tỏ Tình — cầu đạo lữ</button>`);
     const pr = (player.dantian && player.dantian.realm) || 0;
-    if (rel.bond === 'none' && n.realm >= pr + 2 && rel.score >= 400 && !player.suphu) btns.push(`<button class="mini-btn" style="border-color:#b08ae8" onclick="ttAct('baisu')">☯ Bái Sư — ${sc.name} ${n.name}</button>`);
+    if (rel.bond === 'none' && n.realm >= pr + 2 && rel.score >= 400 && !player.suphu) btns.push(`<button class="mini-btn" style="border-color:#b08ae8" onclick="ttAct('baisu')">☯ Bái Trưởng Tộc — ${sc.name} ${n.name}</button>`);
   } else {
     btns.push(`<div style="font-size:11.5px;color:#ff7a6a">⚔ Cừu nhân — hắn sẽ phục kích ngươi khi chạm mặt! Tặng lễ quý để hòa giải.</div>`);
   }
