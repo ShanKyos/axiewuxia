@@ -309,20 +309,88 @@ icons everywhere else in this repo), `PvE/Backgrounds/class/*` (vertical card-ba
 top-down world art), `Textures/StatusIcons` (131 buff/debuff icons — no matching UI slot in this
 game). `PvE/UI` (94 files) was only partially surveyed — worth a closer look if still digging.
 
+## Eighth source — exhausting axie-origins-asset-kit (3 maps, 3 NPCs)
+
+Final sweep through every remaining folder in the kit, closing out the `PvE/UI` folder that was
+only partially surveyed before, plus folders not looked at at all yet: `Summoners/`, `PvE/Starters/`,
+`PvE/Story/`, `PvE/Backgrounds/` (all three subfolders: `class`, `events`, `story`), and
+`Textures/FirstParty/`.
+
+**Used:**
+
+- `bg_ngoai.jpg` <- `PvE/Backgrounds/events/autumn24/autumn24_bg.png` — an autumn forest scene with
+  a small shrine/pagoda and stone guardian statues in the background, exact 2048x1152 pixel match to
+  the slot it replaces, no resize needed. Very fitting for an "outer sect grounds" region.
+- `bg_mongco.jpg` <- `PvE/Backgrounds/class/bg_shop.png` — a canyon/rocky-desert landscape (3840x2160,
+  same aspect ratio as the target, straight downscale). Fits a rugged frontier/steppe region better
+  than the old placeholder.
+- `bg_tuyettinh.jpg` <- `PvE/Backgrounds/events/winter24/winter24_bg.png` — a snow-covered forest with
+  a glowing hollow tree (1920x1296, center-cropped to the target aspect ratio then downscaled). Exact
+  thematic match for the ice/snow sect.
+- `daosi.png` (NPC) <- `PvE/UI/Chapter/dryad_mage.png` — a bearded, robed elder forest-spirit
+  character (430x483, scaled to fit + centered on transparent 256x384). Good fit for "wandering
+  mystic."
+- `thoren.png` (NPC) <- `PvE/Story/Bing_normal.png` — a framed portrait-card of "Bing," a white dog-like
+  Axie (256x254, centered on transparent 256x384). Used for the shopkeeper NPC.
+- `truonglang.png` (NPC) <- `PvE/Story/Xia_normal.png` — a framed portrait-card of "Xia," an
+  ornately-decorated horned Axie with a calm/authoritative expression (256x254, resized to the
+  256x256 slot almost exactly as-is). Used for the sect-leader NPC.
+
+All 8 region map backgrounds are now real sourced art — this closes out the maps category entirely.
+
+**Explicitly checked and NOT used, with why:**
+
+- `Summoners/*` (clover, fruitsloth, littlerobin, mavis, mushroom, sparrow, truefanhermitcrab,
+  trunk) — every file here is a disassembled Spine sprite sheet (separate floating body parts), same
+  problem as the earlier `PvE/Chimeras/*` folder. Not usable without a rigging/compositing pipeline.
+- `PvE/Starters/*` (34 numbered files) — same problem, also disassembled Spine parts, confirmed by
+  visually inspecting several (`1`, `1-1`, `5`, `11`, `17`, `22`).
+- `PvE/UI/Chapter/chimera_riddler_icon.png`, `riddler_3.png` — generic "mystery box" placeholder
+  icons (a question mark on a gift box), not character art, not a fit for anything.
+- `PvE/UI/Lobby/bg_pve_lobby_axie_lv_1.png`, `PvE/Story/xia-bing.png` — jagged alpha-masked scene
+  panels (irregular cutout edges, clearly meant to sit inside a specific UI frame), not usable as a
+  clean rectangular map background.
+- `PvE/UI/Icons`, `PvE/UI/Nodes`, `PvE/UI/Frames`, `PvE/UI/HpBar(2)`, `PvE/UI/InBattle` — pure UI
+  chrome (health bars, map-node icons, frame borders), nothing usable.
+- `Textures/FirstParty/*` — noise/VFX textures for shaders (glow, water ripple, lightning), not art.
+- `PvE/Backgrounds/story/*` (4-entrance through 10-rocky-mountain-2) — real painted environment
+  layers (ground/trees/river/temple/rock/fog/cloud), but exported as small parallax strips (all
+  ~1024px wide, many under 500px tall) meant to be stacked at runtime by a scrolling-camera rig, not
+  flat scenes. `8-temple/8_TEMPLE.png` alone (a nice pagoda-in-forest illustration) was tempting but
+  a direct swap-in of `autumn24_bg.png` for `bg_ngoai` already covered that niche better and at the
+  right resolution, so this folder wasn't used. The `*_ROCK.png` layers specifically were also ruled
+  out for the rocks slot — they carry a baked-in blue/teal lighting tint from the scene's shared fog
+  pass and don't look like plain rocks on their own.
+- `PvE/Backgrounds/events/*` other than `autumn24`/`winter24` (halloween24, xmas24, valentine, lunar,
+  summer23/24-arcade/gauntlet/rank, ragnarok, arena) — reviewed sizes/thumbnails; none fit an
+  unclaimed region theme better than what's already sourced or matched the wrong mood (beach, holiday
+  decorations, battle-arena crowds).
+- Searched the whole kit for "bow" — nothing. The bow skill slot has no matching source anywhere.
+
+This is very likely the last usable material in `axie-origins-asset-kit` — every subfolder has now
+been opened and either used or ruled out with a documented reason.
+
 ## Not done yet
 
 Current state as of the axie-origins-asset-kit passes (see `docs/AI_ART_PROMPTS.md` for the
 generation-prompt fallback on each of these):
 
 - Items: `aochoang` (cape), `quan` (pants), `mat_manhcothan`, `mat_tanquyen` (2 masks) — 4/24.
-- NPCs: all 15 — no wuxia-role portraits (merchant, elder, gatekeeper, etc.) found anywhere yet.
+- NPCs: 12/15 remaining (`binhkhi`, `duoclao`, `duocsu`, `laotuong`, `monkhach`, `noiung`,
+  `quachtinh`, `thumo`, `trachu`, `ttmon`, `vachda`, plus reused-file slots) — no more matching
+  wuxia-role portraits found anywhere after exhausting `axie-origins-asset-kit`; `daosi`, `thoren`,
+  `truonglang` are now sourced (see the eighth source above).
 - Mounts: 7/8 (`1_hacma`, `2_hoangma`, `4_thanho`, `5_sutu`, `6_viembao`, `7_kylan`, `8_longlan`) —
   no side-view horse/tiger/lion/leopard/qilin/dragon creature art found anywhere yet.
 - Rocks: `rock1/2/3.png` — 3/11 trees-folder files (all 8 region trees are done).
-- Skills: `bow.png` + its 7 tiers (`th_bow_1..7.png`) — no bow artwork found anywhere yet.
+- Maps: **0 remaining** — all 8 region backgrounds are now real sourced art.
+- Skills: `bow.png` + its 7 tiers (`th_bow_1..7.png`) — no bow artwork found anywhere, confirmed by
+  an exhaustive filename search across the whole kit.
 - Mobs: `kybinh`, `kylan`, `phando`, `thinu`, `trannhan`, `ttdetu` — 6/30.
 - `Dantian`/`Quze`/`Tien` (46 files) — still needs the design decision described below, not just
   more sourcing.
-- Unexplored leads if still digging: `axie-origins-asset-kit`'s `PvE/UI` folder (94 files, only
-  partially surveyed), Project T's `CharacterAnimationRender` zips (oversized, would need someone
+- `axie-origins-asset-kit` is now fully surveyed — every subfolder opened and either used or ruled
+  out (see the eighth source above). Nothing left to look for there; remaining gaps need either AI-
+  generated art (see `docs/AI_ART_PROMPTS.md`) or a different source. Other leads if still digging:
+  Project T's `CharacterAnimationRender` zips (oversized, would need someone
   to grab them directly in the Drive UI), the still-unreadable `2.In Game` Drive folder.

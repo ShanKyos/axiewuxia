@@ -1,13 +1,14 @@
 # AI art prompts — everything still unsourced
 
-~83 of ~290 asset files have no matching Axie source art anywhere found across six Drive surveys
-plus a pass through the official `axieinfinity/axie-origins-asset-kit` — see `docs/ASSET_SOURCING.md`
-for the full history. NPCs and mounts in particular are still mostly empty — nothing surveyed so far
-has wuxia-role portraits (merchant, elder, gatekeeper, etc.) or side-view creature-mount designs.
-The paths forward for what's left: run these prompts through an image generator, revisit sourcing
-once `2.In Game` (still unreadable via the Drive API) is fixed, grab the oversized Drive PSDs
-(>10MB, over this environment's download cap) directly in the Drive UI, or dig further into the
-asset kit's unexplored `PvE/UI` folder (94 files, not fully surveyed).
+~80 of ~290 asset files have no matching Axie source art anywhere found across six Drive surveys
+plus two passes through the official `axieinfinity/axie-origins-asset-kit` — see
+`docs/ASSET_SOURCING.md` for the full history. The asset kit is now **fully surveyed** (every
+subfolder opened and either used or explicitly ruled out) — it has nothing left to give. NPCs and
+mounts in particular are still mostly empty — nothing surveyed anywhere has wuxia-role portraits
+(merchant, elder, gatekeeper, etc.) or side-view creature-mount designs for most of the remaining
+slots. The paths forward for what's left: run these prompts through an image generator, revisit
+sourcing once `2.In Game` (still unreadable via the Drive API) is fixed, or grab the oversized Drive
+PSDs (>10MB, over this environment's download cap) directly in the Drive UI.
 
 Every filename below is the exact target path under `public/game/assets/<category>/` — generate,
 crop/pad to a clean transparent PNG, and drop it in with the same filename to wire it in (no code
@@ -42,7 +43,11 @@ framing (fills ~80% of a square canvas)."*
 | `mat_manhcothan.png` | mask — "Bone Blade" | bone-white, jagged edges |
 | `mat_tanquyen.png` | mask — "New Fist" | martial, fist-motif engraving |
 
-## NPCs — portrait icons (15 files, `assets/npcs/`)
+## NPCs — portrait icons (12 of 15 files remaining, `assets/npcs/`)
+
+`daosi.png`, `thoren.png`, and `truonglang.png` are now sourced from the Axie Origins asset kit
+(see `docs/ASSET_SOURCING.md`'s eighth source). The kit is fully exhausted — nothing else in it
+matches a wuxia-role portrait — so the rest need generated art:
 
 Template: *"[shared style guide]. A friendly [ROLE] Axie character, [PROPS], three-quarter portrait
 bust, standing pose."*
@@ -50,18 +55,15 @@ bust, standing pose."*
 | File | Role | Props |
 |---|---|---|
 | `binhkhi.png` | weapons dealer | holding/surrounded by simple weapons |
-| `daosi.png` | wandering mystic | robe, staff |
 | `duoclao.png` | elder apothecary | mortar & pestle, herb basket |
 | `duocsu.png` | apothecary | potion bottles |
 | `laotuong.png` | old general/merchant | simple armor piece, ledger |
 | `monkhach.png` | guest disciple | plain traveling clothes |
 | `noiung.png` | inner-sect steward | formal robe |
 | `quachtinh.png` | named hero NPC | simple heroic pose, no weapon drawn |
-| `thoren.png` | shopkeeper | apron, counter props |
 | `thumo.png` | gatekeeper | simple guard stance |
 | `thuongnhan.png` | traveling merchant | pack/cart props |
 | `trachu.png` | teahouse keeper | teapot, cup |
-| `truonglang.png` | sect leader | formal robe, authoritative pose |
 | `ttmon.png` | gate disciple | plain training clothes |
 | `vachda.png` | cave hermit | rustic, simple |
 
