@@ -486,30 +486,66 @@ function inObstacle(mapId, x, y, r){
   }
   return false;
 }
-function collideObstacles(ent, r){
+// Tách phần toán học thuần (điểm x,y → điểm đã né vật cản) khỏi việc mutate 1 entity thật, để
+// click-to-move có thể "giả lập trước" đường đi (xem simulateMovePath) bằng đúng công thức này —
+// đường preview vẽ ra luôn khớp với đường nhân vật thật sự sẽ đi, không lệch.
+function resolveObstaclePoint(x, y, r){
+  let px = x, py = y;
   for (const o of obstaclesOf(curMap)){
     if (o.wd){
-      const cx = clamp(ent.x, o.x, o.x + o.wd), cy = clamp(ent.y, o.y, o.y + o.ht);
-      const dx = ent.x - cx, dy = ent.y - cy, d2 = dx*dx + dy*dy;
+      const cx = clamp(px, o.x, o.x + o.wd), cy = clamp(py, o.y, o.y + o.ht);
+      const dx = px - cx, dy = py - cy, d2 = dx*dx + dy*dy;
       if (d2 < r*r){
-        if (d2 > 0.01){ const d = Math.sqrt(d2); ent.x = cx + dx/d*r; ent.y = cy + dy/d*r; }
+        if (d2 > 0.01){ const d = Math.sqrt(d2); px = cx + dx/d*r; py = cy + dy/d*r; }
         else { // tâm lọt hẳn trong rect — đẩy ra cạnh gần nhất
-          const l = ent.x - o.x, rr = o.x + o.wd - ent.x, t = ent.y - o.y, bb = o.y + o.ht - ent.y;
+          const l = px - o.x, rr = o.x + o.wd - px, t = py - o.y, bb = o.y + o.ht - py;
           const m = Math.min(l, rr, t, bb);
-          if (m === l) ent.x = o.x - r; else if (m === rr) ent.x = o.x + o.wd + r;
-          else if (m === t) ent.y = o.y - r; else ent.y = o.y + o.ht + r;
+          if (m === l) px = o.x - r; else if (m === rr) px = o.x + o.wd + r;
+          else if (m === t) py = o.y - r; else py = o.y + o.ht + r;
         }
       }
     } else {
-      const dx = ent.x - o.x, dy = ent.y - o.y, ax = o.rx + r, ay = o.ry + r;
+      const dx = px - o.x, dy = py - o.y, ax = o.rx + r, ay = o.ry + r;
       const n = (dx*dx)/(ax*ax) + (dy*dy)/(ay*ay);
       if (n < 1){
-        if (n > 0.0001){ const s = 1/Math.sqrt(n); ent.x = o.x + dx*s; ent.y = o.y + dy*s; }
-        else ent.x = o.x + ax;
+        if (n > 0.0001){ const s = 1/Math.sqrt(n); px = o.x + dx*s; py = o.y + dy*s; }
+        else px = o.x + ax;
       }
     }
   }
-  ent.x = clamp(ent.x, 20, MAP.w - 20); ent.y = clamp(ent.y, 20, MAP.h - 20); // không đẩy quá mép map
+  px = clamp(px, 20, MAP.w - 20); py = clamp(py, 20, MAP.h - 20); // không đẩy quá mép map
+  return { x: px, y: py };
+}
+function collideObstacles(ent, r){
+  const p = resolveObstaclePoint(ent.x, ent.y, r);
+  ent.x = p.x; ent.y = p.y;
+}
+// Click-to-move: giả lập trước đường đi từ (sx,sy) tới (tx,ty) bằng đúng resolveObstaclePoint —
+// dùng để vẽ đường preview chấm chấm, luôn khớp với đường nhân vật thật sự sẽ né khi đi tới.
+function simulateMovePath(sx, sy, tx, ty){
+  const path = [{ x: sx, y: sy }];
+  let x = sx, y = sy;
+  const stepLen = 30;
+  let stuck = 0, lastX = sx, lastY = sy; // vật cản lớn (hồ) chặn thẳng hướng đích → chệch dần bám mép
+  for (let i = 0; i < 160; i++){
+    const d = dist(x, y, tx, ty);
+    if (d < stepLen){ path.push({ x: tx, y: ty }); break; }
+    let ang = Math.atan2(ty - y, tx - x);
+    if (stuck > 0) ang += (stuck % 2 === 0 ? 1 : -1) * Math.min(1.4, stuck * 0.35);
+    const nx = x + Math.cos(ang)*stepLen, ny = y + Math.sin(ang)*stepLen;
+    const p = resolveObstaclePoint(nx, ny, 14);
+    x = p.x; y = p.y;
+    path.push({ x, y });
+    stuck = dist(x, y, lastX, lastY) < stepLen*0.4 ? stuck + 1 : 0; // gần như không nhích → tăng độ chệch
+    lastX = x; lastY = y;
+  }
+  return path;
+}
+function setMoveTarget(x, y){
+  if (!player || dead) return;
+  const nf = inObstacle(curMap, x, y, 14) ? nearestFree(curMap, x, y) : { x, y };
+  moveTarget = { x: nf.x, y: nf.y };
+  addEffect({ type:'ring', x: moveTarget.x, y: moveTarget.y, r:20, color:'#9fd8ff' });
 }
 function nearestFree(mapId, x, y){
   if (!inObstacle(mapId, x, y, 16)) return { x, y };
@@ -1829,6 +1865,7 @@ function lerpAng(a, b, t){ // nội suy góc theo đường ngắn nhất (trán
 let shakeT = 0, shakeMag = 0; // rung màn hình khi bị đánh trúng
 let keys = {};
 let joyVec = { x:0, y:0 };
+let moveTarget = null; // Click-to-move: đích chuột phải (canvas) hoặc bấm minimap — { x, y } world coords
 let mouseWorld = { x:0, y:0 };
 let lastTime = performance.now();
 let saveTimer = 0;
@@ -2583,6 +2620,7 @@ function buildWorld(){
   const md = mapDef();
   mobs = []; pickups = []; projectiles = []; effects = []; floats = [];
   petObj = null; mountObj = null; // Linh Thú & Thú Chiến xuất hiện lại ở map mới
+  moveTarget = null; // Click-to-move: đích ở map cũ không còn ý nghĩa khi đổi map
   decor = []; mists = []; springTimer = 0;
   // quái đứng thành cụm 5-7 con (GDD Mob Mechanics) — xếp theo đai cấp:
   // cụm yếu nhất gần cửa vào nhất, cụm mạnh nhất sâu nhất (ghép cặp level↔khoảng cách đã sắp xếp)
@@ -2999,10 +3037,29 @@ canvas.addEventListener('mousemove', e=>{
 });
 canvas.addEventListener('mousedown', e=>{
   if (!player || dead) return;
+  if (e.button !== 0) return; // chuột phải dành cho click-to-move (xem contextmenu bên dưới)
   closePanels(); // click the world = close any open window
   mouseWorld.x = e.clientX + camera.x; mouseWorld.y = e.clientY + camera.y;
   player.face = Math.atan2(mouseWorld.y - player.y, mouseWorld.x - player.x);
   doBasic();
+});
+// Click-to-move (chuột phải): đi tới điểm đã bấm, né vật cản dọc đường — không đổi hành vi chuột trái
+canvas.addEventListener('contextmenu', e=>{
+  e.preventDefault();
+  if (!player || dead) return;
+  closePanels();
+  const wx = e.clientX + camera.x, wy = e.clientY + camera.y;
+  setMoveTarget(wx, wy);
+});
+// Bấm minimap (chuột trái) — đi tới điểm đó; quái hiện lên minimap ngay bên dưới điểm bấm nên đây
+// cũng chính là cách "đi tới bãi quái gần nhất" tự nhiên nhất, không cần thêm icon vùng riêng.
+if (miniCvs) miniCvs.addEventListener('click', e=>{
+  if (!player || dead) return;
+  const rect = miniCvs.getBoundingClientRect();
+  const cx = (e.clientX - rect.left) * (miniCvs.width / rect.width);
+  const cy = (e.clientY - rect.top) * (miniCvs.height / rect.height);
+  const sx = miniCvs.width / MAP.w, sy = miniCvs.height / MAP.h;
+  setMoveTarget(cx / sx, cy / sy);
 });
 
 // touch joystick
@@ -3698,6 +3755,26 @@ function drawBeaconArrow(){
   ctx.fillStyle = '#f0d68a'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
   ctx.fillText(d + ' bước', ex, ey - 16);
 }
+// Click-to-move: đường preview chấm chấm từ vị trí hiện tại tới đích — tính lại mỗi frame bằng
+// simulateMovePath nên luôn khớp chính xác với đường nhân vật thật sự đi (né đúng vật cản đó).
+function drawMoveTargetPath(){
+  if (!moveTarget || !player || dead) return;
+  const path = simulateMovePath(player.x, player.y, moveTarget.x, moveTarget.y);
+  ctx.save();
+  ctx.strokeStyle = 'rgba(159,216,255,.7)';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([8, 7]);
+  ctx.lineDashOffset = -(performance.now()/40 % 15); // chạy dọc đường cho sinh động
+  ctx.beginPath();
+  ctx.moveTo(path[0].x, path[0].y);
+  for (let i = 1; i < path.length; i++) ctx.lineTo(path[i].x, path[i].y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  const pulse = 15 + Math.sin(performance.now()/220)*3;
+  ctx.strokeStyle = '#9fd8ff'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.ellipse(moveTarget.x, moveTarget.y, pulse, pulse*0.45, 0, 0, 7); ctx.stroke();
+  ctx.restore();
+}
 
 // ---------- GDD Đợt 2 B5: Trại Ngựa — Tuấn Mã Hoang & Mã Thầu ----------
 const HORSE_ZONES = {
@@ -3939,6 +4016,14 @@ function update(dt){
   if (keys['a']||keys['arrowleft']) mx -= 1;
   if (keys['d']||keys['arrowright']) mx += 1;
   mx += joyVec.x; my += joyVec.y;
+  if (Math.abs(mx) > 0.05 || Math.abs(my) > 0.05) moveTarget = null; // WASD/joystick hủy đích click-to-move
+  // Click-to-move (chuột phải hoặc bấm minimap): tự bước tới điểm đã chọn, né vật cản dọc đường
+  // đúng như đi tay — không ghi đè khi đang Auto Farm (auto tự dẫn đường riêng, xem dưới)
+  if (moveTarget && !player.auto && mx === 0 && my === 0){
+    const _mtd = dist(player.x, player.y, moveTarget.x, moveTarget.y);
+    if (_mtd < 18) moveTarget = null;
+    else { mx = (moveTarget.x - player.x)/_mtd; my = (moveTarget.y - player.y)/_mtd; player.face = Math.atan2(my, mx); }
+  }
   // AUTO FARM (phím Z): tự đuổi theo & đánh quái gần nhất — treo máy
   // nearestMob tự loại Du Hiệp trung lập (trừ khi bật PK) nên auto không bao giờ gây PK oan
   // GDD Boss v2.1: vào vùng boss (400px) auto tạm dừng — trận boss phải đánh tay
@@ -4453,6 +4538,7 @@ function update(dt){
   updateHud();
 }
 function onDeath(){
+  moveTarget = null; // Click-to-move: hủy đích khi chết, tránh tự đi lung tung sau khi hồi sinh
   // Quẻ Tiên Thiên · THIÊN MỆNH: mỗi màn chơi 1 lần, chết hồi sinh tại chỗ
   if (player.traitRevive && !player.reviveUsed){
     player.reviveUsed = true;
@@ -4614,6 +4700,7 @@ function render(){
   drawTufts(); // cỏ/vết mực trên mặt đất — phá sự phẳng của nền
   drawWaterFx(); // gợn sóng & lấp lánh mặt nước (Gói F)
   drawAiPasses(); drawBeacon(); drawObstaclesDebug(); // GDD Đợt 2 A/B2
+  drawMoveTargetPath(); // Click-to-move: đường preview né vật cản + đích đến
 
   // Đào Hoa Đảo: cụm hoa đào tĩnh rụng dưới gốc cây (seed theo vị trí cây)
   if (curMap === 'daohoa'){
