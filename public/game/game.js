@@ -674,7 +674,7 @@ const SKILL_DEFS = {
 };
 const PASSIVE_SKILLS = [
   { name:'Cung Tiễn (bị động)', req:()=>player.bow.tier>0, desc:'Đòn đánh thường có tỉ lệ bắn linh tiễn — theo tầng Cung Tiễn.' },
-  { name:'Lăng Ba Vi Bộ (J)', req:()=>player.canJump, desc:'Nhảy 2 lần trên không, lướt né mọi đòn — Đan Điền cảnh 7.' },
+  { name:'Lăng Ba Vi Bộ (J)', req:()=>player.canJump, desc:'Nhảy né trên không — lướt né mọi đòn. Đan Điền cảnh 5 (Trúc Cơ) mở thêm lượt nhảy thứ 2 & thân pháp +10%.' },
   { name:'Đạn Chỉ phong mạch (bị động)', req:()=>player.stunProc>0, desc:'5% đòn đánh phong mạch địch — Đan Điền cảnh 4.' },
   { name:'Thái Cực phản đòn (bị động)', req:()=>player.reflect>0, desc:'Phản lại một phần sát thương — Đan Điền cảnh 5 / trang bị.' },
   { name:'Bất Tử (bị động)', req:()=>player.batTu, desc:'Chặn 1 đòn chí mạng, hồi 30% HP — Đan Điền cảnh 8.' },
@@ -1677,9 +1677,9 @@ const DANTIAN_REALMS = [
   { name:'Luyện Khí · Tầng 2',   atk:0.10, hp:0.10, qireg:2,  cost:{tuvi:400,   silver:700,   mat:6},   rate:85 },
   { name:'Luyện Khí · Tầng 3',   atk:0.16, hp:0.16, qireg:3,  cost:{tuvi:900,   silver:1400,  mat:15},  rate:70 },
   { name:'Luyện Khí · Tầng 4',   atk:0.24, hp:0.24, qireg:4,  cost:{tuvi:1800,  silver:2600,  mat:24},  rate:55, unlock:'Đạn Chỉ Thần Thông (5% phong mạch đối thủ)' },
-  { name:'Trúc Cơ Cảnh',         atk:0.35, hp:0.35, qireg:5,  cost:{tuvi:3600,  silver:5000,  mat:42},  trib:3, unlock:'Thái Cực hộ thể — phản 5% sát thương' },
+  { name:'Trúc Cơ Cảnh',         atk:0.35, hp:0.35, qireg:5,  cost:{tuvi:3600,  silver:5000,  mat:42},  trib:3, unlock:'Thái Cực hộ thể — phản 5% sát thương · Lăng Ba Vi Bộ nhảy lần 2 trên không' },
   { name:'Kim Đan Cảnh',         atk:0.45, hp:0.45, qireg:6,  cost:{tuvi:6000,  silver:8000,  mat:55},  trib:4, unlock:'Ám Nhiên Tiêu Hồn Chưởng' },
-  { name:'Nguyên Anh · Trung Kỳ',atk:0.55, hp:0.55, qireg:7,  cost:{tuvi:9000,  silver:12000, mat:80},  trib:6, unlock:'Lăng Ba Vi Bộ (nhảy 2 lần trên không)' },
+  { name:'Nguyên Anh · Trung Kỳ',atk:0.55, hp:0.55, qireg:7,  cost:{tuvi:9000,  silver:12000, mat:80},  trib:6, unlock:null },
   { name:'Nguyên Anh · Hậu Kỳ',  atk:0.70, hp:0.70, qireg:8,  cost:{tuvi:13000, silver:18000, mat:110}, trib:8, unlock:'Bất Tử — chặn 1 đòn chí mạng, hồi 30% HP (180s)' },
   { name:'Hóa Thần Cảnh',        atk:0.88, hp:0.88, qireg:10, cost:{tuvi:20000, silver:28000, mat:160}, trib:9, unlock:'Hóa Thần — nhục thân thăng hoa, toàn thuộc tính vượt cực hạn' },
 ];
@@ -2136,10 +2136,12 @@ function calcDerived(){
   player.aspd = Math.max(0.30, 0.85 - s.agi*0.004 - merAspd/100);
   player.defRed = s.def/(s.def + 60);
   player.qireg = 4 + P.qireg + dr.qireg; // GDD Đợt 2 B1: hồi cơ bản 2.5 -> 4.0
-  // Lăng Ba Vi Bộ (Tiên Thiên Cảnh, tầng 7): nhảy 2 lần trên không + thân pháp +10%
-  player.canJump = realm >= 7;
-  player.maxJumps = realm >= 7 ? 2 : 1;
-  player.speed = Math.round(190 * (realm >= 7 ? 1.10 : 1));
+  // Lăng Ba Vi Bộ: nhảy né cơ bản có sẵn từ đầu (P1 roadmap: "early traversal toys" —
+  // di chuyển là cảm giác wuxia, không nên khóa tới cuối game) — nhảy lần 2 & thân pháp +10%
+  // mở ở Trúc Cơ Cảnh (tầng 5), sớm hơn nhiều so với mốc Nguyên Anh Trung Kỳ (tầng 7) cũ.
+  player.canJump = true;
+  player.maxJumps = realm >= 5 ? 2 : 1;
+  player.speed = Math.round(190 * (realm >= 5 ? 1.10 : 1));
   if (player.ascended) player.speed = Math.round(player.speed * 1.25); // Phi Thăng: ngự kiếm phi hành
   // ── Võ Học Phổ: tâm pháp bị động ──
   player.vhCdMult = 1; player.vhRegen = 0; player.vhPoisonRes = 0;
@@ -2255,6 +2257,7 @@ function calcDerived(){
   }
   // Võ Học Phổ: buff chủ động
   if ((player.vhDmgT || 0) > 0) player.atk = Math.round(player.atk * (1 + (player.vhDmgPct || 0)/100));
+  if ((player.pillDmgT || 0) > 0) player.atk = Math.round(player.atk * (1 + (player.pillDmgPct || 0)/100)); // Bạo Lực Đan (Luyện Đan)
   if ((player.vhCritT || 0) > 0) player.crit = 1; // Tịch Tà Kiếm Pháp
   if ((player.vhEvaT || 0) > 0) player.eva = Math.min(1, player.eva + (player.vhEvaPct || 0)/100);
   if ((player.vhAspdT || 0) > 0) player.aspd = Math.max(0.2, player.aspd * (1 - (player.vhAspdPct || 0)/100));
@@ -2316,6 +2319,9 @@ function newPlayer(sectKey){
     loidonT: 0,                              // Lôi Độn Phù — giảm 40% ST thiên lôi có thời hạn
     channelPick: null, channelId: null, channelT: 0, channelCd: 0, // Hóa Thân Trấn Ải — capture/channel boss form (P)
     towerBest: 0,                            // Vạn Kiếm Tu La Trận — đợt cao nhất từng trụ được (kỷ lục cá nhân)
+    herbCount: 0,                            // Luyện Đan — Thảo Dược tích trữ (hái ngoài đồng)
+    alchDay: '', alchCount: 0,               // Luyện Đan — giới hạn 2 đan vĩnh viễn/ngày (giống Nội Đan)
+    pillDmgT: 0, pillDmgPct: 0,               // Bạo Lực Đan — buff sát thương tạm thời
     dotpha: 0,                               // Đan Đột Phá — bảo mệnh độ kiếp (chịu 4 tia lôi, thất bại chỉ tổn 25% Tu Vi)
     noidan: {},                              // Nội Đan yêu thú theo hành { Kim, Mộc, Thổ, Thủy, Hỏa }
     ndBonus: { atk:0, hp:0, def:0, qi:0, crit:0 }, // chỉ số vĩnh viễn từ thôn phệ nội đan
@@ -2436,6 +2442,11 @@ function loadGame(){
     if (player.channelT == null) player.channelT = 0;
     if (player.channelCd == null) player.channelCd = 0;
     if (player.towerBest == null) player.towerBest = 0;
+    if (player.herbCount == null) player.herbCount = 0;
+    if (player.alchDay == null) player.alchDay = '';
+    if (player.alchCount == null) player.alchCount = 0;
+    if (player.pillDmgT == null) player.pillDmgT = 0;
+    if (player.pillDmgPct == null) player.pillDmgPct = 0;
     if (!player.storySeen) player.storySeen = {};
     if (!player.clues) player.clues = [];
     if (!player.storyFlags) player.storyFlags = {};
@@ -3477,10 +3488,9 @@ function doBasic(){
     }
   }
 }
-// Lăng Ba Vi Bộ — jump (unlocked at Đan Điền cảnh 7, nhảy 2 lần trên không)
+// Lăng Ba Vi Bộ — jump (có sẵn từ đầu; nhảy lần 2 mở ở Đan Điền cảnh 5 — Trúc Cơ)
 function doJump(){
   if (!player || dead) return;
-  if (!player.canJump){ addFloat(player.x, player.y-34, 'Cần Nguyên Anh Trung Kỳ (Đan Điền cảnh 7)', '#8a8a8a', 12); return; }
   const airborne = player.jumpT > 0;
   if (!airborne && player.cd.jump > 0) return; // cooldown chỉ chặn cú nhảy từ mặt đất
   if (airborne && (player.jumpsLeft || 0) <= 0) return;
@@ -4061,7 +4071,7 @@ function update(dt){
     if (Math.random() < dt*8) addEffect({ type:'ring', x:player.x, y:player.y, r:30, color:'#e8c86a' });
   }
   // Võ Học Phổ: buff timers + Dịch Cân Kinh hồi phục + khiên Thái Cực
-  for (const _bk of ['vhDmgT','vhEvaT','vhReflT','vhAspdT','vhCritT','vhLeechT']) if ((player[_bk]||0) > 0) player[_bk] -= dt;
+  for (const _bk of ['vhDmgT','vhEvaT','vhReflT','vhAspdT','vhCritT','vhLeechT','pillDmgT']) if ((player[_bk]||0) > 0) player[_bk] -= dt;
   player.vhReviveCd = Math.max(0, (player.vhReviveCd || 0) - dt);
   if ((player.vhRegen || 0) > 0 && player.hp > 0) player.hp = Math.min(player.maxHp, player.hp + player.maxHp * player.vhRegen * dt);
   if ((player.vhShield || 0) > 0 && Math.random() < dt*6) addEffect({ type:'ring', x:player.x, y:player.y, r:36, color:'#8ad8c8' });
@@ -4119,6 +4129,7 @@ function update(dt){
     if (dist(player.x,player.y,p.x,p.y) < 26){
       p.respawn = 30;
       addEffect({ type:'spark', x:p.x, y:p.y-6, r:24, color:'#b8e87a' });
+      player.herbCount = (player.herbCount || 0) + 1; // Luyện Đan — thảo dược hái được luôn vào túi, kể cả khi đang giao nhiệm vụ
       if (q && q.type==='collect' && questState==='active'){
         questProg++;
         addFloat(p.x, p.y-20, `Thảo Dược ${questProg}/${q.need}`, '#8fd18f', 12);
@@ -4126,7 +4137,7 @@ function update(dt){
         sideOnEvent('collect');
       } else {
         player.hp = Math.min(player.maxHp, player.hp + 25);
-        addFloat(p.x, p.y-20, '+25 HP', '#8fd18f', 11);
+        addFloat(p.x, p.y-20, '+25 HP · +1 🌿', '#8fd18f', 11);
       }
     }
   }
@@ -6325,7 +6336,7 @@ function renderDantian(){
     <div class="realm-name">${cur.name} <span style="font-size:12px;opacity:.7">(Cảnh giới ${realm}/9)</span></div></div>`;
   if (realm > 0){
     html += `<div class="bonus-list"><b>Phúc lợi cảnh giới:</b><br>Công Kích +${Math.round(cur.atk*100)}% · HP +${Math.round(cur.hp*100)}% · Hồi Chân Khí +${cur.qireg}/s`;
-    if (realm >= 7) html += `<br><b style="color:#9fd8ff">◆ Lăng Ba Vi Bộ</b> — mở khóa nhảy (phím J) · thân pháp +10%`;
+    if (realm >= 5) html += `<br><b style="color:#9fd8ff">◆ Lăng Ba Vi Bộ</b> — nhảy lần 2 trên không (phím J) · thân pháp +10%`;
     if (realm >= 8) html += `<br><b style="color:#f0d68a">◆ Bất Tử</b> — chặn 1 đòn chí mạng, hồi 30% HP (180s)`;
     if (realm >= 9) html += `<br><b style="color:#fff2b0">◆ Hóa Thần</b> — nhục thân thăng hoa, toàn thuộc tính vượt cực hạn`;
     html += `</div>`;
@@ -6337,7 +6348,7 @@ function renderDantian(){
     html += `<div class="tuvi-bar"><div class="fill" style="width:${pct}%"></div><span>${Math.floor(player.dantian.tuvi)} / ${next.cost.tuvi} Tu Vi</span></div>
       <div class="next-tier"><img src="assets/dantian/${REALM_ICONS[realm+1]}.png" alt="" style="width:34px;height:34px;vertical-align:-10px;margin-right:6px" onerror="this.style.display='none'"><b style="color:#9fd0ff">Đột phá: ${next.name}</b><br>
       Công Kích +${Math.round(next.atk*100)}% · HP +${Math.round(next.hp*100)}% · Hồi Chân Khí +${next.qireg}/s
-      ${next.unlock ? `<br><b style="color:#f0d68a">◆ Học được: ${next.unlock}${realm+1===7 ? ' (mở khóa nhảy — phím J)' : ''}</b>` : ''}<br>
+      ${next.unlock ? `<br><b style="color:#f0d68a">◆ Học được: ${next.unlock}${realm+1===5 ? ' (nhảy lần 2 — phím J)' : ''}</b>` : ''}<br>
       <span style="opacity:.75">Phí: ${next.cost.tuvi} Tu Vi + ${next.cost.silver}◈ + ${next.cost.mat}✦${next.trib
         ? `<br>⚡ <b style="color:#e8c84a">Lôi Kiếp ${next.trib} đợt thiên lôi</b> — né sấm! Trúng 3 tia là thất bại (Lôi Độn Phù -40% sát thương, Đan Đột Phá chịu thêm 1 tia).<br>(thất bại: mất bạc, vật liệu và 30% Tu Vi — giữ nguyên cảnh giới)`
         : ` · Tỉ lệ: <b>${next.rate}%</b><br>(thất bại: mất bạc, vật liệu và 50% Tu Vi — giữ nguyên cảnh giới)`}</span></div>
@@ -6780,6 +6791,7 @@ const CHAR_TABS = [
   { id:'pet',      name:'🐾 Linh Thú', lv:15 },
   { id:'channel',  name:'☬ Hóa Thân', lv:14 },
   { id:'tower',    name:'🌀 Tu La Trận', lv:20 },
+  { id:'alchemy',  name:'🧪 Luyện Đan', lv:8 },
 ];
 function renderCharPanel(){
   let tab = window.charTab;
@@ -6799,6 +6811,7 @@ function renderCharPanel(){
   else if (tab==='pet') renderPet();
   else if (tab==='channel') renderChannelForm();
   else if (tab==='tower') renderTowerTab();
+  else if (tab==='alchemy') renderAlchemyTab();
   else renderForge();
 }
 window.switchCharTab = function(t){
@@ -10119,6 +10132,77 @@ window.swallowNoidan = function(el2){
   AudioSys.sfx('levelup', 0.5);
   saveGame(); renderBag();
 };
+
+
+// ==================== LUYỆN ĐAN (P1 roadmap: 觅长生 — crafting là chiều sâu được yêu thích nhất
+// của thể loại tu tiên) ====================
+// Hái Thảo Dược ngoài đồng (đã có sẵn, trước đây chỉ dùng cho nhiệm vụ/hồi máu vặt) → luyện thành
+// đan dược ở đây. Đan tiêu hao (hồi máu/giải độc/buff tạm) không giới hạn; đan vĩnh viễn tái dùng
+// đúng player.ndBonus — chung một "hồ chứa" chỉ số vĩnh viễn với Nội Đan ở trên, giới hạn 2/ngày
+// riêng (không cộng dồn với giới hạn 3/ngày của Nội Đan).
+const ALCHEMY_RECIPES = [
+  { id:'hoixuan',  name:'Hồi Xuân Đan',  icon:'🌿', herb:5,  silver:30,  mat:0, perm:false,
+    desc:'Hồi đầy Sinh Lực & Nội Lực ngay lập tức.',
+    apply: p => { p.hp = p.maxHp; p.qi = p.maxQi; } },
+  { id:'thanhdoc', name:'Thanh Độc Đan', icon:'🍵', herb:4,  silver:20,  mat:0, perm:false,
+    desc:'Giải toàn bộ độc tố & hồi thêm 60 Sinh Lực.',
+    apply: p => { p.poisonT = 0; p.hp = Math.min(p.maxHp, p.hp + 60); } },
+  { id:'baoluc',   name:'Bạo Lực Đan',   icon:'🔥', herb:10, silver:100, mat:0, perm:false,
+    desc:'+18% sát thương trong 5 phút.',
+    apply: p => { p.pillDmgT = 300; p.pillDmgPct = 18; } },
+  { id:'coban',    name:'Cố Bản Đan',    icon:'💎', herb:10, silver:80,  mat:1, perm:true,
+    desc:'+50 Sinh Lực tối đa VĨNH VIỄN.',
+    apply: p => { p.ndBonus.hp = (p.ndBonus.hp || 0) + 50; } },
+  { id:'nguluc',   name:'Ngưng Lực Đan', icon:'⚔',  herb:10, silver:80,  mat:1, perm:true,
+    desc:'+6 Công Kích VĨNH VIỄN.',
+    apply: p => { p.ndBonus.atk = (p.ndBonus.atk || 0) + 6; } },
+];
+function alchToday(){
+  const d = new Date().toDateString();
+  if (player.alchDay !== d){ player.alchDay = d; player.alchCount = 0; }
+  return player.alchCount || 0;
+}
+window.craftPill = function(id){
+  const r = ALCHEMY_RECIPES.find(x => x.id === id); if (!r) return;
+  if ((player.herbCount || 0) < r.herb){ addFloat(player.x, player.y-40, `Cần ${r.herb} 🌿 Thảo Dược`, '#8a8a8a', 12); return; }
+  if (player.silver < r.silver){ addFloat(player.x, player.y-40, `Cần ${r.silver} bạc`, '#8a8a8a', 12); return; }
+  if (r.mat && player.mat < r.mat){ addFloat(player.x, player.y-40, `Cần ${r.mat} Tinh Thạch`, '#8a8a8a', 12); return; }
+  if (r.perm && alchToday() >= 2){ addFloat(player.x, player.y-40, 'Đã luyện đủ 2 đan vĩnh viễn hôm nay — mai luyện tiếp!', '#8a8a8a', 12); return; }
+  player.herbCount -= r.herb; player.silver -= r.silver; if (r.mat) player.mat -= r.mat;
+  if (r.perm) player.alchCount = alchToday() + 1;
+  r.apply(player);
+  calcDerived();
+  addFloat(player.x, player.y-56, `${r.icon} ${r.name} luyện thành!`, '#7ec850', 14);
+  AudioSys.sfx('levelup', 0.6);
+  addEffect({ type:'ring', x:player.x, y:player.y, r:70, color:'#7ec850' });
+  saveGame(); refreshCharTab('alchemy');
+};
+function renderAlchemyTab(){
+  const c = el('char-content'); if (!c) return;
+  let html = `<div class="stat-sec">LUYỆN ĐAN</div>
+    <div style="font-size:12px;color:#b8a878;line-height:1.85;padding:0 2px 8px">
+    Hái <b style="color:#8fd18f">🌿 Thảo Dược</b> ngoài đồng (đi ngang qua bụi thuốc) rồi đem về đây luyện thành đan dược.
+    Đan tiêu hao luyện không giới hạn; đan vĩnh viễn giới hạn <b style="color:#f0d68a">2 lần/ngày</b> (tính riêng với Nội Đan).</div>
+    <div style="font-size:14px;color:#e8dcc0;padding:0 2px 12px">Thảo Dược trong túi: <b style="color:#8fd18f;font-size:16px">${player.herbCount || 0} 🌿</b> ·
+    Đan vĩnh viễn hôm nay: <b style="color:${alchToday()>=2?'#ff8f6b':'#f0d68a'}">${alchToday()}/2</b></div>
+    <div style="display:flex;flex-direction:column;gap:8px">`;
+  for (const r of ALCHEMY_RECIPES){
+    const canHerb = (player.herbCount || 0) >= r.herb, canSilver = player.silver >= r.silver, canMat = !r.mat || player.mat >= r.mat;
+    const canPerm = !r.perm || alchToday() < 2;
+    const can = canHerb && canSilver && canMat && canPerm;
+    html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;border:1px solid rgba(220,200,150,.2);background:rgba(255,250,235,.04)">
+      <span style="font-size:26px">${r.icon}</span>
+      <div style="flex:1">
+        <b style="color:#e8dcc0">${r.name}</b>${r.perm ? ' <span style="color:#ffd76a;font-size:10px">VĨNH VIỄN</span>' : ''}<br>
+        <span style="font-size:11px;color:#b8a878">${r.desc}</span><br>
+        <span style="font-size:10.5px;color:${canHerb?'#8fd18f':'#e88a7a'}">${r.herb} 🌿</span><span style="font-size:10.5px;color:${canSilver?'#e8dcc0':'#e88a7a'}"> · ${r.silver} ◈</span>${r.mat ? `<span style="font-size:10.5px;color:${canMat?'#e8dcc0':'#e88a7a'}"> · ${r.mat} ✦</span>` : ''}
+      </div>
+      <button class="mini-btn" ${can?'':'disabled'} onclick="window.craftPill('${r.id}')">Luyện</button>
+    </div>`;
+  }
+  html += `</div>`;
+  c.innerHTML = html;
+}
 
 
 // ==================== LINH THÚ ĐỒNG HÀNH (bài học Phi Nguyệt + NNTD) ====================
