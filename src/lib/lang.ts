@@ -18,7 +18,9 @@ export function toggleLang() {
   if (window.confirm(ask)) {
     try {
       localStorage.setItem("vlcm_lang", next);
-    } catch {}
+    } catch {
+      /* private-browsing/storage-full — reload still picks up the in-memory default */
+    }
     location.reload();
   }
 }

@@ -2,6 +2,9 @@ import { getDb } from "../api/queries/connection";
 // TODO: import tables from "./schema"
 
 async function seed() {
+  // unused until real seed data is written below (see TODOs); getDb() is the intended entry
+  // point, kept as scaffolding.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const db = getDb();
   console.log("Seeding database...");
 

@@ -4,6 +4,10 @@ import type { SessionPayload } from "./types";
 
 const JWT_ALG = "HS256";
 
+// 1 năm là quá dài cho một session cookie không có cơ chế refresh/rotate — rút xuống 30 ngày
+// (đủ cho trải nghiệm "đăng nhập một lần, chơi lâu dài" của game, giảm cửa sổ rủi ro nếu
+// cookie bị lộ). Người dùng chỉ cần đăng nhập lại sau khi hết hạn, không mất save (save nằm
+// trên DB/localStorage, không phụ thuộc session).
 export async function signSessionToken(
   payload: SessionPayload,
 ): Promise<string> {
@@ -11,7 +15,7 @@ export async function signSessionToken(
   return new jose.SignJWT(payload)
     .setProtectedHeader({ alg: JWT_ALG })
     .setIssuedAt()
-    .setExpirationTime("1 year")
+    .setExpirationTime("30d")
     .sign(secret);
 }
 

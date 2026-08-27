@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { trpc } from "@/providers/trpc";
+import { trpc } from "@/providers/trpcClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { LOGIN_PATH } from "@/const";
@@ -43,7 +43,9 @@ export default function GamePage() {
   const cfgQuery = trpc.config.useQuery(undefined, { staleTime: Infinity, retry: false });
   const localOnly = !!cfgQuery.data?.localOnly; // bản Vercel offline: ẩn login/cloud/BXH
   const localOnlyRef = useRef(localOnly);
-  localOnlyRef.current = localOnly;
+  useEffect(() => {
+    localOnlyRef.current = localOnly;
+  }, [localOnly]);
 
   const lbQuery = trpc.leaderboard.list.useQuery(undefined, {
     enabled: showLb && !localOnly,
@@ -113,20 +115,28 @@ export default function GamePage() {
     savePut.mutate({ data: payload, savedAt });
   }, [savePut]);
 
-  // Giữ tham chiếu mới nhất cho listener
+  // Giữ tham chiếu mới nhất cho listener — ghi vào ref phải nằm trong effect, không phải ngay
+  // trong thân render (React coi việc mutate ref trong lúc render là side effect không an toàn
+  // dưới concurrent rendering/Strict Mode, dù trong thực tế hiếm khi lộ ra thành bug).
   const flushSaveRef = useRef(flushSave);
-  flushSaveRef.current = flushSave;
   const pushCloudRef = useRef(pushCloudToGame);
-  pushCloudRef.current = pushCloudToGame;
   const authedRef = useRef(isAuthenticated);
-  authedRef.current = isAuthenticated;
   const hasCloudRef = useRef(!!cloudSave.data);
-  hasCloudRef.current = !!cloudSave.data;
+  useEffect(() => {
+    flushSaveRef.current = flushSave;
+    pushCloudRef.current = pushCloudToGame;
+    authedRef.current = isAuthenticated;
+    hasCloudRef.current = !!cloudSave.data;
+  }, [flushSave, pushCloudToGame, isAuthenticated, cloudSave.data]);
 
-  // Game sẵn sàng + đã có save cloud → đẩy xuống (xử lý cả 2 chiều race)
+  // Game sẵn sàng + đã có save cloud → đẩy xuống (xử lý cả 2 chiều race). pushCloudToGame's
+  // setCloudStatus call is exactly React's own documented "update an external system" effect
+  // pattern (postMessage to the game iframe) — it only fires once per cloud-data arrival
+  // (guarded by cloudPushed), not on every render, so it can't cascade.
   useEffect(() => {
     if (gameReady.current && !cloudPushed.current && cloudSave.data) {
       cloudPushed.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       pushCloudToGame();
     }
   }, [cloudSave.data, pushCloudToGame]);

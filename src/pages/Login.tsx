@@ -2,21 +2,41 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { trpc } from "@/providers/trpc";
+import { trpc } from "@/providers/trpcClient";
 import { t } from "@/lib/lang";
 
 // ---------- Ronin Wallet (extension / in-app browser) — EIP-1193 ----------
 type Eip1193 = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
 };
+type GoogleIdentity = {
+  initialize: (config: {
+    client_id: string;
+    callback: (resp: { credential?: string }) => void;
+  }) => void;
+  renderButton: (
+    el: HTMLElement,
+    opts: { theme: string; size: string; width: number; text: string; locale: string },
+  ) => void;
+};
+// window.ronin/__eip6963_ronin/google are injected at runtime by the wallet extension and the
+// Google Identity Services script — augmenting the global Window type here (instead of `any`
+// casts scattered through the file) gives real type-checking on every access below.
+declare global {
+  interface Window {
+    ronin?: { provider?: Eip1193; roninProvider?: Eip1193; request?: Eip1193["request"] };
+    __eip6963_ronin?: Eip1193;
+    google?: { accounts?: { id?: GoogleIdentity } };
+  }
+}
 
 /** Ronin Wallet inject window.ronin; hỗ trợ cả EIP-6963 announce. */
 function findRoninProvider(): Eip1193 | null {
-  const w = window as unknown as Record<string, any>;
-  if (w.ronin?.provider?.request) return w.ronin.provider as Eip1193;
-  if (w.ronin?.roninProvider?.request) return w.ronin.roninProvider as Eip1193;
+  const w = window;
+  if (w.ronin?.provider?.request) return w.ronin.provider;
+  if (w.ronin?.roninProvider?.request) return w.ronin.roninProvider;
   if (w.ronin?.request) return w.ronin as Eip1193;
-  return (w.__eip6963_ronin as Eip1193 | undefined) ?? null;
+  return w.__eip6963_ronin ?? null;
 }
 
 // Lắng nghe EIP-6963 (ví hiện đại announce thay vì ghi đè window)
@@ -24,7 +44,7 @@ if (typeof window !== "undefined") {
   window.addEventListener("eip6963:announceProvider", (ev) => {
     const detail = (ev as CustomEvent).detail;
     if (detail?.info?.rdns === "com.roninchain.wallet" && detail?.provider) {
-      (window as any).__eip6963_ronin = detail.provider;
+      window.__eip6963_ronin = detail.provider as Eip1193;
     }
   });
   window.dispatchEvent(new Event("eip6963:requestProvider"));
@@ -50,7 +70,7 @@ export default function Login() {
     let cancelled = false;
 
     function renderBtn() {
-      const g = (window as any).google?.accounts?.id;
+      const g = window.google?.accounts?.id;
       if (!g || cancelled || !googleBtnRef.current) return;
       g.initialize({
         client_id: GOOGLE_CLIENT_ID,
@@ -86,7 +106,7 @@ export default function Login() {
       });
     }
 
-    if ((window as any).google?.accounts?.id) {
+    if (window.google?.accounts?.id) {
       renderBtn();
       return;
     }
@@ -132,9 +152,10 @@ export default function Login() {
       }
       await utils.auth.me.invalidate();
       navigate("/");
-    } catch (e: any) {
-      if (e?.code === 4001) setStatus("Bạn đã từ chối yêu cầu trong ví.");
-      else setStatus(e?.message || "Đăng nhập Ronin thất bại.");
+    } catch (e: unknown) {
+      const err = e as { code?: number; message?: string } | undefined;
+      if (err?.code === 4001) setStatus("Bạn đã từ chối yêu cầu trong ví.");
+      else setStatus(err?.message || "Đăng nhập Ronin thất bại.");
     } finally {
       setBusy(false);
     }
