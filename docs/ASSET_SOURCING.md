@@ -274,18 +274,55 @@ StatusIcons` (131 buff/debuff icons — this game doesn't have a matching buff-i
 Unexplored: `PvE/UI` (94 files), `PvE/Cards/Tools` (91 tool-card icons — could be a good lead for the
 still-unsourced generic weapon skill icons `amkhi`/`danchi`/`bow` if someone wants to keep digging).
 
+## Seventh source — deeper into axie-origins-asset-kit (skills, items, mounts)
+
+Follow-up pass on the same kit as the previous section, this time into `PvE/Cards/Tools/` (90
+flat, single-piece ability/item card icons — a much better fit than `Cards/Chimeras` for generic
+skill/item art, since these aren't tied to a specific named creature) and the leftover unused
+`Avatars/portraits/` files:
+
+- `tl_a.png`/`tl_tp.png` (Metal/Mech) <- `tool-energycoin` (base + a brightness/saturation boost for
+  the tp tier, same pattern as the earlier elemental pairs)
+- `dt_a.png`/`dt_tp.png` (Earth/Bird) <- `tool-deadskill1` (grey stone-cluster art)
+- `amkhi.png` <- `tool-shuriken`; `danchi.png` <- `tool-featherdagger`
+- `th_amkhi_1..7.png` — procedural tiering of the `amkhi` base (progressive saturation/brightness
+  boost per tier, no new source art needed)
+- `th_gangkhi_1..7.png` — cycles through 4 real sword/axe icons (`tool-deadattack0/1/2/3`) with the
+  same per-tier boost
+- **All 64 named technique icons** (`fs_*.png` x30, `vh_*.png` x34 — the doc's earlier "39+36=75"
+  count was wrong) <- round-robin assigned from the remaining ~81 Tools icons (after reserving the
+  ones used above), one unique icon per technique. This is honestly **not** a semantic
+  translation-and-match pass — nobody translated 64 Vietnamese wuxia technique names and picked a
+  thematically fitting icon per name. It's a deterministic, alphabetically-sorted pairing whose only
+  goal was "every technique gets a distinct real piece of Axie art instead of a solid-color square."
+  Good enough to stop looking like wuxia; not a substitute for real curation if that matters later.
+- `pet.png` (item) <- `tool-pacu` (a small fish-companion icon)
+- `3_satlang.png` (mount, dark-wolf tier) <- the `alpha-wolf` **portrait** (not the Cards version,
+  which was already used for `boss_dothong`). Front-facing bust, not the side-view running pose the
+  mount slot really wants — no side-profile mount art exists anywhere surveyed, this was the closest
+  real fit. The other 7 mount tiers (horse/tiger/lion/leopard/qilin/dragon) have no matching creature
+  anywhere in the kit and stay unsourced.
+
+Also checked and explicitly **not** used: `Assets/OriginsKit/PvE/Intents/*.png` (17 flat monochrome
+glyph icons for enemy-action telegraphs — flat single-color style clashes with the painted/shaded
+icons everywhere else in this repo), `PvE/Backgrounds/class/*` (vertical card-battle backdrops, not
+top-down world art), `Textures/StatusIcons` (131 buff/debuff icons — no matching UI slot in this
+game). `PvE/UI` (94 files) was only partially surveyed — worth a closer look if still digging.
+
 ## Not done yet
 
-- Skill icons (`iconA`/`iconTP`) — still pointing at the old wuxia skill icon paths. The "In-game
-  UI" Drive folder has 8 style-reference icons (Sword/Flag/Staff/Cannon/Basic/Tripp Normal/Skill
-  pairs) that could inform a real pass, not wired in yet.
-- Remaining item slots (`mat_*` ×12, `aochoang`, `canh`, `quan`, `pet`) — see the items table above.
-- 29 of 30 mobs, 5 of 8 region maps still on placeholder/wuxia art.
-- `texture_tileset.png` / `prop_rocknbush_darkforest.png` from "Overall Environment" — not yet
-  cropped/wired in as decoration sprites.
-- `Sapidae_F_running.png` from "1.Characters" — a real running-animation character sprite, not yet
-  wired to any class/mob.
-- Equipment icons — nothing matching found in any folder surveyed so far.
-- `2.In Game` folder — re-check access; it may hold exactly this missing art.
-- `CharacterAnimationRender` zips in Project T — worth unzipping to check for more animation
-  frames (idle/attack, not just walk) for the characters already in use.
+Current state as of the axie-origins-asset-kit passes (see `docs/AI_ART_PROMPTS.md` for the
+generation-prompt fallback on each of these):
+
+- Items: `aochoang` (cape), `quan` (pants), `mat_manhcothan`, `mat_tanquyen` (2 masks) — 4/24.
+- NPCs: all 15 — no wuxia-role portraits (merchant, elder, gatekeeper, etc.) found anywhere yet.
+- Mounts: 7/8 (`1_hacma`, `2_hoangma`, `4_thanho`, `5_sutu`, `6_viembao`, `7_kylan`, `8_longlan`) —
+  no side-view horse/tiger/lion/leopard/qilin/dragon creature art found anywhere yet.
+- Rocks: `rock1/2/3.png` — 3/11 trees-folder files (all 8 region trees are done).
+- Skills: `bow.png` + its 7 tiers (`th_bow_1..7.png`) — no bow artwork found anywhere yet.
+- Mobs: `kybinh`, `kylan`, `phando`, `thinu`, `trannhan`, `ttdetu` — 6/30.
+- `Dantian`/`Quze`/`Tien` (46 files) — still needs the design decision described below, not just
+  more sourcing.
+- Unexplored leads if still digging: `axie-origins-asset-kit`'s `PvE/UI` folder (94 files, only
+  partially surveyed), Project T's `CharacterAnimationRender` zips (oversized, would need someone
+  to grab them directly in the Drive UI), the still-unreadable `2.In Game` Drive folder.
