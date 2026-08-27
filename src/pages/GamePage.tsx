@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { trpc } from "@/providers/trpc";
+import { trpc } from "@/providers/trpcClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { LOGIN_PATH } from "@/const";
 import { Link } from "react-router";
 import { t, localeTag } from "@/lib/lang";
 
+// TODO(rename): these 10 stage names are the same Ascension-rename decision as game.js's
+// cultivation-realm terms (Đan Điền/Kim Đan Cảnh/Nguyên Anh/Hóa Thần...) — update together,
+// see docs/NAMING_MAP.md.
 const REALM_NAMES = [
   "Phàm Nhân",
   "Luyện Khí · Tầng 1",
@@ -20,14 +23,16 @@ const REALM_NAMES = [
 ];
 
 const SECT_NAMES: Record<string, string> = {
-  thieulam: "Thiếu Lâm",
-  toanchan: "Toàn Chân",
-  comoc: "Cổ Mộ",
-  baidasan: "Bạch Đà Sơn",
-  minhgiao: "Minh Giáo",
-  doanthi: "Đoàn Thị",
-  daohoa: "Đào Hoa",
-  vophai: "Tán Nhân",
+  thieulam: "Mech",
+  toanchan: "Aquatic",
+  comoc: "Dusk",
+  baidasan: "Reptile",
+  minhgiao: "Beast",
+  doanthi: "Bird",
+  daohoa: "Plant",
+  bug: "Bug",
+  dawn: "Dawn",
+  vophai: "Unclassed",
 };
 
 export default function GamePage() {
@@ -38,7 +43,9 @@ export default function GamePage() {
   const cfgQuery = trpc.config.useQuery(undefined, { staleTime: Infinity, retry: false });
   const localOnly = !!cfgQuery.data?.localOnly; // bản Vercel offline: ẩn login/cloud/BXH
   const localOnlyRef = useRef(localOnly);
-  localOnlyRef.current = localOnly;
+  useEffect(() => {
+    localOnlyRef.current = localOnly;
+  }, [localOnly]);
 
   const lbQuery = trpc.leaderboard.list.useQuery(undefined, {
     enabled: showLb && !localOnly,
@@ -108,20 +115,28 @@ export default function GamePage() {
     savePut.mutate({ data: payload, savedAt });
   }, [savePut]);
 
-  // Giữ tham chiếu mới nhất cho listener
+  // Giữ tham chiếu mới nhất cho listener — ghi vào ref phải nằm trong effect, không phải ngay
+  // trong thân render (React coi việc mutate ref trong lúc render là side effect không an toàn
+  // dưới concurrent rendering/Strict Mode, dù trong thực tế hiếm khi lộ ra thành bug).
   const flushSaveRef = useRef(flushSave);
-  flushSaveRef.current = flushSave;
   const pushCloudRef = useRef(pushCloudToGame);
-  pushCloudRef.current = pushCloudToGame;
   const authedRef = useRef(isAuthenticated);
-  authedRef.current = isAuthenticated;
   const hasCloudRef = useRef(!!cloudSave.data);
-  hasCloudRef.current = !!cloudSave.data;
+  useEffect(() => {
+    flushSaveRef.current = flushSave;
+    pushCloudRef.current = pushCloudToGame;
+    authedRef.current = isAuthenticated;
+    hasCloudRef.current = !!cloudSave.data;
+  }, [flushSave, pushCloudToGame, isAuthenticated, cloudSave.data]);
 
-  // Game sẵn sàng + đã có save cloud → đẩy xuống (xử lý cả 2 chiều race)
+  // Game sẵn sàng + đã có save cloud → đẩy xuống (xử lý cả 2 chiều race). pushCloudToGame's
+  // setCloudStatus call is exactly React's own documented "update an external system" effect
+  // pattern (postMessage to the game iframe) — it only fires once per cloud-data arrival
+  // (guarded by cloudPushed), not on every render, so it can't cascade.
   useEffect(() => {
     if (gameReady.current && !cloudPushed.current && cloudSave.data) {
       cloudPushed.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       pushCloudToGame();
     }
   }, [cloudSave.data, pushCloudToGame]);
@@ -158,7 +173,7 @@ export default function GamePage() {
       <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-[#3a2f22] bg-[#1d1712] px-4">
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold tracking-wide text-[#f0d68a]">
-            ⚔ Giang Hồ Huyễn Ảnh
+            ⚔ Axie Wuxia
           </span>
           {isAuthenticated && cloudStatus && (
             <span className="hidden text-xs text-[#a0ffe9] sm:inline">
@@ -175,15 +190,15 @@ export default function GamePage() {
             className="border-[#5a4a32] bg-transparent text-[#f0d68a] hover:bg-[#2a221a] hover:text-[#ffe9a0]"
             onClick={() => setShowLb(true)}
           >
-            🏆 Bảng Xếp Hạng
+            {t("leaderboard")}
           </Button>
           )}
           {isLoading ? (
-            <span className="text-xs text-[#8a7a60]">Đang tải…</span>
+            <span className="text-xs text-[#8a7a60]">{t("loading")}</span>
           ) : isAuthenticated ? (
             <>
               <span className="text-sm text-[#d8c8a8]">
-                {user?.name || "Hiệp khách"}
+                {user?.name || t("heroDefault")}
               </span>
               <Button
                 variant="outline"
@@ -220,7 +235,7 @@ export default function GamePage() {
       <iframe
         ref={iframeRef}
         src="/game/index.html"
-        title="Giang Hồ Huyễn Ảnh"
+        title="Axie Wuxia"
         className="w-full flex-1 border-0"
         allow="autoplay"
       />
@@ -238,10 +253,10 @@ export default function GamePage() {
             <div className="flex items-center justify-between border-b border-[#3a2f22] px-4 py-3">
               <div>
                 <div className="text-lg font-bold text-[#f0d68a]">
-                  🏆 Bảng Xếp Hạng Võ Lâm
+                  {t("lbTitle")}
                 </div>
                 <div className="text-xs text-[#8a7a60]">
-                  Đồng bộ theo lần lưu cloud gần nhất của mỗi hiệp khách
+                  {t("lbSub")}
                 </div>
               </div>
               <Button
@@ -270,7 +285,7 @@ export default function GamePage() {
               ) : (
                 <div className="space-y-2">
                   {lbQuery.data.map((row) => {
-                    const sectName = row.sect ? SECT_NAMES[row.sect] ?? row.sect : "Vô môn phái";
+                    const sectName = row.sect ? SECT_NAMES[row.sect] ?? row.sect : t("noSect");
                     const realmName = REALM_NAMES[Math.min(row.realm, REALM_NAMES.length - 1)] ?? "Phàm Nhân";
                     const medal =
                       row.rank === 1 ? "🥇" : row.rank === 2 ? "🥈" : row.rank === 3 ? "🥉" : `#${row.rank}`;
@@ -301,7 +316,7 @@ export default function GamePage() {
                         </div>
                         <div className="text-right text-xs text-[#d8c8a8]">
                           <div>Lv {row.level}</div>
-                          <div className="text-[#8a7a60]">{row.kills} tả sát</div>
+                          <div className="text-[#8a7a60]">{row.kills} {t("kills")}</div>
                         </div>
                       </div>
                     );

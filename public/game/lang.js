@@ -446,7 +446,7 @@ const EXACT = {
   'mang vào đời!': 'to carry into the world!',
   '🀄 Xáo Lại Bàn Quẻ': '🀄 Reshuffle the Board',
   '— Chọn tính cách —': '— Choose your nature —',
-  '— Danh Tính Giang Hồ —': '— Your Jianghu Name —',
+  '— Danh Tính Lunacia —': '— Your Lunacia Name —',
   'Tên nhân vật của bạn...': 'Your character name...',
   'Gieo quẻ đặt tên': 'Roll a random name',
   '/help — lenh playtest': '/help — playtest commands',

@@ -1,0 +1,35 @@
+name: CI
+
+# Nothing in this repo previously ran `check`/`lint`/`test` automatically — all three were
+# package.json scripts only, so failures (including the ones fixed alongside this workflow)
+# could sit unnoticed indefinitely. This gates every push/PR against main on all three.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Syntax-check the game engine
+        run: node --check public/game/game.js

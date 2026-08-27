@@ -7,7 +7,10 @@
 <script>
   // Bản demo nội bộ: tự động bật chế độ thử nghiệm (test/max) ngay từ đầu,
   // không cần người xem tự gõ query string. Chỉ có trên nhánh demo-axie-showcase.
-  if (!/([?&])(test|max)=1/.test(location.search)) {
+  // Trước đây chỉ khớp "=1" nên ?max=0 (dùng để TẮT max mode và xem thử cân bằng Lv1 thật) bị
+  // ghi đè ngược lại thành max=1 — giờ chỉ cần có tham số test/max/level1 (bất kể giá trị) là
+  // đủ để bỏ qua auto-redirect, cho phép ?max=0 hoặc ?level1=1 thoát chế độ demo thật sự.
+  if (!/([?&])(test|max|level1)=/.test(location.search)) {
     var sep = location.search ? '&' : '?';
     location.replace(location.pathname + location.search + sep + 'max=1' + location.hash);
   }
@@ -108,10 +111,9 @@
 <!-- Sect select -->
 <div id="sect-select" class="hidden">
   <div class="ss-inner">
-    <h1>Giang Hồ Huyễn Ảnh</h1>
-    <h2>Huyễn Ảnh Chí Tôn · PvE</h2>
+    <h1>Axie Wuxia</h1>
+    <h2>Lunacia · PvE</h2>
     <p class="ss-sub">Chọn Tộc để bắt đầu hành trình — 9 Tộc ngũ hành · Đan Điền · Kinh Mạch · Tuyệt Học · Thú Chiến</p>
-    <button id="btn-sect-video" class="qz-shuffle" style="margin-bottom:10px">🎬 Xem Video Giới Thiệu Các Tộc (90s)</button>
     <div id="sect-cards"></div>
     <label id="max-mode" style="display:none"><input type="checkbox" id="chk-max"> Chế độ thử nghiệm — bắt đầu cấp 60, đầy đủ trang bị &amp; vật liệu</label>
     <button id="btn-continue" class="big-btn hidden">Tiếp Tục Hành Trình</button>
@@ -143,7 +145,6 @@
   <div class="ss-inner">
     <h1>The Calling</h1>
     <p class="ss-sub">Mười cấp trưởng thành đã đủ bản lĩnh — 9 Tộc cùng mở cửa đón nhận.<br>Chọn một, con đường của ngươi sẽ đổi thay mãi mãi.</p>
-    <button id="btn-sect-video2" class="qz-shuffle" style="margin-bottom:10px">🎬 Xem Video Giới Thiệu Các Tộc (90s)</button>
     <div id="ceremony-cards"></div>
     <button id="btn-ceremony-later" class="big-btn" style="opacity:.75;font-size:14px">Để Sau — Ta Còn Muốn Lang Bạt</button>
   </div>
@@ -154,12 +155,6 @@
 <div id="th-celebrate" class="hidden"></div>
 <div id="cheat-console" class="hidden"><div id="cheat-log"></div><input id="cheat-input" placeholder="/help — lenh playtest" autocomplete="off" onkeydown="if(event.key==='Enter'){cheatExec(this.value);this.value='';}if(event.key==='Escape'){toggleCheatConsole();}"></div>
 <div id="overlay" class="hidden"><div id="overlay-inner"></div></div>
-
-<!-- Video giới thiệu Bát Đại Môn Phái -->
-<div id="sect-video-overlay" class="hidden" style="position:fixed;inset:0;z-index:999;background:rgba(6,5,3,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
-  <video id="sect-video" src="assets/video/sect_intro.mp4" style="max-width:92vw;max-height:78vh;border:1px solid rgba(201,162,39,.5);border-radius:10px;box-shadow:0 0 40px rgba(0,0,0,.8)" controls playsinline></video>
-  <button id="btn-sect-video-skip" class="big-btn" style="padding:8px 26px">Bỏ Qua ▶</button>
-</div>
 <script>window.RELEASE_BUILD = false; /* demo build: cho phép cheat console + max mode */</script>
 <script src="strings/en.js"></script>
 <script src="strings/vi.js"></script>

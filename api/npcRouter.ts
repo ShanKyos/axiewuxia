@@ -98,6 +98,17 @@ const chatInput = z.object({
 /* ---------- rate limit (in-memory theo IP — mock GĐ1) ---------- */
 const dayKey = () => new Date().toISOString().slice(0, 10);
 const usage = new Map<string, { day: string; count: number }>();
+// Cả usage lẫn cache dưới đây không tự dọn — với lưu lượng thật (nhiều IP/câu hỏi khác nhau
+// mỗi ngày) sẽ phình vô hạn suốt vòng đời server. Dọn định kỳ (không phải mỗi request, tốn
+// CPU vô ích) — mỗi ~200 lượt gọi chat, quét bỏ entry đã hết hạn của cả 2 map.
+let _sweepCounter = 0;
+function sweepStaleEntries() {
+  if (++_sweepCounter % 200 !== 0) return;
+  const today = dayKey();
+  for (const [k, v] of usage) if (v.day !== today) usage.delete(k);
+  const now = Date.now();
+  for (const [k, v] of cache) if (now - v.at >= CACHE_TTL_MS) cache.delete(k);
+}
 function checkRate(ip: string): number {
   const u = usage.get(ip);
   if (!u || u.day !== dayKey()) {
@@ -190,6 +201,7 @@ export const npcRouter = createRouter({
     const npc = NPC_PROFILES[input.npcId];
     const ip = clientIp(ctx.req);
     const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+    sweepStaleEntries();
 
     // 1. rate limit
     const remaining = checkRate(ip);
