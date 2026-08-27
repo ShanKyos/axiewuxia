@@ -424,3 +424,59 @@ generation-prompt fallback on each of these):
   generated art (see `docs/AI_ART_PROMPTS.md`) or a different source. Other leads if still digging:
   Project T's `CharacterAnimationRender` zips (oversized, would need someone
   to grab them directly in the Drive UI), the still-unreadable `2.In Game` Drive folder.
+
+## Tenth source — `axie-origins-asset-kit`'s music/SFX/VFX folders (previously unsurveyed)
+
+The prior eight passes only ever explored `Assets/OriginsKit/` inside this repo. It turns out the
+same repo has two more top-level trees that were never opened: `Assets/OriginsKit/PvE/Music/` (full
+background-music tracks) and `Assets/OriginsKit/Audio/` (status-effect one-shots), plus a
+completely separate `web-vfx/` subproject (a Vite/PixiJS tool Sky Mavis built for browser playback
+of Origins combat VFX — its own README describes it as "the web plate: additive atlases recorded
+from those same [Unity] prefabs"). Between the two, this closes three real, previously-undocumented
+gaps:
+
+**BGM — 9 of the 15 `BGM_TRACKS` map keys had no matching file.** `game.js` has referenced
+`bgm_daohoa_ost`, `bgm_ngoai`, `bgm_chungnam_ost`, `bgm_tuyettinh_ost`, `bgm_comoc`, `bgm_mongco`,
+`bgm_nhanmon`, `bgm_romance`, and `bgm_tomb` (shared by all 7 dungeon instances) since the original
+prototype — none of these files ever existed, so those regions/dungeons/the companion-bond scene
+played silence (`AudioSys._startTrack()` catches the 404 rejection and does nothing). Filled from
+`PvE/Music/` (`pve_1/2/3.wav`, `halloween.wav`, `halloween_battle_2023.wav`, `lunar_bloodmoon.wav`,
+`lunar_battle.wav`, `pvp.wav`, `home.wav` — moods picked per region from the lore bible's chapter
+table, e.g. the moodier `lunar_bloodmoon` for Frostmire Vale's "Lost Ones," `pvp.wav` — the longest,
+most intense track — for the final Stormgate Pass chapter), converted with the same
+`ffmpeg -codec:a libmp3lame -qscale:a 4` recipe as the original 4 tracks.
+
+**SFX — 8 of the 12 `AudioSys.sfx()` names referenced in code had no file** (`coin`, `die`,
+`forge_fail`, `forge_ok`, `hurt`, `jump`, `levelup`, `quest` — only `crit`/`skill`/`slash`/`ui`
+existed). Filled from `Assets/OriginsKit/Audio/`'s generic status one-shots by closest semantic
+match (`power_awaken.wav`→level-up, `death_mark.wav`→death, `feather.wav`→air-jump, etc. — see the
+`SECT_SFX`-adjacent mapping in `game.js` for the full list). No literal "coin"/"forge anvil" sound
+exists anywhere in the kit — these are the closest-fit substitutes, not exact matches, flagged here
+per this doc's own no-force-fit convention.
+
+**Per-class combat SFX — new, not filling an existing gap.** `web-vfx/public/sfx/` has 130 wav
+files: bite/cast/gore/projectile/slash/smash/throw one-shots for exactly the 9 in-game classes
+(mech/aquatic/dusk/reptile/beast/bird/plant/bug/dawn — a 1:1 id match with `SECTS`). Wired 27 of them
+(`slash`/`cast`/`smash` × 9 classes) into `doBasic()` (basic attack), the class `skillA` cast, and
+the `tp` ultimate cast respectively, via a new `SECT_SFX` id-mapping table — replacing the one
+generic sound every class used before with a distinct one per class. See `docs/AI_ART_PROMPTS.md`-
+style reasoning: the other ~100 wav files (bite/gore/projectile/throw variants, ~35 status-effect
+clips) are real and available but weren't wired — no corresponding trigger point exists yet in
+`game.js` for e.g. "bite" specifically, and buff/debuff SFX would need per-status wiring, a separate
+pass.
+
+**VFX — new. `web-vfx/public/vfx/` has 107 pre-rendered additive sprite-atlas animation clips** (63
+skill + 42 buff/status, one `atlas.png` + `clip.json` per clip, grid-sheet format with fps/frame-size/
+anchor metadata — see the folder's own README for the full format). The existing game already has a
+mature, fully procedural VFX system (`SECT_VFX`/`spawnSkillVfx`/`drawVfx`, canvas-drawn shapes, no
+sprite assets) — replacing it wholesale was out of scope and would have been a regression risk for
+no clear gain. Instead, one `_smash` clip per class (9 total, ~13MB) was added as an **extra overlay**
+layered on top of the existing procedural `sectTP` (ultimate) VFX only — a new lightweight atlas
+player (`VFX_ATLAS_DEFS`/`spawnAtlasVfx`/the `atlasVfx` effect-type branch in the draw loop) reads
+the grid metadata (hardcoded from each clip's `clip.json`, matching how `SECT_VFX` styles are already
+hardcoded JS objects rather than fetched) and additive-blends the correct frame each tick. The other
+98 clips (per-class bite/gore/projectile/throw variants, all ~35 status-effect clips) are real and
+available in the same source repo but unused — no existing trigger point in `game.js` calls for them
+yet; a natural next step would be wiring the status clips (`stunned`, `poison_apply`, `heal`,
+`shield`, etc.) to the game's existing status-effect application code, but that's a separate,
+similarly-sized pass, not done here.
