@@ -825,16 +825,59 @@ function skMile(id){
 }
 // GDD Tiến Hóa Chiêu Thức: mỗi cấp −0,25% hồi chiêu (tối đa −30% ở Lv120) — cuối game tung chiêu liên tục, không khoảng chết
 function skCdScale(id){ return Math.max(0.7, 1 - (skLv(id) - 1) * 0.0025); }
-function effCd(id, base){ return Math.max(0.5, (base || 0) * (player.vhCdMult || 1) * skMile(id).cd * skCdScale(id)); }
+function effCd(id, base){ return Math.max(0.5, (base || 0) * (player.vhCdMult || 1) * skMile(id).cd * skEvoMult(id).cd * skCdScale(id)); }
 // Tiến hóa chiêu ở mốc Lv 40/80/120 (bậc 0-3): kiếm/đạo/sóng/vòng nổ tăng theo bậc — vd Lục Mạch 1→2→3→4 kiếm
 function evoStage(id){ const lv = skLv(id); return lv >= 120 ? 3 : lv >= 80 ? 2 : lv >= 40 ? 1 : 0; }
+// ═══ Tiến Hóa Chiêu Thức — chọn nhánh (Skill Evolution Choice Nodes) ═══
+// Ở mỗi mốc 40/80/120, ngoài phần tự động (thêm kiếm/sóng — evoStage ở trên, không đổi),
+// người chơi chọn 1 trong 2 nhánh cho bậc đó: Bá Đạo (dồn sát thương) hoặc Tốc Chiến (dồn tốc/tiết kiệm).
+// Lựa chọn lưu vĩnh viễn theo từng chiêu, độc lập giữa các chiêu — đa dạng build không tốn art mới.
+const EVO_LVS = [40, 80, 120];
+const EVO_PATHS = {
+  power: { name:'Bá Đạo', desc:'+14% sát thương của chiêu này (dồn theo bậc)', dmg:0.14 },
+  swift: { name:'Tốc Chiến', desc:'−9% hồi chiêu & −6% tiêu hao Nội Lực của chiêu này (dồn theo bậc)', cd:0.09, qi:0.06 },
+};
+function skEvoMult(id){
+  const arr = (player && player.skillEvo && player.skillEvo[id]) || [];
+  let dmg = 1, cd = 1, qi = 1;
+  for (const k of arr){
+    const p = EVO_PATHS[k]; if (!p) continue;
+    if (p.dmg) dmg *= 1 + p.dmg; if (p.cd) cd *= 1 - p.cd; if (p.qi) qi *= 1 - p.qi;
+  }
+  return { dmg, cd, qi };
+}
+function showEvoChoice(id, stageIdx){
+  const stName = ['Trung Thành · Lv40', 'Viên Dung · Lv80', 'Hóa Cảnh · Lv120'][stageIdx] || '';
+  document.getElementById('overlay-inner').innerHTML = `
+    <h2 style="letter-spacing:2px">⚡ Tiến Hóa Chiêu Thức</h2>
+    <p style="margin-bottom:10px"><b style="color:#ffd76a">${skillInfo(id).name}</b> đạt mốc <b>${stName}</b> —
+    chọn một nhánh tiến hóa (vĩnh viễn cho bậc này, không ảnh hưởng các chiêu khác):</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      ${Object.entries(EVO_PATHS).map(([k, p]) => `
+        <button class="big-btn" style="letter-spacing:normal;max-width:230px;font-size:13px;line-height:1.6;text-align:left" onclick="window.chooseEvoPath('${id}',${stageIdx},'${k}')">
+          <b style="font-size:15px;letter-spacing:1px">${p.name}</b><br><span style="font-weight:400;opacity:.9">${p.desc}</span>
+        </button>`).join('')}
+    </div>`;
+  document.getElementById('overlay').classList.remove('hidden');
+}
+window.chooseEvoPath = function(id, stageIdx, path){
+  if (!EVO_PATHS[path]) return;
+  if (!player.skillEvo) player.skillEvo = {};
+  if (!player.skillEvo[id]) player.skillEvo[id] = [];
+  player.skillEvo[id][stageIdx] = path;
+  document.getElementById('overlay').classList.add('hidden');
+  addFloat(player.x, player.y-58, `⚡ ${skillInfo(id).name} — ${EVO_PATHS[path].name}!`, '#ffd76a', 13);
+  AudioSys.sfx('levelup', 0.6);
+  addEffect({ type:'ring', x:player.x, y:player.y, r:70, color:'#ffd76a' });
+  saveGame(); renderSkillPanel();
+};
 // Kiểm tra im lặng cho phím Space (không bắn float báo lỗi)
 function canCastSilent(id){
   if (!player || dead || id == null || !SKILL_DEFS[id]) return false;
   if ((player.cd[id] || 0) > 0) return false;
   const _inf = skillInfo(id);
   if (!_inf.unlocked) return false;
-  if (player.qi < Math.max(1, Math.round(_inf.qi * skMile(id).qi))) return false;
+  if (player.qi < Math.max(1, Math.round(_inf.qi * skMile(id).qi * skEvoMult(id).qi))) return false;
   return true;
 }
 function milestoneTxt(m){ return m.dmg ? `+${m.dmg*100}% sát thương` : m.cd ? `−${m.cd*100}% hồi chiêu` : `−${m.qi*100}% tiêu hao Nội Lực`; }
@@ -852,25 +895,39 @@ window.upgradeSkillUI = function(id){
   if (!player.skillLv) player.skillLv = {};
   player.skillLv[id] = lv + 1;
   const _ms = _msI >= 0 ? SK_MILESTONES[_msI] : null; // GDD Đợt 2 B6: đạt mốc cảnh giới chiêu
+  const _evoIdx = _ms ? EVO_LVS.indexOf(_ms.lv) : -1; // 40/80/120 — mốc tiến hóa có chọn nhánh
   if (_ms){
-    zoneBanner = { text:'☯ ' + skillInfo(id).name, sub:`Đạt mốc ${_ms.name} (cấp ${lv+1}) — ${milestoneTxt(_ms)}${[40,80,120].includes(_ms.lv) ? ' · ⚡ CHIÊU THỨC TIẾN HÓA!' : ''}`, color:'#e8c84a', t:3.5 };
+    zoneBanner = { text:'☯ ' + skillInfo(id).name, sub:`Đạt mốc ${_ms.name} (cấp ${lv+1}) — ${milestoneTxt(_ms)}${_evoIdx >= 0 ? ' · ⚡ CHIÊU THỨC TIẾN HÓA!' : ''}`, color:'#e8c84a', t:3.5 };
     AudioSys.sfx('quest', 0.8);
     addEffect({ type:'ring', x:player.x, y:player.y, r:80, color:'#e8c84a', big:true });
   }
   addFloat(player.x, player.y-52, `⬆ ${skillInfo(id).name} → Lv ${lv + 1}!`, '#6ae88a', 13);
   AudioSys.sfx('levelup', 0.4);
   saveGame(); renderSkillPanel();
+  if (_evoIdx >= 0) showEvoChoice(id, _evoIdx); // yêu cầu chọn nhánh tiến hóa ngay
 };
+window.reopenEvoChoiceUI = function(id, stageIdx){ showEvoChoice(id, stageIdx); };
+function evoBadgeHtml(id){
+  // Huy hiệu nhánh tiến hóa đã chọn (Bá/Tốc mỗi bậc) + nút chọn lại nếu đã đạt mốc mà chưa chọn
+  const _stg = evoStage(id), arr = (player.skillEvo && player.skillEvo[id]) || [];
+  let out = '';
+  for (let i = 0; i < _stg; i++){
+    const p = EVO_PATHS[arr[i]];
+    if (p) out += `<span style="font-size:9px;color:#ffd76a;margin-right:2px" title="Bậc ${i+1}: ${p.name} — ${p.desc}">${p === EVO_PATHS.power ? '⚔' : '💨'}</span>`;
+    else out += `<button class="mini-btn" style="font-size:9px;padding:1px 4px;margin-right:2px;border-color:#7df9ff;color:#7df9ff" title="Chưa chọn nhánh tiến hóa bậc ${i+1} — bấm để chọn" onclick="window.reopenEvoChoiceUI('${id}',${i})">?</button>`;
+  }
+  return out;
+}
 function upBtnHtml(id){
   const lv = skLv(id);
   const _spB = `<button class="mini-btn" style="margin-right:3px;${player.spaceSkill === id ? 'border-color:#7df9ff !important;color:#7df9ff !important;' : ''}" title="Gán chiêu này vào phím Space (thay đòn đánh thường; hồi chiêu/thiếu nội lực thì tự quay về đòn thường)" onclick="window.assignSpaceUI('${id}')">${player.spaceSkill === id ? '⌨✓' : '⌨'}</button>`;
-  if (lv >= 120) return `${_spB}<span style="font-size:10px;color:#ffd76a;margin-right:4px">VIÊN MÃN · HÓA CẢNH ⚡3</span>`;
+  if (lv >= 120) return `${_spB}<span style="font-size:10px;color:#ffd76a;margin-right:4px">VIÊN MÃN · HÓA CẢNH ⚡3</span>${evoBadgeHtml(id)}`;
   const nm = SK_MILESTONES.find(x => x.lv > lv);
   const cur = [...SK_MILESTONES].reverse().find(x => lv >= x.lv);
   const _msI = SK_MILESTONES.findIndex(x => x.lv === lv + 1);
   const _tdNeed = _msI >= 0 ? _msI + 1 : 0;
   const _stg = evoStage(id);
-  return `${_spB}<button class="mini-btn vh-learn-btn" style="margin-right:3px" title="Cấp ${lv}/120${cur ? ' · ' + cur.name : ''} · ⚡tiến hóa bậc ${_stg}/3 (mốc 40/80/120) — nâng: ${skUpCost(id).toLocaleString()} bạc${_tdNeed ? ` + ${_tdNeed} 💠 Tâm Đắc đột phá` : ''}, +2,5% ST, −0,25% hồi chiêu${nm ? ` · mốc kế ${nm.name} (cấp ${nm.lv}): ${milestoneTxt(nm)}` : ''} · cấp kỹ năng ≤ cấp nhân vật" onclick="window.upgradeSkillUI('${id}')">⬆${lv}${_stg ? '⚡' + _stg : ''}${_tdNeed ? '💠' + _tdNeed : ''}</button>`;
+  return `${_spB}<button class="mini-btn vh-learn-btn" style="margin-right:3px" title="Cấp ${lv}/120${cur ? ' · ' + cur.name : ''} · ⚡tiến hóa bậc ${_stg}/3 (mốc 40/80/120, mỗi mốc chọn nhánh Bá Đạo/Tốc Chiến) — nâng: ${skUpCost(id).toLocaleString()} bạc${_tdNeed ? ` + ${_tdNeed} 💠 Tâm Đắc đột phá` : ''}, +2,5% ST, −0,25% hồi chiêu${nm ? ` · mốc kế ${nm.name} (cấp ${nm.lv}): ${milestoneTxt(nm)}` : ''} · cấp kỹ năng ≤ cấp nhân vật" onclick="window.upgradeSkillUI('${id}')">⬆${lv}${_stg ? '⚡' + _stg : ''}${_tdNeed ? '💠' + _tdNeed : ''}</button>${evoBadgeHtml(id)}`;
 }
 window.assignSpaceUI = function(id){
   if (!player) return;
@@ -2215,6 +2272,7 @@ function newPlayer(sectKey){
     autoCfg: { skill:true, potion:true, potionPct:40, range:430, boss:false }, // Cài đặt Auto Farm (panel O)
     vohoc: {}, bikipVH: 0,
     skillLv: {},                                 // cấp từng kỹ năng 1-120                       // Võ Học Phổ: võ học đã học + Bí Kíp
+    skillEvo: {},                                // Tiến Hóa Chiêu Thức: {[skillId]: ['power'|'swift', ...]} theo bậc 40/80/120
     tenuiTT: 0,                                    // Té Núi: hết hạn Trọng Thương (timestamp)
     gt: { t: GT_DAY*0.30 },                          // Lịch Tu Tiên: đồng hồ thế giới (giây game) — mở màn canh Thìn
     ascended: false,                               // Phi Thăng: độ kiếp Hóa Thần thành công → phá bỏ môn phái, thần tiên hóa cảnh
@@ -2337,6 +2395,7 @@ function loadGame(){
     if (player.gkBuffT == null) player.gkBuffT = 0;
     if (!player.vohoc) player.vohoc = {};
     if (!player.skillLv) player.skillLv = {};
+    if (!player.skillEvo) player.skillEvo = {};
     if (player.bikipVH == null) player.bikipVH = 0;
     if (!player.gt) player.gt = { t: GT_DAY*0.30 }; // Lịch Tu Tiên backfill
     if (player.poisonT == null) player.poisonT = 0;
@@ -6974,7 +7033,7 @@ function castSkill(id){
   if (id === 'b') id = 'amkhi'; if (id === 'c') id = 'tp'; // legacy alias
   const d = SKILL_DEFS[id]; if (!d) return;
   const info = skillInfo(id);
-  const _sm = skMile(id), _qiNeed = Math.max(1, Math.round(info.qi * _sm.qi)); // GDD Đợt 2 B6: mốc 80 −12% Nội Lực
+  const _sm = skMile(id), _se = skEvoMult(id), _qiNeed = Math.max(1, Math.round(info.qi * _sm.qi * _se.qi)); // GDD Đợt 2 B6: mốc 80 −12% Nội Lực · Tiến Hóa Bá/Tốc
   const _st = evoStage(id); // bậc tiến hóa chiêu (Lv 40/80/120)
   if (!info.unlocked){ addFloat(player.x, player.y-34, info.lockTxt, '#8a8a8a', 12); return; }
   if ((player.cd[id] || 0) > 0) return;
@@ -6984,9 +7043,9 @@ function castSkill(id){
     if (player.qi < _qiNeed){ addFloat(player.x, player.y-34, 'Không đủ Nội Lực!', '#7fa8e0', 12); return; }
     player.qi -= _qiNeed;
   } else addFloat(player.x, player.y-48, '⚡ Liên Trảm — miễn phí Nội Lực!', '#ffd76a', 12);
-  player.cd[id] = info.cd * (player.vhCdMult || 1) * _sm.cd * skCdScale(id); // mốc 40 −10% · Tẩy Tủy −30% · cấp chiêu −0,25%/cấp (tối đa −30%)
+  player.cd[id] = info.cd * (player.vhCdMult || 1) * _sm.cd * _se.cd * skCdScale(id); // mốc 40 −10% · Tẩy Tủy −30% · cấp chiêu −0,25%/cấp (tối đa −30%) · nhánh Tốc Chiến
   if (vhShout(id, d)) SkillVoice.speak(id); // hô tên chiêu (Quan thoại)
-  const _atk0 = player.atk; player.atk = Math.round(player.atk * skLvMult(id) * _sm.dmg); // GDD Đợt 2 B6: mốc ST nhân dồn // cấp kỹ năng 1-120: +2.5% ST mỗi cấp
+  const _atk0 = player.atk; player.atk = Math.round(player.atk * skLvMult(id) * _sm.dmg * _se.dmg); // GDD Đợt 2 B6: mốc ST nhân dồn · nhánh Bá Đạo // cấp kỹ năng 1-120: +2.5% ST mỗi cấp
   player.comboT = 3; // mở/duy trì chuỗi combo — ám khí trúng trong lúc này sẽ kích Liên Trảm
   player.castT = 0.38; // animation tung tuyệt chiêu
   const sect = SECTS[player.sect];

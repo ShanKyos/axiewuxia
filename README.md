@@ -16,6 +16,7 @@ universe rather than building an open-world RPG from scratch. See
 | Area | State |
 |---|---|
 | Engine (combat, progression, save, auth, cloud sync) | Unchanged from the prototype — already production-tested |
+| Skill evolution choice nodes (new, P0 from the competitive-analysis roadmap) | At skill level 40/80/120 the player now picks a permanent path per skill — Bá Đạo (+14% damage, stacks) or Tốc Chiến (−9% cooldown & −6% Qi cost, stacks) — instead of a fixed automatic bonus. Reuses the existing 1–120 skill-level system and all skill icons; no new art. See `upgradeSkillUI`/`showEvoChoice`/`skEvoMult` in `game.js` |
 | 9-class roster (was: 7 sects) | Renamed + 2 new classes (Bug, Dawn) added, tested |
 | 8 regions + 7 trial chambers (was: maps/dungeons) | Renamed, tested |
 | i18n system (English-first) | New key-based `t()` engine built and proven on one real slice; bulk of game text still pending migration — see the guide above |
