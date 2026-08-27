@@ -7951,35 +7951,35 @@ function drawMaxTuyetHocAura(p){
 
 // ═══════════ CỐT TRUYỆN DẪN NHẬP — trước khi chọn môn phái ═══════════
 const INTRO_PAGES = [
-  `<span class="is-title">GIANG HỒ HUYỄN ẢNH</span>
-<i>Nam Tống niên hiệu Thiệu Hưng — thiên hạ đại loạn.</i>
+  `<span class="is-title">LUNACIA</span>
+<i>Từ ánh chớp đầu tiên của quả trứng thế giới Atia, những Axie đầu tiên chào đời.</i>
 
-Quân Mông Cổ từ thảo nguyên phương Bắc kéo xuống như vũ bão, vây chặt <b>Tương Dương Thành</b> — cánh cửa cuối cùng của Trung Nguyên.
+Nhưng dưới những khu rừng cổ, mảnh vỏ trứng vỡ vụn năm xưa vẫn còn sót lại — và nơi chúng rơi xuống, sự sống bị bóp méo thành <b>Chimera</b>.
 
-Giang hồ chấn động. Ngũ Tuyệt tàn lụi, anh hùng các phái đổ về Tương Dương nghĩa cử cao đẹp... hoặc ẩn mình chờ thời.`,
-  `<span class="is-title">THỜI VẬN CỦA NGƯƠI</span>
-Ngươi — một thiếu niên mồ côi — được <b>Trưởng Làng Thanh Ngưu</b> nuôi dưỡng ở <b>Đào Hoa Đảo</b>, hòn đảo hoa đào nở quanh năm giữa biển Đông.
+Từ lâu, <b>Ngũ Ấn</b> — năm phong ấn rải khắp Lunacia — đã giam giữ phần lõi corrupt nặng nhất. Gần đây, chúng bắt đầu rạn nứt.`,
+  `<span class="is-title">MỘT HATCHLING TRÊN PETALSHADE ISLE</span>
+Ngươi — một hatchling chưa mang Tộc — được <b>Trưởng Làng</b> nuôi lớn trên <b>Petalshade Isle</b>, hòn đảo cánh hoa nở quanh năm giữa vùng biển hiền hòa nhất Lunacia.
 
-Đêm qua, đạo tặc <b>Hắc Phong Sát</b> đã đổ bộ lên đảo, cướp phá làng chài...
+Đêm qua, băng cướp <b>Gloam Marauder</b> — những kẻ nhiễm khí Chimera lâu ngày — đổ bộ lên đảo, cướp phá tổ ấp ven làng...
 
-Buổi sáng nay, lão nhân giao cho ngươi một thanh kiếm cũ:
-<i>"Con à... giang hồ này, sớm muộn cũng cần người đứng ra. Hãy đến <b>Tương Dương</b> bái kiến <b>Quách Đại Hiệp</b> — và bước đi."</i>`,
-  `<span class="is-title">THẤT ĐẠI MÔN PHÁI</span>
-Bảy môn phái lớn đang chiêu mộ đệ tử:
+Sáng nay, Trưởng Làng đặt vào tay ngươi một món hành trang cũ:
+<i>"Con à... Lunacia này sớm muộn cũng cần thêm người đứng ra gánh vác. Hãy vượt eo biển đến <b>Lunaris City</b>, tìm Trưởng Lão Rell — và bắt đầu bước đi của riêng con."</i>`,
+  `<span class="is-title">CHÍN TỘC CỦA LUNACIA</span>
+Chín Tộc lớn đang chờ đón những hatchling đủ bản lĩnh:
 
-<b>Thiếu Lâm</b> 金 · <b>Toàn Chân</b> 水 · <b>Cổ Mộ</b> 木 · <b>Bạch Đà Sơn</b> 水 · <b>Minh Giáo</b> 火 · <b>Đoàn Thị</b> 土 · <b>Đào Hoa</b> 木
+<b>Mech</b> 金 · <b>Aquatic</b> 水 · <b>Dusk</b> 木 · <b>Reptile</b> 水 · <b>Beast</b> 火 · <b>Bird</b> 土 · <b>Plant</b> 木 · <b>Bug</b> 土 · <b>Dawn</b> 水
 
-Mỗi phái một hệ <b>Ngũ Hành</b> — khắc hệ sẽ gây thêm <b>+20% sát thương</b> lên quái bị khắc.
+Mỗi Tộc mang một hệ <b>Ngũ Hành</b> — khắc hệ sẽ gây thêm <b>+20% sát thương</b> lên Chimera bị khắc.
 
-Ngươi sẽ khởi đầu làm <b>Tán Nhân</b> tự do — tới <b>cấp 10</b> đủ danh tiếng, 7 môn phái sẽ mở cửa cho ngươi bái sư.
+Ngươi sẽ khởi đầu là <b>Unclassed</b> tự do — tới <b>cấp 10</b>, đủ sức chứng minh bản thân, ngươi sẽ đáp lời <b>the Calling</b> và chọn Tộc của mình.
 
-Con đường võ học: <b>Rèn trang bị +11</b> · <b>Đan Điền 9 cảnh giới</b> · <b>8 Kinh Mạch</b> · <b>Tuyệt Học 7 tầng</b> — và cuối cùng, <b>Tương Dương Đệ Nhất Hiệp</b>.`,
+Con đường phía trước: <b>Rèn trang bị +11</b> · <b>9 cảnh giới trưởng thành</b> · <b>8 Kinh Mạch</b> · <b>7 tầng Tuyệt Học</b> — và cuối cùng, danh hiệu <b>Lunacia's Number One Trainer</b>.`,
   `<span class="is-title">HÀNH TRÌNH BẮT ĐẦU</span>
-<i>"Từ Đào Hoa Đảo, qua Chung Nam Sơn, vào Cổ Mộ, lên Tuyệt Tình Cốc, ra Mông Cổ Đại Doanh... cho tới Nhạn Môn Quan đẫm máu."</i>
+<i>"Từ Petalshade Isle, qua Thornwood Reach, vào Hollow Roost, lên Frostmire Vale, ra Ashen Steppe... cho tới Stormgate Pass đầy bão tố."</i>
 
-Phía trước là <b>100 cấp tu luyện</b>, vạn quân thảo phạt, và danh hiệp cao nhất giang hồ.
+Phía trước là <b>100 cấp trưởng thành</b>, năm phong ấn đang rạn dần, và danh hiệu cao nhất Lunacia đang chờ ai đó xứng đáng.
 
-Từ thành Tương Dương, bước vào <b>Giang Hồ Huyễn Ảnh.</b>`,
+Từ Petalshade Isle, bước vào <b>Lunacia.</b>`,
 ];
 let introPage = 0;
 function showIntro(){
@@ -10636,13 +10636,13 @@ function dailyHtml(){
   return html;
 }
 
-// ==================== BÁI SƯ NHẬP PHÁI (Tán Nhân cấp 10 chọn môn phái) ====================
-// Người mới khởi đầu làm Tán Nhân (không hệ ngũ hành — không khắc cũng không bị khắc).
-// Tới cấp 10, 7 môn phái mở cửa: chọn 1, nhận lễ vật nhập môn, chiêu thức đổi theo phái.
+// ==================== THE CALLING (Unclassed cấp 10 chọn Tộc) ====================
+// Người mới khởi đầu Unclassed (không hệ ngũ hành — không khắc cũng không bị khắc).
+// Tới cấp 10, 9 Tộc mở cửa: chọn 1, nhận quà nhập Tộc, chiêu thức đổi theo Tộc.
 window.openSectCeremony = function(){
   if (!player || player.sect !== 'vophai') return;
   if (player.level < 10){
-    addFloat(player.x, player.y-56, `Bái sư mở khóa ở cấp 10 (hiện cấp ${player.level})`, '#a0ffe9', 13);
+    addFloat(player.x, player.y-56, `The Calling mở khóa ở cấp 10 (hiện cấp ${player.level})`, '#a0ffe9', 13);
     return;
   }
   const wrap = el('ceremony-cards');
@@ -10656,8 +10656,8 @@ window.openSectCeremony = function(){
     card.innerHTML = `<img class="portrait" src="${SECT_ART[key].portrait}" alt="${s.name}">
       <div class="s-title" style="color:${s.color}">${s.glyph} ${s.name}</div>
       <div class="s-role">${s.role} · hệ <b style="color:${(NGU_HANH[s.element]||{}).color || '#e8ecff'}">${s.element}</b></div>
-      <div class="s-desc">${s.desc}<br><br><b>Nhập môn:</b> ${s.skillA.name}<br><b>Trấn phái:</b> ${s.tp.name}</div>
-      <button class="mini-btn" style="margin-top:10px;font-size:13px;padding:7px 20px;border-color:${s.color};color:${s.color}">Bái Sư</button>`;
+      <div class="s-desc">${s.desc}<br><br><b>Kỹ năng khởi đầu:</b> ${s.skillA.name}<br><b>Tuyệt kỹ Tộc:</b> ${s.tp.name}</div>
+      <button class="mini-btn" style="margin-top:10px;font-size:13px;padding:7px 20px;border-color:${s.color};color:${s.color}">Gia Nhập</button>`;
     card.addEventListener('click', ()=>chooseSect(key));
     wrap.appendChild(card);
   }
@@ -10669,21 +10669,21 @@ window.chooseSect = function(key){
   if (!player || player.sect !== 'vophai' || !SECTS[key] || key === 'vophai') return;
   player.sect = key;
   const s = SECTS[key];
-  player.silver += 500; // lễ vật nhập môn
+  player.silver += 500; // quà nhập Tộc
   const w = genItem(10, 0.25); w.slot = 'weapon'; w.slotName = 'Vũ Khí';
   if (player.inv.length < 30) player.inv.push(w); else player.silver += 300;
-  player.skillBar = ['a','amkhi','tp',null,null]; // gán sẵn chiêu môn phái mới
-  // Nghi thức Thần Binh: hồ lô Tán Nhân hóa thành thần binh của phái mới
+  player.skillBar = ['a','amkhi','tp',null,null]; // gán sẵn chiêu của Tộc mới
+  // Elder's Relic hiện thân: hành trang Unclassed hóa thành báu vật của Tộc mới
   const _tb = THANBINH[key];
   if (_tb){
     addEffect({ type:'ring', x:player.x, y:player.y, r:110, color:_tb.color, big:true });
-    setTimeout(()=>{ if (player) addFloat(player.x, player.y-70, `⚔ THẦN BINH 【${_tb.name}】hiện thân — theo người trên đường võ lâm!`, _tb.color, 15); }, 600);
+    setTimeout(()=>{ if (player) addFloat(player.x, player.y-70, `⚔ 【${_tb.name}】hiện thân — theo người khắp Lunacia!`, _tb.color, 15); }, 600);
   }
   applySkillIcons();
   calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
   el('sect-ceremony').classList.add('hidden');
-  zoneBanner = { text:`BÁI NHẬP ${s.name.toUpperCase()}`,
-    sub:`Học được ${s.skillA.name} (phím 1) · ${s.tp.name} (phím 3) — lễ vật: 500◈ + vũ khí môn phái`,
+  zoneBanner = { text:`GIA NHẬP TỘC ${s.name.toUpperCase()}`,
+    sub:`Học được ${s.skillA.name} (phím 1) · ${s.tp.name} (phím 3) — quà nhập Tộc: 500◈ + vũ khí Tộc`,
     color:s.color, t:5.5 };
   addEffect({ type:'ring', x:player.x, y:player.y, r:130, color:s.color, big:true });
   AudioSys.sfx('levelup', 0.9);
@@ -10692,7 +10692,7 @@ window.chooseSect = function(key){
 };
 el('btn-ceremony-later').addEventListener('click', ()=>{
   el('sect-ceremony').classList.add('hidden');
-  addFloat(player.x, player.y-56, 'Tán Nhân tự do cũng tốt — muốn bái sư, mở Nhân Vật (C) bất cứ lúc nào!', '#9aa8d4', 13);
+  addFloat(player.x, player.y-56, 'Unclassed tự do cũng tốt — muốn đáp lời Calling, mở Nhân Vật (C) bất cứ lúc nào!', '#9aa8d4', 13);
   AudioSys.sfx('ui', 0.5);
 });
 
