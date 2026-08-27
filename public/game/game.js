@@ -279,6 +279,16 @@ const VFX_ATLAS_DEFS = {
   plant_smash:   { cols:8, rows:5, frameW:647, frameH:324, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
   bug_smash:     { cols:8, rows:5, frameW:650, frameH:324, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
   dawn_smash:    { cols:8, rows:5, frameW:578, frameH:281, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
+  // Sourced status-effect overlay clips (same kit, web-vfx/public/vfx/<id>/) — generic (not per-class),
+  // played once at the moment a status effect actually lands (see playStatusFx below).
+  stunned:      { cols:8, rows:11, frameW:377, frameH:429, frames:81, fps:30, anchorX:191.4, anchorY:192.5 },
+  bleed_apply:  { cols:8, rows:9,  frameW:467, frameH:440, frames:69, fps:30, anchorX:227.4, anchorY:225.0 },
+  heal:         { cols:8, rows:9,  frameW:432, frameH:437, frames:70, fps:30, anchorX:215.3, anchorY:220.4 },
+  shield:       { cols:8, rows:11, frameW:476, frameH:402, frames:81, fps:30, anchorX:225.6, anchorY:198.9 },
+  poison_apply: { cols:8, rows:11, frameW:458, frameH:457, frames:81, fps:30, anchorX:228.2, anchorY:227.7 },
+  // 'weak' (stat-debuff aura) is the closest-fit substitute for slow/chill — the kit has no
+  // literal slow/freeze clip (see docs/ASSET_SOURCING.md's no-force-fit convention).
+  weak:         { cols:8, rows:9,  frameW:494, frameH:497, frames:69, fps:30, anchorX:246.4, anchorY:232.1 },
 };
 const VFX_ATLAS_IMGS = {};
 function getVfxAtlasImg(id){
@@ -289,6 +299,12 @@ function getVfxAtlasImg(id){
 function spawnAtlasVfx(id, x, y, scale){
   const def = VFX_ATLAS_DEFS[id]; if (!def) return;
   addEffect({ type:'atlasVfx', id, x, y, scale: scale || 0.4, dur: def.frames / def.fps });
+}
+// One-shot status-effect cue: generic (not per-class) SFX + atlas-clip overlay, played once at the
+// exact moment a status effect is applied (stun/bleed/shield/poison/heal/slow) — not per DoT tick.
+function playStatusFx(sfxName, vfxId, x, y, vol, scale){
+  AudioSys.sfx(sfxName, vol == null ? 0.55 : vol);
+  if (vfxId) spawnAtlasVfx(vfxId, x, y, scale == null ? 0.34 : scale);
 }
 // Bản phát hành: khóa toàn bộ playtest/cheat — người chơi tự trải nghiệm từ đầu
 const RELEASE_BUILD = window.RELEASE_BUILD === true;
@@ -1374,9 +1390,18 @@ function castVohoc(id){
     if (crit) dmg *= (player.critDmgMult || 2);
     hurtMob(m, Math.round(dmg), crit ? 'crit' : 'tp');
     if (m.dead) return;
-    if (fx.stun){ m.stunT = Math.max(m.stunT || 0, fx.stun * (m.def.bossKind ? 0.4 : 1)); addFloat(m.x, m.y-m.def.size-24, 'CHOÁNG!', '#ffe9a8', 11); }
-    if (fx.slow){ m.slowT = Math.max(m.slowT || 0, fx.slow.t); m.slowPct = 1 - fx.slow.pct; addFloat(m.x, m.y-m.def.size-24, 'CHẬM!', '#7ab0d8', 11); }
-    if (fx.bleed){ m.bleedT = fx.bleed.t; m.bleedDps = Math.max(1, Math.round(player.atk * 0.35)); addFloat(m.x, m.y-m.def.size-24, 'CHẢY MÁU!', '#c03a4a', 11); }
+    // Sourced per-class action SFX (axie-origins-asset-kit) — flavors the VOHOC/FUSION hit landing by
+    // archetype: bleed reads as a claw/bite chomp, aoe reads as a heavier gore-style hit, kb (no bleed)
+    // reads as a knockback/throw. Additive layer alongside the fx floats/status below, not a replacement.
+    const _hitCls = SECT_SFX[player.sect];
+    if (_hitCls){
+      if (fx.bleed) AudioSys.sfx('bite_' + _hitCls, 0.45);
+      else if (v.type === 'aoe') AudioSys.sfx('gore_' + _hitCls, 0.45);
+      else if (fx.kb) AudioSys.sfx('throw_' + _hitCls, 0.45);
+    }
+    if (fx.stun){ m.stunT = Math.max(m.stunT || 0, fx.stun * (m.def.bossKind ? 0.4 : 1)); addFloat(m.x, m.y-m.def.size-24, 'CHOÁNG!', '#ffe9a8', 11); playStatusFx('stunned', 'stunned', m.x, m.y, 0.5, 0.3); }
+    if (fx.slow){ m.slowT = Math.max(m.slowT || 0, fx.slow.t); m.slowPct = 1 - fx.slow.pct; addFloat(m.x, m.y-m.def.size-24, 'CHẬM!', '#7ab0d8', 11); playStatusFx('weak', 'weak', m.x, m.y, 0.45, 0.28); }
+    if (fx.bleed){ m.bleedT = fx.bleed.t; m.bleedDps = Math.max(1, Math.round(player.atk * 0.35)); addFloat(m.x, m.y-m.def.size-24, 'CHẢY MÁU!', '#c03a4a', 11); playStatusFx('bleed', 'bleed_apply', m.x, m.y, 0.5, 0.3); }
     if (fx.kb) vhKnockback(m, Math.atan2(m.y - player.y, m.x - player.x), fx.kb);
   };
   if (v.type === 'cone'){
@@ -1418,6 +1443,10 @@ function castVohoc(id){
       projectiles.push({ x:player.x, y:player.y, ang:base + off, speed:spd, dmg:player.atk * v.mult * _mul, kind:'skill', life:0.95, color:(_vc && _vc.rainbow) ? `hsl(${Math.round(i*360/Math.max(n,1))},85%,66%)` : col, pierce:!!fx.pierce, vhfx:fx, style:(_vc && _vc.proj) || undefined, seed:i });
     }
     spawnSkillVfx(id, v, 'cast', base, 56);
+    // Sourced per-class projectile-launch SFX — VOHOC/FUSION 'proj' skills only ever got the
+    // generic 'skill' sfx (set at the bottom of castSkill) before this; this is additive, not a swap.
+    const _projCls = SECT_SFX[player.sect];
+    if (_projCls) AudioSys.sfx('projatk_' + _projCls, 0.45);
   }
   else if (v.type === 'aoe'){
     const R = (fx.r || 160) * (1 + 0.12 * _st); // tiến hóa: phạm vi +12%/bậc
@@ -1452,7 +1481,7 @@ function castVohoc(id){
     spawnSkillVfx(id, v, 'buff', 0, 95);
     const _bt = Math.round((fx.t || 0) * (1 + 0.5 * _st)); // tiến hóa: buff bền +50%/bậc
     if (fx.dmgPct){ player.vhDmgT = _bt; player.vhDmgPct = fx.dmgPct; addFloat(player.x, player.y-60, `+${fx.dmgPct}% ST (${_bt}s)`, col, 13); }
-    if (fx.shieldPct){ player.vhShield = Math.round(player.maxHp * fx.shieldPct * (1 + 0.25 * _st) / 100); addFloat(player.x, player.y-60, `🛡 KHIÊN ${player.vhShield}`, '#8ad8c8', 13); }
+    if (fx.shieldPct){ player.vhShield = Math.round(player.maxHp * fx.shieldPct * (1 + 0.25 * _st) / 100); addFloat(player.x, player.y-60, `🛡 KHIÊN ${player.vhShield}`, '#8ad8c8', 13); playStatusFx('shield', 'shield', player.x, player.y, 0.55, 0.32); }
     if (fx.reflect){ player.vhReflT = _bt; addFloat(player.x, player.y-60, `PHẢN ĐÒN ${_bt}s!`, col, 13); }
     if (fx.aspdPct){ player.vhAspdT = _bt; player.vhAspdPct = fx.aspdPct; addFloat(player.x, player.y-60, `TỐC ĐÁNH +${fx.aspdPct}%`, col, 13); }
     if (fx.crit){ player.vhCritT = _bt; addFloat(player.x, player.y-74, `BẠO KÍCH ${_bt}s!`, '#ff6a5a', 13); }
@@ -3528,6 +3557,7 @@ function usePotion(){
   addEffect({ type:'ring', x:player.x, y:player.y, r:46, color:'#6ae88a' });
   for (let i=0;i<5;i++) addEffect({ type:'ink', x:player.x, y:player.y-10, vx:rnd(-40,40), vy:rnd(-70,-20), color:'#6ae88a' });
   AudioSys.sfx('quest', 0.5);
+  playStatusFx('heal', 'heal', player.x, player.y, 0.5, 0.34); // sourced heal SFX+VFX layered on top of the existing quest chime & procedural ring/ink burst above
   saveGame();
 }
 function doBasic(){
@@ -4351,9 +4381,11 @@ function update(dt){
         shakeT = Math.max(shakeT, 0.16); shakeMag = Math.min(6, 2 + 30*dmg/Math.max(1,player.maxHp));
         // Tình Hoa Độc Yêu: đánh trúng gây độc — Cương Khí (tuyệt học) kháng độc
         if (m.def.poisonHit){
+          const _freshPoison = player.poisonT <= 0; // cue only on the moment poison first lands, not every re-tick
           const gkT = (player.gangkhi && player.gangkhi.tier) || 0;
           player.poisonT = 3;
           player.poisonDps = Math.max(1, Math.round(player.maxHp * 0.008 * (1 - Math.min(0.8, gkT*0.12)) * (1 - (player.vhPoisonRes || 0))));
+          if (_freshPoison) playStatusFx('poison', 'poison_apply', player.x, player.y, 0.5, 0.3);
         }
         AudioSys.sfx('hurt', 0.7);
         if (!mobCounter) addDmgFloat(player, player.x+rnd(-8,8), player.y-26, dmg, '#ff7a6a', 13);
@@ -4426,11 +4458,17 @@ function update(dt){
         let src = p.kind==='amkhi' ? 'amkhi' : 'hit';
         if (src==='hit' && Math.random() < player.crit){ dmg *= 2; src='crit'; }
         hurtMob(m, dmg, src);
+        // Sourced per-class projectile-impact SFX — the generic "this ranged attack landed" moment,
+        // shared by every player-fired projectile kind (skill/amkhi/bow/danchi) that reaches this loop.
+        if (!m.dead){
+          const _projHitCls = SECT_SFX[player.sect];
+          if (_projHitCls) AudioSys.sfx('projhit_' + _projHitCls, 0.4);
+        }
         // Võ Học Phổ: hiệu ứng trúng đích của chiêu projectile (Niêm Hoa Chỉ, Đoạt Mệnh Phù, Độc Cô…)
         if (p.vhfx && !m.dead){
           const _vf = p.vhfx;
-          if (_vf.stun){ m.stunT = Math.max(m.stunT || 0, _vf.stun * (m.def.bossKind ? 0.4 : 1)); addFloat(m.x, m.y-m.def.size-22, 'CHOÁNG!', '#ffe9a8', 11); }
-          if (_vf.poison){ m.poisonT = _vf.poison.t; m.poisonDps = Math.max(1, Math.round(player.atk * 0.3)); addFloat(m.x, m.y-m.def.size-22, 'SINH TỬ PHÙ!', '#7ac86a', 11); }
+          if (_vf.stun){ m.stunT = Math.max(m.stunT || 0, _vf.stun * (m.def.bossKind ? 0.4 : 1)); addFloat(m.x, m.y-m.def.size-22, 'CHOÁNG!', '#ffe9a8', 11); playStatusFx('stunned', 'stunned', m.x, m.y, 0.5, 0.3); }
+          if (_vf.poison){ m.poisonT = _vf.poison.t; m.poisonDps = Math.max(1, Math.round(player.atk * 0.3)); addFloat(m.x, m.y-m.def.size-22, 'SINH TỬ PHÙ!', '#7ac86a', 11); playStatusFx('poison', 'poison_apply', m.x, m.y, 0.5, 0.3); }
         }
         // LIÊN TRẢM (võ học kết hợp): ám khí trúng trong chuỗi combo chiêu thức → cửa sổ 2.5s
         if (p.kind === 'amkhi' && (player.comboT || 0) > 0 && (player.ltT || 0) <= 0){
@@ -7289,6 +7327,9 @@ function castSkill(id){
       projectiles.push({ x:player.x, y:player.y, ang:base+off, speed:520, dmg:player.atk*SKILL_DEFS.bow.mult, kind:'bow', life:0.95, color:bwT.color, pierce:true });
     }
     addEffect({ type:'arc', x:player.x, y:player.y, face:base, r:50, color:bwT.color });
+    // Sourced per-class projectile-launch SFX — Linh Tiễn Xạ only ever got the generic 'skill' sfx
+    // (sfxTag default, set below) before this; additive, doesn't touch that fallback.
+    if (SECT_SFX[player.sect]) AudioSys.sfx('projatk_' + SECT_SFX[player.sect], 0.45);
   }
   else if (d.kind === 'tieuhon'){ // Ám Nhiên Tiêu Hồn Chưởng — AoE lớn
     const R = 230 + 25 * _st; // tiến hóa: chưởng lực lan rộng
@@ -10240,6 +10281,7 @@ window.craftPill = function(id){
   addFloat(player.x, player.y-56, `${r.icon} ${r.name} luyện thành!`, '#7ec850', 14);
   AudioSys.sfx('levelup', 0.6);
   addEffect({ type:'ring', x:player.x, y:player.y, r:70, color:'#7ec850' });
+  if (r.id === 'hoixuan' || r.id === 'thanhdoc') playStatusFx('heal', 'heal', player.x, player.y, 0.5, 0.32); // discrete heal-pill event
   saveGame(); refreshCharTab('alchemy');
 };
 function renderAlchemyTab(){
