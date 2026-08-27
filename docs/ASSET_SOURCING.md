@@ -230,6 +230,50 @@ qilin — no qilin/dragon-hybrid art exists in any folder searched). A found-but
 New.png` (a higher-res redo of the already-known Ocean biome) — doesn't thematically match any
 remaining region, not force-fit.
 
+## Sixth source — axieinfinity/axie-origins-asset-kit (20 more mobs)
+
+The user pointed at a different kind of source: [`axieinfinity/axie-origins-asset-kit`](https://github.com/axieinfinity/axie-origins-asset-kit),
+the official first-party Unity asset kit for **Axie Infinity: Origins** (the card game), hosted in
+the Axie Infinity GitHub org. **License note** (`LICENSE.md`): these are Sky Mavis/Axie Infinity IP,
+but usage is explicitly scoped — *"Use is limited to Axie Vibeathon and other Sky Mavis-approved
+programs... If you are not building for Axie Vibeathon or another approved program, do not ship
+these files."* Confirmed with the user that Axie Wuxia is a Vibeathon project before using anything
+from it.
+
+Most of the kit is Unity-native (Spine skeletal rigs, shader-graph materials, animation clips) and
+not directly usable as flat sprites — notably `Assets/OriginsKit/PvE/Chimeras/*.png` looks like
+single creature images by folder name but is actually a disassembled sprite sheet of separate rig
+parts (head, ear, teeth, tail as independent floating pieces), not a usable portrait. Two subfolders
+*are* flat, single-piece, ready-to-use images:
+
+- `Assets/OriginsKit/PvE/Avatars/portraits/*.png` — 200x200 assembled creature portraits, same
+  rounded/chibi/thick-outline house style as everything else in this repo. Used for regular mobs.
+- `Assets/OriginsKit/PvE/Cards/Chimeras/*-NN-00.png` — 320x320 full ability-card illustrations
+  (multiple numbered variants per creature = different abilities, not power tiers — picked whichever
+  variant read as most "boss-like" per creature). Used for the elite `boss_*` mobs, so bosses read as
+  more detailed/dramatic than regular mobs, same intent as the earlier Premium-Axie boss pick.
+
+20 mobs wired in this pass (`wolf`, `mocnhan`, `assassin`, `cungthu`, `cuongbinh`, `daokhach`,
+`duhiep` [shared by mob defs `duhiep1/2/3`], `thamtu`, `caodo`, `bandao`, `bandit`, `hautu`, `xanu`
+from portraits; `boss_dothong`, `boss_hacphong`, `boss_mochu`, `boss_phando`, `boss_sontac`,
+`boss_thienbinh`, `boss_tinhhoa` from cards) — picked by loose name/vibe fit (e.g. `mocnhan` "wood
+puppet" → `treant`, `cungthu` "archer" → `dryad-ranger`). `machito`/`shilin` portraits exist in this
+kit too but were skipped — those names are already the sourced class portraits for Mech/Reptile, and
+reusing them as enemies would put a player's own class face on a monster.
+
+24/30 mobs now have real sourced Axie art. Still unmatched: `kybinh`, `kylan` (qilin — nothing in
+this kit resembles a dragon-deer-lion hybrid, better to stay unsourced than force a generic slime
+onto a very specific mythical-creature name), `phando`, `thinu`, `trannhan`, `ttdetu` — the kit's
+portrait supply (23 named creatures) ran out before covering every remaining slot; ran out of
+close-enough options rather than force weak fits.
+
+Also present in the kit but not used here: `PvE/Intents/*.png` (flat monochrome glyph icons for
+enemy action telegraphs — style doesn't match the painted/shaded skill icons already in the repo),
+`PvE/Backgrounds/class/*` (vertical card-battle backdrops, not top-down world art), `Textures/
+StatusIcons` (131 buff/debuff icons — this game doesn't have a matching buff-icon UI slot).
+Unexplored: `PvE/UI` (94 files), `PvE/Cards/Tools` (91 tool-card icons — could be a good lead for the
+still-unsourced generic weapon skill icons `amkhi`/`danchi`/`bow` if someone wants to keep digging).
+
 ## Not done yet
 
 - Skill icons (`iconA`/`iconTP`) — still pointing at the old wuxia skill icon paths. The "In-game
