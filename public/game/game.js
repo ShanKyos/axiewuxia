@@ -561,12 +561,12 @@ function nearestFree(mapId, x, y){
 }
 // Ải cấp: vòng trấn áp chặn tân thủ vào khu quái mạnh — đủ cấp mới qua
 const AI_PASSES = [
-  { map:'ngoai',     x:1650, y:1450, r:95,  reqLv:14,  name:'Sào Huyệt Giang Phi' },
-  { map:'chungnam',  x:1620, y:640,  r:100, reqLv:26,  name:'Cổng Lăng Cổ Tích' },
-  { map:'comoc',     x:2100, y:400,  r:90,  reqLv:50,  name:'Cửa Mộ Sâu' },
-  { map:'tuyettinh', x:1750, y:1100, r:100, reqLv:68,  name:'Cổng Cốc Sâu' },
-  { map:'mongco',    x:1800, y:520,  r:100, reqLv:88,  name:'Vòng Vây Kỵ Binh' },
-  { map:'nhanmon',   x:1475, y:1000, r:110, reqLv:104, name:'Cổng Thành Nhạn Môn' },
+  { map:'ngoai',     x:1650, y:1450, r:95,  reqLv:14,  name:'Hang Ổ Hắc Phong' },
+  { map:'chungnam',  x:1620, y:640,  r:100, reqLv:26,  name:'Cổng Rừng Gai' },
+  { map:'comoc',     x:2100, y:400,  r:90,  reqLv:50,  name:'Cửa Tổ Sâu' },
+  { map:'tuyettinh', x:1750, y:1100, r:100, reqLv:68,  name:'Cổng Đầm Sương' },
+  { map:'mongco',    x:1800, y:520,  r:100, reqLv:88,  name:'Vòng Vây Tro Tàn' },
+  { map:'nhanmon',   x:1475, y:1000, r:110, reqLv:104, name:'Cổng Bão Tố' },
 ];
 function collideAiPass(){
   for (const a of AI_PASSES){
@@ -1756,13 +1756,13 @@ const MATON_HA = ['daohoa','ngoai','chungnam'];
 const MATON_THUONG = ['comoc','tuyettinh','mongco','nhanmon'];
 // Truy Nã Lệnh — boss săn ngày theo vùng cấp (NPC Bổ Đầu · Tương Dương)
 const TRUYNA_BANDS = [
-  { max:14,  map:'daohoa',    name:'Hắc Phong Phân Đà Chủ' },
+  { max:14,  map:'daohoa',    name:'Hắc Phong Đầu Lĩnh' },
   { max:29,  map:'ngoai',     name:'Sơn Tặc Đại Đầu Mục' },
-  { max:44,  map:'chungnam',  name:'Toàn Chân Phản Đồ Thủ Lĩnh' },
-  { max:59,  map:'comoc',     name:'Cổ Mộ Thi Vương' },
-  { max:74,  map:'tuyettinh', name:'Tình Hoa Độc Yêu Vương' },
-  { max:89,  map:'mongco',    name:'Mông Cổ Tàn Tướng' },
-  { max:999, map:'nhanmon',   name:'Đột Quyết Sát Thần' },
+  { max:44,  map:'chungnam',  name:'Chỉ Huy Phản Loạn Thornwood' },
+  { max:59,  map:'comoc',     name:'Chúa Tể Hang Sâu' },
+  { max:74,  map:'tuyettinh', name:'Độc Hoa Chúa Tể' },
+  { max:89,  map:'mongco',    name:'Tàn Tướng Tro Tàn' },
+  { max:999, map:'nhanmon',   name:'Sát Thần Bão Tố' },
 ];
 // Vạn Duyên Các — gacha NPC Thần Toán Tử: 5% bí kíp hiếm / 15% châu / 25% trang bị / 30% vật liệu / 25% bạc·tu vi (KHÔNG pity)
 const VANDUYEN_RATES = [ { k:'bikip', w:5 }, { k:'chau', w:15 }, { k:'trangbi', w:25 }, { k:'vatlieu', w:30 }, { k:'bac', w:25 } ];
@@ -2705,33 +2705,33 @@ const BOSS_DEFS = {
   ngoai: { thuve:[
       { id:'ng1', name:'Sơn Tặc Đầu Mục',    lv:13, el:'Kim',  img:'bandit',   x:.28, y:.34, moves:['vach','xung','cuong'] },
       { id:'ng2', name:'Độc Nhãn Lang Vương',lv:16, el:'Mộc',  img:'wolf',     x:.62, y:.62, moves:['xung','vong','goi'] },
-      { id:'ng3', name:'Hắc Y Sát Thủ',      lv:19, el:'Thủy', img:'assassin', x:.40, y:.80, moves:['vach','xung','cuong'] } ],
-    tranai: { id:'ng4', name:'Bạch Diện Ma Quân', lv:22, el:'Hỏa', img:'boss_sontac', x:.85, y:.78, moves:['vach','vong','goi','cuong'] } },
+      { id:'ng3', name:'Đặc Vụ Hắc Phong',   lv:19, el:'Thủy', img:'assassin', x:.40, y:.80, moves:['vach','xung','cuong'] } ],
+    tranai: { id:'ng4', name:'Ma Quân Sương Trắng', lv:22, el:'Hỏa', img:'boss_sontac', x:.85, y:.78, moves:['vach','vong','goi','cuong'] } },
   chungnam: { thuve:[
-      { id:'cn1', name:'Phản Đồ Đạo Sĩ',     lv:23, el:'Thủy', img:'phando',   x:.30, y:.32, moves:['vach','xung','goi'] },
-      { id:'cn2', name:'Huyền Giáp Thần Quy',lv:26, el:'Thổ',  img:'mocnhan',  x:.64, y:.58, moves:['vong','vach','cuong'] },
-      { id:'cn3', name:'Phản Đồ Chân Nhân',  lv:29, el:'Thủy', img:'boss_phando', x:.44, y:.80, moves:['xung','vach','vong'] } ],
-    tranai: { id:'cn4', name:'Thái Hư Kiếm Thánh', lv:32, el:'Thủy', img:'bandao', x:.86, y:.80, moves:['vach','xung','vong','cuong'] } },
+      { id:'cn1', name:'Kẻ Phản Tộc',        lv:23, el:'Thủy', img:'phando',   x:.30, y:.32, moves:['vach','xung','goi'] },
+      { id:'cn2', name:'Rùa Giáp Cổ Đại',    lv:26, el:'Thổ',  img:'mocnhan',  x:.64, y:.58, moves:['vong','vach','cuong'] },
+      { id:'cn3', name:'Trưởng Lão Tha Hóa', lv:29, el:'Thủy', img:'boss_phando', x:.44, y:.80, moves:['xung','vach','vong'] } ],
+    tranai: { id:'cn4', name:'Vệ Thần Thornwood Reach', lv:32, el:'Thủy', img:'bandao', x:.86, y:.80, moves:['vach','xung','vong','cuong'] } },
   comoc: { thuve:[
-      { id:'cm1', name:'Thi Binh Thống Lĩnh',lv:43, el:'Thổ',  img:'kybinh',   x:.30, y:.32, moves:['xung','vach','goi'] },
-      { id:'cm2', name:'Âm Dương Táng Giả',  lv:46, el:'Thủy', img:'thinu',    x:.62, y:.58, moves:['vong','xung','cuong'] },
-      { id:'cm3', name:'Thi Vương Bất Tử',   lv:49, el:'Thổ',  img:'mocnhan',  x:.42, y:.80, moves:['vach','vong','goi'] } ],
-    tranai: { id:'cm4', name:'Cổ Mộ Tổ Sư', lv:52, el:'Mộc', img:'boss_mochu', x:.85, y:.80, moves:['vong','xung','goi','cuong'] } },
+      { id:'cm1', name:'Chỉ Huy Vong Binh',  lv:43, el:'Thổ',  img:'kybinh',   x:.30, y:.32, moves:['xung','vach','goi'] },
+      { id:'cm2', name:'Kẻ An Táng Bóng Tối',lv:46, el:'Thủy', img:'thinu',    x:.62, y:.58, moves:['vong','xung','cuong'] },
+      { id:'cm3', name:'Chúa Tể Bất Tử',     lv:49, el:'Thổ',  img:'mocnhan',  x:.42, y:.80, moves:['vach','vong','goi'] } ],
+    tranai: { id:'cm4', name:'Vệ Thần Hollow Roost', lv:52, el:'Mộc', img:'boss_mochu', x:.85, y:.80, moves:['vong','xung','goi','cuong'] } },
   tuyettinh: { thuve:[
-      { id:'tt1', name:'Tình Nhi Tuyệt Vọng',lv:63, el:'Thổ',  img:'ttdetu',   x:.30, y:.32, moves:['vach','goi','cuong'] },
-      { id:'tt2', name:'Hồ Ly Cửu Vĩ',       lv:66, el:'Hỏa',  img:'caodo',    x:.64, y:.58, moves:['xung','vong','goi'] },
-      { id:'tt3', name:'Tuyệt Tình Ma Nữ',   lv:69, el:'Mộc',  img:'boss_tinhhoa', x:.42, y:.80, moves:['vach','xung','vong'] } ],
-    tranai: { id:'tt4', name:'Tuyệt Tình Cốc Chủ', lv:72, el:'Mộc', img:'boss_tinhhoa', x:.86, y:.80, moves:['vong','vach','xung','cuong'] } },
+      { id:'tt1', name:'Kẻ Lạc Lối Tuyệt Vọng',lv:63, el:'Thổ',  img:'ttdetu', x:.30, y:.32, moves:['vach','goi','cuong'] },
+      { id:'tt2', name:'Hồ Ly Băng Giá',     lv:66, el:'Hỏa',  img:'caodo',    x:.64, y:.58, moves:['xung','vong','goi'] },
+      { id:'tt3', name:'Ma Nữ Sương Giá',    lv:69, el:'Mộc',  img:'boss_tinhhoa', x:.42, y:.80, moves:['vach','xung','vong'] } ],
+    tranai: { id:'tt4', name:'Vệ Thần Frostmire Vale', lv:72, el:'Mộc', img:'boss_tinhhoa', x:.86, y:.80, moves:['vong','vach','xung','cuong'] } },
   mongco: { thuve:[
-      { id:'mc1', name:'Thiết Kỵ Bách Phu Trưởng', lv:83, el:'Kim', img:'kybinh',  x:.30, y:.32, moves:['xung','vach','cuong'] },
-      { id:'mc2', name:'Thần Tiễn Hãn Tử',  lv:86, el:'Mộc',  img:'cungthu',  x:.64, y:.58, moves:['vong','xung','goi'] },
-      { id:'mc3', name:'Hãn Vương Thiết Kỵ',lv:89, el:'Kim',  img:'cuongbinh',x:.42, y:.80, moves:['vach','xung','vong'] } ],
-    tranai: { id:'mc4', name:'Đột Thông Đại Hãn', lv:92, el:'Kim', img:'boss_dothong', x:.86, y:.80, moves:['xung','vong','goi','cuong'] } },
+      { id:'mc1', name:'Kỵ Binh Trưởng Tro Tàn', lv:83, el:'Kim', img:'kybinh',  x:.30, y:.32, moves:['xung','vach','cuong'] },
+      { id:'mc2', name:'Cung Thủ Tinh Nhuệ Tro Tàn', lv:86, el:'Mộc',  img:'cungthu',  x:.64, y:.58, moves:['vong','xung','goi'] },
+      { id:'mc3', name:'Thống Lĩnh Kỵ Binh Tro Tàn', lv:89, el:'Kim', img:'cuongbinh',x:.42, y:.80, moves:['vach','xung','vong'] } ],
+    tranai: { id:'mc4', name:'Vệ Thần Ashen Steppe', lv:92, el:'Kim', img:'boss_dothong', x:.86, y:.80, moves:['xung','vong','goi','cuong'] } },
   nhanmon: { thuve:[
-      { id:'nm1', name:'Liêu Quốc Dũng Tướng',lv:103, el:'Kim', img:'daokhach', x:.30, y:.32, moves:['vach','xung','cuong'] },
-      { id:'nm2', name:'Sa Trường Huyết Sát',lv:106, el:'Hỏa',  img:'cuongbinh',x:.64, y:.58, moves:['vong','vach','goi'] },
-      { id:'nm3', name:'Cô Thành Tướng Quân',lv:109, el:'Thổ',  img:'boss_thienbinh', x:.42, y:.80, moves:['xung','vong','vach'] } ],
-    tranai: { id:'nm4', name:'Nhạn Môn Quan Chủ', lv:112, el:'Hỏa', img:'boss_thienbinh', x:.86, y:.80, moves:['vach','xung','vong','cuong'] } },
+      { id:'nm1', name:'Tướng Quân Bão Tố',  lv:103, el:'Kim', img:'daokhach', x:.30, y:.32, moves:['vach','xung','cuong'] },
+      { id:'nm2', name:'Huyết Sát Bão Tố',   lv:106, el:'Hỏa',  img:'cuongbinh',x:.64, y:.58, moves:['vong','vach','goi'] },
+      { id:'nm3', name:'Tướng Quân Trấn Ải', lv:109, el:'Thổ',  img:'boss_thienbinh', x:.42, y:.80, moves:['xung','vong','vach'] } ],
+    tranai: { id:'nm4', name:'Vệ Thần Stormgate Pass', lv:112, el:'Hỏa', img:'boss_thienbinh', x:.86, y:.80, moves:['vach','xung','vong','cuong'] } },
 };
 // ═══ Hóa Thân Trấn Ải — Boss Capture/Channel Form (P0 roadmap: Tale of Immortal + Black Myth) ═══
 // Hạ 1 Trấn Ải (boss trấn giữ cuối bản đồ) lần đầu → vĩnh viễn hàng phục hình dạng của nó. Phím P
@@ -9013,7 +9013,7 @@ function hcTier(s){ if (s <= -30) return { name:'Kết Thù', color:'#ff5a4a' };
 const TT_BOND_NAME = { ketbai:'⚑ Kết Bái', daolu:'❤ Đạo Lữ', suphu:'☯ Trưởng Tộc', dode:'☯ Hậu Bối', cuthu:'⚔ Cừu Nhân' };
 const TT_TP_POOL = ['tp_xuantam','tp_linhcam','tp_vanhanh','tp_thietbo','tp_thuathien','tp_bachhop','tp_hoigiang','tp_nhatnguyet','tp_thancong','tp_votuong','tp_lietdiem','tp_huyenamtp'];
 const TT_LINES = {
-  chinh:['Giang hồ loạn lạc, kẻ sĩ nên lấy nghĩa làm đầu.','Nghe nói Ngũ Ấn lại xao động — ngươi định xông pha chứ?','Đao kiếm vô tình, nhân tâm hữu nghĩa.'],
+  chinh:['Lunacia đang loạn lạc, kẻ mạnh nên lấy nghĩa làm đầu.','Nghe nói Ngũ Ấn lại xao động — ngươi định xông pha chứ?','Vũ khí vô tình, nhân tâm hữu nghĩa.'],
   hao:['Ha ha! Gặp ngươi là thấy hợp nhãn duyên!','Rượu ngon gặp tri âm, nâng chén nào!','Ngày mai ta định lên Võ Đương ngắm tuyết, ngươi thế nào?'],
   ngao:['Hừ, ngươi cũng xứng nói chuyện với ta sao... nhưng thôi, miễn cưỡng nghe.','Võ công của ta, cả giang hồ mấy ai địch nổi.','Đừng tưởng vài lễ vật mà mua được lòng ta.'],
   ta:['Chính đạo? Tà đạo? Thắng mới là đạo, hắc hắc.','Ta nghe nói vách Té Núi giờ Thìn có cơ duyên lớn đấy...','Ngươi có vẻ... rất có tiền đồ. Ta thích kẻ có tiền đồ.'],
@@ -9317,20 +9317,20 @@ window.qlogTab = 'main';
 // ═══════════ CỐT TRUYỆN NGŨ ẤN × TÔNG MÔN — manh mối, lời thoại trấn thủ, kết mở ═══════════
 const CLUES = {
   manh_lenh:   { name:'Mảnh Lệnh Bài Đen',        desc:'Nửa lệnh bài khắc chữ "Hắc Phong" — mặt sau in dấu ấn lạ, hình mặt quỷ đỏ.' },
-  ban_do_da:   { name:'Bản Đồ Da Thú',            desc:'Tấm da khắc đường đi từ Hắc Phong Trại lên Chung Nam — có vệt máu khô.' },
-  tan_quyen:   { name:'Tàn Quyển «Ngũ Ấn Ký»',    desc:'"…năm ấn trấn Ma Tôn tại Tịch Ma Điện. Một ấn vỡ, bốn ấn lung lay…"' },
+  ban_do_da:   { name:'Bản Đồ Da Thú',            desc:'Tấm da khắc đường đi từ Hắc Phong Trại lên Thornwood Reach — có vệt máu khô.' },
+  tan_quyen:   { name:'Tàn Quyển «Ngũ Ấn Ký»',    desc:'"…năm Ấn trấn Bá Chủ tại Vực Nguyên Thủy. Một Ấn vỡ, bốn Ấn lung lay…"' },
   cot_nhan:    { name:'Cốt Nhạn Khắc Chữ',        desc:'Mảnh xương nhạn khắc hàng chữ nhỏ: "Ấn vỡ không phải do ma — mà do người."' },
-  thiep_den:   { name:'Thiếp Đen Vô Danh',        desc:'Thiếp mời "thịnh yến" của Ma Giáo — chỉ có ngày giờ, không hề có địa danh.' },
-  co_thu:      { name:'Cổ Thư Rách',              desc:'Trang sách phong ấn: "Kim Ấn vỡ năm ấy, Tiêu Dao Cốc diệt môn — không một ai sống sót."' },
-  di_thu:      { name:'Di Thư Chân Nhân',         desc:'"Sư môn phụ bạc ta… nhưng trấn ấn này, ta gánh đến cùng." — nét chữ run rẩy.' },
-  phuc_lanh:   { name:'Phúc Lệnh Huyết Ma',       desc:'Sắc lệnh triệu quân: "Mộc Ấn dao động — thúc quân Nam Hãn, đêm rằm tháng bảy."' },
+  thiep_den:   { name:'Thiếp Đen Vô Danh',        desc:'Thiếp mời "thịnh yến" của một hội kín — chỉ có ngày giờ, không hề có địa danh.' },
+  co_thu:      { name:'Cổ Thư Rách',              desc:'Trang sách phong ấn: "Kim Ấn vỡ năm ấy, cả một Tộc bị xóa sổ — không một ai sống sót."' },
+  di_thu:      { name:'Di Thư Trưởng Lão',        desc:'"Tộc của ta phụ bạc ta… nhưng trấn ấn này, ta gánh đến cùng." — nét chữ run rẩy.' },
+  phuc_lanh:   { name:'Phù Lệnh Triệu Tập',       desc:'Sắc lệnh triệu quân: "Mộc Ấn dao động — dồn quân về Ashen Steppe, đêm trăng tròn."' },
   buc_hoa:     { name:'Bích Họa Ngũ Ấn',          desc:'Tranh vẽ năm phong ấn Kim Mộc Thủy Hỏa Thổ — vị trí Kim Ấn chỉ còn một vết cháy đen.' },
-  thu_tinh:    { name:'Thư Tình Chưa Gửi',        desc:'"Nếu có kiếp sau, ta không làm Cốc Chủ, nàng đừng làm đệ tử…"' },
-  lenh_bai_doi:{ name:'Lệnh Bài Đồi Mộ Cổ',       desc:'Lệnh bài bằng xương khắc tên bảy vị tông sư trấn ấn — hai cái tên đã bị cạo sạch.' },
-  co_lenh:     { name:'Cổ Lệnh Chinh Phạt',       desc:'Văn thư triều đình: "Nhạn Môn thất thủ thì Trung Nguyên mở toang." Dấu triện đã 60 năm.' },
-  le_thach:    { name:'Lệ Thạch Đoản Thiên',      desc:'Mảnh đá nhuốm máu: "Đừng tin bất kỳ ai mang lệnh bài đen — kể cả sư môn ngươi."' },
-  mat_lenh:    { name:'Mật Lệnh Rách',            desc:'"…khi đủ năm ấn vỡ, Vạn Ma Điện mở — Ma Tôn giáng thế, giang hồ thành lò luyện."' },
-  thu_cuoi:    { name:'Thư Cuối Của Quan Chủ',    desc:'"Ta giữ Nhạn Môn ba mươi năm. Hôm nay ta mở cửa — không phải vì hàng, mà vì hết cách."' },
+  thu_tinh:    { name:'Thư Tình Chưa Gửi',        desc:'"Nếu có kiếp sau, ta không làm Vệ Thần, nàng đừng chờ ta mãi…"' },
+  lenh_bai_doi:{ name:'Lệnh Bài Đồi Mộ Cổ',       desc:'Lệnh bài bằng xương khắc tên bảy vị Trưởng Tộc trấn ấn — hai cái tên đã bị cạo sạch.' },
+  co_lenh:     { name:'Cổ Lệnh Trấn Ải',          desc:'Văn thư cũ: "Stormgate Pass thất thủ thì cả Lunacia mở toang." Dấu triện đã 60 năm.' },
+  le_thach:    { name:'Lệ Thạch Đoản Thiên',      desc:'Mảnh đá nhuốm máu: "Đừng tin bất kỳ ai mang lệnh bài đen — kể cả Tộc của ngươi."' },
+  mat_lenh:    { name:'Mật Lệnh Rách',            desc:'"…khi đủ năm Ấn vỡ, Vực Nguyên Thủy mở — Bá Chủ giáng thế, Lunacia thành lò luyện."' },
+  thu_cuoi:    { name:'Thư Cuối Của Vệ Thần',     desc:'"Ta giữ Stormgate Pass ba mươi năm. Hôm nay ta mở cửa — không phải vì hàng, mà vì hết cách."' },
 };
 const CLUE_DROPS = {
   dh1:'manh_lenh', dh3:'ban_do_da', dh4:'tan_quyen',
@@ -9345,31 +9345,31 @@ const BOSS_LORE = {
   dh1:{ name:'Dã Trư Vương', intro:['Grao…! Con mồi dám bước vào lãnh địa của bổn vương?!'] },
   dh2:{ name:'Sói Đầu Đàn', intro:['Trăng lên rồi.','Bầy sói của ta đói lắm, khách nhân à.'] },
   dh3:{ name:'Hắc Phong Chấp Sự', intro:['Hắc Phong Trại không chờ kẻ nhát.','Giao hành lý — hoặc giao mạng!'] },
-  dh4:{ name:'Hắc Phong Trại Chủ', intro:['Lệnh bài đen kia… ngươi lấy từ đâu?!','Hỏa Ấn của giang hồ sắp vỡ rồi — ta chỉ đi trước một bước.'], sect:{ daohoa:'Đệ tử Đào Hoa à… sư tỷ ngươi từng quỳ gối trong trại này đấy, ha!' } },
-  ng1:{ name:'Sơn Tặc Đầu Mục', intro:['Bạch Đà Sơn mấy dặm chỉ có một đường sống — đường của ta!','Lên! Giết!'] },
+  dh4:{ name:'Hắc Phong Trại Chủ', intro:['Lệnh bài đen kia… ngươi lấy từ đâu?!','Hỏa Ấn của Lunacia sắp vỡ rồi — ta chỉ đi trước một bước.'], sect:{ daohoa:'Người của Tộc Plant à… đồng đội ngươi từng quỳ gối trong trại này đấy, ha!' } },
+  ng1:{ name:'Sơn Tặc Đầu Mục', intro:['Outskirts mấy dặm chỉ có một đường sống — đường của ta!','Lên! Giết!'] },
   ng2:{ name:'Độc Nhãn Lang Vương', intro:['Một con mắt mất, mười năm hận.','Đêm nay lang vương ăn thịt người.'] },
-  ng3:{ name:'Hắc Y Sát Thủ', intro:['…','Ta không có tên. Chỉ có giá tiền.'] },
-  ng4:{ name:'Bạch Diện Ma Quân', intro:['Khuôn mặt trắng này nhớ mùi máu lắm.','Mộc Ấn đang rung chuyển — ngươi nghe thấy không?'], sect:{ baidasan:'Độc công Bạch Đà Sơn? Cho ngươi xem độc của Ma Giáo này.' } },
-  cn1:{ name:'Phản Đồ Đạo Sĩ', intro:['Đạo gì chứ! Trường sinh mới là thật!','Ngươi dám cản đạo lộ của ta?'] },
-  cn2:{ name:'Huyền Giáp Thần Quy', intro:['Nghìn năm, giáp này chưa từng vỡ.','Đến đây, tiểu bối.'] },
-  cn3:{ name:'Phản Đồ Chân Nhân', intro:['Chung Nam từng là nhà của ta…','Trấn ấn này giam ta — hay giam cả Ma Tôn?'], sect:{ toanchan:'Đệ tử ngoan của sư huynh… ngươi đến giết ta à?' } },
-  cn4:{ name:'Thái Hư Kiếm Thánh', intro:['Kiếm của ta chỉ vỡ một lần — lần đó ta thua.','Thủy Ấn do ta giữ. Muốn qua? Hỏi thanh kiếm này.'], sect:{ toanchan:'Toàn Chân hậu bối… ra tay đừng nương tình.' } },
-  cm1:{ name:'Thi Binh Thống Lĩnh', intro:['Lăng mộ này không chờ người sống.','Quân ta chết rồi — nhưng chưa tan.'] },
-  cm2:{ name:'Âm Dương Táng Giả', intro:['Táng người, táng thần, táng cả trời.','Nằm xuống đi, khách nhân.'] },
-  cm3:{ name:'Thi Vương Bất Tử', intro:['Bất tử không phải phúc — là phạt.','Ở lại cùng ta!'] },
-  cm4:{ name:'Cổ Mộ Tổ Sư', intro:['Ai đánh thức giấc ngủ ngàn năm của lão phu?','Mộc Ấn đã mục từ lâu — giang hồ mới là bệnh.'], sect:{ comoc:'Cốc chủ đời này đến rồi à… đồ đệ của ta dạo này có khỏe không?' } },
-  tt1:{ name:'Tình Nhi Tuyệt Vọng', intro:['Chàng bỏ ta… cả thiên hạ bỏ ta!','Cắt tình — đoạn tuyệt!'] },
-  tt2:{ name:'Hồ Ly Cửu Vĩ', intro:['Chín đuôi, chín kiếp, chín mối tình dở.','Ngươi có tình không? Cho ta xem nào.'] },
-  tt3:{ name:'Tuyệt Tình Ma Nữ', intro:['Tình là bệnh, ta là thuốc.','Tuyệt tình quyết — đệ nhất bi khúc giang hồ.'] },
-  tt4:{ name:'Tuyệt Tình Cốc Chủ', intro:['Cốc này chôn bao nhiêu kẻ đa tình rồi…','Đến lượt ngươi.'], sect:{ thieulam:'Thiếu Lâm từng độ hóa ta — không thành. Hôm nay ngươi thử xem?' } },
-  mc1:{ name:'Thiết Kỵ Bách Phu Trưởng', intro:['Thảo nguyên chỉ nhận kẻ mạnh!','Kỵ binh — bày trận!'] },
-  mc2:{ name:'Thần Tiễn Hãn Tử', intro:['Một tên một mạng — ta có cả nghìn tên.','Đứng yên nào.'] },
-  mc3:{ name:'Hãn Vương Thiết Kỵ', intro:['Đại hãn truyền lệnh — ta chính là lệnh!','Nghiền nát chúng!'] },
-  mc4:{ name:'Đột Thông Đại Hãn', intro:['Nam Hãn ngàn dặm — vì sao dừng ở đây? Vì Kim Ấn đã vỡ!','Người Trung Nguyên… chứng minh đi.'], sect:{ doanthi:'Đoàn Thị hoàng tộc? Hừ, Đại Lý cũng chỉ là một bàn cờ.' } },
-  nm1:{ name:'Liêu Quốc Dũng Tướng', intro:['Nhạn Môn ba mươi năm không gãy — hôm nay cũng vậy!','Tướng sĩ! Giữ ải!'] },
-  nm2:{ name:'Sa Trường Huyết Sát', intro:['Máu trên giáp ta chưa bao giờ khô.','Thêm một mạng nữa!'] },
-  nm3:{ name:'Cô Thành Tướng Quân', intro:['Thành này cô độc — ta cũng vậy.','Qua đây… nếu ngươi đủ nặng ký.'] },
-  nm4:{ name:'Nhạn Môn Quan Chủ', intro:['Ta mở cửa không phải vì hàng — mà vì hết cách.','Hỏa Ấn cuối cùng… để ta xem ngươi giữ nổi không!'], sect:{ minhgiao:'Minh Giáo… hay Ma Giáo? Lửa của ngươi cháy về phía nào?' } },
+  ng3:{ name:'Đặc Vụ Hắc Phong', intro:['…','Ta không có tên. Chỉ có giá tiền.'] },
+  ng4:{ name:'Ma Quân Sương Trắng', intro:['Khuôn mặt trắng này nhớ mùi máu lắm.','Mộc Ấn đang rung chuyển — ngươi nghe thấy không?'], sect:{ baidasan:'Độc tố của Tộc Reptile? Để ta cho ngươi xem thứ độc thật sự.' } },
+  cn1:{ name:'Kẻ Phản Tộc', intro:['Sức mạnh mới là thật, chẳng cần trung thành với ai!','Ngươi dám cản đường ta?'] },
+  cn2:{ name:'Rùa Giáp Cổ Đại', intro:['Nghìn năm, giáp này chưa từng vỡ.','Đến đây, kẻ hậu sinh.'] },
+  cn3:{ name:'Trưởng Lão Tha Hóa', intro:['Thornwood từng là nhà của ta…','Trấn Ấn này giam ta — hay giam cả Bá Chủ?'], sect:{ toanchan:'Người của Tộc Aquatic, ngoan hiền như ta từng biết… ngươi đến giết ta à?' } },
+  cn4:{ name:'Vệ Thần Thornwood Reach', intro:['Kiếm của ta chỉ vỡ một lần — lần đó ta thua.','Thủy Ấn do ta giữ. Muốn qua? Hỏi thanh kiếm này.'], sect:{ toanchan:'Tộc Aquatic hậu bối… ra tay đừng nương tình.' } },
+  cm1:{ name:'Chỉ Huy Vong Binh', intro:['Lăng mộ này không chờ người sống.','Quân ta chết rồi — nhưng chưa tan.'] },
+  cm2:{ name:'Kẻ An Táng Bóng Tối', intro:['Táng người, táng thần, táng cả trời.','Nằm xuống đi, khách nhân.'] },
+  cm3:{ name:'Chúa Tể Bất Tử', intro:['Bất tử không phải phúc — là phạt.','Ở lại cùng ta!'] },
+  cm4:{ name:'Vệ Thần Hollow Roost', intro:['Ai đánh thức giấc ngủ ngàn năm của lão phu?','Mộc Ấn đã mục từ lâu — Lunacia mới là thứ bệnh thật sự.'], sect:{ comoc:'Tộc Dusk đời này đến rồi à… các hậu bối của ta dạo này có khỏe không?' } },
+  tt1:{ name:'Kẻ Lạc Lối Tuyệt Vọng', intro:['Tất cả đã bỏ rơi ta… cả Lunacia này cũng vậy!','Không còn gì để mất nữa!'] },
+  tt2:{ name:'Hồ Ly Băng Giá', intro:['Băng giá thấm vào từng chiếc đuôi của ta.','Ngươi có đủ ấm để sống sót không? Để ta xem nào.'] },
+  tt3:{ name:'Ma Nữ Sương Giá', intro:['Sương giá là thuốc — nó khiến mọi nỗi đau tê liệt.','Đến đây, để ta ru ngươi vào giấc ngủ lạnh lẽo.'] },
+  tt4:{ name:'Vệ Thần Frostmire Vale', intro:['Vale này đã chôn biết bao kẻ lạc lối…','Đến lượt ngươi.'], sect:{ thieulam:'Tộc Mech từng cố cảm hóa ta — không thành. Hôm nay ngươi thử xem?' } },
+  mc1:{ name:'Kỵ Binh Trưởng Tro Tàn', intro:['Thảo nguyên chỉ nhận kẻ mạnh!','Kỵ binh — bày trận!'] },
+  mc2:{ name:'Cung Thủ Tinh Nhuệ Tro Tàn', intro:['Một tên một mạng — ta có cả nghìn tên.','Đứng yên nào.'] },
+  mc3:{ name:'Thống Lĩnh Kỵ Binh Tro Tàn', intro:['Vệ Thần truyền lệnh — ta chính là lệnh!','Nghiền nát chúng!'] },
+  mc4:{ name:'Vệ Thần Ashen Steppe', intro:['Ngàn dặm tro tàn — vì sao dừng ở đây? Vì Kim Ấn đã vỡ!','Kẻ lạ mặt… chứng minh bản lĩnh đi.'], sect:{ doanthi:'Tộc Bird tinh nhuệ? Hừ, danh tiếng cũng chỉ là một quân cờ.' } },
+  nm1:{ name:'Tướng Quân Bão Tố', intro:['Stormgate Pass ba mươi năm không gãy — hôm nay cũng vậy!','Tướng sĩ! Giữ ải!'] },
+  nm2:{ name:'Huyết Sát Bão Tố', intro:['Máu trên giáp ta chưa bao giờ khô.','Thêm một mạng nữa!'] },
+  nm3:{ name:'Tướng Quân Trấn Ải', intro:['Thành này cô độc — ta cũng vậy.','Qua đây… nếu ngươi đủ nặng ký.'] },
+  nm4:{ name:'Vệ Thần Stormgate Pass', intro:['Ta mở cửa không phải vì hàng — mà vì hết cách.','Hỏa Ấn cuối cùng… để ta xem ngươi giữ nổi không!'], sect:{ minhgiao:'Tộc Beast… ngọn lửa của ngươi cháy về phía nào?' } },
 };
 // Hàng thoại trấn thủ — thanh bar dưới màn hình, 3.4s/câu
 let _btQ = [], _btTimer = null;
@@ -9407,21 +9407,21 @@ window.replayBossTalk = function(id){
 function npcStoryLine(){
   const flags = player.storyFlags || {};
   const n = Object.keys(flags).filter(k => k.startsWith('ta_')).length;
-  if (flags.ketMo) return 'Trời đổ máu rồi… Vạn Ma Điện sắp mở. Người như ngươi — là hy vọng cuối cùng của giang hồ này.';
+  if (flags.ketMo) return 'Bầu trời đỏ như máu… Vực Nguyên Thủy sắp mở. Người như ngươi — là hy vọng cuối cùng của Lunacia này.';
   if (n === 0) return null;
-  if (n < 3) return 'Nghe đồn có trấn thủ cổ đã ngã xuống… Giang hồ bắt đầu xôn xao rồi đấy.';
-  if (n < 5) return 'Trời tối hơn mỗi ngày. Nghe nói các đại phái đang triệu tập đệ tử về giữ sơn môn.';
+  if (n < 3) return 'Nghe đồn có Vệ Thần cổ đã ngã xuống… Cả Lunacia bắt đầu xôn xao rồi đấy.';
+  if (n < 5) return 'Trời tối hơn mỗi ngày. Nghe nói các Tộc đang triệu tập thành viên về giữ lãnh địa.';
   return 'Ngũ Ấn sắp vỡ hết rồi… Ngươi… vẫn định tiếp tục chứ?';
 }
-// Kết mở — ấn cuối vỡ, Ma Tôn sắp giáng thế
+// Kết mở — ấn cuối vỡ, Bá Chủ sắp giáng thế
 function showKetMo(){
   const ov = document.getElementById('overlay');
   if (!ov) return;
   document.getElementById('overlay-inner').innerHTML = `
     <h2 style="color:#ff6b6b">☠ ẤN ĐÃ VỠ</h2>
-    <p style="line-height:1.9;font-size:14px">Trấn Ải cuối cùng đã ngã. Tịch Ma Điện mở toang — <b style="color:#ff8f6b">Ma Tôn sắp giáng thế</b>.<br>
-    <span style="opacity:.85">12 canh giờ nữa, thiên hạ đại loạn. 19 canh giờ nữa, các phái đốt cháy sơn môn.<br>22 canh giờ nữa… <b style="color:#e8b060">Vạn Ma Điện</b> sẽ hiện ra giữa giang hồ.</span><br>
-    <span style="color:#e8b060">Ngươi là người đánh vỡ ấn cuối cùng — cũng là người duy nhất có thể khép nó lại.<br><i>Ma công… hay ma tâm? Đó là lựa chọn của ngươi.</i></span></p>
+    <p style="line-height:1.9;font-size:14px">Sigil cuối cùng đã ngã. Vực Nguyên Thủy mở toang — <b style="color:#ff8f6b">Bá Chủ sắp giáng thế</b>.<br>
+    <span style="opacity:.85">12 canh giờ nữa, khắp Lunacia chấn động. 19 canh giờ nữa, các Tộc gọi thành viên về thủ lãnh địa.<br>22 canh giờ nữa… <b style="color:#e8b060">Vực Nguyên Thủy</b> sẽ hiện ra giữa Lunacia.</span><br>
+    <span style="color:#e8b060">Ngươi là người đánh vỡ Ấn cuối cùng — cũng là người duy nhất có thể khép nó lại.<br><i>Sức mạnh… hay trách nhiệm? Đó là lựa chọn của ngươi.</i></span></p>
     <button class="big-btn" onclick="document.getElementById('overlay').classList.add('hidden')">Tiếp Tục Hành Trình</button>`;
   ov.classList.remove('hidden');
   AudioSys.sfx('levelup', 0.9);
@@ -9458,11 +9458,11 @@ function renderQlog(){
   } else if (window.qlogTab === 'story'){
     const flags = player.storyFlags || {};
     const nSeal = Object.keys(flags).filter(k => k.startsWith('ta_')).length;
-    html += `<div class="ql-ch">☬ Ngũ Ấn Trấn Ma <span style="opacity:.6">· ${nSeal}/7 Trấn Ải đã hạ</span></div>`;
-    html += `<div class="ql-row" style="opacity:.85;font-size:11.5px;line-height:1.5">${flags.ketMo ? '⚠ ẤN ĐÃ VỠ — Vạn Ma Điện sắp mở. Giang hồ chờ ngươi khép ấn lại.' : nSeal === 0 ? 'Ngũ Ấn còn nguyên — Ma Tôn vẫn bị giam trong Tịch Ma Điện.' : 'Phong ấn đang rạn nứt… bóng đêm phủ xuống giang hồ.'}</div>`;
+    html += `<div class="ql-ch">☬ Ngũ Ấn Trấn Bá Chủ <span style="opacity:.6">· ${nSeal}/7 Vệ Thần đã hạ</span></div>`;
+    html += `<div class="ql-row" style="opacity:.85;font-size:11.5px;line-height:1.5">${flags.ketMo ? '⚠ ẤN ĐÃ VỠ — Vực Nguyên Thủy sắp mở. Lunacia chờ ngươi khép ấn lại.' : nSeal === 0 ? 'Ngũ Ấn còn nguyên — Bá Chủ vẫn bị giam trong Vực Nguyên Thủy.' : 'Phong ấn đang rạn nứt… bóng đêm phủ xuống Lunacia.'}</div>`;
     const clues = player.clues || [];
     html += `<div class="ql-ch">🔍 Manh Mối <span style="opacity:.6">· ${clues.length}/${Object.keys(CLUES).length}</span></div>`;
-    if (!clues.length) html += `<div class="ql-row" style="opacity:.5">Chưa có manh mối — hạ Thủ Vệ / Trấn Ải để thu thập.</div>`;
+    if (!clues.length) html += `<div class="ql-row" style="opacity:.5">Chưa có manh mối — hạ Thủ Vệ / Vệ Thần để thu thập.</div>`;
     for (const cid of clues){
       const c = CLUES[cid]; if (!c) continue;
       html += `<div class="ql-row"><span style="color:#e8b060">✦</span> <b>${c.name}</b><div style="opacity:.65;font-size:11px;padding-left:18px;line-height:1.4">${c.desc}</div></div>`;
@@ -9475,7 +9475,7 @@ function renderQlog(){
       const killed = Object.values(player.bossKills || {}).some(arr => arr.includes(bid));
       html += `<div class="ql-row"${killed ? '' : ' style="opacity:.55"'}><span>${killed ? '⚔' : '👁'}</span> ${L.name} <button class="mini-btn" onclick="replayBossTalk('${bid}')" style="font-size:10px;padding:1px 6px;margin-left:4px">💬</button></div>`;
     }
-    if (flags.ketMo) html += `<div class="ql-ch" style="color:#ff6b6b">☠ KẾT MỞ — Ấn đã vỡ. Ma Tôn sẽ giáng thế…</div>`;
+    if (flags.ketMo) html += `<div class="ql-ch" style="color:#ff6b6b">☠ KẾT MỞ — Ấn đã vỡ. Bá Chủ sẽ giáng thế…</div>`;
   } else {
     for (const mapId in MAPS){
       const list = SIDE_QUESTS.filter(sq => sq.map === mapId);
@@ -11120,7 +11120,7 @@ function updateMaTon(){
   if (!MATON.active && !MATON.warned && now >= MATON.next - 600000){
     MATON.warned = true;
     const mapId = matonMapFor(MATON.next);
-    zoneBanner = { text:'⚠ MA TÔN SẮP GIÁNG THẾ', sub:`10 phút nữa — ${MAPS[mapId].name}. Chuẩn bị ứng chiến!`, color:'#c07fe0', t:5 };
+    zoneBanner = { text:'⚠ BÁ CHỦ SẮP GIÁNG THẾ', sub:`10 phút nữa — ${MAPS[mapId].name}. Chuẩn bị ứng chiến!`, color:'#c07fe0', t:5 };
     AudioSys.sfx('quest', 0.8);
   }
   if (!MATON.active && now >= MATON.next){
@@ -11128,21 +11128,21 @@ function updateMaTon(){
     MATON.map = matonMapFor(MATON.next);
     MATON.endsAt = now + 30*60000;
     MATON.next = matonNextBoundary(now + 60000);
-    zoneBanner = { text:'☠ MA TÔN GIÁNG THẾ', sub:`Tà khí phủ ${MAPS[MATON.map].name} — hạ Ma Tôn nhận Bảo Hạp!`, color:'#e84a6a', t:6 };
+    zoneBanner = { text:'☠ BÁ CHỦ GIÁNG THẾ', sub:`Tà khí phủ ${MAPS[MATON.map].name} — hạ Bá Chủ nhận Bảo Hạp!`, color:'#e84a6a', t:6 };
     AudioSys.sfx('crit', 0.9);
     if (curMap === MATON.map) spawnMaTonMob();
     saveGame();
   }
   if (MATON.active && now >= MATON.endsAt){
     MATON.active = false; MATON.map = null;
-    zoneBanner = { text:'Ma Tôn đã rời đi', sub:'Tà khí tản dần — hẹn khung giờ sau.', color:'#8a8a8a', t:3.5 };
+    zoneBanner = { text:'Bá Chủ đã rời đi', sub:'Tà khí tản dần — hẹn khung giờ sau.', color:'#8a8a8a', t:3.5 };
     saveGame();
   }
 }
 function spawnMaTonMob(){
   const md = MAPS[MATON.map];
   const lv = Math.min(110, md.min + 12);
-  const def = { name:'Ma Tôn · Hỗn Độn', lv, hp: 5000 + lv*lv*7, atk: 10 + Math.round(lv*3), def: Math.round(lv*0.8),
+  const def = { name:'Bá Chủ · Hỗn Độn', lv, hp: 5000 + lv*lv*7, atk: 10 + Math.round(lv*3), def: Math.round(lv*0.8),
     xp: lv*150, silver:[lv*8, lv*12], speed: 70, aggro: 9999, range: 46, atkCd: 1.3, size: 30,
     color:'#2a0a24', eye:'#ff3a6a', boss:true, elite:true, drop:1, el:'Hỏa', img:'assets/mobs/boss.png' };
   const m = { type:'maton', def, name: def.name,
@@ -11150,14 +11150,14 @@ function spawnMaTonMob(){
     hp: def.hp, maxHp: def.hp, atkT: rnd(0,1), dead: false, face: 0,
     shield: 1, shieldT: 0, hitT: 0, wob: Math.random()*10, packAlert: 0 };
   mobs.push(m);
-  zoneBanner = { text:'☠ MA TÔN XUẤT HIỆN', sub:'Ngay trước mắt — toàn lực ứng chiến!', color:'#e84a6a', t:4 };
+  zoneBanner = { text:'☠ BÁ CHỦ XUẤT HIỆN', sub:'Ngay trước mắt — toàn lực ứng chiến!', color:'#e84a6a', t:4 };
   return m;
 }
 function matonKilled(m){
   MATON.active = false; MATON.map = null;
   const tier = clamp(Math.floor(player.level/15) + 1, 1, 7);
   player.baohap[tier] = (player.baohap[tier] || 0) + 1;
-  zoneBanner = { text:'☠ MA TÔN ĐÃ BỊ TIÊU DIỆT', sub:`Nhận ${BAOHAP_TIERS[tier].name} — mở trong Túi Đồ (phím I)!`, color:'#7ecbff', t:6 };
+  zoneBanner = { text:'☠ BÁ CHỦ ĐÃ BỊ TIÊU DIỆT', sub:`Nhận ${BAOHAP_TIERS[tier].name} — mở trong Túi Đồ (phím I)!`, color:'#7ecbff', t:6 };
   addFloat(m.x, m.y-130, `+1 ${BAOHAP_TIERS[tier].name}`, BAOHAP_TIERS[tier].color, 16);
   AudioSys.sfx('levelup', 1);
   saveGame();
