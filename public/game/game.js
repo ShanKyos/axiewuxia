@@ -1581,7 +1581,7 @@ function tickGameClock(dt){
     if (after.season.id !== before.season.id)
       zoneBanner = { text:`${after.season.icon} ${after.season.name.toUpperCase()} ĐẾN`, sub:`Tháng ${after.month} · Năm ${after.year} — phúc trạch Tứ Quý: ${after.season.buffTxt}`, color:after.season.color, t:4 };
     else
-      zoneBanner = { text:`✦ THIÊN NIÊN KỶ — NĂM ${after.year}`, sub:'Giang hồ lại trôi qua một vòng tuế nguyệt', color:'#7ecbff', t:4 };
+      zoneBanner = { text:`✦ THIÊN NIÊN KỶ — NĂM ${after.year}`, sub:'Lunacia lại trôi qua một vòng tuế nguyệt', color:'#7ecbff', t:4 };
     AudioSys.sfx('quest', 0.6);
   } else if (after.canh !== before.canh) calcDerived(); // qua canh: nhịp ngày/đêm đổi
   if (after.day !== before.day || after.month !== before.month) spawnAmbients(); // sang ngày mới: roll lại thời tiết (Gói B)
@@ -3454,7 +3454,7 @@ function unlockNotices(){
     5:['Mở khóa: Rèn Luyện (phím F)'],
     6:['Mở khóa: Thú Chiến — chiến thú đồng hành tự đánh quái (C → Thú Chiến)'],
     7:['Mở khóa: Tuyệt kỹ (phím 3)','Mở khóa: Đan Điền tu luyện (phím N)'],
-    10:['Mở khóa: Bái Sư Nhập Phái — 7 môn phái chờ ngươi chọn!','Mở khóa: Cương Khí (Tuyệt Học — phím H)','Mở khóa: Truy Nã Lệnh & Vạn Duyên Các — Bổ Đầu và Thần Toán Tử ở Tương Dương'],
+    10:['Mở khóa: the Calling — 9 Tộc chờ ngươi chọn!','Mở khóa: Cương Khí (Tuyệt Học — phím H)','Mở khóa: Truy Nã Lệnh & Vạn Duyên Các — Bổ Đầu và Thần Toán Tử ở Lunaris City'],
     15:['Mở khóa: Linh Thú — mua Phong Linh Phù ở Vũ Khí Phường, đánh tinh anh còn <40% máu rồi bấm T'],
     40:['Mở khóa: Hỗn Độn Lò luyện Linh Dực Cấp 1 — Lò Bát Quái, Tương Dương'],
     45:['Bảo Hạp IV trở lên từ Ma Tôn có 5-8% mở ra trang bị CỔ THẦN Tứ Tượng — Ma Tôn giáng thế mỗi 4 giờ!'],
@@ -3902,9 +3902,9 @@ function tryTalkQuest(){
   tutAdvance('npc'); // hướng dẫn tân thủ: nói chuyện Trưởng Làng
   const q = currentQuest();
   const panel = document.getElementById('panel-quest');
-  let html = `<h3>Trưởng Làng Thanh Ngưu</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  let html = `<h3>Trưởng Làng</h3><button class="close-x" onclick="closePanels()">✕</button>`;
   if (!q){
-    html += `<div class="qd-quest">Giang hồ rộng lớn, Bình Cảnh đã phá. Hành trình Huyễn Ảnh Chí Tôn còn ở phiên bản sau!</div>`;
+    html += `<div class="qd-quest">Lunacia còn rộng lớn, vỏ kén đã phá. Hành trình Lunacia's Number One Trainer còn ở phiên bản sau!</div>`;
   } else if (questState === 'done'){
     html += `<div class="qd-quest"><div class="q-name">${q.name} — Hoàn thành!</div>${q.desc}
       <div class="q-rew">Thưởng: ${q.rew.xp} EXP · ${q.rew.silver||0}◈ ${q.rew.mat?('· '+q.rew.mat+'✦'):''}</div>
@@ -4573,7 +4573,7 @@ function onDeath(){
     <p>Ngươi bị <b style="color:#ff8f6b">${_kb}</b> đánh bại.<br><span style="color:#e8b060;font-size:12.5px">Mẹo: khi trấn thủ tụ chiêu (vùng đỏ), lùi ra hoặc nhảy (J) né — sau đó là 2.5 giây phản công tốt nhất.<br>Hoặc quay lại khi ngươi đã mạnh hơn.</span></p>
     <button class="big-btn" onclick="respawn()">Tái Chiến</button>` : `
     <h2>Trọng Thương!</h2>
-    <p>Ngươi bị đánh bại... Nhưng giang hồ chưa hề bỏ rơi kẻ có chí.<br>Hồi sinh tại làng Thanh Ngưu với đầy đủ sinh lực.</p>
+    <p>Ngươi bị đánh bại... Nhưng Lunacia chưa hề bỏ rơi kẻ có chí.<br>Hồi sinh tại làng trên Petalshade Isle với đầy đủ sinh lực.</p>
     <button class="big-btn" onclick="respawn()">Hồi Sinh</button>`;
   ov.classList.remove('hidden');
 }
@@ -5198,9 +5198,9 @@ function ascendToImmortal(){
   let learned = 0;
   for (const _id in VOHOC_DEFS){ if (VOHOC_DEFS[_id].phai && !vhLearned(_id)){ player.vohoc[_id] = true; learned++; } }
   closePanels();
-  zoneBanner = { text:'☁ PHI THĂNG · THẦN TIÊN HÓA CẢNH', sub:`Xuất thế khỏi ${SECTS[player.oldSect].name} — môn phái phá bỏ · ngự kiếm phi hành · võ học toàn tự do!`, color:'#fff2b0', t:6 };
+  zoneBanner = { text:'☁ PHI THĂNG · THẦN TIÊN HÓA CẢNH', sub:`Xuất thế khỏi ${SECTS[player.oldSect].name} — ràng buộc Tộc phá bỏ · ngự kiếm phi hành · võ học toàn tự do!`, color:'#fff2b0', t:6 };
   addFloat(player.x, player.y-86, '☁ PHI THĂNG!', '#fff2b0', 24);
-  if (learned) addFloat(player.x, player.y-62, `Môn phái phá bỏ — tự ngộ thêm ${learned} môn võ học`, '#a0ffe9', 13);
+  if (learned) addFloat(player.x, player.y-62, `Ràng buộc Tộc phá bỏ — tự ngộ thêm ${learned} môn võ học`, '#a0ffe9', 13);
   addFloat(player.x, player.y-42, 'Ngự Kiếm Phi Hành — tốc độ +25% · mở Cài Đặt (O) đổi hình dáng & tiên y', '#9fd0ff', 12);
   addEffect({ type:'vfx', style:'galaxy', x:player.x, y:player.y, r:150, c1:'#fff2b0', c2:'#9fd0ff', glyph:'仙', dur:1.4, big:true, spin:2.5 });
   addEffect({ type:'vfx', style:'thunderpillar', x:player.x, y:player.y, r:130, c1:'#fff2b0', c2:'#ffb15c', glyph:'仙', dur:1.0 });
@@ -5656,11 +5656,11 @@ el('btn-auto').addEventListener('click', ()=>toggleAuto());
 function renderChar(){
   const p = player, sect = SECTS[p.sect];
   let html = `<h3>Nhân Vật — ${sect.name} Cấp ${p.level}</h3>`;
-  html += `<img class="char-portrait" src="${p.ascended ? 'assets/tien/' + (p.gender === 'nu' ? 'nu' : 'nam') + '_' + (TIEN_SKINS[p.tienSkin] ? p.tienSkin : 'bach') + '.png' : SECT_ART[p.sect].portrait}" alt="${sect.name}">${p.ascended ? `<div style="margin-top:4px;font-size:11.5px;color:#fff2b0">☁ Tán Tiên — xuất thế khỏi ${sect.name}, môn phái đã phá bỏ</div>` : ""}`;
+  html += `<img class="char-portrait" src="${p.ascended ? 'assets/tien/' + (p.gender === 'nu' ? 'nu' : 'nam') + '_' + (TIEN_SKINS[p.tienSkin] ? p.tienSkin : 'bach') + '.png' : SECT_ART[p.sect].portrait}" alt="${sect.name}">${p.ascended ? `<div style="margin-top:4px;font-size:11.5px;color:#fff2b0">☁ Tán Tiên — xuất thế khỏi ${sect.name}, ràng buộc Tộc đã phá bỏ</div>` : ""}`;
   // Tán Nhân: lối vào lễ Bái Sư Nhập Phái (cấp 10)
   if (p.sect === 'vophai'){
     html += `<div style="margin:8px 0;padding:10px;border:1px dashed rgba(126,203,255,.45);border-radius:6px;text-align:center">
-      <div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Tán Nhân lang bạt — chưa bái nhập môn phái nào</div>
+      <div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Unclassed lang bạt — chưa gia nhập Tộc nào</div>
       ${p.level >= 10
         ? `<button class="mini-btn" style="font-size:14px;padding:9px 22px;border-color:#7ecbff;color:#7ecbff" onclick="openSectCeremony()">⚔ BÁI SƯ NHẬP PHÁI</button>`
         : `<div style="font-size:12px;opacity:.7">Bái sư mở khóa ở <b style="color:#7ecbff">cấp 10</b> (hiện cấp ${p.level})</div>`}
@@ -5705,7 +5705,7 @@ function renderChar(){
   html += `<div style="margin:2px 0 6px;padding:8px 10px;border:1px solid ${tbD.color}55;border-radius:6px;background:rgba(0,0,0,.22)">
     <div style="font-size:13px;color:${TB_TIER_COLORS[tbTier-1]};font-weight:700">${tbD.name} · Tầng ${tbTier}【${TB_TIER_NAMES[tbTier-1]}】${tbMax ? ' — ĐÃ THỨC TỈNH ✦' : ''}</div>
     <div style="font-size:11px;color:#9aa8d4;font-style:italic;margin:2px 0">${tbD.lore}</div>
-    <div class="stat-row"><span>ST chiêu môn phái</span><b>+${Math.round(tbTier*2.5)}%</b></div>
+    <div class="stat-row"><span>ST chiêu Tộc</span><b>+${Math.round(tbTier*2.5)}%</b></div>
     <div class="stat-row"><span>Cộng thêm</span><b>+${tbTier*3} Lực · +${tbTier*2} Mẫn · +${tbTier*2} Cốt · +${tbTier*3} Thể</b></div>
     ${tbMax
       ? `<div style="font-size:11.5px;color:#ffe9a8;margin-top:4px">Hình thái cuối — thần binh rực rỡ tối đa ✦</div>`
@@ -6549,7 +6549,7 @@ function showMainMenu(){
   el('sect-cards').style.display = 'none';
   const mm = el('max-mode'); if (mm) mm.style.display = 'none';
   const sub = document.querySelector('#sect-select .ss-sub');
-  if (sub) sub.textContent = 'Chào mừng trở lại giang hồ — hành trình của ngươi vẫn đang chờ.';
+  if (sub) sub.textContent = 'Chào mừng trở lại Lunacia — hành trình của ngươi vẫn đang chờ.';
   el('sect-select').classList.remove('hidden');
   AudioSys.playBgm(BGM_INTRO); // nhạc Ái Đích Phế Khư vang lên ngay màn hình chính
 }
@@ -7030,7 +7030,7 @@ function renderBag(){
       <img src="assets/items/mat_${r.icon}.png" onerror="this.style.display='none'" alt="">
       <span class="mc-count" style="color:${r.color}">${fmtCount(v)}</span></div>`;
   }
-  html += `<div class="mat-cell" title="${matTip('Bạc', 'tiêu xài khắp giang hồ', player.silver)}">
+  html += `<div class="mat-cell" title="${matTip('Bạc', 'tiêu xài khắp Lunacia', player.silver)}">
     <img src="assets/items/mat_bac.png" onerror="this.style.display='none'" alt="">
     <span class="mc-count" style="color:#7ecbff">${fmtCount(player.silver)}</span></div>`;
   html += `<div class="mat-cell" title="${matTip('Công Huân Lệnh', 'Truy Nã Lệnh mỗi ngày · quay Vạn Duyên Các', player.congHuan||0)}">
@@ -7508,7 +7508,7 @@ function applySkillIcons(){
 }
 // ---------- Hệ thống cửa hàng — mỗi NPC một quầy hàng riêng ----------
 const SHOPS = {
-  thuongnhan: { quote:'"Giang hồ lợi lớn nhất là <b style=\'color:#7ecbff\'>bạc</b> — có bạc là có tất cả!"', junk:true, rows:[
+  thuongnhan: { quote:'"Lunacia này, lợi lớn nhất là <b style=\'color:#7ecbff\'>bạc</b> — có bạc là có tất cả!"', junk:true, rows:[
     { id:'thuoc',   name:'🧪 Hồ Lô Thuốc',     price:150, desc:'Hồi 40% máu tức thì (phím R) — túi đựng tối đa 5 lọ' },
     { id:'phu',     name:'☂ Thiên Mệnh Phù',   price:500, desc:'Bảo hiểm rèn +7 trở lên — xịt giữ nguyên cấp' },
     { id:'tiendan', name:'◈ Tiến Cấp Đan ×3',  price:900, desc:'Tấn chức Tuyệt Học (Ám Khí/Cung Tiễn/Cương Khí)' },
@@ -7525,7 +7525,7 @@ const SHOPS = {
     { id:'ruongpc', name:'🛡 Rương Phòng Cụ', price:700, desc:'Giáp trụ ngẫu nhiên theo cấp — có thể ra trang bị Hoàn Hảo' },
     { id:'phongphu', name:'🐾 Phong Linh Phù', price:1500, desc:'Thu phục quái tinh anh suy yếu (dưới 40% máu) làm Linh Thú — đứng gần bấm T' },
   ]},
-  trachu: { quote:'"Vào đây uống chén trà nóng đã — chuyện giang hồ để sau hẵng hay."', rows:[
+  trachu: { quote:'"Vào đây uống chén trà nóng đã — chuyện Lunacia để sau hẵng hay."', rows:[
     { id:'nghitro', name:'🛏 Nghỉ Trọ',      price:120, desc:'Nghỉ ngơi dưỡng thần — hồi đầy HP và Chân Khí' },
     { id:'ruou',    name:'🍶 Rượu Hổ Cốt',   price:200, desc:'3 phút +12% công lực — men say bừng bừng sát khí' },
   ]},
@@ -8315,7 +8315,7 @@ function renderSettings(){
     <div class="set-row" style="border-bottom:none;justify-content:center"><b style="color:#fff2b0;font-size:12px">— ☁ PHI THĂNG · TÁN TIÊN —</b></div>
     <div class="set-row"><span>⚥ Hình dáng tiên nhân</span><span><button class="mini-btn ${player.gender !== 'nu' ? '' : 'danger'}" onclick="setGender('nam')">NAM</button> <button class="mini-btn ${player.gender === 'nu' ? '' : 'danger'}" onclick="setGender('nu')">NỮ</button></span></div>
     <div class="set-row"><span>🎨 Tiên Y (skin)</span><span>${Object.keys(TIEN_SKINS).map(k => `<button class="mini-btn" style="color:${TIEN_SKINS[k].halo} !important;border-color:${TIEN_SKINS[k].halo} !important" title="${TIEN_SKINS[k].name}" onclick="setTienSkin('${k}')">${player.tienSkin === k ? '◉' : '●'}</button>`).join('')}</span></div>
-    <div style="font-size:10.5px;color:#9aa8d4;line-height:1.5">Đang mặc: <b style="color:${(TIEN_SKINS[player.tienSkin] || TIEN_SKINS.bach).halo}">${(TIEN_SKINS[player.tienSkin] || TIEN_SKINS.bach).name}</b> — môn phái đã phá bỏ, võ học toàn tự do, ngự kiếm phi hành +25% tốc độ.</div>` : ''}
+    <div style="font-size:10.5px;color:#9aa8d4;line-height:1.5">Đang mặc: <b style="color:${(TIEN_SKINS[player.tienSkin] || TIEN_SKINS.bach).halo}">${(TIEN_SKINS[player.tienSkin] || TIEN_SKINS.bach).name}</b> — ràng buộc Tộc đã phá bỏ, võ học toàn tự do, ngự kiếm phi hành +25% tốc độ.</div>` : ''}
     <div class="set-row" style="border-bottom:none"><span style="color:#c05a4a">⚠ Xóa dữ liệu & tu luyện lại</span><button class="mini-btn danger" onclick="wipeSave()">XÓA SAVE</button></div>
     <div style="font-size:11px;color:#9aa8d4;margin-top:8px;line-height:1.5">Âm thanh sẽ phát sau thao tác đầu tiên của bạn (quy định trình duyệt). Mọi cài đặt được lưu tự động.</div>`;
 }
@@ -8694,7 +8694,7 @@ window.travelTo = function(mapId, from){
 // ---------- Map panel: vùng chưa mở = ??? ----------
 function renderMapPanel(){
   const zt = zoneType();
-  let html = `<h3>Bản Đồ Giang Hồ</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  let html = `<h3>Bản Đồ Lunacia</h3><button class="close-x" onclick="closePanels()">✕</button>`;
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Đang ở: <b style="color:${zt.color}">${mapDef().name}</b> · ${zt.name} · <span style="opacity:.7">Nhiệm vụ: phím Q</span>${window.TEST_MODE ? ' · <span style="color:#7fd4ff">[CHẾ ĐỘ TEST — dịch chuyển tự do]</span>' : ''}</div>`;
   // GDD Đợt 2 B2: badge mục tiêu NV trên từng vùng
   const _qt = questTarget(currentQuest());
@@ -9217,7 +9217,7 @@ window.ttAct = function(act, arg){
 // ---------- Bảng Nhân Mạch (phím L) ----------
 function renderRelationPanel(){
   const rels = player.relations || {};
-  let html = `<h3>🏮 Giang Hồ Nhân Mạch</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  let html = `<h3>🏮 Lunacia Nhân Mạch</h3><button class="close-x" onclick="closePanels()">✕</button>`;
   html += `<div style="font-size:11.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">Tán tu lang bạt giang hồ — Tán Gẫu mỗi ngày, Tặng Quà, Tỷ Thí để tăng hảo cảm. Đến <b style="color:#5ac8b8">Tri Kỷ</b> có thể <b>Luận Đạo</b> nhận tâm pháp gia truyền; <b style="color:#ffb15c">Chí Giao</b> mở Kết Bái. Danh sách luân phiên theo tuần (Lịch Tu Tiên).</div>`;
   const ids = Object.keys(rels).sort((a, b) => (rels[b].score) - (rels[a].score));
   if (!ids.length) html += `<div style="opacity:.6;font-size:12px">Chưa quen biết ai — đi ra ngoài tìm các tán tu đang lang bạt, lại gần bấm E.</div>`;
