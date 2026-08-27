@@ -23,6 +23,8 @@ export function toggleLang() {
   }
 }
 
+// TODO(rename): same Ascension-rename decision as GamePage.tsx's REALM_NAMES and game.js's
+// cultivation-realm terms — update all three together, see docs/NAMING_MAP.md.
 export const REALM_EN = [
   "Mortal",
   "Qi Refining · Stage 1",
@@ -37,14 +39,16 @@ export const REALM_EN = [
 ];
 
 export const SECT_EN: Record<string, string> = {
-  thieulam: "Shaolin",
-  toanchan: "Quanzhen",
-  comoc: "Ancient Tomb",
-  baidasan: "White Camel Mt.",
-  minhgiao: "Ming Cult",
-  doanthi: "Duan Clan",
-  daohoa: "Peach Blossom",
-  vophai: "Wanderer",
+  thieulam: "Mech",
+  toanchan: "Aquatic",
+  comoc: "Dusk",
+  baidasan: "Reptile",
+  minhgiao: "Beast",
+  doanthi: "Bird",
+  daohoa: "Plant",
+  bug: "Bug",
+  dawn: "Dawn",
+  vophai: "Unclassed",
 };
 
 const dict = {
@@ -53,7 +57,7 @@ const dict = {
     vi: "Bản chơi offline — không cần tài khoản, không cần ví",
     en: "Offline mode — no account, no wallet needed",
   },
-  playNow: { vi: "⚔ Vào Giang Hồ Ngay", en: "⚔ Enter the Jianghu" },
+  playNow: { vi: "⚔ Vào Lunacia Ngay", en: "⚔ Enter Lunacia" },
   offlineNote: {
     vi: "Hành trình của bạn được lưu ngay trong trình duyệt này — mở lại là chơi tiếp.",
     en: "Your journey is saved right in this browser — reopen and keep playing.",
@@ -87,7 +91,7 @@ const dict = {
   },
   logout: { vi: "Đăng xuất", en: "Sign out" },
   loading: { vi: "Đang tải…", en: "Loading…" },
-  heroDefault: { vi: "Hiệp khách", en: "Hero" },
+  heroDefault: { vi: "Nhà Huấn Luyện", en: "Trainer" },
   // Cloud save status
   cloudSaved: { vi: "Đã lưu cloud", en: "Cloud saved" },
   cloudRetry: { vi: "Lưu cloud thất bại — đang thử lại…", en: "Cloud save failed — retrying…" },
@@ -97,7 +101,7 @@ const dict = {
   },
   cloudLoaded: { vi: "Đã tải save cloud", en: "Cloud save loaded" },
   // Leaderboard modal
-  lbTitle: { vi: "🏆 Bảng Xếp Hạng Võ Lâm", en: "🏆 Martial World Leaderboard" },
+  lbTitle: { vi: "🏆 Bảng Xếp Hạng Lunacia", en: "🏆 Lunacia Leaderboard" },
   lbSub: {
     vi: "Đồng bộ theo lần lưu cloud gần nhất của mỗi hiệp khách",
     en: "Synced from each hero's latest cloud save",
@@ -111,8 +115,8 @@ const dict = {
     vi: "Chưa có hiệp khách nào lưu cloud — hãy trở thành người đầu tiên!",
     en: "No heroes have saved to cloud yet — be the first!",
   },
-  noSect: { vi: "Vô môn phái", en: "No sect" },
-  kills: { vi: "tả sát", en: "kills" },
+  noSect: { vi: "Chưa chọn Tộc", en: "Unclassed" },
+  kills: { vi: "quái đã hạ", en: "kills" },
 } as const;
 
 export type TKey = keyof typeof dict;

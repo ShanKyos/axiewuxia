@@ -3,6 +3,7 @@
    migrated content — see docs/I18N_MIGRATION_GUIDE.md. */
 window.I18N_VI = {
   'hud.hint.move': 'WASD di chuyển',
+  'hud.hint.clickmove': 'Chuột phải đi tới',
   'hud.hint.attack': 'Space đánh',
   'hud.hint.talk': 'E nói chuyện',
   'hud.hint.potion': 'R hồ lô thuốc',

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Giang Hồ Huyễn Ảnh — Huyễn Ảnh Chí Tôn (PvE Webgame)</title>
+<title>Axie Wuxia (PvE Webgame)</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,10 +100,9 @@
 <!-- Sect select -->
 <div id="sect-select" class="hidden">
   <div class="ss-inner">
-    <h1>Giang Hồ Huyễn Ảnh</h1>
-    <h2>Huyễn Ảnh Chí Tôn · PvE</h2>
+    <h1>Axie Wuxia</h1>
+    <h2>Lunacia · PvE</h2>
     <p class="ss-sub">Chọn Tộc để bắt đầu hành trình — 9 Tộc ngũ hành · Đan Điền · Kinh Mạch · Tuyệt Học · Thú Chiến</p>
-    <button id="btn-sect-video" class="qz-shuffle" style="margin-bottom:10px">🎬 Xem Video Giới Thiệu Các Tộc (90s)</button>
     <div id="sect-cards"></div>
     <label id="max-mode" style="display:none"><input type="checkbox" id="chk-max"> Chế độ thử nghiệm — bắt đầu cấp 60, đầy đủ trang bị &amp; vật liệu</label>
     <button id="btn-continue" class="big-btn hidden">Tiếp Tục Hành Trình</button>
@@ -135,7 +134,6 @@
   <div class="ss-inner">
     <h1>The Calling</h1>
     <p class="ss-sub">Mười cấp trưởng thành đã đủ bản lĩnh — 9 Tộc cùng mở cửa đón nhận.<br>Chọn một, con đường của ngươi sẽ đổi thay mãi mãi.</p>
-    <button id="btn-sect-video2" class="qz-shuffle" style="margin-bottom:10px">🎬 Xem Video Giới Thiệu Các Tộc (90s)</button>
     <div id="ceremony-cards"></div>
     <button id="btn-ceremony-later" class="big-btn" style="opacity:.75;font-size:14px">Để Sau — Ta Còn Muốn Lang Bạt</button>
   </div>
@@ -146,12 +144,6 @@
 <div id="th-celebrate" class="hidden"></div>
 <div id="cheat-console" class="hidden"><div id="cheat-log"></div><input id="cheat-input" placeholder="/help — lenh playtest" autocomplete="off" onkeydown="if(event.key==='Enter'){cheatExec(this.value);this.value='';}if(event.key==='Escape'){toggleCheatConsole();}"></div>
 <div id="overlay" class="hidden"><div id="overlay-inner"></div></div>
-
-<!-- Video giới thiệu Bát Đại Môn Phái -->
-<div id="sect-video-overlay" class="hidden" style="position:fixed;inset:0;z-index:999;background:rgba(6,5,3,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
-  <video id="sect-video" src="assets/video/sect_intro.mp4" style="max-width:92vw;max-height:78vh;border:1px solid rgba(201,162,39,.5);border-radius:10px;box-shadow:0 0 40px rgba(0,0,0,.8)" controls playsinline></video>
-  <button id="btn-sect-video-skip" class="big-btn" style="padding:8px 26px">Bỏ Qua ▶</button>
-</div>
 <script>window.RELEASE_BUILD = true;</script>
 <script src="strings/en.js"></script>
 <script src="strings/vi.js"></script>

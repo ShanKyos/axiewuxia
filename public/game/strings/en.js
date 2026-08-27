@@ -3,6 +3,7 @@
    t('the.key') from game.js — never hardcode new player-facing English text inline. */
 window.I18N_EN = {
   'hud.hint.move': 'WASD move',
+  'hud.hint.clickmove': 'Right-click to walk',
   'hud.hint.attack': 'Space attack',
   'hud.hint.talk': 'E talk',
   'hud.hint.potion': 'R potion gourd',

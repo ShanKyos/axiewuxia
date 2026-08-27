@@ -6042,6 +6042,10 @@ window.craftCloak = function(t){
   if (!c) return;
   if (player.level < c.req) return;
   if (player.gems.tuLa < c.cost.tuLa || player.gems.honNguyen < c.cost.hon || player.silver < c.cost.silver) return;
+  // t===2 replaces the equipped/inv aochoang in place (net-zero) unless neither exists — only
+  // that fallback path actually grows the inventory, same as the t!==2 path below.
+  const willAddSlot = t === 2 ? (!player.equip.aochoang && player.inv.findIndex(x => x.slot === 'aochoang') < 0) : true;
+  if (willAddSlot && player.inv.length >= 30){ addFloat(player.x, player.y-40, 'Túi đồ đầy!', '#ff7a6a', 12); return; }
   player.gems.tuLa -= c.cost.tuLa; player.gems.honNguyen -= c.cost.hon; player.silver -= c.cost.silver;
   const it = genCloak(t);
   if (t === 2){
@@ -6613,27 +6617,8 @@ else setTimeout(showIntro, 0); // người mới → cốt truyện (defer: ch�
     }
   });
 }
-// 🎬 Video giới thiệu Bát Đại Môn Phái — mở từ menu chính & lễ bái sư
-{
-  const ov = el('sect-video-overlay'), vd = el('sect-video');
-  const openV = ()=>{
-    ov.classList.remove('hidden');
-    if (AudioSys.bgm) AudioSys.bgm.pause();
-    vd.currentTime = 0;
-    vd.volume = Math.max(0.2, (SETTINGS.bgm/100));
-    vd.play().catch(()=>{});
-    AudioSys.sfx('ui', 0.6);
-  };
-  const closeV = ()=>{
-    vd.pause();
-    ov.classList.add('hidden');
-    if (AudioSys.bgm && AudioSys.started) AudioSys.bgm.play().catch(()=>{});
-  };
-  const b1 = el('btn-sect-video'); if (b1) b1.addEventListener('click', openV);
-  const b2 = el('btn-sect-video2'); if (b2) b2.addEventListener('click', openV);
-  el('btn-sect-video-skip').addEventListener('click', closeV);
-  vd.addEventListener('ended', closeV);
-}
+// Video giới thiệu các Tộc removed — assets/video/sect_intro.mp4 never existed in the repo,
+// the buttons that opened it were dead links. Re-add once real intro footage is sourced.
 window.addEventListener('beforeunload', saveGame);
 
 // ---------- Crash watchdog: ghi lại lỗi cuối để chẩn đoán ----------
@@ -8054,7 +8039,7 @@ el('is-skip').addEventListener('click', closeIntro);
 
 // ═══════════ HƯỚNG DẪN TÂN THỦ TỪNG BƯỚC ═══════════
 const TUT_STEPS = [
-  { key:'move',  txt:'<b>W A S D</b> hoặc phím mũi tên để di chuyển — hãy đi một đoạn', },
+  { key:'move',  txt:'<b>W A S D</b> hoặc phím mũi tên để di chuyển — hãy đi một đoạn. (Mẹo: <b>chuột phải</b> vào bản đồ hoặc minimap để tự động đi tới đó)', },
   { key:'npc',   txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
   { key:'map',   txt:'Nhấn <b>M</b> mở bản đồ → <b>Dịch Chuyển</b> tới <b>Petalshade Isle</b> để săn Chimera' },
   { key:'kill',  txt:'Nhấn <b>SPACE</b> để đánh quái gần nhất — hãy hạ 1 con <b>Dã Trư</b>' },
@@ -10451,7 +10436,7 @@ function renderChannelForm(){
   const unlocked = channelFormsUnlocked();
   let html = `<div class="stat-sec">HÓA THÂN TRẤN ẢI</div>
     <div style="font-size:12px;color:#9aa8d4;line-height:1.85;padding:0 2px 8px">
-    Hạ <b style="color:#7ecbff">Trấn Ải</b> (boss trấn giữ cuối mỗi bản đồ, mở sau khi phá 3 Thủ Vệ) lần đầu →
+    <b style="color:#7ecbff">Hạ Trấn Ải</b> (boss trấn giữ cuối mỗi bản đồ, mở sau khi phá 3 Thủ Vệ) lần đầu →
     vĩnh viễn hàng phục hình dạng của nó. Bấm <b style="color:#ffb15c">P</b> trong trận để hóa thân
     <b>14 giây</b>: đổi hẳn tạo hình, <b style="color:#7ec850">+25% công lực</b>, và một đòn bộc phá quanh người
     lúc kích hoạt. Hồi <b>90 giây</b>.${player.channelT > 0 ? ` <span style="color:#ffb15c">— đang hóa thân, còn ${Math.ceil(player.channelT)}s!</span>` : player.channelCd > 0 ? ` <span style="color:#8a8a8a">— còn hồi ${Math.ceil(player.channelCd)}s</span>` : ''}</div>`;
@@ -10619,7 +10604,7 @@ function sysUnlocked(id){
 function hintText(){
   // Migrated to i18n.js's t() — proof-of-pattern slice, see docs/I18N_MIGRATION_GUIDE.md.
   const lv = player.level;
-  const parts = [t('hud.hint.move'), t('hud.hint.attack'), t('hud.hint.talk'), t('hud.hint.potion')];
+  const parts = [t('hud.hint.move'), t('hud.hint.clickmove'), t('hud.hint.attack'), t('hud.hint.talk'), t('hud.hint.potion')];
   if (lv >= 3) parts.push(t('hud.hint.quest'));
   if (lv >= 5) parts.push(t('hud.hint.character'), t('hud.hint.bag'));
   if (lv >= 8) parts.push(t('hud.hint.map'), t('hud.hint.skills'));

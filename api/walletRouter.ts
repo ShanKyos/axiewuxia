@@ -26,7 +26,7 @@ const NONCE_TTL_MS = 5 * 60 * 1000;
 
 function buildLoginMessage(address: string, nonce: string): string {
   return [
-    "Giang Hồ Huyễn Ảnh — Đăng nhập bằng Ronin Wallet",
+    "Axie Wuxia — Đăng nhập bằng Ronin Wallet",
     "",
     `Địa chỉ: ${address}`,
     `Nonce: ${nonce}`,
