@@ -8403,101 +8403,101 @@ function npcName(id){ const n = NPCS.find(x => x.id === id); return n ? n.name :
 // ---------- Chính tuyến: gắn chương I cho 10 NV cũ ----------
 QUESTS.forEach(q => {
   // QA regression: chỉ NV1 ở Tương Dương — NV2 trả tại Trưởng Làng, vì cổng thành khóa (reqMain 10)
-  // sau khi rời thành, nếu trả NV2 cho Quách Đại Hiệp thì tân thủ bị kẹt cứng không thể vào lại thành.
-  if (q.id <= 1){ q.npc = 'quachtinh'; q.map = 'tuongduong'; q.chapter = 'Chương I · Nhập Thế'; }
-  else { q.npc = 'truonglang'; q.map = 'daohoa'; q.chapter = 'Chương I · Thanh Ngưu Thôn'; }
+  // sau khi rời thành, nếu trả NV2 cho Trưởng Lão Rell thì tân thủ bị kẹt cứng không thể vào lại thành.
+  if (q.id <= 1){ q.npc = 'quachtinh'; q.map = 'tuongduong'; q.chapter = 'Chương I · Hatchling Của Lunacia'; }
+  else { q.npc = 'truonglang'; q.map = 'daohoa'; q.chapter = 'Chương I · Petalshade Isle'; }
 });
-// Chương II — Tương Dương Phong Vân (mở sau khi phá Bình Cảnh)
+// Chương II — Lunaris City (mở sau khi phá vỏ kén)
 QUESTS.push(
-  { id:11, lv:10, name:'Phá Cảnh Nhập Thành', chapter:'Chương II · Tương Dương Phong Vân', npc:'quachtinh', map:'tuongduong',
-    desc:'Bình Cảnh đã phá, danh tiếng vọng đến Tương Dương. Đến thành bái kiến Quách Đại Hiệp.',
+  { id:11, lv:10, name:'Bước Vào Thành', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
+    desc:'Vỏ kén đã phá, danh tiếng vọng đến Lunaris City. Đến thành gặp Trưởng Lão Rell.',
     type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:2000, silver:300} },
-  { id:12, lv:11, name:'Quân Nhu Thiếu Hụt', chapter:'Chương II · Tương Dương Phong Vân', npc:'quachtinh', map:'tuongduong',
-    desc:'Quân nhu trong thành cạn kiệt. Quay về Đào Hoa Đảo hái 6 Thảo Dược đem về đây.',
+  { id:12, lv:11, name:'Vật Tư Thiếu Hụt', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
+    desc:'Vật tư trong thành cạn kiệt. Quay về Petalshade Isle hái 6 Thảo Dược đem về đây.',
     type:'collect', need:6, rew:{xp:2600, silver:350, mat:2} },
-  { id:13, lv:12, name:'Thổ Phỉ Ngoại Ô', chapter:'Chương II · Tương Dương Phong Vân', npc:'quachtinh', map:'tuongduong',
-    desc:'Sơn tặc ngoại ô Đào Hoa chặn đường lương thực. Diệt 8 tên để dọn đường.',
+  { id:13, lv:12, name:'Cướp Bóc Ngoại Ô', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
+    desc:'Sơn tặc ở Outskirts chặn đường tiếp tế. Diệt 8 tên để dọn đường.',
     type:'kill', mob:'bandit', need:8, rew:{xp:3200, silver:420} },
-  { id:14, lv:13, name:'Triệu Tập Anh Hùng', chapter:'Chương II · Tương Dương Phong Vân', npc:'quachtinh', map:'tuongduong',
-    desc:'Quách Đại Hiệp cần nhân thủ. Đến gặp Môn Khách trong thành để ghi danh.',
+  { id:14, lv:13, name:'Triệu Tập Đồng Đội', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
+    desc:'Trưởng Lão Rell cần thêm người. Đến gặp Trinh Sát Wren trong thành để ghi danh.',
     type:'talk', targetNpc:'monkhach', need:1, rew:{xp:2800, silver:300} },
-  { id:15, lv:14, name:'Lập Uy Trước Giặc', chapter:'Chương II · Tương Dương Phong Vân', npc:'quachtinh', map:'tuongduong',
-    desc:'Hắc Phong Sát dòm ngó thành trì. Diệt 3 tên ở Đào Hoa Đảo để lập uy — rồi đường lên Chung Nam sẽ mở.',
+  { id:15, lv:14, name:'Lập Uy Trước Hiểm Họa', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
+    desc:'Gloam Marauder dòm ngó thành trì. Diệt 3 tên ở Petalshade Isle để lập uy — rồi đường lên Thornwood Reach sẽ mở.',
     type:'kill', mob:'assassin', need:3, rew:{xp:4200, silver:500, mat:2} },
 );
-// Chương III — Chung Nam Vân Vụ
+// Chương III — Thornwood Reach
 QUESTS.push(
-  { id:16, lv:20, name:'Bái Sơn Môn', chapter:'Chương III · Chung Nam Vân Vụ', npc:'daosi', map:'chungnam',
-    desc:'Lên Chung Nam Sơn bái kiến Đạo Sĩ Toàn Chân ngay cổng sơn môn.',
+  { id:16, lv:20, name:'Vào Rừng Gai', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
+    desc:'Vào Thornwood Reach gặp Người Gác Rừng Corran ngay cửa rừng.',
     type:'talk', targetNpc:'daosi', need:1, rew:{xp:5500, silver:600} },
-  { id:17, lv:22, name:'Phản Đồ Loạn Đạo', chapter:'Chương III · Chung Nam Vân Vụ', npc:'daosi', map:'chungnam',
-    desc:'Phản đồ trốn môn phái chiếm giữ sơn đạo. Diệt 6 Toàn Chân Phản Đồ.',
+  { id:17, lv:22, name:'Kẻ Phản Tộc', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
+    desc:'Những kẻ từng thuộc một Tộc, nay tha hóa vì Chimera, đang chiếm giữ lối mòn. Diệt 6 Chimera Bội Phản.',
     type:'kill', mob:'phando', need:6, rew:{xp:6500, silver:700} },
-  { id:18, lv:26, name:'Xà Nữ Mê Tâm Thuật', chapter:'Chương III · Chung Nam Vân Vụ', npc:'daosi', map:'chungnam',
-    desc:'Xà Nữ dùng mê tâm thuật hại đạo đồng tu luyện. Diệt 6 Xà Nữ.',
+  { id:18, lv:26, name:'Rắn Độc Trong Rừng', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
+    desc:'Chimera Rắn Độc dùng độc khí mê hoặc muông thú trong rừng. Diệt 6 con.',
     type:'kill', mob:'xanu', need:6, rew:{xp:8000, silver:800, mat:2} },
-  { id:19, lv:30, name:'Kiếm Khách Bán Đảo', chapter:'Chương III · Chung Nam Vân Vụ', npc:'daosi', map:'chungnam',
-    desc:'Kiếm Khách Bán Đảo thuê tay chặn đường lên Cổ Mộ. Diệt 3 tên — đường xuống Cổ Mộ sẽ mở.',
+  { id:19, lv:30, name:'Axie Sa Ngã', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
+    desc:'Một Axie từng lang thang, nay bị Chimera ăn mòn tâm trí, chặn đường xuống Hollow Roost. Diệt 3 tên — đường xuống sẽ mở.',
     type:'kill', mob:'bandao', need:3, rew:{xp:10000, silver:1000, mat:3} },
 );
-// Chương IV — Cổ Mộ U Ảnh
+// Chương IV — Hollow Roost
 QUESTS.push(
-  { id:20, lv:40, name:'Người Thủ Mộ', chapter:'Chương IV · Cổ Mộ U Ảnh', npc:'thumo', map:'comoc',
-    desc:'Trong Cổ Mộ Mật Thất u ám, tìm Thủ Mộ Nhân — người duy nhất còn giữ được lẽ sống nơi này.',
+  { id:20, lv:40, name:'Người Giữ Tổ', chapter:'Chương IV · Hollow Roost', npc:'thumo', map:'comoc',
+    desc:'Trong Hollow Roost u ám, tìm Sylas — người duy nhất còn giữ được lẽ sống nơi này.',
     type:'talk', targetNpc:'thumo', need:1, rew:{xp:14000, silver:1200} },
-  { id:21, lv:43, name:'Thị Nữ Dạ Khúc', chapter:'Chương IV · Cổ Mộ U Ảnh', npc:'thumo', map:'comoc',
-    desc:'Cổ Mộ Thị Nữ đêm đêm khóc than, quấy nhiễu vong linh yên nghỉ. Siêu độ 7 Thị Nữ.',
+  { id:21, lv:43, name:'Tiếng Khóc Trong Đêm', chapter:'Chương IV · Hollow Roost', npc:'thumo', map:'comoc',
+    desc:'Chimera U Linh đêm đêm than khóc, quấy nhiễu giấc ngủ của tổ. Giải thoát 7 con.',
     type:'kill', mob:'thinu', need:7, rew:{xp:17000, silver:1400} },
-  { id:22, lv:47, name:'Phá Mộc Nhân Trận', chapter:'Chương IV · Cổ Mộ U Ảnh', npc:'thumo', map:'comoc',
-    desc:'Cơ Quan Mộc Nhân trấn giữ mộ đạo vẫn vận hành sau trăm năm. Phá hủy 5 Mộc Nhân.',
+  { id:22, lv:47, name:'Phá Golem Gác Tổ', chapter:'Chương IV · Hollow Roost', npc:'thumo', map:'comoc',
+    desc:'Những Golem canh tổ vẫn vận hành sau cả trăm năm, giờ đã lỗi vòng lệnh. Phá hủy 5 Golem.',
     type:'kill', mob:'mocnhan', need:5, rew:{xp:21000, silver:1600, mat:3} },
-  { id:23, lv:52, name:'Huyết Bát Tẫu Loạn', chapter:'Chương IV · Cổ Mộ U Ảnh', npc:'thumo', map:'comoc',
-    desc:'Bầy Huyết Biên Bức hút máu kẻ lỡ bước. Diệt 6 con — lối vào Tuyệt Tình Cốc sẽ mở.',
+  { id:23, lv:52, name:'Bầy Dơi Hút Máu', chapter:'Chương IV · Hollow Roost', npc:'thumo', map:'comoc',
+    desc:'Bầy Dơi Chimera rút cạn sức sống của kẻ lỡ bước. Diệt 6 con — lối vào Frostmire Vale sẽ mở.',
     type:'kill', mob:'huyetbat', need:6, rew:{xp:26000, silver:1800, mat:3} },
 );
-// Chương V — Tuyệt Tình Tình Chướng
+// Chương V — Frostmire Vale
 QUESTS.push(
-  { id:24, lv:60, name:'Tình Hoa Độc', chapter:'Chương V · Tuyệt Tình Tình Chướng', npc:'ttmon', map:'tuyettinh',
-    desc:'Đến Tuyệt Tình Cốc gặp Tuyệt Tình Môn Nhân — cẩn thận, hoa nơi đây có độc.',
+  { id:24, lv:60, name:'Sương Giá Và Độc Hoa', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
+    desc:'Đến Frostmire Vale gặp Liora — cẩn thận, hoa nơi đây có độc.',
     type:'talk', targetNpc:'ttmon', need:1, rew:{xp:34000, silver:2000} },
-  { id:25, lv:63, name:'Đệ Tử Thất Lạc', chapter:'Chương V · Tuyệt Tình Tình Chướng', npc:'ttmon', map:'tuyettinh',
-    desc:'Đệ tử môn phái bị tình hoa làm mê hoặc, trở mặt thành thù. Diệt 7 Tuyệt Tình Đệ Tử.',
+  { id:25, lv:63, name:'Những Kẻ Lạc Lối', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
+    desc:'Những hatchling từng lạc vào vale, bị độc hoa mê hoặc, quay sang thù địch. Giải thoát 7 Kẻ Lạc Lối.',
     type:'kill', mob:'ttdetu', need:7, rew:{xp:40000, silver:2200} },
-  { id:26, lv:68, name:'Độc Yêu Tà Vụ', chapter:'Chương V · Tuyệt Tình Tình Chướng', npc:'ttmon', map:'tuyettinh',
-    desc:'Tình Hoa Độc Yêu là nguồn của tà độc. Diệt 6 Độc Yêu — nhớ Cương Khí hộ thể.',
+  { id:26, lv:68, name:'Nguồn Độc', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
+    desc:'Chimera Hoa Độc là gốc rễ của độc khí lan khắp vale. Diệt 6 con — nhớ Cương Khí hộ thể.',
     type:'kill', mob:'docyeu', need:6, rew:{xp:48000, silver:2600, mat:4} },
-  { id:27, lv:73, name:'Hắc Y Thích Khách', chapter:'Chương V · Tuyệt Tình Tình Chướng', npc:'ttmon', map:'tuyettinh',
-    desc:'Hắc Y Sát Thủ mai phục chặn đường ra thảo nguyên. Diệt 4 tên — đường đến Mông Cổ Đại Doanh sẽ mở.',
+  { id:27, lv:73, name:'Sát Thủ Trong Sương', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
+    desc:'Sát Thủ Sương Mù mai phục chặn đường ra Ashen Steppe. Diệt 4 tên — đường đến đó sẽ mở.',
     type:'kill', mob:'satthuhy', need:4, rew:{xp:58000, silver:3000, mat:4} },
 );
-// Chương VI — Mông Cổ Phong Sa
+// Chương VI — Ashen Steppe
 QUESTS.push(
-  { id:28, lv:80, name:'Nội Ứng Trong Doanh', chapter:'Chương VI · Mông Cổ Phong Sa', npc:'noiung', map:'mongco',
-    desc:'Tìm Nội Ứng của Quách Đại Hiệp ngay rìa Mông Cổ Đại Doanh. Hành động lặng lẽ.',
+  { id:28, lv:80, name:'Người Do Thám', chapter:'Chương VI · Ashen Steppe', npc:'noiung', map:'mongco',
+    desc:'Tìm Dax, người của Trưởng Lão Rell, ngay rìa Ashen Steppe. Hành động lặng lẽ.',
     type:'talk', targetNpc:'noiung', need:1, rew:{xp:68000, silver:3200} },
-  { id:29, lv:83, name:'Cắt Đứt Tai Mắt', chapter:'Chương VI · Mông Cổ Phong Sa', npc:'noiung', map:'mongco',
-    desc:'Thám Tử Mông Cổ rải khắp thảo nguyên. Diệt 7 tên để bịt mắt quân địch.',
+  { id:29, lv:83, name:'Cắt Đứt Tai Mắt', chapter:'Chương VI · Ashen Steppe', npc:'noiung', map:'mongco',
+    desc:'Trinh Sát Tro Tàn rải khắp thảo nguyên, dò xét từng bước chân. Diệt 7 tên để bịt tai mắt của bầy Chimera.',
     type:'kill', mob:'thamtu', need:7, rew:{xp:78000, silver:3600} },
-  { id:30, lv:88, name:'Phá Cung Thủ Trận', chapter:'Chương VI · Mông Cổ Phong Sa', npc:'noiung', map:'mongco',
-    desc:'Cung Thủ Thảo Nguyên bắn từ xa cực nguy hiểm. Diệt 6 Cung Thủ.',
+  { id:30, lv:88, name:'Phá Trận Cung Thủ', chapter:'Chương VI · Ashen Steppe', npc:'noiung', map:'mongco',
+    desc:'Cung Thủ Tro Tàn bắn từ xa cực nguy hiểm. Diệt 6 tên.',
     type:'kill', mob:'cungthu', need:6, rew:{xp:90000, silver:4000, mat:5} },
-  { id:31, lv:93, name:'Hắc Kỵ Phong Ba', chapter:'Chương VI · Mông Cổ Phong Sa', npc:'noiung', map:'mongco',
-    desc:'Hắc Ám Kỵ Binh là mũi nhọn xung kích. Diệt 4 tên — đường ra Nhạn Môn Quan sẽ mở.',
+  { id:31, lv:93, name:'Kỵ Binh Xung Kích', chapter:'Chương VI · Ashen Steppe', npc:'noiung', map:'mongco',
+    desc:'Kỵ Binh Tro Tàn là mũi nhọn của bầy Chimera đang tụ lại. Diệt 4 tên — đường ra Stormgate Pass sẽ mở.',
     type:'kill', mob:'kybinh', need:4, rew:{xp:105000, silver:4500, mat:5} },
 );
-// Chương VII — Nhạn Môn Huyết Chiến (chung kết)
+// Chương VII — Stormgate Pass (chung kết)
 QUESTS.push(
-  { id:32, lv:100, name:'Trấn Ải Chi Binh', chapter:'Chương VII · Nhạn Môn Huyết Chiến', npc:'laotuong', map:'nhanmon',
-    desc:'Ra Nhạn Môn Quan gặp Lão Tướng — trận chiến cuối cùng đang chờ.',
+  { id:32, lv:100, name:'Cổng Bão Tố', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
+    desc:'Ra Stormgate Pass gặp Lão Tướng Brann — Ấn cuối cùng đang chờ ở đây.',
     type:'talk', targetNpc:'laotuong', need:1, rew:{xp:120000, silver:5000} },
-  { id:33, lv:100, name:'Cuồng Binh Xung Trận', chapter:'Chương VII · Nhạn Môn Huyết Chiến', npc:'laotuong', map:'nhanmon',
-    desc:'Đột Quyết Cuồng Binh ào ạt như thủy triều. Diệt 6 tên giữ vững phòng tuyến.',
+  { id:33, lv:100, name:'Cuồng Binh Xung Trận', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
+    desc:'Cuồng Binh Tro Tàn ào ạt như thủy triều. Diệt 6 tên giữ vững phòng tuyến.',
     type:'kill', mob:'cuongbinh', need:6, rew:{xp:140000, silver:5500} },
-  { id:34, lv:100, name:'Liệt Hỏa Kỳ Lân', chapter:'Chương VII · Nhạn Môn Huyết Chiến', npc:'laotuong', map:'nhanmon',
-    desc:'Liệt Hỏa Kỳ Lân cháy rụi chiến trường. Thuần diệt 4 con.',
+  { id:34, lv:100, name:'Kỳ Lân Cuồng Nộ', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
+    desc:'Kỳ Lân Liệt Hỏa cháy rụi cả trận tuyến. Thuần hóa 4 con.',
     type:'kill', mob:'kylan', need:4, rew:{xp:165000, silver:6000, mat:6} },
-  { id:35, lv:100, name:'Huyễn Ảnh Chí Tôn', chapter:'Chương VII · Nhạn Môn Huyết Chiến', npc:'laotuong', map:'nhanmon',
-    desc:'Tu La Đao Khách — đao khách đứng đầu bách chiến. Diệt 5 tên để định đoạt thiên hạ, thành danh Huyễn Ảnh Chí Tôn!',
+  { id:35, lv:100, name:"Lunacia's Number One Trainer", chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
+    desc:'Đao Khách Bão Tố — kẻ đứng đầu đám tàn dư nơi cửa ải. Diệt 5 tên để giữ vững Ấn cuối cùng và thành danh Lunacia\'s Number One Trainer!',
     type:'kill', mob:'daokhach', need:5, rew:{xp:200000, silver:8000, mat:8} },
 );
 
