@@ -2243,6 +2243,7 @@ function calcDerived(){
   if (ndB.crit) player.crit = Math.min(0.65, player.crit + ndB.crit/100);
   if (player.maDao) player.atk = Math.round(player.atk * 1.15); // Sa Đọa — ma công tà ác
   if ((player.buffAtkT || 0) > 0) player.atk = Math.round(player.atk * 1.12); // Rượu Hổ Cốt
+  if ((player.channelT || 0) > 0) player.atk = Math.round(player.atk * 1.25); // Hóa Thân Trấn Ải
   // Võ Học Phổ: buff chủ động
   if ((player.vhDmgT || 0) > 0) player.atk = Math.round(player.atk * (1 + (player.vhDmgPct || 0)/100));
   if ((player.vhCritT || 0) > 0) player.crit = 1; // Tịch Tà Kiếm Pháp
@@ -2304,6 +2305,7 @@ function newPlayer(sectKey){
     potions: 3, potionCd: 0,                   // P0: Hồ Lô Thuốc — hồi 40% máu, cd 20s, tối đa 5 lọ
     buffAtkT: 0,                             // Rượu Hổ Cốt — +12% công lực có thời hạn
     loidonT: 0,                              // Lôi Độn Phù — giảm 40% ST thiên lôi có thời hạn
+    channelPick: null, channelId: null, channelT: 0, channelCd: 0, // Hóa Thân Trấn Ải — capture/channel boss form (P)
     dotpha: 0,                               // Đan Đột Phá — bảo mệnh độ kiếp (chịu 4 tia lôi, thất bại chỉ tổn 25% Tu Vi)
     noidan: {},                              // Nội Đan yêu thú theo hành { Kim, Mộc, Thổ, Thủy, Hỏa }
     ndBonus: { atk:0, hp:0, def:0, qi:0, crit:0 }, // chỉ số vĩnh viễn từ thôn phệ nội đan
@@ -2419,6 +2421,10 @@ function loadGame(){
     if (player.bossPity == null) player.bossPity = 0;
     if (!player.chinhPhat) player.chinhPhat = { date:'', count:0 };
     if (!player.bossKills) player.bossKills = {};
+    if (player.channelPick === undefined) player.channelPick = null;
+    if (player.channelId === undefined) player.channelId = null;
+    if (player.channelT == null) player.channelT = 0;
+    if (player.channelCd == null) player.channelCd = 0;
     if (!player.storySeen) player.storySeen = {};
     if (!player.clues) player.clues = [];
     if (!player.storyFlags) player.storyFlags = {};
@@ -2667,6 +2673,61 @@ const BOSS_DEFS = {
       { id:'nm3', name:'Cô Thành Tướng Quân',lv:109, el:'Thổ',  img:'boss_thienbinh', x:.42, y:.80, moves:['xung','vong','vach'] } ],
     tranai: { id:'nm4', name:'Nhạn Môn Quan Chủ', lv:112, el:'Hỏa', img:'boss_thienbinh', x:.86, y:.80, moves:['vach','xung','vong','cuong'] } },
 };
+// ═══ Hóa Thân Trấn Ải — Boss Capture/Channel Form (P0 roadmap: Tale of Immortal + Black Myth) ═══
+// Hạ 1 Trấn Ải (boss trấn giữ cuối bản đồ) lần đầu → vĩnh viễn hàng phục hình dạng của nó. Phím P
+// hóa thân tạm thời: đổi hẳn tạo hình (dùng lại đúng sprite boss), +25% công lực, một đòn bộc phá
+// mở màn quanh người — tái dùng 100% sprite boss đã có (Axie art), không cần vẽ thêm gì.
+const CHANNEL_IMGS = {};
+for (const _cMap in BOSS_DEFS){
+  const _cTv = BOSS_DEFS[_cMap].tranai;
+  if (_cTv && !CHANNEL_IMGS[_cTv.id]){ const _cIm = new Image(); _cIm.src = 'assets/mobs/' + _cTv.img + '.png'; CHANNEL_IMGS[_cTv.id] = _cIm; }
+}
+function findTranaiById(bossId){
+  for (const mapId in BOSS_DEFS){ const tv = BOSS_DEFS[mapId].tranai; if (tv && tv.id === bossId) return tv; }
+  return null;
+}
+function channelFormsUnlocked(){
+  const out = [];
+  for (const mapId in BOSS_DEFS){
+    const tv = BOSS_DEFS[mapId].tranai;
+    if (tv && player.bossKills && (player.bossKills[mapId] || []).includes(tv.id)) out.push(tv);
+  }
+  return out;
+}
+window.setChannelPick = function(bossId){
+  if (!channelFormsUnlocked().some(f => f.id === bossId)) return;
+  player.channelPick = bossId;
+  const tv = findTranaiById(bossId);
+  addFloat(player.x, player.y-56, `☬ Hóa Thân mặc định: ${tv ? tv.name : bossId}`, '#e8c84a', 12);
+  AudioSys.sfx('ui', 0.5);
+  saveGame(); refreshCharTab('channel');
+};
+window.activateChannelForm = function(){
+  if (!player || dead) return;
+  if ((player.channelT || 0) > 0) return; // đang hóa thân rồi
+  if ((player.channelCd || 0) > 0){ addFloat(player.x, player.y-40, `Hóa Thân còn hồi ${Math.ceil(player.channelCd)}s`, '#8a8a8a', 12); return; }
+  const unlocked = channelFormsUnlocked();
+  if (!unlocked.length){ addFloat(player.x, player.y-40, 'Chưa hàng phục Trấn Ải nào — hạ boss cuối bản đồ để mở khóa!', '#8a8a8a', 12); return; }
+  const pick = unlocked.find(f => f.id === player.channelPick) || unlocked[unlocked.length-1];
+  player.channelId = pick.id;
+  player.channelT = 14;
+  player.channelCd = 90;
+  calcDerived();
+  addFloat(player.x, player.y-60, `☬ HÓA THÂN — ${pick.name}!`, '#e8c84a', 16);
+  AudioSys.sfx('levelup', 0.85);
+  addEffect({ type:'ring', x:player.x, y:player.y, r:110, color:'#e8c84a', big:true });
+  addEffect({ type:'ring', x:player.x, y:player.y, r:70, color:(NGU_HANH[pick.el]||{}).color || '#e8c84a' });
+  // đòn bộc phá mở màn — sát thương quanh người, đúng chất một chiêu Trấn Ải
+  const R = 160;
+  for (const m of mobs){
+    if (m.dead) continue;
+    if (dist(player.x, player.y, m.x, m.y) >= R + m.def.size) continue;
+    const dmg = Math.round(player.atk * 2.2 * rnd(0.92, 1.08));
+    hurtMob(m, dmg, 'crit');
+    if (!m.dead) m.stunT = Math.max(m.stunT || 0, m.def.bossKind ? 0.35 : 0.9);
+  }
+  saveGame();
+};
 // Đồng Môn Trợ Uy (Cốt truyện × Tông môn §4): map "chạm nhà" của từng phái
 const SECT_HOOK_MAP = { daohoa:'daohoa', ngoai:'baidasan', chungnam:'toanchan', comoc:'comoc', tuyettinh:'thieulam', mongco:'doanthi', nhanmon:'minhgiao' };
 function bossScale(lv){
@@ -2907,6 +2968,7 @@ window.addEventListener('keydown', e=>{
   if (e.key.toLowerCase()==='r') usePotion();
   if (e.key.toLowerCase()==='g' && nearGate && player && !dead) travelTo(nearGate.to, curMap);
   if (e.key.toLowerCase()==='t' && player && !dead) tryTame(); // Phong Linh Phù — thu phục tinh anh suy yếu
+  if (e.key.toLowerCase()==='p' && player && !dead) window.activateChannelForm(); // Hóa Thân Trấn Ải
   if (e.key === 'Escape') closePanels();
 });
 window.addEventListener('keyup', e=> keys[e.key.toLowerCase()] = false);
@@ -3830,6 +3892,14 @@ function update(dt){
       if (!dead) addFloat(player.x, player.y-46, 'Lôi Độn Phù đã tan…', '#8a8a8a', 12);
     }
   }
+  if ((player.channelT || 0) > 0){ // Hóa Thân Trấn Ải hết hạn — trở lại nguyên hình
+    player.channelT -= dt;
+    if (player.channelT <= 0){
+      player.channelT = 0; player.channelId = null; calcDerived();
+      if (!dead) addFloat(player.x, player.y-46, 'Hóa Thân đã tan — trở lại nguyên hình…', '#8a8a8a', 12);
+    }
+  }
+  if ((player.channelCd || 0) > 0) player.channelCd = Math.max(0, player.channelCd - dt);
   player.khi = (player.khi || 0) + 3*dt*tulinhMult(); // Chân Khí tích lũy thụ động · Tụ Linh Trận tăng thêm
   tickGameClock(dt); // Lịch Tu Tiên: thời gian thế giới trôi theo thời gian thật
   if (dead) return;
@@ -5229,7 +5299,7 @@ function drawPlayer(){
     ctx.restore();
   }
   // character sprite (sect portrait art, đã cắt nền) — walk bob · idle breathing · cast pulse · attack lunge
-  const img = SECT_IMGS[p.sect];
+  const img = (p.channelT > 0 && p.channelId && CHANNEL_IMGS[p.channelId]) ? CHANNEL_IMGS[p.channelId] : SECT_IMGS[p.sect];
   const wph = p.walkPh || 0;
   const bob = p.moving ? Math.abs(Math.sin(wph))*4.2 : Math.sin(wph)*1.5;
   const rock = p.moving ? Math.sin(wph)*0.07 : 0;
@@ -5266,11 +5336,22 @@ function drawPlayer(){
       drawAscendedFigure(p, now, castK, atkK, maxed); // fallback VFX khi sprite chưa tải xong
     }
   } else if (img && img.complete && img.naturalWidth){
-    const sh = 104, sw = sh * (img.naturalWidth/img.naturalHeight);
+    const channeling = p.channelT > 0 && p.channelId;
+    const sh = (channeling ? 120 : 104), sw = sh * (img.naturalWidth/img.naturalHeight);
     const flip = Math.cos(p.face) < 0;
     ctx.save(); ctx.translate(p.x + Math.cos(p.face)*atkK*7, p.y - 26 - bob + Math.sin(p.face)*atkK*3);
     if (flip) ctx.scale(-1, 1);
     ctx.rotate(rock + atkK*0.12); ctx.scale(pulse, pulse);
+    // Hóa Thân Trấn Ải: hào quang đỏ thẫm dữ dội theo hệ boss đang mượn hình
+    if (channeling){
+      const _chTv = findTranaiById(p.channelId), _chCol = (NGU_HANH[_chTv && _chTv.el] || {}).color || '#e8c84a';
+      const hg2 = ctx.createRadialGradient(0, -8, 6, 0, -8, 70);
+      hg2.addColorStop(0, _chCol + 'b0'); hg2.addColorStop(0.55, _chCol + '30'); hg2.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.globalAlpha = 0.8 + 0.18*Math.sin(now/180); ctx.fillStyle = hg2;
+      ctx.beginPath(); ctx.arc(0, -8, 70, 0, 7); ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.shadowColor = _chCol; ctx.shadowBlur = 18;
+    }
     // Thần Hiệp: hào quang vàng rực sau lưng + viền kim quang quanh thân
     if (maxed){
       const hg = ctx.createRadialGradient(0, -8, 6, 0, -8, 64);
@@ -6679,6 +6760,7 @@ const CHAR_TABS = [
   { id:'dantian',  name:'Đan Điền',   lv:7 },
   { id:'tuyethoc', name:'Tuyệt Học',  lv:4 },
   { id:'pet',      name:'🐾 Linh Thú', lv:15 },
+  { id:'channel',  name:'☬ Hóa Thân', lv:14 },
 ];
 function renderCharPanel(){
   let tab = window.charTab;
@@ -6696,6 +6778,7 @@ function renderCharPanel(){
   else if (tab==='dantian') renderDantian();
   else if (tab==='tuyethoc') renderTuyetHoc();
   else if (tab==='pet') renderPet();
+  else if (tab==='channel') renderChannelForm();
   else renderForge();
 }
 window.switchCharTab = function(t){
@@ -7227,6 +7310,19 @@ function updateHud(){
       loiEl.style.display = '';
       loiEl.textContent = `⚡ -40% lôi · ${Math.floor(player.loidonT/60)}:${String(Math.floor(player.loidonT%60)).padStart(2,'0')}`;
     } else loiEl.style.display = 'none';
+  }
+  const chEl = el('hud-channel');
+  if (chEl){
+    if ((player.channelT || 0) > 0){
+      chEl.style.display = ''; chEl.style.color = '#e8c84a';
+      chEl.textContent = `☬ ${(findTranaiById(player.channelId) || {}).name || 'Hóa Thân'} · ${Math.ceil(player.channelT)}s`;
+    } else if ((player.channelCd || 0) > 0){
+      chEl.style.display = ''; chEl.style.color = '#8a8a8a';
+      chEl.textContent = `☬ hồi ${Math.ceil(player.channelCd)}s`;
+    } else if (channelFormsUnlocked().length){
+      chEl.style.display = ''; chEl.style.color = '#8a7a58';
+      chEl.textContent = '☬ Hóa Thân (P)';
+    } else chEl.style.display = 'none';
   }
   el('hud-silver').textContent = `◈ ${player.silver}`;
   el('hud-mat').textContent = `✦ ${player.mat} Tinh Thạch`;
@@ -9986,6 +10082,30 @@ function renderPet(){
       </div>
       <div style="font-size:11.5px;opacity:.6;margin-top:4px">Nội đan trong túi: ${['Kim','Mộc','Thổ','Thủy','Hỏa'].map(e2=>`${e2} ${(player.noidan && player.noidan[e2]) || 0}`).join(' · ')}</div>`;
   }
+  c.innerHTML = html;
+}
+function renderChannelForm(){
+  const c = el('char-content'); if (!c) return;
+  const unlocked = channelFormsUnlocked();
+  let html = `<div class="stat-sec">HÓA THÂN TRẤN ẢI</div>
+    <div style="font-size:12px;color:#b8a878;line-height:1.85;padding:0 2px 8px">
+    Hạ <b style="color:#f0d68a">Trấn Ải</b> (boss trấn giữ cuối mỗi bản đồ, mở sau khi phá 3 Thủ Vệ) lần đầu →
+    vĩnh viễn hàng phục hình dạng của nó. Bấm <b style="color:#e8c84a">P</b> trong trận để hóa thân
+    <b>14 giây</b>: đổi hẳn tạo hình, <b style="color:#7ec850">+25% công lực</b>, và một đòn bộc phá quanh người
+    lúc kích hoạt. Hồi <b>90 giây</b>.${player.channelT > 0 ? ` <span style="color:#e8c84a">— đang hóa thân, còn ${Math.ceil(player.channelT)}s!</span>` : player.channelCd > 0 ? ` <span style="color:#8a8a8a">— còn hồi ${Math.ceil(player.channelCd)}s</span>` : ''}</div>`;
+  html += `<div style="display:flex;flex-wrap:wrap;gap:8px;padding:0 2px">`;
+  for (const mapId in BOSS_DEFS){
+    const tv = BOSS_DEFS[mapId].tranai; if (!tv) continue;
+    const got = unlocked.some(f => f.id === tv.id);
+    const picked = player.channelPick === tv.id || (!player.channelPick && got && unlocked[unlocked.length-1].id === tv.id);
+    html += `<div style="width:88px;text-align:center;padding:8px 4px;border-radius:8px;border:1px solid ${picked?'#e8c84a':'rgba(220,200,150,.2)'};background:rgba(255,250,235,.04);cursor:${got?'pointer':'default'}"
+      ${got?`onclick="window.setChannelPick('${tv.id}')" title="Đặt làm hóa thân mặc định (phím P)"`:`title="Hạ ${tv.name} (Trấn Ải, cấp ${tv.lv}) để hàng phục"`}>
+      <img src="assets/mobs/${tv.img}.png" style="width:48px;height:48px;object-fit:contain;filter:${got?'none':'grayscale(1) brightness(.4)'}"><br>
+      <b style="font-size:10.5px;color:${got?'#e8dcc0':'#6a6156'}">${tv.name}</b><br>
+      <span style="font-size:9px;color:${got?(picked?'#e8c84a':'#8fd18f'):'#8a7a58'}">${got ? (picked?'★ Đang chọn':'Đã hàng phục') : '🔒 Chưa hạ'}</span>
+    </div>`;
+  }
+  html += `</div>`;
   c.innerHTML = html;
 }
 window.feedPet = function(){
