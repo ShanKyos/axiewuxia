@@ -382,7 +382,7 @@ let zoneBanner = null; // { text, sub, color, t }
 const CITY_WALL = { map:'tuongduong', x1:950, y1:760, x2:1720, y2:1560, t:24, gateX1:1236, gateX2:1364 };
 const GATES = [
   { map:'tuongduong', x:1300, y:1560, to:'ngoai',      name:'Qua Cổng Nam → Ngoại Ô' },
-  { map:'ngoai',      x:1300, y:240,  to:'tuongduong', name:'Qua Cổng Thành → Tương Dương' },
+  { map:'ngoai',      x:1300, y:240,  to:'tuongduong', name:'Qua Cổng Thành → Lunaris City' },
 ];
 let nearGate = null;
 function cityWallRects(){
@@ -3388,7 +3388,7 @@ function killMob(m, source){
   // Truy Nã Lệnh: mục tiêu ngày bị hạ
   if (m.truyna && player.truyna && player.truyna.state === 'hunting'){
     player.truyna.state = 'killed';
-    zoneBanner = { text:'⚖ TRUY NÃ HOÀN THÀNH', sub:'Mục tiêu đã phục pháp — về Tương Dương gặp Bổ Đầu nhận Công Huân Lệnh!', color:'#e8b04a', t:5 };
+    zoneBanner = { text:'⚖ TRUY NÃ HOÀN THÀNH', sub:'Mục tiêu đã phục pháp — về Lunaris City gặp Bổ Đầu nhận Công Huân Lệnh!', color:'#e8b04a', t:5 };
     AudioSys.sfx('quest', 0.85); saveGame();
   }
   // ── Boss Vùng/Trấn Ải: mở ải + manh mối + cờ cốt truyện (GDD Boss v2.1 / Ngũ Ấn Phong Ma) ──
@@ -3456,10 +3456,10 @@ function unlockNotices(){
     7:['Mở khóa: Tuyệt kỹ (phím 3)','Mở khóa: Đan Điền tu luyện (phím N)'],
     10:['Mở khóa: the Calling — 9 Tộc chờ ngươi chọn!','Mở khóa: Cương Khí (Tuyệt Học — phím H)','Mở khóa: Truy Nã Lệnh & Vạn Duyên Các — Bổ Đầu và Thần Toán Tử ở Lunaris City'],
     15:['Mở khóa: Linh Thú — mua Phong Linh Phù ở Vũ Khí Phường, đánh tinh anh còn <40% máu rồi bấm T'],
-    40:['Mở khóa: Hỗn Độn Lò luyện Linh Dực Cấp 1 — Lò Bát Quái, Tương Dương'],
-    45:['Bảo Hạp IV trở lên từ Ma Tôn có 5-8% mở ra trang bị CỔ THẦN Tứ Tượng — Ma Tôn giáng thế mỗi 4 giờ!'],
+    40:['Mở khóa: Hỗn Độn Lò luyện Linh Dực Cấp 1 — Lò Bát Quái, Lunaris City'],
+    45:['Bảo Hạp IV trở lên từ Bá Chủ có 5-8% mở ra trang bị CỔ THẦN Tứ Tượng — Bá Chủ giáng thế mỗi 4 giờ!'],
     20:['Mở khóa: Kinh Mạch (Đan Điền — phím N)'],
-    30:['Mở khóa: Cung Tiễn (Tuyệt Học — phím H)','Mở khóa: Động Phủ — gặp Quản Gia ở Tương Dương'],
+    30:['Mở khóa: Cung Tiễn (Tuyệt Học — phím H)','Mở khóa: Động Phủ — gặp Quản Gia ở Lunaris City'],
   };
   const list = msgs[player.level];
   if (list) list.forEach((m, i)=> setTimeout(()=>{ if (player) addFloat(player.x, player.y-70, m, '#a0ffe9', 14); }, i*700));
@@ -3890,7 +3890,7 @@ window.renderStable = function(){
   html += `<div class="mat-row"><span style="width:20px;text-align:center">🐎</span><span style="flex:1">Tuấn Mã đã bắt hôm nay</span><b>${caught}/5</b></div>`;
   html += `<div class="stat-sec">THÚ CƯỠI: ${MOUNT_TIERS[player.mount.tier].name} (Giai ${player.mount.tier})${nx ? ` — kế tiếp: <b style="color:${nx.color}">${nx.name}</b> · cần cấp ${nx.reqLv} · ${nx.cost.silver}◈ + ${nx.cost.mat}✦ · tỉ lệ ${nx.rate}%` : ' — TỐI THƯỢNG'}</div>`;
   html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:7px 16px" onclick="closePanels();togglePanel('mount')">Mở Trại Thú Cưỡi</button></div>`;
-  html += `<div style="font-size:11.5px;opacity:.65;margin-top:8px">Tuấn Mã Hoang ở ba đồng cỏ Ngoại Ô (và thảo nguyên Mông Cổ — phụ tuyến «Tuấn Mã Thảo Nguyên» cấp 80).</div>`;
+  html += `<div style="font-size:11.5px;opacity:.65;margin-top:8px">Tuấn Mã Hoang ở ba đồng cỏ Outskirts (và Ashen Steppe — phụ tuyến «Tuấn Mã Ashen Steppe» cấp 80).</div>`;
   p.innerHTML = html;
   closePanels(); p.classList.remove('hidden');
 };
@@ -4756,7 +4756,7 @@ function render(){
   if (md.village) drawCalligraphy('Thanh Ngưu Thôn', 400, 310, '#6a5836', 18);
   if (md.city){
     drawCityWalls();
-    drawCalligraphy('Tương Dương Thành', 1300, 880, '#6a5836', 20);
+    drawCalligraphy('Lunaris City', 1300, 880, '#6a5836', 20);
     drawCalligraphy('Chợ Đấu Giá', 1150, 950, '#2e5e8a', 14);
     drawCalligraphy('Lò Bát Quái', 1480, 1130, '#8a4a2e', 14);
     drawCalligraphy('Dược Phường', 1060, 1090, '#3a6a3e', 14);
@@ -5894,8 +5894,8 @@ function renderForge(){
     } else if (it.plus >= 9){
       // GDD: trang bị +9 trở lên không thể tự rèn — phải đến Lò Bát Quái
       html += `<div class="next-tier" style="border-color:#e8b04a"><b style="color:#e8b04a">☰ Phá Thiên Kiếp (+9 → +11)</b><br>
-        <span style="font-size:12px;line-height:1.6">Trang bị từ +9 không thể tự rèn. Hãy mang đến <b>Lò Bát Quái</b> ở trung tâm <b>Tương Dương Thành</b>, nhờ <b>Tông Sư Thợ Rèn</b> vận công dung hợp.</span></div>
-        <div class="forge-actions"><button class="mini-btn" onclick="closePanels(); travelTo('tuongduong')">Dịch Chuyển tới Tương Dương Thành</button></div>
+        <span style="font-size:12px;line-height:1.6">Trang bị từ +9 không thể tự rèn. Hãy mang đến <b>Lò Bát Quái</b> ở trung tâm <b>Lunaris City</b>, nhờ <b>Tông Sư Thợ Rèn</b> vận công dung hợp.</span></div>
+        <div class="forge-actions"><button class="mini-btn" onclick="closePanels(); travelTo('tuongduong')">Dịch Chuyển tới Lunaris City</button></div>
         <div id="forge-msg"></div>`;
     } else {
       const target = it.plus + 1;
@@ -6030,7 +6030,7 @@ window.doEnhance = function(){
   const rule = forgeRule(target);
   if (rule.bagua){
     const msg0 = document.getElementById('forge-msg');
-    if (msg0){ msg0.textContent = '✘ Trang bị +9 trở lên chỉ rèn được tại Lò Bát Quái — Tương Dương Thành!'; msg0.style.color = '#ff9a6a'; }
+    if (msg0){ msg0.textContent = '✘ Trang bị +9 trở lên chỉ rèn được tại Lò Bát Quái — Lunaris City!'; msg0.style.color = '#ff9a6a'; }
     addFloat(player.x, player.y-40, 'Phải đến Lò Bát Quái!', '#ff9a6a', 13);
     return;
   }
@@ -7051,7 +7051,7 @@ function renderBag(){
   const bh = player.baohap || {};
   const bhTiers = Object.keys(bh).filter(t => bh[t] > 0);
   if (bhTiers.length){
-    html += `<div class="stat-sec">BẢO HẠP — Ma Tôn Giáng Thế</div>`;
+    html += `<div class="stat-sec">BẢO HẠP — Bá Chủ Giáng Thế</div>`;
     for (const t of bhTiers){
       const d = BAOHAP_TIERS[t];
       html += `<div class="inv-item"><span class="s-name"><b style="color:${d.color}">${d.name}</b> ×${bh[t]}<br>
@@ -7151,7 +7151,7 @@ function renderSkillPanel(){
   // ── VÕ HỌC PHỔ: tự do chọn tuyệt chiêu & hướng đi ──
   vhAutoLearn(); // save cũ / test mode: quét tự ngộ võ học phái
   html += `<div class="stat-sec">VÕ HỌC PHỔ — tự do chọn hướng đi · 📜 Bí Kíp: <b style="color:#ffb15c">${player.bikipVH||0}</b></div>`;
-  html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:4px;line-height:1.55">Võ học <b>giang hồ</b> yêu cầu cảnh giới tu tiên — <b style="color:#b08ae8">Kim Đan Cảnh</b> mở kết hợp tự do, Cao cấp cần Nguyên Anh Trung, Thần cấp cần Nguyên Anh Hậu. Bí Kíp chủ yếu từ <b style="color:#ffb15c">Té Núi</b>: Vân Đài (Chung Nam) · Đoạn Trường Nhai (Tuyệt Tình) · Định Biên Nhai (Nhạn Môn).</div>`;
+  html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:4px;line-height:1.55">Võ học <b>giang hồ</b> yêu cầu cảnh giới tu tiên — <b style="color:#b08ae8">Kim Đan Cảnh</b> mở kết hợp tự do, Cao cấp cần Nguyên Anh Trung, Thần cấp cần Nguyên Anh Hậu. Bí Kíp chủ yếu từ <b style="color:#ffb15c">Té Núi</b>: Vân Đài (Thornwood) · Đoạn Trường Nhai (Frostmire) · Định Biên Nhai (Stormgate).</div>`;
   const _vhSchools = {};
   for (const _vid in VOHOC_DEFS){ const _v = VOHOC_DEFS[_vid]; (_vhSchools[_v.school] = _vhSchools[_v.school] || []).push(_vid); }
   for (const _sch in _vhSchools){
@@ -7733,7 +7733,7 @@ function renderBaGua(){
     const canEx = J2.honDon >= 1 && selN === 3 && player.inv.length < 30;
     html += `<div class="forge-actions"><button class="mini-btn" ${canEx?'':'disabled'} onclick="hdExchange()">◈ Đổi Lấy Cổ Thần</button></div>`;
   } else {
-    html += `<div style="font-size:11.5px;opacity:.6;padding:4px">Chưa có món Cổ Thần nào trong túi — săn Ma Tôn lấy Bảo Hạp IV trở lên (tỉ lệ 5-8%, không pity).</div>`;
+    html += `<div style="font-size:11.5px;opacity:.6;padding:4px">Chưa có món Cổ Thần nào trong túi — săn Bá Chủ lấy Bảo Hạp IV trở lên (tỉ lệ 5-8%, không pity).</div>`;
   }
   html += `<div id="bagua-msg" style="min-height:18px;font-size:12.5px;margin-top:6px"></div>`;
   el('panel-quest').innerHTML = html;
@@ -8009,7 +8009,7 @@ el('is-skip').addEventListener('click', closeIntro);
 const TUT_STEPS = [
   { key:'move',  txt:'<b>W A S D</b> hoặc phím mũi tên để di chuyển — hãy đi một đoạn', },
   { key:'npc',   txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
-  { key:'map',   txt:'Nhấn <b>M</b> mở bản đồ → <b>Dịch Chuyển</b> tới <b>Đào Hoa Đảo</b> để săn quái' },
+  { key:'map',   txt:'Nhấn <b>M</b> mở bản đồ → <b>Dịch Chuyển</b> tới <b>Petalshade Isle</b> để săn Chimera' },
   { key:'kill',  txt:'Nhấn <b>SPACE</b> để đánh quái gần nhất — hãy hạ 1 con <b>Dã Trư</b>' },
   { key:'quest', txt:'Làm theo nhiệm vụ ở <b>góc phải màn hình</b> · <b>C</b> nhân vật · <b>K</b> kỹ năng · <b>B</b> túi đồ' },
 ];
@@ -10138,19 +10138,19 @@ function drawDungeonHUD(){
 // Cổng dịch chuyển: map cha → phó bản (và cổng thoát ngược lại)
 GATES.push(
   { map:'daohoa',      x:2250, y:950,  to:'pb_daohoa',   name:'Phó Bản · Hắc Phong Trại',       portal:true, label:'Phó Bản' },
-  { map:'pb_daohoa',   x:1300, y:1660, to:'daohoa',      name:'Rời Phó Bản → Đào Hoa Đảo',      portal:true, label:'Xuất Môn' },
+  { map:'pb_daohoa',   x:1300, y:1660, to:'daohoa',      name:'Rời Phó Bản → Petalshade Isle',      portal:true, label:'Xuất Môn' },
   { map:'ngoai',       x:2250, y:950,  to:'pb_ngoai',    name:'Phó Bản · Sơn Tặc Doanh',        portal:true, label:'Phó Bản' },
-  { map:'pb_ngoai',    x:1300, y:1660, to:'ngoai',       name:'Rời Phó Bản → Ngoại Ô',           portal:true, label:'Xuất Môn' },
+  { map:'pb_ngoai',    x:1300, y:1660, to:'ngoai',       name:'Rời Phó Bản → Petalshade Outskirts', portal:true, label:'Xuất Môn' },
   { map:'chungnam',    x:2200, y:790,  to:'pb_chungnam', name:'Phó Bản · Phản Đồ Mật Thất',     portal:true, label:'Phó Bản' },
-  { map:'pb_chungnam', x:1300, y:1660, to:'chungnam',    name:'Rời Phó Bản → Chung Nam Sơn',     portal:true, label:'Xuất Môn' },
+  { map:'pb_chungnam', x:1300, y:1660, to:'chungnam',    name:'Rời Phó Bản → Thornwood Reach',   portal:true, label:'Xuất Môn' },
   { map:'comoc',       x:2200, y:890,  to:'pb_comoc',    name:'Phó Bản · Mộ Chủ Địa Cung',      portal:true, label:'Phó Bản' },
-  { map:'pb_comoc',    x:1300, y:1660, to:'comoc',       name:'Rời Phó Bản → Cổ Mộ Mật Thất',    portal:true, label:'Xuất Môn' },
-  { map:'tuyettinh',   x:2200, y:690,  to:'pb_tuyettinh',name:'Phó Bản · Tình Hỏa Luyện Ngục',  portal:true, label:'Phó Bản' },
-  { map:'pb_tuyettinh',x:1300, y:1660, to:'tuyettinh',   name:'Rời Phó Bản → Tuyệt Tình Cốc',    portal:true, label:'Xuất Môn' },
-  { map:'mongco',      x:2200, y:790,  to:'pb_mongco',   name:'Phó Bản · Hãn Vương Trướng',     portal:true, label:'Phó Bản' },
-  { map:'pb_mongco',   x:1300, y:1660, to:'mongco',      name:'Rời Phó Bản → Mông Cổ Đại Doanh', portal:true, label:'Xuất Môn' },
+  { map:'pb_comoc',    x:1300, y:1660, to:'comoc',       name:'Rời Phó Bản → Hollow Roost',      portal:true, label:'Xuất Môn' },
+  { map:'tuyettinh',   x:2200, y:690,  to:'pb_tuyettinh',name:'Phó Bản · Băng Hỏa Luyện Ngục',  portal:true, label:'Phó Bản' },
+  { map:'pb_tuyettinh',x:1300, y:1660, to:'tuyettinh',   name:'Rời Phó Bản → Frostmire Vale',    portal:true, label:'Xuất Môn' },
+  { map:'mongco',      x:2200, y:790,  to:'pb_mongco',   name:'Phó Bản · Trại Tro Tàn',         portal:true, label:'Phó Bản' },
+  { map:'pb_mongco',   x:1300, y:1660, to:'mongco',      name:'Rời Phó Bản → Ashen Steppe',      portal:true, label:'Xuất Môn' },
   { map:'nhanmon',     x:2200, y:790,  to:'pb_nhanmon',  name:'Phó Bản · Thiên Binh Đài',       portal:true, label:'Phó Bản' },
-  { map:'pb_nhanmon',  x:1300, y:1660, to:'nhanmon',     name:'Rời Phó Bản → Nhạn Môn Quan',     portal:true, label:'Xuất Môn' },
+  { map:'pb_nhanmon',  x:1300, y:1660, to:'nhanmon',     name:'Rời Phó Bản → Stormgate Pass',    portal:true, label:'Xuất Môn' },
 );
 
 
@@ -10378,7 +10378,7 @@ function renderPet(){
     html = `<div class="stat-sec">LINH THÚ</div>
       <div style="font-size:12.5px;color:#9aa8d4;line-height:1.9">Ngươi chưa có linh thú đồng hành.<br><br>
       <b style="color:#7ecbff">Cách thu phục:</b><br>
-      1. Mua <b style="color:#d8baff">Phong Linh Phù</b> ở Vũ Khí Phường (Tương Dương)<br>
+      1. Mua <b style="color:#d8baff">Phong Linh Phù</b> ở Vũ Khí Phường (Lunaris City)<br>
       2. Đánh quái <b>tinh anh</b> (Hắc Phong Sát, Kiếm Khách Bán Đảo, Hắc Y Sát Thủ…) còn dưới 40% máu<br>
       3. Đứng gần và bấm <b style="color:#7ecbff">T</b> — 65% thành công<br><br>
       Phù đang có: <b style="color:#7ecbff">${player.phongphu || 0}</b></div>`;
