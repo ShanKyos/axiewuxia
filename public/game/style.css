@@ -280,6 +280,18 @@ html,body { width:100%; height:100%; overflow:hidden; background:#1a1712;
 .mat-row { display:flex; align-items:center; gap:10px; padding:5px 2px; font-size:12.5px;
   border-bottom:1px dashed rgba(220,200,150,.15); }
 .mat-row img { width:30px; height:30px; object-fit:contain; }
+
+/* Vật liệu quý / tiền tệ dạng lưới icon có hình + số + tooltip (thay cho list chữ dài) */
+.mat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(58px,1fr)); gap:7px; margin:6px 0 4px; }
+.mat-cell { position:relative; aspect-ratio:1; border-radius:6px; cursor:default;
+  background:rgba(255,250,235,.05); border:1px solid rgba(220,200,150,.25);
+  display:flex; align-items:center; justify-content:center; transition:background .12s,border-color .12s; }
+.mat-cell:hover { background:rgba(255,250,235,.14); border-color:rgba(240,214,138,.55); }
+.mat-cell img { width:70%; height:70%; object-fit:contain; pointer-events:none;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.5)); }
+.mat-cell .mc-glyph { font-size:16px; pointer-events:none; }
+.mat-cell .mc-count { position:absolute; bottom:1px; right:3px; font-size:10px; font-weight:700;
+  text-shadow:0 1px 2px #000; pointer-events:none; }
 .slot-icon { width:34px; height:34px; object-fit:contain; margin-right:8px; vertical-align:middle;
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.5)); }
 .slot-row .s-name { display:flex; align-items:center; }

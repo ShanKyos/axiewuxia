@@ -412,11 +412,9 @@ function collideCityWalls(){
 // Chỉ chặn địa hình LỚN (hồ/sông/núi/tường), đường đi để rộng; rect {x,y,wd,ht} hoặc ellipse {x,y,rx,ry}
 const MAP_OBSTACLES = {
   daohoa: [
-    { x:110, y:260, rx:250, ry:300 },   // hồ tây-bắc
-    { x:100, y:1560, rx:240, ry:400 },  // hồ tây-nam
-    { x:1950, y:620, wd:650, ht:530 },  // hồ đông (chừa hành lang lên đài Bình Cảnh)
-    { x:2450, y:150, rx:230, ry:220 },  // góc đông-bắc
-    { x:0, y:1660, wd:1700, ht:240 },   // hồ nam (chừa đảo Trấn Ải)
+    // Hiệu chỉnh theo art hồ sen mới (bg_daohoa.jpg) — hồ chính chảy chéo giữa bản đồ
+    { x:1460, y:804, rx:1206, ry:346 },  // nhánh hồ trên
+    { x:1714, y:1113, rx:825, ry:371 },  // nhánh hồ dưới
   ],
   ngoai: [
     { x:2250, y:350, rx:400, ry:310 },  // sông đông-bắc
@@ -458,10 +456,10 @@ const MAP_OBSTACLES = {
     { x:0, y:0, wd:260, ht:1200 },      // vách tây
   ],
   tuongduong: [
-    { x:0, y:0, wd:2600, ht:340 },      // núi bắc
-    { x:1850, y:1100, wd:400, ht:380 }, // cung điện đông-nam
-    { x:0, y:1640, wd:1200, ht:260 },   // rừng nam trái (chừa cổng thành)
-    { x:1400, y:1640, wd:1200, ht:260 },// rừng nam phải
+    { x:0, y:0, wd:2600, ht:340 },       // núi/nền trời phía sau
+    // Hiệu chỉnh theo art làng mới (bg_tuongduong.jpg) — dãy nhà chạy dọc mép dưới, chừa cổng thành giữa
+    { x:0, y:1280, wd:1200, ht:620 },    // dãy nhà trái
+    { x:1400, y:1280, wd:1200, ht:620 }, // dãy nhà phải
   ],
 };
 const DGN_OBSTACLES = [ // 7 phó bản dùng chung: khung tường đá + cửa nam ở giữa
@@ -548,6 +546,19 @@ function collideAiPass(){
       }
     }
   }
+}
+window.SHOW_OBSTACLES = false; // debug: /obstacles trong cheat console — vẽ vùng chặn địa hình để hiệu chỉnh theo art
+function drawObstaclesDebug(){
+  if (!window.SHOW_OBSTACLES) return;
+  ctx.save();
+  ctx.fillStyle = 'rgba(232,74,74,.28)'; ctx.strokeStyle = 'rgba(255,120,120,.9)'; ctx.lineWidth = 2;
+  for (const o of obstaclesOf(curMap)){
+    ctx.beginPath();
+    if (o.wd) ctx.rect(o.x, o.y, o.wd, o.ht);
+    else ctx.ellipse(o.x, o.y, o.rx, o.ry, 0, 0, Math.PI*2);
+    ctx.fill(); ctx.stroke();
+  }
+  ctx.restore();
 }
 function drawAiPasses(){
   if (!player) return;
@@ -4445,7 +4456,7 @@ function render(){
   ctx.globalAlpha = 1;
   drawTufts(); // cỏ/vết mực trên mặt đất — phá sự phẳng của nền
   drawWaterFx(); // gợn sóng & lấp lánh mặt nước (Gói F)
-  drawAiPasses(); drawBeacon(); // GDD Đợt 2 A/B2
+  drawAiPasses(); drawBeacon(); drawObstaclesDebug(); // GDD Đợt 2 A/B2
 
   // Đào Hoa Đảo: cụm hoa đào tĩnh rụng dưới gốc cây (seed theo vị trí cây)
   if (curMap === 'daohoa'){
@@ -6440,6 +6451,7 @@ const CHEAT_HELP = [
   '/tenui — gỡ Trọng Thương (té núi lại ngay)',
   '/time [ngày=10] — nhảy thời gian thế giới (Lịch Tu Tiên)',
   '/wipe — xóa save & tải lại game',
+  '/obstacles — bật/tắt lớp debug vùng chặn địa hình (đỏ) để hiệu chỉnh theo art',
 ];
 window.cheatExec = function(raw){
   const parts = (raw || '').trim().split(/\s+/);
@@ -6577,6 +6589,7 @@ window.cheatExec = function(raw){
         cheatLog('Tốc chạy ×' + mul, '#8fd18f'); break;
       }
       case 'wipe': localStorage.removeItem('vlcm_save'); location.reload(); return;
+      case 'obstacles': window.SHOW_OBSTACLES = !window.SHOW_OBSTACLES; cheatLog('Debug obstacle overlay: ' + (window.SHOW_OBSTACLES ? 'ON' : 'OFF'), '#cfe8ff'); return;
       default: cheatLog('Lệnh lạ "' + cmd + '" — gõ /help', '#ff7a6a'); return;
     }
     try { saveGame(); } catch(e){}
@@ -6735,28 +6748,43 @@ const MAT_ROWS = [
   { icon:'antranai', name:'Ấn Trấn Ải', get:()=>(player.mats&&player.mats.anTranAi)||0, color:'#e8c84a', desc:'vé lên Chí Tôn — Chinh Phạt Trấn Ải 1 lần/ngày' },
   { icon:'manhcothan', name:'Mảnh Cổ Thần', get:()=>(player.mats&&player.mats.manhCoThan)||0, color:'#f0d68a', desc:'×60 đổi Bảo Hạp Cổ Thần chọn bộ (Lò Rèn)' },
 ];
+function fmtCount(n){
+  n = n || 0;
+  if (n >= 1000000) return (n/1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + 'M';
+  if (n >= 10000) return Math.floor(n/1000) + 'K';
+  return String(n);
+}
+function matTip(name, desc, val){
+  const t = desc ? `${name} — ${desc}\n${val}` : `${name}\n${val}`;
+  return t.replace(/"/g, '&quot;');
+}
 function renderBag(){
   let html = `<h3>Túi Đồ (${player.inv.length}/30)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div class="stat-sec">VẬT LIỆU QUÝ</div>`;
+  html += `<div class="stat-sec">VẬT LIỆU QUÝ — di chuột vào ô để xem tên & công dụng</div>`;
+  html += `<div class="mat-grid">`;
   for (const r of MAT_ROWS){
-    html += `<div class="mat-row"><img src="assets/items/mat_${r.icon}.png" onerror="this.style.display='none'" alt="">
-      <span style="flex:1">${r.name} <span style="opacity:.55;font-size:11px">— ${r.desc}</span></span>
-      <b style="color:${r.color}">${r.get()}</b></div>`;
+    const v = r.get();
+    html += `<div class="mat-cell" title="${matTip(r.name, r.desc, v)}">
+      <img src="assets/items/mat_${r.icon}.png" onerror="this.style.display='none'" alt="">
+      <span class="mc-count" style="color:${r.color}">${fmtCount(v)}</span></div>`;
   }
-  html += `<div class="mat-row"><img src="assets/items/mat_bac.png" onerror="this.style.display='none'" alt="">
-    <span style="flex:1">Bạc <span style="opacity:.55;font-size:11px">— tiêu xài khắp giang hồ</span></span>
-    <b style="color:#f0d68a">◈ ${player.silver}</b></div>`;
-  html += `<div class="mat-row"><span style="width:20px;text-align:center">🎖</span>
-    <span style="flex:1">Công Huân Lệnh <span style="opacity:.55;font-size:11px">— Truy Nã Lệnh mỗi ngày · quay Vạn Duyên Các</span></span>
-    <b style="color:#e8c84a">${player.congHuan || 0}</b></div>`;
+  html += `<div class="mat-cell" title="${matTip('Bạc', 'tiêu xài khắp giang hồ', player.silver)}">
+    <img src="assets/items/mat_bac.png" onerror="this.style.display='none'" alt="">
+    <span class="mc-count" style="color:#f0d68a">${fmtCount(player.silver)}</span></div>`;
+  html += `<div class="mat-cell" title="${matTip('Công Huân Lệnh', 'Truy Nã Lệnh mỗi ngày · quay Vạn Duyên Các', player.congHuan||0)}">
+    <span class="mc-glyph">🎖</span>
+    <span class="mc-count" style="color:#e8c84a">${fmtCount(player.congHuan||0)}</span></div>`;
+  html += `</div>`;
   // Tứ Châu — châu quý ép trang bị tại Lò Rèn
   const jw = player.jewels || {};
   html += `<div class="stat-sec">TỨ CHÂU — ép tại Lò Rèn / Hỗn Độn Lò</div>`;
+  html += `<div class="mat-grid">`;
   for (const jk of ['chucPhuc','linhHon','sinhMenh','honDon']){
-    html += `<div class="mat-row"><span style="width:20px;text-align:center;font-size:13px;color:${JEWEL_COLORS[jk]}">◆</span>
-      <span style="flex:1">${JEWEL_NAMES[jk]}</span>
-      <b style="color:${JEWEL_COLORS[jk]}">${jw[jk] || 0}</b></div>`;
+    html += `<div class="mat-cell" title="${matTip(JEWEL_NAMES[jk], '', jw[jk]||0)}">
+      <span class="mc-glyph" style="color:${JEWEL_COLORS[jk]}">◆</span>
+      <span class="mc-count" style="color:${JEWEL_COLORS[jk]}">${fmtCount(jw[jk]||0)}</span></div>`;
   }
+  html += `</div>`;
   // Bảo Hạp từ Ma Tôn Giáng Thế — mở lấy trang bị, tầng IV+ có tỉ lệ ra Cổ Thần (không pity)
   const bh = player.baohap || {};
   const bhTiers = Object.keys(bh).filter(t => bh[t] > 0);
