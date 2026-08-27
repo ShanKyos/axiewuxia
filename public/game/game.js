@@ -2244,6 +2244,15 @@ function calcDerived(){
   if (player.maDao) player.atk = Math.round(player.atk * 1.15); // Sa Đọa — ma công tà ác
   if ((player.buffAtkT || 0) > 0) player.atk = Math.round(player.atk * 1.12); // Rượu Hổ Cốt
   if ((player.channelT || 0) > 0) player.atk = Math.round(player.atk * 1.25); // Hóa Thân Trấn Ải
+  if (typeof TOWER !== 'undefined' && TOWER){ // Vạn Kiếm Tu La Trận — buff dồn theo lượt, chỉ tồn tại trong 1 lượt chơi
+    const tb = TOWER.buffs;
+    if (tb.dmg) player.atk = Math.round(player.atk * (1 + tb.dmg));
+    if (tb.hp) player.maxHp = Math.round(player.maxHp * (1 + tb.hp));
+    if (tb.qi) player.maxQi = Math.round(player.maxQi * (1 + tb.qi));
+    if (tb.crit) player.crit = Math.min(0.65, player.crit + tb.crit);
+    if (tb.leech) player.hpLeech = Math.min(0.6, (player.hpLeech || 0) + tb.leech);
+    if (tb.cd) player.vhCdMult = (player.vhCdMult || 1) * (1 - tb.cd);
+  }
   // Võ Học Phổ: buff chủ động
   if ((player.vhDmgT || 0) > 0) player.atk = Math.round(player.atk * (1 + (player.vhDmgPct || 0)/100));
   if ((player.vhCritT || 0) > 0) player.crit = 1; // Tịch Tà Kiếm Pháp
@@ -2306,6 +2315,7 @@ function newPlayer(sectKey){
     buffAtkT: 0,                             // Rượu Hổ Cốt — +12% công lực có thời hạn
     loidonT: 0,                              // Lôi Độn Phù — giảm 40% ST thiên lôi có thời hạn
     channelPick: null, channelId: null, channelT: 0, channelCd: 0, // Hóa Thân Trấn Ải — capture/channel boss form (P)
+    towerBest: 0,                            // Vạn Kiếm Tu La Trận — đợt cao nhất từng trụ được (kỷ lục cá nhân)
     dotpha: 0,                               // Đan Đột Phá — bảo mệnh độ kiếp (chịu 4 tia lôi, thất bại chỉ tổn 25% Tu Vi)
     noidan: {},                              // Nội Đan yêu thú theo hành { Kim, Mộc, Thổ, Thủy, Hỏa }
     ndBonus: { atk:0, hp:0, def:0, qi:0, crit:0 }, // chỉ số vĩnh viễn từ thôn phệ nội đan
@@ -2425,6 +2435,7 @@ function loadGame(){
     if (player.channelId === undefined) player.channelId = null;
     if (player.channelT == null) player.channelT = 0;
     if (player.channelCd == null) player.channelCd = 0;
+    if (player.towerBest == null) player.towerBest = 0;
     if (!player.storySeen) player.storySeen = {};
     if (!player.clues) player.clues = [];
     if (!player.storyFlags) player.storyFlags = {};
@@ -4031,6 +4042,7 @@ function update(dt){
   if (player.hp <= 0 && !dead){ player.hp = 0; onDeath(); } // thiên lôi cũng giết được người
   updateKyngo(dt); // A2: Kỳ ngộ trên đường
   if (DGN) updateDungeon(); // Phó bản: đợt quái → boss → thưởng
+  if (TOWER) updateTower(); // Vạn Kiếm Tu La Trận: đợt quái vô tận → chọn thẻ
   updatePet(dt); // Linh Thú đồng hành
   updateMount(dt); // Thú Chiến đồng hành
   updateHorses(dt); // GDD Đợt 2 B5
@@ -4450,6 +4462,11 @@ function onDeath(){
     AudioSys.sfx('levelup', 0.9);
     return;
   }
+  if (TOWER){ // Vạn Kiếm Tu La Trận: chết giữa lượt → kết thúc lượt riêng, không tính bại trận thường
+    dead = true;
+    endTowerRun('death');
+    return;
+  }
   TRIB.active = false; TRIB.strikes = []; // chết giữa lôi kiếp = thất bại
   dead = true;
   const ov = document.getElementById('overlay');
@@ -4844,6 +4861,7 @@ function render(){
   }
   drawBeaconArrow(); // GDD Đợt 2 B2: mũi tên chỉ hướng khi mục tiêu ngoài màn hình
   if (DGN) drawDungeonHUD(); // HUD phó bản: đợt quái + thanh máu boss
+  if (TOWER) drawTowerHUD(); // HUD Vạn Kiếm Tu La Trận: đợt hiện tại
 
   // ☬ Cốt truyện: trời tối dần khi các Trấn Ải vỡ
   const _nTa = Object.keys(player.storyFlags || {}).filter(k => k.startsWith('ta_')).length;
@@ -6761,6 +6779,7 @@ const CHAR_TABS = [
   { id:'tuyethoc', name:'Tuyệt Học',  lv:4 },
   { id:'pet',      name:'🐾 Linh Thú', lv:15 },
   { id:'channel',  name:'☬ Hóa Thân', lv:14 },
+  { id:'tower',    name:'🌀 Tu La Trận', lv:20 },
 ];
 function renderCharPanel(){
   let tab = window.charTab;
@@ -6779,6 +6798,7 @@ function renderCharPanel(){
   else if (tab==='tuyethoc') renderTuyetHoc();
   else if (tab==='pet') renderPet();
   else if (tab==='channel') renderChannelForm();
+  else if (tab==='tower') renderTowerTab();
   else renderForge();
 }
 window.switchCharTab = function(t){
@@ -9824,6 +9844,130 @@ const DUNGEONS = {
     rewards:{ tienDan:[5,6], mat:[20,26], tuLa:[2,3], hon:[2,2], khi:350, tuvi:3500, silver:[3000,4500] } },
 };
 
+// ═══════════ VẠN KIẾM TU LA TRẬN — Roguelike Tower (P1 roadmap: draft-based endless waves) ═══════════
+// Đợt quái vô tận quanh người chơi; hạ sạch mỗi đợt → chọn 1/3 thẻ tiến hóa tạm thời (dồn trong lượt
+// chơi này) hoặc dừng nhận thưởng. Chết hoặc tự dừng → kết thúc lượt, buff mất hết, chỉ giữ lại kỷ lục
+// đợt cao nhất từng trụ được. Thẻ bài dùng thật tên + icon từ 34 võ học phổ + 30 dung hợp đã có (không
+// mô phỏng đúng kỹ năng gốc — chỉ mượn hình ảnh/tên để đa dạng, hiệu ứng là buff số liệu đơn giản).
+let TOWER = null; // { wave, buffs:{dmg,cd,hp,qi,crit,leech}, drafting, options }
+const TOWER_MOB_POOL = ['boar','wolf','bandit','assassin','hautu','caodo','xanu','bandao','mocnhan',
+  'huyetbat','docyeu','satthuhy','thamtu','cungthu','cuongbinh','daokhach']; // chỉ quái đã có Axie art thật
+const TOWER_CARD_TYPES = [
+  { k:'dmg',   name:'Cường Kích',  desc:'sát thương chiêu & đòn thường',  v:0.07 },
+  { k:'cd',    name:'Tốc Chiến',   desc:'hồi chiêu mọi kỹ năng',          v:0.05 },
+  { k:'hp',    name:'Kiên Cường',  desc:'sinh lực tối đa',                v:0.09 },
+  { k:'qi',    name:'Uyên Bác',    desc:'nội lực tối đa',                 v:0.09 },
+  { k:'crit',  name:'Yếu Điểm',    desc:'tỉ lệ bạo kích',                 v:0.025 },
+  { k:'leech', name:'Hấp Tinh',    desc:'hút máu',                        v:0.02 },
+];
+function towerCardPool(){
+  const out = [];
+  for (const k in VOHOC_DEFS) if (VOHOC_DEFS[k].icon) out.push({ name: VOHOC_DEFS[k].name, icon: VOHOC_DEFS[k].icon });
+  for (const k in FUSION_DEFS) if (FUSION_DEFS[k].icon) out.push({ name: FUSION_DEFS[k].name, icon: FUSION_DEFS[k].icon });
+  return out;
+}
+window.startTowerRun = function(){
+  if (!player || dead) return;
+  if (TOWER){ addFloat(player.x, player.y-40, 'Đang trong Tu La Trận rồi!', '#8a8a8a', 12); return; }
+  if (DGN){ addFloat(player.x, player.y-40, 'Không thể mở Tu La Trận trong phó bản!', '#8a8a8a', 12); return; }
+  if (curMap === 'tuongduong'){ addFloat(player.x, player.y-40, 'Hãy ra khỏi Lunaris City trước — nơi này cấm giao chiến!', '#8a8a8a', 12); return; }
+  TOWER = { wave: 0, buffs: { dmg:0, cd:0, hp:0, qi:0, crit:0, leech:0 }, drafting:false, options:[] };
+  calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
+  closePanels();
+  zoneBanner = { text:'🌀 VẠN KIẾM TU LA TRẬN', sub:'Càng trụ lâu, quái càng đông — hạ sạch mỗi đợt để chọn tiến hóa tạm thời!', color:'#c07fe0', t:4 };
+  AudioSys.sfx('quest', 0.8);
+  towerNextWave();
+};
+function towerNextWave(){
+  if (!TOWER) return;
+  TOWER.wave++;
+  const n = Math.min(3 + Math.floor(TOWER.wave/2), 12);
+  const scale = 1 + TOWER.wave*0.14;
+  for (let i = 0; i < n; i++){
+    const type = TOWER_MOB_POOL[Math.floor(Math.random()*TOWER_MOB_POOL.length)];
+    const m = spawnMob(type, { x: player.x, y: player.y, r: 280, count: n }, null);
+    m.zone = null; m.towerMob = true; // không tự hồi sinh theo zone; đánh dấu để dọn dẹp khi kết thúc lượt
+    m.def = { ...m.def, hp: Math.round(m.def.hp*scale), atk: Math.round(m.def.atk*scale) };
+    m.hp = m.def.hp; m.maxHp = m.def.hp;
+  }
+  if (player) addFloat(player.x, player.y - 60, `Đợt ${TOWER.wave} — ${n} địch!`, '#c07fe0', 15);
+}
+function updateTower(){
+  if (!TOWER || TOWER.drafting) return;
+  if (mobs.some(m => m.towerMob && !m.dead)) return; // còn quái Tu La Trận sống → chờ
+  towerOfferDraft();
+}
+function towerOfferDraft(){
+  TOWER.drafting = true;
+  const pool = towerCardPool();
+  const opts = [];
+  for (let i = 0; i < 3; i++){
+    const tech = pool[Math.floor(Math.random()*pool.length)];
+    const type = TOWER_CARD_TYPES[Math.floor(Math.random()*TOWER_CARD_TYPES.length)];
+    opts.push({ techName: tech.name, icon: tech.icon, k: type.k, typeName: type.name, typeDesc: type.desc, v: type.v });
+  }
+  TOWER.options = opts;
+  showTowerDraft();
+}
+function showTowerDraft(){
+  const opts = TOWER.options;
+  document.getElementById('overlay-inner').innerHTML = `
+    <h2 style="letter-spacing:2px;color:#c07fe0">🌀 Đợt ${TOWER.wave} Hoàn Thành!</h2>
+    <p style="margin-bottom:10px">Chọn một tiến hóa tạm thời cho lượt chơi này (dồn với các thẻ trước):</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:14px">
+      ${opts.map((o, i) => `
+        <button class="big-btn" style="letter-spacing:normal;max-width:150px;font-size:12px;line-height:1.5;text-align:center;padding:10px 8px" onclick="window.pickTowerCard(${i})">
+          <img src="${o.icon}" style="width:44px;height:44px;object-fit:contain;display:block;margin:0 auto 6px"><br>
+          <b style="font-size:12.5px;color:#e8dcc0">${o.techName}</b><br>
+          <span style="color:#f0d68a">+${Math.round(o.v*100)}% ${o.typeDesc}</span>
+        </button>`).join('')}
+    </div>
+    <button class="big-btn" style="border-color:#7a6a5a;color:#c8b898" onclick="window.stopTowerRun()">Dừng Lại — Nhận Thưởng (Đợt ${TOWER.wave})</button>`;
+  document.getElementById('overlay').classList.remove('hidden');
+}
+window.pickTowerCard = function(idx){
+  if (!TOWER || !TOWER.drafting) return;
+  const o = TOWER.options[idx]; if (!o) return;
+  TOWER.buffs[o.k] = (TOWER.buffs[o.k] || 0) + o.v;
+  TOWER.drafting = false;
+  document.getElementById('overlay').classList.add('hidden');
+  calcDerived();
+  player.hp = Math.min(player.maxHp, player.hp + Math.round(player.maxHp*0.15)); // hồi 15% máu mỗi đợt qua
+  addFloat(player.x, player.y-58, `⚡ ${o.techName} — +${Math.round(o.v*100)}% ${o.typeDesc}!`, '#c07fe0', 13);
+  AudioSys.sfx('levelup', 0.6);
+  addEffect({ type:'ring', x:player.x, y:player.y, r:80, color:'#c07fe0' });
+  towerNextWave();
+};
+window.stopTowerRun = function(){ if (TOWER) endTowerRun('stop'); };
+function endTowerRun(reason){
+  if (!TOWER) return;
+  const wave = TOWER.wave;
+  const isBest = wave > (player.towerBest || 0);
+  if (isBest) player.towerBest = wave;
+  mobs.forEach(m => { if (m.towerMob && !m.dead) m.dead = true; }); // dọn sạch quái Tu La Trận còn sót
+  TOWER = null;
+  calcDerived();
+  const ov = document.getElementById('overlay');
+  document.getElementById('overlay-inner').innerHTML = `
+    <h2 style="color:#c07fe0">Vạn Kiếm Tu La Trận — Kết Thúc</h2>
+    <p>Ngươi trụ được tới <b style="color:#e8c84a">Đợt ${wave}</b>.${isBest ? '<br><span style="color:#ffd76a">★ KỶ LỤC MỚI!</span>' : player.towerBest ? `<br>Kỷ lục cá nhân: <b>Đợt ${player.towerBest}</b>` : ''}${reason === 'death' ? '<br><span style="color:#e8b060;font-size:12.5px">Ngươi đã gục ngã giữa trận — hồi sinh với đầy đủ sinh lực.</span>' : ''}</p>
+    <button class="big-btn" onclick="window.exitTowerOverlay()">Rời Trận</button>`;
+  ov.classList.remove('hidden');
+  saveGame();
+}
+window.exitTowerOverlay = function(){
+  document.getElementById('overlay').classList.add('hidden');
+  if (dead) respawn(); else { player.hp = player.maxHp; player.qi = player.maxQi; }
+};
+function drawTowerHUD(){
+  if (!TOWER || !player) return;
+  const x = W/2, y = 26;
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
+  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3; ctx.fillStyle = '#c07fe0';
+  const label = TOWER.drafting ? 'Chọn tiến hóa để tiếp tục…' : `🌀 Đợt ${TOWER.wave} — còn ${mobs.filter(m=>m.towerMob && !m.dead).length} địch`;
+  ctx.strokeText(label, x, y); ctx.fillText(label, x, y);
+}
 // Engine phó bản: DGN = trạng thái lượt chạy hiện tại
 let DGN = null; // { id, def, wave, bossRef, cleared }
 function startDungeonRun(mapId){
@@ -10106,6 +10250,23 @@ function renderChannelForm(){
     </div>`;
   }
   html += `</div>`;
+  c.innerHTML = html;
+}
+function renderTowerTab(){
+  const c = el('char-content'); if (!c) return;
+  let html = `<div class="stat-sec">VẠN KIẾM TU LA TRẬN</div>
+    <div style="font-size:12px;color:#b8a878;line-height:1.85;padding:0 2px 10px">
+    Đấu trường sinh tồn: quái vô tận vây quanh ngươi, mỗi đợt hạ sạch → chọn 1 trong 3 thẻ tiến hóa
+    tạm thời (mượn tên/hình các võ học đã có), dồn sức mạnh cho tới khi ngươi dừng lại hoặc gục ngã.
+    Buff chỉ tồn tại trong lượt chơi — kết thúc là mất hết, chỉ giữ lại <b style="color:#f0d68a">kỷ lục đợt cao nhất</b>.
+    Không thể mở trong Lunaris City hoặc phó bản.</div>`;
+  html += `<div style="font-size:14px;color:#e8dcc0;padding:0 2px 12px">Kỷ lục cá nhân: <b style="color:#ffd76a;font-size:17px">Đợt ${player.towerBest || 0}</b></div>`;
+  if (TOWER){
+    html += `<div style="font-size:13px;color:#c07fe0;padding:0 2px 10px">🌀 Đang trong trận — Đợt ${TOWER.wave}${TOWER.drafting ? ' (đang chờ chọn thẻ)' : ''}. Đóng bảng này để tiếp tục chiến đấu.</div>
+      <button class="mini-btn" style="border-color:#7a6a5a;color:#c8b898" onclick="window.stopTowerRun();closePanels();">Dừng Lại — Nhận Thưởng</button>`;
+  } else {
+    html += `<button class="big-btn" onclick="window.startTowerRun();closePanels();">🌀 Bắt Đầu Tu La Trận</button>`;
+  }
   c.innerHTML = html;
 }
 window.feedPet = function(){
