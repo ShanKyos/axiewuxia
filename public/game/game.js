@@ -6701,7 +6701,7 @@ const CHEAT_HELP = [
   '/speed <hệ số> — tốc chạy × hệ số',
   '/learn — học toàn bộ Võ Học Phổ',
   '/fullskill — học hết võ học + 30 dung hợp, mọi kỹ năng Lv 120',
-  '/phi — Phi Thăng ngay: phá bỏ môn phái, ngự kiếm phi hành, skin tiên nhân',
+  '/phi — Phi Thăng ngay: phá bỏ ràng buộc Tộc, ngự kiếm phi hành, skin tiên nhân',
     '/npc — Nhân Mạch test: triệu tán tu tới cạnh, hảo cảm 700 để thử Tán Gẫu/Tặng Quà/Tỷ Thí/Kết Bái/Tỏ Tình',
   '/bikip <n> — đặt số Bí Kíp',
   '/tenui — gỡ Trọng Thương (té núi lại ngay)',
