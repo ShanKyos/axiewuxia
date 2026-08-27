@@ -370,16 +370,46 @@ All 8 region map backgrounds are now real sourced art — this closes out the ma
 This is very likely the last usable material in `axie-origins-asset-kit` — every subfolder has now
 been opened and either used or ruled out with a documented reason.
 
+## Ninth source — other axieinfinity GitHub repos (all remaining NPC portraits)
+
+Re-verified `axie-origins-asset-kit` was really exhausted for NPC portraits (checked `PvE/Story/`
+and `PvE/UI/Chapter/` again — still only the 2 already-used character cards, everything else is
+Spine sprite sheets or UI chrome, matching the eighth-source finding exactly). Widened the search to
+other repos under the `axieinfinity` GitHub org instead of Drive:
+
+- `axieinfinity/axie-starter-3d-assets` — 3D FBX rigs + UV texture maps for Buba/Puffy/Pomodoro only,
+  not usable as flat portraits (same problem as raw 3D elsewhere in this doc).
+- `axieinfinity/unity-axie-gtk2d` ("Axie Infinity IP - Tool Kit 2D") — mostly disassembled Spine part
+  sheets again (`Spines/starter-axies/*`, `Spines/chimeras/*`), but its `README.md` embeds two
+  assembled preview sheets that aren't disassembled: `images/chimera.png` (17 individual "Chimera"
+  creature portraits — Sky Mavis's own term for non-Axie world creatures with chaotic, non-class-
+  bound designs, a perfect narrative fit for NPCs as distinct from playable Axie classes) and
+  `images/starter.png` (9 individual "land item" mascot creatures). Each sheet is a loose grid of
+  fully-assembled character illustrations, not body-part fragments — extracted with a Python
+  connected-components pass (alpha-channel bounding boxes via `scipy.ndimage.label`) into 26
+  individual portrait crops, then hand-matched to NPC roles by personality/vibe (e.g. the lion sitting
+  behind a fruit stall → the auction-house merchant; the bandaged, scroll-holding fighter → the
+  "great hero" quest-giver; the bone/skull-masked creature → the tomb keeper). Composited onto padded
+  transparent canvases and dropped straight into `assets/npcs/` at each NPC's existing filename (no
+  code changes needed — `drawNpc()` already sizes NPC sprites by their own aspect ratio, not a fixed
+  canvas, so no letterboxing).
+
+**All 15/15 NPC portraits are now real sourced Axie/Chimera art.** Mapping used:
+`duocsu`←starter_03, `quachtinh`←starter_07, `monkhach`←starter_01, `thumo`←chimera_09,
+`ttmon`←chimera_08, `noiung`←starter_08, `laotuong`←chimera_15, `duoclao`←chimera_13,
+`binhkhi`←starter_06, `trachu`←starter_05, `thuongnhan`←chimera_11, `vachda`←chimera_16 (the
+"Vách Té Núi" cliff-jump marker — technically a landmark, not a talking NPC, but it lives in
+`assets/npcs/` and rendered via the same small map-sprite path as the rest, and its old art was an
+AI-generated Chinese ink-wash mountain painting, the single most obviously-wuxia image left in the
+whole NPC set).
+
 ## Not done yet
 
 Current state as of the axie-origins-asset-kit passes (see `docs/AI_ART_PROMPTS.md` for the
 generation-prompt fallback on each of these):
 
 - Items: `aochoang` (cape), `quan` (pants), `mat_manhcothan`, `mat_tanquyen` (2 masks) — 4/24.
-- NPCs: 12/15 remaining (`binhkhi`, `duoclao`, `duocsu`, `laotuong`, `monkhach`, `noiung`,
-  `quachtinh`, `thumo`, `trachu`, `ttmon`, `vachda`, plus reused-file slots) — no more matching
-  wuxia-role portraits found anywhere after exhausting `axie-origins-asset-kit`; `daosi`, `thoren`,
-  `truonglang` are now sourced (see the eighth source above).
+- NPCs: **0 remaining** — all 15/15 portraits are now real sourced art (see the ninth source above).
 - Mounts: 7/8 (`1_hacma`, `2_hoangma`, `4_thanho`, `5_sutu`, `6_viembao`, `7_kylan`, `8_longlan`) —
   no side-view horse/tiger/lion/leopard/qilin/dragon creature art found anywhere yet.
 - Rocks: `rock1/2/3.png` — 3/11 trees-folder files (all 8 region trees are done).
