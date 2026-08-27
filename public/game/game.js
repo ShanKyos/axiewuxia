@@ -208,6 +208,10 @@ const SECTS = {
     skillA:{ name:'Hatchling Strike', type:'cone', cd:4, qi:18, mult:1.4 },
     tp:{ name:'Wanderer\'s Resolve', mult:2.5 } },
 };
+// Sourced per-class combat SFX (axieinfinity/axie-origins-asset-kit web-vfx) — maps SECTS id to the
+// kit's class-name prefix (sfx_slash_<x>/sfx_cast_<x>/sfx_smash_<x>.mp3). No entry for vophai (pre-Calling,
+// Unclassed) — falls back to the generic 'slash'/'skill' sfx.
+const SECT_SFX = { thieulam:'mech', toanchan:'aquatic', comoc:'dusk', baidasan:'reptile', minhgiao:'beast', doanthi:'bird', daohoa:'plant', bug:'bug', dawn:'dawn' };
 const AMKHI = { name:'Ám Khí', cd:4, qi:15, mult:1.2 };
 const TP_CD = 10, TP_QI = 50, TP_RADIUS = 185;
 
@@ -260,6 +264,30 @@ const MAP_BG = {};
 for (const k in MAP_BG_SRC){ const im = new Image(); im.src = MAP_BG_SRC[k]; MAP_BG[k] = im; }
 for (const k in MOBS){ const im = new Image(); im.src = MOBS[k].img || ''; MOB_IMGS[k] = im; }
 const SLASH_IMG = new Image(); SLASH_IMG.src = 'assets/skills/slash.png';
+// Sourced ultimate-cast VFX (axieinfinity/axie-origins-asset-kit web-vfx) — additive sprite-atlas
+// clips, one per class, played as an extra overlay on top of the existing procedural sectTP VFX.
+// Grid metadata copied from each clip's clip.json (cols/rows/frameW/frameH/frames/fps/anchor).
+const VFX_ATLAS_DEFS = {
+  mech_smash:    { cols:8, rows:7, frameW:573, frameH:338, frames:51, fps:30, anchorX:274.3, anchorY:174.5 },
+  aquatic_smash: { cols:8, rows:6, frameW:692, frameH:428, frames:44, fps:30, anchorX:281.3, anchorY:174.5 },
+  dusk_smash:    { cols:8, rows:5, frameW:578, frameH:324, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
+  reptile_smash: { cols:8, rows:5, frameW:650, frameH:374, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
+  beast_smash:   { cols:8, rows:5, frameW:651, frameH:324, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
+  bird_smash:    { cols:8, rows:6, frameW:572, frameH:231, frames:47, fps:30, anchorX:248.3, anchorY:174.5 },
+  plant_smash:   { cols:8, rows:5, frameW:647, frameH:324, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
+  bug_smash:     { cols:8, rows:5, frameW:650, frameH:324, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
+  dawn_smash:    { cols:8, rows:5, frameW:578, frameH:281, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
+};
+const VFX_ATLAS_IMGS = {};
+function getVfxAtlasImg(id){
+  let im = VFX_ATLAS_IMGS[id];
+  if (!im){ im = new Image(); im.src = 'assets/vfx/' + id + '/atlas.png'; VFX_ATLAS_IMGS[id] = im; }
+  return im;
+}
+function spawnAtlasVfx(id, x, y, scale){
+  const def = VFX_ATLAS_DEFS[id]; if (!def) return;
+  addEffect({ type:'atlasVfx', id, x, y, scale: scale || 0.4, dur: def.frames / def.fps });
+}
 // Bản phát hành: khóa toàn bộ playtest/cheat — ngườ​i chơi tự trải nghiệm từ đầu
 const RELEASE_BUILD = window.RELEASE_BUILD === true;
 // Cây cối & đá theo từng bản đồ (phong cách thủy mặc võ lâm)
@@ -3525,7 +3553,8 @@ function doBasic(){
   const t = nearestMob(90);
   if (t) player.face = Math.atan2(t.y-player.y, t.x-player.x);
   player.cd.basic = player.aspd; player.atkAnim = 0.22;
-  AudioSys.sfx('slash', 0.55);
+  const _basicCls = SECT_SFX[player.sect];
+  AudioSys.sfx(_basicCls ? 'slash_' + _basicCls : 'slash', 0.55);
   addEffect({ type:'arc', x:player.x, y:player.y, face:player.face, r:60, color:'#2b2620' });
   spawnSlash(player.x + Math.cos(player.face)*36, player.y + Math.sin(player.face)*36 - 12, player.face, 95);
   if (t){
@@ -4893,6 +4922,20 @@ function render(){
         ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.face);
         ctx.globalAlpha = Math.min(1, a*1.4);
         ctx.drawImage(SLASH_IMG, -w*0.05, -h/2, w, h);
+        ctx.restore(); ctx.globalAlpha = 1;
+      }
+    } else if (e.type==='atlasVfx'){
+      const def = VFX_ATLAS_DEFS[e.id];
+      const img = getVfxAtlasImg(e.id);
+      if (def && img.complete && img.naturalWidth){
+        const frameIdx = Math.min(def.frames - 1, Math.floor(e.t * def.fps));
+        const col = frameIdx % def.cols, row = Math.floor(frameIdx / def.cols);
+        const dw = def.frameW * e.scale, dh = def.frameH * e.scale;
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = a > 0.15 ? 1 : a / 0.15; // hold full bright, only fade the last sliver
+        ctx.drawImage(img, col*def.frameW, row*def.frameH, def.frameW, def.frameH,
+          e.x - def.anchorX*e.scale, e.y - def.anchorY*e.scale, dw, dh);
         ctx.restore(); ctx.globalAlpha = 1;
       }
     }
@@ -7252,6 +7295,7 @@ function castSkill(id){
   player.comboT = 3; // mở/duy trì chuỗi combo — ám khí trúng trong lúc này sẽ kích Liên Trảm
   player.castT = 0.38; // animation tung tuyệt chiêu
   const sect = SECTS[player.sect];
+  let sfxTag = 'skill'; // per-class override set in the sectTP/sectA branches below
 
   if (d.kind === 'amkhi'){ // ám khí projectile
     const t = nearestMob(360);
@@ -7266,8 +7310,10 @@ function castSkill(id){
     spawnSlash(player.x + Math.cos(ang)*30, player.y + Math.sin(ang)*30 - 12, ang, 80);
   }
   else if (d.kind === 'sectTP'){ // Trấn Phái — big AoE
+    if (SECT_SFX[player.sect]) sfxTag = 'smash_' + SECT_SFX[player.sect];
     const _tpR = TP_RADIUS + 15 * _st; // tiến hóa: trấn phái lan rộng
     spawnSkillVfx('sx_' + player.sect + '_c', { color:sect.color, glyph:'鎮' }, 'aoe', player.face, _tpR);
+    if (SECT_SFX[player.sect]) spawnAtlasVfx(SECT_SFX[player.sect] + '_smash', player.x, player.y, 0.42);
     addEffect({ type:'ring', x:player.x, y:player.y, r:_tpR, color:sect.color, big:true });
     addEffect({ type:'ring', x:player.x, y:player.y, r:_tpR*0.6, color:sect.glow, big:true });
     for (let i = 0; i < 6; i++){
@@ -7328,6 +7374,7 @@ function castSkill(id){
   }
   else if (d.kind === 'vh'){ castVohoc(id); }
   else { // sectA — 4 loại theo môn phái
+    if (SECT_SFX[player.sect]) sfxTag = 'cast_' + SECT_SFX[player.sect];
     const def = sect.skillA, type = def.type, _tbMul = 1 + (player.tbDmg || 0); // Thần Binh buff chiêu phái
     const _sva = 'sx_' + player.sect + '_a';
     if (type==='cone'){
@@ -7384,7 +7431,7 @@ function castSkill(id){
       if (t2) hurtMob(t2, player.atk*def.mult*_tbMul*rnd(0.95,1.15), Math.random()<player.crit?'crit':'hit');
     }
   }
-  AudioSys.sfx('skill', 0.6);
+  AudioSys.sfx(sfxTag, 0.6);
   flashSkillSlot(id);
   // Song Thủ Hỗ Bác (Võ Học Phổ): 30% chiêu vừa tung không tốn hồi chiêu
   if (id !== 'tieuvotuong' && vhLearned('songthu') && Math.random() < 0.3){
