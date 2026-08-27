@@ -20,7 +20,7 @@ universe rather than building an open-world RPG from scratch. See
 | 8 regions + 7 trial chambers (was: maps/dungeons) | Renamed, tested |
 | i18n system (English-first) | New key-based `t()` engine built and proven on one real slice; bulk of game text still pending migration — see the guide above |
 | Art — class portraits (9/9) | Done — real Axie art wired into `assets/classes/` for all 9 classes. See `docs/ASSET_SOURCING.md` |
-| Art — mobs (4/30) | `boar`, `docyeu`, `huyetbat`, `boss` use real sourced Axie art. The other 26 have no source match found anywhere across 5 Drive surveys — see `docs/ASSET_SOURCING.md` |
+| Art — mobs (24/30) | Real sourced Axie art, including 20 from the official `axie-origins-asset-kit` (Vibeathon-licensed). `kybinh`, `kylan`, `phando`, `thinu`, `trannhan`, `ttdetu` still unmatched — see `docs/ASSET_SOURCING.md` |
 | Art — maps (5/8 regions), trees (8/8 regions) | 5 region backgrounds and all 8 region tree sprites now use real sourced Axie/painted art. `bg_ngoai`, `bg_mongco`, `bg_tuyettinh`, and the 3 rocks have no source match yet — see `docs/ASSET_SOURCING.md` |
 | Art — items (19/24) | Weapon/ring/necklace/helmet/gloves/robe/legs/wing + 11 masks now use real sourced Axie icons. Cape, pants, pet, and 2 masks have no source match — see `docs/ASSET_SOURCING.md` |
 | Art — skill icons (14 of ~120 files) | Basic/slash/melee/soul-wisp + the Fire/Wood×2/Water×2 elemental ability pairs now use real sourced Axie ability-burst icons. Metal, Earth, tiered weapons, and the 75 named techniques have no source art — see `docs/ASSET_SOURCING.md` |
