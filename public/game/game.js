@@ -7956,7 +7956,7 @@ const INTRO_PAGES = [
 
 Nhưng dưới những khu rừng cổ, mảnh vỏ trứng vỡ vụn năm xưa vẫn còn sót lại — và nơi chúng rơi xuống, sự sống bị bóp méo thành <b>Chimera</b>.
 
-Từ lâu, <b>Ngũ Ấn</b> — năm phong ấn rải khắp Lunacia — đã giam giữ phần lõi corrupt nặng nhất. Gần đây, chúng bắt đầu rạn nứt.`,
+Từ lâu, <b>Ngũ Ấn</b> — năm phong ấn rải khắp Lunacia — đã giam giữ phần lõi tha hóa nặng nhất. Gần đây, chúng bắt đầu rạn nứt.`,
   `<span class="is-title">MỘT HATCHLING TRÊN PETALSHADE ISLE</span>
 Ngươi — một hatchling chưa mang Tộc — được <b>Trưởng Làng</b> nuôi lớn trên <b>Petalshade Isle</b>, hòn đảo cánh hoa nở quanh năm giữa vùng biển hiền hòa nhất Lunacia.
 
