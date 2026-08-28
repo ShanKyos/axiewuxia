@@ -6,20 +6,19 @@ import { LOGIN_PATH } from "@/const";
 import { Link } from "react-router";
 import { t, localeTag } from "@/lib/lang";
 
-// TODO(rename): these 10 stage names are the same Ascension-rename decision as game.js's
-// cultivation-realm terms (Đan Điền/Kim Đan Cảnh/Nguyên Anh/Hóa Thần...) — update together,
-// see docs/NAMING_MAP.md.
+// Ascension realm-stage names (NAMING_MAP.md §2: Đan Điền → Ascension). Kept in sync with
+// game.js's DANTIAN_REALMS and src/lib/lang.ts's REALM_EN — same order/meaning, three surfaces.
 const REALM_NAMES = [
-  "Phàm Nhân",
-  "Luyện Khí · Tầng 1",
-  "Luyện Khí · Tầng 2",
-  "Luyện Khí · Tầng 3",
-  "Luyện Khí · Tầng 4",
-  "Trúc Cơ Cảnh",
-  "Kim Đan Cảnh",
-  "Nguyên Anh · Trung Kỳ",
-  "Nguyên Anh · Hậu Kỳ",
-  "Hóa Thần Cảnh",
+  "Hatchling",
+  "Spark · Tầng 1",
+  "Spark · Tầng 2",
+  "Spark · Tầng 3",
+  "Spark · Tầng 4",
+  "Molt Cảnh",
+  "Radiant Core Cảnh",
+  "Resonance · Trung Kỳ",
+  "Resonance · Hậu Kỳ",
+  "Starforged Cảnh",
 ];
 
 const SECT_NAMES: Record<string, string> = {
@@ -286,7 +285,7 @@ export default function GamePage() {
                 <div className="space-y-2">
                   {lbQuery.data.map((row) => {
                     const sectName = row.sect ? SECT_NAMES[row.sect] ?? row.sect : t("noSect");
-                    const realmName = REALM_NAMES[Math.min(row.realm, REALM_NAMES.length - 1)] ?? "Phàm Nhân";
+                    const realmName = REALM_NAMES[Math.min(row.realm, REALM_NAMES.length - 1)] ?? "Hatchling";
                     const medal =
                       row.rank === 1 ? "🥇" : row.rank === 2 ? "🥈" : row.rank === 3 ? "🥉" : `#${row.rank}`;
                     return (

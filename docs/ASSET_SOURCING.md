@@ -410,20 +410,28 @@ generation-prompt fallback on each of these):
 
 - Items: `aochoang` (cape), `quan` (pants), `mat_manhcothan`, `mat_tanquyen` (2 masks) — 4/24.
 - NPCs: **0 remaining** — all 15/15 portraits are now real sourced art (see the ninth source above).
+- Player sprite (`sects/vophai.png`): **0 remaining** — fixed in a separate pass (commit `ef38860`),
+  see the eleventh source below for confirmation this wasn't re-touched here.
 - Mounts: 7/8 (`1_hacma`, `2_hoangma`, `4_thanho`, `5_sutu`, `6_viembao`, `7_kylan`, `8_longlan`) —
-  no side-view horse/tiger/lion/leopard/qilin/dragon creature art found anywhere yet.
-- Rocks: `rock1/2/3.png` — 3/11 trees-folder files (all 8 region trees are done).
+  no side-view horse/tiger/lion/leopard/qilin/dragon creature art found anywhere yet, including a
+  fresh check of two more repos in the eleventh source below.
+- Rocks: **0 remaining** — all 3 `rock1/2/3.png` now real sourced art, see the eleventh source below.
+  All 11/11 trees-folder files are now done.
 - Maps: **0 remaining** — all 8 region backgrounds are now real sourced art.
-- Skills: `bow.png` + its 7 tiers (`th_bow_1..7.png`) — no bow artwork found anywhere, confirmed by
-  an exhaustive filename search across the whole kit.
+- Skills: **0 remaining** — `bow.png` + its 7 tiers (`th_bow_1..7.png`) now real sourced art, see the
+  eleventh source below. This closes out the skill-icon category entirely.
 - Mobs: `kybinh`, `kylan`, `phando`, `thinu`, `trannhan`, `ttdetu` — 6/30.
-- `Dantian`/`Quze`/`Tien` (46 files) — still needs the design decision described below, not just
-  more sourcing.
+- `Dantian`/`Quze`/`Tien` (46 files) — the design decision (rename the mechanic into Axie-native
+  vocabulary) has since been made and executed in `game.js`/`docs/NAMING_MAP.md` (commit `3bcc110`,
+  outside this doc's scope). Sourcing was attempted against the new framing in the eleventh source
+  below and came up empty — still 46/46 unsourced.
 - `axie-origins-asset-kit` is now fully surveyed — every subfolder opened and either used or ruled
-  out (see the eighth source above). Nothing left to look for there; remaining gaps need either AI-
-  generated art (see `docs/AI_ART_PROMPTS.md`) or a different source. Other leads if still digging:
-  Project T's `CharacterAnimationRender` zips (oversized, would need someone
-  to grab them directly in the Drive UI), the still-unreadable `2.In Game` Drive folder.
+  out (see the eighth source above). A sibling repo, `cc-axie-gtk2d`, was surveyed in the eleventh
+  source below and is also now exhausted. Remaining gaps need either AI-generated art (see
+  `docs/AI_ART_PROMPTS.md`) or a different source. One lead still not tried: Project T's
+  `CharacterAnimationRender` zips (oversized, would need someone to grab them directly in the Drive
+  UI). The `2.In Game` Drive folder became readable this session (see the eleventh source below) —
+  no longer a blind spot, but its contents didn't move any of the categories above.
 
 ## Tenth source — `axie-origins-asset-kit`'s music/SFX/VFX folders (previously unsurveyed)
 
@@ -480,3 +488,126 @@ available in the same source repo but unused — no existing trigger point in `g
 yet; a natural next step would be wiring the status clips (`stunned`, `poison_apply`, `heal`,
 `shield`, etc.) to the game's existing status-effect application code, but that's a separate,
 similarly-sized pass, not done here.
+
+## Eleventh source — `cc-axie-gtk2d` (bow + rocks closed out), Drive's newly-readable `2.In Game`, mounts/dantian re-checked
+
+Picked up the five remaining gaps left after the tenth source: mounts (7/8), rocks (3 files), the
+bow skill icon, 4 item slots, and the 46-file Dantian/Quze/Tien reskin (now unblocked — the
+mechanic rename referenced in `docs/AI_ART_PROMPTS.md` shipped separately as `docs/NAMING_MAP.md`,
+commit `3bcc110`). Confirmed the player-sprite fix from commit `ef38860` is already in place
+(`git log -p -1 ef38860 -- public/game/assets/sects/vophai.png` shows a real portrait swap) and did
+not re-touch it.
+
+### `cc-axie-gtk2d` — a new repo, same asset pack as the Drive item library
+
+`axieinfinity/unity-axie-gtk2d`'s NPC-portrait sheets (ninth source) had a Cocos Creator sibling
+repo, `axieinfinity/cc-axie-gtk2d` ("Axie Infinity IP - Tool Kit 2D" — same README title, no
+`LICENSE` file, same no-restriction posture already extended to its Unity sibling), never checked
+before. It turns out `assets/axie-standard-assets/sprites/land-items/` is the **same painterly
+512×512 icon pack** as the Drive "2d land assets item" folder used for `assets/items/` back in the
+second/third surveys — just also committed to this git repo, which sidesteps Drive entirely for
+re-checking it. Confirmed items conclusion first: paged through every subfolder (`Items/Accessory`,
+`Armor`, `FoodItem`, `Potion`, `Shell`, `Weapon`, plus `Materials/*`) — still no cape, pants, or
+face-mask category anywhere in this asset family, cross-verified via a second, independent access
+path. Items stay 4/24 short.
+
+**Bow — closed out.** `Items/Weapon/` has real bow and arrow icons that don't exist in
+`axie-origins-asset-kit` (which an exhaustive filename search in the eighth source already ruled
+empty for "bow"): `long_bow.png`, `recurve_bow.png`, `composite_bow.png`, `wooden_arrow.png`,
+`stone_arrow.png`, `iron_arrow.png`, `steel_arrow.png` — 7 real weapon-icon images for the 8 target
+slots (`bow.png` + `th_bow_1..7.png`). Assigned by a rough progression rather than round-robin,
+since the material names line up with a real crafting tier order: `bow.png` (base skill icon) <-
+`long_bow`; `th_bow_1..4` <- `wooden_arrow` → `stone_arrow` → `iron_arrow` → `steel_arrow` (arrow
+material tiers, ascending); `th_bow_5..6` <- `recurve_bow` → `composite_bow` (better bow types);
+`th_bow_7` <- `long_bow` again (reused base image, at the strongest tier boost, same reuse pattern
+as `3_satlang`'s wolf portrait and the earlier elemental-burst pairs). Each source image was cropped
+to its alpha bounding box, fit onto a transparent canvas matching the original slot size (128px for
+`bow.png`, 256px for the tiers), then given the same progressive saturation/brightness ramp used for
+`th_amkhi`/`th_gangkhi` (1.0×→1.4× saturation, 1.0×→1.15× brightness across tiers 1–7) so the 7 tiers
+read as an ascending power sequence despite only 7 distinct source images across 8 slots. This closes
+the skill-icon category entirely — every `assets/skills/*` slot now has real sourced art.
+
+**Rocks — closed out.** `Materials/quarry/stone.png` (a plain cracked tan boulder) and
+`Materials/coal_processor/coal_dust.png` (a dark grey rock pile) are clean, ore-free rock props —
+exactly what the eighth source's rejected `*_ROCK.png` parallax layers weren't ("baked-in blue/teal
+lighting tint... don't look like plain rocks on their own"). A third, `Materials/metal_mine/
+ore_iron.png`, is a rock cluster but with visible reddish ore veins; desaturated it (PIL
+`ImageEnhance.Color` to 0.15×) to strip the ore tint down to a plain grey boulder, giving a third
+shape-distinct rock without reusing either of the other two outright. All 3 cropped to alpha bbox and
+fit onto a 256px transparent canvas (matching `rock1/2/3.png`'s existing size and the sibling tree
+sprites' convention in the same folder) and dropped in at the existing filenames — `rock1.png`
+<- `stone.png`, `rock2.png` <- `coal_dust.png`, `rock3.png` <- desaturated `ore_iron.png`. All
+11/11 `assets/trees/*` files are now real sourced art.
+
+**Mounts — still nothing.** `cc-axie-gtk2d`'s `spines/chimeras/*` folder is the same disassembled
+Spine-sheet problem as everywhere else, and the creature roster in it (wolf/bear/treant/slime/dryad
+variants) is the same one already found in `unity-axie-gtk2d`'s README sheets — no horse, tiger,
+lion, leopard, qilin, or dragon. Also went back to `unity-axie-gtk2d`'s `images/chimera.png` and
+`images/starter.png` sheets (ninth source) and extracted the 13 crops that were *not* used for any
+NPC (10 from `chimera.png`, 3 from `starter.png`, via the same alpha-bbox connected-components
+script as before) to check whether a mount-shaped creature had been sitting unused in the leftovers
+— all 13 are slime blobs, a fox-eared creature, a ram-skull creature, and a cat-eared blob, same
+chibi-bust house style as everything else in that sheet, none horse/tiger/lion/leopard/qilin/dragon
+shaped. Mounts stay 7/8.
+
+### Drive's `2.In Game` folder — now readable, surveyed, doesn't move any category
+
+The seventh/eighth-source doc entries flagged `2.In Game` as inaccessible via the Drive API at
+survey time. It's readable now (folder contents load normally) — worth recording so a future pass
+doesn't treat it as an open lead it isn't. Contents: `Accessory` (Good Vibes Club Accessory, Moku
+Accessory, Class Axies 2024, Animated Accessory), `Icon` (dozens of UI/status-icon sub-folders), and
+`Environment` (`Background`, `Map` — the `Map New` subfolder already fully used in the fourth
+source).
+
+- `Accessory/Good Vibes Club Accessory` and `Accessory/Moku Accessory` are cosmetic Axie trinkets
+  (goggles, neck pins, hip charms, wing charms) from the Good Vibes Club and Moku collab lines —
+  not cape/pants/mask-shaped, and both are separate licensed collab brands rather than core Axie
+  IP, so skipped on licensing grounds rather than risking non-Axie-owned art in the repo.
+- `Accessory/Class Axies 2024` is per-class official Axie renders (Dusk/Plant/Bug/Dawn/Mech, etc.)
+  — same fixed 6-part chibi body plan documented in `unity-axie-gtk2d`'s own README, confirming
+  (rather than just assuming) that "official Axie" art structurally can't produce a horse/tiger/
+  dragon-shaped mount no matter which folder it's found in.
+- `Icon/Battle Status Icon/PNG` (and sibling `Enemy Status Icon`, `Requiem Status Icon`, `Summer
+  2024 Status Icons`, `Metamorph Icon` folders) turned out to be the **same asset library** as
+  `axie-origins-asset-kit`'s `Textures/StatusIcons/` (131 files, already found-but-unused in the
+  eighth source) — confirmed by filename overlap (`buff_healing_boost`/`buff_shield_boost`/
+  `buff_dmg_boost`/`buff_spike` in the kit match "Healing Boost"/"Shield Boost"/"Damage Boost"/
+  "Spike" in Drive). Sampled via the git-hosted copy instead of re-downloading from Drive, avoiding
+  this doc's own documented base64-transcription-corruption risk for small inline files. Considered
+  hard for Dantian/Quze/Tien (see below) and ruled out.
+- `Environment/Map/Map Items/Map 1` and `Map 2` subfolders were not opened — maps are 8/8 done
+  already, so there was no open gap to justify the dig.
+
+### Dantian / Quze / Tien — design decision is done, but no fitting source art found
+
+With the mechanic now renamed (Instinct Channels / Anima / Starflight, per `docs/NAMING_MAP.md`),
+went looking for energy-flow/crystal/bio-luminescent icon art to match. The one real candidate —
+the ~130-file status-badge library described above — was checked seriously and rejected on two
+independent grounds:
+
+1. **Style mismatch.** The badges are flat, saturated, thick-black-outlined mobile-game icons (a
+   glowing yin-yang orb, a hexagonal rune badge, a green leaf on a purple shield). Every other
+   asset in this repo — items, skill cards, the dantian sketches and quze ink paintings themselves
+   — is painterly/illustrated. Dropping in flat cartoon badges would read as a jarring engine swap,
+   not a reskin.
+2. **Shape mismatch for 2 of the 3 folders.** `dantian/` icons are small (128×128), so a badge
+   swap is at least plausible there. But `quze/` (512×731, a full illustrated scene per file — the
+   existing `anmay.png` is a whole koi-and-waterfall ink painting) and `tien/` (256×384, a full
+   costume portrait per file) are shape-incompatible with a small square badge — stretching one to
+   fill a costume-portrait canvas is exactly the low-confidence force-fit this doc's own convention
+   says to skip.
+
+Also re-checked `axie-origins-asset-kit`'s `PvE/Cards/Tools/` (already used for the 64 named
+technique icons, seventh source) for any leftover crystal/orb/energy-themed icon in the same
+painterly style as the rest of the kit — found nothing beyond `tool-energycoin`, already spent on
+`tl_a`/`tl_tp`. No style-and-shape-compatible source turned up anywhere searched this pass. Per this
+doc's own "a low-confidence match would look worse than the placeholder" rule, all 46 files stay
+unsourced — this needs either bespoke AI-generated art (see `docs/AI_ART_PROMPTS.md`) or a different
+source, not a force-fit from what's on hand.
+
+### Summary
+
+Fully closed: bow skill icon (8 files), rocks (3 files). Re-confirmed still empty, now via a second
+independent source: items (cape/pants/2 masks, 4/24), mounts (7/8). Newly unblocked by the naming
+rename but still unsourced after a real search: Dantian/Quze/Tien (46 files) — design decision no
+longer the blocker, matching art is.

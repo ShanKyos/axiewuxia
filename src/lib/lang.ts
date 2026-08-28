@@ -25,19 +25,19 @@ export function toggleLang() {
   }
 }
 
-// TODO(rename): same Ascension-rename decision as GamePage.tsx's REALM_NAMES and game.js's
-// cultivation-realm terms — update all three together, see docs/NAMING_MAP.md.
+// Ascension realm-stage names (NAMING_MAP.md §2: Đan Điền → Ascension). Kept in sync with
+// game.js's DANTIAN_REALMS and GamePage.tsx's REALM_NAMES — same order/meaning, three surfaces.
 export const REALM_EN = [
-  "Mortal",
-  "Qi Refining · Stage 1",
-  "Qi Refining · Stage 2",
-  "Qi Refining · Stage 3",
-  "Qi Refining · Stage 4",
-  "Foundation Realm",
-  "Golden Core Realm",
-  "Nascent Soul · Mid",
-  "Nascent Soul · Late",
-  "Spirit Severing Realm",
+  "Hatchling",
+  "Spark · Stage 1",
+  "Spark · Stage 2",
+  "Spark · Stage 3",
+  "Spark · Stage 4",
+  "Molt Realm",
+  "Radiant Core Realm",
+  "Resonance · Mid",
+  "Resonance · Late",
+  "Starforged Realm",
 ];
 
 export const SECT_EN: Record<string, string> = {
