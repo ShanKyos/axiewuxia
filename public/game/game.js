@@ -2975,7 +2975,7 @@ function drawBossTele(m){
 }
 // ---------- Cài đặt (lưu localStorage) ----------
 // shake mặc định TẮT (chống chóng mặt) — save cũ không có key này nên tự migrate sang tắt
-const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:false },
+const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:false, questTracker:true },
   (()=>{ try { return JSON.parse(localStorage.getItem('vlcm_settings') || '{}'); } catch { return {}; } })());
 function saveSettings(){ try { localStorage.setItem('vlcm_settings', JSON.stringify(SETTINGS)); } catch { /* best-effort — bỏ qua nếu lỗi */ } }
 
@@ -5771,6 +5771,18 @@ if (btnMini) btnMini.addEventListener('click', ()=>{
   SETTINGS.minimap = !SETTINGS.minimap; saveSettings();
   AudioSys.sfx('ui', 0.5);
 });
+const btnQt = el('btn-questtracker');
+if (btnQt) btnQt.addEventListener('click', ()=>{
+  SETTINGS.questTracker = !SETTINGS.questTracker; saveSettings();
+  el('quest-tracker').classList.toggle('qt-closed', !SETTINGS.questTracker);
+  el('qt-arrow').textContent = SETTINGS.questTracker ? '▾' : '▸';
+  AudioSys.sfx('ui', 0.5);
+});
+// khôi phục trạng thái đóng/mở đã lưu (mặc định mở) — không đợi tới lần bấm đầu tiên
+if (el('quest-tracker')){
+  el('quest-tracker').classList.toggle('qt-closed', !SETTINGS.questTracker);
+  if (el('qt-arrow')) el('qt-arrow').textContent = SETTINGS.questTracker ? '▾' : '▸';
+}
 el('btn-pk').addEventListener('click', ()=>{
   if (mapDef().type === 'safe') return;
   player.pk = !player.pk;

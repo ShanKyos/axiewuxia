@@ -51,7 +51,19 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   padding:6px 13px; margin-left:5px; border-radius:999px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; }
 .hbtn:hover { background:rgba(76,141,255,.28); border-color:var(--border-strong); }
 
+/* Cụm nút icon vuông kiểu Võ Lâm Chi Mộng, 2 bên viên đá Máu/Chân Khí ở #bottom-hud
+   (khác .hbtn dạng viên thuốc vẫn dùng cho PK/AUTO ở góc trên phải, xem #hud-right .hbtn) */
+.hud-btns-left, .hud-btns-right { display:flex; gap:6px; pointer-events:auto; }
+#bottom-hud .hud-btns .hbtn { margin-left:0; padding:0; width:44px; height:44px; border-radius:var(--r-sm);
+  font-size:20px; display:flex; align-items:center; justify-content:center; border-width:2px; }
+
 /* Quest tracker — nằm trong luồng cột phải, dưới minimap */
+#quest-tracker-wrap { pointer-events:auto; }
+#btn-questtracker { pointer-events:auto; width:100%; display:flex; justify-content:space-between; align-items:center;
+  background:rgba(30,32,64,.88); color:#e4ebff; border:1px solid var(--border); border-radius:var(--r-sm);
+  padding:5px 10px; margin-bottom:4px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; }
+#btn-questtracker:hover { background:rgba(76,141,255,.28); border-color:var(--border-strong); }
+#quest-tracker.qt-closed { display:none; }
 #quest-tracker { width:min(230px,42vw);
   background:rgba(18,20,44,.7); border:1px solid var(--border-faint); border-left:3px solid var(--accent);
   border-radius:var(--r-sm); padding:8px 10px; color:#dbe2ff; font-size:12px; line-height:1.5; text-align:left; }
