@@ -3779,6 +3779,59 @@ function drawBeacon(){
   ctx.fillText('🚩 ' + b.label, b.x, b.y - 230);
   ctx.restore();
 }
+// Mũi tên định hướng (screen space) — chỉ hiện khi đèn hiệu (player.beacon) đang ở ngoài khung hình,
+// hoặc khi đích ở map khác (không có hướng để trỏ, chỉ nhắc mở Bản Đồ). Gọi sau ctx.restore() của
+// render() — vẽ ở tọa độ màn hình, không phải tọa độ thế giới như drawBeacon().
+function drawQuestCompass(){
+  const b = player && player.beacon;
+  if (!b) return;
+  if (b.map !== curMap){
+    const cx = W/2, cy = 116;
+    const txt = '🗺 ' + b.label + ' — vùng khác, mở Bản Đồ (M)';
+    ctx.save();
+    ctx.font = 'bold 12.5px "Baloo 2","Be Vietnam Pro",sans-serif';
+    const boxW = Math.min(W - 40, ctx.measureText(txt).width + 40);
+    ctx.fillStyle = 'rgba(20,25,40,.72)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(cx-boxW/2, cy-16, boxW, 32, 16); else ctx.rect(cx-boxW/2, cy-16, boxW, 32);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(126,203,255,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#7ecbff'; ctx.textAlign = 'center';
+    ctx.fillText(txt, cx, cy+4);
+    ctx.restore();
+    return;
+  }
+  const px = player.x - camera.x, py = player.y - camera.y;
+  const bx = b.x - camera.x, by = b.y - camera.y;
+  const pad = 46;
+  if (bx > -pad && bx < W+pad && by > -pad && by < H+pad) return; // đã thấy cột sáng trên màn hình, khỏi cần mũi tên
+  const ang = Math.atan2(by - py, bx - px);
+  const cx = W/2, cy = H/2; // dùng tâm màn hình để mũi tên ổn định, không giật khi camera bị kẹp ở biên bản đồ
+  const dx = Math.cos(ang), dy = Math.sin(ang);
+  // lề né vùng HUD che khuất: trên (thanh máu/tiền/AUTO), phải (minimap), dưới (thanh kỹ năng) —
+  // rộng hơn nhiều so với lề trái vốn thoáng
+  const mTop = 110, mRight = 230, mBottom = 130, mLeft = 60;
+  const extLeft = cx - mLeft, extRight = (W - mRight) - cx;
+  const extTop = cy - mTop, extBottom = (H - mBottom) - cy;
+  const t = Math.min(dx > 0 ? extRight/dx : (dx < 0 ? extLeft/-dx : Infinity),
+                      dy > 0 ? extBottom/dy : (dy < 0 ? extTop/-dy : Infinity));
+  const ax = cx + dx*t, ay = cy + dy*t;
+  ctx.save();
+  ctx.translate(ax, ay); ctx.rotate(ang);
+  ctx.fillStyle = 'rgba(20,25,40,.7)'; ctx.beginPath(); ctx.arc(0, 0, 17, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = 'rgba(126,203,255,.85)'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#7ecbff';
+  ctx.beginPath(); ctx.moveTo(13, 0); ctx.lineTo(-7, -8); ctx.lineTo(-7, 8); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  const dist = Math.round(Math.hypot(bx-px, by-py)/10);
+  const lx = ax - dx*24, ly = ay - dy*24; // nhãn khoảng cách đặt lùi vào trong (hướng tâm màn hình) để không bị cắt ở mép
+  ctx.save();
+  ctx.fillStyle = '#7ecbff'; ctx.font = 'bold 11px "Baloo 2","Be Vietnam Pro",sans-serif'; ctx.textAlign = 'center';
+  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
+  ctx.strokeText(dist + 'm', lx, ly);
+  ctx.fillText(dist + 'm', lx, ly);
+  ctx.restore();
+}
 function drawBeaconArrow(){
   const b = player && player.beacon;
   if (!b || b.map !== curMap || !camera) return;
@@ -4939,6 +4992,8 @@ function render(){
   ctx.globalAlpha = 1;
 
   ctx.restore();
+
+  drawQuestCompass(); // mũi tên định hướng khi đèn hiệu (beacon) ra ngoài màn hình — screen space
 
   // mist (screen space, top) — tắt khi Giảm Hiệu Ứng
   if (!SETTINGS.lowFx){
@@ -9302,6 +9357,14 @@ function drawNpc(){
 // ---------- Quest tracker (HUD) ----------
 function trackerHtml(){
   const q = currentQuest();
+  // Tự động ghim đèn hiệu vào mục tiêu chính tuyến hiện tại — người chơi không cần bấm "Tới Ngay"
+  // mới có định hướng; chỉ đồng bộ lại khi nhiệm vụ chính đổi (không đè lên đèn hiệu phụ tuyến
+  // người chơi vừa tự ghim tay, xem goQuestSide()).
+  if (q && window._beaconQuestId !== q.id){
+    const t = questTarget(q);
+    if (t) player.beacon = { map:t.map, x:t.x, y:t.y, label:t.label };
+    window._beaconQuestId = q.id;
+  }
   let qt = '';
   if (q){
     const prog = q.type === 'meditate' ? `${Math.floor(questProg)}/${q.need}s`
