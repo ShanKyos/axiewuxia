@@ -3108,7 +3108,7 @@ window.addEventListener('keydown', e=>{
     if (id) castSkill(id); else togglePanel('skill');
   }
   if (e.key.toLowerCase()==='e'){ if (!window.tryCatchHorse || !tryCatchHorse()) tryTalk(); } // GDD Đợt 2 B5: E bắt Tuấn Mã kiệt sức trước
-  if (e.key.toLowerCase()==='j') doJump();
+  if (e.key.toLowerCase()==='j'){ if (!tryHarvestHerb()) doJump(); } // ưu tiên hái thảo dược gần đó, không thì nhảy né như cũ
   if (e.key.toLowerCase()==='c') togglePanel('char');
   if (e.key.toLowerCase()==='i') togglePanel('inv');
   if (e.key.toLowerCase()==='b') togglePanel('bag');
@@ -3781,7 +3781,12 @@ function questTarget(q){
 function sideQuestTarget(sq){
   const st = sideStates[sq.id];
   const n = NPCS.find(x => x.id === sq.npc);
-  if (!st || st.st === 'done' || st.st === 'claimed' || !sq.mob){
+  // CHÚ Ý: trước đây có thêm điều kiện "|| !sq.mob" ở đây khiến MỌI nhiệm vụ phụ loại
+  // collect/catch (không có field .mob) luôn bị đưa về NPC dù đang active — không bao giờ
+  // chạy tới nhánh HERB_SPOTS/HORSE_ZONES bên dưới được. Bỏ điều kiện đó để nhiệm vụ đang
+  // active rơi đúng xuống nhánh vị trí thật của nó (thảo dược/ngựa/quái); NPC chỉ còn là nơi
+  // đến khi chưa nhận hoặc đã xong nhiệm vụ.
+  if (!st || st.st === 'done' || st.st === 'claimed'){
     if (n) return { map:n.map, x:n.x, y:n.y, label:(st && st.st === 'done' ? 'Trả NV: ' : 'Nhận NV: ') + (n ? n.name : ''), npcId:n.id };
   }
   if (sq.type === 'catch'){
@@ -4374,24 +4379,9 @@ function update(dt){
     }
   }
 
-  // herbs pickup
-  for (const p of pickups){
-    if (p.respawn > 0){ p.respawn -= dt; continue; }
-    if (dist(player.x,player.y,p.x,p.y) < 26){
-      p.respawn = 30;
-      addEffect({ type:'spark', x:p.x, y:p.y-6, r:24, color:'#b8e87a' });
-      player.herbCount = (player.herbCount || 0) + 1; // Luyện Đan — thảo dược hái được luôn vào túi, kể cả khi đang giao nhiệm vụ
-      if (q && q.type==='collect' && questState==='active'){
-        questProg++;
-        addFloat(p.x, p.y-20, `Thảo Dược ${questProg}/${q.need}`, '#8fd18f', 12);
-        if (questProg >= q.need){ questState='done'; addFloat(player.x, player.y-46, `Nhiệm vụ hoàn thành — về gặp ${npcName(q.npc)}`, '#8fd18f', 13); }
-        sideOnEvent('collect');
-      } else {
-        player.hp = Math.min(player.maxHp, player.hp + 25);
-        addFloat(p.x, p.y-20, '+25 HP · +1 🌿', '#8fd18f', 11);
-      }
-    }
-  }
+  // herbs: chỉ đếm hồi phục — hái giờ phải chủ động nhấn J (tryHarvestHerb()), không tự động
+  // khi đi ngang qua nữa (dễ hái nhầm/không rõ ràng lúc chỉ còn tự đi tới bằng click)
+  for (const p of pickups) if (p.respawn > 0) p.respawn -= dt;
 
   // mobs AI
   for (const m of mobs){
@@ -5199,6 +5189,14 @@ function render(){
   }
   if (nearNpc)
     drawCalligraphy(`Nhấn E — ${nearNpc.name}`, W/2, H-130, '#7ecbff', 15, true);
+  // interact hint — bụi thảo dược còn hái được gần nhất
+  let nearHerb = null;
+  for (const p of pickups){
+    if (p.type !== 'herb' || p.respawn > 0) continue;
+    if (dist(player.x, player.y, p.x, p.y) < 36){ nearHerb = p; break; }
+  }
+  if (nearHerb)
+    drawCalligraphy('Nhấn J — Hái Thảo Dược', W/2, H-(nearNpc?108:130), '#8fd18f', 15, true);
 }
 
 // ---------- Drawing helpers ----------
@@ -9446,6 +9444,36 @@ function tryTalk(){
   if (best.talk === 'vanduyen'){ renderVanDuyen(); return; }
   if (best.talk === 'tenui'){ renderTeNui(best); return; }
   if (best.talk === 'tantu'){ window.ttLine = ''; renderTanTuDlg(best); return; } // Nhân Mạch
+}
+// Hái Thảo Dược (phím J, ưu tiên trước Phiêu Vân Bộ nếu đang đứng gần bụi thuốc còn hái được) —
+// trả về true nếu vừa hái, để onkeydown chỉ nhảy (doJump) lúc không có gì để hái gần đó
+function tryHarvestHerb(){
+  if (!player || dead) return false;
+  let target = null;
+  for (const p of pickups){
+    if (p.type !== 'herb' || p.respawn > 0) continue;
+    if (dist(player.x, player.y, p.x, p.y) < 36){ target = p; break; }
+  }
+  if (!target) return false;
+  target.respawn = 30;
+  addEffect({ type:'spark', x:target.x, y:target.y-6, r:24, color:'#b8e87a' });
+  player.herbCount = (player.herbCount || 0) + 1; // Luyện Đan — thảo dược hái được luôn vào túi, kể cả khi đang giao nhiệm vụ
+  const q = currentQuest();
+  let usedForQuest = false;
+  if (q && q.type==='collect' && questState==='active'){
+    questProg++;
+    addFloat(target.x, target.y-20, `Thảo Dược ${questProg}/${q.need}`, '#8fd18f', 12);
+    if (questProg >= q.need){ questState='done'; addFloat(player.x, player.y-46, `Nhiệm vụ hoàn thành — về gặp ${npcName(q.npc)}`, '#8fd18f', 13); }
+    usedForQuest = true;
+  }
+  if (SIDE_QUESTS.some(sq => sq.type === 'collect' && sideStates[sq.id] && sideStates[sq.id].st === 'active')) usedForQuest = true;
+  sideOnEvent('collect'); // luôn kiểm tra nhiệm vụ PHỤ thu thập đang active — không phụ thuộc nhiệm vụ chính có phải loại collect hay không
+  if (!usedForQuest){
+    player.hp = Math.min(player.maxHp, player.hp + 25);
+    addFloat(target.x, target.y-20, '+25 HP · +1 🌿', '#8fd18f', 11);
+  }
+  AudioSys.sfx('ui', 0.5);
+  return true;
 }
 
 // ═════════════ LUNACIA BONDS — Free Axie & Quan Hệ ═════════════
