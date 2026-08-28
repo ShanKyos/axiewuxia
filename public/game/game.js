@@ -9004,6 +9004,33 @@ function renderStageSelect(mapId){
         <span class="zone-badge" style="color:${color};border-color:${color}">${tag}</span></span>
       <span class="m-side"><button class="mini-btn" onclick="enterStage('${mapId}',${i})">⚔ Vào Đánh</button></span></div>`;
   }
+  // BOSS VÙNG — Thủ Vệ (3) + Trấn Ải (1): tách riêng khỏi quái thường, vì AUTO farm tự tạm dừng gần
+  // boss theo thiết kế sẵn có (phải tự đánh tay) — nên chỉ đưa người chơi tới gần, không bật AUTO.
+  const bd = BOSS_DEFS[mapId];
+  if (bd){
+    html += `<div class="stat-sec">BOSS VÙNG — cần tự đánh tay, AUTO không tự đánh boss</div>`;
+    const bosses = [...bd.thuve.map(x=>({def:x, kind:'thuve'})), { def:bd.tranai, kind:'tranai' }];
+    for (const { def, kind } of bosses){
+      const gap = (def.lv||1) - player.level;
+      let tag, color;
+      if (gap > 15){ tag = 'NGUY HIỂM'; color = '#ff6b6b'; }
+      else if (gap > 5){ tag = 'THỬ THÁCH'; color = '#ffb15c'; }
+      else { tag = 'VỪA SỨC'; color = '#7ec850'; }
+      html += `<div class="map-row">
+        <span style="flex:1"><span class="m-name">${kind === 'tranai' ? '👑 ' : '★ '}${def.name}</span>
+          <span style="font-size:10.5px;opacity:.6"> · Lv ${def.lv||1}</span>
+          <span class="zone-badge" style="color:${color};border-color:${color}">${tag}</span></span>
+        <span class="m-side"><button class="mini-btn" onclick="enterBossStage('${mapId}','${def.id}')">⚔ Đến Gần</button></span></div>`;
+    }
+  }
+  // PHÓ BẢN — dùng lại nguyên travelTo() sẵn có, không cần đi bộ tới cổng dịch chuyển vật lý.
+  const dgId = 'pb_' + mapId;
+  if (MAPS[dgId]){
+    html += `<div class="stat-sec">PHÓ BẢN</div>
+      <div class="map-row"><span style="flex:1"><span class="m-name">${MAPS[dgId].name}</span>
+        <span style="font-size:10.5px;opacity:.6"> · Lv ${MAPS[dgId].min}+</span></span>
+        <span class="m-side"><button class="mini-btn" onclick="travelTo('${dgId}')">⚔ Vào Phó Bản</button></span></div>`;
+  }
   el('panel-stage').innerHTML = html;
 }
 window.enterStage = function(mapId, packIdx){
@@ -9017,6 +9044,23 @@ window.enterStage = function(mapId, packIdx){
   snapCamera(); closePanels();
   const mdef = MOBS[pk.mob];
   addFloat(player.x, player.y-56, '⚔ Vào trận: ' + (mdef ? mdef.name : pk.mob) + ' — AUTO đã bật', '#ffd76a', 14);
+  AudioSys.sfx('ui', 0.5);
+  saveGame();
+};
+// Boss vùng: chỉ đưa người chơi tới gần, KHÔNG tự bật AUTO — Thủ Vệ/Trấn Ải cần tự đánh tay
+// theo đúng thiết kế sẵn có (auto tự tạm dừng trong bán kính 400 quanh boss, xem cập nhật player).
+window.enterBossStage = function(mapId, bossId){
+  const bd = BOSS_DEFS[mapId];
+  if (!bd || !player) return;
+  const def = (bd.tranai && bd.tranai.id === bossId) ? bd.tranai : bd.thuve.find(x=>x.id===bossId);
+  if (!def) return;
+  if (curMap !== mapId) travelTo(mapId);
+  player.x = def.x*MAP.w; player.y = def.y*MAP.h;
+  const _f = nearestFree(mapId, player.x, player.y); player.x = _f.x; player.y = _f.y;
+  snapCamera(); closePanels();
+  const liveBoss = mobs.some(m => m.def && m.def.bossId === bossId && !m.dead);
+  addFloat(player.x, player.y-56, liveBoss ? ('⚔ Đã tới: ' + def.name + ' — tự chiến đấu thôi!') : (def.name + ' đang hồi sinh, chờ chút…'),
+    '#ffb15c', 14);
   AudioSys.sfx('ui', 0.5);
   saveGame();
 };
