@@ -611,3 +611,102 @@ Fully closed: bow skill icon (8 files), rocks (3 files). Re-confirmed still empt
 independent source: items (cape/pants/2 masks, 4/24), mounts (7/8). Newly unblocked by the naming
 rename but still unsourced after a real search: Dantian/Quze/Tien (46 files) — design decision no
 longer the blocker, matching art is.
+
+## Twelfth source — widened GitHub search (mounts, Tien): still nothing, now via 8 more repos
+
+The user flagged that the player's own sprite and the mount trailing them at max cultivation were
+still the old wuxia illustrations, and asked for a real re-check of the eleventh source's mount
+conclusion — not a re-open of the same 3 repos (`axie-origins-asset-kit`, `unity-axie-gtk2d`,
+`cc-axie-gtk2d`) already exhausted there, but a genuinely wider net. This pass did that: the whole
+`axieinfinity` GitHub org (53 repos, re-listed fresh to check for anything new since the eleventh
+source), the `skymavis`/`SkyMavis` org (10 repos), `roninchain` (1 repo), plus GitHub-wide repo and
+code search for "axie" combined with "dragon"/"tiger"/"mount"/"steed"/"qilin"/"homeland"/"fanart"/
+"sprite pack", to look for fan-made packs or a separate Homeland repo outside the checked orgs.
+
+**New repos opened this pass** (none checked in the tenth/eleventh source):
+
+- `axieinfinity/awesome-axie-gtk` — just a link-list README pointing at repos already known
+  (`unity-axie-gtk2d`, `cc-axie-gtk2d`, `r3f-axie-starter`, `axie-starter-3d-assets`,
+  `cc-axie-colyseus-demo`, `unity-axie-tracking`, plus `unity-axie-starter-3d-demo`). No new lead.
+- `axieinfinity/cc-axie-colyseus-demo` (an example Cocos Creator artillery-game demo) —
+  `assets/axie-standard-assets/spines/chimeras/*` is the **exact same 21-creature Chimera roster**
+  already found in `unity-axie-gtk2d` and `cc-axie-gtk2d` (wolf ×5 variants, bear ×2, dryad ×3,
+  treant ×3, slime ×5, werewolf, machito, shilin) — a third independent copy of the same closed set,
+  not new material. Its `images/` folder had 3 files not seen before (`axie-part-cards.png`,
+  `land-item.png`, `ntf-axie.png`); all three checked visually — `axie-part-cards.png` is a grid of
+  ability-card icons showing small horn/tail/mouth/back part variants, but every one is mounted on
+  the *same round chibi Axie body* regardless of class (visual proof, not just inference, of the
+  fixed-body-plan finding); `land-item.png` is the same painterly material/equipment icon set already
+  used for `assets/items/`; `ntf-axie.png` is a marketing diagram (gene hex, NFT trait boxes), no art.
+- `axieinfinity/mixer-unity` (`com.skymavis.axiemixer.unity`, the official Axie part-mixer Unity
+  package) — this was the pass's best real lead for the "compose a mount from body parts" idea in
+  the task brief, since a mixer tool implies raw swappable parts. Its `Resources/accessory/*` folders
+  (`ground`, `neck`, `cheek`, `hip`, `air`) are small cosmetic trinkets (anklets, neck charms, cheek
+  paint, hip charms, wing/aura effects) layered on top of the body, not body-shape parts — and the
+  body itself lives in `Resources/axie-2d-v3-stuff/atlas-single/*` as a single shared texture atlas
+  (color/splat/line maps) painted onto one fixed mesh via material swap, not separate swappable limb
+  sprites. Confirms independently, from the tool that actually does the part-mixing, that there is no
+  loose "horn"/"leg"/"tail" sprite library to assemble a mount silhouette from — the mixing happens
+  in a shader on one fixed body, not by swapping drawn parts.
+- `axieinfinity/mixer-playground` (a Next.js demo front-end for the mixer) — only 23 tiny PNGs, all
+  generic UI icons (class icons, and part-*category* icons like a plain "tail"/"horn"/"body" glyph
+  used to label a picker control) — the real part art is fetched live from an API at runtime, not
+  checked into the repo. No creature art here at all.
+- `axieinfinity/godot-axie-starter-3d` and `axieinfinity/r3f-axie-starter` — like
+  `axie-starter-3d-assets` (sixth source), these are raw 3D/FBX/GLB rigs for exactly 3 characters
+  (Buba, Puffy, Pomodoro) plus generic platformer props (coins, clouds, grass) — same "no renderer
+  available in this environment" blocker as everywhere else raw 3D shows up in this doc.
+- `skymavis/*` (10 repos: `ronin-market-sdk`, `tanto-kit`, `waypoint-js/android/unity/iOS`,
+  `katana-sdk`, `sdk-examples`, `skills`, `xrand`) — all wallet/SDK/tooling repos for the Ronin chain,
+  zero game assets of any kind.
+- `roninchain/ronin-smart-contracts` — smart contracts, no assets.
+- No `axie-homeland` GitHub org exists, and GitHub-wide search for "axie homeland" turns up only
+  unofficial third-party tools (a wallet-transaction tracker, a fan wiki-style site) — Sky Mavis has
+  never published Homeland's assets or source publicly.
+
+**Re-confirmed via a 4th independent copy:** the complete named Chimera/creature roster across every
+Axie-official 2D asset repo found on GitHub (`axie-origins-asset-kit`, `unity-axie-gtk2d`,
+`cc-axie-gtk2d`, `cc-axie-colyseus-demo`) is identical: wolves, bears, dryads, treants, slimes,
+werewolf, machito, shilin. Two portraits not previously looked at closely — `werewolf` and
+`daddy-bear` — were opened and visually checked in case a bipedal or four-legged silhouette in that
+set could stand in for a horse/tiger/lion/qilin/dragon tier at a stretch (the same tolerance already
+extended to the wolf-bust used for `3_satlang`); both are the same round chibi head-and-shoulders bust
+as every other Chimera portrait, with only ear/face-paint variation — not a body shape a viewer would
+read as horse, tiger, lion, or dragon under any framing. Per the task's own instruction not to force a
+"reads as wrong genre" substitute (the same standard the user set for Azure Dragon), neither was used.
+**Mounts stay 7/8** — `1_hacma`, `2_hoangma`, `4_thanho`, `5_sutu`, `6_viembao`, `7_kylan`, `8_longlan`
+have no matching source anywhere found across 8 repos + 3 orgs searched, on top of the 3 repos already
+exhausted in the eleventh source.
+
+**Tien (Ascension/Starflight skin, 12 files)** — the user explicitly allowed a human-style character
+here, not just a round Axie creature, so this pass also re-opened `axie-origins-asset-kit`'s
+`PvE/Story/`, `PvE/UI/Chapter/`, and `Summoners/` folders specifically looking for a "person"
+illustration distinct from the already-used `Xia`/`Bing` NPC portraits (which are non-human horned/
+dog-headed Axie characters, not people, and are already spent as NPCs — reusing them here would also
+put an NPC's face on the player). Found nothing new: `PvE/Story/` has only `Xia_normal`, `Bing_normal`
+(both used), and `xia-bing.png` (a background scene, no character, already ruled out in the eighth
+source); `PvE/UI/Chapter/` has one previously-unopened file, `riddle_dryadmage.png` — checked, but
+it's the same dryad-mage creature already used for the `daosi` NPC, not human, and not distinct;
+`Summoners/mavis/Mavis.png` (Sky Mavis's own mascot) was checked as a long shot but is a disassembled
+Spine sheet of a bird/owl-like creature's parts (wing feathers, beak, round body panels) — not human,
+and not reassemblable without a Spine runtime (same blocker as `PvE/Chimeras/*` and `PvE/Starters/*`
+in the eighth source). A quick Google Drive check for the "17 named 2D concept characters" mentioned
+in the third survey (in case one not used as an NPC could double as a human ascended-form portrait)
+came back empty in this session — those folders didn't resolve via search here, unlike in whatever
+context surfaced them originally; not pursued further since the user's ask was specifically to widen
+the *GitHub* search. **No human-style Axie/Sky Mavis character art was found anywhere in scope.**
+Forcing a non-Axie, off-license human illustration in would break this doc's own licensing
+convention (everything shipped here is either Vibeathon-scoped Axie IP or confirmed-appropriate). All
+12 `assets/tien/*.png` files stay unsourced — this needs bespoke AI-generated art (see
+`docs/AI_ART_PROMPTS.md`) or a real leak of Homeland/promotional human-character art, neither of
+which turned up here.
+
+### Summary
+
+No files replaced this pass — every widened search came back empty rather than force a wrong-genre
+fit. Mounts stay 7/8 (only `3_satlang` sourced, from the eleventh source). Tien stays 12/12 unsourced.
+8 new repos + 3 new orgs were opened and ruled out on top of the 3 repos already exhausted in the
+eleventh source; this is very likely the actual end of the line for GitHub-sourced Axie mount/human
+art — the fixed 6-part chibi body plan and the Chimera roster's fixed creature list (wolf/bear/dryad/
+treant/slime/werewolf) are now confirmed across 4 independent repos, and no Sky Mavis game other than
+mobile Origins and 2D starter kits has ever had its assets published to a public GitHub repo.
