@@ -3662,7 +3662,7 @@ function currentQuest(){ return questIdx < QUESTS.length ? QUESTS[questIdx] : nu
 
 // ---------- GDD Đợt 2 B3: Nhắc Việc Bấm Ngay ----------
 function anyPanelOpen(){
-  return ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-relation']
+  return ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-relation','panel-stage']
     .some(id => { const e2 = document.getElementById(id); return e2 && !e2.classList.contains('hidden'); });
 }
 function hintCandidates(){
@@ -7121,7 +7121,7 @@ function renderPanel(which){
   else renderCharPanel();
 }
 function closePanels(){
-  for (const id of ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-relation']){
+  for (const id of ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-relation','panel-stage']){
     const e2 = document.getElementById(id);
     if (e2) e2.classList.add('hidden');
   }
@@ -8967,12 +8967,59 @@ function renderMapPanel(){
         <span style="font-size:10.5px;opacity:.6"> · LV ${m.range}</span>
         <span class="zone-badge" style="color:${z2.color};border-color:${z2.color}">${z2.name}</span>
         <div class="m-desc">${m.desc}${!wpOk && !cur ? '<br><span style="color:#f0a03a">🚩 Chưa mở khoá điểm dịch chuyển — cần được nhiệm vụ dẫn tới đó 1 lần trước</span>' : ''}</div>${bandSummaryHtml(m)}</span>
-      <span class="m-side">${cur ? '<span style="color:#7ecbff;font-size:11px">ĐANG Ở ĐÂY</span>'
-        : wpOk ? `<button class="mini-btn" onclick="travelTo('${id}')">Dịch Chuyển</button>`
-        : '<span style="font-size:11px;color:#6a6255" title="Đã đủ điều kiện, nhưng chưa từng đặt chân tới">🚩 Chưa mở khoá</span>'}</span></div>`;
+      <span class="m-side">${cur ? '<span style="color:#7ecbff;font-size:11px">ĐANG Ở ĐÂY</span>' : ''}
+        ${wpOk && !cur ? `<button class="mini-btn" onclick="travelTo('${id}')">Dịch Chuyển</button>` : ''}
+        ${!wpOk ? '<span style="font-size:11px;color:#6a6255" title="Đã đủ điều kiện, nhưng chưa từng đặt chân tới">🚩 Chưa mở khoá</span>' : ''}
+        ${wpOk && m.packs && m.packs.length ? `<button class="mini-btn" style="margin-left:4px" onclick="openStageSelect('${id}')" title="Vào đánh ngay 1 cụm quái — không cần đi bộ tới">⚔ Chọn Trận</button>` : ''}</span></div>`;
   }
   el('panel-map').innerHTML = html;
 }
+// ═══════════ Chọn Trận (GDD Đợt 3 — kiểu NGU Idle): chọn thẳng 1 cụm quái từ danh sách,
+// vào là dịch chuyển tới + tự bật AUTO luôn — bỏ hẳn việc phải đi bộ/né vật cản để tìm bãi quái. ═══════════
+window.openStageSelect = function(mapId){
+  closePanels();
+  renderStageSelect(mapId);
+  el('panel-stage').classList.remove('hidden');
+  AudioSys.sfx('ui', 0.6);
+};
+function renderStageSelect(mapId){
+  const md = MAPS[mapId];
+  let html = `<h3>Chọn Trận — ${md.name}</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Chọn 1 cụm quái để vào đánh ngay — AUTO tự bật khi vào trận, không cần tự đi bộ tới.</div>`;
+  const packs = (md.packs || [])
+    .map((pk,i)=>({ pk, i, mdef:MOBS[pk.mob] }))
+    .filter(x=>x.mdef)
+    .sort((a,b)=>(a.mdef.lv||0)-(b.mdef.lv||0));
+  if (!packs.length) html += `<div style="opacity:.5;font-size:12px;padding:8px">Vùng này không có cụm quái để chọn (khu an toàn/thành thị).</div>`;
+  for (const { pk, i, mdef } of packs){
+    const gap = (mdef.lv||1) - player.level;
+    let tag, color;
+    if (gap > 15){ tag = 'NGUY HIỂM'; color = '#ff6b6b'; }
+    else if (gap > 5){ tag = 'THỬ THÁCH'; color = '#ffb15c'; }
+    else if (gap < -15){ tag = 'QUÁ DỄ'; color = '#6a6255'; }
+    else { tag = 'VỪA SỨC'; color = '#7ec850'; }
+    html += `<div class="map-row">
+      <span style="flex:1"><span class="m-name">${mdef.name} ×${pk.n}</span>
+        <span style="font-size:10.5px;opacity:.6"> · Lv ${mdef.lv||1}</span>
+        <span class="zone-badge" style="color:${color};border-color:${color}">${tag}</span></span>
+      <span class="m-side"><button class="mini-btn" onclick="enterStage('${mapId}',${i})">⚔ Vào Đánh</button></span></div>`;
+  }
+  el('panel-stage').innerHTML = html;
+}
+window.enterStage = function(mapId, packIdx){
+  const md = MAPS[mapId];
+  const pk = md && md.packs && md.packs[packIdx];
+  if (!pk || !player) return;
+  if (curMap !== mapId) travelTo(mapId);
+  player.x = pk.x; player.y = pk.y;
+  const _f = nearestFree(mapId, player.x, player.y); player.x = _f.x; player.y = _f.y;
+  player.auto = true; player._autoAX = player.x; player._autoAY = player.y; updateAutoBtn();
+  snapCamera(); closePanels();
+  const mdef = MOBS[pk.mob];
+  addFloat(player.x, player.y-56, '⚔ Vào trận: ' + (mdef ? mdef.name : pk.mob) + ' — AUTO đã bật', '#ffd76a', 14);
+  AudioSys.sfx('ui', 0.5);
+  saveGame();
+};
 
 // ---------- Danh hiệu kết thúc chính tuyến ----------
 TITLES.push({ id:'mochiton', name:'Huyễn Ảnh Chí Tôn', color:'#ffd76a',
