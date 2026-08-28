@@ -1712,14 +1712,11 @@ function skillInfo(id){
 // Không cưỡi — chiến thú đi theo và tự tấn công quái quanh người chơi.
 // Upgrade = spend silver + Tinh Thạch, roll against success rate; fail keeps tier.
 const MOUNT_TIERS = [ null,
-  { name:'Bạch Mã',    img:'assets/mounts/1_hacma.png',    color:'#d8d8d8', dmg:12,  str:2,  agi:2,  def:0,  vit:2,  hp:0,    crit:0, qireg:0, reqLv:5,  cost:{silver:200,   mat:2},   rate:100 },
-  { name:'Ô Tôn',      img:'assets/mounts/2_hoangma.png',  color:'#6a6a75', dmg:20,  str:4,  agi:4,  def:2,  vit:4,  hp:80,   crit:0, qireg:0, reqLv:10, cost:{silver:500,   mat:5},   rate:90 },
-  { name:'Đích Lô',    img:'assets/mounts/3_satlang.png',  color:'#7ab0d8', dmg:32,  str:8,  agi:8,  def:2,  vit:4,  hp:120,  crit:3, qireg:0, reqLv:20, cost:{silver:1100,  mat:10},  rate:80 },
-  { name:'Xích Thố',   img:'assets/mounts/6_viembao.png',  color:'#d84a2a', dmg:50,  str:14, agi:10, def:6,  vit:8,  hp:300,  crit:3, qireg:0, reqLv:30, cost:{silver:2200,  mat:18},  rate:70 },
-  { name:'Bạch Hổ',    img:'assets/mounts/4_thanho.png',   color:'#e8e8e8', dmg:75,  str:22, agi:10, def:14, vit:16, hp:450,  crit:4, qireg:1, reqLv:40, cost:{silver:3800,  mat:30},  rate:60 },
-  { name:'Kim Sư',     img:'assets/mounts/5_sutu.png',     color:'#b8862e', dmg:105, str:26, agi:28, def:14, vit:16, hp:600,  crit:6, qireg:1, reqLv:55, cost:{silver:6500,  mat:48},  rate:50 },
-  { name:'Hỏa Kỳ Lân', img:'assets/mounts/7_kylan.png',   color:'#e86a2a', dmg:145, str:35, agi:35, def:35, vit:35, hp:900,  crit:6, qireg:3, reqLv:70, cost:{silver:10000, mat:75},  rate:40 },
-  { name:'Thanh Long', img:'assets/mounts/8_longlan.png', color:'#ffb15c', dmg:200, str:55, agi:55, def:55, vit:55, hp:1500, crit:8, qireg:6, reqLv:85, cost:{silver:15000, mat:110}, rate:30 },
+  { name:'Emberhide Bull',   img:'assets/mounts/1_firebull.png',      color:'#c8622a', dmg:15,  str:3,  agi:3,  def:0,  vit:3,  hp:0,    crit:0, qireg:0, reqLv:10, cost:{silver:300,   mat:3},   rate:100 },
+  { name:'Frosthorn Bull',   img:'assets/mounts/2_icebull.png',       color:'#6ab0e8', dmg:45,  str:12, agi:10, def:6,  vit:10, hp:200,  crit:2, qireg:1, reqLv:25, cost:{silver:1500,  mat:14},  rate:80 },
+  { name:'Voltclaw Panther', img:'assets/mounts/3_shadowpanther.png', color:'#a84ad8', dmg:90,  str:24, agi:24, def:18, vit:20, hp:500,  crit:4, qireg:2, reqLv:45, cost:{silver:4500,  mat:38},  rate:60 },
+  { name:'Sunfeather Phoenix',img:'assets/mounts/4_phoenix.png',      color:'#ff8a3a', dmg:145, str:38, agi:40, def:32, vit:35, hp:900,  crit:6, qireg:4, reqLv:65, cost:{silver:9000,  mat:70},  rate:42 },
+  { name:'Azure Wyrm',       img:'assets/mounts/5_azuredragon.png',   color:'#3a7ad8', dmg:200, str:55, agi:55, def:55, vit:55, hp:1500, crit:8, qireg:6, reqLv:85, cost:{silver:15000, mat:110}, rate:30 },
 ];
 const MOUNT_IMGS = {};
 for (let i=1;i<MOUNT_TIERS.length;i++){
@@ -3641,7 +3638,7 @@ function hintCandidates(){
   if ((player.free || 0) >= 10)
     out.push({ id:'tiemnang', pri:2, txt:`💠 Còn <b>${player.free}</b> điểm Tiềm Năng chưa phân — cộng ngay cho khỏi phí!`, btn:'Phân Ngay', act:"togglePanel('char')" });
   if (player.mount.tier === 0 && player.level >= 6)
-    out.push({ id:'mount0', pri:3, txt:'🐎 Cấp 6+ đã có thể nhận <b>Bạch Mã</b> tại Trại Ngựa (Ngoại Ô) — đi bộ mãi làm gì!', btn:'Xem Ngay', act:'hintGoStable()' });
+    out.push({ id:'mount0', pri:3, txt:'🐎 Cấp 10+ đã có thể nhận <b>Emberhide Bull</b> tại Trại Ngựa (Ngoại Ô) — đi bộ mãi làm gì!', btn:'Xem Ngay', act:'hintGoStable()' });
   else {
     const nx = MOUNT_TIERS[player.mount.tier + 1];
     if (nx && nx.cost && player.level >= (nx.reqLv || 1) && player.silver >= nx.cost.silver && player.mat >= Math.max(0, nx.cost.mat - Math.min(player.maThau || 0, 3)*4))
@@ -3902,7 +3899,7 @@ function updateHorses(dt){
   }
 }
 function drawHorse(h){
-  const img = MOUNT_IMGS[1]; // Bạch Mã — Tuấn Mã Hoang dùng tạm hình ngựa giai 1
+  const img = MOUNT_IMGS[1]; // Tuấn Mã Hoang dùng tạm hình thú cưỡi giai 1 (mượn ảnh, không liên quan tên gọi)
   const bob = Math.sin(performance.now()/300 + h.hx)*2;
   ctx.save(); ctx.translate(h.x, h.y + bob);
   if (h.state === 'tired') ctx.globalAlpha = 0.75 + Math.sin(performance.now()/150)*0.2;
@@ -6359,7 +6356,7 @@ function renderMount(){
       <div style="font-size:12px;color:#9aa8d4;margin-top:6px">Chiến thú đi theo và <b style="color:#7ecbff">tự tấn công</b> quái quanh ngươi, mỗi 1.4s một đòn.</div>
       <div class="forge-actions"><button class="mini-btn" onclick="toggleMountOut()">${player.mount.out?'Thu Hồi (V)':'Xuất Chiến (V)'}</button></div>`;
   } else {
-    html += `<div style="text-align:center;padding:8px;opacity:.65;font-size:13px">Ngươi chưa có chiến thú.<br>Thăng giai lần đầu để nhận <b style="color:#7ecbff">Bạch Mã</b> đồng hành!</div>`;
+    html += `<div style="text-align:center;padding:8px;opacity:.65;font-size:13px">Ngươi chưa có chiến thú.<br>Thăng giai lần đầu để nhận <b style="color:#7ecbff">Emberhide Bull</b> đồng hành!</div>`;
   }
   if (next){
     const _th = window.stableThau || { n:0, mode:'rate' };
@@ -6377,10 +6374,10 @@ function renderMount(){
         <button class="mini-btn" style="${_th.mode === 'mat' ? 'border-color:#7fd8e0;color:#7fd8e0' : ''}" onclick="stableThauMode('mat')">−4✦ phí/thầu</button></div>`;
     }
     html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 20px" onclick="upgradeMount()" ${canPay?'':'disabled'}>
-      Thăng Giai ${tier===0?'(Nhận Bạch Mã)':'→ '+next.name}</button></div><div id="mount-msg"></div>`;
+      Thăng Giai ${tier===0?'(Nhận Emberhide Bull)':'→ '+next.name}</button></div><div id="mount-msg"></div>`;
 
   } else {
-    html += `<div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">☯ Đã đạt Thanh Long — đỉnh cao chiến thú thiên hạ!</div>`;
+    html += `<div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">☯ Đã đạt Azure Wyrm — đỉnh cao chiến thú thiên hạ!</div>`;
   }
   CE().innerHTML = html;
 }
