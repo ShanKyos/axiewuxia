@@ -3756,6 +3756,16 @@ function sideQuestTarget(sq){
   if (n) return { map:n.map, x:n.x, y:n.y, label:'Gặp ' + n.name };
   return null;
 }
+// Đi thẳng tới đèn hiệu đang ghim (player.beacon) — dùng bởi nút "Đi ngay" trên banner khác
+// vùng (xem drawQuestCompass()). Khác với goQuest(): không phụ thuộc nhiệm vụ chính hiện tại,
+// đi theo đúng cái đang ghim (có thể là nhiệm vụ phụ người chơi tự chọn qua goQuestSide()).
+window.goToBeacon = function(){
+  const b = player && player.beacon;
+  if (!b) return;
+  closePanels();
+  if (b.map !== curMap) travelTo(b.map);
+  else addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + b.label + ' — theo cột sáng!', '#8fd18f', 13);
+};
 window.goQuest = function(){
   const t = questTarget(currentQuest());
   if (!t){ addFloat(player.x, player.y - 40, 'Chưa rõ đích đến — đọc kỹ mô tả nhiệm vụ nhé!', '#f0a03a', 12); return; }
@@ -3799,22 +3809,23 @@ function drawBeacon(){
 // hoặc khi đích ở map khác (không có hướng để trỏ, chỉ nhắc mở Bản Đồ). Gọi sau ctx.restore() của
 // render() — vẽ ở tọa độ màn hình, không phải tọa độ thế giới như drawBeacon().
 function drawQuestCompass(){
+  const banner = el('quest-compass-banner');
   const b = player && player.beacon;
+  // Đích ở map khác: dùng banner HTML (bấm được) thay vì vẽ canvas thuần chữ — người chơi
+  // không cần biết phím M, bấm "Đi ngay" là dịch chuyển thẳng tới (giống nút "Tới Ngay" ở
+  // quest tracker, xem goToBeacon()).
+  if (banner && (!b || b.map === curMap)) banner.classList.add('hidden');
   if (!b) return;
   if (b.map !== curMap){
-    const cx = W/2, cy = 116;
-    const txt = '🗺 ' + b.label + ' — vùng khác, mở Bản Đồ (M)';
-    ctx.save();
-    ctx.font = 'bold 12.5px "Baloo 2","Be Vietnam Pro",sans-serif';
-    const boxW = Math.min(W - 40, ctx.measureText(txt).width + 40);
-    ctx.fillStyle = 'rgba(20,25,40,.72)';
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(cx-boxW/2, cy-16, boxW, 32, 16); else ctx.rect(cx-boxW/2, cy-16, boxW, 32);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(126,203,255,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.fillStyle = '#7ecbff'; ctx.textAlign = 'center';
-    ctx.fillText(txt, cx, cy+4);
-    ctx.restore();
+    if (banner){
+      const key = b.map + '|' + b.label;
+      if (window._compassBannerKey !== key){
+        window._compassBannerKey = key;
+        const destName = (MAPS[b.map] && MAPS[b.map].name) || '';
+        banner.innerHTML = `<span>🗺 ${b.label}${destName ? ' · ' + destName : ''}</span><button onclick="goToBeacon()">Đi ngay</button>`;
+      }
+      banner.classList.remove('hidden');
+    }
     return;
   }
   const px = player.x - camera.x, py = player.y - camera.y;
