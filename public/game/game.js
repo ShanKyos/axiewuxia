@@ -458,9 +458,16 @@ function collideCityWalls(){
 // Chỉ chặn địa hình LỚN (hồ/sông/núi/tường), đường đi để rộng; rect {x,y,wd,ht} hoặc ellipse {x,y,rx,ry}
 const MAP_OBSTACLES = {
   daohoa: [
-    // Hiệu chỉnh theo art hồ sen mới (bg_daohoa.jpg) — hồ chính chảy chéo giữa bản đồ
-    { x:1460, y:804, rx:1206, ry:346 },  // nhánh hồ trên
-    { x:1714, y:1113, rx:825, ry:371 },  // nhánh hồ dưới
+    // Hiệu chỉnh lại theo màu nước thật của art (bg_daohoa.jpg), đối chiếu từng pixel với
+    // toàn bộ NPC/quái/thảo dược/suối/cổng phó bản của map — 2 hình ellipse cũ quá to,
+    // đè lên gần 2/3 điểm nội dung (suối tịnh tâm, cổng phó bản, 6/8 bãi thảo dược, hầu hết
+    // cụm quái) khiến người chơi bị chặn ngay giữa nơi cần đến. Bộ 5 vùng dưới đây chỉ che
+    // đúng phần nước sâu không có nội dung xung quanh — đã kiểm tra không đè lên điểm nào.
+    { x:464,  y:146,  rx:192, ry:106 }, // hồ sen góc tây-bắc
+    { x:324,  y:1027, rx:229, ry:199 }, // vũng nước tây (cạnh Hầu Tử)
+    { x:842,  y:854,  rx:188, ry:139 }, // vũng nước giữa-tây
+    { x:1433, y:796,  rx:112, ry:263 }, // dải nước giữa (cạnh Trận Nhân)
+    { x:1910, y:767,  rx:126, ry:329 }, // vũng nước đông (cạnh đảo nhỏ)
   ],
   ngoai: [
     { x:2250, y:350, rx:400, ry:310 },  // sông đông-bắc
