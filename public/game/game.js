@@ -9049,7 +9049,12 @@ window.travelTo = function(mapId, from){
   snapCamera(); // đổi map: camera đặt thẳng vào vị trí mới, không pan từ map cũ
   if (md.type === 'safe') player.pk = false;
   const zt = zoneType();
-  zoneBanner = { text: md.name, sub: `${zt.name} — ${md.desc}`, color: zt.color, t: 3.2 };
+  // daohoa không bị khoá theo reqMain (mở sẵn từ đầu) nên câu dẫn nhập Ngũ Ấn của nó
+  // được gắn vào đúng thời điểm đặt chân tới lần đầu, thay cho banner tên vùng thường
+  const _daohoaFirst = mapId === 'daohoa' && !(player.wpUnlocked && player.wpUnlocked.daohoa);
+  const _rlore = _daohoaFirst && typeof REGION_UNLOCK_LORE !== 'undefined' ? REGION_UNLOCK_LORE.daohoa : null;
+  zoneBanner = _rlore ? { text:'🗺 ' + md.name, sub:_rlore.sub, color:'#ffd76a', t:4.5 }
+                       : { text: md.name, sub: `${zt.name} — ${md.desc}`, color: zt.color, t: 3.2 };
   addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:zt.color, big:true });
   // Điểm dịch chuyển: lần đầu đặt chân tới 1 vùng (dù được nhiệm vụ dẫn tới hay tự dịch chuyển
   // khi vừa đủ điều kiện) sẽ mở khoá nút "Dịch Chuyển" cho vùng đó trong Bản Đồ (M) từ giờ về sau.
@@ -9403,14 +9408,17 @@ window.turnInQuest = function(){
     addFloat(player.x, player.y-64, `"${nq.name}" cần cấp ${nq.lv} (hiện tại ${player.level}) — hãy rèn luyện thêm!`, '#f0a03a', 14);
   }
   if (questIdx === 9 && questState === 'active') spawnBoss(); // quest 10 — boss Đào Hoa
-  // thông báo mở khóa vùng mới
-  for (const id in MAPS){
-    if (MAPS[id].reqMain === questIdx){
-      zoneBanner = { text:'ĐÃ MỞ VÙNG MỚI', sub: `${MAPS[id].name} — bấm M để dịch chuyển`, color:'#ffd76a', t: 4 };
-      addFloat(player.x, player.y-70, `🗺 Đã mở vùng: ${MAPS[id].name}!`, '#ffd76a', 16);
-      AudioSys.sfx('levelup', 0.9);
-    }
-  }
+  // thông báo mở khóa vùng mới — câu dẫn nhập Ngũ Ấn thay vì banner khô khan; xếp hàng bằng
+  // setTimeout phòng trường hợp 2 vùng cùng chung mốc reqMain (không đè banner của nhau)
+  const _newlyOpen = [];
+  for (const id in MAPS) if (MAPS[id].reqMain === questIdx) _newlyOpen.push(id);
+  _newlyOpen.forEach((id, i) => setTimeout(() => {
+    if (!player) return;
+    const lore = REGION_UNLOCK_LORE[id];
+    zoneBanner = { text:'🗺 ' + MAPS[id].name, sub: lore ? lore.sub : 'Đã mở — bấm M để dịch chuyển', color:'#ffd76a', t: 4.5 };
+    addFloat(player.x, player.y-70, `🗺 Đã mở vùng: ${MAPS[id].name}!`, '#ffd76a', 16);
+    AudioSys.sfx('levelup', 0.9);
+  }, i * 4600));
   if (questState === 'all'){
     player.mongChiTon = true;
     zoneBanner = { text:'HUYỄN ẢNH CHÍ TÔN', sub:'Chính tuyến hoàn tất — danh hiệu tối thượng đã mở (bấm C chọn danh hiệu)', color:'#ffd76a', t: 5 };
@@ -9872,6 +9880,19 @@ const BOSS_LORE = {
   nm2:{ name:'Huyết Sát Bão Tố', intro:['Máu trên giáp ta chưa bao giờ khô.','Thêm một mạng nữa!'] },
   nm3:{ name:'Tướng Quân Trấn Ải', intro:['Thành này cô độc — ta cũng vậy.','Qua đây… nếu ngươi đủ nặng ký.'] },
   nm4:{ name:'Vệ Thần Stormgate Pass', intro:['Ta mở cửa không phải vì hàng — mà vì hết cách.','Hỏa Ấn cuối cùng… để ta xem ngươi giữ nổi không!'], sect:{ minhgiao:'Tộc Beast… ngọn lửa của ngươi cháy về phía nào?' } },
+};
+// Câu dẫn nhập ngắn khi mở vùng mới (thay banner "ĐÃ MỞ VÙNG MỚI" khô khan) — lấy đúng từ lời
+// thoại Vệ Thần trấn giữ (BOSS_LORE.*4) của từng vùng, không bịa thêm để khỏi lệch cốt truyện.
+// Tuyettinh không có câu nào nêu tên Ấn cụ thể trong lore gốc nên giữ giọng văn chung.
+const REGION_UNLOCK_LORE = {
+  tuongduong:{ sub:'Vỏ kén đã phá — trở về Lunaris City trong tiếng hoan hô, chính thức bước vào Chương II.' },
+  daohoa:    { sub:'Hỏa Ấn đầu tiên đã rạn nứt tại Petalshade Isle — hành trình của ngươi bắt đầu từ đây.' },
+  ngoai:     { sub:'"Mộc Ấn đang rung chuyển — ngươi nghe thấy không?" Dấu hiệu đầu tiên Ngũ Ấn không còn vững.' },
+  chungnam:  { sub:'"Thủy Ấn do ta giữ." Một Vệ Thần đơn độc chống đỡ Thornwood Reach.' },
+  comoc:     { sub:'"Mộc Ấn đã mục từ lâu — Lunacia mới là thứ bệnh thật sự." Hollow Roost thì thầm điều đó.' },
+  tuyettinh: { sub:'Frostmire Vale chôn vùi không chỉ lữ khách lạc lối — có lẽ cả một mảnh Ngũ Ấn.' },
+  mongco:    { sub:'"Vì sao dừng ở đây? Vì Kim Ấn đã vỡ!" Ngũ Ấn không còn "sắp vỡ" nữa — đang vỡ thật.' },
+  nhanmon:   { sub:'"Hỏa Ấn cuối cùng…" Stormgate Pass — biên ải cuối của Lunacia, trận chiến cuối của Ngũ Ấn.' },
 };
 // Hàng thoại trấn thủ — thanh bar dưới màn hình, 3.4s/câu
 let _btQ = [], _btTimer = null;
