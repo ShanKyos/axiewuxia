@@ -3163,7 +3163,8 @@ window.addEventListener('touchend', e=>{
     }
   }
 });
-if ('ontouchstart' in window) joy.classList.remove('hidden');
+// Joystick (di chuyển tay) đã bỏ theo GDD Quan Sát — không hiện nữa, kể cả trên di động;
+// mobile vẫn tự chạy tới đích qua bấm minimap hoặc đèn hiệu nhiệm vụ.
 
 document.getElementById('sk-basic').addEventListener('click', doBasic);
 document.querySelectorAll('.sk-slot').forEach(b=>{
@@ -3784,7 +3785,7 @@ window.goToBeacon = function(){
   if (!b) return;
   closePanels();
   if (b.map !== curMap) travelTo(b.map);
-  else addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + b.label + ' — theo cột sáng!', '#8fd18f', 13);
+  else { setMoveTarget(b.x, b.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + b.label + ' — khinh công tự đưa tới!', '#8fd18f', 13); }
 };
 window.goQuest = function(){
   const t = questTarget(currentQuest());
@@ -3792,7 +3793,7 @@ window.goQuest = function(){
   player.beacon = { map:t.map, x:t.x, y:t.y, label:t.label };
   closePanels();
   if (t.map !== curMap) travelTo(t.map);
-  else addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + t.label + ' — theo cột sáng!', '#8fd18f', 13);
+  else { setMoveTarget(t.x, t.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + t.label + ' — khinh công tự đưa tới!', '#8fd18f', 13); }
   saveGame();
 };
 window.goQuestSide = function(id){
@@ -3802,7 +3803,7 @@ window.goQuestSide = function(id){
   player.beacon = { map:t.map, x:t.x, y:t.y, label:t.label };
   closePanels();
   if (t.map !== curMap) travelTo(t.map);
-  else addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + t.label, '#7fd4ff', 13);
+  else { setMoveTarget(t.x, t.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + t.label + ' — khinh công tự đưa tới!', '#7fd4ff', 13); }
   saveGame();
 };
 function drawBeacon(){
@@ -4112,20 +4113,19 @@ function update(dt){
     player.beacon = null; saveGame();
   }
 
-  // movement
+  // movement — GDD Quan Sát: bỏ hẳn di chuyển tay (WASD/joystick). Người chơi chỉ CHỌN đích
+  // (bấm phải trên nền đất / bấm minimap / đèn hiệu nhiệm vụ) rồi khinh công tự động chạy tới,
+  // né vật cản dọc đường — đây là cách di chuyển DUY NHẤT còn lại, không ghi đè khi đang Auto Farm
+  // (auto tự dẫn đường riêng tới quái, xem dưới)
   let mx = 0, my = 0;
-  if (keys['w']||keys['arrowup']) my -= 1;
-  if (keys['s']||keys['arrowdown']) my += 1;
-  if (keys['a']||keys['arrowleft']) mx -= 1;
-  if (keys['d']||keys['arrowright']) mx += 1;
-  mx += joyVec.x; my += joyVec.y;
-  if (Math.abs(mx) > 0.05 || Math.abs(my) > 0.05) moveTarget = null; // WASD/joystick hủy đích click-to-move
-  // Click-to-move (chuột phải hoặc bấm minimap): tự bước tới điểm đã chọn, né vật cản dọc đường
-  // đúng như đi tay — không ghi đè khi đang Auto Farm (auto tự dẫn đường riêng, xem dưới)
-  if (moveTarget && !player.auto && mx === 0 && my === 0){
+  if (moveTarget && !player.auto){
     const _mtd = dist(player.x, player.y, moveTarget.x, moveTarget.y);
     if (_mtd < 18) moveTarget = null;
-    else { mx = (moveTarget.x - player.x)/_mtd; my = (moveTarget.y - player.y)/_mtd; player.face = Math.atan2(my, mx); }
+    else {
+      mx = (moveTarget.x - player.x)/_mtd; my = (moveTarget.y - player.y)/_mtd; player.face = Math.atan2(my, mx);
+      // khinh công tự động: tàn ảnh nhẹ trong lúc tự chạy tới đích — không cần bấm phím nào
+      if (!SETTINGS.lowFx && Math.random() < dt*10) addEffect({ type:'ring', x:player.x, y:player.y+4, r:12, color:'#bfe8ff' });
+    }
   }
   // AUTO FARM (phím Z): tự đuổi theo & đánh quái gần nhất — treo máy
   // nearestMob tự loại Du Hiệp trung lập (trừ khi bật PK) nên auto không bao giờ gây PK oan
@@ -8225,7 +8225,7 @@ el('is-skip').addEventListener('click', closeIntro);
 
 // ═══════════ HƯỚNG DẪN TÂN THỦ TỪNG BƯỚC ═══════════
 const TUT_STEPS = [
-  { key:'move',  txt:'<b>W A S D</b> hoặc phím mũi tên để di chuyển — hãy đi một đoạn. (Mẹo: <b>chuột phải</b> vào bản đồ hoặc minimap để tự động đi tới đó)', },
+  { key:'move',  txt:'Bấm <b>chuột phải</b> trên nền đất hoặc bấm vào <b>minimap</b> — nhân vật sẽ tự vận khinh công chạy tới đó, hãy thử một lần', },
   { key:'npc',   txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
   { key:'map',   txt:'Nhấn <b>M</b> mở bản đồ → <b>Dịch Chuyển</b> tới <b>Petalshade Isle</b> để săn Chimera' },
   { key:'kill',  txt:'Nhấn <b>SPACE</b> để đánh quái gần nhất — hãy hạ 1 con <b>Dã Trư</b>' },
@@ -10899,7 +10899,7 @@ function sysUnlocked(id){
 function hintText(){
   // Migrated to i18n.js's t() — proof-of-pattern slice, see docs/I18N_MIGRATION_GUIDE.md.
   const lv = player.level;
-  const parts = [t('hud.hint.move'), t('hud.hint.clickmove'), t('hud.hint.attack'), t('hud.hint.talk'), t('hud.hint.potion')];
+  const parts = [t('hud.hint.clickmove'), t('hud.hint.attack'), t('hud.hint.talk'), t('hud.hint.potion')];
   if (lv >= 3) parts.push(t('hud.hint.quest'));
   if (lv >= 5) parts.push(t('hud.hint.character'), t('hud.hint.bag'));
   if (lv >= 8) parts.push(t('hud.hint.map'), t('hud.hint.skills'));
