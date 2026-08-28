@@ -2349,6 +2349,13 @@ function calcDerived(){
   if (ndB.qi) player.maxQi += ndB.qi;
   if (ndB.def) player.defRed = Math.min(0.78, player.defRed + ndB.def*0.002);
   if (ndB.crit) player.crit = Math.min(0.65, player.crit + ndB.crit/100);
+  // Tẩy Tủy Phong Huyệt (Reset kiểu MU): mỗi lần tẩy tủy cộng vĩnh viễn +2% Công/Mạng,
+  // không bao giờ mất kể cả tẩy tủy tiếp — chỉ cấp độ/EXP bị đưa về 1, xem window.doTayTuy()
+  if (player.resetCount){
+    const rb = 1 + player.resetCount * 0.02;
+    player.atk = Math.round(player.atk * rb);
+    player.maxHp = Math.round(player.maxHp * rb);
+  }
   if (player.maDao) player.atk = Math.round(player.atk * 1.15); // Sa Đọa — ma công tà ác
   if ((player.buffAtkT || 0) > 0) player.atk = Math.round(player.atk * 1.12); // Rượu Hổ Cốt
   if ((player.channelT || 0) > 0) player.atk = Math.round(player.atk * 1.25); // Hóa Thân Trấn Ải
@@ -2409,6 +2416,7 @@ function newPlayer(sectKey){
     baohap: {},                            // Bảo Hạp Ma Tôn Giáng Thế { tier: số lượng }
     truyna: { day:'', state:'none', map:null }, // Truy Nã Lệnh ngày
     wpUnlocked: { tuongduong: true },      // Điểm dịch chuyển (bảng đồ M) — mở khoá khi đã từng đặt chân tới, xem travelTo()
+    resetCount: 0,                         // Tẩy Tủy Phong Huyệt (Reset kiểu MU) — số lần đã tẩy tủy, +2% Công/Mạng vĩnh viễn/lần
     // Dream of Wuxia systems
     khi: 0,                                    // Instinct đả thông kinh mạch
     meridians: {},                             // { thaiam: 0..20, ... }
@@ -2591,6 +2599,7 @@ function loadGame(){
       setTimeout(()=>{ if (player) addFloat(player.x, player.y-56, '🥚 The Hatching ban cho người cũ — xem ở panel Nhân Vật!', '#f0a03a', 14); }, 1200);
     }
     if (player.tutDist == null) player.tutDist = 0;
+    if (player.resetCount == null) player.resetCount = 0; // Tẩy Tủy Phong Huyệt backfill (save cũ chưa có)
     if (d.curMap && MAPS[d.curMap]) curMap = d.curMap;
     // Migrate trang bị cũ (10 ô) sang hệ 12 ô GDD
     const SLOT_MIGRATE = { weapon:'vukhi', helm:'non', armor:'ao', bracer:'tay', belt:'quan',
@@ -6618,6 +6627,50 @@ function renderDantian(){
   }
   CE().innerHTML = html;
 }
+// ---------- Tẩy Tủy Phong Huyệt (Reset kiểu MU Online): đạt max cấp → cấp về 1, giữ nguyên
+// trang bị/Ascension/kỹ năng/danh hiệu — đổi lấy % Công/Mạng vĩnh viễn không mất khi tẩy tủy tiếp ----------
+function renderTayTuy(){
+  const rc = player.resetCount || 0;
+  const curBonus = rc * 2, nextBonus = (rc + 1) * 2;
+  let html = `<h3>Tẩy Tủy Phong Huyệt</h3>`;
+  html += `<div style="text-align:center;padding:6px 0 10px">
+    <div style="font-size:34px">🔄</div>
+    <div style="font-size:15px;color:#ffd76a">Số lần Tẩy Tủy: <b>${rc}</b></div>
+    <div style="font-size:12px;color:#9aa8d4;margin-top:2px">Công Kích &amp; Sinh Lực hiện tại: <b style="color:#7ec850">+${curBonus}%</b> (vĩnh viễn, không mất khi tẩy tủy tiếp)</div>
+  </div>`;
+  html += `<div class="bonus-list">Tẩy Tủy sẽ:<br>
+    • Đưa cấp độ về <b>1</b>, EXP về 0<br>
+    • <b style="color:#7ec850">Giữ nguyên</b> trang bị, Ascension cảnh giới, kỹ năng đã học, danh hiệu, điểm dịch chuyển…<br>
+    • Cộng thêm <b style="color:#ffd76a">+2%</b> Công Kích &amp; Sinh Lực vĩnh viễn (→ tổng ${nextBonus}%)</div>`;
+  if (player.level < MAX_LV){
+    html += `<div style="padding:14px;font-size:13px;text-align:center;color:#9aa8d4">Cần đạt <b style="color:#7ecbff">cấp ${MAX_LV}</b> (Tối đa) mới Tẩy Tủy được.<br>Cấp hiện tại: ${player.level}</div>`;
+  } else if (!window._tayTuyConfirm){
+    html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 20px" onclick="window.doTayTuy()">🔄 Tẩy Tủy Phong Huyệt</button></div>`;
+  } else {
+    html += `<div class="forge-actions" style="flex-direction:column;gap:8px">
+      <div style="color:#ff9a6a;font-size:12px">Chắc chắn chứ? Cấp độ sẽ về 1 (trang bị/Ascension vẫn giữ nguyên).</div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button class="mini-btn" style="border-color:#7ec850;color:#7ec850" onclick="window.doTayTuy(true)">✓ Xác Nhận</button>
+        <button class="mini-btn" onclick="window._tayTuyConfirm=false;renderCharPanel()">✕ Hủy</button>
+      </div></div>`;
+  }
+  CE().innerHTML = html;
+}
+window.doTayTuy = function(confirmed){
+  if (player.level < MAX_LV) return;
+  if (!confirmed){ window._tayTuyConfirm = true; renderCharPanel(); return; }
+  window._tayTuyConfirm = false;
+  player.resetCount = (player.resetCount || 0) + 1;
+  player.level = 1; player.xp = 0;
+  calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
+  zoneBanner = { text:'🔄 TẨY TỦY PHONG HUYỆT', sub:`Lần thứ ${player.resetCount} — Công Kích & Sinh Lực +${player.resetCount*2}% vĩnh viễn!`, color:'#ffd76a', t:4 };
+  addFloat(player.x, player.y-60, `Tẩy Tủy thành công! Reset: ${player.resetCount}`, '#ffd76a', 16);
+  addEffect({ type:'ring', x:player.x, y:player.y, r:110, color:'#ffd76a', big:true });
+  AudioSys.sfx('levelup', 0.95);
+  checkTitles();
+  renderCharPanel();
+  saveGame();
+};
 // ---------- Instinct Channels: 8 mạch × 20 đốt, xung mạch tốn Instinct ----------
 function renderKinhMach(){
   let html = `<h3>Instinct Channels — Đả Thông Huyệt Đạo</h3>`;
@@ -7026,6 +7079,7 @@ const CHAR_TABS = [
   { id:'forge',    name:'Rèn Luyện',  lv:5 },
   { id:'mount',    name:'Thú Chiến',  lv:6 },
   { id:'dantian',  name:'Ascension',   lv:7 },
+  { id:'taytuy',   name:'🔄 Tẩy Tủy',  lv:MAX_LV },
   { id:'tuyethoc', name:'Card',  lv:4 },
   { id:'pet',      name:'🐾 Linh Thú', lv:15 },
   { id:'channel',  name:'☬ Hóa Thân', lv:14 },
@@ -7046,6 +7100,7 @@ function renderCharPanel(){
   if (tab==='info') renderChar();
   else if (tab==='mount') renderMount();
   else if (tab==='dantian') renderDantian();
+  else if (tab==='taytuy') renderTayTuy();
   else if (tab==='tuyethoc') renderTuyetHoc();
   else if (tab==='pet') renderPet();
   else if (tab==='channel') renderChannelForm();
@@ -7617,7 +7672,7 @@ function updateHud(){
   const sect = SECTS[player.sect];
   const tt = player.titles && player.titles.equipped && TITLES.find(x=>x.id===player.titles.equipped);
   const nameEl = el('hud-name');
-  const _nameHtml = `${tt?`<span class="title-tag">【${tt.name}】</span> `:''}${player.name ? `<span class="char-name">${player.name}</span> · ` : ''}${player.ascended ? `<span style="color:#fff2b0">☁ Tán Tiên</span><span style="opacity:.55;font-size:10px"> · xuất thế ${sect.name}</span>` : sect.name} · Cấp ${player.level}${player.level>=MAX_LV?' (Tối đa)':''}${player.toiac>0?` · <b>TỘI ÁC ${player.toiac}</b>`:''}`;
+  const _nameHtml = `${tt?`<span class="title-tag">【${tt.name}】</span> `:''}${player.name ? `<span class="char-name">${player.name}</span> · ` : ''}${player.ascended ? `<span style="color:#fff2b0">☁ Tán Tiên</span><span style="opacity:.55;font-size:10px"> · xuất thế ${sect.name}</span>` : sect.name} · Cấp ${player.level}${player.level>=MAX_LV?' (Tối đa)':''}${player.resetCount?` · <span style="color:#ffd76a" title="Tẩy Tủy Phong Huyệt — +${player.resetCount*2}% Công/Mạng vĩnh viễn">🔄${player.resetCount}</span>`:''}${player.toiac>0?` · <b>TỘI ÁC ${player.toiac}</b>`:''}`;
   if (window._lastHudName !== _nameHtml){ window._lastHudName = _nameHtml; nameEl.innerHTML = _nameHtml; } // dirty-check: innerHTML rewrite is real DOM churn if done every frame
   nameEl.classList.toggle('toiac', (player.toiac||0) > 0);
   // Viên đá Máu/Chân Khí kiểu MU Online: chất lỏng dâng từ dưới lên, nên đổi width → height
