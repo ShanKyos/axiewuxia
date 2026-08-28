@@ -112,6 +112,13 @@ const SLOTS = [
   { id:'canh',      name:'Cánh',       special:true }, // Thiên Thần / Tiểu Quỷ — ngoài 10 cấp
 ];
 const ARMOR_SLOTS = ['non','ao','tay','quan','chan','nhan1','nhan2']; // có thể Hoàn Hảo
+// Bố cục lưới trang bị kiểu paperdoll (3 cột x 4 hàng) — thay cho danh sách dọc cũ
+const EQUIP_GRID = [
+  ['canh','non','aochoang'],
+  ['vukhi','ao','daychuyen'],
+  ['nhan1','quan','nhan2'],
+  ['tay','chan','pet'],
+];
 const ITEM_NAMES = {
   vukhi:['Mộc Kiếm','Thanh Phong Kiếm','Liệt Dương Đao','Huyền Thiết Trọng Kiếm','Du Long Thần Kiếm'],
   non:['Bố Mạo','Thiết Diện','Ngân Quan','Hổ Đầu Khôi','Thiên Tôn Miện'],
@@ -6042,15 +6049,26 @@ function renderForge(){
         <div style="font-size:11px;opacity:.7;text-align:center">${failTxt}</div>
         <div id="forge-msg"></div>`;
     }
-    // ── Tứ Châu khảm phúc (Track HT — GDD §13) ──
+    // ── Tứ Châu khảm phúc (Track HT — GDD §13) ── kéo viên ngọc thả vào ô món đồ để khảm,
+    // hoặc bấm nút bên dưới (giữ lại cho thao tác chạm trên mobile — kéo-thả HTML5 không chạy trên touch).
     const J = player.jewels || { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
-    html += `<div class="stat-sec">TỨ CHÂU — ◎ Chúc Phúc <b style="color:#7ec850">${J.chucPhuc}</b> · ◉ Linh Hồn <b style="color:#b08ae8">${J.linhHon}</b> · ❤ Sinh Mệnh <b style="color:#e84a6a">${J.sinhMenh}</b> · ● Hỗn Độn <b style="color:#7ecbff">${J.honDon}</b></div>`;
     const canCP = J.chucPhuc > 0 && !it.noForge && it.plus <= 5;
     const canLH = J.linhHon > 0 && !it.noForge && it.plus < 11;
     const isArmor = ARMOR_SLOTS.includes(it.slot);
     const smRate = Math.max(25, 75 - (it.life || 0) * 8);
     const canSM = J.sinhMenh > 0 && isArmor && (it.life || 0) < 7;
-    html += `<div class="forge-actions" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
+    html += `<div class="stat-sec">TỨ CHÂU — kéo ngọc thả vào món đồ bên dưới để khảm · ● Hỗn Độn <b style="color:#7ecbff">${J.honDon}</b></div>`;
+    html += `<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:8px">
+      <div class="jewel-drag" draggable="${canCP}" ondragstart="onJewelDragStart(event,'chucPhuc')" title="Lên +1 miễn phí, 100% thành công (áp dụng +0 đến +5)">◎<br>Chúc Phúc<br><b style="color:#7ec850">${J.chucPhuc}</b></div>
+      <div class="jewel-drag" draggable="${canLH}" ondragstart="onJewelDragStart(event,'linhHon')" title="Lên +1 với 50% — thất bại tụt 1 cấp (áp dụng đến +10, kể cả Phá Thiên Kiếp)">◉<br>Linh Hồn<br><b style="color:#b08ae8">${J.linhHon}</b></div>
+      <div class="jewel-drag" draggable="${canSM}" ondragstart="onJewelDragStart(event,'sinhMenh')" title="${isArmor?`+4% HP mỗi bậc (tối đa 7 bậc = +28%) — thất bại về 0. Tỉ lệ hiện tại: ${smRate}%`:'Chỉ khảm lên giáp trụ (Nón/Giáp/Tay/Quần/Giày)'}">❤<br>Sinh Mệnh<br><b style="color:#e84a6a">${J.sinhMenh}</b></div>
+    </div>
+    <div class="forge-drop-zone" style="display:flex;justify-content:center;margin-bottom:8px"
+      ondragover="onForgeItemDragOver(event)" ondragenter="onForgeItemDragEnter(event)" ondragleave="this.classList.remove('drag-over')"
+      ondrop="this.classList.remove('drag-over'); onForgeItemDrop(event, ${it.uid})">
+      ${slotIcon(it, '')}
+    </div>
+    <div class="forge-actions" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
       <button class="mini-btn" ${canCP?'':'disabled'} onclick="useJewel('chucPhuc',${it.uid})" title="Lên +1 miễn phí, 100% thành công (áp dụng +0 đến +5)">◎ Chúc Phúc +1</button>
       <button class="mini-btn" ${canLH?'':'disabled'} onclick="useJewel('linhHon',${it.uid})" title="Lên +1 với 50% — thất bại tụt 1 cấp (áp dụng đến +10, kể cả Phá Thiên Kiếp)">◉ Linh Hồn +1 (50%)</button>
       <button class="mini-btn" ${canSM?'':'disabled'} onclick="useJewel('sinhMenh',${it.uid})" title="${isArmor?`+4% HP mỗi bậc (tối đa 7 bậc = +28%) — thất bại về 0. Tỉ lệ hiện tại: ${smRate}%`:'Chỉ khảm lên giáp trụ (Nón/Giáp/Tay/Quần/Giày)'}">❤ Sinh Mệnh ${(it.life||0)}/7</button></div>
@@ -7042,7 +7060,17 @@ function togglePanel(which){
   const p = el(id);
   const wasHidden = p.classList.contains('hidden');
   closePanels();
-  if (wasHidden){ AudioSys.sfx('ui', 0.6); renderPanel(which); p.classList.remove('hidden'); if (which==='char') tutAdvance('panel'); }
+  if (wasHidden){
+    AudioSys.sfx('ui', 0.6); renderPanel(which); p.classList.remove('hidden'); if (which==='char') tutAdvance('panel');
+    // Trang Bị + Túi Đồ: trên màn hình đủ rộng, mở cùng lúc cả 2 (side-by-side, xem CSS) để
+    // kéo-thả đồ từ Túi Đồ sang ô Trang Bị được — kéo-thả HTML5 cần cả 2 cùng có mặt trên DOM.
+    // Màn hình hẹp/mobile giữ nguyên hành vi cũ (1 bảng tại 1 thời điểm — kéo-thả vốn không chạy trên chạm).
+    if ((which === 'inv' || which === 'bag') && window.innerWidth >= 1000){
+      const otherKey = which === 'inv' ? 'bag' : 'inv';
+      renderPanel(otherKey);
+      el(map[otherKey]).classList.remove('hidden');
+    }
+  }
 }
 function renderPanel(which){
   if (which==='settings'){ renderSettings(); return; }
@@ -7078,18 +7106,62 @@ function slotIcon(it, cls){
   return `<span class="item-ic${rcls}"><img class="${cls||'slot-icon'}" style="filter:hue-rotate(${hue}deg)" src="assets/items/${f}.png" onerror="this.style.display='none'" alt="">${badge}</span>`;
 }
 
-// ---------- Trang Bị (override): chỉ 12 ô, có hình ----------
+// ---------- Trang Bị (override): lưới paperdoll 12 ô, kéo-thả từ Túi Đồ để mặc ----------
 function renderInv(){
   let html = `<h3>Trang Bị — 12 Ô chuẩn GDD</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div class="stat-sec">ĐANG MẶC (bấm để tháo) — đồ đặc biệt không rèn được <button class="mini-btn" style="float:right" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất</button></div>`;
+  html += `<div class="stat-sec">ĐANG MẶC — bấm để tháo, hoặc kéo đồ từ Túi Đồ thả đúng ô <button class="mini-btn" style="float:right" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất</button></div>`;
+  html += `<div class="eq-grid">`;
+  for (const row of EQUIP_GRID){
+    for (const slotId of row){
+      const sl = SLOTS.find(s=>s.id===slotId);
+      const it = player.equip[slotId];
+      html += `<div class="eq-slot${it?' filled':''}" title="${it ? it.name + (it.plus?' +'+it.plus:'') : sl.name}"
+        onclick="unequip('${slotId}')"
+        ondragover="onEquipSlotDragOver(event,'${slotId}')"
+        ondragenter="onEquipSlotDragEnter(event,'${slotId}')" ondragleave="this.classList.remove('drag-over')"
+        ondrop="this.classList.remove('drag-over'); onEquipSlotDrop(event,'${slotId}')">
+        ${it ? slotIcon(it,'') + `<span class="eq-plus">${it.plus?'+'+it.plus:''}</span>` : `<span class="eq-empty">${sl.name}</span>`}
+      </div>`;
+    }
+  }
+  html += `</div>`;
+  html += `<div class="stat-sec" style="margin-top:10px">CHI TIẾT</div>`;
+  let any = false;
   for (const sl of SLOTS){
     const it = player.equip[sl.id];
+    if (!it) continue;
+    any = true;
     html += `<div class="slot-row" onclick="unequip('${sl.id}')">
-      <span class="s-name">${slotIcon(it || { slot: sl.id })}<span><b>${sl.name}</b><br>${it?itemLineHtml(it):'<span style="opacity:.35">— trống —</span>'}</span></span></div>`;
+      <span class="s-name">${slotIcon(it)}<span><b>${sl.name}</b><br>${itemLineHtml(it)}</span></span></div>`;
   }
+  if (!any) html += `<div style="opacity:.5;font-size:12px;padding:8px">Chưa mặc món nào — kéo đồ từ Túi Đồ vào ô tương ứng ở trên.</div>`;
   html += `<div style="font-size:11.5px;opacity:.6;margin-top:8px">Vật phẩm & vật liệu nằm trong <b>Túi Đồ (B)</b>.</div>`;
   el('panel-inv').innerHTML = html;
 }
+// Kéo-thả: đồ trong Túi Đồ → ô Trang Bị tương ứng (thay thế/bổ sung cho click-to-equip).
+// Dùng 1 biến toàn cục đơn giản thay vì tin vào dataTransfer.getData trong dragover (một số trình
+// duyệt chặn đọc dữ liệu cho tới sự kiện drop) — đủ dùng vì chỉ có 1 thao tác kéo diễn ra cùng lúc.
+window._dragBagIdx = -1;
+window.onBagItemDragStart = function(e, i){
+  window._dragBagIdx = i;
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', String(i)); } catch { /* một số trình duyệt kén định dạng — bỏ qua, đã có _dragBagIdx */ }
+};
+window.onEquipSlotDragOver = function(e, slotId){
+  const it = player.inv[window._dragBagIdx];
+  if (it && it.slot === slotId) e.preventDefault(); // preventDefault = cho phép thả; sai loại thì giữ con trỏ "cấm"
+};
+window.onEquipSlotDragEnter = function(e, slotId){
+  const it = player.inv[window._dragBagIdx];
+  if (it && it.slot === slotId) e.currentTarget.classList.add('drag-over');
+};
+window.onEquipSlotDrop = function(e, slotId){
+  e.preventDefault();
+  const i = window._dragBagIdx; window._dragBagIdx = -1;
+  const it = player.inv[i];
+  if (!it || it.slot !== slotId) return;
+  equipItem(i);
+};
 
 // ---------- Túi Đồ: lưới item có hình + vật liệu ----------
 window.bagSel = -1;
@@ -7176,7 +7248,7 @@ function renderBag(){
   player.inv.forEach((it, i)=>{
     const _eq2 = player.equip[it.slot], _bp2 = _eq2 ? itemPower(_eq2) : 0;
     const _up = !it.special && player.level >= itemReqLv(it) && itemPower(it) > _bp2;
-    html += `<div class="bag-cell rar-${it.rarity}" style="position:relative" onclick="equipItem(${i})" title="${it.name} — bấm để MẶC NGAY${_up ? ' (mạnh hơn đang mặc!)' : ''} · ⋯ để chọn">
+    html += `<div class="bag-cell rar-${it.rarity}" style="position:relative" draggable="true" ondragstart="onBagItemDragStart(event,${i})" onclick="equipItem(${i})" title="${it.name} — bấm để MẶC NGAY, hoặc kéo thả vào ô Trang Bị${_up ? ' (mạnh hơn đang mặc!)' : ''} · ⋯ để chọn">
       ${slotIcon(it, '')}<span class="bc-plus">${it.plus?'+'+it.plus:''}</span>${_up ? '<span style="position:absolute;bottom:0;left:2px;color:#6ae88a;font-size:11px;font-weight:700;text-shadow:0 1px 2px #000">▲</span>' : ''}<span style="position:absolute;top:-3px;right:2px;font-size:12px;color:#c9b889;cursor:pointer;text-shadow:0 1px 2px #000" onclick="event.stopPropagation();window.selectBagItem(${i})">⋯</span></div>`;
   });
   html += `</div>`;
@@ -11068,6 +11140,20 @@ function drawMount(){
 // ════════════════════════════════════════════════════════════════════════════
 
 // ---------- Tứ Châu khảm phúc (gọi từ panel Rèn Luyện) ----------
+// Kéo-thả: viên ngọc Tứ Châu (Rèn Luyện) → ô icon món đồ đang chọn, thay cho phải bấm nút riêng.
+window._dragJewelKind = null;
+window.onJewelDragStart = function(e, kind){
+  window._dragJewelKind = kind;
+  e.dataTransfer.effectAllowed = 'copy';
+  try { e.dataTransfer.setData('text/plain', kind); } catch { /* xem ghi chú ở onBagItemDragStart */ }
+};
+window.onForgeItemDragOver = function(e){ if (window._dragJewelKind) e.preventDefault(); };
+window.onForgeItemDragEnter = function(e){ if (window._dragJewelKind) e.currentTarget.classList.add('drag-over'); };
+window.onForgeItemDrop = function(e, uid){
+  e.preventDefault();
+  const kind = window._dragJewelKind; window._dragJewelKind = null;
+  if (kind) useJewel(kind, uid); // useJewel() tự kiểm tra lại điều kiện (đủ ngọc, đúng loại đồ...), an toàn để gọi thẳng
+};
 window.useJewel = function(kind, uid){
   let it = null;
   for (const s in player.equip) if (player.equip[s] && player.equip[s].uid === uid) it = player.equip[s];
@@ -11218,7 +11304,7 @@ window.openBaoHap = function(t){
   saveGame(); refreshEqPanels();
   el('panel-quest').innerHTML = `<h3>${def.name}</h3><button class="close-x" onclick="closePanels()">✕</button>
     <div style="padding:10px;font-size:13px;line-height:2">Khai mở bảo hạp:<br>${got.join('<br>')}</div>
-    <div class="forge-actions"><button class="mini-btn" onclick="closePanels();el('panel-bag').classList.remove('hidden')">Xem Túi Đồ</button></div>`;
+    <div class="forge-actions"><button class="mini-btn" onclick="togglePanel('bag')">Xem Túi Đồ</button></div>`;
   closePanels(); el('panel-quest').classList.remove('hidden');
 };
 
