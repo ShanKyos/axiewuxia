@@ -603,6 +603,9 @@ function simulateMovePath(sx, sy, tx, ty){
 }
 function setMoveTarget(x, y){
   if (!player || dead) return;
+  // AUTO đang bật thì tự dẫn đường riêng (xem update()), click-to-move bị bỏ qua hoàn toàn —
+  // trước đây im lặng không báo gì, người chơi tưởng bấm không ăn/game đứng. Phát hiện qua QA.
+  if (player.auto){ addFloat(player.x, player.y-40, 'Đang AUTO — tắt AUTO (Z) để tự đi chỗ khác', '#ffb15c', 12); return; }
   const nf = inObstacle(curMap, x, y, 14) ? nearestFree(curMap, x, y) : { x, y };
   moveTarget = { x: nf.x, y: nf.y };
   addEffect({ type:'ring', x: moveTarget.x, y: moveTarget.y, r:20, color:'#9fd8ff' });
@@ -2714,15 +2717,17 @@ function buildWorld(){
   moveTarget = null; moveWaypoint = null; // Click-to-move: đích ở map cũ không còn ý nghĩa khi đổi map
   npcTalkTarget = null; // NPC ở map cũ không còn ý nghĩa khi đổi map
   decor = []; mists = []; springTimer = 0;
-  // quái đứng thành cụm 5-7 con (GDD Mob Mechanics) — xếp theo đai cấp:
-  // cụm yếu nhất gần cửa vào nhất, cụm mạnh nhất sâu nhất (ghép cặp level↔khoảng cách đã sắp xếp)
-  const _packs = [...md.packs].sort((a,b) => MOBS[a.mob].lv - MOBS[b.mob].lv);
-  const _spots = md.packs.map(p => ({ x:p.x, y:p.y }))
-    .sort((a,b) => dist(a.x,a.y,md.spawn.x,md.spawn.y) - dist(b.x,b.y,md.spawn.x,md.spawn.y));
-  for (let i = 0; i < _packs.length; i++){
-    const pk = _packs[i], s = _spots[i];
+  // quái đứng thành cụm 5-7 con (GDD Mob Mechanics), đúng vị trí đã thiết kế trong md.packs.
+  // TRƯỚC ĐÂY: sắp loại quái theo cấp và sắp vị trí theo khoảng cách RỒI ghép lại theo thứ tự —
+  // ý định là "cụm yếu gần cửa, cụm mạnh sâu trong", nhưng ghép kiểu này làm loại quái thực sự
+  // xuất hiện ở 1 toạ độ không còn khớp với loại quái đã đặt ở đó lúc thiết kế map. Hậu quả: Chọn
+  // Trận (enterStage) và đèn hiệu nhiệm vụ diệt quái (questTarget/sideQuestTarget, tìm pack theo
+  // .mob rồi tin .x/.y) đều dẫn sai chỗ — có lúc dẫn thẳng vào cạnh Thủ Vệ vùng khiến AUTO đứng im
+  // (phát hiện qua QA level 1→120). Dữ liệu md.packs mỗi map đã tự nhiên đặt quái yếu gần spawn,
+  // quái mạnh/tinh anh xa hơn rồi — bỏ hẳn bước xáo trộn, spawn đúng như đã thiết kế.
+  for (const pk of md.packs){
     const packId = packSeq++;
-    for (let j = 0; j < pk.n; j++) spawnMob(pk.mob, { x:s.x, y:s.y, r:115, count:pk.n }, packId); // dàn trải cụm quái, tránh chồng hình
+    for (let j = 0; j < pk.n; j++) spawnMob(pk.mob, { x:pk.x, y:pk.y, r:115, count:pk.n }, packId); // dàn trải cụm quái, tránh chồng hình
   }
   curBand = -1; // đổi map → tính lại đai, không bắn banner ngay lúc vào
   // Giang Hồ Du Hiệp — mục tiêu PK trong map dã ngoại/huyết chiến
@@ -4203,6 +4208,15 @@ function update(dt){
   if (_bossNear){
     player._bossHintT = (player._bossHintT || 0) - dt;
     if (player._bossHintT <= 0){ addFloat(player.x, player.y-64, '⚠ Vùng Boss — auto tạm dừng, hãy tự chiến!', '#ff9a5a', 13); player._bossHintT = 6; }
+    // AUTO không tự khơi trận boss, nhưng trước đây đứng im HOÀN TOÀN — không né, không uống
+    // thuốc — trong lúc vẫn ăn đòn miễn phí từ boss lẫn bãi quái xung quanh (QA level 1→120 bắt
+    // được ca chết oan của nhân vật cấp 1 vừa vào Chọn Trận). Lùi xa khỏi boss + vẫn tự hồi máu.
+    const _nb = mobs.find(b => !b.dead && (b.def.bossKind || b.type === 'boss') && dist(player.x, player.y, b.x, b.y) < 300);
+    if (_nb){
+      const _bdd = dist(player.x, player.y, _nb.x, _nb.y);
+      if (_bdd > 0){ mx += (player.x - _nb.x)/_bdd; my += (player.y - _nb.y)/_bdd; }
+    }
+    if (_ac.potion && player.hp < player.maxHp*(_ac.potionPct/100) && player.potions > 0 && (player.potionCd || 0) <= 0) usePotion();
   }
   if (player.auto && !dead && player.jumpT <= 0 && !_bossNear){
     if (player._autoAX == null){ player._autoAX = player.x; player._autoAY = player.y; }
@@ -5865,7 +5879,12 @@ el('btn-pk').addEventListener('click', ()=>{
 window.toggleAuto = function(){
   if (!player) return;
   player.auto = !player.auto;
-  if (player.auto){ player._autoAX = player.x; player._autoAY = player.y; } // neo tại chỗ bật — auto chỉ ôm 1-2 bãi quái quanh neo
+  if (player.auto){
+    // Trong phó bản, quái đợt luôn spawn ở (1300,800) — cách xa cửa vào (1300,1560) hơn tầm AUTO
+    // mặc định. Bật AUTO ngay cửa vào trước đây neo tại chỗ đứng, đứng im không đánh gì (QA phát hiện).
+    if (DGN && mapDef().dungeon){ player._autoAX = 1300; player._autoAY = 800; }
+    else { player._autoAX = player.x; player._autoAY = player.y; } // neo tại chỗ bật — auto chỉ ôm 1-2 bãi quái quanh neo
+  }
   addFloat(player.x, player.y-56, player.auto ? '⚔ AUTO FARM: BẬT — ôm 1-2 bãi quái quanh điểm neo, tự tung chiêu, tự uống thuốc' : 'AUTO FARM: TẮT — về chế độ thủ công',
     player.auto ? '#6ae88a' : '#b8a888', 13);
   AudioSys.sfx('ui', 0.5);
@@ -9188,7 +9207,17 @@ window.enterStage = function(mapId, packIdx){
   const pk = md && md.packs && md.packs[packIdx];
   if (!pk || !player) return;
   if (curMap !== mapId) travelTo(mapId);
-  player.x = pk.x; player.y = pk.y;
+  let tx = pk.x, ty = pk.y;
+  // Né bãi quái nằm sát Thủ Vệ/Trấn Ải vùng: nếu không né, vừa tới AUTO đã tự tạm dừng vì phát
+  // hiện boss trong 300px (xem update()) nhưng vẫn đứng nguyên chịu đòn từ cả bãi quái lẫn boss —
+  // đặc biệt nguy hiểm với nhân vật cấp thấp ở bãi quái đầu tiên. Phát hiện qua QA level 1→120.
+  const _bd = BOSS_DEFS[mapId];
+  if (_bd) for (const b of [..._bd.thuve, _bd.tranai]){
+    const bx = b.x*MAP.w, by = b.y*MAP.h;
+    const d = dist(tx, ty, bx, by);
+    if (d > 0 && d < 340){ const ang = Math.atan2(ty-by, tx-bx); tx = bx + Math.cos(ang)*340; ty = by + Math.sin(ang)*340; }
+  }
+  player.x = tx; player.y = ty;
   const _f = nearestFree(mapId, player.x, player.y); player.x = _f.x; player.y = _f.y;
   player.auto = true; player._autoAX = player.x; player._autoAY = player.y; updateAutoBtn();
   snapCamera(); closePanels();
@@ -10613,6 +10642,10 @@ function nextDungeonWave(){
     const m = spawnMob(t, { x:1300, y:800, r:230, count:w.length }, null);
     m.zone = null; // quái phó bản chết là chết hẳn — không respawn
   }
+  // Cửa vào phó bản (1300,1560) cách chỗ quái đợt spawn (1300,800) tới ~760px, ngoài tầm AUTO mặc
+  // định (430px) — bật AUTO ngay cửa vào trước đây đứng im không đánh gì (phát hiện qua QA). Dời
+  // điểm neo AUTO về đúng chỗ quái mỗi đợt để AUTO tự chạy tới như phần overworld đã làm.
+  if (player && player.auto){ player._autoAX = 1300; player._autoAY = 800; }
   if (player) addFloat(player.x, player.y - 60, 'Đợt ' + DGN.wave + '/' + DGN.def.waves.length, '#b08ae8', 16);
 }
 function updateDungeon(){
