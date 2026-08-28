@@ -74,14 +74,14 @@ const EXACT = {
   'Tiến Cấp Đan': 'Advance Pill',
   'Thức Tỉnh': 'Awakened', '— ĐÃ THỨC TỈNH ✦': '— AWAKENED ✦', '— TỐI THƯỢNG': '— SUPREME',
   // Stats
-  'Công Kích': 'Attack', 'Tấn Công': 'Attack', 'Sinh Lực': 'HP', 'Nội Lực': 'Qi',
+  'Công Kích': 'Attack', 'Tấn Công': 'Attack', 'Sinh Lực': 'HP',
   'Phòng Ngự': 'Defense', 'Phòng Thủ': 'Defense', 'Tốc Độ Đánh': 'Atk Speed',
   'Né Tránh': 'Dodge', 'Tránh Đòn': 'Dodge', 'Bạo Kích': 'Crit', 'Bạo Kích %': 'Crit %',
   'Thân Pháp': 'Agility', 'Lực Lượng': 'Strength', 'Mẫn Tiệp': 'Dexterity',
   'Giảm Sát Thương': 'Damage Reduction', 'Phản Sát Thương': 'Reflect Damage',
-  'Thêm Sát Thương': 'Bonus Damage', 'Hút Sinh Lực': 'Life Steal', 'Hút Nội Lực': 'Qi Steal',
+  'Thêm Sát Thương': 'Bonus Damage', 'Hút Sinh Lực': 'Life Steal', 'Hút Qi': 'Qi Steal',
   'Đồng Rơi Thêm': 'Bonus Coin Drops', 'EXP Thêm': 'Bonus EXP', 'Toàn Thuộc Tính': 'All Attributes',
-  'Sinh Lực Tối Đa': 'Max HP', 'Nội Lực Tối Đa': 'Max Qi', 'Hồi Instinct': 'Instinct Regen',
+  'Sinh Lực Tối Đa': 'Max HP', 'Qi Tối Đa': 'Max Qi', 'Hồi Instinct': 'Instinct Regen',
   'Xuyên Giáp': 'Armor Pierce', 'Thần Lực': 'Divine Power', 'Thiên Nhãn': 'Heavenly Eye',
   // Slots
   'Vũ Khí': 'Weapon', 'Nón': 'Helm', 'Áo': 'Armor', 'Tay': 'Gloves', 'Quần': 'Pants',
@@ -119,7 +119,7 @@ const EXACT = {
   '" — gõ /help': '" — type /help',
   // System messages & status
   'Nhiệm vụ hoàn thành!': 'Quest complete!', 'Túi đồ đã đầy!': 'Bag is full!',
-  'Túi thuốc đã đầy (tối đa 5 lọ)!': 'Potion bag full (max 5)!', 'Không đủ Nội Lực!': 'Not enough Qi!',
+  'Túi thuốc đã đầy (tối đa 5 lọ)!': 'Potion bag full (max 5)!', 'Không đủ Qi!': 'Not enough Qi!',
   'Chân khí đã sung mãn!': 'True Qi is full!', 'Vẫn khỏe mạnh — không cần thuốc!': 'Still healthy — no potion needed!',
   'Đã gỡ Trọng Thương — có thể Té Núi ngay': 'Heavy Wound cleared — you can cliff-jump now',
   'Lỗi:': 'Error:', 'Lệnh lạ "': 'Unknown command "', 'Không có map "': 'No such map "',
@@ -128,7 +128,7 @@ const EXACT = {
   'CƯƠNG KHÍ HỘ THỂ!': 'QI SHIELD!', 'Cương Khí Hộ Thể': 'Qi Shield',
   'VÔ TƯỚNG — toàn bộ chiêu đã hồi!': 'FORMLESS — all skills refreshed!',
   '✦ SONG THỦ HỖ BÁC — chiêu không hồi!': '✦ DUAL AMBIDEXTERITY — skills cost no cooldown!',
-  '⚡ Liên Trảm — miễn phí Nội Lực!': '⚡ Chain Strike — free Qi!',
+  '⚡ Liên Trảm — miễn phí Qi!': '⚡ Chain Strike — free Qi!',
   'BẤT TỬ: BẬT': 'GODMODE: ON', 'BẤT TỬ: TẮT': 'GODMODE: OFF',
   'PK: BẬT': 'PK: ON', 'PK: Tắt': 'PK: OFF',
   'ĐÃ MỞ VÙNG MỚI': 'NEW REGION UNLOCKED', '☯ BÁI SƯ THỤ NGHIỆP': '☯ TAKEN AS DISCIPLE',
@@ -312,7 +312,7 @@ const EXACT = {
   'Võ Hồn': 'Martial Soul', 'Thiên Mệnh': 'Heaven\'s Mandate',
   'Kỳ Mạch Đại Thông': 'Open Meridians', 'Vạn Vật Hữu Duyên': 'Fortune\'s Favorite',
   '+8 Tấn Công': '+8 Attack', '+55 Sinh Lực tối đa': '+55 Max HP',
-  '+5% tỉ lệ quái rớt đồ': '+5% monster drop rate', '+15 Nội Lực tối đa': '+15 Max Qi',
+  '+5% tỉ lệ quái rớt đồ': '+5% monster drop rate', '+15 Qi tối đa': '+15 Max Qi',
   'Ám Khí +15% ST · phá khiên lâu thêm 4s': 'Hidden Weapons +15% DMG · shield-break lasts 4s longer',
   'Giết Du Hiệp không tăng Tội Ác': 'Slaying Wandering Heroes grants no Sin',
   'Card +12% Sát Thương': 'Card +12% Damage', '+15% Bạc rơi': '+15% silver drops',
@@ -409,12 +409,12 @@ Object.assign(EXACT, {
   'Tứ lưỡng bát thiên cân — bạo phát AoE hất văng & làm chậm.': 'Four ounces move a thousand pounds — AoE burst with knockback & slow.',
   'Dương hỏa bùng nổ — +50% sát thương trong 8s.': 'Yang fire erupts — +50% damage for 8s.',
   'Liên hoàn quyền cực nhanh — hồi chiêu chỉ 3s.': 'Lightning-fast chained punches — only 3s cooldown.',
-  'Bị động: +4 Nội Lực hồi mỗi giây.': 'Passive: +4 Qi regen per second.',
+  'Bị động: +4 Qi hồi mỗi giây.': 'Passive: +4 Qi regen per second.',
   'Bổng pháp tứ tung — AoE làm chậm 50% trong 3s.': 'Staff strikes everywhere — AoE 50% slow for 3s.',
   'Thập bát chưởng giáng long — chấn động toàn trường, hất văng & choáng.': 'Eighteen dragon-felling palms — shakes the field, knockback & stun.',
   'Bị động: +12% tốc chạy, +5% né.': 'Passive: +12% move speed, +5% dodge.',
   'Bước trên sóng — lướt xuyên quái, né tuyệt đối 2.5s.': 'Step upon the waves — dash through monsters, absolute dodge for 2.5s.',
-  'Thôn phệ nội lực — hút 25% sát thương thành sinh lực trong 8s.': 'Devours inner force — convert 25% damage to HP for 8s.',
+  'Thôn phệ Qi — hút 25% sát thương thành sinh lực trong 8s.': 'Devours Qi — convert 25% damage to HP for 8s.',
   'Biến hóa vô tướng — lập tức hồi toàn bộ chiêu, +20% ST 10s.': 'Formless shifting — instantly reset all cooldowns, +20% DMG for 10s.',
   'Kiếm quang một đường — xuyên thấu mọi địch trên đường bay.': 'A single beam of sword light — pierces every foe in its path.',
   'Bị động: +10% tốc đánh, +8% né.': 'Passive: +10% attack speed, +8% dodge.',
@@ -476,7 +476,7 @@ Object.assign(EXACT, {
   'Hắc động thôn phệ — hút 40% sát thương thành sinh lực & phản đòn trong 8s.': 'A devouring black hole — convert 40% damage to HP & reflect for 8s.',
   'Thất thương tẫn hại — quyền kính 7 lớp chấn nát địch, choáng & hất văng.': 'Seven layers of ruinous fist force — shatter foes, stun & knock back.',
   'Âm hàn nhập cốt — chưởng lực đông cứng gân cốt, chảy máu & chậm 70%.': 'Yin frost enters the bone — palms freeze sinews, bleed & 70% slow.',
-  'Cửu dương tề tựu — nội lực vô biên, +70% sát thương trong 8s.': 'Nine yangs converge — boundless inner force, +70% damage for 8s.',
+  'Cửu dương tề tựu — Qi vô biên, +70% sát thương trong 8s.': 'Nine yangs converge — boundless Qi, +70% damage for 8s.',
   'Long tượng hiện hình — mười tầng lực đạo nghiền nát toàn trường.': 'Dragon-elephant manifests — ten tiers of force crush the whole field.',
   'Đao pháp truyền đời — ba đạo đao quang băng hàn xuyên thấu.': 'Ancestral blade art — three arcs of freezing blade light, piercing.',
   'Kim xà phóng độc — kiếm quang như rắn vàng cắn xé, trúng kịch độc.': 'The golden snake strikes — sword light bites like a viper, inflicting deadly poison.',
@@ -564,7 +564,7 @@ Object.assign(EXACT, {
   'Tiểu Thành +8% ST ·': 'Minor Success +8% DMG ·',
   'Trung Thành −10% hồi chiêu ·': 'Moderate Success −10% cooldown ·',
   'Đại Thành +12% ST ·': 'Great Success +12% DMG ·',
-  'Viên Dung −12% Nội Lực ·': 'Perfection −12% Qi cost ·',
+  'Viên Dung −12% Qi ·': 'Perfection −12% Qi cost ·',
   'Xuất Thần +15% ST ·': 'Transcendence +15% DMG ·',
   'Hóa Cảnh +20% ST — farm quái & bán đồ lấy bạc để tu luyện!': 'Apotheosis +20% DMG — farm monsters & sell loot for silver to train!',
   'Tiểu Thành': 'Minor Success',
@@ -904,11 +904,16 @@ const RULES = [
   [/^Cấp kỹ năng ≤ cấp nhân vật \((\d+)\)$/, 'Skill level ≤ character level ($1)'],
   [/^Cần ([\d.,]+) bạc$/, 'Need $1 silver'],
   [/^\s*· (\d+) nội lực · (.+)$/, (m, a, b) => ` · ${a} Qi · ${b}`],
+  // Map panel "Đang ở: <map> · <zone type> ·" status line: zt.name sits alone between two ` · `
+  // markers, but Dã Ngoại · PK / Huyết Chiến · Free PK already contain a `·` themselves, so the
+  // generic ` · (.+)` splitter below mis-splits on the zone type's own separator. Match the exact
+  // zone-type names first so they translate as one unit.
+  [/^· (An Toàn|Dã Ngoại · PK|Huyết Chiến · Free PK|Phó Bản) ·$/, (m, a) => `· ${tr(a)} ·`],
   [/^\s*· (.+)$/, (full, a) => { const j = a.split(' · ').map(p => tr(p)).join(' · '); return j === a ? full : ' · ' + j; }],
   [/^— (.+) —$/, (full, a) => { const t = tr(a); return t === a ? full : `— ${t} —`; }],
   [/^Cấp (\d+)\/120(?: · (.+?))? — nâng: ([\d.,]+) bạc, \+2,5% ST(?: · mốc kế (.+?) \(cấp (\d+)\): (.+?))? · cấp kỹ năng ≤ cấp nhân vật$/,
     (m, lv, cur, cost, nm, nmlv, mst) => {
-      const ms = mst ? mst.replace('sát thương', 'DMG').replace('hồi chiêu', 'cooldown').replace('tiêu hao Nội Lực', 'Qi cost') : '';
+      const ms = mst ? mst.replace('sát thương', 'DMG').replace('hồi chiêu', 'cooldown').replace('tiêu hao Qi', 'Qi cost') : '';
       return `Lv ${lv}/120${cur ? ' · ' + tr(cur) : ''} — upgrade: ${cost} silver, +2.5% DMG${nm ? ` · next milestone ${tr(nm)} (Lv ${nmlv}): ${ms}` : ''} · skill level ≤ character level`;
     }],
   // ── Character panel + sub-panels (renderChar/renderSettings + Forge/Mount/Ascension/Card) ──
@@ -934,6 +939,11 @@ const RULES = [
   [/^Thợ Rèn Truyền Thuyết: \+(\d+)% tỉ lệ$/, (m, a) => `Legendary Smith: +${a}% rate`],
   [/^NỘI ĐAN YÊU THÚ — Thôn Phệ \(hôm nay còn (\d+)\/3 lần\)$/, (m, a) => `BEAST INNER CORES — Devour (${a}/3 left today)`],
   [/^(\d+)\/7 Vệ Thần đã hạ$/, (m, a) => `${a}/7 Guardian Spirits slain`],
+  // Travel zone banner (travelTo()'s zoneBanner.sub): ZONE_TYPES[...].name is concatenated with
+  // the map's desc into one "<zone type> — <desc>" string before it ever reaches this translator,
+  // so neither the EXACT entry for the zone-type name alone nor a generic rule would catch it.
+  // The 4 alternatives are ZONE_TYPES's exact `name` values (game.js).
+  [/^(An Toàn|Dã Ngoại · PK|Huyết Chiến · Free PK|Phó Bản) — (.+)$/, (m, a, b) => `${tr(a)} — ${tr(b)}`],
   // ── Generic wrapper rules — kept last so more specific patterns above always win first ──
   [/^\((.+)\)$/, (m, a) => `(${tr(a)})`],
   [/^【(.+)】$/, (m, a) => `【${tr(a)}】`],

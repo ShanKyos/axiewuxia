@@ -74,7 +74,7 @@ const ATTR_INFO = {
 const ARMOR_SUBS = [
   { k:'dmgred',    name:'Giảm Sát Thương',  min:1,  max:5  },
   { k:'hpPct',     name:'Sinh Lực Tối Đa',  min:1,  max:5  },
-  { k:'qiPct',     name:'Nội Lực Tối Đa',   min:1,  max:4  },
+  { k:'qiPct',     name:'Qi Tối Đa',   min:1,  max:4  },
   { k:'evaPct',    name:'Tránh Đòn',        min:5,  max:10 },
   { k:'silverPct', name:'Đồng Rơi Thêm',    min:10, max:30 },
   { k:'reflectPct',name:'Phản Sát Thương',  min:1,  max:5  },
@@ -83,7 +83,7 @@ const ARMOR_SUBS = [
 const WEAPON_SUBS = [
   { k:'perfect',   name:'ST Hoàn Hảo',      min:10, max:10, fixed:true },
   { k:'atkPct',    name:'Thêm Sát Thương',  min:2,  max:5  },
-  { k:'qiLeech',   name:'Hút Nội Lực',      min:1,  max:3  },
+  { k:'qiLeech',   name:'Hút Qi',      min:1,  max:3  },
   { k:'hpLeech',   name:'Hút Sinh Lực',     min:1,  max:3  },
   { k:'aspdPct',   name:'Tốc Độ Đánh',      min:2,  max:5  },
 ];
@@ -788,14 +788,14 @@ const VOHOC_DEFS = {
   thuanduong:  { name:'Thuần Dương Vô Cực Công', school:'Võ Đang', phai:null, tier:'than', cat:'Nội Công', type:'buff', unlock:50, cd:15, qi:30, color:'#e8a03a', icon:'assets/skills/vh_thuanduong.png', glyph:'陽', fx:{ dmgPct:50, t:8 }, desc:'Dương hỏa bùng nổ — +50% sát thương trong 8s.' },
   // ── Cái Bang (giang hồ) ──
   lienhoaquyen:{ name:'Liên Hoa Quyền', school:'Cái Bang', phai:null, tier:'so', cat:'Quyền', type:'cone', unlock:8, cd:4, qi:8, mult:1.15, color:'#b89a5a', icon:'assets/skills/vh_lienhoa.png', glyph:'連', fx:{}, desc:'Liên hoàn quyền cực nhanh — hồi chiêu chỉ 3s.' },
-  thaikhacong: { name:'Thái Hà Công', school:'Cái Bang', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', unlock:15, color:'#7ab86a', icon:'assets/skills/vh_thaiha.png', glyph:'河', desc:'Bị động: +4 Nội Lực hồi mỗi giây.' },
+  thaikhacong: { name:'Thái Hà Công', school:'Cái Bang', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', unlock:15, color:'#7ab86a', icon:'assets/skills/vh_thaiha.png', glyph:'河', desc:'Bị động: +4 Qi hồi mỗi giây.' },
   dacau:       { name:'Phục Hổ Bổng Pháp', school:'Cái Bang', phai:null, tier:'cao', cat:'Bổng', type:'aoe', unlock:30, cd:9, qi:22, mult:1.9, color:'#c8aa4a', icon:'assets/skills/vh_dacau.png', glyph:'棒', fx:{ r:170, slow:{ pct:0.5, t:3 } }, desc:'Bổng pháp tứ tung — AoE làm chậm 50% trong 3s.' },
   hanglong:    { name:'Cuồng Phong Thập Bát Chưởng', school:'Cái Bang', phai:null, tier:'than', cat:'Chưởng', type:'aoe', unlock:50, cd:14, qi:45, mult:3.6, color:'#f0c04a', icon:'assets/skills/vh_hanglong.png', glyph:'龍', fx:{ r:230, kb:80, stun:1, big:true }, desc:'Thập bát chưởng giáng long — chấn động toàn trường, hất văng & choáng.' },
   // ── Tiêu Dao (thất truyền — giang hồ) ──
   tieusi:      { name:'Tiểu Sĩ Thần Công', school:'Tiêu Dao', phai:null, tier:'so', cat:'Tâm Pháp', type:'passive', unlock:8, color:'#a0e8d8', icon:'assets/skills/vh_tieusi.png', glyph:'逍', desc:'Bị động: +12% tốc chạy, +5% né.' },
   sinhtuphu:   { name:'Đoạt Mệnh Phù', school:'Tiêu Dao', phai:null, tier:'trung', cat:'Ám Khí', type:'proj', unlock:18, cd:5, qi:15, mult:1.3, color:'#7ac86a', icon:'assets/skills/vh_sinhtuphu.png', glyph:'符', fx:{ poison:{ t:5 }, pierce:true }, desc:'Phù độc đoạt mệnh — trúng địch trúng kịch độc, xuyên giáp.' },
   langba:      { name:'Phiêu Vân Bộ', school:'Tiêu Dao', phai:null, tier:'cao', cat:'Thân Pháp', type:'dash', unlock:30, cd:10, qi:20, color:'#a0ffe9', icon:'assets/skills/vh_langba.png', glyph:'波', fx:{ dist:180, eva:{ pct:100, t:2.5 } }, desc:'Bước trên sóng — lướt xuyên quái, né tuyệt đối 2.5s.' },
-  bacminh:     { name:'Hắc Uyên Thần Công', school:'Tiêu Dao', phai:null, tier:'than', cat:'Nội Công', type:'buff', unlock:45, cd:13, qi:30, color:'#4ac8e8', icon:'assets/skills/vh_bacminh.png', glyph:'冥', fx:{ leechPct:25, t:8 }, desc:'Thôn phệ nội lực — hút 25% sát thương thành sinh lực trong 8s.' },
+  bacminh:     { name:'Hắc Uyên Thần Công', school:'Tiêu Dao', phai:null, tier:'than', cat:'Nội Công', type:'buff', unlock:45, cd:13, qi:30, color:'#4ac8e8', icon:'assets/skills/vh_bacminh.png', glyph:'冥', fx:{ leechPct:25, t:8 }, desc:'Thôn phệ Qi — hút 25% sát thương thành sinh lực trong 8s.' },
   tieuvotuong: { name:'Huyễn Ảnh Vô Tung Công', school:'Tiêu Dao', phai:null, tier:'than', cat:'Tâm Pháp', type:'buff', unlock:55, cd:30, qi:40, color:'#b8e8ff', icon:'assets/skills/vh_tieuvotuong.png', glyph:'相', fx:{ resetCd:true, dmgPct:20, t:10 }, desc:'Biến hóa vô tướng — lập tức hồi toàn bộ chiêu, +20% ST 10s.' },
   // ── Toàn Chân · Cổ Mộ ──
   tckiemphap:  { name:'Toàn Chân Kiếm Pháp', school:'Toàn Chân · Cổ Mộ', phai:'toanchan', tier:'so', cat:'Kiếm', type:'proj', unlock:5, cd:4, qi:10, mult:1.5, color:'#c8d8ff', icon:'assets/skills/vh_tckiem.png', glyph:'真', fx:{ pierce:true }, desc:'Kiếm quang một đường — xuyên thấu mọi địch trên đường bay.' },
@@ -848,7 +848,7 @@ const FUSION_DEFS = {
   fs_haptinh:    { name:'Thiên Cơ Đoạt Tinh Đại Pháp', origin:'Cổ Quyển Vực Nguyên Thủy', req:['bacminh','capmocong'], tier:'than', cat:'Nội Công', type:'buff', unlock:60, cd:8, qi:40, color:'#3ac8a8', icon:'assets/skills/fs_haptinh.png', glyph:'吸', fx:{ leechPct:40, reflect:true, t:8 }, desc:'Hắc động thôn phệ — hút 40% sát thương thành sinh lực & phản đòn trong 8s.' },
   fs_thatthuong: { name:'Cửu Chấn Toái Cốt Quyền', origin:'Cổ Quyển Vực Nguyên Thủy', req:['lienhoaquyen','thaicucquan'], tier:'than', cat:'Quyền', type:'cone', unlock:60, cd:5, qi:30, mult:3.4, color:'#c86a5a', icon:'assets/skills/fs_thatthuong.png', glyph:'傷', fx:{ stun:1.2, kb:40 }, desc:'Thất thương tẫn hại — quyền kính 7 lớp chấn nát địch, choáng & hất văng.' },
   fs_huyenminh:  { name:'Tuyệt Hàn U Cốt Chưởng', origin:'Cổ Quyển Vực Nguyên Thủy', req:['batquaichuong','cuuamtrao'], tier:'than', cat:'Chưởng', type:'cone', unlock:60, cd:5, qi:32, mult:2.6, color:'#5a8ac8', icon:'assets/skills/fs_huyenminh.png', glyph:'冥', fx:{ slow:{ pct:0.7, t:4 }, bleed:{ t:6 } }, desc:'Âm hàn nhập cốt — chưởng lực đông cứng gân cốt, chảy máu & chậm 70%.' },
-  fs_cuuduongthan:{ name:'Thái Dương Bất Diệt Thần Công', origin:'Cổ Quyển Vực Nguyên Thủy', req:['cuuduongkinh','thuanduong'], tier:'than', cat:'Nội Công', type:'buff', unlock:60, cd:8, qi:45, color:'#ffb03a', icon:'assets/skills/fs_cuuduongthan.png', glyph:'陽', fx:{ dmgPct:70, t:8 }, desc:'Cửu dương tề tựu — nội lực vô biên, +70% sát thương trong 8s.' },
+  fs_cuuduongthan:{ name:'Thái Dương Bất Diệt Thần Công', origin:'Cổ Quyển Vực Nguyên Thủy', req:['cuuduongkinh','thuanduong'], tier:'than', cat:'Nội Công', type:'buff', unlock:60, cd:8, qi:45, color:'#ffb03a', icon:'assets/skills/fs_cuuduongthan.png', glyph:'陽', fx:{ dmgPct:70, t:8 }, desc:'Cửu dương tề tựu — Qi vô biên, +70% sát thương trong 8s.' },
   fs_longtuong:  { name:'Cự Tượng Phá Nhạc Công', origin:'Cổ Quyển Vực Nguyên Thủy', req:['lahanquan','dichcankinh'], tier:'than', cat:'Nội Công', type:'aoe', unlock:60, cd:7, qi:48, mult:4.2, color:'#d8a03a', icon:'assets/skills/fs_longtuong.png', glyph:'象', fx:{ r:220, kb:100, big:true }, desc:'Long tượng hiện hình — mười tầng lực đạo nghiền nát toàn trường.' },
   fs_hogiadao:   { name:'Băng Phong Đao Pháp', origin:'Cổ Quyển Vực Nguyên Thủy', req:['vodangkiem','docco'], tier:'than', cat:'Đao', type:'proj', unlock:60, cd:5, qi:28, mult:1.4, color:'#c8d8e8', icon:'assets/skills/fs_hogiadao.png', glyph:'胡', fx:{ multi:3, pierce:true, speed:680 }, desc:'Đao pháp truyền đời — ba đạo đao quang băng hàn xuyên thấu.' },
   fs_kimxa:      { name:'Xích Lân Độc Kiếm Pháp', origin:'Cổ Quyển Vực Nguyên Thủy', req:['tckiemphap','tichta'], tier:'than', cat:'Kiếm', type:'proj', unlock:60, cd:5, qi:30, mult:2.2, color:'#d8b83a', icon:'assets/skills/fs_kimxa.png', glyph:'蛇', fx:{ pierce:true, poison:{ t:6 } }, desc:'Kim xà phóng độc — kiếm quang như rắn vàng cắn xé, trúng kịch độc.' },
@@ -917,7 +917,7 @@ function evoStage(id){ const lv = skLv(id); return lv >= 120 ? 3 : lv >= 80 ? 2 
 const EVO_LVS = [40, 80, 120];
 const EVO_PATHS = {
   power: { name:'Bá Đạo', desc:'+14% sát thương của chiêu này (dồn theo bậc)', dmg:0.14 },
-  swift: { name:'Tốc Chiến', desc:'−9% hồi chiêu & −6% tiêu hao Nội Lực của chiêu này (dồn theo bậc)', cd:0.09, qi:0.06 },
+  swift: { name:'Tốc Chiến', desc:'−9% hồi chiêu & −6% tiêu hao Qi của chiêu này (dồn theo bậc)', cd:0.09, qi:0.06 },
 };
 function skEvoMult(id){
   const arr = (player && player.skillEvo && player.skillEvo[id]) || [];
@@ -962,7 +962,7 @@ function canCastSilent(id){
   if (player.qi < Math.max(1, Math.round(_inf.qi * skMile(id).qi * skEvoMult(id).qi))) return false;
   return true;
 }
-function milestoneTxt(m){ return m.dmg ? `+${m.dmg*100}% sát thương` : m.cd ? `−${m.cd*100}% hồi chiêu` : `−${m.qi*100}% tiêu hao Nội Lực`; }
+function milestoneTxt(m){ return m.dmg ? `+${m.dmg*100}% sát thương` : m.cd ? `−${m.cd*100}% hồi chiêu` : `−${m.qi*100}% tiêu hao Qi`; }
 window.upgradeSkillUI = function(id){
   const lv = skLv(id);
   if (lv >= 120){ addFloat(player.x, player.y-40, 'Kỹ năng đã viên mãn (Lv 120)!', '#8a8a8a', 12); return; }
@@ -1002,7 +1002,7 @@ function evoBadgeHtml(id){
 }
 function upBtnHtml(id){
   const lv = skLv(id);
-  const _spB = `<button class="mini-btn" style="margin-right:3px;${player.spaceSkill === id ? 'border-color:#7df9ff !important;color:#7df9ff !important;' : ''}" title="Gán chiêu này vào phím Space (thay đòn đánh thường; hồi chiêu/thiếu nội lực thì tự quay về đòn thường)" onclick="window.assignSpaceUI('${id}')">${player.spaceSkill === id ? '⌨✓' : '⌨'}</button>`;
+  const _spB = `<button class="mini-btn" style="margin-right:3px;${player.spaceSkill === id ? 'border-color:#7df9ff !important;color:#7df9ff !important;' : ''}" title="Gán chiêu này vào phím Space (thay đòn đánh thường; hồi chiêu/thiếu Qi thì tự quay về đòn thường)" onclick="window.assignSpaceUI('${id}')">${player.spaceSkill === id ? '⌨✓' : '⌨'}</button>`;
   if (lv >= 120) return `${_spB}<span style="font-size:10px;color:#ffd76a;margin-right:4px">VIÊN MÃN · HÓA CẢNH ⚡3</span>${evoBadgeHtml(id)}`;
   const nm = SK_MILESTONES.find(x => x.lv > lv);
   const cur = [...SK_MILESTONES].reverse().find(x => lv >= x.lv);
@@ -1500,7 +1500,7 @@ const CANH_NAMES = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','
 const GT_DAY = 600; // giây thật cho 1 ngày game
 const SEASONS = [
   { id:'xuan', name:'Xuân', icon:'🌸', color:'#f0a8c0', buffTxt:'+5% EXP',         amb:{ kind:'petal', color:'#f5b8cc', n:26 }, dawn:0.25, dusk:0.75 },
-  { id:'ha',   name:'Hạ',   icon:'☀',  color:'#ffd76a', buffTxt:'+5% hồi Nội Lực', amb:{ kind:'rain',  color:'#9ec8e8', n:34 }, dawn:0.23, dusk:0.77 },
+  { id:'ha',   name:'Hạ',   icon:'☀',  color:'#ffd76a', buffTxt:'+5% hồi Qi', amb:{ kind:'rain',  color:'#9ec8e8', n:34 }, dawn:0.23, dusk:0.77 },
   { id:'thu',  name:'Thu',  icon:'🍂', color:'#e8944a', buffTxt:'+8% bạc rơi',      amb:{ kind:'leaf',  color:'#d87a3a', n:26 }, dawn:0.25, dusk:0.75 },
   { id:'dong', name:'Đông', icon:'❄',  color:'#bfe0f0', buffTxt:'+5% phòng thủ',    amb:{ kind:'snow',  color:'#eef4ff', n:32 }, dawn:0.27, dusk:0.73 },
 ];
@@ -1828,7 +1828,7 @@ const VANDUYEN_RATES = [ { k:'bikip', w:5 }, { k:'chau', w:15 }, { k:'trangbi', 
 // Instinct Channels: 8 mạch × 20 đốt, tiêu hao Instinct (tích lũy thụ động)
 const MERIDIANS = [
   { id:'thaiam',   name:'Thái Âm Mạch',  stat:'hp',    per:40,  color:'#e8e8e8', label:'Sinh Lực', img:'k0_thaiam'},
-  { id:'thieuduong',name:'Thiếu Dương Mạch', stat:'qi', per:6,   color:'#5db86a', label:'Nội Lực', img:'k1_thieuduong'},
+  { id:'thieuduong',name:'Thiếu Dương Mạch', stat:'qi', per:6,   color:'#5db86a', label:'Qi', img:'k1_thieuduong'},
   { id:'thaiduong',name:'Thái Dương Mạch', stat:'atk',  per:3,   color:'#5aa0e8', label:'Tấn Công', img:'k2_thaiduong'},
   { id:'thieuam',  name:'Thiếu Âm Mạch', stat:'def',   per:3,   color:'#b08ae8', label:'Phòng Thủ', img:'k3_thieuam'},
   { id:'duongminh',name:'Dương Minh Mạch', stat:'eva', per:0.4, color:'#ffb15c', label:'Né Tránh', img:'k4_duongminh'},
@@ -1952,8 +1952,8 @@ function itemTier(level){ return clamp(Math.ceil(level / 10), 1, 10); }
 function itemReqLv(it){ return it.tier ? (it.tier - 1) * 10 + 1 : (it.cloakTier === 2 ? 60 : 1); }
 function subName(k){
   return { atkPct:'Thêm Sát Thương', pierce:'Xuyên Giáp', defPct:'Phòng Ngự', hpPct:'Sinh Lực Tối Đa',
-           qiPct:'Nội Lực Tối Đa', evaPct:'Tránh Đòn', silverPct:'Đồng Rơi Thêm', reflectPct:'Phản Sát Thương',
-           dmgred:'Giảm Sát Thương', perfect:'ST Hoàn Hảo', hpLeech:'Hút Sinh Lực', qiLeech:'Hút Nội Lực',
+           qiPct:'Qi Tối Đa', evaPct:'Tránh Đòn', silverPct:'Đồng Rơi Thêm', reflectPct:'Phản Sát Thương',
+           dmgred:'Giảm Sát Thương', perfect:'ST Hoàn Hảo', hpLeech:'Hút Sinh Lực', qiLeech:'Hút Qi',
            aspdPct:'Tốc Độ Đánh', expPct:'EXP Thêm', crit:'Bạo Kích' }[k] || k;
 }
 function genItem(level, bias, srcK){
@@ -4473,7 +4473,7 @@ function update(dt){
         // LIÊN TRẢM (võ học kết hợp): ám khí trúng trong chuỗi combo chiêu thức → cửa sổ 2.5s
         if (p.kind === 'amkhi' && (player.comboT || 0) > 0 && (player.ltT || 0) <= 0){
           player.ltT = 2.5;
-          addFloat(player.x, player.y-66, '⚡ LIÊN TRẢM — chiêu kế miễn phí Nội Lực, +30% ST!', '#ffd76a', 14);
+          addFloat(player.x, player.y-66, '⚡ LIÊN TRẢM — chiêu kế miễn phí Qi, +30% ST!', '#ffd76a', 14);
           addEffect({ type:'ring', x:player.x, y:player.y, r:60, color:'#ffd76a', big:true });
           AudioSys.sfx('crit', 0.7);
         }
@@ -6495,7 +6495,7 @@ function renderKinhMach(){
     const pips = Array.from({length:20}, (_,i)=>`<span style="color:${i<node?md.color:'rgba(232,236,255,.22)'}">●</span>`).join('');
     let perTxt = '';
     if (md.stat==='hp') perTxt = `+${md.per} Sinh Lực/đốt`;
-    else if (md.stat==='qi') perTxt = `+${md.per} Nội Lực/đốt`;
+    else if (md.stat==='qi') perTxt = `+${md.per} Qi/đốt`;
     else if (md.stat==='atk') perTxt = `+${md.per} Tấn Công/đốt`;
     else if (md.stat==='def') perTxt = `+${md.per} Phòng Thủ/đốt`;
     else if (md.stat==='eva') perTxt = `+${md.per}% Né/đốt`;
@@ -7147,7 +7147,7 @@ function renderSkillPanel(){
     html += id ? `<button class="mini-btn" onclick="window.assignSkill(null,${i})" title="Bấm để gỡ">${i+1}: ${skillInfo(id).name} ✕</button> `
                : `<span style="opacity:.5;font-size:11px">[${i+1}: trống]</span> `;
   }
-  html += `<div style="font-size:11px;color:#9aa8d4;line-height:1.65;margin-bottom:6px">⬆ Mỗi cấp <b>+2,5% ST</b> (phí bạc tăng dần theo cấp) · Mốc cảnh giới chiêu: <b>20</b> Tiểu Thành +8% ST · <b>40</b> Trung Thành −10% hồi chiêu · <b>60</b> Đại Thành +12% ST · <b>80</b> Viên Dung −12% Nội Lực · <b>100</b> Xuất Thần +15% ST · <b>120</b> Hóa Cảnh +20% ST — farm quái & bán đồ lấy bạc để tu luyện! Mỗi cấp còn <b>−0,25% hồi chiêu</b> (tối đa −30%) · Mốc <b>40/80/120</b>: <b style="color:#7df9ff">⚡ TIẾN HÓA</b> — thêm luồng kiếm/sóng chưởng/vòng nổ, buff bền hơn!</div>`;
+  html += `<div style="font-size:11px;color:#9aa8d4;line-height:1.65;margin-bottom:6px">⬆ Mỗi cấp <b>+2,5% ST</b> (phí bạc tăng dần theo cấp) · Mốc cảnh giới chiêu: <b>20</b> Tiểu Thành +8% ST · <b>40</b> Trung Thành −10% hồi chiêu · <b>60</b> Đại Thành +12% ST · <b>80</b> Viên Dung −12% Qi · <b>100</b> Xuất Thần +15% ST · <b>120</b> Hóa Cảnh +20% ST — farm quái & bán đồ lấy bạc để tu luyện! Mỗi cấp còn <b>−0,25% hồi chiêu</b> (tối đa −30%) · Mốc <b>40/80/120</b>: <b style="color:#7df9ff">⚡ TIẾN HÓA</b> — thêm luồng kiếm/sóng chưởng/vòng nổ, buff bền hơn!</div>`;
   html += `<div style="font-size:11px;color:#7df9ff;margin-bottom:6px">💠 Tâm Đắc: <b>${player.tamdac || 0}</b> — đột phá mốc cảnh giới chiêu (tinh anh 30% · boss 1-2 · Boss Vùng 2-3) · ⌨ Phím Space: <b>${player.spaceSkill ? skillInfo(player.spaceSkill).name : 'Đòn đánh thường'}</b> — bấm nút ⌨ cạnh chiêu để gán/gỡ</div>`;
   html += `</div><div class="stat-sec">CHIÊU THỨC CHỦ ĐỘNG — bấm số ô để gán</div>`;
   for (const id in SKILL_DEFS){
@@ -7156,7 +7156,7 @@ function renderSkillPanel(){
     html += `<div class="skill-row${info.unlocked?'':' locked'}">
       <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='a'?'壹':id==='tp'?'鎮':id==='amkhi'?'暗':id==='bow'?'弓':id==='gangkhi'?'罡':id==='danchi'?'弹':'魂'}</span>'" alt="">
       <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${info.name}</b>
-        <span style="font-size:10.5px;opacity:.6"> · ${info.qi} nội lực · ${effCd(id, info.cd).toFixed(1)}s</span>
+        <span style="font-size:10.5px;opacity:.6"> · ${info.qi} Qi · ${effCd(id, info.cd).toFixed(1)}s</span>
         <div class="sk-desc">${info.unlocked ? info.desc : '🔒 ' + info.lockTxt}</div></span>
       <span class="assign-btns">${info.unlocked ? upBtnHtml(id) : ''}${[0,1,2,3,4].map(s=>
         `<button class="mini-btn" ${info.unlocked?'':'disabled'} onclick="window.assignSkill('${id}',${s})">${s+1}</button>`).join('')}</span></div>`;
@@ -7191,7 +7191,7 @@ function renderSkillPanel(){
         <img src="${_v.icon}" onerror="this.style.display='none'" alt="">
         <span class="sk-info"><b style="color:${learned?_t.color:'#8a8a8a'}">${_v.name}</b>
           <span style="font-size:10px;color:${_t.color}"> · ${_t.name} · ${_v.cat}</span>
-          ${!isPass?`<span style="font-size:10.5px;opacity:.6"> · ${_v.qi} nội lực · ${effCd(_vid, _v.cd).toFixed(1)}s</span>`:''}
+          ${!isPass?`<span style="font-size:10.5px;opacity:.6"> · ${_v.qi} Qi · ${effCd(_vid, _v.cd).toFixed(1)}s</span>`:''}
           <div class="sk-desc">${_v.desc}</div></span>
         ${right}</div>`;
     }
@@ -7217,7 +7217,7 @@ function renderSkillPanel(){
       <img src="${_f.icon}" onerror="this.style.display='none'" alt="">
       <span class="sk-info"><b style="color:${_fsLearned ? FS_TIER.color : '#8a8a8a'}">${_f.name}</b>
         <span style="font-size:10px;color:#c8a0c8"> · ${_f.origin} · ${_f.cat}</span>
-        <span style="font-size:10.5px;opacity:.6"> · ${_f.qi} nội lực · ${effCd(_fid, _f.cd).toFixed(1)}s · Lv ${skLv(_fid)}</span>
+        <span style="font-size:10.5px;opacity:.6"> · ${_f.qi} Qi · ${effCd(_fid, _f.cd).toFixed(1)}s · Lv ${skLv(_fid)}</span>
         <div class="sk-desc">${_f.desc}</div>
         <div style="font-size:10px;opacity:.85">☯ ${_fsReqTxt}</div></span>
       ${right}</div>`;
@@ -7256,9 +7256,9 @@ function castSkill(id){
   // LIÊN TRẢM: trong cửa sổ 2.5s, chiêu kế tiếp theo miễn phí Nội Lực (ám khí không ăn cửa sổ)
   const _ltFree = (player.ltT || 0) > 0 && id !== 'amkhi';
   if (!_ltFree){
-    if (player.qi < _qiNeed){ addFloat(player.x, player.y-34, 'Không đủ Nội Lực!', '#7fa8e0', 12); return; }
+    if (player.qi < _qiNeed){ addFloat(player.x, player.y-34, 'Không đủ Qi!', '#7fa8e0', 12); return; }
     player.qi -= _qiNeed;
-  } else addFloat(player.x, player.y-48, '⚡ Liên Trảm — miễn phí Nội Lực!', '#ffd76a', 12);
+  } else addFloat(player.x, player.y-48, '⚡ Liên Trảm — miễn phí Qi!', '#ffd76a', 12);
   player.cd[id] = info.cd * (player.vhCdMult || 1) * _sm.cd * _se.cd * skCdScale(id); // mốc 40 −10% · Tẩy Tủy −30% · cấp chiêu −0,25%/cấp (tối đa −30%) · nhánh Tốc Chiến
   if (vhShout(id, d)) SkillVoice.speak(id); // hô tên chiêu (Quan thoại)
   const _atk0 = player.atk; player.atk = Math.round(player.atk * skLvMult(id) * _sm.dmg * _se.dmg); // GDD Đợt 2 B6: mốc ST nhân dồn · nhánh Bá Đạo // cấp kỹ năng 1-120: +2.5% ST mỗi cấp
@@ -7430,7 +7430,7 @@ function updateHud(){
   el('bar-hp').style.width = (100*player.hp/player.maxHp)+'%';
   el('txt-hp').textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
   el('bar-qi').style.width = (100*player.qi/player.maxQi)+'%';
-  el('txt-qi').textContent = `Nội Lực ${Math.floor(player.qi)} / ${player.maxQi}`;
+  el('txt-qi').textContent = `Qi ${Math.floor(player.qi)} / ${player.maxQi}`;
   if (player.level >= MAX_LV){ el('bar-xp').style.width='100%'; el('txt-xp').textContent='MAX'; }
   else { el('bar-xp').style.width = (100*player.xp/XP_TABLE[player.level-1])+'%';
          el('txt-xp').textContent = `${Math.floor(player.xp)} / ${XP_TABLE[player.level-1]} EXP`; }
@@ -7517,7 +7517,7 @@ function updateHud(){
     b.classList.toggle('locked', !info.unlocked);
     b.classList.add('has-img');
     b.style.backgroundImage = `url(${info.icon})`;
-    b.title = info.unlocked ? `${info.name} — ${info.qi} nội lực · ${info.cd}s` : `${info.name} — ${info.lockTxt}`;
+    b.title = info.unlocked ? `${info.name} — ${info.qi} Qi · ${info.cd}s` : `${info.name} — ${info.lockTxt}`;
     const cd = player.cd[id] || 0;
     b.querySelector('.sk-cd').style.height = (cd>0 ? (100*cd/info.cd) : 0) + '%';
   }
@@ -9009,8 +9009,8 @@ function ttRng(seed){ let a = seed; return function(){ a |= 0; a = a + 0x6D2B79F
 function tanDay(){ return Math.floor(gameClock().t / GT_DAY); }
 function tanWeek(){ return Math.floor(gameClock().t / (GT_DAY*7)); }
 const TT_HO = ['Ashwing','Mossbrook','Duskmere','Brightfen','Thornvale','Windholt','Palefrost','Sundrift','Nightbloom','Hollowmere','Ravenshade','Larkspur','Farrow','Stormwick','Fernglow','Wildroot'];
-const TT_TEN_NAM = ['Thiên Hành','Vấn Đạo','Trường Không','Tịch Diệt','Cô Thành','Vô Song','Tử Khiên','Hàn Tinh','Phá Quân','Thương Minh','Khai Sơn','Mạc Ly'];
-const TT_TEN_NU = ['Lăng Tuyết','Khuynh Thành','Mộng Dao','Thanh Nhi','Tiểu Thất','Tố Vấn','Nhược Thủy','Linh San','Bích Hà','Nguyệt Nghi','Hàn Y','Thiền Tâm'];
+const TT_TEN_NAM = ['Corwin','Elric','Garrick','Thane','Roric','Aldous','Bram','Cassian','Doran','Emeric','Fenwick','Gavriel'];
+const TT_TEN_NU = ['Elara','Wrenna','Isolde','Briar','Rosalind','Thessaly','Marigold','Sable','Ondine','Celestine','Fenna','Linnea'];
 const TT_TRAITS = {
   chinh:{ name:'Chính Trực', chat:12, gift:1.0, love:1.0, duelHate:false, desc:'ngay thẳng, trọng nghĩa khí' },
   hao:  { name:'Hào Sảng',   chat:15, gift:1.3, love:1.0, duelHate:false, desc:'cởi mở, thích kết giao bằng hữu' },
@@ -9525,7 +9525,7 @@ const TRAITS = [
   { id:'thanluc',   name:'Thần Lực',            tier:'pham',  glyph:'💪', desc:'+8 Tấn Công',                              late:p=>{ p.atk += 8; } },
   { id:'nhucthan',  name:'Nhục Thân Cường Tráng',tier:'pham', glyph:'🛡', desc:'+55 Sinh Lực tối đa',                       late:p=>{ p.maxHp += 55; } },
   { id:'anmay',     name:'Ăn May',              tier:'pham',  glyph:'🍀', desc:'+5% tỉ lệ quái rớt đồ',                     late:p=>{ p.dropBonus += 0.05; } },
-  { id:'chankhi',   name:'Instinct Dồi Dào',    tier:'pham',  glyph:'🔷', desc:'+15 Nội Lực tối đa',                        late:p=>{ p.maxQi += 15; } },
+  { id:'chankhi',   name:'Instinct Dồi Dào',    tier:'pham',  glyph:'🔷', desc:'+15 Qi tối đa',                        late:p=>{ p.maxQi += 15; } },
   { id:'tuctri',    name:'Túc Trí Đa Mưu',      tier:'linh',  glyph:'📖', desc:'+8% Kinh Nghiệm',                           late:p=>{ p.expPct += 8; } },
   { id:'luyenkhi',  name:'Spark Thiên Phú', tier:'linh',  glyph:'⚒', desc:'Rèn đồ +5% tỉ lệ thành công',               late:p=>{ p.forgeBonus += 5; } },
   { id:'thanhanh',  name:'Bách Bộ Thần Hành',   tier:'linh',  glyph:'👟', desc:'+6% Tốc Chạy',                              late:p=>{ p.speed = Math.round(p.speed*1.06); } },
@@ -9560,7 +9560,7 @@ function rollTraitsSilent(){
 
 // ---------- Danh tính giang hồ: đặt tên nhân vật ----------
 const NAME_HO = ['Sparkden','Waverly','Emberfall','Glimmerwood','Driftholt','Ashgrove','Moonshale','Thistledown','Brambleton','Frostholt','Silverfen','Oakhollow','Windmere','Starholt','Cinderfell','Duskrider','Hatchbrook','Shellmere','Cloudvane','Rootwyn'];
-const NAME_TEN = ['Thiên','Dao Tử','Vô Song','Nguyệt','Phong','Tuyết','Kiếm Minh','Thanh Sát','Lưu Ly','Cô Hồn','Phi Yến','Thương','Vấn Tình','Tiêu Dao','Hàn Băng','Phá Quân','Mộ Bạch','Yên Nhi','Tử Ngọ','Song Nhi','Độc Hành','Khinh Vũ','Trầm Châu','Nhạn Quy'];
+const NAME_TEN = ['Robin','Sage','Rowan','Lark','Fenn','Wynn','Quinn','Reed','Sorrel','Vale','Ren','Merit','Sterling','Marlowe','Ellery','Winter','Hollis','Faye','Cove','Bryn','Osric','Thalia','Corin','Dashiell'];
 function genCharName(){
   const ho = NAME_HO[(Math.random()*NAME_HO.length)|0];
   const ten = NAME_TEN[(Math.random()*NAME_TEN.length)|0];
@@ -9975,7 +9975,7 @@ const TOWER_CARD_TYPES = [
   { k:'dmg',   name:'Cường Kích',  desc:'sát thương chiêu & đòn thường',  v:0.07 },
   { k:'cd',    name:'Tốc Chiến',   desc:'hồi chiêu mọi kỹ năng',          v:0.05 },
   { k:'hp',    name:'Kiên Cường',  desc:'sinh lực tối đa',                v:0.09 },
-  { k:'qi',    name:'Uyên Bác',    desc:'nội lực tối đa',                 v:0.09 },
+  { k:'qi',    name:'Uyên Bác',    desc:'Qi tối đa',                 v:0.09 },
   { k:'crit',  name:'Yếu Điểm',    desc:'tỉ lệ bạo kích',                 v:0.025 },
   { k:'leech', name:'Hấp Tinh',    desc:'hút máu',                        v:0.02 },
 ];
@@ -10214,7 +10214,7 @@ const ND_EFFECT = {
   Kim:   { k:'atk',  v:6,   desc:'+6 công lực mỗi viên' },
   'Mộc': { k:'hp',   v:40,  desc:'+40 sinh lực mỗi viên' },
   'Thổ': { k:'def',  v:4,   desc:'+4 phòng ngự mỗi viên' },
-  'Thủy':{ k:'qi',   v:25,  desc:'+25 nội lực mỗi viên' },
+  'Thủy':{ k:'qi',   v:25,  desc:'+25 Qi mỗi viên' },
   'Hỏa': { k:'crit', v:0.5, desc:'+0.5% chí mạng mỗi viên' },
 };
 function ndToday(){
@@ -10248,7 +10248,7 @@ window.swallowNoidan = function(el2){
 // riêng (không cộng dồn với giới hạn 3/ngày của Nội Đan).
 const ALCHEMY_RECIPES = [
   { id:'hoixuan',  name:'Hồi Xuân Đan',  icon:'🌿', herb:5,  silver:30,  mat:0, perm:false,
-    desc:'Hồi đầy Sinh Lực & Nội Lực ngay lập tức.',
+    desc:'Hồi đầy Sinh Lực & Qi ngay lập tức.',
     apply: p => { p.hp = p.maxHp; p.qi = p.maxQi; } },
   { id:'thanhdoc', name:'Thanh Độc Đan', icon:'🍵', herb:4,  silver:20,  mat:0, perm:false,
     desc:'Giải toàn bộ độc tố & hồi thêm 60 Sinh Lực.',
