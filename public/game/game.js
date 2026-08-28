@@ -2401,6 +2401,7 @@ function newPlayer(sectKey){
     congHuan: 0,                           // Công Huân Lệnh — tiền tệ Vạn Duyên Các
     baohap: {},                            // Bảo Hạp Ma Tôn Giáng Thế { tier: số lượng }
     truyna: { day:'', state:'none', map:null }, // Truy Nã Lệnh ngày
+    wpUnlocked: { tuongduong: true },      // Điểm dịch chuyển (bảng đồ M) — mở khoá khi đã từng đặt chân tới, xem travelTo()
     // Dream of Wuxia systems
     khi: 0,                                    // Instinct đả thông kinh mạch
     meridians: {},                             // { thaiam: 0..20, ... }
@@ -2522,6 +2523,10 @@ function loadGame(){
     if (!player.horseDay) player.horseDay = { d:'', n:0 };  // giới hạn bắt ngựa 5 con/ngày
     if (!player.hintCd) player.hintCd = {};                 // GDD Đợt 2 B3: Nhắc Việc cooldown
     if (!player.hintOff) player.hintOff = {};               // Nhắc Việc: đã tắt (reset khi qua map)
+    if (!player.wpUnlocked){                                // Điểm dịch chuyển: save cũ chưa có field này —
+      player.wpUnlocked = {};                               // coi như đã "đặt chân" tới mọi vùng đã đủ điều kiện
+      for (const id in MAPS) if (!MAPS[id].dungeon && mapGate(id).ok) player.wpUnlocked[id] = true; // (đừng bắt đi lại)
+    }
     if (player.auto == null) player.auto = false; // auto farm (treo máy)
     if (!player.autoCfg) player.autoCfg = { skill:true, potion:true, potionPct:40, range:430, boss:false }; // Auto Farm cfg backfill
     if (player.ascended == null) player.ascended = false; // Starflight backfill
@@ -8787,6 +8792,14 @@ window.travelTo = function(mapId, from){
   const zt = zoneType();
   zoneBanner = { text: md.name, sub: `${zt.name} — ${md.desc}`, color: zt.color, t: 3.2 };
   addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:zt.color, big:true });
+  // Điểm dịch chuyển: lần đầu đặt chân tới 1 vùng (dù được nhiệm vụ dẫn tới hay tự dịch chuyển
+  // khi vừa đủ điều kiện) sẽ mở khoá nút "Dịch Chuyển" cho vùng đó trong Bản Đồ (M) từ giờ về sau.
+  if (!player.wpUnlocked) player.wpUnlocked = {};
+  if (!md.dungeon && !player.wpUnlocked[mapId]){
+    player.wpUnlocked[mapId] = true;
+    addFloat(player.x, player.y - 70, '🚩 Đã mở khoá điểm dịch chuyển: ' + md.name, '#ffd76a', 14);
+    AudioSys.sfx('quest', 0.8);
+  }
   calcDerived(); saveGame();
 };
 
@@ -8834,13 +8847,15 @@ function renderMapPanel(){
         <span class="m-side"><span style="font-size:16px;opacity:.5">🔒</span></span></div>`;
       continue;
     }
+    const wpOk = player.wpUnlocked && player.wpUnlocked[id];
     html += `<div class="map-row" style="${cur?'border-color:#7ecbff;background:rgba(76,141,255,.1)':''}">
       <span style="flex:1"><span class="m-name">${m.name}</span>${_badge(id)}
         <span style="font-size:10.5px;opacity:.6"> · LV ${m.range}</span>
         <span class="zone-badge" style="color:${z2.color};border-color:${z2.color}">${z2.name}</span>
-        <div class="m-desc">${m.desc}</div>${bandSummaryHtml(m)}</span>
+        <div class="m-desc">${m.desc}${!wpOk && !cur ? '<br><span style="color:#f0a03a">🚩 Chưa mở khoá điểm dịch chuyển — cần được nhiệm vụ dẫn tới đó 1 lần trước</span>' : ''}</div>${bandSummaryHtml(m)}</span>
       <span class="m-side">${cur ? '<span style="color:#7ecbff;font-size:11px">ĐANG Ở ĐÂY</span>'
-        : `<button class="mini-btn" onclick="travelTo('${id}')">Dịch Chuyển</button>`}</span></div>`;
+        : wpOk ? `<button class="mini-btn" onclick="travelTo('${id}')">Dịch Chuyển</button>`
+        : '<span style="font-size:11px;color:#6a6255" title="Đã đủ điều kiện, nhưng chưa từng đặt chân tới">🚩 Chưa mở khoá</span>'}</span></div>`;
   }
   el('panel-map').innerHTML = html;
 }
