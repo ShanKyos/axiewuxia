@@ -471,7 +471,7 @@ const MAP_OBSTACLES = {
   ],
   ngoai: [
     { x:2250, y:350, rx:400, ry:310 },  // sông đông-bắc
-    { x:2380, y:820, rx:330, ry:360 },  // sông đông
+    { x:2380, y:820, rx:147, ry:160 },  // sông đông — thu nhỏ, bản cũ đè lên cổng phó bản (2250,950)
     { x:140, y:160, rx:360, ry:270 },   // núi tây-bắc
   ],
   chungnam: [
@@ -8472,11 +8472,11 @@ NPCS.push(
     lore:'"Kiếm tốt không chờ người — ngươi chậm thì người khác cầm mất."' },
   { id:'trachu',  name:'Trà Quán Chủ', map:'tuongduong', x:1230, y:1290, img:'assets/npcs/trachu.png', talk:'shop',
     lore:'"Lunacia hiểm ác — nhưng trà trong quán này lúc nào cũng nóng."' },
-  { id:'quangia', name:'Quản Gia · Động Phủ', map:'tuongduong', x:1450, y:1350, img:'assets/npcs/truonglang.png', talk:'abode',
+  { id:'quangia', name:'Quản Gia · Động Phủ', map:'tuongduong', x:1450, y:1240, img:'assets/npcs/truonglang.png', talk:'abode',
     lore:'"Động phủ của đạo hữu đã dọn sạch — Tụ Linh Trận và Dược Viên chờ chủ nhân."' },
   { id:'bodau', name:'Bổ Đầu · Truy Nã Lệnh', map:'tuongduong', x:1420, y:1010, img:'assets/npcs/quachtinh.png', talk:'trunya',
     lore:'"Hội Đồng Lunaris treo thưởng lũ Chimera lộng hành — mỗi ngày một tên. Làm xong, đến Vạn Duyên Các thử vận."' },
-  { id:'thantoan', name:'Thần Toán Tử · Vạn Duyên Các', map:'tuongduong', x:1120, y:1300, img:'assets/npcs/trachu.png', talk:'vanduyen',
+  { id:'thantoan', name:'Thần Toán Tử · Vạn Duyên Các', map:'tuongduong', x:1120, y:1230, img:'assets/npcs/trachu.png', talk:'vanduyen',
     lore:'"Một lệnh một duyên — năm phần trăm gặp bí kíp hiếm, không gom đủ cũng chẳng thành."' },
   { id:'vandai', name:'Vân Đài · Vách Té Núi', map:'chungnam', x:2300, y:350, img:'assets/npcs/vachda.png', talk:'tenui',
     lore:'"Vách mây ngàn trượng — người cầu đạo nhảy xuống, kẻ sợ chết quay đầu."' },
