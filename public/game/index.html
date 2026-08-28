@@ -31,22 +31,14 @@
     <div id="hud-mat">✦ 0</div>
     <button id="btn-pk" class="hbtn pk-off hidden" title="Bật/tắt chế độ PK">PK: Tắt</button>
     <button id="btn-auto" class="hbtn auto-off hidden" title="Auto farm — treo máy: tự đánh quái & tung kỹ năng quanh điểm neo, tối đa 1-2 bãi (Z)">⚔ AUTO</button>
-    <div class="hud-btns">
-      <button class="hbtn" id="btn-char" title="Nhân vật (C) — Thú cưỡi · Đan điền · Rèn · Tuyệt học · Hóa Thân">Nhân</button>
-      <button class="hbtn" id="btn-inv" title="Trang bị (I)">Trang</button>
-      <button class="hbtn" id="btn-bag" title="Túi đồ (B)">Túi</button>
-      <button class="hbtn" id="btn-skill" title="Kỹ năng (K)">Kỹ</button>
-      <button class="hbtn" id="btn-map" title="Bản đồ thế giới (M)">Đồ</button>
-      <button class="hbtn" id="btn-music" title="Nhạc nền">♪</button>
-      <button class="hbtn" id="btn-voice" title="Giọng hô tên chiêu (Tàu)">🗣</button>
-      <button class="hbtn" id="btn-qlog" title="Nhật ký nhiệm vụ (Q)">📜</button>
-      <button class="hbtn" id="btn-settings" title="Cài đặt (O)">⚙</button>
-    </div>
     <div id="minimap-wrap">
       <canvas id="minimap" width="200" height="146" title="Bản đồ thu nhỏ (U)"></canvas>
       <button id="btn-minimap" title="Ẩn/hiện bản đồ thu nhỏ (U)">🗺</button>
     </div>
-    <div id="quest-tracker"></div>
+    <div id="quest-tracker-wrap">
+      <button id="btn-questtracker" title="Ẩn/hiện bảng nhiệm vụ">📜 Nhiệm Vụ <span id="qt-arrow">▾</span></button>
+      <div id="quest-tracker"></div>
+    </div>
   </div>
   <div id="hint-bar"></div>
 </div>
@@ -55,6 +47,12 @@
 <!-- Thanh dưới kiểu MU Online/Võ Lâm Chi Mộng: viên đá Máu (đỏ) + Chân Khí (xanh) hình cầu ở
      2 đầu, thanh kỹ năng dàn ngang ở giữa, viền sáng chạy dọc theo % máu ở mép dưới cùng. -->
 <div id="bottom-hud" class="hidden">
+  <div class="hud-btns hud-btns-left">
+    <button class="hbtn" id="btn-char" title="Nhân vật (C) — Thú cưỡi · Đan điền · Rèn · Tuyệt học · Hóa Thân">🧙</button>
+    <button class="hbtn" id="btn-inv" title="Trang bị (I)">🛡️</button>
+    <button class="hbtn" id="btn-bag" title="Túi đồ (B)">🎒</button>
+    <button class="hbtn" id="btn-skill" title="Kỹ năng (K)">📖</button>
+  </div>
   <div class="orb orb-hp" id="orb-hp" title="Sinh Lực"><div class="orb-fill" id="bar-hp"></div><span class="orb-val" id="txt-hp"></span></div>
   <div id="skillbar">
     <button class="skill" id="sk-basic"><span class="sk-ico">⚔</span><span class="sk-key">Space</span><span class="sk-cd"></span></button>
@@ -66,6 +64,13 @@
     <button class="skill" id="sk-jump" title="Lăng Ba Vi Bộ — nhảy né trên không (J)"><span class="sk-ico">凌</span><span class="sk-key">J</span><span class="sk-cd"></span></button>
   </div>
   <div class="orb orb-qi" id="orb-qi" title="Chân Khí"><div class="orb-fill" id="bar-qi"></div><span class="orb-val" id="txt-qi"></span></div>
+  <div class="hud-btns hud-btns-right">
+    <button class="hbtn" id="btn-map" title="Bản đồ thế giới (M)">🧭</button>
+    <button class="hbtn" id="btn-music" title="Nhạc nền">♪</button>
+    <button class="hbtn" id="btn-voice" title="Giọng hô tên chiêu (Tàu)">🗣</button>
+    <button class="hbtn" id="btn-qlog" title="Nhật ký nhiệm vụ (Q)">📜</button>
+    <button class="hbtn" id="btn-settings" title="Cài đặt (O)">⚙</button>
+  </div>
 </div>
 <div id="hp-accent-bar"><div id="hp-accent-fill"></div></div>
 
