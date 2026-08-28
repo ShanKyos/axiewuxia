@@ -639,13 +639,22 @@ function collideAiPass(){
 window.SHOW_OBSTACLES = false; // debug: /obstacles trong cheat console — vẽ vùng chặn địa hình để hiệu chỉnh theo art
 function drawObstaclesDebug(){
   if (!window.SHOW_OBSTACLES) return;
+  // Vẽ theo từng ô lưới nhỏ (thay vì tô nguyên khối ellipse/rect to) — mỗi ô kiểm tra
+  // bằng đúng hàm inObstacle() (bán kính 14, giống va chạm nhân vật thật) nên viền hiện ra
+  // khớp chính xác vùng chặn thật, dễ soi để hiệu chỉnh theo art hơn 1 khối mờ lớn.
+  const TILE = 32;
+  const x0 = Math.floor(camera.x/TILE)*TILE, x1 = camera.x + W + TILE;
+  const y0 = Math.floor(camera.y/TILE)*TILE, y1 = camera.y + H + TILE;
   ctx.save();
-  ctx.fillStyle = 'rgba(232,74,74,.28)'; ctx.strokeStyle = 'rgba(255,120,120,.9)'; ctx.lineWidth = 2;
-  for (const o of obstaclesOf(curMap)){
-    ctx.beginPath();
-    if (o.wd) ctx.rect(o.x, o.y, o.wd, o.ht);
-    else ctx.ellipse(o.x, o.y, o.rx, o.ry, 0, 0, Math.PI*2);
-    ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(232,74,74,.45)';
+  ctx.strokeStyle = 'rgba(255,160,160,.9)';
+  ctx.lineWidth = 1;
+  for (let gy = y0; gy < y1; gy += TILE){
+    for (let gx = x0; gx < x1; gx += TILE){
+      if (!inObstacle(curMap, gx + TILE/2, gy + TILE/2, 14)) continue;
+      ctx.fillRect(gx+1, gy+1, TILE-2, TILE-2);
+      ctx.strokeRect(gx+1, gy+1, TILE-2, TILE-2);
+    }
   }
   ctx.restore();
 }
