@@ -73,20 +73,60 @@ bust, standing pose."*
 asset kit, close enough to "dark wolf-like creature" to use directly (front-facing bust, not a true
 side-view running pose — the kit had no side-profile mount-style art, this was the closest real fit
 available and still beats a placeholder). No horse, tiger, lion, leopard, qilin, or dragon-serpent
-art exists in anything surveyed so far — those 7 still need generated art:
+art exists anywhere surveyed (confirmed twice — see `docs/ASSET_SOURCING.md`'s Eleventh and Twelfth
+sources, the second a widened GitHub-wide search specifically for these 7 shapes) — those 7 need
+generated art. Ready-to-paste prompts below, one per file, each opening with the shared style guide
+verbatim; power tier escalates visually 1→8 (plainer/smaller at tier 1, most ornate/glowing at tier
+8) to match `MOUNT_TIERS`' own in-game progression order.
 
-Template: *"[shared style guide]. A rideable [CREATURE] mount, side-view profile, standing/running
-pose, no rider."*
+**`1_hacma.png`** (tier 1, entry mount):
+> Cute rounded creature-blob character design in the Axie Infinity house style. Thick clean dark
+> outline (~4-6px at icon scale), flat cel-shaded color fills with minimal soft gradient shading, no
+> photorealism, no painterly brushwork. Simple bold shapes, large expressive eyes where a face is
+> present. Bright saturated palette. Centered composition, isolated on a transparent background, no
+> drop shadow, no background scenery. A rideable black horse-like Axie creature: chunky rounded body,
+> short stubby legs, small flowing mane, no rider, no saddle, side-view profile, standing pose. Charcoal
+> black and dark grey coloring, plain and friendly, no ornamentation — this is the cheapest/first mount
+> tier.
 
-| File | Tier | Creature |
-|---|---|---|
-| `1_hacma.png` | 1 | black horse-like creature |
-| `2_hoangma.png` | 2 | golden/yellow horse-like creature |
-| `4_thanho.png` | 4 | armored tiger-like creature |
-| `5_sutu.png` | 5 | lion-like creature, small mane |
-| `6_viembao.png` | 6 | flame-patterned leopard-like creature |
-| `7_kylan.png` | 7 | qilin — dragon-horned deer/lion hybrid, elite glow |
-| `8_longlan.png` | 8 | dragon-serpent hybrid, top-tier, ornate |
+**`2_hoangma.png`** (tier 2):
+> [same shared style guide as above]. A rideable golden/yellow horse-like Axie creature: chunky
+> rounded body, short stubby legs, a small mane with a couple of braided tassels, no rider, no
+> saddle, side-view profile, standing pose. Warm golden-yellow and cream coloring, a little more
+> decorated than a plain horse but still a modest early-game mount.
+
+**`4_thanho.png`** (tier 4, armored tiger):
+> [same shared style guide]. A rideable white tiger-like Axie creature: chunky rounded body, black
+> tiger stripes, small chibi paws, wearing a couple of simple armor-plate pieces on its shoulders and
+> chest, no rider, side-view profile, standing/prowling pose. White, black, and steel-grey coloring —
+> reads as a sturdy mid-tier war-mount.
+
+**`5_sutu.png`** (tier 5, golden lion):
+> [same shared style guide]. A rideable lion-like Axie creature: chunky rounded body, a small fluffy
+> mane framing its face, no rider, side-view profile, standing regal pose. Golden-tan body with a
+> darker amber mane — reads as a proud, slightly more prestigious mount than the tiers below it.
+
+**`6_viembao.png`** (tier 6, flame leopard):
+> [same shared style guide]. A rideable leopard-like Axie creature: chunky rounded body, flame-shaped
+> orange-and-red patterned spots instead of ordinary leopard spots, a few small ember/spark particles
+> drifting off its back, no rider, side-view profile, running pose. Fiery orange-red palette with dark
+> ember-black spot outlines — should read as faster and more elite than the tiers below it.
+
+**`7_kylan.png`** (tier 7, qilin):
+> [same shared style guide]. A rideable qilin — a mythical hybrid Axie creature combining a deer's
+> antlers/horn, a lion-like mane, and hooved legs, with a single ornate horn on its forehead. Chunky
+> rounded body, no rider, side-view profile, standing pose with a soft golden elite-tier glow/aura
+> outline around its silhouette and a few small floating light particles. Warm gold and cream
+> coloring — reads as a rare, elite near-top-tier mount.
+
+**`8_longlan.png`** (tier 8, Azure Dragon, top tier):
+> [same shared style guide]. A rideable Eastern-dragon-inspired Axie creature: a chunky, rounded,
+> serpentine body coiled into a compact mountable pose (not a long snake — keep it creature-blob
+> proportioned like the rest of the mount tiers), small decorative wing-fins along its back, a pair
+> of short ornate horns, no rider, side-view profile. Azure-blue and gold scale coloring with a
+> glowing cyan energy aura outline and a few small sparkle/light particles around it — this is the
+> single most powerful, most ornate mount tier in the game, should visually read as clearly a cut
+> above every tier before it.
 
 ## Rocks (3 files, `assets/trees/`, decoration sprites)
 
@@ -125,18 +165,61 @@ translation** — nobody translated all 64 Vietnamese technique names and hand-p
 matching icon per name; every file just got a distinct real piece of Axie ability art instead of a
 solid-color placeholder. Revisit with real per-name curation later if it matters.
 
-## Dantian / Quze / Tien (46 files) — needs a design decision, not just a reskin
+## Tien — Ascension/Starflight endgame skin (12 files, `assets/tien/`)
 
-These three folders back the wuxia **cultivation system** — meridian/dantian progression
-(`dantian/`, 17 files: the 8 primary + 9 secondary meridians of neijia cultivation), "fated
-encounters" mechanics (`quze/`, 17 files), and **immortal ascension** skins (`tien/`, 12 files: 2
-genders × 6 color variants for the "transcend the mortal world" endgame prestige system). None of
-this has an Axie-universe equivalent — "meridians" and "Taoist immortality" are wuxia-genre
-concepts, not Axie ones. Reskinning the icons without renaming the underlying mechanic would be
-cosmetic-only and still read as wuxia.
+The rename decision this section used to flag as open is now **resolved and shipped**: the
+cultivation system is renamed per `docs/NAMING_MAP.md` (Đan Điền→Ascension, Phi Thăng→Starflight,
+Quẻ Tiên Thiên→The Hatching — see `game.js`'s `DANTIAN_REALMS`/`TIEN_IMGS` and the commits that did
+this rename this session). `tien/{gender}_{skin}.png` (`nam`/`nu` × `bach`/`thanh`/`kim`/`huyen`/
+`hong`/`lam`) is the visual the player's own sprite switches to once fully ascended ("Starflight") —
+currently still the old wuxia winged-immortal-in-robes painting (confirmed via live screenshot).
+Two independent searches (Drive + a widened GitHub sweep, see `docs/ASSET_SOURCING.md`'s Eleventh
+and Twelfth sources) found no matching Axie-universe art anywhere, human or creature — this needs
+generated art.
 
-Before generating art for these, decide: keep the mechanic and just restyle the *icons* (fastest,
-still conceptually wuxia underneath), or rename/reframe the mechanic itself into something
-Axie-native (e.g. an "Anima flow" energy system instead of meridians, a "Chimera Blessing" instead
-of immortal ascension) the way Phase 2 already renamed the class roster — that's a content/design
-call, not something to default into via image prompts.
+The user explicitly said a **human** Axie-Infinity-style Trainer character is an acceptable
+replacement here (doesn't have to be a round Axie creature) — framed as a Trainer who has achieved
+Starflight, radiating cosmic/starlight energy rather than wuxia Taoist-immortal energy. Same
+approach the game already uses elsewhere for tiered variants (one real base image + programmatic
+recolor): generate 2 base images (one per gender) at full detail, then recolor each into the 6
+`bach`/`thanh`/`kim`/`huyen`/`hong`/`lam` variants via a simple hue/palette shift (bach=white/silver,
+thanh=teal/cyan, kim=gold, huyen=deep violet/black, hong=rose/pink, lam=deep blue) — 2 generations
+instead of 12, same result the game needs (12 filenames, `nam_bach.png` … `nu_lam.png`).
+
+**`nam_bach.png`** (base for all 6 `nam_*` recolors):
+> Cute rounded creature-blob character design in the Axie Infinity house style, adapted here to a
+> human Trainer character rather than a creature — but keep it in the same bold-outline, flat
+> cel-shaded, no-photorealism art direction as the rest of the game. A young adult male Trainer
+> figure, floating/hovering slightly above the ground in a calm meditative pose, robes and hair
+> gently billowing as if caught in a soft cosmic wind, radiating a subtle starlight/aurora-like glow
+> around their body and a faint trail of small glowing star-particles. Confident, serene expression.
+> Full-body, centered composition, isolated on a transparent background, no drop shadow, no
+> background scenery. Base coloring: soft white and silver, so it can be recolored into other
+> palettes afterward — keep shading simple/flat rather than baked-in colored lighting, so a hue shift
+> reads cleanly.
+
+**`nu_bach.png`** (base for all 6 `nu_*` recolors):
+> [identical prompt to `nam_bach.png` above, but a young adult female Trainer figure instead — same
+> floating meditative pose, same starlight-glow treatment, same flat white/silver base coloring for
+> clean recoloring later.]
+
+Then produce the other 10 files by hue-shifting each base image's dominant color per this key (this
+can be done with any image editor's hue/saturation tool, or ask an image generator for "the same
+character, recolored to a [X] palette" using the base image as a reference):
+
+| Skin | Palette |
+|---|---|
+| `thanh` | teal / cyan |
+| `kim` | gold / amber |
+| `huyen` | deep violet / near-black |
+| `hong` | rose / pink |
+| `lam` | deep blue / indigo |
+
+## Dantian / Quze — cultivation-mechanic icons (34 files) — not yet requested, flagged for later
+
+`dantian/` (17 files: meridian-track icons) and `quze/` (17 files: The Hatching's card-back +
+trait-card art, currently bagua/yin-yang-trigram styled) still carry wuxia visual language even
+though their underlying systems are already renamed (Instinct Channels, The Hatching). Nobody has
+asked for these yet this session — noted here so the next pass doesn't have to re-discover that the
+naming decision (which unblocked `tien/` above) applies to these too, whenever someone wants to
+tackle them.
