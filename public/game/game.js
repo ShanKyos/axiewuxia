@@ -2734,7 +2734,7 @@ function buildWorld(){
   if (player && player.truyna && player.truyna.state === 'hunting' && curMap === player.truyna.map && !mobs.some(m => m.truyna && !m.dead)) spawnTruyNaMob();
   spawnZoneBosses(); // GDD Boss v2.1: Thủ Vệ & Trấn Ải theo map
 }
-function spawnMob(type, zone, pack){
+function spawnMob(type, zone, pack, vfx){
   const def = MOBS[type];
   const m = {
     type, def, name: def.name,
@@ -2745,7 +2745,15 @@ function spawnMob(type, zone, pack){
   };
   if (inObstacle(curMap, m.x, m.y, 16)){ const _f = nearestFree(curMap, m.x, m.y); m.x = _f.x; m.y = _f.y; } // GDD Đợt 2 A: không spawn vào vùng cấm
   m.homeX = m.x; m.homeY = m.y; // lãnh địa — điểm boss canh giữ, leash sẽ kéo về đây
-  mobs.push(m); return m;
+  mobs.push(m);
+  // Hồi sinh: cột sáng lóe lên dưới chân thay vì đột ngột "hiện ra" (chỉ dùng khi vfx=true —
+  // buildWorld() dựng cả map cùng lúc, gọi vfx ở đó sẽ spam hàng chục cột sáng cùng lúc, chỉ
+  // bật cho respawn từng con lẻ, xem game.js chỗ "respawn dead mobs").
+  if (vfx){
+    const bc = (def.el && NGU_HANH[def.el]) ? NGU_HANH[def.el].color : (def.color || '#ffd76a');
+    addEffect({ type:'spawnbeam', x:m.x, y:m.y, color:bc, dur:0.6 });
+  }
+  return m;
 }
 function spawnBoss(){
   if (mobs.some(m=>m.type==='boss'&&!m.dead)) return;
@@ -4497,6 +4505,15 @@ function update(dt){
           } else { if (m.def.bossKind) player._killedByBoss = m.def.name; player.hp = 0; onDeath(); }
         }
       }
+    } else if (d >= aggroR && m.type !== 'boss' && !m.def.bossKind && m.homeX != null){
+      // Lang thang nhẹ quanh tổ khi người chơi ở xa — đỡ cảm giác "đứng như tượng" tới khi bị aggro
+      m.wanderT = (m.wanderT || 0) - dt;
+      if (m.wanderT <= 0){ m.wanderT = rnd(2.5, 5); m.wanderAng = Math.random() < 0.4 ? null : rnd(0, Math.PI*2); }
+      if (m.wanderAng != null){
+        const nx = m.x + Math.cos(m.wanderAng)*22*dt, ny = m.y + Math.sin(m.wanderAng)*22*dt;
+        if (dist(nx, ny, m.homeX, m.homeY) < 90){ m.x = nx; m.y = ny; m.faceT = m.wanderAng; collideObstacles(m, 13); }
+        else m.wanderAng = null; // chạm biên tổ — đứng lại, đợi hướng mới thay vì lết theo biên
+      }
     }
     // gentle zone leash
     if (m.zone && m.type!=='boss'){
@@ -4526,7 +4543,7 @@ function update(dt){
     }
     m.respawnT -= dt;
     if (m.respawnT <= 0 && m.zone){
-      if (zoneAliveCount(m.zone) < m.zone.count){ spawnMob(m.type, m.zone); m.gone = true; }
+      if (zoneAliveCount(m.zone) < m.zone.count){ spawnMob(m.type, m.zone, undefined, true); m.gone = true; }
       else m.respawnT = 3;
     }
   }
@@ -4962,6 +4979,14 @@ function render(){
     } else if (e.type==='ring'){
       ctx.strokeStyle = e.color; ctx.globalAlpha = a*0.8; ctx.lineWidth = e.big?6:3;
       ctx.beginPath(); ctx.arc(e.x, e.y, e.r*(0.25+k*0.85), 0, 7); ctx.stroke();
+    } else if (e.type==='spawnbeam'){ // quái hồi sinh: cột sáng lóe dưới chân thay vì "hiện ra" đột ngột
+      ctx.globalAlpha = a*0.7; ctx.fillStyle = e.color;
+      ctx.beginPath(); ctx.ellipse(e.x, e.y+4, 24*(1-k*0.35), 8, 0, 0, 7); ctx.fill();
+      const bh = 76*(1-k*0.3);
+      const grd = ctx.createLinearGradient(e.x, e.y-bh, e.x, e.y);
+      grd.addColorStop(0, 'rgba(255,255,255,0)'); grd.addColorStop(1, e.color);
+      ctx.fillStyle = grd; ctx.globalAlpha = a*0.55;
+      ctx.beginPath(); ctx.moveTo(e.x-11,e.y); ctx.lineTo(e.x-3,e.y-bh); ctx.lineTo(e.x+3,e.y-bh); ctx.lineTo(e.x+11,e.y); ctx.closePath(); ctx.fill();
     } else if (e.type==='cone'){
       ctx.fillStyle = e.color; ctx.globalAlpha = a*0.4;
       ctx.beginPath(); ctx.moveTo(e.x, e.y);
