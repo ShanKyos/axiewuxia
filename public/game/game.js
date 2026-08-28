@@ -607,6 +607,18 @@ function setMoveTarget(x, y){
   moveTarget = { x: nf.x, y: nf.y };
   addEffect({ type:'ring', x: moveTarget.x, y: moveTarget.y, r:20, color:'#9fd8ff' });
 }
+// Bấm/chuột phải trúng NPC (thường hoặc Nhân Mạch): trả về NPC thay vì chỉ tọa độ,
+// để walkToNpc() có thể tự mở lời thoại khi tới nơi — không cần đi tay rồi bấm E riêng
+function npcAt(wx, wy){
+  for (const n of NPCS) if (n.map === curMap && dist(wx, wy, n.x, n.y-25) < 40) return n;
+  if (typeof tanNpcs !== 'undefined') for (const n of tanNpcs) if (n.map === curMap && dist(wx, wy, n.x, n.y-25) < 40) return n;
+  return null;
+}
+function walkToNpc(n){
+  if (!player || dead) return;
+  npcTalkTarget = n.id;
+  setMoveTarget(n.x, n.y);
+}
 function nearestFree(mapId, x, y){
   if (!inObstacle(mapId, x, y, 16)) return { x, y };
   for (let rad = 60; rad <= 900; rad += 60){
@@ -1944,6 +1956,9 @@ let shakeT = 0, shakeMag = 0; // rung màn hình khi bị đánh trúng
 let keys = {};
 let joyVec = { x:0, y:0 };
 let moveTarget = null; // Click-to-move: đích chuột phải (canvas) hoặc bấm minimap — { x, y } world coords
+let moveWaypoint = null, moveWaypointT = 0; // Waypoint gần né vật cản trên đường tới moveTarget — xem update()
+let moveProgressT = 0, moveProgressD = Infinity; // Lưới an toàn chống kẹt vĩnh viễn khi tự đi — xem update()
+let npcTalkTarget = null; // Click vào NPC / đèn hiệu nhiệm vụ: id NPC cần tự mở lời thoại khi tới nơi
 let mouseWorld = { x:0, y:0 };
 let lastTime = performance.now();
 let saveTimer = 0;
@@ -2696,7 +2711,8 @@ function buildWorld(){
   const md = mapDef();
   mobs = []; pickups = []; projectiles = []; effects = []; floats = [];
   petObj = null; mountObj = null; // Linh Thú & Thú Chiến xuất hiện lại ở map mới
-  moveTarget = null; // Click-to-move: đích ở map cũ không còn ý nghĩa khi đổi map
+  moveTarget = null; moveWaypoint = null; // Click-to-move: đích ở map cũ không còn ý nghĩa khi đổi map
+  npcTalkTarget = null; // NPC ở map cũ không còn ý nghĩa khi đổi map
   decor = []; mists = []; springTimer = 0;
   // quái đứng thành cụm 5-7 con (GDD Mob Mechanics) — xếp theo đai cấp:
   // cụm yếu nhất gần cửa vào nhất, cụm mạnh nhất sâu nhất (ghép cặp level↔khoảng cách đã sắp xếp)
@@ -3124,15 +3140,20 @@ canvas.addEventListener('mousedown', e=>{
   if (e.button !== 0) return; // chuột phải dành cho click-to-move (xem contextmenu bên dưới)
   closePanels(); // click the world = close any open window
   mouseWorld.x = e.clientX + camera.x; mouseWorld.y = e.clientY + camera.y;
+  const npcHit = npcAt(mouseWorld.x, mouseWorld.y);
+  if (npcHit){ walkToNpc(npcHit); return; } // bấm trúng NPC: tự đi tới + tự mở lời thoại, không cần bấm E
   player.face = Math.atan2(mouseWorld.y - player.y, mouseWorld.x - player.x);
   doBasic();
 });
 // Click-to-move (chuột phải): đi tới điểm đã bấm, né vật cản dọc đường — không đổi hành vi chuột trái
+// Bấm trúng NPC (chuột trái/phải đều được) thì tự đi tới rồi tự trò chuyện, xem npcAt()/walkToNpc()
 canvas.addEventListener('contextmenu', e=>{
   e.preventDefault();
   if (!player || dead) return;
   closePanels();
   const wx = e.clientX + camera.x, wy = e.clientY + camera.y;
+  const npcHit = npcAt(wx, wy);
+  if (npcHit){ walkToNpc(npcHit); return; }
   setMoveTarget(wx, wy);
 });
 // Bấm minimap (chuột trái) — đi tới điểm đó; quái hiện lên minimap ngay bên dưới điểm bấm nên đây
@@ -3734,10 +3755,10 @@ function questTarget(q){
   const npcId = q.targetNpc || q.npc;
   if (q.type === 'talk' || questState === 'done'){
     const n = NPCS.find(x => x.id === npcId);
-    if (n) return { map:n.map, x:n.x, y:n.y, label:'Gặp ' + n.name };
+    if (n) return { map:n.map, x:n.x, y:n.y, label:'Gặp ' + n.name, npcId:n.id };
   }
   if (q.type === 'meditate' && typeof SPRING !== 'undefined') return { map:'daohoa', x:SPRING.x, y:SPRING.y, label:'Tịnh Tâm Tuyền' };
-  if (q.type === 'enhance'){ const n = NPCS.find(x => x.talk === 'forge'); if (n) return { map:n.map, x:n.x, y:n.y, label:'Lò Bát Quái' }; }
+  if (q.type === 'enhance'){ const n = NPCS.find(x => x.talk === 'forge'); if (n) return { map:n.map, x:n.x, y:n.y, label:'Lò Bát Quái', npcId:n.id }; }
   if (q.type === 'collect' && typeof HERB_SPOTS !== 'undefined') return { map:'daohoa', x:HERB_SPOTS[0].x, y:HERB_SPOTS[0].y, label:'Bãi Thảo Dược' };
   if (q.type === 'boss' && typeof BOSS_ARENA !== 'undefined') return { map:'daohoa', x:BOSS_ARENA.x, y:BOSS_ARENA.y, label:'Đài Bình Cảnh' };
   if (q.mob){
@@ -3754,14 +3775,14 @@ function questTarget(q){
       return best;
     }
   }
-  if (npcId){ const n = NPCS.find(x => x.id === npcId); if (n) return { map:n.map, x:n.x, y:n.y, label:'Gặp ' + n.name }; }
+  if (npcId){ const n = NPCS.find(x => x.id === npcId); if (n) return { map:n.map, x:n.x, y:n.y, label:'Gặp ' + n.name, npcId:n.id }; }
   return null;
 }
 function sideQuestTarget(sq){
   const st = sideStates[sq.id];
   const n = NPCS.find(x => x.id === sq.npc);
   if (!st || st.st === 'done' || st.st === 'claimed' || !sq.mob){
-    if (n) return { map:n.map, x:n.x, y:n.y, label:(st && st.st === 'done' ? 'Trả NV: ' : 'Nhận NV: ') + (n ? n.name : '') };
+    if (n) return { map:n.map, x:n.x, y:n.y, label:(st && st.st === 'done' ? 'Trả NV: ' : 'Nhận NV: ') + (n ? n.name : ''), npcId:n.id };
   }
   if (sq.type === 'catch'){
     const hz = (typeof HORSE_ZONES !== 'undefined') && HORSE_ZONES[sq.map];
@@ -3776,7 +3797,7 @@ function sideQuestTarget(sq){
       return { map:sq.map, x:pk.x, y:pk.y, label:'Săn ' + (mdef ? mdef.name : sq.mob) };
     }
   }
-  if (n) return { map:n.map, x:n.x, y:n.y, label:'Gặp ' + n.name };
+  if (n) return { map:n.map, x:n.x, y:n.y, label:'Gặp ' + n.name, npcId:n.id };
   return null;
 }
 // Đi thẳng tới đèn hiệu đang ghim (player.beacon) — dùng bởi nút "Đi ngay" trên banner khác
@@ -3787,25 +3808,34 @@ window.goToBeacon = function(){
   if (!b) return;
   closePanels();
   if (b.map !== curMap) travelTo(b.map);
-  else { setMoveTarget(b.x, b.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + b.label + ' — khinh công tự đưa tới!', '#8fd18f', 13); }
+  else {
+    if (b.npcId) npcTalkTarget = b.npcId; // đích là NPC: tới nơi tự mở lời thoại luôn, không cần bấm E
+    setMoveTarget(b.x, b.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + b.label + ' — khinh công tự đưa tới!', '#8fd18f', 13);
+  }
 };
 window.goQuest = function(){
   const t = questTarget(currentQuest());
   if (!t){ addFloat(player.x, player.y - 40, 'Chưa rõ đích đến — đọc kỹ mô tả nhiệm vụ nhé!', '#f0a03a', 12); return; }
-  player.beacon = { map:t.map, x:t.x, y:t.y, label:t.label };
+  player.beacon = { map:t.map, x:t.x, y:t.y, label:t.label, npcId:t.npcId };
   closePanels();
   if (t.map !== curMap) travelTo(t.map);
-  else { setMoveTarget(t.x, t.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + t.label + ' — khinh công tự đưa tới!', '#8fd18f', 13); }
+  else {
+    if (t.npcId) npcTalkTarget = t.npcId;
+    setMoveTarget(t.x, t.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + t.label + ' — khinh công tự đưa tới!', '#8fd18f', 13);
+  }
   saveGame();
 };
 window.goQuestSide = function(id){
   const sq = SIDE_QUESTS.find(x => x.id === id);
   const t = sq && sideQuestTarget(sq);
   if (!t){ addFloat(player.x, player.y - 40, 'Chưa rõ đích đến!', '#f0a03a', 12); return; }
-  player.beacon = { map:t.map, x:t.x, y:t.y, label:t.label };
+  player.beacon = { map:t.map, x:t.x, y:t.y, label:t.label, npcId:t.npcId };
   closePanels();
   if (t.map !== curMap) travelTo(t.map);
-  else { setMoveTarget(t.x, t.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + t.label + ' — khinh công tự đưa tới!', '#7fd4ff', 13); }
+  else {
+    if (t.npcId) npcTalkTarget = t.npcId;
+    setMoveTarget(t.x, t.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + t.label + ' — khinh công tự đưa tới!', '#7fd4ff', 13);
+  }
   saveGame();
 };
 function drawBeacon(){
@@ -4114,6 +4144,14 @@ function update(dt){
     addFloat(player.x, player.y - 60, '🚩 Đã đến: ' + player.beacon.label, '#8fd18f', 14);
     player.beacon = null; saveGame();
   }
+  // Đã bấm vào NPC (hoặc đèn hiệu trỏ tới NPC) và đang tự đi tới — tới nơi thì tự mở lời thoại,
+  // không cần bấm E riêng. Dùng chung tryTalk() nên mọi loại NPC (nhiệm vụ/rèn/chợ/Nhân Mạch...) đều đúng.
+  if (npcTalkTarget){
+    const _tn = NPCS.find(x => x.id === npcTalkTarget) || (typeof tanNpcs !== 'undefined' && tanNpcs.find(x => x.id === npcTalkTarget));
+    if (!_tn || _tn.map !== curMap) npcTalkTarget = null;
+    else if (dist(player.x, player.y, _tn.x, _tn.y) < 90){ npcTalkTarget = null; moveTarget = null; tryTalk(); }
+    else if (moveTarget){ moveTarget.x = _tn.x; moveTarget.y = _tn.y; } // đuổi theo nếu NPC đang di chuyển (Nhân Mạch tán tu lang thang)
+  }
 
   // movement — GDD Quan Sát: bỏ hẳn di chuyển tay (WASD/joystick). Người chơi chỉ CHỌN đích
   // (bấm phải trên nền đất / bấm minimap / đèn hiệu nhiệm vụ) rồi khinh công tự động chạy tới,
@@ -4122,13 +4160,36 @@ function update(dt){
   let mx = 0, my = 0;
   if (moveTarget && !player.auto){
     const _mtd = dist(player.x, player.y, moveTarget.x, moveTarget.y);
-    if (_mtd < 18) moveTarget = null;
+    if (_mtd < 18) { moveTarget = null; moveWaypoint = null; }
     else {
-      mx = (moveTarget.x - player.x)/_mtd; my = (moveTarget.y - player.y)/_mtd; player.face = Math.atan2(my, mx);
+      // Đi theo waypoint gần (né vật cản), không lao thẳng đường chim bay — đường thẳng dễ kẹt góc
+      // tường (WASD đã bỏ, không còn cách đi tay để tự gỡ kẹt). Tính lại định kỳ bằng thuật toán né
+      // vật cản có sẵn của simulateMovePath() thay vì viết riêng logic "kẹt" mới.
+      moveWaypointT -= dt;
+      if (moveWaypointT <= 0 || !moveWaypoint){
+        const path = simulateMovePath(player.x, player.y, moveTarget.x, moveTarget.y);
+        moveWaypoint = path[Math.min(3, path.length - 1)];
+        moveWaypointT = 0.35;
+      }
+      const _wd = dist(player.x, player.y, moveWaypoint.x, moveWaypoint.y);
+      if (_wd < 6){ mx = (moveTarget.x - player.x)/_mtd; my = (moveTarget.y - player.y)/_mtd; }
+      else { mx = (moveWaypoint.x - player.x)/_wd; my = (moveWaypoint.y - player.y)/_wd; }
+      player.face = Math.atan2(my, mx);
       // khinh công tự động: tàn ảnh nhẹ trong lúc tự chạy tới đích — không cần bấm phím nào
       if (!SETTINGS.lowFx && Math.random() < dt*10) addEffect({ type:'ring', x:player.x, y:player.y+4, r:12, color:'#bfe8ff' });
+      // Lưới an toàn: vật cản lớn (tường thành, cụm nhà...) đôi khi vượt quá khả năng né cục bộ ở trên
+      // (phải vòng xa tìm cổng chứ không né tại chỗ được) — không còn WASD để tự gỡ kẹt nữa, nên nếu
+      // nhiều giây liền không tiến gần hơn thì huỷ đích, báo người chơi thử điểm khác thay vì kẹt mãi.
+      moveProgressT += dt;
+      if (moveProgressT > 1.3){
+        if (_mtd > moveProgressD - 24){
+          addFloat(player.x, player.y-40, 'Không tìm được đường tới đó — hãy thử bấm điểm gần hơn!', '#ff9a6a', 12);
+          moveTarget = null; moveWaypoint = null; npcTalkTarget = null;
+        }
+        moveProgressT = 0; moveProgressD = _mtd;
+      }
     }
-  }
+  } else { moveProgressT = 0; moveProgressD = Infinity; }
   // AUTO FARM (phím Z): tự đuổi theo & đánh quái gần nhất — treo máy
   // nearestMob tự loại Du Hiệp trung lập (trừ khi bật PK) nên auto không bao giờ gây PK oan
   // GDD Boss v2.1: vào vùng boss (400px) auto tạm dừng — trận boss phải đánh tay
@@ -4659,7 +4720,8 @@ function update(dt){
   updateHud();
 }
 function onDeath(){
-  moveTarget = null; // Click-to-move: hủy đích khi chết, tránh tự đi lung tung sau khi hồi sinh
+  moveTarget = null; moveWaypoint = null; // Click-to-move: hủy đích khi chết, tránh tự đi lung tung sau khi hồi sinh
+  npcTalkTarget = null;
   // The Hatching · THIÊN MỆNH: mỗi màn chơi 1 lần, chết hồi sinh tại chỗ
   if (player.traitRevive && !player.reviveUsed){
     player.reviveUsed = true;
@@ -9668,7 +9730,7 @@ function trackerHtml(){
   // người chơi vừa tự ghim tay, xem goQuestSide()).
   if (q && window._beaconQuestId !== q.id){
     const t = questTarget(q);
-    if (t) player.beacon = { map:t.map, x:t.x, y:t.y, label:t.label };
+    if (t) player.beacon = { map:t.map, x:t.x, y:t.y, label:t.label, npcId:t.npcId };
     window._beaconQuestId = q.id;
   }
   let qt = '';
