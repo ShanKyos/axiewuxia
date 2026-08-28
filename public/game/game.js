@@ -2984,7 +2984,7 @@ function drawBossTele(m){
 }
 // ---------- Cài đặt (lưu localStorage) ----------
 // shake mặc định TẮT (chống chóng mặt) — save cũ không có key này nên tự migrate sang tắt
-const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:false, questTracker:true },
+const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:false, questTracker:true, combatLog:true },
   (()=>{ try { return JSON.parse(localStorage.getItem('vlcm_settings') || '{}'); } catch { return {}; } })());
 function saveSettings(){ try { localStorage.setItem('vlcm_settings', JSON.stringify(SETTINGS)); } catch { /* best-effort — bỏ qua nếu lỗi */ } }
 
@@ -3189,25 +3189,20 @@ function addFloat(x,y,text,color,size){
   if (floats.length >= 70) floats.shift(); // chống tràn số bay
   floats.push({ x, y, text, color, t:1, size:size||13 });
 }
-// ── Gộp số sát thương: đòn thường vào cùng 1 mục tiêu cộng dồn thành 1 số ──
-function addDmgFloat(target, x, y, dmg, color, size){
-  const now = performance.now();
-  const f = target._dmgF;
-  if (f && f.t > 0.2 && now - (target._dmgFT || 0) < 900){
-    target._dmgSum = (target._dmgSum || 0) + dmg;
-    f.text = String(target._dmgSum);
-    f.t = 1; target._dmgFT = now;
-    f.x = x; f.y = y; f.color = color;
-    f.size = Math.min(19, (f.size || 13) + 0.6); // cộng dồn càng lâu số càng to
-    return f;
-  }
-  target._dmgSum = dmg; target._dmgFT = now;
-  const nf = { x, y, text:String(dmg), color, t:1, size:size||13 };
-  floats.push(nf);
-  target._dmgF = nf;
-  return nf;
-}
 function addEffect(e){ if (effects.length >= 400) effects.splice(0, effects.length - 399); effects.push(Object.assign({ t:0 }, e)); } // trần cứng chống phình RAM
+// Nhật ký chiến đấu: gộp sát thương/thưởng mỗi đòn thành 1 dòng chữ trong panel góc dưới trái,
+// thay cho số bay đầy màn hình khi AUTO đang đánh nhiều quái cùng lúc (kiểu combat log NGU Idle) —
+// thao tác DOM trực tiếp, không giữ mảng riêng vì log không cần lưu qua save/load
+function logCombat(text, color){
+  const logEl = el('combat-log');
+  if (!logEl) return;
+  const row = document.createElement('div');
+  row.className = 'cl-row';
+  row.style.color = color || '#e8ecff';
+  row.textContent = text;
+  logEl.insertBefore(row, logEl.firstChild);
+  while (logEl.children.length > 50) logEl.removeChild(logEl.lastChild);
+}
 
 function hurtMob(m, dmg, source){
   if (m.dead) return;
@@ -3247,7 +3242,7 @@ function hurtMob(m, dmg, source){
     if (gap > 10) abMul = 0.35; else if (gap >= 6) abMul = 0.6; else if (gap >= 1) abMul = 0.85;
     if (abMul < 1){
       final *= abMul;
-      if (Math.random() < 0.12) addFloat(m.x, m.y - m.def.size - 36, 'ÁP BỨC VÕ CÔNG — công kích bị áp chế!', '#c07fe0', 11);
+      if (Math.random() < 0.12) logCombat(`⛨ Áp Bức Võ Công — công kích lên ${m.def.name} bị áp chế!`, '#c07fe0');
     }
     if (m.punishT > 0) final *= 1.15; // cửa sổ trừng phạt sau khi boss ra chiêu
   }
@@ -3276,14 +3271,12 @@ function hurtMob(m, dmg, source){
   if (source === 'crit'){ hitStop = Math.max(hitStop, 0.08); shakeT = Math.max(shakeT, 0.2); shakeMag = Math.max(shakeMag, 5); addEffect({ type:'critflash', x:m.x, y:m.y, r:(m.def.size||14)+22 }); }
   else if (source === 'hit'){ hitStop = Math.max(hitStop, 0.04); shakeT = Math.max(shakeT, 0.14); shakeMag = Math.max(shakeMag, 2.4); }
   AudioSys.sfx(source === 'crit' || perfectNote ? 'crit' : 'hit', source === 'crit' ? 0.8 : 0.5);
-  // đòn thường vào cùng 1 quái → cộng dồn 1 số duy nhất (đỡ rối màn hình); đòn đặc biệt vẫn bay riêng
-  if (!perfectNote && !counterNote && !counteredNote && !shieldNote){
-    addDmgFloat(m, m.x + rnd(-8,8), m.y - m.def.size - 6, final, source==='crit' ? '#ffd76a' : '#fff', source==='crit' ? 17 : 13);
-  } else {
-    addFloat(m.x + rnd(-8,8), m.y - m.def.size - 6,
-      (perfectNote ? 'HOÀN HẢO! ' : '') + (counterNote ? 'KHẮC HỆ! ' : '') + (counteredNote ? 'bị khắc ' : '') + (shieldNote ? final+' (chống)' : String(final)),
-      perfectNote ? '#ff9df0' : counterNote ? '#5db86a' : counteredNote ? '#8a94a8' : (shieldNote ? '#8a8a8a' : (source==='crit' ? '#ffd76a' : '#fff')),
-      source==='crit'||perfectNote ? 17 : (counterNote?15:13));
+  // Nhật ký chiến đấu thay cho số bay trên đầu quái (đỡ rối màn hình khi AUTO đánh nhiều quái) —
+  // đòn thường gộp 1 dòng, đòn đặc biệt (hoàn hảo/khắc hệ/chống khiên) có tiền tố riêng
+  {
+    const note = perfectNote ? 'HOÀN HẢO ' : counterNote ? 'KHẮC HỆ ' : counteredNote ? 'bị khắc ' : shieldNote ? '(chống) ' : '';
+    const color = perfectNote ? '#ff9df0' : counterNote ? '#5db86a' : counteredNote ? '#8a94a8' : shieldNote ? '#8a8a8a' : (source==='crit' ? '#ffd76a' : '#e8ecff');
+    logCombat(`⚔ ${note}-${final} → ${m.def.name}${source==='crit' ? ' (bạo kích)' : ''}`, color);
   }
   // tương khắc: tia hào quang hệ thắng bao quanh quái
   if (counterNote) addEffect({ type:'ring', x:m.x, y:m.y, r:26 + m.def.size, color:NGU_HANH[sectEl].color });
@@ -3349,7 +3342,7 @@ function killMob(m, source){
   gainXp(_xp);
   const sil = Math.round(rnd(m.def.silver[0], m.def.silver[1]) * (1 + (player.silverPct || 0)/100));
   player.silver += sil;
-  addFloat(player.x, player.y-30, `+${_xp} EXP${_xpMul < 1 ? ` (-${Math.round((1-_xpMul)*100)}% chênh cấp)` : ''}  +${sil}◈`, _xpMul < 1 ? '#c8b888' : '#7ecbff', 12);
+  logCombat(`☠ Hạ ${m.def.name} — Nhận: +${_xp} EXP${_xpMul < 1 ? ` (-${Math.round((1-_xpMul)*100)}% chênh cấp)` : ''} +${sil}◈`, _xpMul < 1 ? '#c8b888' : '#7ecbff');
   // Pet rơi từ tinh anh (12%) / boss (40%); Cánh từ boss (12%)
   if (!m.def.boss && m.def.elite && Math.random() < 0.12 && player.inv.length < 30){
     const pi = Math.random() < 0.7 ? 0 : Math.random() < 0.8 ? 1 : 2;
@@ -4494,13 +4487,12 @@ function update(dt){
           if (_freshPoison) playStatusFx('poison', 'poison_apply', player.x, player.y, 0.5, 0.3);
         }
         AudioSys.sfx('hurt', 0.7);
-        if (!mobCounter) addDmgFloat(player, player.x+rnd(-8,8), player.y-26, dmg, '#ff7a6a', 13);
-        else addFloat(player.x+rnd(-8,8), player.y-26, 'KHẮC CHẾ! ' + dmg, '#ff9a3a', 15);
+        logCombat(`🩸 ${mobCounter ? 'KHẮC CHẾ ' : ''}-${dmg} ← ${m.def.name}`, mobCounter ? '#ff9a3a' : '#ff7a6a');
         // Thái Cực hộ thể (Lưỡng Nghi Cảnh): phản 5% sát thương
         if (player.reflect && !m.dead){
           const ref = Math.max(1, Math.round(dmg * player.reflect));
           m.hp -= ref; m.hitT = 0.15;
-          addFloat(m.x + rnd(-6,6), m.y - m.def.size - 18, `PHẢN ${ref}`, '#ffd76a', 11);
+          logCombat(`🛡 phản ${ref} → ${m.def.name}`, '#ffd76a');
           if (m.hp <= 0){ killMob(m, 'reflect'); continue; }
         }
         if (player.hp <= 0){
@@ -5792,6 +5784,17 @@ if (el('quest-tracker')){
   el('quest-tracker').classList.toggle('qt-closed', !SETTINGS.questTracker);
   if (el('qt-arrow')) el('qt-arrow').textContent = SETTINGS.questTracker ? '▾' : '▸';
 }
+const btnCl = el('btn-combatlog');
+if (btnCl) btnCl.addEventListener('click', ()=>{
+  SETTINGS.combatLog = !SETTINGS.combatLog; saveSettings();
+  el('combat-log').classList.toggle('cl-closed', !SETTINGS.combatLog);
+  el('cl-arrow').textContent = SETTINGS.combatLog ? '▾' : '▸';
+  AudioSys.sfx('ui', 0.5);
+});
+if (el('combat-log')){
+  el('combat-log').classList.toggle('cl-closed', !SETTINGS.combatLog);
+  if (el('cl-arrow')) el('cl-arrow').textContent = SETTINGS.combatLog ? '▾' : '▸';
+}
 el('btn-pk').addEventListener('click', ()=>{
   if (mapDef().type === 'safe') return;
   player.pk = !player.pk;
@@ -6762,6 +6765,7 @@ function startGame(sectKey, quze){
   el('sect-select').classList.add('hidden');
   el('hud').classList.remove('hidden');
   el('bottom-hud').classList.remove('hidden');
+  el('combat-log-wrap').classList.remove('hidden');
   if (maxMode) player.tutStep = -1; // chế độ thử nghiệm: bỏ qua hướng dẫn
   updateTut();
   snapCamera(); // vào game: camera đặt thẳng vào nhân vật, không pan từ góc (0,0)

@@ -120,6 +120,19 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #joy-knob { position:absolute; left:35px; top:35px; width:40px; height:40px; border-radius:50%;
   background:rgba(126,203,255,.8); box-shadow:0 2px 6px rgba(0,0,0,.5); }
 
+/* Nhật ký chiến đấu — góc dưới trái, thay cho số sát thương/thông báo bay rối mắt lúc AUTO
+   đánh nhiều quái cùng lúc; dòng mới nhất nằm trên cùng, cuộn được, tự bỏ dòng cũ khi đầy */
+#combat-log-wrap { position:fixed; left:16px; bottom:64px; width:min(260px,40vw); z-index:11; pointer-events:auto; }
+#btn-combatlog { pointer-events:auto; width:100%; display:flex; justify-content:space-between; align-items:center;
+  background:rgba(30,32,64,.88); color:#e4ebff; border:1px solid var(--border); border-radius:var(--r-sm);
+  padding:5px 10px; margin-bottom:4px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; }
+#btn-combatlog:hover { background:rgba(76,141,255,.28); border-color:var(--border-strong); }
+#combat-log.cl-closed { display:none; }
+#combat-log { max-height:22vh; overflow-y:auto; background:rgba(18,20,44,.7); border:1px solid var(--border-faint);
+  border-left:3px solid var(--accent); border-radius:var(--r-sm); padding:6px 9px; font-size:11.5px; line-height:1.55; }
+#combat-log .cl-row { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.92; }
+#combat-log .cl-row:first-child { opacity:1; }
+
 /* Panels */
 .panel { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:20;
   width:min(520px,94vw); max-height:86vh; overflow-y:auto;
@@ -320,6 +333,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   #quest-tracker .q-daily { display:none; }
   #minimap { width:150px; height:110px; }
   #hint-bar { bottom:90px; font-size:11px; max-width:92vw; white-space:normal; text-align:center; }
+  #combat-log-wrap { bottom:104px; width:min(200px,44vw); }
+  #combat-log { font-size:10.5px; max-height:16vh; }
 }
 
 /* ===== v2: HUD mở rộng ===== */
