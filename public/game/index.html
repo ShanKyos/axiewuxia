@@ -17,8 +17,6 @@
 <div id="hud" class="hidden">
   <div id="hud-left">
     <div id="hud-name">—</div>
-    <div class="bar hp"><div id="bar-hp" class="fill"></div><span id="txt-hp"></span></div>
-    <div class="bar qi"><div id="bar-qi" class="fill"></div><span id="txt-qi"></span></div>
     <div class="bar xp"><div id="bar-xp" class="fill"></div><span id="txt-xp"></span></div>
     <div id="hud-khi">Chân Khí: 0</div>
     <div id="hud-potion" title="Hồ Lô Thuốc — hồi 40% máu (phím R)">🧪 x0 (R)</div>
@@ -54,16 +52,22 @@
 </div>
 
 
-<!-- Taskbar kỹ năng: đánh thường + 5 ô gán chiêu -->
-<div id="skillbar" class="hidden">
-  <button class="skill" id="sk-basic"><span class="sk-ico">⚔</span><span class="sk-key">Space</span><span class="sk-cd"></span></button>
-  <button class="skill sk-slot" data-slot="0" id="sk-0"><span class="sk-ico">+</span><span class="sk-key">1</span><span class="sk-cd"></span></button>
-  <button class="skill sk-slot" data-slot="1" id="sk-1"><span class="sk-ico">+</span><span class="sk-key">2</span><span class="sk-cd"></span></button>
-  <button class="skill sk-slot" data-slot="2" id="sk-2"><span class="sk-ico">+</span><span class="sk-key">3</span><span class="sk-cd"></span></button>
-  <button class="skill sk-slot" data-slot="3" id="sk-3"><span class="sk-ico">+</span><span class="sk-key">4</span><span class="sk-cd"></span></button>
-  <button class="skill sk-slot" data-slot="4" id="sk-4"><span class="sk-ico">+</span><span class="sk-key">5</span><span class="sk-cd"></span></button>
-  <button class="skill" id="sk-jump" title="Lăng Ba Vi Bộ — nhảy né trên không (J)"><span class="sk-ico">凌</span><span class="sk-key">J</span><span class="sk-cd"></span></button>
+<!-- Thanh dưới kiểu MU Online/Võ Lâm Chi Mộng: viên đá Máu (đỏ) + Chân Khí (xanh) hình cầu ở
+     2 đầu, thanh kỹ năng dàn ngang ở giữa, viền sáng chạy dọc theo % máu ở mép dưới cùng. -->
+<div id="bottom-hud" class="hidden">
+  <div class="orb orb-hp" id="orb-hp" title="Sinh Lực"><div class="orb-fill" id="bar-hp"></div><span class="orb-val" id="txt-hp"></span></div>
+  <div id="skillbar">
+    <button class="skill" id="sk-basic"><span class="sk-ico">⚔</span><span class="sk-key">Space</span><span class="sk-cd"></span></button>
+    <button class="skill sk-slot" data-slot="0" id="sk-0"><span class="sk-ico">+</span><span class="sk-key">1</span><span class="sk-cd"></span></button>
+    <button class="skill sk-slot" data-slot="1" id="sk-1"><span class="sk-ico">+</span><span class="sk-key">2</span><span class="sk-cd"></span></button>
+    <button class="skill sk-slot" data-slot="2" id="sk-2"><span class="sk-ico">+</span><span class="sk-key">3</span><span class="sk-cd"></span></button>
+    <button class="skill sk-slot" data-slot="3" id="sk-3"><span class="sk-ico">+</span><span class="sk-key">4</span><span class="sk-cd"></span></button>
+    <button class="skill sk-slot" data-slot="4" id="sk-4"><span class="sk-ico">+</span><span class="sk-key">5</span><span class="sk-cd"></span></button>
+    <button class="skill" id="sk-jump" title="Lăng Ba Vi Bộ — nhảy né trên không (J)"><span class="sk-ico">凌</span><span class="sk-key">J</span><span class="sk-cd"></span></button>
+  </div>
+  <div class="orb orb-qi" id="orb-qi" title="Chân Khí"><div class="orb-fill" id="bar-qi"></div><span class="orb-val" id="txt-qi"></span></div>
 </div>
+<div id="hp-accent-bar"><div id="hp-accent-fill"></div></div>
 
 <!-- Joystick (touch) -->
 <div id="joystick" class="hidden"><div id="joy-knob"></div></div>

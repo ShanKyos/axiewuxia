@@ -40,8 +40,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .bar .fill { height:100%; width:100%; transition:width .18s; }
 .bar span { position:absolute; inset:0; font-size:10px; line-height:16px; text-align:center;
   color:#fff; text-shadow:0 1px 2px #000; letter-spacing:.5px; }
-.bar.hp .fill { background:linear-gradient(180deg,#ff7a90,#e8425f); }
-.bar.qi .fill { background:linear-gradient(180deg,#5eb3ff,#2f6fe0); }
 .bar.xp { height:10px; } .bar.xp span { line-height:10px; font-size:8px; }
 .bar.xp .fill { background:linear-gradient(180deg,#ffd76a,#e8a83a); }
 #hud-right { position:absolute; top:12px; right:12px; text-align:right; pointer-events:auto;
@@ -72,8 +70,22 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   color:#eef2ff; background:rgba(18,20,44,.75); padding:5px 16px; border-radius:999px;
   font-size:12px; border:1px solid var(--border-faint); white-space:nowrap; }
 
-/* Skill bar */
-#skillbar { position:fixed; bottom:14px; right:14px; display:flex; gap:8px; z-index:11; }
+/* Thanh dưới cùng kiểu MU Online/Võ Lâm Chi Mộng: viên Máu (đỏ)/Chân Khí (xanh) hình cầu
+   2 đầu + thanh kỹ năng dàn ngang giữa + viền sáng theo % máu chạy dọc mép dưới màn hình. */
+#bottom-hud { position:fixed; left:50%; bottom:12px; transform:translateX(-50%); z-index:11;
+  display:flex; align-items:center; gap:14px; pointer-events:none; }
+.orb { pointer-events:auto; position:relative; width:72px; height:72px; border-radius:50%; overflow:hidden;
+  flex:none; cursor:default; border:3px solid #0c0c14;
+  box-shadow:0 0 0 2px rgba(210,225,255,.16), 0 4px 16px rgba(0,0,0,.65), inset 0 2px 8px rgba(0,0,0,.7);
+  background:radial-gradient(circle at 36% 28%, rgba(255,255,255,.14), rgba(0,0,0,.6) 72%); }
+.orb-fill { position:absolute; left:0; right:0; bottom:0; height:0%; transition:height .18s; }
+.orb-hp .orb-fill { background:radial-gradient(circle at 42% 22%, #ff9fae, #e8324f 55%, #6e0e20 100%); }
+.orb-qi .orb-fill { background:radial-gradient(circle at 42% 22%, #9ed4ff, #2f6fe0 55%, #0d2a6e 100%); }
+.orb-val { position:absolute; inset:0; z-index:2; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:800; font-size:15px; color:#fff;
+  text-shadow:0 1px 3px #000, 0 0 8px rgba(0,0,0,.85); letter-spacing:.3px; }
+
+#skillbar { display:flex; gap:8px; pointer-events:auto; }
 .skill { position:relative; width:56px; height:56px; border-radius:var(--r-md); cursor:pointer;
   background:rgba(30,32,64,.88); border:2px solid var(--border); color:#e4ebff;
   font-family:inherit; overflow:hidden; }
@@ -83,6 +95,12 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .skill.locked { opacity:.38; filter:grayscale(.8); }
 .skill:active { transform:scale(.94); }
 .skill.flash { box-shadow:0 0 14px var(--accent-glow); }
+
+/* Viền sáng theo % máu, chạy dọc mép dưới cùng màn hình — chi tiết lấy từ tham chiếu Võ Lâm Chi Mộng */
+#hp-accent-bar { position:fixed; left:0; right:0; bottom:0; height:4px; z-index:11;
+  background:rgba(0,0,0,.55); pointer-events:none; }
+#hp-accent-fill { height:100%; width:100%; background:linear-gradient(90deg,#7a0f22,#e8425f,#ff9fae);
+  box-shadow:0 0 8px rgba(232,66,95,.7); transition:width .18s; }
 
 /* Joystick */
 #joystick { position:fixed; bottom:22px; left:22px; width:110px; height:110px; z-index:11;
@@ -282,6 +300,9 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 
 @media (max-width:720px){
   .skill { width:50px; height:50px; }
+  .orb { width:56px; height:56px; }
+  .orb-val { font-size:12px; }
+  #bottom-hud { gap:8px; bottom:8px; max-width:98vw; }
   #hud-left { width:min(280px,38vw); }
   #quest-tracker { font-size:11px; max-height:34vh; overflow-y:auto; }
   #quest-tracker .q-daily { display:none; }

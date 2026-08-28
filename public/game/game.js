@@ -6696,7 +6696,7 @@ function startGame(sectKey, quze){
   el('intro-story').classList.add('hidden');
   el('sect-select').classList.add('hidden');
   el('hud').classList.remove('hidden');
-  el('skillbar').classList.remove('hidden');
+  el('bottom-hud').classList.remove('hidden');
   if (maxMode) player.tutStep = -1; // chế độ thử nghiệm: bỏ qua hướng dẫn
   updateTut();
   snapCamera(); // vào game: camera đặt thẳng vào nhân vật, không pan từ góc (0,0)
@@ -6723,7 +6723,7 @@ else setTimeout(showIntro, 0); // người mới → cốt truyện (defer: ch�
       applySkillIcons();
       el('sect-select').classList.add('hidden');
       el('hud').classList.remove('hidden');
-      el('skillbar').classList.remove('hidden');
+      el('bottom-hud').classList.remove('hidden');
       snapCamera(); // tiếp tục hành trình: camera đặt thẳng vào nhân vật
       AudioSys.playBgm(BGM_TRACKS[curMap]); // chuyển từ nhạc intro sang nhạc map
     }
@@ -7608,10 +7608,15 @@ function updateHud(){
   const _nameHtml = `${tt?`<span class="title-tag">【${tt.name}】</span> `:''}${player.name ? `<span class="char-name">${player.name}</span> · ` : ''}${player.ascended ? `<span style="color:#fff2b0">☁ Tán Tiên</span><span style="opacity:.55;font-size:10px"> · xuất thế ${sect.name}</span>` : sect.name} · Cấp ${player.level}${player.level>=MAX_LV?' (Tối đa)':''}${player.toiac>0?` · <b>TỘI ÁC ${player.toiac}</b>`:''}`;
   if (window._lastHudName !== _nameHtml){ window._lastHudName = _nameHtml; nameEl.innerHTML = _nameHtml; } // dirty-check: innerHTML rewrite is real DOM churn if done every frame
   nameEl.classList.toggle('toiac', (player.toiac||0) > 0);
-  el('bar-hp').style.width = (100*player.hp/player.maxHp)+'%';
-  el('txt-hp').textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
-  el('bar-qi').style.width = (100*player.qi/player.maxQi)+'%';
-  el('txt-qi').textContent = `Qi ${Math.floor(player.qi)} / ${player.maxQi}`;
+  // Viên đá Máu/Chân Khí kiểu MU Online: chất lỏng dâng từ dưới lên, nên đổi width → height
+  const hpPct = clamp(100*player.hp/player.maxHp, 0, 100), qiPct = clamp(100*player.qi/player.maxQi, 0, 100);
+  el('bar-hp').style.height = hpPct+'%';
+  el('txt-hp').textContent = `${Math.ceil(player.hp)}`;
+  el('orb-hp').title = `Sinh Lực ${Math.ceil(player.hp)} / ${player.maxHp}`;
+  el('bar-qi').style.height = qiPct+'%';
+  el('txt-qi').textContent = `${Math.floor(player.qi)}`;
+  el('orb-qi').title = `Chân Khí ${Math.floor(player.qi)} / ${player.maxQi}`;
+  el('hp-accent-fill').style.width = hpPct+'%';
   if (player.level >= MAX_LV){ el('bar-xp').style.width='100%'; el('txt-xp').textContent='MAX'; }
   else { el('bar-xp').style.width = (100*player.xp/XP_TABLE[player.level-1])+'%';
          el('txt-xp').textContent = `${Math.floor(player.xp)} / ${XP_TABLE[player.level-1]} EXP`; }
