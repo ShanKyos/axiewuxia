@@ -7453,95 +7453,121 @@ window.salvage = function(i){
 
 // ---------- Bản Đồ thế giới ----------
 // ---------- Kỹ Năng: gán vào taskbar 5 ô ----------
+// ── Kỹ Năng: 3 nhóm Trấn Phái / Giang Hồ / Khác (thay cho 1 danh sách dài gộp hết, rối mắt) ──
+const SKILL_TABS = [
+  { id:'tranphai', name:'⚔ Trấn Phái' },
+  { id:'giangho',  name:'🗺 Giang Hồ' },
+  { id:'khac',     name:'✦ Khác' },
+];
+window.skillTab = window.skillTab || 'tranphai';
+window.switchSkillTab = function(t){ window.skillTab = t; renderSkillPanel(); };
+function skillDefRowHtml(id){
+  const info = skillInfo(id);
+  return `<div class="skill-row${info.unlocked?'':' locked'}">
+    <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='a'?'壹':id==='tp'?'鎮':id==='amkhi'?'暗':id==='bow'?'弓':id==='gangkhi'?'罡':id==='danchi'?'弹':'魂'}</span>'" alt="">
+    <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${info.name}</b>
+      <span style="font-size:10.5px;opacity:.6"> · ${info.qi}Qi · ${effCd(id, info.cd).toFixed(1)}s</span>
+      <div class="sk-desc">${info.unlocked ? info.desc : '🔒 ' + info.lockTxt}</div></span>
+    <span class="assign-btns">${info.unlocked ? upBtnHtml(id) : ''}${[0,1,2,3,4].map(s=>
+      `<button class="mini-btn" ${info.unlocked?'':'disabled'} onclick="window.assignSkill('${id}',${s})">${s+1}</button>`).join('')}</span></div>`;
+}
+function vohocRowHtml(_vid){
+  const _v = VOHOC_DEFS[_vid], _t = VH_TIER[_v.tier];
+  const learned = vhLearned(_vid), isPass = _v.type === 'passive';
+  const canLv = player.level >= _v.unlock;
+  const ownPhai = _v.phai && (_v.phai === player.sect || (_v.phai === 'toanchan' && player.sect === 'comoc'));
+  const _rReq = vhRealmReq(_v);
+  const canRealm = ((player.dantian && player.dantian.realm) || 0) >= _rReq;
+  let right = '';
+  if (learned && !isPass){
+    right = `<span class="assign-btns">${upBtnHtml(_vid)}${[0,1,2,3,4].map(s=>
+      `<button class="mini-btn" onclick="window.assignSkill('${_vid}',${s})">${s+1}</button>`).join('')}</span>`;
+  } else if (learned){
+    right = `<span style="font-size:10.5px;color:#a0ffe9">✓</span>`;
+  } else if (!_v.phai && canLv && canRealm){
+    right = `<button class="mini-btn vh-learn-btn" ${(player.bikipVH||0)>=_t.cost?'':'disabled'} onclick="window.learnVohocUI('${_vid}')">Học · ${_t.cost}📜</button>`;
+  } else {
+    right = `<span style="font-size:10.5px;opacity:.5">${!canRealm ? '🔒 ' + VH_REALM_NAME[_rReq] : !canLv ? '🔒 Lv'+_v.unlock : (_v.phai && !ownPhai ? 'khác phái' : '🔒')}</span>`;
+  }
+  return `<div class="skill-row${learned?'':' locked'}">
+    <img src="${_v.icon}" onerror="this.style.display='none'" alt="">
+    <span class="sk-info"><b style="color:${learned?_t.color:'#8a8a8a'}">${_v.name}</b>
+      <span style="font-size:10px;color:${_t.color}"> · ${_v.cat}</span>
+      ${!isPass?`<span style="font-size:10.5px;opacity:.6"> · ${_v.qi}Qi · ${effCd(_vid, _v.cd).toFixed(1)}s</span>`:''}
+      <div class="sk-desc">${_v.desc}</div></span>
+    ${right}</div>`;
+}
+function vohocSchoolsHtml(filterFn){
+  const _groups = {};
+  for (const _vid in VOHOC_DEFS){ const _v = VOHOC_DEFS[_vid]; if (!filterFn(_v)) continue; (_groups[_v.school] = _groups[_v.school] || []).push(_vid); }
+  let h = '';
+  for (const _sch in _groups){
+    h += `<div style="font-size:11px;color:#9aa8d4;margin:7px 0 2px;letter-spacing:1px">— ${_sch} —</div>`;
+    for (const _vid of _groups[_sch]) h += vohocRowHtml(_vid);
+  }
+  return h;
+}
+function fusionRowHtml(_fid){
+  const _f = FUSION_DEFS[_fid];
+  const _fsLearned = vhLearned(_fid), _fsReqOk = _f.req.every(r => vhLearned(r));
+  const _fsRealmOk = ((player.dantian && player.dantian.realm) || 0) >= 6;
+  const _fsReqTxt = _f.req.map(r => { const rv = VOHOC_DEFS[r]; return `<span style="color:${vhLearned(r) ? '#7ec850' : '#8a8a8a'}">${rv ? rv.name : r}</span>`; }).join(' + ');
+  let right = '';
+  if (_fsLearned){
+    right = `<span class="assign-btns">${upBtnHtml(_fid)}${[0,1,2,3,4].map(s=>
+      `<button class="mini-btn" onclick="window.assignSkill('${_fid}',${s})">${s+1}</button>`).join('')}</span>`;
+  } else if (_fsReqOk && _fsRealmOk){
+    right = `<button class="mini-btn vh-learn-btn" style="border-color:#ff9ae0 !important;color:#ff9ae0 !important" ${(player.bikipVH||0)>=FS_TIER.cost?'':'disabled'} onclick="window.learnFusionUI('${_fid}')">☯ 3📜</button>`;
+  } else {
+    right = `<span style="font-size:10.5px;opacity:.5">${!_fsRealmOk ? '🔒 Resonance Trung' : '🔒 thiếu tiền trệ'}</span>`;
+  }
+  return `<div class="skill-row${_fsLearned?'':' locked'}">
+    <img src="${_f.icon}" onerror="this.style.display='none'" alt="">
+    <span class="sk-info"><b style="color:${_fsLearned ? FS_TIER.color : '#8a8a8a'}">${_f.name}</b>
+      <span style="font-size:10px;color:#c8a0c8"> · ${_f.cat}</span>
+      <span style="font-size:10.5px;opacity:.6"> · ${_f.qi}Qi · ${effCd(_fid, _f.cd).toFixed(1)}s · Lv${skLv(_fid)}</span>
+      <div class="sk-desc">${_f.desc}</div>
+      <div style="font-size:10px;opacity:.85">☯ ${_fsReqTxt}</div></span>
+    ${right}</div>`;
+}
 function renderSkillPanel(){
+  vhAutoLearn(); // save cũ / test mode: quét tự ngộ võ học phái
   let html = `<h3>Kỹ Năng — gán tối đa 5 ô (phím 1-5)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Taskbar hiện tại: `;
+  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Taskbar: `;
   for (let i = 0; i < 5; i++){
     const id = player.skillBar[i];
-    html += id ? `<button class="mini-btn" onclick="window.assignSkill(null,${i})" title="Bấm để gỡ">${i+1}: ${skillInfo(id).name} ✕</button> `
-               : `<span style="opacity:.5;font-size:11px">[${i+1}: trống]</span> `;
+    html += id ? `<button class="mini-btn" onclick="window.assignSkill(null,${i})" title="Bấm để gỡ">${i+1}:${skillInfo(id).name}✕</button> `
+               : `<span style="opacity:.5;font-size:11px">[${i+1}:trống]</span> `;
   }
-  html += `<div style="font-size:11px;color:#9aa8d4;line-height:1.65;margin-bottom:6px">⬆ Mỗi cấp <b>+2,5% ST</b> (phí bạc tăng dần theo cấp) · Mốc cảnh giới chiêu: <b>20</b> Tiểu Thành +8% ST · <b>40</b> Trung Thành −10% hồi chiêu · <b>60</b> Đại Thành +12% ST · <b>80</b> Viên Dung −12% Qi · <b>100</b> Xuất Thần +15% ST · <b>120</b> Hóa Cảnh +20% ST — farm quái & bán đồ lấy bạc để tu luyện! Mỗi cấp còn <b>−0,25% hồi chiêu</b> (tối đa −30%) · Mốc <b>40/80/120</b>: <b style="color:#7df9ff">⚡ TIẾN HÓA</b> — thêm luồng kiếm/sóng chưởng/vòng nổ, buff bền hơn!</div>`;
-  html += `<div style="font-size:11px;color:#7df9ff;margin-bottom:6px">💠 Tâm Đắc: <b>${player.tamdac || 0}</b> — đột phá mốc cảnh giới chiêu (tinh anh 30% · boss 1-2 · Boss Vùng 2-3) · ⌨ Phím Space: <b>${player.spaceSkill ? skillInfo(player.spaceSkill).name : 'Đòn đánh thường'}</b> — bấm nút ⌨ cạnh chiêu để gán/gỡ</div>`;
-  html += `</div><div class="stat-sec">CHIÊU THỨC CHỦ ĐỘNG — bấm số ô để gán</div>`;
-  for (const id in SKILL_DEFS){
-    if (SKILL_DEFS[id].kind === 'vh') continue; // võ học phổ có mục riêng bên dưới
-    const info = skillInfo(id);
-    html += `<div class="skill-row${info.unlocked?'':' locked'}">
-      <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='a'?'壹':id==='tp'?'鎮':id==='amkhi'?'暗':id==='bow'?'弓':id==='gangkhi'?'罡':id==='danchi'?'弹':'魂'}</span>'" alt="">
-      <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${info.name}</b>
-        <span style="font-size:10.5px;opacity:.6"> · ${info.qi} Qi · ${effCd(id, info.cd).toFixed(1)}s</span>
-        <div class="sk-desc">${info.unlocked ? info.desc : '🔒 ' + info.lockTxt}</div></span>
-      <span class="assign-btns">${info.unlocked ? upBtnHtml(id) : ''}${[0,1,2,3,4].map(s=>
-        `<button class="mini-btn" ${info.unlocked?'':'disabled'} onclick="window.assignSkill('${id}',${s})">${s+1}</button>`).join('')}</span></div>`;
-  }
-  // ── VÕ HỌC PHỔ: tự do chọn tuyệt chiêu & hướng đi ──
-  vhAutoLearn(); // save cũ / test mode: quét tự ngộ võ học phái
-  html += `<div class="stat-sec">VÕ HỌC PHỔ — tự do chọn hướng đi · 📜 Bí Kíp: <b style="color:#ffb15c">${player.bikipVH||0}</b></div>`;
-  html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:4px;line-height:1.55">Võ học <b>giang hồ</b> yêu cầu cảnh giới tu tiên — <b style="color:#b08ae8">Radiant Core Cảnh</b> mở kết hợp tự do, Cao cấp cần Resonance Trung, Thần cấp cần Resonance Hậu. Bí Kíp chủ yếu từ <b style="color:#ffb15c">Té Núi</b>: Vân Đài (Thornwood) · Đoạn Trường Nhai (Frostmire) · Định Biên Nhai (Stormgate).</div>`;
-  const _vhSchools = {};
-  for (const _vid in VOHOC_DEFS){ const _v = VOHOC_DEFS[_vid]; (_vhSchools[_v.school] = _vhSchools[_v.school] || []).push(_vid); }
-  for (const _sch in _vhSchools){
-    html += `<div style="font-size:11px;color:#9aa8d4;margin:7px 0 2px;letter-spacing:1px">— ${_sch} —</div>`;
-    for (const _vid of _vhSchools[_sch]){
-      const _v = VOHOC_DEFS[_vid], _t = VH_TIER[_v.tier];
-      const learned = vhLearned(_vid), isPass = _v.type === 'passive';
-      const canLv = player.level >= _v.unlock;
-      const ownPhai = _v.phai && (_v.phai === player.sect || (_v.phai === 'toanchan' && player.sect === 'comoc'));
-      const _rReq = vhRealmReq(_v);
-      const canRealm = ((player.dantian && player.dantian.realm) || 0) >= _rReq;
-      let right = '';
-      if (learned && !isPass){
-        right = `<span class="assign-btns">${upBtnHtml(_vid)}${[0,1,2,3,4].map(s=>
-          `<button class="mini-btn" onclick="window.assignSkill('${_vid}',${s})">${s+1}</button>`).join('')}</span>`;
-      } else if (learned){
-        right = `<span style="font-size:10.5px;color:#a0ffe9">✓ đã lĩnh ngộ</span>`;
-      } else if (!_v.phai && canLv && canRealm){
-        right = `<button class="mini-btn vh-learn-btn" ${(player.bikipVH||0)>=_t.cost?'':'disabled'} onclick="window.learnVohocUI('${_vid}')">Học · ${_t.cost}📜</button>`;
-      } else {
-        right = `<span style="font-size:10.5px;opacity:.5">${!canRealm ? '🔒 ' + VH_REALM_NAME[_rReq] : !canLv ? '🔒 cấp '+_v.unlock : (_v.phai && !ownPhai ? 'võ học phái khác' : '🔒')}</span>`;
-      }
-      html += `<div class="skill-row${learned?'':' locked'}">
-        <img src="${_v.icon}" onerror="this.style.display='none'" alt="">
-        <span class="sk-info"><b style="color:${learned?_t.color:'#8a8a8a'}">${_v.name}</b>
-          <span style="font-size:10px;color:${_t.color}"> · ${_t.name} · ${_v.cat}</span>
-          ${!isPass?`<span style="font-size:10.5px;opacity:.6"> · ${_v.qi} Qi · ${effCd(_vid, _v.cd).toFixed(1)}s</span>`:''}
-          <div class="sk-desc">${_v.desc}</div></span>
-        ${right}</div>`;
+  html += `</div>`;
+  html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%ST/cấp (bạc) · mốc 20/40/60/80/100/120 thêm buff · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · 💠 Tâm Đắc <b>${player.tamdac || 0}</b> · ⌨ Space: <b>${player.spaceSkill ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
+  html += `<div class="char-tabs">`;
+  for (const t of SKILL_TABS) html += `<button class="${t.id===window.skillTab?'active':''}" onclick="switchSkillTab('${t.id}')">${t.name}</button>`;
+  html += `</div>`;
+
+  if (window.skillTab === 'tranphai'){
+    html += `<div class="stat-sec">TRẤN PHÁI — tuyệt kỹ ${SECTS[player.sect].name}</div>`;
+    html += skillDefRowHtml('a') + skillDefRowHtml('tp');
+    const ownSchoolHtml = vohocSchoolsHtml(_v => _v.phai === player.sect || (_v.phai === 'toanchan' && player.sect === 'comoc'));
+    html += ownSchoolHtml || `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Môn phái này chưa có tuyệt học Trấn Phái riêng — sang tab Giang Hồ luyện thêm nhé.</div>`;
+  } else if (window.skillTab === 'giangho'){
+    html += `<div class="stat-sec">GIANG HỒ — học bằng 📜 Bí Kíp: <b style="color:#ffb15c">${player.bikipVH||0}</b></div>`;
+    html += `<div style="font-size:10.5px;color:#9aa8d4;margin-bottom:4px">Không giới hạn môn phái · Bí Kíp rơi từ Té Núi · cần đủ cảnh giới tương ứng bậc.</div>`;
+    html += vohocSchoolsHtml(_v => !_v.phai && !_v.npcOnly);
+    html += `<div class="stat-sec" style="color:#ff9ae0">☯ DUNG HỢP — ghép 2 môn thành tuyệt chiêu mới</div>`;
+    html += `<div style="font-size:10.5px;color:#9aa8d4;margin-bottom:4px">Đủ 2 môn tiền trệ + Resonance Trung Kỳ + 3📜.</div>`;
+    for (const _fid in FUSION_DEFS) html += fusionRowHtml(_fid);
+  } else {
+    html += `<div class="stat-sec">KỸ NĂNG KHÁC — hệ Card/Ascension riêng</div>`;
+    for (const id of ['amkhi','gangkhi','danchi','bow','tieuhon']) html += skillDefRowHtml(id);
+    html += vohocSchoolsHtml(_v => _v.npcOnly);
+    html += `<div class="stat-sec">BỊ ĐỘNG — tự kích hoạt, không cần gán</div>`;
+    for (const ps of PASSIVE_SKILLS){
+      const on = ps.req();
+      html += `<div class="skill-row${on?'':' locked'}"><span class="sk-glyph">心</span>
+        <span class="sk-info"><b style="color:${on?'#a0ffe9':'#8a8a8a'}">${ps.name}</b>
+        <div class="sk-desc">${on ? ps.desc : '🔒 chưa đạt điều kiện'}</div></span></div>`;
     }
-  }
-  // ── DUNG HỢP THẦN CÔNG: kết hợp liên phái mở tiềm năng mới (Vực Nguyên Thủy · Axie Lang Thang) ──
-  html += `<div class="stat-sec" style="color:#ff9ae0">☯ DUNG HỢP THẦN CÔNG — kết hợp 2 môn khác phái, mở tuyệt chiêu mới</div>`;
-  html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:4px;line-height:1.55">Lĩnh ngộ đủ <b>cả 2 môn tiền trệ</b> + đạt <b style="color:#b08ae8">Resonance · Trung Kỳ</b> + <b>3 📜 Bí Kíp</b> để dung hợp. 30 tuyệt chiêu thất truyền, khai quật từ <b>Cổ Quyển Vực Nguyên Thủy</b> & <b>Di Huấn Axie Lang Thang</b>.</div>`;
-  for (const _fid in FUSION_DEFS){
-    const _f = FUSION_DEFS[_fid];
-    const _fsLearned = vhLearned(_fid), _fsReqOk = _f.req.every(r => vhLearned(r));
-    const _fsRealmOk = ((player.dantian && player.dantian.realm) || 0) >= 6;
-    const _fsReqTxt = _f.req.map(r => { const rv = VOHOC_DEFS[r]; return `<span style="color:${vhLearned(r) ? '#7ec850' : '#8a8a8a'}">${rv ? rv.name : r}</span>`; }).join(' + ');
-    let right = '';
-    if (_fsLearned){
-      right = `<span class="assign-btns">${upBtnHtml(_fid)}${[0,1,2,3,4].map(s=>
-        `<button class="mini-btn" onclick="window.assignSkill('${_fid}',${s})">${s+1}</button>`).join('')}</span>`;
-    } else if (_fsReqOk && _fsRealmOk){
-      right = `<button class="mini-btn vh-learn-btn" style="border-color:#ff9ae0 !important;color:#ff9ae0 !important" ${(player.bikipVH||0)>=FS_TIER.cost?'':'disabled'} onclick="window.learnFusionUI('${_fid}')">☯ Dung Hợp · 3📜</button>`;
-    } else {
-      right = `<span style="font-size:10.5px;opacity:.5">${!_fsRealmOk ? '🔒 Resonance · Trung Kỳ' : '🔒 thiếu tiền trệ'}</span>`;
-    }
-    html += `<div class="skill-row${_fsLearned?'':' locked'}">
-      <img src="${_f.icon}" onerror="this.style.display='none'" alt="">
-      <span class="sk-info"><b style="color:${_fsLearned ? FS_TIER.color : '#8a8a8a'}">${_f.name}</b>
-        <span style="font-size:10px;color:#c8a0c8"> · ${_f.origin} · ${_f.cat}</span>
-        <span style="font-size:10.5px;opacity:.6"> · ${_f.qi} Qi · ${effCd(_fid, _f.cd).toFixed(1)}s · Lv ${skLv(_fid)}</span>
-        <div class="sk-desc">${_f.desc}</div>
-        <div style="font-size:10px;opacity:.85">☯ ${_fsReqTxt}</div></span>
-      ${right}</div>`;
-  }
-  html += `<div class="stat-sec">TÂM PHÁP BỊ ĐỘNG (tự kích hoạt, không cần gán)</div>`;
-  for (const ps of PASSIVE_SKILLS){
-    const on = ps.req();
-    html += `<div class="skill-row${on?'':' locked'}"><span class="sk-glyph">心</span>
-      <span class="sk-info"><b style="color:${on?'#a0ffe9':'#8a8a8a'}">${ps.name}</b>
-      <div class="sk-desc">${on ? ps.desc : '🔒 chưa đạt điều kiện'}</div></span></div>`;
   }
   el('panel-skill').innerHTML = html;
 }
