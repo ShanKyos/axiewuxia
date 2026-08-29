@@ -155,6 +155,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .attr-row .plus-btn { width:26px; height:26px; border-radius:999px; border:1px solid var(--accent);
   background:rgba(76,141,255,.18); color:#7ecbff; font-size:16px; cursor:pointer; }
 .attr-row .plus-btn:disabled { opacity:.3; cursor:default; }
+.attr-row .attr-qty { width:46px; height:24px; border-radius:6px; border:1px solid var(--border-faint);
+  background:rgba(10,14,26,.6); color:#e4ebff; font-size:12px; text-align:center; margin-right:2px; }
+.attr-row .attr-qty:disabled { opacity:.3; }
+.attr-row .max-btn { width:auto; border-radius:6px; padding:0 8px; font-size:11px; }
 .stat-sec { margin-top:10px; color:#9aa8d4; font-size:12px; letter-spacing:1px; font-weight:600; }
 
 .slot-row, .inv-item { display:flex; justify-content:space-between; align-items:center;
