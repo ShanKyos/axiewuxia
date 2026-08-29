@@ -6072,7 +6072,7 @@ function renderForge(){
       // GDD: trang bị +9 trở lên không thể tự rèn — phải đến Lò Bát Quái
       html += `<div class="next-tier" style="border-color:#e8b04a"><b style="color:#e8b04a">☰ Phá Thiên Kiếp (+9 → +11)</b><br>
         <span style="font-size:12px;line-height:1.6">Trang bị từ +9 không thể tự rèn. Hãy mang đến <b>Lò Bát Quái</b> ở trung tâm <b>Lunaris City</b>, nhờ <b>Tông Sư Thợ Rèn</b> vận công dung hợp.</span></div>
-        <div class="forge-actions"><button class="mini-btn" onclick="closePanels(); travelTo('tuongduong')">Dịch Chuyển tới Lunaris City</button></div>
+        <div class="forge-actions"><button class="mini-btn" onclick="closePanels(); window.hintGoForge()">Dịch Chuyển tới Lò Bát Quái</button></div>
         <div id="forge-msg"></div>`;
     } else {
       const target = it.plus + 1;
