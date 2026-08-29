@@ -796,14 +796,14 @@ function zoneType(){ return ZONE_TYPES[mapDef().type]; }
 // ---------- Sổ tay kỹ năng: mọi chiêu thức gán vào taskbar 5 ô ----------
 const SKILL_DEFS = {
   a:       { unlock:2,  kind:'sectA',  icon:s=>SECT_ART[s].iconA,  desc:s=>`${s.skillA.name} — chiêu thức nhập môn ${s.name}.` },
-  amkhi:   { unlock:4,  kind:'amkhi',  name:'Ám Khí', cd:4, qi:15, mult:1.2, icon:()=>'assets/skills/amkhi.png', desc:()=>'Phóng ám khí độc — theo tầng Card Ám Khí.' },
+  amkhi:   { unlock:4,  kind:'amkhi',  name:'Ám Khí', cd:4, qi:15, mult:1.2, icon:()=>'assets/skills/amkhi.png', desc:()=>'Phóng ám khí độc — theo tầng Tấn Chức Ám Khí.' },
   tp:      { unlock:7,  kind:'sectTP', icon:s=>SECT_ART[s].iconTP, desc:s=>`${s.tp.name} — Trấn Phái tuyệt kỹ ${s.name}, sát thương lan.` },
   gangkhi: { unlock:10, kind:'gangkhi', name:'Cương Khí Hộ Thể', cd:10, qi:30, icon:()=>'assets/skills/gangkhi.png',
-             req:()=>player.gangkhi.tier>0, reqTxt:'Cương Khí tầng 1 (Card)', desc:()=>'6s giảm 30% sát thương gánh chịu — tụ cương khí hộ thể.' },
+             req:()=>player.gangkhi.tier>0, reqTxt:'Cương Khí tầng 1 (Tấn Chức)', desc:()=>'6s giảm 30% sát thương gánh chịu — tụ cương khí hộ thể.' },
   danchi:  { unlock:20, kind:'danchi', name:'Đạn Chỉ Thần Thông', cd:8, qi:35, mult:2.0, icon:()=>'assets/skills/danchi.png',
              req:()=>player.dantian.realm>=4, reqTxt:'Ascension cảnh 4 (Spark Tầng 4)', desc:()=>'Chỉ lực xuyên huyệt — sát thương ×2 và phong mạch địch 2.5s.' },
   bow:     { unlock:30, kind:'bow',    name:'Linh Tiễn Xạ', cd:6, qi:28, mult:1.3, icon:()=>'assets/skills/bow.png',
-             req:()=>player.bow.tier>0, reqTxt:'Cung Tiễn tầng 1 (Card)', desc:()=>'Bắn 3 linh tiễn xuyên thấu quạt trước mặt.' },
+             req:()=>player.bow.tier>0, reqTxt:'Cung Tiễn tầng 1 (Tấn Chức)', desc:()=>'Bắn 3 linh tiễn xuyên thấu quạt trước mặt.' },
   tieuhon: { unlock:20, kind:'tieuhon', name:'Ám Nhiên Tiêu Hồn Chưởng', cd:13, qi:60, mult:3.2, icon:()=>'assets/skills/tieuhon.png',
              req:()=>player.dantian.realm>=6, reqTxt:'Ascension cảnh 6 (Radiant Core Cảnh)', desc:()=>'Chưởng lực âm nhu quét sạch quanh người (AoE lớn).' },
 };
@@ -3308,7 +3308,7 @@ function killMob(m, source){
   if (m.def.lv >= 3 && Math.random() < 0.15){ player.gems.tuLa++; addFloat(m.x, m.y-52, '+1 ◆ Tu La Tinh Thạch', '#e84a6a', 11); }
   if (m.def.elite && Math.random() < 0.35){ player.gems.honNguyen++; addFloat(m.x, m.y-64, '+1 ❖ Hỗn Nguyên Thạch', '#b08ae8', 11); }
   if (m.def.lv >= 5 && Math.random() < 0.22){ player.tienDan++; addFloat(m.x, m.y-76, '+1 ◈ Tiến Cấp Đan', '#7ec850', 11); }
-  // Tinh anh & boss rớt thêm Tiến Cấp Đan (Drop v2.0 — gắn vòng farm boss vào Card)
+  // Tinh anh & boss rớt thêm Tiến Cấp Đan (Drop v2.0 — gắn vòng farm boss vào Tấn Chức)
   const _tdB = m.def.bossKind === 'tranai' ? 8 : (m.def.bossKind === 'thuve' ? 3 : (m.type === 'boss' || m.def.boss) ? 5 : m.def.elite ? 1 : 0);
   if (_tdB){ player.tienDan += _tdB; addFloat(m.x, m.y-88, `+${_tdB} ◈ Tiến Cấp Đan`, '#7ec850', 11); }
   // Võ Học Phổ: Bí Kíp rơi từ tinh anh/boss — học võ học giang hồ (bấm K)
@@ -3465,17 +3465,17 @@ function unlockNotices(){
   }
   // Mở khóa theo tầng — mỗi cấp chỉ giới thiệu 1-2 hệ thống để tân thủ không bị ngợp
   const msgs = {
-    2:['Mở khóa: Card (phím 1)'],
+    2:['Mở khóa: Tấn Chức (phím 1)'],
     3:['Mở khóa: Mục Tiêu Hôm Nay — xem góc trái màn hình, xong hết nhận thưởng lớn!'],
-    4:['Mở khóa: Ám Khí (phím 2)','Mở khóa: Card — tấn chức Ám Khí (phím H)'],
+    4:['Mở khóa: Ám Khí (phím 2)','Mở khóa: Tấn Chức Ám Khí (phím H)'],
     5:['Mở khóa: Rèn Luyện (phím F)'],
     6:['Mở khóa: Thú Chiến — chiến thú đồng hành tự đánh quái (C → Thú Chiến)'],
     7:['Mở khóa: Tuyệt kỹ (phím 3)'],
-    10:['Mở khóa: the Calling — 5 lớp chờ ngươi chọn!','Mở khóa: Cương Khí (Card — phím H)','Mở khóa: Truy Nã Lệnh & Vạn Duyên Các — Bổ Đầu và Thần Toán Tử ở Lunaris City'],
+    10:['Mở khóa: the Calling — 5 lớp chờ ngươi chọn!','Mở khóa: Cương Khí (Tấn Chức — phím H)','Mở khóa: Truy Nã Lệnh & Vạn Duyên Các — Bổ Đầu và Thần Toán Tử ở Lunaris City'],
     15:['Mở khóa: Linh Thú — mua Phong Linh Phù ở Vũ Khí Phường, đánh tinh anh còn <40% máu rồi bấm T'],
     40:['Mở khóa: Lò Bảo Chứng luyện Linh Dực Cấp 1 — Lò Bát Quái, Lunaris City'],
     45:['Bảo Hạp IV trở lên từ Bá Chủ có 5-8% mở ra trang bị CỔ THẦN Tứ Tượng — Bá Chủ giáng thế mỗi 4 giờ!'],
-    30:['Mở khóa: Cung Tiễn (Card — phím H)','Mở khóa: Động Phủ — gặp Quản Gia ở Lunaris City'],
+    30:['Mở khóa: Cung Tiễn (Tấn Chức — phím H)','Mở khóa: Động Phủ — gặp Quản Gia ở Lunaris City'],
   };
   const list = msgs[player.level];
   if (list) list.forEach((m, i)=> setTimeout(()=>{ if (player) addFloat(player.x, player.y-70, m, '#a0ffe9', 14); }, i*700));
@@ -6285,7 +6285,7 @@ window.doEnhance = function(){
   setTimeout(renderForge, 900);
 };
 
-// ---------- Card: Ám Khí / Cung Tiễn / Cương Khí (7 tầng, Chúc Phúc bảo đảm) ----------
+// ---------- Tấn Chức: Ám Khí / Cung Tiễn / Cương Khí (7 tầng, Chúc Phúc bảo đảm) ----------
 const TH_SYSTEMS = {
   amkhi:   { name:'Ám Khí',   glyph:'暗', tiers:AMKHI_TIERS,   minLv:4,
              desc:'Tăng cường chiêu Ám Khí (phím 2) — mỗi tầng thêm bạo kích và hiệu ứng: độc, làm chậm, mù lòa, vạn độc, kết liễu.' },
@@ -6323,7 +6323,7 @@ function renderTuyetHoc(){
   const sys = window.thTab;
   const S = TH_SYSTEMS[sys];
   const st = thState(sys);
-  let html = `<h3>Card — 7 Tầng Cảnh Giới</h3>`;
+  let html = `<h3>Tấn Chức — 7 Tầng Cảnh Giới</h3>`;
   html += `<div style="display:flex;gap:6px;margin-bottom:8px">`;
   for (const k in TH_SYSTEMS){
     const s2 = TH_SYSTEMS[k];
@@ -6871,7 +6871,7 @@ const CHEAT_HELP = [
   '/god — bật/tắt bất tử',
   '/kill [bán kính=350] — hạ quái quanh mình',
   '/realm <0-9> — set cấp đủ để đạt cảnh giới Ascension đó (giờ tự động theo cấp độ)',
-  '/th <amkhi|bow|gangkhi> <0-7> — tầng Card',
+  '/th <amkhi|bow|gangkhi> <0-7> — tầng Tấn Chức',
   '/tier <0-8> — tầng Thú Cưỡi',
   '/boss — mở phong ấn & tới Tế Đàn Trấn Ải của map',
   '/seal <0-7> — đặt tiến độ Ngũ Ấn (7 = Kết Mở)',
@@ -6989,7 +6989,7 @@ window.cheatExec = function(raw){
         const st = sys === 'amkhi' ? player.amkhiX : sys === 'bow' ? player.bow : sys === 'gangkhi' ? player.gangkhi : null;
         if (!st){ cheatLog('/th amkhi|bow|gangkhi <0-7>', '#ff7a6a'); return; }
         st.tier = clamp(Math.round(num(2, 1)), 0, 7); st.bless = 0;
-        calcDerived(); cheatLog('Card ' + sys + ' → tầng ' + st.tier, '#8fd18f'); break;
+        calcDerived(); cheatLog('Tấn Chức ' + sys + ' → tầng ' + st.tier, '#8fd18f'); break;
       }
       case 'tier': {
         player.mount.tier = clamp(Math.round(num(1, 1)), 0, MOUNT_TIERS.length - 1);
@@ -7046,7 +7046,7 @@ const CHAR_TABS = [
   { id:'forge',    name:'Rèn Luyện',  lv:5 },
   { id:'mount',    name:'Thú Chiến',  lv:6 },
   { id:'taytuy',   name:'🔄 Tẩy Tủy',  lv:MAX_LV },
-  { id:'tuyethoc', name:'Card',  lv:4 },
+  { id:'tuyethoc', name:'Tấn Chức',  lv:4 },
   { id:'pet',      name:'🐾 Linh Thú', lv:15 },
   { id:'channel',  name:'☬ Hóa Thân', lv:14 },
   { id:'tower',    name:'🌀 Tu La Trận', lv:20 },
@@ -7227,7 +7227,7 @@ const MAT_ROWS = [
   { icon:'huyenthiet', name:'Huyền Thiết', get:()=>player.mat, color:'#9fd0ff', desc:'rèn +1~+11' },
   { icon:'tula', name:'Tu La Tinh Thạch', get:()=>player.gems.tuLa, color:'#e84a6a', desc:'rèn +7 trở lên · Áo Choàng' },
   { icon:'honnguyen', name:'Hỗn Nguyên Thạch', get:()=>player.gems.honNguyen, color:'#b08ae8', desc:'rèn +10/+11 · Áo Choàng' },
-  { icon:'tiendan', name:'Tiến Cấp Đan', get:()=>player.tienDan, color:'#7ec850', desc:'tấn chức Card' },
+  { icon:'tiendan', name:'Tiến Cấp Đan', get:()=>player.tienDan, color:'#7ec850', desc:'Tấn Chức' },
   { icon:'dotpha', name:'Đan Ascension Trial', get:()=>player.dotpha || 0, color:'#ffb15c', desc:'bảo mệnh độ kiếp — chịu 4 tia lôi' },
   { icon:'phongphu', name:'Phong Linh Phù', get:()=>player.phongphu || 0, color:'#b08ae8', desc:'thu phục linh thú — bấm T' },
   { icon:'phu', name:'Thiên Mệnh Phù', get:()=>player.charms, color:'#7ecbff', desc:'bảo hiểm rèn' },
@@ -7430,7 +7430,7 @@ function renderSkillPanel(){
     const ownSchoolHtml = vohocSchoolsHtml(_v => _v.phai === player.sect);
     html += ownSchoolHtml || `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10 để mở khoá tuyệt kỹ riêng.</div>`;
   } else {
-    html += `<div class="stat-sec">KỸ NĂNG KHÁC — hệ Card/Ascension riêng</div>`;
+    html += `<div class="stat-sec">KỸ NĂNG KHÁC — hệ Tấn Chức riêng</div>`;
     for (const id of ['amkhi','gangkhi','danchi','bow','tieuhon']) html += skillDefRowHtml(id);
     html += `<div class="stat-sec">BỊ ĐỘNG — tự kích hoạt, không cần gán</div>`;
     for (const ps of PASSIVE_SKILLS){
@@ -7454,7 +7454,7 @@ window.assignSkill = function(id, slot){
   saveGame(); renderSkillPanel();
 };
 
-// ---------- Card (override): mọi kỹ năng qua SKILL_DEFS ----------
+// ---------- Tấn Chức (override): mọi kỹ năng qua SKILL_DEFS ----------
 function castSkill(id){
   if (!player || dead || id == null) return;
   if (id === 'b') id = 'amkhi'; if (id === 'c') id = 'tp'; // legacy alias
@@ -7747,7 +7747,7 @@ const SHOPS = {
   thuongnhan: { quote:'"Lunacia này, lợi lớn nhất là <b style=\'color:#7ecbff\'>bạc</b> — có bạc là có tất cả!"', junk:true, rows:[
     { id:'thuoc',   name:'🧪 Hồ Lô Thuốc',     price:150, desc:'Hồi 40% máu tức thì (phím R) — túi đựng tối đa 5 lọ' },
     { id:'phu',     name:'☂ Thiên Mệnh Phù',   price:500, desc:'Bảo hiểm rèn +7 trở lên — xịt giữ nguyên cấp' },
-    { id:'tiendan', name:'◈ Tiến Cấp Đan ×3',  price:900, desc:'Tấn chức Card (Ám Khí/Cung Tiễn/Cương Khí)' },
+    { id:'tiendan', name:'◈ Tiến Cấp Đan ×3',  price:900, desc:'Tấn Chức (Ám Khí/Cung Tiễn/Cương Khí)' },
   ]},
   duoclao: { quote:'"Thuốc bổ hay thuốc độc — khác nhau ở liều lượng thôi, khách quân ạ."', rows:[
     { id:'thuoc',     name:'🧪 Hồ Lô Thuốc',        price:150, desc:'Hồi 40% máu tức thì (phím R) — túi đựng tối đa 5 lọ' },
@@ -8231,16 +8231,16 @@ Ngươi — một hatchling chưa mang Tộc — được <b>Trưởng Làng</b>
 
 Sáng nay, Trưởng Làng đặt vào tay ngươi một món hành trang cũ:
 <i>"Con à... Lunacia này sớm muộn cũng cần thêm người đứng ra gánh vác. Hãy vượt eo biển đến <b>Lunaris City</b>, tìm Trưởng Lão Rell — và bắt đầu bước đi của riêng con."</i>`,
-  `<span class="is-title">CHÍN TỘC CỦA LUNACIA</span>
-Chín Tộc lớn đang chờ đón những hatchling đủ bản lĩnh:
+  `<span class="is-title">NĂM LỚP CỦA LUNACIA</span>
+Năm lớp lớn đang chờ đón những hatchling đủ bản lĩnh:
 
-<b>Mech</b> 金 · <b>Aquatic</b> 水 · <b>Dusk</b> 木 · <b>Reptile</b> 水 · <b>Beast</b> 火 · <b>Bird</b> 土 · <b>Plant</b> 木 · <b>Bug</b> 土 · <b>Dawn</b> 水
+<b>Dark Knight</b> 金 · <b>Dark Wizard</b> 水 · <b>Fairy Elf</b> 水 · <b>Magic Gladiator</b> 火 · <b>Dark Lord</b> 土
 
-Mỗi Tộc mang một hệ <b>Ngũ Hành</b> — khắc hệ sẽ gây thêm <b>+20% sát thương</b> lên Chimera bị khắc.
+Mỗi lớp mang một hệ <b>Ngũ Hành</b> — khắc hệ sẽ gây thêm <b>+20% sát thương</b> lên Chimera bị khắc.
 
-Ngươi sẽ khởi đầu là <b>Unclassed</b> tự do — tới <b>cấp 10</b>, đủ sức chứng minh bản thân, ngươi sẽ đáp lời <b>the Calling</b> và chọn Tộc của mình.
+Ngươi sẽ khởi đầu là <b>Unclassed</b> tự do — tới <b>cấp 10</b>, đủ sức chứng minh bản thân, ngươi sẽ đáp lời <b>the Calling</b> và chọn lớp của mình.
 
-Con đường phía trước: <b>Rèn trang bị +11</b> · <b>9 cảnh giới trưởng thành</b> · <b>8 Instinct Channels</b> · <b>7 tầng Card</b> — và cuối cùng, danh hiệu <b>Lunacia's Number One Trainer</b>.`,
+Con đường phía trước: <b>Rèn trang bị +11</b> · <b>7 tầng Tấn Chức</b> · <b>Quỷ Cốc/Huyết Thành</b> — và cuối cùng, danh hiệu <b>Lunacia's Number One Trainer</b>.`,
   `<span class="is-title">HÀNH TRÌNH BẮT ĐẦU</span>
 <i>"Từ Petalshade Isle, qua Thornwood Reach, vào Hollow Roost, lên Frostmire Vale, ra Ashen Steppe... cho tới Stormgate Pass đầy bão tố."</i>
 
@@ -9705,7 +9705,7 @@ const TRAITS = [
   { id:'doanngoc',  name:'Đoạn Ngọc Thủ',       tier:'huyen', glyph:'🎯', desc:'Ám Khí +15% ST · phá khiên lâu thêm 4s',    late:p=>{ p.amkhiPct += 0.15; p.shieldBonus += 4; } },
   { id:'sattam',    name:'Sát Tâm',             tier:'huyen', glyph:'🌑', desc:'Giết Du Hiệp không tăng Tội Ác',            late:p=>{ p.traitSatTam = true; } },
   { id:'duocthe',   name:'Dược Thể',            tier:'huyen', glyph:'🧪', desc:'Hồ Lô Thuốc hồi 55% máu (thay 40%)',        late:p=>{ p.potionPct = 0.55; } },
-  { id:'vohon',     name:'Võ Hồn',              tier:'thien', glyph:'⚔', desc:'Card +12% Sát Thương',                 late:p=>{ p.skillDmgPct += 0.12; } },
+  { id:'vohon',     name:'Võ Hồn',              tier:'thien', glyph:'⚔', desc:'Tấn Chức +12% Sát Thương',                 late:p=>{ p.skillDmgPct += 0.12; } },
   { id:'thienmenh', name:'Thiên Mệnh',          tier:'thien', glyph:'☯', desc:'Mỗi màn chơi 1 lần: chết hồi sinh tại chỗ 50% máu', late:p=>{ p.traitRevive = true; } },
   { id:'kymach',    name:'Kỳ Mạch Đại Thông',   tier:'thien', glyph:'🌊', desc:'Đả thông Instinct Channels +25% tỉ lệ',             late:p=>{ p.traitMerRate = 1.25; } },
   { id:'vanvat',    name:'Vạn Vật Hữu Duyên',   tier:'thien', glyph:'💰', desc:'+15% Bạc rơi',                              late:p=>{ p.silverPct += 15; } },
@@ -10155,14 +10155,7 @@ function towerNextWave(){
   if (!TOWER) return;
   TOWER.wave++;
   const n = Math.min(3 + Math.floor(TOWER.wave/2), 12);
-  const scale = 1 + TOWER.wave*0.14;
-  for (let i = 0; i < n; i++){
-    const type = TOWER_MOB_POOL[Math.floor(Math.random()*TOWER_MOB_POOL.length)];
-    const m = spawnMob(type, { x: player.x, y: player.y, r: 280, count: n }, null);
-    m.zone = null; m.towerMob = true; // không tự hồi sinh theo zone; đánh dấu để dọn dẹp khi kết thúc lượt
-    m.def = { ...m.def, hp: Math.round(m.def.hp*scale), atk: Math.round(m.def.atk*scale) };
-    m.hp = m.def.hp; m.maxHp = m.def.hp;
-  }
+  spawnArenaWave(n, 1 + TOWER.wave*0.14, 'towerMob', 280);
   if (player) addFloat(player.x, player.y - 60, `Đợt ${TOWER.wave} — ${n} địch!`, '#c07fe0', 15);
 }
 function updateTower(){
@@ -10234,12 +10227,8 @@ window.exitTowerOverlay = function(){
 };
 function drawTowerHUD(){
   if (!TOWER || !player) return;
-  const x = W/2, y = 26;
-  ctx.textAlign = 'center';
-  ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
-  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3; ctx.fillStyle = '#c07fe0';
   const label = TOWER.drafting ? 'Chọn tiến hóa để tiếp tục…' : `🌀 Đợt ${TOWER.wave} — còn ${mobs.filter(m=>m.towerMob && !m.dead).length} địch`;
-  ctx.strokeText(label, x, y); ctx.fillText(label, x, y);
+  drawArenaHUD({ label, labelColor:'#c07fe0' });
 }
 
 // ═══════════ QUỶ CỐC (Devil Square) & HUYẾT THÀNH (Blood Castle) — 2 đấu trường MU Online-lite:
@@ -10282,6 +10271,43 @@ function rollArenaBox(tier, bossLv){
   }
   return gained;
 }
+// QA rà soát: Tower/Devil/Blood từng tự tay lặp lại y hệt đoạn spawn-quái-từ-pool-rồi-scale-hp/atk
+// này 3 lần với hằng số trôi dạt ngẫu nhiên (r:280 vs 260, formula 0.14/0.1/0.08 tự chọn không theo
+// quy tắc chung) — gộp lại đây để lần cân bằng sau không còn sửa 1 nơi quên 2 nơi kia.
+function spawnArenaWave(n, scale, flagKey, r){
+  for (let i = 0; i < n; i++){
+    const type = TOWER_MOB_POOL[Math.floor(Math.random()*TOWER_MOB_POOL.length)];
+    const m = spawnMob(type, { x: player.x, y: player.y, r: r || 260, count: n }, null);
+    m.zone = null; m[flagKey] = true;
+    m.def = { ...m.def, hp: Math.round(m.def.hp*scale), atk: Math.round(m.def.atk*scale) };
+    m.hp = m.def.hp; m.maxHp = m.def.hp;
+  }
+}
+// Cùng lý do: 4 chế độ (Tower/Devil/Blood/Dungeon) vẽ HUD y hệt nhau — nhãn ở giữa trên cùng, đồng
+// hồ đếm ngược tuỳ chọn ngay dưới, thanh máu boss tuỳ chọn dưới nữa. Chỉ label/màu/boss khác nhau.
+function drawArenaHUD({ label, labelColor, timeLeft, activeBoss, barColor }){
+  const x = W/2, y = 26;
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
+  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3; ctx.fillStyle = labelColor;
+  ctx.strokeText(label, x, y); ctx.fillText(label, x, y);
+  if (timeLeft != null){
+    const tl = Math.max(0, timeLeft), mm = Math.floor(tl/60), ss = Math.floor(tl%60);
+    const urgent = tl < 60;
+    ctx.font = 'bold 15px "Be Vietnam Pro", sans-serif';
+    ctx.fillStyle = urgent ? (Math.floor(tl*2)%2===0 ? '#ff3a3a' : '#ffb0a0') : '#ffd76a';
+    const tstr = '⏱ ' + mm + ':' + String(ss).padStart(2,'0');
+    ctx.strokeText(tstr, x, y+20); ctx.fillText(tstr, x, y+20);
+  }
+  if (activeBoss){
+    const b = activeBoss, pct = Math.max(0, b.hp / b.maxHp);
+    const bw = 340, bx = x - bw/2, by = y + 28;
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(bx-2, by-2, bw+4, 14);
+    ctx.fillStyle = '#3a1020'; ctx.fillRect(bx, by, bw, 10);
+    ctx.fillStyle = barColor; ctx.fillRect(bx, by, bw*pct, 10);
+    ctx.strokeStyle = 'rgba(126,203,255,.8)'; ctx.lineWidth = 1; ctx.strokeRect(bx+.5, by+.5, bw-1, 9);
+  }
+}
 
 // ---- Quỷ Cốc: 6 đợt quái dồn dập, đợt 7 là Quỷ Vương — hạ hết trong 10 phút để mở Rương ----
 let DEVIL = null; // { wave, timeLeft, pick, bossRef, cleared, failed, _endT }
@@ -10316,14 +10342,7 @@ function devilNextWave(){
     return;
   }
   const n = Math.min(4 + DEVIL.wave, 10);
-  const scale = 1 + DEVIL.wave*0.1;
-  for (let i = 0; i < n; i++){
-    const type = TOWER_MOB_POOL[Math.floor(Math.random()*TOWER_MOB_POOL.length)];
-    const m = spawnMob(type, { x: player.x, y: player.y, r: 260, count: n }, null);
-    m.zone = null; m.devilMob = true;
-    m.def = { ...m.def, hp: Math.round(m.def.hp*scale), atk: Math.round(m.def.atk*scale) };
-    m.hp = m.def.hp; m.maxHp = m.def.hp;
-  }
+  spawnArenaWave(n, 1 + DEVIL.wave*0.1, 'devilMob');
   addFloat(player.x, player.y-60, `Đợt ${DEVIL.wave}/${DEVIL_WAVES} — ${n} địch!`, '#ff8a5a', 15);
 }
 function updateDevil(dt){
@@ -10366,32 +10385,16 @@ function grantDevilReward(){
 }
 function drawDevilHUD(){
   if (!DEVIL || !player) return;
-  const x = W/2, y = 26;
-  ctx.textAlign = 'center';
-  ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
-  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
-  ctx.fillStyle = DEVIL.failed ? '#ff6a5a' : '#ff9a5a';
   const label = DEVIL.failed ? '⏱ HẾT GIỜ — QUỶ CỐC THẤT BẠI'
     : DEVIL.cleared ? '👹 Quỷ Cốc đã thông quan!'
     : DEVIL.wave > DEVIL_WAVES ? '👹 QUỶ VƯƠNG: ' + MOBS[DEVIL.pick.id].name
     : `👹 Đợt ${DEVIL.wave}/${DEVIL_WAVES} — dọn sạch quái!`;
-  ctx.strokeText(label, x, y); ctx.fillText(label, x, y);
-  if (!DEVIL.cleared && !DEVIL.failed){
-    const tl = Math.max(0, DEVIL.timeLeft), mm = Math.floor(tl/60), ss = Math.floor(tl%60);
-    const urgent = tl < 60;
-    ctx.font = 'bold 15px "Be Vietnam Pro", sans-serif';
-    ctx.fillStyle = urgent ? (Math.floor(tl*2)%2===0 ? '#ff3a3a' : '#ffb0a0') : '#ffd76a';
-    const tstr = '⏱ ' + mm + ':' + String(ss).padStart(2,'0');
-    ctx.strokeText(tstr, x, y+20); ctx.fillText(tstr, x, y+20);
-  }
-  if (DEVIL.bossRef && !DEVIL.bossRef.dead){
-    const b = DEVIL.bossRef, pct = Math.max(0, b.hp / b.maxHp);
-    const bw = 340, bx = x - bw/2, by = y + 28;
-    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(bx-2, by-2, bw+4, 14);
-    ctx.fillStyle = '#3a1020'; ctx.fillRect(bx, by, bw, 10);
-    ctx.fillStyle = '#ff5a3a'; ctx.fillRect(bx, by, bw*pct, 10);
-    ctx.strokeStyle = 'rgba(126,203,255,.8)'; ctx.lineWidth = 1; ctx.strokeRect(bx+.5, by+.5, bw-1, 9);
-  }
+  drawArenaHUD({
+    label, labelColor: DEVIL.failed ? '#ff6a5a' : '#ff9a5a',
+    timeLeft: (!DEVIL.cleared && !DEVIL.failed) ? DEVIL.timeLeft : null,
+    activeBoss: (DEVIL.bossRef && !DEVIL.bossRef.dead) ? DEVIL.bossRef : null,
+    barColor: '#ff5a3a',
+  });
 }
 
 // ---- Huyết Thành: 3 đợt lính gác → Pho Tượng Bảo Vệ trong 7 phút; còn giờ thì đấu thêm
@@ -10430,14 +10433,7 @@ function bloodNextWave(){
     return;
   }
   const n = 4 + BLOOD.wave;
-  const scale = 1 + BLOOD.wave*0.08;
-  for (let i = 0; i < n; i++){
-    const type = TOWER_MOB_POOL[Math.floor(Math.random()*TOWER_MOB_POOL.length)];
-    const m = spawnMob(type, { x: player.x, y: player.y, r: 260, count: n }, null);
-    m.zone = null; m.bloodMob = true;
-    m.def = { ...m.def, hp: Math.round(m.def.hp*scale), atk: Math.round(m.def.atk*scale) };
-    m.hp = m.def.hp; m.maxHp = m.def.hp;
-  }
+  spawnArenaWave(n, 1 + BLOOD.wave*0.08, 'bloodMob');
   addFloat(player.x, player.y-60, `Lính gác ${BLOOD.wave}/${BLOOD_GUARD_WAVES} — ${n} địch!`, '#e88a8a', 15);
 }
 function updateBlood(dt){
@@ -10507,35 +10503,19 @@ function grantBloodReward(bonus){
 }
 function drawBloodHUD(){
   if (!BLOOD || !player) return;
-  const x = W/2, y = 26;
-  ctx.textAlign = 'center';
-  ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
-  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
-  ctx.fillStyle = BLOOD.failed ? '#ff6a5a' : '#e86a7a';
   const label = BLOOD.failed ? '⏱ HẾT GIỜ — HUYẾT THÀNH THẤT BẠI'
     : BLOOD.cleared ? (BLOOD.bonusCleared ? '🩸 Huyết Thành — Thông Quan Hoàn Hảo!' : '🩸 Huyết Thành đã thông quan!')
     : BLOOD.phase === 'archangel' ? '👼 THIÊN SỨ: ' + MOBS[BLOOD.pick.id].name
     : BLOOD.phase === 'statue' ? '🗿 PHO TƯỢNG BẢO VỆ'
     : `🩸 Lính gác ${BLOOD.wave}/${BLOOD_GUARD_WAVES} — dọn sạch!`;
-  ctx.strokeText(label, x, y); ctx.fillText(label, x, y);
-  if (!BLOOD.cleared && !BLOOD.failed){
-    const tl = Math.max(0, BLOOD.timeLeft), mm = Math.floor(tl/60), ss = Math.floor(tl%60);
-    const urgent = tl < 60;
-    ctx.font = 'bold 15px "Be Vietnam Pro", sans-serif';
-    ctx.fillStyle = urgent ? (Math.floor(tl*2)%2===0 ? '#ff3a3a' : '#ffb0a0') : '#ffd76a';
-    const tstr = '⏱ ' + mm + ':' + String(ss).padStart(2,'0');
-    ctx.strokeText(tstr, x, y+20); ctx.fillText(tstr, x, y+20);
-  }
   const activeBoss = (BLOOD.phase==='statue' && BLOOD.statueRef && !BLOOD.statueRef.dead) ? BLOOD.statueRef
     : (BLOOD.phase==='archangel' && BLOOD.angelRef && !BLOOD.angelRef.dead) ? BLOOD.angelRef : null;
-  if (activeBoss){
-    const b = activeBoss, pct = Math.max(0, b.hp / b.maxHp);
-    const bw = 340, bx = x - bw/2, by = y + 28;
-    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(bx-2, by-2, bw+4, 14);
-    ctx.fillStyle = '#3a1020'; ctx.fillRect(bx, by, bw, 10);
-    ctx.fillStyle = b===BLOOD.statueRef ? '#c8a868' : '#ffe9a8'; ctx.fillRect(bx, by, bw*pct, 10);
-    ctx.strokeStyle = 'rgba(126,203,255,.8)'; ctx.lineWidth = 1; ctx.strokeRect(bx+.5, by+.5, bw-1, 9);
-  }
+  drawArenaHUD({
+    label, labelColor: BLOOD.failed ? '#ff6a5a' : '#e86a7a',
+    timeLeft: (!BLOOD.cleared && !BLOOD.failed) ? BLOOD.timeLeft : null,
+    activeBoss,
+    barColor: activeBoss === BLOOD.statueRef ? '#c8a868' : '#ffe9a8',
+  });
 }
 function renderArenaTab(){
   const c = el('char-content'); if (!c) return;
@@ -10702,36 +10682,20 @@ function grantHuntBox(){
 }
 function drawDungeonHUD(){
   if (!DGN || !player) return;
-  const x = W/2, y = 26;
-  ctx.textAlign = 'center';
-  ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
-  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3; ctx.fillStyle = DGN.failed ? '#ff6a5a' : '#d8baff';
   const label = DGN.failed ? '⏱ HẾT GIỜ — PHÓ BẢN THẤT BẠI (qua cổng Xuất Môn để thử lại)'
     : DGN.huntCleared ? 'Phó bản đã thông quan — qua cổng dịch chuyển để rời đi'
     : DGN.huntSpawned ? '⚔ BOSS SĂN: ' + MOBS[DGN.def.huntBoss].name
     : DGN.cleared ? (DGN.def.huntBoss ? 'Trấn Ải đã hạ — Boss Săn sắp xuất hiện…' : 'Phó bản đã thông quan — qua cổng dịch chuyển để rời đi')
     : DGN.bossRef ? 'BOSS: ' + DGN.def.bossName
     : 'Đợt ' + DGN.wave + '/' + DGN.def.waves.length + ' — dọn sạch quái!';
-  ctx.strokeText(label, x, y); ctx.fillText(label, x, y);
-  // Đồng hồ đếm ngược (Devil Square/Blood Castle, MU Online) — đỏ + nhấp nháy khi dưới 60s
-  if (DGN.def.timeLimit != null && !DGN.huntCleared && !DGN.failed){
-    const tl = Math.max(0, DGN.timeLeft), mm = Math.floor(tl/60), ss = Math.floor(tl%60);
-    const urgent = tl < 60;
-    ctx.font = 'bold 15px "Be Vietnam Pro", sans-serif';
-    ctx.fillStyle = urgent ? (Math.floor(tl*2)%2===0 ? '#ff3a3a' : '#ffb0a0') : '#ffd76a';
-    const tstr = '⏱ ' + mm + ':' + String(ss).padStart(2,'0');
-    ctx.strokeText(tstr, x, y + 20); ctx.fillText(tstr, x, y + 20);
-  }
   const activeBoss = (DGN.huntSpawned && DGN.huntRef && !DGN.huntRef.dead) ? DGN.huntRef
     : (DGN.bossRef && !DGN.bossRef.dead) ? DGN.bossRef : null;
-  if (activeBoss){
-    const b = activeBoss, pct = Math.max(0, b.hp / b.maxHp);
-    const bw = 340, bx = x - bw/2, by = y + 28;
-    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(bx-2, by-2, bw+4, 14);
-    ctx.fillStyle = '#3a1020'; ctx.fillRect(bx, by, bw, 10);
-    ctx.fillStyle = b === DGN.huntRef ? '#ffd76a' : '#e84a5a'; ctx.fillRect(bx, by, bw*pct, 10);
-    ctx.strokeStyle = 'rgba(126,203,255,.8)'; ctx.lineWidth = 1; ctx.strokeRect(bx+.5, by+.5, bw-1, 9);
-  }
+  drawArenaHUD({
+    label, labelColor: DGN.failed ? '#ff6a5a' : '#d8baff',
+    timeLeft: (DGN.def.timeLimit != null && !DGN.huntCleared && !DGN.failed) ? DGN.timeLeft : null,
+    activeBoss,
+    barColor: activeBoss === DGN.huntRef ? '#ffd76a' : '#e84a5a',
+  });
 }
 
 // Cổng dịch chuyển: map cha → phó bản (và cổng thoát ngược lại)
