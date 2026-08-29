@@ -358,7 +358,7 @@ const MAPS = {
     desc:'The central hub — Auction Bazaar, the Forge, the Apothecary, the Teahouse. Fully safe: no Chimeras spawn inside the walls. Head out the South Gate to hunt in the Outskirts.',
     packs: [], duhiep: null },
   ngoai: { name:'Petalshade Outskirts', min:10, range:'10 - 20', type:'safe', ground:'#ddd2ae', patch:'#7a7048',
-    spawn:{ x:1300, y:330 }, spawnFrom:{ pb_ngoai:{ x:2000, y:1040 } }, reqMain:10, trees:56, rocks:22,
+    spawn:{ x:1300, y:330 }, spawnFrom:{ pb_ngoai:{ x:2000, y:1040 } }, reqMain:10, trees:56, rocks:22, herbs:true,
     desc:'Just past the city gates — bandit camps block the road, wolf packs prowl the treeline. No PK here, safe ground to train.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
@@ -1851,7 +1851,7 @@ const QUESTS = [
   { id:2, lv:2, name:'Thử Tài Tân Thủ', desc:'Trưởng Lão Rell muốn thử bản lĩnh ngươi — về Petalshade Isle (bản đồ M → Dịch Chuyển) diệt 5 Dã Trư đang quấy phá làng, rồi báo lại cho Trưởng Làng.',
     type:'kill', mob:'boar', need:5, rew:{xp:190, silver:60} },
   { id:3, lv:3, name:'Thảo Dược Cứu Người', desc:'Trưởng Làng cần 4 Thảo Dược trong rừng phía đông đảo để chữa bệnh cho dân làng.',
-    type:'collect', need:4, rew:{xp:360, silver:90} },
+    type:'collect', herbMap:'daohoa', need:4, rew:{xp:360, silver:90} },
   { id:4, lv:4, name:'Sói Dữ Quấy Phá', desc:'Bầy Tàn Lang trong rừng ngày càng hung hãn. Diệt 6 con để bảo vệ người đi rừng.',
     type:'kill', mob:'wolf', need:6, rew:{xp:470, silver:110, mat:3, item:'vukhi'} },
   { id:5, lv:5, name:'Rèn Luyện Sơ Nhập', desc:'Mang trang bị đến lò rèn (phím F) và Tăng Cường một món bất kỳ lên +3.',
@@ -1904,10 +1904,20 @@ const BOSS_ARENA = { x: 2300, y: 500 };
 
 // QA bot playtest: NV3 (cấp 3) bắt nhặt thảo dược giữa bầy Tàn Lang (cấp 3) & Trận Nhân (cấp 9)
 // khiến tân thủ chết liên tục — dời bụi thuốc về rừng phía đông GẦN làng, ngoài tầm aggro của cụm quái mạnh
-const HERB_SPOTS = [
-  { x:620, y:560 }, { x:760, y:700 }, { x:950, y:640 }, { x:1080, y:820 },
-  { x:900, y:1180 }, { x:1200, y:900 }, { x:1350, y:1050 }, { x:1550, y:950 },
-];
+// QA: trước đây chỉ có đúng 1 mảng dùng chung cho mọi map — mọi nhiệm vụ hái Thảo Dược (kể cả NV
+// chính #12, ngay sau khi vừa đặt chân tới Lunaris City lần đầu) đều bị dẫn ngược về đảo khởi đầu
+// Petalshade Isle dù người chơi đã đi xa. Đổi thành theo-từng-map (giống HORSE_ZONES bên dưới) —
+// thêm bãi Thảo Dược ở Petalshade Outskirts (ngoai), ngay ngoài cổng thành, tránh xa các bãi quái.
+const HERB_SPOTS = {
+  daohoa: [
+    { x:620, y:560 }, { x:760, y:700 }, { x:950, y:640 }, { x:1080, y:820 },
+    { x:900, y:1180 }, { x:1200, y:900 }, { x:1350, y:1050 }, { x:1550, y:950 },
+  ],
+  ngoai: [
+    { x:1280, y:380 }, { x:1420, y:400 }, { x:1000, y:420 }, { x:1650, y:460 },
+    { x:450, y:700 }, { x:550, y:950 }, { x:1300, y:1650 }, { x:2300, y:1000 },
+  ],
+};
 
 // ---------- Item generation ----------
 let itemSeq = 1;
@@ -2660,7 +2670,7 @@ function buildWorld(){
     }
   }
   if (md.boss && questIdx >= 9 && questState !== 'all' && !victory) spawnBoss();
-  if (md.herbs) for (const s of HERB_SPOTS) pickups.push({ type:'herb', x:s.x, y:s.y, respawn:0 });
+  if (md.herbs) for (const s of (HERB_SPOTS[curMap] || [])) pickups.push({ type:'herb', x:s.x, y:s.y, respawn:0 });
   // decor: ink trees, rocks theo địa hình map
   for (let i = 0; i < (md.trees ?? 70); i++)
     decor.push({ type:'tree', x:rnd(60,MAP.w-60), y:rnd(60,MAP.h-60), s:rnd(0.7,1.5) });
@@ -3695,7 +3705,13 @@ function questTarget(q){
   }
   if (q.type === 'meditate' && typeof SPRING !== 'undefined') return { map:'daohoa', x:SPRING.x, y:SPRING.y, label:'Tịnh Tâm Tuyền' };
   if (q.type === 'enhance'){ const n = NPCS.find(x => x.talk === 'forge'); if (n) return { map:n.map, x:n.x, y:n.y, label:'Lò Rèn Hoàng Gia', npcId:n.id }; }
-  if (q.type === 'collect' && typeof HERB_SPOTS !== 'undefined') return { map:'daohoa', x:HERB_SPOTS[0].x, y:HERB_SPOTS[0].y, label:'Bãi Thảo Dược' };
+  if (q.type === 'collect' && typeof HERB_SPOTS !== 'undefined'){
+    // herbMap riêng, không dùng q.map — q.map trên vài NV chính (VD #12) là nơi trả NV (NPC ở
+    // Lunaris City), khác với nơi thật sự hái Thảo Dược.
+    const hm = q.herbMap || 'daohoa';
+    const hs = HERB_SPOTS[hm];
+    if (hs) return { map:hm, x:hs[0].x, y:hs[0].y, label:'Bãi Thảo Dược' };
+  }
   if (q.type === 'boss' && typeof BOSS_ARENA !== 'undefined') return { map:'daohoa', x:BOSS_ARENA.x, y:BOSS_ARENA.y, label:'Đài Bình Cảnh' };
   if (q.mob){
     let best = null;
@@ -3729,7 +3745,10 @@ function sideQuestTarget(sq){
     const hz = (typeof HORSE_ZONES !== 'undefined') && HORSE_ZONES[sq.map];
     if (hz) return { map:sq.map, x:hz[0].x, y:hz[0].y, label:'Đồng Tuấn Mã' };
   }
-  if (sq.type === 'collect' && typeof HERB_SPOTS !== 'undefined') return { map:sq.map, x:HERB_SPOTS[0].x, y:HERB_SPOTS[0].y, label:'Bãi Thảo Dược' };
+  if (sq.type === 'collect' && typeof HERB_SPOTS !== 'undefined'){
+    const hs = HERB_SPOTS[sq.map];
+    if (hs) return { map:sq.map, x:hs[0].x, y:hs[0].y, label:'Bãi Thảo Dược' };
+  }
   if (sq.mob){
     const md = MAPS[sq.map];
     const pk = md && md.packs ? md.packs.find(p => p.mob === sq.mob) : null;
@@ -8481,7 +8500,7 @@ function drawMinimapStatic(mw, mh, sx, sy, md){
   // điểm thảo dược — hiện mặc định trên mọi map có thuốc (không cần Quẻ Thiên Nhãn)
   if (md.herbs){
     sc.fillStyle = '#6ae88a';
-    for (const h of HERB_SPOTS){ sc.beginPath(); sc.arc(h.x*sx, h.y*sy, 1.8, 0, 7); sc.fill(); }
+    for (const h of (HERB_SPOTS[curMap] || [])){ sc.beginPath(); sc.arc(h.x*sx, h.y*sy, 1.8, 0, 7); sc.fill(); }
   }
   // Tường thành + cổng thành
   if (curMap === CITY_WALL.map){
@@ -8719,8 +8738,8 @@ QUESTS.push(
     desc:'Vỏ kén đã phá, danh tiếng vọng đến Lunaris City. Đến thành gặp Trưởng Lão Rell.',
     type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:2000, silver:300} },
   { id:12, lv:11, name:'Vật Tư Thiếu Hụt', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
-    desc:'Vật tư trong thành cạn kiệt. Quay về Petalshade Isle hái 6 Thảo Dược đem về đây.',
-    type:'collect', need:6, rew:{xp:2600, silver:350, mat:2} },
+    desc:'Vật tư trong thành cạn kiệt. Ra Outskirts ngay ngoài cổng thành hái 6 Thảo Dược đem về đây.',
+    type:'collect', herbMap:'ngoai', need:6, rew:{xp:2600, silver:350, mat:2} },
   { id:13, lv:12, name:'Cướp Bóc Ngoại Ô', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
     desc:'Sơn tặc ở Outskirts chặn đường tiếp tế. Diệt 8 tên để dọn đường.',
     type:'kill', mob:'bandit', need:8, rew:{xp:3200, silver:420} },
@@ -8843,7 +8862,7 @@ SIDE_QUESTS.push(
   { id:'s_jy11', npc:'monkhach',   map:'ngoai',  reqLv:13, reqMain:10, name:'Truy Nã Hắc Phong',          desc:'Trưởng Lão Rell treo thưởng 2 tên Hắc Phong Sát tinh nhuệ ngoài thành.', type:'kill', mob:'assassin', need:2, rew:{xp:1100, silver:200, mat:2} },
   { id:'s_jy12', npc:'quachtinh',  map:'tuongduong', reqLv:14, reqMain:11, name:'Điểm Danh Nghĩa Sĩ',     desc:'Đến gặp Trinh Sát Wren ghi danh người thủ thành — Trưởng Lão Rell cần biết ai còn ai mất.', type:'talk', targetNpc:'monkhach', need:1, rew:{xp:1200, silver:220} },
   { id:'s_jy13', npc:'monkhach',   map:'ngoai',  reqLv:15, reqMain:12, name:'Chimera Trôi Dạt',           desc:'Chimera Trấn Đảo trôi dạt ra Outskirts hóa cuồng. Phá 8 tượng thu hồi trận cơ.', type:'kill', mob:'trannhan', need:8, rew:{xp:1800, silver:240, mat:2} },
-  { id:'s_jy14', npc:'quachtinh',  map:'daohoa', reqLv:16, reqMain:13, name:'Vật Tư Dược Liệu',           desc:'Thương binh đầy doanh trại. Về Petalshade Isle hái 10 Thảo Dược gấp.', type:'collect', need:10, rew:{xp:1600, silver:260, mat:2} },
+  { id:'s_jy14', npc:'quachtinh',  map:'ngoai', reqLv:16, reqMain:13, name:'Vật Tư Dược Liệu',           desc:'Thương binh đầy doanh trại. Ra Outskirts hái 10 Thảo Dược gấp.', type:'collect', need:10, rew:{xp:1600, silver:260, mat:2} },
   { id:'s_jy15', npc:'monkhach',   map:'chungnam', reqLv:17, reqMain:14, name:'Kẻ Quấy Nhiễu Thornwood',  desc:'Ba Axie Lang Thang biến chất lẫn trên Thornwood Reach bức hiếp lữ khách. Trừng trị 3 tên.', type:'kill', mob:'duhiep1', need:3, rew:{xp:4000, silver:400} },
   { id:'s_jy16', npc:'quachtinh',  map:'chungnam', reqLv:18, reqMain:15, name:'Lễ Vật Rừng Gai',          desc:'Đem lễ vật của Trưởng Lão Rell lên Thornwood Reach giao cho Corran — đáp lễ nghĩa cử năm xưa.', type:'talk', targetNpc:'daosi', need:1, rew:{xp:1800, silver:260} },
   // ── Thornwood Reach (Corran) ──
@@ -8883,7 +8902,7 @@ SIDE_QUESTS.push(
   { id:'s_jy46', npc:'laotuong',   map:'tuongduong', reqLv:115, reqMain:33, name:'Báo Tin Thắng Trận',    desc:'Về Lunaris City báo cho Trưởng Lão Rell tin cửa ải đã giữ vững.', type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:55000, silver:3500} },
   // ── Bổ sung (đan xen các vùng) ──
   { id:'s_jy47', npc:'duocsu',     map:'daohoa',  reqLv:10, reqMain:0,  name:'Lông Cáo Nhuộm Dược',       desc:'Dược Sư cần lông Cáo Đỏ nhuộm dược tán. Săn 12 con.', type:'kill', mob:'caodo', need:12, rew:{xp:1350, silver:200, mat:2} },
-  { id:'s_jy48', npc:'quachtinh',  map:'daohoa',  reqLv:17, reqMain:12, name:'Thuốc Cho Thương Binh',     desc:'Hái 12 Thảo Dược về Lunaris City cứu thương binh nặng.', type:'collect', need:12, rew:{xp:2000, silver:300, mat:2} },
+  { id:'s_jy48', npc:'quachtinh',  map:'ngoai',  reqLv:17, reqMain:12, name:'Thuốc Cho Thương Binh',     desc:'Ra Outskirts hái 12 Thảo Dược đem về Lunaris City cứu thương binh nặng.', type:'collect', need:12, rew:{xp:2000, silver:300, mat:2} },
   { id:'s_jy49', npc:'monkhach',   map:'ngoai',   reqLv:14, reqMain:10, name:'Tuấn Mã Cho Tân Binh',      desc:'Bắt 3 Tuấn Mã Hoang ngoại ô trang bị cho tân binh thủ thành (rượt kiệt sức rồi bấm E).', type:'catch', need:3, rew:{xp:1800, silver:350, thau:1} },
   { id:'s_jy50', npc:'noiung',     map:'mongco',  reqLv:95, reqMain:30, name:'Nghiệt Kỵ',                 desc:'Kỵ Binh Tro Tàn tàn dư còn rảo quanh doanh trại cũ. Diệt 12 kỵ quét sạch.', type:'kill', mob:'kybinh', need:12, rew:{xp:171000, silver:8200, mat:5} },
 );
