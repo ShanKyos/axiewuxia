@@ -2443,6 +2443,7 @@ function newPlayer(sectKey){
     loidonT: 0,                              // Lôi Độn Phù — giảm 40% ST thiên lôi có thời hạn
     channelPick: null, channelId: null, channelT: 0, channelCd: 0, // Hóa Thân Trấn Ải — capture/channel boss form (P)
     towerBest: 0,                            // Vạn Kiếm Tu La Trận — đợt cao nhất từng trụ được (kỷ lục cá nhân)
+    devilClears: 0, bloodClears: 0, bloodBonusClears: 0, // Quỷ Cốc / Huyết Thành — số lần thông quan
     herbCount: 0,                            // Luyện Đan — Thảo Dược tích trữ (hái ngoài đồng)
     alchDay: '', alchCount: 0,               // Luyện Đan — giới hạn 2 đan vĩnh viễn/ngày (giống Nội Đan)
     pillDmgT: 0, pillDmgPct: 0,               // Bạo Lực Đan — buff sát thương tạm thời
@@ -2569,6 +2570,9 @@ function loadGame(){
     if (player.channelT == null) player.channelT = 0;
     if (player.channelCd == null) player.channelCd = 0;
     if (player.towerBest == null) player.towerBest = 0;
+    if (player.devilClears == null) player.devilClears = 0;
+    if (player.bloodClears == null) player.bloodClears = 0;
+    if (player.bloodBonusClears == null) player.bloodBonusClears = 0;
     if (player.herbCount == null) player.herbCount = 0;
     if (player.alchDay == null) player.alchDay = '';
     if (player.alchCount == null) player.alchCount = 0;
@@ -4308,6 +4312,8 @@ function update(dt){
   updateKyngo(dt); // A2: Kỳ ngộ trên đường
   if (DGN) updateDungeon(dt); // Phó bản: đợt quái → boss → thưởng
   if (TOWER) updateTower(); // Vạn Kiếm Tu La Trận: đợt quái vô tận → chọn thẻ
+  if (DEVIL) updateDevil(dt); // Quỷ Cốc: 6 đợt + Quỷ Vương, có đồng hồ đếm ngược
+  if (BLOOD) updateBlood(dt); // Huyết Thành: lính gác → Pho Tượng Bảo Vệ → Thiên Sứ (thưởng thêm)
   updatePet(dt); // Linh Thú đồng hành
   updateMount(dt); // Thú Chiến đồng hành
   updateHorses(dt); // GDD Đợt 2 B5
@@ -5158,6 +5164,8 @@ function render(){
   drawBeaconArrow(); // GDD Đợt 2 B2: mũi tên chỉ hướng khi mục tiêu ngoài màn hình
   if (DGN) drawDungeonHUD(); // HUD phó bản: đợt quái + thanh máu boss
   if (TOWER) drawTowerHUD(); // HUD Vạn Kiếm Tu La Trận: đợt hiện tại
+  if (DEVIL) drawDevilHUD(); // HUD Quỷ Cốc: đợt + đồng hồ + máu Quỷ Vương
+  if (BLOOD) drawBloodHUD(); // HUD Huyết Thành: pha hiện tại + đồng hồ + máu boss
 
   // ☬ Cốt truyện: trời tối dần khi các Trấn Ải vỡ
   const _nTa = Object.keys(player.storyFlags || {}).filter(k => k.startsWith('ta_')).length;
@@ -7112,6 +7120,7 @@ const CHAR_TABS = [
   { id:'pet',      name:'🐾 Linh Thú', lv:15 },
   { id:'channel',  name:'☬ Hóa Thân', lv:14 },
   { id:'tower',    name:'🌀 Tu La Trận', lv:20 },
+  { id:'arena',    name:'👹 Chiến Trường', lv:20 },
   { id:'alchemy',  name:'🧪 Luyện Đan', lv:8 },
 ];
 function renderCharPanel(){
@@ -7133,6 +7142,7 @@ function renderCharPanel(){
   else if (tab==='pet') renderPet();
   else if (tab==='channel') renderChannelForm();
   else if (tab==='tower') renderTowerTab();
+  else if (tab==='arena') renderArenaTab();
   else if (tab==='alchemy') renderAlchemyTab();
   else renderForge();
 }
@@ -9027,6 +9037,10 @@ window.travelTo = function(mapId, from){
     AudioSys.sfx('hurt', 0.4);
     return;
   }
+  // Rời map giữa lượt Quỷ Cốc/Huyết Thành: quái sẽ bị buildWorld() xoá sạch ngay sau đây nhưng
+  // 2 biến trạng thái vẫn còn tham chiếu tới boss cũ nếu không dọn — coi như bỏ cuộc, mất vé.
+  if (DEVIL && !DEVIL.cleared && !DEVIL.failed){ DEVIL.failed = true; DEVIL._endT = 0; addFloat(player.x, player.y-40, 'Rời khỏi Quỷ Cốc — Thiệp Mời đã mất.', '#ff8a5a', 13); }
+  if (BLOOD && !BLOOD.cleared && !BLOOD.failed){ BLOOD.failed = true; BLOOD._endT = 0; addFloat(player.x, player.y-40, 'Rời khỏi Huyết Thành — Thiệp Mời đã mất.', '#ff8a5a', 13); }
   curMap = mapId;
   closePanels();
   tutAdvance('map'); // hướng dẫn tân thủ: dịch chuyển lần đầu
@@ -10217,6 +10231,7 @@ window.startTowerRun = function(){
   if (!player || dead) return;
   if (TOWER){ addFloat(player.x, player.y-40, 'Đang trong Tu La Trận rồi!', '#8a8a8a', 12); return; }
   if (DGN){ addFloat(player.x, player.y-40, 'Không thể mở Tu La Trận trong phó bản!', '#8a8a8a', 12); return; }
+  if (DEVIL || BLOOD){ addFloat(player.x, player.y-40, 'Đang trong một trận đấu khác rồi!', '#8a8a8a', 12); return; }
   if (curMap === 'tuongduong'){ addFloat(player.x, player.y-40, 'Hãy ra khỏi Lunaris City trước — nơi này cấm giao chiến!', '#8a8a8a', 12); return; }
   TOWER = { wave: 0, buffs: { dmg:0, cd:0, hp:0, qi:0, crit:0, leech:0 }, drafting:false, options:[] };
   calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
@@ -10314,6 +10329,329 @@ function drawTowerHUD(){
   ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3; ctx.fillStyle = '#c07fe0';
   const label = TOWER.drafting ? 'Chọn tiến hóa để tiếp tục…' : `🌀 Đợt ${TOWER.wave} — còn ${mobs.filter(m=>m.towerMob && !m.dead).length} địch`;
   ctx.strokeText(label, x, y); ctx.fillText(label, x, y);
+}
+
+// ═══════════ QUỶ CỐC (Devil Square) & HUYẾT THÀNH (Blood Castle) — 2 đấu trường MU Online-lite:
+// quái dồn ngay tại chỗ (không cần map riêng, giống Tu La Trận), có đồng hồ đếm ngược, vé vào tốn
+// bạc và mất luôn nếu thất bại. Boss cuối tái dùng hệ Boss Săn (moveset AoE báo trước) theo cấp
+// người chơi thay vì cấp phó bản cố định, để farm được ở bất kỳ giai đoạn nào của game. ═══════════
+const ARENA_BOSS_TIERS = [ // dùng lại 7 Boss Săn đã cân bằng theo cấp, chọn con phù hợp cấp hiện tại
+  { id:'boss_cotma1',    boxTier:1 }, { id:'boss_cotma2',    boxTier:1 },
+  { id:'boss_hacnu1',    boxTier:2 }, { id:'boss_hacnu2',    boxTier:2 },
+  { id:'boss_hoangkim1', boxTier:3 }, { id:'boss_hoangkim2', boxTier:4 },
+  { id:'boss_amthan',    boxTier:5 },
+];
+function pickArenaBoss(lv){
+  let pick = ARENA_BOSS_TIERS[0];
+  for (const t of ARENA_BOSS_TIERS){ if (lv >= MOBS[t.id].lv) pick = t; }
+  return pick;
+}
+function spawnArenaBoss(bossId, x, y){
+  const b = spawnMob(bossId, { x, y, r:40, count:1 }, null);
+  b.zone = null;
+  // Não moveset Boss Săn (telegraph AoE, tự né bằng J) cần các field này — spawnMob() không tự khởi
+  // tạo, chỉ spawnZoneBoss()/spawnHuntBoss() mới làm; thiếu sẽ NaN, chiêu không bao giờ tung ra được.
+  b.moveT = 4; b.moveIdx = 0; b.tele = null; b.punishT = 0; b.introduced = false;
+  return b;
+}
+function rollArenaBox(tier, bossLv){
+  const srcK = 'box' + tier;
+  const nItems = Math.min(3, tier);
+  const gained = [];
+  for (let i = 0; i < nItems; i++){
+    const it = genItem(bossLv, 0, srcK);
+    if (player.autoSell && it.rarity <= 0){
+      const v = 20 + it.rarity*30 + (it.tier||1)*15;
+      player.silver += v; gained.push(`${it.name}(bán +${v}◈)`);
+    } else if (player.inv.length < 30){
+      player.inv.push(it); gained.push(it.name);
+      if (it.rarity >= 2) addEffect({ type:'spark', x:player.x, y:player.y-12, r:32 + it.rarity*8, color:RARITIES[it.rarity].color });
+      tryAutoEquip(it);
+    } else gained.push(`${it.name}(túi đầy, mất)`);
+  }
+  return gained;
+}
+
+// ---- Quỷ Cốc: 6 đợt quái dồn dập, đợt 7 là Quỷ Vương — hạ hết trong 10 phút để mở Rương ----
+let DEVIL = null; // { wave, timeLeft, pick, bossRef, cleared, failed, _endT }
+const DEVIL_TIME = 600;
+const DEVIL_WAVES = 6;
+window.startDevilSquare = function(){
+  if (!player || dead) return;
+  if (TOWER || DGN || DEVIL || BLOOD){ addFloat(player.x, player.y-40, 'Đang trong một trận đấu khác rồi!', '#8a8a8a', 12); return; }
+  if (curMap === 'tuongduong'){ addFloat(player.x, player.y-40, 'Hãy ra khỏi Lunaris City trước — nơi này cấm giao chiến!', '#8a8a8a', 12); return; }
+  const cost = 200 + player.level*12;
+  if (player.silver < cost){ addFloat(player.x, player.y-40, `Cần ${cost} bạc để mua Thiệp Mời Quỷ Cốc!`, '#8a8a8a', 12); return; }
+  player.silver -= cost;
+  DEVIL = { wave:0, timeLeft: DEVIL_TIME, pick: pickArenaBoss(player.level), bossRef:null, cleared:false, failed:false, _endT:0 };
+  calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
+  closePanels();
+  zoneBanner = { text:'👹 QUỶ CỐC', sub:'6 đợt quái dồn dập, đợt 7 là Quỷ Vương — hạ hết trong 10 phút để mở Rương!', color:'#ff8a5a', t:4 };
+  AudioSys.sfx('quest', 0.8);
+  devilNextWave();
+};
+function devilNextWave(){
+  if (!DEVIL) return;
+  DEVIL.wave++;
+  if (DEVIL.wave > DEVIL_WAVES){
+    const def = MOBS[DEVIL.pick.id];
+    DEVIL.bossRef = spawnArenaBoss(DEVIL.pick.id, player.x, player.y-120);
+    DEVIL.bossRef.devilMob = true; // để quét dọn đúng nếu hết giờ ngay giữa lúc đang đấu Quỷ Vương
+    if (player.auto){ player.auto = false; updateAutoBtn(); addFloat(player.x, player.y-70, 'Quỷ Vương cần tự tay chiến — AUTO đã tắt!', '#ff9a5a', 13); }
+    shakeT = Math.max(shakeT, 0.5); shakeMag = Math.max(shakeMag, 7);
+    addEffect({ type:'ring', x:player.x, y:player.y-120, r:100, color:'#ff5a3a', big:true });
+    addFloat(player.x, player.y-70, '👹 QUỶ VƯƠNG XUẤT HIỆN: ' + def.name + '!', '#ff5a3a', 19);
+    AudioSys.sfx('crit', 0.7);
+    return;
+  }
+  const n = Math.min(4 + DEVIL.wave, 10);
+  const scale = 1 + DEVIL.wave*0.1;
+  for (let i = 0; i < n; i++){
+    const type = TOWER_MOB_POOL[Math.floor(Math.random()*TOWER_MOB_POOL.length)];
+    const m = spawnMob(type, { x: player.x, y: player.y, r: 260, count: n }, null);
+    m.zone = null; m.devilMob = true;
+    m.def = { ...m.def, hp: Math.round(m.def.hp*scale), atk: Math.round(m.def.atk*scale) };
+    m.hp = m.def.hp; m.maxHp = m.def.hp;
+  }
+  addFloat(player.x, player.y-60, `Đợt ${DEVIL.wave}/${DEVIL_WAVES} — ${n} địch!`, '#ff8a5a', 15);
+}
+function updateDevil(dt){
+  if (!DEVIL) return;
+  if (DEVIL.cleared || DEVIL.failed){
+    DEVIL._endT -= dt;
+    if (DEVIL._endT <= 0) DEVIL = null; // dọn HUD sau vài giây, không cần cổng thoát riêng
+    return;
+  }
+  DEVIL.timeLeft -= dt;
+  if (DEVIL.timeLeft <= 0){
+    DEVIL.timeLeft = 0; DEVIL.failed = true; DEVIL._endT = 3;
+    mobs.forEach(m => { if (m.devilMob && !m.dead) m.dead = true; });
+    zoneBanner = { text:'⏱ QUỶ CỐC THẤT BẠI', sub:'Không hạ sạch kịp giờ — Thiệp Mời đã mất, thử lại sau.', color:'#ff5a4a', t:5 };
+    addFloat(player.x, player.y-80, 'Hết giờ! Quỷ Cốc thất bại.', '#ff5a4a', 16);
+    AudioSys.sfx('hurt', 0.7);
+    return;
+  }
+  if (DEVIL.wave <= DEVIL_WAVES){
+    if (mobs.some(m => m.devilMob && !m.dead)) return;
+    devilNextWave();
+    return;
+  }
+  if (DEVIL.bossRef && !DEVIL.bossRef.dead) return;
+  DEVIL.cleared = true; DEVIL._endT = 3;
+  grantDevilReward();
+}
+function grantDevilReward(){
+  const { id, boxTier } = DEVIL.pick;
+  const bossLv = MOBS[id].lv;
+  const gained = rollArenaBox(boxTier, bossLv);
+  const bonusSilver = 300*boxTier, bonusTienDan = boxTier + 1, bonusMat = 8*boxTier;
+  player.silver += bonusSilver; player.tienDan += bonusTienDan; player.mat += bonusMat;
+  player.dantian.tuvi += 200*boxTier;
+  player.devilClears = (player.devilClears || 0) + 1;
+  zoneBanner = { text:'👹 QUỶ CỐC THÔNG QUAN!', sub: gained.join(' · ') + ` · +${bonusSilver} bạc · +${bonusTienDan} Tiến Cấp Đan · +${bonusMat} Huyền Thiết`, color:'#ff8a5a', t:6 };
+  addFloat(player.x, player.y-90, '👹 Quỷ Cốc đã thông quan!', '#ff8a5a', 16);
+  AudioSys.sfx('levelup', 0.9);
+  calcDerived(); saveGame();
+}
+function drawDevilHUD(){
+  if (!DEVIL || !player) return;
+  const x = W/2, y = 26;
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
+  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
+  ctx.fillStyle = DEVIL.failed ? '#ff6a5a' : '#ff9a5a';
+  const label = DEVIL.failed ? '⏱ HẾT GIỜ — QUỶ CỐC THẤT BẠI'
+    : DEVIL.cleared ? '👹 Quỷ Cốc đã thông quan!'
+    : DEVIL.wave > DEVIL_WAVES ? '👹 QUỶ VƯƠNG: ' + MOBS[DEVIL.pick.id].name
+    : `👹 Đợt ${DEVIL.wave}/${DEVIL_WAVES} — dọn sạch quái!`;
+  ctx.strokeText(label, x, y); ctx.fillText(label, x, y);
+  if (!DEVIL.cleared && !DEVIL.failed){
+    const tl = Math.max(0, DEVIL.timeLeft), mm = Math.floor(tl/60), ss = Math.floor(tl%60);
+    const urgent = tl < 60;
+    ctx.font = 'bold 15px "Be Vietnam Pro", sans-serif';
+    ctx.fillStyle = urgent ? (Math.floor(tl*2)%2===0 ? '#ff3a3a' : '#ffb0a0') : '#ffd76a';
+    const tstr = '⏱ ' + mm + ':' + String(ss).padStart(2,'0');
+    ctx.strokeText(tstr, x, y+20); ctx.fillText(tstr, x, y+20);
+  }
+  if (DEVIL.bossRef && !DEVIL.bossRef.dead){
+    const b = DEVIL.bossRef, pct = Math.max(0, b.hp / b.maxHp);
+    const bw = 340, bx = x - bw/2, by = y + 28;
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(bx-2, by-2, bw+4, 14);
+    ctx.fillStyle = '#3a1020'; ctx.fillRect(bx, by, bw, 10);
+    ctx.fillStyle = '#ff5a3a'; ctx.fillRect(bx, by, bw*pct, 10);
+    ctx.strokeStyle = 'rgba(126,203,255,.8)'; ctx.lineWidth = 1; ctx.strokeRect(bx+.5, by+.5, bw-1, 9);
+  }
+}
+
+// ---- Huyết Thành: 3 đợt lính gác → Pho Tượng Bảo Vệ trong 7 phút; còn giờ thì đấu thêm
+// Thiên Sứ (tái dùng Boss Săn theo cấp) để lấy thưởng lớn hơn ----
+let BLOOD = null; // { phase:'guards'|'statue'|'archangel', wave, timeLeft, pick, statueRef, angelRef, cleared, bonusCleared, failed, _endT }
+const BLOOD_TIME = 420;
+const BLOOD_GUARD_WAVES = 3;
+window.startBloodCastle = function(){
+  if (!player || dead) return;
+  if (TOWER || DGN || DEVIL || BLOOD){ addFloat(player.x, player.y-40, 'Đang trong một trận đấu khác rồi!', '#8a8a8a', 12); return; }
+  if (curMap === 'tuongduong'){ addFloat(player.x, player.y-40, 'Hãy ra khỏi Lunaris City trước — nơi này cấm giao chiến!', '#8a8a8a', 12); return; }
+  const cost = 250 + player.level*14;
+  if (player.silver < cost){ addFloat(player.x, player.y-40, `Cần ${cost} bạc để mua Thiệp Mời Thiên Sứ!`, '#8a8a8a', 12); return; }
+  player.silver -= cost;
+  BLOOD = { phase:'guards', wave:0, timeLeft: BLOOD_TIME, pick: pickArenaBoss(player.level), statueRef:null, angelRef:null, cleared:false, bonusCleared:false, failed:false, _endT:0 };
+  calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
+  closePanels();
+  zoneBanner = { text:'🩸 HUYẾT THÀNH', sub:'Dọn lính gác, hạ Pho Tượng Bảo Vệ trong 7 phút — còn giờ thì đấu thêm Thiên Sứ để lấy thưởng lớn!', color:'#ff5a6a', t:4 };
+  AudioSys.sfx('quest', 0.8);
+  bloodNextWave();
+};
+function bloodNextWave(){
+  if (!BLOOD) return;
+  BLOOD.wave++;
+  if (BLOOD.wave > BLOOD_GUARD_WAVES){
+    BLOOD.phase = 'statue';
+    const b = spawnMob('boss_hacphong', { x:player.x, y:player.y-100, r:10, count:1 }, null);
+    b.zone = null; b.bloodMob = true;
+    const hpMul = 1.3 + player.level*0.018, atkMul = 1 + player.level*0.01;
+    // di chuyển đọc m.def.speed (không phải m.speed) — set speed:0 vào def để đứng yên như tượng đá
+    b.def = { ...b.def, hp: Math.round(b.def.hp*hpMul), atk: Math.round(b.def.atk*atkMul), speed: 0 };
+    b.hp = b.def.hp; b.maxHp = b.def.hp;
+    BLOOD.statueRef = b;
+    addFloat(player.x, player.y-70, '🗿 PHO TƯỢNG BẢO VỆ thức tỉnh — hạ gục để phá cổng!', '#c8a868', 17);
+    AudioSys.sfx('crit', 0.6);
+    return;
+  }
+  const n = 4 + BLOOD.wave;
+  const scale = 1 + BLOOD.wave*0.08;
+  for (let i = 0; i < n; i++){
+    const type = TOWER_MOB_POOL[Math.floor(Math.random()*TOWER_MOB_POOL.length)];
+    const m = spawnMob(type, { x: player.x, y: player.y, r: 260, count: n }, null);
+    m.zone = null; m.bloodMob = true;
+    m.def = { ...m.def, hp: Math.round(m.def.hp*scale), atk: Math.round(m.def.atk*scale) };
+    m.hp = m.def.hp; m.maxHp = m.def.hp;
+  }
+  addFloat(player.x, player.y-60, `Lính gác ${BLOOD.wave}/${BLOOD_GUARD_WAVES} — ${n} địch!`, '#e88a8a', 15);
+}
+function updateBlood(dt){
+  if (!BLOOD) return;
+  if (BLOOD.cleared || BLOOD.failed){
+    BLOOD._endT -= dt;
+    if (BLOOD._endT <= 0) BLOOD = null;
+    return;
+  }
+  BLOOD.timeLeft -= dt;
+  if (BLOOD.timeLeft <= 0){
+    BLOOD.timeLeft = 0; BLOOD._endT = 3;
+    mobs.forEach(m => { if (m.bloodMob && !m.dead) m.dead = true; });
+    if (BLOOD.phase === 'archangel'){ // tượng đã hạ trước đó — vẫn tính thông quan cơ bản, chỉ lỡ thưởng Thiên Sứ
+      BLOOD.cleared = true;
+      grantBloodReward(false);
+      return;
+    }
+    BLOOD.failed = true;
+    zoneBanner = { text:'⏱ HUYẾT THÀNH THẤT BẠI', sub:'Không hạ được Pho Tượng Bảo Vệ kịp giờ — Thiệp Mời đã mất, thử lại sau.', color:'#ff5a4a', t:5 };
+    addFloat(player.x, player.y-80, 'Hết giờ! Huyết Thành thất bại.', '#ff5a4a', 16);
+    AudioSys.sfx('hurt', 0.7);
+    return;
+  }
+  if (BLOOD.phase === 'guards'){
+    if (mobs.some(m => m.bloodMob && !m.dead)) return;
+    bloodNextWave();
+    return;
+  }
+  if (BLOOD.phase === 'statue'){
+    if (BLOOD.statueRef && !BLOOD.statueRef.dead) return;
+    BLOOD.phase = 'archangel';
+    BLOOD.angelRef = spawnArenaBoss(BLOOD.pick.id, player.x, player.y-120);
+    BLOOD.angelRef.bloodMob = true;
+    if (player.auto){ player.auto = false; updateAutoBtn(); addFloat(player.x, player.y-70, 'Thiên Sứ cần tự tay chiến — AUTO đã tắt!', '#ff9a5a', 13); }
+    shakeT = Math.max(shakeT, 0.4); shakeMag = Math.max(shakeMag, 6);
+    addEffect({ type:'ring', x:player.x, y:player.y-120, r:100, color:'#ffe9a8', big:true });
+    addFloat(player.x, player.y-70, '👼 THIÊN SỨ xuất hiện — hạ gục để nhận thưởng lớn!', '#ffe9a8', 18);
+    AudioSys.sfx('crit', 0.7);
+    return;
+  }
+  // phase === 'archangel'
+  if (BLOOD.angelRef && !BLOOD.angelRef.dead) return;
+  BLOOD.cleared = true; BLOOD._endT = 3;
+  grantBloodReward(true);
+}
+function grantBloodReward(bonus){
+  const { boxTier } = BLOOD.pick;
+  const bossLv = player.level;
+  const gained = rollArenaBox(boxTier, bossLv);
+  let bonusSilver = 250*boxTier, bonusTienDan = boxTier, bonusMat = 6*boxTier, extra = '';
+  if (bonus){
+    gained.push(...rollArenaBox(boxTier, bossLv));
+    bonusSilver += 350*boxTier; bonusTienDan += boxTier + 1;
+    extra = ' · ★ Thiên Sứ đã ngã — thưởng thêm!';
+    BLOOD.bonusCleared = true;
+    player.bloodBonusClears = (player.bloodBonusClears || 0) + 1;
+  }
+  player.silver += bonusSilver; player.tienDan += bonusTienDan; player.mat += bonusMat;
+  player.dantian.tuvi += 150*boxTier*(bonus?2:1);
+  player.bloodClears = (player.bloodClears || 0) + 1;
+  zoneBanner = { text: bonus ? '🩸 HUYẾT THÀNH — THÔNG QUAN HOÀN HẢO!' : '🩸 HUYẾT THÀNH THÔNG QUAN!',
+    sub: gained.join(' · ') + ` · +${bonusSilver} bạc · +${bonusTienDan} Tiến Cấp Đan${extra}`, color:'#ff5a6a', t:6 };
+  addFloat(player.x, player.y-90, bonus ? '🩸 Huyết Thành hoàn hảo!' : '🩸 Huyết Thành đã thông quan!', '#ff5a6a', 16);
+  AudioSys.sfx('levelup', 0.9);
+  calcDerived(); saveGame();
+}
+function drawBloodHUD(){
+  if (!BLOOD || !player) return;
+  const x = W/2, y = 26;
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
+  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
+  ctx.fillStyle = BLOOD.failed ? '#ff6a5a' : '#e86a7a';
+  const label = BLOOD.failed ? '⏱ HẾT GIỜ — HUYẾT THÀNH THẤT BẠI'
+    : BLOOD.cleared ? (BLOOD.bonusCleared ? '🩸 Huyết Thành — Thông Quan Hoàn Hảo!' : '🩸 Huyết Thành đã thông quan!')
+    : BLOOD.phase === 'archangel' ? '👼 THIÊN SỨ: ' + MOBS[BLOOD.pick.id].name
+    : BLOOD.phase === 'statue' ? '🗿 PHO TƯỢNG BẢO VỆ'
+    : `🩸 Lính gác ${BLOOD.wave}/${BLOOD_GUARD_WAVES} — dọn sạch!`;
+  ctx.strokeText(label, x, y); ctx.fillText(label, x, y);
+  if (!BLOOD.cleared && !BLOOD.failed){
+    const tl = Math.max(0, BLOOD.timeLeft), mm = Math.floor(tl/60), ss = Math.floor(tl%60);
+    const urgent = tl < 60;
+    ctx.font = 'bold 15px "Be Vietnam Pro", sans-serif';
+    ctx.fillStyle = urgent ? (Math.floor(tl*2)%2===0 ? '#ff3a3a' : '#ffb0a0') : '#ffd76a';
+    const tstr = '⏱ ' + mm + ':' + String(ss).padStart(2,'0');
+    ctx.strokeText(tstr, x, y+20); ctx.fillText(tstr, x, y+20);
+  }
+  const activeBoss = (BLOOD.phase==='statue' && BLOOD.statueRef && !BLOOD.statueRef.dead) ? BLOOD.statueRef
+    : (BLOOD.phase==='archangel' && BLOOD.angelRef && !BLOOD.angelRef.dead) ? BLOOD.angelRef : null;
+  if (activeBoss){
+    const b = activeBoss, pct = Math.max(0, b.hp / b.maxHp);
+    const bw = 340, bx = x - bw/2, by = y + 28;
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(bx-2, by-2, bw+4, 14);
+    ctx.fillStyle = '#3a1020'; ctx.fillRect(bx, by, bw, 10);
+    ctx.fillStyle = b===BLOOD.statueRef ? '#c8a868' : '#ffe9a8'; ctx.fillRect(bx, by, bw*pct, 10);
+    ctx.strokeStyle = 'rgba(126,203,255,.8)'; ctx.lineWidth = 1; ctx.strokeRect(bx+.5, by+.5, bw-1, 9);
+  }
+}
+function renderArenaTab(){
+  const c = el('char-content'); if (!c) return;
+  let html = `<div class="stat-sec">👹 CHIẾN TRƯỜNG — phó bản MU Online-lite</div>
+    <div style="font-size:12px;color:#9aa8d4;line-height:1.85;padding:0 2px 10px">
+    2 đấu trường có đồng hồ đếm ngược, quái dồn dập ngay tại chỗ đứng — không cần đi tới map riêng.
+    Vé vào tốn bạc và mất luôn nếu thất bại (không mất trang bị). Không thể mở trong Lunaris City hoặc phó bản khác.</div>`;
+  html += `<div class="stat-sec" style="margin-top:6px">👹 QUỶ CỐC (Devil Square)</div>
+    <div style="font-size:12px;color:#9aa8d4;line-height:1.7;padding:0 2px 8px">6 đợt quái dồn dập trong 10 phút, đợt 7 là Quỷ Vương (Boss Săn theo đúng cấp ngươi). Thông quan → mở Rương theo cấp.</div>
+    <div style="font-size:13px;color:#e4ebff;padding:0 2px 8px">Đã thông quan: <b style="color:#ffd76a">${player.devilClears || 0}</b> lần</div>`;
+  if (DEVIL){
+    html += `<div style="font-size:13px;color:#ff9a5a;padding:0 2px 10px">👹 Đang trong trận — Đợt ${Math.min(DEVIL.wave, DEVIL_WAVES+1)}${DEVIL.wave>DEVIL_WAVES?' (Quỷ Vương)':''}. Đóng bảng này để tiếp tục chiến đấu.</div>`;
+  } else {
+    const cost = 200 + player.level*12;
+    html += `<button class="big-btn" onclick="window.startDevilSquare();closePanels();">👹 Mở Quỷ Cốc — ${cost} bạc</button>`;
+  }
+  html += `<div class="stat-sec" style="margin-top:14px">🩸 HUYẾT THÀNH (Blood Castle)</div>
+    <div style="font-size:12px;color:#9aa8d4;line-height:1.7;padding:0 2px 8px">3 đợt lính gác + Pho Tượng Bảo Vệ trong 7 phút. Còn giờ thì đấu thêm Thiên Sứ để lấy thưởng lớn hơn.</div>
+    <div style="font-size:13px;color:#e4ebff;padding:0 2px 8px">Đã thông quan: <b style="color:#ffd76a">${player.bloodClears || 0}</b> lần (<b style="color:#ff9a5a">${player.bloodBonusClears || 0}</b> hoàn hảo)</div>`;
+  if (BLOOD){
+    const phaseName = BLOOD.phase==='guards' ? `Lính gác ${BLOOD.wave}/${BLOOD_GUARD_WAVES}` : BLOOD.phase==='statue' ? 'Pho Tượng Bảo Vệ' : 'Thiên Sứ';
+    html += `<div style="font-size:13px;color:#e86a7a;padding:0 2px 10px">🩸 Đang trong trận — ${phaseName}. Đóng bảng này để tiếp tục chiến đấu.</div>`;
+  } else {
+    const cost2 = 250 + player.level*14;
+    html += `<button class="big-btn" onclick="window.startBloodCastle();closePanels();">🩸 Mở Huyết Thành — ${cost2} bạc</button>`;
+  }
+  c.innerHTML = html;
 }
 // Engine phó bản: DGN = trạng thái lượt chạy hiện tại
 let DGN = null; // { id, def, wave, bossRef, cleared }
