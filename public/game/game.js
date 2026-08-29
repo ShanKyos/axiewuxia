@@ -468,20 +468,33 @@ let zoneBanner = null; // { text, sub, color, t }
 // ---------- Tường thành & Cổng thành — Tương Dương / Ngoại Ô ----------
 // Thành là khu an toàn tuyệt đối: quái không spawn trong thành, tường chặn mọi lối đi,
 // chỉ có Cổng Nam dẫn ra Ngoại Ô (có quái). Ngoại Ô có cổng ngược để quay về.
-const CITY_WALL = { map:'tuongduong', x1:950, y1:760, x2:1720, y2:1560, t:24, gateX1:1236, gateX2:1364 };
+// Bố cục kiểu Lorencia (MU Online): quảng trường vuông rộng ở giữa, tường bao 4 mặt, MỖI MẶT MỘT
+// CỔNG (Bắc/Nam/Đông/Tây) toả ra 4 hướng thế giới — thay cho thành hộp kín chỉ có 1 cổng Nam cũ,
+// vốn khiến toàn bộ NPC phải chen chúc trong một góc nhỏ.
+const CITY_WALL = { map:'tuongduong', x1:700, y1:560, x2:1900, y2:1250, t:24,
+  gateX:1300, gateY:905, gateW:132 };   // gateX/gateY: tâm cổng ngang & dọc · gateW: bề rộng lối mở
 const GATES = [
-  { map:'tuongduong', x:1300, y:1560, to:'ngoai',      name:'Qua Cổng Nam → Ngoại Ô' },
+  // Cổng đặt NGAY NGOÀI mỗi lối mở trên tường — bước ra khỏi thành là thấy cổng, bấm G để đi.
+  { map:'tuongduong', x:1300, y:1400, to:'ngoai',      name:'Cổng Nam → Petalshade Outskirts' },
+  { map:'tuongduong', x:1300, y:450,  to:'tuyettinh',  name:'Cổng Bắc → Frostmire Vale' },
+  { map:'tuongduong', x:580,  y:905,  to:'daohoa',     name:'Cổng Tây → Petalshade Isle' },
+  { map:'tuongduong', x:2020, y:905,  to:'chungnam',   name:'Cổng Đông → Thornwood Reach' },
   { map:'ngoai',      x:1300, y:240,  to:'tuongduong', name:'Qua Cổng Thành → Lunaris City' },
 ];
 let nearGate = null;
 function cityWallRects(){
-  const w = CITY_WALL;
+  const w = CITY_WALL, h = w.gateW/2;
+  const gx1 = w.gateX - h, gx2 = w.gateX + h;   // lối mở cổng Bắc & Nam
+  const gy1 = w.gateY - h, gy2 = w.gateY + h;   // lối mở cổng Tây & Đông
   return [
-    { x:w.x1,    y:w.y1-w.t, wd:w.x2-w.x1,       ht:w.t },              // bắc
-    { x:w.x1,    y:w.y2,     wd:w.gateX1-w.x1,   ht:w.t },              // nam-trái
-    { x:w.gateX2,y:w.y2,     wd:w.x2-w.gateX2,   ht:w.t },              // nam-phải
-    { x:w.x1-w.t,y:w.y1-w.t, wd:w.t, ht:w.y2-w.y1+w.t*2 },              // tây
-    { x:w.x2,    y:w.y1-w.t, wd:w.t, ht:w.y2-w.y1+w.t*2 },              // đông
+    { x:w.x1-w.t, y:w.y1-w.t, wd:gx1-(w.x1-w.t), ht:w.t },              // bắc-trái (ôm cả góc)
+    { x:gx2,      y:w.y1-w.t, wd:(w.x2+w.t)-gx2, ht:w.t },              // bắc-phải
+    { x:w.x1-w.t, y:w.y2,     wd:gx1-(w.x1-w.t), ht:w.t },              // nam-trái
+    { x:gx2,      y:w.y2,     wd:(w.x2+w.t)-gx2, ht:w.t },              // nam-phải
+    { x:w.x1-w.t, y:w.y1,     wd:w.t, ht:gy1-w.y1 },                    // tây-trên
+    { x:w.x1-w.t, y:gy2,      wd:w.t, ht:w.y2-gy2 },                    // tây-dưới
+    { x:w.x2,     y:w.y1,     wd:w.t, ht:gy1-w.y1 },                    // đông-trên
+    { x:w.x2,     y:gy2,      wd:w.t, ht:w.y2-gy2 },                    // đông-dưới
   ];
 }
 function collideCityWalls(){
@@ -760,6 +773,135 @@ function drawCityWalls(){
     }
   }
 }
+// ═══════════ QUẢNG TRƯỜNG LUNARIS — bố cục Lorencia + không khí ma mị ═══════════
+// Đài phun nước giữa quảng trường, lối lát đá toả ra 4 cổng, trụ đèn + cây khô, quạ đậu trên tường.
+function drawCityPlaza(){
+  const w = CITY_WALL, cx = w.gateX, cy = w.gateY, t = performance.now()/1000;
+  // nền quảng trường lát đá
+  ctx.fillStyle = 'rgba(96,88,74,.28)';
+  ctx.beginPath(); ctx.ellipse(cx, cy, 300, 210, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = 'rgba(70,62,50,.34)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.ellipse(cx, cy, 300, 210, 0, 0, 7); ctx.stroke();
+  // 4 lối lát đá chạy thẳng ra 4 cổng
+  ctx.strokeStyle = 'rgba(112,102,84,.32)'; ctx.lineWidth = 74;
+  ctx.beginPath();
+  ctx.moveTo(cx, w.y1); ctx.lineTo(cx, w.y2);
+  ctx.moveTo(w.x1, cy); ctx.lineTo(w.x2, cy);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(60,54,44,.22)'; ctx.lineWidth = 1.4;   // mạch đá
+  for (let i = -4; i <= 4; i++){
+    ctx.beginPath(); ctx.moveTo(cx + i*34, w.y1); ctx.lineTo(cx + i*34, w.y2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(w.x1, cy + i*34); ctx.lineTo(w.x2, cy + i*34); ctx.stroke();
+  }
+  // ── đài phun nước trung tâm ──
+  ctx.fillStyle = '#6a6152';
+  ctx.beginPath(); ctx.ellipse(cx, cy, 74, 44, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#4e4738';
+  ctx.beginPath(); ctx.ellipse(cx, cy, 64, 36, 0, 0, 7); ctx.fill();
+  const wg = ctx.createRadialGradient(cx, cy-6, 3, cx, cy, 60);   // mặt nước ánh lam ma mị
+  wg.addColorStop(0, 'rgba(150,210,255,.62)'); wg.addColorStop(1, 'rgba(40,80,130,.55)');
+  ctx.fillStyle = wg; ctx.beginPath(); ctx.ellipse(cx, cy, 58, 31, 0, 0, 7); ctx.fill();
+  for (let i = 0; i < 3; i++){                                     // gợn sóng lan
+    const k = ((t/2.4) + i/3) % 1;
+    ctx.strokeStyle = `rgba(190,235,255,${(1-k)*0.34})`; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.ellipse(cx, cy, 10 + k*46, 6 + k*25, 0, 0, 7); ctx.stroke();
+  }
+  ctx.fillStyle = '#78705e';                                       // trụ đá giữa
+  ctx.beginPath(); ctx.moveTo(cx-13, cy-4); ctx.lineTo(cx+13, cy-4);
+  ctx.lineTo(cx+8, cy-52); ctx.lineTo(cx-8, cy-52); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#8c8474';
+  ctx.beginPath(); ctx.ellipse(cx, cy-54, 22, 8, 0, 0, 7); ctx.fill();
+  const og = ctx.createRadialGradient(cx, cy-74, 2, cx, cy-74, 26); // quả cầu linh lực trên đỉnh
+  og.addColorStop(0, '#dff2ff'); og.addColorStop(0.45, 'rgba(122,190,255,.75)');
+  og.addColorStop(1, 'rgba(90,150,230,0)');
+  ctx.fillStyle = og; ctx.beginPath(); ctx.arc(cx, cy-74, 26 + Math.sin(t*1.6)*2.5, 0, 7); ctx.fill();
+  for (let i = 0; i < 4; i++){                                     // nước chảy xuống 4 phía
+    const a = i*Math.PI/2 + Math.PI/4;
+    ctx.strokeStyle = 'rgba(200,240,255,.42)'; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(cx + Math.cos(a)*16, cy-52);
+    ctx.quadraticCurveTo(cx + Math.cos(a)*34, cy-28, cx + Math.cos(a)*44, cy - 4 + Math.sin(a)*8); ctx.stroke();
+  }
+  // ── trụ đèn 4 góc quảng trường: quầng sáng ấm nhấp nháy ──
+  for (const [lx, ly] of [[cx-250, cy-150],[cx+250, cy-150],[cx-250, cy+150],[cx+250, cy+150]]){
+    ctx.fillStyle = '#3a3226'; ctx.fillRect(lx-3, ly-46, 6, 46);
+    ctx.fillStyle = '#2e2a20';
+    ctx.beginPath(); ctx.ellipse(lx, ly+2, 10, 4, 0, 0, 7); ctx.fill();
+    const fl = 0.78 + Math.sin(t*7 + lx*0.03)*0.16;                 // ngọn lửa lay động
+    const lg = ctx.createRadialGradient(lx, ly-54, 1, lx, ly-54, 46*fl);
+    lg.addColorStop(0, `rgba(255,214,140,${0.62*fl})`);
+    lg.addColorStop(1, 'rgba(255,170,70,0)');
+    ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(lx, ly-54, 46*fl, 0, 7); ctx.fill();
+    ctx.fillStyle = '#ffca6a'; ctx.beginPath(); ctx.ellipse(lx, ly-54, 5, 7*fl, 0, 0, 7); ctx.fill();
+  }
+  // ── cây khô trơ cành cạnh quảng trường (chất u ám) ──
+  drawDeadTree(cx - 330, cy + 190, t);
+  drawDeadTree(cx + 342, cy - 176, t + 2);
+  // ── quạ đậu trên tường bắc, thỉnh thoảng vỗ cánh ──
+  for (let i = 0; i < 5; i++){
+    const bx = w.x1 + 150 + i*230, by = w.y1 - 30;
+    const flap = Math.sin(t*2.2 + i*1.7) > 0.93 ? 4 : 0;
+    ctx.fillStyle = '#17141f';
+    ctx.beginPath(); ctx.ellipse(bx, by - flap, 6, 4.6, 0, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(bx + 5, by - 4 - flap, 3, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(bx+8, by-4-flap); ctx.lineTo(bx+13, by-3-flap); ctx.lineTo(bx+8, by-2-flap); ctx.closePath(); ctx.fill();
+    if (flap){ ctx.beginPath(); ctx.ellipse(bx-3, by-8, 7, 3, -0.5, 0, 7); ctx.fill(); }
+  }
+}
+function drawDeadTree(x, y, t){
+  const sway = Math.sin(t*0.5)*0.02;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(sway);
+  ctx.fillStyle = 'rgba(0,0,0,.22)';
+  ctx.beginPath(); ctx.ellipse(0, 2, 26, 8, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#2f2822'; ctx.lineCap = 'round';
+  ctx.lineWidth = 11; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-3, -74); ctx.stroke();
+  const limb = (bx, by, ex, ey, w2) => { ctx.lineWidth = w2; ctx.beginPath();
+    ctx.moveTo(bx, by); ctx.quadraticCurveTo((bx+ex)/2 + 6, (by+ey)/2, ex, ey); ctx.stroke(); };
+  limb(-2, -50, -40, -84, 6); limb(-2, -58, 34, -92, 6); limb(-3, -70, -22, -110, 4.5);
+  limb(-3, -72, 20, -116, 4.5); limb(-30, -76, -48, -100, 3); limb(26, -84, 44, -108, 3);
+  ctx.restore();
+}
+// Lớp sương mù + tàn lửa trôi — vẽ SAU cùng để phủ lên cả NPC/người chơi, tạo chiều sâu u ám.
+// Nhuộm tông chiều tà cho riêng Lunaris City: art nền vốn là ban ngày trời xanh rực rỡ, không hợp
+// không khí ma mị — phủ lớp lam-tím tối + vignette để ánh đèn, sương và tàn lửa hiện rõ.
+function drawCityMood(){
+  const vx = camera.x, vy = camera.y;
+  ctx.save();
+  ctx.globalCompositeOperation = 'multiply';
+  const g = ctx.createLinearGradient(vx, vy, vx, vy + H);
+  g.addColorStop(0, 'rgba(96,104,158,1)');    // trời ngả tím
+  g.addColorStop(0.55, 'rgba(124,120,152,1)');
+  g.addColorStop(1, 'rgba(86,84,116,1)');     // mặt đất chìm bóng
+  ctx.fillStyle = g; ctx.fillRect(vx, vy, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+  const vg = ctx.createRadialGradient(vx + W/2, vy + H/2, Math.min(W,H)*0.32,
+                                      vx + W/2, vy + H/2, Math.max(W,H)*0.78);
+  vg.addColorStop(0, 'rgba(10,8,20,0)'); vg.addColorStop(1, 'rgba(10,8,20,.52)');
+  ctx.fillStyle = vg; ctx.fillRect(vx, vy, W, H);
+  ctx.restore();
+}
+function drawCityHaze(){
+  const w = CITY_WALL, t = performance.now()/1000;
+  ctx.save();
+  for (let i = 0; i < 9; i++){                       // dải sương mỏng trôi ngang chậm sát mặt đất
+    const seed = i*97.3;
+    const fx = w.x1 - 200 + ((t*11 + seed*7) % (w.x2 - w.x1 + 520));
+    const fy = w.y1 + 90 + ((seed*13) % (w.y2 - w.y1 - 120));
+    const rw = 96 + (seed % 54), rh = 15 + (seed % 9);
+    const fg = ctx.createRadialGradient(fx, fy, 2, fx, fy, rw);
+    fg.addColorStop(0, 'rgba(172,186,220,.085)'); fg.addColorStop(1, 'rgba(172,186,220,0)');
+    ctx.fillStyle = fg; ctx.beginPath(); ctx.ellipse(fx, fy, rw, rh, 0, 0, 7); ctx.fill();
+  }
+  for (let i = 0; i < 22; i++){                      // tàn lửa/đom đóm linh hồn bay lên
+    const seed = i*53.7;
+    const life = ((t*0.32 + seed*0.11) % 1);
+    const ex = w.x1 + 60 + ((seed*29) % (w.x2 - w.x1 - 120)) + Math.sin(t*1.1 + seed)*12;
+    const ey = w.y2 - 40 - life*(w.y2 - w.y1 - 120);
+    const a = Math.sin(life*Math.PI) * 0.55;
+    ctx.fillStyle = `rgba(${i%3 ? '190,225,255' : '255,205,140'},${a})`;
+    ctx.beginPath(); ctx.arc(ex, ey, 1.6 + (seed % 2), 0, 7); ctx.fill();
+  }
+  ctx.restore();
+}
 function drawPortal(g){
   const t = performance.now()/1000;
   // đài phát sáng dưới chân
@@ -801,7 +943,7 @@ function drawGates(){
       ctx.fillStyle = '#d84a2a'; ctx.beginPath(); ctx.ellipse(g.x + s*64, g.y - 70, 6, 8, 0, 0, 7); ctx.fill();
       ctx.fillStyle = 'rgba(126,203,255,.85)'; ctx.beginPath(); ctx.ellipse(g.x + s*64, g.y - 70, 2.5, 3.5, 0, 0, 7); ctx.fill();
     }
-    drawCalligraphy('Cổng Thành', g.x, g.y - 118, '#6a4a2a', 15);
+    drawCalligraphy((g.name || 'Cổng Thành').split(' → ')[0], g.x, g.y - 118, '#6a4a2a', 15);
     if (nearGate === g){
       ctx.strokeStyle = 'rgba(126,203,255,.55)'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(g.x, g.y, 58 + Math.sin(performance.now()/300)*6, 20, 0, 0, 7); ctx.stroke();
@@ -818,7 +960,7 @@ const NPCS = [
   // trùng chỗ khác (Hồ Lô Thuốc = Dược Lão, Thiên Mệnh Phù = mua thẳng trong Rèn Luyện qua buyCharm()),
   // và "Chợ Đấu Giá" chưa từng có cơ chế đấu giá thật — chỉ là tiệm giá cố định như 3 tiệm kia.
   // Tiến Cấp Đan ×3 (món duy nhất không trùng) đã chuyển sang tiệm Dược Lão bên dưới.
-  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'tuongduong', x:1480, y:1180, img:'assets/npcs/thoren.png', talk:'forge' },
+  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'tuongduong', x:1780, y:780, img:'assets/npcs/thoren.png', talk:'forge' },
 ];
 const NPC_IMGS = {};
 for (const n of NPCS){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; }
@@ -1724,7 +1866,7 @@ function drawSkyOverlay(){ // screen-space — gọi sau vignette, trước zone
     if (wxFlashT > 0){ ctx.fillStyle = 'rgba(235,240,255,' + Math.min(0.5, wxFlashT*2.6).toFixed(3) + ')'; ctx.fillRect(0, 0, W, H); } // chớp giông
   }
   // ── Ánh sáng động (Gói C) ──
-  if (dk === 0 && !SETTINGS.lowFx && (!wx || wx.id === 'sun' || wx.id === 'sunhot')) drawSunRays();
+  if (dk === 0 && !SETTINGS.lowFx && !mapDef().city && (!wx || wx.id === 'sun' || wx.id === 'sunhot')) drawSunRays(); // thành giữ tông chiều tà (drawCityMood), không chiếu nắng chói
   if (dk > 0.15 && curMap === 'tuongduong' && !SETTINGS.lowFx && typeof camera !== 'undefined') drawLanternGlow(dk);
 }
 
@@ -2920,6 +3062,15 @@ function buildWorld(){
   for (let i = 0; i < 14; i++) mists.push({ x:rnd(0,W), y:rnd(0,H), r:rnd(120,300), v:rnd(4,14), a:rnd(0.04,0.1) });
   // giữ khu làng & suối thiền trống
   if (md.village) decor = decor.filter(d => dist(d.x,d.y,NPC.x,NPC.y) > 160 && dist(d.x,d.y,SPRING.x,SPRING.y) > 120);
+  // Thành: chừa trống quảng trường + 4 lối lát đá ra cổng — trước đây cây rải ngẫu nhiên mọc đè cả
+  // lên đài phun nước giữa quảng trường và chắn ngang lối đi ra cổng.
+  if (md.city){
+    const w = CITY_WALL, gh = w.gateW/2 + 30;
+    decor = decor.filter(d =>
+      dist(d.x, d.y, w.gateX, w.gateY) > 330 &&                                   // lòng quảng trường
+      !(Math.abs(d.x - w.gateX) < gh && d.y > w.y1 - 60 && d.y < w.y2 + 60) &&     // lối Bắc-Nam
+      !(Math.abs(d.y - w.gateY) < gh && d.x > w.x1 - 60 && d.x < w.x2 + 60));      // lối Tây-Đông
+  }
   decor = decor.filter(d => !NPCS.some(n => n.map === curMap && dist(d.x,d.y,n.x,n.y) < 150));
   spawnAmbients(); // hạt môi trường + cỏ mặt đất theo chủ đề bản đồ
   spawnHorses(); // GDD Đợt 2 B5: Tuấn Mã Hoang
@@ -5192,13 +5343,16 @@ function render(){
   // village / city labels
   if (md.village) drawCalligraphy('Thanh Ngưu Thôn', 400, 310, '#6a5836', 18);
   if (md.city){
+    drawCityMood();           // nhuộm tông chiều tà trước, để đèn/sương bên dưới nổi lên
     drawCityWalls();
-    drawCalligraphy('Lunaris City', 1300, 880, '#6a5836', 20);
-    drawCalligraphy('Chợ Đấu Giá', 1150, 950, '#2e5e8a', 14);
-    drawCalligraphy('Lò Rèn Hoàng Gia', 1480, 1130, '#8a4a2e', 14);
-    drawCalligraphy('Xưởng Luyện Đan', 1060, 1090, '#3a6a3e', 14);
-    drawCalligraphy('Vũ Khí Phường', 1580, 950, '#5a5a6a', 14);
-    drawCalligraphy('Trà Quán', 1230, 1240, '#8a6a2e', 14);
+    drawCityPlaza();          // quảng trường + đài phun nước trung tâm kiểu Lorencia
+    drawCalligraphy('Lunaris City', 1300, 612, '#6a5836', 20);
+    drawCalligraphy('Xưởng Luyện Đan', 830, 706, '#3a6a3e', 13);
+    drawCalligraphy('Lò Rèn Hoàng Gia', 1780, 726, '#8a4a2e', 13);
+    drawCalligraphy('Vũ Khí Phường', 1770, 1006, '#5a5a6a', 13);
+    drawCalligraphy('Trà Quán', 980, 1096, '#8a6a2e', 13);
+    drawCalligraphy('Sảnh Cầu May', 820, 986, '#7a5a9a', 13);
+    drawCityHaze();           // lớp sương/tàn lửa ma mị phủ lên trên (vẽ sau cùng)
   }
   drawGates();
 
@@ -8888,9 +9042,9 @@ window.wipeSave = function(){
 NPCS.push(
   { id:'duocsu',    name:'Dược Sư',              map:'daohoa',     x:560,  y:430,  img:'assets/npcs/duocsu.png',    talk:'quest',
     lore:'"Thuốc hay cứu người, thuốc độc cũng cứu người — tùy ai dùng."' },
-  { id:'quachtinh', name:'Trưởng Lão Rell',      map:'tuongduong', x:1250, y:950,  img:'assets/npcs/quachtinh.png', talk:'quest',
+  { id:'quachtinh', name:'Trưởng Lão Rell',      map:'tuongduong', x:1300, y:722,  img:'assets/npcs/quachtinh.png', talk:'quest',
     lore:'"Lunaris còn đứng vững, là nhờ mỗi người trong thành này không chịu bỏ cuộc."' },
-  { id:'monkhach',  name:'Trinh Sát Wren',       map:'tuongduong', x:1420, y:1050, img:'assets/npcs/monkhach.png',  talk:'quest',
+  { id:'monkhach',  name:'Trinh Sát Wren',       map:'tuongduong', x:1300, y:1120, img:'assets/npcs/monkhach.png',  talk:'quest',
     lore:'"Ở Lunacia này, tin tức còn quý hơn Starbits."' },
   { id:'daosi',     name:'Người Gác Rừng Corran', map:'chungnam',   x:520,  y:1420, img:'assets/npcs/daosi.png',     talk:'quest',
     lore:'"Rừng có luật riêng của rừng — nhưng kẻ phản bội thì ta không dung."' },
@@ -8906,17 +9060,17 @@ NPCS.push(
     lore:'"Tuấn mã hoang ngoài đồng kia đấy — rượt cho nó kiệt sức rồi bấm E mà bắt. Mã Thầu thu được dùng khi thăng giai thú cưỡi!"' }, // GDD Đợt 2 B5
 );
 NPCS.push(
-  { id:'duoclao', name:'Nhà Giả Kim · Xưởng Luyện Đan', map:'tuongduong', x:1060, y:1140, img:'assets/npcs/duoclao.png', talk:'shop',
+  { id:'duoclao', name:'Nhà Giả Kim · Xưởng Luyện Đan', map:'tuongduong', x:830, y:760, img:'assets/npcs/duoclao.png', talk:'shop',
     lore:'"Thuốc hay cứu người — nhưng không trả tiền thì thuốc cũng hóa độc đấy."' },
-  { id:'binhkhi', name:'Binh Khí Chủ · Vũ Khí Phường', map:'tuongduong', x:1580, y:1000, img:'assets/npcs/binhkhi.png', talk:'shop',
+  { id:'binhkhi', name:'Binh Khí Chủ · Vũ Khí Phường', map:'tuongduong', x:1770, y:1060, img:'assets/npcs/binhkhi.png', talk:'shop',
     lore:'"Kiếm tốt không chờ người — ngươi chậm thì người khác cầm mất."' },
-  { id:'trachu',  name:'Trà Quán Chủ', map:'tuongduong', x:1230, y:1290, img:'assets/npcs/trachu.png', talk:'shop',
+  { id:'trachu',  name:'Trà Quán Chủ', map:'tuongduong', x:980, y:1150, img:'assets/npcs/trachu.png', talk:'shop',
     lore:'"Lunacia hiểm ác — nhưng trà trong quán này lúc nào cũng nóng."' },
-  { id:'quangia', name:'Quản Gia · Động Phủ', map:'tuongduong', x:1450, y:1240, img:'assets/npcs/quangia.png', talk:'abode',
+  { id:'quangia', name:'Quản Gia · Động Phủ', map:'tuongduong', x:1590, y:1160, img:'assets/npcs/quangia.png', talk:'abode',
     lore:'"Động phủ của đạo hữu đã dọn sạch — Tụ Linh Trận và Dược Viên chờ chủ nhân."' },
-  { id:'bodau', name:'Bổ Đầu · Truy Nã Lệnh', map:'tuongduong', x:1420, y:1010, img:'assets/npcs/bodau.png', talk:'trunya',
+  { id:'bodau', name:'Bổ Đầu · Truy Nã Lệnh', map:'tuongduong', x:1600, y:690, img:'assets/npcs/bodau.png', talk:'trunya',
     lore:'"Hội Đồng Lunaris treo thưởng lũ Chimera lộng hành — mỗi ngày một tên. Làm xong, đến Sảnh Cầu May thử vận."' },
-  { id:'thantoan', name:'Thương Nhân Vận May · Sảnh Cầu May', map:'tuongduong', x:1120, y:1230, img:'assets/npcs/thantoan.png', talk:'vanduyen',
+  { id:'thantoan', name:'Thương Nhân Vận May · Sảnh Cầu May', map:'tuongduong', x:820, y:1040, img:'assets/npcs/thantoan.png', talk:'vanduyen',
     lore:'"Một lệnh một lượt quay — năm phần trăm trúng cổ thư hiếm, không đủ vận cũng đừng trách ta."' },
   { id:'vandai', name:'Skyreach Ledge · Vực Thẳm', map:'chungnam', x:2300, y:350, img:'assets/npcs/vachda.png', talk:'tenui',
     lore:'"Vách mây ngàn trượng — kẻ liều mạng nhảy xuống, kẻ sợ chết quay đầu."' },
