@@ -179,13 +179,13 @@ const WING2_DEFS = [
   { id:'hacma',     name:'Hắc Ma Linh Dực',       color:'#c07fe0', atkPct:24, pierce:8, hpLeech:5, crit:10, desc:'+24% ST · +8% xuyên giáp · +5% hút sinh lực · +10% bạo' },
 ];
 
-// Ngũ hành tương khắc: Kim > Mộc > Thổ > Thủy > Hỏa > Kim (khắc chế +20% sát thương)
+// Vòng khắc hệ: Kim > Mộc > Thổ > Thủy > Hỏa > Kim (khắc chế +20% sát thương)
 const NGU_HANH = {
-  Kim:  { color:'#ffb15c', beats:'Mộc',  glyph:'金' },
-  'Mộc':{ color:'#5db86a', beats:'Thổ',  glyph:'木' },
-  'Thổ':{ color:'#c08a4a', beats:'Thủy', glyph:'土' },
-  'Thủy':{ color:'#5aa0e8', beats:'Hỏa', glyph:'水' },
-  'Hỏa':{ color:'#e8552a', beats:'Kim',  glyph:'火' },
+  Kim:  { color:'#ffb15c', beats:'Mộc',  glyph:'◆' },
+  'Mộc':{ color:'#5db86a', beats:'Thổ',  glyph:'♣' },
+  'Thổ':{ color:'#c08a4a', beats:'Thủy', glyph:'▲' },
+  'Thủy':{ color:'#5aa0e8', beats:'Hỏa', glyph:'❄' },
+  'Hỏa':{ color:'#e8552a', beats:'Kim',  glyph:'☼' },
 };
 // Tương sinh: Kim→Thủy→Mộc→Hỏa→Thổ→Kim (dùng cho hướng dẫn / mở rộng) — chưa có UI nào đọc
 // bảng này, giữ lại làm dữ liệu tham chiếu cho tính năng tương lai (không phải code chết).
@@ -211,39 +211,39 @@ const TUONG_SINH = { Kim:'Thủy', 'Thủy':'Mộc', 'Mộc':'Hỏa', 'Hỏa':'T
 const SECTS = {
   thieulam: { name:'Dark Knight', role:'Tank / Combo cận chiến', element:'Kim', color:'#4c8dff', glow:'#ffe9a0', bonus:{vit:3,def:2,str:1,agi:0,ene:0},
     hpMult:1.18, defMult:1.20, dmgMult:0.95, atkSrc:{str:2.0},
-    glyph:'拳', desc:'Giáp dày, ý chí sắt — một Mech Axie theo lối Dark Knight: gánh tuyến đầu rồi đáp trả bằng đòn chí mạng chậm mà không thể cản. Tiềm năng: dồn Lực Lượng.',
+    desc:'Giáp tấm nặng, mũ trụ có sừng, đại kiếm hai tay. Dark Knight đứng mũi chịu sào, nuốt trọn đòn của cả bầy rồi trả lại bằng một nhát bổ chậm mà không gì cản nổi. Tiềm năng: dồn hết vào Lực Lượng.',
     skillA:{ name:'Twisting Slash', type:'cone',  cd:4, qi:20, mult:1.6 },
     tp:{ name:'Death Stab', mult:3.0 } },
   // range/basicProj: Fairy Elf & Dark Wizard là 2 lớp tầm xa thật (cung/phép) — đòn thường của họ bắn
   // đạn ở khoảng cách này thay vì vung cận chiến như Dark Knight/Magic Gladiator/Dark Lord (xem doBasic()).
   toanchan: { name:'Fairy Elf', role:'Tầm xa / Hỗ trợ', element:'Thủy', color:'#3a9d8b', glow:'#a0ffe9', bonus:{vit:0,def:0,str:0,agi:4,ene:0},
     hpMult:0.90, defMult:0.85, dmgMult:1.05, atkSrc:{agi:2.0},
-    glyph:'弓', desc:'Cung pháp Aquatic — Fairy Elf vừa dồn sát thương tầm xa vừa nâng đỡ đồng đội, tấn công và phòng ngự trong cùng một nhịp. Tiềm năng: chỉ cần dồn Mẫn Tiệp là đủ mạnh.',
+    desc:'Cung dài, giáp da nhẹ, chân bước không thành tiếng. Fairy Elf rót tên từ ngoài tầm với, đồng thời phủ buff lên cả đội — vừa là sát thủ vừa là chỗ dựa. Tiềm năng: chỉ cần dồn Mẫn Tiệp là đủ mạnh.',
     range:380, basicProj:'arrow',
     skillA:{ name:'Multi-Shot', type:'proj', cd:4, qi:20, mult:1.5, count:5 },
     tp:{ name:'Ice Arrow', mult:2.8 } },
   baidasan: { name:'Dark Wizard', role:'Pháp thuật / Độc tố', element:'Thủy', color:'#7ec850', glow:'#c8ffa0', bonus:{vit:1,def:0,str:0,agi:1,ene:3},
     hpMult:0.72, defMult:0.65, dmgMult:1.30, atkSrc:{ene:1.6, agi:0.6},
-    glyph:'蛇', desc:'Reptile Axie theo trường phái Dark Wizard — một chiêu Poison phóng ra, để chất độc tự kết liễu trận đấu. Tiềm năng: cần cả Mẫn Tiệp lẫn Linh Lực.',
+    desc:'Áo thụng trùm kín, quyền trượng nạm ngọc, thân thể mỏng như giấy. Dark Wizard đứng xa nhất chiến trường và gọi độc tố cùng thiên thạch xuống thay mình. Tiềm năng: cần cả Mẫn Tiệp lẫn Linh Lực.',
     range:420, basicProj:'orb',
     skillA:{ name:'Poison', type:'proj', cd:4, qi:20, mult:1.5 },
     tp:{ name:'Meteor', mult:3.2 } },
   minhgiao: { name:'Magic Gladiator', role:'Lai / Bộc phát Hoả', element:'Hỏa', color:'#e8552a', glow:'#ffb060', bonus:{vit:1,def:0,str:2,agi:0,ene:2},
     hpMult:1.05, defMult:1.0, dmgMult:1.08, atkSrc:{str:1.1, ene:1.1},
-    glyph:'焰', desc:'Beast Axie mang sức mạnh lai Magic Gladiator — Fire Slash quét ngang, đánh như cả giáo phái dồn vào một đòn. Tiềm năng: cân cả Lực Lượng lẫn Linh Lực.',
+    desc:'Nửa giáp nửa vải, một vai để trần, đại đao bản rộng cháy lửa. Magic Gladiator vừa chém như hiệp sĩ vừa niệm như pháp sư — không cần chờ tới cấp 10 để mạnh. Tiềm năng: cân cả Lực Lượng lẫn Linh Lực.',
     skillA:{ name:'Fire Slash', type:'cone', cd:4, qi:22, mult:1.6 },
     tp:{ name:'Flame Strike', mult:3.2 } },
   // Dark Lord: lớp chỉ huy/triệu hồi — archetype mượn từ trường phái vô môn phái Cái Bang cũ
   // (VOHOC_DEFS): xáp lá cà bằng số đông, không đơn độc.
   bug: { name:'Dark Lord', role:'Chỉ huy / Triệu hồi', element:'Thổ', color:'#8a9a3a', glow:'#d0e07a', bonus:{vit:2,def:1,str:1,agi:2,ene:0},
     hpMult:1.12, defMult:1.10, dmgMult:0.92, atkSrc:{str:1.8, agi:0.3},
-    glyph:'蟲', desc:'Bug Axie hoá thân Dark Lord — chưa từng đánh một mình, luôn có bầy tùy tùng theo sau dọn sạch chiến trường. Tiềm năng: chủ lực Lực Lượng, dặm thêm Mẫn Tiệp.',
+    desc:'Vương miện năm chấu, giáp đen ánh lam, quyền trượng chỉ huy. Dark Lord không bao giờ ra trận một mình — hắn hiệu triệu, và chiến trường tự sạch. Tiềm năng: chủ lực Lực Lượng, dặm thêm Mẫn Tiệp.',
     skillA:{ name:'Force Wave', type:'cone', cd:4, qi:20, mult:1.5 },
     tp:{ name:'Fire Scream', mult:3.0 } },
   // Tán Nhân — pre-class starter, level 1-10, before the Calling. No element (no advantage or disadvantage).
   vophai: { name:'Unclassed', role:'Wandering / Free', element:null, color:'#b8a888', glow:'#e4ebff', bonus:{vit:1,def:1,str:1,agi:1,ene:0},
     atkSrc:{str:2.0},
-    glyph:'侠', desc:'No class yet claimed — one hatchling, alone in Lunacia. Reach level 10 and answer the Calling!',
+    desc:'Áo vải thô, một thanh kiếm ngắn, chưa mang huy hiệu của ai. Lên cấp 10 và đáp lời The Calling để chọn con đường của mình.',
     skillA:{ name:'Hatchling Strike', type:'cone', cd:4, qi:18, mult:1.4 },
     tp:{ name:'Wanderer\'s Resolve', mult:2.5 } },
 };
@@ -302,7 +302,6 @@ const MAP_BG_SRC = {
 const MAP_BG = {};
 for (const k in MAP_BG_SRC){ const im = new Image(); im.src = MAP_BG_SRC[k]; MAP_BG[k] = im; }
 for (const k in MOBS){ const im = new Image(); im.src = MOBS[k].img || ''; MOB_IMGS[k] = im; }
-const SLASH_IMG = new Image(); SLASH_IMG.src = 'assets/skills/slash.png';
 // Sourced status-effect overlay clips (axieinfinity/axie-origins-asset-kit web-vfx) — generic (not
 // per-class), played once at the moment a status effect actually lands (see playStatusFx below).
 // Grid metadata copied from each clip's clip.json (cols/rows/frameW/frameH/frames/fps/anchor).
@@ -468,20 +467,33 @@ let zoneBanner = null; // { text, sub, color, t }
 // ---------- Tường thành & Cổng thành — Tương Dương / Ngoại Ô ----------
 // Thành là khu an toàn tuyệt đối: quái không spawn trong thành, tường chặn mọi lối đi,
 // chỉ có Cổng Nam dẫn ra Ngoại Ô (có quái). Ngoại Ô có cổng ngược để quay về.
-const CITY_WALL = { map:'tuongduong', x1:950, y1:760, x2:1720, y2:1560, t:24, gateX1:1236, gateX2:1364 };
+// Bố cục kiểu Lorencia (MU Online): quảng trường vuông rộng ở giữa, tường bao 4 mặt, MỖI MẶT MỘT
+// CỔNG (Bắc/Nam/Đông/Tây) toả ra 4 hướng thế giới — thay cho thành hộp kín chỉ có 1 cổng Nam cũ,
+// vốn khiến toàn bộ NPC phải chen chúc trong một góc nhỏ.
+const CITY_WALL = { map:'tuongduong', x1:700, y1:560, x2:1900, y2:1250, t:24,
+  gateX:1300, gateY:905, gateW:132 };   // gateX/gateY: tâm cổng ngang & dọc · gateW: bề rộng lối mở
 const GATES = [
-  { map:'tuongduong', x:1300, y:1560, to:'ngoai',      name:'Qua Cổng Nam → Ngoại Ô' },
+  // Cổng đặt NGAY NGOÀI mỗi lối mở trên tường — bước ra khỏi thành là thấy cổng, bấm G để đi.
+  { map:'tuongduong', x:1300, y:1400, to:'ngoai',      name:'Cổng Nam → Petalshade Outskirts' },
+  { map:'tuongduong', x:1300, y:450,  to:'tuyettinh',  name:'Cổng Bắc → Frostmire Vale' },
+  { map:'tuongduong', x:580,  y:905,  to:'daohoa',     name:'Cổng Tây → Petalshade Isle' },
+  { map:'tuongduong', x:2020, y:905,  to:'chungnam',   name:'Cổng Đông → Thornwood Reach' },
   { map:'ngoai',      x:1300, y:240,  to:'tuongduong', name:'Qua Cổng Thành → Lunaris City' },
 ];
 let nearGate = null;
 function cityWallRects(){
-  const w = CITY_WALL;
+  const w = CITY_WALL, h = w.gateW/2;
+  const gx1 = w.gateX - h, gx2 = w.gateX + h;   // lối mở cổng Bắc & Nam
+  const gy1 = w.gateY - h, gy2 = w.gateY + h;   // lối mở cổng Tây & Đông
   return [
-    { x:w.x1,    y:w.y1-w.t, wd:w.x2-w.x1,       ht:w.t },              // bắc
-    { x:w.x1,    y:w.y2,     wd:w.gateX1-w.x1,   ht:w.t },              // nam-trái
-    { x:w.gateX2,y:w.y2,     wd:w.x2-w.gateX2,   ht:w.t },              // nam-phải
-    { x:w.x1-w.t,y:w.y1-w.t, wd:w.t, ht:w.y2-w.y1+w.t*2 },              // tây
-    { x:w.x2,    y:w.y1-w.t, wd:w.t, ht:w.y2-w.y1+w.t*2 },              // đông
+    { x:w.x1-w.t, y:w.y1-w.t, wd:gx1-(w.x1-w.t), ht:w.t },              // bắc-trái (ôm cả góc)
+    { x:gx2,      y:w.y1-w.t, wd:(w.x2+w.t)-gx2, ht:w.t },              // bắc-phải
+    { x:w.x1-w.t, y:w.y2,     wd:gx1-(w.x1-w.t), ht:w.t },              // nam-trái
+    { x:gx2,      y:w.y2,     wd:(w.x2+w.t)-gx2, ht:w.t },              // nam-phải
+    { x:w.x1-w.t, y:w.y1,     wd:w.t, ht:gy1-w.y1 },                    // tây-trên
+    { x:w.x1-w.t, y:gy2,      wd:w.t, ht:w.y2-gy2 },                    // tây-dưới
+    { x:w.x2,     y:w.y1,     wd:w.t, ht:gy1-w.y1 },                    // đông-trên
+    { x:w.x2,     y:gy2,      wd:w.t, ht:w.y2-gy2 },                    // đông-dưới
   ];
 }
 function collideCityWalls(){
@@ -760,6 +772,135 @@ function drawCityWalls(){
     }
   }
 }
+// ═══════════ QUẢNG TRƯỜNG LUNARIS — bố cục Lorencia + không khí ma mị ═══════════
+// Đài phun nước giữa quảng trường, lối lát đá toả ra 4 cổng, trụ đèn + cây khô, quạ đậu trên tường.
+function drawCityPlaza(){
+  const w = CITY_WALL, cx = w.gateX, cy = w.gateY, t = performance.now()/1000;
+  // nền quảng trường lát đá
+  ctx.fillStyle = 'rgba(96,88,74,.28)';
+  ctx.beginPath(); ctx.ellipse(cx, cy, 300, 210, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = 'rgba(70,62,50,.34)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.ellipse(cx, cy, 300, 210, 0, 0, 7); ctx.stroke();
+  // 4 lối lát đá chạy thẳng ra 4 cổng
+  ctx.strokeStyle = 'rgba(112,102,84,.32)'; ctx.lineWidth = 74;
+  ctx.beginPath();
+  ctx.moveTo(cx, w.y1); ctx.lineTo(cx, w.y2);
+  ctx.moveTo(w.x1, cy); ctx.lineTo(w.x2, cy);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(60,54,44,.22)'; ctx.lineWidth = 1.4;   // mạch đá
+  for (let i = -4; i <= 4; i++){
+    ctx.beginPath(); ctx.moveTo(cx + i*34, w.y1); ctx.lineTo(cx + i*34, w.y2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(w.x1, cy + i*34); ctx.lineTo(w.x2, cy + i*34); ctx.stroke();
+  }
+  // ── đài phun nước trung tâm ──
+  ctx.fillStyle = '#6a6152';
+  ctx.beginPath(); ctx.ellipse(cx, cy, 74, 44, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#4e4738';
+  ctx.beginPath(); ctx.ellipse(cx, cy, 64, 36, 0, 0, 7); ctx.fill();
+  const wg = ctx.createRadialGradient(cx, cy-6, 3, cx, cy, 60);   // mặt nước ánh lam ma mị
+  wg.addColorStop(0, 'rgba(150,210,255,.62)'); wg.addColorStop(1, 'rgba(40,80,130,.55)');
+  ctx.fillStyle = wg; ctx.beginPath(); ctx.ellipse(cx, cy, 58, 31, 0, 0, 7); ctx.fill();
+  for (let i = 0; i < 3; i++){                                     // gợn sóng lan
+    const k = ((t/2.4) + i/3) % 1;
+    ctx.strokeStyle = `rgba(190,235,255,${(1-k)*0.34})`; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.ellipse(cx, cy, 10 + k*46, 6 + k*25, 0, 0, 7); ctx.stroke();
+  }
+  ctx.fillStyle = '#78705e';                                       // trụ đá giữa
+  ctx.beginPath(); ctx.moveTo(cx-13, cy-4); ctx.lineTo(cx+13, cy-4);
+  ctx.lineTo(cx+8, cy-52); ctx.lineTo(cx-8, cy-52); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#8c8474';
+  ctx.beginPath(); ctx.ellipse(cx, cy-54, 22, 8, 0, 0, 7); ctx.fill();
+  const og = ctx.createRadialGradient(cx, cy-74, 2, cx, cy-74, 26); // quả cầu linh lực trên đỉnh
+  og.addColorStop(0, '#dff2ff'); og.addColorStop(0.45, 'rgba(122,190,255,.75)');
+  og.addColorStop(1, 'rgba(90,150,230,0)');
+  ctx.fillStyle = og; ctx.beginPath(); ctx.arc(cx, cy-74, 26 + Math.sin(t*1.6)*2.5, 0, 7); ctx.fill();
+  for (let i = 0; i < 4; i++){                                     // nước chảy xuống 4 phía
+    const a = i*Math.PI/2 + Math.PI/4;
+    ctx.strokeStyle = 'rgba(200,240,255,.42)'; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(cx + Math.cos(a)*16, cy-52);
+    ctx.quadraticCurveTo(cx + Math.cos(a)*34, cy-28, cx + Math.cos(a)*44, cy - 4 + Math.sin(a)*8); ctx.stroke();
+  }
+  // ── trụ đèn 4 góc quảng trường: quầng sáng ấm nhấp nháy ──
+  for (const [lx, ly] of [[cx-250, cy-150],[cx+250, cy-150],[cx-250, cy+150],[cx+250, cy+150]]){
+    ctx.fillStyle = '#3a3226'; ctx.fillRect(lx-3, ly-46, 6, 46);
+    ctx.fillStyle = '#2e2a20';
+    ctx.beginPath(); ctx.ellipse(lx, ly+2, 10, 4, 0, 0, 7); ctx.fill();
+    const fl = 0.78 + Math.sin(t*7 + lx*0.03)*0.16;                 // ngọn lửa lay động
+    const lg = ctx.createRadialGradient(lx, ly-54, 1, lx, ly-54, 46*fl);
+    lg.addColorStop(0, `rgba(255,214,140,${0.62*fl})`);
+    lg.addColorStop(1, 'rgba(255,170,70,0)');
+    ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(lx, ly-54, 46*fl, 0, 7); ctx.fill();
+    ctx.fillStyle = '#ffca6a'; ctx.beginPath(); ctx.ellipse(lx, ly-54, 5, 7*fl, 0, 0, 7); ctx.fill();
+  }
+  // ── cây khô trơ cành cạnh quảng trường (chất u ám) ──
+  drawDeadTree(cx - 330, cy + 190, t);
+  drawDeadTree(cx + 342, cy - 176, t + 2);
+  // ── quạ đậu trên tường bắc, thỉnh thoảng vỗ cánh ──
+  for (let i = 0; i < 5; i++){
+    const bx = w.x1 + 150 + i*230, by = w.y1 - 30;
+    const flap = Math.sin(t*2.2 + i*1.7) > 0.93 ? 4 : 0;
+    ctx.fillStyle = '#17141f';
+    ctx.beginPath(); ctx.ellipse(bx, by - flap, 6, 4.6, 0, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(bx + 5, by - 4 - flap, 3, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(bx+8, by-4-flap); ctx.lineTo(bx+13, by-3-flap); ctx.lineTo(bx+8, by-2-flap); ctx.closePath(); ctx.fill();
+    if (flap){ ctx.beginPath(); ctx.ellipse(bx-3, by-8, 7, 3, -0.5, 0, 7); ctx.fill(); }
+  }
+}
+function drawDeadTree(x, y, t){
+  const sway = Math.sin(t*0.5)*0.02;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(sway);
+  ctx.fillStyle = 'rgba(0,0,0,.22)';
+  ctx.beginPath(); ctx.ellipse(0, 2, 26, 8, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#2f2822'; ctx.lineCap = 'round';
+  ctx.lineWidth = 11; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-3, -74); ctx.stroke();
+  const limb = (bx, by, ex, ey, w2) => { ctx.lineWidth = w2; ctx.beginPath();
+    ctx.moveTo(bx, by); ctx.quadraticCurveTo((bx+ex)/2 + 6, (by+ey)/2, ex, ey); ctx.stroke(); };
+  limb(-2, -50, -40, -84, 6); limb(-2, -58, 34, -92, 6); limb(-3, -70, -22, -110, 4.5);
+  limb(-3, -72, 20, -116, 4.5); limb(-30, -76, -48, -100, 3); limb(26, -84, 44, -108, 3);
+  ctx.restore();
+}
+// Lớp sương mù + tàn lửa trôi — vẽ SAU cùng để phủ lên cả NPC/người chơi, tạo chiều sâu u ám.
+// Nhuộm tông chiều tà cho riêng Lunaris City: art nền vốn là ban ngày trời xanh rực rỡ, không hợp
+// không khí ma mị — phủ lớp lam-tím tối + vignette để ánh đèn, sương và tàn lửa hiện rõ.
+function drawCityMood(){
+  const vx = camera.x, vy = camera.y;
+  ctx.save();
+  ctx.globalCompositeOperation = 'multiply';
+  const g = ctx.createLinearGradient(vx, vy, vx, vy + H);
+  g.addColorStop(0, 'rgba(96,104,158,1)');    // trời ngả tím
+  g.addColorStop(0.55, 'rgba(124,120,152,1)');
+  g.addColorStop(1, 'rgba(86,84,116,1)');     // mặt đất chìm bóng
+  ctx.fillStyle = g; ctx.fillRect(vx, vy, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+  const vg = ctx.createRadialGradient(vx + W/2, vy + H/2, Math.min(W,H)*0.32,
+                                      vx + W/2, vy + H/2, Math.max(W,H)*0.78);
+  vg.addColorStop(0, 'rgba(10,8,20,0)'); vg.addColorStop(1, 'rgba(10,8,20,.52)');
+  ctx.fillStyle = vg; ctx.fillRect(vx, vy, W, H);
+  ctx.restore();
+}
+function drawCityHaze(){
+  const w = CITY_WALL, t = performance.now()/1000;
+  ctx.save();
+  for (let i = 0; i < 9; i++){                       // dải sương mỏng trôi ngang chậm sát mặt đất
+    const seed = i*97.3;
+    const fx = w.x1 - 200 + ((t*11 + seed*7) % (w.x2 - w.x1 + 520));
+    const fy = w.y1 + 90 + ((seed*13) % (w.y2 - w.y1 - 120));
+    const rw = 96 + (seed % 54), rh = 15 + (seed % 9);
+    const fg = ctx.createRadialGradient(fx, fy, 2, fx, fy, rw);
+    fg.addColorStop(0, 'rgba(172,186,220,.085)'); fg.addColorStop(1, 'rgba(172,186,220,0)');
+    ctx.fillStyle = fg; ctx.beginPath(); ctx.ellipse(fx, fy, rw, rh, 0, 0, 7); ctx.fill();
+  }
+  for (let i = 0; i < 22; i++){                      // tàn lửa/đom đóm linh hồn bay lên
+    const seed = i*53.7;
+    const life = ((t*0.32 + seed*0.11) % 1);
+    const ex = w.x1 + 60 + ((seed*29) % (w.x2 - w.x1 - 120)) + Math.sin(t*1.1 + seed)*12;
+    const ey = w.y2 - 40 - life*(w.y2 - w.y1 - 120);
+    const a = Math.sin(life*Math.PI) * 0.55;
+    ctx.fillStyle = `rgba(${i%3 ? '190,225,255' : '255,205,140'},${a})`;
+    ctx.beginPath(); ctx.arc(ex, ey, 1.6 + (seed % 2), 0, 7); ctx.fill();
+  }
+  ctx.restore();
+}
 function drawPortal(g){
   const t = performance.now()/1000;
   // đài phát sáng dưới chân
@@ -801,7 +942,7 @@ function drawGates(){
       ctx.fillStyle = '#d84a2a'; ctx.beginPath(); ctx.ellipse(g.x + s*64, g.y - 70, 6, 8, 0, 0, 7); ctx.fill();
       ctx.fillStyle = 'rgba(126,203,255,.85)'; ctx.beginPath(); ctx.ellipse(g.x + s*64, g.y - 70, 2.5, 3.5, 0, 0, 7); ctx.fill();
     }
-    drawCalligraphy('Cổng Thành', g.x, g.y - 118, '#6a4a2a', 15);
+    drawCalligraphy((g.name || 'Cổng Thành').split(' → ')[0], g.x, g.y - 118, '#6a4a2a', 15);
     if (nearGate === g){
       ctx.strokeStyle = 'rgba(126,203,255,.55)'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(g.x, g.y, 58 + Math.sin(performance.now()/300)*6, 20, 0, 0, 7); ctx.stroke();
@@ -818,7 +959,7 @@ const NPCS = [
   // trùng chỗ khác (Hồ Lô Thuốc = Dược Lão, Thiên Mệnh Phù = mua thẳng trong Rèn Luyện qua buyCharm()),
   // và "Chợ Đấu Giá" chưa từng có cơ chế đấu giá thật — chỉ là tiệm giá cố định như 3 tiệm kia.
   // Tiến Cấp Đan ×3 (món duy nhất không trùng) đã chuyển sang tiệm Dược Lão bên dưới.
-  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'tuongduong', x:1480, y:1180, img:'assets/npcs/thoren.png', talk:'forge' },
+  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'tuongduong', x:1780, y:780, img:'assets/npcs/thoren.png', talk:'forge' },
 ];
 const NPC_IMGS = {};
 for (const n of NPCS){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; }
@@ -865,41 +1006,41 @@ const VH_TIER = {
 // theo id (auto-hồi sinh & miễn hồi chiêu) — chỉ đổi tên hiển thị + đổi phai sang lớp mới.
 const VOHOC_DEFS = {
   // ── Dark Knight ──
-  dk_cyclone:    { name:'Cyclone', school:'Dark Knight', phai:'thieulam', tier:'so', cat:'Cận Chiến', type:'aoe', unlock:15, cd:7, qi:20, mult:1.8, color:'#4c8dff', icon:'assets/skills/vh_dk_cyclone.png', glyph:'旋', fx:{ r:150, kb:40 }, desc:'Xoay tít vũ khí quanh thân — đánh trúng mọi địch trong tầm gần.' },
-  dk_ragefulblow:{ name:'Rageful Blow', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Cận Chiến', type:'aoe', unlock:25, cd:8, qi:24, mult:2.2, color:'#3a6fd8', icon:'assets/skills/vh_dk_rageful.png', glyph:'怒', fx:{ r:170, kb:55, stun:0.8 }, desc:'Giáng vũ khí xuống đất — chấn động, hất văng & choáng nhẹ.' },
-  dk_crescent:   { name:'Crescent Moon Slash', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Cận Chiến', type:'cone', unlock:35, cd:6, qi:20, mult:2.0, color:'#6aa0ff', icon:'assets/skills/vh_dk_crescent.png', glyph:'月', fx:{ pierce:true }, desc:'Một đường chém hình trăng lưỡi liềm — xuyên thấu hàng dài địch.' },
-  dk_fortitude:  { name:'Greater Fortitude', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Bị Động', type:'passive', unlock:45, color:'#8ab8ff', icon:'assets/skills/vh_dk_fortitude.png', glyph:'盾', desc:'Bị động: +15% HP, +10% giảm sát thương.' },
-  tienthiencong: { name:'Undying Will', school:'Dark Knight', phai:'thieulam', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#ffe9a8', icon:'assets/skills/vh_dk_undying.png', glyph:'魂', desc:'Bị động: chết tự hồi sinh 50% HP — mỗi 300s một lần.' },
+  dk_cyclone:    { name:'Cyclone', school:'Dark Knight', phai:'thieulam', tier:'so', cat:'Cận Chiến', type:'aoe', unlock:15, cd:7, qi:20, mult:1.8, color:'#4c8dff', icon:'assets/skills/vh_dk_cyclone.png', glyph:'◉', fx:{ r:150, kb:40 }, desc:'Xoay tít vũ khí quanh thân — đánh trúng mọi địch trong tầm gần.' },
+  dk_ragefulblow:{ name:'Rageful Blow', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Cận Chiến', type:'aoe', unlock:25, cd:8, qi:24, mult:2.2, color:'#3a6fd8', icon:'assets/skills/vh_dk_rageful.png', glyph:'✹', fx:{ r:170, kb:55, stun:0.8 }, desc:'Giáng vũ khí xuống đất — chấn động, hất văng & choáng nhẹ.' },
+  dk_crescent:   { name:'Crescent Moon Slash', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Cận Chiến', type:'cone', unlock:35, cd:6, qi:20, mult:2.0, color:'#6aa0ff', icon:'assets/skills/vh_dk_crescent.png', glyph:'☾', fx:{ pierce:true }, desc:'Một đường chém hình trăng lưỡi liềm — xuyên thấu hàng dài địch.' },
+  dk_fortitude:  { name:'Greater Fortitude', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Bị Động', type:'passive', unlock:45, color:'#8ab8ff', icon:'assets/skills/vh_dk_fortitude.png', glyph:'♦', desc:'Bị động: +15% HP, +10% giảm sát thương.' },
+  tienthiencong: { name:'Undying Will', school:'Dark Knight', phai:'thieulam', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#ffe9a8', icon:'assets/skills/vh_dk_undying.png', glyph:'✦', desc:'Bị động: chết tự hồi sinh 50% HP — mỗi 300s một lần.' },
   // ── Dark Wizard ──
-  dw_lightning:  { name:'Lightning', school:'Dark Wizard', phai:'baidasan', tier:'so', cat:'Pháp Thuật', type:'proj', unlock:15, cd:5, qi:18, mult:1.7, color:'#7ec850', icon:'assets/skills/vh_dw_lightning.png', glyph:'電', fx:{ kb:20 }, desc:'Một tia sét đánh thẳng vào địch, có thể hất văng.' },
-  dw_evilspirit: { name:'Evil Spirit', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'aoe', unlock:25, cd:7, qi:26, mult:2.0, color:'#6ab850', icon:'assets/skills/vh_dw_evilspirit.png', glyph:'霊', fx:{ r:150 }, desc:'Giải phóng năng lượng bóng tối quanh người — sát thương diện rộng.' },
-  dw_ice:        { name:'Ice', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'proj', unlock:35, cd:6, qi:20, mult:1.6, color:'#5ac8e8', icon:'assets/skills/vh_dw_ice.png', glyph:'氷', fx:{ slow:{ pct:0.5, t:3 } }, desc:'Băng giá xuyên thấu — trúng đòn làm chậm mục tiêu.' },
-  dw_twister:    { name:'Twister', school:'Dark Wizard', phai:'baidasan', tier:'cao', cat:'Pháp Thuật', type:'proj', unlock:45, cd:6, qi:24, mult:1.8, color:'#8ac850', icon:'assets/skills/vh_dw_twister.png', glyph:'旋', fx:{ multi:3, pierce:true }, desc:'Ba cơn lốc xuyên phá — quét qua mọi địch trên đường đi.' },
-  dw_nova:       { name:'Nova', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Pháp Thuật', type:'aoe', unlock:55, cd:10, qi:35, mult:2.8, color:'#ffd76a', icon:'assets/skills/vh_dw_nova.png', glyph:'極', fx:{ r:180, big:true }, desc:'Dồn năng lượng ánh sáng rồi bùng nổ toàn diện — chiêu mạnh nhất phái.' },
-  songthu:       { name:'Arcane Insight', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#d8d8f0', icon:'assets/skills/vh_dw_arcane.png', glyph:'智', desc:'Bị động: 30% chiêu vừa tung không tốn hồi chiêu.' },
+  dw_lightning:  { name:'Lightning', school:'Dark Wizard', phai:'baidasan', tier:'so', cat:'Pháp Thuật', type:'proj', unlock:15, cd:5, qi:18, mult:1.7, color:'#7ec850', icon:'assets/skills/vh_dw_lightning.png', glyph:'⚡', fx:{ kb:20 }, desc:'Một tia sét đánh thẳng vào địch, có thể hất văng.' },
+  dw_evilspirit: { name:'Evil Spirit', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'aoe', unlock:25, cd:7, qi:26, mult:2.0, color:'#6ab850', icon:'assets/skills/vh_dw_evilspirit.png', glyph:'✦', fx:{ r:150 }, desc:'Giải phóng năng lượng bóng tối quanh người — sát thương diện rộng.' },
+  dw_ice:        { name:'Ice', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'proj', unlock:35, cd:6, qi:20, mult:1.6, color:'#5ac8e8', icon:'assets/skills/vh_dw_ice.png', glyph:'❄', fx:{ slow:{ pct:0.5, t:3 } }, desc:'Băng giá xuyên thấu — trúng đòn làm chậm mục tiêu.' },
+  dw_twister:    { name:'Twister', school:'Dark Wizard', phai:'baidasan', tier:'cao', cat:'Pháp Thuật', type:'proj', unlock:45, cd:6, qi:24, mult:1.8, color:'#8ac850', icon:'assets/skills/vh_dw_twister.png', glyph:'◉', fx:{ multi:3, pierce:true }, desc:'Ba cơn lốc xuyên phá — quét qua mọi địch trên đường đi.' },
+  dw_nova:       { name:'Nova', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Pháp Thuật', type:'aoe', unlock:55, cd:10, qi:35, mult:2.8, color:'#ffd76a', icon:'assets/skills/vh_dw_nova.png', glyph:'★', fx:{ r:180, big:true }, desc:'Dồn năng lượng ánh sáng rồi bùng nổ toàn diện — chiêu mạnh nhất phái.' },
+  songthu:       { name:'Arcane Insight', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#d8d8f0', icon:'assets/skills/vh_dw_arcane.png', glyph:'✧', desc:'Bị động: 30% chiêu vừa tung không tốn hồi chiêu.' },
   // Chiêu buff (ô 3 cố định — xem BUFF_SKILL_ID/defaultSkillBar): Dark Wizard mỏng máu nhất nên
   // được 1 khiên chắn tạm thời, bù lại lúc đứng lại tụ phép giữa tầm xa 420.
-  dw_shield:     { name:'Soul Barrier', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'buff', unlock:15, cd:10, qi:26, color:'#7ec850', icon:'assets/skills/vh_dw_shield.png', glyph:'盾', fx:{ shieldPct:45, t:6 }, desc:'Khiên hồn ma bao bọc — hấp thụ sát thương bằng 45% HP tối đa trong 6s.' },
+  dw_shield:     { name:'Soul Barrier', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'buff', unlock:15, cd:10, qi:26, color:'#7ec850', icon:'assets/skills/vh_dw_shield.png', glyph:'♦', fx:{ shieldPct:45, t:6 }, desc:'Khiên hồn ma bao bọc — hấp thụ sát thương bằng 45% HP tối đa trong 6s.' },
   // ── Fairy Elf ──
-  elf_heal:      { name:'Heal', school:'Fairy Elf', phai:'toanchan', tier:'so', cat:'Bị Động', type:'passive', unlock:15, color:'#3a9d8b', icon:'assets/skills/vh_elf_heal.png', glyph:'癒', desc:'Bị động: tự hồi 1% HP tối đa mỗi giây.' },
-  elf_greaterdef:{ name:'Greater Defense', school:'Fairy Elf', phai:'toanchan', tier:'trung', cat:'Hỗ Trợ', type:'buff', unlock:30, cd:10, qi:25, color:'#5ac8b8', icon:'assets/skills/vh_elf_greaterdef.png', glyph:'護', fx:{ shieldPct:40, t:6 }, desc:'Khiên năng lượng — hấp thụ sát thương bằng 40% HP tối đa trong 6s.' },
+  elf_heal:      { name:'Heal', school:'Fairy Elf', phai:'toanchan', tier:'so', cat:'Bị Động', type:'passive', unlock:15, color:'#3a9d8b', icon:'assets/skills/vh_elf_heal.png', glyph:'✚', desc:'Bị động: tự hồi 1% HP tối đa mỗi giây.' },
+  elf_greaterdef:{ name:'Greater Defense', school:'Fairy Elf', phai:'toanchan', tier:'trung', cat:'Bị Động', type:'passive', unlock:30, cd:10, qi:25, color:'#5ac8b8', icon:'assets/skills/vh_elf_greaterdef.png', glyph:'✚', fx:{ shieldPct:40, t:6 }, desc:'Khiên năng lượng — hấp thụ sát thương bằng 40% HP tối đa trong 6s.' },
   // Chiêu buff (ô 3 cố định): Greater Damage — đúng bản sắc Fairy Elf hỗ trợ trong MU Online.
-  elf_greaterdmg:{ name:'Greater Damage', school:'Fairy Elf', phai:'toanchan', tier:'cao', cat:'Hỗ Trợ', type:'buff', unlock:15, cd:10, qi:28, color:'#7ecbff', icon:'assets/skills/vh_elf_greaterdmg.png', glyph:'力', fx:{ dmgPct:35, t:6 }, desc:'Cường hoá sức mạnh — +35% sát thương trong 6s.' },
-  elf_swiftwind: { name:'Swift Wind', school:'Fairy Elf', phai:'toanchan', tier:'than', cat:'Hỗ Trợ', type:'buff', unlock:55, cd:8, qi:20, color:'#a0ffe9', icon:'assets/skills/vh_elf_swiftwind.png', glyph:'風', fx:{ selfEva:{ pct:45, t:4 } }, desc:'Gió nhanh theo bước chân — +45% né trong 4s.' },
+  elf_greaterdmg:{ name:'Greater Damage', school:'Fairy Elf', phai:'toanchan', tier:'cao', cat:'Hỗ Trợ', type:'buff', unlock:15, cd:10, qi:28, color:'#7ecbff', icon:'assets/skills/vh_elf_greaterdmg.png', glyph:'⚔', fx:{ dmgPct:35, t:6 }, desc:'Cường hoá sức mạnh — +35% sát thương trong 6s.' },
+  elf_swiftwind: { name:'Swift Wind', school:'Fairy Elf', phai:'toanchan', tier:'than', cat:'Bị Động', type:'passive', unlock:55, cd:8, qi:20, color:'#a0ffe9', icon:'assets/skills/vh_elf_swiftwind.png', glyph:'✽', fx:{ selfEva:{ pct:45, t:4 } }, desc:'Gió nhanh theo bước chân — +45% né trong 4s.' },
   // ── Magic Gladiator ──
-  mg_powerslash: { name:'Power Slash', school:'Magic Gladiator', phai:'minhgiao', tier:'so', cat:'Lai', type:'cone', unlock:15, cd:6, qi:20, mult:1.8, color:'#e8552a', icon:'assets/skills/vh_mg_powerslash.png', glyph:'力', fx:{}, desc:'Một đường kiếm khí quét ngang, dồn cả nội lực vào lưỡi kiếm.' },
-  mg_frostnova:  { name:'Frost Nova', school:'Magic Gladiator', phai:'minhgiao', tier:'trung', cat:'Lai', type:'aoe', unlock:30, cd:8, qi:26, mult:2.0, color:'#5ac8e8', icon:'assets/skills/vh_mg_frostnova.png', glyph:'氷', fx:{ r:150, slow:{ pct:0.4, t:3 } }, desc:'Bùng nổ băng giá quanh thân — làm chậm mọi địch trong tầm.' },
-  mg_ironwill:   { name:'Iron Will', school:'Magic Gladiator', phai:'minhgiao', tier:'cao', cat:'Bị Động', type:'passive', unlock:40, color:'#ffb060', icon:'assets/skills/vh_mg_ironwill.png', glyph:'鉄', desc:'Bị động: +10% HP, +8% giảm sát thương.' },
+  mg_powerslash: { name:'Power Slash', school:'Magic Gladiator', phai:'minhgiao', tier:'so', cat:'Lai', type:'cone', unlock:15, cd:6, qi:20, mult:1.8, color:'#e8552a', icon:'assets/skills/vh_mg_powerslash.png', glyph:'⚔', fx:{}, desc:'Một đường kiếm khí quét ngang, dồn cả nội lực vào lưỡi kiếm.' },
+  mg_frostnova:  { name:'Frost Nova', school:'Magic Gladiator', phai:'minhgiao', tier:'trung', cat:'Lai', type:'aoe', unlock:30, cd:8, qi:26, mult:2.0, color:'#5ac8e8', icon:'assets/skills/vh_mg_frostnova.png', glyph:'❄', fx:{ r:150, slow:{ pct:0.4, t:3 } }, desc:'Bùng nổ băng giá quanh thân — làm chậm mọi địch trong tầm.' },
+  mg_ironwill:   { name:'Iron Will', school:'Magic Gladiator', phai:'minhgiao', tier:'cao', cat:'Bị Động', type:'passive', unlock:40, color:'#ffb060', icon:'assets/skills/vh_mg_ironwill.png', glyph:'◆', desc:'Bị động: +10% HP, +8% giảm sát thương.' },
   // Chiêu buff (ô 3 cố định): hybrid cận-pháp — tăng cả sát thương lẫn khí thế trận đấu.
-  mg_battlefury: { name:'Battle Fury', school:'Magic Gladiator', phai:'minhgiao', tier:'trung', cat:'Lai', type:'buff', unlock:15, cd:10, qi:26, color:'#ff9a5a', icon:'assets/skills/vh_mg_battlefury.png', glyph:'闘', fx:{ dmgPct:30, t:6 }, desc:'Dồn cả nội lẫn ngoại lực — +30% sát thương trong 6s.' },
-  mg_flamestrike:{ name:'Flame Storm', school:'Magic Gladiator', phai:'minhgiao', tier:'than', cat:'Lai', type:'aoe', unlock:55, cd:11, qi:38, mult:3.0, color:'#ff7a3a', icon:'assets/skills/vh_mg_flamestorm.png', glyph:'焔', fx:{ r:200, kb:60, big:true }, desc:'Bão lửa nuốt trọn cả một vùng — chiêu bộc phát mạnh nhất phái.' },
+  mg_battlefury: { name:'Battle Fury', school:'Magic Gladiator', phai:'minhgiao', tier:'trung', cat:'Lai', type:'buff', unlock:15, cd:10, qi:26, color:'#ff9a5a', icon:'assets/skills/vh_mg_battlefury.png', glyph:'⚔', fx:{ dmgPct:30, t:6 }, desc:'Dồn cả nội lẫn ngoại lực — +30% sát thương trong 6s.' },
+  mg_flamestrike:{ name:'Flame Storm', school:'Magic Gladiator', phai:'minhgiao', tier:'than', cat:'Lai', type:'aoe', unlock:55, cd:11, qi:38, mult:3.0, color:'#ff7a3a', icon:'assets/skills/vh_mg_flamestorm.png', glyph:'☼', fx:{ r:200, kb:60, big:true }, desc:'Bão lửa nuốt trọn cả một vùng — chiêu bộc phát mạnh nhất phái.' },
   // ── Dark Lord ──
-  dl_electricspark:{ name:'Electric Spark', school:'Dark Lord', phai:'bug', tier:'so', cat:'Chỉ Huy', type:'proj', unlock:15, cd:5, qi:18, mult:1.6, color:'#8a9a3a', icon:'assets/skills/vh_dl_spark.png', glyph:'電', fx:{ stun:0.8 }, desc:'Tia điện từ quyền trượng — trúng đòn choáng nhẹ.' },
-  dl_darkspirit: { name:'Dark Spirit', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'aoe', unlock:30, cd:7, qi:24, mult:2.0, color:'#6a7a2a', icon:'assets/skills/vh_dl_darkspirit.png', glyph:'霊', fx:{ r:160 }, desc:'Triệu hồi u linh vây quanh — sát thương diện rộng.' },
-  dl_chaoticdiseier:{ name:'Chaotic Diseier', school:'Dark Lord', phai:'bug', tier:'cao', cat:'Chỉ Huy', type:'proj', unlock:40, cd:6, qi:22, mult:1.8, color:'#a8b85a', icon:'assets/skills/vh_dl_chaotic.png', glyph:'杖', fx:{ multi:3, pierce:true }, desc:'Ném quyền trượng xoay tít — xuyên thấu hàng dài địch.' },
-  dl_darkraven:  { name:'Dark Raven', school:'Dark Lord', phai:'bug', tier:'than', cat:'Chỉ Huy', type:'aoe', unlock:55, cd:10, qi:34, mult:2.6, color:'#2a1a3a', icon:'assets/skills/vh_dl_raven.png', glyph:'鴉', fx:{ r:180, kb:40, big:true }, desc:'Bầy quạ đen lao xuống xé nát mọi thứ trong tầm — chiêu chỉ huy tối thượng.' },
+  dl_electricspark:{ name:'Electric Spark', school:'Dark Lord', phai:'bug', tier:'so', cat:'Chỉ Huy', type:'proj', unlock:15, cd:5, qi:18, mult:1.6, color:'#8a9a3a', icon:'assets/skills/vh_dl_spark.png', glyph:'⚡', fx:{ stun:0.8 }, desc:'Tia điện từ quyền trượng — trúng đòn choáng nhẹ.' },
+  dl_darkspirit: { name:'Dark Spirit', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'aoe', unlock:30, cd:7, qi:24, mult:2.0, color:'#6a7a2a', icon:'assets/skills/vh_dl_darkspirit.png', glyph:'✦', fx:{ r:160 }, desc:'Triệu hồi u linh vây quanh — sát thương diện rộng.' },
+  dl_chaoticdiseier:{ name:'Chaotic Diseier', school:'Dark Lord', phai:'bug', tier:'cao', cat:'Chỉ Huy', type:'proj', unlock:40, cd:6, qi:22, mult:1.8, color:'#a8b85a', icon:'assets/skills/vh_dl_chaotic.png', glyph:'✦', fx:{ multi:3, pierce:true }, desc:'Ném quyền trượng xoay tít — xuyên thấu hàng dài địch.' },
+  dl_darkraven:  { name:'Dark Raven', school:'Dark Lord', phai:'bug', tier:'than', cat:'Chỉ Huy', type:'aoe', unlock:55, cd:10, qi:34, mult:2.6, color:'#2a1a3a', icon:'assets/skills/vh_dl_raven.png', glyph:'☾', fx:{ r:180, kb:40, big:true }, desc:'Bầy quạ đen lao xuống xé nát mọi thứ trong tầm — chiêu chỉ huy tối thượng.' },
   // Chiêu buff (ô 3 cố định): khí thế chỉ huy — dồn sức cho bản thân lẫn bầy tùy tùng theo sau.
-  dl_commandaura:{ name:'Command Aura', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'buff', unlock:15, cd:10, qi:26, color:'#a0b04a', icon:'assets/skills/vh_dl_command.png', glyph:'令', fx:{ dmgPct:25, t:6 }, desc:'Hào khí chỉ huy lan tỏa — +25% sát thương trong 6s.' },
+  dl_commandaura:{ name:'Command Aura', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'buff', unlock:15, cd:10, qi:26, color:'#a0b04a', icon:'assets/skills/vh_dl_command.png', glyph:'⚑', fx:{ dmgPct:25, t:6 }, desc:'Hào khí chỉ huy lan tỏa — +25% sát thương trong 6s.' },
 };
 // ═══════════ TỐI GIẢN TASKBAR: 3 Ô CỐ ĐỊNH KIỂU MU ONLINE ═══════════
 // Mỗi phái chỉ còn đúng 3 chiêu chủ động — 1 chiêu chính (skillA), 1 chiêu phụ (Trấn Phái), 1 buff có
@@ -918,19 +1059,18 @@ const LEGACY_SECT_SKILLS = ['dk_cyclone','dk_ragefulblow','dk_crescent',
   'mg_powerslash','mg_frostnova','mg_flamestrike',
   'dl_electricspark','dl_darkspirit','dl_chaoticdiseier','dl_darkraven'];
 const LEGACY_UNIVERSAL_PCT = { amkhi:1.5, danchi:2, bow:2, tieuhon:3 };
-// GDD §5.1: mọi chiêu khóa theo cảnh giới — giữ lại cho vhRealmReq()/tenuiFreeLearn() (Té Núi) dùng;
-// mọi chiêu bây giờ đều phai-locked nên luôn trả về 0 (tự ngộ theo cấp, không qua Bí Kíp/cảnh giới)
-const VH_REALM_REQ  = { so:5, trung:5, cao:6, than:7 };
-const VH_REALM_NAME = { 5:'Radiant Core Cảnh', 6:'Resonance · Trung Kỳ', 7:'Resonance · Hậu Kỳ' };
-function vhRealmReq(v){ return v.phai ? 0 : (VH_REALM_REQ[v.tier] || 5); }
 // Đăng ký võ học chủ động vào SKILL_DEFS — dùng chung cho castSkill(); chỉ chiêu buff (BUFF_SKILL_ID)
 // thực sự nằm ở taskbar 3 ô, còn lại chỉ tồn tại để tính legacyAtkPct và hiển thị ở tab Tuyệt Học Cũ
 for (const _vid in VOHOC_DEFS){
   const _v = VOHOC_DEFS[_vid];
   if (_v.type === 'passive') continue;
-  SKILL_DEFS[_vid] = { unlock:_v.unlock, kind:'vh', icon:_v.icon, desc:_v.desc,
+  SKILL_DEFS[_vid] = { unlock:_v.unlock, kind:'vh', desc:_v.desc,
+    // icon đọc động (getter) thay vì chụp giá trị một lần: cho phép probeSkillIcons() thay bằng icon
+    // tự sinh khi file art khai báo chưa tồn tại — xem genSkillIcon() ngay dưới SECT_ART.
+    get icon(){ return _v.icon; },
     req:()=>vhLearned(_vid),
-    reqTxt:_v.phai ? 'Võ học môn phái — tự ngộ khi đạt cấp' : `Cần ${VH_REALM_NAME[VH_REALM_REQ[_v.tier]]} + ${VH_TIER[_v.tier].cost} 📜 Sách Kỹ Năng (bấm K)` };
+    // Lưu ý: chuỗi này tính NGAY lúc nạp module (player chưa tồn tại) nên không được đọc player ở đây.
+    reqTxt:`Tự ngộ khi đạt cấp ${_v.unlock} nếu đúng Lớp — khác Lớp cần ${VH_TIER[_v.tier].cost} 📜 Sách Kỹ Năng (bấm K → Tuyệt Học Cũ)` };
 }
 // MU không có khái niệm "dung hợp liên phái" — hệ Dung Hợp (30 chiêu) đã bị cắt hẳn theo hướng tối
 // giản. Giữ FUSION_DEFS rỗng (thay vì xoá luôn định danh) để mọi chỗ tham chiếu cũ (vòng lặp/lookup)
@@ -941,6 +1081,11 @@ const FUSION_DEFS = {};
 function skLv(id){ return (player && player.skillLv && player.skillLv[id]) || 1; }
 function skLvMult(id){ return 1 + (skLv(id) - 1) * 0.025; }
 function skUpCost(id){ return Math.round(150 * Math.pow(skLv(id), 1.45)); }
+// Instinct (player.khi) — nơi tiêu DUY NHẤT của chỉ số này. Trước đây nó tích lũy từ đánh quái/thiền/
+// nhiệm vụ rồi hiện thường trực trên HUD mà không tiêu được ở đâu cả (nơi tiêu cũ là tự tay xung Kinh
+// Mạch, đã bị thay bằng tự động theo cấp) — một con số vô nghĩa cứ tăng mãi. Đường cong thoải hơn bạc
+// (mũ 1.1 so với 1.45) để nó là "tài nguyên farm tự nhiên có sẵn", không phải bức tường chặn.
+function skUpKhi(id){ return Math.round(30 * Math.pow(skLv(id), 1.1)); }
 
 // GDD Đợt 2 B6: mốc cảnh giới chiêu 20-120 (nhân dồn với +2.5% ST/cấp)
 const SK_MILESTONES = [
@@ -1020,19 +1165,21 @@ window.upgradeSkillUI = function(id){
   const lv = skLv(id);
   if (lv >= 120){ addFloat(player.x, player.y-40, 'Kỹ năng đã viên mãn (Lv 120)!', '#8a8a8a', 12); return; }
   if (lv >= player.level){ addFloat(player.x, player.y-40, `Cấp kỹ năng ≤ cấp nhân vật (${player.level})`, '#8a8a8a', 12); return; }
-  const cost = skUpCost(id);
+  const cost = skUpCost(id), khiCost = skUpKhi(id);
   if (player.silver < cost){ addFloat(player.x, player.y-40, `Cần ${cost.toLocaleString()} bạc`, '#8a8a8a', 12); return; }
+  if ((player.khi || 0) < khiCost){ addFloat(player.x, player.y-40, `Cần ${khiCost.toLocaleString()} Instinct (đánh quái / ngồi thiền để tích)`, '#7fd8e0', 12); return; }
   const _msI = SK_MILESTONES.findIndex(x => x.lv === lv + 1);
   const _tdNeed = _msI >= 0 ? _msI + 1 : 0; // đột phá cảnh giới chiêu: mốc 20→1💠, 40→2💠 ... 120→6💠
   if ((player.tamdac || 0) < _tdNeed){ addFloat(player.x, player.y-40, `Đột phá ${SK_MILESTONES[_msI].name} cần ${_tdNeed} 💠 Tâm Đắc (hạ tinh anh/boss)`, '#7df9ff', 12); return; }
   player.silver -= cost;
+  player.khi -= khiCost;
   if (_tdNeed) player.tamdac -= _tdNeed;
   if (!player.skillLv) player.skillLv = {};
   player.skillLv[id] = lv + 1;
   const _ms = _msI >= 0 ? SK_MILESTONES[_msI] : null; // GDD Đợt 2 B6: đạt mốc cảnh giới chiêu
   const _evoIdx = _ms ? EVO_LVS.indexOf(_ms.lv) : -1; // 40/80/120 — mốc tiến hóa có chọn nhánh
   if (_ms){
-    zoneBanner = { text:'☯ ' + skillInfo(id).name, sub:`Đạt mốc ${_ms.name} (cấp ${lv+1}) — ${milestoneTxt(_ms)}${_evoIdx >= 0 ? ' · ⚡ CHIÊU THỨC TIẾN HÓA!' : ''}`, color:'#ffb15c', t:3.5 };
+    zoneBanner = { text:'◑ ' + skillInfo(id).name, sub:`Đạt mốc ${_ms.name} (cấp ${lv+1}) — ${milestoneTxt(_ms)}${_evoIdx >= 0 ? ' · ⚡ CHIÊU THỨC TIẾN HÓA!' : ''}`, color:'#ffb15c', t:3.5 };
     AudioSys.sfx('quest', 0.8);
     addEffect({ type:'ring', x:player.x, y:player.y, r:80, color:'#ffb15c', big:true });
   }
@@ -1062,7 +1209,7 @@ function upBtnHtml(id){
   const _msI = SK_MILESTONES.findIndex(x => x.lv === lv + 1);
   const _tdNeed = _msI >= 0 ? _msI + 1 : 0;
   const _stg = evoStage(id);
-  return `${_spB}<button class="mini-btn vh-learn-btn" style="margin-right:3px" title="Cấp ${lv}/120${cur ? ' · ' + cur.name : ''} · ⚡tiến hóa bậc ${_stg}/3 (mốc 40/80/120, mỗi mốc chọn nhánh Bá Đạo/Tốc Chiến) — nâng: ${skUpCost(id).toLocaleString()} bạc${_tdNeed ? ` + ${_tdNeed} 💠 Tâm Đắc đột phá` : ''}, +2,5% ST, −0,25% hồi chiêu${nm ? ` · mốc kế ${nm.name} (cấp ${nm.lv}): ${milestoneTxt(nm)}` : ''} · cấp kỹ năng ≤ cấp nhân vật" onclick="window.upgradeSkillUI('${id}')">⬆${lv}${_stg ? '⚡' + _stg : ''}${_tdNeed ? '💠' + _tdNeed : ''}</button>${evoBadgeHtml(id)}`;
+  return `${_spB}<button class="mini-btn vh-learn-btn" style="margin-right:3px" title="Cấp ${lv}/120${cur ? ' · ' + cur.name : ''} · ⚡tiến hóa bậc ${_stg}/3 (mốc 40/80/120, mỗi mốc chọn nhánh Bá Đạo/Tốc Chiến) — nâng: ${skUpCost(id).toLocaleString()} bạc + ${skUpKhi(id).toLocaleString()} Instinct${_tdNeed ? ` + ${_tdNeed} 💠 Tâm Đắc đột phá` : ''}, +2,5% ST, −0,25% hồi chiêu${nm ? ` · mốc kế ${nm.name} (cấp ${nm.lv}): ${milestoneTxt(nm)}` : ''} · cấp kỹ năng ≤ cấp nhân vật" onclick="window.upgradeSkillUI('${id}')">⬆${lv}${_stg ? '⚡' + _stg : ''}${_tdNeed ? '💠' + _tdNeed : ''}</button>${evoBadgeHtml(id)}`;
 }
 window.assignSpaceUI = function(id){
   if (!player) return;
@@ -1079,20 +1226,22 @@ function learnVohoc(id){
   player.vohoc[id] = true;
   calcDerived(); saveGame();
   addFloat(player.x, player.y-66, `✦ Ngộ được: ${v.name}!`, VH_TIER[v.tier].color, 16);
-  zoneBanner = { text:'VÕ HỌC PHỔ', sub:`${v.school} · ${v.name} — bấm K gán vào taskbar`, color:VH_TIER[v.tier].color, t:3.5 };
+  zoneBanner = { text:'TUYỆT HỌC', sub:`${v.school} · ${v.name} — +${LEGACY_TIER_PCT[v.tier] || 0}% Công Kích vĩnh viễn (xem K → Tuyệt Học Cũ)`, color:VH_TIER[v.tier].color, t:3.5 };
   AudioSys.sfx('quest', 0.9);
+}
+// Sách Kỹ Năng (bikipVH) — đường tiêu duy nhất: học tuyệt học NGOẠI LỚP. Võ học của chính lớp mình
+// vẫn tự ngộ miễn phí theo cấp (vhAutoLearn), còn 4 lớp kia phải mua bằng Sách Kỹ Năng — hoặc nhận
+// sạch miễn phí khi Thăng Tiên. QA: điều kiện cũ là `v.phai` → luôn true sau đợt MU-hoá (mọi chiêu
+// đều phai-locked), khiến hàm này không bao giờ chạy được và Sách Kỹ Năng thành tiền tệ chết.
+function crossClassLearnable(id){
+  const v = VOHOC_DEFS[id];
+  return !!(v && v.phai && v.phai !== player.sect && LEGACY_SECT_SKILLS.includes(id));
 }
 window.learnVohocUI = function(id){
   const v = VOHOC_DEFS[id];
-  if (!v || vhLearned(id) || v.phai) return;
+  if (!v || vhLearned(id) || !crossClassLearnable(id)) return;
   const cost = VH_TIER[v.tier].cost;
   if (player.level < v.unlock){ addFloat(player.x, player.y-40, `Cần cấp ${v.unlock}`, '#8a8a8a', 12); return; }
-  const _rReq = vhRealmReq(v);
-  if (((player.dantian && player.dantian.realm) || 0) < _rReq){
-    addFloat(player.x, player.y-40, `Chưa ngộ nổi — cần ${VH_REALM_NAME[_rReq]}`, '#b08ae8', 13);
-    addFloat(player.x, player.y-56, 'Đột phá Ascension (N) rồi đến vách Té Núi cầu cơ duyên!', '#9aa8d4', 11);
-    return;
-  }
   if ((player.bikipVH || 0) < cost){ addFloat(player.x, player.y-40, `Thiếu Sách Kỹ Năng (cần ${cost})`, '#ffb15c', 12); return; }
   player.bikipVH -= cost;
   learnVohoc(id);
@@ -1113,84 +1262,28 @@ function vhKnockback(m, ang, px){
 }
 
 // ═══════════ VFX TUYỆT CHIÊU — mỗi thần công một hình ảnh riêng, không trùng lặp ═══════════
-// FS_VFX: 30 dung hợp · VH_VFX: 24 võ học chủ động. style → drawVfx, proj → drawProjStyled.
+// VH_VFX: võ học chủ động · style → drawVfx, proj → drawProjStyled.
 // SECT_VFX: 16 tuyệt chiêu môn phái (8 chiêu chính sx_*_a + 8 trấn phái sx_*_c) — hình ảnh riêng từng phái
 const SECT_VFX = {
   sx_thieulam_a: { style:'windslash',    c2:'#cfe8ff' },                      // Twisting Slash (Dark Knight) — chém xoáy cuốn gió
   sx_thieulam_c: { style:'fist',         c2:'#ffe9a0' },                      // Đại Lực Kim Cương Chưởng — chưởng ấn khổng lồ
   sx_toanchan_a: { style:'flash',        c2:'#d8f4ff', proj:'arrow' },        // Multi-Shot (Fairy Elf) — loạt tên bắn tỉa
   sx_toanchan_c: { style:'hexa',         c2:'#c8ecff', spin:1.5 },            // Thất Tinh Hội Kiếm — trận Bắc Đẩu thất tinh
-  sx_comoc_a:    { style:'crescents',    c2:'#e8dcff', proj:'blade' },        // Song Hoàn Trảm — nguyệt hoàn đôi
-  sx_comoc_c:    { style:'petals',       c2:'#f0e8ff' },                      // Ngọc Nữ Tố Tâm Kiếm — song kiếm ngọc
-  sx_baidasan_a: { style:'flash',        c2:'#b8ff9a', proj:'serpent' },      // Linh Xà Độc Tiêu — xà tiêu độc
+  sx_baidasan_a: { style:'flash',        c2:'#b8ff9a', proj:'serpent' },      // Poison (Dark Wizard) — xà tiêu độc
   sx_baidasan_c: { style:'meteor',       c2:'#ffcf7a' },                      // Meteor (Dark Wizard) — vẫn thạch lửa giáng thế
   sx_minhgiao_a: { style:'fireslash',    c2:'#ffcf7a' },                      // Fire Slash (Magic Gladiator) — đao quang cuốn lửa
-  sx_minhgiao_c: { style:'vortex',       c2:'#ff9a5a', spin:2.8 },            // Càn Khôn Đại Na Di — vòng xoáy càn khôn
-  sx_doanthi_a:  { style:'flash',        c2:'#fff0b8', proj:'beam' },         // Nhất Dương Chỉ — chỉ lực xuyên thấu
-  sx_doanthi_c:  { style:'suns',         c2:'#ffe9a0', spin:2.0 },            // Lục Đạo Kiếm Khí — lục mạch kiếm quang
-  sx_daohoa_a:   { style:'petals',       c2:'#ffd8e8' },                      // Lạc Anh Kiếm Vũ — hoa đào cuồn vũ
-  sx_daohoa_c:   { style:'dragonwave',   c2:'#a8e0d8' },                      // Bích Hải Triều Sinh Khúc — sóng triều âm luật
+  sx_minhgiao_c: { style:'vortex',       c2:'#ff9a5a', spin:2.8 },            // Flame Strike (Magic Gladiator) — vòng xoáy lửa
+  // QA: Dark Lord (sect id 'bug') chưa từng có entry nào ở đây — cả chiêu chính lẫn Trấn Phái đều rơi
+  // về style mặc định chung chung, là lớp DUY NHẤT không có hình ảnh nhận diện riêng khi tung chiêu.
+  sx_bug_a:      { style:'windslash',    c2:'#d0e07a' },                      // Force Wave (Dark Lord) — sóng chấn quyền trượng
+  sx_bug_c:      { style:'demonburst',   c2:'#ffb15c' },                      // Fire Scream (Dark Lord) — ma hỏa gào thét tỏa ra
   sx_vophai_a:   { style:'fist',         c2:'#e8d8a8' },                      // Du Hiệp Quyền — quyền kình
   sx_vophai_c:   { style:'stormhost',    c2:'#e4ebff' },                      // Tứ Hải Giai Phục — sóng chưởng tứ hải
 };
-const FS_VFX = {
-  fs_haptinh:    { style:'vortex',       c2:'#0e4a3e', spin:3.2 },
-  fs_thatthuong: { style:'fist',         c2:'#ffb35a' },
-  fs_huyenminh:  { style:'frost',        c2:'#bfeaff' },
-  fs_cuuduongthan:{ style:'sunwheel',    c2:'#ff8a3a', spin:2.4 },
-  fs_longtuong:  { style:'dragonwave',   c2:'#fff0b8' },
-  fs_hogiadao:   { style:'crescents',    c2:'#dff4ff', proj:'blade' },
-  fs_kimxa:      { style:'flash',        c2:'#ffec9e', proj:'serpent' },
-  fs_chietmai:   { style:'petals',       c2:'#ffffff' },
-  fs_lucduong:   { style:'suns',         c2:'#ffd76a', spin:2.0 },
-  fs_truyenam:   { style:'flash',        c2:'#c09aff', proj:'note' },
-  fs_bathoang:   { style:'hexa',         c2:'#ffd76a', spin:1.5 },
-  fs_hoacot:     { style:'bonemist',     c2:'#e8e8e8' },
-  fs_huyenam:    { style:'flash',        c2:'#e0c8ff', proj:'beam' },
-  fs_kimcang:    { style:'vajra',        c2:'#fff4c8', spin:1.2 },
-  fs_thaihuyen:  { style:'galaxy',       c2:'#8ab8ff', spin:1.8 },
-  fs_ngukiem:    { style:'swordride',    c2:'#eaf6ff' },
-  fs_vankiem:    { style:'flash',        c2:'#cfe8ff', proj:'sword' },
-  fs_cuuthien:   { style:'thunderpillar',c2:'#fff2a8' },
-  fs_hoaphuong:  { style:'phoenix',      c2:'#ff9a5a' },
-  fs_huyenbang:  { style:'icecage',      c2:'#ffffff' },
-  fs_nguhanh:    { style:'wuxing',       c2:'#8ae8c8' },
-  fs_thienma:    { style:'demonburst',   c2:'#ff5a3a' },
-  fs_huyetma:    { style:'bloodclaw',    c2:'#ff8a8a' },
-  fs_thaiat:     { style:'flash',        c2:'#ffffff', proj:'beam2' },
-  fs_tutuong:    { style:'seal4',        c2:'#ffe8a8' },
-  fs_bangphong:  { style:'icefield',     c2:'#e8f6ff' },
-  fs_loidinh:    { style:'stormhost',    c2:'#fff8c0' },
-  fs_phethien:   { style:'devourmaw',    c2:'#3a0a4a', spin:2.6 },
-  fs_dalat:      { style:'flash',        c2:'#fff8e0', proj:'sword' },
-  fs_nietban:    { style:'buddhapalm',   c2:'#fff8d8' },
-};
+// VH_VFX: hình ảnh riêng cho chiêu Võ Học Phổ. Sau đợt MU-hoá chỉ còn Dark Raven cần entry
+// riêng (các style khác đã gắn thẳng vào SECT_VFX theo lớp).
 const VH_VFX = {
-  lahanquan:   { style:'fist',       c2:'#ffe8b0' },
-  longtraothu: { style:'bloodclaw',  c2:'#ffd0a0' },
-  niemhoachi:  { style:'flash',      c2:'#ffffff', proj:'shard' },
-  vodangkiem:  { style:'crescents',  c2:'#dff0ff' },
-  batquaichuong:{ style:'hexa',      c2:'#a8ffd8', spin:1.0 },
-  thanhanh:    { style:'wuxing',     c2:'#8ad8ff' },
-  thaicuckiem: { style:'vajra',      c2:'#b8d8ff', spin:0.9 },
-  thaicucquan: { style:'dragonwave', c2:'#c8d8ff' },
-  thuanduong:  { style:'sunwheel',   c2:'#ff6a3a', spin:2.0 },
-  lienhoaquyen:{ style:'fist',       c2:'#ffb0a0' },
-  dacau:       { style:'suns',       c2:'#c8e8a0', spin:2.6 },
-  hanglong:    { style:'dragonwave', c2:'#ffb060' },
-  sinhtuphu:   { style:'flash',      c2:'#b0ff90', proj:'serpent' },
-  langba:      { style:'wuxing',     c2:'#90ffe0' },
-  bacminh:     { style:'vortex',     c2:'#2a3a6a', spin:2.8 },
-  tieuvotuong: { style:'galaxy',     c2:'#e8e8ff', spin:1.2 },
-  tckiemphap:  { style:'flash',      c2:'#d8e8ff', proj:'sword' },
-  bichbochuong:{ style:'petals',     c2:'#ffd0e0' },
-  thanhhoa:    { style:'phoenix',    c2:'#ff8a50' },
-  capmocong:   { style:'demonburst', c2:'#ffa050' },
-  tichta:      { style:'bloodclaw',  c2:'#d8a0ff' },
-  cuuamtrao:   { style:'bloodclaw',  c2:'#f0f0e8' },
-  lucmach:     { style:'flash',      c2:'#ffffff', proj:'beam', rainbow:true },
-  docco:       { style:'flash',      c2:'#e0b0ff', proj:'blade' },
-  dl_darkraven:{ style:'crowswarm', c2:'#ff5a3a' },                          // Dark Raven (Dark Lord) — bầy quạ đen xoáy vào
+  dl_darkraven:{ style:'crowswarm', c2:'#ff5a3a' },   // Dark Raven (Dark Lord) — bầy quạ đen xoáy vào
 };
 function _vxLine(x1, y1, x2, y2){ ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
 function _vxBolt(x, y, ang, len, w, col){
@@ -1225,7 +1318,7 @@ function _vxGlyph(x, y, ch, s, col, al){
   ctx.fillStyle = col; ctx.fillText(ch, x, y + s*0.35);
 }
 function drawVfx(e, k, a){
-  const S = e.style, X = e.x, Y = e.y, F = e.face || 0, R = e.r || 100, C1 = e.c1 || '#fff', C2 = e.c2 || '#fff', G = e.glyph || '氣';
+  const S = e.style, X = e.x, Y = e.y, F = e.face || 0, R = e.r || 100, C1 = e.c1 || '#fff', C2 = e.c2 || '#fff', G = e.glyph || '✦';
   const spin = e.ang || 0;
   ctx.save(); ctx.lineCap = 'round';
   const arc  = (x, y, r, a0, a1, c, w, al) => { ctx.strokeStyle = c; ctx.lineWidth = w; ctx.globalAlpha = al; ctx.beginPath(); ctx.arc(x, y, Math.max(1, r), a0, a1); ctx.stroke(); };
@@ -1319,7 +1412,7 @@ function drawVfx(e, k, a){
     for (let i = 0; i < 3; i++){ const t = i/3; _vxSword(x0 + (X-x0)*t, y0 + (Y-y0)*t, F, 30, i ? C2 : C1, a*(1 - t*0.5)); }
     ctx.strokeStyle = C1; ctx.lineWidth = 6; ctx.globalAlpha = a*0.9; _vxLine(x0, y0, X, Y);
     ctx.strokeStyle = C2; ctx.lineWidth = 2; _vxLine(x0, y0, X, Y);
-  } else if (S === 'wuxing'){ // Ngũ Hành / Thần Hành / Lăng Ba — ngũ sắc độn quang
+  } else if (S === 'wuxing'){ // vòng nguyên tố — 5 sắc quang xoay
     const x0 = e.x0 != null ? e.x0 : X, y0 = e.y0 != null ? e.y0 : Y;
     const cols = [C1, C2, '#ffd76a', '#8ae8c8', '#ff9ae0'];
     for (let i = 1; i <= 5; i++){ const t = i/5; arc(x0 + (X-x0)*t, y0 + (Y-y0)*t, 10 + 6*(1-k), F - 0.9, F + 0.9, cols[i-1], 4, a*0.85); }
@@ -1337,7 +1430,7 @@ function drawVfx(e, k, a){
     for (let i = 0; i < 6; i++){ const ang = F + (i - 2.5)*0.3; const L = R*(0.3 + k*0.6); _vxFlake(X + Math.cos(ang)*L, Y + Math.sin(ang)*L, 6*(1-k) + 3, i%2 ? C1 : C2, a*0.9); }
   } else if (S === 'seal4'){ // Tứ Tượng — vuông ấn + tứ linh tứ phương
     poly(X, Y, R*(0.45 + k*0.25), 4, Math.PI/4, C1, 4, a*0.9);
-    const bs = ['龍', '虎', '雀', '武'];
+    const bs = ['★', '◆', '▲', '⚔'];
     for (let i = 0; i < 4; i++){ const aa = i*Math.PI/2 - Math.PI/2; _vxGlyph(X + Math.cos(aa)*R*0.5, Y + Math.sin(aa)*R*0.5, bs[i], 18, C2, a*(1 - k*0.5)); }
     disc(X, Y, 6, C1, a*0.9);
   } else if (S === 'icefield'){ // Băng Phong — băng nguyên phủ sóng
@@ -1353,7 +1446,7 @@ function drawVfx(e, k, a){
     ctx.beginPath(); ctx.ellipse(X, Y, pr*0.42, pr*0.5, 0, 0, 7); ctx.fill();
     for (let i = 0; i < 5; i++){ const fx = X + (i-2)*pr*0.2; const fl = pr*(0.34 + (i === 2 ? 0.12 : (i%2 ? 0.04 : 0)));
       ctx.beginPath(); ctx.ellipse(fx, Y - pr*0.5 - fl*0.5, pr*0.085, fl*0.55, 0, 0, 7); ctx.fill(); }
-    _vxGlyph(X, Y, '卍', pr*0.5, C2, a);
+    _vxGlyph(X, Y, '✦', pr*0.5, C2, a);
   } else if (S === 'windslash'){ // Twisting Slash (Dark Knight) — chém xoáy cuốn gió
     const rr = R*(0.35 + k*0.55);
     arc(X, Y, rr, F - 0.95, F + 0.95, C1, 6*(1 - k*0.4), a*0.9);
@@ -1451,8 +1544,8 @@ function drawProjStyled(p){
   ctx.restore();
 }
 function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
-  const c = FS_VFX[id] || VH_VFX[id] || SECT_VFX[id] || null;
-  const col = v.color || '#7ecbff', c2 = (c && c.c2) || '#ffffff', glyph = v.glyph || '氣';
+  const c = VH_VFX[id] || SECT_VFX[id] || null;
+  const col = v.color || '#7ecbff', c2 = (c && c.c2) || '#ffffff', glyph = v.glyph || '✦';
   const style = (c && c.style) || ({ cone:'crescents', cast:'flash', aoe:'suns', dash:'wuxing', buff:'vajra' })[phase] || 'flash';
   if (phase === 'cone'){
     addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:0.55, spin:(c && c.spin) || 0 });
@@ -1531,7 +1624,7 @@ function castVohoc(id){
     const base = t ? Math.atan2(t.y - player.y, t.x - player.x) : player.face;
     player.face = base;
     const n = (fx.multi || 1) + _st, spd = fx.speed || 540; // tiến hóa: +1 đạo mỗi bậc (Lục Mạch 1→2→3→4 kiếm)
-    const _vc = FS_VFX[id] || VH_VFX[id] || null;
+    const _vc = VH_VFX[id] || null;
     for (let i = 0; i < n; i++){
       const off = n > 1 ? (i - (n-1)/2) * 0.18 : 0;
       projectiles.push({ x:player.x, y:player.y, ang:base + off, speed:spd, dmg:player.atk * v.mult * _mul, kind:'skill', life:0.95, color:(_vc && _vc.rainbow) ? `hsl(${Math.round(i*360/Math.max(n,1))},85%,66%)` : col, pierce:!!fx.pierce, vhfx:fx, style:(_vc && _vc.proj) || undefined, seed:i });
@@ -1559,18 +1652,7 @@ function castVohoc(id){
       }, _w * 260);
     }
   }
-  else if (v.type === 'dash'){
-    const t = nearestMob(240);
-    const ang = t ? Math.atan2(t.y - player.y, t.x - player.x) : player.face;
-    player.face = ang;
-    const D = Math.round((fx.dist || 140) * (1 + 0.15 * _st)); // tiến hóa: lướt +15%/bậc
-    const _dx0 = player.x, _dy0 = player.y;
-    player.x = clamp(player.x + Math.cos(ang)*D, 20, MAP.w-20);
-    player.y = clamp(player.y + Math.sin(ang)*D, 20, MAP.h-20);
-    spawnSkillVfx(id, v, 'dash', ang, D, _dx0, _dy0);
-    if (fx.eva){ player.vhEvaT = fx.eva.t; player.vhEvaPct = fx.eva.pct; addFloat(player.x, player.y-60, `+${fx.eva.pct}% né (${fx.eva.t}s)`, '#a0ffe9', 12); }
-    if (fx.strikeMult){ const t2 = nearestMob(120); if (t2) hitMob(t2, fx.strikeMult); }
-  }
+  // (nhánh type:'dash' đã xoá — không còn chiêu nào mang type đó sau đợt MU-hoá)
   else if (v.type === 'buff'){
     spawnSkillVfx(id, v, 'buff', 0, 95);
     const _bt = Math.round((fx.t || 0) * (1 + 0.5 * _st)); // tiến hóa: buff bền +50%/bậc
@@ -1783,7 +1865,7 @@ function drawSkyOverlay(){ // screen-space — gọi sau vignette, trước zone
     if (wxFlashT > 0){ ctx.fillStyle = 'rgba(235,240,255,' + Math.min(0.5, wxFlashT*2.6).toFixed(3) + ')'; ctx.fillRect(0, 0, W, H); } // chớp giông
   }
   // ── Ánh sáng động (Gói C) ──
-  if (dk === 0 && !SETTINGS.lowFx && (!wx || wx.id === 'sun' || wx.id === 'sunhot')) drawSunRays();
+  if (dk === 0 && !SETTINGS.lowFx && !mapDef().city && (!wx || wx.id === 'sun' || wx.id === 'sunhot')) drawSunRays(); // thành giữ tông chiều tà (drawCityMood), không chiếu nắng chói
   if (dk > 0.15 && curMap === 'tuongduong' && !SETTINGS.lowFx && typeof camera !== 'undefined') drawLanternGlow(dk);
 }
 
@@ -1818,21 +1900,184 @@ for (let i=1;i<MOUNT_TIERS.length;i++){
 }
 
 // ---------- Sect art (portraits + skill icons) ----------
-// TODO(art): paths below still point at the wuxia-era assets/sects/ and assets/skills/ art.
-// Once the Axie art folder lands, drop class portraits + skill icons at assets/classes/<key>/
+// Chỉ còn icon kỹ năng. Chân dung nhân vật nay dựng bằng drawHeroFigure() (xem
+// heroCardUrl()), không đọc file ảnh nào nữa. Icon nào 404 thì probeSkillIcons()
+// tự sinh icon MU bằng canvas.
 // (paths already wired below for the 2 new classes) and repoint the other 7 the same way —
 // missing images fail gracefully to a flat-color fallback shape elsewhere in the file, so this
 // is safe to ship before art arrives.
 const SECT_ART = {
-  thieulam: { portrait:'assets/classes/thieulam.png', iconA:'assets/skills/tl_a.png', iconTP:'assets/skills/tl_tp.png' },
-  toanchan: { portrait:'assets/classes/toanchan.png', iconA:'assets/skills/tc_a.png', iconTP:'assets/skills/tc_tp.png' },
-  baidasan: { portrait:'assets/classes/baidasan.png', iconA:'assets/skills/bd_a.png', iconTP:'assets/skills/bd_tp.png' },
-  minhgiao: { portrait:'assets/classes/minhgiao.png', iconA:'assets/skills/mg_a.png', iconTP:'assets/skills/mg_tp.png' },
-  bug:      { portrait:'assets/classes/bug.png',    iconA:'assets/classes/bug_a.png', iconTP:'assets/classes/bug_tp.png' },
-  vophai:   { portrait:'assets/sects/vophai.png',   iconA:'assets/skills/slash.png', iconTP:'assets/skills/basic.png' },
+  thieulam: { iconA:'assets/skills/tl_a.png', iconTP:'assets/skills/tl_tp.png' },
+  toanchan: { iconA:'assets/skills/tc_a.png', iconTP:'assets/skills/tc_tp.png' },
+  baidasan: { iconA:'assets/skills/bd_a.png', iconTP:'assets/skills/bd_tp.png' },
+  minhgiao: { iconA:'assets/skills/mg_a.png', iconTP:'assets/skills/mg_tp.png' },
+  bug:      { iconA:'assets/classes/bug_a.png', iconTP:'assets/classes/bug_tp.png' },
+  vophai:   { iconA:'assets/skills/slash.png', iconTP:'assets/skills/basic.png' },
 };
-const SECT_IMGS = {};
-for (const k in SECT_ART){ const im = new Image(); im.src = SECT_ART[k].portrait; SECT_IMGS[k] = im; }
+// ═══════════ ICON KỸ NĂNG TỰ SINH — phong cách MU Online ═══════════
+// Nhiều chiêu (cả 3 ô taskbar của Dark Lord + chiêu buff của 4 lớp còn lại) khai báo đường dẫn art
+// chưa từng được vẽ → ô kỹ năng hiện trống/ảnh vỡ. Thay vì chờ art, vẽ thẳng bằng canvas theo đúng
+// ngôn ngữ hình ảnh MU: khung kim loại gothic vát cạnh + ô lõm phát sáng + BIỂU TƯỢNG VECTOR
+// (kiếm/khiên/sóng xung/ngọn lửa/vương miện) — tuyệt đối không dùng chữ Hán như bản wuxia cũ.
+const _skIconCache = {};
+// Từng biểu tượng vẽ trong hệ toạ độ 0..1 (đã dịch/co giãn sẵn), gốc ở tâm ô.
+const SK_ICON_SYMS = {
+  // Greater Damage — lưỡi kiếm bốc lên kèm 2 mũi tăng lực hai bên
+  blade_up(g, R, c1, c2){
+    g.fillStyle = c1;
+    g.beginPath(); g.moveTo(0, -R*0.82); g.lineTo(R*0.17, -R*0.42); g.lineTo(R*0.11, R*0.34);
+    g.lineTo(-R*0.11, R*0.34); g.lineTo(-R*0.17, -R*0.42); g.closePath(); g.fill();
+    g.fillStyle = '#fff'; g.globalAlpha = 0.85;
+    g.beginPath(); g.moveTo(0, -R*0.78); g.lineTo(R*0.06, -R*0.4); g.lineTo(0, R*0.3); g.closePath(); g.fill();
+    g.globalAlpha = 1; g.fillStyle = c2;
+    g.fillRect(-R*0.42, R*0.3, R*0.84, R*0.13);            // chuôi ngang
+    g.fillRect(-R*0.08, R*0.43, R*0.16, R*0.26);
+    for (const sx of [-1, 1]){                              // 2 mũi tăng lực
+      g.beginPath(); g.moveTo(sx*R*0.55, -R*0.1); g.lineTo(sx*R*0.78, -R*0.42);
+      g.lineTo(sx*R*0.78, -R*0.12); g.lineTo(sx*R*0.55, R*0.2); g.closePath(); g.fill();
+    }
+  },
+  // Soul Barrier — khiên lục giác có rune ở giữa
+  barrier(g, R, c1, c2){
+    const hex = (rr) => { g.beginPath();
+      for (let i = 0; i < 6; i++){ const a2 = -Math.PI/2 + i*Math.PI/3, x = Math.cos(a2)*rr, y = Math.sin(a2)*rr;
+        i ? g.lineTo(x, y) : g.moveTo(x, y); } g.closePath(); };
+    hex(R*0.82); g.fillStyle = c1; g.globalAlpha = 0.34; g.fill(); g.globalAlpha = 1;
+    g.lineWidth = R*0.13; g.strokeStyle = c1; g.stroke();
+    hex(R*0.52); g.lineWidth = R*0.07; g.strokeStyle = c2; g.stroke();
+    g.fillStyle = '#fff'; g.globalAlpha = 0.9;
+    g.beginPath(); g.arc(0, 0, R*0.16, 0, 7); g.fill(); g.globalAlpha = 1;
+  },
+  // Battle Fury — song kiếm bắt chéo, lửa liếm phía trên
+  fury(g, R, c1, c2){
+    g.lineCap = 'round';
+    for (const sx of [-1, 1]){
+      g.strokeStyle = c2; g.lineWidth = R*0.2;
+      g.beginPath(); g.moveTo(sx*R*0.6, R*0.72); g.lineTo(-sx*R*0.55, -R*0.55); g.stroke();
+      g.strokeStyle = '#e8e4f0'; g.lineWidth = R*0.11;
+      g.beginPath(); g.moveTo(sx*R*0.3, R*0.28); g.lineTo(-sx*R*0.55, -R*0.55); g.stroke();
+    }
+    g.fillStyle = c1;                                        // ngọn lửa giữa
+    g.beginPath(); g.moveTo(0, -R*0.86); g.quadraticCurveTo(R*0.34, -R*0.3, R*0.14, R*0.02);
+    g.quadraticCurveTo(0, -R*0.2, -R*0.14, R*0.02);
+    g.quadraticCurveTo(-R*0.34, -R*0.3, 0, -R*0.86); g.closePath(); g.fill();
+  },
+  // Force Wave — 3 vòng sóng xung lan ra từ nắm đấm/quyền trượng
+  wave(g, R, c1, c2){
+    g.lineCap = 'round';
+    for (let i = 0; i < 3; i++){
+      g.beginPath(); g.arc(-R*0.42, 0, R*(0.42 + i*0.3), -0.95, 0.95);
+      g.lineWidth = R*(0.19 - i*0.04); g.strokeStyle = i % 2 ? c2 : c1;
+      g.globalAlpha = 1 - i*0.24; g.stroke();
+    }
+    g.globalAlpha = 1; g.fillStyle = '#fff';
+    g.beginPath(); g.arc(-R*0.52, 0, R*0.2, 0, 7); g.fill();
+  },
+  // Fire Scream — cột lửa gào thét, lưỡi lửa lệch + tia lửa toả ra
+  flame(g, R, c1, c2){
+    for (let i = 0; i < 8; i++){                             // tia lửa nền
+      const a2 = i*Math.PI/4 + 0.4; g.strokeStyle = c2; g.lineWidth = R*0.09; g.globalAlpha = 0.5;
+      g.beginPath(); g.moveTo(Math.cos(a2)*R*0.54, Math.sin(a2)*R*0.54);
+      g.lineTo(Math.cos(a2)*R*0.95, Math.sin(a2)*R*0.95); g.stroke();
+    }
+    g.globalAlpha = 1;
+    const lick = (sx, h, w, col) => {                        // 1 lưỡi lửa: đỉnh nhọn, chân loe
+      g.fillStyle = col; g.beginPath();
+      g.moveTo(sx*w*0.12, -h);
+      g.bezierCurveTo(sx*w*0.95, -h*0.42, sx*w*0.34, -h*0.1, sx*w*0.72, R*0.5);
+      g.lineTo(-sx*w*0.72, R*0.5);
+      g.bezierCurveTo(-sx*w*0.2, -h*0.16, sx*w*0.1, -h*0.3, sx*w*0.12, -h);
+      g.closePath(); g.fill();
+    };
+    lick(1, R*0.95, R*0.62, c1);                             // lưỡi lớn
+    lick(-1, R*0.6, R*0.36, c2);                             // lưỡi phụ lệch ngược
+    g.fillStyle = '#fff6d0';                                  // lõi trắng nóng
+    g.beginPath(); g.moveTo(R*0.02, -R*0.3);
+    g.bezierCurveTo(R*0.3, R*0.02, R*0.06, R*0.14, R*0.16, R*0.46);
+    g.lineTo(-R*0.16, R*0.46);
+    g.bezierCurveTo(-R*0.06, R*0.1, R*0.04, -R*0.02, R*0.02, -R*0.3);
+    g.closePath(); g.fill();
+  },
+  // Command Aura — vương miện chỉ huy trên vòng hào quang
+  crown(g, R, c1, c2){
+    g.strokeStyle = c2; g.lineWidth = R*0.1; g.globalAlpha = 0.75;
+    g.beginPath(); g.arc(0, R*0.12, R*0.84, Math.PI*0.12, Math.PI*0.88); g.stroke();
+    g.globalAlpha = 1; g.fillStyle = c1;
+    g.beginPath(); g.moveTo(-R*0.66, R*0.34); g.lineTo(-R*0.52, -R*0.5); g.lineTo(-R*0.22, -R*0.06);
+    g.lineTo(0, -R*0.68); g.lineTo(R*0.22, -R*0.06); g.lineTo(R*0.52, -R*0.5);
+    g.lineTo(R*0.66, R*0.34); g.closePath(); g.fill();
+    g.fillStyle = c2; g.fillRect(-R*0.66, R*0.34, R*1.32, R*0.22);
+    g.fillStyle = '#fff';                                     // ngọc giữa
+    g.beginPath(); g.arc(0, R*0.1, R*0.13, 0, 7); g.fill();
+  },
+};
+function genSkillIcon(sym, color, glow){
+  const key = sym + '|' + color + '|' + (glow || '');
+  if (_skIconCache[key]) return _skIconCache[key];
+  const S = 64, cv = document.createElement('canvas'); cv.width = cv.height = S;
+  const g = cv.getContext('2d'), c = S/2, c2 = glow || '#f2ecd8';
+  const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x+r, y);
+    g.arcTo(x+w, y, x+w, y+h, r); g.arcTo(x+w, y+h, x, y+h, r);
+    g.arcTo(x, y+h, x, y, r); g.arcTo(x, y, x+w, y, r); g.closePath(); };
+  // khung kim loại gothic: nền tối vát sáng trên-trái, tối dưới-phải
+  const frame = g.createLinearGradient(0, 0, S, S);
+  frame.addColorStop(0, '#5a5266'); frame.addColorStop(0.5, '#2a2532'); frame.addColorStop(1, '#15121c');
+  rr(1, 1, S-2, S-2, 11); g.fillStyle = frame; g.fill();
+  g.lineWidth = 1.6; g.strokeStyle = 'rgba(255,255,255,.22)'; g.stroke();
+  // ô lõm phát sáng theo màu lớp
+  const inner = g.createRadialGradient(c, c*0.82, 1, c, c, c*0.98);
+  inner.addColorStop(0, color); inner.addColorStop(0.62, shade(color, -0.45)); inner.addColorStop(1, '#0b0910');
+  rr(6, 6, S-12, S-12, 7); g.fillStyle = inner; g.fill();
+  g.lineWidth = 1.2; g.strokeStyle = 'rgba(0,0,0,.55)'; g.stroke();
+  // biểu tượng
+  g.save(); g.translate(c, c);
+  g.shadowColor = 'rgba(0,0,0,.75)'; g.shadowBlur = 3; g.shadowOffsetY = 1;
+  (SK_ICON_SYMS[sym] || SK_ICON_SYMS.blade_up)(g, S*0.3, c2, shade(color, 0.55));
+  g.restore();
+  // đinh tán 4 góc — nét trang trí đặc trưng khung MU
+  g.fillStyle = 'rgba(228,220,240,.55)';
+  for (const [dx, dy] of [[6,6],[S-6,6],[6,S-6],[S-6,S-6]]){ g.beginPath(); g.arc(dx, dy, 1.7, 0, 7); g.fill(); }
+  return _skIconCache[key] = cv.toDataURL();
+}
+function shade(hex, amt){ // amt>0 sáng lên, <0 tối đi
+  const n = parseInt(hex.slice(1), 16), t = amt < 0 ? 0 : 255, p = Math.abs(amt);
+  const ch = (sh) => Math.round(((n >> sh & 255) * (1-p)) + t*p);
+  return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
+}
+// Biểu tượng cho từng chiêu chưa có art (id chiêu → key trong SK_ICON_SYMS)
+const SK_ICON_FOR = {
+  elf_greaterdmg:'blade_up', dw_shield:'barrier', mg_battlefury:'fury',
+  dl_commandaura:'crown', dl_electricspark:'wave', dl_darkspirit:'flame',
+  dl_chaoticdiseier:'blade_up', dl_darkraven:'flame',
+};
+// Màu icon theo NGUYÊN TỐ của chiêu, không theo màu lớp — Fire Scream của Dark Lord phải ra lửa cam
+// chứ không phải ô-liu như màu lớp (đúng quy ước MU: icon tô theo hệ, khung mới mang màu lớp).
+const SK_ICON_COLOR = {
+  dl_darkspirit:'#8a5ad8', dl_darkraven:'#6a4a8a', dl_electricspark:'#d8d84a',
+  dw_shield:'#5ab8e8', mg_battlefury:'#e8552a', elf_greaterdmg:'#4c8dff', dl_commandaura:'#c8a83a',
+};
+const SK_ICON_SECT_TP_COLOR = { bug:'#ff7a3a', minhgiao:'#ff7a3a', baidasan:'#ff9a3a', toanchan:'#5ac8e8' };
+const SK_ICON_SECT_A  = { thieulam:'fury', toanchan:'blade_up', baidasan:'flame', minhgiao:'fury', bug:'wave', vophai:'blade_up' };
+const SK_ICON_SECT_TP = { thieulam:'blade_up', toanchan:'barrier', baidasan:'flame', minhgiao:'flame', bug:'flame', vophai:'blade_up' };
+// Thử nạp từng file art đã khai báo; file nào 404 thì thay bằng icon tự sinh (không đụng file có thật).
+function probeSkillIcons(){
+  const swap = (get, set, sym, color, glow) => {
+    const src = get(); if (!src || src.startsWith('data:')) return;
+    const im = new Image();
+    im.onerror = () => set(genSkillIcon(sym, color, glow)); // HUD đọc lại info.icon mỗi khung hình
+    im.src = src;
+  };
+  for (const sk in SECTS){
+    const s = SECTS[sk], a = SECT_ART[sk]; if (!a) continue;
+    swap(() => a.iconA,  v => a.iconA  = v, SK_ICON_SECT_A[sk]  || 'blade_up', s.color, s.glow);
+    swap(() => a.iconTP, v => a.iconTP = v, SK_ICON_SECT_TP[sk] || 'flame',    SK_ICON_SECT_TP_COLOR[sk] || s.color, s.glow);
+  }
+  for (const vid in VOHOC_DEFS){
+    const v = VOHOC_DEFS[vid];
+    swap(() => v.icon, nv => v.icon = nv, SK_ICON_FOR[vid] || 'blade_up', SK_ICON_COLOR[vid] || v.color || '#9aa8d4');
+  }
+}
+probeSkillIcons();
 // Starflight: sprite 3D tiên nhân (nam/nữ × 6 skin) — vẽ sẵn, nền trong suốt
 const TIEN_IMGS = {};
 for (const g of ['nam','nu']) for (const sk of ['bach','thanh','kim','huyen','hong','lam']){
@@ -2202,13 +2447,9 @@ const THANBINH = {
   vophai:   { name:'Wanderer\'s Gourd',   kind:'holu',   color:'#c8a86a', lore:'A hatchling\'s travel-worn flask — Wanderer\'s Resolve' },
   thieulam: { name:'Ironwrap Fists',      kind:'quyen',  color:'#ffb15c', lore:'Metal-bound knuckles — Mech striking discipline' },
   toanchan: { name:'Seven Currents Blade',kind:'kiem',   color:'#9fd0ff', lore:'True-current swordwork, seven stars converged' },
-  comoc:    { name:'Hollowmoon Fan',      kind:'quat',   color:'#b08ae8', lore:'A hunter\'s iron fan, gone before the strike lands' },
-  daohoa:   { name:'Petalfall Spear',     kind:'thuong', color:'#ffb7c5', lore:'A spear that blooms as it flies, and still finds its mark' },
   baidasan: { name:'Serpent Fang Staff',  kind:'truong', color:'#7fe0a8', lore:'A venom-clan staff — the bite comes after the strike' },
   minhgiao: { name:'Sacred Flame Saber',  kind:'dao',    color:'#ff9a5a', lore:'The Sacred-Flame Sigil — a blade forged from cult fire' },
-  doanthi:  { name:'Sunpoint Prayer Beads', kind:'chau', color:'#e8d8a8', lore:'A precision-school rosary, focus given form' },
   bug:      { name:'Bramblebite Wraps',   kind:'quyen',  color:'#8a9a3a', lore:'Scrappy knuckle-wraps, one for every trick in the swarm' },
-  dawn:     { name:'Daybreak Rosary',     kind:'chau',   color:'#f0a878', lore:'Inner-light prayer beads, warm as first sunrise' },
 };
 const TB_MAX_TIER = 10;
 const TB_TIER_NAMES = ['Sơ Khai','Cường Hóa','Tinh Luyện','Kỳ Diệu','Hiếm Có','Excellent','Ancient','Thánh Khí','Truyền Thuyết','Thức Tỉnh'];
@@ -2372,10 +2613,14 @@ function calcDerived(){
   // Tuyệt Học Cũ: chiêu Võ Học Phổ/Tấn Chức không còn nằm trong taskbar 3 ô (xem defaultSkillBar
   // và LEGACY_* ở khai báo VOHOC_DEFS) vẫn giữ giá trị — dồn thành % Công Kích vĩnh viễn, tự động
   // theo đúng điều kiện mở khóa gốc, không cần bấm nút hay học Bí Kíp nữa.
+  // QA: điều kiện ở đây từng là `lv.phai === player.sect`, nên phần thưởng lớn nhất của Thăng Tiên
+  // (ascendToImmortal → vhAutoLearn tự ngộ võ học CẢ 5 lớp, banner ghi rõ "ràng buộc Lớp phá bỏ")
+  // hoàn toàn vô nghĩa: chiêu học thêm từ 4 lớp kia không cộng gì cả. vhLearned() vốn đã là nguồn
+  // đúng duy nhất (chỉ tự ngộ chiêu của lớp mình, trừ khi đã Thăng Tiên) — bỏ điều kiện thừa đi.
   let legacyPct = 0;
   for (const sid of LEGACY_SECT_SKILLS){
     const lv = VOHOC_DEFS[sid];
-    if (lv && lv.phai === player.sect && vhLearned(sid)) legacyPct += LEGACY_TIER_PCT[lv.tier] || 0;
+    if (lv && vhLearned(sid)) legacyPct += LEGACY_TIER_PCT[lv.tier] || 0;
   }
   if (player.level >= SKILL_DEFS.amkhi.unlock) legacyPct += LEGACY_UNIVERSAL_PCT.amkhi;
   if (realm >= 4) legacyPct += LEGACY_UNIVERSAL_PCT.danchi; // Đạn Chỉ Thần Thông — req cũ
@@ -2594,6 +2839,9 @@ function loadGame(){
     // Tối giản taskbar (bản mới): luôn ép về đúng 3 ô cố định theo phái (chính/phụ/buff) — bỏ hẳn
     // ô 4-5 tự gán cũ, tránh save cũ kẹt lại chiêu giờ chỉ còn là bị động (không thể bấm được nữa).
     player.skillBar = defaultSkillBar(player.sect);
+    // Cùng lý do: phím Space có thể còn trỏ vào chiêu đã rút khỏi taskbar (vd 'bow'/'tieuhon' từ save
+    // cũ) — castSkill vẫn còn nhánh cho chúng nên chiêu đó sẽ lén bắn được, phá vỡ thiết kế 3 ô.
+    if (player.spaceSkill && !player.skillBar.includes(player.spaceSkill)) player.spaceSkill = null;
     if (player.pk == null) player.pk = false;
     if (player.toiac == null) player.toiac = 0;
     if (player.toiacT == null) player.toiacT = 0;
@@ -2812,6 +3060,15 @@ function buildWorld(){
   for (let i = 0; i < 14; i++) mists.push({ x:rnd(0,W), y:rnd(0,H), r:rnd(120,300), v:rnd(4,14), a:rnd(0.04,0.1) });
   // giữ khu làng & suối thiền trống
   if (md.village) decor = decor.filter(d => dist(d.x,d.y,NPC.x,NPC.y) > 160 && dist(d.x,d.y,SPRING.x,SPRING.y) > 120);
+  // Thành: chừa trống quảng trường + 4 lối lát đá ra cổng — trước đây cây rải ngẫu nhiên mọc đè cả
+  // lên đài phun nước giữa quảng trường và chắn ngang lối đi ra cổng.
+  if (md.city){
+    const w = CITY_WALL, gh = w.gateW/2 + 30;
+    decor = decor.filter(d =>
+      dist(d.x, d.y, w.gateX, w.gateY) > 330 &&                                   // lòng quảng trường
+      !(Math.abs(d.x - w.gateX) < gh && d.y > w.y1 - 60 && d.y < w.y2 + 60) &&     // lối Bắc-Nam
+      !(Math.abs(d.y - w.gateY) < gh && d.x > w.x1 - 60 && d.x < w.x2 + 60));      // lối Tây-Đông
+  }
   decor = decor.filter(d => !NPCS.some(n => n.map === curMap && dist(d.x,d.y,n.x,n.y) < 150));
   spawnAmbients(); // hạt môi trường + cỏ mặt đất theo chủ đề bản đồ
   spawnHorses(); // GDD Đợt 2 B5: Tuấn Mã Hoang
@@ -3575,7 +3832,7 @@ function killMob(m, source){
         AudioSys.sfx('quest', 0.8);
       } else {
         zoneBanner = { text:`☬ TRẤN ẢI ${m.def.name.toUpperCase()} ĐÃ BỊ ĐÁNH BẠI!`,
-          sub:'Phong ấn ngũ hành vùng này tạm được giữ vững — phần thưởng Chinh Phạt đã trao.', color:'#ffb15c', t:4.5 };
+          sub:'Phong ấn nguyên tố vùng này tạm được giữ vững — phần thưởng Chinh Phạt đã trao.', color:'#ffb15c', t:4.5 };
         AudioSys.sfx('levelup', 0.9);
         player.storyFlags['ta_' + curMap] = true;
         if (curMap === 'nhanmon' && !player.storyFlags.ketMo){ player.storyFlags.ketMo = true; setTimeout(showKetMo, 1400); }
@@ -3670,7 +3927,10 @@ function nearestMob(range){
   }
   return best;
 }
-function spawnSlash(x, y, face, s){ addEffect({ type:'slash', x, y, face, s: s || 110 }); }
+// Vệt kiếm khí — màu theo lớp/nguyên tố của chiêu (mặc định thép trắng).
+function spawnSlash(x, y, face, s, color, glow){
+  addEffect({ type:'slash', x, y, face, s: s || 110, color, glow });
+}
 // P0: Hồ Lô Thuốc — hồi 40% max HP, cooldown 20s (phím R)
 function usePotion(){
   if (!player || dead) return;
@@ -3698,13 +3958,14 @@ function doBasic(){
   const t = nearestMob(rng);
   if (t) player.face = Math.atan2(t.y-player.y, t.x-player.x);
   player.cd.basic = player.aspd; player.atkAnim = 0.22;
+  player.atkAct = heroActOf(player.sect, 'basic'); // tư thế vung khớp vũ khí của lớp
   const _basicCls = SECT_SFX[player.sect];
   AudioSys.sfx(_basicCls ? 'slash_' + _basicCls : 'slash', 0.55);
   if (ranged){
     addEffect({ type:'arc', x:player.x, y:player.y, face:player.face, r:40, color:sect.color });
   } else {
     addEffect({ type:'arc', x:player.x, y:player.y, face:player.face, r:60, color:'#2b2620' });
-    spawnSlash(player.x + Math.cos(player.face)*36, player.y + Math.sin(player.face)*36 - 12, player.face, 95);
+    spawnSlash(player.x + Math.cos(player.face)*36, player.y + Math.sin(player.face)*36 - 12, player.face, 95, sect.color, sect.glow);
   }
   if (t){
     if (ranged){
@@ -3792,7 +4053,7 @@ function hintCandidates(){
     const _rTally = {};
     for (const it of player.inv) if (it && !it.noForge && it.rarity != null && it.rarity < 4) _rTally[it.rarity] = (_rTally[it.rarity] || 0) + 1;
     if (Object.values(_rTally).some(n => n >= 3))
-      out.push({ id:'chaosmachine', pri:6, txt:'☯ Đang dư ít nhất 3 món cùng phẩm — ném vào Lò Hỗn Loạn (Lò Rèn Hoàng Gia) để thử lên phẩm cao hơn!', btn:'Đi Xem', act:'hintGoForge()' });
+      out.push({ id:'chaosmachine', pri:6, txt:'◑ Đang dư ít nhất 3 món cùng phẩm — ném vào Lò Hỗn Loạn (Lò Rèn Hoàng Gia) để thử lên phẩm cao hơn!', btn:'Đi Xem', act:'hintGoForge()' });
   }
   if (player.level >= 20 && !DEVIL && !BLOOD && !TOWER){
     out.push({ id:'arena20', pri:7, txt:'👹 Cấp 20+ đã mở Quỷ Cốc & Huyết Thành — phó bản có giờ, thông quan chắc chắn mở Rương phẩm cao!', btn:'Xem Ngay', act:'hintGoArena()' });
@@ -4184,9 +4445,9 @@ window.fuseBikip = function(){
     player.bikip.hmtp = true;
     player.vohoc['fs_huyetma'] = true; // thần công tàn quyển — học thẳng chiêu chủ động, dùng ngay
     calcDerived();
-    if (msg){ msg.textContent = '✔ Dung hợp thành công — HUYẾT MA THÔN PHỆ + tuyệt chiêu HUYẾT MA PHỆ HỒN CHƯỞNG (bấm K gán)!'; msg.style.color = '#e84a6a'; }
+    if (msg){ msg.textContent = '✔ Dung hợp thành công — HUYẾT MA THÔN PHỆ: hút huyết 10% mỗi đòn (bị động, luôn hiệu lực)!'; msg.style.color = '#e84a6a'; }
     addFloat(player.x, player.y-52, '☠ HUYẾT MA THÔN PHỆ — hút huyết 10%!', '#e84a6a', 17);
-    addFloat(player.x, player.y-74, '《Huyết Ma Phệ Hồn Chưởng》đã nhập thể — bấm K gán vào taskbar!', '#ff8a8a', 15);
+    addFloat(player.x, player.y-74, '《Huyết Ma Thôn Phệ》đã nhập thể — bị động, không cần gán!', '#ff8a8a', 15);
     addEffect({ type:'ring', x:player.x, y:player.y, r:110, color:'#e84a6a', big:true });
     for (let i=0;i<12;i++) addEffect({ type:'ink', x:player.x, y:player.y, vx:rnd(-80,80), vy:rnd(-100,-20), color:'#e84a6a' });
     saveGame();
@@ -4438,7 +4699,6 @@ function update(dt){
   // qi regen + hp regen (P0: hồi máu nhanh hơn — base ×3, ngoài combat thêm 5% max HP/s)
   player.combatT = Math.max(0, (player.combatT || 0) - dt);
   player.potionCd = Math.max(0, (player.potionCd || 0) - dt); // P0: Hồ Lô Thuốc cooldown
-  if (TRIB.active) updateTrib(dt); // A1: Độ Kiếp
   if (player.hp <= 0 && !dead){ player.hp = 0; onDeath(); } // thiên lôi cũng giết được người
   updateKyngo(dt); // A2: Kỳ ngộ trên đường
   if (DGN) updateDungeon(dt); // Phó bản: đợt quái → boss → thưởng
@@ -4522,7 +4782,6 @@ function update(dt){
   // mobs AI
   for (const m of mobs){
     if (m.dead) continue;
-    if (TRIB.active){ m.atkT = Math.max(m.atkT, 0.5); continue; } // lôi kiếp: quái đứng yên
     m.wob += dt*3; m.hitT = Math.max(0, m.hitT - dt);
     if (m.faceT != null) m.face = lerpAng(m.face, m.faceT, Math.min(1, dt*9)); // xoay người mượt, không giật hướng
     m.lungeT = Math.max(0, (m.lungeT || 0) - dt); // hiệu ứng lao tới khi ra đòn
@@ -4638,7 +4897,7 @@ function update(dt){
       collideObstacles(m, 13); // GDD Đợt 2 A
     } else if (d <= m.def.range && m.atkT <= 0){
       m.atkT = m.def.atkCd;
-      // hiệu ứng ra đòn: quái lao tới (lunge) + vệt chém màu ngũ hành
+      // hiệu ứng ra đòn: quái lao tới (lunge) + vệt chém màu nguyên tố
       m.lungeT = 0.22;
       const elC = (m.def.el && NGU_HANH[m.def.el]) ? NGU_HANH[m.def.el].color : m.def.color;
       addEffect({ type:'arc', x:m.x, y:m.y, face:Math.atan2(player.y-m.y,player.x-m.x), r:34, color:elC });
@@ -4657,7 +4916,7 @@ function update(dt){
         const lvGapM = (m.def.lv || 1) - player.level;
         if (lvGapM > 5) dmg *= 1 + Math.min(1.2, (lvGapM - 5) * 0.08);
         if (m.def.bossKind){ const gapB2 = m.def.lv - player.level; if (gapB2 > 10) dmg *= 1.6; else if (gapB2 >= 6) dmg *= 1.3; } // Áp Bức Võ Công chiều ngược
-        // ngũ hành tương khắc chiều quái → người: hệ quái khắc phái +12%, bị phái khắc -10%
+        // khắc hệ chiều quái → người: hệ quái khắc phái +12%, bị phái khắc -10%
         const mobEl = m.def.el, sectEl2 = SECTS[player.sect].element;
         let mobCounter = false;
         if (mobEl && sectEl2){
@@ -4672,7 +4931,7 @@ function update(dt){
           if (absorbed > 0) addFloat(player.x, player.y-40, `🛡 -${absorbed}`, '#8ad8c8', 12);
         }
         player.hp -= dmg;
-        // đòn đánh trúng: vụ nổ hào quang ngũ hành + rung màn hình
+        // đòn đánh trúng: vụ nổ hào quang nguyên tố + rung màn hình
         const elC2 = (mobEl && NGU_HANH[mobEl]) ? NGU_HANH[mobEl].color : '#ff7a6a';
         addEffect({ type:'ring', x:player.x, y:player.y-10, r:22, color:elC2 });
         for (let i=0;i<4;i++) addEffect({ type:'ink', x:player.x, y:player.y-12, vx:rnd(-70,70), vy:rnd(-90,-20), color:elC2 });
@@ -4767,7 +5026,10 @@ function update(dt){
       if (dist(p.x,p.y,m.x,m.y) < m.def.size + 8){
         let dmg = p.dmg * rnd(0.9,1.1);
         let src = p.kind==='amkhi' ? 'amkhi' : 'hit';
-        if (src==='hit' && Math.random() < player.crit){ dmg *= 2; src='crit'; }
+        // QA: trước đây hard-code ×2 nên mọi %ST Bạo Kích từ Vận/bộ Cổ Thần (player.critDmgMult) bị
+        // bỏ qua với MỌI đòn bắn ra — Fairy Elf/Dark Wizard (đòn thường + chiêu chính đều là proj)
+        // gần như toàn bộ sát thương không ăn chỉ số này, khiến đầu tư Vận thành bẫy với 2 lớp đó.
+        if (src==='hit' && Math.random() < player.crit){ dmg *= (player.critDmgMult || 2); src='crit'; }
         hurtMob(m, dmg, src);
         // Sourced per-class projectile-impact SFX — the generic "this ranged attack landed" moment,
         // shared by every player-fired projectile kind (skill/amkhi/bow/danchi) that reaches this loop.
@@ -4870,7 +5132,7 @@ function onDeath(){
     player.reviveUsed = true;
     player.hp = Math.round(player.maxHp * 0.5);
     player.combatT = 0;
-    addFloat(player.x, player.y-56, '☯ THIÊN MỆNH — Tử Lý Đào Sinh!', '#f0a03a', 18);
+    addFloat(player.x, player.y-56, '◑ THIÊN MỆNH — Tử Lý Đào Sinh!', '#f0a03a', 18);
     addEffect({ type:'ring', x:player.x, y:player.y, r:110, color:'#f0a03a', big:true });
     AudioSys.sfx('levelup', 0.9);
     return;
@@ -4890,7 +5152,6 @@ function onDeath(){
     endTowerRun('death');
     return;
   }
-  TRIB.active = false; TRIB.strikes = []; // chết giữa lôi kiếp = thất bại
   dead = true;
   const ov = document.getElementById('overlay');
   const _kb = player._killedByBoss; player._killedByBoss = null;
@@ -5084,13 +5345,16 @@ function render(){
   // village / city labels
   if (md.village) drawCalligraphy('Thanh Ngưu Thôn', 400, 310, '#6a5836', 18);
   if (md.city){
+    drawCityMood();           // nhuộm tông chiều tà trước, để đèn/sương bên dưới nổi lên
     drawCityWalls();
-    drawCalligraphy('Lunaris City', 1300, 880, '#6a5836', 20);
-    drawCalligraphy('Chợ Đấu Giá', 1150, 950, '#2e5e8a', 14);
-    drawCalligraphy('Lò Rèn Hoàng Gia', 1480, 1130, '#8a4a2e', 14);
-    drawCalligraphy('Xưởng Luyện Đan', 1060, 1090, '#3a6a3e', 14);
-    drawCalligraphy('Vũ Khí Phường', 1580, 950, '#5a5a6a', 14);
-    drawCalligraphy('Trà Quán', 1230, 1240, '#8a6a2e', 14);
+    drawCityPlaza();          // quảng trường + đài phun nước trung tâm kiểu Lorencia
+    drawCalligraphy('Lunaris City', 1300, 612, '#6a5836', 20);
+    drawCalligraphy('Xưởng Luyện Đan', 830, 706, '#3a6a3e', 13);
+    drawCalligraphy('Lò Rèn Hoàng Gia', 1780, 726, '#8a4a2e', 13);
+    drawCalligraphy('Vũ Khí Phường', 1770, 1006, '#5a5a6a', 13);
+    drawCalligraphy('Trà Quán', 980, 1096, '#8a6a2e', 13);
+    drawCalligraphy('Sảnh Cầu May', 820, 986, '#7a5a9a', 13);
+    drawCityHaze();           // lớp sương/tàn lửa ma mị phủ lên trên (vẽ sau cùng)
   }
   drawGates();
 
@@ -5173,7 +5437,6 @@ function render(){
     }
   }
 
-  if (TRIB.active) drawTrib(); // A1: vùng cảnh báo thiên lôi
 
   // projectiles — mỗi tuyệt chiêu một kiểu đạn riêng
   for (const p of projectiles){ drawProjStyled(p); }
@@ -5222,15 +5485,31 @@ function render(){
     } else if (e.type==='vfx'){
       drawVfx(e, k, a);
     } else if (e.type==='slash'){
-      // Kiếm Khí — sword-qi crescent sweeping toward the target
-      if (SLASH_IMG.complete && SLASH_IMG.naturalWidth){
-        const w = (e.s || 110) * (0.75 + k*0.6);
-        const h = w * (SLASH_IMG.naturalHeight / SLASH_IMG.naturalWidth);
-        ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.face);
-        ctx.globalAlpha = Math.min(1, a*1.4);
-        ctx.drawImage(SLASH_IMG, -w*0.05, -h/2, w, h);
-        ctx.restore(); ctx.globalAlpha = 1;
+      // Vệt kiếm khí kiểu MU: lưỡi liềm vector — dày ở giữa, nhọn hai đầu, mép trước
+      // sáng gắt. (Trước đây blit assets/skills/slash.png — một thẻ icon Axie vuông,
+      // dùng chung cho MỌI chiêu của MỌI lớp nên nhìn đâu cũng ra Axie.)
+      const r = (e.s || 110) * (0.42 + k*0.34);
+      const col = e.color || '#e8f0ff', glw = e.glow || '#9fd0ff', sp = 0.62;
+      ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.face);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = a*0.32; ctx.strokeStyle = glw;          // vầng sáng toả ngoài
+      ctx.lineWidth = r*0.30; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(0, 0, r, -sp, sp); ctx.stroke();
+      ctx.globalAlpha = a; ctx.fillStyle = col;                  // thân lưỡi chém
+      ctx.beginPath();
+      for (let i = 0; i <= 18; i++){
+        const t = i/18, an = -sp + t*sp*2, w = Math.sin(t*Math.PI)*r*0.17;
+        ctx.lineTo(Math.cos(an)*(r+w), Math.sin(an)*(r+w));
       }
+      for (let i = 18; i >= 0; i--){
+        const t = i/18, an = -sp + t*sp*2, w = Math.sin(t*Math.PI)*r*0.17;
+        ctx.lineTo(Math.cos(an)*(r-w), Math.sin(an)*(r-w));
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = a*0.9; ctx.strokeStyle = '#ffffff';      // mép trước
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, 0, r*1.05, -sp*0.86, sp*0.86); ctx.stroke();
+      ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     } else if (e.type==='atlasVfx'){
       const def = VFX_ATLAS_DEFS[e.id];
       const img = getVfxAtlasImg(e.id);
@@ -5385,7 +5664,7 @@ function drawMob(m){
   const _mshI = gameTimeInfo(), _mshDx = (_mshI.frac - 0.5) * 14, _mshAl = 1 - skyDarkness()*0.35;
   ctx.fillStyle = 'rgba(0,0,0,' + (0.07*_mshAl).toFixed(3) + ')'; ctx.beginPath(); ctx.ellipse(m.x + _mshDx, m.y+6, d.size*1.5, d.size*0.52, 0, 0, 7); ctx.fill();
   ctx.fillStyle = 'rgba(0,0,0,' + (0.16*_mshAl).toFixed(3) + ')'; ctx.beginPath(); ctx.ellipse(m.x + _mshDx*0.45, m.y+6, d.size, d.size*0.35, 0, 0, 7); ctx.fill();
-  // hào quang ngũ hành quanh quái (mờ, theo hệ)
+  // hào quang nguyên tố quanh quái (mờ, theo hệ)
   if (d.el && NGU_HANH[d.el]){
     ctx.save(); ctx.globalAlpha = 0.14 + 0.05*Math.sin(m.wob*1.3);
     ctx.strokeStyle = NGU_HANH[d.el].color; ctx.lineWidth = 2;
@@ -5424,7 +5703,7 @@ function drawMob(m){
   ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(dx-bw/2, topY-10, bw, 4);
   ctx.fillStyle = d.boss ? '#ff3a3a' : '#c0392b';
   ctx.fillRect(dx-bw/2, topY-10, bw*Math.max(0,m.hp/m.maxHp), 4);
-  // huy hiệu ngũ hành (金木水火土) + tên quái
+  // huy hiệu nguyên tố (◆♣❄☼▲) + tên quái
   if (!SETTINGS.mobName) return;
   const nameTxt = `${d.bossKind === 'tranai' ? '☬ TRẤN ẢI ' : d.bossKind === 'thuve' ? '⛨ THỦ VỆ ' : ''}${m.name}${m.revenge ? ' ⚔TRUY THÙ' : ''} · C${d.lv}`;
   ctx.font = '10px "Be Vietnam Pro", sans-serif'; ctx.textAlign='center';
@@ -5560,8 +5839,8 @@ function ascendToImmortal(){
   addFloat(player.x, player.y-86, '☁ PHI THĂNG!', '#fff2b0', 24);
   if (learned) addFloat(player.x, player.y-62, `Ràng buộc Lớp phá bỏ — tự ngộ thêm ${learned} môn võ học`, '#a0ffe9', 13);
   addFloat(player.x, player.y-42, 'Ngự Kiếm Phi Hành — tốc độ +25% · mở Cài Đặt (O) đổi hình dáng & tiên y', '#9fd0ff', 12);
-  addEffect({ type:'vfx', style:'galaxy', x:player.x, y:player.y, r:150, c1:'#fff2b0', c2:'#9fd0ff', glyph:'仙', dur:1.4, big:true, spin:2.5 });
-  addEffect({ type:'vfx', style:'thunderpillar', x:player.x, y:player.y, r:130, c1:'#fff2b0', c2:'#ffb15c', glyph:'仙', dur:1.0 });
+  addEffect({ type:'vfx', style:'galaxy', x:player.x, y:player.y, r:150, c1:'#fff2b0', c2:'#9fd0ff', glyph:'✧', dur:1.4, big:true, spin:2.5 });
+  addEffect({ type:'vfx', style:'thunderpillar', x:player.x, y:player.y, r:130, c1:'#fff2b0', c2:'#ffb15c', glyph:'✧', dur:1.0 });
   for (let i = 0; i < 20; i++) addEffect({ type:'ink', x:player.x, y:player.y, vx:rnd(-110,110), vy:rnd(-160,-40), color:'#fff2b0' });
   AudioSys.sfx('levelup', 1); AudioSys.sfx('quest', 0.9);
   calcDerived(); saveGame(); checkTitles();
@@ -5650,10 +5929,382 @@ function drawAscendedFigure(p, now, castK, _atkK, _maxed){
     ctx.fillStyle = sk.trim; ctx.fillRect(X - 3, hy - 12.5, 6, 3.2);
   }
   ctx.fillStyle = sk.halo; ctx.beginPath(); ctx.arc(X, hy - 2, 1.1, 0, 7); ctx.fill(); // hoa tinh giữa trán
-  if (castK > 0) _vxGlyph(X, Y - 64, '仙', 22, sk.halo, castK); // xuất chiêu: ấn Tiên lóe sáng
+  if (castK > 0){ // xuất chiêu: ấn triệu hồi vòng gai lóe sáng (vector, không dùng chữ Hán)
+    ctx.save(); ctx.globalAlpha = castK; ctx.strokeStyle = sk.halo; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(X, Y - 64, 13, 0, 7); ctx.stroke();
+    for (let i = 0; i < 6; i++){
+      const a = i * Math.PI / 3 + castK * 0.6;
+      ctx.beginPath();
+      ctx.moveTo(X + Math.cos(a)*13, Y - 64 + Math.sin(a)*13);
+      ctx.lineTo(X + Math.cos(a)*21, Y - 64 + Math.sin(a)*21);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
   ctx.restore();
 }
 
+// ══ NHÂN VẬT CHÍNH VẼ THEO KHỚP XƯƠNG (skeletal) — phong cách MU Online ═════
+// Trước đây mỗi lớp là 1 thẻ Axie PNG tĩnh: không hướng, không khung hình.
+// Nay thân người dựng bằng vector chia theo BỘ PHẬN, mỗi chi có trục xoay riêng
+// (vai / hông / cổ), và animation là HÀM SỐ theo thời gian — đúng cơ chế xương
+// mà MU Online dùng, không phải chuỗi ảnh. Nhờ vậy có sải chân, vung vũ khí,
+// ngả người, áo choàng bay… mà không tốn một file art nào.
+// Thứ tự lớp: áo choàng → chân → thân → giáp → mũ → tay → vũ khí.
+// Hộp toạ độ HERO_W×HERO_H, chân chạm y≈212, tâm đầu y≈74.
+const HERO_W = 160, HERO_H = 220;
+const HERO_METAL = [
+  { lo:'#4e5360', hi:'#6d7385', trim:'#7d7048', glow:null },      // 1 Sơ Khai — sắt xỉn
+  { lo:'#575d6c', hi:'#7b8296', trim:'#8d7f4e', glow:null },      // 2 Cường Hóa
+  { lo:'#616880', hi:'#8b93aa', trim:'#a08c52', glow:null },      // 3 Tinh Luyện
+  { lo:'#6a7590', hi:'#9aa4bc', trim:'#c8a84a', glow:null },      // 4 Kỳ Diệu
+  { lo:'#71689a', hi:'#a596c8', trim:'#c8a84a', glow:null },      // 5 Hiếm Có
+  { lo:'#2f6a58', hi:'#4fa88a', trim:'#d8c060', glow:'#6ff0c0' }, // 6 Excellent — xanh ngọc MU
+  { lo:'#6a5220', hi:'#c8a84a', trim:'#ffe9a8', glow:'#ffd76a' }, // 7 Ancient — vàng cổ MU
+  { lo:'#7a2a30', hi:'#c85a52', trim:'#ffd08a', glow:'#ff8a6a' }, // 8 Thánh Khí
+  { lo:'#432a7a', hi:'#8a6ae0', trim:'#dccdff', glow:'#a88aff' }, // 9 Truyền Thuyết
+  { lo:'#8a1e2a', hi:'#ff6a5a', trim:'#fff0c0', glow:'#ff4a3a' }, // 10 Thức Tỉnh
+];
+function hMetal(tier){ return HERO_METAL[Math.max(0, Math.min(9, ((tier|0) || 1) - 1))]; }
+function hPoly(g, pts, c){
+  g.fillStyle = c; g.beginPath();
+  for (let i = 0; i < pts.length; i++) i ? g.lineTo(pts[i][0], pts[i][1]) : g.moveTo(pts[0][0], pts[0][1]);
+  g.closePath(); g.fill();
+}
+function hEll(g, x, y, rx, ry, c){ g.fillStyle = c; g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 7); g.fill(); }
+// một "xương": xoay cả nhóm hình quanh trục (px,py) rồi vẽ tiếp bằng toạ độ gốc
+function hJoint(g, px, py, ang, fn){
+  g.save(); g.translate(px, py); g.rotate(ang); g.translate(-px, -py); fn(); g.restore();
+}
+
+// ── BỘ XƯƠNG: tính góc từng khớp theo trạng thái, không dùng bảng khung hình ──
+const HERO_JOINT = { hipL:[72,142], hipR:[90,142], shL:[52,100], shR:[108,100], neck:[80,94] };
+
+// ── KIỂU RA ĐÒN ──────────────────────────────────────────────────────────────
+// Mỗi kiểu là quỹ đạo tay + vũ khí theo tiến trình p (0 = bắt đầu, 1 = kết thúc).
+// armR/armL: góc vai · wrot: vũ khí xoay thêm · wpush: vũ khí đẩy ra trước ·
+// sw: biên độ dùng cho dây cung và độ bạt áo choàng.
+// Chọn kiểu nào là để KHỚP VFX của chiêu: chiêu quét hình quạt thì tay quét ngang,
+// thiên thạch rơi từ trên xuống thì giơ trượng lên trời, ngũ tiễn thì giương cung.
+const HERO_ACT = {
+  // chém dọc từ trên xuống — đòn thường cận chiến
+  slash: p => ({ armR: -0.7 + p*2.1, armL: -0.30*Math.sin(p*Math.PI), lean: 0.16*Math.sin(p*Math.PI),
+                 wrot: 0, wpush: 0, sw: Math.sin(p*Math.PI) }),
+  // quét ngang một vòng — Twisting Slash (DK) · Fire Slash (MG): VFX hình quạt
+  spin:  p => ({ armR: -0.45 + p*1.05, armL: 0.55*Math.sin(p*Math.PI), lean: 0.22*Math.sin(p*Math.PI),
+                 wrot: -1.65 + p*3.3, wpush: 8*Math.sin(p*Math.PI), sw: Math.sin(p*Math.PI) }),
+  // đâm thẳng tới — Death Stab (DK): VFX bung ra ngay trước mặt
+  thrust: p => { const e = Math.sin(Math.pow(p, 0.55)*Math.PI);
+                 return { armR: -0.55 + e*0.45, armL: -0.5*e, lean: 0.24*e,
+                          wrot: -1.45, wpush: 36*e, sw: e }; },
+  // giương cung rồi buông — Multi-Shot / Ice Arrow (Elf): dây căng đúng lúc tên bay
+  shoot: p => { const draw = p < 0.55 ? p/0.55 : Math.max(0, 1 - (p-0.55)/0.45);
+                return { armR: -0.28 - 0.55*draw, armL: -0.14, lean: -0.05 - 0.04*draw,
+                         wrot: 0, wpush: 0, sw: draw }; },
+  // chĩa trượng ra trước — Poison (DW) · Force Wave / Electric Spark (DL): VFX bắn thẳng
+  point: p => { const e = Math.sin(Math.pow(p, 0.6)*Math.PI);
+                return { armR: -1.05 - 0.25*e, armL: -0.35, lean: 0.10*e,
+                         wrot: 0.85, wpush: 12*e, sw: e*0.4 }; },
+  // giơ vũ khí lên trời — Meteor (DW) · Flame Strike (MG) · Fire Scream (DL): VFX rơi xuống
+  raise: p => { const e = Math.sin(Math.pow(p, 0.5)*Math.PI);
+                return { armR: -1.55 - 0.35*e, armL: -0.75 - 0.3*e, lean: -0.10 - 0.06*e,
+                         wrot: -0.25, wpush: 0, sw: e*0.5, head: -0.16 }; },
+  // dựng vũ khí trước ngực — chiêu buff: Soul Barrier · Greater Damage · Battle Fury…
+  guard: p => { const e = Math.sin(p*Math.PI);
+                return { armR: -0.95 - 0.15*e, armL: -0.95 - 0.15*e, lean: -0.04,
+                         wrot: -0.55, wpush: -6, sw: e*0.3 }; },
+};
+// Kiểu ra đòn mặc định từng lớp: đòn thường · chiêu chính (a) · tuyệt kỹ (tp) · buff
+const SECT_ACT = {
+  thieulam: { basic:'slash', a:'spin',  tp:'thrust', buff:'guard' }, // đại kiếm: chém → quét → đâm
+  minhgiao: { basic:'slash', a:'spin',  tp:'raise',  buff:'guard' }, // đại đao: chém → quét → bổ lửa
+  toanchan: { basic:'shoot', a:'shoot', tp:'shoot',  buff:'raise' }, // cung: luôn giương rồi buông
+  baidasan: { basic:'point', a:'point', tp:'raise',  buff:'raise' }, // trượng: chĩa → gọi thiên thạch
+  bug:      { basic:'slash', a:'point', tp:'raise',  buff:'raise' }, // quyền trượng: vung → hiệu triệu
+  vophai:   { basic:'slash', a:'slash', tp:'thrust', buff:'guard' },
+};
+function heroActOf(sectKey, slot){ return (SECT_ACT[sectKey] || SECT_ACT.vophai)[slot] || 'slash'; }
+
+// wph: pha bước chân · mv: đang di chuyển · atkK/castK 0..1 (đếm NGƯỢC về 0) · act: kiểu ra đòn
+function heroPose(wph, mv, atkK, castK, now, act){
+  const br = Math.sin(now / 620) * 0.035;               // nhịp thở lúc đứng yên
+  const st = mv ? Math.sin(wph) : 0;                    // sải chân
+  const k = castK > 0 ? castK : atkK;                   // đòn nào đang chạy
+  const A = k > 0 ? (HERO_ACT[act] || HERO_ACT.slash)(1 - Math.min(1, k)) : null;
+  return {
+    legL: st * 0.42, legR: -st * 0.42,
+    armL: A ? A.armL - st * 0.10 : -st * 0.30 + br,
+    armR: A ? A.armR : st * 0.30 - br,
+    lean: (A ? A.lean : 0) + (mv ? Math.sin(wph) * 0.045 : br * 0.5),
+    head: (A && A.head ? A.head : 0) + (mv ? -Math.sin(wph * 2) * 0.05 : -br),
+    bob:  mv ? Math.abs(Math.sin(wph)) * -3.2 : Math.sin(now / 620) * -1.2,
+    wrot: A ? A.wrot : 0, wpush: A ? A.wpush : 0,
+    sw: A ? A.sw : 0, cast: castK, back: false,
+  };
+}
+const HERO_POSE0 = heroPose(0, false, 0, 0, 0, 'slash');
+
+// ── LỚP CHUNG: chân · thân · đầu (giáp của từng lớp vẽ đè lên) ──
+function hLegs(g, P, ps){
+  hJoint(g, HERO_JOINT.hipL[0], HERO_JOINT.hipL[1], ps.legL, () => {
+    hPoly(g, [[63,140],[80,140],[80,198],[61,198]], P.leg);
+    hPoly(g, [[60,194],[79,194],[81,212],[57,212]], P.boot);
+  });
+  hJoint(g, HERO_JOINT.hipR[0], HERO_JOINT.hipR[1], ps.legR, () => {
+    hPoly(g, [[80,140],[97,140],[99,198],[80,198]], P.leg);
+    hPoly(g, [[81,194],[100,194],[103,212],[79,212]], P.boot);
+  });
+}
+function hTorso(g, P){ hPoly(g, [[58,96],[102,96],[106,146],[54,146]], P.torso); }
+function hHead(g, P, ps){
+  hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+    hEll(g, 80, 74, 19, 21, P.skin);
+    if (ps.back){ hEll(g, 80, 72, 18, 19, P.skinSh); return; } // nhìn từ sau: chỉ thấy gáy
+    hEll(g, 88, 74, 10, 20, P.skinSh);
+    hEll(g, 72, 72, 3, 4.5, '#1a1219'); hEll(g, 87, 72, 3, 4.5, '#1a1219');
+  });
+}
+function hArmL(g, P, ps, fn){ hJoint(g, HERO_JOINT.shL[0], HERO_JOINT.shL[1], ps.armL, fn || (() => hEll(g, 48, 116, 10, 17, P.skin))); }
+function hArmR(g, P, ps, fn){ hJoint(g, HERO_JOINT.shR[0], HERO_JOINT.shR[1], ps.armR, fn || (() => hEll(g, 112, 116, 10, 17, P.skin))); }
+// áo choàng: đuôi áo bạt ra sau theo bước chân & lực vung
+function hCape(g, c1, c2, ps){
+  const f = (ps.legL - ps.legR) * 16 + ps.sw * 22;
+  hPoly(g, [[52,98],[108,98],[122 - f,190],[38 - f,190]], c2);
+  hPoly(g, [[80,98],[108,98],[122 - f,190],[80 - f,190]], c1);
+}
+
+// ── TRANG BỊ THEO LỚP ──
+// pal: màu da/vải · cape: màu áo choàng · upper(g,M,ps,P): giáp + mũ + tay + vũ khí
+const HERO_GEAR = {
+  // Dark Knight — giáp tấm nặng, mũ sừng, đại kiếm bổ từ trên xuống
+  thieulam: {
+    pal: { boot:'#2a2c38', leg:'#3a3d4c', torso:'#54596e', skin:'#d8a878', skinSh:'#b0805a' },
+    cape: ['#7a1e28', '#5a1420'],
+    upper(g, M, ps, P){
+      hTorso(g, P);
+      hPoly(g, [[56,96],[104,96],[108,140],[52,140]], M.hi);
+      hPoly(g, [[80,96],[104,96],[108,140],[80,140]], M.lo);
+      hPoly(g, [[68,104],[92,104],[88,132],[72,132]], M.trim);
+      hHead(g, P, ps);
+      hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+        hPoly(g, [[58,60],[102,60],[100,88],[60,88]], M.hi);
+        if (!ps.back) hPoly(g, [[58,74],[102,74],[102,80],[58,80]], '#20242e'); // khe mắt
+        hPoly(g, [[58,62],[44,36],[62,50]], M.hi);
+        hPoly(g, [[102,62],[116,36],[98,50]], M.hi);
+      });
+      hArmL(g, P, ps, () => { hEll(g, 48, 116, 10, 17, P.skin); hPoly(g, [[34,94],[62,88],[64,120],[36,126]], M.hi); });
+      hArmR(g, P, ps, () => {
+        hEll(g, 112, 116, 10, 17, P.skin);
+        hPoly(g, [[126,94],[98,88],[96,120],[124,126]], M.lo);
+        g.save(); g.translate(122 + ps.wpush, 134); g.rotate(0.13 + ps.wrot); // chếch ra ngoài, không cắt mặt
+        hPoly(g, [[-6,0],[6,0],[5,-96],[0,-112],[-5,-96]], '#d2d6de');
+        g.fillStyle = '#fff'; g.fillRect(-2, -96, 3, 90);
+        hPoly(g, [[-18,0],[18,0],[16,10],[-16,10]], M.trim);
+        g.fillStyle = '#4a3520'; g.fillRect(-5, 10, 10, 30);
+        hEll(g, 0, 44, 7, 7, M.trim); g.restore();
+      });
+    },
+  },
+  // Dark Wizard — áo thụng loe, mũ trùm tối, quyền trượng ngọc giương cao khi niệm
+  baidasan: {
+    pal: { boot:'#241c34', leg:'#2e2450', torso:'#453076', skin:'#e0c0a0', skinSh:'#bc9c78' },
+    cape: ['#3a2a6a', '#241a4a'],
+    upper(g, M, ps, P){
+      hPoly(g, [[52,96],[108,96],[120,206],[40,206]], '#523a8a');
+      hPoly(g, [[80,96],[108,96],[120,206],[80,206]], '#3d2a68');
+      hPoly(g, [[50,132],[110,132],[108,146],[52,146]], M.trim);
+      hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+        hPoly(g, [[46,92],[114,92],[106,66],[88,44],[72,44],[54,66]], '#5e42a0');
+        hPoly(g, [[80,44],[114,92],[106,66],[88,44]], '#412c76');
+        if (!ps.back){                          // nhìn từ sau chỉ thấy vải mũ trùm
+          hEll(g, 80, 78, 17, 18, '#180f2a');
+          hEll(g, 73, 76, 3.4, 4.6, '#9fd0ff'); hEll(g, 88, 76, 3.4, 4.6, '#9fd0ff');
+        }
+      });
+      hArmL(g, P, ps);
+      hArmR(g, P, ps, () => {
+        g.save(); g.translate(112 + ps.wpush, 150); g.rotate(ps.wrot);
+        g.strokeStyle = '#4a3520'; g.lineWidth = 8; g.lineCap = 'round';
+        g.beginPath(); g.moveTo(0, 0); g.lineTo(-8, -120); g.stroke();
+        const r = 26 + ps.cast * 16;
+        const og = g.createRadialGradient(-8, -134, 2, -8, -134, r);
+        og.addColorStop(0, '#dff2ff'); og.addColorStop(0.45, 'rgba(122,190,255,.8)'); og.addColorStop(1, 'rgba(90,150,230,0)');
+        g.fillStyle = og; g.beginPath(); g.arc(-8, -134, r, 0, 7); g.fill();
+        hEll(g, -8, -134, 9 + ps.cast * 3, 9 + ps.cast * 3, '#8fd0ff');
+        g.strokeStyle = M.trim; g.lineWidth = 3;
+        g.beginPath(); g.arc(-8, -134, 14, 0, 7); g.stroke(); g.restore();
+      });
+    },
+  },
+  // Fairy Elf — giáp da nhẹ, tai nhọn, đuôi ngựa, cung dài (dây kéo căng khi bắn)
+  toanchan: {
+    pal: { boot:'#2a3d34', leg:'#35564a', torso:'#3f7a68', skin:'#e8c8a4', skinSh:'#c4a480' },
+    cape: ['#1e6a5a', '#14483e'],
+    upper(g, M, ps, P){
+      hTorso(g, P);
+      hPoly(g, [[58,96],[102,96],[104,138],[56,138]], '#57a08a');
+      hPoly(g, [[80,96],[102,96],[104,138],[80,138]], '#43836f');
+      hPoly(g, [[66,100],[94,100],[90,130],[70,130]], M.trim);
+      g.strokeStyle = '#5a4630'; g.lineWidth = 4;                    // ống tên sau lưng
+      g.beginPath(); g.moveTo(104, 96); g.lineTo(114, 134); g.stroke();
+      for (let i = 0; i < 3; i++){
+        g.strokeStyle = '#d8d0c0'; g.lineWidth = 2; g.beginPath();
+        g.moveTo(100 + i * 5, 92); g.lineTo(104 + i * 5, 74); g.stroke();
+      }
+      hHead(g, P, ps);
+      hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+        hPoly(g, [[60,60],[100,60],[102,44],[58,44]], '#d8b45a');
+        hPoly(g, [[98,52],[126,40],[118,96],[100,80]], '#d8b45a');
+        if (!ps.back){                          // tai nhọn khuất sau tóc khi quay lưng
+          hPoly(g, [[62,66],[46,52],[60,74]], '#e8c8a4');
+          hPoly(g, [[98,66],[114,52],[100,74]], '#e8c8a4');
+        }
+      });
+      hArmR(g, P, ps, () => { hEll(g, 112, 116, 10, 17, P.skin); hPoly(g, [[126,92],[110,88],[108,110],[124,114]], M.hi); });
+      hArmL(g, P, ps, () => {                                        // tay trái giương cung
+        hPoly(g, [[48,92],[64,88],[66,110],[50,114]], M.hi);
+        g.save(); g.translate(36 - ps.wpush*0.5, 118); g.rotate(0.12 - ps.wrot*0.4);
+        g.strokeStyle = '#7a5a30'; g.lineWidth = 6; g.lineCap = 'round';
+        g.beginPath(); g.arc(14, 0, 60, Math.PI * 0.62, Math.PI * 1.38); g.stroke();
+        g.strokeStyle = '#e8e0c8'; g.lineWidth = 1.8;
+        const bp = 10 + ps.sw * 24;                                  // dây cung kéo căng
+        g.beginPath(); g.moveTo(-6, -56); g.lineTo(-6 + bp, 0); g.lineTo(-6, 56); g.stroke();
+        if (ps.sw > 0.05){                                           // mũi tên đặt trên dây
+          g.strokeStyle = '#cfc4a8'; g.lineWidth = 2.4;
+          g.beginPath(); g.moveTo(-6 + bp, 0); g.lineTo(-6 + bp - 52, 0); g.stroke();
+        }
+        g.restore();
+      });
+    },
+  },
+  // Magic Gladiator — nửa giáp nửa vải, một vai trần, đại đao bản rộng
+  minhgiao: {
+    pal: { boot:'#2c2222', leg:'#3e2e2e', torso:'#6a4038', skin:'#d8a878', skinSh:'#b0805a' },
+    cape: ['#5a1a1a', '#3a1010'],
+    upper(g, M, ps, P){
+      hTorso(g, P);
+      hPoly(g, [[56,96],[102,96],[106,142],[52,142]], '#4a2a2a');
+      hPoly(g, [[56,96],[80,96],[82,142],[52,142]], M.hi);           // chỉ nửa trái có giáp
+      hPoly(g, [[52,136],[106,136],[104,150],[54,150]], M.trim);
+      hHead(g, P, ps);
+      hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+        hPoly(g, [[60,62],[100,62],[104,42],[56,42]], '#2a2028');    // tóc dài đen
+        hPoly(g, [[98,54],[122,66],[112,116],[98,86]], '#2a2028');
+        if (!ps.back) hPoly(g, [[56,68],[70,58],[72,72]], M.trim);   // vòng trán kim loại
+      });
+      hArmL(g, P, ps, () => {                                        // vai trái giáp đồ sộ
+        hEll(g, 48, 116, 10, 17, P.skin);
+        hPoly(g, [[30,92],[60,86],[62,122],[32,128]], M.hi);
+        hPoly(g, [[30,92],[46,89],[47,125],[32,128]], M.lo);
+      });
+      hArmR(g, P, ps, () => {
+        hEll(g, 112, 114, 11, 19, '#d8a878');                        // vai/tay phải để trần
+        g.save(); g.translate(122 + ps.wpush, 136); g.rotate(0.18 + ps.wrot);
+        hPoly(g, [[-9,0],[9,0],[7,-104],[0,-124],[-7,-104]], '#dcd2c0');
+        hPoly(g, [[0,0],[9,0],[7,-104],[0,-124]], '#b6ac98');
+        g.fillStyle = '#fff6e0'; g.fillRect(-2, -104, 3, 98);
+        hPoly(g, [[-20,0],[20,0],[17,11],[-17,11]], M.trim);
+        g.fillStyle = '#3a2418'; g.fillRect(-5, 11, 10, 28); g.restore();
+      });
+    },
+  },
+  // Dark Lord — giáp đen ánh lam, mũ vương miện 5 chấu, quyền trượng chỉ huy
+  bug: {
+    pal: { boot:'#1c1e2c', leg:'#262a3c', torso:'#333a54', skin:'#c89868', skinSh:'#a07048' },
+    cape: ['#1f2f6a', '#131c44'],
+    upper(g, M, ps, P){
+      hTorso(g, P);
+      hPoly(g, [[54,94],[106,94],[110,142],[50,142]], '#2a3050');
+      hPoly(g, [[80,94],[106,94],[110,142],[80,142]], '#1e2340');
+      hPoly(g, [[70,102],[90,102],[86,134],[74,134]], M.trim);
+      hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+        hPoly(g, [[58,58],[102,58],[100,90],[60,90]], '#2a3050');
+        if (!ps.back){
+          hPoly(g, [[58,72],[102,72],[102,79],[58,79]], '#0e1220');
+          hEll(g, 70, 75.5, 3, 3.4, '#ff7a5a'); hEll(g, 90, 75.5, 3, 3.4, '#ff7a5a');
+        }
+        for (let i = 0; i < 5; i++)
+          hPoly(g, [[54 + i * 13, 58], [60 + i * 13, 30 + (i === 2 ? -10 : 0)], [66 + i * 13, 58]], M.trim);
+      });
+      hArmL(g, P, ps, () => {
+        hEll(g, 48, 116, 10, 17, P.skin);
+        hPoly(g, [[28,90],[60,84],[64,122],[32,128]], M.hi);
+        hPoly(g, [[28,90],[44,86],[38,60],[30,88]], M.hi);           // gai vai
+      });
+      hArmR(g, P, ps, () => {
+        hEll(g, 112, 116, 10, 17, P.skin);
+        hPoly(g, [[132,90],[100,84],[96,122],[128,128]], M.lo);
+        hPoly(g, [[132,90],[116,86],[122,60],[130,88]], M.lo);
+        g.save(); g.translate(116 + ps.wpush, 146); g.rotate(ps.wrot);
+        g.strokeStyle = '#2a2438'; g.lineWidth = 9; g.lineCap = 'round';
+        g.beginPath(); g.moveTo(0, 0); g.lineTo(-6, -126); g.stroke();
+        hPoly(g, [[-6,-126],[-24,-146],[-6,-172],[12,-146]], M.trim);
+        hEll(g, -6, -146, 7, 9, '#7fb0ff');
+        const r = 24 + ps.cast * 14;
+        const dg = g.createRadialGradient(-6, -146, 2, -6, -146, r);
+        dg.addColorStop(0, 'rgba(160,200,255,.75)'); dg.addColorStop(1, 'rgba(80,120,220,0)');
+        g.fillStyle = dg; g.beginPath(); g.arc(-6, -146, r, 0, 7); g.fill(); g.restore();
+      });
+    },
+  },
+  // Chưa chọn lớp — áo vải thô, kiếm ngắn tập sự
+  vophai: {
+    pal: { boot:'#3a3028', leg:'#4a4038', torso:'#6a5a48', skin:'#d8a878', skinSh:'#b0805a' },
+    cape: null,
+    upper(g, M, ps, P){
+      hTorso(g, P);
+      hPoly(g, [[56,96],[104,96],[104,150],[56,150]], '#7a6a52');
+      hPoly(g, [[80,96],[104,96],[104,150],[80,150]], '#61533f');
+      hPoly(g, [[54,140],[106,140],[106,150],[54,150]], '#4a3520');
+      hHead(g, P, ps);
+      hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head,
+        () => hPoly(g, [[60,62],[100,62],[98,44],[62,44]], '#4a3828'));
+      hArmL(g, P, ps);
+      hArmR(g, P, ps, () => {
+        hEll(g, 112, 116, 10, 17, P.skin);
+        g.save(); g.translate(118 + ps.wpush, 132); g.rotate(0.15 + ps.wrot);
+        hPoly(g, [[-4,0],[4,0],[3,-58],[0,-68],[-3,-58]], '#c0c4cc');
+        hPoly(g, [[-12,0],[12,0],[11,8],[-11,8]], '#8a7a4a');
+        g.fillStyle = '#4a3520'; g.fillRect(-4, 8, 8, 22); g.restore();
+      });
+    },
+  },
+};
+// Vẽ nhân vật trong hộp 160×220. tier = bậc Thần Binh (đổi bảng màu giáp).
+function drawHeroFigure(g, sectKey, tier, now, ps){
+  const M = hMetal(tier), G = HERO_GEAR[sectKey] || HERO_GEAR.vophai, P = G.pal;
+  ps = ps || HERO_POSE0;
+  g.save();
+  hEll(g, 80, 212, 30 - ps.bob * 0.9, 8, 'rgba(0,0,0,.22)'); // bóng co lại khi nhấc chân
+  if (M.glow){ // giáp bậc cao toả sáng — nhìn là biết đồ xịn, không cần đọc số
+    const ag = g.createRadialGradient(80, 120, 10, 80, 120, 86);
+    ag.addColorStop(0, M.glow); ag.addColorStop(1, 'rgba(0,0,0,0)');
+    g.globalAlpha = 0.2 + 0.1 * Math.sin(now / 380); g.fillStyle = ag;
+    g.beginPath(); g.arc(80, 120, 86, 0, 7); g.fill(); g.globalAlpha = 1;
+  }
+  if (G.cape && !ps.back) hCape(g, G.cape[0], G.cape[1], ps);
+  hLegs(g, P, ps);
+  g.translate(0, ps.bob);                                    // nhún theo bước chân
+  hJoint(g, 80, 146, ps.lean, () => {
+    G.upper(g, M, ps, P);
+    // quay lưng: áo choàng phủ lên trên thân, đúng như nhìn nhân vật đi ra xa
+    if (G.cape && ps.back) hCape(g, G.cape[0], G.cape[1], ps);
+  });
+  g.restore();
+}
+
+// Ảnh chân dung lớp cho màn chọn nhân vật / bảng nhân vật: vẽ thẳng bằng
+// drawHeroFigure() nên card LUÔN khớp với người đứng trong game (trước đây là
+// thẻ Axie tĩnh, chọn Dark Knight xong vào game lại thấy một hình khác hẳn).
+const _heroCardCache = {};
+function heroCardUrl(sectKey, tier){
+  const key = sectKey + ':' + (tier || 1);
+  if (_heroCardCache[key]) return _heroCardCache[key];
+  const cv = document.createElement('canvas');
+  cv.width = HERO_W; cv.height = HERO_H;
+  drawHeroFigure(cv.getContext('2d'), sectKey, tier || 1, 0, HERO_POSE0);
+  return (_heroCardCache[key] = cv.toDataURL('image/png'));
+}
 function drawPlayer(){
   const sect = SECTS[player.sect];
   const p = player;
@@ -5772,8 +6423,8 @@ function drawPlayer(){
     }
     ctx.restore();
   }
-  // character sprite (sect portrait art, đã cắt nền) — walk bob · idle breathing · cast pulse · attack lunge
-  const img = (p.channelT > 0 && p.channelId && CHANNEL_IMGS[p.channelId]) ? CHANNEL_IMGS[p.channelId] : SECT_IMGS[p.sect];
+  // Hóa Thân Trấn Ải mượn hình boss → vẫn dùng sprite quái; còn lại vẽ khớp xương.
+  const img = (p.channelT > 0 && p.channelId) ? CHANNEL_IMGS[p.channelId] : null;
   const wph = p.walkPh || 0;
   const bob = p.moving ? Math.abs(Math.sin(wph))*4.2 : Math.sin(wph)*1.5;
   const rock = p.moving ? Math.sin(wph)*0.07 : 0;
@@ -5809,13 +6460,17 @@ function drawPlayer(){
     } else {
       drawAscendedFigure(p, now, castK, atkK, maxed); // fallback VFX khi sprite chưa tải xong
     }
-  } else if (img && img.complete && img.naturalWidth){
-    const channeling = p.channelT > 0 && p.channelId;
-    const sh = (channeling ? 120 : 104), sw = sh * (img.naturalWidth/img.naturalHeight);
+  } else {
+    // Mượn hình boss → blit sprite quái; bình thường → dựng nhân vật bằng khớp xương.
+    const channeling = !!(img && img.complete && img.naturalWidth);
+    const sh = channeling ? 120 : 104;
     const flip = Math.cos(p.face) < 0;
-    ctx.save(); ctx.translate(p.x + Math.cos(p.face)*atkK*7, p.y - 26 - bob + Math.sin(p.face)*atkK*3);
+    ctx.save();
+    ctx.translate(p.x + Math.cos(p.face)*atkK*7,
+                  (channeling ? p.y - 26 - bob : p.y - 42) + Math.sin(p.face)*atkK*3);
     if (flip) ctx.scale(-1, 1);
-    ctx.rotate(rock + atkK*0.12); ctx.scale(pulse, pulse);
+    // khớp xương đã tự ngả người rồi nên không xoay đè thêm
+    ctx.rotate(channeling ? rock + atkK*0.12 : 0); ctx.scale(pulse, pulse);
     // Hóa Thân Trấn Ải: hào quang đỏ thẫm dữ dội theo hệ boss đang mượn hình
     if (channeling){
       const _chTv = findTranaiById(p.channelId), _chCol = (NGU_HANH[_chTv && _chTv.el] || {}).color || '#ffb15c';
@@ -5843,19 +6498,34 @@ function drawPlayer(){
       ctx.beginPath(); ctx.arc(0, 0, 52, 0, 7); ctx.fill();
       ctx.globalAlpha = 1;
     }
-    ctx.drawImage(img, -sw/2, -sh/2, sw, sh);
+    if (channeling){
+      const sw = sh * (img.naturalWidth/img.naturalHeight);
+      ctx.drawImage(img, -sw/2, -sh/2, sw, sh);
+    } else {
+      const s = sh / HERO_H;
+      ctx.scale(s, s); ctx.translate(-HERO_W/2, -HERO_H/2);
+      const _act = castK > 0 ? (p.castAct || heroActOf(p.sect, 'a'))
+                             : (p.atkAct  || heroActOf(p.sect, 'basic'));
+      const _ps = heroPose(wph, !!p.moving, atkK, Math.min(1, castK), now, _act);
+      // Góc nhìn 3/4 kiểu MU: đi lên trên là thấy LƯNG, đi xuống là thấy mặt.
+      // (Trước đây hướng nào cũng nhìn thẳng vào mặt người chơi, trông rất sai.)
+      _ps.back = Math.sin(p.face) < -0.42;
+      // Trúng đòn: nhân vật giật ngửa ra sau, đầu hất lên, tay bung — trước đây chỉ
+      // có viền đỏ nhấp trên màn hình, còn thân người thì đứng im như không hề gì.
+      const _hurt = Math.min(1, (p.hurtT || 0) / 0.3);
+      if (_hurt > 0){
+        _ps.lean -= 0.24 * _hurt;
+        _ps.head += 0.26 * _hurt;
+        _ps.armL -= 0.42 * _hurt;
+        _ps.armR -= 0.22 * _hurt;
+        _ps.bob  -= 2.2 * _hurt;
+      }
+      drawHeroFigure(ctx, p.sect, (p.thanbinh && p.thanbinh.tier) || 1, now, _ps);
+    }
     ctx.restore();
-  } else {
-    // fallback ink figure
-    ctx.fillStyle = '#2b2620';
-    ctx.beginPath(); ctx.ellipse(p.x, p.y-8, 11, 15, 0, 0, 7); ctx.fill();
-    ctx.strokeStyle = sect.color; ctx.lineWidth = 4; ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(p.x-9, p.y-6); ctx.lineTo(p.x+9, p.y-9); ctx.stroke();
-    ctx.fillStyle = '#e8cfa8'; ctx.beginPath(); ctx.arc(p.x, p.y-27, 7, 0, 7); ctx.fill();
-    ctx.fillStyle = '#1a1712'; ctx.beginPath(); ctx.arc(p.x, p.y-32, 4, 0, 7); ctx.fill();
   }
-  // Vũ khí danh phái cầm tay — vung theo nhịp đánh
-  drawSectWeapon(p, sect);
+  // Vũ khí danh phái cầm tay — nhân vật khớp xương đã tự cầm vũ khí nên bỏ qua
+  if (p.ascended || (p.channelT > 0 && p.channelId)) drawSectWeapon(p, sect);
   // weapon arc while attacking
   if (p.atkAnim > 0){
     const k = p.atkAnim/0.22;
@@ -6060,7 +6730,8 @@ el('btn-auto').addEventListener('click', ()=>toggleAuto());
 function renderChar(){
   const p = player, sect = SECTS[p.sect];
   let html = `<h3>Nhân Vật — ${sect.name} Cấp ${p.level}</h3>`;
-  html += `<img class="char-portrait" src="${p.ascended ? 'assets/tien/' + (p.gender === 'nu' ? 'nu' : 'nam') + '_' + (TIEN_SKINS[p.tienSkin] ? p.tienSkin : 'bach') + '.png' : SECT_ART[p.sect].portrait}" alt="${sect.name}">${p.ascended ? `<div style="margin-top:4px;font-size:11.5px;color:#fff2b0">☁ Tán Tiên — xuất thế khỏi ${sect.name}, ràng buộc Lớp đã phá bỏ</div>` : ""}`;
+  // chân dung = chính nhân vật trong game, ở đúng bậc Thần Binh đang mang
+  html += `<img class="char-portrait" src="${p.ascended ? 'assets/tien/' + (p.gender === 'nu' ? 'nu' : 'nam') + '_' + (TIEN_SKINS[p.tienSkin] ? p.tienSkin : 'bach') + '.png' : heroCardUrl(p.sect, (p.thanbinh && p.thanbinh.tier) || 1)}" alt="${sect.name}">${p.ascended ? `<div style="margin-top:4px;font-size:11.5px;color:#fff2b0">☁ Tán Tiên — xuất thế khỏi ${sect.name}, ràng buộc Lớp đã phá bỏ</div>` : ""}`;
   // Tán Nhân: lối vào lễ Bái Sư Nhập Phái (cấp 10)
   if (p.sect === 'vophai'){
     html += `<div style="margin:8px 0;padding:10px;border:1px dashed rgba(126,203,255,.45);border-radius:6px;text-align:center">
@@ -6073,7 +6744,7 @@ function renderChar(){
   // The Hatching: 3 trait + tính cách
   if (p.traits && p.traits.length){
     const pers = PERSONALITIES[p.personality] || PERSONALITIES.trung;
-    html += `<div style="margin:6px 0 2px;font-size:12px;color:#7ecbff;letter-spacing:1px">☯ QUẺ TIÊN THIÊN · ${pers.glyph} ${pers.name}</div>`;
+    html += `<div style="margin:6px 0 2px;font-size:12px;color:#7ecbff;letter-spacing:1px">◈ DẤU ẤN KHAI SINH · ${pers.glyph} ${pers.name}</div>`;
     for (const tid of p.traits){
       const tr = TRAITS.find(t => t.id === tid);
       if (!tr) continue;
@@ -6264,7 +6935,7 @@ window.doDoiHe = function(uid){
   let el2 = it.element;
   while (el2 === it.element) el2 = ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)];
   it.element = el2;
-  addFloat(player.x, player.y-52, `☯ ĐỔI HỆ — chuyển sang hệ ${el2}!`, NGU_HANH[el2].color, 14);
+  addFloat(player.x, player.y-52, `◑ ĐỔI HỆ — chuyển sang hệ ${el2}!`, NGU_HANH[el2].color, 14);
   calcDerived(); saveGame(); renderForge();
 };
 // Đổi 60 Mảnh Cổ Thần → 1 món Cổ Thần chọn bộ (pity Tứ Tượng — vá lỗi không pity)
@@ -6387,7 +7058,7 @@ function renderForge(){
           <div class="forge-actions"><button class="mini-btn" ${canKt?'':'disabled'} onclick="doKeThua(${it.uid})">⚒ Kế Thừa<br><span style="font-size:11px">40❖Mảnh + 4◆TịchMa + ${5000*it.tier}◈</span></button></div>`;
       }
       const canDh = player.jewels && player.jewels.honDon >= 1;
-      html += `<div class="forge-actions"><button class="mini-btn" ${canDh?'':'disabled'} onclick="doDoiHe(${it.uid})" title="Re-roll nguyên tố trang bị (hiện: ${it.element})">☯ Đổi Hệ (1● Hỗn Độn)</button></div>`;
+      html += `<div class="forge-actions"><button class="mini-btn" ${canDh?'':'disabled'} onclick="doDoiHe(${it.uid})" title="Re-roll nguyên tố trang bị (hiện: ${it.element})">◑ Đổi Hệ (1● Hỗn Độn)</button></div>`;
     }
   }
   // Luyện Bảo Các — Áo Choàng (2 cấp, chỉ luyện chế tại đây, không rơi từ quái)
@@ -6527,11 +7198,11 @@ window.doEnhance = function(){
 
 // ---------- Tấn Chức: Ám Khí / Cung Tiễn / Cương Khí (7 tầng, Chúc Phúc bảo đảm) ----------
 const TH_SYSTEMS = {
-  amkhi:   { name:'Ám Khí',   glyph:'暗', tiers:AMKHI_TIERS,   minLv:4,
+  amkhi:   { name:'Ám Khí',   glyph:'☾', tiers:AMKHI_TIERS,   minLv:4,
              desc:'Tăng cường chiêu Ám Khí (phím 2) — mỗi tầng thêm bạo kích và hiệu ứng: độc, làm chậm, mù lòa, vạn độc, kết liễu.' },
-  bow:     { name:'Cung Tiễn', glyph:'弓', tiers:BOW_TIERS,    minLv:30,
+  bow:     { name:'Cung Tiễn', glyph:'↗', tiers:BOW_TIERS,    minLv:30,
              desc:'Linh cung lơ lửng sau lưng — đòn đánh thường (Space) có tỉ lệ bắn thêm linh tiễn xuyên giáp.' },
-  gangkhi: { name:'Cương Khí', glyph:'罡', tiers:GANGKHI_TIERS, minLv:10,
+  gangkhi: { name:'Cương Khí', glyph:'✦', tiers:GANGKHI_TIERS, minLv:10,
              desc:'Chân khí hộ thể vận chuyển quanh người — tăng Sinh Lực và Phòng Ngự theo %.' },
 };
 const TH_RATES = [0, 95, 85, 75, 62, 50, 38, 26]; // tỉ lệ thành công theo tầng đích (cân bằng lại: tầng đầu dễ, tầng cuối khốc liệt)
@@ -6604,7 +7275,7 @@ function renderTuyetHoc(){
       <div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 20px" onclick="upgradeTH('${sys}')" ${canPay?'':'disabled'}>
       Tấn Chức Tầng ${target}</button></div><div id="th-msg"></div>`;
   } else {
-    html += `<div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">☯ ${S.name} đã đạt tầng tối thượng — ${S.tiers[7].name}!</div>`;
+    html += `<div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">◑ ${S.name} đã đạt tầng tối thượng — ${S.tiers[7].name}!</div>`;
   }
   CE().innerHTML = html;
 }
@@ -6780,7 +7451,7 @@ function renderMount(){
       Thăng Giai ${tier===0?'(Nhận Emberhide Bull)':'→ '+next.name}</button></div><div id="mount-msg"></div>`;
 
   } else {
-    html += `<div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">☯ Đã đạt Azure Wyrm — đỉnh cao chiến thú thiên hạ!</div>`;
+    html += `<div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">◑ Đã đạt Azure Wyrm — đỉnh cao chiến thú thiên hạ!</div>`;
   }
   CE().innerHTML = html;
 }
@@ -6833,43 +7504,6 @@ window.toggleMountOut = function(){
   refreshCharTab('mount');
 };
 
-// ---------- Ascension panel & đột phá ----------
-window.dtTab = 'dantian';
-function renderDantian(){
-  if (player.level < 7){
-    CE().innerHTML = `<h3>Ascension</h3>
-      <div style="padding:14px;font-size:13px">Ascension mở khóa ở <b style="color:#7ecbff">cấp 7</b>.</div>`;
-    return;
-  }
-  // tab Instinct Channels
-  if (window.dtTab === 'kinhmach'){ renderKinhMach(); return; }
-  const realm = player.dantian.realm;
-  const cur = DANTIAN_REALMS[realm];
-  const next = DANTIAN_REALMS[realm+1];
-  let html = `<h3>Ascension — Tu Luyện Nội Công</h3>`;
-  html += `<div style="display:flex;gap:6px;margin-bottom:8px">
-    <button class="mini-btn" style="flex:1;border-color:#7ecbff;color:#7ecbff">丹 Ascension</button>
-    <button class="mini-btn" style="flex:1;${player.level<20?';opacity:.45':''}" onclick="window.dtTab='kinhmach';renderDantian()">脈 Instinct Channels${player.level<20?' (C20)':''}</button></div>`;
-  html += `<div class="realm-ring"><img src="assets/dantian/${REALM_ICONS[realm]}.png" alt="${cur.name}"
-      style="width:64px;height:64px;filter:drop-shadow(0 0 10px rgba(94,160,232,.65))" onerror="this.outerHTML='<div style=&quot;font-size:34px;color:#5ea0e8&quot;>丹</div>'">
-    <div class="realm-name">${cur.name} <span style="font-size:12px;opacity:.7">(Cảnh giới ${realm}/9)</span></div></div>`;
-  if (realm > 0){
-    html += `<div class="bonus-list"><b>Phúc lợi cảnh giới:</b><br>Công Kích +${Math.round(cur.atk*100)}% · HP +${Math.round(cur.hp*100)}% · Hồi Instinct +${cur.qireg}/s`;
-    if (realm >= 5) html += `<br><b style="color:#9fd8ff">◆ Phiêu Vân Bộ</b> — nhảy lần 2 trên không (phím J) · thân pháp +10%`;
-    if (realm >= 8) html += `<br><b style="color:#7ecbff">◆ Bất Tử</b> — chặn 1 đòn chí mạng, hồi 30% HP (180s)`;
-    if (realm >= 9) html += `<br><b style="color:#fff2b0">◆ Starforged</b> — nhục thân thăng hoa, toàn thuộc tính vượt cực hạn`;
-    html += `</div>`;
-  }
-  if (next){
-    const nextLv = (realm + 1) * 12;
-    html += `<div class="next-tier"><img src="assets/dantian/${REALM_ICONS[realm+1]}.png" alt="" style="width:34px;height:34px;vertical-align:-10px;margin-right:6px" onerror="this.style.display='none'"><b style="color:#9fd0ff">Cảnh giới kế: ${next.name}</b> — tự đạt ở <b style="color:#7ecbff">cấp ${nextLv}</b><br>
-      Công Kích +${Math.round(next.atk*100)}% · HP +${Math.round(next.hp*100)}% · Hồi Instinct +${next.qireg}/s
-      ${next.unlock ? `<br><b style="color:#7ecbff">◆ Học được: ${next.unlock}${realm+1===5 ? ' (nhảy lần 2 — phím J)' : ''}</b>` : ''}</div>`;
-  } else {
-    html += `<div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">☯ Starforged Cảnh — Instinct đã đạt cảnh giới tối thượng!</div>`;
-  }
-  CE().innerHTML = html;
-}
 // ---------- Tẩy Tủy Phong Huyệt (Reset kiểu MU Online): đạt max cấp → cấp về 1, giữ nguyên
 // trang bị/Ascension/kỹ năng/danh hiệu — đổi lấy % Công/Mạng vĩnh viễn không mất khi tẩy tủy tiếp ----------
 function renderTayTuy(){
@@ -6914,38 +7548,6 @@ window.doTayTuy = function(confirmed){
   renderCharPanel();
   saveGame();
 };
-// ---------- Instinct Channels: 8 mạch × 20 đốt, xung mạch tốn Instinct ----------
-function renderKinhMach(){
-  let html = `<h3>Instinct Channels — Đả Thông Huyệt Đạo</h3>`;
-  html += `<div style="display:flex;gap:6px;margin-bottom:8px">
-    <button class="mini-btn" style="flex:1" onclick="window.dtTab='dantian';renderDantian()">丹 Ascension</button>
-    <button class="mini-btn" style="flex:1;border-color:#7ecbff;color:#7ecbff">脈 Instinct Channels</button></div>`;
-  if (player.level < 20){
-    html += `<div style="padding:14px;font-size:13px">Instinct Channels mở khóa ở <b style="color:#7ecbff">cấp 20</b>.<br>Instinct tích lũy bằng chiến đấu và tĩnh tọa.</div>`;
-    CE().innerHTML = html; return;
-  }
-  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Bát mạch tự thông theo cấp độ — không cần tự tay xung mạch nữa, cứ lên cấp là mạnh dần.</div>`;
-  for (const md of MERIDIANS){
-    const node = player.meridians[md.id] || 0;
-    const pips = Array.from({length:20}, (_,i)=>`<span style="color:${i<node?md.color:'rgba(232,236,255,.22)'}">●</span>`).join('');
-    let perTxt = '';
-    if (md.stat==='hp') perTxt = `+${md.per} Sinh Lực/đốt`;
-    else if (md.stat==='qi') perTxt = `+${md.per} Qi/đốt`;
-    else if (md.stat==='atk') perTxt = `+${md.per} Tấn Công/đốt`;
-    else if (md.stat==='def') perTxt = `+${md.per} Phòng Thủ/đốt`;
-    else if (md.stat==='eva') perTxt = `+${md.per}% Né/đốt`;
-    else if (md.stat==='crit') perTxt = `+${md.per}% Bạo/đốt`;
-    else if (md.stat==='aspd') perTxt = `+${md.per}% Tốc Đánh/đốt`;
-    else perTxt = `toàn thuộc tính/đốt`;
-    const btnHtml = node >= 20 ? `<span style="color:${md.color};font-size:11px">VIÊN MÃN</span>` : `<span style="font-size:11px;opacity:.5">${node}/20</span>`;
-    html += `<div class="slot-row" style="display:block">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <b style="color:${md.color};font-size:12px"><img src="assets/dantian/${md.img}.png" alt="" style="width:26px;height:26px;vertical-align:-8px;margin-right:5px" onerror="this.style.display='none'">${md.name}</b>${btnHtml}</div>
-      <div style="font-size:9px;letter-spacing:1px;margin:2px 0">${pips}</div>
-      <div style="font-size:11px;opacity:.6">${md.label}: ${perTxt}</div></div>`;
-  }
-  CE().innerHTML = html;
-}
 // ---------- Sect select / boot ----------
 function startGame(sectKey, quze){
   newPlayer(sectKey);
@@ -7157,7 +7759,7 @@ window.cheatExec = function(raw){
       case 'learn': {
         let _n = 0;
         for (const _vid in VOHOC_DEFS){ if (!vhLearned(_vid)){ player.vohoc[_vid] = true; _n++; } }
-        calcDerived(); cheatLog('Đã học ' + _n + ' võ học — bấm K gán vào taskbar', '#ffb15c'); break;
+        calcDerived(); cheatLog('Đã học ' + _n + ' võ học — cộng %ST vĩnh viễn (K → Tuyệt Học Cũ)', '#ffb15c'); break;
       }
       case 'fullskill': {
         for (const _vid in VOHOC_DEFS) player.vohoc[_vid] = true;
@@ -7598,24 +8200,52 @@ const SKILL_TABS = [
   { id:'active', name:'⚔ Kỹ Năng' },
   { id:'legacy', name:'✦ Tuyệt Học Cũ' },
 ];
+// Chiêu nào thì tay vung kiểu nào — để tư thế nhân vật khớp với VFX đang bung ra.
+// (Meteor rơi từ trời xuống thì phải GIƠ trượng lên, không thể chĩa ngang.)
+function heroCastAct(id, d){
+  const sk = player.sect;
+  if (d.kind === 'sectTP') return heroActOf(sk, 'tp');
+  if (d.kind === 'gangkhi' || d.type === 'buff' || d.type === 'passive') return heroActOf(sk, 'buff');
+  if (d.kind === 'bow' || d.kind === 'amkhi' || d.kind === 'danchi')
+    return heroActOf(sk, 'basic') === 'shoot' ? 'shoot' : 'point';
+  if (d.kind === 'tieuhon') return heroActOf(sk, 'tp');
+  if (d.kind === 'vh'){                       // chiêu Tuyệt Học: theo loại của chính nó
+    const v = VOHOC_DEFS[id] || {};
+    if (v.type === 'buff' || v.type === 'passive') return heroActOf(sk, 'buff');
+    if (v.type === 'aoe') return heroActOf(sk, 'tp');
+    if (v.type === 'cone') return heroActOf(sk, 'a');
+    return heroActOf(sk, 'basic') === 'shoot' ? 'shoot' : 'point';
+  }
+  // còn lại là sectA — 4 loại theo lớp
+  const t = (SECTS[sk] && SECTS[sk].skillA && SECTS[sk].skillA.type) || 'cone';
+  if (t === 'proj') return heroActOf(sk, 'basic') === 'shoot' ? 'shoot' : 'point';
+  if (t === 'selfaoe' || t === 'dash') return heroActOf(sk, 'tp');
+  return heroActOf(sk, 'a');
+}
 window.skillTab = window.skillTab || 'active';
 window.switchSkillTab = function(t){ window.skillTab = t; renderSkillPanel(); };
 // 3 ô cố định (chính/phụ/buff — xem defaultSkillBar()): không còn gán/gỡ, chỉ hiện thông tin + nâng cấp.
 function equippedSkillRowHtml(id, roleLabel){
   const info = skillInfo(id);
   return `<div class="skill-row${info.unlocked?'':' locked'}">
-    <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='a'?'壹':id==='tp'?'鎮':'護'}</span>'" alt="">
+    <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='a'?'⚔':id==='tp'?'⚔':'✚'}</span>'" alt="">
     <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${roleLabel} — ${info.name}</b>
       <span style="font-size:10.5px;opacity:.6"> · ${info.qi}Qi · ${effCd(id, info.cd).toFixed(1)}s</span>
       <div class="sk-desc">${info.unlocked ? info.desc : '🔒 ' + info.lockTxt}</div></span>
     <span class="assign-btns">${info.unlocked ? upBtnHtml(id) : ''}</span></div>`;
 }
-// Tuyệt Học Cũ (chiêu môn phái không còn trong taskbar): thông tin + % Công Kích vĩnh viễn nó cộng,
-// không còn nút bấm nào — mở tự động theo đúng điều kiện gốc (xem LEGACY_* + calcDerived()).
+// Tuyệt Học Cũ (chiêu môn phái không còn trong taskbar): thông tin + % Công Kích vĩnh viễn nó cộng.
+// Chiêu của chính lớp mình tự ngộ theo cấp (vhAutoLearn); chiêu NGOẠI LỚP mua bằng Sách Kỹ Năng —
+// đây là đường tiêu duy nhất của tiền tệ đó (xem learnVohocUI).
 function legacySkillRowHtml(_vid){
   const _v = VOHOC_DEFS[_vid], _t = VH_TIER[_v.tier];
   const learned = vhLearned(_vid), pct = LEGACY_TIER_PCT[_v.tier] || 0;
-  const right = learned ? `<span style="font-size:11px;color:#a0ffe9">+${pct}% ST ✓</span>` : `<span style="font-size:10.5px;opacity:.5">🔒 Lv${_v.unlock}</span>`;
+  let right;
+  if (learned) right = `<span style="font-size:11px;color:#a0ffe9">+${pct}% ST ✓</span>`;
+  else if (crossClassLearnable(_vid)){
+    const _c = VH_TIER[_v.tier].cost, _can = player.level >= _v.unlock && (player.bikipVH || 0) >= _c;
+    right = `<button class="mini-btn vh-learn-btn" ${_can?'':'disabled'} title="${player.level < _v.unlock ? 'Cần cấp ' + _v.unlock : 'Học tuyệt học ngoại Lớp — +' + pct + '% Công Kích vĩnh viễn'}" onclick="window.learnVohocUI('${_vid}')">Học · ${_c}📜</button>`;
+  } else right = `<span style="font-size:10.5px;opacity:.5">🔒 Lv${_v.unlock}</span>`;
   return `<div class="skill-row${learned?'':' locked'}">
     <img src="${_v.icon}" onerror="this.style.display='none'" alt="">
     <span class="sk-info"><b style="color:${learned?_t.color:'#8a8a8a'}">${_v.name}</b>
@@ -7629,7 +8259,7 @@ function legacyUniversalRowHtml(id){
   const info = skillInfo(id), pct = LEGACY_UNIVERSAL_PCT[id] || 0;
   const right = info.unlocked ? `<span style="font-size:11px;color:#a0ffe9">+${pct}% ST ✓</span>` : `<span style="font-size:10.5px;opacity:.5">🔒 ${info.lockTxt}</span>`;
   return `<div class="skill-row${info.unlocked?'':' locked'}">
-    <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='amkhi'?'暗':id==='bow'?'弓':id==='danchi'?'弹':'魂'}</span>'" alt="">
+    <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='amkhi'?'☾':id==='bow'?'↗':id==='danchi'?'●':'✦'}</span>'" alt="">
     <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${info.name}</b>
       <div class="sk-desc">${info.desc}</div></span>
     ${right}</div>`;
@@ -7637,7 +8267,7 @@ function legacyUniversalRowHtml(id){
 function renderSkillPanel(){
   vhAutoLearn(); // save cũ / test mode: quét tự ngộ võ học phái
   let html = `<h3>Kỹ Năng — 3 ô cố định (phím 1-3)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%ST/cấp (bạc) · mốc 20/40/60/80/100/120 thêm buff · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · 💠 Tâm Đắc <b>${player.tamdac || 0}</b> · ⌨ Space: <b>${player.spaceSkill ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
+  html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%ST/cấp (bạc) · mốc 20/40/60/80/100/120 thêm buff · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · 💠 Tâm Đắc <b>${player.tamdac || 0}</b> · <span style="color:#7fd8e0">Instinct <b>${Math.floor(player.khi || 0).toLocaleString()}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
   html += `<div class="char-tabs">`;
   for (const t of SKILL_TABS) html += `<button class="${t.id===window.skillTab?'active':''}" onclick="switchSkillTab('${t.id}')">${t.name}</button>`;
   html += `</div>`;
@@ -7652,7 +8282,7 @@ function renderSkillPanel(){
     html += `<div class="stat-sec">BỊ ĐỘNG — tự kích hoạt, không cần gán</div>`;
     for (const ps of PASSIVE_SKILLS){
       const on = ps.req();
-      html += `<div class="skill-row${on?'':' locked'}"><span class="sk-glyph">心</span>
+      html += `<div class="skill-row${on?'':' locked'}"><span class="sk-glyph">✚</span>
         <span class="sk-info"><b style="color:${on?'#a0ffe9':'#8a8a8a'}">${ps.name}</b>
         <div class="sk-desc">${on ? ps.desc : '🔒 chưa đạt điều kiện'}</div></span></div>`;
     }
@@ -7661,6 +8291,15 @@ function renderSkillPanel(){
     html += `<div class="stat-sec">TUYỆT HỌC MÔN PHÁI — ${SECTS[player.sect].name}</div>`;
     const own = LEGACY_SECT_SKILLS.filter(sid => VOHOC_DEFS[sid] && VOHOC_DEFS[sid].phai === player.sect);
     html += own.length ? own.map(legacySkillRowHtml).join('') : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10.</div>`;
+    // Tuyệt học NGOẠI LỚP: mua bằng Sách Kỹ Năng (đường tiêu duy nhất của tiền tệ đó), hoặc nhận
+    // sạch miễn phí khi Thăng Tiên — và khi đó chúng ĐANG cộng %ST thật, nên bắt buộc phải hiện ra,
+    // nếu không phần thưởng endgame lớn nhất trông như chẳng có tác dụng gì (xem calcDerived()).
+    const _cross = LEGACY_SECT_SKILLS.filter(sid => crossClassLearnable(sid));
+    if (_cross.length){
+      html += `<div class="stat-sec">TUYỆT HỌC NGOẠI LỚP — 📜 Sách Kỹ Năng: <b style="color:#ffb15c">${player.bikipVH || 0}</b></div>`;
+      html += `<div style="font-size:11px;color:#9aa8d4;padding:0 4px 6px">Rơi từ tinh anh/boss & Vực Thẳm. Học xong cộng thẳng %ST vĩnh viễn — Thăng Tiên sẽ mở sạch số còn lại.</div>`;
+      html += _cross.map(legacySkillRowHtml).join('');
+    }
     html += `<div class="stat-sec">HỆ TẤN CHỨC PHỤ</div>`;
     for (const id of ['amkhi','danchi','bow','tieuhon']) html += legacyUniversalRowHtml(id);
   }
@@ -7688,6 +8327,7 @@ function castSkill(id){
   const _atk0 = player.atk; player.atk = Math.round(player.atk * skLvMult(id) * _sm.dmg * _se.dmg); // GDD Đợt 2 B6: mốc ST nhân dồn · nhánh Bá Đạo // cấp kỹ năng 1-120: +2.5% ST mỗi cấp
   player.comboT = 3; // mở/duy trì chuỗi combo — ám khí trúng trong lúc này sẽ kích Liên Trảm
   player.castT = 0.38; // animation tung tuyệt chiêu
+  player.castAct = heroCastAct(id, d);           // tư thế phải khớp VFX của chiêu
   const sect = SECTS[player.sect];
   let sfxTag = 'skill'; // per-class override set in the sectTP/sectA branches below
 
@@ -7701,23 +8341,25 @@ function castSkill(id){
       projectiles.push({ x:player.x, y:player.y, ang:ang + _off, speed:460, dmg:player.atk*SKILL_DEFS.amkhi.mult*(1+(player.amkhiPct||0)+(player.skillDmgPct||0)), kind:'amkhi', life:0.85, color:'#e8e8ff' });
     }
     addEffect({ type:'arc', x:player.x, y:player.y, face:ang, r:40, color:'#aab' });
-    spawnSlash(player.x + Math.cos(ang)*30, player.y + Math.sin(ang)*30 - 12, ang, 80);
+    spawnSlash(player.x + Math.cos(ang)*30, player.y + Math.sin(ang)*30 - 12, ang, 80, '#e8e8ff', '#aab');
   }
   else if (d.kind === 'sectTP'){ // Trấn Phái — big AoE
     if (SECT_SFX[player.sect]) sfxTag = 'smash_' + SECT_SFX[player.sect];
     const _tpR = TP_RADIUS + 15 * _st; // tiến hóa: trấn phái lan rộng
-    spawnSkillVfx('sx_' + player.sect + '_c', { color:sect.color, glyph:'鎮' }, 'aoe', player.face, _tpR);
+    spawnSkillVfx('sx_' + player.sect + '_c', { color:sect.color, glyph:'⚔' }, 'aoe', player.face, _tpR);
     addEffect({ type:'ring', x:player.x, y:player.y, r:_tpR, color:sect.color, big:true });
     addEffect({ type:'ring', x:player.x, y:player.y, r:_tpR*0.6, color:sect.glow, big:true });
     for (let i = 0; i < 6; i++){
       const a = i * Math.PI/3 + player.face;
-      spawnSlash(player.x + Math.cos(a)*70, player.y + Math.sin(a)*70 - 10, a, 170);
+      spawnSlash(player.x + Math.cos(a)*70, player.y + Math.sin(a)*70 - 10, a, 170, sect.color, sect.glow);
     }
     for (const m of mobs){
       if (m.dead) continue;
       if (dist(player.x, player.y, m.x, m.y) < _tpR + m.def.size){
-        let dmg = player.atk * sect.tp.mult * rnd(0.95,1.1);
-        if (Math.random() < player.crit) dmg *= 2;
+        // QA: Thần Binh (player.tbDmg) trước đây chỉ áp cho chiêu CHÍNH (nhánh sectA) — chiêu PHỤ
+        // (Trấn Phái, ô 2 cố định của mọi lớp) bị bỏ sót, trái với mô tả "+%ST chiêu Lớp" ở panel.
+        let dmg = player.atk * sect.tp.mult * (1 + (player.tbDmg || 0)) * rnd(0.95,1.1);
+        if (Math.random() < player.crit) dmg *= (player.critDmgMult || 2);
         hurtMob(m, dmg, 'tp');
       }
     }
@@ -7763,7 +8405,7 @@ function castSkill(id){
       if (m.dead) continue;
       if (dist(player.x, player.y, m.x, m.y) < R + m.def.size){
         let dmg = player.atk * SKILL_DEFS.tieuhon.mult * rnd(0.95,1.1);
-        if (Math.random() < player.crit) dmg *= 2;
+        if (Math.random() < player.crit) dmg *= (player.critDmgMult || 2);
         hurtMob(m, dmg, 'tp');
       }
     }
@@ -7776,9 +8418,9 @@ function castSkill(id){
     if (type==='cone'){
       const t = nearestMob(160);
       if (t) player.face = Math.atan2(t.y-player.y, t.x-player.x);
-      spawnSkillVfx(_sva, { color:sect.color, glyph:'絕' }, 'cone', player.face, 120);
+      spawnSkillVfx(_sva, { color:sect.color, glyph:'✹' }, 'cone', player.face, 120);
       addEffect({ type:'cone', x:player.x, y:player.y, face:player.face, r:120, color:sect.color });
-      spawnSlash(player.x + Math.cos(player.face)*62, player.y + Math.sin(player.face)*62 - 12, player.face, 160);
+      spawnSlash(player.x + Math.cos(player.face)*62, player.y + Math.sin(player.face)*62 - 12, player.face, 160, sect.color, sect.glow);
       for (const m of mobs){
         if (m.dead) continue;
         const dd = dist(player.x, player.y, m.x, m.y);
@@ -7798,14 +8440,16 @@ function castSkill(id){
         const _off = _nP > 1 ? (_pi - (_nP - 1) / 2) * 0.15 : 0;
         projectiles.push({ x:player.x, y:player.y, ang:ang + _off, speed:420, dmg:player.atk*def.mult*_tbMul, kind:'skill', life:1.0, color:sect.color, pierce:true, style:(_svc && _svc.proj) || undefined });
       }
-      spawnSkillVfx(_sva, { color:sect.color, glyph:'絕' }, 'cast', ang, 60);
-      spawnSlash(player.x + Math.cos(ang)*34, player.y + Math.sin(ang)*34 - 12, ang, 120);
+      spawnSkillVfx(_sva, { color:sect.color, glyph:'✹' }, 'cast', ang, 60);
+      // Fairy Elf / Dark Wizard bắn đạn từ xa — không có lưỡi kiếm nào quét ra, chỉ loé đầu nòng
+      if (!(sect.range > 200))
+        spawnSlash(player.x + Math.cos(ang)*34, player.y + Math.sin(ang)*34 - 12, ang, 120, sect.color, sect.glow);
     } else if (type==='selfaoe'){
-      spawnSkillVfx(_sva, { color:sect.color, glyph:'絕' }, 'aoe', player.face, 135 + 10*_st);
+      spawnSkillVfx(_sva, { color:sect.color, glyph:'✹' }, 'aoe', player.face, 135 + 10*_st);
       addEffect({ type:'ring', x:player.x, y:player.y, r:135 + 10*_st, color:sect.color });
       for (let i = 0; i < 4; i++){
         const a = i * Math.PI/2 + Math.PI/4;
-        spawnSlash(player.x + Math.cos(a)*52, player.y + Math.sin(a)*52 - 10, a, 130);
+        spawnSlash(player.x + Math.cos(a)*52, player.y + Math.sin(a)*52 - 10, a, 130, sect.color, sect.glow);
       }
       for (let i=0;i<10;i++) addEffect({ type:'ink', x:player.x+rnd(-90,90), y:player.y+rnd(-90,90), vx:rnd(-30,30), vy:rnd(-60,-10), color:sect.color });
       for (const m of mobs){
@@ -7814,7 +8458,7 @@ function castSkill(id){
           hurtMob(m, player.atk*def.mult*_tbMul*rnd(0.9,1.1), Math.random()<player.crit?'crit':'hit');
       }
     } else if (type==='dash'){
-      spawnSkillVfx(_sva, { color:sect.color, glyph:'絕' }, 'dash', player.face, 150, player.x, player.y);
+      spawnSkillVfx(_sva, { color:sect.color, glyph:'✹' }, 'dash', player.face, 150, player.x, player.y);
       const t = nearestMob(220);
       const ang = t ? Math.atan2(t.y-player.y, t.x-player.x) : player.face;
       player.face = ang;
@@ -7822,7 +8466,7 @@ function castSkill(id){
       player.x = clamp(player.x + Math.cos(ang)*_dashD, 20, MAP.w-20);
       player.y = clamp(player.y + Math.sin(ang)*_dashD, 20, MAP.h-20);
       addEffect({ type:'ring', x:player.x, y:player.y, r:70, color:sect.color });
-      spawnSlash(player.x + Math.cos(ang)*40, player.y + Math.sin(ang)*40 - 12, ang, 140);
+      spawnSlash(player.x + Math.cos(ang)*40, player.y + Math.sin(ang)*40 - 12, ang, 140, sect.color, sect.glow);
       const t2 = nearestMob(110);
       if (t2) hurtMob(t2, player.atk*def.mult*_tbMul*rnd(0.95,1.15), Math.random()<player.crit?'crit':'hit');
     }
@@ -7862,7 +8506,7 @@ function updateHud(){
   if (player.level >= MAX_LV){ el('bar-xp').style.width='100%'; el('txt-xp').textContent='MAX'; }
   else { el('bar-xp').style.width = (100*player.xp/XP_TABLE[player.level-1])+'%';
          el('txt-xp').textContent = `${Math.floor(player.xp)} / ${XP_TABLE[player.level-1]} EXP`; }
-  el('hud-khi').textContent = `Instinct: ${Math.floor(player.khi || 0)}${player.poisonT>0 ? ' · ☠ TRÚNG ĐỘC' : ''}${player.gkBuffT>0 ? ` · 罡 ${player.gkBuffT.toFixed(1)}s` : ''}`;
+  el('hud-khi').textContent = `Instinct: ${Math.floor(player.khi || 0)}${player.poisonT>0 ? ' · ☠ TRÚNG ĐỘC' : ''}${player.gkBuffT>0 ? ` · ✦ ${player.gkBuffT.toFixed(1)}s` : ''}`;
   const potEl = el('hud-potion');
   if (potEl){ potEl.textContent = `🧪 x${player.potions || 0} (R)${player.potionCd > 0 ? ` · ${Math.ceil(player.potionCd)}s` : ''}`; potEl.style.opacity = (player.potions > 0 && player.potionCd <= 0) ? 1 : 0.45; }
   const buffEl = el('hud-buff');
@@ -8174,7 +8818,13 @@ function renderBaGua(){
   // ── Lò Hỗn Loạn (MU Online Chaos Machine): 3 món CÙNG PHẨM + Hỗn Nguyên Thạch → 1 món phẩm
   // cao hơn — CÓ TỈ LỆ THẤT BẠI THẬT (mất sạch 3 món nếu trật), khác Lò Bảo Chứng ở trên (đổi chắc
   // ăn, không rủi ro). Đây là chỗ đặt cược thật — tận dụng đồ dư farm được để thử vận lên phẩm.
-  html += `<div class="stat-sec" style="border-color:rgba(255,90,74,.5)">☯ LÒ HỖN LOẠN — 3 món cùng phẩm + Hỗn Nguyên Thạch → 1 món phẩm cao hơn (CÓ THỂ MẤT SẠCH)</div>`;
+  html += `<div class="stat-sec" style="border-color:rgba(255,90,74,.5)">◑ LÒ HỖN LOẠN — 3 món cùng phẩm + Hỗn Nguyên Thạch → 1 món phẩm cao hơn (CÓ THỂ MẤT SẠCH)</div>`;
+  // Chaos Goblin — đúng hình tượng MU Online: gã yêu tinh lùn đứng trông/quay máy Chaos Machine.
+  html += `<div style="display:flex;gap:10px;align-items:center;margin:2px 0 8px;padding:7px 10px;border:1px solid rgba(255,90,74,.28);border-radius:6px;background:rgba(255,90,74,.06)">
+    <img src="assets/npcs/chaosgoblin.png" alt="" style="height:52px;flex:none" onerror="this.style.display='none'">
+    <div style="font-size:11.5px;color:#c8b8a8;font-style:italic;line-height:1.5">"Ba món, ném vào đây! Máy của ta nuốt hết — nhả ra thứ tốt hơn… hoặc chẳng nhả gì cả. Kèkè!"
+      <div style="font-style:normal;opacity:.62;margin-top:2px">— Yêu Tinh Hỗn Loạn, kẻ trông máy</div></div>
+  </div>`;
   {
     const chaosSelUids = Object.keys(window._chaosSel || {}).map(Number);
     const chaosItems = player.inv.filter(x => !x.noForge && x.rarity < 4);
@@ -8196,7 +8846,7 @@ function renderBaGua(){
         const canGo = player.gems.honNguyen >= honCost && player.silver >= silverCost && player.inv.length <= 30;
         html += `<div style="font-size:12px;line-height:1.6">Ghép ${RARITIES[selR].name} → <b style="color:${RARITIES[selR+1].color}">${RARITIES[selR+1].name}</b> — tỉ lệ <b style="color:${rate>=50?'#7ecbff':'#ff9a6a'}">${rate}%</b><br>
           Phí: ${silverCost}◈ + ${honCost}❖ Hỗn Nguyên — <b style="color:#ff5a4a">thất bại mất sạch 3 món + phí</b></div>
-          <div class="forge-actions"><button class="mini-btn" style="border-color:#ff5a4a;color:#ff9a8a" ${canGo?'':'disabled'} onclick="chaosCombine()">☯ Ném Vào Lò Hỗn Loạn</button></div>`;
+          <div class="forge-actions"><button class="mini-btn" style="border-color:#ff5a4a;color:#ff9a8a" ${canGo?'':'disabled'} onclick="chaosCombine()">◑ Ném Vào Lò Hỗn Loạn</button></div>`;
       } else {
         html += `<div style="font-size:11.5px;opacity:.6;padding:2px">Chọn đúng 3 món CÙNG phẩm ở trên (${chaosSelUids.length}/3).</div>`;
       }
@@ -8434,9 +9084,9 @@ Sáng nay, Trưởng Làng đặt vào tay ngươi một món hành trang cũ:
   `<span class="is-title">NĂM LỚP CỦA LUNACIA</span>
 Năm lớp lớn đang chờ đón những hatchling đủ bản lĩnh:
 
-<b>Dark Knight</b> 金 · <b>Dark Wizard</b> 水 · <b>Fairy Elf</b> 水 · <b>Magic Gladiator</b> 火 · <b>Dark Lord</b> 土
+<b>Dark Knight</b> ◆ · <b>Dark Wizard</b> ❄ · <b>Fairy Elf</b> ❄ · <b>Magic Gladiator</b> ☼ · <b>Dark Lord</b> ▲
 
-Mỗi lớp mang một hệ <b>Ngũ Hành</b> — khắc hệ sẽ gây thêm <b>+20% sát thương</b> lên Chimera bị khắc.
+Mỗi lớp mang một <b>hệ nguyên tố</b> — khắc hệ sẽ gây thêm <b>+20% sát thương</b> lên Chimera bị khắc.
 
 Ngươi sẽ khởi đầu là <b>Unclassed</b> tự do — tới <b>cấp 10</b>, đủ sức chứng minh bản thân, ngươi sẽ đáp lời <b>the Calling</b> và chọn lớp của mình.
 
@@ -8544,7 +9194,7 @@ function drawThanHiepSeal(p, now){
   ctx.beginPath(); ctx.ellipse(p.x, p.y + 5, 42, 14, 0, 0, 7); ctx.stroke();
   ctx.setLineDash([]);
   // bát quái quanh ấn
-  const glyphs = ['乾','兌','離','震','巽','坎','艮','坤'];
+  const glyphs = ['✦','✧','☼','⚡','✽','❄','▲','♣'];
   ctx.font = 'bold 10px "Baloo 2", "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (let i = 0; i < 8; i++){
     const a = t*0.55 + i*(Math.PI/4);
@@ -8827,9 +9477,9 @@ window.wipeSave = function(){
 NPCS.push(
   { id:'duocsu',    name:'Dược Sư',              map:'daohoa',     x:560,  y:430,  img:'assets/npcs/duocsu.png',    talk:'quest',
     lore:'"Thuốc hay cứu người, thuốc độc cũng cứu người — tùy ai dùng."' },
-  { id:'quachtinh', name:'Trưởng Lão Rell',      map:'tuongduong', x:1250, y:950,  img:'assets/npcs/quachtinh.png', talk:'quest',
+  { id:'quachtinh', name:'Trưởng Lão Rell',      map:'tuongduong', x:1300, y:722,  img:'assets/npcs/quachtinh.png', talk:'quest',
     lore:'"Lunaris còn đứng vững, là nhờ mỗi người trong thành này không chịu bỏ cuộc."' },
-  { id:'monkhach',  name:'Trinh Sát Wren',       map:'tuongduong', x:1420, y:1050, img:'assets/npcs/monkhach.png',  talk:'quest',
+  { id:'monkhach',  name:'Trinh Sát Wren',       map:'tuongduong', x:1300, y:1120, img:'assets/npcs/monkhach.png',  talk:'quest',
     lore:'"Ở Lunacia này, tin tức còn quý hơn Starbits."' },
   { id:'daosi',     name:'Người Gác Rừng Corran', map:'chungnam',   x:520,  y:1420, img:'assets/npcs/daosi.png',     talk:'quest',
     lore:'"Rừng có luật riêng của rừng — nhưng kẻ phản bội thì ta không dung."' },
@@ -8841,21 +9491,21 @@ NPCS.push(
     lore:'"Suỵt… ta là người của Trưởng Lão Rell, cắm ở rìa vùng đất này đã ba năm."' },
   { id:'laotuong',  name:'Lão Tướng Brann',      map:'nhanmon',    x:520,  y:950,  img:'assets/npcs/laotuong.png',  talk:'quest',
     lore:'"Bốn mươi năm trấn ải, xương già này chưa từng lùi một bước."' },
-  { id:'traichu',   name:'Trại Chủ Mục Đồng',      map:'ngoai',      x:1050, y:700,  img:'assets/npcs/truonglang.png', talk:'stable',
+  { id:'traichu',   name:'Trại Chủ Mục Đồng',      map:'ngoai',      x:1050, y:700,  img:'assets/npcs/traichu.png', talk:'stable',
     lore:'"Tuấn mã hoang ngoài đồng kia đấy — rượt cho nó kiệt sức rồi bấm E mà bắt. Mã Thầu thu được dùng khi thăng giai thú cưỡi!"' }, // GDD Đợt 2 B5
 );
 NPCS.push(
-  { id:'duoclao', name:'Nhà Giả Kim · Xưởng Luyện Đan', map:'tuongduong', x:1060, y:1140, img:'assets/npcs/duoclao.png', talk:'shop',
+  { id:'duoclao', name:'Nhà Giả Kim · Xưởng Luyện Đan', map:'tuongduong', x:830, y:760, img:'assets/npcs/duoclao.png', talk:'shop',
     lore:'"Thuốc hay cứu người — nhưng không trả tiền thì thuốc cũng hóa độc đấy."' },
-  { id:'binhkhi', name:'Binh Khí Chủ · Vũ Khí Phường', map:'tuongduong', x:1580, y:1000, img:'assets/npcs/binhkhi.png', talk:'shop',
+  { id:'binhkhi', name:'Binh Khí Chủ · Vũ Khí Phường', map:'tuongduong', x:1770, y:1060, img:'assets/npcs/binhkhi.png', talk:'shop',
     lore:'"Kiếm tốt không chờ người — ngươi chậm thì người khác cầm mất."' },
-  { id:'trachu',  name:'Trà Quán Chủ', map:'tuongduong', x:1230, y:1290, img:'assets/npcs/trachu.png', talk:'shop',
+  { id:'trachu',  name:'Trà Quán Chủ', map:'tuongduong', x:980, y:1150, img:'assets/npcs/trachu.png', talk:'shop',
     lore:'"Lunacia hiểm ác — nhưng trà trong quán này lúc nào cũng nóng."' },
-  { id:'quangia', name:'Quản Gia · Động Phủ', map:'tuongduong', x:1450, y:1240, img:'assets/npcs/truonglang.png', talk:'abode',
+  { id:'quangia', name:'Quản Gia · Động Phủ', map:'tuongduong', x:1590, y:1160, img:'assets/npcs/quangia.png', talk:'abode',
     lore:'"Động phủ của đạo hữu đã dọn sạch — Tụ Linh Trận và Dược Viên chờ chủ nhân."' },
-  { id:'bodau', name:'Bổ Đầu · Truy Nã Lệnh', map:'tuongduong', x:1420, y:1010, img:'assets/npcs/quachtinh.png', talk:'trunya',
+  { id:'bodau', name:'Bổ Đầu · Truy Nã Lệnh', map:'tuongduong', x:1600, y:690, img:'assets/npcs/bodau.png', talk:'trunya',
     lore:'"Hội Đồng Lunaris treo thưởng lũ Chimera lộng hành — mỗi ngày một tên. Làm xong, đến Sảnh Cầu May thử vận."' },
-  { id:'thantoan', name:'Thương Nhân Vận May · Sảnh Cầu May', map:'tuongduong', x:1120, y:1230, img:'assets/npcs/trachu.png', talk:'vanduyen',
+  { id:'thantoan', name:'Thương Nhân Vận May · Sảnh Cầu May', map:'tuongduong', x:820, y:1040, img:'assets/npcs/thantoan.png', talk:'vanduyen',
     lore:'"Một lệnh một lượt quay — năm phần trăm trúng cổ thư hiếm, không đủ vận cũng đừng trách ta."' },
   { id:'vandai', name:'Skyreach Ledge · Vực Thẳm', map:'chungnam', x:2300, y:350, img:'assets/npcs/vachda.png', talk:'tenui',
     lore:'"Vách mây ngàn trượng — kẻ liều mạng nhảy xuống, kẻ sợ chết quay đầu."' },
@@ -9839,7 +10489,7 @@ function renderQlog(){
   p.innerHTML = html;
 }
 
-// ═══════════ QUẺ TIÊN THIÊN — gacha tính cách & tiềm năng đầu game (lấy cảm hứng QCBH) ═══════════
+// ═══════════ DẤU ẤN KHAI SINH — gacha tính cách & tiềm năng đầu game ═══════════
 const TRAIT_TIERS = {
   pham:  { name:'PHÀM',  w:55, color:'#cfc8b8' },
   linh:  { name:'LINH',  w:30, color:'#6ab0f0' },
@@ -9857,17 +10507,17 @@ const TRAITS = [
   { id:'thiennhan', name:'Thiên Nhãn',          tier:'linh',  glyph:'👁', desc:'Minimap hiện cả điểm Thảo Dược',            late:p=>{ p.traitHerb = true; } },
   { id:'longtich',  name:'Long Tích Hổ Bộ',     tier:'huyen', glyph:'🐉', desc:'+5% Né Tránh',                              late:p=>{ p.eva = Math.min(0.45, p.eva+0.05); } },
   { id:'doanngoc',  name:'Đoạn Ngọc Thủ',       tier:'huyen', glyph:'🎯', desc:'Ám Khí +15% ST · phá khiên lâu thêm 4s',    late:p=>{ p.amkhiPct += 0.15; p.shieldBonus += 4; } },
-  { id:'sattam',    name:'Sát Tâm',             tier:'huyen', glyph:'🌑', desc:'Giết Du Hiệp không tăng Tội Ác',            late:p=>{ p.traitSatTam = true; } },
+  { id:'sattam',    name:'Sát Tâm',             tier:'huyen', glyph:'☾', desc:'Giết Du Hiệp không tăng Tội Ác',            late:p=>{ p.traitSatTam = true; } },
   { id:'duocthe',   name:'Dược Thể',            tier:'huyen', glyph:'🧪', desc:'Hồ Lô Thuốc hồi 55% máu (thay 40%)',        late:p=>{ p.potionPct = 0.55; } },
   { id:'vohon',     name:'Võ Hồn',              tier:'thien', glyph:'⚔', desc:'Tấn Chức +12% Sát Thương',                 late:p=>{ p.skillDmgPct += 0.12; } },
-  { id:'thienmenh', name:'Thiên Mệnh',          tier:'thien', glyph:'☯', desc:'Mỗi màn chơi 1 lần: chết hồi sinh tại chỗ 50% máu', late:p=>{ p.traitRevive = true; } },
+  { id:'thienmenh', name:'Thiên Mệnh',          tier:'thien', glyph:'◑', desc:'Mỗi màn chơi 1 lần: chết hồi sinh tại chỗ 50% máu', late:p=>{ p.traitRevive = true; } },
   { id:'kymach',    name:'Kỳ Mạch Đại Thông',   tier:'thien', glyph:'🌊', desc:'Đả thông Instinct Channels +25% tỉ lệ',             late:p=>{ p.traitMerRate = 1.25; } },
   { id:'vanvat',    name:'Vạn Vật Hữu Duyên',   tier:'thien', glyph:'💰', desc:'+15% Bạc rơi',                              late:p=>{ p.silverPct += 15; } },
 ];
 const PERSONALITIES = {
   chinh: { name:'Chính Trực', glyph:'⚖', desc:'Khí chất hiệp nghĩa, đi đâu cũng được người đời kính nể.' },
-  ta:    { name:'Tà Khí',     glyph:'🌑', desc:'Đường tà đạo — Du Hiệp kiêng kị, dân thường e ngại.' },
-  trung: { name:'Trung Dung', glyph:'☯', desc:'Hài hòa âm dương, không thiên vị bên nào.' },
+  ta:    { name:'Tà Khí',     glyph:'☾', desc:'Đường tà đạo — Du Hiệp kiêng kị, dân thường e ngại.' },
+  trung: { name:'Trung Dung', glyph:'◑', desc:'Hài hòa âm dương, không thiên vị bên nào.' },
 };
 function rollTrait(excludeIds){
   const pool = TRAITS.filter(t => !excludeIds.includes(t.id));
@@ -10022,104 +10672,10 @@ el('btn-quze-go').addEventListener('click', ()=>{
 });
 TITLES.push({ id:'tmsq', name:'Thiên Mệnh Sở Quy', cond:p=>!!p.quzeTitle, stats:{ allPct:0.03 }, vfx:null });
 
-// ═══════════ A1: ĐỘ KIẾP — mini-game sống còn khi đột phá Ascension (thay RNG thuần) ═══════════
-let TRIB = { active:false, realm:0, next:null, spawnT:0, strikes:[], hits:0, landed:0, total:0 };
-// Ascension Trial (né thiên lôi khi đột phá cảnh giới) không còn kích hoạt được nữa — cảnh giới
-// giờ tự động theo cấp độ (xem calcDerived()), không cần người chơi tự tay đột phá. TRIB/updateTrib/
-// drawTrib giữ nguyên bên dưới (không xoá) phòng khi cần dùng lại, nhưng không còn lối vào nào gọi tới.
-function updateTrib(dt){
-  if (!player || dead){ TRIB.active = false; TRIB.strikes = []; return; }
-  const realm = TRIB.realm;
-  // spawn thiên lôi — cảnh giới càng cao, sấm càng dày & nhanh
-  TRIB.spawnT -= dt;
-  const perWave = TRIB.perWave || 1;
-  const interval = perWave > 1 ? Math.max(1.0, 1.6 - realm*0.05) : Math.max(0.5, 1.1 - realm*0.07);
-  if (TRIB.spawnT <= 0 && TRIB.landed + TRIB.strikes.length < TRIB.total){
-    TRIB.spawnT = interval;
-    for (let w = 0; w < perWave && TRIB.landed + TRIB.strikes.length < TRIB.total; w++){
-      const onHead = Math.random() < 0.35; // 35% giáng thẳng đầu — buộc phải di chuyển
-      TRIB.strikes.push({
-        x: clamp(onHead ? player.x : player.x + rnd(-240,240), 40, MAP.w-40),
-        y: clamp(onHead ? player.y : player.y + rnd(-240,240), 40, MAP.h-40),
-        r: 62, tele: Math.max(0.5, 0.95 - realm*0.05), teleMax: Math.max(0.5, 0.95 - realm*0.05),
-      });
-    }
-    AudioSys.sfx('skill', 0.35);
-  }
-  // đếm ngược & giáng sấm
-  for (const st of TRIB.strikes){
-    st.tele -= dt;
-    if (st.tele > 0) continue;
-    st.done = true;
-    TRIB.landed++;
-    addEffect({ type:'ring', x:st.x, y:st.y, r:st.r+18, color:'#fff2b0', big:true });
-    for (let i=0;i<6;i++) addEffect({ type:'ink', x:st.x, y:st.y, vx:rnd(-120,120), vy:rnd(-140,-20), color:'#ffe9a8' });
-    AudioSys.sfx('crit', 0.55);
-    if (dist(player.x, player.y, st.x, st.y) < st.r){
-      TRIB.hits++;
-      const dmg = Math.round(player.maxHp * (player.maDao ? ((player.loidonT || 0) > 0 ? 0.09 : 0.15) : ((player.loidonT || 0) > 0 ? 0.072 : 0.12))); // Lôi Độn -40% · Ma Đạo lôi mạnh hơn
-      player.hp -= dmg;
-      player.combatT = 4; player.hurtT = 0.25;
-      shakeT = Math.max(shakeT, 0.16); shakeMag = 6;
-      addFloat(player.x, player.y-40, `THIÊN LÔI! -${dmg} (${TRIB.hits}/${TRIB.maxHits || 3})${(player.loidonT || 0) > 0 ? ' · Lôi Độn -40%' : ''}`, '#ffe9a8', 15);
-      AudioSys.sfx('hurt', 0.8);
-      if (player.hp <= 0){ TRIB.strikes = TRIB.strikes.filter(x => !x.done); TRIB.active = false; TRIB.strikes = []; return; } // update() xử lý chết
-    }
-  }
-  TRIB.strikes = TRIB.strikes.filter(st => !st.done);
-  // kết thúc kiếp
-  if (TRIB.landed >= TRIB.total && !TRIB.strikes.length){
-    const next = TRIB.next;
-    TRIB.active = false;
-    if (TRIB.hits < (TRIB.maxHits || 3) && !dead){
-      player.dantian.realm++;
-      player.dantian.tuvi -= Math.floor(next.cost.tuvi * (player.doNgo ? 0.7 : 1)); player.doNgo = 0; // Đối Ngộ giảm 30% tiêu hao
-      if (player.dantian.realm >= DANTIAN_REALMS.length - 1) ascendToImmortal(); // Starforged thành công → Starflight · Thần Tiên Hóa Cảnh
-      zoneBanner = { text:'⚡ ĐỘ KIẾP THÀNH CÔNG', sub:`${next.name}${next.unlock ? ' — Học được ' + next.unlock : ''}`, color:'#9fd0ff', t:4 };
-      addFloat(player.x, player.y-46, `ASCENSION TRIAL: ${next.name}!`, '#9fd0ff', 18);
-      if (next.unlock) addFloat(player.x, player.y-70, `Học được: ${next.unlock}!`, '#7ecbff', 15);
-      addEffect({ type:'ring', x:player.x, y:player.y, r:130, color:'#5ea0e8', big:true });
-      for (let i=0;i<16;i++) addEffect({ type:'ink', x:player.x, y:player.y, vx:rnd(-90,90), vy:rnd(-120,-30), color:'#5ea0e8' });
-      AudioSys.sfx('levelup', 0.95);
-      calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
-      checkTitles();
-    } else if (!dead){
-      player.dantian.tuvi = Math.floor(player.dantian.tuvi * ((TRIB.maxHits || 3) > 3 ? 0.75 : 0.7)); // GDD: thất bại mất 30% Anima · Đan Ascension Trial: chỉ tổn 25%
-      zoneBanner = { text:'⚡ TẨU HỎA NHẬP MA', sub:'Độ kiếp thất bại — mất 30% Anima tiến độ, cảnh giới giữ nguyên!', color:'#ff5a4a', t:4 };
-      addFloat(player.x, player.y-46, 'Tẩu hỏa! Anima tổn hao!', '#ff7a6a', 15);
-      AudioSys.sfx('forge_fail', 0.85);
-    }
-    saveGame();
-  }
-}
-function drawTrib(){
-  // vùng cảnh báo sấm (đang trong camera transform)
-  for (const st of TRIB.strikes){
-    const prog = 1 - st.tele / st.teleMax;
-    ctx.globalAlpha = 0.25 + prog*0.4;
-    ctx.fillStyle = '#ffb15c';
-    ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, 7); ctx.fill();
-    ctx.globalAlpha = 0.9;
-    ctx.strokeStyle = prog > 0.7 ? '#fff2b0' : '#4c8dff';
-    ctx.lineWidth = 2 + prog*2;
-    ctx.beginPath(); ctx.arc(st.x, st.y, st.r * (1 - prog*0.55), 0, 7); ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
-  // bảng đếm trên đầu màn hình
-  ctx.font = 'bold 15px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
-  ctx.strokeStyle = 'rgba(0,0,0,.75)'; ctx.lineWidth = 4;
-  const waveTxt = TRIB.perWave > 1 && TRIB.next && TRIB.next.trib
-    ? `ĐỢT ${Math.min(TRIB.next.trib, Math.floor(TRIB.landed/TRIB.perWave) + 1)}/${TRIB.next.trib} · ` : '';
-  const txt = `⚡ ASCENSION TRIAL ${waveTxt}${TRIB.landed}/${TRIB.total} tia · trúng ${TRIB.hits}/${TRIB.maxHits || 3} là THẤT BẠI`;
-  ctx.strokeText(txt, camera.x + W/2, camera.y + 46);
-  ctx.fillStyle = TRIB.hits >= 2 ? '#ff7a6a' : '#ffe9a8';
-  ctx.fillText(txt, camera.x + W/2, camera.y + 46);
-}
-
 // ═══════════ A2: KHÁM PHÁ — sự kiện ngẫu nhiên khi đi đường (vận may trên đường) ═══════════
 let kyngoAcc = 0, kyngoNext = rnd(14000, 22000), kyngoPrev = null; // ~75-115s đi bộ
 function updateKyngo(_dt){ // đi theo quãng đường di chuyển, không cần dt — giữ tham số cho đồng bộ chữ ký update*(dt)
-  if (!player || dead || TRIB.active || mapDef().dungeon) { kyngoPrev = null; return; }
+  if (!player || dead || mapDef().dungeon) { kyngoPrev = null; return; }
   if (kyngoPrev){
     const moved = dist(player.x, player.y, kyngoPrev.x, kyngoPrev.y);
     if (moved < 20) kyngoAcc += moved; // <20px/frame: loại teleport
@@ -11011,7 +11567,7 @@ window.swallowNoidan = function(el2){
 };
 
 
-// ==================== LUYỆN ĐAN (P1 roadmap: 觅长生 — crafting là chiều sâu được yêu thích nhất
+// ==================== LUYỆN ĐAN — crafting là chiều sâu được yêu thích nhất
 // của thể loại tu tiên) ====================
 // Hái Thảo Dược ngoài đồng (đã có sẵn, trước đây chỉ dùng cho nhiệm vụ/hồi máu vặt) → luyện thành
 // đan dược ở đây. Đan tiêu hao (hồi máu/giải độc/buff tạm) không giới hạn; đan vĩnh viễn tái dùng
@@ -11449,8 +12005,8 @@ window.openSectCeremony = function(){
     const s = SECTS[key];
     const card = document.createElement('div');
     card.className = 'sect-card';
-    card.innerHTML = `<img class="portrait" src="${SECT_ART[key].portrait}" alt="${s.name}">
-      <div class="s-title" style="color:${s.color}">${s.glyph} ${s.name}</div>
+    card.innerHTML = `<img class="portrait" src="${heroCardUrl(key)}" alt="${s.name}">
+      <div class="s-title" style="color:${s.color}">${s.name}</div>
       <div class="s-role">${s.role} · hệ <b style="color:${(NGU_HANH[s.element]||{}).color || '#e8ecff'}">${s.element}</b></div>
       <div class="s-desc">${s.desc}<br><br><b>Kỹ năng khởi đầu:</b> ${s.skillA.name}<br><b>Tuyệt kỹ Lớp:</b> ${s.tp.name}</div>
       <button class="mini-btn" style="margin-top:10px;font-size:13px;padding:7px 20px;border-color:${s.color};color:${s.color}">Gia Nhập</button>`;
@@ -11911,10 +12467,10 @@ window.chaosCombine = function(){
   playChaosAnim(items, r, success, () => {
     if (success){
       if (player.inv.length < 30){ player.inv.push(newItem); tryAutoEquip(newItem); }
-      zoneBanner = { text:'☯ LÒ HỖN LOẠN — THÀNH CÔNG!', sub:`3 món hoá thành ${newItem.name}!`, color:RARITIES[newItem.rarity].color, t:5 };
-      addFloat(player.x, player.y-56, `☯ ${newItem.name}`, RARITIES[newItem.rarity].color, 16);
+      zoneBanner = { text:'◑ LÒ HỖN LOẠN — THÀNH CÔNG!', sub:`3 món hoá thành ${newItem.name}!`, color:RARITIES[newItem.rarity].color, t:5 };
+      addFloat(player.x, player.y-56, `◑ ${newItem.name}`, RARITIES[newItem.rarity].color, 16);
     } else {
-      zoneBanner = { text:'☯ LÒ HỖN LOẠN — THẤT BẠI', sub:'3 món đã tan thành tro bụi — Hỗn Loạn vô thường.', color:'#ff5a4a', t:5 };
+      zoneBanner = { text:'◑ LÒ HỖN LOẠN — THẤT BẠI', sub:'3 món đã tan thành tro bụi — Hỗn Loạn vô thường.', color:'#ff5a4a', t:5 };
       addFloat(player.x, player.y-56, 'Thất bại — mất sạch!', '#ff5a4a', 16);
     }
     saveGame(); refreshEqPanels();
@@ -11928,7 +12484,7 @@ function playChaosAnim(items, r, success, onReveal){
   const nextColor = (RARITIES[r+1] || RARITIES[r]).color;
   const slotsHtml = items.map(it => `<div class="chaos-slot">${slotIcon(it)}</div>`).join('');
   document.getElementById('overlay-inner').innerHTML = `
-    <h2 style="color:${RARITIES[r].color}">☯ Lò Hỗn Loạn</h2>
+    <h2 style="color:${RARITIES[r].color}">◑ Lò Hỗn Loạn</h2>
     <p style="margin-bottom:10px">Yêu tinh giữ lò đang tung Hỗn Nguyên Thạch, luyện hoá 3 món...</p>
     <div class="chaos-scene" id="chaos-scene" style="--oc:${nextColor}">
       <div class="chaos-slots">${slotsHtml}</div>
@@ -12151,9 +12707,12 @@ function spawnTruyNaMob(){
 // Không pity — tỉ lệ công khai tại vách. Giờ Vàng (12h & 20h): 2 ô hiếm ×2.
 function tenuiGoldenHour(){ const h = new Date().getHours(); return h === 12 || h === 20; }
 function tenuiWounded(){ return (player.tenuiTT || 0) > Date.now(); }
-function tenuiFreeLearn(preferTier){ // học miễn phí / hiền giả chỉ điểm — tôn trọng khóa cảnh giới
-  const realm = (player.dantian && player.dantian.realm) || 0;
-  let pool = Object.keys(VOHOC_DEFS).filter(id => !VOHOC_DEFS[id].phai && !vhLearned(id) && vhRealmReq(VOHOC_DEFS[id]) <= realm);
+// Học miễn phí / hiền giả chỉ điểm — tặng thẳng 1 tuyệt học NGOẠI LỚP (thứ bình thường phải mua bằng
+// Sách Kỹ Năng, xem learnVohocUI). QA: bộ lọc cũ là `!VOHOC_DEFS[id].phai`, mà sau đợt MU-hoá KHÔNG
+// còn chiêu nào phai:null nữa → pool luôn rỗng → 2 kết quả jackpot của Vực Thẳm ("hang động giấu cổ
+// thư", "hiền giả chỉ điểm") luôn rơi về nhánh an ủi, dù người chơi đã trả 30% HP + 15 phút Trọng Thương.
+function tenuiFreeLearn(preferTier){
+  let pool = Object.keys(VOHOC_DEFS).filter(id => crossClassLearnable(id) && !vhLearned(id) && player.level >= VOHOC_DEFS[id].unlock);
   if (preferTier){
     const hi = pool.filter(id => VOHOC_DEFS[id].tier === preferTier);
     if (hi.length) pool = hi;
@@ -12211,7 +12770,7 @@ window.doTeNui = function(npcId){
   let out = '', col = '#9aa8d4';
   if (r < tRare){ // hang động giấu cổ thư — kỹ năng hiếm học miễn phí
     const v = tenuiFreeLearn('than') || tenuiFreeLearn(null);
-    if (v){ out = `<b style="color:#ffd76a">HANG ĐỘNG CỔ THƯ!</b> Ngộ được <b style="color:${VH_TIER[v.tier].color}">${v.name}</b> — bấm K gán vào taskbar!`;
+    if (v){ out = `<b style="color:#ffd76a">HANG ĐỘNG CỔ THƯ!</b> Ngộ được <b style="color:${VH_TIER[v.tier].color}">${v.name}</b> — +${LEGACY_TIER_PCT[v.tier] || 0}% Công Kích vĩnh viễn!`;
       zoneBanner = { text:'☁ VẬN MAY NGÀN VÀNG', sub:`${n.name}: hang động giấu cổ thư — ${v.name}!`, color:'#ffd76a', t:5 };
       col = '#ffd76a'; AudioSys.sfx('levelup', 0.9);
     } else { player.bikipVH = (player.bikipVH || 0) + 15; out = 'Hang động trống — cổ thư đã thu thập hết, nhặt được <b style="color:#ffb15c">15 📜 Sách Kỹ Năng</b>'; col = '#ffb15c'; }
@@ -12253,7 +12812,7 @@ function renderVanDuyen(){
     <b style="color:#5aa0e8">25%</b> — Trang bị theo cấp (phẩm Lam trở lên)<br>
     <b style="color:#7ec850">30%</b> — Vật liệu tu luyện (Tu La / Hỗn Nguyên / Tiến Cấp Đan / Huyền Thiết)<br>
     <b style="color:#9aa8d4">25%</b> — Bạc + Anima</div>`;
-  html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 22px" ${player.congHuan >= 1 ? '' : 'disabled'} onclick="rollVanDuyen()">☯ Quay Vận May — 1 ⚜</button></div>
+  html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 22px" ${player.congHuan >= 1 ? '' : 'disabled'} onclick="rollVanDuyen()">◑ Quay Vận May — 1 ⚜</button></div>
     <div id="vd-result" style="min-height:20px;font-size:12.5px;line-height:1.8;margin-top:6px"></div>`;
   el('panel-quest').innerHTML = html;
   closePanels(); el('panel-quest').classList.remove('hidden');
@@ -12269,7 +12828,7 @@ window.rollVanDuyen = function(){
       const p = Math.floor(Math.random()*3);
       player.bikip.pieces[p]++;
       out.push(`<b style="color:#e84a6a">CỔ THƯ HIẾM — Mảnh Cổ Thư · ${TAN_QUYEN[p]}!</b> (đang có ${player.bikip.pieces[p]})`);
-      zoneBanner = { text:'☯ VẬN MAY NGÀN VÀNG', sub:`Mảnh Cổ Thư · ${TAN_QUYEN[p]} — 5% đã mỉm cười với ngươi!`, color:'#e84a6a', t:5 };
+      zoneBanner = { text:'◑ VẬN MAY NGÀN VÀNG', sub:`Mảnh Cổ Thư · ${TAN_QUYEN[p]} — 5% đã mỉm cười với ngươi!`, color:'#e84a6a', t:5 };
     } else { player.jewels.honDon++; out.push('<b style="color:#7ecbff">● Hỗn Độn Châu</b> — cổ thư đã thành tựu, quy đổi châu quý'); }
   } else if (key === 'chau'){
     const jr = Math.random()*100;
@@ -12294,8 +12853,8 @@ window.rollVanDuyen = function(){
   }
   AudioSys.sfx(key === 'bikip' ? 'levelup' : 'coin', 0.8);
   saveGame();
-  addFloat(player.x, player.y-56, '☯ Rút duyên: ' + (key === 'bikip' ? 'BÍ KÍP HIẾM!' : key === 'chau' ? 'Tứ Châu' : key === 'trangbi' ? 'Trang bị' : key === 'vatlieu' ? 'Vật liệu' : 'Bạc · Anima'), key === 'bikip' ? '#e84a6a' : '#7ecbff', 14);
+  addFloat(player.x, player.y-56, '◑ Rút duyên: ' + (key === 'bikip' ? 'BÍ KÍP HIẾM!' : key === 'chau' ? 'Tứ Châu' : key === 'trangbi' ? 'Trang bị' : key === 'vatlieu' ? 'Vật liệu' : 'Bạc · Anima'), key === 'bikip' ? '#e84a6a' : '#7ecbff', 14);
   renderVanDuyen();
   const res = document.getElementById('vd-result');
-  if (res) res.innerHTML = `☯ Kết quả: ${out.join('<br>')}`;
+  if (res) res.innerHTML = `◑ Kết quả: ${out.join('<br>')}`;
 };
