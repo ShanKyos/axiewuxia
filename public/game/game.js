@@ -87,11 +87,15 @@ function rerollItemRarity(it){
     it.subs.push({ k:def.k, name:def.name, v, pct:true });
   }
 }
+// str/agi/ene mỗi phái quy đổi ra Công Kích theo TRỌNG SỐ RIÊNG (SECTS[x].atkSrc) — không còn dùng
+// chung 1 công thức "str × 2" cho mọi phái. VD: Fairy Elf chỉ cần dồn Mẫn Tiệp là đủ mạnh, Dark Wizard
+// cần cả Mẫn Tiệp lẫn Linh Lực — đúng lối build đặc trưng từng lớp nhân vật kiểu MU Online.
 const ATTR_INFO = {
-  str:{ name:'Lực Lượng', desc:'Công kích, sát thương ám khí' },
-  agi:{ name:'Mẫn Tiệp',  desc:'Tốc đánh, bạo kích, né tránh' },
+  str:{ name:'Lực Lượng', desc:'Công kích (tùy phái), sát thương ám khí' },
+  agi:{ name:'Mẫn Tiệp',  desc:'Tốc đánh, bạo kích, né tránh + Công kích (tùy phái)' },
   def:{ name:'Phòng Ngự', desc:'Giảm sát thương nhận vào' },
   vit:{ name:'Sinh Lực',  desc:'HP tối đa, hồi phục' },
+  ene:{ name:'Linh Lực',  desc:'Chân Khí tối đa + Công kích (tùy phái)' },
 };
 // Phụ phẩm theo GDD: Trang bị giáp & Nhẫn (thường/hoàn hảo)
 const ARMOR_SUBS = [
@@ -200,40 +204,45 @@ const TUONG_SINH = { Kim:'Thủy', 'Thủy':'Mộc', 'Mộc':'Hỏa', 'Hỏa':'T
 // ATK đã chiếm phần lớn công thức). Áp trong calcDerived(): melee cận chiến (range 90, chịu đòn trực
 // tiếp) được +HP/+DEF bù lại sát thương thấp hơn; 2 lớp tầm xa (Elf/Dark Wizard) giòn hơn hẳn nhưng
 // bù bằng sát thương cao hơn, đặc biệt Dark Wizard (range 420, xa nhất) là glass cannon rõ rệt nhất.
+// atkSrc: điểm tiềm năng nào quy đổi ra Công Kích, đúng lối build đặc trưng từng lớp kiểu MU Online —
+// str/agi/ene nhân theo trọng số riêng (xem calcDerived()), KHÔNG còn chung 1 công thức "str×2" như
+// trước. VD: Fairy Elf chỉ cần dồn Mẫn Tiệp (agi) là đủ mạnh; Dark Wizard cần cả Mẫn Tiệp lẫn Linh
+// Lực (ene). Tổng điểm bonus của mỗi phái GIỮ NGUYÊN so với bản cân bằng trước, chỉ đổi chỗ ghi điểm.
 const SECTS = {
-  thieulam: { name:'Dark Knight', role:'Tank / Combo cận chiến', element:'Kim', color:'#4c8dff', glow:'#ffe9a0', bonus:{vit:3,def:2,str:1,agi:0},
-    hpMult:1.18, defMult:1.20, dmgMult:0.95,
-    glyph:'拳', desc:'Giáp dày, ý chí sắt — một Mech Axie theo lối Dark Knight: gánh tuyến đầu rồi đáp trả bằng đòn chí mạng chậm mà không thể cản.',
+  thieulam: { name:'Dark Knight', role:'Tank / Combo cận chiến', element:'Kim', color:'#4c8dff', glow:'#ffe9a0', bonus:{vit:3,def:2,str:1,agi:0,ene:0},
+    hpMult:1.18, defMult:1.20, dmgMult:0.95, atkSrc:{str:2.0},
+    glyph:'拳', desc:'Giáp dày, ý chí sắt — một Mech Axie theo lối Dark Knight: gánh tuyến đầu rồi đáp trả bằng đòn chí mạng chậm mà không thể cản. Tiềm năng: dồn Lực Lượng.',
     skillA:{ name:'Twisting Slash', type:'cone',  cd:4, qi:20, mult:1.6 },
     tp:{ name:'Death Stab', mult:3.0 } },
   // range/basicProj: Fairy Elf & Dark Wizard là 2 lớp tầm xa thật (cung/phép) — đòn thường của họ bắn
   // đạn ở khoảng cách này thay vì vung cận chiến như Dark Knight/Magic Gladiator/Dark Lord (xem doBasic()).
-  toanchan: { name:'Fairy Elf', role:'Tầm xa / Hỗ trợ', element:'Thủy', color:'#3a9d8b', glow:'#a0ffe9', bonus:{vit:0,def:0,str:2,agi:2},
-    hpMult:0.90, defMult:0.85, dmgMult:1.05,
-    glyph:'弓', desc:'Cung pháp Aquatic — Fairy Elf vừa dồn sát thương tầm xa vừa nâng đỡ đồng đội, tấn công và phòng ngự trong cùng một nhịp.',
+  toanchan: { name:'Fairy Elf', role:'Tầm xa / Hỗ trợ', element:'Thủy', color:'#3a9d8b', glow:'#a0ffe9', bonus:{vit:0,def:0,str:0,agi:4,ene:0},
+    hpMult:0.90, defMult:0.85, dmgMult:1.05, atkSrc:{agi:2.0},
+    glyph:'弓', desc:'Cung pháp Aquatic — Fairy Elf vừa dồn sát thương tầm xa vừa nâng đỡ đồng đội, tấn công và phòng ngự trong cùng một nhịp. Tiềm năng: chỉ cần dồn Mẫn Tiệp là đủ mạnh.',
     range:380, basicProj:'arrow',
     skillA:{ name:'Multi-Shot', type:'proj', cd:4, qi:20, mult:1.5, count:5 },
     tp:{ name:'Ice Arrow', mult:2.8 } },
-  baidasan: { name:'Dark Wizard', role:'Pháp thuật / Độc tố', element:'Thủy', color:'#7ec850', glow:'#c8ffa0', bonus:{vit:1,def:0,str:3,agi:1},
-    hpMult:0.72, defMult:0.65, dmgMult:1.30,
-    glyph:'蛇', desc:'Reptile Axie theo trường phái Dark Wizard — một chiêu Poison phóng ra, để chất độc tự kết liễu trận đấu.',
+  baidasan: { name:'Dark Wizard', role:'Pháp thuật / Độc tố', element:'Thủy', color:'#7ec850', glow:'#c8ffa0', bonus:{vit:1,def:0,str:0,agi:1,ene:3},
+    hpMult:0.72, defMult:0.65, dmgMult:1.30, atkSrc:{ene:1.6, agi:0.6},
+    glyph:'蛇', desc:'Reptile Axie theo trường phái Dark Wizard — một chiêu Poison phóng ra, để chất độc tự kết liễu trận đấu. Tiềm năng: cần cả Mẫn Tiệp lẫn Linh Lực.',
     range:420, basicProj:'orb',
     skillA:{ name:'Poison', type:'proj', cd:4, qi:20, mult:1.5 },
     tp:{ name:'Meteor', mult:3.2 } },
-  minhgiao: { name:'Magic Gladiator', role:'Lai / Bộc phát Hoả', element:'Hỏa', color:'#e8552a', glow:'#ffb060', bonus:{vit:2,def:0,str:3,agi:0},
-    hpMult:1.05, defMult:1.0, dmgMult:1.08,
-    glyph:'焰', desc:'Beast Axie mang sức mạnh lai Magic Gladiator — Fire Slash quét ngang, đánh như cả giáo phái dồn vào một đòn.',
+  minhgiao: { name:'Magic Gladiator', role:'Lai / Bộc phát Hoả', element:'Hỏa', color:'#e8552a', glow:'#ffb060', bonus:{vit:1,def:0,str:2,agi:0,ene:2},
+    hpMult:1.05, defMult:1.0, dmgMult:1.08, atkSrc:{str:1.1, ene:1.1},
+    glyph:'焰', desc:'Beast Axie mang sức mạnh lai Magic Gladiator — Fire Slash quét ngang, đánh như cả giáo phái dồn vào một đòn. Tiềm năng: cân cả Lực Lượng lẫn Linh Lực.',
     skillA:{ name:'Fire Slash', type:'cone', cd:4, qi:22, mult:1.6 },
     tp:{ name:'Flame Strike', mult:3.2 } },
   // Dark Lord: lớp chỉ huy/triệu hồi — archetype mượn từ trường phái vô môn phái Cái Bang cũ
   // (VOHOC_DEFS): xáp lá cà bằng số đông, không đơn độc.
-  bug: { name:'Dark Lord', role:'Chỉ huy / Triệu hồi', element:'Thổ', color:'#8a9a3a', glow:'#d0e07a', bonus:{vit:2,def:1,str:1,agi:2},
-    hpMult:1.12, defMult:1.10, dmgMult:0.92,
-    glyph:'蟲', desc:'Bug Axie hoá thân Dark Lord — chưa từng đánh một mình, luôn có bầy tùy tùng theo sau dọn sạch chiến trường.',
+  bug: { name:'Dark Lord', role:'Chỉ huy / Triệu hồi', element:'Thổ', color:'#8a9a3a', glow:'#d0e07a', bonus:{vit:2,def:1,str:1,agi:2,ene:0},
+    hpMult:1.12, defMult:1.10, dmgMult:0.92, atkSrc:{str:1.8, agi:0.3},
+    glyph:'蟲', desc:'Bug Axie hoá thân Dark Lord — chưa từng đánh một mình, luôn có bầy tùy tùng theo sau dọn sạch chiến trường. Tiềm năng: chủ lực Lực Lượng, dặm thêm Mẫn Tiệp.',
     skillA:{ name:'Force Wave', type:'cone', cd:4, qi:20, mult:1.5 },
     tp:{ name:'Fire Scream', mult:3.0 } },
   // Tán Nhân — pre-class starter, level 1-10, before the Calling. No element (no advantage or disadvantage).
-  vophai: { name:'Unclassed', role:'Wandering / Free', element:null, color:'#b8a888', glow:'#e4ebff', bonus:{vit:1,def:1,str:1,agi:1},
+  vophai: { name:'Unclassed', role:'Wandering / Free', element:null, color:'#b8a888', glow:'#e4ebff', bonus:{vit:1,def:1,str:1,agi:1,ene:0},
+    atkSrc:{str:2.0},
     glyph:'侠', desc:'No class yet claimed — one hatchling, alone in Lunacia. Reach level 10 and answer the Calling!',
     skillA:{ name:'Hatchling Strike', type:'cone', cd:4, qi:18, mult:1.4 },
     tp:{ name:'Wanderer\'s Resolve', mult:2.5 } },
@@ -2209,7 +2218,7 @@ window.upgradeThanBinh = function(){
 function calcDerived(){
   const sect0 = SECTS[player.sect];
   const b = sect0.bonus;
-  const s = { str:player.str+b.str, agi:player.agi+b.agi, def:Math.round((player.def+b.def)*(sect0.defMult||1)), vit:player.vit+b.vit };
+  const s = { str:player.str+b.str, agi:player.agi+b.agi, def:Math.round((player.def+b.def)*(sect0.defMult||1)), vit:player.vit+b.vit, ene:player.ene+(b.ene||0) };
   // P: tích lũy từ trang bị — flat + chỉ số % theo GDD
   const P = { atk:8 + player.level*2, hp:0, crit:0, eva:0, qireg:0,
     hpPct:0, qiPct:0, atkPct:0, dmgred:0, evaPct:0, silverPct:0, reflectPct:0,
@@ -2254,10 +2263,13 @@ function calcDerived(){
   const realm = clamp(Math.floor(player.level / 12), 0, DANTIAN_REALMS.length - 1);
   if (player.dantian) player.dantian.realm = realm;
   const dr = DANTIAN_REALMS[realm];
-  player.dStr = s.str; player.dAgi = s.agi; player.dDef = s.def; player.dVit = s.vit;
-  player.atk = Math.round((P.atk + s.str * 2) * (1 + dr.atk) * (sect0.dmgMult || 1));
+  player.dStr = s.str; player.dAgi = s.agi; player.dDef = s.def; player.dVit = s.vit; player.dEne = s.ene;
+  // Công Kích quy đổi theo atkSrc riêng từng phái (str/agi/ene trọng số khác nhau) thay vì chung str×2
+  const atkSrc = sect0.atkSrc || { str: 2.0 };
+  const rawAtk = (atkSrc.str || 0) * s.str + (atkSrc.agi || 0) * s.agi + (atkSrc.ene || 0) * s.ene;
+  player.atk = Math.round((P.atk + rawAtk) * (1 + dr.atk) * (sect0.dmgMult || 1));
   player.maxHp = Math.round((100 + player.level*15 + s.vit*12 + P.hp) * (1 + dr.hp) * (sect0.hpMult || 1));
-  player.maxQi = 50 + player.level*5;
+  player.maxQi = 50 + player.level*5 + Math.round(s.ene*1.5); // Linh Lực: mỗi điểm +1.5 Chân Khí tối đa (mọi phái)
   player.crit = Math.min(0.45, s.agi*0.003 + P.crit/100);
   // Cương Khí aura: +HP% +DEF%
   const gk = GANGKHI_TIERS[(player.gangkhi && player.gangkhi.tier) || 0];
@@ -2401,7 +2413,7 @@ function calcDerived(){
   player.qi = Math.min(player.qi, player.maxQi);
 }
 function applyLine(s, k, v, P){
-  if (k==='str'||k==='agi'||k==='def'||k==='vit') s[k] += Math.round(v);
+  if (k==='str'||k==='agi'||k==='def'||k==='vit'||k==='ene') s[k] += Math.round(v);
   else if (P && k in P) P[k] += v;
 }
 
@@ -2410,7 +2422,7 @@ let sideStates = {}; // { [id]: { st:'active'|'done'|'claimed', prog } } — kha
 function newPlayer(sectKey){
   player = {
     sect: sectKey, x: 1300, y: 1040, face: 0,  // xuất phát: Tương Dương Thành, gần Quách Đại Hiệp
-    level: 1, xp: 0, str: 5, agi: 5, def: 5, vit: 5, free: 0,
+    level: 1, xp: 0, str: 5, agi: 5, def: 5, vit: 5, ene: 5, free: 0,
     hp: 130, qi: 55, silver: 30, mat: 0,
     equip: {}, inv: [], cd: { basic:0, a:0, amkhi:0, tp:0, jump:0 },
     skillBar: ['a','amkhi','tp',null,null],   // taskbar 5 ô kỹ năng
@@ -2620,6 +2632,7 @@ function loadGame(){
     }
     if (player.tutDist == null) player.tutDist = 0;
     if (player.resetCount == null) player.resetCount = 0; // Tẩy Tủy Phong Huyệt backfill (save cũ chưa có)
+    if (player.ene == null) player.ene = 5; // Linh Lực (stat mới) backfill (save cũ chưa có) — mức khởi điểm giống str/agi/def/vit
     if (d.curMap && MAPS[d.curMap]) curMap = d.curMap;
     // Migrate trang bị cũ (10 ô) sang hệ 12 ô GDD
     const SLOT_MIGRATE = { weapon:'vukhi', helm:'non', armor:'ao', bracer:'tay', belt:'quan',
@@ -6030,11 +6043,16 @@ function renderChar(){
     }
   }
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Điểm tiềm năng còn: <b style="color:#7ecbff">${p.free}</b> (mỗi cấp +5)</div>`;
-  const base = { str:p.str, agi:p.agi, def:p.def, vit:p.vit };
-  const drv = { str:p.dStr, agi:p.dAgi, def:p.dDef, vit:p.dVit };
-  for (const k of ['str','agi','def','vit']){
+  // Gợi ý build: điểm nào quy đổi ra Công Kích cho ĐÚNG phái này (xem SECTS[x].atkSrc trong calcDerived())
+  const _atkSrc = sect.atkSrc || { str:2.0 };
+  const _dmgStatNames = Object.keys(_atkSrc).map(k => ATTR_INFO[k].name);
+  html += `<div style="font-size:11.5px;color:#ffd76a;margin-bottom:10px;padding:6px 10px;border:1px dashed rgba(255,215,106,.4);border-radius:6px">💡 ${sect.name} ra Công Kích từ <b>${_dmgStatNames.join(' + ')}</b> — dồn điểm tiềm năng vào đây là hiệu quả nhất.</div>`;
+  const base = { str:p.str, agi:p.agi, def:p.def, vit:p.vit, ene:p.ene };
+  const drv = { str:p.dStr, agi:p.dAgi, def:p.dDef, vit:p.dVit, ene:p.dEne };
+  for (const k of ['str','agi','def','vit','ene']){
     const a = ATTR_INFO[k];
-    html += `<div class="attr-row"><span>${a.name} <span style="opacity:.6;font-size:11px">(${a.desc})</span></span>
+    const isDmgStat = !!_atkSrc[k];
+    html += `<div class="attr-row"><span>${a.name}${isDmgStat?' <span style="color:#ffd76a;font-size:10.5px">★</span>':''} <span style="opacity:.6;font-size:11px">(${a.desc})</span></span>
       <span><b>${drv[k]}</b>${drv[k]!==base[k]?` <span style="color:#5ea0e8;font-size:11px">(${base[k]}+${drv[k]-base[k]})</span>`:''}
       <input type="number" class="attr-qty" id="qty-${k}" min="1" max="${p.free||1}" value="${Math.min(10, p.free||1)||1}" ${p.free<=0?'disabled':''}>
       <button class="plus-btn" onclick="addAttr('${k}', qtyOf('${k}'))" ${p.free<=0?'disabled':''} title="Cộng theo ô số">+</button>
@@ -6620,7 +6638,7 @@ function genSpecific(slotId, r, level){
 function applyTestBoost(){
   // ===== CHẾ ĐỘ THỬ NGHIỆM: MỌI TÍNH NĂNG TỐI ĐA =====
   player.level = MAX_LV; player.xp = 0;            // cấp 100 — mở hết mọi hệ thống & map
-  player.str = 50; player.agi = 50; player.def = 50; player.vit = 50;
+  player.str = 50; player.agi = 50; player.def = 50; player.vit = 50; player.ene = 50;
   player.free = 500;                               // điểm tiềm năng dư để cộng thử
   player.silver = 999999; player.mat = 999;        // Huyền Thiết
   player.khi = 999999;                             // Instinct — xung mạch thử
