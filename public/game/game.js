@@ -4354,7 +4354,7 @@ function update(dt){
   if (TRIB.active) updateTrib(dt); // A1: Độ Kiếp
   if (player.hp <= 0 && !dead){ player.hp = 0; onDeath(); } // thiên lôi cũng giết được người
   updateKyngo(dt); // A2: Kỳ ngộ trên đường
-  if (DGN) updateDungeon(); // Phó bản: đợt quái → boss → thưởng
+  if (DGN) updateDungeon(dt); // Phó bản: đợt quái → boss → thưởng
   if (TOWER) updateTower(); // Vạn Kiếm Tu La Trận: đợt quái vô tận → chọn thẻ
   updatePet(dt); // Linh Thú đồng hành
   updateMount(dt); // Thú Chiến đồng hành
@@ -8161,6 +8161,37 @@ function renderBaGua(){
   } else {
     html += `<div style="font-size:11.5px;opacity:.6;padding:4px">Chưa có món Cổ Thần nào trong túi — săn Bá Chủ lấy Bảo Hạp IV trở lên (tỉ lệ 5-8%, không pity).</div>`;
   }
+  // ── Lò Hỗn Loạn (MU Online Chaos Machine): 3 món CÙNG PHẨM + Hỗn Nguyên Thạch → 1 món phẩm
+  // cao hơn — CÓ TỈ LỆ THẤT BẠI THẬT (mất sạch 3 món nếu trật), khác Hỗn Độn Lò ở trên (đổi chắc
+  // ăn, không rủi ro). Đây là chỗ đặt cược thật — tận dụng đồ dư farm được để thử vận lên phẩm.
+  html += `<div class="stat-sec" style="border-color:rgba(255,90,74,.5)">☯ LÒ HỖN LOẠN — 3 món cùng phẩm + Hỗn Nguyên Thạch → 1 món phẩm cao hơn (CÓ THỂ MẤT SẠCH)</div>`;
+  {
+    const chaosSelUids = Object.keys(window._chaosSel || {}).map(Number);
+    const chaosItems = player.inv.filter(x => !x.noForge && x.rarity < 4);
+    if (!chaosItems.length){
+      html += `<div style="font-size:11.5px;opacity:.6;padding:4px">Túi chưa có món nào đủ điều kiện (dưới Chí Tôn, không phải đồ đặc biệt).</div>`;
+    } else {
+      const selR = chaosSelUids.length ? (player.inv.find(x=>x.uid===chaosSelUids[0]) || {}).rarity : null;
+      html += `<div style="max-height:150px;overflow-y:auto;margin-bottom:6px">`;
+      chaosItems.forEach(it=>{
+        const on = window._chaosSel && window._chaosSel[it.uid];
+        const dim = selR != null && it.rarity !== selR && !on;
+        html += `<div class="slot-row" style="${on?'border-color:#ff5a4a;background:rgba(255,90,74,.12)':''}${dim?'opacity:.35':''}" onclick="chaosToggle(${it.uid})">
+          <span class="s-name"><span class="${RARITIES[it.rarity].cls}">${it.name}${it.plus?' +'+it.plus:''}</span></span></div>`;
+      });
+      html += `</div>`;
+      if (chaosSelUids.length === 3 && selR != null){
+        const honCost = CHAOS_HON_COST[selR], silverCost = CHAOS_SILVER_COST[selR];
+        const rate = Math.min(100, CHAOS_RATE[selR] + (player.forgeBonus||0));
+        const canGo = player.gems.honNguyen >= honCost && player.silver >= silverCost && player.inv.length <= 30;
+        html += `<div style="font-size:12px;line-height:1.6">Ghép ${RARITIES[selR].name} → <b style="color:${RARITIES[selR+1].color}">${RARITIES[selR+1].name}</b> — tỉ lệ <b style="color:${rate>=50?'#7ecbff':'#ff9a6a'}">${rate}%</b><br>
+          Phí: ${silverCost}◈ + ${honCost}❖ Hỗn Nguyên — <b style="color:#ff5a4a">thất bại mất sạch 3 món + phí</b></div>
+          <div class="forge-actions"><button class="mini-btn" style="border-color:#ff5a4a;color:#ff9a8a" ${canGo?'':'disabled'} onclick="chaosCombine()">☯ Ném Vào Lò Hỗn Loạn</button></div>`;
+      } else {
+        html += `<div style="font-size:11.5px;opacity:.6;padding:2px">Chọn đúng 3 món CÙNG phẩm ở trên (${chaosSelUids.length}/3).</div>`;
+      }
+    }
+  }
   html += `<div id="bagua-msg" style="min-height:18px;font-size:12.5px;margin-top:6px"></div>`;
   el('panel-quest').innerHTML = html;
   closePanels(); el('panel-quest').classList.remove('hidden');
@@ -10529,35 +10560,37 @@ Object.assign(BGM_TRACKS, {
 });
 
 // Cấu hình từng phó bản: 3 đợt quái (quái của map cha) → Boss → thưởng nguyên liệu tiến cấp kỹ năng
+// timeLimit (giây): học Devil Square/Blood Castle của MU Online — phó bản có đồng hồ đếm ngược,
+// hết giờ là thất bại mất trắng, thay vì AUTO đứng farm vô thời hạn như trước.
 const DUNGEONS = {
   pb_daohoa:   { boss:'boss_hacphong',  bossName:'Hắc Phong Trại Chủ',
     waves:[ ['bandit','bandit','wolf'], ['bandit','hautu','bandit'], ['assassin','bandit','wolf'] ],
     rewards:{ tienDan:[1,2], mat:[4,7],   tuLa:[0,0], hon:[0,0], khi:40,  tuvi:150,  silver:[250,400] },
-    huntBoss:'boss_cotma1', boxTier:1 },
+    huntBoss:'boss_cotma1', boxTier:1, timeLimit:480 },
   pb_ngoai:    { boss:'boss_sontac',    bossName:'Sơn Tặc Đại Đầu Lĩnh',
     waves:[ ['bandit','wolf','bandit'], ['bandit','bandit','caodo'], ['assassin','bandit','bandit'] ],
     rewards:{ tienDan:[1,2], mat:[5,8],   tuLa:[0,0], hon:[0,0], khi:55,  tuvi:220,  silver:[320,480] },
-    huntBoss:'boss_cotma2', boxTier:1 },
+    huntBoss:'boss_cotma2', boxTier:1, timeLimit:480 },
   pb_chungnam: { boss:'boss_phando',    bossName:'Phản Đồ Đại Tướng',
     waves:[ ['phando','bandit','phando'], ['xanu','phando','bandit'], ['bandao','xanu','phando'] ],
     rewards:{ tienDan:[2,3], mat:[7,11],  tuLa:[0,1], hon:[0,0], khi:90,  tuvi:450,  silver:[550,800] },
-    huntBoss:'boss_hacnu1', boxTier:2 },
+    huntBoss:'boss_hacnu1', boxTier:2, timeLimit:540 },
   pb_comoc:    { boss:'boss_mochu',     bossName:'Cổ Mộ Mộ Chủ',
     waves:[ ['thinu','mocnhan','thinu'], ['huyetbat','mocnhan','thinu'], ['huyetbat','huyetbat','mocnhan'] ],
     rewards:{ tienDan:[2,3], mat:[10,14], tuLa:[1,1], hon:[0,0], khi:140, tuvi:800,  silver:[900,1300] },
-    huntBoss:'boss_hacnu2', boxTier:2 },
+    huntBoss:'boss_hacnu2', boxTier:2, timeLimit:540 },
   pb_tuyettinh:{ boss:'boss_tinhhoa',   bossName:'Tình Hỏa Ma Quân',
     waves:[ ['ttdetu','docyeu','ttdetu'], ['docyeu','satthuhy','ttdetu'], ['satthuhy','docyeu','docyeu'] ],
     rewards:{ tienDan:[3,4], mat:[13,18], tuLa:[1,2], hon:[0,1], khi:200, tuvi:1400, silver:[1400,2000] },
-    huntBoss:'boss_hoangkim1', boxTier:3 },
+    huntBoss:'boss_hoangkim1', boxTier:3, timeLimit:600 },
   pb_mongco:   { boss:'boss_dothong',   bossName:'Đột Thông Hãn Vương',
     waves:[ ['thamtu','cungthu','kybinh'], ['cungthu','kybinh','thamtu'], ['kybinh','kybinh','cungthu'] ],
     rewards:{ tienDan:[4,5], mat:[16,22], tuLa:[2,2], hon:[1,1], khi:280, tuvi:2400, silver:[2200,3200] },
-    huntBoss:'boss_hoangkim2', boxTier:4 },
+    huntBoss:'boss_hoangkim2', boxTier:4, timeLimit:660 },
   pb_nhanmon:  { boss:'boss_thienbinh', bossName:'Thiên Binh Thống Soái',
     waves:[ ['kylan','cuongbinh','daokhach'], ['cuongbinh','daokhach','kylan'], ['daokhach','kylan','kylan'] ],
     rewards:{ tienDan:[5,6], mat:[20,26], tuLa:[2,3], hon:[2,2], khi:350, tuvi:3500, silver:[3000,4500] },
-    huntBoss:'boss_amthan', boxTier:5 },
+    huntBoss:'boss_amthan', boxTier:5, timeLimit:720 },
 };
 
 // ═══════════ VẠN KIẾM TU LA TRẬN — Roguelike Tower (P1 roadmap: draft-based endless waves) ═══════════
@@ -10688,7 +10721,7 @@ function drawTowerHUD(){
 let DGN = null; // { id, def, wave, bossRef, cleared }
 function startDungeonRun(mapId){
   const def = DUNGEONS[mapId]; if (!def) return;
-  DGN = { id: mapId, def, wave: 0, bossRef: null, cleared: false };
+  DGN = { id: mapId, def, wave: 0, bossRef: null, cleared: false, timeLeft: def.timeLimit, failed: false };
   nextDungeonWave();
 }
 function nextDungeonWave(){
@@ -10713,8 +10746,23 @@ function nextDungeonWave(){
   if (player && player.auto){ player._autoAX = 1300; player._autoAY = 800; }
   if (player) addFloat(player.x, player.y - 60, 'Đợt ' + DGN.wave + '/' + DGN.def.waves.length, '#b08ae8', 16);
 }
-function updateDungeon(){
-  if (!DGN || DGN.huntCleared) return;
+function updateDungeon(dt){
+  if (!DGN) return;
+  if (DGN.huntCleared || DGN.failed) return; // đã kết thúc (thành công hoặc hết giờ) — dừng xử lý
+  // Đồng hồ đếm ngược (Devil Square/Blood Castle style, MU Online): hết giờ trước khi thông quan
+  // xong (kể cả đang ở pha Boss Săn) là thất bại — mất cơ hội, không mất phần thưởng đã nhận trước đó
+  if (DGN.def.timeLimit != null){
+    DGN.timeLeft -= dt;
+    if (DGN.timeLeft <= 0){
+      DGN.timeLeft = 0; DGN.failed = true;
+      zoneBanner = { text:'⏱ HẾT GIỜ — PHÓ BẢN THẤT BẠI',
+        sub: DGN.cleared ? 'Không hạ được Boss Săn kịp giờ — mất cơ hội mở Rương lần này.' : 'Không thông quan kịp — ra cổng Xuất Môn để thử lại từ đầu.',
+        color:'#ff5a4a', t:5 };
+      addFloat(player.x, player.y-80, 'Hết giờ! Phó bản thất bại.', '#ff5a4a', 16);
+      AudioSys.sfx('hurt', 0.7);
+      return;
+    }
+  }
   if (mobs.some(m => !m.dead)) return; // còn quái sống (đợt thường/Trấn Ải/Boss Săn) → chờ
   if (!DGN.bossRef){ nextDungeonWave(); return; }
   if (!DGN.cleared){
@@ -10754,7 +10802,7 @@ const HUNT_BOSS_TAUNT = {
   boss_amthan: 'Ngươi dám khuấy động giấc ngủ của Ma Thần sao?!',
 };
 function spawnHuntBoss(){
-  if (!DGN || DGN.huntSpawned) return;
+  if (!DGN || DGN.huntSpawned || DGN.failed) return; // hết giờ ngay trong lúc chờ Boss Săn ra mắt → thôi, không spawn nữa
   const hb = DGN.def.huntBoss;
   const def = MOBS[hb];
   if (!def){ DGN.huntCleared = true; return; }
@@ -10808,18 +10856,28 @@ function drawDungeonHUD(){
   const x = W/2, y = 26;
   ctx.textAlign = 'center';
   ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
-  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3; ctx.fillStyle = '#d8baff';
-  const label = DGN.huntCleared ? 'Phó bản đã thông quan — qua cổng dịch chuyển để rời đi'
+  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3; ctx.fillStyle = DGN.failed ? '#ff6a5a' : '#d8baff';
+  const label = DGN.failed ? '⏱ HẾT GIỜ — PHÓ BẢN THẤT BẠI (qua cổng Xuất Môn để thử lại)'
+    : DGN.huntCleared ? 'Phó bản đã thông quan — qua cổng dịch chuyển để rời đi'
     : DGN.huntSpawned ? '⚔ BOSS SĂN: ' + MOBS[DGN.def.huntBoss].name
     : DGN.cleared ? (DGN.def.huntBoss ? 'Trấn Ải đã hạ — Boss Săn sắp xuất hiện…' : 'Phó bản đã thông quan — qua cổng dịch chuyển để rời đi')
     : DGN.bossRef ? 'BOSS: ' + DGN.def.bossName
     : 'Đợt ' + DGN.wave + '/' + DGN.def.waves.length + ' — dọn sạch quái!';
   ctx.strokeText(label, x, y); ctx.fillText(label, x, y);
+  // Đồng hồ đếm ngược (Devil Square/Blood Castle, MU Online) — đỏ + nhấp nháy khi dưới 60s
+  if (DGN.def.timeLimit != null && !DGN.huntCleared && !DGN.failed){
+    const tl = Math.max(0, DGN.timeLeft), mm = Math.floor(tl/60), ss = Math.floor(tl%60);
+    const urgent = tl < 60;
+    ctx.font = 'bold 15px "Be Vietnam Pro", sans-serif';
+    ctx.fillStyle = urgent ? (Math.floor(tl*2)%2===0 ? '#ff3a3a' : '#ffb0a0') : '#ffd76a';
+    const tstr = '⏱ ' + mm + ':' + String(ss).padStart(2,'0');
+    ctx.strokeText(tstr, x, y + 20); ctx.fillText(tstr, x, y + 20);
+  }
   const activeBoss = (DGN.huntSpawned && DGN.huntRef && !DGN.huntRef.dead) ? DGN.huntRef
     : (DGN.bossRef && !DGN.bossRef.dead) ? DGN.bossRef : null;
   if (activeBoss){
     const b = activeBoss, pct = Math.max(0, b.hp / b.maxHp);
-    const bw = 340, bx = x - bw/2, by = y + 8;
+    const bw = 340, bx = x - bw/2, by = y + 28;
     ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(bx-2, by-2, bw+4, 14);
     ctx.fillStyle = '#3a1020'; ctx.fillRect(bx, by, bw, 10);
     ctx.fillStyle = b === DGN.huntRef ? '#ffd76a' : '#e84a5a'; ctx.fillRect(bx, by, bw*pct, 10);
@@ -11761,6 +11819,56 @@ window.hdExchange = function(){
   zoneBanner = { text:'◈ CỔ THẦN TỰ CHỌN', sub:`Hỗn Độn Lò đúc thành ${it.name}!`, color:ANCIENT_SETS[setId].color, t:4.5 };
   addFloat(player.x, player.y-56, `◈ ${it.name}`, ANCIENT_SETS[setId].color, 16);
   AudioSys.sfx('forge_ok', 0.95);
+  saveGame(); renderBaGua(); refreshEqPanels();
+};
+
+// ---------- Lò Hỗn Loạn (MU Online Chaos Machine): 3 món cùng phẩm + Hỗn Nguyên Thạch → 1 món
+// phẩm cao hơn, tỉ lệ thất bại THẬT (mất sạch) — khác Hỗn Độn Lò ở trên (đổi luôn chắc ăn) ----------
+window._chaosSel = {};
+const CHAOS_RATE = [70, 55, 40, 25]; // % theo phẩm gốc: Phàm→Tinh, Tinh→Linh, Linh→Thần, Thần→ChíTôn
+const CHAOS_HON_COST = [2, 4, 7, 12];
+const CHAOS_SILVER_COST = [300, 800, 2000, 5000];
+window.chaosToggle = function(uid){
+  if (window._chaosSel[uid]) delete window._chaosSel[uid];
+  else if (Object.keys(window._chaosSel).length < 3){
+    const it = player.inv.find(x => x.uid === uid);
+    if (it && !it.noForge && it.rarity < 4){
+      const already = Object.keys(window._chaosSel).map(Number).map(u => player.inv.find(x => x.uid === u)).filter(Boolean);
+      if (already.length === 0 || already[0].rarity === it.rarity) window._chaosSel[uid] = true;
+    }
+  }
+  renderBaGua();
+};
+window.chaosCombine = function(){
+  const selUids = Object.keys(window._chaosSel || {}).map(Number);
+  if (selUids.length !== 3) return;
+  const idxs = player.inv.map((x,i) => (x && selUids.includes(x.uid)) ? i : -1).filter(i => i >= 0).sort((a,b) => b-a);
+  if (idxs.length !== 3){ window._chaosSel = {}; renderBaGua(); return; }
+  const items = idxs.map(i => player.inv[i]);
+  const r = items[0].rarity;
+  if (!items.every(x => x.rarity === r) || r >= 4){ window._chaosSel = {}; renderBaGua(); return; }
+  const honCost = CHAOS_HON_COST[r], silverCost = CHAOS_SILVER_COST[r];
+  if (player.gems.honNguyen < honCost || player.silver < silverCost) return;
+  const useCharm = forgeUseCharm && player.charms > 0;
+  const rate = useCharm ? 100 : Math.min(100, CHAOS_RATE[r] + (player.forgeBonus || 0));
+  const success = Math.random()*100 < rate;
+  player.gems.honNguyen -= honCost; player.silver -= silverCost;
+  if (useCharm) player.charms--;
+  idxs.forEach(i => player.inv.splice(i, 1)); // 3 món hiến tế luôn mất, thành hay bại
+  window._chaosSel = {};
+  if (success){
+    const avgLevel = Math.max(1, Math.round(items.reduce((s,x) => s + x.level, 0) / 3));
+    const it = genItem(avgLevel, 0, 'mob');
+    it.rarity = r + 1; rerollItemRarity(it);
+    if (player.inv.length < 30){ player.inv.push(it); tryAutoEquip(it); }
+    zoneBanner = { text:'☯ LÒ HỖN LOẠN — THÀNH CÔNG!', sub:`3 món hoá thành ${it.name}!`, color:RARITIES[it.rarity].color, t:5 };
+    addFloat(player.x, player.y-56, `☯ ${it.name}`, RARITIES[it.rarity].color, 16);
+    AudioSys.sfx('forge_ok', 0.95);
+  } else {
+    zoneBanner = { text:'☯ LÒ HỖN LOẠN — THẤT BẠI', sub:'3 món đã tan thành tro bụi — Hỗn Loạn vô thường.', color:'#ff5a4a', t:5 };
+    addFloat(player.x, player.y-56, 'Thất bại — mất sạch!', '#ff5a4a', 16);
+    AudioSys.sfx('forge_fail', 0.8);
+  }
   saveGame(); renderBaGua(); refreshEqPanels();
 };
 
