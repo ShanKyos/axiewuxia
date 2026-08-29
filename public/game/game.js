@@ -352,13 +352,16 @@ const MAPS = {
   daohoa: { name:'Petalshade Isle', min:1, range:'1 - 20', type:'safe', ground:'#ece2c8', patch:'#7a86ad',
     spawn:{ x:460, y:460 }, spawnFrom:{ pb_daohoa:{ x:2250, y:1040 } }, village:true, spring:true, herbs:true, boss:true, trees:70, rocks:26,
     desc:'Home to the Petalshade hatchery — the newcomer\'s hunting ground. Weak Chimeras, starter drops, a gentle place to learn the ropes.',
+    // Cụm quái xếp theo vòng từ spawn ra: yếu (boar/hautu) gần nhất → mạnh dần (wolf/bandit/
+    // caodo) → xa nhất (assassin, trannhan) gần Trấn Ải — người chơi mới thấy rõ "đi sâu = khó
+    // hơn" thay vì gặp ngẫu nhiên cả cụm yếu lẫn cụm elite lẫn lộn quanh spawn.
     packs: [
-      { mob:'boar', x:800, y:520, n:6 }, { mob:'boar', x:1000, y:1000, n:5 },
-      { mob:'hautu', x:640, y:860, n:6 }, { mob:'caodo', x:1250, y:1300, n:6 },
-      { mob:'trannhan', x:1500, y:560, n:5 },
-      { mob:'wolf', x:1650, y:760, n:7 }, { mob:'wolf', x:1400, y:1450, n:6 },
-      { mob:'bandit', x:800, y:1550, n:7 }, { mob:'bandit', x:2050, y:1250, n:7 },
+      { mob:'boar', x:906, y:254, n:6 }, { mob:'boar', x:632, y:876, n:5 },
+      { mob:'hautu', x:1000, y:1000, n:6 }, { mob:'wolf', x:1500, y:560, n:7 },
+      { mob:'wolf', x:754, y:1555, n:6 }, { mob:'bandit', x:1290, y:1244, n:7 },
+      { mob:'bandit', x:1648, y:724, n:7 }, { mob:'caodo', x:1424, y:1445, n:6 },
       { mob:'assassin', x:1900, y:420, n:1 }, // P0: 1 con (trước 5 — NV8 thành bức tường, bot chết 16 lần liên tiếp)
+      { mob:'trannhan', x:2043, y:1240, n:5 },
     ], duhiep: null },
   tuongduong: { name:'Lunaris City', min:1, range:'—', type:'safe', ground:'#d8ccb0', patch:'#7a6a4a',
     spawn:{ x:1300, y:1100 }, spawnFrom:{ ngoai:{ x:1300, y:1460 } }, city:true, trees:24, rocks:10,
@@ -367,51 +370,57 @@ const MAPS = {
   ngoai: { name:'Petalshade Outskirts', min:10, range:'10 - 20', type:'safe', ground:'#ddd2ae', patch:'#7a7048',
     spawn:{ x:1300, y:330 }, spawnFrom:{ pb_ngoai:{ x:2000, y:1040 } }, reqMain:10, trees:56, rocks:22,
     desc:'Just past the city gates — bandit camps block the road, wolf packs prowl the treeline. No PK here, safe ground to train.',
+    // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'boar', x:700, y:600, n:6 }, { mob:'hautu', x:1900, y:560, n:6 },
-      { mob:'wolf', x:900, y:1200, n:7 }, { mob:'caodo', x:1750, y:1150, n:6 },
-      { mob:'bandit', x:1300, y:860, n:7 }, { mob:'bandit', x:600, y:1550, n:7 },
-      { mob:'trannhan', x:2050, y:1500, n:5 }, { mob:'assassin', x:2000, y:820, n:1 },
+      { mob:'boar', x:1300, y:860, n:6 }, { mob:'hautu', x:1900, y:560, n:6 },
+      { mob:'wolf', x:551, y:356, n:7 }, { mob:'bandit', x:2000, y:820, n:7 },
+      { mob:'bandit', x:1945, y:1110, n:7 }, { mob:'caodo', x:900, y:1200, n:6 },
+      { mob:'assassin', x:1872, y:1520, n:1 }, { mob:'trannhan', x:600, y:1550, n:5 },
     ], duhiep: null },
   chungnam: { name:'Thornwood Reach', min:20, range:'20 - 40', type:'pk', ground:'#d4d0ac', patch:'#6a7a52',
     spawn:{ x:400, y:1500 }, spawnFrom:{ pb_chungnam:{ x:2200, y:890 } }, trees:80, rocks:34,
     desc:'Rivalries start turning ugly here. Chimeras drop basic Card Pages and loose Starbits.',
+    // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'phando', x:700, y:600, n:6 }, { mob:'phando', x:1500, y:1200, n:6 },
-      { mob:'bandit', x:1100, y:900, n:7 }, { mob:'xanu', x:2000, y:600, n:6 },
-      { mob:'xanu', x:800, y:1400, n:6 }, { mob:'bandao', x:2100, y:1400, n:5 },
+      { mob:'bandit', x:800, y:1400, n:7 }, { mob:'phando', x:1100, y:900, n:6 },
+      { mob:'phando', x:442, y:574, n:6 }, { mob:'xanu', x:1376, y:1272, n:6 },
+      { mob:'xanu', x:1981, y:1295, n:6 }, { mob:'bandao', x:2000, y:600, n:5 },
     ], duhiep:'duhiep1' },
   comoc: { name:'Hollow Roost', min:40, range:'40 - 60', type:'pk', ground:'#a89f86', patch:'#4a4436',
     spawn:{ x:400, y:400 }, spawnFrom:{ pb_comoc:{ x:2200, y:990 } }, dark:true, trees:30, rocks:46,
     desc:'A narrow, twisting warren. Dense Chimera packs drop Steed upgrade materials — contested hunting ground.',
+    // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'thinu', x:700, y:700, n:7 }, { mob:'thinu', x:1900, y:600, n:7 },
-      { mob:'mocnhan', x:1300, y:1100, n:5 }, { mob:'mocnhan', x:600, y:1400, n:5 },
-      { mob:'huyetbat', x:2000, y:1400, n:7 }, { mob:'huyetbat', x:1200, y:500, n:6 },
+      { mob:'thinu', x:557, y:865, n:7 }, { mob:'thinu', x:1200, y:500, n:7 },
+      { mob:'mocnhan', x:600, y:1400, n:5 }, { mob:'mocnhan', x:1272, y:1100, n:5 },
+      { mob:'huyetbat', x:1900, y:600, n:7 }, { mob:'huyetbat', x:1915, y:1351, n:6 },
     ], duhiep:'duhiep2' },
   tuyettinh: { name:'Frostmire Vale', min:60, range:'60 - 80', type:'pk', ground:'#ddc9a8', patch:'#8a5a6a',
     spawn:{ x:400, y:950 }, spawnFrom:{ pb_tuyettinh:{ x:2200, y:790 } }, trees:60, rocks:24,
     desc:'A massive EXP ground. Bring poison resistance — the Chimeras here bite with venom.',
+    // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'ttdetu', x:800, y:600, n:7 }, { mob:'ttdetu', x:1800, y:1300, n:7 },
-      { mob:'docyeu', x:1400, y:900, n:6 }, { mob:'docyeu', x:700, y:1500, n:6 },
-      { mob:'satthuhy', x:2100, y:500, n:5 }, { mob:'satthuhy', x:1100, y:1450, n:5 },
+      { mob:'ttdetu', x:1096, y:482, n:7 }, { mob:'ttdetu', x:700, y:1500, n:7 },
+      { mob:'docyeu', x:1131, y:1182, n:6 }, { mob:'docyeu', x:1394, y:895, n:6 },
+      { mob:'satthuhy', x:1856, y:1382, n:5 }, { mob:'satthuhy', x:2100, y:500, n:5 },
     ], duhiep:'duhiep2' },
   mongco: { name:'Ashen Steppe', min:80, range:'80 - 100', type:'pk', ground:'#cfc09a', patch:'#7a6a42',
     spawn:{ x:400, y:950 }, spawnFrom:{ pb_mongco:{ x:1720, y:680 } }, trees:36, rocks:30,
     desc:'Wide open plains, tough Chimeras hitting hard. Drops ranged- and blade-art upgrade materials.',
+    // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'thamtu', x:700, y:600, n:7 }, { mob:'thamtu', x:1900, y:1400, n:7 },
-      { mob:'cungthu', x:1400, y:1000, n:6 }, { mob:'cungthu', x:800, y:1500, n:6 },
-      { mob:'kybinh', x:2100, y:600, n:5 }, { mob:'kybinh', x:1300, y:400, n:5 },
+      { mob:'thamtu', x:442, y:574, n:7 }, { mob:'thamtu', x:753, y:1497, n:7 },
+      { mob:'cungthu', x:1347, y:979, n:6 }, { mob:'cungthu', x:1300, y:400, n:6 },
+      { mob:'kybinh', x:1900, y:1400, n:5 }, { mob:'kybinh', x:2100, y:600, n:5 },
     ], duhiep:'duhiep3' },
   nhanmon: { name:'Stormgate Pass', min:100, range:'100+', type:'freepk', ground:'#b8a68a', patch:'#6a3a2a',
     spawn:{ x:400, y:950 }, spawnFrom:{ pb_nhanmon:{ x:2200, y:890 } }, trees:44, rocks:38,
     desc:'The endgame training ground, out on Lunacia\'s frontier. PK carries no Notoriety here. Chimeras drop golden-tier gear.',
+    // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'kylan', x:900, y:700, n:5 }, { mob:'kylan', x:2250, y:1100, n:5 },
-      { mob:'cuongbinh', x:1475, y:1250, n:7 }, { mob:'cuongbinh', x:700, y:1400, n:7 },
-      { mob:'daokhach', x:2100, y:500, n:5 }, { mob:'daokhach', x:1450, y:1600, n:5 },
+      { mob:'cuongbinh', x:700, y:1400, n:7 }, { mob:'cuongbinh', x:1050, y:815, n:7 },
+      { mob:'kylan', x:1396, y:1312, n:5 }, { mob:'kylan', x:1450, y:1600, n:5 },
+      { mob:'daokhach', x:2100, y:500, n:5 }, { mob:'daokhach', x:2250, y:1100, n:5 },
     ], duhiep:'duhiep3' },
   // ---------- PHÓ BẢN: mỗi map một phó bản + boss tương ứng cấp — chỉ vào qua cổng dịch chuyển ----------
   pb_daohoa: { name:'Trial Chamber: Petalshade', min:12, range:'12+', type:'dungeon', ground:'#8a8272', patch:'#3a342a',
