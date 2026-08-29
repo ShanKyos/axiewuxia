@@ -4120,8 +4120,15 @@ function update(dt){
     }
   } else { moveProgressT = 0; moveProgressD = Infinity; }
   // AUTO FARM (phím Z): tự đuổi theo & đánh quái gần nhất — treo máy
-  // nearestMob tự loại Du Hiệp trung lập (trừ khi bật PK) nên auto không bao giờ gây PK oan
+  // auto luôn loại Du Hiệp trung lập kể cả khi player.pk đang bật (chỉ tự vệ nếu bị truy thù)
+  // nên auto không bao giờ tự gây PK oan — đánh tay Du Hiệp vẫn dùng player.pk như cũ
   // GDD Boss v2.1: vào vùng boss (400px) auto tạm dừng — trận boss phải đánh tay
+  // QA: Quỷ Vương/Thiên Sứ/Boss Săn trước đây chỉ ép tắt AUTO ĐÚNG 1 LẦN lúc boss xuất hiện —
+  // bấm Z lại (quen tay) là auto đứng hứng trọn chiêu AoE không né. Khoá liên tục suốt pha boss.
+  if (player.auto && autoBossLockActive()){
+    player.auto = false; updateAutoBtn();
+    addFloat(player.x, player.y-70, 'Boss này phải tự tay chiến — AUTO đã khoá!', '#ff9a5a', 13);
+  }
   const _ac = player.autoCfg || { skill:true, potion:true, potionPct:40, range:430, boss:false };
   const _bossNear = player.auto && !_ac.boss && mobs.some(b => !b.dead && (b.def.bossKind || b.type === 'boss') && dist(player.x, player.y, b.x, b.y) < 300);
   if (_bossNear){
@@ -4144,7 +4151,10 @@ function update(dt){
     for (const m of mobs){
       if (m.dead) continue;
       if (!_ac.boss && (m.def.bossKind || m.type === 'boss')) continue; // auto không tự khơi trận boss — trừ khi bật trong Cài Đặt
-      if (m.def.duHiep && !player.pk && !m.revenge) continue;
+      // QA: auto không được TỰ khơi PK với Du Hiệp dù player.pk đang bật (khác với đánh tay ở
+      // 3153/3513/4551) — nếu không, để quên PK bật rồi auto cày sẽ tích Tội Ác tới Ma Đạo mà
+      // người chơi không hề chủ đích PK ai cả. Vẫn cho tự vệ nếu Du Hiệp đã truy thù (m.revenge).
+      if (m.def.duHiep && !m.revenge) continue;
       const _dd = dist(player._autoAX, player._autoAY, m.x, m.y);
       if (_dd < _bd){ _bd = _dd; _at = m; }
     }
@@ -4171,6 +4181,14 @@ function update(dt){
     if (player.potions <= 0 && player.hp < player.maxHp*0.5){
       player._autoWarnT = (player._autoWarnT || 0) - dt;
       if (player._autoWarnT <= 0){ player._autoWarnT = 30; addFloat(player.x, player.y-70, '⚠ Hết thuốc — auto farm không tự hồi máu được!', '#ff9a6a', 12); }
+    }
+    // QA: chữ nổi cảnh báo rất dễ bị bỏ lỡ nếu người chơi đang không nhìn màn hình (đúng lúc treo
+    // AUTO). Máu xuống mức nguy hiểm mà hết thuốc thì tự tắt AUTO hẳn (banner to, khó bỏ lỡ hơn)
+    // thay vì cứ để auto tiếp tục lao vào ăn đòn tới chết.
+    if (player.potions <= 0 && player.hp < player.maxHp*0.2){
+      player.auto = false; updateAutoBtn();
+      zoneBanner = { text:'⚠ AUTO ĐÃ TỰ TẮT', sub:'Hết Hồ Lô Thuốc & máu xuống thấp — tắt AUTO để tránh chết oan. Mua thêm thuốc rồi bật lại!', color:'#ff7a6a', t:5 };
+      AudioSys.sfx('hurt', 0.5);
     }
   }
   const ml = Math.hypot(mx,my);
@@ -4696,6 +4714,7 @@ window.respawn = function(){
   player.x = sp.x + 40; player.y = sp.y + 40;
   player.hp = player.maxHp; player.qi = player.maxQi;
   player.poisonT = 0;
+  player._autoAX = null; player._autoAY = null; // QA: đừng để auto farm kéo người mới hồi sinh về neo cũ (map/vị trí khác)
   dead = false;
   document.getElementById('overlay').classList.add('hidden');
 };
@@ -5796,15 +5815,31 @@ el('btn-pk').addEventListener('click', ()=>{
   addFloat(player.x, player.y-40, player.pk ? 'PK: BẬT — có thể tấn công Du Hiệp!' : 'PK: Tắt', player.pk ? '#ff5a4a' : '#8a8a8a', 13);
   saveGame();
 });
+// QA: các pha boss buộc tự tay né (Quỷ Vương/Thiên Sứ/Boss Săn) — dùng chung cho cả chỗ ép tắt
+// AUTO mỗi frame trong update() lẫn chỗ chặn bật lại AUTO ở toggleAuto() ngay dưới đây.
+function autoBossLockActive(){
+  if (DEVIL && DEVIL.bossRef && !DEVIL.bossRef.dead) return true;
+  if (BLOOD && BLOOD.phase === 'archangel' && BLOOD.angelRef && !BLOOD.angelRef.dead) return true;
+  if (DGN && DGN.huntSpawned && DGN.huntRef && !DGN.huntRef.dead) return true;
+  return false;
+}
 // AUTO FARM — treo máy: tự đánh quái gần nhất, tự tung kỹ năng, tự uống thuốc
 window.toggleAuto = function(){
   if (!player) return;
+  if (!player.auto && autoBossLockActive()){
+    addFloat(player.x, player.y-56, 'Boss này phải tự tay chiến — không thể bật AUTO lúc này!', '#ff9a5a', 13);
+    AudioSys.sfx('ui', 0.3);
+    return;
+  }
   player.auto = !player.auto;
   if (player.auto){
     // Trong phó bản, quái đợt luôn spawn ở (1300,800) — cách xa cửa vào (1300,1560) hơn tầm AUTO
     // mặc định. Bật AUTO ngay cửa vào trước đây neo tại chỗ đứng, đứng im không đánh gì (QA phát hiện).
     if (DGN && mapDef().dungeon){ player._autoAX = 1300; player._autoAY = 800; }
     else { player._autoAX = player.x; player._autoAY = player.y; } // neo tại chỗ bật — auto chỉ ôm 1-2 bãi quái quanh neo
+    // QA: bật AUTO khi còn 1 lệnh click-di-chuyển tay đang treo (chưa tới đích) — nếu không huỷ ở
+    // đây, tắt AUTO lại sau đó sẽ khiến nhân vật tự đi tiếp theo lệnh cũ dù không có input mới.
+    moveTarget = null; moveWaypoint = null;
   }
   addFloat(player.x, player.y-56, player.auto ? '⚔ AUTO FARM: BẬT — ôm 1-2 bãi quái quanh điểm neo, tự tung chiêu, tự uống thuốc' : 'AUTO FARM: TẮT — về chế độ thủ công',
     player.auto ? '#6ae88a' : '#b8a888', 13);
@@ -8944,6 +8979,11 @@ window.travelTo = function(mapId, from){
   AudioSys.playBgm(BGM_TRACKS[mapId]);
   buildWorld();
   DGN = null;
+  // QA: điểm neo AUTO trỏ về map cũ nếu không xoá ở đây — auto farm có thể kéo người chơi rời
+  // xa khỏi quái vừa xuất hiện ở map mới (kể cả lao vào chỗ chết ở phó bản PK). Xoá để auto tự
+  // neo lại đúng vị trí mới (xem game.js AUTO FARM: player._autoAX == null → neo tại player.x/y);
+  // nếu là phó bản, startDungeonRun()/nextDungeonWave() ngay dưới sẽ ghi đè bằng neo riêng của nó.
+  player._autoAX = null; player._autoAY = null;
   if (md.dungeon) startDungeonRun(mapId);
   const sp = (from && md.spawnFrom && md.spawnFrom[from]) || md.spawn;
   player.x = sp.x; player.y = sp.y;
