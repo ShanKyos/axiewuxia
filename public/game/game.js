@@ -825,7 +825,7 @@ for (const n of NPCS){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = 
 function mapDef(){ return MAPS[curMap]; }
 function zoneType(){ return ZONE_TYPES[mapDef().type]; }
 
-// ---------- Sổ tay kỹ năng: mọi chiêu thức gán vào taskbar 5 ô ----------
+// ---------- Sổ tay kỹ năng: 3 ô cố định (chính/phụ/buff) — xem defaultSkillBar() ----------
 const SKILL_DEFS = {
   a:       { unlock:2,  kind:'sectA',  icon:s=>SECT_ART[s].iconA,  desc:s=>`${s.skillA.name} — chiêu thức nhập môn ${s.name}.` },
   amkhi:   { unlock:4,  kind:'amkhi',  name:'Ám Khí', cd:4, qi:15, mult:1.2, icon:()=>'assets/skills/amkhi.png', desc:()=>'Phóng ám khí độc — theo tầng Tấn Chức Ám Khí.' },
@@ -860,7 +860,8 @@ const VH_TIER = {
 // liên phái — MU không có khái niệm này, vũ khí & chiêu thức LÀ bản sắc lớp). Tất cả phai-locked,
 // tự ngộ theo cấp độ giống hệt cơ chế sect-skill cũ, chỉ khác là giờ CẢ 5 LỚP đều có đủ bộ thay vì
 // chỉ 3/9 Tộc trước đây. skillA/tp (Twisting Slash/Death Stab v.v.) đã nằm ở SECTS, đây là 4-6 chiêu
-// bổ sung mỗi lớp cho phím 1-5. Giữ nguyên 2 id 'tienthiencong'/'songthu' vì có code khác gọi thẳng
+// bổ sung mỗi lớp — chỉ 1 trong số này (buff) còn nằm ở taskbar 3 ô, còn lại đã dồn thành % Công
+// Kích vĩnh viễn (xem LEGACY_SECT_SKILLS). Giữ nguyên 2 id 'tienthiencong'/'songthu' vì có code khác gọi thẳng
 // theo id (auto-hồi sinh & miễn hồi chiêu) — chỉ đổi tên hiển thị + đổi phai sang lớp mới.
 const VOHOC_DEFS = {
   // ── Dark Knight ──
@@ -876,28 +877,54 @@ const VOHOC_DEFS = {
   dw_twister:    { name:'Twister', school:'Dark Wizard', phai:'baidasan', tier:'cao', cat:'Pháp Thuật', type:'proj', unlock:45, cd:6, qi:24, mult:1.8, color:'#8ac850', icon:'assets/skills/vh_dw_twister.png', glyph:'旋', fx:{ multi:3, pierce:true }, desc:'Ba cơn lốc xuyên phá — quét qua mọi địch trên đường đi.' },
   dw_nova:       { name:'Nova', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Pháp Thuật', type:'aoe', unlock:55, cd:10, qi:35, mult:2.8, color:'#ffd76a', icon:'assets/skills/vh_dw_nova.png', glyph:'極', fx:{ r:180, big:true }, desc:'Dồn năng lượng ánh sáng rồi bùng nổ toàn diện — chiêu mạnh nhất phái.' },
   songthu:       { name:'Arcane Insight', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#d8d8f0', icon:'assets/skills/vh_dw_arcane.png', glyph:'智', desc:'Bị động: 30% chiêu vừa tung không tốn hồi chiêu.' },
+  // Chiêu buff (ô 3 cố định — xem BUFF_SKILL_ID/defaultSkillBar): Dark Wizard mỏng máu nhất nên
+  // được 1 khiên chắn tạm thời, bù lại lúc đứng lại tụ phép giữa tầm xa 420.
+  dw_shield:     { name:'Soul Barrier', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'buff', unlock:15, cd:10, qi:26, color:'#7ec850', icon:'assets/skills/vh_dw_shield.png', glyph:'盾', fx:{ shieldPct:45, t:6 }, desc:'Khiên hồn ma bao bọc — hấp thụ sát thương bằng 45% HP tối đa trong 6s.' },
   // ── Fairy Elf ──
   elf_heal:      { name:'Heal', school:'Fairy Elf', phai:'toanchan', tier:'so', cat:'Bị Động', type:'passive', unlock:15, color:'#3a9d8b', icon:'assets/skills/vh_elf_heal.png', glyph:'癒', desc:'Bị động: tự hồi 1% HP tối đa mỗi giây.' },
   elf_greaterdef:{ name:'Greater Defense', school:'Fairy Elf', phai:'toanchan', tier:'trung', cat:'Hỗ Trợ', type:'buff', unlock:30, cd:10, qi:25, color:'#5ac8b8', icon:'assets/skills/vh_elf_greaterdef.png', glyph:'護', fx:{ shieldPct:40, t:6 }, desc:'Khiên năng lượng — hấp thụ sát thương bằng 40% HP tối đa trong 6s.' },
-  elf_greaterdmg:{ name:'Greater Damage', school:'Fairy Elf', phai:'toanchan', tier:'cao', cat:'Hỗ Trợ', type:'buff', unlock:45, cd:10, qi:28, color:'#7ecbff', icon:'assets/skills/vh_elf_greaterdmg.png', glyph:'力', fx:{ dmgPct:35, t:6 }, desc:'Cường hoá sức mạnh — +35% sát thương trong 6s.' },
+  // Chiêu buff (ô 3 cố định): Greater Damage — đúng bản sắc Fairy Elf hỗ trợ trong MU Online.
+  elf_greaterdmg:{ name:'Greater Damage', school:'Fairy Elf', phai:'toanchan', tier:'cao', cat:'Hỗ Trợ', type:'buff', unlock:15, cd:10, qi:28, color:'#7ecbff', icon:'assets/skills/vh_elf_greaterdmg.png', glyph:'力', fx:{ dmgPct:35, t:6 }, desc:'Cường hoá sức mạnh — +35% sát thương trong 6s.' },
   elf_swiftwind: { name:'Swift Wind', school:'Fairy Elf', phai:'toanchan', tier:'than', cat:'Hỗ Trợ', type:'buff', unlock:55, cd:8, qi:20, color:'#a0ffe9', icon:'assets/skills/vh_elf_swiftwind.png', glyph:'風', fx:{ selfEva:{ pct:45, t:4 } }, desc:'Gió nhanh theo bước chân — +45% né trong 4s.' },
   // ── Magic Gladiator ──
   mg_powerslash: { name:'Power Slash', school:'Magic Gladiator', phai:'minhgiao', tier:'so', cat:'Lai', type:'cone', unlock:15, cd:6, qi:20, mult:1.8, color:'#e8552a', icon:'assets/skills/vh_mg_powerslash.png', glyph:'力', fx:{}, desc:'Một đường kiếm khí quét ngang, dồn cả nội lực vào lưỡi kiếm.' },
   mg_frostnova:  { name:'Frost Nova', school:'Magic Gladiator', phai:'minhgiao', tier:'trung', cat:'Lai', type:'aoe', unlock:30, cd:8, qi:26, mult:2.0, color:'#5ac8e8', icon:'assets/skills/vh_mg_frostnova.png', glyph:'氷', fx:{ r:150, slow:{ pct:0.4, t:3 } }, desc:'Bùng nổ băng giá quanh thân — làm chậm mọi địch trong tầm.' },
   mg_ironwill:   { name:'Iron Will', school:'Magic Gladiator', phai:'minhgiao', tier:'cao', cat:'Bị Động', type:'passive', unlock:40, color:'#ffb060', icon:'assets/skills/vh_mg_ironwill.png', glyph:'鉄', desc:'Bị động: +10% HP, +8% giảm sát thương.' },
+  // Chiêu buff (ô 3 cố định): hybrid cận-pháp — tăng cả sát thương lẫn khí thế trận đấu.
+  mg_battlefury: { name:'Battle Fury', school:'Magic Gladiator', phai:'minhgiao', tier:'trung', cat:'Lai', type:'buff', unlock:15, cd:10, qi:26, color:'#ff9a5a', icon:'assets/skills/vh_mg_battlefury.png', glyph:'闘', fx:{ dmgPct:30, t:6 }, desc:'Dồn cả nội lẫn ngoại lực — +30% sát thương trong 6s.' },
   mg_flamestrike:{ name:'Flame Storm', school:'Magic Gladiator', phai:'minhgiao', tier:'than', cat:'Lai', type:'aoe', unlock:55, cd:11, qi:38, mult:3.0, color:'#ff7a3a', icon:'assets/skills/vh_mg_flamestorm.png', glyph:'焔', fx:{ r:200, kb:60, big:true }, desc:'Bão lửa nuốt trọn cả một vùng — chiêu bộc phát mạnh nhất phái.' },
   // ── Dark Lord ──
   dl_electricspark:{ name:'Electric Spark', school:'Dark Lord', phai:'bug', tier:'so', cat:'Chỉ Huy', type:'proj', unlock:15, cd:5, qi:18, mult:1.6, color:'#8a9a3a', icon:'assets/skills/vh_dl_spark.png', glyph:'電', fx:{ stun:0.8 }, desc:'Tia điện từ quyền trượng — trúng đòn choáng nhẹ.' },
   dl_darkspirit: { name:'Dark Spirit', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'aoe', unlock:30, cd:7, qi:24, mult:2.0, color:'#6a7a2a', icon:'assets/skills/vh_dl_darkspirit.png', glyph:'霊', fx:{ r:160 }, desc:'Triệu hồi u linh vây quanh — sát thương diện rộng.' },
   dl_chaoticdiseier:{ name:'Chaotic Diseier', school:'Dark Lord', phai:'bug', tier:'cao', cat:'Chỉ Huy', type:'proj', unlock:40, cd:6, qi:22, mult:1.8, color:'#a8b85a', icon:'assets/skills/vh_dl_chaotic.png', glyph:'杖', fx:{ multi:3, pierce:true }, desc:'Ném quyền trượng xoay tít — xuyên thấu hàng dài địch.' },
   dl_darkraven:  { name:'Dark Raven', school:'Dark Lord', phai:'bug', tier:'than', cat:'Chỉ Huy', type:'aoe', unlock:55, cd:10, qi:34, mult:2.6, color:'#2a1a3a', icon:'assets/skills/vh_dl_raven.png', glyph:'鴉', fx:{ r:180, kb:40, big:true }, desc:'Bầy quạ đen lao xuống xé nát mọi thứ trong tầm — chiêu chỉ huy tối thượng.' },
+  // Chiêu buff (ô 3 cố định): khí thế chỉ huy — dồn sức cho bản thân lẫn bầy tùy tùng theo sau.
+  dl_commandaura:{ name:'Command Aura', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'buff', unlock:15, cd:10, qi:26, color:'#a0b04a', icon:'assets/skills/vh_dl_command.png', glyph:'令', fx:{ dmgPct:25, t:6 }, desc:'Hào khí chỉ huy lan tỏa — +25% sát thương trong 6s.' },
 };
+// ═══════════ TỐI GIẢN TASKBAR: 3 Ô CỐ ĐỊNH KIỂU MU ONLINE ═══════════
+// Mỗi phái chỉ còn đúng 3 chiêu chủ động — 1 chiêu chính (skillA), 1 chiêu phụ (Trấn Phái), 1 buff có
+// thời gian riêng từng phái — thay vì 5 ô người chơi tự gán. Toàn bộ chiêu Võ Học Phổ còn lại (Cyclone,
+// Nova, Flame Storm...) + hệ Tấn Chức phụ (Ám Khí/Đạn Chỉ/Linh Tiễn/Tiêu Hồn) không mất giá trị — dồn
+// thành % Công Kích vĩnh viễn, tự động theo cấp/điều kiện đã có, không cần bấm nút nữa (xem calcDerived()
+// và LEGACY_SECT_SKILLS bên dưới).
+const BUFF_SKILL_ID = { thieulam:'gangkhi', toanchan:'elf_greaterdmg', baidasan:'dw_shield', minhgiao:'mg_battlefury', bug:'dl_commandaura' };
+function defaultSkillBar(sect){ return ['a', 'tp', BUFF_SKILL_ID[sect] || null]; }
+// Tuyệt Học Cũ: mỗi tầng quy đổi thành % Công Kích vĩnh viễn — điều kiện mở giữ nguyên (tự ngộ theo
+// cấp cho chiêu môn phái qua vhLearned(), hoặc điều kiện Tấn Chức riêng cho 4 kỹ năng phổ thông).
+const LEGACY_TIER_PCT = { so:1.5, trung:2, cao:2.5, than:3.5 };
+const LEGACY_SECT_SKILLS = ['dk_cyclone','dk_ragefulblow','dk_crescent',
+  'dw_lightning','dw_evilspirit','dw_ice','dw_twister','dw_nova',
+  'elf_greaterdef','elf_swiftwind',
+  'mg_powerslash','mg_frostnova','mg_flamestrike',
+  'dl_electricspark','dl_darkspirit','dl_chaoticdiseier','dl_darkraven'];
+const LEGACY_UNIVERSAL_PCT = { amkhi:1.5, danchi:2, bow:2, tieuhon:3 };
 // GDD §5.1: mọi chiêu khóa theo cảnh giới — giữ lại cho vhRealmReq()/tenuiFreeLearn() (Té Núi) dùng;
 // mọi chiêu bây giờ đều phai-locked nên luôn trả về 0 (tự ngộ theo cấp, không qua Bí Kíp/cảnh giới)
 const VH_REALM_REQ  = { so:5, trung:5, cao:6, than:7 };
 const VH_REALM_NAME = { 5:'Radiant Core Cảnh', 6:'Resonance · Trung Kỳ', 7:'Resonance · Hậu Kỳ' };
 function vhRealmReq(v){ return v.phai ? 0 : (VH_REALM_REQ[v.tier] || 5); }
-// Đăng ký võ học chủ động vào SKILL_DEFS — dùng chung taskbar 5 ô & phím 1-5
+// Đăng ký võ học chủ động vào SKILL_DEFS — dùng chung cho castSkill(); chỉ chiêu buff (BUFF_SKILL_ID)
+// thực sự nằm ở taskbar 3 ô, còn lại chỉ tồn tại để tính legacyAtkPct và hiển thị ở tab Tuyệt Học Cũ
 for (const _vid in VOHOC_DEFS){
   const _v = VOHOC_DEFS[_vid];
   if (_v.type === 'passive') continue;
@@ -2342,7 +2369,20 @@ function calcDerived(){
   player.forgeBonus = tForge + Math.min(25, luckN * 5); // Vận: +5% tỉ lệ rèn/món, tối đa +25%
   player.luckN = luckN;
   player.critDmgMult = 2 + P.critDmg/100; // Vận + bộ Cổ Thần: sát thương bạo kích ×2 → ×2.x
-  player.atk = Math.round(player.atk * (1 + tAtkPct + tAllPct));
+  // Tuyệt Học Cũ: chiêu Võ Học Phổ/Tấn Chức không còn nằm trong taskbar 3 ô (xem defaultSkillBar
+  // và LEGACY_* ở khai báo VOHOC_DEFS) vẫn giữ giá trị — dồn thành % Công Kích vĩnh viễn, tự động
+  // theo đúng điều kiện mở khóa gốc, không cần bấm nút hay học Bí Kíp nữa.
+  let legacyPct = 0;
+  for (const sid of LEGACY_SECT_SKILLS){
+    const lv = VOHOC_DEFS[sid];
+    if (lv && lv.phai === player.sect && vhLearned(sid)) legacyPct += LEGACY_TIER_PCT[lv.tier] || 0;
+  }
+  if (player.level >= SKILL_DEFS.amkhi.unlock) legacyPct += LEGACY_UNIVERSAL_PCT.amkhi;
+  if (realm >= 4) legacyPct += LEGACY_UNIVERSAL_PCT.danchi; // Đạn Chỉ Thần Thông — req cũ
+  if (player.bow && player.bow.tier > 0) legacyPct += LEGACY_UNIVERSAL_PCT.bow; // Linh Tiễn Xạ — req cũ
+  if (realm >= 6) legacyPct += LEGACY_UNIVERSAL_PCT.tieuhon; // Tiêu Hồn Chưởng — req cũ
+  player.legacyAtkPct = legacyPct;
+  player.atk = Math.round(player.atk * (1 + tAtkPct + tAllPct + legacyPct/100));
   player.maxHp = Math.round((player.maxHp + tHp) * (1 + tAllPct));
   player.crit = Math.min(0.65, player.crit + tCrit/100);
   // Chỉ số % từ trang bị theo GDD (áp cuối, nhân/cộng độc lập)
@@ -2425,7 +2465,7 @@ function newPlayer(sectKey){
     level: 1, xp: 0, str: 5, agi: 5, def: 5, vit: 5, ene: 5, free: 0,
     hp: 130, qi: 55, silver: 30, mat: 0,
     equip: {}, inv: [], cd: { basic:0, a:0, amkhi:0, tp:0, jump:0 },
-    skillBar: ['a','amkhi','tp',null,null],   // taskbar 5 ô kỹ năng
+    skillBar: defaultSkillBar(sectKey),   // 3 ô kỹ năng cố định (chính/phụ/buff) kiểu MU Online
     pk: false, toiac: 0, toiacT: 0,           // PK & Tội Ác (đỏ tên)
     gkBuffT: 0, poisonT: 0, autoSell: false,
     autoCfg: { skill:true, potion:true, potionPct:40, range:430, boss:false }, // Cài đặt Auto Farm (panel O)
@@ -2551,8 +2591,9 @@ function loadGame(){
     if (!player.bikip) player.bikip = { pieces: [0,0,0], hmtp: false };
     if (player.battuCd == null) player.battuCd = 0;
     // Phase C backfill: thanh kỹ năng, PK, tội ác, buff, độc, auto-sell
-    if (!player.skillBar) player.skillBar = ['a','amkhi','tp',null,null];
-    if (!player.skillBar.length) player.skillBar = ['a','amkhi','tp',null,null];
+    // Tối giản taskbar (bản mới): luôn ép về đúng 3 ô cố định theo phái (chính/phụ/buff) — bỏ hẳn
+    // ô 4-5 tự gán cũ, tránh save cũ kẹt lại chiêu giờ chỉ còn là bị động (không thể bấm được nữa).
+    player.skillBar = defaultSkillBar(player.sect);
     if (player.pk == null) player.pk = false;
     if (player.toiac == null) player.toiac = 0;
     if (player.toiacT == null) player.toiacT = 0;
@@ -3124,7 +3165,7 @@ window.addEventListener('keydown', e=>{
   if (e.target && e.target.tagName === 'INPUT') return; // đang gõ console playtest
   keys[e.key.toLowerCase()] = true;
   if (e.key === ' ') { e.preventDefault(); doBasic(); }
-  if (e.key >= '1' && e.key <= '5' && player){ // taskbar 5 ô kỹ năng
+  if (e.key >= '1' && e.key <= '3' && player){ // taskbar 3 ô kỹ năng (chính/phụ/buff)
     const id = player.skillBar[+e.key - 1];
     if (id) castSkill(id); else togglePanel('skill');
   }
@@ -6673,8 +6714,8 @@ function applyTestBoost(){
   // Danh hiệu: mở hết, trang bị danh hiệu cuối cùng
   player.titles.unlocked = TITLES.map(t => t.id);
   player.titles.equipped = TITLES[TITLES.length - 1].id;
-  // Thanh kỹ năng: 5 ô chiêu thức mạnh nhất
-  player.skillBar = ['a', 'tp', 'gangkhi', 'bow', 'tieuhon'];
+  // Thanh kỹ năng: 3 ô cố định theo phái
+  player.skillBar = defaultSkillBar(player.sect);
   // FULL SKILL (bản test): học hết Võ Học Phổ + 30 Dung Hợp, mọi kỹ năng Lv 120
   for (const _vid in VOHOC_DEFS) player.vohoc[_vid] = true;
   for (const _fid in FUSION_DEFS) player.vohoc[_fid] = true;
@@ -6923,7 +6964,7 @@ function startGame(sectKey, quze){
     applyTestBoost();
     checkTitles();
     addFloat(player.x, player.y-50, 'CHẾ ĐỘ THỬ NGHIỆM — Cấp 100, MỌI TÍNH NĂNG TỐI ĐA!', '#7ecbff', 16);
-    addFloat(player.x, player.y-72, 'Full +11 · Tuyệt học max · Ascension max · M bản đồ · K kỹ năng · 1-5 tung chiêu!', '#a0ffe9', 13);
+    addFloat(player.x, player.y-72, 'Full +11 · Tuyệt học max · Ascension max · M bản đồ · K kỹ năng · 1-3 tung chiêu!', '#a0ffe9', 13);
   } else {
     addFloat(player.x, player.y-50, 'Lunaris City — hãy đến gặp Trưởng Lão Rell (lại gần, nhấn E)!', '#7ecbff', 15);
   }
@@ -7550,86 +7591,64 @@ window.salvage = function(i){
 };
 
 // ---------- Bản Đồ thế giới ----------
-// ---------- Kỹ Năng: gán vào taskbar 5 ô ----------
-// ── Kỹ Năng: 3 nhóm Trấn Phái / Giang Hồ / Khác (thay cho 1 danh sách dài gộp hết, rối mắt) ──
+// ---------- Kỹ Năng: 3 ô cố định (chính/phụ/buff) + tab Tuyệt Học Cũ (thông tin, không bấm được) ----------
 // Giang Hồ (võ học tự do liên phái) + Dung Hợp đã bị cắt cùng đợt MU-hoá — mọi chiêu giờ đều
 // thuộc riêng 1 trong 5 lớp, không còn nội dung nào cho tab này nữa nên bỏ luôn.
 const SKILL_TABS = [
-  { id:'tranphai', name:'⚔ Trấn Phái' },
-  { id:'khac',     name:'✦ Khác' },
+  { id:'active', name:'⚔ Kỹ Năng' },
+  { id:'legacy', name:'✦ Tuyệt Học Cũ' },
 ];
-window.skillTab = window.skillTab || 'tranphai';
+window.skillTab = window.skillTab || 'active';
 window.switchSkillTab = function(t){ window.skillTab = t; renderSkillPanel(); };
-function skillDefRowHtml(id){
+// 3 ô cố định (chính/phụ/buff — xem defaultSkillBar()): không còn gán/gỡ, chỉ hiện thông tin + nâng cấp.
+function equippedSkillRowHtml(id, roleLabel){
   const info = skillInfo(id);
   return `<div class="skill-row${info.unlocked?'':' locked'}">
-    <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='a'?'壹':id==='tp'?'鎮':id==='amkhi'?'暗':id==='bow'?'弓':id==='gangkhi'?'罡':id==='danchi'?'弹':'魂'}</span>'" alt="">
-    <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${info.name}</b>
+    <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='a'?'壹':id==='tp'?'鎮':'護'}</span>'" alt="">
+    <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${roleLabel} — ${info.name}</b>
       <span style="font-size:10.5px;opacity:.6"> · ${info.qi}Qi · ${effCd(id, info.cd).toFixed(1)}s</span>
       <div class="sk-desc">${info.unlocked ? info.desc : '🔒 ' + info.lockTxt}</div></span>
-    <span class="assign-btns">${info.unlocked ? upBtnHtml(id) : ''}${[0,1,2,3,4].map(s=>
-      `<button class="mini-btn" ${info.unlocked?'':'disabled'} onclick="window.assignSkill('${id}',${s})">${s+1}</button>`).join('')}</span></div>`;
+    <span class="assign-btns">${info.unlocked ? upBtnHtml(id) : ''}</span></div>`;
 }
-function vohocRowHtml(_vid){
+// Tuyệt Học Cũ (chiêu môn phái không còn trong taskbar): thông tin + % Công Kích vĩnh viễn nó cộng,
+// không còn nút bấm nào — mở tự động theo đúng điều kiện gốc (xem LEGACY_* + calcDerived()).
+function legacySkillRowHtml(_vid){
   const _v = VOHOC_DEFS[_vid], _t = VH_TIER[_v.tier];
-  const learned = vhLearned(_vid), isPass = _v.type === 'passive';
-  const canLv = player.level >= _v.unlock;
-  const ownPhai = _v.phai && _v.phai === player.sect;
-  const _rReq = vhRealmReq(_v);
-  const canRealm = ((player.dantian && player.dantian.realm) || 0) >= _rReq;
-  let right = '';
-  if (learned && !isPass){
-    right = `<span class="assign-btns">${upBtnHtml(_vid)}${[0,1,2,3,4].map(s=>
-      `<button class="mini-btn" onclick="window.assignSkill('${_vid}',${s})">${s+1}</button>`).join('')}</span>`;
-  } else if (learned){
-    right = `<span style="font-size:10.5px;color:#a0ffe9">✓</span>`;
-  } else if (!_v.phai && canLv && canRealm){
-    right = `<button class="mini-btn vh-learn-btn" ${(player.bikipVH||0)>=_t.cost?'':'disabled'} onclick="window.learnVohocUI('${_vid}')">Học · ${_t.cost}📜</button>`;
-  } else {
-    right = `<span style="font-size:10.5px;opacity:.5">${!canRealm ? '🔒 ' + VH_REALM_NAME[_rReq] : !canLv ? '🔒 Lv'+_v.unlock : (_v.phai && !ownPhai ? 'khác phái' : '🔒')}</span>`;
-  }
+  const learned = vhLearned(_vid), pct = LEGACY_TIER_PCT[_v.tier] || 0;
+  const right = learned ? `<span style="font-size:11px;color:#a0ffe9">+${pct}% ST ✓</span>` : `<span style="font-size:10.5px;opacity:.5">🔒 Lv${_v.unlock}</span>`;
   return `<div class="skill-row${learned?'':' locked'}">
     <img src="${_v.icon}" onerror="this.style.display='none'" alt="">
     <span class="sk-info"><b style="color:${learned?_t.color:'#8a8a8a'}">${_v.name}</b>
       <span style="font-size:10px;color:${_t.color}"> · ${_v.cat}</span>
-      ${!isPass?`<span style="font-size:10.5px;opacity:.6"> · ${_v.qi}Qi · ${effCd(_vid, _v.cd).toFixed(1)}s</span>`:''}
       <div class="sk-desc">${_v.desc}</div></span>
     ${right}</div>`;
 }
-function vohocSchoolsHtml(filterFn){
-  const _groups = {};
-  for (const _vid in VOHOC_DEFS){ const _v = VOHOC_DEFS[_vid]; if (!filterFn(_v)) continue; (_groups[_v.school] = _groups[_v.school] || []).push(_vid); }
-  let h = '';
-  for (const _sch in _groups){
-    h += `<div style="font-size:11px;color:#9aa8d4;margin:7px 0 2px;letter-spacing:1px">— ${_sch} —</div>`;
-    for (const _vid of _groups[_sch]) h += vohocRowHtml(_vid);
-  }
-  return h;
+// 4 hệ Tấn Chức phụ (Ám Khí/Đạn Chỉ/Linh Tiễn/Tiêu Hồn) — vẫn giữ nguyên điều kiện đầu tư cũ, chỉ đổi
+// từ "chiêu bấm được" thành "% Công Kích vĩnh viễn" khi đủ điều kiện.
+function legacyUniversalRowHtml(id){
+  const info = skillInfo(id), pct = LEGACY_UNIVERSAL_PCT[id] || 0;
+  const right = info.unlocked ? `<span style="font-size:11px;color:#a0ffe9">+${pct}% ST ✓</span>` : `<span style="font-size:10.5px;opacity:.5">🔒 ${info.lockTxt}</span>`;
+  return `<div class="skill-row${info.unlocked?'':' locked'}">
+    <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='amkhi'?'暗':id==='bow'?'弓':id==='danchi'?'弹':'魂'}</span>'" alt="">
+    <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${info.name}</b>
+      <div class="sk-desc">${info.desc}</div></span>
+    ${right}</div>`;
 }
-// fusionRowHtml đã bị xoá — Dung Hợp cắt hẳn, không còn nơi nào gọi hàm này nữa
 function renderSkillPanel(){
   vhAutoLearn(); // save cũ / test mode: quét tự ngộ võ học phái
-  let html = `<h3>Kỹ Năng — gán tối đa 5 ô (phím 1-5)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Taskbar: `;
-  for (let i = 0; i < 5; i++){
-    const id = player.skillBar[i];
-    html += id ? `<button class="mini-btn" onclick="window.assignSkill(null,${i})" title="Bấm để gỡ">${i+1}:${skillInfo(id).name}✕</button> `
-               : `<span style="opacity:.5;font-size:11px">[${i+1}:trống]</span> `;
-  }
-  html += `</div>`;
+  let html = `<h3>Kỹ Năng — 3 ô cố định (phím 1-3)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
   html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%ST/cấp (bạc) · mốc 20/40/60/80/100/120 thêm buff · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · 💠 Tâm Đắc <b>${player.tamdac || 0}</b> · ⌨ Space: <b>${player.spaceSkill ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
   html += `<div class="char-tabs">`;
   for (const t of SKILL_TABS) html += `<button class="${t.id===window.skillTab?'active':''}" onclick="switchSkillTab('${t.id}')">${t.name}</button>`;
   html += `</div>`;
 
-  if (window.skillTab === 'tranphai'){
-    html += `<div class="stat-sec">TRẤN PHÁI — tuyệt kỹ ${SECTS[player.sect].name}</div>`;
-    html += skillDefRowHtml('a') + skillDefRowHtml('tp');
-    const ownSchoolHtml = vohocSchoolsHtml(_v => _v.phai === player.sect);
-    html += ownSchoolHtml || `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10 để mở khoá tuyệt kỹ riêng.</div>`;
-  } else {
-    html += `<div class="stat-sec">KỸ NĂNG KHÁC — hệ Tấn Chức riêng</div>`;
-    for (const id of ['amkhi','gangkhi','danchi','bow','tieuhon']) html += skillDefRowHtml(id);
+  if (window.skillTab === 'active'){
+    html += `<div class="stat-sec">${SECTS[player.sect].name} — 1 chính · 1 phụ · 1 buff</div>`;
+    html += equippedSkillRowHtml('a', 'Chính');
+    html += equippedSkillRowHtml('tp', 'Phụ');
+    const buffId = BUFF_SKILL_ID[player.sect];
+    html += buffId ? equippedSkillRowHtml(buffId, 'Buff')
+      : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10 để mở khoá bộ 3 chiêu riêng.</div>`;
     html += `<div class="stat-sec">BỊ ĐỘNG — tự kích hoạt, không cần gán</div>`;
     for (const ps of PASSIVE_SKILLS){
       const on = ps.req();
@@ -7637,20 +7656,16 @@ function renderSkillPanel(){
         <span class="sk-info"><b style="color:${on?'#a0ffe9':'#8a8a8a'}">${ps.name}</b>
         <div class="sk-desc">${on ? ps.desc : '🔒 chưa đạt điều kiện'}</div></span></div>`;
     }
+  } else {
+    html += `<div style="font-size:11px;color:#9aa8d4;padding:2px 4px 8px">Taskbar chỉ còn 3 ô, nhưng các chiêu dưới đây không hề mất giá trị — tự động dồn thành % Công Kích vĩnh viễn (hiện <b style="color:#ffd76a">+${(player.legacyAtkPct||0).toFixed(1)}%</b>), không cần bấm nút hay học Bí Kíp nữa.</div>`;
+    html += `<div class="stat-sec">TUYỆT HỌC MÔN PHÁI — ${SECTS[player.sect].name}</div>`;
+    const own = LEGACY_SECT_SKILLS.filter(sid => VOHOC_DEFS[sid] && VOHOC_DEFS[sid].phai === player.sect);
+    html += own.length ? own.map(legacySkillRowHtml).join('') : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10.</div>`;
+    html += `<div class="stat-sec">HỆ TẤN CHỨC PHỤ</div>`;
+    for (const id of ['amkhi','danchi','bow','tieuhon']) html += legacyUniversalRowHtml(id);
   }
   el('panel-skill').innerHTML = html;
 }
-window.assignSkill = function(id, slot){
-  if (id){
-    const info = skillInfo(id);
-    if (!info.unlocked) return;
-    // gỡ khỏi ô cũ nếu đang gán chỗ khác
-    const old = player.skillBar.indexOf(id);
-    if (old >= 0) player.skillBar[old] = null;
-  }
-  player.skillBar[slot] = id;
-  saveGame(); renderSkillPanel();
-};
 
 // ---------- Tấn Chức (override): mọi kỹ năng qua SKILL_DEFS ----------
 function castSkill(id){
@@ -7913,15 +7928,15 @@ function updateHud(){
   { const _th = trackerHtml(); if (window._lastTrack !== _th){ window._lastTrack = _th; el('quest-tracker').innerHTML = _th; } } // GDD Đợt 2 B2: cache để nút bấm không bị render đè
   // hint — theo tầng cấp, tân thủ chỉ thấy phím cốt lõi
   el('hint-bar').textContent = hintText();
-  // taskbar: 5 ô kỹ năng
-  for (let i = 0; i < 5; i++){
+  // taskbar: 3 ô kỹ năng cố định (chính/phụ/buff)
+  for (let i = 0; i < 3; i++){
     const b = el('sk-'+i); if (!b) continue;
     const id = (player.skillBar || [])[i];
     if (!id){
       b.classList.add('sk-empty'); b.classList.remove('locked','has-img');
       b.style.backgroundImage = '';
       b.querySelector('.sk-ico').textContent = '+';
-      b.title = 'Ô trống — bấm để gán kỹ năng (K)';
+      b.title = 'Chưa gia nhập lớp — trả lời The Calling ở cấp 10 (K)';
       b.querySelector('.sk-cd').style.height = '0%';
       continue;
     }
@@ -11453,7 +11468,7 @@ window.chooseSect = function(key){
   player.silver += 500; // quà nhập Tộc
   const w = genItem(10, 0.25); w.slot = 'weapon'; w.slotName = 'Vũ Khí';
   if (player.inv.length < 30) player.inv.push(w); else player.silver += 300;
-  player.skillBar = ['a','amkhi','tp',null,null]; // gán sẵn chiêu của Tộc mới
+  player.skillBar = defaultSkillBar(key); // gán sẵn 3 chiêu cố định của Lớp mới
   // Elder's Relic hiện thân: hành trang Unclassed hóa thành báu vật của Tộc mới
   const _tb = THANBINH[key];
   if (_tb){
