@@ -9741,8 +9741,8 @@ function sanitizeCharName(v){
   return (v || '').replace(/[<>&"'`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
 }
 
-let pendingSect = null, quzeBoard = [], quzePicked = [], quzeShuffles = 3, quzePers = 'trung';
-// Bàn 16 quẻ úp — mỗi quẻ roll độc lập theo đúng xác suất phẩm chất gốc (Phàm 55/Linh 30/Huyền 12/Thiên 3)
+let pendingSect = null, quzeBoard = [], quzePicked = [], quzeShuffles = 3, quzePers = 'trung', quzeRevealed = false;
+// Bàn 16 Thẻ Tiên Duyên úp — mỗi thẻ roll độc lập theo đúng xác suất phẩm chất gốc (Phàm 55/Linh 30/Huyền 12/Thiên 3)
 function rollQuzeBoard(){
   const b = [];
   for (let i = 0; i < 16; i++) b.push({ t: rollTrait([]), open: false });
@@ -9751,18 +9751,24 @@ function rollQuzeBoard(){
 function openQuze(key){
   pendingSect = key;
   quzeBoard = rollQuzeBoard();
-  quzePicked = []; quzeShuffles = 3; quzePers = 'trung';
+  quzePicked = []; quzeShuffles = 3; quzePers = 'trung'; quzeRevealed = false;
   const _ni = el('inp-char-name'); if (_ni && !_ni.value) _ni.value = genCharName();
   el('sect-select').classList.add('hidden');
   el('quze-screen').classList.remove('hidden');
   renderQuze();
 }
-window.qzFlip = function(i){
-  const c = quzeBoard[i]; if (!c || c.open) return;
-  c.open = true;
-  AudioSys.sfx('ui', 0.6);
-  if (c.t.tier === 'thien'){ AudioSys.sfx('levelup', 0.9); }
-  else if (c.t.tier === 'huyen'){ AudioSys.sfx('quest', 0.6); }
+// QA rà soát MU-Axie: trước đây lật từng thẻ một (bấm 16 lần) — giờ lật cùng lúc cả bàn 1 phát,
+// đúng cảm giác "khui vận may" gọn lẹ hơn thay vì grind từng ô. quzeJustFlipped chỉ bật animation
+// đúng 1 lần render ngay sau khi lật — các lần render khác (chọn tính cách, chọn/bỏ thẻ...) không
+// phát lại hiệu ứng lật.
+let quzeJustFlipped = false;
+window.qzFlipAll = function(){
+  if (quzeRevealed || !quzeBoard.length) return;
+  quzeRevealed = true;
+  quzeJustFlipped = true;
+  quzeBoard.forEach(c => { c.open = true; });
+  AudioSys.sfx('quest', 0.7);
+  if (quzeBoard.some(c => c.t.tier === 'thien')) AudioSys.sfx('levelup', 0.9);
   renderQuze();
 };
 window.qzToggle = function(i){
@@ -9781,7 +9787,7 @@ window.qzShuffle = function(){
   if (quzeShuffles <= 0) return;
   quzeShuffles--;
   quzeBoard = rollQuzeBoard();
-  quzePicked = [];
+  quzePicked = []; quzeRevealed = false;
   AudioSys.sfx('skill', 0.6);
   renderQuze();
 };
@@ -9792,7 +9798,8 @@ function renderQuze(){
     const d = document.createElement('div');
     const picked = quzePicked.includes(i);
     const dupe = !picked && c.open && quzePicked.some(j => quzeBoard[j].t.id === c.t.id);
-    d.className = 'qzc' + (c.open ? ' open t-' + c.t.tier : '') + (picked ? ' picked' : '') + (dupe ? ' dim' : '');
+    d.className = 'qzc' + (c.open ? ' open t-' + c.t.tier : '') + (picked ? ' picked' : '') + (dupe ? ' dim' : '') + (quzeJustFlipped ? ' flip-in' : '');
+    if (quzeJustFlipped) d.style.animationDelay = (i * 45) + 'ms';
     if (c.open){
       const tier = TRAIT_TIERS[c.t.tier];
       d.innerHTML = `<img class="qzc-art" src="assets/quze/${c.t.id}.png" alt="" onerror="this.remove()">
@@ -9802,10 +9809,12 @@ function renderQuze(){
       d.addEventListener('click', ()=>qzToggle(i));
     } else {
       d.innerHTML = `<img class="qzc-art" src="assets/quze/back.png" alt="" onerror="this.remove()"><div class="qzc-backglyph">🥚</div>`;
-      d.addEventListener('click', ()=>qzFlip(i));
     }
     bd.appendChild(d);
   });
+  quzeJustFlipped = false; // 1 lần duy nhất — reset ngay sau khi build xong HTML của lượt lật này
+  const flipBtn = el('btn-quze-flipall');
+  if (flipBtn){ flipBtn.classList.toggle('hidden', quzeRevealed); flipBtn.onclick = qzFlipAll; }
   const pk = el('quze-picked');
   pk.innerHTML = '';
   for (let s2 = 0; s2 < 3; s2++){
