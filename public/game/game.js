@@ -2119,6 +2119,7 @@ window.upgradeThanBinh = function(){
   tbConsumeNoidan(c.noidan); player.mat -= c.mat;
   tb.tier++;
   calcDerived();
+  sideOnEvent('thanbinh');
   const def = tbDef();
   addFloat(player.x, player.y-64, `⚔ ${def.name} — tầng ${tb.tier}【${TB_TIER_NAMES[tb.tier-1]}】`, TB_TIER_COLORS[tb.tier-1], 15);
   addEffect({ type:'ring', x:player.x, y:player.y, r:90, color:def.color, big:true });
@@ -2801,6 +2802,7 @@ window.activateChannelForm = function(){
   player.channelT = 14;
   player.channelCd = 90;
   calcDerived();
+  sideOnEvent('channel');
   addFloat(player.x, player.y-60, `☬ HÓA THÂN — ${pick.name}!`, '#ffb15c', 16);
   AudioSys.sfx('levelup', 0.85);
   addEffect({ type:'ring', x:player.x, y:player.y, r:110, color:'#ffb15c', big:true });
@@ -8827,85 +8829,32 @@ QUESTS.push(
 );
 
 // ---------- Phụ tuyến theo vùng (tối đa 3 active cùng lúc) ----------
+// QA: 66 NV phụ đời trước gần 80% là "diệt N con X" lặp đi lặp lại (nhàm chán, trùng nội dung với
+// NV chính/mob quanh đó) và không hề dạy người chơi về hàng loạt hệ thống nâng cấp nhân vật đã có
+// sẵn trong game (Thần Binh, Luyện Đan, Lò Hỗn Loạn, Linh Thú, Hóa Thân, Động Phủ...) — những hệ
+// này trước giờ chỉ có 1 dòng toast thoáng qua lúc lên cấp, rất dễ bị bỏ lỡ. Thay bằng 2 nhóm:
+// (1) NV "học hệ thống" — mỗi cái dạy đúng 1 cơ chế, rải theo đúng cấp hệ đó mở khoá, dùng
+//     sideOnEvent(<type mới>) gọi từ chính hàm nâng cấp/chế tạo của hệ đó (xem các chỗ gọi
+//     sideOnEvent bên dưới trong game.js — upgradeThanBinh/craftPill/chaosCombine/tryTame/
+//     activateChannelForm/harvestSeed); (2) NV "cầu nối cốt truyện" (type:'talk', giữ nguyên từ bản
+//     cũ) — không nhàm vì không phải đánh quái lặp lại, chỉ là mắt xích đưa người chơi qua vùng mới.
 const SIDE_QUESTS = [
-  { id:'s_dh1', npc:'duocsu',   map:'daohoa',     reqLv:2,  reqMain:0,  name:'Thảo Dược Quý',        desc:'Dược Sư cần 6 Thảo Dược để chế thuốc chữa dịch cho làng.', type:'collect', need:6, rew:{xp:300, silver:120, mat:2} },
-  { id:'s_dh2', npc:'duocsu',   map:'daohoa',     reqLv:2,  reqMain:0,  name:'Dã Trư Phá Vườn',      desc:'Dã Trư phá nát vườn thuốc. Diệt 10 con.', type:'kill', mob:'boar', need:10, rew:{xp:400, silver:150} },
-  { id:'s_td1', npc:'monkhach', map:'tuongduong', reqLv:10, reqMain:10, name:'Án Mạng Trong Thành',  desc:'Hắc Phong Sát trà trộn gây án trong thành. Diệt 5 tên ở Petalshade Isle.', type:'kill', mob:'assassin', need:5, rew:{xp:3000, silver:400} },
-  { id:'s_td2', npc:'monkhach', map:'tuongduong', reqLv:10, reqMain:10, name:'Tân Binh Tập Luyện',   desc:'Luyện tay với 10 Hầu Tử tinh quái trên Petalshade Isle.', type:'kill', mob:'hautu', need:10, rew:{xp:2200, silver:350} },
-  { id:'s_cn1', npc:'daosi',    map:'chungnam',   reqLv:22, reqMain:15, name:'Giữ Vững Thornwood',   desc:'Thanh lý 8 Chimera Bội Phản để giữ yên lối rừng.', type:'kill', mob:'phando', need:8, rew:{xp:7500, silver:700} },
-  { id:'s_cn2', npc:'daosi',    map:'chungnam',   reqLv:24, reqMain:15, name:'An Định Rừng Gai',     desc:'Diệt 8 Chimera Rắn Độc để cư dân Thornwood khỏi độc khí mê hoặc.', type:'kill', mob:'xanu', need:8, rew:{xp:8500, silver:800, mat:2} },
-  { id:'s_cm1', npc:'thumo',    map:'comoc',      reqLv:42, reqMain:19, name:'Yên Tĩnh Cho Người Khuất', desc:'Giải thoát 8 Chimera U Linh để vong linh nơi tổ được an nghỉ.', type:'kill', mob:'thinu', need:8, rew:{xp:17000, silver:1100} },
-  { id:'s_cm2', npc:'thumo',    map:'comoc',      reqLv:45, reqMain:19, name:'Dọn Sạch Hollow Roost', desc:'Diệt 8 Dơi Chimera để tổ không còn vương mùi máu.', type:'kill', mob:'huyetbat', need:8, rew:{xp:19000, silver:1300, mat:3} },
-  { id:'s_tt1', npc:'ttmon',    map:'tuyettinh',  reqLv:62, reqMain:23, name:'Giải Độc Frostmire',   desc:'Diệt 8 Chimera Hoa Độc để lấy giải dược cho những Kẻ Lạc Lối.', type:'kill', mob:'docyeu', need:8, rew:{xp:42000, silver:1900} },
-  { id:'s_tt2', npc:'ttmon',    map:'tuyettinh',  reqLv:65, reqMain:23, name:'Dẹp Sát Thủ Trong Sương', desc:'Diệt 6 Sát Thủ Sương Mù phục kích trong vale.', type:'kill', mob:'satthuhy', need:6, rew:{xp:47000, silver:2100, mat:3} },
-  { id:'s_mc1', npc:'noiung',   map:'mongco',     reqLv:82, reqMain:27, name:'Cắt Đứt Tiếp Tế',      desc:'Diệt 8 Trinh Sát Tro Tàn chặn tuyến tiếp tế của bầy Chimera.', type:'kill', mob:'thamtu', need:8, rew:{xp:82000, silver:2900} },
-  { id:'s_mc2', npc:'noiung',   map:'mongco',     reqLv:85, reqMain:27, name:'Phá Kho Dự Trữ',       desc:'Diệt 8 Cung Thủ Tro Tàn canh giữ kho dự trữ để phá hủy nó.', type:'kill', mob:'cungthu', need:8, rew:{xp:92000, silver:3300, mat:4} },
-  { id:'s_nm1', npc:'laotuong', map:'nhanmon',    reqLv:100, reqMain:31, name:'Biên Ải Vệ Binh',     desc:'Diệt 8 Cuồng Binh Tro Tàn giữ vững trận tuyến.', type:'kill', mob:'cuongbinh', need:8, rew:{xp:165000, silver:4800} },
-  { id:'s_nm2', npc:'laotuong', map:'nhanmon',    reqLv:100, reqMain:31, name:'Săn Kỳ Lân',          desc:'Thuần hóa 4 Kỳ Lân Liệt Hỏa — chúng đang phá hủy cả doanh trại.', type:'kill', mob:'kylan', need:4, rew:{xp:185000, silver:5200, mat:5} },
-  { id:'s_ng3', npc:'traichu', map:'ngoai',      reqLv:10, reqMain:10, name:'Trại Ngựa Ngoại Ô',    desc:'Bắt 3 Tuấn Mã Hoang ngoài đồng cho Mục Đồng (rượt đến kiệt sức rồi bấm E).', type:'catch', need:3, rew:{xp:1500, silver:300, mat:2, thau:1} },
-  { id:'s_mc3', npc:'noiung',  map:'mongco',     reqLv:80, reqMain:27, name:'Tuấn Mã Ashen Steppe', desc:'Bắt 4 Tuấn Mã Hoang trên Ashen Steppe giúp doanh trại.', type:'catch', need:4, rew:{xp:85000, silver:3200, thau:3} }, // GDD Đợt 2 B5
+  // ── Học hệ thống — mỗi NV dạy đúng 1 cơ chế nâng cấp nhân vật ──
+  { id:'s_sys1', npc:'duocsu',    map:'daohoa',     reqLv:9,   reqMain:0,  name:'Học Nghề Luyện Đan',     desc:'Dược Sư sẵn lòng dạy ngươi luyện đan từ Thảo Dược hái được. Mở Nhân Vật → Luyện Đan, chế thử 1 viên bất kỳ.', type:'brew', need:1, rew:{xp:600, silver:150, mat:2} },
+  { id:'s_sys2', npc:'monkhach',  map:'ngoai',      reqLv:11,  reqMain:10, name:'Trại Ngựa Ngoại Ô',      desc:'Bắt 3 Tuấn Mã Hoang ngoài đồng cỏ Outskirts (rượt đến kiệt sức rồi bấm E) để có thú cưỡi đầu tiên.', type:'catch', need:3, rew:{xp:1800, silver:300, mat:2, thau:1} },
+  { id:'s_sys3', npc:'quachtinh', map:'tuongduong', reqLv:12,  reqMain:10, name:'Vũ Khí Của Riêng Ngươi', desc:'Mỗi lớp đều có một Thần Binh đồng hành — xem ở Nhân Vật → Thông Tin. Hãy nâng nó lên tầng kế tiếp bằng Nội Đan và Tinh Thạch.', type:'thanbinh', need:1, rew:{xp:2000, silver:300, mat:3} },
+  { id:'s_sys4', npc:'monkhach',  map:'ngoai',      reqLv:17,  reqMain:12, name:'Thu Phục Linh Thú',      desc:'Cần Phong Linh Phù (mua ở Vũ Khí Phường). Đánh một tinh anh xuống dưới 40% máu rồi thu phục nó làm Linh Thú đồng hành.', type:'tame', need:1, rew:{xp:2500, silver:350, mat:2} },
+  { id:'s_sys5', npc:'quachtinh', map:'tuongduong', reqLv:19,  reqMain:12, name:'Lò Hỗn Loạn',            desc:'Dư ít nhất 3 món cùng phẩm? Mang đến Lò Rèn Hoàng Gia, ném vào Lò Hỗn Loạn thử vận may lên phẩm cao hơn.', type:'chaos', need:1, rew:{xp:3500, silver:450, mat:3} },
+  { id:'s_sys6', npc:'daosi',     map:'chungnam',   reqLv:23,  reqMain:15, name:'Mượn Hình Trấn Ải',      desc:'Hàng phục xong một Trấn Ải, ngươi có thể mượn hình dạng nó — bấm P để Hóa Thân Trấn Ải.', type:'channel', need:1, rew:{xp:6000, silver:600, mat:3} },
+  { id:'s_sys7', npc:'quachtinh', map:'tuongduong', reqLv:32,  reqMain:17, name:'Vườn Dược Động Phủ',     desc:'Ghé Động Phủ (gặp Quản Gia), gieo một luống dược viên rồi quay lại thu hoạch.', type:'garden', need:1, rew:{xp:14000, silver:1000, mat:3} },
+  // ── Cầu nối cốt truyện — dẫn người chơi qua từng vùng mới, không đánh quái lặp lại ──
+  { id:'s_b1', npc:'quachtinh', map:'chungnam',   reqLv:18,  reqMain:14, name:'Lễ Vật Rừng Gai',        desc:'Đem lễ vật của Trưởng Lão Rell lên Thornwood Reach giao cho Corran — đáp lễ nghĩa cử năm xưa.', type:'talk', targetNpc:'daosi', need:1, rew:{xp:1800, silver:260} },
+  { id:'s_b2', npc:'daosi',     map:'comoc',      reqLv:36,  reqMain:18, name:'Thăm Hỏi Hollow Roost',  desc:'Tin tức từ Hollow Roost đã bặt nhiều năm — sang thăm Sylas hỏi thăm tình hình.', type:'talk', targetNpc:'thumo', need:1, rew:{xp:3500, silver:400} },
+  { id:'s_b3', npc:'thumo',     map:'tuyettinh',  reqLv:55,  reqMain:22, name:'Bức Thư Gửi Frostmire',  desc:'Sylas có một bức thư gửi Liora — chuyện xưa giữa hai người vẫn còn dang dở.', type:'talk', targetNpc:'ttmon', need:1, rew:{xp:12000, silver:900} },
+  { id:'s_b4', npc:'ttmon',     map:'mongco',     reqLv:75,  reqMain:26, name:'Mật Tín Ashen Steppe',   desc:'Đưa mật tín cho Dax ở rìa Ashen Steppe — đường đi ngàn dặm, cẩn thận.', type:'talk', targetNpc:'noiung', need:1, rew:{xp:28000, silver:1800} },
+  { id:'s_b5', npc:'noiung',    map:'nhanmon',    reqLv:100, reqMain:30, name:'Tin Tức Biên Ải',        desc:'Đưa tin về tình hình thảo nguyên cho Lão Tướng Brann ở Stormgate Pass.', type:'talk', targetNpc:'laotuong', need:1, rew:{xp:50000, silver:3500} },
+  { id:'s_b6', npc:'laotuong',  map:'tuongduong', reqLv:115, reqMain:33, name:'Báo Tin Thắng Trận',     desc:'Về Lunaris City báo cho Trưởng Lão Rell tin cửa ải đã giữ vững.', type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:55000, silver:3500} },
 ];
-// ═══════════ 50 PHỤ TUYẾN LUNACIA — trải khắp các map (diệt Chimera · cứu người · trừng gian · thử ải) ═══════════
-SIDE_QUESTS.push(
-  // ── Petalshade Isle (Trưởng Làng · Dược Sư) ──
-  { id:'s_jy01', npc:'truonglang', map:'daohoa', reqLv:3,  reqMain:0,  name:'Lễ Vật Đầu Xuân',            desc:'Dân làng sắp đón khách quý từ Lunaris City — cần 12 Dã Trư làm thịt đãi tiệc.', type:'kill', mob:'boar', need:12, rew:{xp:500, silver:90} },
-  { id:'s_jy02', npc:'duocsu',     map:'daohoa', reqLv:4,  reqMain:0,  name:'Phương Thuốc Cứu Dịch',      desc:'Bệnh dịch lan trong làng. Hái 8 Thảo Dược giúp Dược Sư chế thuốc cứu người.', type:'collect', need:8, rew:{xp:450, silver:130, mat:2} },
-  { id:'s_jy03', npc:'truonglang', map:'daohoa', reqLv:5,  reqMain:0,  name:'Sói Dữ Vây Làng',            desc:'Bầy Tàn Lang từ rừng Petalshade kéo xuống cắn gia súc. Diệt 10 con bảo vệ làng.', type:'kill', mob:'wolf', need:10, rew:{xp:820, silver:160} },
-  { id:'s_jy04', npc:'duocsu',     map:'daohoa', reqLv:6,  reqMain:0,  name:'Hồ Ly Trộm Thuốc',           desc:'Cáo Đỏ thành tinh trộm dược liệu quý. Diệt 8 con đoạt lại thuốc.', type:'kill', mob:'caodo', need:8, rew:{xp:900, silver:140, mat:2} },
-  { id:'s_jy05', npc:'truonglang', map:'daohoa', reqLv:7,  reqMain:0,  name:'Truy Kích Hắc Phong Dư Đảng', desc:'Dư đảng đạo tặc đêm trước lẩn vào rừng. Diệt 10 tên Sơn Tặc trừ hậu họa.', type:'kill', mob:'bandit', need:10, rew:{xp:1550, silver:260} },
-  { id:'s_jy06', npc:'duocsu',     map:'daohoa', reqLv:8,  reqMain:0,  name:'Phá Trận Hồn',               desc:'Chimera Trấn Đảo hóa cuồng tấn công dân làng — tàn dư trận pháp cổ từ thời lập đảo. Phá 6 tượng.', type:'kill', mob:'trannhan', need:6, rew:{xp:1350, silver:190, mat:2} },
-  { id:'s_jy07', npc:'truonglang', map:'daohoa', reqLv:6,  reqMain:0,  name:'Thuốc Cho Bà Cụ',            desc:'Bà cụ đầu làng lâm bệnh nặng. Đến gặp Dược Sư xin thuốc cứu người gấp.', type:'talk', targetNpc:'duocsu', need:1, rew:{xp:300, silver:100} },
-  { id:'s_jy08', npc:'duocsu',     map:'daohoa', reqLv:9,  reqMain:0,  name:'Kẻ Đứng Sau Vụ Cướp',        desc:'Tên Hắc Phong Sát tinh nhuệ còn phục trên đảo. Diệt hắn, Petalshade mới yên.', type:'kill', mob:'assassin', need:1, rew:{xp:700, silver:150, mat:2} },
-  // ── Lunaris City (Trưởng Lão Rell · Trinh Sát Wren) ──
-  { id:'s_jy09', npc:'monkhach',   map:'ngoai',  reqLv:11, reqMain:10, name:'Dọn Đường Lương Thực',       desc:'Sơn Tặc ngoại ô chặn đoàn xe lương vào thành. Diệt 12 tên mở đường.', type:'kill', mob:'bandit', need:12, rew:{xp:1900, silver:280} },
-  { id:'s_jy10', npc:'quachtinh',  map:'ngoai',  reqLv:12, reqMain:10, name:'Sói Hoành Ngoại Ô',          desc:'Tàn Lang ngoại ô quấy phá nông dân. Diệt 12 con.', type:'kill', mob:'wolf', need:12, rew:{xp:1000, silver:180} },
-  { id:'s_jy11', npc:'monkhach',   map:'ngoai',  reqLv:13, reqMain:10, name:'Truy Nã Hắc Phong',          desc:'Trưởng Lão Rell treo thưởng 2 tên Hắc Phong Sát tinh nhuệ ngoài thành.', type:'kill', mob:'assassin', need:2, rew:{xp:1100, silver:200, mat:2} },
-  { id:'s_jy12', npc:'quachtinh',  map:'tuongduong', reqLv:14, reqMain:11, name:'Điểm Danh Nghĩa Sĩ',     desc:'Đến gặp Trinh Sát Wren ghi danh người thủ thành — Trưởng Lão Rell cần biết ai còn ai mất.', type:'talk', targetNpc:'monkhach', need:1, rew:{xp:1200, silver:220} },
-  { id:'s_jy13', npc:'monkhach',   map:'ngoai',  reqLv:15, reqMain:12, name:'Chimera Trôi Dạt',           desc:'Chimera Trấn Đảo trôi dạt ra Outskirts hóa cuồng. Phá 8 tượng thu hồi trận cơ.', type:'kill', mob:'trannhan', need:8, rew:{xp:1800, silver:240, mat:2} },
-  { id:'s_jy14', npc:'quachtinh',  map:'ngoai', reqLv:16, reqMain:13, name:'Vật Tư Dược Liệu',           desc:'Thương binh đầy doanh trại. Ra Outskirts hái 10 Thảo Dược gấp.', type:'collect', need:10, rew:{xp:1600, silver:260, mat:2} },
-  { id:'s_jy15', npc:'monkhach',   map:'chungnam', reqLv:17, reqMain:14, name:'Kẻ Quấy Nhiễu Thornwood',  desc:'Ba Axie Lang Thang biến chất lẫn trên Thornwood Reach bức hiếp lữ khách. Trừng trị 3 tên.', type:'kill', mob:'duhiep1', need:3, rew:{xp:4000, silver:400} },
-  { id:'s_jy16', npc:'quachtinh',  map:'chungnam', reqLv:18, reqMain:15, name:'Lễ Vật Rừng Gai',          desc:'Đem lễ vật của Trưởng Lão Rell lên Thornwood Reach giao cho Corran — đáp lễ nghĩa cử năm xưa.', type:'talk', targetNpc:'daosi', need:1, rew:{xp:1800, silver:260} },
-  // ── Thornwood Reach (Corran) ──
-  { id:'s_jy17', npc:'daosi',      map:'chungnam', reqLv:22, reqMain:15, name:'Thanh Lọc Rừng Gai',       desc:'Những kẻ phản bội còn lẩn trong rừng. Diệt 10 Chimera Bội Phản để thanh lọc Thornwood.', type:'kill', mob:'phando', need:10, rew:{xp:7800, silver:650} },
-  { id:'s_jy18', npc:'daosi',      map:'chungnam', reqLv:24, reqMain:15, name:'Cướp Bóc Người Gác Rừng',  desc:'Sơn Tặc chặn cướp đoàn tuần rừng của Corran. Diệt 8 tên trả lại trật tự.', type:'kill', mob:'bandit', need:8, rew:{xp:1400, silver:220} },
-  { id:'s_jy19', npc:'daosi',      map:'chungnam', reqLv:26, reqMain:15, name:'Rắn Độc Từ Phương Tây',    desc:'Chimera Rắn Độc từ phía tây tràn đến gieo độc khắp Thornwood. Diệt 10 con.', type:'kill', mob:'xanu', need:10, rew:{xp:10800, silver:800, mat:2} },
-  { id:'s_jy20', npc:'daosi',      map:'chungnam', reqLv:30, reqMain:17, name:'Axie Sa Ngã',              desc:'Chimera đã ăn mòn tâm trí một Axie từng lang thang, khiến nó đánh mất chính mình — giải thoát 6 kẻ bằng sức mạnh của ngươi.', type:'kill', mob:'bandao', need:6, rew:{xp:9500, silver:720, mat:2} },
-  { id:'s_jy21', npc:'daosi',      map:'chungnam', reqLv:32, reqMain:17, name:'Thử Sức Vệ Thần',          desc:'Vệ Thần Thornwood Reach trấn giữ ải cuối, chờ kẻ xứng đáng. Thắng ải để chứng tỏ bản lĩnh.', type:'kill', mob:'zb_cn4', need:1, rew:{xp:20000, silver:1600, mat:4} },
-  { id:'s_jy22', npc:'daosi',      map:'chungnam', reqLv:34, reqMain:18, name:'Kẻ Giả Danh',              desc:'Kẻ giả danh người gác rừng lừa gạt lữ khách quanh Thornwood. Diệt 4 tên mạo danh.', type:'kill', mob:'duhiep1', need:4, rew:{xp:5400, silver:550} },
-  { id:'s_jy23', npc:'daosi',      map:'comoc',   reqLv:36, reqMain:18, name:'Thăm Hỏi Hollow Roost',     desc:'Tin tức từ Hollow Roost đã bặt nhiều năm — sang thăm Sylas hỏi thăm tình hình.', type:'talk', targetNpc:'thumo', need:1, rew:{xp:3500, silver:400} },
-  // ── Hollow Roost (Sylas) ──
-  { id:'s_jy24', npc:'thumo',      map:'comoc',   reqLv:42, reqMain:19, name:'Những Bóng Ma Lạc Lối',     desc:'Chimera U Linh mất phương hướng, tấn công bất kỳ ai lạc bước. Giải thoát 10 con.', type:'kill', mob:'thinu', need:10, rew:{xp:24000, silver:1500} },
-  { id:'s_jy25', npc:'thumo',      map:'comoc',   reqLv:45, reqMain:19, name:'Golem Mất Kiểm Soát',       desc:'Những Golem Gác Tổ từ thời xây dựng đầu tiên giờ đã lỗi vòng lệnh. Phá hủy 8 cỗ máy.', type:'kill', mob:'mocnhan', need:8, rew:{xp:24000, silver:1500, mat:3} },
-  { id:'s_jy26', npc:'thumo',      map:'comoc',   reqLv:48, reqMain:19, name:'Dơi Máu Ùa Về',             desc:'Dơi Chimera ùa ra khỏi hốc sâu mỗi đêm. Diệt 10 con.', type:'kill', mob:'huyetbat', need:10, rew:{xp:36000, silver:2100} },
-  { id:'s_jy27', npc:'thumo',      map:'comoc',   reqLv:50, reqMain:21, name:'Kẻ Dòm Ngó Tổ Cổ',          desc:'Những Axie Lang Thang tham báu vật lẻn vào cướp phá tổ cổ. Trừng trị 3 tên.', type:'kill', mob:'duhiep2', need:3, rew:{xp:16000, silver:1100} },
-  { id:'s_jy28', npc:'thumo',      map:'comoc',   reqLv:52, reqMain:21, name:'Vệ Thần Tỉnh Giấc',         desc:'Vệ Thần Hollow Roost đã tỉnh giấc sau giấc ngủ dài. Thắng ải để chứng minh ngươi xứng đáng.', type:'kill', mob:'zb_cm4', need:1, rew:{xp:33000, silver:2400, mat:5} },
-  { id:'s_jy29', npc:'thumo',      map:'tuyettinh', reqLv:55, reqMain:22, name:'Bức Thư Gửi Frostmire',   desc:'Sylas có một bức thư gửi Liora — chuyện xưa giữa hai người vẫn còn dang dở.', type:'talk', targetNpc:'ttmon', need:1, rew:{xp:12000, silver:900} },
-  // ── Frostmire Vale (Liora) ──
-  { id:'s_jy30', npc:'ttmon',      map:'tuyettinh', reqLv:62, reqMain:23, name:'Những Kẻ Mất Lý Trí',     desc:'Những Kẻ Lạc Lối trong vale trúng độc hoa hóa cuồng. Giải thoát 10 người.', type:'kill', mob:'ttdetu', need:10, rew:{xp:51000, silver:2800} },
-  { id:'s_jy31', npc:'ttmon',      map:'tuyettinh', reqLv:65, reqMain:23, name:'Độc Hoa Nở Rộ',           desc:'Chimera Hoa Độc nở rộ khắp vale. Diệt 8 con lấy nhụy hoa giải độc.', type:'kill', mob:'docyeu', need:8, rew:{xp:50000, silver:2700, mat:3} },
-  { id:'s_jy32', npc:'ttmon',      map:'tuyettinh', reqLv:68, reqMain:23, name:'Sát Thủ Của Vệ Thần',     desc:'Vệ Thần sa ngã của Frostmire sai Sát Thủ Sương Mù thanh trừ mọi kẻ chống đối. Diệt 8 tên tự vệ.', type:'kill', mob:'satthuhy', need:8, rew:{xp:62000, silver:3200} },
-  { id:'s_jy33', npc:'ttmon',      map:'tuyettinh', reqLv:70, reqMain:25, name:'Kẻ Quấy Nhiễu Frostmire', desc:'Axie Lang Thang lạc vào vale quấy nhiễu những Kẻ Lạc Lối đang tĩnh tâm. Đuổi diệt 4 tên.', type:'kill', mob:'duhiep2', need:4, rew:{xp:22000, silver:1400} },
-  { id:'s_jy34', npc:'ttmon',      map:'tuyettinh', reqLv:72, reqMain:25, name:'Vệ Thần Thịnh Nộ',        desc:'Vệ Thần Frostmire Vale trấn ải giận dữ. Thắng ải để vale được yên.', type:'kill', mob:'zb_tt4', need:1, rew:{xp:46000, silver:3200, mat:5} },
-  { id:'s_jy35', npc:'ttmon',      map:'mongco',  reqLv:75, reqMain:26, name:'Mật Tín Ashen Steppe',      desc:'Đưa mật tín cho Dax ở rìa Ashen Steppe — đường đi ngàn dặm, cẩn thận.', type:'talk', targetNpc:'noiung', need:1, rew:{xp:28000, silver:1800} },
-  // ── Ashen Steppe (Dax) ──
-  { id:'s_jy36', npc:'noiung',     map:'mongco',  reqLv:82, reqMain:27, name:'Mắt Tai Của Bầy Chimera',   desc:'Trinh Sát Tro Tàn rình mò khắp thảo nguyên, mắt tai của bầy Chimera đang tụ họp. Diệt 10 tên.', type:'kill', mob:'thamtu', need:10, rew:{xp:102000, silver:5000} },
-  { id:'s_jy37', npc:'noiung',     map:'mongco',  reqLv:85, reqMain:27, name:'Đoạt Cung Xạ',              desc:'Cung Thủ Tro Tàn bắn tỉa bất kỳ ai đi lạc vào tầm ngắm. Diệt 10 tên đoạt cung.', type:'kill', mob:'cungthu', need:10, rew:{xp:111000, silver:5400, mat:4} },
-  { id:'s_jy38', npc:'noiung',     map:'mongco',  reqLv:88, reqMain:27, name:'Kỵ Binh Đột Kích',          desc:'Kỵ Binh Tro Tàn quần thảo quanh doanh trại. Diệt 8 kỵ.', type:'kill', mob:'kybinh', need:8, rew:{xp:114000, silver:5500} },
-  { id:'s_jy39', npc:'noiung',     map:'mongco',  reqLv:90, reqMain:29, name:'Kẻ Phản Bội Lộ Diện',       desc:'Ba Axie Lang Thang đã ngả về phía bầy Chimera — diệt 3 tên phản bội.', type:'kill', mob:'duhiep3', need:3, rew:{xp:45000, silver:2600} },
-  { id:'s_jy40', npc:'noiung',     map:'mongco',  reqLv:92, reqMain:29, name:'Vệ Thần Xuất Trận',         desc:'Vệ Thần Ashen Steppe đích thân xuất hiện. Thắng ải lay động cả thảo nguyên.', type:'kill', mob:'zb_mc4', need:1, rew:{xp:60000, silver:4200, mat:6} },
-  // ── Stormgate Pass (Lão Tướng Brann) ──
-  { id:'s_jy41', npc:'laotuong',   map:'nhanmon', reqLv:100, reqMain:31, name:'Biên Quan Huyết Chiến',    desc:'Cuồng Binh Tro Tàn ép sát cửa ải. Diệt 10 tên giữ trận tuyến.', type:'kill', mob:'cuongbinh', need:10, rew:{xp:187000, silver:8800} },
-  { id:'s_jy42', npc:'laotuong',   map:'nhanmon', reqLv:103, reqMain:31, name:'Đao Khách Bão Tố',         desc:'Đao Khách Bão Tố — từng san phẳng cả một doanh trại — lộ diện ở Stormgate Pass. Diệt 8 tên.', type:'kill', mob:'daokhach', need:8, rew:{xp:180000, silver:8000, mat:5} },
-  { id:'s_jy43', npc:'laotuong',   map:'nhanmon', reqLv:106, reqMain:31, name:'Kỳ Lân Cuồng Hỏa',         desc:'Kỳ Lân Liệt Hỏa cuồng nộ thiêu rụi lương thảo. Thuần hóa 5 con.', type:'kill', mob:'kylan', need:5, rew:{xp:105000, silver:4700, mat:4} },
-  { id:'s_jy44', npc:'laotuong',   map:'nhanmon', reqLv:109, reqMain:32, name:'Hỗn Loạn Ở Stormgate',     desc:'Axie Lang Thang từ khắp Lunacia tụ tập Stormgate tranh đoạt tuyệt kỹ. Dẹp loạn 4 kẻ.', type:'kill', mob:'duhiep3', need:4, rew:{xp:60000, silver:3300} },
-  { id:'s_jy45', npc:'laotuong',   map:'nhanmon', reqLv:112, reqMain:32, name:'Vệ Thần Tử Thủ',           desc:'Vệ Thần Stormgate Pass trấn giữ ải cuối cùng. Thắng ải — Lunacia được yên ổn thêm một nhịp thở.', type:'kill', mob:'zb_nm4', need:1, rew:{xp:75000, silver:5200, mat:8} },
-  { id:'s_jy46', npc:'laotuong',   map:'tuongduong', reqLv:115, reqMain:33, name:'Báo Tin Thắng Trận',    desc:'Về Lunaris City báo cho Trưởng Lão Rell tin cửa ải đã giữ vững.', type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:55000, silver:3500} },
-  // ── Bổ sung (đan xen các vùng) ──
-  { id:'s_jy47', npc:'duocsu',     map:'daohoa',  reqLv:10, reqMain:0,  name:'Lông Cáo Nhuộm Dược',       desc:'Dược Sư cần lông Cáo Đỏ nhuộm dược tán. Săn 12 con.', type:'kill', mob:'caodo', need:12, rew:{xp:1350, silver:200, mat:2} },
-  { id:'s_jy48', npc:'quachtinh',  map:'ngoai',  reqLv:17, reqMain:12, name:'Thuốc Cho Thương Binh',     desc:'Ra Outskirts hái 12 Thảo Dược đem về Lunaris City cứu thương binh nặng.', type:'collect', need:12, rew:{xp:2000, silver:300, mat:2} },
-  { id:'s_jy49', npc:'monkhach',   map:'ngoai',   reqLv:14, reqMain:10, name:'Tuấn Mã Cho Tân Binh',      desc:'Bắt 3 Tuấn Mã Hoang ngoại ô trang bị cho tân binh thủ thành (rượt kiệt sức rồi bấm E).', type:'catch', need:3, rew:{xp:1800, silver:350, thau:1} },
-  { id:'s_jy50', npc:'noiung',     map:'mongco',  reqLv:95, reqMain:30, name:'Nghiệt Kỵ',                 desc:'Kỵ Binh Tro Tàn tàn dư còn rảo quanh doanh trại cũ. Diệt 12 kỵ quét sạch.', type:'kill', mob:'kybinh', need:12, rew:{xp:171000, silver:8200, mat:5} },
-);
 
 function sideActive(){ return Object.keys(sideStates).filter(id => sideStates[id].st === 'active' || sideStates[id].st === 'done'); }
 function sideAvail(q){
@@ -10896,6 +10845,7 @@ window.craftPill = function(id){
   if (r.perm) player.alchCount = alchToday() + 1;
   r.apply(player);
   calcDerived();
+  sideOnEvent('brew');
   addFloat(player.x, player.y-56, `${r.icon} ${r.name} luyện thành!`, '#7ec850', 14);
   AudioSys.sfx('levelup', 0.6);
   addEffect({ type:'ring', x:player.x, y:player.y, r:70, color:'#7ec850' });
@@ -10999,6 +10949,7 @@ window.tryTame = function(){
     player.pet = { type:best.type, name:best.def.name, lv:best.def.lv, el:best.def.el, feed:0 };
     best.dead = true; best.zone = null;
     petObj = null;
+    sideOnEvent('tame');
     zoneBanner = { text:'🐾 THU PHỤC THÀNH CÔNG', sub:`${best.def.name} hệ ${best.def.el} nguyện theo ngươi — xem ở Nhân Vật → Linh Thú!`, color:'#b08ae8', t:3.5 };
     addEffect({ type:'ring', x:player.x, y:player.y, r:90, color:'#b08ae8', big:true });
     AudioSys.sfx('levelup', 0.8);
@@ -11187,6 +11138,7 @@ window.harvestSeed = function(i){
     player.dantian.tuvi += 150;
     addFloat(player.x, player.y-50, 'Thu hoạch: +150 Anima!', '#9fd0ff', 13);
   }
+  sideOnEvent('garden');
   AudioSys.sfx('quest', 0.6);
   saveGame(); renderAbode();
 };
@@ -11743,6 +11695,7 @@ window.chaosCombine = function(){
   if (useCharm) player.charms--;
   idxs.forEach(i => player.inv.splice(i, 1)); // 3 món hiến tế mất ngay khi bỏ vào lò, thành hay bại
   window._chaosSel = {};
+  sideOnEvent('chaos'); // NV học hệ thống chỉ cần đã DÙNG lò, không cần thành công
   let newItem = null;
   if (success){
     const avgLevel = Math.max(1, Math.round(items.reduce((s,x) => s + x.level, 0) / 3));
