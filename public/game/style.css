@@ -265,6 +265,36 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #overlay-inner { text-align:center; color:#e4ebff; padding:30px; max-width:560px; }
 #overlay-inner h2 { font-family:var(--font-display); font-weight:700; color:#7ecbff; letter-spacing:1px; font-size:28px; margin-bottom:14px; }
 #overlay-inner p { font-size:14px; line-height:1.8; margin-bottom:20px; }
+/* ── Lò Hỗn Loạn: cảnh ghép đồ kiểu MU Online — bỏ đồ vào, yêu tinh tung quả cầu, rồi bung kết quả ── */
+.chaos-scene { position:relative; height:170px; display:flex; align-items:flex-end; justify-content:center; gap:22px; margin-bottom:6px; }
+.chaos-slots { display:flex; gap:10px; align-items:center; z-index:1; }
+.chaos-slot { opacity:0; transform:translateY(-26px); animation:chaos-drop .45s ease forwards; }
+.chaos-slot:nth-child(1){ animation-delay:.05s; } .chaos-slot:nth-child(2){ animation-delay:.22s; } .chaos-slot:nth-child(3){ animation-delay:.4s; }
+@keyframes chaos-drop { to { opacity:1; transform:translateY(0); } }
+.chaos-goblin { font-size:46px; line-height:1; transform-origin:bottom center; filter:drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+.chaos-orb { position:absolute; width:20px; height:20px; border-radius:50%; left:50%; bottom:78px; margin-left:54px;
+  background:radial-gradient(circle at 35% 30%, #fff, var(--oc,#ffd76a) 55%, transparent 78%);
+  box-shadow:0 0 14px 4px var(--oc,#ffd76a); }
+.chaos-result-item { opacity:0; transform:scale(0); z-index:1; }
+.chaos-scene.brewing .chaos-goblin { animation:chaos-goblin-toss .55s ease-in-out infinite; }
+.chaos-scene.brewing .chaos-orb { animation:chaos-orb-toss .55s ease-in-out infinite; }
+@keyframes chaos-goblin-toss { 0%,100% { transform:translateY(0) rotate(-4deg); } 50% { transform:translateY(-9px) rotate(4deg); } }
+@keyframes chaos-orb-toss { 0% { transform:translateY(0) scale(.9); } 50% { transform:translateY(-44px) scale(1.15); } 100% { transform:translateY(0) scale(.9); } }
+.chaos-scene.chaos-success .chaos-orb { animation:chaos-orb-burst .5s ease forwards; }
+@keyframes chaos-orb-burst { 0% { transform:scale(1); opacity:1; } 60% { transform:scale(2.8); opacity:.9; box-shadow:0 0 40px 18px var(--oc,#ffd76a); } 100% { transform:scale(3.2); opacity:0; } }
+.chaos-scene.chaos-success .chaos-goblin { animation:chaos-goblin-cheer .6s ease; }
+@keyframes chaos-goblin-cheer { 0%,100% { transform:translateY(0) rotate(0); } 40% { transform:translateY(-15px) rotate(-10deg); } }
+.chaos-scene.chaos-success .chaos-slot { animation:chaos-slot-fade .45s ease forwards; }
+@keyframes chaos-slot-fade { to { transform:translateY(-14px) scale(.3); opacity:0; } }
+.chaos-scene.chaos-success .chaos-result-item { animation:chaos-result-pop .55s ease .25s forwards; }
+@keyframes chaos-result-pop { 0% { opacity:0; transform:scale(0); } 65% { opacity:1; transform:scale(1.25); } 100% { opacity:1; transform:scale(1); } }
+.chaos-scene.chaos-fail .chaos-orb { animation:chaos-orb-die .5s ease forwards; }
+@keyframes chaos-orb-die { to { filter:grayscale(1) brightness(.4); transform:scale(.6); opacity:.35; } }
+.chaos-scene.chaos-fail .chaos-goblin { animation:chaos-goblin-shrug .6s ease; }
+@keyframes chaos-goblin-shrug { 0%,100% { transform:rotate(0); } 30%,70% { transform:rotate(-9deg); } 50% { transform:rotate(9deg); } }
+.chaos-scene.chaos-fail .chaos-slot { animation:chaos-slot-crumble .65s ease forwards; }
+@keyframes chaos-slot-crumble { to { transform:translateY(28px) rotate(18deg) scale(.4); opacity:0; filter:grayscale(1); } }
+.chaos-result-text { font-size:19px; font-weight:700; min-height:28px; letter-spacing:.5px; }
 /* ── Khung phẩm chất + ấn giai cho icon trang bị (Drop v2.0) ── */
 .item-ic { position:relative; display:inline-flex; align-items:center; justify-content:center;
   width:38px; height:38px; border-radius:var(--r-sm); border:1.5px solid rgba(190,205,240,.45);
