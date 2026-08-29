@@ -11451,23 +11451,69 @@ window.chaosCombine = function(){
   const success = Math.random()*100 < rate;
   player.gems.honNguyen -= honCost; player.silver -= silverCost;
   if (useCharm) player.charms--;
-  idxs.forEach(i => player.inv.splice(i, 1)); // 3 món hiến tế luôn mất, thành hay bại
+  idxs.forEach(i => player.inv.splice(i, 1)); // 3 món hiến tế mất ngay khi bỏ vào lò, thành hay bại
   window._chaosSel = {};
+  let newItem = null;
   if (success){
     const avgLevel = Math.max(1, Math.round(items.reduce((s,x) => s + x.level, 0) / 3));
-    const it = genItem(avgLevel, 0, 'mob');
-    it.rarity = r + 1; rerollItemRarity(it);
-    if (player.inv.length < 30){ player.inv.push(it); tryAutoEquip(it); }
-    zoneBanner = { text:'☯ LÒ HỖN LOẠN — THÀNH CÔNG!', sub:`3 món hoá thành ${it.name}!`, color:RARITIES[it.rarity].color, t:5 };
-    addFloat(player.x, player.y-56, `☯ ${it.name}`, RARITIES[it.rarity].color, 16);
-    AudioSys.sfx('forge_ok', 0.95);
-  } else {
-    zoneBanner = { text:'☯ LÒ HỖN LOẠN — THẤT BẠI', sub:'3 món đã tan thành tro bụi — Hỗn Loạn vô thường.', color:'#ff5a4a', t:5 };
-    addFloat(player.x, player.y-56, 'Thất bại — mất sạch!', '#ff5a4a', 16);
-    AudioSys.sfx('forge_fail', 0.8);
+    newItem = genItem(avgLevel, 0, 'mob');
+    newItem.rarity = r + 1; rerollItemRarity(newItem);
   }
-  saveGame(); renderBaGua(); refreshEqPanels();
+  playChaosAnim(items, r, success, () => {
+    if (success){
+      if (player.inv.length < 30){ player.inv.push(newItem); tryAutoEquip(newItem); }
+      zoneBanner = { text:'☯ LÒ HỖN LOẠN — THÀNH CÔNG!', sub:`3 món hoá thành ${newItem.name}!`, color:RARITIES[newItem.rarity].color, t:5 };
+      addFloat(player.x, player.y-56, `☯ ${newItem.name}`, RARITIES[newItem.rarity].color, 16);
+    } else {
+      zoneBanner = { text:'☯ LÒ HỖN LOẠN — THẤT BẠI', sub:'3 món đã tan thành tro bụi — Hỗn Loạn vô thường.', color:'#ff5a4a', t:5 };
+      addFloat(player.x, player.y-56, 'Thất bại — mất sạch!', '#ff5a4a', 16);
+    }
+    saveGame(); refreshEqPanels();
+    return { newItem };
+  });
 };
+// Cảnh ghép đồ kiểu MU Online: yêu tinh tung quả cầu Hỗn Nguyên trong lúc luyện —
+// mutation & lưu game đã chạy synchronous ở chaosCombine, hàm này chỉ diễn hoạt rồi gọi onReveal
+// để lấy dữ liệu hiển thị (tên/màu vật phẩm mới) đúng lúc "khui" kết quả.
+function playChaosAnim(items, r, success, onReveal){
+  const nextColor = (RARITIES[r+1] || RARITIES[r]).color;
+  const slotsHtml = items.map(it => `<div class="chaos-slot">${slotIcon(it)}</div>`).join('');
+  document.getElementById('overlay-inner').innerHTML = `
+    <h2 style="color:${RARITIES[r].color}">☯ Lò Hỗn Loạn</h2>
+    <p style="margin-bottom:10px">Yêu tinh giữ lò đang tung Hỗn Nguyên Thạch, luyện hoá 3 món...</p>
+    <div class="chaos-scene" id="chaos-scene" style="--oc:${nextColor}">
+      <div class="chaos-slots">${slotsHtml}</div>
+      <div class="chaos-goblin">👺</div>
+      <div class="chaos-orb"></div>
+      <div class="chaos-result-item" id="chaos-result-item"></div>
+    </div>
+    <div class="chaos-result-text" id="chaos-result-text"></div>`;
+  document.getElementById('overlay').classList.remove('hidden');
+  const scene = document.getElementById('chaos-scene');
+  requestAnimationFrame(() => requestAnimationFrame(() => { if (scene) scene.classList.add('brewing'); }));
+  AudioSys.sfx('ui', 0.5);
+  setTimeout(() => {
+    if (!scene) return;
+    scene.classList.remove('brewing');
+    scene.classList.add(success ? 'chaos-success' : 'chaos-fail');
+    const data = onReveal() || {};
+    const txt = document.getElementById('chaos-result-text');
+    if (success && data.newItem){
+      document.getElementById('chaos-result-item').innerHTML = slotIcon(data.newItem);
+      txt.textContent = `THÀNH CÔNG! → ${data.newItem.name}`;
+      txt.style.color = RARITIES[data.newItem.rarity].color;
+      AudioSys.sfx('forge_ok', 0.95);
+    } else {
+      txt.textContent = 'THẤT BẠI — mất sạch!';
+      txt.style.color = '#ff5a4a';
+      AudioSys.sfx('forge_fail', 0.8);
+    }
+    setTimeout(() => {
+      document.getElementById('overlay').classList.add('hidden');
+      renderBaGua();
+    }, 1400);
+  }, 1300);
+}
 
 // ---------- Bảo Hạp (mở từ Túi Đồ) — Cổ Thần chỉ từ đây, KHÔNG pity ----------
 window.openBaoHap = function(t){
