@@ -2726,7 +2726,7 @@ const BOSS_DEFS = {
       { id:'ng3', name:'Đặc Vụ Hắc Phong',   lv:19, el:'Thủy', img:'assassin', x:.40, y:.80, moves:['vach','xung','cuong'] } ],
     tranai: { id:'ng4', name:'Ma Quân Sương Trắng', lv:22, el:'Hỏa', img:'boss_sontac', x:.85, y:.78, moves:['vach','vong','goi','cuong'] } },
   chungnam: { thuve:[
-      { id:'cn1', name:'Kẻ Phản Tộc',        lv:23, el:'Thủy', img:'phando',   x:.30, y:.32, moves:['vach','xung','goi'] },
+      { id:'cn1', name:'Kẻ Phản Bội',        lv:23, el:'Thủy', img:'phando',   x:.30, y:.32, moves:['vach','xung','goi'] },
       { id:'cn2', name:'Rùa Giáp Cổ Đại',    lv:26, el:'Thổ',  img:'mocnhan',  x:.64, y:.58, moves:['vong','vach','cuong'] },
       { id:'cn3', name:'Trưởng Lão Tha Hóa', lv:29, el:'Thủy', img:'boss_phando', x:.44, y:.80, moves:['xung','vach','vong'] } ],
     tranai: { id:'cn4', name:'Vệ Thần Thornwood Reach', lv:32, el:'Thủy', img:'bandao', x:.86, y:.80, moves:['vach','xung','vong','cuong'] } },
@@ -3470,7 +3470,7 @@ function unlockNotices(){
     5:['Mở khóa: Rèn Luyện (phím F)'],
     6:['Mở khóa: Thú Chiến — chiến thú đồng hành tự đánh quái (C → Thú Chiến)'],
     7:['Mở khóa: Tuyệt kỹ (phím 3)'],
-    10:['Mở khóa: the Calling — 5 lớp chờ ngươi chọn!','Mở khóa: Cương Khí (Tấn Chức — phím H)','Mở khóa: Truy Nã Lệnh & Vạn Duyên Các — Bổ Đầu và Thần Toán Tử ở Lunaris City'],
+    10:['Mở khóa: the Calling — 5 lớp chờ ngươi chọn!','Mở khóa: Cương Khí (Tấn Chức — phím H)','Mở khóa: Truy Nã Lệnh & Sảnh Cầu May — Bổ Đầu và Thương Nhân Vận May ở Lunaris City'],
     15:['Mở khóa: Linh Thú — mua Phong Linh Phù ở Vũ Khí Phường, đánh tinh anh còn <40% máu rồi bấm T'],
     40:['Mở khóa: Lò Bảo Chứng luyện Linh Dực Cấp 1 — Lò Rèn Hoàng Gia, Lunaris City'],
     45:['Bảo Hạp IV trở lên từ Bá Chủ có 5-8% mở ra trang bị CỔ THẦN Tứ Tượng — Bá Chủ giáng thế mỗi 4 giờ!'],
@@ -6879,7 +6879,7 @@ const CHEAT_HELP = [
   '/fullskill — học hết võ học + 30 dung hợp, mọi kỹ năng Lv 120',
   '/phi — Starflight ngay: phá bỏ ràng buộc Lớp, ngự kiếm phi hành, skin tiên nhân',
   '/bikip <n> — đặt số Sách Kỹ Năng',
-  '/tenui — gỡ Trọng Thương (té núi lại ngay)',
+  '/tenui — gỡ Trọng Thương (nhảy Vực Thẳm lại ngay)',
   '/time [ngày=10] — nhảy thời gian thế giới (Lịch Tu Tiên)',
   '/wipe — xóa save & tải lại game',
   '/obstacles — bật/tắt lớp debug vùng chặn địa hình (đỏ) để hiệu chỉnh theo art',
@@ -6932,7 +6932,7 @@ window.cheatExec = function(raw){
       }
       case 'tenui': {
         player.tenuiTT = 0;
-        cheatLog('Đã gỡ Trọng Thương — có thể Té Núi ngay', '#8fd18f'); break;
+        cheatLog('Đã gỡ Trọng Thương — có thể nhảy Vực Thẳm ngay', '#8fd18f'); break;
       }
       case 'phi': { // Starflight ngay — test giai đoạn Thần Tiên Hóa Cảnh
         player.dantian.realm = DANTIAN_REALMS.length - 1;
@@ -7258,7 +7258,7 @@ function renderBag(){
   html += `<div class="mat-cell" title="${matTip('Bạc', 'tiêu xài khắp Lunacia', player.silver)}">
     <img src="assets/items/mat_bac.png" onerror="this.style.display='none'" alt="">
     <span class="mc-count" style="color:#7ecbff">${fmtCount(player.silver)}</span></div>`;
-  html += `<div class="mat-cell" title="${matTip('Công Huân Lệnh', 'Truy Nã Lệnh mỗi ngày · quay Vạn Duyên Các', player.congHuan||0)}">
+  html += `<div class="mat-cell" title="${matTip('Công Huân Lệnh', 'Truy Nã Lệnh mỗi ngày · quay Sảnh Cầu May', player.congHuan||0)}">
     <span class="mc-glyph">🎖</span>
     <span class="mc-count" style="color:#ffb15c">${fmtCount(player.congHuan||0)}</span></div>`;
   html += `</div>`;
@@ -8211,7 +8211,7 @@ Nhưng dưới những khu rừng cổ, mảnh vỏ trứng vỡ vụn năm xưa
 
 Từ lâu, <b>Ngũ Ấn</b> — năm phong ấn rải khắp Lunacia — đã giam giữ phần lõi tha hóa nặng nhất. Gần đây, chúng bắt đầu rạn nứt.`,
   `<span class="is-title">MỘT HATCHLING TRÊN PETALSHADE ISLE</span>
-Ngươi — một hatchling chưa mang Tộc — được <b>Trưởng Làng</b> nuôi lớn trên <b>Petalshade Isle</b>, hòn đảo cánh hoa nở quanh năm giữa vùng biển hiền hòa nhất Lunacia.
+Ngươi — một hatchling chưa mang Lớp — được <b>Trưởng Làng</b> nuôi lớn trên <b>Petalshade Isle</b>, hòn đảo cánh hoa nở quanh năm giữa vùng biển hiền hòa nhất Lunacia.
 
 Đêm qua, băng cướp <b>Gloam Marauder</b> — những kẻ nhiễm khí Chimera lâu ngày — đổ bộ lên đảo, cướp phá tổ ấp ven làng...
 
@@ -8618,7 +8618,7 @@ NPCS.push(
   { id:'monkhach',  name:'Trinh Sát Wren',       map:'tuongduong', x:1420, y:1050, img:'assets/npcs/monkhach.png',  talk:'quest',
     lore:'"Ở Lunacia này, tin tức còn quý hơn Starbits."' },
   { id:'daosi',     name:'Người Gác Rừng Corran', map:'chungnam',   x:520,  y:1420, img:'assets/npcs/daosi.png',     talk:'quest',
-    lore:'"Rừng có luật riêng của rừng — nhưng kẻ phản Tộc thì ta không dung."' },
+    lore:'"Rừng có luật riêng của rừng — nhưng kẻ phản bội thì ta không dung."' },
   { id:'thumo',     name:'Sylas, Người Giữ Tổ',  map:'comoc',      x:520,  y:480,  img:'assets/npcs/thumo.png',     talk:'quest',
     lore:'"Tổ này… có thứ không nên bị đánh thức. Ngươi nghe thấy gì không?"' },
   { id:'ttmon',     name:'Liora, Ẩn Sĩ Frostmire', map:'tuyettinh',  x:520,  y:950,  img:'assets/npcs/ttmon.png',     talk:'quest',
@@ -8640,15 +8640,15 @@ NPCS.push(
   { id:'quangia', name:'Quản Gia · Động Phủ', map:'tuongduong', x:1450, y:1240, img:'assets/npcs/truonglang.png', talk:'abode',
     lore:'"Động phủ của đạo hữu đã dọn sạch — Tụ Linh Trận và Dược Viên chờ chủ nhân."' },
   { id:'bodau', name:'Bổ Đầu · Truy Nã Lệnh', map:'tuongduong', x:1420, y:1010, img:'assets/npcs/quachtinh.png', talk:'trunya',
-    lore:'"Hội Đồng Lunaris treo thưởng lũ Chimera lộng hành — mỗi ngày một tên. Làm xong, đến Vạn Duyên Các thử vận."' },
-  { id:'thantoan', name:'Thần Toán Tử · Vạn Duyên Các', map:'tuongduong', x:1120, y:1230, img:'assets/npcs/trachu.png', talk:'vanduyen',
-    lore:'"Một lệnh một duyên — năm phần trăm gặp bí kíp hiếm, không gom đủ cũng chẳng thành."' },
-  { id:'vandai', name:'Vân Đài · Vách Té Núi', map:'chungnam', x:2300, y:350, img:'assets/npcs/vachda.png', talk:'tenui',
-    lore:'"Vách mây ngàn trượng — người cầu đạo nhảy xuống, kẻ sợ chết quay đầu."' },
-  { id:'doantruongnhai', name:'Đoạn Trường Nhai · Vách Té Núi', map:'tuyettinh', x:350, y:1550, img:'assets/npcs/vachda.png', talk:'tenui',
-    lore:'"Nhai này đoạn trường tình — dưới vực sâu, kẻ hữu duyên sẽ đổi đời."' },
-  { id:'dinhbiennhai', name:'Định Biên Nhai · Vách Té Núi', map:'nhanmon', x:2250, y:1500, img:'assets/npcs/vachda.png', talk:'tenui',
-    lore:'"Gió biên thùy cắt thịt — cơ duyên chỉ dành cho kẻ dám té."' },
+    lore:'"Hội Đồng Lunaris treo thưởng lũ Chimera lộng hành — mỗi ngày một tên. Làm xong, đến Sảnh Cầu May thử vận."' },
+  { id:'thantoan', name:'Thương Nhân Vận May · Sảnh Cầu May', map:'tuongduong', x:1120, y:1230, img:'assets/npcs/trachu.png', talk:'vanduyen',
+    lore:'"Một lệnh một lượt quay — năm phần trăm trúng cổ thư hiếm, không đủ vận cũng đừng trách ta."' },
+  { id:'vandai', name:'Skyreach Ledge · Vực Thẳm', map:'chungnam', x:2300, y:350, img:'assets/npcs/vachda.png', talk:'tenui',
+    lore:'"Vách mây ngàn trượng — kẻ liều mạng nhảy xuống, kẻ sợ chết quay đầu."' },
+  { id:'doantruongnhai', name:'Sorrowfall Cliff · Vực Thẳm', map:'tuyettinh', x:350, y:1550, img:'assets/npcs/vachda.png', talk:'tenui',
+    lore:'"Vực sâu này đã nuốt chửng không biết bao kẻ — dưới đáy, kẻ may mắn sẽ đổi đời."' },
+  { id:'dinhbiennhai', name:'Frontier\'s Edge · Vực Thẳm', map:'nhanmon', x:2250, y:1500, img:'assets/npcs/vachda.png', talk:'tenui',
+    lore:'"Gió biên thùy cắt thịt — vận may chỉ dành cho kẻ dám nhảy."' },
 );
 for (const n of NPCS){ if (!NPC_IMGS[n.id]){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; } }
 function npcName(id){ const n = NPCS.find(x => x.id === id); return n ? n.name : 'Trưởng Làng'; }
@@ -8683,8 +8683,8 @@ QUESTS.push(
   { id:16, lv:20, name:'Vào Rừng Gai', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
     desc:'Vào Thornwood Reach gặp Người Gác Rừng Corran ngay cửa rừng.',
     type:'talk', targetNpc:'daosi', need:1, rew:{xp:5500, silver:600} },
-  { id:17, lv:22, name:'Kẻ Phản Tộc', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
-    desc:'Những kẻ từng thuộc một Tộc, nay tha hóa vì Chimera, đang chiếm giữ lối mòn. Diệt 6 Chimera Bội Phản.',
+  { id:17, lv:22, name:'Kẻ Phản Bội', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
+    desc:'Những kẻ từng thuộc một bộ lạc, nay tha hóa vì Chimera, đang chiếm giữ lối mòn. Diệt 6 Chimera Bội Phản.',
     type:'kill', mob:'phando', need:6, rew:{xp:6500, silver:700} },
   { id:18, lv:26, name:'Rắn Độc Trong Rừng', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
     desc:'Chimera Rắn Độc dùng độc khí mê hoặc muông thú trong rừng. Diệt 6 con.',
@@ -8794,7 +8794,7 @@ SIDE_QUESTS.push(
   { id:'s_jy15', npc:'monkhach',   map:'chungnam', reqLv:17, reqMain:14, name:'Kẻ Quấy Nhiễu Thornwood',  desc:'Ba Axie Lang Thang biến chất lẫn trên Thornwood Reach bức hiếp lữ khách. Trừng trị 3 tên.', type:'kill', mob:'duhiep1', need:3, rew:{xp:4000, silver:400} },
   { id:'s_jy16', npc:'quachtinh',  map:'chungnam', reqLv:18, reqMain:15, name:'Lễ Vật Rừng Gai',          desc:'Đem lễ vật của Trưởng Lão Rell lên Thornwood Reach giao cho Corran — đáp lễ nghĩa cử năm xưa.', type:'talk', targetNpc:'daosi', need:1, rew:{xp:1800, silver:260} },
   // ── Thornwood Reach (Corran) ──
-  { id:'s_jy17', npc:'daosi',      map:'chungnam', reqLv:22, reqMain:15, name:'Thanh Lọc Rừng Gai',       desc:'Những kẻ phản Tộc còn lẩn trong rừng. Diệt 10 Chimera Bội Phản để thanh lọc Thornwood.', type:'kill', mob:'phando', need:10, rew:{xp:7800, silver:650} },
+  { id:'s_jy17', npc:'daosi',      map:'chungnam', reqLv:22, reqMain:15, name:'Thanh Lọc Rừng Gai',       desc:'Những kẻ phản bội còn lẩn trong rừng. Diệt 10 Chimera Bội Phản để thanh lọc Thornwood.', type:'kill', mob:'phando', need:10, rew:{xp:7800, silver:650} },
   { id:'s_jy18', npc:'daosi',      map:'chungnam', reqLv:24, reqMain:15, name:'Cướp Bóc Người Gác Rừng',  desc:'Sơn Tặc chặn cướp đoàn tuần rừng của Corran. Diệt 8 tên trả lại trật tự.', type:'kill', mob:'bandit', need:8, rew:{xp:1400, silver:220} },
   { id:'s_jy19', npc:'daosi',      map:'chungnam', reqLv:26, reqMain:15, name:'Rắn Độc Từ Phương Tây',    desc:'Chimera Rắn Độc từ phía tây tràn đến gieo độc khắp Thornwood. Diệt 10 con.', type:'kill', mob:'xanu', need:10, rew:{xp:10800, silver:800, mat:2} },
   { id:'s_jy20', npc:'daosi',      map:'chungnam', reqLv:30, reqMain:17, name:'Axie Sa Ngã',              desc:'Chimera đã ăn mòn tâm trí một Axie từng lang thang, khiến nó đánh mất chính mình — giải thoát 6 kẻ bằng sức mạnh của ngươi.', type:'kill', mob:'bandao', need:6, rew:{xp:9500, silver:720, mat:2} },
@@ -9485,14 +9485,14 @@ const CLUES = {
   tan_quyen:   { name:'Tàn Quyển «Ngũ Ấn Ký»',    desc:'"…năm Ấn trấn Bá Chủ tại Vực Nguyên Thủy. Một Ấn vỡ, bốn Ấn lung lay…"' },
   cot_nhan:    { name:'Cốt Nhạn Khắc Chữ',        desc:'Mảnh xương nhạn khắc hàng chữ nhỏ: "Ấn vỡ không phải do ma — mà do người."' },
   thiep_den:   { name:'Thiếp Đen Vô Danh',        desc:'Thiếp mời "thịnh yến" của một hội kín — chỉ có ngày giờ, không hề có địa danh.' },
-  co_thu:      { name:'Cổ Thư Rách',              desc:'Trang sách phong ấn: "Kim Ấn vỡ năm ấy, cả một Tộc bị xóa sổ — không một ai sống sót."' },
-  di_thu:      { name:'Di Thư Trưởng Lão',        desc:'"Tộc của ta phụ bạc ta… nhưng trấn ấn này, ta gánh đến cùng." — nét chữ run rẩy.' },
+  co_thu:      { name:'Cổ Thư Rách',              desc:'Trang sách phong ấn: "Kim Ấn vỡ năm ấy, cả một bộ lạc bị xóa sổ — không một ai sống sót."' },
+  di_thu:      { name:'Di Thư Trưởng Lão',        desc:'"Bộ lạc của ta phụ bạc ta… nhưng trấn ấn này, ta gánh đến cùng." — nét chữ run rẩy.' },
   phuc_lanh:   { name:'Phù Lệnh Triệu Tập',       desc:'Sắc lệnh triệu quân: "Mộc Ấn dao động — dồn quân về Ashen Steppe, đêm trăng tròn."' },
   buc_hoa:     { name:'Bích Họa Ngũ Ấn',          desc:'Tranh vẽ năm phong ấn Kim Mộc Thủy Hỏa Thổ — vị trí Kim Ấn chỉ còn một vết cháy đen.' },
   thu_tinh:    { name:'Thư Tình Chưa Gửi',        desc:'"Nếu có kiếp sau, ta không làm Vệ Thần, nàng đừng chờ ta mãi…"' },
-  lenh_bai_doi:{ name:'Lệnh Bài Đồi Mộ Cổ',       desc:'Lệnh bài bằng xương khắc tên bảy vị Trưởng Tộc trấn ấn — hai cái tên đã bị cạo sạch.' },
+  lenh_bai_doi:{ name:'Lệnh Bài Đồi Mộ Cổ',       desc:'Lệnh bài bằng xương khắc tên bảy vị thủ lĩnh bộ lạc trấn ấn — hai cái tên đã bị cạo sạch.' },
   co_lenh:     { name:'Cổ Lệnh Trấn Ải',          desc:'Văn thư cũ: "Stormgate Pass thất thủ thì cả Lunacia mở toang." Dấu triện đã 60 năm.' },
-  le_thach:    { name:'Lệ Thạch Đoản Thiên',      desc:'Mảnh đá nhuốm máu: "Đừng tin bất kỳ ai mang lệnh bài đen — kể cả Tộc của ngươi."' },
+  le_thach:    { name:'Lệ Thạch Đoản Thiên',      desc:'Mảnh đá nhuốm máu: "Đừng tin bất kỳ ai mang lệnh bài đen — kể cả bộ lạc của ngươi."' },
   mat_lenh:    { name:'Mật Lệnh Rách',            desc:'"…khi đủ năm Ấn vỡ, Vực Nguyên Thủy mở — Bá Chủ giáng thế, Lunacia thành lò luyện."' },
   thu_cuoi:    { name:'Thư Cuối Của Vệ Thần',     desc:'"Ta giữ Stormgate Pass ba mươi năm. Hôm nay ta mở cửa — không phải vì hàng, mà vì hết cách."' },
 };
@@ -9509,31 +9509,31 @@ const BOSS_LORE = {
   dh1:{ name:'Dã Trư Vương', intro:['Grao…! Con mồi dám bước vào lãnh địa của bổn vương?!'] },
   dh2:{ name:'Sói Đầu Đàn', intro:['Trăng lên rồi.','Bầy sói của ta đói lắm, khách nhân à.'] },
   dh3:{ name:'Hắc Phong Chấp Sự', intro:['Hắc Phong Trại không chờ kẻ nhát.','Giao hành lý — hoặc giao mạng!'] },
-  dh4:{ name:'Hắc Phong Trại Chủ', intro:['Lệnh bài đen kia… ngươi lấy từ đâu?!','Hỏa Ấn của Lunacia sắp vỡ rồi — ta chỉ đi trước một bước.'], sect:{ daohoa:'Người của Tộc Plant à… đồng đội ngươi từng quỳ gối trong trại này đấy, ha!' } },
+  dh4:{ name:'Hắc Phong Trại Chủ', intro:['Lệnh bài đen kia… ngươi lấy từ đâu?!','Hỏa Ấn của Lunacia sắp vỡ rồi — ta chỉ đi trước một bước.'], sect:{ daohoa:'Người của bộ lạc Plant à… đồng đội ngươi từng quỳ gối trong trại này đấy, ha!' } },
   ng1:{ name:'Sơn Tặc Đầu Mục', intro:['Outskirts mấy dặm chỉ có một đường sống — đường của ta!','Lên! Giết!'] },
   ng2:{ name:'Độc Nhãn Lang Vương', intro:['Một con mắt mất, mười năm hận.','Đêm nay lang vương ăn thịt người.'] },
   ng3:{ name:'Đặc Vụ Hắc Phong', intro:['…','Ta không có tên. Chỉ có giá tiền.'] },
-  ng4:{ name:'Ma Quân Sương Trắng', intro:['Khuôn mặt trắng này nhớ mùi máu lắm.','Mộc Ấn đang rung chuyển — ngươi nghe thấy không?'], sect:{ baidasan:'Độc tố của Tộc Reptile? Để ta cho ngươi xem thứ độc thật sự.' } },
-  cn1:{ name:'Kẻ Phản Tộc', intro:['Sức mạnh mới là thật, chẳng cần trung thành với ai!','Ngươi dám cản đường ta?'] },
+  ng4:{ name:'Ma Quân Sương Trắng', intro:['Khuôn mặt trắng này nhớ mùi máu lắm.','Mộc Ấn đang rung chuyển — ngươi nghe thấy không?'], sect:{ baidasan:'Độc tố của bộ lạc Reptile? Để ta cho ngươi xem thứ độc thật sự.' } },
+  cn1:{ name:'Kẻ Phản Bội', intro:['Sức mạnh mới là thật, chẳng cần trung thành với ai!','Ngươi dám cản đường ta?'] },
   cn2:{ name:'Rùa Giáp Cổ Đại', intro:['Nghìn năm, giáp này chưa từng vỡ.','Đến đây, kẻ hậu sinh.'] },
-  cn3:{ name:'Trưởng Lão Tha Hóa', intro:['Thornwood từng là nhà của ta…','Trấn Ấn này giam ta — hay giam cả Bá Chủ?'], sect:{ toanchan:'Người của Tộc Aquatic, ngoan hiền như ta từng biết… ngươi đến giết ta à?' } },
-  cn4:{ name:'Vệ Thần Thornwood Reach', intro:['Kiếm của ta chỉ vỡ một lần — lần đó ta thua.','Thủy Ấn do ta giữ. Muốn qua? Hỏi thanh kiếm này.'], sect:{ toanchan:'Tộc Aquatic hậu bối… ra tay đừng nương tình.' } },
+  cn3:{ name:'Trưởng Lão Tha Hóa', intro:['Thornwood từng là nhà của ta…','Trấn Ấn này giam ta — hay giam cả Bá Chủ?'], sect:{ toanchan:'Người của bộ lạc Aquatic, ngoan hiền như ta từng biết… ngươi đến giết ta à?' } },
+  cn4:{ name:'Vệ Thần Thornwood Reach', intro:['Kiếm của ta chỉ vỡ một lần — lần đó ta thua.','Thủy Ấn do ta giữ. Muốn qua? Hỏi thanh kiếm này.'], sect:{ toanchan:'Bộ lạc Aquatic hậu bối… ra tay đừng nương tình.' } },
   cm1:{ name:'Chỉ Huy Vong Binh', intro:['Lăng mộ này không chờ người sống.','Quân ta chết rồi — nhưng chưa tan.'] },
   cm2:{ name:'Kẻ An Táng Bóng Tối', intro:['Táng người, táng thần, táng cả trời.','Nằm xuống đi, khách nhân.'] },
   cm3:{ name:'Chúa Tể Bất Tử', intro:['Bất tử không phải phúc — là phạt.','Ở lại cùng ta!'] },
-  cm4:{ name:'Vệ Thần Hollow Roost', intro:['Ai đánh thức giấc ngủ ngàn năm của lão phu?','Mộc Ấn đã mục từ lâu — Lunacia mới là thứ bệnh thật sự.'], sect:{ comoc:'Tộc Dusk đời này đến rồi à… các hậu bối của ta dạo này có khỏe không?' } },
+  cm4:{ name:'Vệ Thần Hollow Roost', intro:['Ai đánh thức giấc ngủ ngàn năm của lão phu?','Mộc Ấn đã mục từ lâu — Lunacia mới là thứ bệnh thật sự.'], sect:{ comoc:'Bộ lạc Dusk đời này đến rồi à… các hậu bối của ta dạo này có khỏe không?' } },
   tt1:{ name:'Kẻ Lạc Lối Tuyệt Vọng', intro:['Tất cả đã bỏ rơi ta… cả Lunacia này cũng vậy!','Không còn gì để mất nữa!'] },
   tt2:{ name:'Hồ Ly Băng Giá', intro:['Băng giá thấm vào từng chiếc đuôi của ta.','Ngươi có đủ ấm để sống sót không? Để ta xem nào.'] },
   tt3:{ name:'Ma Nữ Sương Giá', intro:['Sương giá là thuốc — nó khiến mọi nỗi đau tê liệt.','Đến đây, để ta ru ngươi vào giấc ngủ lạnh lẽo.'] },
-  tt4:{ name:'Vệ Thần Frostmire Vale', intro:['Vale này đã chôn biết bao kẻ lạc lối…','Đến lượt ngươi.'], sect:{ thieulam:'Tộc Mech từng cố cảm hóa ta — không thành. Hôm nay ngươi thử xem?' } },
+  tt4:{ name:'Vệ Thần Frostmire Vale', intro:['Vale này đã chôn biết bao kẻ lạc lối…','Đến lượt ngươi.'], sect:{ thieulam:'Bộ lạc Mech từng cố cảm hóa ta — không thành. Hôm nay ngươi thử xem?' } },
   mc1:{ name:'Kỵ Binh Trưởng Tro Tàn', intro:['Thảo nguyên chỉ nhận kẻ mạnh!','Kỵ binh — bày trận!'] },
   mc2:{ name:'Cung Thủ Tinh Nhuệ Tro Tàn', intro:['Một tên một mạng — ta có cả nghìn tên.','Đứng yên nào.'] },
   mc3:{ name:'Thống Lĩnh Kỵ Binh Tro Tàn', intro:['Vệ Thần truyền lệnh — ta chính là lệnh!','Nghiền nát chúng!'] },
-  mc4:{ name:'Vệ Thần Ashen Steppe', intro:['Ngàn dặm tro tàn — vì sao dừng ở đây? Vì Kim Ấn đã vỡ!','Kẻ lạ mặt… chứng minh bản lĩnh đi.'], sect:{ doanthi:'Tộc Bird tinh nhuệ? Hừ, danh tiếng cũng chỉ là một quân cờ.' } },
+  mc4:{ name:'Vệ Thần Ashen Steppe', intro:['Ngàn dặm tro tàn — vì sao dừng ở đây? Vì Kim Ấn đã vỡ!','Kẻ lạ mặt… chứng minh bản lĩnh đi.'], sect:{ doanthi:'Bộ lạc Bird tinh nhuệ? Hừ, danh tiếng cũng chỉ là một quân cờ.' } },
   nm1:{ name:'Tướng Quân Bão Tố', intro:['Stormgate Pass ba mươi năm không gãy — hôm nay cũng vậy!','Tướng sĩ! Giữ ải!'] },
   nm2:{ name:'Huyết Sát Bão Tố', intro:['Máu trên giáp ta chưa bao giờ khô.','Thêm một mạng nữa!'] },
   nm3:{ name:'Tướng Quân Trấn Ải', intro:['Thành này cô độc — ta cũng vậy.','Qua đây… nếu ngươi đủ nặng ký.'] },
-  nm4:{ name:'Vệ Thần Stormgate Pass', intro:['Ta mở cửa không phải vì hàng — mà vì hết cách.','Hỏa Ấn cuối cùng… để ta xem ngươi giữ nổi không!'], sect:{ minhgiao:'Tộc Beast… ngọn lửa của ngươi cháy về phía nào?' } },
+  nm4:{ name:'Vệ Thần Stormgate Pass', intro:['Ta mở cửa không phải vì hàng — mà vì hết cách.','Hỏa Ấn cuối cùng… để ta xem ngươi giữ nổi không!'], sect:{ minhgiao:'Bộ lạc Beast… ngọn lửa của ngươi cháy về phía nào?' } },
 };
 // Câu dẫn nhập ngắn khi mở vùng mới (thay banner "ĐÃ MỞ VÙNG MỚI" khô khan) — lấy đúng từ lời
 // thoại Vệ Thần trấn giữ (BOSS_LORE.*4) của từng vùng, không bịa thêm để khỏi lệch cốt truyện.
@@ -9587,7 +9587,7 @@ function npcStoryLine(){
   if (flags.ketMo) return 'Bầu trời đỏ như máu… Vực Nguyên Thủy sắp mở. Người như ngươi — là hy vọng cuối cùng của Lunacia này.';
   if (n === 0) return null;
   if (n < 3) return 'Nghe đồn có Vệ Thần cổ đã ngã xuống… Cả Lunacia bắt đầu xôn xao rồi đấy.';
-  if (n < 5) return 'Trời tối hơn mỗi ngày. Nghe nói các Tộc đang triệu tập thành viên về giữ lãnh địa.';
+  if (n < 5) return 'Trời tối hơn mỗi ngày. Nghe nói các bộ lạc đang triệu tập thành viên về giữ lãnh địa.';
   return 'Ngũ Ấn sắp vỡ hết rồi… Ngươi… vẫn định tiếp tục chứ?';
 }
 // Kết mở — ấn cuối vỡ, Bá Chủ sắp giáng thế
@@ -9597,7 +9597,7 @@ function showKetMo(){
   document.getElementById('overlay-inner').innerHTML = `
     <h2 style="color:#ff6b6b">☠ ẤN ĐÃ VỠ</h2>
     <p style="line-height:1.9;font-size:14px">Sigil cuối cùng đã ngã. Vực Nguyên Thủy mở toang — <b style="color:#ff8f6b">Bá Chủ sắp giáng thế</b>.<br>
-    <span style="opacity:.85">12 canh giờ nữa, khắp Lunacia chấn động. 19 canh giờ nữa, các Tộc gọi thành viên về thủ lãnh địa.<br>22 canh giờ nữa… <b style="color:#e8b060">Vực Nguyên Thủy</b> sẽ hiện ra giữa Lunacia.</span><br>
+    <span style="opacity:.85">12 canh giờ nữa, khắp Lunacia chấn động. 19 canh giờ nữa, các bộ lạc gọi thành viên về thủ lãnh địa.<br>22 canh giờ nữa… <b style="color:#e8b060">Vực Nguyên Thủy</b> sẽ hiện ra giữa Lunacia.</span><br>
     <span style="color:#e8b060">Ngươi là người đánh vỡ Ấn cuối cùng — cũng là người duy nhất có thể khép nó lại.<br><i>Sức mạnh… hay trách nhiệm? Đó là lựa chọn của ngươi.</i></span></p>
     <button class="big-btn" onclick="document.getElementById('overlay').classList.add('hidden')">Tiếp Tục Hành Trình</button>`;
   ov.classList.remove('hidden');
@@ -11868,7 +11868,7 @@ function renderTruyNa(){
       <span style="opacity:.8">Thưởng: 1 ⚜ Công Huân Lệnh + ${300 + player.level*20}◈ + ${60 + player.level*2} Anima</span></div>
       <div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 20px" onclick="truynaClaim()">Nhận Thưởng</button></div>`;
   } else {
-    html += `<div style="padding:12px;font-size:12.5px;opacity:.75;text-align:center;line-height:1.8">✔ Truy nã hôm nay đã xong — quay lại ngày mai!<br>⚜ Công Huân Lệnh đang có: <b style="color:#7ecbff">${player.congHuan}</b><br>Mang đến Vạn Duyên Các (Thần Toán Tử) để rút duyên.</div>`;
+    html += `<div style="padding:12px;font-size:12.5px;opacity:.75;text-align:center;line-height:1.8">✔ Truy nã hôm nay đã xong — quay lại ngày mai!<br>⚜ Công Huân Lệnh đang có: <b style="color:#7ecbff">${player.congHuan}</b><br>Mang đến Sảnh Cầu May (Thương Nhân Vận May) để quay thử vận.</div>`;
   }
   el('panel-quest').innerHTML = html;
   closePanels(); el('panel-quest').classList.remove('hidden');
@@ -11889,7 +11889,7 @@ window.truynaClaim = function(){
   player.congHuan++;
   player.silver += 300 + player.level*20;
   player.dantian.tuvi += 60 + player.level*2;
-  zoneBanner = { text:'⚜ +1 CÔNG HUÂN LỆNH', sub:'Mang đến Vạn Duyên Các — Thần Toán Tử rút duyên (5% bí kíp hiếm)!', color:'#7ecbff', t:5 };
+  zoneBanner = { text:'⚜ +1 CÔNG HUÂN LỆNH', sub:'Mang đến Sảnh Cầu May — Thương Nhân Vận May sẽ giúp ngươi quay thử vận (5% cổ thư hiếm)!', color:'#7ecbff', t:5 };
   AudioSys.sfx('levelup', 0.9);
   saveGame(); renderTruyNa();
 };
@@ -11908,13 +11908,13 @@ function spawnTruyNaMob(){
   return m;
 }
 
-// ---------- Vạn Duyên Các (GDD §5.9) — Thần Toán Tử · gacha Công Huân Lệnh, KHÔNG pity ----------
-// ═══════════ TÉ NÚI (GDD Lấy Võ Nhập Đạo §5.4) — chủ động nhảy vực cầu đạo ═══════════
-// Mở sau Thăng Linh (realm 5 · Radiant Core). Mỗi lần té: -30% HP (tối thiểu 1) + Trọng Thương 15 phút.
-// Không pity — tỉ lệ công khai tại vách. Giờ vàng Kiếp Vân Tụ (12h & 20h): 2 ô hiếm ×2.
+// ---------- Sảnh Cầu May (GDD §5.9) — Thương Nhân Vận May · gacha Công Huân Lệnh, KHÔNG pity ----------
+// ═══════════ VỰC THẲM (GDD Lấy Võ Nhập Đạo §5.4) — chủ động nhảy vực thử vận ═══════════
+// Mở sau Thăng Linh (realm 5 · Radiant Core). Mỗi lần nhảy: -30% HP (tối thiểu 1) + Trọng Thương 15 phút.
+// Không pity — tỉ lệ công khai tại vách. Giờ Vàng (12h & 20h): 2 ô hiếm ×2.
 function tenuiGoldenHour(){ const h = new Date().getHours(); return h === 12 || h === 20; }
 function tenuiWounded(){ return (player.tenuiTT || 0) > Date.now(); }
-function tenuiFreeLearn(preferTier){ // bí kíp nguyên quyển / lão tổ chỉ điểm — tôn trọng khóa cảnh giới
+function tenuiFreeLearn(preferTier){ // học miễn phí / hiền giả chỉ điểm — tôn trọng khóa cảnh giới
   const realm = (player.dantian && player.dantian.realm) || 0;
   let pool = Object.keys(VOHOC_DEFS).filter(id => !VOHOC_DEFS[id].phai && !vhLearned(id) && vhRealmReq(VOHOC_DEFS[id]) <= realm);
   if (preferTier){
@@ -11933,24 +11933,24 @@ function renderTeNui(n){
   html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">${n.lore}</div>`;
   if (!unlocked){
     html += `<div style="text-align:center;padding:14px 8px;font-size:13px;line-height:1.8;color:#8a8a8a">
-      ☁ Vách cao mây phủ — phàm nhân té xuống chỉ có nát thây.<br>
+      ☁ Vách cao mây phủ — phàm nhân nhảy xuống chỉ có nát thây.<br>
       Cần đạt <b style="color:#b08ae8">Radiant Core Cảnh</b> (cảnh 5, tự động ở cấp 60) để Thăng Linh,<br>
-      khi ấy mới đủ sức <b style="color:#ffb15c">Té Núi cầu đạo</b>.</div>`;
+      khi ấy mới đủ sức <b style="color:#ffb15c">nhảy vào Vực Thẳm</b>.</div>`;
   } else {
-    html += `<div class="stat-sec">TỈ LỆ CÔNG KHAI — KHÔNG GOM DUYÊN${gold ? ' · <b style="color:#ffd76a">⚡ KIẾP VÂN TỤ: 2 ô hiếm ×2!</b>' : ''}</div>
+    html += `<div class="stat-sec">TỈ LỆ CÔNG KHAI — KHÔNG GOM DUYÊN${gold ? ' · <b style="color:#ffd76a">⚡ GIỜ VÀNG: 2 ô hiếm ×2!</b>' : ''}</div>
       <div style="font-size:12px;line-height:1.9;opacity:.9">
       <b style="color:#9aa8d4">${gold ? 50 : 60}%</b> — Rơi vào lùm cây / dòng suối: 1-2 📜 Sách Kỹ Năng + 3-6 ✦ Huyền Thiết<br>
       <b style="color:#7ec850">20%</b> — Lọt vào hang động: 3-5 📜 Sách Kỹ Năng<br>
-      <b style="color:#5aa0e8">10%</b> — Động phủ tu sĩ cổ: 6-8 📜 Sách Kỹ Năng + 3 ◈ Tiến Cấp Đan<br>
-      <b style="color:#b08ae8">${gold ? 10 : 5}%</b> — Vách động giấu bí tịch: <b>học miễn phí 1 kỹ năng tự do</b> (hết → +15 📜)<br>
-      <b style="color:#ffd76a">${gold ? 10 : 5}%</b> — Gặp lão tổ ẩn thế: được chỉ điểm <b>1 võ học chưa ngộ</b></div>
-      <div style="font-size:11.5px;color:#9aa8d4;margin-top:6px;line-height:1.5">Giờ vàng <b>Kiếp Vân Tụ</b> (12h & 20h mỗi ngày): tỉ lệ bí tịch/lão tổ ×2.<br>
-      Cái giá mỗi lần té: <b style="color:#ff7a6a">-30% HP</b> (không chết) + <b style="color:#ff7a6a">Trọng Thương 15 phút</b>.</div>`;
+      <b style="color:#5aa0e8">10%</b> — Hang động cổ xưa: 6-8 📜 Sách Kỹ Năng + 3 ◈ Tiến Cấp Đan<br>
+      <b style="color:#b08ae8">${gold ? 10 : 5}%</b> — Hang động giấu cổ thư: <b>học miễn phí 1 kỹ năng tự do</b> (hết → +15 📜)<br>
+      <b style="color:#ffd76a">${gold ? 10 : 5}%</b> — Gặp hiền giả ẩn danh: được chỉ điểm <b>1 võ học chưa ngộ</b></div>
+      <div style="font-size:11.5px;color:#9aa8d4;margin-top:6px;line-height:1.5">Giờ Vàng (12h & 20h mỗi ngày): tỉ lệ cổ thư/hiền giả ×2.<br>
+      Cái giá mỗi lần nhảy: <b style="color:#ff7a6a">-30% HP</b> (không chết) + <b style="color:#ff7a6a">Trọng Thương 15 phút</b>.</div>`;
     if (wounded){
       const left = Math.ceil(((player.tenuiTT || 0) - Date.now()) / 1000);
       html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 22px" disabled>🩸 Trọng Thương — còn ${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}</button></div>`;
     } else {
-      html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 22px;border-color:#ffb15c;color:#ffb15c" onclick="doTeNui('${n.id}')">☁ TÉ NÚI — nhảy vực cầu đạo</button></div>`;
+      html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 22px;border-color:#ffb15c;color:#ffb15c" onclick="doTeNui('${n.id}')">☁ VỰC THẲM — liều mình thử vận</button></div>`;
     }
     html += `<div id="tn-result" style="min-height:20px;font-size:12.5px;line-height:1.8;margin-top:6px"></div>`;
   }
@@ -11972,22 +11972,22 @@ window.doTeNui = function(npcId){
   const tRare = gold ? 10 : 5; // giờ vàng: 2 ô hiếm 5% → 10%
   const r = Math.random()*100;
   let out = '', col = '#9aa8d4';
-  if (r < tRare){ // vách động giấu bí tịch — bí kíp hiếm nguyên quyển
+  if (r < tRare){ // hang động giấu cổ thư — kỹ năng hiếm học miễn phí
     const v = tenuiFreeLearn('than') || tenuiFreeLearn(null);
-    if (v){ out = `<b style="color:#ffd76a">VÁCH ĐỘNG BÍ TỊCH!</b> Ngộ được <b style="color:${VH_TIER[v.tier].color}">${v.name}</b> — bấm K gán vào taskbar!`;
-      zoneBanner = { text:'☁ CƠ DUYÊN NGÀN VÀNG', sub:`${n.name}: vách động giấu bí tịch — ${v.name}!`, color:'#ffd76a', t:5 };
+    if (v){ out = `<b style="color:#ffd76a">HANG ĐỘNG CỔ THƯ!</b> Ngộ được <b style="color:${VH_TIER[v.tier].color}">${v.name}</b> — bấm K gán vào taskbar!`;
+      zoneBanner = { text:'☁ VẬN MAY NGÀN VÀNG', sub:`${n.name}: hang động giấu cổ thư — ${v.name}!`, color:'#ffd76a', t:5 };
       col = '#ffd76a'; AudioSys.sfx('levelup', 0.9);
-    } else { player.bikipVH = (player.bikipVH || 0) + 15; out = 'Vách động trống — bí tịch đã thành tựu hết, nhặt được <b style="color:#ffb15c">15 📜 Sách Kỹ Năng</b>'; col = '#ffb15c'; }
-  } else if (r < tRare * 2){ // lão tổ ẩn thế chỉ điểm
+    } else { player.bikipVH = (player.bikipVH || 0) + 15; out = 'Hang động trống — cổ thư đã thu thập hết, nhặt được <b style="color:#ffb15c">15 📜 Sách Kỹ Năng</b>'; col = '#ffb15c'; }
+  } else if (r < tRare * 2){ // hiền giả ẩn danh chỉ điểm
     const v = tenuiFreeLearn(null);
-    if (v){ out = `<b style="color:#b08ae8">LÃO TỔ ẨN THẾ</b> chỉ điểm — ngộ được <b style="color:${VH_TIER[v.tier].color}">${v.name}</b>!`;
-      zoneBanner = { text:'☁ LÃO TỔ CHỈ ĐIỂM', sub:`${n.name}: ${v.name} — đạo pháp truyền người hữu duyên`, color:'#b08ae8', t:5 };
+    if (v){ out = `<b style="color:#b08ae8">HIỀN GIẢ ẨN DANH</b> chỉ điểm — ngộ được <b style="color:${VH_TIER[v.tier].color}">${v.name}</b>!`;
+      zoneBanner = { text:'☁ HIỀN GIẢ CHỈ ĐIỂM', sub:`${n.name}: ${v.name} — bí thuật truyền cho kẻ may mắn`, color:'#b08ae8', t:5 };
       col = '#b08ae8'; AudioSys.sfx('quest', 0.9);
-    } else { player.bikipVH = (player.bikipVH || 0) + 10; out = 'Lão tổ gật đầu: "Duyên đã đủ" — <b style="color:#ffb15c">+10 📜 Sách Kỹ Năng</b>'; col = '#ffb15c'; }
-  } else if (r < tRare * 2 + 10){ // động phủ tu sĩ cổ
+    } else { player.bikipVH = (player.bikipVH || 0) + 10; out = 'Hiền giả gật đầu: "Vận đã đủ" — <b style="color:#ffb15c">+10 📜 Sách Kỹ Năng</b>'; col = '#ffb15c'; }
+  } else if (r < tRare * 2 + 10){ // hang động cổ xưa
     const bk = 6 + Math.floor(Math.random()*3);
     player.bikipVH = (player.bikipVH || 0) + bk; player.tienDan += 3;
-    out = `<b style="color:#5aa0e8">Động phủ tu sĩ cổ!</b> +${bk} 📜 Sách Kỹ Năng + 3 ◈ Tiến Cấp Đan`; col = '#5aa0e8';
+    out = `<b style="color:#5aa0e8">Hang động cổ xưa!</b> +${bk} 📜 Sách Kỹ Năng + 3 ◈ Tiến Cấp Đan`; col = '#5aa0e8';
   } else if (r < tRare * 2 + 30){ // hang động
     const bk = 3 + Math.floor(Math.random()*3);
     player.bikipVH = (player.bikipVH || 0) + bk;
@@ -11998,7 +11998,7 @@ window.doTeNui = function(npcId){
     out = `Rơi vào lùm cây — may mắn toàn mạng: +${bk} 📜 Sách Kỹ Năng + ${mt} ✦ Huyền Thiết`;
   }
   saveGame();
-  addFloat(player.x, player.y-56, '☁ TÉ NÚI!', col, 16);
+  addFloat(player.x, player.y-56, '☁ VỰC THẲM!', col, 16);
   renderTeNui(n);
   const res = document.getElementById('tn-result');
   if (res) res.innerHTML = `☁ Kết cục: ${out}`;
@@ -12016,7 +12016,7 @@ function renderVanDuyen(){
     <b style="color:#5aa0e8">25%</b> — Trang bị theo cấp (phẩm Lam trở lên)<br>
     <b style="color:#7ec850">30%</b> — Vật liệu tu luyện (Tu La / Hỗn Nguyên / Tiến Cấp Đan / Huyền Thiết)<br>
     <b style="color:#9aa8d4">25%</b> — Bạc + Anima</div>`;
-  html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 22px" ${player.congHuan >= 1 ? '' : 'disabled'} onclick="rollVanDuyen()">☯ Rút Duyên — 1 ⚜</button></div>
+  html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 22px" ${player.congHuan >= 1 ? '' : 'disabled'} onclick="rollVanDuyen()">☯ Quay Vận May — 1 ⚜</button></div>
     <div id="vd-result" style="min-height:20px;font-size:12.5px;line-height:1.8;margin-top:6px"></div>`;
   el('panel-quest').innerHTML = html;
   closePanels(); el('panel-quest').classList.remove('hidden');
@@ -12032,7 +12032,7 @@ window.rollVanDuyen = function(){
       const p = Math.floor(Math.random()*3);
       player.bikip.pieces[p]++;
       out.push(`<b style="color:#e84a6a">CỔ THƯ HIẾM — Mảnh Cổ Thư · ${TAN_QUYEN[p]}!</b> (đang có ${player.bikip.pieces[p]})`);
-      zoneBanner = { text:'☯ CƠ DUYÊN NGÀN VÀNG', sub:`Mảnh Cổ Thư · ${TAN_QUYEN[p]} — 5% đã mỉm cười với ngươi!`, color:'#e84a6a', t:5 };
+      zoneBanner = { text:'☯ VẬN MAY NGÀN VÀNG', sub:`Mảnh Cổ Thư · ${TAN_QUYEN[p]} — 5% đã mỉm cười với ngươi!`, color:'#e84a6a', t:5 };
     } else { player.jewels.honDon++; out.push('<b style="color:#7ecbff">● Hỗn Độn Châu</b> — cổ thư đã thành tựu, quy đổi châu quý'); }
   } else if (key === 'chau'){
     const jr = Math.random()*100;
