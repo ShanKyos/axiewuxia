@@ -3150,10 +3150,20 @@ function hurtMob(m, dmg, source){
     if (source === 'crit') player.ltT = 2.5;
   }
   // Du Hiệp trung lập: chỉ đánh được khi bật PK (khu an toàn tuyệt đối cấm)
-  if (m.def.duHiep && !player.pk && !m.revenge){
-    addFloat(m.x, m.y - m.def.size - 16, 'Bật PK để tấn công Du Hiệp!', '#8a8a8a', 11);
+  // QA: chặn player.pk thôi là chưa đủ — nếu để PK bật rồi bật AUTO farm đi chỗ khác, một Du Hiệp
+  // trung lập lang thang vào tầm nổ AoE/thú cưỡi/linh thú vẫn có thể "ăn miểng" ngoài ý muốn dù
+  // AUTO không hề chủ đích chọn nó (xem game.js AUTO FARM: m.def.duHiep && !m.revenge → loại khỏi
+  // mục tiêu, nhưng đó chỉ chặn ở khâu CHỌN mục tiêu, không chặn sát thương lan tới từ mục tiêu khác).
+  // Chặn hẳn ở đây — nơi mọi nguồn sát thương đều đi qua — khi đang AUTO, bất kể PK đang bật hay tắt.
+  if (m.def.duHiep && !m.revenge && (player.auto || !player.pk)){
+    if (!player.auto) addFloat(m.x, m.y - m.def.size - 16, 'Bật PK để tấn công Du Hiệp!', '#8a8a8a', 11);
     return;
   }
+  // QA: AUTO chỉ được farm ĐÚNG 1 bãi quái đã khoá (xem AUTO FARM trong update()) — nhưng khoá đó
+  // chỉ chặn ở khâu CHỌN mục tiêu, không chặn vật lý va chạm của đạn xuyên táo/AoE bay lố sang bãi
+  // bên cạnh (ví dụ tên xuyên nhắm bãi đang khoá nhưng bay tiếp trúng quái bãi khác đứng thẳng
+  // hàng phía sau). Chặn hẳn ở đây để không món sát thương nào của AUTO lọt sang bãi chưa khoá.
+  if (player.auto && player._autoZoneLocked && m.zone !== player._autoZone) return;
   // Aggro cụm: đánh 1 con, cả cụm 5-7 con lao vào (GDD Mob Mechanics)
   // QA: map An Toàn (tân thủ) chỉ tối đa 3 con cùng lao vào để tránh chết oan lúc LV1-5
   if (m.pack != null){
@@ -4147,6 +4157,9 @@ function update(dt){
   if (player.auto && !dead && player.jumpT <= 0 && !_bossNear){
     if (player._autoAX == null){ player._autoAX = player.x; player._autoAY = player.y; }
     // Chỉ quét quanh điểm neo (bán kính 430 ≈ 1-2 bãi quái) — không rượt quái khắp map
+    // QA: chỉ farm ĐÚNG 1 bãi quái — khoá vào zone của mục tiêu đầu tiên tìm được (m.zone: cùng
+    // tham chiếu cho mọi quái spawn từ 1 bãi/1 đợt), các frame sau chỉ xét quái CÙNG zone đó, dù
+    // bãi khác có lọt vào bán kính quét cũng bỏ qua — không còn "lan" farm sang bãi kế bên.
     let _at = null, _bd = _ac.range;
     for (const m of mobs){
       if (m.dead) continue;
@@ -4155,9 +4168,11 @@ function update(dt){
       // 3153/3513/4551) — nếu không, để quên PK bật rồi auto cày sẽ tích Tội Ác tới Ma Đạo mà
       // người chơi không hề chủ đích PK ai cả. Vẫn cho tự vệ nếu Du Hiệp đã truy thù (m.revenge).
       if (m.def.duHiep && !m.revenge) continue;
+      if (player._autoZoneLocked && m.zone !== player._autoZone) continue; // khác bãi — bỏ qua
       const _dd = dist(player._autoAX, player._autoAY, m.x, m.y);
       if (_dd < _bd){ _bd = _dd; _at = m; }
     }
+    if (_at && !player._autoZoneLocked){ player._autoZone = _at.zone; player._autoZoneLocked = true; }
     if (_at){
       const _ad = dist(player.x, player.y, _at.x, _at.y);
       player.face = Math.atan2(_at.y - player.y, _at.x - player.x);
@@ -4715,6 +4730,7 @@ window.respawn = function(){
   player.hp = player.maxHp; player.qi = player.maxQi;
   player.poisonT = 0;
   player._autoAX = null; player._autoAY = null; // QA: đừng để auto farm kéo người mới hồi sinh về neo cũ (map/vị trí khác)
+  player._autoZone = null; player._autoZoneLocked = false;
   dead = false;
   document.getElementById('overlay').classList.add('hidden');
 };
@@ -5840,6 +5856,8 @@ window.toggleAuto = function(){
     // QA: bật AUTO khi còn 1 lệnh click-di-chuyển tay đang treo (chưa tới đích) — nếu không huỷ ở
     // đây, tắt AUTO lại sau đó sẽ khiến nhân vật tự đi tiếp theo lệnh cũ dù không có input mới.
     moveTarget = null; moveWaypoint = null;
+    // QA: mở khoá bãi quái cũ mỗi lần bật lại AUTO — để nó tự khoá vào bãi gần điểm neo mới nhất
+    player._autoZone = null; player._autoZoneLocked = false;
   }
   addFloat(player.x, player.y-56, player.auto ? '⚔ AUTO FARM: BẬT — ôm 1-2 bãi quái quanh điểm neo, tự tung chiêu, tự uống thuốc' : 'AUTO FARM: TẮT — về chế độ thủ công',
     player.auto ? '#6ae88a' : '#b8a888', 13);
@@ -8984,6 +9002,7 @@ window.travelTo = function(mapId, from){
   // neo lại đúng vị trí mới (xem game.js AUTO FARM: player._autoAX == null → neo tại player.x/y);
   // nếu là phó bản, startDungeonRun()/nextDungeonWave() ngay dưới sẽ ghi đè bằng neo riêng của nó.
   player._autoAX = null; player._autoAY = null;
+  player._autoZone = null; player._autoZoneLocked = false; // QA: bãi quái khoá ở map cũ không còn nghĩa gì ở map mới
   if (md.dungeon) startDungeonRun(mapId);
   const sp = (from && md.spawnFrom && md.spawnFrom[from]) || md.spawn;
   player.x = sp.x; player.y = sp.y;
