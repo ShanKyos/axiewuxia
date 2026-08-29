@@ -785,7 +785,10 @@ function drawGates(){
 }
 const NPCS = [
   { id:'truonglang', name:'Trưởng Làng', map:'daohoa', x:400, y:400, img:'assets/npcs/truonglang.png', talk:'quest' },
-  { id:'thuongnhan', name:'Thương Nhân · Chợ Đấu Giá', map:'tuongduong', x:1150, y:1000, img:'assets/npcs/thuongnhan.png', talk:'shop' },
+  // QA rà soát NPC Lunaris City: Thương Nhân · Chợ Đấu Giá đã bị xoá — cả 3 món trong tiệm đều
+  // trùng chỗ khác (Hồ Lô Thuốc = Dược Lão, Thiên Mệnh Phù = mua thẳng trong Rèn Luyện qua buyCharm()),
+  // và "Chợ Đấu Giá" chưa từng có cơ chế đấu giá thật — chỉ là tiệm giá cố định như 3 tiệm kia.
+  // Tiến Cấp Đan ×3 (món duy nhất không trùng) đã chuyển sang tiệm Dược Lão bên dưới.
   { id:'thoren', name:'Thợ Rèn · Lò Bát Quái', map:'tuongduong', x:1480, y:1180, img:'assets/npcs/thoren.png', talk:'forge' },
 ];
 const NPC_IMGS = {};
@@ -7744,17 +7747,12 @@ function applySkillIcons(){
 }
 // ---------- Hệ thống cửa hàng — mỗi NPC một quầy hàng riêng ----------
 const SHOPS = {
-  thuongnhan: { quote:'"Lunacia này, lợi lớn nhất là <b style=\'color:#7ecbff\'>bạc</b> — có bạc là có tất cả!"', junk:true, rows:[
-    { id:'thuoc',   name:'🧪 Hồ Lô Thuốc',     price:150, desc:'Hồi 40% máu tức thì (phím R) — túi đựng tối đa 5 lọ' },
-    { id:'phu',     name:'☂ Thiên Mệnh Phù',   price:500, desc:'Bảo hiểm rèn +7 trở lên — xịt giữ nguyên cấp' },
-    { id:'tiendan', name:'◈ Tiến Cấp Đan ×3',  price:900, desc:'Tấn Chức (Ám Khí/Cung Tiễn/Cương Khí)' },
-  ]},
-  duoclao: { quote:'"Thuốc bổ hay thuốc độc — khác nhau ở liều lượng thôi, khách quân ạ."', rows:[
+  duoclao: { quote:'"Thuốc bổ hay thuốc độc — khác nhau ở liều lượng thôi, khách quân ạ."', junk:true, rows:[
     { id:'thuoc',     name:'🧪 Hồ Lô Thuốc',        price:150, desc:'Hồi 40% máu tức thì (phím R) — túi đựng tối đa 5 lọ' },
     { id:'trithuong', name:'✚ Trị Thương Toàn Phần', price:100, desc:'Dược Lão tự tay bốc thuốc — hồi đầy HP ngay lập tức' },
     { id:'tukhi',     name:'◎ Tụ Khí Công',          price:80,  desc:'Vận chuyển chân khí — hồi đầy Instinct ngay lập tức' },
     { id:'loidon',    name:'⚡ Lôi Độn Phù',           price:600, desc:'5 phút giảm 40% sát thương thiên lôi — vật bất ly thân khi độ kiếp' },
-    { id:'dotpha',    name:'◈ Đan Ascension Trial',            price:800, desc:'Bảo mệnh độ kiếp: chịu được 4 tia lôi thay vì 3, thất bại chỉ tổn 25% Anima (tự dùng khi đột phá)' },
+    { id:'tiendan',   name:'◈ Tiến Cấp Đan ×3',      price:900, desc:'Tấn Chức (Ám Khí/Cung Tiễn/Cương Khí)' },
   ]},
   binhkhi: { quote:'"Binh khí nhà ta ba đời rèn giũa — mở rương là biết liền."', rows:[
     { id:'ruongvk', name:'⚔ Rương Binh Khí',  price:800, desc:'Vũ khí ngẫu nhiên theo cấp của ngươi — có thể ra hàng hiếm' },
@@ -7782,8 +7780,7 @@ function renderShop(n){
   const RARE_POOL = (window.RARE_POOL = window.RARE_POOL || [
     { id:'r_ruongvk2', name:'⚔ Rương Binh Khí Tinh Tuyển', price:1400, desc:'Tỉ lệ ra hàng hiếm gấp 3 — vũ khí theo cấp của ngươi' },
     { id:'r_tiendan5', name:'◈ Tiến Cấp Đan ×5 (giá hời)', price:1200, desc:'Gói tiết kiệm — chỉ bán theo đợt' },
-    { id:'r_dotpha',   name:'◈ Đan Ascension Trial (giá hời)',     price:650,  desc:'Bảo mệnh độ kiếp — chịu 4 tia thiên lôi' },
-    { id:'r_mat5',     name:'✦ Huyền Thiết ×5',            price:750,  desc:'Nguyên liệu rèn & đột phá Ascension' },
+    { id:'r_mat5',     name:'✦ Huyền Thiết ×5',            price:750,  desc:'Nguyên liệu rèn +1 đến +6' },
     { id:'r_tula',     name:'◆ Tu La Tinh Thạch',          price:1800, desc:'Khảm trang bị, rèn +7 trở lên — hiếm có' },
     { id:'r_hon',      name:'❖ Hỗn Nguyên Thạch',          price:2600, desc:'Rèn +10/+11 — cực hiếm' },
   ]);
@@ -7850,14 +7847,8 @@ window.buyFromShop = function(what){
     zoneBanner = { text:'⚡ LÔI ĐỘN PHÙ', sub:'5 phút giảm 40% sát thương thiên lôi — cứ yên tâm độ kiếp!', color:'#ffb15c', t:2.6 };
     AudioSys.sfx('quest', 0.5);
   }
-  else if (what==='dotpha'){
-    player.silver -= row.price; player.dotpha = (player.dotpha || 0) + 1;
-    addFloat(player.x, player.y-50, '+1 Đan Ascension Trial — sẽ tự dùng khi độ kiếp', '#ffb15c', 13);
-    AudioSys.sfx('quest', 0.5);
-  }
   else if (what==='phongphu'){ player.silver -= row.price; player.phongphu = (player.phongphu || 0) + 1; addFloat(player.x, player.y-50, '+1 Phong Linh Phù — bấm T gần tinh anh suy yếu', '#b08ae8', 13); }
   else if (what==='r_tiendan5'){ player.silver -= row.price; player.tienDan += 5; }
-  else if (what==='r_dotpha'){ player.silver -= row.price; player.dotpha = (player.dotpha || 0) + 1; addFloat(player.x, player.y-50, '+1 Đan Ascension Trial', '#ffb15c', 13); }
   else if (what==='r_mat5'){ player.silver -= row.price; player.mat += 5; }
   else if (what==='r_tula'){ player.silver -= row.price; player.gems.tuLa++; }
   else if (what==='r_hon'){ player.silver -= row.price; player.gems.honNguyen++; }
