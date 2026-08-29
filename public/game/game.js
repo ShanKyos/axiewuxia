@@ -6039,7 +6039,7 @@ function heroPose(wph, mv, atkK, castK, now, act){
     head: (A && A.head ? A.head : 0) + (mv ? -Math.sin(wph * 2) * 0.05 : -br),
     bob:  mv ? Math.abs(Math.sin(wph)) * -3.2 : Math.sin(now / 620) * -1.2,
     wrot: A ? A.wrot : 0, wpush: A ? A.wpush : 0,
-    sw: A ? A.sw : 0, cast: castK,
+    sw: A ? A.sw : 0, cast: castK, back: false,
   };
 }
 const HERO_POSE0 = heroPose(0, false, 0, 0, 0, 'slash');
@@ -6059,6 +6059,7 @@ function hTorso(g, P){ hPoly(g, [[58,96],[102,96],[106,146],[54,146]], P.torso);
 function hHead(g, P, ps){
   hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
     hEll(g, 80, 74, 19, 21, P.skin);
+    if (ps.back){ hEll(g, 80, 72, 18, 19, P.skinSh); return; } // nhìn từ sau: chỉ thấy gáy
     hEll(g, 88, 74, 10, 20, P.skinSh);
     hEll(g, 72, 72, 3, 4.5, '#1a1219'); hEll(g, 87, 72, 3, 4.5, '#1a1219');
   });
@@ -6087,7 +6088,7 @@ const HERO_GEAR = {
       hHead(g, P, ps);
       hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
         hPoly(g, [[58,60],[102,60],[100,88],[60,88]], M.hi);
-        hPoly(g, [[58,74],[102,74],[102,80],[58,80]], '#20242e');
+        if (!ps.back) hPoly(g, [[58,74],[102,74],[102,80],[58,80]], '#20242e'); // khe mắt
         hPoly(g, [[58,62],[44,36],[62,50]], M.hi);
         hPoly(g, [[102,62],[116,36],[98,50]], M.hi);
       });
@@ -6115,8 +6116,10 @@ const HERO_GEAR = {
       hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
         hPoly(g, [[46,92],[114,92],[106,66],[88,44],[72,44],[54,66]], '#5e42a0');
         hPoly(g, [[80,44],[114,92],[106,66],[88,44]], '#412c76');
-        hEll(g, 80, 78, 17, 18, '#180f2a');
-        hEll(g, 73, 76, 3.4, 4.6, '#9fd0ff'); hEll(g, 88, 76, 3.4, 4.6, '#9fd0ff');
+        if (!ps.back){                          // nhìn từ sau chỉ thấy vải mũ trùm
+          hEll(g, 80, 78, 17, 18, '#180f2a');
+          hEll(g, 73, 76, 3.4, 4.6, '#9fd0ff'); hEll(g, 88, 76, 3.4, 4.6, '#9fd0ff');
+        }
       });
       hArmL(g, P, ps);
       hArmR(g, P, ps, () => {
@@ -6152,8 +6155,10 @@ const HERO_GEAR = {
       hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
         hPoly(g, [[60,60],[100,60],[102,44],[58,44]], '#d8b45a');
         hPoly(g, [[98,52],[126,40],[118,96],[100,80]], '#d8b45a');
-        hPoly(g, [[62,66],[46,52],[60,74]], '#e8c8a4');
-        hPoly(g, [[98,66],[114,52],[100,74]], '#e8c8a4');
+        if (!ps.back){                          // tai nhọn khuất sau tóc khi quay lưng
+          hPoly(g, [[62,66],[46,52],[60,74]], '#e8c8a4');
+          hPoly(g, [[98,66],[114,52],[100,74]], '#e8c8a4');
+        }
       });
       hArmR(g, P, ps, () => { hEll(g, 112, 116, 10, 17, P.skin); hPoly(g, [[126,92],[110,88],[108,110],[124,114]], M.hi); });
       hArmL(g, P, ps, () => {                                        // tay trái giương cung
@@ -6185,7 +6190,7 @@ const HERO_GEAR = {
       hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
         hPoly(g, [[60,62],[100,62],[104,42],[56,42]], '#2a2028');    // tóc dài đen
         hPoly(g, [[98,54],[122,66],[112,116],[98,86]], '#2a2028');
-        hPoly(g, [[56,68],[70,58],[72,72]], M.trim);                 // vòng trán kim loại
+        if (!ps.back) hPoly(g, [[56,68],[70,58],[72,72]], M.trim);   // vòng trán kim loại
       });
       hArmL(g, P, ps, () => {                                        // vai trái giáp đồ sộ
         hEll(g, 48, 116, 10, 17, P.skin);
@@ -6214,8 +6219,10 @@ const HERO_GEAR = {
       hPoly(g, [[70,102],[90,102],[86,134],[74,134]], M.trim);
       hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
         hPoly(g, [[58,58],[102,58],[100,90],[60,90]], '#2a3050');
-        hPoly(g, [[58,72],[102,72],[102,79],[58,79]], '#0e1220');
-        hEll(g, 70, 75.5, 3, 3.4, '#ff7a5a'); hEll(g, 90, 75.5, 3, 3.4, '#ff7a5a');
+        if (!ps.back){
+          hPoly(g, [[58,72],[102,72],[102,79],[58,79]], '#0e1220');
+          hEll(g, 70, 75.5, 3, 3.4, '#ff7a5a'); hEll(g, 90, 75.5, 3, 3.4, '#ff7a5a');
+        }
         for (let i = 0; i < 5; i++)
           hPoly(g, [[54 + i * 13, 58], [60 + i * 13, 30 + (i === 2 ? -10 : 0)], [66 + i * 13, 58]], M.trim);
       });
@@ -6275,10 +6282,14 @@ function drawHeroFigure(g, sectKey, tier, now, ps){
     g.globalAlpha = 0.2 + 0.1 * Math.sin(now / 380); g.fillStyle = ag;
     g.beginPath(); g.arc(80, 120, 86, 0, 7); g.fill(); g.globalAlpha = 1;
   }
-  if (G.cape) hCape(g, G.cape[0], G.cape[1], ps);
+  if (G.cape && !ps.back) hCape(g, G.cape[0], G.cape[1], ps);
   hLegs(g, P, ps);
   g.translate(0, ps.bob);                                    // nhún theo bước chân
-  hJoint(g, 80, 146, ps.lean, () => G.upper(g, M, ps, P));   // thân ngả quanh eo
+  hJoint(g, 80, 146, ps.lean, () => {
+    G.upper(g, M, ps, P);
+    // quay lưng: áo choàng phủ lên trên thân, đúng như nhìn nhân vật đi ra xa
+    if (G.cape && ps.back) hCape(g, G.cape[0], G.cape[1], ps);
+  });
   g.restore();
 }
 
@@ -6495,8 +6506,11 @@ function drawPlayer(){
       ctx.scale(s, s); ctx.translate(-HERO_W/2, -HERO_H/2);
       const _act = castK > 0 ? (p.castAct || heroActOf(p.sect, 'a'))
                              : (p.atkAct  || heroActOf(p.sect, 'basic'));
-      drawHeroFigure(ctx, p.sect, (p.thanbinh && p.thanbinh.tier) || 1, now,
-                     heroPose(wph, !!p.moving, atkK, Math.min(1, castK), now, _act));
+      const _ps = heroPose(wph, !!p.moving, atkK, Math.min(1, castK), now, _act);
+      // Góc nhìn 3/4 kiểu MU: đi lên trên là thấy LƯNG, đi xuống là thấy mặt.
+      // (Trước đây hướng nào cũng nhìn thẳng vào mặt người chơi, trông rất sai.)
+      _ps.back = Math.sin(p.face) < -0.42;
+      drawHeroFigure(ctx, p.sect, (p.thanbinh && p.thanbinh.tier) || 1, now, _ps);
     }
     ctx.restore();
   }
