@@ -336,6 +336,7 @@ const ZONE_TYPES = {
   pk:     { name:'Dã Ngoại · PK', color:'#e8b04a', desc:'Bãi train — bật PK cướp bãi được, nhưng giết Du Hiệp bị Tội Ác (đỏ tên), chết rớt đồ.' },
   freepk: { name:'Huyết Chiến · Free PK', color:'#e84a3a', desc:'PK tự do, không Tội Ác — giết thoải mái.' },
   dungeon:{ name:'Phó Bản', color:'#b08ae8', desc:'Phó bản 3 đợt quái + Boss — farm Tiến Cấp Đan & nguyên liệu tiến cấp kỹ năng.' },
+  arena:  { name:'Đấu Trường', color:'#c07fe0', desc:'Vạn Kiếm Tu La Trận — bảo vệ Lõi Trận khỏi quái tràn vào từ 4 hướng, không PK.' },
 };
 // packs: quái đứng thành cụm 5-7 con, đánh 1 con cả cụm lao vào (GDD Mob Mechanics)
 const MAPS = {
@@ -367,6 +368,13 @@ const MAPS = {
       { mob:'bandit', x:1945, y:1110, n:7 }, { mob:'caodo', x:900, y:1200, n:6 },
       { mob:'assassin', x:1872, y:1520, n:1 }, { mob:'trannhan', x:600, y:1550, n:5 },
     ], duhiep: null },
+  // Đấu trường riêng của Vạn Kiếm Tu La Trận (xem startTowerRun) — không vào qua Bản Đồ, chỉ vào
+  // qua nút "Bắt Đầu" ở tab Tu La Trận. Bố cục hình chữ thập: Lõi Trận giữa (TOWER_CORE), quái tràn
+  // vào từ 4 cổng (TOWER_GATES) theo 4 lane thẳng — 4 góc phần tư còn lại bị chặn (MAP_OBSTACLES).
+  towerarena: { name:'Vạn Kiếm Tu La Trận', min:1, range:'—', type:'arena', ground:'#332e28', patch:'#4a4436',
+    spawn:{ x:1300, y:1030 }, trees:0, rocks:0,
+    desc:'Đấu trường phòng thủ — chặn quái ở 1 trong 4 lane, đừng để chúng tràn vào Lõi Trận giữa sân.',
+    packs: [], duhiep: null },
   chungnam: { name:'Thornwood Reach', min:20, range:'20 - 40', type:'pk', ground:'#d4d0ac', patch:'#6a7a52',
     spawn:{ x:400, y:1500 }, spawnFrom:{ pb_chungnam:{ x:2200, y:890 } }, trees:80, rocks:34,
     desc:'Rivalries start turning ugly here. Chimeras drop basic Card Pages and loose Starbits.',
@@ -536,6 +544,15 @@ const MAP_OBSTACLES = {
     // Hiệu chỉnh theo art làng mới (bg_tuongduong.jpg) — dãy nhà chạy dọc mép dưới, chừa cổng thành giữa
     { x:0, y:1280, wd:1200, ht:620 },    // dãy nhà trái
     { x:1400, y:1280, wd:1200, ht:620 }, // dãy nhà phải
+  ],
+  // 4 góc phần tư chặn kín, chừa lại hình chữ thập rộng 440px (x:1080-1520 / y:730-1170) nối Lõi
+  // Trận giữa sân (TOWER_CORE, 1300,950) với 4 cổng ở mép map (TOWER_GATES) — ép quái + người chơi
+  // chỉ có thể men theo 1 trong 4 lane thẳng, không cắt tắt qua góc.
+  towerarena: [
+    { x:0,    y:0,    wd:1080, ht:730 }, // góc tây-bắc
+    { x:1520, y:0,    wd:1080, ht:730 }, // góc đông-bắc
+    { x:0,    y:1170, wd:1080, ht:730 }, // góc tây-nam
+    { x:1520, y:1170, wd:1080, ht:730 }, // góc đông-nam
   ],
 };
 const DGN_OBSTACLES = [ // 7 phó bản dùng chung: khung tường đá + cửa nam ở giữa
@@ -4468,6 +4485,20 @@ function update(dt){
       m.x = clamp(m.x + Math.cos(fa)*m.def.speed*dt, 40, MAP.w-40);
       m.y = clamp(m.y + Math.sin(fa)*m.def.speed*dt, 40, MAP.h-40);
       m.faceT = fa;
+    } else if (m.laned && m.wpPath && d > m.def.range){
+      // Vạn Kiếm Tu La Trận: quái đi thẳng theo lane tới Lõi Trận, bỏ qua aggro —
+      // người chơi phải đứng chắn đường mới ngăn được (đúng chất tower defense)
+      const wp = m.wpPath[m.wpIdx];
+      const wd = dist(m.x, m.y, wp.x, wp.y);
+      if (wd < 40){
+        if (m.wpIdx < m.wpPath.length - 1) m.wpIdx++;
+        else { towerCoreHit(m); continue; }
+      }
+      const lang = Math.atan2(wp.y-m.y, wp.x-m.x);
+      m.faceT = lang;
+      const lspd = m.def.speed * (m.slowT > 0 ? (m.slowPct || 0.65) : 1);
+      m.x += Math.cos(lang)*lspd*dt;
+      m.y += Math.sin(lang)*lspd*dt;
     } else if (d < aggroR && d > m.def.range){
       const ang = Math.atan2(player.y-m.y, player.x-m.x);
       m.faceT = ang;
@@ -4890,6 +4921,7 @@ function render(){
 
   // spirit spring — Tịnh Tâm Tuyền, chỉ có ở Đào Hoa Đảo
   if (md.spring) drawSpring();
+  if (curMap === 'towerarena') drawTowerArena();
 
   // vùng hoạt động của AUTO FARM — vòng neo mờ quanh điểm bật auto
   if (player.auto && player._autoAX != null){
@@ -8952,7 +8984,7 @@ window.travelTo = function(mapId, from){
   // QA rà soát: rời map giữa lượt Tu La Trận trước đây không dọn TOWER — quái towerMob bị buildWorld()
   // xoá nhưng biến TOWER sống sót, khiến updateTower() tưởng đã dọn sạch đợt và tự mở bảng chọn thẻ
   // ở map mới (kể cả Lunaris City, nơi lẽ ra cấm giao chiến). Dọn y hệt cách DEVIL/BLOOD đã làm ở trên.
-  if (TOWER){
+  if (TOWER && mapId !== 'towerarena'){ // mapId === 'towerarena' nghĩa là đang VÀO trận (startTowerRun tự gọi travelTo), không phải rời bỏ
     const _twWave = TOWER.wave;
     if (_twWave > (player.towerBest || 0)) player.towerBest = _twWave;
     mobs.forEach(m => { if (m.towerMob && !m.dead) m.dead = true; });
@@ -9015,6 +9047,7 @@ function renderMapPanel(){
   for (const id in MAPS){
     const m = MAPS[id], z2 = ZONE_TYPES[m.type];
     if (m.dungeon && !window.TEST_MODE) continue; // phó bản chỉ vào qua cổng dịch chuyển — không hiện ở đây (trừ chế độ test)
+    if (id === 'towerarena' && !window.TEST_MODE) continue; // đấu trường riêng — chỉ vào qua nút "Bắt Đầu" ở tab Tu La Trận
     const g = mapGate(id), cur = id === curMap;
     if (window.TEST_MODE){
       // playtest: hiện đủ tên mọi map + phó bản, dịch chuyển tự do
@@ -10145,9 +10178,18 @@ const DUNGEONS = {
 // chơi này) hoặc dừng nhận thưởng. Chết hoặc tự dừng → kết thúc lượt, buff mất hết, chỉ giữ lại kỷ lục
 // đợt cao nhất từng trụ được. Thẻ bài dùng thật tên + icon từ 34 võ học phổ + 30 dung hợp đã có (không
 // mô phỏng đúng kỹ năng gốc — chỉ mượn hình ảnh/tên để đa dạng, hiệu ứng là buff số liệu đơn giản).
-let TOWER = null; // { wave, buffs:{dmg,cd,hp,qi,crit,leech}, drafting, options }
+let TOWER = null; // { wave, buffs:{dmg,cd,hp,qi,crit,leech}, drafting, options, coreHp, coreMaxHp }
 const TOWER_MOB_POOL = ['boar','wolf','bandit','assassin','hautu','caodo','xanu','bandao','mocnhan',
   'huyetbat','docyeu','satthuhy','thamtu','cungthu','cuongbinh','daokhach']; // chỉ quái đã có Axie art thật
+// Bố cục đấu trường (map towerarena) — xem MAP_OBSTACLES.towerarena: hình chữ thập nối 4 cổng
+// mép map với Lõi Trận giữa sân. Quái spawn ở 1 cổng ngẫu nhiên rồi đi thẳng theo lane đó tới lõi.
+const TOWER_CORE = { x:1300, y:950, r:55 };
+const TOWER_GATES = {
+  bac:  { x:1300, y:70 },
+  nam:  { x:1300, y:1830 },
+  tay:  { x:70,   y:950 },
+  dong: { x:2530, y:950 },
+};
 const TOWER_CARD_TYPES = [
   { k:'dmg',   name:'Cường Kích',  desc:'sát thương chiêu & đòn thường',  v:0.07 },
   { k:'cd',    name:'Tốc Chiến',   desc:'hồi chiêu mọi kỹ năng',          v:0.05 },
@@ -10167,23 +10209,51 @@ window.startTowerRun = function(){
   if (TOWER){ addFloat(player.x, player.y-40, 'Đang trong Tu La Trận rồi!', '#8a8a8a', 12); return; }
   if (DGN){ addFloat(player.x, player.y-40, 'Không thể mở Tu La Trận trong phó bản!', '#8a8a8a', 12); return; }
   if (DEVIL || BLOOD){ addFloat(player.x, player.y-40, 'Đang trong một trận đấu khác rồi!', '#8a8a8a', 12); return; }
-  if (curMap === 'tuongduong'){ addFloat(player.x, player.y-40, 'Hãy ra khỏi Lunaris City trước — nơi này cấm giao chiến!', '#8a8a8a', 12); return; }
-  TOWER = { wave: 0, buffs: { dmg:0, cd:0, hp:0, qi:0, crit:0, leech:0 }, drafting:false, options:[] };
+  const coreMaxHp = 1000;
+  TOWER = { wave: 0, buffs: { dmg:0, cd:0, hp:0, qi:0, crit:0, leech:0 }, drafting:false, options:[], coreHp: coreMaxHp, coreMaxHp };
+  travelTo('towerarena');
   calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
   closePanels();
-  zoneBanner = { text:'🌀 VẠN KIẾM TU LA TRẬN', sub:'Càng trụ lâu, quái càng đông — hạ sạch mỗi đợt để chọn tiến hóa tạm thời!', color:'#c07fe0', t:4 };
+  zoneBanner = { text:'🌀 VẠN KIẾM TU LA TRẬN', sub:'Chặn quái ở 1 trong 4 lane — để chúng tràn vào Lõi Trận là mất máu lõi. Hạ sạch mỗi đợt để chọn tiến hóa tạm thời!', color:'#c07fe0', t:5 };
   AudioSys.sfx('quest', 0.8);
   towerNextWave();
 };
+// Spawn quái ở 1 trong 4 cổng, gán đường đi thẳng (lane) tới Lõi Trận — xem nhánh m.laned trong
+// vòng lặp cập nhật quái (update()) và towerCoreHit() khi quái đi hết lane.
+function spawnTowerWave(n, scale){
+  const gateKeys = Object.keys(TOWER_GATES);
+  for (let i = 0; i < n; i++){
+    const type = TOWER_MOB_POOL[Math.floor(Math.random()*TOWER_MOB_POOL.length)];
+    const gate = TOWER_GATES[gateKeys[Math.floor(Math.random()*gateKeys.length)]];
+    const m = spawnMob(type, { x: gate.x, y: gate.y, r: 40, count: n }, null);
+    m.zone = null; m.towerMob = true;
+    m.laned = true; m.wpPath = [gate, TOWER_CORE]; m.wpIdx = 0;
+    m.def = { ...m.def, hp: Math.round(m.def.hp*scale), atk: Math.round(m.def.atk*scale) };
+    m.hp = m.def.hp; m.maxHp = m.def.hp;
+  }
+}
 function towerNextWave(){
   if (!TOWER) return;
   TOWER.wave++;
   const n = Math.min(3 + Math.floor(TOWER.wave/2), 12);
-  spawnArenaWave(n, 1 + TOWER.wave*0.14, 'towerMob', 280);
-  if (player) addFloat(player.x, player.y - 60, `Đợt ${TOWER.wave} — ${n} địch!`, '#c07fe0', 15);
+  spawnTowerWave(n, 1 + TOWER.wave*0.14);
+  if (player) addFloat(player.x, player.y - 60, `Đợt ${TOWER.wave} — ${n} địch từ 4 cổng!`, '#c07fe0', 15);
+}
+// Quái đi hết lane (chạm Lõi Trận) mà chưa bị hạ — lõi mất máu, quái biến mất (không tính hạ gục,
+// không thưởng): đây là hậu quả của việc để lọt quái, khác với việc người chơi chủ động đánh bại nó.
+function towerCoreHit(m){
+  if (!TOWER) return;
+  const dmg = Math.round(25 + (m.def.lv || 1) * 1.8);
+  TOWER.coreHp = Math.max(0, TOWER.coreHp - dmg);
+  addFloat(TOWER_CORE.x, TOWER_CORE.y - 50, `💥 Lõi Trận -${dmg}!`, '#ff5a4a', 14);
+  addEffect({ type:'ring', x: TOWER_CORE.x, y: TOWER_CORE.y, r:70, color:'#ff5a4a', big:true });
+  shakeT = Math.max(shakeT, 0.25); shakeMag = Math.max(shakeMag, 5);
+  AudioSys.sfx('hurt', 0.5);
+  m.dead = true;
 }
 function updateTower(){
   if (!TOWER || TOWER.drafting) return;
+  if (TOWER.coreHp <= 0){ endTowerRun('coredown'); return; }
   if (mobs.some(m => m.towerMob && !m.dead)) return; // còn quái Tu La Trận sống → chờ
   towerOfferDraft();
 }
@@ -10240,19 +10310,45 @@ function endTowerRun(reason){
   const ov = document.getElementById('overlay');
   document.getElementById('overlay-inner').innerHTML = `
     <h2 style="color:#c07fe0">Vạn Kiếm Tu La Trận — Kết Thúc</h2>
-    <p>Ngươi trụ được tới <b style="color:#ffb15c">Đợt ${wave}</b>.${isBest ? '<br><span style="color:#ffd76a">★ KỶ LỤC MỚI!</span>' : player.towerBest ? `<br>Kỷ lục cá nhân: <b>Đợt ${player.towerBest}</b>` : ''}${reason === 'death' ? '<br><span style="color:#e8b060;font-size:12.5px">Ngươi đã gục ngã giữa trận — hồi sinh với đầy đủ sinh lực.</span>' : ''}</p>
+    <p>Ngươi trụ được tới <b style="color:#ffb15c">Đợt ${wave}</b>.${isBest ? '<br><span style="color:#ffd76a">★ KỶ LỤC MỚI!</span>' : player.towerBest ? `<br>Kỷ lục cá nhân: <b>Đợt ${player.towerBest}</b>` : ''}${reason === 'death' ? '<br><span style="color:#e8b060;font-size:12.5px">Ngươi đã gục ngã giữa trận — hồi sinh với đầy đủ sinh lực.</span>' : ''}${reason === 'coredown' ? '<br><span style="color:#ff5a4a;font-size:12.5px">Lõi Trận đã sụp đổ — quái tràn qua cả 4 lane!</span>' : ''}</p>
     <button class="big-btn" onclick="window.exitTowerOverlay()">Rời Trận</button>`;
   ov.classList.remove('hidden');
   saveGame();
 }
 window.exitTowerOverlay = function(){
   document.getElementById('overlay').classList.add('hidden');
-  if (dead) respawn(); else { player.hp = player.maxHp; player.qi = player.maxQi; }
+  if (dead) respawn(); else { player.hp = player.maxHp; player.qi = player.maxQi; travelTo('ngoai'); }
 };
 function drawTowerHUD(){
   if (!TOWER || !player) return;
   const label = TOWER.drafting ? 'Chọn tiến hóa để tiếp tục…' : `🌀 Đợt ${TOWER.wave} — còn ${mobs.filter(m=>m.towerMob && !m.dead).length} địch`;
-  drawArenaHUD({ label, labelColor:'#c07fe0' });
+  drawArenaHUD({ label, labelColor:'#c07fe0', activeBoss:{ hp:TOWER.coreHp, maxHp:TOWER.coreMaxHp }, barColor:'#ff5a4a' });
+}
+function drawTowerArena(){
+  if (!TOWER) return;
+  ctx.save();
+  // Lõi Trận
+  ctx.beginPath(); ctx.arc(TOWER_CORE.x, TOWER_CORE.y, 46, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(192,127,224,0.28)'; ctx.fill();
+  ctx.lineWidth = 4; ctx.strokeStyle = '#c07fe0'; ctx.stroke();
+  ctx.fillStyle = '#e8d0ff'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('LÕI TRẬN', TOWER_CORE.x, TOWER_CORE.y - 58);
+  // 4 lane từ cổng tới lõi
+  ctx.setLineDash([14, 10]);
+  ctx.strokeStyle = 'rgba(192,127,224,0.35)'; ctx.lineWidth = 3;
+  for (const k of Object.keys(TOWER_GATES)){
+    const g = TOWER_GATES[k];
+    ctx.beginPath(); ctx.moveTo(g.x, g.y); ctx.lineTo(TOWER_CORE.x, TOWER_CORE.y); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  // 4 cổng
+  for (const k of Object.keys(TOWER_GATES)){
+    const g = TOWER_GATES[k];
+    ctx.beginPath(); ctx.arc(g.x, g.y, 26, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(120,80,160,0.4)'; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = '#8a5ab0'; ctx.stroke();
+  }
+  ctx.restore();
 }
 
 // ═══════════ QUỶ CỐC (Devil Square) & HUYẾT THÀNH (Blood Castle) — 2 đấu trường MU Online-lite:
@@ -11016,11 +11112,13 @@ function renderTowerTab(){
   const c = el('char-content'); if (!c) return;
   let html = `<div class="stat-sec">VẠN KIẾM TU LA TRẬN</div>
     <div style="font-size:12px;color:#9aa8d4;line-height:1.85;padding:0 2px 10px">
-    Đấu trường sinh tồn <b style="color:#c07fe0">vô hạn</b>, miễn phí — khác Quỷ Cốc/Huyết Thành ở chỗ
-    không có giờ, không có Rương, không tốn vé: quái vô tận vây quanh ngươi, mỗi đợt hạ sạch → chọn 1
-    trong 3 thẻ tiến hóa tạm thời (mượn tên/hình các võ học đã có), dồn sức mạnh cho tới khi ngươi dừng
-    lại hoặc gục ngã. Buff chỉ tồn tại trong lượt chơi — kết thúc là mất hết, chỉ giữ lại
-    <b style="color:#7ecbff">kỷ lục đợt cao nhất</b>. Không thể mở trong Lunaris City hoặc phó bản.</div>`;
+    Đấu trường phòng thủ <b style="color:#c07fe0">vô hạn</b>, miễn phí — vào một đấu trường riêng
+    (Vạn Kiếm Tu La Trận) với <b style="color:#ffb15c">Lõi Trận</b> ở giữa và quái đổ vào theo 4 lane
+    từ 4 cổng. Đứng chắn một lane để chặn quái — quái lọt qua sẽ đánh thẳng vào Lõi Trận và mất luôn
+    (không thưởng). Mỗi đợt hạ sạch → chọn 1 trong 3 thẻ tiến hóa tạm thời (mượn tên/hình các võ học
+    đã có), dồn sức mạnh cho tới khi Lõi Trận sụp đổ hoặc ngươi tự dừng lại. Buff chỉ tồn tại trong
+    lượt chơi — kết thúc là mất hết, chỉ giữ lại <b style="color:#7ecbff">kỷ lục đợt cao nhất</b>.
+    Không thể mở trong Lunaris City hoặc phó bản.</div>`;
   html += `<div style="font-size:14px;color:#e4ebff;padding:0 2px 12px">Kỷ lục cá nhân: <b style="color:#ffd76a;font-size:17px">Đợt ${player.towerBest || 0}</b></div>`;
   if (TOWER){
     html += `<div style="font-size:13px;color:#c07fe0;padding:0 2px 10px">🌀 Đang trong trận — Đợt ${TOWER.wave}${TOWER.drafting ? ' (đang chờ chọn thẻ)' : ''}. Đóng bảng này để tiếp tục chiến đấu.</div>
