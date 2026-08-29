@@ -8,7 +8,10 @@ MU Online**. Tên thư mục/repo `axie-wuxia` chỉ là di sản lịch sử �
 Mọi thứ làm mới từ nay trở đi phải theo MU Online. Cụ thể:
 
 **KHÔNG dùng:**
-- Chữ Hán/kanji làm hình ảnh (icon, biểu tượng, glyph trang trí trên UI)
+- Chữ Hán/kanji làm hình ảnh (icon, biểu tượng, glyph trang trí trên UI).
+  Toàn bộ file **hiện không còn ký tự CJK nào** — kiểm tra lại bất cứ lúc nào bằng:
+  `python3 -c "import re;print(sum(1 for l in open('public/game/game.js',encoding='utf-8') if re.search(r'[一-鿿]',l)))"`
+  Trường `glyph:` nay dùng ký hiệu phương Tây: `⚔ ✚ ✦ ✧ ✹ ◆ ♣ ▲ ❄ ☼ ⚡ ☾ ☠ ⚑ ★ ◉ ♦ ✽ ● ◑`
 - Thuật ngữ tu tiên: cảnh giới, đan điền, kinh mạch, chân khí, tu vi, độ kiếp, bí kíp, môn phái,
   giang hồ, "Tộc", tiên hiệp, phi thăng...
 - Motif kiếm hiệp: hoa đào, sương khói, thái cực, bát quái, ngũ hành làm hệ thống trung tâm
@@ -33,6 +36,26 @@ Khi thấy tàn dư wuxia trong code/UI cũ: dọn luôn nếu nằm trong phạ
 - Các hằng số lớn: `SECTS` (5 lớp), `VOHOC_DEFS` (chiêu), `SKILL_DEFS`, `MAPS`, `MOBS`, `QUESTS`,
   `SIDE_QUESTS`. Hàm trung tâm: `calcDerived()` (mọi chỉ số), `update(dt)`, `render()`,
   `castSkill()`, `hurtMob()` (điểm áp sát thương DUY NHẤT của toàn game).
+
+## Nhân vật chính — vẽ theo KHỚP XƯƠNG, không phải sprite sheet
+
+Không còn thẻ Axie PNG. `drawHeroFigure()` dựng nhân vật bằng vector trong hộp
+`HERO_W×HERO_H` (160×220), chia theo bộ phận, mỗi chi xoay quanh trục riêng
+(`HERO_JOINT`: vai / hông / cổ). **Animation là hàm số theo thời gian** — đúng cơ
+chế xương MU Online dùng, không phải chuỗi khung hình.
+
+- `heroPose(wph, mv, atkK, castK, now, act)` → góc mọi khớp + `wrot`/`wpush` (vũ khí).
+- `HERO_ACT` — 7 kiểu ra đòn: `slash · spin · thrust · shoot · point · raise · guard`.
+- `SECT_ACT[lớp]` — lớp nào dùng kiểu nào cho `basic / a / tp / buff`.
+  **Chọn kiểu phải KHỚP VFX của chiêu**: Meteor rơi từ trên xuống ⇒ `raise` (giơ
+  trượng lên), Fire Slash quét hình quạt ⇒ `spin`, ngũ tiễn ⇒ `shoot`.
+- `heroCastAct(id, d)` suy ra kiểu lúc `castSkill()`; ghi vào `player.castAct`
+  (đòn thường ghi `player.atkAct`).
+- `HERO_GEAR[lớp]` — `{ pal, cape, upper(g,M,ps,P) }`. Thêm lớp mới = thêm 1 entry.
+- `HERO_METAL[0..9]` — bậc Thần Binh đổi bảng màu giáp, bậc 6+ toả hào quang.
+  Nâng trang bị phải NHÌN THẤY được trên nhân vật.
+
+Chỉ 2 trường hợp còn blit ảnh: Hóa Thân Trấn Ải (mượn sprite quái) và Phi Thăng.
 
 ## Hệ thống kỹ năng (đã tối giản)
 
