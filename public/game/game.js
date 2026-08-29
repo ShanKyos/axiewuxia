@@ -642,11 +642,10 @@ function setMoveTarget(x, y){
   moveTarget = { x: nf.x, y: nf.y };
   addEffect({ type:'ring', x: moveTarget.x, y: moveTarget.y, r:20, color:'#9fd8ff' });
 }
-// Bấm/chuột phải trúng NPC (thường hoặc Nhân Mạch): trả về NPC thay vì chỉ tọa độ,
-// để walkToNpc() có thể tự mở lời thoại khi tới nơi — không cần đi tay rồi bấm E riêng
+// Bấm/chuột phải trúng NPC: trả về NPC thay vì chỉ tọa độ, để walkToNpc() có thể tự mở lời thoại
+// khi tới nơi — không cần đi tay rồi bấm E riêng
 function npcAt(wx, wy){
   for (const n of NPCS) if (n.map === curMap && dist(wx, wy, n.x, n.y-25) < 40) return n;
-  if (typeof tanNpcs !== 'undefined') for (const n of tanNpcs) if (n.map === curMap && dist(wx, wy, n.x, n.y-25) < 40) return n;
   return null;
 }
 function walkToNpc(n){
@@ -872,19 +871,6 @@ const VOHOC_DEFS = {
   ngocnu:      { name:'Hàn Ngọc Tâm Kinh', school:'Toàn Chân · Cổ Mộ', phai:'toanchan', tier:'trung', cat:'Tâm Pháp', type:'passive', unlock:20, color:'#e8c8d8', icon:'assets/skills/vh_ngocnu.png', glyph:'玉', desc:'Bị động: +10% tốc đánh, +8% né.' },
   songthu:     { name:'Song Ảnh Phân Thân Thủ', school:'Toàn Chân · Cổ Mộ', phai:'toanchan', tier:'cao', cat:'Tâm Pháp', type:'passive', unlock:40, color:'#d8d8f0', icon:'assets/skills/vh_songthu.png', glyph:'雙', desc:'Bị động: 30% chiêu vừa tung không tốn hồi chiêu.' },
   tienthiencong:{ name:'Bản Nguyên Công', school:'Toàn Chân · Cổ Mộ', phai:'toanchan', tier:'than', cat:'Tâm Pháp', type:'passive', unlock:60, color:'#ffe9a8', icon:'assets/skills/vh_tienthien.png', glyph:'先', desc:'Bị động: chết tự hồi sinh 50% HP — mỗi 300s một lần.' },
-  // ── Free Axie gia truyền (12 môn — CHỈ lĩnh hội qua Luận Đạo với Axie lang thang, Bonds phím L) ──
-  tp_xuantam:   { name:'Huyền Tâm Thông',       school:'Free Axie', phai:null, npcOnly:true, tier:'cao',  cat:'Tâm Pháp', type:'passive', unlock:1, color:'#b8e8ff', icon:'assets/skills/vh_tlnoicong.png', glyph:'玄', desc:'Bị động: +10% kinh nghiệm.' },
-  tp_linhcam:   { name:'Linh Cảm Thông Thiên',  school:'Free Axie', phai:null, npcOnly:true, tier:'cao',  cat:'Tâm Pháp', type:'passive', unlock:1, color:'#a8ffd8', icon:'assets/skills/vh_taytykinh.png', glyph:'靈', desc:'Bị động: +8% né tránh.' },
-  tp_vanhanh:   { name:'Vân Hành Chu Thiên',    school:'Free Axie', phai:null, npcOnly:true, tier:'trung',cat:'Tâm Pháp', type:'passive', unlock:1, color:'#c8d8ff', icon:'assets/skills/vh_thaiha.png', glyph:'雲', desc:'Bị động: +4 chân khí hồi mỗi giây.' },
-  tp_thietbo:   { name:'Thiết Bố Sam',          school:'Free Axie', phai:null, npcOnly:true, tier:'trung',cat:'Tâm Pháp', type:'passive', unlock:1, color:'#d8c8a8', icon:'assets/skills/vh_tlnoicong.png', glyph:'衫', desc:'Bị động: +10% phòng ngự.' },
-  tp_thuathien: { name:'Thuận Thiên Giả',       school:'Free Axie', phai:null, npcOnly:true, tier:'so',   cat:'Tâm Pháp', type:'passive', unlock:1, color:'#ffe9a8', icon:'assets/skills/vh_thaiha.png', glyph:'順', desc:'Bị động: +15% bạc rơi.' },
-  tp_bachhop:   { name:'Bách Hợp Tâm Pháp',     school:'Free Axie', phai:null, npcOnly:true, tier:'trung',cat:'Tâm Pháp', type:'passive', unlock:1, color:'#ffb8d0', icon:'assets/skills/vh_ngocnu.png', glyph:'合', desc:'Bị động: hồi 0.4% HP mỗi giây.' },
-  tp_hoigiang:  { name:'Hồi Giang Tứ Hải',      school:'Free Axie', phai:null, npcOnly:true, tier:'cao',  cat:'Tâm Pháp', type:'passive', unlock:1, color:'#8ad8e8', icon:'assets/skills/vh_thaiha.png', glyph:'海', desc:'Bị động: +10% sát thương.' },
-  tp_nhatnguyet:{ name:'Nhật Nguyệt Giao Hội',  school:'Free Axie', phai:null, npcOnly:true, tier:'trung',cat:'Tâm Pháp', type:'passive', unlock:1, color:'#ffd0a0', icon:'assets/skills/vh_ngocnu.png', glyph:'月', desc:'Bị động: +6% tốc đánh.' },
-  tp_thancong:  { name:'Thần Công Tâm Kinh',    school:'Free Axie', phai:null, npcOnly:true, tier:'cao',  cat:'Tâm Pháp', type:'passive', unlock:1, color:'#e8b8ff', icon:'assets/skills/vh_tienthien.png', glyph:'神', desc:'Bị động: +8% bạo kích.' },
-  tp_votuong:   { name:'Vô Tướng Tâm Chú',      school:'Free Axie', phai:null, npcOnly:true, tier:'trung',cat:'Tâm Pháp', type:'passive', unlock:1, color:'#d8d8d8', icon:'assets/skills/vh_tlnoicong.png', glyph:'相', desc:'Bị động: +15% chân khí tối đa.' },
-  tp_lietdiem:  { name:'Liệt Diễm Chân Quyết',  school:'Free Axie', phai:null, npcOnly:true, tier:'cao',  cat:'Tâm Pháp', type:'passive', unlock:1, color:'#ff9a7a', icon:'assets/skills/vh_tienthien.png', glyph:'焰', desc:'Bị động: +12% ST bạo kích.' },
-  tp_huyenamtp: { name:'Huyền Âm Tâm Pháp',     school:'Free Axie', phai:null, npcOnly:true, tier:'cao',  cat:'Tâm Pháp', type:'passive', unlock:1, color:'#9a8ad8', icon:'assets/skills/vh_taytykinh.png', glyph:'陰', desc:'Bị động: kháng độc 60%.' },
   // ── Đào Hoa Đảo ──
   bichbochuong:{ name:'Bích Ba Chưởng', school:'Đào Hoa Đảo', phai:'daohoa', tier:'so', cat:'Chưởng', type:'cone', unlock:5, cd:4, qi:10, mult:1.3, color:'#e87a9a', icon:'assets/skills/vh_bichbo.png', glyph:'碧', fx:{ kb:34 }, desc:'Chưởng lực như sóng biển — đẩy lùi địch.' },
   // ── Minh Giáo / Ma Phái ──
@@ -1117,7 +1103,6 @@ function learnVohoc(id){
 window.learnVohocUI = function(id){
   const v = VOHOC_DEFS[id];
   if (!v || vhLearned(id) || v.phai) return;
-  if (v.npcOnly){ addFloat(player.x, player.y-40, 'Tâm pháp gia truyền — chỉ lĩnh hội qua Luận Đạo với tán tu (phím L)', '#b8e8ff', 12); return; }
   const cost = VH_TIER[v.tier].cost;
   if (player.level < v.unlock){ addFloat(player.x, player.y-40, `Cần cấp ${v.unlock}`, '#8a8a8a', 12); return; }
   const _rReq = vhRealmReq(v);
@@ -1818,13 +1803,6 @@ const TIEN_IMGS = {};
 for (const g of ['nam','nu']) for (const sk of ['bach','thanh','kim','huyen','hong','lam']){
   const im = new Image(); im.src = 'assets/tien/' + g + '_' + sk + '.png'; TIEN_IMGS[g + '_' + sk] = im;
 }
-// Sprite tán tu Nhân Mạch — mỗi (phái, giới) một hình 3D riêng, cố định theo NPC
-const TT_IMGS = {};
-for (const g of ['nam','nu']) for (const ph in SECTS){
-  const im = new Image(); im.src = 'assets/tantu/' + ph + '_' + g + '.png'; TT_IMGS[ph + '_' + g] = im;
-}
-function ttImg(n){ const im = TT_IMGS[n.phai + '_' + n.gender]; return (im && im.complete && im.naturalWidth) ? im : null; }
-
 // ---------- Ascension: cultivation realms (Ascension Trial upgrades) ----------
 // Bonus values are TOTAL at that realm. Đột phá consumes Anima + silver + mats;
 // on failure: silver/mats lost, 50% Anima lost, realm kept.
@@ -2258,8 +2236,12 @@ function calcDerived(){
   const tbTier = (player.thanbinh && player.thanbinh.tier) || 0;
   if (tbTier > 0){ s.str += tbTier*3; s.agi += tbTier*2; s.def += tbTier*2; s.vit += tbTier*3; }
   player.tbDmg = tbTier * 0.025;
-  // Ascension realm multipliers (8 cảnh giới)
-  const realm = Math.min((player.dantian && player.dantian.realm) || 0, DANTIAN_REALMS.length - 1);
+  // Ascension realm — MU Online-lite: không cần tự tay Ascension Trial/đốt Anima quản lý nữa, cảnh
+  // giới tự tăng thẳng theo cấp độ (chạm cảnh tối đa Starforged ở cấp 108, dư 12 cấp "đã max" cuối
+  // game). Ghi ngược vào player.dantian.realm để mọi chỗ đọc cũ (mở khóa kỹ năng/danh hiệu/UI) vẫn
+  // đúng như trước, chỉ khác nguồn gán — không còn là lựa chọn/tốn tài nguyên của người chơi nữa.
+  const realm = clamp(Math.floor(player.level / 12), 0, DANTIAN_REALMS.length - 1);
+  if (player.dantian) player.dantian.realm = realm;
   const dr = DANTIAN_REALMS[realm];
   player.dStr = s.str; player.dAgi = s.agi; player.dDef = s.def; player.dVit = s.vit;
   player.atk = Math.round((P.atk + s.str * 2) * (1 + dr.atk));
@@ -2272,11 +2254,14 @@ function calcDerived(){
   // Cung Tiễn: +bạo kích + xuyên giáp
   const bw = BOW_TIERS[(player.bow && player.bow.tier) || 0];
   if (bw) P.crit += bw.crit;
-  // Instinct Channels bonuses
+  // Instinct Channels — cũng tự thông theo cấp độ (không cần tự tay xung mạch từng huyệt nữa),
+  // đều nhau cả 8 mạch, chạm mức tối đa (20 đốt/mạch) ở cấp 120
+  const merPts = clamp(Math.floor(player.level / 6), 0, 20);
   let merAtk = 0, merHp = 0, merDef = 0, merCrit = 0, merEva = 0, merAspd = 0, merQi = 0;
   if (player.meridians){
     for (const md of MERIDIANS){
-      const n = player.meridians[md.id] || 0;
+      player.meridians[md.id] = merPts;
+      const n = merPts;
       if (!n) continue;
       if (md.stat==='hp') merHp += n * md.per;
       else if (md.stat==='qi') merQi += n * md.per;
@@ -2311,30 +2296,6 @@ function calcDerived(){
     if (VH.ngocnu){ P.aspdPct += 10; P.evaPct += 8; }
     if (VH.cuuamkinh){ P.atkPct += 8; P.defPct += 8; P.hpPct += 8; }
     if (VH.cuuduongkinh){ player.vhPoisonRes = Math.max(player.vhPoisonRes, 0.7); P.hpPct += 5; }
-    // Free Axie gia truyền (Luận Đạo — Bonds)
-    if (VH.tp_xuantam) P.expPct += 10;
-    if (VH.tp_linhcam) P.evaPct += 8;
-    if (VH.tp_vanhanh) player.qireg += 4;
-    if (VH.tp_thietbo) P.defPct += 10;
-    if (VH.tp_thuathien) P.silverPct += 15;
-    if (VH.tp_bachhop) player.vhRegen += 0.004;
-    if (VH.tp_hoigiang) P.atkPct += 10;
-    if (VH.tp_nhatnguyet) P.aspdPct += 6;
-    if (VH.tp_thancong) P.crit += 8;
-    if (VH.tp_votuong) P.qiPct += 15;
-    if (VH.tp_lietdiem) P.critDmg += 12;
-    if (VH.tp_huyenamtp) player.vhPoisonRes = Math.max(player.vhPoisonRes, 0.6);
-  }
-  // ── Nhân Mạch: buff theo quan hệ ──
-  if (player.relations){
-    let _kb = 0;
-    for (const _rid in player.relations){
-      const _rb = player.relations[_rid].bond;
-      if (_rb === 'ketbai') _kb++;
-      else if (_rb === 'daolu'){ player.qireg *= 1.08; P.hpPct += 5; }   // Đạo lữ song tu
-      else if (_rb === 'suphu') P.expPct += 10;                          // Trưởng Tộc chỉ điểm
-    }
-    if (_kb) P.atkPct += Math.min(_kb, 5) * 2;                           // Kết bái: +2% ST/người (tối đa 5)
   }
   // Đan điền passives: Quy Nguyên (t4) phong mạch, Lưỡng Nghi (t5) phản đòn, Hỗn Nguyên (t8) bất tử
   player.stunProc = realm >= 4 ? 0.05 : 0;
@@ -2451,7 +2412,6 @@ function newPlayer(sectKey){
     tenuiTT: 0,                                    // Té Núi: hết hạn Trọng Thương (timestamp)
     gt: { t: GT_DAY*0.30 },                          // Lịch Tu Tiên: đồng hồ thế giới (giây game) — mở màn canh Thìn
     ascended: false,                               // Starflight: độ kiếp Starforged thành công → phá bỏ môn phái, thần tiên hóa cảnh
-    relations: {},                                 // Nhân Mạch: quan hệ tán tu { score, love, bond, ... }
     gender: 'nam',                                 // hình dáng tiên nhân: nam / nu
     tienSkin: 'bach',                              // skin tiên y — xem TIEN_SKINS
     vhDmgT:0, vhDmgPct:0, vhEvaT:0, vhEvaPct:0, vhReflT:0, vhAspdT:0, vhAspdPct:0,
@@ -2599,7 +2559,6 @@ function loadGame(){
     if (!player.tienSkin) player.tienSkin = 'bach';
     // Save cũ đã đứng ở Starforged Cảnh trước khi có Starflight → tự thăng khi nạp game
     if (!player.ascended && player.dantian && player.dantian.realm >= DANTIAN_REALMS.length - 1) ascendToImmortal();
-    if (!player.relations) player.relations = {}; // Nhân Mạch backfill
     if (!player.thanbinh) player.thanbinh = { tier: 1 }; // Thần Binh môn phái
     if (!player.mats) player.mats = { manh:0, tichMa:0, anTranAi:0, manhCoThan:0 };
     if (player.bossPity == null) player.bossPity = 0;
@@ -3152,7 +3111,6 @@ window.addEventListener('keydown', e=>{
   if (e.key.toLowerCase()==='k') togglePanel('skill');
   if (e.key.toLowerCase()==='m') togglePanel('map');
   if (e.key.toLowerCase()==='q') togglePanel('qlog');
-  if (e.key.toLowerCase()==='l') togglePanel('relation'); // Nhân Mạch
   if (e.key.toLowerCase()==='u'){ SETTINGS.minimap = !SETTINGS.minimap; saveSettings(); }
   if (e.key.toLowerCase()==='o') togglePanel('settings');
   if (e.key.toLowerCase()==='f') togglePanel('forge');
@@ -3724,15 +3682,11 @@ function currentQuest(){ return questIdx < QUESTS.length ? QUESTS[questIdx] : nu
 
 // ---------- GDD Đợt 2 B3: Nhắc Việc Bấm Ngay ----------
 function anyPanelOpen(){
-  return ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-relation','panel-stage']
+  return ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-stage']
     .some(id => { const e2 = document.getElementById(id); return e2 && !e2.classList.contains('hidden'); });
 }
 function hintCandidates(){
   const out = [];
-  const realm = (player.dantian && player.dantian.realm) || 0;
-  const dr = DANTIAN_REALMS[realm + 1];
-  if (dr && dr.cost && player.dantian.tuvi >= dr.cost.tuvi && player.silver >= dr.cost.silver && player.mat >= dr.cost.mat)
-    out.push({ id:'dotpha', pri:1, txt:'☯ Đã đủ tư lương <b>Ascension Trial</b> cảnh giới kế tiếp — sức mạnh bước ngoặt!', btn:'Ascension Trial Ngay', act:"togglePanel('dantian')" });
   if ((player.free || 0) >= 10)
     out.push({ id:'tiemnang', pri:2, txt:`💠 Còn <b>${player.free}</b> điểm Tiềm Năng chưa phân — cộng ngay cho khỏi phí!`, btn:'Phân Ngay', act:"togglePanel('char')" });
   if (player.mount.tier === 0 && player.level >= 6)
@@ -4153,7 +4107,6 @@ function update(dt){
   player.castT = Math.max(0, (player.castT || 0) - dt);
   player.hurtT = Math.max(0, (player.hurtT || 0) - dt);
   shakeT = Math.max(0, shakeT - dt);
-  updateTanNpcs(dt); // Nhân Mạch: tán tu lang bạt + cừu nhân phục kích
   player.battuCd = Math.max(0, (player.battuCd || 0) - dt);
   if ((player.buffAtkT || 0) > 0){ // Rượu Hổ Cốt hết men
     player.buffAtkT -= dt;
@@ -4188,12 +4141,11 @@ function update(dt){
     player.beacon = null; saveGame();
   }
   // Đã bấm vào NPC (hoặc đèn hiệu trỏ tới NPC) và đang tự đi tới — tới nơi thì tự mở lời thoại,
-  // không cần bấm E riêng. Dùng chung tryTalk() nên mọi loại NPC (nhiệm vụ/rèn/chợ/Nhân Mạch...) đều đúng.
+  // không cần bấm E riêng. Dùng chung tryTalk() nên mọi loại NPC (nhiệm vụ/rèn/chợ...) đều đúng.
   if (npcTalkTarget){
-    const _tn = NPCS.find(x => x.id === npcTalkTarget) || (typeof tanNpcs !== 'undefined' && tanNpcs.find(x => x.id === npcTalkTarget));
+    const _tn = NPCS.find(x => x.id === npcTalkTarget);
     if (!_tn || _tn.map !== curMap) npcTalkTarget = null;
     else if (dist(player.x, player.y, _tn.x, _tn.y) < 90){ npcTalkTarget = null; moveTarget = null; tryTalk(); }
-    else if (moveTarget){ moveTarget.x = _tn.x; moveTarget.y = _tn.y; } // đuổi theo nếu NPC đang di chuyển (Nhân Mạch tán tu lang thang)
   }
 
   // movement — GDD Quan Sát: bỏ hẳn di chuyển tay (WASD/joystick). Người chơi chỉ CHỌN đích
@@ -5022,7 +4974,6 @@ function render(){
 
   // NPC
   drawNpc();
-  drawTanNpcs(); // Nhân Mạch: tán tu giang hồ
 
   // Boss telegraph: vùng cảnh báo chiêu trên mặt đất (GDD Boss v2.1)
   for (const m of mobs){ if (m.tele) drawBossTele(m); }
@@ -5230,10 +5181,6 @@ function render(){
   // interact hint — NPC gần nhất trong bản đồ
   let nearNpc = null;
   for (const n of NPCS){
-    if (n.map !== curMap) continue;
-    if (dist(player.x, player.y, n.x, n.y) < 95){ nearNpc = n; break; }
-  }
-  if (!nearNpc) for (const n of tanNpcs){ // Nhân Mạch
     if (n.map !== curMap) continue;
     if (dist(player.x, player.y, n.x, n.y) < 95){ nearNpc = n; break; }
   }
@@ -6734,22 +6681,13 @@ function renderDantian(){
     if (realm >= 9) html += `<br><b style="color:#fff2b0">◆ Starforged</b> — nhục thân thăng hoa, toàn thuộc tính vượt cực hạn`;
     html += `</div>`;
   }
-  html += `<div style="font-size:12px;color:#9aa8d4;margin-top:6px">Anima tích lũy: giết quái và tĩnh tọa tại Tịnh Tâm Tuyền.</div>`;
   if (next){
-    const pct = Math.min(100, 100*player.dantian.tuvi/next.cost.tuvi);
-    const canPay = player.dantian.tuvi >= next.cost.tuvi && player.silver >= next.cost.silver && player.mat >= next.cost.mat;
-    html += `<div class="tuvi-bar"><div class="fill" style="width:${pct}%"></div><span>${Math.floor(player.dantian.tuvi)} / ${next.cost.tuvi} Anima</span></div>
-      <div class="next-tier"><img src="assets/dantian/${REALM_ICONS[realm+1]}.png" alt="" style="width:34px;height:34px;vertical-align:-10px;margin-right:6px" onerror="this.style.display='none'"><b style="color:#9fd0ff">Đột phá: ${next.name}</b><br>
+    const nextLv = (realm + 1) * 12;
+    html += `<div class="next-tier"><img src="assets/dantian/${REALM_ICONS[realm+1]}.png" alt="" style="width:34px;height:34px;vertical-align:-10px;margin-right:6px" onerror="this.style.display='none'"><b style="color:#9fd0ff">Cảnh giới kế: ${next.name}</b> — tự đạt ở <b style="color:#7ecbff">cấp ${nextLv}</b><br>
       Công Kích +${Math.round(next.atk*100)}% · HP +${Math.round(next.hp*100)}% · Hồi Instinct +${next.qireg}/s
-      ${next.unlock ? `<br><b style="color:#7ecbff">◆ Học được: ${next.unlock}${realm+1===5 ? ' (nhảy lần 2 — phím J)' : ''}</b>` : ''}<br>
-      <span style="opacity:.75">Phí: ${next.cost.tuvi} Anima + ${next.cost.silver}◈ + ${next.cost.mat}✦${next.trib
-        ? `<br>⚡ <b style="color:#ffb15c">Ascension Trial ${next.trib} đợt thiên lôi</b> — né sấm! Trúng 3 tia là thất bại (Lôi Độn Phù -40% sát thương, Đan Ascension Trial chịu thêm 1 tia).<br>(thất bại: mất bạc, vật liệu và 30% Anima — giữ nguyên cảnh giới)`
-        : ` · Tỉ lệ: <b>${next.rate}%</b><br>(thất bại: mất bạc, vật liệu và 50% Anima — giữ nguyên cảnh giới)`}</span></div>
-      <div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 20px" onclick="breakthrough()" ${canPay?'':'disabled'}>${next.trib ? '⚡ Độ Kiếp' : 'Ascension Trial'}</button></div>
-      <div id="dantian-msg"></div>`;
+      ${next.unlock ? `<br><b style="color:#7ecbff">◆ Học được: ${next.unlock}${realm+1===5 ? ' (nhảy lần 2 — phím J)' : ''}</b>` : ''}</div>`;
   } else {
-    html += `<div class="tuvi-bar"><div class="fill" style="width:100%"></div><span>Anima: ${Math.floor(player.dantian.tuvi)}</span></div>
-      <div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">☯ Starforged Cảnh — Instinct đã đạt cảnh giới tối thượng!</div>`;
+    html += `<div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">☯ Starforged Cảnh — Instinct đã đạt cảnh giới tối thượng!</div>`;
   }
   CE().innerHTML = html;
 }
@@ -6807,7 +6745,7 @@ function renderKinhMach(){
     html += `<div style="padding:14px;font-size:13px">Instinct Channels mở khóa ở <b style="color:#7ecbff">cấp 20</b>.<br>Instinct tích lũy bằng chiến đấu và tĩnh tọa.</div>`;
     CE().innerHTML = html; return;
   }
-  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Instinct: <b style="color:#3a9d8b">${Math.floor(player.khi)}</b> <span style="opacity:.6">(+${Math.floor(3)}/s thụ động · ×3 tại Tịnh Tâm Tuyền · +10 mỗi quái tiêu diệt)</span></div>`;
+  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Bát mạch tự thông theo cấp độ — không cần tự tay xung mạch nữa, cứ lên cấp là mạnh dần.</div>`;
   for (const md of MERIDIANS){
     const node = player.meridians[md.id] || 0;
     const pips = Array.from({length:20}, (_,i)=>`<span style="color:${i<node?md.color:'rgba(232,236,255,.22)'}">●</span>`).join('');
@@ -6820,47 +6758,15 @@ function renderKinhMach(){
     else if (md.stat==='crit') perTxt = `+${md.per}% Bạo/đốt`;
     else if (md.stat==='aspd') perTxt = `+${md.per}% Tốc Đánh/đốt`;
     else perTxt = `toàn thuộc tính/đốt`;
-    let btnHtml;
-    if (node >= 20){
-      btnHtml = `<span style="color:${md.color};font-size:11px">VIÊN MÃN</span>`;
-    } else {
-      let cost = 150 + node*80;
-      if (player.dantian.realm >= 4) cost = Math.round(cost * 0.8); // Quy Nguyên giảm phí
-      let rate = Math.max(35, 100 - node*3);
-  if (player.traitMerRate) rate = Math.min(100, Math.round(rate * player.traitMerRate)); // Quẻ: Kỳ Mạch Đại Thông
-      btnHtml = `<button class="mini-btn" onclick="openMeridianNode('${md.id}')" ${player.khi<cost?'disabled':''} style="font-size:11px">Xung (${cost} khí · ${rate}%)</button>`;
-    }
+    const btnHtml = node >= 20 ? `<span style="color:${md.color};font-size:11px">VIÊN MÃN</span>` : `<span style="font-size:11px;opacity:.5">${node}/20</span>`;
     html += `<div class="slot-row" style="display:block">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <b style="color:${md.color};font-size:12px"><img src="assets/dantian/${md.img}.png" alt="" style="width:26px;height:26px;vertical-align:-8px;margin-right:5px" onerror="this.style.display='none'">${md.name}</b>${btnHtml}</div>
       <div style="font-size:9px;letter-spacing:1px;margin:2px 0">${pips}</div>
       <div style="font-size:11px;opacity:.6">${md.label}: ${perTxt}</div></div>`;
   }
-  html += `<div id="km-msg" style="text-align:center;font-size:12px;min-height:16px"></div>`;
-  html += `<div style="font-size:11px;opacity:.6;margin-top:4px">Xung mạch thất bại chỉ mất Instinct, đốt đã thông không mất. Ascension cảnh 4 (Spark Tầng 4) trở lên giảm 20% phí xung mạch.</div>`;
   CE().innerHTML = html;
 }
-window.openMeridianNode = function(id){
-  if (player.level < 20) return;
-  const md = MERIDIANS.find(m=>m.id===id);
-  const node = player.meridians[id] || 0;
-  if (!md || node >= 20) return;
-  let cost = 150 + node*80;
-  if (player.dantian.realm >= 4) cost = Math.round(cost * 0.8); // Quy Nguyên: khí mạch tư thông
-  if (player.khi < cost) return;
-  player.khi -= cost;
-  let rate = Math.max(35, 100 - node*3);
-  if (player.traitMerRate) rate = Math.min(100, Math.round(rate * player.traitMerRate)); // Quẻ: Kỳ Mạch Đại Thông
-  if (Math.random()*100 < rate){
-    player.meridians[id] = node + 1;
-    addFloat(player.x, player.y-40, `Đả thông ${md.name} — đốt ${node+1}/20!`, md.color, 13);
-    addEffect({ type:'ring', x:player.x, y:player.y, r:44, color:md.color });
-    dailyTrack('forge'); // Mục Tiêu Hôm Nay — xung mạch cũng tính tu luyện
-  } else {
-    addFloat(player.x, player.y-40, `Xung mạch thất bại! (${rate}%)`, '#ff7a6a', 12);
-  }
-  calcDerived(); saveGame(); renderDantian();
-};
 // ---------- Sect select / boot ----------
 function startGame(sectKey, quze){
   newPlayer(sectKey);
@@ -7025,7 +6931,7 @@ const CHEAT_HELP = [
   '/item [phẩm 0-4] [giai 1-10] — tạo trang bị vào túi',
   '/god — bật/tắt bất tử',
   '/kill [bán kính=350] — hạ quái quanh mình',
-  '/realm <0-9> — cảnh giới Ascension',
+  '/realm <0-9> — set cấp đủ để đạt cảnh giới Ascension đó (giờ tự động theo cấp độ)',
   '/th <amkhi|bow|gangkhi> <0-7> — tầng Card',
   '/tier <0-8> — tầng Thú Cưỡi',
   '/boss — mở phong ấn & tới Tế Đàn Trấn Ải của map',
@@ -7034,7 +6940,6 @@ const CHEAT_HELP = [
   '/learn — học toàn bộ Võ Học Phổ',
   '/fullskill — học hết võ học + 30 dung hợp, mọi kỹ năng Lv 120',
   '/phi — Starflight ngay: phá bỏ ràng buộc Tộc, ngự kiếm phi hành, skin tiên nhân',
-    '/npc — Nhân Mạch test: triệu tán tu tới cạnh, hảo cảm 700 để thử Tán Gẫu/Tặng Quà/Tỷ Thí/Kết Bái/Tỏ Tình',
   '/bikip <n> — đặt số Bí Kíp',
   '/tenui — gỡ Trọng Thương (té núi lại ngay)',
   '/time [ngày=10] — nhảy thời gian thế giới (Lịch Tu Tiên)',
@@ -7091,11 +6996,6 @@ window.cheatExec = function(raw){
         player.tenuiTT = 0;
         cheatLog('Đã gỡ Trọng Thương — có thể Té Núi ngay', '#8fd18f'); break;
       }
-      case 'npc': // Nhân Mạch test: kéo tán tu tới cạnh + hảo cảm cao
-        ensureTanNpcs();
-        tanNpcs.forEach((n, i) => { n.x = player.x + 60 + i*40; n.y = player.y + 40; const r = ttRel(n); r.score = Math.max(r.score, 700); if (n.gender !== player.gender) r.love = Math.max(r.love, 80); });
-        cheatLog(`🏮 ${tanNpcs.length} tán tu đã tề tựu — hảo cảm 700, tình cảm 80 (khác giới). Bấm E để giao tiếp, L xem Nhân Mạch.`);
-        return;
       case 'phi': { // Starflight ngay — test giai đoạn Thần Tiên Hóa Cảnh
         player.dantian.realm = DANTIAN_REALMS.length - 1;
         ascendToImmortal();
@@ -7139,10 +7039,11 @@ window.cheatExec = function(raw){
         list.forEach(m => { m.hp = 0; killMob(m, 'cheat'); });
         cheatLog('Đã hạ ' + list.length + ' mục tiêu trong ' + r + 'px.', '#8fd18f'); break;
       }
-      case 'realm': {
-        player.dantian.realm = clamp(Math.round(num(1, 0)), 0, DANTIAN_REALMS.length - 1);
+      case 'realm': { // Cảnh giới giờ tự động theo cấp độ (calcDerived()) — set cấp tương ứng thay vì gán thẳng
+        const _r = clamp(Math.round(num(1, 0)), 0, DANTIAN_REALMS.length - 1);
+        player.level = Math.max(player.level, _r * 12);
         calcDerived(); player.hp = player.maxHp;
-        cheatLog('Ascension → ' + DANTIAN_REALMS[player.dantian.realm].name, '#8fd18f'); break;
+        cheatLog('Ascension → ' + DANTIAN_REALMS[player.dantian.realm].name + ' (cấp ' + player.level + ')', '#8fd18f'); break;
       }
       case 'th': {
         const sys = parts[1];
@@ -7274,7 +7175,7 @@ function togglePanel(which){
     }
     return;
   }
-  const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', qlog:'panel-qlog', relation:'panel-relation' };
+  const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', qlog:'panel-qlog' };
   const id = map[which];
   const p = el(id);
   const wasHidden = p.classList.contains('hidden');
@@ -7294,7 +7195,6 @@ function togglePanel(which){
 function renderPanel(which){
   if (which==='settings'){ renderSettings(); return; }
   if (which==='qlog'){ renderQlog(); return; }
-  if (which==='relation'){ renderRelationPanel(); return; }
   if (which==='char'){ window.charTab = 'info'; renderCharPanel(); }
   else if (which==='inv') renderInv();
   else if (which==='bag') renderBag();
@@ -7303,7 +7203,7 @@ function renderPanel(which){
   else renderCharPanel();
 }
 function closePanels(){
-  for (const id of ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-relation','panel-stage']){
+  for (const id of ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-stage']){
     const e2 = document.getElementById(id);
     if (e2) e2.classList.add('hidden');
   }
@@ -7621,7 +7521,6 @@ function renderSkillPanel(){
   } else {
     html += `<div class="stat-sec">KỸ NĂNG KHÁC — hệ Card/Ascension riêng</div>`;
     for (const id of ['amkhi','gangkhi','danchi','bow','tieuhon']) html += skillDefRowHtml(id);
-    html += vohocSchoolsHtml(_v => _v.npcOnly);
     html += `<div class="stat-sec">BỊ ĐỘNG — tự kích hoạt, không cần gán</div>`;
     for (const ps of PASSIVE_SKILLS){
       const on = ps.req();
@@ -9539,11 +9438,6 @@ function tryTalk(){
     const d = dist(player.x, player.y, n.x, n.y);
     if (d < bd){ bd = d; best = n; }
   }
-  for (const n of tanNpcs){ // Nhân Mạch: tán tu
-    if (n.map !== curMap) continue;
-    const d = dist(player.x, player.y, n.x, n.y);
-    if (d < bd){ bd = d; best = n; }
-  }
   if (!best) return;
   tutAdvance('npc');
   questOnTalk(best);
@@ -9555,7 +9449,6 @@ function tryTalk(){
   if (best.talk === 'trunya'){ renderTruyNa(); return; }
   if (best.talk === 'vanduyen'){ renderVanDuyen(); return; }
   if (best.talk === 'tenui'){ renderTeNui(best); return; }
-  if (best.talk === 'tantu'){ window.ttLine = ''; renderTanTuDlg(best); return; } // Nhân Mạch
 }
 // Hái Thảo Dược (phím J, ưu tiên trước Phiêu Vân Bộ nếu đang đứng gần bụi thuốc còn hái được) —
 // trả về true nếu vừa hái, để onkeydown chỉ nhảy (doJump) lúc không có gì để hái gần đó
@@ -9586,260 +9479,6 @@ function tryHarvestHerb(){
   }
   AudioSys.sfx('ui', 0.5);
   return true;
-}
-
-// ═════════════ LUNACIA BONDS — Free Axie & Quan Hệ ═════════════
-let tanNpcs = []; let tanKey = '';
-function ttSeed(str){ let h = 2166136261; for (let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
-function ttRng(seed){ let a = seed; return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-function tanDay(){ return Math.floor(gameClock().t / GT_DAY); }
-function tanWeek(){ return Math.floor(gameClock().t / (GT_DAY*7)); }
-const TT_HO = ['Ashwing','Mossbrook','Duskmere','Brightfen','Thornvale','Windholt','Palefrost','Sundrift','Nightbloom','Hollowmere','Ravenshade','Larkspur','Farrow','Stormwick','Fernglow','Wildroot'];
-const TT_TEN_NAM = ['Corwin','Elric','Garrick','Thane','Roric','Aldous','Bram','Cassian','Doran','Emeric','Fenwick','Gavriel'];
-const TT_TEN_NU = ['Elara','Wrenna','Isolde','Briar','Rosalind','Thessaly','Marigold','Sable','Ondine','Celestine','Fenna','Linnea'];
-const TT_TRAITS = {
-  chinh:{ name:'Chính Trực', chat:12, gift:1.0, love:1.0, duelHate:false, desc:'ngay thẳng, trọng nghĩa khí' },
-  hao:  { name:'Hào Sảng',   chat:15, gift:1.3, love:1.0, duelHate:false, desc:'cởi mở, thích kết giao bằng hữu' },
-  ngao: { name:'Ngạo Mạn',   chat:6,  gift:1.0, love:0.8, duelHate:true,  desc:'kiêu ngạo — thắng họ nhiều sẽ sinh thù hận' },
-  ta:   { name:'Tà Mị',      chat:8,  gift:1.5, love:1.0, duelHate:true,  desc:'tà khí âm u, trọng lợi lạc, dễ ghi thù' },
-  am:   { name:'Âm Hiểm',    chat:8,  gift:1.2, love:0.7, duelHate:false, desc:'khó lường, ít để lộ tâm tư' },
-  on:   { name:'Ôn Hòa',     chat:12, gift:1.0, love:1.5, duelHate:false, desc:'ôn nhu dễ gần, tình cảm dễ nảy nở' },
-  si:   { name:'Si Tình',    chat:10, gift:1.1, love:2.0, duelHate:false, desc:'đa tình, dễ rung động' },
-  tham: { name:'Tham Lam',   chat:4,  gift:2.0, love:0.9, duelHate:false, desc:'tham tài — quà càng quý càng trọng ngươi' },
-};
-const HC_TIERS = [
-  { min:0,   name:'Xa Lạ',            color:'#b8b0a0' },
-  { min:100, name:'Quen Biết',        color:'#9fd0ff' },
-  { min:250, name:'Hảo Hữu',          color:'#8ad88a' },
-  { min:400, name:'Tri Kỷ',           color:'#5ac8b8' },
-  { min:600, name:'Chí Giao',         color:'#ffb15c' },
-  { min:800, name:'Sinh Tử Chi Giao', color:'#ff9a5a' },
-];
-function hcTier(s){ if (s <= -30) return { name:'Kết Thù', color:'#ff5a4a' }; let t = HC_TIERS[0]; for (const x of HC_TIERS) if (s >= x.min) t = x; return t; }
-const TT_BOND_NAME = { ketbai:'⚑ Kết Bái', daolu:'❤ Đạo Lữ', suphu:'☯ Trưởng Tộc', dode:'☯ Hậu Bối', cuthu:'⚔ Cừu Nhân' };
-const TT_TP_POOL = ['tp_xuantam','tp_linhcam','tp_vanhanh','tp_thietbo','tp_thuathien','tp_bachhop','tp_hoigiang','tp_nhatnguyet','tp_thancong','tp_votuong','tp_lietdiem','tp_huyenamtp'];
-const TT_LINES = {
-  chinh:['Lunacia đang loạn lạc, kẻ mạnh nên lấy nghĩa làm đầu.','Nghe nói Ngũ Ấn lại xao động — ngươi định xông pha chứ?','Vũ khí vô tình, nhân tâm hữu nghĩa.'],
-  hao:['Ha ha! Gặp ngươi là thấy hợp nhãn duyên!','Rượu ngon gặp tri âm, nâng chén nào!','Ngày mai ta định lên Võ Đương ngắm tuyết, ngươi thế nào?'],
-  ngao:['Hừ, ngươi cũng xứng nói chuyện với ta sao... nhưng thôi, miễn cưỡng nghe.','Võ công của ta, cả giang hồ mấy ai địch nổi.','Đừng tưởng vài lễ vật mà mua được lòng ta.'],
-  ta:['Chính đạo? Tà đạo? Thắng mới là đạo, hắc hắc.','Ta nghe nói vách Té Núi giờ Thìn có cơ duyên lớn đấy...','Ngươi có vẻ... rất có tiền đồ. Ta thích kẻ có tiền đồ.'],
-  am:['...Ngươi tìm ta có việc gì?','Biết nhiều quá, không phải chuyện tốt đâu.','Giang hồ này, lợi ích mới là thật.'],
-  on:['Trăng hôm nay thật đẹp, ngồi lại uống trà với ta không?','Tu luyện gấp gáp chi, tâm an vạn sự an.','Ngươi đến là ta vui rồi, không cần lễ vật chi.'],
-  si:['Từ khi gặp ngươi, ta tu luyện cứ phân tâm...','Đêm qua ta mơ thấy... thôi, không nói đâu.','Nếu có kiếp sau, mong sớm gặp ngươi hơn.'],
-  tham:['Ngươi mang theo gì quý không? Cho ta xem chút!','Bạc không phải vạn năng, nhưng không bạc thì... ngươi hiểu mà.','Ta thu mọi thứ — trừ lừa gạt.'],
-};
-const TT_GIFTS = [
-  { id:'silver',    name:'Lễ Bạc 500◈',      val:14, can:() => player.silver >= 500,        pay:() => { player.silver -= 500; } },
-  { id:'mat',       name:'Huyền Thiết ×5',   val:26, can:() => player.mat >= 5,             pay:() => { player.mat -= 5; } },
-  { id:'tiendan',   name:'Tiên Đan ×2',      val:38, can:() => player.tienDan >= 2,         pay:() => { player.tienDan -= 2; } },
-  { id:'tula',      name:'Tu La Tinh Thạch', val:60, can:() => player.gems.tuLa >= 1,       pay:() => { player.gems.tuLa--; } },
-  { id:'honnguyen', name:'Hỗn Nguyên Thạch', val:85, can:() => player.gems.honNguyen >= 1,  pay:() => { player.gems.honNguyen--; } },
-];
-function genTanTu(mapId, idx, rng){
-  const gender = rng() < 0.5 ? 'nam' : 'nu';
-  const name = TT_HO[Math.floor(rng()*TT_HO.length)] + ' ' + (gender === 'nam' ? TT_TEN_NAM[Math.floor(rng()*TT_TEN_NAM.length)] : TT_TEN_NU[Math.floor(rng()*TT_TEN_NU.length)]);
-  const sectKeys = Object.keys(SECTS);
-  const traitKeys = Object.keys(TT_TRAITS);
-  const pr = (player.dantian && player.dantian.realm) || 0;
-  return {
-    id:`tt_${mapId}_${tanWeek()}_${idx}`, name, gender,
-    phai: sectKeys[Math.floor(rng()*sectKeys.length)],
-    trait: traitKeys[Math.floor(rng()*traitKeys.length)],
-    realm: clamp(Math.round(pr + (rng()*4 - 1.5)), 2, DANTIAN_REALMS.length - 1),
-    tp: TT_TP_POOL[(idx*2 + tanWeek()) % TT_TP_POOL.length],
-    map: mapId, talk:'tantu',
-    x: rnd(260, MAP.w-260), y: rnd(260, MAP.h-260), tx: null, ty: null, waitT: 0, face: 0, wob: Math.random()*10,
-  };
-}
-function ensureTanNpcs(){
-  if (!player || typeof curMap === 'undefined' || !curMap) return;
-  const key = curMap + '_' + tanWeek();
-  if (tanKey === key && tanNpcs.length) return;
-  tanKey = key;
-  const rng = ttRng(ttSeed('tantu_' + key));
-  const n = 3 + Math.floor(rng()*2); // 3-4 tán tu mỗi bản đồ, luân phiên theo tuần (Lịch Tu Tiên)
-  tanNpcs = [];
-  for (let i=0;i<n;i++) tanNpcs.push(genTanTu(curMap, i, rng));
-}
-function ttRel(n){
-  if (!player.relations) player.relations = {};
-  if (!player.relations[n.id]) player.relations[n.id] = { score:0, love:0, bond:'none', name:n.name, phai:n.phai, gender:n.gender, realm:n.realm, trait:n.trait, met:tanDay(), chatDay:-1, duelW:0, duelL:0, luandao:false, ambWeek:-1 };
-  return player.relations[n.id];
-}
-function updateTanNpcs(dt){
-  ensureTanNpcs();
-  for (const n of tanNpcs){
-    // Neo vị trí cố định — tán tu đứng một chỗ quen thuộc, chỉ khẽ đung đưa (±18px) để người chơi dễ nhớ
-    if (n.hx == null){ n.hx = n.x; n.hy = n.y; n.tx = n.x; n.ty = n.y; }
-    n.waitT -= dt;
-    if (n.waitT <= 0){ n.tx = n.hx + rnd(-18, 18); n.ty = n.hy + rnd(-18, 18); n.waitT = rnd(3, 8); }
-    if (n.tx != null && dist(n.x, n.y, n.tx, n.ty) > 5){ const ang = Math.atan2(n.ty - n.y, n.tx - n.x); n.x += Math.cos(ang)*10*dt; n.y += Math.sin(ang)*10*dt; n.face = ang; }
-    // Cừu nhân phục kích — mỗi tuần một lần khi chạm mặt
-    const rel = player.relations && player.relations[n.id];
-    if (rel && rel.bond === 'cuthu' && rel.ambWeek !== tanWeek() && dist(player.x, player.y, n.x, n.y) < 250){
-      rel.ambWeek = tanWeek();
-      zoneBanner = { text:'⚔ PHỤC KÍCH!', sub:`${n.name} dẫn môn khả đến trả thù — chống đỡ!`, color:'#ff5a4a', t:4 };
-      for (let i=0;i<2;i++) spawnMob('assassin', { x:player.x, y:player.y, r:130 });
-      AudioSys.sfx('hurt', 0.7); saveGame();
-    }
-  }
-}
-function drawTanNpcs(){
-  for (const n of tanNpcs){
-    if (n.map !== curMap) continue;
-    const sc = SECTS[n.phai], rel = player.relations && player.relations[n.id];
-    ctx.fillStyle = 'rgba(0,0,0,.16)'; ctx.beginPath(); ctx.ellipse(n.x, n.y+8, 13, 5, 0, 0, 7); ctx.fill();
-    const bob = Math.sin(Date.now()/500 + n.wob)*1.5;
-    const _tim = ttImg(n);
-    if (_tim){
-      const sh = 62, sw = sh * _tim.naturalWidth / _tim.naturalHeight;
-      ctx.drawImage(_tim, n.x - sw/2, n.y - sh + 10 + bob*0.5, sw, sh);
-    } else {
-      ctx.fillStyle = sc.color; ctx.beginPath(); ctx.ellipse(n.x, n.y-8+bob*0.3, 10, 14, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.beginPath(); ctx.ellipse(n.x, n.y-15, 5, 6, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = '#e8cfa8'; ctx.beginPath(); ctx.arc(n.x, n.y-26, 6.5, 0, 7); ctx.fill();
-      ctx.fillStyle = '#1a1712';
-      if (n.gender === 'nu'){ ctx.beginPath(); ctx.arc(n.x, n.y-30, 5.5, Math.PI, 0); ctx.fill(); ctx.beginPath(); ctx.arc(n.x-5, n.y-28, 2.4, 0, 7); ctx.arc(n.x+5, n.y-28, 2.4, 0, 7); ctx.fill(); }
-      else { ctx.beginPath(); ctx.arc(n.x, n.y-30, 4.2, Math.PI, 0); ctx.fill(); ctx.fillRect(n.x-1, n.y-37, 2, 5); }
-    }
-    if (rel && rel.score >= 400 && rel.bond !== 'cuthu'){ ctx.strokeStyle = 'rgba(255,215,106,.45)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(n.x, n.y-12, 17 + Math.sin(Date.now()/400)*2, 0, 7); ctx.stroke(); }
-    ctx.font = '11px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
-    ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 3;
-    const tag = rel && TT_BOND_NAME[rel.bond] ? ' ' + TT_BOND_NAME[rel.bond].split(' ')[0] : '';
-    ctx.fillStyle = rel && rel.bond === 'cuthu' ? '#ff7a6a' : rel && rel.score >= 250 ? '#ffd76a' : '#fff';
-    ctx.strokeText(n.name + tag, n.x, n.y-56); ctx.fillText(n.name + tag, n.x, n.y-56);
-    if (rel){ const t2 = hcTier(rel.score); ctx.font = '9.5px "Be Vietnam Pro", sans-serif'; ctx.fillStyle = t2.color; ctx.strokeText(t2.name, n.x, n.y-45); ctx.fillText(t2.name, n.x, n.y-45); }
-  }
-}
-
-// ---------- Đối thoại tán tu ----------
-window.ttCur = null; window.ttLine = '';
-function renderTanTuDlg(n){
-  window.ttCur = n.id;
-  const rel = ttRel(n), tr = TT_TRAITS[n.trait], tier = hcTier(rel.score), sc = SECTS[n.phai];
-  const opp = n.gender !== player.gender;
-  let html = `<h3>${n.gender === 'nu' ? '🌸' : '🗡'} ${n.name}</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div style="text-align:center;margin:-4px 0 4px"><img src="assets/tantu/${n.phai}_${n.gender}.png" alt="${n.name}" style="height:150px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5));border-radius:8px" onerror="this.style.display='none'"></div>`;
-  html += `<div style="font-size:12px;color:#9aa8d4;line-height:1.7;margin-bottom:6px">
-    <b style="color:${sc.color}">${sc.name}</b> · ${DANTIAN_REALMS[n.realm].name} · Tính cách: <b style="color:#7ecbff">${tr.name}</b> <span style="opacity:.65">(${tr.desc})</span></div>`;
-  html += `<div style="font-size:11.5px;margin-bottom:2px">Hảo cảm: <b style="color:${tier.color}">${tier.name}</b> (${rel.score})${rel.bond !== 'none' ? ` · <b style="color:#ffd76a">${TT_BOND_NAME[rel.bond] || ''}</b>` : ''}</div>`;
-  html += `<div style="height:6px;background:rgba(0,0,0,.4);border-radius:3px;margin-bottom:6px"><div style="height:100%;width:${clamp(rel.score/10, 0, 100)}%;background:${tier.color};border-radius:3px"></div></div>`;
-  if (opp) html += `<div style="font-size:11.5px;margin-bottom:6px;color:#ffb8d0">❤ Tình cảm: ${rel.love}/100${player.daolu ? (player.daolu === n.id ? ' — đạo lữ của ngươi' : ' (ngươi đã có đạo lữ)') : ''}</div>`;
-  if (window.ttLine) html += `<div style="font-size:12.5px;font-style:italic;color:#e4ebff;background:rgba(0,0,0,.25);padding:8px 10px;border-radius:8px;margin-bottom:8px;line-height:1.6">“${window.ttLine}”</div>`;
-  const chatted = rel.chatDay === tanDay();
-  const btns = [];
-  btns.push(`<button class="mini-btn" ${chatted ? 'disabled' : ''} onclick="ttAct('chat')">💬 Tán Gẫu${chatted ? ' (hôm nay rồi)' : ''}</button>`);
-  btns.push(`<button class="mini-btn" onclick="ttAct('giftmenu')">🎁 Tặng Quà</button>`);
-  btns.push(`<button class="mini-btn" onclick="ttAct('duel')">⚔ Tỷ Thí</button>`);
-  if (rel.bond !== 'cuthu'){
-    if (!rel.luandao && (rel.score >= 400 || rel.bond === 'suphu')) btns.push(`<button class="mini-btn" style="border-color:#5ac8b8" onclick="ttAct('luandao')">📖 Luận Đạo — truyền thụ ${VOHOC_DEFS[n.tp].name}</button>`);
-    if (rel.bond === 'none' && rel.score >= 600) btns.push(`<button class="mini-btn" style="border-color:#ffb15c" onclick="ttAct('ketbai')">⚑ Kết Bái huynh đệ / tỷ muội</button>`);
-    if (opp && !player.daolu && (rel.bond === 'none' || rel.bond === 'ketbai') && rel.score >= 250 && rel.love >= 60) btns.push(`<button class="mini-btn" style="border-color:#ffb8d0" onclick="ttAct('totinh')">❤ Tỏ Tình — cầu đạo lữ</button>`);
-    const pr = (player.dantian && player.dantian.realm) || 0;
-    if (rel.bond === 'none' && n.realm >= pr + 2 && rel.score >= 400 && !player.suphu) btns.push(`<button class="mini-btn" style="border-color:#b08ae8" onclick="ttAct('baisu')">☯ Bái Trưởng Tộc — ${sc.name} ${n.name}</button>`);
-  } else {
-    btns.push(`<div style="font-size:11.5px;color:#ff7a6a">⚔ Cừu nhân — hắn sẽ phục kích ngươi khi chạm mặt! Tặng lễ quý để hòa giải.</div>`);
-  }
-  html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${btns.join('')}</div>`;
-  el('panel-quest').innerHTML = html;
-  closePanels(); el('panel-quest').classList.remove('hidden');
-}
-function ttFind(){ return tanNpcs.find(x => x.id === window.ttCur); }
-window.ttAct = function(act, arg){
-  const n = ttFind(); if (!n){ closePanels(); return; }
-  const rel = ttRel(n), tr = TT_TRAITS[n.trait], opp = n.gender !== player.gender;
-  const say = t => { window.ttLine = t; };
-  if (act === 'chat'){
-    if (rel.chatDay === tanDay()){ say('Hôm nay nói nhiều rồi, ngày mai ghé lại nhé.'); }
-    else {
-      rel.chatDay = tanDay();
-      const gain = tr.chat + Math.floor(rnd(0, 7));
-      rel.score = clamp(rel.score + gain, -100, 1000);
-      if (opp) rel.love = clamp(rel.love + Math.round(2*tr.love), 0, 100);
-      say(TT_LINES[n.trait][Math.floor(Math.random()*TT_LINES[n.trait].length)] + ` (+${gain} hảo cảm)`);
-      AudioSys.sfx('ui', 0.6);
-    }
-  } else if (act === 'giftmenu'){
-    let g = `<div style="margin-top:8px">`;
-    for (const gf of TT_GIFTS) g += `<div class="npc-shop-row"><span><b style="color:#7ecbff">${gf.name}</b><br><span style="font-size:11px;opacity:.7">+${Math.round(gf.val*tr.gift)} hảo cảm${opp ? ` · +${Math.round(gf.val*0.3*tr.love)} tình cảm` : ''}</span></span><button class="mini-btn" ${gf.can() ? '' : 'disabled'} onclick="ttAct('gift','${gf.id}')">Tặng</button></div>`;
-    g += `</div>`;
-    el('panel-quest').innerHTML = `<h3>🎁 Tặng quà cho ${n.name}</h3><button class="close-x" onclick="renderTanTuDlg(ttFind())">←</button>` + g;
-    return;
-  } else if (act === 'gift'){
-    const gf = TT_GIFTS.find(x => x.id === arg); if (!gf || !gf.can()) return;
-    gf.pay();
-    const gain = Math.round(gf.val * tr.gift);
-    rel.score = clamp(rel.score + gain, -100, 1000);
-    if (opp) rel.love = clamp(rel.love + Math.round(gf.val*0.3*tr.love), 0, 100);
-    say(`${n.name} nhận ${gf.name} — ${rel.bond === 'cuthu' ? 'sắc mặt dịu hẳn.' : 'rất hài lòng!'} (+${gain} hảo cảm)`);
-    if (rel.bond === 'cuthu' && rel.score >= -10){ rel.bond = 'none'; zoneBanner = { text:'🕊 HÒA GIẢI', sub:`${n.name} chấp nhận lễ bồi — mối thù xem như xóa nhòa`, color:'#8ad88a', t:4 }; }
-    AudioSys.sfx('ui', 0.7);
-  } else if (act === 'duel'){
-    const pr = (player.dantian && player.dantian.realm) || 0;
-    const pPow = player.atk + player.maxHp/8 + pr*80, nPow = n.realm*150 + 200 + rnd(0, 160);
-    const win = Math.random() < pPow/(pPow + nPow);
-    if (win){
-      rel.duelW++;
-      if (tr.duelHate){
-        rel.score = clamp(rel.score - 30, -100, 1000);
-        say(`Ngươi thắng rồi... nhưng mối nhục này ${n.name} GHI NHỚ! (-30 hảo cảm)`);
-        if (rel.duelW >= 2 && rel.bond !== 'cuthu'){ rel.bond = 'cuthu'; rel.score = Math.min(rel.score, -50); zoneBanner = { text:'⚔ KẾT THÙ GIANG HỒ', sub:`${n.name} thề sẽ trả mối nhục này — coi chừng phục kích!`, color:'#ff5a4a', t:4.5 }; }
-      } else { rel.score = clamp(rel.score + 18, -100, 1000); if (opp) rel.love = clamp(rel.love + Math.round(4*tr.love), 0, 100); say(`Hay lắm! ${n.name} thua tâm phục khẩu phục — võ công của ngươi thật xuất thần! (+18 hảo cảm)`); }
-    } else {
-      rel.duelL++; player.hp = Math.max(1, Math.round(player.hp * 0.85));
-      rel.score = clamp(rel.score + 5, -100, 1000);
-      say(`${n.name} thắng nhưng vẫn dừng tay đúng lúc — "võ công ngươi cũng có chút ý tứ". (+5 hảo cảm, mất ít HP)`);
-    }
-    AudioSys.sfx('crit', 0.7);
-  } else if (act === 'luandao'){
-    rel.luandao = true;
-    const tp = VOHOC_DEFS[n.tp];
-    if (vhLearned(n.tp)){ player.bikipVH = (player.bikipVH || 0) + 2; say(`Hai người luận đạo suốt đêm — tâm pháp đã thông, ${n.name} tặng thêm 2 📜 Bí Kíp.`); }
-    else { player.vohoc[n.tp] = true; say(`${n.name} truyền thụ gia bảo: 【${tp.name}】— ${tp.desc}`); zoneBanner = { text:'📖 LUẬN ĐẠO NGỘ PHÁP', sub:`Lĩnh hội ${tp.name} — tâm pháp gia truyền của ${n.name}`, color:'#5ac8b8', t:4.5 }; }
-    rel.score = clamp(rel.score + 10, -100, 1000);
-    calcDerived(); AudioSys.sfx('levelup', 0.9);
-  } else if (act === 'ketbai'){
-    rel.bond = 'ketbai'; player.bikipVH = (player.bikipVH || 0) + 3; player.tienDan = (player.tienDan || 0) + 2;
-    zoneBanner = { text:'⚑ KIM LAN KẾT NGHĨA', sub:`${n.name} — từ nay phúc cùng hưởng, họa cùng chia (+2% ST vĩnh viễn, +3📜)`, color:'#ffb15c', t:5 };
-    say(`Hoàng thiên hậu thổ chứng giám — từ nay ta là huynh đệ/tỷ muội một nhà!`);
-    calcDerived(); AudioSys.sfx('levelup', 1);
-  } else if (act === 'totinh'){
-    const chance = 0.5 + rel.love/200;
-    if (Math.random() < chance){
-      rel.bond = 'daolu'; player.daolu = n.id;
-      zoneBanner = { text:'❤ ĐẠO LỮ ĐỊNH TAM SINH', sub:`${n.name} nhận lỡi — song tu chi lộ bắt đầu (+8% hồi Instinct, +5% HP)`, color:'#ffb8d0', t:5 };
-      say(`${n.name} đỏ mặt gật đầu... từ nay non sông cùng đi, sinh tử cùng gánh.`);
-      calcDerived(); AudioSys.sfx('levelup', 1);
-      AudioSys.playBgm(BGM_ROMANCE); // Tiếu Vấn Tình Duyên — song ca chúc phúc đạo lữ
-    } else { rel.score = clamp(rel.score - 20, -100, 1000); rel.love = clamp(rel.love - 15, 0, 100); say(`${n.name} lắc đầu: "Duyên phận... chưa tới." (-20 hảo cảm, -15 tình cảm)`); }
-  } else if (act === 'baisu'){
-    rel.bond = 'suphu'; player.suphu = n.id;
-    zoneBanner = { text:'☯ BÁI SƯ THỤ NGHIỆP', sub:`${n.name} nhận ngươi làm đồ đệ — +10% kinh nghiệm, Luận Đạo không cần Tri Kỷ`, color:'#b08ae8', t:5 };
-    say(`${n.name} đỡ ngươi dậy: "Đồ nhi, từ nay chăm chỉ tu luyện."`);
-    calcDerived(); AudioSys.sfx('levelup', 1);
-  }
-  saveGame(); renderTanTuDlg(n);
-};
-// ---------- Bảng Nhân Mạch (phím L) ----------
-function renderRelationPanel(){
-  const rels = player.relations || {};
-  let html = `<h3>🏮 Lunacia Nhân Mạch</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div style="font-size:11.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">Tán tu lang bạt giang hồ — Tán Gẫu mỗi ngày, Tặng Quà, Tỷ Thí để tăng hảo cảm. Đến <b style="color:#5ac8b8">Tri Kỷ</b> có thể <b>Luận Đạo</b> nhận tâm pháp gia truyền; <b style="color:#ffb15c">Chí Giao</b> mở Kết Bái. Danh sách luân phiên theo tuần (Lịch Tu Tiên).</div>`;
-  const ids = Object.keys(rels).sort((a, b) => (rels[b].score) - (rels[a].score));
-  if (!ids.length) html += `<div style="opacity:.6;font-size:12px">Chưa quen biết ai — đi ra ngoài tìm các tán tu đang lang bạt, lại gần bấm E.</div>`;
-  for (const id of ids){
-    const r = rels[id], tier = hcTier(r.score), sc = SECTS[r.phai] || { color:'#aaa', name:'?' };
-    const live = tanNpcs.find(x => x.id === id);
-    const _av = `<img src="assets/tantu/${r.phai}_${r.gender}.png" style="height:40px;vertical-align:top;margin-right:6px;border-radius:5px;float:left" onerror="this.style.display='none'">`;
-    const bondTxt = r.bond !== 'none' ? ` · <b style="color:#ffd76a">${TT_BOND_NAME[r.bond] || ''}</b>` : '';
-    html += `<div class="npc-shop-row" style="align-items:flex-start"><span style="flex:1">
-      ${_av}<b style="color:${sc.color}">${r.gender === 'nu' ? '🌸' : '🗡'} ${r.name}</b> <span style="font-size:10.5px;opacity:.65">${sc.name} · ${DANTIAN_REALMS[r.realm] ? DANTIAN_REALMS[r.realm].name : ''} · ${TT_TRAITS[r.trait] ? TT_TRAITS[r.trait].name : ''}</span><br>
-      <span style="font-size:11px;color:${tier.color}">${tier.name} (${r.score})</span>${bondTxt}${r.love > 0 ? ` <span style="font-size:11px;color:#ffb8d0">· ❤ ${r.love}</span>` : ''}<br>
-      <div style="height:4px;background:rgba(0,0,0,.4);border-radius:2px;margin:3px 0;max-width:220px"><div style="height:100%;width:${clamp(r.score/10, 0, 100)}%;background:${tier.color};border-radius:2px"></div></div>
-      <span style="font-size:10px;opacity:.55">${live ? '📍 Đang ở ' + (MAPS[curMap] ? MAPS[curMap].name : curMap) + ' — lại gần bấm E' : '☁ Vân du bất định — gặp lại theo tuần'}</span>
-    </span>${live ? `<button class="mini-btn" onclick="renderTanTuDlg(tanNpcs.find(x=>x.id==='${id}'))">Gặp</button>` : ''}</div>`;
-  }
-  el('panel-relation').innerHTML = html;
 }
 
 // ---------- Vẽ NPC (override — dấu ! / … theo từng NPC) ----------
@@ -10297,50 +9936,9 @@ TITLES.push({ id:'tmsq', name:'Thiên Mệnh Sở Quy', cond:p=>!!p.quzeTitle, s
 
 // ═══════════ A1: ĐỘ KIẾP — mini-game sống còn khi đột phá Ascension (thay RNG thuần) ═══════════
 let TRIB = { active:false, realm:0, next:null, spawnT:0, strikes:[], hits:0, landed:0, total:0 };
-window.breakthrough = function(){
-  if (TRIB.active) return;
-  const realm = player.dantian.realm;
-  const next = DANTIAN_REALMS[realm+1];
-  if (!next || !next.cost) return;
-  if (player.dantian.tuvi < Math.floor(next.cost.tuvi * (player.doNgo ? 0.7 : 1)) || player.silver < next.cost.silver || player.mat < next.cost.mat) return;
-  player.silver -= next.cost.silver; player.mat -= next.cost.mat;
-  // Spark (cảnh 1-4): đột phá vận công theo tỉ lệ — chưa đủ tư cách độ kiếp
-  if (!next.trib){
-    const msg = document.getElementById('dantian-msg');
-    if (Math.random()*100 < next.rate){
-      player.dantian.realm++;
-      player.dantian.tuvi -= Math.floor(next.cost.tuvi * (player.doNgo ? 0.7 : 1)); player.doNgo = 0;
-      zoneBanner = { text:'☯ ASCENSION TRIAL CẢNH GIỚI', sub:`${next.name}${next.unlock ? ' — Học được ' + next.unlock : ''}`, color:'#9fd0ff', t:4 };
-      addFloat(player.x, player.y-46, `ASCENSION TRIAL: ${next.name}!`, '#9fd0ff', 18);
-      if (next.unlock) addFloat(player.x, player.y-70, `Học được: ${next.unlock}!`, '#7ecbff', 15);
-      addEffect({ type:'ring', x:player.x, y:player.y, r:110, color:'#5ea0e8', big:true });
-      for (let i=0;i<14;i++) addEffect({ type:'ink', x:player.x, y:player.y, vx:rnd(-90,90), vy:rnd(-120,-30), color:'#5ea0e8' });
-      AudioSys.sfx('levelup', 0.95);
-      calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
-      checkTitles();
-    } else {
-      player.dantian.tuvi = Math.floor(player.dantian.tuvi * 0.5);
-      zoneBanner = { text:'✘ ASCENSION TRIAL THẤT BẠI', sub:'Tẩu hỏa nhẹ — Anima tổn hao một nửa, cảnh giới giữ nguyên.', color:'#ff5a4a', t:3.5 };
-      addFloat(player.x, player.y-46, 'Tẩu hỏa! Anima tổn hao!', '#ff7a6a', 14);
-      AudioSys.sfx('forge_fail', 0.8);
-    }
-    if (msg) msg.textContent = '';
-    saveGame();
-    return;
-  }
-  // Molt trở lên (cảnh 5-9): ASCENSION TRIAL — 3-9 đợt thiên lôi, mỗi đợt 3 tia
-  closePanels();
-  TRIB = { active:true, realm, next, spawnT:0.8, strikes:[], hits:0, landed:0,
-    total: next.trib*3 + (player.maDao ? 3 : 0), perWave:3, maxHits: 3 }; // Ma Đạo: lôi kiếp dày hơn
-  if ((player.dotpha || 0) > 0){
-    player.dotpha--; TRIB.maxHits = 4;
-    addFloat(player.x, player.y-90, '◈ Đan Ascension Trial bảo mệnh — chịu được 4 tia lôi, thất bại chỉ tổn 25% Anima!', '#ffb15c', 14);
-  }
-  zoneBanner = { text:'⚡ ASCENSION TRIAL GIÁNG LÂM', sub:`Độ kiếp ${next.name} — ${next.trib} đợt thiên lôi! Trúng ${TRIB.maxHits} tia là Tẩu Hỏa Nhập Ma`, color:'#ffb15c', t:3.5 };
-  addFloat(player.x, player.y-70, 'Thiên đạo thử thách — HÃY NÉ!', '#ffb15c', 16);
-  AudioSys.sfx('levelup', 0.8);
-  saveGame();
-};
+// Ascension Trial (né thiên lôi khi đột phá cảnh giới) không còn kích hoạt được nữa — cảnh giới
+// giờ tự động theo cấp độ (xem calcDerived()), không cần người chơi tự tay đột phá. TRIB/updateTrib/
+// drawTrib giữ nguyên bên dưới (không xoá) phòng khi cần dùng lại, nhưng không còn lối vào nào gọi tới.
 function updateTrib(dt){
   if (!player || dead){ TRIB.active = false; TRIB.strikes = []; return; }
   const realm = TRIB.realm;
@@ -11328,7 +10926,6 @@ function hintText(){
   if (lv >= 5) parts.push(t('hud.hint.character'), t('hud.hint.bag'));
   if (lv >= 8) parts.push(t('hud.hint.map'), t('hud.hint.skills'));
   if (lv >= 15) parts.push(t('hud.hint.tame'));
-  if (lv >= 10) parts.push(t('hud.hint.bonds'));
   if (player.canJump) parts.push(t('hud.hint.jump'));
   return parts.join(' · ');
 }
