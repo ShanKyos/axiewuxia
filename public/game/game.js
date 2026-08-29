@@ -169,7 +169,7 @@ const WING_DEFS = [
   { id:'thienthan', name:'Cánh Thiên Thần', color:'#dfe8ff', hpPct:12, evaPct:6, silverPct:20, desc:'+12% HP · +6% né · +20% đồng rơi' },
   { id:'tieuquy',   name:'Cánh Tiểu Quỷ',   color:'#b08ae8', atkPct:12, crit:5,  aspdPct:6,    desc:'+12% ST · +5% bạo · +6% tốc đánh' },
 ];
-// Linh Dực Cấp 2 — luyện tại Hỗn Độn Lò (LV80+), thăng từ cánh cấp 1
+// Linh Dực Cấp 2 — luyện tại Lò Bảo Chứng (LV80+), thăng từ cánh cấp 1
 const WING2_DEFS = [
   { id:'phuongduc', name:'Phượng Hoàng Linh Dực', color:'#ff8a3a', atkPct:20, hpPct:15, crit:8, aspdPct:10, desc:'+20% ST · +15% HP · +8% bạo · +10% tốc đánh' },
   { id:'hacma',     name:'Hắc Ma Linh Dực',       color:'#c07fe0', atkPct:24, pierce:8, hpLeech:5, crit:10, desc:'+24% ST · +8% xuyên giáp · +5% hút sinh lực · +10% bạo' },
@@ -3041,7 +3041,6 @@ window.addEventListener('keydown', e=>{
   if (e.key.toLowerCase()==='v') toggleMountOut();
   if (e.key.toLowerCase()==='z' && player && !dead) toggleAuto();
   if (e.key === '`' && window.TEST_MODE){ e.preventDefault(); window.toggleCheatConsole(); }
-  if (e.key.toLowerCase()==='n') togglePanel('dantian');
   if (e.key.toLowerCase()==='h') togglePanel('tuyethoc');
   if (e.key.toLowerCase()==='r') usePotion();
   if (e.key.toLowerCase()==='g' && nearGate && player && !dead) travelTo(nearGate.to, curMap);
@@ -3474,7 +3473,7 @@ function unlockNotices(){
     7:['Mở khóa: Tuyệt kỹ (phím 3)'],
     10:['Mở khóa: the Calling — 5 lớp chờ ngươi chọn!','Mở khóa: Cương Khí (Card — phím H)','Mở khóa: Truy Nã Lệnh & Vạn Duyên Các — Bổ Đầu và Thần Toán Tử ở Lunaris City'],
     15:['Mở khóa: Linh Thú — mua Phong Linh Phù ở Vũ Khí Phường, đánh tinh anh còn <40% máu rồi bấm T'],
-    40:['Mở khóa: Hỗn Độn Lò luyện Linh Dực Cấp 1 — Lò Bát Quái, Lunaris City'],
+    40:['Mở khóa: Lò Bảo Chứng luyện Linh Dực Cấp 1 — Lò Bát Quái, Lunaris City'],
     45:['Bảo Hạp IV trở lên từ Bá Chủ có 5-8% mở ra trang bị CỔ THẦN Tứ Tượng — Bá Chủ giáng thế mỗi 4 giờ!'],
     30:['Mở khóa: Cung Tiễn (Card — phím H)','Mở khóa: Động Phủ — gặp Quản Gia ở Lunaris City'],
   };
@@ -3622,6 +3621,18 @@ function hintCandidates(){
     const weak = Object.values(player.equip).some(it => it && !it.special && (it.plus || 0) < 3);
     if (weak) out.push({ id:'forge', pri:5, txt:'⚒ Đang dư Huyền Thiết mà trang bị chưa +3 — đi rèn ngay!', btn:'Đi Rèn', act:'hintGoForge()' });
   }
+  // QA rà soát: Lò Hỗn Loạn/Quỷ Cốc/Huyết Thành/Tu La Trận không được tutorial/hint nào nhắc tới —
+  // người chơi mới có thể không bao giờ tự tìm ra. Thêm gợi ý đúng lúc điều kiện chín muồi.
+  if (player.level >= 15){
+    const _rTally = {};
+    for (const it of player.inv) if (it && !it.noForge && it.rarity != null && it.rarity < 4) _rTally[it.rarity] = (_rTally[it.rarity] || 0) + 1;
+    if (Object.values(_rTally).some(n => n >= 3))
+      out.push({ id:'chaosmachine', pri:6, txt:'☯ Đang dư ít nhất 3 món cùng phẩm — ném vào Lò Hỗn Loạn (Lò Bát Quái) để thử lên phẩm cao hơn!', btn:'Đi Xem', act:'hintGoForge()' });
+  }
+  if (player.level >= 20 && !DEVIL && !BLOOD && !TOWER){
+    out.push({ id:'arena20', pri:7, txt:'👹 Cấp 20+ đã mở Quỷ Cốc & Huyết Thành — phó bản có giờ, thông quan chắc chắn mở Rương phẩm cao!', btn:'Xem Ngay', act:'hintGoArena()' });
+    out.push({ id:'tower20', pri:8, txt:'🌀 Cấp 20+ đã mở Tu La Trận — đấu trường sinh tồn vô hạn, miễn phí, không giới hạn số lần!', btn:'Xem Ngay', act:'hintGoTower()' });
+  }
   return out;
 }
 window.hintGoStable = function(){
@@ -3634,6 +3645,8 @@ window.hintGoForge = function(){
   if (n){ player.beacon = { map:n.map, x:n.x, y:n.y, label:'Lò Bát Quái' }; if (n.map !== curMap) travelTo(n.map); }
   hintHide();
 };
+window.hintGoArena = function(){ togglePanel('arena'); hintHide(); };
+window.hintGoTower = function(){ togglePanel('tower'); hintHide(); };
 window.hintHide = function(){ const t = el('hint-toast'); if (t) t.classList.add('hidden'); window._hintId = null; };
 window.hintDismiss = function(id){ player.hintOff[id] = true; hintHide(); saveGame(); };
 function updateHints(dt){
@@ -7082,7 +7095,7 @@ function refreshEqPanels(){
 
 // ---------- Panel routing (override) ----------
 function togglePanel(which){
-  const tabbed = { forge:'forge', mount:'mount', dantian:'dantian', tuyethoc:'tuyethoc' };
+  const tabbed = { forge:'forge', mount:'mount', tuyethoc:'tuyethoc', arena:'arena', tower:'tower' };
   if (tabbed[which]){ // các hệ thống con → mở khung Nhân Vật đúng tab
     if (!sysUnlocked(tabbed[which])){ // hệ thống chưa mở theo tầng cấp
       const def = CHAR_TABS.find(x=>x.id===tabbed[which]);
@@ -7253,7 +7266,7 @@ function renderBag(){
   html += `</div>`;
   // Tứ Châu — châu quý ép trang bị tại Lò Rèn
   const jw = player.jewels || {};
-  html += `<div class="stat-sec">TỨ CHÂU — ép tại Lò Rèn / Hỗn Độn Lò</div>`;
+  html += `<div class="stat-sec">TỨ CHÂU — ép tại Lò Rèn / Lò Bảo Chứng</div>`;
   html += `<div class="mat-grid">`;
   for (const jk of ['chucPhuc','linhHon','sinhMenh','honDon']){
     html += `<div class="mat-cell" title="${matTip(JEWEL_NAMES[jk], '', jw[jk]||0)}">
@@ -7916,7 +7929,7 @@ function renderBaGua(){
       Dùng Thiên Mệnh Phù — thất bại KHÔNG bị vỡ trang bị (còn ${player.charms})</label>
       <div style="font-size:11px;opacity:.7;line-height:1.6">+10 thức tỉnh thuộc tính ẩn · +11 Khai Quang <b style="color:#9fd0ff">Thiên Lôi Cương Khí</b> (sét xanh bao quanh thân)</div>`;
   }
-  // ── Hỗn Độn Lò: Linh Dực & đổi Cổ Thần (Track HT — GDD §13) ──
+  // ── Lò Bảo Chứng: Linh Dực & đổi Cổ Thần (Track HT — GDD §13) ──
   const J2 = player.jewels || { honDon:0 };
   html += `<div class="stat-sec" style="border-color:rgba(126,203,255,.5)">◈ HỖN ĐỘN LÒ — ● Hỗn Độn Châu: <b style="color:#7ecbff">${J2.honDon}</b></div>`;
   const wing1 = player.equip.canh || player.inv.find(x=>x.slot==='canh');
@@ -7959,7 +7972,7 @@ function renderBaGua(){
     html += `<div style="font-size:11.5px;opacity:.6;padding:4px">Chưa có món Cổ Thần nào trong túi — săn Bá Chủ lấy Bảo Hạp IV trở lên (tỉ lệ 5-8%, không pity).</div>`;
   }
   // ── Lò Hỗn Loạn (MU Online Chaos Machine): 3 món CÙNG PHẨM + Hỗn Nguyên Thạch → 1 món phẩm
-  // cao hơn — CÓ TỈ LỆ THẤT BẠI THẬT (mất sạch 3 món nếu trật), khác Hỗn Độn Lò ở trên (đổi chắc
+  // cao hơn — CÓ TỈ LỆ THẤT BẠI THẬT (mất sạch 3 món nếu trật), khác Lò Bảo Chứng ở trên (đổi chắc
   // ăn, không rủi ro). Đây là chỗ đặt cược thật — tận dụng đồ dư farm được để thử vận lên phẩm.
   html += `<div class="stat-sec" style="border-color:rgba(255,90,74,.5)">☯ LÒ HỖN LOẠN — 3 món cùng phẩm + Hỗn Nguyên Thạch → 1 món phẩm cao hơn (CÓ THỂ MẤT SẠCH)</div>`;
   {
@@ -8929,6 +8942,16 @@ window.travelTo = function(mapId, from){
   // 2 biến trạng thái vẫn còn tham chiếu tới boss cũ nếu không dọn — coi như bỏ cuộc, mất vé.
   if (DEVIL && !DEVIL.cleared && !DEVIL.failed){ DEVIL.failed = true; DEVIL._endT = 0; addFloat(player.x, player.y-40, 'Rời khỏi Quỷ Cốc — Thiệp Mời đã mất.', '#ff8a5a', 13); }
   if (BLOOD && !BLOOD.cleared && !BLOOD.failed){ BLOOD.failed = true; BLOOD._endT = 0; addFloat(player.x, player.y-40, 'Rời khỏi Huyết Thành — Thiệp Mời đã mất.', '#ff8a5a', 13); }
+  // QA rà soát: rời map giữa lượt Tu La Trận trước đây không dọn TOWER — quái towerMob bị buildWorld()
+  // xoá nhưng biến TOWER sống sót, khiến updateTower() tưởng đã dọn sạch đợt và tự mở bảng chọn thẻ
+  // ở map mới (kể cả Lunaris City, nơi lẽ ra cấm giao chiến). Dọn y hệt cách DEVIL/BLOOD đã làm ở trên.
+  if (TOWER){
+    const _twWave = TOWER.wave;
+    if (_twWave > (player.towerBest || 0)) player.towerBest = _twWave;
+    mobs.forEach(m => { if (m.towerMob && !m.dead) m.dead = true; });
+    TOWER = null;
+    addFloat(player.x, player.y-40, `Rời khỏi Tu La Trận — kỷ lục Đợt ${_twWave} đã lưu.`, '#c07fe0', 13);
+  }
   curMap = mapId;
   closePanels();
   tutAdvance('map'); // hướng dẫn tân thủ: dịch chuyển lần đầu
@@ -10518,8 +10541,10 @@ function renderArenaTab(){
   const c = el('char-content'); if (!c) return;
   let html = `<div class="stat-sec">👹 CHIẾN TRƯỜNG — phó bản MU Online-lite</div>
     <div style="font-size:12px;color:#9aa8d4;line-height:1.85;padding:0 2px 10px">
-    2 đấu trường có đồng hồ đếm ngược, quái dồn dập ngay tại chỗ đứng — không cần đi tới map riêng.
-    Vé vào tốn bạc và mất luôn nếu thất bại (không mất trang bị). Không thể mở trong Lunaris City hoặc phó bản khác.</div>`;
+    Khác Tu La Trận (miễn phí, vô hạn, không thưởng cố định): 2 đấu trường này có <b style="color:#ff9a5a">giờ giới hạn thật</b>
+    và tốn vé vào, đổi lại thông quan là chắc chắn mở <b style="color:#ffd76a">Rương phẩm cao cố định</b> — không cần may rủi drop.
+    Quái dồn dập ngay tại chỗ đứng, không cần đi tới map riêng. Vé mất luôn nếu thất bại (không mất trang bị).
+    Không thể mở trong Lunaris City hoặc phó bản khác.</div>`;
   html += `<div class="stat-sec" style="margin-top:6px">👹 QUỶ CỐC (Devil Square)</div>
     <div style="font-size:12px;color:#9aa8d4;line-height:1.7;padding:0 2px 8px">6 đợt quái dồn dập trong 10 phút, đợt 7 là Quỷ Vương (Boss Săn theo đúng cấp ngươi). Thông quan → mở Rương theo cấp.</div>
     <div style="font-size:13px;color:#e4ebff;padding:0 2px 8px">Đã thông quan: <b style="color:#ffd76a">${player.devilClears || 0}</b> lần</div>`;
@@ -11002,10 +11027,11 @@ function renderTowerTab(){
   const c = el('char-content'); if (!c) return;
   let html = `<div class="stat-sec">VẠN KIẾM TU LA TRẬN</div>
     <div style="font-size:12px;color:#9aa8d4;line-height:1.85;padding:0 2px 10px">
-    Đấu trường sinh tồn: quái vô tận vây quanh ngươi, mỗi đợt hạ sạch → chọn 1 trong 3 thẻ tiến hóa
-    tạm thời (mượn tên/hình các võ học đã có), dồn sức mạnh cho tới khi ngươi dừng lại hoặc gục ngã.
-    Buff chỉ tồn tại trong lượt chơi — kết thúc là mất hết, chỉ giữ lại <b style="color:#7ecbff">kỷ lục đợt cao nhất</b>.
-    Không thể mở trong Lunaris City hoặc phó bản.</div>`;
+    Đấu trường sinh tồn <b style="color:#c07fe0">vô hạn</b>, miễn phí — khác Quỷ Cốc/Huyết Thành ở chỗ
+    không có giờ, không có Rương, không tốn vé: quái vô tận vây quanh ngươi, mỗi đợt hạ sạch → chọn 1
+    trong 3 thẻ tiến hóa tạm thời (mượn tên/hình các võ học đã có), dồn sức mạnh cho tới khi ngươi dừng
+    lại hoặc gục ngã. Buff chỉ tồn tại trong lượt chơi — kết thúc là mất hết, chỉ giữ lại
+    <b style="color:#7ecbff">kỷ lục đợt cao nhất</b>. Không thể mở trong Lunaris City hoặc phó bản.</div>`;
   html += `<div style="font-size:14px;color:#e4ebff;padding:0 2px 12px">Kỷ lục cá nhân: <b style="color:#ffd76a;font-size:17px">Đợt ${player.towerBest || 0}</b></div>`;
   if (TOWER){
     html += `<div style="font-size:13px;color:#c07fe0;padding:0 2px 10px">🌀 Đang trong trận — Đợt ${TOWER.wave}${TOWER.drafting ? ' (đang chờ chọn thẻ)' : ''}. Đóng bảng này để tiếp tục chiến đấu.</div>
@@ -11584,7 +11610,7 @@ window.useJewel = function(kind, uid){
   calcDerived(); saveGame(); renderForge(); refreshEqPanels();
 };
 
-// ---------- Hỗn Độn Lò: luyện Linh Dực ----------
+// ---------- Lò Bảo Chứng: luyện Linh Dực ----------
 window.craftWing = function(t){
   const J = player.jewels;
   const msg = document.getElementById('bagua-msg');
@@ -11600,7 +11626,7 @@ window.craftWing = function(t){
     const wi = Math.floor(Math.random()*2);
     const w = genWing(wi);
     if (player.inv.length < 30) player.inv.push(w); else player.silver += 2000;
-    zoneBanner = { text:'◈ LINH DỰC XUẤT THẾ', sub:`Hỗn Độn Lò luyện thành ${WING_DEFS[wi].name}!`, color:WING_DEFS[wi].color, t:4.5 };
+    zoneBanner = { text:'◈ LINH DỰC XUẤT THẾ', sub:`Lò Bảo Chứng luyện thành ${WING_DEFS[wi].name}!`, color:WING_DEFS[wi].color, t:4.5 };
     say(`✔ Luyện thành ${WING_DEFS[wi].name}!`, '#8fd18f');
     addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:WING_DEFS[wi].color, big:true });
     AudioSys.sfx('forge_ok', 0.95);
@@ -11620,7 +11646,7 @@ window.craftWing = function(t){
   calcDerived(); saveGame(); renderBaGua(); refreshEqPanels();
 };
 
-// ---------- Hỗn Độn Lò: đổi 3 Cổ Thần trùng + 1 Hỗn Độn = 1 món tự chọn ----------
+// ---------- Lò Bảo Chứng: đổi 3 Cổ Thần trùng + 1 Hỗn Độn = 1 món tự chọn ----------
 window._hdSel = {}; window._hdSet = 'thanhlong'; window._hdSlot = 'non';
 window.hdToggle = function(uid){
   if (window._hdSel[uid]) delete window._hdSel[uid];
@@ -11639,14 +11665,14 @@ window.hdExchange = function(){
   const it = genAncient(setId, slotId, player.level);
   player.inv.push(it);
   window._hdSel = {};
-  zoneBanner = { text:'◈ CỔ THẦN TỰ CHỌN', sub:`Hỗn Độn Lò đúc thành ${it.name}!`, color:ANCIENT_SETS[setId].color, t:4.5 };
+  zoneBanner = { text:'◈ CỔ THẦN TỰ CHỌN', sub:`Lò Bảo Chứng đúc thành ${it.name}!`, color:ANCIENT_SETS[setId].color, t:4.5 };
   addFloat(player.x, player.y-56, `◈ ${it.name}`, ANCIENT_SETS[setId].color, 16);
   AudioSys.sfx('forge_ok', 0.95);
   saveGame(); renderBaGua(); refreshEqPanels();
 };
 
 // ---------- Lò Hỗn Loạn (MU Online Chaos Machine): 3 món cùng phẩm + Hỗn Nguyên Thạch → 1 món
-// phẩm cao hơn, tỉ lệ thất bại THẬT (mất sạch) — khác Hỗn Độn Lò ở trên (đổi luôn chắc ăn) ----------
+// phẩm cao hơn, tỉ lệ thất bại THẬT (mất sạch) — khác Lò Bảo Chứng ở trên (đổi luôn chắc ăn) ----------
 window._chaosSel = {};
 const CHAOS_RATE = [70, 55, 40, 25]; // % theo phẩm gốc: Phàm→Tinh, Tinh→Linh, Linh→Thần, Thần→ChíTôn
 const CHAOS_HON_COST = [2, 4, 7, 12];
