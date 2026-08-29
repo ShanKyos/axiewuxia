@@ -6510,6 +6510,16 @@ function drawPlayer(){
       // Góc nhìn 3/4 kiểu MU: đi lên trên là thấy LƯNG, đi xuống là thấy mặt.
       // (Trước đây hướng nào cũng nhìn thẳng vào mặt người chơi, trông rất sai.)
       _ps.back = Math.sin(p.face) < -0.42;
+      // Trúng đòn: nhân vật giật ngửa ra sau, đầu hất lên, tay bung — trước đây chỉ
+      // có viền đỏ nhấp trên màn hình, còn thân người thì đứng im như không hề gì.
+      const _hurt = Math.min(1, (p.hurtT || 0) / 0.3);
+      if (_hurt > 0){
+        _ps.lean -= 0.24 * _hurt;
+        _ps.head += 0.26 * _hurt;
+        _ps.armL -= 0.42 * _hurt;
+        _ps.armR -= 0.22 * _hurt;
+        _ps.bob  -= 2.2 * _hurt;
+      }
       drawHeroFigure(ctx, p.sect, (p.thanbinh && p.thanbinh.tier) || 1, now, _ps);
     }
     ctx.restore();
