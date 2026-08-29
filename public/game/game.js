@@ -5911,8 +5911,311 @@ function drawAscendedFigure(p, now, castK, _atkK, _maxed){
     ctx.fillStyle = sk.trim; ctx.fillRect(X - 3, hy - 12.5, 6, 3.2);
   }
   ctx.fillStyle = sk.halo; ctx.beginPath(); ctx.arc(X, hy - 2, 1.1, 0, 7); ctx.fill(); // hoa tinh giữa trán
-  if (castK > 0) _vxGlyph(X, Y - 64, '仙', 22, sk.halo, castK); // xuất chiêu: ấn Tiên lóe sáng
+  if (castK > 0){ // xuất chiêu: ấn triệu hồi vòng gai lóe sáng (vector, không dùng chữ Hán)
+    ctx.save(); ctx.globalAlpha = castK; ctx.strokeStyle = sk.halo; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(X, Y - 64, 13, 0, 7); ctx.stroke();
+    for (let i = 0; i < 6; i++){
+      const a = i * Math.PI / 3 + castK * 0.6;
+      ctx.beginPath();
+      ctx.moveTo(X + Math.cos(a)*13, Y - 64 + Math.sin(a)*13);
+      ctx.lineTo(X + Math.cos(a)*21, Y - 64 + Math.sin(a)*21);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
   ctx.restore();
+}
+
+// ══ NHÂN VẬT CHÍNH VẼ THEO KHỚP XƯƠNG (skeletal) — phong cách MU Online ═════
+// Trước đây mỗi lớp là 1 thẻ Axie PNG tĩnh: không hướng, không khung hình.
+// Nay thân người dựng bằng vector chia theo BỘ PHẬN, mỗi chi có trục xoay riêng
+// (vai / hông / cổ), và animation là HÀM SỐ theo thời gian — đúng cơ chế xương
+// mà MU Online dùng, không phải chuỗi ảnh. Nhờ vậy có sải chân, vung vũ khí,
+// ngả người, áo choàng bay… mà không tốn một file art nào.
+// Thứ tự lớp: áo choàng → chân → thân → giáp → mũ → tay → vũ khí.
+// Hộp toạ độ HERO_W×HERO_H, chân chạm y≈212, tâm đầu y≈74.
+const HERO_W = 160, HERO_H = 220;
+const HERO_METAL = [
+  { lo:'#4e5360', hi:'#6d7385', trim:'#7d7048', glow:null },      // 1 Sơ Khai — sắt xỉn
+  { lo:'#575d6c', hi:'#7b8296', trim:'#8d7f4e', glow:null },      // 2 Cường Hóa
+  { lo:'#616880', hi:'#8b93aa', trim:'#a08c52', glow:null },      // 3 Tinh Luyện
+  { lo:'#6a7590', hi:'#9aa4bc', trim:'#c8a84a', glow:null },      // 4 Kỳ Diệu
+  { lo:'#71689a', hi:'#a596c8', trim:'#c8a84a', glow:null },      // 5 Hiếm Có
+  { lo:'#2f6a58', hi:'#4fa88a', trim:'#d8c060', glow:'#6ff0c0' }, // 6 Excellent — xanh ngọc MU
+  { lo:'#6a5220', hi:'#c8a84a', trim:'#ffe9a8', glow:'#ffd76a' }, // 7 Ancient — vàng cổ MU
+  { lo:'#7a2a30', hi:'#c85a52', trim:'#ffd08a', glow:'#ff8a6a' }, // 8 Thánh Khí
+  { lo:'#432a7a', hi:'#8a6ae0', trim:'#dccdff', glow:'#a88aff' }, // 9 Truyền Thuyết
+  { lo:'#8a1e2a', hi:'#ff6a5a', trim:'#fff0c0', glow:'#ff4a3a' }, // 10 Thức Tỉnh
+];
+function hMetal(tier){ return HERO_METAL[Math.max(0, Math.min(9, ((tier|0) || 1) - 1))]; }
+function hPoly(g, pts, c){
+  g.fillStyle = c; g.beginPath();
+  for (let i = 0; i < pts.length; i++) i ? g.lineTo(pts[i][0], pts[i][1]) : g.moveTo(pts[0][0], pts[0][1]);
+  g.closePath(); g.fill();
+}
+function hEll(g, x, y, rx, ry, c){ g.fillStyle = c; g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 7); g.fill(); }
+// một "xương": xoay cả nhóm hình quanh trục (px,py) rồi vẽ tiếp bằng toạ độ gốc
+function hJoint(g, px, py, ang, fn){
+  g.save(); g.translate(px, py); g.rotate(ang); g.translate(-px, -py); fn(); g.restore();
+}
+
+// ── BỘ XƯƠNG: tính góc từng khớp theo trạng thái, không dùng bảng khung hình ──
+const HERO_JOINT = { hipL:[72,142], hipR:[90,142], shL:[52,100], shR:[108,100], neck:[80,94] };
+// wph: pha bước chân · mv: đang di chuyển · atkK 0..1: vung vũ khí · castK 0..1: niệm chú
+function heroPose(wph, mv, atkK, castK, now){
+  const br = Math.sin(now / 620) * 0.035;               // nhịp thở lúc đứng yên
+  const st = mv ? Math.sin(wph) : 0;                    // sải chân
+  // vung vũ khí: giương lên rồi bổ xuống (ease), tay trái giữ thăng bằng ngược lại
+  const sw = atkK > 0 ? Math.sin(Math.pow(atkK, 0.7) * Math.PI) : 0;
+  const chop = atkK > 0 ? (1 - atkK) * 2.1 - 0.7 : 0;
+  return {
+    legL: st * 0.42, legR: -st * 0.42,
+    armL: -st * 0.30 + br - castK * 0.62 - sw * 0.30,
+    armR: (atkK > 0 ? chop : st * 0.30 - br) - castK * 0.62,
+    lean: (mv ? Math.sin(wph) * 0.045 : br * 0.5) + (atkK > 0 ? sw * 0.16 : 0),
+    head: (mv ? -Math.sin(wph * 2) * 0.05 : -br) + castK * 0.12,
+    bob:  mv ? Math.abs(Math.sin(wph)) * -3.2 : Math.sin(now / 620) * -1.2,
+    sw: sw, cast: castK,
+  };
+}
+const HERO_POSE0 = heroPose(0, false, 0, 0, 0);
+
+// ── LỚP CHUNG: chân · thân · đầu (giáp của từng lớp vẽ đè lên) ──
+function hLegs(g, P, ps){
+  hJoint(g, HERO_JOINT.hipL[0], HERO_JOINT.hipL[1], ps.legL, () => {
+    hPoly(g, [[63,140],[80,140],[80,198],[61,198]], P.leg);
+    hPoly(g, [[60,194],[79,194],[81,212],[57,212]], P.boot);
+  });
+  hJoint(g, HERO_JOINT.hipR[0], HERO_JOINT.hipR[1], ps.legR, () => {
+    hPoly(g, [[80,140],[97,140],[99,198],[80,198]], P.leg);
+    hPoly(g, [[81,194],[100,194],[103,212],[79,212]], P.boot);
+  });
+}
+function hTorso(g, P){ hPoly(g, [[58,96],[102,96],[106,146],[54,146]], P.torso); }
+function hHead(g, P, ps){
+  hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+    hEll(g, 80, 74, 19, 21, P.skin);
+    hEll(g, 88, 74, 10, 20, P.skinSh);
+    hEll(g, 72, 72, 3, 4.5, '#1a1219'); hEll(g, 87, 72, 3, 4.5, '#1a1219');
+  });
+}
+function hArmL(g, P, ps, fn){ hJoint(g, HERO_JOINT.shL[0], HERO_JOINT.shL[1], ps.armL, fn || (() => hEll(g, 48, 116, 10, 17, P.skin))); }
+function hArmR(g, P, ps, fn){ hJoint(g, HERO_JOINT.shR[0], HERO_JOINT.shR[1], ps.armR, fn || (() => hEll(g, 112, 116, 10, 17, P.skin))); }
+// áo choàng: đuôi áo bạt ra sau theo bước chân & lực vung
+function hCape(g, c1, c2, ps){
+  const f = (ps.legL - ps.legR) * 16 + ps.sw * 22;
+  hPoly(g, [[52,98],[108,98],[122 - f,190],[38 - f,190]], c2);
+  hPoly(g, [[80,98],[108,98],[122 - f,190],[80 - f,190]], c1);
+}
+
+// ── TRANG BỊ THEO LỚP ──
+// pal: màu da/vải · cape: màu áo choàng · upper(g,M,ps,P): giáp + mũ + tay + vũ khí
+const HERO_GEAR = {
+  // Dark Knight — giáp tấm nặng, mũ sừng, đại kiếm bổ từ trên xuống
+  thieulam: {
+    pal: { boot:'#2a2c38', leg:'#3a3d4c', torso:'#54596e', skin:'#d8a878', skinSh:'#b0805a' },
+    cape: ['#7a1e28', '#5a1420'],
+    upper(g, M, ps, P){
+      hTorso(g, P);
+      hPoly(g, [[56,96],[104,96],[108,140],[52,140]], M.hi);
+      hPoly(g, [[80,96],[104,96],[108,140],[80,140]], M.lo);
+      hPoly(g, [[68,104],[92,104],[88,132],[72,132]], M.trim);
+      hHead(g, P, ps);
+      hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+        hPoly(g, [[58,60],[102,60],[100,88],[60,88]], M.hi);
+        hPoly(g, [[58,74],[102,74],[102,80],[58,80]], '#20242e');
+        hPoly(g, [[58,62],[44,36],[62,50]], M.hi);
+        hPoly(g, [[102,62],[116,36],[98,50]], M.hi);
+      });
+      hArmL(g, P, ps, () => { hEll(g, 48, 116, 10, 17, P.skin); hPoly(g, [[34,94],[62,88],[64,120],[36,126]], M.hi); });
+      hArmR(g, P, ps, () => {
+        hEll(g, 112, 116, 10, 17, P.skin);
+        hPoly(g, [[126,94],[98,88],[96,120],[124,126]], M.lo);
+        g.save(); g.translate(122, 134); g.rotate(0.13); // hơi chếch ra ngoài, không cắt ngang mặt
+        hPoly(g, [[-6,0],[6,0],[5,-96],[0,-112],[-5,-96]], '#d2d6de');
+        g.fillStyle = '#fff'; g.fillRect(-2, -96, 3, 90);
+        hPoly(g, [[-18,0],[18,0],[16,10],[-16,10]], M.trim);
+        g.fillStyle = '#4a3520'; g.fillRect(-5, 10, 10, 30);
+        hEll(g, 0, 44, 7, 7, M.trim); g.restore();
+      });
+    },
+  },
+  // Dark Wizard — áo thụng loe, mũ trùm tối, quyền trượng ngọc giương cao khi niệm
+  baidasan: {
+    pal: { boot:'#241c34', leg:'#2e2450', torso:'#453076', skin:'#e0c0a0', skinSh:'#bc9c78' },
+    cape: ['#3a2a6a', '#241a4a'],
+    upper(g, M, ps, P){
+      hPoly(g, [[52,96],[108,96],[120,206],[40,206]], '#523a8a');
+      hPoly(g, [[80,96],[108,96],[120,206],[80,206]], '#3d2a68');
+      hPoly(g, [[50,132],[110,132],[108,146],[52,146]], M.trim);
+      hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+        hPoly(g, [[46,92],[114,92],[106,66],[88,44],[72,44],[54,66]], '#5e42a0');
+        hPoly(g, [[80,44],[114,92],[106,66],[88,44]], '#412c76');
+        hEll(g, 80, 78, 17, 18, '#180f2a');
+        hEll(g, 73, 76, 3.4, 4.6, '#9fd0ff'); hEll(g, 88, 76, 3.4, 4.6, '#9fd0ff');
+      });
+      hArmL(g, P, ps);
+      hArmR(g, P, ps, () => {
+        g.save(); g.translate(112, 150);
+        g.strokeStyle = '#4a3520'; g.lineWidth = 8; g.lineCap = 'round';
+        g.beginPath(); g.moveTo(0, 0); g.lineTo(-8, -120); g.stroke();
+        const r = 26 + ps.cast * 16;
+        const og = g.createRadialGradient(-8, -134, 2, -8, -134, r);
+        og.addColorStop(0, '#dff2ff'); og.addColorStop(0.45, 'rgba(122,190,255,.8)'); og.addColorStop(1, 'rgba(90,150,230,0)');
+        g.fillStyle = og; g.beginPath(); g.arc(-8, -134, r, 0, 7); g.fill();
+        hEll(g, -8, -134, 9 + ps.cast * 3, 9 + ps.cast * 3, '#8fd0ff');
+        g.strokeStyle = M.trim; g.lineWidth = 3;
+        g.beginPath(); g.arc(-8, -134, 14, 0, 7); g.stroke(); g.restore();
+      });
+    },
+  },
+  // Fairy Elf — giáp da nhẹ, tai nhọn, đuôi ngựa, cung dài (dây kéo căng khi bắn)
+  toanchan: {
+    pal: { boot:'#2a3d34', leg:'#35564a', torso:'#3f7a68', skin:'#e8c8a4', skinSh:'#c4a480' },
+    cape: ['#1e6a5a', '#14483e'],
+    upper(g, M, ps, P){
+      hTorso(g, P);
+      hPoly(g, [[58,96],[102,96],[104,138],[56,138]], '#57a08a');
+      hPoly(g, [[80,96],[102,96],[104,138],[80,138]], '#43836f');
+      hPoly(g, [[66,100],[94,100],[90,130],[70,130]], M.trim);
+      g.strokeStyle = '#5a4630'; g.lineWidth = 4;                    // ống tên sau lưng
+      g.beginPath(); g.moveTo(104, 96); g.lineTo(114, 134); g.stroke();
+      for (let i = 0; i < 3; i++){
+        g.strokeStyle = '#d8d0c0'; g.lineWidth = 2; g.beginPath();
+        g.moveTo(100 + i * 5, 92); g.lineTo(104 + i * 5, 74); g.stroke();
+      }
+      hHead(g, P, ps);
+      hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+        hPoly(g, [[60,60],[100,60],[102,44],[58,44]], '#d8b45a');
+        hPoly(g, [[98,52],[126,40],[118,96],[100,80]], '#d8b45a');
+        hPoly(g, [[62,66],[46,52],[60,74]], '#e8c8a4');
+        hPoly(g, [[98,66],[114,52],[100,74]], '#e8c8a4');
+      });
+      hArmR(g, P, ps, () => { hEll(g, 112, 116, 10, 17, P.skin); hPoly(g, [[126,92],[110,88],[108,110],[124,114]], M.hi); });
+      hArmL(g, P, ps, () => {                                        // tay trái giương cung
+        hPoly(g, [[48,92],[64,88],[66,110],[50,114]], M.hi);
+        g.save(); g.translate(36, 118); g.rotate(0.12);
+        g.strokeStyle = '#7a5a30'; g.lineWidth = 6; g.lineCap = 'round';
+        g.beginPath(); g.arc(14, 0, 60, Math.PI * 0.62, Math.PI * 1.38); g.stroke();
+        g.strokeStyle = '#e8e0c8'; g.lineWidth = 1.8;
+        const bp = 10 + ps.sw * 24;                                  // dây cung kéo căng
+        g.beginPath(); g.moveTo(-6, -56); g.lineTo(-6 + bp, 0); g.lineTo(-6, 56); g.stroke();
+        if (ps.sw > 0.05){                                           // mũi tên đặt trên dây
+          g.strokeStyle = '#cfc4a8'; g.lineWidth = 2.4;
+          g.beginPath(); g.moveTo(-6 + bp, 0); g.lineTo(-6 + bp - 52, 0); g.stroke();
+        }
+        g.restore();
+      });
+    },
+  },
+  // Magic Gladiator — nửa giáp nửa vải, một vai trần, đại đao bản rộng
+  minhgiao: {
+    pal: { boot:'#2c2222', leg:'#3e2e2e', torso:'#6a4038', skin:'#d8a878', skinSh:'#b0805a' },
+    cape: ['#5a1a1a', '#3a1010'],
+    upper(g, M, ps, P){
+      hTorso(g, P);
+      hPoly(g, [[56,96],[102,96],[106,142],[52,142]], '#4a2a2a');
+      hPoly(g, [[56,96],[80,96],[82,142],[52,142]], M.hi);           // chỉ nửa trái có giáp
+      hPoly(g, [[52,136],[106,136],[104,150],[54,150]], M.trim);
+      hHead(g, P, ps);
+      hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+        hPoly(g, [[60,62],[100,62],[104,42],[56,42]], '#2a2028');    // tóc dài đen
+        hPoly(g, [[98,54],[122,66],[112,116],[98,86]], '#2a2028');
+        hPoly(g, [[56,68],[70,58],[72,72]], M.trim);                 // vòng trán kim loại
+      });
+      hArmL(g, P, ps, () => {                                        // vai trái giáp đồ sộ
+        hEll(g, 48, 116, 10, 17, P.skin);
+        hPoly(g, [[30,92],[60,86],[62,122],[32,128]], M.hi);
+        hPoly(g, [[30,92],[46,89],[47,125],[32,128]], M.lo);
+      });
+      hArmR(g, P, ps, () => {
+        hEll(g, 112, 114, 11, 19, '#d8a878');                        // vai/tay phải để trần
+        g.save(); g.translate(122, 136); g.rotate(0.18);
+        hPoly(g, [[-9,0],[9,0],[7,-104],[0,-124],[-7,-104]], '#dcd2c0');
+        hPoly(g, [[0,0],[9,0],[7,-104],[0,-124]], '#b6ac98');
+        g.fillStyle = '#fff6e0'; g.fillRect(-2, -104, 3, 98);
+        hPoly(g, [[-20,0],[20,0],[17,11],[-17,11]], M.trim);
+        g.fillStyle = '#3a2418'; g.fillRect(-5, 11, 10, 28); g.restore();
+      });
+    },
+  },
+  // Dark Lord — giáp đen ánh lam, mũ vương miện 5 chấu, quyền trượng chỉ huy
+  bug: {
+    pal: { boot:'#1c1e2c', leg:'#262a3c', torso:'#333a54', skin:'#c89868', skinSh:'#a07048' },
+    cape: ['#1f2f6a', '#131c44'],
+    upper(g, M, ps, P){
+      hTorso(g, P);
+      hPoly(g, [[54,94],[106,94],[110,142],[50,142]], '#2a3050');
+      hPoly(g, [[80,94],[106,94],[110,142],[80,142]], '#1e2340');
+      hPoly(g, [[70,102],[90,102],[86,134],[74,134]], M.trim);
+      hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+        hPoly(g, [[58,58],[102,58],[100,90],[60,90]], '#2a3050');
+        hPoly(g, [[58,72],[102,72],[102,79],[58,79]], '#0e1220');
+        hEll(g, 70, 75.5, 3, 3.4, '#ff7a5a'); hEll(g, 90, 75.5, 3, 3.4, '#ff7a5a');
+        for (let i = 0; i < 5; i++)
+          hPoly(g, [[54 + i * 13, 58], [60 + i * 13, 30 + (i === 2 ? -10 : 0)], [66 + i * 13, 58]], M.trim);
+      });
+      hArmL(g, P, ps, () => {
+        hEll(g, 48, 116, 10, 17, P.skin);
+        hPoly(g, [[28,90],[60,84],[64,122],[32,128]], M.hi);
+        hPoly(g, [[28,90],[44,86],[38,60],[30,88]], M.hi);           // gai vai
+      });
+      hArmR(g, P, ps, () => {
+        hEll(g, 112, 116, 10, 17, P.skin);
+        hPoly(g, [[132,90],[100,84],[96,122],[128,128]], M.lo);
+        hPoly(g, [[132,90],[116,86],[122,60],[130,88]], M.lo);
+        g.save(); g.translate(116, 146);
+        g.strokeStyle = '#2a2438'; g.lineWidth = 9; g.lineCap = 'round';
+        g.beginPath(); g.moveTo(0, 0); g.lineTo(-6, -126); g.stroke();
+        hPoly(g, [[-6,-126],[-24,-146],[-6,-172],[12,-146]], M.trim);
+        hEll(g, -6, -146, 7, 9, '#7fb0ff');
+        const r = 24 + ps.cast * 14;
+        const dg = g.createRadialGradient(-6, -146, 2, -6, -146, r);
+        dg.addColorStop(0, 'rgba(160,200,255,.75)'); dg.addColorStop(1, 'rgba(80,120,220,0)');
+        g.fillStyle = dg; g.beginPath(); g.arc(-6, -146, r, 0, 7); g.fill(); g.restore();
+      });
+    },
+  },
+  // Chưa chọn lớp — áo vải thô, kiếm ngắn tập sự
+  vophai: {
+    pal: { boot:'#3a3028', leg:'#4a4038', torso:'#6a5a48', skin:'#d8a878', skinSh:'#b0805a' },
+    cape: null,
+    upper(g, M, ps, P){
+      hTorso(g, P);
+      hPoly(g, [[56,96],[104,96],[104,150],[56,150]], '#7a6a52');
+      hPoly(g, [[80,96],[104,96],[104,150],[80,150]], '#61533f');
+      hPoly(g, [[54,140],[106,140],[106,150],[54,150]], '#4a3520');
+      hHead(g, P, ps);
+      hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head,
+        () => hPoly(g, [[60,62],[100,62],[98,44],[62,44]], '#4a3828'));
+      hArmL(g, P, ps);
+      hArmR(g, P, ps, () => {
+        hEll(g, 112, 116, 10, 17, P.skin);
+        g.save(); g.translate(118, 132); g.rotate(0.15);
+        hPoly(g, [[-4,0],[4,0],[3,-58],[0,-68],[-3,-58]], '#c0c4cc');
+        hPoly(g, [[-12,0],[12,0],[11,8],[-11,8]], '#8a7a4a');
+        g.fillStyle = '#4a3520'; g.fillRect(-4, 8, 8, 22); g.restore();
+      });
+    },
+  },
+};
+// Vẽ nhân vật trong hộp 160×220. tier = bậc Thần Binh (đổi bảng màu giáp).
+function drawHeroFigure(g, sectKey, tier, now, ps){
+  const M = hMetal(tier), G = HERO_GEAR[sectKey] || HERO_GEAR.vophai, P = G.pal;
+  ps = ps || HERO_POSE0;
+  g.save();
+  hEll(g, 80, 212, 30 - ps.bob * 0.9, 8, 'rgba(0,0,0,.22)'); // bóng co lại khi nhấc chân
+  if (M.glow){ // giáp bậc cao toả sáng — nhìn là biết đồ xịn, không cần đọc số
+    const ag = g.createRadialGradient(80, 120, 10, 80, 120, 86);
+    ag.addColorStop(0, M.glow); ag.addColorStop(1, 'rgba(0,0,0,0)');
+    g.globalAlpha = 0.2 + 0.1 * Math.sin(now / 380); g.fillStyle = ag;
+    g.beginPath(); g.arc(80, 120, 86, 0, 7); g.fill(); g.globalAlpha = 1;
+  }
+  if (G.cape) hCape(g, G.cape[0], G.cape[1], ps);
+  hLegs(g, P, ps);
+  g.translate(0, ps.bob);                                    // nhún theo bước chân
+  hJoint(g, 80, 146, ps.lean, () => G.upper(g, M, ps, P));   // thân ngả quanh eo
+  g.restore();
 }
 
 function drawPlayer(){
@@ -6033,8 +6336,8 @@ function drawPlayer(){
     }
     ctx.restore();
   }
-  // character sprite (sect portrait art, đã cắt nền) — walk bob · idle breathing · cast pulse · attack lunge
-  const img = (p.channelT > 0 && p.channelId && CHANNEL_IMGS[p.channelId]) ? CHANNEL_IMGS[p.channelId] : SECT_IMGS[p.sect];
+  // Hóa Thân Trấn Ải mượn hình boss → vẫn dùng sprite quái; còn lại vẽ khớp xương.
+  const img = (p.channelT > 0 && p.channelId) ? CHANNEL_IMGS[p.channelId] : null;
   const wph = p.walkPh || 0;
   const bob = p.moving ? Math.abs(Math.sin(wph))*4.2 : Math.sin(wph)*1.5;
   const rock = p.moving ? Math.sin(wph)*0.07 : 0;
@@ -6070,13 +6373,17 @@ function drawPlayer(){
     } else {
       drawAscendedFigure(p, now, castK, atkK, maxed); // fallback VFX khi sprite chưa tải xong
     }
-  } else if (img && img.complete && img.naturalWidth){
-    const channeling = p.channelT > 0 && p.channelId;
-    const sh = (channeling ? 120 : 104), sw = sh * (img.naturalWidth/img.naturalHeight);
+  } else {
+    // Mượn hình boss → blit sprite quái; bình thường → dựng nhân vật bằng khớp xương.
+    const channeling = !!(img && img.complete && img.naturalWidth);
+    const sh = channeling ? 120 : 104;
     const flip = Math.cos(p.face) < 0;
-    ctx.save(); ctx.translate(p.x + Math.cos(p.face)*atkK*7, p.y - 26 - bob + Math.sin(p.face)*atkK*3);
+    ctx.save();
+    ctx.translate(p.x + Math.cos(p.face)*atkK*7,
+                  (channeling ? p.y - 26 - bob : p.y - 42) + Math.sin(p.face)*atkK*3);
     if (flip) ctx.scale(-1, 1);
-    ctx.rotate(rock + atkK*0.12); ctx.scale(pulse, pulse);
+    // khớp xương đã tự ngả người rồi nên không xoay đè thêm
+    ctx.rotate(channeling ? rock + atkK*0.12 : 0); ctx.scale(pulse, pulse);
     // Hóa Thân Trấn Ải: hào quang đỏ thẫm dữ dội theo hệ boss đang mượn hình
     if (channeling){
       const _chTv = findTranaiById(p.channelId), _chCol = (NGU_HANH[_chTv && _chTv.el] || {}).color || '#ffb15c';
@@ -6104,19 +6411,19 @@ function drawPlayer(){
       ctx.beginPath(); ctx.arc(0, 0, 52, 0, 7); ctx.fill();
       ctx.globalAlpha = 1;
     }
-    ctx.drawImage(img, -sw/2, -sh/2, sw, sh);
+    if (channeling){
+      const sw = sh * (img.naturalWidth/img.naturalHeight);
+      ctx.drawImage(img, -sw/2, -sh/2, sw, sh);
+    } else {
+      const s = sh / HERO_H;
+      ctx.scale(s, s); ctx.translate(-HERO_W/2, -HERO_H/2);
+      drawHeroFigure(ctx, p.sect, (p.thanbinh && p.thanbinh.tier) || 1, now,
+                     heroPose(wph, !!p.moving, atkK, Math.min(1, castK), now));
+    }
     ctx.restore();
-  } else {
-    // fallback ink figure
-    ctx.fillStyle = '#2b2620';
-    ctx.beginPath(); ctx.ellipse(p.x, p.y-8, 11, 15, 0, 0, 7); ctx.fill();
-    ctx.strokeStyle = sect.color; ctx.lineWidth = 4; ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(p.x-9, p.y-6); ctx.lineTo(p.x+9, p.y-9); ctx.stroke();
-    ctx.fillStyle = '#e8cfa8'; ctx.beginPath(); ctx.arc(p.x, p.y-27, 7, 0, 7); ctx.fill();
-    ctx.fillStyle = '#1a1712'; ctx.beginPath(); ctx.arc(p.x, p.y-32, 4, 0, 7); ctx.fill();
   }
-  // Vũ khí danh phái cầm tay — vung theo nhịp đánh
-  drawSectWeapon(p, sect);
+  // Vũ khí danh phái cầm tay — nhân vật khớp xương đã tự cầm vũ khí nên bỏ qua
+  if (p.ascended || (p.channelT > 0 && p.channelId)) drawSectWeapon(p, sect);
   // weapon arc while attacking
   if (p.atkAnim > 0){
     const k = p.atkAnim/0.22;
