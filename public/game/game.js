@@ -195,26 +195,40 @@ const TUONG_SINH = { Kim:'Thủy', 'Thủy':'Mộc', 'Mộc':'Hỏa', 'Hỏa':'T
 // mượn hình hài 1 trong 9 loài Axie gần đúng playstyle nhất — 4 loài còn lại (Dusk/Bird/Plant/Dawn)
 // đã bị cắt hẳn theo hướng tối giản hoá. skillA/tp đổi tên & type theo đúng chiêu gốc MU của lớp đó,
 // numbers (mult/cd/qi) giữ nguyên từ bản cũ — không cần cân bằng lại.
+// hpMult/defMult/dmgMult: hệ số cân bằng theo archetype MU Online (kiểu thiết kế mọi bản MU đều
+// dùng — không chỉ vài điểm bonus cố định, vì bonus bị pha loãng ở cấp cao khi level*15 HP/level*2
+// ATK đã chiếm phần lớn công thức). Áp trong calcDerived(): melee cận chiến (range 90, chịu đòn trực
+// tiếp) được +HP/+DEF bù lại sát thương thấp hơn; 2 lớp tầm xa (Elf/Dark Wizard) giòn hơn hẳn nhưng
+// bù bằng sát thương cao hơn, đặc biệt Dark Wizard (range 420, xa nhất) là glass cannon rõ rệt nhất.
 const SECTS = {
   thieulam: { name:'Dark Knight', role:'Tank / Combo cận chiến', element:'Kim', color:'#4c8dff', glow:'#ffe9a0', bonus:{vit:3,def:2,str:1,agi:0},
+    hpMult:1.18, defMult:1.20, dmgMult:0.95,
     glyph:'拳', desc:'Giáp dày, ý chí sắt — một Mech Axie theo lối Dark Knight: gánh tuyến đầu rồi đáp trả bằng đòn chí mạng chậm mà không thể cản.',
     skillA:{ name:'Twisting Slash', type:'cone',  cd:4, qi:20, mult:1.6 },
     tp:{ name:'Death Stab', mult:3.0 } },
+  // range/basicProj: Fairy Elf & Dark Wizard là 2 lớp tầm xa thật (cung/phép) — đòn thường của họ bắn
+  // đạn ở khoảng cách này thay vì vung cận chiến như Dark Knight/Magic Gladiator/Dark Lord (xem doBasic()).
   toanchan: { name:'Fairy Elf', role:'Tầm xa / Hỗ trợ', element:'Thủy', color:'#3a9d8b', glow:'#a0ffe9', bonus:{vit:0,def:0,str:2,agi:2},
+    hpMult:0.90, defMult:0.85, dmgMult:1.05,
     glyph:'弓', desc:'Cung pháp Aquatic — Fairy Elf vừa dồn sát thương tầm xa vừa nâng đỡ đồng đội, tấn công và phòng ngự trong cùng một nhịp.',
-    skillA:{ name:'Multi-Shot', type:'proj', cd:4, qi:20, mult:1.5 },
+    range:380, basicProj:'arrow',
+    skillA:{ name:'Multi-Shot', type:'proj', cd:4, qi:20, mult:1.5, count:5 },
     tp:{ name:'Ice Arrow', mult:2.8 } },
   baidasan: { name:'Dark Wizard', role:'Pháp thuật / Độc tố', element:'Thủy', color:'#7ec850', glow:'#c8ffa0', bonus:{vit:1,def:0,str:3,agi:1},
+    hpMult:0.72, defMult:0.65, dmgMult:1.30,
     glyph:'蛇', desc:'Reptile Axie theo trường phái Dark Wizard — một chiêu Poison phóng ra, để chất độc tự kết liễu trận đấu.',
+    range:420, basicProj:'orb',
     skillA:{ name:'Poison', type:'proj', cd:4, qi:20, mult:1.5 },
     tp:{ name:'Meteor', mult:3.2 } },
   minhgiao: { name:'Magic Gladiator', role:'Lai / Bộc phát Hoả', element:'Hỏa', color:'#e8552a', glow:'#ffb060', bonus:{vit:2,def:0,str:3,agi:0},
+    hpMult:1.05, defMult:1.0, dmgMult:1.08,
     glyph:'焰', desc:'Beast Axie mang sức mạnh lai Magic Gladiator — Fire Slash quét ngang, đánh như cả giáo phái dồn vào một đòn.',
     skillA:{ name:'Fire Slash', type:'cone', cd:4, qi:22, mult:1.6 },
     tp:{ name:'Flame Strike', mult:3.2 } },
   // Dark Lord: lớp chỉ huy/triệu hồi — archetype mượn từ trường phái vô môn phái Cái Bang cũ
   // (VOHOC_DEFS): xáp lá cà bằng số đông, không đơn độc.
   bug: { name:'Dark Lord', role:'Chỉ huy / Triệu hồi', element:'Thổ', color:'#8a9a3a', glow:'#d0e07a', bonus:{vit:2,def:1,str:1,agi:2},
+    hpMult:1.12, defMult:1.10, dmgMult:0.92,
     glyph:'蟲', desc:'Bug Axie hoá thân Dark Lord — chưa từng đánh một mình, luôn có bầy tùy tùng theo sau dọn sạch chiến trường.',
     skillA:{ name:'Force Wave', type:'cone', cd:4, qi:20, mult:1.5 },
     tp:{ name:'Fire Scream', mult:3.0 } },
@@ -280,21 +294,10 @@ const MAP_BG = {};
 for (const k in MAP_BG_SRC){ const im = new Image(); im.src = MAP_BG_SRC[k]; MAP_BG[k] = im; }
 for (const k in MOBS){ const im = new Image(); im.src = MOBS[k].img || ''; MOB_IMGS[k] = im; }
 const SLASH_IMG = new Image(); SLASH_IMG.src = 'assets/skills/slash.png';
-// Sourced ultimate-cast VFX (axieinfinity/axie-origins-asset-kit web-vfx) — additive sprite-atlas
-// clips, one per class, played as an extra overlay on top of the existing procedural sectTP VFX.
+// Sourced status-effect overlay clips (axieinfinity/axie-origins-asset-kit web-vfx) — generic (not
+// per-class), played once at the moment a status effect actually lands (see playStatusFx below).
 // Grid metadata copied from each clip's clip.json (cols/rows/frameW/frameH/frames/fps/anchor).
 const VFX_ATLAS_DEFS = {
-  mech_smash:    { cols:8, rows:7, frameW:573, frameH:338, frames:51, fps:30, anchorX:274.3, anchorY:174.5 },
-  aquatic_smash: { cols:8, rows:6, frameW:692, frameH:428, frames:44, fps:30, anchorX:281.3, anchorY:174.5 },
-  dusk_smash:    { cols:8, rows:5, frameW:578, frameH:324, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
-  reptile_smash: { cols:8, rows:5, frameW:650, frameH:374, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
-  beast_smash:   { cols:8, rows:5, frameW:651, frameH:324, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
-  bird_smash:    { cols:8, rows:6, frameW:572, frameH:231, frames:47, fps:30, anchorX:248.3, anchorY:174.5 },
-  plant_smash:   { cols:8, rows:5, frameW:647, frameH:324, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
-  bug_smash:     { cols:8, rows:5, frameW:650, frameH:324, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
-  dawn_smash:    { cols:8, rows:5, frameW:578, frameH:281, frames:39, fps:30, anchorX:281.3, anchorY:174.5 },
-  // Sourced status-effect overlay clips (same kit, web-vfx/public/vfx/<id>/) — generic (not per-class),
-  // played once at the moment a status effect actually lands (see playStatusFx below).
   stunned:      { cols:8, rows:11, frameW:377, frameH:429, frames:81, fps:30, anchorX:191.4, anchorY:192.5 },
   bleed_apply:  { cols:8, rows:9,  frameW:467, frameH:440, frames:69, fps:30, anchorX:227.4, anchorY:225.0 },
   heal:         { cols:8, rows:9,  frameW:432, frameH:437, frames:70, fps:30, anchorX:215.3, anchorY:220.4 },
@@ -878,7 +881,7 @@ const VOHOC_DEFS = {
   dl_electricspark:{ name:'Electric Spark', school:'Dark Lord', phai:'bug', tier:'so', cat:'Chỉ Huy', type:'proj', unlock:15, cd:5, qi:18, mult:1.6, color:'#8a9a3a', icon:'assets/skills/vh_dl_spark.png', glyph:'電', fx:{ stun:0.8 }, desc:'Tia điện từ quyền trượng — trúng đòn choáng nhẹ.' },
   dl_darkspirit: { name:'Dark Spirit', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'aoe', unlock:30, cd:7, qi:24, mult:2.0, color:'#6a7a2a', icon:'assets/skills/vh_dl_darkspirit.png', glyph:'霊', fx:{ r:160 }, desc:'Triệu hồi u linh vây quanh — sát thương diện rộng.' },
   dl_chaoticdiseier:{ name:'Chaotic Diseier', school:'Dark Lord', phai:'bug', tier:'cao', cat:'Chỉ Huy', type:'proj', unlock:40, cd:6, qi:22, mult:1.8, color:'#a8b85a', icon:'assets/skills/vh_dl_chaotic.png', glyph:'杖', fx:{ multi:3, pierce:true }, desc:'Ném quyền trượng xoay tít — xuyên thấu hàng dài địch.' },
-  dl_darkraven:  { name:'Dark Raven', school:'Dark Lord', phai:'bug', tier:'than', cat:'Chỉ Huy', type:'aoe', unlock:55, cd:10, qi:34, mult:2.6, color:'#d0e07a', icon:'assets/skills/vh_dl_raven.png', glyph:'鴉', fx:{ r:180, kb:40, big:true }, desc:'Bầy quạ đen lao xuống xé nát mọi thứ trong tầm — chiêu chỉ huy tối thượng.' },
+  dl_darkraven:  { name:'Dark Raven', school:'Dark Lord', phai:'bug', tier:'than', cat:'Chỉ Huy', type:'aoe', unlock:55, cd:10, qi:34, mult:2.6, color:'#2a1a3a', icon:'assets/skills/vh_dl_raven.png', glyph:'鴉', fx:{ r:180, kb:40, big:true }, desc:'Bầy quạ đen lao xuống xé nát mọi thứ trong tầm — chiêu chỉ huy tối thượng.' },
 };
 // GDD §5.1: mọi chiêu khóa theo cảnh giới — giữ lại cho vhRealmReq()/tenuiFreeLearn() (Té Núi) dùng;
 // mọi chiêu bây giờ đều phai-locked nên luôn trả về 0 (tự ngộ theo cấp, không qua Bí Kíp/cảnh giới)
@@ -1077,15 +1080,15 @@ function vhKnockback(m, ang, px){
 // FS_VFX: 30 dung hợp · VH_VFX: 24 võ học chủ động. style → drawVfx, proj → drawProjStyled.
 // SECT_VFX: 16 tuyệt chiêu môn phái (8 chiêu chính sx_*_a + 8 trấn phái sx_*_c) — hình ảnh riêng từng phái
 const SECT_VFX = {
-  sx_thieulam_a: { style:'vajra',        c2:'#fff4c8', spin:1.2 },            // Kim Cương Chưởng — ấn chưởng kim cang
+  sx_thieulam_a: { style:'windslash',    c2:'#cfe8ff' },                      // Twisting Slash (Dark Knight) — chém xoáy cuốn gió
   sx_thieulam_c: { style:'fist',         c2:'#ffe9a0' },                      // Đại Lực Kim Cương Chưởng — chưởng ấn khổng lồ
-  sx_toanchan_a: { style:'flash',        c2:'#d8f4ff', proj:'sword' },        // Kiếm Khí Xuyên Vân — kiếm khí bạch quang
+  sx_toanchan_a: { style:'flash',        c2:'#d8f4ff', proj:'arrow' },        // Multi-Shot (Fairy Elf) — loạt tên bắn tỉa
   sx_toanchan_c: { style:'hexa',         c2:'#c8ecff', spin:1.5 },            // Thất Tinh Hội Kiếm — trận Bắc Đẩu thất tinh
   sx_comoc_a:    { style:'crescents',    c2:'#e8dcff', proj:'blade' },        // Song Hoàn Trảm — nguyệt hoàn đôi
   sx_comoc_c:    { style:'petals',       c2:'#f0e8ff' },                      // Ngọc Nữ Tố Tâm Kiếm — song kiếm ngọc
   sx_baidasan_a: { style:'flash',        c2:'#b8ff9a', proj:'serpent' },      // Linh Xà Độc Tiêu — xà tiêu độc
-  sx_baidasan_c: { style:'bonemist',     c2:'#d8ffb8' },                      // Hà Mô Công — cóc kình độc khí
-  sx_minhgiao_a: { style:'phoenix',      c2:'#ffb35a' },                      // Thánh Hỏa Liên Nguyên — liên hỏa
+  sx_baidasan_c: { style:'meteor',       c2:'#ffcf7a' },                      // Meteor (Dark Wizard) — vẫn thạch lửa giáng thế
+  sx_minhgiao_a: { style:'fireslash',    c2:'#ffcf7a' },                      // Fire Slash (Magic Gladiator) — đao quang cuốn lửa
   sx_minhgiao_c: { style:'vortex',       c2:'#ff9a5a', spin:2.8 },            // Càn Khôn Đại Na Di — vòng xoáy càn khôn
   sx_doanthi_a:  { style:'flash',        c2:'#fff0b8', proj:'beam' },         // Nhất Dương Chỉ — chỉ lực xuyên thấu
   sx_doanthi_c:  { style:'suns',         c2:'#ffe9a0', spin:2.0 },            // Lục Đạo Kiếm Khí — lục mạch kiếm quang
@@ -1151,6 +1154,7 @@ const VH_VFX = {
   cuuamtrao:   { style:'bloodclaw',  c2:'#f0f0e8' },
   lucmach:     { style:'flash',      c2:'#ffffff', proj:'beam', rainbow:true },
   docco:       { style:'flash',      c2:'#e0b0ff', proj:'blade' },
+  dl_darkraven:{ style:'crowswarm', c2:'#ff5a3a' },                          // Dark Raven (Dark Lord) — bầy quạ đen xoáy vào
 };
 function _vxLine(x1, y1, x2, y2){ ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
 function _vxBolt(x, y, ang, len, w, col){
@@ -1314,6 +1318,54 @@ function drawVfx(e, k, a){
     for (let i = 0; i < 5; i++){ const fx = X + (i-2)*pr*0.2; const fl = pr*(0.34 + (i === 2 ? 0.12 : (i%2 ? 0.04 : 0)));
       ctx.beginPath(); ctx.ellipse(fx, Y - pr*0.5 - fl*0.5, pr*0.085, fl*0.55, 0, 0, 7); ctx.fill(); }
     _vxGlyph(X, Y, '卍', pr*0.5, C2, a);
+  } else if (S === 'windslash'){ // Twisting Slash (Dark Knight) — chém xoáy cuốn gió
+    const rr = R*(0.35 + k*0.55);
+    arc(X, Y, rr, F - 0.95, F + 0.95, C1, 6*(1 - k*0.4), a*0.9);
+    for (let i = 0; i < 4; i++){
+      const wa = F + (i - 1.5)*0.35, L1 = rr*0.55, L2 = rr*(0.95 + i*0.05);
+      ctx.strokeStyle = C2; ctx.lineWidth = 2; ctx.globalAlpha = a*0.7;
+      ctx.beginPath();
+      for (let s2 = 0; s2 <= 8; s2++){ const tt = s2/8; const ang2 = wa + tt*0.6*(i%2 ? 1 : -1); const rL = L1 + (L2-L1)*tt;
+        const px = X + Math.cos(ang2)*rL, py = Y + Math.sin(ang2)*rL; s2 ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+      ctx.stroke();
+    }
+    _vxGlyph(X + Math.cos(F)*rr*0.6, Y + Math.sin(F)*rr*0.6, G, 22, C2, a*0.85);
+  } else if (S === 'fireslash'){ // Fire Slash (Magic Gladiator) — đao quang cuốn lửa
+    const rr = R*(0.35 + k*0.6);
+    arc(X, Y, rr, F - 0.8, F + 0.8, C1, 7*(1 - k*0.3), a*0.9);
+    arc(X, Y, rr*0.92, F - 0.7, F + 0.7, '#fff2c0', 2, a*0.8);
+    for (let i = 0; i < 6; i++){ const t2 = i/6; const ang2 = F + (t2 - 0.5)*1.5;
+      const ex = X + Math.cos(ang2)*rr, ey = Y + Math.sin(ang2)*rr - t2*6;
+      disc(ex, ey - 4, 3.5*(1 - t2*0.4), i%2 ? C1 : C2, a*0.75); }
+    _vxGlyph(X + Math.cos(F)*rr*0.6, Y + Math.sin(F)*rr*0.6, G, 22, C2, a*0.85);
+  } else if (S === 'meteor'){ // Meteor (Dark Wizard) — vẫn thạch lửa giáng thế, nổ tung khi chạm đất
+    for (let i = 0; i < 6; i++){
+      const seed = i*53.7;
+      const fx0 = X + Math.cos(seed)*R*0.6, fy0 = Y - R*(1.05 + (i%3)*0.22);
+      const tx = X + Math.cos(seed + 1.7)*R*0.3, ty = Y + Math.sin(seed + 1.7)*R*0.2;
+      const kk = Math.min(1, k*1.4 - i*0.09); if (kk <= 0) continue;
+      const px = fx0 + (tx-fx0)*kk, py = fy0 + (ty-fy0)*kk;
+      ctx.strokeStyle = C1; ctx.lineWidth = 4; ctx.globalAlpha = a*0.7;
+      _vxLine(px, py, px - (tx-fx0)*0.18, py - (ty-fy0)*0.18);
+      disc(px, py, 7*(1 - kk*0.3), C1, a*0.9); disc(px, py, 3.2, C2, a);
+      if (kk >= 0.94) arc(tx, ty, 14 + (k - 0.75)*90, 0, 7, C2, 4, a*0.85);
+    }
+    disc(X, Y, R*(0.22 + k*0.35), C1, a*0.22);
+    _vxGlyph(X, Y - R*0.1, G, 26, C2, a*0.9);
+  } else if (S === 'crowswarm'){ // Dark Raven (Dark Lord) — bầy quạ đen xoáy vào, cánh nhọn xé gió
+    disc(X, Y, R*(0.5 + k*0.2), '#0a0612', a*0.35);
+    for (let i = 0; i < 8; i++){
+      const aa = i*0.7854 + spin + k*5;
+      const rr = R*(0.85 - k*0.55);
+      const cx = X + Math.cos(aa)*rr, cy = Y + Math.sin(aa)*rr*0.7;
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(aa + Math.PI/2); ctx.globalAlpha = a*0.85;
+      ctx.fillStyle = i%2 ? C1 : '#140a1e';
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-9,-4); ctx.lineTo(-2,0); ctx.lineTo(-9,4); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(9,-4); ctx.lineTo(2,0); ctx.lineTo(9,4); ctx.closePath(); ctx.fill();
+      ctx.restore();
+      if (i%3 === 0) disc(cx, cy, 1.8, C2, a);
+    }
+    _vxGlyph(X, Y, G, 26, C2, a*0.9);
   }
   ctx.restore();
 }
@@ -1347,6 +1399,14 @@ function drawProjStyled(p){
     const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 9);
     g.addColorStop(0, '#fff'); g.addColorStop(0.4, p.color); g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0, 7); ctx.fill();
+  } else if (s === 'arrow'){ // Multi-Shot (Fairy Elf) — thân tên + mũi nhọn + lông vũ đuôi
+    ctx.strokeStyle = p.color; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(p.x - dx*18, p.y - dy*18); ctx.lineTo(p.x - dx*4, p.y - dy*4); ctx.stroke();
+    ctx.fillStyle = p.color; ctx.beginPath();
+    ctx.moveTo(p.x + dx*6, p.y + dy*6); ctx.lineTo(p.x - dx*2 - dy*3, p.y - dy*2 + dx*3); ctx.lineTo(p.x - dx*2 + dy*3, p.y - dy*2 - dx*3); ctx.closePath(); ctx.fill();
+    ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(p.x - dx*18 - dy*3, p.y - dy*18 + dx*3); ctx.lineTo(p.x - dx*14, p.y - dy*14); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(p.x - dx*18 + dy*3, p.y - dy*18 - dx*3); ctx.lineTo(p.x - dx*14, p.y - dy*14); ctx.stroke();
   } else { // dart — kiểu cũ mặc định
     ctx.strokeStyle = p.color; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.moveTo(p.x - dx*16, p.y - dy*16); ctx.lineTo(p.x, p.y); ctx.stroke();
@@ -2147,8 +2207,9 @@ window.upgradeThanBinh = function(){
 };
 
 function calcDerived(){
-  const b = SECTS[player.sect].bonus;
-  const s = { str:player.str+b.str, agi:player.agi+b.agi, def:player.def+b.def, vit:player.vit+b.vit };
+  const sect0 = SECTS[player.sect];
+  const b = sect0.bonus;
+  const s = { str:player.str+b.str, agi:player.agi+b.agi, def:Math.round((player.def+b.def)*(sect0.defMult||1)), vit:player.vit+b.vit };
   // P: tích lũy từ trang bị — flat + chỉ số % theo GDD
   const P = { atk:8 + player.level*2, hp:0, crit:0, eva:0, qireg:0,
     hpPct:0, qiPct:0, atkPct:0, dmgred:0, evaPct:0, silverPct:0, reflectPct:0,
@@ -2194,8 +2255,8 @@ function calcDerived(){
   if (player.dantian) player.dantian.realm = realm;
   const dr = DANTIAN_REALMS[realm];
   player.dStr = s.str; player.dAgi = s.agi; player.dDef = s.def; player.dVit = s.vit;
-  player.atk = Math.round((P.atk + s.str * 2) * (1 + dr.atk));
-  player.maxHp = Math.round((100 + player.level*15 + s.vit*12 + P.hp) * (1 + dr.hp));
+  player.atk = Math.round((P.atk + s.str * 2) * (1 + dr.atk) * (sect0.dmgMult || 1));
+  player.maxHp = Math.round((100 + player.level*15 + s.vit*12 + P.hp) * (1 + dr.hp) * (sect0.hpMult || 1));
   player.maxQi = 50 + player.level*5;
   player.crit = Math.min(0.45, s.agi*0.003 + P.crit/100);
   // Cương Khí aura: +HP% +DEF%
@@ -3577,19 +3638,31 @@ function doBasic(){
   // Phím Space gán chiêu: ưu tiên tung chiêu — đang hồi/thiếu nội lực thì tự quay về đòn thường
   if (player.spaceSkill && canCastSilent(player.spaceSkill)){ castSkill(player.spaceSkill); return; }
   if (player.cd.basic > 0) return;
-  const t = nearestMob(90);
+  const sect = SECTS[player.sect] || SECTS.vophai;
+  const rng = sect.range || 90;
+  const ranged = rng > 200; // Dark Wizard/Fairy Elf: đòn thường bắn đạn tầm xa (đánh xa kiểu vây), phái khác vung cận chiến như trước
+  const t = nearestMob(rng);
   if (t) player.face = Math.atan2(t.y-player.y, t.x-player.x);
   player.cd.basic = player.aspd; player.atkAnim = 0.22;
   const _basicCls = SECT_SFX[player.sect];
   AudioSys.sfx(_basicCls ? 'slash_' + _basicCls : 'slash', 0.55);
-  addEffect({ type:'arc', x:player.x, y:player.y, face:player.face, r:60, color:'#2b2620' });
-  spawnSlash(player.x + Math.cos(player.face)*36, player.y + Math.sin(player.face)*36 - 12, player.face, 95);
+  if (ranged){
+    addEffect({ type:'arc', x:player.x, y:player.y, face:player.face, r:40, color:sect.color });
+  } else {
+    addEffect({ type:'arc', x:player.x, y:player.y, face:player.face, r:60, color:'#2b2620' });
+    spawnSlash(player.x + Math.cos(player.face)*36, player.y + Math.sin(player.face)*36 - 12, player.face, 95);
+  }
   if (t){
-    let dmg = player.atk * rnd(0.9,1.12);
-    let src = 'hit';
-    if (Math.random() < player.crit){ dmg *= (player.critDmgMult || 2); src = 'crit'; }
-    hurtMob(t, dmg, src);
-    // Cung Tiễn: đòn đánh thường có tỉ lệ phóng linh tiễn theo sau
+    if (ranged){
+      const ang = Math.atan2(t.y-player.y, t.x-player.x);
+      projectiles.push({ x:player.x, y:player.y-10, ang, speed:520, dmg:player.atk*rnd(0.9,1.12), kind:'basic', life:0.9, color:sect.color, style:sect.basicProj || 'orb' });
+    } else {
+      let dmg = player.atk * rnd(0.9,1.12);
+      let src = 'hit';
+      if (Math.random() < player.crit){ dmg *= (player.critDmgMult || 2); src = 'crit'; }
+      hurtMob(t, dmg, src);
+    }
+    // Cung Tiễn: đòn đánh thường có tỉ lệ phóng linh tiễn theo sau (phụ kiện thú cưỡi — mọi phái)
     const bowT = BOW_TIERS[(player.bow && player.bow.tier) || 0];
     if (bowT && !t.dead && Math.random()*100 < bowT.proc){
       const arrows = (bowT.double && Math.random() < bowT.double) ? 2 : 1;
@@ -4214,10 +4287,13 @@ function update(dt){
     if (_at){
       const _ad = dist(player.x, player.y, _at.x, _at.y);
       player.face = Math.atan2(_at.y - player.y, _at.x - player.x);
-      if (_ad > 64){ mx += (_at.x - player.x)/_ad; my += (_at.y - player.y)/_ad; } // chạy tới bãi quái
-      else if (player.cd.basic <= 0) doBasic(); // trong tầm tay: chém
+      // Dark Wizard/Fairy Elf đánh xa: AUTO dừng lại ở rìa tầm bắn thay vì lao vào cận chiến (kiểu vây)
+      const _rng0 = (SECTS[player.sect] || SECTS.vophai).range || 90;
+      const _stopD = _rng0 > 200 ? _rng0*0.85 : 64;
+      if (_ad > _stopD){ mx += (_at.x - player.x)/_ad; my += (_at.y - player.y)/_ad; } // chạy tới bãi quái
+      else if (player.cd.basic <= 0) doBasic(); // trong tầm đánh: ra đòn
       // tự tung kỹ năng trên taskbar khi hết hồi chiêu & đủ nội lực (im lặng, không spam thông báo)
-      if (_ac.skill && _ad < 340){
+      if (_ac.skill && _ad < Math.max(340, _rng0)){
         for (const _sid of player.skillBar){
           if (_sid == null) continue;
           const _inf = skillInfo(_sid);
@@ -7598,7 +7674,6 @@ function castSkill(id){
     if (SECT_SFX[player.sect]) sfxTag = 'smash_' + SECT_SFX[player.sect];
     const _tpR = TP_RADIUS + 15 * _st; // tiến hóa: trấn phái lan rộng
     spawnSkillVfx('sx_' + player.sect + '_c', { color:sect.color, glyph:'鎮' }, 'aoe', player.face, _tpR);
-    if (SECT_SFX[player.sect]) spawnAtlasVfx(SECT_SFX[player.sect] + '_smash', player.x, player.y, 0.42);
     addEffect({ type:'ring', x:player.x, y:player.y, r:_tpR, color:sect.color, big:true });
     addEffect({ type:'ring', x:player.x, y:player.y, r:_tpR*0.6, color:sect.glow, big:true });
     for (let i = 0; i < 6; i++){
@@ -7685,7 +7760,7 @@ function castSkill(id){
       const ang = t ? Math.atan2(t.y-player.y, t.x-player.x) : player.face;
       player.face = ang;
       const _svc = SECT_VFX[_sva];
-      const _nP = 1 + _st; // tiến hóa: +1 đạo kiếm khí mỗi bậc
+      const _nP = (def.count || 1) + _st; // Multi-Shot (Fairy Elf) bắn 5 tên/loạt; các phái khác mặc định 1, +1 mỗi bậc tiến hóa
       for (let _pi = 0; _pi < _nP; _pi++){
         const _off = _nP > 1 ? (_pi - (_nP - 1) / 2) * 0.15 : 0;
         projectiles.push({ x:player.x, y:player.y, ang:ang + _off, speed:420, dmg:player.atk*def.mult*_tbMul, kind:'skill', life:1.0, color:sect.color, pierce:true, style:(_svc && _svc.proj) || undefined });
