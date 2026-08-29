@@ -2369,11 +2369,9 @@ function newPlayer(sectKey){
     herbCount: 0,                            // Luyện Đan — Thảo Dược tích trữ (hái ngoài đồng)
     alchDay: '', alchCount: 0,               // Luyện Đan — giới hạn 2 đan vĩnh viễn/ngày (giống Nội Đan)
     pillDmgT: 0, pillDmgPct: 0,               // Bạo Lực Đan — buff sát thương tạm thời
-    dotpha: 0,                               // Đan Ascension Trial — bảo mệnh độ kiếp (chịu 4 tia lôi, thất bại chỉ tổn 25% Anima)
     noidan: {},                              // Nội Đan yêu thú theo hành { Kim, Mộc, Thổ, Thủy, Hỏa }
     ndBonus: { atk:0, hp:0, def:0, qi:0, crit:0 }, // chỉ số vĩnh viễn từ thôn phệ nội đan
     ndDay: '', ndCount: 0,                   // giới hạn thôn phệ 3 viên/ngày
-    doNgo: 0,                                // Đối Ngộ — lần đột phá kế giảm 30% Anima tiêu hao
     pet: null,                               // Linh Thú đồng hành { type, name, lv, el, feed }
     phongphu: 0,                             // Phong Linh Phù — thu phục linh thú
     abode: { tulinh:0, garden:[null,null,null] }, // Động Phủ: Tụ Linh Trận + Dược Viên
@@ -2510,11 +2508,9 @@ function loadGame(){
     if (player.potionCd == null) player.potionCd = 0;
     if (player.buffAtkT == null) player.buffAtkT = 0;
     if (player.loidonT == null) player.loidonT = 0;
-    if (player.dotpha == null) player.dotpha = 0;
     if (!player.noidan) player.noidan = {};
     if (!player.ndBonus) player.ndBonus = { atk:0, hp:0, def:0, qi:0, crit:0 };
     if (player.ndDay == null){ player.ndDay = ''; player.ndCount = 0; }
-    if (player.doNgo == null) player.doNgo = 0;
     if (player.pet === undefined) player.pet = null;
     if (player.phongphu == null) player.phongphu = 0;
     if (!player.abode) player.abode = { tulinh:0, garden:[null,null,null] };
@@ -7231,7 +7227,6 @@ const MAT_ROWS = [
   { icon:'tula', name:'Tu La Tinh Thạch', get:()=>player.gems.tuLa, color:'#e84a6a', desc:'rèn +7 trở lên · Áo Choàng' },
   { icon:'honnguyen', name:'Hỗn Nguyên Thạch', get:()=>player.gems.honNguyen, color:'#b08ae8', desc:'rèn +10/+11 · Áo Choàng' },
   { icon:'tiendan', name:'Tiến Cấp Đan', get:()=>player.tienDan, color:'#7ec850', desc:'Tấn Chức' },
-  { icon:'dotpha', name:'Đan Ascension Trial', get:()=>player.dotpha || 0, color:'#ffb15c', desc:'bảo mệnh độ kiếp — chịu 4 tia lôi' },
   { icon:'phongphu', name:'Phong Linh Phù', get:()=>player.phongphu || 0, color:'#b08ae8', desc:'thu phục linh thú — bấm T' },
   { icon:'phu', name:'Thiên Mệnh Phù', get:()=>player.charms, color:'#7ecbff', desc:'bảo hiểm rèn' },
   { icon:'tanquyen', name:'Tàn Quyển (Thượng/Trung/Hạ)', get:()=>player.bikip ? player.bikip.pieces.join('/') : '0/0/0', color:'#e84a6a', desc:'dung hợp Huyết Ma Thôn Phệ' },
@@ -9998,12 +9993,14 @@ function rollKyngo(){
     const tv = 40 + ((player.dantian && player.dantian.realm) || 0)*25;
     player.dantian.tuvi += tv;
     sub = `Cao nhân ẩn thế xuất hiện, chỉ điểm vài chiêu — +${tv} Anima!`;
-    if (Math.random() < 0.5){ player.dotpha = (player.dotpha || 0) + 1; sub += ' Tặng kèm 1 ◈ Đan Ascension Trial!'; }
     text = 'KỲ NGỘ · Cao Nhân Chỉ Điểm'; color = '#d8baff';
-  } else { // Đối Ngộ — phá bình cảnh
-    player.doNgo = 1;
+  } else { // Đối Ngộ — phá bình cảnh: trước đây giảm 30% tiêu hao Ascension Trial (cơ chế đột phá thủ
+    // công đã tự động hoá từ đợt MU-hoá, giảm giá đó không còn ai tiêu thụ được nữa) — đổi thành
+    // thưởng Anima thẳng cho tương xứng với các nhánh Kỳ Ngộ khác, giữ nguyên cảm giác "chợt ngộ đạo".
+    const tv2 = 80 + ((player.dantian && player.dantian.realm) || 0)*30;
+    player.dantian.tuvi += tv2;
     text = 'KỲ NGỘ · Đối Ngộ'; color = '#9fd0ff';
-    sub = 'Chợt ngộ đạo trong thoáng chốc — lần đột phá kế tiếp giảm 30% Anima tiêu hao!';
+    sub = `Chợt ngộ đạo trong thoáng chốc — +${tv2} Anima!`;
   }
   zoneBanner = { text, sub, color, t:3.2 };
   AudioSys.sfx('quest', 0.7);
@@ -10602,12 +10599,11 @@ function updateDungeon(dt){
           tl = Math.round(rnd(r.tuLa[0], r.tuLa[1])),     hn = Math.round(rnd(r.hon[0], r.hon[1])),
           sv = Math.round(rnd(r.silver[0], r.silver[1]));
     player.tienDan += td; player.mat += mt; player.khi += r.khi; player.dantian.tuvi += r.tuvi; player.silver += sv;
-    player.dotpha = (player.dotpha || 0) + 1; // boss phó bản luôn rớt Đan Ascension Trial — farm để đột phá an toàn
     dailyTrack('dungeon'); // Mục Tiêu Hôm Nay
     if (tl > 0) player.gems.tuLa += tl;
     if (hn > 0) player.gems.honNguyen += hn;
     zoneBanner = { text:'PHÓ BẢN THÔNG QUAN!',
-      sub:`+${td} Tiến Cấp Đan · +${mt} Huyền Thiết · +${r.khi} Instinct · +${r.tuvi} Anima · +${sv} bạc · +1 Đan Ascension Trial`,
+      sub:`+${td} Tiến Cấp Đan · +${mt} Huyền Thiết · +${r.khi} Instinct · +${r.tuvi} Anima · +${sv} bạc`,
       color:'#b08ae8', t:5 };
     addFloat(player.x, player.y - 80, 'Phần thưởng phó bản đã vào túi!', '#7ecbff', 16);
     AudioSys.sfx('levelup', 0.8);
