@@ -4627,7 +4627,10 @@ function update(dt){
   // respawn dead mobs
   for (const m of mobs){
     if (!m.dead) continue;
-    if (m.def && m.def.bossKind){ // Boss Vùng/Trấn Ải hồi lại sau 60s tại đúng vị trí canh giữ
+    // Boss Vùng/Trấn Ải hồi lại sau 60s tại đúng vị trí canh giữ — chỉ áp dụng mob có m.zone thật
+    // (Boss Săn phó bản dùng chung bossKind để thừa hưởng não moveset/lãnh địa nhưng zone=null,
+    // chết là chết hẳn — không có _bdRef nên gọi spawnZoneBoss sẽ crash nếu thiếu chặn m.zone này)
+    if (m.def && m.def.bossKind && m.zone){
       if (m.respawnT <= 0){ m.gone = true; spawnZoneBoss(m.def._bdRef, m.def.bossKind); }
       else m.respawnT -= dt;
       continue;
@@ -10504,13 +10507,16 @@ Object.assign(MOBS, {
   // Boss Săn (MU Online-style): xuất hiện SAU khi hạ Trấn Ải phó bản — hoạt động phụ, không bắt
   // buộc để thông quan, thưởng Rương (xem DROP_SRC.box1..5 + grantHuntBox()). huntBoss:true → bỏ
   // qua bảng rơi đồ thường theo-kill (m.def.bossKind/boss) vì phần thưởng đã do grantHuntBox() lo.
-  boss_cotma1:   { name:'Cốt Ma Tướng Quân',  lv:18,  hp:5600,   atk:88,  def:32,  xp:5100,  silver:[550,800],   speed:82, aggro:9999, range:40, atkCd:1.2,  size:25, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, drop:0, el:'Thổ', img:'assets/mobs/boss_cotma.png' },
-  boss_cotma2:   { name:'Cốt Ma Tướng Quân',  lv:24,  hp:9600,   atk:120, def:45,  xp:8300,  silver:[800,1100],  speed:82, aggro:9999, range:40, atkCd:1.2,  size:25, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, drop:0, el:'Thổ', img:'assets/mobs/boss_cotma.png' },
-  boss_hacnu1:   { name:'U Minh Hắc Nữ Vu',   lv:36,  hp:17600,  atk:176, def:64,  xp:14400, silver:[1300,1750], speed:86, aggro:9999, range:44, atkCd:1.15, size:25, color:'#241428', eye:'#c07fe0', huntBoss:true, drop:0, el:'Mộc', poisonHit:true, img:'assets/mobs/boss_hacnu.png' },
-  boss_hacnu2:   { name:'U Minh Hắc Nữ Vu',   lv:54,  hp:35200,  atk:272, def:112, xp:25600, silver:[2100,2900], speed:86, aggro:9999, range:44, atkCd:1.15, size:25, color:'#241428', eye:'#c07fe0', huntBoss:true, drop:0, el:'Mộc', poisonHit:true, img:'assets/mobs/boss_hacnu.png' },
-  boss_hoangkim1:{ name:'Hoàng Kim Ma Tướng', lv:74,  hp:64000,  atk:384, def:152, xp:44800, silver:[3200,4500], speed:80, aggro:9999, range:48, atkCd:1.15, size:27, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, drop:0, el:'Kim', img:'assets/mobs/boss_hoangkim.png' },
-  boss_hoangkim2:{ name:'Hoàng Kim Ma Tướng', lv:94,  hp:108800, atk:544, def:208, xp:72000, silver:[5100,6700], speed:80, aggro:9999, range:48, atkCd:1.1,  size:27, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, drop:0, el:'Kim', img:'assets/mobs/boss_hoangkim.png' },
-  boss_amthan:   { name:'Hắc Ám Ma Thần',     lv:112, hp:180000, atk:680, def:260, xp:126000,silver:[8000,11000],speed:90, aggro:9999, range:52, atkCd:1.0,  size:28, color:'#0c0810', eye:'#ff2a2a', huntBoss:true, drop:0, el:'Hỏa', img:'assets/mobs/boss_amthan.png' },
+  // bossKind:'hunt' mượn nguyên não moveset/lãnh địa/né đòn của Boss Vùng-Trấn Ải (telegraph AoE,
+  // vòng lãnh địa đỏ nét đứt, tự hồi nếu người chơi bỏ chạy) — không cần xây hệ thống riêng. Size
+  // lớn hơn hẳn Trấn Ải thường (24-30) để áng ngữ đúng không gian rộng của phòng phó bản.
+  boss_cotma1:   { name:'Cốt Ma Tướng Quân',  lv:18,  hp:5600,   atk:88,  def:32,  xp:5100,  silver:[550,800],   speed:82, aggro:9999, range:40, atkCd:1.2,  size:32, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, bossKind:'hunt', bossId:'boss_cotma1', moves:['vach','xung','cuong'], drop:0, el:'Thổ', img:'assets/mobs/boss_cotma.png' },
+  boss_cotma2:   { name:'Cốt Ma Tướng Quân',  lv:24,  hp:9600,   atk:120, def:45,  xp:8300,  silver:[800,1100],  speed:82, aggro:9999, range:40, atkCd:1.2,  size:32, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, bossKind:'hunt', bossId:'boss_cotma2', moves:['vach','xung','goi','cuong'], drop:0, el:'Thổ', img:'assets/mobs/boss_cotma.png' },
+  boss_hacnu1:   { name:'U Minh Hắc Nữ Vu',   lv:36,  hp:17600,  atk:176, def:64,  xp:14400, silver:[1300,1750], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu1', moves:['vong','goi','cuong'], drop:0, el:'Mộc', poisonHit:true, img:'assets/mobs/boss_hacnu.png' },
+  boss_hacnu2:   { name:'U Minh Hắc Nữ Vu',   lv:54,  hp:35200,  atk:272, def:112, xp:25600, silver:[2100,2900], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu2', moves:['vong','vach','goi','cuong'], drop:0, el:'Mộc', poisonHit:true, img:'assets/mobs/boss_hacnu.png' },
+  boss_hoangkim1:{ name:'Hoàng Kim Ma Tướng', lv:74,  hp:64000,  atk:384, def:152, xp:44800, silver:[3200,4500], speed:80, aggro:9999, range:48, atkCd:1.15, size:36, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim1', moves:['vach','xung','vong'], drop:0, el:'Kim', img:'assets/mobs/boss_hoangkim.png' },
+  boss_hoangkim2:{ name:'Hoàng Kim Ma Tướng', lv:94,  hp:108800, atk:544, def:208, xp:72000, silver:[5100,6700], speed:80, aggro:9999, range:48, atkCd:1.1,  size:38, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim2', moves:['vach','xung','vong','cuong'], drop:0, el:'Kim', img:'assets/mobs/boss_hoangkim.png' },
+  boss_amthan:   { name:'Hắc Ám Ma Thần',     lv:112, hp:180000, atk:680, def:260, xp:126000,silver:[8000,11000],speed:90, aggro:9999, range:52, atkCd:1.0,  size:44, color:'#0c0810', eye:'#ff2a2a', huntBoss:true, bossKind:'hunt', bossId:'boss_amthan', moves:['vach','xung','vong','goi','cuong'], drop:0, el:'Hỏa', img:'assets/mobs/boss_amthan.png' },
 });
 // ảnh boss nạp thủ công (MOB_IMGS gốc chỉ load mobs trong literal đầu file)
 for (const bt of ['boss_hacphong','boss_sontac','boss_phando','boss_mochu','boss_tinhhoa','boss_dothong','boss_thienbinh',
@@ -10738,6 +10744,15 @@ function updateDungeon(){
     grantHuntBox();
   }
 }
+const HUNT_BOSS_TAUNT = {
+  boss_cotma1: 'Xương cốt ngươi sẽ gia nhập đội quân của ta!',
+  boss_cotma2: 'Xương cốt ngươi sẽ gia nhập đội quân của ta!',
+  boss_hacnu1: 'Bóng tối sẽ nuốt chửng linh hồn ngươi!',
+  boss_hacnu2: 'Bóng tối sẽ nuốt chửng linh hồn ngươi!',
+  boss_hoangkim1: 'Quỳ xuống trước uy quyền Hoàng Kim!',
+  boss_hoangkim2: 'Quỳ xuống trước uy quyền Hoàng Kim!',
+  boss_amthan: 'Ngươi dám khuấy động giấc ngủ của Ma Thần sao?!',
+};
 function spawnHuntBoss(){
   if (!DGN || DGN.huntSpawned) return;
   const hb = DGN.def.huntBoss;
@@ -10745,10 +10760,21 @@ function spawnHuntBoss(){
   if (!def){ DGN.huntCleared = true; return; }
   const b = spawnMob(hb, { x:1300, y:430, r:40, count:1 }, null);
   b.zone = null; // Boss Săn chết là chết hẳn, không hồi sinh
+  // Não moveset Boss Vùng/Trấn Ải (telegraph AoE, vòng lãnh địa, tự hồi khi rời xa) cần các field
+  // này — spawnMob() không tự khởi tạo, chỉ spawnZoneBoss() mới làm; thiếu sẽ NaN, chiêu không
+  // bao giờ tung ra được (m.moveT -= dt trên undefined → NaN, so sánh NaN<=0 luôn false)
+  b.moveT = 4; b.moveIdx = 0; b.tele = null; b.punishT = 0; b.introduced = false;
   DGN.huntRef = b;
   DGN.huntSpawned = true;
-  if (player && player.auto){ player._autoAX = 1300; player._autoAY = 430; } // dời neo AUTO theo boss săn — xem ghi chú ở nextDungeonWave()
+  // Boss Săn có chiêu AoE báo trước cần tự tay né (J để né) — AUTO không tự né được nên buộc tắt,
+  // người chơi tự chiến trong lãnh địa boss (vòng đỏ nét đứt quanh boss, QA: sảnh phó bản quá rộng
+  // để AUTO đứng yên bên trong một cách vô nghĩa như trước)
+  if (player && player.auto){ player.auto = false; updateAutoBtn(); addFloat(player.x, player.y-70, 'Boss Săn cần tự tay chiến — AUTO đã tắt!', '#ff9a5a', 13); }
+  // Ra mắt kịch tính: rung màn hình + hào quang bùng + 1 câu doạ — xứng với sảnh phó bản rộng
+  shakeT = Math.max(shakeT, 0.5); shakeMag = Math.max(shakeMag, 7);
+  addEffect({ type:'ring', x:1300, y:430, r:100, color:'#ffd76a', big:true });
   addFloat(1300, 500, '⚔ BOSS SĂN xuất hiện: ' + def.name + '!', '#ffd76a', 20);
+  if (HUNT_BOSS_TAUNT[hb]) addFloat(1300, 470, '"' + HUNT_BOSS_TAUNT[hb] + '"', '#ffb0b0', 13);
   AudioSys.sfx('crit', 0.7);
 }
 function grantHuntBox(){
