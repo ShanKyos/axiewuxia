@@ -19,6 +19,23 @@ window.addEventListener('resize', resize); resize();
 const MAX_LV = 120; // max cấp theo cấp boss endgame (GDD: 120)
 const XP_TABLE = [200,450,800,1300,1900,2600,3400,4300,5400]; // xp to next level (index = lv-1)
 for (let l = 10; l < 120; l++) XP_TABLE.push(Math.round(5400 * Math.pow(1.08, l - 9))); // GDD 120 cấp: dốc 1.08 cho hành trình dài
+// Từ cấp 60: farm chậm lại rõ rệt, mục tiêu trung bình 1 tiếng treo AUTO/cấp. Mốc dưới đo trực
+// tiếp từ công thức chiến đấu của game (atk cơ bản theo calcDerived — không trang bị — × HP/DEF
+// quái đại diện 3 vùng farm cuối Frostmire Vale/Ashen Steppe/Stormgate Pass) ra EXP/giờ THUẦN AUTO
+// ở mỗi mốc cấp, rồi quy đổi ngược: cần bao nhiêu EXP để 1 giờ farm đó vừa đúng lên 1 cấp. Trang bị
+// + kỹ năng tự động thực tế sẽ đẩy nhanh hơn mốc này — đúng như game idle: có đầu tư thì nhanh hơn.
+const XP60PLUS_ANCHORS = [
+  [60,2472993],[65,2825065],[70,3218638],[75,3660353],[80,4712812],[85,5353775],
+  [90,6085261],[95,6925890],[100,8485085],[105,9651109],[110,10205747],[115,10771241],[120,11248196],
+];
+function xp60PlusHourlyRate(l){
+  for (let i = 0; i < XP60PLUS_ANCHORS.length - 1; i++){
+    const [l0, v0] = XP60PLUS_ANCHORS[i], [l1, v1] = XP60PLUS_ANCHORS[i+1];
+    if (l >= l0 && l <= l1) return v0 + (v1 - v0) * (l - l0) / (l1 - l0);
+  }
+  return XP60PLUS_ANCHORS[XP60PLUS_ANCHORS.length - 1][1];
+}
+for (let l = 60; l < 120; l++) XP_TABLE[l-1] = Math.round(xp60PlusHourlyRate(l));
 const MAP = { w: 2600, h: 1900 };
 
 const ELEMENTS = ['Kim','Mộc','Thủy','Hỏa','Thổ'];
@@ -5933,7 +5950,9 @@ function renderChar(){
     const a = ATTR_INFO[k];
     html += `<div class="attr-row"><span>${a.name} <span style="opacity:.6;font-size:11px">(${a.desc})</span></span>
       <span><b>${drv[k]}</b>${drv[k]!==base[k]?` <span style="color:#5ea0e8;font-size:11px">(${base[k]}+${drv[k]-base[k]})</span>`:''}
-      <button class="plus-btn" onclick="addAttr('${k}')" ${p.free<=0?'disabled':''}>+</button></span></div>`;
+      <input type="number" class="attr-qty" id="qty-${k}" min="1" max="${p.free||1}" value="${Math.min(10, p.free||1)||1}" ${p.free<=0?'disabled':''}>
+      <button class="plus-btn" onclick="addAttr('${k}', qtyOf('${k}'))" ${p.free<=0?'disabled':''} title="Cộng theo ô số">+</button>
+      <button class="plus-btn max-btn" onclick="addAttr('${k}', player.free)" ${p.free<=0?'disabled':''} title="Dồn hết điểm còn lại">Max</button></span></div>`;
   }
   html += `<div class="stat-sec">THUỘC TÍNH CHIẾN ĐẤU</div>`;
   const stats = [
@@ -5993,9 +6012,15 @@ window.equipTitle = function(id){
   player.titles.equipped = (player.titles.equipped === id) ? null : id;
   saveGame(); renderChar();
 };
-window.addAttr = function(k){
+window.qtyOf = function(k){
+  const el = document.getElementById('qty-'+k);
+  const n = parseInt(el && el.value, 10);
+  return (!n || n < 1) ? 1 : n;
+};
+window.addAttr = function(k, n){
   if (player.free <= 0) return;
-  player.free--; player[k]++;
+  n = Math.max(1, Math.min(Math.floor(n) || 1, player.free)); // ô cộng điểm nhanh: gõ số hoặc bấm Max thay vì bấm tay từng điểm
+  player.free -= n; player[k] += n;
   calcDerived();
   renderChar(); saveGame();
 };
