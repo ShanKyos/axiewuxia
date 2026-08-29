@@ -58,6 +58,12 @@ const DROP_SRC = {
   elite:  { chance:0.35, rar:[0,70,28,2,0],  perfect:0.02 },
   thuve:  { chance:1,    rar:[0,28,52,18,2], perfect:0.08, drops:2 },
   tranai: { chance:1,    rar:[0,0,38,52,10], perfect:0.15, drops:3 },
+  // Rương Boss Săn (phó bản, MU Online-style) — 5 cấp, cấp càng cao càng chắc ra phẩm cao
+  box1: { chance:1, rar:[70,25,5,0,0],  perfect:0    },
+  box2: { chance:1, rar:[0,60,32,8,0],  perfect:0.05 },
+  box3: { chance:1, rar:[0,10,55,30,5], perfect:0.10 },
+  box4: { chance:1, rar:[0,0,30,55,15], perfect:0.15 },
+  box5: { chance:1, rar:[0,0,5,35,60],  perfect:0.25 },
 };
 function rollRaritySrc(srcK){
   const w = DROP_SRC[srcK].rar; let tot = 0; for (const x of w) tot += x;
@@ -3438,10 +3444,11 @@ function killMob(m, source){
     dailyTrack('noidan'); // Mục Tiêu Hôm Nay
   }
   // ── Drop v2.0: bảng rơi theo nguồn — quái thường chỉ fodder, đồ tốt từ tinh anh/boss ──
-  const _dsrc = m.def.bossKind === 'tranai' ? 'tranai' : (m.def.boss || m.def.bossKind) ? 'thuve' : (m.def.elite ? 'elite' : 'mob');
-  const _tbl = DROP_SRC[_dsrc];
+  // Boss Săn (huntBoss) không rơi theo đường này — phần thưởng Rương do grantHuntBox() cấp riêng
+  const _dsrc = m.def.huntBoss ? null : m.def.bossKind === 'tranai' ? 'tranai' : (m.def.boss || m.def.bossKind) ? 'thuve' : (m.def.elite ? 'elite' : 'mob');
+  const _tbl = _dsrc && DROP_SRC[_dsrc];
   let _gotThan = false;
-  for (let _di = 0; _di < (_tbl.drops || 1); _di++){
+  for (let _di = 0; _dsrc && _di < (_tbl.drops || 1); _di++){
     if (Math.random() >= _tbl.chance + (player.dropBonus || 0)) continue;
     const it = genItem(Math.max(1, m.def.lv + (Math.random()<0.3?1:0)), 0, _dsrc);
     // Pity đai: Thủ Vệ 8 lần liên tiếp không ra Thần+ → bảo đảm 1 món Thần
@@ -10494,9 +10501,20 @@ Object.assign(MOBS, {
   boss_tinhhoa:   { name:'Tình Hỏa Ma Quân',      lv:72,  hp:40000,  atk:240, def:95,  xp:28000, silver:[2000,2800], speed:88, aggro:9999, range:48, atkCd:1.15, size:26, color:'#2a1218', eye:'#7ec850', boss:true, elite:true, drop:1, el:'Mộc', poisonHit:true, img:'assets/mobs/boss_tinhhoa.png' },
   boss_dothong:   { name:'Đột Thông Hãn Vương',   lv:92,  hp:68000,  atk:340, def:130, xp:45000, silver:[3200,4200], speed:84, aggro:9999, range:50, atkCd:1.1,  size:27, color:'#1a1410', eye:'#ffd76a', boss:true, elite:true, drop:1, el:'Kim',  img:'assets/mobs/boss_dothong.png' },
   boss_thienbinh: { name:'Thiên Binh Thống Soái', lv:108, hp:100000, atk:420, def:160, xp:70000, silver:[4500,6000], speed:92, aggro:9999, range:52, atkCd:1.0,  size:27, color:'#101018', eye:'#ff3a3a', boss:true, elite:true, drop:1, el:'Hỏa',  img:'assets/mobs/boss_thienbinh.png' },
+  // Boss Săn (MU Online-style): xuất hiện SAU khi hạ Trấn Ải phó bản — hoạt động phụ, không bắt
+  // buộc để thông quan, thưởng Rương (xem DROP_SRC.box1..5 + grantHuntBox()). huntBoss:true → bỏ
+  // qua bảng rơi đồ thường theo-kill (m.def.bossKind/boss) vì phần thưởng đã do grantHuntBox() lo.
+  boss_cotma1:   { name:'Cốt Ma Tướng Quân',  lv:18,  hp:5600,   atk:88,  def:32,  xp:5100,  silver:[550,800],   speed:82, aggro:9999, range:40, atkCd:1.2,  size:25, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, drop:0, el:'Thổ', img:'assets/mobs/boss_cotma.png' },
+  boss_cotma2:   { name:'Cốt Ma Tướng Quân',  lv:24,  hp:9600,   atk:120, def:45,  xp:8300,  silver:[800,1100],  speed:82, aggro:9999, range:40, atkCd:1.2,  size:25, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, drop:0, el:'Thổ', img:'assets/mobs/boss_cotma.png' },
+  boss_hacnu1:   { name:'U Minh Hắc Nữ Vu',   lv:36,  hp:17600,  atk:176, def:64,  xp:14400, silver:[1300,1750], speed:86, aggro:9999, range:44, atkCd:1.15, size:25, color:'#241428', eye:'#c07fe0', huntBoss:true, drop:0, el:'Mộc', poisonHit:true, img:'assets/mobs/boss_hacnu.png' },
+  boss_hacnu2:   { name:'U Minh Hắc Nữ Vu',   lv:54,  hp:35200,  atk:272, def:112, xp:25600, silver:[2100,2900], speed:86, aggro:9999, range:44, atkCd:1.15, size:25, color:'#241428', eye:'#c07fe0', huntBoss:true, drop:0, el:'Mộc', poisonHit:true, img:'assets/mobs/boss_hacnu.png' },
+  boss_hoangkim1:{ name:'Hoàng Kim Ma Tướng', lv:74,  hp:64000,  atk:384, def:152, xp:44800, silver:[3200,4500], speed:80, aggro:9999, range:48, atkCd:1.15, size:27, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, drop:0, el:'Kim', img:'assets/mobs/boss_hoangkim.png' },
+  boss_hoangkim2:{ name:'Hoàng Kim Ma Tướng', lv:94,  hp:108800, atk:544, def:208, xp:72000, silver:[5100,6700], speed:80, aggro:9999, range:48, atkCd:1.1,  size:27, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, drop:0, el:'Kim', img:'assets/mobs/boss_hoangkim.png' },
+  boss_amthan:   { name:'Hắc Ám Ma Thần',     lv:112, hp:180000, atk:680, def:260, xp:126000,silver:[8000,11000],speed:90, aggro:9999, range:52, atkCd:1.0,  size:28, color:'#0c0810', eye:'#ff2a2a', huntBoss:true, drop:0, el:'Hỏa', img:'assets/mobs/boss_amthan.png' },
 });
 // ảnh boss nạp thủ công (MOB_IMGS gốc chỉ load mobs trong literal đầu file)
-for (const bt of ['boss_hacphong','boss_sontac','boss_phando','boss_mochu','boss_tinhhoa','boss_dothong','boss_thienbinh']){
+for (const bt of ['boss_hacphong','boss_sontac','boss_phando','boss_mochu','boss_tinhhoa','boss_dothong','boss_thienbinh',
+  'boss_cotma1','boss_cotma2','boss_hacnu1','boss_hacnu2','boss_hoangkim1','boss_hoangkim2','boss_amthan']){
   const im = new Image(); im.src = MOBS[bt].img; MOB_IMGS[bt] = im;
 }
 Object.assign(BGM_TRACKS, {
@@ -10508,25 +10526,32 @@ Object.assign(BGM_TRACKS, {
 const DUNGEONS = {
   pb_daohoa:   { boss:'boss_hacphong',  bossName:'Hắc Phong Trại Chủ',
     waves:[ ['bandit','bandit','wolf'], ['bandit','hautu','bandit'], ['assassin','bandit','wolf'] ],
-    rewards:{ tienDan:[1,2], mat:[4,7],   tuLa:[0,0], hon:[0,0], khi:40,  tuvi:150,  silver:[250,400] } },
+    rewards:{ tienDan:[1,2], mat:[4,7],   tuLa:[0,0], hon:[0,0], khi:40,  tuvi:150,  silver:[250,400] },
+    huntBoss:'boss_cotma1', boxTier:1 },
   pb_ngoai:    { boss:'boss_sontac',    bossName:'Sơn Tặc Đại Đầu Lĩnh',
     waves:[ ['bandit','wolf','bandit'], ['bandit','bandit','caodo'], ['assassin','bandit','bandit'] ],
-    rewards:{ tienDan:[1,2], mat:[5,8],   tuLa:[0,0], hon:[0,0], khi:55,  tuvi:220,  silver:[320,480] } },
+    rewards:{ tienDan:[1,2], mat:[5,8],   tuLa:[0,0], hon:[0,0], khi:55,  tuvi:220,  silver:[320,480] },
+    huntBoss:'boss_cotma2', boxTier:1 },
   pb_chungnam: { boss:'boss_phando',    bossName:'Phản Đồ Đại Tướng',
     waves:[ ['phando','bandit','phando'], ['xanu','phando','bandit'], ['bandao','xanu','phando'] ],
-    rewards:{ tienDan:[2,3], mat:[7,11],  tuLa:[0,1], hon:[0,0], khi:90,  tuvi:450,  silver:[550,800] } },
+    rewards:{ tienDan:[2,3], mat:[7,11],  tuLa:[0,1], hon:[0,0], khi:90,  tuvi:450,  silver:[550,800] },
+    huntBoss:'boss_hacnu1', boxTier:2 },
   pb_comoc:    { boss:'boss_mochu',     bossName:'Cổ Mộ Mộ Chủ',
     waves:[ ['thinu','mocnhan','thinu'], ['huyetbat','mocnhan','thinu'], ['huyetbat','huyetbat','mocnhan'] ],
-    rewards:{ tienDan:[2,3], mat:[10,14], tuLa:[1,1], hon:[0,0], khi:140, tuvi:800,  silver:[900,1300] } },
+    rewards:{ tienDan:[2,3], mat:[10,14], tuLa:[1,1], hon:[0,0], khi:140, tuvi:800,  silver:[900,1300] },
+    huntBoss:'boss_hacnu2', boxTier:2 },
   pb_tuyettinh:{ boss:'boss_tinhhoa',   bossName:'Tình Hỏa Ma Quân',
     waves:[ ['ttdetu','docyeu','ttdetu'], ['docyeu','satthuhy','ttdetu'], ['satthuhy','docyeu','docyeu'] ],
-    rewards:{ tienDan:[3,4], mat:[13,18], tuLa:[1,2], hon:[0,1], khi:200, tuvi:1400, silver:[1400,2000] } },
+    rewards:{ tienDan:[3,4], mat:[13,18], tuLa:[1,2], hon:[0,1], khi:200, tuvi:1400, silver:[1400,2000] },
+    huntBoss:'boss_hoangkim1', boxTier:3 },
   pb_mongco:   { boss:'boss_dothong',   bossName:'Đột Thông Hãn Vương',
     waves:[ ['thamtu','cungthu','kybinh'], ['cungthu','kybinh','thamtu'], ['kybinh','kybinh','cungthu'] ],
-    rewards:{ tienDan:[4,5], mat:[16,22], tuLa:[2,2], hon:[1,1], khi:280, tuvi:2400, silver:[2200,3200] } },
+    rewards:{ tienDan:[4,5], mat:[16,22], tuLa:[2,2], hon:[1,1], khi:280, tuvi:2400, silver:[2200,3200] },
+    huntBoss:'boss_hoangkim2', boxTier:4 },
   pb_nhanmon:  { boss:'boss_thienbinh', bossName:'Thiên Binh Thống Soái',
     waves:[ ['kylan','cuongbinh','daokhach'], ['cuongbinh','daokhach','kylan'], ['daokhach','kylan','kylan'] ],
-    rewards:{ tienDan:[5,6], mat:[20,26], tuLa:[2,3], hon:[2,2], khi:350, tuvi:3500, silver:[3000,4500] } },
+    rewards:{ tienDan:[5,6], mat:[20,26], tuLa:[2,3], hon:[2,2], khi:350, tuvi:3500, silver:[3000,4500] },
+    huntBoss:'boss_amthan', boxTier:5 },
 };
 
 // ═══════════ VẠN KIẾM TU LA TRẬN — Roguelike Tower (P1 roadmap: draft-based endless waves) ═══════════
@@ -10683,26 +10708,74 @@ function nextDungeonWave(){
   if (player) addFloat(player.x, player.y - 60, 'Đợt ' + DGN.wave + '/' + DGN.def.waves.length, '#b08ae8', 16);
 }
 function updateDungeon(){
-  if (!DGN || DGN.cleared) return;
-  if (mobs.some(m => !m.dead)) return; // còn quái sống → chờ
+  if (!DGN || DGN.huntCleared) return;
+  if (mobs.some(m => !m.dead)) return; // còn quái sống (đợt thường/Trấn Ải/Boss Săn) → chờ
   if (!DGN.bossRef){ nextDungeonWave(); return; }
-  // Boss đã ngã → trao thưởng farm tiến cấp kỹ năng
-  DGN.cleared = true;
-  const r = DGN.def.rewards;
-  const td = Math.round(rnd(r.tienDan[0], r.tienDan[1])), mt = Math.round(rnd(r.mat[0], r.mat[1])),
-        tl = Math.round(rnd(r.tuLa[0], r.tuLa[1])),     hn = Math.round(rnd(r.hon[0], r.hon[1])),
-        sv = Math.round(rnd(r.silver[0], r.silver[1]));
-  player.tienDan += td; player.mat += mt; player.khi += r.khi; player.dantian.tuvi += r.tuvi; player.silver += sv;
-  player.dotpha = (player.dotpha || 0) + 1; // boss phó bản luôn rớt Đan Ascension Trial — farm để đột phá an toàn
-  dailyTrack('dungeon'); // Mục Tiêu Hôm Nay
-  if (tl > 0) player.gems.tuLa += tl;
-  if (hn > 0) player.gems.honNguyen += hn;
-  zoneBanner = { text:'PHÓ BẢN THÔNG QUAN!',
-    sub:`+${td} Tiến Cấp Đan · +${mt} Huyền Thiết · +${r.khi} Instinct · +${r.tuvi} Anima · +${sv} bạc · +1 Đan Ascension Trial`,
-    color:'#b08ae8', t:5 };
-  addFloat(player.x, player.y - 80, 'Phần thưởng phó bản đã vào túi!', '#7ecbff', 16);
-  AudioSys.sfx('levelup', 0.8);
-  calcDerived(); saveGame();
+  if (!DGN.cleared){
+    // Boss đã ngã → trao thưởng farm tiến cấp kỹ năng
+    DGN.cleared = true;
+    const r = DGN.def.rewards;
+    const td = Math.round(rnd(r.tienDan[0], r.tienDan[1])), mt = Math.round(rnd(r.mat[0], r.mat[1])),
+          tl = Math.round(rnd(r.tuLa[0], r.tuLa[1])),     hn = Math.round(rnd(r.hon[0], r.hon[1])),
+          sv = Math.round(rnd(r.silver[0], r.silver[1]));
+    player.tienDan += td; player.mat += mt; player.khi += r.khi; player.dantian.tuvi += r.tuvi; player.silver += sv;
+    player.dotpha = (player.dotpha || 0) + 1; // boss phó bản luôn rớt Đan Ascension Trial — farm để đột phá an toàn
+    dailyTrack('dungeon'); // Mục Tiêu Hôm Nay
+    if (tl > 0) player.gems.tuLa += tl;
+    if (hn > 0) player.gems.honNguyen += hn;
+    zoneBanner = { text:'PHÓ BẢN THÔNG QUAN!',
+      sub:`+${td} Tiến Cấp Đan · +${mt} Huyền Thiết · +${r.khi} Instinct · +${r.tuvi} Anima · +${sv} bạc · +1 Đan Ascension Trial`,
+      color:'#b08ae8', t:5 };
+    addFloat(player.x, player.y - 80, 'Phần thưởng phó bản đã vào túi!', '#7ecbff', 16);
+    AudioSys.sfx('levelup', 0.8);
+    calcDerived(); saveGame();
+    // Boss Săn (MU Online-style): hoạt động phụ sau khi thông quan — không bắt buộc, thưởng Rương
+    if (DGN.def.huntBoss) setTimeout(spawnHuntBoss, 1800); else DGN.huntCleared = true;
+    return;
+  }
+  if (DGN.huntSpawned && !DGN.huntCleared){
+    DGN.huntCleared = true;
+    grantHuntBox();
+  }
+}
+function spawnHuntBoss(){
+  if (!DGN || DGN.huntSpawned) return;
+  const hb = DGN.def.huntBoss;
+  const def = MOBS[hb];
+  if (!def){ DGN.huntCleared = true; return; }
+  const b = spawnMob(hb, { x:1300, y:430, r:40, count:1 }, null);
+  b.zone = null; // Boss Săn chết là chết hẳn, không hồi sinh
+  DGN.huntRef = b;
+  DGN.huntSpawned = true;
+  if (player && player.auto){ player._autoAX = 1300; player._autoAY = 430; } // dời neo AUTO theo boss săn — xem ghi chú ở nextDungeonWave()
+  addFloat(1300, 500, '⚔ BOSS SĂN xuất hiện: ' + def.name + '!', '#ffd76a', 20);
+  AudioSys.sfx('crit', 0.7);
+}
+function grantHuntBox(){
+  const tier = DGN.def.boxTier;
+  const srcK = 'box' + tier;
+  const bossLv = MOBS[DGN.def.huntBoss].lv;
+  const nItems = Math.min(3, tier);
+  const gained = [];
+  for (let i = 0; i < nItems; i++){
+    const it = genItem(bossLv, 0, srcK);
+    if (player.autoSell && it.rarity <= 0){
+      const v = 20 + it.rarity*30 + (it.tier||1)*15;
+      player.silver += v; gained.push(`${it.name}(bán +${v}◈)`);
+    } else if (player.inv.length < 30){
+      player.inv.push(it); gained.push(it.name);
+      if (it.rarity >= 2) addEffect({ type:'spark', x:player.x, y:player.y-12, r:32 + it.rarity*8, color:RARITIES[it.rarity].color });
+      tryAutoEquip(it);
+    } else gained.push(`${it.name}(túi đầy, mất)`);
+  }
+  const bonusSilver = 200*tier, bonusTienDan = tier;
+  player.silver += bonusSilver; player.tienDan += bonusTienDan;
+  zoneBanner = { text:'📦 RƯƠNG CẤP ' + tier + ' MỞ RA!',
+    sub: gained.join(' · ') + ` · +${bonusSilver} bạc · +${bonusTienDan} Tiến Cấp Đan`,
+    color:'#ffd76a', t:6 };
+  addFloat(player.x, player.y - 90, '📦 Rương Cấp ' + tier + ' đã mở!', '#ffd76a', 16);
+  AudioSys.sfx('levelup', 0.9);
+  saveGame();
 }
 function drawDungeonHUD(){
   if (!DGN || !player) return;
@@ -10710,16 +10783,20 @@ function drawDungeonHUD(){
   ctx.textAlign = 'center';
   ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
   ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3; ctx.fillStyle = '#d8baff';
-  const label = DGN.cleared ? 'Phó bản đã thông quan — qua cổng dịch chuyển để rời đi'
+  const label = DGN.huntCleared ? 'Phó bản đã thông quan — qua cổng dịch chuyển để rời đi'
+    : DGN.huntSpawned ? '⚔ BOSS SĂN: ' + MOBS[DGN.def.huntBoss].name
+    : DGN.cleared ? (DGN.def.huntBoss ? 'Trấn Ải đã hạ — Boss Săn sắp xuất hiện…' : 'Phó bản đã thông quan — qua cổng dịch chuyển để rời đi')
     : DGN.bossRef ? 'BOSS: ' + DGN.def.bossName
     : 'Đợt ' + DGN.wave + '/' + DGN.def.waves.length + ' — dọn sạch quái!';
   ctx.strokeText(label, x, y); ctx.fillText(label, x, y);
-  if (DGN.bossRef && !DGN.bossRef.dead){
-    const b = DGN.bossRef, pct = Math.max(0, b.hp / b.maxHp);
+  const activeBoss = (DGN.huntSpawned && DGN.huntRef && !DGN.huntRef.dead) ? DGN.huntRef
+    : (DGN.bossRef && !DGN.bossRef.dead) ? DGN.bossRef : null;
+  if (activeBoss){
+    const b = activeBoss, pct = Math.max(0, b.hp / b.maxHp);
     const bw = 340, bx = x - bw/2, by = y + 8;
     ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(bx-2, by-2, bw+4, 14);
     ctx.fillStyle = '#3a1020'; ctx.fillRect(bx, by, bw, 10);
-    ctx.fillStyle = '#e84a5a'; ctx.fillRect(bx, by, bw*pct, 10);
+    ctx.fillStyle = b === DGN.huntRef ? '#ffd76a' : '#e84a5a'; ctx.fillRect(bx, by, bw*pct, 10);
     ctx.strokeStyle = 'rgba(126,203,255,.8)'; ctx.lineWidth = 1; ctx.strokeRect(bx+.5, by+.5, bw-1, 9);
   }
 }
