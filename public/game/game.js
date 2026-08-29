@@ -191,49 +191,33 @@ const TUONG_SINH = { Kim:'Thủy', 'Thủy':'Mộc', 'Mộc':'Hỏa', 'Hỏa':'T
 // intentionally left unchanged by the Axie Wuxia reskin — only player-facing fields below (name,
 // role, desc, glyph, skill names) were rewritten. See docs/NAMING_MAP.md for the full class
 // roster mapping and reasoning (element/role match from each source sect → its Axie class).
+// MU Online-lite: 5 lớp gốc (Dark Knight/Dark Wizard/Fairy Elf/Magic Gladiator/Dark Lord), mỗi lớp
+// mượn hình hài 1 trong 9 loài Axie gần đúng playstyle nhất — 4 loài còn lại (Dusk/Bird/Plant/Dawn)
+// đã bị cắt hẳn theo hướng tối giản hoá. skillA/tp đổi tên & type theo đúng chiêu gốc MU của lớp đó,
+// numbers (mult/cd/qi) giữ nguyên từ bản cũ — không cần cân bằng lại.
 const SECTS = {
-  thieulam: { name:'Mech', role:'Tank / Control', element:'Kim', color:'#4c8dff', glow:'#ffe9a0', bonus:{vit:3,def:2,str:1,agi:0},
-    glyph:'拳', desc:'Plated shell, iron discipline — a Mech Axie absorbs the front line and answers with a slow, unstoppable weight.',
-    skillA:{ name:'Iron Shell Slam', type:'cone',  cd:4, qi:20, mult:1.6 },
-    tp:{ name:'Overdrive Crush', mult:3.0 } },
-  toanchan: { name:'Aquatic', role:'Flowing Blade / Support', element:'Thủy', color:'#3a9d8b', glow:'#a0ffe9', bonus:{vit:0,def:0,str:2,agi:2},
-    glyph:'劍', desc:'Water-school swordwork — every strike bends and returns, offense and defense in the same current.',
-    skillA:{ name:'Tide-Cutting Wave', type:'proj', cd:4, qi:20, mult:1.5 },
-    tp:{ name:'Seven Currents Convergence', mult:2.8 } },
-  comoc: { name:'Dusk', role:'Skirmish / Agile', element:'Mộc', color:'#9a86d8', glow:'#d8c8ff', bonus:{vit:0,def:0,str:1,agi:3},
-    glyph:'影', desc:'A hunter from the Hollow — twin-ring strikes out of the half-light, gone before the blow lands.',
-    skillA:{ name:'Twin Ring Cut', type:'dash', cd:4, qi:18, mult:1.8 },
-    tp:{ name:'Hollow Moon Blade', mult:3.0 } },
-  baidasan: { name:'Reptile', role:'Venom / Ranged', element:'Thủy', color:'#7ec850', glow:'#c8ffa0', bonus:{vit:1,def:0,str:3,agi:1},
-    glyph:'蛇', desc:'The old venom-clan discipline — a Reptile Axie strikes once and lets the poison finish the fight.',
-    skillA:{ name:'Serpent Fang Toxin', type:'proj', cd:4, qi:20, mult:1.5 },
-    tp:{ name:'Venomtide Breath', mult:3.2 } },
-  minhgiao: { name:'Beast', role:'Burst / Flame', element:'Hỏa', color:'#e8552a', glow:'#ffb060', bonus:{vit:2,def:0,str:3,agi:0},
-    glyph:'焰', desc:'Sacred-flame zealotry burned down to pure ferocity — a Beast Axie hits like the whole cult at once.',
-    skillA:{ name:'Sacred Flame Chain', type:'cone', cd:4, qi:22, mult:1.6 },
-    tp:{ name:'Heaven-and-Earth Reversal', mult:3.2 } },
-  doanthi: { name:'Bird', role:'Precision / Finesse', element:'Thổ', color:'#e8b04a', glow:'#ffe0a0', bonus:{vit:1,def:1,str:2,agi:2},
-    glyph:'指', desc:'One perfect strike where you least expect it — the old finger-point school, now feather-light and exact.',
-    skillA:{ name:'Sunpoint Strike', type:'proj', cd:4, qi:18, mult:1.4 },
-    tp:{ name:'Six Pulses Barrage', mult:3.0 } },
-  daohoa: { name:'Plant', role:'Burst / Ranged', element:'Mộc', color:'#e0779a', glow:'#ffc0d8', bonus:{vit:0,def:0,str:3,agi:1},
-    glyph:'花', desc:'A thousand falling petals, each one a blade — beautiful, and devastating from the back line.',
-    skillA:{ name:'Petalfall Dance', type:'selfaoe', cd:4, qi:24, mult:1.4 },
-    tp:{ name:'Tideborn Bloom', mult:3.2 } },
-  // Bug — new class, skill archetype adapted from the sect-less Beggar-Clan school (VOHOC_DEFS):
-  // scrappy, swarm-flavored, group-tactics. No source sect, so no Ngũ Hành combat-advantage skew
-  // beyond the reused Thổ bucket (grounded/survivalist, matching the archetype).
-  bug: { name:'Bug', role:'Swarm / Scrappy', element:'Thổ', color:'#8a9a3a', glow:'#d0e07a', bonus:{vit:2,def:1,str:1,agi:2},
-    glyph:'蟲', desc:'Nine lives and a dozen tricks — a Bug Axie never fights fair, and never fights alone for long.',
-    skillA:{ name:'Swarm Call', type:'cone', cd:4, qi:20, mult:1.5 },
-    tp:{ name:'Bramblebite Frenzy', mult:3.0 } },
-  // Dawn — new class, skill archetype adapted from the sect-less Wudang internal-cultivation
-  // school (VOHOC_DEFS): renewal, inner light, sustain. Reuses the Thủy bucket (yielding/flow,
-  // the real-world Tai Chi association).
-  dawn: { name:'Dawn', role:'Internal / Renewal', element:'Thủy', color:'#f0a878', glow:'#ffe0c0', bonus:{vit:2,def:1,str:1,agi:2},
-    glyph:'曙', desc:'Inner light cultivated slow and deep — a Dawn Axie outlasts what it cannot outfight.',
-    skillA:{ name:'First Light Palm', type:'proj', cd:4, qi:20, mult:1.5 },
-    tp:{ name:'Daybreak Renewal', mult:2.8 } },
+  thieulam: { name:'Dark Knight', role:'Tank / Combo cận chiến', element:'Kim', color:'#4c8dff', glow:'#ffe9a0', bonus:{vit:3,def:2,str:1,agi:0},
+    glyph:'拳', desc:'Giáp dày, ý chí sắt — một Mech Axie theo lối Dark Knight: gánh tuyến đầu rồi đáp trả bằng đòn chí mạng chậm mà không thể cản.',
+    skillA:{ name:'Twisting Slash', type:'cone',  cd:4, qi:20, mult:1.6 },
+    tp:{ name:'Death Stab', mult:3.0 } },
+  toanchan: { name:'Fairy Elf', role:'Tầm xa / Hỗ trợ', element:'Thủy', color:'#3a9d8b', glow:'#a0ffe9', bonus:{vit:0,def:0,str:2,agi:2},
+    glyph:'弓', desc:'Cung pháp Aquatic — Fairy Elf vừa dồn sát thương tầm xa vừa nâng đỡ đồng đội, tấn công và phòng ngự trong cùng một nhịp.',
+    skillA:{ name:'Multi-Shot', type:'proj', cd:4, qi:20, mult:1.5 },
+    tp:{ name:'Ice Arrow', mult:2.8 } },
+  baidasan: { name:'Dark Wizard', role:'Pháp thuật / Độc tố', element:'Thủy', color:'#7ec850', glow:'#c8ffa0', bonus:{vit:1,def:0,str:3,agi:1},
+    glyph:'蛇', desc:'Reptile Axie theo trường phái Dark Wizard — một chiêu Poison phóng ra, để chất độc tự kết liễu trận đấu.',
+    skillA:{ name:'Poison', type:'proj', cd:4, qi:20, mult:1.5 },
+    tp:{ name:'Meteor', mult:3.2 } },
+  minhgiao: { name:'Magic Gladiator', role:'Lai / Bộc phát Hoả', element:'Hỏa', color:'#e8552a', glow:'#ffb060', bonus:{vit:2,def:0,str:3,agi:0},
+    glyph:'焰', desc:'Beast Axie mang sức mạnh lai Magic Gladiator — Fire Slash quét ngang, đánh như cả giáo phái dồn vào một đòn.',
+    skillA:{ name:'Fire Slash', type:'cone', cd:4, qi:22, mult:1.6 },
+    tp:{ name:'Flame Strike', mult:3.2 } },
+  // Dark Lord: lớp chỉ huy/triệu hồi — archetype mượn từ trường phái vô môn phái Cái Bang cũ
+  // (VOHOC_DEFS): xáp lá cà bằng số đông, không đơn độc.
+  bug: { name:'Dark Lord', role:'Chỉ huy / Triệu hồi', element:'Thổ', color:'#8a9a3a', glow:'#d0e07a', bonus:{vit:2,def:1,str:1,agi:2},
+    glyph:'蟲', desc:'Bug Axie hoá thân Dark Lord — chưa từng đánh một mình, luôn có bầy tùy tùng theo sau dọn sạch chiến trường.',
+    skillA:{ name:'Force Wave', type:'cone', cd:4, qi:20, mult:1.5 },
+    tp:{ name:'Fire Scream', mult:3.0 } },
   // Tán Nhân — pre-class starter, level 1-10, before the Calling. No element (no advantage or disadvantage).
   vophai: { name:'Unclassed', role:'Wandering / Free', element:null, color:'#b8a888', glow:'#e4ebff', bonus:{vit:1,def:1,str:1,agi:1},
     glyph:'侠', desc:'No class yet claimed — one hatchling, alone in Lunacia. Reach level 10 and answer the Calling!',
@@ -243,7 +227,7 @@ const SECTS = {
 // Sourced per-class combat SFX (axieinfinity/axie-origins-asset-kit web-vfx) — maps SECTS id to the
 // kit's class-name prefix (sfx_slash_<x>/sfx_cast_<x>/sfx_smash_<x>.mp3). No entry for vophai (pre-Calling,
 // Unclassed) — falls back to the generic 'slash'/'skill' sfx.
-const SECT_SFX = { thieulam:'mech', toanchan:'aquatic', comoc:'dusk', baidasan:'reptile', minhgiao:'beast', doanthi:'bird', daohoa:'plant', bug:'bug', dawn:'dawn' };
+const SECT_SFX = { thieulam:'mech', toanchan:'aquatic', baidasan:'reptile', minhgiao:'beast', bug:'bug' };
 const AMKHI = { name:'Ám Khí', cd:4, qi:15, mult:1.2 };
 const TP_CD = 10, TP_QI = 50, TP_RADIUS = 185;
 
@@ -840,51 +824,44 @@ const VH_TIER = {
   cao:  { name:'Cao Cấp',  color:'#b08ae8', cost:3 },
   than: { name:'Thần Cấp', color:'#ffd76a', cost:5 },
 };
+// MU Online-lite: mỗi lớp chỉ giữ đúng bộ chiêu gốc của lớp đó (không còn giang hồ tự do/dung hợp
+// liên phái — MU không có khái niệm này, vũ khí & chiêu thức LÀ bản sắc lớp). Tất cả phai-locked,
+// tự ngộ theo cấp độ giống hệt cơ chế sect-skill cũ, chỉ khác là giờ CẢ 5 LỚP đều có đủ bộ thay vì
+// chỉ 3/9 Tộc trước đây. skillA/tp (Twisting Slash/Death Stab v.v.) đã nằm ở SECTS, đây là 4-6 chiêu
+// bổ sung mỗi lớp cho phím 1-5. Giữ nguyên 2 id 'tienthiencong'/'songthu' vì có code khác gọi thẳng
+// theo id (auto-hồi sinh & miễn hồi chiêu) — chỉ đổi tên hiển thị + đổi phai sang lớp mới.
 const VOHOC_DEFS = {
-  // ── Thiếu Lâm ──
-  lahanquan:   { name:'La Hán Quyền', school:'Thiếu Lâm', phai:'thieulam', tier:'so', cat:'Quyền', type:'cone', unlock:5, cd:4, qi:10, mult:1.35, color:'#e8b84a', icon:'assets/skills/vh_lahanquan.png', glyph:'拳', fx:{ kb:26 }, desc:'Quyền pháp nhập môn — quạt trước mặt, hất văng nhẹ.' },
-  tlnoicong:   { name:'Thiếu Lâm Nội Công', school:'Thiếu Lâm', phai:'thieulam', tier:'so', cat:'Tâm Pháp', type:'passive', unlock:5, color:'#d8c86a', icon:'assets/skills/vh_tlnoicong.png', glyph:'功', desc:'Bị động: +12% HP, +8% giảm sát thương.' },
-  longtraothu: { name:'Long Trảo Thủ', school:'Thiếu Lâm', phai:'thieulam', tier:'trung', cat:'Trảo', type:'cone', unlock:20, cd:6, qi:18, mult:1.7, color:'#f0c04a', icon:'assets/skills/vh_longtraothu.png', glyph:'爪', fx:{ stun:1.5, pierce:true }, desc:'Trảo kình phá giáp — xuyên phòng thủ, khống chế 1.5s.' },
-  niemhoachi:  { name:'Niêm Hoa Chỉ', school:'Thiếu Lâm', phai:'thieulam', tier:'trung', cat:'Chỉ', type:'proj', unlock:20, cd:4, qi:14, mult:1.6, color:'#ffd76a', icon:'assets/skills/vh_niemhoachi.png', glyph:'指', fx:{ stun:1.2 }, desc:'Chỉ lực tầm xa — trúng địch choáng 1.2s.' },
-  dichcankinh: { name:'Dịch Cân Kinh', school:'Thiếu Lâm', phai:'thieulam', tier:'than', cat:'Tâm Pháp', type:'passive', unlock:60, color:'#ffe9a8', icon:'assets/skills/vh_dichcankinh.png', glyph:'易', desc:'Bị động: hồi 0.8% HP mỗi giây, kháng độc 50%.' },
-  taytykinh:   { name:'Tẩy Tủy Kinh', school:'Thiếu Lâm', phai:'thieulam', tier:'than', cat:'Tâm Pháp', type:'passive', unlock:60, color:'#a8e8c8', icon:'assets/skills/vh_taytykinh.png', glyph:'洗', desc:'Bị động: mọi chiêu thức hồi nhanh hơn 30%.' },
-  // ── Võ Đang (thất truyền — giang hồ) ──
-  vodangkiem:  { name:'Võ Đang Kiếm Pháp', school:'Võ Đang', phai:null, tier:'so', cat:'Kiếm', type:'cone', unlock:8, cd:4, qi:10, mult:1.4, color:'#7ec8e8', icon:'assets/skills/vh_vodangkiem.png', glyph:'劍', fx:{}, desc:'Kiếm ý liên miên như nước chảy — quạt trước mặt.' },
-  batquaichuong:{ name:'Bát Quái Chưởng', school:'Võ Đang', phai:null, tier:'so', cat:'Chưởng', type:'cone', unlock:8, cd:5, qi:12, mult:1.2, color:'#6ab8d8', icon:'assets/skills/vh_batquai.png', glyph:'卦', fx:{ selfEva:{ pct:30, t:3 } }, desc:'Chưởng theo quẻ Bát Quái — tung chiêu xong +30% né trong 3s.' },
-  thanhanh:    { name:'Thần Hành Bách Biến', school:'Võ Đang', phai:null, tier:'trung', cat:'Thân Pháp', type:'dash', unlock:15, cd:7, qi:14, color:'#a0e8ff', icon:'assets/skills/vh_thanhanh.png', glyph:'行', fx:{ dist:150, eva:{ pct:50, t:3 } }, desc:'Lướt đi như thần hành — +50% né trong 3s.' },
-  thaicuckiem: { name:'Thái Cực Kiếm', school:'Võ Đang', phai:null, tier:'cao', cat:'Kiếm', type:'buff', unlock:30, cd:10, qi:25, color:'#8ad8c8', icon:'assets/skills/vh_thaicuckiem.png', glyph:'極', fx:{ shieldPct:35, t:6 }, desc:'Khiên kiếm khí — hấp thụ sát thương bằng 35% HP tối đa trong 6s.' },
-  thaicucquan: { name:'Thái Cực Quyền', school:'Võ Đang', phai:null, tier:'than', cat:'Quyền', type:'aoe', unlock:45, cd:11, qi:35, mult:2.6, color:'#5ac8b8', icon:'assets/skills/vh_thaicucquan.png', glyph:'極拳', fx:{ r:200, kb:60, slow:{ pct:0.5, t:3 }, big:true }, desc:'Tứ lưỡng bát thiên cân — bạo phát AoE hất văng & làm chậm.' },
-  thuanduong:  { name:'Thuần Dương Vô Cực Công', school:'Võ Đang', phai:null, tier:'than', cat:'Nội Công', type:'buff', unlock:50, cd:15, qi:30, color:'#e8a03a', icon:'assets/skills/vh_thuanduong.png', glyph:'陽', fx:{ dmgPct:50, t:8 }, desc:'Dương hỏa bùng nổ — +50% sát thương trong 8s.' },
-  // ── Cái Bang (giang hồ) ──
-  lienhoaquyen:{ name:'Liên Hoa Quyền', school:'Cái Bang', phai:null, tier:'so', cat:'Quyền', type:'cone', unlock:8, cd:4, qi:8, mult:1.15, color:'#b89a5a', icon:'assets/skills/vh_lienhoa.png', glyph:'連', fx:{}, desc:'Liên hoàn quyền cực nhanh — hồi chiêu chỉ 3s.' },
-  thaikhacong: { name:'Thái Hà Công', school:'Cái Bang', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', unlock:15, color:'#7ab86a', icon:'assets/skills/vh_thaiha.png', glyph:'河', desc:'Bị động: +4 Qi hồi mỗi giây.' },
-  dacau:       { name:'Phục Hổ Bổng Pháp', school:'Cái Bang', phai:null, tier:'cao', cat:'Bổng', type:'aoe', unlock:30, cd:9, qi:22, mult:1.9, color:'#c8aa4a', icon:'assets/skills/vh_dacau.png', glyph:'棒', fx:{ r:170, slow:{ pct:0.5, t:3 } }, desc:'Bổng pháp tứ tung — AoE làm chậm 50% trong 3s.' },
-  hanglong:    { name:'Cuồng Phong Thập Bát Chưởng', school:'Cái Bang', phai:null, tier:'than', cat:'Chưởng', type:'aoe', unlock:50, cd:14, qi:45, mult:3.6, color:'#f0c04a', icon:'assets/skills/vh_hanglong.png', glyph:'龍', fx:{ r:230, kb:80, stun:1, big:true }, desc:'Thập bát chưởng giáng long — chấn động toàn trường, hất văng & choáng.' },
-  // ── Tiêu Dao (thất truyền — giang hồ) ──
-  tieusi:      { name:'Tiểu Sĩ Thần Công', school:'Tiêu Dao', phai:null, tier:'so', cat:'Tâm Pháp', type:'passive', unlock:8, color:'#a0e8d8', icon:'assets/skills/vh_tieusi.png', glyph:'逍', desc:'Bị động: +12% tốc chạy, +5% né.' },
-  sinhtuphu:   { name:'Đoạt Mệnh Phù', school:'Tiêu Dao', phai:null, tier:'trung', cat:'Ám Khí', type:'proj', unlock:18, cd:5, qi:15, mult:1.3, color:'#7ac86a', icon:'assets/skills/vh_sinhtuphu.png', glyph:'符', fx:{ poison:{ t:5 }, pierce:true }, desc:'Phù độc đoạt mệnh — trúng địch trúng kịch độc, xuyên giáp.' },
-  langba:      { name:'Phiêu Vân Bộ', school:'Tiêu Dao', phai:null, tier:'cao', cat:'Thân Pháp', type:'dash', unlock:30, cd:10, qi:20, color:'#a0ffe9', icon:'assets/skills/vh_langba.png', glyph:'波', fx:{ dist:180, eva:{ pct:100, t:2.5 } }, desc:'Bước trên sóng — lướt xuyên quái, né tuyệt đối 2.5s.' },
-  bacminh:     { name:'Hắc Uyên Thần Công', school:'Tiêu Dao', phai:null, tier:'than', cat:'Nội Công', type:'buff', unlock:45, cd:13, qi:30, color:'#4ac8e8', icon:'assets/skills/vh_bacminh.png', glyph:'冥', fx:{ leechPct:25, t:8 }, desc:'Thôn phệ Qi — hút 25% sát thương thành sinh lực trong 8s.' },
-  tieuvotuong: { name:'Huyễn Ảnh Vô Tung Công', school:'Tiêu Dao', phai:null, tier:'than', cat:'Tâm Pháp', type:'buff', unlock:55, cd:30, qi:40, color:'#b8e8ff', icon:'assets/skills/vh_tieuvotuong.png', glyph:'相', fx:{ resetCd:true, dmgPct:20, t:10 }, desc:'Biến hóa vô tướng — lập tức hồi toàn bộ chiêu, +20% ST 10s.' },
-  // ── Toàn Chân · Cổ Mộ ──
-  tckiemphap:  { name:'Toàn Chân Kiếm Pháp', school:'Toàn Chân · Cổ Mộ', phai:'toanchan', tier:'so', cat:'Kiếm', type:'proj', unlock:5, cd:4, qi:10, mult:1.5, color:'#c8d8ff', icon:'assets/skills/vh_tckiem.png', glyph:'真', fx:{ pierce:true }, desc:'Kiếm quang một đường — xuyên thấu mọi địch trên đường bay.' },
-  ngocnu:      { name:'Hàn Ngọc Tâm Kinh', school:'Toàn Chân · Cổ Mộ', phai:'toanchan', tier:'trung', cat:'Tâm Pháp', type:'passive', unlock:20, color:'#e8c8d8', icon:'assets/skills/vh_ngocnu.png', glyph:'玉', desc:'Bị động: +10% tốc đánh, +8% né.' },
-  songthu:     { name:'Song Ảnh Phân Thân Thủ', school:'Toàn Chân · Cổ Mộ', phai:'toanchan', tier:'cao', cat:'Tâm Pháp', type:'passive', unlock:40, color:'#d8d8f0', icon:'assets/skills/vh_songthu.png', glyph:'雙', desc:'Bị động: 30% chiêu vừa tung không tốn hồi chiêu.' },
-  tienthiencong:{ name:'Bản Nguyên Công', school:'Toàn Chân · Cổ Mộ', phai:'toanchan', tier:'than', cat:'Tâm Pháp', type:'passive', unlock:60, color:'#ffe9a8', icon:'assets/skills/vh_tienthien.png', glyph:'先', desc:'Bị động: chết tự hồi sinh 50% HP — mỗi 300s một lần.' },
-  // ── Đào Hoa Đảo ──
-  bichbochuong:{ name:'Bích Ba Chưởng', school:'Đào Hoa Đảo', phai:'daohoa', tier:'so', cat:'Chưởng', type:'cone', unlock:5, cd:4, qi:10, mult:1.3, color:'#e87a9a', icon:'assets/skills/vh_bichbo.png', glyph:'碧', fx:{ kb:34 }, desc:'Chưởng lực như sóng biển — đẩy lùi địch.' },
-  // ── Minh Giáo / Ma Phái ──
-  thanhhoa:    { name:'Liệt Diễm Lệnh Pháp', school:'Minh Giáo', phai:'minhgiao', tier:'trung', cat:'Binh Khí', type:'dash', unlock:20, cd:6, qi:14, color:'#e86a2a', icon:'assets/skills/vh_thanhhoa.png', glyph:'火', fx:{ dist:140, strikeMult:1.5, pierce:true }, desc:'Lệnh bài quỹ đạo — lướt tới chém địch gần nhất, xuyên giáp.' },
-  capmocong:   { name:'Hắc Yêu Nghịch Kình Công', school:'Ma Phái', phai:'minhgiao', tier:'cao', cat:'Chưởng', type:'buff', unlock:40, cd:12, qi:28, color:'#d84a3a', icon:'assets/skills/vh_capmo.png', glyph:'蟆', fx:{ reflect:true, t:5 }, desc:'Côn phục xuất kích — phản 100% sát thương trong 5s.' },
-  tichta:      { name:'Trảm Ma Kiếm Pháp', school:'Ma Phái', phai:'minhgiao', tier:'than', cat:'Kiếm', type:'buff', unlock:60, cd:15, qi:35, color:'#c03a5a', icon:'assets/skills/vh_tichta.png', glyph:'邪', fx:{ aspdPct:60, crit:true, t:6 }, desc:'Kiếm pháp tà mị — tốc đánh +60%, mọi đòn bạo kích trong 6s.' },
-  // ── Giang Hồ Tuyệt Học ──
-  cuuamtrao:   { name:'Hắc Nguyệt Bạch Cốt Trảo', school:'Giang Hồ Tuyệt Học', phai:null, tier:'trung', cat:'Trảo', type:'cone', unlock:18, cd:5, qi:16, mult:1.8, color:'#9a6ac8', icon:'assets/skills/vh_cuuamtrao.png', glyph:'骨', fx:{ bleed:{ t:6 }, pierce:true }, desc:'Trảo pháp âm độc — xé giáp, gây chảy máu 6s.' },
-  lucmach:     { name:'Lục Đạo Kiếm Khí', school:'Giang Hồ Tuyệt Học', phai:null, tier:'than', cat:'Kiếm Khí', type:'proj', unlock:45, cd:10, qi:32, mult:1.0, color:'#6ae8d8', icon:'assets/skills/vh_lucmach.png', glyph:'脈', fx:{ multi:6, pierce:true }, desc:'Sáu đạo kiếm khí từ đầu ngón tay — xuyên thấu 100% giáp.' },
-  docco:       { name:'Vô Ảnh Cửu Kiếm', school:'Giang Hồ Tuyệt Học', phai:null, tier:'than', cat:'Kiếm', type:'proj', unlock:50, cd:10, qi:30, mult:3.0, color:'#e8e8f0', icon:'assets/skills/vh_docco.png', glyph:'孤', fx:{ pierce:true, stun:1, speed:720 }, desc:'Phá kiếm thức — một kiếm bỏ qua phòng thủ, cắt đứt chiêu địch.' },
-  cuuamkinh:   { name:'Thái Âm Huyền Kinh', school:'Giang Hồ Tuyệt Học', phai:null, tier:'than', cat:'Tâm Pháp', type:'passive', unlock:50, color:'#b08ae8', icon:'assets/skills/vh_cuuamkinh.png', glyph:'陰', desc:'Bị động: +8% công, +8% phòng, +8% HP — mở giới hạn thuộc tính.' },
-  cuuduongkinh:{ name:'Thái Dương Huyền Kinh', school:'Giang Hồ Tuyệt Học', phai:null, tier:'than', cat:'Tâm Pháp', type:'passive', unlock:50, color:'#f0a03a', icon:'assets/skills/vh_cuuduong.png', glyph:'陽', desc:'Bị động: kháng độc 70%, +5% HP.' },
+  // ── Dark Knight ──
+  dk_cyclone:    { name:'Cyclone', school:'Dark Knight', phai:'thieulam', tier:'so', cat:'Cận Chiến', type:'aoe', unlock:15, cd:7, qi:20, mult:1.8, color:'#4c8dff', icon:'assets/skills/vh_dk_cyclone.png', glyph:'旋', fx:{ r:150, kb:40 }, desc:'Xoay tít vũ khí quanh thân — đánh trúng mọi địch trong tầm gần.' },
+  dk_ragefulblow:{ name:'Rageful Blow', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Cận Chiến', type:'aoe', unlock:25, cd:8, qi:24, mult:2.2, color:'#3a6fd8', icon:'assets/skills/vh_dk_rageful.png', glyph:'怒', fx:{ r:170, kb:55, stun:0.8 }, desc:'Giáng vũ khí xuống đất — chấn động, hất văng & choáng nhẹ.' },
+  dk_crescent:   { name:'Crescent Moon Slash', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Cận Chiến', type:'cone', unlock:35, cd:6, qi:20, mult:2.0, color:'#6aa0ff', icon:'assets/skills/vh_dk_crescent.png', glyph:'月', fx:{ pierce:true }, desc:'Một đường chém hình trăng lưỡi liềm — xuyên thấu hàng dài địch.' },
+  dk_fortitude:  { name:'Greater Fortitude', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Bị Động', type:'passive', unlock:45, color:'#8ab8ff', icon:'assets/skills/vh_dk_fortitude.png', glyph:'盾', desc:'Bị động: +15% HP, +10% giảm sát thương.' },
+  tienthiencong: { name:'Undying Will', school:'Dark Knight', phai:'thieulam', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#ffe9a8', icon:'assets/skills/vh_dk_undying.png', glyph:'魂', desc:'Bị động: chết tự hồi sinh 50% HP — mỗi 300s một lần.' },
+  // ── Dark Wizard ──
+  dw_lightning:  { name:'Lightning', school:'Dark Wizard', phai:'baidasan', tier:'so', cat:'Pháp Thuật', type:'proj', unlock:15, cd:5, qi:18, mult:1.7, color:'#7ec850', icon:'assets/skills/vh_dw_lightning.png', glyph:'電', fx:{ kb:20 }, desc:'Một tia sét đánh thẳng vào địch, có thể hất văng.' },
+  dw_evilspirit: { name:'Evil Spirit', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'aoe', unlock:25, cd:7, qi:26, mult:2.0, color:'#6ab850', icon:'assets/skills/vh_dw_evilspirit.png', glyph:'霊', fx:{ r:150 }, desc:'Giải phóng năng lượng bóng tối quanh người — sát thương diện rộng.' },
+  dw_ice:        { name:'Ice', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'proj', unlock:35, cd:6, qi:20, mult:1.6, color:'#5ac8e8', icon:'assets/skills/vh_dw_ice.png', glyph:'氷', fx:{ slow:{ pct:0.5, t:3 } }, desc:'Băng giá xuyên thấu — trúng đòn làm chậm mục tiêu.' },
+  dw_twister:    { name:'Twister', school:'Dark Wizard', phai:'baidasan', tier:'cao', cat:'Pháp Thuật', type:'proj', unlock:45, cd:6, qi:24, mult:1.8, color:'#8ac850', icon:'assets/skills/vh_dw_twister.png', glyph:'旋', fx:{ multi:3, pierce:true }, desc:'Ba cơn lốc xuyên phá — quét qua mọi địch trên đường đi.' },
+  dw_nova:       { name:'Nova', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Pháp Thuật', type:'aoe', unlock:55, cd:10, qi:35, mult:2.8, color:'#ffd76a', icon:'assets/skills/vh_dw_nova.png', glyph:'極', fx:{ r:180, big:true }, desc:'Dồn năng lượng ánh sáng rồi bùng nổ toàn diện — chiêu mạnh nhất phái.' },
+  songthu:       { name:'Arcane Insight', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#d8d8f0', icon:'assets/skills/vh_dw_arcane.png', glyph:'智', desc:'Bị động: 30% chiêu vừa tung không tốn hồi chiêu.' },
+  // ── Fairy Elf ──
+  elf_heal:      { name:'Heal', school:'Fairy Elf', phai:'toanchan', tier:'so', cat:'Bị Động', type:'passive', unlock:15, color:'#3a9d8b', icon:'assets/skills/vh_elf_heal.png', glyph:'癒', desc:'Bị động: tự hồi 1% HP tối đa mỗi giây.' },
+  elf_greaterdef:{ name:'Greater Defense', school:'Fairy Elf', phai:'toanchan', tier:'trung', cat:'Hỗ Trợ', type:'buff', unlock:30, cd:10, qi:25, color:'#5ac8b8', icon:'assets/skills/vh_elf_greaterdef.png', glyph:'護', fx:{ shieldPct:40, t:6 }, desc:'Khiên năng lượng — hấp thụ sát thương bằng 40% HP tối đa trong 6s.' },
+  elf_greaterdmg:{ name:'Greater Damage', school:'Fairy Elf', phai:'toanchan', tier:'cao', cat:'Hỗ Trợ', type:'buff', unlock:45, cd:10, qi:28, color:'#7ecbff', icon:'assets/skills/vh_elf_greaterdmg.png', glyph:'力', fx:{ dmgPct:35, t:6 }, desc:'Cường hoá sức mạnh — +35% sát thương trong 6s.' },
+  elf_swiftwind: { name:'Swift Wind', school:'Fairy Elf', phai:'toanchan', tier:'than', cat:'Hỗ Trợ', type:'buff', unlock:55, cd:8, qi:20, color:'#a0ffe9', icon:'assets/skills/vh_elf_swiftwind.png', glyph:'風', fx:{ selfEva:{ pct:45, t:4 } }, desc:'Gió nhanh theo bước chân — +45% né trong 4s.' },
+  // ── Magic Gladiator ──
+  mg_powerslash: { name:'Power Slash', school:'Magic Gladiator', phai:'minhgiao', tier:'so', cat:'Lai', type:'cone', unlock:15, cd:6, qi:20, mult:1.8, color:'#e8552a', icon:'assets/skills/vh_mg_powerslash.png', glyph:'力', fx:{}, desc:'Một đường kiếm khí quét ngang, dồn cả nội lực vào lưỡi kiếm.' },
+  mg_frostnova:  { name:'Frost Nova', school:'Magic Gladiator', phai:'minhgiao', tier:'trung', cat:'Lai', type:'aoe', unlock:30, cd:8, qi:26, mult:2.0, color:'#5ac8e8', icon:'assets/skills/vh_mg_frostnova.png', glyph:'氷', fx:{ r:150, slow:{ pct:0.4, t:3 } }, desc:'Bùng nổ băng giá quanh thân — làm chậm mọi địch trong tầm.' },
+  mg_ironwill:   { name:'Iron Will', school:'Magic Gladiator', phai:'minhgiao', tier:'cao', cat:'Bị Động', type:'passive', unlock:40, color:'#ffb060', icon:'assets/skills/vh_mg_ironwill.png', glyph:'鉄', desc:'Bị động: +10% HP, +8% giảm sát thương.' },
+  mg_flamestrike:{ name:'Flame Storm', school:'Magic Gladiator', phai:'minhgiao', tier:'than', cat:'Lai', type:'aoe', unlock:55, cd:11, qi:38, mult:3.0, color:'#ff7a3a', icon:'assets/skills/vh_mg_flamestorm.png', glyph:'焔', fx:{ r:200, kb:60, big:true }, desc:'Bão lửa nuốt trọn cả một vùng — chiêu bộc phát mạnh nhất phái.' },
+  // ── Dark Lord ──
+  dl_electricspark:{ name:'Electric Spark', school:'Dark Lord', phai:'bug', tier:'so', cat:'Chỉ Huy', type:'proj', unlock:15, cd:5, qi:18, mult:1.6, color:'#8a9a3a', icon:'assets/skills/vh_dl_spark.png', glyph:'電', fx:{ stun:0.8 }, desc:'Tia điện từ quyền trượng — trúng đòn choáng nhẹ.' },
+  dl_darkspirit: { name:'Dark Spirit', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'aoe', unlock:30, cd:7, qi:24, mult:2.0, color:'#6a7a2a', icon:'assets/skills/vh_dl_darkspirit.png', glyph:'霊', fx:{ r:160 }, desc:'Triệu hồi u linh vây quanh — sát thương diện rộng.' },
+  dl_chaoticdiseier:{ name:'Chaotic Diseier', school:'Dark Lord', phai:'bug', tier:'cao', cat:'Chỉ Huy', type:'proj', unlock:40, cd:6, qi:22, mult:1.8, color:'#a8b85a', icon:'assets/skills/vh_dl_chaotic.png', glyph:'杖', fx:{ multi:3, pierce:true }, desc:'Ném quyền trượng xoay tít — xuyên thấu hàng dài địch.' },
+  dl_darkraven:  { name:'Dark Raven', school:'Dark Lord', phai:'bug', tier:'than', cat:'Chỉ Huy', type:'aoe', unlock:55, cd:10, qi:34, mult:2.6, color:'#d0e07a', icon:'assets/skills/vh_dl_raven.png', glyph:'鴉', fx:{ r:180, kb:40, big:true }, desc:'Bầy quạ đen lao xuống xé nát mọi thứ trong tầm — chiêu chỉ huy tối thượng.' },
 };
-// GDD §5.1: mọi chiêu khóa theo cảnh giới — võ học giang hồ cần tu tiên (Thăng Linh)
+// GDD §5.1: mọi chiêu khóa theo cảnh giới — giữ lại cho vhRealmReq()/tenuiFreeLearn() (Té Núi) dùng;
+// mọi chiêu bây giờ đều phai-locked nên luôn trả về 0 (tự ngộ theo cấp, không qua Bí Kíp/cảnh giới)
 const VH_REALM_REQ  = { so:5, trung:5, cao:6, than:7 };
 const VH_REALM_NAME = { 5:'Radiant Core Cảnh', 6:'Resonance · Trung Kỳ', 7:'Resonance · Hậu Kỳ' };
 function vhRealmReq(v){ return v.phai ? 0 : (VH_REALM_REQ[v.tier] || 5); }
@@ -896,49 +873,10 @@ for (const _vid in VOHOC_DEFS){
     req:()=>vhLearned(_vid),
     reqTxt:_v.phai ? 'Võ học môn phái — tự ngộ khi đạt cấp' : `Cần ${VH_REALM_NAME[VH_REALM_REQ[_v.tier]]} + ${VH_TIER[_v.tier].cost} 📜 Bí Kíp (bấm K)` };
 }
-// ═══════════ DUNG HỢP THẦN CÔNG (Combo Card) — 30 tuyệt chiêu kết hợp liên phái ═══════════
-// Nguồn gốc Cổ Quyển Vực Nguyên Thủy (15) & Di Huấn Axie Lang Thang (15). Học đủ 2 môn tiền trệ + Resonance Trung Kỳ + 3 📜 Bí Kíp.
-const FS_TIER = { name:'Dung Hợp', color:'#ff9ae0', cost:3 };
-const FUSION_DEFS = {
-  // ── Cổ Quyển Vực Nguyên Thủy ──
-  fs_haptinh:    { name:'Thiên Cơ Đoạt Tinh Đại Pháp', origin:'Cổ Quyển Vực Nguyên Thủy', req:['bacminh','capmocong'], tier:'than', cat:'Nội Công', type:'buff', unlock:60, cd:8, qi:40, color:'#3ac8a8', icon:'assets/skills/fs_haptinh.png', glyph:'吸', fx:{ leechPct:40, reflect:true, t:8 }, desc:'Hắc động thôn phệ — hút 40% sát thương thành sinh lực & phản đòn trong 8s.' },
-  fs_thatthuong: { name:'Cửu Chấn Toái Cốt Quyền', origin:'Cổ Quyển Vực Nguyên Thủy', req:['lienhoaquyen','thaicucquan'], tier:'than', cat:'Quyền', type:'cone', unlock:60, cd:5, qi:30, mult:3.4, color:'#c86a5a', icon:'assets/skills/fs_thatthuong.png', glyph:'傷', fx:{ stun:1.2, kb:40 }, desc:'Thất thương tẫn hại — quyền kính 7 lớp chấn nát địch, choáng & hất văng.' },
-  fs_huyenminh:  { name:'Tuyệt Hàn U Cốt Chưởng', origin:'Cổ Quyển Vực Nguyên Thủy', req:['batquaichuong','cuuamtrao'], tier:'than', cat:'Chưởng', type:'cone', unlock:60, cd:5, qi:32, mult:2.6, color:'#5a8ac8', icon:'assets/skills/fs_huyenminh.png', glyph:'冥', fx:{ slow:{ pct:0.7, t:4 }, bleed:{ t:6 } }, desc:'Âm hàn nhập cốt — chưởng lực đông cứng gân cốt, chảy máu & chậm 70%.' },
-  fs_cuuduongthan:{ name:'Thái Dương Bất Diệt Thần Công', origin:'Cổ Quyển Vực Nguyên Thủy', req:['cuuduongkinh','thuanduong'], tier:'than', cat:'Nội Công', type:'buff', unlock:60, cd:8, qi:45, color:'#ffb03a', icon:'assets/skills/fs_cuuduongthan.png', glyph:'陽', fx:{ dmgPct:70, t:8 }, desc:'Cửu dương tề tựu — Qi vô biên, +70% sát thương trong 8s.' },
-  fs_longtuong:  { name:'Cự Tượng Phá Nhạc Công', origin:'Cổ Quyển Vực Nguyên Thủy', req:['lahanquan','dichcankinh'], tier:'than', cat:'Nội Công', type:'aoe', unlock:60, cd:7, qi:48, mult:4.2, color:'#d8a03a', icon:'assets/skills/fs_longtuong.png', glyph:'象', fx:{ r:220, kb:100, big:true }, desc:'Long tượng hiện hình — mười tầng lực đạo nghiền nát toàn trường.' },
-  fs_hogiadao:   { name:'Băng Phong Đao Pháp', origin:'Cổ Quyển Vực Nguyên Thủy', req:['vodangkiem','docco'], tier:'than', cat:'Đao', type:'proj', unlock:60, cd:5, qi:28, mult:1.4, color:'#c8d8e8', icon:'assets/skills/fs_hogiadao.png', glyph:'胡', fx:{ multi:3, pierce:true, speed:680 }, desc:'Đao pháp truyền đời — ba đạo đao quang băng hàn xuyên thấu.' },
-  fs_kimxa:      { name:'Xích Lân Độc Kiếm Pháp', origin:'Cổ Quyển Vực Nguyên Thủy', req:['tckiemphap','tichta'], tier:'than', cat:'Kiếm', type:'proj', unlock:60, cd:5, qi:30, mult:2.2, color:'#d8b83a', icon:'assets/skills/fs_kimxa.png', glyph:'蛇', fx:{ pierce:true, poison:{ t:6 } }, desc:'Kim xà phóng độc — kiếm quang như rắn vàng cắn xé, trúng kịch độc.' },
-  fs_chietmai:   { name:'Hàn Mai Toái Cốt Thủ', origin:'Cổ Quyển Vực Nguyên Thủy', req:['tieuvotuong','longtraothu'], tier:'than', cat:'Cầm Nã', type:'cone', unlock:60, cd:5, qi:30, mult:2.8, color:'#e8a8c0', icon:'assets/skills/fs_chietmai.png', glyph:'梅', fx:{ stun:2, pierce:true }, desc:'Chiết mai trong hư không — cánh hoa hóa thủ ấn, choáng 2s xuyên giáp.' },
-  fs_lucduong:   { name:'Lục Dương Cực Viêm Chưởng', origin:'Cổ Quyển Vực Nguyên Thủy', req:['hanglong','thaicuckiem'], tier:'than', cat:'Chưởng', type:'aoe', unlock:60, cd:7, qi:42, mult:3.8, color:'#f0d05a', icon:'assets/skills/fs_lucduong.png', glyph:'日', fx:{ r:230, stun:1, kb:70, big:true }, desc:'Lục dương luân chuyển — sáu vầng thái dương nổ tung quanh người.' },
-  fs_truyenam:   { name:'U Minh Sưu Hồn Đại Pháp', origin:'Cổ Quyển Vực Nguyên Thủy', req:['sinhtuphu','bacminh'], tier:'than', cat:'Âm Công', type:'proj', unlock:60, cd:5, qi:30, mult:1.1, color:'#8a5ac8', icon:'assets/skills/fs_truyenam.png', glyph:'魂', fx:{ multi:4, poison:{ t:5 }, pierce:true }, desc:'Âm ba sưu hồn — bốn đạo tử khí xuyên thấu, đoạt mệnh vô thanh.' },
-  fs_bathoang:   { name:'Vạn Cổ Độc Tôn Thần Công', origin:'Cổ Quyển Vực Nguyên Thủy', req:['bacminh','tieuvotuong'], tier:'than', cat:'Nội Công', type:'buff', unlock:60, cd:8, qi:50, color:'#b8e8ff', icon:'assets/skills/fs_bathoang.png', glyph:'尊', fx:{ dmgPct:40, leechPct:20, t:10 }, desc:'Duy ngã độc tôn — +40% ST & hút 20% sinh lực trong 10s.' },
-  fs_hoacot:     { name:'Nhuyễn Cốt Tan Gân Chưởng', origin:'Cổ Quyển Vực Nguyên Thủy', req:['cuuamtrao','ngocnu'], tier:'than', cat:'Chưởng', type:'cone', unlock:60, cd:5, qi:26, mult:2.4, color:'#a87ab8', icon:'assets/skills/fs_hoacot.png', glyph:'綿', fx:{ bleed:{ t:8 }, slow:{ pct:0.5, t:3 } }, desc:'Miên chưởng hóa cốt — trúng chưởng xương cốt nhũn ra, chảy máu 8s.' },
-  fs_huyenam:    { name:'Quỷ Ảnh Chỉ', origin:'Cổ Quyển Vực Nguyên Thủy', req:['niemhoachi','tienthiencong'], tier:'than', cat:'Chỉ', type:'proj', unlock:60, cd:5, qi:34, mult:4.0, color:'#7ab8e8', icon:'assets/skills/fs_huyenam.png', glyph:'幻', fx:{ stun:1.5, speed:760 }, desc:'Chỉ phong huyễn ảnh — một chỉ xuyên thấu ảo ảnh, choáng 1.5s.' },
-  fs_kimcang:    { name:'Thiết Giáp Bất Hoại Thần Công', origin:'Cổ Quyển Vực Nguyên Thủy', req:['tlnoicong','dichcankinh'], tier:'than', cat:'Hộ Thể', type:'buff', unlock:60, cd:8, qi:40, color:'#ffb15c', icon:'assets/skills/fs_kimcang.png', glyph:'剛', fx:{ shieldPct:60, dmgPct:20, t:6 }, desc:'Kim cang bất hoại — khiên 60% HP & +20% ST trong 6s.' },
-  fs_thaihuyen:  { name:'Vô Tự Thiên Kinh', origin:'Cổ Quyển Vực Nguyên Thủy', req:['cuuamkinh','cuuduongkinh'], tier:'than', cat:'Tâm Pháp', type:'buff', unlock:60, cd:8, qi:60, color:'#ffd76a', icon:'assets/skills/fs_thaihuyen.png', glyph:'玄', fx:{ dmgPct:100, shieldPct:30, t:10 }, desc:'Đệ nhất thần công — đốn ngộ thái huyền: +100% ST & khiên 30% HP trong 10s.' },
-  // ── Di Huấn Axie Lang Thang ──
-  fs_ngukiem:    { name:'Ngự Kiếm Phi Tiên', origin:'Di Huấn Axie Lang Thang', req:['langba','lucmach'], tier:'than', cat:'Kiếm Thuật', type:'dash', unlock:60, cd:5, qi:30, color:'#9ad8ff', icon:'assets/skills/fs_ngukiem.png', glyph:'御', fx:{ dist:220, strikeMult:2.2, pierce:true }, desc:'Ngự kiếm mà đi — hóa thành kiếm quang xé gió, chém xuyên địch cuối đường.' },
-  fs_vankiem:    { name:'Vạn Kiếm Quy Tông', origin:'Di Huấn Axie Lang Thang', req:['lucmach','docco'], tier:'than', cat:'Kiếm Trận', type:'proj', unlock:60, cd:5, qi:45, mult:0.8, color:'#e8f0ff', icon:'assets/skills/fs_vankiem.png', glyph:'萬', fx:{ multi:9, pierce:true, speed:640 }, desc:'Vạn kiếm triều tông — chín đạo phi kiếm quét ngang, xuyên thấu tuyệt đối.' },
-  fs_cuuthien:   { name:'Cửu Thiên Huyền Lôi', origin:'Di Huấn Axie Lang Thang', req:['hanglong','lucmach'], tier:'than', cat:'Lôi Pháp', type:'aoe', unlock:60, cd:7, qi:55, mult:4.5, color:'#8ab8ff', icon:'assets/skills/fs_cuuthien.png', glyph:'雷', fx:{ r:250, stun:1.2, big:true }, desc:'Cửu thiên giáng lôi — lôi trụ tử điện đánh xuống, choáng toàn trường.' },
-  fs_hoaphuong:  { name:'Hỏa Phượng Niết Bàn', origin:'Di Huấn Axie Lang Thang', req:['thanhhoa','thuanduong'], tier:'than', cat:'Hỏa Pháp', type:'aoe', unlock:60, cd:7, qi:45, mult:3.6, color:'#ff7a3a', icon:'assets/skills/fs_hoaphuong.png', glyph:'鳳', fx:{ r:240, kb:50, big:true }, desc:'Phượng hoàng dục hỏa — liệt diễm trùm trời, niết bàn trùng sinh.' },
-  fs_huyenbang:  { name:'Huyền Băng Thần Chưởng', origin:'Di Huấn Axie Lang Thang', req:['batquaichuong','sinhtuphu'], tier:'than', cat:'Băng Pháp', type:'cone', unlock:60, cd:5, qi:30, mult:2.8, color:'#a8e8ff', icon:'assets/skills/fs_huyenbang.png', glyph:'冰', fx:{ slow:{ pct:0.8, t:4 }, stun:1 }, desc:'Huyền băng phong ấn — hàn khí đóng băng tứ chi, chậm 80% & choáng.' },
-  fs_nguhanh:    { name:'Ngũ Hành Độn Thuật', origin:'Di Huấn Axie Lang Thang', req:['thanhanh','langba'], tier:'than', cat:'Độn Pháp', type:'dash', unlock:60, cd:5, qi:24, color:'#c8e8a8', icon:'assets/skills/fs_nguhanh.png', glyph:'遁', fx:{ dist:260, eva:{ pct:100, t:3 } }, desc:'Độn hình ngũ hành — lướt xa 260px, né tuyệt đối 3s.' },
-  fs_thienma:    { name:'Thiên Ma Giải Thể Đại Pháp', origin:'Tà Đạo Vực Nguyên Thủy', req:['tichta','capmocong'], tier:'than', cat:'Ma Công', type:'buff', unlock:60, cd:8, qi:40, color:'#c03a6a', icon:'assets/skills/fs_thienma.png', glyph:'魔', fx:{ aspdPct:80, crit:true, t:6 }, desc:'Giải thể bộc phát — tốc đánh +80%, mọi đòn bạo kích trong 6s.' },
-  fs_huyetma:    { name:'Huyết Ma Phệ Hồn Chưởng', origin:'Tà Đạo Vực Nguyên Thủy', req:['cuuamtrao','bacminh'], tier:'than', cat:'Ma Chưởng', type:'cone', unlock:60, cd:5, qi:32, mult:2.6, color:'#c02a3a', icon:'assets/skills/fs_huyetma.png', glyph:'噬', fx:{ bleed:{ t:6 }, kb:20 }, desc:'Huyết ma phệ hồn — trảo huyết xé hồn phách, chảy máu 6s.' },
-  fs_thaiat:     { name:'Thái Ất Thần Kiếm', origin:'Di Huấn Axie Lang Thang', req:['tckiemphap','docco'], tier:'than', cat:'Tiên Kiếm', type:'proj', unlock:60, cd:5, qi:36, mult:4.2, color:'#ffe9a8', icon:'assets/skills/fs_thaiat.png', glyph:'乙', fx:{ pierce:true, speed:800 }, desc:'Thái Ất huyền quang — một kiếm phá vạn pháp, tốc độ cực hạn.' },
-  fs_tutuong:    { name:'Tứ Tượng Trấn Ma Ấn', origin:'Di Huấn Axie Lang Thang', req:['dacau','thaicuckiem'], tier:'than', cat:'Pháp Ấn', type:'aoe', unlock:60, cd:7, qi:40, mult:3.2, color:'#d8c86a', icon:'assets/skills/fs_tutuong.png', glyph:'印', fx:{ r:210, stun:1.5, big:true }, desc:'Tứ tượng tề giáng — Thanh Long Bạch Hổ Chu Tước Huyền Vũ trấn áp, choáng 1.5s.' },
-  fs_bangphong:  { name:'Băng Phong Vạn Lý', origin:'Di Huấn Axie Lang Thang', req:['vodangkiem','sinhtuphu'], tier:'than', cat:'Băng Pháp', type:'aoe', unlock:60, cd:7, qi:38, mult:3.0, color:'#b8e0f0', icon:'assets/skills/fs_bangphong.png', glyph:'凍', fx:{ r:250, slow:{ pct:0.6, t:5 } }, desc:'Vạn lý giao băng — sóng băng phủ toàn trường, chậm 60% trong 5s.' },
-  fs_loidinh:    { name:'Lôi Đình Vạn Quân', origin:'Di Huấn Axie Lang Thang', req:['lahanquan','hanglong'], tier:'than', cat:'Lôi Pháp', type:'aoe', unlock:60, cd:7, qi:42, mult:3.4, color:'#e8d86a', icon:'assets/skills/fs_loidinh.png', glyph:'霆', fx:{ r:220, stun:1, kb:60, big:true }, desc:'Lôi quân vạn mã — sấm sét như thiên binh quét sạch bát phương.' },
-  fs_phethien:   { name:'Phệ Thiên Ma Công', origin:'Tà Đạo Vực Nguyên Thủy', req:['cuuamkinh','bacminh'], tier:'than', cat:'Ma Công', type:'buff', unlock:60, cd:8, qi:45, color:'#9a4a8a', icon:'assets/skills/fs_phethien.png', glyph:'吞', fx:{ leechPct:35, dmgPct:30, t:8 }, desc:'Thôn thiên phệ địa — hút 35% sinh lực & +30% ST trong 8s.' },
-  fs_dalat:      { name:'Đại La Tiên Kiếm', origin:'Di Huấn Axie Lang Thang', req:['thaicuckiem','lucmach'], tier:'than', cat:'Tiên Kiếm', type:'proj', unlock:60, cd:5, qi:34, mult:1.0, color:'#a8f0e0', icon:'assets/skills/fs_dalat.png', glyph:'仙', fx:{ multi:5, pierce:true, speed:700 }, desc:'Đại la kiếm trận — năm thanh tiên kiếm đồng loạt xuất kích.' },
-  fs_nietban:    { name:'Niết Bàn Phật Ấn', origin:'Giáo Lý Vệ Thần', req:['lahanquan','tienthiencong'], tier:'than', cat:'Phật Ấn', type:'aoe', unlock:60, cd:7, qi:50, mult:4.0, color:'#f0e8c8', icon:'assets/skills/fs_nietban.png', glyph:'槃', fx:{ r:240, stun:1, big:true }, desc:'Phật ấn giáng thế — kim chưởng niết bàn trấn áp chư ma.' },
-};
-for (const _fid in FUSION_DEFS){
-  const _f = FUSION_DEFS[_fid];
-  SKILL_DEFS[_fid] = { unlock:_f.unlock, kind:'vh', icon:_f.icon, desc:_f.desc,
-    req:()=>vhLearned(_fid),
-    reqTxt:`Dung hợp: ${_f.req.map(r => (VOHOC_DEFS[r] || {}).name || r).join(' + ')} — Resonance Trung Kỳ + 3 📜 (bấm K)` };
-}
+// MU không có khái niệm "dung hợp liên phái" — hệ Dung Hợp (30 chiêu) đã bị cắt hẳn theo hướng tối
+// giản. Giữ FUSION_DEFS rỗng (thay vì xoá luôn định danh) để mọi chỗ tham chiếu cũ (vòng lặp/lookup)
+// vẫn chạy an toàn — chỉ đơn giản là không còn chiêu dung hợp nào để tìm thấy nữa.
+const FUSION_DEFS = {};
 
 // ═══════════ CẤP KỸ NĂNG 1-120 — +2,5% ST & −0,25% hồi chiêu mỗi cấp · mốc cảnh giới · ⚡tiến hóa 40/80/120 ═══════════
 function skLv(id){ return (player && player.skillLv && player.skillLv[id]) || 1; }
@@ -1074,22 +1012,7 @@ window.assignSpaceUI = function(id){
   AudioSys.sfx('ui', 0.5);
   saveGame(); renderSkillPanel();
 };
-window.learnFusionUI = function(id){
-  const f = FUSION_DEFS[id]; if (!f || vhLearned(id)) return;
-  if (player.level < f.unlock){ addFloat(player.x, player.y-40, `Cần cấp ${f.unlock}`, '#8a8a8a', 12); return; }
-  if (((player.dantian && player.dantian.realm) || 0) < 6){ addFloat(player.x, player.y-40, 'Dung hợp cần Resonance · Trung Kỳ', '#b08ae8', 12); return; }
-  if (!f.req.every(r => vhLearned(r))){ addFloat(player.x, player.y-40, 'Chưa lĩnh ngộ đủ 2 môn tiền trệ', '#8a8a8a', 12); return; }
-  if ((player.bikipVH || 0) < FS_TIER.cost){ addFloat(player.x, player.y-40, `Cần ${FS_TIER.cost} 📜 Bí Kíp`, '#8a8a8a', 12); return; }
-  player.bikipVH -= FS_TIER.cost;
-  player.vohoc[id] = true;
-  calcDerived(); saveGame();
-  addFloat(player.x, player.y-66, `☯ DUNG HỢP THÀNH CÔNG: ${f.name}!`, FS_TIER.color, 17);
-  zoneBanner = { text:'☯ DUNG HỢP THẦN CÔNG', sub:`${f.name} — ${f.origin} · bấm K gán vào taskbar`, color:FS_TIER.color, t:4 };
-  AudioSys.sfx('quest', 1);
-  addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:FS_TIER.color, big:true });
-  for (let i = 0; i < 12; i++) addEffect({ type:'ink', x:player.x+rnd(-40,40), y:player.y+rnd(-40,40), vx:rnd(-50,50), vy:rnd(-90,-30), color:FS_TIER.color });
-  renderSkillPanel();
-};
+// Dung Hợp (ghép 2 chiêu liên phái) đã bị cắt hẳn cùng đợt MU-hoá — MU không có khái niệm này.
 function vhLearned(id){ return !!(player && player.vohoc && player.vohoc[id]); }
 function learnVohoc(id){
   const v = VOHOC_DEFS[id];
@@ -1116,11 +1039,11 @@ window.learnVohocUI = function(id){
   learnVohoc(id);
   renderSkillPanel();
 };
-function vhAutoLearn(){ // võ học môn phái tự ngộ khi đạt cấp (Cổ Mộ học chung võ Toàn Chân)
+function vhAutoLearn(){ // võ học môn phái tự ngộ khi đạt cấp — mỗi lớp học đúng bộ chiêu của lớp mình
   for (const _vid in VOHOC_DEFS){
     const _v = VOHOC_DEFS[_vid];
     if (!_v.phai || vhLearned(_vid) || player.level < _v.unlock) continue;
-    if (!player.ascended && _v.phai !== player.sect && !(_v.phai === 'toanchan' && player.sect === 'comoc')) continue; // Starflight: môn phái phá bỏ — võ học toàn tự do
+    if (!player.ascended && _v.phai !== player.sect) continue; // Starflight: môn phái phá bỏ — võ học toàn tự do
     learnVohoc(_vid);
   }
 }
@@ -1787,13 +1710,9 @@ for (let i=1;i<MOUNT_TIERS.length;i++){
 const SECT_ART = {
   thieulam: { portrait:'assets/classes/thieulam.png', iconA:'assets/skills/tl_a.png', iconTP:'assets/skills/tl_tp.png' },
   toanchan: { portrait:'assets/classes/toanchan.png', iconA:'assets/skills/tc_a.png', iconTP:'assets/skills/tc_tp.png' },
-  comoc:    { portrait:'assets/classes/comoc.png',    iconA:'assets/skills/cm_a.png', iconTP:'assets/skills/cm_tp.png' },
   baidasan: { portrait:'assets/classes/baidasan.png', iconA:'assets/skills/bd_a.png', iconTP:'assets/skills/bd_tp.png' },
   minhgiao: { portrait:'assets/classes/minhgiao.png', iconA:'assets/skills/mg_a.png', iconTP:'assets/skills/mg_tp.png' },
-  doanthi:  { portrait:'assets/classes/doanthi.png',  iconA:'assets/skills/dt_a.png', iconTP:'assets/skills/dt_tp.png' },
-  daohoa:   { portrait:'assets/classes/daohoa.png',   iconA:'assets/skills/dh_a.png', iconTP:'assets/skills/dh_tp.png' },
   bug:      { portrait:'assets/classes/bug.png',    iconA:'assets/classes/bug_a.png', iconTP:'assets/classes/bug_tp.png' },
-  dawn:     { portrait:'assets/classes/dawn.png',   iconA:'assets/classes/dawn_a.png', iconTP:'assets/classes/dawn_tp.png' },
   vophai:   { portrait:'assets/sects/vophai.png',   iconA:'assets/skills/slash.png', iconTP:'assets/skills/basic.png' },
 };
 const SECT_IMGS = {};
@@ -2889,7 +2808,7 @@ window.activateChannelForm = function(){
   saveGame();
 };
 // Đồng Môn Trợ Uy (Cốt truyện × Tông môn §4): map "chạm nhà" của từng phái
-const SECT_HOOK_MAP = { daohoa:'daohoa', ngoai:'baidasan', chungnam:'toanchan', comoc:'comoc', tuyettinh:'thieulam', mongco:'doanthi', nhanmon:'minhgiao' };
+const SECT_HOOK_MAP = { ngoai:'baidasan', chungnam:'toanchan', tuyettinh:'thieulam', nhanmon:'minhgiao' };
 function bossScale(lv){
   return { hp: Math.round(2600*Math.pow(lv/10, 1.7)), atk: Math.round(44*lv/10), def: Math.round(16*lv/10),
     xp: Math.round(2500*lv/10), silver:[Math.round(280*lv/10), Math.round(400*lv/10)] };
@@ -3552,12 +3471,11 @@ function unlockNotices(){
     4:['Mở khóa: Ám Khí (phím 2)','Mở khóa: Card — tấn chức Ám Khí (phím H)'],
     5:['Mở khóa: Rèn Luyện (phím F)'],
     6:['Mở khóa: Thú Chiến — chiến thú đồng hành tự đánh quái (C → Thú Chiến)'],
-    7:['Mở khóa: Tuyệt kỹ (phím 3)','Mở khóa: Ascension tu luyện (phím N)'],
-    10:['Mở khóa: the Calling — 9 Tộc chờ ngươi chọn!','Mở khóa: Cương Khí (Card — phím H)','Mở khóa: Truy Nã Lệnh & Vạn Duyên Các — Bổ Đầu và Thần Toán Tử ở Lunaris City'],
+    7:['Mở khóa: Tuyệt kỹ (phím 3)'],
+    10:['Mở khóa: the Calling — 5 lớp chờ ngươi chọn!','Mở khóa: Cương Khí (Card — phím H)','Mở khóa: Truy Nã Lệnh & Vạn Duyên Các — Bổ Đầu và Thần Toán Tử ở Lunaris City'],
     15:['Mở khóa: Linh Thú — mua Phong Linh Phù ở Vũ Khí Phường, đánh tinh anh còn <40% máu rồi bấm T'],
     40:['Mở khóa: Hỗn Độn Lò luyện Linh Dực Cấp 1 — Lò Bát Quái, Lunaris City'],
     45:['Bảo Hạp IV trở lên từ Bá Chủ có 5-8% mở ra trang bị CỔ THẦN Tứ Tượng — Bá Chủ giáng thế mỗi 4 giờ!'],
-    20:['Mở khóa: Instinct Channels (Ascension — phím N)'],
     30:['Mở khóa: Cung Tiễn (Card — phím H)','Mở khóa: Động Phủ — gặp Quản Gia ở Lunaris City'],
   };
   const list = msgs[player.level];
@@ -6877,7 +6795,7 @@ window.addEventListener('beforeunload', saveGame);
   } catch { /* best-effort — bỏ qua nếu lỗi */ }
 }
 
-// quick-start via URL: ?sect=thieulam|toanchan|daohoa|comoc
+// quick-start via URL: ?sect=thieulam|toanchan|baidasan|minhgiao|bug
 // defer: chờ toàn bộ script nạp xong (TUT_STEPS, SIDE_QUESTS, intro... khai báo ở cuối file) tránh TDZ
 // TEST_MODE (?test=1 hoặc ?max=1): playtest — dịch chuyển tự do mọi map/phó bản, bỏ qua điều kiện mở
 // Bản phát hành vẫn mở cho người chơi chủ động trải nghiệm full: thêm ?test=1 (hoặc ?max=1) vào link
@@ -7114,7 +7032,6 @@ const CHAR_TABS = [
   { id:'info',     name:'Thông Tin',  lv:1 },
   { id:'forge',    name:'Rèn Luyện',  lv:5 },
   { id:'mount',    name:'Thú Chiến',  lv:6 },
-  { id:'dantian',  name:'Ascension',   lv:7 },
   { id:'taytuy',   name:'🔄 Tẩy Tủy',  lv:MAX_LV },
   { id:'tuyethoc', name:'Card',  lv:4 },
   { id:'pet',      name:'🐾 Linh Thú', lv:15 },
@@ -7126,7 +7043,7 @@ const CHAR_TABS = [
 function renderCharPanel(){
   let tab = window.charTab;
   if (!sysUnlocked(tab)) tab = window.charTab = 'info'; // tab đang chọn bị khóa → về Thông Tin
-  let html = `<h3>Nhân Vật — mọi tu luyện trong một</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  let html = `<h3>Nhân Vật</h3><button class="close-x" onclick="closePanels()">✕</button>`;
   html += `<div class="char-tabs">`;
   for (const t of CHAR_TABS){
     const locked = !sysUnlocked(t.id);
@@ -7136,7 +7053,6 @@ function renderCharPanel(){
   el('panel-char').innerHTML = html;
   if (tab==='info') renderChar();
   else if (tab==='mount') renderMount();
-  else if (tab==='dantian') renderDantian();
   else if (tab==='taytuy') renderTayTuy();
   else if (tab==='tuyethoc') renderTuyetHoc();
   else if (tab==='pet') renderPet();
@@ -7425,9 +7341,10 @@ window.salvage = function(i){
 // ---------- Bản Đồ thế giới ----------
 // ---------- Kỹ Năng: gán vào taskbar 5 ô ----------
 // ── Kỹ Năng: 3 nhóm Trấn Phái / Giang Hồ / Khác (thay cho 1 danh sách dài gộp hết, rối mắt) ──
+// Giang Hồ (võ học tự do liên phái) + Dung Hợp đã bị cắt cùng đợt MU-hoá — mọi chiêu giờ đều
+// thuộc riêng 1 trong 5 lớp, không còn nội dung nào cho tab này nữa nên bỏ luôn.
 const SKILL_TABS = [
   { id:'tranphai', name:'⚔ Trấn Phái' },
-  { id:'giangho',  name:'🗺 Giang Hồ' },
   { id:'khac',     name:'✦ Khác' },
 ];
 window.skillTab = window.skillTab || 'tranphai';
@@ -7446,7 +7363,7 @@ function vohocRowHtml(_vid){
   const _v = VOHOC_DEFS[_vid], _t = VH_TIER[_v.tier];
   const learned = vhLearned(_vid), isPass = _v.type === 'passive';
   const canLv = player.level >= _v.unlock;
-  const ownPhai = _v.phai && (_v.phai === player.sect || (_v.phai === 'toanchan' && player.sect === 'comoc'));
+  const ownPhai = _v.phai && _v.phai === player.sect;
   const _rReq = vhRealmReq(_v);
   const canRealm = ((player.dantian && player.dantian.realm) || 0) >= _rReq;
   let right = '';
@@ -7478,29 +7395,7 @@ function vohocSchoolsHtml(filterFn){
   }
   return h;
 }
-function fusionRowHtml(_fid){
-  const _f = FUSION_DEFS[_fid];
-  const _fsLearned = vhLearned(_fid), _fsReqOk = _f.req.every(r => vhLearned(r));
-  const _fsRealmOk = ((player.dantian && player.dantian.realm) || 0) >= 6;
-  const _fsReqTxt = _f.req.map(r => { const rv = VOHOC_DEFS[r]; return `<span style="color:${vhLearned(r) ? '#7ec850' : '#8a8a8a'}">${rv ? rv.name : r}</span>`; }).join(' + ');
-  let right = '';
-  if (_fsLearned){
-    right = `<span class="assign-btns">${upBtnHtml(_fid)}${[0,1,2,3,4].map(s=>
-      `<button class="mini-btn" onclick="window.assignSkill('${_fid}',${s})">${s+1}</button>`).join('')}</span>`;
-  } else if (_fsReqOk && _fsRealmOk){
-    right = `<button class="mini-btn vh-learn-btn" style="border-color:#ff9ae0 !important;color:#ff9ae0 !important" ${(player.bikipVH||0)>=FS_TIER.cost?'':'disabled'} onclick="window.learnFusionUI('${_fid}')">☯ 3📜</button>`;
-  } else {
-    right = `<span style="font-size:10.5px;opacity:.5">${!_fsRealmOk ? '🔒 Resonance Trung' : '🔒 thiếu tiền trệ'}</span>`;
-  }
-  return `<div class="skill-row${_fsLearned?'':' locked'}">
-    <img src="${_f.icon}" onerror="this.style.display='none'" alt="">
-    <span class="sk-info"><b style="color:${_fsLearned ? FS_TIER.color : '#8a8a8a'}">${_f.name}</b>
-      <span style="font-size:10px;color:#c8a0c8"> · ${_f.cat}</span>
-      <span style="font-size:10.5px;opacity:.6"> · ${_f.qi}Qi · ${effCd(_fid, _f.cd).toFixed(1)}s · Lv${skLv(_fid)}</span>
-      <div class="sk-desc">${_f.desc}</div>
-      <div style="font-size:10px;opacity:.85">☯ ${_fsReqTxt}</div></span>
-    ${right}</div>`;
-}
+// fusionRowHtml đã bị xoá — Dung Hợp cắt hẳn, không còn nơi nào gọi hàm này nữa
 function renderSkillPanel(){
   vhAutoLearn(); // save cũ / test mode: quét tự ngộ võ học phái
   let html = `<h3>Kỹ Năng — gán tối đa 5 ô (phím 1-5)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
@@ -7519,15 +7414,8 @@ function renderSkillPanel(){
   if (window.skillTab === 'tranphai'){
     html += `<div class="stat-sec">TRẤN PHÁI — tuyệt kỹ ${SECTS[player.sect].name}</div>`;
     html += skillDefRowHtml('a') + skillDefRowHtml('tp');
-    const ownSchoolHtml = vohocSchoolsHtml(_v => _v.phai === player.sect || (_v.phai === 'toanchan' && player.sect === 'comoc'));
-    html += ownSchoolHtml || `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Môn phái này chưa có tuyệt học Trấn Phái riêng — sang tab Giang Hồ luyện thêm nhé.</div>`;
-  } else if (window.skillTab === 'giangho'){
-    html += `<div class="stat-sec">GIANG HỒ — học bằng 📜 Bí Kíp: <b style="color:#ffb15c">${player.bikipVH||0}</b></div>`;
-    html += `<div style="font-size:10.5px;color:#9aa8d4;margin-bottom:4px">Không giới hạn môn phái · Bí Kíp rơi từ Té Núi · cần đủ cảnh giới tương ứng bậc.</div>`;
-    html += vohocSchoolsHtml(_v => !_v.phai && !_v.npcOnly);
-    html += `<div class="stat-sec" style="color:#ff9ae0">☯ DUNG HỢP — ghép 2 môn thành tuyệt chiêu mới</div>`;
-    html += `<div style="font-size:10.5px;color:#9aa8d4;margin-bottom:4px">Đủ 2 môn tiền trệ + Resonance Trung Kỳ + 3📜.</div>`;
-    for (const _fid in FUSION_DEFS) html += fusionRowHtml(_fid);
+    const ownSchoolHtml = vohocSchoolsHtml(_v => _v.phai === player.sect);
+    html += ownSchoolHtml || `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10 để mở khoá tuyệt kỹ riêng.</div>`;
   } else {
     html += `<div class="stat-sec">KỸ NĂNG KHÁC — hệ Card/Ascension riêng</div>`;
     for (const id of ['amkhi','gangkhi','danchi','bow','tieuhon']) html += skillDefRowHtml(id);
@@ -8156,7 +8044,7 @@ window.doBaGua = function(uid){
 };
 
 // ═══════════ VŨ KHÍ DANH PHÁI — mỗi môn phái một binh khí riêng ═══════════
-const SECT_WEAPONS = { thieulam:'con', toanchan:'kiem', comoc:'songhoan', baidasan:'xatruong', minhgiao:'daidao', doanthi:'quat', daohoa:'ngoctieu' };
+const SECT_WEAPONS = { thieulam:'con', toanchan:'kiem', baidasan:'xatruong', minhgiao:'daidao' }; // bug (Dark Lord) không có entry riêng, rơi về fallback 'kiem' — như trước đây
 function drawSectWeapon(p, sect){
   const kind = SECT_WEAPONS[p.sect] || 'kiem';
   const k = p.atkAnim > 0 ? p.atkAnim/0.22 : 0;          // 1 → 0 khi chém
@@ -12060,7 +11948,7 @@ function renderTeNui(n){
   if (!unlocked){
     html += `<div style="text-align:center;padding:14px 8px;font-size:13px;line-height:1.8;color:#8a8a8a">
       ☁ Vách cao mây phủ — phàm nhân té xuống chỉ có nát thây.<br>
-      Cần đột phá <b style="color:#b08ae8">Radiant Core Cảnh</b> (Ascension — phím N, cảnh 5) để Thăng Linh,<br>
+      Cần đạt <b style="color:#b08ae8">Radiant Core Cảnh</b> (cảnh 5, tự động ở cấp 60) để Thăng Linh,<br>
       khi ấy mới đủ sức <b style="color:#ffb15c">Té Núi cầu đạo</b>.</div>`;
   } else {
     html += `<div class="stat-sec">TỈ LỆ CÔNG KHAI — KHÔNG GOM DUYÊN${gold ? ' · <b style="color:#ffd76a">⚡ KIẾP VÂN TỤ: 2 ô hiếm ×2!</b>' : ''}</div>
