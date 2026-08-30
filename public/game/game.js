@@ -8336,6 +8336,7 @@ const HERO_GEAR = {
       });
       hArmL(g, P, ps);
       hArmR(g, P, ps, () => {
+        hHeldWeapon(g, ps.gv, ps, 112, 150, 0, () => {
         g.save(); g.translate(112 + ps.wpush, 150); g.rotate(ps.wrot);
         g.strokeStyle = '#4a3520'; g.lineWidth = 8; g.lineCap = 'round';
         g.beginPath(); g.moveTo(0, 0); g.lineTo(-8, -120); g.stroke();
@@ -8346,6 +8347,7 @@ const HERO_GEAR = {
         hEll(g, -8, -134, 9 + ps.cast * 3, 9 + ps.cast * 3, '#8fd0ff');
         g.strokeStyle = M.trim; g.lineWidth = 3;
         g.beginPath(); g.arc(-8, -134, 14, 0, 7); g.stroke(); g.restore();
+        });
       });
     },
   },
@@ -8376,6 +8378,7 @@ const HERO_GEAR = {
       hArmR(g, P, ps, () => { hEll(g, 112, 116, 10, 17, P.skin); hPoly(g, [[126,92],[110,88],[108,110],[124,114]], M.hi); });
       hArmL(g, P, ps, () => {                                        // tay trái giương cung
         hPoly(g, [[48,92],[64,88],[66,110],[50,114]], M.hi);
+        hHeldWeapon(g, ps.gv, ps, 36, 118, 0.12, () => {
         g.save(); g.translate(36 - ps.wpush*0.5, 118); g.rotate(0.12 - ps.wrot*0.4);
         g.strokeStyle = '#7a5a30'; g.lineWidth = 6; g.lineCap = 'round';
         g.beginPath(); g.arc(14, 0, 60, Math.PI * 0.62, Math.PI * 1.38); g.stroke();
@@ -8387,6 +8390,7 @@ const HERO_GEAR = {
           g.beginPath(); g.moveTo(-6 + bp, 0); g.lineTo(-6 + bp - 52, 0); g.stroke();
         }
         g.restore();
+        });
       });
     },
   },
@@ -8450,6 +8454,7 @@ const HERO_GEAR = {
         hEll(g, 112, 116, 10, 17, P.skin);
         hPoly(g, [[132,90],[100,84],[96,122],[128,128]], M.lo);
         hPoly(g, [[132,90],[116,86],[122,60],[130,88]], M.lo);
+        hHeldWeapon(g, ps.gv, ps, 116, 146, 0, () => {
         g.save(); g.translate(116 + ps.wpush, 146); g.rotate(ps.wrot);
         g.strokeStyle = '#2a2438'; g.lineWidth = 9; g.lineCap = 'round';
         g.beginPath(); g.moveTo(0, 0); g.lineTo(-6, -126); g.stroke();
@@ -8459,6 +8464,7 @@ const HERO_GEAR = {
         const dg = g.createRadialGradient(-6, -146, 2, -6, -146, r);
         dg.addColorStop(0, 'rgba(160,200,255,.75)'); dg.addColorStop(1, 'rgba(80,120,220,0)');
         g.fillStyle = dg; g.beginPath(); g.arc(-6, -146, r, 0, 7); g.fill(); g.restore();
+        });
       });
     },
   },
@@ -8493,18 +8499,26 @@ const HERO_GEAR = {
 // Vũ khí trên tay dùng CHÍNH bộ phận dựng icon, nên món trong túi và thanh nhân vật đang cầm
 // không thể lệch nhau. `fallback` là thanh vẽ cứng cũ của lớp — vẫn dùng khi chưa mặc vũ khí,
 // hoặc khi vũ khí không thuộc dòng lưỡi (gậy/cung/trượng có bộ phận riêng, làm ở đợt sau).
+// Mỗi dòng vũ khí một tỉ lệ và một điểm nắm — gậy dài hơn kiếm, cung thì nắm ở GIỮA thân
+// chứ không ở chuôi, nỏ nắm ở báng.
+const HELD_FIT = {
+  weapon:   { fn:'iaWeapon',    k:1.45, dy:-22 },
+  staff:    { fn:'iaStaff',     k:1.55, dy:-14 },
+  bow:      { fn:'iaBow',       k:1.55, dy:0   },
+  crossbow: { fn:'iaCrossbow',  k:1.5,  dy:-4  },
+};
 function hHeldWeapon(g, gv, ps, x, y, rot, fallback){
   const d = gv && gv.wDef;
-  if (!d || !d.blade){ fallback(); return; }
+  const F = d && HELD_FIT[d.art];
+  if (!F){ fallback(); return; }
   const W = itemPal(d, gv.wTier || 1);
   g.save();
   g.translate(x + ps.wpush, y); g.rotate(rot + ps.wrot);
   // Thanh vẽ cứng cũ cao ~112 đơn vị. Icon cao ~77 (chuôi +33 → mũi -44), nên tỉ lệ phải là
   // ~1.45, không phải 2.5 — ở 2.5 thanh kiếm cao hơn cả người và cắt ngang thân.
-  const k = 1.45;
-  g.scale(k, k);
-  g.translate(0, -22);                       // chuôi rơi đúng vào nắm tay
-  iaWeapon(g, W, Object.assign({}, d, { rot: 0 }));
+  g.scale(F.k, F.k);
+  g.translate(0, F.dy);                      // điểm nắm rơi đúng vào bàn tay
+  (ITEM_ART[d.art] || iaWeapon)(g, W, Object.assign({}, d, { rot: 0 }));
   g.restore();
 }
 function drawHeroFigure(g, sectKey, tier, now, ps, gv){
@@ -11162,6 +11176,186 @@ function iaWeapon(g, M, P){
   g.restore();
 }
 
+// ═══ GẬY / TRƯỢNG — thân + đầu, giống kiếm là lưỡi + chắn tay ═══
+// Dark Wizard và Dark Lord không cầm kiếm. Dùng chung bộ phận lưỡi cho họ là sai từ gốc.
+const ISHAFT = {
+  thang(g, M, len){                                  // thân trơn
+    iFill(g, [[-3.2, 34], [3.2, 34], [2.6, len], [-2.6, len]], iGrad(g, -3, 34, 3, len, M.hi, M.lo));
+  },
+  xoan(g, M, len){                                   // thân xoắn thừng
+    iFill(g, [[-3.4, 34], [3.4, 34], [2.8, len], [-2.8, len]], iGrad(g, -3, 34, 3, len, M.hi, M.lo));
+    g.strokeStyle = 'rgba(0,0,0,.34)'; g.lineWidth = 1.3;
+    for (let i = 0; i < 9; i++){
+      const y = 32 - i * (32 - len) / 9;
+      g.beginPath(); g.moveTo(-3.2, y); g.lineTo(3.2, y - 4.5); g.stroke();
+    }
+  },
+  dot(g, M, len){                                    // thân chia đốt
+    iFill(g, [[-3.2, 34], [3.2, 34], [2.6, len], [-2.6, len]], iGrad(g, -3, 34, 3, len, M.hi, M.lo));
+    g.fillStyle = M.trim;
+    for (let i = 1; i < 5; i++){
+      const y = 34 - i * (34 - len) / 5;
+      g.fillRect(-4.4, y - 2, 8.8, 4);
+    }
+  },
+  xuong(g, M, len){                                  // thân xương, phình đốt
+    iFill(g, [[-3, 34], [3, 34], [2.4, len], [-2.4, len]], iGrad(g, -3, 34, 3, len, M.hi, M.lo));
+    g.fillStyle = M.hi;
+    for (let i = 0; i < 4; i++){
+      const y = 28 - i * (28 - len) / 4;
+      g.beginPath(); g.ellipse(0, y, 5.2, 3, 0, 0, 7); g.fill();
+      g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = .8; g.stroke();
+    }
+  },
+};
+const IHEAD = {
+  cau(g, M, y, st){                                  // cầu phép
+    const c = M.glow || M.trim, r = 8 + st * 0.9;
+    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .4;
+    g.fillStyle = c; g.beginPath(); g.arc(0, y, r + 6, 0, 7); g.fill(); g.restore();
+    const gr = g.createRadialGradient(-r * .3, y - r * .35, 1, 0, y, r);
+    gr.addColorStop(0, '#fff'); gr.addColorStop(.4, c); gr.addColorStop(1, M.lo);
+    g.fillStyle = gr; g.beginPath(); g.arc(0, y, r, 0, 7); g.fill();
+    if (st >= 3){ g.strokeStyle = M.trim; g.lineWidth = 2.4;   // gọng ôm
+      g.beginPath(); g.arc(0, y, r + 3.4, Math.PI * .8, Math.PI * 2.2); g.stroke(); }
+  },
+  liem(g, M, y, st){                                 // lưỡi liềm
+    g.beginPath();
+    g.moveTo(-13, y + 6); g.quadraticCurveTo(-17, y - 16, 0, y - 20);
+    g.quadraticCurveTo(15, y - 16, 12, y + 6);
+    g.quadraticCurveTo(9, y - 8, 0, y - 10);
+    g.quadraticCurveTo(-9, y - 8, -13, y + 6);
+    g.closePath(); g.fillStyle = M.trim; g.fill();
+    if (st >= 3) iGem(g, M, 0, y - 4, 3);
+  },
+  so(g, M, y, st){                                   // sọ
+    g.fillStyle = M.hi;
+    g.beginPath(); g.ellipse(0, y - 5, 9, 10, 0, 0, 7); g.fill();
+    iFill(g, [[-6, y + 3], [6, y + 3], [4.6, y + 10], [-4.6, y + 10]], M.hi);
+    g.fillStyle = '#0a0c12';
+    g.beginPath(); g.arc(-3.6, y - 6, 2.7, 0, 7); g.arc(3.6, y - 6, 2.7, 0, 7); g.fill();
+    g.fillRect(-1.6, y + 1, 3.2, 3);
+    if (st >= 4){ g.fillStyle = M.trim;                 // sừng hai bên sọ
+      iPoly(g, [[-8, y - 10], [-18, y - 20], [-6, y - 14]]); g.fill();
+      iPoly(g, [[8, y - 10], [18, y - 20], [6, y - 14]]); g.fill(); }
+  },
+  tinhthe(g, M, y, st){                              // cụm tinh thể
+    const c = M.glow || M.trim;
+    const shard = (dx, dy, h, w) => { iPoly(g, [[dx - w, y + dy], [dx, y + dy - h], [dx + w, y + dy]]); g.fill(); };
+    g.fillStyle = M.lo; shard(-7, 4, 14, 4.5); shard(7, 5, 12, 4);
+    g.fillStyle = c;    shard(0, 6, 22 + st, 5.5);
+    g.fillStyle = 'rgba(255,255,255,.6)'; shard(-1.6, 4, 14, 2);
+  },
+  canh(g, M, y, st){                                 // đôi cánh ôm viên đá
+    for (const sd of [-1, 1]){
+      g.save(); g.translate(sd * 5, y); g.scale(sd, 1); g.fillStyle = M.trim;
+      for (let i = 0; i < 3; i++){
+        g.beginPath(); g.moveTo(0, 4 - i * 2);
+        g.quadraticCurveTo(9 + i * 2, -6 - i * 4, 14 + i * 3, -2 - i * 6);
+        g.quadraticCurveTo(7 + i, 2 - i * 3, 0, 6 - i * 2); g.fill();
+      }
+      g.restore();
+    }
+    iGem(g, M, 0, y - 2, 4.6 + st * 0.4);
+  },
+  vong(g, M, y, st){                                 // vòng lệnh
+    g.strokeStyle = M.trim; g.lineWidth = 4 + st * 0.4;
+    g.beginPath(); g.arc(0, y - 6, 11, 0, 7); g.stroke();
+    if (st >= 3){ g.lineWidth = 1.6; g.strokeStyle = M.glow || M.hi;
+      g.beginPath(); g.arc(0, y - 6, 11, 0, 7); g.stroke(); }
+    iGem(g, M, 0, y - 6, 3.4 + st * 0.3);
+  },
+  vuot(g, M, y, st){                                 // vuốt quặp giữ đá
+    g.fillStyle = M.trim;
+    for (const sd of [-1, 1]){
+      g.beginPath(); g.moveTo(sd * 3, y + 8);
+      g.quadraticCurveTo(sd * 13, y + 2, sd * 10, y - 14);
+      g.quadraticCurveTo(sd * 9, y - 2, sd * 1, y + 6); g.closePath(); g.fill();
+    }
+    iGem(g, M, 0, y - 1, 5 + st * 0.5);
+  },
+};
+function iaStaff(g, M, P){
+  const st = P.st || 1;
+  g.save(); g.rotate(P.rot === undefined ? -0.26 : P.rot);
+  const len = P.len || -30;                          // đỉnh thân (đầu gậy nằm trên nữa)
+  const DK = { lo:'#0a0c12', hi:'#0a0c12', trim:'#0a0c12', glow:null };
+  g.save(); g.scale(1.5, 1.02); (ISHAFT[P.shaft] || ISHAFT.thang)(g, DK, len); g.restore();
+  (ISHAFT[P.shaft] || ISHAFT.thang)(g, M, len);
+  (IHEAD[P.head] || IHEAD.cau)(g, M, len - 6, st);
+  // đai tay
+  iFill(g, [[-4.6, 16], [4.6, 16], [4, 26], [-4, 26]], M.trim);
+  if (st >= 2) iRivet(g, M, 0, 21, 1.6);
+  if (st >= 4) iFill(g, [[-3.4, 34], [3.4, 34], [0, 42]], M.trim);   // chân nhọn
+  g.restore();
+}
+
+// ═══ CUNG / NỎ ═══
+function iaBow(g, M, P){
+  const st = P.st || 1, kind = P.limb || 'cong';
+  g.save(); g.rotate(P.rot === undefined ? 0.12 : P.rot);
+  const H = 43 + st * 1.6;
+  const limb = (sd) => {                             // một cánh cung
+    g.beginPath();
+    // Bề ngang cánh phải THẤY ĐƯỢC. Bản đầu mép trong và mép ngoài gần trùng nhau nên cả cây
+    // cung chỉ còn là một nét mảnh, ở 44px thì mất hẳn.
+    g.moveTo(2, sd * 5);
+    if (kind === 'dai') g.quadraticCurveTo(-19, sd * H * 0.55, -11, sd * H);        // trường cung: cong đều
+    else if (kind === 'kep'){ g.quadraticCurveTo(-23, sd * H * 0.45, -10, sd * H * 0.76);
+                              g.quadraticCurveTo(-1, sd * H * 0.94, -15, sd * H); } // cung kép: gập ngược đầu
+    else g.quadraticCurveTo(-26, sd * H * 0.5, -7, sd * H);                         // cung ngắn: cong sâu
+    g.lineTo(0, sd * (H - 5));
+    if (kind === 'dai') g.quadraticCurveTo(-9, sd * H * 0.55, 9, sd * 5);
+    else if (kind === 'kep'){ g.quadraticCurveTo(-4, sd * H * 0.88, -1, sd * H * 0.72);
+                              g.quadraticCurveTo(-14, sd * H * 0.45, 9, sd * 5); }
+    else g.quadraticCurveTo(-15, sd * H * 0.5, 9, sd * 5);
+    g.closePath();
+  };
+  for (const sd of [-1, 1]){
+    limb(sd); g.fillStyle = iGrad(g, -26, 0, 9, 0, M.lo, M.hi); g.fill();
+    limb(sd); g.strokeStyle = 'rgba(0,0,0,.48)'; g.lineWidth = 1.4; g.stroke();
+  }
+  // dây
+  g.strokeStyle = '#e8e0c8'; g.lineWidth = 1.6;
+  g.beginPath(); g.moveTo(-10, -H); g.lineTo(-4, 0); g.lineTo(-10, H); g.stroke();
+  // tay nắm
+  iFill(g, [[-7, -15], [8, -15], [7, 15], [-6, 15]], M.trim);
+  g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = .9;
+  for (let i = -1; i <= 1; i++){ g.beginPath(); g.moveTo(-5, i * 7); g.lineTo(5, i * 7); g.stroke(); }
+  if (st >= 3) iGem(g, M, 0, 0, 3 + st * 0.25);
+  if (st >= 4){                                      // trang trí đầu cánh
+    g.fillStyle = M.trim;
+    for (const sd of [-1, 1]) iPoly(g, [[-9, sd * H], [-19, sd * (H + 7)], [-6, sd * (H - 5)]]), g.fill();
+  }
+  g.restore();
+}
+function iaCrossbow(g, M, P){
+  const st = P.st || 1;
+  g.save(); g.rotate(P.rot === undefined ? -0.18 : P.rot);
+  const W = 36 + st * 1.8;
+  // hai cánh nằm NGANG — đây là thứ tách nỏ khỏi cung ngay từ bóng dáng
+  for (const sd of [-1, 1]){
+    g.beginPath();
+    g.moveTo(sd * 5, -8); g.quadraticCurveTo(sd * W * 0.6, -18, sd * W, -7);
+    g.quadraticCurveTo(sd * W * 0.62, -1, sd * 5, 2); g.closePath();
+    g.fillStyle = iGrad(g, 0, -13, 0, 0, M.hi, M.lo); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.4)'; g.lineWidth = 1; g.stroke();
+  }
+  g.strokeStyle = '#e8e0c8'; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(-W, -6); g.lineTo(0, 4); g.lineTo(W, -6); g.stroke();
+  // báng dọc
+  iFill(g, [[-6, -16], [6, -16], [5, 26], [-5, 26]], iGrad(g, -6, -16, 6, 26, M.hi, M.lo));
+  iFill(g, [[-8, -18], [8, -18], [7, -9], [-7, -9]], M.trim);
+  iFill(g, [[-5, 14], [5, 14], [11, 29], [2, 29]], M.lo);           // cò
+  if (st >= 2) iRivet(g, M, 0, 6, 1.8);
+  // Mũi tên nạp CHĨA LÊN từng làm cả cây nỏ thành mớ gai trên tay nhân vật — bỏ, thay bằng
+  // rãnh dẫn tên nằm trên báng, đọc ra "nỏ" mà không phá bóng dáng.
+  if (st >= 3){ g.strokeStyle = M.trim; g.lineWidth = 2.2;
+    g.beginPath(); g.moveTo(0, -14); g.lineTo(0, 10); g.stroke(); }
+  if (st >= 4) iGem(g, M, 0, -4, 3.2);
+  g.restore();
+}
+
 // ═══ GIÁP — bóng dáng theo KIỂU BỘ, không phải một dáng tô lại màu ═══
 // 12 kiểu lấy thẳng từ HERO_SETS[].style, nên hình trong túi và hình trên người là CÙNG một
 // bộ. Mũ pháp sư phải là mũ trùm vải, không được là mũ hiệp sĩ đổi màu.
@@ -11700,7 +11894,7 @@ function iaPendMagic(g, M, P){
 }
 
 const ITEM_ART = {
-  weapon: iaWeapon, helm: iaHelm, armor: iaArmor, gloves: iaGloves, pants: iaPants, boots: iaBoots,
+  weapon: iaWeapon, staff: iaStaff, bow: iaBow, crossbow: iaCrossbow, helm: iaHelm, armor: iaArmor, gloves: iaGloves, pants: iaPants, boots: iaBoots,
   ring: iaRing, pendPhys: iaPendPhys, pendMagic: iaPendMagic,
 };
 
@@ -11757,7 +11951,7 @@ function drawItemIcon(g, def, tier, rarity, plus){
 }
 // data-URL có cache. Khoá gồm mọi thứ đổi hình: món, giai, phẩm, mức rèn.
 window.itemArtUrl = function(def, tier, rarity, plus){
-  const key = `${def.art}|${def.blade||''}|${def.guard||''}|${def.pommel||''}|${def.motif||''}`
+  const key = `${def.art}|${def.blade||''}|${def.guard||''}|${def.pommel||''}|${def.motif||''}|${def.shaft||''}|${def.head||''}|${def.limb||''}`
             + `|${def.w||''}|${def.len||''}|${def.gw||''}|${def.st || 1}|${def.mat||''}|${def.tintKey || ''}`
             + `|${tier}|${rarity}|${plus || 0}`;
   let u = _itemArtCache.get(key);
