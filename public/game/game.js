@@ -2484,7 +2484,7 @@ function lerpAng(a, b, t){ // nội suy góc theo đường ngắn nhất (trán
   if (d > Math.PI) d -= Math.PI*2; else if (d < -Math.PI) d += Math.PI*2;
   return a + d*t;
 }
-let shakeT = 0, shakeMag = 0; // rung màn hình khi bị đánh trúng
+let shakeT = 0, shakeMag = 0, shakeDir = 0; // rung màn hình khi bị đánh trúng (shakeDir: hướng cú đấm)
 let keys = {};
 let joyVec = { x:0, y:0 };
 let moveTarget = null; // Click-to-move: đích chuột phải (canvas) hoặc bấm minimap — { x, y } world coords
@@ -3165,6 +3165,7 @@ function loadGame(){
       const it = player.equip[k];
       if (it && ANCIENT_MIGRATE[it.ancient]) it.ancient = ANCIENT_MIGRATE[it.ancient];
     }
+    player.pendingHit = null;   // đòn thường đang hẹn không được sống sót qua lần tải lại
     if (!player.gems) player.gems = { tuLa: 0, honNguyen: 0 };
     if (player.charms == null) player.charms = 0;
     if (player.tienDan == null) player.tienDan = 0;
@@ -3359,6 +3360,7 @@ function buildWorld(){
   const md = mapDef();
   mobs = []; pickups = []; projectiles = []; effects = []; floats = [];
   sigilReset(); // Khắc Ấn: vũng độc/sóng hẹn giờ của map cũ không được nổ giữa map mới
+  if (player) player.pendingHit = null;   // cùng lý do: đòn thường đã hẹn ở map cũ
   petObj = null; mountObj = null; // Linh Thú & Thú Chiến xuất hiện lại ở map mới
   moveTarget = null; moveWaypoint = null; // Click-to-move: đích ở map cũ không còn ý nghĩa khi đổi map
   npcTalkTarget = null; // NPC ở map cũ không còn ý nghĩa khi đổi map
@@ -3665,8 +3667,16 @@ function drawBossTele(m){
 }
 // ---------- Cài đặt (lưu localStorage) ----------
 // shake mặc định TẮT (chống chóng mặt) — save cũ không có key này nên tự migrate sang tắt
-const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:false, questTracker:true, combatLog:true },
+// shake: 0 TẮT · 1 NHẸ (mặc định) · 2 ĐẦY. Trước đây là boolean và mặc định `false` để chống
+// chóng mặt — nhưng bật/tắt là quá thô, và hậu quả là TOÀN BỘ 12 chỗ đặt shakeT/shakeMag trong
+// game không ai nhìn thấy. Diablo luôn rung, chỉ là rung rất khẽ và CÓ HƯỚNG.
+const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true },
   (()=>{ try { return JSON.parse(localStorage.getItem('vlcm_settings') || '{}'); } catch { return {}; } })());
+// Save cũ lưu `shake` là boolean. Không di trú thì Object.assign ghi đè `false` lên mặc định
+// mới và người chơi cũ mắc kẹt ở mức TẮT vĩnh viễn — mà họ chưa từng chọn tắt, đó chỉ là
+// mặc định cũ. `true` (đã tự bật) thì cho lên ĐẦY.
+if (typeof SETTINGS.shake === 'boolean') SETTINGS.shake = SETTINGS.shake ? 2 : 1;
+SETTINGS.shake = clamp(SETTINGS.shake | 0, 0, 2);
 function saveSettings(){ try { localStorage.setItem('vlcm_settings', JSON.stringify(SETTINGS)); } catch { /* best-effort — bỏ qua nếu lỗi */ } }
 
 // ---------- Âm thanh kiếm hiệp: BGM theo map + SFX ----------
@@ -3947,6 +3957,27 @@ function sigilTick(dt){
   if (sigilZones.length) sigilZones = sigilZones.filter(z => z.t > 0);
 }
 
+// ═══════════ PHẢN HỒI LỰC ĐÒN — mỗi CÚ ĐÁNH một lần, không phải mỗi mục tiêu ═══════════
+// Trước đây hitstop/rung/loé bạo kích nằm trong hurtMob(), tức mỗi mục tiêu một lần: AoE trúng
+// 8 con đặt lại hitstop 8 lần và đẻ 8 vệt loé; đạn multishot làm hitstop nối đuôi nên game giật
+// liên tục thay vì khựng một nhịp rồi bung. Cửa sổ 60 ms gom cả cú đánh lại, giữ giá trị MẠNH
+// NHẤT trong cú đó.
+let _swingT = 0, _swingBest = -1;
+function swingFeel(crit, w, m){
+  const now = performance.now();
+  const fresh = now - _swingT > 60;
+  if (fresh){ _swingT = now; _swingBest = -1; }
+  const power = (crit ? 1 : 0.45) + w * 0.8;           // w = phần máu vừa mất
+  if (power <= _swingBest) return;                      // trong cùng cú đánh đã có đòn mạnh hơn
+  _swingBest = power;
+  hitStop  = Math.max(hitStop,  crit ? 0.06 + 0.08 * w : 0.03 + 0.04 * w);
+  shakeT   = Math.max(shakeT,   crit ? 0.20 : 0.14);
+  shakeMag = Math.max(shakeMag, (crit ? 4 : 2.2) + w * 5);
+  shakeDir = Math.atan2(m.y - player.y, m.x - player.x); // xung CÓ HƯỚNG, xem render()
+  if (crit && fresh)                                    // một vệt loé cho cả cú, không phải mỗi con
+    addEffect({ type:'critflash', x:m.x, y:m.y, r:(m.def.size||14) + 18 + w * 26 });
+}
+
 function hurtMob(m, dmg, source){
   if (m.dead) return;
   player.combatT = 4; // P0: gây sát thương cũng tính là vào combat
@@ -4020,10 +4051,30 @@ function hurtMob(m, dmg, source){
   if (m.def.def) final *= 1 - m.def.def / (m.def.def + 250);
   final = Math.max(1, Math.round(final));
   m.hp -= final; m.hitT = 0.15;
-  // phản hồi lực đòn: chỉ đòn tay (Space) mới khựng hình + lắc camera — DoT/kỹ năng/pet không spam
-  if (source === 'crit'){ hitStop = Math.max(hitStop, 0.08); shakeT = Math.max(shakeT, 0.2); shakeMag = Math.max(shakeMag, 5); addEffect({ type:'critflash', x:m.x, y:m.y, r:(m.def.size||14)+22 }); }
-  else if (source === 'hit'){ hitStop = Math.max(hitStop, 0.04); shakeT = Math.max(shakeT, 0.14); shakeMag = Math.max(shakeMag, 2.4); }
-  AudioSys.sfx(source === 'crit' || perfectNote ? 'crit' : 'hit', source === 'crit' ? 0.8 : 0.5);
+  // Màu loé theo LOẠI đòn — trước đây `ctx.filter` chỉ làm sáng lên, không phân biệt được gì.
+  m.hitCol = perfectNote ? '#ff9df0' : source === 'crit' ? '#ffd76a'
+           : counterNote ? (NGU_HANH[sectEl] || {}).color || '#ffffff' : '#ffffff';
+  // Tỉ lệ SỨC NẶNG của đòn: cào 1% máu và bổ mất nửa cây máu phải khác nhau. Trước đây hitstop
+  // là hằng số bất kể sát thương nên mọi đòn chạm nhau y hệt.
+  const _w = Math.min(1, final / Math.max(1, m.maxHp));
+  // Hất lùi theo sát thương. vhKnockback() viết sẵn từ lâu nhưng CHỈ được gọi khi chiêu khai
+  // báo fx.kb — đòn thường không đẩy quái một pixel nào. Quái to gần như bất động (chia size).
+  if (source === 'hit' || source === 'crit' || source === 'tp'){
+    const _kb = (2 + 10 * _w) * (14 / Math.max(14, m.def.size || 14));
+    if (_kb > 0.4) vhKnockback(m, Math.atan2(m.y - player.y, m.x - player.x), _kb);
+  }
+  // Khựng hình / rung / loé bạo kích KHÔNG đặt ở đây nữa — xem swingFeel(). Đặt trong hurtMob
+  // nghĩa là AoE trúng 8 con thì kích hoạt 8 lần, và đạn multishot làm hitstop nối đuôi nhau
+  // khiến game giật liên tục thay vì "khựng một nhịp rồi bung".
+  if (source === 'hit' || source === 'crit') swingFeel(source === 'crit', _w, m);
+  // Âm chạm. `sfx_hit.mp3` KHÔNG TỒN TẠI trên đĩa, nên trước đây mọi đòn thường im lặng lúc
+  // chạm còn bạo kích thì có tiếng — game phân biệt thường/chí mạng bằng CÓ TIẾNG vs KHÔNG,
+  // hoàn toàn do tai nạn. Dùng smash_<hệ> đã có sẵn (đúng chất liệu, đúng theo lớp).
+  if (source === 'crit' || perfectNote) AudioSys.sfx('crit', 0.8);
+  else if (source === 'hit'){
+    const _hc = SECT_SFX[player.sect];
+    AudioSys.sfx(_hc ? 'smash_' + _hc : 'crit', 0.3 + 0.25 * _w);
+  }
   // Nhật ký chiến đấu thay cho số bay trên đầu quái (đỡ rối màn hình khi AUTO đánh nhiều quái) —
   // đòn thường gộp 1 dòng, đòn đặc biệt (hoàn hảo/khắc hệ/chống khiên) có tiền tố riêng
   {
@@ -4387,10 +4438,11 @@ function doBasic(){
       const ang = Math.atan2(t.y-player.y, t.x-player.x);
       projectiles.push({ x:player.x, y:player.y-10, ang, speed:520, dmg:player.atk*rnd(0.9,1.12), kind:'basic', life:0.9, color:sect.color, style:sect.basicProj || 'orb' });
     } else {
-      let dmg = player.atk * rnd(0.9,1.12);
-      let src = 'hit';
-      if (Math.random() < player.crit){ dmg *= (player.critDmgMult || 2); src = 'crit'; }
-      hurtMob(t, dmg, src);
+      // Hẹn sát thương tới KHUNG TIẾP XÚC thay vì nổ ngay khung đầu. hSwing() đẩy khoảnh khắc
+      // lưỡi thật sự chạm ra p≈0.41, nên bắn âm thanh/khựng hình/sát thương ở p=0 là lệch ~8
+      // khung — tay còn chưa nhấc lên mà quái đã trúng đòn.
+      // Mục tiêu có thể chết hoặc chạy khỏi tầm trong 0,09s đó ⇒ tìm lại lúc chạm (whiff).
+      player.pendingHit = { t: 0.09, dmg: player.atk * rnd(0.9,1.12), reach: rng * 1.15 };
     }
     // Cung Tiễn: đòn đánh thường có tỉ lệ phóng linh tiễn theo sau (phụ kiện thú cưỡi — mọi phái)
     const bowT = BOW_TIERS[(player.bow && player.bow.tier) || 0];
@@ -5445,6 +5497,20 @@ function update(dt){
   for (const m of mobs){ if (m.dead && m.deadT > 0) m.deadT -= dt; }
   compactInPlace(mobs, m => !m.dead || m.deadT > 0 || (m.type !== 'boss' && !m.gone));
 
+  // Đòn thường đã hẹn: nổ đúng lúc lưỡi chạm (xem doBasic). Tìm lại mục tiêu ở thời điểm này
+  // — nếu con cũ đã chết hoặc đã chạy xa thì đòn HỤT, đúng như Diablo xử lý whiff.
+  if (player.pendingHit){
+    player.pendingHit.t -= dt;
+    if (player.pendingHit.t <= 0){
+      const ph = player.pendingHit; player.pendingHit = null;
+      const tgt = nearestMob(ph.reach);
+      if (tgt){
+        let dmg = ph.dmg, src = 'hit';
+        if (Math.random() < player.crit){ dmg *= (player.critDmgMult || 2); src = 'crit'; }
+        hurtMob(tgt, dmg, src);
+      }
+    }
+  }
   sigilTick(dt);   // Khắc Ấn: việc hẹn giờ (sóng 2, mưa tên) + vùng đất còn hiệu lực (vũng độc)
 
   // projectiles
@@ -5710,7 +5776,16 @@ function render(){
 
   ctx.save();
   // rung màn hình khi trúng đòn — tôn trọng cài đặt (mặc định tắt, chống chóng mặt)
-  if (shakeT > 0 && SETTINGS.shake){ ctx.translate(rnd(-shakeMag, shakeMag)*shakeT/0.16, rnd(-shakeMag, shakeMag)*shakeT/0.16); }
+  if (shakeT > 0 && SETTINGS.shake){
+    // XUNG CÓ HƯỚNG, không phải nhiễu trắng. Random độc lập 2 trục mỗi khung cho ra cảm giác
+    // "màn hình bị rung", còn dao động tắt dần dọc theo hướng đòn cho cảm giác "bị đẩy".
+    // Cũng bỏ hằng 0.16: shakeT được đặt tới 0.2-0.25 ở nhiều chỗ nên biên độ từng vượt trần 1.56×.
+    const _lv = SETTINGS.shake >= 2 ? 1 : 0.35;            // NHẸ = 35% biên độ
+    const _k  = Math.min(1, shakeT / 0.2);                 // tắt dần theo thời gian còn lại
+    const _osc = Math.sin(shakeT * 92) * _k * _k;          // dao động rồi lắng
+    const _amp = shakeMag * _lv * _osc;
+    ctx.translate(Math.cos(shakeDir) * _amp, Math.sin(shakeDir) * _amp);
+  }
   ctx.translate(-camera.x, -camera.y);
 
   // nền bản đồ vẽ tay — phủ toàn bộ thế giới, nằm dưới mọi decor/thực thể
@@ -6098,6 +6173,36 @@ function drawRock(d){
 const MOBSK_W = 120, MOBSK_H = 120;
 
 // Bảng màu theo cấp: quái thường xỉn, elite ánh kim, boss rực và có hào quang.
+// ═══════════ LOÉ TRẮNG KHI TRÚNG ĐÒN — KHÔNG dùng ctx.filter ═══════════
+// `ctx.filter` buộc canvas 2D dựng surface phụ rồi đọc ngược, chi phí TUYẾN TÍNH theo số quái
+// đang loé. Đo trên raster phần mềm: 20 quái không loé = 21,6 ms/khung, nhưng CHỈ 12 quái đang
+// loé = 910 ms/khung. Máy có GPU thì hệ số nhỏ hơn nhiều, nhưng hình thái vẫn vậy.
+// Nặng nhất là quái vàng: nó bật filter sepia THƯỜNG TRỰC suốt 12 phút Xâm Lăng Vàng, nên sự
+// kiện flagship đang là cảnh tốn nhất game.
+//
+// Hai cách thay, tuỳ loại quái:
+//   • quái khung xương → vẽ lại chính hình đó bằng màu phẳng, chế độ 'lighter'. Rẻ như một
+//     lần vẽ thường, và cho MÀU LOÉ ĐIỀU KHIỂN ĐƯỢC theo loại đòn — thứ brightness() không làm được.
+//   • quái dùng ảnh   → nhuộm sẵn một bản vào canvas ngoài màn hình rồi cache. Vẫn dùng filter,
+//     nhưng trả giá ĐÚNG MỘT LẦN cho mỗi ảnh thay vì 60 lần/giây cho mỗi con.
+function mobFlashPal(P, col){
+  const o = {};
+  for (const k in P) o[k] = col;
+  return o;
+}
+const _tintCache = new Map();
+function tintedImg(img, key, filter){
+  let c = _tintCache.get(key);
+  if (c) return c;
+  if (!img.naturalWidth) return img;                  // ảnh chưa tải xong — dùng tạm bản gốc
+  const cv = document.createElement('canvas');
+  cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+  const q = cv.getContext('2d');
+  q.filter = filter;                                  // trả giá đúng một lần, ở đây
+  q.drawImage(img, 0, 0);
+  _tintCache.set(key, cv);
+  return cv;
+}
 function mobPal(d){
   const p = d.skelPal || {};
   return { main:p.main||'#6a6f80', dark:p.dark||'#454a58', trim:p.trim||'#8a7a4a',
@@ -6109,7 +6214,9 @@ function mobPose(m, now){
   const ph = (now/260) + (m.wob || 0);
   const mv = !!m.moving || (m.spd0 || 0) > 0;
   const atk = m.lungeT > 0 ? Math.sin((0.22 - m.lungeT)/0.22 * Math.PI) : 0;
-  const hurt = Math.min(1, (m.hitT || 0) / 0.25);
+  // Chia cho 0.15 = đúng giá trị hitT được đặt lúc trúng đòn. Trước đây chia 0.25 nên `hurt`
+  // không bao giờ vượt 0.6 — mất 40% biên độ giật vì một hằng số lệch.
+  const hurt = Math.min(1, (m.hitT || 0) / 0.15);
   return {
     step: Math.sin(ph) * (mv ? 1 : 0.28),
     bob:  Math.abs(Math.sin(ph)) * (mv ? -2.6 : -1.0),
@@ -6476,9 +6583,14 @@ function drawMobFigure(m, d, dx, dy, now, g){
     g.globalAlpha = 0.22 + 0.1*Math.sin(now/380); g.fillStyle = bg;
     g.beginPath(); g.arc(60,70,74,0,7); g.fill(); g.globalAlpha = 1;
   }
-  if (m.hitT > 0) g.filter = 'brightness(1.8) saturate(0.4)';       // trúng đòn: loé trắng
   arch(g, P, ps);
-  g.filter = 'none';
+  if (m.hitT > 0){                                                   // trúng đòn: loé, vẽ đè
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.globalAlpha = 0.6 * Math.min(1, m.hitT / 0.15);                // tắt dần theo hitT
+    arch(g, mobFlashPal(P, m.hitCol || '#ffffff'), ps);
+    g.restore();
+  }
   const fx = MOB_ATK_FX[d.skel];                                     // phun lửa / chém kiếm...
   if (fx && ps.atk > 0.02) fx(g, P, ps);
   g.restore();
@@ -6550,9 +6662,12 @@ function drawMob(m){
     const flip = Math.cos(m.face || 0) < 0;
     ctx.save(); ctx.translate(dx, dy - mh*0.28 + bob);
     if (flip) ctx.scale(-1, 1);
-    if (m.hitT > 0) ctx.filter = 'brightness(1.7) saturate(2) hue-rotate(-45deg)';
-    else if (d.golden) ctx.filter = 'sepia(0.85) saturate(2.6) hue-rotate(-14deg) brightness(1.25)'; // nhúng vàng cho quái dùng ảnh
-    ctx.drawImage(img, -mw/2, -mh/2, mw, mh);
+    // Bản nhuộm sẵn có cache thay cho ctx.filter mỗi khung (xem tintedImg). Quái vàng đứng
+    // suốt 12 phút nên chỗ này là chỗ tiết kiệm lớn nhất.
+    let _src = img;
+    if (m.hitT > 0) _src = tintedImg(img, img.src + '|hit', 'brightness(1.7) saturate(2) hue-rotate(-45deg)');
+    else if (d.golden) _src = tintedImg(img, img.src + '|gold', 'sepia(0.85) saturate(2.6) hue-rotate(-14deg) brightness(1.25)');
+    ctx.drawImage(_src, -mw/2, -mh/2, mw, mh);
     ctx.restore();
   } else {
     ctx.fillStyle = m.hitT > 0 ? '#8a2020' : d.color;
@@ -8516,7 +8631,11 @@ function drawPlayer(){
   const bob = p.moving ? Math.abs(Math.sin(wph))*4.2 : Math.sin(wph)*1.5;
   const rock = p.moving ? Math.sin(wph)*0.07 : 0;
   const castK = (p.castT || 0) / 0.38;
-  const atkK = (p.atkAnim || 0) / 0.22; // lunge về phía chém
+  const atkK = (p.atkAnim || 0) / 0.22;
+  // `atkAnim` ĐẾM NGƯỢC nên atkK = 1 ở khung ĐẦU và 0 ở khung cuối: thân người dồn tới xa nhất
+  // ngay lúc LẤY ĐÀ rồi lùi dần trong lúc lưỡi bổ xuống. Trọng tâm đi ngược chiều đòn đánh —
+  // đúng thứ làm cú chém "nhẹ hều". hSwing(1-atkK) cho thân dồn tới đúng lúc lưỡi chạm.
+  const lungeK = Math.max(0, hSwing(1 - Math.min(1, atkK)));
   const pulse = 1 + castK*0.12 + (p.moving ? Math.sin(wph*2)*0.025 : Math.sin(wph)*0.015);
   if (p.ascended){
     const _tKey = (p.gender === 'nu' ? 'nu' : 'nam') + '_' + (TIEN_SKINS[p.tienSkin] ? p.tienSkin : 'bach');
@@ -8525,7 +8644,7 @@ function drawPlayer(){
       const _tsk = TIEN_SKINS[p.tienSkin] || TIEN_SKINS.bach;
       const sh = 128, sw = sh * (_tim.naturalWidth/_tim.naturalHeight);
       const hover = Math.sin(now/520)*3.4; // ngự kiếm: lơ lửng trên phi kiếm
-      ctx.save(); ctx.translate(p.x + Math.cos(p.face)*atkK*5, p.y + 6 - hover);
+      ctx.save(); ctx.translate(p.x + Math.cos(p.face)*lungeK*5, p.y + 6 - hover);
       ctx.scale(pulse, pulse);
       // hào quang tán tiên sau lưng (màu theo skin)
       const hg = ctx.createRadialGradient(0, -sh*0.52, 8, 0, -sh*0.52, 72);
@@ -8553,8 +8672,8 @@ function drawPlayer(){
     const sh = channeling ? 120 : 104;
     const flip = Math.cos(p.face) < 0;
     ctx.save();
-    ctx.translate(p.x + Math.cos(p.face)*atkK*7,
-                  (channeling ? p.y - 26 - bob : p.y - 42) + Math.sin(p.face)*atkK*3);
+    ctx.translate(p.x + Math.cos(p.face)*lungeK*7,
+                  (channeling ? p.y - 26 - bob : p.y - 42) + Math.sin(p.face)*lungeK*3);
     if (flip) ctx.scale(-1, 1);
     // khớp xương đã tự ngả người rồi nên không xoay đè thêm
     ctx.rotate(channeling ? rock + atkK*0.12 : 0); ctx.scale(pulse, pulse);
@@ -11563,7 +11682,8 @@ function renderSettings(){
     <div class="set-row"><span>🔔 Hiệu ứng âm thanh</span>${slider('sfx', SETTINGS.sfx)}</div>
     <div class="set-row"><span>🗺 Bản đồ thu nhỏ <i>(phím U)</i></span>${tog('minimap')}</div>
     <div class="set-row"><span>🏷 Tên quái vật</span>${tog('mobName')}</div>
-    <div class="set-row"><span>📳 Rung màn hình <i>(mặc định tắt)</i></span>${tog('shake')}</div>
+    <div class="set-row"><span>📳 Rung màn hình</span><span>${[[0,'TẮT'],[1,'NHẸ'],[2,'ĐẦY']].map(([v,t]) =>
+      `<button class="mini-btn ${(SETTINGS.shake|0) === v ? '' : 'danger'}" onclick="setShake(${v})">${t}</button>`).join(' ')}</span></div>
     <div class="set-row"><span>🍃 Giảm hiệu ứng <i>(máy yếu)</i></span>${tog('lowFx')}</div>
     <div class="set-row" style="border-bottom:none;justify-content:center"><b style="color:#6ae88a;font-size:12px">— ⚔ AUTO FARM (phím Z) —</b></div>
     <div class="set-row"><span>🗡 Tự tung kỹ năng trên taskbar</span>${togA('skill')}</div>
@@ -11579,6 +11699,7 @@ function renderSettings(){
     <div class="set-row" style="border-bottom:none"><span style="color:#c05a4a">⚠ Xóa dữ liệu & tu luyện lại</span><button class="mini-btn danger" onclick="wipeSave()">XÓA SAVE</button></div>
     <div style="font-size:11px;color:#9aa8d4;margin-top:8px;line-height:1.5">Âm thanh sẽ phát sau thao tác đầu tiên của bạn (quy định trình duyệt). Mọi cài đặt được lưu tự động.</div>`;
 }
+window.setShake = function(v){ SETTINGS.shake = clamp(v|0, 0, 2); saveSettings(); renderSettings(); };
 window.setGender = function(g){ if (!player) return; player.gender = (g === 'nu') ? 'nu' : 'nam'; saveGame(); renderSettings(); };
 window.setTienSkin = function(id){ if (!player || !TIEN_SKINS[id]) return; player.tienSkin = id; saveGame(); renderSettings(); };
 window.setOpt = function(key, v, quiet){
