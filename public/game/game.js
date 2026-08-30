@@ -3558,6 +3558,7 @@ function buildWorld(){
   // Ma Tôn Giáng Thế & Truy Nã Lệnh: tái xuất hiện khi người chơi vào đúng bản đồ
   if (typeof MATON !== 'undefined' && MATON.active && curMap === MATON.map && !mobs.some(m => m.type === 'maton' && !m.dead)) spawnMaTonMob();
   if (typeof GOLDEN !== 'undefined' && GOLDEN.active && curMap === GOLDEN.map) spawnGoldenMobs();
+  if (typeof RIFT !== 'undefined' && riftCanSpawn() && !mobs.some(m => m.type === 'rift' && !m.dead)) spawnRiftBoss();
   if (player && player.truyna && player.truyna.state === 'hunting' && curMap === player.truyna.map && !mobs.some(m => m.truyna && !m.dead)) spawnTruyNaMob();
   spawnZoneBosses(); // GDD Boss v2.1: Vệ Binh Trụ & Cổng Vực theo map
 }
@@ -4445,6 +4446,7 @@ function killMob(m, source){
   // Ma Tôn Giáng Thế: hạ boss nhận Bảo Hạp theo vùng cấp
   if (m.type === 'maton') matonKilled(m);
   if (m.def && m.def.goldBox) goldenKilled(m);
+  if (m.type === 'rift') riftKilled(m);
   // Truy Nã Lệnh: mục tiêu ngày bị hạ
   if (m.truyna && player.truyna && player.truyna.state === 'hunting'){
     player.truyna.state = 'killed';
@@ -5453,6 +5455,7 @@ function update(dt){
   }
   updateMaTon(); // Hung Thần Giáng Thế — 0h/4h/8h…
   updateGolden(); // Xâm Lăng Vàng — 2h/6h/10h… (lệch pha để cứ 2 giờ có 1 sự kiện)
+  updateRift(); // Chúa Tể Vực Nứt — 0h/6h/12h/18h, 4 lượt/ngày theo giờ thật
 
   // spirit spring: meditation quest + Anima source (always active)
   const q = currentQuest();
@@ -17038,6 +17041,104 @@ function goldenKilled(m){
 }
 window.debugGolden = function(sec){ GOLDEN.next = Date.now() + (sec || 5)*1000; GOLDEN.warned = true; return GOLDEN; };
 
+// ═══════════ CHÚA TỂ VỰC NỨT — 6 giờ thật/lần: 0h · 6h · 12h · 18h (4 lượt/ngày) ═══════════
+// Boss thế giới lớn nhất game. Khác hai sự kiện kia ở chỗ nó KHÔNG chọn một map: khi cửa vực
+// mở, mọi bãi săn đều nứt — người chơi cấp nào cũng có phần, boss lên cấp theo map đang đứng.
+// Mốc giờ tính lại được từ đồng hồ thật nên không cần lưu; đến trễ là lỡ chuyến, đúng nhịp MU.
+const RIFT_FIELD = ['daohoa','ngoai','chungnam','comoc','tuyettinh','mongco','nhanmon'];
+const RIFT_WINDOW_MS = 45*60000;   // cửa vực mở 45 phút
+const RIFT_WARN_MS   = 15*60000;   // báo trước 15 phút — sự kiện lớn nhất nên báo sớm nhất
+const RIFT_MAX_KILLS = 3;          // chạy map kiếm thêm được, nhưng tối đa 3 con/lượt
+const RIFT_MIN_LV    = 15;         // dưới cấp này vực không nứt — xem ghi chú ở riftCanSpawn()
+let RIFT = { next: 0, warned: false, active: false, endsAt: 0, done: {}, kills: 0 };
+function riftNextBoundary(after){
+  const d = new Date(after); d.setMinutes(0, 0, 0);
+  d.setHours(d.getHours() + 1);
+  while (d.getHours() % 6 !== 0) d.setHours(d.getHours() + 1); // 0h · 6h · 12h · 18h
+  return d.getTime();
+}
+function riftBoxTier(){ return clamp(Math.floor(player.level/15) + 2, 1, 7); }
+// Ảnh chụp cho thấy vì sao hai chốt dưới đây là bắt buộc: bản đầu boss aggro toàn map + spawn
+// ở cả bãi tân thủ, nên nhân vật cấp 1 vừa vào Petalshade Isle đã bị nó băng qua nửa map đấm
+// chết trong 2 nhịp. Vực Nứt là boss thế giới lớn nhất — nó phải là thứ NGƯƠI chọn xông tới.
+function riftCanSpawn(){
+  return RIFT.active && RIFT.kills < RIFT_MAX_KILLS && !RIFT.done[curMap]
+      && RIFT_FIELD.includes(curMap) && player && player.level >= RIFT_MIN_LV;
+}
+function updateRift(){
+  const now = Date.now();
+  if (!RIFT.next) RIFT.next = riftNextBoundary(now);
+  if (!RIFT.active && !RIFT.warned && now >= RIFT.next - RIFT_WARN_MS){
+    RIFT.warned = true;
+    zoneBanner = { text:'✹ VỰC NỨT SẮP TOÁC MỞ', sub:`15 phút nữa — Chúa Tể Vực Nứt giáng xuống MỌI bãi săn (cần cấp ${RIFT_MIN_LV}+). Vá giáp, nạp thuốc!`, color:'#a06aff', t:5.5 };
+    AudioSys.sfx('quest', 0.85);
+  }
+  if (!RIFT.active && now >= RIFT.next){
+    RIFT.active = true; RIFT.warned = false;
+    RIFT.endsAt = now + RIFT_WINDOW_MS;
+    RIFT.next = riftNextBoundary(now + 60000);
+    RIFT.done = {}; RIFT.kills = 0;
+    zoneBanner = { text:'✹ CHÚA TỂ VỰC NỨT GIÁNG THẾ', sub:`Vực nứt toác ở mọi bãi săn — 45 phút, hạ tối đa ${RIFT_MAX_KILLS} con để cướp Bảo Hạp lớn!`, color:'#a06aff', t:6.5 };
+    AudioSys.sfx('levelup', 0.9);
+    if (riftCanSpawn()) spawnRiftBoss();
+    saveGame();
+  }
+  if (RIFT.active && now >= RIFT.endsAt) riftClose('Cửa vực khép lại — hẹn khung giờ sau (6 tiếng/lần).');
+}
+function riftClose(sub){
+  RIFT.active = false; RIFT.done = {}; RIFT.kills = 0;
+  let fled = 0;
+  for (const m of mobs) if (m.type === 'rift' && !m.dead){ m.dead = true; m.gone = true; m.deadT = 0; fled++;
+    addEffect({ type:'ring', x:m.x, y:m.y, r:70, color:'#a06aff', big:true }); }
+  zoneBanner = { text:'✹ Vực nứt đã khép', sub: fled ? 'Chúa Tể rút về bên kia vết nứt cùng chiến lợi phẩm.' : sub, color:'#8a8a8a', t:4 };
+  saveGame();
+}
+function spawnRiftBoss(){
+  const md = MAPS[curMap];
+  RIFT.done[curMap] = true;
+  // Bám theo cấp người chơi (không phải cấp map): luôn là một nấc trên tầm ngươi, không bao
+  // giờ là bức tường vô lý khi ngươi tạt qua bãi thấp.
+  const lv = clamp(Math.max(md.min + 10, player.level + 6), RIFT_MIN_LV, 120);
+  const def = { name:'Chúa Tể Vực Nứt', lv, hp: 9000 + lv*lv*11, atk: 14 + Math.round(lv*3.4), def: Math.round(lv*1.0),
+    xp: lv*260, silver:[lv*14, lv*20], speed: 74, aggro: 420, range: 50, atkCd: 1.25, size: 34,
+    color:'#1a0a2e', eye:'#c07fe0', boss:true, elite:true, drop:1, el:'Thủy',
+    // Dựng bằng khung xương 'fiend' thay vì boss.png: Hung Thần và boss vùng đã dùng chung ảnh
+    // đó rồi — boss thế giới lớn nhất mà đụng hàng thì mất hết cảm giác "thứ này khác hẳn".
+    skel:'fiend', skelPal:{ main:'#4a2a6e', dark:'#1a0a2e', trim:'#a06aff', cloth:'#2e1450',
+                            bone:'#e0d0ff', glow:'#c07fe0', line:'#0d0418' } };
+  const m = { type:'rift', def, name: def.name,
+    x: MAP.w*0.5, y: MAP.h*0.5, zone: null, pack: null,
+    hp: def.hp, maxHp: def.hp, atkT: rnd(0,1), dead: false, face: 0,
+    shield: 1, shieldT: 0, hitT: 0, wob: Math.random()*10, packAlert: 0 };
+  mobs.push(m);
+  addEffect({ type:'ring', x:m.x, y:m.y, r:150, color:'#a06aff', big:true });
+  zoneBanner = { text:'✹ VỰC NỨT TOÁC NGAY GIỮA BÃI', sub:`${def.name} cấp ${lv} — rơi ${BAOHAP_TIERS[riftBoxTier()].name} + Hỗn Độn Châu!`, color:'#a06aff', t:5 };
+  AudioSys.sfx('crit', 0.95);
+  return m;
+}
+function riftKilled(m){
+  RIFT.kills++;
+  const tier = riftBoxTier();
+  player.baohap[tier] = (player.baohap[tier] || 0) + 1;
+  player.jewels.honDon = (player.jewels.honDon || 0) + 2;
+  addFloat(m.x, m.y-130, `+1 ${BAOHAP_TIERS[tier].name}`, BAOHAP_TIERS[tier].color, 16);
+  addFloat(m.x, m.y-108, `+2 ${JEWEL_NAMES.honDon}`, JEWEL_COLORS.honDon, 14);
+  AudioSys.sfx('levelup', 1);
+  // Nguồn Khắc Ấn chắc tay nhất game — 60%, cao hơn cả Hung Thần (45%).
+  if (player.inv.length < 30){
+    const it = genItem(Math.max(player.level, m.def.lv || player.level), 0.8);
+    if (attachSigil(it, 0.6)){ player.inv.push(it); sigilAnnounce(it.sigil, m.x, m.y - 170); }
+  }
+  const con = RIFT_MAX_KILLS - RIFT.kills;
+  if (con > 0 && RIFT.active)
+    zoneBanner = { text:'✹ CHÚA TỂ VỰC NỨT GỤC NGÃ', sub:`Còn ${con} con ở bãi săn khác — cửa vực đóng lúc ${fmtClock(RIFT.endsAt)}!`, color:'#a06aff', t:5 };
+  else
+    riftClose('Đã hạ trọn cả 3 Chúa Tể — chiến lợi phẩm về tay ngươi!');
+  saveGame();
+}
+// Hook QA: đẩy lịch Vực Nứt đến sau vài giây
+window.debugRift = function(sec){ RIFT.next = Date.now() + (sec || 5)*1000; RIFT.warned = true; return RIFT; };
+
 // ═══════════ BẢNG SỰ KIỆN — đồng hồ hẹn giờ kiểu MMORPG cổ điển ═══════════
 function fmtCountdown(ms){
   ms = Math.max(0, ms);
@@ -17054,6 +17155,12 @@ function eventList(now){
       : { icon:'☠', name:'Hung Thần Giáng Thế', map: matonMapFor(MATON.next || matonNextBoundary(now)),
           at: MATON.next || matonNextBoundary(now), active:false, color:'#c07fe0',
           sub:`${fmtClock(MATON.next || matonNextBoundary(now))} · ${MAPS[matonMapFor(MATON.next || matonNextBoundary(now))].name} — hạ boss nhận Bảo Hạp lớn` });
+    list.push(RIFT.active
+      ? { icon:'✹', name:'Chúa Tể Vực Nứt', map: null, at: RIFT.endsAt, active:true, color:'#a06aff',
+          sub:`ĐANG DIỄN RA ở MỌI bãi săn — còn ${fmtCountdown(RIFT.endsAt - now)} · đã hạ ${RIFT.kills}/${RIFT_MAX_KILLS}` }
+      : { icon:'✹', name:'Chúa Tể Vực Nứt', map: null,
+          at: RIFT.next || riftNextBoundary(now), active:false, color:'#a06aff',
+          sub:`${fmtClock(RIFT.next || riftNextBoundary(now))} · 6 tiếng/lần (0h·6h·12h·18h) — nứt ở mọi bãi săn (cấp ${RIFT_MIN_LV}+), boss luôn trên tầm ngươi 6 cấp` });
     list.push(GOLDEN.active
       ? { icon:'✦', name:'Xâm Lăng Vàng', map: GOLDEN.map, at: GOLDEN.endsAt, active:true, color:'#ffd76a',
           sub:`ĐANG DIỄN RA tại ${MAPS[GOLDEN.map].name} — còn ${fmtCountdown(GOLDEN.endsAt - now)} · còn ${GOLDEN.left || '?'} quái vàng` }
@@ -17094,7 +17201,7 @@ window.openEventBoard = function(){
   }
   document.getElementById('overlay-inner').innerHTML = `
     <h2 style="color:#ffd76a">⏱ BẢNG SỰ KIỆN</h2>
-    <div style="font-size:12.5px;opacity:.75;margin-bottom:4px">Cứ 2 giờ có một sự kiện thế giới — Hung Thần (0h·4h·8h…) xen kẽ Xâm Lăng Vàng (2h·6h·10h…)</div>
+    <div style="font-size:12.5px;opacity:.75;margin-bottom:4px">Chạy theo giờ thật: Hung Thần 0h·4h·8h… · Xâm Lăng Vàng 2h·6h·10h… · <b style="color:#a06aff">Chúa Tể Vực Nứt 0h·6h·12h·18h</b> (4 lượt/ngày, nứt ở mọi bãi săn)</div>
     ${rows}
     <div style="font-size:12px;opacity:.65;margin-top:6px">👹 Đấu Trường Tế Thần · 🩸 Pháo Đài Máu — vào bất cứ lúc nào bằng Thiệp Mời (quái tinh anh rơi)</div>
     <button class="big-btn" style="margin-top:10px" onclick="document.getElementById('overlay').classList.add('hidden')">Đóng</button>`;
