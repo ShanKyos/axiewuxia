@@ -17,17 +17,74 @@ Mọi thứ làm mới từ nay trở đi phải theo MU Online. Cụ thể:
 - Motif kiếm hiệp: hoa đào, sương khói, thái cực, bát quái, ngũ hành làm hệ thống trung tâm
 
 **PHẢI dùng:**
-- Từ vựng & motif dark-fantasy phương Tây kiểu MU/Diablo: Dark Knight, Dark Wizard, Fairy Elf,
-  Magic Gladiator, Dark Lord; Jewel/Excellent/Ancient; Devil Square, Blood Castle, Chaos Machine;
-  Lorencia/Noria-style zone design
+- Từ vựng & motif dark-fantasy phương Tây kiểu MU/Diablo — nhưng dùng **tên của game này**,
+  không phải tên riêng của MU Online (xem QUY TẮC SỐ 2): Dark Knight, Dark Wizard, Dark Lord,
+  Sylvan Ranger, Spellblade; Tinh Xảo/Cổ Vật; Đấu Trường Tế Thần, Pháo Đài Máu, Lò Hỗn Loạn;
+  zone kiểu thị trấn đá phương Tây (Ardhaven)
 - Art: khung kim loại gothic vát cạnh, biểu tượng vector (kiếm/khiên/lửa/sét/băng/vương miện),
   màu tô **theo nguyên tố của chiêu**, không theo màu lớp
 - Số liệu/cơ chế: str/agi/vit/ene, tầm đánh & sát thương khác nhau theo lớp, reset (Tẩy Tủy)
+
+**Thứ tự ưu tiên:** QUY TẮC SỐ 2 (bản quyền) > QUY TẮC SỐ 1 (phong cách). Khi hai cái đụng nhau,
+giữ phong cách MU nhưng đổi tên.
 
 **Text tiếng Việt vẫn giữ** (đây là game Việt hoá) — nhưng phải là tiếng Việt mô tả thế giới MU,
 không phải sáo ngữ kiếm hiệp.
 
 Khi thấy tàn dư wuxia trong code/UI cũ: dọn luôn nếu nằm trong phạm vi đang làm, hoặc báo lại.
+
+## ⚠ QUY TẮC SỐ 2: KHÔNG DÙNG TÊN RIÊNG CỦA MU ONLINE
+
+Lấy **ý tưởng và phong cách** từ MU Online thì được, nhưng **tên riêng thì không** —
+đây là game sẽ phát hành, không phải bản mod. Text người chơi nhìn thấy phải sạch.
+
+**Cấm xuất hiện trong text người chơi thấy:** Kundun · Lorencia · Noria · Devias ·
+Icarus · Atlans · Tarkan · Fairy Elf · Magic Gladiator · Devil Square · Blood Castle.
+(Nhắc "MU Online" trong *comment* để ghi nguồn cảm hứng thì được — chỉ là đừng ship
+tên riêng của họ thành nội dung game.)
+
+Kiểm tra bất cứ lúc nào: `node <scratchpad>/test_story.js` — nó quét toàn bộ
+INTRO_PAGES / QUESTS / CLUES / BOSS_LORE / SECTS / NPCS / MOBS / TB_TIER_NAMES.
+
+**Tên đã tự đặt để thay thế:**
+
+| Thay cho | Dùng |
+|---|---|
+| MU (thế giới) | **Vaeldra** — lục địa thép và tro |
+| Kundun | **Morvahn** |
+| Lorencia | **Ardhaven** |
+| Fairy Elf / Magic Gladiator | **Sylvan Ranger** / **Spellblade** |
+| Devil Square / Blood Castle | **Đấu Trường Tế Thần** / **Pháo Đài Máu** |
+| Excellent / Ancient | **Tinh Xảo** / **Cổ Vật** |
+
+Dark Knight · Dark Wizard · Dark Lord **giữ nguyên** — là danh từ fantasy phổ thông.
+
+## Cốt truyện (canon)
+
+Hai vũ trụ giao thoa. Phong ấn giam **Morvahn** ở **Vaeldra** vỡ; Thủ Hộ Vaeldra
+không giữ nổi nên **bẻ lệch vết nứt** sang một thế giới bên cạnh mà hải đồ ghi là
+"vô chủ" — hải đồ sai, đó là **Lunacia**. Vaeldra tự cứu mình bằng cách trút tận
+thế lên nhà người khác.
+
+Nhân vật chính thuộc một trong **5 môn phái Vaeldra**, nằm trong đội tiên phong
+vượt vết nứt sang sửa. Cú vượt biên xoá ký ức võ nghệ → khởi đầu Unclassed, tới
+**cấp 10 ký ức trở về** (the Calling). Cú giật ngược kéo cả khu phố **Ardhaven**
+sang, dân bản địa dựng lại quanh đó thành **Lunaris City**.
+
+⇒ Điều này *giải thích trong truyện* hai thứ vốn khập khiễng:
+tường thành phương Tây giữa thế giới Axie, và NPC hai phong cách
+(**NPC chức năng = người Ardhaven sống sót**, **NPC cốt truyện = người Lunacia bản địa**).
+
+Khí Morvahn chạm vào sinh vật Lunacia thì bẻ nó thành **Chimera**.
+
+**Năm Trụ Khóa** (thay cho Ngũ Ấn) do Thủ Hộ Vaeldra đóng xuống để ghim miệng vết
+nứt. Tướng quân Morvahn chiếm cả năm. **Gỡ trụ thì đi tiếp được, nhưng vết nứt
+toác thêm** — muốn tới Morvahn phải tự tay mở cánh cửa hắn cần. Đó là bi kịch
+trung tâm, và là lý do của kết mở.
+
+Thuật ngữ: Tướng Quân (boss cuối map) · Vệ Binh Trụ (3 boss phụ) · Trụ Khóa ·
+Cổng Vực · Hung Thần (boss thế giới định kỳ, **không phải** Morvahn) · Đoàn Gloam
+(lính Vaeldra đào ngũ).
 
 ## Kiến trúc
 
@@ -55,7 +112,7 @@ chế xương MU Online dùng, không phải chuỗi khung hình.
 - `HERO_METAL[0..9]` — bậc Thần Binh đổi bảng màu giáp, bậc 6+ toả hào quang.
   Nâng trang bị phải NHÌN THẤY được trên nhân vật.
 
-Chỉ 2 trường hợp còn blit ảnh: Hóa Thân Trấn Ải (mượn sprite quái) và Phi Thăng.
+Chỉ 2 trường hợp còn blit ảnh: Hóa Thân Tướng Quân (mượn sprite boss) và Phi Thăng.
 
 ## Hệ thống kỹ năng (đã tối giản)
 
