@@ -4023,7 +4023,11 @@ document.querySelectorAll('.sk-slot').forEach(b=>{
     if (id) castSkill(id); else togglePanel('skill');
   });
 });
-document.getElementById('sk-jump').addEventListener('click', doJump);
+// Nút J trên thanh kỹ năng phải theo ĐÚNG thứ tự ưu tiên của phím J, không thì trên điện
+// thoại (không có bàn phím) người chơi không có cách nào nhặt đồ dưới đất.
+document.getElementById('sk-jump').addEventListener('click', () => {
+  if (!tryPickLoot() && !tryHarvestHerb()) doJump();
+});
 
 // ---------- Combat ----------
 function addFloat(x,y,text,color,size){
@@ -4113,6 +4117,7 @@ function takeLoot(g, idx){
   }
   addEffect({ type:'ring', x: g.x, y: g.y, r: 26, color: lootColor(g) });
   groundLoot.splice(idx, 1);
+  tutAdvance('loot');
   return true;
 }
 // Phím J (không truyền toạ độ): với quanh người chơi, ưu tiên món gần nhất.
@@ -13709,6 +13714,7 @@ const TUT_STEPS = [
   { key:'npc',   txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
   { key:'map',   txt:'Nhấn <b>M</b> mở bản đồ → <b>Dịch Chuyển</b> tới <b>Petalshade Isle</b> để săn Chimera' },
   { key:'kill',  txt:'Nhấn <b>SPACE</b> để đánh quái gần nhất — hãy hạ 1 con <b>Axie Heo Rừng</b>' },
+  { key:'loot',  txt:'Quái chết có thể rơi đồ hoặc <b>Châu</b> xuống đất — <b>đi ngang qua</b>, bấm <b>J</b> hoặc <b>bấm chuột trúng món</b> để nhặt. Giữ <b>ALT</b> xem tên mọi món trên màn' },
   { key:'quest', txt:'Làm theo nhiệm vụ ở <b>góc phải màn hình</b> · <b>C</b> nhân vật · <b>K</b> kỹ năng · <b>B</b> túi đồ' },
 ];
 function updateTut(){
