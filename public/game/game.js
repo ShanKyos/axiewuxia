@@ -265,7 +265,7 @@ const MOBS = {
 Object.assign(MOBS, {
   hautu:    { name:'Hầu Tử', lv:2, hp:70, atk:8, def:1, xp:36, silver:[5,10], speed:95, aggro:150, range:26, atkCd:1.1, size:13, color:'#7a6248', eye:'#ffe9a0', drop:0.14, el:'Mộc', img:'assets/mobs/hautu.png' },
   caodo:    { name:'Cáo Đỏ', lv:8, hp:300, atk:21, def:4, xp:175, silver:[13,26], speed:100, aggro:180, range:26, atkCd:1.1, size:13, color:'#b05030', eye:'#ffd76a', drop:0.18, el:'Hỏa', img:'assets/mobs/caodo.png' },
-  trannhan: { name:'Tượng Đá Canh Cổng', lv:12, hp:440, atk:29, def:10, xp:230, silver:[25,46], speed:55, aggro:160, range:34, atkCd:1.5, size:17, color:'#c88aa8', eye:'#ffffff', drop:0.22, el:'Mộc', img:'assets/mobs/trannhan.png', skel:'golem', skelPal:{main:'#7d8290',dark:'#565b69',trim:'#9aa2b4',glow:'#7fd0ff'}},
+  trannhan: { name:'Tượng Đá Canh Cổng', lv:12, hp:440, atk:29, def:10, xp:230, silver:[25,46], speed:55, aggro:160, range:34, atkCd:1.5, size:17, color:'#c88aa8', eye:'#ffffff', drop:0.22, el:'Mộc', skel:'golem', skelPal:{main:'#7d8290',dark:'#565b69',trim:'#9aa2b4',glow:'#7fd0ff'}},
   // ── Bậc 14-24: bộ quái RIÊNG của Petalshade Outskirts. Dùng lại tạo hình có sẵn theo
   // đúng lối MU (Bull Fighter → Elite Bull Fighter): cùng sinh vật, bậc cựu binh mạnh hơn.
   // Trước đây map 2 dùng y hệt bộ quái lv1-9 của map 1 nên không có bậc nào cho khoảng 10-24.
@@ -274,20 +274,20 @@ Object.assign(MOBS, {
   bandit_vet: { name:'Gloam Cựu Binh',   lv:18, hp:680, atk:39, def:13, xp:420, silver:[43,75], speed:84, aggro:200, range:34, atkCd:1.2, size:17, color:'#5a4a3a', eye:'#e8dcb0', drop:0.23, el:'Kim', img:'assets/mobs/bandit.png'},
   caodo_fire: { name:'Cáo Lửa Vết Nứt',  lv:20, hp:760, atk:43, def:13, xp:480, silver:[49,85], speed:104, aggro:190, range:30, atkCd:1.0, size:14, color:'#d4552a', eye:'#ffd76a', drop:0.22, el:'Hỏa', img:'assets/mobs/caodo.png'},
   gloam_scout:{ name:'Trinh Sát Gloam',  lv:22, hp:1300, atk:52, def:20, xp:1035, silver:[110,189], speed:100, aggro:240, range:34, atkCd:1.1, size:18, color:'#1d1a24', eye:'#c07fe0', elite:true, drop:0.55, el:'Thủy', img:'assets/mobs/assassin.png'},
-  chimera_bo: { name:'Tượng Đá Vỡ Lệnh',  lv:24, hp:920, atk:50, def:15, xp:605, silver:[61,104], speed:62, aggro:170, range:34, atkCd:1.4, size:18, color:'#b87a9a', eye:'#ffffff', drop:0.24, el:'Thủy', img:'assets/mobs/trannhan.png', skel:'golem', skelPal:{main:'#6f7d8c',dark:'#4a5563',trim:'#8fb0c4',glow:'#6ae8c0'}},
-  phando:   { name:'Bộ Xương Phản Loạn', lv:26, hp:1000, atk:53, def:16, xp:670, silver:[67,114], speed:80, aggro:200, range:34, atkCd:1.2, size:16, color:'#3a9d8b', eye:'#a0ffe9', sash:'#2a6a5c', drop:0.25, el:'Thủy', img:'assets/mobs/phando.png', skel:'skeleton', skelPal:{main:'#8b8f9c',dark:'#3f4450',trim:'#9a8a52',bone:'#ddd6c4',cloth:'#3a5c52',glow:'#a0ffe9'}},
+  chimera_bo: { name:'Tượng Đá Vỡ Lệnh',  lv:24, hp:920, atk:50, def:15, xp:605, silver:[61,104], speed:62, aggro:170, range:34, atkCd:1.4, size:18, color:'#b87a9a', eye:'#ffffff', drop:0.24, el:'Thủy', skel:'golem', skelPal:{main:'#6f7d8c',dark:'#4a5563',trim:'#8fb0c4',glow:'#6ae8c0'}},
+  phando:   { name:'Bộ Xương Phản Loạn', lv:26, hp:1000, atk:53, def:16, xp:670, silver:[67,114], speed:80, aggro:200, range:34, atkCd:1.2, size:16, color:'#3a9d8b', eye:'#a0ffe9', sash:'#2a6a5c', drop:0.25, el:'Thủy', skel:'skeleton', skelPal:{main:'#8b8f9c',dark:'#3f4450',trim:'#9a8a52',bone:'#ddd6c4',cloth:'#3a5c52',glow:'#a0ffe9'}},
   xanu:     { name:'Chimera Rắn Độc', lv:31, hp:1260, atk:64, def:18, xp:840, silver:[79,134], speed:88, aggro:210, range:30, atkCd:1.15, size:16, color:'#5c8a3a', eye:'#c8ffa0', drop:0.27, el:'Mộc', img:'assets/mobs/xanu.png' },
   bandao:   { name:'Axie Sa Ngã', lv:38, hp:1790, atk:81, def:24, xp:1190, silver:[105,175], speed:92, aggro:230, range:36, atkCd:1.1, size:17, color:'#2d3a55', eye:'#9fd0ff', elite:true, drop:0.4, el:'Kim', img:'assets/mobs/bandao.png'},
-  thinu:    { name:'Oan Hồn Ổ Ấp', lv:42, hp:2190, atk:89, def:26, xp:1440, silver:[120,195], speed:78, aggro:200, range:34, atkCd:1.2, size:15, color:'#d8d0e8', eye:'#9a86d8', drop:0.28, el:'Mộc', img:'assets/mobs/thinu.png', skel:'wraith', skelPal:{main:'#8fa8c0',dark:'#3a4458',cloth:'#5a6a86',bone:'#e0e6f0',glow:'#9fd0ff'}},
+  thinu:    { name:'Oan Hồn Ổ Ấp', lv:42, hp:2190, atk:89, def:26, xp:1440, silver:[120,195], speed:78, aggro:200, range:34, atkCd:1.2, size:15, color:'#d8d0e8', eye:'#9a86d8', drop:0.28, el:'Mộc', skel:'wraith', skelPal:{main:'#8fa8c0',dark:'#3a4458',cloth:'#5a6a86',bone:'#e0e6f0',glow:'#9fd0ff'}},
   mocnhan:  { name:'Golem Gác Tổ', lv:48, hp:3410, atk:101, def:43, xp:1880, silver:[143,230], speed:50, aggro:170, range:36, atkCd:1.5, size:19, color:'#8a6a42', eye:'#e8b04a', drop:0.3, el:'Thổ', img:'assets/mobs/mocnhan.png'},
   huyetbat: { name:'Dơi Chimera', lv:56, hp:2870, atk:122, def:26, xp:2465, silver:[174,275], speed:115, aggro:240, range:28, atkCd:0.95, size:14, color:'#6a1a24', eye:'#ff3a3a', drop:0.32, el:'Hỏa', img:'assets/mobs/huyetbat.png' },
-  ttdetu:   { name:'Kẻ Cuồng Tín Lạc Lối', lv:62, hp:4320, atk:144, def:36, xp:3165, silver:[199,314], speed:84, aggro:210, range:34, atkCd:1.15, size:16, color:'#e0779a', eye:'#ffc0d8', sash:'#a04868', drop:0.3, el:'Thổ', img:'assets/mobs/ttdetu.png', skel:'cultist', skelPal:{main:'#c0c6d4',dark:'#2e2438',cloth:'#4a3a5e',trim:'#c8a84a',glow:'#8fe0a8'}},
+  ttdetu:   { name:'Kẻ Cuồng Tín Lạc Lối', lv:62, hp:4320, atk:144, def:36, xp:3165, silver:[199,314], speed:84, aggro:210, range:34, atkCd:1.15, size:16, color:'#e0779a', eye:'#ffc0d8', sash:'#a04868', drop:0.3, el:'Thổ', skel:'cultist', skelPal:{main:'#c0c6d4',dark:'#2e2438',cloth:'#4a3a5e',trim:'#c8a84a',glow:'#8fe0a8'}},
   docyeu:   { name:'Chimera Hoa Độc', lv:70, hp:5390, atk:166, def:41, xp:4025, silver:[242,378], speed:74, aggro:220, range:38, atkCd:1.3, size:18, color:'#4a7a2a', eye:'#7ec850', drop:0.34, el:'Mộc', poisonHit:true, img:'assets/mobs/docyeu.png'},
   satthuhy: { name:'Sát Thủ Sương Mù', lv:78, hp:6800, atk:200, def:48, xp:5200, silver:[300,400], speed:100, aggro:240, range:34, atkCd:1.0, size:16, color:'#16121e', eye:'#c07fe0', elite:true, drop:0.45, el:'Thủy', img:'assets/mobs/assassin.png' },
   thamtu:   { name:'Trinh Sát Tro Tàn', lv:84, hp:8070, atk:227, def:54, xp:6680, silver:[325,504], speed:96, aggro:230, range:33, atkCd:1.05, size:15, color:'#4a4238', eye:'#ffd76a', drop:0.34, el:'Thổ', img:'assets/mobs/thamtu.png'},
   cungthu:  { name:'Cung Thủ Tro Tàn', lv:92, hp:8070, atk:271, def:52, xp:7920, silver:[369,567], speed:70, aggro:260, range:230, atkCd:1.6, size:15, color:'#7a5a30', eye:'#ffe9a0', drop:0.36, el:'Mộc', ranged:true, img:'assets/mobs/cungthu.png'},
-  kybinh:   { name:'Kỵ Sĩ Tro Tàn', lv:100, hp:10300, atk:277, def:77, xp:8820, silver:[406,626], speed:90, aggro:220, range:40, atkCd:1.3, size:21, color:'#1c1c24', eye:'#ff6a5a', elite:true, drop:0.5, el:'Kim', img:'assets/mobs/kybinh.png', skel:'knight', skelPal:{main:'#6a6f80',dark:'#43485a',trim:'#c8a84a',cloth:'#7a2a30',glow:'#ffb15c'}},
-  kylan:    { name:'Chó Ngao Lửa', lv:112, hp:14480, atk:332, def:88, xp:13450, silver:[494,758], speed:94, aggro:240, range:42, atkCd:1.2, size:22, color:'#8a1a10', eye:'#ffd76a', elite:true, drop:0.55, el:'Hỏa', img:'assets/mobs/kylan.png', skel:'hound', skelPal:{main:'#8a3a2a',dark:'#5a2418',trim:'#ffb15c',glow:'#ff6a3a',bone:'#e8d0b0'}},
+  kybinh:   { name:'Kỵ Sĩ Tro Tàn', lv:100, hp:10300, atk:277, def:77, xp:8820, silver:[406,626], speed:90, aggro:220, range:40, atkCd:1.3, size:21, color:'#1c1c24', eye:'#ff6a5a', elite:true, drop:0.5, el:'Kim', skel:'knight', skelPal:{main:'#6a6f80',dark:'#43485a',trim:'#c8a84a',cloth:'#7a2a30',glow:'#ffb15c'}},
+  kylan:    { name:'Chó Ngao Lửa', lv:112, hp:14480, atk:332, def:88, xp:13450, silver:[494,758], speed:94, aggro:240, range:42, atkCd:1.2, size:22, color:'#8a1a10', eye:'#ffd76a', elite:true, drop:0.55, el:'Hỏa', skel:'hound', skelPal:{main:'#8a3a2a',dark:'#5a2418',trim:'#ffb15c',glow:'#ff6a3a',bone:'#e8d0b0'}},
   cuongbinh:{ name:'Cuồng Binh Tro Tàn', lv:102, hp:12220, atk:345, def:67, xp:11645, silver:[445,685], speed:98, aggro:230, range:36, atkCd:1.0, size:17, color:'#5a2a1a', eye:'#ff9a3a', drop:0.42, el:'Thổ', img:'assets/mobs/cuongbinh.png'},
   daokhach: { name:'Đao Khách Bão Tố', lv:120, hp:14000, atk:380, def:75, xp:15000, silver:[750,1000], speed:102, aggro:250, range:38, atkCd:0.9, size:17, color:'#3a1010', eye:'#ff3a3a', elite:true, drop:0.6, el:'Hỏa', img:'assets/mobs/daokhach.png'},
   // Axie Lang Thang — "người chơi" NPC trung lập để PK (3 cấp theo map)
@@ -3172,10 +3172,9 @@ const BOSS_DEFS = {
 // hóa thân tạm thời: đổi hẳn tạo hình (dùng lại đúng sprite boss), +25% công lực, một đòn bộc phá
 // mở màn quanh người — tái dùng 100% sprite boss đã có (Axie art), không cần vẽ thêm gì.
 const CHANNEL_IMGS = {};
-for (const _cMap in BOSS_DEFS){
-  const _cTv = BOSS_DEFS[_cMap].tranai;
-  if (_cTv && !CHANNEL_IMGS[_cTv.id]){ const _cIm = new Image(); _cIm.src = 'assets/mobs/' + _cTv.img + '.png'; CHANNEL_IMGS[_cTv.id] = _cIm; }
-}
+// ⚠ KHÔNG nạp ở đây: các mob boss chỉ được thêm vào MOBS ở cuối file, nên tại điểm này
+// MOBS['boss_*'] còn undefined và không thể biết boss nào vẽ khung xương (đã bỏ file ảnh).
+// Việc nạp nằm ở loadBossImages() phía dưới, chạy sau khi MOBS đã đủ.
 function findTranaiById(bossId){
   for (const mapId in BOSS_DEFS){ const tv = BOSS_DEFS[mapId].tranai; if (tv && tv.id === bossId) return tv; }
   return null;
@@ -5679,7 +5678,8 @@ const MOBSK_W = 120, MOBSK_H = 120;
 function mobPal(d){
   const p = d.skelPal || {};
   return { main:p.main||'#6a6f80', dark:p.dark||'#454a58', trim:p.trim||'#8a7a4a',
-           glow:p.glow||'#ff7a5a', cloth:p.cloth||'#4a3a52', bone:p.bone||'#ddd6c4' };
+           glow:p.glow||'#ff7a5a', cloth:p.cloth||'#4a3a52', bone:p.bone||'#ddd6c4',
+           line:p.line||'#15121c' };   // viền tối — thứ làm quái nổi khối
 }
 // Tư thế quái: bước đi · vung đòn (lungeT) · giật khi trúng (hitT)
 function mobPose(m, now){
@@ -5697,186 +5697,344 @@ function mobPose(m, now){
   };
 }
 
+// ── Bút vẽ dùng chung: mọi khối đều có VIỀN TỐI + MẶT SÁNG/TỐI, nhờ vậy quái nổi
+// khối chứ không phẳng lì như bản đầu.
+function hOut(g, pts, fill, line, lw){
+  g.lineJoin = 'round';
+  if (line){ g.strokeStyle = line; g.lineWidth = lw || 3; hPoly(g, pts, fill); g.stroke(); }
+  else hPoly(g, pts, fill);
+}
+function hOEll(g, x, y, rx, ry, fill, line, lw){
+  g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 7);
+  g.fillStyle = fill; g.fill();
+  if (line){ g.strokeStyle = line; g.lineWidth = lw || 3; g.stroke(); }
+}
+function hGlowDot(g, x, y, r, col, t){
+  const gg = g.createRadialGradient(x, y, 0.5, x, y, r * 3.6);
+  gg.addColorStop(0, col); gg.addColorStop(1, 'rgba(0,0,0,0)');
+  g.globalAlpha = 0.55 + 0.25 * Math.sin(t * 4); g.fillStyle = gg;
+  g.beginPath(); g.arc(x, y, r * 3.6, 0, 7); g.fill(); g.globalAlpha = 1;
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(x, y, r * 0.55, 0, 7); g.fill();
+  g.fillStyle = col; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+}
+// Lưỡi lửa phun ra phía trước (quái luôn vẽ hướng phải, người gọi lo việc lật)
+function hFlame(g, x, y, len, spread, k, c1, c2){
+  g.save(); g.translate(x, y);
+  for (let i = 0; i < 3; i++){
+    const f = 1 - i * 0.26, a = (0.55 - i * 0.13) * k;
+    g.globalAlpha = a; g.fillStyle = i === 0 ? c2 : c1;
+    g.beginPath(); g.moveTo(0, 0);
+    for (let j = 0; j <= 8; j++){
+      const t = j / 8, ang = -spread * f + t * spread * 2 * f;
+      const wob = Math.sin(t * 9 + k * 14) * len * 0.09;
+      g.lineTo(Math.cos(ang) * (len * f + wob), Math.sin(ang) * (len * f * 0.72 + wob));
+    }
+    g.closePath(); g.fill();
+  }
+  g.globalAlpha = 1; g.restore();
+}
+// Vệt chém hình lưỡi liềm
+function hSlashArc(g, x, y, r, k, col){
+  const sp = 1.05, prog = 1 - k;
+  g.save(); g.translate(x, y); g.rotate(-0.9 + prog * 1.9);
+  g.globalCompositeOperation = 'lighter';
+  for (const [rr, w, a] of [[r*1.06, 3, 0.9], [r, 9, 0.5]]){
+    g.globalAlpha = a * k; g.strokeStyle = col; g.lineWidth = w; g.lineCap = 'round';
+    g.beginPath(); g.arc(0, 0, rr, -sp, sp); g.stroke();
+  }
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.restore();
+}
+
 const MOB_ARCH = {
-  // Tượng đá canh cổng — khối nặng, nứt phát sáng, tay to như búa
+  // ── TƯỢNG ĐÁ: khổng lồ lưng gù, chân ngắn, hai tay đá to hơn cả thân ──
   golem(g, P, ps){
-    const s = ps.step;
-    hJoint(g, 46,84, s*0.26, () => { hPoly(g,[[38,78],[54,78],[56,112],[36,112]], P.dark); });
-    hJoint(g, 74,84, -s*0.26, () => { hPoly(g,[[66,78],[82,78],[84,112],[64,112]], P.dark); });
+    const s = ps.step, L = P.line;
+    hJoint(g, 44,86, s*0.20, () => hOut(g,[[32,80],[54,80],[56,112],[30,112]], P.dark, L));
+    hJoint(g, 78,86, -s*0.20, () => hOut(g,[[68,80],[90,80],[92,112],[66,112]], P.dark, L));
     g.save(); g.translate(0, ps.bob);
-    hJoint(g, 60,80, ps.lean, () => {
-      hPoly(g, [[34,36],[86,36],[92,84],[28,84]], P.main);          // thân khối
-      hPoly(g, [[60,36],[86,36],[92,84],[60,84]], P.dark);
-      g.strokeStyle = P.glow; g.lineWidth = 2; g.globalAlpha = 0.55 + 0.25*Math.sin(ps.t*2.4);
-      g.beginPath(); g.moveTo(46,44); g.lineTo(56,60); g.lineTo(48,70);   // vết nứt sáng
-      g.moveTo(72,48); g.lineTo(66,64); g.stroke(); g.globalAlpha = 1;
-      hPoly(g, [[46,20],[74,20],[78,38],[42,38]], P.main);          // đầu vuông
-      hEll(g, 52,29, 3.2,3, P.glow); hEll(g, 68,29, 3.2,3, P.glow);
-      hJoint(g, 30,44, ps.arm*0.55, () => hPoly(g,[[16,38],[38,34],[42,72],[18,76]], P.main)); // tay trái
-      hJoint(g, 90,44, -ps.arm*0.75, () => hPoly(g,[[104,38],[82,34],[78,72],[102,76]], P.dark));
+    hJoint(g, 60,82, ps.lean, () => {
+      hOut(g, [[26,40],[94,40],[100,86],[20,86]], P.main, L, 3.5);      // thân đá
+      hPoly(g, [[62,42],[92,42],[97,84],[62,84]], P.dark);
+      g.strokeStyle = P.glow; g.lineWidth = 2.6;                         // mạch nứt phát sáng
+      g.globalAlpha = 0.5 + 0.3*Math.sin(ps.t*2.2);
+      g.beginPath(); g.moveTo(40,48); g.lineTo(54,64); g.lineTo(44,78);
+      g.moveTo(74,46); g.lineTo(66,62); g.lineTo(78,74); g.stroke(); g.globalAlpha = 1;
+      hOut(g, [[40,18],[80,18],[86,42],[34,42]], P.main, L, 3);          // đầu khối
+      hPoly(g, [[42,26],[78,26],[78,33],[42,33]], '#10131a');            // khe mắt
+      hGlowDot(g, 50,29, 3, P.glow, ps.t); hGlowDot(g, 70,29, 3, P.glow, ps.t+1);
+      hPoly(g, [[38,18],[46,2],[52,18]], P.trim); hPoly(g,[[68,18],[76,2],[82,18]], P.trim);
+      // hai tay đá — to, buông thấp, nhấc lên khi đập
+      hJoint(g, 24,46, ps.arm*0.7, () => {
+        hOut(g,[[2,38],[34,30],[40,80],[6,88]], P.main, L, 3);
+        hOut(g,[[0,74],[26,70],[30,100],[2,104]], P.dark, L, 3); });
+      hJoint(g, 96,46, -ps.arm*0.9, () => {
+        hOut(g,[[118,38],[86,30],[80,80],[114,88]], P.dark, L, 3);
+        hOut(g,[[120,74],[94,70],[90,100],[118,104]], P.main, L, 3); });
     });
     g.restore();
   },
-  // Bộ xương chiến binh — sườn lộ, kiếm gỉ, khiên vỡ
+  // ── BỘ XƯƠNG: lưng còng, sọ hàm há, sườn lộ, áo choàng rách, đao cong ──
   skeleton(g, P, ps){
-    const s = ps.step;
-    hJoint(g, 50,80, s*0.42, () => { g.strokeStyle=P.bone; g.lineWidth=5; g.lineCap='round';
-      g.beginPath(); g.moveTo(50,78); g.lineTo(44,96); g.lineTo(46,110); g.stroke(); });
-    hJoint(g, 70,80, -s*0.42, () => { g.strokeStyle=P.bone; g.lineWidth=5; g.lineCap='round';
-      g.beginPath(); g.moveTo(70,78); g.lineTo(76,96); g.lineTo(74,110); g.stroke(); });
+    const s = ps.step, L = P.line;
+    hJoint(g, 50,82, s*0.44, () => { g.strokeStyle=L; g.lineWidth=8; g.lineCap='round';
+      g.beginPath(); g.moveTo(50,78); g.lineTo(43,96); g.lineTo(45,110); g.stroke();
+      g.strokeStyle=P.bone; g.lineWidth=4.5; g.stroke(); });
+    hJoint(g, 70,82, -s*0.44, () => { g.strokeStyle=L; g.lineWidth=8; g.lineCap='round';
+      g.beginPath(); g.moveTo(70,78); g.lineTo(78,96); g.lineTo(76,110); g.stroke();
+      g.strokeStyle=P.bone; g.lineWidth=4.5; g.stroke(); });
     g.save(); g.translate(0, ps.bob);
-    hJoint(g, 60,78, ps.lean, () => {
-      hPoly(g, [[48,40],[72,40],[70,80],[50,80]], P.cloth);         // giáp da rách
-      g.strokeStyle = P.bone; g.lineWidth = 3.2;                     // xương sườn
-      for (let i=0;i<4;i++){ g.beginPath(); g.moveTo(50, 46+i*8); g.lineTo(70, 46+i*8); g.stroke(); }
-      hEll(g, 60,28, 11,12, P.bone);                                 // sọ
-      hEll(g, 55,27, 2.8,3.4, '#140f18'); hEll(g, 65,27, 2.8,3.4, '#140f18');
-      g.fillStyle='#140f18'; g.fillRect(56,34,8,4);
-      hJoint(g, 46,44, ps.arm*0.5, () => {                           // khiên vỡ
-        hPoly(g, [[26,40],[44,36],[46,66],[28,70]], P.dark);
-        hPoly(g, [[30,44],[42,42],[43,60],[31,63]], P.trim); });
-      hJoint(g, 74,44, -ps.arm, () => {                              // kiếm gỉ
-        g.strokeStyle=P.bone; g.lineWidth=4; g.beginPath(); g.moveTo(74,44); g.lineTo(88,58); g.stroke();
-        g.save(); g.translate(88,58); g.rotate(-0.9);
-        hPoly(g, [[-3,0],[3,0],[2,-40],[0,-46],[-2,-40]], P.main);
-        hPoly(g, [[-8,0],[8,0],[7,5],[-7,5]], P.trim); g.restore(); });
+    hPoly(g, [[42,34],[78,34],[92,96],[28,96]], P.cloth);                // áo choàng rách
+    for (let i=0;i<4;i++) hPoly(g,[[30+i*16,92],[38+i*16,92],[34+i*16,104]], P.cloth);
+    hJoint(g, 60,76, ps.lean - 0.14, () => {                             // lưng còng
+      hOut(g, [[48,42],[72,42],[74,78],[46,78]], P.dark, L, 3);
+      g.strokeStyle = P.bone; g.lineWidth = 4; g.lineCap='round';         // sườn
+      for (let i=0;i<4;i++){ const w = 13 - i*1.6;
+        g.beginPath(); g.moveTo(60-w, 48+i*8); g.quadraticCurveTo(60, 52+i*8, 60+w, 48+i*8); g.stroke(); }
+      g.strokeStyle = P.bone; g.lineWidth = 5;                            // cột sống
+      g.beginPath(); g.moveTo(60,44); g.lineTo(60,78); g.stroke();
+      hOEll(g, 60,26, 13,13, P.bone, L, 3);                               // sọ
+      hPoly(g, [[52,32],[68,32],[66,42],[54,42]], P.bone);                // hàm
+      g.strokeStyle=L; g.lineWidth=1.6;
+      for (let i=0;i<4;i++){ g.beginPath(); g.moveTo(54+i*4,34); g.lineTo(54+i*4,41); g.stroke(); }
+      hOEll(g, 55,24, 3.6,4.2, '#0d0a12', null); hOEll(g, 65,24, 3.6,4.2, '#0d0a12', null);
+      hGlowDot(g, 55,24, 2.2, P.glow, ps.t); hGlowDot(g, 65,24, 2.2, P.glow, ps.t+.6);
+      hJoint(g, 44,48, ps.arm*0.45, () => {                               // khiên vỡ
+        hOut(g,[[22,40],[44,34],[48,70],[24,76]], P.dark, L, 3);
+        hPoly(g,[[28,46],[42,42],[44,62],[30,66]], P.trim);
+        hPoly(g,[[34,52],[48,62],[34,64]], P.cloth); });
+      hJoint(g, 76,48, -ps.arm, () => {                                   // đao cong
+        g.strokeStyle=P.bone; g.lineWidth=5; g.lineCap='round';
+        g.beginPath(); g.moveTo(74,46); g.lineTo(90,60); g.stroke();
+        g.save(); g.translate(90,60); g.rotate(-0.7);
+        g.strokeStyle=L; g.lineWidth=9; g.beginPath(); g.arc(4,-26, 28, 1.1, 2.4); g.stroke();
+        g.strokeStyle=P.main; g.lineWidth=5.5; g.stroke();
+        g.fillStyle=P.trim; g.fillRect(-4,-6,9,14); g.restore(); });
     });
     g.restore();
   },
-  // Oan hồn — không chân, đuôi áo tan vào không khí, mũ trùm rỗng
+  // ── OAN HỒN: không chân, thân tan thành khói, mặt sọ dài, vuốt buông ──
   wraith(g, P, ps){
-    const f = Math.sin(ps.t*1.6)*4;
-    g.save(); g.translate(0, ps.bob*1.6 + Math.sin(ps.t*1.1)*3);
-    g.globalAlpha = 0.9;
-    hPoly(g, [[42,44],[78,44],[92+f,108],[28+f,108]], P.cloth);      // thân áo loe
-    g.globalAlpha = 0.45;
-    hPoly(g, [[52,70],[68,70],[80+f,112],[40+f,112]], P.main);       // đuôi mờ
+    const f = Math.sin(ps.t*1.5)*5, L = P.line;
+    g.save(); g.translate(0, ps.bob*1.7 + Math.sin(ps.t*1.05)*4);
+    for (let i=0;i<3;i++){                                               // đuôi khói nhiều lớp
+      g.globalAlpha = 0.5 - i*0.14;
+      hPoly(g, [[46-i*3,52],[74+i*3,52],[92+f+i*6,112],[28+f-i*6,112]], i?P.main:P.cloth);
+    }
     g.globalAlpha = 1;
+    hOut(g, [[42,44],[78,44],[86,84],[34,84]], P.cloth, L, 3);           // thân áo
     hJoint(g, 60,50, ps.lean, () => {
-      hPoly(g, [[40,48],[80,48],[74,26],[62,14],[58,14],[46,26]], P.cloth); // mũ trùm
-      hEll(g, 60,36, 13,14, '#100c18');                              // trong mũ tối đen
-      hEll(g, 55,34, 3,3.6, P.glow); hEll(g, 65,34, 3,3.6, P.glow);
-      const gg = g.createRadialGradient(60,34,2,60,34,20);
-      gg.addColorStop(0, P.glow); gg.addColorStop(1,'rgba(0,0,0,0)');
-      g.globalAlpha = 0.35 + 0.15*Math.sin(ps.t*3); g.fillStyle = gg;
-      g.beginPath(); g.arc(60,34,20,0,7); g.fill(); g.globalAlpha = 1;
+      hOut(g, [[36,52],[84,52],[78,24],[64,8],[56,8],[42,24]], P.cloth, L, 3.5); // mũ trùm
+      hPoly(g, [[60,8],[84,52],[78,24],[64,8]], P.dark);
+      hOEll(g, 60,36, 15,17, '#0b0812', null);                           // hốc tối
+      hOEll(g, 60,42, 8,10, '#0b0812', null);
+      hGlowDot(g, 54,34, 3.4, P.glow, ps.t); hGlowDot(g, 66,34, 3.4, P.glow, ps.t+.8);
+      g.strokeStyle = P.glow; g.lineWidth = 1.6; g.globalAlpha = 0.5;    // hơi lạnh toả
+      for (let i=0;i<4;i++){ const a = -1.4 + i*0.5;
+        g.beginPath(); g.moveTo(60+Math.cos(a)*16, 36+Math.sin(a)*16);
+        g.lineTo(60+Math.cos(a)*(24+Math.sin(ps.t*3+i)*4), 36+Math.sin(a)*(24+Math.sin(ps.t*3+i)*4));
+        g.stroke(); } g.globalAlpha = 1;
     });
-    hJoint(g, 40,56, ps.arm*0.8, () => {                             // vuốt
-      g.strokeStyle=P.bone; g.lineWidth=2.4; g.lineCap='round';
-      for (let i=0;i<3;i++){ g.beginPath(); g.moveTo(40,56); g.lineTo(26-i*3, 68+i*5); g.stroke(); } });
-    hJoint(g, 80,56, -ps.arm*0.8, () => {
-      g.strokeStyle=P.bone; g.lineWidth=2.4; g.lineCap='round';
-      for (let i=0;i<3;i++){ g.beginPath(); g.moveTo(80,56); g.lineTo(94+i*3, 68+i*5); g.stroke(); } });
+    // vuốt chồm ra trước chứ không dang ngang: tay sau thu lại, tay trước với tới
+    for (const [jx,dir,amt] of [[36,1,0.22],[84,-1,0.5]])
+      hJoint(g, jx,58, (-0.35 + ps.atk*1.1) * amt * dir, () => {
+        g.strokeStyle=L; g.lineWidth=6; g.lineCap='round';
+        g.beginPath(); g.moveTo(jx,58); g.lineTo(jx-dir*10, 76); g.stroke();
+        g.strokeStyle=P.bone; g.lineWidth=3.4; g.stroke();
+        for (let i=0;i<3;i++){ g.strokeStyle=P.bone; g.lineWidth=2.6;
+          g.beginPath(); g.moveTo(jx-dir*10,76); g.lineTo(jx-dir*(14+i*5), 90+i*4); g.stroke(); } });
     g.restore();
   },
-  // Kẻ cuồng tín — áo thụng trùm đầu, dao cong, ấn phát sáng trước ngực
+  // ── KẺ CUỒNG TÍN: áo thụng dài, ấn phù nổi trước ngực, quyền trượng sọ ──
   cultist(g, P, ps){
-    const s = ps.step;
-    hJoint(g, 52,84, s*0.3, () => hPoly(g,[[46,80],[58,80],[56,110],[44,110]], P.dark));
-    hJoint(g, 68,84, -s*0.3, () => hPoly(g,[[62,80],[74,80],[76,110],[64,110]], P.dark));
+    const s = ps.step, L = P.line;
+    hJoint(g, 52,86, s*0.26, () => hOut(g,[[46,82],[58,82],[56,110],[44,110]], P.dark, L));
+    hJoint(g, 68,86, -s*0.26, () => hOut(g,[[62,82],[74,82],[76,110],[64,110]], P.dark, L));
     g.save(); g.translate(0, ps.bob);
-    hJoint(g, 60,80, ps.lean, () => {
-      hPoly(g, [[44,42],[76,42],[84,104],[36,104]], P.cloth);        // áo thụng
-      hPoly(g, [[60,42],[76,42],[84,104],[60,104]], P.dark);
-      hEll(g, 60,66, 6,6, P.glow);                                   // ấn ngực
-      g.strokeStyle = P.trim; g.lineWidth = 2;
-      g.beginPath(); g.arc(60,66, 10, 0, 7); g.stroke();
-      hPoly(g, [[42,46],[78,46],[72,24],[62,12],[58,12],[48,24]], P.cloth);
-      hEll(g, 60,34, 13,13, '#140f1e');
-      hEll(g, 55,33, 2.8,3.2, P.glow); hEll(g, 65,33, 2.8,3.2, P.glow);
-      hJoint(g, 40,54, ps.arm*0.6, () => hEll(g, 36,66, 6,10, P.cloth));
-      hJoint(g, 80,54, -ps.arm, () => {                              // dao cong
-        hEll(g, 84,66, 6,10, P.cloth);
-        g.save(); g.translate(88,70); g.rotate(-0.5);
-        g.strokeStyle = P.main; g.lineWidth = 4; g.lineCap='round';
-        g.beginPath(); g.arc(0,-16, 16, 0.5, 2.2); g.stroke();
-        g.fillStyle = P.trim; g.fillRect(-3,-4,6,12); g.restore(); });
-    });
-    g.restore();
-  },
-  // Kỵ sĩ giáp — mũ trụ khe mắt, khiên lớn, đại kiếm
-  knight(g, P, ps){
-    const s = ps.step;
-    hJoint(g, 50,84, s*0.34, () => { hPoly(g,[[44,78],[58,78],[58,108],[42,108]], P.dark);
-      hPoly(g,[[40,104],[60,104],[62,112],[38,112]], P.main); });
-    hJoint(g, 70,84, -s*0.34, () => { hPoly(g,[[62,78],[76,78],[78,108],[62,108]], P.dark);
-      hPoly(g,[[60,104],[80,104],[82,112],[58,112]], P.main); });
-    g.save(); g.translate(0, ps.bob);
-    hPoly(g, [[46,40],[74,40],[86,96],[34,96]], P.cloth);            // áo choàng sau lưng
-    hJoint(g, 60,80, ps.lean, () => {
-      hPoly(g, [[44,38],[76,38],[80,82],[40,82]], P.main);           // giáp ngực
-      hPoly(g, [[60,38],[76,38],[80,82],[60,82]], P.dark);
-      hPoly(g, [[52,48],[68,48],[65,74],[55,74]], P.trim);
-      hPoly(g, [[46,20],[74,20],[72,42],[48,42]], P.main);           // mũ trụ
-      hPoly(g, [[48,30],[72,30],[72,35],[48,35]], '#15131c');
-      hPoly(g, [[48,22],[38,6],[52,16]], P.main); hPoly(g,[[72,22],[82,6],[68,16]], P.main);
-      hJoint(g, 38,46, ps.arm*0.5, () => {                           // khiên
-        hPoly(g, [[18,38],[40,32],[44,70],[22,76]], P.dark);
-        hPoly(g, [[24,42],[38,38],[40,64],[26,68]], P.trim); });
-      hJoint(g, 82,46, -ps.arm, () => {                              // đại kiếm
-        hEll(g, 86,58, 7,11, P.main);
-        g.save(); g.translate(90,60); g.rotate(0.2);
-        hPoly(g, [[-4,0],[4,0],[3,-48],[0,-56],[-3,-48]], '#cfd4dc');
-        hPoly(g, [[-11,0],[11,0],[10,6],[-10,6]], P.trim); g.restore(); });
-    });
-    g.restore();
-  },
-  // Chó ngao — bốn chân, lưng gai, bờm lửa
-  hound(g, P, ps){
-    const s = ps.step;
-    g.save(); g.translate(0, ps.bob*0.6);
-    for (const [bx, ph] of [[34,1],[46,-1],[76,-1],[88,1]])           // 4 chân so le
-      hJoint(g, bx,78, s*0.5*ph, () => { g.strokeStyle=P.dark; g.lineWidth=6; g.lineCap='round';
-        g.beginPath(); g.moveTo(bx,74); g.lineTo(bx+s*ph*4,110); g.stroke(); });
-    hJoint(g, 60,66, ps.lean*0.5, () => {
-      hEll(g, 60,62, 30,17, P.main);                                  // thân dài
-      hEll(g, 68,62, 20,15, P.dark);
-      for (let i=0;i<5;i++)                                           // gai lưng
-        hPoly(g, [[44+i*9,48],[48+i*9,30-(i===2?6:0)],[52+i*9,48]], P.trim);
-      g.strokeStyle = P.dark; g.lineWidth = 5; g.lineCap='round';      // đuôi
-      g.beginPath(); g.moveTo(88,58); g.lineTo(104+Math.sin(ps.t*3)*4, 40); g.stroke();
-      hEll(g, 30,58, 15,12, P.main);                                  // đầu
-      hPoly(g, [[16,58],[30,52],[30,66]], P.dark);                    // mõm
-      hEll(g, 26,54, 3,3.2, P.glow); hEll(g, 34,53, 3,3.2, P.glow);
-      hPoly(g, [[24,46],[28,34],[32,46]], P.trim); hPoly(g,[[34,46],[38,34],[42,46]], P.trim);
-      const hg = g.createRadialGradient(30,58,3,30,58,22);            // bờm rực
-      hg.addColorStop(0, P.glow); hg.addColorStop(1,'rgba(0,0,0,0)');
-      g.globalAlpha = 0.3 + 0.12*Math.sin(ps.t*4); g.fillStyle = hg;
-      g.beginPath(); g.arc(30,58,22,0,7); g.fill(); g.globalAlpha = 1;
-    });
-    g.restore();
-  },
-  // Ác quỷ — sừng cong, vai gai, cánh da, vuốt dài
-  fiend(g, P, ps){
-    const s = ps.step;
-    hJoint(g, 48,82, s*0.3, () => hPoly(g,[[40,76],[58,76],[58,112],[36,112]], P.dark));
-    hJoint(g, 72,82, -s*0.3, () => hPoly(g,[[62,76],[80,76],[84,112],[62,112]], P.dark));
-    g.save(); g.translate(0, ps.bob);
-    for (const sd of [-1,1]){                                         // cánh da
-      g.save(); g.translate(60,44); g.scale(sd,1);
-      g.globalAlpha = 0.85;
-      hPoly(g, [[6,0],[40,-22+Math.sin(ps.t*2)*4],[46,10],[30,6],[34,28],[10,14]], P.dark);
+    hOut(g, [[42,40],[78,40],[92,106],[28,106]], P.cloth, L, 3.5);       // áo thụng loe
+    hPoly(g, [[60,40],[78,40],[92,106],[60,106]], P.dark);
+    for (let i=0;i<3;i++) hPoly(g,[[32+i*20,102],[42+i*20,102],[37+i*20,112]], P.cloth);
+    hJoint(g, 60,78, ps.lean, () => {
+      hOut(g, [[40,46],[80,46],[74,22],[64,8],[56,8],[46,22]], P.cloth, L, 3.5);
+      hOEll(g, 60,34, 14,14, '#100b1a', null);
+      hGlowDot(g, 55,32, 3, P.glow, ps.t); hGlowDot(g, 65,32, 3, P.glow, ps.t+.5);
+      const r = 11 + Math.sin(ps.t*2.4)*1.6;                              // ấn phù xoay
+      g.save(); g.translate(60,70); g.rotate(ps.t*0.9);
+      g.strokeStyle = P.glow; g.lineWidth = 2; g.globalAlpha = 0.85;
+      g.beginPath(); g.arc(0,0,r,0,7); g.stroke();
+      for (let i=0;i<6;i++){ const a=i*Math.PI/3;
+        g.beginPath(); g.moveTo(Math.cos(a)*r, Math.sin(a)*r);
+        g.lineTo(Math.cos(a)*(r+5), Math.sin(a)*(r+5)); g.stroke(); }
       g.globalAlpha = 1; g.restore();
+      hGlowDot(g, 60,70, 3.4, P.glow, ps.t*1.6);
+      hJoint(g, 38,56, ps.arm*0.5, () => hOEll(g, 34,70, 7,12, P.cloth, L));
+      hJoint(g, 82,56, -ps.arm*0.8, () => {                               // trượng đầu sọ
+        hOEll(g, 86,70, 7,12, P.cloth, L);
+        g.strokeStyle=L; g.lineWidth=7; g.lineCap='round';
+        g.beginPath(); g.moveTo(90,96); g.lineTo(86,26); g.stroke();
+        g.strokeStyle='#4a3520'; g.lineWidth=4.4; g.stroke();
+        hOEll(g, 86,20, 8,8, P.bone, L, 2.6);
+        hOEll(g, 83,19, 2,2.6, '#0d0a12', null); hOEll(g, 89,19, 2,2.6, '#0d0a12', null); });
+    });
+    g.restore();
+  },
+  // ── KỴ SĨ: vai gai khổng lồ, mũ trụ sừng, áo choàng, đại kiếm ──
+  knight(g, P, ps){
+    const s = ps.step, L = P.line;
+    hJoint(g, 48,86, s*0.3, () => { hOut(g,[[40,80],[58,80],[58,106],[38,106]], P.dark, L);
+      hOut(g,[[34,102],[62,102],[64,112],[32,112]], P.main, L); });
+    hJoint(g, 72,86, -s*0.3, () => { hOut(g,[[62,80],[80,80],[82,106],[62,106]], P.dark, L);
+      hOut(g,[[58,102],[86,102],[88,112],[56,112]], P.main, L); });
+    g.save(); g.translate(0, ps.bob);
+    hPoly(g, [[44,34],[76,34],[94,98],[26,98]], P.cloth);                 // áo choàng
+    hJoint(g, 60,80, ps.lean, () => {
+      hOut(g, [[42,36],[78,36],[84,84],[36,84]], P.main, L, 3.5);         // giáp ngực
+      hPoly(g, [[60,38],[78,38],[84,84],[60,84]], P.dark);
+      hOut(g, [[52,46],[68,46],[64,76],[56,76]], P.trim, L, 2);
+      hOut(g, [[42,16],[78,16],[76,40],[44,40]], P.main, L, 3);           // mũ trụ
+      hPoly(g, [[44,26],[76,26],[76,32],[44,32]], '#0e1018');
+      hGlowDot(g, 52,29, 2.8, P.glow, ps.t); hGlowDot(g, 68,29, 2.8, P.glow, ps.t+.4);
+      hPoly(g, [[44,18],[28,-2],[50,10]], P.trim); hPoly(g,[[76,18],[92,-2],[70,10]], P.trim);
+      hJoint(g, 34,44, ps.arm*0.42, () => {                               // vai + khiên
+        hOut(g,[[12,34],[40,26],[44,60],[16,68]], P.main, L, 3);
+        hPoly(g,[[14,32],[26,18],[22,34]], P.trim);
+        hOut(g,[[8,52],[34,46],[38,86],[12,92]], P.dark, L, 3);
+        hOut(g,[[14,58],[32,54],[34,80],[16,84]], P.trim, L, 2); });
+      hJoint(g, 86,44, -ps.arm, () => {                                   // vai + đại kiếm
+        hOut(g,[[108,34],[80,26],[76,60],[104,68]], P.dark, L, 3);
+        hPoly(g,[[106,32],[94,18],[98,34]], P.trim);
+        g.save(); g.translate(98,62); g.rotate(0.18);
+        hOut(g, [[-6,0],[6,0],[5,-58],[0,-68],[-5,-58]], '#d8dce6', L, 2.6);
+        g.fillStyle='#fff'; g.fillRect(-2,-56,3,52);
+        hOut(g, [[-15,0],[15,0],[13,8],[-13,8]], P.trim, L, 2); g.restore(); });
+    });
+    g.restore();
+  },
+  // ── CHÓ NGAO: bốn chân bấu đất, hàm há đầy nanh, bờm lửa, gai lưng ──
+  hound(g, P, ps){
+    const s = ps.step, L = P.line;
+    // Mọi nguyên mẫu đều quay mặt sang PHẢI (người gọi lo việc lật theo m.face).
+    // Con này vẽ theo hướng ngược nên lật lại tại đây cho khớp, nếu không lửa phun ngược vào thân.
+    g.save(); g.translate(MOBSK_W, 0); g.scale(-1, 1);
+    g.save(); g.translate(0, ps.bob*0.7);
+    for (const [bx,ph,shade] of [[40,1,P.dark],[54,-1,P.dark],[80,-1,P.main],[94,1,P.main]])
+      hJoint(g, bx,74, s*0.46*ph, () => {
+        g.strokeStyle=L; g.lineWidth=11; g.lineCap='round';
+        g.beginPath(); g.moveTo(bx,70); g.lineTo(bx+s*ph*5,92); g.lineTo(bx+s*ph*7,110); g.stroke();
+        g.strokeStyle=shade; g.lineWidth=7; g.stroke(); });
+    hJoint(g, 64,62, ps.lean*0.6, () => {
+      hOEll(g, 66,58, 33,20, P.main, L, 3.5);                             // thân
+      hOEll(g, 76,60, 22,16, P.dark, null);
+      for (let i=0;i<6;i++){ const hgt = 30 - Math.abs(i-2)*5;            // gai lưng
+        hOut(g, [[44+i*11,44],[48+i*11,44-hgt],[52+i*11,44]], P.trim, L, 2); }
+      g.strokeStyle=L; g.lineWidth=8; g.lineCap='round';                  // đuôi
+      g.beginPath(); g.moveTo(96,54); g.lineTo(112+Math.sin(ps.t*3)*5, 32); g.stroke();
+      g.strokeStyle=P.main; g.lineWidth=5; g.stroke();
+      const hg = g.createRadialGradient(34,52,4,34,52,30);                // bờm lửa
+      hg.addColorStop(0, P.glow); hg.addColorStop(1,'rgba(0,0,0,0)');
+      g.globalAlpha = 0.42 + 0.16*Math.sin(ps.t*5); g.fillStyle = hg;
+      g.beginPath(); g.arc(34,52,30,0,7); g.fill(); g.globalAlpha = 1;
+      for (let i=0;i<5;i++){ const a = -2.3 + i*0.5, ln = 16+Math.sin(ps.t*6+i)*5;
+        hOut(g, [[34,52],[34+Math.cos(a)*ln, 52+Math.sin(a)*ln],[34+Math.cos(a+0.3)*ln*0.7, 52+Math.sin(a+0.3)*ln*0.7]], P.trim, null); }
+      hOEll(g, 30,56, 17,14, P.main, L, 3);                               // đầu
+      hOut(g, [[8,52],[30,46],[30,58],[10,62]], P.dark, L, 2.6);          // mõm trên
+      hOut(g, [[10,62],[30,58],[30,68],[12,70]], P.main, L, 2.6);         // hàm dưới
+      for (let i=0;i<4;i++){ hPoly(g,[[13+i*5,60],[16+i*5,60],[14.5+i*5,66]], '#fff');
+                             hPoly(g,[[14+i*5,68],[17+i*5,68],[15.5+i*5,62]], '#fff'); }
+      hPoly(g, [[24,44],[28,28],[33,44]], P.trim); hPoly(g,[[34,44],[38,30],[43,44]], P.trim);
+      hGlowDot(g, 26,50, 3.2, P.glow, ps.t); hGlowDot(g, 36,49, 3.2, P.glow, ps.t+.7);
+    });
+    g.restore(); g.restore();
+  },
+  // ── ÁC QUỶ: cánh da lớn, sừng cong, lõi lửa trong ngực, vuốt dài ──
+  fiend(g, P, ps){
+    const s = ps.step, L = P.line;
+    hJoint(g, 46,84, s*0.26, () => { hOut(g,[[36,78],[58,78],[58,104],[34,104]], P.dark, L);
+      hOut(g,[[30,100],[62,100],[58,112],[28,112]], P.dark, L); });
+    hJoint(g, 74,84, -s*0.26, () => { hOut(g,[[62,78],[84,78],[86,104],[62,104]], P.dark, L);
+      hOut(g,[[58,100],[90,100],[92,112],[62,112]], P.dark, L); });
+    g.save(); g.translate(0, ps.bob);
+    for (const sd of [-1,1]){                                             // cánh da
+      g.save(); g.translate(60,42); g.scale(sd,1);
+      const fl = Math.sin(ps.t*2 + (sd>0?0:1))*7;
+      hOut(g, [[4,0],[46,-30+fl],[58,4],[38,2],[46,30],[24,16],[26,36],[8,18]], P.dark, L, 3);
+      g.strokeStyle = L; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(8,4); g.lineTo(44,-24+fl); g.moveTo(10,10); g.lineTo(40,4);
+      g.moveTo(14,18); g.lineTo(30,28); g.stroke(); g.restore();
     }
     hJoint(g, 60,80, ps.lean, () => {
-      hPoly(g, [[40,36],[80,36],[86,84],[34,84]], P.main);
-      hPoly(g, [[60,36],[80,36],[86,84],[60,84]], P.dark);
-      hPoly(g, [[30,34],[52,28],[54,54],[32,58]], P.main);            // vai gai
-      hPoly(g, [[90,34],[68,28],[66,54],[88,58]], P.dark);
-      hPoly(g, [[30,34],[42,26],[36,12],[31,32]], P.trim);
-      hPoly(g, [[90,34],[78,26],[84,12],[89,32]], P.trim);
-      hEll(g, 60,24, 14,13, P.main);                                  // đầu
-      hPoly(g, [[48,20],[36,2],[54,12]], P.trim); hPoly(g,[[72,20],[84,2],[66,12]], P.trim);
-      hEll(g, 54,24, 3.4,3.6, P.glow); hEll(g, 66,24, 3.4,3.6, P.glow);
-      g.fillStyle='#140f18'; hPoly(g,[[52,32],[68,32],[64,38],[56,38]], '#140f18');
-      for (const [jx,dir] of [[30,1],[90,-1]])                        // vuốt
-        hJoint(g, jx,52, ps.arm*0.7*dir, () => { g.strokeStyle=P.bone; g.lineWidth=3; g.lineCap='round';
-          for (let i=0;i<3;i++){ g.beginPath(); g.moveTo(jx,52); g.lineTo(jx-dir*(14+i*3), 76+i*4); g.stroke(); } });
+      hOut(g, [[38,34],[82,34],[88,86],[32,86]], P.main, L, 3.5);
+      hPoly(g, [[60,36],[82,36],[88,86],[60,86]], P.dark);
+      const cg = g.createRadialGradient(60,58,2,60,58,20);                // lõi lửa ngực
+      cg.addColorStop(0,'#fff'); cg.addColorStop(0.3,P.glow); cg.addColorStop(1,'rgba(0,0,0,0)');
+      g.globalAlpha = 0.7+0.25*Math.sin(ps.t*3.4); g.fillStyle=cg;
+      g.beginPath(); g.arc(60,58,20,0,7); g.fill(); g.globalAlpha=1;
+      hOut(g, [[26,32],[54,24],[56,56],[28,62]], P.main, L, 3);           // vai gai
+      hOut(g, [[94,32],[66,24],[64,56],[92,62]], P.dark, L, 3);
+      hPoly(g, [[28,30],[40,10],[36,32]], P.trim); hPoly(g,[[92,30],[80,10],[84,32]], P.trim);
+      hOEll(g, 60,20, 16,14, P.main, L, 3);                               // đầu
+      hOut(g, [[46,16],[28,-8],[52,6]], P.trim, L, 2.4);
+      hOut(g, [[74,16],[92,-8],[68,6]], P.trim, L, 2.4);
+      hGlowDot(g, 53,20, 3.6, P.glow, ps.t); hGlowDot(g, 67,20, 3.6, P.glow, ps.t+.5);
+      hOut(g, [[50,28],[70,28],[66,36],[54,36]], '#120c14', null);        // miệng nanh
+      for (let i=0;i<4;i++) hPoly(g,[[52+i*4.6,28],[55+i*4.6,28],[53.5+i*4.6,34]], '#fff');
+      for (const [jx,dir,amt] of [[24,1,0.25],[96,-1,0.6]])
+        hJoint(g, jx,50, (-0.3 + ps.atk*1.2) * amt * dir, () => {
+          g.strokeStyle=L; g.lineWidth=9; g.lineCap='round';
+          g.beginPath(); g.moveTo(jx,50); g.lineTo(jx-dir*8,74); g.stroke();
+          g.strokeStyle=P.main; g.lineWidth=5.5; g.stroke();
+          for (let i=0;i<3;i++){ g.strokeStyle=P.bone; g.lineWidth=3;
+            g.beginPath(); g.moveTo(jx-dir*8,74); g.lineTo(jx-dir*(12+i*6), 92+i*3); g.stroke(); } });
     });
     g.restore();
   },
 };
 
+// ── VFX ĐÒN ĐÁNH theo loại quái — chạy khi ps.atk > 0 ──
+const MOB_ATK_FX = {
+  golem: (g,P,ps) => {                       // đập đất: sóng xung + mảnh đá bắn
+    const k = ps.atk;
+    g.save(); g.globalCompositeOperation='lighter'; g.globalAlpha = k*0.8;
+    g.strokeStyle = P.glow; g.lineWidth = 4;
+    g.beginPath(); g.ellipse(60, 110, 20+70*(1-k), (20+70*(1-k))*0.3, 0, 0, 7); g.stroke();
+    g.globalAlpha = k*0.5;
+    g.beginPath(); g.ellipse(60, 110, 10+46*(1-k), (10+46*(1-k))*0.3, 0, 0, 7); g.stroke();
+    g.globalCompositeOperation='source-over';
+    g.fillStyle = P.main; g.globalAlpha = k;
+    for (let i=0;i<6;i++){ const a=-2.6+i*0.42, d=(1-k)*40;
+      g.beginPath(); g.arc(60+Math.cos(a)*d, 108+Math.sin(a)*d*0.6, 3.2, 0, 7); g.fill(); }
+    g.globalAlpha=1; g.restore();
+  },
+  skeleton: (g,P,ps) => hSlashArc(g, 92, 58, 34, ps.atk, '#e8f0ff'),
+  knight:   (g,P,ps) => hSlashArc(g, 100, 56, 44, ps.atk, '#ffffff'),
+  wraith:   (g,P,ps) => {                    // sóng âm khí lan ra trước
+    const k = ps.atk;
+    g.save(); g.globalCompositeOperation='lighter';
+    for (let i=0;i<3;i++){
+      const rr = 18 + (1-k)*30 + i*11;
+      g.globalAlpha = k*(0.85-i*0.22); g.strokeStyle = P.glow;
+      g.lineWidth = 9-i*2.5; g.lineCap = 'round';
+      g.beginPath(); g.arc(66, 54, rr, -1.0, 1.0); g.stroke();
+    }
+    g.globalAlpha=1; g.globalCompositeOperation='source-over'; g.restore();
+  },
+  cultist:  (g,P,ps) => {                    // cầu phép bắn ra
+    const k = ps.atk, d = (1-k)*46;
+    g.save(); g.globalCompositeOperation='lighter'; g.globalAlpha = Math.min(1,k*1.4);
+    const gg = g.createRadialGradient(92+d,66,1,92+d,66,16);
+    gg.addColorStop(0,'#fff'); gg.addColorStop(0.35,P.glow); gg.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=gg; g.beginPath(); g.arc(92+d,66,16,0,7); g.fill();
+    g.globalAlpha=1; g.globalCompositeOperation='source-over'; g.restore();
+  },
+  hound: (g,P,ps) => hFlame(g, 108, 62, 66*ps.atk, 0.5, ps.atk, P.trim, P.glow),
+  fiend: (g,P,ps) => {                       // phun lửa từ miệng + tàn lửa quanh thân
+    hFlame(g, 72, 32, 74*ps.atk, 0.40, ps.atk, P.trim, P.glow);
+    g.save(); g.globalCompositeOperation='lighter'; g.fillStyle = P.glow;
+    for (let i=0;i<7;i++){ const a = ps.t*2 + i, r = 40 + Math.sin(ps.t*3+i)*8;
+      g.globalAlpha = ps.atk*0.4;
+      g.beginPath(); g.arc(60+Math.cos(a)*r, 50+Math.sin(a)*r*0.6, 2.6, 0, 7); g.fill(); }
+    g.globalAlpha=1; g.globalCompositeOperation='source-over'; g.restore();
+  },
+};
 // Vẽ 1 quái khung xương vào thế giới. size = d.size, boss thì to hơn và có hào quang.
 function drawMobFigure(m, d, dx, dy, now, g){
   const arch = MOB_ARCH[d.skel]; if (!arch) return false;
@@ -5897,10 +6055,24 @@ function drawMobFigure(m, d, dx, dy, now, g){
   }
   if (m.hitT > 0) g.filter = 'brightness(1.8) saturate(0.4)';       // trúng đòn: loé trắng
   arch(g, P, ps);
+  g.filter = 'none';
+  const fx = MOB_ATK_FX[d.skel];                                     // phun lửa / chém kiếm...
+  if (fx && ps.atk > 0.02) fx(g, P, ps);
   g.restore();
   return true;
 }
 
+// Ảnh thu nhỏ cho quái vẽ khung xương, dùng trong panel (Hóa Thân, sổ tay...).
+const _mobCardCache = {};
+function mobCardUrl(mobKey){
+  if (_mobCardCache[mobKey]) return _mobCardCache[mobKey];
+  const d = MOBS[mobKey]; if (!d || !d.skel) return '';
+  const cv = document.createElement('canvas'); cv.width = MOBSK_W; cv.height = MOBSK_H;
+  drawMobFigure({ face:0, wob:0, lungeT:0, hitT:0, moving:false },
+                Object.assign({}, d, { boss:false, size:MOBSK_H/3.6 }),
+                MOBSK_W/2, MOBSK_H - 4, 0, cv.getContext('2d'));
+  return (_mobCardCache[mobKey] = cv.toDataURL('image/png'));
+}
 function drawMob(m){
   const d = m.def;
   const bob = Math.sin(m.wob)*2;
@@ -6675,8 +6847,14 @@ function drawPlayer(){
     }
     ctx.restore();
   }
-  // Hóa Thân Tướng Quân mượn hình boss → vẫn dùng sprite quái; còn lại vẽ khớp xương.
+  // Hóa Thân Tướng Quân mượn hình boss → sprite quái nếu boss đó còn ảnh,
+  // còn boss vẽ khung xương thì dựng lại bằng chính bộ vẽ của nó.
   const img = (p.channelT > 0 && p.channelId) ? CHANNEL_IMGS[p.channelId] : null;
+  let _chSkel = null;
+  if (p.channelT > 0 && p.channelId && !img){
+    const _tv = findTranaiById(p.channelId);
+    if (_tv && MOBS[_tv.img] && MOBS[_tv.img].skel) _chSkel = MOBS[_tv.img];
+  }
   const wph = p.walkPh || 0;
   const bob = p.moving ? Math.abs(Math.sin(wph))*4.2 : Math.sin(wph)*1.5;
   const rock = p.moving ? Math.sin(wph)*0.07 : 0;
@@ -6753,6 +6931,9 @@ function drawPlayer(){
     if (channeling){
       const sw = sh * (img.naturalWidth/img.naturalHeight);
       ctx.drawImage(img, -sw/2, -sh/2, sw, sh);
+    } else if (_chSkel){                       // Hóa Thân boss khung xương: mượn đúng hình nó
+      drawMobFigure({ face:0, wob:now/700, lungeT: atkK*0.22, hitT:0, moving:!!p.moving, spd0:1 },
+                    Object.assign({}, _chSkel, { boss:true, size:24 }), 0, sh*0.5, now, ctx);
     } else {
       const s = sh / HERO_H;
       ctx.scale(s, s); ctx.translate(-HERO_W/2, -HERO_H/2);
@@ -11040,31 +11221,45 @@ TITLES.push({ id:'tctk', name:'Túc Thù Chung Kết', cond:p=>(p.revengeKills||
 // Boss tương ứng cấp từng map — ảnh riêng vẽ bằng AI, phong cách thủy mặc
 Object.assign(MOBS, {
   boss_hacphong:  { name:'Thủ Lĩnh Đoàn Gloam',    lv:16,  hp:3500,   atk:55,  def:20,  xp:3200,  silver:[350,500],   speed:80, aggro:9999, range:40, atkCd:1.2,  size:24, color:'#181420', eye:'#ff3a3a', boss:true, elite:true, drop:1, el:'Hỏa',  img:'assets/mobs/boss_hacphong.png' },
-  boss_sontac:    { name:'Thủ Lĩnh Sói Hoang',  lv:22,  hp:6000,   atk:75,  def:28,  xp:5200,  silver:[500,700],   speed:76, aggro:9999, range:42, atkCd:1.25, size:25, color:'#241a12', eye:'#ff9a3a', boss:true, elite:true, drop:1, el:'Thổ',  img:'assets/mobs/boss_sontac.png', skel:'hound', skelPal:{main:'#5f5348',dark:'#3d342c',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}},
-  boss_phando:    { name:'Đại Tướng Phản Loạn',     lv:34,  hp:11000,  atk:110, def:40,  xp:9000,  silver:[800,1100],  speed:82, aggro:9999, range:44, atkCd:1.2,  size:25, color:'#12201c', eye:'#a0ffe9', boss:true, elite:true, drop:1, el:'Thủy', img:'assets/mobs/boss_phando.png', skel:'knight', skelPal:{main:'#4f7a70',dark:'#2e4a44',trim:'#a0ffe9',cloth:'#1e3a34',glow:'#6ae8c0'}},
-  boss_mochu:     { name:'Chúa Tể Hầm Mộ',          lv:52,  hp:22000,  atk:170, def:70,  xp:16000, silver:[1300,1800], speed:70, aggro:9999, range:46, atkCd:1.3,  size:26, color:'#1c1a14', eye:'#9a86d8', boss:true, elite:true, drop:1, el:'Thổ',  img:'assets/mobs/boss_mochu.png', skel:'cultist', skelPal:{main:'#b0a890',dark:'#332a24',cloth:'#4a3a2a',trim:'#c8a84a',glow:'#8fe0a8'}},
+  boss_sontac:    { name:'Thủ Lĩnh Sói Hoang',  lv:22,  hp:6000,   atk:75,  def:28,  xp:5200,  silver:[500,700],   speed:76, aggro:9999, range:42, atkCd:1.25, size:25, color:'#241a12', eye:'#ff9a3a', boss:true, elite:true, drop:1, el:'Thổ', skel:'hound', skelPal:{main:'#5f5348',dark:'#3d342c',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}},
+  boss_phando:    { name:'Đại Tướng Phản Loạn',     lv:34,  hp:11000,  atk:110, def:40,  xp:9000,  silver:[800,1100],  speed:82, aggro:9999, range:44, atkCd:1.2,  size:25, color:'#12201c', eye:'#a0ffe9', boss:true, elite:true, drop:1, el:'Thủy', skel:'knight', skelPal:{main:'#4f7a70',dark:'#2e4a44',trim:'#a0ffe9',cloth:'#1e3a34',glow:'#6ae8c0'}},
+  boss_mochu:     { name:'Chúa Tể Hầm Mộ',          lv:52,  hp:22000,  atk:170, def:70,  xp:16000, silver:[1300,1800], speed:70, aggro:9999, range:46, atkCd:1.3,  size:26, color:'#1c1a14', eye:'#9a86d8', boss:true, elite:true, drop:1, el:'Thổ', skel:'cultist', skelPal:{main:'#b0a890',dark:'#332a24',cloth:'#4a3a2a',trim:'#c8a84a',glow:'#8fe0a8'}},
   boss_tinhhoa:   { name:'Tình Hỏa Ma Quân',      lv:72,  hp:40000,  atk:240, def:95,  xp:28000, silver:[2000,2800], speed:88, aggro:9999, range:48, atkCd:1.15, size:26, color:'#2a1218', eye:'#7ec850', boss:true, elite:true, drop:1, el:'Mộc', poisonHit:true, img:'assets/mobs/boss_tinhhoa.png' },
-  boss_dothong:   { name:'Chúa Sói Thảo Nguyên',   lv:92,  hp:68000,  atk:340, def:130, xp:45000, silver:[3200,4200], speed:84, aggro:9999, range:50, atkCd:1.1,  size:27, color:'#1a1410', eye:'#ffd76a', boss:true, elite:true, drop:1, el:'Kim',  img:'assets/mobs/boss_dothong.png', skel:'hound', skelPal:{main:'#6a6050',dark:'#443c30',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}},
-  boss_thienbinh: { name:'Thống Soái Thiên Giáp', lv:108, hp:100000, atk:420, def:160, xp:70000, silver:[4500,6000], speed:92, aggro:9999, range:52, atkCd:1.0,  size:27, color:'#101018', eye:'#ff3a3a', boss:true, elite:true, drop:1, el:'Hỏa',  img:'assets/mobs/boss_thienbinh.png', skel:'knight', skelPal:{main:'#d0c8b0',dark:'#8a8068',trim:'#ffe9a8',cloth:'#c04a2a',glow:'#ffb15c'}},
+  boss_dothong:   { name:'Chúa Sói Thảo Nguyên',   lv:92,  hp:68000,  atk:340, def:130, xp:45000, silver:[3200,4200], speed:84, aggro:9999, range:50, atkCd:1.1,  size:27, color:'#1a1410', eye:'#ffd76a', boss:true, elite:true, drop:1, el:'Kim', skel:'hound', skelPal:{main:'#6a6050',dark:'#443c30',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}},
+  boss_thienbinh: { name:'Thống Soái Thiên Giáp', lv:108, hp:100000, atk:420, def:160, xp:70000, silver:[4500,6000], speed:92, aggro:9999, range:52, atkCd:1.0,  size:27, color:'#101018', eye:'#ff3a3a', boss:true, elite:true, drop:1, el:'Hỏa', skel:'knight', skelPal:{main:'#d0c8b0',dark:'#8a8068',trim:'#ffe9a8',cloth:'#c04a2a',glow:'#ffb15c'}},
   // Boss Săn (MU Online-style): xuất hiện SAU khi hạ Cổng Vực phó bản — hoạt động phụ, không bắt
   // buộc để thông quan, thưởng Rương (xem DROP_SRC.box1..5 + grantHuntBox()). huntBoss:true → bỏ
   // qua bảng rơi đồ thường theo-kill (m.def.bossKind/boss) vì phần thưởng đã do grantHuntBox() lo.
   // bossKind:'hunt' mượn nguyên não moveset/lãnh địa/né đòn của Boss Vùng-Cổng Vực (telegraph AoE,
   // vòng lãnh địa đỏ nét đứt, tự hồi nếu người chơi bỏ chạy) — không cần xây hệ thống riêng. Size
   // lớn hơn hẳn Cổng Vực thường (24-30) để áng ngữ đúng không gian rộng của phòng phó bản.
-  boss_cotma1:   { name:'Cốt Tướng',  lv:18,  hp:5600,   atk:88,  def:32,  xp:5100,  silver:[550,800],   speed:82, aggro:9999, range:40, atkCd:1.2,  size:32, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, bossKind:'hunt', bossId:'boss_cotma1', moves:['vach','xung','cuong'], drop:0, el:'Thổ', img:'assets/mobs/boss_cotma.png', skel:'skeleton', skelPal:{main:'#9aa4b0',dark:'#3a4450',trim:'#6ff0c0',bone:'#e4ecf4',cloth:'#2e4a44',glow:'#6ff0c0'}},
-  boss_cotma2:   { name:'Cốt Tướng',  lv:24,  hp:9600,   atk:120, def:45,  xp:8300,  silver:[800,1100],  speed:82, aggro:9999, range:40, atkCd:1.2,  size:32, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, bossKind:'hunt', bossId:'boss_cotma2', moves:['vach','xung','goi','cuong'], drop:0, el:'Thổ', img:'assets/mobs/boss_cotma.png', skel:'skeleton', skelPal:{main:'#9aa4b0',dark:'#3a4450',trim:'#6ff0c0',bone:'#e4ecf4',cloth:'#2e4a44',glow:'#6ff0c0'}},
-  boss_hacnu1:   { name:'Nữ Vu Bóng Tối',   lv:36,  hp:17600,  atk:176, def:64,  xp:14400, silver:[1300,1750], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu1', moves:['vong','goi','cuong'], drop:0, el:'Mộc', poisonHit:true, img:'assets/mobs/boss_hacnu.png', skel:'wraith', skelPal:{main:'#a88ae0',dark:'#3a2a5a',cloth:'#5a3a86',bone:'#e8dcff',glow:'#c07fe0'}},
-  boss_hacnu2:   { name:'Nữ Vu Bóng Tối',   lv:54,  hp:35200,  atk:272, def:112, xp:25600, silver:[2100,2900], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu2', moves:['vong','vach','goi','cuong'], drop:0, el:'Mộc', poisonHit:true, img:'assets/mobs/boss_hacnu.png', skel:'wraith', skelPal:{main:'#a88ae0',dark:'#3a2a5a',cloth:'#5a3a86',bone:'#e8dcff',glow:'#c07fe0'}},
-  boss_hoangkim1:{ name:'Tướng Quân Vàng', lv:74,  hp:64000,  atk:384, def:152, xp:44800, silver:[3200,4500], speed:80, aggro:9999, range:48, atkCd:1.15, size:36, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim1', moves:['vach','xung','vong'], drop:0, el:'Kim', img:'assets/mobs/boss_hoangkim.png', skel:'knight', skelPal:{main:'#c8a84a',dark:'#8a6a20',trim:'#ffe9a8',cloth:'#6a2a1a',glow:'#ffd76a'}},
-  boss_hoangkim2:{ name:'Tướng Quân Vàng', lv:94,  hp:108800, atk:544, def:208, xp:72000, silver:[5100,6700], speed:80, aggro:9999, range:48, atkCd:1.1,  size:38, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim2', moves:['vach','xung','vong','cuong'], drop:0, el:'Kim', img:'assets/mobs/boss_hoangkim.png', skel:'knight', skelPal:{main:'#c8a84a',dark:'#8a6a20',trim:'#ffe9a8',cloth:'#6a2a1a',glow:'#ffd76a'}},
-  boss_amthan:   { name:'Ác Thần Bóng Tối',     lv:112, hp:180000, atk:680, def:260, xp:126000,silver:[8000,11000],speed:90, aggro:9999, range:52, atkCd:1.0,  size:44, color:'#0c0810', eye:'#ff2a2a', huntBoss:true, bossKind:'hunt', bossId:'boss_amthan', moves:['vach','xung','vong','goi','cuong'], drop:0, el:'Hỏa', img:'assets/mobs/boss_amthan.png', skel:'fiend', skelPal:{main:'#5a2a3a',dark:'#331824',trim:'#ff6a5a',bone:'#e8c0b0',glow:'#ff4a3a'}},
+  boss_cotma1:   { name:'Cốt Tướng',  lv:18,  hp:5600,   atk:88,  def:32,  xp:5100,  silver:[550,800],   speed:82, aggro:9999, range:40, atkCd:1.2,  size:32, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, bossKind:'hunt', bossId:'boss_cotma1', moves:['vach','xung','cuong'], drop:0, el:'Thổ', skel:'skeleton', skelPal:{main:'#9aa4b0',dark:'#3a4450',trim:'#6ff0c0',bone:'#e4ecf4',cloth:'#2e4a44',glow:'#6ff0c0'}},
+  boss_cotma2:   { name:'Cốt Tướng',  lv:24,  hp:9600,   atk:120, def:45,  xp:8300,  silver:[800,1100],  speed:82, aggro:9999, range:40, atkCd:1.2,  size:32, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, bossKind:'hunt', bossId:'boss_cotma2', moves:['vach','xung','goi','cuong'], drop:0, el:'Thổ', skel:'skeleton', skelPal:{main:'#9aa4b0',dark:'#3a4450',trim:'#6ff0c0',bone:'#e4ecf4',cloth:'#2e4a44',glow:'#6ff0c0'}},
+  boss_hacnu1:   { name:'Nữ Vu Bóng Tối',   lv:36,  hp:17600,  atk:176, def:64,  xp:14400, silver:[1300,1750], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu1', moves:['vong','goi','cuong'], drop:0, el:'Mộc', poisonHit:true, skel:'wraith', skelPal:{main:'#a88ae0',dark:'#3a2a5a',cloth:'#5a3a86',bone:'#e8dcff',glow:'#c07fe0'}},
+  boss_hacnu2:   { name:'Nữ Vu Bóng Tối',   lv:54,  hp:35200,  atk:272, def:112, xp:25600, silver:[2100,2900], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu2', moves:['vong','vach','goi','cuong'], drop:0, el:'Mộc', poisonHit:true, skel:'wraith', skelPal:{main:'#a88ae0',dark:'#3a2a5a',cloth:'#5a3a86',bone:'#e8dcff',glow:'#c07fe0'}},
+  boss_hoangkim1:{ name:'Tướng Quân Vàng', lv:74,  hp:64000,  atk:384, def:152, xp:44800, silver:[3200,4500], speed:80, aggro:9999, range:48, atkCd:1.15, size:36, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim1', moves:['vach','xung','vong'], drop:0, el:'Kim', skel:'knight', skelPal:{main:'#c8a84a',dark:'#8a6a20',trim:'#ffe9a8',cloth:'#6a2a1a',glow:'#ffd76a'}},
+  boss_hoangkim2:{ name:'Tướng Quân Vàng', lv:94,  hp:108800, atk:544, def:208, xp:72000, silver:[5100,6700], speed:80, aggro:9999, range:48, atkCd:1.1,  size:38, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim2', moves:['vach','xung','vong','cuong'], drop:0, el:'Kim', skel:'knight', skelPal:{main:'#c8a84a',dark:'#8a6a20',trim:'#ffe9a8',cloth:'#6a2a1a',glow:'#ffd76a'}},
+  boss_amthan:   { name:'Ác Thần Bóng Tối',     lv:112, hp:180000, atk:680, def:260, xp:126000,silver:[8000,11000],speed:90, aggro:9999, range:52, atkCd:1.0,  size:44, color:'#0c0810', eye:'#ff2a2a', huntBoss:true, bossKind:'hunt', bossId:'boss_amthan', moves:['vach','xung','vong','goi','cuong'], drop:0, el:'Hỏa', skel:'fiend', skelPal:{main:'#5a2a3a',dark:'#331824',trim:'#ff6a5a',bone:'#e8c0b0',glow:'#ff4a3a'}},
 });
-// ảnh boss nạp thủ công (MOB_IMGS gốc chỉ load mobs trong literal đầu file)
-for (const bt of ['boss_hacphong','boss_sontac','boss_phando','boss_mochu','boss_tinhhoa','boss_dothong','boss_thienbinh',
-  'boss_cotma1','boss_cotma2','boss_hacnu1','boss_hacnu2','boss_hoangkim1','boss_hoangkim2','boss_amthan']){
-  const im = new Image(); im.src = MOBS[bt].img; MOB_IMGS[bt] = im;
+// Ảnh boss nạp thủ công — chạy SAU khi MOBS đã có đủ mob boss (MOB_IMGS ở đầu file chỉ
+// load được các mob khai báo trong literal đầu tiên). Boss vẽ khung xương thì bỏ qua,
+// nếu không sẽ đi tải file đã xoá.
+function loadBossImages(){
+  for (const bt in MOBS){
+    const d = MOBS[bt];
+    if (!d.boss && !d.bossKind && !/^boss_/.test(bt)) continue;
+    if (d.skel || !d.img || MOB_IMGS[bt]) continue;
+    const im = new Image(); im.src = d.img; MOB_IMGS[bt] = im;
+  }
+  for (const mp in BOSS_DEFS){                 // hình dùng cho Hóa Thân Tướng Quân
+    const tv = BOSS_DEFS[mp].tranai;
+    if (!tv || CHANNEL_IMGS[tv.id]) continue;
+    const md = MOBS[tv.img];
+    if (md && md.skel) continue;               // boss khung xương: dựng lại, không cần ảnh
+    const im = new Image(); im.src = 'assets/mobs/' + tv.img + '.png'; CHANNEL_IMGS[tv.id] = im;
+  }
 }
+loadBossImages();
 Object.assign(BGM_TRACKS, {
   pb_daohoa:'bgm_tomb', pb_ngoai:'bgm_tomb', pb_chungnam:'bgm_tomb', pb_comoc:'bgm_tomb',
   pb_tuyettinh:'bgm_tomb', pb_mongco:'bgm_tomb', pb_nhanmon:'bgm_tomb',
@@ -12031,7 +12226,7 @@ function renderChannelForm(){
     const picked = player.channelPick === tv.id || (!player.channelPick && got && unlocked[unlocked.length-1].id === tv.id);
     html += `<div style="width:88px;text-align:center;padding:8px 4px;border-radius:8px;border:1px solid ${picked?'#ffb15c':'rgba(160,190,255,.2)'};background:rgba(180,205,255,.04);cursor:${got?'pointer':'default'}"
       ${got?`onclick="window.setChannelPick('${tv.id}')" title="Đặt làm hóa thân mặc định (phím P)"`:`title="Hạ ${tv.name} (Cổng Vực, cấp ${tv.lv}) để hàng phục"`}>
-      <img src="assets/mobs/${tv.img}.png" style="width:48px;height:48px;object-fit:contain;filter:${got?'none':'grayscale(1) brightness(.4)'}"><br>
+      <img src="${(MOBS[tv.img] && MOBS[tv.img].skel) ? mobCardUrl(tv.img) : 'assets/mobs/' + tv.img + '.png'}" style="width:48px;height:48px;object-fit:contain;filter:${got?'none':'grayscale(1) brightness(.4)'}"><br>
       <b style="font-size:10.5px;color:${got?'#e4ebff':'#6a6156'}">${tv.name}</b><br>
       <span style="font-size:9px;color:${got?(picked?'#ffb15c':'#8fd18f'):'#7a86ad'}">${got ? (picked?'★ Đang chọn':'Đã hàng phục') : '🔒 Chưa hạ'}</span>
     </div>`;
