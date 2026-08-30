@@ -526,3 +526,177 @@ Nối tiếp mục 8:
    `autoEquipBest()`. ⚠ Ba chỗ này đều phải chặn, sót một chỗ là tự-mặc-đồ lách qua được.
 10. Phân giải đồ sai lớp ×2 vật liệu.
 11. Hoàn Hảo lên hình: `hEngrave` đọc `gv.perfect`.
+
+---
+
+# PHẦN 3 — Vòng kinh tế kiểu MU Season 1 (ĐỀ XUẤT, chưa làm)
+
+## 17. MU Season 1 chảy như thế nào
+
+Ba dòng chảy **tách bạch**, mỗi dòng một nguồn:
+
+| Dòng | Nguồn | Vai trò |
+|---|---|---|
+| **Đồ Thường** | mọi quái, bậc theo cấp quái | nền — thay đồ liên tục suốt hành trình |
+| **Ngọc** | mọi quái, kể cả quái thường | **xương sống kinh tế** — thứ thật sự đáng cày |
+| **Hoàn Hảo** | **chỉ quái vàng → hộp** | đích cuối, không mua được bằng thời gian cày thường |
+
+Điểm mấu chốt mà đa số bản làm lại hiểu sai: **ngọc mới là phần thưởng chính của việc cày
+quái thường, không phải đồ.** Đồ rơi ra chủ yếu để phân giải; ngọc mới là thứ nâng sức mạnh.
+Bốn viên ngọc gốc:
+
+- **Bless** — +1 an toàn tới +6, 100%, không rủi ro
+- **Soul** — +1 bất kỳ, 50% (75% nếu món có Luck), xịt thì tụt cấp
+- **Life** — cộng dòng phụ Additional Option, xịt thì mất trắng dòng đó
+- **Chaos** — nguyên liệu Chaos Machine: cánh, ghép đồ cấp cao
+
+Và **Excellent chỉ đến từ Box of Kundun**, mà Box of Kundun chỉ đến từ **quái vàng** — chứ
+không phải từ boss thường hay quái tinh anh.
+
+## 18. Đối chiếu với game mình
+
+Đọc từ code. Cột cuối là kết luận:
+
+| MU Season 1 | Game mình | Trạng thái |
+|---|---|---|
+| Jewel of Bless | ◎ Chúc Phúc Châu | ✅ có, đúng cơ chế (+1 tới +6, 100%) |
+| Jewel of Soul | ◉ Linh Hồn Châu | ✅ có, đúng cơ chế (50%, xịt tụt 1) |
+| Jewel of Life | ❤ Sinh Mệnh Châu | ✅ có (`it.life`, +4%/bậc, xịt về 0) |
+| Jewel of Chaos | ● Hỗn Độn Châu | ✅ có (luyện Linh Dực / đổi Cổ Thần) |
+| Luck option | ☘ Vận | ✅ có (`it.luck`) |
+| Additional option | `it.life` | ✅ có |
+| Box of Kundun | Bảo Hạp I-VII | ✅ có |
+| Golden monsters | Xâm Lăng Vàng | ✅ có (mỗi 4 giờ, 7 map) |
+| Excellent item | Hoàn Hảo (`it.perfect`) | ⚠️ **có, nhưng sai nguồn VÀ sai nội dung** |
+
+**Cấu trúc đã đúng ~90%.** Chỉ ba chỗ nối sai.
+
+## 19. Ba chỗ phải sửa
+
+### 19.1 Quái thường rơi ĐÚNG 0 ngọc
+
+```js
+// game.js — Tứ Châu: boss 41% rơi châu, tinh anh 3% Chúc Phúc
+if (m.def.boss && player.jewels){ ... }
+else if (m.def.elite && Math.random() < 0.03){ ... }
+// ← KHÔNG có nhánh nào cho quái thường
+```
+
+30/46 con quái trong game là quái thường, và chúng **không rơi một viên ngọc nào**. Đây
+đúng là chỗ trái với MU S1 mà bạn chỉ ra: ở MU, cày quái thường ra ngọc chính là lý do
+người ta cày. Ở đây cày quái thường chỉ ra đồ Phàm để bán.
+
+### 19.2 Hoàn Hảo rơi từ tinh anh và boss thường
+
+```js
+elite:  { perfect: 0.02 }
+thuve:  { perfect: 0.08 }
+tranai: { perfect: 0.15 }
+```
+
+Trái hẳn với MU S1, và làm hỏng luôn ý nghĩa của Xâm Lăng Vàng mà ta vừa dựng: nếu boss
+thường cũng ra Hoàn Hảo thì không ai cần chờ 4 tiếng.
+
+### 19.3 Hoàn Hảo chỉ là "dòng cũ roll max"
+
+```js
+const v = (perfect || def.fixed) ? def.max : (roll ngẫu nhiên);
+```
+
+Hoàn Hảo hiện chỉ lấy **cùng những dòng phụ đó** rồi đặt về giá trị lớn nhất. Nghĩa là nó
+**mạnh hơn** chứ không **khác đi** — đúng cái lỗi mà Khắc Ấn vừa sửa cho hệ chiêu thức.
+
+MU không làm vậy: Excellent có **bộ dòng RIÊNG**, 6 dòng cho vũ khí và 6 dòng cho giáp,
+không trùng dòng thường. Một món Excellent hồi mana mỗi lần giết quái — dòng đó không tồn
+tại trên đồ thường, không có cách nào đạt được bằng đồ thường.
+
+## 20. Đề xuất
+
+### 20.1 Ngọc rơi từ mọi loại quái
+
+Tỉ lệ nhân theo dải quái (dải 1 = ×1,0 → dải 5 = ×1,8), tính trên bảng gốc dưới đây:
+
+| Loại quái | ◎ Chúc Phúc | ◉ Linh Hồn | ❤ Sinh Mệnh | ● Hỗn Độn |
+|---|---|---|---|---|
+| **Thường** | 0,9% | 0,7% | 0,25% | 0,10% |
+| **Tinh anh** | 4,5% | 3,5% | 1,6% | 0,8% |
+| **Boss Vùng** | 20% | 12% | 6% | 3% |
+| **Tướng Quân** | 100% | 45% | 22% | 12% |
+
+Ước lượng: treo AUTO một tiếng ở dải 3 hạ ~400 quái thường ⇒ **~4 Chúc Phúc + ~3 Linh Hồn**.
+Đủ để mỗi buổi chơi đều có cái để rèn, không nhiều tới mức +11 thành chuyện vặt.
+
+⚠ Tỉ lệ thật của MU S1 thấp hơn nhiều (cỡ 1/1000). Không bê nguyên: MU là MMO chơi hàng
+nghìn giờ, game này chơi trên trình duyệt từng phiên ngắn. Con số trên đã điều chỉnh.
+
+### 20.2 Hoàn Hảo CHỈ từ Bảo Hạp
+
+| Nguồn | Hoàn Hảo hiện tại | Đề xuất |
+|---|---|---|
+| Quái thường | 0% | **0%** |
+| Tinh anh | 2% | **0%** ← gỡ |
+| Boss Vùng | 8% | **0%** ← gỡ |
+| Tướng Quân | 15% | **0%** ← gỡ |
+| Bảo Hạp I / II | 0% / 5% | **0% / 6%** |
+| Bảo Hạp III / IV | 10% / 15% | **12% / 20%** |
+| Bảo Hạp V / VI / VII | 25% / — / — | **30% / 40% / 55%** |
+
+Bù lại việc gỡ khỏi boss: **nâng tỉ lệ trong Bảo Hạp**, và Bảo Hạp thì chỉ có từ Xâm Lăng
+Vàng (mỗi 4 giờ) và Hung Thần. ⇒ Hai sự kiện thế giới trở thành **con đường duy nhất** tới
+đồ Hoàn Hảo. Đó chính là điều làm chúng đáng chờ.
+
+### 20.3 Hoàn Hảo có bộ dòng RIÊNG
+
+Đây là phần quan trọng nhất. Bám sát cấu trúc MU (6 dòng mỗi nhóm), dùng chỉ số của game mình.
+Món Hoàn Hảo roll **1-3 dòng** từ bảng riêng, **cộng thêm** các dòng thường vốn có.
+
+**Vũ khí — 6 dòng Hoàn Hảo**
+
+| # | Dòng | Ghi chú |
+|---|---|---|
+| 1 | Hạ địch hồi **+8 Qi** | cơ chế MỚI, đồ thường không có |
+| 2 | Hạ địch hồi **+8 Sinh Lực** | cơ chế MỚI |
+| 3 | Tỉ lệ **ST Hoàn Hảo +10%** | mạnh hơn hẳn dòng thường |
+| 4 | **Sát thương +2%** | nhỏ nhưng cộng dồn |
+| 5 | **Sát thương +(cấp nhân vật ÷ 20)** | tự lớn theo cấp — dòng duy nhất làm vậy |
+| 6 | **Tốc đánh +7%** | |
+
+**Giáp — 6 dòng Hoàn Hảo**
+
+| # | Dòng | Ghi chú |
+|---|---|---|
+| 1 | **Đồng rơi +40%** | gấp nhiều lần dòng thường |
+| 2 | **Tỉ lệ đỡ đòn +10%** | cơ chế MỚI |
+| 3 | **Phản sát thương +5%** | |
+| 4 | **Giảm sát thương +4%** | |
+| 5 | **Qi tối đa +4%** | |
+| 6 | **Sinh Lực tối đa +4%** | |
+
+Số dòng theo bậc hạp: **I-II → 1 dòng · III-IV → 1-2 · V-VI → 2-3 · VII → 3**.
+
+⇒ Hệ quả thiết kế: một món **Rèn Hoàn Hảo** có thể đáng mặc hơn **Thánh Thường**, vì nó mang
+dòng mà đồ thường **không bao giờ** có. Người chơi có hai thứ để săn song song, không phải một.
+
+### 20.4 Còn 5 bậc độ hiếm thì sao?
+
+MU không có trục này — Phàm/Rèn/Tinh Luyện/Thánh/Tinh Xảo là của riêng game mình.
+**Đề xuất giữ**, vì nó không đụng gì tới trục Hoàn Hảo:
+
+| Trục | Quyết định |
+|---|---|
+| Độ hiếm | **SỐ dòng thường** (0-4) + tiền tố tên + màu khảm trên giáp |
+| Hoàn Hảo | **THÊM 1-3 dòng từ bảng riêng** |
+| `+0..+11` | nhân chỉ số + hào quang (đã làm) |
+| Vận / Sinh Mệnh | dòng phụ đặc biệt (đã có) |
+
+Bốn trục độc lập, không trục nào nuốt trục nào.
+
+## 21. Việc phải làm — PHẦN 3
+
+12. Nhánh rơi ngọc cho **quái thường** + nhân hệ số theo dải quái.
+13. `DROP_SRC`: đặt `perfect: 0` cho elite / thuve / tranai; nâng cho box3-7.
+14. `EXCELLENT_WEAPON` / `EXCELLENT_ARMOR` — 2 bảng 6 dòng, roll 1-3 dòng khi `perfect`.
+15. `calcDerived()` áp dòng Hoàn Hảo; 2 cơ chế mới (hồi Qi/HP khi hạ địch) móc vào `killMob()`.
+16. `itemLineHtml()` hiện dòng Hoàn Hảo **tách khối riêng**, giống cách Khắc Ấn đang hiển thị.
+17. ⚠ Kiểm lại `itemPower()` — nó tính điểm theo `subs`, dòng Hoàn Hảo mới phải được tính vào,
+    nếu không mũi ▲ và nút "Mặc Đồ Tốt Nhất" sẽ đánh giá thấp đồ Hoàn Hảo.
