@@ -159,8 +159,8 @@ const ITEM_NAMES = {
 };
 // Áo Choàng — 2 cấp, chỉ luyện chế tại Luyện Bảo Các (Rèn)
 const CLOAK_TIERS = [ null,
-  { name:'Huyền Vũ Phi Phong', color:'#5ea0e8', req:1,  atkPct:5,  pierce:3, defPct:0, cost:{ tuLa:5,  hon:2, silver:2000 } },
-  { name:'Thánh Vũ Phi Phong', color:'#7ecbff', req:60, atkPct:10, pierce:6, defPct:5, cost:{ tuLa:10, hon:5, silver:6000 } },
+  { name:'Áo Choàng Thép Xám', color:'#5ea0e8', req:1,  atkPct:5,  pierce:3, defPct:0, cost:{ tuLa:5,  hon:2, silver:2000 } },
+  { name:'Áo Choàng Thánh Quang', color:'#7ecbff', req:60, atkPct:10, pierce:6, defPct:5, cost:{ tuLa:10, hon:5, silver:6000 } },
 ];
 // Pet — rơi từ tinh anh (12%) / boss (40%)
 const PET_DEFS = [
@@ -1444,7 +1444,7 @@ function drawVfx(e, k, a){
   } else if (S === 'icecage'){ // Huyền Băng — hàn khí kết tinh
     ctx.fillStyle = C2; ctx.globalAlpha = a*0.25; ctx.beginPath(); ctx.moveTo(X, Y); ctx.arc(X, Y, R*(0.4 + k*0.55), F - 0.9, F + 0.9); ctx.closePath(); ctx.fill();
     for (let i = 0; i < 6; i++){ const ang = F + (i - 2.5)*0.3; const L = R*(0.3 + k*0.6); _vxFlake(X + Math.cos(ang)*L, Y + Math.sin(ang)*L, 6*(1-k) + 3, i%2 ? C1 : C2, a*0.9); }
-  } else if (S === 'seal4'){ // Tứ Tượng — vuông ấn + tứ linh tứ phương
+  } else if (S === 'seal4'){ // Ấn Trấn — vuông ấn + bốn dấu bốn phương
     poly(X, Y, R*(0.45 + k*0.25), 4, Math.PI/4, C1, 4, a*0.9);
     const bs = ['★', '◆', '▲', '⚔'];
     for (let i = 0; i < 4; i++){ const aa = i*Math.PI/2 - Math.PI/2; _vxGlyph(X + Math.cos(aa)*R*0.5, Y + Math.sin(aa)*R*0.5, bs[i], 18, C2, a*(1 - k*0.5)); }
@@ -2115,23 +2115,29 @@ const DANTIAN_REALMS = [
   { name:'Starforged Cảnh',        atk:0.88, hp:0.88, qireg:10, cost:{tuvi:20000, silver:28000, mat:160}, trib:9, unlock:'Starforged — nhục thân thăng hoa, toàn thuộc tính vượt cực hạn' },
 ];
 
-// ═══════════ TRACK HT (GDD §13) — trang bị MU Online S2 phong cách kiếm hiệp ═══════════
-// Tứ Tượng Cổ Thần: 5 món/bộ (Nón/Giáp/Tay/Quần/Giày) — CHỈ mở từ Bảo Hạp, không pity.
+// ═══════════ TRACK HT (GDD §13) — trang bị dark-fantasy kiểu MU Online S2 ═══════════
+// Cổ Thần Thủ Hộ: 5 món/bộ (Nón/Giáp/Tay/Quần/Giày) — CHỈ mở từ Bảo Hạp, không pity.
 // Hiệu ứng bộ ẨN — người chơi tự khám phá khi mặc đủ 2/3/5 món.
+// Bốn bộ mang tên bốn Thủ Hộ Vaeldra đã ngã xuống khi Phong Ấn vỡ — di giáp của họ
+// còn lại trong Bảo Hạp. (Tên cũ Thanh Long/Bạch Hổ/Chu Tước/Huyền Vũ là tàn dư kiếm
+// hiệp, đã gỡ theo QUY TẮC SỐ 1; ANCIENT_MIGRATE bên dưới lo save cũ.)
 const ANCIENT_SETS = {
-  thanhlong: { name:'Thanh Long', color:'#3ac88a',
+  sarkaan:  { name:'Sarkaan', color:'#3ac88a',
     b2:{ atkPct:10 }, b3:{ critDmg:20 }, b5:{ aspdPct:8, hpLeech:3 },
-    hint:'gió xanh cuồn cuộn — công kích cuồng bạo' },
-  bachho:    { name:'Bạch Hổ', color:'#e8e8f0',
+    hint:'thép xanh gào thét — công kích cuồng bạo' },
+  velmyr:   { name:'Velmyr', color:'#e8e8f0',
     b2:{ crit:6 }, b3:{ atkPct:8 }, b5:{ pierce:10, perfect:5 },
-    hint:'sát khí trắng toát — xuyên phá hộ thể' },
-  chutuoc:   { name:'Chu Tước', color:'#ff6a3a',
+    hint:'lưỡi bạc lạnh buốt — xuyên phá hộ giáp' },
+  ashvard:  { name:'Ashvard', color:'#ff6a3a',
     b2:{ hpPct:10 }, b3:{ reflectPct:8 }, b5:{ dmgred:8, hpPct:6 },
-    hint:'hỏa diễm thiêu đốt — sinh mệnh bền bỉ' },
-  huyenvu:   { name:'Huyền Vũ', color:'#5aa0e8',
+    hint:'tro tàn còn cháy — sinh mệnh bền bỉ' },
+  korrveth: { name:'Korrveth', color:'#5aa0e8',
     b2:{ dmgred:6 }, b3:{ hpPct:12 }, b5:{ evaPct:8, reflectPct:5 },
-    hint:'quy xà hộ thể — phòng ngự tuyệt đối' },
+    hint:'thành lũy bất động — phòng ngự tuyệt đối' },
 };
+// Save cũ giữ id bộ theo tên kiếm hiệp — ánh xạ sang id mới lúc loadGame(), nếu không
+// ANCIENT_SETS[it.ancient] thành undefined và người chơi mất trắng hiệu ứng bộ.
+const ANCIENT_MIGRATE = { thanhlong:'sarkaan', bachho:'velmyr', chutuoc:'ashvard', huyenvu:'korrveth' };
 // Tứ Châu: ◎ Chúc Phúc (+1..+6 miễn phí 100%) · ◉ Linh Hồn (+1 bất kỳ, 50%, xịt tụt 1)
 //          ❤ Sinh Mệnh (+4%→+28% HP theo bậc, xịt về 0) · ● Hỗn Độn (luyện Linh Dực / đổi Cổ Thần)
 const JEWEL_NAMES = { chucPhuc:'◎ Chúc Phúc Châu', linhHon:'◉ Linh Hồn Châu', sinhMenh:'❤ Sinh Mệnh Châu', honDon:'● Hỗn Độn Châu' };
@@ -2336,7 +2342,7 @@ function genItem(level, bias, srcK){
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
   };
 }
-// Cổ Thần (Tứ Tượng) — chỉ mở từ Bảo Hạp: giáp Thần cấp 4 dòng Hoàn Hảo + ấn bộ ẩn
+// Cổ Thần Thủ Hộ — chỉ mở từ Bảo Hạp: giáp Thần cấp 4 dòng Hoàn Hảo + ấn bộ ẩn
 function genAncient(setId, slotId, level){
   const set = ANCIENT_SETS[setId];
   const slot = SLOTS.find(s => s.id === slotId);
@@ -2516,7 +2522,7 @@ function calcDerived(){
     if (it.life) P.hpPct += it.life * 4;                     // Sinh Mệnh: +4% HP/bậc (tối đa +28%)
     if (it.ancient && ANCIENT_SETS[it.ancient]) setCount[it.ancient] = (setCount[it.ancient] || 0) + 1;
   }
-  // Tứ Tượng Cổ Thần — hiệu ứng bộ ẩn kích hoạt ở 2/3/5 món
+  // Cổ Thần Thủ Hộ — hiệu ứng bộ ẩn kích hoạt ở 2/3/5 món
   player.setActive = {};
   for (const sid in setCount){
     const n = setCount[sid], set = ANCIENT_SETS[sid];
@@ -2831,6 +2837,13 @@ function loadGame(){
     if (player.khi == null) player.khi = 0;
     if (!player.meridians) player.meridians = {};
     for (const m of MERIDIANS) if (player.meridians[m.id] == null) player.meridians[m.id] = 0;
+    // Bộ Cổ Thần đổi tên (Thanh Long… → Sarkaan…): ánh xạ id trên MỌI món đang giữ — cả
+    // món trong túi lẫn món đang mặc. Bỏ sót chỗ nào là chỗ đó mất hiệu ứng bộ vĩnh viễn.
+    for (const it of (player.inv || [])) if (it && ANCIENT_MIGRATE[it.ancient]) it.ancient = ANCIENT_MIGRATE[it.ancient];
+    for (const k in (player.equip || {})){
+      const it = player.equip[k];
+      if (it && ANCIENT_MIGRATE[it.ancient]) it.ancient = ANCIENT_MIGRATE[it.ancient];
+    }
     if (!player.gems) player.gems = { tuLa: 0, honNguyen: 0 };
     if (player.charms == null) player.charms = 0;
     if (player.tienDan == null) player.tienDan = 0;
@@ -3896,7 +3909,7 @@ function unlockNotices(){
     10:['Mở khóa: the Calling — 5 lớp chờ ngươi chọn!','Mở khóa: Cương Khí (Tấn Chức — phím H)','Mở khóa: Truy Nã Lệnh & Sảnh Cầu May — Bổ Đầu và Thương Nhân Vận May ở Lunaris City'],
     15:['Mở khóa: Linh Thú — mua Phong Linh Phù ở Vũ Khí Phường, đánh tinh anh còn <40% máu rồi bấm T'],
     40:['Mở khóa: Lò Bảo Chứng luyện Linh Dực Cấp 1 — Lò Rèn Hoàng Gia, Lunaris City'],
-    45:['Bảo Hạp IV trở lên từ Hung Thần có 5-8% mở ra trang bị CỔ THẦN Tứ Tượng — Hung Thần giáng thế mỗi 4 giờ!'],
+    45:['Bảo Hạp IV trở lên từ Hung Thần có 5-8% mở ra trang bị CỔ THẦN THỦ HỘ — Hung Thần giáng thế mỗi 4 giờ!'],
     30:['Mở khóa: Cung Tiễn (Tấn Chức — phím H)','Mở khóa: Động Phủ — gặp Quản Gia ở Lunaris City'],
   };
   const list = msgs[player.level];
@@ -7387,7 +7400,7 @@ window.doDoiHe = function(uid){
   addFloat(player.x, player.y-52, `◑ ĐỔI HỆ — chuyển sang hệ ${el2}!`, NGU_HANH[el2].color, 14);
   calcDerived(); saveGame(); renderForge();
 };
-// Đổi 60 Mảnh Cổ Thần → 1 món Cổ Thần chọn bộ (pity Tứ Tượng — vá lỗi không pity)
+// Đổi 60 Mảnh Cổ Thần → 1 món Cổ Thần chọn bộ (pity Thủ Hộ — vá lỗi không pity)
 window.doiCoThan = function(setId){
   if (!ANCIENT_SETS[setId] || player.mats.manhCoThan < 60) return;
   if (player.inv.length >= 30){ addFloat(player.x, player.y-40, 'Túi đồ đầy!', '#ff7a6a', 12); return; }
@@ -7533,7 +7546,7 @@ function renderForge(){
     html += `<div style="text-align:center;color:#7ecbff;font-size:13px;padding:6px">☀ ${CLOAK_TIERS[2].name} — áo choàng tối thượng của Luyện Bảo Các!</div>`;
   }
   // ── Drop v2.0: pity Cổ Thần — 60 Mảnh Cổ Thần đổi 1 món chọn bộ ──
-  html += `<div class="stat-sec">TỨ TƯỢNG CỔ THẦN — đổi ◈ Mảnh Cổ Thần (đang có <b style="color:#7ecbff">${(player.mats&&player.mats.manhCoThan)||0}</b>/60)</div>`;
+  html += `<div class="stat-sec">CỔ THẦN THỦ HỘ — đổi ◈ Mảnh Cổ Thần (đang có <b style="color:#7ecbff">${(player.mats&&player.mats.manhCoThan)||0}</b>/60)</div>`;
   html += `<div class="forge-actions" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">`;
   for (const sid in ANCIENT_SETS){
     const st = ANCIENT_SETS[sid];
@@ -9247,7 +9260,7 @@ function renderBaGua(){
   }
   // Đổi Cổ Thần: 3 món trùng + 1 Hỗn Độn = 1 món TỰ CHỌN (con đường song song thay pity)
   const ancients = player.inv.filter(x=>x.ancient);
-  html += `<div class="next-tier" style="border-color:rgba(58,200,138,.5)"><b style="color:#3ac88a">Đổi Cổ Thần — Tứ Tượng tự chọn</b><br>
+  html += `<div class="next-tier" style="border-color:rgba(58,200,138,.5)"><b style="color:#3ac88a">Đổi Cổ Thần — Thủ Hộ tự chọn</b><br>
     <span style="font-size:11.5px;opacity:.8">Hiến tế 3 món Cổ Thần trong túi + 1 ● Hỗn Độn Châu → nhận 1 món Cổ Thần theo ý muốn.</span></div>`;
   if (ancients.length){
     const selN = Object.keys(window._hdSel || {}).length;
@@ -12881,7 +12894,7 @@ window.craftWing = function(t){
 };
 
 // ---------- Lò Bảo Chứng: đổi 3 Cổ Thần trùng + 1 Hỗn Độn = 1 món tự chọn ----------
-window._hdSel = {}; window._hdSet = 'thanhlong'; window._hdSlot = 'non';
+window._hdSel = {}; window._hdSet = 'sarkaan'; window._hdSlot = 'non';
 window.hdToggle = function(uid){
   if (window._hdSel[uid]) delete window._hdSel[uid];
   else if (Object.keys(window._hdSel).length < 3 && player.inv.some(x => x.uid === uid && x.ancient)) window._hdSel[uid] = true;
@@ -12890,7 +12903,7 @@ window.hdToggle = function(uid){
 window.hdExchange = function(){
   const sel = Object.keys(window._hdSel || {}).map(Number);
   if (sel.length !== 3 || player.jewels.honDon < 1 || player.inv.length >= 30) return;
-  const setId = ANCIENT_SETS[window._hdSet] ? window._hdSet : 'thanhlong';
+  const setId = ANCIENT_SETS[window._hdSet] ? window._hdSet : 'sarkaan';
   const slotId = ARMOR_SLOTS.includes(window._hdSlot) ? window._hdSlot : 'non';
   const idxs = player.inv.map((x, i) => (x && sel.includes(x.uid)) ? i : -1).filter(i => i >= 0).sort((a, b) => b - a);
   if (idxs.length !== 3){ window._hdSel = {}; renderBaGua(); return; }
