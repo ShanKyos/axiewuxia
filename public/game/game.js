@@ -4059,7 +4059,12 @@ function hurtMob(m, dmg, source){
   const _w = Math.min(1, final / Math.max(1, m.maxHp));
   // Hất lùi theo sát thương. vhKnockback() viết sẵn từ lâu nhưng CHỈ được gọi khi chiêu khai
   // báo fx.kb — đòn thường không đẩy quái một pixel nào. Quái to gần như bất động (chia size).
-  if (source === 'hit' || source === 'crit' || source === 'tp'){
+  // ⚠ CHỈ đòn đơn mục tiêu. Cố ý KHÔNG áp cho 'tp' (Trấn Phái) và các chiêu diện rộng:
+  // AoE mà đẩy địch ra thì chính nó phá tan đội hình cho đòn kế tiếp của mình, chống lại mọi
+  // thứ ăn theo việc gom địch — Khắc Ấn Hiệu Triệu (trúng ≥3 địch) là ví dụ trực tiếp, nó
+  // ngừng kích hoạt vì Trấn Phái đẩy con thứ ba ra đúng 1 pixel khỏi tầm quạt.
+  // Chiêu nào MUỐN hất lùi thì khai báo `fx.kb` như trước, đi qua vhKnockback riêng.
+  if (source === 'hit' || source === 'crit'){
     const _kb = (2 + 10 * _w) * (14 / Math.max(14, m.def.size || 14));
     if (_kb > 0.4) vhKnockback(m, Math.atan2(m.y - player.y, m.x - player.x), _kb);
   }
