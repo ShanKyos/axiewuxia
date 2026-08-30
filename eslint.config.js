@@ -66,7 +66,8 @@ export default defineConfig([
         qzToggle: 'readonly', renderStable: 'readonly', respawn: 'readonly',
         toggleAuto: 'readonly', toggleMountOut: 'readonly', travelTo: 'readonly',
         tryCatchHorse: 'readonly', tryTame: 'readonly',
-        equipItem: 'readonly', qzFlipAll: 'readonly', useJewel: 'readonly',
+        equipItem: 'readonly', qzFlipAll: 'readonly',
+        craftCloak: 'readonly', doiCoThan: 'readonly', buyCharm: 'readonly', useJewel: 'readonly',
       },
     },
     rules: {

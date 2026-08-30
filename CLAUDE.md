@@ -59,6 +59,13 @@ INTRO_PAGES / QUESTS / CLUES / BOSS_LORE / SECTS / NPCS / MOBS / TB_TIER_NAMES.
 
 Dark Knight · Dark Wizard · Dark Lord **giữ nguyên** — là danh từ fantasy phổ thông.
 
+## Tên trang bị đi theo CHẤT LIỆU
+
+`ITEM_NAMES[slot][rarity]` — 5 tên mỗi ô, leo theo chất liệu như đồ MU: **da → sắt → thép →
+vảy rồng → hắc nguyệt**. Bộ tên cũ mượn thẳng binh khí kiếm hiệp (Huyền Thiết Trọng Kiếm,
+Lăng Ba Hài, Chí Tôn Long Giáp, Thiên Tôn Miện…) — vi phạm Quy tắc số 1. Tên mới phải là
+danh từ trang bị thuần, đừng mượn tên chiêu thức hay bảo vật tiểu thuyết.
+
 ## Cốt truyện (canon)
 
 Hai vũ trụ giao thoa. Phong ấn giam **Morvahn** ở **Vaeldra** vỡ; Thủ Hộ Vaeldra
@@ -328,6 +335,80 @@ Taskbar cố định **3 ô**: chiêu chính (`a`) · chiêu phụ (`tp`) · buf
 (`BUFF_SKILL_ID`). Không cho người chơi tự gán. Các chiêu cũ không còn bấm được đã quy thành
 **% Công Kích vĩnh viễn** (`LEGACY_SECT_SKILLS` / `legacyAtkPct` trong `calcDerived()`), hiện ở
 tab "Tuyệt Học Cũ" (panel K).
+
+## Hình vật phẩm — LẮP TỪ BỘ PHẬN, không phải file PNG
+
+220 món, **0 byte**. Trước đây 11 file PNG (2,3 MB) phải gánh toàn bộ trang bị: mọi thanh
+kiếm dùng chung `vukhi.png`, khác nhau đúng một bộ lọc xoay màu theo giai.
+
+**Mỗi món là một DÒNG trong `ITEM_DB`, hình suy ra từ tổ hợp bộ phận.** Thêm món mới = thêm
+một dòng, không viết hàm vẽ mới.
+
+| dòng | bộ phận |
+|---|---|
+| Lưỡi | `IBLADE` 11 × `IGUARD` 7 × `IPOMMEL` 4 × `IMOTIF` 6 |
+| Gậy/Trượng | `ISHAFT` 4 × `IHEAD` 7 |
+| Cung / Nỏ | `iaBow` 3 cánh · `iaCrossbow` |
+| Giáp | `ARMOR_TRAIT` 12 kiểu × 5 ô |
+
+**Giáp sinh THẲNG từ `HERO_SETS`** (`ARMOR_PIECES` × 25 bộ). Nhờ vậy hình trong túi và hình
+trên người dùng chung một nguồn — không có cách nào lệch nhau, kể cả khi đổi bảng màu bộ sau
+này. **Vũ khí trên tay cũng vẽ bằng chính bộ phận dựng icon** (`hHeldWeapon` + `HELD_FIT`).
+
+**Bốn luật đã trả giá mới biết:**
+1. **Màu hoa văn thuộc về MÓN, không thuộc về giai.** Lấy `M.glow` thì Kiếm Điện, Kiếm Băng
+   và Kiếm Lửa cùng giai sẽ cùng một màu — mất sạch bản sắc. Dùng `MOTIF_COL`.
+2. **Vũ khí có `WEAPON_MAT` riêng, không dùng bảng màu giai.** Bảng đó viết cho GIÁP trên
+   người: giai 10 là đỏ, nên mọi vũ khí cuối game sẽ đỏ hết.
+3. **Icon cần sàn độ sáng riêng** (`itemPal` nâng khi `_lum(hi) < 0.30`). Nhân vật đứng trên
+   bản đồ SÁNG, icon nằm trên nền panel TỐI — dùng chung một bảng màu cho hai chỗ là sai.
+4. **Khoá cache phải gồm MỌI thứ đổi hình**, kể cả `plus` (không phải `plusStage(plus)`) —
+   nếu không thì +8 và +9 dùng chung một ảnh dù có vẽ khác đi cũng vô ích.
+
+**Khoá lớp** (`itemUsable`): kiếm chỉ Dark Knight, gậy chỉ Dark Wizard, cung chỉ Sylvan
+Ranger. Chặn ở **cả ba** chỗ mặc đồ — bấm tay, tự mặc khi nhặt, nút Mặc Đồ Tốt Nhất. Bỏ sót
+một chỗ là auto lách được luật. Dây chuyền và nhẫn không khoá.
+
+**Hiệu ứng chém theo `motif` là THUẦN HÌNH ẢNH.** Cơ chế chiến đấu là việc của Khắc Ấn — cho
+vũ khí làm cả hai thì hai hệ giẫm chân nhau và người chơi không biết sát thương lan ra là do
+kiếm hay do dấu ấn.
+
+⚠ **Ba lỗi hình chỉ lộ khi CHỤP RA XEM, không lỗi nào lộ khi đọc code**: nhẫn ra hình móng
+ngựa (vẽ cung hở), găng ra thanh sô-cô-la (4 khối chữ nhật bằng nhau), kiếm cao hơn cả người
+(hệ số 2.5 thay vì 1.45). Vẽ xong phải render ra ảnh mà nhìn.
+
+## Lò Hỗn Độn — MỘT cỗ máy, không phải 7 khối chữ
+
+Trước đây có **hai** màn rèn chồng nhau: bảng `Rèn Luyện` (tab) và `Lò Rèn Hoàng Gia` (NPC).
+Mỗi màn là một cuộn chữ dài xếp 7 khối khác nhau, và hai bên còn trùng nội dung. Nay gộp thành
+một cỗ máy kiểu Chaos Machine: **bỏ đồ + ngọc vào KHAY → máy liệt kê công thức khay đó thoả →
+chọn → KẾT HỢP**.
+
+**Luật nằm hết trong `CHAOS_RECIPES`, `renderForge()` chỉ vẽ.** Thêm công thức mới = thêm một
+phần tử vào bảng, không đụng vào phần vẽ. Mỗi công thức khai báo:
+
+| khoá | việc |
+|---|---|
+| `match(v)` | khay có đúng HÌNH DẠNG không (mấy món, loại gì) → trả mô tả hoặc `null` |
+| `plan(v,m)` | tỉ lệ, bảng nguyên liệu, cảnh báo, có cho dùng Thiên Mệnh Phù không |
+| `run(v,m,p)` | thực thi |
+| `royal:true` | chỉ chạy tại Lò Rèn Hoàng Gia (`atRoyalForge()`) |
+
+**Quy ước phân loại nguyên liệu:** thứ **rời rạc** (trang bị, ngọc Tứ Châu) phải bỏ vào khay mới
+tính — dùng `jewelCost()`. Thứ **số lượng lớn** (bạc, Huyền Thiết, Tu La, Mảnh…) trừ thẳng từ kho
+và chỉ hiện trong bảng — dùng `chaosCost()`. Đừng trộn hai loại.
+
+**Ba cái bẫy đã sập một lần, đừng sập lại:**
+1. `chaosSyncGroup()` phải chạy theo `chaosPick`. Nếu không, bảng DANH SÁCH công thức và bảng
+   CHI TIẾT sẽ chỉ vào hai công thức KHÁC NHAU.
+2. Khay trống thì **đừng** tự nhảy tab. Không có bước chặn này, mở lò ra là rơi thẳng vào Chế Tạo
+   chỉ vì "khay trống khớp công thức luyện áo choàng".
+3. Khay khớp công thức ở nhóm khác thì **phải** nhảy sang. Không có bước này, bỏ trang bị + viên
+   Chúc Phúc vào khay lúc đang xem tab Rèn sẽ khiến máy im lặng hoàn toàn — không công thức,
+   không nút bấm — dù khay hoàn toàn hợp lệ.
+
+`trayView()` tự nhả món đã bán/vỡ khỏi khay, nên không có uid ma. Sau khi khảm ngọc xong, khay
+**giữ lại món đồ** (để khảm tiếp) và chỉ nhả viên ngọc.
 
 ## Cảm giác chiến đấu — 3 luật dễ vi phạm lại
 

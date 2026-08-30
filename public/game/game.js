@@ -146,16 +146,19 @@ const EQUIP_GRID = [
   ['nhan1','quan','nhan2'],
   ['tay','chan','pet'],
 ];
+// Tên trang bị đi theo PHẨM (Phàm→Chí Tôn), leo theo CHẤT LIỆU như đồ MU: da → sắt → thép →
+// vảy rồng → hắc nguyệt. Bộ tên cũ mượn thẳng binh khí kiếm hiệp (Huyền Thiết Trọng Kiếm,
+// Lăng Ba Hài, Chí Tôn Long Giáp…) — vi phạm Quy tắc số 1.
 const ITEM_NAMES = {
-  vukhi:['Mộc Kiếm','Thanh Phong Kiếm','Liệt Dương Đao','Huyền Thiết Trọng Kiếm','Du Long Thần Kiếm'],
-  non:['Bố Mạo','Thiết Diện','Ngân Quan','Hổ Đầu Khôi','Thiên Tôn Miện'],
-  ao:['Bố Y','Tinh Giáp','Lân Giáp','Kim Lân Giáp','Chí Tôn Long Giáp'],
-  tay:['Bố Uyển','Thiết Uyển','Ngân Uyển','Kim Uyển','Long Uyển'],
-  quan:['Ma Khố','Cẩm Khố','Ngọc Khố','Lân Khố','Thần Khố'],
-  chan:['Thảo Hài','Vân Hài','Truy Phong Hài','Lăng Ba Hài','Phi Thiên Hài'],
-  daychuyen:['Mộc Liên','Ngân Liên','Ngọc Liên','Lân Liên','Thánh Liên'],
-  nhan1:['Đồng Giới','Ngân Giới','Ngọc Giới','Linh Giới','Chí Tôn Giới'],
-  nhan2:['Phổ Giới','Mỹ Giới','Huyền Giới','Thần Giới','Tứ Linh Giới'],
+  vukhi:['Kiếm Đồng','Kiếm Sắt','Trọng Kiếm Thép','Kiếm Vảy Rồng','Ma Kiếm Hắc Nguyệt'],
+  non:['Mũ Da','Mũ Sắt','Mũ Trụ Thép','Mũ Trụ Vảy Rồng','Vương Miện Hắc Nguyệt'],
+  ao:['Giáp Da','Giáp Sắt','Giáp Bản Thép','Giáp Vảy Rồng','Thánh Giáp Hắc Nguyệt'],
+  tay:['Găng Da','Găng Sắt','Găng Thép','Găng Vảy Rồng','Găng Hắc Nguyệt'],
+  quan:['Quần Da','Giáp Đùi Sắt','Giáp Đùi Thép','Giáp Đùi Vảy Rồng','Giáp Đùi Hắc Nguyệt'],
+  chan:['Giày Da','Giày Sắt','Ủng Thép','Ủng Vảy Rồng','Ủng Hắc Nguyệt'],
+  daychuyen:['Dây Chuyền Đồng','Dây Chuyền Bạc','Dây Chuyền Ngọc Lam','Dây Chuyền Hồng Ngọc','Dây Chuyền Tinh Vân'],
+  nhan1:['Nhẫn Đồng','Nhẫn Bạc','Nhẫn Ngọc Lục','Nhẫn Hắc Kim','Nhẫn Tinh Vân'],
+  nhan2:['Nhẫn Thô Sơ','Nhẫn Chạm Khắc','Nhẫn Cổ Ngữ','Nhẫn Phong Ấn','Nhẫn Vĩnh Hằng'],
 };
 // Áo Choàng — 2 cấp, chỉ luyện chế tại Luyện Bảo Các (Rèn)
 const CLOAK_TIERS = [ null,
@@ -2566,15 +2569,15 @@ function genItem(level, bias, srcK){
   }
   // Vận (Luck) — chỉ xuất hiện khi rơi, không rèn được: +5% ST bạo kích/món, +5% tỉ lệ rèn (tối đa +25%)
   const luck = Math.random() < 0.06 + r*0.025 + (srcK ? 0 : (bias||0)*0.04);
-  return {
+  return assignDef({
     uid: itemSeq++, slot: slot.id, slotName: slot.name,
-    name: (perfect ? 'Hoàn Hảo ' : '') + ITEM_NAMES[slot.id][r],
+    name: (perfect ? 'Hoàn Hảo ' : '') + ITEM_NAMES[slot.id][r],   // ghi đè bởi assignDef()
     rarity: r, level: ilvl, tier, perfect, luck, life: 0, ancient: null,
     main: { k: slot.main, v: slot.base(tier, r), name: mainName(slot.main) },
     element: ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)],
     subs, plus: 0,
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
-  };
+  });
 }
 // Cổ Thần Thủ Hộ — chỉ mở từ Bảo Hạp: giáp Thần cấp 4 dòng Hoàn Hảo + ấn bộ ẩn
 function genAncient(setId, slotId, level){
@@ -2589,7 +2592,7 @@ function genAncient(setId, slotId, level){
     const def = pool.splice(idx,1)[0];
     subs.push({ k:def.k, name:def.name, v:def.max, pct:true });
   }
-  return {
+  const it = assignDef({
     uid: itemSeq++, slot: slot.id, slotName: slot.name,
     name: set.name + ' · ' + ITEM_NAMES[slot.id][r],
     rarity: r, level: ilvl, tier, perfect: true, luck: Math.random() < 0.1, life: 0, ancient: setId,
@@ -2597,7 +2600,9 @@ function genAncient(setId, slotId, level){
     element: ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)],
     subs, plus: 0,
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
-  };
+  });
+  it.name = set.name + ' · ' + it.name;   // assignDef() đặt tên theo bộ lớp, bộ Cổ Thần đứng trước
+  return it;
 }
 // Trang bị đặc biệt (Áo Choàng / Pet / Cánh): chỉ số cố định, không rèn
 function specialItem(slot, def, extra){
@@ -2738,6 +2743,7 @@ window.sellItem = function(i){
 function tryAutoEquip(it){
   if (!player.autoEquip || !it.slot || it.special) return;
   if (player.level < itemReqLv(it)) return;
+  if (!itemUsable(it)) return;                     // khoá lớp — chặn ở CẢ BA chỗ mặc đồ
   const cur = player.equip[it.slot];
   const cp = cur ? itemPower(cur) : 0, np = itemPower(it);
   // Khắc Ấn nằm ngoài lực chiến hoàn toàn. Không chặn ở đây thì tự-mặc-đồ sẽ lặng lẽ tháo mất
@@ -2764,6 +2770,7 @@ window.autoEquipBest = function(){
     for (let i2 = 0; i2 < player.inv.length; i2++){
       const it2 = player.inv[i2];
       if (it2.slot !== sl.id || it2.special || player.level < itemReqLv(it2)) continue;
+      if (!itemUsable(it2)) continue;              // khoá lớp — bỏ sót đây là auto lách được luật
       if (itemSigilLost(sl.id, it2)) continue;   // cùng lý do như tryAutoEquip: đừng tháo mất Khắc Ấn
       const s2 = !!itemSigilNew(it2), p2 = itemPower(it2);
       if (s2 !== bs ? s2 : p2 > bp){ bs = s2; bp = p2; bi = i2; }
@@ -3142,10 +3149,15 @@ function newPlayer(sectKey){
   calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
   buildWorld();
 }
+// Save cũ không có `def` trên món nào, nên toàn bộ trang bị sẽ rơi về icon PNG dùng chung và
+// KHÔNG bị khoá lớp — một Dark Wizard save cũ đang cầm kiếm sẽ tiếp tục cầm được. Danh mục 220
+// món đổi hẳn hình dạng vật phẩm nên không có đường vá tại chỗ nào sạch: nâng phiên bản, xoá.
+const SAVE_VERSION = 2;
 function saveGame(){
   if (!player) return;
   try {
     const payload = JSON.stringify({
+      v: SAVE_VERSION,
       player, questIdx, questProg, questState, victory, curMap, sideStates,
       savedAt: Date.now()
     });
@@ -3161,6 +3173,12 @@ function loadGame(){
     const raw = localStorage.getItem('vlcm_save');
     if (!raw) return false;
     const d = JSON.parse(raw);
+    if ((d.v || 1) < SAVE_VERSION){
+      // Nói rõ ra, đừng lặng lẽ xoá: mất nhân vật mà không hiểu vì sao là thứ tệ nhất.
+      try { localStorage.removeItem('vlcm_save'); } catch { /* best-effort */ }
+      window._saveWiped = true;
+      return false;
+    }
     player = d.player; questIdx = d.questIdx; questProg = d.questProg;
     questState = d.questState; victory = !!d.victory;
     sideStates = d.sideStates || {};
@@ -4075,8 +4093,10 @@ function hurtMob(m, dmg, source){
   final = Math.max(1, Math.round(final));
   m.hp -= final; m.hitT = 0.15;
   // Màu loé theo LOẠI đòn — trước đây `ctx.filter` chỉ làm sáng lên, không phân biệt được gì.
+  const _mf = (source === 'hit' || source === 'crit') ? weaponFx() : null;
   m.hitCol = perfectNote ? '#ff9df0' : source === 'crit' ? '#ffd76a'
-           : counterNote ? (NGU_HANH[sectEl] || {}).color || '#ffffff' : '#ffffff';
+           : counterNote ? (NGU_HANH[sectEl] || {}).color || '#ffffff'
+           : _mf ? _mf.col : '#ffffff';
   // Tỉ lệ SỨC NẶNG của đòn: cào 1% máu và bổ mất nửa cây máu phải khác nhau. Trước đây hitstop
   // là hằng số bất kể sát thương nên mọi đòn chạm nhau y hệt.
   const _w = Math.min(1, final / Math.max(1, m.maxHp));
@@ -4094,7 +4114,10 @@ function hurtMob(m, dmg, source){
   // Khựng hình / rung / loé bạo kích KHÔNG đặt ở đây nữa — xem swingFeel(). Đặt trong hurtMob
   // nghĩa là AoE trúng 8 con thì kích hoạt 8 lần, và đạn multishot làm hitstop nối đuôi nhau
   // khiến game giật liên tục thay vì "khựng một nhịp rồi bung".
-  if (source === 'hit' || source === 'crit') swingFeel(source === 'crit', _w, m);
+  if (source === 'hit' || source === 'crit'){
+    swingFeel(source === 'crit', _w, m);
+    motifBurst(m.x, m.y - (m.def.size || 14) * 0.4, Math.atan2(m.y - player.y, m.x - player.x));
+  }
   // Âm chạm. `sfx_hit.mp3` KHÔNG TỒN TẠI trên đĩa, nên trước đây mọi đòn thường im lặng lúc
   // chạm còn bạo kích thì có tiếng — game phân biệt thường/chí mạng bằng CÓ TIẾNG vs KHÔNG,
   // hoàn toàn do tai nạn. Dùng smash_<hệ> đã có sẵn (đúng chất liệu, đúng theo lớp).
@@ -4422,6 +4445,50 @@ function nearestMob(range){
   return best;
 }
 // Vệt kiếm khí — màu theo lớp/nguyên tố của chiêu (mặc định thép trắng).
+// ═══ HIỆU ỨNG THEO HOA VĂN VŨ KHÍ ═══
+// Kiếm điện chém ra tia xanh, kiếm băng ra mảnh băng. THUẦN HÌNH ẢNH — cơ chế chiến đấu là
+// việc của Khắc Ấn; cho vũ khí làm cả hai thì hai hệ giẫm chân nhau và người chơi không biết
+// sát thương lan ra là do kiếm hay do dấu ấn.
+const MOTIF_FX = {
+  set:   { col:'#8fe0ff', glow:'#dffaff', hit:'zap'   },
+  bang:  { col:'#bfe8ff', glow:'#eaf8ff', hit:'frost' },
+  lua:   { col:'#ff8a2a', glow:'#ffd08a', hit:'ember' },
+  runes: { col:'#c8a8ff', glow:'#e8dcff', hit:'rune'  },
+  mach:  { col:'#c8a8ff', glow:'#f0e6ff', hit:'rune'  },
+  gai:   { col:'#ff6a5a', glow:'#ffc0a8', hit:'shard' },
+};
+// Hoa văn của vũ khí ĐANG MẶC. Trả null khi tay không hoặc vũ khí trơn.
+function weaponFx(){
+  const d = itemDef(player && player.equip && player.equip.vukhi);
+  return (d && MOTIF_FX[d.motif]) || null;
+}
+// Nổ tại điểm chạm — mỗi hoa văn một dáng, đọc ra ngay cả khi tắt tiếng.
+function motifBurst(x, y, ang){
+  const F = weaponFx();
+  if (!F) return;
+  if (F.hit === 'zap'){                       // tia điện gãy khúc bắn ra hai bên
+    for (let i = 0; i < 3; i++){
+      const a = ang + rnd(-1.1, 1.1);
+      addEffect({ type:'ink', x, y, vx:Math.cos(a)*rnd(90,170), vy:Math.sin(a)*rnd(90,170)-40, color:F.col });
+    }
+    addEffect({ type:'ring', x, y, r:26, color:F.col });
+  } else if (F.hit === 'frost'){              // mảnh băng rơi xuống
+    for (let i = 0; i < 5; i++)
+      addEffect({ type:'ink', x:x+rnd(-14,14), y:y+rnd(-10,6), vx:rnd(-40,40), vy:rnd(-70,-20), color:F.col });
+    addEffect({ type:'ring', x, y, r:22, color:F.glow });
+  } else if (F.hit === 'ember'){               // tàn lửa bốc lên
+    for (let i = 0; i < 5; i++)
+      addEffect({ type:'ink', x:x+rnd(-10,10), y:y+rnd(-6,6), vx:rnd(-45,45), vy:rnd(-110,-45), color:F.col });
+  } else if (F.hit === 'rune'){                // vòng ký tự loé rồi tắt
+    addEffect({ type:'ring', x, y, r:30, color:F.col });
+    addEffect({ type:'ring', x, y, r:16, color:F.glow });
+  } else {                                     // mảnh vỡ văng theo hướng chém
+    for (let i = 0; i < 4; i++){
+      const a = ang + rnd(-0.5, 0.5);
+      addEffect({ type:'ink', x, y, vx:Math.cos(a)*rnd(120,200), vy:Math.sin(a)*rnd(120,200)-30, color:F.col });
+    }
+  }
+}
 function spawnSlash(x, y, face, s, color, glow){
   addEffect({ type:'slash', x, y, face, s: s || 110, color, glow });
 }
@@ -4459,12 +4526,17 @@ function doBasic(){
     addEffect({ type:'arc', x:player.x, y:player.y, face:player.face, r:40, color:sect.color });
   } else {
     addEffect({ type:'arc', x:player.x, y:player.y, face:player.face, r:60, color:'#2b2620' });
-    spawnSlash(player.x + Math.cos(player.face)*36, player.y + Math.sin(player.face)*36 - 12, player.face, 95, sect.color, sect.glow);
+    // Vệt chém mang màu HOA VĂN của vũ khí, không phải màu phái — đây là chỗ người chơi thấy
+    // "kiếm điện" khác "kiếm băng" rõ nhất, vì nó lặp lại mỗi đòn.
+    const _wf = weaponFx();
+    spawnSlash(player.x + Math.cos(player.face)*36, player.y + Math.sin(player.face)*36 - 12,
+               player.face, 95, _wf ? _wf.col : sect.color, _wf ? _wf.glow : sect.glow);
   }
   if (t){
     if (ranged){
       const ang = Math.atan2(t.y-player.y, t.x-player.x);
-      projectiles.push({ x:player.x, y:player.y-10, ang, speed:520, dmg:player.atk*rnd(0.9,1.12), kind:'basic', life:0.9, color:sect.color, style:sect.basicProj || 'orb' });
+      const _wp = weaponFx();
+      projectiles.push({ x:player.x, y:player.y-10, ang, speed:520, dmg:player.atk*rnd(0.9,1.12), kind:'basic', life:0.9, color:_wp ? _wp.col : sect.color, style:sect.basicProj || 'orb' });
     } else {
       // Hẹn sát thương tới KHUNG TIẾP XÚC thay vì nổ ngay khung đầu. hSwing() đẩy khoảnh khắc
       // lưỡi thật sự chạm ra p≈0.41, nên bắn âm thanh/khựng hình/sát thương ở p=0 là lệch ~8
@@ -7025,6 +7097,10 @@ function gearVisual(p){
     rcol: RARITIES[rmax] ? RARITIES[rmax].color : null,
     wTier: w ? (w.tier || 1) : 0,
     wPlus: w ? (w.plus || 0) : 0,
+    // Định nghĩa vũ khí — để thanh trên tay nhân vật vẽ bằng CHÍNH bộ phận dựng icon.
+    // Trước đây chỉ đưa ra wTier/wPlus, mà hai trường đó không ai đọc: mỗi lớp vẽ cứng
+    // một thanh, nên nâng vũ khí không hiện lên người một chút nào.
+    wDef: itemDef(w),
     setColor,
   };
 }
@@ -8300,12 +8376,14 @@ const HERO_GEAR = {
       hArmR(g, P, ps, () => {
         hEll(g, 112, 116, 10, 17, P.skin);
         hPoly(g, [[126,94],[98,88],[96,120],[124,126]], M.lo);
-        g.save(); g.translate(122 + ps.wpush, 134); g.rotate(0.13 + ps.wrot); // chếch ra ngoài, không cắt mặt
-        hPoly(g, [[-6,0],[6,0],[5,-96],[0,-112],[-5,-96]], '#d2d6de');
-        g.fillStyle = '#fff'; g.fillRect(-2, -96, 3, 90);
-        hPoly(g, [[-18,0],[18,0],[16,10],[-16,10]], M.trim);
-        g.fillStyle = '#4a3520'; g.fillRect(-5, 10, 10, 30);
-        hEll(g, 0, 44, 7, 7, M.trim); g.restore();
+        hHeldWeapon(g, ps.gv, ps, 122, 134, 0.13, () => {
+          g.save(); g.translate(122 + ps.wpush, 134); g.rotate(0.13 + ps.wrot); // chếch ra ngoài, không cắt mặt
+          hPoly(g, [[-6,0],[6,0],[5,-96],[0,-112],[-5,-96]], '#d2d6de');
+          g.fillStyle = '#fff'; g.fillRect(-2, -96, 3, 90);
+          hPoly(g, [[-18,0],[18,0],[16,10],[-16,10]], M.trim);
+          g.fillStyle = '#4a3520'; g.fillRect(-5, 10, 10, 30);
+          hEll(g, 0, 44, 7, 7, M.trim); g.restore();
+        });
       });
     },
   },
@@ -8327,6 +8405,7 @@ const HERO_GEAR = {
       });
       hArmL(g, P, ps);
       hArmR(g, P, ps, () => {
+        hHeldWeapon(g, ps.gv, ps, 112, 150, 0, () => {
         g.save(); g.translate(112 + ps.wpush, 150); g.rotate(ps.wrot);
         g.strokeStyle = '#4a3520'; g.lineWidth = 8; g.lineCap = 'round';
         g.beginPath(); g.moveTo(0, 0); g.lineTo(-8, -120); g.stroke();
@@ -8337,6 +8416,7 @@ const HERO_GEAR = {
         hEll(g, -8, -134, 9 + ps.cast * 3, 9 + ps.cast * 3, '#8fd0ff');
         g.strokeStyle = M.trim; g.lineWidth = 3;
         g.beginPath(); g.arc(-8, -134, 14, 0, 7); g.stroke(); g.restore();
+        });
       });
     },
   },
@@ -8367,6 +8447,7 @@ const HERO_GEAR = {
       hArmR(g, P, ps, () => { hEll(g, 112, 116, 10, 17, P.skin); hPoly(g, [[126,92],[110,88],[108,110],[124,114]], M.hi); });
       hArmL(g, P, ps, () => {                                        // tay trái giương cung
         hPoly(g, [[48,92],[64,88],[66,110],[50,114]], M.hi);
+        hHeldWeapon(g, ps.gv, ps, 36, 118, 0.12, () => {
         g.save(); g.translate(36 - ps.wpush*0.5, 118); g.rotate(0.12 - ps.wrot*0.4);
         g.strokeStyle = '#7a5a30'; g.lineWidth = 6; g.lineCap = 'round';
         g.beginPath(); g.arc(14, 0, 60, Math.PI * 0.62, Math.PI * 1.38); g.stroke();
@@ -8378,6 +8459,7 @@ const HERO_GEAR = {
           g.beginPath(); g.moveTo(-6 + bp, 0); g.lineTo(-6 + bp - 52, 0); g.stroke();
         }
         g.restore();
+        });
       });
     },
   },
@@ -8403,12 +8485,14 @@ const HERO_GEAR = {
       });
       hArmR(g, P, ps, () => {
         hEll(g, 112, 114, 11, 19, '#d8a878');                        // vai/tay phải để trần
-        g.save(); g.translate(122 + ps.wpush, 136); g.rotate(0.18 + ps.wrot);
-        hPoly(g, [[-9,0],[9,0],[7,-104],[0,-124],[-7,-104]], '#dcd2c0');
-        hPoly(g, [[0,0],[9,0],[7,-104],[0,-124]], '#b6ac98');
-        g.fillStyle = '#fff6e0'; g.fillRect(-2, -104, 3, 98);
-        hPoly(g, [[-20,0],[20,0],[17,11],[-17,11]], M.trim);
-        g.fillStyle = '#3a2418'; g.fillRect(-5, 11, 10, 28); g.restore();
+        hHeldWeapon(g, ps.gv, ps, 122, 136, 0.18, () => {
+          g.save(); g.translate(122 + ps.wpush, 136); g.rotate(0.18 + ps.wrot);
+          hPoly(g, [[-9,0],[9,0],[7,-104],[0,-124],[-7,-104]], '#dcd2c0');
+          hPoly(g, [[0,0],[9,0],[7,-104],[0,-124]], '#b6ac98');
+          g.fillStyle = '#fff6e0'; g.fillRect(-2, -104, 3, 98);
+          hPoly(g, [[-20,0],[20,0],[17,11],[-17,11]], M.trim);
+          g.fillStyle = '#3a2418'; g.fillRect(-5, 11, 10, 28); g.restore();
+        });
       });
     },
   },
@@ -8439,6 +8523,7 @@ const HERO_GEAR = {
         hEll(g, 112, 116, 10, 17, P.skin);
         hPoly(g, [[132,90],[100,84],[96,122],[128,128]], M.lo);
         hPoly(g, [[132,90],[116,86],[122,60],[130,88]], M.lo);
+        hHeldWeapon(g, ps.gv, ps, 116, 146, 0, () => {
         g.save(); g.translate(116 + ps.wpush, 146); g.rotate(ps.wrot);
         g.strokeStyle = '#2a2438'; g.lineWidth = 9; g.lineCap = 'round';
         g.beginPath(); g.moveTo(0, 0); g.lineTo(-6, -126); g.stroke();
@@ -8448,6 +8533,7 @@ const HERO_GEAR = {
         const dg = g.createRadialGradient(-6, -146, 2, -6, -146, r);
         dg.addColorStop(0, 'rgba(160,200,255,.75)'); dg.addColorStop(1, 'rgba(80,120,220,0)');
         g.fillStyle = dg; g.beginPath(); g.arc(-6, -146, r, 0, 7); g.fill(); g.restore();
+        });
       });
     },
   },
@@ -8466,10 +8552,12 @@ const HERO_GEAR = {
       hArmL(g, P, ps);
       hArmR(g, P, ps, () => {
         hEll(g, 112, 116, 10, 17, P.skin);
-        g.save(); g.translate(118 + ps.wpush, 132); g.rotate(0.15 + ps.wrot);
-        hPoly(g, [[-4,0],[4,0],[3,-58],[0,-68],[-3,-58]], '#c0c4cc');
-        hPoly(g, [[-12,0],[12,0],[11,8],[-11,8]], '#8a7a4a');
-        g.fillStyle = '#4a3520'; g.fillRect(-4, 8, 8, 22); g.restore();
+        hHeldWeapon(g, ps.gv, ps, 118, 132, 0.15, () => {
+          g.save(); g.translate(118 + ps.wpush, 132); g.rotate(0.15 + ps.wrot);
+          hPoly(g, [[-4,0],[4,0],[3,-58],[0,-68],[-3,-58]], '#c0c4cc');
+          hPoly(g, [[-12,0],[12,0],[11,8],[-11,8]], '#8a7a4a');
+          g.fillStyle = '#4a3520'; g.fillRect(-4, 8, 8, 22); g.restore();
+        });
       });
     },
   },
@@ -8477,6 +8565,31 @@ const HERO_GEAR = {
 // Vẽ nhân vật trong hộp 160×220. tier = bậc Thần Binh (đổi bảng màu giáp).
 // gv (tham số THỨ 6, thêm sau ps nên mọi lời gọi 5 tham số cũ vẫn chạy nguyên): chữ ký trang
 // bị thật từ gearVisual(). Bỏ trống ⇒ chỉ vẽ theo `tier` như trước, dùng cho màn chọn lớp.
+// Vũ khí trên tay dùng CHÍNH bộ phận dựng icon, nên món trong túi và thanh nhân vật đang cầm
+// không thể lệch nhau. `fallback` là thanh vẽ cứng cũ của lớp — vẫn dùng khi chưa mặc vũ khí,
+// hoặc khi vũ khí không thuộc dòng lưỡi (gậy/cung/trượng có bộ phận riêng, làm ở đợt sau).
+// Mỗi dòng vũ khí một tỉ lệ và một điểm nắm — gậy dài hơn kiếm, cung thì nắm ở GIỮA thân
+// chứ không ở chuôi, nỏ nắm ở báng.
+const HELD_FIT = {
+  weapon:   { fn:'iaWeapon',    k:1.45, dy:-22 },
+  staff:    { fn:'iaStaff',     k:1.55, dy:-14 },
+  bow:      { fn:'iaBow',       k:1.55, dy:0   },
+  crossbow: { fn:'iaCrossbow',  k:1.5,  dy:-4  },
+};
+function hHeldWeapon(g, gv, ps, x, y, rot, fallback){
+  const d = gv && gv.wDef;
+  const F = d && HELD_FIT[d.art];
+  if (!F){ fallback(); return; }
+  const W = itemPal(d, gv.wTier || 1);
+  g.save();
+  g.translate(x + ps.wpush, y); g.rotate(rot + ps.wrot);
+  // Thanh vẽ cứng cũ cao ~112 đơn vị. Icon cao ~77 (chuôi +33 → mũi -44), nên tỉ lệ phải là
+  // ~1.45, không phải 2.5 — ở 2.5 thanh kiếm cao hơn cả người và cắt ngang thân.
+  g.scale(F.k, F.k);
+  g.translate(0, F.dy);                      // điểm nắm rơi đúng vào bàn tay
+  (ITEM_ART[d.art] || iaWeapon)(g, W, Object.assign({}, d, { rot: 0 }));
+  g.restore();
+}
 function drawHeroFigure(g, sectKey, tier, now, ps, gv){
   const M = hMetal(tier), G = HERO_GEAR[sectKey] || HERO_GEAR.vophai, P = G.pal;
   ps = ps || HERO_POSE0;
@@ -8484,6 +8597,7 @@ function drawHeroFigure(g, sectKey, tier, now, ps, gv){
   // Bộ giáp riêng của lớp: đổi cả TẠO HÌNH (vai/mũ/chân/eo) lẫn BẢNG MÀU. Không có bộ
   // (chưa mặc gì / màn chọn lớp) thì SM === M, mọi thứ y như trước.
   const S = gv ? heroSet(sectKey, gv.t) : null, SM = hSetMetal(M, S);
+  ps.gv = gv;   // upper() của từng lớp cần gv để vẽ đúng vũ khí đang mặc
   g.save();
   hEll(g, 80, 212, 30 - ps.bob * 0.9, 8, 'rgba(0,0,0,.22)'); // bóng co lại khi nhấc chân
   // D. HÀO QUANG — nét hoàn thiện, không phải toàn bộ câu chuyện. Mặc đủ 5 món một bộ Cổ Thần
@@ -9143,7 +9257,6 @@ function itemLineHtml(it){
   else s += ` · <span style="opacity:.4">☆(+10)</span>`;
   return s;
 }
-let forgeSel = null;
 window.forgeUseCharm = false;
 // GDD 3 giai đoạn: +1~6 an toàn 100% (Huyền Thiết) · +7~9 Đập Ngọc Tu La, xịt tụt 1 cấp · +10/+11 CHỈ tại Lò Rèn Hoàng Gia
 function forgeRule(target){
@@ -9227,147 +9340,726 @@ window.doiCoThan = function(setId){
   AudioSys.sfx('quest', 0.9);
   saveGame(); renderForge();
 };
+// ═══════════════ LÒ HỖN ĐỘN — cỗ máy kết hợp ═══════════════
+// Trước đây có HAI màn rèn chồng nhau (bảng Rèn Luyện + Lò Rèn Hoàng Gia của NPC), mỗi màn là
+// một cuộn chữ dài xếp 7 khối khác nhau, và hai bên còn trùng nội dung (Hỗn Độn Lò, Cổ Thần).
+// Nay gộp thành MỘT cỗ máy: bỏ trang bị + ngọc vào KHAY, máy liệt kê mọi công thức khay đó
+// thoả, chọn một cái rồi bấm KẾT HỢP. Luật nằm hết trong CHAOS_RECIPES; renderForge() chỉ vẽ.
+//
+// Quy ước: thứ RỜI RẠC (trang bị, ngọc) phải bỏ vào khay mới tính; thứ SỐ LƯỢNG LỚN (bạc,
+// Huyền Thiết, Tu La, Mảnh…) trừ thẳng từ kho và chỉ hiện trong bảng nguyên liệu.
+let forgeTray = [];        // [{k:'item',uid} | {k:'jewel',j:'chucPhuc'|'linhHon'|'sinhMenh'|'honDon'}]
+let chaosPick = null;      // id công thức đang chọn
+let chaosGroup = 'ren';    // nhóm tab đang xem
+const CHAOS_TRAY_MAX = 10;
+const CHAOS_GROUPS = [
+  { id:'ren', name:'Rèn Trang Bị' },
+  { id:'ngoc', name:'Khảm Ngọc' },
+  { id:'che', name:'Chế Tạo' },
+];
+const CHAOS_JEWELS = [
+  { k:'chucPhuc', name:'Ngọc Chúc Phúc', glyph:'◎', color:'#7ec850' },
+  { k:'linhHon',  name:'Ngọc Linh Hồn',  glyph:'◉', color:'#b08ae8' },
+  { k:'sinhMenh', name:'Ngọc Sinh Mệnh', glyph:'❤', color:'#e84a6a' },
+  { k:'honDon',   name:'Ngọc Hỗn Độn',   glyph:'●', color:'#7ecbff' },
+];
+// Vị trí một món đồ (đang mặc hay trong túi) — cần cho công thức làm VỠ hoặc TIÊU HỦY món đó.
+function itemLoc(uid){
+  for (const s in player.equip){ const it = player.equip[s]; if (it && it.uid === uid) return { it, where:'equip', key:s }; }
+  const i = (player.inv || []).findIndex(x => x && x.uid === uid);
+  if (i >= 0) return { it: player.inv[i], where:'inv', key:i };
+  return null;
+}
+function destroyItem(uid){
+  const loc = itemLoc(uid);
+  if (!loc) return false;
+  if (loc.where === 'equip') player.equip[loc.key] = null; else player.inv.splice(loc.key, 1);
+  return true;
+}
+// Ảnh chụp khay: món đồ đã tra ngược ra vật thật, ngọc đếm theo loại.
+function trayView(){
+  const items = [], jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
+  let nJewel = 0;
+  forgeTray = forgeTray.filter(e => e.k !== 'item' || findItemByUid(e.uid)); // đồ đã bán/vỡ thì rơi khỏi khay
+  for (const e of forgeTray){
+    if (e.k === 'item'){ const it = findItemByUid(e.uid); if (it) items.push(it); }
+    else if (e.k === 'jewel' && jewels[e.j] != null){ jewels[e.j]++; nJewel++; }
+  }
+  return { items, jewels, nJewel };
+}
+function chaosCost(label, have, need, glyph){ return { label, have, need, glyph, ok: have >= need }; }
+function jewelCost(k, v, need){
+  const d = CHAOS_JEWELS.find(x => x.k === k);
+  return { label: d.name + ' (trong khay)', have: v.jewels[k], need, glyph: d.glyph, ok: v.jewels[k] >= need, jewel:k };
+}
+// Trừ ngọc: lấy đúng số viên ra khỏi khay VÀ khỏi kho.
+function spendJewels(need){
+  for (const k in need){
+    for (let n = 0; n < need[k]; n++){
+      const i = forgeTray.findIndex(e => e.k === 'jewel' && e.j === k);
+      if (i >= 0) forgeTray.splice(i, 1);
+      player.jewels[k] = Math.max(0, (player.jewels[k] || 0) - 1);
+    }
+  }
+}
+// Đang đứng tại Lò Rèn Hoàng Gia? Công thức royal:true đòi có mặt ở đó (giữ nguyên thiết kế cũ:
+// +9 trở lên và Linh Dực chỉ luyện được tại chỗ Tông Sư Thợ Rèn).
+function atRoyalForge(){
+  const n = NPCS.find(x => x.talk === 'forge');
+  if (!n || !player) return false;
+  return curMap === n.map && dist(player.x, player.y, n.x, n.y) < 220;
+}
+
+const CHAOS_RECIPES = [
+  // ── Nhóm RÈN ────────────────────────────────────────────────────────────
+  { id:'ren', group:'ren', name:'Rèn Thường', tray:'1 trang bị (+0 → +9)',
+    match(v){
+      if (v.items.length !== 1 || v.nJewel) return null;
+      const it = v.items[0];
+      if (it.noForge || it.plus >= 9) return null;
+      return { it, target: it.plus + 1 };
+    },
+    plan(v, m){
+      const r = forgeRule(m.target);
+      const silver = (20 + m.it.plus * 15) * (m.it.tier || 1);
+      return {
+        title: `${m.it.name} +${m.it.plus} → +${m.target}`,
+        rate: Math.min(100, r.rate + (player.forgeBonus || 0)),
+        cost: [ chaosCost('Bạc', player.silver, silver, '◈'),
+                chaosCost('Huyền Thiết', player.mat, r.mat, '✦'),
+                ...(r.tuLa ? [chaosCost('Tu La Tinh Thạch', player.gems.tuLa, r.tuLa, '◆')] : []) ],
+        warn: r.fail === 'drop1' ? 'Thất bại: trang bị TỤT 1 CẤP.' : 'Thất bại: chỉ mất nguyên liệu, trang bị vẹn nguyên.',
+        charm: r.fail !== 'none', silver, rule: r,
+      };
+    },
+    run(v, m, p){
+      player.silver -= p.silver; player.mat -= p.rule.mat;
+      player.gems.tuLa -= p.rule.tuLa; player.gems.honNguyen -= p.rule.hon;
+      return chaosResolveEnhance(m.it, p.rate, p.rule);
+    } },
+
+  { id:'phathien', group:'ren', name:'Phá Thiên Kiếp', royal:true, tray:'1 trang bị +9/+10 · ngọc',
+    match(v){
+      if (v.items.length !== 1) return null;
+      const it = v.items[0];
+      if (it.noForge || it.plus < 9 || it.plus >= 11) return null;
+      const n = it.plus === 9 ? 2 : 3;
+      return { it, target: it.plus + 1, need: { honDon:1, chucPhuc:n, linhHon:n } };
+    },
+    plan(v, m){
+      const r = forgeRule(m.target);
+      const silver = (20 + m.it.plus * 15) * (m.it.tier || 1);
+      return {
+        title: `${m.it.name} +${m.it.plus} → +${m.target}`,
+        rate: Math.min(100, r.rate + (player.forgeBonus || 0)),
+        cost: [ jewelCost('honDon', v, m.need.honDon),
+                jewelCost('chucPhuc', v, m.need.chucPhuc),
+                jewelCost('linhHon', v, m.need.linhHon),
+                chaosCost('Bạc', player.silver, silver, '◈'),
+                chaosCost('Huyền Thiết', player.mat, r.mat, '✦'),
+                chaosCost('Tu La Tinh Thạch', player.gems.tuLa, r.tuLa, '◆'),
+                chaosCost('Hỗn Nguyên', player.gems.honNguyen, r.hon, '❖') ],
+        warn: 'THẤT BẠI: TRANG BỊ VỠ VỤN — mất vĩnh viễn (trừ khi dùng Thiên Mệnh Phù).',
+        charm: true, silver, rule: r,
+      };
+    },
+    run(v, m, p){
+      spendJewels(m.need);
+      player.silver -= p.silver; player.mat -= p.rule.mat;
+      player.gems.tuLa -= p.rule.tuLa; player.gems.honNguyen -= p.rule.hon;
+      return chaosResolveEnhance(m.it, p.rate, p.rule);
+    } },
+
+  // ── Nhóm NGỌC ───────────────────────────────────────────────────────────
+  { id:'bless', group:'ngoc', name:'Ngọc Chúc Phúc', tray:'1 trang bị (+0 → +5) · ◎ 1',
+    match(v){
+      if (v.items.length !== 1) return null;
+      const it = v.items[0];
+      if (it.noForge || it.plus > 5) return null;
+      return { it, need:{ chucPhuc:1 } };
+    },
+    plan(v, m){ return {
+      title: `${m.it.name} +${m.it.plus} → +${m.it.plus + 1}`, rate: 100,
+      cost: [ jewelCost('chucPhuc', v, 1) ],
+      warn: 'An toàn tuyệt đối — không có thất bại.', charm:false }; },
+    run(v, m){ spendJewels(m.need); m.it.plus++;
+      chaosSay(`◎ Chúc Phúc — ${m.it.name} lên +${m.it.plus}!`, '#8fd18f');
+      addFloat(player.x, player.y-40, `◎ +${m.it.plus} (Chúc Phúc)`, '#7ec850', 14);
+      AudioSys.sfx('forge_ok', 0.9); chaosAwakenNote(m.it); return true; } },
+
+  { id:'soul', group:'ngoc', name:'Ngọc Linh Hồn', tray:'1 trang bị (dưới +11) · ◉ 1',
+    match(v){
+      if (v.items.length !== 1) return null;
+      const it = v.items[0];
+      if (it.noForge || it.plus >= 11) return null;
+      return { it, need:{ linhHon:1 } };
+    },
+    plan(v, m){ return {
+      title: `${m.it.name} +${m.it.plus} → +${m.it.plus + 1}`, rate: 50,
+      cost: [ jewelCost('linhHon', v, 1) ],
+      warn: 'Thất bại: trang bị TỤT 1 CẤP.', charm:false }; },
+    run(v, m){
+      spendJewels(m.need);
+      if (Math.random() < 0.5){
+        m.it.plus++;
+        chaosSay(`◉ Linh Hồn — ${m.it.name} lên +${m.it.plus}!`, '#8fd18f');
+        addFloat(player.x, player.y-40, `◉ +${m.it.plus} (Linh Hồn)`, '#b08ae8', 14);
+        AudioSys.sfx('forge_ok', 0.9); chaosAwakenNote(m.it);
+      } else {
+        m.it.plus = Math.max(0, m.it.plus - 1);
+        chaosSay(`✘ Linh Hồn thất bại — tụt còn +${m.it.plus}`, '#ff7a6a');
+        addFloat(player.x, player.y-40, `◉ Xịt — tụt còn +${m.it.plus}`, '#ff7a6a', 13);
+        AudioSys.sfx('forge_fail', 0.85);
+      }
+      return true; } },
+
+  { id:'life', group:'ngoc', name:'Ngọc Sinh Mệnh', tray:'1 giáp trụ · ❤ 1',
+    match(v){
+      if (v.items.length !== 1) return null;
+      const it = v.items[0];
+      if (it.noForge || !ARMOR_SLOTS.includes(it.slot) || (it.life || 0) >= 7) return null;
+      return { it, need:{ sinhMenh:1 } };
+    },
+    plan(v, m){ return {
+      title: `${m.it.name} — Sinh Mệnh bậc ${(m.it.life||0)} → ${(m.it.life||0)+1} (+${((m.it.life||0)+1)*4}% HP)`,
+      rate: Math.max(25, 75 - (m.it.life || 0) * 8),
+      cost: [ jewelCost('sinhMenh', v, 1) ],
+      warn: 'Thất bại: dòng Sinh Mệnh VỀ 0 — mất hết bậc đã khảm.', charm:false }; },
+    run(v, m, p){
+      spendJewels(m.need);
+      if (Math.random()*100 < p.rate){
+        m.it.life = (m.it.life || 0) + 1;
+        chaosSay(`❤ Sinh Mệnh bậc ${m.it.life} — +${m.it.life*4}% HP tối đa!`, '#8fd18f');
+        addFloat(player.x, player.y-40, `❤ Sinh Mệnh +${m.it.life*4}% HP`, '#e84a6a', 14);
+        AudioSys.sfx('forge_ok', 0.9);
+      } else {
+        m.it.life = 0;
+        chaosSay('✘ Sinh Mệnh tan biến — dòng HP về 0!', '#ff7a6a');
+        addFloat(player.x, player.y-40, '❤ Xịt — Sinh Mệnh về 0!', '#ff7a6a', 13);
+        AudioSys.sfx('forge_fail', 0.85);
+      }
+      return true; } },
+
+  { id:'element', group:'ngoc', name:'Đổi Hệ', tray:'1 trang bị · ● 1',
+    match(v){
+      if (v.items.length !== 1) return null;
+      const it = v.items[0];
+      if (it.special || it.noForge) return null;
+      return { it, need:{ honDon:1 } };
+    },
+    plan(v, m){ return {
+      title: `${m.it.name} — đổi khỏi hệ ${m.it.element}`, rate: 100,
+      cost: [ jewelCost('honDon', v, 1) ],
+      warn: 'Hệ mới ngẫu nhiên, chắc chắn khác hệ hiện tại.', charm:false }; },
+    run(v, m){
+      spendJewels(m.need);
+      let e2 = m.it.element;
+      while (e2 === m.it.element) e2 = ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)];
+      m.it.element = e2;
+      chaosSay(`◑ Đổi Hệ — nay là hệ ${e2}`, (NGU_HANH[e2]||{}).color || '#7ecbff');
+      addFloat(player.x, player.y-52, `◑ ĐỔI HỆ — hệ ${e2}!`, (NGU_HANH[e2]||{}).color || '#7ecbff', 14);
+      return true; } },
+
+  // ── Nhóm CHẾ TẠO ────────────────────────────────────────────────────────
+  { id:'tanpham', group:'che', name:'Tấn Phẩm', tray:'1 trang bị (dưới Chí Tôn)',
+    match(v){
+      if (v.items.length !== 1 || v.nJewel) return null;
+      const it = v.items[0];
+      if (it.special || it.ancient || it.rarity >= 4 || !TANPHAM_RULES[it.rarity]) return null;
+      return { it, r: TANPHAM_RULES[it.rarity] };
+    },
+    plan(v, m){ return {
+      title: `${RARITIES[m.it.rarity].name} → ${RARITIES[m.it.rarity+1].name} (mở ${RARITY_SUBS[m.it.rarity+1]} dòng phụ)`,
+      rate: m.r.rate,
+      cost: [ chaosCost('Huyền Thiết', player.mat, m.r.tinh, '✦'),
+              chaosCost('Mảnh Trang Bị', player.mats.manh, m.r.manh, '❖'),
+              chaosCost('Tịch Ma Thạch', player.mats.tichMa, m.r.tichMa, '◆'),
+              chaosCost('Ấn Cổng Vực', player.mats.anTranAi, m.r.an, '☬'),
+              chaosCost('Bạc', player.silver, m.r.silver, '◈') ].filter(c => c.need > 0),
+      warn: m.r.rate < 100 ? 'Thất bại: giữ nguyên trang bị, chỉ mất nửa nguyên liệu.' : 'An toàn tuyệt đối.',
+      charm:false }; },
+    run(v, m){
+      const r = m.r;
+      if (Math.random()*100 < r.rate){
+        player.mat -= r.tinh; player.mats.manh -= r.manh; player.mats.tichMa -= r.tichMa;
+        player.mats.anTranAi -= r.an; player.silver -= r.silver;
+        m.it.rarity++; rerollItemRarity(m.it);
+        chaosSay(`✦ Tấn Phẩm — ${RARITIES[m.it.rarity].name}!`, RARITIES[m.it.rarity].color);
+        addFloat(player.x, player.y-52, `✦ TẤN PHẨM — ${RARITIES[m.it.rarity].name}!`, RARITIES[m.it.rarity].color, 16);
+        addEffect({ type:'ring', x:player.x, y:player.y, r:90, color:RARITIES[m.it.rarity].color, big:true });
+        AudioSys.sfx('levelup', 0.8);
+      } else {
+        player.mat -= Math.floor(r.tinh/2); player.mats.manh -= Math.floor(r.manh/2);
+        player.mats.tichMa -= Math.floor(r.tichMa/2); player.silver -= Math.floor(r.silver/2);
+        chaosSay('✘ Tấn phẩm thất bại — trang bị vẹn nguyên, mất nửa nguyên liệu', '#ff7a6a');
+        AudioSys.sfx('hurt', 0.5);
+      }
+      return true; } },
+
+  { id:'kethua', group:'che', name:'Kế Thừa', tray:'1 trang bị (dưới giai X)',
+    match(v){
+      if (v.items.length !== 1 || v.nJewel) return null;
+      const it = v.items[0];
+      if (it.special || it.tier >= 10) return null;
+      return { it, cost:{ manh:40, tichMa:4, silver:5000*it.tier } };
+    },
+    plan(v, m){ return {
+      title: `【${giaiName(m.it.tier)}】→【${giaiName(m.it.tier+1)}】giữ Phẩm / +${m.it.plus} / dòng phụ`,
+      rate: 100,
+      cost: [ chaosCost('Mảnh Trang Bị', player.mats.manh, m.cost.manh, '❖'),
+              chaosCost('Tịch Ma Thạch', player.mats.tichMa, m.cost.tichMa, '◆'),
+              chaosCost('Bạc', player.silver, m.cost.silver, '◈') ],
+      warn: 'Chỉ số gốc của giai mới bằng 90% bản gốc — bù lại giữ trọn mọi dòng đã có.', charm:false }; },
+    run(v, m){
+      player.mats.manh -= m.cost.manh; player.mats.tichMa -= m.cost.tichMa; player.silver -= m.cost.silver;
+      m.it.tier++; m.it.level = (m.it.tier-1)*10 + 10;
+      const sl = SLOTS.find(s => s.id === m.it.slot);
+      if (sl && m.it.main) m.it.main.v = Math.max(1, Math.round(sl.base(m.it.tier, m.it.rarity) * 0.9));
+      chaosSay(`⚒ Kế Thừa — lên giai【${giaiName(m.it.tier)}】!`, '#9fd0ff');
+      addFloat(player.x, player.y-52, `⚒ KẾ THỪA —【${giaiName(m.it.tier)}】!`, '#9fd0ff', 15);
+      addEffect({ type:'ring', x:player.x, y:player.y, r:80, color:'#9fd0ff', big:true });
+      AudioSys.sfx('levelup', 0.7);
+      return true; } },
+
+  { id:'cloak', group:'che', name:'Luyện Áo Choàng', tray:'khay trống',
+    match(v){
+      if (v.items.length || v.nJewel) return null;
+      const c = player.equip.aochoang || player.inv.find(x => x.slot === 'aochoang');
+      const t = !c ? 1 : (c.cloakTier === 1 ? 2 : 0);
+      if (!t) return null;
+      return { t, def: CLOAK_TIERS[t] };
+    },
+    plan(v, m){ const c = m.def; return {
+      title: `${c.name} (Cấp ${m.t})${player.level < c.req ? ` — cần LV${c.req}` : ''}`,
+      rate: 100,
+      cost: [ chaosCost('Tu La Tinh Thạch', player.gems.tuLa, c.cost.tuLa, '◆'),
+              chaosCost('Hỗn Nguyên', player.gems.honNguyen, c.cost.hon, '❖'),
+              chaosCost('Bạc', player.silver, c.cost.silver, '◈'),
+              chaosCost('Cấp nhân vật', player.level, c.req, '★') ],
+      warn: `Thêm Sát Thương +${c.atkPct}% · Xuyên Giáp +${c.pierce}%${c.defPct?` · Phòng Ngự +${c.defPct}%`:''}`,
+      charm:false }; },
+    run(v, m){ craftCloak(m.t); return true; } },
+
+  { id:'wing1', group:'che', name:'Luyện Linh Dực', royal:true, tray:'1 trang bị Hoàn Hảo +4 (hiến tế) · ● 1',
+    match(v){
+      if (v.items.length !== 1) return null;
+      const it = v.items[0];
+      if (!it.perfect || it.plus < 4 || it.noForge) return null;
+      return { it, need:{ honDon:1 } };
+    },
+    plan(v, m){ return {
+      title: `Linh Dực Cấp 1 — Thiên Thần / Tiểu Quỷ ngẫu nhiên`,
+      rate: 100,
+      cost: [ jewelCost('honDon', v, 1),
+              chaosCost('Hỗn Nguyên', player.gems.honNguyen, 10, '❖'),
+              chaosCost('Bạc', player.silver, 5000, '◈'),
+              chaosCost('Cấp nhân vật', player.level, 40, '★') ],
+      warn: `${m.it.name} +${m.it.plus} sẽ bị TIÊU HỦY làm vật hiến tế.`, charm:false }; },
+    run(v, m){
+      spendJewels(m.need);
+      destroyItem(m.it.uid);
+      player.gems.honNguyen -= 10; player.silver -= 5000;
+      const wi = Math.floor(Math.random()*2), w = genWing(wi);
+      if (player.inv.length < 30) player.inv.push(w); else player.silver += 2000;
+      zoneBanner = { text:'◈ LINH DỰC XUẤT THẾ', sub:`Lò Hỗn Độn luyện thành ${WING_DEFS[wi].name}!`, color:WING_DEFS[wi].color, t:4.5 };
+      chaosSay(`✔ Luyện thành ${WING_DEFS[wi].name}!`, '#8fd18f');
+      addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:WING_DEFS[wi].color, big:true });
+      AudioSys.sfx('forge_ok', 0.95);
+      return true; } },
+
+  { id:'wing2', group:'che', name:'Thăng Linh Dực 2', royal:true, tray:'1 Linh Dực cấp 1 · ● 1',
+    match(v){
+      if (v.items.length !== 1) return null;
+      const it = v.items[0];
+      if (it.slot !== 'canh' || it.wing2) return null;
+      return { it, need:{ honDon:1 } };
+    },
+    plan(v, _m){ return {
+      title: 'Linh Dực Cấp 2 — Phượng Dực / Hắc Ma Dực',
+      rate: 100,
+      cost: [ jewelCost('honDon', v, 1),
+              chaosCost('Hỗn Nguyên', player.gems.honNguyen, 20, '❖'),
+              chaosCost('Bạc', player.silver, 10000, '◈'),
+              chaosCost('Cấp nhân vật', player.level, 80, '★') ],
+      warn: 'Cánh cấp 1 được thăng tại chỗ — không mất gì thêm.', charm:false }; },
+    run(v, m){
+      spendJewels(m.need);
+      player.gems.honNguyen -= 20; player.silver -= 10000;
+      const j = Math.floor(Math.random()*2);
+      const w2 = specialItem('canh', WING2_DEFS[j], { wing2: WING2_DEFS[j].id });
+      const loc = itemLoc(m.it.uid);
+      if (loc){ if (loc.where === 'equip') player.equip[loc.key] = w2; else player.inv[loc.key] = w2; }
+      else player.inv.push(w2);
+      zoneBanner = { text:'◈ LINH DỰC THĂNG HOA', sub:`${WING2_DEFS[j].name} — sức mạnh vượt trần!`, color:WING2_DEFS[j].color, t:5 };
+      chaosSay(`✔ Thăng thành ${WING2_DEFS[j].name}!`, '#8fd18f');
+      addEffect({ type:'ring', x:player.x, y:player.y, r:130, color:WING2_DEFS[j].color, big:true });
+      AudioSys.sfx('forge_ok', 0.95);
+      return true; } },
+
+  // Lò Hỗn Loạn — 3 món CÙNG PHẨM đổi lấy 1 món phẩm cao hơn, thất bại là mất sạch. Đây vốn đã
+  // là Chaos Machine đúng nghĩa, chỉ bị chôn trong danh sách chữ của màn NPC.
+  { id:'hopnhat', group:'che', name:'Lò Hỗn Loạn', tray:'3 trang bị CÙNG PHẨM (dưới Chí Tôn)',
+    match(v){
+      if (v.items.length !== 3 || v.nJewel) return null;
+      const r = v.items[0].rarity;
+      if (r == null || r >= 4) return null;
+      if (!v.items.every(x => x.rarity === r && !x.noForge && !x.special)) return null;
+      if (!v.items.every(x => itemLoc(x.uid) && itemLoc(x.uid).where === 'inv')) return null;
+      return { r, items: v.items };
+    },
+    plan(v, m){
+      const useCharm = forgeUseCharm && player.charms > 0;
+      return {
+        title: `3 món ${RARITIES[m.r].name} → 1 món ${RARITIES[m.r+1].name}`,
+        rate: useCharm ? 100 : Math.min(100, CHAOS_RATE[m.r] + (player.forgeBonus || 0)),
+        cost: [ chaosCost('Hỗn Nguyên', player.gems.honNguyen, CHAOS_HON_COST[m.r], '❖'),
+                chaosCost('Bạc', player.silver, CHAOS_SILVER_COST[m.r], '◈') ],
+        warn: 'CẢ 3 MÓN TAN BIẾN ngay khi ném vào lò — thành hay bại cũng không lấy lại được.',
+        charm: true,
+      };
+    },
+    run(v, m, p){
+      const honCost = CHAOS_HON_COST[m.r], silverCost = CHAOS_SILVER_COST[m.r];
+      const useCharm = forgeUseCharm && player.charms > 0;
+      const success = Math.random()*100 < p.rate;
+      player.gems.honNguyen -= honCost; player.silver -= silverCost;
+      if (useCharm) player.charms--;
+      const snapshot = m.items.slice();
+      for (const it of snapshot) destroyItem(it.uid);
+      forgeTray = [];
+      sideOnEvent('chaos'); // NV học hệ thống chỉ cần đã DÙNG lò, không cần thành công
+      let newItem = null;
+      if (success){
+        const avgLevel = Math.max(1, Math.round(snapshot.reduce((a,x) => a + x.level, 0) / 3));
+        newItem = genItem(avgLevel, 0, 'mob');
+        newItem.rarity = m.r + 1; rerollItemRarity(newItem);
+      }
+      playChaosAnim(snapshot, m.r, success, () => {
+        if (success){
+          if (player.inv.length < 30){ player.inv.push(newItem); tryAutoEquip(newItem); }
+          zoneBanner = { text:'◑ LÒ HỖN LOẠN — THÀNH CÔNG!', sub:`3 món hoá thành ${newItem.name}!`, color:RARITIES[newItem.rarity].color, t:5 };
+          addFloat(player.x, player.y-56, `◑ ${newItem.name}`, RARITIES[newItem.rarity].color, 16);
+        } else {
+          zoneBanner = { text:'◑ LÒ HỖN LOẠN — THẤT BẠI', sub:'3 món đã tan thành tro bụi — Hỗn Loạn vô thường.', color:'#ff5a4a', t:5 };
+          addFloat(player.x, player.y-56, 'Thất bại — mất sạch!', '#ff5a4a', 16);
+        }
+        calcDerived(); saveGame(); refreshEqPanels(); renderForge();
+        return { newItem };   // playChaosAnim đọc để hiện tên món mới; thiếu là báo THẤT BẠI dù thành
+      });
+      chaosSay(success ? '◑ Lò nhả ra thứ tốt hơn!' : '◑ Lò nuốt sạch — chẳng nhả gì cả.', success ? '#8fd18f' : '#ff5a4a');
+      return true;
+    } },
+
+  { id:'doicothan', group:'che', name:'Đổi Cổ Thần', tray:'3 món Cổ Thần trong túi · ● 1',
+    match(v){
+      if (v.items.length !== 3) return null;
+      if (!v.items.every(x => x.ancient && itemLoc(x.uid) && itemLoc(x.uid).where === 'inv')) return null;
+      return { items: v.items, need:{ honDon:1 }, set: chaosCoThanSet, slot: chaosCoThanSlot };
+    },
+    plan(v, m){ return {
+      title: `3 món Cổ Thần → 1 ${(SLOTS.find(x => x.id === m.slot)||{}).name || m.slot} bộ ${ANCIENT_SETS[m.set].name}`,
+      rate: 100,
+      cost: [ jewelCost('honDon', v, 1) ],
+      warn: '3 món hiến tế mất vĩnh viễn, đổi lại món mới do NGƯƠI chọn cả bộ lẫn ô.',
+      charm:false, pickSet:true, pickSlot:true }; },
+    run(v, m){
+      if (player.inv.length >= 30){ chaosSay('✘ Túi đồ đầy!', '#ff7a6a'); return false; }
+      spendJewels(m.need);
+      for (const it of m.items) destroyItem(it.uid);
+      forgeTray = [];
+      const it = genAncient(m.set, m.slot, player.level);
+      player.inv.push(it);
+      zoneBanner = { text:'◈ CỔ THẦN TỰ CHỌN', sub:`Lò Hỗn Độn đúc thành ${it.name}!`, color:ANCIENT_SETS[m.set].color, t:4.5 };
+      chaosSay(`✔ Đúc thành ${it.name}`, ANCIENT_SETS[m.set].color);
+      addFloat(player.x, player.y-56, `◈ ${it.name}`, ANCIENT_SETS[m.set].color, 16);
+      AudioSys.sfx('forge_ok', 0.95);
+      return true; } },
+
+  { id:'cothan', group:'che', name:'Triệu Cổ Thần', tray:'khay trống',
+    match(v){
+      if (v.items.length || v.nJewel) return null;
+      return { set: chaosCoThanSet };
+    },
+    plan(v, m){ return {
+      title: `Đổi 60 Mảnh Cổ Thần → 1 món bộ ${ANCIENT_SETS[m.set].name}`,
+      rate: 100,
+      cost: [ chaosCost('Mảnh Cổ Thần', (player.mats && player.mats.manhCoThan) || 0, 60, '◈') ],
+      warn: 'Ô giáp trong bộ là ngẫu nhiên, nhưng BỘ thì do ngươi chọn.',
+      charm:false, pickSet:true }; },
+    run(v, m){
+      if (player.inv.length >= 30){ chaosSay('✘ Túi đồ đầy!', '#ff7a6a'); return false; }
+      doiCoThan(m.set); return true; } },
+];
+let chaosCoThanSet = Object.keys(ANCIENT_SETS)[0];
+let chaosCoThanSlot = 'non';
+window.chaosSetSlot = function(sl){ if (ARMOR_SLOTS.includes(sl)){ chaosCoThanSlot = sl; renderForge(); } };
+window.chaosSetCoThan = function(id){ if (ANCIENT_SETS[id]){ chaosCoThanSet = id; renderForge(); } };
+
+function chaosSay(t, c){
+  const m = document.getElementById('chaos-msg');
+  if (m){ m.textContent = t; m.style.color = c || '#e4ebff'; }
+}
+function chaosAwakenNote(it){
+  if (it.plus === 10) addFloat(player.x, player.y-58, `☆ Thức tỉnh: ${it.awakened.name}`, '#f39c3d', 13);
+  if (it.plus === 11){
+    player.forged11 = true;
+    addFloat(player.x, player.y-76, '☀ KHAI QUANG +11!', '#ffd76a', 16);
+    addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:'#ffd76a', big:true });
+    checkTitles();
+  }
+}
+// Phần chung của mọi kiểu rèn tăng +N: tung xúc xắc rồi xử lý 4 kiểu thất bại của forgeRule().
+function chaosResolveEnhance(it, rate, rule){
+  const useCharm = forgeUseCharm && player.charms > 0 && rule.fail !== 'none';
+  if (Math.random()*100 < rate){
+    it.plus++;
+    AudioSys.sfx('forge_ok', 0.85);
+    chaosSay(`✔ Thành công! ${it.name} +${it.plus}`, '#8fd18f');
+    addFloat(player.x, player.y-40, `Rèn thành công +${it.plus}!`, '#8fd18f', 14);
+    addEffect({ type:'ring', x:player.x, y:player.y, r:70, color:'#8fd18f' });
+    const q = currentQuest();
+    if (q && q.type === 'enhance' && questState === 'active' && it.plus >= q.need){
+      questProg = q.need; questState = 'done';
+      addFloat(player.x, player.y-60, `Nhiệm vụ hoàn thành — về gặp ${npcName(q.npc)}`, '#8fd18f', 13);
+    }
+    chaosAwakenNote(it);
+    dailyTrack('forge');
+    checkTitles();
+    return true;
+  }
+  if (useCharm){
+    player.charms--;
+    chaosSay(`☂ Thiên Mệnh Phù bảo hộ — giữ nguyên +${it.plus}`, '#7ecbff');
+    addFloat(player.x, player.y-40, 'Thiên Mệnh Phù bảo hộ!', '#7ecbff', 13);
+    return true;
+  }
+  AudioSys.sfx('forge_fail', 0.8);
+  if (rule.fail === 'drop1'){
+    it.plus = Math.max(6, it.plus - 1);
+    chaosSay(`✘ Thất bại — tụt xuống +${it.plus}`, '#ff7a6a');
+    addFloat(player.x, player.y-40, `Rèn xịt! Tụt còn +${it.plus}`, '#ff7a6a', 13);
+  } else if (rule.fail === 'zero'){
+    it.plus = 0;
+    chaosSay('✘ Thất bại thảm khốc — trang bị về +0!', '#ff7a6a');
+  } else if (rule.fail === 'break'){
+    destroyItem(it.uid);
+    forgeTray = forgeTray.filter(e => !(e.k === 'item' && e.uid === it.uid));
+    chaosSay(`✘ ${it.name} đã VỠ VỤN!`, '#ff3a3a');
+    addFloat(player.x, player.y-40, `${it.name} đã VỠ VỤN!`, '#ff3a3a', 16);
+    addEffect({ type:'ring', x:player.x, y:player.y, r:90, color:'#ff3a3a', big:true });
+  } else {
+    chaosSay('✘ Thất bại... nguyên liệu đã mất', '#ff7a6a');
+    addFloat(player.x, player.y-40, 'Rèn thất bại!', '#ff7a6a', 13);
+  }
+  return true;
+}
+// Mọi công thức khay hiện tại thoả — kèm plan() đã tính sẵn để vẽ và để bấm.
+function chaosMatches(){
+  const v = trayView();
+  const out = [];
+  for (const rec of CHAOS_RECIPES){
+    let m = null;
+    try { m = rec.match(v); } catch { m = null; }
+    if (!m) continue;
+    let p = null;
+    try { p = rec.plan(v, m); } catch { continue; }
+    p.ready = p.cost.every(c => c.ok) && (!rec.royal || atRoyalForge());
+    out.push({ rec, m, p, v });
+  }
+  return out;
+}
+// Khay khớp công thức ở nhóm KHÁC thì nhảy sang nhóm đó. Không có bước này, bỏ trang bị + viên
+// Chúc Phúc vào khay lúc đang xem tab Rèn sẽ khiến máy IM LẶNG HOÀN TOÀN — không công thức,
+// không nút bấm — dù khay hoàn toàn hợp lệ.
+function chaosSyncGroup(){
+  const ms = chaosMatches();
+  if (!ms.length) return;
+  // Đã tự tay chọn một công thức → nhóm phải chạy theo nó. Thiếu bước này thì bảng DANH SÁCH
+  // và bảng CHI TIẾT chỉ vào hai công thức khác nhau — đúng kiểu rối mà cỗ máy sinh ra để dẹp.
+  const picked = ms.find(x => x.rec.id === chaosPick);
+  if (picked){ chaosGroup = picked.rec.group; return; }
+  // Khay trống thì chẳng có gì để đoán — giữ nguyên tab người chơi đang xem, đừng tự nhảy đi
+  // (mở lò ra mà rơi thẳng vào Chế Tạo chỉ vì "khay trống khớp công thức luyện áo choàng").
+  if (!forgeTray.length) return;
+  if (ms.some(x => x.rec.group === chaosGroup)) return;
+  chaosGroup = (ms.find(x => x.p.ready) || ms[0]).rec.group;
+}
+function chaosCurrent(){
+  const ms = chaosMatches();
+  if (!ms.length) return null;
+  // Ưu tiên công thức người chơi đã chọn; nếu không còn thoả thì lấy cái đủ nguyên liệu trước,
+  // rồi mới tới cái đầu danh sách — để khay vừa đủ ngọc là máy tự chỉ đúng việc cần làm.
+  return ms.find(x => x.rec.id === chaosPick)
+      || ms.find(x => x.rec.group === chaosGroup && x.p.ready)
+      || ms.find(x => x.rec.group === chaosGroup)
+      || null;
+}
+window.chaosPickRecipe = function(id){ chaosPick = id; renderForge(); };
+window.chaosSetGroup = function(g){ chaosGroup = g; chaosPick = null; renderForge(); };
+window.chaosAddItem = function(uid){
+  if (forgeTray.some(e => e.k === 'item' && e.uid === uid)){ chaosTrayRemoveItem(uid); return; }
+  if (forgeTray.length >= CHAOS_TRAY_MAX) return;
+  forgeTray.push({ k:'item', uid }); chaosPick = null; renderForge();
+};
+function chaosTrayRemoveItem(uid){
+  forgeTray = forgeTray.filter(e => !(e.k === 'item' && e.uid === uid));
+  chaosPick = null; renderForge();
+}
+window.chaosAddJewel = function(j){
+  const v = trayView();
+  if (!player.jewels || (player.jewels[j] || 0) <= v.jewels[j]) return; // đã bỏ hết số đang có vào khay
+  if (forgeTray.length >= CHAOS_TRAY_MAX) return;
+  forgeTray.push({ k:'jewel', j }); chaosPick = null; renderForge();
+};
+window.chaosTrayPop = function(i){ forgeTray.splice(i, 1); chaosPick = null; renderForge(); };
+window.chaosClear = function(){ forgeTray = []; chaosPick = null; renderForge(); };
+window.doChaos = function(){
+  const cur = chaosCurrent();
+  if (!cur || !cur.p.ready) return;
+  let ok = false;
+  try { ok = cur.rec.run(cur.v, cur.m, cur.p); }
+  catch (e){ console.error('Lò Hỗn Độn ' + cur.rec.id, e); chaosSay('✘ Kết hợp lỗi — xem console', '#ff7a6a'); }
+  if (ok){ calcDerived(); saveGame(); }
+  setTimeout(renderForge, 700);
+};
+function chaosRateColor(r){ return r >= 100 ? '#8fd18f' : r >= 50 ? '#7ecbff' : r >= 40 ? '#e8b04a' : '#ff7a6a'; }
 function renderForge(){
-  if (player.level < 4){ // P0: mở ở cấp 4 để NV5 "Rèn Luyện Sơ Nhập" không bị khóa
-    CE().innerHTML = `<h3>Rèn Luyện</h3>
-      <div style="padding:14px;font-size:13px">Lò rèn mở khóa ở <b style="color:#7ecbff">cấp 4</b>.<br>Hãy tiếp tục làm nhiệm vụ!</div>`;
+  if (player.level < 4){
+    CE().innerHTML = `<h3>Lò Hỗn Độn</h3>
+      <div style="padding:14px;font-size:13px">Lò mở khóa ở <b style="color:#7ecbff">cấp 4</b>.<br>Hãy tiếp tục làm nhiệm vụ!</div>`;
     return;
   }
-  const all = [];
-  for (const s in player.equip) if (player.equip[s] && !player.equip[s].noForge) all.push({ it:player.equip[s], where:'equip', key:s });
-  player.inv.forEach((it,i)=>{ if (!it.noForge) all.push({ it, where:'inv', key:i }); });
-  let html = `<h3>Rèn Luyện — Tăng Cường Trang Bị</h3>`;
-  html += `<div style="font-size:12px;color:#9aa8d4;line-height:1.7">◈ <b>${player.silver}</b> · ✦ Huyền Thiết <b style="color:#9fd0ff">${player.mat}</b> · ◆ Tu La <b style="color:#e84a6a">${player.gems.tuLa}</b> · ❖ Hỗn Nguyên <b style="color:#b08ae8">${player.gems.honNguyen}</b><br>
-    ☂ Thiên Mệnh Phù <b style="color:#7ecbff">${player.charms}</b> <button class="mini-btn" onclick="buyCharm()" ${player.silver<500?'disabled':''}>Mua (500◈)</button>${player.forgeBonus?` · <span style="color:#5aa0e8">Thợ Rèn Truyền Thuyết: +${player.forgeBonus}% tỉ lệ</span>`:''}</div>`;
-  if (!all.length){ html += `<div style="padding:12px;opacity:.6;font-size:12px">Chưa có trang bị nào.</div>`; }
-  html += `<div class="stat-sec">CHỌN TRANG BỊ (tối đa +11 · +10 thức tỉnh)</div>`;
-  all.forEach((e,i)=>{
-    const sel = forgeSel && forgeSel.uid === e.it.uid;
-    html += `<div class="slot-row" style="${sel?'border-color:#7ecbff;background:rgba(76,141,255,.12)':''}" onclick="forgeSelect(${i})">
-      <span class="s-name"><span class="${RARITIES[e.it.rarity].cls}">${e.it.name}${e.it.plus?' +'+e.it.plus:''}</span>
-      <span style="opacity:.55;font-size:11px"> (${e.where==='equip'?'đang mặc':'túi'})</span></span></div>`;
-  });
-  window._forgeList = all;
-  const sel = forgeSel && all.find(e=>e.it.uid===forgeSel.uid);
-  if (sel){
-    const it = sel.it;
-    html += `<div class="forge-lines"><b class="${RARITIES[it.rarity].cls}">${it.name} +${it.plus}</b>
-      <span style="opacity:.6"> (Lực chiến ${itemPower(it)})</span><br>${itemLineHtml(it)}</div>`;
-    if (it.plus >= 11){
-      html += `<div id="forge-msg" style="color:#f39c3d">☀ Đã đạt Khai Quang tối thượng (+11) — danh hiệu Thợ Rèn Truyền Thuyết!</div>`;
-    } else if (it.plus >= 9){
-      // GDD: trang bị +9 trở lên không thể tự rèn — phải đến Lò Rèn Hoàng Gia
-      html += `<div class="next-tier" style="border-color:#e8b04a"><b style="color:#e8b04a">☰ Phá Thiên Kiếp (+9 → +11)</b><br>
-        <span style="font-size:12px;line-height:1.6">Trang bị từ +9 không thể tự rèn. Hãy mang đến <b>Lò Rèn Hoàng Gia</b> ở trung tâm <b>Lunaris City</b>, nhờ <b>Tông Sư Thợ Rèn</b> vận công dung hợp.</span></div>
-        <div class="forge-actions"><button class="mini-btn" onclick="closePanels(); window.hintGoForge()">Dịch Chuyển tới Lò Rèn Hoàng Gia</button></div>
-        <div id="forge-msg"></div>`;
+  chaosSyncGroup();
+  const v = trayView();
+  const cur = chaosCurrent();
+  const ms = chaosMatches();
+  const J = player.jewels || { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
+  let h = `<h3>⚙ Lò Hỗn Độn</h3>`;
+
+  // ── kho: tiền + nguyên liệu số lượng lớn ──
+  h += `<div class="chaos-bank">
+    <span title="Bạc">◈ ${player.silver.toLocaleString('vi-VN')}</span>
+    <span title="Huyền Thiết" style="color:#9fd0ff">✦ ${player.mat}</span>
+    <span title="Tu La Tinh Thạch" style="color:#e84a6a">◆ ${player.gems.tuLa}</span>
+    <span title="Hỗn Nguyên" style="color:#b08ae8">❖ ${player.gems.honNguyen}</span>
+    <span title="Mảnh Cổ Thần" style="color:#7ecbff">◈ ${(player.mats && player.mats.manhCoThan) || 0}</span>
+    <span title="Thiên Mệnh Phù" style="color:#7ecbff">☂ ${player.charms}
+      <button class="mini-btn" style="padding:1px 6px;font-size:10px" onclick="buyCharm()" ${player.silver<500?'disabled':''}>Mua 500◈</button></span>
+    ${player.forgeBonus?`<span style="color:#5aa0e8">Thợ Rèn Truyền Thuyết +${player.forgeBonus}%</span>`:''}
+  </div>`;
+
+  // ── tab nhóm ──
+  h += `<div class="chaos-tabs">`;
+  for (const g of CHAOS_GROUPS){
+    const n = ms.filter(x => x.rec.group === g.id).length;
+    h += `<button class="chaos-tab${chaosGroup===g.id?' on':''}" onclick="chaosSetGroup('${g.id}')">${g.name}${n?` <i>${n}</i>`:''}</button>`;
+  }
+  h += `</div>`;
+
+  // ── KHAY ──
+  h += `<div class="chaos-sec">KHAY HỖN ĐỘN <span class="chaos-sub">bấm món trong túi để bỏ vào · bấm ô khay để lấy ra</span></div>`;
+  h += `<div class="chaos-tray">`;
+  for (let i = 0; i < CHAOS_TRAY_MAX; i++){
+    const e = forgeTray[i];
+    if (!e){ h += `<div class="chaos-cell"></div>`; continue; }
+    if (e.k === 'item'){
+      const it = findItemByUid(e.uid);
+      if (!it){ h += `<div class="chaos-cell"></div>`; continue; }
+      h += `<div class="chaos-cell full" title="${it.name} +${it.plus||0}" onclick="chaosTrayPop(${i})">
+        ${slotIcon(it, 'chaos-ic')}${it.plus?`<b class="chaos-plus">+${it.plus}</b>`:''}</div>`;
     } else {
-      const target = it.plus + 1;
-      const rule = forgeRule(target);
-      const rate = Math.min(100, rule.rate + (player.forgeBonus||0));
-      const costS = (20 + it.plus*15) * (it.tier || 1); // Drop v2.0: phí rèn theo giai
-      const canPay = player.silver>=costS && player.mat>=rule.mat && player.gems.tuLa>=rule.tuLa && player.gems.honNguyen>=rule.hon;
-      const failTxt = rule.fail === 'drop1' ? 'thất bại: TỤT 1 CẤP (tẩu hỏa nhập ma)' : 'thất bại chỉ mất vật liệu';
-      // Đập Ngọc (+6 → +9): hiển thị rõ ngọc Tu La cần đập vào
-      if (rule.tuLa){
-        const enough = player.gems.tuLa >= rule.tuLa;
-        html += `<div class="gem-socket">
-          <img src="assets/items/mat_tula.png" onerror="this.style.display='none'" alt="Tu La">
-          <div><b style="color:#e84a6a">ĐẬP NGỌC — Tu La Tinh Thạch</b><br>
-          <span style="font-size:11.5px;opacity:.8">+6 trở lên bắt buộc đập ngọc để đột phá giới hạn (75% → 50%). Thất bại chỉ tụt 1 cấp.</span><br>
-          <span style="color:${enough?'#8fd18f':'#ff7a6a'};font-size:12px">Đang có: ${player.gems.tuLa} / cần ${rule.tuLa} viên</span></div></div>`;
-      } else {
-        html += `<div class="gem-socket">
-          <img src="assets/items/mat_huyenthiet.png" onerror="this.style.display='none'" alt="Huyền Thiết">
-          <div><b style="color:#9fd0ff">BÌNH CHỈ NHƯ THỦY (+1 đến +6)</b><br>
-          <span style="font-size:11.5px;opacity:.8">Huyền Thiết Thạch cường hóa an toàn tuyệt đối — tỉ lệ 100%.</span><br>
-          <span style="color:#8fd18f;font-size:12px">Đang có: ${player.mat} / cần ${rule.mat} ✦ · ${costS}◈</span></div></div>`;
-      }
-      if (rule.fail !== 'none'){
-        html += `<label style="display:block;font-size:12px;margin:6px 0;color:#7ecbff;cursor:pointer">
-          <input type="checkbox" ${forgeUseCharm?'checked':''} onchange="forgeUseCharm=this.checked" ${player.charms>0?'':'disabled'}>
-          Dùng Thiên Mệnh Phù — xịt vẫn giữ nguyên cấp (còn ${player.charms})</label>`;
-      }
-      html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 20px"
-        onclick="doEnhance()" ${canPay?'':'disabled'}>
-        ${rule.tuLa ? '◆ Đập Ngọc +' + target : 'Tăng Cường +' + target} (${rate}%)<br><span style="font-size:11px">${costS}◈ + ${rule.mat}✦${rule.tuLa ? ` + ${rule.tuLa}◆ Tu La` : ''}</span></button></div>
-        <div style="font-size:11px;opacity:.7;text-align:center">${failTxt}</div>
-        <div id="forge-msg"></div>`;
-    }
-    // ── Tứ Châu khảm phúc (Track HT — GDD §13) ── kéo viên ngọc thả vào ô món đồ để khảm,
-    // hoặc bấm nút bên dưới (giữ lại cho thao tác chạm trên mobile — kéo-thả HTML5 không chạy trên touch).
-    const J = player.jewels || { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
-    const canCP = J.chucPhuc > 0 && !it.noForge && it.plus <= 5;
-    const canLH = J.linhHon > 0 && !it.noForge && it.plus < 11;
-    const isArmor = ARMOR_SLOTS.includes(it.slot);
-    const smRate = Math.max(25, 75 - (it.life || 0) * 8);
-    const canSM = J.sinhMenh > 0 && isArmor && (it.life || 0) < 7;
-    html += `<div class="stat-sec">TỨ CHÂU — kéo ngọc thả vào món đồ bên dưới để khảm · ● Hỗn Độn <b style="color:#7ecbff">${J.honDon}</b></div>`;
-    html += `<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:8px">
-      <div class="jewel-drag" draggable="${canCP}" ondragstart="onJewelDragStart(event,'chucPhuc')" title="Lên +1 miễn phí, 100% thành công (áp dụng +0 đến +5)">◎<br>Chúc Phúc<br><b style="color:#7ec850">${J.chucPhuc}</b></div>
-      <div class="jewel-drag" draggable="${canLH}" ondragstart="onJewelDragStart(event,'linhHon')" title="Lên +1 với 50% — thất bại tụt 1 cấp (áp dụng đến +10, kể cả Phá Thiên Kiếp)">◉<br>Linh Hồn<br><b style="color:#b08ae8">${J.linhHon}</b></div>
-      <div class="jewel-drag" draggable="${canSM}" ondragstart="onJewelDragStart(event,'sinhMenh')" title="${isArmor?`+4% HP mỗi bậc (tối đa 7 bậc = +28%) — thất bại về 0. Tỉ lệ hiện tại: ${smRate}%`:'Chỉ khảm lên giáp trụ (Nón/Giáp/Tay/Quần/Giày)'}">❤<br>Sinh Mệnh<br><b style="color:#e84a6a">${J.sinhMenh}</b></div>
-    </div>
-    <div class="forge-drop-zone" style="display:flex;justify-content:center;margin-bottom:8px"
-      ondragover="onForgeItemDragOver(event)" ondragenter="onForgeItemDragEnter(event)" ondragleave="this.classList.remove('drag-over')"
-      ondrop="this.classList.remove('drag-over'); onForgeItemDrop(event, ${it.uid})">
-      ${slotIcon(it, '')}
-    </div>
-    <div class="forge-actions" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
-      <button class="mini-btn" ${canCP?'':'disabled'} onclick="useJewel('chucPhuc',${it.uid})" title="Lên +1 miễn phí, 100% thành công (áp dụng +0 đến +5)">◎ Chúc Phúc +1</button>
-      <button class="mini-btn" ${canLH?'':'disabled'} onclick="useJewel('linhHon',${it.uid})" title="Lên +1 với 50% — thất bại tụt 1 cấp (áp dụng đến +10, kể cả Phá Thiên Kiếp)">◉ Linh Hồn +1 (50%)</button>
-      <button class="mini-btn" ${canSM?'':'disabled'} onclick="useJewel('sinhMenh',${it.uid})" title="${isArmor?`+4% HP mỗi bậc (tối đa 7 bậc = +28%) — thất bại về 0. Tỉ lệ hiện tại: ${smRate}%`:'Chỉ khảm lên giáp trụ (Nón/Giáp/Tay/Quần/Giày)'}">❤ Sinh Mệnh ${(it.life||0)}/7</button></div>
-      <div id="jewel-msg" style="min-height:16px;font-size:12px;text-align:center"></div>`;
-    // ── Drop v2.0: Tấn Phẩm / Kế Thừa / Đổi Hệ ──
-    if (!it.special){
-      if (it.rarity < 4 && !it.ancient){
-        const tp = TANPHAM_RULES[it.rarity];
-        const costTxt = [tp.tinh?`${tp.tinh}✦`:'', tp.manh?`${tp.manh}❖Mảnh`:'', tp.tichMa?`${tp.tichMa}◆TịchMa`:'', tp.an?`${tp.an}☬Ấn`:'', `${tp.silver}◈`].filter(Boolean).join(' + ');
-        const canTp = player.mat>=tp.tinh && player.mats.manh>=tp.manh && player.mats.tichMa>=tp.tichMa && player.mats.anTranAi>=tp.an && player.silver>=tp.silver;
-        html += `<div class="stat-sec">TẤN PHẨM — ${RARITIES[it.rarity].name} → <b style="color:${RARITIES[it.rarity+1].color}">${RARITIES[it.rarity+1].name}</b> (mở ${RARITY_SUBS[it.rarity+1]} dòng phụ)</div>
-          <div class="forge-actions"><button class="mini-btn" ${canTp?'':'disabled'} onclick="doTanPham(${it.uid})">✦ Tấn Phẩm (${tp.rate}%)<br><span style="font-size:11px">${costTxt}</span></button></div>
-          <div style="font-size:11px;opacity:.7;text-align:center">${tp.rate<100?'thất bại: giữ đồ & Ấn, mất nửa vật liệu':'an toàn tuyệt đối 100%'}</div>`;
-      }
-      if (it.tier < 10){
-        const canKt = player.mats.manh>=40 && player.mats.tichMa>=4 && player.silver>=5000*it.tier;
-        html += `<div class="stat-sec">KẾ THỪA —【${giaiName(it.tier)}】→【${giaiName(it.tier+1)}】giữ Phẩm/+${it.plus}/dòng phụ (gốc −10%)</div>
-          <div class="forge-actions"><button class="mini-btn" ${canKt?'':'disabled'} onclick="doKeThua(${it.uid})">⚒ Kế Thừa<br><span style="font-size:11px">40❖Mảnh + 4◆TịchMa + ${5000*it.tier}◈</span></button></div>`;
-      }
-      const canDh = player.jewels && player.jewels.honDon >= 1;
-      html += `<div class="forge-actions"><button class="mini-btn" ${canDh?'':'disabled'} onclick="doDoiHe(${it.uid})" title="Re-roll nguyên tố trang bị (hiện: ${it.element})">◑ Đổi Hệ (1● Hỗn Độn)</button></div>`;
+      const d = CHAOS_JEWELS.find(x => x.k === e.j) || CHAOS_JEWELS[0];
+      h += `<div class="chaos-cell full jw" title="${d.name}" onclick="chaosTrayPop(${i})">
+        <span class="chaos-gem" style="color:${d.color}">${d.glyph}</span></div>`;
     }
   }
-  // Luyện Bảo Các — Áo Choàng (2 cấp, chỉ luyện chế tại đây, không rơi từ quái)
-  const cloak = player.equip.aochoang || player.inv.find(x => x.slot === 'aochoang');
-  html += `<div class="stat-sec">LUYỆN BẢO CÁC — ÁO CHOÀNG</div>`;
-  if (!cloak){
-    const c = CLOAK_TIERS[1];
-    const can = player.gems.tuLa >= c.cost.tuLa && player.gems.honNguyen >= c.cost.hon && player.silver >= c.cost.silver;
-    html += `<div class="next-tier"><b style="color:${c.color}">${c.name} (Cấp 1)</b><br>
-      Thêm Sát Thương +${c.atkPct}% · Xuyên Giáp +${c.pierce}%<br>
-      <span style="opacity:.75">Phí: ${c.cost.tuLa}◆ Tu La + ${c.cost.hon}❖ Hỗn Nguyên + ${c.cost.silver}◈</span></div>
-      <div class="forge-actions"><button class="mini-btn" onclick="craftCloak(1)" ${can?'':'disabled'}>Luyện Chế Áo Choàng</button></div>
-      <div id="cloak-msg" style="text-align:center;font-size:12px"></div>`;
-  } else if (cloak.cloakTier === 1){
-    const c = CLOAK_TIERS[2];
-    const can = player.level >= 60 && player.gems.tuLa >= c.cost.tuLa && player.gems.honNguyen >= c.cost.hon && player.silver >= c.cost.silver;
-    html += `<div class="next-tier"><b style="color:${c.color}">${c.name} (Cấp 2 — yêu cầu LV60)</b><br>
-      Thêm Sát Thương +${c.atkPct}% · Xuyên Giáp +${c.pierce}% · Phòng Ngự +${c.defPct}%<br>
-      <span style="opacity:.75">Phí: ${c.cost.tuLa}◆ Tu La + ${c.cost.hon}❖ Hỗn Nguyên + ${c.cost.silver}◈${player.level<60?' · <span style="color:#ff7a6a">chưa đạt LV60</span>':''}</span></div>
-      <div class="forge-actions"><button class="mini-btn" onclick="craftCloak(2)" ${can?'':'disabled'}>Thăng Cấp Áo Choàng 2</button></div>
-      <div id="cloak-msg" style="text-align:center;font-size:12px"></div>`;
+  h += `</div>`;
+  h += `<div class="chaos-tray-bar">
+    <button class="mini-btn" onclick="chaosClear()" ${forgeTray.length?'':'disabled'}>Lấy hết ra</button>
+    <span style="opacity:.6;font-size:11px">${forgeTray.length}/${CHAOS_TRAY_MAX} ô</span></div>`;
+
+  // ── giá ngọc: bấm để bỏ viên vào khay ──
+  h += `<div class="chaos-jewels">`;
+  for (const d of CHAOS_JEWELS){
+    const con = (J[d.k] || 0) - v.jewels[d.k];
+    h += `<button class="chaos-jw" style="--jc:${d.color}" onclick="chaosAddJewel('${d.k}')" ${con>0?'':'disabled'} title="${d.name} — còn ${con} viên ngoài khay">
+      <span class="chaos-gem" style="color:${d.color}">${d.glyph}</span><b>${con}</b></button>`;
+  }
+  h += `</div>`;
+
+  // ── CÔNG THỨC ──
+  const inGroup = ms.filter(x => x.rec.group === chaosGroup);
+  h += `<div class="chaos-sec">CÔNG THỨC</div>`;
+  if (!inGroup.length){
+    const gname = (CHAOS_GROUPS.find(g => g.id === chaosGroup) || {}).name || '';
+    h += `<div class="chaos-empty">Khay hiện tại không khớp công thức <b>${gname}</b> nào.<br>
+      <span style="opacity:.7;font-size:11px">Gợi ý: ${CHAOS_RECIPES.filter(r => r.group === chaosGroup).map(r => `<b>${r.name}</b> — ${r.tray}`).join(' · ')}</span></div>`;
   } else {
-    html += `<div style="text-align:center;color:#7ecbff;font-size:13px;padding:6px">☀ ${CLOAK_TIERS[2].name} — áo choàng tối thượng của Luyện Bảo Các!</div>`;
+    h += `<div class="chaos-reclist">`;
+    for (const x of inGroup){
+      const on = cur && cur.rec.id === x.rec.id;
+      h += `<button class="chaos-rec${on?' on':''}${x.p.ready?'':' dim'}" onclick="chaosPickRecipe('${x.rec.id}')">
+        <span>${x.rec.name}</span><em style="color:${chaosRateColor(x.p.rate)}">${x.p.rate}%</em></button>`;
+    }
+    h += `</div>`;
   }
-  // ── Drop v2.0: pity Cổ Thần — 60 Mảnh Cổ Thần đổi 1 món chọn bộ ──
-  html += `<div class="stat-sec">CỔ THẦN THỦ HỘ — đổi ◈ Mảnh Cổ Thần (đang có <b style="color:#7ecbff">${(player.mats&&player.mats.manhCoThan)||0}</b>/60)</div>`;
-  html += `<div class="forge-actions" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">`;
-  for (const sid in ANCIENT_SETS){
-    const st = ANCIENT_SETS[sid];
-    html += `<button class="mini-btn" style="border-color:${st.color};color:${st.color}" ${(player.mats&&player.mats.manhCoThan>=60)?'':'disabled'} onclick="doiCoThan('${sid}')">◈ ${st.name} (60)</button>`;
+
+  // ── CHI TIẾT công thức đang chọn ──
+  if (cur){
+    const p = cur.p;
+    h += `<div class="chaos-detail">
+      <div class="chaos-title">${p.title}</div>
+      <div class="chaos-rate" style="color:${chaosRateColor(p.rate)}">Tỉ lệ thành công: <b>${p.rate}%</b></div>`;
+    if (cur.rec.royal && !atRoyalForge()){
+      h += `<div class="chaos-warn royal">☰ Công thức này chỉ chạy được tại <b>Lò Rèn Hoàng Gia</b> — hãy đến chỗ Tông Sư Thợ Rèn.
+        <button class="mini-btn" onclick="closePanels(); window.hintGoForge()">Dẫn đường</button></div>`;
+    }
+    h += `<div class="chaos-costs">`;
+    for (const c of p.cost){
+      h += `<div class="chaos-cost${c.ok?'':' bad'}"><span>${c.glyph} ${c.label}</span>
+        <b>${c.ok?'✓':'✗'} ${typeof c.have === 'number' ? c.have.toLocaleString('vi-VN') : c.have}/${c.need.toLocaleString('vi-VN')}</b></div>`;
+    }
+    h += `</div>`;
+    if (p.pickSet){
+      h += `<div class="chaos-setpick">`;
+      for (const sid in ANCIENT_SETS){
+        const st = ANCIENT_SETS[sid];
+        h += `<button class="chaos-setbtn${chaosCoThanSet===sid?' on':''}" style="--sc:${st.color}" onclick="chaosSetCoThan('${sid}')">${st.name}</button>`;
+      }
+      h += `</div>`;
+    }
+    if (p.pickSlot){
+      h += `<div class="chaos-setpick">`;
+      for (const sl of ARMOR_SLOTS){
+        const sd = SLOTS.find(x => x.id === sl);
+        h += `<button class="chaos-setbtn${chaosCoThanSlot===sl?' on':''}" style="--sc:#9fd0ff" onclick="chaosSetSlot('${sl}')">${sd ? sd.name : sl}</button>`;
+      }
+      h += `</div>`;
+    }
+    if (p.warn) h += `<div class="chaos-warn${/VỠ VỤN|TIÊU HỦY|VỀ 0/.test(p.warn)?' danger':''}">⚠ ${p.warn}</div>`;
+    if (p.charm){
+      h += `<label class="chaos-charm">
+        <input type="checkbox" ${forgeUseCharm?'checked':''} onchange="forgeUseCharm=this.checked" ${player.charms>0?'':'disabled'}>
+        Dùng ☂ Thiên Mệnh Phù — thất bại vẫn giữ nguyên (còn ${player.charms})</label>`;
+    }
+    h += `<button class="chaos-go" onclick="doChaos()" ${p.ready?'':'disabled'}>⟳ KẾT HỢP</button>
+      <div id="chaos-msg" class="chaos-msg"></div></div>`;
   }
-  html += `</div><div style="font-size:11px;opacity:.7;text-align:center">Mảnh Cổ Thần rơi từ Cổng Vực (×2/lần hạ) — bảo đảm Cổ Thần sau ~30 lần Chinh Phạt.</div>`;
-  CE().innerHTML = html;
+
+  // ── TÚI ĐỒ: bấm icon để bỏ vào khay ──
+  const bag = [];
+  for (const s in player.equip){ const it = player.equip[s]; if (it) bag.push({ it, w:'mặc' }); }
+  (player.inv || []).forEach(it => bag.push({ it, w:'túi' }));
+  h += `<div class="chaos-sec">TRANG BỊ <span class="chaos-sub">bấm để bỏ vào khay</span></div>`;
+  h += `<div class="chaos-bag">`;
+  for (const b of bag){
+    const on = forgeTray.some(e => e.k === 'item' && e.uid === b.it.uid);
+    h += `<div class="chaos-cell bag${on?' on':''}" title="${b.it.name}${b.it.plus?' +'+b.it.plus:''} (${b.w})" onclick="chaosAddItem(${b.it.uid})">
+      ${slotIcon(b.it, 'chaos-ic')}${b.it.plus?`<b class="chaos-plus">+${b.it.plus}</b>`:''}</div>`;
+  }
+  if (!bag.length) h += `<div class="chaos-empty">Chưa có trang bị nào.</div>`;
+  h += `</div>`;
+  CE().innerHTML = h;
 }
 window.craftCloak = function(t){
   const c = CLOAK_TIERS[t];
@@ -9395,83 +10087,6 @@ window.buyCharm = function(){
   addFloat(player.x, player.y-34, '+1 ☂ Thiên Mệnh Phù', '#7ecbff', 12);
   saveGame(); renderForge();
 };
-window.forgeSelect = function(i){
-  forgeSel = window._forgeList[i].it;
-  renderForge();
-};
-window.doEnhance = function(){
-  const all = window._forgeList;
-  const sel = forgeSel && all.find(e=>e.it.uid===forgeSel.uid);
-  if (!sel) return;
-  const it = sel.it;
-  if (it.plus >= 11) return;
-  const target = it.plus + 1;
-  const rule = forgeRule(target);
-  if (rule.bagua){
-    const msg0 = document.getElementById('forge-msg');
-    if (msg0){ msg0.textContent = '✘ Trang bị +9 trở lên chỉ rèn được tại Lò Rèn Hoàng Gia — Lunaris City!'; msg0.style.color = '#ff9a6a'; }
-    addFloat(player.x, player.y-40, 'Phải đến Lò Rèn Hoàng Gia!', '#ff9a6a', 13);
-    return;
-  }
-  const rate = Math.min(100, rule.rate + (player.forgeBonus||0));
-  const costS = (20 + it.plus*15) * (it.tier || 1); // Drop v2.0: phí rèn theo giai
-  if (player.silver < costS || player.mat < rule.mat || player.gems.tuLa < rule.tuLa || player.gems.honNguyen < rule.hon) return;
-  const useCharm = forgeUseCharm && player.charms > 0 && rule.fail !== 'none';
-  player.silver -= costS; player.mat -= rule.mat;
-  player.gems.tuLa -= rule.tuLa; player.gems.honNguyen -= rule.hon;
-  const msg = document.getElementById('forge-msg');
-  if (Math.random()*100 < rate){
-    it.plus++;
-    AudioSys.sfx('forge_ok', 0.85);
-    if (msg){ msg.textContent = `✔ Thành công! ${it.name} +${it.plus}`; msg.style.color = '#8fd18f'; }
-    addFloat(player.x, player.y-40, `Rèn thành công +${it.plus}!`, '#8fd18f', 14);
-    addEffect({ type:'ring', x:player.x, y:player.y, r:70, color:'#8fd18f' });
-    // quest 5 check
-    const q = currentQuest();
-    if (q && q.type==='enhance' && questState==='active' && it.plus >= q.need){
-      questProg = q.need; questState='done';
-      addFloat(player.x, player.y-60, `Nhiệm vụ hoàn thành — về gặp ${npcName(q.npc)}`, '#8fd18f', 13);
-    }
-    if (it.plus === 10) addFloat(player.x, player.y-56, `☆ Thức tỉnh: ${it.awakened.name}`, '#f39c3d', 13);
-    if (it.plus === 11){
-      player.forged11 = true;
-      addFloat(player.x, player.y-72, '☀ KHAI QUANG +11 — Thợ Rèn Truyền Thuyết!', '#ffd76a', 16);
-      addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:'#ffd76a', big:true });
-    }
-    dailyTrack('forge'); // Mục Tiêu Hôm Nay
-    checkTitles();
-  } else if (useCharm){
-    player.charms--;
-    if (msg){ msg.textContent = `☂ Thiên Mệnh Phù đã bảo hộ — trang bị giữ nguyên +${it.plus}`; msg.style.color = '#7ecbff'; }
-    addFloat(player.x, player.y-40, 'Thiên Mệnh Phù bảo hộ!', '#7ecbff', 13);
-  } else {
-    AudioSys.sfx('forge_fail', 0.8);
-    if (rule.fail === 'drop1'){
-      it.plus = Math.max(6, it.plus - 1);
-      if (msg){ msg.textContent = `✘ Thất bại — tụt xuống +${it.plus}`; msg.style.color = '#ff7a6a'; }
-      addFloat(player.x, player.y-40, `Rèn xịt! Tụt còn +${it.plus}`, '#ff7a6a', 13);
-    } else if (rule.fail === 'zero'){
-      it.plus = 0;
-      if (msg){ msg.textContent = `✘ Thất bại thảm khốc — trang bị về +0!`; msg.style.color = '#ff7a6a'; }
-      addFloat(player.x, player.y-40, 'Rèn xịt! Về +0!', '#ff7a6a', 14);
-    } else if (rule.fail === 'break'){
-      if (sel.where === 'equip') player.equip[sel.key] = null;
-      else player.inv.splice(sel.key, 1);
-      forgeSel = null;
-      addFloat(player.x, player.y-40, `${it.name} đã VỠ VỤN!`, '#ff3a3a', 16);
-      addEffect({ type:'ring', x:player.x, y:player.y, r:90, color:'#ff3a3a', big:true });
-      calcDerived(); saveGame();
-      setTimeout(renderForge, 900);
-      return;
-    } else {
-      if (msg){ msg.textContent = `✘ Thất bại... vật liệu đã mất`; msg.style.color = '#ff7a6a'; }
-      addFloat(player.x, player.y-40, 'Rèn thất bại!', '#ff7a6a', 13);
-    }
-  }
-  calcDerived(); saveGame();
-  setTimeout(renderForge, 900);
-};
-
 // ---------- Tấn Chức: Ám Khí / Cung Tiễn / Cương Khí (7 tầng, Chúc Phúc bảo đảm) ----------
 const TH_SYSTEMS = {
   amkhi:   { name:'Ám Khí',   glyph:'☾', tiers:AMKHI_TIERS,   minLv:4,
@@ -9613,7 +10228,7 @@ function genSpecific(slotId, r, level){
     const def = pool.splice(idx,1)[0];
     subs.push({ k:def.k, name:def.name, v: def.max, pct:true }); // đồ test: chỉ số tối đa
   }
-  return {
+  return assignDef({
     uid: itemSeq++, slot: slot.id, slotName: slot.name,
     name: (armorGroup ? 'Hoàn Hảo ' : '') + ITEM_NAMES[slot.id][r],
     rarity: r, level, tier, perfect: armorGroup,
@@ -9621,7 +10236,7 @@ function genSpecific(slotId, r, level){
     element: ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)],
     subs, plus: 0,
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
-  };
+  });
 }
 function applyTestBoost(){
   // ===== CHẾ ĐỘ THỬ NGHIỆM: MỌI TÍNH NĂNG TỐI ĐA =====
@@ -9678,7 +10293,9 @@ function applyTestBoost(){
   player.baohap = {};
   for (let t = 1; t < BAOHAP_TIERS.length; t++) player.baohap[t] = 10;
   player.mats = player.mats || {};
-  player.mats.manhCoThan = 120;
+  // Đủ MỌI nguyên liệu Lò Hỗn Độn cần — thiếu manh/tichMa/anTranAi thì Tấn Phẩm với Kế Thừa
+  // vẫn khoá cứng ở max mode, tức là hai công thức không test được.
+  player.mats.manhCoThan = 120; player.mats.manh = 300; player.mats.tichMa = 60; player.mats.anTranAi = 20;
   // Danh hiệu: mở hết, trang bị danh hiệu cuối cùng
   player.titles.unlocked = TITLES.map(t => t.id);
   player.titles.equipped = TITLES[TITLES.length - 1].id;
@@ -9896,9 +10513,31 @@ function showMainMenu(){
   el('sect-select').classList.remove('hidden');
   AudioSys.playBgm(BGM_INTRO); // nhạc Ái Đích Phế Khư vang lên ngay màn hình chính
 }
-const hasSave = !!localStorage.getItem('vlcm_save');
-if (hasSave) showMainMenu(); // người cũ → thẳng màn Tiếp Tục
-else setTimeout(showIntro, 0); // người mới → cốt truyện (defer: chờ module intro ở cuối file nạp xong)
+// `hasSave` phải BIẾT PHIÊN BẢN. Chỉ kiểm tra "có khoá trong localStorage" thì save cũ vẫn
+// hiện nút Tiếp Tục, bấm vào thì loadGame() trả false và người chơi rơi ra màn hình trắng.
+let saveStale = false;
+const hasSave = (() => {
+  try {
+    const raw = localStorage.getItem('vlcm_save');
+    if (!raw) return false;
+    if ((JSON.parse(raw).v || 1) >= SAVE_VERSION) return true;
+    localStorage.removeItem('vlcm_save'); saveStale = true; return false;
+  } catch { return false; }
+})();
+if (hasSave) showMainMenu();          // người cũ → thẳng màn Tiếp Tục
+else if (saveStale){
+  // Người này ĐÃ chơi rồi — đừng bắt xem lại intro cốt truyện. Đưa thẳng vào màn chọn lớp,
+  // kèm lý do. Mất nhân vật mà không hiểu vì sao là thứ tệ nhất một bản cập nhật có thể làm.
+  setTimeout(() => {
+    el('sect-select').classList.remove('hidden');
+    const cards = el('sect-cards'); if (cards) cards.style.display = '';
+    const sub = document.querySelector('#sect-select .ss-sub');
+    if (sub) sub.innerHTML = `<b style="color:#e8b04a">Bản cập nhật lớn — toàn bộ trang bị đã được vẽ lại</b><br>
+      <span style="opacity:.85">Hệ vật phẩm đổi hoàn toàn: 220 món, mỗi món một hình riêng, và vũ khí nay
+      khoá theo lớp. Nhân vật cũ không mang sang được — hãy tạo lại, lần này nhìn đồ là biết đẳng cấp.</span>`;
+  }, 0);
+}
+else setTimeout(showIntro, 0);        // người mới → cốt truyện (defer: chờ module intro ở cuối file nạp xong)
 {
   const btn = el('btn-continue');
   if (hasSave) btn.classList.remove('hidden');
@@ -10304,7 +10943,1397 @@ const SLOT_ICONS = {
   daychuyen:'daychuyen', nhan1:'nhan', nhan2:'nhan',
   aochoang:'aochoang', pet:'pet', canh:'canh',
 };
+// ═══════════════ HÌNH VẬT PHẨM — vẽ bằng code, không dùng file PNG ═══════════════
+// 11 file PNG đang phải gánh TOÀN BỘ trang bị: mọi thanh kiếm trong game dùng chung vukhi.png,
+// khác nhau đúng một bộ lọc xoay màu theo giai. Nay mỗi món một hình riêng, vẽ bằng code y như
+// nhân vật và 25 bộ giáp — hơn 200 món tốn ~0 byte, trong khi 11 file PNG kia đã ngốn 2,3 MB.
+//
+// Hệ toạ độ: gốc ở TÂM icon, khung 100×100, y âm là hướng lên. Hàm vẽ nhận (g, M, P):
+// g = ngữ cảnh, M = bảng màu kim loại, P = tham số riêng của món.
+const ICON_PX = 88;
+const _itemArtCache = new Map();
+
+// Bảng màu một món: lấy sắc kim loại theo GIAI — dùng chung HERO_METAL với nhân vật để hình
+// trong túi và hình trên người là cùng một chất liệu — rồi nhuộm lại theo bộ nếu món thuộc bộ.
+function _lum(h){
+  const n = parseInt((h || '#888').slice(1), 16);
+  return (((n >> 16) & 255) * 0.30 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11) / 255;
+}
+// Nâng một màu về phía trắng theo tỉ lệ k.
+function _lift(h, k){
+  const n = parseInt((h || '#888').slice(1), 16);
+  const f = c => Math.round(c + (255 - c) * k);
+  const r = f((n >> 16) & 255), g2 = f((n >> 8) & 255), b = f(n & 255);
+  return '#' + ((1 << 24) | (r << 16) | (g2 << 8) | b).toString(16).slice(1);
+}
+const WEAPON_MAT = {
+  dong:    { lo:'#6a4e28', hi:'#b08a4a', trim:'#e8c078', glow:null },       // đồng
+  sat:     { lo:'#4a4f5c', hi:'#8a92a4', trim:'#b8bfd0', glow:null },       // sắt
+  thep:    { lo:'#5a6272', hi:'#a8b2c6', trim:'#dfe6f2', glow:null },       // thép sáng
+  hacKim:  { lo:'#1c1f28', hi:'#3c424f', trim:'#8fa6c8', glow:'#6f8ec0' },  // hắc kim
+  bang:    { lo:'#2c5a72', hi:'#9fd8ee', trim:'#eaf8ff', glow:'#8fe0ff' },  // băng
+  lua:     { lo:'#4a1c10', hi:'#8a3a20', trim:'#ffb060', glow:'#ff8a3a' },  // nung đỏ
+  vang:    { lo:'#6a5220', hi:'#c8a84a', trim:'#ffe9a8', glow:'#ffd76a' },  // vàng cổ
+  xuong:   { lo:'#5a5344', hi:'#cfc6ac', trim:'#efe8d2', glow:null },       // xương
+  ma:      { lo:'#2a1f4a', hi:'#6a4fb0', trim:'#c8a8ff', glow:'#a88aff' },  // ma thuật
+  rong:    { lo:'#5a1418', hi:'#c0342c', trim:'#ffc24a', glow:'#ff6a2a' },  // vảy rồng
+};
+function itemPal(def, tier){
+  const M = (def && def.mat && WEAPON_MAT[def.mat]) || hMetal(tier);
+  const t = def && def.tint;
+  let P = !t ? M : { lo: t.lo || M.lo, hi: t.hi || M.hi, trim: t.trim || M.trim,
+                     glow: t.glow !== undefined ? t.glow : M.glow };
+  // Icon nằm trên nền panel TỐI, còn nhân vật đứng trên bản đồ SÁNG — cùng một bảng màu cho
+  // hai chỗ đó là sai. Bộ tối như Hắc Giáp (lo #23262f) tan hẳn vào nền ô túi. Nâng sàn sáng
+  // RIÊNG cho icon, giữ nguyên sắc, để món nào cũng đọc được trong túi.
+  const need = 0.30 - _lum(P.hi);
+  if (need > 0){
+    const k = Math.min(0.55, need * 1.7);
+    P = { lo: _lift(P.lo, k * 0.85), hi: _lift(P.hi, k), trim: _lift(P.trim, k * 0.5), glow: P.glow };
+  }
+  return P;
+}
+function iGrad(g, x0, y0, x1, y1, a, b){
+  const gr = g.createLinearGradient(x0, y0, x1, y1);
+  gr.addColorStop(0, a); gr.addColorStop(1, b); return gr;
+}
+function iPoly(g, pts, close){
+  g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
+  if (close !== false) g.closePath();
+}
+function iFill(g, pts, col){ iPoly(g, pts); g.fillStyle = col; g.fill(); }
+// Đinh tán: chi tiết nhỏ nhất nhưng là thứ nói "đồ thật" ở cỡ 44px.
+function iRivet(g, M, x, y, r){
+  g.fillStyle = M.trim; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.5)'; g.beginPath(); g.arc(x - r*0.3, y - r*0.32, r*0.4, 0, 7); g.fill();
+}
+// Viên đá nạm — dùng cho nấc cao, và là chỗ duy nhất màu `glow` của bộ hiện ra rõ.
+function iGem(g, M, x, y, r){
+  const c = M.glow || M.trim;
+  g.fillStyle = c; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.75)'; g.beginPath(); g.arc(x - r*0.28, y - r*0.3, r*0.38, 0, 7); g.fill();
+  g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 0.8; g.beginPath(); g.arc(x, y, r, 0, 7); g.stroke();
+}
+
+// ═══ BỘ PHẬN VŨ KHÍ — mỗi món là một TỔ HỢP, không phải một dáng tô lại màu ═══
+// Bản nháp đầu sai ở đây: 5 nấc chỉ là cùng một thanh kiếm đổi bảng màu, nên 75 vũ khí sẽ ra
+// 75 thanh giống hệt nhau. Trong MU thì Kiếm La Mã, Kiếm Điện, Kiếm Băng là BA VẬT KHÁC NHAU
+// — khác lưỡi, khác chắn tay, khác hoa văn. Nên tách rời rồi lắp lại:
+//   9 lưỡi × 7 chắn tay × 4 chuôi × 6 hoa văn  →  thừa sức cho 75 vũ khí mà không trùng dáng.
+// Quy ước: lưỡi vẽ từ chắn tay (y = +12) hướng lên tới mũi (y = len, âm). w = NỬA bề ngang.
+
+// ── LƯỠI ────────────────────────────────────────────────────────────────────────
+const IBLADE = {
+  // kiếm một tay thường: thuôn đều
+  thang(g, M, w, len){
+    iFill(g, [[-w, 12], [-w*0.86, len*0.5], [0, len], [w*0.86, len*0.5], [w, 12]], M.hi);
+    iFill(g, [[-w*0.28, 9], [-w*0.24, len*0.5], [0, len*0.82], [w*0.24, len*0.5], [w*0.28, 9]], M.lo);
+  },
+  // KIẾM LA MÃ: ngắn, bè, vai lưỡi gãy khúc rõ rồi mới vào mũi tam giác
+  lama(g, M, w, len){
+    const W = w * 1.55, sh = len * 0.62;
+    iFill(g, [[-W, 12], [-W, sh], [-W*0.9, sh*1.06], [0, len], [W*0.9, sh*1.06], [W, sh], [W, 12]], M.hi);
+    iFill(g, [[-W*0.26, 10], [-W*0.26, sh], [0, len*0.86], [W*0.26, sh], [W*0.26, 10]], M.lo);
+    g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 0.9;
+    g.beginPath(); g.moveTo(-W, sh); g.lineTo(W, sh); g.stroke();
+  },
+  // KRIS: lưỡi lượn sóng
+  song(g, M, w, len){
+    const N = 5;
+    const side = (s) => {
+      const pts = [];
+      for (let i = 0; i <= N; i++){
+        const t = i / N, y = 12 + (len - 12) * t;
+        const amp = (1 - t * 0.55) * w * 0.75;
+        pts.push([s * (w * (1 - t * 0.35) + Math.sin(t * Math.PI * 2.6) * amp * 0.5), y]);
+      }
+      return pts;
+    };
+    const L = side(-1), R = side(1).reverse();
+    iFill(g, [...L, [0, len], ...R], M.hi);
+    iFill(g, [[-w*0.22, 9], [-w*0.2, len*0.5], [0, len*0.8], [w*0.2, len*0.5], [w*0.22, 9]], M.lo);
+  },
+  // KIẾM ĐIỆN: hai ngạnh chẻ, cạnh gãy khúc kiểu tia sét
+  chietia(g, M, w, len){
+    const zig = (s) => [
+      [s*w, 12], [s*w*1.5, len*0.30], [s*w*0.55, len*0.42],
+      [s*w*1.35, len*0.66], [s*w*0.5, len*0.74], [s*w*0.95, len*0.92],
+    ];
+    iFill(g, [...zig(-1), [0, len], ...zig(1).reverse()], M.hi);
+    iFill(g, [[-w*0.3, 10], [-w*0.22, len*0.6], [0, len*0.9], [w*0.22, len*0.6], [w*0.3, 10]], M.lo);
+  },
+  // ĐAO: một lưỡi, sống thẳng, bụng cong
+  cong(g, M, w, len){
+    g.beginPath();
+    g.moveTo(-w, 12);
+    g.quadraticCurveTo(-w * 1.9, len * 0.55, -w * 0.25, len);
+    g.lineTo(w * 0.55, len * 0.95);
+    g.quadraticCurveTo(w * 0.85, len * 0.5, w * 0.8, 12);
+    g.closePath();
+    g.fillStyle = M.hi; g.fill();
+    g.strokeStyle = M.lo; g.lineWidth = 1.6;
+    g.beginPath(); g.moveTo(w * 0.4, 10); g.quadraticCurveTo(w * 0.5, len * 0.55, w * 0.35, len * 0.9); g.stroke();
+  },
+  // KIẾM BĂNG: khối pha lê gãy mặt, không có sống
+  pha_le(g, M, w, len){
+    const W = w * 1.2;
+    iFill(g, [[-W, 12], [-W*0.75, len*0.42], [-W*0.5, len*0.7], [0, len], [W*0.5, len*0.7], [W*0.75, len*0.42], [W, 12]], M.hi);
+    // ba mặt cắt
+    iFill(g, [[-W, 12], [-W*0.75, len*0.42], [0, len*0.36], [0, 12]], M.lo);
+    g.save(); g.globalAlpha = .55;
+    iFill(g, [[0, 12], [0, len*0.36], [W*0.75, len*0.42], [W, 12]], '#ffffff');
+    g.restore();
+    iFill(g, [[-W*0.5, len*0.7], [0, len], [W*0.5, len*0.7], [0, len*0.62]], M.lo);
+  },
+  // lưỡi răng cưa
+  rangcua(g, M, w, len){
+    iFill(g, [[-w, 12], [-w*0.8, len*0.55], [0, len], [w*0.8, len*0.55], [w, 12]], M.hi);
+    g.fillStyle = M.lo;
+    for (let i = 0; i < 5; i++){
+      const t = 0.14 + i * 0.16, y = 12 + (len - 12) * t;
+      const ww = w * (1 - t * 0.42);
+      iPoly(g, [[ww, y], [ww + 3.4, y - 2.6], [ww, y - 5.2]]); g.fill();
+    }
+    iFill(g, [[-w*0.26, 9], [-w*0.22, len*0.55], [0, len*0.8], [w*0.22, len*0.55], [w*0.26, 9]], M.lo);
+  },
+  // ĐẠI KIẾM: to bản, có khấc gần chắn tay
+  daikiem(g, M, w, len){
+    const W = w * 1.7;
+    iFill(g, [[-W, 12], [-W, len*0.22], [-W*1.25, len*0.3], [-W*0.92, len*0.38],
+              [-W*0.8, len*0.72], [0, len], [W*0.8, len*0.72], [W*0.92, len*0.38],
+              [W*1.25, len*0.3], [W, len*0.22], [W, 12]], M.hi);
+    iFill(g, [[-W*0.3, 9], [-W*0.26, len*0.62], [0, len*0.85], [W*0.26, len*0.62], [W*0.3, 9]], M.lo);
+  },
+  // RÌU: đầu rìu bè một bên cán, cán xuyên suốt
+  riu(g, M, w, len){
+    const H = len * 0.62;                       // đầu rìu chiếm phần trên
+    iFill(g, [[-w*0.5, 12], [w*0.5, 12], [w*0.5, len], [-w*0.5, len]], M.lo);   // cán
+    g.beginPath();                              // lưỡi bè sang phải
+    g.moveTo(w*0.4, H*0.35);
+    g.quadraticCurveTo(w*3.4, H*0.5, w*3.1, H);
+    g.quadraticCurveTo(w*2.2, len*0.94, w*0.4, len*0.9);
+    g.closePath();
+    g.fillStyle = iGrad(g, w*0.4, H, w*3.4, len, M.hi, M.lo); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = 1; g.stroke();
+    iFill(g, [[-w*0.4, H*0.5], [-w*1.7, H*0.75], [-w*1.5, len*0.9], [-w*0.4, len*0.85]], M.trim);  // ngạnh sau
+    iFill(g, [[-w*0.5, len], [w*0.5, len], [0, len*1.14]], M.trim);             // mũi nhọn đỉnh cán
+  },
+  // CHÙY: đầu khối có cánh, dùng để phá giáp
+  chuy(g, M, w, len){
+    const H = len * 0.66;
+    iFill(g, [[-w*0.5, 12], [w*0.5, 12], [w*0.5, H*0.9], [-w*0.5, H*0.9]], M.lo);  // cán
+    const R = w * 2.2;
+    g.fillStyle = iGrad(g, -R, H, R, len, M.hi, M.lo);
+    g.beginPath(); g.ellipse(0, (H + len) / 2, R, Math.abs(len - H) * 0.58, 0, 0, 7); g.fill();
+    g.fillStyle = M.trim;                        // 4 cánh phá giáp
+    for (const sd of [-1, 1]){
+      iPoly(g, [[sd*R*0.6, H*0.98], [sd*R*1.85, (H+len)/2], [sd*R*0.6, len*0.98]]); g.fill();
+    }
+    iPoly(g, [[-w*0.7, len*0.95], [w*0.7, len*0.95], [0, len*1.2]]); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = 1;
+    g.beginPath(); g.ellipse(0, (H + len) / 2, R, Math.abs(len - H) * 0.58, 0, 0, 7); g.stroke();
+  },
+  // KIẾM MẢNH: đâm, gần như không bề ngang
+  manh(g, M, w, len){
+    const W = w * 0.5;
+    iFill(g, [[-W, 12], [-W, len*0.78], [0, len], [W, len*0.78], [W, 12]], M.hi);
+    g.strokeStyle = M.lo; g.lineWidth = 1.2;
+    g.beginPath(); g.moveTo(0, 10); g.lineTo(0, len*0.85); g.stroke();
+  },
+};
+
+// ── CHẮN TAY ────────────────────────────────────────────────────────────────────
+const IGUARD = {
+  thanh(g, M, gw){ iFill(g, [[-gw, 12], [-gw*0.82, 17.5], [gw*0.82, 17.5], [gw, 12], [gw*0.74, 9.4], [-gw*0.74, 9.4]], M.trim); },
+  quat(g, M, gw){  // quillon vuốt lên
+    iFill(g, [[-gw, 12], [-gw*0.8, 17], [gw*0.8, 17], [gw, 12], [gw*0.72, 9.4], [-gw*0.72, 9.4]], M.trim);
+    iFill(g, [[-gw, 12.5], [-gw-4.5, 4], [-gw*0.7, 9.4]], M.trim);
+    iFill(g, [[gw, 12.5], [gw+4.5, 4], [gw*0.7, 9.4]], M.trim);
+  },
+  canh(g, M, gw){  // cánh xoè
+    for (const s of [-1, 1]){
+      g.save(); g.scale(s, 1);
+      g.beginPath(); g.moveTo(0, 9);
+      g.quadraticCurveTo(gw*0.7, 4, gw*1.25, 12);
+      g.quadraticCurveTo(gw*0.8, 18, 0, 17); g.closePath();
+      g.fillStyle = M.trim; g.fill();
+      g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = .8; g.stroke();
+      g.restore();
+    }
+  },
+  luoiliem(g, M, gw){ // lưỡi liềm ngửa
+    g.beginPath();
+    g.moveTo(-gw*1.15, 15); g.quadraticCurveTo(0, 2.5, gw*1.15, 15);
+    g.quadraticCurveTo(0, 10, -gw*1.15, 15); g.closePath();
+    g.fillStyle = M.trim; g.fill();
+  },
+  vuot(g, M, gw){  // vuốt quặp xuống
+    iFill(g, [[-gw*0.7, 9.4], [gw*0.7, 9.4], [gw*0.7, 15], [-gw*0.7, 15]], M.trim);
+    for (const s of [-1, 1]) iFill(g, [[s*gw*0.6, 10], [s*gw*1.45, 20], [s*gw*0.95, 21], [s*gw*0.55, 15]], M.trim);
+  },
+  soc(g, M, gw){   // ổ giữa + hai ngạnh nhỏ
+    iFill(g, [[-gw*0.9, 11], [gw*0.9, 11], [gw*0.75, 17], [-gw*0.75, 17]], M.trim);
+    for (const s of [-1, 1]) iFill(g, [[s*gw*0.9, 11], [s*gw*1.3, 13.6], [s*gw*0.85, 17]], M.trim);
+  },
+  khong(g){ void g; },  // gậy / cung: không có chắn tay
+};
+
+// ── CHUÔI ───────────────────────────────────────────────────────────────────────
+const IPOMMEL = {
+  tron(g, M, r){ g.fillStyle = M.trim; g.beginPath(); g.arc(0, 33, r, 0, 7); g.fill(); },
+  da(g, M, r){ g.fillStyle = M.trim; g.beginPath(); g.arc(0, 33, r, 0, 7); g.fill(); iGem(g, M, 0, 33, r*0.55); },
+  gai(g, M, r){ iFill(g, [[-r, 30], [r, 30], [0, 30 + r*2.2]], M.trim);
+                g.fillStyle = M.trim; g.beginPath(); g.arc(0, 30, r*0.8, 0, 7); g.fill(); },
+  vuot(g, M, r){ g.fillStyle = M.trim; g.beginPath(); g.arc(0, 32, r*0.9, 0, 7); g.fill();
+                 for (const s of [-1, 1]) iFill(g, [[s*r*0.5, 30], [s*r*1.9, 36], [s*r*0.4, 35]], M.trim); },
+};
+
+// ── HOA VĂN trên lưỡi — thứ biến "thanh kiếm" thành "KIẾM ĐIỆN" ────────────────
+// Màu hoa văn thuộc về MÓN, không thuộc về giai. Bản đầu lấy M.glow nên Kiếm Điện, Kiếm Băng
+// và Kiếm Lửa cùng giai thì cùng một màu vàng — mất sạch bản sắc. Trong MU thì Kiếm Điện xanh
+// điện ở mọi cấp.
+const MOTIF_COL = { set:'#8fe0ff', bang:'#bfe8ff', lua:'#ff8a2a', runes:'#c8a8ff', gai:null, mach:'#c8a8ff' };
+const IMOTIF = {
+  khong(g){ void g; },
+  set(g, M, len){          // tia sét gãy khúc
+    const c = MOTIF_COL.set;
+    const path = () => { g.beginPath();
+      g.moveTo(-3, 6); g.lineTo(2.6, len*0.34); g.lineTo(-2.8, len*0.46);
+      g.lineTo(3, len*0.72); g.lineTo(-1.4, len*0.84); };
+    g.save();
+    // rãnh tối lót dưới — không có nó thì nét sáng tan vào lưỡi kim loại sáng
+    g.strokeStyle = 'rgba(0,0,0,.55)'; g.lineWidth = 4.6; g.lineJoin = 'miter'; path(); g.stroke();
+    g.globalCompositeOperation = 'lighter';
+    g.strokeStyle = c; g.globalAlpha = .45; g.lineWidth = 5; path(); g.stroke();
+    g.globalAlpha = 1; g.lineWidth = 2.2; path(); g.stroke();
+    g.strokeStyle = '#ffffff'; g.lineWidth = 0.9; path(); g.stroke();
+    g.restore();
+  },
+  bang(g, M, len){         // gai băng mọc chéo hai bên sống
+    const c = MOTIF_COL.bang;
+    const spikes = () => { g.beginPath();
+      for (let i = 0; i < 4; i++){
+        const y = 4 + (len - 4) * (0.18 + i * 0.2);
+        g.moveTo(0, y); g.lineTo(-5.4, y - 5.2); g.moveTo(0, y); g.lineTo(5.4, y - 5.2);
+      }
+      g.moveTo(0, 6); g.lineTo(0, len*0.88); };
+    g.save(); g.lineCap = 'round';
+    g.strokeStyle = 'rgba(0,40,70,.55)'; g.lineWidth = 4.2; spikes(); g.stroke();
+    g.globalCompositeOperation = 'lighter';
+    g.strokeStyle = c; g.globalAlpha = .5; g.lineWidth = 4; spikes(); g.stroke();
+    g.globalAlpha = 1; g.lineWidth = 1.7; spikes(); g.stroke();
+    g.restore();
+  },
+  lua(g, M, len){          // lưỡi lửa liếm dọc sống
+    const c = MOTIF_COL.lua;
+    const flames = () => { g.beginPath();
+      for (let i = 0; i < 3; i++){
+        const y = 4 + (len - 4) * (0.2 + i * 0.26), sd = i % 2 ? 1 : -1;
+        g.moveTo(0, y);
+        g.quadraticCurveTo(sd * 7, y - 6, 0, y - 13.5);
+        g.quadraticCurveTo(sd * 2.4, y - 6, 0, y);
+      } };
+    g.save();
+    g.fillStyle = 'rgba(60,10,0,.5)'; flames(); g.fill();
+    g.globalCompositeOperation = 'lighter';
+    g.fillStyle = c; g.globalAlpha = .95; flames(); g.fill();
+    g.globalAlpha = .8; g.fillStyle = '#ffe08a';
+    g.save(); g.scale(0.5, 0.72); flames(); g.fill(); g.restore();
+    g.restore();
+  },
+  runes(g, M, len){        // ký tự khắc chìm
+    g.save(); g.strokeStyle = MOTIF_COL.runes; g.lineWidth = 1.5; g.globalAlpha = 1;
+    for (let i = 0; i < 4; i++){
+      const y = 4 + (len - 4) * (0.2 + i * 0.19);
+      g.beginPath(); g.moveTo(-2.2, y); g.lineTo(2.2, y - 2.4); g.moveTo(2.2, y); g.lineTo(-2.2, y - 2.4); g.stroke();
+    }
+    g.restore();
+  },
+  gai(g, M, len){          // ngạnh mọc ra khỏi lưỡi
+    g.fillStyle = M.trim;
+    for (let i = 0; i < 3; i++){
+      const y = 4 + (len - 4) * (0.26 + i * 0.24);
+      iPoly(g, [[-3, y], [-9.5, y - 3.2], [-3, y - 5.5]]); g.fill();
+      iPoly(g, [[3, y], [9.5, y - 3.2], [3, y - 5.5]]); g.fill();
+    }
+  },
+  mach(g, M, len){         // mạch sáng chạy giữa sống
+    const c = MOTIF_COL.mach;
+    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .75;
+    g.strokeStyle = c; g.lineWidth = 2.6; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(0, 6); g.lineTo(0, len*0.86); g.stroke();
+    g.lineWidth = 1; g.globalAlpha = 1; g.strokeStyle = '#ffffff';
+    g.beginPath(); g.moveTo(0, 6); g.lineTo(0, len*0.86); g.stroke();
+    g.restore();
+  },
+};
+
+// Lắp một vũ khí từ 4 bộ phận. P = { blade, guard, pommel, motif, w, len, gw, st }
+function iaWeapon(g, M, P){
+  const st = P.st || 1;
+  g.save(); g.rotate(P.rot === undefined ? -0.42 : P.rot);
+  // Tỉ lệ là thứ nói "món này NẶNG". Bản đầu mọi thanh dài xấp xỉ nhau nên đại kiếm trông
+  // chẳng to hơn dao găm chút nào — cỡ phải chênh thật.
+  const len = P.len || -44, w = P.w || 5.5, gw = P.gw || 15;
+  if (P.big) g.scale(P.big, P.big);
+  // Viền tối: vẽ lưỡi một lần bằng màu gần-đen ở cỡ nhỉnh hơn để tạo contour. Không có nó thì
+  // lưỡi sáng nằm trên nền sáng là mất hẳn bóng dáng — đây là thứ mọi icon MU đều có.
+  const DK = { lo:'#0a0c12', hi:'#0a0c12', trim:'#0a0c12', glow:null };
+  g.save(); g.translate(0, 0.6); g.scale(1.1, 1.03);
+  (IBLADE[P.blade] || IBLADE.thang)(g, DK, w, len);
+  g.restore();
+  (IBLADE[P.blade] || IBLADE.thang)(g, M, w, len);
+  (IMOTIF[P.motif] || IMOTIF.khong)(g, M, len);
+  // cán
+  iFill(g, [[-3.4, 17], [3.4, 17], [3, 31], [-3, 31]], M.lo);
+  g.strokeStyle = M.hi; g.lineWidth = 1.5;
+  for (let i = 0; i < 4; i++){ const y = 19 + i * 3.4;
+    g.beginPath(); g.moveTo(-3.3, y); g.lineTo(3.3, y + 1.6); g.stroke(); }
+  (IGUARD[P.guard] || IGUARD.thanh)(g, M, gw);
+  (IPOMMEL[P.pommel] || IPOMMEL.tron)(g, M, 4.4 + st * 0.3);
+  if (st >= 3) iGem(g, M, 0, 13.4, 2.1 + st * 0.18);
+  g.restore();
+}
+
+// ═══ GẬY / TRƯỢNG — thân + đầu, giống kiếm là lưỡi + chắn tay ═══
+// Dark Wizard và Dark Lord không cầm kiếm. Dùng chung bộ phận lưỡi cho họ là sai từ gốc.
+const ISHAFT = {
+  thang(g, M, len){                                  // thân trơn
+    iFill(g, [[-3.2, 34], [3.2, 34], [2.6, len], [-2.6, len]], iGrad(g, -3, 34, 3, len, M.hi, M.lo));
+  },
+  xoan(g, M, len){                                   // thân xoắn thừng
+    iFill(g, [[-3.4, 34], [3.4, 34], [2.8, len], [-2.8, len]], iGrad(g, -3, 34, 3, len, M.hi, M.lo));
+    g.strokeStyle = 'rgba(0,0,0,.34)'; g.lineWidth = 1.3;
+    for (let i = 0; i < 9; i++){
+      const y = 32 - i * (32 - len) / 9;
+      g.beginPath(); g.moveTo(-3.2, y); g.lineTo(3.2, y - 4.5); g.stroke();
+    }
+  },
+  dot(g, M, len){                                    // thân chia đốt
+    iFill(g, [[-3.2, 34], [3.2, 34], [2.6, len], [-2.6, len]], iGrad(g, -3, 34, 3, len, M.hi, M.lo));
+    g.fillStyle = M.trim;
+    for (let i = 1; i < 5; i++){
+      const y = 34 - i * (34 - len) / 5;
+      g.fillRect(-4.4, y - 2, 8.8, 4);
+    }
+  },
+  xuong(g, M, len){                                  // thân xương, phình đốt
+    iFill(g, [[-3, 34], [3, 34], [2.4, len], [-2.4, len]], iGrad(g, -3, 34, 3, len, M.hi, M.lo));
+    g.fillStyle = M.hi;
+    for (let i = 0; i < 4; i++){
+      const y = 28 - i * (28 - len) / 4;
+      g.beginPath(); g.ellipse(0, y, 5.2, 3, 0, 0, 7); g.fill();
+      g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = .8; g.stroke();
+    }
+  },
+};
+const IHEAD = {
+  cau(g, M, y, st){                                  // cầu phép
+    const c = M.glow || M.trim, r = 8 + st * 0.9;
+    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .4;
+    g.fillStyle = c; g.beginPath(); g.arc(0, y, r + 6, 0, 7); g.fill(); g.restore();
+    const gr = g.createRadialGradient(-r * .3, y - r * .35, 1, 0, y, r);
+    gr.addColorStop(0, '#fff'); gr.addColorStop(.4, c); gr.addColorStop(1, M.lo);
+    g.fillStyle = gr; g.beginPath(); g.arc(0, y, r, 0, 7); g.fill();
+    if (st >= 3){ g.strokeStyle = M.trim; g.lineWidth = 2.4;   // gọng ôm
+      g.beginPath(); g.arc(0, y, r + 3.4, Math.PI * .8, Math.PI * 2.2); g.stroke(); }
+  },
+  liem(g, M, y, st){                                 // lưỡi liềm
+    g.beginPath();
+    g.moveTo(-13, y + 6); g.quadraticCurveTo(-17, y - 16, 0, y - 20);
+    g.quadraticCurveTo(15, y - 16, 12, y + 6);
+    g.quadraticCurveTo(9, y - 8, 0, y - 10);
+    g.quadraticCurveTo(-9, y - 8, -13, y + 6);
+    g.closePath(); g.fillStyle = M.trim; g.fill();
+    if (st >= 3) iGem(g, M, 0, y - 4, 3);
+  },
+  so(g, M, y, st){                                   // sọ
+    g.fillStyle = M.hi;
+    g.beginPath(); g.ellipse(0, y - 5, 9, 10, 0, 0, 7); g.fill();
+    iFill(g, [[-6, y + 3], [6, y + 3], [4.6, y + 10], [-4.6, y + 10]], M.hi);
+    g.fillStyle = '#0a0c12';
+    g.beginPath(); g.arc(-3.6, y - 6, 2.7, 0, 7); g.arc(3.6, y - 6, 2.7, 0, 7); g.fill();
+    g.fillRect(-1.6, y + 1, 3.2, 3);
+    if (st >= 4){ g.fillStyle = M.trim;                 // sừng hai bên sọ
+      iPoly(g, [[-8, y - 10], [-18, y - 20], [-6, y - 14]]); g.fill();
+      iPoly(g, [[8, y - 10], [18, y - 20], [6, y - 14]]); g.fill(); }
+  },
+  tinhthe(g, M, y, st){                              // cụm tinh thể
+    const c = M.glow || M.trim;
+    const shard = (dx, dy, h, w) => { iPoly(g, [[dx - w, y + dy], [dx, y + dy - h], [dx + w, y + dy]]); g.fill(); };
+    g.fillStyle = M.lo; shard(-7, 4, 14, 4.5); shard(7, 5, 12, 4);
+    g.fillStyle = c;    shard(0, 6, 22 + st, 5.5);
+    g.fillStyle = 'rgba(255,255,255,.6)'; shard(-1.6, 4, 14, 2);
+  },
+  canh(g, M, y, st){                                 // đôi cánh ôm viên đá
+    for (const sd of [-1, 1]){
+      g.save(); g.translate(sd * 5, y); g.scale(sd, 1); g.fillStyle = M.trim;
+      for (let i = 0; i < 3; i++){
+        g.beginPath(); g.moveTo(0, 4 - i * 2);
+        g.quadraticCurveTo(9 + i * 2, -6 - i * 4, 14 + i * 3, -2 - i * 6);
+        g.quadraticCurveTo(7 + i, 2 - i * 3, 0, 6 - i * 2); g.fill();
+      }
+      g.restore();
+    }
+    iGem(g, M, 0, y - 2, 4.6 + st * 0.4);
+  },
+  vong(g, M, y, st){                                 // vòng lệnh
+    g.strokeStyle = M.trim; g.lineWidth = 4 + st * 0.4;
+    g.beginPath(); g.arc(0, y - 6, 11, 0, 7); g.stroke();
+    if (st >= 3){ g.lineWidth = 1.6; g.strokeStyle = M.glow || M.hi;
+      g.beginPath(); g.arc(0, y - 6, 11, 0, 7); g.stroke(); }
+    iGem(g, M, 0, y - 6, 3.4 + st * 0.3);
+  },
+  vuot(g, M, y, st){                                 // vuốt quặp giữ đá
+    g.fillStyle = M.trim;
+    for (const sd of [-1, 1]){
+      g.beginPath(); g.moveTo(sd * 3, y + 8);
+      g.quadraticCurveTo(sd * 13, y + 2, sd * 10, y - 14);
+      g.quadraticCurveTo(sd * 9, y - 2, sd * 1, y + 6); g.closePath(); g.fill();
+    }
+    iGem(g, M, 0, y - 1, 5 + st * 0.5);
+  },
+};
+function iaStaff(g, M, P){
+  const st = P.st || 1;
+  g.save(); g.rotate(P.rot === undefined ? -0.26 : P.rot);
+  const len = P.len || -30;                          // đỉnh thân (đầu gậy nằm trên nữa)
+  const DK = { lo:'#0a0c12', hi:'#0a0c12', trim:'#0a0c12', glow:null };
+  g.save(); g.scale(1.5, 1.02); (ISHAFT[P.shaft] || ISHAFT.thang)(g, DK, len); g.restore();
+  (ISHAFT[P.shaft] || ISHAFT.thang)(g, M, len);
+  (IHEAD[P.head] || IHEAD.cau)(g, M, len - 6, st);
+  // đai tay
+  iFill(g, [[-4.6, 16], [4.6, 16], [4, 26], [-4, 26]], M.trim);
+  if (st >= 2) iRivet(g, M, 0, 21, 1.6);
+  if (st >= 4) iFill(g, [[-3.4, 34], [3.4, 34], [0, 42]], M.trim);   // chân nhọn
+  g.restore();
+}
+
+// ═══ CUNG / NỎ ═══
+function iaBow(g, M, P){
+  const st = P.st || 1, kind = P.limb || 'cong';
+  g.save(); g.rotate(P.rot === undefined ? 0.12 : P.rot);
+  const H = 43 + st * 1.6;
+  const limb = (sd) => {                             // một cánh cung
+    g.beginPath();
+    // Bề ngang cánh phải THẤY ĐƯỢC. Bản đầu mép trong và mép ngoài gần trùng nhau nên cả cây
+    // cung chỉ còn là một nét mảnh, ở 44px thì mất hẳn.
+    g.moveTo(2, sd * 5);
+    if (kind === 'dai') g.quadraticCurveTo(-19, sd * H * 0.55, -11, sd * H);        // trường cung: cong đều
+    else if (kind === 'kep'){ g.quadraticCurveTo(-23, sd * H * 0.45, -10, sd * H * 0.76);
+                              g.quadraticCurveTo(-1, sd * H * 0.94, -15, sd * H); } // cung kép: gập ngược đầu
+    else g.quadraticCurveTo(-26, sd * H * 0.5, -7, sd * H);                         // cung ngắn: cong sâu
+    g.lineTo(0, sd * (H - 5));
+    if (kind === 'dai') g.quadraticCurveTo(-9, sd * H * 0.55, 9, sd * 5);
+    else if (kind === 'kep'){ g.quadraticCurveTo(-4, sd * H * 0.88, -1, sd * H * 0.72);
+                              g.quadraticCurveTo(-14, sd * H * 0.45, 9, sd * 5); }
+    else g.quadraticCurveTo(-15, sd * H * 0.5, 9, sd * 5);
+    g.closePath();
+  };
+  for (const sd of [-1, 1]){
+    limb(sd); g.fillStyle = iGrad(g, -26, 0, 9, 0, M.lo, M.hi); g.fill();
+    limb(sd); g.strokeStyle = 'rgba(0,0,0,.48)'; g.lineWidth = 1.4; g.stroke();
+  }
+  // dây
+  g.strokeStyle = '#e8e0c8'; g.lineWidth = 1.6;
+  g.beginPath(); g.moveTo(-10, -H); g.lineTo(-4, 0); g.lineTo(-10, H); g.stroke();
+  // tay nắm
+  iFill(g, [[-7, -15], [8, -15], [7, 15], [-6, 15]], M.trim);
+  g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = .9;
+  for (let i = -1; i <= 1; i++){ g.beginPath(); g.moveTo(-5, i * 7); g.lineTo(5, i * 7); g.stroke(); }
+  if (st >= 3) iGem(g, M, 0, 0, 3 + st * 0.25);
+  if (st >= 4){                                      // trang trí đầu cánh
+    g.fillStyle = M.trim;
+    for (const sd of [-1, 1]) iPoly(g, [[-9, sd * H], [-19, sd * (H + 7)], [-6, sd * (H - 5)]]), g.fill();
+  }
+  g.restore();
+}
+function iaCrossbow(g, M, P){
+  const st = P.st || 1;
+  g.save(); g.rotate(P.rot === undefined ? -0.18 : P.rot);
+  const W = 36 + st * 1.8;
+  // hai cánh nằm NGANG — đây là thứ tách nỏ khỏi cung ngay từ bóng dáng
+  for (const sd of [-1, 1]){
+    g.beginPath();
+    g.moveTo(sd * 5, -8); g.quadraticCurveTo(sd * W * 0.6, -18, sd * W, -7);
+    g.quadraticCurveTo(sd * W * 0.62, -1, sd * 5, 2); g.closePath();
+    g.fillStyle = iGrad(g, 0, -13, 0, 0, M.hi, M.lo); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.4)'; g.lineWidth = 1; g.stroke();
+  }
+  g.strokeStyle = '#e8e0c8'; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(-W, -6); g.lineTo(0, 4); g.lineTo(W, -6); g.stroke();
+  // báng dọc
+  iFill(g, [[-6, -16], [6, -16], [5, 26], [-5, 26]], iGrad(g, -6, -16, 6, 26, M.hi, M.lo));
+  iFill(g, [[-8, -18], [8, -18], [7, -9], [-7, -9]], M.trim);
+  iFill(g, [[-5, 14], [5, 14], [11, 29], [2, 29]], M.lo);           // cò
+  if (st >= 2) iRivet(g, M, 0, 6, 1.8);
+  // Mũi tên nạp CHĨA LÊN từng làm cả cây nỏ thành mớ gai trên tay nhân vật — bỏ, thay bằng
+  // rãnh dẫn tên nằm trên báng, đọc ra "nỏ" mà không phá bóng dáng.
+  if (st >= 3){ g.strokeStyle = M.trim; g.lineWidth = 2.2;
+    g.beginPath(); g.moveTo(0, -14); g.lineTo(0, 10); g.stroke(); }
+  if (st >= 4) iGem(g, M, 0, -4, 3.2);
+  g.restore();
+}
+
+// ═══ GIÁP — bóng dáng theo KIỂU BỘ, không phải một dáng tô lại màu ═══
+// 12 kiểu lấy thẳng từ HERO_SETS[].style, nên hình trong túi và hình trên người là CÙNG một
+// bộ. Mũ pháp sư phải là mũ trùm vải, không được là mũ hiệp sĩ đổi màu.
+const ARMOR_TRAIT = {
+  plate:     { soft:0, crest:'sung',   tex:'tam',    round:0.15 },
+  chain:     { soft:0, crest:'khong',  tex:'luoi',   round:0.85 },
+  drake:     { soft:0, crest:'vuot',   tex:'vay',    round:0.25 },
+  hoalong:   { soft:0, crest:'rong',   tex:'vay',    round:0.20 },
+  cloth:     { soft:1, crest:'khong',  tex:'nep',    round:1.00 },
+  sphinx:    { soft:0, crest:'nemes',  tex:'soc',    round:0.30 },
+  arcane:    { soft:1, crest:'cau',    tex:'rune',   round:0.90 },
+  hide:      { soft:1, crest:'khong',  tex:'khau',   round:0.75 },
+  leaf:      { soft:1, crest:'la',     tex:'la',     round:0.80 },
+  plume:     { soft:0, crest:'canh',   tex:'vu',     round:0.55 },
+  halfplate: { soft:0, crest:'lech',   tex:'tam',    round:0.25, asym:1 },
+  regal:     { soft:0, crest:'vuong',  tex:'vien',   round:0.35 },
+};
+function aTrait(P){ return ARMOR_TRAIT[P.style] || ARMOR_TRAIT.plate; }
+
+// Hoạ tiết bề mặt — phủ lên một vùng đã vẽ, cắt theo đường bao hiện tại.
+function aTex(g, M, T, st, x0, y0, x1, y1){
+  g.save(); g.clip();
+  const w = x1 - x0, h = y1 - y0;
+  if (T.tex === 'luoi'){                       // giáp lưới: chấm tròn so le
+    g.fillStyle = 'rgba(0,0,0,.30)';
+    for (let y = y0 + 2; y < y1; y += 4.2)
+      for (let x = x0 + ((Math.round((y - y0) / 4.2) % 2) ? 2 : 0); x < x1; x += 4.2){
+        g.beginPath(); g.arc(x, y, 1.35, 0, 7); g.fill();
+      }
+  } else if (T.tex === 'vay'){                 // vảy: cung xếp lớp
+    g.strokeStyle = 'rgba(0,0,0,.34)'; g.lineWidth = 1.1;
+    for (let y = y0 + 3; y < y1; y += 5)
+      for (let x = x0; x < x1 + 5; x += 6.5){
+        g.beginPath(); g.arc(x + ((Math.round((y - y0) / 5) % 2) ? 3.2 : 0), y, 3.4, Math.PI * 0.15, Math.PI * 0.85); g.stroke();
+      }
+  } else if (T.tex === 'nep'){                 // vải: nếp rủ dọc
+    g.strokeStyle = 'rgba(0,0,0,.26)'; g.lineWidth = 1.3;
+    for (let i = 1; i < 5; i++){
+      const x = x0 + w * i / 5;
+      g.beginPath(); g.moveTo(x, y0); g.quadraticCurveTo(x + 2.5, y0 + h * 0.5, x, y1); g.stroke();
+    }
+  } else if (T.tex === 'khau'){                // da: đường khâu
+    g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = 1; g.setLineDash([2.4, 2.6]);
+    for (let i = 1; i < 4; i++){
+      const y = y0 + h * i / 4;
+      g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
+    }
+    g.setLineDash([]);
+  } else if (T.tex === 'la'){                  // lá: gân chéo
+    g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 1.1;
+    for (let i = 0; i < 5; i++){
+      const y = y0 + h * (i + .5) / 5;
+      g.beginPath(); g.moveTo(x0, y); g.quadraticCurveTo((x0 + x1) / 2, y - 4.5, x1, y); g.stroke();
+    }
+  } else if (T.tex === 'vu'){                  // lông vũ: cung chồng
+    g.strokeStyle = 'rgba(255,255,255,.24)'; g.lineWidth = 1.2;
+    for (let y = y0 + 4; y < y1; y += 5.5){
+      g.beginPath(); g.moveTo(x0, y); g.quadraticCurveTo((x0 + x1) / 2, y + 5.5, x1, y); g.stroke();
+    }
+  } else if (T.tex === 'soc'){                 // nhân sư: sọc ngang đậm nhạt
+    for (let i = 0; i < 6; i++){
+      g.fillStyle = i % 2 ? 'rgba(0,0,0,.26)' : 'rgba(255,255,255,.14)';
+      g.fillRect(x0, y0 + h * i / 6, w, h / 12);
+    }
+  } else if (T.tex === 'rune'){                // ma thuật: ký tự phát sáng
+    g.strokeStyle = M.glow || M.trim; g.lineWidth = 1.2; g.globalAlpha = .85;
+    for (let i = 0; i < 4; i++){
+      const x = x0 + w * (i + .5) / 4, y = y0 + h * 0.5;
+      g.beginPath(); g.moveTo(x - 2.6, y - 3); g.lineTo(x + 2.6, y + 3);
+      g.moveTo(x + 2.6, y - 3); g.lineTo(x - 2.6, y + 3); g.stroke();
+    }
+  } else if (T.tex === 'vien'){                // vương giả: viền kép
+    g.strokeStyle = M.trim; g.lineWidth = 1.4;
+    g.strokeRect(x0 + 2.5, y0 + 2.5, w - 5, h - 5);
+    g.globalAlpha = .5; g.strokeRect(x0 + 5, y0 + 5, w - 10, h - 10);
+  } else {                                     // tấm: đường ghép ngang
+    g.strokeStyle = 'rgba(0,0,0,.30)'; g.lineWidth = 1.3;
+    for (let i = 1; i < 3 + (st >= 3 ? 1 : 0); i++){
+      const y = y0 + h * i / (3 + (st >= 3 ? 1 : 0));
+      g.beginPath(); g.moveTo(x0, y); g.quadraticCurveTo((x0 + x1) / 2, y + 3, x1, y); g.stroke();
+    }
+  }
+  g.restore();
+}
+
+// ── MŨ TRỤ ──────────────────────────────────────────────────────────────────────
+function iaHelm(g, M, P){
+  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
+  g.translate(0, 3);
+  // ĐƯỜNG BAO — khác hẳn nhau theo kiểu, đây mới là thứ đọc được ở cỡ 44px
+  const dome = () => {
+    g.beginPath();
+    if (style === 'cloth' || style === 'arcane'){        // mũ TRÙM có chóp
+      g.moveTo(-20, 16);
+      g.bezierCurveTo(-23, -12, -14, -26, -3, -34);      // chóp lệch ra sau
+      g.bezierCurveTo(6, -28, 21, -12, 20, 16);
+    } else if (style === 'sphinx'){                       // khăn nemes: xoè hình thang
+      g.moveTo(-25, 18); g.lineTo(-17, -14);
+      g.quadraticCurveTo(0, -26, 17, -14); g.lineTo(25, 18);
+    } else if (style === 'hide' || style === 'leaf'){     // mũ da thấp
+      g.moveTo(-20, 14);
+      g.bezierCurveTo(-21, -6, -12, -19, 0, -19);
+      g.bezierCurveTo(12, -19, 21, -6, 20, 14);
+    } else if (style === 'regal'){                        // vương miện: hở đỉnh
+      g.moveTo(-21, 16); g.lineTo(-21, -6); g.lineTo(21, -6); g.lineTo(21, 16);
+    } else if (style === 'chain'){                        // khăn lưới trùm cổ
+      g.moveTo(-22, 20);
+      g.bezierCurveTo(-24, -8, -13, -23, 0, -23);
+      g.bezierCurveTo(13, -23, 24, -8, 22, 20);
+    } else {                                              // mũ trụ kim loại
+      g.moveTo(-21, 14);
+      g.bezierCurveTo(-23, -10, -12, -25, 0, -25);
+      g.bezierCurveTo(12, -25, 23, -10, 21, 14);
+    }
+    g.closePath();
+  };
+  dome();
+  g.fillStyle = iGrad(g, -22, -30, 22, 18, M.hi, M.lo); g.fill();
+  dome(); aTex(g, M, T, st, -22, -22, 22, 16);
+  dome(); g.strokeStyle = 'rgba(0,0,0,.42)'; g.lineWidth = 1.2; g.stroke();
+
+  // KHE MẮT / MẶT — đồ vải thì để hở bóng tối, đồ kim loại thì có khe ngang
+  if (T.soft){
+    g.fillStyle = 'rgba(6,8,16,.88)';
+    g.beginPath(); g.ellipse(0, 4, 11, 9, 0, 0, 7); g.fill();
+    if (style === 'arcane'){                              // hai đốm sáng trong bóng tối
+      g.fillStyle = M.glow || '#a88aff';
+      g.beginPath(); g.arc(-4.5, 3, 1.9, 0, 7); g.arc(4.5, 3, 1.9, 0, 7); g.fill();
+    }
+  } else if (style === 'regal'){
+    g.fillStyle = 'rgba(6,8,16,.55)'; g.fillRect(-16, -2, 32, 9);
+  } else {
+    iFill(g, [[-14, -3], [14, -3], [12, 5], [-12, 5]], '#0a0c12');
+    g.fillStyle = M.lo; g.fillRect(-1.7, -3, 3.4, 8);
+    if (P.asym) iFill(g, [[1, -4], [15, -4], [13, 14], [1, 16]], M.hi);  // nửa mặt nạ
+  }
+  // vành trán
+  if (style !== 'regal' && style !== 'arcane'){
+    iFill(g, [[-22, -4], [22, -4], [21, -9], [-21, -9]], M.trim);
+    if (st >= 2){ iRivet(g, M, -16, -6.5, 1.7); iRivet(g, M, 16, -6.5, 1.7); }
+  }
+  // MÀO — chữ ký của kiểu
+  const C = T.crest;
+  if (C === 'sung' && st >= 2){                    // sừng thẳng
+    iFill(g, [[-17, -15], [-29, -32], [-21, -13]], M.trim);
+    iFill(g, [[17, -15], [29, -32], [21, -13]], M.trim);
+  } else if (C === 'vuot'){                        // sừng vuốt ngược
+    for (const s of [-1, 1]){
+      g.beginPath(); g.moveTo(s * 18, -14);
+      g.quadraticCurveTo(s * 34, -20, s * 30, -34);
+      g.quadraticCurveTo(s * 26, -22, s * 21, -12); g.closePath();
+      g.fillStyle = M.trim; g.fill();
+    }
+  } else if (C === 'rong'){                        // đầu rồng: sừng cong + mào lửa
+    for (const s of [-1, 1]){
+      g.beginPath(); g.moveTo(s * 17, -16);
+      g.bezierCurveTo(s * 36, -22, s * 40, -40, s * 26, -44);
+      g.bezierCurveTo(s * 33, -32, s * 27, -20, s * 20, -13); g.closePath();
+      g.fillStyle = M.trim; g.fill();
+    }
+    g.fillStyle = M.glow || '#ff8a3a';
+    for (let i = 0; i < 3; i++){
+      const x = -6 + i * 6;
+      iPoly(g, [[x - 3, -25], [x, -25 - 9 - i % 2 * 4], [x + 3, -25]]); g.fill();
+    }
+  } else if (C === 'nemes'){                       // khăn nhân sư: hai vạt buông
+    iFill(g, [[-25, 18], [-32, 6], [-24, -6], [-19, 10]], M.trim);
+    iFill(g, [[25, 18], [32, 6], [24, -6], [19, 10]], M.trim);
+    iFill(g, [[-6, -20], [6, -20], [4, -30], [-4, -30]], M.trim);     // rắn hổ mang
+    if (st >= 3) iGem(g, M, 0, -26, 2.6);
+  } else if (C === 'cau'){                         // cầu phép lơ lửng trên chóp
+    const c = M.glow || '#a88aff';
+    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .5;
+    g.fillStyle = c; g.beginPath(); g.arc(-3, -40, 8 + st, 0, 7); g.fill(); g.restore();
+    g.fillStyle = c; g.beginPath(); g.arc(-3, -40, 4 + st * 0.5, 0, 7); g.fill();
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(-4.4, -41.6, 1.6, 0, 7); g.fill();
+  } else if (C === 'la'){                          // vành lá quanh trán
+    g.fillStyle = M.trim;
+    for (let i = 0; i < 5; i++){
+      const a = -Math.PI * (0.2 + i * 0.15);
+      g.save(); g.translate(Math.cos(a) * 20, Math.sin(a) * 17 - 2); g.rotate(a + Math.PI / 2);
+      g.beginPath(); g.ellipse(0, -5, 3.2, 7.5, 0, 0, 7); g.fill(); g.restore();
+    }
+  } else if (C === 'canh'){                        // cánh hai bên
+    for (const s of [-1, 1]){
+      g.save(); g.translate(s * 19, -6); g.scale(s, 1);
+      g.fillStyle = M.trim;
+      for (let i = 0; i < 3; i++){
+        g.beginPath(); g.moveTo(0, 2 - i * 3);
+        g.quadraticCurveTo(9 + i * 3, -6 - i * 4, 17 + i * 4, -3 - i * 6);
+        g.quadraticCurveTo(8 + i * 2, 1 - i * 3, 0, 4 - i * 3); g.fill();
+      }
+      g.restore();
+    }
+  } else if (C === 'vuong'){                       // vương miện: răng nhọn
+    const n = 3 + Math.min(2, st - 1);
+    for (let i = 0; i < n; i++){
+      const x = -18 + i * (36 / (n - 1));
+      const h = i === Math.floor(n / 2) ? 20 : 13;
+      iFill(g, [[x - 5, -6], [x, -6 - h], [x + 5, -6]], M.trim);
+      if (st >= 3) iGem(g, M, x, -10, 1.9);
+    }
+    iFill(g, [[-22, -2], [22, -2], [21, -8], [-21, -8]], M.trim);
+  } else if (C === 'lech' && st >= 2){             // Spellblade: MỘT sừng, lệch hẳn
+    iFill(g, [[15, -16], [30, -34], [21, -13]], M.trim);
+  }
+  if (st >= 4 && C !== 'cau' && C !== 'vuong') iGem(g, M, 0, -13, 2.7);
+  iSheenArc(g);
+}
+
+// Vệt sáng chéo phủ lên toàn hình — làm mảng phẳng thành bề mặt cong.
+function iSheenArc(g){
+  g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.16;
+  g.fillStyle = iGrad(g, -30, -30, 6, 20, 'rgba(255,255,255,1)', 'rgba(255,255,255,0)');
+  g.beginPath(); g.arc(0, 0, 46, 0, 7); g.fill();
+  g.restore();
+}
+
+// ── ÁO GIÁP ─────────────────────────────────────────────────────────────────────
+function iaArmor(g, M, P){
+  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
+  g.translate(0, 2);
+  const body = () => {
+    g.beginPath();
+    if (T.soft){                                   // ÁO CHOÀNG: buông xuống, loe ra
+      g.moveTo(-14, -20); g.lineTo(14, -20);
+      g.bezierCurveTo(20, -2, 24, 14, 26, 26);
+      g.lineTo(-26, 26);
+      g.bezierCurveTo(-24, 14, -20, -2, -14, -20);
+    } else if (style === 'chain'){                 // ÁO LƯỚI: bo tròn, không có góc
+      g.moveTo(-16, -20);
+      g.bezierCurveTo(-21, -4, -20, 12, -14, 24);
+      g.lineTo(14, 24);
+      g.bezierCurveTo(20, 12, 21, -4, 16, -20);
+    } else if (style === 'regal'){                 // ÁO CHOÀNG NGHI LỄ: cổ cao, tà dài
+      g.moveTo(-16, -24); g.lineTo(16, -24);
+      g.lineTo(20, -4); g.lineTo(15, 27); g.lineTo(-15, 27); g.lineTo(-20, -4);
+    } else {                                       // GIÁP TẤM
+      g.moveTo(-17, -20); g.lineTo(-20, -6); g.lineTo(-14, 16);
+      g.lineTo(-9, 25); g.lineTo(9, 25); g.lineTo(14, 16); g.lineTo(20, -6); g.lineTo(17, -20);
+    }
+    g.closePath();
+  };
+  body(); g.fillStyle = iGrad(g, -22, -22, 22, 26, M.hi, M.lo); g.fill();
+  body(); aTex(g, M, T, st, -24, -20, 24, 26);
+  body(); g.strokeStyle = 'rgba(0,0,0,.40)'; g.lineWidth = 1.2; g.stroke();
+  // cổ áo
+  if (style === 'regal'){                          // cổ dựng cao hai bên
+    iFill(g, [[-16, -24], [-7, -22], [-9, -32], [-17, -30]], M.trim);
+    iFill(g, [[16, -24], [7, -22], [9, -32], [17, -30]], M.trim);
+    iFill(g, [[-7, -22], [7, -22], [4, -12], [-4, -12]], '#0a0c12');
+  } else {
+    iFill(g, [[-8, -21], [8, -21], [5, -12], [0, -9], [-5, -12]], '#0a0c12');
+  }
+  // đai / dây chằng
+  if (T.soft){
+    iFill(g, [[-16, 4], [16, 4], [15, 11], [-15, 11]], M.trim);
+    if (st >= 3) iGem(g, M, 0, 7.5, 3);
+  } else {
+    g.strokeStyle = M.trim; g.lineWidth = 1.7;
+    g.beginPath(); g.moveTo(-16, -4); g.quadraticCurveTo(0, 3, 16, -4); g.stroke();
+  }
+  // VAI — chữ ký lớn nhất của kiểu
+  const pw = 9 + st * 1.9;
+  const shoulder = (sd) => {
+    g.save(); g.translate(sd * 15, -17); g.scale(sd, 1);
+    if (T.soft && style !== 'arcane'){              // tay áo vải rủ
+      g.beginPath(); g.moveTo(-4, -4);
+      g.quadraticCurveTo(pw * 0.9, -6, pw * 1.05, 6);
+      g.quadraticCurveTo(pw * 0.8, 16, -3, 12); g.closePath();
+      g.fillStyle = iGrad(g, 0, -6, 0, 14, M.hi, M.lo); g.fill();
+    } else if (style === 'arcane'){                 // phiến đá lơ lửng, KHÔNG chạm vai
+      const c = M.glow || '#a88aff';
+      g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .35;
+      g.fillStyle = c; g.beginPath(); g.arc(pw * 0.6, -2, 8, 0, 7); g.fill(); g.restore();
+      iFill(g, [[pw * 0.25, -8], [pw * 1.05, -4], [pw * 0.85, 6], [pw * 0.15, 2]], M.trim);
+    } else if (style === 'plume'){                  // lớp lông vũ xếp
+      g.fillStyle = M.trim;
+      for (let i = 0; i < 3; i++){
+        g.beginPath(); g.moveTo(-3, 6 - i * 3);
+        g.quadraticCurveTo(pw * 0.7, -2 - i * 4, pw * 1.1 + i * 2, 2 - i * 5);
+        g.quadraticCurveTo(pw * 0.6, 6 - i * 2, -3, 9 - i * 3); g.fill();
+      }
+    } else {                                        // tấm vai kim loại
+      g.beginPath();
+      g.moveTo(-5, 9); g.quadraticCurveTo(-7, -6, 3, -8);
+      g.quadraticCurveTo(pw, -7, pw + 1, 8);
+      g.quadraticCurveTo(pw * 0.5, 12, -5, 9); g.closePath();
+      g.fillStyle = iGrad(g, 0, -8, 0, 10, M.hi, M.lo); g.fill();
+      g.strokeStyle = 'rgba(0,0,0,.30)'; g.lineWidth = .9; g.stroke();
+      if (st >= 3){ g.strokeStyle = M.trim; g.lineWidth = 1.3;
+        g.beginPath(); g.moveTo(-3, 3); g.quadraticCurveTo(pw * 0.5, -4, pw * 0.9, 4); g.stroke(); }
+      if (st >= 4 && (style === 'drake' || style === 'hoalong' || style === 'plate'))
+        iFill(g, [[pw * 0.45, -7], [pw * 0.75, -18], [pw * 0.95, -4]], M.trim);   // gai
+    }
+    g.restore();
+  };
+  if (T.asym){ shoulder(1); iFill(g, [[-17, -19], [-9, -20], [-11, -8], [-18, -6]], M.lo); }  // MỘT bên trần
+  else { shoulder(-1); shoulder(1); }
+  if (st >= 2 && !T.soft){ iRivet(g, M, -13, -14, 1.8); iRivet(g, M, 13, -14, 1.8); }
+  if (st >= 4) iGem(g, M, 0, -3, 3.2);
+  iSheenArc(g);
+}
+
+// ── GĂNG TAY ────────────────────────────────────────────────────────────────────
+function iaGloves(g, M, P){
+  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
+  g.save(); g.rotate(-0.1); g.translate(1, 4);
+  const fl = [13, 15.5, 14.5, 11.5];
+  for (let i = 0; i < 4; i++){
+    const x = -10.5 + i * 7;
+    // đồ vải/da: ngón NGẮN, hở đầu ngón — đồ kim loại: ngón dài kín
+    const cut = T.soft ? 6 : 0;
+    const top = -12 - fl[i] + cut;
+    g.fillStyle = i % 2 ? M.lo : M.hi;
+    g.beginPath();
+    g.moveTo(x - 2.9, -8); g.lineTo(x - 2.5, top + 3);
+    if (T.soft) g.lineTo(x + 2.5, top + 3);
+    else g.quadraticCurveTo(x, top - 1.5, x + 2.5, top + 3);
+    g.lineTo(x + 2.9, -8); g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = 0.9; g.stroke();
+    if (st >= 2 && !T.soft){ g.strokeStyle = M.trim; g.lineWidth = 1.1;
+      g.beginPath(); g.moveTo(x - 2.6, top + 8); g.lineTo(x + 2.6, top + 8); g.stroke(); }
+  }
+  g.save(); g.translate(-13, -4); g.rotate(-0.55);
+  g.fillStyle = M.hi;
+  g.beginPath(); g.moveTo(-3.2, 6); g.lineTo(-2.8, -6);
+  g.quadraticCurveTo(0, -9.5, 2.8, -6); g.lineTo(3.2, 6); g.closePath(); g.fill();
+  g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = 0.9; g.stroke();
+  g.restore();
+  const hand = () => {
+    g.beginPath();
+    g.moveTo(-11, 12); g.lineTo(11, 12);
+    g.lineTo(14, -4); g.quadraticCurveTo(14.5, -10, 12, -11);
+    g.lineTo(-12, -11); g.quadraticCurveTo(-14.5, -10, -14, -4);
+    g.closePath();
+  };
+  hand(); g.fillStyle = iGrad(g, -14, -11, 14, 12, M.hi, M.lo); g.fill();
+  hand(); aTex(g, M, T, st, -14, -11, 14, 12);
+  hand(); g.strokeStyle = 'rgba(0,0,0,.38)'; g.lineWidth = 1.1; g.stroke();
+  if (st >= 4) iGem(g, M, 0, 1, 3);
+  // CỔ TAY — kim loại thì loe cứng, vải thì quấn dây
+  if (T.soft){
+    iFill(g, [[-13, 11], [13, 11], [12, 26], [-12, 26]], iGrad(g, -13, 11, 13, 26, M.hi, M.lo));
+    g.strokeStyle = M.trim; g.lineWidth = 1.8;
+    for (let i = 0; i < 3; i++){ const y = 14 + i * 4;
+      g.beginPath(); g.moveTo(-12.5, y); g.lineTo(12.5, y + 1.4); g.stroke(); }
+  } else {
+    iFill(g, [[-14, 11], [14, 11], [15.5, 18], [-15.5, 18]], M.trim);
+    iFill(g, [[-13, 18], [13, 18], [11.5, 27], [-11.5, 27]], iGrad(g, -13, 18, 13, 27, M.hi, M.lo));
+    if (st >= 3){ iRivet(g, M, -8, 14.5, 1.6); iRivet(g, M, 8, 14.5, 1.6); }
+    if (st >= 5) iFill(g, [[-15.5, 14], [-25, 8], [-15, 20]], M.trim);
+  }
+  if (style === 'plume' && st >= 3){                 // lông vũ mọc từ cổ tay
+    g.fillStyle = M.trim;
+    for (let i = 0; i < 3; i++){
+      g.beginPath(); g.moveTo(13, 14 + i * 3);
+      g.quadraticCurveTo(24 + i * 3, 8 + i * 2, 28 + i * 4, 14 + i * 4);
+      g.quadraticCurveTo(22, 16 + i * 3, 13, 17 + i * 3); g.fill();
+    }
+  }
+  g.restore();
+  iSheenArc(g);
+}
+
+// ── GIÁP ĐÙI ────────────────────────────────────────────────────────────────────
+function iaPants(g, M, P){
+  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
+  g.translate(0, 2);
+  // đai
+  iFill(g, [[-20, -22], [20, -22], [19, -13], [-19, -13]], iGrad(g, -20, -22, 20, -13, M.hi, M.lo));
+  iFill(g, [[-7, -24], [7, -24], [6, -11], [-6, -11]], M.trim);
+  if (st >= 4) iGem(g, M, 0, -17.5, 3);
+  if (T.soft || style === 'regal'){
+    // VÁY GIÁP: một khối loe, không tách hai ống
+    const skirt = () => { g.beginPath();
+      g.moveTo(-17, -13); g.lineTo(17, -13);
+      g.bezierCurveTo(23, 4, 26, 18, 27, 28);
+      g.lineTo(-27, 28);
+      g.bezierCurveTo(-26, 18, -23, 4, -17, -13); g.closePath(); };
+    skirt(); g.fillStyle = iGrad(g, -24, -13, 24, 28, M.hi, M.lo); g.fill();
+    skirt(); aTex(g, M, T, st, -26, -13, 26, 28);
+    skirt(); g.strokeStyle = 'rgba(0,0,0,.38)'; g.lineWidth = 1.1; g.stroke();
+    if (st >= 3){                                   // dải rủ trước
+      iFill(g, [[-5, -12], [5, -12], [4, 27], [-4, 27]], M.trim);
+      if (style === 'leaf'){ g.fillStyle = M.trim;
+        for (let i = 0; i < 3; i++){ g.beginPath();
+          g.ellipse(0, 0 + i * 9, 4, 7, 0, 0, 7); g.fill(); } }
+    }
+  } else {
+    // HAI TẤM ĐÙI rời
+    for (const sd of [-1, 1]){
+      g.save(); g.translate(sd * 10, -12);
+      const th = () => { g.beginPath();
+        g.moveTo(-8, 0); g.lineTo(8, 0);
+        g.bezierCurveTo(10, 14, 7, 26, 0, 30);
+        g.bezierCurveTo(-7, 26, -10, 14, -8, 0); g.closePath(); };
+      th(); g.fillStyle = iGrad(g, -8, 0, 8, 30, M.hi, M.lo); g.fill();
+      th(); aTex(g, M, T, st, -9, 0, 9, 30);
+      th(); g.strokeStyle = 'rgba(0,0,0,.36)'; g.lineWidth = 1; g.stroke();
+      if (st >= 2) iRivet(g, M, 0, 2.5, 1.7);
+      if (st >= 5) iFill(g, [[sd * 8, 6], [sd * 15, 2], [sd * 8, 12]], M.trim);
+      g.restore();
+    }
+  }
+  iSheenArc(g);
+}
+
+// ── ỦNG ─────────────────────────────────────────────────────────────────────────
+function iaBoots(g, M, P){
+  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
+  for (const sd of [-1, 1]){
+    g.save(); g.translate(sd * 11, 0); g.rotate(sd * 0.06);
+    const shaft = () => { g.beginPath();
+      if (T.soft){                                  // giày mềm: ống thấp, bo tròn
+        g.moveTo(-8, -14); g.quadraticCurveTo(-9, -4, -7, 6);
+        g.lineTo(7, 6); g.quadraticCurveTo(9, -4, 8, -14); g.closePath();
+      } else {
+        g.moveTo(-8, -24); g.lineTo(8, -24); g.lineTo(7, 6); g.lineTo(-7, 6); g.closePath();
+      }
+    };
+    shaft(); g.fillStyle = iGrad(g, -8, -24, 8, 6, M.hi, M.lo); g.fill();
+    shaft(); aTex(g, M, T, st, -8, T.soft ? -14 : -24, 8, 6);
+    shaft(); g.strokeStyle = 'rgba(0,0,0,.38)'; g.lineWidth = 1; g.stroke();
+    // vành ống
+    if (T.soft) iFill(g, [[-9, -16], [9, -16], [8.5, -10], [-8.5, -10]], M.trim);
+    else iFill(g, [[-9.5, -26], [9.5, -26], [9, -19], [-9, -19]], M.trim);
+    // bàn chân
+    g.beginPath();
+    g.moveTo(-7, 4); g.lineTo(7, 4);
+    g.lineTo(sd > 0 ? 15 : 9, 16); g.lineTo(sd > 0 ? 13 : 7, 21);
+    g.lineTo(-9, 21); g.closePath();
+    g.fillStyle = iGrad(g, -7, 4, 10, 21, M.hi, M.lo); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.36)'; g.lineWidth = 1; g.stroke();
+    iFill(g, [[-9.5, 20], [sd > 0 ? 13.5 : 7.5, 20], [sd > 0 ? 13 : 7, 24], [-9, 24]], M.lo);
+    if (st >= 2 && !T.soft){ g.strokeStyle = M.trim; g.lineWidth = 1.3;
+      g.beginPath(); g.moveTo(-7, -8); g.lineTo(7, -8); g.stroke(); }
+    if (T.soft && st >= 2){                          // dây buộc chéo
+      g.strokeStyle = M.trim; g.lineWidth = 1.4;
+      for (let i = 0; i < 3; i++){ const y = -10 + i * 5;
+        g.beginPath(); g.moveTo(-7, y); g.lineTo(7, y + 3); g.stroke(); }
+    }
+    if (st >= 3 && !T.soft) iRivet(g, M, 0, -13, 1.6);
+    if (style === 'plume' && st >= 3){                // cánh cổ chân
+      g.fillStyle = M.trim;
+      for (let i = 0; i < 3; i++){
+        g.beginPath(); g.moveTo(-8, -18 + i * 3);
+        g.quadraticCurveTo(-19 - i * 3, -24 - i * 3, -24 - i * 4, -18 - i * 4);
+        g.quadraticCurveTo(-16, -16 - i * 2, -8, -15 + i * 3); g.fill();
+      }
+    } else if (st >= 4 && !T.soft) iFill(g, [[-8, -22], [-15, -30], [-7, -27]], M.trim);
+    if (st >= 5) iGem(g, M, 0, -2, 2.4);
+    g.restore();
+  }
+  iSheenArc(g);
+}
+
+// ── PHỤ KIỆN: nhẫn — dùng chung mọi lớp ─────────────────────────────────────────
+function iaRing(g, M, P){
+  const st = P.st || 1;
+  g.save(); g.translate(0, 6);
+  const bw2 = 6 + st * 0.9;                 // bề dày vành
+  // Vành phải KÍN. Bản đầu vẽ một cung hở nên ra hình móng ngựa, không ai đọc là nhẫn.
+  g.save(); g.scale(1, 0.94);
+  g.lineWidth = bw2;
+  g.strokeStyle = iGrad(g, 0, -24, 0, 24, M.hi, M.lo);
+  g.beginPath(); g.arc(0, 0, 20, 0, 7); g.stroke();
+  g.lineWidth = bw2 * 0.34; g.strokeStyle = 'rgba(255,255,255,.34)';
+  g.beginPath(); g.arc(0, 0, 20 + bw2 * 0.28, Math.PI * 0.62, Math.PI * 1.28); g.stroke();
+  g.lineWidth = bw2 * 0.30; g.strokeStyle = 'rgba(0,0,0,.30)';
+  g.beginPath(); g.arc(0, 0, 20 - bw2 * 0.30, Math.PI * 1.62, Math.PI * 0.28); g.stroke();
+  g.restore();
+  // ổ nạm ngồi TRÊN vành
+  iFill(g, [[-9, -18], [9, -18], [7, -27], [-7, -27]], M.trim);
+  if (st >= 3){ iFill(g, [[-9, -19], [-17, -25], [-8, -25]], M.trim);
+                iFill(g, [[9, -19], [17, -25], [8, -25]], M.trim); }
+  iGem(g, M, 0, -25, 4.6 + st * 0.55);
+  if (st >= 4){ iRivet(g, M, -15, -11, 1.5); iRivet(g, M, 15, -11, 1.5); }
+  g.restore();
+  iSheenArc(g);
+}
+// ── PHỤ KIỆN: dây chuyền — hai nhánh, NHÌN LÀ BIẾT ──────────────────────────────
+// Nhánh vật lý đeo NANH kim loại; nhánh phép đeo CẦU pha lê. Phân biệt bằng bóng dáng
+// chứ không bằng màu — ở cỡ 44px trong ô túi, màu là thứ mất trước tiên.
+function iChain(g, M, st){
+  g.strokeStyle = M.lo; g.lineWidth = 3.4;
+  g.beginPath(); g.moveTo(-19, -30); g.quadraticCurveTo(-13, -6, 0, -2); g.stroke();
+  g.beginPath(); g.moveTo(19, -30); g.quadraticCurveTo(13, -6, 0, -2); g.stroke();
+  g.strokeStyle = M.hi; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(-19, -30); g.quadraticCurveTo(-13, -7, -1, -3); g.stroke();
+  if (st >= 2){                              // mắt xích thấy rõ ở nấc cao
+    for (let i = 1; i <= 3; i++){
+      const t = i / 4, x = -19 + (19) * t, y = -30 + 28 * t * t;
+      iRivet(g, M, x, y, 1.5); iRivet(g, M, -x, y, 1.5);
+    }
+  }
+}
+function iaPendPhys(g, M, P){
+  const st = P.st || 1;
+  iChain(g, M, st);
+  // nanh: khối nhọn xuống, có sống giữa
+  iFill(g, [[-9, -3], [9, -3], [5, 20], [0, 30], [-5, 20]], iGrad(g, -9, -3, 9, 30, M.hi, M.lo));
+  iFill(g, [[-2.4, 0], [2.4, 0], [1.4, 18], [0, 26], [-1.4, 18]], M.lo);
+  // gông cổ nanh
+  iFill(g, [[-11, -8], [11, -8], [10, -1], [-10, -1]], M.trim);
+  if (st >= 3){ iFill(g, [[-11, -6], [-19, -11], [-10, -12]], M.trim);
+                iFill(g, [[11, -6], [19, -11], [10, -12]], M.trim); }
+  if (st >= 2) iGem(g, M, 0, -4.5, 2.6 + st * 0.25);
+  if (st >= 5){ g.strokeStyle = M.trim; g.lineWidth = 1.2;
+    g.beginPath(); g.moveTo(-6, 6); g.lineTo(6, 6); g.stroke(); }
+  iSheenArc(g);
+}
+function iaPendMagic(g, M, P){
+  const st = P.st || 1;
+  iChain(g, M, st);
+  // gọng ôm cầu
+  g.strokeStyle = M.trim; g.lineWidth = 3;
+  g.beginPath(); g.arc(0, 11, 13.5, -0.85 * Math.PI, -0.15 * Math.PI); g.stroke();
+  iFill(g, [[-6, -8], [6, -8], [5, -2], [-5, -2]], M.trim);
+  // cầu pha lê
+  const c = M.glow || M.trim;
+  const rr = 9 + st * 0.7;
+  const gr = g.createRadialGradient(-rr*0.3, 11 - rr*0.35, 1, 0, 11, rr);
+  gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.35, c); gr.addColorStop(1, M.lo);
+  g.fillStyle = gr; g.beginPath(); g.arc(0, 11, rr, 0, 7); g.fill();
+  g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; g.beginPath(); g.arc(0, 11, rr, 0, 7); g.stroke();
+  if (st >= 3){                               // vành xoay quanh cầu
+    g.strokeStyle = M.trim; g.lineWidth = 1.6;
+    g.save(); g.translate(0, 11); g.scale(1, 0.34);
+    g.beginPath(); g.arc(0, 0, rr + 5, 0, 7); g.stroke();
+    g.restore();
+  }
+  if (st >= 5){ g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .45;
+    g.fillStyle = c; g.beginPath(); g.arc(0, 11, rr + 6, 0, 7); g.fill(); g.restore(); }
+  iSheenArc(g);
+}
+
+const ITEM_ART = {
+  weapon: iaWeapon, staff: iaStaff, bow: iaBow, crossbow: iaCrossbow, helm: iaHelm, armor: iaArmor, gloves: iaGloves, pants: iaPants, boots: iaBoots,
+  ring: iaRing, pendPhys: iaPendPhys, pendMagic: iaPendMagic,
+};
+
+// Vẽ trọn một icon: nền theo phẩm → hình món → hào quang cường hoá.
+function drawItemIcon(g, def, tier, rarity, plus){
+  const M = itemPal(def, tier);
+  const R = RARITIES[Math.max(0, Math.min(4, rarity || 0))];
+  g.save();
+  g.translate(ICON_PX / 2, ICON_PX / 2);
+  g.scale(ICON_PX / 100, ICON_PX / 100);
+  // nền: quầng màu phẩm — cùng ngôn ngữ màu với viền ô túi, để nhìn là biết phẩm
+  const bg = g.createRadialGradient(0, 0, 4, 0, 0, 50);
+  bg.addColorStop(0, R.color + '38'); bg.addColorStop(1, R.color + '00');
+  g.fillStyle = bg; g.fillRect(-50, -50, 100, 100);
+  // ── CƯỜNG HOÁ +0 → +11 ──────────────────────────────────────────────────────
+  // Mốc NHẢY vẫn theo MU (+4 / +7 / +10) nhưng trong mỗi mốc phải LEO LIÊN TỤC. Bản đầu chỉ
+  // đổi ở đúng 3 mốc: rèn từ +7 lên +9 là cả một chặng dài, tốn Tu La và có thể tụt cấp, mà
+  // icon không đổi một điểm ảnh nào. Đo được: +5 +6 +8 +9 +11 đều ra 0px khác biệt.
+  const pl = plus || 0;
+  const st = plusStage(pl);
+  const k = clamp((pl - 3) / 8, 0, 1);            // 0 tại +3 → 1 tại +11, chạy liên tục
+  const fn = ITEM_ART[def.art] || iaWeapon;
+  const GC = M.glow || '#ffe9a8';
+  const gl = { lo: GC, hi: GC, trim: GC, glow: null };
+  if (st >= 1){                                   // 1. quầng sau lưng — to dần, đậm dần
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.globalAlpha = 0.05 + k * 0.17;
+    g.scale(1.10 + k * 0.12, 1.10 + k * 0.12);
+    fn(g, gl, def);
+    g.restore();
+  }
+  g.save(); fn(g, M, def); g.restore();
+  if (st >= 2){                                   // 2. viền sáng ôm sát — mốc +7 phải KHÁC mốc +4
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.globalAlpha = 0.10 + k * 0.22;
+    g.scale(1.035, 1.035); fn(g, gl, def);
+    g.restore();
+  }
+  if (st >= 3){                                   // 3. tàn lửa quanh món — chỉ +10 trở lên
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.fillStyle = GC;
+    const n = 4 + Math.round((pl - 9) * 2);
+    for (let i = 0; i < n; i++){
+      const a = (i / n) * Math.PI * 2 + pl * 0.3, r = 32 + (i % 3) * 5;
+      g.globalAlpha = 0.35 + (i % 2) * 0.25;
+      g.beginPath(); g.arc(Math.cos(a) * r, Math.sin(a) * r * 0.9, 1.5 + (i % 2) * 0.9, 0, 7); g.fill();
+    }
+    g.restore();
+  }
+  g.restore();
+}
+// data-URL có cache. Khoá gồm mọi thứ đổi hình: món, giai, phẩm, mức rèn.
+function itemArtUrl(def, tier, rarity, plus){
+  const key = `${def.art}|${def.blade||''}|${def.guard||''}|${def.pommel||''}|${def.motif||''}|${def.shaft||''}|${def.head||''}|${def.limb||''}`
+            + `|${def.w||''}|${def.len||''}|${def.gw||''}|${def.st || 1}|${def.mat||''}|${def.tintKey || ''}`
+            + `|${tier}|${rarity}|${plus || 0}`;
+  let u = _itemArtCache.get(key);
+  if (u) return u;
+  const c = document.createElement('canvas');
+  c.width = ICON_PX; c.height = ICON_PX;
+  drawItemIcon(c.getContext('2d'), def, tier, rarity, plus);
+  u = c.toDataURL();
+  _itemArtCache.set(key, u);
+  return u;
+}
+
+// ═══════════════ DANH MỤC TRANG BỊ — 220 món ═══════════════
+// Mỗi món là một DÒNG DỮ LIỆU, hình vẽ suy ra từ tổ hợp bộ phận. Không có hàm vẽ riêng cho
+// từng món, nên thêm món mới = thêm một dòng.
+//
+// Khoá lớp: `sect` khác null nghĩa là CHỈ lớp đó dùng được. Vũ khí và giáp đều khoá; dây
+// chuyền và nhẫn thì không (MU cũng vậy).
+// `lv` = cấp yêu cầu, suy từ dải: 1 / 21 / 41 / 61 / 81.
+const BAND_LV = [1, 21, 41, 61, 81];
+const BAND_TIER = [1, 3, 5, 7, 10];
+const ITEM_DB = {};
+function regItem(d){ ITEM_DB[d.id] = d; return d; }
+
+// ── GIÁP: 25 bộ × 5 ô, sinh thẳng từ HERO_SETS ───────────────────────────────
+// Nhờ sinh từ đó mà hình trong túi và hình trên người dùng CHUNG một nguồn — không có cách
+// nào lệch nhau, kể cả khi sau này đổi bảng màu bộ.
+const ARMOR_PIECES = [
+  { slot:'non',  art:'helm',   pre:'Mũ Trụ' },
+  { slot:'ao',   art:'armor',  pre:'Giáp' },
+  { slot:'tay',  art:'gloves', pre:'Găng' },
+  { slot:'quan', art:'pants',  pre:'Giáp Đùi' },
+  { slot:'chan', art:'boots',  pre:'Ủng' },
+];
+for (const sect in HERO_SETS){
+  HERO_SETS[sect].forEach((sd, band) => {
+    for (const pc of ARMOR_PIECES){
+      regItem({
+        id: `${sect}_${band}_${pc.slot}`, kind:'armor', sect, band,
+        slot: pc.slot, art: pc.art, style: sd.style, tint: sd.tint || null,
+        tintKey: `${sect}${band}`, st: band + 1,
+        lv: BAND_LV[band], tier: BAND_TIER[band],
+        name: `${pc.pre} ${sd.name}`, setName: sd.name,
+      });
+    }
+  });
+}
+
+// ── VŨ KHÍ: 5 lớp × 3 dòng × 5 nấc = 75 ──────────────────────────────────────
+// Viết theo DÒNG + đè theo nấc, thay vì 75 dòng đầy đủ: đọc ra ngay dòng nào leo thế nào.
+const WEAPON_LINES = [
+  // ══ Dark Knight — cận chiến nặng ══
+  { sect:'thieulam', line:'kiem', slot:'vukhi', desc:'cân bằng',
+    base:{ art:'weapon', blade:'thang', guard:'thanh', pommel:'tron', motif:'khong', w:5.4, len:-42, gw:14 },
+    t:[ ['Kiếm Đồng',       { mat:'dong', big:0.88, len:-36, gw:12 }],
+        ['Kiếm Sắt',        { mat:'sat' }],
+        ['Trọng Kiếm Thép', { mat:'thep', guard:'quat', w:6.0, len:-44 }],
+        ['Kiếm Vảy Rồng',   { mat:'rong', guard:'vuot', motif:'gai', pommel:'da' }],
+        ['Kiếm Hỏa Long',   { mat:'lua',  guard:'vuot', motif:'lua', pommel:'gai', big:1.07 }] ] },
+  { sect:'thieulam', line:'riu', slot:'vukhi', desc:'sát thương cao, chậm',
+    base:{ art:'weapon', blade:'riu', guard:'khong', pommel:'tron', motif:'khong', w:5.0, len:-40, gw:10 },
+    t:[ ['Rìu Thợ Rừng',   { mat:'dong', big:0.9 }],
+        ['Rìu Chiến',      { mat:'sat' }],
+        ['Rìu Song Nguyệt',{ mat:'thep', w:5.6 }],
+        ['Rìu Vảy Rồng',   { mat:'rong', motif:'gai', big:1.06 }],
+        ['Rìu Hỏa Long',   { mat:'lua',  motif:'lua', pommel:'gai', big:1.12 }] ] },
+  { sect:'thieulam', line:'chuy', slot:'vukhi', desc:'phá giáp',
+    base:{ art:'weapon', blade:'chuy', guard:'khong', pommel:'tron', motif:'khong', w:4.6, len:-38, gw:10 },
+    t:[ ['Chùy Đinh',      { mat:'dong', big:0.9 }],
+        ['Chùy Gai',       { mat:'sat' }],
+        ['Chùy Thép Nặng', { mat:'thep', w:5.2 }],
+        ['Chùy Vảy Rồng',  { mat:'rong', motif:'gai' }],
+        ['Chùy Hỏa Long',  { mat:'lua',  motif:'lua', pommel:'gai', big:1.1 }] ] },
+
+  // ══ Dark Wizard — gậy, đánh xa ══
+  { sect:'baidasan', line:'gay', slot:'vukhi', desc:'sát thương phép',
+    base:{ art:'staff', shaft:'thang', head:'cau', len:-30 },
+    t:[ ['Gậy Gỗ',        { mat:'xuong', big:0.9 }],
+        ['Gậy Xương',     { mat:'xuong', shaft:'xuong' }],
+        ['Gậy Nhân Sư',   { mat:'vang',  shaft:'dot' }],
+        ['Gậy Ma Thuật',  { mat:'ma',    shaft:'xoan', len:-32 }],
+        ['Gậy Hư Vô',     { mat:'ma',    shaft:'xoan', head:'tinhthe', len:-32, big:1.06 }] ] },
+  { sect:'baidasan', line:'quyentruong', slot:'vukhi', desc:'tốc niệm',
+    base:{ art:'staff', shaft:'dot', head:'vong', len:-30 },
+    t:[ ['Trượng Đồng',    { mat:'dong', big:0.9 }],
+        ['Trượng Bạc',     { mat:'thep' }],
+        ['Trượng Pha Lê',  { mat:'bang', head:'canh' }],
+        ['Trượng Ma Thuật',{ mat:'ma',   head:'canh', len:-32 }],
+        ['Trượng Hư Vô',   { mat:'ma',   head:'canh', shaft:'xoan', len:-32, big:1.06 }] ] },
+  { sect:'baidasan', line:'tinhtruong', slot:'vukhi', desc:'bạo kích',
+    base:{ art:'staff', shaft:'xuong', head:'so', len:-30 },
+    t:[ ['Trượng Đá Lửa',  { mat:'lua',  big:0.9, head:'cau' }],
+        ['Trượng Rắn',     { mat:'xuong' }],
+        ['Trượng Mắt Quỷ', { mat:'hacKim' }],
+        ['Trượng Tinh Vân',{ mat:'ma',   head:'tinhthe', len:-32 }],
+        ['Trượng Hắc Nguyệt',{ mat:'hacKim', head:'tinhthe', shaft:'xoan', len:-32, big:1.06 }] ] },
+
+  // ══ Sylvan Ranger — cung/nỏ ══
+  { sect:'toanchan', line:'cungngan', slot:'vukhi', desc:'bắn nhanh',
+    base:{ art:'bow', limb:'cong' },
+    t:[ ['Cung Gỗ',       { mat:'xuong', big:0.9 }],
+        ['Cung Sừng',     { mat:'xuong' }],
+        ['Cung Vỏ Sồi',   { mat:'thep' }],
+        ['Cung Lông Ưng', { mat:'bang' }],
+        ['Cung Đại Bàng', { mat:'vang', big:1.06 }] ] },
+  { sect:'toanchan', line:'truongcung', slot:'vukhi', desc:'tầm xa',
+    base:{ art:'bow', limb:'dai' },
+    t:[ ['Trường Cung Thô',      { mat:'dong', big:0.92 }],
+        ['Trường Cung Thép',     { mat:'sat' }],
+        ['Trường Cung Bạc',      { mat:'thep' }],
+        ['Trường Cung Lông Ưng', { mat:'bang' }],
+        ['Trường Cung Bạch Vũ',  { mat:'vang', big:1.08 }] ] },
+  { sect:'toanchan', line:'no', slot:'vukhi', desc:'nặng, xuyên giáp',
+    base:{ art:'crossbow' },
+    t:[ ['Nỏ Tay',      { mat:'dong', big:0.88 }],
+        ['Nỏ Chiến',    { mat:'sat' }],
+        ['Nỏ Thép',     { mat:'thep' }],
+        ['Nỏ Ưng Vương',{ mat:'hacKim' }],
+        ['Nỏ Bạch Vũ',  { mat:'vang', big:1.08 }] ] },
+
+  // ══ Spellblade — kiếm lai phép ══
+  { sect:'minhgiao', line:'songdao', slot:'vukhi', desc:'nhanh',
+    base:{ art:'weapon', blade:'cong', guard:'canh', pommel:'tron', motif:'khong', w:5.2, len:-40, gw:13 },
+    t:[ ['Song Đao Thô',       { mat:'sat', big:0.9 }],
+        ['Song Đao Sắt',       { mat:'sat' }],
+        ['Song Đao Than Hồng', { mat:'lua', motif:'lua' }],
+        ['Song Đao Lửa Dữ',    { mat:'lua', motif:'lua', pommel:'gai' }],
+        ['Song Đao Hoả Ngục',  { mat:'lua', motif:'lua', guard:'vuot', pommel:'gai', big:1.06 }] ] },
+  { sect:'minhgiao', line:'daikiem', slot:'vukhi', desc:'nặng',
+    base:{ art:'weapon', blade:'daikiem', guard:'thanh', pommel:'vuot', motif:'khong', w:5.4, len:-44, gw:16 },
+    t:[ ['Đại Kiếm Sắt',    { mat:'sat', big:0.94 }],
+        ['Đại Kiếm Thép',   { mat:'thep' }],
+        ['Đại Kiếm Nung Đỏ',{ mat:'lua', motif:'lua' }],
+        ['Đại Kiếm Lửa Dữ', { mat:'lua', motif:'lua', motifX:1 }],
+        ['Đại Kiếm Hoả Ngục',{ mat:'lua', motif:'lua', pommel:'gai', big:1.16 }] ] },
+  { sect:'minhgiao', line:'makiem', slot:'vukhi', desc:'lai phép',
+    base:{ art:'weapon', blade:'song', guard:'canh', pommel:'da', motif:'runes', w:5.4, len:-43, gw:14 },
+    t:[ ['Kiếm Khắc Ấn',   { mat:'sat', big:0.92 }],
+        ['Kiếm Bùa Chú',   { mat:'thep' }],
+        ['Kiếm Tro Tàn',   { mat:'hacKim' }],
+        ['Ma Kiếm Lửa Dữ', { mat:'lua', motif:'mach' }],
+        ['Ma Kiếm Hoả Ngục',{ mat:'lua', motif:'mach', pommel:'vuot', big:1.06 }] ] },
+
+  // ══ Dark Lord — nghi lễ, chỉ huy ══
+  { sect:'bug', line:'lenhtruong', slot:'vukhi', desc:'chỉ huy',
+    base:{ art:'staff', shaft:'dot', head:'vong', len:-30 },
+    t:[ ['Lệnh Trượng Gỗ',       { mat:'xuong', big:0.9 }],
+        ['Lệnh Trượng Đồng',     { mat:'dong' }],
+        ['Lệnh Trượng Vương Giả',{ mat:'vang' }],
+        ['Lệnh Trượng Bạo Chúa', { mat:'vang', head:'vuot', len:-32 }],
+        ['Lệnh Trượng Ngai Đen', { mat:'hacKim', head:'vuot', shaft:'xoan', len:-32, big:1.06 }] ] },
+  { sect:'bug', line:'bua', slot:'vukhi', desc:'nặng',
+    base:{ art:'weapon', blade:'chuy', guard:'khong', pommel:'tron', motif:'khong', w:4.8, len:-38, gw:10 },
+    t:[ ['Búa Nghi Lễ',   { mat:'dong', big:0.9 }],
+        ['Búa Cận Vệ',    { mat:'sat' }],
+        ['Búa Vương Triều',{ mat:'vang', w:5.4 }],
+        ['Búa Bạo Chúa',  { mat:'vang', motif:'runes' }],
+        ['Búa Ngai Đen',  { mat:'hacKim', motif:'runes', pommel:'gai', big:1.12 }] ] },
+  { sect:'bug', line:'kich', slot:'vukhi', desc:'tầm với',
+    base:{ art:'staff', shaft:'thang', head:'liem', len:-32 },
+    t:[ ['Kích Ngắn',       { mat:'sat', big:0.9, len:-28 }],
+        ['Kích Cận Vệ',     { mat:'sat' }],
+        ['Kích Vương Triều',{ mat:'vang' }],
+        ['Kích Bạo Chúa',   { mat:'vang', shaft:'dot' }],
+        ['Kích Ngai Đen',   { mat:'hacKim', shaft:'xoan', big:1.08 }] ] },
+];
+for (const L of WEAPON_LINES){
+  L.t.forEach(([name, over], band) => {
+    regItem(Object.assign({
+      id: `${L.sect}_${L.line}_${band}`, kind:'weapon', sect: L.sect, line: L.line, band,
+      slot: L.slot, st: band + 1, lv: BAND_LV[band], tier: BAND_TIER[band], name, desc: L.desc,
+      tintKey: `${L.sect}${L.line}${band}`,
+    }, L.base, over));
+  });
+}
+
+// ── PHỤ KIỆN: 20 món, KHÔNG khoá lớp ─────────────────────────────────────────
+// Dây chuyền chia hai nhánh VẬT LÝ / PHÉP — phân biệt bằng bóng dáng (nanh vs cầu pha lê),
+// không bằng màu: ở 44px trong ô túi thì màu là thứ mất trước tiên.
+const ACC_LINES = [
+  { slot:'daychuyen', line:'phys', art:'pendPhys', branch:'phys',
+    names:['Dây Chuyền Nanh Đồng','Dây Chuyền Nanh Sắt','Dây Chuyền Nanh Thép','Dây Chuyền Nanh Rồng','Dây Chuyền Nanh Hắc Nguyệt'],
+    mats:['dong','sat','thep','rong','hacKim'] },
+  { slot:'daychuyen', line:'magic', art:'pendMagic', branch:'magic',
+    names:['Dây Chuyền Ngọc Lam','Dây Chuyền Ngọc Bích','Dây Chuyền Pha Lê','Dây Chuyền Ma Thuật','Dây Chuyền Tinh Vân'],
+    mats:['dong','thep','bang','ma','ma'] },
+  { slot:'nhan1', line:'r1', art:'ring',
+    names:['Nhẫn Đồng','Nhẫn Bạc','Nhẫn Ngọc Lục','Nhẫn Hắc Kim','Nhẫn Tinh Vân'],
+    mats:['dong','thep','bang','hacKim','ma'] },
+  { slot:'nhan2', line:'r2', art:'ring',
+    names:['Nhẫn Thô Sơ','Nhẫn Chạm Khắc','Nhẫn Cổ Ngữ','Nhẫn Phong Ấn','Nhẫn Vĩnh Hằng'],
+    mats:['sat','dong','vang','ma','vang'] },
+];
+for (const A of ACC_LINES){
+  A.names.forEach((name, band) => {
+    regItem({
+      id: `acc_${A.slot}_${A.line}_${band}`, kind:'acc', sect:null, band,
+      slot: A.slot, art: A.art, branch: A.branch || null, mat: A.mats[band],
+      st: band + 1, lv: BAND_LV[band], tier: BAND_TIER[band], name,
+      tintKey: `acc${A.line}${band}`,
+    });
+  });
+}
+
+// ── Tra cứu ──────────────────────────────────────────────────────────────────
+const ITEM_BY_SLOT = {};
+for (const id in ITEM_DB){
+  const d = ITEM_DB[id];
+  (ITEM_BY_SLOT[d.slot] = ITEM_BY_SLOT[d.slot] || []).push(d);
+}
+// Món hợp lệ cho một ô + một lớp + một dải. Đây là chỗ DUY NHẤT biết luật khoá lớp.
+function itemDefsFor(slot, sect, band){
+  const all = ITEM_BY_SLOT[slot] || [];
+  return all.filter(d => (d.sect === null || d.sect === sect) && (band === undefined || d.band === band));
+}
+function pickItemDef(slot, sect, band){
+  const c = itemDefsFor(slot, sect, band);
+  return c.length ? c[Math.floor(Math.random() * c.length)] : null;
+}
+// Lớp này có dùng được món đó không — dùng cho cả khoá mặc đồ lẫn câu giải thích.
+// Lớp này mặc được món này không. Khoá cứng kiểu MU: kiếm chỉ Dark Knight, gậy chỉ Dark
+// Wizard, cung chỉ Sylvan Ranger. Dây chuyền và nhẫn thì ai cũng đeo được.
+function itemUsable(it){
+  const d = itemDef(it);
+  return !d || !d.sect || d.sect === (player && player.sect);
+}
+// Câu giải thích cho người chơi — món không mặc được thì phải NÓI RÕ vì sao, đừng im lặng.
+function itemLockMsg(it){
+  const d = itemDef(it);
+  if (!d || !d.sect) return '';
+  const sc = SECTS[d.sect];
+  return `${it.name} — chỉ ${sc ? sc.name : d.sect} dùng được`;
+}
+// 10 giai trải đều lên 5 dải: giai 1-2 → dải I, 3-4 → II, 5-6 → III, 7-8 → IV, 9-10 → V.
+function bandOfTier(t){ return clamp(Math.ceil((t || 1) / 2) - 1, 0, 4); }
+function itemDef(it){ return it && it.def ? ITEM_DB[it.def] : null; }
+// Gắn định nghĩa + TÊN theo danh mục. Lớp quyết định món nào rơi ra được: vũ khí và giáp đều
+// khoá lớp, nên nhặt được đồ lớp khác là chuyện cố ý (bán, hoặc ném vào Lò Hỗn Loạn).
+function assignDef(it, sect){
+  const d = pickItemDef(it.slot, sect || (player && player.sect) || 'vophai', bandOfTier(it.tier));
+  if (!d) return it;
+  it.def = d.id;
+  it.name = (it.perfect ? 'Hoàn Hảo ' : '') + d.name;
+  return it;
+}
+
 function slotIcon(it, cls){
+  // Món có định nghĩa → vẽ bằng bộ phận. 11 file PNG cũ chỉ còn phục vụ đồ đặc biệt
+  // (cánh, áo choàng, pet) và save cũ chưa có def.
+  let _d = itemDef(it);
+  // Cổ Thần nhuộm theo màu BỘ CỔ THẦN, không theo bộ giáp của lớp: đó là thứ khiến người ta
+  // nhận ra món Cổ Thần từ xa trong túi.
+  if (_d && it.ancient && ANCIENT_SETS[it.ancient]){
+    const ac = ANCIENT_SETS[it.ancient].color;
+    _d = Object.assign({}, _d, { tint: { lo: ac, hi: _lift(ac, 0.34), trim: _lift(ac, 0.62), glow: ac },
+                                 tintKey: 'anc' + it.ancient });
+  }
+  if (_d){
+    const rc = (it.rarity != null && !it.special) ? ' ic-r' + it.rarity : '';
+    const bd = it.tier ? `<i class="ic-giai">${['I','II','III','IV','V','VI','VII','VIII','IX','X'][clamp(it.tier-1,0,9)]}</i>` : '';
+    return `<span class="item-ic${rc}"><img class="${cls||'slot-icon'}" src="${itemArtUrl(_d, it.tier || 1, it.rarity || 0, it.plus || 0)}" alt="">${bd}</span>`;
+  }
   const f = SLOT_ICONS[it.slot] || 'vukhi';
   // Drop v2.0: viền màu theo phẩm, xoay màu theo giai, huy hiệu số giai góc trái
   const hue = it.tier ? (it.tier-1)*22 : 0;
@@ -10395,79 +12424,110 @@ function matTip(name, desc, val){
   const t = desc ? `${name} — ${desc}\n${val}` : `${name}\n${val}`;
   return t.replace(/"/g, '&quot;');
 }
-function renderBag(){
-  let html = `<h3>Túi Đồ (${player.inv.length}/30)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div class="stat-sec">VẬT LIỆU QUÝ — di chuột vào ô để xem tên & công dụng</div>`;
-  html += `<div class="mat-grid">`;
-  for (const r of MAT_ROWS){
-    const v = r.get();
-    html += `<div class="mat-cell" title="${matTip(r.name, r.desc, v)}">
-      <img src="assets/items/mat_${r.icon}.png" onerror="this.style.display='none'" alt="">
-      <span class="mc-count" style="color:${r.color}">${fmtCount(v)}</span></div>`;
-  }
-  html += `<div class="mat-cell" title="${matTip('Bạc', 'tiêu xài khắp Lunacia', player.silver)}">
-    <img src="assets/items/mat_bac.png" onerror="this.style.display='none'" alt="">
-    <span class="mc-count" style="color:#7ecbff">${fmtCount(player.silver)}</span></div>`;
-  html += `<div class="mat-cell" title="${matTip('Công Huân Lệnh', 'Truy Nã Lệnh mỗi ngày · quay Sảnh Cầu May', player.congHuan||0)}">
-    <span class="mc-glyph">🎖</span>
-    <span class="mc-count" style="color:#ffb15c">${fmtCount(player.congHuan||0)}</span></div>`;
-  html += `</div>`;
-  // Tứ Châu — châu quý ép trang bị tại Lò Rèn
-  const jw = player.jewels || {};
-  html += `<div class="stat-sec">TỨ CHÂU — ép tại Lò Rèn / Lò Bảo Chứng</div>`;
-  html += `<div class="mat-grid">`;
-  for (const jk of ['chucPhuc','linhHon','sinhMenh','honDon']){
-    html += `<div class="mat-cell" title="${matTip(JEWEL_NAMES[jk], '', jw[jk]||0)}">
-      <span class="mc-glyph" style="color:${JEWEL_COLORS[jk]}">◆</span>
-      <span class="mc-count" style="color:${JEWEL_COLORS[jk]}">${fmtCount(jw[jk]||0)}</span></div>`;
-  }
-  html += `</div>`;
-  // Bảo Hạp từ Ma Tôn Giáng Thế — mở lấy trang bị, tầng IV+ có tỉ lệ ra Cổ Thần (không pity)
-  const bh = player.baohap || {};
-  const bhTiers = Object.keys(bh).filter(t => bh[t] > 0);
-  if (bhTiers.length){
-    html += `<div class="stat-sec">BẢO HẠP — Hung Thần Giáng Thế</div>`;
-    for (const t of bhTiers){
-      const d = BAOHAP_TIERS[t];
-      html += `<div class="inv-item"><span class="s-name"><b style="color:${d.color}">${d.name}</b> ×${bh[t]}<br>
-        <span class="item-tip">LV${d.min}-${d.max === 999 ? '100+' : d.max} · trang bị cao cấp${d.ancient ? ` · <b style="color:#3ac88a">Cổ Thần ${Math.round(d.ancient*100)}%</b>` : ''} · châu quý</span></span>
-        <span><button class="mini-btn" onclick="openBaoHap(${t})">Mở Hạp</button></span></div>`;
-    }
-  }
-  // Nội Đan yêu thú — thôn phệ tăng chỉ số vĩnh viễn, tối đa 3 viên/ngày (bài học Phi Nguyệt Tiên Hành Lục)
-  const ndUsed = ndToday();
-  html += `<div class="stat-sec">NỘI ĐAN YÊU THÚ — Thôn Phệ (hôm nay còn ${Math.max(0, 3-ndUsed)}/3 lần)</div>`;
-  for (const el2 of ['Kim','Mộc','Thổ','Thủy','Hỏa']){
-    const cnt = (player.noidan && player.noidan[el2]) || 0;
-    const nh = NGU_HANH[el2], ef = ND_EFFECT[el2];
-    html += `<div class="mat-row"><span style="color:${nh.color};width:20px;text-align:center;font-size:13px">${nh.glyph}</span>
-      <span style="flex:1">Nội Đan hệ ${el2} <span style="opacity:.55;font-size:11px">— ${ef.desc}</span></span>
-      <b style="color:${nh.color};margin-right:8px">${cnt}</b>
-      <button class="mini-btn" ${cnt > 0 && ndUsed < 3 ? '' : 'disabled'} onclick="swallowNoidan('${el2}')">Thôn Phệ</button></div>`;
-  }
-  html += `<div class="stat-sec">TRANG BỊ NHẶT ĐƯỢC — bấm ô để MẶC NGAY · ▲ xanh = mạnh hơn · ⋯ để Phân Giải/Bán</div>`;
-  html += `<label style="font-size:12px;color:#9aa8d4;cursor:pointer"><input type="checkbox" ${player.autoSell?'checked':''} onchange="window.toggleAutoSell(this.checked)"> Tự động bán đồ trắng/xanh lá khi nhặt (đổi lấy bạc)</label>`;
-  html += `<label style="font-size:12px;color:#9aa8d4;cursor:pointer"><input type="checkbox" ${player.autoEquip?'checked':''} onchange="window.toggleAutoEquip(this.checked)"> Tự mặc đồ mạnh hơn khi nhặt (≥105% lực chiến, giữ đồ quý)</label>`;
-  html += `<div style="margin:6px 0"><button class="mini-btn" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất (12 ô)</button></div>`;
-  if (!player.inv.length) html += `<div style="opacity:.5;font-size:12px;padding:8px">Túi trống — hãy đi farm quái!</div>`;
-  html += `<div class="bag-grid">`;
-  player.inv.forEach((it, i)=>{
+// Túi đồ chia TAB. Trước đây nó xếp NĂM kho khác nhau vào một cuộn dọc — vật liệu, tứ châu,
+// bảo hạp, nội đan, rồi mới tới trang bị — nên thứ người ta mở túi để xem lại nằm cuối cùng,
+// phải cuộn qua hơn một màn hình mới thấy. Nay trang bị đứng đầu và mặc định.
+const BAG_TABS = [
+  { id:'gear', name:'Trang Bị' },
+  { id:'mat',  name:'Vật Liệu' },
+  { id:'box',  name:'Bảo Hạp' },
+];
+window.bagTab = 'gear';
+window.setBagTab = function(t){ window.bagTab = t; renderBag(); };
+
+function bagSecGear(){
+  let h = `<div class="bag-bar">
+    <label><input type="checkbox" ${player.autoSell?'checked':''} onchange="window.toggleAutoSell(this.checked)"> Tự bán đồ trắng/lục</label>
+    <label><input type="checkbox" ${player.autoEquip?'checked':''} onchange="window.toggleAutoEquip(this.checked)"> Tự mặc đồ mạnh hơn</label>
+    <button class="mini-btn" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất</button></div>`;
+  h += `<div class="bag-legend">bấm ô để MẶC NGAY · <b style="color:#6ae88a">▲</b> mạnh hơn ·
+    <b style="color:#ffd76a">◆</b> Khắc Ấn mới · <b style="color:#ff9a6a">🔒</b> khác lớp · <b>⋯</b> Phân Giải/Bán</div>`;
+  if (!player.inv.length) return h + `<div class="chaos-empty">Túi trống — hãy đi farm quái!</div>`;
+  h += `<div class="bag-grid">`;
+  player.inv.forEach((it, i) => {
     const _eq2 = player.equip[it.slot], _bp2 = _eq2 ? itemPower(_eq2) : 0;
-    const _up = !it.special && player.level >= itemReqLv(it) && itemPower(it) > _bp2;
+    const _lock = !it.special && !itemUsable(it);
+    const _up = !it.special && !_lock && player.level >= itemReqLv(it) && itemPower(it) > _bp2;
     // ◆ vàng: món mang về Khắc Ấn CHƯA có. Đứng riêng với ▲ vì đây là thứ mũi ▲ (thuần lực
     // chiến) không bao giờ thấy — món yếu hơn vẫn có thể đáng mặc chỉ vì cái Khắc Ấn này.
-    const _sg = !it.special && player.level >= itemReqLv(it) && itemSigilNew(it);
-    html += `<div class="bag-cell rar-${it.rarity}" style="position:relative" draggable="true" ondragstart="onBagItemDragStart(event,${i})" onclick="equipItem(${i})" title="${it.name} — bấm để MẶC NGAY, hoặc kéo thả vào ô Trang Bị${_up ? ' (mạnh hơn đang mặc!)' : ''}${_sg ? ` · ◆ Khắc Ấn mới: ${SIGIL_DEFS[_sg].name}` : ''} · ⋯ để chọn">
-      ${slotIcon(it, '')}<span class="bc-plus">${it.plus?'+'+it.plus:''}</span>${_up ? '<span style="position:absolute;bottom:0;left:2px;color:#6ae88a;font-size:11px;font-weight:700;text-shadow:0 1px 2px #000">▲</span>' : ''}${_sg ? '<span style="position:absolute;bottom:0;right:2px;color:#ffd76a;font-size:11px;font-weight:700;text-shadow:0 1px 2px #000">◆</span>' : ''}<span style="position:absolute;top:-3px;right:2px;font-size:12px;color:#c9b889;cursor:pointer;text-shadow:0 1px 2px #000" onclick="event.stopPropagation();window.selectBagItem(${i})">⋯</span></div>`;
+    const _sg = !it.special && !_lock && player.level >= itemReqLv(it) && itemSigilNew(it);
+    const tip = _lock ? itemLockMsg(it)
+      : `${it.name} — bấm để MẶC NGAY, hoặc kéo thả vào ô Trang Bị${_up ? ' (mạnh hơn đang mặc!)' : ''}${_sg ? ` · ◆ Khắc Ấn mới: ${SIGIL_DEFS[_sg].name}` : ''}`;
+    h += `<div class="bag-cell rar-${it.rarity}${_lock?' locked':''}" draggable="true"
+      ondragstart="onBagItemDragStart(event,${i})" onclick="equipItem(${i})" title="${tip}">
+      ${slotIcon(it, '')}<span class="bc-plus">${it.plus?'+'+it.plus:''}</span>
+      ${_up ? '<i class="bc-up">▲</i>' : ''}${_sg ? '<i class="bc-sg">◆</i>' : ''}${_lock ? '<i class="bc-lock">🔒</i>' : ''}
+      <i class="bc-more" onclick="event.stopPropagation();window.selectBagItem(${i})">⋯</i></div>`;
   });
-  html += `</div>`;
+  h += `</div>`;
   if (window.bagSel >= 0 && player.inv[window.bagSel]){
     const it = player.inv[window.bagSel];
-    html += `<div class="forge-lines" style="margin-top:10px"><b class="${RARITIES[it.rarity].cls}">${it.name}</b><br>${itemLineHtml(it)}${itemCompareHtml(it)}</div>
+    h += `<div class="forge-lines" style="margin-top:10px"><b class="${RARITIES[it.rarity].cls}">${it.name}</b><br>${itemLineHtml(it)}${itemCompareHtml(it)}</div>
       <div class="forge-actions"><button class="mini-btn" onclick="equipItem(${window.bagSel})">Mặc Vào</button>
       <button class="mini-btn" onclick="sellItem(${window.bagSel})">Bán (+${itemSellPrice(it)}◈)</button>
       <button class="mini-btn" onclick="salvage(${window.bagSel});window.bagSel=-1">Phân Giải (+${1+it.rarity+Math.floor(it.plus/3)}✦)</button></div>`;
   }
+  return h;
+}
+function bagSecMat(){
+  let h = `<div class="chaos-sec">VẬT LIỆU QUÝ <span class="chaos-sub">di chuột vào ô để xem công dụng</span></div><div class="mat-grid">`;
+  for (const r of MAT_ROWS){
+    const v = r.get();
+    h += `<div class="mat-cell" title="${matTip(r.name, r.desc, v)}">
+      <img src="assets/items/mat_${r.icon}.png" onerror="this.style.display='none'" alt="">
+      <span class="mc-count" style="color:${r.color}">${fmtCount(v)}</span></div>`;
+  }
+  h += `<div class="mat-cell" title="${matTip('Bạc', 'tiêu xài khắp Lunacia', player.silver)}">
+    <img src="assets/items/mat_bac.png" onerror="this.style.display='none'" alt="">
+    <span class="mc-count" style="color:#7ecbff">${fmtCount(player.silver)}</span></div>`;
+  h += `<div class="mat-cell" title="${matTip('Công Huân Lệnh', 'Truy Nã Lệnh mỗi ngày · quay Sảnh Cầu May', player.congHuan||0)}">
+    <span class="mc-glyph">🎖</span>
+    <span class="mc-count" style="color:#ffb15c">${fmtCount(player.congHuan||0)}</span></div></div>`;
+  const jw = player.jewels || {};
+  h += `<div class="chaos-sec">TỨ CHÂU <span class="chaos-sub">bỏ vào khay ở Lò Hỗn Độn</span></div><div class="mat-grid">`;
+  for (const jk of ['chucPhuc','linhHon','sinhMenh','honDon']){
+    h += `<div class="mat-cell" title="${matTip(JEWEL_NAMES[jk], '', jw[jk]||0)}">
+      <span class="mc-glyph" style="color:${JEWEL_COLORS[jk]}">◆</span>
+      <span class="mc-count" style="color:${JEWEL_COLORS[jk]}">${fmtCount(jw[jk]||0)}</span></div>`;
+  }
+  return h + `</div>`;
+}
+function bagSecBox(){
+  const bh = player.baohap || {};
+  const bhTiers = Object.keys(bh).filter(t => bh[t] > 0);
+  let h = `<div class="chaos-sec">BẢO HẠP <span class="chaos-sub">Hung Thần Giáng Thế</span></div>`;
+  if (!bhTiers.length) h += `<div class="chaos-empty">Chưa có Bảo Hạp nào — săn Hung Thần hoặc quái Xâm Lăng Vàng.</div>`;
+  for (const t of bhTiers){
+    const d = BAOHAP_TIERS[t];
+    h += `<div class="inv-item"><span class="s-name"><b style="color:${d.color}">${d.name}</b> ×${bh[t]}<br>
+      <span class="item-tip">LV${d.min}-${d.max === 999 ? '100+' : d.max} · trang bị cao cấp${d.ancient ? ` · <b style="color:#3ac88a">Cổ Thần ${Math.round(d.ancient*100)}%</b>` : ''} · châu quý</span></span>
+      <span><button class="mini-btn" onclick="openBaoHap(${t})">Mở Hạp</button></span></div>`;
+  }
+  const ndUsed = ndToday();
+  h += `<div class="chaos-sec">NỘI ĐAN YÊU THÚ <span class="chaos-sub">hôm nay còn ${Math.max(0, 3-ndUsed)}/3 lần</span></div>`;
+  for (const el2 of ['Kim','Mộc','Thổ','Thủy','Hỏa']){
+    const cnt = (player.noidan && player.noidan[el2]) || 0;
+    const nh = NGU_HANH[el2], ef = ND_EFFECT[el2];
+    h += `<div class="mat-row"><span style="color:${nh.color};width:20px;text-align:center;font-size:13px">${nh.glyph}</span>
+      <span style="flex:1">Nội Đan hệ ${el2} <span style="opacity:.55;font-size:11px">— ${ef.desc}</span></span>
+      <b style="color:${nh.color};margin-right:8px">${cnt}</b>
+      <button class="mini-btn" ${cnt > 0 && ndUsed < 3 ? '' : 'disabled'} onclick="swallowNoidan('${el2}')">Thôn Phệ</button></div>`;
+  }
+  return h;
+}
+function renderBag(){
+  const T = window.bagTab || 'gear';
+  let html = `<h3>Túi Đồ (${player.inv.length}/30)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  html += `<div class="chaos-tabs">`;
+  for (const t of BAG_TABS){
+    // đếm ngay trên tab: khỏi phải mở từng cái xem có gì mới
+    const n = t.id === 'gear' ? player.inv.length
+            : t.id === 'box'  ? Object.values(player.baohap || {}).reduce((a, b) => a + b, 0)
+            : Object.values(player.jewels || {}).reduce((a, b) => a + b, 0);
+    html += `<button class="chaos-tab${T===t.id?' on':''}" onclick="setBagTab('${t.id}')">${t.name}${n?` <i>${n}</i>`:''}</button>`;
+  }
+  html += `</div>`;
+  html += T === 'mat' ? bagSecMat() : T === 'box' ? bagSecBox() : bagSecGear();
   el('panel-bag').innerHTML = html;
 }
 window.selectBagItem = function(i){ window.bagSel = (window.bagSel === i) ? -1 : i; renderBag(); };
@@ -10478,6 +12538,11 @@ window.equipItem = function(i){
   if (!it) return;
   if (player.level < itemReqLv(it)){
     addFloat(player.x, player.y-30, `Cần LV${itemReqLv(it)} để mặc ${it.name}!`, '#ff7a6a', 13);
+    return;
+  }
+  if (!itemUsable(it)){
+    addFloat(player.x, player.y-30, `🔒 ${itemLockMsg(it)}`, '#ff9a6a', 13);
+    AudioSys.sfx('ui', 0.4);
     return;
   }
   player.inv.splice(i,1);
@@ -11076,166 +13141,18 @@ window.sellJunk = function(){
 // ═══════════ LÒ BÁT QUÁI — Phá Thiên Kiếp (+9 → +11) ═══════════
 // GDD: chỉ Tông Sư Thợ Rèn tại Lò Rèn Hoàng Gia (Tương Dương Thành) mới rèn được +10/+11.
 // +10 = 50%, +11 = 45%. Thất bại → trang bị VỠ NÁT (Thiên Mệnh Phù bảo hộ).
+// Tông Sư Thợ Rèn không còn màn riêng nữa — NPC chỉ mở đúng cỗ máy ở tab Rèn. Trước đây đây là
+// màn THỨ HAI, trùng nội dung với bảng Rèn (Hỗn Độn Lò, Cổ Thần đều có ở cả hai chỗ), và các
+// công thức chỉ-làm-được-ở-đây thì nay tự khoá bằng cờ royal + atRoyalForge().
 function renderBaGua(){
-  let html = `<h3>☰ Lò Rèn Hoàng Gia — Tông Sư Thợ Rèn</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">"Lò này nung bằng <b style="color:#e8b04a">Tứ Hải Càn Khôn</b> — chỉ trang bị <b style="color:#e8b04a">+9</b> mới đủ tư cách bước vào <b style="color:#ff7a6a">Phá Thiên Kiếp</b>. Nhớ kỹ: <b style="color:#ff7a6a">thất bại là thần binh vỡ nát</b>, trừ khi có Thiên Mệnh Phù bảo mệnh."</div>`;
-  html += `<div style="font-size:12px;color:#9aa8d4;line-height:1.7">◈ <b>${player.silver}</b> · ✦ Huyền Thiết <b style="color:#9fd0ff">${player.mat}</b> · ◆ Tu La <b style="color:#e84a6a">${player.gems.tuLa}</b> · ❖ Hỗn Nguyên <b style="color:#b08ae8">${player.gems.honNguyen}</b> · ☂ Phù <b style="color:#7ecbff">${player.charms}</b></div>`;
-  const all = [];
-  for (const s in player.equip) if (player.equip[s] && !player.equip[s].noForge && player.equip[s].plus >= 9 && player.equip[s].plus < 11) all.push({ it:player.equip[s], where:'equip', key:s });
-  player.inv.forEach((it,i)=>{ if (!it.noForge && it.plus >= 9 && it.plus < 11) all.push({ it, where:'inv', key:i }); });
-  if (!all.length){
-    html += `<div style="padding:14px;font-size:12.5px;line-height:1.7;opacity:.75">Ngươi chưa có trang bị nào đạt <b style="color:#e8b04a">+9</b>.<br>Hãy tự rèn và đập ngọc đến +9 rồi quay lại đây.</div>`;
-  } else {
-    for (const e of all){
-      const it = e.it;
-      const target = it.plus + 1;
-      const rule = forgeRule(target);
-      const rate = Math.min(100, rule.rate + (player.forgeBonus||0));
-      const costS = (20 + it.plus*15) * (it.tier || 1); // Drop v2.0: phí rèn theo giai
-      const canPay = player.silver>=costS && player.mat>=rule.mat && player.gems.tuLa>=rule.tuLa && player.gems.honNguyen>=rule.hon;
-      html += `<div class="bagua-item">
-        <div class="bagua-item-info"><b class="${RARITIES[it.rarity].cls}">${it.name} +${it.plus}</b>
-          <span style="opacity:.55;font-size:11px"> (${e.where==='equip'?'đang mặc':'túi'})</span><br>
-          <span style="font-size:11px;opacity:.8">Phá Thiên Kiếp <b style="color:#e8b04a">+${target}</b> — tỉ lệ <b style="color:${rate>=50?'#7ecbff':'#ff9a6a'}">${rate}%</b> · ${costS}◈ + ${rule.mat}✦ + ${rule.tuLa}◆ + ${rule.hon}❖</span></div>
-        <button class="mini-btn" ${canPay?'':'disabled'} onclick="doBaGua('${it.uid}')">☰ Đột Phá<br>+${target}</button></div>`;
-    }
-    html += `<label style="display:block;font-size:12px;margin:8px 0;color:#7ecbff;cursor:pointer">
-      <input type="checkbox" ${forgeUseCharm?'checked':''} onchange="forgeUseCharm=this.checked" ${player.charms>0?'':'disabled'}>
-      Dùng Thiên Mệnh Phù — thất bại KHÔNG bị vỡ trang bị (còn ${player.charms})</label>
-      <div style="font-size:11px;opacity:.7;line-height:1.6">+10 thức tỉnh thuộc tính ẩn · +11 Khai Quang <b style="color:#9fd0ff">Thiên Lôi Cương Khí</b> (sét xanh bao quanh thân)</div>`;
-  }
-  // ── Lò Bảo Chứng: Linh Dực & đổi Cổ Thần (Track HT — GDD §13) ──
-  const J2 = player.jewels || { honDon:0 };
-  html += `<div class="stat-sec" style="border-color:rgba(126,203,255,.5)">◈ HỖN ĐỘN LÒ — ● Hỗn Độn Châu: <b style="color:#7ecbff">${J2.honDon}</b></div>`;
-  const wing1 = player.equip.canh || player.inv.find(x=>x.slot==='canh');
-  if (player.level >= 40){
-    const fodder = [];
-    for (const s3 in player.equip){ const t2 = player.equip[s3]; if (t2 && t2.perfect && t2.plus >= 4 && !t2.noForge) fodder.push(t2); }
-    player.inv.forEach(t2=>{ if (t2.perfect && t2.plus >= 4 && !t2.noForge) fodder.push(t2); });
-    const canW1 = J2.honDon >= 1 && fodder.length > 0 && player.gems.honNguyen >= 10 && player.silver >= 5000;
-    html += `<div class="next-tier"><b style="color:#9fd0ff">Linh Dực Cấp 1</b> (LV40+) — Thiên Thần / Tiểu Quỷ ngẫu nhiên<br>
-      <span style="font-size:11.5px;opacity:.8">Phí: 1 ● Hỗn Độn + 1 trang bị Hoàn Hảo +4 hiến tế (${fodder.length ? fodder[0].name+' +'+fodder[0].plus : 'chưa có'}) + 10❖ + 5000◈</span></div>
-      <div class="forge-actions"><button class="mini-btn" ${canW1?'':'disabled'} onclick="craftWing(1)">Luyện Linh Dực</button></div>`;
-  }
-  if (player.level >= 80 && wing1 && !wing1.wing2){
-    const canW2 = J2.honDon >= 1 && player.gems.honNguyen >= 20 && player.silver >= 10000;
-    html += `<div class="next-tier"><b style="color:#d8baff">Linh Dực Cấp 2</b> (LV80+) — Phượng Dực / Hắc Ma Dực, thăng từ cánh đang có<br>
-      <span style="font-size:11.5px;opacity:.8">Phí: 1 ● Hỗn Độn + cánh cấp 1 hiện tại + 20❖ + 10000◈</span></div>
-      <div class="forge-actions"><button class="mini-btn" ${canW2?'':'disabled'} onclick="craftWing(2)">Thăng Linh Dực 2</button></div>`;
-  }
-  // Đổi Cổ Thần: 3 món trùng + 1 Hỗn Độn = 1 món TỰ CHỌN (con đường song song thay pity)
-  const ancients = player.inv.filter(x=>x.ancient);
-  html += `<div class="next-tier" style="border-color:rgba(58,200,138,.5)"><b style="color:#3ac88a">Đổi Cổ Thần — Thủ Hộ tự chọn</b><br>
-    <span style="font-size:11.5px;opacity:.8">Hiến tế 3 món Cổ Thần trong túi + 1 ● Hỗn Độn Châu → nhận 1 món Cổ Thần theo ý muốn.</span></div>`;
-  if (ancients.length){
-    const selN = Object.keys(window._hdSel || {}).length;
-    html += `<div style="font-size:11.5px;margin:4px 0;opacity:.85">Chọn 3 món hiến tế (${selN}/3):</div>`;
-    ancients.forEach(a=>{
-      const on = window._hdSel && window._hdSel[a.uid];
-      html += `<div class="slot-row" style="${on?'border-color:#3ac88a;background:rgba(58,200,138,.12)':''}" onclick="hdToggle(${a.uid})">
-        <span class="s-name"><span style="color:${ANCIENT_SETS[a.ancient].color}">◈ ${a.name}${a.plus?' +'+a.plus:''}</span></span></div>`;
-    });
-    const selCss = 'background:#2a2418;color:#e8ecff;border:1px solid #7a6a4a;border-radius:4px;padding:4px;font-size:12px';
-    html += `<div class="forge-actions" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
-      <select onchange="window._hdSet=this.value" style="${selCss}">` +
-      Object.keys(ANCIENT_SETS).map(k=>`<option value="${k}" ${window._hdSet===k?'selected':''}>${ANCIENT_SETS[k].name}</option>`).join('') + `</select>
-      <select onchange="window._hdSlot=this.value" style="${selCss}">` +
-      ARMOR_SLOTS.map(sl=>{ const sd = SLOTS.find(x=>x.id===sl); return `<option value="${sl}" ${window._hdSlot===sl?'selected':''}>${sd ? sd.name : sl}</option>`; }).join('') + `</select></div>`;
-    const canEx = J2.honDon >= 1 && selN === 3 && player.inv.length < 30;
-    html += `<div class="forge-actions"><button class="mini-btn" ${canEx?'':'disabled'} onclick="hdExchange()">◈ Đổi Lấy Cổ Thần</button></div>`;
-  } else {
-    html += `<div style="font-size:11.5px;opacity:.6;padding:4px">Chưa có món Cổ Thần nào trong túi — săn Hung Thần lấy Bảo Hạp IV trở lên (tỉ lệ 5-8%, không pity).</div>`;
-  }
-  // ── Lò Hỗn Loạn (MU Online Chaos Machine): 3 món CÙNG PHẨM + Hỗn Nguyên Thạch → 1 món phẩm
-  // cao hơn — CÓ TỈ LỆ THẤT BẠI THẬT (mất sạch 3 món nếu trật), khác Lò Bảo Chứng ở trên (đổi chắc
-  // ăn, không rủi ro). Đây là chỗ đặt cược thật — tận dụng đồ dư farm được để thử vận lên phẩm.
-  html += `<div class="stat-sec" style="border-color:rgba(255,90,74,.5)">◑ LÒ HỖN LOẠN — 3 món cùng phẩm + Hỗn Nguyên Thạch → 1 món phẩm cao hơn (CÓ THỂ MẤT SẠCH)</div>`;
-  // Chaos Goblin — đúng hình tượng MU Online: gã yêu tinh lùn đứng trông/quay máy Chaos Machine.
-  html += `<div style="display:flex;gap:10px;align-items:center;margin:2px 0 8px;padding:7px 10px;border:1px solid rgba(255,90,74,.28);border-radius:6px;background:rgba(255,90,74,.06)">
-    <img src="assets/npcs/chaosgoblin.png" alt="" style="height:52px;flex:none" onerror="this.style.display='none'">
-    <div style="font-size:11.5px;color:#c8b8a8;font-style:italic;line-height:1.5">"Ba món, ném vào đây! Máy của ta nuốt hết — nhả ra thứ tốt hơn… hoặc chẳng nhả gì cả. Kèkè!"
-      <div style="font-style:normal;opacity:.62;margin-top:2px">— Yêu Tinh Hỗn Loạn, kẻ trông máy</div></div>
-  </div>`;
-  {
-    const chaosSelUids = Object.keys(window._chaosSel || {}).map(Number);
-    const chaosItems = player.inv.filter(x => !x.noForge && x.rarity < 4);
-    if (!chaosItems.length){
-      html += `<div style="font-size:11.5px;opacity:.6;padding:4px">Túi chưa có món nào đủ điều kiện (dưới Chí Tôn, không phải đồ đặc biệt).</div>`;
-    } else {
-      const selR = chaosSelUids.length ? (player.inv.find(x=>x.uid===chaosSelUids[0]) || {}).rarity : null;
-      html += `<div style="max-height:150px;overflow-y:auto;margin-bottom:6px">`;
-      chaosItems.forEach(it=>{
-        const on = window._chaosSel && window._chaosSel[it.uid];
-        const dim = selR != null && it.rarity !== selR && !on;
-        html += `<div class="slot-row" style="${on?'border-color:#ff5a4a;background:rgba(255,90,74,.12)':''}${dim?'opacity:.35':''}" onclick="chaosToggle(${it.uid})">
-          <span class="s-name"><span class="${RARITIES[it.rarity].cls}">${it.name}${it.plus?' +'+it.plus:''}</span></span></div>`;
-      });
-      html += `</div>`;
-      if (chaosSelUids.length === 3 && selR != null){
-        const honCost = CHAOS_HON_COST[selR], silverCost = CHAOS_SILVER_COST[selR];
-        const rate = Math.min(100, CHAOS_RATE[selR] + (player.forgeBonus||0));
-        const canGo = player.gems.honNguyen >= honCost && player.silver >= silverCost && player.inv.length <= 30;
-        html += `<div style="font-size:12px;line-height:1.6">Ghép ${RARITIES[selR].name} → <b style="color:${RARITIES[selR+1].color}">${RARITIES[selR+1].name}</b> — tỉ lệ <b style="color:${rate>=50?'#7ecbff':'#ff9a6a'}">${rate}%</b><br>
-          Phí: ${silverCost}◈ + ${honCost}❖ Hỗn Nguyên — <b style="color:#ff5a4a">thất bại mất sạch 3 món + phí</b></div>
-          <div class="forge-actions"><button class="mini-btn" style="border-color:#ff5a4a;color:#ff9a8a" ${canGo?'':'disabled'} onclick="chaosCombine()">◑ Ném Vào Lò Hỗn Loạn</button></div>`;
-      } else {
-        html += `<div style="font-size:11.5px;opacity:.6;padding:2px">Chọn đúng 3 món CÙNG phẩm ở trên (${chaosSelUids.length}/3).</div>`;
-      }
-    }
-  }
-  html += `<div id="bagua-msg" style="min-height:18px;font-size:12.5px;margin-top:6px"></div>`;
-  el('panel-quest').innerHTML = html;
-  closePanels(); el('panel-quest').classList.remove('hidden');
+  chaosGroup = 'ren'; chaosPick = null;
+  if (!sysUnlocked('forge')){ togglePanel('forge'); return; } // để togglePanel báo "khoá ở cấp N"
+  closePanels();
+  window.charTab = 'forge';
+  renderCharPanel();
+  el('panel-char').classList.remove('hidden');
+  AudioSys.sfx('ui', 0.6);
 }
-window.doBaGua = function(uid){
-  let entry = null;
-  for (const s in player.equip) if (player.equip[s] && player.equip[s].uid === uid) entry = { it:player.equip[s], where:'equip', key:s };
-  if (!entry) player.inv.forEach((it,i)=>{ if (it.uid === uid) entry = { it, where:'inv', key:i }; });
-  if (!entry) return;
-  const it = entry.it;
-  if (it.plus < 9 || it.plus >= 11) return;
-  const target = it.plus + 1;
-  const rule = forgeRule(target);
-  const rate = Math.min(100, rule.rate + (player.forgeBonus||0));
-  const costS = (20 + it.plus*15) * (it.tier || 1); // Drop v2.0: phí rèn theo giai
-  if (player.silver < costS || player.mat < rule.mat || player.gems.tuLa < rule.tuLa || player.gems.honNguyen < rule.hon) return;
-  const useCharm = forgeUseCharm && player.charms > 0;
-  player.silver -= costS; player.mat -= rule.mat;
-  player.gems.tuLa -= rule.tuLa; player.gems.honNguyen -= rule.hon;
-  const msg = document.getElementById('bagua-msg');
-  if (Math.random()*100 < rate){
-    it.plus++;
-    AudioSys.sfx('forge_ok', 0.9);
-    if (msg){ msg.textContent = `✔ Phá Thiên Kiếp thành công! ${it.name} +${it.plus}`; msg.style.color = '#8fd18f'; }
-    addFloat(player.x, player.y-40, `☰ PHÁ THIÊN KIẾP +${it.plus}!`, '#e8b04a', 15);
-    addEffect({ type:'ring', x:player.x, y:player.y, r:110, color:'#e8b04a', big:true });
-    addEffect({ type:'ring', x:player.x, y:player.y, r:70, color:'#9fd0ff' });
-    if (it.plus === 10) addFloat(player.x, player.y-58, `☆ Thức tỉnh: ${it.awakened.name}`, '#f39c3d', 13);
-    if (it.plus === 11){
-      player.forged11 = true;
-      addFloat(player.x, player.y-76, '☀ KHAI QUANG +11 — Thiên Lôi Cương Khí!', '#ffd76a', 16);
-      addEffect({ type:'ring', x:player.x, y:player.y, r:150, color:'#7fd0ff', big:true });
-      addEffect({ type:'ring', x:player.x, y:player.y, r:110, color:'#ffd76a', big:true });
-    }
-    checkTitles(); updateHud();
-  } else if (useCharm){
-    player.charms--;
-    if (msg){ msg.textContent = `☂ Thiên Mệnh Phù đã bảo hộ — ${it.name} giữ nguyên +${it.plus}`; msg.style.color = '#7ecbff'; }
-    addFloat(player.x, player.y-40, '☂ Thiên Mệnh Phù bảo hộ!', '#7ecbff', 13);
-  } else {
-    // GDD: thất bại → HỦY DIỆT trang bị
-    AudioSys.sfx('forge_fail', 0.9);
-    if (entry.where === 'equip') player.equip[entry.key] = null;
-    else player.inv.splice(entry.key, 1);
-    if (msg){ msg.textContent = `✘ Hỏa hầu chưa đạt — ${it.name} đã VỠ NÁT!`; msg.style.color = '#ff5a4a'; }
-    addFloat(player.x, player.y-40, '✘ HỎA HẦU CHƯA ĐẠT — THẦN BINH VỠ NÁT!', '#ff5a4a', 15);
-    addFloat(player.x, player.y-60, `${it.name} +${it.plus} đã hóa thành tro bụi...`, '#ff7a6a', 12);
-    addEffect({ type:'ring', x:player.x, y:player.y, r:90, color:'#ff5a4a', big:true });
-    updateHud();
-  }
-  saveGame();
-  renderBaGua();
-};
 
 // ═══════════ VŨ KHÍ DANH PHÁI — mỗi môn phái một binh khí riêng ═══════════
 const SECT_WEAPONS = { thieulam:'con', toanchan:'kiem', baidasan:'xatruong', minhgiao:'daidao' }; // bug (Dark Lord) không có entry riêng, rơi về fallback 'kiem' — như trước đây
@@ -14666,18 +16583,6 @@ function drawMount(){
 // ---------- Tứ Châu khảm phúc (gọi từ panel Rèn Luyện) ----------
 // Kéo-thả: viên ngọc Tứ Châu (Rèn Luyện) → ô icon món đồ đang chọn, thay cho phải bấm nút riêng.
 window._dragJewelKind = null;
-window.onJewelDragStart = function(e, kind){
-  window._dragJewelKind = kind;
-  e.dataTransfer.effectAllowed = 'copy';
-  try { e.dataTransfer.setData('text/plain', kind); } catch { /* xem ghi chú ở onBagItemDragStart */ }
-};
-window.onForgeItemDragOver = function(e){ if (window._dragJewelKind) e.preventDefault(); };
-window.onForgeItemDragEnter = function(e){ if (window._dragJewelKind) e.currentTarget.classList.add('drag-over'); };
-window.onForgeItemDrop = function(e, uid){
-  e.preventDefault();
-  const kind = window._dragJewelKind; window._dragJewelKind = null;
-  if (kind) useJewel(kind, uid); // useJewel() tự kiểm tra lại điều kiện (đủ ngọc, đúng loại đồ...), an toàn để gọi thẳng
-};
 window.useJewel = function(kind, uid){
   let it = null;
   for (const s in player.equip) if (player.equip[s] && player.equip[s].uid === uid) it = player.equip[s];
@@ -14728,121 +16633,10 @@ window.useJewel = function(kind, uid){
   calcDerived(); saveGame(); renderForge(); refreshEqPanels();
 };
 
-// ---------- Lò Bảo Chứng: luyện Linh Dực ----------
-window.craftWing = function(t){
-  const J = player.jewels;
-  const msg = document.getElementById('bagua-msg');
-  const say = (tx, c) => { if (msg){ msg.textContent = tx; msg.style.color = c; } };
-  if (t === 1){
-    if (player.level < 40 || J.honDon < 1 || player.gems.honNguyen < 10 || player.silver < 5000) return;
-    let fk = null, fs = null;
-    for (const s in player.equip){ const x = player.equip[s]; if (x && x.perfect && x.plus >= 4 && !x.noForge){ fk = 'equip'; fs = s; break; } }
-    if (!fk){ const i = player.inv.findIndex(x => x.perfect && x.plus >= 4 && !x.noForge); if (i >= 0){ fk = 'inv'; fs = i; } }
-    if (!fk){ say('✘ Cần 1 trang bị Hoàn Hảo +4 trở lên làm vật hiến tế!', '#ff9a6a'); return; }
-    if (fk === 'equip') player.equip[fs] = null; else player.inv.splice(fs, 1);
-    J.honDon--; player.gems.honNguyen -= 10; player.silver -= 5000;
-    const wi = Math.floor(Math.random()*2);
-    const w = genWing(wi);
-    if (player.inv.length < 30) player.inv.push(w); else player.silver += 2000;
-    zoneBanner = { text:'◈ LINH DỰC XUẤT THẾ', sub:`Lò Bảo Chứng luyện thành ${WING_DEFS[wi].name}!`, color:WING_DEFS[wi].color, t:4.5 };
-    say(`✔ Luyện thành ${WING_DEFS[wi].name}!`, '#8fd18f');
-    addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:WING_DEFS[wi].color, big:true });
-    AudioSys.sfx('forge_ok', 0.95);
-  } else if (t === 2){
-    const w1 = player.equip.canh || player.inv.find(x => x.slot === 'canh');
-    if (player.level < 80 || !w1 || w1.wing2 || J.honDon < 1 || player.gems.honNguyen < 20 || player.silver < 10000) return;
-    J.honDon--; player.gems.honNguyen -= 20; player.silver -= 10000;
-    const j = Math.floor(Math.random()*2);
-    const w2 = specialItem('canh', WING2_DEFS[j], { wing2: WING2_DEFS[j].id });
-    if (player.equip.canh === w1) player.equip.canh = w2;
-    else { const i = player.inv.indexOf(w1); if (i >= 0) player.inv[i] = w2; else player.inv.push(w2); }
-    zoneBanner = { text:'◈ LINH DỰC THĂNG HOA', sub:`${WING2_DEFS[j].name} — sức mạnh vượt trần!`, color:WING2_DEFS[j].color, t:5 };
-    say(`✔ Thăng thành ${WING2_DEFS[j].name}!`, '#8fd18f');
-    addEffect({ type:'ring', x:player.x, y:player.y, r:140, color:WING2_DEFS[j].color, big:true });
-    AudioSys.sfx('levelup', 0.95);
-  }
-  calcDerived(); saveGame(); renderBaGua(); refreshEqPanels();
-};
-
-// ---------- Lò Bảo Chứng: đổi 3 Cổ Thần trùng + 1 Hỗn Độn = 1 món tự chọn ----------
-window._hdSel = {}; window._hdSet = 'sarkaan'; window._hdSlot = 'non';
-window.hdToggle = function(uid){
-  if (window._hdSel[uid]) delete window._hdSel[uid];
-  else if (Object.keys(window._hdSel).length < 3 && player.inv.some(x => x.uid === uid && x.ancient)) window._hdSel[uid] = true;
-  renderBaGua();
-};
-window.hdExchange = function(){
-  const sel = Object.keys(window._hdSel || {}).map(Number);
-  if (sel.length !== 3 || player.jewels.honDon < 1 || player.inv.length >= 30) return;
-  const setId = ANCIENT_SETS[window._hdSet] ? window._hdSet : 'sarkaan';
-  const slotId = ARMOR_SLOTS.includes(window._hdSlot) ? window._hdSlot : 'non';
-  const idxs = player.inv.map((x, i) => (x && sel.includes(x.uid)) ? i : -1).filter(i => i >= 0).sort((a, b) => b - a);
-  if (idxs.length !== 3){ window._hdSel = {}; renderBaGua(); return; }
-  idxs.forEach(i => player.inv.splice(i, 1));
-  player.jewels.honDon--;
-  const it = genAncient(setId, slotId, player.level);
-  player.inv.push(it);
-  window._hdSel = {};
-  zoneBanner = { text:'◈ CỔ THẦN TỰ CHỌN', sub:`Lò Bảo Chứng đúc thành ${it.name}!`, color:ANCIENT_SETS[setId].color, t:4.5 };
-  addFloat(player.x, player.y-56, `◈ ${it.name}`, ANCIENT_SETS[setId].color, 16);
-  AudioSys.sfx('forge_ok', 0.95);
-  saveGame(); renderBaGua(); refreshEqPanels();
-};
-
-// ---------- Lò Hỗn Loạn (MU Online Chaos Machine): 3 món cùng phẩm + Hỗn Nguyên Thạch → 1 món
-// phẩm cao hơn, tỉ lệ thất bại THẬT (mất sạch) — khác Lò Bảo Chứng ở trên (đổi luôn chắc ăn) ----------
-window._chaosSel = {};
+// ---------- Bảng giá Lò Hỗn Loạn (công thức 'hopnhat' của Lò Hỗn Độn) ----------
 const CHAOS_RATE = [70, 55, 40, 25]; // % theo phẩm gốc: Phàm→Tinh, Tinh→Linh, Linh→Thần, Thần→ChíTôn
 const CHAOS_HON_COST = [2, 4, 7, 12];
 const CHAOS_SILVER_COST = [300, 800, 2000, 5000];
-window.chaosToggle = function(uid){
-  if (window._chaosSel[uid]) delete window._chaosSel[uid];
-  else if (Object.keys(window._chaosSel).length < 3){
-    const it = player.inv.find(x => x.uid === uid);
-    if (it && !it.noForge && it.rarity < 4){
-      const already = Object.keys(window._chaosSel).map(Number).map(u => player.inv.find(x => x.uid === u)).filter(Boolean);
-      if (already.length === 0 || already[0].rarity === it.rarity) window._chaosSel[uid] = true;
-    }
-  }
-  renderBaGua();
-};
-window.chaosCombine = function(){
-  const selUids = Object.keys(window._chaosSel || {}).map(Number);
-  if (selUids.length !== 3) return;
-  const idxs = player.inv.map((x,i) => (x && selUids.includes(x.uid)) ? i : -1).filter(i => i >= 0).sort((a,b) => b-a);
-  if (idxs.length !== 3){ window._chaosSel = {}; renderBaGua(); return; }
-  const items = idxs.map(i => player.inv[i]);
-  const r = items[0].rarity;
-  if (!items.every(x => x.rarity === r) || r >= 4){ window._chaosSel = {}; renderBaGua(); return; }
-  const honCost = CHAOS_HON_COST[r], silverCost = CHAOS_SILVER_COST[r];
-  if (player.gems.honNguyen < honCost || player.silver < silverCost) return;
-  const useCharm = forgeUseCharm && player.charms > 0;
-  const rate = useCharm ? 100 : Math.min(100, CHAOS_RATE[r] + (player.forgeBonus || 0));
-  const success = Math.random()*100 < rate;
-  player.gems.honNguyen -= honCost; player.silver -= silverCost;
-  if (useCharm) player.charms--;
-  idxs.forEach(i => player.inv.splice(i, 1)); // 3 món hiến tế mất ngay khi bỏ vào lò, thành hay bại
-  window._chaosSel = {};
-  sideOnEvent('chaos'); // NV học hệ thống chỉ cần đã DÙNG lò, không cần thành công
-  let newItem = null;
-  if (success){
-    const avgLevel = Math.max(1, Math.round(items.reduce((s,x) => s + x.level, 0) / 3));
-    newItem = genItem(avgLevel, 0, 'mob');
-    newItem.rarity = r + 1; rerollItemRarity(newItem);
-  }
-  playChaosAnim(items, r, success, () => {
-    if (success){
-      if (player.inv.length < 30){ player.inv.push(newItem); tryAutoEquip(newItem); }
-      zoneBanner = { text:'◑ LÒ HỖN LOẠN — THÀNH CÔNG!', sub:`3 món hoá thành ${newItem.name}!`, color:RARITIES[newItem.rarity].color, t:5 };
-      addFloat(player.x, player.y-56, `◑ ${newItem.name}`, RARITIES[newItem.rarity].color, 16);
-    } else {
-      zoneBanner = { text:'◑ LÒ HỖN LOẠN — THẤT BẠI', sub:'3 món đã tan thành tro bụi — Hỗn Loạn vô thường.', color:'#ff5a4a', t:5 };
-      addFloat(player.x, player.y-56, 'Thất bại — mất sạch!', '#ff5a4a', 16);
-    }
-    saveGame(); refreshEqPanels();
-    return { newItem };
-  });
-};
 // Cảnh ghép đồ kiểu MU Online: yêu tinh tung quả cầu Hỗn Nguyên trong lúc luyện —
 // mutation & lưu game đã chạy synchronous ở chaosCombine, hàm này chỉ diễn hoạt rồi gọi onReveal
 // để lấy dữ liệu hiển thị (tên/màu vật phẩm mới) đúng lúc "khui" kết quả.
@@ -14881,7 +16675,7 @@ function playChaosAnim(items, r, success, onReveal){
     }
     setTimeout(() => {
       document.getElementById('overlay').classList.add('hidden');
-      renderBaGua();
+      renderForge();
     }, 1400);
   }, 1300);
 }
