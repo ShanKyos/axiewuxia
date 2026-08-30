@@ -6816,6 +6816,236 @@ const HERO_METAL = [
   { lo:'#8a1e2a', hi:'#ff6a5a', trim:'#fff0c0', glow:'#ff4a3a' }, // 10 Thức Tỉnh
 ];
 function hMetal(tier){ return HERO_METAL[Math.max(0, Math.min(9, ((tier|0) || 1) - 1))]; }
+
+// ═══════════ TRANG BỊ HIỆN LÊN NGƯỜI — 4 lớp, không lớp nào là "phát sáng" ═══════════
+// Đo trước khi làm: nhân vật mặc full Chí Tôn giai 10 +11 Hoàn Hảo Cổ Thần chỉ khác nhân vật
+// mới tạo đúng 718/62.400 pixel (1,15%) — và toàn bộ 718 px đó là một đốm sáng cạnh bàn tay.
+// Trên THÂN NGƯỜI: 0 pixel. 7/9 ô chỉ số (nón/áo/tay/quần/chân/dây chuyền/2 nhẫn) đổi đúng 0 px.
+//
+// Hào quang là lớp rẻ nhất nhưng cũng nông nhất: bậc nào cũng chỉ là "sáng hơn". Bốn lớp dưới
+// đây thêm ĐỘ PHỨC TẠP thật, xếp theo mức dễ nhận ra từ xa:
+//   A. BÓNG DÁNG  — vai giáp & chóp mũ mọc dần ⇒ đổi đường viền ngoài, thấy được cả khi thu nhỏ
+//   B. CHẤT LIỆU  — chuyển sắc + dải phản quang ⇒ sắt xỉn → thép đánh bóng (không sáng hơn,
+//                   mà PHẢN CHIẾU khác đi)
+//   C. HOA VĂN    — số đường khảm trên ngực tăng theo bậc, tô theo màu độ hiếm ⇒ mật độ chi tiết
+//   D. HÀO QUANG  — giữ, nhưng chỉ là nét hoàn thiện ở bậc cao, và nhuốm màu bộ Cổ Thần đang mặc
+//
+// Cả 4 lớp vẽ GENERIC trong drawHeroFigure, không đụng một dòng nào trong 6 entry HERO_GEAR.
+const HERO_ARMOR_SLOTS = ['non','ao','tay','quan','chan'];
+// Chữ ký ngoại hình rút từ trang bị THẬT. Trả null khi chưa có nhân vật (màn chọn lớp gọi
+// heroCardUrl trước khi `player` tồn tại — đọc player.equip ở đó là crash trắng màn hình).
+function gearVisual(p){
+  if (!p || !p.equip) return null;
+  let n = 0, tsum = 0, psum = 0, rmax = 0;
+  for (const k of HERO_ARMOR_SLOTS){
+    const it = p.equip[k];
+    if (!it) continue;
+    n++; tsum += it.tier || 1; psum += it.plus || 0; rmax = Math.max(rmax, it.rarity || 0);
+  }
+  const w = p.equip.vukhi;
+  let setColor = null;
+  for (const sid in (p.setActive || {}))
+    if (((p.setActive[sid] || {}).act || []).includes(5) && ANCIENT_SETS[sid]) setColor = ANCIENT_SETS[sid].color;
+  return {
+    n, rarity: rmax,
+    // bậc HIỆU DỤNG: bậc trung bình nhân độ phủ — mặc 3 món giai 10 không được nhìn ngang
+    // với mặc đủ 5 món giai 10, nếu không thì lộ nguyên bộ giáp mà vẫn trông như full plate
+    t: n ? (tsum / n) * (n / HERO_ARMOR_SLOTS.length) : 0,
+    plus: n ? psum / n : 0,
+    rcol: RARITIES[rmax] ? RARITIES[rmax].color : null,
+    wTier: w ? (w.tier || 1) : 0,
+    setColor,
+  };
+}
+// Bậc bảng màu giáp: lấy CAO HƠN giữa Thần Binh và trang bị thật. Dùng max để không ai bị
+// tụt so với trước — Thần Binh vẫn giữ nguyên tác dụng cũ, trang bị nay cộng thêm đường riêng.
+function heroTier(p){
+  const tb = (p && p.thanbinh && p.thanbinh.tier) || 1;
+  const gv = gearVisual(p);
+  return clamp(Math.max(tb, gv ? Math.round(gv.t) : 0), 1, 10);
+}
+// ── A. BÓNG DÁNG: vai giáp ──
+// Đây là lớp đáng giá nhất. Màu sắc và hào quang biến mất khi nhân vật nhỏ hoặc nền rối;
+// đường viền ngoài thì không — cứ mọc thêm gai là từ xa vẫn biết người kia mặc đồ nặng hơn.
+function hPauldrons(g, M, gv){
+  const t = gv ? gv.t : 0;
+  if (t < 2.5) return;
+  const st = t < 4.5 ? 1 : t < 6.5 ? 2 : t < 8.5 ? 3 : 4;
+  for (const side of [-1, 1]){
+    g.save();
+    g.translate(80 + side * 29, 98);
+    g.scale(side, 1);                                   // vẽ một bên rồi soi gương
+    // đủ to để vượt RA NGOÀI đường viền cánh tay (tay vẽ tới x≈122) — nằm gọn bên trong thì
+    // vai giáp chỉ còn là một mảng màu, mất hẳn tác dụng đổi dáng nhìn từ xa
+    const w = 14 + st * 3.4, h = 9 + st * 2.4;
+    g.fillStyle = M.hi;                                 // vòm vai
+    g.beginPath();
+    g.moveTo(-w * 0.55, h * 0.55);
+    g.quadraticCurveTo(-w * 0.7, -h, 0, -h * 1.05);
+    g.quadraticCurveTo(w * 0.85, -h * 0.9, w, h * 0.5);
+    g.closePath(); g.fill();
+    g.fillStyle = M.lo;                                 // mặt dưới tối → ra khối, không phẳng
+    g.beginPath();
+    g.moveTo(-w * 0.55, h * 0.55); g.lineTo(w, h * 0.5);
+    g.lineTo(w * 0.8, h * 0.95); g.lineTo(-w * 0.4, h);
+    g.closePath(); g.fill();
+    if (st >= 2){                                       // đường khảm chạy vòng vai
+      g.strokeStyle = M.trim; g.lineWidth = 1.4;
+      g.beginPath(); g.moveTo(-w * 0.5, h * 0.3);
+      g.quadraticCurveTo(0, -h * 0.75, w * 0.9, h * 0.28); g.stroke();
+    }
+    if (st >= 3){                                       // gai — thứ phá vỡ đường viền mạnh nhất
+      g.fillStyle = M.trim;
+      const nS = st === 3 ? 2 : 3;
+      for (let i = 0; i < nS; i++){
+        const a = -0.85 + i * (1.55 / Math.max(1, nS - 1));
+        const bx = Math.sin(a) * w * 0.8, by = -Math.cos(a) * h * 0.88;
+        g.beginPath();
+        g.moveTo(bx - 2.4, by); g.lineTo(bx + 2.4, by);
+        g.lineTo(bx + Math.sin(a) * 9, by - Math.cos(a) * 9);
+        g.closePath(); g.fill();
+      }
+    }
+    if (st >= 4){                                       // vây hất ra sau ở bậc tối cao
+      g.fillStyle = M.hi;
+      g.beginPath();
+      g.moveTo(w * 0.5, h * 0.2); g.lineTo(w * 1.5, -h * 0.55); g.lineTo(w * 1.22, h * 0.85);
+      g.closePath(); g.fill();
+    }
+    g.restore();
+  }
+}
+// ── A. BÓNG DÁNG: chóp mũ ──
+function hHelmCrest(g, M, gv, ps){
+  const t = gv ? gv.t : 0;
+  if (t < 4.5) return;
+  const st = t < 6.5 ? 1 : t < 8.5 ? 2 : 3;
+  hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+    const hh = 7 + st * 4;
+    g.fillStyle = M.trim;                               // sống mũ dựng đứng
+    g.beginPath(); g.moveTo(80, 56 - hh); g.lineTo(85, 58); g.lineTo(75, 58); g.closePath(); g.fill();
+    if (st >= 2){                                       // sừng hai bên
+      g.fillStyle = M.hi;
+      for (const s of [-1, 1]){
+        g.beginPath();
+        g.moveTo(80 + s * 15, 62);
+        g.quadraticCurveTo(80 + s * 26, 54, 80 + s * 23, 42);
+        g.quadraticCurveTo(80 + s * 20, 52, 80 + s * 11, 64);
+        g.closePath(); g.fill();
+      }
+    }
+    // ngọc trán: mặt trước mới có — quay lưng mà vẫn vẽ thì thành nhãn dán trên gáy
+    if (st >= 3 && !ps.back){
+      g.fillStyle = M.glow || M.trim;
+      g.beginPath(); g.ellipse(80, 62, 3.4, 4.2, 0, 0, 7); g.fill();
+    }
+  });
+}
+// ── A. BÓNG DÁNG: giáp ống chân + đai lưng ──
+// Hai vùng trước nay hoàn toàn trơn: chân chỉ là 2 khối màu đặc, eo không có gì. Thêm chi tiết
+// ở đây đáng giá gấp đôi vì chân CHUYỂN ĐỘNG — giáp ống nhấp nhô theo sải bước, mắt bắt ngay.
+// Vẽ trong khớp hông nên tự đi theo chu kỳ bước chân.
+function hGreave(g, M, gv, side){
+  const t = gv ? gv.t : 0;
+  if (t < 3.5) return;
+  const st = t < 5.5 ? 1 : t < 7.5 ? 2 : 3;
+  const x0 = side < 0 ? 61 : 80;                        // mép ngoài của ống chân tương ứng
+  const dir = side < 0 ? -1 : 1;
+  g.save();
+  g.fillStyle = M.hi;                                   // tấm che ống quyển
+  g.beginPath();
+  g.moveTo(x0 + dir * 2, 170); g.lineTo(x0 + dir * 17, 170);
+  g.lineTo(x0 + dir * 18, 196); g.lineTo(x0 + dir * 1, 196);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;                                   // rãnh giữa → tách khối
+  g.fillRect(Math.min(x0 + dir * 8, x0 + dir * 10), 172, 2, 22);
+  if (st >= 2){                                         // chụp gối
+    g.fillStyle = M.hi;
+    g.beginPath(); g.ellipse(x0 + dir * 9, 168, 10, 8, 0, 0, 7); g.fill();
+    g.strokeStyle = M.trim; g.lineWidth = 1.3;
+    g.beginPath(); g.ellipse(x0 + dir * 9, 168, 10, 8, 0, 0, 7); g.stroke();
+  }
+  if (st >= 3){                                         // gai gối chĩa ra ngoài
+    g.fillStyle = M.trim;
+    g.beginPath();
+    g.moveTo(x0 + dir * 16, 164); g.lineTo(x0 + dir * 16, 172);
+    g.lineTo(x0 + dir * 27, 165);
+    g.closePath(); g.fill();
+  }
+  g.restore();
+}
+function hBelt(g, M, gv){
+  const t = gv ? gv.t : 0;
+  if (t < 2) return;
+  const st = t < 5 ? 1 : t < 8 ? 2 : 3;
+  g.save();
+  g.fillStyle = M.lo;                                   // bản đai
+  g.fillRect(54, 138, 52, 7 + st);
+  g.fillStyle = M.trim;                                 // khoá đai giữa bụng
+  const bw = 7 + st * 2.2;
+  g.beginPath();
+  g.moveTo(80, 136); g.lineTo(80 + bw * 0.5, 141.5 + st * 0.5);
+  g.lineTo(80, 148 + st); g.lineTo(80 - bw * 0.5, 141.5 + st * 0.5);
+  g.closePath(); g.fill();
+  if (st >= 2){                                         // hai tấm hông rủ xuống
+    g.fillStyle = M.hi;
+    for (const s of [-1, 1]){
+      g.beginPath();
+      g.moveTo(80 + s * 16, 144); g.lineTo(80 + s * 30, 144);
+      g.lineTo(80 + s * (26 + st * 2), 160 + st * 3); g.lineTo(80 + s * 15, 158 + st * 2);
+      g.closePath(); g.fill();
+    }
+  }
+  g.restore();
+}
+// ── B. CHẤT LIỆU ──
+// Không làm giáp SÁNG hơn, mà làm nó PHẢN CHIẾU khác đi: bậc thấp là sắt nhám (chuyển sắc mờ,
+// không có dải phản quang), bậc cao là thép đánh bóng (dải phản quang hẹp và gắt).
+function hArmorSheen(g, M, gv){
+  const t = gv ? gv.t : 0;
+  if (t < 1) return;
+  const polish = Math.min(1, t / 10);
+  g.save();
+  g.beginPath();                                        // giới hạn trong khối thân
+  g.moveTo(56, 94); g.lineTo(104, 94); g.lineTo(108, 142); g.lineTo(52, 142);
+  g.closePath(); g.clip();
+  const gr = g.createLinearGradient(0, 94, 0, 142);
+  gr.addColorStop(0, `rgba(255,255,255,${(0.05 + polish * 0.16).toFixed(3)})`);
+  gr.addColorStop(0.45, 'rgba(255,255,255,0)');
+  gr.addColorStop(1, `rgba(0,0,0,${(0.10 + polish * 0.16).toFixed(3)})`);
+  g.fillStyle = gr; g.fillRect(50, 92, 60, 54);
+  if (polish > 0.25){
+    const bw = 16 - polish * 9;                         // càng bóng dải càng hẹp
+    const sg = g.createLinearGradient(66 - bw / 2, 0, 66 + bw / 2, 0);
+    sg.addColorStop(0, 'rgba(255,255,255,0)');
+    sg.addColorStop(0.5, `rgba(255,255,255,${(polish * 0.34).toFixed(3)})`);
+    sg.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = sg; g.fillRect(50, 92, 60, 54);
+  }
+  g.restore();
+}
+// ── C. HOA VĂN KHẢM ──
+// Mật độ chi tiết là thứ mắt đọc ra "đồ đắt" mà không cần biết luật chơi. Số đường tăng theo
+// bậc, MÀU lấy theo độ hiếm — nên `it.rarity` lần đầu tiên có mặt trên người nhân vật.
+function hEngrave(g, M, gv){
+  const t = gv ? gv.t : 0;
+  const n = t < 3 ? 0 : t < 5 ? 1 : t < 7 ? 2 : t < 9 ? 3 : 4;
+  if (!n) return;
+  g.save();
+  g.strokeStyle = gv.rcol || M.trim;
+  g.globalAlpha = 0.75; g.lineWidth = 1.2;
+  for (let i = 0; i < n; i++){
+    const y = 104 + i * 8.5;
+    g.beginPath(); g.moveTo(60, y); g.quadraticCurveTo(80, y + 4.5, 100, y); g.stroke();
+  }
+  if (n >= 4){                                          // khoá ngực hình thoi ở bậc tối cao
+    g.globalAlpha = 0.9; g.fillStyle = gv.rcol || M.trim;
+    g.beginPath();
+    g.moveTo(80, 98); g.lineTo(86, 105); g.lineTo(80, 112); g.lineTo(74, 105);
+    g.closePath(); g.fill();
+  }
+  g.restore();
+}
 function hPoly(g, pts, c){
   g.fillStyle = c; g.beginPath();
   for (let i = 0; i < pts.length; i++) i ? g.lineTo(pts[i][0], pts[i][1]) : g.moveTo(pts[0][0], pts[0][1]);
@@ -6895,14 +7125,18 @@ function heroPose(wph, mv, atkK, castK, now, act){
 const HERO_POSE0 = heroPose(0, false, 0, 0, 0, 'slash');
 
 // ── LỚP CHUNG: chân · thân · đầu (giáp của từng lớp vẽ đè lên) ──
-function hLegs(g, P, ps){
+// gv (tham số thứ 4, thêm sau ps): có thì đắp thêm giáp ống chân, vẽ TRONG khớp hông nên
+// giáp nhấp nhô theo đúng sải bước thay vì dán chết một chỗ.
+function hLegs(g, P, ps, gv){
   hJoint(g, HERO_JOINT.hipL[0], HERO_JOINT.hipL[1], ps.legL, () => {
     hPoly(g, [[63,140],[80,140],[80,198],[61,198]], P.leg);
     hPoly(g, [[60,194],[79,194],[81,212],[57,212]], P.boot);
+    hGreave(g, hMetal(gv ? Math.max(1, Math.round(gv.t)) : 1), gv, -1);
   });
   hJoint(g, HERO_JOINT.hipR[0], HERO_JOINT.hipR[1], ps.legR, () => {
     hPoly(g, [[80,140],[97,140],[99,198],[80,198]], P.leg);
     hPoly(g, [[81,194],[100,194],[103,212],[79,212]], P.boot);
+    hGreave(g, hMetal(gv ? Math.max(1, Math.round(gv.t)) : 1), gv, 1);
   });
 }
 function hTorso(g, P){ hPoly(g, [[58,96],[102,96],[106,146],[54,146]], P.torso); }
@@ -7121,24 +7355,37 @@ const HERO_GEAR = {
   },
 };
 // Vẽ nhân vật trong hộp 160×220. tier = bậc Thần Binh (đổi bảng màu giáp).
-function drawHeroFigure(g, sectKey, tier, now, ps){
+// gv (tham số THỨ 6, thêm sau ps nên mọi lời gọi 5 tham số cũ vẫn chạy nguyên): chữ ký trang
+// bị thật từ gearVisual(). Bỏ trống ⇒ chỉ vẽ theo `tier` như trước, dùng cho màn chọn lớp.
+function drawHeroFigure(g, sectKey, tier, now, ps, gv){
   const M = hMetal(tier), G = HERO_GEAR[sectKey] || HERO_GEAR.vophai, P = G.pal;
   ps = ps || HERO_POSE0;
+  gv = gv || null;
   g.save();
   hEll(g, 80, 212, 30 - ps.bob * 0.9, 8, 'rgba(0,0,0,.22)'); // bóng co lại khi nhấc chân
-  if (M.glow){ // giáp bậc cao toả sáng — nhìn là biết đồ xịn, không cần đọc số
+  // D. HÀO QUANG — nét hoàn thiện, không phải toàn bộ câu chuyện. Mặc đủ 5 món một bộ Cổ Thần
+  // thì hào quang nhuốm màu bộ đó, nên bộ nào cũng có dáng riêng nhìn từ xa.
+  const glowCol = (gv && gv.setColor) || M.glow;
+  if (glowCol){
     const ag = g.createRadialGradient(80, 120, 10, 80, 120, 86);
-    ag.addColorStop(0, M.glow); ag.addColorStop(1, 'rgba(0,0,0,0)');
+    ag.addColorStop(0, glowCol); ag.addColorStop(1, 'rgba(0,0,0,0)');
     g.globalAlpha = 0.2 + 0.1 * Math.sin(now / 380); g.fillStyle = ag;
     g.beginPath(); g.arc(80, 120, 86, 0, 7); g.fill(); g.globalAlpha = 1;
   }
   if (G.cape && !ps.back) hCape(g, G.cape[0], G.cape[1], ps);
-  hLegs(g, P, ps);
+  hLegs(g, P, ps, gv);
   g.translate(0, ps.bob);                                    // nhún theo bước chân
   hJoint(g, 80, 146, ps.lean, () => {
     G.upper(g, M, ps, P);
+    hArmorSheen(g, M, gv);                                   // B. chất liệu — đè lên giáp lớp
+    hEngrave(g, M, gv);                                      // C. hoa văn khảm
+    hBelt(g, M, gv);                                         // A. đai lưng + tấm hông
     // quay lưng: áo choàng phủ lên trên thân, đúng như nhìn nhân vật đi ra xa
     if (G.cape && ps.back) hCape(g, G.cape[0], G.cape[1], ps);
+    // A. bóng dáng vẽ SAU áo choàng: vai giáp nằm cao hơn mép áo choàng, phải thấy được cả
+    // khi nhân vật quay lưng, nếu không thì đi ra xa là mất sạch phần dễ nhận ra nhất.
+    hPauldrons(g, M, gv);
+    hHelmCrest(g, M, gv, ps);
   });
   g.restore();
 }
@@ -7147,12 +7394,15 @@ function drawHeroFigure(g, sectKey, tier, now, ps){
 // drawHeroFigure() nên card LUÔN khớp với người đứng trong game (trước đây là
 // thẻ Axie tĩnh, chọn Dark Knight xong vào game lại thấy một hình khác hẳn).
 const _heroCardCache = {};
-function heroCardUrl(sectKey, tier){
-  const key = sectKey + ':' + (tier || 1);
+// ⚠ Khoá cache PHẢI gồm chữ ký trang bị. Chân dung nay phụ thuộc gv, nên khoá chỉ theo
+// sect:tier như trước sẽ khiến panel Nhân Vật hiện mãi ảnh cũ sau mỗi lần thay đồ.
+function heroCardUrl(sectKey, tier, gv){
+  const sig = gv ? `${Math.round(gv.t * 10)}_${gv.n}_${gv.rarity}_${gv.setColor || ''}` : '-';
+  const key = sectKey + ':' + (tier || 1) + ':' + sig;
   if (_heroCardCache[key]) return _heroCardCache[key];
   const cv = document.createElement('canvas');
   cv.width = HERO_W; cv.height = HERO_H;
-  drawHeroFigure(cv.getContext('2d'), sectKey, tier || 1, 0, HERO_POSE0);
+  drawHeroFigure(cv.getContext('2d'), sectKey, tier || 1, 0, HERO_POSE0, gv);
   return (_heroCardCache[key] = cv.toDataURL('image/png'));
 }
 function drawPlayer(){
@@ -7253,7 +7503,13 @@ function drawPlayer(){
   // Cánh (Thiên Thần / Tiểu Quỷ) — đôi cánh vỗ sau lưng, vẽ trước sprite
   const wingIt = p.equip && p.equip.canh;
   if (wingIt){
-    const wd = WING_DEFS.find(w => w.id === wingIt.wing) || WING_DEFS[0];
+    // Linh Dực cấp 2 ghi id vào field `wing2` (xem specialItem('canh', WING2_DEFS[j], {wing2:…})),
+    // KHÔNG phải `wing`. Trước đây chỉ tra WING_DEFS theo `wing` nên cánh cấp 2 luôn find() ra
+    // undefined và rơi về WING_DEFS[0] — người chơi LV80 tốn 1 Hỗn Độn + 20 Hồn Nguyên + 10.000
+    // bạc để thăng Phượng Hoàng/Hắc Ma Linh Dực thì cánh lại chuyển thành TRẮNG Thiên Thần,
+    // tức là nâng cấp xong nhìn còn kém hơn trước.
+    const wd = (wingIt.wing2 && WING2_DEFS.find(w => w.id === wingIt.wing2))
+            || WING_DEFS.find(w => w.id === wingIt.wing) || WING_DEFS[0];
     const lift = Math.sin(performance.now()/280) * 0.22 * 10; // vỗ cánh
     ctx.save();
     ctx.fillStyle = wd.color;
@@ -7379,7 +7635,7 @@ function drawPlayer(){
         _ps.armR -= 0.22 * _hurt;
         _ps.bob  -= 2.2 * _hurt;
       }
-      drawHeroFigure(ctx, p.sect, (p.thanbinh && p.thanbinh.tier) || 1, now, _ps);
+      drawHeroFigure(ctx, p.sect, heroTier(p), now, _ps, gearVisual(p));
     }
     ctx.restore();
   }
@@ -7590,7 +7846,7 @@ function renderChar(){
   const p = player, sect = SECTS[p.sect];
   let html = `<h3>Nhân Vật — ${sect.name} Cấp ${p.level}</h3>`;
   // chân dung = chính nhân vật trong game, ở đúng bậc Thần Binh đang mang
-  html += `<img class="char-portrait" src="${p.ascended ? 'assets/tien/' + (p.gender === 'nu' ? 'nu' : 'nam') + '_' + (TIEN_SKINS[p.tienSkin] ? p.tienSkin : 'bach') + '.png' : heroCardUrl(p.sect, (p.thanbinh && p.thanbinh.tier) || 1)}" alt="${sect.name}">${p.ascended ? `<div style="margin-top:4px;font-size:11.5px;color:#fff2b0">☁ Tán Tiên — xuất thế khỏi ${sect.name}, ràng buộc Lớp đã phá bỏ</div>` : ""}`;
+  html += `<img class="char-portrait" src="${p.ascended ? 'assets/tien/' + (p.gender === 'nu' ? 'nu' : 'nam') + '_' + (TIEN_SKINS[p.tienSkin] ? p.tienSkin : 'bach') + '.png' : heroCardUrl(p.sect, heroTier(p), gearVisual(p))}" alt="${sect.name}">${p.ascended ? `<div style="margin-top:4px;font-size:11.5px;color:#fff2b0">☁ Tán Tiên — xuất thế khỏi ${sect.name}, ràng buộc Lớp đã phá bỏ</div>` : ""}`;
   // Tán Nhân: lối vào lễ Bái Sư Nhập Phái (cấp 10)
   if (p.sect === 'vophai'){
     html += `<div style="margin:8px 0;padding:10px;border:1px dashed rgba(126,203,255,.45);border-radius:6px;text-align:center">
