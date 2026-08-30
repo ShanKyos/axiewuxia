@@ -138,3 +138,24 @@ Nhóm đáng chú ý — tất cả đều theo mẫu A/B ở §1:
 
 ⚠ Test cũ dễ **ôi** khi refactor (từng có test lặp 9 lớp đã xoá, gọi hàm đã gỡ, dùng cấu trúc
 dữ liệu cũ). Đỏ ở test cũ **chưa chắc là hồi quy** — đọc kỹ trước khi kết luận.
+
+---
+
+## Nợ kỹ thuật đã biết — QA Agent đo được, chưa sửa
+
+Bốn mục dưới đây **đã xác minh bằng phép đo**, không phải nghi ngờ. Không chặn phát hành
+nhưng đều là "game hơi sai" mà không crash, không log — nên rất dễ nằm im mãi.
+
+1. **Nâng VŨ KHÍ không hiện lên nhân vật.** `gv.wTier` / `gv.wPlus` được ghi trong
+   `gearVisual()` nhưng **không đọc ở đâu cả**. Đổi vũ khí `t1 +0` → `t10 +11` cho ra ảnh
+   chân dung y hệt từng byte. Giáp thì phình theo bậc, vũ khí thì không — trái với dòng
+   "Nâng trang bị phải NHÌN THẤY được" trong CLAUDE.md.
+2. **Xung Phong bị `moveTarget` cũ kéo ngược.** Móc `pre` dời người chơi tới địch nhưng
+   không xoá `moveTarget`, nên 1s sau người chơi đang đi xa dần con vừa lao vào. AUTO thì
+   không sao (tự neo lại). Chỉ cần thêm `moveTarget = null` trong `sb_xungphong.pre`.
+3. **`m.hitCol` bị bỏ qua với quái dùng ẢNH.** `tintedImg()` dùng bộ lọc CỐ ĐỊNH, nên
+   "màu loé theo loại đòn" (trắng thường / vàng bạo kích / màu hệ) chỉ hiện trên quái khung
+   xương. Quái vàng đang loé cũng mất luôn màu vàng trong 0,15s.
+4. **Đòn thường đã hẹn có thể quay 180°.** `nearestMob(ph.reach)` không xét hướng nhìn: con
+   phía trước chết trong 0,09s thì đòn ăn vào con **sau lưng** trong khi hoạt ảnh vẫn bổ về
+   trước. Ngoài ra `reach = rng * 1.15` rộng hơn tầm lúc vung 15%.

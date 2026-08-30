@@ -329,6 +329,26 @@ Taskbar cố định **3 ô**: chiêu chính (`a`) · chiêu phụ (`tp`) · buf
 **% Công Kích vĩnh viễn** (`LEGACY_SECT_SKILLS` / `legacyAtkPct` trong `calcDerived()`), hiện ở
 tab "Tuyệt Học Cũ" (panel K).
 
+## Cảm giác chiến đấu — 3 luật dễ vi phạm lại
+
+**1. AoE KHÔNG được hất lùi.** `hurtMob()` tự hất lùi mọi đòn `source === 'hit'|'crit'`.
+Chiêu diện rộng mà đẩy địch ra thì chính nó phá tan đội hình cho đòn kế tiếp của mình —
+Khắc Ấn Hiệu Triệu (trúng ≥3 địch) ngừng kích hoạt vì con thứ ba bị đẩy ra đúng 1 pixel.
+Đừng chữa bằng cách đổi `source`: `source` còn chi phối bạo kích, âm thanh, móc Khắc Ấn.
+**Bọc vòng lặp trúng-nhiều-mục-tiêu trong `aoeHit(() => { … })`.** Chiêu nào MUỐN hất lùi
+thì khai báo `fx.kb` như cũ. Hiện có 6 chỗ: sectA cone/selfaoe, Võ Học Phổ cone/aoe và 2 sóng
+dư chấn của chúng.
+
+**2. `shakeDir` phải được đặt ở MỌI chỗ đặt `shakeT`.** Bỏ sót thì màn hình giật theo hướng
+của cú đánh gần nhất — có khi ngược hẳn. Và `shakeMag` luôn dùng `Math.max`, đừng gán đè:
+một cú cào nhẹ không được phép hạ biên độ của cú vừa nện.
+
+**3. Mọi trạng thái hẹn giờ phải chết theo người chơi.** `update()` `return` sớm khi `dead`,
+nên thứ gì đang hẹn sẽ ĐÓNG BĂNG rồi chạy tiếp ở toạ độ cũ sau khi hồi sinh — có khi ở tận
+map khác. `onDeath()` phải dọn: `sigilReset()` (vũng độc + sóng hẹn giờ) và `player.pendingHit`.
+Lưu ý `respawn()` chỉ gọi `buildWorld()` khi chết ở map KHÔNG an toàn, nên không thể trông
+vào nó để dọn hộ.
+
 ## Test
 
 Playwright + server tĩnh:
