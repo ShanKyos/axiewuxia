@@ -11715,26 +11715,51 @@ function drawItemIcon(g, def, tier, rarity, plus){
   const bg = g.createRadialGradient(0, 0, 4, 0, 0, 50);
   bg.addColorStop(0, R.color + '38'); bg.addColorStop(1, R.color + '00');
   g.fillStyle = bg; g.fillRect(-50, -50, 100, 100);
-  // hào quang cường hoá: vẽ đè chính hình ở cỡ lớn hơn bằng màu sáng, giống hPlusAura của nhân vật
-  const st = plusStage(plus || 0);
+  // ── CƯỜNG HOÁ +0 → +11 ──────────────────────────────────────────────────────
+  // Mốc NHẢY vẫn theo MU (+4 / +7 / +10) nhưng trong mỗi mốc phải LEO LIÊN TỤC. Bản đầu chỉ
+  // đổi ở đúng 3 mốc: rèn từ +7 lên +9 là cả một chặng dài, tốn Tu La và có thể tụt cấp, mà
+  // icon không đổi một điểm ảnh nào. Đo được: +5 +6 +8 +9 +11 đều ra 0px khác biệt.
+  const pl = plus || 0;
+  const st = plusStage(pl);
+  const k = clamp((pl - 3) / 8, 0, 1);            // 0 tại +3 → 1 tại +11, chạy liên tục
   const fn = ITEM_ART[def.art] || iaWeapon;
-  if (st >= 1){
+  const GC = M.glow || '#ffe9a8';
+  const gl = { lo: GC, hi: GC, trim: GC, glow: null };
+  if (st >= 1){                                   // 1. quầng sau lưng — to dần, đậm dần
     g.save();
     g.globalCompositeOperation = 'lighter';
-    g.globalAlpha = 0.07 + st * 0.045;   // nhẹ tay: hào quang là GIA VỊ, không được nuốt bóng dáng
-    g.scale(1.16, 1.16);
-    const gl = { lo: M.glow || '#ffe9a8', hi: M.glow || '#ffe9a8', trim: M.glow || '#ffe9a8', glow: null };
-    g.save(); fn(g, gl, def); g.restore();
+    g.globalAlpha = 0.05 + k * 0.17;
+    g.scale(1.10 + k * 0.12, 1.10 + k * 0.12);
+    fn(g, gl, def);
     g.restore();
   }
   g.save(); fn(g, M, def); g.restore();
+  if (st >= 2){                                   // 2. viền sáng ôm sát — mốc +7 phải KHÁC mốc +4
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.globalAlpha = 0.10 + k * 0.22;
+    g.scale(1.035, 1.035); fn(g, gl, def);
+    g.restore();
+  }
+  if (st >= 3){                                   // 3. tàn lửa quanh món — chỉ +10 trở lên
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.fillStyle = GC;
+    const n = 4 + Math.round((pl - 9) * 2);
+    for (let i = 0; i < n; i++){
+      const a = (i / n) * Math.PI * 2 + pl * 0.3, r = 32 + (i % 3) * 5;
+      g.globalAlpha = 0.35 + (i % 2) * 0.25;
+      g.beginPath(); g.arc(Math.cos(a) * r, Math.sin(a) * r * 0.9, 1.5 + (i % 2) * 0.9, 0, 7); g.fill();
+    }
+    g.restore();
+  }
   g.restore();
 }
 // data-URL có cache. Khoá gồm mọi thứ đổi hình: món, giai, phẩm, mức rèn.
 window.itemArtUrl = function(def, tier, rarity, plus){
   const key = `${def.art}|${def.blade||''}|${def.guard||''}|${def.pommel||''}|${def.motif||''}`
             + `|${def.w||''}|${def.len||''}|${def.gw||''}|${def.st || 1}|${def.mat||''}|${def.tintKey || ''}`
-            + `|${tier}|${rarity}|${plusStage(plus || 0)}`;
+            + `|${tier}|${rarity}|${plus || 0}`;
   let u = _itemArtCache.get(key);
   if (u) return u;
   const c = document.createElement('canvas');
