@@ -91,14 +91,16 @@ const JEWEL_DROP = {
   tranai: { chucPhuc:1.00,  linhHon:0.45,  sinhMenh:0.22,   honDon:0.12   },
 };
 const JEWEL_BAND_MUL = [1.0, 1.2, 1.4, 1.6, 1.8];
-function rollJewels(def, srcK){
+function rollJewels(def, srcK, x, y){
   const tbl = JEWEL_DROP[srcK]; if (!tbl) return;
   const mul = JEWEL_BAND_MUL[mobBand(def.lv || 1)];
   for (const k in tbl){
     if (Math.random() >= tbl[k] * mul) continue;
-    player.jewels[k] = (player.jewels[k] || 0) + 1;
-    addFloat(player.x, player.y - 70 - Math.random() * 20, '+1 ' + JEWEL_NAMES[k], JEWEL_COLORS[k], 13);
-    AudioSys.sfx('coin', 0.6);
+    // Ngọc rơi xuống ĐẤT tại xác quái. Bản cũ cộng thẳng vào player.jewels rồi bắn chữ ở chân
+    // người chơi — không ai nối được "con này vừa rớt ngọc", mà tiếng thì bị debounce nuốt sạch.
+    if (x != null) dropToGround({ k:'jewel', jk:k }, x, y);
+    else { player.jewels[k] = (player.jewels[k] || 0) + 1;
+      addFloat(player.x, player.y - 70, '+1 ' + JEWEL_NAMES[k], JEWEL_COLORS[k], 13); AudioSys.sfx('forge_ok', 0.85); }
   }
 }
 const DROP_SRC = {
@@ -3497,7 +3499,7 @@ function bandSummaryHtml(md){
 }
 function buildWorld(){
   const md = mapDef();
-  mobs = []; pickups = []; projectiles = []; effects = []; floats = [];
+  mobs = []; pickups = []; projectiles = []; effects = []; floats = []; groundLoot = []; // đồ dưới đất KHÔNG theo người sang map khác
   sigilReset(); // Khắc Ấn: vũng độc/sóng hẹn giờ của map cũ không được nổ giữa map mới
   if (player) player.pendingHit = null;   // cùng lý do: đòn thường đã hẹn ở map cũ
   petObj = null; mountObj = null; // Linh Thú & Thú Chiến xuất hiện lại ở map mới
@@ -3923,7 +3925,7 @@ window.addEventListener('keydown', e=>{
     if (id) castSkill(id); else togglePanel('skill');
   }
   if (e.key.toLowerCase()==='e'){ if (!window.tryCatchHorse || !tryCatchHorse()) tryTalk(); } // GDD Đợt 2 B5: E bắt Tuấn Mã kiệt sức trước
-  if (e.key.toLowerCase()==='j'){ if (!tryHarvestHerb()) doJump(); } // ưu tiên hái thảo dược gần đó, không thì nhảy né như cũ
+  if (e.key.toLowerCase()==='j'){ if (!tryPickLoot() && !tryHarvestHerb()) doJump(); } // ưu tiên nhặt đồ dưới đất → hái thảo dược → nhảy né như cũ
   if (e.key.toLowerCase()==='c') togglePanel('char');
   if (e.key.toLowerCase()==='i') togglePanel('inv');
   if (e.key.toLowerCase()==='b') togglePanel('bag');
@@ -3945,6 +3947,10 @@ window.addEventListener('keydown', e=>{
   if (e.key === 'Escape') closePanels();
 });
 window.addEventListener('keyup', e=> keys[e.key.toLowerCase()] = false);
+// Giữ ALT: hiện nhãn tên MỌI món dưới đất, không chỉ món gần. Nhả ra là về như cũ.
+window.addEventListener('keydown', e => { if (e.key === 'Alt'){ window._lootShowAll = true; e.preventDefault(); } });
+window.addEventListener('keyup',   e => { if (e.key === 'Alt') window._lootShowAll = false; });
+window.addEventListener('blur',    () => { window._lootShowAll = false; }); // Alt+Tab: đừng kẹt bật
 canvas.addEventListener('mousemove', e=>{
   mouseWorld.x = e.clientX + camera.x; mouseWorld.y = e.clientY + camera.y;
 });
@@ -3955,6 +3961,7 @@ canvas.addEventListener('mousedown', e=>{
   mouseWorld.x = e.clientX + camera.x; mouseWorld.y = e.clientY + camera.y;
   const npcHit = npcAt(mouseWorld.x, mouseWorld.y);
   if (npcHit){ walkToNpc(npcHit); return; } // bấm trúng NPC: tự đi tới + tự mở lời thoại, không cần bấm E
+  if (tryPickLoot(mouseWorld.x, mouseWorld.y)) return; // bấm trúng đồ dưới đất: nhặt
   player.face = Math.atan2(mouseWorld.y - player.y, mouseWorld.x - player.x);
   doBasic();
 });
@@ -4024,6 +4031,185 @@ function addFloat(x,y,text,color,size){
   floats.push({ x, y, text, color, t:1, size:size||13 });
 }
 function addEffect(e){ if (effects.length >= 400) effects.splice(0, effects.length - 399); effects.push(Object.assign({ t:0 }, e)); } // trần cứng chống phình RAM
+
+// ═══════════ ĐỒ RƠI DƯỚI ĐẤT ═══════════
+// Trước bản này quái chết là item nhảy thẳng vào player.inv, người chơi chỉ thấy một dòng chữ
+// 12px sống 1,25 giây — đo thật 300 con: 33% số kill IM LẶNG TUYỆT ĐỐI, và túi đầy thì đồ bốc
+// hơi không một lời cảnh báo (50/50 món mất trắng). Đó là thứ MU Online làm ngược lại hoàn
+// toàn: đồ nằm dưới đất, có tên nổi màu theo phẩm, đọc được bao lâu tùy ngươi.
+// KHÔNG lưu vào save — rời map hay thoát game là mất, đúng như mọi thứ tạm khác trong game.
+let groundLoot = [];
+const LOOT_TTL     = 45;    // giây nằm dưới đất
+const LOOT_BLINK   = 10;    // nhấp nháy cảnh báo trong 10 giây cuối
+const LOOT_MAX     = 60;    // trần cứng chống phình RAM khi treo AUTO
+const LOOT_GRAB_R  = 46;    // đi ngang qua là nhặt
+const LOOT_REACH_R = 96;    // tầm với của phím J / cú bấm chuột
+const LOOT_G       = 620;   // trọng lực cú nảy
+function lootRar(g){ return g.k === 'jewel' ? 3 : (g.it.rarity || 0); }
+function lootColor(g){ return g.k === 'jewel' ? JEWEL_COLORS[g.jk] : RARITIES[g.it.rarity].color; }
+function lootName(g){ return g.k === 'jewel' ? JEWEL_NAMES[g.jk] : g.it.name; }
+// Bắn item ra khỏi xác theo hình vòng cung rồi đáp xuống — cú nảy chính là thứ báo cho mắt
+// "vừa có cái gì rơi ra", trước khi kịp đọc chữ.
+function dropToGround(o, x, y){
+  if (groundLoot.length >= LOOT_MAX) groundLoot.shift();
+  const a = Math.random() * 6.283, r = 26 + Math.random() * 30;
+  const g = Object.assign({ x, y, tx: x + Math.cos(a) * r, ty: y + Math.sin(a) * r * 0.55,
+    z: 12, vz: 190 + Math.random() * 70, t: LOOT_TTL, land: 0, wob: Math.random() * 6.283 }, o);
+  g.sx = x; g.sy = y; g.fly = 0;
+  groundLoot.push(g);
+  const col = lootColor(g);
+  addEffect({ type:'spark', x, y: y - 10, r: 20 + lootRar(g) * 9, color: col });
+  if (g.k === 'jewel'){
+    // Âm riêng cho ngọc. KHÔNG được dùng 'coin': killMob đã gọi sfx('coin') vài phần nghìn
+    // giây trước, mà AudioSys debounce 70ms mỗi tên âm → tiếng ngọc bị nuốt 100%.
+    AudioSys.sfx('forge_ok', 0.9);
+    addEffect({ type:'ring', x, y, r: 56, color: col, big:true });
+  } else if (lootRar(g) >= 2){
+    AudioSys.sfx('quest', 0.75);
+    addEffect({ type:'ring', x, y, r: 46 + lootRar(g) * 14, color: col, big:true });
+    if (lootRar(g) >= 3){ shakeMag = Math.max(shakeMag || 0, 5); zoneBanner = zoneBanner ||
+      { text:`${RARITIES[g.it.rarity].name.toUpperCase()} RƠI XUỐNG!`, sub: g.it.name, color: col, t:3 }; }
+  }
+  return g;
+}
+function updateGroundLoot(dt){
+  if (!groundLoot.length || !player) return;
+  for (let i = groundLoot.length - 1; i >= 0; i--){
+    const g = groundLoot[i];
+    if (g.z > 0 || g.vz !== 0){                        // còn đang bay: nội suy tới điểm đáp
+      g.fly = Math.min(1, g.fly + dt * 2.6);
+      g.x = g.sx + (g.tx - g.sx) * g.fly;
+      g.y = g.sy + (g.ty - g.sy) * g.fly;
+      g.vz -= LOOT_G * dt; g.z += g.vz * dt;
+      if (g.z <= 0){ g.z = 0; g.vz = 0; g.land = 0.28; }  // land = thời gian bẹt bóng lúc chạm đất
+    }
+    if (g.land > 0) g.land = Math.max(0, g.land - dt);
+    g.t -= dt;
+    if (g.t <= 0){ groundLoot.splice(i, 1); continue; }
+    // AUTO đang cày thì nới tầm hút: lớp tầm xa giết quái cách 200px, để nguyên bán kính
+    // đi-ngang-qua là treo máy cả tiếng rồi bỏ lại nguyên bãi đồ dưới đất.
+    const gr = (player.auto ? LOOT_REACH_R * 3 : LOOT_GRAB_R);
+    if (g.z === 0 && dist(player.x, player.y, g.x, g.y) < gr) takeLoot(g, i);
+  }
+}
+// Trả về true nếu đã nhặt được. Túi đầy thì KHÔNG xoá — đồ nằm lại dưới đất và đổi nhãn cảnh
+// báo, thay cho việc mất trắng im lặng như bản cũ.
+function takeLoot(g, idx){
+  if (idx == null) idx = groundLoot.indexOf(g);
+  if (idx < 0) return false;
+  if (g.k === 'jewel'){
+    player.jewels[g.jk] = (player.jewels[g.jk] || 0) + 1;
+    addFloat(g.x, g.y - 26, '+1 ' + JEWEL_NAMES[g.jk], JEWEL_COLORS[g.jk], 14);
+    logCombat(`✦ Nhặt ${JEWEL_NAMES[g.jk]}`, JEWEL_COLORS[g.jk]);
+    AudioSys.sfx('forge_ok', 0.7);
+  } else {
+    if (player.inv.length >= 30){ g.full = true; g.t = Math.max(g.t, LOOT_BLINK + 1); return false; }
+    g.full = false;
+    player.inv.push(g.it);
+    addFloat(g.x, g.y - 26, g.it.name, RARITIES[g.it.rarity].color, 13);
+    logCombat(`▣ Nhặt ${g.it.name}`, RARITIES[g.it.rarity].color);
+    AudioSys.sfx(g.it.rarity >= 2 ? 'levelup' : 'ui', g.it.rarity >= 2 ? 0.85 : 0.5);
+    tryAutoEquip(g.it);
+  }
+  addEffect({ type:'ring', x: g.x, y: g.y, r: 26, color: lootColor(g) });
+  groundLoot.splice(idx, 1);
+  return true;
+}
+// Phím J (không truyền toạ độ): với quanh người chơi, ưu tiên món gần nhất.
+// Chuột trái (truyền toạ độ): phải bấm TRÚNG món — bán kính hẹp bằng cỡ icon, không thì mỗi
+// cú vung kiếm gần đống đồ lại biến thành thao tác nhặt và người chơi mất đòn đánh.
+function tryPickLoot(px, py){
+  if (!player || dead || !groundLoot.length) return false;
+  const byClick = px != null;
+  const x = byClick ? px : player.x, y = byClick ? py : player.y;
+  let best = -1, bd = byClick ? 26 : LOOT_REACH_R;
+  for (let i = 0; i < groundLoot.length; i++){
+    const g = groundLoot[i];
+    if (byClick && dist(player.x, player.y, g.x, g.y) > LOOT_REACH_R * 2) continue; // ngoài tầm với
+    const d = dist(x, y, g.x, g.y - g.z - 12);
+    if (d < bd){ bd = d; best = i; }
+  }
+  if (best < 0) return false;
+  return takeLoot(groundLoot[best], best);
+}
+function drawGroundLoot(now){
+  if (!groundLoot.length) return;
+  const alt = !!window._lootShowAll;
+  for (const g of groundLoot){
+    if (g.x < camera.x - 60 || g.x > camera.x + W + 60 || g.y < camera.y - 90 || g.y > camera.y + H + 60) continue;
+    const rar = lootRar(g), col = lootColor(g);
+    const blink = g.t < LOOT_BLINK ? (0.45 + 0.55 * Math.abs(Math.sin(now / 170))) : 1;
+    const bob = g.z > 0 ? 0 : Math.sin(now / 520 + g.wob) * 2.2;
+    const iy = g.y - g.z - 12 + bob;
+    ctx.save(); ctx.globalAlpha = blink;
+    // bóng đổ — bẹt ra đúng lúc chạm đất, đó là cái làm cú nảy có sức nặng
+    const sq = 1 + g.land * 1.5;
+    ctx.fillStyle = `rgba(0,0,0,${0.30 - Math.min(0.22, g.z / 180)})`;
+    ctx.beginPath(); ctx.ellipse(g.x, g.y, 9 * sq, 4 * sq, 0, 0, 7); ctx.fill();
+    // cột sáng cho đồ hiếm: nhìn thấy từ xa, khỏi phải đọc chữ mới biết đáng chạy tới
+    if (rar >= 2 && !SETTINGS.lowFx && g.z === 0){
+      const pul = 0.42 + 0.26 * Math.sin(now / 340 + g.wob);
+      const lg = ctx.createLinearGradient(g.x, g.y - 96, g.x, g.y);
+      lg.addColorStop(0, 'rgba(0,0,0,0)'); lg.addColorStop(1, col);
+      ctx.globalAlpha = blink * pul; ctx.fillStyle = lg;
+      ctx.beginPath(); ctx.moveTo(g.x - 13, g.y); ctx.lineTo(g.x - 5, g.y - 96);
+      ctx.lineTo(g.x + 5, g.y - 96); ctx.lineTo(g.x + 13, g.y); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = blink;
+    }
+    if (g.k === 'jewel') drawLootJewel(g.x, iy, col, now + g.wob * 500);
+    else {
+      // Nền tối + viền theo phẩm. Hình vật phẩm được vẽ cho ô túi NỀN TỐI, đặt thẳng lên bãi
+      // cỏ sáng thì mất hút — ảnh chụp đầu tiên chỉ thấy mấy vệt xám không đọc ra là món gì.
+      const R = 19;
+      ctx.fillStyle = 'rgba(9,7,15,.62)';
+      ctx.beginPath(); ctx.roundRect(g.x - R, iy - R, R*2, R*2, 6); ctx.fill();
+      ctx.strokeStyle = col; ctx.globalAlpha = blink * (rar >= 2 ? 0.95 : 0.5); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(g.x - R, iy - R, R*2, R*2, 6); ctx.stroke();
+      ctx.globalAlpha = blink;
+      const d = itemDef(g.it);
+      const url = d && itemArtUrl(d, g.it.tier || 1, g.it.rarity || 0, g.it.plus || 0);
+      const im = url && _lootImg(url);
+      if (im && im.complete && im.naturalWidth) ctx.drawImage(im, g.x - 17, iy - 17, 34, 34);
+      else { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(g.x, iy, 8, 0, 7); ctx.fill(); }
+    }
+    // nhãn tên: chỉ hiện cho món hiếm / món gần / khi giữ ALT — không thì 20 nhãn đè lên nhau
+    const near = dist(player.x, player.y, g.x, g.y) < 190;
+    if (g.z === 0 && (alt || near || rar >= 2 || g.full)){
+      const txt = g.full ? '⚠ TÚI ĐẦY — ' + lootName(g) : lootName(g);
+      ctx.font = `${rar >= 2 ? 'bold ' : ''}12px system-ui, sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const w = ctx.measureText(txt).width + 12, ly = iy - (g.k === 'jewel' ? 26 : 32);
+      ctx.fillStyle = 'rgba(8,6,14,.72)';
+      ctx.beginPath(); ctx.roundRect(g.x - w/2, ly - 9, w, 18, 5); ctx.fill();
+      ctx.strokeStyle = g.full ? '#ff6a3a' : (rar >= 2 ? col : 'rgba(255,255,255,.14)');
+      ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = g.full ? '#ff9a6a' : col; ctx.fillText(txt, g.x, ly);
+    }
+    ctx.restore();
+  }
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+}
+const _lootImgs = new Map();
+function _lootImg(url){
+  let im = _lootImgs.get(url);
+  if (!im){ im = new Image(); im.src = url; _lootImgs.set(url, im); }
+  return im;
+}
+function drawLootJewel(x, y, col, t){
+  const s = 1 + Math.sin(t / 400) * 0.06;
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  ctx.shadowColor = col; ctx.shadowBlur = 12;
+  ctx.fillStyle = col;
+  ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(8, -3); ctx.lineTo(5, 10);
+  ctx.lineTo(-5, 10); ctx.lineTo(-8, -3); ctx.closePath(); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(8, -3); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(10,8,16,.75)'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(8, -3); ctx.lineTo(5, 10);
+  ctx.lineTo(-5, 10); ctx.lineTo(-8, -3); ctx.closePath(); ctx.stroke();
+  ctx.restore();
+}
 // Nhật ký chiến đấu: gộp sát thương/thưởng mỗi đòn thành 1 dòng chữ trong panel góc dưới trái,
 // thay cho số bay đầy màn hình khi AUTO đang đánh nhiều quái cùng lúc (kiểu combat log NGU Idle) —
 // thao tác DOM trực tiếp, không giữ mảng riêng vì log không cần lưu qua save/load
@@ -4337,18 +4523,18 @@ function killMob(m, source){
       addFloat(m.x, m.y-114, `${WING_DEFS[wi].name}!`, WING_DEFS[wi].color, 15);
     }
   }
-  if (Math.random() < 0.3){ player.mat++; addFloat(m.x, m.y-40, '+1 ✦ Huyền Thiết', '#9fd0ff', 11); }
+  if (Math.random() < 0.3){ player.mat++; logCombat('+1 ✦ Huyền Thiết', '#9fd0ff'); }
   player.kills++;
   player.khi += 10; // Instinct từ chiến đấu
   player.dantian.tuvi += 2; // Anima từ chiến đấu — giảm thời gian ngồi thiền thuần túy (QA)
   dailyTrack('kills'); // Mục Tiêu Hôm Nay
   // gem drops: Tu La (sói+), Hỗn Nguyên (tinh anh/boss), Tiến Cấp Đan (sơn tặc+)
-  if (m.def.lv >= 3 && Math.random() < 0.15){ player.gems.tuLa++; addFloat(m.x, m.y-52, '+1 ◆ Tu La Tinh Thạch', '#e84a6a', 11); }
-  if (m.def.elite && Math.random() < 0.35){ player.gems.honNguyen++; addFloat(m.x, m.y-64, '+1 ❖ Hỗn Nguyên Thạch', '#b08ae8', 11); }
-  if (m.def.lv >= 5 && Math.random() < 0.22){ player.tienDan++; addFloat(m.x, m.y-76, '+1 ◈ Tiến Cấp Đan', '#7ec850', 11); }
+  if (m.def.lv >= 3 && Math.random() < 0.15){ player.gems.tuLa++; logCombat('+1 ◆ Tu La Tinh Thạch', '#e84a6a'); }
+  if (m.def.elite && Math.random() < 0.35){ player.gems.honNguyen++; logCombat('+1 ❖ Hỗn Nguyên Thạch', '#b08ae8'); }
+  if (m.def.lv >= 5 && Math.random() < 0.22){ player.tienDan++; logCombat('+1 ◈ Tiến Cấp Đan', '#7ec850'); }
   // Tinh anh & boss rớt thêm Tiến Cấp Đan (Drop v2.0 — gắn vòng farm boss vào Tấn Chức)
   const _tdB = m.def.bossKind === 'tranai' ? 8 : (m.def.bossKind === 'thuve' ? 3 : (m.type === 'boss' || m.def.boss) ? 5 : m.def.elite ? 1 : 0);
-  if (_tdB){ player.tienDan += _tdB; addFloat(m.x, m.y-88, `+${_tdB} ◈ Tiến Cấp Đan`, '#7ec850', 11); }
+  if (_tdB){ player.tienDan += _tdB; logCombat(`+${_tdB} ◈ Tiến Cấp Đan`, '#7ec850'); }
   // Võ Học Phổ: Bí Kíp rơi từ tinh anh/boss — học võ học giang hồ (bấm K)
   const _bkR = m.def.bossKind === 'tranai' ? 0.35 : (m.def.bossKind === 'thuve' || m.def.boss) ? 0.12 : m.def.elite ? 0.03 : 0;
   if (_bkR && Math.random() < _bkR){ player.bikipVH = (player.bikipVH || 0) + 1; addFloat(m.x, m.y-100, '+1 📜 Sách Kỹ Năng', '#ffb15c', 13); }
@@ -4385,15 +4571,16 @@ function killMob(m, source){
       player.silver += v;
       addFloat(m.x, m.y-54, `Tự bán ${it.name} +${v}◈`, '#9aa8d4', 11);
     }
-    else if (player.inv.length < 30){ player.inv.push(it); addFloat(m.x, m.y-54, it.name, RARITIES[it.rarity].color, 12);
-      if (it.rarity >= 2) addEffect({ type:'spark', x:m.x, y:m.y-12, r:32 + it.rarity*8, color:RARITIES[it.rarity].color }); tryAutoEquip(it); } // GDD Đợt 2 B7: tự mặc đồ mạnh hơn
+    else dropToGround({ k:'item', it }, m.x, m.y); // nằm dưới đất, đi ngang qua hoặc bấm J là nhặt
   }
-  if (_dsrc) rollJewels(m.def, _dsrc);
+  if (_dsrc) rollJewels(m.def, _dsrc, m.x, m.y);
   if (m.def.bossKind === 'thuve') player.bossPity = _gotThan ? 0 : (player.bossPity || 0) + 1;
   // Vật liệu Drop v2.0: Mảnh Trang Bị (quái 8%, tinh anh 100%)
   if (!m.def.boss && !m.def.bossKind && Math.random() < (m.def.elite ? 1 : 0.08)){
     player.mats.manh++;
-    addFloat(m.x, m.y-66, '+1 ❖ Mảnh Trang Bị', '#7ec8d8', 11);
+    // Đo thật 300 con: 229 chữ bay là vật liệu vụn, chỉ 29 là tên trang bị — mà chữ trang bị
+    // còn NHỎ HƠN và NHẠT HƠN. Vật liệu về nhật ký, sân khấu để lại cho đồ và ngọc.
+    logCombat('+1 ❖ Mảnh Trang Bị', '#7ec8d8');
   }
   // Tịch Ma Thạch từ Vệ Binh Trụ (vé Tấn Phẩm) · Ấn Cổng Vực (Chinh Phạt ngày) + Mảnh Cổ Thần từ Cổng Vực
   if (m.def.bossKind === 'thuve'){
@@ -4439,9 +4626,9 @@ function killMob(m, source){
     let jk = null;
     if (jr < 0.20) jk = 'chucPhuc'; else if (jr < 0.32) jk = 'linhHon';
     else if (jr < 0.38) jk = 'sinhMenh'; else if (jr < 0.41) jk = 'honDon';
-    if (jk){ player.jewels[jk]++; addFloat(m.x, m.y-104, `+1 ${JEWEL_NAMES[jk]}`, JEWEL_COLORS[jk], 13); }
+    if (jk) dropToGround({ k:'jewel', jk }, m.x, m.y);
   } else if (m.def.elite && player.jewels && Math.random() < 0.03){
-    player.jewels.chucPhuc++; addFloat(m.x, m.y-104, `+1 ${JEWEL_NAMES.chucPhuc}`, JEWEL_COLORS.chucPhuc, 12);
+    dropToGround({ k:'jewel', jk:'chucPhuc' }, m.x, m.y);
   }
   // Ma Tôn Giáng Thế: hạ boss nhận Bảo Hạp theo vùng cấp
   if (m.type === 'maton') matonKilled(m);
@@ -5480,6 +5667,7 @@ function update(dt){
   // herbs: chỉ đếm hồi phục — hái giờ phải chủ động nhấn J (tryHarvestHerb()), không tự động
   // khi đi ngang qua nữa (dễ hái nhầm/không rõ ràng lúc chỉ còn tự đi tới bằng click)
   for (const p of pickups) if (p.respawn > 0) p.respawn -= dt;
+  updateGroundLoot(dt);
 
   // mobs AI
   for (const m of mobs){
@@ -6138,6 +6326,8 @@ function render(){
       ctx.beginPath(); ctx.arc(p.x - Math.cos(_herbT/430)*6, p.y - 13, 1.2, 0, 7); ctx.fill();
     }
   }
+
+  drawGroundLoot(_herbT); // đồ rơi dưới đất — vẽ sau thảo dược, trước NPC/quái
 
   // NPC
   drawNpc();
