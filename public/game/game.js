@@ -1612,26 +1612,30 @@ function castVohoc(id){
     if (t) player.face = Math.atan2(t.y - player.y, t.x - player.x);
     const R = 135;
     spawnSkillVfx(id, v, 'cone', player.face, R);
-    for (const m of mobs){
-      if (m.dead) continue;
-      if (dist(player.x, player.y, m.x, m.y) >= R + m.def.size) continue;
-      let da = Math.atan2(m.y - player.y, m.x - player.x) - player.face;
-      while (da > Math.PI) da -= 2*Math.PI; while (da < -Math.PI) da += 2*Math.PI;
-      if (Math.abs(da) < 1.05) hitMob(m, v.mult);
-    }
+    aoeHit(() => {
+      for (const m of mobs){
+        if (m.dead) continue;
+        if (dist(player.x, player.y, m.x, m.y) >= R + m.def.size) continue;
+        let da = Math.atan2(m.y - player.y, m.x - player.x) - player.face;
+        while (da > Math.PI) da -= 2*Math.PI; while (da < -Math.PI) da += 2*Math.PI;
+        if (Math.abs(da) < 1.05) hitMob(m, v.mult);
+      }
+    });
     if (fx.selfEva){ player.vhEvaT = fx.selfEva.t; player.vhEvaPct = fx.selfEva.pct; addFloat(player.x, player.y-60, `+${fx.selfEva.pct}% né (${fx.selfEva.t}s)`, '#a0ffe9', 12); }
     for (let _w = 1; _w <= _st; _w++){ // tiến hóa: sóng chưởng nối tiếp, mỗi sóng rộng hơn
       const _wm = _w === 1 ? 0.55 : 0.4, _Rw = R * (1 + 0.18 * _w), _fw = player.face, _px = player.x, _py = player.y;
       setTimeout(() => {
         if (!player || dead) return;
         addEffect({ type:'cone', x:_px, y:_py, face:_fw, r:_Rw, color:col });
-        for (const m of mobs){
-          if (m.dead) continue;
-          if (dist(_px, _py, m.x, m.y) >= _Rw + m.def.size) continue;
-          let da = Math.atan2(m.y - _py, m.x - _px) - _fw;
-          while (da > Math.PI) da -= 2*Math.PI; while (da < -Math.PI) da += 2*Math.PI;
-          if (Math.abs(da) < 1.05) hitMob(m, v.mult * _wm);
-        }
+        aoeHit(() => {
+          for (const m of mobs){
+            if (m.dead) continue;
+            if (dist(_px, _py, m.x, m.y) >= _Rw + m.def.size) continue;
+            let da = Math.atan2(m.y - _py, m.x - _px) - _fw;
+            while (da > Math.PI) da -= 2*Math.PI; while (da < -Math.PI) da += 2*Math.PI;
+            if (Math.abs(da) < 1.05) hitMob(m, v.mult * _wm);
+          }
+        });
       }, _w * 240);
     }
   }
@@ -1655,16 +1659,18 @@ function castVohoc(id){
     const R = (fx.r || 160) * (1 + 0.12 * _st); // tiến hóa: phạm vi +12%/bậc
     spawnSkillVfx(id, v, 'aoe', player.face, R);
     shakeT = Math.max(shakeT, 0.2); shakeMag = Math.max(shakeMag, fx.big ? 7 : 4);
-    for (const m of mobs){
-      if (m.dead) continue;
-      if (dist(player.x, player.y, m.x, m.y) < R + m.def.size) hitMob(m, v.mult);
-    }
+    aoeHit(() => {
+      for (const m of mobs){
+        if (m.dead) continue;
+        if (dist(player.x, player.y, m.x, m.y) < R + m.def.size) hitMob(m, v.mult);
+      }
+    });
     for (let _w = 1; _w <= _st; _w++){ // tiến hóa: dư chấn nổ tiếp thành từng vòng
       const _wm = _w === 1 ? 0.5 : 0.35, _Rw = R * (1 + 0.15 * _w), _px = player.x, _py = player.y;
       setTimeout(() => {
         if (!player || dead) return;
         addEffect({ type:'ring', x:_px, y:_py, r:_Rw, color:col, big:true });
-        for (const m of mobs){ if (m.dead) continue; if (dist(_px, _py, m.x, m.y) < _Rw + m.def.size) hitMob(m, v.mult * _wm); }
+        aoeHit(() => { for (const m of mobs){ if (m.dead) continue; if (dist(_px, _py, m.x, m.y) < _Rw + m.def.size) hitMob(m, v.mult * _wm); } });
       }, _w * 260);
     }
   }
@@ -2462,6 +2468,11 @@ let mobs = [], pickups = [], projectiles = [], effects = [], floats = [], decor 
 let sigilTimers = [], sigilZones = [];
 // Chống đệ quy: sát thương do chính Khắc Ấn gây ra không được kích lại Khắc Ấn, nếu không
 // Lan Trảm sẽ tự bật vòng quanh đến khi tràn ngăn xếp.
+// Vùng sát thương diện rộng. Bọc quanh vòng lặp trúng-nhiều-mục-tiêu để hurtMob() nhận ra đây
+// là AoE mà KHÔNG phải đổi `source` — `source` còn chi phối bạo kích, âm thanh và móc Khắc Ấn,
+// nên đổi nó đi thì hỏng cả ba thứ đó.
+let _aoeHit = false;
+function aoeHit(fn){ const _p = _aoeHit; _aoeHit = true; try { return fn(); } finally { _aoeHit = _p; } }
 let _sigilBusy = false;
 let _sigilDepth = 0;          // chặn nổ dây chuyền của móc 'kill'
 const SIGIL_MAX_DEPTH = 3;
@@ -2765,6 +2776,11 @@ window.autoEquipBest = function(){
       if (player.equip[sl.id]) player.inv.push(player.equip[sl.id]);
       player.equip[sl.id] = it2;
       swapped++;
+      // calcDerived() NGAY trong vòng lặp: player.sigils là thứ itemSigilNew() tra cứu, mà nó
+      // chỉ được dựng lại ở đây. Nếu đợi tới cuối vòng thì ô sau vẫn thấy Khắc Ấn mà ô trước
+      // vừa mặc là "chưa có" → khoá xếp hạng thứ nhất thắng, và nó mặc đồ rác để lấy một Khắc
+      // Ấn mình đã có rồi. Mỗi lớp chỉ có 4 Khắc Ấn hợp lệ nên trùng lặp là chuyện thường.
+      calcDerived();
     }
   }
   calcDerived(); try{ renderInv(); renderBag(); }catch { /* best-effort — bỏ qua nếu lỗi */ } saveGame();
@@ -4071,7 +4087,7 @@ function hurtMob(m, dmg, source){
   // thứ ăn theo việc gom địch — Khắc Ấn Hiệu Triệu (trúng ≥3 địch) là ví dụ trực tiếp, nó
   // ngừng kích hoạt vì Trấn Phái đẩy con thứ ba ra đúng 1 pixel khỏi tầm quạt.
   // Chiêu nào MUỐN hất lùi thì khai báo `fx.kb` như trước, đi qua vhKnockback riêng.
-  if (source === 'hit' || source === 'crit'){
+  if (!_aoeHit && (source === 'hit' || source === 'crit')){
     const _kb = (2 + 10 * _w) * (14 / Math.max(14, m.def.size || 14));
     if (_kb > 0.4) vhKnockback(m, Math.atan2(m.y - player.y, m.x - player.x), _kb);
   }
@@ -5432,7 +5448,12 @@ function update(dt){
         for (let i=0;i<4;i++) addEffect({ type:'ink', x:player.x, y:player.y-12, vx:rnd(-70,70), vy:rnd(-90,-20), color:elC2 });
         player.hurtT = 0.25; // viền đỏ nhấp khi trúng đòn
         player.combatT = 4; // P0: vào trạng thái combat — ngừng hồi máu nhanh
-        shakeT = Math.max(shakeT, 0.16); shakeMag = Math.min(6, 2 + 30*dmg/Math.max(1,player.maxHp));
+        shakeT = Math.max(shakeT, 0.16);
+        // Math.max, không phải gán đè: một cú cào nhẹ từng có thể HẠ biên độ của cú vừa nện.
+        shakeMag = Math.max(shakeMag, Math.min(6, 2 + 30*dmg/Math.max(1,player.maxHp)));
+        // Hướng rung: ĐẨY NGƯỜI CHƠI RA XA con vừa nện mình. Trước đây chỉ swingFeel() ghi
+        // shakeDir, nên lúc ăn đòn màn hình vẫn giật về phía mình vừa đánh — sai hẳn hướng.
+        shakeDir = Math.atan2(player.y - m.y, player.x - m.x);
         // Tình Hoa Độc Yêu: đánh trúng gây độc — Cương Khí (tuyệt học) kháng độc
         if (m.def.poisonHit){
           const _freshPoison = player.poisonT <= 0; // cue only on the moment poison first lands, not every re-tick
@@ -5666,6 +5687,8 @@ function onDeath(){
   // Khắc Ấn: vũng độc và sóng hẹn giờ phải tắt theo cái chết. Nếu không chúng đóng băng suốt
   // màn hình bại trận rồi chạy tiếp ở TOẠ ĐỘ CŨ sau khi hồi sinh — có khi ở tận map khác.
   sigilReset();
+  player.pendingHit = null; // đòn thường đã hẹn cũng phải huỷ: update() return sớm khi dead nên
+                            // nó đóng băng nguyên vẹn rồi nổ vào con quái đứng cạnh điểm hồi sinh
   if (TOWER){ // Trận Địa Phòng Thủ: chết giữa lượt → kết thúc lượt riêng, không tính bại trận thường
     dead = true;
     endTowerRun('death');
@@ -10715,15 +10738,17 @@ function castSkill(id){
       spawnSkillVfx(_sva, { color:sect.color, glyph:'✹' }, 'cone', player.face, 120);
       addEffect({ type:'cone', x:player.x, y:player.y, face:player.face, r:120, color:sect.color });
       spawnSlash(player.x + Math.cos(player.face)*62, player.y + Math.sin(player.face)*62 - 12, player.face, 160, sect.color, sect.glow);
-      for (const m of mobs){
-        if (m.dead) continue;
-        const dd = dist(player.x, player.y, m.x, m.y);
-        if (dd < 125 + 8*_st + m.def.size){ // tiến hóa: quạt rộng hơn
-          let da = Math.atan2(m.y-player.y, m.x-player.x) - player.face;
-          while (da > Math.PI) da -= 2*Math.PI; while (da < -Math.PI) da += 2*Math.PI;
-          if (Math.abs(da) < 1.0 + 0.08*_st) hurtMob(m, player.atk*def.mult*_tbMul*rnd(0.9,1.1), Math.random()<player.crit?'crit':'hit');
+      aoeHit(() => {
+        for (const m of mobs){
+          if (m.dead) continue;
+          const dd = dist(player.x, player.y, m.x, m.y);
+          if (dd < 125 + 8*_st + m.def.size){ // tiến hóa: quạt rộng hơn
+            let da = Math.atan2(m.y-player.y, m.x-player.x) - player.face;
+            while (da > Math.PI) da -= 2*Math.PI; while (da < -Math.PI) da += 2*Math.PI;
+            if (Math.abs(da) < 1.0 + 0.08*_st) hurtMob(m, player.atk*def.mult*_tbMul*rnd(0.9,1.1), Math.random()<player.crit?'crit':'hit');
+          }
         }
-      }
+      });
     } else if (type==='proj'){
       const t = nearestMob(420);
       const ang = t ? Math.atan2(t.y-player.y, t.x-player.x) : player.face;
@@ -10747,11 +10772,13 @@ function castSkill(id){
         spawnSlash(player.x + Math.cos(a)*52, player.y + Math.sin(a)*52 - 10, a, 130, sect.color, sect.glow);
       }
       for (let i=0;i<10;i++) addEffect({ type:'ink', x:player.x+rnd(-90,90), y:player.y+rnd(-90,90), vx:rnd(-30,30), vy:rnd(-60,-10), color:sect.color });
-      for (const m of mobs){
-        if (m.dead) continue;
-        if (dist(player.x, player.y, m.x, m.y) < 140 + 10*_st + m.def.size)
-          hurtMob(m, player.atk*def.mult*_tbMul*rnd(0.9,1.1), Math.random()<player.crit?'crit':'hit');
-      }
+      aoeHit(() => {
+        for (const m of mobs){
+          if (m.dead) continue;
+          if (dist(player.x, player.y, m.x, m.y) < 140 + 10*_st + m.def.size)
+            hurtMob(m, player.atk*def.mult*_tbMul*rnd(0.9,1.1), Math.random()<player.crit?'crit':'hit');
+        }
+      });
     } else if (type==='dash'){
       spawnSkillVfx(_sva, { color:sect.color, glyph:'✹' }, 'dash', player.face, 150, player.x, player.y);
       const t = nearestMob(220);
