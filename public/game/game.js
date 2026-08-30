@@ -2138,6 +2138,215 @@ const ANCIENT_SETS = {
 // Save cũ giữ id bộ theo tên kiếm hiệp — ánh xạ sang id mới lúc loadGame(), nếu không
 // ANCIENT_SETS[it.ancient] thành undefined và người chơi mất trắng hiệu ứng bộ.
 const ANCIENT_MIGRATE = { thanhlong:'sarkaan', bachho:'velmyr', chutuoc:'ashvard', huyenvu:'korrveth' };
+
+// ═══════════ KHẮC ẤN — trang bị đổi CÁCH CHIÊU HOẠT ĐỘNG, không phải đổi con số ═══════════
+// Bài học lấy từ Diablo 3 (Loot 2.0 / legendary power): trước hệ này, mọi món đồ trong game
+// chỉ trả lời đúng một câu hỏi — "số có to hơn cái đang mặc không?". 15 dòng phụ đều là %
+// thuần, 6 dòng Thức Tỉnh là số cộng thẳng, 4 bộ Cổ Thần cũng chỉ là %. Không món nào làm
+// chiêu thức hành xử khác đi, nên mọi hệ thống sản xuất đồ (rèn, Bảo Hạp, Cổ Vật, gacha…)
+// đều đổ về cùng một phần thưởng vô vị.
+//
+// Khắc Ấn gắn trên MỘT món (it.sigil), mặc vào là có. Chỉ rơi từ 3 nguồn cuối game:
+// Bảo Hạp IV+, Hung Thần Giáng Thế, Xâm Lăng Vàng — thứ cuối vốn chưa có bản sắc gì
+// ngoài "hạp bậc cao hơn", nay là nguồn Khắc Ấn nên có lý do tồn tại riêng.
+//
+// Móc nối: pre (trước khi tung chiêu) · hit (mỗi lần chiêu chạm địch) · cast (sau khi tung
+// xong, biết đã trúng mấy con) · kill (khi địch gục). Mỗi Khắc Ấn khai báo móc nào nó cần.
+// `tag` cho biết đòn đến từ đâu: 'a' = chiêu chính, 'tp' = Trấn Phái, null = đòn thường.
+const SIGIL_DEFS = {
+  // ── Dùng chung cho mọi lớp ──
+  un_hoiquang: { name:'Khắc Ấn Hồi Quang', sect:null, color:'#ffd76a',
+    desc:'Hạ một địch rút ngắn 10% hồi chiêu còn lại của MỌI chiêu. Giết nhanh ⇒ tung nhiều hơn.',
+    kill(){
+      let any = false;
+      for (const k in player.cd) if (player.cd[k] > 0){ player.cd[k] *= 0.9; any = true; }
+      if (any && Math.random() < 0.25) addFloat(player.x, player.y-58, '✦ Hồi Quang', '#ffd76a', 11);
+    } },
+  un_vongkhi: { name:'Khắc Ấn Vọng Khí', sect:null, color:'#ff9df0',
+    desc:'Đòn bạo kích nổ một vòng khí quanh mục tiêu, 45% sát thương lên địch bên cạnh. Bạo kích thành đòn diện rộng.',
+    hit(m, final, source){
+      if (source !== 'crit') return;
+      addEffect({ type:'ring', x:m.x, y:m.y, r:96, color:'#ff9df0' });
+      sigilSplash(m, 96, final * 0.45);
+    } },
+
+  // ── Dark Knight — cận chiến, chiêu chính hình quạt ──
+  dk_lantram: { name:'Khắc Ấn Lan Trảm', sect:'thieulam', color:'#4c8dff',
+    desc:'Chiêu chính chạm địch thì bật sang một địch khác trong 160px với 55% sát thương. Quạt hẹp hoá đòn dây chuyền.',
+    hit(m, final, source, tag){
+      if (tag !== 'a') return;
+      let best = null, bd = 161;
+      for (const m2 of mobs){
+        if (m2.dead || m2 === m || m2.def.duHiep) continue;
+        const d = dist(m.x, m.y, m2.x, m2.y);
+        if (d < bd){ bd = d; best = m2; }
+      }
+      if (!best) return;
+      // vệt bật: rắc hạt dọc đường nối 2 mục tiêu (không có effect kiểu 'bolt' trong game)
+      const ang = Math.atan2(best.y - m.y, best.x - m.x);
+      for (let i = 1; i <= 4; i++)
+        addEffect({ type:'ink', x:m.x + Math.cos(ang)*bd*i/5, y:m.y + Math.sin(ang)*bd*i/5,
+                    vx:rnd(-20,20), vy:rnd(-40,-10), color:'#7fb0ff' });
+      spawnSlash(best.x, best.y - 10, ang, 110, '#4c8dff', '#ffe9a0');
+      sigilHurt(best, final * 0.55);
+    } },
+  dk_thanhluy: { name:'Khắc Ấn Thành Lũy', sect:'thieulam', color:'#7ecbff',
+    desc:'Mỗi địch trúng chiêu chính cộng một lớp khiên bằng 3% Sinh Lực tối đa (trần 25%). Đánh vào đám đông là cách phòng thủ.',
+    hit(m, final, source, tag){
+      if (tag !== 'a') return;
+      const cap = Math.round(player.maxHp * 0.25);
+      const before = player.vhShield || 0;
+      player.vhShield = Math.min(cap, before + Math.round(player.maxHp * 0.03));
+      if (player.vhShield > before) addEffect({ type:'ring', x:player.x, y:player.y, r:38, color:'#7ecbff' });
+    } },
+
+  // ── Sylvan Ranger — tầm xa, chiêu chính bắn 5 mũi ──
+  sr_tachtien: { name:'Khắc Ấn Tách Tiễn', sect:'toanchan', color:'#3a9d8b',
+    desc:'Mũi tên chiêu chính chạm địch thì tách đôi, hai mũi nhỏ bắn tạt ngang với 40% sát thương.',
+    hit(m, final, source, tag){
+      if (tag !== 'a') return;
+      const base = Math.atan2(m.y - player.y, m.x - player.x);
+      for (const s of [-1, 1])
+        projectiles.push({ x:m.x, y:m.y, ang:base + s*1.25, speed:430, dmg:final*0.4,
+          kind:'skill', life:0.5, color:'#a0ffe9', pierce:true, sigilSplit:true });
+    } },
+  sr_muatien: { name:'Khắc Ấn Mưa Tiễn', sect:'toanchan', color:'#a0ffe9',
+    desc:'Tung Trấn Phái xong, 1,1s sau một loạt tên rơi trúng chính chỗ đó — đòn thứ hai cho kẻ vừa lao vào.',
+    cast(tag){
+      if (tag !== 'tp') return;
+      const x = player.x, y = player.y;
+      sigilAfter(1.1, () => {
+        addEffect({ type:'ring', x, y, r:170, color:'#a0ffe9', big:true });
+        for (let i = 0; i < 8; i++){
+          const a = i * Math.PI/4;
+          spawnSlash(x + Math.cos(a)*90, y + Math.sin(a)*90 - 10, a + Math.PI/2, 90, '#a0ffe9', '#3a9d8b');
+        }
+        AudioSys.sfx('skill', 0.45);
+        sigilArea(x, y, 170, player.atk * 0.9);
+      });
+    } },
+
+  // ── Dark Wizard — pháp sư tầm xa nhất, Trấn Phái là Meteor ──
+  dw_vungdoc: { name:'Khắc Ấn Vũng Tà Độc', sect:'baidasan', color:'#7ec850',
+    desc:'Trấn Phái để lại một vũng tà độc 5s, ăn mòn mọi thứ đứng trong đó. Chiêu bộc phát hoá chiêu khống chế đất.',
+    cast(tag){
+      if (tag !== 'tp') return;
+      sigilZones.push({ x:player.x, y:player.y, r:165, t:5, tick:0,
+        dps: player.atk * 0.55, color:'#7ec850' });
+    } },
+  dw_vongam: { name:'Khắc Ấn Vọng Âm', sect:'baidasan', color:'#c8ffa0',
+    desc:'35% chiêu chính nổ thêm lần hai ngay tại điểm trúng với 70% sát thương diện rộng.',
+    hit(m, final, source, tag){
+      if (tag !== 'a' || Math.random() >= 0.35) return;
+      addFloat(m.x, m.y - m.def.size - 26, '✦ VỌNG ÂM', '#c8ffa0', 12);
+      addEffect({ type:'ring', x:m.x, y:m.y, r:94, color:'#c8ffa0' });
+      sigilArea(m.x, m.y, 94, final * 0.7);
+    } },
+
+  // ── Spellblade — lai cận/pháp, chiêu chính là đường kiếm lửa ──
+  sb_bungchay: { name:'Khắc Ấn Bùng Cháy', sect:'minhgiao', color:'#e8552a',
+    desc:'Địch trúng chiêu chính bốc cháy 3s; nếu gục trong lúc còn cháy thì nổ tung, thiêu cả đám xung quanh.',
+    hit(m, final, source, tag){
+      if (tag !== 'a') return;
+      m.poisonT = Math.max(m.poisonT || 0, 3);
+      m.poisonDps = Math.max(m.poisonDps || 0, Math.round(player.atk * 0.35));
+      m.sgBurn = Math.round(final);      // ST gốc quyết định sức nổ khi nó chết
+    },
+    kill(m){
+      if (!m.sgBurn) return;
+      addFloat(m.x, m.y - 40, '☼ BÙNG CHÁY!', '#ff9a5a', 14);
+      addEffect({ type:'ring', x:m.x, y:m.y, r:135, color:'#ff7a3a', big:true });
+      sigilArea(m.x, m.y, 135, m.sgBurn * 0.8, m);
+    } },
+  sb_xungphong: { name:'Khắc Ấn Xung Phong', sect:'minhgiao', color:'#ffb060',
+    desc:'Tung chiêu chính khi địch gần nhất ở ngoài tầm sẽ lướt tới trước rồi mới chém. Đòn đứng yên hoá đòn lao vào.',
+    pre(tag){
+      if (tag !== 'a') return;
+      const t = nearestMob(400);
+      if (!t) return;
+      const d = dist(player.x, player.y, t.x, t.y);
+      if (d <= 130) return;                       // đã trong tầm quạt, không cần lướt
+      const ang = Math.atan2(t.y - player.y, t.x - player.x);
+      const step = Math.min(d - 95, 240);          // dừng ngay rìa tầm chém, không xuyên qua địch
+      player.face = ang;
+      player.x = clamp(player.x + Math.cos(ang)*step, 20, MAP.w-20);
+      player.y = clamp(player.y + Math.sin(ang)*step, 20, MAP.h-20);
+      addEffect({ type:'ring', x:player.x, y:player.y, r:64, color:'#ffb060' });
+    } },
+
+  // ── Dark Lord — lớp chỉ huy, thưởng cho việc gom địch thành đám ──
+  dl_trungsong: { name:'Khắc Ấn Trùng Sóng', sect:'bug', color:'#8a9a3a',
+    desc:'Chiêu chính phóng thêm đợt sóng thứ hai rộng hơn sau 0,35s với 60% sát thương.',
+    cast(tag){
+      if (tag !== 'a') return;
+      const x = player.x, y = player.y, f = player.face, dmg = player.atk * 0.6;
+      sigilAfter(0.35, () => {
+        addEffect({ type:'cone', x, y, face:f, r:185, color:'#d0e07a' });
+        spawnSlash(x + Math.cos(f)*80, y + Math.sin(f)*80 - 12, f, 200, '#8a9a3a', '#d0e07a');
+        AudioSys.sfx('skill', 0.4);
+        for (const m of mobs){
+          if (m.dead || m.def.duHiep) continue;
+          if (dist(x, y, m.x, m.y) > 185 + m.def.size) continue;
+          let da = Math.atan2(m.y - y, m.x - x) - f;
+          while (da > Math.PI) da -= 2*Math.PI; while (da < -Math.PI) da += 2*Math.PI;
+          if (Math.abs(da) < 1.15) sigilHurt(m, dmg * rnd(0.9, 1.1));
+        }
+      });
+    } },
+  dl_hieutrieu: { name:'Khắc Ấn Hiệu Triệu', sect:'bug', color:'#d0e07a',
+    desc:'Chiêu chính quét trúng từ 3 địch trở lên thì Trấn Phái hồi ngay một nửa thời gian chờ. Gom được đám đông là được thưởng.',
+    cast(tag, hits){
+      if (tag !== 'a' || hits < 3 || !(player.cd.tp > 0)) return;
+      player.cd.tp *= 0.5;
+      addFloat(player.x, player.y-64, `⚑ HIỆU TRIỆU (${hits}) — Trấn Phái hồi nhanh!`, '#d0e07a', 13);
+    } },
+};
+// Khắc Ấn này lớp hiện tại có xài được không (Khắc Ấn dùng chung: sect=null ⇒ luôn được)
+function sigilUsable(k){
+  const s = SIGIL_DEFS[k];
+  return !!s && (!s.sect || (player && s.sect === player.sect));
+}
+// Lớp nào dùng được Khắc Ấn nào (Khắc Ấn dùng chung tính cho mọi lớp)
+function sigilPool(sect){
+  return Object.keys(SIGIL_DEFS).filter(k => !SIGIL_DEFS[k].sect || SIGIL_DEFS[k].sect === sect);
+}
+// Rơi Khắc Ấn: ƯU TIÊN cái người chơi chưa có. Trùng lặp là phần thưởng rỗng — với chỉ 4 Khắc Ấn
+// hợp lệ mỗi lớp thì random thuần sẽ trả trùng ngay từ lần thứ hai và hỏng hẳn cảm giác săn.
+function rollSigil(sect){
+  const pool = sigilPool(sect || (player && player.sect));
+  if (!pool.length) return null;
+  const owned = new Set();
+  if (player){
+    for (const it of (player.inv || [])) if (it && it.sigil) owned.add(it.sigil);
+    for (const k in (player.equip || {})){ const it = player.equip[k]; if (it && it.sigil) owned.add(it.sigil); }
+  }
+  const fresh = pool.filter(k => !owned.has(k));
+  const from = fresh.length ? fresh : pool;
+  return from[Math.floor(Math.random() * from.length)];
+}
+// Gắn Khắc Ấn vào món đồ vừa sinh ra. Chỉ ô mặc được (không gắn lên áo choàng/cánh/pet — đó là
+// đồ đặc biệt không rơi từ 3 nguồn này). Trả về true nếu có gắn.
+function attachSigil(it, chance){
+  if (!it || it.special || it.sigil) return false;
+  if (Math.random() >= chance) return false;
+  const s = rollSigil(player && player.sect);
+  if (!s) return false;
+  it.sigil = s;
+  return true;
+}
+// Dòng thông báo khi Khắc Ấn rơi — nêu luôn hiệu ứng, vì cái người chơi cần biết không phải
+// "vừa nhặt được món hiếm" mà là "món này làm chiêu của mình khác đi thế nào".
+function sigilGotLine(k){
+  const s = SIGIL_DEFS[k];
+  return `<b style="color:${s.color}">◆ KHẮC ẤN — ${s.name}</b><br><span style="opacity:.8;font-size:12px">${s.desc}</span>`;
+}
+// Băng-rôn + tiếng khi một Khắc Ấn rơi ra, dùng chung cho cả 3 nguồn
+function sigilAnnounce(k, x, y){
+  const s = SIGIL_DEFS[k];
+  zoneBanner = { text:'◆ KHẮC ẤN HIỆN THẾ', sub:`${s.name} — ${s.desc}`, color:s.color, t:6 };
+  addFloat(x, y, `◆ ${s.name}`, s.color, 16);
+  AudioSys.sfx('levelup', 1);
+}
 // Tứ Châu: ◎ Chúc Phúc (+1..+6 miễn phí 100%) · ◉ Linh Hồn (+1 bất kỳ, 50%, xịt tụt 1)
 //          ❤ Sinh Mệnh (+4%→+28% HP theo bậc, xịt về 0) · ● Hỗn Độn (luyện Linh Dực / đổi Cổ Thần)
 const JEWEL_NAMES = { chucPhuc:'◎ Chúc Phúc Châu', linhHon:'◉ Linh Hồn Châu', sinhMenh:'❤ Sinh Mệnh Châu', honDon:'● Hỗn Độn Châu' };
@@ -2247,6 +2456,18 @@ const QUESTS = [
 // ---------- State ----------
 let player = null;
 let mobs = [], pickups = [], projectiles = [], effects = [], floats = [], decor = [], mists = [];
+// ── Bộ máy chạy nền của Khắc Ấn (xem SIGIL_DEFS) ──
+// sigilTimers: việc hẹn giờ (sóng thứ hai, mưa tên). sigilZones: vùng đất còn hiệu lực (vũng độc).
+// Cả hai KHÔNG lưu vào save — chết/đổi map là mất, đúng như mọi hiệu ứng tạm khác trong game.
+let sigilTimers = [], sigilZones = [];
+// Chống đệ quy: sát thương do chính Khắc Ấn gây ra không được kích lại Khắc Ấn, nếu không
+// Lan Trảm sẽ tự bật vòng quanh đến khi tràn ngăn xếp.
+let _sigilBusy = false;
+// Ngữ cảnh đòn đang bay: chiêu nào gây ra nó ('a' chiêu chính · 'tp' Trấn Phái · null đòn thường)
+// và đã chạm mấy con trong lần tung này. castSkill() chạy đồng bộ nên với chiêu chạm-ngay
+// (cone/selfaoe/dash) cờ này còn nguyên lúc hurtMob() chạy; chiêu bắn đạn thì gắn cờ lên
+// chính viên đạn (p.tag) và dựng lại lúc đạn trúng.
+let _sigilTag = null, _sigilHits = 0;
 let questIdx = 0, questProg = 0, questState = 'none'; // none | active | done | all
 let springTimer = 0, victory = false, dead = false;
 let camera = { x:0, y:0 };
@@ -2511,6 +2732,7 @@ function calcDerived(){
     perfect:0, hpLeech:0, qiLeech:0, aspdPct:0, pierce:0, expPct:0, defPct:0, critDmg:0 };
   let luckN = 0;
   const setCount = {};
+  const sigilOwned = {};   // Khắc Ấn gom từ đồ ĐANG MẶC (đồ trong túi không tính)
   for (const slotId in player.equip){
     const it = player.equip[slotId];
     if (!it) continue;
@@ -2521,7 +2743,11 @@ function calcDerived(){
     if (it.luck){ luckN++; P.critDmg += 5; }                 // Vận: +5% ST bạo/món
     if (it.life) P.hpPct += it.life * 4;                     // Sinh Mệnh: +4% HP/bậc (tối đa +28%)
     if (it.ancient && ANCIENT_SETS[it.ancient]) setCount[it.ancient] = (setCount[it.ancient] || 0) + 1;
+    // Khắc Ấn: có mặc là có hiệu lực. Chỉ tính Khắc Ấn hợp lớp — nhặt được của lớp khác thì món
+    // đồ vẫn dùng bình thường, riêng Khắc Ấn nằm im (nhãn món sẽ ghi rõ là không dùng được).
+    if (it.sigil && SIGIL_DEFS[it.sigil] && sigilUsable(it.sigil)) sigilOwned[it.sigil] = true;
   }
+  player.sigils = sigilOwned;
   // Cổ Thần Thủ Hộ — hiệu ứng bộ ẩn kích hoạt ở 2/3/5 món
   player.setActive = {};
   for (const sid in setCount){
@@ -3037,6 +3263,7 @@ function bandSummaryHtml(md){
 function buildWorld(){
   const md = mapDef();
   mobs = []; pickups = []; projectiles = []; effects = []; floats = [];
+  sigilReset(); // Khắc Ấn: vũng độc/sóng hẹn giờ của map cũ không được nổ giữa map mới
   petObj = null; mountObj = null; // Linh Thú & Thú Chiến xuất hiện lại ở map mới
   moveTarget = null; moveWaypoint = null; // Click-to-move: đích ở map cũ không còn ý nghĩa khi đổi map
   npcTalkTarget = null; // NPC ở map cũ không còn ý nghĩa khi đổi map
@@ -3566,6 +3793,65 @@ function logCombat(text, color){
   while (logEl.children.length > 50) logEl.removeChild(logEl.lastChild);
 }
 
+// ═══════════ KHẮC ẤN — bộ máy chạy (bảng dữ liệu ở SIGIL_DEFS) ═══════════
+// Gọi một móc trên mọi Khắc Ấn người chơi đang mặc. Bọc trong _sigilBusy để sát thương do
+// Khắc Ấn gây ra không kích lại chính nó.
+function sigilFire(hook, a, b, c, d){
+  if (_sigilBusy || !player || !player.sigils) return;
+  _sigilBusy = true;
+  try {
+    for (const k in player.sigils){
+      const s = SIGIL_DEFS[k];
+      if (!s || !s[hook]) continue;
+      try { s[hook](a, b, c, d); }
+      catch (e){ console.error('Khắc Ấn ' + k + '.' + hook, e); }   // 1 Khắc Ấn lỗi không được làm gãy cả đòn đánh
+    }
+  } finally { _sigilBusy = false; }
+}
+// Sát thương phát sinh từ Khắc Ấn: đi qua hurtMob() như mọi nguồn khác (để ăn giáp quái, khắc
+// hệ, hút máu…) nhưng mang source riêng nên không gây khựng hình/rung màn hình lặp.
+function sigilHurt(m, dmg){
+  if (!m || m.dead) return;
+  hurtMob(m, Math.max(1, dmg), 'sigil');
+}
+function sigilArea(x, y, r, dmg, except){
+  for (const m of mobs){
+    if (m.dead || m === except || m.def.duHiep) continue;
+    if (dist(x, y, m.x, m.y) < r + m.def.size) sigilHurt(m, dmg * rnd(0.9, 1.1));
+  }
+}
+function sigilSplash(m, r, dmg){ sigilArea(m.x, m.y, r, dmg, m); }
+function sigilAfter(t, fn){ sigilTimers.push({ t, fn }); }
+// Xoá sạch việc hẹn giờ + vùng đất — gọi khi đổi map hoặc người chơi chết, nếu không một
+// quả Trấn Phái tung ở map cũ sẽ nổ giữa map mới.
+function sigilReset(){ sigilTimers.length = 0; sigilZones.length = 0; }
+function sigilTick(dt){
+  if (sigilTimers.length){
+    for (const s of sigilTimers) s.t -= dt;
+    const due = sigilTimers.filter(s => s.t <= 0);
+    if (due.length){
+      sigilTimers = sigilTimers.filter(s => s.t > 0);
+      // _sigilBusy: đòn hẹn giờ cũng là sát thương của Khắc Ấn, không được kích Khắc Ấn lần nữa
+      _sigilBusy = true;
+      try { for (const s of due) { try { s.fn(); } catch (e){ console.error('Khắc Ấn hẹn giờ', e); } } }
+      finally { _sigilBusy = false; }
+    }
+  }
+  for (const z of sigilZones){
+    z.t -= dt; z.tick -= dt;
+    if (z.tick <= 0){
+      z.tick = 0.5;
+      _sigilBusy = true;
+      try { sigilArea(z.x, z.y, z.r, z.dps * 0.5); } finally { _sigilBusy = false; }
+      addEffect({ type:'ring', x:z.x, y:z.y, r:z.r, color:z.color });
+      for (let i = 0; i < 3; i++)
+        addEffect({ type:'ink', x:z.x + rnd(-z.r,z.r)*0.8, y:z.y + rnd(-z.r,z.r)*0.8,
+                    vx:rnd(-15,15), vy:rnd(-40,-8), color:z.color });
+    }
+  }
+  if (sigilZones.length) sigilZones = sigilZones.filter(z => z.t > 0);
+}
+
 function hurtMob(m, dmg, source){
   if (m.dead) return;
   player.combatT = 4; // P0: gây sát thương cũng tính là vào combat
@@ -3669,10 +3955,17 @@ function hurtMob(m, dmg, source){
   if ((player.vhLeechT || 0) > 0){
     player.hp = Math.min(player.maxHp, player.hp + final * 0.25);
   }
+  // Khắc Ấn — móc 'hit'. Chạy TRƯỚC killMob() để một Khắc Ấn kịp đánh dấu con quái (vd Bùng
+  // Cháy ghi m.sgBurn) rồi móc 'kill' ngay sau đó mới đọc được dấu ấy.
+  if (source !== 'sigil'){
+    if (_sigilTag) _sigilHits++;
+    sigilFire('hit', m, final, source, _sigilTag);
+  }
   if (m.hp <= 0) killMob(m, source);
 }
 function killMob(m, source){
   m.dead = true; m.deadT = 0.45; // xác tan dần thành mực thay vì biến mất tức thì
+  sigilFire('kill', m); // Khắc Ấn — móc 'kill' (Hồi Quang, Bùng Cháy…)
   shakeT = Math.max(shakeT, 0.2); shakeMag = Math.max(shakeMag, m.def.boss ? 8 : m.def.elite ? 5 : 3); // hạ quái có lực
   AudioSys.sfx('die', 0.6);
   AudioSys.sfx('coin', 0.5);
@@ -5040,6 +5333,8 @@ function update(dt){
   for (const m of mobs){ if (m.dead && m.deadT > 0) m.deadT -= dt; }
   compactInPlace(mobs, m => !m.dead || m.deadT > 0 || (m.type !== 'boss' && !m.gone));
 
+  sigilTick(dt);   // Khắc Ấn: việc hẹn giờ (sóng 2, mưa tên) + vùng đất còn hiệu lực (vũng độc)
+
   // projectiles
   for (const p of projectiles){
     p.life -= dt;
@@ -5056,7 +5351,12 @@ function update(dt){
         // bỏ qua với MỌI đòn bắn ra — Sylvan Ranger/Dark Wizard (đòn thường + chiêu chính đều là proj)
         // gần như toàn bộ sát thương không ăn chỉ số này, khiến đầu tư Vận thành bẫy với 2 lớp đó.
         if (src==='hit' && Math.random() < player.crit){ dmg *= (player.critDmgMult || 2); src='crit'; }
+        // Khắc Ấn: dựng lại ngữ cảnh từ chính viên đạn — đạn chiêu chính bay tới đây rất lâu sau
+        // khi castSkill() kết thúc, nên không thể trông vào cờ toàn cục. Đạn do Khắc Ấn đẻ ra
+        // (sigilSplit) mang tag rỗng để Tách Tiễn không tự tách mãi.
+        _sigilTag = p.sigilSplit ? null : (p.tag || null);
         hurtMob(m, dmg, src);
+        _sigilTag = null;
         // Sourced per-class projectile-impact SFX — the generic "this ranged attack landed" moment,
         // shared by every player-fired projectile kind (skill/amkhi/bow/danchi) that reaches this loop.
         if (!m.dead){
@@ -7216,6 +7516,27 @@ function renderChar(){
         <span class="t-desc">${tr.desc}</span></div>`;
     }
   }
+  // ── Khắc Ấn đang mang: thứ người chơi cần tra nhanh là "chiêu mình đang khác thường ở chỗ nào" ──
+  {
+    const own = Object.keys(p.sigils || {});
+    const pool = sigilPool(p.sect);
+    html += `<div style="margin:8px 0 2px;font-size:12px;color:#ffd76a;letter-spacing:1px">◆ KHẮC ẤN ĐANG MANG · ${own.length}/${pool.length}</div>`;
+    if (!own.length){
+      html += `<div style="font-size:11.5px;opacity:.62;margin-bottom:6px;line-height:1.7">
+        Chưa mang Khắc Ấn nào. Khắc Ấn đổi <b>cách chiêu hoạt động</b>, không cộng thêm chỉ số —
+        rơi từ <b style="color:#b08ae8">Bảo Hạp IV+</b>, <b style="color:#7ecbff">Hung Thần Giáng Thế</b>
+        và <b style="color:#ffd76a">Xâm Lăng Vàng</b>.</div>`;
+    } else {
+      for (const k of own){
+        const sg = SIGIL_DEFS[k];
+        html += `<div class="trait-row"><span class="t-glyph" style="color:${sg.color}">◆</span>
+          <span class="t-name" style="color:${sg.color}">${sg.name}</span>
+          <span class="t-desc">${sg.desc}</span></div>`;
+      }
+      const miss = pool.filter(k => !p.sigils[k]);
+      if (miss.length) html += `<div style="font-size:11px;opacity:.5;margin-bottom:6px">Chưa có: ${miss.map(k=>SIGIL_DEFS[k].name).join(' · ')}</div>`;
+    }
+  }
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Điểm tiềm năng còn: <b style="color:#7ecbff">${p.free}</b> (mỗi cấp +5)</div>`;
   // Gợi ý build: điểm nào quy đổi ra Công Kích cho ĐÚNG phái này (xem SECTS[x].atkSrc trong calcDerived())
   const _atkSrc = sect.atkSrc || { str:2.0 };
@@ -7322,6 +7643,14 @@ function itemLineHtml(it){
   }
   if (it.luck) s += `<span style="color:#7fd8e0">☘Vận</span> `;
   if (it.life) s += `<span style="color:#e84a6a">❤Sinh Mệnh +${it.life*4}% HP</span> `;
+  // Khắc Ấn đứng riêng một dòng, ghi rõ hiệu ứng: nó KHÔNG so được với dòng phụ nào nên nhét
+  // chung một hàng với các con số % chỉ làm người chơi lướt qua mất.
+  if (it.sigil && SIGIL_DEFS[it.sigil]){
+    const sg = SIGIL_DEFS[it.sigil], ok = sigilUsable(it.sigil);
+    s += `<div style="margin:3px 0;padding:3px 6px;border-left:3px solid ${ok?sg.color:'#6a6a72'};background:rgba(255,255,255,.04);font-size:12px">
+      <b style="color:${ok?sg.color:'#8a8a92'}">◆ ${sg.name}</b>${ok?'':' <span style="color:#8a8a92">(lớp khác — không có tác dụng)</span>'}
+      <br><span style="opacity:.82">${sg.desc}</span></div>`;
+  }
   s += `${it.main.name} +${Math.round(it.main.v*m*10)/10}`;
   s += ` · ${it.element}`;
   for (const sub of it.subs) s += ` · ${sub.name} +${Math.round(sub.v*(sub.k==='perfect'?1:m)*10)/10}%`;
@@ -8792,6 +9121,13 @@ function castSkill(id){
   player.castAct = heroCastAct(id, d);           // tư thế phải khớp VFX của chiêu
   const sect = SECTS[player.sect];
   let sfxTag = 'skill'; // per-class override set in the sectTP/sectA branches below
+  // Khắc Ấn — mở ngữ cảnh đòn cho cả lượt tung này. 'a' = chiêu chính (sectA), 'tp' = Trấn Phái.
+  // Móc 'pre' chạy TRƯỚC mọi thứ khác vì nó có thể dời chỗ đứng người chơi (Xung Phong), và
+  // vị trí ấy phải là vị trí chiêu thực sự phát ra.
+  _sigilTag = d.kind === 'sectTP' ? 'tp' : (d.kind === 'amkhi' || d.kind === 'gangkhi' || d.kind === 'danchi'
+              || d.kind === 'bow' || d.kind === 'tieuhon' || d.kind === 'vh') ? null : 'a';
+  _sigilHits = 0;
+  if (_sigilTag) sigilFire('pre', _sigilTag);
 
   if (d.kind === 'amkhi'){ // ám khí projectile
     const t = nearestMob(360);
@@ -8900,7 +9236,8 @@ function castSkill(id){
       const _nP = (def.count || 1) + _st; // Multi-Shot (Sylvan Ranger) bắn 5 tên/loạt; các phái khác mặc định 1, +1 mỗi bậc tiến hóa
       for (let _pi = 0; _pi < _nP; _pi++){
         const _off = _nP > 1 ? (_pi - (_nP - 1) / 2) * 0.15 : 0;
-        projectiles.push({ x:player.x, y:player.y, ang:ang + _off, speed:420, dmg:player.atk*def.mult*_tbMul, kind:'skill', life:1.0, color:sect.color, pierce:true, style:(_svc && _svc.proj) || undefined });
+        // tag:'a' — đạn của chiêu CHÍNH mang theo ngữ cảnh Khắc Ấn tới tận lúc nó chạm địch
+        projectiles.push({ x:player.x, y:player.y, ang:ang + _off, speed:420, dmg:player.atk*def.mult*_tbMul, kind:'skill', life:1.0, color:sect.color, pierce:true, tag:'a', style:(_svc && _svc.proj) || undefined });
       }
       spawnSkillVfx(_sva, { color:sect.color, glyph:'✹' }, 'cast', ang, 60);
       // Sylvan Ranger / Dark Wizard bắn đạn từ xa — không có lưỡi kiếm nào quét ra, chỉ loé đầu nòng
@@ -8933,6 +9270,11 @@ function castSkill(id){
       if (t2) hurtMob(t2, player.atk*def.mult*_tbMul*rnd(0.95,1.15), Math.random()<player.crit?'crit':'hit');
     }
   }
+  // Khắc Ấn — móc 'cast': biết lượt tung này đã chạm mấy con (Hiệu Triệu cần con số đó).
+  // Đóng ngữ cảnh NGAY sau đó: chiêu bắn đạn thì sát thương tới muộn, lúc ấy cờ phải đến từ
+  // chính viên đạn (p.tag) chứ không phải cờ còn sót lại của lượt tung trước.
+  if (_sigilTag){ const _t = _sigilTag, _h = _sigilHits; _sigilTag = null; sigilFire('cast', _t, _h); }
+  _sigilTag = null; _sigilHits = 0;
   AudioSys.sfx(sfxTag, 0.6);
   flashSkillSlot(id);
   // Song Ảnh Phân Thân Thủ (Võ Học Phổ): 30% chiêu vừa tung không tốn hồi chiêu
@@ -13035,7 +13377,13 @@ window.openBaoHap = function(t){
   } else {
     let it = null;
     for (let i = 0; i < 6; i++){ it = genItem(lv, 0.5 + t*0.06); if (it.rarity >= 2) break; }
-    if (player.inv.length < 30){ player.inv.push(it); got.push(`Trang bị: <b class="${RARITIES[it.rarity].cls}">${it.name}</b>`); }
+    // Khắc Ấn chỉ từ Bảo Hạp IV trở lên, tỉ lệ tăng dần theo tầng (IV 18% → VII 33%)
+    if (t >= 4) attachSigil(it, 0.18 + (t - 4) * 0.05);
+    if (player.inv.length < 30){
+      player.inv.push(it);
+      got.push(`Trang bị: <b class="${RARITIES[it.rarity].cls}">${it.name}</b>`);
+      if (it.sigil) got.push(sigilGotLine(it.sigil));
+    }
     else { player.silver += 800; got.push('Túi đầy — trang bị quy đổi 800◈'); }
   }
   // Châu kèm theo — tầng càng cao tỉ lệ càng tốt
@@ -13117,6 +13465,15 @@ function matonKilled(m){
   zoneBanner = { text:'☠ HUNG THẦN ĐÃ BỊ TIÊU DIỆT', sub:`Nhận ${BAOHAP_TIERS[tier].name} — mở trong Túi Đồ (phím I)!`, color:'#7ecbff', t:6 };
   addFloat(m.x, m.y-130, `+1 ${BAOHAP_TIERS[tier].name}`, BAOHAP_TIERS[tier].color, 16);
   AudioSys.sfx('levelup', 1);
+  // Hung Thần là sự kiện thế giới hiếm nhất (4 giờ/lần, một con boss) — 45% rơi thẳng một món
+  // mang Khắc Ấn, không phải qua Bảo Hạp. Đây là nguồn Khắc Ấn chắc tay nhất trong game.
+  if (player.inv.length < 30){
+    const it = genItem(Math.max(player.level, m.def.lv || player.level), 0.7);
+    if (attachSigil(it, 0.45)){
+      player.inv.push(it);
+      sigilAnnounce(it.sigil, m.x, m.y - 160);
+    }
+  }
   saveGame();
 }
 // Hook QA: đẩy lịch Ma Tôn đến sau vài giây
@@ -13198,6 +13555,15 @@ function goldenKilled(m){
   player.baohap[tier] = (player.baohap[tier] || 0) + 1;
   addFloat(m.x, m.y - 90, `+1 ${BAOHAP_TIERS[tier].name}`, BAOHAP_TIERS[tier].color, 15);
   AudioSys.sfx('quest', 0.6);
+  // Bản sắc riêng của Xâm Lăng Vàng: ngoài Bảo Hạp, đây là nguồn Khắc Ấn thứ ba. Chúa Đàn Vàng
+  // 35%, quái vàng thường 8% — trước đây sự kiện này không có gì khác ngoài "hạp bậc cao hơn".
+  if (player.inv.length < 30){
+    const it = genItem(Math.max(player.level, m.def.lv || player.level), 0.6);
+    if (attachSigil(it, m.def.goldenLeader ? 0.35 : 0.08)){
+      player.inv.push(it);
+      sigilAnnounce(it.sigil, m.x, m.y - 110);
+    }
+  }
   if (GOLDEN.active && GOLDEN.spawnedOn){
     GOLDEN.left = Math.max(0, GOLDEN.left - 1);
     if (m.def.goldenLeader)
