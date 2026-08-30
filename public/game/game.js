@@ -53,11 +53,59 @@ const RARITIES = [
 const GIAI_NAMES = ['Tân Binh','Chiến Binh','Anh Hùng','Chinh Phục','Hung Thần','Huyền Thoại','Bất Tử','Thần Thoại','Vô Song','Tối Thượng'];
 function giaiName(t){ return GIAI_NAMES[clamp((t||1)-1, 0, 9)]; }
 // Quái thường chỉ rơi fodder Phàm + vật liệu; đồ dùng được (Tinh+) chỉ từ tinh anh/boss
+// ── TỈ LỆ RƠI TRANG BỊ: theo DẢI QUÁI × LOẠI ────────────────────────────────
+// Trước đây DROP_SRC.chance chỉ có 4 ngăn cứng, nên Axie Heo Rừng cấp 1 và Cuồng Binh Tro Tàn
+// cấp 102 rơi đồ với xác suất Y HỆT nhau: 6%. Về cuối game mỗi con quái tốn nhiều thời gian
+// hơn hẳn, tỉ lệ phải bù lại.
+const DROP_RATE = {          // dải:  I     II    III   IV    V
+  mob:    [0.07, 0.08, 0.09, 0.10, 0.12],
+  elite:  [0.28, 0.30, 0.33, 0.36, 0.40],
+  thuve:  [1, 1, 1, 1, 1],
+  tranai: [1, 1, 1, 1, 1],
+};
+const DROP_COUNT = { thuve:[1,2,2,2,3], tranai:[2,2,3,3,3] };
+function mobBand(lv){ return lv <= 20 ? 0 : lv <= 40 ? 1 : lv <= 60 ? 2 : lv <= 80 ? 3 : 4; }
+// 46 giá trị `drop:` đã cân sẵn trên từng con quái (0,14 → 1,0) nay SỐNG lại — nhưng làm hệ số
+// TRONG dải, không phải tỉ lệ tuyệt đối: con "giàu" rơi nhiều hơn con "nghèo" cùng dải chừng
+// ±20%, mà không phá mức đã chốt cho cả dải.
+function mobDropRate(def, srcK){
+  const base = (DROP_RATE[srcK] || DROP_RATE.mob)[mobBand(def.lv || 1)];
+  return def.drop == null ? base : base * (0.80 + 0.40 * clamp(def.drop, 0, 1));
+}
+function mobDropCount(def, srcK){
+  const t = DROP_COUNT[srcK];
+  return t ? t[mobBand(def.lv || 1)] : 1;
+}
+// Tỉ lệ Hoàn Hảo theo tầng Bảo Hạp. Hoàn Hảo GỠ khỏi quái (kể cả boss) — Bảo Hạp chỉ có từ
+// Xâm Lăng Vàng và Hung Thần, nên hai sự kiện thế giới thành con đường DUY NHẤT tới đồ Hoàn
+// Hảo. Đó chính là thứ làm chúng đáng chờ.
+const BAOHAP_PERFECT = [0, 0, 0.06, 0.12, 0.20, 0.30, 0.40, 0.55];
+// ── NGỌC RƠI TỪ MỌI LOẠI QUÁI (vòng kinh tế MU Season 1) ────────────────────
+// Trước đây quái thường rơi ĐÚNG 0 ngọc: muốn rèn thì bắt buộc phải chờ sự kiện thế giới hoặc
+// mở Bảo Hạp. Trong MU thì ngọc rơi từ quái thường — đó là thứ khiến việc cày có nghĩa mỗi ngày.
+// Nhân theo dải quái ×1,0 → ×1,8: cuối game mỗi con tốn nhiều thời gian hơn hẳn.
+const JEWEL_DROP = {
+  mob:    { chucPhuc:0.009, linhHon:0.007, sinhMenh:0.0025, honDon:0.0010 },
+  elite:  { chucPhuc:0.045, linhHon:0.035, sinhMenh:0.016,  honDon:0.008  },
+  thuve:  { chucPhuc:0.20,  linhHon:0.12,  sinhMenh:0.06,   honDon:0.03   },
+  tranai: { chucPhuc:1.00,  linhHon:0.45,  sinhMenh:0.22,   honDon:0.12   },
+};
+const JEWEL_BAND_MUL = [1.0, 1.2, 1.4, 1.6, 1.8];
+function rollJewels(def, srcK){
+  const tbl = JEWEL_DROP[srcK]; if (!tbl) return;
+  const mul = JEWEL_BAND_MUL[mobBand(def.lv || 1)];
+  for (const k in tbl){
+    if (Math.random() >= tbl[k] * mul) continue;
+    player.jewels[k] = (player.jewels[k] || 0) + 1;
+    addFloat(player.x, player.y - 70 - Math.random() * 20, '+1 ' + JEWEL_NAMES[k], JEWEL_COLORS[k], 13);
+    AudioSys.sfx('coin', 0.6);
+  }
+}
 const DROP_SRC = {
-  mob:    { chance:0.06, rar:[80,19,1,0,0],  perfect:0    },
-  elite:  { chance:0.35, rar:[0,70,28,2,0],  perfect:0.02 },
-  thuve:  { chance:1,    rar:[0,28,52,18,2], perfect:0.08, drops:2 },
-  tranai: { chance:1,    rar:[0,0,38,52,10], perfect:0.15, drops:3 },
+  mob:    { rar:[80,19,1,0,0],  perfect:0 },
+  elite:  { rar:[0,70,28,2,0],  perfect:0 },
+  thuve:  { rar:[0,28,52,18,2], perfect:0 },
+  tranai: { rar:[0,0,38,52,10], perfect:0 },
   // Rương Boss Săn (phó bản, MU Online-style) — 5 cấp, cấp càng cao càng chắc ra phẩm cao
   box1: { chance:1, rar:[70,25,5,0,0],  perfect:0    },
   box2: { chance:1, rar:[0,60,32,8,0],  perfect:0.05 },
@@ -70,6 +118,39 @@ function rollRaritySrc(srcK){
   let roll = Math.random()*tot;
   for (let i = 0; i < w.length; i++){ roll -= w[i]; if (roll <= 0) return i; }
   return 0;
+}
+// ── DÒNG HOÀN HẢO — bộ dòng RIÊNG, không phải "dòng cũ roll max" ───────────
+// Đây là chỗ hai trục tách hẳn nhau: ĐỘ HIẾM quyết định SỐ dòng thường (0-4), HOÀN HẢO thêm
+// 1-3 dòng từ bảng dưới. Hệ quả cố ý: một món Rèn Hoàn Hảo có thể đáng mặc hơn một món Thánh
+// Thường, vì nó mang dòng mà đồ thường KHÔNG BAO GIỜ có. Hai thứ để săn song song, không phải một.
+const EXC_WEAPON = [
+  { k:'excQi',     name:'Hạ địch hồi Qi',        v:8,  flat:true },  // cơ chế MỚI
+  { k:'excHp',     name:'Hạ địch hồi Sinh Lực',  v:8,  flat:true },  // cơ chế MỚI
+  { k:'perfect',   name:'Tỉ lệ ST Hoàn Hảo',     v:10 },
+  { k:'atkPct',    name:'Thêm Sát Thương',       v:2  },
+  { k:'excAtkLv',  name:'ST theo cấp',           v:1,  flat:true },  // = cấp ÷ 20, tự lớn theo cấp
+  { k:'aspdPct',   name:'Tốc Độ Đánh',           v:7  },
+];
+const EXC_ARMOR = [
+  { k:'silverPct', name:'Đồng Rơi Thêm',      v:40 },
+  { k:'excBlock',  name:'Tỉ lệ Đỡ Đòn',       v:10 },                // cơ chế MỚI
+  { k:'reflectPct',name:'Phản Sát Thương',    v:5  },
+  { k:'dmgred',    name:'Giảm Sát Thương',    v:4  },
+  { k:'qiPct',     name:'Qi Tối Đa',          v:4  },
+  { k:'hpPct',     name:'Sinh Lực Tối Đa',    v:4  },
+];
+// Số dòng Hoàn Hảo theo tầng Bảo Hạp: I-II → 1 · III-IV → 1-2 · V-VI → 2-3 · VII → 3
+function excCount(tier){
+  const t = tier || 0;
+  return t >= 7 ? 3 : t >= 5 ? 2 + (Math.random() < 0.5 ? 1 : 0)
+       : t >= 3 ? 1 + (Math.random() < 0.5 ? 1 : 0) : 1;
+}
+function rollExcLines(slotId, tier){
+  const pool = (slotId === 'vukhi' ? EXC_WEAPON : EXC_ARMOR).slice();
+  const n = Math.min(pool.length, excCount(tier));
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  return out;
 }
 const RARITY_SUBS = [0,1,2,3,4]; // số dòng phụ mở theo phẩm Phàm..Chí Tôn
 // Roll lại tên + chỉ số gốc + dòng phụ khi phẩm đổi (Tấn Phẩm / pity đai)
@@ -2549,7 +2630,7 @@ function subName(k){
            dmgred:'Giảm Sát Thương', perfect:'ST Hoàn Hảo', hpLeech:'Hút Sinh Lực', qiLeech:'Hút Qi',
            aspdPct:'Tốc Độ Đánh', expPct:'EXP Thêm', crit:'Bạo Kích' }[k] || k;
 }
-function genItem(level, bias, srcK){
+function genItem(level, bias, srcK, opts){
   const dropSlots = SLOTS.filter(s => !s.special);
   const slot = dropSlots[Math.floor(Math.random()*dropSlots.length)];
   // Drop v2.0: nguồn boss/tinh anh dùng bảng phẳng — xóa bias lv/10 thổi phồng Chí Tôn
@@ -2557,7 +2638,12 @@ function genItem(level, bias, srcK){
   const tier = itemTier(level);
   const ilvl = (tier-1)*10 + Math.ceil(Math.random()*10);
   const armorGroup = ARMOR_SLOTS.includes(slot.id);
-  const perfect = armorGroup && Math.random() < (srcK ? DROP_SRC[srcK].perfect : 0.08 + (bias||0)*0.06); // Hoàn Hảo: quái thường không roll
+  // `armorGroup &&` từng chặn ở đây, nên ô vũ khí LUÔN ra false: người chơi không thể có vũ
+  // khí Hoàn Hảo bằng bất kỳ cách nào. Vũ khí là ô người ta để ý nhất mà lại là ô duy nhất bị
+  // khoá — không có lý do thiết kế nào cho việc đó.
+  const _pRate = opts && opts.perfect != null ? opts.perfect
+               : srcK ? DROP_SRC[srcK].perfect : 0;
+  const perfect = Math.random() < _pRate;
   const pool = (armorGroup ? ARMOR_SUBS : WEAPON_SUBS).slice();
   const nSubs = Math.min(pool.length, perfect ? 4 : RARITY_SUBS[r]);
   const subs = [];
@@ -2576,6 +2662,7 @@ function genItem(level, bias, srcK){
     main: { k: slot.main, v: slot.base(tier, r), name: mainName(slot.main) },
     element: ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)],
     subs, plus: 0,
+    exc: perfect ? rollExcLines(slot.id, opts && opts.bhTier) : null,
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
   });
 }
@@ -2714,6 +2801,9 @@ function itemPower(it){
   const m = 1 + it.plus * 0.08;
   let p = it.main ? it.main.v * m * 10 : 0;
   for (const s of it.subs) p += s.pct ? s.v * 22 : s.v * 8;
+  // Dòng Hoàn Hảo PHẢI vào lực chiến. Bỏ qua thì mũi ▲, tự-mặc-đồ và nút Mặc Đồ Tốt Nhất
+  // đều mù trước thứ đắt nhất game — người chơi sẽ bị auto tháo mất đồ Hoàn Hảo.
+  if (it.exc) for (const e of it.exc) p += (e.flat ? e.v * 14 : e.v * 26);
   if (it.plus >= 10) p += it.awakened.v * 12;
   return Math.round(p);
 }
@@ -2849,7 +2939,10 @@ function calcDerived(){
   // P: tích lũy từ trang bị — flat + chỉ số % theo GDD
   const P = { atk:8 + player.level*2, hp:0, crit:0, eva:0, qireg:0,
     hpPct:0, qiPct:0, atkPct:0, dmgred:0, evaPct:0, silverPct:0, reflectPct:0,
-    perfect:0, hpLeech:0, qiLeech:0, aspdPct:0, pierce:0, expPct:0, defPct:0, critDmg:0 };
+    perfect:0, hpLeech:0, qiLeech:0, aspdPct:0, pierce:0, expPct:0, defPct:0, critDmg:0,
+    // Ba cơ chế MỚI chỉ đồ Hoàn Hảo có. Thiếu ngăn ở đây thì applyLine() lặng lẽ bỏ qua —
+    // dòng hiện trên nhãn món mà không có tác dụng gì.
+    excQi:0, excHp:0, excBlock:0, excAtkLv:0 };
   let luckN = 0;
   const setCount = {};
   const sigilOwned = {};   // Khắc Ấn gom từ đồ ĐANG MẶC (đồ trong túi không tính)
@@ -2859,6 +2952,9 @@ function calcDerived(){
     const m = 1 + it.plus * 0.08;
     if (it.main) applyLine(s, it.main.k, it.main.v * m, P);
     for (const sub of it.subs) applyLine(s, sub.k, sub.k === 'perfect' ? sub.v : sub.v * m, P);
+    // Dòng Hoàn Hảo KHÔNG nhân theo mức rèn: rèn làm mạnh chỉ số gốc, còn đây là dòng riêng
+    // của món. Nhân cả hai thì +11 Hoàn Hảo vọt hẳn khỏi thang cân bằng.
+    if (it.exc) for (const e of it.exc) applyLine(s, e.k, e.k === 'excAtkLv' ? Math.floor(player.level / 20) : e.v, P);
     if (it.plus >= 10 && it.awakened) applyLine(s, it.awakened.k, it.awakened.v, P);
     if (it.luck){ luckN++; P.critDmg += 5; }                 // Vận: +5% ST bạo/món
     if (it.life) P.hpPct += it.life * 4;                     // Sinh Mệnh: +4% HP/bậc (tối đa +28%)
@@ -2899,6 +2995,9 @@ function calcDerived(){
   // Công Kích quy đổi theo atkSrc riêng từng phái (str/agi/ene trọng số khác nhau) thay vì chung str×2
   const atkSrc = sect0.atkSrc || { str: 2.0 };
   const rawAtk = (atkSrc.str || 0) * s.str + (atkSrc.agi || 0) * s.agi + (atkSrc.ene || 0) * s.ene;
+  // Dòng Hoàn Hảo "ST theo cấp" = cấp ÷ 20. Cộng vào P.atk TRƯỚC khi nhân, để nó ăn mọi hệ số
+  // về sau y như sát thương gốc — đây là dòng DUY NHẤT tự lớn theo cấp nhân vật.
+  if (P.excAtkLv) P.atk += P.excAtkLv;
   player.atk = Math.round((P.atk + rawAtk) * (1 + dr.atk) * (sect0.dmgMult || 1));
   player.maxHp = Math.round((100 + player.level*15 + s.vit*12 + P.hp) * (1 + dr.hp) * (sect0.hpMult || 1));
   player.maxQi = 50 + player.level*5 + Math.round(s.ene*1.5); // Linh Lực: mỗi điểm +1.5 Chân Khí tối đa (mọi phái)
@@ -3011,6 +3110,10 @@ function calcDerived(){
   }
   if (player.level < 20) player.qireg *= 1.5; // tân thủ hồi chân khí nhanh hơn — đỡ chết nhịp farm đầu game
   player.perfectProc = Math.min(0.5, P.perfect/100);
+  // Bốn dòng Hoàn Hảo có cơ chế RIÊNG — phải đổ ra `player` mới có ai đọc được
+  player.excQi = P.excQi;                       // hạ địch hồi Qi (số phẳng)
+  player.excHp = P.excHp;                       // hạ địch hồi Sinh Lực (số phẳng)
+  player.excBlock = Math.min(0.4, P.excBlock/100); // tỉ lệ đỡ đòn, chặn trần 40%
   player.hpLeech = P.hpLeech/100;
   player.qiLeech = P.qiLeech/100;
   // ── The Hatching: reset rồi áp trait (mọi hiệu ứng trait đều qua đây) ──
@@ -4162,6 +4265,16 @@ function hurtMob(m, dmg, source){
 }
 function killMob(m, source){
   m.dead = true; m.deadT = 0.45; // xác tan dần thành mực thay vì biến mất tức thì
+  // Hai cơ chế chỉ đồ Hoàn Hảo có: hạ địch hồi Qi / Sinh Lực. Đặt ở killMob() để mọi đường
+  // sát thương (đòn thường, chiêu, Khắc Ấn, pet) đều tính — không phải chỉ đòn tay.
+  if (player.excQi && player.qi < player.maxQi){
+    player.qi = Math.min(player.maxQi, player.qi + player.excQi);
+    addFloat(m.x, m.y - 40, `+${player.excQi} Qi`, '#7ecbff', 11);
+  }
+  if (player.excHp && player.hp < player.maxHp){
+    player.hp = Math.min(player.maxHp, player.hp + player.excHp);
+    addFloat(m.x, m.y - 52, `+${player.excHp}`, '#6ae88a', 11);
+  }
   sigilFire('kill', m); // Khắc Ấn — móc 'kill' (Hồi Quang, Bùng Cháy…)
   shakeT = Math.max(shakeT, 0.2); shakeMag = Math.max(shakeMag, m.def.boss ? 8 : m.def.elite ? 5 : 3); // hạ quái có lực
   AudioSys.sfx('die', 0.6);
@@ -4252,8 +4365,10 @@ function killMob(m, source){
   const _dsrc = m.def.huntBoss ? null : m.def.bossKind === 'tranai' ? 'tranai' : (m.def.boss || m.def.bossKind) ? 'thuve' : (m.def.elite ? 'elite' : 'mob');
   const _tbl = _dsrc && DROP_SRC[_dsrc];
   let _gotThan = false;
-  for (let _di = 0; _dsrc && _di < (_tbl.drops || 1); _di++){
-    if (Math.random() >= _tbl.chance + (player.dropBonus || 0)) continue;
+  const _dn = _dsrc ? mobDropCount(m.def, _dsrc) : 0;
+  const _dr = _dsrc ? mobDropRate(m.def, _dsrc) : 0;
+  for (let _di = 0; _dsrc && _di < _dn; _di++){
+    if (Math.random() >= _dr + (player.dropBonus || 0)) continue;
     const it = genItem(Math.max(1, m.def.lv + (Math.random()<0.3?1:0)), 0, _dsrc);
     // Pity đai: Vệ Binh Trụ 8 lần liên tiếp không ra Thần+ → bảo đảm 1 món Thần
     if (_dsrc === 'thuve' && m.def.bossKind === 'thuve' && (player.bossPity || 0) >= 8 && it.rarity < 3){
@@ -4272,6 +4387,7 @@ function killMob(m, source){
     else if (player.inv.length < 30){ player.inv.push(it); addFloat(m.x, m.y-54, it.name, RARITIES[it.rarity].color, 12);
       if (it.rarity >= 2) addEffect({ type:'spark', x:m.x, y:m.y-12, r:32 + it.rarity*8, color:RARITIES[it.rarity].color }); tryAutoEquip(it); } // GDD Đợt 2 B7: tự mặc đồ mạnh hơn
   }
+  if (_dsrc) rollJewels(m.def, _dsrc);
   if (m.def.bossKind === 'thuve') player.bossPity = _gotThan ? 0 : (player.bossPity || 0) + 1;
   // Vật liệu Drop v2.0: Mảnh Trang Bị (quái 8%, tinh anh 100%)
   if (!m.def.boss && !m.def.bossKind && Math.random() < (m.def.elite ? 1 : 0.08)){
@@ -5508,6 +5624,13 @@ function update(dt){
         }
         if (player.gkBuffT > 0) dmg *= 0.7; // Cương Khí Hộ Thể (chủ động): giảm 30% ST
         dmg = Math.max(1, Math.round(dmg));
+        // ĐỠ ĐÒN — cơ chế chỉ đồ Hoàn Hảo có: chặn HẲN một đòn, không phải giảm %. Đặt SAU khi
+        // đã làm tròn để con số hiện lên đúng bằng thứ người chơi vừa chặn được.
+        if (player.excBlock && Math.random() < player.excBlock){
+          addFloat(player.x, player.y-46, `⛊ ĐỠ! -${dmg}`, '#9fd0ff', 14);
+          AudioSys.sfx('ui', 0.5);
+          continue;   // hồi chiêu của quái đã đặt ở trên — đặt lại 0 là nó đánh lại NGAY khung sau
+        }
         if ((player.vhShield || 0) > 0){ // Thái Cực Kiếm: khiên kiếm khí hấp thụ
           const absorbed = Math.min(player.vhShield, dmg);
           player.vhShield -= absorbed; dmg -= absorbed;
@@ -9255,6 +9378,16 @@ function itemLineHtml(it){
   for (const sub of it.subs) s += ` · ${sub.name} +${Math.round(sub.v*(sub.k==='perfect'?1:m)*10)/10}%`;
   if (it.plus>=10) s += ` · <span style="color:#f39c3d">☆ ${it.awakened.name}</span>`;
   else s += ` · <span style="opacity:.4">☆(+10)</span>`;
+  // Dòng Hoàn Hảo đứng thành KHỐI RIÊNG, không trộn vào dãy dòng thường — chúng là bộ dòng
+  // khác hẳn, và là lý do một món Rèn Hoàn Hảo có thể đáng mặc hơn một món Thánh Thường.
+  if (it.exc && it.exc.length){
+    s += `<div class="exc-block"><b>✦ DÒNG HOÀN HẢO</b>`;
+    for (const e of it.exc){
+      const v = e.k === 'excAtkLv' ? Math.floor((player ? player.level : 20) / 20) : e.v;
+      s += `<span>${e.name} +${v}${e.flat ? '' : '%'}</span>`;
+    }
+    s += `</div>`;
+  }
   return s;
 }
 window.forgeUseCharm = false;
@@ -12465,7 +12598,7 @@ function bagSecGear(){
     h += `<div class="forge-lines" style="margin-top:10px"><b class="${RARITIES[it.rarity].cls}">${it.name}</b><br>${itemLineHtml(it)}${itemCompareHtml(it)}</div>
       <div class="forge-actions"><button class="mini-btn" onclick="equipItem(${window.bagSel})">Mặc Vào</button>
       <button class="mini-btn" onclick="sellItem(${window.bagSel})">Bán (+${itemSellPrice(it)}◈)</button>
-      <button class="mini-btn" onclick="salvage(${window.bagSel});window.bagSel=-1">Phân Giải (+${1+it.rarity+Math.floor(it.plus/3)}✦)</button></div>`;
+      <button class="mini-btn" onclick="salvage(${window.bagSel});window.bagSel=-1">Phân Giải (+${(1+it.rarity+Math.floor(it.plus/3)) * (!it.special && !itemUsable(it) ? 2 : 1)}✦)</button></div>`;
   }
   return h;
 }
@@ -12560,10 +12693,13 @@ window.unequip = function(slotId){
 window.salvage = function(i){
   const it = player.inv[i];
   if (!it) return;
-  const gain = 1 + it.rarity + Math.floor(it.plus/3);
+  // Khoá lớp nghĩa là 4/5 số vũ khí nhặt được là đồ vô dụng. Phân giải ×2 biến chúng thành
+  // nguyên liệu thật, chứ không phải rác phải bấm bán từng món.
+  const wrong = !it.special && !itemUsable(it);
+  const gain = (1 + it.rarity + Math.floor(it.plus/3)) * (wrong ? 2 : 1);
   player.mat += gain;
   player.inv.splice(i,1);
-  addFloat(player.x, player.y-30, `Phân giải +${gain}✦`, '#9fd0ff', 12);
+  addFloat(player.x, player.y-30, `Phân giải +${gain}✦${wrong ? ' (đồ khác lớp ×2)' : ''}`, '#9fd0ff', 12);
   refreshEqPanels(); saveGame();
 };
 
@@ -16699,7 +16835,8 @@ window.openBaoHap = function(t){
     } else { player.silver += 3000; got.push('Túi đầy — Cổ Thần quy đổi 3000◈'); }
   } else {
     let it = null;
-    for (let i = 0; i < 6; i++){ it = genItem(lv, 0.5 + t*0.06); if (it.rarity >= 2) break; }
+    const _bp = BAOHAP_PERFECT[Math.min(t, BAOHAP_PERFECT.length - 1)] || 0;
+    for (let i = 0; i < 6; i++){ it = genItem(lv, 0.5 + t*0.06, null, { perfect: _bp }); if (it.rarity >= 2) break; }
     // Khắc Ấn chỉ từ Bảo Hạp IV trở lên, tỉ lệ tăng dần theo tầng (IV 18% → VII 33%)
     if (t >= 4) attachSigil(it, 0.18 + (t - 4) * 0.05);
     if (player.inv.length < 30){
