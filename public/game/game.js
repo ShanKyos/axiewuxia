@@ -2463,6 +2463,8 @@ let sigilTimers = [], sigilZones = [];
 // Chống đệ quy: sát thương do chính Khắc Ấn gây ra không được kích lại Khắc Ấn, nếu không
 // Lan Trảm sẽ tự bật vòng quanh đến khi tràn ngăn xếp.
 let _sigilBusy = false;
+let _sigilDepth = 0;          // chặn nổ dây chuyền của móc 'kill'
+const SIGIL_MAX_DEPTH = 3;
 // Ngữ cảnh đòn đang bay: chiêu nào gây ra nó ('a' chiêu chính · 'tp' Trấn Phái · null đòn thường)
 // và đã chạm mấy con trong lần tung này. castSkill() chạy đồng bộ nên với chiêu chạm-ngay
 // (cone/selfaoe/dash) cờ này còn nguyên lúc hurtMob() chạy; chiêu bắn đạn thì gắn cờ lên
@@ -3902,8 +3904,13 @@ function logCombat(text, color){
 // Gọi một móc trên mọi Khắc Ấn người chơi đang mặc. Bọc trong _sigilBusy để sát thương do
 // Khắc Ấn gây ra không kích lại chính nó.
 function sigilFire(hook, a, b, c, d){
-  if (_sigilBusy || !player || !player.sigils) return;
-  _sigilBusy = true;
+  if (!player || !player.sigils) return;
+  // 'pre'/'hit'/'cast' không được tự kích lại từ sát thương của chính Khắc Ấn — sẽ thành vòng
+  // lặp vô hạn. Riêng 'kill' thì PHẢI chạy: hạ địch bằng Khắc Ấn vẫn là hạ địch, Hồi Quang và
+  // Bùng Cháy đều dựa vào nó. Nổ dây chuyền được chặn bằng độ sâu, không phải cấm hẳn.
+  if (hook === 'kill' ? _sigilDepth >= SIGIL_MAX_DEPTH : _sigilBusy) return;
+  const _prevBusy = _sigilBusy;
+  _sigilBusy = true; _sigilDepth++;
   try {
     for (const k in player.sigils){
       const s = SIGIL_DEFS[k];
@@ -3911,7 +3918,7 @@ function sigilFire(hook, a, b, c, d){
       try { s[hook](a, b, c, d); }
       catch (e){ console.error('Khắc Ấn ' + k + '.' + hook, e); }   // 1 Khắc Ấn lỗi không được làm gãy cả đòn đánh
     }
-  } finally { _sigilBusy = false; }
+  } finally { _sigilBusy = _prevBusy; _sigilDepth--; }
 }
 // Sát thương phát sinh từ Khắc Ấn: đi qua hurtMob() như mọi nguồn khác (để ăn giáp quái, khắc
 // hệ, hút máu…) nhưng mang source riêng nên không gây khựng hình/rung màn hình lặp.
@@ -5656,6 +5663,9 @@ function onDeath(){
     AudioSys.sfx('levelup', 0.9);
     return;
   }
+  // Khắc Ấn: vũng độc và sóng hẹn giờ phải tắt theo cái chết. Nếu không chúng đóng băng suốt
+  // màn hình bại trận rồi chạy tiếp ở TOẠ ĐỘ CŨ sau khi hồi sinh — có khi ở tận map khác.
+  sigilReset();
   if (TOWER){ // Trận Địa Phòng Thủ: chết giữa lượt → kết thúc lượt riêng, không tính bại trận thường
     dead = true;
     endTowerRun('death');
