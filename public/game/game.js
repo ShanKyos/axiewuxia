@@ -256,30 +256,39 @@ const TP_CD = 10, TP_QI = 50, TP_RADIUS = 185;
 
 const MOBS = {
   boar:    { name:'Dã Trư',    lv:1, hp:55,  atk:7,  def:0, xp:28,  silver:[4,9],   speed:52, aggro:130, range:30, atkCd:1.4, size:15, color:'#6b5b4a', eye:'#e8ecff', drop:0.14, el:'Thổ', img:'assets/mobs/boar.png' },
-  wolf:    { name:'Tàn Lang',  lv:3, hp:110, atk:13, def:2, xp:55,  silver:[8,15],  speed:86, aggro:170, range:30, atkCd:1.2, size:15, color:'#5a5f6b', eye:'#ffd76a', drop:0.17, el:'Mộc', img:'assets/mobs/wolf.png' },
-  bandit:  { name:'Sơn Tặc',   lv:5, hp:210, atk:20, def:6, xp:105, silver:[14,24], speed:66, aggro:190, range:32, atkCd:1.3, size:16, color:'#4a3a30', eye:'#ff6a5a', sash:'#a03028', drop:0.20, el:'Kim', img:'assets/mobs/bandit.png' },
-  assassin:{ name:'Gloam Marauder', lv:8, hp:520, atk:30, def:10, xp:320, silver:[40,70], speed:96, aggro:230, range:34, atkCd:1.1, size:17, color:'#1d1a24', eye:'#c07fe0', elite:true, drop:0.55, el:'Thủy', img:'assets/mobs/assassin.png' },
+  wolf:    { name:'Tàn Lang',  lv:4, hp:160, atk:17, def:3, xp:85,  silver:[10,20],  speed:86, aggro:170, range:30, atkCd:1.2, size:15, color:'#5a5f6b', eye:'#ffd76a', drop:0.17, el:'Mộc', img:'assets/mobs/wolf.png' },
+  bandit:  { name:'Sơn Tặc',   lv:6, hp:270, atk:24, def:7, xp:140, silver:[15,32], speed:66, aggro:190, range:32, atkCd:1.3, size:16, color:'#4a3a30', eye:'#ff6a5a', sash:'#a03028', drop:0.20, el:'Kim', img:'assets/mobs/bandit.png' },
+  assassin:{ name:'Gloam Marauder', lv:10, hp:700, atk:37, def:12, xp:450, silver:[52,89], speed:96, aggro:230, range:34, atkCd:1.1, size:17, color:'#1d1a24', eye:'#c07fe0', elite:true, drop:0.55, el:'Thủy', img:'assets/mobs/assassin.png' },
   boss:    { name:'Thủ Lĩnh Gloam', lv:10, hp:2600, atk:44, def:16, xp:2500, silver:[300,420], speed:78, aggro:480, range:38, atkCd:1.2, size:26, color:'#120f18', eye:'#ff3a3a', boss:true, elite:true, drop:1, el:'Hỏa', img:'assets/mobs/boss.png' },
 };
 // Quái theo tuyến bản đồ GDD (cấp 1 → 100+)
 Object.assign(MOBS, {
   hautu:    { name:'Hầu Tử', lv:2, hp:70, atk:8, def:1, xp:36, silver:[5,10], speed:95, aggro:150, range:26, atkCd:1.1, size:13, color:'#7a6248', eye:'#ffe9a0', drop:0.14, el:'Mộc', img:'assets/mobs/hautu.png' },
-  caodo:    { name:'Cáo Đỏ', lv:6, hp:150, atk:16, def:3, xp:75, silver:[9,16], speed:100, aggro:180, range:26, atkCd:1.1, size:13, color:'#b05030', eye:'#ffd76a', drop:0.18, el:'Hỏa', img:'assets/mobs/caodo.png' },
-  trannhan: { name:'Chimera Trấn Đảo', lv:9, hp:300, atk:22, def:8, xp:150, silver:[16,26], speed:55, aggro:160, range:34, atkCd:1.5, size:17, color:'#c88aa8', eye:'#ffffff', drop:0.22, el:'Mộc', img:'assets/mobs/trannhan.png'},
-  phando:   { name:'Chimera Bội Phản', lv:22, hp:800, atk:45, def:14, xp:520, silver:[40,60], speed:80, aggro:200, range:34, atkCd:1.2, size:16, color:'#3a9d8b', eye:'#a0ffe9', sash:'#2a6a5c', drop:0.25, el:'Thủy', img:'assets/mobs/phando.png'},
-  xanu:     { name:'Chimera Rắn Độc', lv:28, hp:1100, atk:58, def:16, xp:720, silver:[55,80], speed:88, aggro:210, range:30, atkCd:1.15, size:16, color:'#5c8a3a', eye:'#c8ffa0', drop:0.27, el:'Mộc', img:'assets/mobs/xanu.png' },
-  bandao:   { name:'Axie Sa Ngã', lv:35, hp:1600, atk:75, def:22, xp:1050, silver:[80,120], speed:92, aggro:230, range:36, atkCd:1.1, size:17, color:'#2d3a55', eye:'#9fd0ff', elite:true, drop:0.4, el:'Kim', img:'assets/mobs/bandao.png'},
-  thinu:    { name:'Chimera U Linh', lv:45, hp:2400, atk:95, def:28, xp:1600, silver:[110,150], speed:78, aggro:200, range:34, atkCd:1.2, size:15, color:'#d8d0e8', eye:'#9a86d8', drop:0.28, el:'Mộc', img:'assets/mobs/thinu.png'},
-  mocnhan:  { name:'Golem Gác Tổ', lv:50, hp:3600, atk:105, def:45, xp:2000, silver:[130,180], speed:50, aggro:170, range:36, atkCd:1.5, size:19, color:'#8a6a42', eye:'#e8b04a', drop:0.3, el:'Thổ', img:'assets/mobs/mocnhan.png'},
-  huyetbat: { name:'Dơi Chimera', lv:55, hp:2800, atk:120, def:26, xp:2400, silver:[150,210], speed:115, aggro:240, range:28, atkCd:0.95, size:14, color:'#6a1a24', eye:'#ff3a3a', drop:0.32, el:'Hỏa', img:'assets/mobs/huyetbat.png' },
-  ttdetu:   { name:'Kẻ Lạc Lối', lv:65, hp:4600, atk:150, def:38, xp:3400, silver:[200,280], speed:84, aggro:210, range:34, atkCd:1.15, size:16, color:'#e0779a', eye:'#ffc0d8', sash:'#a04868', drop:0.3, el:'Thổ', img:'assets/mobs/ttdetu.png'},
-  docyeu:   { name:'Chimera Hoa Độc', lv:72, hp:5600, atk:170, def:42, xp:4200, silver:[240,330], speed:74, aggro:220, range:38, atkCd:1.3, size:18, color:'#4a7a2a', eye:'#7ec850', drop:0.34, el:'Mộc', poisonHit:true, img:'assets/mobs/docyeu.png'},
+  caodo:    { name:'Cáo Đỏ', lv:8, hp:300, atk:21, def:4, xp:175, silver:[13,26], speed:100, aggro:180, range:26, atkCd:1.1, size:13, color:'#b05030', eye:'#ffd76a', drop:0.18, el:'Hỏa', img:'assets/mobs/caodo.png' },
+  trannhan: { name:'Chimera Trấn Đảo', lv:12, hp:440, atk:29, def:10, xp:230, silver:[25,46], speed:55, aggro:160, range:34, atkCd:1.5, size:17, color:'#c88aa8', eye:'#ffffff', drop:0.22, el:'Mộc', img:'assets/mobs/trannhan.png'},
+  // ── Bậc 14-24: bộ quái RIÊNG của Petalshade Outskirts. Dùng lại tạo hình có sẵn theo
+  // đúng lối MU (Bull Fighter → Elite Bull Fighter): cùng sinh vật, bậc cựu binh mạnh hơn.
+  // Trước đây map 2 dùng y hệt bộ quái lv1-9 của map 1 nên không có bậc nào cho khoảng 10-24.
+  boar_tusk:  { name:'Dã Trư Nhiễm Khí', lv:14, hp:520, atk:32, def:11, xp:295, silver:[31,56], speed:60, aggro:140, range:32, atkCd:1.3, size:16, color:'#7a5b48', eye:'#ff8a6a', drop:0.20, el:'Thổ', img:'assets/mobs/boar.png'},
+  wolf_alpha: { name:'Tàn Lang Đầu Đàn', lv:16, hp:600, atk:36, def:12, xp:355, silver:[37,65], speed:96, aggro:185, range:32, atkCd:1.1, size:16, color:'#48505f', eye:'#ffd76a', drop:0.21, el:'Mộc', img:'assets/mobs/wolf.png'},
+  bandit_vet: { name:'Gloam Cựu Binh',   lv:18, hp:680, atk:39, def:13, xp:420, silver:[43,75], speed:84, aggro:200, range:34, atkCd:1.2, size:17, color:'#5a4a3a', eye:'#e8dcb0', drop:0.23, el:'Kim', img:'assets/mobs/bandit.png'},
+  caodo_fire: { name:'Cáo Lửa Vết Nứt',  lv:20, hp:760, atk:43, def:13, xp:480, silver:[49,85], speed:104, aggro:190, range:30, atkCd:1.0, size:14, color:'#d4552a', eye:'#ffd76a', drop:0.22, el:'Hỏa', img:'assets/mobs/caodo.png'},
+  gloam_scout:{ name:'Trinh Sát Gloam',  lv:22, hp:1300, atk:52, def:20, xp:1035, silver:[110,189], speed:100, aggro:240, range:34, atkCd:1.1, size:18, color:'#1d1a24', eye:'#c07fe0', elite:true, drop:0.55, el:'Thủy', img:'assets/mobs/assassin.png'},
+  chimera_bo: { name:'Chimera Canh Bờ',  lv:24, hp:920, atk:50, def:15, xp:605, silver:[61,104], speed:62, aggro:170, range:34, atkCd:1.4, size:18, color:'#b87a9a', eye:'#ffffff', drop:0.24, el:'Thủy', img:'assets/mobs/trannhan.png'},
+  phando:   { name:'Chimera Bội Phản', lv:26, hp:1000, atk:53, def:16, xp:670, silver:[67,114], speed:80, aggro:200, range:34, atkCd:1.2, size:16, color:'#3a9d8b', eye:'#a0ffe9', sash:'#2a6a5c', drop:0.25, el:'Thủy', img:'assets/mobs/phando.png'},
+  xanu:     { name:'Chimera Rắn Độc', lv:31, hp:1260, atk:64, def:18, xp:840, silver:[79,134], speed:88, aggro:210, range:30, atkCd:1.15, size:16, color:'#5c8a3a', eye:'#c8ffa0', drop:0.27, el:'Mộc', img:'assets/mobs/xanu.png' },
+  bandao:   { name:'Axie Sa Ngã', lv:38, hp:1790, atk:81, def:24, xp:1190, silver:[105,175], speed:92, aggro:230, range:36, atkCd:1.1, size:17, color:'#2d3a55', eye:'#9fd0ff', elite:true, drop:0.4, el:'Kim', img:'assets/mobs/bandao.png'},
+  thinu:    { name:'Chimera U Linh', lv:42, hp:2190, atk:89, def:26, xp:1440, silver:[120,195], speed:78, aggro:200, range:34, atkCd:1.2, size:15, color:'#d8d0e8', eye:'#9a86d8', drop:0.28, el:'Mộc', img:'assets/mobs/thinu.png'},
+  mocnhan:  { name:'Golem Gác Tổ', lv:48, hp:3410, atk:101, def:43, xp:1880, silver:[143,230], speed:50, aggro:170, range:36, atkCd:1.5, size:19, color:'#8a6a42', eye:'#e8b04a', drop:0.3, el:'Thổ', img:'assets/mobs/mocnhan.png'},
+  huyetbat: { name:'Dơi Chimera', lv:56, hp:2870, atk:122, def:26, xp:2465, silver:[174,275], speed:115, aggro:240, range:28, atkCd:0.95, size:14, color:'#6a1a24', eye:'#ff3a3a', drop:0.32, el:'Hỏa', img:'assets/mobs/huyetbat.png' },
+  ttdetu:   { name:'Kẻ Lạc Lối', lv:62, hp:4320, atk:144, def:36, xp:3165, silver:[199,314], speed:84, aggro:210, range:34, atkCd:1.15, size:16, color:'#e0779a', eye:'#ffc0d8', sash:'#a04868', drop:0.3, el:'Thổ', img:'assets/mobs/ttdetu.png'},
+  docyeu:   { name:'Chimera Hoa Độc', lv:70, hp:5390, atk:166, def:41, xp:4025, silver:[242,378], speed:74, aggro:220, range:38, atkCd:1.3, size:18, color:'#4a7a2a', eye:'#7ec850', drop:0.34, el:'Mộc', poisonHit:true, img:'assets/mobs/docyeu.png'},
   satthuhy: { name:'Sát Thủ Sương Mù', lv:78, hp:6800, atk:200, def:48, xp:5200, silver:[300,400], speed:100, aggro:240, range:34, atkCd:1.0, size:16, color:'#16121e', eye:'#c07fe0', elite:true, drop:0.45, el:'Thủy', img:'assets/mobs/assassin.png' },
-  thamtu:   { name:'Trinh Sát Tro Tàn', lv:85, hp:8200, atk:230, def:55, xp:6800, silver:[380,500], speed:96, aggro:230, range:33, atkCd:1.05, size:15, color:'#4a4238', eye:'#ffd76a', drop:0.34, el:'Thổ', img:'assets/mobs/thamtu.png'},
-  cungthu:  { name:'Cung Thủ Tro Tàn', lv:88, hp:7600, atk:260, def:50, xp:7400, silver:[400,540], speed:70, aggro:260, range:230, atkCd:1.6, size:15, color:'#7a5a30', eye:'#ffe9a0', drop:0.36, el:'Mộc', ranged:true, img:'assets/mobs/cungthu.png'},
-  kybinh:   { name:'Kỵ Binh Tro Tàn', lv:105, hp:11000, atk:290, def:80, xp:9500, silver:[500,700], speed:90, aggro:220, range:40, atkCd:1.3, size:21, color:'#1c1c24', eye:'#ff6a5a', elite:true, drop:0.5, el:'Kim', img:'assets/mobs/kybinh.png'},
-  kylan:    { name:'Liệt Hỏa Kỳ Lân', lv:115, hp:15000, atk:340, def:90, xp:14000, silver:[700,950], speed:94, aggro:240, range:42, atkCd:1.2, size:22, color:'#8a1a10', eye:'#ffd76a', elite:true, drop:0.55, el:'Hỏa', img:'assets/mobs/kylan.png' },
-  cuongbinh:{ name:'Cuồng Binh Tro Tàn', lv:110, hp:13000, atk:360, def:70, xp:12500, silver:[650,880], speed:98, aggro:230, range:36, atkCd:1.0, size:17, color:'#5a2a1a', eye:'#ff9a3a', drop:0.42, el:'Thổ', img:'assets/mobs/cuongbinh.png'},
+  thamtu:   { name:'Trinh Sát Tro Tàn', lv:84, hp:8070, atk:227, def:54, xp:6680, silver:[325,504], speed:96, aggro:230, range:33, atkCd:1.05, size:15, color:'#4a4238', eye:'#ffd76a', drop:0.34, el:'Thổ', img:'assets/mobs/thamtu.png'},
+  cungthu:  { name:'Cung Thủ Tro Tàn', lv:92, hp:8070, atk:271, def:52, xp:7920, silver:[369,567], speed:70, aggro:260, range:230, atkCd:1.6, size:15, color:'#7a5a30', eye:'#ffe9a0', drop:0.36, el:'Mộc', ranged:true, img:'assets/mobs/cungthu.png'},
+  kybinh:   { name:'Kỵ Binh Tro Tàn', lv:100, hp:10300, atk:277, def:77, xp:8820, silver:[406,626], speed:90, aggro:220, range:40, atkCd:1.3, size:21, color:'#1c1c24', eye:'#ff6a5a', elite:true, drop:0.5, el:'Kim', img:'assets/mobs/kybinh.png'},
+  kylan:    { name:'Liệt Hỏa Kỳ Lân', lv:112, hp:14480, atk:332, def:88, xp:13450, silver:[494,758], speed:94, aggro:240, range:42, atkCd:1.2, size:22, color:'#8a1a10', eye:'#ffd76a', elite:true, drop:0.55, el:'Hỏa', img:'assets/mobs/kylan.png' },
+  cuongbinh:{ name:'Cuồng Binh Tro Tàn', lv:102, hp:12220, atk:345, def:67, xp:11645, silver:[445,685], speed:98, aggro:230, range:36, atkCd:1.0, size:17, color:'#5a2a1a', eye:'#ff9a3a', drop:0.42, el:'Thổ', img:'assets/mobs/cuongbinh.png'},
   daokhach: { name:'Đao Khách Bão Tố', lv:120, hp:14000, atk:380, def:75, xp:15000, silver:[750,1000], speed:102, aggro:250, range:38, atkCd:0.9, size:17, color:'#3a1010', eye:'#ff3a3a', elite:true, drop:0.6, el:'Hỏa', img:'assets/mobs/daokhach.png'},
   // Axie Lang Thang — "người chơi" NPC trung lập để PK (3 cấp theo map)
   duhiep1:  { name:'Axie Lang Thang', lv:30, hp:1800, atk:70, def:20, xp:900, silver:[90,140], speed:88, aggro:0, range:34, atkCd:1.2, size:16, color:'#4a5a7a', eye:'#dfe8ff', drop:0.5, el:'Kim', duHiep:true, img:'assets/mobs/duhiep.png'},
@@ -351,7 +360,7 @@ const ZONE_TYPES = {
 };
 // packs: quái đứng thành cụm 5-7 con, đánh 1 con cả cụm lao vào (GDD Mob Mechanics)
 const MAPS = {
-  daohoa: { name:'Petalshade Isle', min:1, range:'1 - 20', type:'safe', ground:'#ece2c8', patch:'#7a86ad',
+  daohoa: { name:'Petalshade Isle', min:1, range:'1 - 12', type:'safe', ground:'#ece2c8', patch:'#7a86ad',
     spawn:{ x:460, y:460 }, spawnFrom:{ pb_daohoa:{ x:2250, y:1040 } }, village:true, spring:true, herbs:true, boss:true, trees:70, rocks:26,
     desc:'Home to the Petalshade hatchery — the newcomer\'s hunting ground. Weak Chimeras, starter drops, a gentle place to learn the ropes.',
     // Cụm quái xếp theo vòng từ spawn ra: yếu (boar/hautu) gần nhất → mạnh dần (wolf/bandit/
@@ -369,15 +378,22 @@ const MAPS = {
     spawn:{ x:1300, y:1100 }, spawnFrom:{ ngoai:{ x:1300, y:1460 } }, city:true, trees:24, rocks:10,
     desc:'The central hub — Auction Bazaar, the Forge, the Apothecary, the Teahouse. Fully safe: no Chimeras spawn inside the walls. Head out the South Gate to hunt in the Outskirts.',
     packs: [], duhiep: null },
-  ngoai: { name:'Petalshade Outskirts', min:10, range:'10 - 20', type:'safe', ground:'#ddd2ae', patch:'#7a7048',
+  ngoai: { name:'Petalshade Outskirts', min:10, range:'14 - 24', type:'safe', ground:'#ddd2ae', patch:'#7a7048',
     spawn:{ x:1300, y:330 }, spawnFrom:{ pb_ngoai:{ x:2000, y:1040 } }, reqMain:10, trees:56, rocks:22, herbs:true,
     desc:'Just past the city gates — bandit camps block the road, wolf packs prowl the treeline. No PK here, safe ground to train.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
+    // Rải theo GRADIENT KHOẢNG CÁCH: sát cổng thành là bậc thấp nhất, càng ra xa bậc càng
+    // cao, góc xa nhất là elite — cùng nguyên lý bố trí đồng cỏ quanh thị trấn khởi đầu.
+    // Bộ quái RIÊNG của vùng này (bậc 14-24), không dùng lại bộ lv1-12 của Petalshade Isle.
     packs: [
-      { mob:'boar', x:1300, y:860, n:6 }, { mob:'hautu', x:1900, y:560, n:6 },
-      { mob:'wolf', x:551, y:356, n:7 }, { mob:'bandit', x:2000, y:820, n:7 },
-      { mob:'bandit', x:1945, y:1110, n:7 }, { mob:'caodo', x:900, y:1200, n:6 },
-      { mob:'assassin', x:1872, y:1520, n:1 }, { mob:'trannhan', x:600, y:1550, n:5 },
+      { mob:'boar_tusk',  x:1300, y:860,  n:6 },  // d≈530  · lv14
+      { mob:'boar_tusk',  x:1900, y:560,  n:6 },  // d≈643  · lv14
+      { mob:'wolf_alpha', x:551,  y:356,  n:6 },  // d≈749  · lv16
+      { mob:'wolf_alpha', x:2000, y:820,  n:7 },  // d≈854  · lv16
+      { mob:'bandit_vet', x:900,  y:1200, n:7 },  // d≈958  · lv18
+      { mob:'caodo_fire', x:1945, y:1110, n:6 },  // d≈1012 · lv20
+      { mob:'gloam_scout',x:1872, y:1520, n:1 },  // d≈1320 · lv22 ELITE
+      { mob:'chimera_bo', x:600,  y:1550, n:5 },  // d≈1407 · lv24
     ], duhiep: null },
   // Đấu trường riêng của Trận Địa Phòng Thủ (xem startTowerRun) — không vào qua Bản Đồ, chỉ vào
   // qua nút "Bắt Đầu" ở tab Trận Địa Phòng Thủ. Bố cục hình chữ thập: Lõi Trụ giữa (TOWER_CORE), quái tràn
@@ -386,16 +402,16 @@ const MAPS = {
     spawn:{ x:1300, y:1030 }, trees:0, rocks:0,
     desc:'Đấu trường phòng thủ — chặn quái ở 1 trong 4 lane, đừng để chúng tràn vào Lõi Trụ giữa sân.',
     packs: [], duhiep: null },
-  chungnam: { name:'Thornwood Reach', min:20, range:'20 - 40', type:'pk', ground:'#d4d0ac', patch:'#6a7a52',
+  chungnam: { name:'Thornwood Reach', min:20, range:'24 - 38', type:'pk', ground:'#d4d0ac', patch:'#6a7a52',
     spawn:{ x:400, y:1500 }, spawnFrom:{ pb_chungnam:{ x:2200, y:890 } }, trees:80, rocks:34,
     desc:'Rivalries start turning ugly here. Chimeras drop basic Card Pages and loose Starbits.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'bandit', x:800, y:1400, n:7 }, { mob:'phando', x:1100, y:900, n:6 },
+      { mob:'chimera_bo', x:800, y:1400, n:6 }, { mob:'phando', x:1100, y:900, n:6 },
       { mob:'phando', x:442, y:574, n:6 }, { mob:'xanu', x:1376, y:1272, n:6 },
       { mob:'xanu', x:1981, y:1295, n:6 }, { mob:'bandao', x:2000, y:600, n:5 },
     ], duhiep:'duhiep1' },
-  comoc: { name:'Hollow Roost', min:40, range:'40 - 60', type:'pk', ground:'#a89f86', patch:'#4a4436',
+  comoc: { name:'Hollow Roost', min:40, range:'42 - 56', type:'pk', ground:'#a89f86', patch:'#4a4436',
     spawn:{ x:400, y:400 }, spawnFrom:{ pb_comoc:{ x:2200, y:990 } }, dark:true, trees:30, rocks:46,
     desc:'A narrow, twisting warren. Dense Chimera packs drop Steed upgrade materials — contested hunting ground.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
@@ -404,16 +420,16 @@ const MAPS = {
       { mob:'mocnhan', x:600, y:1400, n:5 }, { mob:'mocnhan', x:1272, y:1100, n:5 },
       { mob:'huyetbat', x:1900, y:600, n:7 }, { mob:'huyetbat', x:1915, y:1351, n:6 },
     ], duhiep:'duhiep2' },
-  tuyettinh: { name:'Frostmire Vale', min:60, range:'60 - 80', type:'pk', ground:'#ddc9a8', patch:'#8a5a6a',
+  tuyettinh: { name:'Frostmire Vale', min:60, range:'62 - 78', type:'pk', ground:'#ddc9a8', patch:'#8a5a6a',
     spawn:{ x:400, y:950 }, spawnFrom:{ pb_tuyettinh:{ x:2200, y:790 } }, trees:60, rocks:24,
     desc:'A massive EXP ground. Bring poison resistance — the Chimeras here bite with venom.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'ttdetu', x:1096, y:482, n:7 }, { mob:'ttdetu', x:700, y:1500, n:7 },
-      { mob:'docyeu', x:1131, y:1182, n:6 }, { mob:'docyeu', x:1394, y:895, n:6 },
+      { mob:'docyeu', x:1096, y:482, n:6 }, { mob:'ttdetu', x:700, y:1500, n:7 },
+      { mob:'ttdetu', x:1131, y:1182, n:7 }, { mob:'docyeu', x:1394, y:895, n:6 },
       { mob:'satthuhy', x:1856, y:1382, n:5 }, { mob:'satthuhy', x:2100, y:500, n:5 },
     ], duhiep:'duhiep2' },
-  mongco: { name:'Ashen Steppe', min:80, range:'80 - 100', type:'pk', ground:'#cfc09a', patch:'#7a6a42',
+  mongco: { name:'Ashen Steppe', min:80, range:'84 - 100', type:'pk', ground:'#cfc09a', patch:'#7a6a42',
     spawn:{ x:400, y:950 }, spawnFrom:{ pb_mongco:{ x:1720, y:680 } }, trees:36, rocks:30,
     desc:'Wide open plains, tough Chimeras hitting hard. Drops ranged- and blade-art upgrade materials.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
@@ -422,7 +438,7 @@ const MAPS = {
       { mob:'cungthu', x:1347, y:979, n:6 }, { mob:'cungthu', x:1300, y:400, n:6 },
       { mob:'kybinh', x:1900, y:1400, n:5 }, { mob:'kybinh', x:2100, y:600, n:5 },
     ], duhiep:'duhiep3' },
-  nhanmon: { name:'Stormgate Pass', min:100, range:'100+', type:'freepk', ground:'#b8a68a', patch:'#6a3a2a',
+  nhanmon: { name:'Stormgate Pass', min:100, range:'102 - 120', type:'freepk', ground:'#b8a68a', patch:'#6a3a2a',
     spawn:{ x:400, y:950 }, spawnFrom:{ pb_nhanmon:{ x:2200, y:890 } }, trees:44, rocks:38,
     desc:'The endgame training ground, out on Lunacia\'s frontier. PK carries no Notoriety here. Chimeras drop golden-tier gear.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
@@ -9537,8 +9553,8 @@ QUESTS.push(
     desc:'Người tị nạn Axie đổ về thành mỗi ngày, kho thuốc đã cạn. Ra Outskirts ngoài cổng hái 6 Thảo Dược đem về.',
     type:'collect', herbMap:'ngoai', need:6, rew:{xp:2600, silver:350, mat:2} },
   { id:13, lv:12, name:'Chặn Đường Tiếp Tế', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
-    desc:'Gloam Marauder chặn đoàn xe tị nạn ngoài Outskirts. Diệt 8 tên để đường về thành thông trở lại.',
-    type:'kill', mob:'bandit', need:8, rew:{xp:3200, silver:420} },
+    desc:'Gloam Cựu Binh chặn đoàn xe tị nạn ngoài Outskirts. Diệt 8 tên để đường về thành thông trở lại.',
+    type:'kill', mob:'bandit_vet', need:8, rew:{xp:3200, silver:420} },
   { id:14, lv:13, name:'Người Bản Địa Biết Đường', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
     desc:'Bản đồ Vaeldra vô dụng ở đây. Gặp Trinh Sát Wren — một Axie thuộc lòng từng lối mòn Lunacia.',
     type:'talk', targetNpc:'monkhach', need:1, rew:{xp:2800, silver:300} },
