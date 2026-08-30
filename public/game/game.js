@@ -9615,16 +9615,37 @@ function applyTestBoost(){
   // Bí kíp Huyết Ma Thôn Phệ: đã hợp thành
   player.bikip = { pieces: [1,1,1], hmtp: true };
   player.forged11 = true;
-  // Full set 12 ô Thần-grade cấp 10, rèn +11 hoàn hảo
+  // Full 12 ô Chí Tôn (phẩm cao nhất) giai 10, rèn +11 hoàn hảo
   for (const sl of SLOTS){
-    const it = genSpecific(sl.id, 3, MAX_LV);
+    const it = genSpecific(sl.id, RARITIES.length - 1, MAX_LV);
     it.plus = 11; it.perfect = true;
     player.equip[sl.id] = it;
   }
-  // Đồ đặc biệt tối thượng: Áo Choàng cấp 2, Cánh & Pet tốt nhất
+  // 5 ô giáp thay bằng ĐỦ BỘ Cổ Thần — để xem hào quang nhuốm màu bộ (chỉ hiện khi đủ 5 món)
+  for (const sl of HERO_ARMOR_SLOTS){
+    const it = genAncient('sarkaan', sl, MAX_LV);
+    it.plus = 11; it.luck = true; it.life = 7;
+    player.equip[sl] = it;
+  }
+  // Thần Binh tầng cao nhất — bậc bảng màu giáp lấy max(Thần Binh, trang bị)
+  player.thanbinh = { tier: TB_TIER_NAMES.length };
+  // KHẮC ẤN: gắn đủ 4 cái dùng được của lớp lên đồ đang mặc, mỗi món một cái.
+  // Không có bước này thì bật ?max=1 vẫn KHÔNG thấy hệ Khắc Ấn ở đâu cả.
+  {
+    const pool = sigilPool(player.sect);
+    const slots = ['vukhi', 'non', 'ao', 'tay', 'quan', 'chan'];
+    pool.forEach((k, i) => { const it = player.equip[slots[i % slots.length]]; if (it) it.sigil = k; });
+  }
+  // Đồ đặc biệt tối thượng: Áo Choàng cấp 2, Linh Dực CẤP 2 (không phải cánh cấp 1), Pet tốt nhất
   player.equip.aochoang = genCloak(2);
-  player.equip.canh = genWing(WING_DEFS.length - 1);
+  player.equip.canh = specialItem('canh', WING2_DEFS[1], { wing2: WING2_DEFS[1].id });
   player.equip.pet = genPet(PET_DEFS.length - 1);
+  // Châu + Bảo Hạp: để thử nguyên vòng rèn/mở hạp mà không phải cày
+  player.jewels = { chucPhuc: 99, linhHon: 99, sinhMenh: 99, honDon: 99 };
+  player.baohap = {};
+  for (let t = 1; t < BAOHAP_TIERS.length; t++) player.baohap[t] = 10;
+  player.mats = player.mats || {};
+  player.mats.manhCoThan = 120;
   // Danh hiệu: mở hết, trang bị danh hiệu cuối cùng
   player.titles.unlocked = TITLES.map(t => t.id);
   player.titles.equipped = TITLES[TITLES.length - 1].id;
@@ -9639,6 +9660,13 @@ function applyTestBoost(){
   // Túi đồ: loot mẫu để xem hình
   player.inv = [];
   for (let i=0;i<6;i++) player.inv.push(genItem(MAX_LV, 1.5));
+  // vài món mang Khắc Ấn + vài món bậc thấp, để thấy ngay bảng so sánh và hai badge ▲ / ◆
+  for (const k of sigilPool(player.sect)){
+    const it = genItem(MAX_LV, 1.2); it.sigil = k; player.inv.push(it);
+  }
+  for (const t of [2, 5, 8]){
+    const it = genItem(t * 10, 0); it.tier = t; player.inv.push(it);
+  }
   player.pk = false; player.toiac = 0; player.gkBuffT = 0; player.poisonT = 0;
   calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
 }
@@ -9809,7 +9837,8 @@ function startGame(sectKey, quze){
     applyTestBoost();
     checkTitles();
     addFloat(player.x, player.y-50, 'CHẾ ĐỘ THỬ NGHIỆM — Cấp 100, MỌI TÍNH NĂNG TỐI ĐA!', '#7ecbff', 16);
-    addFloat(player.x, player.y-72, 'Full +11 · Tuyệt học max · Ascension max · M bản đồ · K kỹ năng · 1-3 tung chiêu!', '#a0ffe9', 13);
+    addFloat(player.x, player.y-72, 'Full Chí Tôn +11 · đủ bộ Cổ Thần · 4 Khắc Ấn · Linh Dực c2 · 99 châu · 70 Bảo Hạp', '#a0ffe9', 13);
+    addFloat(player.x, player.y-94, 'C nhân vật · I túi đồ · O cài đặt (rung 3 mức) · M bản đồ · K kỹ năng', '#ffd76a', 12);
   } else {
     addFloat(player.x, player.y-50, 'Lunaris City — hãy đến gặp Trưởng Lão Rell (lại gần, nhấn E)!', '#7ecbff', 15);
   }
