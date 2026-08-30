@@ -2569,15 +2569,15 @@ function genItem(level, bias, srcK){
   }
   // Vận (Luck) — chỉ xuất hiện khi rơi, không rèn được: +5% ST bạo kích/món, +5% tỉ lệ rèn (tối đa +25%)
   const luck = Math.random() < 0.06 + r*0.025 + (srcK ? 0 : (bias||0)*0.04);
-  return {
+  return assignDef({
     uid: itemSeq++, slot: slot.id, slotName: slot.name,
-    name: (perfect ? 'Hoàn Hảo ' : '') + ITEM_NAMES[slot.id][r],
+    name: (perfect ? 'Hoàn Hảo ' : '') + ITEM_NAMES[slot.id][r],   // ghi đè bởi assignDef()
     rarity: r, level: ilvl, tier, perfect, luck, life: 0, ancient: null,
     main: { k: slot.main, v: slot.base(tier, r), name: mainName(slot.main) },
     element: ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)],
     subs, plus: 0,
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
-  };
+  });
 }
 // Cổ Thần Thủ Hộ — chỉ mở từ Bảo Hạp: giáp Thần cấp 4 dòng Hoàn Hảo + ấn bộ ẩn
 function genAncient(setId, slotId, level){
@@ -2592,7 +2592,7 @@ function genAncient(setId, slotId, level){
     const def = pool.splice(idx,1)[0];
     subs.push({ k:def.k, name:def.name, v:def.max, pct:true });
   }
-  return {
+  const it = assignDef({
     uid: itemSeq++, slot: slot.id, slotName: slot.name,
     name: set.name + ' · ' + ITEM_NAMES[slot.id][r],
     rarity: r, level: ilvl, tier, perfect: true, luck: Math.random() < 0.1, life: 0, ancient: setId,
@@ -2600,7 +2600,9 @@ function genAncient(setId, slotId, level){
     element: ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)],
     subs, plus: 0,
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
-  };
+  });
+  it.name = set.name + ' · ' + it.name;   // assignDef() đặt tên theo bộ lớp, bộ Cổ Thần đứng trước
+  return it;
 }
 // Trang bị đặc biệt (Áo Choàng / Pet / Cánh): chỉ số cố định, không rèn
 function specialItem(slot, def, extra){
@@ -2741,6 +2743,7 @@ window.sellItem = function(i){
 function tryAutoEquip(it){
   if (!player.autoEquip || !it.slot || it.special) return;
   if (player.level < itemReqLv(it)) return;
+  if (!itemUsable(it)) return;                     // khoá lớp — chặn ở CẢ BA chỗ mặc đồ
   const cur = player.equip[it.slot];
   const cp = cur ? itemPower(cur) : 0, np = itemPower(it);
   // Khắc Ấn nằm ngoài lực chiến hoàn toàn. Không chặn ở đây thì tự-mặc-đồ sẽ lặng lẽ tháo mất
@@ -2767,6 +2770,7 @@ window.autoEquipBest = function(){
     for (let i2 = 0; i2 < player.inv.length; i2++){
       const it2 = player.inv[i2];
       if (it2.slot !== sl.id || it2.special || player.level < itemReqLv(it2)) continue;
+      if (!itemUsable(it2)) continue;              // khoá lớp — bỏ sót đây là auto lách được luật
       if (itemSigilLost(sl.id, it2)) continue;   // cùng lý do như tryAutoEquip: đừng tháo mất Khắc Ấn
       const s2 = !!itemSigilNew(it2), p2 = itemPower(it2);
       if (s2 !== bs ? s2 : p2 > bp){ bs = s2; bp = p2; bi = i2; }
@@ -7031,7 +7035,7 @@ function gearVisual(p){
     // Định nghĩa vũ khí — để thanh trên tay nhân vật vẽ bằng CHÍNH bộ phận dựng icon.
     // Trước đây chỉ đưa ra wTier/wPlus, mà hai trường đó không ai đọc: mỗi lớp vẽ cứng
     // một thanh, nên nâng vũ khí không hiện lên người một chút nào.
-    wDef: w ? (w.def || null) : null,
+    wDef: itemDef(w),
     setColor,
   };
 }
@@ -10159,7 +10163,7 @@ function genSpecific(slotId, r, level){
     const def = pool.splice(idx,1)[0];
     subs.push({ k:def.k, name:def.name, v: def.max, pct:true }); // đồ test: chỉ số tối đa
   }
-  return {
+  return assignDef({
     uid: itemSeq++, slot: slot.id, slotName: slot.name,
     name: (armorGroup ? 'Hoàn Hảo ' : '') + ITEM_NAMES[slot.id][r],
     rarity: r, level, tier, perfect: armorGroup,
@@ -10167,7 +10171,7 @@ function genSpecific(slotId, r, level){
     element: ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)],
     subs, plus: 0,
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
-  };
+  });
 }
 function applyTestBoost(){
   // ===== CHẾ ĐỘ THỬ NGHIỆM: MỌI TÍNH NĂNG TỐI ĐA =====
@@ -11013,6 +11017,35 @@ const IBLADE = {
               [-W*0.8, len*0.72], [0, len], [W*0.8, len*0.72], [W*0.92, len*0.38],
               [W*1.25, len*0.3], [W, len*0.22], [W, 12]], M.hi);
     iFill(g, [[-W*0.3, 9], [-W*0.26, len*0.62], [0, len*0.85], [W*0.26, len*0.62], [W*0.3, 9]], M.lo);
+  },
+  // RÌU: đầu rìu bè một bên cán, cán xuyên suốt
+  riu(g, M, w, len){
+    const H = len * 0.62;                       // đầu rìu chiếm phần trên
+    iFill(g, [[-w*0.5, 12], [w*0.5, 12], [w*0.5, len], [-w*0.5, len]], M.lo);   // cán
+    g.beginPath();                              // lưỡi bè sang phải
+    g.moveTo(w*0.4, H*0.35);
+    g.quadraticCurveTo(w*3.4, H*0.5, w*3.1, H);
+    g.quadraticCurveTo(w*2.2, len*0.94, w*0.4, len*0.9);
+    g.closePath();
+    g.fillStyle = iGrad(g, w*0.4, H, w*3.4, len, M.hi, M.lo); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = 1; g.stroke();
+    iFill(g, [[-w*0.4, H*0.5], [-w*1.7, H*0.75], [-w*1.5, len*0.9], [-w*0.4, len*0.85]], M.trim);  // ngạnh sau
+    iFill(g, [[-w*0.5, len], [w*0.5, len], [0, len*1.14]], M.trim);             // mũi nhọn đỉnh cán
+  },
+  // CHÙY: đầu khối có cánh, dùng để phá giáp
+  chuy(g, M, w, len){
+    const H = len * 0.66;
+    iFill(g, [[-w*0.5, 12], [w*0.5, 12], [w*0.5, H*0.9], [-w*0.5, H*0.9]], M.lo);  // cán
+    const R = w * 2.2;
+    g.fillStyle = iGrad(g, -R, H, R, len, M.hi, M.lo);
+    g.beginPath(); g.ellipse(0, (H + len) / 2, R, Math.abs(len - H) * 0.58, 0, 0, 7); g.fill();
+    g.fillStyle = M.trim;                        // 4 cánh phá giáp
+    for (const sd of [-1, 1]){
+      iPoly(g, [[sd*R*0.6, H*0.98], [sd*R*1.85, (H+len)/2], [sd*R*0.6, len*0.98]]); g.fill();
+    }
+    iPoly(g, [[-w*0.7, len*0.95], [w*0.7, len*0.95], [0, len*1.2]]); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = 1;
+    g.beginPath(); g.ellipse(0, (H + len) / 2, R, Math.abs(len - H) * 0.58, 0, 0, 7); g.stroke();
   },
   // KIẾM MẢNH: đâm, gần như không bề ngang
   manh(g, M, w, len){
@@ -11950,7 +11983,7 @@ function drawItemIcon(g, def, tier, rarity, plus){
   g.restore();
 }
 // data-URL có cache. Khoá gồm mọi thứ đổi hình: món, giai, phẩm, mức rèn.
-window.itemArtUrl = function(def, tier, rarity, plus){
+function itemArtUrl(def, tier, rarity, plus){
   const key = `${def.art}|${def.blade||''}|${def.guard||''}|${def.pommel||''}|${def.motif||''}|${def.shaft||''}|${def.head||''}|${def.limb||''}`
             + `|${def.w||''}|${def.len||''}|${def.gw||''}|${def.st || 1}|${def.mat||''}|${def.tintKey || ''}`
             + `|${tier}|${rarity}|${plus || 0}`;
@@ -11962,9 +11995,258 @@ window.itemArtUrl = function(def, tier, rarity, plus){
   u = c.toDataURL();
   _itemArtCache.set(key, u);
   return u;
-};
+}
+
+// ═══════════════ DANH MỤC TRANG BỊ — 220 món ═══════════════
+// Mỗi món là một DÒNG DỮ LIỆU, hình vẽ suy ra từ tổ hợp bộ phận. Không có hàm vẽ riêng cho
+// từng món, nên thêm món mới = thêm một dòng.
+//
+// Khoá lớp: `sect` khác null nghĩa là CHỈ lớp đó dùng được. Vũ khí và giáp đều khoá; dây
+// chuyền và nhẫn thì không (MU cũng vậy).
+// `lv` = cấp yêu cầu, suy từ dải: 1 / 21 / 41 / 61 / 81.
+const BAND_LV = [1, 21, 41, 61, 81];
+const BAND_TIER = [1, 3, 5, 7, 10];
+const ITEM_DB = {};
+function regItem(d){ ITEM_DB[d.id] = d; return d; }
+
+// ── GIÁP: 25 bộ × 5 ô, sinh thẳng từ HERO_SETS ───────────────────────────────
+// Nhờ sinh từ đó mà hình trong túi và hình trên người dùng CHUNG một nguồn — không có cách
+// nào lệch nhau, kể cả khi sau này đổi bảng màu bộ.
+const ARMOR_PIECES = [
+  { slot:'non',  art:'helm',   pre:'Mũ Trụ' },
+  { slot:'ao',   art:'armor',  pre:'Giáp' },
+  { slot:'tay',  art:'gloves', pre:'Găng' },
+  { slot:'quan', art:'pants',  pre:'Giáp Đùi' },
+  { slot:'chan', art:'boots',  pre:'Ủng' },
+];
+for (const sect in HERO_SETS){
+  HERO_SETS[sect].forEach((sd, band) => {
+    for (const pc of ARMOR_PIECES){
+      regItem({
+        id: `${sect}_${band}_${pc.slot}`, kind:'armor', sect, band,
+        slot: pc.slot, art: pc.art, style: sd.style, tint: sd.tint || null,
+        tintKey: `${sect}${band}`, st: band + 1,
+        lv: BAND_LV[band], tier: BAND_TIER[band],
+        name: `${pc.pre} ${sd.name}`, setName: sd.name,
+      });
+    }
+  });
+}
+
+// ── VŨ KHÍ: 5 lớp × 3 dòng × 5 nấc = 75 ──────────────────────────────────────
+// Viết theo DÒNG + đè theo nấc, thay vì 75 dòng đầy đủ: đọc ra ngay dòng nào leo thế nào.
+const WEAPON_LINES = [
+  // ══ Dark Knight — cận chiến nặng ══
+  { sect:'thieulam', line:'kiem', slot:'vukhi', desc:'cân bằng',
+    base:{ art:'weapon', blade:'thang', guard:'thanh', pommel:'tron', motif:'khong', w:5.4, len:-42, gw:14 },
+    t:[ ['Kiếm Đồng',       { mat:'dong', big:0.88, len:-36, gw:12 }],
+        ['Kiếm Sắt',        { mat:'sat' }],
+        ['Trọng Kiếm Thép', { mat:'thep', guard:'quat', w:6.0, len:-44 }],
+        ['Kiếm Vảy Rồng',   { mat:'rong', guard:'vuot', motif:'gai', pommel:'da' }],
+        ['Kiếm Hỏa Long',   { mat:'lua',  guard:'vuot', motif:'lua', pommel:'gai', big:1.07 }] ] },
+  { sect:'thieulam', line:'riu', slot:'vukhi', desc:'sát thương cao, chậm',
+    base:{ art:'weapon', blade:'riu', guard:'khong', pommel:'tron', motif:'khong', w:5.0, len:-40, gw:10 },
+    t:[ ['Rìu Thợ Rừng',   { mat:'dong', big:0.9 }],
+        ['Rìu Chiến',      { mat:'sat' }],
+        ['Rìu Song Nguyệt',{ mat:'thep', w:5.6 }],
+        ['Rìu Vảy Rồng',   { mat:'rong', motif:'gai', big:1.06 }],
+        ['Rìu Hỏa Long',   { mat:'lua',  motif:'lua', pommel:'gai', big:1.12 }] ] },
+  { sect:'thieulam', line:'chuy', slot:'vukhi', desc:'phá giáp',
+    base:{ art:'weapon', blade:'chuy', guard:'khong', pommel:'tron', motif:'khong', w:4.6, len:-38, gw:10 },
+    t:[ ['Chùy Đinh',      { mat:'dong', big:0.9 }],
+        ['Chùy Gai',       { mat:'sat' }],
+        ['Chùy Thép Nặng', { mat:'thep', w:5.2 }],
+        ['Chùy Vảy Rồng',  { mat:'rong', motif:'gai' }],
+        ['Chùy Hỏa Long',  { mat:'lua',  motif:'lua', pommel:'gai', big:1.1 }] ] },
+
+  // ══ Dark Wizard — gậy, đánh xa ══
+  { sect:'baidasan', line:'gay', slot:'vukhi', desc:'sát thương phép',
+    base:{ art:'staff', shaft:'thang', head:'cau', len:-30 },
+    t:[ ['Gậy Gỗ',        { mat:'xuong', big:0.9 }],
+        ['Gậy Xương',     { mat:'xuong', shaft:'xuong' }],
+        ['Gậy Nhân Sư',   { mat:'vang',  shaft:'dot' }],
+        ['Gậy Ma Thuật',  { mat:'ma',    shaft:'xoan', len:-32 }],
+        ['Gậy Hư Vô',     { mat:'ma',    shaft:'xoan', head:'tinhthe', len:-32, big:1.06 }] ] },
+  { sect:'baidasan', line:'quyentruong', slot:'vukhi', desc:'tốc niệm',
+    base:{ art:'staff', shaft:'dot', head:'vong', len:-30 },
+    t:[ ['Trượng Đồng',    { mat:'dong', big:0.9 }],
+        ['Trượng Bạc',     { mat:'thep' }],
+        ['Trượng Pha Lê',  { mat:'bang', head:'canh' }],
+        ['Trượng Ma Thuật',{ mat:'ma',   head:'canh', len:-32 }],
+        ['Trượng Hư Vô',   { mat:'ma',   head:'canh', shaft:'xoan', len:-32, big:1.06 }] ] },
+  { sect:'baidasan', line:'tinhtruong', slot:'vukhi', desc:'bạo kích',
+    base:{ art:'staff', shaft:'xuong', head:'so', len:-30 },
+    t:[ ['Trượng Đá Lửa',  { mat:'lua',  big:0.9, head:'cau' }],
+        ['Trượng Rắn',     { mat:'xuong' }],
+        ['Trượng Mắt Quỷ', { mat:'hacKim' }],
+        ['Trượng Tinh Vân',{ mat:'ma',   head:'tinhthe', len:-32 }],
+        ['Trượng Hắc Nguyệt',{ mat:'hacKim', head:'tinhthe', shaft:'xoan', len:-32, big:1.06 }] ] },
+
+  // ══ Sylvan Ranger — cung/nỏ ══
+  { sect:'toanchan', line:'cungngan', slot:'vukhi', desc:'bắn nhanh',
+    base:{ art:'bow', limb:'cong' },
+    t:[ ['Cung Gỗ',       { mat:'xuong', big:0.9 }],
+        ['Cung Sừng',     { mat:'xuong' }],
+        ['Cung Vỏ Sồi',   { mat:'thep' }],
+        ['Cung Lông Ưng', { mat:'bang' }],
+        ['Cung Đại Bàng', { mat:'vang', big:1.06 }] ] },
+  { sect:'toanchan', line:'truongcung', slot:'vukhi', desc:'tầm xa',
+    base:{ art:'bow', limb:'dai' },
+    t:[ ['Trường Cung Thô',      { mat:'dong', big:0.92 }],
+        ['Trường Cung Thép',     { mat:'sat' }],
+        ['Trường Cung Bạc',      { mat:'thep' }],
+        ['Trường Cung Lông Ưng', { mat:'bang' }],
+        ['Trường Cung Bạch Vũ',  { mat:'vang', big:1.08 }] ] },
+  { sect:'toanchan', line:'no', slot:'vukhi', desc:'nặng, xuyên giáp',
+    base:{ art:'crossbow' },
+    t:[ ['Nỏ Tay',      { mat:'dong', big:0.88 }],
+        ['Nỏ Chiến',    { mat:'sat' }],
+        ['Nỏ Thép',     { mat:'thep' }],
+        ['Nỏ Ưng Vương',{ mat:'hacKim' }],
+        ['Nỏ Bạch Vũ',  { mat:'vang', big:1.08 }] ] },
+
+  // ══ Spellblade — kiếm lai phép ══
+  { sect:'minhgiao', line:'songdao', slot:'vukhi', desc:'nhanh',
+    base:{ art:'weapon', blade:'cong', guard:'canh', pommel:'tron', motif:'khong', w:5.2, len:-40, gw:13 },
+    t:[ ['Song Đao Thô',       { mat:'sat', big:0.9 }],
+        ['Song Đao Sắt',       { mat:'sat' }],
+        ['Song Đao Than Hồng', { mat:'lua', motif:'lua' }],
+        ['Song Đao Lửa Dữ',    { mat:'lua', motif:'lua', pommel:'gai' }],
+        ['Song Đao Hoả Ngục',  { mat:'lua', motif:'lua', guard:'vuot', pommel:'gai', big:1.06 }] ] },
+  { sect:'minhgiao', line:'daikiem', slot:'vukhi', desc:'nặng',
+    base:{ art:'weapon', blade:'daikiem', guard:'thanh', pommel:'vuot', motif:'khong', w:5.4, len:-44, gw:16 },
+    t:[ ['Đại Kiếm Sắt',    { mat:'sat', big:0.94 }],
+        ['Đại Kiếm Thép',   { mat:'thep' }],
+        ['Đại Kiếm Nung Đỏ',{ mat:'lua', motif:'lua' }],
+        ['Đại Kiếm Lửa Dữ', { mat:'lua', motif:'lua', motifX:1 }],
+        ['Đại Kiếm Hoả Ngục',{ mat:'lua', motif:'lua', pommel:'gai', big:1.16 }] ] },
+  { sect:'minhgiao', line:'makiem', slot:'vukhi', desc:'lai phép',
+    base:{ art:'weapon', blade:'song', guard:'canh', pommel:'da', motif:'runes', w:5.4, len:-43, gw:14 },
+    t:[ ['Kiếm Khắc Ấn',   { mat:'sat', big:0.92 }],
+        ['Kiếm Bùa Chú',   { mat:'thep' }],
+        ['Kiếm Tro Tàn',   { mat:'hacKim' }],
+        ['Ma Kiếm Lửa Dữ', { mat:'lua', motif:'mach' }],
+        ['Ma Kiếm Hoả Ngục',{ mat:'lua', motif:'mach', pommel:'vuot', big:1.06 }] ] },
+
+  // ══ Dark Lord — nghi lễ, chỉ huy ══
+  { sect:'bug', line:'lenhtruong', slot:'vukhi', desc:'chỉ huy',
+    base:{ art:'staff', shaft:'dot', head:'vong', len:-30 },
+    t:[ ['Lệnh Trượng Gỗ',       { mat:'xuong', big:0.9 }],
+        ['Lệnh Trượng Đồng',     { mat:'dong' }],
+        ['Lệnh Trượng Vương Giả',{ mat:'vang' }],
+        ['Lệnh Trượng Bạo Chúa', { mat:'vang', head:'vuot', len:-32 }],
+        ['Lệnh Trượng Ngai Đen', { mat:'hacKim', head:'vuot', shaft:'xoan', len:-32, big:1.06 }] ] },
+  { sect:'bug', line:'bua', slot:'vukhi', desc:'nặng',
+    base:{ art:'weapon', blade:'chuy', guard:'khong', pommel:'tron', motif:'khong', w:4.8, len:-38, gw:10 },
+    t:[ ['Búa Nghi Lễ',   { mat:'dong', big:0.9 }],
+        ['Búa Cận Vệ',    { mat:'sat' }],
+        ['Búa Vương Triều',{ mat:'vang', w:5.4 }],
+        ['Búa Bạo Chúa',  { mat:'vang', motif:'runes' }],
+        ['Búa Ngai Đen',  { mat:'hacKim', motif:'runes', pommel:'gai', big:1.12 }] ] },
+  { sect:'bug', line:'kich', slot:'vukhi', desc:'tầm với',
+    base:{ art:'staff', shaft:'thang', head:'liem', len:-32 },
+    t:[ ['Kích Ngắn',       { mat:'sat', big:0.9, len:-28 }],
+        ['Kích Cận Vệ',     { mat:'sat' }],
+        ['Kích Vương Triều',{ mat:'vang' }],
+        ['Kích Bạo Chúa',   { mat:'vang', shaft:'dot' }],
+        ['Kích Ngai Đen',   { mat:'hacKim', shaft:'xoan', big:1.08 }] ] },
+];
+for (const L of WEAPON_LINES){
+  L.t.forEach(([name, over], band) => {
+    regItem(Object.assign({
+      id: `${L.sect}_${L.line}_${band}`, kind:'weapon', sect: L.sect, line: L.line, band,
+      slot: L.slot, st: band + 1, lv: BAND_LV[band], tier: BAND_TIER[band], name, desc: L.desc,
+      tintKey: `${L.sect}${L.line}${band}`,
+    }, L.base, over));
+  });
+}
+
+// ── PHỤ KIỆN: 20 món, KHÔNG khoá lớp ─────────────────────────────────────────
+// Dây chuyền chia hai nhánh VẬT LÝ / PHÉP — phân biệt bằng bóng dáng (nanh vs cầu pha lê),
+// không bằng màu: ở 44px trong ô túi thì màu là thứ mất trước tiên.
+const ACC_LINES = [
+  { slot:'daychuyen', line:'phys', art:'pendPhys', branch:'phys',
+    names:['Dây Chuyền Nanh Đồng','Dây Chuyền Nanh Sắt','Dây Chuyền Nanh Thép','Dây Chuyền Nanh Rồng','Dây Chuyền Nanh Hắc Nguyệt'],
+    mats:['dong','sat','thep','rong','hacKim'] },
+  { slot:'daychuyen', line:'magic', art:'pendMagic', branch:'magic',
+    names:['Dây Chuyền Ngọc Lam','Dây Chuyền Ngọc Bích','Dây Chuyền Pha Lê','Dây Chuyền Ma Thuật','Dây Chuyền Tinh Vân'],
+    mats:['dong','thep','bang','ma','ma'] },
+  { slot:'nhan1', line:'r1', art:'ring',
+    names:['Nhẫn Đồng','Nhẫn Bạc','Nhẫn Ngọc Lục','Nhẫn Hắc Kim','Nhẫn Tinh Vân'],
+    mats:['dong','thep','bang','hacKim','ma'] },
+  { slot:'nhan2', line:'r2', art:'ring',
+    names:['Nhẫn Thô Sơ','Nhẫn Chạm Khắc','Nhẫn Cổ Ngữ','Nhẫn Phong Ấn','Nhẫn Vĩnh Hằng'],
+    mats:['sat','dong','vang','ma','vang'] },
+];
+for (const A of ACC_LINES){
+  A.names.forEach((name, band) => {
+    regItem({
+      id: `acc_${A.slot}_${A.line}_${band}`, kind:'acc', sect:null, band,
+      slot: A.slot, art: A.art, branch: A.branch || null, mat: A.mats[band],
+      st: band + 1, lv: BAND_LV[band], tier: BAND_TIER[band], name,
+      tintKey: `acc${A.line}${band}`,
+    });
+  });
+}
+
+// ── Tra cứu ──────────────────────────────────────────────────────────────────
+const ITEM_BY_SLOT = {};
+for (const id in ITEM_DB){
+  const d = ITEM_DB[id];
+  (ITEM_BY_SLOT[d.slot] = ITEM_BY_SLOT[d.slot] || []).push(d);
+}
+// Món hợp lệ cho một ô + một lớp + một dải. Đây là chỗ DUY NHẤT biết luật khoá lớp.
+function itemDefsFor(slot, sect, band){
+  const all = ITEM_BY_SLOT[slot] || [];
+  return all.filter(d => (d.sect === null || d.sect === sect) && (band === undefined || d.band === band));
+}
+function pickItemDef(slot, sect, band){
+  const c = itemDefsFor(slot, sect, band);
+  return c.length ? c[Math.floor(Math.random() * c.length)] : null;
+}
+// Lớp này có dùng được món đó không — dùng cho cả khoá mặc đồ lẫn câu giải thích.
+// Lớp này mặc được món này không. Khoá cứng kiểu MU: kiếm chỉ Dark Knight, gậy chỉ Dark
+// Wizard, cung chỉ Sylvan Ranger. Dây chuyền và nhẫn thì ai cũng đeo được.
+function itemUsable(it){
+  const d = itemDef(it);
+  return !d || !d.sect || d.sect === (player && player.sect);
+}
+// Câu giải thích cho người chơi — món không mặc được thì phải NÓI RÕ vì sao, đừng im lặng.
+function itemLockMsg(it){
+  const d = itemDef(it);
+  if (!d || !d.sect) return '';
+  const sc = SECTS[d.sect];
+  return `${it.name} — chỉ ${sc ? sc.name : d.sect} dùng được`;
+}
+// 10 giai trải đều lên 5 dải: giai 1-2 → dải I, 3-4 → II, 5-6 → III, 7-8 → IV, 9-10 → V.
+function bandOfTier(t){ return clamp(Math.ceil((t || 1) / 2) - 1, 0, 4); }
+function itemDef(it){ return it && it.def ? ITEM_DB[it.def] : null; }
+// Gắn định nghĩa + TÊN theo danh mục. Lớp quyết định món nào rơi ra được: vũ khí và giáp đều
+// khoá lớp, nên nhặt được đồ lớp khác là chuyện cố ý (bán, hoặc ném vào Lò Hỗn Loạn).
+function assignDef(it, sect){
+  const d = pickItemDef(it.slot, sect || (player && player.sect) || 'vophai', bandOfTier(it.tier));
+  if (!d) return it;
+  it.def = d.id;
+  it.name = (it.perfect ? 'Hoàn Hảo ' : '') + d.name;
+  return it;
+}
 
 function slotIcon(it, cls){
+  // Món có định nghĩa → vẽ bằng bộ phận. 11 file PNG cũ chỉ còn phục vụ đồ đặc biệt
+  // (cánh, áo choàng, pet) và save cũ chưa có def.
+  let _d = itemDef(it);
+  // Cổ Thần nhuộm theo màu BỘ CỔ THẦN, không theo bộ giáp của lớp: đó là thứ khiến người ta
+  // nhận ra món Cổ Thần từ xa trong túi.
+  if (_d && it.ancient && ANCIENT_SETS[it.ancient]){
+    const ac = ANCIENT_SETS[it.ancient].color;
+    _d = Object.assign({}, _d, { tint: { lo: ac, hi: _lift(ac, 0.34), trim: _lift(ac, 0.62), glow: ac },
+                                 tintKey: 'anc' + it.ancient });
+  }
+  if (_d){
+    const rc = (it.rarity != null && !it.special) ? ' ic-r' + it.rarity : '';
+    const bd = it.tier ? `<i class="ic-giai">${['I','II','III','IV','V','VI','VII','VIII','IX','X'][clamp(it.tier-1,0,9)]}</i>` : '';
+    return `<span class="item-ic${rc}"><img class="${cls||'slot-icon'}" src="${itemArtUrl(_d, it.tier || 1, it.rarity || 0, it.plus || 0)}" alt="">${bd}</span>`;
+  }
   const f = SLOT_ICONS[it.slot] || 'vukhi';
   // Drop v2.0: viền màu theo phẩm, xoay màu theo giai, huy hiệu số giai góc trái
   const hue = it.tier ? (it.tier-1)*22 : 0;
@@ -12138,6 +12420,11 @@ window.equipItem = function(i){
   if (!it) return;
   if (player.level < itemReqLv(it)){
     addFloat(player.x, player.y-30, `Cần LV${itemReqLv(it)} để mặc ${it.name}!`, '#ff7a6a', 13);
+    return;
+  }
+  if (!itemUsable(it)){
+    addFloat(player.x, player.y-30, `🔒 ${itemLockMsg(it)}`, '#ff9a6a', 13);
+    AudioSys.sfx('ui', 0.4);
     return;
   }
   player.inv.splice(i,1);
