@@ -5053,6 +5053,21 @@ function update(dt){
   const ml = Math.hypot(mx,my);
   player.moving = ml > 0.01;
   player.walkPh = (player.walkPh || 0) + dt * (player.moving ? 11 : 2.2);
+  // ── QUÁN TÍNH PHỤ (secondary motion) ──
+  // Trước đây áo choàng đọc thẳng tư thế tức thời nên nó DÍNH vào chân: dừng là dừng ngay,
+  // đổi hướng là bật ngay, không có sức nặng. Hai con lò xo dưới đây chạy TRỄ sau chuyển
+  // động thật, nên vải/lông/mảnh phép đi thêm một nhịp rồi mới lắng — đúng cảm giác có khối
+  // lượng. Chỉ 2 số, tính trong update() một lần, mọi bộ phận cùng đọc.
+  {
+    const tgt = player.moving ? ml : 0;            // đích: đang chạy hay đứng
+    const K = 9.5, D = 5.2;                        // độ cứng · giảm chấn (tinh chỉnh bằng mắt)
+    player.sway = player.sway || 0; player.swayV = player.swayV || 0;
+    player.swayV += ((tgt - player.sway) * K - player.swayV * D) * dt;
+    player.sway += player.swayV * dt;
+    // hướng bạt: vải luôn hất về phía NGƯỢC hướng đang đi, và cũng trễ theo
+    const fx = player.moving ? -mx / Math.max(1, ml) : 0;
+    player.swayDir = (player.swayDir || 0) + (fx - (player.swayDir || 0)) * Math.min(1, dt * 6.5);
+  }
   if (ml > 0.01){
     mx /= Math.max(1,ml); my /= Math.max(1,ml);
     let spd = player.speed || 190;
@@ -7020,13 +7035,19 @@ function hShoulderDragon(g, M, st, w, h){
   }
 }
 const SET_SHOULDER = { plate: hShoulderPlate, hoalong: hShoulderDragon };
-function hPauldrons(g, M, gv, S){
+function hPauldrons(g, M, gv, S, ps){
   const t = gv ? gv.t : 0;
   if (t < 2.5) return;
   const st = hStage(t), fn = SET_SHOULDER[(S && S.style) || 'plate'] || hShoulderPlate;
   const dragon = ((S && S.style) || 'plate') === 'hoalong';
   for (const side of [-1, 1]){
+    // Xoay quanh KHỚP VAI theo ~35% góc cánh tay. Trước đây vai giáp chỉ nằm trong khớp
+    // `lean` nên vung tay mà tấm vai đứng im như dán lên ngực. Giáp thật gắn vào bả vai nên
+    // đi theo tay, chỉ ít hơn vì nó nặng và có dây buộc giữ lại.
+    const _J = side < 0 ? HERO_JOINT.shL : HERO_JOINT.shR;
+    const _arm = ps ? (side < 0 ? ps.armL : ps.armR) : 0;
     g.save();
+    g.translate(_J[0], _J[1]); g.rotate(_arm * 0.35); g.translate(-_J[0], -_J[1]);
     g.translate(80 + side * 29, 98);
     g.scale(side, 1);                                 // vẽ một bên rồi soi gương
     // đầu rồng cần khung hẹp hơn tấm thép, nếu không mõm thò quá xa khỏi khung 160px
@@ -7368,13 +7389,25 @@ const HERO_JOINT = { hipL:[72,142], hipR:[90,142], shL:[52,100], shR:[108,100], 
 // sw: biên độ dùng cho dây cung và độ bạt áo choàng.
 // Chọn kiểu nào là để KHỚP VFX của chiêu: chiêu quét hình quạt thì tay quét ngang,
 // thiên thạch rơi từ trên xuống thì giơ trượng lên trời, ngũ tiễn thì giương cung.
+// Đường cong ra đòn: LẤY ĐÀ → bung → VƯỢT ĐÀ rồi lắng về. Trả 0→1 nhưng đi vòng.
+// Trước đây `slash`/`spin` nội suy tuyến tính (`armR: -0.7 + p*2.1`) nên đòn đánh trôi đều
+// từ đầu tới cuối, không có sức nặng. Ba pha dưới đây là công thức hoạt hình cổ điển:
+//   p < 0.22  — hõm NGƯỢC lại (lấy đà), giá trị âm
+//   sau đó    — ease-out mạnh, vọt qua 1 (vượt đà) rồi trả về đúng 1
+function hSwing(p){
+  if (p < 0.22) return -0.30 * Math.sin(p / 0.22 * Math.PI);
+  const q = (p - 0.22) / 0.78;
+  return (1 - Math.pow(1 - q, 3)) + 0.20 * Math.sin(q * Math.PI) * (1 - q * 0.3);
+}
 const HERO_ACT = {
   // chém dọc từ trên xuống — đòn thường cận chiến
-  slash: p => ({ armR: -0.7 + p*2.1, armL: -0.30*Math.sin(p*Math.PI), lean: 0.16*Math.sin(p*Math.PI),
-                 wrot: 0, wpush: 0, sw: Math.sin(p*Math.PI) }),
+  slash: p => { const e = hSwing(p);
+                return { armR: -0.7 + e*2.1, armL: -0.30*Math.sin(p*Math.PI), lean: 0.16*Math.sin(p*Math.PI) - 0.10*Math.max(0, -e),
+                         wrot: 0, wpush: 0, sw: Math.sin(p*Math.PI) }; },
   // quét ngang một vòng — Twisting Slash (DK) · Fire Slash (MG): VFX hình quạt
-  spin:  p => ({ armR: -0.45 + p*1.05, armL: 0.55*Math.sin(p*Math.PI), lean: 0.22*Math.sin(p*Math.PI),
-                 wrot: -1.65 + p*3.3, wpush: 8*Math.sin(p*Math.PI), sw: Math.sin(p*Math.PI) }),
+  spin:  p => { const e = hSwing(p);
+                return { armR: -0.45 + e*1.05, armL: 0.55*Math.sin(p*Math.PI), lean: 0.22*Math.sin(p*Math.PI) - 0.12*Math.max(0, -e),
+                         wrot: -1.65 + e*3.3, wpush: 8*Math.sin(p*Math.PI), sw: Math.sin(p*Math.PI) }; },
   // đâm thẳng tới — Death Stab (DK): VFX bung ra ngay trước mặt
   thrust: p => { const e = Math.sin(Math.pow(p, 0.55)*Math.PI);
                  return { armR: -0.55 + e*0.45, armL: -0.5*e, lean: 0.24*e,
@@ -7408,7 +7441,7 @@ const SECT_ACT = {
 function heroActOf(sectKey, slot){ return (SECT_ACT[sectKey] || SECT_ACT.vophai)[slot] || 'slash'; }
 
 // wph: pha bước chân · mv: đang di chuyển · atkK/castK 0..1 (đếm NGƯỢC về 0) · act: kiểu ra đòn
-function heroPose(wph, mv, atkK, castK, now, act){
+function heroPose(wph, mv, atkK, castK, now, act, sway, swayDir){
   const br = Math.sin(now / 620) * 0.035;               // nhịp thở lúc đứng yên
   const st = mv ? Math.sin(wph) : 0;                    // sải chân
   const k = castK > 0 ? castK : atkK;                   // đòn nào đang chạy
@@ -7422,6 +7455,8 @@ function heroPose(wph, mv, atkK, castK, now, act){
     bob:  mv ? Math.abs(Math.sin(wph)) * -3.2 : Math.sin(now / 620) * -1.2,
     wrot: A ? A.wrot : 0, wpush: A ? A.wpush : 0,
     sw: A ? A.sw : 0, cast: castK, back: false,
+    // quán tính phụ, dùng chung cho mọi bộ phận mềm (áo choàng · vải rủ · lông vũ · mảnh phép)
+    sway: sway || 0, swayDir: swayDir || 0,
   };
 }
 const HERO_POSE0 = heroPose(0, false, 0, 0, 0, 'slash');
@@ -7456,7 +7491,9 @@ function hArmL(g, P, ps, fn){ hJoint(g, HERO_JOINT.shL[0], HERO_JOINT.shL[1], ps
 function hArmR(g, P, ps, fn){ hJoint(g, HERO_JOINT.shR[0], HERO_JOINT.shR[1], ps.armR, fn || (() => hEll(g, 112, 116, 10, 17, P.skin))); }
 // áo choàng: đuôi áo bạt ra sau theo bước chân & lực vung
 function hCape(g, c1, c2, ps){
-  const f = (ps.legL - ps.legR) * 16 + ps.sw * 22;
+  // sải chân + lực vung (tức thời) CỘNG quán tính (trễ) — thành phần thứ hai mới là thứ
+  // làm áo choàng còn bay tiếp một nhịp sau khi nhân vật đã đứng lại
+  const f = (ps.legL - ps.legR) * 16 + ps.sw * 22 + (ps.sway || 0) * 26 + (ps.swayDir || 0) * 14;
   hPoly(g, [[52,98],[108,98],[122 - f,190],[38 - f,190]], c2);
   hPoly(g, [[80,98],[108,98],[122 - f,190],[80 - f,190]], c1);
 }
@@ -7695,7 +7732,7 @@ function drawHeroFigure(g, sectKey, tier, now, ps, gv){
     if (G.cape && ps.back) hCape(g, G.cape[0], G.cape[1], ps);
     // A. bóng dáng vẽ SAU áo choàng: vai giáp nằm cao hơn mép áo choàng, phải thấy được cả
     // khi nhân vật quay lưng, nếu không thì đi ra xa là mất sạch phần dễ nhận ra nhất.
-    hPauldrons(g, SM, gv, S);
+    hPauldrons(g, SM, gv, S, ps);
     hHelmCrest(g, SM, gv, ps, S);
   });
   hPlusSpark(g, SM, gv, now);                                // E. tàn lửa (trước thân)
@@ -7933,7 +7970,7 @@ function drawPlayer(){
       ctx.scale(s, s); ctx.translate(-HERO_W/2, -HERO_H/2);
       const _act = castK > 0 ? (p.castAct || heroActOf(p.sect, 'a'))
                              : (p.atkAct  || heroActOf(p.sect, 'basic'));
-      const _ps = heroPose(wph, !!p.moving, atkK, Math.min(1, castK), now, _act);
+      const _ps = heroPose(wph, !!p.moving, atkK, Math.min(1, castK), now, _act, p.sway, p.swayDir);
       // Góc nhìn 3/4 kiểu MU: đi lên trên là thấy LƯNG, đi xuống là thấy mặt.
       // (Trước đây hướng nào cũng nhìn thẳng vào mặt người chơi, trông rất sai.)
       _ps.back = Math.sin(p.face) < -0.42;
