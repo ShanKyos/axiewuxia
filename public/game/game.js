@@ -10810,6 +10810,645 @@ const SLOT_ICONS = {
   daychuyen:'daychuyen', nhan1:'nhan', nhan2:'nhan',
   aochoang:'aochoang', pet:'pet', canh:'canh',
 };
+// ═══════════════ HÌNH VẬT PHẨM — vẽ bằng code, không dùng file PNG ═══════════════
+// 11 file PNG đang phải gánh TOÀN BỘ trang bị: mọi thanh kiếm trong game dùng chung vukhi.png,
+// khác nhau đúng một bộ lọc xoay màu theo giai. Nay mỗi món một hình riêng, vẽ bằng code y như
+// nhân vật và 25 bộ giáp — hơn 200 món tốn ~0 byte, trong khi 11 file PNG kia đã ngốn 2,3 MB.
+//
+// Hệ toạ độ: gốc ở TÂM icon, khung 100×100, y âm là hướng lên. Hàm vẽ nhận (g, M, P):
+// g = ngữ cảnh, M = bảng màu kim loại, P = tham số riêng của món.
+const ICON_PX = 88;
+const _itemArtCache = new Map();
+
+// Bảng màu một món: lấy sắc kim loại theo GIAI — dùng chung HERO_METAL với nhân vật để hình
+// trong túi và hình trên người là cùng một chất liệu — rồi nhuộm lại theo bộ nếu món thuộc bộ.
+function _lum(h){
+  const n = parseInt((h || '#888').slice(1), 16);
+  return (((n >> 16) & 255) * 0.30 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11) / 255;
+}
+// Nâng một màu về phía trắng theo tỉ lệ k.
+function _lift(h, k){
+  const n = parseInt((h || '#888').slice(1), 16);
+  const f = c => Math.round(c + (255 - c) * k);
+  const r = f((n >> 16) & 255), g2 = f((n >> 8) & 255), b = f(n & 255);
+  return '#' + ((1 << 24) | (r << 16) | (g2 << 8) | b).toString(16).slice(1);
+}
+const WEAPON_MAT = {
+  dong:    { lo:'#6a4e28', hi:'#b08a4a', trim:'#e8c078', glow:null },       // đồng
+  sat:     { lo:'#4a4f5c', hi:'#8a92a4', trim:'#b8bfd0', glow:null },       // sắt
+  thep:    { lo:'#5a6272', hi:'#a8b2c6', trim:'#dfe6f2', glow:null },       // thép sáng
+  hacKim:  { lo:'#1c1f28', hi:'#3c424f', trim:'#8fa6c8', glow:'#6f8ec0' },  // hắc kim
+  bang:    { lo:'#2c5a72', hi:'#9fd8ee', trim:'#eaf8ff', glow:'#8fe0ff' },  // băng
+  lua:     { lo:'#4a1c10', hi:'#8a3a20', trim:'#ffb060', glow:'#ff8a3a' },  // nung đỏ
+  vang:    { lo:'#6a5220', hi:'#c8a84a', trim:'#ffe9a8', glow:'#ffd76a' },  // vàng cổ
+  xuong:   { lo:'#5a5344', hi:'#cfc6ac', trim:'#efe8d2', glow:null },       // xương
+  ma:      { lo:'#2a1f4a', hi:'#6a4fb0', trim:'#c8a8ff', glow:'#a88aff' },  // ma thuật
+  rong:    { lo:'#5a1418', hi:'#c0342c', trim:'#ffc24a', glow:'#ff6a2a' },  // vảy rồng
+};
+function itemPal(def, tier){
+  const M = (def && def.mat && WEAPON_MAT[def.mat]) || hMetal(tier);
+  const t = def && def.tint;
+  let P = !t ? M : { lo: t.lo || M.lo, hi: t.hi || M.hi, trim: t.trim || M.trim,
+                     glow: t.glow !== undefined ? t.glow : M.glow };
+  // Icon nằm trên nền panel TỐI, còn nhân vật đứng trên bản đồ SÁNG — cùng một bảng màu cho
+  // hai chỗ đó là sai. Bộ tối như Hắc Giáp (lo #23262f) tan hẳn vào nền ô túi. Nâng sàn sáng
+  // RIÊNG cho icon, giữ nguyên sắc, để món nào cũng đọc được trong túi.
+  const need = 0.30 - _lum(P.hi);
+  if (need > 0){
+    const k = Math.min(0.55, need * 1.7);
+    P = { lo: _lift(P.lo, k * 0.85), hi: _lift(P.hi, k), trim: _lift(P.trim, k * 0.5), glow: P.glow };
+  }
+  return P;
+}
+function iGrad(g, x0, y0, x1, y1, a, b){
+  const gr = g.createLinearGradient(x0, y0, x1, y1);
+  gr.addColorStop(0, a); gr.addColorStop(1, b); return gr;
+}
+function iPoly(g, pts, close){
+  g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
+  if (close !== false) g.closePath();
+}
+function iFill(g, pts, col){ iPoly(g, pts); g.fillStyle = col; g.fill(); }
+// Đinh tán: chi tiết nhỏ nhất nhưng là thứ nói "đồ thật" ở cỡ 44px.
+function iRivet(g, M, x, y, r){
+  g.fillStyle = M.trim; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.5)'; g.beginPath(); g.arc(x - r*0.3, y - r*0.32, r*0.4, 0, 7); g.fill();
+}
+// Viên đá nạm — dùng cho nấc cao, và là chỗ duy nhất màu `glow` của bộ hiện ra rõ.
+function iGem(g, M, x, y, r){
+  const c = M.glow || M.trim;
+  g.fillStyle = c; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.75)'; g.beginPath(); g.arc(x - r*0.28, y - r*0.3, r*0.38, 0, 7); g.fill();
+  g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 0.8; g.beginPath(); g.arc(x, y, r, 0, 7); g.stroke();
+}
+
+// ═══ BỘ PHẬN VŨ KHÍ — mỗi món là một TỔ HỢP, không phải một dáng tô lại màu ═══
+// Bản nháp đầu sai ở đây: 5 nấc chỉ là cùng một thanh kiếm đổi bảng màu, nên 75 vũ khí sẽ ra
+// 75 thanh giống hệt nhau. Trong MU thì Kiếm La Mã, Kiếm Điện, Kiếm Băng là BA VẬT KHÁC NHAU
+// — khác lưỡi, khác chắn tay, khác hoa văn. Nên tách rời rồi lắp lại:
+//   9 lưỡi × 7 chắn tay × 4 chuôi × 6 hoa văn  →  thừa sức cho 75 vũ khí mà không trùng dáng.
+// Quy ước: lưỡi vẽ từ chắn tay (y = +12) hướng lên tới mũi (y = len, âm). w = NỬA bề ngang.
+
+// ── LƯỠI ────────────────────────────────────────────────────────────────────────
+const IBLADE = {
+  // kiếm một tay thường: thuôn đều
+  thang(g, M, w, len){
+    iFill(g, [[-w, 12], [-w*0.86, len*0.5], [0, len], [w*0.86, len*0.5], [w, 12]], M.hi);
+    iFill(g, [[-w*0.28, 9], [-w*0.24, len*0.5], [0, len*0.82], [w*0.24, len*0.5], [w*0.28, 9]], M.lo);
+  },
+  // KIẾM LA MÃ: ngắn, bè, vai lưỡi gãy khúc rõ rồi mới vào mũi tam giác
+  lama(g, M, w, len){
+    const W = w * 1.55, sh = len * 0.62;
+    iFill(g, [[-W, 12], [-W, sh], [-W*0.9, sh*1.06], [0, len], [W*0.9, sh*1.06], [W, sh], [W, 12]], M.hi);
+    iFill(g, [[-W*0.26, 10], [-W*0.26, sh], [0, len*0.86], [W*0.26, sh], [W*0.26, 10]], M.lo);
+    g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 0.9;
+    g.beginPath(); g.moveTo(-W, sh); g.lineTo(W, sh); g.stroke();
+  },
+  // KRIS: lưỡi lượn sóng
+  song(g, M, w, len){
+    const N = 5;
+    const side = (s) => {
+      const pts = [];
+      for (let i = 0; i <= N; i++){
+        const t = i / N, y = 12 + (len - 12) * t;
+        const amp = (1 - t * 0.55) * w * 0.75;
+        pts.push([s * (w * (1 - t * 0.35) + Math.sin(t * Math.PI * 2.6) * amp * 0.5), y]);
+      }
+      return pts;
+    };
+    const L = side(-1), R = side(1).reverse();
+    iFill(g, [...L, [0, len], ...R], M.hi);
+    iFill(g, [[-w*0.22, 9], [-w*0.2, len*0.5], [0, len*0.8], [w*0.2, len*0.5], [w*0.22, 9]], M.lo);
+  },
+  // KIẾM ĐIỆN: hai ngạnh chẻ, cạnh gãy khúc kiểu tia sét
+  chietia(g, M, w, len){
+    const zig = (s) => [
+      [s*w, 12], [s*w*1.5, len*0.30], [s*w*0.55, len*0.42],
+      [s*w*1.35, len*0.66], [s*w*0.5, len*0.74], [s*w*0.95, len*0.92],
+    ];
+    iFill(g, [...zig(-1), [0, len], ...zig(1).reverse()], M.hi);
+    iFill(g, [[-w*0.3, 10], [-w*0.22, len*0.6], [0, len*0.9], [w*0.22, len*0.6], [w*0.3, 10]], M.lo);
+  },
+  // ĐAO: một lưỡi, sống thẳng, bụng cong
+  cong(g, M, w, len){
+    g.beginPath();
+    g.moveTo(-w, 12);
+    g.quadraticCurveTo(-w * 1.9, len * 0.55, -w * 0.25, len);
+    g.lineTo(w * 0.55, len * 0.95);
+    g.quadraticCurveTo(w * 0.85, len * 0.5, w * 0.8, 12);
+    g.closePath();
+    g.fillStyle = M.hi; g.fill();
+    g.strokeStyle = M.lo; g.lineWidth = 1.6;
+    g.beginPath(); g.moveTo(w * 0.4, 10); g.quadraticCurveTo(w * 0.5, len * 0.55, w * 0.35, len * 0.9); g.stroke();
+  },
+  // KIẾM BĂNG: khối pha lê gãy mặt, không có sống
+  pha_le(g, M, w, len){
+    const W = w * 1.2;
+    iFill(g, [[-W, 12], [-W*0.75, len*0.42], [-W*0.5, len*0.7], [0, len], [W*0.5, len*0.7], [W*0.75, len*0.42], [W, 12]], M.hi);
+    // ba mặt cắt
+    iFill(g, [[-W, 12], [-W*0.75, len*0.42], [0, len*0.36], [0, 12]], M.lo);
+    g.save(); g.globalAlpha = .55;
+    iFill(g, [[0, 12], [0, len*0.36], [W*0.75, len*0.42], [W, 12]], '#ffffff');
+    g.restore();
+    iFill(g, [[-W*0.5, len*0.7], [0, len], [W*0.5, len*0.7], [0, len*0.62]], M.lo);
+  },
+  // lưỡi răng cưa
+  rangcua(g, M, w, len){
+    iFill(g, [[-w, 12], [-w*0.8, len*0.55], [0, len], [w*0.8, len*0.55], [w, 12]], M.hi);
+    g.fillStyle = M.lo;
+    for (let i = 0; i < 5; i++){
+      const t = 0.14 + i * 0.16, y = 12 + (len - 12) * t;
+      const ww = w * (1 - t * 0.42);
+      iPoly(g, [[ww, y], [ww + 3.4, y - 2.6], [ww, y - 5.2]]); g.fill();
+    }
+    iFill(g, [[-w*0.26, 9], [-w*0.22, len*0.55], [0, len*0.8], [w*0.22, len*0.55], [w*0.26, 9]], M.lo);
+  },
+  // ĐẠI KIẾM: to bản, có khấc gần chắn tay
+  daikiem(g, M, w, len){
+    const W = w * 1.7;
+    iFill(g, [[-W, 12], [-W, len*0.22], [-W*1.25, len*0.3], [-W*0.92, len*0.38],
+              [-W*0.8, len*0.72], [0, len], [W*0.8, len*0.72], [W*0.92, len*0.38],
+              [W*1.25, len*0.3], [W, len*0.22], [W, 12]], M.hi);
+    iFill(g, [[-W*0.3, 9], [-W*0.26, len*0.62], [0, len*0.85], [W*0.26, len*0.62], [W*0.3, 9]], M.lo);
+  },
+  // KIẾM MẢNH: đâm, gần như không bề ngang
+  manh(g, M, w, len){
+    const W = w * 0.5;
+    iFill(g, [[-W, 12], [-W, len*0.78], [0, len], [W, len*0.78], [W, 12]], M.hi);
+    g.strokeStyle = M.lo; g.lineWidth = 1.2;
+    g.beginPath(); g.moveTo(0, 10); g.lineTo(0, len*0.85); g.stroke();
+  },
+};
+
+// ── CHẮN TAY ────────────────────────────────────────────────────────────────────
+const IGUARD = {
+  thanh(g, M, gw){ iFill(g, [[-gw, 12], [-gw*0.82, 17.5], [gw*0.82, 17.5], [gw, 12], [gw*0.74, 9.4], [-gw*0.74, 9.4]], M.trim); },
+  quat(g, M, gw){  // quillon vuốt lên
+    iFill(g, [[-gw, 12], [-gw*0.8, 17], [gw*0.8, 17], [gw, 12], [gw*0.72, 9.4], [-gw*0.72, 9.4]], M.trim);
+    iFill(g, [[-gw, 12.5], [-gw-4.5, 4], [-gw*0.7, 9.4]], M.trim);
+    iFill(g, [[gw, 12.5], [gw+4.5, 4], [gw*0.7, 9.4]], M.trim);
+  },
+  canh(g, M, gw){  // cánh xoè
+    for (const s of [-1, 1]){
+      g.save(); g.scale(s, 1);
+      g.beginPath(); g.moveTo(0, 9);
+      g.quadraticCurveTo(gw*0.7, 4, gw*1.25, 12);
+      g.quadraticCurveTo(gw*0.8, 18, 0, 17); g.closePath();
+      g.fillStyle = M.trim; g.fill();
+      g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = .8; g.stroke();
+      g.restore();
+    }
+  },
+  luoiliem(g, M, gw){ // lưỡi liềm ngửa
+    g.beginPath();
+    g.moveTo(-gw*1.15, 15); g.quadraticCurveTo(0, 2.5, gw*1.15, 15);
+    g.quadraticCurveTo(0, 10, -gw*1.15, 15); g.closePath();
+    g.fillStyle = M.trim; g.fill();
+  },
+  vuot(g, M, gw){  // vuốt quặp xuống
+    iFill(g, [[-gw*0.7, 9.4], [gw*0.7, 9.4], [gw*0.7, 15], [-gw*0.7, 15]], M.trim);
+    for (const s of [-1, 1]) iFill(g, [[s*gw*0.6, 10], [s*gw*1.45, 20], [s*gw*0.95, 21], [s*gw*0.55, 15]], M.trim);
+  },
+  soc(g, M, gw){   // ổ giữa + hai ngạnh nhỏ
+    iFill(g, [[-gw*0.9, 11], [gw*0.9, 11], [gw*0.75, 17], [-gw*0.75, 17]], M.trim);
+    for (const s of [-1, 1]) iFill(g, [[s*gw*0.9, 11], [s*gw*1.3, 13.6], [s*gw*0.85, 17]], M.trim);
+  },
+  khong(g){ void g; },  // gậy / cung: không có chắn tay
+};
+
+// ── CHUÔI ───────────────────────────────────────────────────────────────────────
+const IPOMMEL = {
+  tron(g, M, r){ g.fillStyle = M.trim; g.beginPath(); g.arc(0, 33, r, 0, 7); g.fill(); },
+  da(g, M, r){ g.fillStyle = M.trim; g.beginPath(); g.arc(0, 33, r, 0, 7); g.fill(); iGem(g, M, 0, 33, r*0.55); },
+  gai(g, M, r){ iFill(g, [[-r, 30], [r, 30], [0, 30 + r*2.2]], M.trim);
+                g.fillStyle = M.trim; g.beginPath(); g.arc(0, 30, r*0.8, 0, 7); g.fill(); },
+  vuot(g, M, r){ g.fillStyle = M.trim; g.beginPath(); g.arc(0, 32, r*0.9, 0, 7); g.fill();
+                 for (const s of [-1, 1]) iFill(g, [[s*r*0.5, 30], [s*r*1.9, 36], [s*r*0.4, 35]], M.trim); },
+};
+
+// ── HOA VĂN trên lưỡi — thứ biến "thanh kiếm" thành "KIẾM ĐIỆN" ────────────────
+// Màu hoa văn thuộc về MÓN, không thuộc về giai. Bản đầu lấy M.glow nên Kiếm Điện, Kiếm Băng
+// và Kiếm Lửa cùng giai thì cùng một màu vàng — mất sạch bản sắc. Trong MU thì Kiếm Điện xanh
+// điện ở mọi cấp.
+const MOTIF_COL = { set:'#8fe0ff', bang:'#bfe8ff', lua:'#ff8a2a', runes:'#c8a8ff', gai:null, mach:'#c8a8ff' };
+const IMOTIF = {
+  khong(g){ void g; },
+  set(g, M, len){          // tia sét gãy khúc
+    const c = MOTIF_COL.set;
+    const path = () => { g.beginPath();
+      g.moveTo(-3, 6); g.lineTo(2.6, len*0.34); g.lineTo(-2.8, len*0.46);
+      g.lineTo(3, len*0.72); g.lineTo(-1.4, len*0.84); };
+    g.save();
+    // rãnh tối lót dưới — không có nó thì nét sáng tan vào lưỡi kim loại sáng
+    g.strokeStyle = 'rgba(0,0,0,.55)'; g.lineWidth = 4.6; g.lineJoin = 'miter'; path(); g.stroke();
+    g.globalCompositeOperation = 'lighter';
+    g.strokeStyle = c; g.globalAlpha = .45; g.lineWidth = 5; path(); g.stroke();
+    g.globalAlpha = 1; g.lineWidth = 2.2; path(); g.stroke();
+    g.strokeStyle = '#ffffff'; g.lineWidth = 0.9; path(); g.stroke();
+    g.restore();
+  },
+  bang(g, M, len){         // gai băng mọc chéo hai bên sống
+    const c = MOTIF_COL.bang;
+    const spikes = () => { g.beginPath();
+      for (let i = 0; i < 4; i++){
+        const y = 4 + (len - 4) * (0.18 + i * 0.2);
+        g.moveTo(0, y); g.lineTo(-5.4, y - 5.2); g.moveTo(0, y); g.lineTo(5.4, y - 5.2);
+      }
+      g.moveTo(0, 6); g.lineTo(0, len*0.88); };
+    g.save(); g.lineCap = 'round';
+    g.strokeStyle = 'rgba(0,40,70,.55)'; g.lineWidth = 4.2; spikes(); g.stroke();
+    g.globalCompositeOperation = 'lighter';
+    g.strokeStyle = c; g.globalAlpha = .5; g.lineWidth = 4; spikes(); g.stroke();
+    g.globalAlpha = 1; g.lineWidth = 1.7; spikes(); g.stroke();
+    g.restore();
+  },
+  lua(g, M, len){          // lưỡi lửa liếm dọc sống
+    const c = MOTIF_COL.lua;
+    const flames = () => { g.beginPath();
+      for (let i = 0; i < 3; i++){
+        const y = 4 + (len - 4) * (0.2 + i * 0.26), sd = i % 2 ? 1 : -1;
+        g.moveTo(0, y);
+        g.quadraticCurveTo(sd * 7, y - 6, 0, y - 13.5);
+        g.quadraticCurveTo(sd * 2.4, y - 6, 0, y);
+      } };
+    g.save();
+    g.fillStyle = 'rgba(60,10,0,.5)'; flames(); g.fill();
+    g.globalCompositeOperation = 'lighter';
+    g.fillStyle = c; g.globalAlpha = .95; flames(); g.fill();
+    g.globalAlpha = .8; g.fillStyle = '#ffe08a';
+    g.save(); g.scale(0.5, 0.72); flames(); g.fill(); g.restore();
+    g.restore();
+  },
+  runes(g, M, len){        // ký tự khắc chìm
+    g.save(); g.strokeStyle = MOTIF_COL.runes; g.lineWidth = 1.5; g.globalAlpha = 1;
+    for (let i = 0; i < 4; i++){
+      const y = 4 + (len - 4) * (0.2 + i * 0.19);
+      g.beginPath(); g.moveTo(-2.2, y); g.lineTo(2.2, y - 2.4); g.moveTo(2.2, y); g.lineTo(-2.2, y - 2.4); g.stroke();
+    }
+    g.restore();
+  },
+  gai(g, M, len){          // ngạnh mọc ra khỏi lưỡi
+    g.fillStyle = M.trim;
+    for (let i = 0; i < 3; i++){
+      const y = 4 + (len - 4) * (0.26 + i * 0.24);
+      iPoly(g, [[-3, y], [-9.5, y - 3.2], [-3, y - 5.5]]); g.fill();
+      iPoly(g, [[3, y], [9.5, y - 3.2], [3, y - 5.5]]); g.fill();
+    }
+  },
+  mach(g, M, len){         // mạch sáng chạy giữa sống
+    const c = MOTIF_COL.mach;
+    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .75;
+    g.strokeStyle = c; g.lineWidth = 2.6; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(0, 6); g.lineTo(0, len*0.86); g.stroke();
+    g.lineWidth = 1; g.globalAlpha = 1; g.strokeStyle = '#ffffff';
+    g.beginPath(); g.moveTo(0, 6); g.lineTo(0, len*0.86); g.stroke();
+    g.restore();
+  },
+};
+
+// Lắp một vũ khí từ 4 bộ phận. P = { blade, guard, pommel, motif, w, len, gw, st }
+function iaWeapon(g, M, P){
+  const st = P.st || 1;
+  g.save(); g.rotate(P.rot === undefined ? -0.42 : P.rot);
+  // Tỉ lệ là thứ nói "món này NẶNG". Bản đầu mọi thanh dài xấp xỉ nhau nên đại kiếm trông
+  // chẳng to hơn dao găm chút nào — cỡ phải chênh thật.
+  const len = P.len || -44, w = P.w || 5.5, gw = P.gw || 15;
+  if (P.big) g.scale(P.big, P.big);
+  // Viền tối: vẽ lưỡi một lần bằng màu gần-đen ở cỡ nhỉnh hơn để tạo contour. Không có nó thì
+  // lưỡi sáng nằm trên nền sáng là mất hẳn bóng dáng — đây là thứ mọi icon MU đều có.
+  const DK = { lo:'#0a0c12', hi:'#0a0c12', trim:'#0a0c12', glow:null };
+  g.save(); g.translate(0, 0.6); g.scale(1.1, 1.03);
+  (IBLADE[P.blade] || IBLADE.thang)(g, DK, w, len);
+  g.restore();
+  (IBLADE[P.blade] || IBLADE.thang)(g, M, w, len);
+  (IMOTIF[P.motif] || IMOTIF.khong)(g, M, len);
+  // cán
+  iFill(g, [[-3.4, 17], [3.4, 17], [3, 31], [-3, 31]], M.lo);
+  g.strokeStyle = M.hi; g.lineWidth = 1.5;
+  for (let i = 0; i < 4; i++){ const y = 19 + i * 3.4;
+    g.beginPath(); g.moveTo(-3.3, y); g.lineTo(3.3, y + 1.6); g.stroke(); }
+  (IGUARD[P.guard] || IGUARD.thanh)(g, M, gw);
+  (IPOMMEL[P.pommel] || IPOMMEL.tron)(g, M, 4.4 + st * 0.3);
+  if (st >= 3) iGem(g, M, 0, 13.4, 2.1 + st * 0.18);
+  g.restore();
+}
+
+// ── GIÁP: mũ trụ ────────────────────────────────────────────────────────────────
+function iaHelm(g, M, P){
+  const st = P.st || 1;
+  g.translate(0, 3);
+  // vòm
+  iPoly(g, [[-21, 12], [-22, -6]]);
+  g.beginPath();
+  g.moveTo(-21, 14);
+  g.bezierCurveTo(-23, -10, -12, -24, 0, -24);
+  g.bezierCurveTo(12, -24, 23, -10, 21, 14);
+  g.closePath();
+  g.fillStyle = iGrad(g, -21, -24, 21, 14, M.hi, M.lo); g.fill();
+  // khe mắt
+  iFill(g, [[-14, -2], [14, -2], [12, 5], [-12, 5]], '#0a0c12');
+  g.fillStyle = M.lo; g.fillRect(-1.6, -2, 3.2, 7);         // sống mũi
+  // má giáp
+  iFill(g, [[-21, 5], [-13, 5], [-11, 18], [-19, 17]], M.lo);
+  iFill(g, [[21, 5], [13, 5], [11, 18], [19, 17]], M.lo);
+  // vành trán
+  iFill(g, [[-22, -3], [22, -3], [21, -8], [-21, -8]], M.trim);
+  if (st >= 2){ iRivet(g, M, -16, -5.5, 1.7); iRivet(g, M, 16, -5.5, 1.7); }
+  if (st >= 3){                             // sừng
+    iFill(g, [[-18, -14], [-30, -28], [-22, -12]], M.trim);
+    iFill(g, [[18, -14], [30, -28], [22, -12]], M.trim);
+  }
+  if (st >= 4){                             // mào giữa
+    iFill(g, [[-3, -24], [0, -38], [3, -24]], M.trim);
+    iGem(g, M, 0, -12, 2.6);
+  }
+  iSheenArc(g);
+}
+// Vệt sáng chéo phủ lên toàn hình — làm mảng phẳng thành bề mặt cong.
+function iSheenArc(g){
+  g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.16;
+  g.fillStyle = iGrad(g, -30, -30, 6, 20, 'rgba(255,255,255,1)', 'rgba(255,255,255,0)');
+  g.beginPath(); g.arc(0, 0, 46, 0, 7); g.fill();
+  g.restore();
+}
+
+// ── GIÁP: áo ────────────────────────────────────────────────────────────────────
+function iaArmor(g, M, P){
+  const st = P.st || 1;
+  const pw = 9 + st * 1.9;                  // độ xoè vai
+  g.translate(0, 2);
+  // THÂN — hình thang ngực-eo. Bản đầu thuôn về MỘT ĐIỂM ở đáy nên đọc thành cái khiên,
+  // cộng với vai lơ lửng tách khỏi thân thì ra hình con bọ.
+  g.beginPath();
+  g.moveTo(-17, -20);                        // vai trái
+  g.lineTo(-20, -6);                         // ngực bè nhất
+  g.lineTo(-14, 16);                         // thắt eo
+  g.lineTo(-9, 24); g.lineTo(9, 24);         // gấu áo THẲNG, không nhọn
+  g.lineTo(14, 16); g.lineTo(20, -6); g.lineTo(17, -20);
+  g.closePath();
+  g.fillStyle = iGrad(g, -20, -20, 20, 24, M.hi, M.lo); g.fill();
+  // cổ áo khoét chữ V
+  iFill(g, [[-8, -21], [8, -21], [5, -12], [0, -9], [-5, -12]], '#0a0c12');
+  // hai mảng ngực
+  g.strokeStyle = 'rgba(0,0,0,.30)'; g.lineWidth = 1.4;
+  g.beginPath(); g.moveTo(0, -9); g.lineTo(0, 6); g.stroke();
+  g.strokeStyle = M.trim; g.lineWidth = 1.6;
+  g.beginPath(); g.moveTo(-16, -4); g.quadraticCurveTo(0, 3, 16, -4); g.stroke();
+  // tấm bụng xếp lớp
+  for (let i = 0; i < 2 + (st >= 3 ? 1 : 0); i++){
+    const y = 8 + i * 5.5;
+    g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 1.3;
+    g.beginPath(); g.moveTo(-15 + i * 1.4, y); g.quadraticCurveTo(0, y + 3, 15 - i * 1.4, y); g.stroke();
+  }
+  // VAI — ĐÈ LÊN mép thân (x = ±17), không để hở khe
+  for (const sd of [-1, 1]){
+    g.save(); g.translate(sd * 15, -17); g.scale(sd, 1);
+    g.beginPath();
+    g.moveTo(-5, 9);
+    g.quadraticCurveTo(-7, -6, 3, -8);
+    g.quadraticCurveTo(pw, -7, pw + 1, 8);
+    g.quadraticCurveTo(pw * 0.5, 12, -5, 9);
+    g.closePath();
+    g.fillStyle = iGrad(g, 0, -8, 0, 10, M.hi, M.lo); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 0.9; g.stroke();
+    if (st >= 3){ g.strokeStyle = M.trim; g.lineWidth = 1.3;
+      g.beginPath(); g.moveTo(-3, 3); g.quadraticCurveTo(pw * 0.5, -4, pw * 0.9, 4); g.stroke(); }
+    if (st >= 4) iFill(g, [[pw * 0.45, -7], [pw * 0.75, -17], [pw * 0.95, -4]], M.trim);  // gai vai
+    g.restore();
+  }
+  if (st >= 2){ iRivet(g, M, -13, -14, 1.8); iRivet(g, M, 13, -14, 1.8); }
+  if (st >= 4) iGem(g, M, 0, -3, 3.2);
+  iSheenArc(g);
+}
+
+// ── GIÁP: găng tay ──────────────────────────────────────────────────────────────
+function iaGloves(g, M, P){
+  const st = P.st || 1;
+  g.save(); g.rotate(-0.1); g.translate(1, 4);
+  // NGÓN — vẽ trước để mu bàn tay đè lên gốc ngón. Bản đầu xếp 4 khối chữ nhật bằng nhau
+  // thành một hàng nên ra hình thanh sô-cô-la; ngón thật phải so le và thuôn dần.
+  const fl = [13, 15.5, 14.5, 11.5];              // ngón giữa dài nhất
+  for (let i = 0; i < 4; i++){
+    const x = -10.5 + i * 7;
+    const top = -12 - fl[i];
+    g.fillStyle = i % 2 ? M.lo : M.hi;
+    g.beginPath();
+    g.moveTo(x - 2.9, -8); g.lineTo(x - 2.5, top + 3);
+    g.quadraticCurveTo(x, top - 1.5, x + 2.5, top + 3);
+    g.lineTo(x + 2.9, -8); g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = 0.9; g.stroke();
+    if (st >= 2){ g.strokeStyle = M.trim; g.lineWidth = 1.1;      // đốt ngón
+      g.beginPath(); g.moveTo(x - 2.6, top + 8); g.lineTo(x + 2.6, top + 8); g.stroke(); }
+  }
+  // NGÓN CÁI — chìa hẳn sang bên, đây là thứ khiến người ta đọc ra "bàn tay"
+  g.save(); g.translate(-13, -4); g.rotate(-0.55);
+  g.fillStyle = M.hi;
+  g.beginPath(); g.moveTo(-3.2, 6); g.lineTo(-2.8, -6);
+  g.quadraticCurveTo(0, -9.5, 2.8, -6); g.lineTo(3.2, 6); g.closePath(); g.fill();
+  g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = 0.9; g.stroke();
+  g.restore();
+  // MU BÀN TAY — hẹp ở cổ tay, bè ra ở khớp ngón
+  g.beginPath();
+  g.moveTo(-11, 12); g.lineTo(11, 12);
+  g.lineTo(14, -4); g.quadraticCurveTo(14.5, -10, 12, -11);
+  g.lineTo(-12, -11); g.quadraticCurveTo(-14.5, -10, -14, -4);
+  g.closePath();
+  g.fillStyle = iGrad(g, -14, -11, 14, 12, M.hi, M.lo); g.fill();
+  if (st >= 2){ g.strokeStyle = M.trim; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(-12.5, -6); g.quadraticCurveTo(0, -1.5, 12.5, -6); g.stroke(); }
+  if (st >= 4) iGem(g, M, 0, 1, 3);
+  // CỔ TAY — loe ra, chặn dưới
+  iFill(g, [[-14, 11], [14, 11], [15.5, 18], [-15.5, 18]], M.trim);
+  iFill(g, [[-13, 18], [13, 18], [11.5, 27], [-11.5, 27]], iGrad(g, -13, 18, 13, 27, M.hi, M.lo));
+  if (st >= 3){ iRivet(g, M, -8, 14.5, 1.6); iRivet(g, M, 8, 14.5, 1.6); }
+  if (st >= 5) iFill(g, [[-15.5, 14], [-25, 8], [-15, 20]], M.trim);
+  g.restore();
+  iSheenArc(g);
+}
+
+// ── GIÁP: giáp đùi ──────────────────────────────────────────────────────────────
+function iaPants(g, M, P){
+  const st = P.st || 1;
+  g.translate(0, 2);
+  // đai
+  iFill(g, [[-20, -22], [20, -22], [19, -13], [-19, -13]], iGrad(g, -20, -22, 20, -13, M.hi, M.lo));
+  iFill(g, [[-7, -24], [7, -24], [6, -11], [-6, -11]], M.trim);      // khoá đai
+  if (st >= 4) iGem(g, M, 0, -17.5, 3);
+  // hai tấm đùi
+  for (const s of [-1, 1]){
+    g.save(); g.translate(s * 10, -12);
+    g.beginPath();
+    g.moveTo(-8, 0); g.lineTo(8, 0);
+    g.bezierCurveTo(10, 14, 7, 26, 0, 30);
+    g.bezierCurveTo(-7, 26, -10, 14, -8, 0);
+    g.closePath();
+    g.fillStyle = iGrad(g, -8, 0, 8, 30, M.hi, M.lo); g.fill();
+    for (let i = 0; i < 2 + (st >= 3 ? 1 : 0); i++){
+      g.strokeStyle = M.lo; g.lineWidth = 1.2;
+      const y = 6 + i * 7;
+      g.beginPath(); g.moveTo(-7 + i*0.6, y); g.quadraticCurveTo(0, y + 3, 7 - i*0.6, y); g.stroke();
+    }
+    if (st >= 2) iRivet(g, M, 0, 2.5, 1.7);
+    if (st >= 5) iFill(g, [[s*8, 6], [s*15, 2], [s*8, 12]], M.trim);
+    g.restore();
+  }
+  iSheenArc(g);
+}
+
+// ── GIÁP: ủng ───────────────────────────────────────────────────────────────────
+function iaBoots(g, M, P){
+  const st = P.st || 1;
+  for (const s of [-1, 1]){
+    g.save(); g.translate(s * 11, 0); g.rotate(s * 0.06);
+    // ống
+    iFill(g, [[-8, -24], [8, -24], [7, 6], [-7, 6]], iGrad(g, -8, -24, 8, 6, M.hi, M.lo));
+    // vành ống
+    iFill(g, [[-9.5, -26], [9.5, -26], [9, -19], [-9, -19]], M.trim);
+    // bàn chân
+    g.beginPath();
+    g.moveTo(-7, 4); g.lineTo(7, 4);
+    g.lineTo(s > 0 ? 15 : 9, 16); g.lineTo(s > 0 ? 13 : 7, 21);
+    g.lineTo(-9, 21); g.closePath();
+    g.fillStyle = iGrad(g, -7, 4, 10, 21, M.hi, M.lo); g.fill();
+    // đế
+    iFill(g, [[-9.5, 20], [s > 0 ? 13.5 : 7.5, 20], [s > 0 ? 13 : 7, 24], [-9, 24]], M.lo);
+    if (st >= 2){ g.strokeStyle = M.trim; g.lineWidth = 1.3;
+      g.beginPath(); g.moveTo(-7, -8); g.lineTo(7, -8); g.stroke(); }
+    if (st >= 3) iRivet(g, M, 0, -13, 1.6);
+    if (st >= 4) iFill(g, [[-8, -22], [-15, -30], [-7, -27]], M.trim);   // cánh cổ ủng
+    if (st >= 5) iGem(g, M, 0, -2, 2.4);
+    g.restore();
+  }
+  iSheenArc(g);
+}
+
+const ITEM_ART = {
+  weapon: iaWeapon, helm: iaHelm, armor: iaArmor, gloves: iaGloves, pants: iaPants, boots: iaBoots,
+  ring: iaRing, pendPhys: iaPendPhys, pendMagic: iaPendMagic,
+};
+
+// Vẽ trọn một icon: nền theo phẩm → hình món → hào quang cường hoá.
+function drawItemIcon(g, def, tier, rarity, plus){
+  const M = itemPal(def, tier);
+  const R = RARITIES[Math.max(0, Math.min(4, rarity || 0))];
+  g.save();
+  g.translate(ICON_PX / 2, ICON_PX / 2);
+  g.scale(ICON_PX / 100, ICON_PX / 100);
+  // nền: quầng màu phẩm — cùng ngôn ngữ màu với viền ô túi, để nhìn là biết phẩm
+  const bg = g.createRadialGradient(0, 0, 4, 0, 0, 50);
+  bg.addColorStop(0, R.color + '38'); bg.addColorStop(1, R.color + '00');
+  g.fillStyle = bg; g.fillRect(-50, -50, 100, 100);
+  // hào quang cường hoá: vẽ đè chính hình ở cỡ lớn hơn bằng màu sáng, giống hPlusAura của nhân vật
+  const st = plusStage(plus || 0);
+  const fn = ITEM_ART[def.art] || iaWeapon;
+  if (st >= 1){
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.globalAlpha = 0.07 + st * 0.045;   // nhẹ tay: hào quang là GIA VỊ, không được nuốt bóng dáng
+    g.scale(1.16, 1.16);
+    const gl = { lo: M.glow || '#ffe9a8', hi: M.glow || '#ffe9a8', trim: M.glow || '#ffe9a8', glow: null };
+    g.save(); fn(g, gl, def); g.restore();
+    g.restore();
+  }
+  g.save(); fn(g, M, def); g.restore();
+  g.restore();
+}
+// data-URL có cache. Khoá gồm mọi thứ đổi hình: món, giai, phẩm, mức rèn.
+window.itemArtUrl = function(def, tier, rarity, plus){
+  const key = `${def.art}|${def.blade||''}|${def.guard||''}|${def.pommel||''}|${def.motif||''}`
+            + `|${def.w||''}|${def.len||''}|${def.gw||''}|${def.st || 1}|${def.mat||''}|${def.tintKey || ''}`
+            + `|${tier}|${rarity}|${plusStage(plus || 0)}`;
+  let u = _itemArtCache.get(key);
+  if (u) return u;
+  const c = document.createElement('canvas');
+  c.width = ICON_PX; c.height = ICON_PX;
+  drawItemIcon(c.getContext('2d'), def, tier, rarity, plus);
+  u = c.toDataURL();
+  _itemArtCache.set(key, u);
+  return u;
+};
+
+// ── PHỤ KIỆN: nhẫn — dùng chung mọi lớp ─────────────────────────────────────────
+function iaRing(g, M, P){
+  const st = P.st || 1;
+  g.save(); g.translate(0, 6);
+  const bw2 = 6 + st * 0.9;                 // bề dày vành
+  // Vành phải KÍN. Bản đầu vẽ một cung hở nên ra hình móng ngựa, không ai đọc là nhẫn.
+  g.save(); g.scale(1, 0.94);
+  g.lineWidth = bw2;
+  g.strokeStyle = iGrad(g, 0, -24, 0, 24, M.hi, M.lo);
+  g.beginPath(); g.arc(0, 0, 20, 0, 7); g.stroke();
+  g.lineWidth = bw2 * 0.34; g.strokeStyle = 'rgba(255,255,255,.34)';
+  g.beginPath(); g.arc(0, 0, 20 + bw2 * 0.28, Math.PI * 0.62, Math.PI * 1.28); g.stroke();
+  g.lineWidth = bw2 * 0.30; g.strokeStyle = 'rgba(0,0,0,.30)';
+  g.beginPath(); g.arc(0, 0, 20 - bw2 * 0.30, Math.PI * 1.62, Math.PI * 0.28); g.stroke();
+  g.restore();
+  // ổ nạm ngồi TRÊN vành
+  iFill(g, [[-9, -18], [9, -18], [7, -27], [-7, -27]], M.trim);
+  if (st >= 3){ iFill(g, [[-9, -19], [-17, -25], [-8, -25]], M.trim);
+                iFill(g, [[9, -19], [17, -25], [8, -25]], M.trim); }
+  iGem(g, M, 0, -25, 4.6 + st * 0.55);
+  if (st >= 4){ iRivet(g, M, -15, -11, 1.5); iRivet(g, M, 15, -11, 1.5); }
+  g.restore();
+  iSheenArc(g);
+}
+// ── PHỤ KIỆN: dây chuyền — hai nhánh, NHÌN LÀ BIẾT ──────────────────────────────
+// Nhánh vật lý đeo NANH kim loại; nhánh phép đeo CẦU pha lê. Phân biệt bằng bóng dáng
+// chứ không bằng màu — ở cỡ 44px trong ô túi, màu là thứ mất trước tiên.
+function iChain(g, M, st){
+  g.strokeStyle = M.lo; g.lineWidth = 3.4;
+  g.beginPath(); g.moveTo(-19, -30); g.quadraticCurveTo(-13, -6, 0, -2); g.stroke();
+  g.beginPath(); g.moveTo(19, -30); g.quadraticCurveTo(13, -6, 0, -2); g.stroke();
+  g.strokeStyle = M.hi; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(-19, -30); g.quadraticCurveTo(-13, -7, -1, -3); g.stroke();
+  if (st >= 2){                              // mắt xích thấy rõ ở nấc cao
+    for (let i = 1; i <= 3; i++){
+      const t = i / 4, x = -19 + (19) * t, y = -30 + 28 * t * t;
+      iRivet(g, M, x, y, 1.5); iRivet(g, M, -x, y, 1.5);
+    }
+  }
+}
+function iaPendPhys(g, M, P){
+  const st = P.st || 1;
+  iChain(g, M, st);
+  // nanh: khối nhọn xuống, có sống giữa
+  iFill(g, [[-9, -3], [9, -3], [5, 20], [0, 30], [-5, 20]], iGrad(g, -9, -3, 9, 30, M.hi, M.lo));
+  iFill(g, [[-2.4, 0], [2.4, 0], [1.4, 18], [0, 26], [-1.4, 18]], M.lo);
+  // gông cổ nanh
+  iFill(g, [[-11, -8], [11, -8], [10, -1], [-10, -1]], M.trim);
+  if (st >= 3){ iFill(g, [[-11, -6], [-19, -11], [-10, -12]], M.trim);
+                iFill(g, [[11, -6], [19, -11], [10, -12]], M.trim); }
+  if (st >= 2) iGem(g, M, 0, -4.5, 2.6 + st * 0.25);
+  if (st >= 5){ g.strokeStyle = M.trim; g.lineWidth = 1.2;
+    g.beginPath(); g.moveTo(-6, 6); g.lineTo(6, 6); g.stroke(); }
+  iSheenArc(g);
+}
+function iaPendMagic(g, M, P){
+  const st = P.st || 1;
+  iChain(g, M, st);
+  // gọng ôm cầu
+  g.strokeStyle = M.trim; g.lineWidth = 3;
+  g.beginPath(); g.arc(0, 11, 13.5, -0.85 * Math.PI, -0.15 * Math.PI); g.stroke();
+  iFill(g, [[-6, -8], [6, -8], [5, -2], [-5, -2]], M.trim);
+  // cầu pha lê
+  const c = M.glow || M.trim;
+  const rr = 9 + st * 0.7;
+  const gr = g.createRadialGradient(-rr*0.3, 11 - rr*0.35, 1, 0, 11, rr);
+  gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.35, c); gr.addColorStop(1, M.lo);
+  g.fillStyle = gr; g.beginPath(); g.arc(0, 11, rr, 0, 7); g.fill();
+  g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; g.beginPath(); g.arc(0, 11, rr, 0, 7); g.stroke();
+  if (st >= 3){                               // vành xoay quanh cầu
+    g.strokeStyle = M.trim; g.lineWidth = 1.6;
+    g.save(); g.translate(0, 11); g.scale(1, 0.34);
+    g.beginPath(); g.arc(0, 0, rr + 5, 0, 7); g.stroke();
+    g.restore();
+  }
+  if (st >= 5){ g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .45;
+    g.fillStyle = c; g.beginPath(); g.arc(0, 11, rr + 6, 0, 7); g.fill(); g.restore(); }
+  iSheenArc(g);
+}
+
 function slotIcon(it, cls){
   const f = SLOT_ICONS[it.slot] || 'vukhi';
   // Drop v2.0: viền màu theo phẩm, xoay màu theo giai, huy hiệu số giai góc trái
