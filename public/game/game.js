@@ -1688,7 +1688,7 @@ function castVohoc(id){
 // 12 canh/ngày · 30 ngày/tháng · 3 tháng/mùa · 4 mùa/năm
 // 1 ngày game = 10 phút thật → 1 tháng ≈ 5 giờ, 1 năm ≈ 20 giờ chơi
 // ============================================================
-const CANH_NAMES = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
+// (tên 12 canh Địa Chi đã gỡ — frac trong gameTimeInfo() vẫn là nguồn nhịp ngày/đêm)
 const GT_DAY = 600; // giây thật cho 1 ngày game
 const SEASONS = [
   { id:'xuan', name:'Xuân', icon:'🌸', color:'#f0a8c0', buffTxt:'+5% EXP',         amb:{ kind:'petal', color:'#f5b8cc', n:26 }, dawn:0.25, dusk:0.75 },
@@ -1823,18 +1823,14 @@ function drawWaterFx(){
 }
 
 function tickGameClock(dt){
+  // Lịch Can Chi / Tứ Quý đã gỡ — đồng hồ nay chỉ chạy ngầm cho nhịp ngày/đêm
+  // và thời tiết. Sự kiện neo theo GIỜ THẬT (xem Bảng Sự Kiện), không theo lịch game.
   const before = gameTimeInfo();
-  player.gt.t += dt;
+  player.gt.t += dt; _gtiCache = null;              // gt đổi → memo phải tính lại
   const after = gameTimeInfo();
-  if (after.season.id !== before.season.id || after.year !== before.year){
-    calcDerived(); spawnAmbients();
-    if (after.season.id !== before.season.id)
-      zoneBanner = { text:`${after.season.icon} ${after.season.name.toUpperCase()} ĐẾN`, sub:`Tháng ${after.month} · Năm ${after.year} — phúc trạch Tứ Quý: ${after.season.buffTxt}`, color:after.season.color, t:4 };
-    else
-      zoneBanner = { text:`✦ THIÊN NIÊN KỶ — NĂM ${after.year}`, sub:'Lunacia lại trôi qua một vòng tuế nguyệt', color:'#7ecbff', t:4 };
-    AudioSys.sfx('quest', 0.6);
-  } else if (after.canh !== before.canh) calcDerived(); // qua canh: nhịp ngày/đêm đổi
-  if (after.day !== before.day || after.month !== before.month) spawnAmbients(); // sang ngày mới: roll lại thời tiết (Gói B)
+  if (after.canh !== before.canh) calcDerived();     // nhịp ngày/đêm đổi (đêm +10% EXP)
+  if (after.day !== before.day || after.month !== before.month || after.season.id !== before.season.id)
+    spawnAmbients();                                 // sang ngày/mùa: roll thời tiết + hạt môi trường
 }
 function seasonAmbientCfg(cfg){ // hạt mùa phủ lên map ngoài trời — phó bản giữ than hồng
   if (typeof player === 'undefined' || !player || !player.gt) return cfg;
@@ -2659,12 +2655,7 @@ function calcDerived(){
   player.expPct = P.expPct;
   // Lịch Tu Tiên: phúc trạch Tứ Quý
   if (player.gt){
-    const _gti = gameTimeInfo();
-    player.seasonId = _gti.season.id;
-    if (_gti.season.id === 'xuan') player.expPct += 5;
-    else if (_gti.season.id === 'ha') player.qireg *= 1.05;
-    else if (_gti.season.id === 'thu') player.silverPct += 8;
-    else if (_gti.season.id === 'dong') player.defRed = Math.min(0.80, player.defRed + 0.05);
+    // (buff Tứ Quý theo mùa đã gỡ cùng Lịch Tu Tiên — mùa nay chỉ đổi thời tiết/hạt môi trường)
   }
   if (player.level < 20) player.qireg *= 1.5; // tân thủ hồi chân khí nhanh hơn — đỡ chết nhịp farm đầu game
   player.perfectProc = Math.min(0.5, P.perfect/100);
@@ -3090,6 +3081,7 @@ function buildWorld(){
   spawnHorses(); // GDD Đợt 2 B5: Tuấn Mã Hoang
   // Ma Tôn Giáng Thế & Truy Nã Lệnh: tái xuất hiện khi người chơi vào đúng bản đồ
   if (typeof MATON !== 'undefined' && MATON.active && curMap === MATON.map && !mobs.some(m => m.type === 'maton' && !m.dead)) spawnMaTonMob();
+  if (typeof GOLDEN !== 'undefined' && GOLDEN.active && curMap === GOLDEN.map) spawnGoldenMobs();
   if (player && player.truyna && player.truyna.state === 'hunting' && curMap === player.truyna.map && !mobs.some(m => m.truyna && !m.dead)) spawnTruyNaMob();
   spawnZoneBosses(); // GDD Boss v2.1: Vệ Binh Trụ & Cổng Vực theo map
 }
@@ -3831,6 +3823,7 @@ function killMob(m, source){
   }
   // Ma Tôn Giáng Thế: hạ boss nhận Bảo Hạp theo vùng cấp
   if (m.type === 'maton') matonKilled(m);
+  if (m.def && m.def.goldBox) goldenKilled(m);
   // Truy Nã Lệnh: mục tiêu ngày bị hạ
   if (m.truyna && player.truyna && player.truyna.state === 'hunting'){
     player.truyna.state = 'killed';
@@ -4772,7 +4765,8 @@ function update(dt){
       curBand = _b;
     } else curBand = -1;
   }
-  updateMaTon(); // Track HT: sự kiện Ma Tôn Giáng Thế — 4 giờ một lần
+  updateMaTon(); // Hung Thần Giáng Thế — 0h/4h/8h…
+  updateGolden(); // Xâm Lăng Vàng — 2h/6h/10h… (lệch pha để cứ 2 giờ có 1 sự kiện)
 
   // spirit spring: meditation quest + Anima source (always active)
   const q = currentQuest();
@@ -6090,6 +6084,23 @@ function drawMob(m){
   const _mshI = gameTimeInfo(), _mshDx = (_mshI.frac - 0.5) * 14, _mshAl = 1 - skyDarkness()*0.35;
   ctx.fillStyle = 'rgba(0,0,0,' + (0.07*_mshAl).toFixed(3) + ')'; ctx.beginPath(); ctx.ellipse(m.x + _mshDx, m.y+6, d.size*1.5, d.size*0.52, 0, 0, 7); ctx.fill();
   ctx.fillStyle = 'rgba(0,0,0,' + (0.16*_mshAl).toFixed(3) + ')'; ctx.beginPath(); ctx.ellipse(m.x + _mshDx*0.45, m.y+6, d.size, d.size*0.35, 0, 0, 7); ctx.fill();
+  // quái dát vàng: vầng kim quang + tia lấp lánh — nhận ra từ xa
+  if (d.golden){
+    ctx.save();
+    const gk = 0.5 + 0.25*Math.sin(m.wob*2.2);
+    const gg = ctx.createRadialGradient(dx, dy - 4, 4, dx, dy - 4, d.size*2.3);
+    gg.addColorStop(0, 'rgba(255,215,106,' + (0.30*gk).toFixed(2) + ')'); gg.addColorStop(1, 'rgba(255,215,106,0)');
+    ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(dx, dy - 4, d.size*2.3, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#ffd76a'; ctx.globalAlpha = 0.5 + 0.3*Math.sin(m.wob*3);
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(dx, dy + 5, d.size + 9, (d.size + 9)*0.42, 0, 0, 7); ctx.stroke();
+    for (let gi = 0; gi < 3; gi++){
+      const ga = m.wob*1.8 + gi*2.1, gr = d.size + 12;
+      ctx.fillStyle = '#fff0b8'; ctx.globalAlpha = 0.55 + 0.4*Math.sin(m.wob*4 + gi*2);
+      ctx.beginPath(); ctx.arc(dx + Math.cos(ga)*gr, dy - 8 + Math.sin(ga)*gr*0.45, 1.8, 0, 7); ctx.fill();
+    }
+    ctx.restore(); ctx.globalAlpha = 1;
+  }
   // hào quang nguyên tố quanh quái (mờ, theo hệ)
   if (d.el && NGU_HANH[d.el]){
     ctx.save(); ctx.globalAlpha = 0.14 + 0.05*Math.sin(m.wob*1.3);
@@ -6115,6 +6126,7 @@ function drawMob(m){
     ctx.save(); ctx.translate(dx, dy - mh*0.28 + bob);
     if (flip) ctx.scale(-1, 1);
     if (m.hitT > 0) ctx.filter = 'brightness(1.7) saturate(2) hue-rotate(-45deg)';
+    else if (d.golden) ctx.filter = 'sepia(0.85) saturate(2.6) hue-rotate(-14deg) brightness(1.25)'; // nhúng vàng cho quái dùng ảnh
     ctx.drawImage(img, -mw/2, -mh/2, mw, mh);
     ctx.restore();
   } else {
@@ -8975,17 +8987,21 @@ function updateHud(){
   }
   el('hud-silver').textContent = `◈ ${player.silver}`;
   el('hud-mat').textContent = `✦ ${player.mat} Tinh Thạch`;
-  // Lịch Tu Tiên: chip đồng hồ thế giới (mùa · ngày/tháng/năm · canh giờ)
+  // Đồng Hồ Thế Giới: giờ thật + đếm ngược sự kiện gần nhất — bấm mở Bảng Sự Kiện
   const gtEl = el('hud-time');
   if (gtEl && player.gt){
-    const gti = gameTimeInfo();
+    const _now = Date.now(), _d = new Date(_now);
+    const _ev = nextEventInfo(_now);
     const _wxn = weatherNow();
-    const _timeHtml = `${gti.season.icon} <b>${gti.season.name}</b> · ${gti.day}/${gti.month} N${gti.year} · ${CANH_NAMES[gti.canh]}${_wxn ? ` · <span title="Thời tiết: ${_wxn.name}">${_wxn.icon}</span>` : ''}${isNightGame() ? ' · <span style="color:#8ab8e8">☾</span>' : ''}`;
-    if (window._lastHudTime !== _timeHtml){ // dirty-check: this ticks every real-time second otherwise, every frame
+    const _timeHtml = `⏱ <b>${String(_d.getHours()).padStart(2,'0')}:${String(_d.getMinutes()).padStart(2,'0')}</b>`
+      + (_ev ? ` · ${_ev.icon} ${_ev.active ? '<b>ĐANG DIỄN RA</b>' : fmtCountdown(_ev.at - _now)}` : '')
+      + (_wxn ? ` · <span title="Thời tiết: ${_wxn.name}">${_wxn.icon}</span>` : '')
+      + (isNightGame() ? ' · <span style="color:#8ab8e8" title="Ban đêm: quái +10% công nhưng +10% EXP">☾</span>' : '');
+    if (window._lastHudTime !== _timeHtml){ // dirty-check: đổi mỗi phút, không ghi DOM mỗi khung
       window._lastHudTime = _timeHtml;
       gtEl.innerHTML = _timeHtml;
-      gtEl.style.color = gti.season.color;
-      gtEl.title = `Lịch Tu Tiên — mùa ${gti.season.name}: ${gti.season.buffTxt} · ban đêm quái +10% công nhưng +10% EXP`;
+      gtEl.style.color = _ev && _ev.active ? _ev.color : '#cfd4e8';
+      gtEl.title = 'Đồng Hồ Thế Giới — bấm để mở Bảng Sự Kiện';
     }
   }
   // bản đồ + loại khu vực + đai cấp đang đứng
@@ -13048,7 +13064,7 @@ function updateMaTon(){
   if (!MATON.active && !MATON.warned && now >= MATON.next - 600000){
     MATON.warned = true;
     const mapId = matonMapFor(MATON.next);
-    zoneBanner = { text:'⚠ BÁ CHỦ SẮP GIÁNG THẾ', sub:`10 phút nữa — ${MAPS[mapId].name}. Chuẩn bị ứng chiến!`, color:'#c07fe0', t:5 };
+    zoneBanner = { text:'⚠ HUNG THẦN SẮP GIÁNG THẾ', sub:`10 phút nữa — ${MAPS[mapId].name}. Chuẩn bị ứng chiến!`, color:'#c07fe0', t:5 };
     AudioSys.sfx('quest', 0.8);
   }
   if (!MATON.active && now >= MATON.next){
@@ -13056,7 +13072,7 @@ function updateMaTon(){
     MATON.map = matonMapFor(MATON.next);
     MATON.endsAt = now + 30*60000;
     MATON.next = matonNextBoundary(now + 60000);
-    zoneBanner = { text:'☠ BÁ CHỦ GIÁNG THẾ', sub:`Tà khí phủ ${MAPS[MATON.map].name} — hạ Hung Thần nhận Bảo Hạp!`, color:'#e84a6a', t:6 };
+    zoneBanner = { text:'☠ HUNG THẦN GIÁNG THẾ', sub:`Tà khí phủ ${MAPS[MATON.map].name} — hạ Hung Thần nhận Bảo Hạp!`, color:'#e84a6a', t:6 };
     AudioSys.sfx('crit', 0.9);
     if (curMap === MATON.map) spawnMaTonMob();
     saveGame();
@@ -13078,20 +13094,174 @@ function spawnMaTonMob(){
     hp: def.hp, maxHp: def.hp, atkT: rnd(0,1), dead: false, face: 0,
     shield: 1, shieldT: 0, hitT: 0, wob: Math.random()*10, packAlert: 0 };
   mobs.push(m);
-  zoneBanner = { text:'☠ BÁ CHỦ XUẤT HIỆN', sub:'Ngay trước mắt — toàn lực ứng chiến!', color:'#e84a6a', t:4 };
+  zoneBanner = { text:'☠ HUNG THẦN XUẤT HIỆN', sub:'Ngay trước mắt — toàn lực ứng chiến!', color:'#e84a6a', t:4 };
   return m;
 }
 function matonKilled(m){
   MATON.active = false; MATON.map = null;
   const tier = clamp(Math.floor(player.level/15) + 1, 1, 7);
   player.baohap[tier] = (player.baohap[tier] || 0) + 1;
-  zoneBanner = { text:'☠ BÁ CHỦ ĐÃ BỊ TIÊU DIỆT', sub:`Nhận ${BAOHAP_TIERS[tier].name} — mở trong Túi Đồ (phím I)!`, color:'#7ecbff', t:6 };
+  zoneBanner = { text:'☠ HUNG THẦN ĐÃ BỊ TIÊU DIỆT', sub:`Nhận ${BAOHAP_TIERS[tier].name} — mở trong Túi Đồ (phím I)!`, color:'#7ecbff', t:6 };
   addFloat(m.x, m.y-130, `+1 ${BAOHAP_TIERS[tier].name}`, BAOHAP_TIERS[tier].color, 16);
   AudioSys.sfx('levelup', 1);
   saveGame();
 }
 // Hook QA: đẩy lịch Ma Tôn đến sau vài giây
 window.debugMaTon = function(sec){ MATON.next = Date.now() + (sec || 5)*1000; MATON.warned = true; return MATON; };
+
+// ═══════════ XÂM LĂNG VÀNG — mỗi 4 giờ thật, lệch 2 giờ so với Hung Thần ═══════════
+// Nhịp MU cổ điển: cứ 2 tiếng có MỘT sự kiện thế giới (0h/4h/8h… Hung Thần, 2h/6h/10h…
+// Xâm Lăng Vàng). Một đàn quái dát vàng tràn vào 1 map thường trong 12 phút; mỗi con
+// CHẮC CHẮN rơi Bảo Hạp theo bậc map (I-V), Chúa Đàn Vàng rơi hạp cao hơn 1 bậc.
+// Không lưu state — mốc giờ tính lại được từ đồng hồ thật, đến trễ coi như lỡ chuyến.
+const GOLDEN_FIELD = ['daohoa','ngoai','chungnam','comoc','tuyettinh','mongco','nhanmon'];
+const GOLDEN_BOX = { daohoa:1, ngoai:2, chungnam:2, comoc:3, tuyettinh:4, mongco:4, nhanmon:5 };
+let GOLDEN = { next: 0, warned: false, active: false, map: null, endsAt: 0, spawnedOn: null, left: 0 };
+function goldenNextBoundary(after){
+  const d = new Date(after); d.setMinutes(0, 0, 0); d.setHours(d.getHours() + 1);
+  while (d.getHours() % 4 !== 2) d.setHours(d.getHours() + 1); // 2h · 6h · 10h · 14h · 18h · 22h
+  return d.getTime();
+}
+function goldenMapFor(t){ return GOLDEN_FIELD[Math.floor(t / 14400000) % GOLDEN_FIELD.length]; }
+function goldenPal(){ // bảng màu dát vàng cho quái khung xương
+  return { main:'#e0b84a', dark:'#9a7420', trim:'#fff0b8', glow:'#ffd76a', cloth:'#7a5c18', bone:'#fff4d0', line:'#4a3810' };
+}
+function goldify(m, tier, leader){
+  const d = Object.assign({}, m.def);          // CLONE — không được sửa def gốc trong MOBS
+  d.name = leader ? 'Chúa Đàn Vàng' : d.name + ' Vàng';
+  d.hp = Math.round(d.hp * (leader ? 14 : 6)); d.atk = Math.round(d.atk * (leader ? 1.7 : 1.4));
+  d.xp = Math.round(d.xp * 3); d.silver = [d.silver[0]*3, d.silver[1]*3];
+  d.aggro = Math.max(d.aggro, 260); d.elite = true; d.golden = true;
+  d.goldBox = Math.min(5, tier + (leader ? 1 : 0));
+  if (leader){ d.size = d.size + 8; d.goldenLeader = true; }
+  if (d.skel) d.skelPal = goldenPal();
+  m.def = d; m.name = d.name; m.hp = d.hp; m.maxHp = d.hp;
+  m.zone = null;                               // chết là hết — quái vàng không hồi sinh
+  return m;
+}
+function spawnGoldenMobs(){
+  if (GOLDEN.spawnedOn === curMap) return;
+  GOLDEN.spawnedOn = curMap;
+  const md = MAPS[GOLDEN.map], tier = GOLDEN_BOX[GOLDEN.map] || 1;
+  const packs = md.packs.slice(0, 4);
+  let n = 0;
+  for (const q of packs){
+    for (let i = 0; i < 2; i++){ goldify(spawnMob(q.mob, { x:q.x, y:q.y, r:90 }, null, true), tier, false); n++; }
+  }
+  const lq = packs[packs.length - 1];          // Chúa Đàn đứng giữa map
+  goldify(spawnMob(lq.mob, { x: md.spawn.x + (MAP.w/2 - md.spawn.x)*0.7, y: MAP.h/2, r: 60 }, null, true), tier, true);
+  GOLDEN.left = n + 1;
+  zoneBanner = { text:'✦ ĐÀN VÀNG TRÀN VÀO', sub:`${GOLDEN.left} quái dát vàng — mỗi con rơi 1 Bảo Hạp!`, color:'#ffd76a', t:5 };
+}
+function updateGolden(){
+  const now = Date.now();
+  if (!GOLDEN.next) GOLDEN.next = goldenNextBoundary(now);
+  if (!GOLDEN.active && !GOLDEN.warned && now >= GOLDEN.next - 600000){
+    GOLDEN.warned = true;
+    zoneBanner = { text:'✦ ĐÀN VÀNG SẮP XÂM LĂNG', sub:`10 phút nữa — ${MAPS[goldenMapFor(GOLDEN.next)].name}. Săn Bảo Hạp!`, color:'#ffd76a', t:5 };
+    AudioSys.sfx('quest', 0.8);
+  }
+  if (!GOLDEN.active && now >= GOLDEN.next){
+    GOLDEN.active = true; GOLDEN.warned = false;
+    GOLDEN.map = goldenMapFor(GOLDEN.next);
+    GOLDEN.endsAt = now + 12*60000;
+    GOLDEN.next = goldenNextBoundary(now + 60000);
+    GOLDEN.spawnedOn = null; GOLDEN.left = 0;
+    zoneBanner = { text:'✦ XÂM LĂNG VÀNG', sub:`Đàn quái dát vàng tràn vào ${MAPS[GOLDEN.map].name} — 12 phút, mỗi con rơi 1 ${BAOHAP_TIERS[GOLDEN_BOX[GOLDEN.map]].name}!`, color:'#ffd76a', t:6 };
+    AudioSys.sfx('crit', 0.9);
+    if (curMap === GOLDEN.map) spawnGoldenMobs();
+  }
+  if (GOLDEN.active && now >= GOLDEN.endsAt){
+    GOLDEN.active = false;
+    let fled = 0;
+    for (const m of mobs) if (m.def && m.def.golden && !m.dead){ m.dead = true; m.gone = true; m.deadT = 0; fled++;
+      addEffect({ type:'ring', x:m.x, y:m.y, r:40, color:'#ffd76a' }); }
+    GOLDEN.map = null; GOLDEN.spawnedOn = null;
+    zoneBanner = { text:'Đàn Vàng đã rút lui', sub: fled ? `${fled} con kịp tẩu thoát cùng số Bảo Hạp còn lại.` : 'Hẹn chuyến xâm lăng sau.', color:'#8a8a8a', t:4 };
+  }
+}
+function goldenKilled(m){
+  const tier = m.def.goldBox;
+  player.baohap[tier] = (player.baohap[tier] || 0) + 1;
+  addFloat(m.x, m.y - 90, `+1 ${BAOHAP_TIERS[tier].name}`, BAOHAP_TIERS[tier].color, 15);
+  AudioSys.sfx('quest', 0.6);
+  if (GOLDEN.active && GOLDEN.spawnedOn){
+    GOLDEN.left = Math.max(0, GOLDEN.left - 1);
+    if (m.def.goldenLeader)
+      zoneBanner = { text:'✦ CHÚA ĐÀN VÀNG GỤC NGÃ', sub:`+1 ${BAOHAP_TIERS[tier].name} — mở trong Túi Đồ (phím I)!`, color:'#ffd76a', t:4 };
+    if (GOLDEN.left === 0){
+      GOLDEN.active = false; GOLDEN.map = null; GOLDEN.spawnedOn = null;
+      zoneBanner = { text:'✦ ĐÀN VÀNG BỊ QUÉT SẠCH', sub:'Toàn bộ Bảo Hạp về tay ngươi — mở trong Túi Đồ (phím I)!', color:'#ffd76a', t:6 };
+      AudioSys.sfx('levelup', 1);
+    }
+  }
+  saveGame();
+}
+window.debugGolden = function(sec){ GOLDEN.next = Date.now() + (sec || 5)*1000; GOLDEN.warned = true; return GOLDEN; };
+
+// ═══════════ BẢNG SỰ KIỆN — đồng hồ hẹn giờ kiểu MMORPG cổ điển ═══════════
+function fmtCountdown(ms){
+  ms = Math.max(0, ms);
+  const m = Math.floor(ms / 60000), h = Math.floor(m / 60);
+  return h > 0 ? `${h}g${String(m % 60).padStart(2,'0')}` : (m > 0 ? `${m} phút` : 'sắp diễn ra!');
+}
+function fmtClock(t){ const d = new Date(t); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
+function eventList(now){
+  const list = [];
+  if (typeof MATON !== 'undefined'){
+    list.push(MATON.active
+      ? { icon:'☠', name:'Hung Thần Giáng Thế', map: MATON.map, at: MATON.endsAt, active:true, color:'#e84a6a',
+          sub:`ĐANG DIỄN RA tại ${MAPS[MATON.map].name} — còn ${fmtCountdown(MATON.endsAt - now)}` }
+      : { icon:'☠', name:'Hung Thần Giáng Thế', map: matonMapFor(MATON.next || matonNextBoundary(now)),
+          at: MATON.next || matonNextBoundary(now), active:false, color:'#c07fe0',
+          sub:`${fmtClock(MATON.next || matonNextBoundary(now))} · ${MAPS[matonMapFor(MATON.next || matonNextBoundary(now))].name} — hạ boss nhận Bảo Hạp lớn` });
+    list.push(GOLDEN.active
+      ? { icon:'✦', name:'Xâm Lăng Vàng', map: GOLDEN.map, at: GOLDEN.endsAt, active:true, color:'#ffd76a',
+          sub:`ĐANG DIỄN RA tại ${MAPS[GOLDEN.map].name} — còn ${fmtCountdown(GOLDEN.endsAt - now)} · còn ${GOLDEN.left || '?'} quái vàng` }
+      : { icon:'✦', name:'Xâm Lăng Vàng', map: goldenMapFor(GOLDEN.next || goldenNextBoundary(now)),
+          at: GOLDEN.next || goldenNextBoundary(now), active:false, color:'#ffd76a',
+          sub:`${fmtClock(GOLDEN.next || goldenNextBoundary(now))} · ${MAPS[goldenMapFor(GOLDEN.next || goldenNextBoundary(now))].name} — mỗi quái vàng rơi 1 Bảo Hạp (I-V theo map)` });
+  }
+  const mid = new Date(now); mid.setHours(24, 0, 0, 0);
+  list.push({ icon:'⚔', name:'Truy Nã Lệnh & Mục Tiêu Ngày', at: mid.getTime(), active:false, color:'#7ecbff',
+              sub:`Làm mới lúc 00:00 — còn ${fmtCountdown(mid.getTime() - now)}` });
+  return list;
+}
+function nextEventInfo(now){
+  const evs = eventList(now).filter(e => e.icon !== '⚔');
+  evs.sort((a, b) => (b.active - a.active) || (a.at - b.at));
+  return evs[0] || null;
+}
+window.goEventMap = function(id){
+  document.getElementById('overlay').classList.add('hidden');
+  const g = mapGate(id);
+  if (!g.ok){
+    const msg = g.why === 'lv' ? `Cần cấp ${g.need} để vào ${MAPS[id].name}!` : `Chưa mở đường đến ${MAPS[id].name} — hoàn thành "${g.quest}"!`;
+    addFloat(player.x, player.y - 40, msg, '#ff9a5a', 13); return;
+  }
+  travelTo(id);
+};
+window.openEventBoard = function(){
+  const ov = document.getElementById('overlay'); if (!ov || !player) return;
+  const now = Date.now();
+  let rows = '';
+  for (const e of eventList(now)){
+    rows += `<div style="display:flex;align-items:center;gap:10px;text-align:left;background:rgba(255,255,255,.04);
+        border:1px solid ${e.active ? e.color : 'rgba(255,255,255,.10)'};border-radius:10px;padding:9px 12px;margin:7px 0">
+      <span style="font-size:20px;color:${e.color}">${e.icon}</span>
+      <span style="flex:1"><b style="color:${e.color}">${e.name}</b>${e.active ? ' <b style="color:#ffd76a">● LIVE</b>' : ''}<br>
+        <span style="font-size:12px;opacity:.8">${e.sub}</span></span>
+      ${e.map ? `<button class="mini-btn" onclick="goEventMap('${e.map}')">${e.active ? 'Tới Ngay' : 'Xem Map'}</button>` : ''}</div>`;
+  }
+  document.getElementById('overlay-inner').innerHTML = `
+    <h2 style="color:#ffd76a">⏱ BẢNG SỰ KIỆN</h2>
+    <div style="font-size:12.5px;opacity:.75;margin-bottom:4px">Cứ 2 giờ có một sự kiện thế giới — Hung Thần (0h·4h·8h…) xen kẽ Xâm Lăng Vàng (2h·6h·10h…)</div>
+    ${rows}
+    <div style="font-size:12px;opacity:.65;margin-top:6px">👹 Đấu Trường Tế Thần · 🩸 Pháo Đài Máu — vào bất cứ lúc nào bằng Thiệp Mời (quái tinh anh rơi)</div>
+    <button class="big-btn" style="margin-top:10px" onclick="document.getElementById('overlay').classList.add('hidden')">Đóng</button>`;
+  ov.classList.remove('hidden');
+};
+
 
 // ---------- Truy Nã Lệnh (GDD §5.9) — Bổ Đầu · Tương Dương ----------
 function truynaBand(){
