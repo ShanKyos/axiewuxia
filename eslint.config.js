@@ -66,6 +66,7 @@ export default defineConfig([
         qzToggle: 'readonly', renderStable: 'readonly', respawn: 'readonly',
         toggleAuto: 'readonly', toggleMountOut: 'readonly', travelTo: 'readonly',
         tryCatchHorse: 'readonly', tryTame: 'readonly',
+        equipItem: 'readonly', qzFlipAll: 'readonly', useJewel: 'readonly',
       },
     },
     rules: {

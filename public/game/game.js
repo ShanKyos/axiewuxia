@@ -159,8 +159,8 @@ const ITEM_NAMES = {
 };
 // Áo Choàng — 2 cấp, chỉ luyện chế tại Luyện Bảo Các (Rèn)
 const CLOAK_TIERS = [ null,
-  { name:'Huyền Vũ Phi Phong', color:'#5ea0e8', req:1,  atkPct:5,  pierce:3, defPct:0, cost:{ tuLa:5,  hon:2, silver:2000 } },
-  { name:'Thánh Vũ Phi Phong', color:'#7ecbff', req:60, atkPct:10, pierce:6, defPct:5, cost:{ tuLa:10, hon:5, silver:6000 } },
+  { name:'Áo Choàng Thép Xám', color:'#5ea0e8', req:1,  atkPct:5,  pierce:3, defPct:0, cost:{ tuLa:5,  hon:2, silver:2000 } },
+  { name:'Áo Choàng Thánh Quang', color:'#7ecbff', req:60, atkPct:10, pierce:6, defPct:5, cost:{ tuLa:10, hon:5, silver:6000 } },
 ];
 // Pet — rơi từ tinh anh (12%) / boss (40%)
 const PET_DEFS = [
@@ -1444,7 +1444,7 @@ function drawVfx(e, k, a){
   } else if (S === 'icecage'){ // Huyền Băng — hàn khí kết tinh
     ctx.fillStyle = C2; ctx.globalAlpha = a*0.25; ctx.beginPath(); ctx.moveTo(X, Y); ctx.arc(X, Y, R*(0.4 + k*0.55), F - 0.9, F + 0.9); ctx.closePath(); ctx.fill();
     for (let i = 0; i < 6; i++){ const ang = F + (i - 2.5)*0.3; const L = R*(0.3 + k*0.6); _vxFlake(X + Math.cos(ang)*L, Y + Math.sin(ang)*L, 6*(1-k) + 3, i%2 ? C1 : C2, a*0.9); }
-  } else if (S === 'seal4'){ // Tứ Tượng — vuông ấn + tứ linh tứ phương
+  } else if (S === 'seal4'){ // Ấn Trấn — vuông ấn + bốn dấu bốn phương
     poly(X, Y, R*(0.45 + k*0.25), 4, Math.PI/4, C1, 4, a*0.9);
     const bs = ['★', '◆', '▲', '⚔'];
     for (let i = 0; i < 4; i++){ const aa = i*Math.PI/2 - Math.PI/2; _vxGlyph(X + Math.cos(aa)*R*0.5, Y + Math.sin(aa)*R*0.5, bs[i], 18, C2, a*(1 - k*0.5)); }
@@ -1612,26 +1612,30 @@ function castVohoc(id){
     if (t) player.face = Math.atan2(t.y - player.y, t.x - player.x);
     const R = 135;
     spawnSkillVfx(id, v, 'cone', player.face, R);
-    for (const m of mobs){
-      if (m.dead) continue;
-      if (dist(player.x, player.y, m.x, m.y) >= R + m.def.size) continue;
-      let da = Math.atan2(m.y - player.y, m.x - player.x) - player.face;
-      while (da > Math.PI) da -= 2*Math.PI; while (da < -Math.PI) da += 2*Math.PI;
-      if (Math.abs(da) < 1.05) hitMob(m, v.mult);
-    }
+    aoeHit(() => {
+      for (const m of mobs){
+        if (m.dead) continue;
+        if (dist(player.x, player.y, m.x, m.y) >= R + m.def.size) continue;
+        let da = Math.atan2(m.y - player.y, m.x - player.x) - player.face;
+        while (da > Math.PI) da -= 2*Math.PI; while (da < -Math.PI) da += 2*Math.PI;
+        if (Math.abs(da) < 1.05) hitMob(m, v.mult);
+      }
+    });
     if (fx.selfEva){ player.vhEvaT = fx.selfEva.t; player.vhEvaPct = fx.selfEva.pct; addFloat(player.x, player.y-60, `+${fx.selfEva.pct}% né (${fx.selfEva.t}s)`, '#a0ffe9', 12); }
     for (let _w = 1; _w <= _st; _w++){ // tiến hóa: sóng chưởng nối tiếp, mỗi sóng rộng hơn
       const _wm = _w === 1 ? 0.55 : 0.4, _Rw = R * (1 + 0.18 * _w), _fw = player.face, _px = player.x, _py = player.y;
       setTimeout(() => {
         if (!player || dead) return;
         addEffect({ type:'cone', x:_px, y:_py, face:_fw, r:_Rw, color:col });
-        for (const m of mobs){
-          if (m.dead) continue;
-          if (dist(_px, _py, m.x, m.y) >= _Rw + m.def.size) continue;
-          let da = Math.atan2(m.y - _py, m.x - _px) - _fw;
-          while (da > Math.PI) da -= 2*Math.PI; while (da < -Math.PI) da += 2*Math.PI;
-          if (Math.abs(da) < 1.05) hitMob(m, v.mult * _wm);
-        }
+        aoeHit(() => {
+          for (const m of mobs){
+            if (m.dead) continue;
+            if (dist(_px, _py, m.x, m.y) >= _Rw + m.def.size) continue;
+            let da = Math.atan2(m.y - _py, m.x - _px) - _fw;
+            while (da > Math.PI) da -= 2*Math.PI; while (da < -Math.PI) da += 2*Math.PI;
+            if (Math.abs(da) < 1.05) hitMob(m, v.mult * _wm);
+          }
+        });
       }, _w * 240);
     }
   }
@@ -1655,16 +1659,18 @@ function castVohoc(id){
     const R = (fx.r || 160) * (1 + 0.12 * _st); // tiến hóa: phạm vi +12%/bậc
     spawnSkillVfx(id, v, 'aoe', player.face, R);
     shakeT = Math.max(shakeT, 0.2); shakeMag = Math.max(shakeMag, fx.big ? 7 : 4);
-    for (const m of mobs){
-      if (m.dead) continue;
-      if (dist(player.x, player.y, m.x, m.y) < R + m.def.size) hitMob(m, v.mult);
-    }
+    aoeHit(() => {
+      for (const m of mobs){
+        if (m.dead) continue;
+        if (dist(player.x, player.y, m.x, m.y) < R + m.def.size) hitMob(m, v.mult);
+      }
+    });
     for (let _w = 1; _w <= _st; _w++){ // tiến hóa: dư chấn nổ tiếp thành từng vòng
       const _wm = _w === 1 ? 0.5 : 0.35, _Rw = R * (1 + 0.15 * _w), _px = player.x, _py = player.y;
       setTimeout(() => {
         if (!player || dead) return;
         addEffect({ type:'ring', x:_px, y:_py, r:_Rw, color:col, big:true });
-        for (const m of mobs){ if (m.dead) continue; if (dist(_px, _py, m.x, m.y) < _Rw + m.def.size) hitMob(m, v.mult * _wm); }
+        aoeHit(() => { for (const m of mobs){ if (m.dead) continue; if (dist(_px, _py, m.x, m.y) < _Rw + m.def.size) hitMob(m, v.mult * _wm); } });
       }, _w * 260);
     }
   }
@@ -2098,7 +2104,7 @@ for (const g of ['nam','nu']) for (const sk of ['bach','thanh','kim','huyen','ho
 // ---------- Ascension: cultivation realms (Ascension Trial upgrades) ----------
 // Bonus values are TOTAL at that realm. Đột phá consumes Anima + silver + mats;
 // on failure: silver/mats lost, 50% Anima lost, realm kept.
-const REALM_ICONS = ['r0_phan_nhan','r1_khi_hai','r2_chu_thien','r3_tu_phu','r4_quy_nguyen','r5_luong_nghi','r6_thai_hu','r7_tien_thien','r8_hon_nguyen','r8_hon_nguyen'];
+const _REALM_ICONS = ['r0_phan_nhan','r1_khi_hai','r2_chu_thien','r3_tu_phu','r4_quy_nguyen','r5_luong_nghi','r6_thai_hu','r7_tien_thien','r8_hon_nguyen','r8_hon_nguyen'];
 // GDD Lấy Võ Nhập Đạo §3 — Giai đoạn 1: cảnh giới tu tiên.
 // Spark (1-4): đột phá vận công theo tỉ lệ. Molt trở lên (5-9): ASCENSION TRIAL 3-9 đợt thiên lôi,
 // mỗi tia gây % maxHP, thất bại mất 30% Anima tiến độ — KHÔNG tụt cảnh giới.
@@ -2115,23 +2121,238 @@ const DANTIAN_REALMS = [
   { name:'Starforged Cảnh',        atk:0.88, hp:0.88, qireg:10, cost:{tuvi:20000, silver:28000, mat:160}, trib:9, unlock:'Starforged — nhục thân thăng hoa, toàn thuộc tính vượt cực hạn' },
 ];
 
-// ═══════════ TRACK HT (GDD §13) — trang bị MU Online S2 phong cách kiếm hiệp ═══════════
-// Tứ Tượng Cổ Thần: 5 món/bộ (Nón/Giáp/Tay/Quần/Giày) — CHỈ mở từ Bảo Hạp, không pity.
+// ═══════════ TRACK HT (GDD §13) — trang bị dark-fantasy kiểu MU Online S2 ═══════════
+// Cổ Thần Thủ Hộ: 5 món/bộ (Nón/Giáp/Tay/Quần/Giày) — CHỈ mở từ Bảo Hạp, không pity.
 // Hiệu ứng bộ ẨN — người chơi tự khám phá khi mặc đủ 2/3/5 món.
+// Bốn bộ mang tên bốn Thủ Hộ Vaeldra đã ngã xuống khi Phong Ấn vỡ — di giáp của họ
+// còn lại trong Bảo Hạp. (Tên cũ Thanh Long/Bạch Hổ/Chu Tước/Huyền Vũ là tàn dư kiếm
+// hiệp, đã gỡ theo QUY TẮC SỐ 1; ANCIENT_MIGRATE bên dưới lo save cũ.)
 const ANCIENT_SETS = {
-  thanhlong: { name:'Thanh Long', color:'#3ac88a',
+  sarkaan:  { name:'Sarkaan', color:'#3ac88a',
     b2:{ atkPct:10 }, b3:{ critDmg:20 }, b5:{ aspdPct:8, hpLeech:3 },
-    hint:'gió xanh cuồn cuộn — công kích cuồng bạo' },
-  bachho:    { name:'Bạch Hổ', color:'#e8e8f0',
+    hint:'thép xanh gào thét — công kích cuồng bạo' },
+  velmyr:   { name:'Velmyr', color:'#e8e8f0',
     b2:{ crit:6 }, b3:{ atkPct:8 }, b5:{ pierce:10, perfect:5 },
-    hint:'sát khí trắng toát — xuyên phá hộ thể' },
-  chutuoc:   { name:'Chu Tước', color:'#ff6a3a',
+    hint:'lưỡi bạc lạnh buốt — xuyên phá hộ giáp' },
+  ashvard:  { name:'Ashvard', color:'#ff6a3a',
     b2:{ hpPct:10 }, b3:{ reflectPct:8 }, b5:{ dmgred:8, hpPct:6 },
-    hint:'hỏa diễm thiêu đốt — sinh mệnh bền bỉ' },
-  huyenvu:   { name:'Huyền Vũ', color:'#5aa0e8',
+    hint:'tro tàn còn cháy — sinh mệnh bền bỉ' },
+  korrveth: { name:'Korrveth', color:'#5aa0e8',
     b2:{ dmgred:6 }, b3:{ hpPct:12 }, b5:{ evaPct:8, reflectPct:5 },
-    hint:'quy xà hộ thể — phòng ngự tuyệt đối' },
+    hint:'thành lũy bất động — phòng ngự tuyệt đối' },
 };
+// Save cũ giữ id bộ theo tên kiếm hiệp — ánh xạ sang id mới lúc loadGame(), nếu không
+// ANCIENT_SETS[it.ancient] thành undefined và người chơi mất trắng hiệu ứng bộ.
+const ANCIENT_MIGRATE = { thanhlong:'sarkaan', bachho:'velmyr', chutuoc:'ashvard', huyenvu:'korrveth' };
+
+// ═══════════ KHẮC ẤN — trang bị đổi CÁCH CHIÊU HOẠT ĐỘNG, không phải đổi con số ═══════════
+// Bài học lấy từ Diablo 3 (Loot 2.0 / legendary power): trước hệ này, mọi món đồ trong game
+// chỉ trả lời đúng một câu hỏi — "số có to hơn cái đang mặc không?". 15 dòng phụ đều là %
+// thuần, 6 dòng Thức Tỉnh là số cộng thẳng, 4 bộ Cổ Thần cũng chỉ là %. Không món nào làm
+// chiêu thức hành xử khác đi, nên mọi hệ thống sản xuất đồ (rèn, Bảo Hạp, Cổ Vật, gacha…)
+// đều đổ về cùng một phần thưởng vô vị.
+//
+// Khắc Ấn gắn trên MỘT món (it.sigil), mặc vào là có. Chỉ rơi từ 3 nguồn cuối game:
+// Bảo Hạp IV+, Hung Thần Giáng Thế, Xâm Lăng Vàng — thứ cuối vốn chưa có bản sắc gì
+// ngoài "hạp bậc cao hơn", nay là nguồn Khắc Ấn nên có lý do tồn tại riêng.
+//
+// Móc nối: pre (trước khi tung chiêu) · hit (mỗi lần chiêu chạm địch) · cast (sau khi tung
+// xong, biết đã trúng mấy con) · kill (khi địch gục). Mỗi Khắc Ấn khai báo móc nào nó cần.
+// `tag` cho biết đòn đến từ đâu: 'a' = chiêu chính, 'tp' = Trấn Phái, null = đòn thường.
+const SIGIL_DEFS = {
+  // ── Dùng chung cho mọi lớp ──
+  un_hoiquang: { name:'Khắc Ấn Hồi Quang', sect:null, color:'#ffd76a',
+    desc:'Hạ một địch rút ngắn 10% hồi chiêu còn lại của MỌI chiêu. Giết nhanh ⇒ tung nhiều hơn.',
+    kill(){
+      let any = false;
+      for (const k in player.cd) if (player.cd[k] > 0){ player.cd[k] *= 0.9; any = true; }
+      if (any && Math.random() < 0.25) addFloat(player.x, player.y-58, '✦ Hồi Quang', '#ffd76a', 11);
+    } },
+  un_vongkhi: { name:'Khắc Ấn Vọng Khí', sect:null, color:'#ff9df0',
+    desc:'Đòn bạo kích nổ một vòng khí quanh mục tiêu, 45% sát thương lên địch bên cạnh. Bạo kích thành đòn diện rộng.',
+    hit(m, final, source){
+      if (source !== 'crit') return;
+      addEffect({ type:'ring', x:m.x, y:m.y, r:96, color:'#ff9df0' });
+      sigilSplash(m, 96, final * 0.45);
+    } },
+
+  // ── Dark Knight — cận chiến, chiêu chính hình quạt ──
+  dk_lantram: { name:'Khắc Ấn Lan Trảm', sect:'thieulam', color:'#4c8dff',
+    desc:'Chiêu chính chạm địch thì bật sang một địch khác trong 160px với 55% sát thương. Quạt hẹp hoá đòn dây chuyền.',
+    hit(m, final, source, tag){
+      if (tag !== 'a') return;
+      let best = null, bd = 161;
+      for (const m2 of mobs){
+        if (m2.dead || m2 === m || m2.def.duHiep) continue;
+        const d = dist(m.x, m.y, m2.x, m2.y);
+        if (d < bd){ bd = d; best = m2; }
+      }
+      if (!best) return;
+      // vệt bật: rắc hạt dọc đường nối 2 mục tiêu (không có effect kiểu 'bolt' trong game)
+      const ang = Math.atan2(best.y - m.y, best.x - m.x);
+      for (let i = 1; i <= 4; i++)
+        addEffect({ type:'ink', x:m.x + Math.cos(ang)*bd*i/5, y:m.y + Math.sin(ang)*bd*i/5,
+                    vx:rnd(-20,20), vy:rnd(-40,-10), color:'#7fb0ff' });
+      spawnSlash(best.x, best.y - 10, ang, 110, '#4c8dff', '#ffe9a0');
+      sigilHurt(best, final * 0.55);
+    } },
+  dk_thanhluy: { name:'Khắc Ấn Thành Lũy', sect:'thieulam', color:'#7ecbff',
+    desc:'Mỗi địch trúng chiêu chính cộng một lớp khiên bằng 3% Sinh Lực tối đa (trần 25%). Đánh vào đám đông là cách phòng thủ.',
+    hit(m, final, source, tag){
+      if (tag !== 'a') return;
+      const cap = Math.round(player.maxHp * 0.25);
+      const before = player.vhShield || 0;
+      player.vhShield = Math.min(cap, before + Math.round(player.maxHp * 0.03));
+      if (player.vhShield > before) addEffect({ type:'ring', x:player.x, y:player.y, r:38, color:'#7ecbff' });
+    } },
+
+  // ── Sylvan Ranger — tầm xa, chiêu chính bắn 5 mũi ──
+  sr_tachtien: { name:'Khắc Ấn Tách Tiễn', sect:'toanchan', color:'#3a9d8b',
+    desc:'Mũi tên chiêu chính chạm địch thì tách đôi, hai mũi nhỏ bắn tạt ngang với 40% sát thương.',
+    hit(m, final, source, tag){
+      if (tag !== 'a') return;
+      const base = Math.atan2(m.y - player.y, m.x - player.x);
+      for (const s of [-1, 1])
+        projectiles.push({ x:m.x, y:m.y, ang:base + s*1.25, speed:430, dmg:final*0.4,
+          kind:'skill', life:0.5, color:'#a0ffe9', pierce:true, sigilSplit:true });
+    } },
+  sr_muatien: { name:'Khắc Ấn Mưa Tiễn', sect:'toanchan', color:'#a0ffe9',
+    desc:'Tung Trấn Phái xong, 1,1s sau một loạt tên rơi trúng chính chỗ đó — đòn thứ hai cho kẻ vừa lao vào.',
+    cast(tag){
+      if (tag !== 'tp') return;
+      const x = player.x, y = player.y;
+      sigilAfter(1.1, () => {
+        addEffect({ type:'ring', x, y, r:170, color:'#a0ffe9', big:true });
+        for (let i = 0; i < 8; i++){
+          const a = i * Math.PI/4;
+          spawnSlash(x + Math.cos(a)*90, y + Math.sin(a)*90 - 10, a + Math.PI/2, 90, '#a0ffe9', '#3a9d8b');
+        }
+        AudioSys.sfx('skill', 0.45);
+        sigilArea(x, y, 170, player.atk * 0.9);
+      });
+    } },
+
+  // ── Dark Wizard — pháp sư tầm xa nhất, Trấn Phái là Meteor ──
+  dw_vungdoc: { name:'Khắc Ấn Vũng Tà Độc', sect:'baidasan', color:'#7ec850',
+    desc:'Trấn Phái để lại một vũng tà độc 5s, ăn mòn mọi thứ đứng trong đó. Chiêu bộc phát hoá chiêu khống chế đất.',
+    cast(tag){
+      if (tag !== 'tp') return;
+      sigilZones.push({ x:player.x, y:player.y, r:165, t:5, tick:0,
+        dps: player.atk * 0.55, color:'#7ec850' });
+    } },
+  dw_vongam: { name:'Khắc Ấn Vọng Âm', sect:'baidasan', color:'#c8ffa0',
+    desc:'35% chiêu chính nổ thêm lần hai ngay tại điểm trúng với 70% sát thương diện rộng.',
+    hit(m, final, source, tag){
+      if (tag !== 'a' || Math.random() >= 0.35) return;
+      addFloat(m.x, m.y - m.def.size - 26, '✦ VỌNG ÂM', '#c8ffa0', 12);
+      addEffect({ type:'ring', x:m.x, y:m.y, r:94, color:'#c8ffa0' });
+      sigilArea(m.x, m.y, 94, final * 0.7);
+    } },
+
+  // ── Spellblade — lai cận/pháp, chiêu chính là đường kiếm lửa ──
+  sb_bungchay: { name:'Khắc Ấn Bùng Cháy', sect:'minhgiao', color:'#e8552a',
+    desc:'Địch trúng chiêu chính bốc cháy 3s; nếu gục trong lúc còn cháy thì nổ tung, thiêu cả đám xung quanh.',
+    hit(m, final, source, tag){
+      if (tag !== 'a') return;
+      m.poisonT = Math.max(m.poisonT || 0, 3);
+      m.poisonDps = Math.max(m.poisonDps || 0, Math.round(player.atk * 0.35));
+      m.sgBurn = Math.round(final);      // ST gốc quyết định sức nổ khi nó chết
+    },
+    kill(m){
+      if (!m.sgBurn) return;
+      addFloat(m.x, m.y - 40, '☼ BÙNG CHÁY!', '#ff9a5a', 14);
+      addEffect({ type:'ring', x:m.x, y:m.y, r:135, color:'#ff7a3a', big:true });
+      sigilArea(m.x, m.y, 135, m.sgBurn * 0.8, m);
+    } },
+  sb_xungphong: { name:'Khắc Ấn Xung Phong', sect:'minhgiao', color:'#ffb060',
+    desc:'Tung chiêu chính khi địch gần nhất ở ngoài tầm sẽ lướt tới trước rồi mới chém. Đòn đứng yên hoá đòn lao vào.',
+    pre(tag){
+      if (tag !== 'a') return;
+      const t = nearestMob(400);
+      if (!t) return;
+      const d = dist(player.x, player.y, t.x, t.y);
+      if (d <= 130) return;                       // đã trong tầm quạt, không cần lướt
+      const ang = Math.atan2(t.y - player.y, t.x - player.x);
+      const step = Math.min(d - 95, 240);          // dừng ngay rìa tầm chém, không xuyên qua địch
+      player.face = ang;
+      player.x = clamp(player.x + Math.cos(ang)*step, 20, MAP.w-20);
+      player.y = clamp(player.y + Math.sin(ang)*step, 20, MAP.h-20);
+      addEffect({ type:'ring', x:player.x, y:player.y, r:64, color:'#ffb060' });
+    } },
+
+  // ── Dark Lord — lớp chỉ huy, thưởng cho việc gom địch thành đám ──
+  dl_trungsong: { name:'Khắc Ấn Trùng Sóng', sect:'bug', color:'#8a9a3a',
+    desc:'Chiêu chính phóng thêm đợt sóng thứ hai rộng hơn sau 0,35s với 60% sát thương.',
+    cast(tag){
+      if (tag !== 'a') return;
+      const x = player.x, y = player.y, f = player.face, dmg = player.atk * 0.6;
+      sigilAfter(0.35, () => {
+        addEffect({ type:'cone', x, y, face:f, r:185, color:'#d0e07a' });
+        spawnSlash(x + Math.cos(f)*80, y + Math.sin(f)*80 - 12, f, 200, '#8a9a3a', '#d0e07a');
+        AudioSys.sfx('skill', 0.4);
+        for (const m of mobs){
+          if (m.dead || m.def.duHiep) continue;
+          if (dist(x, y, m.x, m.y) > 185 + m.def.size) continue;
+          let da = Math.atan2(m.y - y, m.x - x) - f;
+          while (da > Math.PI) da -= 2*Math.PI; while (da < -Math.PI) da += 2*Math.PI;
+          if (Math.abs(da) < 1.15) sigilHurt(m, dmg * rnd(0.9, 1.1));
+        }
+      });
+    } },
+  dl_hieutrieu: { name:'Khắc Ấn Hiệu Triệu', sect:'bug', color:'#d0e07a',
+    desc:'Chiêu chính quét trúng từ 3 địch trở lên thì Trấn Phái hồi ngay một nửa thời gian chờ. Gom được đám đông là được thưởng.',
+    cast(tag, hits){
+      if (tag !== 'a' || hits < 3 || !(player.cd.tp > 0)) return;
+      player.cd.tp *= 0.5;
+      addFloat(player.x, player.y-64, `⚑ HIỆU TRIỆU (${hits}) — Trấn Phái hồi nhanh!`, '#d0e07a', 13);
+    } },
+};
+// Khắc Ấn này lớp hiện tại có xài được không (Khắc Ấn dùng chung: sect=null ⇒ luôn được)
+function sigilUsable(k){
+  const s = SIGIL_DEFS[k];
+  return !!s && (!s.sect || (player && s.sect === player.sect));
+}
+// Lớp nào dùng được Khắc Ấn nào (Khắc Ấn dùng chung tính cho mọi lớp)
+function sigilPool(sect){
+  return Object.keys(SIGIL_DEFS).filter(k => !SIGIL_DEFS[k].sect || SIGIL_DEFS[k].sect === sect);
+}
+// Rơi Khắc Ấn: ƯU TIÊN cái người chơi chưa có. Trùng lặp là phần thưởng rỗng — với chỉ 4 Khắc Ấn
+// hợp lệ mỗi lớp thì random thuần sẽ trả trùng ngay từ lần thứ hai và hỏng hẳn cảm giác săn.
+function rollSigil(sect){
+  const pool = sigilPool(sect || (player && player.sect));
+  if (!pool.length) return null;
+  const owned = new Set();
+  if (player){
+    for (const it of (player.inv || [])) if (it && it.sigil) owned.add(it.sigil);
+    for (const k in (player.equip || {})){ const it = player.equip[k]; if (it && it.sigil) owned.add(it.sigil); }
+  }
+  const fresh = pool.filter(k => !owned.has(k));
+  const from = fresh.length ? fresh : pool;
+  return from[Math.floor(Math.random() * from.length)];
+}
+// Gắn Khắc Ấn vào món đồ vừa sinh ra. Chỉ ô mặc được (không gắn lên áo choàng/cánh/pet — đó là
+// đồ đặc biệt không rơi từ 3 nguồn này). Trả về true nếu có gắn.
+function attachSigil(it, chance){
+  if (!it || it.special || it.sigil) return false;
+  if (Math.random() >= chance) return false;
+  const s = rollSigil(player && player.sect);
+  if (!s) return false;
+  it.sigil = s;
+  return true;
+}
+// Dòng thông báo khi Khắc Ấn rơi — nêu luôn hiệu ứng, vì cái người chơi cần biết không phải
+// "vừa nhặt được món hiếm" mà là "món này làm chiêu của mình khác đi thế nào".
+function sigilGotLine(k){
+  const s = SIGIL_DEFS[k];
+  return `<b style="color:${s.color}">◆ KHẮC ẤN — ${s.name}</b><br><span style="opacity:.8;font-size:12px">${s.desc}</span>`;
+}
+// Băng-rôn + tiếng khi một Khắc Ấn rơi ra, dùng chung cho cả 3 nguồn
+function sigilAnnounce(k, x, y){
+  const s = SIGIL_DEFS[k];
+  zoneBanner = { text:'◆ KHẮC ẤN HIỆN THẾ', sub:`${s.name} — ${s.desc}`, color:s.color, t:6 };
+  addFloat(x, y, `◆ ${s.name}`, s.color, 16);
+  AudioSys.sfx('levelup', 1);
+}
 // Tứ Châu: ◎ Chúc Phúc (+1..+6 miễn phí 100%) · ◉ Linh Hồn (+1 bất kỳ, 50%, xịt tụt 1)
 //          ❤ Sinh Mệnh (+4%→+28% HP theo bậc, xịt về 0) · ● Hỗn Độn (luyện Linh Dực / đổi Cổ Thần)
 const JEWEL_NAMES = { chucPhuc:'◎ Chúc Phúc Châu', linhHon:'◉ Linh Hồn Châu', sinhMenh:'❤ Sinh Mệnh Châu', honDon:'● Hỗn Độn Châu' };
@@ -2241,6 +2462,25 @@ const QUESTS = [
 // ---------- State ----------
 let player = null;
 let mobs = [], pickups = [], projectiles = [], effects = [], floats = [], decor = [], mists = [];
+// ── Bộ máy chạy nền của Khắc Ấn (xem SIGIL_DEFS) ──
+// sigilTimers: việc hẹn giờ (sóng thứ hai, mưa tên). sigilZones: vùng đất còn hiệu lực (vũng độc).
+// Cả hai KHÔNG lưu vào save — chết/đổi map là mất, đúng như mọi hiệu ứng tạm khác trong game.
+let sigilTimers = [], sigilZones = [];
+// Chống đệ quy: sát thương do chính Khắc Ấn gây ra không được kích lại Khắc Ấn, nếu không
+// Lan Trảm sẽ tự bật vòng quanh đến khi tràn ngăn xếp.
+// Vùng sát thương diện rộng. Bọc quanh vòng lặp trúng-nhiều-mục-tiêu để hurtMob() nhận ra đây
+// là AoE mà KHÔNG phải đổi `source` — `source` còn chi phối bạo kích, âm thanh và móc Khắc Ấn,
+// nên đổi nó đi thì hỏng cả ba thứ đó.
+let _aoeHit = false;
+function aoeHit(fn){ const _p = _aoeHit; _aoeHit = true; try { return fn(); } finally { _aoeHit = _p; } }
+let _sigilBusy = false;
+let _sigilDepth = 0;          // chặn nổ dây chuyền của móc 'kill'
+const SIGIL_MAX_DEPTH = 3;
+// Ngữ cảnh đòn đang bay: chiêu nào gây ra nó ('a' chiêu chính · 'tp' Trấn Phái · null đòn thường)
+// và đã chạm mấy con trong lần tung này. castSkill() chạy đồng bộ nên với chiêu chạm-ngay
+// (cone/selfaoe/dash) cờ này còn nguyên lúc hurtMob() chạy; chiêu bắn đạn thì gắn cờ lên
+// chính viên đạn (p.tag) và dựng lại lúc đạn trúng.
+let _sigilTag = null, _sigilHits = 0;
 let questIdx = 0, questProg = 0, questState = 'none'; // none | active | done | all
 let springTimer = 0, victory = false, dead = false;
 let camera = { x:0, y:0 };
@@ -2257,7 +2497,7 @@ function lerpAng(a, b, t){ // nội suy góc theo đường ngắn nhất (trán
   if (d > Math.PI) d -= Math.PI*2; else if (d < -Math.PI) d += Math.PI*2;
   return a + d*t;
 }
-let shakeT = 0, shakeMag = 0; // rung màn hình khi bị đánh trúng
+let shakeT = 0, shakeMag = 0, shakeDir = 0; // rung màn hình khi bị đánh trúng (shakeDir: hướng cú đấm)
 let keys = {};
 let joyVec = { x:0, y:0 };
 let moveTarget = null; // Click-to-move: đích chuột phải (canvas) hoặc bấm minimap — { x, y } world coords
@@ -2336,7 +2576,7 @@ function genItem(level, bias, srcK){
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
   };
 }
-// Cổ Thần (Tứ Tượng) — chỉ mở từ Bảo Hạp: giáp Thần cấp 4 dòng Hoàn Hảo + ấn bộ ẩn
+// Cổ Thần Thủ Hộ — chỉ mở từ Bảo Hạp: giáp Thần cấp 4 dòng Hoàn Hảo + ấn bộ ẩn
 function genAncient(setId, slotId, level){
   const set = ANCIENT_SETS[setId];
   const slot = SLOTS.find(s => s.id === slotId);
@@ -2379,6 +2619,92 @@ function mainName(k){
   return { atk:'Công Kích', def:'Phòng Ngự', vit:'Sinh Lực', str:'Lực Lượng',
            agi:'Mẫn Tiệp', hp:'Sinh Lực tối đa', crit:'Bạo Kích %', qireg:'Hồi Instinct' }[k] || k;
 }
+// ═══════════ SO SÁNH TRANG BỊ — nửa còn lại của bài học Loot 2.0 ═══════════
+// Với 15 dòng phụ đều là % thuần, người chơi KHÔNG có cách nào tự nhìn ra món vừa nhặt hơn
+// hay kém món đang mặc. Trước đây túi đồ chỉ có một mũi ▲ xanh dựa trên itemPower() — nói
+// được "to hơn" nhưng không nói được "khác chỗ nào", và đặc biệt là mù hoàn toàn với Khắc Ấn.
+
+// Gom mọi dòng chỉ số của một món về chung một bảng để trừ nhau được.
+// Khoá có tiền tố để dòng chính / dòng phụ / dòng Thức Tỉnh cùng loại không đè lên nhau.
+function itemStatMap(it){
+  const m = 1 + it.plus * 0.08, o = {};
+  if (it.main) o['m:' + it.main.k] = { name: it.main.name, v: it.main.v * m, pct: false };
+  for (const s of it.subs)
+    o['s:' + s.k] = { name: s.name, v: s.v * (s.k === 'perfect' ? 1 : m), pct: true };
+  if (it.plus >= 10 && it.awakened)
+    o['a:' + it.awakened.k] = { name: '☆ ' + it.awakened.name, v: it.awakened.v, pct: false };
+  return o;
+}
+// Khắc Ấn món này MANG LẠI mà hiện người chơi chưa có (đã tính cả việc mặc nó vào sẽ tháo
+// món cũ ra). Trả về id, hoặc null.
+function itemSigilNew(it){
+  if (!it || !it.sigil || !sigilUsable(it.sigil)) return null;
+  if (player && player.sigils && player.sigils[it.sigil]){
+    // đang có rồi — nhưng nếu nguồn duy nhất chính là món ở ĐÚNG ô này thì mặc vào không mất gì
+    const cur = player.equip && player.equip[it.slot];
+    if (!(cur && cur.sigil === it.sigil)) return null;
+  }
+  return it.sigil;
+}
+// Khắc Ấn sẽ MẤT nếu tháo món đang mặc ở ô này ra (không món nào khác đang cấp nó).
+function itemSigilLost(slot, incoming){
+  const cur = player && player.equip && player.equip[slot];
+  if (!cur || !cur.sigil || !sigilUsable(cur.sigil)) return null;
+  if (incoming && incoming.sigil === cur.sigil) return null;
+  for (const k in player.equip){
+    if (k === slot) continue;
+    const o = player.equip[k];
+    if (o && o.sigil === cur.sigil) return null;   // món khác vẫn cấp Khắc Ấn này
+  }
+  return cur.sigil;
+}
+// Bảng so sánh đầy đủ giữa món trong túi và món đang mặc cùng ô.
+function itemCompareHtml(it){
+  if (!it || it.special || !it.slot) return '';
+  const cur = player.equip[it.slot];
+  const np = itemPower(it), cp = cur ? itemPower(cur) : 0;
+  const gained = itemSigilNew(it), lost = itemSigilLost(it.slot, it);
+  const pct = cp > 0 ? Math.round((np / cp - 1) * 100) : 100;
+  const lowLv = player.level < itemReqLv(it);
+
+  // Phán quyết. Khắc Ấn được nói TRƯỚC lực chiến: một món kém 10% mà mang về Khắc Ấn chưa có
+  // thường đáng mặc hơn, và đó chính là loại quyết định mà mũi ▲ thuần số không diễn tả được.
+  let verdict, vc;
+  if (lowLv){ verdict = `Chưa đủ cấp — cần LV${itemReqLv(it)}`; vc = '#ff7a6a'; }
+  else if (gained){ verdict = `◆ Mang về Khắc Ấn mới: ${SIGIL_DEFS[gained].name}`; vc = SIGIL_DEFS[gained].color; }
+  else if (!cur){ verdict = 'Ô này đang trống — mặc vào là lời'; vc = '#6ae88a'; }
+  else if (pct >= 3){ verdict = `▲ Mạnh hơn ${pct}% lực chiến`; vc = '#6ae88a'; }
+  else if (pct <= -3){ verdict = `▼ Yếu hơn ${-pct}% lực chiến`; vc = '#ff7a6a'; }
+  else { verdict = '≈ Ngang nhau về lực chiến'; vc = '#c9b889'; }
+
+  let s = `<div style="margin-top:6px;padding:6px 8px;border:1px solid rgba(255,255,255,.12);border-radius:5px;background:rgba(0,0,0,.22)">`;
+  s += `<div style="font-size:12.5px;font-weight:700;color:${vc}">${verdict}</div>`;
+  if (lost) s += `<div style="font-size:11.5px;color:#ff9a6a;margin-top:2px">⚠ Tháo món cũ ra sẽ MẤT Khắc Ấn ${SIGIL_DEFS[lost].name}</div>`;
+  if (!cur){ return s + `</div>`; }
+
+  s += `<div style="font-size:11px;opacity:.6;margin:3px 0 2px">so với đang mặc: ${cur.name} (Lực chiến ${cp} → ${np})</div>`;
+  const A = itemStatMap(cur), B = itemStatMap(it);
+  const rows = [];
+  for (const k of new Set([...Object.keys(A), ...Object.keys(B)])){
+    const a = A[k], b = B[k];
+    const av = a ? a.v : 0, bv = b ? b.v : 0;
+    const d = Math.round((bv - av) * 10) / 10;
+    if (!d) continue;
+    const nm = (b || a).name, unit = (b || a).pct ? '%' : '';
+    rows.push({ d, html: `<span style="color:${d > 0 ? '#6ae88a' : '#ff7a6a'}">${d > 0 ? '+' : ''}${d}${unit}</span> ${nm}` });
+  }
+  rows.sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
+  s += rows.length
+    ? `<div style="font-size:11.5px;line-height:1.75">${rows.map(r => r.html).join(' · ')}</div>`
+    : `<div style="font-size:11.5px;opacity:.55">Chỉ số y hệt nhau.</div>`;
+  // Bộ Cổ Thần: đổi món có thể phá mốc 2/3/5 — mất bonus bộ mà bảng chỉ số ở trên không hề thấy
+  if (cur.ancient && cur.ancient !== it.ancient && ANCIENT_SETS[cur.ancient]){
+    const n = (player.setActive && player.setActive[cur.ancient] || {}).n || 0;
+    s += `<div style="font-size:11.5px;color:#ff9a6a;margin-top:2px">⚠ Rời bộ <b style="color:${ANCIENT_SETS[cur.ancient].color}">${ANCIENT_SETS[cur.ancient].name}</b> (${n}/5) — có thể tụt mốc bộ</div>`;
+  }
+  return s + `</div>`;
+}
+
 function itemPower(it){
   const m = 1 + it.plus * 0.08;
   let p = it.main ? it.main.v * m * 10 : 0;
@@ -2392,7 +2718,7 @@ function itemSellPrice(it){ return 20 + (it.tier || 1)*15 + it.rarity*40 + Math.
 window.sellItem = function(i){
   const it = player.inv[i];
   if (!it) return;
-  const precious = it.rarity >= 2 || it.perfect || it.ancient; // xác nhận 2 lớp với đồ quý
+  const precious = it.rarity >= 2 || it.perfect || it.ancient || it.sigil; // xác nhận 2 lớp với đồ quý (Khắc Ấn luôn tính là quý)
   if (precious && window._sellArm !== i){
     window._sellArm = i;
     addFloat(player.x, player.y-40, `Bấm Bán lần nữa để xác nhận bán ${it.name}`, '#ffb066', 12);
@@ -2414,8 +2740,12 @@ function tryAutoEquip(it){
   if (player.level < itemReqLv(it)) return;
   const cur = player.equip[it.slot];
   const cp = cur ? itemPower(cur) : 0, np = itemPower(it);
-  if (np < Math.max(cp*1.05, cp + 1)) return;
-  if (cur && (cur.perfect || cur.ancient || cur.luck) && np < cp*1.15) return;
+  // Khắc Ấn nằm ngoài lực chiến hoàn toàn. Không chặn ở đây thì tự-mặc-đồ sẽ lặng lẽ tháo mất
+  // một Khắc Ấn chỉ vì món mới nhiều hơn 5% chỉ số — mất thứ đắt nhất game vì một con số nhỏ.
+  if (itemSigilLost(it.slot, it)) return;
+  const _sgGain = !!itemSigilNew(it);
+  if (!_sgGain && np < Math.max(cp*1.05, cp + 1)) return;
+  if (!_sgGain && cur && (cur.perfect || cur.ancient || cur.luck) && np < cp*1.15) return;
   const idx = player.inv.indexOf(it);
   if (idx < 0) return;
   player.inv.splice(idx, 1);
@@ -2427,20 +2757,30 @@ function tryAutoEquip(it){
 window.autoEquipBest = function(){
   let swapped = 0, gained = 0;
   for (const sl of SLOTS){
-    let bi = -1, bp = player.equip[sl.id] ? itemPower(player.equip[sl.id]) : 0;
+    // Xếp hạng theo HAI khoá, không phải một: (có Khắc Ấn mới) rồi mới tới lực chiến.
+    // Nhân lực chiến với một hệ số cố định là sai — Khắc Ấn khan hiếm hơn hẳn (mỗi lớp chỉ
+    // 4 cái, chỉ từ 3 nguồn cuối game) nên chênh lệch chỉ số bao nhiêu cũng không mua lại được.
+    let bi = -1, bs = false, bp = player.equip[sl.id] ? itemPower(player.equip[sl.id]) : 0;
     for (let i2 = 0; i2 < player.inv.length; i2++){
       const it2 = player.inv[i2];
       if (it2.slot !== sl.id || it2.special || player.level < itemReqLv(it2)) continue;
-      const p2 = itemPower(it2);
-      if (p2 > bp){ bp = p2; bi = i2; }
+      if (itemSigilLost(sl.id, it2)) continue;   // cùng lý do như tryAutoEquip: đừng tháo mất Khắc Ấn
+      const s2 = !!itemSigilNew(it2), p2 = itemPower(it2);
+      if (s2 !== bs ? s2 : p2 > bp){ bs = s2; bp = p2; bi = i2; }
     }
     if (bi >= 0){
       const it2 = player.inv[bi];
-      gained += bp - (player.equip[sl.id] ? itemPower(player.equip[sl.id]) : 0);
+      // lấy lực chiến THẬT của món được chọn, không lấy bp (đã nhân hệ số ưu tiên Khắc Ấn)
+      gained += itemPower(it2) - (player.equip[sl.id] ? itemPower(player.equip[sl.id]) : 0);
       player.inv.splice(bi, 1);
       if (player.equip[sl.id]) player.inv.push(player.equip[sl.id]);
       player.equip[sl.id] = it2;
       swapped++;
+      // calcDerived() NGAY trong vòng lặp: player.sigils là thứ itemSigilNew() tra cứu, mà nó
+      // chỉ được dựng lại ở đây. Nếu đợi tới cuối vòng thì ô sau vẫn thấy Khắc Ấn mà ô trước
+      // vừa mặc là "chưa có" → khoá xếp hạng thứ nhất thắng, và nó mặc đồ rác để lấy một Khắc
+      // Ấn mình đã có rồi. Mỗi lớp chỉ có 4 Khắc Ấn hợp lệ nên trùng lặp là chuyện thường.
+      calcDerived();
     }
   }
   calcDerived(); try{ renderInv(); renderBag(); }catch { /* best-effort — bỏ qua nếu lỗi */ } saveGame();
@@ -2505,6 +2845,7 @@ function calcDerived(){
     perfect:0, hpLeech:0, qiLeech:0, aspdPct:0, pierce:0, expPct:0, defPct:0, critDmg:0 };
   let luckN = 0;
   const setCount = {};
+  const sigilOwned = {};   // Khắc Ấn gom từ đồ ĐANG MẶC (đồ trong túi không tính)
   for (const slotId in player.equip){
     const it = player.equip[slotId];
     if (!it) continue;
@@ -2515,8 +2856,12 @@ function calcDerived(){
     if (it.luck){ luckN++; P.critDmg += 5; }                 // Vận: +5% ST bạo/món
     if (it.life) P.hpPct += it.life * 4;                     // Sinh Mệnh: +4% HP/bậc (tối đa +28%)
     if (it.ancient && ANCIENT_SETS[it.ancient]) setCount[it.ancient] = (setCount[it.ancient] || 0) + 1;
+    // Khắc Ấn: có mặc là có hiệu lực. Chỉ tính Khắc Ấn hợp lớp — nhặt được của lớp khác thì món
+    // đồ vẫn dùng bình thường, riêng Khắc Ấn nằm im (nhãn món sẽ ghi rõ là không dùng được).
+    if (it.sigil && SIGIL_DEFS[it.sigil] && sigilUsable(it.sigil)) sigilOwned[it.sigil] = true;
   }
-  // Tứ Tượng Cổ Thần — hiệu ứng bộ ẩn kích hoạt ở 2/3/5 món
+  player.sigils = sigilOwned;
+  // Cổ Thần Thủ Hộ — hiệu ứng bộ ẩn kích hoạt ở 2/3/5 món
   player.setActive = {};
   for (const sid in setCount){
     const n = setCount[sid], set = ANCIENT_SETS[sid];
@@ -2831,6 +3176,14 @@ function loadGame(){
     if (player.khi == null) player.khi = 0;
     if (!player.meridians) player.meridians = {};
     for (const m of MERIDIANS) if (player.meridians[m.id] == null) player.meridians[m.id] = 0;
+    // Bộ Cổ Thần đổi tên (Thanh Long… → Sarkaan…): ánh xạ id trên MỌI món đang giữ — cả
+    // món trong túi lẫn món đang mặc. Bỏ sót chỗ nào là chỗ đó mất hiệu ứng bộ vĩnh viễn.
+    for (const it of (player.inv || [])) if (it && ANCIENT_MIGRATE[it.ancient]) it.ancient = ANCIENT_MIGRATE[it.ancient];
+    for (const k in (player.equip || {})){
+      const it = player.equip[k];
+      if (it && ANCIENT_MIGRATE[it.ancient]) it.ancient = ANCIENT_MIGRATE[it.ancient];
+    }
+    player.pendingHit = null;   // đòn thường đang hẹn không được sống sót qua lần tải lại
     if (!player.gems) player.gems = { tuLa: 0, honNguyen: 0 };
     if (player.charms == null) player.charms = 0;
     if (player.tienDan == null) player.tienDan = 0;
@@ -3024,6 +3377,8 @@ function bandSummaryHtml(md){
 function buildWorld(){
   const md = mapDef();
   mobs = []; pickups = []; projectiles = []; effects = []; floats = [];
+  sigilReset(); // Khắc Ấn: vũng độc/sóng hẹn giờ của map cũ không được nổ giữa map mới
+  if (player) player.pendingHit = null;   // cùng lý do: đòn thường đã hẹn ở map cũ
   petObj = null; mountObj = null; // Linh Thú & Thú Chiến xuất hiện lại ở map mới
   moveTarget = null; moveWaypoint = null; // Click-to-move: đích ở map cũ không còn ý nghĩa khi đổi map
   npcTalkTarget = null; // NPC ở map cũ không còn ý nghĩa khi đổi map
@@ -3330,8 +3685,16 @@ function drawBossTele(m){
 }
 // ---------- Cài đặt (lưu localStorage) ----------
 // shake mặc định TẮT (chống chóng mặt) — save cũ không có key này nên tự migrate sang tắt
-const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:false, questTracker:true, combatLog:true },
+// shake: 0 TẮT · 1 NHẸ (mặc định) · 2 ĐẦY. Trước đây là boolean và mặc định `false` để chống
+// chóng mặt — nhưng bật/tắt là quá thô, và hậu quả là TOÀN BỘ 12 chỗ đặt shakeT/shakeMag trong
+// game không ai nhìn thấy. Diablo luôn rung, chỉ là rung rất khẽ và CÓ HƯỚNG.
+const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true },
   (()=>{ try { return JSON.parse(localStorage.getItem('vlcm_settings') || '{}'); } catch { return {}; } })());
+// Save cũ lưu `shake` là boolean. Không di trú thì Object.assign ghi đè `false` lên mặc định
+// mới và người chơi cũ mắc kẹt ở mức TẮT vĩnh viễn — mà họ chưa từng chọn tắt, đó chỉ là
+// mặc định cũ. `true` (đã tự bật) thì cho lên ĐẦY.
+if (typeof SETTINGS.shake === 'boolean') SETTINGS.shake = SETTINGS.shake ? 2 : 1;
+SETTINGS.shake = clamp(SETTINGS.shake | 0, 0, 2);
 function saveSettings(){ try { localStorage.setItem('vlcm_settings', JSON.stringify(SETTINGS)); } catch { /* best-effort — bỏ qua nếu lỗi */ } }
 
 // ---------- Âm thanh kiếm hiệp: BGM theo map + SFX ----------
@@ -3341,7 +3704,7 @@ const BGM_TRACKS = { daohoa:'bgm_daohoa_ost', tuongduong:'bgm_tuongduong_ost', n
   tuyettinh:'bgm_tuyettinh_ost', comoc:'bgm_comoc', mongco:'bgm_mongco', nhanmon:'bgm_nhanmon' };
 const BGM_INTRO = 'bgm_kiemhiep'; // Kiếm Hiệp Tình — màn mở đầu & chọn phái (hào hiệp chính khí)
 const BGM_BOSS = 'bgm_boss_nguan';   // Hoa Địa Li Lao — boss Cổng Vực / Ngũ Trụ (bi kịch bùng nổ)
-const BGM_ROMANCE = 'bgm_romance';   // Tiếu Vấn Tình Duyên — song ca khi kết Đạo Lữ
+const _BGM_ROMANCE = 'bgm_romance';   // Tiếu Vấn Tình Duyên — song ca khi kết Đạo Lữ
 const AudioSys = {
   bgm: null, bgmName: '', started: false, cache: {}, last: {},
   bgmVol(){ return (SETTINGS.bgm/100) * 0.85; },
@@ -3553,6 +3916,91 @@ function logCombat(text, color){
   while (logEl.children.length > 50) logEl.removeChild(logEl.lastChild);
 }
 
+// ═══════════ KHẮC ẤN — bộ máy chạy (bảng dữ liệu ở SIGIL_DEFS) ═══════════
+// Gọi một móc trên mọi Khắc Ấn người chơi đang mặc. Bọc trong _sigilBusy để sát thương do
+// Khắc Ấn gây ra không kích lại chính nó.
+function sigilFire(hook, a, b, c, d){
+  if (!player || !player.sigils) return;
+  // 'pre'/'hit'/'cast' không được tự kích lại từ sát thương của chính Khắc Ấn — sẽ thành vòng
+  // lặp vô hạn. Riêng 'kill' thì PHẢI chạy: hạ địch bằng Khắc Ấn vẫn là hạ địch, Hồi Quang và
+  // Bùng Cháy đều dựa vào nó. Nổ dây chuyền được chặn bằng độ sâu, không phải cấm hẳn.
+  if (hook === 'kill' ? _sigilDepth >= SIGIL_MAX_DEPTH : _sigilBusy) return;
+  const _prevBusy = _sigilBusy;
+  _sigilBusy = true; _sigilDepth++;
+  try {
+    for (const k in player.sigils){
+      const s = SIGIL_DEFS[k];
+      if (!s || !s[hook]) continue;
+      try { s[hook](a, b, c, d); }
+      catch (e){ console.error('Khắc Ấn ' + k + '.' + hook, e); }   // 1 Khắc Ấn lỗi không được làm gãy cả đòn đánh
+    }
+  } finally { _sigilBusy = _prevBusy; _sigilDepth--; }
+}
+// Sát thương phát sinh từ Khắc Ấn: đi qua hurtMob() như mọi nguồn khác (để ăn giáp quái, khắc
+// hệ, hút máu…) nhưng mang source riêng nên không gây khựng hình/rung màn hình lặp.
+function sigilHurt(m, dmg){
+  if (!m || m.dead) return;
+  hurtMob(m, Math.max(1, dmg), 'sigil');
+}
+function sigilArea(x, y, r, dmg, except){
+  for (const m of mobs){
+    if (m.dead || m === except || m.def.duHiep) continue;
+    if (dist(x, y, m.x, m.y) < r + m.def.size) sigilHurt(m, dmg * rnd(0.9, 1.1));
+  }
+}
+function sigilSplash(m, r, dmg){ sigilArea(m.x, m.y, r, dmg, m); }
+function sigilAfter(t, fn){ sigilTimers.push({ t, fn }); }
+// Xoá sạch việc hẹn giờ + vùng đất — gọi khi đổi map hoặc người chơi chết, nếu không một
+// quả Trấn Phái tung ở map cũ sẽ nổ giữa map mới.
+function sigilReset(){ sigilTimers.length = 0; sigilZones.length = 0; }
+function sigilTick(dt){
+  if (sigilTimers.length){
+    for (const s of sigilTimers) s.t -= dt;
+    const due = sigilTimers.filter(s => s.t <= 0);
+    if (due.length){
+      sigilTimers = sigilTimers.filter(s => s.t > 0);
+      // _sigilBusy: đòn hẹn giờ cũng là sát thương của Khắc Ấn, không được kích Khắc Ấn lần nữa
+      _sigilBusy = true;
+      try { for (const s of due) { try { s.fn(); } catch (e){ console.error('Khắc Ấn hẹn giờ', e); } } }
+      finally { _sigilBusy = false; }
+    }
+  }
+  for (const z of sigilZones){
+    z.t -= dt; z.tick -= dt;
+    if (z.tick <= 0){
+      z.tick = 0.5;
+      _sigilBusy = true;
+      try { sigilArea(z.x, z.y, z.r, z.dps * 0.5); } finally { _sigilBusy = false; }
+      addEffect({ type:'ring', x:z.x, y:z.y, r:z.r, color:z.color });
+      for (let i = 0; i < 3; i++)
+        addEffect({ type:'ink', x:z.x + rnd(-z.r,z.r)*0.8, y:z.y + rnd(-z.r,z.r)*0.8,
+                    vx:rnd(-15,15), vy:rnd(-40,-8), color:z.color });
+    }
+  }
+  if (sigilZones.length) sigilZones = sigilZones.filter(z => z.t > 0);
+}
+
+// ═══════════ PHẢN HỒI LỰC ĐÒN — mỗi CÚ ĐÁNH một lần, không phải mỗi mục tiêu ═══════════
+// Trước đây hitstop/rung/loé bạo kích nằm trong hurtMob(), tức mỗi mục tiêu một lần: AoE trúng
+// 8 con đặt lại hitstop 8 lần và đẻ 8 vệt loé; đạn multishot làm hitstop nối đuôi nên game giật
+// liên tục thay vì khựng một nhịp rồi bung. Cửa sổ 60 ms gom cả cú đánh lại, giữ giá trị MẠNH
+// NHẤT trong cú đó.
+let _swingT = 0, _swingBest = -1;
+function swingFeel(crit, w, m){
+  const now = performance.now();
+  const fresh = now - _swingT > 60;
+  if (fresh){ _swingT = now; _swingBest = -1; }
+  const power = (crit ? 1 : 0.45) + w * 0.8;           // w = phần máu vừa mất
+  if (power <= _swingBest) return;                      // trong cùng cú đánh đã có đòn mạnh hơn
+  _swingBest = power;
+  hitStop  = Math.max(hitStop,  crit ? 0.06 + 0.08 * w : 0.03 + 0.04 * w);
+  shakeT   = Math.max(shakeT,   crit ? 0.20 : 0.14);
+  shakeMag = Math.max(shakeMag, (crit ? 4 : 2.2) + w * 5);
+  shakeDir = Math.atan2(m.y - player.y, m.x - player.x); // xung CÓ HƯỚNG, xem render()
+  if (crit && fresh)                                    // một vệt loé cho cả cú, không phải mỗi con
+    addEffect({ type:'critflash', x:m.x, y:m.y, r:(m.def.size||14) + 18 + w * 26 });
+}
+
 function hurtMob(m, dmg, source){
   if (m.dead) return;
   player.combatT = 4; // P0: gây sát thương cũng tính là vào combat
@@ -3626,10 +4074,35 @@ function hurtMob(m, dmg, source){
   if (m.def.def) final *= 1 - m.def.def / (m.def.def + 250);
   final = Math.max(1, Math.round(final));
   m.hp -= final; m.hitT = 0.15;
-  // phản hồi lực đòn: chỉ đòn tay (Space) mới khựng hình + lắc camera — DoT/kỹ năng/pet không spam
-  if (source === 'crit'){ hitStop = Math.max(hitStop, 0.08); shakeT = Math.max(shakeT, 0.2); shakeMag = Math.max(shakeMag, 5); addEffect({ type:'critflash', x:m.x, y:m.y, r:(m.def.size||14)+22 }); }
-  else if (source === 'hit'){ hitStop = Math.max(hitStop, 0.04); shakeT = Math.max(shakeT, 0.14); shakeMag = Math.max(shakeMag, 2.4); }
-  AudioSys.sfx(source === 'crit' || perfectNote ? 'crit' : 'hit', source === 'crit' ? 0.8 : 0.5);
+  // Màu loé theo LOẠI đòn — trước đây `ctx.filter` chỉ làm sáng lên, không phân biệt được gì.
+  m.hitCol = perfectNote ? '#ff9df0' : source === 'crit' ? '#ffd76a'
+           : counterNote ? (NGU_HANH[sectEl] || {}).color || '#ffffff' : '#ffffff';
+  // Tỉ lệ SỨC NẶNG của đòn: cào 1% máu và bổ mất nửa cây máu phải khác nhau. Trước đây hitstop
+  // là hằng số bất kể sát thương nên mọi đòn chạm nhau y hệt.
+  const _w = Math.min(1, final / Math.max(1, m.maxHp));
+  // Hất lùi theo sát thương. vhKnockback() viết sẵn từ lâu nhưng CHỈ được gọi khi chiêu khai
+  // báo fx.kb — đòn thường không đẩy quái một pixel nào. Quái to gần như bất động (chia size).
+  // ⚠ CHỈ đòn đơn mục tiêu. Cố ý KHÔNG áp cho 'tp' (Trấn Phái) và các chiêu diện rộng:
+  // AoE mà đẩy địch ra thì chính nó phá tan đội hình cho đòn kế tiếp của mình, chống lại mọi
+  // thứ ăn theo việc gom địch — Khắc Ấn Hiệu Triệu (trúng ≥3 địch) là ví dụ trực tiếp, nó
+  // ngừng kích hoạt vì Trấn Phái đẩy con thứ ba ra đúng 1 pixel khỏi tầm quạt.
+  // Chiêu nào MUỐN hất lùi thì khai báo `fx.kb` như trước, đi qua vhKnockback riêng.
+  if (!_aoeHit && (source === 'hit' || source === 'crit')){
+    const _kb = (2 + 10 * _w) * (14 / Math.max(14, m.def.size || 14));
+    if (_kb > 0.4) vhKnockback(m, Math.atan2(m.y - player.y, m.x - player.x), _kb);
+  }
+  // Khựng hình / rung / loé bạo kích KHÔNG đặt ở đây nữa — xem swingFeel(). Đặt trong hurtMob
+  // nghĩa là AoE trúng 8 con thì kích hoạt 8 lần, và đạn multishot làm hitstop nối đuôi nhau
+  // khiến game giật liên tục thay vì "khựng một nhịp rồi bung".
+  if (source === 'hit' || source === 'crit') swingFeel(source === 'crit', _w, m);
+  // Âm chạm. `sfx_hit.mp3` KHÔNG TỒN TẠI trên đĩa, nên trước đây mọi đòn thường im lặng lúc
+  // chạm còn bạo kích thì có tiếng — game phân biệt thường/chí mạng bằng CÓ TIẾNG vs KHÔNG,
+  // hoàn toàn do tai nạn. Dùng smash_<hệ> đã có sẵn (đúng chất liệu, đúng theo lớp).
+  if (source === 'crit' || perfectNote) AudioSys.sfx('crit', 0.8);
+  else if (source === 'hit'){
+    const _hc = SECT_SFX[player.sect];
+    AudioSys.sfx(_hc ? 'smash_' + _hc : 'crit', 0.3 + 0.25 * _w);
+  }
   // Nhật ký chiến đấu thay cho số bay trên đầu quái (đỡ rối màn hình khi AUTO đánh nhiều quái) —
   // đòn thường gộp 1 dòng, đòn đặc biệt (hoàn hảo/khắc hệ/chống khiên) có tiền tố riêng
   {
@@ -3656,10 +4129,17 @@ function hurtMob(m, dmg, source){
   if ((player.vhLeechT || 0) > 0){
     player.hp = Math.min(player.maxHp, player.hp + final * 0.25);
   }
+  // Khắc Ấn — móc 'hit'. Chạy TRƯỚC killMob() để một Khắc Ấn kịp đánh dấu con quái (vd Bùng
+  // Cháy ghi m.sgBurn) rồi móc 'kill' ngay sau đó mới đọc được dấu ấy.
+  if (source !== 'sigil'){
+    if (_sigilTag) _sigilHits++;
+    sigilFire('hit', m, final, source, _sigilTag);
+  }
   if (m.hp <= 0) killMob(m, source);
 }
 function killMob(m, source){
   m.dead = true; m.deadT = 0.45; // xác tan dần thành mực thay vì biến mất tức thì
+  sigilFire('kill', m); // Khắc Ấn — móc 'kill' (Hồi Quang, Bùng Cháy…)
   shakeT = Math.max(shakeT, 0.2); shakeMag = Math.max(shakeMag, m.def.boss ? 8 : m.def.elite ? 5 : 3); // hạ quái có lực
   AudioSys.sfx('die', 0.6);
   AudioSys.sfx('coin', 0.5);
@@ -3759,7 +4239,9 @@ function killMob(m, source){
     }
     if (it.rarity >= 3) _gotThan = true;
     // Tự động bán đồ Phàm đổi lấy bạc (bật trong Túi Đồ)
-    if (player.autoSell && it.rarity <= 0){
+    // Khắc Ấn có thể rơi trên món độ hiếm thấp (genItem roll ngẫu nhiên) — bán tự động
+    // món đó là xoá vĩnh viễn thứ hiếm nhất game vì vài đồng bạc.
+    if (player.autoSell && it.rarity <= 0 && !it.sigil){
       const v = 20 + it.rarity*30 + (it.tier||1)*15;
       player.silver += v;
       addFloat(m.x, m.y-54, `Tự bán ${it.name} +${v}◈`, '#9aa8d4', 11);
@@ -3896,7 +4378,7 @@ function unlockNotices(){
     10:['Mở khóa: the Calling — 5 lớp chờ ngươi chọn!','Mở khóa: Cương Khí (Tấn Chức — phím H)','Mở khóa: Truy Nã Lệnh & Sảnh Cầu May — Bổ Đầu và Thương Nhân Vận May ở Lunaris City'],
     15:['Mở khóa: Linh Thú — mua Phong Linh Phù ở Vũ Khí Phường, đánh tinh anh còn <40% máu rồi bấm T'],
     40:['Mở khóa: Lò Bảo Chứng luyện Linh Dực Cấp 1 — Lò Rèn Hoàng Gia, Lunaris City'],
-    45:['Bảo Hạp IV trở lên từ Hung Thần có 5-8% mở ra trang bị CỔ THẦN Tứ Tượng — Hung Thần giáng thế mỗi 4 giờ!'],
+    45:['Bảo Hạp IV trở lên từ Hung Thần có 5-8% mở ra trang bị CỔ THẦN THỦ HỘ — Hung Thần giáng thế mỗi 4 giờ!'],
     30:['Mở khóa: Cung Tiễn (Tấn Chức — phím H)','Mở khóa: Động Phủ — gặp Quản Gia ở Lunaris City'],
   };
   const list = msgs[player.level];
@@ -3984,10 +4466,11 @@ function doBasic(){
       const ang = Math.atan2(t.y-player.y, t.x-player.x);
       projectiles.push({ x:player.x, y:player.y-10, ang, speed:520, dmg:player.atk*rnd(0.9,1.12), kind:'basic', life:0.9, color:sect.color, style:sect.basicProj || 'orb' });
     } else {
-      let dmg = player.atk * rnd(0.9,1.12);
-      let src = 'hit';
-      if (Math.random() < player.crit){ dmg *= (player.critDmgMult || 2); src = 'crit'; }
-      hurtMob(t, dmg, src);
+      // Hẹn sát thương tới KHUNG TIẾP XÚC thay vì nổ ngay khung đầu. hSwing() đẩy khoảnh khắc
+      // lưỡi thật sự chạm ra p≈0.41, nên bắn âm thanh/khựng hình/sát thương ở p=0 là lệch ~8
+      // khung — tay còn chưa nhấc lên mà quái đã trúng đòn.
+      // Mục tiêu có thể chết hoặc chạy khỏi tầm trong 0,09s đó ⇒ tìm lại lúc chạm (whiff).
+      player.pendingHit = { t: 0.09, dmg: player.atk * rnd(0.9,1.12), reach: rng * 1.15 };
     }
     // Cung Tiễn: đòn đánh thường có tỉ lệ phóng linh tiễn theo sau (phụ kiện thú cưỡi — mọi phái)
     const bowT = BOW_TIERS[(player.bow && player.bow.tier) || 0];
@@ -4650,6 +5133,21 @@ function update(dt){
   const ml = Math.hypot(mx,my);
   player.moving = ml > 0.01;
   player.walkPh = (player.walkPh || 0) + dt * (player.moving ? 11 : 2.2);
+  // ── QUÁN TÍNH PHỤ (secondary motion) ──
+  // Trước đây áo choàng đọc thẳng tư thế tức thời nên nó DÍNH vào chân: dừng là dừng ngay,
+  // đổi hướng là bật ngay, không có sức nặng. Hai con lò xo dưới đây chạy TRỄ sau chuyển
+  // động thật, nên vải/lông/mảnh phép đi thêm một nhịp rồi mới lắng — đúng cảm giác có khối
+  // lượng. Chỉ 2 số, tính trong update() một lần, mọi bộ phận cùng đọc.
+  {
+    const tgt = player.moving ? ml : 0;            // đích: đang chạy hay đứng
+    const K = 9.5, D = 5.2;                        // độ cứng · giảm chấn (tinh chỉnh bằng mắt)
+    player.sway = player.sway || 0; player.swayV = player.swayV || 0;
+    player.swayV += ((tgt - player.sway) * K - player.swayV * D) * dt;
+    player.sway += player.swayV * dt;
+    // hướng bạt: vải luôn hất về phía NGƯỢC hướng đang đi, và cũng trễ theo
+    const fx = player.moving ? -mx / Math.max(1, ml) : 0;
+    player.swayDir = (player.swayDir || 0) + (fx - (player.swayDir || 0)) * Math.min(1, dt * 6.5);
+  }
   if (ml > 0.01){
     mx /= Math.max(1,ml); my /= Math.max(1,ml);
     let spd = player.speed || 190;
@@ -4950,7 +5448,12 @@ function update(dt){
         for (let i=0;i<4;i++) addEffect({ type:'ink', x:player.x, y:player.y-12, vx:rnd(-70,70), vy:rnd(-90,-20), color:elC2 });
         player.hurtT = 0.25; // viền đỏ nhấp khi trúng đòn
         player.combatT = 4; // P0: vào trạng thái combat — ngừng hồi máu nhanh
-        shakeT = Math.max(shakeT, 0.16); shakeMag = Math.min(6, 2 + 30*dmg/Math.max(1,player.maxHp));
+        shakeT = Math.max(shakeT, 0.16);
+        // Math.max, không phải gán đè: một cú cào nhẹ từng có thể HẠ biên độ của cú vừa nện.
+        shakeMag = Math.max(shakeMag, Math.min(6, 2 + 30*dmg/Math.max(1,player.maxHp)));
+        // Hướng rung: ĐẨY NGƯỜI CHƠI RA XA con vừa nện mình. Trước đây chỉ swingFeel() ghi
+        // shakeDir, nên lúc ăn đòn màn hình vẫn giật về phía mình vừa đánh — sai hẳn hướng.
+        shakeDir = Math.atan2(player.y - m.y, player.x - m.x);
         // Tình Hoa Độc Yêu: đánh trúng gây độc — Cương Khí (tuyệt học) kháng độc
         if (m.def.poisonHit){
           const _freshPoison = player.poisonT <= 0; // cue only on the moment poison first lands, not every re-tick
@@ -5027,6 +5530,22 @@ function update(dt){
   for (const m of mobs){ if (m.dead && m.deadT > 0) m.deadT -= dt; }
   compactInPlace(mobs, m => !m.dead || m.deadT > 0 || (m.type !== 'boss' && !m.gone));
 
+  // Đòn thường đã hẹn: nổ đúng lúc lưỡi chạm (xem doBasic). Tìm lại mục tiêu ở thời điểm này
+  // — nếu con cũ đã chết hoặc đã chạy xa thì đòn HỤT, đúng như Diablo xử lý whiff.
+  if (player.pendingHit){
+    player.pendingHit.t -= dt;
+    if (player.pendingHit.t <= 0){
+      const ph = player.pendingHit; player.pendingHit = null;
+      const tgt = nearestMob(ph.reach);
+      if (tgt){
+        let dmg = ph.dmg, src = 'hit';
+        if (Math.random() < player.crit){ dmg *= (player.critDmgMult || 2); src = 'crit'; }
+        hurtMob(tgt, dmg, src);
+      }
+    }
+  }
+  sigilTick(dt);   // Khắc Ấn: việc hẹn giờ (sóng 2, mưa tên) + vùng đất còn hiệu lực (vũng độc)
+
   // projectiles
   for (const p of projectiles){
     p.life -= dt;
@@ -5043,7 +5562,12 @@ function update(dt){
         // bỏ qua với MỌI đòn bắn ra — Sylvan Ranger/Dark Wizard (đòn thường + chiêu chính đều là proj)
         // gần như toàn bộ sát thương không ăn chỉ số này, khiến đầu tư Vận thành bẫy với 2 lớp đó.
         if (src==='hit' && Math.random() < player.crit){ dmg *= (player.critDmgMult || 2); src='crit'; }
+        // Khắc Ấn: dựng lại ngữ cảnh từ chính viên đạn — đạn chiêu chính bay tới đây rất lâu sau
+        // khi castSkill() kết thúc, nên không thể trông vào cờ toàn cục. Đạn do Khắc Ấn đẻ ra
+        // (sigilSplit) mang tag rỗng để Tách Tiễn không tự tách mãi.
+        _sigilTag = p.sigilSplit ? null : (p.tag || null);
         hurtMob(m, dmg, src);
+        _sigilTag = null;
         // Sourced per-class projectile-impact SFX — the generic "this ranged attack landed" moment,
         // shared by every player-fired projectile kind (skill/amkhi/bow/danchi) that reaches this loop.
         if (!m.dead){
@@ -5160,6 +5684,11 @@ function onDeath(){
     AudioSys.sfx('levelup', 0.9);
     return;
   }
+  // Khắc Ấn: vũng độc và sóng hẹn giờ phải tắt theo cái chết. Nếu không chúng đóng băng suốt
+  // màn hình bại trận rồi chạy tiếp ở TOẠ ĐỘ CŨ sau khi hồi sinh — có khi ở tận map khác.
+  sigilReset();
+  player.pendingHit = null; // đòn thường đã hẹn cũng phải huỷ: update() return sớm khi dead nên
+                            // nó đóng băng nguyên vẹn rồi nổ vào con quái đứng cạnh điểm hồi sinh
   if (TOWER){ // Trận Địa Phòng Thủ: chết giữa lượt → kết thúc lượt riêng, không tính bại trận thường
     dead = true;
     endTowerRun('death');
@@ -5285,7 +5814,16 @@ function render(){
 
   ctx.save();
   // rung màn hình khi trúng đòn — tôn trọng cài đặt (mặc định tắt, chống chóng mặt)
-  if (shakeT > 0 && SETTINGS.shake){ ctx.translate(rnd(-shakeMag, shakeMag)*shakeT/0.16, rnd(-shakeMag, shakeMag)*shakeT/0.16); }
+  if (shakeT > 0 && SETTINGS.shake){
+    // XUNG CÓ HƯỚNG, không phải nhiễu trắng. Random độc lập 2 trục mỗi khung cho ra cảm giác
+    // "màn hình bị rung", còn dao động tắt dần dọc theo hướng đòn cho cảm giác "bị đẩy".
+    // Cũng bỏ hằng 0.16: shakeT được đặt tới 0.2-0.25 ở nhiều chỗ nên biên độ từng vượt trần 1.56×.
+    const _lv = SETTINGS.shake >= 2 ? 1 : 0.35;            // NHẸ = 35% biên độ
+    const _k  = Math.min(1, shakeT / 0.2);                 // tắt dần theo thời gian còn lại
+    const _osc = Math.sin(shakeT * 92) * _k * _k;          // dao động rồi lắng
+    const _amp = shakeMag * _lv * _osc;
+    ctx.translate(Math.cos(shakeDir) * _amp, Math.sin(shakeDir) * _amp);
+  }
   ctx.translate(-camera.x, -camera.y);
 
   // nền bản đồ vẽ tay — phủ toàn bộ thế giới, nằm dưới mọi decor/thực thể
@@ -5673,6 +6211,36 @@ function drawRock(d){
 const MOBSK_W = 120, MOBSK_H = 120;
 
 // Bảng màu theo cấp: quái thường xỉn, elite ánh kim, boss rực và có hào quang.
+// ═══════════ LOÉ TRẮNG KHI TRÚNG ĐÒN — KHÔNG dùng ctx.filter ═══════════
+// `ctx.filter` buộc canvas 2D dựng surface phụ rồi đọc ngược, chi phí TUYẾN TÍNH theo số quái
+// đang loé. Đo trên raster phần mềm: 20 quái không loé = 21,6 ms/khung, nhưng CHỈ 12 quái đang
+// loé = 910 ms/khung. Máy có GPU thì hệ số nhỏ hơn nhiều, nhưng hình thái vẫn vậy.
+// Nặng nhất là quái vàng: nó bật filter sepia THƯỜNG TRỰC suốt 12 phút Xâm Lăng Vàng, nên sự
+// kiện flagship đang là cảnh tốn nhất game.
+//
+// Hai cách thay, tuỳ loại quái:
+//   • quái khung xương → vẽ lại chính hình đó bằng màu phẳng, chế độ 'lighter'. Rẻ như một
+//     lần vẽ thường, và cho MÀU LOÉ ĐIỀU KHIỂN ĐƯỢC theo loại đòn — thứ brightness() không làm được.
+//   • quái dùng ảnh   → nhuộm sẵn một bản vào canvas ngoài màn hình rồi cache. Vẫn dùng filter,
+//     nhưng trả giá ĐÚNG MỘT LẦN cho mỗi ảnh thay vì 60 lần/giây cho mỗi con.
+function mobFlashPal(P, col){
+  const o = {};
+  for (const k in P) o[k] = col;
+  return o;
+}
+const _tintCache = new Map();
+function tintedImg(img, key, filter){
+  let c = _tintCache.get(key);
+  if (c) return c;
+  if (!img.naturalWidth) return img;                  // ảnh chưa tải xong — dùng tạm bản gốc
+  const cv = document.createElement('canvas');
+  cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+  const q = cv.getContext('2d');
+  q.filter = filter;                                  // trả giá đúng một lần, ở đây
+  q.drawImage(img, 0, 0);
+  _tintCache.set(key, cv);
+  return cv;
+}
 function mobPal(d){
   const p = d.skelPal || {};
   return { main:p.main||'#6a6f80', dark:p.dark||'#454a58', trim:p.trim||'#8a7a4a',
@@ -5684,7 +6252,9 @@ function mobPose(m, now){
   const ph = (now/260) + (m.wob || 0);
   const mv = !!m.moving || (m.spd0 || 0) > 0;
   const atk = m.lungeT > 0 ? Math.sin((0.22 - m.lungeT)/0.22 * Math.PI) : 0;
-  const hurt = Math.min(1, (m.hitT || 0) / 0.25);
+  // Chia cho 0.15 = đúng giá trị hitT được đặt lúc trúng đòn. Trước đây chia 0.25 nên `hurt`
+  // không bao giờ vượt 0.6 — mất 40% biên độ giật vì một hằng số lệch.
+  const hurt = Math.min(1, (m.hitT || 0) / 0.15);
   return {
     step: Math.sin(ph) * (mv ? 1 : 0.28),
     bob:  Math.abs(Math.sin(ph)) * (mv ? -2.6 : -1.0),
@@ -6051,9 +6621,14 @@ function drawMobFigure(m, d, dx, dy, now, g){
     g.globalAlpha = 0.22 + 0.1*Math.sin(now/380); g.fillStyle = bg;
     g.beginPath(); g.arc(60,70,74,0,7); g.fill(); g.globalAlpha = 1;
   }
-  if (m.hitT > 0) g.filter = 'brightness(1.8) saturate(0.4)';       // trúng đòn: loé trắng
   arch(g, P, ps);
-  g.filter = 'none';
+  if (m.hitT > 0){                                                   // trúng đòn: loé, vẽ đè
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.globalAlpha = 0.6 * Math.min(1, m.hitT / 0.15);                // tắt dần theo hitT
+    arch(g, mobFlashPal(P, m.hitCol || '#ffffff'), ps);
+    g.restore();
+  }
   const fx = MOB_ATK_FX[d.skel];                                     // phun lửa / chém kiếm...
   if (fx && ps.atk > 0.02) fx(g, P, ps);
   g.restore();
@@ -6125,9 +6700,12 @@ function drawMob(m){
     const flip = Math.cos(m.face || 0) < 0;
     ctx.save(); ctx.translate(dx, dy - mh*0.28 + bob);
     if (flip) ctx.scale(-1, 1);
-    if (m.hitT > 0) ctx.filter = 'brightness(1.7) saturate(2) hue-rotate(-45deg)';
-    else if (d.golden) ctx.filter = 'sepia(0.85) saturate(2.6) hue-rotate(-14deg) brightness(1.25)'; // nhúng vàng cho quái dùng ảnh
-    ctx.drawImage(img, -mw/2, -mh/2, mw, mh);
+    // Bản nhuộm sẵn có cache thay cho ctx.filter mỗi khung (xem tintedImg). Quái vàng đứng
+    // suốt 12 phút nên chỗ này là chỗ tiết kiệm lớn nhất.
+    let _src = img;
+    if (m.hitT > 0) _src = tintedImg(img, img.src + '|hit', 'brightness(1.7) saturate(2) hue-rotate(-45deg)');
+    else if (d.golden) _src = tintedImg(img, img.src + '|gold', 'sepia(0.85) saturate(2.6) hue-rotate(-14deg) brightness(1.25)');
+    ctx.drawImage(_src, -mw/2, -mh/2, mw, mh);
     ctx.restore();
   } else {
     ctx.fillStyle = m.hitT > 0 ? '#8a2020' : d.color;
@@ -6406,6 +6984,1170 @@ const HERO_METAL = [
   { lo:'#8a1e2a', hi:'#ff6a5a', trim:'#fff0c0', glow:'#ff4a3a' }, // 10 Thức Tỉnh
 ];
 function hMetal(tier){ return HERO_METAL[Math.max(0, Math.min(9, ((tier|0) || 1) - 1))]; }
+
+// ═══════════ TRANG BỊ HIỆN LÊN NGƯỜI — 4 lớp, không lớp nào là "phát sáng" ═══════════
+// Đo trước khi làm: nhân vật mặc full Chí Tôn giai 10 +11 Hoàn Hảo Cổ Thần chỉ khác nhân vật
+// mới tạo đúng 718/62.400 pixel (1,15%) — và toàn bộ 718 px đó là một đốm sáng cạnh bàn tay.
+// Trên THÂN NGƯỜI: 0 pixel. 7/9 ô chỉ số (nón/áo/tay/quần/chân/dây chuyền/2 nhẫn) đổi đúng 0 px.
+//
+// Hào quang là lớp rẻ nhất nhưng cũng nông nhất: bậc nào cũng chỉ là "sáng hơn". Bốn lớp dưới
+// đây thêm ĐỘ PHỨC TẠP thật, xếp theo mức dễ nhận ra từ xa:
+//   A. BÓNG DÁNG  — vai giáp & chóp mũ mọc dần ⇒ đổi đường viền ngoài, thấy được cả khi thu nhỏ
+//   B. CHẤT LIỆU  — chuyển sắc + dải phản quang ⇒ sắt xỉn → thép đánh bóng (không sáng hơn,
+//                   mà PHẢN CHIẾU khác đi)
+//   C. HOA VĂN    — số đường khảm trên ngực tăng theo bậc, tô theo màu độ hiếm ⇒ mật độ chi tiết
+//   D. HÀO QUANG  — giữ, nhưng chỉ là nét hoàn thiện ở bậc cao, và nhuốm màu bộ Cổ Thần đang mặc
+//
+// Cả 4 lớp vẽ GENERIC trong drawHeroFigure, không đụng một dòng nào trong 6 entry HERO_GEAR.
+const HERO_ARMOR_SLOTS = ['non','ao','tay','quan','chan'];
+// Chữ ký ngoại hình rút từ trang bị THẬT. Trả null khi chưa có nhân vật (màn chọn lớp gọi
+// heroCardUrl trước khi `player` tồn tại — đọc player.equip ở đó là crash trắng màn hình).
+function gearVisual(p){
+  if (!p || !p.equip) return null;
+  let n = 0, tsum = 0, psum = 0, rmax = 0;
+  for (const k of HERO_ARMOR_SLOTS){
+    const it = p.equip[k];
+    if (!it) continue;
+    n++; tsum += it.tier || 1; psum += it.plus || 0; rmax = Math.max(rmax, it.rarity || 0);
+  }
+  const w = p.equip.vukhi;
+  let setColor = null;
+  for (const sid in (p.setActive || {}))
+    if (((p.setActive[sid] || {}).act || []).includes(5) && ANCIENT_SETS[sid]) setColor = ANCIENT_SETS[sid].color;
+  return {
+    n, rarity: rmax,
+    // bậc HIỆU DỤNG: bậc trung bình nhân độ phủ — mặc 3 món giai 10 không được nhìn ngang
+    // với mặc đủ 5 món giai 10, nếu không thì lộ nguyên bộ giáp mà vẫn trông như full plate
+    t: n ? (tsum / n) * (n / HERO_ARMOR_SLOTS.length) : 0,
+    // Nhân độ phủ y như `t`. Thiếu bước này thì đeo mỗi cái mũ +11 rồi bỏ trống 4 ô vẫn
+    // phát sáng ngang full +11 — lộ nguyên người mà vẫn rực như mặc đủ bộ.
+    plus: n ? (psum / n) * (n / HERO_ARMOR_SLOTS.length) : 0,
+    rcol: RARITIES[rmax] ? RARITIES[rmax].color : null,
+    wTier: w ? (w.tier || 1) : 0,
+    wPlus: w ? (w.plus || 0) : 0,
+    setColor,
+  };
+}
+// Bậc bảng màu giáp: lấy CAO HƠN giữa Thần Binh và trang bị thật. Dùng max để không ai bị
+// tụt so với trước — Thần Binh vẫn giữ nguyên tác dụng cũ, trang bị nay cộng thêm đường riêng.
+function heroTier(p){
+  const tb = (p && p.thanbinh && p.thanbinh.tier) || 1;
+  const gv = gearVisual(p);
+  return clamp(Math.max(tb, gv ? Math.round(gv.t) : 0), 1, 10);
+}
+// ═══════════ BỘ GIÁP RIÊNG TỪNG LỚP ═══════════
+// Bản đầu tôi vẽ 4 lớp GENERIC cho cả 6 lớp nhân vật — kết quả là pháp sư mặc áo choàng lại
+// đeo đúng cái vai giáp tấm của hiệp sĩ, và cả 5 lớp trông như mặc chung một bộ. Sai hẳn.
+//
+// MU Online làm theo kiểu khác: mỗi lớp có DÒNG GIÁP RIÊNG, đổi cả tạo hình lẫn bảng màu theo
+// mốc cấp, và mỗi bộ có TÊN để người chơi gọi tên nhau. Đó mới là "nhìn là biết đẳng cấp".
+//
+// `style` chọn bộ tạo hình (vai/mũ/chân/eo), `tint` đổi bảng màu — nên bậc vẫn đọc được qua
+// màu, nhưng mỗi lớp đi theo một dải màu riêng thay vì cả 5 lớp cùng đỏ ở bậc 10.
+const HERO_SETS = {
+  // Dark Knight — giáp tấm nặng: sắt thô → giáp lưới → giáp tấm đen → bắt đầu có vảy → đầu rồng
+  thieulam: [
+    { min:1, name:'Thiết Vệ', style:'plate' },
+    { min:3, name:'Giáp Xích', style:'chain',
+      tint:{ lo:'#3f4654', hi:'#5f6a80', trim:'#8d8256', glow:null } },
+    { min:5, name:'Hắc Giáp', style:'plate',
+      tint:{ lo:'#23262f', hi:'#3d4354', trim:'#8fa6c8', glow:'#6f8ec0' } },
+    { min:7, name:'Vảy Rồng', style:'drake',
+      tint:{ lo:'#3a1f22', hi:'#7a3a34', trim:'#c8a84a', glow:'#c8703a' } },
+    { min:9, name:'Hỏa Long', style:'hoalong',
+      tint:{ lo:'#5a1418', hi:'#c0342c', trim:'#ffc24a', glow:'#ff6a2a' } },
+  ],
+  // Dark Wizard — VẢI, tuyệt đối không giáp tấm. Đây là lớp dễ làm sai nhất: bản nháp đầu
+  // cho pháp sư đeo vai giáp tấm của hiệp sĩ, nhìn mắc cười.
+  baidasan: [
+    { min:1, name:'Vải Thô', style:'cloth',
+      tint:{ lo:'#4a4038', hi:'#6b5c4c', trim:'#8a7a5c', glow:null } },
+    { min:3, name:'Da Thú', style:'cloth',
+      tint:{ lo:'#3e3228', hi:'#6a5340', trim:'#b09068', glow:null } },
+    { min:5, name:'Nhân Sư', style:'sphinx',
+      tint:{ lo:'#5a4a2c', hi:'#c8b070', trim:'#3ac8c0', glow:'#7ee0d8' } },
+    { min:7, name:'Ma Thuật', style:'arcane',
+      tint:{ lo:'#2a1f4a', hi:'#5a3f9a', trim:'#c0a0ff', glow:'#a88aff' } },
+    { min:9, name:'Hư Vô', style:'arcane',
+      tint:{ lo:'#160f2c', hi:'#3a2a6a', trim:'#7ecbff', glow:'#6ff0ff' } },
+  ],
+  // Sylvan Ranger — da nhẹ, lá & lông vũ. Vai to ngang Hỏa Long ở bậc cuối nhưng NHẸ:
+  // nhiều lớp mảnh thay vì một khối đặc.
+  toanchan: [
+    { min:1, name:'Da Rừng', style:'hide',
+      tint:{ lo:'#4a3c2c', hi:'#6e5a40', trim:'#8a7448', glow:null } },
+    { min:3, name:'Lá Thép', style:'hide',
+      tint:{ lo:'#2f4436', hi:'#4a6b52', trim:'#9aa858', glow:null } },
+    { min:5, name:'Vỏ Sồi', style:'leaf',
+      tint:{ lo:'#24402f', hi:'#3e6b4a', trim:'#8ad86a', glow:'#7ad86a' } },
+    { min:7, name:'Lông Ưng', style:'plume',
+      tint:{ lo:'#2a4a4a', hi:'#4e8a86', trim:'#c8f0e8', glow:'#8fe8dc' } },
+    { min:9, name:'Đại Bàng Trắng', style:'plume',
+      tint:{ lo:'#6a6a58', hi:'#e8e4d4', trim:'#ffd76a', glow:'#fff0c0' } },
+  ],
+  // Spellblade — nửa giáp LỆCH VAI suốt cả 5 dải. Đây là chữ ký của lớp, đừng làm đối xứng.
+  minhgiao: [
+    { min:1, name:'Bán Giáp', style:'halfplate',
+      tint:{ lo:'#4a4038', hi:'#7a6a58', trim:'#9a7a4a', glow:null } },
+    { min:3, name:'Giáp Lệch', style:'halfplate',
+      tint:{ lo:'#4a2f26', hi:'#7a4a36', trim:'#c08a4a', glow:null } },
+    { min:5, name:'Than Hồng', style:'halfplate',
+      tint:{ lo:'#5a2418', hi:'#a84a28', trim:'#ffb060', glow:'#ff8a3a' } },
+    { min:7, name:'Lửa Dữ', style:'halfplate',
+      tint:{ lo:'#6a1e10', hi:'#d85a22', trim:'#ffd08a', glow:'#ff6a1a' } },
+    { min:9, name:'Hoả Ngục', style:'halfplate',
+      tint:{ lo:'#2a0d08', hi:'#ff5a1a', trim:'#fff0c0', glow:'#ffb020' } },
+  ],
+  // Dark Lord — nghi lễ, chỉ huy. KHÔNG gai nhọn kiểu Dark Knight: quý tộc, không phải
+  // chiến binh tuyến đầu. Vai là bệ + răng lược + vải rủ.
+  bug: [
+    { min:1, name:'Lệnh Giáp', style:'regal',
+      tint:{ lo:'#454a30', hi:'#6a7248', trim:'#8a8a58', glow:null } },
+    { min:3, name:'Cận Vệ', style:'regal',
+      tint:{ lo:'#3a4028', hi:'#5e6a3a', trim:'#a8a860', glow:null } },
+    { min:5, name:'Vương Giáp', style:'regal',
+      tint:{ lo:'#2a3020', hi:'#4a5a30', trim:'#d8c060', glow:'#c8d060' } },
+    { min:7, name:'Bạo Chúa', style:'regal',
+      tint:{ lo:'#1e2418', hi:'#3a4a26', trim:'#ffd76a', glow:'#d0e07a' } },
+    { min:9, name:'Ngai Đen', style:'regal',
+      tint:{ lo:'#100e14', hi:'#2a2a34', trim:'#ffd76a', glow:'#c8a0ff' } },
+  ],
+};
+// Bộ giáp ứng với bậc hiệu dụng t. Trả null khi chưa mặc gì (màn chọn lớp, nhân vật mới).
+function heroSet(sectKey, t){
+  const line = HERO_SETS[sectKey];
+  if (!line || !(t > 0)) return null;
+  let best = null;
+  for (const s of line) if (t >= s.min) best = s;
+  return best || line[0];
+}
+// Bảng màu của bộ đè lên bảng màu bậc. Không có tint thì giữ nguyên HERO_METAL.
+function hSetMetal(M, S){
+  if (!S || !S.tint) return M;
+  return { lo: S.tint.lo || M.lo, hi: S.tint.hi || M.hi,
+           trim: S.tint.trim || M.trim,
+           glow: S.tint.glow !== undefined ? S.tint.glow : M.glow };
+}
+// Nấc tạo hình 1..4 theo bậc hiệu dụng — dùng chung cho mọi bộ
+function hStage(t){ return t < 4.5 ? 1 : t < 6.5 ? 2 : t < 8.5 ? 3 : 4; }
+
+// ── A. BÓNG DÁNG: vai giáp ──
+// Đây là lớp đáng giá nhất. Màu sắc và hào quang biến mất khi nhân vật nhỏ hoặc nền rối;
+// đường viền ngoài thì không — cứ mọc thêm gai là từ xa vẫn biết người kia mặc đồ nặng hơn.
+// Vai giáp phải đủ to để vượt RA NGOÀI đường viền cánh tay (tay vẽ tới x≈122); nằm gọn bên
+// trong thì nó chỉ còn là một mảng màu, mất hẳn tác dụng đổi dáng.
+function hShoulderPlate(g, M, st, w, h){
+  g.fillStyle = M.hi;                                 // vòm vai
+  g.beginPath();
+  g.moveTo(-w * 0.55, h * 0.55);
+  g.quadraticCurveTo(-w * 0.7, -h, 0, -h * 1.05);
+  g.quadraticCurveTo(w * 0.85, -h * 0.9, w, h * 0.5);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;                                 // mặt dưới tối → ra khối, không phẳng
+  g.beginPath();
+  g.moveTo(-w * 0.55, h * 0.55); g.lineTo(w, h * 0.5);
+  g.lineTo(w * 0.8, h * 0.95); g.lineTo(-w * 0.4, h);
+  g.closePath(); g.fill();
+  if (st >= 2){                                       // đường khảm chạy vòng vai
+    g.strokeStyle = M.trim; g.lineWidth = 1.4;
+    g.beginPath(); g.moveTo(-w * 0.5, h * 0.3);
+    g.quadraticCurveTo(0, -h * 0.75, w * 0.9, h * 0.28); g.stroke();
+  }
+  if (st >= 3){                                       // gai — phá đường viền mạnh nhất
+    g.fillStyle = M.trim;
+    const nS = st === 3 ? 2 : 3;
+    for (let i = 0; i < nS; i++){
+      const a = -0.85 + i * (1.55 / Math.max(1, nS - 1));
+      const bx = Math.sin(a) * w * 0.8, by = -Math.cos(a) * h * 0.88;
+      g.beginPath();
+      g.moveTo(bx - 2.4, by); g.lineTo(bx + 2.4, by);
+      g.lineTo(bx + Math.sin(a) * 9, by - Math.cos(a) * 9);
+      g.closePath(); g.fill();
+    }
+  }
+  if (st >= 4){                                       // vây hất ra sau ở bậc tối cao
+    g.fillStyle = M.hi;
+    g.beginPath();
+    g.moveTo(w * 0.5, h * 0.2); g.lineTo(w * 1.5, -h * 0.55); g.lineTo(w * 1.22, h * 0.85);
+    g.closePath(); g.fill();
+  }
+}
+// HỎA LONG — vai giáp là một cái ĐẦU RỒNG chĩa ra ngoài, không phải tấm thép. Đây là chỗ
+// khác biệt lớn nhất giữa hai bộ: cùng một chỗ trên người, một bên là hình học, một bên là
+// sinh vật. Nhìn từ xa vẫn phân biệt được ngay cả khi mất hết màu.
+function hShoulderDragon(g, M, st, w, h){
+  for (let i = 2; i >= 0; i--){                       // vảy cổ xếp lớp làm nền
+    const k = 1 - i * 0.2;
+    g.fillStyle = i ? M.lo : M.hi;
+    g.beginPath();
+    g.moveTo(-w * 0.5 * k, h * 0.55);
+    g.quadraticCurveTo(-w * 0.62 * k, -h * 0.95 * k, 0, -h * 1.05 * k);
+    g.quadraticCurveTo(w * 0.55 * k, -h * 0.95 * k, w * 0.62 * k, h * 0.45);
+    g.closePath(); g.fill();
+  }
+  // Sọ NGẮN và SÂU, có gờ mày nhô che mắt. Bản đầu mõm dài w*1.42 và thuôn đều nên đọc ra
+  // thành mỏ vịt — thú dữ thì mõm ngắn, trán cao, mắt lùi sâu dưới gờ mày.
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(w * 0.15, -h * 0.95);                      // gáy
+  g.lineTo(w * 0.70, -h * 1.05);                      // đỉnh gờ mày
+  g.lineTo(w * 1.02, -h * 0.55);                      // sống mũi dốc xuống
+  g.lineTo(w * 1.14, h * 0.02);                       // chóp mõm
+  g.lineTo(w * 0.95, h * 0.22);
+  g.lineTo(w * 0.15, h * 0.30);
+  g.closePath(); g.fill();
+  g.fillStyle = M.trim;                               // gờ mày đậm nhô ra
+  g.beginPath();
+  g.moveTo(w * 0.42, -h * 0.98); g.lineTo(w * 0.80, -h * 0.92);
+  g.lineTo(w * 0.86, -h * 0.62); g.lineTo(w * 0.44, -h * 0.66);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;                                 // hàm dưới hé mở
+  g.beginPath();
+  g.moveTo(w * 0.30, h * 0.22); g.lineTo(w * 1.02, h * 0.20);
+  g.lineTo(w * 0.92, h * 0.55); g.lineTo(w * 0.32, h * 0.52);
+  g.closePath(); g.fill();
+  g.fillStyle = '#f3ead6';                            // răng nanh
+  for (let i = 0; i < 3; i++){
+    const tx = w * (0.62 + i * 0.16);
+    g.beginPath(); g.moveTo(tx, h * 0.20); g.lineTo(tx + w * 0.06, h * 0.20);
+    g.lineTo(tx + w * 0.03, h * 0.42); g.closePath(); g.fill();
+  }
+  g.fillStyle = M.glow || '#ffb060';                  // mắt rực, lùi sâu dưới gờ mày
+  g.beginPath(); g.ellipse(w * 0.66, -h * 0.50, w * 0.09, h * 0.08, 0, 0, 7); g.fill();
+  g.fillStyle = '#2a0d0d';                            // lỗ mũi
+  g.beginPath(); g.ellipse(w * 1.00, -h * 0.18, w * 0.045, h * 0.05, 0.3, 0, 7); g.fill();
+  g.fillStyle = M.trim;                               // sừng vuốt ngược ra sau
+  g.beginPath();
+  g.moveTo(w * 0.42, -h * 0.72);
+  g.quadraticCurveTo(w * 0.15, -h * 1.85, -w * 0.55, -h * 1.75);
+  g.quadraticCurveTo(w * 0.05, -h * 1.45, w * 0.20, -h * 0.62);
+  g.closePath(); g.fill();
+  if (st >= 2){
+    g.beginPath();
+    g.moveTo(w * 0.62, -h * 0.62);
+    g.quadraticCurveTo(w * 0.55, -h * 1.35, w * 0.05, -h * 1.42);
+    g.quadraticCurveTo(w * 0.50, -h * 1.05, w * 0.50, -h * 0.50);
+    g.closePath(); g.fill();
+  }
+  if (st >= 3){                                       // lửa phun khỏi mõm
+    const fl = M.glow || '#ff7a3a';
+    for (let i = 0; i < 3; i++){
+      g.globalAlpha = 0.85 - i * 0.22;
+      g.fillStyle = i ? fl : '#ffe9a8';
+      const L = w * (0.5 + i * 0.45), sp = h * (0.16 + i * 0.13);
+      g.beginPath();
+      g.moveTo(w * 1.05, h * 0.26);
+      g.quadraticCurveTo(w * 1.05 + L * 0.6, h * 0.26 - sp, w * 1.05 + L, h * 0.32);
+      g.quadraticCurveTo(w * 1.05 + L * 0.6, h * 0.32 + sp, w * 1.05, h * 0.44);
+      g.closePath(); g.fill();
+    }
+    g.globalAlpha = 1;
+  }
+}
+// ── VAI: các bộ tạo hình còn lại ──
+// Dark Knight II — giáp lưới: tấm vai gọn + lưới xích rủ xuống
+function hShoulderChain(g, M, st, w, h){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(-w * 0.5, h * 0.4);
+  g.quadraticCurveTo(-w * 0.6, -h * 0.85, 0, -h * 0.95);
+  g.quadraticCurveTo(w * 0.8, -h * 0.8, w * 0.88, h * 0.35);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;                                  // lưới xích: chấm so le
+  for (let r = 0; r < 2; r++) for (let i = 0; i < 5; i++){
+    g.beginPath();
+    g.arc(-w * 0.35 + i * w * 0.3, h * 0.5 + r * 4.5 + (i % 2) * 2.2, 2.1, 0, 7);
+    g.fill();
+  }
+  if (st >= 2){                                        // đinh tán
+    g.fillStyle = M.trim;
+    for (let i = 0; i < 3; i++){ g.beginPath(); g.arc(-w * 0.2 + i * w * 0.4, -h * 0.35, 1.8, 0, 7); g.fill(); }
+  }
+}
+// Dark Knight IV — dải CHUYỂN TIẾP: vảy bắt đầu mọc ở mép, sừng cong nhẹ. Nửa hình học
+// nửa sinh vật, để bước sang Hỏa Long không bị hẫng.
+function hShoulderDrake(g, M, st, w, h){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(-w * 0.5, h * 0.5);
+  g.quadraticCurveTo(-w * 0.65, -h * 0.9, 0, -h);
+  g.quadraticCurveTo(w * 0.85, -h * 0.85, w * 0.95, h * 0.4);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;                                  // mép vảy
+  for (let i = 0; i < 4; i++){
+    const x = -w * 0.4 + i * w * 0.36;
+    g.beginPath(); g.moveTo(x, h * 0.35);
+    g.quadraticCurveTo(x + w * 0.18, h * 0.85, x + w * 0.36, h * 0.35);
+    g.closePath(); g.fill();
+  }
+  g.fillStyle = M.trim;                                // sừng cong
+  g.beginPath();
+  g.moveTo(w * 0.3, -h * 0.85);
+  g.quadraticCurveTo(w * 0.95, -h * 1.5, w * 1.25, -h * 0.85);
+  g.quadraticCurveTo(w * 0.8, -h * 1.1, w * 0.45, -h * 0.7);
+  g.closePath(); g.fill();
+  if (st >= 3){
+    g.beginPath();
+    g.moveTo(-w * 0.1, -h * 0.95);
+    g.quadraticCurveTo(w * 0.2, -h * 1.6, w * 0.55, -h * 1.15);
+    g.quadraticCurveTo(w * 0.2, -h * 1.2, -w * 0.05, -h * 0.8);
+    g.closePath(); g.fill();
+  }
+}
+// Dark Wizard I-II — VẢI/LÔNG, tuyệt đối không kim loại. Đây là chỗ bản nháp trước sai:
+// pháp sư mặc áo choàng mà đeo vai giáp tấm của hiệp sĩ.
+function hShoulderCloth(g, M, st, w, h){
+  g.fillStyle = M.lo;                                  // cụm vải rủ
+  g.beginPath();
+  g.moveTo(-w * 0.45, -h * 0.3);
+  g.quadraticCurveTo(w * 0.1, -h * 0.85, w * 0.75, -h * 0.05);
+  g.quadraticCurveTo(w * 0.5, h * 0.95, -w * 0.3, h * 0.7);
+  g.closePath(); g.fill();
+  g.fillStyle = M.hi;                                  // tua lông thú
+  const n = 3 + st;
+  for (let i = 0; i < n; i++){
+    const a = -0.5 + i * (1.5 / Math.max(1, n - 1));
+    const bx = Math.sin(a) * w * 0.6, by = -Math.cos(a) * h * 0.5;
+    g.beginPath();
+    g.moveTo(bx, by);
+    g.quadraticCurveTo(bx + w * 0.25, by + h * 0.35, bx + w * 0.1, by + h * 0.9);
+    g.quadraticCurveTo(bx - w * 0.05, by + h * 0.4, bx - w * 0.12, by);
+    g.closePath(); g.fill();
+  }
+}
+// Dark Wizard III — Nhân Sư: vạt vải CỨNG kẻ sọc kiểu Ai Cập, vẫn không phải tấm giáp
+function hShoulderSphinx(g, M, st, w, h){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(-w * 0.4, -h * 0.4); g.lineTo(w * 0.55, -h * 0.55);
+  g.lineTo(w * 0.95, h * 0.9); g.lineTo(-w * 0.25, h * 0.75);
+  g.closePath(); g.fill();
+  g.fillStyle = M.trim;                                // sọc ngang
+  for (let i = 0; i < 3; i++){
+    const y = -h * 0.15 + i * h * 0.42;
+    g.beginPath();
+    g.moveTo(-w * 0.32, y); g.lineTo(w * (0.68 + i * 0.08), y - h * 0.06);
+    g.lineTo(w * (0.7 + i * 0.08), y + h * 0.14); g.lineTo(-w * 0.3, y + h * 0.2);
+    g.closePath(); g.fill();
+  }
+  if (st >= 2){                                        // khoen kim loại ở đỉnh
+    g.beginPath(); g.ellipse(w * 0.1, -h * 0.55, w * 0.4, h * 0.16, -0.12, 0, 7); g.fill();
+  }
+}
+// Dark Wizard IV-V — mảnh phép LƠ LỬNG thay hẳn cho vai giáp
+function hShoulderArcane(g, M, st, w, h){
+  if (M.glow){                                         // quầng sáng nền
+    g.save(); g.globalAlpha = 0.42; g.fillStyle = M.glow;
+    g.beginPath(); g.ellipse(w * 0.4, -h * 0.5, w * 0.85, h, 0, 0, 7); g.fill(); g.restore();
+  }
+  g.fillStyle = M.hi;
+  const n = 2 + st;
+  for (let i = 0; i < n; i++){
+    const a = -1.0 + i * (2.0 / Math.max(1, n - 1));
+    const r = w * (0.85 + (i % 2) * 0.35);
+    const x = Math.sin(a) * r, y = -Math.cos(a) * h * 1.25, sz = 3 + st * 0.9;
+    g.beginPath();
+    g.moveTo(x, y - sz * 1.7); g.lineTo(x + sz * 0.75, y);
+    g.lineTo(x, y + sz * 1.7); g.lineTo(x - sz * 0.75, y);
+    g.closePath(); g.fill();
+  }
+}
+// Sylvan Ranger I-II — miếng da tròn khâu chỉ
+function hShoulderHide(g, M, st, w, h){
+  g.fillStyle = M.hi;
+  g.beginPath(); g.ellipse(w * 0.2, -h * 0.05, w * 0.72, h * 0.72, -0.15, 0, 7); g.fill();
+  g.fillStyle = M.lo;
+  g.beginPath(); g.ellipse(w * 0.28, h * 0.2, w * 0.6, h * 0.42, -0.15, 0, 7); g.fill();
+  g.strokeStyle = M.trim; g.lineWidth = 1; g.setLineDash([2, 2]);
+  g.beginPath(); g.ellipse(w * 0.2, -h * 0.05, w * 0.55, h * 0.55, -0.15, 0, 7); g.stroke();
+  g.setLineDash([]);
+  if (st >= 3){                                        // tấm lá kim loại khâu thêm
+    g.fillStyle = M.trim;
+    for (const d of [-0.4, 0.25]){
+      g.beginPath(); g.ellipse(w * 0.55, h * d, w * 0.22, h * 0.34, 0.5, 0, 7); g.fill();
+    }
+  }
+}
+// Sylvan Ranger III — lá xếp lớp
+function hShoulderLeaf(g, M, st, w, h){
+  const n = 2 + st;
+  for (let i = n - 1; i >= 0; i--){
+    g.fillStyle = i % 2 ? M.lo : M.hi;
+    const k = 1 - i * 0.12;
+    g.save(); g.rotate(-0.45 + i * 0.24);
+    g.beginPath();
+    g.moveTo(-w * 0.1, 0);
+    g.quadraticCurveTo(w * 0.45 * k, -h * 0.6 * k, w * 1.05 * k, 0);
+    g.quadraticCurveTo(w * 0.45 * k, h * 0.6 * k, -w * 0.1, 0);
+    g.closePath(); g.fill();
+    g.restore();
+  }
+  g.strokeStyle = M.trim; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(0, h * 0.15); g.lineTo(w * 0.95, -h * 0.2); g.stroke();
+}
+// Sylvan Ranger IV-V — cụm lông vũ hất ra sau. To ngang vai giáp Hỏa Long nhưng NHẸ:
+// nhiều lớp mảnh thay vì một khối đặc.
+function hShoulderPlume(g, M, st, w, h){
+  const n = 3 + st;
+  for (let i = n - 1; i >= 0; i--){
+    g.fillStyle = i % 2 ? M.lo : M.hi;
+    const L = w * (1.5 - i * 0.12), W = h * (0.30 - i * 0.02);
+    g.save(); g.rotate(-0.15 - i * 0.2);
+    g.beginPath();
+    g.moveTo(-w * 0.15, 0);
+    g.quadraticCurveTo(L * 0.5, -W, L, -W * 0.25);
+    g.quadraticCurveTo(L * 0.55, W * 0.55, -w * 0.15, W * 0.5);
+    g.closePath(); g.fill();
+    g.restore();
+  }
+  g.fillStyle = M.trim;                                // gốc lông bọc kim loại
+  g.beginPath(); g.ellipse(-w * 0.05, h * 0.05, w * 0.3, h * 0.45, 0, 0, 7); g.fill();
+}
+// Spellblade — LỆCH VAI: một bên giáp dày, một bên trần. Đây là chữ ký của lớp, giữ suốt
+// cả 5 dải. Hàm nhận `side` và CỐ Ý vẽ khác nhau hai bên.
+function hShoulderHalf(g, M, st, w, h, side){
+  if (side > 0){                                       // bên TRẦN — chỉ còn dây đai chéo
+    g.fillStyle = M.lo;
+    g.beginPath();
+    g.moveTo(-w * 0.5, -h * 0.15); g.lineTo(-w * 0.15, -h * 0.35);
+    g.lineTo(w * 0.1, h * 0.9); g.lineTo(-w * 0.25, h * 1.05);
+    g.closePath(); g.fill();
+    if (st >= 3){                                      // vết cháy trên da trần
+      g.save(); g.globalAlpha = 0.5; g.fillStyle = M.glow || '#ff7a3a';
+      for (let i = 0; i < 3; i++){
+        g.beginPath(); g.ellipse(w * 0.2 + i * w * 0.16, -h * 0.1 + i * h * 0.3, 1.6, 3.2, 0.4, 0, 7); g.fill();
+      }
+      g.restore();
+    }
+    return;
+  }
+  g.fillStyle = M.hi;                                  // bên CÓ giáp — dày hơn plate thường
+  g.beginPath();
+  g.moveTo(-w * 0.55, h * 0.55);
+  g.quadraticCurveTo(-w * 0.7, -h * 1.05, 0, -h * 1.15);
+  g.quadraticCurveTo(w * 0.9, -h * 0.95, w * 1.05, h * 0.5);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;
+  g.beginPath();
+  g.moveTo(-w * 0.55, h * 0.55); g.lineTo(w * 1.05, h * 0.5);
+  g.lineTo(w * 0.85, h); g.lineTo(-w * 0.4, h * 1.05);
+  g.closePath(); g.fill();
+  if (st >= 2){                                        // lửa liếm dọc vai
+    g.fillStyle = M.glow || M.trim;
+    const n = 1 + st;
+    for (let i = 0; i < n; i++){
+      const a = -0.7 + i * (1.4 / Math.max(1, n - 1));
+      const bx = Math.sin(a) * w * 0.72, by = -Math.cos(a) * h * 0.95, L = 7 + st * 3.5;
+      g.beginPath();
+      g.moveTo(bx - 2.2, by);
+      g.quadraticCurveTo(bx + Math.sin(a) * L * 0.4 - 3.2, by - Math.cos(a) * L * 0.7,
+                         bx + Math.sin(a) * L, by - Math.cos(a) * L);
+      g.quadraticCurveTo(bx + Math.sin(a) * L * 0.5 + 3.2, by - Math.cos(a) * L * 0.5, bx + 2.2, by);
+      g.closePath(); g.fill();
+    }
+  }
+}
+// Dark Lord — bệ vai nghi lễ: răng lược + vải rủ. KHÔNG gai nhọn kiểu Dark Knight;
+// Dark Lord là quý tộc chỉ huy, không phải chiến binh tuyến đầu.
+function hShoulderRegal(g, M, st, w, h){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(-w * 0.5, h * 0.35); g.lineTo(-w * 0.4, -h * 0.7);
+  g.lineTo(w * 0.95, -h * 0.5); g.lineTo(w * 0.88, h * 0.45);
+  g.closePath(); g.fill();
+  g.fillStyle = M.trim;                                // răng lược
+  const n = 2 + st;
+  for (let i = 0; i < n; i++){
+    const x = -w * 0.3 + i * (w * 1.05 / n), hh = h * (0.5 + (i % 2) * 0.25);
+    g.beginPath();
+    g.moveTo(x, -h * 0.6); g.lineTo(x + w * 0.15, -h * 0.62);
+    g.lineTo(x + w * 0.075, -h * 0.6 - hh);
+    g.closePath(); g.fill();
+  }
+  g.fillStyle = M.lo; g.globalAlpha = 0.92;            // vải rủ
+  g.beginPath();
+  g.moveTo(-w * 0.4, h * 0.35); g.lineTo(w * 0.88, h * 0.42);
+  g.quadraticCurveTo(w * 0.62, h * (1.5 + st * 0.28), -w * 0.12, h * (1.25 + st * 0.22));
+  g.closePath(); g.fill();
+  g.globalAlpha = 1;
+}
+
+// ── CHÓP MŨ: các bộ còn lại ──
+// Dark Wizard I-II — mũ TRÙM mềm rủ che nửa mặt. Pháp sư không đội mũ sắt.
+function hCrestHood(g, M, st, ps){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(58, 82);
+  g.quadraticCurveTo(56, 48, 80, 44);
+  g.quadraticCurveTo(104, 48, 102, 82);
+  g.quadraticCurveTo(80, 74, 58, 82);
+  g.closePath(); g.fill();
+  if (!ps.back){
+    g.fillStyle = 'rgba(0,0,0,.55)';                   // bóng trong mũ trùm nuốt mất khuôn mặt
+    g.beginPath(); g.ellipse(80, 72, 15, 13, 0, 0, 7); g.fill();
+    if (st >= 2){                                      // chỉ còn hai đốm mắt trong bóng tối
+      g.fillStyle = M.glow || '#a88aff';
+      g.beginPath(); g.ellipse(74, 72, 2.4, 2.8, 0, 0, 7); g.fill();
+      g.beginPath(); g.ellipse(86, 72, 2.4, 2.8, 0, 0, 7); g.fill();
+    }
+  }
+  g.fillStyle = M.lo;                                  // chóp mũ rủ ra sau
+  g.beginPath();
+  g.moveTo(74, 48); g.lineTo(86, 48);
+  g.quadraticCurveTo(82, 34, 70 - st * 2, 32);
+  g.quadraticCurveTo(74, 42, 74, 48);
+  g.closePath(); g.fill();
+}
+// Dark Wizard III — Nhân Sư: mũ nemes hai vạt vải cứng xoè hai bên má, kẻ sọc, rắn hổ mang
+function hCrestNemes(g, M, st, ps){
+  g.fillStyle = M.hi;
+  for (const s of [-1, 1]){
+    g.beginPath();
+    g.moveTo(80 + s * 8, 54); g.lineTo(80 + s * 26, 66);
+    g.lineTo(80 + s * 22, 94); g.lineTo(80 + s * 9, 88);
+    g.closePath(); g.fill();
+  }
+  g.fillStyle = M.trim;                                // sọc ngang đặc trưng
+  for (const s of [-1, 1]) for (let i = 0; i < 3; i++){
+    const y = 68 + i * 8;
+    g.beginPath();
+    g.moveTo(80 + s * 10, y); g.lineTo(80 + s * (24 - i * 1.5), y + 2.5);
+    g.lineTo(80 + s * (24 - i * 1.5), y + 5); g.lineTo(80 + s * 10, y + 3);
+    g.closePath(); g.fill();
+  }
+  g.beginPath();                                       // vành trán
+  g.moveTo(60, 58); g.lineTo(100, 58); g.lineTo(98, 64); g.lineTo(62, 64);
+  g.closePath(); g.fill();
+  if (!ps.back && st >= 2){                            // rắn hổ mang dựng giữa trán
+    g.fillStyle = M.glow || '#7ee0d8';
+    g.beginPath();
+    g.moveTo(80, 58); g.quadraticCurveTo(75, 48, 80, 44);
+    g.quadraticCurveTo(85, 48, 80, 58);
+    g.closePath(); g.fill();
+  }
+}
+// Dark Wizard IV-V — mũ nhọn cao + vòng hào quang sau đầu
+function hCrestHalo(g, M, st, ps){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(60, 60);
+  g.quadraticCurveTo(74, 40 - st * 5, 83, 30 - st * 6);
+  g.quadraticCurveTo(88, 46, 100, 60);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;                                  // vành mũ
+  g.beginPath(); g.ellipse(80, 60, 24, 5.5, 0, 0, 7); g.fill();
+  if (st >= 2){                                        // vòng hào quang — nét hở, không phải đĩa đặc
+    g.save();
+    g.strokeStyle = M.glow || '#7ecbff'; g.lineWidth = 2.2; g.globalAlpha = 0.85;
+    g.beginPath(); g.ellipse(80, 62, 26, 9, 0, 0, 7); g.stroke();
+    g.restore();
+  }
+  if (st >= 3 && !ps.back){                            // rune trên vành
+    g.fillStyle = M.glow || '#7ecbff';
+    for (let i = 0; i < 3; i++){ g.beginPath(); g.arc(70 + i * 10, 60, 1.6, 0, 7); g.fill(); }
+  }
+}
+// Sylvan Ranger I-II — mũ da mềm có vành + một chiếc lông cắm nghiêng
+function hCrestCap(g, M, st, _ps){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(61, 62); g.quadraticCurveTo(80, 44, 99, 62);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;
+  g.beginPath(); g.ellipse(80, 62, 23, 4.5, 0, 0, 7); g.fill();
+  if (st >= 2){
+    g.fillStyle = M.trim;
+    g.beginPath();
+    g.moveTo(94, 58);
+    g.quadraticCurveTo(110, 46, 114, 34);
+    g.quadraticCurveTo(104, 46, 93, 55);
+    g.closePath(); g.fill();
+  }
+}
+// Sylvan Ranger III — hai chiếc lá dựng như sừng nai non
+function hCrestLeaf(g, M, st, _ps){
+  g.fillStyle = M.hi;
+  for (const s of [-1, 1]){
+    g.beginPath();
+    g.moveTo(80 + s * 10, 62);
+    g.quadraticCurveTo(80 + s * 24, 48, 80 + s * 16, 32 - st * 3);
+    g.quadraticCurveTo(80 + s * 12, 48, 80 + s * 7, 62);
+    g.closePath(); g.fill();
+    g.strokeStyle = M.trim; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(80 + s * 9, 60); g.lineTo(80 + s * 16, 34 - st * 3); g.stroke();
+  }
+  g.fillStyle = M.lo;                                  // dây quấn trán
+  g.beginPath();
+  g.moveTo(61, 60); g.lineTo(99, 60); g.lineTo(98, 65); g.lineTo(62, 65);
+  g.closePath(); g.fill();
+}
+// Sylvan Ranger IV-V — vương miện gạc nai. Nhánh phụ mọc thêm theo bậc.
+function hCrestAntler(g, M, st, _ps){
+  g.fillStyle = M.hi;
+  for (const s of [-1, 1]){
+    g.beginPath();
+    g.moveTo(80 + s * 11, 62);
+    g.quadraticCurveTo(80 + s * 20, 44, 80 + s * 17, 26 - st * 2);
+    g.quadraticCurveTo(80 + s * 15, 44, 80 + s * 8, 62);
+    g.closePath(); g.fill();
+    for (let i = 0; i < 1 + Math.min(2, st - 1); i++){
+      const y = 48 - i * 10;
+      g.beginPath();
+      g.moveTo(80 + s * 17, y);
+      g.quadraticCurveTo(80 + s * 30, y - 6, 80 + s * 33, y - 14);
+      g.quadraticCurveTo(80 + s * 26, y - 4, 80 + s * 16, y + 3);
+      g.closePath(); g.fill();
+    }
+  }
+  g.fillStyle = M.trim;
+  g.beginPath();
+  g.moveTo(60, 59); g.lineTo(100, 59); g.lineTo(98, 66); g.lineTo(62, 66);
+  g.closePath(); g.fill();
+}
+// Spellblade — mặt nạ NỬA MẶT, khe mắt rực, mào lửa. Cùng lối lệch như vai giáp.
+function hCrestHalfMask(g, M, st, ps){
+  if (!ps.back){
+    g.fillStyle = M.hi;
+    g.beginPath();
+    g.moveTo(60, 60); g.lineTo(82, 58); g.lineTo(82, 88); g.lineTo(62, 84);
+    g.closePath(); g.fill();
+    g.fillStyle = M.glow || '#ff8a3a';
+    g.beginPath();
+    g.moveTo(64, 71); g.lineTo(78, 69); g.lineTo(78, 75); g.lineTo(64, 76);
+    g.closePath(); g.fill();
+    if (st >= 3){                                      // vết nứt để lộ lửa bên trong
+      g.strokeStyle = M.glow || '#ffb020'; g.lineWidth = 1.3;
+      g.beginPath(); g.moveTo(68, 60); g.lineTo(72, 68); g.lineTo(66, 78); g.stroke();
+    }
+  } else {
+    g.fillStyle = M.lo;
+    g.beginPath(); g.ellipse(80, 72, 20, 15, 0, 0, 7); g.fill();
+  }
+  if (st >= 2){                                        // mào lửa trên đỉnh
+    g.fillStyle = M.glow || M.trim;
+    for (let i = 0; i < 3; i++){
+      const x = 72 + i * 8, hh = 14 + st * 3 - Math.abs(i - 1) * 5;
+      g.beginPath();
+      g.moveTo(x - 3, 56);
+      g.quadraticCurveTo(x + 2, 56 - hh * 0.6, x, 56 - hh);
+      g.quadraticCurveTo(x - 1, 56 - hh * 0.5, x + 3, 56);
+      g.closePath(); g.fill();
+    }
+  }
+}
+// Dark Lord — vương miện. Bậc tối cao thì nó LƠ LỬNG cách đầu vài pixel, không chạm.
+function hCrestCrown(g, M, st, ps){
+  const lift = st >= 4 ? 5 : 0;
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(59, 58 - lift); g.lineTo(101, 58 - lift);
+  g.lineTo(99, 48 - lift); g.lineTo(61, 48 - lift);
+  g.closePath(); g.fill();
+  g.fillStyle = M.trim;
+  const n = st >= 3 ? 5 : 3, mid = Math.floor(n / 2);
+  for (let i = 0; i < n; i++){
+    const x = 64 + i * (32 / (n - 1));
+    const hh = 12 + st * 2.5 - (i === mid ? -5 : Math.abs(i - mid) * 3);
+    g.beginPath();
+    g.moveTo(x - 3.2, 50 - lift); g.lineTo(x + 3.2, 50 - lift);
+    g.lineTo(x, 50 - lift - hh);
+    g.closePath(); g.fill();
+  }
+  if (st >= 3 && !ps.back){                            // mạng che mặt bằng dây kim loại
+    g.save(); g.strokeStyle = M.trim; g.lineWidth = 0.9; g.globalAlpha = 0.75;
+    for (let i = 0; i < 4; i++){
+      g.beginPath(); g.moveTo(66 + i * 9, 60 - lift); g.lineTo(64 + i * 9, 84); g.stroke();
+    }
+    g.restore();
+  }
+}
+
+// ── GIÁP CHÂN: các bộ còn lại ──
+// Sylvan Ranger — giày nhẹ, dây quấn, cựa sau gót
+function hGreaveLight(g, M, st, x0, dir){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(x0 + dir * 2, 182); g.lineTo(x0 + dir * 17, 182);
+  g.lineTo(x0 + dir * 18, 200); g.lineTo(x0 + dir * 1, 200);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;                                  // hai dây quấn ống chân
+  for (let i = 0; i < 2; i++){
+    const y = 170 + i * 7;
+    g.beginPath();
+    g.moveTo(x0 + dir * 1, y); g.lineTo(x0 + dir * 17, y - 2);
+    g.lineTo(x0 + dir * 17, y + 2.6); g.lineTo(x0 + dir * 1, y + 4.6);
+    g.closePath(); g.fill();
+  }
+  if (st >= 2){
+    g.fillStyle = M.trim;
+    g.beginPath(); g.ellipse(x0 + dir * 10, 176, 6.5, 9, dir * 0.35, 0, 7); g.fill();
+  }
+  if (st >= 3){                                        // cựa sau gót
+    g.fillStyle = M.trim;
+    g.beginPath();
+    g.moveTo(x0 + dir * 2, 202); g.lineTo(x0 + dir * 2, 210); g.lineTo(x0 - dir * 7, 208);
+    g.closePath(); g.fill();
+  }
+}
+// Dark Wizard — gấu áo choàng phủ xuống, KHÔNG có kim loại. Bậc cao thì gấu tan thành khói.
+function hGreaveRobe(g, M, st, x0, dir){
+  g.fillStyle = M.lo;
+  g.beginPath();
+  g.moveTo(x0, 168);
+  g.quadraticCurveTo(x0 + dir * 20, 178, x0 + dir * 19, 202);
+  g.lineTo(x0 + dir * 1, 200);
+  g.closePath(); g.fill();
+  g.fillStyle = M.trim;                                // viền thêu ở gấu
+  g.beginPath();
+  g.moveTo(x0 + dir * 1, 196); g.lineTo(x0 + dir * 19, 198);
+  g.lineTo(x0 + dir * 19, 202); g.lineTo(x0 + dir * 1, 200);
+  g.closePath(); g.fill();
+  if (st >= 3){
+    g.save(); g.fillStyle = M.lo;
+    for (let i = 0; i < 3; i++){
+      g.globalAlpha = 0.5 - i * 0.14;
+      g.beginPath(); g.ellipse(x0 + dir * (4 + i * 6), 206 + i * 3, 4.5, 3, 0, 0, 7); g.fill();
+    }
+    g.restore();
+  }
+}
+
+// ── ĐAI LƯNG: các bộ còn lại ──
+// Dark Wizard — đai vải quấn chéo, nút thắt lệch, đuôi đai rủ
+function hBeltSash(g, M, st){
+  g.fillStyle = M.lo;
+  g.beginPath();
+  g.moveTo(54, 140); g.lineTo(106, 136); g.lineTo(106, 148); g.lineTo(54, 152);
+  g.closePath(); g.fill();
+  g.fillStyle = M.trim;
+  g.beginPath(); g.ellipse(96, 143, 6.5, 5.5, 0.2, 0, 7); g.fill();
+  g.fillStyle = M.lo;                                  // đuôi đai — dài thêm theo bậc
+  g.beginPath();
+  g.moveTo(94, 147); g.lineTo(103, 146);
+  g.quadraticCurveTo(101, 166 + st * 5, 92, 172 + st * 5);
+  g.quadraticCurveTo(93, 158, 90, 148);
+  g.closePath(); g.fill();
+  if (st >= 2){                                        // rune chạy dọc đai
+    g.fillStyle = M.glow || M.trim;
+    for (let i = 0; i < 4; i++){ g.beginPath(); g.arc(60 + i * 11, 145 - i * 0.8, 1.5, 0, 7); g.fill(); }
+  }
+}
+// Sylvan Ranger — váy lá/lông so le
+function hBeltLeafSkirt(g, M, st){
+  g.fillStyle = M.lo; g.fillRect(56, 139, 48, 6);
+  const n = 4 + st;
+  for (let i = 0; i < n; i++){
+    const x = 58 + i * (48 / n);
+    g.fillStyle = i % 2 ? M.hi : M.lo;
+    g.beginPath();
+    g.moveTo(x, 145);
+    g.quadraticCurveTo(x + 7, 152, x + 3.5, 162 + st * 2);
+    g.quadraticCurveTo(x, 152, x - 3, 145);
+    g.closePath(); g.fill();
+  }
+  g.fillStyle = M.trim;
+  g.beginPath(); g.ellipse(80, 142, 5.5, 4.5, 0, 0, 7); g.fill();
+}
+// Dark Lord — đai bản rộng + huy hiệu + vải rủ dài giữa hai chân
+function hBeltDrape(g, M, st){
+  g.fillStyle = M.lo; g.fillRect(53, 136, 54, 11 + st);
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(80, 132); g.lineTo(90, 141); g.lineTo(85, 154); g.lineTo(75, 154); g.lineTo(70, 141);
+  g.closePath(); g.fill();
+  g.fillStyle = M.trim;
+  g.beginPath(); g.ellipse(80, 143, 3.6, 4.6, 0, 0, 7); g.fill();
+  g.save(); g.fillStyle = M.lo; g.globalAlpha = 0.94;
+  g.beginPath();
+  g.moveTo(70, 150); g.lineTo(90, 150);
+  g.quadraticCurveTo(88, 176 + st * 8, 80, 184 + st * 9);
+  g.quadraticCurveTo(72, 176 + st * 8, 70, 150);
+  g.closePath(); g.fill();
+  g.restore();
+  if (st >= 2){                                        // tua kim loại ở gấu vải
+    g.fillStyle = M.trim;
+    for (let i = 0; i < 3; i++){ g.beginPath(); g.arc(74 + i * 6, 182 + st * 8, 1.8, 0, 7); g.fill(); }
+  }
+}
+// Spellblade — CHỈ MỘT tấm hông, khoá lệch. Cùng chữ ký lệch như vai giáp và mặt nạ.
+function hBeltHalf(g, M, st){
+  g.fillStyle = M.lo; g.fillRect(56, 138, 48, 7 + st);
+  g.fillStyle = M.trim;
+  g.beginPath();
+  g.moveTo(68, 136); g.lineTo(77, 143); g.lineTo(70, 152); g.lineTo(62, 143);
+  g.closePath(); g.fill();
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(64, 145); g.lineTo(49, 145);
+  g.lineTo(53, 166 + st * 3); g.lineTo(65, 161 + st * 2);
+  g.closePath(); g.fill();
+  if (st >= 3){                                        // mép ửng đỏ như còn nóng
+    g.save(); g.fillStyle = M.glow || '#ff7a3a'; g.globalAlpha = 0.6;
+    g.beginPath();
+    g.moveTo(53, 166 + st * 3); g.lineTo(65, 161 + st * 2);
+    g.lineTo(64, 165 + st * 2); g.lineTo(52, 170 + st * 3);
+    g.closePath(); g.fill(); g.restore();
+  }
+}
+
+const SET_SHOULDER = {
+  plate: hShoulderPlate, chain: hShoulderChain, drake: hShoulderDrake, hoalong: hShoulderDragon,
+  cloth: hShoulderCloth, sphinx: hShoulderSphinx, arcane: hShoulderArcane,
+  hide: hShoulderHide, leaf: hShoulderLeaf, plume: hShoulderPlume,
+  halfplate: hShoulderHalf, regal: hShoulderRegal,
+};
+function hPauldrons(g, M, gv, S, ps){
+  const t = gv ? gv.t : 0;
+  const _style = (S && S.style) || 'plate';
+  // Spellblade vào sớm hơn: chữ ký của lớp là LỆCH VAI (một bên giáp, một bên trần), mà dải I
+  // của nó tên là "Bán Giáp" — chặn ở 2.5 thì dải đó không có vai nào cả và cái tên nói dối.
+  if (t < (_style === 'halfplate' ? 1.2 : 2.5)) return;
+  const st = hStage(t), fn = SET_SHOULDER[_style] || hShoulderPlate;
+  const dragon = _style === 'hoalong';
+  for (const side of [-1, 1]){
+    // Xoay quanh KHỚP VAI theo ~35% góc cánh tay. Trước đây vai giáp chỉ nằm trong khớp
+    // `lean` nên vung tay mà tấm vai đứng im như dán lên ngực. Giáp thật gắn vào bả vai nên
+    // đi theo tay, chỉ ít hơn vì nó nặng và có dây buộc giữ lại.
+    const _J = side < 0 ? HERO_JOINT.shL : HERO_JOINT.shR;
+    const _arm = ps ? (side < 0 ? ps.armL : ps.armR) : 0;
+    g.save();
+    g.translate(_J[0], _J[1]); g.rotate(_arm * 0.35); g.translate(-_J[0], -_J[1]);
+    g.translate(80 + side * 29, 98);
+    g.scale(side, 1);                                 // vẽ một bên rồi soi gương
+    // đầu rồng cần khung hẹp hơn tấm thép, nếu không mõm thò quá xa khỏi khung 160px
+    const w = dragon ? 12 + st * 2.6 : 14 + st * 3.4;
+    const h = dragon ? 9 + st * 2.1 : 9 + st * 2.4;
+    const rim = plusRim(M, gv);
+    if (rim){   // viền cường hoá: chính hình đó, to hơn 12%, màu sáng, nằm dưới
+      g.save(); g.globalAlpha = 0.34 + clamp(((gv.plus || 0) - 3) / 8, 0, 1) * 0.34; g.scale(1.12, 1.12);
+      fn(g, { lo:rim, hi:rim, trim:rim, glow:rim }, st, w, h, side);
+      g.restore();
+    }
+    fn(g, M, st, w, h, side);
+    g.restore();
+  }
+}
+
+// ── A. BÓNG DÁNG: chóp mũ ──
+function hCrestHorn(g, M, st, ps){
+  const hh = 7 + st * 4;
+  g.fillStyle = M.trim;                               // sống mũ dựng đứng
+  g.beginPath(); g.moveTo(80, 56 - hh); g.lineTo(85, 58); g.lineTo(75, 58); g.closePath(); g.fill();
+  if (st >= 2){                                       // sừng hai bên
+    g.fillStyle = M.hi;
+    for (const s of [-1, 1]){
+      g.beginPath();
+      g.moveTo(80 + s * 15, 62);
+      g.quadraticCurveTo(80 + s * 26, 54, 80 + s * 23, 42);
+      g.quadraticCurveTo(80 + s * 20, 52, 80 + s * 11, 64);
+      g.closePath(); g.fill();
+    }
+  }
+  // ngọc trán: mặt trước mới có — quay lưng mà vẫn vẽ thì thành nhãn dán trên gáy
+  if (st >= 3 && !ps.back){
+    g.fillStyle = M.glow || M.trim;
+    g.beginPath(); g.ellipse(80, 62, 3.4, 4.2, 0, 0, 7); g.fill();
+  }
+}
+// HỎA LONG — mũ rồng: sừng lớn vuốt ngược, vây sống giữa, khe mắt rực thay cho ngọc trán
+function hCrestDragon(g, M, st, ps){
+  g.fillStyle = M.hi;
+  for (const s of [-1, 1]){
+    g.beginPath();                                    // sừng chính
+    g.moveTo(80 + s * 13, 66);
+    g.quadraticCurveTo(80 + s * 34, 58, 80 + s * 33, 34);
+    g.quadraticCurveTo(80 + s * 27, 50, 80 + s * 17, 60);
+    g.closePath(); g.fill();
+    if (st >= 2){                                     // sừng phụ thấp hơn
+      g.beginPath();
+      g.moveTo(80 + s * 15, 70);
+      g.quadraticCurveTo(80 + s * 30, 70, 80 + s * 32, 56);
+      g.quadraticCurveTo(80 + s * 24, 64, 80 + s * 16, 66);
+      g.closePath(); g.fill();
+    }
+  }
+  g.fillStyle = M.trim;                               // vây sống chạy dọc đỉnh mũ
+  for (let i = 0; i < 3; i++){
+    const hh = 16 + st * 4 - i * 4.5, y0 = 56 + i * 5;
+    g.beginPath();
+    g.moveTo(80 - 3.4, y0); g.lineTo(80 + 3.4, y0); g.lineTo(80, y0 - hh);
+    g.closePath(); g.fill();
+  }
+  if (!ps.back){                                      // khe mắt rực — chỉ mặt trước
+    g.fillStyle = M.glow || '#ff7a3a';
+    g.beginPath(); g.moveTo(70, 73); g.lineTo(78, 71); g.lineTo(78, 76); g.lineTo(70, 77);
+    g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(90, 73); g.lineTo(82, 71); g.lineTo(82, 76); g.lineTo(90, 77);
+    g.closePath(); g.fill();
+  }
+}
+const SET_CREST = {
+  plate: hCrestHorn, chain: hCrestHorn, drake: hCrestDragon, hoalong: hCrestDragon,
+  cloth: hCrestHood, sphinx: hCrestNemes, arcane: hCrestHalo,
+  hide: hCrestCap, leaf: hCrestLeaf, plume: hCrestAntler,
+  halfplate: hCrestHalfMask, regal: hCrestCrown,
+};
+function hHelmCrest(g, M, gv, ps, S){
+  const t = gv ? gv.t : 0;
+  if (t < 4.5) return;
+  const fn = SET_CREST[(S && S.style) || 'plate'] || hCrestHorn;
+  const rim = plusRim(M, gv);
+  hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+    if (rim){   // cùng thủ thuật viền như vai giáp, xoay quanh tâm đầu
+      g.save(); g.globalAlpha = 0.34 + clamp(((gv.plus || 0) - 3) / 8, 0, 1) * 0.34;
+      g.translate(80, 74); g.scale(1.14, 1.14); g.translate(-80, -74);
+      fn(g, { lo:rim, hi:rim, trim:rim, glow:rim }, hStage(t), ps);
+      g.restore();
+    }
+    fn(g, M, hStage(t), ps);
+  });
+}
+
+// ── A. BÓNG DÁNG: giáp ống chân + đai lưng ──
+// Hai vùng trước nay hoàn toàn trơn: chân chỉ là 2 khối màu đặc, eo không có gì. Thêm chi tiết
+// ở đây đáng giá gấp đôi vì chân CHUYỂN ĐỘNG — giáp ống nhấp nhô theo sải bước, mắt bắt ngay.
+// Vẽ trong khớp hông (xem hLegs) nên tự đi theo chu kỳ bước chân; vẽ ngoài là thành nhãn dán.
+function hGreavePlate(g, M, st, x0, dir){
+  g.fillStyle = M.hi;                                 // tấm che ống quyển
+  g.beginPath();
+  g.moveTo(x0 + dir * 2, 170); g.lineTo(x0 + dir * 17, 170);
+  g.lineTo(x0 + dir * 18, 196); g.lineTo(x0 + dir * 1, 196);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;                                 // rãnh giữa → tách khối
+  g.fillRect(Math.min(x0 + dir * 8, x0 + dir * 10), 172, 2, 22);
+  if (st >= 2){                                       // chụp gối
+    g.fillStyle = M.hi;
+    g.beginPath(); g.ellipse(x0 + dir * 9, 168, 10, 8, 0, 0, 7); g.fill();
+    g.strokeStyle = M.trim; g.lineWidth = 1.3;
+    g.beginPath(); g.ellipse(x0 + dir * 9, 168, 10, 8, 0, 0, 7); g.stroke();
+  }
+  if (st >= 3){                                       // gai gối chĩa ra ngoài
+    g.fillStyle = M.trim;
+    g.beginPath();
+    g.moveTo(x0 + dir * 16, 164); g.lineTo(x0 + dir * 16, 172);
+    g.lineTo(x0 + dir * 27, 165);
+    g.closePath(); g.fill();
+  }
+}
+// HỎA LONG — ống chân phủ vảy xếp lớp, mũi giày là vuốt rồng
+function hGreaveDragon(g, M, st, x0, dir){
+  for (let i = 0; i < 4; i++){                        // vảy xếp lớp
+    const y = 166 + i * 8;
+    g.fillStyle = i % 2 ? M.lo : M.hi;
+    g.beginPath();
+    g.moveTo(x0 + dir * 1, y);
+    g.quadraticCurveTo(x0 + dir * 10, y + 5, x0 + dir * 18, y);
+    g.lineTo(x0 + dir * 18, y + 8);
+    g.quadraticCurveTo(x0 + dir * 10, y + 12, x0 + dir * 1, y + 8);
+    g.closePath(); g.fill();
+  }
+  g.fillStyle = M.hi;                                 // chụp gối
+  g.beginPath(); g.ellipse(x0 + dir * 9, 164, 11, 9, 0, 0, 7); g.fill();
+  g.fillStyle = M.trim;                               // gai gối
+  g.beginPath();
+  g.moveTo(x0 + dir * 15, 159); g.lineTo(x0 + dir * 15, 169);
+  g.lineTo(x0 + dir * 30, 160); g.closePath(); g.fill();
+  if (st >= 2){                                       // vuốt rồng ở mũi giày
+    g.fillStyle = M.trim;
+    for (let i = 0; i < 3; i++){
+      const cx = x0 + dir * (3 + i * 7);
+      g.beginPath();
+      g.moveTo(cx, 206); g.lineTo(cx + dir * 5, 206); g.lineTo(cx + dir * 3, 216);
+      g.closePath(); g.fill();
+    }
+  }
+}
+const SET_LEG = {
+  plate: hGreavePlate, chain: hGreavePlate, drake: hGreaveDragon, hoalong: hGreaveDragon,
+  cloth: hGreaveRobe, sphinx: hGreaveRobe, arcane: hGreaveRobe,
+  hide: hGreaveLight, leaf: hGreaveLight, plume: hGreaveLight,
+  halfplate: hGreavePlate, regal: hGreavePlate,
+};
+function hGreave(g, M, gv, side, S){
+  const t = gv ? gv.t : 0;
+  if (t < 3.5) return;
+  const fn = SET_LEG[(S && S.style) || 'plate'] || hGreavePlate;
+  g.save();
+  fn(g, M, t < 5.5 ? 1 : t < 7.5 ? 2 : 3, side < 0 ? 61 : 80, side < 0 ? -1 : 1);
+  g.restore();
+}
+function hBeltPlate(g, M, st){
+  g.fillStyle = M.lo;                                 // bản đai
+  g.fillRect(54, 138, 52, 7 + st);
+  g.fillStyle = M.trim;                               // khoá đai giữa bụng
+  const bw = 7 + st * 2.2;
+  g.beginPath();
+  g.moveTo(80, 136); g.lineTo(80 + bw * 0.5, 141.5 + st * 0.5);
+  g.lineTo(80, 148 + st); g.lineTo(80 - bw * 0.5, 141.5 + st * 0.5);
+  g.closePath(); g.fill();
+  if (st >= 2){                                       // hai tấm hông rủ xuống
+    g.fillStyle = M.hi;
+    for (const s of [-1, 1]){
+      g.beginPath();
+      g.moveTo(80 + s * 16, 144); g.lineTo(80 + s * 30, 144);
+      g.lineTo(80 + s * (26 + st * 2), 160 + st * 3); g.lineTo(80 + s * 15, 158 + st * 2);
+      g.closePath(); g.fill();
+    }
+  }
+}
+// HỎA LONG — váy vảy hai hàng, khoá hàm rồng, tấm hông có vuốt
+function hBeltDragon(g, M, _st){
+  g.fillStyle = M.lo; g.fillRect(54, 137, 52, 9);
+  for (let row = 0; row < 2; row++){                  // váy vảy so le
+    for (let i = 0; i < 5; i++){
+      const x = 56 + i * 10 + row * 5, y = 145 + row * 8;
+      g.fillStyle = (i + row) % 2 ? M.hi : M.lo;
+      g.beginPath();
+      g.moveTo(x, y); g.lineTo(x + 9, y);
+      g.quadraticCurveTo(x + 4.5, y + 11, x, y);
+      g.closePath(); g.fill();
+    }
+  }
+  g.fillStyle = M.trim;                               // khoá hình hàm rồng
+  g.beginPath();
+  g.moveTo(80, 134); g.lineTo(89, 141); g.lineTo(84, 150); g.lineTo(76, 150); g.lineTo(71, 141);
+  g.closePath(); g.fill();
+  g.fillStyle = M.glow || '#ff7a3a';
+  g.beginPath(); g.ellipse(80, 142, 3, 4, 0, 0, 7); g.fill();
+  for (const s of [-1, 1]){                           // tấm hông + vuốt
+    g.fillStyle = M.hi;
+    g.beginPath();
+    g.moveTo(80 + s * 17, 143); g.lineTo(80 + s * 31, 143);
+    g.lineTo(80 + s * 28, 168); g.lineTo(80 + s * 16, 163);
+    g.closePath(); g.fill();
+    g.fillStyle = M.trim;
+    g.beginPath();
+    g.moveTo(80 + s * 28, 166); g.lineTo(80 + s * 22, 164); g.lineTo(80 + s * 26, 177);
+    g.closePath(); g.fill();
+  }
+}
+const SET_HIP = {
+  plate: hBeltPlate, chain: hBeltPlate, drake: hBeltDragon, hoalong: hBeltDragon,
+  cloth: hBeltSash, sphinx: hBeltSash, arcane: hBeltSash,
+  hide: hBeltLeafSkirt, leaf: hBeltLeafSkirt, plume: hBeltLeafSkirt,
+  halfplate: hBeltHalf, regal: hBeltDrape,
+};
+function hBelt(g, M, gv, S){
+  const t = gv ? gv.t : 0;
+  if (t < 2) return;
+  const fn = SET_HIP[(S && S.style) || 'plate'] || hBeltPlate;
+  g.save();
+  fn(g, M, t < 5 ? 1 : t < 8 ? 2 : 3);
+  g.restore();
+}
+// ── B. CHẤT LIỆU ──
+// Không làm giáp SÁNG hơn, mà làm nó PHẢN CHIẾU khác đi: bậc thấp là sắt nhám (chuyển sắc mờ,
+// không có dải phản quang), bậc cao là thép đánh bóng (dải phản quang hẹp và gắt).
+function hArmorSheen(g, M, gv){
+  const t = gv ? gv.t : 0;
+  if (t < 1) return;
+  const polish = Math.min(1, t / 10);
+  g.save();
+  g.beginPath();                                        // giới hạn trong khối thân
+  g.moveTo(56, 94); g.lineTo(104, 94); g.lineTo(108, 142); g.lineTo(52, 142);
+  g.closePath(); g.clip();
+  const gr = g.createLinearGradient(0, 94, 0, 142);
+  gr.addColorStop(0, `rgba(255,255,255,${(0.05 + polish * 0.16).toFixed(3)})`);
+  gr.addColorStop(0.45, 'rgba(255,255,255,0)');
+  gr.addColorStop(1, `rgba(0,0,0,${(0.10 + polish * 0.16).toFixed(3)})`);
+  g.fillStyle = gr; g.fillRect(50, 92, 60, 54);
+  if (polish > 0.25){
+    const bw = 16 - polish * 9;                         // càng bóng dải càng hẹp
+    const sg = g.createLinearGradient(66 - bw / 2, 0, 66 + bw / 2, 0);
+    sg.addColorStop(0, 'rgba(255,255,255,0)');
+    sg.addColorStop(0.5, `rgba(255,255,255,${(polish * 0.34).toFixed(3)})`);
+    sg.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = sg; g.fillRect(50, 92, 60, 54);
+  }
+  g.restore();
+}
+// ── C. HOA VĂN KHẢM ──
+// Mật độ chi tiết là thứ mắt đọc ra "đồ đắt" mà không cần biết luật chơi. Số đường tăng theo
+// bậc, MÀU lấy theo độ hiếm — nên `it.rarity` lần đầu tiên có mặt trên người nhân vật.
+function hEngrave(g, M, gv){
+  const t = gv ? gv.t : 0;
+  const n = t < 3 ? 0 : t < 5 ? 1 : t < 7 ? 2 : t < 9 ? 3 : 4;
+  if (!n) return;
+  g.save();
+  g.strokeStyle = gv.rcol || M.trim;
+  g.globalAlpha = 0.75; g.lineWidth = 1.2;
+  for (let i = 0; i < n; i++){
+    const y = 104 + i * 8.5;
+    g.beginPath(); g.moveTo(60, y); g.quadraticCurveTo(80, y + 4.5, 100, y); g.stroke();
+  }
+  if (n >= 4){                                          // khoá ngực hình thoi ở bậc tối cao
+    g.globalAlpha = 0.9; g.fillStyle = gv.rcol || M.trim;
+    g.beginPath();
+    g.moveTo(80, 98); g.lineTo(86, 105); g.lineTo(80, 112); g.lineTo(74, 105);
+    g.closePath(); g.fill();
+  }
+  g.restore();
+}
+// ═══════════ E. CƯỜNG HOÁ +0..+11 — càng rèn cao càng "nóng" ═══════════
+// MU Online lấy mốc **+7** làm ngưỡng phát sáng: dưới ngưỡng đồ trơ, từ +7 trở lên món đồ toả
+// hào quang và ai liếc qua cũng biết. Giữ đúng mốc đó, nhưng KHÔNG để nó chỉ là "sáng hơn" —
+// mỗi mốc thêm một hiện tượng KHÁC, nếu không thì +4 với +11 chỉ khác nhau độ chói:
+//   0 (+0..3)   trơ, không có gì
+//   1 (+4..6)   viền sáng quanh vai & mũ — thấy được nhưng còn tĩnh
+//   2 (+7..9)   NGƯỠNG MU: hào quang nóng sau lưng + tàn lửa bay lên
+//   3 (+10,11)  thêm dải sáng quét dọc thân, như kim loại còn đang nung
+// `plus` là mức rèn TRUNG BÌNH của 5 ô giáp (xem gearVisual) — rèn mỗi cái mũ +11 rồi bỏ trống
+// 4 ô còn lại thì không được sáng ngang full +11.
+function plusStage(pl){ return !(pl > 0) ? 0 : pl < 4 ? 0 : pl < 7 ? 1 : pl < 10 ? 2 : 3; }
+// Hào quang nóng — vẽ SAU LƯNG, trước cả áo choàng
+function hPlusAura(g, M, gv, now){
+  const st = plusStage(gv ? gv.plus : 0);
+  if (st < 2) return;
+  const col = M.glow || '#ffe9a8';
+  const pulse = 0.5 + 0.5 * Math.sin(now / 260);
+  // k: thành phần LIÊN TỤC 0→1 từ +7 lên +11. Chỉ chia mốc thôi thì +7 với +9 trông y hệt
+  // nhau (đo được: 0 pixel khác biệt) — mà rèn từ +7 lên +9 là cả một chặng dài, phải thấy.
+  const k = clamp(((gv.plus || 0) - 6) / 5, 0, 1);
+  const r = 64 + st * 11 + k * 12 + pulse * (4 + st * 3);
+  g.save();
+  g.globalAlpha = (0.10 + st * 0.055 + k * 0.07) * (0.75 + pulse * 0.25);
+  const gr = g.createRadialGradient(80, 128, r * 0.3, 80, 128, r);
+  gr.addColorStop(0, col); gr.addColorStop(0.5, col); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = gr;
+  g.beginPath(); g.arc(80, 128, r, 0, 7); g.fill();
+  g.restore();
+}
+// Tàn lửa bay lên — vẽ TRƯỚC thân: cho cảm giác món đồ đang toả nhiệt, không phải dán đèn
+function hPlusSpark(g, M, gv, now){
+  const st = plusStage(gv ? gv.plus : 0);
+  if (st < 2) return;
+  const col = M.glow || '#ffe9a8';
+  const n = clamp(2 + Math.round(((gv.plus || 0) - 6) * 1.2), 2, 8);   // mỗi cấp rèn thêm tàn lửa
+  g.save(); g.fillStyle = col;
+  for (let i = 0; i < n; i++){
+    const ph = ((now / (900 + (i % 3) * 260)) + i / n) % 1;   // 0→1: nổi lên rồi tắt
+    const x = 80 + Math.sin(i * 137.5) * 34 + Math.sin(now / 500 + i) * 5;
+    const y = 190 - ph * 120;
+    g.globalAlpha = 0.8 * (1 - ph) * (ph < 0.15 ? ph / 0.15 : 1);   // hiện dần rồi lịm dần
+    const sz = 1.4 + (i % 3) * 0.7;
+    g.beginPath(); g.ellipse(x, y, sz, sz * 1.8, 0, 0, 7); g.fill();
+  }
+  g.restore();
+}
+// Dải sáng quét dọc thân — chỉ từ +10, trông như kim loại còn đang nung
+function hPlusSweep(g, M, gv, now){
+  if (plusStage(gv ? gv.plus : 0) < 3) return;
+  g.save();
+  g.beginPath();
+  g.moveTo(56, 94); g.lineTo(104, 94); g.lineTo(108, 142); g.lineTo(52, 142);
+  g.closePath(); g.clip();
+  const y0 = 88 + ((now % 2200) / 2200) * 62;
+  const gr = g.createLinearGradient(0, y0 - 14, 0, y0 + 14);
+  gr.addColorStop(0, 'rgba(255,255,255,0)');
+  gr.addColorStop(0.5, 'rgba(255,255,255,.42)');
+  gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(50, 88, 60, 62);
+  g.restore();
+}
+// Màu viền sáng cho vai/mũ (null nếu chưa tới mốc +4). Cách tạo viền: vẽ lại CHÍNH hình đó
+// to hơn ~12% bằng màu sáng ở lớp dưới — rẻ hơn nhiều so với dựng mặt nạ silhouette mỗi khung.
+function plusRim(M, gv){ return plusStage(gv ? gv.plus : 0) >= 1 ? (M.glow || '#ffe9a8') : null; }
+
 function hPoly(g, pts, c){
   g.fillStyle = c; g.beginPath();
   for (let i = 0; i < pts.length; i++) i ? g.lineTo(pts[i][0], pts[i][1]) : g.moveTo(pts[0][0], pts[0][1]);
@@ -6426,13 +8168,25 @@ const HERO_JOINT = { hipL:[72,142], hipR:[90,142], shL:[52,100], shR:[108,100], 
 // sw: biên độ dùng cho dây cung và độ bạt áo choàng.
 // Chọn kiểu nào là để KHỚP VFX của chiêu: chiêu quét hình quạt thì tay quét ngang,
 // thiên thạch rơi từ trên xuống thì giơ trượng lên trời, ngũ tiễn thì giương cung.
+// Đường cong ra đòn: LẤY ĐÀ → bung → VƯỢT ĐÀ rồi lắng về. Trả 0→1 nhưng đi vòng.
+// Trước đây `slash`/`spin` nội suy tuyến tính (`armR: -0.7 + p*2.1`) nên đòn đánh trôi đều
+// từ đầu tới cuối, không có sức nặng. Ba pha dưới đây là công thức hoạt hình cổ điển:
+//   p < 0.22  — hõm NGƯỢC lại (lấy đà), giá trị âm
+//   sau đó    — ease-out mạnh, vọt qua 1 (vượt đà) rồi trả về đúng 1
+function hSwing(p){
+  if (p < 0.22) return -0.30 * Math.sin(p / 0.22 * Math.PI);
+  const q = (p - 0.22) / 0.78;
+  return (1 - Math.pow(1 - q, 3)) + 0.20 * Math.sin(q * Math.PI) * (1 - q * 0.3);
+}
 const HERO_ACT = {
   // chém dọc từ trên xuống — đòn thường cận chiến
-  slash: p => ({ armR: -0.7 + p*2.1, armL: -0.30*Math.sin(p*Math.PI), lean: 0.16*Math.sin(p*Math.PI),
-                 wrot: 0, wpush: 0, sw: Math.sin(p*Math.PI) }),
+  slash: p => { const e = hSwing(p);
+                return { armR: -0.7 + e*2.1, armL: -0.30*Math.sin(p*Math.PI), lean: 0.16*Math.sin(p*Math.PI) - 0.10*Math.max(0, -e),
+                         wrot: 0, wpush: 0, sw: Math.sin(p*Math.PI) }; },
   // quét ngang một vòng — Twisting Slash (DK) · Fire Slash (MG): VFX hình quạt
-  spin:  p => ({ armR: -0.45 + p*1.05, armL: 0.55*Math.sin(p*Math.PI), lean: 0.22*Math.sin(p*Math.PI),
-                 wrot: -1.65 + p*3.3, wpush: 8*Math.sin(p*Math.PI), sw: Math.sin(p*Math.PI) }),
+  spin:  p => { const e = hSwing(p);
+                return { armR: -0.45 + e*1.05, armL: 0.55*Math.sin(p*Math.PI), lean: 0.22*Math.sin(p*Math.PI) - 0.12*Math.max(0, -e),
+                         wrot: -1.65 + e*3.3, wpush: 8*Math.sin(p*Math.PI), sw: Math.sin(p*Math.PI) }; },
   // đâm thẳng tới — Death Stab (DK): VFX bung ra ngay trước mặt
   thrust: p => { const e = Math.sin(Math.pow(p, 0.55)*Math.PI);
                  return { armR: -0.55 + e*0.45, armL: -0.5*e, lean: 0.24*e,
@@ -6466,7 +8220,7 @@ const SECT_ACT = {
 function heroActOf(sectKey, slot){ return (SECT_ACT[sectKey] || SECT_ACT.vophai)[slot] || 'slash'; }
 
 // wph: pha bước chân · mv: đang di chuyển · atkK/castK 0..1 (đếm NGƯỢC về 0) · act: kiểu ra đòn
-function heroPose(wph, mv, atkK, castK, now, act){
+function heroPose(wph, mv, atkK, castK, now, act, sway, swayDir){
   const br = Math.sin(now / 620) * 0.035;               // nhịp thở lúc đứng yên
   const st = mv ? Math.sin(wph) : 0;                    // sải chân
   const k = castK > 0 ? castK : atkK;                   // đòn nào đang chạy
@@ -6480,19 +8234,27 @@ function heroPose(wph, mv, atkK, castK, now, act){
     bob:  mv ? Math.abs(Math.sin(wph)) * -3.2 : Math.sin(now / 620) * -1.2,
     wrot: A ? A.wrot : 0, wpush: A ? A.wpush : 0,
     sw: A ? A.sw : 0, cast: castK, back: false,
+    // quán tính phụ, dùng chung cho mọi bộ phận mềm (áo choàng · vải rủ · lông vũ · mảnh phép)
+    sway: sway || 0, swayDir: swayDir || 0,
   };
 }
 const HERO_POSE0 = heroPose(0, false, 0, 0, 0, 'slash');
 
 // ── LỚP CHUNG: chân · thân · đầu (giáp của từng lớp vẽ đè lên) ──
-function hLegs(g, P, ps){
+// gv (tham số thứ 4, thêm sau ps): có thì đắp thêm giáp ống chân, vẽ TRONG khớp hông nên
+// giáp nhấp nhô theo đúng sải bước thay vì dán chết một chỗ.
+// SM/S (thêm sau gv): bảng màu + tạo hình của ĐÚNG bộ giáp đang mặc. Giáp ống vẽ TRONG khớp
+// hông nên nhấp nhô theo sải bước — vẽ ngoài là thành nhãn dán.
+function hLegs(g, P, ps, gv, SM, S){
   hJoint(g, HERO_JOINT.hipL[0], HERO_JOINT.hipL[1], ps.legL, () => {
     hPoly(g, [[63,140],[80,140],[80,198],[61,198]], P.leg);
     hPoly(g, [[60,194],[79,194],[81,212],[57,212]], P.boot);
+    hGreave(g, SM || hMetal(1), gv, -1, S);
   });
   hJoint(g, HERO_JOINT.hipR[0], HERO_JOINT.hipR[1], ps.legR, () => {
     hPoly(g, [[80,140],[97,140],[99,198],[80,198]], P.leg);
     hPoly(g, [[81,194],[100,194],[103,212],[79,212]], P.boot);
+    hGreave(g, SM || hMetal(1), gv, 1, S);
   });
 }
 function hTorso(g, P){ hPoly(g, [[58,96],[102,96],[106,146],[54,146]], P.torso); }
@@ -6508,7 +8270,9 @@ function hArmL(g, P, ps, fn){ hJoint(g, HERO_JOINT.shL[0], HERO_JOINT.shL[1], ps
 function hArmR(g, P, ps, fn){ hJoint(g, HERO_JOINT.shR[0], HERO_JOINT.shR[1], ps.armR, fn || (() => hEll(g, 112, 116, 10, 17, P.skin))); }
 // áo choàng: đuôi áo bạt ra sau theo bước chân & lực vung
 function hCape(g, c1, c2, ps){
-  const f = (ps.legL - ps.legR) * 16 + ps.sw * 22;
+  // sải chân + lực vung (tức thời) CỘNG quán tính (trễ) — thành phần thứ hai mới là thứ
+  // làm áo choàng còn bay tiếp một nhịp sau khi nhân vật đã đứng lại
+  const f = (ps.legL - ps.legR) * 16 + ps.sw * 22 + (ps.sway || 0) * 26 + (ps.swayDir || 0) * 14;
   hPoly(g, [[52,98],[108,98],[122 - f,190],[38 - f,190]], c2);
   hPoly(g, [[80,98],[108,98],[122 - f,190],[80 - f,190]], c1);
 }
@@ -6711,25 +8475,46 @@ const HERO_GEAR = {
   },
 };
 // Vẽ nhân vật trong hộp 160×220. tier = bậc Thần Binh (đổi bảng màu giáp).
-function drawHeroFigure(g, sectKey, tier, now, ps){
+// gv (tham số THỨ 6, thêm sau ps nên mọi lời gọi 5 tham số cũ vẫn chạy nguyên): chữ ký trang
+// bị thật từ gearVisual(). Bỏ trống ⇒ chỉ vẽ theo `tier` như trước, dùng cho màn chọn lớp.
+function drawHeroFigure(g, sectKey, tier, now, ps, gv){
   const M = hMetal(tier), G = HERO_GEAR[sectKey] || HERO_GEAR.vophai, P = G.pal;
   ps = ps || HERO_POSE0;
+  gv = gv || null;
+  // Bộ giáp riêng của lớp: đổi cả TẠO HÌNH (vai/mũ/chân/eo) lẫn BẢNG MÀU. Không có bộ
+  // (chưa mặc gì / màn chọn lớp) thì SM === M, mọi thứ y như trước.
+  const S = gv ? heroSet(sectKey, gv.t) : null, SM = hSetMetal(M, S);
   g.save();
   hEll(g, 80, 212, 30 - ps.bob * 0.9, 8, 'rgba(0,0,0,.22)'); // bóng co lại khi nhấc chân
-  if (M.glow){ // giáp bậc cao toả sáng — nhìn là biết đồ xịn, không cần đọc số
+  // D. HÀO QUANG — nét hoàn thiện, không phải toàn bộ câu chuyện. Mặc đủ 5 món một bộ Cổ Thần
+  // thì hào quang nhuốm màu bộ đó, nên bộ nào cũng có dáng riêng nhìn từ xa.
+  const glowCol = (gv && gv.setColor) || SM.glow;
+  if (glowCol){
     const ag = g.createRadialGradient(80, 120, 10, 80, 120, 86);
-    ag.addColorStop(0, M.glow); ag.addColorStop(1, 'rgba(0,0,0,0)');
+    ag.addColorStop(0, glowCol); ag.addColorStop(1, 'rgba(0,0,0,0)');
     g.globalAlpha = 0.2 + 0.1 * Math.sin(now / 380); g.fillStyle = ag;
     g.beginPath(); g.arc(80, 120, 86, 0, 7); g.fill(); g.globalAlpha = 1;
   }
+  hPlusAura(g, SM, gv, now);                                 // E. hào quang cường hoá (sau lưng)
   if (G.cape && !ps.back) hCape(g, G.cape[0], G.cape[1], ps);
-  hLegs(g, P, ps);
+  hLegs(g, P, ps, gv, SM, S);
   g.translate(0, ps.bob);                                    // nhún theo bước chân
   hJoint(g, 80, 146, ps.lean, () => {
-    G.upper(g, M, ps, P);
+    // SM chứ không phải M: giáp thân của lớp phải cùng bảng màu với vai/mũ/chân của BỘ,
+    // nếu không thì mũ ra một màu (theo bậc) còn vai ra màu khác (theo bộ) — lạc hẳn nhau.
+    G.upper(g, SM, ps, P);
+    hArmorSheen(g, M, gv);                                   // B. chất liệu — đè lên giáp lớp
+    hEngrave(g, M, gv);                                      // C. hoa văn khảm
+    hPlusSweep(g, SM, gv, now);                              // E. dải sáng quét thân (+10)
+    hBelt(g, SM, gv, S);                                     // A. đai lưng + tấm hông
     // quay lưng: áo choàng phủ lên trên thân, đúng như nhìn nhân vật đi ra xa
     if (G.cape && ps.back) hCape(g, G.cape[0], G.cape[1], ps);
+    // A. bóng dáng vẽ SAU áo choàng: vai giáp nằm cao hơn mép áo choàng, phải thấy được cả
+    // khi nhân vật quay lưng, nếu không thì đi ra xa là mất sạch phần dễ nhận ra nhất.
+    hPauldrons(g, SM, gv, S, ps);
+    hHelmCrest(g, SM, gv, ps, S);
   });
+  hPlusSpark(g, SM, gv, now);                                // E. tàn lửa (trước thân)
   g.restore();
 }
 
@@ -6737,12 +8522,15 @@ function drawHeroFigure(g, sectKey, tier, now, ps){
 // drawHeroFigure() nên card LUÔN khớp với người đứng trong game (trước đây là
 // thẻ Axie tĩnh, chọn Dark Knight xong vào game lại thấy một hình khác hẳn).
 const _heroCardCache = {};
-function heroCardUrl(sectKey, tier){
-  const key = sectKey + ':' + (tier || 1);
+// ⚠ Khoá cache PHẢI gồm chữ ký trang bị. Chân dung nay phụ thuộc gv, nên khoá chỉ theo
+// sect:tier như trước sẽ khiến panel Nhân Vật hiện mãi ảnh cũ sau mỗi lần thay đồ.
+function heroCardUrl(sectKey, tier, gv){
+  const sig = gv ? `${Math.round(gv.t * 10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor || ''}` : '-';
+  const key = sectKey + ':' + (tier || 1) + ':' + sig;
   if (_heroCardCache[key]) return _heroCardCache[key];
   const cv = document.createElement('canvas');
   cv.width = HERO_W; cv.height = HERO_H;
-  drawHeroFigure(cv.getContext('2d'), sectKey, tier || 1, 0, HERO_POSE0);
+  drawHeroFigure(cv.getContext('2d'), sectKey, tier || 1, 0, HERO_POSE0, gv);
   return (_heroCardCache[key] = cv.toDataURL('image/png'));
 }
 function drawPlayer(){
@@ -6843,7 +8631,13 @@ function drawPlayer(){
   // Cánh (Thiên Thần / Tiểu Quỷ) — đôi cánh vỗ sau lưng, vẽ trước sprite
   const wingIt = p.equip && p.equip.canh;
   if (wingIt){
-    const wd = WING_DEFS.find(w => w.id === wingIt.wing) || WING_DEFS[0];
+    // Linh Dực cấp 2 ghi id vào field `wing2` (xem specialItem('canh', WING2_DEFS[j], {wing2:…})),
+    // KHÔNG phải `wing`. Trước đây chỉ tra WING_DEFS theo `wing` nên cánh cấp 2 luôn find() ra
+    // undefined và rơi về WING_DEFS[0] — người chơi LV80 tốn 1 Hỗn Độn + 20 Hồn Nguyên + 10.000
+    // bạc để thăng Phượng Hoàng/Hắc Ma Linh Dực thì cánh lại chuyển thành TRẮNG Thiên Thần,
+    // tức là nâng cấp xong nhìn còn kém hơn trước.
+    const wd = (wingIt.wing2 && WING2_DEFS.find(w => w.id === wingIt.wing2))
+            || WING_DEFS.find(w => w.id === wingIt.wing) || WING_DEFS[0];
     const lift = Math.sin(performance.now()/280) * 0.22 * 10; // vỗ cánh
     ctx.save();
     ctx.fillStyle = wd.color;
@@ -6875,7 +8669,11 @@ function drawPlayer(){
   const bob = p.moving ? Math.abs(Math.sin(wph))*4.2 : Math.sin(wph)*1.5;
   const rock = p.moving ? Math.sin(wph)*0.07 : 0;
   const castK = (p.castT || 0) / 0.38;
-  const atkK = (p.atkAnim || 0) / 0.22; // lunge về phía chém
+  const atkK = (p.atkAnim || 0) / 0.22;
+  // `atkAnim` ĐẾM NGƯỢC nên atkK = 1 ở khung ĐẦU và 0 ở khung cuối: thân người dồn tới xa nhất
+  // ngay lúc LẤY ĐÀ rồi lùi dần trong lúc lưỡi bổ xuống. Trọng tâm đi ngược chiều đòn đánh —
+  // đúng thứ làm cú chém "nhẹ hều". hSwing(1-atkK) cho thân dồn tới đúng lúc lưỡi chạm.
+  const lungeK = Math.max(0, hSwing(1 - Math.min(1, atkK)));
   const pulse = 1 + castK*0.12 + (p.moving ? Math.sin(wph*2)*0.025 : Math.sin(wph)*0.015);
   if (p.ascended){
     const _tKey = (p.gender === 'nu' ? 'nu' : 'nam') + '_' + (TIEN_SKINS[p.tienSkin] ? p.tienSkin : 'bach');
@@ -6884,7 +8682,7 @@ function drawPlayer(){
       const _tsk = TIEN_SKINS[p.tienSkin] || TIEN_SKINS.bach;
       const sh = 128, sw = sh * (_tim.naturalWidth/_tim.naturalHeight);
       const hover = Math.sin(now/520)*3.4; // ngự kiếm: lơ lửng trên phi kiếm
-      ctx.save(); ctx.translate(p.x + Math.cos(p.face)*atkK*5, p.y + 6 - hover);
+      ctx.save(); ctx.translate(p.x + Math.cos(p.face)*lungeK*5, p.y + 6 - hover);
       ctx.scale(pulse, pulse);
       // hào quang tán tiên sau lưng (màu theo skin)
       const hg = ctx.createRadialGradient(0, -sh*0.52, 8, 0, -sh*0.52, 72);
@@ -6912,8 +8710,8 @@ function drawPlayer(){
     const sh = channeling ? 120 : 104;
     const flip = Math.cos(p.face) < 0;
     ctx.save();
-    ctx.translate(p.x + Math.cos(p.face)*atkK*7,
-                  (channeling ? p.y - 26 - bob : p.y - 42) + Math.sin(p.face)*atkK*3);
+    ctx.translate(p.x + Math.cos(p.face)*lungeK*7,
+                  (channeling ? p.y - 26 - bob : p.y - 42) + Math.sin(p.face)*lungeK*3);
     if (flip) ctx.scale(-1, 1);
     // khớp xương đã tự ngả người rồi nên không xoay đè thêm
     ctx.rotate(channeling ? rock + atkK*0.12 : 0); ctx.scale(pulse, pulse);
@@ -6955,7 +8753,7 @@ function drawPlayer(){
       ctx.scale(s, s); ctx.translate(-HERO_W/2, -HERO_H/2);
       const _act = castK > 0 ? (p.castAct || heroActOf(p.sect, 'a'))
                              : (p.atkAct  || heroActOf(p.sect, 'basic'));
-      const _ps = heroPose(wph, !!p.moving, atkK, Math.min(1, castK), now, _act);
+      const _ps = heroPose(wph, !!p.moving, atkK, Math.min(1, castK), now, _act, p.sway, p.swayDir);
       // Góc nhìn 3/4 kiểu MU: đi lên trên là thấy LƯNG, đi xuống là thấy mặt.
       // (Trước đây hướng nào cũng nhìn thẳng vào mặt người chơi, trông rất sai.)
       _ps.back = Math.sin(p.face) < -0.42;
@@ -6969,7 +8767,7 @@ function drawPlayer(){
         _ps.armR -= 0.22 * _hurt;
         _ps.bob  -= 2.2 * _hurt;
       }
-      drawHeroFigure(ctx, p.sect, (p.thanbinh && p.thanbinh.tier) || 1, now, _ps);
+      drawHeroFigure(ctx, p.sect, heroTier(p), now, _ps, gearVisual(p));
     }
     ctx.restore();
   }
@@ -7180,7 +8978,7 @@ function renderChar(){
   const p = player, sect = SECTS[p.sect];
   let html = `<h3>Nhân Vật — ${sect.name} Cấp ${p.level}</h3>`;
   // chân dung = chính nhân vật trong game, ở đúng bậc Thần Binh đang mang
-  html += `<img class="char-portrait" src="${p.ascended ? 'assets/tien/' + (p.gender === 'nu' ? 'nu' : 'nam') + '_' + (TIEN_SKINS[p.tienSkin] ? p.tienSkin : 'bach') + '.png' : heroCardUrl(p.sect, (p.thanbinh && p.thanbinh.tier) || 1)}" alt="${sect.name}">${p.ascended ? `<div style="margin-top:4px;font-size:11.5px;color:#fff2b0">☁ Tán Tiên — xuất thế khỏi ${sect.name}, ràng buộc Lớp đã phá bỏ</div>` : ""}`;
+  html += `<img class="char-portrait" src="${p.ascended ? 'assets/tien/' + (p.gender === 'nu' ? 'nu' : 'nam') + '_' + (TIEN_SKINS[p.tienSkin] ? p.tienSkin : 'bach') + '.png' : heroCardUrl(p.sect, heroTier(p), gearVisual(p))}" alt="${sect.name}">${p.ascended ? `<div style="margin-top:4px;font-size:11.5px;color:#fff2b0">☁ Tán Tiên — xuất thế khỏi ${sect.name}, ràng buộc Lớp đã phá bỏ</div>` : ""}`;
   // Tán Nhân: lối vào lễ Bái Sư Nhập Phái (cấp 10)
   if (p.sect === 'vophai'){
     html += `<div style="margin:8px 0;padding:10px;border:1px dashed rgba(126,203,255,.45);border-radius:6px;text-align:center">
@@ -7201,6 +8999,27 @@ function renderChar(){
       html += `<div class="trait-row"><span class="t-glyph">${tr.glyph}</span>
         <span class="t-name" style="color:${tier.color}">${tr.name} <small style="opacity:.6">[${tier.name}]</small></span>
         <span class="t-desc">${tr.desc}</span></div>`;
+    }
+  }
+  // ── Khắc Ấn đang mang: thứ người chơi cần tra nhanh là "chiêu mình đang khác thường ở chỗ nào" ──
+  {
+    const own = Object.keys(p.sigils || {});
+    const pool = sigilPool(p.sect);
+    html += `<div style="margin:8px 0 2px;font-size:12px;color:#ffd76a;letter-spacing:1px">◆ KHẮC ẤN ĐANG MANG · ${own.length}/${pool.length}</div>`;
+    if (!own.length){
+      html += `<div style="font-size:11.5px;opacity:.62;margin-bottom:6px;line-height:1.7">
+        Chưa mang Khắc Ấn nào. Khắc Ấn đổi <b>cách chiêu hoạt động</b>, không cộng thêm chỉ số —
+        rơi từ <b style="color:#b08ae8">Bảo Hạp IV+</b>, <b style="color:#7ecbff">Hung Thần Giáng Thế</b>
+        và <b style="color:#ffd76a">Xâm Lăng Vàng</b>.</div>`;
+    } else {
+      for (const k of own){
+        const sg = SIGIL_DEFS[k];
+        html += `<div class="trait-row"><span class="t-glyph" style="color:${sg.color}">◆</span>
+          <span class="t-name" style="color:${sg.color}">${sg.name}</span>
+          <span class="t-desc">${sg.desc}</span></div>`;
+      }
+      const miss = pool.filter(k => !p.sigils[k]);
+      if (miss.length) html += `<div style="font-size:11px;opacity:.5;margin-bottom:6px">Chưa có: ${miss.map(k=>SIGIL_DEFS[k].name).join(' · ')}</div>`;
     }
   }
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Điểm tiềm năng còn: <b style="color:#7ecbff">${p.free}</b> (mỗi cấp +5)</div>`;
@@ -7309,6 +9128,14 @@ function itemLineHtml(it){
   }
   if (it.luck) s += `<span style="color:#7fd8e0">☘Vận</span> `;
   if (it.life) s += `<span style="color:#e84a6a">❤Sinh Mệnh +${it.life*4}% HP</span> `;
+  // Khắc Ấn đứng riêng một dòng, ghi rõ hiệu ứng: nó KHÔNG so được với dòng phụ nào nên nhét
+  // chung một hàng với các con số % chỉ làm người chơi lướt qua mất.
+  if (it.sigil && SIGIL_DEFS[it.sigil]){
+    const sg = SIGIL_DEFS[it.sigil], ok = sigilUsable(it.sigil);
+    s += `<div style="margin:3px 0;padding:3px 6px;border-left:3px solid ${ok?sg.color:'#6a6a72'};background:rgba(255,255,255,.04);font-size:12px">
+      <b style="color:${ok?sg.color:'#8a8a92'}">◆ ${sg.name}</b>${ok?'':' <span style="color:#8a8a92">(lớp khác — không có tác dụng)</span>'}
+      <br><span style="opacity:.82">${sg.desc}</span></div>`;
+  }
   s += `${it.main.name} +${Math.round(it.main.v*m*10)/10}`;
   s += ` · ${it.element}`;
   for (const sub of it.subs) s += ` · ${sub.name} +${Math.round(sub.v*(sub.k==='perfect'?1:m)*10)/10}%`;
@@ -7387,7 +9214,7 @@ window.doDoiHe = function(uid){
   addFloat(player.x, player.y-52, `◑ ĐỔI HỆ — chuyển sang hệ ${el2}!`, NGU_HANH[el2].color, 14);
   calcDerived(); saveGame(); renderForge();
 };
-// Đổi 60 Mảnh Cổ Thần → 1 món Cổ Thần chọn bộ (pity Tứ Tượng — vá lỗi không pity)
+// Đổi 60 Mảnh Cổ Thần → 1 món Cổ Thần chọn bộ (pity Thủ Hộ — vá lỗi không pity)
 window.doiCoThan = function(setId){
   if (!ANCIENT_SETS[setId] || player.mats.manhCoThan < 60) return;
   if (player.inv.length >= 30){ addFloat(player.x, player.y-40, 'Túi đồ đầy!', '#ff7a6a', 12); return; }
@@ -7533,7 +9360,7 @@ function renderForge(){
     html += `<div style="text-align:center;color:#7ecbff;font-size:13px;padding:6px">☀ ${CLOAK_TIERS[2].name} — áo choàng tối thượng của Luyện Bảo Các!</div>`;
   }
   // ── Drop v2.0: pity Cổ Thần — 60 Mảnh Cổ Thần đổi 1 món chọn bộ ──
-  html += `<div class="stat-sec">TỨ TƯỢNG CỔ THẦN — đổi ◈ Mảnh Cổ Thần (đang có <b style="color:#7ecbff">${(player.mats&&player.mats.manhCoThan)||0}</b>/60)</div>`;
+  html += `<div class="stat-sec">CỔ THẦN THỦ HỘ — đổi ◈ Mảnh Cổ Thần (đang có <b style="color:#7ecbff">${(player.mats&&player.mats.manhCoThan)||0}</b>/60)</div>`;
   html += `<div class="forge-actions" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">`;
   for (const sid in ANCIENT_SETS){
     const st = ANCIENT_SETS[sid];
@@ -7821,16 +9648,37 @@ function applyTestBoost(){
   // Bí kíp Huyết Ma Thôn Phệ: đã hợp thành
   player.bikip = { pieces: [1,1,1], hmtp: true };
   player.forged11 = true;
-  // Full set 12 ô Thần-grade cấp 10, rèn +11 hoàn hảo
+  // Full 12 ô Chí Tôn (phẩm cao nhất) giai 10, rèn +11 hoàn hảo
   for (const sl of SLOTS){
-    const it = genSpecific(sl.id, 3, MAX_LV);
+    const it = genSpecific(sl.id, RARITIES.length - 1, MAX_LV);
     it.plus = 11; it.perfect = true;
     player.equip[sl.id] = it;
   }
-  // Đồ đặc biệt tối thượng: Áo Choàng cấp 2, Cánh & Pet tốt nhất
+  // 5 ô giáp thay bằng ĐỦ BỘ Cổ Thần — để xem hào quang nhuốm màu bộ (chỉ hiện khi đủ 5 món)
+  for (const sl of HERO_ARMOR_SLOTS){
+    const it = genAncient('sarkaan', sl, MAX_LV);
+    it.plus = 11; it.luck = true; it.life = 7;
+    player.equip[sl] = it;
+  }
+  // Thần Binh tầng cao nhất — bậc bảng màu giáp lấy max(Thần Binh, trang bị)
+  player.thanbinh = { tier: TB_TIER_NAMES.length };
+  // KHẮC ẤN: gắn đủ 4 cái dùng được của lớp lên đồ đang mặc, mỗi món một cái.
+  // Không có bước này thì bật ?max=1 vẫn KHÔNG thấy hệ Khắc Ấn ở đâu cả.
+  {
+    const pool = sigilPool(player.sect);
+    const slots = ['vukhi', 'non', 'ao', 'tay', 'quan', 'chan'];
+    pool.forEach((k, i) => { const it = player.equip[slots[i % slots.length]]; if (it) it.sigil = k; });
+  }
+  // Đồ đặc biệt tối thượng: Áo Choàng cấp 2, Linh Dực CẤP 2 (không phải cánh cấp 1), Pet tốt nhất
   player.equip.aochoang = genCloak(2);
-  player.equip.canh = genWing(WING_DEFS.length - 1);
+  player.equip.canh = specialItem('canh', WING2_DEFS[1], { wing2: WING2_DEFS[1].id });
   player.equip.pet = genPet(PET_DEFS.length - 1);
+  // Châu + Bảo Hạp: để thử nguyên vòng rèn/mở hạp mà không phải cày
+  player.jewels = { chucPhuc: 99, linhHon: 99, sinhMenh: 99, honDon: 99 };
+  player.baohap = {};
+  for (let t = 1; t < BAOHAP_TIERS.length; t++) player.baohap[t] = 10;
+  player.mats = player.mats || {};
+  player.mats.manhCoThan = 120;
   // Danh hiệu: mở hết, trang bị danh hiệu cuối cùng
   player.titles.unlocked = TITLES.map(t => t.id);
   player.titles.equipped = TITLES[TITLES.length - 1].id;
@@ -7845,6 +9693,13 @@ function applyTestBoost(){
   // Túi đồ: loot mẫu để xem hình
   player.inv = [];
   for (let i=0;i<6;i++) player.inv.push(genItem(MAX_LV, 1.5));
+  // vài món mang Khắc Ấn + vài món bậc thấp, để thấy ngay bảng so sánh và hai badge ▲ / ◆
+  for (const k of sigilPool(player.sect)){
+    const it = genItem(MAX_LV, 1.2); it.sigil = k; player.inv.push(it);
+  }
+  for (const t of [2, 5, 8]){
+    const it = genItem(t * 10, 0); it.tier = t; player.inv.push(it);
+  }
   player.pk = false; player.toiac = 0; player.gkBuffT = 0; player.poisonT = 0;
   calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
 }
@@ -8015,7 +9870,8 @@ function startGame(sectKey, quze){
     applyTestBoost();
     checkTitles();
     addFloat(player.x, player.y-50, 'CHẾ ĐỘ THỬ NGHIỆM — Cấp 100, MỌI TÍNH NĂNG TỐI ĐA!', '#7ecbff', 16);
-    addFloat(player.x, player.y-72, 'Full +11 · Tuyệt học max · Ascension max · M bản đồ · K kỹ năng · 1-3 tung chiêu!', '#a0ffe9', 13);
+    addFloat(player.x, player.y-72, 'Full Chí Tôn +11 · đủ bộ Cổ Thần · 4 Khắc Ấn · Linh Dực c2 · 99 châu · 70 Bảo Hạp', '#a0ffe9', 13);
+    addFloat(player.x, player.y-94, 'C nhân vật · I túi đồ · O cài đặt (rung 3 mức) · M bản đồ · K kỹ năng', '#ffd76a', 12);
   } else {
     addFloat(player.x, player.y-50, 'Lunaris City — hãy đến gặp Trưởng Lão Rell (lại gần, nhấn E)!', '#7ecbff', 15);
   }
@@ -8235,7 +10091,9 @@ window.cheatExec = function(raw){
         gameClock();
         player.gt.t += Math.max(0, num(1, 10)) * GT_DAY;
         const gti = gameTimeInfo(); calcDerived(); spawnAmbients();
-        cheatLog(`Lịch Tu Tiên → ${gti.season.name} ${gti.day}/${gti.month} Năm ${gti.year} · Canh ${CANH_NAMES[gti.canh]}`, gti.season.color); break;
+        // CANH_NAMES/gti.canh thuộc Lịch Tu Tiên (Can Chi) đã gỡ — để lại thì gõ /time là
+        // ném ReferenceError. Đồng hồ thế giới nay chỉ còn ngày/mùa.
+        cheatLog(`Đồng Hồ Thế Giới → ${gti.season.name} ${gti.day}/${gti.month} Năm ${gti.year}`, gti.season.color); break;
       }
       case 'silver': case 'mat': case 'tuvi': case 'khi': case 'manh': case 'tich': case 'an': case 'cothan': case 'dan': {
         const raw2 = parts[1] || '10000';
@@ -8596,13 +10454,16 @@ function renderBag(){
   player.inv.forEach((it, i)=>{
     const _eq2 = player.equip[it.slot], _bp2 = _eq2 ? itemPower(_eq2) : 0;
     const _up = !it.special && player.level >= itemReqLv(it) && itemPower(it) > _bp2;
-    html += `<div class="bag-cell rar-${it.rarity}" style="position:relative" draggable="true" ondragstart="onBagItemDragStart(event,${i})" onclick="equipItem(${i})" title="${it.name} — bấm để MẶC NGAY, hoặc kéo thả vào ô Trang Bị${_up ? ' (mạnh hơn đang mặc!)' : ''} · ⋯ để chọn">
-      ${slotIcon(it, '')}<span class="bc-plus">${it.plus?'+'+it.plus:''}</span>${_up ? '<span style="position:absolute;bottom:0;left:2px;color:#6ae88a;font-size:11px;font-weight:700;text-shadow:0 1px 2px #000">▲</span>' : ''}<span style="position:absolute;top:-3px;right:2px;font-size:12px;color:#c9b889;cursor:pointer;text-shadow:0 1px 2px #000" onclick="event.stopPropagation();window.selectBagItem(${i})">⋯</span></div>`;
+    // ◆ vàng: món mang về Khắc Ấn CHƯA có. Đứng riêng với ▲ vì đây là thứ mũi ▲ (thuần lực
+    // chiến) không bao giờ thấy — món yếu hơn vẫn có thể đáng mặc chỉ vì cái Khắc Ấn này.
+    const _sg = !it.special && player.level >= itemReqLv(it) && itemSigilNew(it);
+    html += `<div class="bag-cell rar-${it.rarity}" style="position:relative" draggable="true" ondragstart="onBagItemDragStart(event,${i})" onclick="equipItem(${i})" title="${it.name} — bấm để MẶC NGAY, hoặc kéo thả vào ô Trang Bị${_up ? ' (mạnh hơn đang mặc!)' : ''}${_sg ? ` · ◆ Khắc Ấn mới: ${SIGIL_DEFS[_sg].name}` : ''} · ⋯ để chọn">
+      ${slotIcon(it, '')}<span class="bc-plus">${it.plus?'+'+it.plus:''}</span>${_up ? '<span style="position:absolute;bottom:0;left:2px;color:#6ae88a;font-size:11px;font-weight:700;text-shadow:0 1px 2px #000">▲</span>' : ''}${_sg ? '<span style="position:absolute;bottom:0;right:2px;color:#ffd76a;font-size:11px;font-weight:700;text-shadow:0 1px 2px #000">◆</span>' : ''}<span style="position:absolute;top:-3px;right:2px;font-size:12px;color:#c9b889;cursor:pointer;text-shadow:0 1px 2px #000" onclick="event.stopPropagation();window.selectBagItem(${i})">⋯</span></div>`;
   });
   html += `</div>`;
   if (window.bagSel >= 0 && player.inv[window.bagSel]){
     const it = player.inv[window.bagSel];
-    html += `<div class="forge-lines" style="margin-top:10px"><b class="${RARITIES[it.rarity].cls}">${it.name}</b><br>${itemLineHtml(it)}</div>
+    html += `<div class="forge-lines" style="margin-top:10px"><b class="${RARITIES[it.rarity].cls}">${it.name}</b><br>${itemLineHtml(it)}${itemCompareHtml(it)}</div>
       <div class="forge-actions"><button class="mini-btn" onclick="equipItem(${window.bagSel})">Mặc Vào</button>
       <button class="mini-btn" onclick="sellItem(${window.bagSel})">Bán (+${itemSellPrice(it)}◈)</button>
       <button class="mini-btn" onclick="salvage(${window.bagSel});window.bagSel=-1">Phân Giải (+${1+it.rarity+Math.floor(it.plus/3)}✦)</button></div>`;
@@ -8779,6 +10640,13 @@ function castSkill(id){
   player.castAct = heroCastAct(id, d);           // tư thế phải khớp VFX của chiêu
   const sect = SECTS[player.sect];
   let sfxTag = 'skill'; // per-class override set in the sectTP/sectA branches below
+  // Khắc Ấn — mở ngữ cảnh đòn cho cả lượt tung này. 'a' = chiêu chính (sectA), 'tp' = Trấn Phái.
+  // Móc 'pre' chạy TRƯỚC mọi thứ khác vì nó có thể dời chỗ đứng người chơi (Xung Phong), và
+  // vị trí ấy phải là vị trí chiêu thực sự phát ra.
+  _sigilTag = d.kind === 'sectTP' ? 'tp' : (d.kind === 'amkhi' || d.kind === 'gangkhi' || d.kind === 'danchi'
+              || d.kind === 'bow' || d.kind === 'tieuhon' || d.kind === 'vh') ? null : 'a';
+  _sigilHits = 0;
+  if (_sigilTag) sigilFire('pre', _sigilTag);
 
   if (d.kind === 'amkhi'){ // ám khí projectile
     const t = nearestMob(360);
@@ -8870,15 +10738,17 @@ function castSkill(id){
       spawnSkillVfx(_sva, { color:sect.color, glyph:'✹' }, 'cone', player.face, 120);
       addEffect({ type:'cone', x:player.x, y:player.y, face:player.face, r:120, color:sect.color });
       spawnSlash(player.x + Math.cos(player.face)*62, player.y + Math.sin(player.face)*62 - 12, player.face, 160, sect.color, sect.glow);
-      for (const m of mobs){
-        if (m.dead) continue;
-        const dd = dist(player.x, player.y, m.x, m.y);
-        if (dd < 125 + 8*_st + m.def.size){ // tiến hóa: quạt rộng hơn
-          let da = Math.atan2(m.y-player.y, m.x-player.x) - player.face;
-          while (da > Math.PI) da -= 2*Math.PI; while (da < -Math.PI) da += 2*Math.PI;
-          if (Math.abs(da) < 1.0 + 0.08*_st) hurtMob(m, player.atk*def.mult*_tbMul*rnd(0.9,1.1), Math.random()<player.crit?'crit':'hit');
+      aoeHit(() => {
+        for (const m of mobs){
+          if (m.dead) continue;
+          const dd = dist(player.x, player.y, m.x, m.y);
+          if (dd < 125 + 8*_st + m.def.size){ // tiến hóa: quạt rộng hơn
+            let da = Math.atan2(m.y-player.y, m.x-player.x) - player.face;
+            while (da > Math.PI) da -= 2*Math.PI; while (da < -Math.PI) da += 2*Math.PI;
+            if (Math.abs(da) < 1.0 + 0.08*_st) hurtMob(m, player.atk*def.mult*_tbMul*rnd(0.9,1.1), Math.random()<player.crit?'crit':'hit');
+          }
         }
-      }
+      });
     } else if (type==='proj'){
       const t = nearestMob(420);
       const ang = t ? Math.atan2(t.y-player.y, t.x-player.x) : player.face;
@@ -8887,7 +10757,8 @@ function castSkill(id){
       const _nP = (def.count || 1) + _st; // Multi-Shot (Sylvan Ranger) bắn 5 tên/loạt; các phái khác mặc định 1, +1 mỗi bậc tiến hóa
       for (let _pi = 0; _pi < _nP; _pi++){
         const _off = _nP > 1 ? (_pi - (_nP - 1) / 2) * 0.15 : 0;
-        projectiles.push({ x:player.x, y:player.y, ang:ang + _off, speed:420, dmg:player.atk*def.mult*_tbMul, kind:'skill', life:1.0, color:sect.color, pierce:true, style:(_svc && _svc.proj) || undefined });
+        // tag:'a' — đạn của chiêu CHÍNH mang theo ngữ cảnh Khắc Ấn tới tận lúc nó chạm địch
+        projectiles.push({ x:player.x, y:player.y, ang:ang + _off, speed:420, dmg:player.atk*def.mult*_tbMul, kind:'skill', life:1.0, color:sect.color, pierce:true, tag:'a', style:(_svc && _svc.proj) || undefined });
       }
       spawnSkillVfx(_sva, { color:sect.color, glyph:'✹' }, 'cast', ang, 60);
       // Sylvan Ranger / Dark Wizard bắn đạn từ xa — không có lưỡi kiếm nào quét ra, chỉ loé đầu nòng
@@ -8901,11 +10772,13 @@ function castSkill(id){
         spawnSlash(player.x + Math.cos(a)*52, player.y + Math.sin(a)*52 - 10, a, 130, sect.color, sect.glow);
       }
       for (let i=0;i<10;i++) addEffect({ type:'ink', x:player.x+rnd(-90,90), y:player.y+rnd(-90,90), vx:rnd(-30,30), vy:rnd(-60,-10), color:sect.color });
-      for (const m of mobs){
-        if (m.dead) continue;
-        if (dist(player.x, player.y, m.x, m.y) < 140 + 10*_st + m.def.size)
-          hurtMob(m, player.atk*def.mult*_tbMul*rnd(0.9,1.1), Math.random()<player.crit?'crit':'hit');
-      }
+      aoeHit(() => {
+        for (const m of mobs){
+          if (m.dead) continue;
+          if (dist(player.x, player.y, m.x, m.y) < 140 + 10*_st + m.def.size)
+            hurtMob(m, player.atk*def.mult*_tbMul*rnd(0.9,1.1), Math.random()<player.crit?'crit':'hit');
+        }
+      });
     } else if (type==='dash'){
       spawnSkillVfx(_sva, { color:sect.color, glyph:'✹' }, 'dash', player.face, 150, player.x, player.y);
       const t = nearestMob(220);
@@ -8920,6 +10793,11 @@ function castSkill(id){
       if (t2) hurtMob(t2, player.atk*def.mult*_tbMul*rnd(0.95,1.15), Math.random()<player.crit?'crit':'hit');
     }
   }
+  // Khắc Ấn — móc 'cast': biết lượt tung này đã chạm mấy con (Hiệu Triệu cần con số đó).
+  // Đóng ngữ cảnh NGAY sau đó: chiêu bắn đạn thì sát thương tới muộn, lúc ấy cờ phải đến từ
+  // chính viên đạn (p.tag) chứ không phải cờ còn sót lại của lượt tung trước.
+  if (_sigilTag){ const _t = _sigilTag, _h = _sigilHits; _sigilTag = null; sigilFire('cast', _t, _h); }
+  _sigilTag = null; _sigilHits = 0;
   AudioSys.sfx(sfxTag, 0.6);
   flashSkillSlot(id);
   // Song Ảnh Phân Thân Thủ (Võ Học Phổ): 30% chiêu vừa tung không tốn hồi chiêu
@@ -9247,7 +11125,7 @@ function renderBaGua(){
   }
   // Đổi Cổ Thần: 3 món trùng + 1 Hỗn Độn = 1 món TỰ CHỌN (con đường song song thay pity)
   const ancients = player.inv.filter(x=>x.ancient);
-  html += `<div class="next-tier" style="border-color:rgba(58,200,138,.5)"><b style="color:#3ac88a">Đổi Cổ Thần — Tứ Tượng tự chọn</b><br>
+  html += `<div class="next-tier" style="border-color:rgba(58,200,138,.5)"><b style="color:#3ac88a">Đổi Cổ Thần — Thủ Hộ tự chọn</b><br>
     <span style="font-size:11.5px;opacity:.8">Hiến tế 3 món Cổ Thần trong túi + 1 ● Hỗn Độn Châu → nhận 1 món Cổ Thần theo ý muốn.</span></div>`;
   if (ancients.length){
     const selN = Object.keys(window._hdSel || {}).length;
@@ -9877,7 +11755,8 @@ function renderSettings(){
     <div class="set-row"><span>🔔 Hiệu ứng âm thanh</span>${slider('sfx', SETTINGS.sfx)}</div>
     <div class="set-row"><span>🗺 Bản đồ thu nhỏ <i>(phím U)</i></span>${tog('minimap')}</div>
     <div class="set-row"><span>🏷 Tên quái vật</span>${tog('mobName')}</div>
-    <div class="set-row"><span>📳 Rung màn hình <i>(mặc định tắt)</i></span>${tog('shake')}</div>
+    <div class="set-row"><span>📳 Rung màn hình</span><span>${[[0,'TẮT'],[1,'NHẸ'],[2,'ĐẦY']].map(([v,t]) =>
+      `<button class="mini-btn ${(SETTINGS.shake|0) === v ? '' : 'danger'}" onclick="setShake(${v})">${t}</button>`).join(' ')}</span></div>
     <div class="set-row"><span>🍃 Giảm hiệu ứng <i>(máy yếu)</i></span>${tog('lowFx')}</div>
     <div class="set-row" style="border-bottom:none;justify-content:center"><b style="color:#6ae88a;font-size:12px">— ⚔ AUTO FARM (phím Z) —</b></div>
     <div class="set-row"><span>🗡 Tự tung kỹ năng trên taskbar</span>${togA('skill')}</div>
@@ -9893,6 +11772,7 @@ function renderSettings(){
     <div class="set-row" style="border-bottom:none"><span style="color:#c05a4a">⚠ Xóa dữ liệu & tu luyện lại</span><button class="mini-btn danger" onclick="wipeSave()">XÓA SAVE</button></div>
     <div style="font-size:11px;color:#9aa8d4;margin-top:8px;line-height:1.5">Âm thanh sẽ phát sau thao tác đầu tiên của bạn (quy định trình duyệt). Mọi cài đặt được lưu tự động.</div>`;
 }
+window.setShake = function(v){ SETTINGS.shake = clamp(v|0, 0, 2); saveSettings(); renderSettings(); };
 window.setGender = function(g){ if (!player) return; player.gender = (g === 'nu') ? 'nu' : 'nam'; saveGame(); renderSettings(); };
 window.setTienSkin = function(id){ if (!player || !TIEN_SKINS[id]) return; player.tienSkin = id; saveGame(); renderSettings(); };
 window.setOpt = function(key, v, quiet){
@@ -11526,7 +13406,9 @@ function rollArenaBox(tier, bossLv){
   const gained = [];
   for (let i = 0; i < nItems; i++){
     const it = genItem(bossLv, 0, srcK);
-    if (player.autoSell && it.rarity <= 0){
+    // Khắc Ấn có thể rơi trên món độ hiếm thấp (genItem roll ngẫu nhiên) — bán tự động
+    // món đó là xoá vĩnh viễn thứ hiếm nhất game vì vài đồng bạc.
+    if (player.autoSell && it.rarity <= 0 && !it.sigil){
       const v = 20 + it.rarity*30 + (it.tier||1)*15;
       player.silver += v; gained.push(`${it.name}(bán +${v}◈)`);
     } else if (player.inv.length < 30){
@@ -11927,7 +13809,9 @@ function grantHuntBox(){
   const gained = [];
   for (let i = 0; i < nItems; i++){
     const it = genItem(bossLv, 0, srcK);
-    if (player.autoSell && it.rarity <= 0){
+    // Khắc Ấn có thể rơi trên món độ hiếm thấp (genItem roll ngẫu nhiên) — bán tự động
+    // món đó là xoá vĩnh viễn thứ hiếm nhất game vì vài đồng bạc.
+    if (player.autoSell && it.rarity <= 0 && !it.sigil){
       const v = 20 + it.rarity*30 + (it.tier||1)*15;
       player.silver += v; gained.push(`${it.name}(bán +${v}◈)`);
     } else if (player.inv.length < 30){
@@ -12881,7 +14765,7 @@ window.craftWing = function(t){
 };
 
 // ---------- Lò Bảo Chứng: đổi 3 Cổ Thần trùng + 1 Hỗn Độn = 1 món tự chọn ----------
-window._hdSel = {}; window._hdSet = 'thanhlong'; window._hdSlot = 'non';
+window._hdSel = {}; window._hdSet = 'sarkaan'; window._hdSlot = 'non';
 window.hdToggle = function(uid){
   if (window._hdSel[uid]) delete window._hdSel[uid];
   else if (Object.keys(window._hdSel).length < 3 && player.inv.some(x => x.uid === uid && x.ancient)) window._hdSel[uid] = true;
@@ -12890,7 +14774,7 @@ window.hdToggle = function(uid){
 window.hdExchange = function(){
   const sel = Object.keys(window._hdSel || {}).map(Number);
   if (sel.length !== 3 || player.jewels.honDon < 1 || player.inv.length >= 30) return;
-  const setId = ANCIENT_SETS[window._hdSet] ? window._hdSet : 'thanhlong';
+  const setId = ANCIENT_SETS[window._hdSet] ? window._hdSet : 'sarkaan';
   const slotId = ARMOR_SLOTS.includes(window._hdSlot) ? window._hdSlot : 'non';
   const idxs = player.inv.map((x, i) => (x && sel.includes(x.uid)) ? i : -1).filter(i => i >= 0).sort((a, b) => b - a);
   if (idxs.length !== 3){ window._hdSel = {}; renderBaGua(); return; }
@@ -13022,7 +14906,13 @@ window.openBaoHap = function(t){
   } else {
     let it = null;
     for (let i = 0; i < 6; i++){ it = genItem(lv, 0.5 + t*0.06); if (it.rarity >= 2) break; }
-    if (player.inv.length < 30){ player.inv.push(it); got.push(`Trang bị: <b class="${RARITIES[it.rarity].cls}">${it.name}</b>`); }
+    // Khắc Ấn chỉ từ Bảo Hạp IV trở lên, tỉ lệ tăng dần theo tầng (IV 18% → VII 33%)
+    if (t >= 4) attachSigil(it, 0.18 + (t - 4) * 0.05);
+    if (player.inv.length < 30){
+      player.inv.push(it);
+      got.push(`Trang bị: <b class="${RARITIES[it.rarity].cls}">${it.name}</b>`);
+      if (it.sigil) got.push(sigilGotLine(it.sigil));
+    }
     else { player.silver += 800; got.push('Túi đầy — trang bị quy đổi 800◈'); }
   }
   // Châu kèm theo — tầng càng cao tỉ lệ càng tốt
@@ -13104,6 +14994,15 @@ function matonKilled(m){
   zoneBanner = { text:'☠ HUNG THẦN ĐÃ BỊ TIÊU DIỆT', sub:`Nhận ${BAOHAP_TIERS[tier].name} — mở trong Túi Đồ (phím I)!`, color:'#7ecbff', t:6 };
   addFloat(m.x, m.y-130, `+1 ${BAOHAP_TIERS[tier].name}`, BAOHAP_TIERS[tier].color, 16);
   AudioSys.sfx('levelup', 1);
+  // Hung Thần là sự kiện thế giới hiếm nhất (4 giờ/lần, một con boss) — 45% rơi thẳng một món
+  // mang Khắc Ấn, không phải qua Bảo Hạp. Đây là nguồn Khắc Ấn chắc tay nhất trong game.
+  if (player.inv.length < 30){
+    const it = genItem(Math.max(player.level, m.def.lv || player.level), 0.7);
+    if (attachSigil(it, 0.45)){
+      player.inv.push(it);
+      sigilAnnounce(it.sigil, m.x, m.y - 160);
+    }
+  }
   saveGame();
 }
 // Hook QA: đẩy lịch Ma Tôn đến sau vài giây
@@ -13185,6 +15084,15 @@ function goldenKilled(m){
   player.baohap[tier] = (player.baohap[tier] || 0) + 1;
   addFloat(m.x, m.y - 90, `+1 ${BAOHAP_TIERS[tier].name}`, BAOHAP_TIERS[tier].color, 15);
   AudioSys.sfx('quest', 0.6);
+  // Bản sắc riêng của Xâm Lăng Vàng: ngoài Bảo Hạp, đây là nguồn Khắc Ấn thứ ba. Chúa Đàn Vàng
+  // 35%, quái vàng thường 8% — trước đây sự kiện này không có gì khác ngoài "hạp bậc cao hơn".
+  if (player.inv.length < 30){
+    const it = genItem(Math.max(player.level, m.def.lv || player.level), 0.6);
+    if (attachSigil(it, m.def.goldenLeader ? 0.35 : 0.08)){
+      player.inv.push(it);
+      sigilAnnounce(it.sigil, m.x, m.y - 110);
+    }
+  }
   if (GOLDEN.active && GOLDEN.spawnedOn){
     GOLDEN.left = Math.max(0, GOLDEN.left - 1);
     if (m.def.goldenLeader)
