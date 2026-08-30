@@ -342,6 +342,50 @@ Trong test: `window.TEST_MODE = true; startGame('<sect>', null);` rồi gọi th
 ⚠ Khi nhảy thẳng `player.level` trong test, phải tự gọi `vhAutoLearn()` — game thật gọi nó qua
 `gainXp()` → `unlockNotices()` mỗi lần lên cấp.
 
+## 🚀 PRODUCTION — VPS tự kéo từ `main` mỗi 2 phút
+
+**Production LÀ VPS này, không phải Vercel.** Repo có `vercel.json` + `Dockerfile.vercel`
+nhưng đó là môi trường khác — đừng suy ra production từ chúng.
+
+| | |
+|---|---|
+| Live | **http://14.225.204.107/** |
+| Máy chủ | VPS Vietnix, hostname `axiewuxia-xiiz`, nginx |
+| Thư mục phục vụ | `/var/www/axiewuxia/public/game` |
+| Bản sao git | `/var/www/axiewuxia` (clone của `ShanKyos/axiewuxia`) |
+| Tự động | cron `*/2 * * * * /root/deploy-axiewuxia.sh` |
+| Script | `git fetch origin main --quiet && git reset --hard origin/main --quiet` |
+
+### ⇒ Deploy = MERGE VÀO `main`. Không có bước nào khác.
+
+```bash
+git checkout main
+git merge <nhánh> --no-edit
+git push origin main          # ≤2 phút sau là live
+git checkout demo-axie-showcase && git merge origin/main --no-edit && git push origin demo-axie-showcase
+git checkout main
+```
+
+### Những chỗ đã vấp, đừng vấp lại
+
+- ⚠ **Sandbox KHÔNG SSH được vào VPS.** Cổng 22 bị chặn ở tầng mạng, và IP cũng không nằm
+  trong allowlist HTTP của proxy (gọi thử trả `403 Host not in allowlist`). Mọi lệnh cần chạy
+  **trên** VPS đều phải đưa cho người dùng tự chạy. Đừng hứa sẽ tự deploy/SSH.
+- ⚠ **IP không xuất hiện ở đâu trong repo** — cấu hình nằm trên VPS. Grep repo rồi kết luận
+  "không có đường deploy" là SAI; tôi đã mắc đúng lỗi này. Cần tra thì tra transcript phiên.
+- ⚠ Script dùng `git reset --hard`. Sửa file tay trong `/var/www/axiewuxia` sẽ **mất sạch** ở
+  lần pull kế tiếp. Mọi thay đổi phải đi qua `main`.
+- ⚠ **Trước khi merge vào `main` phải chạy đủ 3 gate CI** (`npm run lint` · `npm run check` ·
+  `npm test`) **và** bộ regression game trong scratchpad. Merge là live trong 2 phút, không có
+  bước duyệt nào chen vào giữa.
+- ⚠ **KHÔNG ghi thông tin đăng nhập vào bất kỳ file nào trong repo.** Mật khẩu root từng bị
+  dán nguyên văn vào lịch sử chat — đã báo người dùng đổi và chuyển sang SSH key.
+
+### Kiểm tra sau khi deploy
+
+`http://14.225.204.107/` (thêm `?test=1` để mở chế độ thử: đi map tự do + tick cấp 60).
+Log deploy nằm ở VPS, người dùng xem giúp — sandbox không tới được.
+
 ## Git
 
 Phát triển trên `main`, sau đó sync sang `demo-axie-showcase`:
