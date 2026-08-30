@@ -364,3 +364,165 @@ thái cực · ngũ hành làm hệ thống trung tâm).
 - "Nhân Sư" (Sphinx) là thần thoại Ai Cập thuộc phạm vi công cộng, không phải tên riêng của
   MU — dù MU cũng có một bộ tên tương tự cho Dark Wizard.
 - "Hỏa Long" giữ theo yêu cầu; rồng là mô-típ dark-fantasy phổ thông, không riêng của ai.
+
+---
+
+# PHẦN 2 — Rơi đồ
+
+## 11. Hai lỗi trong hệ rơi đồ hiện tại
+
+### 11.1 `m.def.drop` là trường CHẾT
+
+Cả **46 con quái** đều khai một giá trị `drop:` (0.14 → 1.0), nhưng **không dòng code nào đọc nó**.
+Tỉ lệ rơi thực tế lấy hoàn toàn từ `DROP_SRC[loại].chance`, mà bảng đó chỉ có 4 ngăn:
+
+```js
+mob: 0.06 · elite: 0.35 · thuve: 1 (×2) · tranai: 1 (×3)
+```
+
+⇒ **Axie Heo Rừng cấp 1 và Cuồng Binh Tro Tàn cấp 102 rơi đồ với xác suất y hệt nhau: 6%.**
+Toàn bộ 46 con số cân bằng đã đặt sẵn đang bị bỏ phí.
+
+### 11.2 Vũ khí KHÔNG BAO GIỜ Hoàn Hảo được
+
+```js
+const armorGroup = ARMOR_SLOTS.includes(slot.id);
+const perfect = armorGroup && Math.random() < (...);   // ← chặn ở đây
+```
+
+`perfect` bị nhân với `armorGroup`, nên ô `vukhi` luôn ra `false`. Người chơi không thể có
+vũ khí Hoàn Hảo bằng bất kỳ cách nào — kể cả Bảo Hạp VII.
+
+---
+
+## 12. Đồ rơi ngẫu nhiên theo lớp
+
+Theo quyết định: **đồ rơi random, không smart-loot**. Món rơi ra mang thêm `it.sect` — thuộc
+dòng giáp của lớp nào. Mặc được khi `it.sect === player.sect`; sai lớp thì chỉ bán / phân giải.
+
+### ⚠ Một phép tính cần bạn xem trước
+
+Random đều 5 lớp ⇒ **80% đồ rơi ra là đồ lớp khác**. Trong một MMO có chợ thì đó là hàng hoá;
+game này chơi đơn, không có chợ, nên 80% sẽ thành rác. Túi 30 ô sẽ đầy bằng đồ không mặc được.
+
+Ba cách xử lý, tôi đề xuất **B**:
+
+| | Cách | Hệ quả |
+|---|---|---|
+| A | Random đều 20%/lớp | đúng nghĩa "random" nhất, nhưng 80% rác |
+| **B** | **Nghiêng 50% lớp mình · 50% chia đều 4 lớp kia (12,5%/lớp)** | vẫn random thật, tỉ lệ dùng được 50% |
+| C | Chỉ giáp khoá lớp, vũ khí dùng chung | ít rác hơn nhưng mất bản sắc vũ khí theo lớp |
+
+Đặt thành **một hằng số duy nhất** `SECT_DROP_BIAS` để chỉnh sau bằng một con số:
+`0` = random đều (cách A) · `0.5` = cách B · `1` = smart-loot hoàn toàn.
+
+Đồ sai lớp cần có đường ra, nếu không nó chỉ là phiền:
+- **Phân giải** cho vật liệu **×2** so với đồ đúng lớp (đây là mục đích chính của nó)
+- Bán được giá bình thường
+- Vẫn hiện đầy đủ tên bộ + Khắc Ấn trong túi, nhãn ghi rõ `(Dark Wizard — lớp khác)`
+
+---
+
+## 13. Bảng rơi theo quái
+
+Sửa `m.def.drop` thành **tỉ lệ rơi trang bị thật của con quái đó** (thay cho 4 ngăn cứng).
+`DROP_SRC` giữ lại đúng hai việc: **bảng độ hiếm** và **tỉ lệ Hoàn Hảo**.
+
+Bậc đồ rơi ra vẫn tính từ cấp quái: `itemTier(m.def.lv)` ⇒ tự khớp dải bộ I-V.
+
+### 13.1 Tỉ lệ rơi trang bị
+
+| Dải quái | Cấp | Bộ rơi ra | Quái thường | Tinh anh | Boss Vùng | Tướng Quân |
+|---|---|---|---|---|---|---|
+| 1 | 1-20 | **I** | 7% | 28% | 100% ×1 | 100% ×2 |
+| 2 | 21-40 | **II** | 8% | 30% | 100% ×2 | 100% ×2 |
+| 3 | 41-60 | **III** | 9% | 33% | 100% ×2 | 100% ×3 |
+| 4 | 61-80 | **IV** | 10% | 36% | 100% ×2 | 100% ×3 |
+| 5 | 81-120 | **V** | 12% | 40% | 100% ×3 | 100% ×3 |
+
+Quái thường tăng dần 7%→12% chứ không phẳng 6%: về cuối game mỗi con quái mất nhiều thời gian
+hơn hẳn, tỉ lệ phải bù lại. Tinh anh giữ khoảng cách ~3,5 lần so với quái thường ở mọi dải —
+đó là thứ khiến người chơi chủ động đi tìm tinh anh thay vì cày con dễ nhất.
+
+### 13.2 Bảng độ hiếm theo nguồn
+
+Số = %. Giữ nguyên tinh thần bảng cũ, siết lại cho đều tay giữa các dải.
+
+| Nguồn | Phàm | Rèn | Tinh Luyện | Thánh | Tinh Xảo |
+|---|---|---|---|---|---|
+| Quái thường | 80 | 19 | 1 | 0 | 0 |
+| Tinh anh | 0 | 70 | 28 | 2 | 0 |
+| Boss Vùng | 0 | 28 | 52 | 18 | 2 |
+| Tướng Quân | 0 | 0 | 38 | 52 | 10 |
+| Bảo Hạp I | 70 | 25 | 5 | 0 | 0 |
+| Bảo Hạp II | 0 | 60 | 32 | 8 | 0 |
+| Bảo Hạp III | 0 | 10 | 55 | 30 | 5 |
+| Bảo Hạp IV | 0 | 0 | 30 | 55 | 15 |
+| Bảo Hạp V | 0 | 0 | 5 | 35 | 60 |
+
+**Quái thường không bao giờ rơi Thánh/Tinh Xảo.** Đây là điều kiện để tinh anh và boss có lý do
+tồn tại — bỏ nó thì cày con dễ nhất luôn là chiến lược tối ưu.
+
+---
+
+## 14. Đồ Thường và đồ Hoàn Hảo
+
+Hai trục **độc lập nhau**, đừng gộp:
+
+| Trục | Giá trị | Quyết định |
+|---|---|---|
+| **Độ hiếm** | Phàm → Tinh Xảo | SỐ DÒNG phụ (0-4) + tiền tố tên + màu viền khảm trên giáp |
+| **Hoàn Hảo** | Thường / Hoàn Hảo | GIÁ TRỊ dòng phụ: Thường roll trong khoảng, Hoàn Hảo **max hết** + luôn đủ 4 dòng |
+
+Nghĩa là một món **Rèn Hoàn Hảo** có thể mạnh hơn một món **Thánh Thường** — và đó là chủ ý:
+người chơi có hai thứ để săn thay vì một.
+
+### 14.1 Tỉ lệ Hoàn Hảo
+
+| Nguồn | Hiện tại | Đề xuất |
+|---|---|---|
+| Quái thường | 0% | **0%** (giữ — đây là ranh giới của tinh anh) |
+| Tinh anh | 2% | **3%** |
+| Boss Vùng | 8% | **8%** |
+| Tướng Quân | 15% | **15%** |
+| Bảo Hạp I → V | 0 · 5 · 10 · 15 · 25% | giữ nguyên |
+
+**Sửa bắt buộc:** bỏ điều kiện `armorGroup &&` để **vũ khí cũng Hoàn Hảo được**. Vũ khí là ô
+người chơi để ý nhất mà lại là ô duy nhất bị khoá — không có lý do thiết kế nào cho việc đó.
+
+### 14.2 Hoàn Hảo phải NHÌN THẤY ĐƯỢC
+
+Hiện Hoàn Hảo chỉ đổi tên và số. Theo đúng tinh thần phần 1, nó phải lên người:
+
+- **Đường khảm ngực** (`hEngrave`) đổi sang **vàng kim + dày gấp đôi**, thay vì màu độ hiếm
+- Thêm **một cặp tua kim loại nhỏ** ở mép vai giáp
+- Ở túi đồ: viền ô **nhấp nháy chậm** thay vì viền tĩnh
+
+---
+
+## 15. Xoá save cũ
+
+Theo quyết định: **clear data**, không migrate.
+
+- Thêm `const SAVE_VERSION = 3;` (hoặc số kế tiếp), ghi vào payload của `saveGame()`.
+- `loadGame()` đọc `d.ver`; khác `SAVE_VERSION` ⇒ **xoá `localStorage['vlcm_save']` và bắt đầu
+  nhân vật mới**, kèm một thông báo giải thích, không im lặng nuốt mất tiến độ.
+- ⇒ Bỏ được `ANCIENT_MIGRATE` và mấy chục dòng backfill trong `loadGame()`. **Đừng xoá vội** —
+  gỡ ở một commit riêng sau khi bản mới chạy ổn, để còn quay lại được.
+- ⚠ Game có đồng bộ cloud qua `postMessage({type:'vlcm:save'})` tới shell React. Xoá bản
+  local mà bản cloud vẫn còn thì lần mở sau nó tải ngược về. **Phải kiểm tra phía shell** —
+  chỗ này nằm ngoài `game.js`.
+
+---
+
+## 16. Việc phải làm trong code — PHẦN 2
+
+Nối tiếp mục 8:
+
+6. `SAVE_VERSION` + xoá save cũ trong `loadGame()`. *(làm trước, để khỏi phải lo tương thích)*
+7. `m.def.drop` thành trường SỐNG: viết lại 46 giá trị theo bảng 13.1, `DROP_SRC` bỏ `chance`.
+8. Bỏ `armorGroup &&` ở dòng roll `perfect` trong `genItem()`.
+9. `it.sect` + `SECT_DROP_BIAS` + chặn mặc sai lớp trong `equipItem()` / `tryAutoEquip()` /
+   `autoEquipBest()`. ⚠ Ba chỗ này đều phải chặn, sót một chỗ là tự-mặc-đồ lách qua được.
+10. Phân giải đồ sai lớp ×2 vật liệu.
+11. Hoàn Hảo lên hình: `hEngrave` đọc `gv.perfect`.
