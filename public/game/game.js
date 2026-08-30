@@ -6892,16 +6892,73 @@ function heroTier(p){
 // `style` chọn bộ tạo hình (vai/mũ/chân/eo), `tint` đổi bảng màu — nên bậc vẫn đọc được qua
 // màu, nhưng mỗi lớp đi theo một dải màu riêng thay vì cả 5 lớp cùng đỏ ở bậc 10.
 const HERO_SETS = {
+  // Dark Knight — giáp tấm nặng: sắt thô → giáp lưới → giáp tấm đen → bắt đầu có vảy → đầu rồng
   thieulam: [
-    { min: 1, name: 'Thiết Vệ', style: 'plate' },
-    { min: 5, name: 'Hắc Giáp', style: 'plate',
-      tint: { lo:'#23262f', hi:'#3d4354', trim:'#8fa6c8', glow:'#6f8ec0' } },
-    { min: 8, name: 'Hỏa Long', style: 'hoalong',
-      tint: { lo:'#5a1418', hi:'#c0342c', trim:'#ffc24a', glow:'#ff6a2a' } },
+    { min:1, name:'Thiết Vệ', style:'plate' },
+    { min:3, name:'Giáp Xích', style:'chain',
+      tint:{ lo:'#3f4654', hi:'#5f6a80', trim:'#8d8256', glow:null } },
+    { min:5, name:'Hắc Giáp', style:'plate',
+      tint:{ lo:'#23262f', hi:'#3d4354', trim:'#8fa6c8', glow:'#6f8ec0' } },
+    { min:7, name:'Vảy Rồng', style:'drake',
+      tint:{ lo:'#3a1f22', hi:'#7a3a34', trim:'#c8a84a', glow:'#c8703a' } },
+    { min:9, name:'Hỏa Long', style:'hoalong',
+      tint:{ lo:'#5a1418', hi:'#c0342c', trim:'#ffc24a', glow:'#ff6a2a' } },
   ],
-  // Bốn lớp còn lại tạm giữ tạo hình `plate` — sẽ thay bằng dòng giáp riêng của từng lớp
-  // (mantle/shard cho Dark Wizard, leaf/feather cho Sylvan Ranger, flame cho Spellblade,
-  // crown cho Dark Lord) sau khi mẫu Hỏa Long được duyệt.
+  // Dark Wizard — VẢI, tuyệt đối không giáp tấm. Đây là lớp dễ làm sai nhất: bản nháp đầu
+  // cho pháp sư đeo vai giáp tấm của hiệp sĩ, nhìn mắc cười.
+  baidasan: [
+    { min:1, name:'Vải Thô', style:'cloth',
+      tint:{ lo:'#4a4038', hi:'#6b5c4c', trim:'#8a7a5c', glow:null } },
+    { min:3, name:'Da Thú', style:'cloth',
+      tint:{ lo:'#3e3228', hi:'#6a5340', trim:'#b09068', glow:null } },
+    { min:5, name:'Nhân Sư', style:'sphinx',
+      tint:{ lo:'#5a4a2c', hi:'#c8b070', trim:'#3ac8c0', glow:'#7ee0d8' } },
+    { min:7, name:'Ma Thuật', style:'arcane',
+      tint:{ lo:'#2a1f4a', hi:'#5a3f9a', trim:'#c0a0ff', glow:'#a88aff' } },
+    { min:9, name:'Hư Vô', style:'arcane',
+      tint:{ lo:'#160f2c', hi:'#3a2a6a', trim:'#7ecbff', glow:'#6ff0ff' } },
+  ],
+  // Sylvan Ranger — da nhẹ, lá & lông vũ. Vai to ngang Hỏa Long ở bậc cuối nhưng NHẸ:
+  // nhiều lớp mảnh thay vì một khối đặc.
+  toanchan: [
+    { min:1, name:'Da Rừng', style:'hide',
+      tint:{ lo:'#4a3c2c', hi:'#6e5a40', trim:'#8a7448', glow:null } },
+    { min:3, name:'Lá Thép', style:'hide',
+      tint:{ lo:'#2f4436', hi:'#4a6b52', trim:'#9aa858', glow:null } },
+    { min:5, name:'Vỏ Sồi', style:'leaf',
+      tint:{ lo:'#24402f', hi:'#3e6b4a', trim:'#8ad86a', glow:'#7ad86a' } },
+    { min:7, name:'Lông Ưng', style:'plume',
+      tint:{ lo:'#2a4a4a', hi:'#4e8a86', trim:'#c8f0e8', glow:'#8fe8dc' } },
+    { min:9, name:'Đại Bàng Trắng', style:'plume',
+      tint:{ lo:'#6a6a58', hi:'#e8e4d4', trim:'#ffd76a', glow:'#fff0c0' } },
+  ],
+  // Spellblade — nửa giáp LỆCH VAI suốt cả 5 dải. Đây là chữ ký của lớp, đừng làm đối xứng.
+  minhgiao: [
+    { min:1, name:'Bán Giáp', style:'halfplate',
+      tint:{ lo:'#4a4038', hi:'#7a6a58', trim:'#9a7a4a', glow:null } },
+    { min:3, name:'Giáp Lệch', style:'halfplate',
+      tint:{ lo:'#4a2f26', hi:'#7a4a36', trim:'#c08a4a', glow:null } },
+    { min:5, name:'Than Hồng', style:'halfplate',
+      tint:{ lo:'#5a2418', hi:'#a84a28', trim:'#ffb060', glow:'#ff8a3a' } },
+    { min:7, name:'Lửa Dữ', style:'halfplate',
+      tint:{ lo:'#6a1e10', hi:'#d85a22', trim:'#ffd08a', glow:'#ff6a1a' } },
+    { min:9, name:'Hoả Ngục', style:'halfplate',
+      tint:{ lo:'#2a0d08', hi:'#ff5a1a', trim:'#fff0c0', glow:'#ffb020' } },
+  ],
+  // Dark Lord — nghi lễ, chỉ huy. KHÔNG gai nhọn kiểu Dark Knight: quý tộc, không phải
+  // chiến binh tuyến đầu. Vai là bệ + răng lược + vải rủ.
+  bug: [
+    { min:1, name:'Lệnh Giáp', style:'regal',
+      tint:{ lo:'#454a30', hi:'#6a7248', trim:'#8a8a58', glow:null } },
+    { min:3, name:'Cận Vệ', style:'regal',
+      tint:{ lo:'#3a4028', hi:'#5e6a3a', trim:'#a8a860', glow:null } },
+    { min:5, name:'Vương Giáp', style:'regal',
+      tint:{ lo:'#2a3020', hi:'#4a5a30', trim:'#d8c060', glow:'#c8d060' } },
+    { min:7, name:'Bạo Chúa', style:'regal',
+      tint:{ lo:'#1e2418', hi:'#3a4a26', trim:'#ffd76a', glow:'#d0e07a' } },
+    { min:9, name:'Ngai Đen', style:'regal',
+      tint:{ lo:'#100e14', hi:'#2a2a34', trim:'#ffd76a', glow:'#c8a0ff' } },
+  ],
 };
 // Bộ giáp ứng với bậc hiệu dụng t. Trả null khi chưa mặc gì (màn chọn lớp, nhân vật mới).
 function heroSet(sectKey, t){
@@ -7034,12 +7091,566 @@ function hShoulderDragon(g, M, st, w, h){
     g.globalAlpha = 1;
   }
 }
-const SET_SHOULDER = { plate: hShoulderPlate, hoalong: hShoulderDragon };
+// ── VAI: các bộ tạo hình còn lại ──
+// Dark Knight II — giáp lưới: tấm vai gọn + lưới xích rủ xuống
+function hShoulderChain(g, M, st, w, h){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(-w * 0.5, h * 0.4);
+  g.quadraticCurveTo(-w * 0.6, -h * 0.85, 0, -h * 0.95);
+  g.quadraticCurveTo(w * 0.8, -h * 0.8, w * 0.88, h * 0.35);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;                                  // lưới xích: chấm so le
+  for (let r = 0; r < 2; r++) for (let i = 0; i < 5; i++){
+    g.beginPath();
+    g.arc(-w * 0.35 + i * w * 0.3, h * 0.5 + r * 4.5 + (i % 2) * 2.2, 2.1, 0, 7);
+    g.fill();
+  }
+  if (st >= 2){                                        // đinh tán
+    g.fillStyle = M.trim;
+    for (let i = 0; i < 3; i++){ g.beginPath(); g.arc(-w * 0.2 + i * w * 0.4, -h * 0.35, 1.8, 0, 7); g.fill(); }
+  }
+}
+// Dark Knight IV — dải CHUYỂN TIẾP: vảy bắt đầu mọc ở mép, sừng cong nhẹ. Nửa hình học
+// nửa sinh vật, để bước sang Hỏa Long không bị hẫng.
+function hShoulderDrake(g, M, st, w, h){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(-w * 0.5, h * 0.5);
+  g.quadraticCurveTo(-w * 0.65, -h * 0.9, 0, -h);
+  g.quadraticCurveTo(w * 0.85, -h * 0.85, w * 0.95, h * 0.4);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;                                  // mép vảy
+  for (let i = 0; i < 4; i++){
+    const x = -w * 0.4 + i * w * 0.36;
+    g.beginPath(); g.moveTo(x, h * 0.35);
+    g.quadraticCurveTo(x + w * 0.18, h * 0.85, x + w * 0.36, h * 0.35);
+    g.closePath(); g.fill();
+  }
+  g.fillStyle = M.trim;                                // sừng cong
+  g.beginPath();
+  g.moveTo(w * 0.3, -h * 0.85);
+  g.quadraticCurveTo(w * 0.95, -h * 1.5, w * 1.25, -h * 0.85);
+  g.quadraticCurveTo(w * 0.8, -h * 1.1, w * 0.45, -h * 0.7);
+  g.closePath(); g.fill();
+  if (st >= 3){
+    g.beginPath();
+    g.moveTo(-w * 0.1, -h * 0.95);
+    g.quadraticCurveTo(w * 0.2, -h * 1.6, w * 0.55, -h * 1.15);
+    g.quadraticCurveTo(w * 0.2, -h * 1.2, -w * 0.05, -h * 0.8);
+    g.closePath(); g.fill();
+  }
+}
+// Dark Wizard I-II — VẢI/LÔNG, tuyệt đối không kim loại. Đây là chỗ bản nháp trước sai:
+// pháp sư mặc áo choàng mà đeo vai giáp tấm của hiệp sĩ.
+function hShoulderCloth(g, M, st, w, h){
+  g.fillStyle = M.lo;                                  // cụm vải rủ
+  g.beginPath();
+  g.moveTo(-w * 0.45, -h * 0.3);
+  g.quadraticCurveTo(w * 0.1, -h * 0.85, w * 0.75, -h * 0.05);
+  g.quadraticCurveTo(w * 0.5, h * 0.95, -w * 0.3, h * 0.7);
+  g.closePath(); g.fill();
+  g.fillStyle = M.hi;                                  // tua lông thú
+  const n = 3 + st;
+  for (let i = 0; i < n; i++){
+    const a = -0.5 + i * (1.5 / Math.max(1, n - 1));
+    const bx = Math.sin(a) * w * 0.6, by = -Math.cos(a) * h * 0.5;
+    g.beginPath();
+    g.moveTo(bx, by);
+    g.quadraticCurveTo(bx + w * 0.25, by + h * 0.35, bx + w * 0.1, by + h * 0.9);
+    g.quadraticCurveTo(bx - w * 0.05, by + h * 0.4, bx - w * 0.12, by);
+    g.closePath(); g.fill();
+  }
+}
+// Dark Wizard III — Nhân Sư: vạt vải CỨNG kẻ sọc kiểu Ai Cập, vẫn không phải tấm giáp
+function hShoulderSphinx(g, M, st, w, h){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(-w * 0.4, -h * 0.4); g.lineTo(w * 0.55, -h * 0.55);
+  g.lineTo(w * 0.95, h * 0.9); g.lineTo(-w * 0.25, h * 0.75);
+  g.closePath(); g.fill();
+  g.fillStyle = M.trim;                                // sọc ngang
+  for (let i = 0; i < 3; i++){
+    const y = -h * 0.15 + i * h * 0.42;
+    g.beginPath();
+    g.moveTo(-w * 0.32, y); g.lineTo(w * (0.68 + i * 0.08), y - h * 0.06);
+    g.lineTo(w * (0.7 + i * 0.08), y + h * 0.14); g.lineTo(-w * 0.3, y + h * 0.2);
+    g.closePath(); g.fill();
+  }
+  if (st >= 2){                                        // khoen kim loại ở đỉnh
+    g.beginPath(); g.ellipse(w * 0.1, -h * 0.55, w * 0.4, h * 0.16, -0.12, 0, 7); g.fill();
+  }
+}
+// Dark Wizard IV-V — mảnh phép LƠ LỬNG thay hẳn cho vai giáp
+function hShoulderArcane(g, M, st, w, h){
+  if (M.glow){                                         // quầng sáng nền
+    g.save(); g.globalAlpha = 0.42; g.fillStyle = M.glow;
+    g.beginPath(); g.ellipse(w * 0.4, -h * 0.5, w * 0.85, h, 0, 0, 7); g.fill(); g.restore();
+  }
+  g.fillStyle = M.hi;
+  const n = 2 + st;
+  for (let i = 0; i < n; i++){
+    const a = -1.0 + i * (2.0 / Math.max(1, n - 1));
+    const r = w * (0.85 + (i % 2) * 0.35);
+    const x = Math.sin(a) * r, y = -Math.cos(a) * h * 1.25, sz = 3 + st * 0.9;
+    g.beginPath();
+    g.moveTo(x, y - sz * 1.7); g.lineTo(x + sz * 0.75, y);
+    g.lineTo(x, y + sz * 1.7); g.lineTo(x - sz * 0.75, y);
+    g.closePath(); g.fill();
+  }
+}
+// Sylvan Ranger I-II — miếng da tròn khâu chỉ
+function hShoulderHide(g, M, st, w, h){
+  g.fillStyle = M.hi;
+  g.beginPath(); g.ellipse(w * 0.2, -h * 0.05, w * 0.72, h * 0.72, -0.15, 0, 7); g.fill();
+  g.fillStyle = M.lo;
+  g.beginPath(); g.ellipse(w * 0.28, h * 0.2, w * 0.6, h * 0.42, -0.15, 0, 7); g.fill();
+  g.strokeStyle = M.trim; g.lineWidth = 1; g.setLineDash([2, 2]);
+  g.beginPath(); g.ellipse(w * 0.2, -h * 0.05, w * 0.55, h * 0.55, -0.15, 0, 7); g.stroke();
+  g.setLineDash([]);
+  if (st >= 3){                                        // tấm lá kim loại khâu thêm
+    g.fillStyle = M.trim;
+    for (const d of [-0.4, 0.25]){
+      g.beginPath(); g.ellipse(w * 0.55, h * d, w * 0.22, h * 0.34, 0.5, 0, 7); g.fill();
+    }
+  }
+}
+// Sylvan Ranger III — lá xếp lớp
+function hShoulderLeaf(g, M, st, w, h){
+  const n = 2 + st;
+  for (let i = n - 1; i >= 0; i--){
+    g.fillStyle = i % 2 ? M.lo : M.hi;
+    const k = 1 - i * 0.12;
+    g.save(); g.rotate(-0.45 + i * 0.24);
+    g.beginPath();
+    g.moveTo(-w * 0.1, 0);
+    g.quadraticCurveTo(w * 0.45 * k, -h * 0.6 * k, w * 1.05 * k, 0);
+    g.quadraticCurveTo(w * 0.45 * k, h * 0.6 * k, -w * 0.1, 0);
+    g.closePath(); g.fill();
+    g.restore();
+  }
+  g.strokeStyle = M.trim; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(0, h * 0.15); g.lineTo(w * 0.95, -h * 0.2); g.stroke();
+}
+// Sylvan Ranger IV-V — cụm lông vũ hất ra sau. To ngang vai giáp Hỏa Long nhưng NHẸ:
+// nhiều lớp mảnh thay vì một khối đặc.
+function hShoulderPlume(g, M, st, w, h){
+  const n = 3 + st;
+  for (let i = n - 1; i >= 0; i--){
+    g.fillStyle = i % 2 ? M.lo : M.hi;
+    const L = w * (1.5 - i * 0.12), W = h * (0.30 - i * 0.02);
+    g.save(); g.rotate(-0.15 - i * 0.2);
+    g.beginPath();
+    g.moveTo(-w * 0.15, 0);
+    g.quadraticCurveTo(L * 0.5, -W, L, -W * 0.25);
+    g.quadraticCurveTo(L * 0.55, W * 0.55, -w * 0.15, W * 0.5);
+    g.closePath(); g.fill();
+    g.restore();
+  }
+  g.fillStyle = M.trim;                                // gốc lông bọc kim loại
+  g.beginPath(); g.ellipse(-w * 0.05, h * 0.05, w * 0.3, h * 0.45, 0, 0, 7); g.fill();
+}
+// Spellblade — LỆCH VAI: một bên giáp dày, một bên trần. Đây là chữ ký của lớp, giữ suốt
+// cả 5 dải. Hàm nhận `side` và CỐ Ý vẽ khác nhau hai bên.
+function hShoulderHalf(g, M, st, w, h, side){
+  if (side > 0){                                       // bên TRẦN — chỉ còn dây đai chéo
+    g.fillStyle = M.lo;
+    g.beginPath();
+    g.moveTo(-w * 0.5, -h * 0.15); g.lineTo(-w * 0.15, -h * 0.35);
+    g.lineTo(w * 0.1, h * 0.9); g.lineTo(-w * 0.25, h * 1.05);
+    g.closePath(); g.fill();
+    if (st >= 3){                                      // vết cháy trên da trần
+      g.save(); g.globalAlpha = 0.5; g.fillStyle = M.glow || '#ff7a3a';
+      for (let i = 0; i < 3; i++){
+        g.beginPath(); g.ellipse(w * 0.2 + i * w * 0.16, -h * 0.1 + i * h * 0.3, 1.6, 3.2, 0.4, 0, 7); g.fill();
+      }
+      g.restore();
+    }
+    return;
+  }
+  g.fillStyle = M.hi;                                  // bên CÓ giáp — dày hơn plate thường
+  g.beginPath();
+  g.moveTo(-w * 0.55, h * 0.55);
+  g.quadraticCurveTo(-w * 0.7, -h * 1.05, 0, -h * 1.15);
+  g.quadraticCurveTo(w * 0.9, -h * 0.95, w * 1.05, h * 0.5);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;
+  g.beginPath();
+  g.moveTo(-w * 0.55, h * 0.55); g.lineTo(w * 1.05, h * 0.5);
+  g.lineTo(w * 0.85, h); g.lineTo(-w * 0.4, h * 1.05);
+  g.closePath(); g.fill();
+  if (st >= 2){                                        // lửa liếm dọc vai
+    g.fillStyle = M.glow || M.trim;
+    const n = 1 + st;
+    for (let i = 0; i < n; i++){
+      const a = -0.7 + i * (1.4 / Math.max(1, n - 1));
+      const bx = Math.sin(a) * w * 0.72, by = -Math.cos(a) * h * 0.95, L = 7 + st * 3.5;
+      g.beginPath();
+      g.moveTo(bx - 2.2, by);
+      g.quadraticCurveTo(bx + Math.sin(a) * L * 0.4 - 3.2, by - Math.cos(a) * L * 0.7,
+                         bx + Math.sin(a) * L, by - Math.cos(a) * L);
+      g.quadraticCurveTo(bx + Math.sin(a) * L * 0.5 + 3.2, by - Math.cos(a) * L * 0.5, bx + 2.2, by);
+      g.closePath(); g.fill();
+    }
+  }
+}
+// Dark Lord — bệ vai nghi lễ: răng lược + vải rủ. KHÔNG gai nhọn kiểu Dark Knight;
+// Dark Lord là quý tộc chỉ huy, không phải chiến binh tuyến đầu.
+function hShoulderRegal(g, M, st, w, h){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(-w * 0.5, h * 0.35); g.lineTo(-w * 0.4, -h * 0.7);
+  g.lineTo(w * 0.95, -h * 0.5); g.lineTo(w * 0.88, h * 0.45);
+  g.closePath(); g.fill();
+  g.fillStyle = M.trim;                                // răng lược
+  const n = 2 + st;
+  for (let i = 0; i < n; i++){
+    const x = -w * 0.3 + i * (w * 1.05 / n), hh = h * (0.5 + (i % 2) * 0.25);
+    g.beginPath();
+    g.moveTo(x, -h * 0.6); g.lineTo(x + w * 0.15, -h * 0.62);
+    g.lineTo(x + w * 0.075, -h * 0.6 - hh);
+    g.closePath(); g.fill();
+  }
+  g.fillStyle = M.lo; g.globalAlpha = 0.92;            // vải rủ
+  g.beginPath();
+  g.moveTo(-w * 0.4, h * 0.35); g.lineTo(w * 0.88, h * 0.42);
+  g.quadraticCurveTo(w * 0.62, h * (1.5 + st * 0.28), -w * 0.12, h * (1.25 + st * 0.22));
+  g.closePath(); g.fill();
+  g.globalAlpha = 1;
+}
+
+// ── CHÓP MŨ: các bộ còn lại ──
+// Dark Wizard I-II — mũ TRÙM mềm rủ che nửa mặt. Pháp sư không đội mũ sắt.
+function hCrestHood(g, M, st, ps){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(58, 82);
+  g.quadraticCurveTo(56, 48, 80, 44);
+  g.quadraticCurveTo(104, 48, 102, 82);
+  g.quadraticCurveTo(80, 74, 58, 82);
+  g.closePath(); g.fill();
+  if (!ps.back){
+    g.fillStyle = 'rgba(0,0,0,.55)';                   // bóng trong mũ trùm nuốt mất khuôn mặt
+    g.beginPath(); g.ellipse(80, 72, 15, 13, 0, 0, 7); g.fill();
+    if (st >= 2){                                      // chỉ còn hai đốm mắt trong bóng tối
+      g.fillStyle = M.glow || '#a88aff';
+      g.beginPath(); g.ellipse(74, 72, 2.4, 2.8, 0, 0, 7); g.fill();
+      g.beginPath(); g.ellipse(86, 72, 2.4, 2.8, 0, 0, 7); g.fill();
+    }
+  }
+  g.fillStyle = M.lo;                                  // chóp mũ rủ ra sau
+  g.beginPath();
+  g.moveTo(74, 48); g.lineTo(86, 48);
+  g.quadraticCurveTo(82, 34, 70 - st * 2, 32);
+  g.quadraticCurveTo(74, 42, 74, 48);
+  g.closePath(); g.fill();
+}
+// Dark Wizard III — Nhân Sư: mũ nemes hai vạt vải cứng xoè hai bên má, kẻ sọc, rắn hổ mang
+function hCrestNemes(g, M, st, ps){
+  g.fillStyle = M.hi;
+  for (const s of [-1, 1]){
+    g.beginPath();
+    g.moveTo(80 + s * 8, 54); g.lineTo(80 + s * 26, 66);
+    g.lineTo(80 + s * 22, 94); g.lineTo(80 + s * 9, 88);
+    g.closePath(); g.fill();
+  }
+  g.fillStyle = M.trim;                                // sọc ngang đặc trưng
+  for (const s of [-1, 1]) for (let i = 0; i < 3; i++){
+    const y = 68 + i * 8;
+    g.beginPath();
+    g.moveTo(80 + s * 10, y); g.lineTo(80 + s * (24 - i * 1.5), y + 2.5);
+    g.lineTo(80 + s * (24 - i * 1.5), y + 5); g.lineTo(80 + s * 10, y + 3);
+    g.closePath(); g.fill();
+  }
+  g.beginPath();                                       // vành trán
+  g.moveTo(60, 58); g.lineTo(100, 58); g.lineTo(98, 64); g.lineTo(62, 64);
+  g.closePath(); g.fill();
+  if (!ps.back && st >= 2){                            // rắn hổ mang dựng giữa trán
+    g.fillStyle = M.glow || '#7ee0d8';
+    g.beginPath();
+    g.moveTo(80, 58); g.quadraticCurveTo(75, 48, 80, 44);
+    g.quadraticCurveTo(85, 48, 80, 58);
+    g.closePath(); g.fill();
+  }
+}
+// Dark Wizard IV-V — mũ nhọn cao + vòng hào quang sau đầu
+function hCrestHalo(g, M, st, ps){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(60, 60);
+  g.quadraticCurveTo(74, 40 - st * 5, 83, 30 - st * 6);
+  g.quadraticCurveTo(88, 46, 100, 60);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;                                  // vành mũ
+  g.beginPath(); g.ellipse(80, 60, 24, 5.5, 0, 0, 7); g.fill();
+  if (st >= 2){                                        // vòng hào quang — nét hở, không phải đĩa đặc
+    g.save();
+    g.strokeStyle = M.glow || '#7ecbff'; g.lineWidth = 2.2; g.globalAlpha = 0.85;
+    g.beginPath(); g.ellipse(80, 62, 26, 9, 0, 0, 7); g.stroke();
+    g.restore();
+  }
+  if (st >= 3 && !ps.back){                            // rune trên vành
+    g.fillStyle = M.glow || '#7ecbff';
+    for (let i = 0; i < 3; i++){ g.beginPath(); g.arc(70 + i * 10, 60, 1.6, 0, 7); g.fill(); }
+  }
+}
+// Sylvan Ranger I-II — mũ da mềm có vành + một chiếc lông cắm nghiêng
+function hCrestCap(g, M, st, ps){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(61, 62); g.quadraticCurveTo(80, 44, 99, 62);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;
+  g.beginPath(); g.ellipse(80, 62, 23, 4.5, 0, 0, 7); g.fill();
+  if (st >= 2){
+    g.fillStyle = M.trim;
+    g.beginPath();
+    g.moveTo(94, 58);
+    g.quadraticCurveTo(110, 46, 114, 34);
+    g.quadraticCurveTo(104, 46, 93, 55);
+    g.closePath(); g.fill();
+  }
+}
+// Sylvan Ranger III — hai chiếc lá dựng như sừng nai non
+function hCrestLeaf(g, M, st, ps){
+  g.fillStyle = M.hi;
+  for (const s of [-1, 1]){
+    g.beginPath();
+    g.moveTo(80 + s * 10, 62);
+    g.quadraticCurveTo(80 + s * 24, 48, 80 + s * 16, 32 - st * 3);
+    g.quadraticCurveTo(80 + s * 12, 48, 80 + s * 7, 62);
+    g.closePath(); g.fill();
+    g.strokeStyle = M.trim; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(80 + s * 9, 60); g.lineTo(80 + s * 16, 34 - st * 3); g.stroke();
+  }
+  g.fillStyle = M.lo;                                  // dây quấn trán
+  g.beginPath();
+  g.moveTo(61, 60); g.lineTo(99, 60); g.lineTo(98, 65); g.lineTo(62, 65);
+  g.closePath(); g.fill();
+}
+// Sylvan Ranger IV-V — vương miện gạc nai. Nhánh phụ mọc thêm theo bậc.
+function hCrestAntler(g, M, st, ps){
+  g.fillStyle = M.hi;
+  for (const s of [-1, 1]){
+    g.beginPath();
+    g.moveTo(80 + s * 11, 62);
+    g.quadraticCurveTo(80 + s * 20, 44, 80 + s * 17, 26 - st * 2);
+    g.quadraticCurveTo(80 + s * 15, 44, 80 + s * 8, 62);
+    g.closePath(); g.fill();
+    for (let i = 0; i < 1 + Math.min(2, st - 1); i++){
+      const y = 48 - i * 10;
+      g.beginPath();
+      g.moveTo(80 + s * 17, y);
+      g.quadraticCurveTo(80 + s * 30, y - 6, 80 + s * 33, y - 14);
+      g.quadraticCurveTo(80 + s * 26, y - 4, 80 + s * 16, y + 3);
+      g.closePath(); g.fill();
+    }
+  }
+  g.fillStyle = M.trim;
+  g.beginPath();
+  g.moveTo(60, 59); g.lineTo(100, 59); g.lineTo(98, 66); g.lineTo(62, 66);
+  g.closePath(); g.fill();
+}
+// Spellblade — mặt nạ NỬA MẶT, khe mắt rực, mào lửa. Cùng lối lệch như vai giáp.
+function hCrestHalfMask(g, M, st, ps){
+  if (!ps.back){
+    g.fillStyle = M.hi;
+    g.beginPath();
+    g.moveTo(60, 60); g.lineTo(82, 58); g.lineTo(82, 88); g.lineTo(62, 84);
+    g.closePath(); g.fill();
+    g.fillStyle = M.glow || '#ff8a3a';
+    g.beginPath();
+    g.moveTo(64, 71); g.lineTo(78, 69); g.lineTo(78, 75); g.lineTo(64, 76);
+    g.closePath(); g.fill();
+    if (st >= 3){                                      // vết nứt để lộ lửa bên trong
+      g.strokeStyle = M.glow || '#ffb020'; g.lineWidth = 1.3;
+      g.beginPath(); g.moveTo(68, 60); g.lineTo(72, 68); g.lineTo(66, 78); g.stroke();
+    }
+  } else {
+    g.fillStyle = M.lo;
+    g.beginPath(); g.ellipse(80, 72, 20, 15, 0, 0, 7); g.fill();
+  }
+  if (st >= 2){                                        // mào lửa trên đỉnh
+    g.fillStyle = M.glow || M.trim;
+    for (let i = 0; i < 3; i++){
+      const x = 72 + i * 8, hh = 14 + st * 3 - Math.abs(i - 1) * 5;
+      g.beginPath();
+      g.moveTo(x - 3, 56);
+      g.quadraticCurveTo(x + 2, 56 - hh * 0.6, x, 56 - hh);
+      g.quadraticCurveTo(x - 1, 56 - hh * 0.5, x + 3, 56);
+      g.closePath(); g.fill();
+    }
+  }
+}
+// Dark Lord — vương miện. Bậc tối cao thì nó LƠ LỬNG cách đầu vài pixel, không chạm.
+function hCrestCrown(g, M, st, ps){
+  const lift = st >= 4 ? 5 : 0;
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(59, 58 - lift); g.lineTo(101, 58 - lift);
+  g.lineTo(99, 48 - lift); g.lineTo(61, 48 - lift);
+  g.closePath(); g.fill();
+  g.fillStyle = M.trim;
+  const n = st >= 3 ? 5 : 3, mid = Math.floor(n / 2);
+  for (let i = 0; i < n; i++){
+    const x = 64 + i * (32 / (n - 1));
+    const hh = 12 + st * 2.5 - (i === mid ? -5 : Math.abs(i - mid) * 3);
+    g.beginPath();
+    g.moveTo(x - 3.2, 50 - lift); g.lineTo(x + 3.2, 50 - lift);
+    g.lineTo(x, 50 - lift - hh);
+    g.closePath(); g.fill();
+  }
+  if (st >= 3 && !ps.back){                            // mạng che mặt bằng dây kim loại
+    g.save(); g.strokeStyle = M.trim; g.lineWidth = 0.9; g.globalAlpha = 0.75;
+    for (let i = 0; i < 4; i++){
+      g.beginPath(); g.moveTo(66 + i * 9, 60 - lift); g.lineTo(64 + i * 9, 84); g.stroke();
+    }
+    g.restore();
+  }
+}
+
+// ── GIÁP CHÂN: các bộ còn lại ──
+// Sylvan Ranger — giày nhẹ, dây quấn, cựa sau gót
+function hGreaveLight(g, M, st, x0, dir){
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(x0 + dir * 2, 182); g.lineTo(x0 + dir * 17, 182);
+  g.lineTo(x0 + dir * 18, 200); g.lineTo(x0 + dir * 1, 200);
+  g.closePath(); g.fill();
+  g.fillStyle = M.lo;                                  // hai dây quấn ống chân
+  for (let i = 0; i < 2; i++){
+    const y = 170 + i * 7;
+    g.beginPath();
+    g.moveTo(x0 + dir * 1, y); g.lineTo(x0 + dir * 17, y - 2);
+    g.lineTo(x0 + dir * 17, y + 2.6); g.lineTo(x0 + dir * 1, y + 4.6);
+    g.closePath(); g.fill();
+  }
+  if (st >= 2){
+    g.fillStyle = M.trim;
+    g.beginPath(); g.ellipse(x0 + dir * 10, 176, 6.5, 9, dir * 0.35, 0, 7); g.fill();
+  }
+  if (st >= 3){                                        // cựa sau gót
+    g.fillStyle = M.trim;
+    g.beginPath();
+    g.moveTo(x0 + dir * 2, 202); g.lineTo(x0 + dir * 2, 210); g.lineTo(x0 - dir * 7, 208);
+    g.closePath(); g.fill();
+  }
+}
+// Dark Wizard — gấu áo choàng phủ xuống, KHÔNG có kim loại. Bậc cao thì gấu tan thành khói.
+function hGreaveRobe(g, M, st, x0, dir){
+  g.fillStyle = M.lo;
+  g.beginPath();
+  g.moveTo(x0, 168);
+  g.quadraticCurveTo(x0 + dir * 20, 178, x0 + dir * 19, 202);
+  g.lineTo(x0 + dir * 1, 200);
+  g.closePath(); g.fill();
+  g.fillStyle = M.trim;                                // viền thêu ở gấu
+  g.beginPath();
+  g.moveTo(x0 + dir * 1, 196); g.lineTo(x0 + dir * 19, 198);
+  g.lineTo(x0 + dir * 19, 202); g.lineTo(x0 + dir * 1, 200);
+  g.closePath(); g.fill();
+  if (st >= 3){
+    g.save(); g.fillStyle = M.lo;
+    for (let i = 0; i < 3; i++){
+      g.globalAlpha = 0.5 - i * 0.14;
+      g.beginPath(); g.ellipse(x0 + dir * (4 + i * 6), 206 + i * 3, 4.5, 3, 0, 0, 7); g.fill();
+    }
+    g.restore();
+  }
+}
+
+// ── ĐAI LƯNG: các bộ còn lại ──
+// Dark Wizard — đai vải quấn chéo, nút thắt lệch, đuôi đai rủ
+function hBeltSash(g, M, st){
+  g.fillStyle = M.lo;
+  g.beginPath();
+  g.moveTo(54, 140); g.lineTo(106, 136); g.lineTo(106, 148); g.lineTo(54, 152);
+  g.closePath(); g.fill();
+  g.fillStyle = M.trim;
+  g.beginPath(); g.ellipse(96, 143, 6.5, 5.5, 0.2, 0, 7); g.fill();
+  g.fillStyle = M.lo;                                  // đuôi đai — dài thêm theo bậc
+  g.beginPath();
+  g.moveTo(94, 147); g.lineTo(103, 146);
+  g.quadraticCurveTo(101, 166 + st * 5, 92, 172 + st * 5);
+  g.quadraticCurveTo(93, 158, 90, 148);
+  g.closePath(); g.fill();
+  if (st >= 2){                                        // rune chạy dọc đai
+    g.fillStyle = M.glow || M.trim;
+    for (let i = 0; i < 4; i++){ g.beginPath(); g.arc(60 + i * 11, 145 - i * 0.8, 1.5, 0, 7); g.fill(); }
+  }
+}
+// Sylvan Ranger — váy lá/lông so le
+function hBeltLeafSkirt(g, M, st){
+  g.fillStyle = M.lo; g.fillRect(56, 139, 48, 6);
+  const n = 4 + st;
+  for (let i = 0; i < n; i++){
+    const x = 58 + i * (48 / n);
+    g.fillStyle = i % 2 ? M.hi : M.lo;
+    g.beginPath();
+    g.moveTo(x, 145);
+    g.quadraticCurveTo(x + 7, 152, x + 3.5, 162 + st * 2);
+    g.quadraticCurveTo(x, 152, x - 3, 145);
+    g.closePath(); g.fill();
+  }
+  g.fillStyle = M.trim;
+  g.beginPath(); g.ellipse(80, 142, 5.5, 4.5, 0, 0, 7); g.fill();
+}
+// Dark Lord — đai bản rộng + huy hiệu + vải rủ dài giữa hai chân
+function hBeltDrape(g, M, st){
+  g.fillStyle = M.lo; g.fillRect(53, 136, 54, 11 + st);
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(80, 132); g.lineTo(90, 141); g.lineTo(85, 154); g.lineTo(75, 154); g.lineTo(70, 141);
+  g.closePath(); g.fill();
+  g.fillStyle = M.trim;
+  g.beginPath(); g.ellipse(80, 143, 3.6, 4.6, 0, 0, 7); g.fill();
+  g.save(); g.fillStyle = M.lo; g.globalAlpha = 0.94;
+  g.beginPath();
+  g.moveTo(70, 150); g.lineTo(90, 150);
+  g.quadraticCurveTo(88, 176 + st * 8, 80, 184 + st * 9);
+  g.quadraticCurveTo(72, 176 + st * 8, 70, 150);
+  g.closePath(); g.fill();
+  g.restore();
+  if (st >= 2){                                        // tua kim loại ở gấu vải
+    g.fillStyle = M.trim;
+    for (let i = 0; i < 3; i++){ g.beginPath(); g.arc(74 + i * 6, 182 + st * 8, 1.8, 0, 7); g.fill(); }
+  }
+}
+// Spellblade — CHỈ MỘT tấm hông, khoá lệch. Cùng chữ ký lệch như vai giáp và mặt nạ.
+function hBeltHalf(g, M, st){
+  g.fillStyle = M.lo; g.fillRect(56, 138, 48, 7 + st);
+  g.fillStyle = M.trim;
+  g.beginPath();
+  g.moveTo(68, 136); g.lineTo(77, 143); g.lineTo(70, 152); g.lineTo(62, 143);
+  g.closePath(); g.fill();
+  g.fillStyle = M.hi;
+  g.beginPath();
+  g.moveTo(64, 145); g.lineTo(49, 145);
+  g.lineTo(53, 166 + st * 3); g.lineTo(65, 161 + st * 2);
+  g.closePath(); g.fill();
+  if (st >= 3){                                        // mép ửng đỏ như còn nóng
+    g.save(); g.fillStyle = M.glow || '#ff7a3a'; g.globalAlpha = 0.6;
+    g.beginPath();
+    g.moveTo(53, 166 + st * 3); g.lineTo(65, 161 + st * 2);
+    g.lineTo(64, 165 + st * 2); g.lineTo(52, 170 + st * 3);
+    g.closePath(); g.fill(); g.restore();
+  }
+}
+
+const SET_SHOULDER = {
+  plate: hShoulderPlate, chain: hShoulderChain, drake: hShoulderDrake, hoalong: hShoulderDragon,
+  cloth: hShoulderCloth, sphinx: hShoulderSphinx, arcane: hShoulderArcane,
+  hide: hShoulderHide, leaf: hShoulderLeaf, plume: hShoulderPlume,
+  halfplate: hShoulderHalf, regal: hShoulderRegal,
+};
 function hPauldrons(g, M, gv, S, ps){
   const t = gv ? gv.t : 0;
-  if (t < 2.5) return;
-  const st = hStage(t), fn = SET_SHOULDER[(S && S.style) || 'plate'] || hShoulderPlate;
-  const dragon = ((S && S.style) || 'plate') === 'hoalong';
+  const _style = (S && S.style) || 'plate';
+  // Spellblade vào sớm hơn: chữ ký của lớp là LỆCH VAI (một bên giáp, một bên trần), mà dải I
+  // của nó tên là "Bán Giáp" — chặn ở 2.5 thì dải đó không có vai nào cả và cái tên nói dối.
+  if (t < (_style === 'halfplate' ? 1.2 : 2.5)) return;
+  const st = hStage(t), fn = SET_SHOULDER[_style] || hShoulderPlate;
+  const dragon = _style === 'hoalong';
   for (const side of [-1, 1]){
     // Xoay quanh KHỚP VAI theo ~35% góc cánh tay. Trước đây vai giáp chỉ nằm trong khớp
     // `lean` nên vung tay mà tấm vai đứng im như dán lên ngực. Giáp thật gắn vào bả vai nên
@@ -7056,10 +7667,10 @@ function hPauldrons(g, M, gv, S, ps){
     const rim = plusRim(M, gv);
     if (rim){   // viền cường hoá: chính hình đó, to hơn 12%, màu sáng, nằm dưới
       g.save(); g.globalAlpha = 0.34 + clamp(((gv.plus || 0) - 3) / 8, 0, 1) * 0.34; g.scale(1.12, 1.12);
-      fn(g, { lo:rim, hi:rim, trim:rim, glow:rim }, st, w, h);
+      fn(g, { lo:rim, hi:rim, trim:rim, glow:rim }, st, w, h, side);
       g.restore();
     }
-    fn(g, M, st, w, h);
+    fn(g, M, st, w, h, side);
     g.restore();
   }
 }
@@ -7117,7 +7728,12 @@ function hCrestDragon(g, M, st, ps){
     g.closePath(); g.fill();
   }
 }
-const SET_CREST = { plate: hCrestHorn, hoalong: hCrestDragon };
+const SET_CREST = {
+  plate: hCrestHorn, chain: hCrestHorn, drake: hCrestDragon, hoalong: hCrestDragon,
+  cloth: hCrestHood, sphinx: hCrestNemes, arcane: hCrestHalo,
+  hide: hCrestCap, leaf: hCrestLeaf, plume: hCrestAntler,
+  halfplate: hCrestHalfMask, regal: hCrestCrown,
+};
 function hHelmCrest(g, M, gv, ps, S){
   const t = gv ? gv.t : 0;
   if (t < 4.5) return;
@@ -7188,7 +7804,12 @@ function hGreaveDragon(g, M, st, x0, dir){
     }
   }
 }
-const SET_LEG = { plate: hGreavePlate, hoalong: hGreaveDragon };
+const SET_LEG = {
+  plate: hGreavePlate, chain: hGreavePlate, drake: hGreaveDragon, hoalong: hGreaveDragon,
+  cloth: hGreaveRobe, sphinx: hGreaveRobe, arcane: hGreaveRobe,
+  hide: hGreaveLight, leaf: hGreaveLight, plume: hGreaveLight,
+  halfplate: hGreavePlate, regal: hGreavePlate,
+};
 function hGreave(g, M, gv, side, S){
   const t = gv ? gv.t : 0;
   if (t < 3.5) return;
@@ -7247,7 +7868,12 @@ function hBeltDragon(g, M, st){
     g.closePath(); g.fill();
   }
 }
-const SET_HIP = { plate: hBeltPlate, hoalong: hBeltDragon };
+const SET_HIP = {
+  plate: hBeltPlate, chain: hBeltPlate, drake: hBeltDragon, hoalong: hBeltDragon,
+  cloth: hBeltSash, sphinx: hBeltSash, arcane: hBeltSash,
+  hide: hBeltLeafSkirt, leaf: hBeltLeafSkirt, plume: hBeltLeafSkirt,
+  halfplate: hBeltHalf, regal: hBeltDrape,
+};
 function hBelt(g, M, gv, S){
   const t = gv ? gv.t : 0;
   if (t < 2) return;

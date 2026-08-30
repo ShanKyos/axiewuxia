@@ -154,12 +154,33 @@ hiệp sĩ — cả 5 lớp trông như mặc chung một bộ. Mỗi lớp ph�
 `{ min, name, style, tint }` · `heroSet(sect, t)` chọn bộ theo bậc · `hSetMetal(M, S)` đè
 bảng màu. Bậc vẫn đọc được qua màu, nhưng mỗi lớp đi theo một dải màu riêng.
 
-- Dark Knight đã có 3 bộ: **Thiết Vệ → Hắc Giáp → Hỏa Long** (`style:'hoalong'` — vai giáp là
-  một ĐẦU RỒNG, mũ sừng rồng, ống chân vảy, váy vảy). Bốn lớp còn lại **chưa làm**, đang tạm
-  dùng `style:'plate'`.
-- Bảng tra: `SET_SHOULDER` · `SET_CREST` · `SET_LEG` · `SET_HIP`. Thêm bộ mới = thêm 4 hàm.
+**Đủ 25 bộ = 5 lớp × 5 dải** (dải theo bậc: 1-2 · 3-4 · 5-6 · 7-8 · 9-10). Đặc tả đầy đủ ở
+`docs/BO_GIAP.md`.
+
+| | I | II | III | IV | V |
+|---|---|---|---|---|---|
+| Dark Knight | Thiết Vệ | Giáp Xích | Hắc Giáp | Vảy Rồng | **Hỏa Long** |
+| Dark Wizard | Vải Thô | Da Thú | Nhân Sư | Ma Thuật | Hư Vô |
+| Sylvan Ranger | Da Rừng | Lá Thép | Vỏ Sồi | Lông Ưng | Đại Bàng Trắng |
+| Spellblade | Bán Giáp | Giáp Lệch | Than Hồng | Lửa Dữ | Hoả Ngục |
+| Dark Lord | Lệnh Giáp | Cận Vệ | Vương Giáp | Bạo Chúa | Ngai Đen |
+
+- 12 `style`, mỗi cái phải có đủ **4 hàm** trong `SET_SHOULDER` · `SET_CREST` · `SET_LEG` ·
+  `SET_HIP` (test bắt nếu thiếu).
+- ⚠ **Dark Wizard TUYỆT ĐỐI không dùng `plate`/`chain`/`drake`/`halfplate`/`regal`** — chỉ
+  `cloth` · `sphinx` · `arcane`. Pháp sư mặc áo choàng mà đeo vai giáp tấm là lỗi đã mắc một
+  lần rồi; test khoá lại bằng một khẳng định riêng.
+- ⚠ **Spellblade phải `halfplate` ở CẢ 5 dải** — chữ ký của lớp là lệch vai (một bên giáp,
+  một bên trần). Hàm vai nhận thêm tham số `side` và CỐ Ý vẽ khác nhau hai bên. Ngưỡng hiện
+  của `hPauldrons` cũng hạ riêng cho `halfplate` (1.2 thay vì 2.5) để dải I — vốn tên là
+  "Bán Giáp" — có vai ngay từ đầu.
 - ⚠ `G.upper()` phải nhận **SM** (bảng màu BỘ) chứ không phải `M` (bảng màu BẬC), nếu không
   mũ ra một màu còn vai ra màu khác.
+
+Test: `node <scratchpad>/test_sets.js` — bắt buộc 5 lớp khác nhau >3000 px ở bậc cuối, 5 dải
+mỗi lớp khác nhau tuần tự, và Spellblade lệch vai ở mọi dải. ⚠ Khi đo lệch vai phải vẽ **riêng
+lớp `hPauldrons`**: đo trên nguyên hình sẽ bắt được **thanh kiếm** (mọi lớp đều cầm một tay)
+chứ không bắt được vai giáp — đối chứng Dark Knight lẽ ra 0 mà ra 215 px vì lý do đó.
 
 ### Cường hoá +0..+11 (`plusStage`)
 
