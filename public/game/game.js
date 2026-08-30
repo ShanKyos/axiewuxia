@@ -12337,79 +12337,110 @@ function matTip(name, desc, val){
   const t = desc ? `${name} — ${desc}\n${val}` : `${name}\n${val}`;
   return t.replace(/"/g, '&quot;');
 }
-function renderBag(){
-  let html = `<h3>Túi Đồ (${player.inv.length}/30)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div class="stat-sec">VẬT LIỆU QUÝ — di chuột vào ô để xem tên & công dụng</div>`;
-  html += `<div class="mat-grid">`;
-  for (const r of MAT_ROWS){
-    const v = r.get();
-    html += `<div class="mat-cell" title="${matTip(r.name, r.desc, v)}">
-      <img src="assets/items/mat_${r.icon}.png" onerror="this.style.display='none'" alt="">
-      <span class="mc-count" style="color:${r.color}">${fmtCount(v)}</span></div>`;
-  }
-  html += `<div class="mat-cell" title="${matTip('Bạc', 'tiêu xài khắp Lunacia', player.silver)}">
-    <img src="assets/items/mat_bac.png" onerror="this.style.display='none'" alt="">
-    <span class="mc-count" style="color:#7ecbff">${fmtCount(player.silver)}</span></div>`;
-  html += `<div class="mat-cell" title="${matTip('Công Huân Lệnh', 'Truy Nã Lệnh mỗi ngày · quay Sảnh Cầu May', player.congHuan||0)}">
-    <span class="mc-glyph">🎖</span>
-    <span class="mc-count" style="color:#ffb15c">${fmtCount(player.congHuan||0)}</span></div>`;
-  html += `</div>`;
-  // Tứ Châu — châu quý ép trang bị tại Lò Rèn
-  const jw = player.jewels || {};
-  html += `<div class="stat-sec">TỨ CHÂU — ép tại Lò Rèn / Lò Bảo Chứng</div>`;
-  html += `<div class="mat-grid">`;
-  for (const jk of ['chucPhuc','linhHon','sinhMenh','honDon']){
-    html += `<div class="mat-cell" title="${matTip(JEWEL_NAMES[jk], '', jw[jk]||0)}">
-      <span class="mc-glyph" style="color:${JEWEL_COLORS[jk]}">◆</span>
-      <span class="mc-count" style="color:${JEWEL_COLORS[jk]}">${fmtCount(jw[jk]||0)}</span></div>`;
-  }
-  html += `</div>`;
-  // Bảo Hạp từ Ma Tôn Giáng Thế — mở lấy trang bị, tầng IV+ có tỉ lệ ra Cổ Thần (không pity)
-  const bh = player.baohap || {};
-  const bhTiers = Object.keys(bh).filter(t => bh[t] > 0);
-  if (bhTiers.length){
-    html += `<div class="stat-sec">BẢO HẠP — Hung Thần Giáng Thế</div>`;
-    for (const t of bhTiers){
-      const d = BAOHAP_TIERS[t];
-      html += `<div class="inv-item"><span class="s-name"><b style="color:${d.color}">${d.name}</b> ×${bh[t]}<br>
-        <span class="item-tip">LV${d.min}-${d.max === 999 ? '100+' : d.max} · trang bị cao cấp${d.ancient ? ` · <b style="color:#3ac88a">Cổ Thần ${Math.round(d.ancient*100)}%</b>` : ''} · châu quý</span></span>
-        <span><button class="mini-btn" onclick="openBaoHap(${t})">Mở Hạp</button></span></div>`;
-    }
-  }
-  // Nội Đan yêu thú — thôn phệ tăng chỉ số vĩnh viễn, tối đa 3 viên/ngày (bài học Phi Nguyệt Tiên Hành Lục)
-  const ndUsed = ndToday();
-  html += `<div class="stat-sec">NỘI ĐAN YÊU THÚ — Thôn Phệ (hôm nay còn ${Math.max(0, 3-ndUsed)}/3 lần)</div>`;
-  for (const el2 of ['Kim','Mộc','Thổ','Thủy','Hỏa']){
-    const cnt = (player.noidan && player.noidan[el2]) || 0;
-    const nh = NGU_HANH[el2], ef = ND_EFFECT[el2];
-    html += `<div class="mat-row"><span style="color:${nh.color};width:20px;text-align:center;font-size:13px">${nh.glyph}</span>
-      <span style="flex:1">Nội Đan hệ ${el2} <span style="opacity:.55;font-size:11px">— ${ef.desc}</span></span>
-      <b style="color:${nh.color};margin-right:8px">${cnt}</b>
-      <button class="mini-btn" ${cnt > 0 && ndUsed < 3 ? '' : 'disabled'} onclick="swallowNoidan('${el2}')">Thôn Phệ</button></div>`;
-  }
-  html += `<div class="stat-sec">TRANG BỊ NHẶT ĐƯỢC — bấm ô để MẶC NGAY · ▲ xanh = mạnh hơn · ⋯ để Phân Giải/Bán</div>`;
-  html += `<label style="font-size:12px;color:#9aa8d4;cursor:pointer"><input type="checkbox" ${player.autoSell?'checked':''} onchange="window.toggleAutoSell(this.checked)"> Tự động bán đồ trắng/xanh lá khi nhặt (đổi lấy bạc)</label>`;
-  html += `<label style="font-size:12px;color:#9aa8d4;cursor:pointer"><input type="checkbox" ${player.autoEquip?'checked':''} onchange="window.toggleAutoEquip(this.checked)"> Tự mặc đồ mạnh hơn khi nhặt (≥105% lực chiến, giữ đồ quý)</label>`;
-  html += `<div style="margin:6px 0"><button class="mini-btn" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất (12 ô)</button></div>`;
-  if (!player.inv.length) html += `<div style="opacity:.5;font-size:12px;padding:8px">Túi trống — hãy đi farm quái!</div>`;
-  html += `<div class="bag-grid">`;
-  player.inv.forEach((it, i)=>{
+// Túi đồ chia TAB. Trước đây nó xếp NĂM kho khác nhau vào một cuộn dọc — vật liệu, tứ châu,
+// bảo hạp, nội đan, rồi mới tới trang bị — nên thứ người ta mở túi để xem lại nằm cuối cùng,
+// phải cuộn qua hơn một màn hình mới thấy. Nay trang bị đứng đầu và mặc định.
+const BAG_TABS = [
+  { id:'gear', name:'Trang Bị' },
+  { id:'mat',  name:'Vật Liệu' },
+  { id:'box',  name:'Bảo Hạp' },
+];
+window.bagTab = 'gear';
+window.setBagTab = function(t){ window.bagTab = t; renderBag(); };
+
+function bagSecGear(){
+  let h = `<div class="bag-bar">
+    <label><input type="checkbox" ${player.autoSell?'checked':''} onchange="window.toggleAutoSell(this.checked)"> Tự bán đồ trắng/lục</label>
+    <label><input type="checkbox" ${player.autoEquip?'checked':''} onchange="window.toggleAutoEquip(this.checked)"> Tự mặc đồ mạnh hơn</label>
+    <button class="mini-btn" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất</button></div>`;
+  h += `<div class="bag-legend">bấm ô để MẶC NGAY · <b style="color:#6ae88a">▲</b> mạnh hơn ·
+    <b style="color:#ffd76a">◆</b> Khắc Ấn mới · <b style="color:#ff9a6a">🔒</b> khác lớp · <b>⋯</b> Phân Giải/Bán</div>`;
+  if (!player.inv.length) return h + `<div class="chaos-empty">Túi trống — hãy đi farm quái!</div>`;
+  h += `<div class="bag-grid">`;
+  player.inv.forEach((it, i) => {
     const _eq2 = player.equip[it.slot], _bp2 = _eq2 ? itemPower(_eq2) : 0;
-    const _up = !it.special && player.level >= itemReqLv(it) && itemPower(it) > _bp2;
+    const _lock = !it.special && !itemUsable(it);
+    const _up = !it.special && !_lock && player.level >= itemReqLv(it) && itemPower(it) > _bp2;
     // ◆ vàng: món mang về Khắc Ấn CHƯA có. Đứng riêng với ▲ vì đây là thứ mũi ▲ (thuần lực
     // chiến) không bao giờ thấy — món yếu hơn vẫn có thể đáng mặc chỉ vì cái Khắc Ấn này.
-    const _sg = !it.special && player.level >= itemReqLv(it) && itemSigilNew(it);
-    html += `<div class="bag-cell rar-${it.rarity}" style="position:relative" draggable="true" ondragstart="onBagItemDragStart(event,${i})" onclick="equipItem(${i})" title="${it.name} — bấm để MẶC NGAY, hoặc kéo thả vào ô Trang Bị${_up ? ' (mạnh hơn đang mặc!)' : ''}${_sg ? ` · ◆ Khắc Ấn mới: ${SIGIL_DEFS[_sg].name}` : ''} · ⋯ để chọn">
-      ${slotIcon(it, '')}<span class="bc-plus">${it.plus?'+'+it.plus:''}</span>${_up ? '<span style="position:absolute;bottom:0;left:2px;color:#6ae88a;font-size:11px;font-weight:700;text-shadow:0 1px 2px #000">▲</span>' : ''}${_sg ? '<span style="position:absolute;bottom:0;right:2px;color:#ffd76a;font-size:11px;font-weight:700;text-shadow:0 1px 2px #000">◆</span>' : ''}<span style="position:absolute;top:-3px;right:2px;font-size:12px;color:#c9b889;cursor:pointer;text-shadow:0 1px 2px #000" onclick="event.stopPropagation();window.selectBagItem(${i})">⋯</span></div>`;
+    const _sg = !it.special && !_lock && player.level >= itemReqLv(it) && itemSigilNew(it);
+    const tip = _lock ? itemLockMsg(it)
+      : `${it.name} — bấm để MẶC NGAY, hoặc kéo thả vào ô Trang Bị${_up ? ' (mạnh hơn đang mặc!)' : ''}${_sg ? ` · ◆ Khắc Ấn mới: ${SIGIL_DEFS[_sg].name}` : ''}`;
+    h += `<div class="bag-cell rar-${it.rarity}${_lock?' locked':''}" draggable="true"
+      ondragstart="onBagItemDragStart(event,${i})" onclick="equipItem(${i})" title="${tip}">
+      ${slotIcon(it, '')}<span class="bc-plus">${it.plus?'+'+it.plus:''}</span>
+      ${_up ? '<i class="bc-up">▲</i>' : ''}${_sg ? '<i class="bc-sg">◆</i>' : ''}${_lock ? '<i class="bc-lock">🔒</i>' : ''}
+      <i class="bc-more" onclick="event.stopPropagation();window.selectBagItem(${i})">⋯</i></div>`;
   });
-  html += `</div>`;
+  h += `</div>`;
   if (window.bagSel >= 0 && player.inv[window.bagSel]){
     const it = player.inv[window.bagSel];
-    html += `<div class="forge-lines" style="margin-top:10px"><b class="${RARITIES[it.rarity].cls}">${it.name}</b><br>${itemLineHtml(it)}${itemCompareHtml(it)}</div>
+    h += `<div class="forge-lines" style="margin-top:10px"><b class="${RARITIES[it.rarity].cls}">${it.name}</b><br>${itemLineHtml(it)}${itemCompareHtml(it)}</div>
       <div class="forge-actions"><button class="mini-btn" onclick="equipItem(${window.bagSel})">Mặc Vào</button>
       <button class="mini-btn" onclick="sellItem(${window.bagSel})">Bán (+${itemSellPrice(it)}◈)</button>
       <button class="mini-btn" onclick="salvage(${window.bagSel});window.bagSel=-1">Phân Giải (+${1+it.rarity+Math.floor(it.plus/3)}✦)</button></div>`;
   }
+  return h;
+}
+function bagSecMat(){
+  let h = `<div class="chaos-sec">VẬT LIỆU QUÝ <span class="chaos-sub">di chuột vào ô để xem công dụng</span></div><div class="mat-grid">`;
+  for (const r of MAT_ROWS){
+    const v = r.get();
+    h += `<div class="mat-cell" title="${matTip(r.name, r.desc, v)}">
+      <img src="assets/items/mat_${r.icon}.png" onerror="this.style.display='none'" alt="">
+      <span class="mc-count" style="color:${r.color}">${fmtCount(v)}</span></div>`;
+  }
+  h += `<div class="mat-cell" title="${matTip('Bạc', 'tiêu xài khắp Lunacia', player.silver)}">
+    <img src="assets/items/mat_bac.png" onerror="this.style.display='none'" alt="">
+    <span class="mc-count" style="color:#7ecbff">${fmtCount(player.silver)}</span></div>`;
+  h += `<div class="mat-cell" title="${matTip('Công Huân Lệnh', 'Truy Nã Lệnh mỗi ngày · quay Sảnh Cầu May', player.congHuan||0)}">
+    <span class="mc-glyph">🎖</span>
+    <span class="mc-count" style="color:#ffb15c">${fmtCount(player.congHuan||0)}</span></div></div>`;
+  const jw = player.jewels || {};
+  h += `<div class="chaos-sec">TỨ CHÂU <span class="chaos-sub">bỏ vào khay ở Lò Hỗn Độn</span></div><div class="mat-grid">`;
+  for (const jk of ['chucPhuc','linhHon','sinhMenh','honDon']){
+    h += `<div class="mat-cell" title="${matTip(JEWEL_NAMES[jk], '', jw[jk]||0)}">
+      <span class="mc-glyph" style="color:${JEWEL_COLORS[jk]}">◆</span>
+      <span class="mc-count" style="color:${JEWEL_COLORS[jk]}">${fmtCount(jw[jk]||0)}</span></div>`;
+  }
+  return h + `</div>`;
+}
+function bagSecBox(){
+  const bh = player.baohap || {};
+  const bhTiers = Object.keys(bh).filter(t => bh[t] > 0);
+  let h = `<div class="chaos-sec">BẢO HẠP <span class="chaos-sub">Hung Thần Giáng Thế</span></div>`;
+  if (!bhTiers.length) h += `<div class="chaos-empty">Chưa có Bảo Hạp nào — săn Hung Thần hoặc quái Xâm Lăng Vàng.</div>`;
+  for (const t of bhTiers){
+    const d = BAOHAP_TIERS[t];
+    h += `<div class="inv-item"><span class="s-name"><b style="color:${d.color}">${d.name}</b> ×${bh[t]}<br>
+      <span class="item-tip">LV${d.min}-${d.max === 999 ? '100+' : d.max} · trang bị cao cấp${d.ancient ? ` · <b style="color:#3ac88a">Cổ Thần ${Math.round(d.ancient*100)}%</b>` : ''} · châu quý</span></span>
+      <span><button class="mini-btn" onclick="openBaoHap(${t})">Mở Hạp</button></span></div>`;
+  }
+  const ndUsed = ndToday();
+  h += `<div class="chaos-sec">NỘI ĐAN YÊU THÚ <span class="chaos-sub">hôm nay còn ${Math.max(0, 3-ndUsed)}/3 lần</span></div>`;
+  for (const el2 of ['Kim','Mộc','Thổ','Thủy','Hỏa']){
+    const cnt = (player.noidan && player.noidan[el2]) || 0;
+    const nh = NGU_HANH[el2], ef = ND_EFFECT[el2];
+    h += `<div class="mat-row"><span style="color:${nh.color};width:20px;text-align:center;font-size:13px">${nh.glyph}</span>
+      <span style="flex:1">Nội Đan hệ ${el2} <span style="opacity:.55;font-size:11px">— ${ef.desc}</span></span>
+      <b style="color:${nh.color};margin-right:8px">${cnt}</b>
+      <button class="mini-btn" ${cnt > 0 && ndUsed < 3 ? '' : 'disabled'} onclick="swallowNoidan('${el2}')">Thôn Phệ</button></div>`;
+  }
+  return h;
+}
+function renderBag(){
+  const T = window.bagTab || 'gear';
+  let html = `<h3>Túi Đồ (${player.inv.length}/30)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  html += `<div class="chaos-tabs">`;
+  for (const t of BAG_TABS){
+    // đếm ngay trên tab: khỏi phải mở từng cái xem có gì mới
+    const n = t.id === 'gear' ? player.inv.length
+            : t.id === 'box'  ? Object.values(player.baohap || {}).reduce((a, b) => a + b, 0)
+            : Object.values(player.jewels || {}).reduce((a, b) => a + b, 0);
+    html += `<button class="chaos-tab${T===t.id?' on':''}" onclick="setBagTab('${t.id}')">${t.name}${n?` <i>${n}</i>`:''}</button>`;
+  }
+  html += `</div>`;
+  html += T === 'mat' ? bagSecMat() : T === 'box' ? bagSecBox() : bagSecGear();
   el('panel-bag').innerHTML = html;
 }
 window.selectBagItem = function(i){ window.bagSel = (window.bagSel === i) ? -1 : i; renderBag(); };
