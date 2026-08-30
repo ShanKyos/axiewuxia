@@ -6851,9 +6851,12 @@ function gearVisual(p){
     // bậc HIỆU DỤNG: bậc trung bình nhân độ phủ — mặc 3 món giai 10 không được nhìn ngang
     // với mặc đủ 5 món giai 10, nếu không thì lộ nguyên bộ giáp mà vẫn trông như full plate
     t: n ? (tsum / n) * (n / HERO_ARMOR_SLOTS.length) : 0,
-    plus: n ? psum / n : 0,
+    // Nhân độ phủ y như `t`. Thiếu bước này thì đeo mỗi cái mũ +11 rồi bỏ trống 4 ô vẫn
+    // phát sáng ngang full +11 — lộ nguyên người mà vẫn rực như mặc đủ bộ.
+    plus: n ? (psum / n) * (n / HERO_ARMOR_SLOTS.length) : 0,
     rcol: RARITIES[rmax] ? RARITIES[rmax].color : null,
     wTier: w ? (w.tier || 1) : 0,
+    wPlus: w ? (w.plus || 0) : 0,
     setColor,
   };
 }
@@ -7029,6 +7032,12 @@ function hPauldrons(g, M, gv, S){
     // đầu rồng cần khung hẹp hơn tấm thép, nếu không mõm thò quá xa khỏi khung 160px
     const w = dragon ? 12 + st * 2.6 : 14 + st * 3.4;
     const h = dragon ? 9 + st * 2.1 : 9 + st * 2.4;
+    const rim = plusRim(M, gv);
+    if (rim){   // viền cường hoá: chính hình đó, to hơn 12%, màu sáng, nằm dưới
+      g.save(); g.globalAlpha = 0.34 + clamp(((gv.plus || 0) - 3) / 8, 0, 1) * 0.34; g.scale(1.12, 1.12);
+      fn(g, { lo:rim, hi:rim, trim:rim, glow:rim }, st, w, h);
+      g.restore();
+    }
     fn(g, M, st, w, h);
     g.restore();
   }
@@ -7092,7 +7101,16 @@ function hHelmCrest(g, M, gv, ps, S){
   const t = gv ? gv.t : 0;
   if (t < 4.5) return;
   const fn = SET_CREST[(S && S.style) || 'plate'] || hCrestHorn;
-  hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => fn(g, M, hStage(t), ps));
+  const rim = plusRim(M, gv);
+  hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
+    if (rim){   // cùng thủ thuật viền như vai giáp, xoay quanh tâm đầu
+      g.save(); g.globalAlpha = 0.34 + clamp(((gv.plus || 0) - 3) / 8, 0, 1) * 0.34;
+      g.translate(80, 74); g.scale(1.14, 1.14); g.translate(-80, -74);
+      fn(g, { lo:rim, hi:rim, trim:rim, glow:rim }, hStage(t), ps);
+      g.restore();
+    }
+    fn(g, M, hStage(t), ps);
+  });
 }
 
 // ── A. BÓNG DÁNG: giáp ống chân + đai lưng ──
@@ -7265,6 +7283,71 @@ function hEngrave(g, M, gv){
   }
   g.restore();
 }
+// ═══════════ E. CƯỜNG HOÁ +0..+11 — càng rèn cao càng "nóng" ═══════════
+// MU Online lấy mốc **+7** làm ngưỡng phát sáng: dưới ngưỡng đồ trơ, từ +7 trở lên món đồ toả
+// hào quang và ai liếc qua cũng biết. Giữ đúng mốc đó, nhưng KHÔNG để nó chỉ là "sáng hơn" —
+// mỗi mốc thêm một hiện tượng KHÁC, nếu không thì +4 với +11 chỉ khác nhau độ chói:
+//   0 (+0..3)   trơ, không có gì
+//   1 (+4..6)   viền sáng quanh vai & mũ — thấy được nhưng còn tĩnh
+//   2 (+7..9)   NGƯỠNG MU: hào quang nóng sau lưng + tàn lửa bay lên
+//   3 (+10,11)  thêm dải sáng quét dọc thân, như kim loại còn đang nung
+// `plus` là mức rèn TRUNG BÌNH của 5 ô giáp (xem gearVisual) — rèn mỗi cái mũ +11 rồi bỏ trống
+// 4 ô còn lại thì không được sáng ngang full +11.
+function plusStage(pl){ return !(pl > 0) ? 0 : pl < 4 ? 0 : pl < 7 ? 1 : pl < 10 ? 2 : 3; }
+// Hào quang nóng — vẽ SAU LƯNG, trước cả áo choàng
+function hPlusAura(g, M, gv, now){
+  const st = plusStage(gv ? gv.plus : 0);
+  if (st < 2) return;
+  const col = M.glow || '#ffe9a8';
+  const pulse = 0.5 + 0.5 * Math.sin(now / 260);
+  // k: thành phần LIÊN TỤC 0→1 từ +7 lên +11. Chỉ chia mốc thôi thì +7 với +9 trông y hệt
+  // nhau (đo được: 0 pixel khác biệt) — mà rèn từ +7 lên +9 là cả một chặng dài, phải thấy.
+  const k = clamp(((gv.plus || 0) - 6) / 5, 0, 1);
+  const r = 64 + st * 11 + k * 12 + pulse * (4 + st * 3);
+  g.save();
+  g.globalAlpha = (0.10 + st * 0.055 + k * 0.07) * (0.75 + pulse * 0.25);
+  const gr = g.createRadialGradient(80, 128, r * 0.3, 80, 128, r);
+  gr.addColorStop(0, col); gr.addColorStop(0.5, col); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = gr;
+  g.beginPath(); g.arc(80, 128, r, 0, 7); g.fill();
+  g.restore();
+}
+// Tàn lửa bay lên — vẽ TRƯỚC thân: cho cảm giác món đồ đang toả nhiệt, không phải dán đèn
+function hPlusSpark(g, M, gv, now){
+  const st = plusStage(gv ? gv.plus : 0);
+  if (st < 2) return;
+  const col = M.glow || '#ffe9a8';
+  const n = clamp(2 + Math.round(((gv.plus || 0) - 6) * 1.2), 2, 8);   // mỗi cấp rèn thêm tàn lửa
+  g.save(); g.fillStyle = col;
+  for (let i = 0; i < n; i++){
+    const ph = ((now / (900 + (i % 3) * 260)) + i / n) % 1;   // 0→1: nổi lên rồi tắt
+    const x = 80 + Math.sin(i * 137.5) * 34 + Math.sin(now / 500 + i) * 5;
+    const y = 190 - ph * 120;
+    g.globalAlpha = 0.8 * (1 - ph) * (ph < 0.15 ? ph / 0.15 : 1);   // hiện dần rồi lịm dần
+    const sz = 1.4 + (i % 3) * 0.7;
+    g.beginPath(); g.ellipse(x, y, sz, sz * 1.8, 0, 0, 7); g.fill();
+  }
+  g.restore();
+}
+// Dải sáng quét dọc thân — chỉ từ +10, trông như kim loại còn đang nung
+function hPlusSweep(g, M, gv, now){
+  if (plusStage(gv ? gv.plus : 0) < 3) return;
+  g.save();
+  g.beginPath();
+  g.moveTo(56, 94); g.lineTo(104, 94); g.lineTo(108, 142); g.lineTo(52, 142);
+  g.closePath(); g.clip();
+  const y0 = 88 + ((now % 2200) / 2200) * 62;
+  const gr = g.createLinearGradient(0, y0 - 14, 0, y0 + 14);
+  gr.addColorStop(0, 'rgba(255,255,255,0)');
+  gr.addColorStop(0.5, 'rgba(255,255,255,.42)');
+  gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(50, 88, 60, 62);
+  g.restore();
+}
+// Màu viền sáng cho vai/mũ (null nếu chưa tới mốc +4). Cách tạo viền: vẽ lại CHÍNH hình đó
+// to hơn ~12% bằng màu sáng ở lớp dưới — rẻ hơn nhiều so với dựng mặt nạ silhouette mỗi khung.
+function plusRim(M, gv){ return plusStage(gv ? gv.plus : 0) >= 1 ? (M.glow || '#ffe9a8') : null; }
+
 function hPoly(g, pts, c){
   g.fillStyle = c; g.beginPath();
   for (let i = 0; i < pts.length; i++) i ? g.lineTo(pts[i][0], pts[i][1]) : g.moveTo(pts[0][0], pts[0][1]);
@@ -7596,6 +7679,7 @@ function drawHeroFigure(g, sectKey, tier, now, ps, gv){
     g.globalAlpha = 0.2 + 0.1 * Math.sin(now / 380); g.fillStyle = ag;
     g.beginPath(); g.arc(80, 120, 86, 0, 7); g.fill(); g.globalAlpha = 1;
   }
+  hPlusAura(g, SM, gv, now);                                 // E. hào quang cường hoá (sau lưng)
   if (G.cape && !ps.back) hCape(g, G.cape[0], G.cape[1], ps);
   hLegs(g, P, ps, gv, SM, S);
   g.translate(0, ps.bob);                                    // nhún theo bước chân
@@ -7605,6 +7689,7 @@ function drawHeroFigure(g, sectKey, tier, now, ps, gv){
     G.upper(g, SM, ps, P);
     hArmorSheen(g, M, gv);                                   // B. chất liệu — đè lên giáp lớp
     hEngrave(g, M, gv);                                      // C. hoa văn khảm
+    hPlusSweep(g, SM, gv, now);                              // E. dải sáng quét thân (+10)
     hBelt(g, SM, gv, S);                                     // A. đai lưng + tấm hông
     // quay lưng: áo choàng phủ lên trên thân, đúng như nhìn nhân vật đi ra xa
     if (G.cape && ps.back) hCape(g, G.cape[0], G.cape[1], ps);
@@ -7613,6 +7698,7 @@ function drawHeroFigure(g, sectKey, tier, now, ps, gv){
     hPauldrons(g, SM, gv, S);
     hHelmCrest(g, SM, gv, ps, S);
   });
+  hPlusSpark(g, SM, gv, now);                                // E. tàn lửa (trước thân)
   g.restore();
 }
 
@@ -7623,7 +7709,7 @@ const _heroCardCache = {};
 // ⚠ Khoá cache PHẢI gồm chữ ký trang bị. Chân dung nay phụ thuộc gv, nên khoá chỉ theo
 // sect:tier như trước sẽ khiến panel Nhân Vật hiện mãi ảnh cũ sau mỗi lần thay đồ.
 function heroCardUrl(sectKey, tier, gv){
-  const sig = gv ? `${Math.round(gv.t * 10)}_${gv.n}_${gv.rarity}_${gv.setColor || ''}` : '-';
+  const sig = gv ? `${Math.round(gv.t * 10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor || ''}` : '-';
   const key = sectKey + ':' + (tier || 1) + ':' + sig;
   if (_heroCardCache[key]) return _heroCardCache[key];
   const cv = document.createElement('canvas');

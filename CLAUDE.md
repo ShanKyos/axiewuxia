@@ -147,6 +147,39 @@ góp từng lớp, và bắt buộc **đường viền thân đặc** phải ph�
 đo viền là **180**, không phải 8: hào quang là đĩa gradient bán trong suốt phủ kín khung, lấy
 ngưỡng thấp thì đo nhầm mép hào quang (ra 912 px trong khi thân chỉ đổi 117).
 
+### Bộ giáp RIÊNG từng lớp (`HERO_SETS`)
+
+Bốn lớp trên nếu vẽ generic cho cả 6 lớp thì pháp sư mặc áo choàng lại đeo vai giáp tấm của
+hiệp sĩ — cả 5 lớp trông như mặc chung một bộ. Mỗi lớp phải có **dòng giáp riêng**:
+`{ min, name, style, tint }` · `heroSet(sect, t)` chọn bộ theo bậc · `hSetMetal(M, S)` đè
+bảng màu. Bậc vẫn đọc được qua màu, nhưng mỗi lớp đi theo một dải màu riêng.
+
+- Dark Knight đã có 3 bộ: **Thiết Vệ → Hắc Giáp → Hỏa Long** (`style:'hoalong'` — vai giáp là
+  một ĐẦU RỒNG, mũ sừng rồng, ống chân vảy, váy vảy). Bốn lớp còn lại **chưa làm**, đang tạm
+  dùng `style:'plate'`.
+- Bảng tra: `SET_SHOULDER` · `SET_CREST` · `SET_LEG` · `SET_HIP`. Thêm bộ mới = thêm 4 hàm.
+- ⚠ `G.upper()` phải nhận **SM** (bảng màu BỘ) chứ không phải `M` (bảng màu BẬC), nếu không
+  mũ ra một màu còn vai ra màu khác.
+
+### Cường hoá +0..+11 (`plusStage`)
+
+Đúng mốc MU Online: **+7 là ngưỡng phát sáng**. Bốn mốc, mỗi mốc thêm một hiện tượng KHÁC
+(không phải chỉ chói hơn): `0` (+0..3) trơ · `1` (+4..6) viền sáng quanh vai/mũ · `2` (+7..9)
+hào quang nóng sau lưng + tàn lửa bay lên · `3` (+10,11) thêm dải sáng quét dọc thân.
+
+- `hPlusAura` (sau lưng) · `hPlusSpark` (trước thân) · `hPlusSweep` (trong clip thân) ·
+  `plusRim()` cho viền. Viền tạo bằng cách **vẽ lại chính hình đó to hơn 12% màu sáng ở lớp
+  dưới** — rẻ hơn dựng mặt nạ silhouette mỗi khung.
+- Trong mỗi mốc còn một thành phần **liên tục** theo `plus`, vì nếu chỉ chia mốc thì +7 với
+  +9 đo ra **0 pixel khác biệt** — mà đó là cả một chặng rèn dài.
+- ⚠ `gv.plus` phải **nhân độ phủ** y như `gv.t`. Thiếu bước này thì đeo mỗi cái mũ +11 rồi bỏ
+  trống 4 ô vẫn rực như mặc đủ bộ (test bắt được lỗi này).
+- ⚠ Khoá `_heroCardCache` phải gồm cả mức rèn.
+
+Test: `node <scratchpad>/test_plusglow.js`. Lưu ý khi sửa test: hào quang theo BẬC (`M.glow`)
+vốn đã đập nhẹ từ trước, nên **+0 động theo thời gian là bình thường** — đừng khẳng định
+"+0 phải đứng yên"; thứ cần chứng minh là +11 động THÊM đáng kể.
+
 ## Sự kiện thế giới — neo theo GIỜ THẬT
 
 Lịch Tu Tiên (Can Chi/Tứ Quý/năm tháng) đã gỡ. `gameTimeInfo()` vẫn chạy ngầm cho
