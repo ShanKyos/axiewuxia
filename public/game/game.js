@@ -11134,37 +11134,216 @@ function iaWeapon(g, M, P){
   g.restore();
 }
 
-// ── GIÁP: mũ trụ ────────────────────────────────────────────────────────────────
+// ═══ GIÁP — bóng dáng theo KIỂU BỘ, không phải một dáng tô lại màu ═══
+// 12 kiểu lấy thẳng từ HERO_SETS[].style, nên hình trong túi và hình trên người là CÙNG một
+// bộ. Mũ pháp sư phải là mũ trùm vải, không được là mũ hiệp sĩ đổi màu.
+const ARMOR_TRAIT = {
+  plate:     { soft:0, crest:'sung',   tex:'tam',    round:0.15 },
+  chain:     { soft:0, crest:'khong',  tex:'luoi',   round:0.85 },
+  drake:     { soft:0, crest:'vuot',   tex:'vay',    round:0.25 },
+  hoalong:   { soft:0, crest:'rong',   tex:'vay',    round:0.20 },
+  cloth:     { soft:1, crest:'khong',  tex:'nep',    round:1.00 },
+  sphinx:    { soft:0, crest:'nemes',  tex:'soc',    round:0.30 },
+  arcane:    { soft:1, crest:'cau',    tex:'rune',   round:0.90 },
+  hide:      { soft:1, crest:'khong',  tex:'khau',   round:0.75 },
+  leaf:      { soft:1, crest:'la',     tex:'la',     round:0.80 },
+  plume:     { soft:0, crest:'canh',   tex:'vu',     round:0.55 },
+  halfplate: { soft:0, crest:'lech',   tex:'tam',    round:0.25, asym:1 },
+  regal:     { soft:0, crest:'vuong',  tex:'vien',   round:0.35 },
+};
+function aTrait(P){ return ARMOR_TRAIT[P.style] || ARMOR_TRAIT.plate; }
+
+// Hoạ tiết bề mặt — phủ lên một vùng đã vẽ, cắt theo đường bao hiện tại.
+function aTex(g, M, T, st, x0, y0, x1, y1){
+  g.save(); g.clip();
+  const w = x1 - x0, h = y1 - y0;
+  if (T.tex === 'luoi'){                       // giáp lưới: chấm tròn so le
+    g.fillStyle = 'rgba(0,0,0,.30)';
+    for (let y = y0 + 2; y < y1; y += 4.2)
+      for (let x = x0 + ((Math.round((y - y0) / 4.2) % 2) ? 2 : 0); x < x1; x += 4.2){
+        g.beginPath(); g.arc(x, y, 1.35, 0, 7); g.fill();
+      }
+  } else if (T.tex === 'vay'){                 // vảy: cung xếp lớp
+    g.strokeStyle = 'rgba(0,0,0,.34)'; g.lineWidth = 1.1;
+    for (let y = y0 + 3; y < y1; y += 5)
+      for (let x = x0; x < x1 + 5; x += 6.5){
+        g.beginPath(); g.arc(x + ((Math.round((y - y0) / 5) % 2) ? 3.2 : 0), y, 3.4, Math.PI * 0.15, Math.PI * 0.85); g.stroke();
+      }
+  } else if (T.tex === 'nep'){                 // vải: nếp rủ dọc
+    g.strokeStyle = 'rgba(0,0,0,.26)'; g.lineWidth = 1.3;
+    for (let i = 1; i < 5; i++){
+      const x = x0 + w * i / 5;
+      g.beginPath(); g.moveTo(x, y0); g.quadraticCurveTo(x + 2.5, y0 + h * 0.5, x, y1); g.stroke();
+    }
+  } else if (T.tex === 'khau'){                // da: đường khâu
+    g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = 1; g.setLineDash([2.4, 2.6]);
+    for (let i = 1; i < 4; i++){
+      const y = y0 + h * i / 4;
+      g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
+    }
+    g.setLineDash([]);
+  } else if (T.tex === 'la'){                  // lá: gân chéo
+    g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 1.1;
+    for (let i = 0; i < 5; i++){
+      const y = y0 + h * (i + .5) / 5;
+      g.beginPath(); g.moveTo(x0, y); g.quadraticCurveTo((x0 + x1) / 2, y - 4.5, x1, y); g.stroke();
+    }
+  } else if (T.tex === 'vu'){                  // lông vũ: cung chồng
+    g.strokeStyle = 'rgba(255,255,255,.24)'; g.lineWidth = 1.2;
+    for (let y = y0 + 4; y < y1; y += 5.5){
+      g.beginPath(); g.moveTo(x0, y); g.quadraticCurveTo((x0 + x1) / 2, y + 5.5, x1, y); g.stroke();
+    }
+  } else if (T.tex === 'soc'){                 // nhân sư: sọc ngang đậm nhạt
+    for (let i = 0; i < 6; i++){
+      g.fillStyle = i % 2 ? 'rgba(0,0,0,.26)' : 'rgba(255,255,255,.14)';
+      g.fillRect(x0, y0 + h * i / 6, w, h / 12);
+    }
+  } else if (T.tex === 'rune'){                // ma thuật: ký tự phát sáng
+    g.strokeStyle = M.glow || M.trim; g.lineWidth = 1.2; g.globalAlpha = .85;
+    for (let i = 0; i < 4; i++){
+      const x = x0 + w * (i + .5) / 4, y = y0 + h * 0.5;
+      g.beginPath(); g.moveTo(x - 2.6, y - 3); g.lineTo(x + 2.6, y + 3);
+      g.moveTo(x + 2.6, y - 3); g.lineTo(x - 2.6, y + 3); g.stroke();
+    }
+  } else if (T.tex === 'vien'){                // vương giả: viền kép
+    g.strokeStyle = M.trim; g.lineWidth = 1.4;
+    g.strokeRect(x0 + 2.5, y0 + 2.5, w - 5, h - 5);
+    g.globalAlpha = .5; g.strokeRect(x0 + 5, y0 + 5, w - 10, h - 10);
+  } else {                                     // tấm: đường ghép ngang
+    g.strokeStyle = 'rgba(0,0,0,.30)'; g.lineWidth = 1.3;
+    for (let i = 1; i < 3 + (st >= 3 ? 1 : 0); i++){
+      const y = y0 + h * i / (3 + (st >= 3 ? 1 : 0));
+      g.beginPath(); g.moveTo(x0, y); g.quadraticCurveTo((x0 + x1) / 2, y + 3, x1, y); g.stroke();
+    }
+  }
+  g.restore();
+}
+
+// ── MŨ TRỤ ──────────────────────────────────────────────────────────────────────
 function iaHelm(g, M, P){
-  const st = P.st || 1;
+  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
   g.translate(0, 3);
-  // vòm
-  iPoly(g, [[-21, 12], [-22, -6]]);
-  g.beginPath();
-  g.moveTo(-21, 14);
-  g.bezierCurveTo(-23, -10, -12, -24, 0, -24);
-  g.bezierCurveTo(12, -24, 23, -10, 21, 14);
-  g.closePath();
-  g.fillStyle = iGrad(g, -21, -24, 21, 14, M.hi, M.lo); g.fill();
-  // khe mắt
-  iFill(g, [[-14, -2], [14, -2], [12, 5], [-12, 5]], '#0a0c12');
-  g.fillStyle = M.lo; g.fillRect(-1.6, -2, 3.2, 7);         // sống mũi
-  // má giáp
-  iFill(g, [[-21, 5], [-13, 5], [-11, 18], [-19, 17]], M.lo);
-  iFill(g, [[21, 5], [13, 5], [11, 18], [19, 17]], M.lo);
+  // ĐƯỜNG BAO — khác hẳn nhau theo kiểu, đây mới là thứ đọc được ở cỡ 44px
+  const dome = () => {
+    g.beginPath();
+    if (style === 'cloth' || style === 'arcane'){        // mũ TRÙM có chóp
+      g.moveTo(-20, 16);
+      g.bezierCurveTo(-23, -12, -14, -26, -3, -34);      // chóp lệch ra sau
+      g.bezierCurveTo(6, -28, 21, -12, 20, 16);
+    } else if (style === 'sphinx'){                       // khăn nemes: xoè hình thang
+      g.moveTo(-25, 18); g.lineTo(-17, -14);
+      g.quadraticCurveTo(0, -26, 17, -14); g.lineTo(25, 18);
+    } else if (style === 'hide' || style === 'leaf'){     // mũ da thấp
+      g.moveTo(-20, 14);
+      g.bezierCurveTo(-21, -6, -12, -19, 0, -19);
+      g.bezierCurveTo(12, -19, 21, -6, 20, 14);
+    } else if (style === 'regal'){                        // vương miện: hở đỉnh
+      g.moveTo(-21, 16); g.lineTo(-21, -6); g.lineTo(21, -6); g.lineTo(21, 16);
+    } else if (style === 'chain'){                        // khăn lưới trùm cổ
+      g.moveTo(-22, 20);
+      g.bezierCurveTo(-24, -8, -13, -23, 0, -23);
+      g.bezierCurveTo(13, -23, 24, -8, 22, 20);
+    } else {                                              // mũ trụ kim loại
+      g.moveTo(-21, 14);
+      g.bezierCurveTo(-23, -10, -12, -25, 0, -25);
+      g.bezierCurveTo(12, -25, 23, -10, 21, 14);
+    }
+    g.closePath();
+  };
+  dome();
+  g.fillStyle = iGrad(g, -22, -30, 22, 18, M.hi, M.lo); g.fill();
+  dome(); aTex(g, M, T, st, -22, -22, 22, 16);
+  dome(); g.strokeStyle = 'rgba(0,0,0,.42)'; g.lineWidth = 1.2; g.stroke();
+
+  // KHE MẮT / MẶT — đồ vải thì để hở bóng tối, đồ kim loại thì có khe ngang
+  if (T.soft){
+    g.fillStyle = 'rgba(6,8,16,.88)';
+    g.beginPath(); g.ellipse(0, 4, 11, 9, 0, 0, 7); g.fill();
+    if (style === 'arcane'){                              // hai đốm sáng trong bóng tối
+      g.fillStyle = M.glow || '#a88aff';
+      g.beginPath(); g.arc(-4.5, 3, 1.9, 0, 7); g.arc(4.5, 3, 1.9, 0, 7); g.fill();
+    }
+  } else if (style === 'regal'){
+    g.fillStyle = 'rgba(6,8,16,.55)'; g.fillRect(-16, -2, 32, 9);
+  } else {
+    iFill(g, [[-14, -3], [14, -3], [12, 5], [-12, 5]], '#0a0c12');
+    g.fillStyle = M.lo; g.fillRect(-1.7, -3, 3.4, 8);
+    if (P.asym) iFill(g, [[1, -4], [15, -4], [13, 14], [1, 16]], M.hi);  // nửa mặt nạ
+  }
   // vành trán
-  iFill(g, [[-22, -3], [22, -3], [21, -8], [-21, -8]], M.trim);
-  if (st >= 2){ iRivet(g, M, -16, -5.5, 1.7); iRivet(g, M, 16, -5.5, 1.7); }
-  if (st >= 3){                             // sừng
-    iFill(g, [[-18, -14], [-30, -28], [-22, -12]], M.trim);
-    iFill(g, [[18, -14], [30, -28], [22, -12]], M.trim);
+  if (style !== 'regal' && style !== 'arcane'){
+    iFill(g, [[-22, -4], [22, -4], [21, -9], [-21, -9]], M.trim);
+    if (st >= 2){ iRivet(g, M, -16, -6.5, 1.7); iRivet(g, M, 16, -6.5, 1.7); }
   }
-  if (st >= 4){                             // mào giữa
-    iFill(g, [[-3, -24], [0, -38], [3, -24]], M.trim);
-    iGem(g, M, 0, -12, 2.6);
+  // MÀO — chữ ký của kiểu
+  const C = T.crest;
+  if (C === 'sung' && st >= 2){                    // sừng thẳng
+    iFill(g, [[-17, -15], [-29, -32], [-21, -13]], M.trim);
+    iFill(g, [[17, -15], [29, -32], [21, -13]], M.trim);
+  } else if (C === 'vuot'){                        // sừng vuốt ngược
+    for (const s of [-1, 1]){
+      g.beginPath(); g.moveTo(s * 18, -14);
+      g.quadraticCurveTo(s * 34, -20, s * 30, -34);
+      g.quadraticCurveTo(s * 26, -22, s * 21, -12); g.closePath();
+      g.fillStyle = M.trim; g.fill();
+    }
+  } else if (C === 'rong'){                        // đầu rồng: sừng cong + mào lửa
+    for (const s of [-1, 1]){
+      g.beginPath(); g.moveTo(s * 17, -16);
+      g.bezierCurveTo(s * 36, -22, s * 40, -40, s * 26, -44);
+      g.bezierCurveTo(s * 33, -32, s * 27, -20, s * 20, -13); g.closePath();
+      g.fillStyle = M.trim; g.fill();
+    }
+    g.fillStyle = M.glow || '#ff8a3a';
+    for (let i = 0; i < 3; i++){
+      const x = -6 + i * 6;
+      iPoly(g, [[x - 3, -25], [x, -25 - 9 - i % 2 * 4], [x + 3, -25]]); g.fill();
+    }
+  } else if (C === 'nemes'){                       // khăn nhân sư: hai vạt buông
+    iFill(g, [[-25, 18], [-32, 6], [-24, -6], [-19, 10]], M.trim);
+    iFill(g, [[25, 18], [32, 6], [24, -6], [19, 10]], M.trim);
+    iFill(g, [[-6, -20], [6, -20], [4, -30], [-4, -30]], M.trim);     // rắn hổ mang
+    if (st >= 3) iGem(g, M, 0, -26, 2.6);
+  } else if (C === 'cau'){                         // cầu phép lơ lửng trên chóp
+    const c = M.glow || '#a88aff';
+    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .5;
+    g.fillStyle = c; g.beginPath(); g.arc(-3, -40, 8 + st, 0, 7); g.fill(); g.restore();
+    g.fillStyle = c; g.beginPath(); g.arc(-3, -40, 4 + st * 0.5, 0, 7); g.fill();
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(-4.4, -41.6, 1.6, 0, 7); g.fill();
+  } else if (C === 'la'){                          // vành lá quanh trán
+    g.fillStyle = M.trim;
+    for (let i = 0; i < 5; i++){
+      const a = -Math.PI * (0.2 + i * 0.15);
+      g.save(); g.translate(Math.cos(a) * 20, Math.sin(a) * 17 - 2); g.rotate(a + Math.PI / 2);
+      g.beginPath(); g.ellipse(0, -5, 3.2, 7.5, 0, 0, 7); g.fill(); g.restore();
+    }
+  } else if (C === 'canh'){                        // cánh hai bên
+    for (const s of [-1, 1]){
+      g.save(); g.translate(s * 19, -6); g.scale(s, 1);
+      g.fillStyle = M.trim;
+      for (let i = 0; i < 3; i++){
+        g.beginPath(); g.moveTo(0, 2 - i * 3);
+        g.quadraticCurveTo(9 + i * 3, -6 - i * 4, 17 + i * 4, -3 - i * 6);
+        g.quadraticCurveTo(8 + i * 2, 1 - i * 3, 0, 4 - i * 3); g.fill();
+      }
+      g.restore();
+    }
+  } else if (C === 'vuong'){                       // vương miện: răng nhọn
+    const n = 3 + Math.min(2, st - 1);
+    for (let i = 0; i < n; i++){
+      const x = -18 + i * (36 / (n - 1));
+      const h = i === Math.floor(n / 2) ? 20 : 13;
+      iFill(g, [[x - 5, -6], [x, -6 - h], [x + 5, -6]], M.trim);
+      if (st >= 3) iGem(g, M, x, -10, 1.9);
+    }
+    iFill(g, [[-22, -2], [22, -2], [21, -8], [-21, -8]], M.trim);
+  } else if (C === 'lech' && st >= 2){             // Spellblade: MỘT sừng, lệch hẳn
+    iFill(g, [[15, -16], [30, -34], [21, -13]], M.trim);
   }
+  if (st >= 4 && C !== 'cau' && C !== 'vuong') iGem(g, M, 0, -13, 2.7);
   iSheenArc(g);
 }
+
 // Vệt sáng chéo phủ lên toàn hình — làm mảng phẳng thành bề mặt cong.
 function iSheenArc(g){
   g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.16;
@@ -11173,201 +11352,244 @@ function iSheenArc(g){
   g.restore();
 }
 
-// ── GIÁP: áo ────────────────────────────────────────────────────────────────────
+// ── ÁO GIÁP ─────────────────────────────────────────────────────────────────────
 function iaArmor(g, M, P){
-  const st = P.st || 1;
-  const pw = 9 + st * 1.9;                  // độ xoè vai
+  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
   g.translate(0, 2);
-  // THÂN — hình thang ngực-eo. Bản đầu thuôn về MỘT ĐIỂM ở đáy nên đọc thành cái khiên,
-  // cộng với vai lơ lửng tách khỏi thân thì ra hình con bọ.
-  g.beginPath();
-  g.moveTo(-17, -20);                        // vai trái
-  g.lineTo(-20, -6);                         // ngực bè nhất
-  g.lineTo(-14, 16);                         // thắt eo
-  g.lineTo(-9, 24); g.lineTo(9, 24);         // gấu áo THẲNG, không nhọn
-  g.lineTo(14, 16); g.lineTo(20, -6); g.lineTo(17, -20);
-  g.closePath();
-  g.fillStyle = iGrad(g, -20, -20, 20, 24, M.hi, M.lo); g.fill();
-  // cổ áo khoét chữ V
-  iFill(g, [[-8, -21], [8, -21], [5, -12], [0, -9], [-5, -12]], '#0a0c12');
-  // hai mảng ngực
-  g.strokeStyle = 'rgba(0,0,0,.30)'; g.lineWidth = 1.4;
-  g.beginPath(); g.moveTo(0, -9); g.lineTo(0, 6); g.stroke();
-  g.strokeStyle = M.trim; g.lineWidth = 1.6;
-  g.beginPath(); g.moveTo(-16, -4); g.quadraticCurveTo(0, 3, 16, -4); g.stroke();
-  // tấm bụng xếp lớp
-  for (let i = 0; i < 2 + (st >= 3 ? 1 : 0); i++){
-    const y = 8 + i * 5.5;
-    g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 1.3;
-    g.beginPath(); g.moveTo(-15 + i * 1.4, y); g.quadraticCurveTo(0, y + 3, 15 - i * 1.4, y); g.stroke();
-  }
-  // VAI — ĐÈ LÊN mép thân (x = ±17), không để hở khe
-  for (const sd of [-1, 1]){
-    g.save(); g.translate(sd * 15, -17); g.scale(sd, 1);
+  const body = () => {
     g.beginPath();
-    g.moveTo(-5, 9);
-    g.quadraticCurveTo(-7, -6, 3, -8);
-    g.quadraticCurveTo(pw, -7, pw + 1, 8);
-    g.quadraticCurveTo(pw * 0.5, 12, -5, 9);
+    if (T.soft){                                   // ÁO CHOÀNG: buông xuống, loe ra
+      g.moveTo(-14, -20); g.lineTo(14, -20);
+      g.bezierCurveTo(20, -2, 24, 14, 26, 26);
+      g.lineTo(-26, 26);
+      g.bezierCurveTo(-24, 14, -20, -2, -14, -20);
+    } else if (style === 'chain'){                 // ÁO LƯỚI: bo tròn, không có góc
+      g.moveTo(-16, -20);
+      g.bezierCurveTo(-21, -4, -20, 12, -14, 24);
+      g.lineTo(14, 24);
+      g.bezierCurveTo(20, 12, 21, -4, 16, -20);
+    } else if (style === 'regal'){                 // ÁO CHOÀNG NGHI LỄ: cổ cao, tà dài
+      g.moveTo(-16, -24); g.lineTo(16, -24);
+      g.lineTo(20, -4); g.lineTo(15, 27); g.lineTo(-15, 27); g.lineTo(-20, -4);
+    } else {                                       // GIÁP TẤM
+      g.moveTo(-17, -20); g.lineTo(-20, -6); g.lineTo(-14, 16);
+      g.lineTo(-9, 25); g.lineTo(9, 25); g.lineTo(14, 16); g.lineTo(20, -6); g.lineTo(17, -20);
+    }
     g.closePath();
-    g.fillStyle = iGrad(g, 0, -8, 0, 10, M.hi, M.lo); g.fill();
-    g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 0.9; g.stroke();
-    if (st >= 3){ g.strokeStyle = M.trim; g.lineWidth = 1.3;
-      g.beginPath(); g.moveTo(-3, 3); g.quadraticCurveTo(pw * 0.5, -4, pw * 0.9, 4); g.stroke(); }
-    if (st >= 4) iFill(g, [[pw * 0.45, -7], [pw * 0.75, -17], [pw * 0.95, -4]], M.trim);  // gai vai
-    g.restore();
+  };
+  body(); g.fillStyle = iGrad(g, -22, -22, 22, 26, M.hi, M.lo); g.fill();
+  body(); aTex(g, M, T, st, -24, -20, 24, 26);
+  body(); g.strokeStyle = 'rgba(0,0,0,.40)'; g.lineWidth = 1.2; g.stroke();
+  // cổ áo
+  if (style === 'regal'){                          // cổ dựng cao hai bên
+    iFill(g, [[-16, -24], [-7, -22], [-9, -32], [-17, -30]], M.trim);
+    iFill(g, [[16, -24], [7, -22], [9, -32], [17, -30]], M.trim);
+    iFill(g, [[-7, -22], [7, -22], [4, -12], [-4, -12]], '#0a0c12');
+  } else {
+    iFill(g, [[-8, -21], [8, -21], [5, -12], [0, -9], [-5, -12]], '#0a0c12');
   }
-  if (st >= 2){ iRivet(g, M, -13, -14, 1.8); iRivet(g, M, 13, -14, 1.8); }
+  // đai / dây chằng
+  if (T.soft){
+    iFill(g, [[-16, 4], [16, 4], [15, 11], [-15, 11]], M.trim);
+    if (st >= 3) iGem(g, M, 0, 7.5, 3);
+  } else {
+    g.strokeStyle = M.trim; g.lineWidth = 1.7;
+    g.beginPath(); g.moveTo(-16, -4); g.quadraticCurveTo(0, 3, 16, -4); g.stroke();
+  }
+  // VAI — chữ ký lớn nhất của kiểu
+  const pw = 9 + st * 1.9;
+  const shoulder = (sd) => {
+    g.save(); g.translate(sd * 15, -17); g.scale(sd, 1);
+    if (T.soft && style !== 'arcane'){              // tay áo vải rủ
+      g.beginPath(); g.moveTo(-4, -4);
+      g.quadraticCurveTo(pw * 0.9, -6, pw * 1.05, 6);
+      g.quadraticCurveTo(pw * 0.8, 16, -3, 12); g.closePath();
+      g.fillStyle = iGrad(g, 0, -6, 0, 14, M.hi, M.lo); g.fill();
+    } else if (style === 'arcane'){                 // phiến đá lơ lửng, KHÔNG chạm vai
+      const c = M.glow || '#a88aff';
+      g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .35;
+      g.fillStyle = c; g.beginPath(); g.arc(pw * 0.6, -2, 8, 0, 7); g.fill(); g.restore();
+      iFill(g, [[pw * 0.25, -8], [pw * 1.05, -4], [pw * 0.85, 6], [pw * 0.15, 2]], M.trim);
+    } else if (style === 'plume'){                  // lớp lông vũ xếp
+      g.fillStyle = M.trim;
+      for (let i = 0; i < 3; i++){
+        g.beginPath(); g.moveTo(-3, 6 - i * 3);
+        g.quadraticCurveTo(pw * 0.7, -2 - i * 4, pw * 1.1 + i * 2, 2 - i * 5);
+        g.quadraticCurveTo(pw * 0.6, 6 - i * 2, -3, 9 - i * 3); g.fill();
+      }
+    } else {                                        // tấm vai kim loại
+      g.beginPath();
+      g.moveTo(-5, 9); g.quadraticCurveTo(-7, -6, 3, -8);
+      g.quadraticCurveTo(pw, -7, pw + 1, 8);
+      g.quadraticCurveTo(pw * 0.5, 12, -5, 9); g.closePath();
+      g.fillStyle = iGrad(g, 0, -8, 0, 10, M.hi, M.lo); g.fill();
+      g.strokeStyle = 'rgba(0,0,0,.30)'; g.lineWidth = .9; g.stroke();
+      if (st >= 3){ g.strokeStyle = M.trim; g.lineWidth = 1.3;
+        g.beginPath(); g.moveTo(-3, 3); g.quadraticCurveTo(pw * 0.5, -4, pw * 0.9, 4); g.stroke(); }
+      if (st >= 4 && (style === 'drake' || style === 'hoalong' || style === 'plate'))
+        iFill(g, [[pw * 0.45, -7], [pw * 0.75, -18], [pw * 0.95, -4]], M.trim);   // gai
+    }
+    g.restore();
+  };
+  if (T.asym){ shoulder(1); iFill(g, [[-17, -19], [-9, -20], [-11, -8], [-18, -6]], M.lo); }  // MỘT bên trần
+  else { shoulder(-1); shoulder(1); }
+  if (st >= 2 && !T.soft){ iRivet(g, M, -13, -14, 1.8); iRivet(g, M, 13, -14, 1.8); }
   if (st >= 4) iGem(g, M, 0, -3, 3.2);
   iSheenArc(g);
 }
 
-// ── GIÁP: găng tay ──────────────────────────────────────────────────────────────
+// ── GĂNG TAY ────────────────────────────────────────────────────────────────────
 function iaGloves(g, M, P){
-  const st = P.st || 1;
+  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
   g.save(); g.rotate(-0.1); g.translate(1, 4);
-  // NGÓN — vẽ trước để mu bàn tay đè lên gốc ngón. Bản đầu xếp 4 khối chữ nhật bằng nhau
-  // thành một hàng nên ra hình thanh sô-cô-la; ngón thật phải so le và thuôn dần.
-  const fl = [13, 15.5, 14.5, 11.5];              // ngón giữa dài nhất
+  const fl = [13, 15.5, 14.5, 11.5];
   for (let i = 0; i < 4; i++){
     const x = -10.5 + i * 7;
-    const top = -12 - fl[i];
+    // đồ vải/da: ngón NGẮN, hở đầu ngón — đồ kim loại: ngón dài kín
+    const cut = T.soft ? 6 : 0;
+    const top = -12 - fl[i] + cut;
     g.fillStyle = i % 2 ? M.lo : M.hi;
     g.beginPath();
     g.moveTo(x - 2.9, -8); g.lineTo(x - 2.5, top + 3);
-    g.quadraticCurveTo(x, top - 1.5, x + 2.5, top + 3);
+    if (T.soft) g.lineTo(x + 2.5, top + 3);
+    else g.quadraticCurveTo(x, top - 1.5, x + 2.5, top + 3);
     g.lineTo(x + 2.9, -8); g.closePath(); g.fill();
     g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = 0.9; g.stroke();
-    if (st >= 2){ g.strokeStyle = M.trim; g.lineWidth = 1.1;      // đốt ngón
+    if (st >= 2 && !T.soft){ g.strokeStyle = M.trim; g.lineWidth = 1.1;
       g.beginPath(); g.moveTo(x - 2.6, top + 8); g.lineTo(x + 2.6, top + 8); g.stroke(); }
   }
-  // NGÓN CÁI — chìa hẳn sang bên, đây là thứ khiến người ta đọc ra "bàn tay"
   g.save(); g.translate(-13, -4); g.rotate(-0.55);
   g.fillStyle = M.hi;
   g.beginPath(); g.moveTo(-3.2, 6); g.lineTo(-2.8, -6);
   g.quadraticCurveTo(0, -9.5, 2.8, -6); g.lineTo(3.2, 6); g.closePath(); g.fill();
   g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = 0.9; g.stroke();
   g.restore();
-  // MU BÀN TAY — hẹp ở cổ tay, bè ra ở khớp ngón
-  g.beginPath();
-  g.moveTo(-11, 12); g.lineTo(11, 12);
-  g.lineTo(14, -4); g.quadraticCurveTo(14.5, -10, 12, -11);
-  g.lineTo(-12, -11); g.quadraticCurveTo(-14.5, -10, -14, -4);
-  g.closePath();
-  g.fillStyle = iGrad(g, -14, -11, 14, 12, M.hi, M.lo); g.fill();
-  if (st >= 2){ g.strokeStyle = M.trim; g.lineWidth = 1.5;
-    g.beginPath(); g.moveTo(-12.5, -6); g.quadraticCurveTo(0, -1.5, 12.5, -6); g.stroke(); }
+  const hand = () => {
+    g.beginPath();
+    g.moveTo(-11, 12); g.lineTo(11, 12);
+    g.lineTo(14, -4); g.quadraticCurveTo(14.5, -10, 12, -11);
+    g.lineTo(-12, -11); g.quadraticCurveTo(-14.5, -10, -14, -4);
+    g.closePath();
+  };
+  hand(); g.fillStyle = iGrad(g, -14, -11, 14, 12, M.hi, M.lo); g.fill();
+  hand(); aTex(g, M, T, st, -14, -11, 14, 12);
+  hand(); g.strokeStyle = 'rgba(0,0,0,.38)'; g.lineWidth = 1.1; g.stroke();
   if (st >= 4) iGem(g, M, 0, 1, 3);
-  // CỔ TAY — loe ra, chặn dưới
-  iFill(g, [[-14, 11], [14, 11], [15.5, 18], [-15.5, 18]], M.trim);
-  iFill(g, [[-13, 18], [13, 18], [11.5, 27], [-11.5, 27]], iGrad(g, -13, 18, 13, 27, M.hi, M.lo));
-  if (st >= 3){ iRivet(g, M, -8, 14.5, 1.6); iRivet(g, M, 8, 14.5, 1.6); }
-  if (st >= 5) iFill(g, [[-15.5, 14], [-25, 8], [-15, 20]], M.trim);
+  // CỔ TAY — kim loại thì loe cứng, vải thì quấn dây
+  if (T.soft){
+    iFill(g, [[-13, 11], [13, 11], [12, 26], [-12, 26]], iGrad(g, -13, 11, 13, 26, M.hi, M.lo));
+    g.strokeStyle = M.trim; g.lineWidth = 1.8;
+    for (let i = 0; i < 3; i++){ const y = 14 + i * 4;
+      g.beginPath(); g.moveTo(-12.5, y); g.lineTo(12.5, y + 1.4); g.stroke(); }
+  } else {
+    iFill(g, [[-14, 11], [14, 11], [15.5, 18], [-15.5, 18]], M.trim);
+    iFill(g, [[-13, 18], [13, 18], [11.5, 27], [-11.5, 27]], iGrad(g, -13, 18, 13, 27, M.hi, M.lo));
+    if (st >= 3){ iRivet(g, M, -8, 14.5, 1.6); iRivet(g, M, 8, 14.5, 1.6); }
+    if (st >= 5) iFill(g, [[-15.5, 14], [-25, 8], [-15, 20]], M.trim);
+  }
+  if (style === 'plume' && st >= 3){                 // lông vũ mọc từ cổ tay
+    g.fillStyle = M.trim;
+    for (let i = 0; i < 3; i++){
+      g.beginPath(); g.moveTo(13, 14 + i * 3);
+      g.quadraticCurveTo(24 + i * 3, 8 + i * 2, 28 + i * 4, 14 + i * 4);
+      g.quadraticCurveTo(22, 16 + i * 3, 13, 17 + i * 3); g.fill();
+    }
+  }
   g.restore();
   iSheenArc(g);
 }
 
-// ── GIÁP: giáp đùi ──────────────────────────────────────────────────────────────
+// ── GIÁP ĐÙI ────────────────────────────────────────────────────────────────────
 function iaPants(g, M, P){
-  const st = P.st || 1;
+  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
   g.translate(0, 2);
   // đai
   iFill(g, [[-20, -22], [20, -22], [19, -13], [-19, -13]], iGrad(g, -20, -22, 20, -13, M.hi, M.lo));
-  iFill(g, [[-7, -24], [7, -24], [6, -11], [-6, -11]], M.trim);      // khoá đai
+  iFill(g, [[-7, -24], [7, -24], [6, -11], [-6, -11]], M.trim);
   if (st >= 4) iGem(g, M, 0, -17.5, 3);
-  // hai tấm đùi
-  for (const s of [-1, 1]){
-    g.save(); g.translate(s * 10, -12);
-    g.beginPath();
-    g.moveTo(-8, 0); g.lineTo(8, 0);
-    g.bezierCurveTo(10, 14, 7, 26, 0, 30);
-    g.bezierCurveTo(-7, 26, -10, 14, -8, 0);
-    g.closePath();
-    g.fillStyle = iGrad(g, -8, 0, 8, 30, M.hi, M.lo); g.fill();
-    for (let i = 0; i < 2 + (st >= 3 ? 1 : 0); i++){
-      g.strokeStyle = M.lo; g.lineWidth = 1.2;
-      const y = 6 + i * 7;
-      g.beginPath(); g.moveTo(-7 + i*0.6, y); g.quadraticCurveTo(0, y + 3, 7 - i*0.6, y); g.stroke();
+  if (T.soft || style === 'regal'){
+    // VÁY GIÁP: một khối loe, không tách hai ống
+    const skirt = () => { g.beginPath();
+      g.moveTo(-17, -13); g.lineTo(17, -13);
+      g.bezierCurveTo(23, 4, 26, 18, 27, 28);
+      g.lineTo(-27, 28);
+      g.bezierCurveTo(-26, 18, -23, 4, -17, -13); g.closePath(); };
+    skirt(); g.fillStyle = iGrad(g, -24, -13, 24, 28, M.hi, M.lo); g.fill();
+    skirt(); aTex(g, M, T, st, -26, -13, 26, 28);
+    skirt(); g.strokeStyle = 'rgba(0,0,0,.38)'; g.lineWidth = 1.1; g.stroke();
+    if (st >= 3){                                   // dải rủ trước
+      iFill(g, [[-5, -12], [5, -12], [4, 27], [-4, 27]], M.trim);
+      if (style === 'leaf'){ g.fillStyle = M.trim;
+        for (let i = 0; i < 3; i++){ g.beginPath();
+          g.ellipse(0, 0 + i * 9, 4, 7, 0, 0, 7); g.fill(); } }
     }
-    if (st >= 2) iRivet(g, M, 0, 2.5, 1.7);
-    if (st >= 5) iFill(g, [[s*8, 6], [s*15, 2], [s*8, 12]], M.trim);
-    g.restore();
+  } else {
+    // HAI TẤM ĐÙI rời
+    for (const sd of [-1, 1]){
+      g.save(); g.translate(sd * 10, -12);
+      const th = () => { g.beginPath();
+        g.moveTo(-8, 0); g.lineTo(8, 0);
+        g.bezierCurveTo(10, 14, 7, 26, 0, 30);
+        g.bezierCurveTo(-7, 26, -10, 14, -8, 0); g.closePath(); };
+      th(); g.fillStyle = iGrad(g, -8, 0, 8, 30, M.hi, M.lo); g.fill();
+      th(); aTex(g, M, T, st, -9, 0, 9, 30);
+      th(); g.strokeStyle = 'rgba(0,0,0,.36)'; g.lineWidth = 1; g.stroke();
+      if (st >= 2) iRivet(g, M, 0, 2.5, 1.7);
+      if (st >= 5) iFill(g, [[sd * 8, 6], [sd * 15, 2], [sd * 8, 12]], M.trim);
+      g.restore();
+    }
   }
   iSheenArc(g);
 }
 
-// ── GIÁP: ủng ───────────────────────────────────────────────────────────────────
+// ── ỦNG ─────────────────────────────────────────────────────────────────────────
 function iaBoots(g, M, P){
-  const st = P.st || 1;
-  for (const s of [-1, 1]){
-    g.save(); g.translate(s * 11, 0); g.rotate(s * 0.06);
-    // ống
-    iFill(g, [[-8, -24], [8, -24], [7, 6], [-7, 6]], iGrad(g, -8, -24, 8, 6, M.hi, M.lo));
+  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
+  for (const sd of [-1, 1]){
+    g.save(); g.translate(sd * 11, 0); g.rotate(sd * 0.06);
+    const shaft = () => { g.beginPath();
+      if (T.soft){                                  // giày mềm: ống thấp, bo tròn
+        g.moveTo(-8, -14); g.quadraticCurveTo(-9, -4, -7, 6);
+        g.lineTo(7, 6); g.quadraticCurveTo(9, -4, 8, -14); g.closePath();
+      } else {
+        g.moveTo(-8, -24); g.lineTo(8, -24); g.lineTo(7, 6); g.lineTo(-7, 6); g.closePath();
+      }
+    };
+    shaft(); g.fillStyle = iGrad(g, -8, -24, 8, 6, M.hi, M.lo); g.fill();
+    shaft(); aTex(g, M, T, st, -8, T.soft ? -14 : -24, 8, 6);
+    shaft(); g.strokeStyle = 'rgba(0,0,0,.38)'; g.lineWidth = 1; g.stroke();
     // vành ống
-    iFill(g, [[-9.5, -26], [9.5, -26], [9, -19], [-9, -19]], M.trim);
+    if (T.soft) iFill(g, [[-9, -16], [9, -16], [8.5, -10], [-8.5, -10]], M.trim);
+    else iFill(g, [[-9.5, -26], [9.5, -26], [9, -19], [-9, -19]], M.trim);
     // bàn chân
     g.beginPath();
     g.moveTo(-7, 4); g.lineTo(7, 4);
-    g.lineTo(s > 0 ? 15 : 9, 16); g.lineTo(s > 0 ? 13 : 7, 21);
+    g.lineTo(sd > 0 ? 15 : 9, 16); g.lineTo(sd > 0 ? 13 : 7, 21);
     g.lineTo(-9, 21); g.closePath();
     g.fillStyle = iGrad(g, -7, 4, 10, 21, M.hi, M.lo); g.fill();
-    // đế
-    iFill(g, [[-9.5, 20], [s > 0 ? 13.5 : 7.5, 20], [s > 0 ? 13 : 7, 24], [-9, 24]], M.lo);
-    if (st >= 2){ g.strokeStyle = M.trim; g.lineWidth = 1.3;
+    g.strokeStyle = 'rgba(0,0,0,.36)'; g.lineWidth = 1; g.stroke();
+    iFill(g, [[-9.5, 20], [sd > 0 ? 13.5 : 7.5, 20], [sd > 0 ? 13 : 7, 24], [-9, 24]], M.lo);
+    if (st >= 2 && !T.soft){ g.strokeStyle = M.trim; g.lineWidth = 1.3;
       g.beginPath(); g.moveTo(-7, -8); g.lineTo(7, -8); g.stroke(); }
-    if (st >= 3) iRivet(g, M, 0, -13, 1.6);
-    if (st >= 4) iFill(g, [[-8, -22], [-15, -30], [-7, -27]], M.trim);   // cánh cổ ủng
+    if (T.soft && st >= 2){                          // dây buộc chéo
+      g.strokeStyle = M.trim; g.lineWidth = 1.4;
+      for (let i = 0; i < 3; i++){ const y = -10 + i * 5;
+        g.beginPath(); g.moveTo(-7, y); g.lineTo(7, y + 3); g.stroke(); }
+    }
+    if (st >= 3 && !T.soft) iRivet(g, M, 0, -13, 1.6);
+    if (style === 'plume' && st >= 3){                // cánh cổ chân
+      g.fillStyle = M.trim;
+      for (let i = 0; i < 3; i++){
+        g.beginPath(); g.moveTo(-8, -18 + i * 3);
+        g.quadraticCurveTo(-19 - i * 3, -24 - i * 3, -24 - i * 4, -18 - i * 4);
+        g.quadraticCurveTo(-16, -16 - i * 2, -8, -15 + i * 3); g.fill();
+      }
+    } else if (st >= 4 && !T.soft) iFill(g, [[-8, -22], [-15, -30], [-7, -27]], M.trim);
     if (st >= 5) iGem(g, M, 0, -2, 2.4);
     g.restore();
   }
   iSheenArc(g);
 }
-
-const ITEM_ART = {
-  weapon: iaWeapon, helm: iaHelm, armor: iaArmor, gloves: iaGloves, pants: iaPants, boots: iaBoots,
-  ring: iaRing, pendPhys: iaPendPhys, pendMagic: iaPendMagic,
-};
-
-// Vẽ trọn một icon: nền theo phẩm → hình món → hào quang cường hoá.
-function drawItemIcon(g, def, tier, rarity, plus){
-  const M = itemPal(def, tier);
-  const R = RARITIES[Math.max(0, Math.min(4, rarity || 0))];
-  g.save();
-  g.translate(ICON_PX / 2, ICON_PX / 2);
-  g.scale(ICON_PX / 100, ICON_PX / 100);
-  // nền: quầng màu phẩm — cùng ngôn ngữ màu với viền ô túi, để nhìn là biết phẩm
-  const bg = g.createRadialGradient(0, 0, 4, 0, 0, 50);
-  bg.addColorStop(0, R.color + '38'); bg.addColorStop(1, R.color + '00');
-  g.fillStyle = bg; g.fillRect(-50, -50, 100, 100);
-  // hào quang cường hoá: vẽ đè chính hình ở cỡ lớn hơn bằng màu sáng, giống hPlusAura của nhân vật
-  const st = plusStage(plus || 0);
-  const fn = ITEM_ART[def.art] || iaWeapon;
-  if (st >= 1){
-    g.save();
-    g.globalCompositeOperation = 'lighter';
-    g.globalAlpha = 0.07 + st * 0.045;   // nhẹ tay: hào quang là GIA VỊ, không được nuốt bóng dáng
-    g.scale(1.16, 1.16);
-    const gl = { lo: M.glow || '#ffe9a8', hi: M.glow || '#ffe9a8', trim: M.glow || '#ffe9a8', glow: null };
-    g.save(); fn(g, gl, def); g.restore();
-    g.restore();
-  }
-  g.save(); fn(g, M, def); g.restore();
-  g.restore();
-}
-// data-URL có cache. Khoá gồm mọi thứ đổi hình: món, giai, phẩm, mức rèn.
-window.itemArtUrl = function(def, tier, rarity, plus){
-  const key = `${def.art}|${def.blade||''}|${def.guard||''}|${def.pommel||''}|${def.motif||''}`
-            + `|${def.w||''}|${def.len||''}|${def.gw||''}|${def.st || 1}|${def.mat||''}|${def.tintKey || ''}`
-            + `|${tier}|${rarity}|${plusStage(plus || 0)}`;
-  let u = _itemArtCache.get(key);
-  if (u) return u;
-  const c = document.createElement('canvas');
-  c.width = ICON_PX; c.height = ICON_PX;
-  drawItemIcon(c.getContext('2d'), def, tier, rarity, plus);
-  u = c.toDataURL();
-  _itemArtCache.set(key, u);
-  return u;
-};
 
 // ── PHỤ KIỆN: nhẫn — dùng chung mọi lớp ─────────────────────────────────────────
 function iaRing(g, M, P){
@@ -11448,6 +11670,52 @@ function iaPendMagic(g, M, P){
     g.fillStyle = c; g.beginPath(); g.arc(0, 11, rr + 6, 0, 7); g.fill(); g.restore(); }
   iSheenArc(g);
 }
+
+const ITEM_ART = {
+  weapon: iaWeapon, helm: iaHelm, armor: iaArmor, gloves: iaGloves, pants: iaPants, boots: iaBoots,
+  ring: iaRing, pendPhys: iaPendPhys, pendMagic: iaPendMagic,
+};
+
+// Vẽ trọn một icon: nền theo phẩm → hình món → hào quang cường hoá.
+function drawItemIcon(g, def, tier, rarity, plus){
+  const M = itemPal(def, tier);
+  const R = RARITIES[Math.max(0, Math.min(4, rarity || 0))];
+  g.save();
+  g.translate(ICON_PX / 2, ICON_PX / 2);
+  g.scale(ICON_PX / 100, ICON_PX / 100);
+  // nền: quầng màu phẩm — cùng ngôn ngữ màu với viền ô túi, để nhìn là biết phẩm
+  const bg = g.createRadialGradient(0, 0, 4, 0, 0, 50);
+  bg.addColorStop(0, R.color + '38'); bg.addColorStop(1, R.color + '00');
+  g.fillStyle = bg; g.fillRect(-50, -50, 100, 100);
+  // hào quang cường hoá: vẽ đè chính hình ở cỡ lớn hơn bằng màu sáng, giống hPlusAura của nhân vật
+  const st = plusStage(plus || 0);
+  const fn = ITEM_ART[def.art] || iaWeapon;
+  if (st >= 1){
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.globalAlpha = 0.07 + st * 0.045;   // nhẹ tay: hào quang là GIA VỊ, không được nuốt bóng dáng
+    g.scale(1.16, 1.16);
+    const gl = { lo: M.glow || '#ffe9a8', hi: M.glow || '#ffe9a8', trim: M.glow || '#ffe9a8', glow: null };
+    g.save(); fn(g, gl, def); g.restore();
+    g.restore();
+  }
+  g.save(); fn(g, M, def); g.restore();
+  g.restore();
+}
+// data-URL có cache. Khoá gồm mọi thứ đổi hình: món, giai, phẩm, mức rèn.
+window.itemArtUrl = function(def, tier, rarity, plus){
+  const key = `${def.art}|${def.blade||''}|${def.guard||''}|${def.pommel||''}|${def.motif||''}`
+            + `|${def.w||''}|${def.len||''}|${def.gw||''}|${def.st || 1}|${def.mat||''}|${def.tintKey || ''}`
+            + `|${tier}|${rarity}|${plusStage(plus || 0)}`;
+  let u = _itemArtCache.get(key);
+  if (u) return u;
+  const c = document.createElement('canvas');
+  c.width = ICON_PX; c.height = ICON_PX;
+  drawItemIcon(c.getContext('2d'), def, tier, rarity, plus);
+  u = c.toDataURL();
+  _itemArtCache.set(key, u);
+  return u;
+};
 
 function slotIcon(it, cls){
   const f = SLOT_ICONS[it.slot] || 'vukhi';
