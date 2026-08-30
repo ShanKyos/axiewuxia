@@ -3149,10 +3149,15 @@ function newPlayer(sectKey){
   calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
   buildWorld();
 }
+// Save cũ không có `def` trên món nào, nên toàn bộ trang bị sẽ rơi về icon PNG dùng chung và
+// KHÔNG bị khoá lớp — một Dark Wizard save cũ đang cầm kiếm sẽ tiếp tục cầm được. Danh mục 220
+// món đổi hẳn hình dạng vật phẩm nên không có đường vá tại chỗ nào sạch: nâng phiên bản, xoá.
+const SAVE_VERSION = 2;
 function saveGame(){
   if (!player) return;
   try {
     const payload = JSON.stringify({
+      v: SAVE_VERSION,
       player, questIdx, questProg, questState, victory, curMap, sideStates,
       savedAt: Date.now()
     });
@@ -3168,6 +3173,12 @@ function loadGame(){
     const raw = localStorage.getItem('vlcm_save');
     if (!raw) return false;
     const d = JSON.parse(raw);
+    if ((d.v || 1) < SAVE_VERSION){
+      // Nói rõ ra, đừng lặng lẽ xoá: mất nhân vật mà không hiểu vì sao là thứ tệ nhất.
+      try { localStorage.removeItem('vlcm_save'); } catch { /* best-effort */ }
+      window._saveWiped = true;
+      return false;
+    }
     player = d.player; questIdx = d.questIdx; questProg = d.questProg;
     questState = d.questState; victory = !!d.victory;
     sideStates = d.sideStates || {};
@@ -10502,9 +10513,31 @@ function showMainMenu(){
   el('sect-select').classList.remove('hidden');
   AudioSys.playBgm(BGM_INTRO); // nhạc Ái Đích Phế Khư vang lên ngay màn hình chính
 }
-const hasSave = !!localStorage.getItem('vlcm_save');
-if (hasSave) showMainMenu(); // người cũ → thẳng màn Tiếp Tục
-else setTimeout(showIntro, 0); // người mới → cốt truyện (defer: chờ module intro ở cuối file nạp xong)
+// `hasSave` phải BIẾT PHIÊN BẢN. Chỉ kiểm tra "có khoá trong localStorage" thì save cũ vẫn
+// hiện nút Tiếp Tục, bấm vào thì loadGame() trả false và người chơi rơi ra màn hình trắng.
+let saveStale = false;
+const hasSave = (() => {
+  try {
+    const raw = localStorage.getItem('vlcm_save');
+    if (!raw) return false;
+    if ((JSON.parse(raw).v || 1) >= SAVE_VERSION) return true;
+    localStorage.removeItem('vlcm_save'); saveStale = true; return false;
+  } catch { return false; }
+})();
+if (hasSave) showMainMenu();          // người cũ → thẳng màn Tiếp Tục
+else if (saveStale){
+  // Người này ĐÃ chơi rồi — đừng bắt xem lại intro cốt truyện. Đưa thẳng vào màn chọn lớp,
+  // kèm lý do. Mất nhân vật mà không hiểu vì sao là thứ tệ nhất một bản cập nhật có thể làm.
+  setTimeout(() => {
+    el('sect-select').classList.remove('hidden');
+    const cards = el('sect-cards'); if (cards) cards.style.display = '';
+    const sub = document.querySelector('#sect-select .ss-sub');
+    if (sub) sub.innerHTML = `<b style="color:#e8b04a">Bản cập nhật lớn — toàn bộ trang bị đã được vẽ lại</b><br>
+      <span style="opacity:.85">Hệ vật phẩm đổi hoàn toàn: 220 món, mỗi món một hình riêng, và vũ khí nay
+      khoá theo lớp. Nhân vật cũ không mang sang được — hãy tạo lại, lần này nhìn đồ là biết đẳng cấp.</span>`;
+  }, 0);
+}
+else setTimeout(showIntro, 0);        // người mới → cốt truyện (defer: chờ module intro ở cuối file nạp xong)
 {
   const btn = el('btn-continue');
   if (hasSave) btn.classList.remove('hidden');
