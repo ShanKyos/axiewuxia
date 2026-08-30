@@ -4082,8 +4082,10 @@ function hurtMob(m, dmg, source){
   final = Math.max(1, Math.round(final));
   m.hp -= final; m.hitT = 0.15;
   // Màu loé theo LOẠI đòn — trước đây `ctx.filter` chỉ làm sáng lên, không phân biệt được gì.
+  const _mf = (source === 'hit' || source === 'crit') ? weaponFx() : null;
   m.hitCol = perfectNote ? '#ff9df0' : source === 'crit' ? '#ffd76a'
-           : counterNote ? (NGU_HANH[sectEl] || {}).color || '#ffffff' : '#ffffff';
+           : counterNote ? (NGU_HANH[sectEl] || {}).color || '#ffffff'
+           : _mf ? _mf.col : '#ffffff';
   // Tỉ lệ SỨC NẶNG của đòn: cào 1% máu và bổ mất nửa cây máu phải khác nhau. Trước đây hitstop
   // là hằng số bất kể sát thương nên mọi đòn chạm nhau y hệt.
   const _w = Math.min(1, final / Math.max(1, m.maxHp));
@@ -4101,7 +4103,10 @@ function hurtMob(m, dmg, source){
   // Khựng hình / rung / loé bạo kích KHÔNG đặt ở đây nữa — xem swingFeel(). Đặt trong hurtMob
   // nghĩa là AoE trúng 8 con thì kích hoạt 8 lần, và đạn multishot làm hitstop nối đuôi nhau
   // khiến game giật liên tục thay vì "khựng một nhịp rồi bung".
-  if (source === 'hit' || source === 'crit') swingFeel(source === 'crit', _w, m);
+  if (source === 'hit' || source === 'crit'){
+    swingFeel(source === 'crit', _w, m);
+    motifBurst(m.x, m.y - (m.def.size || 14) * 0.4, Math.atan2(m.y - player.y, m.x - player.x));
+  }
   // Âm chạm. `sfx_hit.mp3` KHÔNG TỒN TẠI trên đĩa, nên trước đây mọi đòn thường im lặng lúc
   // chạm còn bạo kích thì có tiếng — game phân biệt thường/chí mạng bằng CÓ TIẾNG vs KHÔNG,
   // hoàn toàn do tai nạn. Dùng smash_<hệ> đã có sẵn (đúng chất liệu, đúng theo lớp).
@@ -4429,6 +4434,50 @@ function nearestMob(range){
   return best;
 }
 // Vệt kiếm khí — màu theo lớp/nguyên tố của chiêu (mặc định thép trắng).
+// ═══ HIỆU ỨNG THEO HOA VĂN VŨ KHÍ ═══
+// Kiếm điện chém ra tia xanh, kiếm băng ra mảnh băng. THUẦN HÌNH ẢNH — cơ chế chiến đấu là
+// việc của Khắc Ấn; cho vũ khí làm cả hai thì hai hệ giẫm chân nhau và người chơi không biết
+// sát thương lan ra là do kiếm hay do dấu ấn.
+const MOTIF_FX = {
+  set:   { col:'#8fe0ff', glow:'#dffaff', hit:'zap'   },
+  bang:  { col:'#bfe8ff', glow:'#eaf8ff', hit:'frost' },
+  lua:   { col:'#ff8a2a', glow:'#ffd08a', hit:'ember' },
+  runes: { col:'#c8a8ff', glow:'#e8dcff', hit:'rune'  },
+  mach:  { col:'#c8a8ff', glow:'#f0e6ff', hit:'rune'  },
+  gai:   { col:'#ff6a5a', glow:'#ffc0a8', hit:'shard' },
+};
+// Hoa văn của vũ khí ĐANG MẶC. Trả null khi tay không hoặc vũ khí trơn.
+function weaponFx(){
+  const d = itemDef(player && player.equip && player.equip.vukhi);
+  return (d && MOTIF_FX[d.motif]) || null;
+}
+// Nổ tại điểm chạm — mỗi hoa văn một dáng, đọc ra ngay cả khi tắt tiếng.
+function motifBurst(x, y, ang){
+  const F = weaponFx();
+  if (!F) return;
+  if (F.hit === 'zap'){                       // tia điện gãy khúc bắn ra hai bên
+    for (let i = 0; i < 3; i++){
+      const a = ang + rnd(-1.1, 1.1);
+      addEffect({ type:'ink', x, y, vx:Math.cos(a)*rnd(90,170), vy:Math.sin(a)*rnd(90,170)-40, color:F.col });
+    }
+    addEffect({ type:'ring', x, y, r:26, color:F.col });
+  } else if (F.hit === 'frost'){              // mảnh băng rơi xuống
+    for (let i = 0; i < 5; i++)
+      addEffect({ type:'ink', x:x+rnd(-14,14), y:y+rnd(-10,6), vx:rnd(-40,40), vy:rnd(-70,-20), color:F.col });
+    addEffect({ type:'ring', x, y, r:22, color:F.glow });
+  } else if (F.hit === 'ember'){               // tàn lửa bốc lên
+    for (let i = 0; i < 5; i++)
+      addEffect({ type:'ink', x:x+rnd(-10,10), y:y+rnd(-6,6), vx:rnd(-45,45), vy:rnd(-110,-45), color:F.col });
+  } else if (F.hit === 'rune'){                // vòng ký tự loé rồi tắt
+    addEffect({ type:'ring', x, y, r:30, color:F.col });
+    addEffect({ type:'ring', x, y, r:16, color:F.glow });
+  } else {                                     // mảnh vỡ văng theo hướng chém
+    for (let i = 0; i < 4; i++){
+      const a = ang + rnd(-0.5, 0.5);
+      addEffect({ type:'ink', x, y, vx:Math.cos(a)*rnd(120,200), vy:Math.sin(a)*rnd(120,200)-30, color:F.col });
+    }
+  }
+}
 function spawnSlash(x, y, face, s, color, glow){
   addEffect({ type:'slash', x, y, face, s: s || 110, color, glow });
 }
@@ -4466,12 +4515,17 @@ function doBasic(){
     addEffect({ type:'arc', x:player.x, y:player.y, face:player.face, r:40, color:sect.color });
   } else {
     addEffect({ type:'arc', x:player.x, y:player.y, face:player.face, r:60, color:'#2b2620' });
-    spawnSlash(player.x + Math.cos(player.face)*36, player.y + Math.sin(player.face)*36 - 12, player.face, 95, sect.color, sect.glow);
+    // Vệt chém mang màu HOA VĂN của vũ khí, không phải màu phái — đây là chỗ người chơi thấy
+    // "kiếm điện" khác "kiếm băng" rõ nhất, vì nó lặp lại mỗi đòn.
+    const _wf = weaponFx();
+    spawnSlash(player.x + Math.cos(player.face)*36, player.y + Math.sin(player.face)*36 - 12,
+               player.face, 95, _wf ? _wf.col : sect.color, _wf ? _wf.glow : sect.glow);
   }
   if (t){
     if (ranged){
       const ang = Math.atan2(t.y-player.y, t.x-player.x);
-      projectiles.push({ x:player.x, y:player.y-10, ang, speed:520, dmg:player.atk*rnd(0.9,1.12), kind:'basic', life:0.9, color:sect.color, style:sect.basicProj || 'orb' });
+      const _wp = weaponFx();
+      projectiles.push({ x:player.x, y:player.y-10, ang, speed:520, dmg:player.atk*rnd(0.9,1.12), kind:'basic', life:0.9, color:_wp ? _wp.col : sect.color, style:sect.basicProj || 'orb' });
     } else {
       // Hẹn sát thương tới KHUNG TIẾP XÚC thay vì nổ ngay khung đầu. hSwing() đẩy khoảnh khắc
       // lưỡi thật sự chạm ra p≈0.41, nên bắn âm thanh/khựng hình/sát thương ở p=0 là lệch ~8
