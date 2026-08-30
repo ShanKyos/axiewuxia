@@ -165,6 +165,27 @@ làm chiêu thức hành xử khác đi: 15 dòng phụ (`subName`) đều là `
 Test: `node <scratchpad>/test_sigil.js` — chạy A/B từng Khắc Ấn (tắt vs bật) và bắt buộc
 số đo phải khác nhau; "có mô tả nhưng không làm gì" sẽ bị đánh trượt.
 
+## So sánh trang bị — nửa còn lại của Loot 2.0
+
+Với 15 dòng phụ đều là % thuần, người chơi không tự nhìn ra món vừa nhặt hơn hay kém.
+Trước đây túi đồ chỉ có mũi `▲` xanh dựa trên `itemPower()`: nói được "to hơn", không nói
+được "khác chỗ nào", và **mù hoàn toàn với Khắc Ấn**.
+
+- `itemCompareHtml(it)` — phán quyết + chênh lệch TỪNG DÒNG so với món đang mặc cùng ô.
+  Nêu Khắc Ấn **trước** lực chiến: món kém 10% mà mang Khắc Ấn chưa có thường vẫn đáng mặc.
+  Cũng cảnh báo khi đổi món sẽ **rời bộ Cổ Thần** (mốc 2/3/5 mà bảng chỉ số không thấy).
+- `itemStatMap(it)` gom dòng chính/phụ/Thức Tỉnh về một bảng trừ được nhau (khoá có tiền tố
+  `m:`/`s:`/`a:` để dòng cùng loại không đè nhau).
+- `itemSigilNew(it)` / `itemSigilLost(slot, incoming)` — được/mất Khắc Ấn nếu đổi món.
+- ⚠ **Ba cái bẫy Khắc Ấn tạo ra, đều đã chặn** (dễ tái phạm khi thêm hệ đồ mới):
+  1. `tryAutoEquip` + `autoEquipBest` từng tháo mất Khắc Ấn chỉ vì món mới hơn 5% chỉ số.
+  2. `autoEquipBest` xếp hạng theo **hai khoá** — (có Khắc Ấn mới) rồi mới tới lực chiến.
+     Nhân lực chiến với hệ số cố định là sai: Khắc Ấn khan hiếm hơn hẳn nên chênh chỉ số
+     bao nhiêu cũng không mua lại được.
+  3. Auto-bán (3 chỗ) + `sellItem` một chạm: món có `sigil` luôn tính là đồ quý.
+
+Test: `node <scratchpad>/test_itemcompare.js`.
+
 ## Hệ thống kỹ năng (đã tối giản)
 
 Taskbar cố định **3 ô**: chiêu chính (`a`) · chiêu phụ (`tp`) · buff riêng từng lớp

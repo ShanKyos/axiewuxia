@@ -2606,6 +2606,92 @@ function mainName(k){
   return { atk:'Công Kích', def:'Phòng Ngự', vit:'Sinh Lực', str:'Lực Lượng',
            agi:'Mẫn Tiệp', hp:'Sinh Lực tối đa', crit:'Bạo Kích %', qireg:'Hồi Instinct' }[k] || k;
 }
+// ═══════════ SO SÁNH TRANG BỊ — nửa còn lại của bài học Loot 2.0 ═══════════
+// Với 15 dòng phụ đều là % thuần, người chơi KHÔNG có cách nào tự nhìn ra món vừa nhặt hơn
+// hay kém món đang mặc. Trước đây túi đồ chỉ có một mũi ▲ xanh dựa trên itemPower() — nói
+// được "to hơn" nhưng không nói được "khác chỗ nào", và đặc biệt là mù hoàn toàn với Khắc Ấn.
+
+// Gom mọi dòng chỉ số của một món về chung một bảng để trừ nhau được.
+// Khoá có tiền tố để dòng chính / dòng phụ / dòng Thức Tỉnh cùng loại không đè lên nhau.
+function itemStatMap(it){
+  const m = 1 + it.plus * 0.08, o = {};
+  if (it.main) o['m:' + it.main.k] = { name: it.main.name, v: it.main.v * m, pct: false };
+  for (const s of it.subs)
+    o['s:' + s.k] = { name: s.name, v: s.v * (s.k === 'perfect' ? 1 : m), pct: true };
+  if (it.plus >= 10 && it.awakened)
+    o['a:' + it.awakened.k] = { name: '☆ ' + it.awakened.name, v: it.awakened.v, pct: false };
+  return o;
+}
+// Khắc Ấn món này MANG LẠI mà hiện người chơi chưa có (đã tính cả việc mặc nó vào sẽ tháo
+// món cũ ra). Trả về id, hoặc null.
+function itemSigilNew(it){
+  if (!it || !it.sigil || !sigilUsable(it.sigil)) return null;
+  if (player && player.sigils && player.sigils[it.sigil]){
+    // đang có rồi — nhưng nếu nguồn duy nhất chính là món ở ĐÚNG ô này thì mặc vào không mất gì
+    const cur = player.equip && player.equip[it.slot];
+    if (!(cur && cur.sigil === it.sigil)) return null;
+  }
+  return it.sigil;
+}
+// Khắc Ấn sẽ MẤT nếu tháo món đang mặc ở ô này ra (không món nào khác đang cấp nó).
+function itemSigilLost(slot, incoming){
+  const cur = player && player.equip && player.equip[slot];
+  if (!cur || !cur.sigil || !sigilUsable(cur.sigil)) return null;
+  if (incoming && incoming.sigil === cur.sigil) return null;
+  for (const k in player.equip){
+    if (k === slot) continue;
+    const o = player.equip[k];
+    if (o && o.sigil === cur.sigil) return null;   // món khác vẫn cấp Khắc Ấn này
+  }
+  return cur.sigil;
+}
+// Bảng so sánh đầy đủ giữa món trong túi và món đang mặc cùng ô.
+function itemCompareHtml(it){
+  if (!it || it.special || !it.slot) return '';
+  const cur = player.equip[it.slot];
+  const np = itemPower(it), cp = cur ? itemPower(cur) : 0;
+  const gained = itemSigilNew(it), lost = itemSigilLost(it.slot, it);
+  const pct = cp > 0 ? Math.round((np / cp - 1) * 100) : 100;
+  const lowLv = player.level < itemReqLv(it);
+
+  // Phán quyết. Khắc Ấn được nói TRƯỚC lực chiến: một món kém 10% mà mang về Khắc Ấn chưa có
+  // thường đáng mặc hơn, và đó chính là loại quyết định mà mũi ▲ thuần số không diễn tả được.
+  let verdict, vc;
+  if (lowLv){ verdict = `Chưa đủ cấp — cần LV${itemReqLv(it)}`; vc = '#ff7a6a'; }
+  else if (gained){ verdict = `◆ Mang về Khắc Ấn mới: ${SIGIL_DEFS[gained].name}`; vc = SIGIL_DEFS[gained].color; }
+  else if (!cur){ verdict = 'Ô này đang trống — mặc vào là lời'; vc = '#6ae88a'; }
+  else if (pct >= 3){ verdict = `▲ Mạnh hơn ${pct}% lực chiến`; vc = '#6ae88a'; }
+  else if (pct <= -3){ verdict = `▼ Yếu hơn ${-pct}% lực chiến`; vc = '#ff7a6a'; }
+  else { verdict = '≈ Ngang nhau về lực chiến'; vc = '#c9b889'; }
+
+  let s = `<div style="margin-top:6px;padding:6px 8px;border:1px solid rgba(255,255,255,.12);border-radius:5px;background:rgba(0,0,0,.22)">`;
+  s += `<div style="font-size:12.5px;font-weight:700;color:${vc}">${verdict}</div>`;
+  if (lost) s += `<div style="font-size:11.5px;color:#ff9a6a;margin-top:2px">⚠ Tháo món cũ ra sẽ MẤT Khắc Ấn ${SIGIL_DEFS[lost].name}</div>`;
+  if (!cur){ return s + `</div>`; }
+
+  s += `<div style="font-size:11px;opacity:.6;margin:3px 0 2px">so với đang mặc: ${cur.name} (Lực chiến ${cp} → ${np})</div>`;
+  const A = itemStatMap(cur), B = itemStatMap(it);
+  const rows = [];
+  for (const k of new Set([...Object.keys(A), ...Object.keys(B)])){
+    const a = A[k], b = B[k];
+    const av = a ? a.v : 0, bv = b ? b.v : 0;
+    const d = Math.round((bv - av) * 10) / 10;
+    if (!d) continue;
+    const nm = (b || a).name, unit = (b || a).pct ? '%' : '';
+    rows.push({ d, html: `<span style="color:${d > 0 ? '#6ae88a' : '#ff7a6a'}">${d > 0 ? '+' : ''}${d}${unit}</span> ${nm}` });
+  }
+  rows.sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
+  s += rows.length
+    ? `<div style="font-size:11.5px;line-height:1.75">${rows.map(r => r.html).join(' · ')}</div>`
+    : `<div style="font-size:11.5px;opacity:.55">Chỉ số y hệt nhau.</div>`;
+  // Bộ Cổ Thần: đổi món có thể phá mốc 2/3/5 — mất bonus bộ mà bảng chỉ số ở trên không hề thấy
+  if (cur.ancient && cur.ancient !== it.ancient && ANCIENT_SETS[cur.ancient]){
+    const n = (player.setActive && player.setActive[cur.ancient] || {}).n || 0;
+    s += `<div style="font-size:11.5px;color:#ff9a6a;margin-top:2px">⚠ Rời bộ <b style="color:${ANCIENT_SETS[cur.ancient].color}">${ANCIENT_SETS[cur.ancient].name}</b> (${n}/5) — có thể tụt mốc bộ</div>`;
+  }
+  return s + `</div>`;
+}
+
 function itemPower(it){
   const m = 1 + it.plus * 0.08;
   let p = it.main ? it.main.v * m * 10 : 0;
@@ -2619,7 +2705,7 @@ function itemSellPrice(it){ return 20 + (it.tier || 1)*15 + it.rarity*40 + Math.
 window.sellItem = function(i){
   const it = player.inv[i];
   if (!it) return;
-  const precious = it.rarity >= 2 || it.perfect || it.ancient; // xác nhận 2 lớp với đồ quý
+  const precious = it.rarity >= 2 || it.perfect || it.ancient || it.sigil; // xác nhận 2 lớp với đồ quý (Khắc Ấn luôn tính là quý)
   if (precious && window._sellArm !== i){
     window._sellArm = i;
     addFloat(player.x, player.y-40, `Bấm Bán lần nữa để xác nhận bán ${it.name}`, '#ffb066', 12);
@@ -2641,8 +2727,12 @@ function tryAutoEquip(it){
   if (player.level < itemReqLv(it)) return;
   const cur = player.equip[it.slot];
   const cp = cur ? itemPower(cur) : 0, np = itemPower(it);
-  if (np < Math.max(cp*1.05, cp + 1)) return;
-  if (cur && (cur.perfect || cur.ancient || cur.luck) && np < cp*1.15) return;
+  // Khắc Ấn nằm ngoài lực chiến hoàn toàn. Không chặn ở đây thì tự-mặc-đồ sẽ lặng lẽ tháo mất
+  // một Khắc Ấn chỉ vì món mới nhiều hơn 5% chỉ số — mất thứ đắt nhất game vì một con số nhỏ.
+  if (itemSigilLost(it.slot, it)) return;
+  const _sgGain = !!itemSigilNew(it);
+  if (!_sgGain && np < Math.max(cp*1.05, cp + 1)) return;
+  if (!_sgGain && cur && (cur.perfect || cur.ancient || cur.luck) && np < cp*1.15) return;
   const idx = player.inv.indexOf(it);
   if (idx < 0) return;
   player.inv.splice(idx, 1);
@@ -2654,16 +2744,21 @@ function tryAutoEquip(it){
 window.autoEquipBest = function(){
   let swapped = 0, gained = 0;
   for (const sl of SLOTS){
-    let bi = -1, bp = player.equip[sl.id] ? itemPower(player.equip[sl.id]) : 0;
+    // Xếp hạng theo HAI khoá, không phải một: (có Khắc Ấn mới) rồi mới tới lực chiến.
+    // Nhân lực chiến với một hệ số cố định là sai — Khắc Ấn khan hiếm hơn hẳn (mỗi lớp chỉ
+    // 4 cái, chỉ từ 3 nguồn cuối game) nên chênh lệch chỉ số bao nhiêu cũng không mua lại được.
+    let bi = -1, bs = false, bp = player.equip[sl.id] ? itemPower(player.equip[sl.id]) : 0;
     for (let i2 = 0; i2 < player.inv.length; i2++){
       const it2 = player.inv[i2];
       if (it2.slot !== sl.id || it2.special || player.level < itemReqLv(it2)) continue;
-      const p2 = itemPower(it2);
-      if (p2 > bp){ bp = p2; bi = i2; }
+      if (itemSigilLost(sl.id, it2)) continue;   // cùng lý do như tryAutoEquip: đừng tháo mất Khắc Ấn
+      const s2 = !!itemSigilNew(it2), p2 = itemPower(it2);
+      if (s2 !== bs ? s2 : p2 > bp){ bs = s2; bp = p2; bi = i2; }
     }
     if (bi >= 0){
       const it2 = player.inv[bi];
-      gained += bp - (player.equip[sl.id] ? itemPower(player.equip[sl.id]) : 0);
+      // lấy lực chiến THẬT của món được chọn, không lấy bp (đã nhân hệ số ưu tiên Khắc Ấn)
+      gained += itemPower(it2) - (player.equip[sl.id] ? itemPower(player.equip[sl.id]) : 0);
       player.inv.splice(bi, 1);
       if (player.equip[sl.id]) player.inv.push(player.equip[sl.id]);
       player.equip[sl.id] = it2;
@@ -4065,7 +4160,9 @@ function killMob(m, source){
     }
     if (it.rarity >= 3) _gotThan = true;
     // Tự động bán đồ Phàm đổi lấy bạc (bật trong Túi Đồ)
-    if (player.autoSell && it.rarity <= 0){
+    // Khắc Ấn có thể rơi trên món độ hiếm thấp (genItem roll ngẫu nhiên) — bán tự động
+    // món đó là xoá vĩnh viễn thứ hiếm nhất game vì vài đồng bạc.
+    if (player.autoSell && it.rarity <= 0 && !it.sigil){
       const v = 20 + it.rarity*30 + (it.tier||1)*15;
       player.silver += v;
       addFloat(m.x, m.y-54, `Tự bán ${it.name} +${v}◈`, '#9aa8d4', 11);
@@ -8938,13 +9035,16 @@ function renderBag(){
   player.inv.forEach((it, i)=>{
     const _eq2 = player.equip[it.slot], _bp2 = _eq2 ? itemPower(_eq2) : 0;
     const _up = !it.special && player.level >= itemReqLv(it) && itemPower(it) > _bp2;
-    html += `<div class="bag-cell rar-${it.rarity}" style="position:relative" draggable="true" ondragstart="onBagItemDragStart(event,${i})" onclick="equipItem(${i})" title="${it.name} — bấm để MẶC NGAY, hoặc kéo thả vào ô Trang Bị${_up ? ' (mạnh hơn đang mặc!)' : ''} · ⋯ để chọn">
-      ${slotIcon(it, '')}<span class="bc-plus">${it.plus?'+'+it.plus:''}</span>${_up ? '<span style="position:absolute;bottom:0;left:2px;color:#6ae88a;font-size:11px;font-weight:700;text-shadow:0 1px 2px #000">▲</span>' : ''}<span style="position:absolute;top:-3px;right:2px;font-size:12px;color:#c9b889;cursor:pointer;text-shadow:0 1px 2px #000" onclick="event.stopPropagation();window.selectBagItem(${i})">⋯</span></div>`;
+    // ◆ vàng: món mang về Khắc Ấn CHƯA có. Đứng riêng với ▲ vì đây là thứ mũi ▲ (thuần lực
+    // chiến) không bao giờ thấy — món yếu hơn vẫn có thể đáng mặc chỉ vì cái Khắc Ấn này.
+    const _sg = !it.special && player.level >= itemReqLv(it) && itemSigilNew(it);
+    html += `<div class="bag-cell rar-${it.rarity}" style="position:relative" draggable="true" ondragstart="onBagItemDragStart(event,${i})" onclick="equipItem(${i})" title="${it.name} — bấm để MẶC NGAY, hoặc kéo thả vào ô Trang Bị${_up ? ' (mạnh hơn đang mặc!)' : ''}${_sg ? ` · ◆ Khắc Ấn mới: ${SIGIL_DEFS[_sg].name}` : ''} · ⋯ để chọn">
+      ${slotIcon(it, '')}<span class="bc-plus">${it.plus?'+'+it.plus:''}</span>${_up ? '<span style="position:absolute;bottom:0;left:2px;color:#6ae88a;font-size:11px;font-weight:700;text-shadow:0 1px 2px #000">▲</span>' : ''}${_sg ? '<span style="position:absolute;bottom:0;right:2px;color:#ffd76a;font-size:11px;font-weight:700;text-shadow:0 1px 2px #000">◆</span>' : ''}<span style="position:absolute;top:-3px;right:2px;font-size:12px;color:#c9b889;cursor:pointer;text-shadow:0 1px 2px #000" onclick="event.stopPropagation();window.selectBagItem(${i})">⋯</span></div>`;
   });
   html += `</div>`;
   if (window.bagSel >= 0 && player.inv[window.bagSel]){
     const it = player.inv[window.bagSel];
-    html += `<div class="forge-lines" style="margin-top:10px"><b class="${RARITIES[it.rarity].cls}">${it.name}</b><br>${itemLineHtml(it)}</div>
+    html += `<div class="forge-lines" style="margin-top:10px"><b class="${RARITIES[it.rarity].cls}">${it.name}</b><br>${itemLineHtml(it)}${itemCompareHtml(it)}</div>
       <div class="forge-actions"><button class="mini-btn" onclick="equipItem(${window.bagSel})">Mặc Vào</button>
       <button class="mini-btn" onclick="sellItem(${window.bagSel})">Bán (+${itemSellPrice(it)}◈)</button>
       <button class="mini-btn" onclick="salvage(${window.bagSel});window.bagSel=-1">Phân Giải (+${1+it.rarity+Math.floor(it.plus/3)}✦)</button></div>`;
@@ -11881,7 +11981,9 @@ function rollArenaBox(tier, bossLv){
   const gained = [];
   for (let i = 0; i < nItems; i++){
     const it = genItem(bossLv, 0, srcK);
-    if (player.autoSell && it.rarity <= 0){
+    // Khắc Ấn có thể rơi trên món độ hiếm thấp (genItem roll ngẫu nhiên) — bán tự động
+    // món đó là xoá vĩnh viễn thứ hiếm nhất game vì vài đồng bạc.
+    if (player.autoSell && it.rarity <= 0 && !it.sigil){
       const v = 20 + it.rarity*30 + (it.tier||1)*15;
       player.silver += v; gained.push(`${it.name}(bán +${v}◈)`);
     } else if (player.inv.length < 30){
@@ -12282,7 +12384,9 @@ function grantHuntBox(){
   const gained = [];
   for (let i = 0; i < nItems; i++){
     const it = genItem(bossLv, 0, srcK);
-    if (player.autoSell && it.rarity <= 0){
+    // Khắc Ấn có thể rơi trên món độ hiếm thấp (genItem roll ngẫu nhiên) — bán tự động
+    // món đó là xoá vĩnh viễn thứ hiếm nhất game vì vài đồng bạc.
+    if (player.autoSell && it.rarity <= 0 && !it.sigil){
       const v = 20 + it.rarity*30 + (it.tier||1)*15;
       player.silver += v; gained.push(`${it.name}(bán +${v}◈)`);
     } else if (player.inv.length < 30){
