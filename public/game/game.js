@@ -2098,7 +2098,7 @@ for (const g of ['nam','nu']) for (const sk of ['bach','thanh','kim','huyen','ho
 // ---------- Ascension: cultivation realms (Ascension Trial upgrades) ----------
 // Bonus values are TOTAL at that realm. Đột phá consumes Anima + silver + mats;
 // on failure: silver/mats lost, 50% Anima lost, realm kept.
-const REALM_ICONS = ['r0_phan_nhan','r1_khi_hai','r2_chu_thien','r3_tu_phu','r4_quy_nguyen','r5_luong_nghi','r6_thai_hu','r7_tien_thien','r8_hon_nguyen','r8_hon_nguyen'];
+const _REALM_ICONS = ['r0_phan_nhan','r1_khi_hai','r2_chu_thien','r3_tu_phu','r4_quy_nguyen','r5_luong_nghi','r6_thai_hu','r7_tien_thien','r8_hon_nguyen','r8_hon_nguyen'];
 // GDD Lấy Võ Nhập Đạo §3 — Giai đoạn 1: cảnh giới tu tiên.
 // Spark (1-4): đột phá vận công theo tỉ lệ. Molt trở lên (5-9): ASCENSION TRIAL 3-9 đợt thiên lôi,
 // mỗi tia gây % maxHP, thất bại mất 30% Anima tiến độ — KHÔNG tụt cảnh giới.
@@ -3686,7 +3686,7 @@ const BGM_TRACKS = { daohoa:'bgm_daohoa_ost', tuongduong:'bgm_tuongduong_ost', n
   tuyettinh:'bgm_tuyettinh_ost', comoc:'bgm_comoc', mongco:'bgm_mongco', nhanmon:'bgm_nhanmon' };
 const BGM_INTRO = 'bgm_kiemhiep'; // Kiếm Hiệp Tình — màn mở đầu & chọn phái (hào hiệp chính khí)
 const BGM_BOSS = 'bgm_boss_nguan';   // Hoa Địa Li Lao — boss Cổng Vực / Ngũ Trụ (bi kịch bùng nổ)
-const BGM_ROMANCE = 'bgm_romance';   // Tiếu Vấn Tình Duyên — song ca khi kết Đạo Lữ
+const _BGM_ROMANCE = 'bgm_romance';   // Tiếu Vấn Tình Duyên — song ca khi kết Đạo Lữ
 const AudioSys = {
   bgm: null, bgmName: '', started: false, cache: {}, last: {},
   bgmVol(){ return (SETTINGS.bgm/100) * 0.85; },
@@ -7510,7 +7510,7 @@ function hCrestHalo(g, M, st, ps){
   }
 }
 // Sylvan Ranger I-II — mũ da mềm có vành + một chiếc lông cắm nghiêng
-function hCrestCap(g, M, st, ps){
+function hCrestCap(g, M, st, _ps){
   g.fillStyle = M.hi;
   g.beginPath();
   g.moveTo(61, 62); g.quadraticCurveTo(80, 44, 99, 62);
@@ -7527,7 +7527,7 @@ function hCrestCap(g, M, st, ps){
   }
 }
 // Sylvan Ranger III — hai chiếc lá dựng như sừng nai non
-function hCrestLeaf(g, M, st, ps){
+function hCrestLeaf(g, M, st, _ps){
   g.fillStyle = M.hi;
   for (const s of [-1, 1]){
     g.beginPath();
@@ -7544,7 +7544,7 @@ function hCrestLeaf(g, M, st, ps){
   g.closePath(); g.fill();
 }
 // Sylvan Ranger IV-V — vương miện gạc nai. Nhánh phụ mọc thêm theo bậc.
-function hCrestAntler(g, M, st, ps){
+function hCrestAntler(g, M, st, _ps){
   g.fillStyle = M.hi;
   for (const s of [-1, 1]){
     g.beginPath();
@@ -7953,7 +7953,7 @@ function hBeltPlate(g, M, st){
   }
 }
 // HỎA LONG — váy vảy hai hàng, khoá hàm rồng, tấm hông có vuốt
-function hBeltDragon(g, M, st){
+function hBeltDragon(g, M, _st){
   g.fillStyle = M.lo; g.fillRect(54, 137, 52, 9);
   for (let row = 0; row < 2; row++){                  // váy vảy so le
     for (let i = 0; i < 5; i++){
@@ -10024,7 +10024,9 @@ window.cheatExec = function(raw){
         gameClock();
         player.gt.t += Math.max(0, num(1, 10)) * GT_DAY;
         const gti = gameTimeInfo(); calcDerived(); spawnAmbients();
-        cheatLog(`Lịch Tu Tiên → ${gti.season.name} ${gti.day}/${gti.month} Năm ${gti.year} · Canh ${CANH_NAMES[gti.canh]}`, gti.season.color); break;
+        // CANH_NAMES/gti.canh thuộc Lịch Tu Tiên (Can Chi) đã gỡ — để lại thì gõ /time là
+        // ném ReferenceError. Đồng hồ thế giới nay chỉ còn ngày/mùa.
+        cheatLog(`Đồng Hồ Thế Giới → ${gti.season.name} ${gti.day}/${gti.month} Năm ${gti.year}`, gti.season.color); break;
       }
       case 'silver': case 'mat': case 'tuvi': case 'khi': case 'manh': case 'tich': case 'an': case 'cothan': case 'dan': {
         const raw2 = parts[1] || '10000';
