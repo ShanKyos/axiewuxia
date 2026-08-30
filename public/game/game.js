@@ -7028,6 +7028,10 @@ function gearVisual(p){
     rcol: RARITIES[rmax] ? RARITIES[rmax].color : null,
     wTier: w ? (w.tier || 1) : 0,
     wPlus: w ? (w.plus || 0) : 0,
+    // Định nghĩa vũ khí — để thanh trên tay nhân vật vẽ bằng CHÍNH bộ phận dựng icon.
+    // Trước đây chỉ đưa ra wTier/wPlus, mà hai trường đó không ai đọc: mỗi lớp vẽ cứng
+    // một thanh, nên nâng vũ khí không hiện lên người một chút nào.
+    wDef: w ? (w.def || null) : null,
     setColor,
   };
 }
@@ -8303,12 +8307,14 @@ const HERO_GEAR = {
       hArmR(g, P, ps, () => {
         hEll(g, 112, 116, 10, 17, P.skin);
         hPoly(g, [[126,94],[98,88],[96,120],[124,126]], M.lo);
-        g.save(); g.translate(122 + ps.wpush, 134); g.rotate(0.13 + ps.wrot); // chếch ra ngoài, không cắt mặt
-        hPoly(g, [[-6,0],[6,0],[5,-96],[0,-112],[-5,-96]], '#d2d6de');
-        g.fillStyle = '#fff'; g.fillRect(-2, -96, 3, 90);
-        hPoly(g, [[-18,0],[18,0],[16,10],[-16,10]], M.trim);
-        g.fillStyle = '#4a3520'; g.fillRect(-5, 10, 10, 30);
-        hEll(g, 0, 44, 7, 7, M.trim); g.restore();
+        hHeldWeapon(g, ps.gv, ps, 122, 134, 0.13, () => {
+          g.save(); g.translate(122 + ps.wpush, 134); g.rotate(0.13 + ps.wrot); // chếch ra ngoài, không cắt mặt
+          hPoly(g, [[-6,0],[6,0],[5,-96],[0,-112],[-5,-96]], '#d2d6de');
+          g.fillStyle = '#fff'; g.fillRect(-2, -96, 3, 90);
+          hPoly(g, [[-18,0],[18,0],[16,10],[-16,10]], M.trim);
+          g.fillStyle = '#4a3520'; g.fillRect(-5, 10, 10, 30);
+          hEll(g, 0, 44, 7, 7, M.trim); g.restore();
+        });
       });
     },
   },
@@ -8406,12 +8412,14 @@ const HERO_GEAR = {
       });
       hArmR(g, P, ps, () => {
         hEll(g, 112, 114, 11, 19, '#d8a878');                        // vai/tay phải để trần
-        g.save(); g.translate(122 + ps.wpush, 136); g.rotate(0.18 + ps.wrot);
-        hPoly(g, [[-9,0],[9,0],[7,-104],[0,-124],[-7,-104]], '#dcd2c0');
-        hPoly(g, [[0,0],[9,0],[7,-104],[0,-124]], '#b6ac98');
-        g.fillStyle = '#fff6e0'; g.fillRect(-2, -104, 3, 98);
-        hPoly(g, [[-20,0],[20,0],[17,11],[-17,11]], M.trim);
-        g.fillStyle = '#3a2418'; g.fillRect(-5, 11, 10, 28); g.restore();
+        hHeldWeapon(g, ps.gv, ps, 122, 136, 0.18, () => {
+          g.save(); g.translate(122 + ps.wpush, 136); g.rotate(0.18 + ps.wrot);
+          hPoly(g, [[-9,0],[9,0],[7,-104],[0,-124],[-7,-104]], '#dcd2c0');
+          hPoly(g, [[0,0],[9,0],[7,-104],[0,-124]], '#b6ac98');
+          g.fillStyle = '#fff6e0'; g.fillRect(-2, -104, 3, 98);
+          hPoly(g, [[-20,0],[20,0],[17,11],[-17,11]], M.trim);
+          g.fillStyle = '#3a2418'; g.fillRect(-5, 11, 10, 28); g.restore();
+        });
       });
     },
   },
@@ -8469,10 +8477,12 @@ const HERO_GEAR = {
       hArmL(g, P, ps);
       hArmR(g, P, ps, () => {
         hEll(g, 112, 116, 10, 17, P.skin);
-        g.save(); g.translate(118 + ps.wpush, 132); g.rotate(0.15 + ps.wrot);
-        hPoly(g, [[-4,0],[4,0],[3,-58],[0,-68],[-3,-58]], '#c0c4cc');
-        hPoly(g, [[-12,0],[12,0],[11,8],[-11,8]], '#8a7a4a');
-        g.fillStyle = '#4a3520'; g.fillRect(-4, 8, 8, 22); g.restore();
+        hHeldWeapon(g, ps.gv, ps, 118, 132, 0.15, () => {
+          g.save(); g.translate(118 + ps.wpush, 132); g.rotate(0.15 + ps.wrot);
+          hPoly(g, [[-4,0],[4,0],[3,-58],[0,-68],[-3,-58]], '#c0c4cc');
+          hPoly(g, [[-12,0],[12,0],[11,8],[-11,8]], '#8a7a4a');
+          g.fillStyle = '#4a3520'; g.fillRect(-4, 8, 8, 22); g.restore();
+        });
       });
     },
   },
@@ -8480,6 +8490,23 @@ const HERO_GEAR = {
 // Vẽ nhân vật trong hộp 160×220. tier = bậc Thần Binh (đổi bảng màu giáp).
 // gv (tham số THỨ 6, thêm sau ps nên mọi lời gọi 5 tham số cũ vẫn chạy nguyên): chữ ký trang
 // bị thật từ gearVisual(). Bỏ trống ⇒ chỉ vẽ theo `tier` như trước, dùng cho màn chọn lớp.
+// Vũ khí trên tay dùng CHÍNH bộ phận dựng icon, nên món trong túi và thanh nhân vật đang cầm
+// không thể lệch nhau. `fallback` là thanh vẽ cứng cũ của lớp — vẫn dùng khi chưa mặc vũ khí,
+// hoặc khi vũ khí không thuộc dòng lưỡi (gậy/cung/trượng có bộ phận riêng, làm ở đợt sau).
+function hHeldWeapon(g, gv, ps, x, y, rot, fallback){
+  const d = gv && gv.wDef;
+  if (!d || !d.blade){ fallback(); return; }
+  const W = itemPal(d, gv.wTier || 1);
+  g.save();
+  g.translate(x + ps.wpush, y); g.rotate(rot + ps.wrot);
+  // Thanh vẽ cứng cũ cao ~112 đơn vị. Icon cao ~77 (chuôi +33 → mũi -44), nên tỉ lệ phải là
+  // ~1.45, không phải 2.5 — ở 2.5 thanh kiếm cao hơn cả người và cắt ngang thân.
+  const k = 1.45;
+  g.scale(k, k);
+  g.translate(0, -22);                       // chuôi rơi đúng vào nắm tay
+  iaWeapon(g, W, Object.assign({}, d, { rot: 0 }));
+  g.restore();
+}
 function drawHeroFigure(g, sectKey, tier, now, ps, gv){
   const M = hMetal(tier), G = HERO_GEAR[sectKey] || HERO_GEAR.vophai, P = G.pal;
   ps = ps || HERO_POSE0;
@@ -8487,6 +8514,7 @@ function drawHeroFigure(g, sectKey, tier, now, ps, gv){
   // Bộ giáp riêng của lớp: đổi cả TẠO HÌNH (vai/mũ/chân/eo) lẫn BẢNG MÀU. Không có bộ
   // (chưa mặc gì / màn chọn lớp) thì SM === M, mọi thứ y như trước.
   const S = gv ? heroSet(sectKey, gv.t) : null, SM = hSetMetal(M, S);
+  ps.gv = gv;   // upper() của từng lớp cần gv để vẽ đúng vũ khí đang mặc
   g.save();
   hEll(g, 80, 212, 30 - ps.bob * 0.9, 8, 'rgba(0,0,0,.22)'); // bóng co lại khi nhấc chân
   // D. HÀO QUANG — nét hoàn thiện, không phải toàn bộ câu chuyện. Mặc đủ 5 món một bộ Cổ Thần
