@@ -9277,35 +9277,50 @@ function hHeldWeapon(g, gv, ps, x, y, rot, fallback){
 // Không nhét vào khoá bộ nhớ đệm: `sway` (quán tính áo choàng khi đổi hướng) và tư thế TRÚNG ĐÒN.
 // Sway bỏ hẳn — áo choàng vẫn nhấp nhô theo sải bước, chỉ không trôi thêm khi ngoặt. Trúng đòn thì
 // vẽ THẲNG như cũ: nó ngắn, và giật ngửa khi ăn đòn là phản hồi phải thấy ngay, không được rời rạc.
-const HS_FRAMES = { i: 8, w: 12, a: 8, c: 8 };   // đứng · đi · đánh · tung chiêu
-const HS_SCALE = 0.75;                           // hộp gốc 160×220 ⇒ sprite 120×165. Trong game dáng
-                                                 // người cao 104px (0,47× hộp gốc) nên 0,75 còn dư nét,
-                                                 // đủ chỗ cho cú phóng to lúc lên cấp (pulse > 1).
+// Số khung: ĐO rồi mới chọn. Ở 12 khung đi, hai khung liền nhau lệch 25–50% pixel, trong khi vẽ
+// liên tục cùng khoảng thời gian đó chỉ lệch 0,7–5% — tức hoạt ảnh thô hơn 7–10 lần, và đó chính
+// là thứ mắt bắt được. 32 khung đưa bước nhảy về ngang mức vẽ thẳng.
+const HS_FRAMES = { i: 16, w: 32, a: 16, c: 16 };  // đứng · đi · đánh · tung chiêu
+// Dựng ở ĐÚNG hộp gốc 160×220. Trong game dáng người cao 104px nên đây là hơn 2× độ phân giải
+// hiển thị — blit xuống là có khử răng cưa, nét hơn cả vẽ thẳng ở cỡ đó.
+const HS_SCALE = 1;
+// Quán tính áo choàng lúc ngoặt: đo được đổi 5,9–7,0% pixel ở hai cực, đủ để thấy. Ba nấc
+// (trái · giữa · phải) là đủ vì nó chỉ là độ nghiêng của vải rủ.
+// Nấc 0 phải là KHÔNG nghiêng: `sw` mặc định bằng 0 ở cả heroSprite lẫn heroFramePose, nên nếu
+// nấc 0 là "nghiêng trái" thì bỏ trống tham số ra một tư thế khác hẳn — đo được lệch 11% pixel
+// so với bản vẽ thẳng trước khi phát hiện.
+const HS_SWAY = [0, -0.85, 0.85];
 // Hào quang quanh người TRÀN RA NGOÀI hộp 160×220 (vòng sáng bán kính 86 quanh tâm, chưa kể
 // hào quang cường hoá +10). Không chừa lề thì sprite bị cắt vuông, nhìn rõ mồn một: quầng sáng
 // hoá thành hình chữ nhật bo góc thay vì tan dần.
 const HS_PAD = 40;
-const HS_CAP = 140;                              // trần LRU (~160 KB/sprite ⇒ tối đa ~22 MB, thực dùng ~3 MB)
+const HS_CAP = 420;                              // trần LRU — dựng lười nên thực dùng bằng đúng số tư thế đã gặp
 const _hsCache = new Map();
 let _hsHit = 0, _hsMiss = 0;
 function heroGearSig(gv){
   return gv ? `${Math.round(gv.t*10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor||''}` : '-';
 }
 // Tư thế của MỘT khung hình — dựng lại đúng từ chỉ số khung, để ảnh trong bộ nhớ đệm luôn khớp khoá.
-function heroFramePose(kind, idx, act){
+function heroFramePose(kind, idx, act, sw){
   const TAU = Math.PI * 2;
-  if (kind === 'c') return heroPose(0, false, 0, (idx + 0.5) / HS_FRAMES.c, 0, act);
-  if (kind === 'a') return heroPose(0, false, (idx + 0.5) / HS_FRAMES.a, 0, 0, act);
-  if (kind === 'w') return heroPose((idx + 0.5) / HS_FRAMES.w * TAU, true, 0, 0, 0, act);
-  return heroPose(0, false, 0, 0, (idx + 0.5) / HS_FRAMES.i * TAU * 620, act);  // nhịp thở
+  const sway = HS_SWAY[sw] || 0;
+  const ps = kind === 'c' ? heroPose(0, false, 0, (idx + 0.5) / HS_FRAMES.c, 0, act, sway, sway)
+           : kind === 'a' ? heroPose(0, false, (idx + 0.5) / HS_FRAMES.a, 0, 0, act, sway, sway)
+           : kind === 'w' ? heroPose((idx + 0.5) / HS_FRAMES.w * TAU, true, 0, 0, 0, act, sway, sway)
+           : heroPose(0, false, 0, 0, (idx + 0.5) / HS_FRAMES.i * TAU * 620, act, sway, sway); // nhịp thở
+  return ps;
 }
 // `now` giả của khung: giữ cho hào quang +10 (hPlusAura/Sweep/Spark) vẫn nhúc nhích theo chu kỳ
 // thay vì đứng chết một kiểu.
 function heroFrameNow(kind, idx){
   return (idx + 0.5) / (HS_FRAMES[kind] || 8) * Math.PI * 2 * 620;
 }
-function heroSprite(sectKey, tier, gv, kind, idx, act, back){
-  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${kind === 'a' ? act : ''}|${back ? 1 : 0}`;
+function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw){
+  sw = sw || 0;
+  // `act` phải nằm trong khoá cho CẢ đánh lẫn tung chiêu: heroFramePose() đọc act ở cả hai nhánh
+  // (mỗi lớp một bộ khung tay/vũ khí riêng), nên bỏ nó ra khỏi khoá ở nhánh 'c' là hai tuyệt kỹ
+  // khác nhau dùng chung một ảnh.
+  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${back ? 1 : 0}|${sw}`;
   let cv = _hsCache.get(key);
   if (cv){                       // chạm — đẩy lên cuối để LRU giữ lại
     _hsHit++;
@@ -9320,7 +9335,7 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back){
   const g = big.getContext('2d');
   g.scale(HS_SCALE, HS_SCALE);
   g.translate(HS_PAD, HS_PAD);
-  const ps = heroFramePose(kind, idx, act);
+  const ps = heroFramePose(kind, idx, act, sw);
   ps.back = !!back;
   drawHeroFigure(g, sectKey, tier, heroFrameNow(kind, idx), ps, gv);
   // CẮT SÁT nội dung. Lề 40 là cần (đo được hào quang tràn ra tới −38..197 ngang, 245 dọc), nhưng
@@ -9330,7 +9345,7 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back){
   let x0 = W0, y0 = H0, x1 = -1, y1 = -1;
   for (let y = 0; y < H0; y++)
     for (let x = 0; x < W0; x++)
-      if (d[(y*W0 + x)*4 + 3] > 6){ if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      if (d[(y*W0 + x)*4 + 3] > 0){ if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
   if (x1 < 0){ x0 = y0 = 0; x1 = y1 = 1; }         // khung rỗng (không nên xảy ra) — giữ 1px cho an toàn
   const cw = x1 - x0 + 1, ch = y1 - y0 + 1;
   cv = document.createElement('canvas');
@@ -9617,10 +9632,13 @@ function drawPlayer(){
       _ps.bob  -= 2.2 * _hurt;
     }
     const _tier = heroTier(p), _gv = gearVisual(p);
-    // Chọn khung hình: ưu tiên tung chiêu → đánh → đi → đứng. Trúng đòn thì KHÔNG dùng sprite —
-    // tư thế giật ngửa phải khớp đúng độ mạnh của cú đòn, và nó chỉ kéo dài 0,3s.
+    // Chọn khung hình. Ba đường KHÔNG dùng sprite, mỗi đường một lý do đo được:
+    //  · mức hiệu ứng ĐẦY — người chơi chọn chất lượng thì trả lại chất lượng: vẽ thẳng, hoạt ảnh
+    //    liên tục thật, không có bước nhảy nào;
+    //  · TRÚNG ĐÒN — giật ngửa phải khớp đúng độ mạnh cú đòn, và chỉ kéo dài 0,3s;
+    //  · cú phóng to lúc lên cấp (pulse > 1,02) — lúc đó sprite bị kéo lên quá cỡ gốc.
     let _spr = null;
-    if (_hurt <= 0){
+    if (_hurt <= 0 && FXQ < 2 && pulse <= 1.02){
       const _kind = castK > 0 ? 'c' : atkK > 0 ? 'a' : (p.moving ? 'w' : 'i');
       const _n = HS_FRAMES[_kind];
       const _TAU = Math.PI * 2;
@@ -9628,7 +9646,8 @@ function drawPlayer(){
                  : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)
                  : _kind === 'w' ? ((((wph % _TAU) + _TAU) % _TAU) / _TAU * _n) | 0
                  : ((((now / 620) % _TAU) + _TAU) % _TAU) / _TAU * _n | 0;
-      _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back);
+      const _sw = (p.sway || 0) > 0.35 ? 2 : (p.sway || 0) < -0.35 ? 1 : 0;
+      _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back, _sw);
     }
     // Thần Hiệp: viền kim quang quanh thân. Trước đây làm bằng cách đặt shadowBlur rồi để nguyên
     // suốt cả dáng người — đo được 166 trong 204 nhát fill của drawPlayer() bị làm mờ, mỗi nhát là
