@@ -213,7 +213,7 @@ const AWAKENED = [
   { k:'eva',  v:5,  name:'Né Tránh +5%' },
   { k:'atk',  v:25, name:'Công Kích +25' },
   { k:'hp',   v:200,name:'Sinh Lực +200' },
-  { k:'qireg',v:3,  name:'Hồi Instinct +3' },
+  { k:'qireg',v:3,  name:'Hồi Qi +3' },
   { k:'str',  v:8,  name:'Lực Lượng +8' },
 ];
 
@@ -2814,7 +2814,7 @@ function genPet(i){ return specialItem('pet', PET_DEFS[i], { pet: PET_DEFS[i].id
 function genWing(i){ return specialItem('canh', WING_DEFS[i], { wing: WING_DEFS[i].id }); }
 function mainName(k){
   return { atk:'Công Kích', def:'Phòng Ngự', vit:'Sinh Lực', str:'Lực Lượng',
-           agi:'Mẫn Tiệp', hp:'Sinh Lực tối đa', crit:'Bạo Kích %', qireg:'Hồi Instinct' }[k] || k;
+           agi:'Mẫn Tiệp', hp:'Sinh Lực tối đa', crit:'Bạo Kích %', qireg:'Hồi Qi' }[k] || k;
 }
 // ═══════════ SO SÁNH TRANG BỊ — nửa còn lại của bài học Loot 2.0 ═══════════
 // Với 15 dòng phụ đều là % thuần, người chơi KHÔNG có cách nào tự nhìn ra món vừa nhặt hơn
@@ -4175,8 +4175,10 @@ window.addEventListener('keydown', e=>{
   if (e.key.toLowerCase()==='u'){ SETTINGS.minimap = !SETTINGS.minimap; saveSettings(); }
   if (e.key.toLowerCase()==='o') togglePanel('settings');
   if (e.key.toLowerCase()==='f') togglePanel('forge');
-  // Phím T dành riêng cho thu phục Linh Thú — Thú Chiến mở qua C → Thú Chiến, xuất trận/thu hồi bằng V
-  if (e.key.toLowerCase()==='v') toggleMountOut();
+  // Phím T dành riêng cho thu phục Linh Thú — Thú Chiến mở qua C → Thú Chiến, xuất trận/thu hồi bằng X.
+  // Trước đây dùng V, nhưng V sau này được gán thêm cho cửa sổ Nhân Vật mà không ai kiểm phím đã
+  // có chủ chưa: bấm V một lần là vừa mở bảng vừa lật xuất trận Thú Chiến.
+  if (e.key.toLowerCase()==='x') toggleMountOut();
   if (e.key.toLowerCase()==='z' && player && !dead) toggleAuto();
   if (e.key === '`' && window.TEST_MODE){ e.preventDefault(); window.toggleCheatConsole(); }
   if (e.key.toLowerCase()==='h') togglePanel('tuyethoc');
@@ -6264,7 +6266,7 @@ function onDeath(){
   const _kb = player._killedByBoss; player._killedByBoss = null;
   document.getElementById('overlay-inner').innerHTML = _kb ? `
     <h2 style="color:#ff6b6b">Bại Trận!</h2>
-    <p>Ngươi bị <b style="color:#ff8f6b">${_kb}</b> đánh bại.<br><span style="color:#e8b060;font-size:12.5px">Mẹo: khi trấn thủ tụ chiêu (vùng đỏ), lùi ra hoặc nhảy (J) né — sau đó là 2.5 giây phản công tốt nhất.<br>Hoặc quay lại khi ngươi đã mạnh hơn.</span></p>
+    <p>Ngươi bị <b style="color:#ff8f6b">${_kb}</b> đánh bại.<br><span style="color:#e8b060;font-size:12.5px">Mẹo: khi trấn thủ tụ chiêu (vùng đỏ), hãy chạy ra khỏi vùng đỏ — sau đó là 2.5 giây phản công tốt nhất.<br>Hoặc quay lại khi ngươi đã mạnh hơn.</span></p>
     <button class="big-btn" onclick="respawn()">Tái Chiến</button>` : `
     <h2>Trọng Thương!</h2>
     <p>Ngươi bị đánh bại... Nhưng Lunacia chưa hề bỏ rơi kẻ có chí.<br>Hồi sinh tại làng trên Petalshade Isle với đầy đủ sinh lực.</p>
@@ -6464,7 +6466,7 @@ function render(){
     drawCityWalls();
     drawCityPlaza();          // quảng trường + đài phun nước trung tâm kiểu Lorencia
     drawCalligraphy('Lunaris City', 1300, 612, '#6a5836', 20);
-    drawCalligraphy('Xưởng Luyện Đan', 830, 706, '#3a6a3e', 13);
+    drawCalligraphy('Tiệm Thuốc', 830, 706, '#3a6a3e', 13);
     drawCalligraphy('Lò Rèn Hoàng Gia', 1780, 726, '#8a4a2e', 13);
     drawCalligraphy('Vũ Khí Phường', 1770, 1006, '#5a5a6a', 13);
     drawCalligraphy('Trà Quán', 980, 1096, '#8a6a2e', 13);
@@ -9594,7 +9596,7 @@ function renderChar(){
     ['Công Kích', p.atk], ['Sinh Lực', `${Math.ceil(p.hp)} / ${p.maxHp}`],
     ['Giảm Thương', Math.round(p.defRed*100)+'%'],
     ['Bạo Kích', Math.round(p.crit*100)+'%'], ['Né Tránh', Math.round(p.eva*100)+'%'],
-    ['Tốc Đánh', p.aspd.toFixed(2)+'s'], ['Hồi Instinct', p.qireg.toFixed(1)+'/s'],
+    ['Tốc Đánh', p.aspd.toFixed(2)+'s'], ['Hồi Qi', p.qireg.toFixed(1)+'/s'],
   ];
   for (const [n,v] of stats) html += `<div class="stat-row"><span>${n}</span><b>${v}</b></div>`;
   // Thần Binh môn phái — trục progression riêng, không chiếm slot Vũ Khí (GDD §5)
@@ -9684,8 +9686,11 @@ function renderVStat(){
     ['Chân Khí', `${Math.floor(p.qi)} / ${p.maxQi}`],
     ['Giảm Thương', Math.round(p.defRed * 100) + '%'],
     ['Bạo Kích', Math.round(p.crit * 100) + '%'], ['Né Tránh', Math.round(p.eva * 100) + '%'],
-    ['Tốc Đánh', p.aspd.toFixed(2) + 's'], ['Hồi Instinct', p.qireg.toFixed(1) + '/s'],
-    ['Instinct', Math.floor(p.khi || 0).toLocaleString('vi-VN')],
+    ['Tốc Đánh', p.aspd.toFixed(2) + 's'], ['Hồi Qi', p.qireg.toFixed(1) + '/s'],
+    // Qi = tài nguyên tung chiêu (hồi liên tục). Instinct = điểm nâng kỹ năng (tích lũy).
+    // Trước đây qireg mang nhãn "Hồi Instinct" trong khi Instinct là một dòng RIÊNG ngay dưới —
+    // ba khái niệm mà chỉ có hai tên.
+    ['Instinct (nâng kỹ năng)', Math.floor(p.khi || 0).toLocaleString('vi-VN')],
   ];
   if (ae) rows.push(['Hệ đòn đánh', `<span style="color:${elColor(ae)}">${ELEM[ae].glyph} ${elName(ae)}</span>`]);
   for (const [nm, v] of rows) h += `<div class="stat-row"><span>${nm}</span><b>${v}</b></div>`;
@@ -10782,7 +10787,7 @@ function mountAttrLines(t){
   if (t.vit) parts.push(`Sinh Lực +${t.vit}`);
   if (t.hp) parts.push(`HP +${t.hp}`);
   if (t.crit) parts.push(`Bạo Kích +${t.crit}%`);
-  if (t.qireg) parts.push(`Hồi Instinct +${t.qireg}`);
+  if (t.qireg) parts.push(`Hồi Qi +${t.qireg}`);
   return parts;
 }
 function renderMount(){
@@ -13443,8 +13448,8 @@ const SHOPS = {
   duoclao: { quote:'"Thuốc bổ hay thuốc độc — khác nhau ở liều lượng thôi, khách quân ạ."', junk:true, rows:[
     { id:'thuoc',     name:'🧪 Hồ Lô Thuốc',        price:150, desc:'Hồi 40% máu tức thì (phím R) — túi đựng tối đa 5 lọ' },
     { id:'trithuong', name:'✚ Trị Thương Toàn Phần', price:100, desc:'Nhà Giả Kim tự tay bào chế thuốc — hồi đầy HP ngay lập tức' },
-    { id:'tukhi',     name:'◎ Tụ Khí Công',          price:80,  desc:'Vận chuyển chân khí — hồi đầy Instinct ngay lập tức' },
-    { id:'loidon',    name:'⚡ Lôi Độn Phù',           price:600, desc:'5 phút giảm 40% sát thương thiên lôi — vật bất ly thân khi độ kiếp' },
+    { id:'tukhi',     name:'◎ Tụ Khí Công',          price:80,  desc:'Vận chuyển chân khí — hồi đầy Qi (tài nguyên tung chiêu) ngay lập tức' },
+    { id:'loidon',    name:'⚡ Lôi Độn Phù',           price:600, desc:'5 phút giảm 40% sát thương thiên lôi — mang theo khi vào vùng bão' },
     { id:'tiendan',   name:'◈ Tiến Cấp Đan ×3',      price:900, desc:'Tấn Chức (Ám Khí/Cung Tiễn/Cương Khí)' },
   ]},
   binhkhi: { quote:'"Binh khí nhà ta ba đời rèn giũa — mở rương là biết liền."', rows:[
@@ -13453,7 +13458,7 @@ const SHOPS = {
     { id:'phongphu', name:'🐾 Phong Linh Phù', price:1500, desc:'Thu phục quái tinh anh suy yếu (dưới 40% máu) làm Linh Thú — đứng gần bấm T' },
   ]},
   trachu: { quote:'"Vào đây uống chén trà nóng đã — chuyện Lunacia để sau hẵng hay."', rows:[
-    { id:'nghitro', name:'🛏 Nghỉ Trọ',      price:120, desc:'Nghỉ ngơi dưỡng thần — hồi đầy HP và Instinct' },
+    { id:'nghitro', name:'🛏 Nghỉ Trọ',      price:120, desc:'Nghỉ ngơi dưỡng thần — hồi đầy HP và Qi' },
     { id:'ruou',    name:'🍶 Rượu Hổ Cốt',   price:200, desc:'3 phút +12% công lực — men say bừng bừng sát khí' },
   ]},
 };
@@ -13537,7 +13542,7 @@ window.buyFromShop = function(what){
   }
   else if (what==='loidon'){
     player.silver -= row.price; player.loidonT = 300;
-    zoneBanner = { text:'⚡ LÔI ĐỘN PHÙ', sub:'5 phút giảm 40% sát thương thiên lôi — cứ yên tâm độ kiếp!', color:'#ffb15c', t:2.6 };
+    zoneBanner = { text:'⚡ LÔI ĐỘN PHÙ', sub:'5 phút giảm 40% sát thương thiên lôi — cứ yên tâm xông vào bão!', color:'#ffb15c', t:2.6 };
     AudioSys.sfx('quest', 0.5);
   }
   else if (what==='phongphu'){ player.silver -= row.price; player.phongphu = (player.phongphu || 0) + 1; addFloat(player.x, player.y-50, '+1 Phong Linh Phù — bấm T gần tinh anh suy yếu', '#b08ae8', 13); }
@@ -14194,7 +14199,7 @@ NPCS.push(
     lore:'"Tuấn mã hoang ngoài đồng kia đấy — rượt cho nó kiệt sức rồi bấm E mà bắt. Mã Thầu thu được dùng khi thăng giai thú cưỡi!"' }, // GDD Đợt 2 B5
 );
 NPCS.push(
-  { id:'duoclao', name:'Nhà Giả Kim · Xưởng Luyện Đan', map:'tuongduong', x:830, y:760, img:'assets/npcs/duoclao.png', talk:'shop',
+  { id:'duoclao', name:'Nhà Giả Kim · Tiệm Thuốc', map:'tuongduong', x:830, y:760, img:'assets/npcs/duoclao.png', talk:'shop',
     lore:'"Thuốc hay cứu người — nhưng không trả tiền thì thuốc cũng hóa độc đấy."' },
   { id:'binhkhi', name:'Binh Khí Chủ · Vũ Khí Phường', map:'tuongduong', x:1770, y:1060, img:'assets/npcs/binhkhi.png', talk:'shop',
     lore:'"Thép Ardhaven, rèn bên kia vết nứt. Hết lô này là hết, đừng hỏi thêm."' },
@@ -15192,7 +15197,7 @@ const TRAITS = [
   { id:'thanluc',   name:'Thần Lực',            tier:'pham',  glyph:'💪', desc:'+8 Tấn Công',                              late:p=>{ p.atk += 8; } },
   { id:'nhucthan',  name:'Nhục Thân Cường Tráng',tier:'pham', glyph:'🛡', desc:'+55 Sinh Lực tối đa',                       late:p=>{ p.maxHp += 55; } },
   { id:'anmay',     name:'Ăn May',              tier:'pham',  glyph:'🍀', desc:'+5% tỉ lệ quái rớt đồ',                     late:p=>{ p.dropBonus += 0.05; } },
-  { id:'chankhi',   name:'Instinct Dồi Dào',    tier:'pham',  glyph:'🔷', desc:'+15 Qi tối đa',                        late:p=>{ p.maxQi += 15; } },
+  { id:'chankhi',   name:'Chân Khí Dồi Dào',    tier:'pham',  glyph:'🔷', desc:'+15 Qi tối đa',                        late:p=>{ p.maxQi += 15; } },
   { id:'tuctri',    name:'Túc Trí Đa Mưu',      tier:'linh',  glyph:'📖', desc:'+8% Kinh Nghiệm',                           late:p=>{ p.expPct += 8; } },
   { id:'luyenkhi',  name:'Spark Thiên Phú', tier:'linh',  glyph:'⚒', desc:'Rèn đồ +5% tỉ lệ thành công',               late:p=>{ p.forgeBonus += 5; } },
   { id:'thanhanh',  name:'Bách Bộ Thần Hành',   tier:'linh',  glyph:'👟', desc:'+6% Tốc Chạy',                              late:p=>{ p.speed = Math.round(p.speed*1.06); } },
