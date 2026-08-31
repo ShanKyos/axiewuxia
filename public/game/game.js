@@ -17599,3 +17599,9 @@ window.rollVanDuyen = function(){
   const res = document.getElementById('vd-result');
   if (res) res.innerHTML = `◑ Kết quả: ${out.join('<br>')}`;
 };
+
+// Cờ "mã đã nạp xong". Mọi khai báo `let` ở phạm vi module chỉ khởi tạo khi chạy tới dòng của
+// chúng; gọi startGame() trước lúc đó là đâm vào vùng chết (TDZ) của những biến nằm sau — đo được
+// dưới tải hồi quy: "Cannot access 'petObj' before initialization". Test chờ cờ này thay vì chờ
+// một số mili-giây đoán mò.
+window.__gameReady = true;
