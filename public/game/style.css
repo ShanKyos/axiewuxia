@@ -358,10 +358,18 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .qd-quest .q-rew { color:#7ec850; font-size:11.5px; margin-top:6px; }
 
 @media (max-width:720px){
-  .skill { width:50px; height:50px; }
-  .orb { width:56px; height:56px; }
-  .orb-val { font-size:12px; }
-  #bottom-hud { gap:8px; bottom:8px; max-width:98vw; }
+  /* Thanh dưới là MỘT hàng flex 14 phần tử không co, không xuống dòng: cần ~838px, mà điện thoại
+     chỉ có 390px và không cuộn ngang được ⇒ 8 nút nằm hẳn ngoài màn hình, trong đó có nút ✋ NHẶT
+     ĐỒ — trên điện thoại không có bàn phím nên đó là đường DUY NHẤT nhặt đồ dưới đất. Tách làm
+     hai hàng: hàng trên 9 nút menu, hàng dưới hai viên đá + 5 ô kỹ năng. */
+  #bottom-hud { gap:6px; bottom:8px; max-width:100vw; width:100vw; flex-wrap:wrap; justify-content:center; }
+  .hud-btns-left, .hud-btns-right { order:-1; gap:5px; }
+  #bottom-hud .hud-btns .hbtn { width:36px; height:36px; font-size:16px; }
+  #skillbar { gap:5px; }
+  .skill { width:42px; height:42px; }
+  .skill .sk-ico { font-size:17px; line-height:26px; }
+  .orb { width:48px; height:48px; }
+  .orb-val { font-size:11px; }
   #hud-left { width:min(280px,38vw); }
   #quest-tracker { font-size:11px; max-height:34vh; overflow-y:auto; }
   #quest-tracker .q-daily { display:none; }
@@ -545,9 +553,13 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .q-side { margin-top:6px; padding-top:4px; border-top:1px dashed rgba(76,141,255,.25); font-size:11px; }
 
 /* ═══════════ THẺ TIÊN DUYÊN ═══════════ */
-#quze-screen { position:fixed; inset:0; z-index:31; display:flex; align-items:center; justify-content:center;
+/* KHÔNG dùng align-items:center ở đây. Kèm overflow:auto thì phần nội dung tràn ra PHÍA TRÊN
+   nằm ngoài vùng cuộn và vĩnh viễn không tới được — đo được: .qz-inner top = -184px ở
+   1366×768 và -434px ở 390×844, tiêu đề "Thẻ Tiên Duyên" cùng đoạn hướng dẫn chọn 3 thẻ đều
+   không cách nào đọc được. margin:auto trên phần tử con canh giữa mà vẫn cuộn được cả hai đầu. */
+#quze-screen { position:fixed; inset:0; z-index:31; display:flex; align-items:flex-start; justify-content:center;
   background:radial-gradient(ellipse at 50% 30%, rgba(48,52,110,.92), rgba(10,11,24,.97)); overflow:auto; }
-.qz-inner { text-align:center; max-width:760px; padding:26px 18px; }
+.qz-inner { text-align:center; max-width:760px; padding:26px 18px; margin:auto; }
 .qz-inner h1 { color:#7ecbff; letter-spacing:1px; margin-bottom:6px; font-family:var(--font-display); }
 #quze-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:18px 0 10px; }
 .qz-card { position:relative; border-radius:var(--r-md); padding:16px 12px 12px; min-height:150px;
@@ -652,7 +664,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #quest-tracker{ pointer-events:auto; }
 
 /* Banner "đích khác vùng" — bấm thẳng để dịch chuyển, khỏi cần biết phím M */
-#quest-compass-banner{ position:fixed; top:96px; left:50%; transform:translateX(-50%); z-index:36;
+/* z-index PHẢI thấp hơn .panel (20): banner nổi ở top:96px, còn bảng bắt đầu từ top:54px, nên
+   ở 36 nó nằm đè đúng hàng tab — "Rèn Luyện · Thú Chiến · Tẩy Tủy · Tấn Chức" vừa không nhìn
+   thấy vừa không bấm được. */
+#quest-compass-banner{ position:fixed; top:96px; left:50%; transform:translateX(-50%); z-index:15;
   max-width:min(90vw,460px); background:rgba(20,25,40,.85); border:1px solid rgba(126,203,255,.6);
   border-radius:999px; padding:6px 8px 6px 16px; font-size:12.5px; color:#7ecbff;
   display:flex; align-items:center; gap:10px; box-shadow:0 6px 18px rgba(0,0,0,.5); white-space:nowrap; }
@@ -837,7 +852,9 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 
 /* Tầng Sâu — nút rút lui, đặt nổi bật vì đó là QUYẾT ĐỊNH của cả chế độ */
 /* top:150px chứ không phải 84px — chỗ đó là banner dẫn nhiệm vụ, đè lên nhau đọc không ra */
-#deep-leave { position:fixed; left:50%; transform:translateX(-50%); top:150px; z-index:60;
+/* Dạt sang phải: ở giữa-trên nó che hẳn dòng tiêu đề zoneBanner "TẦNG n/20". Cột phải từ
+   ~200px trở xuống là chỗ trống duy nhất còn lại (minimap kết thúc quanh 190px). */
+#deep-leave { position:fixed; right:14px; top:206px; z-index:60;
   background:linear-gradient(180deg,#2a6a3a,#1d4a2a); color:#d8ffe0; cursor:pointer;
   border:1px solid #6ae88a; border-radius:9px; padding:7px 18px; font-size:13px; font-weight:700;
   box-shadow:0 4px 16px rgba(0,0,0,.5); font-family:inherit; letter-spacing:.02em; }

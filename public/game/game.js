@@ -735,6 +735,7 @@ const DGN_ROOMS = [
 const DGN_WALLS = [ { y:1140, h:60 }, { y:690, h:60 } ];  // hai bức tường ngăn
 const DGN_GATE = { x0:1230, x1:1370 };                    // khe cửa giữa mỗi tường
 function dgnWallObs(){
+  if (DEEP) return [];   // Tầng Sâu: sảnh mở, dọn sạch là xuống tầng — không có cửa để mở
   const out = [];
   DGN_WALLS.forEach((w, i) => {
     out.push({ x:330, y:w.y, wd: DGN_GATE.x0 - 330, ht: w.h });
@@ -4387,6 +4388,7 @@ function tryPickLoot(px, py){
 function drawGroundLoot(now){
   if (!groundLoot.length) return;
   const alt = !!window._lootShowAll;
+  const labels = [];
   for (const g of groundLoot){
     if (g.x < camera.x - 60 || g.x > camera.x + W + 60 || g.y < camera.y - 90 || g.y > camera.y + H + 60) continue;
     const rar = lootRar(g), col = lootColor(g);
@@ -4424,22 +4426,49 @@ function drawGroundLoot(now){
       if (im && im.complete && im.naturalWidth) ctx.drawImage(im, g.x - 17, iy - 17, 34, 34);
       else { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(g.x, iy, 8, 0, 7); ctx.fill(); }
     }
-    // nhãn tên: chỉ hiện cho món hiếm / món gần / khi giữ ALT — không thì 20 nhãn đè lên nhau
+    // nhãn tên: chỉ hiện cho món hiếm / món gần / khi giữ ALT. Gom lại, vẽ ở LƯỢT HAI — vẽ ngay
+    // tại đây thì nhãn của món này chui xuống dưới hình của món vẽ sau nó.
     const near = dist(player.x, player.y, g.x, g.y) < 190;
-    if (g.z === 0 && (alt || near || rar >= 2 || g.full)){
-      const txt = g.full ? '⚠ TÚI ĐẦY — ' + lootName(g) : lootName(g);
-      ctx.font = `${rar >= 2 ? 'bold ' : ''}12px system-ui, sans-serif`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      const w = ctx.measureText(txt).width + 12, ly = iy - (g.k === 'jewel' ? 26 : 32);
-      ctx.fillStyle = 'rgba(8,6,14,.72)';
-      ctx.beginPath(); ctx.roundRect(g.x - w/2, ly - 9, w, 18, 5); ctx.fill();
-      ctx.strokeStyle = g.full ? '#ff6a3a' : (rar >= 2 ? col : 'rgba(255,255,255,.14)');
-      ctx.lineWidth = 1; ctx.stroke();
-      ctx.fillStyle = g.full ? '#ff9a6a' : col; ctx.fillText(txt, g.x, ly);
-    }
+    if (g.z === 0 && (alt || near || rar >= 2 || g.full))
+      labels.push({ x:g.x, y:g.y, ly: iy - (g.k === 'jewel' ? 26 : 32), rar, col, blink,
+                    full: g.full, txt: g.full ? '⚠ TÚI ĐẦY — ' + lootName(g) : lootName(g) });
     ctx.restore();
   }
+  drawLootLabels(labels);
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+}
+// Một bầy quái chết cùng chỗ là chuyện thường, và khi ấy 8–10 nhãn rơi vào cùng một nắm ~150px:
+// lọc theo phẩm/khoảng cách (lượt trên) KHÔNG cứu được, chúng vẫn chồng thành một vệt không đọc
+// nổi. Tệ nhất là "⚠ TÚI ĐẦY — <tên>" dài gần gấp đôi, tức cảnh báo quan trọng nhất lại là cái
+// chắc chắn bị đè. Đẩy nhãn lên từng nấc cho tới khi hết chạm nhau.
+function drawLootLabels(labels){
+  if (!labels.length) return;
+  labels.sort((a, b) => a.y - b.y);   // món ở xa (y nhỏ) giữ chỗ trước, món gần đẩy lên trên nó
+  const placed = [];
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const L of labels){
+    ctx.font = `${L.rar >= 2 ? 'bold ' : ''}12px system-ui, sans-serif`;
+    const w = ctx.measureText(L.txt).width + 12;
+    let ly = L.ly;
+    for (let n = 0; n < 8; n++){
+      const x0 = L.x - w/2, x1 = L.x + w/2;
+      if (!placed.some(q => x0 < q.x1 + 3 && x1 > q.x0 - 3 && ly - 9 < q.y1 + 2 && ly + 9 > q.y0 - 2)) break;
+      ly -= 19;
+    }
+    placed.push({ x0: L.x - w/2, x1: L.x + w/2, y0: ly - 9, y1: ly + 9 });
+    ctx.globalAlpha = L.blink;
+    // món bị đẩy lên cao thì nối một sợi chỉ về icon, không thì không biết nhãn của ai
+    if (ly < L.ly - 4){
+      ctx.strokeStyle = 'rgba(255,255,255,.20)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(L.x, ly + 9); ctx.lineTo(L.x, L.ly + 4); ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(8,6,14,.72)';
+    ctx.beginPath(); ctx.roundRect(L.x - w/2, ly - 9, w, 18, 5); ctx.fill();
+    ctx.strokeStyle = L.full ? '#ff6a3a' : (L.rar >= 2 ? L.col : 'rgba(255,255,255,.14)');
+    ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = L.full ? '#ff9a6a' : L.col; ctx.fillText(L.txt, L.x, ly);
+  }
+  ctx.globalAlpha = 1;
 }
 const _lootImgs = new Map();
 function _lootImg(url){
@@ -5673,6 +5702,11 @@ function update(dt){
   }
   if (player.auto && !dead && !_bossNear){
     if (player._autoAX == null){ player._autoAX = player.x; player._autoAY = player.y; }
+    // Tầng Sâu: cả tầng CHỈ có một ổ quái quanh tâm sảnh, và tầng chỉ chuyển khi sạch quái. Neo
+    // AUTO ở đâu khác (bật auto ngay chỗ vừa rơi xuống, cách tâm ~560px) là ngoài tầm quét 430 ⇒
+    // đứng im vĩnh viễn. Đây là ổ duy nhất nên kéo neo về tâm luôn, không sợ "lan sang bãi kế".
+    if (DEEP){ player._autoAX = DEEP_HALL.cx; player._autoAY = DEEP_HALL.cy;
+               player._autoZone = null; player._autoZoneLocked = false; }
     // Chỉ quét quanh điểm neo (bán kính 430 ≈ 1-2 bãi quái) — không rượt quái khắp map
     // QA: chỉ farm ĐÚNG 1 bãi quái — khoá vào zone của mục tiêu đầu tiên tìm được (m.zone: cùng
     // tham chiếu cho mọi quái spawn từ 1 bãi/1 đợt), các frame sau chỉ xét quái CÙNG zone đó, dù
@@ -9504,7 +9538,8 @@ window.toggleAuto = function(){
   if (player.auto){
     // Trong phó bản, quái đợt luôn spawn ở (1300,800) — cách xa cửa vào (1300,1560) hơn tầm AUTO
     // mặc định. Bật AUTO ngay cửa vào trước đây neo tại chỗ đứng, đứng im không đánh gì (QA phát hiện).
-    if (DGN && mapDef().dungeon){ player._autoAX = 1300; player._autoAY = 800; }
+    if (DEEP){ player._autoAX = DEEP_HALL.cx; player._autoAY = DEEP_HALL.cy; }
+    else if (DGN && mapDef().dungeon){ player._autoAX = 1300; player._autoAY = 800; }
     else { player._autoAX = player.x; player._autoAY = player.y; } // neo tại chỗ bật — auto chỉ ôm 1-2 bãi quái quanh neo
     // QA: bật AUTO khi còn 1 lệnh click-di-chuyển tay đang treo (chưa tới đích) — nếu không huỷ ở
     // đây, tắt AUTO lại sau đó sẽ khiến nhân vật tự đi tiếp theo lệnh cũ dù không có input mới.
@@ -10956,6 +10991,10 @@ function startGame(sectKey, quze){
   el('bottom-hud').classList.remove('hidden');
   el('xp-strip').classList.remove('hidden');
   el('combat-log-wrap').classList.remove('hidden');
+  if (el('combat-log')) el('combat-log').innerHTML = '';   // nhân vật mới không đọc log của người trước
+  // Chip đổi ngôn ngữ chỉ thuộc về màn chờ: trong game nó neo trùng chỗ với #hud-map, và trên
+  // điện thoại thì không còn góc nào trống. Đổi ngôn ngữ chuyển vào bảng Cài Đặt (phím O).
+  if (el('ghha-lang-toggle')) el('ghha-lang-toggle').style.display = 'none';
   if (maxMode) player.tutStep = -1; // chế độ thử nghiệm: bỏ qua hướng dẫn
   updateTut();
   snapCamera(); // vào game: camera đặt thẳng vào nhân vật, không pan từ góc (0,0)
@@ -13400,8 +13439,12 @@ function updateHud(){
   // bản đồ + loại khu vực + đai cấp đang đứng
   const md = mapDef(), zt = zoneType();
   const _hb = bandOfDist(md, player.x, player.y);
-  const _mapHtml = `${md.name}<span class="zone-badge" style="color:${zt.color};border-color:${zt.color}">${zt.name}</span>`
-    + (_hb >= 0 ? `<span class="zone-badge" style="color:${BAND_COLORS[_hb]};border-color:${BAND_COLORS[_hb]}">Đai ${BAND_NAMES[_hb]} · ${bandLvText(md,_hb)}</span>` : '');
+  // Tầng Sâu mượn địa hình map phó bản, nhưng ghi tên map đó lên HUD là nói dối người chơi về
+  // nơi họ đang đứng — nhất là khi banner phó bản cũng chen vào.
+  const _mapHtml = DEEP
+    ? `Vực Sâu<span class="zone-badge" style="color:#c07fe0;border-color:#c07fe0">Tầng ${DEEP.floor}/${DEEP_MAX}</span>`
+    : `${md.name}<span class="zone-badge" style="color:${zt.color};border-color:${zt.color}">${zt.name}</span>`
+    + (!DEEP && _hb >= 0 ? `<span class="zone-badge" style="color:${BAND_COLORS[_hb]};border-color:${BAND_COLORS[_hb]}">Đai ${BAND_NAMES[_hb]} · ${bandLvText(md,_hb)}</span>` : '');
   if (window._lastHudMap !== _mapHtml){ window._lastHudMap = _mapHtml; el('hud-map').innerHTML = _mapHtml; } // dirty-check: rarely changes, was rewritten every frame
   // nút PK: chỉ ở map Dã Ngoại / Huyết Chiến
   const pkBtn = el('btn-pk');
@@ -14125,6 +14168,7 @@ function renderSettings(){
     <div class="set-row"><span>📳 Rung màn hình</span><span>${[[0,'TẮT'],[1,'NHẸ'],[2,'ĐẦY']].map(([v,t]) =>
       `<button class="mini-btn ${(SETTINGS.shake|0) === v ? '' : 'danger'}" onclick="setShake(${v})">${t}</button>`).join(' ')}</span></div>
     <div class="set-row"><span>🍃 Giảm hiệu ứng <i>(máy yếu)</i></span>${tog('lowFx')}</div>
+    <div class="set-row"><span>🌐 Ngôn ngữ / Language</span><button class="mini-btn" onclick="window.ghhaSwitchLang && window.ghhaSwitchLang()">${(window.ghhaLang && window.ghhaLang() === 'en') ? '🇻🇳 Tiếng Việt' : '🇬🇧 English'}</button></div>
     <div class="set-row" style="border-bottom:none;justify-content:center"><b style="color:#6ae88a;font-size:12px">— ⚔ AUTO FARM (phím Z) —</b></div>
     <div class="set-row"><span>🗡 Tự tung kỹ năng trên taskbar</span>${togA('skill')}</div>
     <div class="set-row"><span>🧪 Tự uống Hồ Lô Thuốc</span>${togA('potion')}</div>
@@ -14427,6 +14471,11 @@ function mapGate(id){
   return { ok:true };
 }
 window.travelTo = function(mapId, from){
+  // Đang ở Tầng Sâu mà rời map bằng BẤT KỲ đường nào — cổng, nút "Đi ngay" của banner dẫn
+  // nhiệm vụ, nút Dịch Chuyển trong bảng Bản Đồ — đều tính là RÚT LUI. Trước đây chỉ updateGate()
+  // có chốt này, nên teleport ra ngoài vẫn để DEEP sống: updateDeep() thấy map an toàn sạch quái
+  // liền coi như "dọn xong tầng", tự lên tầng và spawn quái Tầng Sâu ngay giữa Lunaris City.
+  if (DEEP && mapId !== DEEP_MAP){ window.deepLeave(mapId); return; }
   const md = MAPS[mapId];
   if (!md || !player) return;
   const g = mapGate(mapId);
@@ -14449,7 +14498,11 @@ window.travelTo = function(mapId, from){
   // nếu là phó bản, startDungeonRun()/nextDungeonWave() ngay dưới sẽ ghi đè bằng neo riêng của nó.
   player._autoAX = null; player._autoAY = null;
   player._autoZone = null; player._autoZoneLocked = false; // QA: bãi quái khoá ở map cũ không còn nghĩa gì ở map mới
-  if (md.dungeon) startDungeonRun(mapId);
+  // Tầng Sâu mượn ĐỊA HÌNH map phó bản nhưng KHÔNG phải một lượt chạy phó bản. Thiếu chốt
+  // !DEEP ở đây thì deepStart() xoá DGN xong travelTo() dựng lại ngay: hai bức tường đá khoá
+  // lại, mà deepNextFloor() rải quái vào cả ba phòng ⇒ kẹt cứng vĩnh viễn ở tầng 1; đồng thời
+  // updateDungeon() chạy song song, phát không thưởng "thông quan" và banner phó bản đè lên.
+  if (md.dungeon && !DEEP) startDungeonRun(mapId);
   const sp = (from && md.spawnFrom && md.spawnFrom[from]) || md.spawn;
   player.x = sp.x; player.y = sp.y;
   collideCityWalls(); // chắc chắn không spawn lọt tường
@@ -15576,6 +15629,11 @@ let DEEP = null; // { floor, bank, entered }
 const DEEP_MAX = 20;      // CÓ ĐÁY. Vô hạn thì phần thưởng không có trần và cũng chẳng có cái
                           // kết nào để hướng tới — chỉ còn là cày cho tới lúc chán hoặc chết.
 const DEEP_BOSS_EVERY = 5;  // tầng 5·10·15·20 là tầng boss
+const DEEP_MAP = 'pb_daohoa';   // Tầng Sâu mượn địa hình map này; KHÔNG chạy lượt phó bản của nó
+// Tầng Sâu là MỘT sảnh, không phải ba phòng. Bán kính 380 nằm gọn trong tầm quét 430 của AUTO:
+// rải quái theo DGN_ROOMS (ba tâm phòng cách nhau tới 960px) thì AUTO neo ở phòng 1 không bao giờ
+// với tới quái phòng 3 — tầng không bao giờ sạch, và cả chế độ đứng im vĩnh viễn.
+const DEEP_HALL = { cx: 1300, cy: 1000, r: 380 };
 const DEEP_MOBS = ['bandit','wolf','caodo','phando','xanu','bandao','thinu','mocnhan','huyetbat','ttdetu','docyeu','satthuhy','thamtu','cungthu'];
 function deepFloorLv(f){ return clamp(6 + f * 4, 1, 120); }
 // Thưởng mỗi tầng dồn vào "kho tạm" — chưa phải của ngươi cho tới khi rời.
@@ -15586,12 +15644,13 @@ function deepFloorLoot(f){
            hap: f % 5 === 0 ? clamp(Math.floor(f/5), 1, 7) : 0 };
 }
 function deepStart(){
-  if (!player || player.level < 20){
+  if (!player || DEEP) return;
+  if (player.level < 20){
     addFloat(player.x, player.y-50, 'Cần cấp 20 để xuống Tầng Sâu', '#ff9a6a', 13); return;
   }
   DEEP = { floor: 0, bank: { silver:0, tuvi:0, xp:0, mat:0, tienDan:0, hap:{} }, entered: Date.now() };
   DGN = null;
-  travelTo('pb_daohoa');
+  travelTo(DEEP_MAP);
   deepNextFloor();
 }
 function deepNextFloor(){
@@ -15602,8 +15661,7 @@ function deepNextFloor(){
   if (f % DEEP_BOSS_EVERY === 0){   // tầng boss — không phải bầy quái
     const pick = ['boss_hacphong','boss_sontac','boss_phando','boss_mochu','boss_tinhhoa','boss_dothong','boss_thienbinh'];
     const key = pick[clamp(Math.floor(f / DEEP_BOSS_EVERY) - 1, 0, pick.length - 1)];
-    const R = DGN_ROOMS[2];
-    const bm = spawnMob(key, { x:R.cx, y:R.cy, r:30, count:1 }, null);
+    const bm = spawnMob(key, { x:DEEP_HALL.cx, y:DEEP_HALL.cy, r:30, count:1 }, null);
     bm.zone = null;
     const bmul = 1 + f * 0.22;
     bm.def = Object.assign({}, bm.def, { hp: Math.round(bm.def.hp * bmul),
@@ -15614,15 +15672,15 @@ function deepNextFloor(){
       sub: f >= DEEP_MAX ? 'TẦNG CUỐI. Hạ nó là trọn vẹn chuyến xuống.' : 'Tầng boss — hạ nó để mở lối xuống tiếp',
       color:'#ff5a4a', t:4.5 };
     AudioSys.sfx('crit', 0.9);
-    if (player && player.auto){ player._autoAX = R.cx; player._autoAY = R.cy; }
+    if (player && player.auto){ player._autoAX = DEEP_HALL.cx; player._autoAY = DEEP_HALL.cy; }
     return;
   }
   const pool = DEEP_MOBS.filter(k => MOBS[k] && Math.abs((MOBS[k].lv || 1) - lv) <= 22);
   const use = pool.length ? pool : [DEEP_MOBS[0]];
   const nMob = Math.min(14, 4 + Math.floor(f * 0.7));
   for (let i = 0; i < nMob; i++){
-    const R = DGN_ROOMS[i % DGN_ROOMS.length];
-    const m = spawnMob(use[Math.floor(Math.random()*use.length)], { x:R.cx, y:R.cy, r:190, count:nMob }, null);
+    const m = spawnMob(use[Math.floor(Math.random()*use.length)],
+                       { x:DEEP_HALL.cx, y:DEEP_HALL.cy, r:DEEP_HALL.r, count:nMob }, null);
     m.zone = null;
     // Tầng càng sâu quái càng dày máu — đây là thứ cuối cùng chặn ngươi lại, không phải cấp
     const mul = 1 + f * 0.28;
@@ -15632,7 +15690,7 @@ function deepNextFloor(){
   }
   if (DEEP.doorOpen) DEEP.doorOpen = null;
   zoneBanner = { text:`TẦNG ${f}/${DEEP_MAX}`, sub:`${nMob} quái · máu ×${(1+f*0.28).toFixed(1)} — dọn sạch để mở lối xuống`, color:'#c07fe0', t:3.5 };
-  if (player && player.auto){ player._autoAX = DGN_ROOMS[0].cx; player._autoAY = DGN_ROOMS[0].cy; }
+  if (player && player.auto){ player._autoAX = DEEP_HALL.cx; player._autoAY = DEEP_HALL.cy; }
 }
 function deepBankFloor(){
   const l = deepFloorLoot(DEEP.floor), b = DEEP.bank;
@@ -15640,7 +15698,7 @@ function deepBankFloor(){
   if (l.hap) b.hap[l.hap] = (b.hap[l.hap] || 0) + 1;
 }
 // Rời CHỦ ĐỘNG: kho tạm thành của ngươi. Đây là toàn bộ trò chơi của chế độ này.
-window.deepLeave = function(){
+window.deepLeave = function(dest){
   if (!DEEP) return;
   const b = DEEP.bank;
   player.silver += b.silver; player.dantian.tuvi += b.tuvi; player.mat += b.mat; player.tienDan += b.tienDan;
@@ -15652,7 +15710,7 @@ window.deepLeave = function(){
     color:'#6ae88a', t:6 };
   AudioSys.sfx('levelup', 1);
   DEEP = null; calcDerived(); saveGame();
-  travelTo('tuongduong');
+  travelTo(dest || 'tuongduong');
 };
 // Chết trong Tầng Sâu: mất SẠCH kho tạm. Không có nửa vời — đó là thứ làm quyết định "xuống
 // thêm một tầng nữa" có sức nặng.
@@ -15838,7 +15896,8 @@ function grantHuntBox(){
 function drawDeepHUD(){
   if (!DEEP || !player) return;
   const b = DEEP.bank;
-  drawArenaHUD({ label: `⬇ TẦNG SÂU — Tầng ${DEEP.floor}/${DEEP_MAX}`, labelColor:'#c07fe0' });
+  // KHÔNG vẽ nhãn tầng ở đây nữa: #hud-map ngay phía trên đã ghi "Vực Sâu · Tầng n/20", hai
+  // dòng in đè lên nhau đúng cùng một chỗ.
   ctx.textAlign = 'center';
   ctx.font = 'bold 13px "Be Vietnam Pro", sans-serif';
   ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
@@ -16942,6 +17001,18 @@ function riftClose(sub){
   zoneBanner = { text:'✹ Vực nứt đã khép', sub: fled ? 'Chúa Tể rút về bên kia vết nứt cùng chiến lợi phẩm.' : sub, color:'#8a8a8a', t:4 };
   saveGame();
 }
+// nearestFree() chỉ chừa 16px — không đủ cho một con size 34. Tìm riêng với bán kính thật.
+function riftFreeSpot(x, y, r){
+  if (!inObstacle(curMap, x, y, r)) return { x, y };
+  for (let rad = 70; rad <= 900; rad += 70){
+    for (let k = 0; k < 16; k++){
+      const a = k/16 * Math.PI*2;
+      const nx = clamp(x + Math.cos(a)*rad, 60, MAP.w - 60), ny = clamp(y + Math.sin(a)*rad, 60, MAP.h - 60);
+      if (!inObstacle(curMap, nx, ny, r)) return { x:nx, y:ny };
+    }
+  }
+  return { x, y };
+}
 function spawnRiftBoss(){
   const md = MAPS[curMap];
   RIFT.done[curMap] = true;
@@ -16955,8 +17026,12 @@ function spawnRiftBoss(){
     // đó rồi — boss thế giới lớn nhất mà đụng hàng thì mất hết cảm giác "thứ này khác hẳn".
     skel:'fiend', skelPal:{ main:'#4a2a6e', dark:'#1a0a2e', trim:'#a06aff', cloth:'#2e1450',
                             bone:'#e0d0ff', glow:'#c07fe0', line:'#0d0418' } };
+  // Dựng mob thủ công nên không đi qua spawnMob() — phải TỰ tìm chỗ trống, nếu không boss thế
+  // giới lớn nhất game lún trong tảng đá (đo được ở comoc và nhanmon: click-to-move chỉ tới được
+  // cách 130px, ngoài tầm đánh cận chiến 90px).
+  const _sp = riftFreeSpot(MAP.w*0.5, MAP.h*0.5, def.size + 6);
   const m = { type:'rift', def, name: def.name,
-    x: MAP.w*0.5, y: MAP.h*0.5, zone: null, pack: null,
+    x: _sp.x, y: _sp.y, zone: null, pack: null,
     hp: def.hp, maxHp: def.hp, atkT: rnd(0,1), dead: false, face: 0,
     shield: 1, shieldT: 0, hitT: 0, wob: Math.random()*10, packAlert: 0 };
   mobs.push(m);

@@ -1037,20 +1037,28 @@ function addToggle() {
   b.id = 'ghha-lang-toggle';
   b.textContent = lang === 'en' ? '🇻🇳 VI' : '🇬🇧 EN';
   b.title = 'Language / Ngôn ngữ';
-  b.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:99999;'
+  // Góc trái-dưới, và CHỈ ở màn chờ. top:8px + left:50% là ĐÚNG cùng điểm neo với #hud-map
+  // (top:12px, left:50%) nên viên "🇻🇳 VI" đè thẳng lên tên vùng ở mọi độ phân giải — cắt
+  // "Wilds" thành "Wild". Trong game thì bốn góc đều đã có chủ (nhất là ở 390px, nơi HUD chiếm
+  // gần hết màn hình), nên startGame() giấu chip này đi và bảng Cài Đặt nhận việc đổi ngôn ngữ.
+  b.style.cssText = 'position:fixed;bottom:10px;left:10px;z-index:99999;'
     + 'padding:4px 12px;border-radius:999px;border:1px solid #8a6d3b;background:rgba(29,23,18,.92);'
     + 'color:#f0d68a;font:700 12px/1.4 system-ui,sans-serif;cursor:pointer;opacity:.9;pointer-events:auto';
   b.onmouseenter = () => { b.style.opacity = '1'; };
   b.onmouseleave = () => { b.style.opacity = '.9'; };
-  b.onclick = () => {
-    const nl = lang === 'en' ? 'vi' : 'en';
-    const ask = nl === 'en'
-      ? 'Switch to English?\nThe game will reload (progress is saved automatically).'
-      : 'Chuyển sang Tiếng Việt?\nGame sẽ tải lại (tiến trình đã tự lưu).';
-    if (confirm(ask)) { try { localStorage.setItem(KEY, nl); } catch (e) {} location.reload(); }
-  };
+  b.onclick = () => window.ghhaSwitchLang();
   document.body.appendChild(b);
 }
+// Bảng Cài Đặt gọi lại đúng hàm này — đổi ngôn ngữ là việc làm một lần, không đáng chiếm một
+// góc màn hình suốt trận. Chip nổi chỉ còn phục vụ màn chờ, trước khi vào game.
+window.ghhaSwitchLang = function(){
+  const nl = lang === 'en' ? 'vi' : 'en';
+  const ask = nl === 'en'
+    ? 'Switch to English?\nThe game will reload (progress is saved automatically).'
+    : 'Chuyển sang Tiếng Việt?\nGame sẽ tải lại (tiến trình đã tự lưu).';
+  if (confirm(ask)) { try { localStorage.setItem(KEY, nl); } catch (e) {} location.reload(); }
+};
+window.ghhaLang = function(){ return lang; };
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
 else boot();
