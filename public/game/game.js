@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================
-   GIANG HỒ HUYỄN ẢNH — HUYỄN ẢNH CHÍ TÔN (PvE Webgame v1)
+   AXIE WUXIA — webgame PvE nhập vai, tri ân MU Online (IP gốc)
    Core loop: farm → mission → level 1→10 → gear (10 slots ×
    6 attributes) → Rèn Luyện → Venom / Trấn Phái / Tấn Chức
    ========================================================= */
@@ -138,7 +138,7 @@ const EXC_ARMOR = [
   { k:'excBlock',  name:'Tỉ lệ Đỡ Đòn',       v:10 },                // cơ chế MỚI
   { k:'reflectPct',name:'Phản Sát Thương',    v:5  },
   { k:'dmgred',    name:'Giảm Sát Thương',    v:4  },
-  { k:'qiPct',     name:'Qi Tối Đa',          v:4  },
+  { k:'qiPct',     name:'Mana Tối Đa',          v:4  },
   { k:'hpPct',     name:'Sinh Lực Tối Đa',    v:4  },
 ];
 // Số dòng Hoàn Hảo theo tầng Bảo Hạp: I-II → 1 · III-IV → 1-2 · V-VI → 2-3 · VII → 3
@@ -193,7 +193,7 @@ const ATTR_INFO = {
 const ARMOR_SUBS = [
   { k:'dmgred',    name:'Giảm Sát Thương',  min:1,  max:5  },
   { k:'hpPct',     name:'Sinh Lực Tối Đa',  min:1,  max:5  },
-  { k:'qiPct',     name:'Qi Tối Đa',   min:1,  max:4  },
+  { k:'qiPct',     name:'Mana Tối Đa',   min:1,  max:4  },
   { k:'evaPct',    name:'Tránh Đòn',        min:5,  max:10 },
   { k:'silverPct', name:'Đồng Rơi Thêm',    min:10, max:30 },
   { k:'reflectPct',name:'Phản Sát Thương',  min:1,  max:5  },
@@ -204,7 +204,7 @@ const WEAPON_SUBS = [
   // bảng nên 5,6% vũ khí phẩm thường cũng mang "ST Hoàn Hảo +10%" — đo 6000 lần rơi: 333 món.
   { k:'perfect',   name:'ST Hoàn Hảo',      min:10, max:10, fixed:true, vip:true },
   { k:'atkPct',    name:'Thêm Sát Thương',  min:2,  max:5  },
-  { k:'qiLeech',   name:'Hút Qi',      min:1,  max:3  },
+  { k:'qiLeech',   name:'Hút Mana',      min:1,  max:3  },
   { k:'hpLeech',   name:'Hút Sinh Lực',     min:1,  max:3  },
   { k:'aspdPct',   name:'Tốc Độ Đánh',      min:2,  max:5  },
 ];
@@ -1321,7 +1321,7 @@ const SKILL_DEFS = {
   bow:     { unlock:30, kind:'bow',    name:'Piercing Arrow', cd:6, qi:28, mult:1.3, icon:()=>'assets/skills/bow.png',
              req:()=>player.bow.tier>0, reqTxt:'Archery tầng 1 (Tấn Chức)', desc:()=>'Bắn 3 mũi tên xuyên thấu theo hình quạt trước mặt.' },
   tieuhon: { unlock:20, kind:'tieuhon', name:'Soul Rend', cd:13, qi:60, mult:3.2, icon:()=>'assets/skills/tieuhon.png',
-             req:()=>player.dantian.realm>=6, reqTxt:'Ascension cảnh 6 (Radiant Core Cảnh)', desc:()=>'Sóng xung kích bóng tối quét sạch quanh người (AoE lớn).' },
+             req:()=>player.dantian.realm>=6, reqTxt:'Ascension cảnh 6 (Radiant Core)', desc:()=>'Sóng xung kích bóng tối quét sạch quanh người (AoE lớn).' },
 };
 const PASSIVE_SKILLS = [
   { name:'Archery (bị động)', req:()=>player.bow.tier>0, desc:'Đòn đánh thường có tỉ lệ bắn thêm một mũi tên — theo tầng Archery.' },
@@ -1331,15 +1331,15 @@ const PASSIVE_SKILLS = [
   { name:'Khát Huyết', req:()=>player.bikip && player.bikip.hmtp, desc:'Hút 10% sát thương thành sinh lực + tuyệt chiêu chủ động Nuốt Hồn (gán ở bảng K) — cổ thư thất truyền.' },
 ];
 
-// ═══════════ VÕ HỌC PHỔ — võ học tự do, người chơi tự chọn tuyệt chiêu & hướng đi ═══════════
-// phai: võ học môn phái — tự ngộ khi đạt cấp · phai:null = giang hồ — học bằng Bí Kíp (rơi từ tinh anh/boss)
+// ═══════════ SỔ KỸ NĂNG — kỹ năng tự do, người chơi tự chọn tuyệt chiêu & hướng đi ═══════════
+// phai: kỹ năng môn phái — tự ngộ khi đạt cấp · phai:null = phiêu bạt — học bằng Sách Kỹ Năng (rơi từ tinh anh/boss)
 const VH_TIER = {
   so:   { name:'Sơ Cấp',   color:'#c8c8c8', cost:1 },
   trung:{ name:'Trung Cấp',color:'#7ec850', cost:2 },
   cao:  { name:'Cao Cấp',  color:'#b08ae8', cost:3 },
   than: { name:'Thần Cấp', color:'#ffd76a', cost:5 },
 };
-// MU Online-lite: mỗi lớp chỉ giữ đúng bộ chiêu gốc của lớp đó (không còn giang hồ tự do/dung hợp
+// MU Online-lite: mỗi lớp chỉ giữ đúng bộ chiêu gốc của lớp đó (không còn phiêu bạt tự do/dung hợp
 // liên phái — MU không có khái niệm này, vũ khí & chiêu thức LÀ bản sắc lớp). Tất cả phai-locked,
 // tự ngộ theo cấp độ giống hệt cơ chế sect-skill cũ, chỉ khác là giờ CẢ 5 LỚP đều có đủ bộ thay vì
 // chỉ 3/9 Tộc trước đây. skillA/tp (Twisting Slash/Death Stab v.v.) đã nằm ở SECTS, đây là 4-6 chiêu
@@ -1386,13 +1386,13 @@ const VOHOC_DEFS = {
 };
 // ═══════════ TỐI GIẢN TASKBAR: 3 Ô CỐ ĐỊNH KIỂU MU ONLINE ═══════════
 // Mỗi phái chỉ còn đúng 3 chiêu chủ động — 1 chiêu chính (skillA), 1 chiêu phụ (Trấn Phái), 1 buff có
-// thời gian riêng từng phái — thay vì 5 ô người chơi tự gán. Toàn bộ chiêu Võ Học Phổ còn lại (Cyclone,
+// thời gian riêng từng phái — thay vì 5 ô người chơi tự gán. Toàn bộ chiêu Sổ Kỹ Năng còn lại (Cyclone,
 // Nova, Flame Storm...) + hệ Tấn Chức phụ (Ám Khí/Đạn Chỉ/Linh Tiễn/Tiêu Hồn) không mất giá trị — dồn
 // thành % Công Kích vĩnh viễn, tự động theo cấp/điều kiện đã có, không cần bấm nút nữa (xem calcDerived()
 // và LEGACY_SECT_SKILLS bên dưới).
 const BUFF_SKILL_ID = { thieulam:'gangkhi', toanchan:'elf_greaterdmg', baidasan:'dw_shield', minhgiao:'mg_battlefury', bug:'dl_commandaura' };
 function defaultSkillBar(sect){ return ['a', 'tp', BUFF_SKILL_ID[sect] || null]; }
-// Tuyệt Học Cũ: mỗi tầng quy đổi thành % Công Kích vĩnh viễn — điều kiện mở giữ nguyên (tự ngộ theo
+// Di Sản Cũ: mỗi tầng quy đổi thành % Công Kích vĩnh viễn — điều kiện mở giữ nguyên (tự ngộ theo
 // cấp cho chiêu môn phái qua vhLearned(), hoặc điều kiện Tấn Chức riêng cho 4 kỹ năng phổ thông).
 const LEGACY_TIER_PCT = { so:1.5, trung:2, cao:2.5, than:3.5 };
 const LEGACY_SECT_SKILLS = ['dk_cyclone','dk_ragefulblow','dk_crescent',
@@ -1401,8 +1401,8 @@ const LEGACY_SECT_SKILLS = ['dk_cyclone','dk_ragefulblow','dk_crescent',
   'mg_powerslash','mg_frostnova','mg_flamestrike',
   'dl_electricspark','dl_darkspirit','dl_chaoticdiseier','dl_darkraven'];
 const LEGACY_UNIVERSAL_PCT = { amkhi:1.5, danchi:2, bow:2, tieuhon:3 };
-// Đăng ký võ học chủ động vào SKILL_DEFS — dùng chung cho castSkill(); chỉ chiêu buff (BUFF_SKILL_ID)
-// thực sự nằm ở taskbar 3 ô, còn lại chỉ tồn tại để tính legacyAtkPct và hiển thị ở tab Tuyệt Học Cũ
+// Đăng ký kỹ năng chủ động vào SKILL_DEFS — dùng chung cho castSkill(); chỉ chiêu buff (BUFF_SKILL_ID)
+// thực sự nằm ở taskbar 3 ô, còn lại chỉ tồn tại để tính legacyAtkPct và hiển thị ở tab Di Sản Cũ
 for (const _vid in VOHOC_DEFS){
   const _v = VOHOC_DEFS[_vid];
   if (_v.type === 'passive') continue;
@@ -1412,7 +1412,7 @@ for (const _vid in VOHOC_DEFS){
     get icon(){ return _v.icon; },
     req:()=>vhLearned(_vid),
     // Lưu ý: chuỗi này tính NGAY lúc nạp module (player chưa tồn tại) nên không được đọc player ở đây.
-    reqTxt:`Tự ngộ khi đạt cấp ${_v.unlock} nếu đúng Lớp — khác Lớp cần ${VH_TIER[_v.tier].cost} 📜 Sách Kỹ Năng (bấm K → Tuyệt Học Cũ)` };
+    reqTxt:`Tự ngộ khi đạt cấp ${_v.unlock} nếu đúng Lớp — khác Lớp cần ${VH_TIER[_v.tier].cost} 📜 Sách Kỹ Năng (bấm K → Di Sản Cũ)` };
 }
 // MU không có khái niệm "dung hợp liên phái" — hệ Dung Hợp (30 chiêu) đã bị cắt hẳn theo hướng tối
 // giản. Giữ FUSION_DEFS rỗng (thay vì xoá luôn định danh) để mọi chỗ tham chiếu cũ (vòng lặp/lookup)
@@ -1568,10 +1568,10 @@ function learnVohoc(id){
   player.vohoc[id] = true;
   calcDerived(); saveGame();
   addFloat(player.x, player.y-66, `✦ Ngộ được: ${v.name}!`, VH_TIER[v.tier].color, 16);
-  zoneBanner = { text:'TUYỆT HỌC', sub:`${v.school} · ${v.name} — +${LEGACY_TIER_PCT[v.tier] || 0}% Công Kích vĩnh viễn (xem K → Tuyệt Học Cũ)`, color:VH_TIER[v.tier].color, t:3.5 };
+  zoneBanner = { text:'DI SẢN', sub:`${v.school} · ${v.name} — +${LEGACY_TIER_PCT[v.tier] || 0}% Công Kích vĩnh viễn (xem K → Di Sản Cũ)`, color:VH_TIER[v.tier].color, t:3.5 };
   AudioSys.sfx('quest', 0.9);
 }
-// Sách Kỹ Năng (bikipVH) — đường tiêu duy nhất: học tuyệt học NGOẠI LỚP. Võ học của chính lớp mình
+// Sách Kỹ Năng (bikipVH) — đường tiêu duy nhất: học di sản NGOẠI LỚP. Kỹ năng của chính lớp mình
 // vẫn tự ngộ miễn phí theo cấp (vhAutoLearn), còn 4 lớp kia phải mua bằng Sách Kỹ Năng — hoặc nhận
 // sạch miễn phí khi Thăng Tiên. QA: điều kiện cũ là `v.phai` → luôn true sau đợt MU-hoá (mọi chiêu
 // đều phai-locked), khiến hàm này không bao giờ chạy được và Sách Kỹ Năng thành tiền tệ chết.
@@ -1589,11 +1589,11 @@ window.learnVohocUI = function(id){
   learnVohoc(id);
   renderSkillPanel();
 };
-function vhAutoLearn(){ // võ học môn phái tự ngộ khi đạt cấp — mỗi lớp học đúng bộ chiêu của lớp mình
+function vhAutoLearn(){ // kỹ năng môn phái tự ngộ khi đạt cấp — mỗi lớp học đúng bộ chiêu của lớp mình
   for (const _vid in VOHOC_DEFS){
     const _v = VOHOC_DEFS[_vid];
     if (!_v.phai || vhLearned(_vid) || player.level < _v.unlock) continue;
-    if (!player.ascended && _v.phai !== player.sect) continue; // Starflight: môn phái phá bỏ — võ học toàn tự do
+    if (!player.ascended && _v.phai !== player.sect) continue; // Starflight: môn phái phá bỏ — kỹ năng toàn tự do
     learnVohoc(_vid);
   }
 }
@@ -1604,7 +1604,7 @@ function vhKnockback(m, ang, px){
 }
 
 // ═══════════ VFX TUYỆT CHIÊU — mỗi thần công một hình ảnh riêng, không trùng lặp ═══════════
-// VH_VFX: võ học chủ động · style → drawVfx, proj → drawProjStyled.
+// VH_VFX: kỹ năng chủ động · style → drawVfx, proj → drawProjStyled.
 // SECT_VFX: 16 tuyệt chiêu môn phái (8 chiêu chính sx_*_a + 8 trấn phái sx_*_c) — hình ảnh riêng từng phái
 const SECT_VFX = {
   sx_thieulam_a: { style:'windslash',    c2:'#cfe8ff' },                      // Twisting Slash (Dark Knight) — chém xoáy cuốn gió
@@ -1622,7 +1622,7 @@ const SECT_VFX = {
   sx_vophai_a:   { style:'fist',         c2:'#e8d8a8' },                      // Du Hiệp Quyền — quyền kình
   sx_vophai_c:   { style:'stormhost',    c2:'#e4ebff' },                      // Tứ Hải Giai Phục — sóng chưởng tứ hải
 };
-// VH_VFX: hình ảnh riêng cho chiêu Võ Học Phổ. Sau đợt MU-hoá chỉ còn Dark Raven cần entry
+// VH_VFX: hình ảnh riêng cho chiêu Sổ Kỹ Năng. Sau đợt MU-hoá chỉ còn Dark Raven cần entry
 // riêng (các style khác đã gắn thẳng vào SECT_VFX theo lớp).
 const VH_VFX = {
   dl_darkraven:{ style:'crowswarm', c2:'#ff5a3a' },   // Dark Raven (Dark Lord) — bầy quạ đen xoáy vào
@@ -1723,7 +1723,7 @@ function drawVfx(e, k, a){
       disc(X + Math.cos(ang)*L, Y + Math.sin(ang)*L, 10*(1-k) + 4, i%2 ? C1 : C2, a*0.4); }
     for (let i = 0; i < 3; i++){ const ang = F + (i-1)*0.5; ctx.strokeStyle = C2; ctx.lineWidth = 2.5; ctx.globalAlpha = a*0.8;
       _vxLine(X + Math.cos(ang)*R*0.2, Y + Math.sin(ang)*R*0.2, X + Math.cos(ang)*R*(0.4 + k*0.5), Y + Math.sin(ang)*R*(0.4 + k*0.5)); }
-  } else if (S === 'vajra'){ // Kim Cang / Thái Cực Kiếm — kim cang phạn ấn quay
+  } else if (S === 'vajra'){ // Kim Cang / Kiếm Xoáy — kim cang phạn ấn quay
     poly(X, Y, R*(0.45 + k*0.2), 4, spin, C1, 4, a*0.9);
     poly(X, Y, R*(0.45 + k*0.2), 4, spin + Math.PI/4, C2, 2.5, a*0.7);
     disc(X, Y, 8, C2, a*0.8); _vxGlyph(X, Y, G, 22, C1, a);
@@ -2464,11 +2464,11 @@ const DANTIAN_REALMS = [
   { name:'Spark · Tầng 2',   atk:0.10, hp:0.10, qireg:2,  cost:{tuvi:400,   silver:700,   mat:6},   rate:85 },
   { name:'Spark · Tầng 3',   atk:0.16, hp:0.16, qireg:3,  cost:{tuvi:900,   silver:1400,  mat:15},  rate:70 },
   { name:'Spark · Tầng 4',   atk:0.24, hp:0.24, qireg:4,  cost:{tuvi:1800,  silver:2600,  mat:24},  rate:55, unlock:'Rupture Bolt (5% khóa chiêu đối thủ)' },
-  { name:'Molt Cảnh',         atk:0.35, hp:0.35, qireg:5,  cost:{tuvi:3600,  silver:5000,  mat:42},  trib:3, unlock:'Vòng phản đòn — phản 5% sát thương · thân pháp +10%' },
-  { name:'Radiant Core Cảnh',         atk:0.45, hp:0.45, qireg:6,  cost:{tuvi:6000,  silver:8000,  mat:55},  trib:4, unlock:'Soul Rend' },
+  { name:'Molt',         atk:0.35, hp:0.35, qireg:5,  cost:{tuvi:3600,  silver:5000,  mat:42},  trib:3, unlock:'Vòng phản đòn — phản 5% sát thương · thân pháp +10%' },
+  { name:'Radiant Core',         atk:0.45, hp:0.45, qireg:6,  cost:{tuvi:6000,  silver:8000,  mat:55},  trib:4, unlock:'Soul Rend' },
   { name:'Resonance · Trung Kỳ',atk:0.55, hp:0.55, qireg:7,  cost:{tuvi:9000,  silver:12000, mat:80},  trib:6, unlock:null },
   { name:'Resonance · Hậu Kỳ',  atk:0.70, hp:0.70, qireg:8,  cost:{tuvi:13000, silver:18000, mat:110}, trib:8, unlock:'Bất Tử — chặn 1 đòn chí mạng, hồi 30% HP (180s)' },
-  { name:'Starforged Cảnh',        atk:0.88, hp:0.88, qireg:10, cost:{tuvi:20000, silver:28000, mat:160}, trib:9, unlock:'Starforged — nhục thân thăng hoa, toàn thuộc tính vượt cực hạn' },
+  { name:'Starforged',             atk:0.88, hp:0.88, qireg:10, cost:{tuvi:20000, silver:28000, mat:160}, trib:9, unlock:'Starforged — nhục thân thăng hoa, toàn thuộc tính vượt cực hạn' },
 ];
 
 // ═══════════ TRACK HT (GDD §13) — trang bị dark-fantasy kiểu MU Online S2 ═══════════
@@ -2730,7 +2730,7 @@ const TRUYNA_BANDS = [
   { max:89,  map:'mongco',    name:'Tàn Tướng Tro Tàn' },
   { max:999, map:'nhanmon',   name:'Sát Thần Bão Tố' },
 ];
-// Vạn Duyên Các — gacha NPC Thần Toán Tử: 5% bí kíp hiếm / 15% châu / 25% trang bị / 30% vật liệu / 25% bạc·tu vi (KHÔNG pity)
+// Vạn Duyên Các — gacha NPC Thần Toán Tử: 5% sách kỹ năng hiếm / 15% châu / 25% trang bị / 30% vật liệu / 25% bạc·tu vi (KHÔNG pity)
 const VANDUYEN_RATES = [ { k:'bikip', w:5 }, { k:'chau', w:15 }, { k:'trangbi', w:25 }, { k:'vatlieu', w:30 }, { k:'bac', w:25 } ];
 // ---------- Hệ thống mới theo GDD Dream of Wuxia ----------
 // Instinct Channels: 8 mạch × 20 đốt, tiêu hao Instinct (tích lũy thụ động)
@@ -2781,10 +2781,10 @@ const TITLES = [
   { id:'thientram',name:'Thiên Quái Trảm',    color:'#e84a3a', cond:p=>p.kills>=1000,            desc:'Tiêu diệt 1.000 quái', stats:{crit:10},       vfx:'máu' },
   { id:'thoren',  name:'Thợ Rèn Truyền Thuyết', color:'#5aa0e8', cond:p=>p.forged11,             desc:'Rèn thành công +11',   stats:{forgeRate:5},   vfx:'lửa' },
   { id:'honnguyen',name:'Resonance Chân Quân', color:'#7ecbff', cond:p=>p.dantian.realm>=8,     desc:'Ascension cảnh 8 (Resonance Hậu Kỳ)', stats:{allPct:0.10}, vfx:'long' },
-  { id:'hoathan', name:'Starforged Chân Nhân',   color:'#fff2b0', cond:p=>p.dantian.realm>=9,     desc:'Vượt Thử Luyện cuối thành Starforged', stats:{allPct:0.15},   vfx:'long' },
+  { id:'hoathan', name:'Starforged Bất Diệt',   color:'#fff2b0', cond:p=>p.dantian.realm>=9,     desc:'Vượt Thử Luyện cuối thành Starforged', stats:{allPct:0.15},   vfx:'long' },
   { id:'tuongduong',name:'Người Giữ Lunacia', color:'#ffd76a', cond:p=>p.dantian.realm>=8 && p.mount.tier>=8 && p.level>=60, desc:'Đỉnh cao mọi hệ thống', stats:{allPct:0.15}, vfx:'long' },
 ];
-const TAN_QUYEN = ['Thượng','Trung','Hạ']; // Mảnh bí kíp Huyết Ma Thôn Phệ (boss drop)
+const TAN_QUYEN = ['Thượng','Trung','Hạ']; // Mảnh sách kỹ năng Huyết Ma Thôn Phệ (boss drop)
 
 const QUESTS = [
   { id:1, lv:1, name:'Kẻ Rơi Xuống',  desc:'Ngươi vừa vượt vết nứt và mất sạch ký ức võ nghệ. Đến gặp Trưởng Lão Rell giữa Lunaris City — ông ta là người Vaeldra duy nhất còn nhớ đội tiên phong.',
@@ -2805,7 +2805,7 @@ const QUESTS = [
     type:'kill', mob:'assassin', need:1, rew:{xp:1900, silver:220} }, // QA bot: tăng XP giữ nhịp cấp
   { id:9, lv:9, name:'Bàn Tay Còn Nhớ', desc:'Ký ức chưa về, nhưng bàn tay đã nhớ ra tuyệt kỹ của lớp mình (phím 3). Dùng nó kết liễu 5 Tay Sai Gloam.',
     type:'tpkill', mob:'bandit', need:5, rew:{xp:1600, silver:320} },
-  { id:10, lv:10, name:'The Calling', desc:'Thủ lĩnh Đoàn Gloam đã dựng trại trên đài phía đông. Hạ hắn — và ký ức môn phái Vaeldra của ngươi sẽ trở về trọn vẹn.',
+  { id:10, lv:10, name:'The Calling', desc:'Thủ lĩnh Đoàn Gloam đã dựng trại trên đài phía đông. Hạ hắn — và ký ức đội tiên phong Vaeldra của ngươi sẽ trở về trọn vẹn.',
     type:'boss', mob:'boss', need:1, rew:{xp:2500, silver:500} },
 ];
 
@@ -2892,8 +2892,8 @@ function itemTier(level){ return clamp(Math.ceil(level / 10), 1, 10); }
 function itemReqLv(it){ return it.tier ? (it.tier - 1) * 10 + 1 : (it.cloakTier === 2 ? 60 : 1); }
 function subName(k){
   return { atkPct:'Thêm Sát Thương', pierce:'Xuyên Giáp', defPct:'Phòng Ngự', hpPct:'Sinh Lực Tối Đa',
-           qiPct:'Qi Tối Đa', evaPct:'Tránh Đòn', silverPct:'Đồng Rơi Thêm', reflectPct:'Phản Sát Thương',
-           dmgred:'Giảm Sát Thương', perfect:'ST Hoàn Hảo', hpLeech:'Hút Sinh Lực', qiLeech:'Hút Qi',
+           qiPct:'Mana Tối Đa', evaPct:'Tránh Đòn', silverPct:'Đồng Rơi Thêm', reflectPct:'Phản Sát Thương',
+           dmgred:'Giảm Sát Thương', perfect:'ST Hoàn Hảo', hpLeech:'Hút Sinh Lực', qiLeech:'Hút Mana',
            aspdPct:'Tốc Độ Đánh', expPct:'EXP Thêm', crit:'Bạo Kích' }[k] || k;
 }
 function genItem(level, bias, srcK, opts){
@@ -3403,8 +3403,8 @@ function calcDerived(){
   player.defRed = s.def/(s.def + 60);
   player.qireg = 4 + P.qireg + dr.qireg; // GDD Đợt 2 B1: hồi cơ bản 2.5 -> 4.0
   player.speed = Math.round(190 * (realm >= 5 ? 1.10 : 1));
-  if (player.ascended) player.speed = Math.round(player.speed * 1.25); // Starflight: ngự kiếm phi hành
-  // ── Võ Học Phổ: tâm pháp bị động ──
+  if (player.ascended) player.speed = Math.round(player.speed * 1.25); // Starflight: bay lượn
+  // ── Sổ Kỹ Năng: tâm pháp bị động ──
   player.vhCdMult = 1; player.vhRegen = 0; player.vhPoisonRes = 0;
   if (player.vohoc){
     const VH = player.vohoc;
@@ -3439,11 +3439,11 @@ function calcDerived(){
   player.forgeBonus = tForge + Math.min(25, luckN * 5); // Vận: +5% tỉ lệ rèn/món, tối đa +25%
   player.luckN = luckN;
   player.critDmgMult = 2 + P.critDmg/100; // Vận + bộ Cổ Thần: sát thương bạo kích ×2 → ×2.x
-  // Tuyệt Học Cũ: chiêu Võ Học Phổ/Tấn Chức không còn nằm trong taskbar 3 ô (xem defaultSkillBar
+  // Di Sản Cũ: chiêu Sổ Kỹ Năng/Tấn Chức không còn nằm trong taskbar 3 ô (xem defaultSkillBar
   // và LEGACY_* ở khai báo VOHOC_DEFS) vẫn giữ giá trị — dồn thành % Công Kích vĩnh viễn, tự động
-  // theo đúng điều kiện mở khóa gốc, không cần bấm nút hay học Bí Kíp nữa.
+  // theo đúng điều kiện mở khóa gốc, không cần bấm nút hay học Sách Kỹ Năng nữa.
   // QA: điều kiện ở đây từng là `lv.phai === player.sect`, nên phần thưởng lớn nhất của Thăng Tiên
-  // (ascendToImmortal → vhAutoLearn tự ngộ võ học CẢ 5 lớp, banner ghi rõ "ràng buộc Lớp phá bỏ")
+  // (ascendToImmortal → vhAutoLearn tự ngộ kỹ năng CẢ 5 lớp, banner ghi rõ "ràng buộc Lớp phá bỏ")
   // hoàn toàn vô nghĩa: chiêu học thêm từ 4 lớp kia không cộng gì cả. vhLearned() vốn đã là nguồn
   // đúng duy nhất (chỉ tự ngộ chiêu của lớp mình, trừ khi đã Thăng Tiên) — bỏ điều kiện thừa đi.
   let legacyPct = 0;
@@ -3470,9 +3470,9 @@ function calcDerived(){
   player.pierce = (bw ? bw.pierce : 0) + P.pierce/100;
   player.silverPct = P.silverPct;
   player.expPct = P.expPct;
-  // Lịch Tu Tiên: phúc trạch Tứ Quý
+  // Lịch Thế Giới: phúc trạch Tứ Quý
   if (player.gt){
-    // (buff Tứ Quý theo mùa đã gỡ cùng Lịch Tu Tiên — mùa nay chỉ đổi thời tiết/hạt môi trường)
+    // (buff Tứ Quý theo mùa đã gỡ cùng Lịch Thế Giới — mùa nay chỉ đổi thời tiết/hạt môi trường)
   }
   if (player.level < 20) player.qireg *= 1.5; // tân thủ hồi chân khí nhanh hơn — đỡ chết nhịp farm đầu game
   player.perfectProc = Math.min(0.5, P.perfect/100);
@@ -3496,7 +3496,7 @@ function calcDerived(){
   if (ndB.qi) player.maxQi += ndB.qi;
   if (ndB.def) player.defRed = Math.min(0.78, player.defRed + ndB.def*0.002);
   if (ndB.crit) player.crit = Math.min(0.65, player.crit + ndB.crit/100);
-  // Tẩy Tủy Phong Huyệt (Reset kiểu MU): mỗi lần tẩy tủy cộng vĩnh viễn +2% Công/Mạng,
+  // Tẩy Tủy (Reset kiểu MU): mỗi lần tẩy tủy cộng vĩnh viễn +2% Công/Mạng,
   // không bao giờ mất kể cả tẩy tủy tiếp — chỉ cấp độ/EXP bị đưa về 1, xem window.doTayTuy()
   if (player.resetCount){
     const rb = 1 + player.resetCount * 0.02;
@@ -3505,7 +3505,7 @@ function calcDerived(){
   }
   if (player.maDao) player.atk = Math.round(player.atk * 1.15); // Sa Đọa — ma công tà ác
   if ((player.buffAtkT || 0) > 0) player.atk = Math.round(player.atk * 1.12); // Rượu Hổ Cốt
-  // Võ Học Phổ: buff chủ động
+  // Sổ Kỹ Năng: buff chủ động
   if ((player.vhDmgT || 0) > 0) player.atk = Math.round(player.atk * (1 + (player.vhDmgPct || 0)/100));
   if ((player.vhCritT || 0) > 0) player.crit = 1; // Trảm Ma Kiếm Pháp
   if ((player.vhEvaT || 0) > 0) player.eva = Math.min(1, player.eva + (player.vhEvaPct || 0)/100);
@@ -3532,13 +3532,13 @@ function newPlayer(sectKey){
     gkBuffT: 0, poisonT: 0, autoSell: false,
     autoCfg: { skill:true, potion:true, potionPct:40, range:430, boss:false }, // Cài đặt Auto Farm (panel O)
     vohoc: {}, bikipVH: 0,
-    skillLv: {},                                 // cấp từng kỹ năng 1-120                       // Võ Học Phổ: võ học đã học + Bí Kíp
+    skillLv: {},                                 // cấp từng kỹ năng 1-120                       // Sổ Kỹ Năng: kỹ năng đã học + Sách Kỹ Năng
     skillEvo: {},                                // Tiến Hóa Chiêu Thức: {[skillId]: ['power'|'swift', ...]} theo bậc 40/80/120
     tenuiTT: 0,                                    // Té Núi: hết hạn Trọng Thương (timestamp)
-    gt: { t: GT_DAY*0.30 },                          // Lịch Tu Tiên: đồng hồ thế giới (giây game) — mở màn canh Thìn
+    gt: { t: GT_DAY*0.30 },                          // Lịch Thế Giới: đồng hồ thế giới (giây game) — mở màn canh Thìn
     ascended: false,                               // Starflight: độ kiếp Starforged thành công → phá bỏ môn phái, thần tiên hóa cảnh
     gender: 'nam',                                 // hình dáng tiên nhân: nam / nu
-    tienSkin: 'bach',                              // skin tiên y — xem TIEN_SKINS
+    tienSkin: 'bach',                              // skin trang phục — xem TIEN_SKINS
     vhDmgT:0, vhDmgPct:0, vhEvaT:0, vhEvaPct:0, vhReflT:0, vhAspdT:0, vhAspdPct:0,
     vhCritT:0, vhLeechT:0, vhShield:0, vhReviveCd:0,
     shieldBroken: 0, atkAnim: 0, dashT: 0,
@@ -3550,7 +3550,7 @@ function newPlayer(sectKey){
     baohap: {},                            // Bảo Hạp Ma Tôn Giáng Thế { tier: số lượng }
     truyna: { day:'', state:'none', map:null }, // Truy Nã Lệnh ngày
     wpUnlocked: { tuongduong: true },      // Điểm dịch chuyển (bảng đồ M) — mở khoá khi đã từng đặt chân tới, xem travelTo()
-    resetCount: 0,                         // Tẩy Tủy Phong Huyệt (Reset kiểu MU) — số lần đã tẩy tủy, +2% Công/Mạng vĩnh viễn/lần
+    resetCount: 0,                         // Tẩy Tủy (Reset kiểu MU) — số lần đã tẩy tủy, +2% Công/Mạng vĩnh viễn/lần
     // Dream of Wuxia systems
     khi: 0,                                    // Instinct đả thông kinh mạch
     meridians: {},                             // { thaiam: 0..20, ... }
@@ -3564,13 +3564,13 @@ function newPlayer(sectKey){
     charms: 0,                                 // Thiên Mệnh Phù (bảo hiểm rèn đồ)
     potions: 3, potionCd: 0,                   // P0: Hồ Lô Thuốc — hồi 40% máu, cd 20s, tối đa 5 lọ
     buffAtkT: 0,                             // Rượu Hổ Cốt — +12% công lực có thời hạn
-    loidonT: 0,                              // Lôi Độn Phù — giảm 40% ST thiên lôi có thời hạn
+    loidonT: 0,                              // Bùa Chắn Sét — giảm 40% ST thiên lôi có thời hạn
     noidan: {},                              // Nội Đan yêu thú theo hành { Kim, Mộc, Thổ, Thủy, Hỏa }
     ndBonus: { atk:0, hp:0, def:0, qi:0, crit:0 }, // chỉ số vĩnh viễn từ thôn phệ nội đan
     ndDay: '', ndCount: 0,                   // giới hạn thôn phệ 3 viên/ngày
     pet: null,                               // Linh Thú đồng hành { type, name, lv, el, feed }
     phongphu: 0,                             // Phong Linh Phù — thu phục linh thú
-    abode: { tulinh:0, garden:[null,null,null] }, // Động Phủ: Tụ Linh Trận + Dược Viên
+    abode: { tulinh:0, garden:[null,null,null] }, // Nhà Riêng: Tụ Linh Trận + Dược Viên
     maDao: false,                            // Sa Đọa — Tội Ác cao hắc hóa thành Ma Tu
     daily: { day:'', kills:0, noidan:0, dungeon:0, forge:0, claimed:false }, // Mục Tiêu Hôm Nay
     sectOffered: false,                      // đã mời bái sư ở cấp 10 chưa (chỉ dành cho Tán Nhân)
@@ -3681,7 +3681,7 @@ function loadGame(){
     if (!player.skillLv) player.skillLv = {};
     if (!player.skillEvo) player.skillEvo = {};
     if (player.bikipVH == null) player.bikipVH = 0;
-    if (!player.gt) player.gt = { t: GT_DAY*0.30 }; // Lịch Tu Tiên backfill
+    if (!player.gt) player.gt = { t: GT_DAY*0.30 }; // Lịch Thế Giới backfill
     if (player.poisonT == null) player.poisonT = 0;
     if (player.autoSell == null) player.autoSell = false;
     if (player.autoEquip == null) player.autoEquip = true;  // GDD Đợt 2 B7: mặc định bật tự mặc đồ
@@ -3745,7 +3745,7 @@ function loadGame(){
       setTimeout(()=>{ if (player) addFloat(player.x, player.y-56, '🥚 The Hatching ban cho người cũ — xem ở panel Nhân Vật!', '#f0a03a', 14); }, 1200);
     }
     if (player.tutDist == null) player.tutDist = 0;
-    if (player.resetCount == null) player.resetCount = 0; // Tẩy Tủy Phong Huyệt backfill (save cũ chưa có)
+    if (player.resetCount == null) player.resetCount = 0; // Tẩy Tủy backfill (save cũ chưa có)
     if (player.ene == null) player.ene = 5; // Linh Lực (stat mới) backfill (save cũ chưa có) — mức khởi điểm giống str/agi/def/vit
     if (d.curMap && MAPS[d.curMap]) curMap = d.curMap;
     // Migrate trang bị cũ (10 ô) sang hệ 12 ô GDD
@@ -3862,7 +3862,7 @@ function buildWorld(){
     for (let j = 0; j < pk.n; j++) spawnMob(pk.mob, { x:pk.x, y:pk.y, r:115, count:pk.n }, packId); // dàn trải cụm quái, tránh chồng hình
   }
   curBand = -1; // đổi map → tính lại đai, không bắn banner ngay lúc vào
-  // Giang Hồ Du Hiệp — mục tiêu PK trong map dã ngoại/huyết chiến
+  // Phiêu Bạt Du Hiệp — mục tiêu PK trong map dã ngoại/huyết chiến
   if (md.duhiep){
     const nDH = md.type === 'freepk' ? 6 : 4;
     const hate = (player.dhHate && player.dhHate[md.duhiep]) || 0;
@@ -4212,22 +4212,32 @@ function saveSettings(){ try { localStorage.setItem('vlcm_settings', JSON.string
 // ---------- Âm thanh kiếm hiệp: BGM theo map + SFX ----------
 // Nhạc nền: bgm_safe (làng/thành) · bgm_field (dã ngoại) · bgm_tomb (mật thất) · bgm_war (chiến trường)
 // Mỗi map có nhạc nền riêng; map chưa có bản riêng dùng nhạc nền chung
-const BGM_TRACKS = { daohoa:'bgm_daohoa_ost', tuongduong:'bgm_tuongduong_ost', ngoai:'bgm_ngoai', chungnam:'bgm_chungnam_ost',
-  tuyettinh:'bgm_tuyettinh_ost', comoc:'bgm_comoc', mongco:'bgm_mongco', nhanmon:'bgm_nhanmon' };
-const BGM_INTRO = 'bgm_kiemhiep'; // Kiếm Hiệp Tình — màn mở đầu & chọn phái (hào hiệp chính khí)
-const BGM_BOSS = 'bgm_boss_nguan';   // Hoa Địa Li Lao — boss Cổng Vực / Ngũ Trụ (bi kịch bùng nổ)
-const _BGM_ROMANCE = 'bgm_romance';   // Tiếu Vấn Tình Duyên — song ca khi kết Đạo Lữ
+// ═══════════ NHẠC NỀN — ĐANG TRỐNG ═══════════
+// 13 bản nhạc nền cũ là nhạc phim kiếm hiệp Hoa ngữ (Kiếm Hiệp Tình, Hoa Địa Li Lao, Tiếu Vấn
+// Tình Duyên...) — vi phạm Quy tắc 1 nặng nhất về mặt ÂM THANH, và cũng là thứ định hình bản sắc
+// game mạnh hơn bất cứ dòng chữ nào. Đã xoá cả 13 tệp (21 MB).
+// Chưa có bộ nhạc thay, nên bảng này để TRỐNG thay vì trỏ tới tệp không tồn tại: playBgm() thấy
+// tên rỗng là thoát ngay, không phát sinh một yêu cầu mạng nào, và nút ♪ tự ẩn (xem uiSyncBgmBtn).
+// Thêm nhạc mới: bỏ tệp vào assets/music/ rồi điền lại đúng ba hằng số dưới đây, không cần sửa
+// chỗ nào khác.
+const BGM_TRACKS = {};
+const BGM_INTRO = null;   // màn mở đầu & chọn lớp
+const BGM_BOSS = null;    // boss Cổng Vực / Năm Trụ
+const _BGM_ROMANCE = null;
 const AudioSys = {
   bgm: null, bgmName: '', started: false, cache: {}, last: {},
   bgmVol(){ return (SETTINGS.bgm/100) * 0.85; },
   sfxVol(){ return SETTINGS.sfx/100; },
   playBgm(name){
-    if (!name || this.bgmName === name) return;
+    if (!name || this.bgmName === name) return;   // name rỗng = chưa có nhạc, im lặng chứ không 404
     this.bgmName = name;
     if (this.started) this._startTrack();
   },
   _startTrack(){
     if (this.bgm) this.bgm.pause();
+    // Chưa có bản nhạc nào: dừng hẳn ở đây. Không chốt thì 'assets/music/null.mp3' được yêu cầu
+    // thật, và mỗi lần đổi map là thêm một lượt 404.
+    if (!this.bgmName){ this.bgm = null; return; }
     const a = new Audio('assets/music/' + this.bgmName + '.mp3');
     a.loop = true; a.volume = this.bgmVol();
     a.play().catch(()=>{ /* autoplay bị chặn — chờ tương tác */ });
@@ -4236,7 +4246,7 @@ const AudioSys = {
   tryStart(){
     if (this.started) return;
     this.started = true;
-    if (!this.bgmName) this.bgmName = BGM_TRACKS[curMap] || 'bgm_safe';
+    if (!this.bgmName) this.bgmName = BGM_TRACKS[curMap] || null;   // 'bgm_safe' cũng đã xoá
     this._startTrack();
   },
   refreshBgmVol(){ if (this.bgm){ this.bgm.volume = this.bgmVol(); if (SETTINGS.bgm <= 0) this.bgm.pause(); else this.bgm.play().catch(()=>{}); } },
@@ -4254,11 +4264,18 @@ const AudioSys = {
 };
 
 // Giọng hô tên chiêu đã GỠ. Đó là 76 tệp mp3 hô tên chiêu bằng tiếng Quan thoại, mà tên chiêu
-// là tên chiêu kiếm hiệp: Thái Cực Kiếm, Bát Quái Chưởng, Cửu Âm Trảo, Hàng Long, Lục Mạch...
+// là tên chiêu kiếm hiệp: Kiếm Xoáy, Bát Quái Chưởng, Cửu Âm Trảo, Hàng Long, Lục Mạch...
 // Nghe thấy ở mỗi đại chiêu, tức là thứ kiếm hiệp to tiếng nhất còn sót lại trong game.
 // Không thay bằng bộ giọng khác vì chưa có bản thu nào để thay.
 window.addEventListener('pointerdown', ()=>AudioSys.tryStart());
 window.addEventListener('keydown', ()=>AudioSys.tryStart());
+// Nút ♪ chỉ có nghĩa khi có nhạc để tắt/bật. Chưa có bản nào thì ẩn đi — nút bấm không làm gì
+// là thứ người chơi thử đúng một lần rồi mất lòng tin vào cả thanh nút.
+function uiSyncBgmBtn(){
+  const b0 = document.getElementById('btn-music');
+  if (b0) b0.classList.toggle('hidden', Object.keys(BGM_TRACKS).length === 0 && !BGM_INTRO && !BGM_BOSS);
+}
+uiSyncBgmBtn();
 document.getElementById('btn-music').addEventListener('click', ()=>{
   SETTINGS.bgm = SETTINGS.bgm > 0 ? 0 : 35;
   saveSettings(); AudioSys.refreshBgmVol();
@@ -4750,7 +4767,7 @@ function hurtMob(m, dmg, source){
     if (gap > 10) abMul = 0.35; else if (gap >= 6) abMul = 0.6; else if (gap >= 1) abMul = 0.85;
     if (abMul < 1){
       final *= abMul;
-      if (Math.random() < 0.12) logCombat(`⛨ Áp Bức Võ Công — công kích lên ${m.def.name} bị áp chế!`, '#c07fe0');
+      if (Math.random() < 0.12) logCombat(`⛨ Áp Chế — công kích lên ${m.def.name} bị áp chế!`, '#c07fe0');
     }
     if (m.punishT > 0) final *= 1.15; // cửa sổ trừng phạt sau khi boss ra chiêu
   }
@@ -4818,7 +4835,7 @@ function hurtMob(m, dmg, source){
   }
   // tương khắc: tia hào quang hệ thắng bao quanh quái
   if (counterNote) addEffect({ type:'ring', x:m.x, y:m.y, r:26 + m.def.size, color:ELEM[sectEl].color });
-  // Hút sinh lực / nội lực (vũ khí · dây chuyền · pet)
+  // Hút sinh lực / mana (vũ khí · dây chuyền · pet)
   if (player.hpLeech) player.hp = Math.min(player.maxHp, player.hp + final * player.hpLeech);
   if (player.qiLeech) player.qi = Math.min(player.maxQi, player.qi + final * player.qiLeech);
   // Đạn Chỉ Thần Thông (Ascension tầng 4): 5% phong mạch — địch không thể tấn công 2s
@@ -4827,11 +4844,11 @@ function hurtMob(m, dmg, source){
     addFloat(m.x, m.y-34, 'KHÓA CHIÊU!', '#9fd0ff', 12);
     addEffect({ type:'ring', x:m.x, y:m.y, r:34, color:'#9fd0ff' });
   }
-  // Huyết Ma Thôn Phệ (bí kíp giang hồ): hút 10% sát thương gây ra
+  // Huyết Ma Thôn Phệ (sách kỹ năng phiêu bạt): hút 10% sát thương gây ra
   if (player.bikip && player.bikip.hmtp){
     player.hp = Math.min(player.maxHp, player.hp + final * 0.10);
   }
-  // Hắc Uyên Thần Công (Võ Học Phổ): hút 25% sát thương thành sinh lực khi buff còn
+  // Hắc Uyên Quyết (Sổ Kỹ Năng): hút 25% sát thương thành sinh lực khi buff còn
   if ((player.vhLeechT || 0) > 0){
     player.hp = Math.min(player.maxHp, player.hp + final * 0.25);
   }
@@ -4935,7 +4952,7 @@ function killMob(m, source){
   // Tinh anh & boss rớt thêm Tiến Cấp Đan (Drop v2.0 — gắn vòng farm boss vào Tấn Chức)
   const _tdB = m.def.bossKind === 'tranai' ? 8 : (m.def.bossKind === 'thuve' ? 3 : (m.type === 'boss' || m.def.boss) ? 5 : m.def.elite ? 1 : 0);
   if (_tdB){ player.tienDan += _tdB; logCombat(`+${_tdB} ◈ Tiến Cấp Đan`, '#7ec850'); }
-  // Võ Học Phổ: Bí Kíp rơi từ tinh anh/boss — học võ học giang hồ (bấm K)
+  // Sổ Kỹ Năng: Sách Kỹ Năng rơi từ tinh anh/boss — học kỹ năng phiêu bạt (bấm K)
   const _bkR = m.def.bossKind === 'tranai' ? 0.35 : (m.def.bossKind === 'thuve' || m.def.boss) ? 0.12 : m.def.elite ? 0.03 : 0;
   if (_bkR && Math.random() < _bkR){ player.bikipVH = (player.bikipVH || 0) + 1; addFloat(m.x, m.y-100, '+1 📜 Sách Kỹ Năng', '#ffb15c', 13); }
   // 💠 Tâm Đắc — nguyên liệu đột phá cảnh giới chiêu thức: tinh anh 30%×1 · boss 1-2 · Boss Vùng/Cổng Vực 2-3
@@ -5013,7 +5030,7 @@ function killMob(m, source){
   }
   sideOnKill(m.type, source);
   if (m.def.boss) AudioSys.playBgm(BGM_TRACKS[curMap]); // hạ boss — trở lại nhạc map
-  // Boss: Tàn Quyển bí kíp Huyết Ma Thôn Phệ (Thượng 40% / Trung 40% / Hạ 20%)
+  // Boss: Tàn Quyển sách kỹ năng Huyết Ma Thôn Phệ (Thượng 40% / Trung 40% / Hạ 20%)
   if (m.def.boss && player.bikip && !player.bikip.hmtp){
     const roll = Math.random();
     const piece = roll < 0.4 ? 0 : roll < 0.8 ? 1 : 2;
@@ -5072,7 +5089,7 @@ function killMob(m, source){
 }
 function gainXp(amount){
   if (player.level >= MAX_LV) return;
-  if (isNightGame()) amount *= 1.1; // Lịch Tu Tiên: tu luyện ban đêm +10% EXP
+  if (isNightGame()) amount *= 1.1; // Lịch Thế Giới: tu luyện ban đêm +10% EXP
   player.xp += Math.round(amount * 1.5 * (1 + (player.expPct || 0)/100)); // EXP ×1.5 (đẩy nhịp farm) · Pet: +EXP% · QA F6: XP luôn nguyên
   while (player.level < MAX_LV && player.xp >= XP_TABLE[player.level-1]){
     player.xp -= XP_TABLE[player.level-1];
@@ -5107,7 +5124,7 @@ function unlockNotices(){
     15:['Mở khóa: Linh Thú — mua Phong Linh Phù ở Vũ Khí Phường, đánh tinh anh còn <40% máu rồi bấm T'],
     40:['Mở khóa: Lò Bảo Chứng luyện Linh Dực Cấp 1 — Lò Rèn Hoàng Gia, Lunaris City'],
     45:['Bảo Hạp IV trở lên từ Hung Thần có 5-8% mở ra trang bị CỔ THẦN THỦ HỘ — Hung Thần giáng thế mỗi 4 giờ!'],
-    30:['Mở khóa: Archery (Tấn Chức — phím H)','Mở khóa: Động Phủ — gặp Quản Gia ở Lunaris City'],
+    30:['Mở khóa: Archery (Tấn Chức — phím H)','Mở khóa: Nhà Riêng — gặp Quản Gia ở Lunaris City'],
   };
   const list = msgs[player.level];
   if (list) list.forEach((m, i)=> setTimeout(()=>{ if (player) addFloat(player.x, player.y-70, m, '#a0ffe9', 14); }, i*700));
@@ -5116,7 +5133,7 @@ function unlockNotices(){
     player.sectOffered = true;
     setTimeout(()=>{ try{ openSectCeremony(); }catch { /* best-effort — bỏ qua nếu lỗi */ } }, 1800);
   }
-  vhAutoLearn(); // Võ Học Phổ: võ học môn phái tự ngộ khi đạt cấp
+  vhAutoLearn(); // Sổ Kỹ Năng: kỹ năng môn phái tự ngộ khi đạt cấp
   checkTitles();
 }
 
@@ -5215,7 +5232,7 @@ function usePotion(){
 }
 function doBasic(){
   if (!player || dead) return;
-  // Phím Space gán chiêu: ưu tiên tung chiêu — đang hồi/thiếu nội lực thì tự quay về đòn thường
+  // Phím Space gán chiêu: ưu tiên tung chiêu — đang hồi/thiếu mana thì tự quay về đòn thường
   if (player.spaceSkill && canCastSilent(player.spaceSkill)){ castSkill(player.spaceSkill); return; }
   if (player.cd.basic > 0) return;
   const sect = SECTS[player.sect] || SECTS.vophai;
@@ -5683,7 +5700,7 @@ window.fuseBikip = function(){
     for (let i=0;i<12;i++) addEffect({ type:'ink', x:player.x, y:player.y, vx:rnd(-80,80), vy:rnd(-100,-20), color:'#e84a6a' });
     saveGame();
   } else {
-    if (msg){ msg.textContent = '✘ Dung hợp thất bại — kinh mạch chấn động, tàn quyển vẫn còn.'; msg.style.color = '#ff7a6a'; }
+    if (msg){ msg.textContent = '✘ Dung hợp thất bại — sức mạnh phản lại, tàn quyển vẫn còn.'; msg.style.color = '#ff7a6a'; }
     addFloat(player.x, player.y-40, 'Dung hợp thất bại (30%)', '#ff7a6a', 13);
   }
   setTimeout(()=>{ try{ tryTalk(); }catch { /* best-effort — bỏ qua nếu lỗi */ } }, 900);
@@ -5716,15 +5733,15 @@ function update(dt){
       if (!dead) addFloat(player.x, player.y-46, 'Hết men Rượu Hổ Cốt…', '#8a8a8a', 12);
     }
   }
-  if ((player.loidonT || 0) > 0){ // Lôi Độn Phù hết hiệu lực
+  if ((player.loidonT || 0) > 0){ // Bùa Chắn Sét hết hiệu lực
     player.loidonT -= dt;
     if (player.loidonT <= 0){
       player.loidonT = 0;
-      if (!dead) addFloat(player.x, player.y-46, 'Lôi Độn Phù đã tan…', '#8a8a8a', 12);
+      if (!dead) addFloat(player.x, player.y-46, 'Bùa Chắn Sét đã tan…', '#8a8a8a', 12);
     }
   }
   player.khi = (player.khi || 0) + 3*dt*tulinhMult(); // Instinct tích lũy thụ động · Tụ Linh Trận tăng thêm
-  tickGameClock(dt); // Lịch Tu Tiên: thời gian thế giới trôi theo thời gian thật
+  tickGameClock(dt); // Lịch Thế Giới: thời gian thế giới trôi theo thời gian thật
   if (dead) return;
 
   collideObstacles(player, 14); collideAiPass(); // GDD Đợt 2 A: đứng yên cũng bị đẩy ra khỏi vùng cấm/ải (save cũ/dịch chuyển)
@@ -5831,7 +5848,7 @@ function update(dt){
       if (m.dead) continue;
       if (!_ac.boss && (m.def.bossKind || m.type === 'boss')) continue; // auto không tự khơi trận boss — trừ khi bật trong Cài Đặt
       // QA: auto không được TỰ khơi PK với Du Hiệp dù player.pk đang bật (khác với đánh tay ở
-      // 3153/3513/4551) — nếu không, để quên PK bật rồi auto cày sẽ tích Tội Ác tới Ma Đạo mà
+      // 3153/3513/4551) — nếu không, để quên PK bật rồi auto cày sẽ tích Tội Ác tới Hắc Danh mà
       // người chơi không hề chủ đích PK ai cả. Vẫn cho tự vệ nếu Du Hiệp đã truy thù (m.revenge).
       if (m.def.duHiep && !m.revenge) continue;
       if (player._autoZoneLocked && m.zone !== player._autoZone) continue; // khác bãi — bỏ qua
@@ -5847,7 +5864,7 @@ function update(dt){
       const _stopD = _rng0 > 200 ? _rng0*0.85 : 64;
       if (_ad > _stopD){ mx += (_at.x - player.x)/_ad; my += (_at.y - player.y)/_ad; } // chạy tới bãi quái
       else if (player.cd.basic <= 0) doBasic(); // trong tầm đánh: ra đòn
-      // tự tung kỹ năng trên taskbar khi hết hồi chiêu & đủ nội lực (im lặng, không spam thông báo)
+      // tự tung kỹ năng trên taskbar khi hết hồi chiêu & đủ mana (im lặng, không spam thông báo)
       if (_ac.skill && _ad < Math.max(340, _rng0)){
         for (const _sid of player.skillBar){
           if (_sid == null) continue;
@@ -5956,7 +5973,7 @@ function update(dt){
     player.gkBuffT -= dt;
     if (Math.random() < dt*8) addEffect({ type:'ring', x:player.x, y:player.y, r:30, color:'#e8c86a' });
   }
-  // Võ Học Phổ: buff timers + Dịch Cân Kinh hồi phục + khiên Thái Cực
+  // Sổ Kỹ Năng: buff timers + Dịch Cân Kinh hồi phục + khiên Thái Cực
   for (const _bk of ['vhDmgT','vhEvaT','vhReflT','vhAspdT','vhCritT','vhLeechT']) if ((player[_bk]||0) > 0) player[_bk] -= dt;
   player.vhReviveCd = Math.max(0, (player.vhReviveCd || 0) - dt);
   if ((player.vhRegen || 0) > 0 && player.hp > 0) player.hp = Math.min(player.maxHp, player.hp + player.maxHp * player.vhRegen * dt);
@@ -5965,15 +5982,15 @@ function update(dt){
     player.toiacT += dt;
     if (player.toiacT >= 300){ player.toiac--; player.toiacT = 0; }
   }
-  // Sa Đọa: Tội Ác ≥ 5 → hắc hóa Ma Tu; gột rửa hết tội → trở lại chính đạo
+  // Sa Đọa: Tội Ác ≥ 5 → hắc hóa Ma Tu; gột rửa hết tội → trở lại danh sạch
   if (!player.maDao && (player.toiac || 0) >= 5){
     player.maDao = true;
     zoneBanner = { text:'⚫ ĐỌA MA', sub:'Sát niệm xâm tâm — công lực +15% nhưng lôi kiếp sẽ khắc nghiệt hơn!', color:'#c07fe0', t:4 };
-    addFloat(player.x, player.y-60, 'Ngươi đã bước vào Ma Đạo…', '#c07fe0', 15);
+    addFloat(player.x, player.y-60, 'Ngươi đã bị treo Hắc Danh…', '#c07fe0', 15);
     AudioSys.sfx('crit', 0.8); saveGame();
   } else if (player.maDao && (player.toiac || 0) <= 0){
     player.maDao = false;
-    zoneBanner = { text:'HỒI ĐẦU THỊ NGẠN', sub:'Tội nghiệt đã gột sạch — trở lại chính đạo.', color:'#7ec850', t:3.5 };
+    zoneBanner = { text:'HỒI ĐẦU THỊ NGẠN', sub:'Tội nghiệt đã gột sạch — trở lại danh sạch.', color:'#7ec850', t:3.5 };
     saveGame();
   }
   if (zoneBanner){ zoneBanner.t -= dt; if (zoneBanner.t <= 0) zoneBanner = null; }
@@ -6117,7 +6134,7 @@ function update(dt){
     } else if (d < aggroR && d > m.def.range){
       const ang = Math.atan2(player.y-m.y, player.x-m.x);
       m.faceT = ang;
-      const mspd = m.def.speed * (m.slowT > 0 ? (m.slowPct || 0.65) : 1); // chậm: Mai Hoa Châm 35%, võ học theo chiêu
+      const mspd = m.def.speed * (m.slowT > 0 ? (m.slowPct || 0.65) : 1); // chậm: Mai Hoa Châm 35%, kỹ năng theo chiêu
       m.x += Math.cos(ang)*mspd*dt;
       m.y += Math.sin(ang)*mspd*dt;
       collideObstacles(m, 13); // GDD Đợt 2 A
@@ -6135,7 +6152,7 @@ function update(dt){
       } else if (Math.random() < player.eva){
         addFloat(player.x, player.y-28, 'Né!', '#a0ffe9', 13);
       } else {
-        let dmg = m.def.atk * rnd(0.85,1.15) * (m.atkMul || 1) * (isNightGame() ? 1.1 : 1) * (1 - player.defRed); // Lịch Tu Tiên: ban đêm quái +10% công
+        let dmg = m.def.atk * rnd(0.85,1.15) * (m.atkMul || 1) * (isNightGame() ? 1.1 : 1) * (1 - player.defRed); // Lịch Thế Giới: ban đêm quái +10% công
         // QA endgame F3: quái cao hơn 6+ cấp gây thêm sát thương (tối đa +120%) — lạc vào map cao là trả giá
         const lvGapM = (m.def.lv || 1) - player.level;
         if (lvGapM > 5) dmg *= 1 + Math.min(1.2, (lvGapM - 5) * 0.08);
@@ -6156,7 +6173,7 @@ function update(dt){
           AudioSys.sfx('ui', 0.5);
           continue;   // hồi chiêu của quái đã đặt ở trên — đặt lại 0 là nó đánh lại NGAY khung sau
         }
-        if ((player.vhShield || 0) > 0){ // Thái Cực Kiếm: khiên kiếm khí hấp thụ
+        if ((player.vhShield || 0) > 0){ // Kiếm Xoáy: khiên kiếm khí hấp thụ
           const absorbed = Math.min(player.vhShield, dmg);
           player.vhShield -= absorbed; dmg -= absorbed;
           if (absorbed > 0) addFloat(player.x, player.y-40, `🛡 -${absorbed}`, '#8ad8c8', 12);
@@ -6174,7 +6191,7 @@ function update(dt){
         // Hướng rung: ĐẨY NGƯỜI CHƠI RA XA con vừa nện mình. Trước đây chỉ swingFeel() ghi
         // shakeDir, nên lúc ăn đòn màn hình vẫn giật về phía mình vừa đánh — sai hẳn hướng.
         shakeDir = Math.atan2(player.y - m.y, player.x - m.x);
-        // Tình Hoa Độc Yêu: đánh trúng gây độc — Cương Khí (tuyệt học) kháng độc
+        // Tình Hoa Độc Yêu: đánh trúng gây độc — Cương Khí (di sản) kháng độc
         if (m.def.poisonHit){
           const _freshPoison = player.poisonT <= 0; // cue only on the moment poison first lands, not every re-tick
           const gkT = (player.gangkhi && player.gangkhi.tier) || 0;
@@ -6294,20 +6311,20 @@ function update(dt){
           const _projHitCls = SECT_SFX[player.sect];
           if (_projHitCls) AudioSys.sfx('projhit_' + _projHitCls, 0.4);
         }
-        // Võ Học Phổ: hiệu ứng trúng đích của chiêu projectile (Niêm Hoa Chỉ, Đoạt Mệnh Phù, Độc Cô…)
+        // Sổ Kỹ Năng: hiệu ứng trúng đích của chiêu projectile (Niêm Hoa Chỉ, Đoạt Mệnh Phù, Độc Cô…)
         if (p.vhfx && !m.dead){
           const _vf = p.vhfx;
           if (_vf.stun){ m.stunT = Math.max(m.stunT || 0, _vf.stun * (m.def.bossKind ? 0.4 : 1)); addFloat(m.x, m.y-m.def.size-22, 'CHOÁNG!', '#ffe9a8', 11); playStatusFx('stunned', 'stunned', m.x, m.y, 0.5, 0.3); }
           if (_vf.poison){ m.poisonT = _vf.poison.t; m.poisonDps = Math.max(1, Math.round(player.atk * 0.3)); addFloat(m.x, m.y-m.def.size-22, 'SINH TỬ PHÙ!', '#7ac86a', 11); playStatusFx('poison', 'poison_apply', m.x, m.y, 0.5, 0.3); }
         }
-        // LIÊN TRẢM (võ học kết hợp): ám khí trúng trong chuỗi combo chiêu thức → cửa sổ 2.5s
+        // LIÊN TRẢM (kỹ năng kết hợp): ám khí trúng trong chuỗi combo chiêu thức → cửa sổ 2.5s
         if (p.kind === 'amkhi' && (player.comboT || 0) > 0 && (player.ltT || 0) <= 0){
           player.ltT = 2.5;
-          addFloat(player.x, player.y-66, '⚡ LIÊN TRẢM — chiêu kế miễn phí Qi, +30% ST!', '#ffd76a', 14);
+          addFloat(player.x, player.y-66, '⚡ LIÊN TRẢM — chiêu kế miễn phí Mana, +30% ST!', '#ffd76a', 14);
           addEffect({ type:'ring', x:player.x, y:player.y, r:60, color:'#ffd76a', big:true });
           AudioSys.sfx('crit', 0.7);
         }
-        // Hiệu ứng Ám Khí theo tầng tuyệt học
+        // Hiệu ứng Ám Khí theo tầng di sản
         if (p.kind==='amkhi' && !m.dead){
           const aTier = (player.amkhiX && player.amkhiX.tier) || 0;
           if (aTier >= 1){ // Tinh Thiết Tiêu: kịch độc
@@ -6395,7 +6412,7 @@ function onDeath(){
     AudioSys.sfx('levelup', 0.9);
     return;
   }
-  // Bản Nguyên Công (Võ Học Phổ): chết tự hồi sinh 50% HP — CD 300s
+  // Bản Nguyên Công (Sổ Kỹ Năng): chết tự hồi sinh 50% HP — CD 300s
   if (vhLearned('tienthiencong') && (player.vhReviveCd || 0) <= 0){
     player.vhReviveCd = 300;
     player.hp = Math.round(player.maxHp * 0.5);
@@ -6439,7 +6456,7 @@ function showVictory(){
   const sect = SECTS[player.sect];
   const sectLine = player.sect === 'vophai'
     ? 'Một Unclassed vô danh — từ nay khắp Lunacia sẽ nhớ mặt ngươi.'
-    : `<span style="color:${sect.color}">${sect.name}</span> tự hào về đệ tử của mình.`;
+    : `<span style="color:${sect.color}">${sect.name}</span> tự hào về người của mình.`;
   document.getElementById('overlay-inner').innerHTML = `
     <h2>PHÁ VỠ VỎ KÉN!</h2>
     <p>Thủ Lĩnh Gloam đã bại dưới tay ngươi.<br>
@@ -6857,7 +6874,7 @@ function render(){
   const _nTa = Object.keys(player.storyFlags || {}).filter(k => k.startsWith('ta_')).length;
   if (_nTa >= 3 && !SETTINGS.lowFx){ ctx.fillStyle = `rgba(8,6,20,${Math.min(0.18, 0.05 + _nTa * 0.018)})`; ctx.fillRect(0, 0, W, H); }
 
-  drawSkyOverlay(); // Lịch Tu Tiên: bầu trời ngày/đêm theo canh giờ
+  drawSkyOverlay(); // Lịch Thế Giới: bầu trời ngày/đêm theo canh giờ
 
   if (zoneBanner){
     const a = Math.min(1, zoneBanner.t / 0.6);
@@ -7536,7 +7553,7 @@ function drawThanBinh(p){
 // ═══════════ PHI THĂNG · THẦN TIÊN HÓA CẢNH — tiên nhân vẽ bằng VFX thuần (nam/nữ + 6 skin) ═══════════
 const TIEN_SKINS = {
   bach:  { name:'Bạch Y Tiên Tử',       robe:'#f2ecdc', trim:'#4c8dff', ribbon:'#7ecbff', halo:'#fff2b0', metal:'#cfd8e8', hair:'#241c18' },
-  thanh: { name:'Thanh Ngọc Chân Nhân', robe:'#8ad8c8', trim:'#2a6a5a', ribbon:'#c8f0e4', halo:'#a8ffe0', metal:'#b8d8d0', hair:'#1a2a26' },
+  thanh: { name:'Thanh Ngọc', robe:'#8ad8c8', trim:'#2a6a5a', ribbon:'#c8f0e4', halo:'#a8ffe0', metal:'#b8d8d0', hair:'#1a2a26' },
   kim:   { name:'Kim Quang Thánh Quân', robe:'#ffb15c', trim:'#8a5a1a', ribbon:'#ffe8a0', halo:'#ffd76a', metal:'#f0e0b0', hair:'#3a2a12' },
   huyen: { name:'Huyền Ảnh Dạ Quân',    robe:'#4a3a6a', trim:'#b08ae8', ribbon:'#9a7ad8', halo:'#c09aff', metal:'#7a6a9a', hair:'#16121f' },
   hong:  { name:'Hồng Nhan Tiên Cơ',    robe:'#f0a8c0', trim:'#b03a5a', ribbon:'#ffd6e4', halo:'#ffb8d0', metal:'#f0d8e0', hair:'#2a1a20' },
@@ -7546,7 +7563,7 @@ function ascendToImmortal(){
   if (!player || player.ascended) return;
   player.ascended = true;
   player.oldSect = player.sect;
-  // Môn phái phá bỏ hoàn toàn — mọi võ học môn phái tự ngộ, kết hợp không giới hạn
+  // Môn phái phá bỏ hoàn toàn — mọi kỹ năng môn phái tự ngộ, kết hợp không giới hạn
   let learned = 0;
   for (const _id in VOHOC_DEFS){ if (VOHOC_DEFS[_id].phai && !vhLearned(_id)){ player.vohoc[_id] = true; learned++; } }
   closePanels();
@@ -9730,12 +9747,12 @@ function renderChar(){
   let html = `<h3>Nhân Vật — ${sect.name} Cấp ${p.level}</h3>`;
   // chân dung = chính nhân vật trong game, ở đúng bậc Thần Binh đang mang
   html += `<img class="char-portrait" src="${p.ascended ? 'assets/tien/' + (p.gender === 'nu' ? 'nu' : 'nam') + '_' + (TIEN_SKINS[p.tienSkin] ? p.tienSkin : 'bach') + '.png' : heroCardUrl(p.sect, heroTier(p), gearVisual(p))}" alt="${sect.name}">${p.ascended ? `<div style="margin-top:4px;font-size:11.5px;color:#fff2b0">☁ Tán Tiên — xuất thế khỏi ${sect.name}, ràng buộc Lớp đã phá bỏ</div>` : ""}`;
-  // Tán Nhân: lối vào lễ Bái Sư Nhập Phái (cấp 10)
+  // Tán Nhân: lối vào lễ Gia Nhập Lớp (cấp 10)
   if (p.sect === 'vophai'){
     html += `<div style="margin:8px 0;padding:10px;border:1px dashed rgba(126,203,255,.45);border-radius:6px;text-align:center">
       <div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Unclassed lang bạt — chưa gia nhập Lớp nào</div>
       ${p.level >= 10
-        ? `<button class="mini-btn" style="font-size:14px;padding:9px 22px;border-color:#7ecbff;color:#7ecbff" onclick="openSectCeremony()">⚔ BÁI SƯ NHẬP PHÁI</button>`
+        ? `<button class="mini-btn" style="font-size:14px;padding:9px 22px;border-color:#7ecbff;color:#7ecbff" onclick="openSectCeremony()">⚔ GIA NHẬP LỚP</button>`
         : `<div style="font-size:12px;opacity:.7">Bái sư mở khóa ở <b style="color:#7ecbff">cấp 10</b> (hiện cấp ${p.level})</div>`}
     </div>`;
   }
@@ -9819,7 +9836,7 @@ function renderChar(){
   html += `<div class="stat-row"><span>2 — Venom Dart${akT?` · <span style="color:${akT.color}">${akT.name}</span>`:''}</span><b>${p.level>=4?'×'+AMKHI.mult:'Cấp 4'}</b></div>`;
   html += `<div class="stat-row"><span>3 — Trấn Phái: ${sect.tp.name}</span><b>${p.level>=9?'×'+sect.tp.mult:'Cấp 9'}</b></div>`;
   if (p.bikip && p.bikip.hmtp)
-    html += `<div class="stat-row"><span style="color:#e84a6a">☠ Huyết Ma Thôn Phệ (bí kíp)</span><b>hút 10% ST</b></div>`;
+    html += `<div class="stat-row"><span style="color:#e84a6a">☠ Huyết Ma Thôn Phệ (sách kỹ năng)</span><b>hút 10% ST</b></div>`;
   // Danh hiệu — chỉ số cộng dồn vĩnh viễn, chọn 1 hiển thị trên đầu
   html += `<div class="stat-sec">DANH HIỆU — bấm để chọn danh hiệu hiển thị trên đỉnh đầu</div>`;
   html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:6px">Mở khóa = cộng dồn chỉ số vĩnh viễn (không cần trang bị). Bấm lần nữa vào danh hiệu đang hiển thị để ẩn.</div>`;
@@ -10780,7 +10797,7 @@ function renderTuyetHoc(){
   const sys = window.thTab;
   const S = TH_SYSTEMS[sys];
   const st = thState(sys);
-  let html = `<h3>Tấn Chức — 7 Tầng Cảnh Giới</h3>`;
+  let html = `<h3>Tấn Chức — 7 Tầng</h3>`;
   html += `<div style="display:flex;gap:6px;margin-bottom:8px">`;
   for (const k in TH_SYSTEMS){
     const s2 = TH_SYSTEMS[k];
@@ -10828,13 +10845,13 @@ function renderTuyetHoc(){
 function thStatLines(sys, t){
   if (sys === 'amkhi') return [`Bạo Kích +${t.crit}%`, t.eff];
   if (sys === 'bow'){
-    const parts = [`Bạo Kích +${t.crit}%`, `Xuyên Giáp +${Math.round(t.pierce*100)}%`, `Linh tiễn: ${t.proc}% gây ${Math.round(t.pdmg*100)}% ST`];
+    const parts = [`Bạo Kích +${t.crit}%`, `Xuyên Giáp +${Math.round(t.pierce*100)}%`, `Mũi tên: ${t.proc}% gây ${Math.round(t.pdmg*100)}% ST`];
     if (t.double) parts.push(`${Math.round(t.double*100)}% bắn 2 mũi`);
     if (t.stun) parts.push(`${Math.round(t.stun*100)}% chặn đứng 1.5s`);
     if (t.burn) parts.push('Thiêu đốt 3s');
     return parts;
   }
-  return [`Sinh Lực +${Math.round(t.hp*100)}%`, `Phòng Ngự +${Math.round(t.def*100)}%`, `Kháng hiệu ứng ám khí của địch`];
+  return [`Sinh Lực +${Math.round(t.hp*100)}%`, `Phòng Ngự +${Math.round(t.def*100)}%`, `Kháng hiệu ứng độc của địch`];
 }
 window.upgradeTH = function(sys){
   const S = TH_SYSTEMS[sys];
@@ -10901,7 +10918,7 @@ function applyTestBoost(){
   player.silver = 999999; player.mat = 999;        // Huyền Thiết
   player.khi = 999999;                             // Instinct — xung mạch thử
   player.gems = { tuLa: 99, honNguyen: 99 };       // rèn +7 trở lên
-  player.tienDan = 99;                             // tấn chức tuyệt học
+  player.tienDan = 99;                             // tấn chức di sản
   player.charms = 99;                              // bảo hiểm rèn +10/+11
   // Ascension: cảnh giới cao nhất (Starforged Cảnh)
   player.dantian.realm = DANTIAN_REALMS.length - 1;
@@ -10956,7 +10973,7 @@ function applyTestBoost(){
   player.titles.equipped = TITLES[TITLES.length - 1].id;
   // Thanh kỹ năng: 3 ô cố định theo phái
   player.skillBar = defaultSkillBar(player.sect);
-  // FULL SKILL (bản test): học hết Võ Học Phổ + 30 Dung Hợp, mọi kỹ năng Lv 120
+  // FULL SKILL (bản test): học hết Sổ Kỹ Năng + 30 Dung Hợp, mọi kỹ năng Lv 120
   for (const _vid in VOHOC_DEFS) player.vohoc[_vid] = true;
   for (const _fid in FUSION_DEFS) player.vohoc[_fid] = true;
   player.bikipVH = 999;
@@ -11027,7 +11044,7 @@ function renderMount(){
       Thăng Giai ${tier===0?'(Nhận Emberhide Bull)':'→ '+next.name}</button></div><div id="mount-msg"></div>`;
 
   } else {
-    html += `<div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">◑ Đã đạt Azure Wyrm — đỉnh cao chiến thú thiên hạ!</div>`;
+    html += `<div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">◑ Đã đạt Azure Wyrm — đỉnh cao của mọi chiến thú!</div>`;
   }
   CE().innerHTML = html;
 }
@@ -11080,12 +11097,12 @@ window.toggleMountOut = function(){
   refreshCharTab('mount');
 };
 
-// ---------- Tẩy Tủy Phong Huyệt (Reset kiểu MU Online): đạt max cấp → cấp về 1, giữ nguyên
+// ---------- Tẩy Tủy (Reset kiểu MU Online): đạt max cấp → cấp về 1, giữ nguyên
 // trang bị/Ascension/kỹ năng/danh hiệu — đổi lấy % Công/Mạng vĩnh viễn không mất khi tẩy tủy tiếp ----------
 function renderTayTuy(){
   const rc = player.resetCount || 0;
   const curBonus = rc * 2, nextBonus = (rc + 1) * 2;
-  let html = `<h3>Tẩy Tủy Phong Huyệt</h3>`;
+  let html = `<h3>Tẩy Tủy</h3>`;
   html += `<div style="text-align:center;padding:6px 0 10px">
     <div style="font-size:34px">🔄</div>
     <div style="font-size:15px;color:#ffd76a">Số lần Tẩy Tủy: <b>${rc}</b></div>
@@ -11098,7 +11115,7 @@ function renderTayTuy(){
   if (player.level < MAX_LV){
     html += `<div style="padding:14px;font-size:13px;text-align:center;color:#9aa8d4">Cần đạt <b style="color:#7ecbff">cấp ${MAX_LV}</b> (Tối đa) mới Tẩy Tủy được.<br>Cấp hiện tại: ${player.level}</div>`;
   } else if (!window._tayTuyConfirm){
-    html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 20px" onclick="window.doTayTuy()">🔄 Tẩy Tủy Phong Huyệt</button></div>`;
+    html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 20px" onclick="window.doTayTuy()">🔄 Tẩy Tủy</button></div>`;
   } else {
     html += `<div class="forge-actions" style="flex-direction:column;gap:8px">
       <div style="color:#ff9a6a;font-size:12px">Chắc chắn chứ? Cấp độ sẽ về 1 (trang bị/Ascension vẫn giữ nguyên).</div>
@@ -11127,7 +11144,7 @@ window.doTayTuy = function(confirmed){
 // ---------- Sect select / boot ----------
 function startGame(sectKey, quze){
   newPlayer(sectKey);
-  player.name = (quze && quze.name) || genCharName(); // danh tính giang hồ (bước đặt tên)
+  player.name = (quze && quze.name) || genCharName(); // danh tính phiêu bạt (bước đặt tên)
   // The Hatching: từ màn roll (người chơi thật) hoặc roll ngầm (quick-start/test)
   if (quze && quze.traits){
     player.traits = quze.traits.slice(0, 3);
@@ -11318,18 +11335,18 @@ const CHEAT_HELP = [
   '/item [phẩm 0-4] [giai 1-10] — tạo trang bị vào túi',
   '/god — bật/tắt bất tử',
   '/kill [bán kính=350] — hạ quái quanh mình',
-  '/realm <0-9> — set cấp đủ để đạt cảnh giới Ascension đó (giờ tự động theo cấp độ)',
+  '/realm <0-9> — set cấp đủ để đạt bậc Ascension đó (giờ tự động theo cấp độ)',
   '/th <amkhi|bow|gangkhi> <0-7> — tầng Tấn Chức',
   '/tier <0-8> — tầng Thú Cưỡi',
   '/boss — mở phong ấn & tới Cổng Vực của map',
   '/seal <0-7> — đặt tiến độ Ngũ Trụ (7 = Kết Mở)',
   '/speed <hệ số> — tốc chạy × hệ số',
-  '/learn — học toàn bộ Võ Học Phổ',
-  '/fullskill — học hết võ học + 30 dung hợp, mọi kỹ năng Lv 120',
-  '/phi — Starflight ngay: phá bỏ ràng buộc Lớp, ngự kiếm phi hành, skin tiên nhân',
+  '/learn — học toàn bộ Sổ Kỹ Năng',
+  '/fullskill — học hết kỹ năng + 30 dung hợp, mọi kỹ năng Lv 120',
+  '/phi — Starflight ngay: phá bỏ ràng buộc Lớp, bay lượn, skin Starforged',
   '/bikip <n> — đặt số Sách Kỹ Năng',
   '/tenui — gỡ Trọng Thương (nhảy Vực Thẳm lại ngay)',
-  '/time [ngày=10] — nhảy thời gian thế giới (Lịch Tu Tiên)',
+  '/time [ngày=10] — nhảy thời gian thế giới (Lịch Thế Giới)',
   '/wipe — xóa save & tải lại game',
   '/obstacles — bật/tắt lớp debug vùng chặn địa hình (đỏ) để hiệu chỉnh theo art',
 ];
@@ -11365,7 +11382,7 @@ window.cheatExec = function(raw){
       case 'learn': {
         let _n = 0;
         for (const _vid in VOHOC_DEFS){ if (!vhLearned(_vid)){ player.vohoc[_vid] = true; _n++; } }
-        calcDerived(); cheatLog('Đã học ' + _n + ' võ học — cộng %ST vĩnh viễn (K → Tuyệt Học Cũ)', '#ffb15c'); break;
+        calcDerived(); cheatLog('Đã học ' + _n + ' kỹ năng — cộng %ST vĩnh viễn (K → Di Sản Cũ)', '#ffb15c'); break;
       }
       case 'fullskill': {
         for (const _vid in VOHOC_DEFS) player.vohoc[_vid] = true;
@@ -11373,7 +11390,7 @@ window.cheatExec = function(raw){
         player.skillLv = player.skillLv || {};
         for (const _sid in SKILL_DEFS) player.skillLv[_sid] = 120;
         player.bikipVH = Math.max(player.bikipVH || 0, 99);
-        calcDerived(); cheatLog('FULL SKILL — 34 võ học + 30 dung hợp, mọi kỹ năng Lv 120 (bấm K gán)', '#ff9ae0'); break;
+        calcDerived(); cheatLog('FULL SKILL — 34 kỹ năng + 30 dung hợp, mọi kỹ năng Lv 120 (bấm K gán)', '#ff9ae0'); break;
       }
       case 'bikip': {
         player.bikipVH = clamp(Math.round(num(1, 20)), 0, 999);
@@ -11383,16 +11400,16 @@ window.cheatExec = function(raw){
         player.tenuiTT = 0;
         cheatLog('Đã gỡ Trọng Thương — có thể nhảy Vực Thẳm ngay', '#8fd18f'); break;
       }
-      case 'phi': { // Starflight ngay — test giai đoạn Thần Tiên Hóa Cảnh
+      case 'phi': { // Starflight ngay — test giai đoạn Vượt Giới Hạn
         player.dantian.realm = DANTIAN_REALMS.length - 1;
         ascendToImmortal();
-        cheatLog('☁ Starflight — Thần Tiên Hóa Cảnh! Mở Cài Đặt (O) đổi Nam/Nữ & tiên y', '#fff2b0'); break;
+        cheatLog('☁ Starflight — Vượt Giới Hạn! Mở Cài Đặt (O) đổi Nam/Nữ & trang phục', '#fff2b0'); break;
       }
       case 'time': { // /time [ngày] — nhảy thời gian thế giới (mặc định +10 ngày)
         gameClock();
         player.gt.t += Math.max(0, num(1, 10)) * GT_DAY;
         const gti = gameTimeInfo(); calcDerived(); spawnAmbients();
-        // CANH_NAMES/gti.canh thuộc Lịch Tu Tiên (Can Chi) đã gỡ — để lại thì gõ /time là
+        // CANH_NAMES/gti.canh thuộc Lịch Thế Giới (Can Chi) đã gỡ — để lại thì gõ /time là
         // ném ReferenceError. Đồng hồ thế giới nay chỉ còn ngày/mùa.
         cheatLog(`Đồng Hồ Thế Giới → ${gti.season.name} ${gti.day}/${gti.month} Năm ${gti.year}`, gti.season.color); break;
       }
@@ -13323,12 +13340,12 @@ window.salvage = function(i){
 };
 
 // ---------- Bản Đồ thế giới ----------
-// ---------- Kỹ Năng: 3 ô cố định (chính/phụ/buff) + tab Tuyệt Học Cũ (thông tin, không bấm được) ----------
-// Giang Hồ (võ học tự do liên phái) + Dung Hợp đã bị cắt cùng đợt MU-hoá — mọi chiêu giờ đều
+// ---------- Kỹ Năng: 3 ô cố định (chính/phụ/buff) + tab Di Sản Cũ (thông tin, không bấm được) ----------
+// Phiêu Bạt (kỹ năng tự do liên phái) + Dung Hợp đã bị cắt cùng đợt MU-hoá — mọi chiêu giờ đều
 // thuộc riêng 1 trong 5 lớp, không còn nội dung nào cho tab này nữa nên bỏ luôn.
 const SKILL_TABS = [
   { id:'active', name:'⚔ Kỹ Năng' },
-  { id:'legacy', name:'✦ Tuyệt Học Cũ' },
+  { id:'legacy', name:'✦ Di Sản Cũ' },
 ];
 // Chiêu nào thì tay vung kiểu nào — để tư thế nhân vật khớp với VFX đang bung ra.
 // (Meteor rơi từ trời xuống thì phải GIƠ trượng lên, không thể chĩa ngang.)
@@ -13339,7 +13356,7 @@ function heroCastAct(id, d){
   if (d.kind === 'bow' || d.kind === 'amkhi' || d.kind === 'danchi')
     return heroActOf(sk, 'basic') === 'shoot' ? 'shoot' : 'point';
   if (d.kind === 'tieuhon') return heroActOf(sk, 'tp');
-  if (d.kind === 'vh'){                       // chiêu Tuyệt Học: theo loại của chính nó
+  if (d.kind === 'vh'){                       // chiêu Di Sản: theo loại của chính nó
     const v = VOHOC_DEFS[id] || {};
     if (v.type === 'buff' || v.type === 'passive') return heroActOf(sk, 'buff');
     if (v.type === 'aoe') return heroActOf(sk, 'tp');
@@ -13364,7 +13381,7 @@ function equippedSkillRowHtml(id, roleLabel){
       <div class="sk-desc">${info.unlocked ? info.desc : '🔒 ' + info.lockTxt}</div></span>
     <span class="assign-btns">${info.unlocked ? upBtnHtml(id) : ''}</span></div>`;
 }
-// Tuyệt Học Cũ (chiêu môn phái không còn trong taskbar): thông tin + % Công Kích vĩnh viễn nó cộng.
+// Di Sản Cũ (chiêu môn phái không còn trong taskbar): thông tin + % Công Kích vĩnh viễn nó cộng.
 // Chiêu của chính lớp mình tự ngộ theo cấp (vhAutoLearn); chiêu NGOẠI LỚP mua bằng Sách Kỹ Năng —
 // đây là đường tiêu duy nhất của tiền tệ đó (xem learnVohocUI).
 function legacySkillRowHtml(_vid){
@@ -13374,7 +13391,7 @@ function legacySkillRowHtml(_vid){
   if (learned) right = `<span style="font-size:11px;color:#a0ffe9">+${pct}% ST ✓</span>`;
   else if (crossClassLearnable(_vid)){
     const _c = VH_TIER[_v.tier].cost, _can = player.level >= _v.unlock && (player.bikipVH || 0) >= _c;
-    right = `<button class="mini-btn vh-learn-btn" ${_can?'':'disabled'} title="${player.level < _v.unlock ? 'Cần cấp ' + _v.unlock : 'Học tuyệt học ngoại Lớp — +' + pct + '% Công Kích vĩnh viễn'}" onclick="window.learnVohocUI('${_vid}')">Học · ${_c}📜</button>`;
+    right = `<button class="mini-btn vh-learn-btn" ${_can?'':'disabled'} title="${player.level < _v.unlock ? 'Cần cấp ' + _v.unlock : 'Học di sản ngoại Lớp — +' + pct + '% Công Kích vĩnh viễn'}" onclick="window.learnVohocUI('${_vid}')">Học · ${_c}📜</button>`;
   } else right = `<span style="font-size:10.5px;opacity:.5">🔒 Lv${_v.unlock}</span>`;
   return `<div class="skill-row${learned?'':' locked'}">
     <img src="${_v.icon}" onerror="this.style.display='none'" alt="">
@@ -13395,7 +13412,7 @@ function legacyUniversalRowHtml(id){
     ${right}</div>`;
 }
 function renderSkillPanel(){
-  vhAutoLearn(); // save cũ / test mode: quét tự ngộ võ học phái
+  vhAutoLearn(); // save cũ / test mode: quét tự ngộ kỹ năng phái
   let html = `<h3>Kỹ Năng — 3 ô cố định (phím 1-3)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
   html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%ST/cấp (bạc) · mốc 20/40/60/80/100/120 thêm buff · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · 💠 Tâm Đắc <b>${player.tamdac || 0}</b> · <span style="color:#7fd8e0">Instinct <b>${Math.floor(player.khi || 0).toLocaleString()}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
   html += `<div class="char-tabs">`;
@@ -13417,8 +13434,8 @@ function renderSkillPanel(){
         <div class="sk-desc">${on ? ps.desc : '🔒 chưa đạt điều kiện'}</div></span></div>`;
     }
   } else {
-    html += `<div style="font-size:11px;color:#9aa8d4;padding:2px 4px 8px">Taskbar chỉ còn 3 ô, nhưng các chiêu dưới đây không hề mất giá trị — tự động dồn thành % Công Kích vĩnh viễn (hiện <b style="color:#ffd76a">+${(player.legacyAtkPct||0).toFixed(1)}%</b>), không cần bấm nút hay học Bí Kíp nữa.</div>`;
-    html += `<div class="stat-sec">TUYỆT HỌC MÔN PHÁI — ${SECTS[player.sect].name}</div>`;
+    html += `<div style="font-size:11px;color:#9aa8d4;padding:2px 4px 8px">Taskbar chỉ còn 3 ô, nhưng các chiêu dưới đây không hề mất giá trị — tự động dồn thành % Công Kích vĩnh viễn (hiện <b style="color:#ffd76a">+${(player.legacyAtkPct||0).toFixed(1)}%</b>), không cần bấm nút hay học Sách Kỹ Năng nữa.</div>`;
+    html += `<div class="stat-sec">DI SẢN LỚP — ${SECTS[player.sect].name}</div>`;
     const own = LEGACY_SECT_SKILLS.filter(sid => VOHOC_DEFS[sid] && VOHOC_DEFS[sid].phai === player.sect);
     html += own.length ? own.map(legacySkillRowHtml).join('') : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10.</div>`;
     // Tuyệt học NGOẠI LỚP: mua bằng Sách Kỹ Năng (đường tiêu duy nhất của tiền tệ đó), hoặc nhận
@@ -13426,7 +13443,7 @@ function renderSkillPanel(){
     // nếu không phần thưởng endgame lớn nhất trông như chẳng có tác dụng gì (xem calcDerived()).
     const _cross = LEGACY_SECT_SKILLS.filter(sid => crossClassLearnable(sid));
     if (_cross.length){
-      html += `<div class="stat-sec">TUYỆT HỌC NGOẠI LỚP — 📜 Sách Kỹ Năng: <b style="color:#ffb15c">${player.bikipVH || 0}</b></div>`;
+      html += `<div class="stat-sec">DI SẢN NGOẠI LỚP — 📜 Sách Kỹ Năng: <b style="color:#ffb15c">${player.bikipVH || 0}</b></div>`;
       html += `<div style="font-size:11px;color:#9aa8d4;padding:0 4px 6px">Rơi từ tinh anh/boss & Vực Thẳm. Học xong cộng thẳng %ST vĩnh viễn — Thăng Tiên sẽ mở sạch số còn lại.</div>`;
       html += _cross.map(legacySkillRowHtml).join('');
     }
@@ -13442,16 +13459,16 @@ function castSkill(id){
   if (id === 'b') id = 'amkhi'; if (id === 'c') id = 'tp'; // legacy alias
   const d = SKILL_DEFS[id]; if (!d) return;
   const info = skillInfo(id);
-  const _sm = skMile(id), _se = skEvoMult(id), _qiNeed = Math.max(1, Math.round(info.qi * _sm.qi * _se.qi)); // GDD Đợt 2 B6: mốc 80 −12% Nội Lực · Tiến Hóa Bá/Tốc
+  const _sm = skMile(id), _se = skEvoMult(id), _qiNeed = Math.max(1, Math.round(info.qi * _sm.qi * _se.qi)); // GDD Đợt 2 B6: mốc 80 −12% Mana · Tiến Hóa Bá/Tốc
   const _st = evoStage(id); // bậc tiến hóa chiêu (Lv 40/80/120)
   if (!info.unlocked){ addFloat(player.x, player.y-34, info.lockTxt, '#8a8a8a', 12); return; }
   if ((player.cd[id] || 0) > 0) return;
-  // LIÊN TRẢM: trong cửa sổ 2.5s, chiêu kế tiếp theo miễn phí Nội Lực (ám khí không ăn cửa sổ)
+  // LIÊN TRẢM: trong cửa sổ 2.5s, chiêu kế tiếp theo miễn phí Mana (ám khí không ăn cửa sổ)
   const _ltFree = (player.ltT || 0) > 0 && id !== 'amkhi';
   if (!_ltFree){
-    if (player.qi < _qiNeed){ addFloat(player.x, player.y-34, 'Không đủ Qi!', '#7fa8e0', 12); return; }
+    if (player.qi < _qiNeed){ addFloat(player.x, player.y-34, 'Không đủ Mana!', '#7fa8e0', 12); return; }
     player.qi -= _qiNeed;
-  } else addFloat(player.x, player.y-48, '⚡ Liên Trảm — miễn phí Qi!', '#ffd76a', 12);
+  } else addFloat(player.x, player.y-48, '⚡ Liên Trảm — miễn phí Mana!', '#ffd76a', 12);
   player.cd[id] = info.cd * (player.vhCdMult || 1) * _sm.cd * _se.cd * skCdScale(id); // mốc 40 −10% · Tẩy Tủy −30% · cấp chiêu −0,25%/cấp (tối đa −30%) · nhánh Tốc Chiến
   const _atk0 = player.atk; player.atk = Math.round(player.atk * skLvMult(id) * _sm.dmg * _se.dmg); // GDD Đợt 2 B6: mốc ST nhân dồn · nhánh Bá Đạo // cấp kỹ năng 1-120: +2.5% ST mỗi cấp
   player.comboT = 3; // mở/duy trì chuỗi combo — ám khí trúng trong lúc này sẽ kích Liên Trảm
@@ -13619,7 +13636,7 @@ function castSkill(id){
   _sigilTag = null; _sigilHits = 0;
   AudioSys.sfx(sfxTag, 0.6);
   flashSkillSlot(id);
-  // Song Ảnh Phân Thân Thủ (Võ Học Phổ): 30% chiêu vừa tung không tốn hồi chiêu
+  // Song Ảnh Phân Thân Thủ (Sổ Kỹ Năng): 30% chiêu vừa tung không tốn hồi chiêu
   if (id !== 'tieuvotuong' && vhLearned('songthu') && Math.random() < 0.3){
     player.cd[id] = 0;
     addFloat(player.x, player.y-62, '✦ SONG THỦ HỖ BÁC — chiêu không hồi!', '#d8d8f0', 13);
@@ -13745,7 +13762,7 @@ const SHOPS = {
     { id:'thuoc',     name:'🧪 Hồ Lô Thuốc',        price:150, desc:'Hồi 40% máu tức thì (phím R) — túi đựng tối đa 5 lọ' },
     { id:'trithuong', name:'✚ Trị Thương Toàn Phần', price:100, desc:'Nhà Giả Kim tự tay bào chế thuốc — hồi đầy HP ngay lập tức' },
     { id:'tukhi',     name:'◎ Lọ Mana',              price:80,  desc:'Hồi đầy Mana (tài nguyên tung chiêu) ngay lập tức' },
-    { id:'loidon',    name:'⚡ Lôi Độn Phù',           price:600, desc:'5 phút giảm 40% sát thương thiên lôi — mang theo khi vào vùng bão' },
+    { id:'loidon',    name:'⚡ Bùa Chắn Sét',           price:600, desc:'5 phút giảm 40% sát thương thiên lôi — mang theo khi vào vùng bão' },
     { id:'tiendan',   name:'◈ Tiến Cấp Đan ×3',      price:900, desc:'Tấn Chức (Venom / Archery / Stoneform)' },
   ]},
   binhkhi: { quote:'"Binh khí nhà ta ba đời rèn giũa — mở rương là biết liền."', rows:[
@@ -13838,7 +13855,7 @@ window.buyFromShop = function(what){
   }
   else if (what==='loidon'){
     player.silver -= row.price; player.loidonT = 300;
-    zoneBanner = { text:'⚡ LÔI ĐỘN PHÙ', sub:'5 phút giảm 40% sát thương thiên lôi — cứ yên tâm xông vào bão!', color:'#ffb15c', t:2.6 };
+    zoneBanner = { text:'⚡ BÙA CHẮN SÉT', sub:'5 phút giảm 40% sát thương thiên lôi — cứ yên tâm xông vào bão!', color:'#ffb15c', t:2.6 };
     AudioSys.sfx('quest', 0.5);
   }
   else if (what==='phongphu'){ player.silver -= row.price; player.phongphu = (player.phongphu || 0) + 1; addFloat(player.x, player.y-50, '+1 Phong Linh Phù — bấm T gần tinh anh suy yếu', '#b08ae8', 13); }
@@ -13991,7 +14008,7 @@ function drawSectWeapon(p, sect){
   ctx.restore();
 }
 
-// ═══════════ HÀO QUANG TUYỆT HỌC MAX TẦNG (Ám Khí 7 · Cung Tiễn 7) ═══════════
+// ═══════════ HÀO QUANG DI SẢN MAX TẦNG (Ám Khí 7 · Cung Tiễn 7) ═══════════
 function drawMaxTuyetHocAura(p){
   const t = performance.now()/1000;
   const akTier = (p.amkhiX && p.amkhiX.tier) || 0;
@@ -14436,10 +14453,10 @@ function renderSettings(){
     <div class="set-row"><span>🎯 Tầm quét quanh điểm neo</span>${sldA('range', 200, 700, 10, _acS.range + 'px')}</div>
     <div class="set-row"><span>👹 Auto đánh cả Boss <i>(nguy hiểm — mặc định tắt, boss tự mình quyết!)</i></span>${togA('boss')}</div>
     ${(typeof player !== 'undefined' && player && player.ascended) ? `
-    <div class="set-row" style="border-bottom:none;justify-content:center"><b style="color:#fff2b0;font-size:12px">— ☁ PHI THĂNG · TÁN TIÊN —</b></div>
-    <div class="set-row"><span>⚥ Hình dáng tiên nhân</span><span><button class="mini-btn ${player.gender !== 'nu' ? '' : 'danger'}" onclick="setGender('nam')">NAM</button> <button class="mini-btn ${player.gender === 'nu' ? '' : 'danger'}" onclick="setGender('nu')">NỮ</button></span></div>
-    <div class="set-row"><span>🎨 Tiên Y (skin)</span><span>${Object.keys(TIEN_SKINS).map(k => `<button class="mini-btn" style="color:${TIEN_SKINS[k].halo} !important;border-color:${TIEN_SKINS[k].halo} !important" title="${TIEN_SKINS[k].name}" onclick="setTienSkin('${k}')">${player.tienSkin === k ? '◉' : '●'}</button>`).join('')}</span></div>
-    <div style="font-size:10.5px;color:#9aa8d4;line-height:1.5">Đang mặc: <b style="color:${(TIEN_SKINS[player.tienSkin] || TIEN_SKINS.bach).halo}">${(TIEN_SKINS[player.tienSkin] || TIEN_SKINS.bach).name}</b> — ràng buộc Lớp đã phá bỏ, võ học toàn tự do, ngự kiếm phi hành +25% tốc độ.</div>` : ''}
+    <div class="set-row" style="border-bottom:none;justify-content:center"><b style="color:#fff2b0;font-size:12px">— ☁ STARFLIGHT —</b></div>
+    <div class="set-row"><span>⚥ Hình dáng Starforged</span><span><button class="mini-btn ${player.gender !== 'nu' ? '' : 'danger'}" onclick="setGender('nam')">NAM</button> <button class="mini-btn ${player.gender === 'nu' ? '' : 'danger'}" onclick="setGender('nu')">NỮ</button></span></div>
+    <div class="set-row"><span>🎨 Trang Phục (skin)</span><span>${Object.keys(TIEN_SKINS).map(k => `<button class="mini-btn" style="color:${TIEN_SKINS[k].halo} !important;border-color:${TIEN_SKINS[k].halo} !important" title="${TIEN_SKINS[k].name}" onclick="setTienSkin('${k}')">${player.tienSkin === k ? '◉' : '●'}</button>`).join('')}</span></div>
+    <div style="font-size:10.5px;color:#9aa8d4;line-height:1.5">Đang mặc: <b style="color:${(TIEN_SKINS[player.tienSkin] || TIEN_SKINS.bach).halo}">${(TIEN_SKINS[player.tienSkin] || TIEN_SKINS.bach).name}</b> — ràng buộc Lớp đã phá bỏ, kỹ năng toàn tự do, bay lượn +25% tốc độ.</div>` : ''}
     <div class="set-row" style="border-bottom:none"><span style="color:#c05a4a">⚠ Xóa dữ liệu & tu luyện lại</span><button class="mini-btn danger" onclick="wipeSave()">XÓA SAVE</button></div>
     <div style="font-size:11px;color:#9aa8d4;margin-top:8px;line-height:1.5">Âm thanh sẽ phát sau thao tác đầu tiên của bạn (quy định trình duyệt). Mọi cài đặt được lưu tự động.</div>`;
 }
@@ -14509,7 +14526,7 @@ NPCS.push(
     lore:'"Thép Ardhaven, rèn bên kia vết nứt. Hết lô này là hết, đừng hỏi thêm."' },
   { id:'trachu',  name:'Trà Quán Chủ', map:'tuongduong', x:980, y:1150, img:'assets/npcs/trachu.png', talk:'shop',
     lore:'"Quán này rơi qua đây nguyên vẹn, cả ấm trà. Đời còn cho gì thì nhận nấy."' },
-  { id:'quangia', name:'Quản Gia · Động Phủ', map:'tuongduong', x:1590, y:1160, img:'assets/npcs/quangia.png', talk:'abode',
+  { id:'quangia', name:'Quản Gia · Nhà Riêng', map:'tuongduong', x:1590, y:1160, img:'assets/npcs/quangia.png', talk:'abode',
     lore:'"Nhà riêng của ngươi đã dọn sạch — Trận Tụ Linh và Vườn Dược chờ chủ nhân."' },
   { id:'bodau', name:'Bổ Đầu · Truy Nã Lệnh', map:'tuongduong', x:1600, y:690, img:'assets/npcs/bodau.png', talk:'trunya',
     lore:'"Hội Đồng Lunaris treo thưởng lũ Chimera lộng hành — mỗi ngày một tên. Làm xong, đến Sảnh Cầu May thử vận."' },
@@ -14629,7 +14646,7 @@ QUESTS.push(
 // ---------- Phụ tuyến theo vùng (tối đa 3 active cùng lúc) ----------
 // QA: 66 NV phụ đời trước gần 80% là "diệt N con X" lặp đi lặp lại (nhàm chán, trùng nội dung với
 // NV chính/mob quanh đó) và không hề dạy người chơi về hàng loạt hệ thống nâng cấp nhân vật đã có
-// sẵn trong game (Thần Binh, Lò Hỗn Loạn, Linh Thú, Động Phủ...) — những hệ này trước giờ chỉ có
+// sẵn trong game (Thần Binh, Lò Hỗn Loạn, Linh Thú, Nhà Riêng...) — những hệ này trước giờ chỉ có
 // 1 dòng toast thoáng qua lúc lên cấp, rất dễ bị bỏ lỡ. Thay bằng 2 nhóm:
 // (1) NV "học hệ thống" — mỗi cái dạy đúng 1 cơ chế, rải theo đúng cấp hệ đó mở khoá, dùng
 //     sideOnEvent(<type mới>) gọi từ chính hàm nâng cấp/chế tạo của hệ đó (xem các chỗ gọi
@@ -14642,7 +14659,7 @@ const SIDE_QUESTS = [
   { id:'s_sys3', npc:'quachtinh', map:'tuongduong', reqLv:12,  reqMain:10, name:'Vũ Khí Của Riêng Ngươi', desc:'Mỗi lớp đều có một Thần Binh đồng hành — xem ở Nhân Vật → Thông Tin. Hãy nâng nó lên tầng kế tiếp bằng Nội Đan và Tinh Thạch.', type:'thanbinh', need:1, rew:{xp:2000, silver:300, mat:3} },
   { id:'s_sys4', npc:'monkhach',  map:'ngoai',      reqLv:17,  reqMain:12, name:'Thu Phục Linh Thú',      desc:'Cần Phong Linh Phù (mua ở Vũ Khí Phường). Đánh một tinh anh xuống dưới 40% máu rồi thu phục nó làm Linh Thú đồng hành.', type:'tame', need:1, rew:{xp:2500, silver:350, mat:2} },
   { id:'s_sys5', npc:'quachtinh', map:'tuongduong', reqLv:19,  reqMain:12, name:'Lò Hỗn Loạn',            desc:'Dư ít nhất 3 món cùng phẩm? Mang đến Lò Rèn Hoàng Gia, ném vào Lò Hỗn Loạn thử vận may lên phẩm cao hơn.', type:'chaos', need:1, rew:{xp:3500, silver:450, mat:3} },
-  { id:'s_sys7', npc:'quachtinh', map:'tuongduong', reqLv:32,  reqMain:17, name:'Vườn Dược Động Phủ',     desc:'Ghé Động Phủ (gặp Quản Gia), gieo một luống dược viên rồi quay lại thu hoạch.', type:'garden', need:1, rew:{xp:14000, silver:1000, mat:3} },
+  { id:'s_sys7', npc:'quachtinh', map:'tuongduong', reqLv:32,  reqMain:17, name:'Vườn Dược Nhà Riêng',     desc:'Ghé Nhà Riêng (gặp Quản Gia), gieo một luống dược viên rồi quay lại thu hoạch.', type:'garden', need:1, rew:{xp:14000, silver:1000, mat:3} },
   // ── Cầu nối cốt truyện — dẫn người chơi qua từng vùng mới, không đánh quái lặp lại ──
   { id:'s_b1', npc:'quachtinh', map:'chungnam',   reqLv:18,  reqMain:14, name:'Lễ Vật Rừng Gai',        desc:'Đem lễ vật của Trưởng Lão Rell lên Thornwood Reach giao cho Corran — đáp lễ nghĩa cử năm xưa.', type:'talk', targetNpc:'daosi', need:1, rew:{xp:1800, silver:260} },
   { id:'s_b2', npc:'daosi',     map:'comoc',      reqLv:36,  reqMain:18, name:'Thăm Hỏi Hollow Roost',  desc:'Tin tức từ Hollow Roost đã bặt nhiều năm — sang thăm Sylas hỏi thăm tình hình.', type:'talk', targetNpc:'thumo', need:1, rew:{xp:3500, silver:400} },
@@ -15523,12 +15540,12 @@ const TRAITS = [
   { id:'duocthe',   name:'Dược Thể',            tier:'huyen', glyph:'🧪', desc:'Hồ Lô Thuốc hồi 55% máu (thay 40%)',        late:p=>{ p.potionPct = 0.55; } },
   { id:'vohon',     name:'Võ Hồn',              tier:'thien', glyph:'⚔', desc:'Tấn Chức +12% Sát Thương',                 late:p=>{ p.skillDmgPct += 0.12; } },
   { id:'thienmenh', name:'Thiên Mệnh',          tier:'thien', glyph:'◑', desc:'Mỗi màn chơi 1 lần: chết hồi sinh tại chỗ 50% máu', late:p=>{ p.traitRevive = true; } },
-  { id:'kymach',    name:'Kỳ Mạch Đại Thông',   tier:'thien', glyph:'🌊', desc:'Đả thông Instinct Channels +25% tỉ lệ',             late:p=>{ p.traitMerRate = 1.25; } },
+  { id:'kymach',    name:'Khai Mở Mạch Lực',   tier:'thien', glyph:'🌊', desc:'Đả thông Instinct Channels +25% tỉ lệ',             late:p=>{ p.traitMerRate = 1.25; } },
   { id:'vanvat',    name:'Vạn Vật Hữu Duyên',   tier:'thien', glyph:'💰', desc:'+15% Bạc rơi',                              late:p=>{ p.silverPct += 15; } },
 ];
 const PERSONALITIES = {
   chinh: { name:'Chính Trực', glyph:'⚖', desc:'Khí chất hiệp nghĩa, đi đâu cũng được người đời kính nể.' },
-  ta:    { name:'Tà Khí',     glyph:'☾', desc:'Đường tà đạo — Du Hiệp kiêng kị, dân thường e ngại.' },
+  ta:    { name:'Tà Khí',     glyph:'☾', desc:'Con đường tăm tối — Du Hiệp kiêng kị, dân thường e ngại.' },
   trung: { name:'Trung Dung', glyph:'◑', desc:'Hài hòa âm dương, không thiên vị bên nào.' },
 };
 function rollTrait(excludeIds){
@@ -15545,7 +15562,7 @@ function rollTraitsSilent(){
   return ids;
 }
 
-// ---------- Danh tính giang hồ: đặt tên nhân vật ----------
+// ---------- Danh tính phiêu bạt: đặt tên nhân vật ----------
 const NAME_HO = ['Sparkden','Waverly','Emberfall','Glimmerwood','Driftholt','Ashgrove','Moonshale','Thistledown','Brambleton','Frostholt','Silverfen','Oakhollow','Windmere','Starholt','Cinderfell','Duskrider','Hatchbrook','Shellmere','Cloudvane','Rootwyn'];
 const NAME_TEN = ['Robin','Sage','Rowan','Lark','Fenn','Wynn','Quinn','Reed','Sorrel','Vale','Ren','Merit','Sterling','Marlowe','Ellery','Winter','Hollis','Faye','Cove','Bryn','Osric','Thalia','Corin','Dashiell'];
 function genCharName(){
@@ -15818,8 +15835,7 @@ function loadBossImages(){
 }
 loadBossImages();
 Object.assign(BGM_TRACKS, {
-  pb_daohoa:'bgm_tomb', pb_ngoai:'bgm_tomb', pb_chungnam:'bgm_tomb', pb_comoc:'bgm_tomb',
-  pb_tuyettinh:'bgm_tomb', pb_mongco:'bgm_tomb', pb_nhanmon:'bgm_tomb',
+  // (bỏ trống cùng lý do với BGM_TRACKS — điền lại khi có nhạc phó bản)
 });
 
 // Cấu hình từng phó bản: 3 đợt quái (quái của map cha) → Boss → thưởng nguyên liệu tiến cấp kỹ năng
@@ -15838,7 +15854,7 @@ const DUNGEONS = {
     waves:[ ['phando','bandit','phando'], ['xanu','phando','bandit'], ['bandao','xanu','phando'] ],
     rewards:{ tienDan:[2,3], mat:[7,11],  tuLa:[0,1], hon:[0,0], khi:90,  tuvi:450,  silver:[550,800] },
     huntBoss:'boss_hacnu1', boxTier:2, timeLimit:540 },
-  pb_comoc:    { boss:'boss_mochu',     bossName:'Cổ Mộ Mộ Chủ',
+  pb_comoc:    { boss:'boss_mochu',     bossName:'Chúa Tể Lăng Mộ',
     waves:[ ['thinu','mocnhan','thinu'], ['huyetbat','mocnhan','thinu'], ['huyetbat','huyetbat','mocnhan'] ],
     rewards:{ tienDan:[2,3], mat:[10,14], tuLa:[1,1], hon:[0,0], khi:140, tuvi:800,  silver:[900,1300] },
     huntBoss:'boss_hacnu2', boxTier:2, timeLimit:540 },
@@ -16418,16 +16434,16 @@ const GARDEN_SEEDS = {
 function tulinhMult(){ return 1 + (TULINH_TIERS[(player && player.abode && player.abode.tulinh) || 0] || 0); }
 function renderAbode(){
   if (player.level < 30){ // mở theo tầng — tân thủ tập trung chiến đấu & nhiệm vụ trước
-    el('panel-quest').innerHTML = `<h3>Động Phủ</h3><button class="close-x" onclick="closePanels()">✕</button>
-      <div style="padding:14px;font-size:13px;line-height:1.8">Quản Gia lắc đầu: <i>"Đạo hữu tu vi còn mỏng, chưa gánh nổi linh khí động phủ."</i><br><br>
-      Động Phủ mở khóa ở <b style="color:#7ecbff">cấp 30</b> — hãy rèn thân đã!</div>`;
+    el('panel-quest').innerHTML = `<h3>Nhà Riêng</h3><button class="close-x" onclick="closePanels()">✕</button>
+      <div style="padding:14px;font-size:13px;line-height:1.8">Quản Gia lắc đầu: <i>"Ngươi còn non sức, chưa gánh nổi nguồn năng lượng của nơi này."</i><br><br>
+      Nhà Riêng mở khóa ở <b style="color:#7ecbff">cấp 30</b> — hãy rèn thân đã!</div>`;
     closePanels(); el('panel-quest').classList.remove('hidden');
     return;
   }
   const ab = player.abode;
   const t = ab.tulinh;
-  let html = `<h3>Động Phủ</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">"Động phủ này tuy nhỏ — nhưng linh khí hội tụ thì đạo hữu tu một ngày bằng kẻ khác tu mười ngày."</div>`;
+  let html = `<h3>Nhà Riêng</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">"Nhà nhỏ thôi — nhưng nguồn năng lượng ở đây hội tụ, một ngày ở lại bằng mười ngày bên ngoài."</div>`;
   // Tụ Linh Trận
   html += `<div class="stat-sec">TỤ LINH TRẬN — BẬC ${t}/5 · tu luyện nhanh +${Math.round(TULINH_TIERS[t]*100)}%</div>`;
   if (t < 5){
@@ -16679,7 +16695,7 @@ function spawnAmbients(){
     } else if (_wx.id === 'snow'){
       for (let i = 0; i < 46; i++) ambients.push({ kind:'snow', color:'#eef4ff', x:rnd(0,MAP.w), y:rnd(0,MAP.h), ph:rnd(0,Math.PI*2), sp:0.5+rnd(0,0.9), sz:1.4+rnd(0,1.6) });
     }
-  } // Lịch Tu Tiên: hạt môi trường theo MÙA
+  } // Lịch Thế Giới: hạt môi trường theo MÙA
   for (let i = 0; i < cfg.n; i++){
     ambients.push({
       kind: cfg.kind, color: cfg.color,
@@ -17476,7 +17492,7 @@ function spawnTruyNaMob(){
 // Không pity — tỉ lệ công khai tại vách. Giờ Vàng (12h & 20h): 2 ô hiếm ×2.
 function tenuiGoldenHour(){ const h = new Date().getHours(); return h === 12 || h === 20; }
 function tenuiWounded(){ return (player.tenuiTT || 0) > Date.now(); }
-// Học miễn phí / hiền giả chỉ điểm — tặng thẳng 1 tuyệt học NGOẠI LỚP (thứ bình thường phải mua bằng
+// Học miễn phí / hiền giả chỉ điểm — tặng thẳng 1 di sản NGOẠI LỚP (thứ bình thường phải mua bằng
 // Sách Kỹ Năng, xem learnVohocUI). QA: bộ lọc cũ là `!VOHOC_DEFS[id].phai`, mà sau đợt MU-hoá KHÔNG
 // còn chiêu nào phai:null nữa → pool luôn rỗng → 2 kết quả jackpot của Vực Thẳm ("hang động giấu cổ
 // thư", "hiền giả chỉ điểm") luôn rơi về nhánh an ủi, dù người chơi đã trả 30% HP + 15 phút Trọng Thương.
@@ -17499,7 +17515,7 @@ function renderTeNui(n){
   if (!unlocked){
     html += `<div style="text-align:center;padding:14px 8px;font-size:13px;line-height:1.8;color:#8a8a8a">
       ☁ Vách cao mây phủ — phàm nhân nhảy xuống chỉ có nát thây.<br>
-      Cần đạt <b style="color:#b08ae8">Radiant Core Cảnh</b> (cảnh 5, tự động ở cấp 60) để Thăng Linh,<br>
+      Cần đạt <b style="color:#b08ae8">Radiant Core</b> (cảnh 5, tự động ở cấp 60) để Thăng Linh,<br>
       khi ấy mới đủ sức <b style="color:#ffb15c">nhảy vào Vực Thẳm</b>.</div>`;
   } else {
     html += `<div class="stat-sec">TỈ LỆ CÔNG KHAI — KHÔNG GOM DUYÊN${gold ? ' · <b style="color:#ffd76a">⚡ GIỜ VÀNG: 2 ô hiếm ×2!</b>' : ''}</div>
@@ -17508,7 +17524,7 @@ function renderTeNui(n){
       <b style="color:#7ec850">20%</b> — Lọt vào hang động: 3-5 📜 Sách Kỹ Năng<br>
       <b style="color:#5aa0e8">10%</b> — Hang động cổ xưa: 6-8 📜 Sách Kỹ Năng + 3 ◈ Tiến Cấp Đan<br>
       <b style="color:#b08ae8">${gold ? 10 : 5}%</b> — Hang động giấu cổ thư: <b>học miễn phí 1 kỹ năng tự do</b> (hết → +15 📜)<br>
-      <b style="color:#ffd76a">${gold ? 10 : 5}%</b> — Gặp hiền giả ẩn danh: được chỉ điểm <b>1 võ học chưa ngộ</b></div>
+      <b style="color:#ffd76a">${gold ? 10 : 5}%</b> — Gặp hiền giả ẩn danh: được chỉ điểm <b>1 kỹ năng chưa ngộ</b></div>
       <div style="font-size:11.5px;color:#9aa8d4;margin-top:6px;line-height:1.5">Giờ Vàng (12h & 20h mỗi ngày): tỉ lệ cổ thư/hiền giả ×2.<br>
       Cái giá mỗi lần nhảy: <b style="color:#ff7a6a">-30% HP</b> (không chết) + <b style="color:#ff7a6a">Trọng Thương 15 phút</b>.</div>`;
     if (wounded){
@@ -17622,7 +17638,7 @@ window.rollVanDuyen = function(){
   }
   AudioSys.sfx(key === 'bikip' ? 'levelup' : 'coin', 0.8);
   saveGame();
-  addFloat(player.x, player.y-56, '◑ Rút duyên: ' + (key === 'bikip' ? 'BÍ KÍP HIẾM!' : key === 'chau' ? 'Tứ Châu' : key === 'trangbi' ? 'Trang bị' : key === 'vatlieu' ? 'Vật liệu' : 'Bạc · Anima'), key === 'bikip' ? '#e84a6a' : '#7ecbff', 14);
+  addFloat(player.x, player.y-56, '◑ Rút duyên: ' + (key === 'bikip' ? 'SÁCH KỸ NĂNG HIẾM!' : key === 'chau' ? 'Tứ Châu' : key === 'trangbi' ? 'Trang bị' : key === 'vatlieu' ? 'Vật liệu' : 'Bạc · Anima'), key === 'bikip' ? '#e84a6a' : '#7ecbff', 14);
   renderVanDuyen();
   const res = document.getElementById('vd-result');
   if (res) res.innerHTML = `◑ Kết quả: ${out.join('<br>')}`;
