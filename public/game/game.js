@@ -9632,13 +9632,17 @@ function drawPlayer(){
       _ps.bob  -= 2.2 * _hurt;
     }
     const _tier = heroTier(p), _gv = gearVisual(p);
-    // Chọn khung hình. Ba đường KHÔNG dùng sprite, mỗi đường một lý do đo được:
-    //  · mức hiệu ứng ĐẦY — người chơi chọn chất lượng thì trả lại chất lượng: vẽ thẳng, hoạt ảnh
-    //    liên tục thật, không có bước nhảy nào;
-    //  · TRÚNG ĐÒN — giật ngửa phải khớp đúng độ mạnh cú đòn, và chỉ kéo dài 0,3s;
-    //  · cú phóng to lúc lên cấp (pulse > 1,02) — lúc đó sprite bị kéo lên quá cỡ gốc.
+    // Chọn khung hình. Sprite dùng ở MỌI mức hiệu ứng: sau khi nâng lên 32 khung đi và dựng ở
+    // đúng hộp gốc, nó đo được lệch 0–0,03% pixel so với bản vẽ thẳng, và nhịp giật 15,4% so với
+    // 13,5% của bản liên tục — tức không còn khác biệt để mà đánh đổi.
+    // Chỉ TRÚNG ĐÒN là vẫn vẽ thẳng: giật ngửa phải khớp đúng độ mạnh cú đòn, và chỉ kéo dài 0,3s.
+    // (Trước đây còn một chốt `pulse <= 1.02` với lý do "cú phóng to lúc lên cấp". Sai cả hai vế:
+    //  pulse KHÔNG phải hiệu ứng lên cấp mà là `1 + castK*0,12` — tức nó bật gần như suốt mọi lần
+    //  tung tuyệt kỹ, và chốt đó vô hiệu hoá sprite đúng lúc cần nhất. Mà kể cả có phóng to thì
+    //  cũng chẳng sao: sprite dựng ở 220px trong khi trên màn hình cao 104×1,12 = 116px, vẫn là
+    //  thu nhỏ chứ không phải kéo giãn.)
     let _spr = null;
-    if (_hurt <= 0 && FXQ < 2 && pulse <= 1.02){
+    if (_hurt <= 0){
       const _kind = castK > 0 ? 'c' : atkK > 0 ? 'a' : (p.moving ? 'w' : 'i');
       const _n = HS_FRAMES[_kind];
       const _TAU = Math.PI * 2;
