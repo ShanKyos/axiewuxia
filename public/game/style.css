@@ -860,3 +860,32 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   box-shadow:0 4px 16px rgba(0,0,0,.5); font-family:inherit; letter-spacing:.02em; }
 #deep-leave:hover { background:linear-gradient(180deg,#357f47,#245a33); }
 #deep-leave i { font-style:normal; font-weight:400; font-size:11px; opacity:.75; margin-left:6px; }
+
+
+/* ═══════════ LỚP PHỦ TOÀN MÀN HÌNH (thay cho fillRect(0,0,W,H) mỗi khung) ═══════════
+   z-index 10: trên canvas (#game), dưới mọi thứ của HUD (#bottom-hud là 11). */
+.fx-layer { position:fixed; inset:0; z-index:10; pointer-events:none; opacity:0;
+  transition:opacity .12s linear; }
+#fx-vignette.on { opacity:1;
+  background:radial-gradient(ellipse at 50% 50%, rgba(24,16,8,0) 44%, rgba(24,16,8,.16) 88%); }
+#fx-dark.on { opacity:1;
+  background:radial-gradient(ellipse at 50% 50%, rgba(10,8,14,0) 28%, rgba(10,8,14,.62) 75%); }
+#fx-sky  { transition:opacity .3s linear, background .5s linear; }
+/* Dải nắng nghiêng. mix-blend-mode:screen cho đúng cảm giác "ánh sáng cộng vào", nhưng ở đây nó
+   chạy trên tầng ghép ảnh của trình duyệt chứ không phải trong lượt vẽ canvas. */
+#fx-rays { overflow:hidden; }
+#fx-rays.on { opacity:1; }
+#fx-rays i { position:absolute; top:-12%; left:-60%; width:260%; height:130%; display:block;
+  mix-blend-mode:screen; transform:rotate(14deg);
+  background:repeating-linear-gradient(78deg,
+    rgba(255,240,190,0) 0px, rgba(255,240,190,0) 120px,
+    rgba(255,240,190,.13) 150px, rgba(255,240,190,.13) 196px,
+    rgba(255,240,190,0) 236px, rgba(255,240,190,0) 340px);
+  animation:fxRayDrift 90s linear infinite; }
+@keyframes fxRayDrift { from { transform:rotate(14deg) translateX(0); }
+                        to   { transform:rotate(14deg) translateX(340px); } }
+@media (prefers-reduced-motion: reduce){ #fx-rays i { animation:none; } }
+#fx-hurt { background:radial-gradient(ellipse at 50% 50%, rgba(200,30,20,0) 30%, rgba(200,30,20,.35) 75%);
+  transition:opacity .08s linear; }
+#fx-low  { background:radial-gradient(ellipse at 50% 50%, rgba(190,16,16,0) 34%, rgba(190,16,16,.32) 78%);
+  transition:opacity .25s linear; }

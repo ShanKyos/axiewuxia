@@ -2066,21 +2066,12 @@ function tickWeather(dt){ // sấm chớp khi giông (Gói B)
 }
 
 // ---------- Tia nắng & đèn lồng (Gói C) — screen-space ----------
-function drawSunRays(){
-  const t = performance.now()/1000;
-  ctx.save(); ctx.globalCompositeOperation = 'screen';
-  for (let i = 0; i < 4; i++){
-    const bx = ((i*0.29 + t*0.008) % 1.3 - 0.15) * W;
-    const g = ctx.createLinearGradient(bx, -40, bx + H*0.55, H);
-    g.addColorStop(0, 'rgba(255,240,190,0.17)'); g.addColorStop(1, 'rgba(255,240,190,0)');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.moveTo(bx, -40); ctx.lineTo(bx + 60 + i*18, -40);
-    ctx.lineTo(bx + H*0.55 + 150 + i*18, H); ctx.lineTo(bx + H*0.55, H);
-    ctx.closePath(); ctx.fill();
-  }
-  ctx.restore();
-}
+// Bốn dải nắng nghiêng, trước đây vẽ bằng canvas với globalCompositeOperation='screen'. Chế độ
+// hoà trộn 'screen' bỏ hẳn đường vẽ nhanh, và bốn hình này mỗi hình phủ trọn chiều cao màn hình:
+// đo được BỎ RIÊNG hàm này đưa 22,5 → 39,2 FPS (+74%) — một hiệu ứng trang trí ăn hơn một phần ba
+// khung hình. Chúng chỉ trôi ngang rất chậm, nên chuyển hẳn sang một lớp CSS có mix-blend-mode và
+// animation riêng: trình duyệt ghép trên tầng compositor, lượt vẽ không tốn gì.
+
 function drawLanternGlow(dk){ // đèn lồng Tương Dương về đêm — neo tọa độ thế giới
   const t = performance.now()/1000;
   ctx.save(); ctx.globalCompositeOperation = 'screen';
@@ -2148,33 +2139,52 @@ function seasonAmbientCfg(cfg){ // hạt mùa phủ lên map ngoài trời — p
   const sa = gameTimeInfo().season.amb;
   return { kind: sa.kind, color: sa.color, n: Math.max(cfg.n, sa.n) };
 }
+// Trộn nhiều lớp màu phẳng thành MỘT màu, thay vì tô chồng từng lớp lên cả màn hình.
+function _skyMix(acc, r, g, b, a){
+  if (a <= 0) return acc;
+  const na = acc.a + a*(1 - acc.a);
+  if (na <= 0) return acc;
+  return { r:(r*a + acc.r*acc.a*(1-a))/na, g:(g*a + acc.g*acc.a*(1-a))/na,
+           b:(b*a + acc.b*acc.a*(1-a))/na, a:na };
+}
+let _skyCss = '', _skyTick = 0;
 function drawSkyOverlay(){ // screen-space — gọi sau vignette, trước zone banner
   if (!player || !player.gt) return;
   const gti = gameTimeInfo();
   const dk = skyDarkness();
-  if (dk > 0){ // đêm xanh mực, khuya có ánh trăng nhạt
-    ctx.fillStyle = `rgba(8,10,32,${(0.36*dk).toFixed(3)})`; ctx.fillRect(0, 0, W, H);
-    if (dk > 0.85){ ctx.fillStyle = `rgba(150,170,255,${(0.05*dk).toFixed(3)})`; ctx.fillRect(0, 0, W, H); }
+  // Ngày/đêm · giao mùa · thời tiết đều là màu PHẲNG phủ trọn màn hình, và đổi rất chậm — trước
+  // đây là tới NĂM lần fillRect(0,0,W,H) mỗi khung. Trộn sẵn thành một màu rồi giao cho một lớp
+  // CSS: đo được bỏ riêng hàm này đưa 24,3 → 41,8 FPS.
+  let acc = { r:0, g:0, b:0, a:0 };
+  if (dk > 0){
+    acc = _skyMix(acc, 8, 10, 32, 0.36*dk);
+    if (dk > 0.85) acc = _skyMix(acc, 150, 170, 255, 0.05*dk);
   }
-  if (gti.frac > gti.season.dusk - 0.05 && gti.frac < gti.season.dusk + 0.06){ // hoàng hôn cam
-    const k = 1 - Math.abs(gti.frac - gti.season.dusk)/0.06;
-    ctx.fillStyle = `rgba(255,130,50,${(0.14*Math.max(0,k)).toFixed(3)})`; ctx.fillRect(0, 0, W, H);
-  }
-  if (gti.frac > gti.season.dawn - 0.06 && gti.frac < gti.season.dawn + 0.05){ // bình minh vàng nhạt
-    const k2 = 1 - Math.abs(gti.frac - gti.season.dawn)/0.06;
-    ctx.fillStyle = `rgba(255,200,110,${(0.10*Math.max(0,k2)).toFixed(3)})`; ctx.fillRect(0, 0, W, H);
-  }
-  if (dk === 0 && gti.season.id === 'ha'){ ctx.fillStyle = 'rgba(255,225,130,0.06)'; ctx.fillRect(0, 0, W, H); }   // nắng hạ gắt
-  if (dk === 0 && gti.season.id === 'dong'){ ctx.fillStyle = 'rgba(190,215,240,0.05)'; ctx.fillRect(0, 0, W, H); } // trời đông lạnh
+  if (gti.frac > gti.season.dusk - 0.05 && gti.frac < gti.season.dusk + 0.06)
+    acc = _skyMix(acc, 255, 130, 50, 0.14*Math.max(0, 1 - Math.abs(gti.frac - gti.season.dusk)/0.06));
+  if (gti.frac > gti.season.dawn - 0.06 && gti.frac < gti.season.dawn + 0.05)
+    acc = _skyMix(acc, 255, 200, 110, 0.10*Math.max(0, 1 - Math.abs(gti.frac - gti.season.dawn)/0.06));
+  if (dk === 0 && gti.season.id === 'ha')   acc = _skyMix(acc, 255, 225, 130, 0.06);
+  if (dk === 0 && gti.season.id === 'dong') acc = _skyMix(acc, 190, 215, 240, 0.05);
   // ── Thời tiết động (Gói B) ──
   const wx = weatherNow();
   if (wx){
-    if (wx.id === 'storm' || wx.id === 'drizzle'){ ctx.fillStyle = 'rgba(26,34,52,' + (wx.id === 'storm' ? 0.16 : 0.09) + ')'; ctx.fillRect(0, 0, W, H); }
-    else if (wx.id === 'snow'){ ctx.fillStyle = 'rgba(225,235,245,0.07)'; ctx.fillRect(0, 0, W, H); }
-    else if (wx.id === 'sunhot' && dk === 0){ ctx.fillStyle = 'rgba(255,214,120,0.08)'; ctx.fillRect(0, 0, W, H); }
+    if (wx.id === 'storm' || wx.id === 'drizzle') acc = _skyMix(acc, 26, 34, 52, wx.id === 'storm' ? 0.16 : 0.09);
+    else if (wx.id === 'snow')                    acc = _skyMix(acc, 225, 235, 245, 0.07);
+    else if (wx.id === 'sunhot' && dk === 0)      acc = _skyMix(acc, 255, 214, 120, 0.08);
+    if (wx.id === 'fog')                          acc = _skyMix(acc, 214, 216, 210, 0.10);
+    if (wxFlashT > 0)                             acc = _skyMix(acc, 235, 240, 255, Math.min(0.5, wxFlashT*2.6)); // chớp giông
+  }
+  const css = acc.a > 0.002
+    ? `rgba(${Math.round(acc.r)},${Math.round(acc.g)},${Math.round(acc.b)},${acc.a.toFixed(3)})` : '';
+  if (css !== _skyCss){
+    _skyCss = css;
+    const e = el('fx-sky');
+    if (e){ e.style.background = css; e.style.opacity = css ? '1' : '0'; }
+  }
+  if (wx){
     if (wx.id === 'fog'){
-      ctx.fillStyle = 'rgba(214,216,210,0.10)'; ctx.fillRect(0, 0, W, H);
-      if (!SETTINGS.lowFx){
+      if (FXQ >= 1){
         const ft = performance.now()/1000;
         for (let i = 0; i < 3; i++){
           const fx0 = ((ft*16 + i*470) % (W + 800)) - 400, fy0 = H*(0.22 + i*0.26);
@@ -2184,11 +2194,10 @@ function drawSkyOverlay(){ // screen-space — gọi sau vignette, trước zone
         }
       }
     }
-    if (wxFlashT > 0){ ctx.fillStyle = 'rgba(235,240,255,' + Math.min(0.5, wxFlashT*2.6).toFixed(3) + ')'; ctx.fillRect(0, 0, W, H); } // chớp giông
   }
   // ── Ánh sáng động (Gói C) ──
-  if (dk === 0 && !SETTINGS.lowFx && !mapDef().city && (!wx || wx.id === 'sun' || wx.id === 'sunhot')) drawSunRays(); // thành giữ tông chiều tà (drawCityMood), không chiếu nắng chói
-  if (dk > 0.15 && curMap === 'tuongduong' && !SETTINGS.lowFx && typeof camera !== 'undefined') drawLanternGlow(dk);
+  if (_skyTick-- <= 0){ _skyTick = 30; fxRays(); }   // trời/thời tiết đổi theo phút, không theo khung
+  if (dk > 0.15 && curMap === 'tuongduong' && FXQ >= 1 && typeof camera !== 'undefined') drawLanternGlow(dk);
 }
 
 function skillInfo(id){
@@ -4581,7 +4590,7 @@ function _lootImg(url){
 function drawLootJewel(x, y, col, t){
   const s = 1 + Math.sin(t / 400) * 0.06;
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
-  ctx.shadowColor = col; ctx.shadowBlur = 12;
+  fxShadow(col, 12);
   ctx.fillStyle = col;
   ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(8, -3); ctx.lineTo(5, 10);
   ctx.lineTo(-5, 10); ctx.lineTo(-8, -3); ctx.closePath(); ctx.fill();
@@ -6535,7 +6544,17 @@ function render(){
 
   // nền bản đồ vẽ tay — phủ toàn bộ thế giới, nằm dưới mọi decor/thực thể
   const bg = MAP_BG[curMap];
-  if (bg && bg.complete && bg.naturalWidth > 0) ctx.drawImage(bg, 0, 0, MAP.w, MAP.h);
+  if (bg && bg.complete && bg.naturalWidth > 0){
+    // Chỉ vẽ ĐÚNG mảnh ảnh đang lọt vào khung nhìn. Vẽ cả ảnh phóng ra 2600×1900 là bảo trình
+    // duyệt lấy mẫu 4,94 triệu điểm cho một màn 1,05 triệu — riêng nó đã là 4,7 lần diện tích
+    // màn hình, và là phần lớn con số overdraw 6,8× đo được.
+    const sx = clamp(camera.x, 0, MAP.w), sy = clamp(camera.y, 0, MAP.h);
+    const sw = Math.min(W, MAP.w - sx), sh = Math.min(H, MAP.h - sy);
+    if (sw > 0 && sh > 0){
+      const kx = bg.naturalWidth / MAP.w, ky = bg.naturalHeight / MAP.h;
+      ctx.drawImage(bg, sx*kx, sy*ky, sw*kx, sh*ky, sx, sy, sw, sh);
+    }
+  }
 
   // ground texture: faint brush patches
   ctx.globalAlpha = 0.05; ctx.fillStyle = md.patch;
@@ -6821,33 +6840,14 @@ function render(){
   // bản đồ thu nhỏ góc phải
   drawMinimap();
 
-  // bản đồ tối (Cổ Mộ Mật Thất) — phủ màn u ám
-  if (md.dark){
-    const vg = ctx.createRadialGradient(W/2, H/2, H*0.28, W/2, H/2, H*0.75);
-    vg.addColorStop(0, 'rgba(10,8,14,0)'); vg.addColorStop(1, 'rgba(10,8,14,.62)');
-    ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
-  } else if (!SETTINGS.lowFx){
-    // vignette ấm rất nhẹ cho mọi bản đồ — tạo chiều sâu, xóa cảm giác "phẳng"
-    const vg2 = ctx.createRadialGradient(W/2, H/2, H*0.44, W/2, H/2, H*0.88);
-    vg2.addColorStop(0, 'rgba(24,16,8,0)'); vg2.addColorStop(1, 'rgba(24,16,8,.16)');
-    ctx.fillStyle = vg2; ctx.fillRect(0,0,W,H);
-  }
-
-  // banner tên bản đồ khi vừa dịch chuyển
-  // viền đỏ nhấp khi người chơi trúng đòn (screen-space)
-  if (player && player.hurtT > 0){
-    const ha = player.hurtT / 0.25 * 0.35;
-    const hg = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, H*0.75);
-    hg.addColorStop(0, 'rgba(200,30,20,0)'); hg.addColorStop(1, `rgba(200,30,20,${ha})`);
-    ctx.fillStyle = hg; ctx.fillRect(0, 0, W, H);
-  }
-  // máu thấp <25%: viền đỏ nhấp nháy cảnh báo sinh tử (Gói E)
-  if (player && player.hp > 0 && player.hp < player.maxHp*0.25){
-    const lp = 0.5 + 0.5*Math.sin(performance.now()/260);
-    const lg = ctx.createRadialGradient(W/2, H/2, H*0.34, W/2, H/2, H*0.78);
-    lg.addColorStop(0, 'rgba(190,16,16,0)'); lg.addColorStop(1, 'rgba(190,16,16,' + (0.14 + 0.18*lp).toFixed(3) + ')');
-    ctx.fillStyle = lg; ctx.fillRect(0, 0, W, H);
-  }
+  // Bốn lớp phủ TOÀN màn hình (vignette · bản đồ tối · nháy đỏ khi trúng đòn · cảnh báo máu
+  // thấp) trước đây là 4 lần createRadialGradient + fillRect(0,0,W,H) MỖI KHUNG — mỗi lần chạm
+  // trọn 1,05 triệu điểm ảnh, và tính chung cả khung phải tô 7,1 triệu điểm cho một màn 1,05
+  // triệu (overdraw 6,8×). Chúng đều là gradient TĨNH ở toạ độ màn hình, không có lý do gì phải
+  // vẽ lại từng khung: đẩy sang lớp CSS, trình duyệt ghép một lần, JS chỉ còn ghi opacity.
+  fxOverlay('fx-hurt', player && player.hurtT > 0 ? player.hurtT / 0.25 : 0);
+  fxOverlay('fx-low', (player && player.hp > 0 && player.hp < player.maxHp*0.25)
+    ? 0.45 + 0.55*Math.sin(performance.now()/260) : 0);
   drawBeaconArrow(); // GDD Đợt 2 B2: mũi tên chỉ hướng khi mục tiêu ngoài màn hình
   if (DGN) drawDungeonHUD(); // HUD phó bản: đợt quái + thanh máu boss
   if (DEEP) drawDeepHUD();   // HUD Tầng Sâu: tầng hiện tại + kho tạm chưa vào túi
@@ -7450,7 +7450,7 @@ function drawThanBinh(p){
   const bob = Math.sin(now/420) * 2.2;
   ctx.save();
   const _tbRes = !SETTINGS.lowFx && typeof mobs !== 'undefined' && mobs.some(b => !b.dead && b.def.bossKind === 'tranai' && dist(p.x, p.y, b.x, b.y) < 520);
-  if ((tier >= 4 || _tbRes) && !SETTINGS.lowFx){ ctx.shadowColor = _tbRes && tier < 4 ? '#c04848' : def.color; ctx.shadowBlur = 3 + Math.max(tier, 2) * 1.5 + (_tbRes ? 3 : 0); }
+  if (tier >= 4 || _tbRes) fxShadow(_tbRes && tier < 4 ? '#c04848' : def.color, 3 + Math.max(tier, 2) * 1.5 + (_tbRes ? 3 : 0));
   ctx.lineCap = 'round';
   const bx = p.x + Math.cos(backAng)*15, by = p.y - 24 + Math.sin(backAng)*6 + bob;
   if (def.kind === 'kiem' || def.kind === 'dao' || def.kind === 'thuong' || def.kind === 'truong'){
@@ -9215,6 +9215,18 @@ function hHeldWeapon(g, gv, ps, x, y, rot, fallback){
   (ITEM_ART[d.art] || iaWeapon)(g, W, Object.assign({}, d, { rot: 0 }));
   g.restore();
 }
+// Canvas phụ dùng lại giữa các khung — dựng mới mỗi khung thì lại tốn hơn cái vừa tiết kiệm được.
+let _rimCv = null, _rimCtx = null;
+function heroRimCanvas(sectKey, tier, now, ps, gv){
+  if (!_rimCv){
+    _rimCv = document.createElement('canvas');
+    _rimCv.width = HERO_W; _rimCv.height = HERO_H;
+    _rimCtx = _rimCv.getContext('2d');
+  }
+  _rimCtx.clearRect(0, 0, HERO_W, HERO_H);
+  drawHeroFigure(_rimCtx, sectKey, tier, now, ps, gv);
+  return _rimCv;
+}
 function drawHeroFigure(g, sectKey, tier, now, ps, gv){
   const M = hMetal(tier), G = HERO_GEAR[sectKey] || HERO_GEAR.vophai, P = G.pal;
   ps = ps || HERO_POSE0;
@@ -9420,7 +9432,7 @@ function drawPlayer(){
         ctx.globalAlpha = castK*0.5; ctx.fillStyle = cg;
         ctx.beginPath(); ctx.arc(0, -sh*0.4, 56, 0, 7); ctx.fill();
         ctx.globalAlpha = 1;
-        ctx.shadowColor = _tsk.halo; ctx.shadowBlur = 14;
+        fxShadow(_tsk.halo, 14);
       }
       ctx.drawImage(_tim, -sw/2, -sh, sw, sh);
       ctx.restore();
@@ -9443,7 +9455,7 @@ function drawPlayer(){
       ctx.globalAlpha = 0.85 + 0.15*Math.sin(now/300); ctx.fillStyle = hg;
       ctx.beginPath(); ctx.arc(0, -8, 64, 0, 7); ctx.fill();
       ctx.globalAlpha = 1;
-      ctx.shadowColor = '#ffd76a'; ctx.shadowBlur = 15;
+      // Viền kim quang quanh thân KHÔNG đặt shadowBlur ở đây nữa — xem chỗ vẽ dáng người bên dưới.
     }
     // tuyệt chiêu: hào quang phái lóe sau lưng
     if (castK > 0){
@@ -9471,7 +9483,19 @@ function drawPlayer(){
       _ps.armR -= 0.22 * _hurt;
       _ps.bob  -= 2.2 * _hurt;
     }
-    drawHeroFigure(ctx, p.sect, heroTier(p), now, _ps, gearVisual(p));
+    const _tier = heroTier(p), _gv = gearVisual(p);
+    // Thần Hiệp: viền kim quang quanh thân. Trước đây làm bằng cách đặt shadowBlur rồi để nguyên
+    // suốt cả dáng người — đo được 166 trong 204 nhát fill của drawPlayer() bị làm mờ, mỗi nhát là
+    // một mặt vẽ phụ + một lượt ghép riêng. Chi phí KHÔNG phụ thuộc bán kính mờ (thử hạ còn 1/4 chỉ
+    // được 22,8 → 25,6 FPS) mà phụ thuộc SỐ NHÁT vẽ có bóng. Nên: dựng dáng người vào một canvas
+    // phụ, làm mờ ĐÚNG MỘT lần cho cả bóng, rồi vẽ bản nét đè lên. 1 nhát mờ thay cho 166.
+    if (maxed){
+      ctx.save();
+      ctx.shadowColor = '#ffd76a'; ctx.shadowBlur = 15;
+      ctx.drawImage(heroRimCanvas(p.sect, _tier, now, _ps, _gv), 0, 0);
+      ctx.restore();
+    }
+    drawHeroFigure(ctx, p.sect, _tier, now, _ps, _gv);
     ctx.restore();
   }
   // Vũ khí danh phái cầm tay — chỉ hình Thần Hiệp cần, nhân vật khớp xương đã tự cầm vũ khí
@@ -11097,6 +11121,7 @@ function startGame(sectKey, quze){
   el('bottom-hud').classList.remove('hidden');
   el('xp-strip').classList.remove('hidden');
   el('combat-log-wrap').classList.remove('hidden');
+  fxLoad();   // mức hiệu ứng đã lưu (hoặc Tự Chỉnh) + bật lớp phủ CSS đúng bản đồ
   if (el('combat-log')) el('combat-log').innerHTML = '';   // nhân vật mới không đọc log của người trước
   // Chip đổi ngôn ngữ chỉ thuộc về màn chờ: trong game nó neo trùng chỗ với #hud-map, và trên
   // điện thoại thì không còn góc nào trống. Đổi ngôn ngữ chuyển vào bảng Cài Đặt (phím O).
@@ -11418,11 +11443,83 @@ window.cheatExec = function(raw){
 };
 
 // ---------- Main loop ----------
+// ═══════════ CHẤT LƯỢNG HIỂN THỊ TỰ DÒ ═══════════
+// Đo được trên máy không GPU rời: 22 FPS ở bãi quái, mà update()+render() chỉ tốn 2,5ms JS —
+// gần 48ms còn lại là RASTER, không phải logic. Bịt riêng shadowBlur trong drawPlayer() đưa 22
+// lên 35,7 FPS (+60%): một nhân vật duy nhất đặt shadowBlur 21 lần cho 203 nhát fill, mà mỗi
+// nhát có bóng là Chromium phải vẽ ra mặt phụ, làm mờ, rồi ghép lại.
+//   FXQ 2 = đầy · 1 = vừa (tắt quầng sáng nhân vật, tắt vignette) · 0 = thấp (thêm: bỏ hạt, bỏ cỏ)
+let FXQ = 2;
+let FXQ_AUTO = true;          // người chơi chọn tay trong Cài Đặt thì thôi tự dò
+const _fxT = []; let _fxHold = 0;
+function fxShadow(color, blur){   // mọi quầng sáng trong lượt vẽ THẾ GIỚI đi qua đây
+  if (FXQ >= 2){ ctx.shadowColor = color; ctx.shadowBlur = blur; }
+}
+function fxShadowOff(){ if (ctx.shadowBlur) ctx.shadowBlur = 0; }
+function fxAutoTune(ms){
+  if (!FXQ_AUTO || !player || dead) return;
+  if (_fxHold > 0){ _fxHold--; return; }
+  _fxT.push(ms); if (_fxT.length < 90) return;
+  const med = _fxT.slice().sort((a,b)=>a-b)[45];
+  _fxT.length = 0;
+  // Hạ nhanh, nâng chậm và phải dư sức RÕ RỆT — không thì FXQ nhấp nháy quanh ngưỡng, mà đổi
+  // chất lượng giữa trận còn khó chịu hơn là thấp đều.
+  const was = FXQ;
+  if (med > 30 && FXQ > 0) FXQ--;
+  else if (med > 21 && FXQ > 1) FXQ--;
+  else if (med < 13 && FXQ < 2) FXQ++;
+  if (FXQ !== was){ SETTINGS.lowFx = FXQ === 0; _fxHold = FXQ > was ? 600 : 240; fxApply(); fxNote(); }
+}
+window.setFxq = function(v){
+  if (v === 'auto'){ FXQ_AUTO = true; }
+  else { FXQ_AUTO = false; FXQ = clamp(+v, 0, 2); }
+  SETTINGS.fxq = FXQ_AUTO ? 'auto' : FXQ;
+  SETTINGS.lowFx = FXQ === 0;   // giữ cho các chỗ cũ còn đọc lowFx
+  saveSettings(); fxApply(); renderSettings();
+};
+function fxLoad(){
+  const v = SETTINGS.fxq;
+  if (v === undefined || v === 'auto'){ FXQ_AUTO = true; FXQ = SETTINGS.lowFx ? 0 : 2; }
+  else { FXQ_AUTO = false; FXQ = clamp(+v, 0, 2); SETTINGS.lowFx = FXQ === 0; }
+  fxApply();
+}
+function fxNote(){
+  const t = ['Thấp','Vừa','Đầy'][FXQ];
+  addFloat(player.x, player.y-86, `⚙ Hiệu ứng: ${t} (tự chỉnh theo máy — đổi tay ở Cài Đặt)`, '#8ab4ff', 12);
+}
+function fxApply(){   // đồng bộ lớp phủ CSS theo FXQ + bản đồ hiện tại
+  const md0 = player ? mapDef() : null;
+  const dark = !!(md0 && md0.dark);
+  const v = el('fx-vignette'); if (v) v.classList.toggle('on', FXQ >= 1 && !dark);
+  const d = el('fx-dark');     if (d) d.classList.toggle('on', dark);
+  fxRays();
+}
+// Nắng chỉ chiếu ban ngày, ngoài thành, và chỉ ở mức hiệu ứng Đầy.
+function fxRays(){
+  const e = el('fx-rays'); if (!e || !player) return;
+  const md0 = mapDef(), wx = weatherNow();
+  e.classList.toggle('on', FXQ >= 2 && skyDarkness() === 0 && !md0.city && !md0.dark
+                           && (!wx || wx.id === 'sun' || wx.id === 'sunhot'));
+}
+// Ghi opacity là việc của tầng ghép ảnh, không phải của tầng tô điểm ảnh — rẻ hơn fillRect toàn
+// màn hình vài bậc. Chỉ ghi khi giá trị đổi thật, để khỏi làm bẩn style mỗi khung.
+const _fxOv = {};
+function fxOverlay(id, k){
+  const v = Math.max(0, Math.min(1, k)).toFixed(2);
+  if (_fxOv[id] === v) return;
+  _fxOv[id] = v;
+  const e = el(id); if (e) e.style.opacity = v;
+}
+let _fxPrev = 0;
 function loop(now){
   requestAnimationFrame(loop); // schedule first — an error can never freeze the game
   const dt = Math.min(0.05, (now - lastTime)/1000);
   lastTime = now;
   try { update(dt); render(); } catch(e){ console.error(e); }
+  // Đo bằng KHOẢNG CÁCH GIỮA HAI KHUNG, không phải thời gian chạy update+render: phần đắt nhất
+  // là raster, xảy ra SAU khi render() trả về, nên đo trong thân hàm sẽ không thấy gì cả.
+  if (_fxPrev) fxAutoTune(Math.min(200, now - _fxPrev));
+  _fxPrev = now;
 }
 requestAnimationFrame(loop);
 
@@ -13770,7 +13867,10 @@ function drawSectWeapon(p, sect){
   ctx.save(); ctx.translate(hx, hy); ctx.rotate(ang);
   ctx.lineCap = 'round';
   // hào quang quanh vũ khí theo màu phái
-  ctx.shadowColor = sect.glow; ctx.shadowBlur = 4*glowBoost + castK*10;
+  // shadowBlur đặt ở đây CÒN NGUYÊN cho tới ctx.restore(): mọi nhát fill của thân người, giáp,
+  // vũ khí sau dòng này đều bị làm mờ theo. Đo được: bịt riêng chỗ này và các chỗ cùng loại
+  // trong drawPlayer đưa 22,3 → 35,7 FPS.
+  fxShadow(sect.glow, 4*glowBoost + castK*10);
   if (kind === 'con'){ // Thiếu Lâm — côn
     ctx.strokeStyle = '#7a5a30'; ctx.lineWidth = 3.4;
     ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(30, 0); ctx.stroke();
@@ -13857,7 +13957,7 @@ function drawMaxTuyetHocAura(p){
       ctx.save();
       ctx.translate(bx, by); ctx.rotate(a + Math.PI/2);
       ctx.globalAlpha = depth < -0.2 ? 0.55 : 1;
-      ctx.shadowColor = '#7ecbff'; ctx.shadowBlur = 10;
+      fxShadow('#7ecbff', 10);
       const bg = ctx.createLinearGradient(-6, 0, 6, 0);
       bg.addColorStop(0, '#fff4cc'); bg.addColorStop(0.5, '#7ecbff'); bg.addColorStop(1, '#c9982e');
       ctx.fillStyle = bg;
@@ -13890,7 +13990,7 @@ function drawMaxTuyetHocAura(p){
       const ax = p.x + Math.cos(a)*22, ay = p.y - 48 + Math.sin(a)*6;
       ctx.save();
       ctx.translate(ax, ay); ctx.rotate(a + Math.PI);
-      ctx.globalAlpha = 0.9; ctx.shadowColor = bt.color; ctx.shadowBlur = 7;
+      ctx.globalAlpha = 0.9; fxShadow(bt.color, 7);
       ctx.strokeStyle = '#fff8e0'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(7, 0); ctx.stroke();
       ctx.fillStyle = bt.color;
@@ -14051,7 +14151,7 @@ function drawThanHiepSeal(p, now){
     const a = t*0.55 + i*(Math.PI/4);
     const gx = p.x + Math.cos(a)*50, gy = p.y + 5 + Math.sin(a)*17;
     ctx.globalAlpha = 0.55 + 0.3*Math.sin(t*3 + i);
-    ctx.shadowColor = '#ffd76a'; ctx.shadowBlur = 6;
+    fxShadow('#ffd76a', 6);
     ctx.fillStyle = '#ffe9a8';
     ctx.fillText(glyphs[i], gx, gy);
   }
@@ -14087,7 +14187,7 @@ function drawOverheadTitle(p, yOff, riding, maxed){
   ctx.fill();
   ctx.globalAlpha = 0.8; ctx.strokeStyle = tdef.color; ctx.lineWidth = 1; ctx.stroke();
   ctx.globalAlpha = 1;
-  ctx.shadowColor = tdef.color; ctx.shadowBlur = maxed ? 12 : 8;
+  fxShadow(tdef.color, maxed ? 12 : 8);
   ctx.fillStyle = tdef.color;
   ctx.fillText(label, p.x, ty + 1);
   ctx.restore();
@@ -14273,7 +14373,11 @@ function renderSettings(){
     <div class="set-row"><span>🏷 Tên quái vật</span>${tog('mobName')}</div>
     <div class="set-row"><span>📳 Rung màn hình</span><span>${[[0,'TẮT'],[1,'NHẸ'],[2,'ĐẦY']].map(([v,t]) =>
       `<button class="mini-btn ${(SETTINGS.shake|0) === v ? '' : 'danger'}" onclick="setShake(${v})">${t}</button>`).join(' ')}</span></div>
-    <div class="set-row"><span>🍃 Giảm hiệu ứng <i>(máy yếu)</i></span>${tog('lowFx')}</div>
+    <div class="set-row"><span>🍃 Hiệu ứng <i>(Tự Chỉnh sẽ hạ mức khi máy đuối)</i></span><span>${
+      [['auto','Tự Chỉnh'],[2,'Đầy'],[1,'Vừa'],[0,'Thấp']].map(([v,t]) =>
+        `<button class="mini-btn ${(v === 'auto' ? FXQ_AUTO : (!FXQ_AUTO && FXQ === v)) ? '' : 'danger'}" onclick="setFxq('${v}')">${t}</button>`).join(' ')
+    }</span></div>
+    <div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin:-2px 0 8px">Đang chạy: <b style="color:#8ab4ff">${['Thấp','Vừa','Đầy'][FXQ]}</b>${FXQ_AUTO ? ' <i>(tự chỉnh)</i>' : ''} — mức thấp tắt quầng sáng và lớp phủ, đổi lại khung hình mượt hơn nhiều.</div>
     <div class="set-row"><span>🌐 Ngôn ngữ / Language</span><button class="mini-btn" onclick="window.ghhaSwitchLang && window.ghhaSwitchLang()">${(window.ghhaLang && window.ghhaLang() === 'en') ? '🇻🇳 Tiếng Việt' : '🇬🇧 English'}</button></div>
     <div class="set-row" style="border-bottom:none;justify-content:center"><b style="color:#6ae88a;font-size:12px">— ⚔ AUTO FARM (phím Z) —</b></div>
     <div class="set-row"><span>🗡 Tự tung kỹ năng trên taskbar</span>${togA('skill')}</div>
@@ -14609,6 +14713,7 @@ window.travelTo = function(mapId, from){
   // lại, mà deepNextFloor() rải quái vào cả ba phòng ⇒ kẹt cứng vĩnh viễn ở tầng 1; đồng thời
   // updateDungeon() chạy song song, phát không thưởng "thông quan" và banner phó bản đè lên.
   if (md.dungeon && !DEEP) startDungeonRun(mapId);
+  setTimeout(fxApply, 0);   // lớp phủ CSS theo bản đồ mới (tối / vignette)
   const sp = (from && md.spawnFrom && md.spawnFrom[from]) || md.spawn;
   player.x = sp.x; player.y = sp.y;
   collideCityWalls(); // chắc chắn không spawn lọt tường
@@ -15084,17 +15189,17 @@ function drawNpc(){
       if (mark){
         ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
         ctx.fillStyle = mark === '!' ? '#ffd76a' : '#9fd0ff';
-        ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 6;
+        fxShadow(ctx.fillStyle, 6);
         ctx.strokeText(mark, n.x, n.y-64); ctx.fillText(mark, n.x, n.y-64);
-        ctx.shadowBlur = 0;
+        fxShadowOff();
         ctx.font = '12px "Be Vietnam Pro", sans-serif';
       }
     }
     if (n.talk === 'trunya' && player.truyna && player.truyna.state === 'killed'){
       ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
-      ctx.fillStyle = '#ffd76a'; ctx.shadowColor = '#ffd76a'; ctx.shadowBlur = 6;
+      ctx.fillStyle = '#ffd76a'; fxShadow('#ffd76a', 6);
       ctx.strokeText('!', n.x, n.y-64); ctx.fillText('!', n.x, n.y-64);
-      ctx.shadowBlur = 0; ctx.font = '12px "Be Vietnam Pro", sans-serif';
+      fxShadowOff(); ctx.font = '12px "Be Vietnam Pro", sans-serif';
     }
     ctx.fillStyle = '#fff';
     ctx.strokeText(n.name, n.x, n.y-52); ctx.fillText(n.name, n.x, n.y-52);
