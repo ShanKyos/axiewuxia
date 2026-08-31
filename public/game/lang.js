@@ -22,7 +22,7 @@ const TERMS = [
   ['bạc rơi','silver drops'],['đồng rơi','coin drops'],['đồng','coins'],
   ['Sinh Lực Tối Đa','Max HP'],['Sinh Lực','HP'],['sinh lực','HP'],
   ['Nội Lực Tối Đa','Max Qi'],['Nội Lực','Qi'],['nội lực','Qi'],
-  ['Chân Khí','True Qi'],['chân khí','True Qi'],
+  ['Mana','True Qi'],['chân khí','True Qi'],
   ['tốc chạy','move speed'],['Tốc Chạy','Move Speed'],
   ['hút sinh lực','life steal'],['hút nội lực','Qi steal'],['hút','drain'],
   ['mỗi giây','per second'],['tỉ lệ thành công','success rate'],['tỉ lệ','rate'],['thành công','success'],
