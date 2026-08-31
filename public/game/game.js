@@ -9082,12 +9082,17 @@ const HERO_GEAR = {
     pal: { boot:'#241c34', leg:'#2e2450', torso:'#453076', skin:'#e0c0a0', skinSh:'#bc9c78' },
     cape: ['#3a2a6a', '#241a4a'],
     upper(g, M, ps, P){
-      hPoly(g, [[52,96],[108,96],[120,206],[40,206]], '#523a8a');
-      hPoly(g, [[80,96],[108,96],[120,206],[80,206]], '#3d2a68');
+      // Thân áo choàng từng là màu CHẾT CỨNG, không đọc M một chút nào — nên với lớp mặc vải,
+      // lên giai gần như không đổi gì trên người (đo được: giai 1→2 chỉ 3,5% pixel, trong khi
+      // lớp mặc giáp tấm là 19%). Pha màu bộ vào vải: vẫn ra tím Dark Wizard, nhưng sắc vải
+      // đi theo bậc như giáp của các lớp khác.
+      const _r1 = _hexMix('#523a8a', M.hi, 0.26), _r2 = _hexMix('#3d2a68', M.hi, 0.20);
+      hPoly(g, [[52,96],[108,96],[120,206],[40,206]], _r1);
+      hPoly(g, [[80,96],[108,96],[120,206],[80,206]], _r2);
       hPoly(g, [[50,132],[110,132],[108,146],[52,146]], M.trim);
       hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
-        hPoly(g, [[46,92],[114,92],[106,66],[88,44],[72,44],[54,66]], '#5e42a0');
-        hPoly(g, [[80,44],[114,92],[106,66],[88,44]], '#412c76');
+        hPoly(g, [[46,92],[114,92],[106,66],[88,44],[72,44],[54,66]], _hexMix('#5e42a0', M.hi, 0.24));
+        hPoly(g, [[80,44],[114,92],[106,66],[88,44]], _hexMix('#412c76', M.hi, 0.18));
         if (!ps.back){                          // nhìn từ sau chỉ thấy vải mũ trùm
           hEll(g, 80, 78, 17, 18, '#180f2a');
           hEll(g, 73, 76, 3.4, 4.6, '#9fd0ff'); hEll(g, 88, 76, 3.4, 4.6, '#9fd0ff');
