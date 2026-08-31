@@ -834,3 +834,12 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .vs-cls { font-size:12.5px; margin-top:1px; }
 .vs-xp { margin-top:8px; }
 .vs-foot { margin-top:9px; font-size:10.5px; color:#8a92a8; line-height:1.5; }
+
+/* Tầng Sâu — nút rút lui, đặt nổi bật vì đó là QUYẾT ĐỊNH của cả chế độ */
+/* top:150px chứ không phải 84px — chỗ đó là banner dẫn nhiệm vụ, đè lên nhau đọc không ra */
+#deep-leave { position:fixed; left:50%; transform:translateX(-50%); top:150px; z-index:60;
+  background:linear-gradient(180deg,#2a6a3a,#1d4a2a); color:#d8ffe0; cursor:pointer;
+  border:1px solid #6ae88a; border-radius:9px; padding:7px 18px; font-size:13px; font-weight:700;
+  box-shadow:0 4px 16px rgba(0,0,0,.5); font-family:inherit; letter-spacing:.02em; }
+#deep-leave:hover { background:linear-gradient(180deg,#357f47,#245a33); }
+#deep-leave i { font-style:normal; font-weight:400; font-size:11px; opacity:.75; margin-left:6px; }

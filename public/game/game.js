@@ -718,6 +718,56 @@ const DGN_OBSTACLES = [ // 7 phó bản dùng chung: khung tường đá + cửa
   { x:0, y:0, wd:330, ht:1900 },
   { x:2270, y:0, wd:330, ht:1900 },
 ];
+// ═══ PHÒNG NỐI PHÒNG ═══
+// Phó bản cũ là MỘT phòng trống: 3 đợt quái rơi xuống cùng một chỗ, hạ xong thì boss rơi xuống
+// đúng chỗ đó. Không có tiến triển trong KHÔNG GIAN, chỉ có tiến triển trong bộ đếm. Nay cắt
+// thành 3 phòng nối bằng cửa đá — dọn sạch phòng thì cửa mới mở. Chỉ làm được từ khi vật cản
+// chặn thật; trước đó người chơi đi xuyên tường.
+const DGN_ROOMS = [
+  { y0:1200, y1:1700, cx:1300, cy:1440 },  // phòng 1 — ngay cửa vào
+  { y0: 750, y1:1140, cx:1300, cy: 950 },  // phòng 2
+  { y0: 290, y1: 690, cx:1300, cy: 480 },  // phòng 3 — sảnh boss
+];
+const DGN_WALLS = [ { y:1140, h:60 }, { y:690, h:60 } ];  // hai bức tường ngăn
+const DGN_GATE = { x0:1230, x1:1370 };                    // khe cửa giữa mỗi tường
+function dgnWallObs(){
+  const out = [];
+  DGN_WALLS.forEach((w, i) => {
+    out.push({ x:330, y:w.y, wd: DGN_GATE.x0 - 330, ht: w.h });
+    out.push({ x:DGN_GATE.x1, y:w.y, wd: 2270 - DGN_GATE.x1, ht: w.h });
+    if (!(DGN && DGN.doorOpen && DGN.doorOpen[i]))          // cửa đóng → bịt luôn khe
+      out.push({ x:DGN_GATE.x0, y:w.y, wd: DGN_GATE.x1 - DGN_GATE.x0, ht: w.h });
+  });
+  return out;
+}
+// Tường và cửa vẽ trên mặt đất — tường vô hình là lỗi tệ nhất của kiểu phó bản này.
+function drawDgnWalls(){
+  if (!DGN) return;
+  DGN_WALLS.forEach((w, i) => {
+    const open = !!(DGN.doorOpen && DGN.doorOpen[i]);
+    ctx.fillStyle = '#2a2432'; ctx.strokeStyle = '#4a4256'; ctx.lineWidth = 2;
+    ctx.fillRect(330, w.y, DGN_GATE.x0 - 330, w.h);
+    ctx.strokeRect(330, w.y, DGN_GATE.x0 - 330, w.h);
+    ctx.fillRect(DGN_GATE.x1, w.y, 2270 - DGN_GATE.x1, w.h);
+    ctx.strokeRect(DGN_GATE.x1, w.y, 2270 - DGN_GATE.x1, w.h);
+    const gw = DGN_GATE.x1 - DGN_GATE.x0;
+    if (open){   // cửa mở: hai cánh nép sang hai bên + luồng sáng chỉ đường
+      ctx.fillStyle = '#3a3446';
+      ctx.fillRect(DGN_GATE.x0, w.y, 14, w.h); ctx.fillRect(DGN_GATE.x1 - 14, w.y, 14, w.h);
+      const g2 = ctx.createLinearGradient(0, w.y, 0, w.y + w.h);
+      g2.addColorStop(0, 'rgba(126,203,255,0)'); g2.addColorStop(.5, 'rgba(126,203,255,.35)');
+      g2.addColorStop(1, 'rgba(126,203,255,0)');
+      ctx.fillStyle = g2; ctx.fillRect(DGN_GATE.x0 + 14, w.y, gw - 28, w.h);
+    } else {
+      ctx.fillStyle = '#4a2a2a'; ctx.fillRect(DGN_GATE.x0, w.y, gw, w.h);
+      ctx.strokeStyle = '#8a4a4a'; ctx.strokeRect(DGN_GATE.x0, w.y, gw, w.h);
+      ctx.fillStyle = 'rgba(255,120,90,.85)';
+      ctx.font = 'bold 13px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('⛨ CỬA KHOÁ', DGN_GATE.x0 + gw/2, w.y + w.h/2 + 5);
+      ctx.textAlign = 'left';
+    }
+  });
+}
 // Cây và đá quy đổi thành vật cản. Khảo sát đo được: trước bản này bán kính va chạm của chúng
 // bằng 0 — xếp 8 cây to nhất thành hàng rào rồi cho nhân vật đi qua, toạ độ x KHÔNG lệch một
 // pixel nào. Thứ mắt nhìn thấy là vật cản và thứ game thực thi là hai chuyện khác hẳn nhau, và
@@ -731,7 +781,7 @@ function rebuildDecorObs(){
 }
 function obstaclesOf(mapId){
   const md = MAPS[mapId];
-  if (md && md.dungeon) return DGN_OBSTACLES;
+  if (md && md.dungeon) return DGN_OBSTACLES.concat(dgnWallObs());
   const base = MAP_OBSTACLES[mapId] || [];
   // decor chỉ tồn tại cho map đang đứng — map khác thì chỉ có vật cản tĩnh
   return mapId === curMap && decorObs.length ? base.concat(decorObs) : base;
@@ -3770,39 +3820,39 @@ const BOSS_MOVES = {
 const BOSS_DEFS = {
   daohoa: { thuve:[
       { id:'dh1', name:'Chúa Heo Rừng',       lv:6,  el:'Thổ',  img:'boar',     x:.30, y:.30, moves:['vach','xung','cuong'] },
-      { id:'dh2', name:'Chúa Bầy Gai Tím',        lv:9,  el:'Mộc',  img:'wolf',     x:.64, y:.56, moves:['xung','goi','vach','daovung'] },
+      { id:'dh2', name:'Chúa Bầy Gai Tím',        lv:9,  el:'Mộc',  img:'wolf',     x:.64, y:.56, moves:['xung','goi','vach'] },
       { id:'dh3', name:'Chấp Sự Gloam',  lv:12, el:'Thủy', img:'assassin', x:.42, y:.80, moves:['vach','vong','cuong'] } ],
-    tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:14, el:'Hỏa', img:'boss_hacphong', x:.86, y:.80, moves:['vong','vach','goi','cuong','vogiap'] } },
+    tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:14, el:'Hỏa', img:'boss_hacphong', x:.86, y:.80, moves:['vong','vach','goi','cuong'] } },
   ngoai: { thuve:[
       { id:'ng1', name:'Đầu Mục Gloam',    lv:13, el:'Kim',  img:'bandit',   x:.28, y:.34, moves:['vach','xung','cuong'] },
-      { id:'ng2', name:'Gai Tím Độc Nhãn',lv:16, el:'Mộc',  img:'wolf',     x:.62, y:.62, moves:['xung','vong','goi','daovung'] },
+      { id:'ng2', name:'Gai Tím Độc Nhãn',lv:16, el:'Mộc',  img:'wolf',     x:.62, y:.62, moves:['xung','vong','goi'] },
       { id:'ng3', name:'Đặc Vụ Gloam',   lv:19, el:'Thủy', img:'assassin', x:.40, y:.80, moves:['vach','xung','cuong'] } ],
-    tranai: { id:'ng4', name:'Ma Sói Sương Trắng', lv:22, el:'Hỏa', img:'boss_sontac', x:.85, y:.78, moves:['vach','vong','goi','cuong','vogiap'] } },
+    tranai: { id:'ng4', name:'Ma Sói Sương Trắng', lv:22, el:'Hỏa', img:'boss_sontac', x:.85, y:.78, moves:['vach','vong','goi','cuong'] } },
   chungnam: { thuve:[
       { id:'cn1', name:'Kẻ Đổi Phe',        lv:23, el:'Thủy', img:'phando',   x:.30, y:.32, moves:['vach','xung','goi'] },
-      { id:'cn2', name:'Golem Gỗ Cổ Đại',    lv:26, el:'Thổ',  img:'mocnhan',  x:.64, y:.58, moves:['vong','vach','cuong','daovung'] },
+      { id:'cn2', name:'Golem Gỗ Cổ Đại',    lv:26, el:'Thổ',  img:'mocnhan',  x:.64, y:.58, moves:['vong','vach','cuong'] },
       { id:'cn3', name:'Trưởng Lão Tha Hóa', lv:29, el:'Thủy', img:'boss_phando', x:.44, y:.80, moves:['xung','vach','vong'] } ],
-    tranai: { id:'cn4', name:'Tướng Quân Thornwood Reach', lv:32, el:'Thủy', img:'bandao', x:.86, y:.80, moves:['vach','xung','vong','cuong','vogiap'] } },
+    tranai: { id:'cn4', name:'Tướng Quân Thornwood Reach', lv:32, el:'Thủy', img:'bandao', x:.86, y:.80, moves:['vach','xung','vong','cuong'] } },
   comoc: { thuve:[
       { id:'cm1', name:'Chỉ Huy Vong Binh',  lv:43, el:'Thổ',  img:'kybinh',   x:.30, y:.32, moves:['xung','vach','goi'] },
-      { id:'cm2', name:'Kẻ An Táng Bóng Tối',lv:46, el:'Thủy', img:'thinu',    x:.62, y:.58, moves:['vong','xung','cuong','daovung'] },
+      { id:'cm2', name:'Kẻ An Táng Bóng Tối',lv:46, el:'Thủy', img:'thinu',    x:.62, y:.58, moves:['vong','xung','cuong'] },
       { id:'cm3', name:'Chúa Tể Bất Tử',     lv:49, el:'Thổ',  img:'mocnhan',  x:.42, y:.80, moves:['vach','vong','goi'] } ],
-    tranai: { id:'cm4', name:'Tướng Quân Hollow Roost', lv:52, el:'Mộc', img:'boss_mochu', x:.85, y:.80, moves:['vong','xung','goi','cuong','vogiap'] } },
+    tranai: { id:'cm4', name:'Tướng Quân Hollow Roost', lv:52, el:'Mộc', img:'boss_mochu', x:.85, y:.80, moves:['vong','xung','goi','cuong'] } },
   tuyettinh: { thuve:[
       { id:'tt1', name:'Kẻ Lạc Lối Tuyệt Vọng',lv:63, el:'Thổ',  img:'ttdetu', x:.30, y:.32, moves:['vach','goi','cuong'] },
-      { id:'tt2', name:'Cỏ Dại Băng Giá',     lv:66, el:'Hỏa',  img:'caodo',    x:.64, y:.58, moves:['xung','vong','goi','daovung'] },
+      { id:'tt2', name:'Cỏ Dại Băng Giá',     lv:66, el:'Hỏa',  img:'caodo',    x:.64, y:.58, moves:['xung','vong','goi'] },
       { id:'tt3', name:'Xoáy Sương Nguyền',    lv:69, el:'Mộc',  img:'boss_tinhhoa', x:.42, y:.80, moves:['vach','xung','vong'] } ],
-    tranai: { id:'tt4', name:'Tướng Quân Frostmire Vale', lv:72, el:'Mộc', img:'thinu', x:.86, y:.80, moves:['vong','vach','xung','cuong','vogiap'] } },
+    tranai: { id:'tt4', name:'Tướng Quân Frostmire Vale', lv:72, el:'Mộc', img:'thinu', x:.86, y:.80, moves:['vong','vach','xung','cuong'] } },
   mongco: { thuve:[
       { id:'mc1', name:'Kỵ Sĩ Trưởng Tro Tàn', lv:83, el:'Kim', img:'kybinh',  x:.30, y:.32, moves:['xung','vach','cuong'] },
-      { id:'mc2', name:'Cung Thủ Tinh Nhuệ Tro Tàn', lv:86, el:'Mộc',  img:'cungthu',  x:.64, y:.58, moves:['vong','xung','goi','daovung'] },
+      { id:'mc2', name:'Cung Thủ Tinh Nhuệ Tro Tàn', lv:86, el:'Mộc',  img:'cungthu',  x:.64, y:.58, moves:['vong','xung','goi'] },
       { id:'mc3', name:'Thống Lĩnh Tro Tàn', lv:89, el:'Kim', img:'cuongbinh',x:.42, y:.80, moves:['vach','xung','vong'] } ],
-    tranai: { id:'mc4', name:'Tướng Quân Ashen Steppe', lv:92, el:'Kim', img:'boss_dothong', x:.86, y:.80, moves:['xung','vong','goi','cuong','vogiap'] } },
+    tranai: { id:'mc4', name:'Tướng Quân Ashen Steppe', lv:92, el:'Kim', img:'boss_dothong', x:.86, y:.80, moves:['xung','vong','goi','cuong'] } },
   nhanmon: { thuve:[
       { id:'nm1', name:'Tướng Quân Bão Tố',  lv:103, el:'Kim', img:'daokhach', x:.30, y:.32, moves:['vach','xung','cuong'] },
-      { id:'nm2', name:'Huyết Sát Bão Tố',   lv:106, el:'Hỏa',  img:'cuongbinh',x:.64, y:.58, moves:['vong','vach','goi','daovung'] },
+      { id:'nm2', name:'Huyết Sát Bão Tố',   lv:106, el:'Hỏa',  img:'cuongbinh',x:.64, y:.58, moves:['vong','vach','goi'] },
       { id:'nm3', name:'Tướng Quân Cửa Ải', lv:109, el:'Thổ',  img:'boss_thienbinh', x:.42, y:.80, moves:['xung','vong','vach'] } ],
-    tranai: { id:'nm4', name:'Tướng Quân Stormgate Pass', lv:112, el:'Hỏa', img:'boss_thienbinh', x:.86, y:.80, moves:['vach','xung','vong','cuong','vogiap'] } },
+    tranai: { id:'nm4', name:'Tướng Quân Stormgate Pass', lv:112, el:'Hỏa', img:'boss_thienbinh', x:.86, y:.80, moves:['vach','xung','vong','cuong'] } },
 };
 // Đồng Môn Trợ Uy (Cốt truyện × Tông môn §4): map "chạm nhà" của từng phái
 const SECT_HOOK_MAP = { ngoai:'baidasan', chungnam:'toanchan', tuyettinh:'thieulam', nhanmon:'minhgiao' };
@@ -4646,6 +4696,10 @@ function killMob(m, source){
   // Cầu Giáp (chiêu Vỡ Giáp) chỉ là mục tiêu bấm có hạn giờ — không exp, không bạc, không đồ,
   // không đếm nhiệm vụ. Phải thoát ở ĐẦU hàm, không phải cuối: cuối là đã phát thưởng xong rồi.
   if (m.def.bossOrb){ addEffect({ type:'ring', x:m.x, y:m.y, r:34, color:'#ffd76a' }); AudioSys.sfx('ui', 0.5); return; }
+  // Quái Tầng Sâu KHÔNG trả thưởng trực tiếp — mọi thứ chảy vào kho tạm và chỉ thành của ngươi
+  // khi ngươi chủ động rút. Đo được: để chúng phát bạc như quái thường thì chết vẫn +2730 bạc,
+  // tức là chẳng còn gì để đặt cược và cả chế độ mất sạch ý nghĩa.
+  if (m.def.deepMob){ addEffect({ type:'ink', x:m.x, y:m.y-6, vx:0, vy:-28, color:'#c07fe0' }); AudioSys.sfx('die', 0.5); return; }
   // Hai cơ chế chỉ đồ Hoàn Hảo có: hạ địch hồi Qi / Sinh Lực. Đặt ở killMob() để mọi đường
   // sát thương (đòn thường, chiêu, Khắc Ấn, pet) đều tính — không phải chỉ đòn tay.
   if (player.excQi && player.qi < player.maxQi){
@@ -5723,6 +5777,7 @@ function update(dt){
   if (player.hp <= 0 && !dead){ player.hp = 0; onDeath(); } // thiên lôi cũng giết được người
   updateKyngo(dt); // A2: Kỳ ngộ trên đường
   if (DGN) updateDungeon(dt); // Phó bản: đợt quái → boss → thưởng
+  if (DEEP) updateDeep();   // Tầng Sâu: dọn sạch tầng → gửi kho tạm → xuống tầng kế
   updatePet(dt); // Linh Thú đồng hành
   updateMount(dt); // Thú Chiến đồng hành
   updateHorses(dt); // GDD Đợt 2 B5
@@ -6167,6 +6222,7 @@ function update(dt){
 }
 function onDeath(){
   moveTarget = null; moveWaypoint = null; // Click-to-move: hủy đích khi chết, tránh tự đi lung tung sau khi hồi sinh
+  deepOnDeath();   // Tầng Sâu: chết là mất sạch kho tạm — phải chạy TRƯỚC mọi nhánh hồi sinh
   npcTalkTarget = null;
   // The Hatching · THIÊN MỆNH: mỗi màn chơi 1 lần, chết hồi sinh tại chỗ
   if (player.traitRevive && !player.reviveUsed){
@@ -6445,6 +6501,7 @@ function render(){
   drawNpc();
 
   // Boss telegraph: vùng cảnh báo chiêu trên mặt đất (GDD Boss v2.1)
+  if (mapDef().dungeon) drawDgnWalls();   // tường vô hình là lỗi tệ nhất của phó bản phòng-nối-phòng
   for (const m of mobs){ if (m.tele) drawBossTele(m); }
   // trees after npc but before mobs for depth — simple approach: draw all entities sorted by y
   // Perf: entities are plain tagged records (not per-entity closures) and off-screen mobs are
@@ -6641,6 +6698,8 @@ function render(){
   }
   drawBeaconArrow(); // GDD Đợt 2 B2: mũi tên chỉ hướng khi mục tiêu ngoài màn hình
   if (DGN) drawDungeonHUD(); // HUD phó bản: đợt quái + thanh máu boss
+  if (DEEP) drawDeepHUD();   // HUD Tầng Sâu: tầng hiện tại + kho tạm chưa vào túi
+  { const _dl = el('deep-leave'); if (_dl) _dl.classList.toggle('hidden', !DEEP); }
 
   // ☬ Cốt truyện: trời tối dần khi các Cổng Vực vỡ
   const _nTa = Object.keys(player.storyFlags || {}).filter(k => k.startsWith('ta_')).length;
@@ -11190,6 +11249,7 @@ window.cheatExec = function(raw){
         cheatLog('Tốc chạy ×' + mul, '#8fd18f'); break;
       }
       case 'wipe': localStorage.removeItem('vlcm_save'); location.reload(); return;
+      case 'deep': deepStart(); cheatLog('Tầng Sâu: bắt đầu', '#c07fe0'); return;
       case 'obstacles': window.SHOW_OBSTACLES = !window.SHOW_OBSTACLES; cheatLog('Debug obstacle overlay: ' + (window.SHOW_OBSTACLES ? 'ON' : 'OFF'), '#cfe8ff'); return;
       default: cheatLog('Lệnh lạ "' + cmd + '" — gõ /help', '#ff7a6a'); return;
     }
@@ -15394,13 +15454,13 @@ TITLES.push({ id:'tctk', name:'Túc Thù Chung Kết', cond:p=>(p.revengeKills||
 // ==================== PHÓ BẢN & BOSS (Request P) ====================
 // Boss tương ứng cấp từng map — ảnh riêng vẽ bằng AI, phong cách thủy mặc
 Object.assign(MOBS, {
-  boss_hacphong:  { name:'Thủ Lĩnh Đoàn Gloam',    lv:16,  hp:3500,   atk:55,  def:20,  xp:3200,  silver:[350,500],   speed:80, aggro:9999, range:40, atkCd:1.2,  size:24, color:'#181420', eye:'#ff3a3a', boss:true, elite:true, drop:1, el:'Hỏa',  img:'assets/mobs/boss_hacphong.png' },
-  boss_sontac:    { name:'Thủ Lĩnh Sói Hoang',  lv:22,  hp:6000,   atk:75,  def:28,  xp:5200,  silver:[500,700],   speed:76, aggro:9999, range:42, atkCd:1.25, size:25, color:'#241a12', eye:'#ff9a3a', boss:true, elite:true, drop:1, el:'Thổ', skel:'hound', skelPal:{main:'#5f5348',dark:'#3d342c',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}},
-  boss_phando:    { name:'Đại Tướng Phản Loạn',     lv:34,  hp:11000,  atk:110, def:40,  xp:9000,  silver:[800,1100],  speed:82, aggro:9999, range:44, atkCd:1.2,  size:25, color:'#12201c', eye:'#a0ffe9', boss:true, elite:true, drop:1, el:'Thủy', skel:'knight', skelPal:{main:'#4f7a70',dark:'#2e4a44',trim:'#a0ffe9',cloth:'#1e3a34',glow:'#6ae8c0'}},
-  boss_mochu:     { name:'Chúa Tể Hầm Mộ',          lv:52,  hp:22000,  atk:170, def:70,  xp:16000, silver:[1300,1800], speed:70, aggro:9999, range:46, atkCd:1.3,  size:26, color:'#1c1a14', eye:'#9a86d8', boss:true, elite:true, drop:1, el:'Thổ', skel:'cultist', skelPal:{main:'#b0a890',dark:'#332a24',cloth:'#4a3a2a',trim:'#c8a84a',glow:'#8fe0a8'}},
-  boss_tinhhoa:   { name:'Xoáy Lá Nguyền',      lv:72,  hp:40000,  atk:240, def:95,  xp:28000, silver:[2000,2800], speed:88, aggro:9999, range:48, atkCd:1.15, size:26, color:'#2a1218', eye:'#7ec850', boss:true, elite:true, drop:1, el:'Mộc', poisonHit:true, img:'assets/mobs/boss_tinhhoa.png' },
-  boss_dothong:   { name:'Chúa Sói Thảo Nguyên',   lv:92,  hp:68000,  atk:340, def:130, xp:45000, silver:[3200,4200], speed:84, aggro:9999, range:50, atkCd:1.1,  size:27, color:'#1a1410', eye:'#ffd76a', boss:true, elite:true, drop:1, el:'Kim', skel:'hound', skelPal:{main:'#6a6050',dark:'#443c30',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}},
-  boss_thienbinh: { name:'Thống Soái Thiên Giáp', lv:108, hp:100000, atk:420, def:160, xp:70000, silver:[4500,6000], speed:92, aggro:9999, range:52, atkCd:1.0,  size:27, color:'#101018', eye:'#ff3a3a', boss:true, elite:true, drop:1, el:'Hỏa', skel:'knight', skelPal:{main:'#d0c8b0',dark:'#8a8068',trim:'#ffe9a8',cloth:'#c04a2a',glow:'#ffb15c'}},
+  boss_hacphong:  { name:'Thủ Lĩnh Đoàn Gloam',    lv:16,  hp:3500,   atk:55,  def:20,  xp:3200,  silver:[350,500],   speed:80, aggro:9999, range:40, atkCd:1.2,  size:24, color:'#181420', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_hacphong', moves:['vach','xung','daovung'], drop:1, el:'Hỏa',  img:'assets/mobs/boss_hacphong.png' },
+  boss_sontac:    { name:'Thủ Lĩnh Sói Hoang',  lv:22,  hp:6000,   atk:75,  def:28,  xp:5200,  silver:[500,700],   speed:76, aggro:9999, range:42, atkCd:1.25, size:25, color:'#241a12', eye:'#ff9a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_sontac', moves:['vach','goi','vogiap'], drop:1, el:'Thổ', skel:'hound', skelPal:{main:'#5f5348',dark:'#3d342c',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}},
+  boss_phando:    { name:'Đại Tướng Phản Loạn',     lv:34,  hp:11000,  atk:110, def:40,  xp:9000,  silver:[800,1100],  speed:82, aggro:9999, range:44, atkCd:1.2,  size:25, color:'#12201c', eye:'#a0ffe9', boss:true, elite:true, bossKind:'dgn', bossId:'boss_phando', moves:['vong','xung','cuong','daovung'], drop:1, el:'Thủy', skel:'knight', skelPal:{main:'#4f7a70',dark:'#2e4a44',trim:'#a0ffe9',cloth:'#1e3a34',glow:'#6ae8c0'}},
+  boss_mochu:     { name:'Chúa Tể Hầm Mộ',          lv:52,  hp:22000,  atk:170, def:70,  xp:16000, silver:[1300,1800], speed:70, aggro:9999, range:46, atkCd:1.3,  size:26, color:'#1c1a14', eye:'#9a86d8', boss:true, elite:true, bossKind:'dgn', bossId:'boss_mochu', moves:['vach','goi','cuong','vogiap'], drop:1, el:'Thổ', skel:'cultist', skelPal:{main:'#b0a890',dark:'#332a24',cloth:'#4a3a2a',trim:'#c8a84a',glow:'#8fe0a8'}},
+  boss_tinhhoa:   { name:'Xoáy Lá Nguyền',      lv:72,  hp:40000,  atk:240, def:95,  xp:28000, silver:[2000,2800], speed:88, aggro:9999, range:48, atkCd:1.15, size:26, color:'#2a1218', eye:'#7ec850', boss:true, elite:true, bossKind:'dgn', bossId:'boss_tinhhoa', moves:['vong','xung','daovung','vogiap'], drop:1, el:'Mộc', poisonHit:true, img:'assets/mobs/boss_tinhhoa.png' },
+  boss_dothong:   { name:'Chúa Sói Thảo Nguyên',   lv:92,  hp:68000,  atk:340, def:130, xp:45000, silver:[3200,4200], speed:84, aggro:9999, range:50, atkCd:1.1,  size:27, color:'#1a1410', eye:'#ffd76a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_dothong', moves:['vach','xung','goi','cuong','vogiap'], drop:1, el:'Kim', skel:'hound', skelPal:{main:'#6a6050',dark:'#443c30',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}},
+  boss_thienbinh: { name:'Thống Soái Thiên Giáp', lv:108, hp:100000, atk:420, def:160, xp:70000, silver:[4500,6000], speed:92, aggro:9999, range:52, atkCd:1.0,  size:27, color:'#101018', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_thienbinh', moves:['vong','vach','xung','goi','cuong','daovung','vogiap'], drop:1, el:'Hỏa', skel:'knight', skelPal:{main:'#d0c8b0',dark:'#8a8068',trim:'#ffe9a8',cloth:'#c04a2a',glow:'#ffb15c'}},
   // Boss Săn (MU Online-style): xuất hiện SAU khi hạ Cổng Vực phó bản — hoạt động phụ, không bắt
   // buộc để thông quan, thưởng Rương (xem DROP_SRC.box1..5 + grantHuntBox()). huntBoss:true → bỏ
   // qua bảng rơi đồ thường theo-kill (m.def.bossKind/boss) vì phần thưởng đã do grantHuntBox() lo.
@@ -15492,34 +15552,131 @@ function drawArenaHUD({ label, labelColor, timeLeft, activeBoss, barColor }){
   }
 }
 
+// ═══════════ TẦNG SÂU — vòng lặp tham lam / rút lui ═══════════
+// Mọi phó bản hiện có đều là "vào, thông quan, ra, nhận thưởng" — hết. Không có lúc nào người
+// chơi phải TỰ QUYẾT ĐỊNH điều gì. Tầng Sâu đảo lại: xuống được bao nhiêu tầng tuỳ ngươi, mỗi
+// tầng khó hơn và thưởng nhiều hơn, nhưng phần thưởng chỉ VÀO TÚI khi ngươi chủ động rời.
+// Chết là mất sạch những gì đã tích trong lượt đó.
+let DEEP = null; // { floor, bank, alive, entered }
+const DEEP_MOBS = ['bandit','wolf','caodo','phando','xanu','bandao','thinu','mocnhan','huyetbat','ttdetu','docyeu','satthuhy','thamtu','cungthu'];
+function deepFloorLv(f){ return clamp(6 + f * 4, 1, 120); }
+// Thưởng mỗi tầng dồn vào "kho tạm" — chưa phải của ngươi cho tới khi rời.
+function deepFloorLoot(f){
+  return { silver: Math.round(220 * f * (1 + f*0.12)), tuvi: Math.round(120 * f),
+           xp: Math.round(340 * f * (1 + f*0.18)),
+           mat: 1 + Math.floor(f/2), tienDan: f % 3 === 0 ? 1 : 0,
+           hap: f % 5 === 0 ? clamp(Math.floor(f/5), 1, 7) : 0 };
+}
+function deepStart(){
+  if (!player || player.level < 20){
+    addFloat(player.x, player.y-50, 'Cần cấp 20 để xuống Tầng Sâu', '#ff9a6a', 13); return;
+  }
+  DEEP = { floor: 0, bank: { silver:0, tuvi:0, xp:0, mat:0, tienDan:0, hap:{} }, entered: Date.now() };
+  DGN = null;
+  travelTo('pb_daohoa');
+  deepNextFloor();
+}
+function deepNextFloor(){
+  if (!DEEP) return;
+  DEEP.floor++;
+  const f = DEEP.floor, lv = deepFloorLv(f);
+  mobs = []; groundLoot = [];
+  const pool = DEEP_MOBS.filter(k => MOBS[k] && Math.abs((MOBS[k].lv || 1) - lv) <= 22);
+  const use = pool.length ? pool : [DEEP_MOBS[0]];
+  const nMob = Math.min(14, 4 + Math.floor(f * 0.7));
+  for (let i = 0; i < nMob; i++){
+    const R = DGN_ROOMS[i % DGN_ROOMS.length];
+    const m = spawnMob(use[Math.floor(Math.random()*use.length)], { x:R.cx, y:R.cy, r:190, count:nMob }, null);
+    m.zone = null;
+    // Tầng càng sâu quái càng dày máu — đây là thứ cuối cùng chặn ngươi lại, không phải cấp
+    const mul = 1 + f * 0.28;
+    m.def = Object.assign({}, m.def, { hp: Math.round(m.def.hp * mul), atk: Math.round(m.def.atk * (1 + f*0.16)),
+                                      deepMob: true, drop: 0 });
+    m.hp = m.maxHp = m.def.hp;
+  }
+  if (DEEP.doorOpen) DEEP.doorOpen = null;
+  zoneBanner = { text:`TẦNG ${f}`, sub:`${nMob} quái · máu ×${(1+f*0.28).toFixed(1)} — dọn sạch để mở lối xuống`, color:'#c07fe0', t:3.5 };
+  if (player && player.auto){ player._autoAX = DGN_ROOMS[0].cx; player._autoAY = DGN_ROOMS[0].cy; }
+}
+function deepBankFloor(){
+  const l = deepFloorLoot(DEEP.floor), b = DEEP.bank;
+  b.silver += l.silver; b.tuvi += l.tuvi; b.xp += l.xp; b.mat += l.mat; b.tienDan += l.tienDan;
+  if (l.hap) b.hap[l.hap] = (b.hap[l.hap] || 0) + 1;
+}
+// Rời CHỦ ĐỘNG: kho tạm thành của ngươi. Đây là toàn bộ trò chơi của chế độ này.
+window.deepLeave = function(){
+  if (!DEEP) return;
+  const b = DEEP.bank;
+  player.silver += b.silver; player.dantian.tuvi += b.tuvi; player.mat += b.mat; player.tienDan += b.tienDan;
+  if (b.xp) gainXp(b.xp);
+  for (const t in b.hap) player.baohap[t] = (player.baohap[t] || 0) + b.hap[t];
+  const hapTxt = Object.keys(b.hap).map(t => `${b.hap[t]}× ${BAOHAP_TIERS[t].name}`).join(' · ');
+  zoneBanner = { text:`✦ RÚT LUI Ở TẦNG ${DEEP.floor}`,
+    sub:`+${b.xp.toLocaleString('vi-VN')} EXP · +${b.silver.toLocaleString('vi-VN')} bạc · +${b.tuvi} Anima · +${b.mat} Huyền Thiết${b.tienDan?` · +${b.tienDan} Tiến Cấp Đan`:''}${hapTxt?' · '+hapTxt:''}`,
+    color:'#6ae88a', t:6 };
+  AudioSys.sfx('levelup', 1);
+  DEEP = null; calcDerived(); saveGame();
+  travelTo('tuongduong');
+};
+// Chết trong Tầng Sâu: mất SẠCH kho tạm. Không có nửa vời — đó là thứ làm quyết định "xuống
+// thêm một tầng nữa" có sức nặng.
+function deepOnDeath(){
+  if (!DEEP) return;
+  const f = DEEP.floor;
+  zoneBanner = { text:'☠ GỤC Ở TẦNG ' + f, sub:'Mất sạch chiến lợi phẩm cả lượt — lần sau nhớ rút đúng lúc.', color:'#ff5a4a', t:6 };
+  DEEP = null;
+}
+function updateDeep(){   // không dùng dt: mỗi tầng chỉ chuyển khi SẠCH quái, không theo đồng hồ
+  if (!DEEP || dead) return;
+  if (mobs.some(m => !m.dead)) return;
+  deepBankFloor();
+  const l = deepFloorLoot(DEEP.floor);
+  addFloat(player.x, player.y-70, `Tầng ${DEEP.floor} sạch — kho tạm +${l.silver} bạc`, '#ffd76a', 15);
+  AudioSys.sfx('coin', 0.7);
+  deepNextFloor();
+}
+
 // Engine phó bản: DGN = trạng thái lượt chạy hiện tại
 let DGN = null; // { id, def, wave, bossRef, cleared }
 function startDungeonRun(mapId){
   const def = DUNGEONS[mapId]; if (!def) return;
-  DGN = { id: mapId, def, wave: 0, bossRef: null, cleared: false, timeLeft: def.timeLimit, failed: false };
+  DGN = { id: mapId, def, wave: 0, bossRef: null, cleared: false, timeLeft: def.timeLimit, failed: false,
+          doorOpen: [false, false] };
   nextDungeonWave();
 }
 function nextDungeonWave(){
   if (!DGN) return;
   DGN.wave++;
   const w = DGN.def.waves[DGN.wave - 1];
-  if (!w){ // hết 3 đợt → triệu hồi Boss
-    const b = spawnMob(DGN.def.boss, { x:1300, y:430, r:40, count:1 }, null);
+  // Dọn xong đợt trước → mở cửa sang phòng kế tiếp
+  const _prevDoor = DGN.wave - 2;
+  if (_prevDoor >= 0 && _prevDoor < DGN.doorOpen.length && !DGN.doorOpen[_prevDoor]){
+    DGN.doorOpen[_prevDoor] = true;
+    const _w2 = DGN_WALLS[_prevDoor];
+    addEffect({ type:'ring', x:(DGN_GATE.x0+DGN_GATE.x1)/2, y:_w2.y + _w2.h/2, r:110, color:'#7ecbff', big:true });
+    zoneBanner = { text:'⛨ CỬA ĐÁ MỞ', sub:'Phòng kế tiếp đã thông — tiến lên phía Bắc!', color:'#7ecbff', t:3 };
+    AudioSys.sfx('forge_ok', 0.8);
+  }
+  if (!w){ // hết 3 đợt → triệu hồi Boss ở sảnh trong cùng
+    const R3 = DGN_ROOMS[2];
+    const b = spawnMob(DGN.def.boss, { x:R3.cx, y:R3.cy, r:40, count:1 }, null);
     b.zone = null; // không hồi sinh lại theo zone
     DGN.bossRef = b;
-    addFloat(1300, 500, 'BOSS ' + DGN.def.bossName + ' xuất hiện!', '#ff5a4a', 20);
+    addFloat(R3.cx, R3.cy + 70, 'BOSS ' + DGN.def.bossName + ' xuất hiện!', '#ff5a4a', 20);
+    if (player && player.auto){ player._autoAX = R3.cx; player._autoAY = R3.cy; }
     AudioSys.sfx('crit', 0.7);
     return;
   }
+  const R = DGN_ROOMS[Math.min(DGN.wave - 1, DGN_ROOMS.length - 1)];
   for (const t of w){
-    const m = spawnMob(t, { x:1300, y:800, r:230, count:w.length }, null);
+    const m = spawnMob(t, { x:R.cx, y:R.cy, r:170, count:w.length }, null);
     m.zone = null; // quái phó bản chết là chết hẳn — không respawn
   }
   // Cửa vào phó bản (1300,1560) cách chỗ quái đợt spawn (1300,800) tới ~760px, ngoài tầm AUTO mặc
   // định (430px) — bật AUTO ngay cửa vào trước đây đứng im không đánh gì (phát hiện qua QA). Dời
   // điểm neo AUTO về đúng chỗ quái mỗi đợt để AUTO tự chạy tới như phần overworld đã làm.
-  if (player && player.auto){ player._autoAX = 1300; player._autoAY = 800; }
-  if (player) addFloat(player.x, player.y - 60, 'Đợt ' + DGN.wave + '/' + DGN.def.waves.length, '#b08ae8', 16);
+  if (player && player.auto){ player._autoAX = R.cx; player._autoAY = R.cy; }
+  if (player) addFloat(player.x, player.y - 60, `Phòng ${DGN.wave}/${DGN.def.waves.length}`, '#b08ae8', 16);
 }
 function updateDungeon(dt){
   if (!DGN) return;
@@ -15580,7 +15737,8 @@ function spawnHuntBoss(){
   const hb = DGN.def.huntBoss;
   const def = MOBS[hb];
   if (!def){ DGN.huntCleared = true; return; }
-  const b = spawnMob(hb, { x:1300, y:430, r:40, count:1 }, null);
+  const _R3 = DGN_ROOMS[2];
+  const b = spawnMob(hb, { x:_R3.cx, y:_R3.cy, r:40, count:1 }, null);
   b.zone = null; // Boss Săn chết là chết hẳn, không hồi sinh
   // Não moveset Boss Vùng/Cổng Vực (telegraph AoE, vòng lãnh địa, tự hồi khi rời xa) cần các field
   // này — spawnMob() không tự khởi tạo, chỉ spawnZoneBoss() mới làm; thiếu sẽ NaN, chiêu không
@@ -15626,6 +15784,23 @@ function grantHuntBox(){
   addFloat(player.x, player.y - 90, '📦 Rương Cấp ' + tier + ' đã mở!', '#ffd76a', 16);
   AudioSys.sfx('levelup', 0.9);
   saveGame();
+}
+// HUD Tầng Sâu. Con số quan trọng nhất là KHO TẠM — người chơi phải nhìn thấy mình đang đặt
+// cược bao nhiêu thì quyết định "xuống thêm tầng nữa" mới có sức nặng.
+function drawDeepHUD(){
+  if (!DEEP || !player) return;
+  const b = DEEP.bank;
+  drawArenaHUD({ label: `⬇ TẦNG SÂU — Tầng ${DEEP.floor}`, labelColor:'#c07fe0' });
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 13px "Be Vietnam Pro", sans-serif';
+  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
+  const hapN = Object.values(b.hap).reduce((a, c) => a + c, 0);
+  const t1 = `Kho tạm: ${b.xp.toLocaleString('vi-VN')} EXP · ${b.silver.toLocaleString('vi-VN')}◈ · ${b.mat}✦${hapN ? ` · ${hapN} Bảo Hạp` : ''}`;
+  ctx.fillStyle = '#ffd76a'; ctx.strokeText(t1, W/2, 46); ctx.fillText(t1, W/2, 46);
+  const t2 = 'Chết là MẤT SẠCH — bấm nút Rút Lui để mang về';
+  ctx.font = '11.5px "Be Vietnam Pro", sans-serif'; ctx.fillStyle = '#ff9a6a';
+  ctx.strokeText(t2, W/2, 63); ctx.fillText(t2, W/2, 63);
+  ctx.textAlign = 'left';
 }
 function drawDungeonHUD(){
   if (!DGN || !player) return;
