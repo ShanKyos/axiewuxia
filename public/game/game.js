@@ -4777,7 +4777,7 @@ function hurtMob(m, dmg, source){
   // chỉ chặn ở khâu CHỌN mục tiêu, không chặn vật lý va chạm của đạn xuyên táo/AoE bay lố sang bãi
   // bên cạnh (ví dụ tên xuyên nhắm bãi đang khoá nhưng bay tiếp trúng quái bãi khác đứng thẳng
   // hàng phía sau). Chặn hẳn ở đây để không món sát thương nào của AUTO lọt sang bãi chưa khoá.
-  if (player.auto && player._autoZoneLocked && m.zone !== player._autoZone) return;
+  if (player.auto && player._autoZoneLocked && m.pack !== player._autoPack) return;
   // Aggro cụm: đánh 1 con, cả cụm 5-7 con lao vào (GDD Mob Mechanics)
   // QA: map An Toàn (tân thủ) chỉ tối đa 3 con cùng lao vào để tránh chết oan lúc LV1-5
   if (m.pack != null){
@@ -5928,7 +5928,7 @@ function update(dt){
     // AUTO ở đâu khác (bật auto ngay chỗ vừa rơi xuống, cách tâm ~560px) là ngoài tầm quét 430 ⇒
     // đứng im vĩnh viễn. Đây là ổ duy nhất nên kéo neo về tâm luôn, không sợ "lan sang bãi kế".
     if (DEEP){ player._autoAX = DEEP_HALL.cx; player._autoAY = DEEP_HALL.cy;
-               player._autoZone = null; player._autoZoneLocked = false; }
+               player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0; }
     // Chỉ quét quanh điểm neo (bán kính 430 ≈ 1-2 bãi quái) — không rượt quái khắp map
     // QA: chỉ farm ĐÚNG 1 bãi quái — khoá vào zone của mục tiêu đầu tiên tìm được (m.zone: cùng
     // tham chiếu cho mọi quái spawn từ 1 bãi/1 đợt), các frame sau chỉ xét quái CÙNG zone đó, dù
@@ -5945,11 +5945,27 @@ function update(dt){
       // 3153/3513/4551) — nếu không, để quên PK bật rồi auto cày sẽ tích Tội Ác tới Hắc Danh mà
       // người chơi không hề chủ đích PK ai cả. Vẫn cho tự vệ nếu Du Hiệp đã truy thù (m.revenge).
       if (m.def.duHiep && !m.revenge) continue;
-      if (player._autoZoneLocked && m.zone !== player._autoZone) continue; // khác bãi — bỏ qua
+      if (player._autoZoneLocked && m.pack !== player._autoPack) continue; // khác bãi — bỏ qua
       const _dd = dist(player._autoAX, player._autoAY, m.x, m.y);
       if (_dd < _bd){ _bd = _dd; _at = m; }
     }
-    if (_at && !player._autoZoneLocked){ player._autoZone = _at.zone; player._autoZoneLocked = true; }
+    // Khoá theo m.pack — MÃ SỐ BÃI dùng chung cho cả cụm. Trước đây khoá theo m.zone, mà zone là
+    // object literal được tạo MỚI TRONG VÒNG LẶP khi dựng bãi (xem buildWorld: `for (j...)
+    // spawnMob(pk.mob, { x, y, r, count }, packId)`), nên một "bãi 6 con" thực chất là 6 zone
+    // riêng biệt cùng toạ độ. So sánh tham chiếu vì thế chỉ khớp ĐÚNG MỘT con: AUTO hạ con đó
+    // xong là hết mục tiêu, quay về neo đứng im trong khi 5 con còn lại vây đánh.
+    // Đo được ở bãi tân thủ: nhân vật cấp 1 hạ 1 con lúc giây thứ 3 rồi tịt hẳn 27 giây, máu tụt
+    // 265 → 10, rồi chết. packId thì vốn đã dùng chung cho cả cụm — đúng thứ cần, chỉ là bị bỏ không.
+    // Bãi không có mã (Du Hiệp, quái gọi thêm) thì KHÔNG khoá: khoá vào null sẽ gom nhầm mọi con
+    // không thuộc bãi nào thành "một bãi".
+    if (_at && !player._autoZoneLocked && _at.pack != null){ player._autoPack = _at.pack; player._autoZoneLocked = true; }
+    // Lưới an toàn: bãi đã khoá sạch quái (hoặc khoá vào thứ không bao giờ hồi sinh) thì thả khoá
+    // sau 6 giây để AUTO chọn bãi khác, thay vì đứng chờ vô hạn.
+    if (player._autoZoneLocked){
+      const _song = mobs.some(m => !m.dead && m.pack === player._autoPack);
+      player._autoEmptyT = _song ? 0 : (player._autoEmptyT || 0) + dt;
+      if (player._autoEmptyT > 6){ player._autoZoneLocked = false; player._autoPack = null; player._autoEmptyT = 0; }
+    }
     if (_at){
       const _ad = dist(player.x, player.y, _at.x, _at.y);
       player.face = Math.atan2(_at.y - player.y, _at.x - player.x);
@@ -6542,7 +6558,7 @@ window.respawn = function(){
   player.hp = player.maxHp; player.qi = player.maxQi;
   player.poisonT = 0;
   player._autoAX = null; player._autoAY = null; // QA: đừng để auto farm kéo người mới hồi sinh về neo cũ (map/vị trí khác)
-  player._autoZone = null; player._autoZoneLocked = false;
+  player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0;
   dead = false;
   document.getElementById('overlay').classList.add('hidden');
 };
@@ -9943,7 +9959,7 @@ window.toggleAuto = function(){
     // đây, tắt AUTO lại sau đó sẽ khiến nhân vật tự đi tiếp theo lệnh cũ dù không có input mới.
     moveTarget = null; moveWaypoint = null; movePlanClear();
     // QA: mở khoá bãi quái cũ mỗi lần bật lại AUTO — để nó tự khoá vào bãi gần điểm neo mới nhất
-    player._autoZone = null; player._autoZoneLocked = false;
+    player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0;
   }
   addFloat(player.x, player.y-56, player.auto ? '⚔ AUTO FARM: BẬT — ôm 1-2 bãi quái quanh điểm neo, tự tung chiêu, tự uống thuốc' : 'AUTO FARM: TẮT — về chế độ thủ công',
     player.auto ? '#6ae88a' : '#b8a888', 13);
@@ -15082,7 +15098,7 @@ window.travelTo = function(mapId, from){
   // neo lại đúng vị trí mới (xem game.js AUTO FARM: player._autoAX == null → neo tại player.x/y);
   // nếu là phó bản, startDungeonRun()/nextDungeonWave() ngay dưới sẽ ghi đè bằng neo riêng của nó.
   player._autoAX = null; player._autoAY = null;
-  player._autoZone = null; player._autoZoneLocked = false; // QA: bãi quái khoá ở map cũ không còn nghĩa gì ở map mới
+  player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0; // QA: bãi quái khoá ở map cũ không còn nghĩa gì ở map mới
   // Tầng Sâu mượn ĐỊA HÌNH map phó bản nhưng KHÔNG phải một lượt chạy phó bản. Thiếu chốt
   // !DEEP ở đây thì deepStart() xoá DGN xong travelTo() dựng lại ngay: hai bức tường đá khoá
   // lại, mà deepNextFloor() rải quái vào cả ba phòng ⇒ kẹt cứng vĩnh viễn ở tầng 1; đồng thời
