@@ -9,10 +9,11 @@ window.I18N_VI = {
   'hud.hint.potion': 'R hồ lô thuốc',
   'hud.hint.quest': 'Q nhiệm vụ',
   'hud.hint.character': 'C nhân vật',
+  'hud.hint.stats': 'V nhân vật',
   'hud.hint.bag': 'B túi',
   'hud.hint.map': 'M bản đồ',
   'hud.hint.skills': 'K thẻ bài',
   'hud.hint.tame': 'T thu phục',
   'hud.hint.bonds': 'L nhân mạch',
-  'hud.hint.jump': 'J nhảy',
+  'hud.hint.loot': 'J nhặt đồ',
 };

@@ -17,8 +17,6 @@
 <div id="hud" class="hidden">
   <div id="hud-left">
     <div id="hud-name">—</div>
-    <div class="bar xp"><div id="bar-xp" class="fill"></div><span id="txt-xp"></span></div>
-    <div id="hud-khi">Chân Khí: 0</div>
     <div id="hud-potion" title="Hồ Lô Thuốc — hồi 40% máu (phím R)">🧪 x0 (R)</div>
     <div id="hud-buff" title="Rượu Hổ Cốt — tạm thời +12% công lực" style="display:none">🍶</div>
     <div id="hud-loidon" title="Lôi Độn Phù — giảm 40% sát thương thiên lôi" style="display:none">⚡</div>
@@ -59,7 +57,7 @@
     <button class="skill sk-slot" data-slot="0" id="sk-0" title="Chiêu chính"><span class="sk-ico">+</span><span class="sk-key">1</span><span class="sk-cd"></span></button>
     <button class="skill sk-slot" data-slot="1" id="sk-1" title="Chiêu phụ"><span class="sk-ico">+</span><span class="sk-key">2</span><span class="sk-cd"></span></button>
     <button class="skill sk-slot" data-slot="2" id="sk-2" title="Buff"><span class="sk-ico">+</span><span class="sk-key">3</span><span class="sk-cd"></span></button>
-    <button class="skill" id="sk-jump" title="Bước Nhảy — bật lên né đòn (J)"><span class="sk-ico">⇑</span><span class="sk-key">J</span><span class="sk-cd"></span></button>
+    <button class="skill" id="sk-loot" title="Nhặt đồ dưới đất (J)"><span class="sk-ico">✋</span><span class="sk-key">J</span><span class="sk-cd"></span></button>
   </div>
   <div class="orb orb-qi" id="orb-qi" title="Chân Khí"><div class="orb-fill" id="bar-qi"></div><span class="orb-val" id="txt-qi"></span></div>
   <div class="hud-btns hud-btns-right">
@@ -70,6 +68,8 @@
     <button class="hbtn" id="btn-settings" title="Cài đặt (O)">⚙</button>
   </div>
 </div>
+<!-- Thanh EXP nằm NGAY DƯỚI viên đá Máu, mép dưới màn hình — đúng chỗ MU đặt nó. -->
+<div id="xp-strip" class="hidden"><div class="bar xp"><div id="bar-xp" class="fill"></div><span id="txt-xp"></span></div></div>
 <div id="hp-accent-bar"><div id="hp-accent-fill"></div></div>
 
 <!-- Joystick (touch) -->
@@ -90,6 +90,7 @@
 <div id="panel-map" class="panel hidden"></div>
 <div id="panel-settings" class="panel hidden"></div>
 <div id="panel-qlog" class="panel hidden"></div>
+<div id="panel-vstat" class="panel hidden"></div>
 <div id="panel-quest" class="panel hidden"></div>
 <div id="panel-stage" class="panel hidden"></div>
 
@@ -117,7 +118,7 @@
   <div class="ss-inner">
     <h1>Axie Wuxia</h1>
     <h2>Lunacia · PvE</h2>
-    <p class="ss-sub">Chọn lớp để bắt đầu hành trình — 5 lớp ngũ hành · Rèn Luyện · Tấn Chức · Thú Chiến</p>
+    <p class="ss-sub">Chọn lớp để bắt đầu hành trình — 5 lớp 5 hệ · Rèn Luyện · Tấn Chức · Thú Chiến</p>
     <div id="sect-cards"></div>
     <label id="max-mode" style="display:none"><input type="checkbox" id="chk-max"> Chế độ thử nghiệm — bắt đầu cấp 60, đầy đủ trang bị &amp; vật liệu</label>
     <button id="btn-continue" class="big-btn hidden">Tiếp Tục Hành Trình</button>

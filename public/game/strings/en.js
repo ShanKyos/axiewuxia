@@ -9,10 +9,11 @@ window.I18N_EN = {
   'hud.hint.potion': 'R potion gourd',
   'hud.hint.quest': 'Q quests',
   'hud.hint.character': 'C character',
+  'hud.hint.stats': 'V stats',
   'hud.hint.bag': 'B bag',
   'hud.hint.map': 'M map',
   'hud.hint.skills': 'K cards',
   'hud.hint.tame': 'T tame',
   'hud.hint.bonds': 'L bonds',
-  'hud.hint.jump': 'J jump',
+  'hud.hint.loot': 'J pick up',
 };
