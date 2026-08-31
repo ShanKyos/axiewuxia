@@ -599,6 +599,10 @@ const GATES = [
   { map:'tuongduong', x:580,  y:905,  to:'daohoa',     name:'Cổng Tây → Petalshade Isle' },
   { map:'tuongduong', x:2020, y:905,  to:'chungnam',   name:'Cổng Đông → Thornwood Reach' },
   { map:'ngoai',      x:1300, y:240,  to:'tuongduong', name:'Qua Cổng Thành → Lunaris City' },
+  // Tầng Sâu: giếng đá trong sân thành, góc tây-bắc quảng trường (cách Thợ Rèn ~800px).
+  // KHÔNG dùng `to` — nó không dẫn tới một map cố định mà mở một lượt xuống tầng, xem deepStart().
+  { map:'tuongduong', x:1080, y:620,  deep:true, portal:true, label:'Tầng Sâu',
+    name:'Giếng Vực Sâu — xuống Tầng Sâu (cấp 20+)' },
 ];
 let nearGate = null;
 function cityWallRects(){
@@ -4177,7 +4181,13 @@ window.addEventListener('keydown', e=>{
   if (e.key === '`' && window.TEST_MODE){ e.preventDefault(); window.toggleCheatConsole(); }
   if (e.key.toLowerCase()==='h') togglePanel('tuyethoc');
   if (e.key.toLowerCase()==='r') usePotion();
-  if (e.key.toLowerCase()==='g' && nearGate && player && !dead) travelTo(nearGate.to, curMap);
+  if (e.key.toLowerCase()==='g' && nearGate && player && !dead){
+    if (nearGate.deep) deepStart();
+    // Đang trong Tầng Sâu mà đi cổng thoát: coi như RÚT LUI, đừng để mất trắng kho tạm chỉ vì
+    // người chơi bấm nhầm cổng quen tay thay vì nút Rút Lui.
+    else if (DEEP) window.deepLeave();
+    else travelTo(nearGate.to, curMap);
+  }
   if (e.key.toLowerCase()==='t' && player && !dead) tryTame(); // Phong Linh Phù — thu phục tinh anh suy yếu
   if (e.key === 'Escape') closePanels();
 });
@@ -15557,7 +15567,10 @@ function drawArenaHUD({ label, labelColor, timeLeft, activeBoss, barColor }){
 // chơi phải TỰ QUYẾT ĐỊNH điều gì. Tầng Sâu đảo lại: xuống được bao nhiêu tầng tuỳ ngươi, mỗi
 // tầng khó hơn và thưởng nhiều hơn, nhưng phần thưởng chỉ VÀO TÚI khi ngươi chủ động rời.
 // Chết là mất sạch những gì đã tích trong lượt đó.
-let DEEP = null; // { floor, bank, alive, entered }
+let DEEP = null; // { floor, bank, entered }
+const DEEP_MAX = 20;      // CÓ ĐÁY. Vô hạn thì phần thưởng không có trần và cũng chẳng có cái
+                          // kết nào để hướng tới — chỉ còn là cày cho tới lúc chán hoặc chết.
+const DEEP_BOSS_EVERY = 5;  // tầng 5·10·15·20 là tầng boss
 const DEEP_MOBS = ['bandit','wolf','caodo','phando','xanu','bandao','thinu','mocnhan','huyetbat','ttdetu','docyeu','satthuhy','thamtu','cungthu'];
 function deepFloorLv(f){ return clamp(6 + f * 4, 1, 120); }
 // Thưởng mỗi tầng dồn vào "kho tạm" — chưa phải của ngươi cho tới khi rời.
@@ -15581,6 +15594,24 @@ function deepNextFloor(){
   DEEP.floor++;
   const f = DEEP.floor, lv = deepFloorLv(f);
   mobs = []; groundLoot = [];
+  if (f % DEEP_BOSS_EVERY === 0){   // tầng boss — không phải bầy quái
+    const pick = ['boss_hacphong','boss_sontac','boss_phando','boss_mochu','boss_tinhhoa','boss_dothong','boss_thienbinh'];
+    const key = pick[clamp(Math.floor(f / DEEP_BOSS_EVERY) - 1, 0, pick.length - 1)];
+    const R = DGN_ROOMS[2];
+    const bm = spawnMob(key, { x:R.cx, y:R.cy, r:30, count:1 }, null);
+    bm.zone = null;
+    const bmul = 1 + f * 0.22;
+    bm.def = Object.assign({}, bm.def, { hp: Math.round(bm.def.hp * bmul),
+      atk: Math.round(bm.def.atk * (1 + f*0.14)), deepMob: true, drop: 0 });
+    bm.hp = bm.maxHp = bm.def.hp;
+    bm.homeX = bm.x; bm.homeY = bm.y; bm.moveT = 3; bm.punishT = 0; bm.introduced = false;
+    zoneBanner = { text:`TẦNG ${f} — ${bm.def.name}`,
+      sub: f >= DEEP_MAX ? 'TẦNG CUỐI. Hạ nó là trọn vẹn chuyến xuống.' : 'Tầng boss — hạ nó để mở lối xuống tiếp',
+      color:'#ff5a4a', t:4.5 };
+    AudioSys.sfx('crit', 0.9);
+    if (player && player.auto){ player._autoAX = R.cx; player._autoAY = R.cy; }
+    return;
+  }
   const pool = DEEP_MOBS.filter(k => MOBS[k] && Math.abs((MOBS[k].lv || 1) - lv) <= 22);
   const use = pool.length ? pool : [DEEP_MOBS[0]];
   const nMob = Math.min(14, 4 + Math.floor(f * 0.7));
@@ -15595,7 +15626,7 @@ function deepNextFloor(){
     m.hp = m.maxHp = m.def.hp;
   }
   if (DEEP.doorOpen) DEEP.doorOpen = null;
-  zoneBanner = { text:`TẦNG ${f}`, sub:`${nMob} quái · máu ×${(1+f*0.28).toFixed(1)} — dọn sạch để mở lối xuống`, color:'#c07fe0', t:3.5 };
+  zoneBanner = { text:`TẦNG ${f}/${DEEP_MAX}`, sub:`${nMob} quái · máu ×${(1+f*0.28).toFixed(1)} — dọn sạch để mở lối xuống`, color:'#c07fe0', t:3.5 };
   if (player && player.auto){ player._autoAX = DGN_ROOMS[0].cx; player._autoAY = DGN_ROOMS[0].cy; }
 }
 function deepBankFloor(){
@@ -15611,8 +15642,8 @@ window.deepLeave = function(){
   if (b.xp) gainXp(b.xp);
   for (const t in b.hap) player.baohap[t] = (player.baohap[t] || 0) + b.hap[t];
   const hapTxt = Object.keys(b.hap).map(t => `${b.hap[t]}× ${BAOHAP_TIERS[t].name}`).join(' · ');
-  zoneBanner = { text:`✦ RÚT LUI Ở TẦNG ${DEEP.floor}`,
-    sub:`+${b.xp.toLocaleString('vi-VN')} EXP · +${b.silver.toLocaleString('vi-VN')} bạc · +${b.tuvi} Anima · +${b.mat} Huyền Thiết${b.tienDan?` · +${b.tienDan} Tiến Cấp Đan`:''}${hapTxt?' · '+hapTxt:''}`,
+  zoneBanner = { text: DEEP.finished ? `✦ CHINH PHỤC TRỌN ${DEEP_MAX} TẦNG` : `✦ RÚT LUI Ở TẦNG ${DEEP.floor}`,
+    sub:`${DEEP.finished ? `Trọn ${DEEP_MAX} tầng · ` : ''}+${b.xp.toLocaleString('vi-VN')} EXP · +${b.silver.toLocaleString('vi-VN')} bạc · +${b.tuvi} Anima · +${b.mat} Huyền Thiết${b.tienDan?` · +${b.tienDan} Tiến Cấp Đan`:''}${hapTxt?' · '+hapTxt:''}`,
     color:'#6ae88a', t:6 };
   AudioSys.sfx('levelup', 1);
   DEEP = null; calcDerived(); saveGame();
@@ -15633,6 +15664,18 @@ function updateDeep(){   // không dùng dt: mỗi tầng chỉ chuyển khi S�
   const l = deepFloorLoot(DEEP.floor);
   addFloat(player.x, player.y-70, `Tầng ${DEEP.floor} sạch — kho tạm +${l.silver} bạc`, '#ffd76a', 15);
   AudioSys.sfx('coin', 0.7);
+  if (DEEP.floor >= DEEP_MAX){
+    // Xuống tới đáy: thưởng trọn chuyến rồi TỰ trao kho tạm — không bắt người chơi bấm Rút Lui
+    // lần nữa sau khi đã hạ boss tầng cuối.
+    DEEP.bank.silver = Math.round(DEEP.bank.silver * 1.5);
+    DEEP.bank.xp = Math.round(DEEP.bank.xp * 1.5);
+    DEEP.bank.hap[7] = (DEEP.bank.hap[7] || 0) + 1;
+    DEEP.finished = true;
+    zoneBanner = { text:'✦ CHẠM ĐÁY VỰC SÂU', sub:`Trọn ${DEEP_MAX} tầng — thưởng ×1,5 và một ${BAOHAP_TIERS[7].name}!`, color:'#ffd76a', t:6 };
+    AudioSys.sfx('levelup', 1);
+    window.deepLeave();
+    return;
+  }
   deepNextFloor();
 }
 
@@ -15790,7 +15833,7 @@ function grantHuntBox(){
 function drawDeepHUD(){
   if (!DEEP || !player) return;
   const b = DEEP.bank;
-  drawArenaHUD({ label: `⬇ TẦNG SÂU — Tầng ${DEEP.floor}`, labelColor:'#c07fe0' });
+  drawArenaHUD({ label: `⬇ TẦNG SÂU — Tầng ${DEEP.floor}/${DEEP_MAX}`, labelColor:'#c07fe0' });
   ctx.textAlign = 'center';
   ctx.font = 'bold 13px "Be Vietnam Pro", sans-serif';
   ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
