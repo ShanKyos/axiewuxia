@@ -420,9 +420,24 @@ const MAP_BG_SRC = {
   pb_mongco:'assets/maps/bg_dungeon_stone.jpg',
   pb_tuyettinh:'assets/maps/bg_dungeon_fire.jpg', pb_nhanmon:'assets/maps/bg_dungeon_fire.jpg',
 };
+// Nạp NỀN THEO NHU CẦU. Trước đây nạp cả 15 mục ngay khi tải trang — 3,2 MB ảnh nền cho 15 bản
+// đồ mà người chơi mới chỉ đứng ở đúng MỘT. Nay chỉ nạp map đang vào (và nạp trước những map đi
+// tới được từ đó, sau khi trang đã rảnh tay).
 const MAP_BG = {};
-for (const k in MAP_BG_SRC){ const im = new Image(); im.src = MAP_BG_SRC[k]; MAP_BG[k] = im; }
-for (const k in MOBS){ const im = new Image(); im.src = MOBS[k].img || ''; MOB_IMGS[k] = im; }
+function mapBgOf(k){
+  if (MAP_BG[k]) return MAP_BG[k];
+  const src = MAP_BG_SRC[k]; if (!src) return null;
+  const im = new Image(); im.src = src; MAP_BG[k] = im;
+  return im;
+}
+function mapBgPrefetch(k){
+  // nạp trước hàng xóm khi trình duyệt rảnh — vào cổng là có ảnh sẵn, không chớp một nhịp nền trơn
+  const go = () => { for (const g of (MAPS[k] && MAPS[k].gates) || []) if (g.to) mapBgOf(g.to); };
+  if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 3000 }); else setTimeout(go, 1200);
+}
+// `im.src = '' ` KHÔNG phải là "không nạp gì": trình duyệt coi chuỗi rỗng là đường dẫn tương đối
+// và đi tải lại chính trang hiện tại. Quái dựng bằng khớp xương thì không có ảnh — bỏ hẳn.
+for (const k in MOBS){ if (!MOBS[k].img) continue; const im = new Image(); im.src = MOBS[k].img; MOB_IMGS[k] = im; }
 // Sourced status-effect overlay clips (axieinfinity/axie-origins-asset-kit web-vfx) — generic (not
 // per-class), played once at the moment a status effect actually lands (see playStatusFx below).
 // Grid metadata copied from each clip's clip.json (cols/rows/frameW/frameH/frames/fps/anchor).
@@ -455,9 +470,14 @@ function playStatusFx(sfxName, vfxId, x, y, vol, scale){
 // Bản phát hành: khóa toàn bộ playtest/cheat — người chơi tự trải nghiệm từ đầu
 const RELEASE_BUILD = window.RELEASE_BUILD === true;
 // Cây cối & đá theo từng bản đồ (phong cách thủy mặc võ lâm)
+// Nạp theo nhu cầu: bộ cây của một bản đồ chỉ dùng khi đứng ở bản đồ đó, mà riêng comoc.png đã
+// 765 KB — nạp cả tám bộ ngay lúc mở trang là bắt người chơi tải bảy thứ chưa nhìn thấy.
 const TREE_IMGS = {};
-for (const k of ['daohoa','tuongduong','ngoai','chungnam','comoc','tuyettinh','mongco','nhanmon']){
+function treeImgOf(k){
+  if (TREE_IMGS[k]) return TREE_IMGS[k];
+  if (!['daohoa','tuongduong','ngoai','chungnam','comoc','tuyettinh','mongco','nhanmon'].includes(k)) return null;
   const im = new Image(); im.src = 'assets/trees/' + k + '.png'; TREE_IMGS[k] = im;
+  return im;
 }
 const ROCK_IMGS = [];
 for (let i = 1; i <= 3; i++){ const im = new Image(); im.src = 'assets/trees/rock' + i + '.png'; ROCK_IMGS.push(im); }
@@ -1326,41 +1346,41 @@ const VH_TIER = {
 // theo id (auto-hồi sinh & miễn hồi chiêu) — chỉ đổi tên hiển thị + đổi phai sang lớp mới.
 const VOHOC_DEFS = {
   // ── Dark Knight ──
-  dk_cyclone:    { name:'Cyclone', school:'Dark Knight', phai:'thieulam', tier:'so', cat:'Cận Chiến', type:'aoe', unlock:15, cd:7, qi:20, mult:1.8, color:'#4c8dff', icon:'assets/skills/vh_dk_cyclone.png', glyph:'◉', fx:{ r:150, kb:40 }, desc:'Xoay tít vũ khí quanh thân — đánh trúng mọi địch trong tầm gần.' },
-  dk_ragefulblow:{ name:'Rageful Blow', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Cận Chiến', type:'aoe', unlock:25, cd:8, qi:24, mult:2.2, color:'#3a6fd8', icon:'assets/skills/vh_dk_rageful.png', glyph:'✹', fx:{ r:170, kb:55, stun:0.8 }, desc:'Giáng vũ khí xuống đất — chấn động, hất văng & choáng nhẹ.' },
-  dk_crescent:   { name:'Crescent Moon Slash', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Cận Chiến', type:'cone', unlock:35, cd:6, qi:20, mult:2.0, color:'#6aa0ff', icon:'assets/skills/vh_dk_crescent.png', glyph:'☾', fx:{ pierce:true }, desc:'Một đường chém hình trăng lưỡi liềm — xuyên thấu hàng dài địch.' },
-  dk_fortitude:  { name:'Greater Fortitude', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Bị Động', type:'passive', unlock:45, color:'#8ab8ff', icon:'assets/skills/vh_dk_fortitude.png', glyph:'♦', desc:'Bị động: +15% HP, +10% giảm sát thương.' },
-  tienthiencong: { name:'Undying Will', school:'Dark Knight', phai:'thieulam', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#ffe9a8', icon:'assets/skills/vh_dk_undying.png', glyph:'✦', desc:'Bị động: chết tự hồi sinh 50% HP — mỗi 300s một lần.' },
+  dk_cyclone:    { name:'Cyclone', school:'Dark Knight', phai:'thieulam', tier:'so', cat:'Cận Chiến', type:'aoe', unlock:15, cd:7, qi:20, mult:1.8, color:'#4c8dff', glyph:'◉', fx:{ r:150, kb:40 }, desc:'Xoay tít vũ khí quanh thân — đánh trúng mọi địch trong tầm gần.' },
+  dk_ragefulblow:{ name:'Rageful Blow', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Cận Chiến', type:'aoe', unlock:25, cd:8, qi:24, mult:2.2, color:'#3a6fd8', glyph:'✹', fx:{ r:170, kb:55, stun:0.8 }, desc:'Giáng vũ khí xuống đất — chấn động, hất văng & choáng nhẹ.' },
+  dk_crescent:   { name:'Crescent Moon Slash', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Cận Chiến', type:'cone', unlock:35, cd:6, qi:20, mult:2.0, color:'#6aa0ff', glyph:'☾', fx:{ pierce:true }, desc:'Một đường chém hình trăng lưỡi liềm — xuyên thấu hàng dài địch.' },
+  dk_fortitude:  { name:'Greater Fortitude', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Bị Động', type:'passive', unlock:45, color:'#8ab8ff', glyph:'♦', desc:'Bị động: +15% HP, +10% giảm sát thương.' },
+  tienthiencong: { name:'Undying Will', school:'Dark Knight', phai:'thieulam', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#ffe9a8', glyph:'✦', desc:'Bị động: chết tự hồi sinh 50% HP — mỗi 300s một lần.' },
   // ── Dark Wizard ──
-  dw_lightning:  { name:'Lightning', school:'Dark Wizard', phai:'baidasan', tier:'so', cat:'Pháp Thuật', type:'proj', unlock:15, cd:5, qi:18, mult:1.7, color:'#7ec850', icon:'assets/skills/vh_dw_lightning.png', glyph:'⚡', fx:{ kb:20 }, desc:'Một tia sét đánh thẳng vào địch, có thể hất văng.' },
-  dw_evilspirit: { name:'Evil Spirit', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'aoe', unlock:25, cd:7, qi:26, mult:2.0, color:'#6ab850', icon:'assets/skills/vh_dw_evilspirit.png', glyph:'✦', fx:{ r:150 }, desc:'Giải phóng năng lượng bóng tối quanh người — sát thương diện rộng.' },
-  dw_ice:        { name:'Ice', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'proj', unlock:35, cd:6, qi:20, mult:1.6, color:'#5ac8e8', icon:'assets/skills/vh_dw_ice.png', glyph:'❄', fx:{ slow:{ pct:0.5, t:3 } }, desc:'Băng giá xuyên thấu — trúng đòn làm chậm mục tiêu.' },
-  dw_twister:    { name:'Twister', school:'Dark Wizard', phai:'baidasan', tier:'cao', cat:'Pháp Thuật', type:'proj', unlock:45, cd:6, qi:24, mult:1.8, color:'#8ac850', icon:'assets/skills/vh_dw_twister.png', glyph:'◉', fx:{ multi:3, pierce:true }, desc:'Ba cơn lốc xuyên phá — quét qua mọi địch trên đường đi.' },
-  dw_nova:       { name:'Nova', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Pháp Thuật', type:'aoe', unlock:55, cd:10, qi:35, mult:2.8, color:'#ffd76a', icon:'assets/skills/vh_dw_nova.png', glyph:'★', fx:{ r:180, big:true }, desc:'Dồn năng lượng ánh sáng rồi bùng nổ toàn diện — chiêu mạnh nhất phái.' },
-  songthu:       { name:'Arcane Insight', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#d8d8f0', icon:'assets/skills/vh_dw_arcane.png', glyph:'✧', desc:'Bị động: 30% chiêu vừa tung không tốn hồi chiêu.' },
+  dw_lightning:  { name:'Lightning', school:'Dark Wizard', phai:'baidasan', tier:'so', cat:'Pháp Thuật', type:'proj', unlock:15, cd:5, qi:18, mult:1.7, color:'#7ec850', glyph:'⚡', fx:{ kb:20 }, desc:'Một tia sét đánh thẳng vào địch, có thể hất văng.' },
+  dw_evilspirit: { name:'Evil Spirit', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'aoe', unlock:25, cd:7, qi:26, mult:2.0, color:'#6ab850', glyph:'✦', fx:{ r:150 }, desc:'Giải phóng năng lượng bóng tối quanh người — sát thương diện rộng.' },
+  dw_ice:        { name:'Ice', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'proj', unlock:35, cd:6, qi:20, mult:1.6, color:'#5ac8e8', glyph:'❄', fx:{ slow:{ pct:0.5, t:3 } }, desc:'Băng giá xuyên thấu — trúng đòn làm chậm mục tiêu.' },
+  dw_twister:    { name:'Twister', school:'Dark Wizard', phai:'baidasan', tier:'cao', cat:'Pháp Thuật', type:'proj', unlock:45, cd:6, qi:24, mult:1.8, color:'#8ac850', glyph:'◉', fx:{ multi:3, pierce:true }, desc:'Ba cơn lốc xuyên phá — quét qua mọi địch trên đường đi.' },
+  dw_nova:       { name:'Nova', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Pháp Thuật', type:'aoe', unlock:55, cd:10, qi:35, mult:2.8, color:'#ffd76a', glyph:'★', fx:{ r:180, big:true }, desc:'Dồn năng lượng ánh sáng rồi bùng nổ toàn diện — chiêu mạnh nhất phái.' },
+  songthu:       { name:'Arcane Insight', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#d8d8f0', glyph:'✧', desc:'Bị động: 30% chiêu vừa tung không tốn hồi chiêu.' },
   // Chiêu buff (ô 3 cố định — xem BUFF_SKILL_ID/defaultSkillBar): Dark Wizard mỏng máu nhất nên
   // được 1 khiên chắn tạm thời, bù lại lúc đứng lại tụ phép giữa tầm xa 420.
-  dw_shield:     { name:'Soul Barrier', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'buff', unlock:15, cd:10, qi:26, color:'#7ec850', icon:'assets/skills/vh_dw_shield.png', glyph:'♦', fx:{ shieldPct:45, t:6 }, desc:'Khiên hồn ma bao bọc — hấp thụ sát thương bằng 45% HP tối đa trong 6s.' },
+  dw_shield:     { name:'Soul Barrier', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'buff', unlock:15, cd:10, qi:26, color:'#7ec850', glyph:'♦', fx:{ shieldPct:45, t:6 }, desc:'Khiên hồn ma bao bọc — hấp thụ sát thương bằng 45% HP tối đa trong 6s.' },
   // ── Sylvan Ranger ──
-  elf_heal:      { name:'Heal', school:'Sylvan Ranger', phai:'toanchan', tier:'so', cat:'Bị Động', type:'passive', unlock:15, color:'#3a9d8b', icon:'assets/skills/vh_elf_heal.png', glyph:'✚', desc:'Bị động: tự hồi 1% HP tối đa mỗi giây.' },
-  elf_greaterdef:{ name:'Greater Defense', school:'Sylvan Ranger', phai:'toanchan', tier:'trung', cat:'Bị Động', type:'passive', unlock:30, cd:10, qi:25, color:'#5ac8b8', icon:'assets/skills/vh_elf_greaterdef.png', glyph:'✚', fx:{ shieldPct:40, t:6 }, desc:'Khiên năng lượng — hấp thụ sát thương bằng 40% HP tối đa trong 6s.' },
+  elf_heal:      { name:'Heal', school:'Sylvan Ranger', phai:'toanchan', tier:'so', cat:'Bị Động', type:'passive', unlock:15, color:'#3a9d8b', glyph:'✚', desc:'Bị động: tự hồi 1% HP tối đa mỗi giây.' },
+  elf_greaterdef:{ name:'Greater Defense', school:'Sylvan Ranger', phai:'toanchan', tier:'trung', cat:'Bị Động', type:'passive', unlock:30, cd:10, qi:25, color:'#5ac8b8', glyph:'✚', fx:{ shieldPct:40, t:6 }, desc:'Khiên năng lượng — hấp thụ sát thương bằng 40% HP tối đa trong 6s.' },
   // Chiêu buff (ô 3 cố định): Greater Damage — đúng bản sắc Sylvan Ranger hỗ trợ trong MU Online.
-  elf_greaterdmg:{ name:'Greater Damage', school:'Sylvan Ranger', phai:'toanchan', tier:'cao', cat:'Hỗ Trợ', type:'buff', unlock:15, cd:10, qi:28, color:'#7ecbff', icon:'assets/skills/vh_elf_greaterdmg.png', glyph:'⚔', fx:{ dmgPct:35, t:6 }, desc:'Cường hoá sức mạnh — +35% sát thương trong 6s.' },
-  elf_swiftwind: { name:'Swift Wind', school:'Sylvan Ranger', phai:'toanchan', tier:'than', cat:'Bị Động', type:'passive', unlock:55, cd:8, qi:20, color:'#a0ffe9', icon:'assets/skills/vh_elf_swiftwind.png', glyph:'✽', fx:{ selfEva:{ pct:45, t:4 } }, desc:'Gió nhanh theo bước chân — +45% né trong 4s.' },
+  elf_greaterdmg:{ name:'Greater Damage', school:'Sylvan Ranger', phai:'toanchan', tier:'cao', cat:'Hỗ Trợ', type:'buff', unlock:15, cd:10, qi:28, color:'#7ecbff', glyph:'⚔', fx:{ dmgPct:35, t:6 }, desc:'Cường hoá sức mạnh — +35% sát thương trong 6s.' },
+  elf_swiftwind: { name:'Swift Wind', school:'Sylvan Ranger', phai:'toanchan', tier:'than', cat:'Bị Động', type:'passive', unlock:55, cd:8, qi:20, color:'#a0ffe9', glyph:'✽', fx:{ selfEva:{ pct:45, t:4 } }, desc:'Gió nhanh theo bước chân — +45% né trong 4s.' },
   // ── Spellblade ──
-  mg_powerslash: { name:'Power Slash', school:'Spellblade', phai:'minhgiao', tier:'so', cat:'Lai', type:'cone', unlock:15, cd:6, qi:20, mult:1.8, color:'#e8552a', icon:'assets/skills/vh_mg_powerslash.png', glyph:'⚔', fx:{}, desc:'Một đường kiếm khí quét ngang, dồn cả nội lực vào lưỡi kiếm.' },
-  mg_frostnova:  { name:'Frost Nova', school:'Spellblade', phai:'minhgiao', tier:'trung', cat:'Lai', type:'aoe', unlock:30, cd:8, qi:26, mult:2.0, color:'#5ac8e8', icon:'assets/skills/vh_mg_frostnova.png', glyph:'❄', fx:{ r:150, slow:{ pct:0.4, t:3 } }, desc:'Bùng nổ băng giá quanh thân — làm chậm mọi địch trong tầm.' },
-  mg_ironwill:   { name:'Iron Will', school:'Spellblade', phai:'minhgiao', tier:'cao', cat:'Bị Động', type:'passive', unlock:40, color:'#ffb060', icon:'assets/skills/vh_mg_ironwill.png', glyph:'◆', desc:'Bị động: +10% HP, +8% giảm sát thương.' },
+  mg_powerslash: { name:'Power Slash', school:'Spellblade', phai:'minhgiao', tier:'so', cat:'Lai', type:'cone', unlock:15, cd:6, qi:20, mult:1.8, color:'#e8552a', glyph:'⚔', fx:{}, desc:'Một đường kiếm khí quét ngang, dồn cả nội lực vào lưỡi kiếm.' },
+  mg_frostnova:  { name:'Frost Nova', school:'Spellblade', phai:'minhgiao', tier:'trung', cat:'Lai', type:'aoe', unlock:30, cd:8, qi:26, mult:2.0, color:'#5ac8e8', glyph:'❄', fx:{ r:150, slow:{ pct:0.4, t:3 } }, desc:'Bùng nổ băng giá quanh thân — làm chậm mọi địch trong tầm.' },
+  mg_ironwill:   { name:'Iron Will', school:'Spellblade', phai:'minhgiao', tier:'cao', cat:'Bị Động', type:'passive', unlock:40, color:'#ffb060', glyph:'◆', desc:'Bị động: +10% HP, +8% giảm sát thương.' },
   // Chiêu buff (ô 3 cố định): hybrid cận-pháp — tăng cả sát thương lẫn khí thế trận đấu.
-  mg_battlefury: { name:'Battle Fury', school:'Spellblade', phai:'minhgiao', tier:'trung', cat:'Lai', type:'buff', unlock:15, cd:10, qi:26, color:'#ff9a5a', icon:'assets/skills/vh_mg_battlefury.png', glyph:'⚔', fx:{ dmgPct:30, t:6 }, desc:'Dồn cả nội lẫn ngoại lực — +30% sát thương trong 6s.' },
-  mg_flamestrike:{ name:'Flame Storm', school:'Spellblade', phai:'minhgiao', tier:'than', cat:'Lai', type:'aoe', unlock:55, cd:11, qi:38, mult:3.0, color:'#ff7a3a', icon:'assets/skills/vh_mg_flamestorm.png', glyph:'☼', fx:{ r:200, kb:60, big:true }, desc:'Bão lửa nuốt trọn cả một vùng — chiêu bộc phát mạnh nhất phái.' },
+  mg_battlefury: { name:'Battle Fury', school:'Spellblade', phai:'minhgiao', tier:'trung', cat:'Lai', type:'buff', unlock:15, cd:10, qi:26, color:'#ff9a5a', glyph:'⚔', fx:{ dmgPct:30, t:6 }, desc:'Dồn cả nội lẫn ngoại lực — +30% sát thương trong 6s.' },
+  mg_flamestrike:{ name:'Flame Storm', school:'Spellblade', phai:'minhgiao', tier:'than', cat:'Lai', type:'aoe', unlock:55, cd:11, qi:38, mult:3.0, color:'#ff7a3a', glyph:'☼', fx:{ r:200, kb:60, big:true }, desc:'Bão lửa nuốt trọn cả một vùng — chiêu bộc phát mạnh nhất phái.' },
   // ── Dark Lord ──
-  dl_electricspark:{ name:'Electric Spark', school:'Dark Lord', phai:'bug', tier:'so', cat:'Chỉ Huy', type:'proj', unlock:15, cd:5, qi:18, mult:1.6, color:'#8a9a3a', icon:'assets/skills/vh_dl_spark.png', glyph:'⚡', fx:{ stun:0.8 }, desc:'Tia điện từ quyền trượng — trúng đòn choáng nhẹ.' },
-  dl_darkspirit: { name:'Dark Spirit', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'aoe', unlock:30, cd:7, qi:24, mult:2.0, color:'#6a7a2a', icon:'assets/skills/vh_dl_darkspirit.png', glyph:'✦', fx:{ r:160 }, desc:'Triệu hồi u linh vây quanh — sát thương diện rộng.' },
-  dl_chaoticdiseier:{ name:'Chaotic Diseier', school:'Dark Lord', phai:'bug', tier:'cao', cat:'Chỉ Huy', type:'proj', unlock:40, cd:6, qi:22, mult:1.8, color:'#a8b85a', icon:'assets/skills/vh_dl_chaotic.png', glyph:'✦', fx:{ multi:3, pierce:true }, desc:'Ném quyền trượng xoay tít — xuyên thấu hàng dài địch.' },
-  dl_darkraven:  { name:'Dark Raven', school:'Dark Lord', phai:'bug', tier:'than', cat:'Chỉ Huy', type:'aoe', unlock:55, cd:10, qi:34, mult:2.6, color:'#2a1a3a', icon:'assets/skills/vh_dl_raven.png', glyph:'☾', fx:{ r:180, kb:40, big:true }, desc:'Bầy quạ đen lao xuống xé nát mọi thứ trong tầm — chiêu chỉ huy tối thượng.' },
+  dl_electricspark:{ name:'Electric Spark', school:'Dark Lord', phai:'bug', tier:'so', cat:'Chỉ Huy', type:'proj', unlock:15, cd:5, qi:18, mult:1.6, color:'#8a9a3a', glyph:'⚡', fx:{ stun:0.8 }, desc:'Tia điện từ quyền trượng — trúng đòn choáng nhẹ.' },
+  dl_darkspirit: { name:'Dark Spirit', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'aoe', unlock:30, cd:7, qi:24, mult:2.0, color:'#6a7a2a', glyph:'✦', fx:{ r:160 }, desc:'Triệu hồi u linh vây quanh — sát thương diện rộng.' },
+  dl_chaoticdiseier:{ name:'Chaotic Diseier', school:'Dark Lord', phai:'bug', tier:'cao', cat:'Chỉ Huy', type:'proj', unlock:40, cd:6, qi:22, mult:1.8, color:'#a8b85a', glyph:'✦', fx:{ multi:3, pierce:true }, desc:'Ném quyền trượng xoay tít — xuyên thấu hàng dài địch.' },
+  dl_darkraven:  { name:'Dark Raven', school:'Dark Lord', phai:'bug', tier:'than', cat:'Chỉ Huy', type:'aoe', unlock:55, cd:10, qi:34, mult:2.6, color:'#2a1a3a', glyph:'☾', fx:{ r:180, kb:40, big:true }, desc:'Bầy quạ đen lao xuống xé nát mọi thứ trong tầm — chiêu chỉ huy tối thượng.' },
   // Chiêu buff (ô 3 cố định): khí thế chỉ huy — dồn sức cho bản thân lẫn bầy tùy tùng theo sau.
-  dl_commandaura:{ name:'Command Aura', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'buff', unlock:15, cd:10, qi:26, color:'#a0b04a', icon:'assets/skills/vh_dl_command.png', glyph:'⚑', fx:{ dmgPct:25, t:6 }, desc:'Hào khí chỉ huy lan tỏa — +25% sát thương trong 6s.' },
+  dl_commandaura:{ name:'Command Aura', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'buff', unlock:15, cd:10, qi:26, color:'#a0b04a', glyph:'⚑', fx:{ dmgPct:25, t:6 }, desc:'Hào khí chỉ huy lan tỏa — +25% sát thương trong 6s.' },
 };
 // ═══════════ TỐI GIẢN TASKBAR: 3 Ô CỐ ĐỊNH KIỂU MU ONLINE ═══════════
 // Mỗi phái chỉ còn đúng 3 chiêu chủ động — 1 chiêu chính (skillA), 1 chiêu phụ (Trấn Phái), 1 buff có
@@ -2225,9 +2245,14 @@ const MOUNT_TIERS = [ null,
   { name:'Sunfeather Phoenix',img:'assets/mounts/4_phoenix.png',      color:'#ff8a3a', dmg:145, str:38, agi:40, def:32, vit:35, hp:900,  crit:6, qireg:4, reqLv:65, cost:{silver:9000,  mat:70},  rate:42 },
   { name:'Azure Wyrm',       img:'assets/mounts/5_azuredragon.png',   color:'#3a7ad8', dmg:200, str:55, agi:55, def:55, vit:55, hp:1500, crit:8, qireg:6, reqLv:85, cost:{silver:15000, mat:110}, rate:30 },
 ];
+// Người chơi chỉ bao giờ có MỘT giai thú cưỡi, và giai 1 mở ở cấp 10 — nạp sẵn cả tám giai
+// (1,4 MB) ngay lúc mở trang là tải bảy con thú người ta chưa từng thấy.
 const MOUNT_IMGS = {};
-for (let i=1;i<MOUNT_TIERS.length;i++){
+function mountImgOf(i){
+  if (!MOUNT_TIERS[i]) return null;
+  if (MOUNT_IMGS[i]) return MOUNT_IMGS[i];
   const im = new Image(); im.src = MOUNT_TIERS[i].img; MOUNT_IMGS[i] = im;
+  return im;
 }
 
 // ---------- Sect art (portraits + skill icons) ----------
@@ -2242,7 +2267,7 @@ const SECT_ART = {
   toanchan: { iconA:'assets/skills/tc_a.png', iconTP:'assets/skills/tc_tp.png' },
   baidasan: { iconA:'assets/skills/bd_a.png', iconTP:'assets/skills/bd_tp.png' },
   minhgiao: { iconA:'assets/skills/mg_a.png', iconTP:'assets/skills/mg_tp.png' },
-  bug:      { iconA:'assets/classes/bug_a.png', iconTP:'assets/classes/bug_tp.png' },
+  bug:      { },
   vophai:   { iconA:'assets/skills/slash.png', iconTP:'assets/skills/basic.png' },
 };
 // ═══════════ ICON KỸ NĂNG TỰ SINH — phong cách MU Online ═══════════
@@ -2393,7 +2418,12 @@ const SK_ICON_SECT_TP = { thieulam:'blade_up', toanchan:'barrier', baidasan:'fla
 // Thử nạp từng file art đã khai báo; file nào 404 thì thay bằng icon tự sinh (không đụng file có thật).
 function probeSkillIcons(){
   const swap = (get, set, sym, color, glow) => {
-    const src = get(); if (!src || src.startsWith('data:')) return;
+    const src = get();
+    if (src && src.startsWith('data:')) return;
+    // KHÔNG khai báo art thì sinh icon ngay. Trước đây 28 chiêu/lớp khai báo đường dẫn tới file
+    // chưa bao giờ tồn tại, và lượt "thử nạp" này biến chúng thành 28 lượt 404 MỖI lần mở trang —
+    // 28 vòng đi-về chỉ để biết một điều đã biết chắc từ đầu.
+    if (!src){ set(genSkillIcon(sym, color, glow)); return; }
     const im = new Image();
     im.onerror = () => set(genSkillIcon(sym, color, glow)); // HUD đọc lại info.icon mỗi khung hình
     im.src = src;
@@ -2410,9 +2440,14 @@ function probeSkillIcons(){
 }
 probeSkillIcons();
 // Starflight: sprite 3D tiên nhân (nam/nữ × 6 skin) — vẽ sẵn, nền trong suốt
+// 12 sprite × ~230 KB = 2,6 MB, và CHỈ dùng khi nhân vật đã Starflight (cấp cuối). Nạp sẵn hết
+// ngay lúc mở trang là bắt người chơi cấp 1 tải trước phần thưởng của cấp 120.
 const TIEN_IMGS = {};
-for (const g of ['nam','nu']) for (const sk of ['bach','thanh','kim','huyen','hong','lam']){
-  const im = new Image(); im.src = 'assets/tien/' + g + '_' + sk + '.png'; TIEN_IMGS[g + '_' + sk] = im;
+function tienImgOf(key){
+  if (TIEN_IMGS[key]) return TIEN_IMGS[key];
+  if (!/^(nam|nu)_(bach|thanh|kim|huyen|hong|lam)$/.test(key)) return null;
+  const im = new Image(); im.src = 'assets/tien/' + key.replace('_', '_') + '.png'; TIEN_IMGS[key] = im;
+  return im;
 }
 // ---------- Ascension: cultivation realms (Ascension Trial upgrades) ----------
 // Bonus values are TOTAL at that realm. Đột phá consumes Anima + silver + mats;
@@ -5630,7 +5665,7 @@ function updateHorses(dt){
   }
 }
 function drawHorse(h){
-  const img = MOUNT_IMGS[1]; // Tuấn Mã Hoang dùng tạm hình thú cưỡi giai 1 (mượn ảnh, không liên quan tên gọi)
+  const img = mountImgOf(1); // Tuấn Mã Hoang dùng tạm hình thú cưỡi giai 1 (mượn ảnh, không liên quan tên gọi)
   const bob = Math.sin(performance.now()/300 + h.hx)*2;
   ctx.save(); ctx.translate(h.x, h.y + bob);
   if (h.state === 'tired') ctx.globalAlpha = 0.75 + Math.sin(performance.now()/150)*0.2;
@@ -6543,7 +6578,7 @@ function render(){
   ctx.translate(-camera.x, -camera.y);
 
   // nền bản đồ vẽ tay — phủ toàn bộ thế giới, nằm dưới mọi decor/thực thể
-  const bg = MAP_BG[curMap];
+  const bg = mapBgOf(curMap);
   if (bg && bg.complete && bg.naturalWidth > 0){
     // Chỉ vẽ ĐÚNG mảnh ảnh đang lọt vào khung nhìn. Vẽ cả ảnh phóng ra 2600×1900 là bảo trình
     // duyệt lấy mẫu 4,94 triệu điểm cho một màn 1,05 triệu — riêng nó đã là 4,7 lần diện tích
@@ -9412,7 +9447,7 @@ function drawPlayer(){
   const pulse = 1 + castK*0.12 + (p.moving ? Math.sin(wph*2)*0.025 : Math.sin(wph)*0.015);
   if (p.ascended){
     const _tKey = (p.gender === 'nu' ? 'nu' : 'nam') + '_' + (TIEN_SKINS[p.tienSkin] ? p.tienSkin : 'bach');
-    const _tim = TIEN_IMGS[_tKey];
+    const _tim = tienImgOf(_tKey);
     if (_tim && _tim.complete && _tim.naturalWidth){
       const _tsk = TIEN_SKINS[p.tienSkin] || TIEN_SKINS.bach;
       const sh = 128, sw = sh * (_tim.naturalWidth/_tim.naturalHeight);
@@ -14206,7 +14241,7 @@ function drawMinimapStatic(mw, mh, sx, sy, md){
   const off = document.createElement('canvas'); off.width = mw; off.height = mh;
   const sc = off.getContext('2d');
   // nền: ưu tiên ảnh map vẽ tay (thu nhỏ + phủ tối 40%), fallback màu đất phẳng
-  const _bg = MAP_BG[curMap];
+  const _bg = mapBgOf(curMap);
   if (_bg && _bg.complete && _bg.naturalWidth > 0){
     sc.drawImage(_bg, 0, 0, mw, mh);
     sc.fillStyle = 'rgba(22,18,12,.40)';
@@ -14713,6 +14748,7 @@ window.travelTo = function(mapId, from){
   // lại, mà deepNextFloor() rải quái vào cả ba phòng ⇒ kẹt cứng vĩnh viễn ở tầng 1; đồng thời
   // updateDungeon() chạy song song, phát không thưởng "thông quan" và banner phó bản đè lên.
   if (md.dungeon && !DEEP) startDungeonRun(mapId);
+  mapBgOf(mapId); mapBgPrefetch(mapId);
   setTimeout(fxApply, 0);   // lớp phủ CSS theo bản đồ mới (tối / vignette)
   const sp = (from && md.spawnFrom && md.spawnFrom[from]) || md.spawn;
   player.x = sp.x; player.y = sp.y;
@@ -16735,7 +16771,7 @@ function drawMountains(){
 function drawTree(d){
   const sway = (SETTINGS.lowFx) ? 0 : Math.sin(performance.now()/900 + d.x*0.7) * 0.025;
   ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(sway); ctx.translate(-d.x, -d.y);
-  const tim = (typeof TREE_IMGS !== 'undefined') && TREE_IMGS[curMap];
+  const tim = (typeof treeImgOf === 'function') && treeImgOf(curMap);
   if (tim && tim.complete && tim.naturalWidth){
     const h = 100*d.s, w = h * (tim.naturalWidth/tim.naturalHeight);
     ctx.drawImage(tim, d.x-w/2, d.y-h*0.94, w, h);
@@ -16808,7 +16844,7 @@ function updateMount(dt){
 }
 function drawMount(){
   const t = MOUNT_TIERS[mountObj.tier];
-  const img = MOUNT_IMGS[mountObj.tier];
+  const img = mountImgOf(mountObj.tier);
   // bóng đổ
   ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath();
   ctx.ellipse(mountObj.x, mountObj.y+7, 20, 7, 0, 0, 7); ctx.fill();
