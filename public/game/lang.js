@@ -87,6 +87,10 @@ const EXACT = {
   'Vũ Khí': 'Weapon', 'Nón': 'Helm', 'Áo': 'Armor', 'Tay': 'Gloves', 'Quần': 'Pants',
   'Chân': 'Boots', 'Dây Chuyền': 'Amulet', 'Nhẫn 1': 'Ring 1', 'Nhẫn 2': 'Ring 2',
   'Áo Choàng': 'Cloak', 'Binh Khí': 'Weapon', 'đang mặc': 'equipped', 'túi': 'bag',
+  // 'Cánh' và 'Pet' từng thiếu, nên bảng Trang Bị hiện 10 nhãn tiếng Anh xen 2 nhãn tiếng Việt
+  'Cánh': 'Wings', 'Pet': 'Pet', 'Chưa mặc giáp': 'No armor equipped',
+  'Bấm để tháo · kéo từ Túi Đồ để mặc': 'Click to unequip · drag from Bag to equip',
+  'Trang Bị': 'Equipment',
   // Materials & shop
   'Mảnh Trang Bị': 'Gear Shard', 'Tịch Ma Thạch': 'Demon-Seal Stone', 'Ấn Trấn Ải': 'Pass-Guard Seal',
   'Mảnh Cổ Thần': 'Ancient God Shard', 'Huyền Thiết': 'Mystic Iron', 'Bí Kíp →': 'Tomes →',

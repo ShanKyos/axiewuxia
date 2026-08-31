@@ -168,6 +168,23 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .slot-row .s-name, .inv-item .s-name { flex:1; }
 
 /* Trang Bị — lưới paperdoll 12 ô (thay danh sách dọc), kéo-thả từ Túi Đồ để mặc */
+/* ═══ Bảng trang bị kiểu MU/Diablo: người đứng giữa, ô đồ hai bên ═══ */
+.eq-doll { display:grid; grid-template-columns:58px 1fr 58px; gap:10px; align-items:stretch;
+  max-width:376px; margin:2px auto 6px; }
+.eq-col { display:flex; flex-direction:column; gap:6px; }
+.eq-col .eq-slot { width:58px; height:58px; aspect-ratio:auto; flex:none; }
+.eq-fig { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  border-radius:var(--r-md); border:1px solid var(--border-faint); padding:6px 4px 4px; min-height:0;
+  background:radial-gradient(ellipse at 50% 34%, rgba(126,203,255,.10), rgba(10,11,24,.55) 72%); }
+.eq-fig img { flex:1 1 auto; min-height:0; width:auto; max-width:100%; object-fit:contain;
+  filter:drop-shadow(0 6px 12px rgba(0,0,0,.55)); }
+.eq-fig-cap { text-align:center; line-height:1.35; margin-top:2px; }
+.eq-fig-cap b { display:block; font-size:12.5px; letter-spacing:.3px; }
+.eq-fig-cap span { display:block; font-size:10.5px; color:#9aa8d4; }
+@media (max-width:720px){
+  .eq-doll { grid-template-columns:48px 1fr 48px; gap:7px; max-width:300px; }
+  .eq-col .eq-slot { width:48px; height:48px; }
+}
 .eq-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; max-width:280px; margin:0 auto 4px; }
 .eq-slot { position:relative; aspect-ratio:1; border-radius:var(--r-md); border:1.5px dashed var(--border-faint);
   display:flex; align-items:center; justify-content:center; cursor:pointer; background:var(--cell); transition:background .12s,border-color .12s; }

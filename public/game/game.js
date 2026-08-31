@@ -233,13 +233,15 @@ const SLOTS = [
   { id:'canh',      name:'Cánh',       special:true }, // Thiên Thần / Tiểu Quỷ — ngoài 10 cấp
 ];
 const ARMOR_SLOTS = ['non','ao','tay','quan','chan','nhan1','nhan2']; // có thể Hoàn Hảo
-// Bố cục lưới trang bị kiểu paperdoll (3 cột x 4 hàng) — thay cho danh sách dọc cũ
-const EQUIP_GRID = [
-  ['canh','non','aochoang'],
-  ['vukhi','ao','daychuyen'],
-  ['nhan1','quan','nhan2'],
-  ['tay','chan','pet'],
-];
+// Bảng trang bị kiểu MU/Diablo: NGƯỜI ĐỨNG GIỮA, ô đồ xếp hai bên theo đúng chỗ trên cơ thể.
+// Bản cũ là lưới 3×4 phẳng không có hình nhân vật — nhìn vào chỉ thấy 12 ô vuông, không biết
+// món nào mặc ở đâu, và cũng không thấy được thành quả mặc lên người.
+//   cột TRÁI  = đồ mặc trên người, xếp từ đầu xuống chân rồi tới vũ khí trên tay
+//   cột PHẢI  = trang sức và đồ khoác ngoài
+const EQUIP_DOLL = {
+  left:  ['non','ao','tay','quan','chan','vukhi'],
+  right: ['canh','aochoang','daychuyen','nhan1','nhan2','pet'],
+};
 // Tên trang bị đi theo PHẨM (Phàm→Chí Tôn), leo theo CHẤT LIỆU như đồ MU: da → sắt → thép →
 // vảy rồng → hắc nguyệt. Bộ tên cũ mượn thẳng binh khí kiếm hiệp (Huyền Thiết Trọng Kiếm,
 // Lăng Ba Hài, Chí Tôn Long Giáp…) — vi phạm Quy tắc số 1.
@@ -7857,12 +7859,38 @@ function heroSet(sectKey, t){
   for (const s of line) if (t >= s.min) best = s;
   return best || line[0];
 }
+// Mỗi bộ trải trên MỘT DẢI giai (Thiết Vệ 1-2, Giáp Xích 3-4, Hắc Giáp 5-6, Vảy Rồng 7-8,
+// Hỏa Long 9-10). Ghi sẵn bề rộng dải để bảng màu còn nhích được bên trong dải.
+for (const _k in HERO_SETS){
+  const _L = HERO_SETS[_k];
+  _L.forEach((s0, i) => { s0.span = (_L[i+1] ? _L[i+1].min : 11) - s0.min; });
+}
+function _hexMix(a0, b0, k){
+  if (!a0 || !b0) return a0;
+  const A = parseInt(a0.slice(1), 16), B = parseInt(b0.slice(1), 16);
+  const r = Math.round((A>>16 & 255) + (((B>>16 & 255) - (A>>16 & 255)) * k));
+  const g0 = Math.round((A>>8 & 255) + (((B>>8 & 255) - (A>>8 & 255)) * k));
+  const b1 = Math.round((A & 255) + (((B & 255) - (A & 255)) * k));
+  return '#' + ((1<<24) + (r<<16) + (g0<<8) + b1).toString(16).slice(1);
+}
 // Bảng màu của bộ đè lên bảng màu bậc. Không có tint thì giữ nguyên HERO_METAL.
-function hSetMetal(M, S){
+function hSetMetal(M, S, t){
   if (!S || !S.tint) return M;
-  return { lo: S.tint.lo || M.lo, hi: S.tint.hi || M.hi,
-           trim: S.tint.trim || M.trim,
-           glow: S.tint.glow !== undefined ? S.tint.glow : M.glow };
+  const base = { lo: S.tint.lo || M.lo, hi: S.tint.hi || M.hi,
+                 trim: S.tint.trim || M.trim,
+                 glow: S.tint.glow !== undefined ? S.tint.glow : M.glow };
+  // Tint của bộ ghi đè TOÀN BỘ bảng màu bậc, mà hStage() và hEngrave() cũng chia theo đúng các
+  // mốc 1/3/5/7/9 — nên bên trong một dải thì không một thứ gì đổi. Đo được (đủ 5 món, +0):
+  // lên giai 8 và giai 10 đổi ĐÚNG 0% pixel ở Dark Knight, Spellblade và Dark Lord. Giai 10 là
+  // thứ khó kiếm nhất game mà mặc vào nhìn y hệt giai 9.
+  // Nâng dần bảng màu theo vị trí trong dải: giai trên sáng và ánh kim hơn giai dưới, mà vẫn
+  // đọc ra là cùng một bộ.
+  const k = (S.span > 1 && t > S.min) ? Math.max(0, Math.min(1, (t - S.min) / (S.span - 1))) : 0;
+  if (k <= 0) return base;
+  return { lo:   _hexMix(base.lo,   '#ffffff', k * 0.12),
+           hi:   _hexMix(base.hi,   '#ffffff', k * 0.26),
+           trim: _hexMix(base.trim, '#ffe9a8', k * 0.40),
+           glow: base.glow ? _hexMix(base.glow, '#ffffff', k * 0.28) : null };
 }
 // Nấc tạo hình 1..4 theo bậc hiệu dụng — dùng chung cho mọi bộ
 function hStage(t){ return t < 4.5 ? 1 : t < 6.5 ? 2 : t < 8.5 ? 3 : 4; }
@@ -8802,7 +8830,9 @@ function hArmorSheen(g, M, gv){
 // bậc, MÀU lấy theo độ hiếm — nên `it.rarity` lần đầu tiên có mặt trên người nhân vật.
 function hEngrave(g, M, gv){
   const t = gv ? gv.t : 0;
-  const n = t < 3 ? 0 : t < 5 ? 1 : t < 7 ? 2 : t < 9 ? 3 : 4;
+  // Trước đây cũng chia theo mốc 1/3/5/7/9 y như bộ giáp, nên giai chẵn không thêm được nét nào.
+  // Nay mỗi giai từ 3 trở lên thêm một nét, tới giai 10 là 5 nét + khoá ngực.
+  const n = t < 3 ? 0 : Math.max(1, Math.min(5, Math.round((t - 1) / 1.8)));
   if (!n) return;
   g.save();
   g.strokeStyle = gv.rcol || M.trim;
@@ -9268,7 +9298,7 @@ function drawHeroFigure(g, sectKey, tier, now, ps, gv){
   gv = gv || null;
   // Bộ giáp riêng của lớp: đổi cả TẠO HÌNH (vai/mũ/chân/eo) lẫn BẢNG MÀU. Không có bộ
   // (chưa mặc gì / màn chọn lớp) thì SM === M, mọi thứ y như trước.
-  const S = gv ? heroSet(sectKey, gv.t) : null, SM = hSetMetal(M, S);
+  const S = gv ? heroSet(sectKey, gv.t) : null, SM = hSetMetal(M, S, gv ? gv.t : 0);
   ps.gv = gv;   // upper() của từng lớp cần gv để vẽ đúng vũ khí đang mặc
   g.save();
   hEll(g, 80, 212, 30 - ps.bob * 0.9, 8, 'rgba(0,0,0,.22)'); // bóng co lại khi nhấc chân
@@ -13074,23 +13104,41 @@ function slotIcon(it, cls){
 
 // ---------- Trang Bị (override): lưới paperdoll 12 ô, kéo-thả từ Túi Đồ để mặc ----------
 function renderInv(){
-  let html = `<h3>Trang Bị — 12 Ô chuẩn GDD</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div class="stat-sec">ĐANG MẶC — bấm để tháo, hoặc kéo đồ từ Túi Đồ thả đúng ô <button class="mini-btn" style="float:right" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất</button></div>`;
-  html += `<div class="eq-grid">`;
-  for (const row of EQUIP_GRID){
-    for (const slotId of row){
-      const sl = SLOTS.find(s=>s.id===slotId);
-      const it = player.equip[slotId];
-      html += `<div class="eq-slot${it?' filled':''}" ${it ? `data-tip="eq:${slotId}"` : ''} aria-label="${it ? it.name + (it.plus?' +'+it.plus:'') : sl.name}"
-        onclick="unequip('${slotId}')"
-        ondragover="onEquipSlotDragOver(event,'${slotId}')"
-        ondragenter="onEquipSlotDragEnter(event,'${slotId}')" ondragleave="this.classList.remove('drag-over')"
-        ondrop="this.classList.remove('drag-over'); onEquipSlotDrop(event,'${slotId}')">
-        ${it ? slotIcon(it,'') + `<span class="eq-plus">${it.plus?'+'+it.plus:''}</span>` : `<span class="eq-empty">${sl.name}</span>`}
-      </div>`;
-    }
-  }
-  html += `</div>`;
+  let html = `<h3>Trang Bị</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  // Dòng này trước đây dài tới mức xuống hàng và bỏ rơi một chữ "ô" lẻ loi ở dòng dưới, lại còn
+  // chen với nút bên phải. Ngắn gọn thôi — thao tác đã tự hiển nhiên khi nhìn thấy người mặc đồ.
+  html += `<div class="stat-sec">Bấm để tháo · kéo từ Túi Đồ để mặc <button class="mini-btn" style="float:right" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất</button></div>`;
+  const slotCell = (slotId) => {
+    const sl = SLOTS.find(s2 => s2.id === slotId);
+    const it = player.equip[slotId];
+    const r = it ? (it.special ? { color:'#7ecbff' } : (RARITIES[it.rarity] || RARITIES[0])) : null;
+    return `<div class="eq-slot${it ? ' filled' : ''}" ${it ? `data-tip="eq:${slotId}"` : ''}
+      ${it ? `style="border-color:${r.color};box-shadow:0 0 8px ${r.color}33"` : ''}
+      aria-label="${it ? it.name + (it.plus ? ' +' + it.plus : '') : sl.name}"
+      onclick="unequip('${slotId}')"
+      ondragover="onEquipSlotDragOver(event,'${slotId}')"
+      ondragenter="onEquipSlotDragEnter(event,'${slotId}')" ondragleave="this.classList.remove('drag-over')"
+      ondrop="this.classList.remove('drag-over'); onEquipSlotDrop(event,'${slotId}')">
+      ${it ? slotIcon(it,'') + `<span class="eq-plus">${it.plus ? '+' + it.plus : ''}</span>`
+           : `<span class="eq-empty">${sl.name}</span>`}
+    </div>`;
+  };
+  // Hình nhân vật ở giữa vẽ bằng CHÍNH drawHeroFigure() đang dùng ngoài map, nên đồ mặc vào
+  // hiện lên đúng như lúc đứng trong game — không phải một hình minh hoạ riêng dễ lệch.
+  const _gv = gearVisual(player), _tier = heroTier(player);
+  const _set = _gv ? heroSet(player.sect, _gv.t) : null;
+  const _sect = SECTS[player.sect] || {};
+  html += `<div class="eq-doll">
+    <div class="eq-col">${EQUIP_DOLL.left.map(slotCell).join('')}</div>
+    <div class="eq-fig">
+      <img src="${heroCardUrl(player.sect, _tier, _gv)}" alt="Nhân vật đang mặc đồ">
+      <div class="eq-fig-cap">
+        <b style="color:${_sect.color || '#e6eaf4'}">${_sect.name || ''}</b>
+        <span>${_set ? _set.name + ' · giai ' + _tier : 'Chưa mặc giáp'}</span>
+      </div>
+    </div>
+    <div class="eq-col">${EQUIP_DOLL.right.map(slotCell).join('')}</div>
+  </div>`;
   // Khối CHI TIẾT cũ chép nguyên đoạn chỉ số của CẢ 12 ô ra thành 12 đoạn văn dài — nay thẻ
   // rê chuột đã nói đủ, giữ lại chỉ còn là nói lại lần thứ hai. Chỉ để một dòng gọn mỗi ô cho
   // điện thoại (không có con trỏ nên không rê được).
