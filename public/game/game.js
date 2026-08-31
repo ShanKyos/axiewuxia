@@ -780,6 +780,7 @@ function drawDgnWalls(){
 // Chỉ dựng lại khi decor đổi (đổi map) — không tính lại mỗi khung hình.
 let decorObs = [];
 function rebuildDecorObs(){
+  navInvalidate();   // cây vừa đổi chỗ ⇒ lưới tìm đường cũ không còn đúng
   decorObs = decor.map(d => d.type === 'tree'
     ? { x:d.x, y:d.y, rx:10 + 8*d.s, ry:7 + 5*d.s }     // gốc cây: dẹt theo phối cảnh nhìn xuống
     : { x:d.x, y:d.y, rx:13*d.s,     ry:8*d.s });        // tảng đá
@@ -841,6 +842,101 @@ function collideObstacles(ent, r){
 }
 // Click-to-move: giả lập trước đường đi từ (sx,sy) tới (tx,ty) bằng đúng resolveObstaclePoint —
 // dùng để vẽ đường preview chấm chấm, luôn khớp với đường nhân vật thật sự sẽ né khi đi tới.
+// ── Lưới tìm đường thô, CHỈ dùng khi bám mép thất bại ────────────────────────
+// Bám mép là bộ giải tham lam cục bộ: nó vòng được khối ngắn, nhưng gặp túi lõm do vài gốc cây
+// xếp thành hình chữ C thì đi vào rồi không ra. Đo được ~1/58 tuyến dài hỏng theo cách này, tuỳ
+// vị trí cây rải ngẫu nhiên — trong khi flood-fill luôn khẳng định map LIÊN THÔNG. Tức là lỗi
+// của bộ giải, không phải của địa hình, nên cứu bằng BFS trên lưới thô là đủ và an toàn: nó chỉ
+// chạy ở đúng những tuyến mà hôm nay người chơi bấm rồi nhân vật đứng im.
+const NAV_CELL = 40;
+let _navGrid = null, _navW = 0, _navH = 0, _navKey = '';
+function navInvalidate(){ _navGrid = null; _navKey = ''; }
+function navEnsure(){
+  if (_navGrid && _navKey === curMap) return;
+  _navW = Math.ceil(MAP.w / NAV_CELL); _navH = Math.ceil(MAP.h / NAV_CELL);
+  _navGrid = new Uint8Array(_navW * _navH);
+  for (let gy = 0; gy < _navH; gy++)
+    for (let gx = 0; gx < _navW; gx++)
+      _navGrid[gy*_navW + gx] = inObstacle(curMap, gx*NAV_CELL + NAV_CELL/2, gy*NAV_CELL + NAV_CELL/2, 16) ? 1 : 0;
+  _navKey = curMap;
+}
+function navFreeCell(gx, gy){
+  gx = clamp(gx, 0, _navW-1); gy = clamp(gy, 0, _navH-1);
+  if (!_navGrid[gy*_navW + gx]) return gy*_navW + gx;
+  for (let rad = 1; rad <= 6; rad++)
+    for (let dy = -rad; dy <= rad; dy++)
+      for (let dx = -rad; dx <= rad; dx++){
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== rad) continue;
+        const nx = gx + dx, ny = gy + dy;
+        if (nx < 0 || ny < 0 || nx >= _navW || ny >= _navH) continue;
+        if (!_navGrid[ny*_navW + nx]) return ny*_navW + nx;
+      }
+  return -1;
+}
+function navPath(sx, sy, tx, ty){
+  navEnsure();
+  const s0 = navFreeCell(Math.floor(sx / NAV_CELL), Math.floor(sy / NAV_CELL));
+  const t0 = navFreeCell(Math.floor(tx / NAV_CELL), Math.floor(ty / NAV_CELL));
+  if (s0 < 0 || t0 < 0) return null;
+  const n = _navW * _navH, prev = new Int32Array(n).fill(-1), seen = new Uint8Array(n);
+  const q = new Int32Array(n); let qh = 0, qt = 0;
+  q[qt++] = s0; seen[s0] = 1;
+  while (qh < qt){
+    const c = q[qh++];
+    if (c === t0) break;
+    const cx = c % _navW, cy = (c - cx) / _navW;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){
+      if (!dx && !dy) continue;
+      const nx = cx + dx, ny = cy + dy;
+      if (nx < 0 || ny < 0 || nx >= _navW || ny >= _navH) continue;
+      const ni = ny*_navW + nx;
+      if (seen[ni] || _navGrid[ni]) continue;
+      // đi chéo thì hai ô kề phải thoáng, không thì cắt góc xuyên qua mép vật cản
+      if (dx && dy && (_navGrid[cy*_navW + nx] || _navGrid[ny*_navW + cx])) continue;
+      seen[ni] = 1; prev[ni] = c; q[qt++] = ni;
+    }
+  }
+  if (!seen[t0]) return null;
+  const cells = [];
+  for (let c = t0; c !== -1; c = prev[c]) cells.push(c);
+  cells.reverse();
+  const raw = [{ x: sx, y: sy }];
+  for (const c of cells){
+    const cx = c % _navW, cy = (c - cx) / _navW;
+    raw.push({ x: cx*NAV_CELL + NAV_CELL/2, y: cy*NAV_CELL + NAV_CELL/2 });
+  }
+  raw.push({ x: tx, y: ty });
+  // Kéo dây: BFS bám tâm ô nên đường răng cưa, và ô đầu tiên có thể nằm SAU LƯNG người chơi —
+  // update() lấy path[3] làm waypoint nên nhân vật lùi lại rồi tiến, cứ 0,35s tính lại một lần
+  // là dập dình tại chỗ. Bỏ mọi điểm mà đi thẳng tới điểm sau vẫn thoáng.
+  const knots = [raw[0]];
+  let i = 0;
+  while (i < raw.length - 1){
+    let j = raw.length - 1;
+    while (j > i + 1 && !navLos(raw[i].x, raw[i].y, raw[j].x, raw[j].y)) j--;
+    knots.push(raw[j]); i = j;
+  }
+  // Rải lại thành các bước ~30px. simulateMovePath() có một HỢP ĐỒNG ngầm với update(): đường
+  // trả về là polyline DÀY, vì bên đó lấy path[3] làm waypoint kế tiếp. Trả về đường thưa sau khi
+  // kéo dây thì path[3] rơi thẳng vào điểm cách hàng trăm px — nhân vật cắm đầu vào vật cản, bộ
+  // đếm kẹt lên 3 rồi bỏ đích. Đo được: đi 9 giây còn cách bãi quái 676px.
+  const out = [knots[0]];
+  for (let k = 1; k < knots.length; k++){
+    const a0 = knots[k-1], b0 = knots[k];
+    const d0 = Math.hypot(b0.x - a0.x, b0.y - a0.y), n0 = Math.max(1, Math.ceil(d0 / 30));
+    for (let t = 1; t <= n0; t++)
+      out.push({ x: a0.x + (b0.x - a0.x)*t/n0, y: a0.y + (b0.y - a0.y)*t/n0 });
+  }
+  return out;
+}
+// Đi thẳng từ A tới B có thoáng không — lấy mẫu mỗi 12px, đúng bán kính người chơi dùng ở
+// resolveObstaclePoint (14) để đường kéo dây không cắt sát mép rồi bị đẩy ngược ra.
+function navLos(x1, y1, x2, y2){
+  const d = Math.hypot(x2 - x1, y2 - y1), n = Math.max(1, Math.ceil(d / 12));
+  for (let k = 1; k < n; k++)
+    if (inObstacle(curMap, x1 + (x2-x1)*k/n, y1 + (y2-y1)*k/n, 14)) return false;
+  return true;
+}
 function simulateMovePath(sx, sy, tx, ty){
   const path = [{ x: sx, y: sy }];
   let x = sx, y = sy;
@@ -873,6 +969,12 @@ function simulateMovePath(sx, sy, tx, ty){
     stuck = dist(x, y, lastX, lastY) < stepLen*0.4 ? stuck + 1 : 0;
     if (!stuck) side = 0;   // thoát rồi thì thả bên đã chọn, để lần kẹt sau chọn lại
     lastX = x; lastY = y;
+  }
+  // Hết 200 bước mà vẫn chưa tới: bám mép đã chịu thua. Trả về đường BFS nếu có — thà đi vòng
+  // một quãng thừa còn hơn để người chơi bấm rồi nhân vật đứng im không hiểu vì sao.
+  if (dist(x, y, tx, ty) > stepLen*2){
+    const alt = navPath(sx, sy, tx, ty);
+    if (alt) return alt;
   }
   return path;
 }
@@ -5711,7 +5813,11 @@ function update(dt){
     // QA: chỉ farm ĐÚNG 1 bãi quái — khoá vào zone của mục tiêu đầu tiên tìm được (m.zone: cùng
     // tham chiếu cho mọi quái spawn từ 1 bãi/1 đợt), các frame sau chỉ xét quái CÙNG zone đó, dù
     // bãi khác có lọt vào bán kính quét cũng bỏ qua — không còn "lan" farm sang bãi kế bên.
-    let _at = null, _bd = _ac.range;
+    // Tầng Sâu: tầng chỉ chuyển khi SẠCH quái, nên một con lang thang ra ngoài tầm quét là kẹt
+    // vĩnh viễn — đo được con cuối cách neo 427px với tầm 430px, sát mép tới mức chỉ cần nó nhích
+    // thêm một bước là AUTO mất dấu. Trong sảnh kín chỉ có ĐÚNG một ổ quái nên quét rộng ra không
+    // sợ lan sang bãi khác.
+    let _at = null, _bd = DEEP ? Math.max(_ac.range, 900) : _ac.range;
     for (const m of mobs){
       if (m.dead) continue;
       if (!_ac.boss && (m.def.bossKind || m.type === 'boss')) continue; // auto không tự khơi trận boss — trừ khi bật trong Cài Đặt
@@ -15649,7 +15755,7 @@ function deepStart(){
     addFloat(player.x, player.y-50, 'Cần cấp 20 để xuống Tầng Sâu', '#ff9a6a', 13); return;
   }
   DEEP = { floor: 0, bank: { silver:0, tuvi:0, xp:0, mat:0, tienDan:0, hap:{} }, entered: Date.now() };
-  DGN = null;
+  DGN = null; navInvalidate();   // Tầng Sâu gỡ hết tường phòng ⇒ lưới cũ còn ghi tường
   travelTo(DEEP_MAP);
   deepNextFloor();
 }
@@ -15746,6 +15852,7 @@ function updateDeep(){   // không dùng dt: mỗi tầng chỉ chuyển khi S�
 let DGN = null; // { id, def, wave, bossRef, cleared }
 function startDungeonRun(mapId){
   const def = DUNGEONS[mapId]; if (!def) return;
+  navInvalidate();   // lượt phó bản dựng tường ngăn phòng — địa hình đổi ngay tại đây
   DGN = { id: mapId, def, wave: 0, bossRef: null, cleared: false, timeLeft: def.timeLimit, failed: false,
           doorOpen: [false, false] };
   nextDungeonWave();
@@ -15758,6 +15865,7 @@ function nextDungeonWave(){
   const _prevDoor = DGN.wave - 2;
   if (_prevDoor >= 0 && _prevDoor < DGN.doorOpen.length && !DGN.doorOpen[_prevDoor]){
     DGN.doorOpen[_prevDoor] = true;
+    navInvalidate();   // cửa đá vừa mở ⇒ lưới tìm đường phải biết khe đó đã thông
     const _w2 = DGN_WALLS[_prevDoor];
     addEffect({ type:'ring', x:(DGN_GATE.x0+DGN_GATE.x1)/2, y:_w2.y + _w2.h/2, r:110, color:'#7ecbff', big:true });
     zoneBanner = { text:'⛨ CỬA ĐÁ MỞ', sub:'Phòng kế tiếp đã thông — tiến lên phía Bắc!', color:'#7ecbff', t:3 };
