@@ -4200,7 +4200,7 @@ function drawBossTele(m){
 // shake: 0 TẮT · 1 NHẸ (mặc định) · 2 ĐẦY. Trước đây là boolean và mặc định `false` để chống
 // chóng mặt — nhưng bật/tắt là quá thô, và hậu quả là TOÀN BỘ 12 chỗ đặt shakeT/shakeMag trong
 // game không ai nhìn thấy. Diablo luôn rung, chỉ là rung rất khẽ và CÓ HƯỚNG.
-const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true },
+const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false },
   (()=>{ try { return JSON.parse(localStorage.getItem('vlcm_settings') || '{}'); } catch { return {}; } })());
 // Save cũ lưu `shake` là boolean. Không di trú thì Object.assign ghi đè `false` lên mặc định
 // mới và người chơi cũ mắc kẹt ở mức TẮT vĩnh viễn — mà họ chưa từng chọn tắt, đó chỉ là
@@ -11694,14 +11694,58 @@ function fxOverlay(id, k){
   const e = el(id); if (e) e.style.opacity = v;
 }
 let _fxPrev = 0;
+// ── Bảng đo hiệu năng (bật ở Cài Đặt) ────────────────────────────────────────
+// Tách rõ hai phần, vì chúng nằm ở hai nơi khác nhau của máy:
+//   JS     = thời gian CPU chạy update()+render() để GỬI lệnh vẽ — có card đồ hoạ hay không cũng vậy
+//   RASTER = thời gian TÔ điểm ảnh, xảy ra SAU khi render() trả về — hoàn toàn do card đồ hoạ
+// Máy dựng game này chạy phần mềm giả lập card (SwiftShader, ~634 triệu điểm ảnh/giây) nên raster
+// chiếm 89-93% mỗi khung. Trên máy có card thật, phần đó rẻ hơn hàng chục lần — bảng này để người
+// chơi tự đọc số trên MÁY CỦA HỌ thay vì tin vào số đo ở máy dựng.
+const _perf = { js: [], frame: [], fps: 0, ms: 0, jsMs: 0, rasMs: 0, t: 0 };
+function perfSample(jsMs, frameMs){
+  _perf.js.push(jsMs); _perf.frame.push(frameMs);
+  if (_perf.js.length < 30) return;
+  const med = a2 => { const x = a2.slice().sort((u,v)=>u-v); return x[x.length>>1]; };
+  _perf.jsMs = +med(_perf.js).toFixed(2);
+  _perf.ms   = +med(_perf.frame).toFixed(2);
+  _perf.rasMs = +Math.max(0, _perf.ms - _perf.jsMs).toFixed(2);
+  _perf.fps  = +(1000/_perf.ms).toFixed(1);
+  _perf.js.length = 0; _perf.frame.length = 0;
+}
+function drawPerfHud(){
+  if (!SETTINGS.perfHud || !_perf.fps) return;
+  const L = [
+    `${_perf.fps} FPS  ·  ${_perf.ms} ms/khung`,
+    `JS ${_perf.jsMs} ms  ·  raster ${_perf.rasMs} ms`,
+    `hiệu ứng: ${['Thấp','Vừa','Đầy'][FXQ]}${FXQ_AUTO ? ' (tự chỉnh)' : ''}  ·  sprite ${_hsCache.size}`,
+  ];
+  ctx.save();
+  ctx.font = 'bold 11.5px ui-monospace, Menlo, Consolas, monospace';
+  const w = Math.max(...L.map(t => ctx.measureText(t).width)) + 16;
+  // Góc TRÁI-DƯỚI: cột phải đã có bạc/Tinh Thạch rồi hai nút PK và AUTO, đặt vào đó là đè lên
+  // nhau ngay. Nhật ký chiến đấu bắt đầu từ mép dưới 104px nên chỗ này còn trống.
+  const x0 = 12, y0 = H - 190;
+  ctx.fillStyle = 'rgba(8,9,20,.82)';
+  ctx.beginPath(); ctx.roundRect(x0, y0, w, 58, 7); ctx.fill();
+  ctx.strokeStyle = 'rgba(126,203,255,.35)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.textAlign = 'left';
+  ctx.fillStyle = _perf.fps >= 55 ? '#6ae88a' : _perf.fps >= 40 ? '#ffd76a' : '#ff8f6b';
+  ctx.fillText(L[0], x0 + 8, y0 + 17);
+  ctx.fillStyle = '#9aa8d4';
+  ctx.fillText(L[1], x0 + 8, y0 + 33);
+  ctx.fillText(L[2], x0 + 8, y0 + 49);
+  ctx.restore();
+}
 function loop(now){
   requestAnimationFrame(loop); // schedule first — an error can never freeze the game
   const dt = Math.min(0.05, (now - lastTime)/1000);
   lastTime = now;
-  try { update(dt); render(); } catch(e){ console.error(e); }
+  const _t0 = performance.now();
+  try { update(dt); render(); drawPerfHud(); } catch(e){ console.error(e); }
+  const _js = performance.now() - _t0;
   // Đo bằng KHOẢNG CÁCH GIỮA HAI KHUNG, không phải thời gian chạy update+render: phần đắt nhất
   // là raster, xảy ra SAU khi render() trả về, nên đo trong thân hàm sẽ không thấy gì cả.
-  if (_fxPrev) fxAutoTune(Math.min(200, now - _fxPrev));
+  if (_fxPrev){ fxAutoTune(Math.min(200, now - _fxPrev)); perfSample(_js, Math.min(200, now - _fxPrev)); }
   _fxPrev = now;
 }
 requestAnimationFrame(loop);
@@ -14573,6 +14617,7 @@ function renderSettings(){
     <div class="set-row"><span>🏷 Tên quái vật</span>${tog('mobName')}</div>
     <div class="set-row"><span>📳 Rung màn hình</span><span>${[[0,'TẮT'],[1,'NHẸ'],[2,'ĐẦY']].map(([v,t]) =>
       `<button class="mini-btn ${(SETTINGS.shake|0) === v ? '' : 'danger'}" onclick="setShake(${v})">${t}</button>`).join(' ')}</span></div>
+    <div class="set-row"><span>📈 Bảng đo hiệu năng <i>(FPS · JS · raster)</i></span>${tog('perfHud')}</div>
     <div class="set-row"><span>🍃 Hiệu ứng <i>(Tự Chỉnh sẽ hạ mức khi máy đuối)</i></span><span>${
       [['auto','Tự Chỉnh'],[2,'Đầy'],[1,'Vừa'],[0,'Thấp']].map(([v,t]) =>
         `<button class="mini-btn ${(v === 'auto' ? FXQ_AUTO : (!FXQ_AUTO && FXQ === v)) ? '' : 'danger'}" onclick="setFxq('${v}')">${t}</button>`).join(' ')
