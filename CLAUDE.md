@@ -494,3 +494,49 @@ Phát triển trên `main`, sau đó sync sang `demo-axie-showcase`:
 git checkout demo-axie-showcase && git merge origin/main --no-edit && git push origin demo-axie-showcase
 git checkout main
 ```
+
+## Đồ rơi phải NẰM DƯỚI ĐẤT, không nhảy thẳng vào túi
+
+`killMob()` KHÔNG được gọi `player.inv.push(it)` nữa. Mọi thứ rơi ra đi qua
+`dropToGround({k:'item'|'jewel', ...}, x, y)` — vật thể có toạ độ, nảy vòng
+cung, nằm 45 giây, có nhãn tên nổi màu theo phẩm.
+
+Bốn con số đo được ở bản cũ, để đừng bao giờ quay lại:
+- 33% số kill **im lặng tuyệt đối** — 0 chữ, 0 tiếng, 0 dòng log
+- tiếng rơi ngọc bị `AudioSys` debounce 70ms **nuốt 100%**: `killMob` đã gọi
+  `sfx('coin')` vài phần nghìn giây trước `rollJewels`. Âm cho thứ rơi ra
+  **không được trùng tên** với âm đã phát trong cùng một `killMob`.
+- túi đầy → **50/50 món mất trắng**, không một lời cảnh báo. Nay đồ nằm lại
+  dưới đất và đổi nhãn `⚠ TÚI ĐẦY`.
+- 229 chữ bay là vật liệu vụn vs 29 chữ tên trang bị. **Vật liệu vụn về
+  `logCombat`**, `addFloat` để dành cho đồ, ngọc và những thứ đáng dừng tay.
+
+Ba luật kèm theo:
+- `groundLoot` **không lưu vào save** và **phải bị xoá trong `buildWorld()`**
+  — không thì đồ map cũ hiện lơ lửng ở map mới.
+- **AUTO bật thì nới tầm hút gấp 3.** Lớp tầm xa giết quái cách 200px; để
+  nguyên bán kính đi-ngang-qua là treo máy cả tiếng rồi bỏ lại nguyên bãi đồ.
+- Nút J trên thanh kỹ năng phải theo **đúng** thứ tự ưu tiên của phím J
+  (nhặt đồ → hái thuốc → nhảy), không thì điện thoại không có cách nào nhặt.
+
+Hình vật phẩm được vẽ cho **ô túi nền tối**. Đặt thẳng lên bãi cỏ sáng là mất
+hút — mỗi món dưới đất phải có tấm nền tối bo góc + viền màu phẩm.
+
+## Sự kiện thế giới chạy theo GIỜ THẬT
+
+Ba sự kiện, cùng một khuôn: `*NextBoundary(after)` snap về mốc giờ, cảnh báo
+trước, kích hoạt, hết cửa thì dọn. State tính lại được từ `Date.now()` nên
+**không lưu vào save** — đến trễ là lỡ chuyến, đúng nhịp MU.
+
+| Sự kiện | Mốc giờ | Cửa mở | Báo trước |
+|---|---|---|---|
+| Hung Thần Giáng Thế | 0h·4h·8h·12h·16h·20h | 30 phút | 10 phút |
+| Xâm Lăng Vàng | 2h·6h·10h·14h·18h·22h | 12 phút | 10 phút |
+| Chúa Tể Vực Nứt | 0h·6h·12h·18h (4 lượt/ngày) | 45 phút | 15 phút |
+
+Hai chốt của Vực Nứt chỉ lộ ra khi **chụp màn hình**, không phải khi đọc code:
+- `aggro: 9999` + cho nứt ở cả bãi tân thủ = nhân vật cấp 1 vừa vào bãi đầu
+  tiên đã bị boss băng qua nửa map đấm chết trong 2 nhịp.
+- Bậc Bảo Hạp tính theo **map** thì người chơi cấp thấp mở ra toàn đồ ngoài
+  khoảng cấp dùng được. `BAOHAP_TIERS` khoá khoảng cấp đồ → thưởng hạp luôn
+  phải tính theo **cấp người chơi**.
