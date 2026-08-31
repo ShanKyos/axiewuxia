@@ -26,12 +26,32 @@ if ! nginx -t; then
   exit 1
 fi
 
-systemctl reload nginx || { echo ">>> reload hỏng"; exit 1; }
+# reload CHỈ dùng được khi nginx đang chạy. Nếu nó đang tắt (ví dụ vì một lần khởi động lại với
+# cấu hình hỏng trước đó) thì reload báo "is not active, cannot reload" và trang vẫn nằm im — đã
+# vấp thật, và hậu quả là website chết mà thông báo trên màn hình chỉ nói "reload hỏng".
+if systemctl is-active --quiet nginx; then
+  systemctl reload nginx || { echo ">>> reload hỏng"; exit 1; }
+else
+  echo "nginx đang KHÔNG chạy — khởi động thay vì nạp lại."
+  systemctl start nginx || {
+    echo ">>> KHÔNG khởi động được nginx. Xem lý do:"
+    systemctl status nginx --no-pager -l | tail -20
+    exit 1
+  }
+fi
 # reload là BẤT ĐỒNG BỘ: lệnh trả về ngay, nhưng worker cũ còn phục vụ nốt vài nhịp nữa. Đo ngay
 # lập tức sẽ trúng worker cũ và báo "chưa đạt" trên một cấu hình hoàn toàn đúng — đã vấp thật.
 sleep 3
 echo
 echo ">>> ĐÃ NẠP LẠI. Kiểm chứng:"
+echo
+
+CODE=$(curl -s -o /dev/null -w '%{http_code}' "$HOST/game.js")
+if [ "$CODE" != "200" ]; then
+  echo ">>> TRANG KHÔNG PHỤC VỤ ĐƯỢC (mã $CODE). Xem: systemctl status nginx"
+  exit 1
+fi
+echo "trang sống — HTTP $CODE"
 echo
 
 printf '%-38s' "game.js"
