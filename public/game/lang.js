@@ -673,13 +673,7 @@ Object.assign(EXACT, {
   'Nhân Vật — mọi tu luyện trong một': 'Character — every training system in one place',
   'Thú Chiến': 'Mount',
   '🐾 Linh Thú': '🐾 Pets',
-  '☬ Hóa Thân': '☬ Shapeshift',
-  '🌀 Tu La Trận': '🌀 Asura Arena',
-  '🧪 Luyện Đan': '🧪 Alchemy',
   'LINH THÚ': 'PET',
-  'HÓA THÂN TRẤN ẢI': 'PASS GUARDIAN SHAPESHIFT',
-  'VẠN KIẾM TU LA TRẬN': 'TEN THOUSAND SWORDS ASURA ARENA',
-  'LUYỆN ĐAN': 'ALCHEMY',
 });
 
 /* ---- Forge / Mount / Ascension / Instinct Channels / Card — sub-panels reachable from Character ---- */
