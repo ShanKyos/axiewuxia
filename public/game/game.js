@@ -12,7 +12,28 @@ const ctx = canvas.getContext('2d');
 const miniCvs = document.getElementById('minimap');
 const miniCtx = miniCvs ? miniCvs.getContext('2d') : null;
 let W = 0, H = 0;
-function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+// ── Độ phân giải vẽ ──────────────────────────────────────────────────────────
+// Đòn bẩy fill-rate lớn nhất còn lại, và là đòn duy nhất chắc chắn đạt 60 FPS trên MỌI máy.
+// Đo trên máy dựng game (KHÔNG có card đồ hoạ, SwiftShader ~634 triệu điểm ảnh/giây), cảnh 60
+// quái ở mức hiệu ứng Đầy:
+//     100%  1280x760 → 34,1 FPS      75%  960x570 → 56,2 FPS
+//      85%  1088x646 → 43,9 FPS      60%  768x456 → 60,2 FPS  ← kịch trần vsync
+// Chi phí tô điểm ảnh tỉ lệ với DIỆN TÍCH, nên hạ 40% chiều là còn 36% số điểm ảnh. Đổi lại
+// chữ và nét vẽ mềm đi vì canvas bị phóng to lên đúng bằng cửa sổ — nên mặc định là 100% và
+// chỉ tự hạ khi máy thật sự không gánh nổi, kể cả sau khi đã hạ hiệu ứng xuống mức Thấp.
+const RES_STEPS = [1, 0.85, 0.75, 0.6];
+let RES = 1, RES_AUTO = true;
+function resize(){
+  // W/H là kích thước LOGIC, luôn bằng cửa sổ tính theo điểm ảnh CSS — RES không đụng tới nó.
+  // Chỉ BỘ ĐỆM co lại; render() nhân sẵn ctx theo RES nên toàn bộ mã game vẫn vẽ theo W/H như cũ.
+  // Cách này quan trọng chứ không phải cho gọn: nếu để W/H co theo RES thì hạ độ nét cũng thu hẹp
+  // TẦM NHÌN (60% là mất 40% bề ngang thế giới) — người máy yếu tự nhiên nhìn được ít hơn người
+  // máy khoẻ. Đó là thay đổi lối chơi, không phải thay đổi đồ hoạ.
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width  = Math.round(W * RES);
+  canvas.height = Math.round(H * RES);
+  // Việc phủ kín cửa sổ do CSS lo (#game đặt width/height 100% — xem style.css).
+}
 window.addEventListener('resize', resize); resize();
 
 // ---------- Balance data ----------
@@ -4216,7 +4237,7 @@ function drawBossTele(m){
 // shake: 0 TẮT · 1 NHẸ (mặc định) · 2 ĐẦY. Trước đây là boolean và mặc định `false` để chống
 // chóng mặt — nhưng bật/tắt là quá thô, và hậu quả là TOÀN BỘ 12 chỗ đặt shakeT/shakeMag trong
 // game không ai nhìn thấy. Diablo luôn rung, chỉ là rung rất khẽ và CÓ HƯỚNG.
-const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false },
+const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto' },
   (()=>{ try { return JSON.parse(localStorage.getItem('vlcm_settings') || '{}'); } catch { return {}; } })());
 // Save cũ lưu `shake` là boolean. Không di trú thì Object.assign ghi đè `false` lên mặc định
 // mới và người chơi cũ mắc kẹt ở mức TẮT vĩnh viễn — mà họ chưa từng chọn tắt, đó chỉ là
@@ -6563,6 +6584,10 @@ function drawSpring(){
 }
 
 function render(){
+  // Đặt lại phép biến hình gốc mỗi khung: mọi thứ bên dưới vẽ theo toạ độ LOGIC (W/H, điểm ảnh
+  // CSS), còn bộ đệm thì nhỏ hơn đúng RES lần. Đặt ở đây chứ không ở resize() để không phụ thuộc
+  // vào việc mọi save() bên dưới đều có restore() khớp.
+  ctx.setTransform(RES, 0, 0, RES, 0, 0);
   // paper background — màu nền theo bản đồ hiện tại
   const md = mapDef();
   ctx.fillStyle = md.ground; ctx.fillRect(0,0,W,H);
@@ -11674,8 +11699,31 @@ function fxAutoTune(ms){
   if (med > 30 && FXQ > 0) FXQ--;
   else if (med > 21 && FXQ > 1) FXQ--;
   else if (med < 13 && FXQ < 2) FXQ++;
-  if (FXQ !== was){ SETTINGS.lowFx = FXQ === 0; _fxHold = FXQ > was ? 600 : 240; fxApply(); fxNote(); }
+  if (FXQ !== was){ SETTINGS.lowFx = FXQ === 0; _fxHold = FXQ > was ? 600 : 240; fxApply(); fxNote(); return; }
+  // Hiệu ứng đã kịch mức Thấp mà vẫn không đủ 60 → hạ độ phân giải. Đây là thứ tự CỐ Ý: hiệu ứng
+  // mất đi thì người chơi không thấy thiếu, còn hạ độ phân giải là chữ mềm đi — trả giá sau cùng.
+  if (!RES_AUTO) return;
+  const ri = RES_STEPS.indexOf(RES), i = ri < 0 ? 0 : ri;
+  if (med > 19 && FXQ === 0 && i < RES_STEPS.length - 1) resSet(RES_STEPS[i + 1], true);
+  else if (med < 13 && i > 0) resSet(RES_STEPS[i - 1], true);
 }
+// Đổi độ phân giải. `auto` chỉ để phân biệt người chơi tự chọn (ghi vào Cài Đặt) với bộ tự chỉnh.
+function resSet(v, auto){
+  const was = RES;
+  RES = clamp(+v || 1, 0.5, 1);
+  if (!auto){ RES_AUTO = false; SETTINGS.res = RES; saveSettings(); }
+  if (RES !== was){
+    resize();
+    _fxHold = RES > was ? 600 : 240;   // nâng lên thì giữ lâu hơn, tránh nhấp nháy quanh ngưỡng
+    if (auto && player) addFloat(player.x, player.y - 86,
+      `⚙ Độ nét: ${Math.round(RES*100)}% (tự chỉnh theo máy — đổi tay ở Cài Đặt)`, '#8ab4ff', 12);
+  }
+  if (!auto) renderSettings();
+}
+window.setRes = function(v){
+  if (v === 'auto'){ RES_AUTO = true; SETTINGS.res = 'auto'; saveSettings(); renderSettings(); return; }
+  resSet(+v, false);
+};
 window.setFxq = function(v){
   if (v === 'auto'){ FXQ_AUTO = true; }
   else { FXQ_AUTO = false; FXQ = clamp(+v, 0, 2); }
@@ -11687,6 +11735,10 @@ function fxLoad(){
   const v = SETTINGS.fxq;
   if (v === undefined || v === 'auto'){ FXQ_AUTO = true; FXQ = SETTINGS.lowFx ? 0 : 2; }
   else { FXQ_AUTO = false; FXQ = clamp(+v, 0, 2); SETTINGS.lowFx = FXQ === 0; }
+  const r = SETTINGS.res;
+  if (r === undefined || r === 'auto'){ RES_AUTO = true; }
+  else { RES_AUTO = false; RES = clamp(+r, 0.5, 1); }
+  resize();
   fxApply();
 }
 function fxNote(){
@@ -11740,14 +11792,15 @@ function drawPerfHud(){
   const L = [
     `${_perf.fps} FPS  ·  ${_perf.ms} ms/khung`,
     `JS ${_perf.jsMs} ms  ·  raster ${_perf.rasMs} ms`,
-    `hiệu ứng: ${['Thấp','Vừa','Đầy'][FXQ]}${FXQ_AUTO ? ' (tự chỉnh)' : ''}  ·  sprite ${_hsCache.size}`,
+    `hiệu ứng ${['Thấp','Vừa','Đầy'][FXQ]}${FXQ_AUTO ? '*' : ''}  ·  độ nét ${Math.round(RES*100)}%${RES_AUTO ? '*' : ''}  ·  sprite ${_hsCache.size}`,
   ];
   ctx.save();
   ctx.font = 'bold 11.5px ui-monospace, Menlo, Consolas, monospace';
   const w = Math.max(...L.map(t => ctx.measureText(t).width)) + 16;
-  // Góc TRÁI-DƯỚI: cột phải đã có bạc/Tinh Thạch rồi hai nút PK và AUTO, đặt vào đó là đè lên
-  // nhau ngay. Nhật ký chiến đấu bắt đầu từ mép dưới 104px nên chỗ này còn trống.
-  const x0 = 12, y0 = H - 190;
+  // Góc TRÁI-TRÊN, ngay dưới khối tên/hồ lô/giờ. Đã thử góc phải (đè lên hai nút PK và AUTO) rồi
+  // góc trái-dưới — chỗ đó đè lên Nhật Ký Chiến Đấu, vốn cao tới 22vh nên trên màn hình thấp thì
+  // mép trên của nó leo lên tận giữa màn. Trái-trên là dải duy nhất cố định và luôn trống.
+  const x0 = 12, y0 = 112;
   ctx.fillStyle = 'rgba(8,9,20,.82)';
   ctx.beginPath(); ctx.roundRect(x0, y0, w, 58, 7); ctx.fill();
   ctx.strokeStyle = 'rgba(126,203,255,.35)'; ctx.lineWidth = 1; ctx.stroke();
@@ -14644,6 +14697,10 @@ function renderSettings(){
     <div class="set-row"><span>🍃 Hiệu ứng <i>(Tự Chỉnh sẽ hạ mức khi máy đuối)</i></span><span>${
       [['auto','Tự Chỉnh'],[2,'Đầy'],[1,'Vừa'],[0,'Thấp']].map(([v,t]) =>
         `<button class="mini-btn ${(v === 'auto' ? FXQ_AUTO : (!FXQ_AUTO && FXQ === v)) ? '' : 'danger'}" onclick="setFxq('${v}')">${t}</button>`).join(' ')
+    }</span></div>
+    <div class="set-row"><span>🔍 Độ nét <i>(hạ xuống để chạy mượt trên máy yếu — chữ sẽ mềm hơn)</i></span><span>${
+      [['auto','Tự Chỉnh'],[1,'100%'],[0.85,'85%'],[0.75,'75%'],[0.6,'60%']].map(([v,t]) =>
+        `<button class="mini-btn ${(v === 'auto' ? RES_AUTO : (!RES_AUTO && Math.abs(RES - v) < 0.001)) ? '' : 'danger'}" onclick="setRes('${v}')">${t}</button>`).join(' ')
     }</span></div>
     <div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin:-2px 0 8px">Đang chạy: <b style="color:#8ab4ff">${['Thấp','Vừa','Đầy'][FXQ]}</b>${FXQ_AUTO ? ' <i>(tự chỉnh)</i>' : ''} — mức thấp tắt quầng sáng và lớp phủ, đổi lại khung hình mượt hơn nhiều.</div>
     <div class="set-row"><span>🌐 Ngôn ngữ / Language</span><button class="mini-btn" onclick="window.ghhaSwitchLang && window.ghhaSwitchLang()">${(window.ghhaLang && window.ghhaLang() === 'en') ? '🇻🇳 Tiếng Việt' : '🇬🇧 English'}</button></div>
