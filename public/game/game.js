@@ -5193,15 +5193,37 @@ function checkTitles(){
   if (changed){ calcDerived(); saveGame(); }
 }
 
+// Hàm này quyết định phím Space và mọi chiêu tự nhắm sẽ đánh vào ai. Trước đây nó chỉ lọc Du
+// Hiệp, nên BOSS cũng được coi như quái thường — mà boss thì to, đứng lì và có tầm truy đuổi 420,
+// nên chỉ cần nó lảng vảng vào là mọi cú bấm của người chơi đổi hướng sang nó. Tutorial dạy "Nhấn
+// SPACE để đánh quái gần nhất" và người chơi mới đâm thẳng vào một con 1.091 máu, đánh 32 giây
+// mới trừ được 187 máu trong khi máu mình từ 291 xuống 42.
+// Nay boss bị XẾP SAU chứ không bị loại: còn quái thường trong tầm thì đánh quái thường, hết mới
+// tới boss. Đứng cạnh mỗi boss thì vẫn đánh được nó — người chơi đã tự đi tới đó thì họ muốn thế.
 function nearestMob(range){
-  let best = null, bd = range;
+  let best = null, bd = range, boss = null, bbd = range;
   for (const m of mobs){
     if (m.dead) continue;
     if (m.def.duHiep && !player.pk && !m.revenge) continue; // Du Hiệp chỉ đánh được khi bật PK (trừ kẻ truy thù)
     const d = dist(player.x, player.y, m.x, m.y);
-    if (d < bd){ bd = d; best = m; }
+    if (m.def.bossKind || m.def.boss || m.type === 'boss'){ if (d < bbd){ bbd = d; boss = m; } }
+    else if (d < bd){ bd = d; best = m; }
   }
-  return best;
+  return best || boss;
+}
+// Bãi quái gần nhất mà KHÔNG nằm trong tầm với của bất kỳ boss nào — đích để AUTO rút về.
+function autoSafeSpot(){
+  const md = MAPS[curMap], live = mobs.filter(m => !m.dead && (m.def.bossKind || m.def.boss || m.type === 'boss'));
+  const safe = (x, y) => live.every(b => dist(x, y, b.x, b.y) > 520);
+  let best = null, bd = Infinity;
+  for (const k of (md && md.packs) || []){
+    if (!safe(k.x, k.y)) continue;
+    const d = dist(player.x, player.y, k.x, k.y);
+    if (d < bd){ bd = d; best = { x:k.x, y:k.y }; }
+  }
+  if (best) return best;
+  const sp = md && md.spawn;                       // không bãi nào an toàn → về điểm thả
+  return sp && safe(sp.x, sp.y) ? { x:sp.x, y:sp.y } : null;
 }
 // Vệt kiếm khí — màu theo lớp/nguyên tố của chiêu (mặc định thép trắng).
 // ═══ HIỆU ỨNG THEO HOA VĂN VŨ KHÍ ═══
@@ -5862,16 +5884,44 @@ function update(dt){
   if (_bossNear){
     player._bossHintT = (player._bossHintT || 0) - dt;
     if (player._bossHintT <= 0){ addFloat(player.x, player.y-64, '⚠ Vùng Boss — auto tạm dừng, hãy tự chiến!', '#ff9a5a', 13); player._bossHintT = 6; }
-    // AUTO không tự khơi trận boss, nhưng trước đây đứng im HOÀN TOÀN — không né, không uống
-    // thuốc — trong lúc vẫn ăn đòn miễn phí từ boss lẫn bãi quái xung quanh (QA level 1→120 bắt
-    // được ca chết oan của nhân vật cấp 1 vừa vào Chọn Trận). Lùi xa khỏi boss + vẫn tự hồi máu.
-    const _nb = mobs.find(b => !b.dead && (b.def.bossKind || b.type === 'boss') && dist(player.x, player.y, b.x, b.y) < 300);
-    if (_nb){
-      const _bdd = dist(player.x, player.y, _nb.x, _nb.y);
-      if (_bdd > 0){ mx += (player.x - _nb.x)/_bdd; my += (player.y - _nb.y)/_bdd; }
+    // Trước đây chỗ này chỉ HẤT NGƯỢC người chơi ra xa boss mỗi khung. Không bao giờ thoát được:
+    // bán kính tạm dừng là 300 còn tầm truy đuổi của boss là 420, nên boss cứ bám theo và nhân
+    // vật rung qua rung lại ở mép vòng cho tới khi chết hoặc người chơi tự tắt AUTO. Đo được:
+    // 2 phút AUTO cạnh Chúa Heo Rừng = 0 quái bị hạ.
+    // Nay chọn hẳn MỘT bãi quái nằm ngoài tầm với của mọi boss rồi ĐI TỚI ĐÓ, theo tuyến đã cam
+    // kết (né vật cản, không tự nghĩ lại mỗi khung — xem movePlan ở click-to-move).
+    if (!player._fleeTo){
+      player._fleeTo = autoSafeSpot();
+      player._fleePlan = null;
+      player._autoZoneLocked = false;   // bãi cũ không còn hợp lệ, để AUTO chọn lại khi tới nơi
+    }
+    if (player._fleeTo){
+      const _ft = player._fleeTo, _fd = dist(player.x, player.y, _ft.x, _ft.y);
+      if (_fd < 90){
+        // Tới nơi: dời neo AUTO về đây rồi thả trạng thái chạy trốn. Khung sau _bossNear đã tắt
+        // (bãi này cách mọi boss >520) nên AUTO tự bắt lại nhịp cày bình thường.
+        player._autoAX = _ft.x; player._autoAY = _ft.y;
+        player._fleeTo = null; player._fleePlan = null;
+      } else {
+        if (!player._fleePlan) player._fleePlan = { p: simulateMovePath(player.x, player.y, _ft.x, _ft.y), i: 1 };
+        const _fp = player._fleePlan;
+        while (_fp.p && _fp.i < _fp.p.length - 1 &&
+               dist(player.x, player.y, _fp.p[_fp.i].x, _fp.p[_fp.i].y) < 22) _fp.i++;
+        const _w = (_fp.p && _fp.p.length > 1) ? _fp.p[Math.min(_fp.i, _fp.p.length - 1)] : _ft;
+        const _wd = dist(player.x, player.y, _w.x, _w.y);
+        if (_wd > 1){ mx += (_w.x - player.x)/_wd; my += (_w.y - player.y)/_wd; }
+      }
+    } else {
+      // Cả map không còn chỗ nào ngoài tầm boss — lùi thẳng ra như cũ còn hơn đứng im ăn đòn.
+      const _nb = mobs.find(b => !b.dead && (b.def.bossKind || b.type === 'boss') && dist(player.x, player.y, b.x, b.y) < 300);
+      if (_nb){
+        const _bdd = dist(player.x, player.y, _nb.x, _nb.y);
+        if (_bdd > 0){ mx += (player.x - _nb.x)/_bdd; my += (player.y - _nb.y)/_bdd; }
+      }
     }
     if (_ac.potion && player.hp < player.maxHp*(_ac.potionPct/100) && player.potions > 0 && (player.potionCd || 0) <= 0) usePotion();
   }
+  if (!_bossNear && player._fleeTo){ player._fleeTo = null; player._fleePlan = null; }
   if (player.auto && !dead && !_bossNear){
     if (player._autoAX == null){ player._autoAX = player.x; player._autoAY = player.y; }
     // Tầng Sâu: cả tầng CHỈ có một ổ quái quanh tâm sảnh, và tầng chỉ chuyển khi sạch quái. Neo
