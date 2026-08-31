@@ -5,9 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Axie Wuxia (PvE Webgame)</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Bộ chữ tự chứa. Bản trước gọi thẳng fonts.googleapis.com — một bảng kiểu CHẶN VẼ
+     do bên thứ ba giữ, nằm ngay trên đường tới hạn của trang. Xem fonts.css. -->
+<!-- Chữ thân trang là Be Vietnam Pro 400. Tiếng Việt cần CẢ HAI tập: chữ cái nền lấy từ
+     tập latin, còn các chữ có dấu lấy từ tập vietnamese — thiếu một là nhấp nháy nửa chừng. -->
+<link rel="preload" href="fonts/QdVPSTAyLFyeg_IDWvOJmVES_Hw3BXo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/QdVPSTAyLFyeg_IDWvOJmVES_Hw4BXoKZA.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="fonts.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>

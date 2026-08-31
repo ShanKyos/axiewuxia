@@ -11,6 +11,7 @@ type App = Hono<{ Bindings: HttpBindings }>;
 // KHÔNG một tệp nào có Cache-Control — nghĩa là mỗi lần người chơi mở lại game là tải lại từ đầu
 // toàn bộ 11,4 MB đó. Riêng game.js là 1,06 MB thô, gzip xuống còn khoảng một phần năm.
 const ONE_WEEK = 60 * 60 * 24 * 7;
+const ONE_YEAR = 60 * 60 * 24 * 365;
 
 export function serveStaticFiles(app: App) {
   const distPath = path.resolve(import.meta.dirname, "../dist/public");
@@ -29,6 +30,12 @@ export function serveStaticFiles(app: App) {
         // nào tự thoát. Ảnh và nhạc thì gần như không bao giờ đổi nội dung dưới cùng một tên —
         // cho chúng cache dài; mã và trang thì bắt hỏi lại mỗi lần (đổi thì 200, không đổi thì
         // 304 rỗng — vẫn tiết kiệm gần trọn băng thông mà không bao giờ phục vụ bản cũ).
+        // Riêng bộ chữ thì tên tệp DO Google đặt theo nội dung (wXKrE3kT…woff2) — nội dung đổi
+        // là tên đổi, nên ở đây immutable là an toàn: trình duyệt không hỏi lại lần nào nữa.
+        if (/\/fonts\/.*\.woff2?$/i.test(filePath)) {
+          c.header("Cache-Control", `public, max-age=${ONE_YEAR}, immutable`);
+          return;
+        }
         const asset = /\.(png|jpe?g|gif|webp|svg|mp3|ogg|wav|woff2?|ttf)$/i.test(filePath);
         c.header(
           "Cache-Control",
