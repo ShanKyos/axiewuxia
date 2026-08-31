@@ -6370,7 +6370,12 @@ function update(dt){
     }
     m.respawnT -= dt;
     if (m.respawnT <= 0 && m.zone){
-      if (zoneAliveCount(m.zone) < m.zone.count){ spawnMob(m.type, m.zone, undefined, true); m.gone = true; }
+      // Truyền lại m.pack. Trước đây chỗ này để `undefined`, mà spawnMob đặt `pack: pack ?? null`
+      // — nên MỌI con hồi sinh đều mất mã bãi. AUTO khoá theo mã bãi vì thế chỉ đánh được lứa
+      // quái ĐẦU TIÊN; hạ hết lứa đó là mọi con thay thế đều mang pack=null, không con nào khớp,
+      // AUTO đứng im chịu đòn tới chết. Đo được ở bãi tân thủ, lặp lại 3/3 lượt: hạ 3-4 con trong
+      // 8 giây đầu rồi tịt hẳn, máu tụt đều về 0 trong khi 6 con vây quanh.
+      if (zoneAliveCount(m.zone) < m.zone.count){ spawnMob(m.type, m.zone, m.pack, true); m.gone = true; }
       else m.respawnT = 3;
     }
   }
