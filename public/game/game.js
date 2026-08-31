@@ -3762,43 +3762,47 @@ const BOSS_MOVES = {
   xung:  { tele:1.2, len:340, w:64,   name:'Xung Phong' }, // lao tuyến thẳng tới vị trí người chơi
   goi:   { tele:1.0,                  name:'Triệu Hồi' },  // gọi 2 tùy tùng
   cuong: { tele:1.0,                  name:'Cuồng Hóa' },  // buff công ×1.3 trong 8s (dưới 50% HP)
+  // Hai chiêu dưới đây hỏi người chơi một câu hỏi KHÁC. Năm chiêu trên đều chỉ hỏi "đừng đứng
+  // đó" — không chiêu nào bắt phải LÀM gì. Đó là lý do mọi trận boss cảm giác giống hệt nhau.
+  vogiap:  { tele:5.0, orbs:4, r:120, name:'Niệm Chú Huỷ Diệt' }, // phá 4 cầu giáp trước khi niệm xong
+  daovung: { tele:3.4, r:200,         name:'Tử Vực' },            // CẢ SÂN chết, chỉ một ô sống
 };
 const BOSS_DEFS = {
   daohoa: { thuve:[
       { id:'dh1', name:'Chúa Heo Rừng',       lv:6,  el:'Thổ',  img:'boar',     x:.30, y:.30, moves:['vach','xung','cuong'] },
-      { id:'dh2', name:'Chúa Bầy Gai Tím',        lv:9,  el:'Mộc',  img:'wolf',     x:.64, y:.56, moves:['xung','goi','vach'] },
+      { id:'dh2', name:'Chúa Bầy Gai Tím',        lv:9,  el:'Mộc',  img:'wolf',     x:.64, y:.56, moves:['xung','goi','vach','daovung'] },
       { id:'dh3', name:'Chấp Sự Gloam',  lv:12, el:'Thủy', img:'assassin', x:.42, y:.80, moves:['vach','vong','cuong'] } ],
-    tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:14, el:'Hỏa', img:'boss_hacphong', x:.86, y:.80, moves:['vong','vach','goi','cuong'] } },
+    tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:14, el:'Hỏa', img:'boss_hacphong', x:.86, y:.80, moves:['vong','vach','goi','cuong','vogiap'] } },
   ngoai: { thuve:[
       { id:'ng1', name:'Đầu Mục Gloam',    lv:13, el:'Kim',  img:'bandit',   x:.28, y:.34, moves:['vach','xung','cuong'] },
-      { id:'ng2', name:'Gai Tím Độc Nhãn',lv:16, el:'Mộc',  img:'wolf',     x:.62, y:.62, moves:['xung','vong','goi'] },
+      { id:'ng2', name:'Gai Tím Độc Nhãn',lv:16, el:'Mộc',  img:'wolf',     x:.62, y:.62, moves:['xung','vong','goi','daovung'] },
       { id:'ng3', name:'Đặc Vụ Gloam',   lv:19, el:'Thủy', img:'assassin', x:.40, y:.80, moves:['vach','xung','cuong'] } ],
-    tranai: { id:'ng4', name:'Ma Sói Sương Trắng', lv:22, el:'Hỏa', img:'boss_sontac', x:.85, y:.78, moves:['vach','vong','goi','cuong'] } },
+    tranai: { id:'ng4', name:'Ma Sói Sương Trắng', lv:22, el:'Hỏa', img:'boss_sontac', x:.85, y:.78, moves:['vach','vong','goi','cuong','vogiap'] } },
   chungnam: { thuve:[
       { id:'cn1', name:'Kẻ Đổi Phe',        lv:23, el:'Thủy', img:'phando',   x:.30, y:.32, moves:['vach','xung','goi'] },
-      { id:'cn2', name:'Golem Gỗ Cổ Đại',    lv:26, el:'Thổ',  img:'mocnhan',  x:.64, y:.58, moves:['vong','vach','cuong'] },
+      { id:'cn2', name:'Golem Gỗ Cổ Đại',    lv:26, el:'Thổ',  img:'mocnhan',  x:.64, y:.58, moves:['vong','vach','cuong','daovung'] },
       { id:'cn3', name:'Trưởng Lão Tha Hóa', lv:29, el:'Thủy', img:'boss_phando', x:.44, y:.80, moves:['xung','vach','vong'] } ],
-    tranai: { id:'cn4', name:'Tướng Quân Thornwood Reach', lv:32, el:'Thủy', img:'bandao', x:.86, y:.80, moves:['vach','xung','vong','cuong'] } },
+    tranai: { id:'cn4', name:'Tướng Quân Thornwood Reach', lv:32, el:'Thủy', img:'bandao', x:.86, y:.80, moves:['vach','xung','vong','cuong','vogiap'] } },
   comoc: { thuve:[
       { id:'cm1', name:'Chỉ Huy Vong Binh',  lv:43, el:'Thổ',  img:'kybinh',   x:.30, y:.32, moves:['xung','vach','goi'] },
-      { id:'cm2', name:'Kẻ An Táng Bóng Tối',lv:46, el:'Thủy', img:'thinu',    x:.62, y:.58, moves:['vong','xung','cuong'] },
+      { id:'cm2', name:'Kẻ An Táng Bóng Tối',lv:46, el:'Thủy', img:'thinu',    x:.62, y:.58, moves:['vong','xung','cuong','daovung'] },
       { id:'cm3', name:'Chúa Tể Bất Tử',     lv:49, el:'Thổ',  img:'mocnhan',  x:.42, y:.80, moves:['vach','vong','goi'] } ],
-    tranai: { id:'cm4', name:'Tướng Quân Hollow Roost', lv:52, el:'Mộc', img:'boss_mochu', x:.85, y:.80, moves:['vong','xung','goi','cuong'] } },
+    tranai: { id:'cm4', name:'Tướng Quân Hollow Roost', lv:52, el:'Mộc', img:'boss_mochu', x:.85, y:.80, moves:['vong','xung','goi','cuong','vogiap'] } },
   tuyettinh: { thuve:[
       { id:'tt1', name:'Kẻ Lạc Lối Tuyệt Vọng',lv:63, el:'Thổ',  img:'ttdetu', x:.30, y:.32, moves:['vach','goi','cuong'] },
-      { id:'tt2', name:'Cỏ Dại Băng Giá',     lv:66, el:'Hỏa',  img:'caodo',    x:.64, y:.58, moves:['xung','vong','goi'] },
+      { id:'tt2', name:'Cỏ Dại Băng Giá',     lv:66, el:'Hỏa',  img:'caodo',    x:.64, y:.58, moves:['xung','vong','goi','daovung'] },
       { id:'tt3', name:'Xoáy Sương Nguyền',    lv:69, el:'Mộc',  img:'boss_tinhhoa', x:.42, y:.80, moves:['vach','xung','vong'] } ],
-    tranai: { id:'tt4', name:'Tướng Quân Frostmire Vale', lv:72, el:'Mộc', img:'thinu', x:.86, y:.80, moves:['vong','vach','xung','cuong'] } },
+    tranai: { id:'tt4', name:'Tướng Quân Frostmire Vale', lv:72, el:'Mộc', img:'thinu', x:.86, y:.80, moves:['vong','vach','xung','cuong','vogiap'] } },
   mongco: { thuve:[
       { id:'mc1', name:'Kỵ Sĩ Trưởng Tro Tàn', lv:83, el:'Kim', img:'kybinh',  x:.30, y:.32, moves:['xung','vach','cuong'] },
-      { id:'mc2', name:'Cung Thủ Tinh Nhuệ Tro Tàn', lv:86, el:'Mộc',  img:'cungthu',  x:.64, y:.58, moves:['vong','xung','goi'] },
+      { id:'mc2', name:'Cung Thủ Tinh Nhuệ Tro Tàn', lv:86, el:'Mộc',  img:'cungthu',  x:.64, y:.58, moves:['vong','xung','goi','daovung'] },
       { id:'mc3', name:'Thống Lĩnh Tro Tàn', lv:89, el:'Kim', img:'cuongbinh',x:.42, y:.80, moves:['vach','xung','vong'] } ],
-    tranai: { id:'mc4', name:'Tướng Quân Ashen Steppe', lv:92, el:'Kim', img:'boss_dothong', x:.86, y:.80, moves:['xung','vong','goi','cuong'] } },
+    tranai: { id:'mc4', name:'Tướng Quân Ashen Steppe', lv:92, el:'Kim', img:'boss_dothong', x:.86, y:.80, moves:['xung','vong','goi','cuong','vogiap'] } },
   nhanmon: { thuve:[
       { id:'nm1', name:'Tướng Quân Bão Tố',  lv:103, el:'Kim', img:'daokhach', x:.30, y:.32, moves:['vach','xung','cuong'] },
-      { id:'nm2', name:'Huyết Sát Bão Tố',   lv:106, el:'Hỏa',  img:'cuongbinh',x:.64, y:.58, moves:['vong','vach','goi'] },
+      { id:'nm2', name:'Huyết Sát Bão Tố',   lv:106, el:'Hỏa',  img:'cuongbinh',x:.64, y:.58, moves:['vong','vach','goi','daovung'] },
       { id:'nm3', name:'Tướng Quân Cửa Ải', lv:109, el:'Thổ',  img:'boss_thienbinh', x:.42, y:.80, moves:['xung','vong','vach'] } ],
-    tranai: { id:'nm4', name:'Tướng Quân Stormgate Pass', lv:112, el:'Hỏa', img:'boss_thienbinh', x:.86, y:.80, moves:['vach','xung','vong','cuong'] } },
+    tranai: { id:'nm4', name:'Tướng Quân Stormgate Pass', lv:112, el:'Hỏa', img:'boss_thienbinh', x:.86, y:.80, moves:['vach','xung','vong','cuong','vogiap'] } },
 };
 // Đồng Môn Trợ Uy (Cốt truyện × Tông môn §4): map "chạm nhà" của từng phái
 const SECT_HOOK_MAP = { ngoai:'baidasan', chungnam:'toanchan', tuyettinh:'thieulam', nhanmon:'minhgiao' };
@@ -3838,6 +3842,30 @@ function bossStartTele(m, mvId){
   if (mvId === 'cuong' && m.hp > m.maxHp*0.5){ m.moveT = 2; return; } // Cuồng Hóa chỉ khi dưới nửa máu
   m.tele = { mvId, t: mv.tele, max: mv.tele, x: m.x, y: m.y,
     ang: Math.atan2(player.y - m.y, player.x - m.x), px: player.x, py: player.y };
+  if (mvId === 'vogiap'){
+    // Cầu giáp: máu thấp, đứng yên, không đánh trả — chúng là một bài kiểm tra BÙNG NỔ SÁT
+    // THƯƠNG có hạn giờ, không phải thêm quái để cày.
+    m.tele.orbs = [];
+    for (let i = 0; i < mv.orbs; i++){
+      const a = (i / mv.orbs) * Math.PI * 2 + rnd(0, 0.6);
+      const od = { name:'Cầu Giáp', lv: m.def.lv, hp: Math.round(m.maxHp * 0.035) + 40, atk: 0, def: 0,
+        xp: 0, silver:[0,0], speed: 0, aggro: 0, range: 0, atkCd: 99, size: 11,
+        color:'#2a1a3e', eye:'#ffd76a', el: m.def.el, drop: 0, bossOrb: true, noRespawn: true };
+      const o = { type:'bossorb', def: od, name: od.name,
+        x: clamp(m.x + Math.cos(a)*mv.r, 40, MAP.w-40), y: clamp(m.y + Math.sin(a)*mv.r, 40, MAP.h-40),
+        zone: null, pack: null, hp: od.hp, maxHp: od.hp, atkT: 99, dead: false, face: 0,
+        shield: 0, shieldT: 0, hitT: 0, wob: Math.random()*10, packAlert: 0 };
+      mobs.push(o); m.tele.orbs.push(o);
+    }
+    addFloat(m.x, m.y - m.def.size - 40, `PHÁ ${mv.orbs} CẦU GIÁP!`, '#ffd76a', 15);
+  }
+  if (mvId === 'daovung'){
+    // Ô an toàn đặt XA boss, để người chơi phải rời khỏi boss chứ không đứng nguyên mà thắng.
+    const a = Math.random() * Math.PI * 2, d = 260 + Math.random() * 200;
+    m.tele.sx = clamp(m.x + Math.cos(a)*d, mv.r + 40, MAP.w - mv.r - 40);
+    m.tele.sy = clamp(m.y + Math.sin(a)*d, mv.r + 40, MAP.h - mv.r - 40);
+    addFloat(m.x, m.y - m.def.size - 40, 'CHẠY VÀO VÒNG SÁNG!', '#7ecbff', 15);
+  }
   addFloat(m.x, m.y - m.def.size - 22, mv.name + '!', '#ff7a5a', 14);
   AudioSys.sfx('quest', 0.3);
 }
@@ -3860,6 +3888,32 @@ function bossExecMove(m){
     addEffect({ type:'ring', x:m.x, y:m.y, r:60, color:'#ff3a3a', big:true });
     return;
   }
+  if (mvId === 'vogiap'){
+    const alive = (tele.orbs || []).filter(o => !o.dead);
+    for (const o of alive){ o.dead = true; o.gone = true; o.deadT = 0; }  // niệm xong thì cầu tan
+    if (!alive.length){
+      // Phá hết kịp giờ: chiêu tắt ngóm, boss choáng — ĐÂY mới là phần thưởng, không phải né được
+      m.stunT = Math.max(m.stunT || 0, 5); m.punishT = 6;
+      addFloat(m.x, m.y-50, '✦ CHÚ VỠ — BOSS CHOÁNG!', '#7ecbff', 18);
+      addEffect({ type:'ring', x:m.x, y:m.y, r:110, color:'#7ecbff', big:true });
+      AudioSys.sfx('levelup', 0.8);
+      return;
+    }
+    // Không phá kịp: đòn này KHÔNG né được — đó là ý nghĩa của nó
+    addEffect({ type:'ring', x:m.x, y:m.y, r:320, color:'#c07fe0', big:true });
+    shakeT = Math.max(shakeT, 0.5); shakeMag = Math.max(shakeMag, 9);
+    addFloat(player.x, player.y-64, `Còn ${alive.length} cầu giáp!`, '#ff7a5a', 15);
+    bossHitPlayer(m, 1.6 + alive.length * 0.5);
+    return;
+  }
+  if (mvId === 'daovung'){
+    addEffect({ type:'ring', x:tele.sx, y:tele.sy, r:mv.r, color:'#7ecbff', big:true });
+    if (dist(player.x, player.y, tele.sx, tele.sy) > mv.r){
+      shakeT = Math.max(shakeT, 0.4); shakeMag = Math.max(shakeMag, 7);
+      bossHitPlayer(m, 2.4);
+    } else addFloat(player.x, player.y-40, '✦ AN TOÀN!', '#7ecbff', 15);
+    return;
+  }
   let hit = false;
   if (mvId === 'vong'){
     addEffect({ type:'ring', x:tele.x, y:tele.y, r:mv.r, color:'#ff5a3a', big:true });
@@ -3875,18 +3929,19 @@ function bossExecMove(m){
     addEffect({ type:'ring', x:m.x, y:m.y, r:70, color:'#ff5a3a', big:true });
     hit = dist(player.x, player.y, m.x, m.y) < mv.w + 26;
   }
-  if (hit){
-    {
-      let dmg = Math.round(m.def.atk * 2.2 * (1 - player.defRed));
-      const gapB = m.def.lv - player.level; // Áp Bức chiều ngược
-      if (gapB > 10) dmg = Math.round(dmg*1.6); else if (gapB >= 6) dmg = Math.round(dmg*1.3);
-      player.hp -= dmg; player.hurtT = 0.3; player.combatT = 4;
-      addFloat(player.x, player.y-30, dmg, '#ff5a3a', 17);
-      addEffect({ type:'ring', x:player.x, y:player.y-10, r:26, color:'#ff5a3a' });
-      AudioSys.sfx('hurt', 0.8);
-      if (player.hp <= 0){ player.hp = 0; player._killedByBoss = m.def.name; onDeath(); }
-    }
-  }
+  if (hit) bossHitPlayer(m, 2.2);
+}
+// Một chỗ duy nhất cho việc boss đánh trúng người chơi — trước đây đoạn này nằm inline trong
+// bossExecMove, nên thêm chiêu mới là phải chép lại cả khối.
+function bossHitPlayer(m, mul){
+  let dmg = Math.round(m.def.atk * mul * (1 - player.defRed));
+  const gapB = m.def.lv - player.level; // Áp Bức chiều ngược
+  if (gapB > 10) dmg = Math.round(dmg*1.6); else if (gapB >= 6) dmg = Math.round(dmg*1.3);
+  player.hp -= dmg; player.hurtT = 0.3; player.combatT = 4;
+  addFloat(player.x, player.y-30, dmg, '#ff5a3a', 17);
+  addEffect({ type:'ring', x:player.x, y:player.y-10, r:26, color:'#ff5a3a' });
+  AudioSys.sfx('hurt', 0.8);
+  if (player.hp <= 0){ player.hp = 0; player._killedByBoss = m.def.name; onDeath(); }
 }
 // Telegraph vẽ trên mặt đất (world space, dưới chân thực thể)
 function drawBossTele(m){
@@ -3896,6 +3951,30 @@ function drawBossTele(m){
   ctx.globalAlpha = 0.16 + 0.3*prog;
   ctx.fillStyle = '#ff3a2a';
   ctx.strokeStyle = 'rgba(255,80,50,.9)'; ctx.lineWidth = 2;
+  if (t.mvId === 'daovung'){
+    // ĐẢO NGƯỢC: tô đỏ CẢ SÂN rồi khoét một lỗ an toàn. Dùng quy tắc evenodd nên chỉ một
+    // đường path, không cần lớp vẽ riêng.
+    ctx.beginPath();
+    ctx.rect(camera.x - 40, camera.y - 40, W + 80, H + 80);
+    ctx.arc(t.sx, t.sy, mv.r, 0, Math.PI*2);
+    ctx.fill('evenodd');
+    ctx.globalAlpha = 0.85;
+    ctx.strokeStyle = '#7ecbff'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(t.sx, t.sy, mv.r, 0, Math.PI*2); ctx.stroke();
+    ctx.restore(); return;
+  }
+  if (t.mvId === 'vogiap'){
+    const alive = (t.orbs || []).filter(o => !o.dead);
+    ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = '#ffd76a'; ctx.lineWidth = 2.5;
+    for (const o of alive){   // dây nối boss ↔ cầu giáp: nhìn là hiểu phải đánh cái nào
+      ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(o.x, o.y); ctx.stroke();
+    }
+    ctx.globalAlpha = 0.20 + 0.5*prog;
+    ctx.fillStyle = '#c07fe0';
+    ctx.beginPath(); ctx.arc(m.x, m.y, 40 + 300*prog, 0, Math.PI*2); ctx.fill();
+    ctx.restore(); return;
+  }
   if (t.mvId === 'vong'){
     ctx.beginPath(); ctx.arc(t.x, t.y, mv.r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
   } else if (t.mvId === 'vach'){
@@ -4564,6 +4643,9 @@ function hurtMob(m, dmg, source){
 }
 function killMob(m, source){
   m.dead = true; m.deadT = 0.45; // xác tan dần thành mực thay vì biến mất tức thì
+  // Cầu Giáp (chiêu Vỡ Giáp) chỉ là mục tiêu bấm có hạn giờ — không exp, không bạc, không đồ,
+  // không đếm nhiệm vụ. Phải thoát ở ĐẦU hàm, không phải cuối: cuối là đã phát thưởng xong rồi.
+  if (m.def.bossOrb){ addEffect({ type:'ring', x:m.x, y:m.y, r:34, color:'#ffd76a' }); AudioSys.sfx('ui', 0.5); return; }
   // Hai cơ chế chỉ đồ Hoàn Hảo có: hạ địch hồi Qi / Sinh Lực. Đặt ở killMob() để mọi đường
   // sát thương (đòn thường, chiêu, Khắc Ấn, pet) đều tính — không phải chỉ đòn tay.
   if (player.excQi && player.qi < player.maxQi){
@@ -5782,6 +5864,9 @@ function update(dt){
       if (!m.introduced && bd0 < m.def.aggro){ m.introduced = true; if (typeof bossIntro === 'function') bossIntro(m); }
       if (m.tele){
         m.tele.t -= dt;
+        // Phá hết cầu giáp là chú vỡ NGAY. Bắt đứng chờ cho hết 5 giây niệm thì phần thưởng
+        // của việc bùng nổ sát thương đúng lúc chẳng còn nghĩa gì.
+        if (m.tele.mvId === 'vogiap' && (m.tele.orbs || []).every(o => o.dead)) m.tele.t = 0;
         if (m.tele.t <= 0) bossExecMove(m);
         continue; // đang tụ chiêu — đứng yên, người chơi né
       }
