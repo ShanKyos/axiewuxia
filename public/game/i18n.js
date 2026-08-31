@@ -16,8 +16,14 @@
 (function () {
   'use strict';
   const KEY = 'vlcm_lang';
-  let locale = 'en'; // Axie Wuxia is English-first (the prototype defaulted to 'vi' — see lang.js)
-  try { locale = localStorage.getItem(KEY) || 'en'; } catch (e) {}
+  // Mặc định 'vi'. Trước đây là 'en', và hậu quả là một màn hình LẪN hai thứ tiếng: lớp dịch ở
+  // lang.js phủ không hết nên phần lớn giao diện vẫn ra tiếng Việt, còn vài chỗ thì ra tiếng Anh.
+  // Đo trên bảng Nhân Vật / Túi Đồ / Kỹ Năng / Nhiệm Vụ: mặc định cũ để lại 4 dòng tiếng Anh
+  // trên 87 (5%) — "Defense (Reduces damage taken)", "Dodge", "Unlocking grants a permanent stat
+  // bonus…" — trong khi đặt 'vi' cho ra 0.
+  // (Con số này tôi tự đo. Một khảo sát trước đó báo 44%; không tái hiện được.)
+  let locale = 'vi';
+  try { locale = localStorage.getItem(KEY) || 'vi'; } catch (e) {}
 
   function dict() {
     return locale === 'vi' ? (window.I18N_VI || {}) : (window.I18N_EN || {});
