@@ -9265,6 +9265,89 @@ function hHeldWeapon(g, gv, ps, x, y, rot, fallback){
   (ITEM_ART[d.art] || iaWeapon)(g, W, Object.assign({}, d, { rot: 0 }));
   g.restore();
 }
+// ═══════════ SPRITE NHÂN VẬT — dựng sẵn, mỗi khung chỉ còn MỘT drawImage ═══════════
+// Đo được: drawHeroFigure() tốn 203 nhát fill + 236 beginPath cho MỘT nhân vật, mỗi khung vẽ lại
+// từ đầu — bịt riêng nó đưa 21 lên 40,7 FPS, tức nó ăn gần nửa khung hình một mình. Nhưng dáng
+// người chỉ có từng ấy tư thế: nó lặp lại y hệt sau mỗi chu kỳ bước chân.
+// Nên: LƯỢNG TỬ HOÁ tư thế thành khung hình rời (12 khung đi · 8 khung đứng · 8 khung đánh ·
+// 8 khung tung chiêu, mỗi thứ ×2 hướng mặt/lưng), dựng ra canvas phụ ở lần đầu gặp, các lần sau
+// chỉ blit lại. Đây cũng đúng cách game sprite 2D vẫn làm — MU Online cũng là hoạt ảnh sprite
+// số khung hữu hạn, nên nhịp giật nhẹ của khung hình KHÔNG phải là mất mát, nó là đúng thể loại.
+//
+// Không nhét vào khoá bộ nhớ đệm: `sway` (quán tính áo choàng khi đổi hướng) và tư thế TRÚNG ĐÒN.
+// Sway bỏ hẳn — áo choàng vẫn nhấp nhô theo sải bước, chỉ không trôi thêm khi ngoặt. Trúng đòn thì
+// vẽ THẲNG như cũ: nó ngắn, và giật ngửa khi ăn đòn là phản hồi phải thấy ngay, không được rời rạc.
+const HS_FRAMES = { i: 8, w: 12, a: 8, c: 8 };   // đứng · đi · đánh · tung chiêu
+const HS_SCALE = 0.75;                           // hộp gốc 160×220 ⇒ sprite 120×165. Trong game dáng
+                                                 // người cao 104px (0,47× hộp gốc) nên 0,75 còn dư nét,
+                                                 // đủ chỗ cho cú phóng to lúc lên cấp (pulse > 1).
+// Hào quang quanh người TRÀN RA NGOÀI hộp 160×220 (vòng sáng bán kính 86 quanh tâm, chưa kể
+// hào quang cường hoá +10). Không chừa lề thì sprite bị cắt vuông, nhìn rõ mồn một: quầng sáng
+// hoá thành hình chữ nhật bo góc thay vì tan dần.
+const HS_PAD = 40;
+const HS_CAP = 140;                              // trần LRU (~160 KB/sprite ⇒ tối đa ~22 MB, thực dùng ~3 MB)
+const _hsCache = new Map();
+let _hsHit = 0, _hsMiss = 0;
+function heroGearSig(gv){
+  return gv ? `${Math.round(gv.t*10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor||''}` : '-';
+}
+// Tư thế của MỘT khung hình — dựng lại đúng từ chỉ số khung, để ảnh trong bộ nhớ đệm luôn khớp khoá.
+function heroFramePose(kind, idx, act){
+  const TAU = Math.PI * 2;
+  if (kind === 'c') return heroPose(0, false, 0, (idx + 0.5) / HS_FRAMES.c, 0, act);
+  if (kind === 'a') return heroPose(0, false, (idx + 0.5) / HS_FRAMES.a, 0, 0, act);
+  if (kind === 'w') return heroPose((idx + 0.5) / HS_FRAMES.w * TAU, true, 0, 0, 0, act);
+  return heroPose(0, false, 0, 0, (idx + 0.5) / HS_FRAMES.i * TAU * 620, act);  // nhịp thở
+}
+// `now` giả của khung: giữ cho hào quang +10 (hPlusAura/Sweep/Spark) vẫn nhúc nhích theo chu kỳ
+// thay vì đứng chết một kiểu.
+function heroFrameNow(kind, idx){
+  return (idx + 0.5) / (HS_FRAMES[kind] || 8) * Math.PI * 2 * 620;
+}
+function heroSprite(sectKey, tier, gv, kind, idx, act, back){
+  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${kind === 'a' ? act : ''}|${back ? 1 : 0}`;
+  let cv = _hsCache.get(key);
+  if (cv){                       // chạm — đẩy lên cuối để LRU giữ lại
+    _hsHit++;
+    _hsCache.delete(key); _hsCache.set(key, cv);
+    return cv;
+  }
+  _hsMiss++;
+  const W0 = Math.ceil((HERO_W + HS_PAD*2) * HS_SCALE);
+  const H0 = Math.ceil((HERO_H + HS_PAD*2) * HS_SCALE);
+  const big = document.createElement('canvas');
+  big.width = W0; big.height = H0;
+  const g = big.getContext('2d');
+  g.scale(HS_SCALE, HS_SCALE);
+  g.translate(HS_PAD, HS_PAD);
+  const ps = heroFramePose(kind, idx, act);
+  ps.back = !!back;
+  drawHeroFigure(g, sectKey, tier, heroFrameNow(kind, idx), ps, gv);
+  // CẮT SÁT nội dung. Lề 40 là cần (đo được hào quang tràn ra tới −38..197 ngang, 245 dọc), nhưng
+  // blit nguyên tấm có lề là tô thêm 2× diện tích toàn pixel trong suốt mỗi khung — đo được mất
+  // 43,9 → 38,9 FPS chỉ vì phần lề đó. Đo hộp bao đúng một lần lúc dựng rồi cắt.
+  const d = g.getImageData(0, 0, W0, H0).data;
+  let x0 = W0, y0 = H0, x1 = -1, y1 = -1;
+  for (let y = 0; y < H0; y++)
+    for (let x = 0; x < W0; x++)
+      if (d[(y*W0 + x)*4 + 3] > 6){ if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 < 0){ x0 = y0 = 0; x1 = y1 = 1; }         // khung rỗng (không nên xảy ra) — giữ 1px cho an toàn
+  const cw = x1 - x0 + 1, ch = y1 - y0 + 1;
+  cv = document.createElement('canvas');
+  cv.width = cw; cv.height = ch;
+  cv.getContext('2d').drawImage(big, x0, y0, cw, ch, 0, 0, cw, ch);
+  // toạ độ + kích thước để blit lại, quy về hệ 160×220 của drawHeroFigure
+  cv._ox = x0 / HS_SCALE - HS_PAD;
+  cv._oy = y0 / HS_SCALE - HS_PAD;
+  cv._ow = cw / HS_SCALE;
+  cv._oh = ch / HS_SCALE;
+  _hsCache.set(key, cv);
+  if (_hsCache.size > HS_CAP) _hsCache.delete(_hsCache.keys().next().value);
+  return cv;
+}
+function heroBlit(g, spr){ g.drawImage(spr, spr._ox, spr._oy, spr._ow, spr._oh); }
+window.heroSpriteStats = () => ({ cache: _hsCache.size, hit: _hsHit, miss: _hsMiss });
+
 // Canvas phụ dùng lại giữa các khung — dựng mới mỗi khung thì lại tốn hơn cái vừa tiết kiệm được.
 let _rimCv = null, _rimCtx = null;
 function heroRimCanvas(sectKey, tier, now, ps, gv){
@@ -9534,18 +9617,32 @@ function drawPlayer(){
       _ps.bob  -= 2.2 * _hurt;
     }
     const _tier = heroTier(p), _gv = gearVisual(p);
+    // Chọn khung hình: ưu tiên tung chiêu → đánh → đi → đứng. Trúng đòn thì KHÔNG dùng sprite —
+    // tư thế giật ngửa phải khớp đúng độ mạnh của cú đòn, và nó chỉ kéo dài 0,3s.
+    let _spr = null;
+    if (_hurt <= 0){
+      const _kind = castK > 0 ? 'c' : atkK > 0 ? 'a' : (p.moving ? 'w' : 'i');
+      const _n = HS_FRAMES[_kind];
+      const _TAU = Math.PI * 2;
+      const _idx = _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
+                 : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)
+                 : _kind === 'w' ? ((((wph % _TAU) + _TAU) % _TAU) / _TAU * _n) | 0
+                 : ((((now / 620) % _TAU) + _TAU) % _TAU) / _TAU * _n | 0;
+      _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back);
+    }
     // Thần Hiệp: viền kim quang quanh thân. Trước đây làm bằng cách đặt shadowBlur rồi để nguyên
     // suốt cả dáng người — đo được 166 trong 204 nhát fill của drawPlayer() bị làm mờ, mỗi nhát là
     // một mặt vẽ phụ + một lượt ghép riêng. Chi phí KHÔNG phụ thuộc bán kính mờ (thử hạ còn 1/4 chỉ
-    // được 22,8 → 25,6 FPS) mà phụ thuộc SỐ NHÁT vẽ có bóng. Nên: dựng dáng người vào một canvas
-    // phụ, làm mờ ĐÚNG MỘT lần cho cả bóng, rồi vẽ bản nét đè lên. 1 nhát mờ thay cho 166.
+    // được 22,8 → 25,6 FPS) mà phụ thuộc SỐ NHÁT vẽ có bóng. Một nhát mờ trên sprite là đủ.
     if (maxed){
       ctx.save();
       ctx.shadowColor = '#ffd76a'; ctx.shadowBlur = 15;
-      ctx.drawImage(heroRimCanvas(p.sect, _tier, now, _ps, _gv), 0, 0);
+      if (_spr) heroBlit(ctx, _spr);
+      else ctx.drawImage(heroRimCanvas(p.sect, _tier, now, _ps, _gv), 0, 0, HERO_W, HERO_H);
       ctx.restore();
     }
-    drawHeroFigure(ctx, p.sect, _tier, now, _ps, _gv);
+    if (_spr) heroBlit(ctx, _spr);
+    else drawHeroFigure(ctx, p.sect, _tier, now, _ps, _gv);
     ctx.restore();
   }
   // Vũ khí danh phái cầm tay — chỉ hình Thần Hiệp cần, nhân vật khớp xương đã tự cầm vũ khí
