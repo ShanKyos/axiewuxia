@@ -746,8 +746,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .bag-bar { display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; margin-bottom:7px;
   font-size:11.5px; color:#9aa8d4; }
 .bag-bar label { display:inline-flex; align-items:center; gap:4px; cursor:pointer; }
-.bag-legend { font-size:11px; color:#8a97bd; margin-bottom:7px; padding-bottom:6px;
-  border-bottom:1px solid var(--border); }
+/* .bag-legend đã bỏ — ba ký hiệu ▲ ◆ 🔒 nay do thẻ rê chuột giải nghĩa */
 .bag-cell { position:relative; }
 .bag-cell.locked { opacity:.42; filter:grayscale(.7); cursor:not-allowed; }
 .bag-cell .bc-up, .bag-cell .bc-sg, .bag-cell .bc-lock, .bag-cell .bc-more {
@@ -762,3 +761,55 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   background:rgba(255,215,106,.09); font-size:11.5px; line-height:1.6; }
 .exc-block b { display:block; color:#ffd76a; font-size:10.5px; letter-spacing:.8px; margin-bottom:2px; }
 .exc-block span { display:block; color:#f0e2bc; }
+
+/* ═══ Thẻ vật phẩm khi rê chuột — dạng hộp hẹp một cột của MU ═══
+   Hộp cố ý HẸP (208px) và chữ nhỏ: thẻ đồ trong MU đọc lướt trong nửa giây, không phải một
+   bảng thông số. Mọi câu văn dài đã bị cắt; chênh lệch in ngay cạnh con số. */
+.itip { position:fixed; z-index:9000; pointer-events:none;
+  color:#e6eaf4; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
+.itip-wrap { display:flex; gap:6px; align-items:flex-start; }
+.itip-card { width:208px; background:rgba(9,8,16,.96); border:1px solid var(--rc);
+  border-radius:6px; box-shadow:0 8px 26px rgba(0,0,0,.65); font-size:11.5px; line-height:1.5;
+  overflow:hidden; }
+.itip-tag { font-size:9px; letter-spacing:.09em; text-align:center; padding:2px 0;
+  background:var(--rc); color:#0a0812; font-weight:700; }
+.itip-top { padding:8px 9px 6px; text-align:center; border-bottom:1px solid rgba(255,255,255,.09);
+  height:108px; box-sizing:border-box; overflow:hidden;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.itip-top .item-ic { width:46px; height:46px; border:none; background:transparent; box-shadow:none; margin-bottom:3px; }
+.itip-top .item-ic img { width:100%; height:100%; }
+.itip-name { font-weight:700; font-size:12.5px; line-height:1.3;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.itip-name em { font-style:normal; color:#7ecbff; }
+.itip-sub { font-size:10px; color:#9aa2b8; margin-top:2px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.itip-sec { padding:5px 9px; border-bottom:1px solid rgba(255,255,255,.07); }
+.itip-sec:last-child { border-bottom:none; }
+.itip-row { display:flex; align-items:baseline; gap:5px; }
+.itip-row span:first-child { flex:1; color:#a8b0c4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.itip-row b { font-weight:600; }
+.itip-row.lost { opacity:.5; }
+.itip-d { font-style:normal; font-size:10px; font-weight:700; min-width:38px; text-align:right; }
+.itip-d.up { color:#6ae88a; } .itip-d.dn { color:#ff7a6a; }
+.itip-sec.req { font-size:10.5px; color:#8c94a8; }
+.itip-sec.req.bad { color:#ff7a6a; opacity:1; }
+.itip-sec.exc { color:#ffd76a; }
+.itip-sec.awk { color:#f39c3d; }
+.itip-sec.sig { border-left:3px solid var(--sc); }
+.itip-sec.sig b { color:var(--sc); }
+.itip-sec.sig div { color:#a8b0c4; font-size:10.5px; margin-top:1px; }
+.itip-sec.sig.off { opacity:.55; }
+.itip-foot { margin-top:6px; display:flex; flex-direction:column; gap:1px;
+  background:rgba(9,8,16,.96); border:1px solid rgba(255,255,255,.12); border-radius:6px;
+  padding:5px 9px; font-size:11px; font-weight:600; box-shadow:0 8px 26px rgba(0,0,0,.65); }
+
+/* Danh sách đang mặc: một dòng mỗi ô, chi tiết để thẻ rê chuột lo */
+.eq-list { display:flex; flex-direction:column; gap:2px; margin-top:6px; }
+.eq-li { display:flex; align-items:baseline; gap:8px; padding:3px 8px; border-radius:5px;
+  cursor:pointer; font-size:11.5px; }
+.eq-li:hover { background:var(--cell-hover); }
+.eq-li b { flex:0 0 auto; }
+.eq-li span { flex:1; text-align:right; opacity:.55; font-size:10.5px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bag-bar .bag-tip { flex:1; text-align:right; font-style:normal; font-size:10.5px; opacity:.5; }
+.bag-act { margin-top:10px; font-size:13px; }

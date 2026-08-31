@@ -155,20 +155,29 @@ function rollExcLines(slotId, tier){
   return out;
 }
 const RARITY_SUBS = [0,1,2,3,4]; // số dòng phụ mở theo phẩm Phàm..Chí Tôn
+// Bốc dòng phụ. Một chỗ duy nhất cho cả lúc rơi lẫn lúc Tấn Phẩm — trước đây hai nơi chép
+// cùng một đoạn, nên sửa luật ở nơi này mà quên nơi kia là đồ rơi và đồ tấn phẩm khác luật nhau.
+function rollSubs(slotId, rarity, perfect){
+  const all = (ARMOR_SLOTS.includes(slotId) ? ARMOR_SUBS : WEAPON_SUBS);
+  const vip = all.filter(d => d.vip), pool = all.filter(d => !d.vip);
+  const out = [];
+  const take = (def) => {
+    const v = (perfect || def.fixed) ? def.max
+            : Math.round((def.min + Math.random() * (def.max - def.min)) * 10) / 10;
+    out.push({ k:def.k, name:def.name, v, pct:true });
+  };
+  if (perfect) for (const d of vip) take(d);          // Hoàn Hảo: dòng VIP là đặc quyền, luôn có
+  const want = Math.min(all.length, perfect ? 4 : RARITY_SUBS[rarity]);
+  const bag = pool.slice();
+  while (out.length < want && bag.length) take(bag.splice(Math.floor(Math.random() * bag.length), 1)[0]);
+  return out;
+}
 // Roll lại tên + chỉ số gốc + dòng phụ khi phẩm đổi (Tấn Phẩm / pity đai)
 function rerollItemRarity(it){
   it.name = (it.perfect ? 'Hoàn Hảo ' : '') + ITEM_NAMES[it.slot][it.rarity];
   const slot = SLOTS.find(s => s.id === it.slot);
   if (slot && it.main) it.main.v = slot.base(it.tier, it.rarity);
-  const pool = (ARMOR_SLOTS.includes(it.slot) ? ARMOR_SUBS : WEAPON_SUBS).slice();
-  const nn = Math.min(pool.length, it.perfect ? 4 : RARITY_SUBS[it.rarity]);
-  it.subs = [];
-  for (let i = 0; i < nn; i++){
-    const idx = Math.floor(Math.random()*pool.length);
-    const def = pool.splice(idx,1)[0];
-    const v = (it.perfect || def.fixed) ? def.max : Math.round((def.min + Math.random()*(def.max-def.min))*10)/10;
-    it.subs.push({ k:def.k, name:def.name, v, pct:true });
-  }
+  it.subs = rollSubs(it.slot, it.rarity, it.perfect);
 }
 // str/agi/ene mỗi phái quy đổi ra Công Kích theo TRỌNG SỐ RIÊNG (SECTS[x].atkSrc) — không còn dùng
 // chung 1 công thức "str × 2" cho mọi phái. VD: Sylvan Ranger chỉ cần dồn Mẫn Tiệp là đủ mạnh, Dark Wizard
@@ -191,7 +200,9 @@ const ARMOR_SUBS = [
 ];
 // Phụ phẩm theo GDD: Dây Chuyền & Vũ Khí
 const WEAPON_SUBS = [
-  { k:'perfect',   name:'ST Hoàn Hảo',      min:10, max:10, fixed:true },
+  // vip: CHỈ đồ Hoàn Hảo mới có, và đã Hoàn Hảo thì CHẮC CHẮN có. Trước đây nó nằm chung
+  // bảng nên 5,6% vũ khí phẩm thường cũng mang "ST Hoàn Hảo +10%" — đo 6000 lần rơi: 333 món.
+  { k:'perfect',   name:'ST Hoàn Hảo',      min:10, max:10, fixed:true, vip:true },
   { k:'atkPct',    name:'Thêm Sát Thương',  min:2,  max:5  },
   { k:'qiLeech',   name:'Hút Qi',      min:1,  max:3  },
   { k:'hpLeech',   name:'Hút Sinh Lực',     min:1,  max:3  },
@@ -2639,22 +2650,13 @@ function genItem(level, bias, srcK, opts){
   const r = srcK ? rollRaritySrc(srcK) : rollRarity(bias || 0);
   const tier = itemTier(level);
   const ilvl = (tier-1)*10 + Math.ceil(Math.random()*10);
-  const armorGroup = ARMOR_SLOTS.includes(slot.id);
   // `armorGroup &&` từng chặn ở đây, nên ô vũ khí LUÔN ra false: người chơi không thể có vũ
   // khí Hoàn Hảo bằng bất kỳ cách nào. Vũ khí là ô người ta để ý nhất mà lại là ô duy nhất bị
   // khoá — không có lý do thiết kế nào cho việc đó.
   const _pRate = opts && opts.perfect != null ? opts.perfect
                : srcK ? DROP_SRC[srcK].perfect : 0;
   const perfect = Math.random() < _pRate;
-  const pool = (armorGroup ? ARMOR_SUBS : WEAPON_SUBS).slice();
-  const nSubs = Math.min(pool.length, perfect ? 4 : RARITY_SUBS[r]);
-  const subs = [];
-  for (let i = 0; i < nSubs; i++){
-    const idx = Math.floor(Math.random()*pool.length);
-    const def = pool.splice(idx,1)[0];
-    const v = (perfect || def.fixed) ? def.max : Math.round((def.min + Math.random()*(def.max-def.min))*10)/10;
-    subs.push({ k:def.k, name:def.name, v, pct:true });
-  }
+  const subs = rollSubs(slot.id, r, perfect);
   // Vận (Luck) — chỉ xuất hiện khi rơi, không rèn được: +5% ST bạo kích/món, +5% tỉ lệ rèn (tối đa +25%)
   const luck = Math.random() < 0.06 + r*0.025 + (srcK ? 0 : (bias||0)*0.04);
   return assignDef({
@@ -2674,13 +2676,7 @@ function genAncient(setId, slotId, level){
   const slot = SLOTS.find(s => s.id === slotId);
   const r = 4, tier = itemTier(level);
   const ilvl = (tier-1)*10 + 10;
-  const pool = ARMOR_SUBS.slice();
-  const subs = [];
-  for (let i = 0; i < 4; i++){
-    const idx = Math.floor(Math.random()*pool.length);
-    const def = pool.splice(idx,1)[0];
-    subs.push({ k:def.k, name:def.name, v:def.max, pct:true });
-  }
+  const subs = rollSubs(slot.id, r, true);
   const it = assignDef({
     uid: itemSeq++, slot: slot.id, slotName: slot.name,
     name: set.name + ' · ' + ITEM_NAMES[slot.id][r],
@@ -2688,6 +2684,7 @@ function genAncient(setId, slotId, level){
     main: { k: slot.main, v: slot.base(tier, r), name: mainName(slot.main) },
     element: ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)],
     subs, plus: 0,
+    exc: rollExcLines(slot.id, 6),
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
   });
   it.name = set.name + ' · ' + it.name;   // assignDef() đặt tên theo bộ lớp, bộ Cổ Thần đứng trước
@@ -2753,50 +2750,166 @@ function itemSigilLost(slot, incoming){
   return cur.sigil;
 }
 // Bảng so sánh đầy đủ giữa món trong túi và món đang mặc cùng ô.
-function itemCompareHtml(it){
-  if (!it || it.special || !it.slot) return '';
+// ═══════════ THẺ THÔNG TIN VẬT PHẨM KHI RÊ CHUỘT ═══════════
+// Trước bản này, rê chuột lên ô đồ chỉ ra tooltip mặc định của trình duyệt: chờ ~500ms, chữ
+// xám một cỡ, không màu phẩm, không chỉ số, không so sánh. Muốn xem đầy đủ phải bấm nút ⋯ bé
+// xíu ở góc ô, rồi bảng chi tiết hiện ra DƯỚI cả lưới 30 ô — cuộn khỏi món vừa bấm.
+// Nay: rê tới đâu hiện thẻ tới đó, ngay cạnh con trỏ, kèm thẻ MÓN ĐANG MẶC đặt sát bên để so.
+const TIP_DELAY = 90;         // đủ để lướt ngang qua lưới không nháy loạn
+let _tipEl = null, _tipT = 0, _tipKey = '';
+function tipEl(){
+  if (!_tipEl){ _tipEl = document.createElement('div'); _tipEl.className = 'itip'; _tipEl.hidden = true;
+    document.body.appendChild(_tipEl); }
+  return _tipEl;
+}
+function tipItemFrom(key){
+  if (!player || !key) return null;
+  const [k, v] = key.split(':');
+  if (k === 'inv') return player.inv[+v] || null;
+  if (k === 'eq')  return player.equip[v] || null;
+  return null;
+}
+// Một dòng chỉ số. `cmp` là bảng chỉ số của món đối chiếu — có thì in luôn chênh lệch ngay
+// sau con số, đúng chỗ mắt đang nhìn, thay vì đẩy xuống một khối "so sánh" riêng bên dưới.
+// Một dòng chỉ số kiểu MU: nhãn trái, số phải, hết. Chênh lệch in ngay sau con số — đúng chỗ
+// mắt đang nhìn, thay vì đẩy xuống một đoạn văn "so sánh" riêng bên dưới.
+function tipStatRow(st, cmp, key, cls){
+  const unit = st.pct ? '%' : '';
+  const v = Math.round(st.v * 10) / 10;
+  let d = '';
+  if (cmp){
+    const o = cmp[key], ov = o ? o.v : 0;
+    const dd = Math.round((st.v - ov) * 10) / 10;
+    if (dd) d = `<i class="itip-d ${dd > 0 ? 'up' : 'dn'}">${dd > 0 ? '+' : ''}${dd}${unit}</i>`;
+  }
+  return `<div class="itip-row${cls ? ' ' + cls : ''}"><span>${st.name}</span><b>+${v}${unit}</b>${d}</div>`;
+}
+function tipCard(it, cmpItem, tag){
+  if (!it) return '';
+  const r = RARITIES[it.rarity] || RARITIES[0];
+  const col = it.special ? '#7ecbff' : r.color;
+  let h = `<div class="itip-card" style="--rc:${col}">`;
+  if (tag) h += `<div class="itip-tag">${tag}</div>`;
+  h += `<div class="itip-top">${slotIcon(it, 'itip-ic')}
+    <div class="itip-name" style="color:${col}">${it.name}${it.plus ? ' <em>+' + it.plus + '</em>' : ''}</div>`;
+  if (it.special) return h + `</div><div class="itip-sec">${(it.subs || []).map(sb =>
+      `<div class="itip-row"><span>${sb.name}</span><b>+${Math.round(sb.v * 10) / 10}%</b></div>`).join('')}</div></div>`;
+
+  // Dòng phụ đề gộp phẩm + giai + mọi nhãn đặc biệt vào MỘT hàng. Bản trước tách thành hai
+  // hàng thẻ chip rồi thêm một hàng huy hiệu nữa — ba hàng cho thứ đọc lướt trong nửa giây.
+  const sub = [`<span style="color:${col}">${r.name}</span>`, `${giaiName(it.tier)} · C${it.tier}`];
+  if (it.perfect) sub.push(`<span style="color:#ffd76a">✦Hoàn Hảo</span>`);
+  if (it.ancient && ANCIENT_SETS[it.ancient]){
+    const st = ANCIENT_SETS[it.ancient], act = player && player.setActive && player.setActive[it.ancient];
+    sub.push(`<span style="color:${st.color}">◈${st.name}${act ? ' ' + act.n + '/5' : ''}</span>`);
+  }
+  if (it.luck) sub.push(`<span style="color:#7fd8e0">☘Vận</span>`);
+  if (it.life) sub.push(`<span style="color:#e84a6a">❤+${it.life * 4}%HP</span>`);
+  h += `<div class="itip-sub">${sub.join(' · ')}</div></div>`;
+
+  const cmp = cmpItem ? itemStatMap(cmpItem) : null;
+  const mine = itemStatMap(it);
+  h += `<div class="itip-sec">`;
+  for (const k in mine) h += tipStatRow(mine[k], cmp, k);
+  if (cmp) for (const k in cmp) if (!(k in mine)){
+    const o = cmp[k], unit = o.pct ? '%' : '';
+    h += `<div class="itip-row lost"><span>${o.name}</span><b>—</b><i class="itip-d dn">${-Math.round(o.v * 10) / 10}${unit}</i></div>`;
+  }
+  h += `<div class="itip-row"><span>Hệ</span><b>${it.element}</b></div></div>`;
+
+  const need = itemReqLv(it), low = player && player.level < need;
+  h += `<div class="itip-sec req${low ? ' bad' : ''}">Yêu cầu cấp ${need}</div>`;
+
+  if (it.exc && it.exc.length){
+    h += `<div class="itip-sec exc">`;
+    for (const e of it.exc){
+      const v = e.k === 'excAtkLv' ? Math.floor((player ? player.level : 20) / 20) : e.v;
+      h += `<div>${e.name} +${v}${e.flat ? '' : '%'}</div>`;
+    }
+    h += `</div>`;
+  }
+  if (it.plus >= 10 && it.awakened) h += `<div class="itip-sec awk">☆ ${it.awakened.name}</div>`;
+  if (it.sigil && SIGIL_DEFS[it.sigil]){
+    const sg = SIGIL_DEFS[it.sigil], ok = sigilUsable(it.sigil);
+    h += `<div class="itip-sec sig${ok ? '' : ' off'}" style="--sc:${ok ? sg.color : '#6a6a72'}">
+      <b>◆ ${sg.name}</b>${ok ? '' : ' (lớp khác)'}<div>${sg.desc}</div></div>`;
+  }
+  return h + `</div>`;
+}
+function tipHtml(it, isEquipped){
+  const cur = (!isEquipped && it && !it.special && it.slot) ? player.equip[it.slot] : null;
+  const two = cur && cur !== it;
+  let h = `<div class="itip-wrap">${tipCard(it, two ? cur : null, two ? 'MÓN NÀY' : '')}`;
+  if (two) h += tipCard(cur, null, 'ĐANG MẶC');
+  h += `</div>`;
+  if (!isEquipped && it && !it.special) h += tipVerdict(it);
+  return h;
+}
+// Phán quyết rút về ĐÚNG MỘT DÒNG. Chênh lệch từng chỉ số đã in ngay cạnh con số ở trên rồi,
+// nên đoạn "so với đang mặc… (lực chiến A → B)" cộng dãy delta dài ở bản cũ chỉ là nói lại.
+function tipVerdict(it){
   const cur = player.equip[it.slot];
-  const np = itemPower(it), cp = cur ? itemPower(cur) : 0;
-  const gained = itemSigilNew(it), lost = itemSigilLost(it.slot, it);
-  const pct = cp > 0 ? Math.round((np / cp - 1) * 100) : 100;
-  const lowLv = player.level < itemReqLv(it);
-
-  // Phán quyết. Khắc Ấn được nói TRƯỚC lực chiến: một món kém 10% mà mang về Khắc Ấn chưa có
-  // thường đáng mặc hơn, và đó chính là loại quyết định mà mũi ▲ thuần số không diễn tả được.
-  let verdict, vc;
-  if (lowLv){ verdict = `Chưa đủ cấp — cần LV${itemReqLv(it)}`; vc = '#ff7a6a'; }
-  else if (gained){ verdict = `◆ Mang về Khắc Ấn mới: ${SIGIL_DEFS[gained].name}`; vc = SIGIL_DEFS[gained].color; }
-  else if (!cur){ verdict = 'Ô này đang trống — mặc vào là lời'; vc = '#6ae88a'; }
-  else if (pct >= 3){ verdict = `▲ Mạnh hơn ${pct}% lực chiến`; vc = '#6ae88a'; }
-  else if (pct <= -3){ verdict = `▼ Yếu hơn ${-pct}% lực chiến`; vc = '#ff7a6a'; }
-  else { verdict = '≈ Ngang nhau về lực chiến'; vc = '#c9b889'; }
-
-  let s = `<div style="margin-top:6px;padding:6px 8px;border:1px solid rgba(255,255,255,.12);border-radius:5px;background:rgba(0,0,0,.22)">`;
-  s += `<div style="font-size:12.5px;font-weight:700;color:${vc}">${verdict}</div>`;
-  if (lost) s += `<div style="font-size:11.5px;color:#ff9a6a;margin-top:2px">⚠ Tháo món cũ ra sẽ MẤT Khắc Ấn ${SIGIL_DEFS[lost].name}</div>`;
-  if (!cur){ return s + `</div>`; }
-
-  s += `<div style="font-size:11px;opacity:.6;margin:3px 0 2px">so với đang mặc: ${cur.name} (Lực chiến ${cp} → ${np})</div>`;
-  const A = itemStatMap(cur), B = itemStatMap(it);
+  const need = itemReqLv(it);
   const rows = [];
-  for (const k of new Set([...Object.keys(A), ...Object.keys(B)])){
-    const a = A[k], b = B[k];
-    const av = a ? a.v : 0, bv = b ? b.v : 0;
-    const d = Math.round((bv - av) * 10) / 10;
-    if (!d) continue;
-    const nm = (b || a).name, unit = (b || a).pct ? '%' : '';
-    rows.push({ d, html: `<span style="color:${d > 0 ? '#6ae88a' : '#ff7a6a'}">${d > 0 ? '+' : ''}${d}${unit}</span> ${nm}` });
+  if (player.level < need) rows.push(['#ff7a6a', `Chưa đủ cấp — cần LV${need}`]);
+  else {
+    const g = itemSigilNew(it);
+    if (g) rows.push([SIGIL_DEFS[g].color, `◆ Mới: ${SIGIL_DEFS[g].name}`]);
+    if (!cur) rows.push(['#6ae88a', 'Ô đang trống']);
+    else {
+      const pct = Math.round((itemPower(it) / itemPower(cur) - 1) * 100);
+      rows.push(pct >= 3 ? ['#6ae88a', `▲ Mạnh hơn ${pct}%`]
+              : pct <= -3 ? ['#ff7a6a', `▼ Yếu hơn ${-pct}%`]
+              : ['#c9b889', '≈ Ngang nhau']);
+    }
   }
-  rows.sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
-  s += rows.length
-    ? `<div style="font-size:11.5px;line-height:1.75">${rows.map(r => r.html).join(' · ')}</div>`
-    : `<div style="font-size:11.5px;opacity:.55">Chỉ số y hệt nhau.</div>`;
-  // Bộ Cổ Thần: đổi món có thể phá mốc 2/3/5 — mất bonus bộ mà bảng chỉ số ở trên không hề thấy
-  if (cur.ancient && cur.ancient !== it.ancient && ANCIENT_SETS[cur.ancient]){
+  const lost = itemSigilLost(it.slot, it);
+  if (lost) rows.push(['#ff9a6a', `⚠ Mất ${SIGIL_DEFS[lost].name}`]);
+  if (cur && cur.ancient && cur.ancient !== it.ancient && ANCIENT_SETS[cur.ancient]){
     const n = (player.setActive && player.setActive[cur.ancient] || {}).n || 0;
-    s += `<div style="font-size:11.5px;color:#ff9a6a;margin-top:2px">⚠ Rời bộ <b style="color:${ANCIENT_SETS[cur.ancient].color}">${ANCIENT_SETS[cur.ancient].name}</b> (${n}/5) — có thể tụt mốc bộ</div>`;
+    rows.push(['#ff9a6a', `⚠ Rời bộ ${ANCIENT_SETS[cur.ancient].name} (${n}/5)`]);
   }
-  return s + `</div>`;
+  return `<div class="itip-foot">${rows.map(([c, t]) => `<span style="color:${c}">${t}</span>`).join('')}</div>`;
+}
+function placeTip(anchor){
+  const t = tipEl(), r = anchor.getBoundingClientRect();
+  t.hidden = false;
+  t.style.left = '0px'; t.style.top = '0px';   // đo ở góc 0,0 rồi mới dời — tránh thẻ tự kẹp mình
+  const b = t.getBoundingClientRect(), M = 8;
+  let x = r.right + 10;
+  if (x + b.width > innerWidth - M) x = r.left - b.width - 10;      // lật sang trái
+  if (x < M) x = Math.max(M, (innerWidth - b.width) / 2);           // vẫn không đủ: canh giữa
+  let y = r.top - 6;
+  if (y + b.height > innerHeight - M) y = innerHeight - b.height - M;
+  t.style.left = Math.round(Math.max(M, x)) + 'px';
+  t.style.top  = Math.round(Math.max(M, y)) + 'px';
+}
+function hideItemTip(){ clearTimeout(_tipT); _tipKey = ''; if (_tipEl) _tipEl.hidden = true; }
+function showItemTip(cell){
+  const key = cell.getAttribute('data-tip');
+  if (key === _tipKey) return;
+  clearTimeout(_tipT);
+  _tipT = setTimeout(() => {
+    const it = tipItemFrom(key);
+    if (!it || !document.body.contains(cell)) return hideItemTip();
+    _tipKey = key;
+    const t = tipEl();
+    t.innerHTML = tipHtml(it, key.startsWith('eq:'));
+    placeTip(cell);
+  }, TIP_DELAY);
+}
+// Uỷ quyền sự kiện ở document: lưới túi đồ dựng lại toàn bộ innerHTML mỗi lần thay đổi, gắn
+// listener lên từng ô sẽ mất sạch sau lần render kế tiếp.
+// Chỉ bật trên thiết bị THẬT SỰ có con trỏ — trên điện thoại một cú chạm vừa mở thẻ vừa mặc
+// đồ, người chơi không kịp đọc; ở đó nút ⋯ vẫn là đường xem chi tiết.
+if (window.matchMedia && window.matchMedia('(hover: hover)').matches){
+  document.addEventListener('mouseover', e => {
+    const c = e.target.closest && e.target.closest('[data-tip]');
+    if (c) showItemTip(c); else if (!(e.target.closest && e.target.closest('.itip'))) hideItemTip();
+  });
+  document.addEventListener('mousedown', hideItemTip);
+  window.addEventListener('scroll', hideItemTip, true);
+  window.addEventListener('blur', hideItemTip);
 }
 
 function itemPower(it){
@@ -9544,50 +9657,6 @@ window.addAttr = function(k, n){
   renderChar(); saveGame();
 };
 
-function itemLineHtml(it){
-  const r = RARITIES[it.rarity];
-  const m = 1 + it.plus*0.08;
-  let s = `<span class="${r.cls}">[${it.special ? it.name : r.name + (it.plus>0?' +'+it.plus:'')}]</span> `;
-  if (it.special){
-    for (const sub of it.subs) s += `${sub.name} +${Math.round(sub.v*10)/10}% · `;
-    s = s.slice(0, -3);
-    if (it.cloakTier) s += ` <span style="color:${CLOAK_TIERS[it.cloakTier].color}">(Cấp ${it.cloakTier}${it.cloakTier===2?' · yêu cầu LV60':''})</span>`;
-    return s;
-  }
-  s += `<span style="opacity:.55;font-size:11px">【${giaiName(it.tier)} · C${it.tier}】${player && player.level < itemReqLv(it) ? ` · <span style="color:#ff7a6a">yêu cầu LV${itemReqLv(it)}</span>` : ''}</span> `;
-  if (it.perfect) s += `<span style="color:#ffd76a">✦Hoàn Hảo✦</span> `;
-  if (it.ancient && ANCIENT_SETS[it.ancient]){
-    const set = ANCIENT_SETS[it.ancient];
-    const act = player && player.setActive && player.setActive[it.ancient];
-    s += `<span style="color:${set.color}">◈Cổ Thần ${set.name}${act ? ` (${act.n}/5)` : ''}</span> `;
-  }
-  if (it.luck) s += `<span style="color:#7fd8e0">☘Vận</span> `;
-  if (it.life) s += `<span style="color:#e84a6a">❤Sinh Mệnh +${it.life*4}% HP</span> `;
-  // Khắc Ấn đứng riêng một dòng, ghi rõ hiệu ứng: nó KHÔNG so được với dòng phụ nào nên nhét
-  // chung một hàng với các con số % chỉ làm người chơi lướt qua mất.
-  if (it.sigil && SIGIL_DEFS[it.sigil]){
-    const sg = SIGIL_DEFS[it.sigil], ok = sigilUsable(it.sigil);
-    s += `<div style="margin:3px 0;padding:3px 6px;border-left:3px solid ${ok?sg.color:'#6a6a72'};background:rgba(255,255,255,.04);font-size:12px">
-      <b style="color:${ok?sg.color:'#8a8a92'}">◆ ${sg.name}</b>${ok?'':' <span style="color:#8a8a92">(lớp khác — không có tác dụng)</span>'}
-      <br><span style="opacity:.82">${sg.desc}</span></div>`;
-  }
-  s += `${it.main.name} +${Math.round(it.main.v*m*10)/10}`;
-  s += ` · ${it.element}`;
-  for (const sub of it.subs) s += ` · ${sub.name} +${Math.round(sub.v*(sub.k==='perfect'?1:m)*10)/10}%`;
-  if (it.plus>=10) s += ` · <span style="color:#f39c3d">☆ ${it.awakened.name}</span>`;
-  else s += ` · <span style="opacity:.4">☆(+10)</span>`;
-  // Dòng Hoàn Hảo đứng thành KHỐI RIÊNG, không trộn vào dãy dòng thường — chúng là bộ dòng
-  // khác hẳn, và là lý do một món Rèn Hoàn Hảo có thể đáng mặc hơn một món Thánh Thường.
-  if (it.exc && it.exc.length){
-    s += `<div class="exc-block"><b>✦ DÒNG HOÀN HẢO</b>`;
-    for (const e of it.exc){
-      const v = e.k === 'excAtkLv' ? Math.floor((player ? player.level : 20) / 20) : e.v;
-      s += `<span>${e.name} +${v}${e.flat ? '' : '%'}</span>`;
-    }
-    s += `</div>`;
-  }
-  return s;
-}
 window.forgeUseCharm = false;
 // GDD 3 giai đoạn: +1~6 an toàn 100% (Huyền Thiết) · +7~9 Đập Ngọc Tu La, xịt tụt 1 cấp · +10/+11 CHỈ tại Lò Rèn Hoàng Gia
 function forgeRule(target){
@@ -12682,7 +12751,7 @@ function renderInv(){
     for (const slotId of row){
       const sl = SLOTS.find(s=>s.id===slotId);
       const it = player.equip[slotId];
-      html += `<div class="eq-slot${it?' filled':''}" title="${it ? it.name + (it.plus?' +'+it.plus:'') : sl.name}"
+      html += `<div class="eq-slot${it?' filled':''}" ${it ? `data-tip="eq:${slotId}"` : ''} aria-label="${it ? it.name + (it.plus?' +'+it.plus:'') : sl.name}"
         onclick="unequip('${slotId}')"
         ondragover="onEquipSlotDragOver(event,'${slotId}')"
         ondragenter="onEquipSlotDragEnter(event,'${slotId}')" ondragleave="this.classList.remove('drag-over')"
@@ -12692,17 +12761,20 @@ function renderInv(){
     }
   }
   html += `</div>`;
-  html += `<div class="stat-sec" style="margin-top:10px">CHI TIẾT</div>`;
-  let any = false;
-  for (const sl of SLOTS){
-    const it = player.equip[sl.id];
-    if (!it) continue;
-    any = true;
-    html += `<div class="slot-row" onclick="unequip('${sl.id}')">
-      <span class="s-name">${slotIcon(it)}<span><b>${sl.name}</b><br>${itemLineHtml(it)}</span></span></div>`;
-  }
-  if (!any) html += `<div style="opacity:.5;font-size:12px;padding:8px">Chưa mặc món nào — kéo đồ từ Túi Đồ vào ô tương ứng ở trên.</div>`;
-  html += `<div style="font-size:11.5px;opacity:.6;margin-top:8px">Vật phẩm & vật liệu nằm trong <b>Túi Đồ (B)</b>.</div>`;
+  // Khối CHI TIẾT cũ chép nguyên đoạn chỉ số của CẢ 12 ô ra thành 12 đoạn văn dài — nay thẻ
+  // rê chuột đã nói đủ, giữ lại chỉ còn là nói lại lần thứ hai. Chỉ để một dòng gọn mỗi ô cho
+  // điện thoại (không có con trỏ nên không rê được).
+  const _worn = SLOTS.filter(sl => player.equip[sl.id]);
+  if (_worn.length){
+    html += `<div class="stat-sec" style="margin-top:10px">ĐANG MẶC (${_worn.length}/${SLOTS.length})</div><div class="eq-list">`;
+    for (const sl of _worn){
+      const it = player.equip[sl.id], r = RARITIES[it.rarity] || RARITIES[0];
+      const mn = it.main ? ` · ${it.main.name} ${Math.round(it.main.v * (1 + it.plus * 0.08))}` : '';
+      html += `<div class="eq-li" data-tip="eq:${sl.id}" onclick="unequip('${sl.id}')">
+        <b style="color:${it.special ? '#7ecbff' : r.color}">${it.name}${it.plus ? ' +' + it.plus : ''}</b><span>${sl.name}${mn}</span></div>`;
+    }
+    html += `</div>`;
+  } else html += `<div style="opacity:.5;font-size:12px;padding:8px">Chưa mặc món nào — kéo đồ từ Túi Đồ vào ô tương ứng ở trên.</div>`;
   el('panel-inv').innerHTML = html;
 }
 // Kéo-thả: đồ trong Túi Đồ → ô Trang Bị tương ứng (thay thế/bổ sung cho click-to-equip).
@@ -12767,12 +12839,13 @@ window.bagTab = 'gear';
 window.setBagTab = function(t){ window.bagTab = t; renderBag(); };
 
 function bagSecGear(){
+  // Một hàng duy nhất. Bản cũ có hàng tuỳ chọn RỒI thêm một dòng chú thích giải nghĩa ▲ ◆ 🔒
+  // dài hai dòng — cả ba ký hiệu đó nay thẻ rê chuột đều nói rõ, chú thích thành thừa.
   let h = `<div class="bag-bar">
-    <label><input type="checkbox" ${player.autoSell?'checked':''} onchange="window.toggleAutoSell(this.checked)"> Tự bán đồ trắng/lục</label>
-    <label><input type="checkbox" ${player.autoEquip?'checked':''} onchange="window.toggleAutoEquip(this.checked)"> Tự mặc đồ mạnh hơn</label>
-    <button class="mini-btn" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất</button></div>`;
-  h += `<div class="bag-legend">bấm ô để MẶC NGAY · <b style="color:#6ae88a">▲</b> mạnh hơn ·
-    <b style="color:#ffd76a">◆</b> Khắc Ấn mới · <b style="color:#ff9a6a">🔒</b> khác lớp · <b>⋯</b> Phân Giải/Bán</div>`;
+    <label><input type="checkbox" ${player.autoSell?'checked':''} onchange="window.toggleAutoSell(this.checked)"> Tự bán trắng/lục</label>
+    <label><input type="checkbox" ${player.autoEquip?'checked':''} onchange="window.toggleAutoEquip(this.checked)"> Tự mặc đồ mạnh</label>
+    <button class="mini-btn" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất</button>
+    <i class="bag-tip">bấm ô = mặc · <b>⋯</b> = bán / phân giải</i></div>`;
   if (!player.inv.length) return h + `<div class="chaos-empty">Túi trống — hãy đi farm quái!</div>`;
   h += `<div class="bag-grid">`;
   player.inv.forEach((it, i) => {
@@ -12785,7 +12858,7 @@ function bagSecGear(){
     const tip = _lock ? itemLockMsg(it)
       : `${it.name} — bấm để MẶC NGAY, hoặc kéo thả vào ô Trang Bị${_up ? ' (mạnh hơn đang mặc!)' : ''}${_sg ? ` · ◆ Khắc Ấn mới: ${SIGIL_DEFS[_sg].name}` : ''}`;
     h += `<div class="bag-cell rar-${it.rarity}${_lock?' locked':''}" draggable="true"
-      ondragstart="onBagItemDragStart(event,${i})" onclick="equipItem(${i})" title="${tip}">
+      ondragstart="onBagItemDragStart(event,${i})" onclick="equipItem(${i})" data-tip="inv:${i}" aria-label="${tip}">
       ${slotIcon(it, '')}<span class="bc-plus">${it.plus?'+'+it.plus:''}</span>
       ${_up ? '<i class="bc-up">▲</i>' : ''}${_sg ? '<i class="bc-sg">◆</i>' : ''}${_lock ? '<i class="bc-lock">🔒</i>' : ''}
       <i class="bc-more" onclick="event.stopPropagation();window.selectBagItem(${i})">⋯</i></div>`;
@@ -12793,7 +12866,9 @@ function bagSecGear(){
   h += `</div>`;
   if (window.bagSel >= 0 && player.inv[window.bagSel]){
     const it = player.inv[window.bagSel];
-    h += `<div class="forge-lines" style="margin-top:10px"><b class="${RARITIES[it.rarity].cls}">${it.name}</b><br>${itemLineHtml(it)}${itemCompareHtml(it)}</div>
+    // Chỉ tên + nút. Chỉ số và so sánh đã nằm trong thẻ rê chuột ngay trên ô — in lại ở đây
+    // là đẩy người chơi cuộn xuống hết lưới 30 ô để đọc thứ vừa thấy.
+    h += `<div class="bag-act"><b class="${RARITIES[it.rarity].cls}">${it.name}${it.plus?' +'+it.plus:''}</b></div>
       <div class="forge-actions"><button class="mini-btn" onclick="equipItem(${window.bagSel})">Mặc Vào</button>
       <button class="mini-btn" onclick="sellItem(${window.bagSel})">Bán (+${itemSellPrice(it)}◈)</button>
       <button class="mini-btn" onclick="salvage(${window.bagSel});window.bagSel=-1">Phân Giải (+${(1+it.rarity+Math.floor(it.plus/3)) * (!it.special && !itemUsable(it) ? 2 : 1)}✦)</button></div>`;
