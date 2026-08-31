@@ -11312,7 +11312,12 @@ function startGame(sectKey, quze){
 }
 // Màn menu chỉ còn dành cho người cũ tiếp tục hành trình — chọn phái đã dời vào trong game (cấp 10)
 function showMainMenu(){
-  el('sect-cards').style.display = 'none';
+  // Ô này đổi tên thành #cc-classes khi dựng màn tạo nhân vật. Bỏ sót ở đây là NGƯỜI CHƠI CŨ
+  // (có save ⇒ đi thẳng vào showMainMenu) đâm vào null ngay lúc mở game.
+  { const _cc = el('cc-classes'); if (_cc) _cc.style.display = 'none'; }
+  for (const _id of ['cc-detail','btn-create']){ const _e = el(_id); if (_e) _e.style.display = 'none'; }
+  { const _n = document.querySelector('#sect-select .cc-name'); if (_n) _n.style.display = 'none'; }
+  { const _w = el('cc-name-warn'); if (_w) _w.style.display = 'none'; }
   const mm = el('max-mode'); if (mm) mm.style.display = 'none';
   const sub = document.querySelector('#sect-select .ss-sub');
   if (sub) sub.textContent = 'Chào mừng trở lại Lunacia — hành trình của ngươi vẫn đang chờ.';
@@ -11336,7 +11341,7 @@ else if (saveStale){
   // kèm lý do. Mất nhân vật mà không hiểu vì sao là thứ tệ nhất một bản cập nhật có thể làm.
   setTimeout(() => {
     el('sect-select').classList.remove('hidden');
-    const cards = el('sect-cards'); if (cards) cards.style.display = '';
+    const cards = el('cc-classes'); if (cards) cards.style.display = '';
     const sub = document.querySelector('#sect-select .ss-sub');
     if (sub) sub.innerHTML = `<b style="color:#e8b04a">Bản cập nhật lớn — toàn bộ trang bị đã được vẽ lại</b><br>
       <span style="opacity:.85">Hệ vật phẩm đổi hoàn toàn: 220 món, mỗi món một hình riêng, và vũ khí nay
@@ -15752,6 +15757,10 @@ function ccValidate(){
 function openCreate(){
   ccSect = null;
   el('sect-select').classList.remove('hidden');
+  // showMainMenu() ẩn hết phần tạo nhân vật đi (người cũ chỉ cần nút Tiếp Tục) — bật lại toàn bộ,
+  // nếu không thì bấm "Tạo nhân vật mới" từ màn chờ ra một trang trống.
+  for (const _id of ['cc-classes','cc-detail','btn-create','cc-name-warn']){ const _e = el(_id); if (_e) _e.style.display = ''; }
+  { const _n = document.querySelector('#sect-select .cc-name'); if (_n) _n.style.display = ''; }
   const cards = el('cc-classes'); if (cards) cards.style.display = '';
   const inp = el('inp-char-name');
   if (inp && !inp.value) inp.value = genCharName();
