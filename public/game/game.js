@@ -2805,7 +2805,7 @@ const QUESTS = [
     type:'kill', mob:'assassin', need:1, rew:{xp:1900, silver:220} }, // QA bot: tăng XP giữ nhịp cấp
   { id:9, lv:9, name:'Bàn Tay Còn Nhớ', desc:'Ký ức chưa về, nhưng bàn tay đã nhớ ra tuyệt kỹ của lớp mình (phím 3). Dùng nó kết liễu 5 Tay Sai Gloam.',
     type:'tpkill', mob:'bandit', need:5, rew:{xp:1600, silver:320} },
-  { id:10, lv:10, name:'The Calling', desc:'Thủ lĩnh Đoàn Gloam đã dựng trại trên đài phía đông. Hạ hắn — và ký ức đội tiên phong Vaeldra của ngươi sẽ trở về trọn vẹn.',
+  { id:10, lv:10, name:'Ký Ức Trở Về', desc:'Thủ lĩnh Đoàn Gloam đã dựng trại trên đài phía đông. Hạ hắn — và ký ức đội tiên phong Vaeldra của ngươi sẽ trở về trọn vẹn.',
     type:'boss', mob:'boss', need:1, rew:{xp:2500, silver:500} },
 ];
 
@@ -5120,7 +5120,7 @@ function unlockNotices(){
     5:['Mở khóa: Rèn Luyện (phím F)'],
     6:['Mở khóa: Thú Chiến — chiến thú đồng hành tự đánh quái (C → Thú Chiến)'],
     7:['Mở khóa: Tuyệt kỹ (phím 3)'],
-    10:['Mở khóa: the Calling — 5 lớp chờ ngươi chọn!','Mở khóa: Stoneform (Tấn Chức — phím H)','Mở khóa: Truy Nã Lệnh & Sảnh Cầu May — Bổ Đầu và Thương Nhân Vận May ở Lunaris City'],
+    10:[...(player.sect === 'vophai' ? ['Mở khóa: the Calling — 5 lớp chờ ngươi chọn!'] : []),'Mở khóa: Stoneform (Tấn Chức — phím H)','Mở khóa: Truy Nã Lệnh & Sảnh Cầu May — Bổ Đầu và Thương Nhân Vận May ở Lunaris City'],
     15:['Mở khóa: Linh Thú — mua Phong Linh Phù ở Vũ Khí Phường, đánh tinh anh còn <40% máu rồi bấm T'],
     40:['Mở khóa: Lò Bảo Chứng luyện Linh Dực Cấp 1 — Lò Rèn Hoàng Gia, Lunaris City'],
     45:['Bảo Hạp IV trở lên từ Hung Thần có 5-8% mở ra trang bị CỔ THẦN THỦ HỘ — Hung Thần giáng thế mỗi 4 giờ!'],
@@ -11151,10 +11151,18 @@ function startGame(sectKey, quze){
     player.personality = quze.pers || 'trung';
     player.quzeTitle = !!quze.title;
   } else {
+    // Không còn màn lật thẻ nên đây là đường DUY NHẤT: roll ngầm ba thiên phú, và tự mở danh
+    // hiệu ẩn nếu cả ba đều từ bậc HUYỀN trở lên — đúng điều kiện cũ, chỉ khác là không bắt
+    // người chơi ngồi lật 16 lá bài thái cực trước khi được vào game.
     player.traits = rollTraitsSilent();
+    player.personality = 'trung';
+    player.quzeTitle = player.traits.every(id => {
+      const t = TRAITS.find(x => x.id === id);
+      return t && (t.tier === 'huyen' || t.tier === 'thien');
+    });
   }
   applySkillIcons();
-  const maxMode = !RELEASE_BUILD && ((el('chk-max') && el('chk-max').checked) || (el('chk-max-quze') && el('chk-max-quze').checked) || (el('chk-max-intro') && el('chk-max-intro').checked) || /max=1/.test(location.search));
+  const maxMode = !RELEASE_BUILD && ((el('chk-max') && el('chk-max').checked) || (el('chk-max-intro') && el('chk-max-intro').checked) || /max=1/.test(location.search));
   if (maxMode){
     applyTestBoost();
     checkTitles();
@@ -11280,7 +11288,7 @@ window.addEventListener('beforeunload', saveGame);
 window.TEST_MODE = /([?&])(test|max)=1/.test(location.search);
 // TEST_MODE: hiện checkbox "Chế độ thử nghiệm" trên các màn hình bắt đầu (mặc định ẩn trong index.html)
 if (window.TEST_MODE) setTimeout(() => {
-  for (const id of ['max-mode', 'max-mode-quze', 'max-mode-intro']) { const l = el(id); if (l) l.style.display = 'block'; }
+  for (const id of ['max-mode', 'max-mode-intro']) { const l = el(id); if (l) l.style.display = 'block'; }
 }, 0);
 setTimeout(function(){
   const m = location.search.match(/sect=(\w+)/);
@@ -14131,7 +14139,7 @@ function renderIntroPage(){
 }
 function closeIntro(){
   el('intro-story').classList.add('hidden');
-  openQuze('vophai'); // người mới: vào thẳng The Hatching, khởi đầu làm Tán Nhân — cấp 10 mới bái sư
+  openCreate(); // người mới: chọn lớp + đặt tên rồi vào game, kiểu MU Online
 }
 el('is-next').addEventListener('click', ()=>{
   if (introPage < INTRO_PAGES.length - 1){ introPage++; renderIntroPage(); }
@@ -15574,132 +15582,80 @@ function sanitizeCharName(v){
   return (v || '').replace(/[<>&"'`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
 }
 
-let pendingSect = null, quzeBoard = [], quzePicked = [], quzeShuffles = 3, quzePers = 'trung', quzeRevealed = false;
-// Bàn 16 Thẻ Tiên Duyên úp — mỗi thẻ roll độc lập theo đúng xác suất phẩm chất gốc (Phàm 55/Linh 30/Huyền 12/Thiên 3)
-function rollQuzeBoard(){
-  const b = [];
-  for (let i = 0; i < 16; i++) b.push({ t: rollTrait([]), open: false });
-  return b;
-}
-function openQuze(key){
-  pendingSect = key;
-  quzeBoard = rollQuzeBoard();
-  quzePicked = []; quzeShuffles = 3; quzePers = 'trung'; quzeRevealed = false;
-  const _ni = el('inp-char-name'); if (_ni && !_ni.value) _ni.value = genCharName();
-  el('sect-select').classList.add('hidden');
-  el('quze-screen').classList.remove('hidden');
-  renderQuze();
-}
-// QA rà soát MU-Axie: trước đây lật từng thẻ một (bấm 16 lần) — giờ lật cùng lúc cả bàn 1 phát,
-// đúng cảm giác "khui vận may" gọn lẹ hơn thay vì grind từng ô. quzeJustFlipped chỉ bật animation
-// đúng 1 lần render ngay sau khi lật — các lần render khác (chọn tính cách, chọn/bỏ thẻ...) không
-// phát lại hiệu ứng lật.
-let quzeJustFlipped = false;
-window.qzFlipAll = function(){
-  if (quzeRevealed || !quzeBoard.length) return;
-  quzeRevealed = true;
-  quzeJustFlipped = true;
-  quzeBoard.forEach(c => { c.open = true; });
-  AudioSys.sfx('quest', 0.7);
-  if (quzeBoard.some(c => c.t.tier === 'thien')) AudioSys.sfx('levelup', 0.9);
-  renderQuze();
-};
-window.qzToggle = function(i){
-  const c = quzeBoard[i]; if (!c || !c.open) return;
-  const at = quzePicked.indexOf(i);
-  if (at >= 0) quzePicked.splice(at, 1);
-  else {
-    if (quzePicked.length >= 3) return;
-    if (quzePicked.some(j => quzeBoard[j].t.id === c.t.id)) return; // không chọn 2 quẻ trùng vận
-    quzePicked.push(i);
-  }
-  AudioSys.sfx('ui', 0.5);
-  renderQuze();
-};
-window.qzShuffle = function(){
-  if (quzeShuffles <= 0) return;
-  quzeShuffles--;
-  quzeBoard = rollQuzeBoard();
-  quzePicked = []; quzeRevealed = false;
-  AudioSys.sfx('skill', 0.6);
-  renderQuze();
-};
-function renderQuze(){
-  const bd = el('quze-board');
-  bd.innerHTML = '';
-  quzeBoard.forEach((c, i) => {
+// ═══════════ TẠO NHÂN VẬT — kiểu MU Online ═══════════
+// Màn cũ là "Thẻ Tiên Duyên": 16 lá bài úp, mỗi lá vẽ THÁI CỰC bao quanh BÁT QUÁI, lật ra để roll
+// 3 mảnh vận mệnh, kèm ô chọn tính cách "hài hòa âm dương". Đó là thứ ĐẦU TIÊN người chơi mới
+// nhìn thấy, và nó vi phạm Quy tắc 1 đúng ở chỗ dễ thấy nhất. MU Online không có bước đó: chọn
+// lớp, gõ tên, vào game. Làm đúng như vậy.
+// Ba mảnh thiên phú vẫn còn (chúng gắn với nhiều hệ thống khác) — nay roll ngầm trong startGame()
+// qua rollTraitsSilent(), đúng như đường quick-start vẫn dùng lâu nay.
+let ccSect = null;
+const CC_ORDER = ['thieulam','toanchan','baidasan','minhgiao','bug'];
+function ccRender(){
+  const wrap = el('cc-classes'); if (!wrap) return;
+  wrap.innerHTML = '';
+  for (const k of CC_ORDER){
+    const sc = SECTS[k]; if (!sc) continue;
     const d = document.createElement('div');
-    const picked = quzePicked.includes(i);
-    const dupe = !picked && c.open && quzePicked.some(j => quzeBoard[j].t.id === c.t.id);
-    d.className = 'qzc' + (c.open ? ' open t-' + c.t.tier : '') + (picked ? ' picked' : '') + (dupe ? ' dim' : '') + (quzeJustFlipped ? ' flip-in' : '');
-    if (quzeJustFlipped) d.style.animationDelay = (i * 45) + 'ms';
-    if (c.open){
-      const tier = TRAIT_TIERS[c.t.tier];
-      d.innerHTML = `<img class="qzc-art" src="assets/quze/${c.t.id}.png" alt="" onerror="this.remove()">
-        <div class="qzc-name" style="color:${tier.color}">${c.t.name}</div>
-        <div class="qzc-tier" style="color:${tier.color}">— ${tier.name} —</div>
-        <div class="qzc-desc">${c.t.desc}</div>`;
-      d.addEventListener('click', ()=>qzToggle(i));
-    } else {
-      d.innerHTML = `<img class="qzc-art" src="assets/quze/back.png" alt="" onerror="this.remove()"><div class="qzc-backglyph">🥚</div>`;
-    }
-    bd.appendChild(d);
+    d.className = 'cc-card' + (ccSect === k ? ' sel' : '');
+    d.setAttribute('role', 'button');
+    d.tabIndex = 0;
+    d.innerHTML = `<img class="cc-art" src="${heroCardUrl(k, 1, null)}" alt="">
+      <div class="cc-nm" style="color:${sc.color}">${sc.name}</div>
+      <div class="cc-tag">${sc.role || ''}</div>`;
+    const pick = () => { ccSect = k; AudioSys.sfx('ui', 0.5); ccRender(); };
+    d.addEventListener('click', pick);
+    d.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); pick(); } });
+    wrap.appendChild(d);
+  }
+  const det = el('cc-detail');
+  if (det){
+    const sc = ccSect && SECTS[ccSect];
+    det.innerHTML = sc
+      ? `<b style="color:${sc.color}">${sc.name}</b> — ${sc.desc || ''}
+         <div class="cc-skills">Chiêu chính: <b>${(sc.skillA||{}).name || '—'}</b> · Trấn Phái: <b>${(sc.tp||{}).name || '—'}</b></div>`
+      : '<span style="opacity:.6">Chọn một lớp để xem chi tiết.</span>';
+  }
+  ccValidate();
+}
+function ccValidate(){
+  const inp = el('inp-char-name'), btn = el('btn-create'), warn = el('cc-name-warn');
+  if (!inp || !btn) return;
+  const nm = sanitizeCharName(inp.value);
+  let msg = '';
+  if (!ccSect) msg = 'Hãy chọn một lớp.';
+  else if (!nm) msg = 'Hãy đặt tên cho nhân vật.';
+  else if (nm.length < 2) msg = 'Tên cần ít nhất 2 ký tự.';
+  btn.disabled = !!msg;
+  if (warn) warn.textContent = msg;
+}
+function openCreate(){
+  ccSect = null;
+  el('sect-select').classList.remove('hidden');
+  const cards = el('cc-classes'); if (cards) cards.style.display = '';
+  const inp = el('inp-char-name');
+  if (inp && !inp.value) inp.value = genCharName();
+  ccRender();
+}
+{
+  const inp = el('inp-char-name');
+  if (inp) inp.addEventListener('input', ccValidate);
+  const rnd = el('btn-name-random');
+  if (rnd) rnd.addEventListener('click', ()=>{ el('inp-char-name').value = genCharName(); AudioSys.sfx('ui', 0.5); ccValidate(); });
+  const go = el('btn-create');
+  if (go) go.addEventListener('click', ()=>{
+    if (!ccSect) return;
+    const nm = sanitizeCharName(el('inp-char-name').value) || genCharName();
+    el('sect-select').classList.add('hidden');
+    startGame(ccSect, { name: nm });
+    checkTitles();
+    AudioSys.sfx('quest', 0.9);
   });
-  quzeJustFlipped = false; // 1 lần duy nhất — reset ngay sau khi build xong HTML của lượt lật này
-  const flipBtn = el('btn-quze-flipall');
-  if (flipBtn){ flipBtn.classList.toggle('hidden', quzeRevealed); flipBtn.onclick = qzFlipAll; }
-  const pk = el('quze-picked');
-  pk.innerHTML = '';
-  for (let s2 = 0; s2 < 3; s2++){
-    const i = quzePicked[s2], d = document.createElement('div');
-    d.className = 'qzs' + (i != null ? ' filled t-' + quzeBoard[i].t.tier : '');
-    d.textContent = i != null ? quzeBoard[i].t.name : '— Mảnh ' + (s2+1) + ' —';
-    pk.appendChild(d);
-  }
-  const sb = el('btn-quze-shuffle');
-  sb.textContent = `🥚 Ấp Lại Ổ Trứng (còn ${quzeShuffles})`;
-  sb.disabled = quzeShuffles <= 0;
-  sb.onclick = qzShuffle;
-  const pers = el('quze-pers');
-  pers.innerHTML = '';
-  for (const pid in PERSONALITIES){
-    const p = PERSONALITIES[pid];
-    const d = document.createElement('div');
-    d.className = 'qz-pers' + (quzePers === pid ? ' sel' : '');
-    d.innerHTML = `${p.glyph} <b>${p.name}</b><small>${p.desc}</small>`;
-    d.addEventListener('click', ()=>{ quzePers = pid; AudioSys.sfx('ui', 0.5); renderQuze(); });
-    pers.appendChild(d);
-  }
-  const allHigh = quzePicked.length === 3 && quzePicked.every(i => quzeBoard[i].t.tier === 'huyen' || quzeBoard[i].t.tier === 'thien');
-  let hint = el('qz-title-hint');
-  if (!hint){
-    hint = document.createElement('div');
-    hint.id = 'qz-title-hint'; hint.className = 'qz-title-hint';
-    el('quze-picked').after(hint);
-  }
-  hint.textContent = allHigh ? '✨ 3 mảnh HUYỀN trở lên — sẽ mở danh hiệu ẩn 【Thiên Mệnh Sở Quy】!' : '';
-  const go = el('btn-quze-go');
-  go.disabled = quzePicked.length !== 3;
-  go.textContent = quzePicked.length === 3 ? 'Bắt Đầu Hành Trình' : `Đã chọn ${quzePicked.length}/3 mảnh`;
 }
-el('btn-name-random').addEventListener('click', ()=>{ el('inp-char-name').value = genCharName(); AudioSys.sfx('ui', 0.5); });
-el('btn-quze-go').addEventListener('click', ()=>{
-  if (quzePicked.length !== 3) return;
-  const pickedTraits = quzePicked.map(i => quzeBoard[i].t);
-  const traits = pickedTraits.map(t => t.id);
-  const allHigh = pickedTraits.every(t => t.tier === 'huyen' || t.tier === 'thien');
-  el('quze-screen').classList.add('hidden');
-  const cname = sanitizeCharName(el('inp-char-name') ? el('inp-char-name').value : '') || genCharName();
-  startGame(pendingSect, { traits, pers: quzePers, title: allHigh, name: cname });
-  checkTitles();
-  const pers = PERSONALITIES[quzePers];
-  setTimeout(()=>{
-    addFloat(player.x, player.y-92, `🥚 The Hatching: ${pickedTraits.map(t => t.name).join(' · ')}`, '#7ecbff', 13);
-    addFloat(player.x, player.y-72, `Tính cách: ${pers.glyph} ${pers.name}`, '#9aa8d4', 12);
-  }, 600);
-  AudioSys.sfx('quest', 0.9);
-});
-TITLES.push({ id:'tmsq', name:'Thiên Mệnh Sở Quy', cond:p=>!!p.quzeTitle, stats:{ allPct:0.03 }, vfx:null });
+
+// Danh hiệu ẩn cũ mở bằng cách lật đủ 3 mảnh HUYỀN ở màn Thẻ Tiên Duyên — màn đó đã gỡ, nay
+// mở khi ba thiên phú roll ngầm đều từ bậc HUYỀN trở lên (cùng điều kiện, chỉ khác đường tới).
+TITLES.push({ id:'tmsq', name:'Định Mệnh Chọn Ngươi', cond:p=>!!p.quzeTitle, stats:{ allPct:0.03 }, vfx:null });
 
 // ═══════════ A2: KHÁM PHÁ — sự kiện ngẫu nhiên khi đi đường (vận may trên đường) ═══════════
 let kyngoAcc = 0, kyngoNext = rnd(14000, 22000), kyngoPrev = null; // ~75-115s đi bộ
@@ -16822,7 +16778,7 @@ function drawTree(d){
 
 // Đồng bộ các checkbox chế độ thử nghiệm (màn intro, màn Quẻ & màn chọn phái cũ)
 (function(){
-  const boxes = [el('chk-max'), el('chk-max-quze'), el('chk-max-intro')].filter(Boolean);
+  const boxes = [el('chk-max'), el('chk-max-intro')].filter(Boolean);
   for (const box of boxes) box.addEventListener('change', ()=>{ for (const o of boxes) o.checked = box.checked; });
 })();
 

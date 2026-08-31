@@ -123,38 +123,23 @@
 <div id="hint-toast" class="hidden"></div>
 <div id="quest-compass-banner" class="hidden"></div>
 
-<!-- Sect select -->
+<!-- Tạo nhân vật — kiểu MU Online: chọn lớp, đặt tên, vào game -->
 <div id="sect-select" class="hidden">
   <div class="ss-inner">
     <h1>Axie Wuxia</h1>
     <h2>Lunacia · PvE</h2>
-    <p class="ss-sub">Chọn lớp để bắt đầu hành trình — 5 lớp 5 hệ · Rèn Luyện · Tấn Chức · Thú Chiến</p>
-    <div id="sect-cards"></div>
+    <p class="ss-sub">Chọn lớp và đặt tên — rồi bước vào Lunacia.</p>
+    <div id="cc-classes"></div>
+    <div id="cc-detail" class="cc-detail"></div>
+    <div class="cc-name">
+      <label for="inp-char-name">Tên nhân vật</label>
+      <input id="inp-char-name" maxlength="24" placeholder="Đặt tên cho nhân vật…" autocomplete="off" spellcheck="false">
+      <button id="btn-name-random" type="button" title="Gợi ý một cái tên">🎲</button>
+    </div>
+    <div id="cc-name-warn" class="cc-warn"></div>
     <label id="max-mode" style="display:none"><input type="checkbox" id="chk-max"> Chế độ thử nghiệm — bắt đầu cấp 60, đầy đủ trang bị &amp; vật liệu</label>
+    <button id="btn-create" class="big-btn" disabled>Tạo Nhân Vật</button>
     <button id="btn-continue" class="big-btn hidden">Tiếp Tục Hành Trình</button>
-  </div>
-</div>
-
-<!-- Thẻ Tiên Duyên: gacha tính cách & tiềm năng đầu game -->
-<div id="quze-screen" class="hidden">
-  <div class="ss-inner qz-inner qz-wide">
-    <h1>🃏 Thẻ Tiên Duyên</h1>
-    <p class="ss-sub">Mỗi Axie sinh ra mang một tia sáng riêng — mười sáu Thẻ Tiên Duyên úp sấp, chờ được lật cùng lúc để hé lộ vận mệnh của ngươi.<br><b style="color:#7ecbff">Lật hết một lượt</b>, đọc vận mệnh bẩm sinh, rồi <b style="color:#7ecbff">chọn đúng 3 thẻ</b> mang theo suốt hành trình!</p>
-    <div id="quze-picked"></div>
-    <div id="quze-board"></div>
-    <div class="qz-board-actions">
-      <button id="btn-quze-flipall" class="qz-shuffle qz-flipall">✨ Lật Thẻ</button>
-      <button id="btn-quze-shuffle" class="qz-shuffle">🥚 Ấp Lại Ổ Trứng</button>
-    </div>
-    <div class="qz-pers-label">— Chọn tính cách —</div>
-    <div id="quze-pers"></div>
-    <div class="qz-pers-label">— Danh Tính Lunacia —</div>
-    <div class="qz-name">
-      <input id="inp-char-name" maxlength="24" placeholder="Tên nhân vật của bạn..." autocomplete="off">
-      <button id="btn-name-random" title="Nở ngẫu nhiên tên gọi">🎲</button>
-    </div>
-    <button id="btn-quze-go" class="big-btn">Bắt Đầu Hành Trình</button>
-    <label id="max-mode-quze" style="display:none"><input type="checkbox" id="chk-max-quze"> 🧪 Chế độ thử nghiệm — vào game cấp 100, full trang bị &amp; mọi tính năng mở sẵn</label>
   </div>
 </div>
 
