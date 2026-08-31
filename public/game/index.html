@@ -5,9 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Axie Wuxia (PvE Webgame)</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Bộ chữ tự chứa. Bản trước gọi thẳng fonts.googleapis.com — một bảng kiểu CHẶN VẼ
+     do bên thứ ba giữ, nằm ngay trên đường tới hạn của trang. Xem fonts.css. -->
+<!-- Chữ thân trang là Be Vietnam Pro 400. Tiếng Việt cần CẢ HAI tập: chữ cái nền lấy từ
+     tập latin, còn các chữ có dấu lấy từ tập vietnamese — thiếu một là nhấp nháy nửa chừng. -->
+<link rel="preload" href="fonts/QdVPSTAyLFyeg_IDWvOJmVES_Hw3BXo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/QdVPSTAyLFyeg_IDWvOJmVES_Hw4BXoKZA.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="fonts.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,12 +21,9 @@
 <div id="hud" class="hidden">
   <div id="hud-left">
     <div id="hud-name">—</div>
-    <div class="bar xp"><div id="bar-xp" class="fill"></div><span id="txt-xp"></span></div>
-    <div id="hud-khi">Chân Khí: 0</div>
     <div id="hud-potion" title="Hồ Lô Thuốc — hồi 40% máu (phím R)">🧪 x0 (R)</div>
     <div id="hud-buff" title="Rượu Hổ Cốt — tạm thời +12% công lực" style="display:none">🍶</div>
-    <div id="hud-loidon" title="Lôi Độn Phù — giảm 40% sát thương thiên lôi" style="display:none">⚡</div>
-    <div id="hud-channel" title="Hóa Thân Trấn Ải — mượn hình dạng boss đã hàng phục (phím P)" style="display:none">☬</div>
+    <div id="hud-loidon" title="Bùa Chắn Sét — giảm 40% sát thương sét" style="display:none">⚡</div>
     <div id="hud-time" title="Đồng Hồ Thế Giới — bấm mở Bảng Sự Kiện" onclick="openEventBoard()" style="cursor:pointer">⏱ --:--</div>
   </div>
   <div id="hud-map"></div>
@@ -44,11 +45,11 @@
 </div>
 
 
-<!-- Thanh dưới kiểu MU Online/Võ Lâm Chi Mộng: viên đá Máu (đỏ) + Chân Khí (xanh) hình cầu ở
+<!-- Thanh dưới kiểu MU Online/Võ Lâm Chi Mộng: viên đá Máu (đỏ) + Mana (xanh) hình cầu ở
      2 đầu, thanh kỹ năng dàn ngang ở giữa, viền sáng chạy dọc theo % máu ở mép dưới cùng. -->
 <div id="bottom-hud" class="hidden">
   <div class="hud-btns hud-btns-left">
-    <button class="hbtn" id="btn-char" title="Nhân vật (C) — Thú cưỡi · Đan điền · Rèn · Tuyệt học · Hóa Thân">🧙</button>
+    <button class="hbtn" id="btn-char" title="Nhân vật (C) — Thú Chiến · Ascension · Rèn Luyện · Tấn Chức">🧙</button>
     <button class="hbtn" id="btn-inv" title="Trang bị (I)">🛡️</button>
     <button class="hbtn" id="btn-bag" title="Túi đồ (B)">🎒</button>
     <button class="hbtn" id="btn-skill" title="Kỹ năng (K)">📖</button>
@@ -59,18 +60,31 @@
     <button class="skill sk-slot" data-slot="0" id="sk-0" title="Chiêu chính"><span class="sk-ico">+</span><span class="sk-key">1</span><span class="sk-cd"></span></button>
     <button class="skill sk-slot" data-slot="1" id="sk-1" title="Chiêu phụ"><span class="sk-ico">+</span><span class="sk-key">2</span><span class="sk-cd"></span></button>
     <button class="skill sk-slot" data-slot="2" id="sk-2" title="Buff"><span class="sk-ico">+</span><span class="sk-key">3</span><span class="sk-cd"></span></button>
-    <button class="skill" id="sk-jump" title="Bước Nhảy — bật lên né đòn (J)"><span class="sk-ico">⇑</span><span class="sk-key">J</span><span class="sk-cd"></span></button>
+    <button class="skill" id="sk-loot" title="Nhặt đồ dưới đất (J)"><span class="sk-ico">✋</span><span class="sk-key">J</span><span class="sk-cd"></span></button>
   </div>
-  <div class="orb orb-qi" id="orb-qi" title="Chân Khí"><div class="orb-fill" id="bar-qi"></div><span class="orb-val" id="txt-qi"></span></div>
+  <div class="orb orb-qi" id="orb-qi" title="Mana"><div class="orb-fill" id="bar-qi"></div><span class="orb-val" id="txt-qi"></span></div>
   <div class="hud-btns hud-btns-right">
     <button class="hbtn" id="btn-map" title="Bản đồ thế giới (M)">🧭</button>
     <button class="hbtn" id="btn-music" title="Nhạc nền">♪</button>
-    <button class="hbtn" id="btn-voice" title="Giọng hô tên chiêu (Tàu)">🗣</button>
     <button class="hbtn" id="btn-qlog" title="Nhật ký nhiệm vụ (Q)">📜</button>
     <button class="hbtn" id="btn-settings" title="Cài đặt (O)">⚙</button>
   </div>
 </div>
+<!-- Thanh EXP nằm NGAY DƯỚI viên đá Máu, mép dưới màn hình — đúng chỗ MU đặt nó. -->
+<div id="xp-strip" class="hidden"><div class="bar xp"><div id="bar-xp" class="fill"></div><span id="txt-xp"></span></div></div>
+<!-- Tầng Sâu: nút rút lui. Không có nút này thì kho tạm không có cách nào mang về, cả chế độ
+     chỉ còn là "cày tới chết" — đúng thứ nó KHÔNG nên là. -->
+<button id="deep-leave" class="hidden" onclick="deepLeave()">⬆ RÚT LUI <i>mang kho tạm về</i></button>
 <div id="hp-accent-bar"><div id="hp-accent-fill"></div></div>
+<!-- Lớp phủ toàn màn hình. Trước đây cả bốn thứ này là createRadialGradient + fillRect(0,0,W,H)
+     mỗi khung — bốn lượt tô trọn màn hình cho những gradient KHÔNG hề đổi. Ở đây trình duyệt
+     ghép một lần, JS chỉ còn ghi opacity (việc của tầng ghép, không phải tầng tô điểm ảnh). -->
+<div id="fx-vignette" class="fx-layer"></div>
+<div id="fx-dark" class="fx-layer"></div>
+<div id="fx-rays" class="fx-layer"><i></i></div>
+<div id="fx-sky" class="fx-layer"></div>
+<div id="fx-hurt" class="fx-layer"></div>
+<div id="fx-low" class="fx-layer"></div>
 
 <!-- Joystick (touch) -->
 <div id="joystick" class="hidden"><div id="joy-knob"></div></div>
@@ -90,6 +104,7 @@
 <div id="panel-map" class="panel hidden"></div>
 <div id="panel-settings" class="panel hidden"></div>
 <div id="panel-qlog" class="panel hidden"></div>
+<div id="panel-vstat" class="panel hidden"></div>
 <div id="panel-quest" class="panel hidden"></div>
 <div id="panel-stage" class="panel hidden"></div>
 
@@ -112,38 +127,23 @@
 <div id="hint-toast" class="hidden"></div>
 <div id="quest-compass-banner" class="hidden"></div>
 
-<!-- Sect select -->
+<!-- Tạo nhân vật — kiểu MU Online: chọn lớp, đặt tên, vào game -->
 <div id="sect-select" class="hidden">
   <div class="ss-inner">
     <h1>Axie Wuxia</h1>
     <h2>Lunacia · PvE</h2>
-    <p class="ss-sub">Chọn lớp để bắt đầu hành trình — 5 lớp ngũ hành · Rèn Luyện · Tấn Chức · Thú Chiến</p>
-    <div id="sect-cards"></div>
+    <p class="ss-sub">Chọn lớp và đặt tên — rồi bước vào Lunacia.</p>
+    <div id="cc-classes"></div>
+    <div id="cc-detail" class="cc-detail"></div>
+    <div class="cc-name">
+      <label for="inp-char-name">Tên nhân vật</label>
+      <input id="inp-char-name" maxlength="24" placeholder="Đặt tên cho nhân vật…" autocomplete="off" spellcheck="false">
+      <button id="btn-name-random" type="button" title="Gợi ý một cái tên">🎲</button>
+    </div>
+    <div id="cc-name-warn" class="cc-warn"></div>
     <label id="max-mode" style="display:none"><input type="checkbox" id="chk-max"> Chế độ thử nghiệm — bắt đầu cấp 60, đầy đủ trang bị &amp; vật liệu</label>
+    <button id="btn-create" class="big-btn" disabled>Tạo Nhân Vật</button>
     <button id="btn-continue" class="big-btn hidden">Tiếp Tục Hành Trình</button>
-  </div>
-</div>
-
-<!-- Thẻ Tiên Duyên: gacha tính cách & tiềm năng đầu game -->
-<div id="quze-screen" class="hidden">
-  <div class="ss-inner qz-inner qz-wide">
-    <h1>🃏 Thẻ Tiên Duyên</h1>
-    <p class="ss-sub">Mỗi Axie sinh ra mang một tia sáng riêng — mười sáu Thẻ Tiên Duyên úp sấp, chờ được lật cùng lúc để hé lộ vận mệnh của ngươi.<br><b style="color:#7ecbff">Lật hết một lượt</b>, đọc vận mệnh bẩm sinh, rồi <b style="color:#7ecbff">chọn đúng 3 thẻ</b> mang theo suốt hành trình!</p>
-    <div id="quze-picked"></div>
-    <div id="quze-board"></div>
-    <div class="qz-board-actions">
-      <button id="btn-quze-flipall" class="qz-shuffle qz-flipall">✨ Lật Thẻ</button>
-      <button id="btn-quze-shuffle" class="qz-shuffle">🥚 Ấp Lại Ổ Trứng</button>
-    </div>
-    <div class="qz-pers-label">— Chọn tính cách —</div>
-    <div id="quze-pers"></div>
-    <div class="qz-pers-label">— Danh Tính Lunacia —</div>
-    <div class="qz-name">
-      <input id="inp-char-name" maxlength="24" placeholder="Tên nhân vật của bạn..." autocomplete="off">
-      <button id="btn-name-random" title="Nở ngẫu nhiên tên gọi">🎲</button>
-    </div>
-    <button id="btn-quze-go" class="big-btn">Bắt Đầu Hành Trình</button>
-    <label id="max-mode-quze" style="display:none"><input type="checkbox" id="chk-max-quze"> 🧪 Chế độ thử nghiệm — vào game cấp 100, full trang bị &amp; mọi tính năng mở sẵn</label>
   </div>
 </div>
 
