@@ -547,7 +547,7 @@ const MAPS = {
     desc:'The endgame training ground, out on Lunacia\'s frontier. PK carries no Notoriety here. Chimeras drop golden-tier gear.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'cuongbinh', x:700, y:1400, n:7 }, { mob:'cuongbinh', x:1050, y:815, n:7 },
+      { mob:'cuongbinh', x:700, y:1400, n:7 }, { mob:'cuongbinh', x:1300, y:660, n:7 }, // bãi 2 vốn nằm LỌT TRONG tường thành trái (850,800,560,350)
       { mob:'kylan', x:1396, y:1312, n:5 }, { mob:'kylan', x:1450, y:1600, n:5 },
       { mob:'daokhach', x:2100, y:500, n:5 }, { mob:'daokhach', x:2250, y:1100, n:5 },
     ], duhiep:'duhiep3' },
@@ -640,19 +640,33 @@ const MAP_OBSTACLES = {
     // đúng phần nước sâu không có nội dung xung quanh — đã kiểm tra không đè lên điểm nào.
     { x:464,  y:146,  rx:192, ry:106 }, // hồ sen góc tây-bắc
     { x:324,  y:1027, rx:229, ry:199 }, // vũng nước tây (cạnh Hầu Tử)
-    { x:842,  y:854,  rx:188, ry:139 }, // vũng nước giữa-tây
-    { x:1433, y:796,  rx:112, ry:263 }, // dải nước giữa (cạnh Trận Nhân)
-    { x:1910, y:767,  rx:126, ry:329 }, // vũng nước đông (cạnh đảo nhỏ)
+    { x:842,  y:854,  rx:178, ry:139 }, // vũng nước giữa-tây — thu rx, mép cũ chạm bãi boar (632,876)
+    { x:1433, y:796,  rx:112, ry:205 }, // dải nước giữa — thu ry, mép cũ nuốt bãi wolf (1500,560)
+    { x:1910, y:767,  rx:126, ry:300 }, // vũng nước đông — thu ry, mép cũ nuốt bãi assassin (1900,420)
   ],
+  // Ba map dưới đây từng có 0-1 vật cản TRONG LÒNG map: đo tỉ lệ vòng giữa mọi cặp bãi quái ra
+  // đúng 1,000 — nghĩa là suốt vòng đời người chơi không có một đoạn đường nào phải né gì cả.
+  // Các khối thêm vào chia bãi săn thành "phòng" và ép vài lối đi hẹp, bám theo địa hình trong
+  // tranh nền. Mọi khối đã kiểm không đè lên bãi quái / thảo dược / cổng / ải cấp / boss vùng.
   ngoai: [
     { x:2250, y:350, rx:400, ry:310 },  // sông đông-bắc
-    { x:2380, y:820, rx:147, ry:160 },  // sông đông — thu nhỏ, bản cũ đè lên cổng phó bản (2250,950)
+    { x:2400, y:800, rx:130, ry:140 },  // sông đông — lùi thêm, bản trước vẫn liếm vào cổng phó bản (2250,950)
     { x:140, y:160, rx:360, ry:270 },   // núi tây-bắc
+    { x:820,  y:660,  wd:380, ht:110 }, // gờ đá tây — tách bãi bắc khỏi bãi giữa (né Vệ Binh Trụ ng1)
+    { x:1500, y:900,  wd:230, ht:110 }, // gờ đá đông — thu ngắn, bản dài 340 chắn ngang trục bãi tây↔đông-nam
+    { x:1050, y:1300, wd:300, ht:130 }, // mỏm giữa-nam
+    { x:2150, y:1700, rx:200, ry:130 }, // vũng nước đông-nam
   ],
   chungnam: [
     { x:0, y:0, wd:1050, ht:540 },      // núi tây-bắc
     { x:2050, y:0, wd:550, ht:250 },    // núi đông-bắc
     { x:0, y:0, wd:320, ht:1000 },      // dốc tây
+    { x:760,  y:1080, wd:300, ht:110 }, // sườn dốc nam — chừa hành lang tây 100px với tảng đá (520,900)
+    { x:1150, y:520,  wd:250, ht:120 }, // mỏm bắc, chừa hành lang tới Cổng Rừng Gai
+    { x:1450, y:1180, wd:280, ht:110 }, // gờ giữa-nam — KHÔNG chắn ngang hành lang đông (x>1860),
+                                        // né cục bộ không vòng nổi khối dài chặn thẳng trục bãi-bãi
+    { x:520,  y:900,  rx:140, ry:110 }, // tảng đá tây — chừa khe hẹp 60px với dốc tây
+    { x:2150, y:1620, wd:450, ht:110 }, // vách đông-nam (lùi xuống, né Cổng Vực)
   ],
   comoc: [
     { x:0, y:0, wd:1150, ht:260 },      // tường bắc trái (chừa cổng giữa)
@@ -660,13 +674,20 @@ const MAP_OBSTACLES = {
     { x:0, y:0, wd:300, ht:1200 },      // tường tây
     { x:2350, y:0, wd:250, ht:1300 },   // tường đông
     { x:0, y:1780, wd:2600, ht:120 },   // tường nam
+    // Bám theo tranh nền: bộ rễ khổng lồ bên trái và cổng đá giữa map vốn đã vẽ sẵn, trước đây
+    // đi xuyên qua được hết.
+    { x:860,  y:700,  wd:260, ht:110 }, // rễ nổi tây-bắc (né Vệ Binh Trụ cm1)
+    { x:1360, y:880,  rx:170, ry:125 }, // cổng đá giữa map — chừa khe 70px với rễ tây-bắc
+    { x:900,  y:1150, rx:170, ry:120 }, // bộ rễ khổng lồ tây
+    { x:1550, y:1500, wd:300, ht:130 }, // gò nam
+    { x:1600, y:200,  wd:340, ht:130 }, // vách bắc-đông
   ],
   tuyettinh: [
     { x:0, y:0, wd:2600, ht:280 },      // vách bắc
     { x:0, y:0, wd:160, ht:1400 },      // vách tây
     { x:2420, y:0, wd:180, ht:1900 },   // vách đông
-    { x:542, y:704, rx:240, ry:195 },   // suối băng 1
-    { x:948, y:1231, rx:255, ry:215 },  // suối băng 2
+    { x:542, y:704, rx:170, ry:195 },   // suối băng 1 — thu rx, mép cũ nuốt Vệ Binh Trụ tt1 (780,608)
+    { x:880, y:1231, rx:200, ry:215 },  // suối băng 2 — dời tây + thu rx, mép cũ nuốt bãi ttdetu (1131,1182)
     { x:1422, y:1671, rx:275, ry:225 }, // suối băng 3
   ],
   mongco: [
@@ -697,10 +718,23 @@ const DGN_OBSTACLES = [ // 7 phó bản dùng chung: khung tường đá + cửa
   { x:0, y:0, wd:330, ht:1900 },
   { x:2270, y:0, wd:330, ht:1900 },
 ];
+// Cây và đá quy đổi thành vật cản. Khảo sát đo được: trước bản này bán kính va chạm của chúng
+// bằng 0 — xếp 8 cây to nhất thành hàng rào rồi cho nhân vật đi qua, toạ độ x KHÔNG lệch một
+// pixel nào. Thứ mắt nhìn thấy là vật cản và thứ game thực thi là hai chuyện khác hẳn nhau, và
+// đó mới là gốc của cảm giác "trôi tuột", không phải chuyện map to hay nhỏ.
+// Chỉ dựng lại khi decor đổi (đổi map) — không tính lại mỗi khung hình.
+let decorObs = [];
+function rebuildDecorObs(){
+  decorObs = decor.map(d => d.type === 'tree'
+    ? { x:d.x, y:d.y, rx:10 + 8*d.s, ry:7 + 5*d.s }     // gốc cây: dẹt theo phối cảnh nhìn xuống
+    : { x:d.x, y:d.y, rx:13*d.s,     ry:8*d.s });        // tảng đá
+}
 function obstaclesOf(mapId){
   const md = MAPS[mapId];
   if (md && md.dungeon) return DGN_OBSTACLES;
-  return MAP_OBSTACLES[mapId] || [];
+  const base = MAP_OBSTACLES[mapId] || [];
+  // decor chỉ tồn tại cho map đang đứng — map khác thì chỉ có vật cản tĩnh
+  return mapId === curMap && decorObs.length ? base.concat(decorObs) : base;
 }
 function inObstacle(mapId, x, y, r){
   for (const o of obstaclesOf(mapId)){
@@ -708,6 +742,7 @@ function inObstacle(mapId, x, y, r){
       const cx = clamp(x, o.x, o.x + o.wd), cy = clamp(y, o.y, o.y + o.ht);
       if ((x-cx)*(x-cx) + (y-cy)*(y-cy) < r*r) return true;
     } else {
+      if (Math.abs(x - o.x) > o.rx + r || Math.abs(y - o.y) > o.ry + r) continue; // lọc thô
       const dx = (x - o.x)/(o.rx + r), dy = (y - o.y)/(o.ry + r);
       if (dx*dx + dy*dy < 1) return true;
     }
@@ -734,6 +769,7 @@ function resolveObstaclePoint(x, y, r){
       }
     } else {
       const dx = px - o.x, dy = py - o.y, ax = o.rx + r, ay = o.ry + r;
+      if (Math.abs(dx) > ax || Math.abs(dy) > ay) continue;                       // lọc thô
       const n = (dx*dx)/(ax*ax) + (dy*dy)/(ay*ay);
       if (n < 1){
         if (n > 0.0001){ const s = 1/Math.sqrt(n); px = o.x + dx*s; py = o.y + dy*s; }
@@ -754,17 +790,33 @@ function simulateMovePath(sx, sy, tx, ty){
   const path = [{ x: sx, y: sy }];
   let x = sx, y = sy;
   const stepLen = 30;
-  let stuck = 0, lastX = sx, lastY = sy; // vật cản lớn (hồ) chặn thẳng hướng đích → chệch dần bám mép
-  for (let i = 0; i < 160; i++){
+  // Bám mép khi bị chặn. Bản cũ ĐỔI BÊN mỗi bước kẹt (`stuck % 2`), nên gặp khối dài là nó dao
+  // động tại chỗ thay vì vòng qua — đo được một tuyến ở Thornwood Reach kẹt lại cách đích 555px.
+  // Nay chọn HẲN một bên (bên nào thoáng hơn) rồi bám theo tới khi thoát.
+  let stuck = 0, side = 0, lastX = sx, lastY = sy;
+  const _probe = (px2, py2, base, sg) => {
+    for (let t = 1; t <= 8; t++)
+      if (inObstacle(curMap, px2 + Math.cos(base + sg*0.9)*stepLen*t, py2 + Math.sin(base + sg*0.9)*stepLen*t, 14)) return t;
+    return 99;
+  };
+  for (let i = 0; i < 200; i++){
     const d = dist(x, y, tx, ty);
     if (d < stepLen){ path.push({ x: tx, y: ty }); break; }
     let ang = Math.atan2(ty - y, tx - x);
-    if (stuck > 0) ang += (stuck % 2 === 0 ? 1 : -1) * Math.min(1.4, stuck * 0.35);
+    if (stuck > 0){
+      if (!side) side = _probe(x, y, ang, 1) >= _probe(x, y, ang, -1) ? 1 : -1;
+      ang += side * Math.min(2.0, stuck * 0.35); // chệch tối đa ~115°: đủ để lách khe giữa hai gốc cây
+    }
     const nx = x + Math.cos(ang)*stepLen, ny = y + Math.sin(ang)*stepLen;
     const p = resolveObstaclePoint(nx, ny, 14);
     x = p.x; y = p.y;
     path.push({ x, y });
-    stuck = dist(x, y, lastX, lastY) < stepLen*0.4 ? stuck + 1 : 0; // gần như không nhích → tăng độ chệch
+    // Đo "kẹt" bằng QUÃNG ĐƯỜNG đã nhích. Đã thử đo bằng "gần đích hơn" — hỏng nặng: trượt dọc
+    // mép gần như không bao giờ rút ngắn đủ, stuck tăng mỗi bước, độ chệch kịch trần tức thì và
+    // đường đi xoáy ra góc map (đo được: hụt đích 1954px). Bù lại bằng cách KHÔNG đặt khối chắn
+    // ngang trục nối hai bãi quái — né cục bộ chỉ vòng nổi khối ngắn.
+    stuck = dist(x, y, lastX, lastY) < stepLen*0.4 ? stuck + 1 : 0;
+    if (!stuck) side = 0;   // thoát rồi thì thả bên đã chọn, để lần kẹt sau chọn lại
     lastX = x; lastY = y;
   }
   return path;
@@ -776,6 +828,7 @@ function setMoveTarget(x, y){
   if (player.auto){ addFloat(player.x, player.y-40, 'Đang AUTO — tắt AUTO (Z) để tự đi chỗ khác', '#ffb15c', 12); return; }
   const nf = inObstacle(curMap, x, y, 14) ? nearestFree(curMap, x, y) : { x, y };
   moveTarget = { x: nf.x, y: nf.y };
+  player._moveRetry = 0;   // đích mới → đếm lại số lần gỡ kẹt
   addEffect({ type:'ring', x: moveTarget.x, y: moveTarget.y, r:20, color:'#9fd8ff' });
 }
 // Bấm/chuột phải trúng NPC: trả về NPC thay vì chỉ tọa độ, để walkToNpc() có thể tự mở lời thoại
@@ -3586,6 +3639,7 @@ function bandSummaryHtml(md){
 function buildWorld(){
   const md = mapDef();
   mobs = []; pickups = []; projectiles = []; effects = []; floats = []; groundLoot = []; // đồ dưới đất KHÔNG theo người sang map khác
+  decorObs = [];   // xoá TRƯỚC khi rải decor mới — xem ghi chú ở rebuildDecorObs()
   sigilReset(); // Khắc Ấn: vũng độc/sóng hẹn giờ của map cũ không được nổ giữa map mới
   if (player) player.pendingHit = null;   // cùng lý do: đòn thường đã hẹn ở map cũ
   petObj = null; mountObj = null; // Linh Thú & Thú Chiến xuất hiện lại ở map mới
@@ -3641,6 +3695,28 @@ function buildWorld(){
       !(Math.abs(d.y - w.gateY) < gh && d.x > w.x1 - 60 && d.x < w.x2 + 60));      // lối Tây-Đông
   }
   decor = decor.filter(d => !NPCS.some(n => n.map === curMap && dist(d.x,d.y,n.x,n.y) < 150));
+  // ── Cây/đá nay CHẶN ĐƯỜNG (xem obstaclesOf), nên phải dọn khỏi mọi điểm nội dung. ──
+  // Trước bản này chúng rải hoàn toàn ngẫu nhiên và chỉ né NPC/làng/thành — vô hại khi không
+  // va chạm, nhưng bật va chạm lên là một gốc cây mọc đúng giữa bãi quái sẽ khoá luôn bãi đó.
+  {
+    const _keep = [];
+    for (const q of (md.packs || [])) _keep.push({ x:q.x, y:q.y, r:(q.r || 90) + 70 });
+    if (md.spawn) _keep.push({ x:md.spawn.x, y:md.spawn.y, r:150 });
+    for (const k in (md.spawnFrom || {})) _keep.push({ x:md.spawnFrom[k].x, y:md.spawnFrom[k].y, r:150 });
+    for (const h of (HERB_SPOTS[curMap] || [])) _keep.push({ x:h.x, y:h.y, r:60 });
+    for (const a of AI_PASSES) if (a.map === curMap) _keep.push({ x:a.x, y:a.y, r:a.r + 80 });
+    if (typeof GATES !== 'undefined') for (const g of GATES) if (g.map === curMap) _keep.push({ x:g.x, y:g.y, r:130 });
+    const _bd = BOSS_DEFS[curMap];
+    if (_bd){
+      for (const tv of (_bd.thuve || [])) _keep.push({ x:tv.x*MAP.w, y:tv.y*MAP.h, r:170 });
+      if (_bd.tranai) _keep.push({ x:_bd.tranai.x*MAP.w, y:_bd.tranai.y*MAP.h, r:210 });
+    }
+    if (md.spring && typeof SPRING !== 'undefined') _keep.push({ x:SPRING.x, y:SPRING.y, r:140 });
+    decor = decor.filter(d => !_keep.some(k => dist(d.x, d.y, k.x, k.y) < k.r));
+    // và không mọc chồng lên vật cản tĩnh (hồ, tường) — vẽ ra thì thành cây mọc giữa hồ
+    decor = decor.filter(d => !inObstacle(curMap, d.x, d.y, 4));
+  }
+  rebuildDecorObs();
   spawnAmbients(); // hạt môi trường + cỏ mặt đất theo chủ đề bản đồ
   spawnHorses(); // GDD Đợt 2 B5: Tuấn Mã Hoang
   // Ma Tôn Giáng Thế & Truy Nã Lệnh: tái xuất hiện khi người chơi vào đúng bản đồ
@@ -5405,11 +5481,19 @@ function update(dt){
       // (phải vòng xa tìm cổng chứ không né tại chỗ được) — không còn WASD để tự gỡ kẹt nữa, nên nếu
       // nhiều giây liền không tiến gần hơn thì huỷ đích, báo người chơi thử điểm khác thay vì kẹt mãi.
       moveProgressT += dt;
-      if (moveProgressT > 1.3){
+      if (moveProgressT > 2.6){   // 1,3s là quá gắt sau khi cây/đá chặn thật — né cục bộ cần thêm nhịp
         if (_mtd > moveProgressD - 24){
-          addFloat(player.x, player.y-40, 'Không tìm được đường tới đó — hãy thử bấm điểm gần hơn!', '#ff9a6a', 12);
-          moveTarget = null; moveWaypoint = null; npcTalkTarget = null;
-        }
+          // Kẹt lần đầu thì ĐỪNG bỏ cuộc ngay: né cục bộ hay chui vào túi giữa mấy gốc cây, chỉ
+          // cần vứt waypoint cũ và tính lại từ vị trí mới là thoát. Đo được: bỏ cuộc ngay làm
+          // 1/3 số lần bấm đi xa bị huỷ giữa đường sau khi cây bắt đầu chặn thật.
+          player._moveRetry = (player._moveRetry || 0) + 1;
+          if (player._moveRetry >= 3){
+            addFloat(player.x, player.y-40, 'Không tìm được đường tới đó — hãy thử bấm điểm gần hơn!', '#ff9a6a', 12);
+            moveTarget = null; moveWaypoint = null; npcTalkTarget = null; player._moveRetry = 0;
+          } else {
+            moveWaypoint = null; moveWaypointT = 0;   // ép tính lại đường ngay khung sau
+          }
+        } else player._moveRetry = 0;
         moveProgressT = 0; moveProgressD = _mtd;
       }
     }
