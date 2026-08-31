@@ -4237,7 +4237,7 @@ function drawBossTele(m){
 // shake: 0 TẮT · 1 NHẸ (mặc định) · 2 ĐẦY. Trước đây là boolean và mặc định `false` để chống
 // chóng mặt — nhưng bật/tắt là quá thô, và hậu quả là TOÀN BỘ 12 chỗ đặt shakeT/shakeMag trong
 // game không ai nhìn thấy. Diablo luôn rung, chỉ là rung rất khẽ và CÓ HƯỚNG.
-const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto' },
+const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto', dmgNum:true },
   (()=>{ try { return JSON.parse(localStorage.getItem('vlcm_settings') || '{}'); } catch { return {}; } })());
 // Save cũ lưu `shake` là boolean. Không di trú thì Object.assign ghi đè `false` lên mặc định
 // mới và người chơi cũ mắc kẹt ở mức TẮT vĩnh viễn — mà họ chưa từng chọn tắt, đó chỉ là
@@ -4869,6 +4869,18 @@ function hurtMob(m, dmg, source){
     const note = perfectNote ? 'HOÀN HẢO ' : counterNote ? 'KHẮC HỆ ' : counteredNote ? 'bị khắc ' : shieldNote ? '(chống) ' : '';
     const color = perfectNote ? '#ff9df0' : counterNote ? '#5db86a' : counteredNote ? '#8a94a8' : shieldNote ? '#8a8a8a' : (source==='crit' ? '#ffd76a' : '#e8ecff');
     logCombat(`⚔ ${note}-${final} → ${m.def.name}${source==='crit' ? ' (bạo kích)' : ''}`, color);
+    // Số bay TRÊN ĐẦU QUÁI. Nhật ký góc dưới-trái không thay thế được nó: lúc đang đánh, mắt
+    // người chơi ở giữa màn hình, còn hộp nhật ký rộng 260px thì trôi quá nhanh để đọc. Đây là
+    // kênh phản hồi CHÍNH của Diablo 3 và game đang không có.
+    // GỘP theo cửa sổ 0,22 giây cho từng con thay vì bắn một số mỗi cú: chiêu diện rộng và AUTO
+    // đánh nhiều mục tiêu sẽ đẩy số bay tràn mảng floats (trần 70) và nuốt mất các thông báo
+    // khác. Gộp lại còn cho ra con số ĐÚNG THỨ người chơi muốn biết: cả chuỗi đòn ăn bao nhiêu.
+    if (SETTINGS.dmgNum !== false){
+      m._dmgAcc = (m._dmgAcc || 0) + final;
+      if (source === 'crit' || perfectNote) m._dmgBig = true;
+      if (counterNote) m._dmgCounter = true;
+      if (!(m._dmgT > 0)) m._dmgT = 0.22;
+    }
   }
   // tương khắc: tia hào quang hệ thắng bao quanh quái
   if (counterNote) addEffect({ type:'ring', x:m.x, y:m.y, r:26 + m.def.size, color:ELEM[sectEl].color });
@@ -6351,6 +6363,22 @@ function update(dt){
   }
   // respawn dead mobs
   for (const m of mobs){
+    // Xả số sát thương đã gộp. Đặt TRƯỚC nhánh `if (!m.dead)` để cú kết liễu cũng hiện số —
+    // nếu không thì đòn quan trọng nhất lại là đòn duy nhất im lặng.
+    if (m._dmgT > 0){
+      m._dmgT -= dt;
+      if (m._dmgT <= 0 && m._dmgAcc > 0){
+        // Đặt CAO HƠN nhãn tên. Nhãn của quái khung xương neo ở dy - size*3,6 chứ không phải
+        // dy - size, nên một hằng số chung sẽ đâm thẳng vào tên và thanh máu — thấy rõ trên ảnh
+        // chụp đầu tiên. Lệch ngang nhẹ theo từng con để số của cả cụm không chồng khít nhau.
+        const _fy = m.y - (m.def.skel ? m.def.size * 3.6 : m.def.size) - 34;
+        const _fx = m.x + ((m.wob || 0) % 3 - 1) * 14;
+        addFloat(_fx, _fy, '-' + Math.round(m._dmgAcc),
+          m._dmgCounter ? '#5db86a' : m._dmgBig ? '#ffd76a' : '#ffffff',
+          m._dmgBig ? 18 : 13);
+        m._dmgAcc = 0; m._dmgBig = false; m._dmgCounter = false; m._dmgT = 0;
+      }
+    }
     if (!m.dead) continue;
     // Boss Vùng/Cổng Vực hồi lại sau 60s tại đúng vị trí canh giữ — chỉ áp dụng mob có m.zone thật
     // (Boss Săn phó bản dùng chung bossKind để thừa hưởng não moveset/lãnh địa nhưng zone=null,
@@ -14762,6 +14790,7 @@ function renderSettings(){
     <div class="set-row"><span>🔔 Hiệu ứng âm thanh</span>${slider('sfx', SETTINGS.sfx)}</div>
     <div class="set-row"><span>🗺 Bản đồ thu nhỏ <i>(phím U)</i></span>${tog('minimap')}</div>
     <div class="set-row"><span>🏷 Tên quái vật</span>${tog('mobName')}</div>
+    <div class="set-row"><span>💥 Số sát thương trên đầu quái</span>${tog('dmgNum')}</div>
     <div class="set-row"><span>📳 Rung màn hình</span><span>${[[0,'TẮT'],[1,'NHẸ'],[2,'ĐẦY']].map(([v,t]) =>
       `<button class="mini-btn ${(SETTINGS.shake|0) === v ? '' : 'danger'}" onclick="setShake(${v})">${t}</button>`).join(' ')}</span></div>
     <div class="set-row"><span>📈 Bảng đo hiệu năng <i>(FPS · JS · raster)</i></span>${tog('perfHud')}</div>
