@@ -1007,6 +1007,7 @@ function setMoveTarget(x, y){
   if (player.auto){ addFloat(player.x, player.y-40, 'Đang AUTO — tắt AUTO (Z) để tự đi chỗ khác', '#ffb15c', 12); return; }
   const nf = inObstacle(curMap, x, y, 14) ? nearestFree(curMap, x, y) : { x, y };
   moveTarget = { x: nf.x, y: nf.y };
+  movePlanClear(); player._planD = null;   // đích mới ⇒ kế hoạch cũ vô nghĩa
   player._moveRetry = 0;   // đích mới → đếm lại số lần gỡ kẹt
   addEffect({ type:'ring', x: moveTarget.x, y: moveTarget.y, r:20, color:'#9fd8ff' });
 }
@@ -2851,7 +2852,22 @@ let shakeT = 0, shakeMag = 0, shakeDir = 0; // rung màn hình khi bị đánh t
 let keys = {};
 let joyVec = { x:0, y:0 };
 let moveTarget = null; // Click-to-move: đích chuột phải (canvas) hoặc bấm minimap — { x, y } world coords
-let moveWaypoint = null, moveWaypointT = 0; // Waypoint gần né vật cản trên đường tới moveTarget — xem update()
+let moveWaypoint = null; // Nút đang nhắm tới trong movePlan — chỉ để vẽ/gỡ lỗi, xem update()
+// Kế hoạch đường đi ĐÃ CAM KẾT. Bản cũ tính lại đường từ đầu mỗi 0,35 giây rồi lấy path[3] làm
+// waypoint — mà simulateMovePath() bám mép và tự chọn bên theo _probe(), nên chỉ cần nhân vật
+// nhích vài chục điểm ảnh là nó đổi ý sang bên kia. Kết quả: đứng rung qua lại trong một khoảng
+// 35px, không bao giờ tới nơi. Đo được 2/5 lần đi giữa hai bãi quái ở Cửa Tổ Sâu hỏng như vậy.
+// Nay tính MỘT LẦN rồi đi hết chuỗi nút; chỉ tính lại khi thật sự cần (xem update()).
+let movePlan = null, movePlanI = 0, movePlanT = 0;
+function movePlanClear(){ movePlan = null; movePlanI = 0; movePlanT = 0; }
+// Lập kế hoạch tới (tx,ty). `bfs` = đã kẹt một lần rồi, bỏ qua bám mép, đi thẳng bằng BFS.
+function movePlanMake(tx, ty, bfs){
+  const pth = bfs ? (navPath(player.x, player.y, tx, ty) || simulateMovePath(player.x, player.y, tx, ty))
+                  : simulateMovePath(player.x, player.y, tx, ty);
+  movePlan = (pth && pth.length > 1) ? pth : null;
+  movePlanI = movePlan ? 1 : 0;   // nút 0 là chỗ đang đứng
+  movePlanT = 0;
+}
 let moveProgressT = 0, moveProgressD = Infinity; // Lưới an toàn chống kẹt vĩnh viễn khi tự đi — xem update()
 let npcTalkTarget = null; // Click vào NPC / đèn hiệu nhiệm vụ: id NPC cần tự mở lời thoại khi tới nơi
 let mouseWorld = { x:0, y:0 };
@@ -3846,7 +3862,7 @@ function buildWorld(){
   sigilReset(); // Khắc Ấn: vũng độc/sóng hẹn giờ của map cũ không được nổ giữa map mới
   if (player) player.pendingHit = null;   // cùng lý do: đòn thường đã hẹn ở map cũ
   petObj = null; mountObj = null; // Linh Thú & Thú Chiến xuất hiện lại ở map mới
-  moveTarget = null; moveWaypoint = null; // Click-to-move: đích ở map cũ không còn ý nghĩa khi đổi map
+  moveTarget = null; moveWaypoint = null; movePlanClear(); // Click-to-move: đích ở map cũ không còn ý nghĩa khi đổi map
   npcTalkTarget = null; // NPC ở map cũ không còn ý nghĩa khi đổi map
   decor = []; mists = []; springTimer = 0;
   // quái đứng thành cụm 5-7 con (GDD Mob Mechanics), đúng vị trí đã thiết kế trong md.packs.
@@ -5765,17 +5781,24 @@ function update(dt){
   let mx = 0, my = 0;
   if (moveTarget && !player.auto){
     const _mtd = dist(player.x, player.y, moveTarget.x, moveTarget.y);
-    if (_mtd < 18) { moveTarget = null; moveWaypoint = null; }
+    if (_mtd < 18) { moveTarget = null; moveWaypoint = null; movePlanClear(); }
     else {
       // Đi theo waypoint gần (né vật cản), không lao thẳng đường chim bay — đường thẳng dễ kẹt góc
       // tường (WASD đã bỏ, không còn cách đi tay để tự gỡ kẹt). Tính lại định kỳ bằng thuật toán né
       // vật cản có sẵn của simulateMovePath() thay vì viết riêng logic "kẹt" mới.
-      moveWaypointT -= dt;
-      if (moveWaypointT <= 0 || !moveWaypoint){
-        const path = simulateMovePath(player.x, player.y, moveTarget.x, moveTarget.y);
-        moveWaypoint = path[Math.min(3, path.length - 1)];
-        moveWaypointT = 0.35;
+      if (!movePlan) movePlanMake(moveTarget.x, moveTarget.y, false);
+      // Bỏ qua mọi nút đã đi qua hoặc còn rất gần — chuỗi nút cách nhau ~30px, mà mỗi khung nhân
+      // vật nhích được vài điểm ảnh, nên không bỏ qua thì nó bám dính vào nút cũ ngay sau lưng.
+      while (movePlan && movePlanI < movePlan.length - 1 &&
+             dist(player.x, player.y, movePlan[movePlanI].x, movePlan[movePlanI].y) < 22) movePlanI++;
+      // Cam kết rồi vẫn phải có đường lùi: nếu 1,2 giây không nhích thêm được dọc kế hoạch thì
+      // tính lại — lần này bằng BFS, vì bám mép vừa chứng minh là nó không qua nổi chỗ đó.
+      movePlanT += dt;
+      if (movePlanT > 1.2){
+        if (_mtd > (player._planD == null ? Infinity : player._planD) - 30) movePlanMake(moveTarget.x, moveTarget.y, true);
+        player._planD = _mtd; movePlanT = 0;
       }
+      moveWaypoint = movePlan ? movePlan[Math.min(movePlanI, movePlan.length - 1)] : moveTarget;
       const _wd = dist(player.x, player.y, moveWaypoint.x, moveWaypoint.y);
       if (_wd < 6){ mx = (moveTarget.x - player.x)/_mtd; my = (moveTarget.y - player.y)/_mtd; }
       else { mx = (moveWaypoint.x - player.x)/_wd; my = (moveWaypoint.y - player.y)/_wd; }
@@ -5794,9 +5817,9 @@ function update(dt){
           player._moveRetry = (player._moveRetry || 0) + 1;
           if (player._moveRetry >= 3){
             addFloat(player.x, player.y-40, 'Không tìm được đường tới đó — hãy thử bấm điểm gần hơn!', '#ff9a6a', 12);
-            moveTarget = null; moveWaypoint = null; npcTalkTarget = null; player._moveRetry = 0;
+            moveTarget = null; moveWaypoint = null; movePlanClear(); npcTalkTarget = null; player._moveRetry = 0;
           } else {
-            moveWaypoint = null; moveWaypointT = 0;   // ép tính lại đường ngay khung sau
+            movePlanClear(); moveWaypoint = null;   // ép tính lại đường ngay khung sau
           }
         } else player._moveRetry = 0;
         moveProgressT = 0; moveProgressD = _mtd;
@@ -6399,7 +6422,7 @@ function update(dt){
   updateHud();
 }
 function onDeath(){
-  moveTarget = null; moveWaypoint = null; // Click-to-move: hủy đích khi chết, tránh tự đi lung tung sau khi hồi sinh
+  moveTarget = null; moveWaypoint = null; movePlanClear(); // Click-to-move: hủy đích khi chết, tránh tự đi lung tung sau khi hồi sinh
   deepOnDeath();   // Tầng Sâu: chết là mất sạch kho tạm — phải chạy TRƯỚC mọi nhánh hồi sinh
   npcTalkTarget = null;
   // The Hatching · THIÊN MỆNH: mỗi màn chơi 1 lần, chết hồi sinh tại chỗ
@@ -9843,7 +9866,7 @@ window.toggleAuto = function(){
     else { player._autoAX = player.x; player._autoAY = player.y; } // neo tại chỗ bật — auto chỉ ôm 1-2 bãi quái quanh neo
     // QA: bật AUTO khi còn 1 lệnh click-di-chuyển tay đang treo (chưa tới đích) — nếu không huỷ ở
     // đây, tắt AUTO lại sau đó sẽ khiến nhân vật tự đi tiếp theo lệnh cũ dù không có input mới.
-    moveTarget = null; moveWaypoint = null;
+    moveTarget = null; moveWaypoint = null; movePlanClear();
     // QA: mở khoá bãi quái cũ mỗi lần bật lại AUTO — để nó tự khoá vào bãi gần điểm neo mới nhất
     player._autoZone = null; player._autoZoneLocked = false;
   }
