@@ -936,6 +936,27 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 
 /* ═══════════ TẠO NHÂN VẬT — kiểu MU Online ═══════════
    Màn cũ là 16 lá bài thái cực/bát quái để roll vận mệnh. Nay: chọn lớp, gõ tên, vào game. */
+#art-view { position:fixed; inset:0; z-index:9000; background:rgba(4,4,10,.94);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; }
+#art-view .av-in { display:flex; align-items:center; gap:24px; padding:20px; }
+#art-view img { height:82vh; width:auto; }
+#art-view .av-chibi { height:52vh; }
+#art-view .av-cap { position:fixed; bottom:20px; left:0; right:0; text-align:center;
+  font-size:15px; font-weight:700; color:#dbe2ff; letter-spacing:.4px; }
+#art-view .av-cap span { font-size:12px; font-weight:400; color:#9aa8d4; }
+#cc-splash { position:fixed; left:1vw; top:50%; transform:translateY(-50%) scale(.97);
+  height:auto; width:24vw; max-width:340px; z-index:12; pointer-events:none;
+  opacity:0; transition:opacity 180ms ease-out, transform 180ms ease-out; }
+#cc-splash.on { opacity:1; transform:translateY(-50%) scale(1); }
+@media (max-width:1240px){ #art-view { position:fixed; inset:0; z-index:9000; background:rgba(4,4,10,.94);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; }
+#art-view .av-in { display:flex; align-items:center; gap:24px; padding:20px; }
+#art-view img { height:82vh; width:auto; }
+#art-view .av-chibi { height:52vh; }
+#art-view .av-cap { position:fixed; bottom:20px; left:0; right:0; text-align:center;
+  font-size:15px; font-weight:700; color:#dbe2ff; letter-spacing:.4px; }
+#art-view .av-cap span { font-size:12px; font-weight:400; color:#9aa8d4; }
+#cc-splash { display:none; } }
 #cc-classes { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin:16px auto 12px; max-width:820px; }
 .cc-card { position:relative; border:1.5px solid var(--border-faint); border-radius:var(--r-md);
   padding:10px 6px 12px; cursor:pointer; background:linear-gradient(170deg,rgba(180,205,255,.07),rgba(10,11,24,.5));
