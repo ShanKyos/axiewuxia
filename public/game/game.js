@@ -4265,11 +4265,8 @@ const TB_TIER_NAMES = ['Sơ Khai','Cường Hóa','Tinh Luyện','Kỳ Diệu','
 const TB_TIER_COLORS = ['#9a7a4a','#9a7a4a','#9a7a4a','#c8c8d8','#c8c8d8','#c8c8d8','#7ecbff','#7ecbff','#7ecbff','#ffe9a8'];
 function tbCost(t){ return { noidan: t*2, mat: t*15 }; } // nâng từ tầng t → t+1
 function tbDef(){ return THANBINH[player.sect] || THANBINH.vophai; }
-function tbNoidanTotal(){ let n = 0; for (const e in (player.noidan || {})) n += player.noidan[e] || 0; return n; }
-function tbConsumeNoidan(n){ // trừ dần từ hành đang có nhiều nhất
-  const els = ['Kim','Mộc','Thổ','Thủy','Hỏa'].sort((a,b)=>((player.noidan[b]||0)-(player.noidan[a]||0)));
-  for (const e of els){ if (n <= 0) break; const take = Math.min(player.noidan[e] || 0, n); player.noidan[e] -= take; n -= take; }
-}
+function tbNoidanTotal(){ return player.noidan || 0; }
+function tbConsumeNoidan(n){ player.noidan = Math.max(0, (player.noidan || 0) - n); }
 window.upgradeThanBinh = function(){
   if (!player) return;
   const tb = player.thanbinh;
@@ -4553,7 +4550,7 @@ function newPlayer(sectKey){
     potions: 3, potionCd: 0,                   // P0: Hồ Lô Thuốc — hồi 40% máu, cd 20s, tối đa 5 lọ
     buffAtkT: 0,                             // Rượu Hổ Cốt — +12% công lực có thời hạn
     loidonT: 0,                              // Bùa Chắn Sét — giảm 40% ST thiên lôi có thời hạn
-    noidan: {},                              // Nội Đan yêu thú theo hành { Kim, Mộc, Thổ, Thủy, Hỏa }
+    noidan: 0,                               // Lõi Nguyên Tố — MỘT ô đếm, chọn chỉ số lúc hấp thụ
     ndBonus: { atk:0, hp:0, def:0, qi:0, crit:0 }, // chỉ số vĩnh viễn từ thôn phệ nội đan
     ndDay: '', ndCount: 0,                   // giới hạn thôn phệ 3 viên/ngày
     abode: { tulinh:0, garden:[null,null,null] }, // Nhà Riêng: Tụ Linh Trận + Dược Viên
@@ -4726,7 +4723,14 @@ function loadGame(){
     if (player.potionCd == null) player.potionCd = 0;
     if (player.buffAtkT == null) player.buffAtkT = 0;
     if (player.loidonT == null) player.loidonT = 0;
-    if (!player.noidan) player.noidan = {};
+    // ═══ GỘP TIỀN TỆ — bậc 3: năm Lõi Nguyên Tố về một ════════════════════════════════
+    // Save cũ giữ object { Kim:.., Mộc:.. }; cộng cả năm hệ lại thành một số. Tỉ lệ 1:1, không
+    // ai mất viên nào — năm hệ vốn đã tiêu chung một chỗ.
+    if (player.noidan && typeof player.noidan === 'object'){
+      let _n = 0; for (const e in player.noidan) _n += player.noidan[e] || 0;
+      player.noidan = _n;
+    }
+    if (typeof player.noidan !== 'number') player.noidan = 0;
     if (!player.ndBonus) player.ndBonus = { atk:0, hp:0, def:0, qi:0, crit:0 };
     if (player.ndDay == null){ player.ndDay = ''; player.ndCount = 0; }
     // ═══ Gỡ hệ Thú Thuần Hóa — hoàn lại cho người chơi đang giữ ════════════════════════
@@ -4735,7 +4739,7 @@ function loadGame(){
     if (player.phongphu > 0){ player.silver += player.phongphu * GO_ANTHUANTHU; }
     if (player.pet){
       const _fed = Math.ceil((player.pet.feed || 0) / 2);
-      if (_fed > 0 && player.noidan) player.noidan[player.pet.el] = (player.noidan[player.pet.el] || 0) + _fed;
+      if (_fed > 0) player.noidan = (player.noidan || 0) + _fed;
       player.silver += GO_ANTHUANTHU;   // hoàn luôn cái ấn đã dùng để thu phục nó
     }
     delete player.phongphu; delete player.pet;
@@ -5936,8 +5940,9 @@ function computeKillRewards(m, source, P, rng){
   rw.tamdac = d.bossKind ? (2 + Math.floor(R()*2))
     : (d.boss || m.type === 'boss') ? (1 + Math.floor(R()*2))
     : (d.elite && R() < 0.3) ? 1 : 0;
-  // Lõi Nguyên Tố theo hệ — tinh anh 30%, boss 100%
-  if (d.el && (d.boss || (d.elite && R() < 0.3))) rw.noidan = d.el;
+  // Lõi Nguyên Tố — tinh anh 30%, boss 100%. Trước đây còn đòi d.el vì Lõi phải khoá theo hệ
+  // của con quái; nay Lõi chỉ có một loại nên bỏ điều kiện đó (mọi def boss/tinh anh đều có el).
+  if (d.boss || (d.elite && R() < 0.3)) rw.noidan = 1;
   // ── Bảng rơi đồ theo nguồn ──
   rw.dropSrc = d.huntBoss ? null : d.bossKind === 'tranai' ? 'tranai'
     : (d.boss || d.bossKind) ? 'thuve' : (d.elite ? 'elite' : 'mob');
@@ -5992,8 +5997,8 @@ function applyRewards(rw, m){
   if (rw.bikipVH){ player.bikipVH = (player.bikipVH || 0) + rw.bikipVH; addFloat(m.x, m.y-100, '+1 📜 Sách Kỹ Năng', '#ffb15c', 13); }
   if (rw.tamdac){ player.tamdac = (player.tamdac || 0) + rw.tamdac; addFloat(m.x, m.y-112, `+${rw.tamdac} 💠 Tâm Đắc`, '#7df9ff', 13); }
   if (rw.noidan){
-    player.noidan[rw.noidan] = (player.noidan[rw.noidan] || 0) + 1;
-    addFloat(m.x, m.y-88, `+1 ● Lõi Nguyên Tố ${elName(rw.noidan)}`, elColor(rw.noidan), 12);
+    player.noidan = (player.noidan || 0) + rw.noidan;
+    addFloat(m.x, m.y-88, `+${rw.noidan} ● Lõi Nguyên Tố`, '#b08ae8', 12);
     dailyTrack('noidan');
   }
   if (rw.firstDrop) player._daRoiMonDau = true;
@@ -14704,14 +14709,16 @@ function bagSecBox(){
       <span><button class="mini-btn" onclick="openBaoHap(${t})">Mở Hạp</button></span></div>`;
   }
   const ndUsed = ndToday();
-  h += `<div class="chaos-sec">NỘI ĐAN YÊU THÚ <span class="chaos-sub">hôm nay còn ${Math.max(0, 3-ndUsed)}/3 lần</span></div>`;
-  for (const el2 of ['Kim','Mộc','Thổ','Thủy','Hỏa']){
-    const cnt = (player.noidan && player.noidan[el2]) || 0;
-    const nh = ELEM[el2], ef = ND_EFFECT[el2];
-    h += `<div class="mat-row"><span style="color:${nh.color};width:20px;text-align:center;font-size:13px">${nh.glyph}</span>
-      <span style="flex:1">Lõi Nguyên Tố ${elName(el2)} <span style="opacity:.55;font-size:11px">— ${ef.desc}</span></span>
-      <b style="color:${nh.color};margin-right:8px">${cnt}</b>
-      <button class="mini-btn" ${cnt > 0 && ndUsed < 3 ? '' : 'disabled'} onclick="swallowNoidan('${el2}')">Thôn Phệ</button></div>`;
+  const ndCnt = player.noidan || 0;
+  // Một ô đếm, năm nút chọn: người chơi quyết lấy chỉ số nào, không phải con quái nào vừa chết.
+  h += `<div class="chaos-sec">LÕI NGUYÊN TỐ <span class="chaos-sub">có ${ndCnt} · hôm nay còn ${Math.max(0, 3-ndUsed)}/3 lần</span></div>`;
+  if (!ndCnt) h += `<div class="chaos-empty">Chưa có Lõi nào — săn quái tinh anh hoặc Hung Thần để rơi.</div>`;
+  for (const st of ['atk','hp','def','qi','crit']){
+    const ef = ND_EFFECT[st];
+    const co = (player.ndBonus && player.ndBonus[ef.k]) || 0;
+    h += `<div class="mat-row"><span style="color:${ef.color};width:20px;text-align:center;font-size:13px">●</span>
+      <span style="flex:1">${ef.ten} <span style="opacity:.55;font-size:11px">— ${ef.desc} vĩnh viễn${co ? ` · đang có +${co % 1 ? co.toFixed(1) : co}` : ''}</span></span>
+      <button class="mini-btn" ${ndCnt > 0 && ndUsed < 3 ? '' : 'disabled'} onclick="swallowNoidan('${st}')">Hấp Thụ</button></div>`;
   }
   return h;
 }
@@ -17652,32 +17659,39 @@ function showOfflineGains(offSec, khiGain, tuviGain){
 
 
 // ==================== NỘI ĐAN YÊU THÚ (bài học Phi Nguyệt Tiên Hành Lục) ====================
-// Quái tinh anh/boss rớt Nội Đan theo hành — Thôn Phệ tăng chỉ số VĨNH VIỄN, tối đa 3 viên/ngày.
+// Quái tinh anh/boss rớt Lõi Nguyên Tố — hấp thụ tăng chỉ số VĨNH VIỄN, tối đa 3 viên/ngày.
+// Lõi Nguyên Tố gộp từ NĂM ô đếm (Kim/Mộc/Thổ/Thủy/Hỏa) về MỘT. Năm ô đó vốn đã làm việc của
+// một: tbConsumeNoidan() khi nâng Thần Binh chỉ trừ dần từ hệ nào đang có nhiều nhất, không hề
+// đòi đúng hệ. Chỗ DUY NHẤT hệ nguyên tố có nghĩa là lúc hấp thụ lấy chỉ số vĩnh viễn — mà ở đó
+// nó lại quyết hộ người chơi: muốn +công thì phải đi tìm quái hệ Kim.
+// Nay bảng này khoá theo CHỈ SỐ, và người chơi tự chọn. Cùng năm lựa chọn, một ô đếm, và lựa
+// chọn thuộc về người chơi thay vì thuộc về con quái nào tình cờ chết.
 const ND_EFFECT = {
-  Kim:   { k:'atk',  v:6,   desc:'+6 công lực mỗi viên' },
-  'Mộc': { k:'hp',   v:40,  desc:'+40 sinh lực mỗi viên' },
-  'Thổ': { k:'def',  v:4,   desc:'+4 phòng ngự mỗi viên' },
-  'Thủy':{ k:'qi',   v:25,  desc:'+25 Qi mỗi viên' },
-  'Hỏa': { k:'crit', v:0.5, desc:'+0.5% chí mạng mỗi viên' },
+  atk:  { k:'atk',  v:6,   ten:'Công Lực',  desc:'+6 công lực',    color:'#c8d4e8' },
+  hp:   { k:'hp',   v:40,  ten:'Sinh Lực',  desc:'+40 sinh lực',   color:'#5db86a' },
+  def:  { k:'def',  v:4,   ten:'Phòng Ngự', desc:'+4 phòng ngự',   color:'#c08a4a' },
+  qi:   { k:'qi',   v:25,  ten:'Mana',      desc:'+25 Mana',       color:'#7ec8ff' },
+  crit: { k:'crit', v:0.5, ten:'Chí Mạng',  desc:'+0,5% chí mạng', color:'#e8552a' },
 };
 function ndToday(){
   const d = new Date().toDateString();
   if (player.ndDay !== d){ player.ndDay = d; player.ndCount = 0; }
   return player.ndCount || 0;
 }
-window.swallowNoidan = function(el2){
-  if (!player.noidan || !(player.noidan[el2] > 0)) return;
+// Tham số nay là CHỈ SỐ muốn nhận (atk/hp/def/qi/crit), không phải hệ nguyên tố.
+window.swallowNoidan = function(stat){
+  const ef = ND_EFFECT[stat];
+  if (!ef || !((player.noidan || 0) > 0)) return;
   if (ndToday() >= 3){
     addFloat(player.x, player.y-40, 'Đã hấp thụ hết hôm nay — mai quay lại!', '#8a8a8a', 12);
     return;
   }
-  player.noidan[el2]--;
-  const ef = ND_EFFECT[el2];
+  player.noidan--;
   player.ndBonus[ef.k] = (player.ndBonus[ef.k] || 0) + ef.v;
   player.ndCount = ndToday() + 1;
   calcDerived();
-  addFloat(player.x, player.y-50, `Hấp Thụ Lõi Nguyên Tố ${el2}: ${ef.desc.split(' mỗi')[0]} VĨNH VIỄN!`, ELEM[el2].color, 14);
-  addEffect({ type:'ring', x:player.x, y:player.y, r:60, color:ELEM[el2].color });
+  addFloat(player.x, player.y-50, `Hấp Thụ Lõi Nguyên Tố: ${ef.desc} VĨNH VIỄN!`, ef.color, 14);
+  addEffect({ type:'ring', x:player.x, y:player.y, r:60, color:ef.color });
   AudioSys.sfx('levelup', 0.5);
   saveGame(); renderBag();
 };
