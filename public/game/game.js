@@ -5265,6 +5265,62 @@ function coQuaiHopLe(){
   }
   return false;
 }
+// Đẩy quái ra khỏi nhau. Trước đây không có gì cả, nên một bãi 6 con chồng khít trong khoảng
+// ~40px: sáu nhãn tên đè lên nhau không đọc được chữ nào, và người chơi không biết mình đang
+// đánh mấy con. Lực ĐẨY MỀM, không phải va chạm cứng — quái vẫn dồn lại quanh người chơi, chỉ là
+// không trùng khít.
+// Chỉ xét quái TRONG TẦM NHÌN: cả map có tới 60 con, so từng cặp là 1.770 phép mỗi khung cho một
+// việc thuần thị giác.
+function mobSeparate(dt){
+  const R = 900, gan = [];
+  for (const m of mobs){
+    if (m.dead || m.def.bossKind || m.type === 'boss') continue;   // boss đứng đâu là chuyện của boss
+    if (Math.abs(m.x - player.x) > R || Math.abs(m.y - player.y) > R) continue;
+    gan.push(m);
+  }
+  for (let i = 0; i < gan.length; i++){
+    const a = gan[i];
+    for (let j = i + 1; j < gan.length; j++){
+      const b2 = gan[j];
+      const min = (a.def.size + b2.def.size) * 1.2;
+      const dx = b2.x - a.x, dy = b2.y - a.y;
+      const d2 = dx*dx + dy*dy;
+      if (d2 >= min*min) continue;
+      // Hai con nằm ĐÚNG một điểm là ca cần xử lý nhất, mà cũng là ca không có hướng đẩy: dx=dy=0
+      // thì chia cho 0. Bản đầu tôi `continue` ở đây — tức là bỏ qua đúng thứ mình định sửa, và
+      // sáu con chồng khít cứ đứng nguyên chồng khít. Nay chọn hướng theo pha dao động sẵn có của
+      // từng con, nên vẫn tất định mà không cần thêm trạng thái.
+      let ux, uy, d;
+      if (d2 < 0.01){ const ang = (a.wob + j) * 1.7; ux = Math.cos(ang); uy = Math.sin(ang); d = 0; }
+      else { d = Math.sqrt(d2); ux = dx/d; uy = dy/d; }
+      const push = (min - d) * 0.5 * Math.min(1, dt * 8);
+      a.x -= ux*push; a.y -= uy*push;
+      b2.x += ux*push; b2.y += uy*push;
+    }
+  }
+}
+// Quyết định con nào ĐƯỢC vẽ nhãn tên trong khung này. Chạy MỘT LẦN mỗi khung, trước khi vẽ.
+// Con bị bỏ nhãn được gom vào con đại diện gần nhất dưới dạng "×N" — vẫn cho biết có mấy con,
+// nhưng không còn sáu dòng chữ chồng lên nhau.
+function mobLabelPass(){
+  const nhan = [];
+  for (const m of mobs){
+    if (m.dead){ m._lbl = false; continue; }
+    const sx = m.x - camera.x, sy = m.y - camera.y;
+    if (sx < -80 || sy < -80 || sx > W + 80 || sy > H + 80){ m._lbl = false; continue; }
+    m._lbl = true; m._lblN = 1;
+    // Boss luôn có nhãn riêng — chúng là mục tiêu, không phải bầy
+    if (m.def.bossKind || m.type === 'boss'){ nhan.push(m); continue; }
+    let gop = null;
+    for (const q of nhan){
+      if (q.def !== m.def) continue;                       // chỉ gộp con CÙNG LOẠI
+      if (Math.abs(q.x - m.x) > 96 || Math.abs(q.y - m.y) > 30) continue;
+      gop = q; break;
+    }
+    if (gop){ m._lbl = false; gop._lblN++; }
+    else nhan.push(m);
+  }
+}
 function nearestMob(range){
   let best = null, bd = range, boss = null, bbd = range;
   for (const m of mobs){
@@ -6190,6 +6246,7 @@ function update(dt){
   updateGroundLoot(dt);
 
   // mobs AI
+  mobSeparate(dt);
   for (const m of mobs){
     if (m.dead) continue;
     m.wob += dt*3; m.hitT = Math.max(0, m.hitT - dt);
@@ -6717,6 +6774,7 @@ function drawSpring(){
 }
 
 function render(){
+  if (player) mobLabelPass();   // quyết định con nào được vẽ nhãn, TRƯỚC khi vẽ
   // Đặt lại phép biến hình gốc mỗi khung: mọi thứ bên dưới vẽ theo toạ độ LOGIC (W/H, điểm ảnh
   // CSS), còn bộ đệm thì nhỏ hơn đúng RES lần. Đặt ở đây chứ không ở resize() để không phụ thuộc
   // vào việc mọi save() bên dưới đều có restore() khớp.
@@ -7617,8 +7675,9 @@ function drawMob(m){
   ctx.fillStyle = d.boss ? '#ff3a3a' : '#c0392b';
   ctx.fillRect(dx-bw/2, topY-10, bw*Math.max(0,m.hp/m.maxHp), 4);
   // huy hiệu nguyên tố (◆♣❄☼▲) + tên quái
-  if (!SETTINGS.mobName) return;
-  const nameTxt = `${d.bossKind === 'tranai' ? '✦ TƯỚNG QUÂN ' : d.bossKind === 'thuve' ? '◆ VỆ BINH TRỤ ' : ''}${m.name}${m.revenge ? ' ⚔TRUY THÙ' : ''} · C${d.lv}`;
+  if (!SETTINGS.mobName || m._lbl === false) return;
+  const _sl = (m._lblN || 1) > 1 ? ` ×${m._lblN}` : '';
+  const nameTxt = `${d.bossKind === 'tranai' ? '✦ TƯỚNG QUÂN ' : d.bossKind === 'thuve' ? '◆ VỆ BINH TRỤ ' : ''}${m.name}${m.revenge ? ' ⚔TRUY THÙ' : ''} · C${d.lv}${_sl}`;
   ctx.font = '10px "Be Vietnam Pro", sans-serif'; ctx.textAlign='center';
   const eld = d.el && ELEM[d.el];
   const nw = ctx.measureText(nameTxt).width;
