@@ -825,14 +825,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #hud-name .hud-free { color:#0d0a16; background:#ffd76a; border-radius:8px; padding:0 6px;
   font-size:11px; font-weight:700; text-shadow:none; }
 
-/* ═══ Bảng Nhân Vật (V) ═══ */
-#panel-vstat { max-width:380px; }
-.vs-head { text-align:center; padding:4px 0 10px; border-bottom:1px solid var(--border); margin-bottom:8px; }
-.vs-title { color:#7ecbff; font-size:11.5px; letter-spacing:.06em; }
-.vs-name { font-size:17px; font-weight:700; color:#f5f7ff; line-height:1.25; }
-.vs-cls { font-size:12.5px; margin-top:1px; }
-.vs-xp { margin-top:8px; }
-.vs-foot { margin-top:9px; font-size:10.5px; color:#8a92a8; line-height:1.5; }
+/* Bảng nhân vật thứ hai (#panel-vstat) đã gỡ — nó in trùng nội dung với tab Thông Tin.
+   Bảy quy tắc .vs-* đi theo nó, không còn phần tử nào mang các lớp đó. */
 
 /* Tầng Sâu — nút rút lui, đặt nổi bật vì đó là QUYẾT ĐỊNH của cả chế độ */
 /* top:150px chứ không phải 84px — chỗ đó là banner dẫn nhiệm vụ, đè lên nhau đọc không ra */

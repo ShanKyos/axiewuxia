@@ -4033,6 +4033,7 @@ function tipItemFrom(key){
   if (k === 'eq')  return player.equip[v] || null;
   // Hàng bày trong tiệm dùng CHUNG thẻ rê chuột với túi đồ — cùng chỉ số, cùng phần so với đồ
   // đang mặc. Viết riêng một thẻ cho tiệm là chắc chắn sẽ lệch khỏi thẻ kia sau vài lần sửa.
+  if (k === 'kho') return (player.kho && player.kho[+v]) || null;
   if (k === 'shop'){
     const st = (player.shopStock && curShopNpc && player.shopStock[curShopNpc.id]) || null;
     return (st && st.items && st.items[+v]) || null;
@@ -4576,6 +4577,7 @@ function newPlayer(sectKey){
     potions: 3, potionCd: 0,                   // P0: Hồ Lô Thuốc — hồi 40% máu, cd 20s, tối đa 5 lọ
     buffAtkT: 0,                             // Rượu Hổ Cốt — +12% công lực có thời hạn
     loidonT: 0,                              // Bùa Chắn Sét — giảm 40% ST thiên lôi có thời hạn
+    kho: [],                                 // Kho: chỗ cất trang bị cho khỏi đầy túi — xem KHO_SIZE
     shopStock: {},                           // kho hàng bày của từng tiệm — xem shopStock()
     noidan: 0,                               // Lõi Nguyên Tố — MỘT ô đếm, chọn chỉ số lúc hấp thụ
     ndBonus: { atk:0, hp:0, def:0, qi:0, crit:0 }, // chỉ số vĩnh viễn từ thôn phệ nội đan
@@ -4760,6 +4762,7 @@ function loadGame(){
     if (typeof player.noidan !== 'number') player.noidan = 0;
     if (!player.ndBonus) player.ndBonus = { atk:0, hp:0, def:0, qi:0, crit:0 };
     if (!player.shopStock || typeof player.shopStock !== 'object') player.shopStock = {};
+    if (!Array.isArray(player.kho)) player.kho = [];
     if (player.ndDay == null){ player.ndDay = ''; player.ndCount = 0; }
     // ═══ GỘP TIỀN TỆ — bậc 4: Tâm Đắc nhập vào Instinct ═══════════════════════════════
     // Tỉ giá lấy từ chính chỗ tiêu: nâng trọn một chiêu 1→120 trước đây tốn 21💠, nay tốn thêm
@@ -5365,7 +5368,8 @@ window.addEventListener('keydown', e=>{
   if (e.key.toLowerCase()==='e'){ if (!window.tryCatchHorse || !tryCatchHorse()) tryTalk(); } // GDD Đợt 2 B5: E bắt Tuấn Mã kiệt sức trước
   if (e.key.toLowerCase()==='j'){ if (!tryPickLoot()) tryHarvestHerb(); } // nhặt đồ dưới đất → hái thảo dược
   if (e.key.toLowerCase()==='c') togglePanel('char');
-  if (e.key.toLowerCase()==='v') togglePanel('vstat');   // cửa sổ nhân vật kiểu MU
+  // V và C cùng mở MỘT cửa sổ nhân vật — giữ cả hai phím cho quen tay, nhưng chỉ còn một bảng.
+  if (e.key.toLowerCase()==='v'){ window.charTab = 'info'; togglePanel('char'); }
   if (e.key.toLowerCase()==='i') togglePanel('inv');
   if (e.key.toLowerCase()==='b') togglePanel('bag');
   if (e.key.toLowerCase()==='k') togglePanel('skill');
@@ -6474,7 +6478,7 @@ function currentQuest(){ return questIdx < QUESTS.length ? QUESTS[questIdx] : nu
 
 // ---------- GDD Đợt 2 B3: Nhắc Việc Bấm Ngay ----------
 function anyPanelOpen(){
-  return ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-vstat','panel-stage']
+  return ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-stage']
     .some(id => { const e2 = document.getElementById(id); return e2 && !e2.classList.contains('hidden'); });
 }
 function hintCandidates(){
@@ -11188,13 +11192,22 @@ function renderChar(){
       <button class="plus-btn" onclick="addAttr('${k}', qtyOf('${k}'))" ${p.free<=0?'disabled':''} title="Cộng theo ô số">+</button>
       <button class="plus-btn max-btn" onclick="addAttr('${k}', player.free)" ${p.free<=0?'disabled':''} title="Dồn hết điểm còn lại">Max</button></span></div>`;
   }
+  // MỘT chỗ duy nhất in thuộc tính chiến đấu. Trước đây có HAI cửa sổ nhân vật — phím C (tab
+  // Thông Tin) và phím V (panel-vstat) — in y hệt điểm tiềm năng, năm chỉ số có nút +/Max, rồi
+  // khối này. Hai bản còn lệch nhau: bản V có thêm Mana, Instinct và Hệ đòn đánh. Nay gộp về
+  // đây, lấy bản đầy đủ hơn, và phím V mở thẳng tab này.
   html += `<div class="stat-sec">THUỘC TÍNH CHIẾN ĐẤU</div>`;
+  const _ae = atkElem();
   const stats = [
     ['Công Kích', p.atk], ['Sinh Lực', `${Math.ceil(p.hp)} / ${p.maxHp}`],
+    ['Mana', `${Math.floor(p.qi)} / ${p.maxQi}`],
     ['Giảm Thương', Math.round(p.defRed*100)+'%'],
     ['Bạo Kích', Math.round(p.crit*100)+'%'], ['Né Tránh', Math.round(p.eva*100)+'%'],
     ['Tốc Đánh', p.aspd.toFixed(2)+'s'], ['Hồi Mana', p.qireg.toFixed(1)+'/s'],
+    // Mana = tài nguyên tung chiêu (hồi liên tục). Instinct = điểm nâng kỹ năng (tích lũy).
+    ['Instinct (nâng kỹ năng)', Math.floor(p.khi || 0).toLocaleString('vi-VN')],
   ];
+  if (_ae) stats.push(['Hệ đòn đánh', `<span style="color:${elColor(_ae)}">${ELEM[_ae].glyph} ${elName(_ae)}</span>`]);
   for (const [n,v] of stats) html += `<div class="stat-row"><span>${n}</span><b>${v}</b></div>`;
   // Thần Binh môn phái — trục progression riêng, không chiếm slot Vũ Khí (GDD §5)
   const tbD = THANBINH[p.sect] || THANBINH.vophai;
@@ -11250,50 +11263,8 @@ window.equipTitle = function(id){
 // Lớp, cấp, EXP, điểm cộng và bảng chỉ số trước đây nằm rải rác: lớp/cấp nhồi vào dòng tên
 // góc trái (dài tới mức xuống ba dòng), điểm cộng chôn trong tab đầu của bảng Nhân Vật nhiều
 // tab, còn Instinct thì chiếm một dòng HUD riêng suốt trận. Gom hết vào một cửa sổ tra cứu.
-function renderVStat(){
-  const p = player, sect = SECTS[p.sect];
-  const tt = p.titles && p.titles.equipped && TITLES.find(x => x.id === p.titles.equipped);
-  const xpNeed = XP_TABLE[p.level - 1], maxed = p.level >= MAX_LV;
-  const xpPct = maxed ? 100 : clamp(100 * p.xp / xpNeed, 0, 100);
-  let h = `<h3>Nhân Vật</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  h += `<div class="vs-head">
-    ${tt ? `<div class="vs-title">【${tt.name}】</div>` : ''}
-    <div class="vs-name">${p.name || sect.name}</div>
-    <div class="vs-cls" style="color:${sect.color}">${sect.name} · Cấp ${p.level}${maxed ? ' (Tối đa)' : ''}${p.resetCount ? ` · <span style="color:#ffd76a">🔄${p.resetCount}</span>` : ''}</div>
-    <div class="bar xp vs-xp"><div class="fill" style="width:${xpPct}%"></div><span>${maxed ? 'MAX' : `${Math.floor(p.xp).toLocaleString()} / ${xpNeed.toLocaleString()} EXP`}</span></div>
-  </div>`;
-
-  h += `<div class="stat-sec">ĐIỂM TIỀM NĂNG <b style="float:right;color:${p.free > 0 ? '#ffd76a' : '#8a92a8'}">${p.free}</b></div>`;
-  const base = { str:p.str, agi:p.agi, def:p.def, vit:p.vit, ene:p.ene };
-  const drv  = { str:p.dStr, agi:p.dAgi, def:p.dDef, vit:p.dVit, ene:p.dEne };
-  const _src = (sect.atkSrc) || {};
-  for (const k of ['str','agi','def','vit','ene']){
-    const a = ATTR_INFO[k];
-    h += `<div class="attr-row"><span>${a.name}${_src[k] ? ' <span style="color:#ffd76a;font-size:10.5px" title="Chỉ số này quy ra Công Kích cho lớp của bạn">★</span>' : ''}</span>
-      <span><b>${drv[k]}</b>${drv[k] !== base[k] ? ` <span style="color:#5ea0e8;font-size:11px">(${base[k]}+${drv[k] - base[k]})</span>` : ''}
-      <input type="number" class="attr-qty" id="qty-${k}" min="1" max="${p.free || 1}" value="${Math.min(10, p.free || 1) || 1}" ${p.free <= 0 ? 'disabled' : ''}>
-      <button class="plus-btn" onclick="addAttr('${k}', qtyOf('${k}'))" ${p.free <= 0 ? 'disabled' : ''} title="Cộng theo ô số">+</button>
-      <button class="plus-btn max-btn" onclick="addAttr('${k}', player.free)" ${p.free <= 0 ? 'disabled' : ''} title="Dồn hết điểm còn lại">Max</button></span></div>`;
-  }
-
-  h += `<div class="stat-sec">THUỘC TÍNH CHIẾN ĐẤU</div>`;
-  const ae = atkElem();
-  const rows = [
-    ['Công Kích', p.atk], ['Sinh Lực', `${Math.ceil(p.hp)} / ${p.maxHp}`],
-    ['Mana', `${Math.floor(p.qi)} / ${p.maxQi}`],
-    ['Giảm Thương', Math.round(p.defRed * 100) + '%'],
-    ['Bạo Kích', Math.round(p.crit * 100) + '%'], ['Né Tránh', Math.round(p.eva * 100) + '%'],
-    ['Tốc Đánh', p.aspd.toFixed(2) + 's'], ['Hồi Mana', p.qireg.toFixed(1) + '/s'],
-    // Qi = tài nguyên tung chiêu (hồi liên tục). Instinct = điểm nâng kỹ năng (tích lũy).
-    // Trước đây qireg mang nhãn "Hồi Instinct" trong khi Instinct là một dòng RIÊNG ngay dưới —
-    // ba khái niệm mà chỉ có hai tên.
-    ['Instinct (nâng kỹ năng)', Math.floor(p.khi || 0).toLocaleString('vi-VN')],
-  ];
-  if (ae) rows.push(['Hệ đòn đánh', `<span style="color:${elColor(ae)}">${ELEM[ae].glyph} ${elName(ae)}</span>`]);
-  for (const [nm, v] of rows) h += `<div class="stat-row"><span>${nm}</span><b>${v}</b></div>`;
-  h += `<div class="vs-foot">Instinct dùng để nâng kỹ năng (K) · Hệ đòn đánh theo vũ khí, chỉ tác dụng lên quái</div>`;
-  el('panel-vstat').innerHTML = h;
-}
+// renderVStat() ĐÃ GỠ — nó là bản sao thứ hai của cửa sổ nhân vật. Nội dung đầy đủ hơn của nó
+// (Mana · Instinct · Hệ đòn đánh) đã dời vào tab Thông Tin của bảng Nhân Vật.
 window.qtyOf = function(k){
   const el = document.getElementById('qty-'+k);
   const n = parseInt(el && el.value, 10);
@@ -11304,10 +11275,7 @@ window.addAttr = function(k, n){
   n = Math.max(1, Math.min(Math.floor(n) || 1, player.free)); // ô cộng điểm nhanh: gõ số hoặc bấm Max thay vì bấm tay từng điểm
   player.free -= n; player[k] += n;
   calcDerived();
-  // Cộng điểm giờ làm được từ HAI bảng — vẽ lại đúng bảng đang mở, không thì bấm + ở bảng V
-  // mà số không nhúc nhích.
-  if (!el('panel-vstat').classList.contains('hidden')) renderVStat();
-  else renderChar();
+  renderChar();   // chỉ còn MỘT bảng nhân vật, không phải chọn vẽ lại bảng nào nữa
   saveGame();
 };
 
@@ -13167,7 +13135,7 @@ function togglePanel(which){
     }
     return;
   }
-  const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', qlog:'panel-qlog', vstat:'panel-vstat' };
+  const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', qlog:'panel-qlog' };
   const id = map[which];
   const p = el(id);
   const wasHidden = p.classList.contains('hidden');
@@ -13185,7 +13153,6 @@ function togglePanel(which){
   }
 }
 function renderPanel(which){
-  if (which==='vstat'){ renderVStat(); return; }
   if (which==='settings'){ renderSettings(); return; }
   if (which==='qlog'){ renderQlog(); return; }
   if (which==='char'){ window.charTab = 'info'; renderCharPanel(); }
@@ -13196,7 +13163,7 @@ function renderPanel(which){
   else renderCharPanel();
 }
 function closePanels(){
-  for (const id of ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-vstat','panel-stage']){
+  for (const id of ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-stage']){
     const e2 = document.getElementById(id);
     if (e2) e2.classList.add('hidden');
   }
@@ -14925,7 +14892,99 @@ const BAG_TABS = [
   { id:'gear', name:'Trang Bị' },
   { id:'mat',  name:'Vật Liệu' },
   { id:'box',  name:'Box Kundun' },
+  { id:'kho',  name:'Kho' },
 ];
+
+// ═══════════ KHO — chỗ cất trang bị, để túi không đầy ═══════════
+// Yêu cầu ban đầu là "ngăn riêng cất ngọc, tránh đầy rương" theo mẫu Ngân Hàng Ngọc của MU.
+// Nhưng ĐO trong code này: ngọc (player.jewels) và Box Kundun (player.baohap) là Ô ĐẾM, không
+// bao giờ đi qua player.inv — cả 31 chỗ inv.push() không có chỗ nào đẩy ngọc vào. Nên chúng
+// không thể làm đầy túi, và một cái "ngân hàng" để chuyển số từ ô đếm này sang ô đếm kia là
+// nghi thức rỗng — đúng loại thừa vừa phải dọn ở bảng nhân vật.
+// Thứ THẬT SỰ làm đầy túi là TRANG BỊ: player.inv có 30 ô, và 7 chỗ trong game phải chặn người
+// chơi vì "Túi đồ đã đầy". Nên kho này cất trang bị. Ngọc và Box Kundun vẫn hiện ở đây, xếp
+// theo đúng bố cục Ngân Hàng Ngọc, nhưng là chỗ XEM — chúng vốn đã an toàn sẵn.
+const KHO_SIZE = 60;
+function khoList(){ if (!player.kho) player.kho = []; return player.kho; }
+window.khoDeposit = function(i){
+  const it = player.inv[i];
+  if (!it) return;
+  const k = khoList();
+  if (k.length >= KHO_SIZE){ addFloat(player.x, player.y-34, 'Kho đã đầy!', '#ff7a6a', 12); return; }
+  player.inv.splice(i, 1); k.push(it);
+  window.bagSel = -1;
+  saveGame(); renderBag(); renderInv();
+};
+window.khoWithdraw = function(i){
+  const k = khoList();
+  const it = k[i];
+  if (!it) return;
+  if (player.inv.length >= 30){ addFloat(player.x, player.y-34, 'Túi đồ đã đầy!', '#ff7a6a', 12); return; }
+  k.splice(i, 1); player.inv.push(it);
+  saveGame(); renderBag(); renderInv();
+};
+// Gửi hết: chỉ đẩy đồ KHÔNG mặc được hoặc yếu hơn đồ đang mặc — thứ đang chờ xử lý chứ không
+// phải đồ đang dùng. Đẩy sạch cả túi thì lần sau mở ra không còn gì để so sánh.
+window.khoDepositAll = function(){
+  const k = khoList();
+  let n = 0;
+  for (let i = player.inv.length - 1; i >= 0 && k.length < KHO_SIZE; i--){
+    const it = player.inv[i];
+    if (it.special) continue;
+    const eq = player.equip[it.slot];
+    const manhHon = itemUsable(it) && player.level >= itemReqLv(it) && itemPower(it) > (eq ? itemPower(eq) : 0);
+    if (manhHon) continue;                    // món đang mạnh hơn đồ mặc thì giữ lại để mặc
+    player.inv.splice(i, 1); k.push(it); n++;
+  }
+  addFloat(player.x, player.y-40, n ? `Cất ${n} món vào kho` : 'Không có món nào cần cất', n ? '#7ecbff' : '#8a8a8a', 13);
+  saveGame(); renderBag(); renderInv();
+};
+function bagSecKho(){
+  const k = khoList();
+  let h = `<div class="bag-bar">
+    <b style="color:#7ecbff">Kho ${k.length}/${KHO_SIZE}</b>
+    <button class="mini-btn" onclick="khoDepositAll()">⬇ Cất đồ thừa</button>
+    <i class="bag-tip">bấm ô trong kho = lấy ra · túi ${player.inv.length}/30</i></div>`;
+
+  h += `<div class="chaos-sec">NGĂN TRANG BỊ <span class="chaos-sub">chỗ này mới là thứ làm đầy túi</span></div>`;
+  if (!k.length) h += `<div class="chaos-empty">Kho trống — bấm "Cất đồ thừa" để dọn túi nhanh.</div>`;
+  else {
+    h += `<div class="bag-grid">`;
+    k.forEach((it, i) => {
+      h += `<div class="bag-cell rar-${it.rarity}" onclick="khoWithdraw(${i})" data-tip="kho:${i}"
+        aria-label="${it.name} — bấm để lấy về túi">
+        ${slotIcon(it, '')}<span class="bc-plus">${it.plus?'+'+it.plus:''}</span></div>`;
+    });
+    h += `</div>`;
+  }
+
+  // Ngăn ngọc — bố cục theo Ngân Hàng Ngọc của MU, nhưng là chỗ XEM: ngọc và Box Kundun vốn là
+  // ô đếm, không chiếm ô túi nào, nên không có gì để "gửi" cả.
+  h += `<div class="chaos-sec">NGĂN NGỌC <span class="chaos-sub">ô đếm — không chiếm chỗ trong túi</span></div>`;
+  h += `<div class="mat-grid">`;
+  const jw = player.jewels || {};
+  for (const jk of ['chucPhuc','linhHon','sinhMenh','honDon']){
+    h += `<div class="mat-cell" title="${matTip(JEWEL_NAMES[jk], 'ô đếm — luôn an toàn, không chiếm chỗ', jw[jk]||0)}">
+      <img src="${consumArtUrl('orb', JEWEL_COLORS[jk])}" alt="">
+      <span class="mc-count" style="color:${JEWEL_COLORS[jk]}">${fmtCount(jw[jk]||0)}</span></div>`;
+  }
+  for (const g of ['tuLa','honNguyen']){
+    const nm = g === 'tuLa' ? 'Tu La Tinh Thạch' : 'Hỗn Nguyên Thạch';
+    const co = g === 'tuLa' ? '#e8552a' : '#b08ae8';
+    h += `<div class="mat-cell" title="${matTip(nm, 'ô đếm — luôn an toàn, không chiếm chỗ', (player.gems&&player.gems[g])||0)}">
+      <img src="${consumArtUrl('stone', co)}" alt="">
+      <span class="mc-count" style="color:${co}">${fmtCount((player.gems&&player.gems[g])||0)}</span></div>`;
+  }
+  const bh = player.baohap || {};
+  for (let t = 1; t < BAOHAP_TIERS.length; t++){
+    const d = BAOHAP_TIERS[t];
+    h += `<div class="mat-cell" title="${matTip(d.name, 'mở ở tab Box Kundun', bh[t]||0)}">
+      <img src="${consumArtUrl('box', d.color)}" alt="">
+      <span class="mc-count" style="color:${d.color}">${fmtCount(bh[t]||0)}</span></div>`;
+  }
+  h += `</div>`;
+  return h;
+}
 window.bagTab = 'gear';
 window.setBagTab = function(t){ window.bagTab = t; renderBag(); };
 
@@ -15022,11 +15081,12 @@ function renderBag(){
     // đếm ngay trên tab: khỏi phải mở từng cái xem có gì mới
     const n = t.id === 'gear' ? player.inv.length
             : t.id === 'box'  ? Object.values(player.baohap || {}).reduce((a, b) => a + b, 0)
+            : t.id === 'kho'  ? khoList().length
             : Object.values(player.jewels || {}).reduce((a, b) => a + b, 0);
     html += `<button class="chaos-tab${T===t.id?' on':''}" onclick="setBagTab('${t.id}')">${t.name}${n?` <i>${n}</i>`:''}</button>`;
   }
   html += `</div>`;
-  html += T === 'mat' ? bagSecMat() : T === 'box' ? bagSecBox() : bagSecGear();
+  html += T === 'mat' ? bagSecMat() : T === 'box' ? bagSecBox() : T === 'kho' ? bagSecKho() : bagSecGear();
   el('panel-bag').innerHTML = html;
 }
 window.selectBagItem = function(i){ window.bagSel = (window.bagSel === i) ? -1 : i; renderBag(); };
@@ -16054,7 +16114,7 @@ function updateTut(){
   if (!box) return;
   const cur = (!player || player.tutStep == null || player.tutStep < 0 || player.tutStep >= TUT_STEPS.length) ? -99 : player.tutStep;
   // ẩn hướng dẫn khi đang mở bảng — tránh đè nội dung
-  const anyPanel = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-vstat'].some(id => { const e2 = document.getElementById(id); return e2 && !e2.classList.contains('hidden'); });
+  const anyPanel = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog'].some(id => { const e2 = document.getElementById(id); return e2 && !e2.classList.contains('hidden'); });
   const key = cur * 10 + (anyPanel ? 1 : 0);
   if (window._tutShown === key) return; // chỉ vẽ lại khi đổi bước/trạng thái — tránh reset nút ✕
   window._tutShown = key;
