@@ -131,10 +131,10 @@
 <div id="quest-compass-banner" class="hidden"></div>
 
 <!-- Tạo nhân vật — kiểu MU Online: chọn lớp, đặt tên, vào game -->
+<!-- Hoạt cảnh mở đầu: biển đêm, bờ xa, ba con tàu. Nằm NGOÀI #sect-select vì trang dẫn
+     truyện cũng dùng chung nền này; để bên trong thì .hidden ẩn luôn cả canvas. -->
+<canvas id="title-fx" class="hidden"></canvas>
 <div id="sect-select" class="hidden">
-  <!-- Hoạt cảnh mở đầu: đoàn tàu vượt biển đêm tới vùng đất giam giữ Axie. Vẽ bằng canvas,
-       chạy khi màn này mở và tự dừng khi rời màn — xem titleStart() trong game.js -->
-  <canvas id="title-fx"></canvas>
   <!-- Tranh minh hoạ lớp: hiện khi đã chọn một lớp. Vẽ bằng canvas (splashUrl) -->
   <img id="cc-splash" class="hidden" alt="">
   <div class="ss-inner">

@@ -17297,17 +17297,29 @@ const TITLE_SKY = [
 function titleStop(){
   if (window._titleRAF) cancelAnimationFrame(window._titleRAF);
   window._titleRAF = 0;
+  // Canvas nay nằm NGOÀI #sect-select (để trang dẫn truyện dùng chung), nên .hidden của màn
+  // kia không còn ẩn hộ nữa — không tự ẩn ở đây thì cảnh biển đêm treo đè lên cả game.
+  const cv = document.getElementById('title-fx');
+  if (cv) cv.classList.add('hidden');
 }
 
+// Cảnh nền chạy khi MÀN CHỌN LỚP hoặc TRANG DẪN TRUYỆN đang mở — hai màn dùng chung một nền.
+function titleAlive(){
+  for (const id of ['sect-select', 'intro-story']){
+    const e = document.getElementById(id);
+    if (e && !e.classList.contains('hidden')) return true;
+  }
+  return false;
+}
 function titleStart(){
   const cv = document.getElementById('title-fx');
   if (!cv) return;
   titleStop();
+  cv.classList.remove('hidden');
   window._titleT0 = performance.now();
   const g = cv.getContext('2d');
   const step = () => {
-    const host = document.getElementById('sect-select');
-    if (!host || host.classList.contains('hidden')){ window._titleRAF = 0; return; }  // rời màn → dừng hẳn
+    if (!titleAlive()){ window._titleRAF = 0; cv.classList.add('hidden'); return; }  // rời cả hai màn → dừng hẳn
     const w = cv.clientWidth, h = cv.clientHeight;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     if (cv.width !== Math.round(w*dpr) || cv.height !== Math.round(h*dpr)){
@@ -17320,6 +17332,26 @@ function titleStart(){
   window._titleRAF = requestAnimationFrame(step);
 }
 
+// Bờ xa là TRANH THẬT (cắt từ bg_elderbough, dìm tối và ngả xanh tím) chứ không còn là mấy
+// hình tam giác đen. Đây là thứ đổi nhiều nhất: một dải vẽ tay phẳng không bao giờ có được
+// chiều sâu của tán cây chồng lớp, và mặt nước cần một thứ CÓ HÌNH để mà phản chiếu.
+const TITLE_SHORE = new Image(); TITLE_SHORE.src = 'assets/title/shore.png';
+let _refCv = null, _refW = 0;
+// Ảnh phản chiếu: lật dọc bờ, dựng sẵn một lần rồi mỗi khung chỉ cắt từng dải ngang và
+// xê dịch theo sóng. Lật lại mỗi khung là 60 lần/giây vẽ một ảnh 1600px — không cần thiết.
+function titleReflect(W){
+  if (_refCv && _refW === W) return _refCv;
+  const im = TITLE_SHORE;
+  if (!im.complete || !im.naturalWidth) return null;
+  const h = Math.round(im.naturalHeight * (W / im.naturalWidth));
+  const c = document.createElement('canvas');
+  c.width = W; c.height = h;
+  const q = c.getContext('2d');
+  q.translate(0, h); q.scale(1, -1);
+  q.drawImage(im, 0, 0, W, h);
+  _refCv = c; _refW = W;
+  return c;
+}
 function drawTitleScene(g, W, H, t){
   const sea = H * 0.58;                       // đường chân trời
   g.clearRect(0, 0, W, H);
@@ -17351,10 +17383,35 @@ function drawTitleScene(g, W, H, t){
     }
   }
 
+  // ── trăng ── đặt bên PHẢI: bên trái đã có cột sáng ấm từ toà thành, hai vệt sáng chồng nhau
+  // thì mặt nước loang một mảng bệch. Tách ra: ấm bên trái, lạnh bên phải, tàu đứng giữa hai vệt.
+  const moonX = W * 0.80, moonY = sea * 0.16, moonR = Math.max(16, Math.min(W, H) * 0.028);
+  const halo = g.createRadialGradient(moonX, moonY, moonR * 0.6, moonX, moonY, moonR * 7);
+  halo.addColorStop(0, 'rgba(226,232,255,.30)'); halo.addColorStop(0.35, 'rgba(180,196,255,.10)');
+  halo.addColorStop(1, 'rgba(140,160,255,0)');
+  g.fillStyle = halo; g.beginPath(); g.arc(moonX, moonY, moonR * 7, 0, 7); g.fill();
+  g.fillStyle = '#eef1ff'; g.beginPath(); g.arc(moonX, moonY, moonR, 0, 7); g.fill();
+  g.fillStyle = 'rgba(150,160,205,.30)';                     // vài hố trăng cho đỡ phẳng
+  g.beginPath(); g.arc(moonX - moonR*0.30, moonY - moonR*0.22, moonR*0.24, 0, 7); g.fill();
+  g.beginPath(); g.arc(moonX + moonR*0.26, moonY + moonR*0.28, moonR*0.17, 0, 7); g.fill();
+  g.beginPath(); g.arc(moonX + moonR*0.10, moonY - moonR*0.44, moonR*0.12, 0, 7); g.fill();
+
   // chớp xa — thưa và ngắn, chỉ hắt sáng chứ không vẽ tia
   const fl = Math.max(0, Math.sin(t * 0.37) - 0.985) * 60;
   if (fl > 0){ g.fillStyle = `rgba(200,180,255,${fl * 0.5})`; g.fillRect(0, 0, W, sea); }
 
+  // ── bờ xa: tranh thật, ngồi ngay trên đường chân trời ──
+  if (TITLE_SHORE.complete && TITLE_SHORE.naturalWidth){
+    const sh = sea * 0.42;                 // ép thấp: bờ ở XA, không phải rừng ngay sau lưng
+    g.save(); g.globalAlpha = 0.88;
+    g.drawImage(TITLE_SHORE, 0, sea - sh + 2, W, sh);
+    g.restore();
+    // vệt sáng ấm ngay chân bờ — tách bờ khỏi mặt nước, và cho mắt một đường chân trời DUY NHẤT
+    const hz = g.createLinearGradient(0, sea - 14, 0, sea + 6);
+    hz.addColorStop(0, 'rgba(255,176,110,0)'); hz.addColorStop(0.7, 'rgba(255,176,110,.16)');
+    hz.addColorStop(1, 'rgba(255,176,110,0)');
+    g.fillStyle = hz; g.fillRect(0, sea - 14, W, 20);
+  }
   // ── vùng đất phía trước: mỏm đá lởm chởm + toà thành vỡ ──
   drawTitleLand(g, W, sea, t);
 
@@ -17369,6 +17426,39 @@ function drawTitleScene(g, W, H, t){
   const rc = W * 0.135;                                  // rọi xuống từ phía toà thành
   g.beginPath(); g.moveTo(rc - 26, sea); g.lineTo(rc + 26, sea);
   g.lineTo(rc + 130, H); g.lineTo(rc - 130, H); g.closePath(); g.fill();
+  // ── PHẢN CHIẾU ── thứ làm nước ra nước. Cắt bờ đã lật thành từng dải ngang rồi xê dịch
+  // mỗi dải theo một pha khác nhau: mắt đọc đó là mặt nước gợn, không phải ảnh gương.
+  const ref = titleReflect(W);
+  if (ref){
+    const RH = Math.min(ref.height, (H - sea) * 0.72);
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    for (let y = 0; y < RH; y += 3){
+      const k = y / RH;
+      const off = Math.sin(t * 1.5 + y * 0.09) * (2 + k * 13);
+      g.globalAlpha = (1 - k) * 0.42;
+      g.drawImage(ref, 0, y, W, 3, off, sea + y, W, 3);
+    }
+    g.restore();
+  }
+  // vệt trăng trên nước — dải sáng dọc, hẹp dần về xa
+  const mg = g.createLinearGradient(0, sea, 0, H);
+  mg.addColorStop(0, 'rgba(214,226,255,.20)'); mg.addColorStop(1, 'rgba(214,226,255,0)');
+  g.fillStyle = mg;
+  g.beginPath(); g.moveTo(moonX - 16, sea); g.lineTo(moonX + 16, sea);
+  g.lineTo(moonX + 120, H); g.lineTo(moonX - 120, H); g.closePath(); g.fill();
+  // lấp lánh: những vạch ngắn nhấp nháy lệch pha dọc vệt trăng
+  for (let i = 0; i < 46; i++){
+    const k = ((i * 0.137) % 1);
+    const yy = sea + (H - sea) * k * k;
+    const spread = 18 + k * 110;
+    const xx = moonX + Math.sin(i * 12.9 + t * 0.6) * spread;
+    const tw = Math.max(0, Math.sin(t * 3.2 + i * 1.7));
+    g.globalAlpha = tw * (0.15 + k * 0.5);
+    g.fillStyle = '#eaf0ff';
+    g.fillRect(xx, yy, 3 + k * 9, 1 + k * 1.5);
+  }
+  g.globalAlpha = 1;
   // sóng: các dải ngang trượt, càng gần càng thưa và dày
   for (let i = 0; i < 26; i++){
     const k = i / 25;
@@ -17390,6 +17480,21 @@ function drawTitleScene(g, W, H, t){
   drawTitleShip(g, W * 0.90, sea + (H - sea) * 0.26, 0.55, t, 0.85);       // tàu xa bên phải
   drawTitleShip(g, W * 0.09, sea + (H - sea) * 0.40, 0.80, t + 1.7, 1);    // tàu vừa bên trái
   drawTitleShip(g, W * 0.88, sea + (H - sea) * 0.72, 1.20, t + 0.6, 1);    // tàu gần — có người trên boong
+
+  // ── sương là là mặt nước ── ba dải mềm trôi ngược chiều nhau, che chân bờ cho có chiều sâu
+  for (let L = 0; L < 3; L++){
+    const yy = sea + (H - sea) * (0.04 + L * 0.13);
+    const sp = (L % 2 ? -1 : 1) * (7 + L * 5);
+    const fg = g.createLinearGradient(0, yy - 26, 0, yy + 26);
+    fg.addColorStop(0, 'rgba(150,170,215,0)');
+    fg.addColorStop(0.5, `rgba(150,170,215,${0.10 - L * 0.02})`);
+    fg.addColorStop(1, 'rgba(150,170,215,0)');
+    g.fillStyle = fg;
+    for (let i = -1; i < 5; i++){
+      const cx = ((i * 420 + t * sp) % (W + 840) + (W + 840)) % (W + 840) - 420;
+      g.beginPath(); g.ellipse(cx, yy + Math.sin(t * 0.4 + i) * 3, 230 + L * 60, 20 + L * 6, 0, 0, 7); g.fill();
+    }
+  }
 
   // ── tro bay ──
   for (let i = 0; i < 34; i++){
@@ -17656,7 +17761,8 @@ let introPage = 0;
 function showIntro(){
   introPage = 0;
   el('intro-story').classList.remove('hidden');
-  el('sect-select').classList.add('hidden'); titleStop();
+  el('sect-select').classList.add('hidden');
+  titleStart();                       // dẫn truyện dùng chung cảnh biển đêm, không để nền phẳng
   AudioSys.playBgm(BGM_INTRO); // tân thủ mở game — giai điệu hoài niệm dẫn vào cốt truyện
   renderIntroPage();
 }
@@ -19125,7 +19231,7 @@ function ccRender(){
     d.className = 'cc-card' + (ccSect === k ? ' sel' : '');
     d.setAttribute('role', 'button');
     d.tabIndex = 0;
-    d.innerHTML = `<img class="cc-art" src="${chibiUrl(k)}" alt="">
+    d.innerHTML = `<img class="cc-art" src="${heroCardUrl(k)}" alt="">
       <div class="cc-nm" style="color:${sc.color}">${sc.name}</div>
       <div class="cc-tag">${sc.role || ''}</div>`;
     const pick = () => { ccSect = k; AudioSys.sfx('ui', 0.5); ccRender(); };
@@ -19133,12 +19239,12 @@ function ccRender(){
     d.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); pick(); } });
     wrap.appendChild(d);
   }
-  // Bản phóng to của lớp đang chọn. Dùng CHIBI chứ không dùng tranh minh hoạ:
-  // chibi khớp với phần còn lại của game, còn tranh minh hoạ đứng một mình một kiểu.
-  // Bản minh hoạ vẫn giữ, xem bằng lệnh /art.
+  // Bản phóng to của lớp đang chọn — dùng ĐÚNG hình nhân vật của game (heroCardUrl), thứ
+  // người chơi sẽ thấy suốt cả hành trình. Bản chibi từng được thử ở đây rồi bỏ vì không hợp
+  // tông; bản minh hoạ vẫn giữ, xem bằng lệnh /art.
   const spl = el('cc-splash');
   if (spl){
-    if (ccSect){ spl.src = chibiUrl(ccSect); spl.classList.remove('hidden'); requestAnimationFrame(() => spl.classList.add('on')); }
+    if (ccSect){ spl.src = heroCardUrl(ccSect); spl.classList.remove('hidden'); requestAnimationFrame(() => spl.classList.add('on')); }
     else { spl.classList.remove('on'); spl.classList.add('hidden'); }
   }
   const det = el('cc-detail');
