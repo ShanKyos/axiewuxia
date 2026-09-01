@@ -4009,39 +4009,39 @@ const BOSS_MOVES = {
 };
 const BOSS_DEFS = {
   daohoa: { thuve:[
-      { id:'dh1', name:'Chúa Heo Rừng',       lv:6,  el:'Thổ',  img:'boar',     x:.30, y:.30, moves:['vach','xung','cuong'] },
-      { id:'dh2', name:'Chúa Bầy Gai Tím',        lv:9,  el:'Mộc',  img:'wolf',     x:.64, y:.56, moves:['xung','goi','vach'] },
+      { id:'dh1', name:'Chúa Heo Rừng',       lv:6,  el:'Thổ',  img:'boar',     x:0.4346, y:0.3526, moves:['vach','xung','cuong'] },
+      { id:'dh2', name:'Chúa Bầy Gai Tím',        lv:9,  el:'Mộc',  img:'wolf',     x:0.7077, y:0.8842, moves:['xung','goi','vach'] },
       { id:'dh3', name:'Chấp Sự Gloam',  lv:12, el:'Thủy', img:'assassin', x:.42, y:.80, moves:['vach','vong','cuong'] } ],
     tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:14, el:'Hỏa', img:'boss_hacphong', x:.86, y:.80, moves:['vong','vach','goi','cuong'] } },
   ngoai: { thuve:[
-      { id:'ng1', name:'Đầu Mục Gloam',    lv:13, el:'Kim',  img:'bandit',   x:.28, y:.34, moves:['vach','xung','cuong'] },
-      { id:'ng2', name:'Gai Tím Độc Nhãn',lv:16, el:'Mộc',  img:'wolf',     x:.62, y:.62, moves:['xung','vong','goi'] },
+      { id:'ng1', name:'Đầu Mục Gloam',    lv:13, el:'Kim',  img:'bandit',   x:0.2885, y:0.4053, moves:['vach','xung','cuong'] },
+      { id:'ng2', name:'Gai Tím Độc Nhãn',lv:16, el:'Mộc',  img:'wolf',     x:0.5423, y:0.7526, moves:['xung','vong','goi'] },
       { id:'ng3', name:'Đặc Vụ Gloam',   lv:19, el:'Thủy', img:'assassin', x:.40, y:.80, moves:['vach','xung','cuong'] } ],
     tranai: { id:'ng4', name:'Ma Sói Sương Trắng', lv:22, el:'Hỏa', img:'boss_sontac', x:.85, y:.78, moves:['vach','vong','goi','cuong'] } },
   chungnam: { thuve:[
       { id:'cn1', name:'Kẻ Đổi Phe',        lv:23, el:'Thủy', img:'phando',   x:.30, y:.32, moves:['vach','xung','goi'] },
-      { id:'cn2', name:'Golem Gỗ Cổ Đại',    lv:26, el:'Thổ',  img:'mocnhan',  x:.64, y:.58, moves:['vong','vach','cuong'] },
+      { id:'cn2', name:'Golem Gỗ Cổ Đại',    lv:26, el:'Thổ',  img:'mocnhan',  x:0.5731, y:0.4684, moves:['vong','vach','cuong'] },
       { id:'cn3', name:'Trưởng Lão Tha Hóa', lv:29, el:'Thủy', img:'boss_phando', x:.44, y:.80, moves:['xung','vach','vong'] } ],
     tranai: { id:'cn4', name:'Tướng Quân Thornwood Reach', lv:32, el:'Thủy', img:'bandao', x:.86, y:.80, moves:['vach','xung','vong','cuong'] } },
   comoc: { thuve:[
-      { id:'cm1', name:'Chỉ Huy Vong Binh',  lv:43, el:'Thổ',  img:'kybinh',   x:.30, y:.32, moves:['xung','vach','goi'] },
-      { id:'cm2', name:'Kẻ An Táng Bóng Tối',lv:46, el:'Thủy', img:'thinu',    x:.62, y:.58, moves:['vong','xung','cuong'] },
+      { id:'cm1', name:'Chỉ Huy Vong Binh',  lv:43, el:'Thổ',  img:'kybinh',   x:0.3654, y:0.4579, moves:['xung','vach','goi'] },
+      { id:'cm2', name:'Kẻ An Táng Bóng Tối',lv:46, el:'Thủy', img:'thinu',    x:0.5654, y:0.8053, moves:['vong','xung','cuong'] },
       { id:'cm3', name:'Chúa Tể Bất Tử',     lv:49, el:'Thổ',  img:'mocnhan',  x:.42, y:.80, moves:['vach','vong','goi'] } ],
     tranai: { id:'cm4', name:'Tướng Quân Hollow Roost', lv:52, el:'Mộc', img:'boss_mochu', x:.85, y:.80, moves:['vong','xung','goi','cuong'] } },
   tuyettinh: { thuve:[
-      { id:'tt1', name:'Kẻ Lạc Lối Tuyệt Vọng',lv:63, el:'Thổ',  img:'ttdetu', x:.30, y:.32, moves:['vach','goi','cuong'] },
-      { id:'tt2', name:'Cỏ Dại Băng Giá',     lv:66, el:'Hỏa',  img:'caodo',    x:.64, y:.58, moves:['xung','vong','goi'] },
+      { id:'tt1', name:'Kẻ Lạc Lối Tuyệt Vọng',lv:63, el:'Thổ',  img:'ttdetu', x:0.3115, y:0.1947, moves:['vach','goi','cuong'] },
+      { id:'tt2', name:'Cỏ Dại Băng Giá',     lv:66, el:'Hỏa',  img:'caodo',    x:0.6115, y:0.6158, moves:['xung','vong','goi'] },
       { id:'tt3', name:'Xoáy Sương Nguyền',    lv:69, el:'Mộc',  img:'boss_tinhhoa', x:.42, y:.80, moves:['vach','xung','vong'] } ],
     tranai: { id:'tt4', name:'Tướng Quân Frostmire Vale', lv:72, el:'Mộc', img:'thinu', x:.86, y:.80, moves:['vong','vach','xung','cuong'] } },
   mongco: { thuve:[
-      { id:'mc1', name:'Kỵ Sĩ Trưởng Tro Tàn', lv:83, el:'Kim', img:'kybinh',  x:.30, y:.32, moves:['xung','vach','cuong'] },
-      { id:'mc2', name:'Cung Thủ Tinh Nhuệ Tro Tàn', lv:86, el:'Mộc',  img:'cungthu',  x:.64, y:.58, moves:['vong','xung','goi'] },
+      { id:'mc1', name:'Kỵ Sĩ Trưởng Tro Tàn', lv:83, el:'Kim', img:'kybinh',  x:0.3269, y:0.2158, moves:['xung','vach','cuong'] },
+      { id:'mc2', name:'Cung Thủ Tinh Nhuệ Tro Tàn', lv:86, el:'Mộc',  img:'cungthu',  x:0.55, y:0.7632, moves:['vong','xung','goi'] },
       { id:'mc3', name:'Thống Lĩnh Tro Tàn', lv:89, el:'Kim', img:'cuongbinh',x:.42, y:.80, moves:['vach','xung','vong'] } ],
     tranai: { id:'mc4', name:'Tướng Quân Ashen Steppe', lv:92, el:'Kim', img:'boss_dothong', x:.86, y:.80, moves:['xung','vong','goi','cuong'] } },
   nhanmon: { thuve:[
-      { id:'nm1', name:'Tướng Quân Bão Tố',  lv:103, el:'Kim', img:'daokhach', x:.30, y:.32, moves:['vach','xung','cuong'] },
-      { id:'nm2', name:'Huyết Sát Bão Tố',   lv:106, el:'Hỏa',  img:'cuongbinh',x:.64, y:.58, moves:['vong','vach','goi'] },
-      { id:'nm3', name:'Tướng Quân Cửa Ải', lv:109, el:'Thổ',  img:'boss_thienbinh', x:.42, y:.80, moves:['xung','vong','vach'] } ],
+      { id:'nm1', name:'Tướng Quân Bão Tố',  lv:103, el:'Kim', img:'daokhach', x:0.3423, y:0.2368, moves:['vach','xung','cuong'] },
+      { id:'nm2', name:'Huyết Sát Bão Tố',   lv:106, el:'Hỏa',  img:'cuongbinh',x:0.5654, y:0.5105, moves:['vong','vach','goi'] },
+      { id:'nm3', name:'Tướng Quân Cửa Ải', lv:109, el:'Thổ',  img:'boss_thienbinh', x:0.3038, y:0.9105, moves:['xung','vong','vach'] } ],
     tranai: { id:'nm4', name:'Tướng Quân Stormgate Pass', lv:112, el:'Hỏa', img:'boss_thienbinh', x:.86, y:.80, moves:['vach','xung','vong','cuong'] } },
 };
 // Đồng Môn Trợ Uy (Cốt truyện × Tông môn §4): map "chạm nhà" của từng phái
@@ -4237,7 +4237,7 @@ function drawBossTele(m){
 // shake: 0 TẮT · 1 NHẸ (mặc định) · 2 ĐẦY. Trước đây là boolean và mặc định `false` để chống
 // chóng mặt — nhưng bật/tắt là quá thô, và hậu quả là TOÀN BỘ 12 chỗ đặt shakeT/shakeMag trong
 // game không ai nhìn thấy. Diablo luôn rung, chỉ là rung rất khẽ và CÓ HƯỚNG.
-const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto' },
+const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto', dmgNum:true },
   (()=>{ try { return JSON.parse(localStorage.getItem('vlcm_settings') || '{}'); } catch { return {}; } })());
 // Save cũ lưu `shake` là boolean. Không di trú thì Object.assign ghi đè `false` lên mặc định
 // mới và người chơi cũ mắc kẹt ở mức TẮT vĩnh viễn — mà họ chưa từng chọn tắt, đó chỉ là
@@ -4777,7 +4777,7 @@ function hurtMob(m, dmg, source){
   // chỉ chặn ở khâu CHỌN mục tiêu, không chặn vật lý va chạm của đạn xuyên táo/AoE bay lố sang bãi
   // bên cạnh (ví dụ tên xuyên nhắm bãi đang khoá nhưng bay tiếp trúng quái bãi khác đứng thẳng
   // hàng phía sau). Chặn hẳn ở đây để không món sát thương nào của AUTO lọt sang bãi chưa khoá.
-  if (player.auto && player._autoZoneLocked && m.zone !== player._autoZone) return;
+  if (player.auto && player._autoZoneLocked && m.pack !== player._autoPack) return;
   // Aggro cụm: đánh 1 con, cả cụm 5-7 con lao vào (GDD Mob Mechanics)
   // QA: map An Toàn (tân thủ) chỉ tối đa 3 con cùng lao vào để tránh chết oan lúc LV1-5
   if (m.pack != null){
@@ -4869,6 +4869,18 @@ function hurtMob(m, dmg, source){
     const note = perfectNote ? 'HOÀN HẢO ' : counterNote ? 'KHẮC HỆ ' : counteredNote ? 'bị khắc ' : shieldNote ? '(chống) ' : '';
     const color = perfectNote ? '#ff9df0' : counterNote ? '#5db86a' : counteredNote ? '#8a94a8' : shieldNote ? '#8a8a8a' : (source==='crit' ? '#ffd76a' : '#e8ecff');
     logCombat(`⚔ ${note}-${final} → ${m.def.name}${source==='crit' ? ' (bạo kích)' : ''}`, color);
+    // Số bay TRÊN ĐẦU QUÁI. Nhật ký góc dưới-trái không thay thế được nó: lúc đang đánh, mắt
+    // người chơi ở giữa màn hình, còn hộp nhật ký rộng 260px thì trôi quá nhanh để đọc. Đây là
+    // kênh phản hồi CHÍNH của Diablo 3 và game đang không có.
+    // GỘP theo cửa sổ 0,22 giây cho từng con thay vì bắn một số mỗi cú: chiêu diện rộng và AUTO
+    // đánh nhiều mục tiêu sẽ đẩy số bay tràn mảng floats (trần 70) và nuốt mất các thông báo
+    // khác. Gộp lại còn cho ra con số ĐÚNG THỨ người chơi muốn biết: cả chuỗi đòn ăn bao nhiêu.
+    if (SETTINGS.dmgNum !== false){
+      m._dmgAcc = (m._dmgAcc || 0) + final;
+      if (source === 'crit' || perfectNote) m._dmgBig = true;
+      if (counterNote) m._dmgCounter = true;
+      if (!(m._dmgT > 0)) m._dmgT = 0.22;
+    }
   }
   // tương khắc: tia hào quang hệ thắng bao quanh quái
   if (counterNote) addEffect({ type:'ring', x:m.x, y:m.y, r:26 + m.def.size, color:ELEM[sectEl].color });
@@ -5193,15 +5205,23 @@ function checkTitles(){
   if (changed){ calcDerived(); saveGame(); }
 }
 
+// Hàm này quyết định phím Space và mọi chiêu tự nhắm sẽ đánh vào ai. Trước đây nó chỉ lọc Du
+// Hiệp, nên BOSS cũng được coi như quái thường — mà boss thì to, đứng lì và có tầm truy đuổi 420,
+// nên chỉ cần nó lảng vảng vào là mọi cú bấm của người chơi đổi hướng sang nó. Tutorial dạy "Nhấn
+// SPACE để đánh quái gần nhất" và người chơi mới đâm thẳng vào một con 1.091 máu, đánh 32 giây
+// mới trừ được 187 máu trong khi máu mình từ 291 xuống 42.
+// Nay boss bị XẾP SAU chứ không bị loại: còn quái thường trong tầm thì đánh quái thường, hết mới
+// tới boss. Đứng cạnh mỗi boss thì vẫn đánh được nó — người chơi đã tự đi tới đó thì họ muốn thế.
 function nearestMob(range){
-  let best = null, bd = range;
+  let best = null, bd = range, boss = null, bbd = range;
   for (const m of mobs){
     if (m.dead) continue;
     if (m.def.duHiep && !player.pk && !m.revenge) continue; // Du Hiệp chỉ đánh được khi bật PK (trừ kẻ truy thù)
     const d = dist(player.x, player.y, m.x, m.y);
-    if (d < bd){ bd = d; best = m; }
+    if (m.def.bossKind || m.def.boss || m.type === 'boss'){ if (d < bbd){ bbd = d; boss = m; } }
+    else if (d < bd){ bd = d; best = m; }
   }
-  return best;
+  return best || boss;
 }
 // Vệt kiếm khí — màu theo lớp/nguyên tố của chiêu (mặc định thép trắng).
 // ═══ HIỆU ỨNG THEO HOA VĂN VŨ KHÍ ═══
@@ -5862,9 +5882,16 @@ function update(dt){
   if (_bossNear){
     player._bossHintT = (player._bossHintT || 0) - dt;
     if (player._bossHintT <= 0){ addFloat(player.x, player.y-64, '⚠ Vùng Boss — auto tạm dừng, hãy tự chiến!', '#ff9a5a', 13); player._bossHintT = 6; }
-    // AUTO không tự khơi trận boss, nhưng trước đây đứng im HOÀN TOÀN — không né, không uống
-    // thuốc — trong lúc vẫn ăn đòn miễn phí từ boss lẫn bãi quái xung quanh (QA level 1→120 bắt
-    // được ca chết oan của nhân vật cấp 1 vừa vào Chọn Trận). Lùi xa khỏi boss + vẫn tự hồi máu.
+    // Lùi thẳng ra xa boss. AUTO không tự khơi trận boss, nhưng nếu đứng im HOÀN TOÀN thì vẫn
+    // ăn đòn miễn phí — nên vẫn phải né và vẫn phải uống thuốc.
+    //
+    // ĐÃ THỬ VÀ ĐÃ BỎ: cho AUTO chọn một bãi quái ngoài tầm mọi boss rồi đi hẳn tới đó. Nghe
+    // hợp lý, đo ra thì tệ hơn hẳn — nhân vật cấp 1 bị dắt đi ngang map, aggro mọi thứ dọc
+    // đường và chết trước khi tới nơi. Đo 45 giây, cấp 1 không boost, boss áp sát bãi tân thủ:
+    //     lùi tại chỗ   → 26 quái, lên cấp 3, còn sống
+    //     rút về bãi xa →  0 quái, chết
+    // Bế tắc mà bản rút lui định chữa hoá ra không nằm ở đây: nó nằm ở chỗ quái hồi sinh bị mất
+    // mã bãi nên AUTO hết mục tiêu. Sửa đúng chỗ đó rồi thì lùi tại chỗ là đủ.
     const _nb = mobs.find(b => !b.dead && (b.def.bossKind || b.type === 'boss') && dist(player.x, player.y, b.x, b.y) < 300);
     if (_nb){
       const _bdd = dist(player.x, player.y, _nb.x, _nb.y);
@@ -5878,7 +5905,7 @@ function update(dt){
     // AUTO ở đâu khác (bật auto ngay chỗ vừa rơi xuống, cách tâm ~560px) là ngoài tầm quét 430 ⇒
     // đứng im vĩnh viễn. Đây là ổ duy nhất nên kéo neo về tâm luôn, không sợ "lan sang bãi kế".
     if (DEEP){ player._autoAX = DEEP_HALL.cx; player._autoAY = DEEP_HALL.cy;
-               player._autoZone = null; player._autoZoneLocked = false; }
+               player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0; }
     // Chỉ quét quanh điểm neo (bán kính 430 ≈ 1-2 bãi quái) — không rượt quái khắp map
     // QA: chỉ farm ĐÚNG 1 bãi quái — khoá vào zone của mục tiêu đầu tiên tìm được (m.zone: cùng
     // tham chiếu cho mọi quái spawn từ 1 bãi/1 đợt), các frame sau chỉ xét quái CÙNG zone đó, dù
@@ -5895,11 +5922,27 @@ function update(dt){
       // 3153/3513/4551) — nếu không, để quên PK bật rồi auto cày sẽ tích Tội Ác tới Hắc Danh mà
       // người chơi không hề chủ đích PK ai cả. Vẫn cho tự vệ nếu Du Hiệp đã truy thù (m.revenge).
       if (m.def.duHiep && !m.revenge) continue;
-      if (player._autoZoneLocked && m.zone !== player._autoZone) continue; // khác bãi — bỏ qua
+      if (player._autoZoneLocked && m.pack !== player._autoPack) continue; // khác bãi — bỏ qua
       const _dd = dist(player._autoAX, player._autoAY, m.x, m.y);
       if (_dd < _bd){ _bd = _dd; _at = m; }
     }
-    if (_at && !player._autoZoneLocked){ player._autoZone = _at.zone; player._autoZoneLocked = true; }
+    // Khoá theo m.pack — MÃ SỐ BÃI dùng chung cho cả cụm. Trước đây khoá theo m.zone, mà zone là
+    // object literal được tạo MỚI TRONG VÒNG LẶP khi dựng bãi (xem buildWorld: `for (j...)
+    // spawnMob(pk.mob, { x, y, r, count }, packId)`), nên một "bãi 6 con" thực chất là 6 zone
+    // riêng biệt cùng toạ độ. So sánh tham chiếu vì thế chỉ khớp ĐÚNG MỘT con: AUTO hạ con đó
+    // xong là hết mục tiêu, quay về neo đứng im trong khi 5 con còn lại vây đánh.
+    // Đo được ở bãi tân thủ: nhân vật cấp 1 hạ 1 con lúc giây thứ 3 rồi tịt hẳn 27 giây, máu tụt
+    // 265 → 10, rồi chết. packId thì vốn đã dùng chung cho cả cụm — đúng thứ cần, chỉ là bị bỏ không.
+    // Bãi không có mã (Du Hiệp, quái gọi thêm) thì KHÔNG khoá: khoá vào null sẽ gom nhầm mọi con
+    // không thuộc bãi nào thành "một bãi".
+    if (_at && !player._autoZoneLocked && _at.pack != null){ player._autoPack = _at.pack; player._autoZoneLocked = true; }
+    // Lưới an toàn: bãi đã khoá sạch quái (hoặc khoá vào thứ không bao giờ hồi sinh) thì thả khoá
+    // sau 6 giây để AUTO chọn bãi khác, thay vì đứng chờ vô hạn.
+    if (player._autoZoneLocked){
+      const _song = mobs.some(m => !m.dead && m.pack === player._autoPack);
+      player._autoEmptyT = _song ? 0 : (player._autoEmptyT || 0) + dt;
+      if (player._autoEmptyT > 6){ player._autoZoneLocked = false; player._autoPack = null; player._autoEmptyT = 0; }
+    }
     if (_at){
       const _ad = dist(player.x, player.y, _at.x, _at.y);
       player.face = Math.atan2(_at.y - player.y, _at.x - player.x);
@@ -6285,6 +6328,22 @@ function update(dt){
   }
   // respawn dead mobs
   for (const m of mobs){
+    // Xả số sát thương đã gộp. Đặt TRƯỚC nhánh `if (!m.dead)` để cú kết liễu cũng hiện số —
+    // nếu không thì đòn quan trọng nhất lại là đòn duy nhất im lặng.
+    if (m._dmgT > 0){
+      m._dmgT -= dt;
+      if (m._dmgT <= 0 && m._dmgAcc > 0){
+        // Đặt CAO HƠN nhãn tên. Nhãn của quái khung xương neo ở dy - size*3,6 chứ không phải
+        // dy - size, nên một hằng số chung sẽ đâm thẳng vào tên và thanh máu — thấy rõ trên ảnh
+        // chụp đầu tiên. Lệch ngang nhẹ theo từng con để số của cả cụm không chồng khít nhau.
+        const _fy = m.y - (m.def.skel ? m.def.size * 3.6 : m.def.size) - 34;
+        const _fx = m.x + ((m.wob || 0) % 3 - 1) * 14;
+        addFloat(_fx, _fy, '-' + Math.round(m._dmgAcc),
+          m._dmgCounter ? '#5db86a' : m._dmgBig ? '#ffd76a' : '#ffffff',
+          m._dmgBig ? 18 : 13);
+        m._dmgAcc = 0; m._dmgBig = false; m._dmgCounter = false; m._dmgT = 0;
+      }
+    }
     if (!m.dead) continue;
     // Boss Vùng/Cổng Vực hồi lại sau 60s tại đúng vị trí canh giữ — chỉ áp dụng mob có m.zone thật
     // (Boss Săn phó bản dùng chung bossKind để thừa hưởng não moveset/lãnh địa nhưng zone=null,
@@ -6304,7 +6363,12 @@ function update(dt){
     }
     m.respawnT -= dt;
     if (m.respawnT <= 0 && m.zone){
-      if (zoneAliveCount(m.zone) < m.zone.count){ spawnMob(m.type, m.zone, undefined, true); m.gone = true; }
+      // Truyền lại m.pack. Trước đây chỗ này để `undefined`, mà spawnMob đặt `pack: pack ?? null`
+      // — nên MỌI con hồi sinh đều mất mã bãi. AUTO khoá theo mã bãi vì thế chỉ đánh được lứa
+      // quái ĐẦU TIÊN; hạ hết lứa đó là mọi con thay thế đều mang pack=null, không con nào khớp,
+      // AUTO đứng im chịu đòn tới chết. Đo được ở bãi tân thủ, lặp lại 3/3 lượt: hạ 3-4 con trong
+      // 8 giây đầu rồi tịt hẳn, máu tụt đều về 0 trong khi 6 con vây quanh.
+      if (zoneAliveCount(m.zone) < m.zone.count){ spawnMob(m.type, m.zone, m.pack, true); m.gone = true; }
       else m.respawnT = 3;
     }
   }
@@ -6492,7 +6556,7 @@ window.respawn = function(){
   player.hp = player.maxHp; player.qi = player.maxQi;
   player.poisonT = 0;
   player._autoAX = null; player._autoAY = null; // QA: đừng để auto farm kéo người mới hồi sinh về neo cũ (map/vị trí khác)
-  player._autoZone = null; player._autoZoneLocked = false;
+  player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0;
   dead = false;
   document.getElementById('overlay').classList.add('hidden');
 };
@@ -9893,7 +9957,7 @@ window.toggleAuto = function(){
     // đây, tắt AUTO lại sau đó sẽ khiến nhân vật tự đi tiếp theo lệnh cũ dù không có input mới.
     moveTarget = null; moveWaypoint = null; movePlanClear();
     // QA: mở khoá bãi quái cũ mỗi lần bật lại AUTO — để nó tự khoá vào bãi gần điểm neo mới nhất
-    player._autoZone = null; player._autoZoneLocked = false;
+    player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0;
   }
   addFloat(player.x, player.y-56, player.auto ? '⚔ AUTO FARM: BẬT — ôm 1-2 bãi quái quanh điểm neo, tự tung chiêu, tự uống thuốc' : 'AUTO FARM: TẮT — về chế độ thủ công',
     player.auto ? '#6ae88a' : '#b8a888', 13);
@@ -14691,6 +14755,7 @@ function renderSettings(){
     <div class="set-row"><span>🔔 Hiệu ứng âm thanh</span>${slider('sfx', SETTINGS.sfx)}</div>
     <div class="set-row"><span>🗺 Bản đồ thu nhỏ <i>(phím U)</i></span>${tog('minimap')}</div>
     <div class="set-row"><span>🏷 Tên quái vật</span>${tog('mobName')}</div>
+    <div class="set-row"><span>💥 Số sát thương trên đầu quái</span>${tog('dmgNum')}</div>
     <div class="set-row"><span>📳 Rung màn hình</span><span>${[[0,'TẮT'],[1,'NHẸ'],[2,'ĐẦY']].map(([v,t]) =>
       `<button class="mini-btn ${(SETTINGS.shake|0) === v ? '' : 'danger'}" onclick="setShake(${v})">${t}</button>`).join(' ')}</span></div>
     <div class="set-row"><span>📈 Bảng đo hiệu năng <i>(FPS · JS · raster)</i></span>${tog('perfHud')}</div>
@@ -15032,7 +15097,7 @@ window.travelTo = function(mapId, from){
   // neo lại đúng vị trí mới (xem game.js AUTO FARM: player._autoAX == null → neo tại player.x/y);
   // nếu là phó bản, startDungeonRun()/nextDungeonWave() ngay dưới sẽ ghi đè bằng neo riêng của nó.
   player._autoAX = null; player._autoAY = null;
-  player._autoZone = null; player._autoZoneLocked = false; // QA: bãi quái khoá ở map cũ không còn nghĩa gì ở map mới
+  player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0; // QA: bãi quái khoá ở map cũ không còn nghĩa gì ở map mới
   // Tầng Sâu mượn ĐỊA HÌNH map phó bản nhưng KHÔNG phải một lượt chạy phó bản. Thiếu chốt
   // !DEEP ở đây thì deepStart() xoá DGN xong travelTo() dựng lại ngay: hai bức tường đá khoá
   // lại, mà deepNextFloor() rải quái vào cả ba phòng ⇒ kẹt cứng vĩnh viễn ở tầng 1; đồng thời

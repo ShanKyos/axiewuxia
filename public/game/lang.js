@@ -8,8 +8,10 @@
 (function () {
 'use strict';
 const KEY = 'vlcm_lang';
-let lang = 'en';
-try { lang = localStorage.getItem(KEY) || 'en'; } catch (e) {}
+// Phải TRÙNG mặc định với i18n.js — hai lớp dùng chung khoá 'vlcm_lang', lệch nhau là giao diện
+// lẫn hai thứ tiếng ngay từ lần mở đầu tiên.
+let lang = 'vi';
+try { lang = localStorage.getItem(KEY) || 'vi'; } catch (e) {}
 
 /* ---- term swaps: applied ONLY inside rule-captured fragments ---- */
 const TERMS = [
