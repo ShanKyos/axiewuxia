@@ -13232,6 +13232,13 @@ function _lift(h, k){
   const r = f((n >> 16) & 255), g2 = f((n >> 8) & 255), b = f(n & 255);
   return '#' + ((1 << 24) | (r << 16) | (g2 << 8) | b).toString(16).slice(1);
 }
+// Hạ một màu về phía đen theo tỉ lệ k — cặp với _lift().
+function _dim(h, k){
+  const n = parseInt((h || '#888').slice(1), 16);
+  const f = c => Math.round(c * (1 - k));
+  const r = f((n >> 16) & 255), g2 = f((n >> 8) & 255), b = f(n & 255);
+  return '#' + ((1 << 24) | (r << 16) | (g2 << 8) | b).toString(16).slice(1);
+}
 const WEAPON_MAT = {
   dong:    { lo:'#6a4e28', hi:'#b08a4a', trim:'#e8c078', glow:null },       // đồng
   sat:     { lo:'#4a4f5c', hi:'#8a92a4', trim:'#b8bfd0', glow:null },       // sắt
@@ -14279,6 +14286,207 @@ function iaPendMagic(g, M, P){
   iSheenArc(g);
 }
 
+// ═══════════ ICON VẬT PHẨM TIÊU HAO — vẽ bằng canvas, không cần file ảnh ═══════════
+// Trang bị đã có icon sinh từ ITEM_ART; bình thuốc / sách phép / bùa / hộp thì chưa, nên mọi
+// chỗ hiện chúng đều phải mượn emoji hoặc chỉ in chữ. Emoji thì phụ thuộc font máy người chơi
+// (⚔ và 🛡 đã hiện thành ô vuông trong tiệm), còn chữ thì không nói được "đây là một món".
+// Bộ này vẽ chúng cùng một ngôn ngữ hình với trang bị: cùng khung 100×100, cùng quầng nền,
+// cùng kiểu tô sáng-tối, nên đặt cạnh nhau trong một lưới không bị lệch tông.
+function cPal(c){ return { lo: _dim(c, 0.42), hi: c, trim: _lift(c, 0.45), glow: c }; }
+
+// Bình thuốc — cổ chai, thân phình, mực nước, nút bần. Dùng cho máu / mana / trị thương.
+function caFlask(g, M){
+  g.save();
+  iFill(g, [[-5,-30],[5,-30],[5,-18],[-5,-18]], _dim(M.hi, 0.55));      // cổ
+  g.fillStyle = '#8a6a44';                                              // nút bần
+  g.fillRect(-6.5, -37, 13, 8);
+  g.fillStyle = 'rgba(255,255,255,.28)'; g.fillRect(-6.5, -37, 4, 8);
+  g.beginPath();                                                        // thân thuỷ tinh
+  g.moveTo(-6, -18); g.quadraticCurveTo(-22, -6, -20, 12);
+  g.quadraticCurveTo(-18, 30, 0, 30); g.quadraticCurveTo(18, 30, 20, 12);
+  g.quadraticCurveTo(22, -6, 6, -18); g.closePath();
+  g.fillStyle = 'rgba(210,225,255,.20)'; g.fill();
+  g.save(); g.clip();                                                   // mực thuốc bên trong
+  g.fillStyle = iGrad(g, 0, -4, 0, 30, M.hi, M.lo);
+  g.fillRect(-24, -2, 48, 34);
+  g.fillStyle = _lift(M.hi, 0.35); g.fillRect(-24, -2, 48, 3);          // mặt nước
+  g.restore();
+  g.strokeStyle = 'rgba(255,255,255,.30)'; g.lineWidth = 1.6; g.stroke();
+  g.fillStyle = 'rgba(255,255,255,.45)';                                // ánh sáng dọc thân
+  g.beginPath(); g.ellipse(-9, 6, 3, 11, -0.2, 0, 7); g.fill();
+  g.restore();
+}
+// Hồ lô rượu — hai bầu tròn, dây quấn giữa.
+function caGourd(g, M){
+  g.save();
+  g.fillStyle = iGrad(g, -14, -20, 14, 28, M.hi, M.lo);
+  g.beginPath(); g.arc(0, 14, 17, 0, 7); g.fill();
+  g.beginPath(); g.arc(0, -12, 11, 0, 7); g.fill();
+  g.fillStyle = _dim(M.hi, 0.5); g.fillRect(-4, -6, 8, 6);
+  g.fillStyle = '#8a6a44'; g.fillRect(-5, -28, 10, 7);
+  g.strokeStyle = M.trim; g.lineWidth = 2.4;
+  g.beginPath(); g.arc(0, 0, 8.5, 0.2, Math.PI - 0.2); g.stroke();
+  g.fillStyle = 'rgba(255,255,255,.4)';
+  g.beginPath(); g.ellipse(-6, 10, 3.4, 6, -0.3, 0, 7); g.fill();
+  g.restore();
+}
+// Bùa giấy — dải dọc, mép dưới cắt nhọn, ấn triện ở giữa.
+function caTalisman(g, M){
+  g.save();
+  iFill(g, [[-13,-32],[13,-32],[13,22],[0,32],[-13,22]], iGrad(g, 0, -32, 0, 32, '#f0e3c6', '#cbb994'));
+  g.strokeStyle = _dim(M.hi, 0.35); g.lineWidth = 1.4;
+  iPoly(g, [[-13,-32],[13,-32],[13,22],[0,32],[-13,22]]); g.stroke();
+  g.strokeStyle = M.hi; g.lineWidth = 2.2;                              // nét bùa
+  g.beginPath(); g.moveTo(0, -26); g.lineTo(0, 14); g.stroke();
+  g.beginPath(); g.moveTo(-7, -18); g.lineTo(7, -18); g.stroke();
+  g.beginPath(); g.moveTo(-6, -6); g.lineTo(6, -6); g.stroke();
+  g.fillStyle = 'rgba(200,40,40,.85)'; g.fillRect(-6, 2, 12, 12);       // triện đỏ
+  g.fillStyle = 'rgba(255,255,255,.5)'; g.fillRect(-4, 4, 8, 2);
+  g.restore();
+}
+// Sách phép — cuộn giấy có hai trục gỗ.
+function caScroll(g, M){
+  g.save();
+  g.fillStyle = iGrad(g, 0, -18, 0, 18, '#f2e8cf', '#d3c4a2');          // thân giấy
+  g.fillRect(-24, -17, 48, 34);
+  g.strokeStyle = _dim(M.hi, 0.3); g.lineWidth = 1.6;
+  for (let i = 0; i < 4; i++){                                          // dòng chữ
+    g.beginPath(); g.moveTo(-17, -10 + i * 7); g.lineTo(i === 3 ? 6 : 17, -10 + i * 7); g.stroke();
+  }
+  for (const x of [-24, 24]){                                           // hai trục
+    g.fillStyle = iGrad(g, x - 5, 0, x + 5, 0, M.trim, M.lo);
+    g.fillRect(x - 5, -24, 10, 48);
+    g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(x - 5, -24, 3, 48);
+    g.fillStyle = M.glow; g.beginPath(); g.arc(x, -24, 4, 0, 7); g.fill();
+    g.beginPath(); g.arc(x, 24, 4, 0, 7); g.fill();
+  }
+  g.restore();
+}
+// Hòm báu. Bản đầu vẽ nắp vòm cao 24 trên thân 28 nên ra hình vòm cổng — đọc thành bia mộ,
+// không ai thấy là cái hòm. Hòm đọc được cần: THẤP và RỘNG, nắp mỏng hơn thân, và một đường
+// ghép nắp-thân rõ ràng chạy ngang.
+function caBox(g, M){
+  g.save();
+  const W = 30;
+  g.fillStyle = iGrad(g, 0, -2, 0, 26, _lift(M.lo, 0.18), M.lo);   // thân
+  g.fillRect(-W, -2, W * 2, 28);
+  g.beginPath();                                                    // nắp — cung THOẢI
+  g.moveTo(-W, -2); g.quadraticCurveTo(-W, -20, 0, -20);
+  g.quadraticCurveTo(W, -20, W, -2); g.closePath();
+  g.fillStyle = iGrad(g, 0, -20, 0, -2, _lift(M.hi, 0.26), M.hi); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.22)';                            // ánh trên nắp
+  g.beginPath(); g.ellipse(-10, -12, 9, 4, -0.25, 0, 7); g.fill();
+  g.fillStyle = _dim(M.lo, 0.45);                                   // ĐƯỜNG GHÉP nắp/thân
+  g.fillRect(-W, -4, W * 2, 4);
+  g.fillStyle = M.trim;                                             // đai ngang trên thân
+  g.fillRect(-W, 12, W * 2, 4);
+  g.fillStyle = M.trim;                                             // đai dọc giữa
+  g.fillRect(-5, -20, 10, 46);
+  g.fillStyle = 'rgba(255,255,255,.28)'; g.fillRect(-5, -20, 3, 46);
+  g.fillStyle = _lift(M.trim, 0.15);                                // mặt khoá
+  g.fillRect(-9, -6, 18, 13);
+  g.strokeStyle = _dim(M.trim, 0.4); g.lineWidth = 1; g.strokeRect(-9, -6, 18, 13);
+  iGem(g, M, 0, 0.5, 4.2);                                          // ổ khoá
+  iRivet(g, M, -W + 5, 21, 2.2); iRivet(g, M, W - 5, 21, 2.2);
+  iRivet(g, M, -W + 5, -10, 2); iRivet(g, M, W - 5, -10, 2);
+  g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1.2;             // viền ngoài
+  g.strokeRect(-W, -2, W * 2, 28);
+  g.restore();
+}
+// Lõi nguyên tố — cầu phát sáng có vân trong.
+function caOrb(g, M){
+  g.save();
+  const gr = g.createRadialGradient(-6, -8, 2, 0, 0, 26);
+  gr.addColorStop(0, _lift(M.hi, 0.55)); gr.addColorStop(0.55, M.hi); gr.addColorStop(1, M.lo);
+  g.fillStyle = gr; g.beginPath(); g.arc(0, 0, 24, 0, 7); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.30)'; g.lineWidth = 1.6;           // vân trong
+  g.beginPath(); g.ellipse(0, 0, 15, 24, 0.5, 0, 7); g.stroke();
+  g.beginPath(); g.ellipse(0, 0, 24, 13, -0.4, 0, 7); g.stroke();
+  g.fillStyle = 'rgba(255,255,255,.65)';
+  g.beginPath(); g.ellipse(-8, -10, 5, 7, -0.5, 0, 7); g.fill();
+  g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1.2;
+  g.beginPath(); g.arc(0, 0, 24, 0, 7); g.stroke();
+  g.restore();
+}
+// Đá / tinh thạch — khối cắt mặt, dùng cho Huyền Thiết, Tu La, Hỗn Nguyên, Đá Thăng Cấp.
+function caStone(g, M){
+  g.save();
+  iFill(g, [[0,-28],[19,-9],[12,24],[-12,24],[-19,-9]], iGrad(g, 0, -28, 0, 24, M.hi, M.lo));
+  iFill(g, [[0,-28],[19,-9],[0,-2]], _lift(M.hi, 0.32));                // mặt sáng
+  iFill(g, [[0,-28],[-19,-9],[0,-2]], _dim(M.hi, 0.28));               // mặt tối
+  iFill(g, [[0,-2],[12,24],[-12,24]], _dim(M.lo, 0.15));
+  g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1.2;
+  iPoly(g, [[0,-28],[19,-9],[12,24],[-12,24],[-19,-9]]); g.stroke();
+  g.restore();
+}
+const CONSUM_ART = { flask:caFlask, gourd:caGourd, talisman:caTalisman, scroll:caScroll,
+                     box:caBox, orb:caOrb, stone:caStone };
+
+// ═══════════ DANH MỤC VẬT PHẨM TIÊU HAO ═══════════
+// Mỗi món một DÒNG: hình + màu + tên + công dụng + cách đếm + số liệu thật.
+// `info` đọc từ trạng thái người chơi nên thẻ không bao giờ lệch khỏi cơ chế — cùng bài học với
+// mô tả bình thuốc ("Hồi 40% máu" ghi cứng trong khi lượng hồi là player.potionPct).
+const CONSUM_DB = {
+  thuoc:     { art:'flask',    col:'#e8434a', name:'Bình Thuốc Đỏ',   use:'Uống bằng phím R',
+               have:()=>player.potions, cap:5,
+               info:()=>`Hồi ${Math.round((player.potionPct||0.4)*100)}% máu (~${Math.round(player.maxHp*(player.potionPct||0.4)).toLocaleString('vi-VN')} HP)` },
+  tukhi:     { art:'flask',    col:'#4a86e8', name:'Lọ Mana',         use:'Mana là tài nguyên tung chiêu',
+               info:()=>`Hồi đầy Mana — đang ${Math.round(player.qi)}/${player.maxQi}` },
+  trithuong: { art:'flask',    col:'#5db86a', name:'Trị Thương Toàn Phần', use:'Dùng ngay tại chỗ',
+               info:()=>`Hồi đầy máu — đang ${Math.round(player.hp).toLocaleString('vi-VN')}/${player.maxHp.toLocaleString('vi-VN')}` },
+  ruou:      { art:'gourd',    col:'#e8a04a', name:'Rượu Hổ Cốt',     use:'Men say bừng bừng sát khí',
+               info:()=>`+12% công lực trong 3 phút${(player.buffAtkT||0)>0?` · còn ${Math.ceil(player.buffAtkT)}s`:''}` },
+  loidon:    { art:'talisman', col:'#ffd76a', name:'Bùa Chắn Sét',    use:'Mang theo khi vào vùng bão',
+               info:()=>`−40% sát thương thiên lôi trong 5 phút${(player.loidonT||0)>0?` · còn ${Math.ceil(player.loidonT)}s`:''}` },
+  phu:       { art:'talisman', col:'#7ecbff', name:'Thiên Mệnh Phù',  use:'Bảo hiểm rèn — hỏng thì không tụt cấp',
+               have:()=>player.charms, info:()=>`Đang giữ ${player.charms||0} lá` },
+  sach:      { art:'scroll',   col:'#ffb15c', name:'Sách Kỹ Năng',    use:'Học di sản kỹ năng NGOẠI LỚP (bảng K)',
+               have:()=>player.bikipVH, info:()=>`Đang có ${player.bikipVH||0} quyển · rơi từ tinh anh/boss & Vực Thẳm` },
+  tiendan:   { art:'stone',    col:'#7ec850', name:'Đá Thăng Cấp',    use:'Nâng Thuần Thục (Venom / Archery / Stoneform)',
+               have:()=>player.tienDan, info:()=>`Đang có ${player.tienDan||0} viên` },
+  huyenthiet:{ art:'stone',    col:'#c8d4e8', name:'Huyền Thiết',     use:'Rèn +1 → +6 · thăng giai Thú Chiến',
+               have:()=>player.mat, info:()=>`Đang có ${player.mat||0}` },
+  tula:      { art:'stone',    col:'#e8552a', name:'Tu La Tinh Thạch', use:'Khảm trang bị · rèn +7 trở lên',
+               have:()=>player.gems.tuLa, info:()=>`Đang có ${player.gems.tuLa||0}` },
+  honnguyen: { art:'stone',    col:'#b08ae8', name:'Hỗn Nguyên Thạch', use:'Rèn +10/+11 · luyện Áo Choàng',
+               have:()=>player.gems.honNguyen, info:()=>`Đang có ${player.gems.honNguyen||0}` },
+  noidan:    { art:'orb',      col:'#b08ae8', name:'Lõi Nguyên Tố',   use:'Nâng Thần Binh · hấp thụ lấy chỉ số vĩnh viễn',
+               have:()=>player.noidan, info:()=>`Đang có ${player.noidan||0} · hôm nay còn ${Math.max(0,3-ndToday())}/3 lượt hấp thụ` },
+};
+const _consumCache = new Map();
+// Icon vẽ một lần rồi nhớ theo (hình|màu): mọi ô cùng loại dùng lại đúng một dataURL.
+function consumArtUrl(art, col){
+  const key = art + '|' + col;
+  let u = _consumCache.get(key);
+  if (u) return u;
+  const c = document.createElement('canvas');
+  c.width = ICON_PX; c.height = ICON_PX;
+  const g = c.getContext('2d');
+  g.save();
+  g.translate(ICON_PX/2, ICON_PX/2); g.scale(ICON_PX/100, ICON_PX/100);
+  const bg = g.createRadialGradient(0, 0, 4, 0, 0, 50);        // quầng nền — cùng kiểu với trang bị
+  bg.addColorStop(0, col + '38'); bg.addColorStop(1, col + '00');
+  g.fillStyle = bg; g.fillRect(-50, -50, 100, 100);
+  (CONSUM_ART[art] || caStone)(g, cPal(col));
+  g.restore();
+  u = c.toDataURL();
+  _consumCache.set(key, u);
+  return u;
+}
+// Icon của một món trong danh mục. `over` cho phép ghi đè màu (vd Box Kundun đổi màu theo tầng).
+function consumIcon(id, cls, over){
+  const d = CONSUM_DB[id];
+  if (!d) return '';
+  return `<img class="${cls || 'consum-ic'}" src="${consumArtUrl(d.art, over || d.col)}" alt="">`;
+}
+// Thẻ rê chuột chung cho vật phẩm tiêu hao: tên · công dụng · số liệu thật.
+function consumTip(id){
+  const d = CONSUM_DB[id];
+  if (!d) return '';
+  const parts = [d.name, d.use, d.info ? d.info() : ''];
+  if (d.cap) parts.push(`Túi đựng tối đa ${d.cap}`);
+  return parts.filter(Boolean).join('\n').replace(/"/g, '&quot;');
+}
 const ITEM_ART = {
   weapon: iaWeapon, staff: iaStaff, bow: iaBow, crossbow: iaCrossbow, helm: iaHelm, armor: iaArmor, gloves: iaGloves, pants: iaPants, boots: iaBoots,
   ring: iaRing, pendPhys: iaPendPhys, pendMagic: iaPendMagic,
@@ -14774,7 +14982,7 @@ function bagSecMat(){
   h += `<div class="chaos-sec">TỨ CHÂU <span class="chaos-sub">bỏ vào khay ở Lò Hỗn Độn</span></div><div class="mat-grid">`;
   for (const jk of ['chucPhuc','linhHon','sinhMenh','honDon']){
     h += `<div class="mat-cell" title="${matTip(JEWEL_NAMES[jk], '', jw[jk]||0)}">
-      <span class="mc-glyph" style="color:${JEWEL_COLORS[jk]}">◆</span>
+      <img src="${consumArtUrl('orb', JEWEL_COLORS[jk])}" alt="">
       <span class="mc-count" style="color:${JEWEL_COLORS[jk]}">${fmtCount(jw[jk]||0)}</span></div>`;
   }
   return h + `</div>`;
@@ -14782,12 +14990,14 @@ function bagSecMat(){
 function bagSecBox(){
   const bh = player.baohap || {};
   const bhTiers = Object.keys(bh).filter(t => bh[t] > 0);
-  let h = `<div class="chaos-sec">BẢO HẠP <span class="chaos-sub">Hung Thần Giáng Thế</span></div>`;
+  let h = `<div class="chaos-sec">BOX KUNDUN <span class="chaos-sub">Hung Thần Giáng Thế</span></div>`;
   if (!bhTiers.length) h += `<div class="chaos-empty">Chưa có Box Kundun nào — săn Hung Thần hoặc quái Xâm Lăng Vàng.</div>`;
   for (const t of bhTiers){
     const d = BAOHAP_TIERS[t];
-    h += `<div class="inv-item"><span class="s-name"><b style="color:${d.color}">${d.name}</b> ×${bh[t]}<br>
-      <span class="item-tip">LV${d.min}-${d.max === 999 ? '100+' : d.max} · trang bị cao cấp${d.ancient ? ` · <b style="color:#3ac88a">Cổ Thần ${Math.round(d.ancient*100)}%</b>` : ''} · châu quý</span></span>
+    h += `<div class="inv-item"><span class="s-name" style="display:flex;align-items:center;gap:9px">
+        <img class="consum-ic" src="${consumArtUrl('box', d.color)}" alt="">
+        <span><b style="color:${d.color}">${d.name}</b> ×${bh[t]}<br>
+        <span class="item-tip">LV${d.min}-${d.max === 999 ? '100+' : d.max} · trang bị cao cấp${d.ancient ? ` · <b style="color:#3ac88a">Cổ Thần ${Math.round(d.ancient*100)}%</b>` : ''} · châu quý</span></span></span>
       <span><button class="mini-btn" onclick="openBaoHap(${t})">Mở Hạp</button></span></div>`;
   }
   const ndUsed = ndToday();
@@ -14798,7 +15008,7 @@ function bagSecBox(){
   for (const st of ['atk','hp','def','qi','crit']){
     const ef = ND_EFFECT[st];
     const co = (player.ndBonus && player.ndBonus[ef.k]) || 0;
-    h += `<div class="mat-row"><span style="color:${ef.color};width:20px;text-align:center;font-size:13px">●</span>
+    h += `<div class="mat-row" title="${consumTip('noidan')}"><img class="consum-ic sm" src="${consumArtUrl('orb', ef.color)}" alt="">
       <span style="flex:1">${ef.ten} <span style="opacity:.55;font-size:11px">— ${ef.desc} vĩnh viễn${co ? ` · đang có +${co % 1 ? co.toFixed(1) : co}` : ''}</span></span>
       <button class="mini-btn" ${ndCnt > 0 && ndUsed < 3 ? '' : 'disabled'} onclick="swallowNoidan('${st}')">Hấp Thụ</button></div>`;
   }
@@ -14955,7 +15165,7 @@ function renderSkillPanel(){
         <div class="sk-desc">${on ? ps.desc : '🔒 chưa đạt điều kiện'}</div></span></div>`;
     }
   } else {
-    html += `<div style="font-size:11px;color:#9aa8d4;padding:2px 4px 8px">Taskbar chỉ còn 3 ô, nhưng các chiêu dưới đây không hề mất giá trị — tự động dồn thành % Công Kích vĩnh viễn (hiện <b style="color:#ffd76a">+${(player.legacyAtkPct||0).toFixed(1)}%</b>), không cần bấm nút hay học Sách Kỹ Năng nữa.</div>`;
+    html += `<div style="font-size:11px;color:#9aa8d4;padding:2px 4px 8px">Thanh chiêu chỉ có 4 ô, nhưng các chiêu dưới đây không hề mất giá trị — tự động dồn thành % Công Kích vĩnh viễn (hiện <b style="color:#ffd76a">+${(player.legacyAtkPct||0).toFixed(1)}%</b>), không cần bấm nút hay học Sách Kỹ Năng nữa.</div>`;
     html += `<div class="stat-sec">DI SẢN LỚP — ${SECTS[player.sect].name}</div>`;
     const own = LEGACY_SECT_SKILLS.filter(sid => VOHOC_DEFS[sid] && VOHOC_DEFS[sid].phai === player.sect);
     html += own.length ? own.map(legacySkillRowHtml).join('') : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10.</div>`;
@@ -14964,8 +15174,13 @@ function renderSkillPanel(){
     // nếu không phần thưởng endgame lớn nhất trông như chẳng có tác dụng gì (xem calcDerived()).
     const _cross = LEGACY_SECT_SKILLS.filter(sid => crossClassLearnable(sid));
     if (_cross.length){
-      html += `<div class="stat-sec">DI SẢN NGOẠI LỚP — 📜 Sách Kỹ Năng: <b style="color:#ffb15c">${player.bikipVH || 0}</b></div>`;
-      html += `<div style="font-size:11px;color:#9aa8d4;padding:0 4px 6px">Rơi từ tinh anh/boss & Vực Thẳm. Học xong cộng thẳng %ST vĩnh viễn — Thăng Tiên sẽ mở sạch số còn lại.</div>`;
+      html += `<div class="stat-sec">DI SẢN NGOẠI LỚP</div>
+        <div class="shop-row" title="${consumTip('sach')}"><span class="sr-ic">${consumIcon('sach', 'sr-img')}</span>
+          <span class="sr-body"><b style="color:#ffb15c">Sách Kỹ Năng</b>
+            <span class="sr-desc">Học di sản kỹ năng NGOẠI LỚP — kỹ năng của chính lớp mình thì tự ngộ theo cấp</span>
+            <span class="sr-stat">${CONSUM_DB.sach.info()}</span></span>
+          <b style="color:#ffb15c;font-size:15px">${player.bikipVH || 0}</b></div>`;
+      html += `<div style="font-size:11px;color:#9aa8d4;padding:0 4px 6px">Học xong cộng thẳng %ST vĩnh viễn — Thăng Tiên sẽ mở sạch số còn lại.</div>`;
       html += _cross.map(legacySkillRowHtml).join('');
     }
     html += `<div class="stat-sec">HỆ TẤN CHỨC PHỤ</div>`;
@@ -15290,8 +15505,8 @@ const SHOPS = {
   // loãng ra khắp ba tiệm.
   binhkhi: { quote:'"Binh khí nhà ta ba đời rèn giũa — cứ ngắm cho kỹ rồi hẵng trả tiền."',
     stock:true, rows:[], boxes:[
-      { id:'ruongvk', icon:'◈', name:'Rương Binh Khí',  price:800, desc:'Vũ khí ngẫu nhiên theo cấp của bạn — có thể ra hàng hiếm' },
-      { id:'ruongpc', icon:'❖', name:'Rương Phòng Cụ', price:700, desc:'Giáp trụ ngẫu nhiên theo cấp — có thể ra trang bị Hoàn Hảo' },
+      { id:'ruongvk', col:'#c8d4e8', name:'Rương Binh Khí',  price:800, desc:'Vũ khí ngẫu nhiên theo cấp của bạn — có thể ra hàng hiếm' },
+      { id:'ruongpc', col:'#5aa0e8', name:'Rương Phòng Cụ', price:700, desc:'Giáp trụ ngẫu nhiên theo cấp — có thể ra trang bị Hoàn Hảo' },
     ]},
   trachu: { quote:'"Vào đây uống chén trà nóng đã — chuyện Lunacia để sau hẵng hay."', rows:[
     { id:'nghitro', icon:'🛏', name:'Nghỉ Trọ',    price:120, desc:'Nghỉ ngơi dưỡng thần' },
@@ -15426,7 +15641,11 @@ function renderShop(n){
   if (shop.rows.length) html += `<div class="stat-sec">HÀNG THƯỜNG</div>`;
   for (const r of shop.rows){
     const info = shopRowInfo(r.id);
-    html += `<div class="shop-row"><span class="sr-ic">${r.icon || '◈'}</span>
+    // Ưu tiên icon vẽ; món chưa có trong danh mục thì mới rơi về ký tự.
+    // id của hàng CHÍNH LÀ khoá trong CONSUM_DB (thuoc/tukhi/ruou…). Món không phải vật phẩm
+    // (vd 'nghitro' — một dịch vụ) thì không có trong danh mục và rơi về ký tự.
+    const ic = CONSUM_DB[r.id] ? consumIcon(r.id, 'sr-img') : `<span>${r.icon || '◈'}</span>`;
+    html += `<div class="shop-row"${CONSUM_DB[r.id] ? ` title="${consumTip(r.id)}"` : ''}><span class="sr-ic">${ic}</span>
       <span class="sr-body"><b>${r.name}</b>
         <span class="sr-desc">${r.desc}</span>
         ${info.stat ? `<span class="sr-stat">${info.stat}</span>` : ''}</span>
@@ -15442,13 +15661,13 @@ function renderShop(n){
     { const t = shopBaoHapTier(), d = BAOHAP_TIERS[t], gia = shopBaoHapPrice(t);
       const anc = d.ancient ? ` · <b style="color:#3ac88a">${Math.round(d.ancient*100)}% ra đồ Cổ Thần</b>` : '';
       html += `<div class="shop-row" style="border-color:${d.color}55">
-        <span class="sr-ic" style="color:${d.color}">▣</span>
+        <span class="sr-ic"><img class="sr-img" src="${consumArtUrl('box', d.color)}" alt=""></span>
         <span class="sr-body"><b style="color:${d.color}">${d.name}</b>
           <span class="sr-desc">Mở ra trang bị cấp ${d.min}-${d.max === 999 ? '100+' : d.max} — có thể ra dòng Hoàn Hảo${anc}</span>
           <span class="sr-stat">Tầng theo cấp của bạn · đang giữ ${(player.baohap && player.baohap[t]) || 0} hạp · mở ở Túi Đồ → Box Kundun</span></span>
         <button class="mini-btn" ${player.silver < gia ? 'disabled' : ''} onclick="buyBaoHap()">${gia.toLocaleString('vi-VN')}◈</button></div>`; }
     for (const b of shop.boxes){
-      html += `<div class="shop-row"><span class="sr-ic">${b.icon}</span>
+      html += `<div class="shop-row"><span class="sr-ic"><img class="sr-img" src="${consumArtUrl('box', b.col || '#8a95bd')}" alt=""></span>
         <span class="sr-body"><b>${b.name}</b><span class="sr-desc">${b.desc}</span></span>
         <button class="mini-btn" ${player.silver < b.price ? 'disabled' : ''}
           onclick="buyFromShop('${b.id}')">${b.price.toLocaleString('vi-VN')}◈</button></div>`;
@@ -15457,15 +15676,15 @@ function renderShop(n){
 
   // Vật Phẩm Quý — làm mới 2 giờ/lần, mỗi tiệm một món khác nhau
   const RARE_POOL = (window.RARE_POOL = window.RARE_POOL || [
-    { id:'r_tiendan5', icon:'◈', name:'Đá Thăng Cấp ×5 (giá hời)', price:1200, desc:'Gói tiết kiệm — chỉ bán theo đợt' },
-    { id:'r_mat5',     icon:'✦', name:'Huyền Thiết ×5',            price:750,  desc:'Nguyên liệu rèn +1 đến +6' },
-    { id:'r_tula',     icon:'◆', name:'Tu La Tinh Thạch',          price:1800, desc:'Khảm trang bị, rèn +7 trở lên — hiếm có' },
-    { id:'r_hon',      icon:'❖', name:'Hỗn Nguyên Thạch',          price:2600, desc:'Rèn +10/+11 — cực hiếm' },
+    { id:'r_tiendan5', item:'tiendan',    name:'Đá Thăng Cấp ×5 (giá hời)', price:1200, desc:'Gói tiết kiệm — chỉ bán theo đợt' },
+    { id:'r_mat5',     item:'huyenthiet', name:'Huyền Thiết ×5',            price:750,  desc:'Nguyên liệu rèn +1 đến +6' },
+    { id:'r_tula',     item:'tula',       name:'Tu La Tinh Thạch',          price:1800, desc:'Khảm trang bị, rèn +7 trở lên — hiếm có' },
+    { id:'r_hon',      item:'honnguyen',  name:'Hỗn Nguyên Thạch',          price:2600, desc:'Rèn +10/+11 — cực hiếm' },
   ]);
   const cycle = Math.floor(Date.now()/7200000);
   const rare = RARE_POOL[(cycle*7 + n.id.length*3) % RARE_POOL.length];
   html += `<div class="stat-sec">VẬT PHẨM QUÝ — đổi sau ${shopCountdown()}</div>`;
-  html += `<div class="shop-row rare"><span class="sr-ic">${rare.icon}</span>
+  html += `<div class="shop-row rare"${CONSUM_DB[rare.item] ? ` title="${consumTip(rare.item)}"` : ''}><span class="sr-ic">${CONSUM_DB[rare.item] ? consumIcon(rare.item, 'sr-img') : rare.icon}</span>
     <span class="sr-body"><b style="color:#d8baff">${rare.name}</b><span class="sr-desc">${rare.desc}</span>
       <span class="sr-stat">${shopRowInfo(rare.id).stat || ''}</span></span>
     <button class="mini-btn" ${player.silver < rare.price ? 'disabled' : ''}
