@@ -711,3 +711,41 @@ eleventh source; this is very likely the actual end of the line for GitHub-sourc
 art — the fixed 6-part chibi body plan and the Chimera roster's fixed creature list (wolf/bear/dryad/
 treant/slime/werewolf) are now confirmed across 4 independent repos, and no Sky Mavis game other than
 mobile Origins and 2D starter kits has ever had its assets published to a public GitHub repo.
+
+## Chín — GHÉP RIG SPINE: lật lại kết luận "không dùng được"
+
+Tám đợt trên đều dừng ở cùng một chỗ: phần lớn art Axie trong kit nằm dưới dạng **rig Spine**
+(`.atlas` + `.json`/`.skel` + `.png`), và tấm `.png` chỉ là chỗ gom các **bộ phận rời** — đầu, tai,
+răng, đuôi nằm rải rác, không phải chân dung. `PvE/Chimeras/*` bị bỏ qua vì lý do đó, và cả 38 con
+Axie trong `PvE/Starters/` cũng vậy.
+
+Kết luận đó **sai**. Tấm `.png` đúng là không dùng thẳng được, nhưng file `.json` đi kèm còn nguyên
+**cây xương và tư thế gốc** (setup pose): mỗi xương có phép dịch/xoay/co và cha của nó, mỗi mảnh có
+vị trí gắn lên xương. Đủ để dựng lại hình hoàn chỉnh.
+
+`tools/spine/assemble.py` làm đúng việc đó: đọc `.atlas` lấy toạ độ từng vùng, đọc `.json` dựng cây
+xương, tính phép biến hình thế giới, rồi dán từng mảnh theo thứ tự vẽ của slot.
+
+```
+python3 tools/spine/assemble.py <thư-mục-bộ> <tên-bộ> <file-ra.png>
+```
+
+**Hai cái bẫy khi viết:**
+
+- **Vùng bị xoay 90° khi đóng gói.** `rotate: true` nghĩa là vùng nằm nghiêng trên tấm ảnh, nhưng
+  `size:` vẫn ghi kích thước GỐC. Cắt theo `size` là cắt lệch — ra những mảng chữ nhật cụt lủn.
+  Phải cắt theo kích thước đã hoán đổi rồi xoay `-90°`.
+- **Spine dùng hệ Y-HƯỚNG-LÊN**, ảnh thì Y hướng xuống. Quên đảo dấu là hình lộn ngược.
+
+**Kết quả:** 12/38 con trong `PvE/Starters` ghép ra ảnh hoàn chỉnh, nền trong suốt, ~950px.
+26 con còn lại dùng `.skel` (Spine nhị phân) — bộ này chưa đọc được, cần viết thêm bộ đọc nhị phân.
+
+**Đã dùng:** 5 con cho Thú Chiến (`assets/mounts/`), thay hẳn bộ bò lửa / bò băng / báo / phượng /
+rồng cũ — đám đó KHÔNG phải art Axie. Bậc xếp theo mức dữ tợn nhìn thấy được và lệch màu để phân
+biệt trong màn: `12`→Petalkin (hồng, hoa) · `3`→Tidenip (xanh lơ, càng) · `1`→Emberpaw (cam, sừng
+lá) · `2`→Stonetusk (lục, ngà + đá) · `17`→Crimsonmaw (đỏ sẫm, dữ tợn). Ảnh gốc quay TRÁI, đã lật
+sẵn khi xuất vì `drawMount()` lật lại khi nhân vật quay trái.
+
+**Còn 7 con chưa dùng** (`1-1`, `16`, `16-1`, `2-1`, `3-1`, `5-1`, `7`, `12-1`, `17-1` — các bản
+`-N` là biến thể của cùng một con). Cộng với `PvE/Chimeras/*` và `Summoners/*` nay cũng ghép được,
+đây là nguồn art Axie lớn nhất còn chưa khai thác trong repo.

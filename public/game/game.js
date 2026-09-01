@@ -2711,15 +2711,22 @@ function skillInfo(id){
   return out;
 }
 
-// ---------- Thú Chiến: 8-giai chiến thú đồng hành ----------
+// ---------- Thú Chiến: 5 bậc AXIE đồng hành ----------
+// Art là Axie THẬT, ghép từ rig Spine trong axieinfinity/axie-origins-asset-kit
+// (PvE/Starters) bằng tools/spine/assemble.py. Tám đợt khảo sát nguồn trước đó
+// đều kết luận thư mục này "không dùng được" vì tấm .png chỉ là chỗ gom các bộ
+// phận rời — nhưng file .json còn nguyên cây xương, đủ dựng lại tư thế gốc.
+// Bậc xếp theo mức DỮ TỢN nhìn thấy được, và lệch màu để phân biệt trong màn:
+// hồng hoa → xanh lơ càng → cam sừng lá → lục ngà đá → đỏ sẫm.
+// Ảnh gốc quay TRÁI, đã lật sẵn khi xuất: drawMount() lật lại khi quay trái.
 // Không cưỡi — chiến thú đi theo và tự tấn công quái quanh người chơi.
 // Upgrade = spend silver + Huyền Thiết (player.mat), roll against success rate; fail keeps tier.
 const MOUNT_TIERS = [ null,
-  { name:'Emberhide Bull',   img:'assets/mounts/1_firebull.png',      color:'#c8622a', dmg:15,  str:3,  agi:3,  def:0,  vit:3,  hp:0,    crit:0, qireg:0, reqLv:10, cost:{silver:300,   mat:3},   rate:100 },
-  { name:'Frosthorn Bull',   img:'assets/mounts/2_icebull.png',       color:'#6ab0e8', dmg:45,  str:12, agi:10, def:6,  vit:10, hp:200,  crit:2, qireg:1, reqLv:25, cost:{silver:1500,  mat:14},  rate:80 },
-  { name:'Voltclaw Panther', img:'assets/mounts/3_shadowpanther.png', color:'#a84ad8', dmg:90,  str:24, agi:24, def:18, vit:20, hp:500,  crit:4, qireg:2, reqLv:45, cost:{silver:4500,  mat:38},  rate:60 },
-  { name:'Sunfeather Phoenix',img:'assets/mounts/4_phoenix.png',      color:'#ff8a3a', dmg:145, str:38, agi:40, def:32, vit:35, hp:900,  crit:6, qireg:4, reqLv:65, cost:{silver:9000,  mat:70},  rate:42 },
-  { name:'Azure Wyrm',       img:'assets/mounts/5_azuredragon.png',   color:'#3a7ad8', dmg:200, str:55, agi:55, def:55, vit:55, hp:1500, crit:8, qireg:6, reqLv:85, cost:{silver:15000, mat:110}, rate:30 },
+  { name:'Petalkin',   img:'assets/mounts/1_petalkin.png',   color:'#e87ab0', dmg:15,  str:3,  agi:3,  def:0,  vit:3,  hp:0,    crit:0, qireg:0, reqLv:10, cost:{silver:300,   mat:3},   rate:100 },
+  { name:'Tidenip',    img:'assets/mounts/2_tidenip.png',    color:'#3ac8c8', dmg:45,  str:12, agi:10, def:6,  vit:10, hp:200,  crit:2, qireg:1, reqLv:25, cost:{silver:1500,  mat:14},  rate:80 },
+  { name:'Emberpaw',   img:'assets/mounts/3_emberpaw.png',   color:'#f0932a', dmg:90,  str:24, agi:24, def:18, vit:20, hp:500,  crit:4, qireg:2, reqLv:45, cost:{silver:4500,  mat:38},  rate:60 },
+  { name:'Stonetusk',  img:'assets/mounts/4_stonetusk.png',  color:'#7bc043', dmg:145, str:38, agi:40, def:32, vit:35, hp:900,  crit:6, qireg:4, reqLv:65, cost:{silver:9000,  mat:70},  rate:42 },
+  { name:'Crimsonmaw', img:'assets/mounts/5_crimsonmaw.png', color:'#c0304a', dmg:200, str:55, agi:55, def:55, vit:55, hp:1500, crit:8, qireg:6, reqLv:85, cost:{silver:15000, mat:110}, rate:30 },
 ];
 // Người chơi chỉ bao giờ có MỘT giai thú cưỡi, và giai 1 mở ở cấp 10 — nạp sẵn cả tám giai
 // (1,4 MB) ngay lúc mở trang là tải bảy con thú người ta chưa từng thấy.
