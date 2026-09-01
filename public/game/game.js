@@ -5880,6 +5880,144 @@ function hurtMob(m, dmg, source){
   }
   if (m.hp <= 0) killMob(m, source);
 }
+// ═══════════ PHẦN THƯỞNG KHI HẠ QUÁI — tách QUYẾT ĐỊNH khỏi GHI VÀO ═══════════
+// computeKillRewards() quyết định ĐƯỢC GÌ. applyRewards() ghi vào player và phát phản hồi.
+//
+// Vì sao tách: killMob() trước đây là 232 dòng trộn ba việc — quay số, ghi vào player, và bắn
+// hiệu ứng/âm thanh/chữ nổi — nên không có cách nào trả lời "cú giết này đáng lẽ cho bao nhiêu"
+// mà không đồng thời làm nó xảy ra. Mọi thứ cần câu trả lời đó đều bế tắc: kiểm thử cân bằng,
+// máy chủ tự tính thưởng thay vì tin client, hay chỉ đơn giản là log lại để dò gian lận.
+//
+// HỢP ĐỒNG của computeKillRewards: KHÔNG ghi một byte nào vào `player`, không đụng DOM, không
+// phát âm thanh hay hiệu ứng. Chỉ ĐỌC P và quay `rng`. Gọi hai lần liên tiếp thì player y nguyên.
+// Bài kiểm test_killrewards.js gác đúng điều đó.
+//
+// CHƯA THUẦN HOÀN TOÀN, nói rõ để không ai tưởng nhầm: genItem/genPet/genWing bên trong vẫn tự
+// gọi Math.random() của riêng chúng, nên truyền `rng` có hạt giống vào đây CHƯA đủ để tái lập y
+// hệt một cú giết. Muốn thế thì phải luồn rng xuống cả ba hàm đó — việc riêng, chưa làm.
+function computeKillRewards(m, source, P, rng){
+  const R = rng || Math.random;
+  const d = m.def;
+  const rw = {
+    xp:0, xpMul:1, silver:0, mat:0, khi:0, kills:1,
+    gems:{ tuLa:0, honNguyen:0 }, tienDan:0, bikipVH:0, tamdac:0,
+    noidan:null, mats:{ manh:0, tichMa:0, anTranAi:0, manhCoThan:0 },
+    pets:[], wings:[], items:[], autoSold:[],
+    bossPity:null, firstDrop:false, chinhPhat:false, dropSrc:null, gotThan:false,
+  };
+  // EXP: quái thấp hơn mình >5 cấp thì giảm dần 15%/cấp (tối thiểu 10%) — phạt farm vùng thấp
+  const _diff = P.level - d.lv;
+  rw.xpMul = _diff <= 5 ? 1 : Math.max(0.1, 1 - 0.15*(_diff - 5));
+  rw.xp = Math.round(d.xp * rw.xpMul);
+  rw.silver = Math.round((d.silver[0] + R()*(d.silver[1] - d.silver[0])) * (1 + (P.silverPct || 0)/100));
+  rw.silver += 4;                      // Anima cũ quy đổi 1:2 sang bạc — xem GO_ANIMA
+  rw.khi = 10;                         // Instinct từ chiến đấu
+  if (R() < 0.3) rw.mat = 1;
+  // Thú cưng rơi từ tinh anh (12%) / boss (40%); Cánh từ boss (12%)
+  const _oCon = P.inv.length;
+  let _sotCho = Math.max(0, 30 - _oCon);
+  if (!d.boss && d.elite && R() < 0.12 && _sotCho > 0){
+    const r2 = R(); rw.pets.push(r2 < 0.7 ? 0 : R() < 0.8 ? 1 : 2); _sotCho--;
+  }
+  if (d.boss){
+    if (R() < 0.4 && _sotCho > 0){ rw.pets.push(Math.floor(R()*3)); _sotCho--; }
+    if (R() < 0.12 && _sotCho > 0){ rw.wings.push(Math.floor(R()*2)); _sotCho--; }
+  }
+  // đá quý: Tu La (cấp 3+), Hỗn Nguyên (tinh anh), Đá Thăng Cấp (cấp 5+)
+  if (d.lv >= 3 && R() < 0.15) rw.gems.tuLa = 1;
+  if (d.elite && R() < 0.35) rw.gems.honNguyen = 1;
+  if (d.lv >= 5 && R() < 0.22) rw.tienDan += 1;
+  rw.tienDan += d.bossKind === 'tranai' ? 8 : (d.bossKind === 'thuve' ? 3
+    : (m.type === 'boss' || d.boss) ? 5 : d.elite ? 1 : 0);
+  // Sách Kỹ Năng từ tinh anh/boss
+  const _bkR = d.bossKind === 'tranai' ? 0.35 : (d.bossKind === 'thuve' || d.boss) ? 0.12 : d.elite ? 0.03 : 0;
+  if (_bkR && R() < _bkR) rw.bikipVH = 1;
+  // Tâm Đắc — nguyên liệu vượt mốc cấp chiêu
+  rw.tamdac = d.bossKind ? (2 + Math.floor(R()*2))
+    : (d.boss || m.type === 'boss') ? (1 + Math.floor(R()*2))
+    : (d.elite && R() < 0.3) ? 1 : 0;
+  // Lõi Nguyên Tố theo hệ — tinh anh 30%, boss 100%
+  if (d.el && (d.boss || (d.elite && R() < 0.3))) rw.noidan = d.el;
+  // ── Bảng rơi đồ theo nguồn ──
+  rw.dropSrc = d.huntBoss ? null : d.bossKind === 'tranai' ? 'tranai'
+    : (d.boss || d.bossKind) ? 'thuve' : (d.elite ? 'elite' : 'mob');
+  if (rw.dropSrc){
+    const _dn = mobDropCount(d, rw.dropSrc), _dr = mobDropRate(d, rw.dropSrc);
+    // Ba con đầu đời BẢO ĐẢM rơi một món — tỉ lệ thường 5,99%/con nghĩa là ~17 con mới thấy món
+    // đầu tiên, đúng lúc người chơi mới đang quyết định có ở lại hay không.
+    const _phatDau = (P.kills || 0) <= 3 && !P._daRoiMonDau;
+    for (let i = 0; i < _dn; i++){
+      const _baoDam = _phatDau && i === 0;
+      if (!_baoDam && R() >= _dr + (P.dropBonus || 0)) continue;
+      if (_baoDam) rw.firstDrop = true;
+      const it = genItem(Math.max(1, d.lv + (R() < 0.3 ? 1 : 0)), 0, rw.dropSrc);
+      // Pity đai: Vệ Binh Trụ 8 lần liên tiếp không ra Thần+ → bảo đảm 1 món Thần
+      if (rw.dropSrc === 'thuve' && d.bossKind === 'thuve' && (P.bossPity || 0) >= 8 && it.rarity < 3){
+        it.rarity = 3; rerollItemRarity(it); it._pity = true;
+      }
+      if (it.rarity >= 3) rw.gotThan = true;
+      // Tự bán đồ Phàm — nhưng KHÔNG bán món mang Khắc Ấn: genItem có thể gieo Khắc Ấn lên món
+      // độ hiếm thấp, bán tự động là xoá vĩnh viễn thứ hiếm nhất game vì vài đồng bạc.
+      if (P.autoSell && it.rarity <= 0 && !it.sigil) rw.autoSold.push({ it, gia: 20 + it.rarity*30 + (it.tier||1)*15 });
+      else rw.items.push(it);
+    }
+    if (d.bossKind === 'thuve') rw.bossPity = rw.gotThan ? 0 : (P.bossPity || 0) + 1;
+  }
+  // Vật liệu
+  if (!d.boss && !d.bossKind && R() < (d.elite ? 1 : 0.08)) rw.mats.manh = 1;
+  if (d.bossKind === 'thuve') rw.mats.tichMa = 1 + (R() < 0.5 ? 1 : 0);
+  if (d.bossKind === 'tranai'){
+    rw.mats.manhCoThan = 2;
+    const _today = new Date().toDateString();
+    const cp = P.chinhPhat;
+    if (!cp || cp.date !== _today || cp.count < 1){ rw.chinhPhat = true; rw.mats.anTranAi = 1; }
+  }
+  return rw;
+}
+// Ghi phần thưởng vào player và phát phản hồi. Đây mới là nơi được phép đụng trạng thái.
+function applyRewards(rw, m){
+  gainXp(rw.xp);
+  player.silver += rw.silver;
+  player.mat += rw.mat;
+  player.khi += rw.khi;
+  player.kills += rw.kills;
+  logCombat(`☠ Hạ ${m.def.name} — Nhận: +${rw.xp} EXP${rw.xpMul < 1 ? ` (-${Math.round((1-rw.xpMul)*100)}% chênh cấp)` : ''} +${rw.silver}◈`, rw.xpMul < 1 ? '#c8b888' : '#7ecbff');
+  if (rw.mat) logCombat('+1 ✦ Huyền Thiết', '#9fd0ff');
+  dailyTrack('kills');
+  for (const pi of rw.pets){ player.inv.push(genPet(pi)); addFloat(m.x, m.y-88, `Pet: ${PET_DEFS[pi].name}!`, PET_DEFS[pi].color, 13); }
+  for (const wi of rw.wings){ player.inv.push(genWing(wi)); addFloat(m.x, m.y-114, `${WING_DEFS[wi].name}!`, WING_DEFS[wi].color, 15); }
+  if (rw.gems.tuLa){ player.gems.tuLa += rw.gems.tuLa; logCombat('+1 ◆ Tu La Tinh Thạch', '#e84a6a'); }
+  if (rw.gems.honNguyen){ player.gems.honNguyen += rw.gems.honNguyen; logCombat('+1 ❖ Hỗn Nguyên Thạch', '#b08ae8'); }
+  if (rw.tienDan){ player.tienDan += rw.tienDan; logCombat(`+${rw.tienDan} ◈ Đá Thăng Cấp`, '#7ec850'); }
+  if (rw.bikipVH){ player.bikipVH = (player.bikipVH || 0) + rw.bikipVH; addFloat(m.x, m.y-100, '+1 📜 Sách Kỹ Năng', '#ffb15c', 13); }
+  if (rw.tamdac){ player.tamdac = (player.tamdac || 0) + rw.tamdac; addFloat(m.x, m.y-112, `+${rw.tamdac} 💠 Tâm Đắc`, '#7df9ff', 13); }
+  if (rw.noidan){
+    player.noidan[rw.noidan] = (player.noidan[rw.noidan] || 0) + 1;
+    addFloat(m.x, m.y-88, `+1 ● Lõi Nguyên Tố ${elName(rw.noidan)}`, elColor(rw.noidan), 12);
+    dailyTrack('noidan');
+  }
+  if (rw.firstDrop) player._daRoiMonDau = true;
+  for (const s of rw.autoSold){ player.silver += s.gia; addFloat(m.x, m.y-54, `Tự bán ${s.it.name} +${s.gia}◈`, '#9aa8d4', 11); }
+  for (const it of rw.items){
+    if (it._pity){ delete it._pity; addFloat(m.x, m.y-110, '☘ VẬN MAY TÍCH LŨY — bảo đảm Thần phẩm!', '#7fd8e0', 13); }
+    dropToGround({ k:'item', it }, m.x, m.y);
+  }
+  if (rw.dropSrc) rollJewels(m.def, rw.dropSrc, m.x, m.y);
+  if (rw.bossPity !== null) player.bossPity = rw.bossPity;
+  // Vật liệu vụn về NHẬT KÝ, không bay lên sân khấu: đo thật 300 con thì 229 chữ bay là vật liệu
+  // còn 29 là tên trang bị — mà chữ trang bị lại nhỏ hơn và nhạt hơn. Sân khấu để cho đồ và ngọc.
+  if (rw.mats.manh){ player.mats.manh += rw.mats.manh; logCombat('+1 ❖ Mảnh Trang Bị', '#7ec8d8'); }
+  if (rw.mats.tichMa){ player.mats.tichMa += rw.mats.tichMa; addFloat(m.x, m.y-92, `+${rw.mats.tichMa} ◆ Tịch Ma Thạch`, '#e84a6a', 13); }
+  if (rw.mats.manhCoThan){ player.mats.manhCoThan += rw.mats.manhCoThan; addFloat(m.x, m.y-92, `+${rw.mats.manhCoThan} ◈ Mảnh Cổ Thần`, '#7ecbff', 13); }
+  if (rw.chinhPhat){
+    const _today = new Date().toDateString();
+    if (!player.chinhPhat || player.chinhPhat.date !== _today) player.chinhPhat = { date:_today, count:0 };
+    player.chinhPhat.count++;
+    player.mats.anTranAi += rw.mats.anTranAi;
+    addFloat(m.x, m.y-106, '☬ ẤN TRẤN ẢI — Chinh Phạt hoàn thành (1/ngày)!', '#ffb15c', 15);
+  }
+}
+
 function killMob(m, source){
   m.dead = true; m.deadT = 0.45; // xác tan dần thành mực thay vì biến mất tức thì
   // Cầu Giáp (chiêu Vỡ Giáp) chỉ là mục tiêu bấm có hạn giờ — không exp, không bạc, không đồ,
@@ -5933,114 +6071,8 @@ function killMob(m, source){
   addEffect({ type:'ring', x:m.x, y:m.y, r:m.def.size*3*_kb, color:'#3a332a' });
   if (_kb > 1) addEffect({ type:'ring', x:m.x, y:m.y, r:m.def.size*4.5*_kb, color:m.def.color, big:true });
   for (let i=0;i<Math.round(8*_kb);i++) addEffect({ type:'ink', x:m.x, y:m.y, vx:rnd(-70,70)*_kb, vy:rnd(-90,-20)*_kb, color:m.def.color });
-  // xp & silver (Pet: +EXP% · trang bị: +đồng rơi%)
-  // luật chênh cấp: quái thấp hơn mình >5 cấp → EXP giảm dần 15%/cấp (tối thiểu 10%) — phạt farm vùng thấp, drop giữ nguyên
-  const _diff = player.level - m.def.lv;
-  const _xpMul = _diff <= 5 ? 1 : Math.max(0.1, 1 - 0.15*(_diff - 5));
-  const _xp = Math.round(m.def.xp * _xpMul);
-  gainXp(_xp);
-  const sil = Math.round(rnd(m.def.silver[0], m.def.silver[1]) * (1 + (player.silverPct || 0)/100));
-  player.silver += sil;
-  logCombat(`☠ Hạ ${m.def.name} — Nhận: +${_xp} EXP${_xpMul < 1 ? ` (-${Math.round((1-_xpMul)*100)}% chênh cấp)` : ''} +${sil}◈`, _xpMul < 1 ? '#c8b888' : '#7ecbff');
-  // Pet rơi từ tinh anh (12%) / boss (40%); Cánh từ boss (12%)
-  if (!m.def.boss && m.def.elite && Math.random() < 0.12 && player.inv.length < 30){
-    const pi = Math.random() < 0.7 ? 0 : Math.random() < 0.8 ? 1 : 2;
-    player.inv.push(genPet(pi));
-    addFloat(m.x, m.y-88, `Pet: ${PET_DEFS[pi].name}!`, PET_DEFS[pi].color, 13);
-  }
-  if (m.def.boss){
-    if (Math.random() < 0.4 && player.inv.length < 30){
-      const pi = Math.floor(Math.random()*3);
-      player.inv.push(genPet(pi));
-      addFloat(m.x, m.y-102, `Pet: ${PET_DEFS[pi].name}!`, PET_DEFS[pi].color, 14);
-    }
-    if (Math.random() < 0.12 && player.inv.length < 30){
-      const wi = Math.floor(Math.random()*2);
-      player.inv.push(genWing(wi));
-      addFloat(m.x, m.y-114, `${WING_DEFS[wi].name}!`, WING_DEFS[wi].color, 15);
-    }
-  }
-  if (Math.random() < 0.3){ player.mat++; logCombat('+1 ✦ Huyền Thiết', '#9fd0ff'); }
-  player.kills++;
-  player.khi += 10; // Instinct từ chiến đấu
-  player.silver += 4;  // Anima cũ (2/mạng) quy đổi 1:2 sang bạc — xem GO_ANIMA
-  dailyTrack('kills'); // Mục Tiêu Hôm Nay
-  // gem drops: Tu La (sói+), Hỗn Nguyên (tinh anh/boss), Đá Thăng Cấp (sơn tặc+)
-  if (m.def.lv >= 3 && Math.random() < 0.15){ player.gems.tuLa++; logCombat('+1 ◆ Tu La Tinh Thạch', '#e84a6a'); }
-  if (m.def.elite && Math.random() < 0.35){ player.gems.honNguyen++; logCombat('+1 ❖ Hỗn Nguyên Thạch', '#b08ae8'); }
-  if (m.def.lv >= 5 && Math.random() < 0.22){ player.tienDan++; logCombat('+1 ◈ Đá Thăng Cấp', '#7ec850'); }
-  // Tinh anh & boss rớt thêm Đá Thăng Cấp (Drop v2.0 — gắn vòng farm boss vào Tấn Chức)
-  const _tdB = m.def.bossKind === 'tranai' ? 8 : (m.def.bossKind === 'thuve' ? 3 : (m.type === 'boss' || m.def.boss) ? 5 : m.def.elite ? 1 : 0);
-  if (_tdB){ player.tienDan += _tdB; logCombat(`+${_tdB} ◈ Đá Thăng Cấp`, '#7ec850'); }
-  // Sổ Kỹ Năng: Sách Kỹ Năng rơi từ tinh anh/boss — học kỹ năng phiêu bạt (bấm K)
-  const _bkR = m.def.bossKind === 'tranai' ? 0.35 : (m.def.bossKind === 'thuve' || m.def.boss) ? 0.12 : m.def.elite ? 0.03 : 0;
-  if (_bkR && Math.random() < _bkR){ player.bikipVH = (player.bikipVH || 0) + 1; addFloat(m.x, m.y-100, '+1 📜 Sách Kỹ Năng', '#ffb15c', 13); }
-  // 💠 Tâm Đắc — nguyên liệu đột phá cảnh giới chiêu thức: tinh anh 30%×1 · boss 1-2 · Boss Vùng/Cổng Vực 2-3
-  const _tdR = m.def.bossKind ? (2 + Math.floor(Math.random() * 2)) : (m.def.boss || m.type === 'boss') ? (1 + Math.floor(Math.random() * 2)) : (m.def.elite && Math.random() < 0.3) ? 1 : 0;
-  if (_tdR){ player.tamdac = (player.tamdac || 0) + _tdR; addFloat(m.x, m.y-112, `+${_tdR} 💠 Tâm Đắc`, '#7df9ff', 13); }
-  // Nội Đan yêu thú theo hành — tinh anh 30%, boss 100%
-  if (m.def.el && (m.def.boss || (m.def.elite && Math.random() < 0.3))){
-    player.noidan[m.def.el] = (player.noidan[m.def.el] || 0) + 1;
-    addFloat(m.x, m.y-88, `+1 ● Lõi Nguyên Tố ${elName(m.def.el)}`, elColor(m.def.el), 12);
-    dailyTrack('noidan'); // Mục Tiêu Hôm Nay
-  }
-  // ── Drop v2.0: bảng rơi theo nguồn — quái thường chỉ fodder, đồ tốt từ tinh anh/boss ──
-  // Boss Săn (huntBoss) không rơi theo đường này — phần thưởng Rương do grantHuntBox() cấp riêng
-  const _dsrc = m.def.huntBoss ? null : m.def.bossKind === 'tranai' ? 'tranai' : (m.def.boss || m.def.bossKind) ? 'thuve' : (m.def.elite ? 'elite' : 'mob');
-  const _tbl = _dsrc && DROP_SRC[_dsrc];
-  let _gotThan = false;
-  const _dn = _dsrc ? mobDropCount(m.def, _dsrc) : 0;
-  const _dr = _dsrc ? mobDropRate(m.def, _dsrc) : 0;
-  // Ba con đầu đời của một nhân vật mới BẢO ĐẢM rơi một món. Tỉ lệ thường là 5,99%/con, nên
-  // theo kỳ vọng phải hạ ~17 con mới thấy món đầu tiên — với người chơi mới, đó là gần một phút
-  // đánh nhau mà không có gì rơi ra, đúng lúc họ đang quyết định có ở lại hay không.
-  const _phatDau = (player.kills || 0) <= 3 && !(player._daRoiMonDau);
-  for (let _di = 0; _dsrc && _di < _dn; _di++){
-    if (!(_phatDau && _di === 0) && Math.random() >= _dr + (player.dropBonus || 0)) continue;
-    if (_phatDau && _di === 0) player._daRoiMonDau = true;
-    const it = genItem(Math.max(1, m.def.lv + (Math.random()<0.3?1:0)), 0, _dsrc);
-    // Pity đai: Vệ Binh Trụ 8 lần liên tiếp không ra Thần+ → bảo đảm 1 món Thần
-    if (_dsrc === 'thuve' && m.def.bossKind === 'thuve' && (player.bossPity || 0) >= 8 && it.rarity < 3){
-      it.rarity = 3; rerollItemRarity(it);
-      addFloat(m.x, m.y-110, '☘ VẬN MAY TÍCH LŨY — bảo đảm Thần phẩm!', '#7fd8e0', 13);
-    }
-    if (it.rarity >= 3) _gotThan = true;
-    // Tự động bán đồ Phàm đổi lấy bạc (bật trong Túi Đồ)
-    // Khắc Ấn có thể rơi trên món độ hiếm thấp (genItem roll ngẫu nhiên) — bán tự động
-    // món đó là xoá vĩnh viễn thứ hiếm nhất game vì vài đồng bạc.
-    if (player.autoSell && it.rarity <= 0 && !it.sigil){
-      const v = 20 + it.rarity*30 + (it.tier||1)*15;
-      player.silver += v;
-      addFloat(m.x, m.y-54, `Tự bán ${it.name} +${v}◈`, '#9aa8d4', 11);
-    }
-    else dropToGround({ k:'item', it }, m.x, m.y); // nằm dưới đất, đi ngang qua hoặc bấm J là nhặt
-  }
-  if (_dsrc) rollJewels(m.def, _dsrc, m.x, m.y);
-  if (m.def.bossKind === 'thuve') player.bossPity = _gotThan ? 0 : (player.bossPity || 0) + 1;
-  // Vật liệu Drop v2.0: Mảnh Trang Bị (quái 8%, tinh anh 100%)
-  if (!m.def.boss && !m.def.bossKind && Math.random() < (m.def.elite ? 1 : 0.08)){
-    player.mats.manh++;
-    // Đo thật 300 con: 229 chữ bay là vật liệu vụn, chỉ 29 là tên trang bị — mà chữ trang bị
-    // còn NHỎ HƠN và NHẠT HƠN. Vật liệu về nhật ký, sân khấu để lại cho đồ và ngọc.
-    logCombat('+1 ❖ Mảnh Trang Bị', '#7ec8d8');
-  }
-  // Tịch Ma Thạch từ Vệ Binh Trụ (vé Tấn Phẩm) · Ấn Cổng Vực (Chinh Phạt ngày) + Mảnh Cổ Thần từ Cổng Vực
-  if (m.def.bossKind === 'thuve'){
-    const _tm = 1 + (Math.random() < 0.5 ? 1 : 0);
-    player.mats.tichMa += _tm;
-    addFloat(m.x, m.y-92, `+${_tm} ◆ Tịch Ma Thạch`, '#e84a6a', 13);
-  }
-  if (m.def.bossKind === 'tranai'){
-    player.mats.manhCoThan += 2;
-    addFloat(m.x, m.y-92, '+2 ◈ Mảnh Cổ Thần', '#7ecbff', 13);
-    const _today = new Date().toDateString();
-    if (!player.chinhPhat || player.chinhPhat.date !== _today) player.chinhPhat = { date:_today, count:0 };
-    if (player.chinhPhat.count < 1){
-      player.chinhPhat.count++;
-      player.mats.anTranAi++;
-      addFloat(m.x, m.y-106, '☬ ẤN TRẤN ẢI — Chinh Phạt hoàn thành (1/ngày)!', '#ffb15c', 15);
-    }
-  }
+  // Phần thưởng: QUYẾT ĐỊNH tách khỏi GHI VÀO — xem computeKillRewards() ngay trên killMob().
+  applyRewards(computeKillRewards(m, source, player), m);
   // quests
   const q = QUESTS[questIdx];
   if (q && questState==='active'){
