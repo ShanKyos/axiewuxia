@@ -1666,18 +1666,19 @@ function vhKnockback(m, ang, px){
 // VH_VFX: kỹ năng chủ động · style → drawVfx, proj → drawProjStyled.
 // SECT_VFX: 16 tuyệt chiêu môn phái (8 chiêu chính sx_*_a + 8 trấn phái sx_*_c) — hình ảnh riêng từng phái
 const SECT_VFX = {
-  sx_thieulam_a: { style:'bladewhirl',   c2:'#cfe8ff', spin:1.2 },            // Twisting Slash (Dark Knight) — quét trọn vòng quanh thân
-  sx_thieulam_c: { style:'fist',         c2:'#ffe9a0' },                      // Đại Lực Kim Cương Chưởng — chưởng ấn khổng lồ
+  sx_thieulam_a: { style:'bladewhirl',   c2:'#cfe8ff', spin:1.2, dur:0.7 },   // Twisting Slash (Dark Knight) — quét trọn vòng quanh thân
+  sx_thieulam_c: { style:'stabburst',    c2:'#cfe8ff', dur:0.85 },            // Death Stab (Dark Knight) — chuỗi nhát đâm liên tiếp
   sx_toanchan_a: { style:'flash',        c2:'#d8f4ff', proj:'arrow' },        // Multi-Shot (Sylvan Ranger) — loạt tên bắn tỉa
+  sx_toanchan_b: { style:'icefall',      c2:'#dff4ff', dur:1.0 },             // Ice Arrow (Sylvan Ranger) — phiến băng rơi xuống vỡ tan
   sx_toanchan_c: { style:'hexa',         c2:'#c8ecff', spin:1.5 },            // Thất Tinh Hội Kiếm — trận Bắc Đẩu thất tinh
-  sx_baidasan_a: { style:'flash',        c2:'#b8ff9a', proj:'serpent' },      // Poison (Dark Wizard) — xà tiêu độc
+  sx_baidasan_a: { style:'poisonbloom',  c2:'#b8ff9a', proj:'serpent', dur:1.1 }, // Poison (Dark Wizard) — vũng độc loang ra, sủi bọt
   sx_baidasan_c: { style:'meteor',       c2:'#ffcf7a' },                      // Meteor (Dark Wizard) — vẫn thạch lửa giáng thế
   sx_minhgiao_a: { style:'fireslash',    c2:'#ffcf7a' },                      // Fire Slash (Spellblade) — đao quang cuốn lửa
-  sx_minhgiao_c: { style:'vortex',       c2:'#ff9a5a', spin:2.8 },            // Flame Strike (Spellblade) — vòng xoáy lửa
+  sx_minhgiao_c: { style:'flamewall',    c2:'#ff9a5a', dur:1.15 },            // Flame Strike (Spellblade) — hàng cột lửa dựng lên phía trước
   // QA: Dark Lord (sect id 'bug') chưa từng có entry nào ở đây — cả chiêu chính lẫn Trấn Phái đều rơi
   // về style mặc định chung chung, là lớp DUY NHẤT không có hình ảnh nhận diện riêng khi tung chiêu.
   sx_bug_a:      { style:'windslash',    c2:'#d0e07a' },                      // Force Wave (Dark Lord) — sóng chấn quyền trượng
-  sx_bug_c:      { style:'firelines',    c2:'#ffb15c' },                      // Fire Scream (Dark Lord) — ba vệt lửa quét xuống đất rồi bung nổ
+  sx_bug_c:      { style:'firepillar',   c2:'#ffb15c', dur:1.15 },            // Fire Scream (Dark Lord) — ba vệt lửa chạy ra rồi dựng cột lửa
   sx_vophai_a:   { style:'fist',         c2:'#e8d8a8' },                      // Du Hiệp Quyền — quyền kình
   sx_vophai_c:   { style:'stormhost',    c2:'#e4ebff' },                      // Tứ Hải Giai Phục — sóng chưởng tứ hải
 };
@@ -1687,10 +1688,15 @@ const VH_VFX = {
   dl_darkraven:{ style:'crowswarm', c2:'#ff5a3a' },   // Dark Raven (Dark Lord) — bầy quạ đen xoáy vào
   // Bốn TUYỆT CHIÊU ô 4 (xem SIGNATURE_SKILL) — mỗi chiêu một hình riêng, không dùng chung style
   // mặc định theo kiểu chiêu nữa. Tuyệt chiêu mà bung ra y hệt chiêu thường thì không ai nhớ nổi.
-  dw_evilspirit:    { style:'spiritswarm', c2:'#cfffc0' },  // bầy u linh lượn vào tâm
-  dk_ragefulblow:   { style:'groundburst', c2:'#cfe8ff' },  // nền toác thành tia từ điểm giáng
-  mg_powerslash:    { style:'lightwave',   c2:'#ffe9b0' },  // sóng sáng rời kiếm bay đi
-  dl_chaoticdiseier:{ style:'crowswarm',   c2:'#d8e87a' },  // bầy quạ hỗn loạn
+  dw_evilspirit:    { style:'spiritdragon', c2:'#cfffc0', dur:1.2 }, // hai rồng bóng tối cuộn quanh rồi lao ra
+  dw_lightning:     { style:'boltdown',    c2:'#eaffb0', dur:0.75 }, // sét giáng từ trên trời xuống
+  dw_nova:          { style:'novaburst',   c2:'#fff0b0', dur:1.3 },  // dồn năng lượng rồi mới bung
+  dw_ice:           { style:'icefall',     c2:'#dff4ff', dur:1.0 },  // phiến băng rơi xuống vỡ tan
+  dl_electricspark: { style:'boltdown',    c2:'#fff3a0', dur:0.75 }, // sét giáng, tia con nảy ra
+  mg_flamestrike:   { style:'flamewall',   c2:'#ff9a5a', dur:1.15 }, // hàng cột lửa phía trước
+  dk_ragefulblow:   { style:'groundburst', c2:'#cfe8ff', dur:0.9 },  // nền toác thành tia từ điểm giáng
+  mg_powerslash:    { style:'lightwave',   c2:'#ffe9b0', dur:0.85 }, // sóng sáng rời kiếm bay đi
+  dl_chaoticdiseier:{ style:'crowswarm',   c2:'#d8e87a', dur:0.95 }, // bầy quạ hỗn loạn
   elf_penetration:  { style:'flash',       c2:'#dfffff', proj:'lance' }, // mũi tên xuyên — xem drawProjStyled
 };
 function _vxLine(x1, y1, x2, y2){ ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
@@ -1724,6 +1730,77 @@ function _vxGlyph(x, y, ch, s, col, al){
   ctx.globalAlpha = al; ctx.font = `bold ${Math.round(s)}px "Noto Serif", serif`; ctx.textAlign = 'center';
   ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 3; ctx.strokeText(ch, x, y + s*0.35);
   ctx.fillStyle = col; ctx.fillText(ch, x, y + s*0.35);
+}
+// ── Khối dựng hình cho hoạt ảnh chiêu ────────────────────────────────────────────────────
+// Bản đồ vẽ theo lối 2,5D: nhân vật và quái đứng THẲNG trên điểm chân của chúng. Nên một cột
+// lửa "dựng lên" chính là ngọn lửa vẽ từ điểm chân đi NGƯỢC LÊN trên màn hình — đúng như trong
+// MU, nơi Fire Scream và Flame Strike đều phun cột lửa chứ không phải loang một vòng dưới đất.
+// kk là tiến độ mọc lên 0→1; qua 1 thì cột đứng nguyên độ cao và chỉ còn lay động.
+function _vxFlameCol(x, gy, h, w, kk, ph, c1, c2, al){
+  const H = h * Math.min(1, kk);
+  if (H < 2) return;
+  const lay = (t) => Math.sin(ph + t*5.5) * w * 0.34 * t;   // càng lên cao càng lắc mạnh
+  const than = (ww, col, aa) => {
+    ctx.globalAlpha = aa; ctx.fillStyle = col;
+    ctx.beginPath(); ctx.moveTo(x - ww, gy);
+    for (let i = 1; i <= 6; i++){                            // mép trái, uốn theo chiều cao
+      const t = i/6; ctx.lineTo(x - ww*(1 - t*0.82) + lay(t), gy - H*t);
+    }
+    for (let i = 6; i >= 1; i--){                            // mép phải, đi ngược xuống
+      const t = i/6; ctx.lineTo(x + ww*(1 - t*0.82) + lay(t), gy - H*t);
+    }
+    ctx.closePath(); ctx.fill();
+  };
+  than(w,        c1, al*0.55);                               // quầng ngoài
+  than(w*0.66,   c2, al*0.98);                               // thân lửa
+  than(w*0.28, '#fff6d0', al);                               // lõi trắng nóng
+  ctx.globalAlpha = al*0.5; ctx.fillStyle = c2;              // vũng sáng dưới chân cột
+  ctx.beginPath(); ctx.ellipse(x, gy, w*1.15, w*0.42, 0, 0, 7); ctx.fill();
+  for (let i = 0; i < 3; i++){                               // tàn lửa bay lên khỏi ngọn
+    const t = ((kk*1.5 + i*0.37) % 1);
+    ctx.globalAlpha = al*(1 - t)*0.85; ctx.fillStyle = i % 2 ? '#fff6d0' : c2;
+    ctx.beginPath(); ctx.arc(x + Math.sin(ph + i*2.1)*w*0.7, gy - H - t*h*0.45, 2.6*(1-t) + 1, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+// Thân rồng cuộn: một chuỗi đốt chạy dọc cung tròn, đốt to ở đầu và thuôn dần về đuôi.
+// a0 là góc của ĐẦU rồng, coil là số radian thân trải ra phía sau nó.
+function _vxDragon(cx, cy, a0, rr, coil, seg, sz, c1, c2, al){
+  const pt = (t) => {                                        // t=0 là đầu, t=1 là chót đuôi
+    const ang = a0 + coil*t, r2 = rr*(1 - t*0.16);
+    return [cx + Math.cos(ang)*r2, cy + Math.sin(ang)*r2*0.72];
+  };
+  // THÂN TỐI, VIỀN SÁNG. Bản đầu tô đốt bằng chính màu chiêu: Evil Spirit màu lục nhạt trên bản đồ
+  // tân thủ cũng lục nhạt, nên cả con rồng chìm nghỉm — quay phim lại mới thấy nó vẫn ở đó suốt.
+  // Rồng bóng tối thì thân vốn phải tối; màu chiêu chuyển hết sang viền, đọc được trên mọi nền.
+  ctx.globalAlpha = al*0.9;
+  for (let i = seg; i >= 1; i--){                            // vẽ từ đuôi lên đầu để đầu nằm trên
+    const t = i/seg, [px, py] = pt(t), rs = sz*(1 - t*0.72);
+    ctx.fillStyle = '#100d18';
+    ctx.beginPath(); ctx.arc(px, py, rs, 0, 7); ctx.fill();
+    ctx.strokeStyle = i % 2 ? c1 : c2; ctx.lineWidth = Math.max(1.4, rs*0.32);
+    ctx.beginPath(); ctx.arc(px, py, rs, 0, 7); ctx.stroke();
+  }
+  const [hx, hy] = pt(0), [nx, ny] = pt(0.16);
+  const ha = Math.atan2(hy - ny, hx - nx);                   // đầu hướng theo chiều bay
+  ctx.save(); ctx.translate(hx, hy); ctx.rotate(ha); ctx.scale(1.45, 1.45);
+  ctx.globalAlpha = al;
+  ctx.beginPath();                                            // hàm rồng: mõm nhọn, gáy phình
+  ctx.moveTo(sz*2.1, 0);
+  ctx.lineTo(sz*0.5, -sz*0.95); ctx.lineTo(-sz*0.7, -sz*0.75);
+  ctx.lineTo(-sz*0.7, sz*0.75); ctx.lineTo(sz*0.5, sz*0.95);
+  ctx.closePath();
+  ctx.fillStyle = '#100d18'; ctx.fill();
+  ctx.strokeStyle = c1; ctx.lineWidth = sz*0.38; ctx.lineJoin = 'round'; ctx.stroke();
+  for (const sy of [-1, 1]){                                  // hai sừng ngả về sau
+    ctx.beginPath(); ctx.moveTo(-sz*0.2, sy*sz*0.7);
+    ctx.lineTo(-sz*1.6, sy*sz*1.6); ctx.lineTo(-sz*0.4, sy*sz*0.35); ctx.closePath();
+    ctx.fillStyle = c2; ctx.fill();
+  }
+  ctx.fillStyle = '#fff';                                     // mắt
+  ctx.beginPath(); ctx.arc(sz*0.55, -sz*0.32, sz*0.26, 0, 7); ctx.fill();
+  ctx.restore();
+  ctx.globalAlpha = 1;
 }
 function drawVfx(e, k, a){
   const S = e.style, X = e.x, Y = e.y, F = e.face || 0, R = e.r || 100, C1 = e.c1 || '#fff', C2 = e.c2 || '#fff', G = e.glyph || '✦';
@@ -1997,6 +2074,166 @@ function drawVfx(e, k, a){
     }
     disc(X, Y, R*0.2*(1 - k*0.5), '#fff6d0', a*0.7);
 
+  } else if (S === 'spiritdragon'){ // Evil Spirit — hai con rồng bóng tối cuộn quanh rồi lao ra
+    // Bản trước (spiritswarm) là bảy bóng ma lượn vòng — đúng nghĩa đen cái tên, nhưng trong MU
+    // chiêu này bung ra hai con RỒNG quấn quanh người niệm rồi phóng đi. Chia làm hai nhịp:
+    // nửa đầu cuộn siết vào, nửa sau duỗi thẳng lao ra ngoài.
+    const siet = Math.min(1, k*2);                 // nhịp 1: cuộn vào
+    const lao  = Math.max(0, (k - 0.5)*2);         // nhịp 2: lao ra
+    disc(X, Y, R*(0.3 + siet*0.35), '#0c1408', a*0.34*(1 - lao*0.6));
+    for (let d = 0; d < 2; d++){
+      const goc = d*Math.PI + spin + siet*3.2 + lao*2.4;
+      const ban = R*(0.72 - siet*0.3 + lao*0.95);  // siết vào rồi bung ra xa
+      const cuon = 2.5 - lao*1.9;                  // đang cuộn thì thân xoắn, lao ra thì duỗi thẳng
+      _vxDragon(X, Y, goc, ban, cuon, 18, R*0.095 + 3, d ? C2 : C1, d ? C1 : C2, a*0.95);
+    }
+    for (let i = 0; i < 6; i++){                   // khói âm bốc lên từ chỗ đứng
+      const t = ((k*1.4 + i*0.17) % 1);
+      disc(X + Math.sin(i*2.7 + k*5)*R*0.4, Y - t*R*0.55, (3.4 - t*2)*1.2, i%2 ? C2 : C1, a*(1-t)*0.55);
+    }
+    arc(X, Y, R*(0.35 + k*0.55), 0, 7, C2, 2, a*0.3);
+
+  } else if (S === 'firepillar'){ // Fire Scream — ba vệt lửa chạy ra, tới cuối thì DỰNG CỘT LỬA
+    // Mô tả gốc trong MU: "phun ba vệt lửa xuống đất, các vệt lửa sau đó nổ tung". Bản trước vẽ
+    // đúng ba vệt nhưng cái "nổ" chỉ là một quầng sáng bẹt dưới đất — nhìn ra vũng nước hơn là lửa.
+    // Nay cuối mỗi vệt mọc lên một CỘT lửa thật, cao dần rồi lay động.
+    const chay = Math.min(1, k*2.4);               // nhịp 1: vệt lửa chạy ra
+    const moc  = Math.max(0, (k - 0.34)/0.34);     // nhịp 2: cột lửa mọc lên
+    for (let i = 0; i < 3; i++){
+      const aa = F + (i-1)*0.46, L = R*0.95;
+      const tx = X + Math.cos(aa)*L, ty = Y + Math.sin(aa)*L;
+      ctx.strokeStyle = C1; ctx.lineWidth = 13*(1 - k*0.4); ctx.globalAlpha = a*0.3;
+      ctx.beginPath(); ctx.moveTo(X, Y);
+      ctx.lineTo(X + Math.cos(aa)*L*chay, Y + Math.sin(aa)*L*chay); ctx.stroke();
+      ctx.strokeStyle = C2; ctx.lineWidth = 6*(1 - k*0.4); ctx.globalAlpha = a*0.85; ctx.stroke();
+      if (moc > 0)
+        _vxFlameCol(tx, ty, R*1.05, R*0.22, moc*1.5, k*9 + i*2.2, C1, C2, a);
+    }
+    disc(X, Y, R*0.18*(1 - k*0.4), '#fff6d0', a*0.7);
+
+  } else if (S === 'flamewall'){ // Flame Strike — một HÀNG cột lửa dựng lên phía trước
+    // MU tả: "vung vũ khí về hướng chỉ định, gây sát thương lửa lên nhiều mục tiêu". Nên đây là
+    // một bức tường lửa quét về phía trước, không phải vòng xoáy tại chỗ (style vortex cũ).
+    for (let i = 0; i < 5; i++){
+      const lech = (i - 2) * 0.30;
+      const aa = F + lech, L = R*(0.5 + Math.abs(lech)*0.32);
+      const px = X + Math.cos(aa)*L, py = Y + Math.sin(aa)*L;
+      const tre = i === 2 ? 0 : Math.abs(i - 2)*0.11;        // giữa mọc trước, hai bên theo sau
+      const kk = (k - tre) / (0.42 - tre*0.2);
+      if (kk <= 0) continue;
+      _vxFlameCol(px, py, R*(1.1 - Math.abs(lech)*0.55), R*0.2, kk, k*8 + i*1.9, C1, C2, a);
+    }
+    ctx.strokeStyle = C2; ctx.lineWidth = 4; ctx.globalAlpha = a*0.5;  // vệt quét dưới chân tường
+    ctx.beginPath(); ctx.arc(X, Y, R*0.6, F - 0.78, F + 0.78); ctx.stroke();
+    ctx.globalAlpha = 1;
+
+  } else if (S === 'boltdown'){ // Lightning / Electric Spark — sét giáng TỪ TRÊN TRỜI xuống
+    // Style flash cũ chỉ loè một vòng cung quanh người niệm, không ai đọc ra đó là sét. Sét thì
+    // phải đến từ trên cao và đánh xuống một điểm — nhịp đó mới nói được "sét".
+    const roi = Math.min(1, k*3.2);                 // tia sét lao xuống rất nhanh
+    const no  = Math.max(0, (k - 0.3)/0.7);
+    for (let i = 0; i < 3; i++){
+      const px = X + Math.cos(F)*R*(0.4 + i*0.28), py = Y + Math.sin(F)*R*(0.4 + i*0.28)*0.7;
+      const cao = R*1.5;
+      if (roi > 0.02){
+        ctx.globalAlpha = a*(1 - no*0.75);
+        _vxBolt(px, py - cao, Math.PI/2, cao*roi, R*0.13, i % 2 ? C2 : C1);
+      }
+      if (no > 0){
+        disc(px, py, R*0.3*no, C2, a*(1 - no)*0.8);
+        arc(px, py, R*0.34*no, 0, 7, C1, 3*(1-no) + 1, a*(1 - no));
+        for (let j = 0; j < 4; j++){                 // tia con nảy ra khỏi điểm chạm
+          const aj = j*1.57 + i;
+          ctx.globalAlpha = a*(1 - no)*0.7; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.8;
+          _vxLine(px, py, px + Math.cos(aj)*R*0.4*no, py + Math.sin(aj)*R*0.26*no);
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+
+  } else if (S === 'stabburst'){ // Death Stab — chuỗi nhát đâm liên tiếp, không phải một cú
+    // Tên chiêu trong MU ghi rõ "gây HAI nấc sát thương". Một vòng cung tĩnh không nói được điều
+    // đó; ba nhát đâm nối nhau theo thời gian thì nói được.
+    for (let i = 0; i < 3; i++){
+      const kk = (k - i*0.16) / 0.34;
+      if (kk <= 0 || kk >= 1) continue;
+      const L = R*(0.25 + kk*0.85), lech = (i - 1)*0.17;
+      const aa = F + lech;
+      const tx = X + Math.cos(aa)*L, ty = Y + Math.sin(aa)*L*0.8;
+      ctx.globalAlpha = a*(1 - kk)*0.95;
+      ctx.strokeStyle = i === 1 ? C1 : C2; ctx.lineWidth = 7 - i*1.6; ctx.lineCap = 'round';
+      _vxLine(X + Math.cos(aa)*R*0.2, Y + Math.sin(aa)*R*0.16, tx, ty);
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.2; _vxLine(X + Math.cos(aa)*R*0.3, Y + Math.sin(aa)*R*0.24, tx, ty);
+      ctx.fillStyle = '#fff';                        // chớp sáng ở mũi nhát đâm
+      ctx.beginPath(); ctx.moveTo(tx + Math.cos(aa)*10, ty + Math.sin(aa)*10);
+      ctx.lineTo(tx + Math.cos(aa + 2.1)*9, ty + Math.sin(aa + 2.1)*9);
+      ctx.lineTo(tx + Math.cos(aa - 2.1)*9, ty + Math.sin(aa - 2.1)*9);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+  } else if (S === 'novaburst'){ // Nova — DỒN năng lượng vào tâm rồi mới bung ra
+    // "Chiêu mạnh nhất trong game" mà bung ra ngay khung đầu thì không khác gì mọi chiêu diện
+    // rộng khác. Sức nặng nằm ở nhịp dồn: nửa giây các vòng siết vào trước khi nổ.
+    const don = Math.min(1, k/0.45), no = Math.max(0, (k - 0.45)/0.55);
+    if (no <= 0){
+      for (let i = 0; i < 5; i++){                   // các vòng siết vào tâm
+        const t = ((don + i*0.2) % 1);
+        arc(X, Y, R*(1.05 - t*0.85), 0, 7, i % 2 ? C1 : C2, 3.4, a*t*0.85);
+      }
+      disc(X, Y, R*0.1 + don*R*0.16, '#fff', a*don);
+    } else {
+      disc(X, Y, R*0.42*(1 - no), '#fff', a*(1 - no));
+      for (let i = 0; i < 3; i++){                   // ba lớp sóng nổ nối nhau
+        const t = Math.max(0, no - i*0.14);
+        if (t <= 0) continue;
+        arc(X, Y, R*t*1.15, 0, 7, i ? C2 : C1, (9 - i*2.5)*(1 - t), a*(1 - t)*0.95);
+      }
+      for (let i = 0; i < 12; i++){                  // tia bắn ra tứ phía
+        const aa = i*0.5236;
+        ctx.globalAlpha = a*(1 - no)*0.8; ctx.strokeStyle = i % 2 ? C1 : '#fff'; ctx.lineWidth = 3;
+        _vxLine(X + Math.cos(aa)*R*no*0.5, Y + Math.sin(aa)*R*no*0.5*0.8,
+                X + Math.cos(aa)*R*no*1.1, Y + Math.sin(aa)*R*no*1.1*0.8);
+      }
+    }
+    ctx.globalAlpha = 1;
+
+  } else if (S === 'icefall'){ // Ice — phiến băng KẾT TRÊN CAO rồi rơi xuống vỡ tan
+    for (let i = 0; i < 7; i++){
+      const seed = i*2.39;
+      const px = X + Math.cos(seed)*R*0.72, gy = Y + Math.sin(seed)*R*0.42;
+      const kk = (k - i*0.055) / 0.5;
+      if (kk <= 0) continue;
+      if (kk < 1){                                   // phiến băng đang rơi
+        const py = gy - R*0.95*(1 - kk);
+        ctx.save(); ctx.translate(px, py); ctx.rotate(seed + kk*2);
+        ctx.globalAlpha = a*0.95; ctx.fillStyle = i % 2 ? C1 : C2;
+        ctx.beginPath(); ctx.moveTo(0, -9); ctx.lineTo(5, 3); ctx.lineTo(0, 10); ctx.lineTo(-5, 3);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.globalAlpha = a*0.8;
+        ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(2, 2); ctx.lineTo(0, 7); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      } else {                                       // đã chạm đất, vỡ thành hoa băng
+        const v = Math.min(1, (kk - 1)*2.6);
+        _vxFlake(px, gy, 5 + v*11, C2, a*(1 - v)*0.9);
+        arc(px, gy, 4 + v*15, 0, 7, C1, 2, a*(1 - v)*0.7);
+      }
+    }
+    ctx.globalAlpha = 1;
+
+  } else if (S === 'poisonbloom'){ // Poison — vũng độc LOANG RA rồi sủi bọt
+    const loang = Math.min(1, k*1.8);
+    ctx.globalAlpha = a*0.3; ctx.fillStyle = C1;
+    ctx.beginPath(); ctx.ellipse(X, Y, R*0.85*loang, R*0.5*loang, 0, 0, 7); ctx.fill();
+    arc(X, Y, R*0.85*loang, 0, 7, C2, 2.5, a*0.6);
+    for (let i = 0; i < 9; i++){                     // bọt độc nổi lên rồi vỡ
+      const t = ((k*1.6 + i*0.111) % 1);
+      const seed = i*1.87;
+      const px = X + Math.cos(seed)*R*0.62*loang, py = Y + Math.sin(seed)*R*0.36*loang;
+      disc(px, py - t*R*0.4, (4.5 - t*3)*1.1, i % 3 ? C2 : '#ffffff', a*(1 - t)*0.85);
+    }
+    ctx.globalAlpha = 1;
+
   } else if (S === 'crowswarm'){ // Dark Raven (Dark Lord) — bầy quạ đen xoáy vào, cánh nhọn xé gió
     disc(X, Y, R*(0.5 + k*0.2), '#0a0612', a*0.35);
     for (let i = 0; i < 8; i++){
@@ -2081,19 +2318,23 @@ function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
   const c = VH_VFX[id] || SECT_VFX[id] || null;
   const col = v.color || '#7ecbff', c2 = (c && c.c2) || '#ffffff', glyph = v.glyph || '✦';
   const style = (c && c.style) || ({ cone:'crescents', cast:'flash', aoe:'suns', dash:'wuxing', buff:'vajra' })[phase] || 'flash';
+  // Thời lượng mặc định 0,4-0,7 giây đủ cho một hình nở ra rồi tắt, nhưng KHÔNG đủ cho hoạt ảnh
+  // có nhịp: cột lửa phải mọc lên rồi mới lay, rồng phải cuộn xong mới lao ra, Nova phải dồn
+  // trước khi nổ. Chiêu nào có hoạt ảnh nhiều nhịp thì khai `dur` riêng trong bảng VFX.
+  const _d = (t) => (c && c.dur) || t;
   if (phase === 'cone'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:0.55, spin:(c && c.spin) || 0 });
+    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.55), spin:(c && c.spin) || 0 });
     for (let i = 0; i < 5; i++) addEffect({ type:'ink', x:player.x + Math.cos(ang)*rnd(30,90), y:player.y + Math.sin(ang)*rnd(30,90), vx:rnd(-30,30), vy:rnd(-60,-10), color:c2 });
   } else if (phase === 'cast'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:0.4 });
+    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.4) });
   } else if (phase === 'aoe'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:0.7, big:true, spin:(c && c.spin) || 0 });
+    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.7), big:true, spin:(c && c.spin) || 0 });
     addEffect({ type:'vfx', style:'shock', x:player.x, y:player.y, face:0, r:R, c1:col, c2, glyph, dur:0.5 });
   } else if (phase === 'dash'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:0.6, x0, y0 });
+    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.6), x0, y0 });
     addEffect({ type:'vfx', style:'shock', x:player.x, y:player.y, face:0, r:80, c1:col, c2, glyph, dur:0.45 });
   } else if (phase === 'buff'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:0, r:R, c1:col, c2, glyph, dur:1.0, big:true, spin:(c && c.spin) || 0 });
+    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:0, r:R, c1:col, c2, glyph, dur:_d(1.0), big:true, spin:(c && c.spin) || 0 });
   }
 }
 
