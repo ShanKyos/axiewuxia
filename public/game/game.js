@@ -3324,7 +3324,7 @@ window.upgradeThanBinh = function(){
   if (tb.tier >= TB_MAX_TIER){ addFloat(player.x, player.y-56, 'Thần Binh đã THỨC TỈNH — tối đa!', '#ffe9a8', 13); return; }
   const c = tbCost(tb.tier);
   if (tbNoidanTotal() < c.noidan || player.mat < c.mat){
-    addFloat(player.x, player.y-56, `Thiếu nguyên liệu: cần ${c.noidan} Nội Đan + ${c.mat} Tinh Thạch`, '#ff9a6a', 12);
+    addFloat(player.x, player.y-56, `Thiếu nguyên liệu: cần ${c.noidan} Lõi Nguyên Tố + ${c.mat} Tinh Thạch`, '#ff9a6a', 12);
     AudioSys.sfx('ui', 0.4); return;
   }
   tbConsumeNoidan(c.noidan); player.mat -= c.mat;
@@ -5021,7 +5021,7 @@ function killMob(m, source){
   // Nội Đan yêu thú theo hành — tinh anh 30%, boss 100%
   if (m.def.el && (m.def.boss || (m.def.elite && Math.random() < 0.3))){
     player.noidan[m.def.el] = (player.noidan[m.def.el] || 0) + 1;
-    addFloat(m.x, m.y-88, `+1 ● Nội Đan ${elName(m.def.el)}`, elColor(m.def.el), 12);
+    addFloat(m.x, m.y-88, `+1 ● Lõi Nguyên Tố ${elName(m.def.el)}`, elColor(m.def.el), 12);
     dailyTrack('noidan'); // Mục Tiêu Hôm Nay
   }
   // ── Drop v2.0: bảng rơi theo nguồn — quái thường chỉ fodder, đồ tốt từ tinh anh/boss ──
@@ -5320,7 +5320,7 @@ function spawnSlash(x, y, face, s, color, glow){
 // P0: Hồ Lô Thuốc — hồi 40% max HP, cooldown 20s (phím R)
 function usePotion(){
   if (!player || dead) return;
-  if (player.potions <= 0){ addFloat(player.x, player.y-40, 'Hết Hồ Lô Thuốc — mua ở Thương Nhân!', '#8a8a8a', 12); AudioSys.sfx('ui', 0.4); return; }
+  if (player.potions <= 0){ addFloat(player.x, player.y-40, 'Hết Bình Thuốc Đỏ — mua ở Thương Nhân!', '#8a8a8a', 12); AudioSys.sfx('ui', 0.4); return; }
   if (player.potionCd > 0){ addFloat(player.x, player.y-40, `Thuốc còn hồi ${Math.ceil(player.potionCd)}s`, '#8a8a8a', 11); return; }
   if (player.hp >= player.maxHp){ addFloat(player.x, player.y-40, 'Máu đã đầy!', '#8a8a8a', 11); return; }
   player.potions--; player.potionCd = 20;
@@ -5528,7 +5528,7 @@ window.goToBeacon = function(){
   if (b.map !== curMap) travelTo(b.map);
   else {
     if (b.npcId) npcTalkTarget = b.npcId; // đích là NPC: tới nơi tự mở lời thoại luôn, không cần bấm E
-    setMoveTarget(b.x, b.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + b.label + ' — khinh công tự đưa tới!', '#8fd18f', 13);
+    setMoveTarget(b.x, b.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + b.label + ' — nhân vật sẽ tự chạy tới!', '#8fd18f', 13);
   }
 };
 window.goQuest = function(){
@@ -5539,7 +5539,7 @@ window.goQuest = function(){
   if (t.map !== curMap) travelTo(t.map);
   else {
     if (t.npcId) npcTalkTarget = t.npcId;
-    setMoveTarget(t.x, t.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + t.label + ' — khinh công tự đưa tới!', '#8fd18f', 13);
+    setMoveTarget(t.x, t.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + t.label + ' — nhân vật sẽ tự chạy tới!', '#8fd18f', 13);
   }
   saveGame();
 };
@@ -5552,7 +5552,7 @@ window.goQuestSide = function(id){
   if (t.map !== curMap) travelTo(t.map);
   else {
     if (t.npcId) npcTalkTarget = t.npcId;
-    setMoveTarget(t.x, t.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + t.label + ' — khinh công tự đưa tới!', '#7fd4ff', 13);
+    setMoveTarget(t.x, t.y); addFloat(player.x, player.y - 56, '🧭 Đã ghim: ' + t.label + ' — nhân vật sẽ tự chạy tới!', '#7fd4ff', 13);
   }
   saveGame();
 };
@@ -6037,7 +6037,7 @@ function update(dt){
     // thay vì cứ để auto tiếp tục lao vào ăn đòn tới chết.
     if (player.potions <= 0 && player.hp < player.maxHp*0.2){
       player.auto = false; updateAutoBtn();
-      zoneBanner = { text:'⚠ AUTO ĐÃ TỰ TẮT', sub:'Hết Hồ Lô Thuốc & máu xuống thấp — tắt AUTO để tránh chết oan. Mua thêm thuốc rồi bật lại!', color:'#ff7a6a', t:5 };
+      zoneBanner = { text:'⚠ AUTO ĐÃ TỰ TẮT', sub:'Hết Bình Thuốc Đỏ & máu xuống thấp — tắt AUTO để tránh chết oan. Mua thêm thuốc rồi bật lại!', color:'#ff7a6a', t:5 };
       AudioSys.sfx('hurt', 0.5);
     }
   }
@@ -10122,7 +10122,7 @@ function renderChar(){
     ${tbMax
       ? `<div style="font-size:11.5px;color:#ffe9a8;margin-top:4px">Hình thái cuối — thần binh rực rỡ tối đa ✦</div>`
       : `<button class="mini-btn" style="margin-top:6px;border-color:${tbD.color};color:${tbD.color}" onclick="upgradeThanBinh()">Luyện lên tầng ${tbTier+1}【${TB_TIER_NAMES[tbTier]}】</button>
-         <div style="font-size:11px;color:#7a86ad;margin-top:3px">Cần: ${tbC.noidan} Nội Đan (có ${tbNoidanTotal()}) + ${tbC.mat} Tinh Thạch (có ${p.mat})</div>`}
+         <div style="font-size:11px;color:#7a86ad;margin-top:3px">Cần: ${tbC.noidan} Lõi Nguyên Tố (có ${tbNoidanTotal()}) + ${tbC.mat} Tinh Thạch (có ${p.mat})</div>`}
   </div>`;
   html += `<div class="stat-sec">CHIÊU THỨC</div>`;
   html += `<div class="stat-row"><span>1 — ${sect.skillA.name}</span><b>${p.level>=2?'×'+sect.skillA.mult:'Cấp 2'}</b></div>`;
@@ -11404,7 +11404,7 @@ function renderTayTuy(){
   </div>`;
   html += `<div class="bonus-list">Tẩy Tủy sẽ:<br>
     • Đưa cấp độ về <b>1</b>, EXP về 0<br>
-    • <b style="color:#7ec850">Giữ nguyên</b> trang bị, Ascension cảnh giới, kỹ năng đã học, danh hiệu, điểm dịch chuyển…<br>
+    • <b style="color:#7ec850">Giữ nguyên</b> trang bị, Ascension bậc, kỹ năng đã học, danh hiệu, điểm dịch chuyển…<br>
     • Cộng thêm <b style="color:#ffd76a">+2%</b> Công Kích &amp; Sinh Lực vĩnh viễn (→ tổng ${nextBonus}%)</div>`;
   if (player.level < MAX_LV){
     html += `<div style="padding:14px;font-size:13px;text-align:center;color:#9aa8d4">Cần đạt <b style="color:#7ecbff">cấp ${MAX_LV}</b> (Tối đa) mới Tẩy Tủy được.<br>Cấp hiện tại: ${player.level}</div>`;
@@ -13570,7 +13570,7 @@ function matTip(name, desc, val){
   return t.replace(/"/g, '&quot;');
 }
 // Túi đồ chia TAB. Trước đây nó xếp NĂM kho khác nhau vào một cuộn dọc — vật liệu, tứ châu,
-// bảo hạp, nội đan, rồi mới tới trang bị — nên thứ người ta mở túi để xem lại nằm cuối cùng,
+// bảo hạp, lõi nguyên tố, rồi mới tới trang bị — nên thứ người ta mở túi để xem lại nằm cuối cùng,
 // phải cuộn qua hơn một màn hình mới thấy. Nay trang bị đứng đầu và mặc định.
 const BAG_TABS = [
   { id:'gear', name:'Trang Bị' },
@@ -13657,7 +13657,7 @@ function bagSecBox(){
     const cnt = (player.noidan && player.noidan[el2]) || 0;
     const nh = ELEM[el2], ef = ND_EFFECT[el2];
     h += `<div class="mat-row"><span style="color:${nh.color};width:20px;text-align:center;font-size:13px">${nh.glyph}</span>
-      <span style="flex:1">Nội Đan ${elName(el2)} <span style="opacity:.55;font-size:11px">— ${ef.desc}</span></span>
+      <span style="flex:1">Lõi Nguyên Tố ${elName(el2)} <span style="opacity:.55;font-size:11px">— ${ef.desc}</span></span>
       <b style="color:${nh.color};margin-right:8px">${cnt}</b>
       <button class="mini-btn" ${cnt > 0 && ndUsed < 3 ? '' : 'disabled'} onclick="swallowNoidan('${el2}')">Thôn Phệ</button></div>`;
   }
@@ -14138,7 +14138,7 @@ function applySkillIcons(){
 // ---------- Hệ thống cửa hàng — mỗi NPC một quầy hàng riêng ----------
 const SHOPS = {
   duoclao: { quote:'"Thuốc bổ hay thuốc độc — khác nhau ở liều lượng thôi, khách quân ạ."', junk:true, rows:[
-    { id:'thuoc',     name:'🧪 Hồ Lô Thuốc',        price:150, desc:'Hồi 40% máu tức thì (phím R) — túi đựng tối đa 5 lọ' },
+    { id:'thuoc',     name:'🧪 Bình Thuốc Đỏ',        price:150, desc:'Hồi 40% máu tức thì (phím R) — túi đựng tối đa 5 lọ' },
     { id:'trithuong', name:'✚ Trị Thương Toàn Phần', price:100, desc:'Nhà Giả Kim tự tay bào chế thuốc — hồi đầy HP ngay lập tức' },
     { id:'tukhi',     name:'◎ Lọ Mana',              price:80,  desc:'Hồi đầy Mana (tài nguyên tung chiêu) ngay lập tức' },
     { id:'loidon',    name:'⚡ Bùa Chắn Sét',           price:600, desc:'5 phút giảm 40% sát thương thiên lôi — mang theo khi vào vùng bão' },
@@ -14520,7 +14520,7 @@ el('is-skip').addEventListener('click', closeIntro);
 
 // ═══════════ HƯỚNG DẪN TÂN THỦ TỪNG BƯỚC ═══════════
 const TUT_STEPS = [
-  { key:'move',  txt:'Bấm <b>chuột phải</b> trên nền đất hoặc bấm vào <b>minimap</b> — nhân vật sẽ tự vận khinh công chạy tới đó, hãy thử một lần', },
+  { key:'move',  txt:'Bấm <b>chuột phải</b> trên nền đất hoặc bấm vào <b>minimap</b> — nhân vật sẽ tự chạy tới đó, hãy thử một lần', },
   { key:'npc',   txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
   { key:'map',   txt:'Nhấn <b>M</b> mở bản đồ → <b>Dịch Chuyển</b> tới <b>Petalshade Isle</b> để săn Chimera' },
   { key:'kill',  txt:'Nhấn <b>SPACE</b> để đánh quái gần nhất — hãy hạ 1 con <b>Axie Heo Rừng</b>' },
@@ -14833,7 +14833,7 @@ function renderSettings(){
     <div class="set-row"><span>🌐 Ngôn ngữ / Language</span><button class="mini-btn" onclick="window.ghhaSwitchLang && window.ghhaSwitchLang()">${(window.ghhaLang && window.ghhaLang() === 'en') ? '🇻🇳 Tiếng Việt' : '🇬🇧 English'}</button></div>
     <div class="set-row" style="border-bottom:none;justify-content:center"><b style="color:#6ae88a;font-size:12px">— ⚔ AUTO FARM (phím Z) —</b></div>
     <div class="set-row"><span>🗡 Tự tung kỹ năng trên taskbar</span>${togA('skill')}</div>
-    <div class="set-row"><span>🧪 Tự uống Hồ Lô Thuốc</span>${togA('potion')}</div>
+    <div class="set-row"><span>🧪 Tự uống Bình Thuốc Đỏ</span>${togA('potion')}</div>
     <div class="set-row"><span>❤ Uống thuốc khi HP dưới</span>${sldA('potionPct', 10, 80, 5, _acS.potionPct + '%')}</div>
     <div class="set-row"><span>🎯 Tầm quét quanh điểm neo</span>${sldA('range', 200, 700, 10, _acS.range + 'px')}</div>
     <div class="set-row"><span>👹 Auto đánh cả Boss <i>(nguy hiểm — mặc định tắt, boss tự mình quyết!)</i></span>${togA('boss')}</div>
@@ -15041,7 +15041,7 @@ QUESTS.push(
 const SIDE_QUESTS = [
   // ── Học hệ thống — mỗi NV dạy đúng 1 cơ chế nâng cấp nhân vật ──
   { id:'s_sys2', npc:'monkhach',  map:'ngoai',      reqLv:11,  reqMain:10, name:'Trại Ngựa Ngoại Ô',      desc:'Bắt 3 Tuấn Mã Hoang ngoài đồng cỏ Outskirts (rượt đến kiệt sức rồi bấm E) để có thú cưỡi đầu tiên.', type:'catch', need:3, rew:{xp:1800, silver:300, mat:2, thau:1} },
-  { id:'s_sys3', npc:'quachtinh', map:'tuongduong', reqLv:12,  reqMain:10, name:'Vũ Khí Của Riêng Ngươi', desc:'Mỗi lớp đều có một Thần Binh đồng hành — xem ở Nhân Vật → Thông Tin. Hãy nâng nó lên tầng kế tiếp bằng Nội Đan và Tinh Thạch.', type:'thanbinh', need:1, rew:{xp:2000, silver:300, mat:3} },
+  { id:'s_sys3', npc:'quachtinh', map:'tuongduong', reqLv:12,  reqMain:10, name:'Vũ Khí Của Riêng Ngươi', desc:'Mỗi lớp đều có một Thần Binh đồng hành — xem ở Nhân Vật → Thông Tin. Hãy nâng nó lên tầng kế tiếp bằng Lõi Nguyên Tố và Tinh Thạch.', type:'thanbinh', need:1, rew:{xp:2000, silver:300, mat:3} },
   { id:'s_sys4', npc:'monkhach',  map:'ngoai',      reqLv:17,  reqMain:12, name:'Thu Phục Linh Thú',      desc:'Cần Phong Linh Phù (mua ở Vũ Khí Phường). Đánh một tinh anh xuống dưới 40% máu rồi thu phục nó làm Linh Thú đồng hành.', type:'tame', need:1, rew:{xp:2500, silver:350, mat:2} },
   { id:'s_sys5', npc:'quachtinh', map:'tuongduong', reqLv:19,  reqMain:12, name:'Lò Hỗn Loạn',            desc:'Dư ít nhất 3 món cùng phẩm? Mang đến Lò Rèn Hoàng Gia, ném vào Lò Hỗn Loạn thử vận may lên phẩm cao hơn.', type:'chaos', need:1, rew:{xp:3500, silver:450, mat:3} },
   { id:'s_sys7', npc:'quachtinh', map:'tuongduong', reqLv:32,  reqMain:17, name:'Vườn Dược Nhà Riêng',     desc:'Ghé Nhà Riêng (gặp Quản Gia), gieo một luống dược viên rồi quay lại thu hoạch.', type:'garden', need:1, rew:{xp:14000, silver:1000, mat:3} },
@@ -15922,7 +15922,7 @@ const TRAITS = [
   { id:'longtich',  name:'Long Tích Hổ Bộ',     tier:'huyen', glyph:'🐉', desc:'+5% Né Tránh',                              late:p=>{ p.eva = Math.min(0.45, p.eva+0.05); } },
   { id:'doanngoc',  name:'Đoạn Ngọc Thủ',       tier:'huyen', glyph:'🎯', desc:'Venom Dart +15% ST · phá khiên lâu thêm 4s',    late:p=>{ p.amkhiPct += 0.15; p.shieldBonus += 4; } },
   { id:'sattam',    name:'Sát Tâm',             tier:'huyen', glyph:'☾', desc:'Giết Du Hiệp không tăng Tội Ác',            late:p=>{ p.traitSatTam = true; } },
-  { id:'duocthe',   name:'Dược Thể',            tier:'huyen', glyph:'🧪', desc:'Hồ Lô Thuốc hồi 55% máu (thay 40%)',        late:p=>{ p.potionPct = 0.55; } },
+  { id:'duocthe',   name:'Dược Thể',            tier:'huyen', glyph:'🧪', desc:'Bình Thuốc Đỏ hồi 55% máu (thay 40%)',        late:p=>{ p.potionPct = 0.55; } },
   { id:'vohon',     name:'Võ Hồn',              tier:'thien', glyph:'⚔', desc:'Tấn Chức +12% Sát Thương',                 late:p=>{ p.skillDmgPct += 0.12; } },
   { id:'thienmenh', name:'Thiên Mệnh',          tier:'thien', glyph:'◑', desc:'Mỗi màn chơi 1 lần: chết hồi sinh tại chỗ 50% máu', late:p=>{ p.traitRevive = true; } },
   { id:'kymach',    name:'Khai Mở Mạch Lực',   tier:'thien', glyph:'🌊', desc:'Đả thông Instinct Channels +25% tỉ lệ',             late:p=>{ p.traitMerRate = 1.25; } },
@@ -16065,9 +16065,9 @@ function rollKyngo(){
     player.mat += n;
     text = 'KHÁM PHÁ · Khoáng Mạch'; sub = `Đá dưới chân lóe sáng — nhặt được ${n}✦ Huyền Thiết!`; color = '#9fd0ff';
   } else if (r < 0.48){ // Hồ lô lạc
-    if (player.potions < 5){ player.potions++; sub = 'Nhặt được 1 🧪 Hồ Lô Thuốc còn nguyên!' ; }
+    if (player.potions < 5){ player.potions++; sub = 'Nhặt được 1 🧪 Bình Thuốc Đỏ còn nguyên!' ; }
     else { player.silver += 100; sub = 'Hồ lô đầy — đổi lấy 100◈!'; }
-    text = 'KHÁM PHÁ · Hồ Lô Lạc';
+    text = 'KHÁM PHÁ · Bình Thuốc Rơi';
   } else if (r < 0.64 && mdK.type !== 'safe'){ // Mai phục — khu an toàn tuyệt đối không có
     const mobType = (mdK.packs && mdK.packs.length) ? mdK.packs[Math.floor(Math.random()*mdK.packs.length)].mob : 'bandit';
     for (let i = 0; i < 2; i++){
@@ -16623,7 +16623,7 @@ window.swallowNoidan = function(el2){
   player.ndBonus[ef.k] = (player.ndBonus[ef.k] || 0) + ef.v;
   player.ndCount = ndToday() + 1;
   calcDerived();
-  addFloat(player.x, player.y-50, `Thôn phệ Nội Đan ${el2}: ${ef.desc.split(' mỗi')[0]} VĨNH VIỄN!`, ELEM[el2].color, 14);
+  addFloat(player.x, player.y-50, `Hấp Thụ Lõi Nguyên Tố ${el2}: ${ef.desc.split(' mỗi')[0]} VĨNH VIỄN!`, ELEM[el2].color, 14);
   addEffect({ type:'ring', x:player.x, y:player.y, r:60, color:ELEM[el2].color });
   AudioSys.sfx('levelup', 0.5);
   saveGame(); renderBag();
@@ -16729,10 +16729,10 @@ function renderPet(){
       <div style="font-size:13px;line-height:2;color:#e4ebff">
         <b style="color:${nh.color};font-size:15px">${nh.glyph} ${p.name}</b>${tier > 0 ? ` <span style="color:#7ecbff">· Tinh Anh bậc ${tier}</span>` : ''} · hệ ${elName(p.el)} · C${p.lv}<br>
         Sức mạnh: <b style="color:#7ecbff">${petDmg()} ST</b> mỗi 1.2s — tự săn quái quanh ngươi<br>
-        Đã cho ăn: <b>${p.feed || 0}</b> nội đan ${`(còn ${10 - (p.feed || 0)%10} viên nữa tiến hóa)`}
+        Đã cho ăn: <b>${p.feed || 0}</b> lõi nguyên tố ${`(còn ${10 - (p.feed || 0)%10} viên nữa tiến hóa)`}
       </div>
       <div class="forge-actions">
-        <button class="mini-btn" onclick="feedPet()">● Cho Ăn Nội Đan (${elName(p.el)} tính ×2)</button>
+        <button class="mini-btn" onclick="feedPet()">● Cho Ăn Lõi Nguyên Tố (${elName(p.el)} tính ×2)</button>
         <button class="mini-btn" style="border-color:#7a4a3a;color:#c88" onclick="releasePet()">Phóng Sinh</button>
       </div>
       <div style="font-size:11.5px;opacity:.6;margin-top:4px">Nội đan trong túi: ${['Kim','Mộc','Thổ','Thủy','Hỏa'].map(e2=>`${e2} ${(player.noidan && player.noidan[e2]) || 0}`).join(' · ')}</div>`;
@@ -16744,11 +16744,11 @@ window.feedPet = function(){
   let el2 = null;
   if (player.noidan && player.noidan[p.el] > 0) el2 = p.el;
   else el2 = ['Kim','Mộc','Thổ','Thủy','Hỏa'].find(e2 => (player.noidan[e2] || 0) > 0);
-  if (el2 == null){ addFloat(player.x, player.y-40, 'Hết nội đan — săn tinh anh/boss để kiếm thêm!', '#8a8a8a', 12); return; }
+  if (el2 == null){ addFloat(player.x, player.y-40, 'Hết lõi nguyên tố — săn tinh anh/boss để kiếm thêm!', '#8a8a8a', 12); return; }
   const bonus = el2 === p.el ? 2 : 1;
   player.noidan[el2]--;
   p.feed = (p.feed || 0) + bonus;
-  addFloat(player.x, player.y-50, `Linh thú ăn Nội Đan ${el2} (+${bonus}) — sức mạnh ${petDmg()}!`, ELEM[el2].color, 13);
+  addFloat(player.x, player.y-50, `Linh thú ăn Lõi Nguyên Tố ${el2} (+${bonus}) — sức mạnh ${petDmg()}!`, ELEM[el2].color, 13);
   AudioSys.sfx('quest', 0.5);
   saveGame(); renderPet();
 };
@@ -16764,7 +16764,7 @@ window.releasePet = function(){
 // Dược Viên: 3 luống trồng linh dược theo GIỜ THỰC — quay lại thu hoạch.
 const TULINH_TIERS = [0, 0.15, 0.30, 0.50, 0.75, 1.00];
 const GARDEN_SEEDS = {
-  hoisinh: { name:'Hồi Sinh Thảo', time:3600,  desc:'1 giờ → 2 🧪 Hồ Lô Thuốc' },
+  hoisinh: { name:'Hồi Sinh Thảo', time:3600,  desc:'1 giờ → 2 🧪 Bình Thuốc Đỏ' },
   tukhi:   { name:'Tụ Khí Thảo',   time:7200,  desc:'2 giờ → +200 Instinct' },
   ngoctam: { name:'Ngọc Tâm Thảo', time:14400, desc:'4 giờ → +150 Anima' },
 };
@@ -16839,7 +16839,7 @@ window.harvestSeed = function(i){
   ab.garden[i] = null;
   if (plot.seed === 'hoisinh'){
     player.potions = Math.min(5, player.potions + 2);
-    addFloat(player.x, player.y-50, 'Thu hoạch: +2 🧪 Hồ Lô Thuốc!', '#7ec850', 13);
+    addFloat(player.x, player.y-50, 'Thu hoạch: +2 🧪 Bình Thuốc Đỏ!', '#7ec850', 13);
   } else if (plot.seed === 'tukhi'){
     player.khi += 200;
     addFloat(player.x, player.y-50, 'Thu hoạch: +200 Instinct!', '#7fd8e0', 13);
@@ -16883,10 +16883,10 @@ function hintText(){
 
 // ---------- Mục Tiêu Hôm Nay ----------
 const DAILY_GOALS = [
-  { id:'kills',   icon:'⚔', name:'Hạ 10 yêu thú',        need:10 },
-  { id:'noidan',  icon:'●', name:'Thu 1 Nội Đan',        need:1 },
+  { id:'kills',   icon:'⚔', name:'Hạ 10 Chimera',        need:10 },
+  { id:'noidan',  icon:'●', name:'Thu 1 Lõi Nguyên Tố',        need:1 },
   { id:'dungeon', icon:'🏯', name:'Thông quan 1 phó bản', need:1 },
-  { id:'forge',   icon:'🔨', name:'Rèn / tấn chức / xung mạch 1 lần', need:1 },
+  { id:'forge',   icon:'🔨', name:'Rèn / tấn chức / tôi cốt 1 lần', need:1 },
 ];
 function dailyReset(){
   if (!player) return;
@@ -16927,7 +16927,10 @@ function dailyHtml(){
   } else {
     for (const g of DAILY_GOALS){
       const done = (d[g.id] || 0) >= g.need;
-      html += `<div class="q-daily-row${done?' done':''}">${done?'✔':'·'} ${g.icon} ${g.name}
+      // Tên mục tiêu nằm trong span RIÊNG. Trước đây nó dính liền dấu tick và biểu tượng thành
+      // một nút văn bản duy nhất ("· ● Thu 1 Lõi Nguyên Tố"), nên lớp dịch tra khoá nguyên văn
+      // không bao giờ khớp và bản tiếng Anh hiện nguyên câu tiếng Việt giữa một bảng tiếng Anh.
+      html += `<div class="q-daily-row${done?' done':''}">${done?'✔':'·'} ${g.icon} <span>${g.name}</span>
         <span>${done ? '' : ` <b>${Math.min(d[g.id]||0, g.need)}/${g.need}</b>`}</span></div>`;
     }
   }

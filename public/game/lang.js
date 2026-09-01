@@ -8,6 +8,8 @@
 (function () {
 'use strict';
 const KEY = 'vlcm_lang';
+// Tên hệ trong chuỗi động — dùng lại đúng bảng dịch bên dưới thay vì chép tay lần nữa.
+function m1El(e){ return ({ 'Kim':'Metal','Mộc':'Wood','Thủy':'Water','Hỏa':'Fire','Thổ':'Earth' })[e] || e; }
 // Phải TRÙNG mặc định với i18n.js — hai lớp dùng chung khoá 'vlcm_lang', lệch nhau là giao diện
 // lẫn hai thứ tiếng ngay từ lần mở đầu tiên.
 let lang = 'vi';
@@ -97,7 +99,7 @@ const EXACT = {
   'Mảnh Cổ Thần': 'Ancient God Shard', 'Huyền Thiết': 'Mystic Iron', 'Sách Kỹ Năng →': 'Tomes →',
   'Thảo Dược': 'Herb', 'Thảo Dược Quý': 'Rare Herb', 'Phong Linh Phù': 'Spirit-Seal Charm',
   'Thiên Mệnh Phù': 'Fate Charm', '☂ Thiên Mệnh Phù': '☂ Fate Charm',
-  'Hồ Lô Thuốc': 'Potion Gourd', '🧪 Hồ Lô Thuốc': '🧪 Potion Gourd',
+  'Bình Thuốc Đỏ': 'Red Potion', '🧪 Bình Thuốc Đỏ': '🧪 Red Potion',
   '🍶 Rượu Hổ Cốt': '🍶 Tiger Bone Wine', '🍶 RƯỢU HỔ CỐT': '🍶 TIGER BONE WINE',
   '⚡ Bùa Chắn Sét': '⚡ Thunder Escape Charm', '⚡ BÙA CHẮN SÉT': '⚡ THUNDER ESCAPE',
   '✚ Trị Thương Toàn Phần': '✚ Full Heal', '🛏 Nghỉ Trọ': '🛏 Rest at Inn',
@@ -226,7 +228,7 @@ const EXACT = {
   'Gói tiết kiệm — chỉ bán theo đợt': 'Budget bundle — sold in batches only',
   'tấn chức Card': 'promote to Card',
   'dung hợp Huyết Ma Thôn Phệ': 'fuse into Blood Demon Devour',
-  'Hồ Lô Thuốc hồi 55% máu (thay 40%)': 'Potion Gourd heals 55% HP (instead of 40%)',
+  'Bình Thuốc Đỏ hồi 55% máu (thay 40%)': 'Red Potion heals 55% HP (instead of 40%)',
   'Rèn đồ +5% tỉ lệ thành công': 'Forge +5% success rate',
   '+1 Phong Linh Phù — bấm T gần tinh anh suy yếu': '+1 Spirit-Seal Charm — press T near a weakened elite',
  '+1 Đan Ascension Trial': '+1 Ascension Trial Pill',
@@ -438,7 +440,7 @@ Object.assign(EXACT, {
   'Phệ Thiên Ma Công': 'Heaven-Devouring Demon Art',
   'Niết Bàn Phật Ấn': 'Nirvana Buddha Seal',
   // ── Dung Hợp: 30 descs ──
-  'Hắc động thôn phệ — hút 40% sát thương thành sinh lực & phản đòn trong 8s.': 'A devouring black hole — convert 40% damage to HP & reflect for 8s.',
+  'Hắc động hấp thụ — hút 40% sát thương thành sinh lực & phản đòn trong 8s.': 'A devouring black hole — convert 40% damage to HP & reflect for 8s.',
   'Thất thương tẫn hại — quyền kính 7 lớp chấn nát địch, choáng & hất văng.': 'Seven layers of ruinous fist force — shatter foes, stun & knock back.',
   'Long tượng hiện hình — mười tầng lực đạo nghiền nát toàn trường.': 'Dragon-elephant manifests — ten tiers of force crush the whole field.',
   'Đao pháp truyền đời — ba đạo đao quang băng hàn xuyên thấu.': 'Ancestral blade art — three arcs of freezing blade light, piercing.',
@@ -605,7 +607,11 @@ Object.assign(EXACT, {
  'Luyện Hư': 'Void Tempering',
  'Hợp Thể': 'Body Integration',
   'Tinh Thạch': 'Mystic Iron', // same currency as ✦ Huyền Thiết (player.mat), just displayed under a different label here
-  'Nội Đan': 'Inner Core',
+  'Lõi Nguyên Tố': 'Elemental Core',
+  'Hạ 10 Chimera': 'Slay 10 Chimeras',
+  'Thu 1 Lõi Nguyên Tố': 'Collect 1 Elemental Core',
+  'Thông quan 1 phó bản': 'Clear 1 dungeon',
+  'Rèn / tấn chức / tôi cốt 1 lần': 'Forge / promote / temper once',
   // Character-panel wrapper (renderCharPanel) + CHAR_TABS
   'Nhân Vật — mọi tu luyện trong một': 'Character — every training system in one place',
   'Thú Chiến': 'Mount',
@@ -680,7 +686,7 @@ Object.assign(EXACT, {
   'Instinct Channels mở khóa ở': 'Instinct Channels unlock at',
   'Instinct tích lũy bằng chiến đấu và tĩnh tọa.': 'Instinct builds up through combat and meditation.',
   'VIÊN MÃN': 'MAXED',
-  'Xung mạch thất bại chỉ mất Instinct, đốt đã thông không mất. Ascension cảnh 4 (Spark Tầng 4) trở lên giảm 20% phí xung mạch.': 'A failed channel pulse only costs Instinct — unblocked nodes are never lost. Ascension Lv 4 (Spark Stage 4) or higher reduces the pulse cost by 20%.',
+  'Tôi cốt thất bại chỉ mất Instinct, đốt đã thông không mất. Ascension cảnh 4 (Spark Tầng 4) trở lên giảm 20% phí tôi cốt.': 'A failed channel pulse only costs Instinct — unblocked nodes are never lost. Ascension Lv 4 (Spark Stage 4) or higher reduces the pulse cost by 20%.',
   // Card (Di Sản)
   'Chưa tu luyện — tấn chức tầng 1 để khai mở!': 'Not yet trained — advance to Stage 1 to unlock!',
 });
@@ -701,7 +707,7 @@ Object.assign(EXACT, {
   'máy yếu': 'weak devices',
   '— ⚔ AUTO FARM (phím Z) —': '— ⚔ AUTO FARM (key Z) —',
   '🗡 Tự tung kỹ năng trên taskbar': '🗡 Auto-cast taskbar skills',
-  '🧪 Tự uống Hồ Lô Thuốc': '🧪 Auto-drink Potion Gourd',
+  '🧪 Tự uống Bình Thuốc Đỏ': '🧪 Auto-drink Red Potion',
   '❤ Uống thuốc khi HP dưới': '❤ Drink potion when HP below',
   '🎯 Tầm quét quanh điểm neo': '🎯 Scan range around anchor point',
   '👹 Auto đánh cả Boss': '👹 Auto-fight bosses too',
@@ -841,8 +847,9 @@ const RULES = [
   [/^⚔ THẦN BINH — (.+)$/, (m, a) => `⚔ DIVINE WEAPON — ${tr(a)}`],
   [/^(.+?) · Tầng (\d+)【(.+?)】( — ĐÃ THỨC TỈNH ✦)?$/, (m, a, b, c, d) => `${tr(a)} · Stage ${b}【${tr(c)}】${d ? ' — AWAKENED ✦' : ''}`],
   [/^Luyện lên tầng (\d+)【(.+?)】$/, (m, a, b) => `Advance to Stage ${a}【${tr(b)}】`],
-  [/^Cần: (\d+) Nội Đan \(có (\d+)\) \+ (\d+) Tinh Thạch \(có (\d+)\)$/, (m, a, b, c, d) => `Need: ${a} Inner Core (have ${b}) + ${c} Mystic Iron (have ${d})`],
-  [/^Thiếu nguyên liệu: cần (\d+) Nội Đan \+ (\d+) Tinh Thạch$/, (m, a, b) => `Missing materials: need ${a} Inner Core + ${b} Mystic Iron`],
+  [/^Lõi Nguyên Tố (\S+)/, (m, e) => `Elemental Core ${m1El(e)}`],
+  [/^Cần: (\d+) Lõi Nguyên Tố \(có (\d+)\) \+ (\d+) Tinh Thạch \(có (\d+)\)$/, (m, a, b, c, d) => `Need: ${a} Elemental Core (have ${b}) + ${c} Mystic Iron (have ${d})`],
+  [/^Thiếu nguyên liệu: cần (\d+) Lõi Nguyên Tố \+ (\d+) Tinh Thạch$/, (m, a, b) => `Missing materials: need ${a} Elemental Core + ${b} Mystic Iron`],
   [/^Dùng Thiên Mệnh Phù — xịt vẫn giữ nguyên cấp \(còn (\d+)\)$/, (m, a) => `Use a Fate Charm — a failure still keeps your level (${a} left)`],
   [/^Lên \+1 với 50% — thất bại tụt 1 cấp \(áp dụng đến \+10, kể cả Phá Thiên Kiếp\)$/, '+1 at 50% success — failure drops 1 level (applies up to +10, including the Heaven-Rending Trial)'],
   [/^Giai (\d+)\/(\d+)$/, 'Tier $1/$2'],

@@ -6,7 +6,7 @@ window.I18N_VI = {
   'hud.hint.clickmove': 'Chuột phải/minimap tự chạy tới',
   'hud.hint.attack': 'Space đánh',
   'hud.hint.talk': 'E nói chuyện',
-  'hud.hint.potion': 'R hồ lô thuốc',
+  'hud.hint.potion': 'R bình thuốc đỏ',
   'hud.hint.quest': 'Q nhiệm vụ',
   'hud.hint.character': 'C nhân vật',
   'hud.hint.stats': 'V nhân vật',
