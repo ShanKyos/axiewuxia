@@ -387,6 +387,56 @@ kiếm hay do dấu ấn.
 ngựa (vẽ cung hở), găng ra thanh sô-cô-la (4 khối chữ nhật bằng nhau), kiếm cao hơn cả người
 (hệ số 2.5 thay vì 1.45). Vẽ xong phải render ra ảnh mà nhìn.
 
+## Hai lối vẽ nhân vật — ĐỪNG TRỘN VÀO NHAU
+
+Game có **ba** bộ dựng nhân vật, mỗi bộ một việc. Nhầm chỗ là ra hình lạc quẻ.
+
+| Bộ | Hàm | Cỡ | Dùng ở đâu |
+|---|---|---|---|
+| Trong màn | `drawPlayer()` | ~40–56px | nhân vật đang chạy, vẽ mỗi khung hình |
+| Thẻ nhân vật | `heroCardUrl()` | 160×220 | bảng Nhân Vật, bảng Trang Bị — có thể hiện đồ đang mặc |
+| **Chibi** | `chibiUrl()` | 420×420 | **thẻ chọn lớp** và ảnh phóng to bên cạnh |
+| **Tranh minh hoạ** | `splashUrl()` | 620×860 | **chỉ mở bằng lệnh `/art`** |
+
+**Chibi khác thẻ nhân vật ở LUẬT, không phải ở cỡ.** Đầu chiếm gần nửa chiều cao,
+mắt to có tròng và đốm sáng, tay chân mập ngắn, nét viền dày bao ngoài. Viền dựng
+bằng khuôn: in bóng đơn sắc ở 20 hướng quanh tâm rồi đặt hình gốc lên. Hai lớp —
+**trắng dày ngoài, đen mỏng trong**; chỉ đen thì viền tàng hình trên nền tối. Phải
+ép mép khuôn thành đặc (`drawImage` bóng lên chính nó vài lần) trước khi in vòng,
+không thì 20 bản mờ chồng nhau ra viền nhoè.
+
+**Mỗi lớp một BÓNG DÁNG riêng — đây là điều dễ làm sai nhất.** Bản đầu năm lớp
+chung một khuôn, chỉ đổi màu; che màu đi thì không ai phân biệt được. MU phân biệt
+lớp bằng đường viền ngoài. `CHIBI_CFG` giữ ba trục: `head` / `sh` (vai) / `body`.
+
+    Dark Knight   helm  · spike · plate     mũ trụ kín + hai sừng cong
+    Sylvan Ranger hair  · small · leather   đuôi tóc sau gáy + tai nhọn
+    Dark Wizard   hood  · none  · robe      mũ chóp cao, KHÔNG giáp vai, áo loe che chân
+    Spellblade    mane  · one   · half      bờm đổ một bên, CHỈ MỘT bên vai
+    Dark Lord     crown · wide  · cape      vương miện năm chấu + áo choàng
+
+**Cách kiểm:** tô đặc một màu rồi nhìn. Năm cái bóng phải khác hẳn nhau. Nếu phải
+đọc màu mới biết lớp nào thì chưa đạt.
+
+**Tranh minh hoạ KHÔNG đặt vào luồng chơi.** Đã thử làm ảnh lớn ở màn chọn lớp và
+bị gỡ ra: tỉ lệ 8 đầu đứng cạnh chibi là lệch hẳn. Nó chỉ để xem, mở bằng
+`/art <lớp> [mavuong]`.
+
+## Đổ khối: một nguồn sáng, đặt ở TRÊN-TRÁI
+
+`applyFormLight` + `applyEdgeLight` phủ ánh sáng lên hình ĐÃ VẼ bằng `source-atop`.
+Hai cái bẫy đã mắc:
+
+- **`_dim(h, k)` là NHÂN VỚI `(1-k)`**, không phải "còn lại k phần sáng".
+  `_dim(x, 0.86)` ra gần đen. Đọc nhầm chiều này thì cả bức tranh đen kịt.
+- **Rìa sáng phải là DẢI VIỀN, không phải cả bóng dời đi.** Phủ nguyên bóng trắng
+  dời 2px rồi bóng đen dời ngược lại thì ruột hình bị trắng chồng đen hoá xám —
+  đỏ ra nâu hồng, vàng ra khaki. Phải lấy bóng gốc TRỪ bóng dời để chỉ còn vành.
+  Vành cũng phải tô bằng dải tắt dần: vành đều một sắc đọc thành nét viền dán.
+
+Độ dày rìa đo bằng bảng đối chiếu, không đoán: 2.4px trên icon 88px. 3.2px làm
+giáp và ủng bạc màu.
+
 ## Lò Hỗn Độn — MỘT cỗ máy, không phải 7 khối chữ
 
 Trước đây có **hai** màn rèn chồng nhau: bảng `Rèn Luyện` (tab) và `Lò Rèn Hoàng Gia` (NPC).
