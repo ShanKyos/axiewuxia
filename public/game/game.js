@@ -521,7 +521,9 @@ const MAPS = {
     // caodo) → xa nhất (assassin, trannhan) gần Cổng Vực — người chơi mới thấy rõ "đi sâu = khó
     // hơn" thay vì gặp ngẫu nhiên cả cụm yếu lẫn cụm elite lẫn lộn quanh spawn.
     packs: [
-      { mob:'boar', x:906, y:254, n:6 }, { mob:'boar', x:632, y:876, n:5 },
+      // Bãi đầu tiên đặt gần điểm thả (460,460): người chơi mới phải THẤY quái ngay, không
+      // phải đi tìm. Trước đây bãi gần nhất cách 450px — năm giây đi bộ trong im lặng.
+      { mob:'boar', x:906, y:254, n:6 }, { mob:'boar', x:660, y:690, n:5 },
       { mob:'hautu', x:1000, y:1000, n:6 }, { mob:'wolf', x:1500, y:560, n:7 },
       { mob:'wolf', x:754, y:1555, n:6 }, { mob:'bandit', x:1290, y:1244, n:7 },
       { mob:'bandit', x:1648, y:724, n:7 }, { mob:'caodo', x:1424, y:1445, n:6 },
@@ -1333,7 +1335,7 @@ function zoneType(){ return ZONE_TYPES[mapDef().type]; }
 
 // ---------- Sổ tay kỹ năng: 3 ô cố định (chính/phụ/buff) — xem defaultSkillBar() ----------
 const SKILL_DEFS = {
-  a:       { unlock:2,  kind:'sectA',  icon:s=>SECT_ART[s].iconA,  desc:s=>`${s.skillA.name} — chiêu thức nhập môn ${s.name}.` },
+  a:       { unlock:1,  kind:'sectA',  icon:s=>SECT_ART[s].iconA,  desc:s=>`${s.skillA.name} — chiêu thức nhập môn ${s.name}.` },
   amkhi:   { unlock:4,  kind:'amkhi',  name:'Venom Dart', cd:4, qi:15, mult:1.2, icon:()=>'assets/skills/amkhi.png', desc:()=>'Phóng phi tiêu tẩm độc — mạnh dần theo tầng Tấn Chức Venom.' },
   tp:      { unlock:7,  kind:'sectTP', icon:s=>SECT_ART[s].iconTP, desc:s=>`${s.tp.name} — Trấn Phái tuyệt kỹ ${s.name}, sát thương lan.` },
   gangkhi: { unlock:10, kind:'gangkhi', name:'Stone Skin', cd:10, qi:30, icon:()=>'assets/skills/gangkhi.png',
@@ -5031,8 +5033,13 @@ function killMob(m, source){
   let _gotThan = false;
   const _dn = _dsrc ? mobDropCount(m.def, _dsrc) : 0;
   const _dr = _dsrc ? mobDropRate(m.def, _dsrc) : 0;
+  // Ba con đầu đời của một nhân vật mới BẢO ĐẢM rơi một món. Tỉ lệ thường là 5,99%/con, nên
+  // theo kỳ vọng phải hạ ~17 con mới thấy món đầu tiên — với người chơi mới, đó là gần một phút
+  // đánh nhau mà không có gì rơi ra, đúng lúc họ đang quyết định có ở lại hay không.
+  const _phatDau = (player.kills || 0) <= 3 && !(player._daRoiMonDau);
   for (let _di = 0; _dsrc && _di < _dn; _di++){
-    if (Math.random() >= _dr + (player.dropBonus || 0)) continue;
+    if (!(_phatDau && _di === 0) && Math.random() >= _dr + (player.dropBonus || 0)) continue;
+    if (_phatDau && _di === 0) player._daRoiMonDau = true;
     const it = genItem(Math.max(1, m.def.lv + (Math.random()<0.3?1:0)), 0, _dsrc);
     // Pity đai: Vệ Binh Trụ 8 lần liên tiếp không ra Thần+ → bảo đảm 1 món Thần
     if (_dsrc === 'thuve' && m.def.bossKind === 'thuve' && (player.bossPity || 0) >= 8 && it.rarity < 3){
