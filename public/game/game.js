@@ -1473,7 +1473,19 @@ function skUpCost(id){ return Math.round(150 * Math.pow(skLv(id), 1.45)); }
 // nhiệm vụ rồi hiện thường trực trên HUD mà không tiêu được ở đâu cả (nơi tiêu cũ là tự tay xung Kinh
 // Mạch, đã bị thay bằng tự động theo cấp) — một con số vô nghĩa cứ tăng mãi. Đường cong thoải hơn bạc
 // (mũ 1.1 so với 1.45) để nó là "tài nguyên farm tự nhiên có sẵn", không phải bức tường chặn.
-function skUpKhi(id){ return Math.round(30 * Math.pow(skLv(id), 1.1)); }
+function skUpKhi(id){ return Math.round(30 * Math.pow(skLv(id), 1.1) * skMileMult(id)); }
+// ═══ GỘP TIỀN TỆ — bậc 4: Tâm Đắc nhập vào Instinct ═════════════════════════════════
+// Tâm Đắc có ĐÚNG một nguồn (hạ tinh anh/boss) và ĐÚNG một chỗ tiêu (sáu cấp mốc của chiêu) —
+// cùng hình dạng với Công Huân Lệnh đã gộp ở bậc 1. Nó lại nằm chung một nút bấm với bạc và
+// Instinct, nên người chơi phải nhìn ba ô đếm để hiểu vì sao nút xám.
+// Nay cấp mốc chỉ đắt hơn bằng chính Instinct: mốc thứ n tốn (n+1) lần phí thường — đúng bậc
+// thang 1💠…6💠 cũ, nhưng bằng thứ đã có sẵn trên HUD.
+// Sức ép "phải đi săn tinh anh/boss" mà Tâm Đắc tạo ra không mất theo: xem rw.khi ở
+// computeKillRewards — Instinct nay rơi theo loại quái thay vì 10 đều cho mọi con.
+function skMileMult(id){
+  const i = SK_MILESTONES.findIndex(x => x.lv === skLv(id) + 1);
+  return i >= 0 ? i + 2 : 1;
+}
 
 // Mốc thuần thục của chiêu, 20-120 (nhân dồn với +2.5% ST/cấp)
 const SK_MILESTONES = [
@@ -1568,13 +1580,16 @@ window.upgradeSkillUI = function(id){
   if (lv >= player.level){ addFloat(player.x, player.y-40, `Cấp kỹ năng ≤ cấp nhân vật (${player.level})`, '#8a8a8a', 12); return; }
   const cost = skUpCost(id), khiCost = skUpKhi(id);
   if (player.silver < cost){ addFloat(player.x, player.y-40, `Cần ${cost.toLocaleString()} bạc`, '#8a8a8a', 12); return; }
-  if ((player.khi || 0) < khiCost){ addFloat(player.x, player.y-40, `Cần ${khiCost.toLocaleString()} Instinct (đánh quái / tĩnh dưỡng ở Suối Ký Ức để tích)`, '#7fd8e0', 12); return; }
+  if ((player.khi || 0) < khiCost){
+    const _mn = SK_MILESTONES.find(x => x.lv === lv + 1);
+    addFloat(player.x, player.y-40, _mn
+      ? `Cấp mốc ${_mn.name} — cần ${khiCost.toLocaleString()} Instinct (hạ tinh anh/boss được nhiều nhất)`
+      : `Cần ${khiCost.toLocaleString()} Instinct (đánh quái / tĩnh dưỡng ở Suối Ký Ức để tích)`, '#7fd8e0', 12);
+    return;
+  }
   const _msI = SK_MILESTONES.findIndex(x => x.lv === lv + 1);
-  const _tdNeed = _msI >= 0 ? _msI + 1 : 0; // đột phá cảnh giới chiêu: mốc 20→1💠, 40→2💠 ... 120→6💠
-  if ((player.tamdac || 0) < _tdNeed){ addFloat(player.x, player.y-40, `Lên mốc ${SK_MILESTONES[_msI].name} cần ${_tdNeed} 💠 Tâm Đắc (hạ tinh anh/boss)`, '#7df9ff', 12); return; }
   player.silver -= cost;
   player.khi -= khiCost;
-  if (_tdNeed) player.tamdac -= _tdNeed;
   if (!player.skillLv) player.skillLv = {};
   player.skillLv[id] = lv + 1;
   const _ms = _msI >= 0 ? SK_MILESTONES[_msI] : null; // đạt mốc thuần thục của chiêu
@@ -1613,10 +1628,10 @@ function upBtnHtml(id){
   }
   const nm = SK_MILESTONES.find(x => x.lv > lv);
   const cur = [...SK_MILESTONES].reverse().find(x => lv >= x.lv);
-  const _msI = SK_MILESTONES.findIndex(x => x.lv === lv + 1);
-  const _tdNeed = _msI >= 0 ? _msI + 1 : 0;
+  const _msNext = SK_MILESTONES.find(x => x.lv === lv + 1); // cấp kế tiếp có phải cấp mốc không
+  const _mult = skMileMult(id);
   const _stg = evoStage(id);
-  return `${_spB}<button class="mini-btn vh-learn-btn" style="margin-right:3px" title="Cấp ${lv}/120${cur ? ' · ' + cur.name : ''} · ⚡tiến hóa bậc ${_stg}/3 (mốc 40/80/120, mỗi mốc chọn nhánh Bá Đạo/Tốc Chiến) — nâng: ${skUpCost(id).toLocaleString()} bạc + ${skUpKhi(id).toLocaleString()} Instinct${_tdNeed ? ` + ${_tdNeed} 💠 Tâm Đắc đột phá` : ''}, +2,5% ST, −0,25% hồi chiêu${nm ? ` · mốc kế ${nm.name} (cấp ${nm.lv}): ${milestoneTxt(nm)}` : ''} · cấp kỹ năng ≤ cấp nhân vật" onclick="window.upgradeSkillUI('${id}')">⬆${lv}${_stg ? '⚡' + _stg : ''}${_tdNeed ? '💠' + _tdNeed : ''}</button>${evoBadgeHtml(id)}`;
+  return `${_spB}<button class="mini-btn vh-learn-btn" style="margin-right:3px" title="Cấp ${lv}/120${cur ? ' · ' + cur.name : ''} · ⚡tiến hóa bậc ${_stg}/3 (mốc 40/80/120, mỗi mốc chọn nhánh Bá Đạo/Tốc Chiến) — nâng: ${skUpCost(id).toLocaleString()} bạc + ${skUpKhi(id).toLocaleString()} Instinct${_msNext ? ` (cấp mốc ${_msNext.name}: Instinct ×${_mult})` : ''}, +2,5% ST, −0,25% hồi chiêu${nm ? ` · mốc kế ${nm.name} (cấp ${nm.lv}): ${milestoneTxt(nm)}` : ''} · cấp kỹ năng ≤ cấp nhân vật" onclick="window.upgradeSkillUI('${id}')">⬆${lv}${_stg ? '⚡' + _stg : ''}${_msNext ? '◆' : ''}</button>${evoBadgeHtml(id)}`;
 }
 window.assignSpaceUI = function(id){
   if (!player) return;
@@ -4733,6 +4748,11 @@ function loadGame(){
     if (typeof player.noidan !== 'number') player.noidan = 0;
     if (!player.ndBonus) player.ndBonus = { atk:0, hp:0, def:0, qi:0, crit:0 };
     if (player.ndDay == null){ player.ndDay = ''; player.ndCount = 0; }
+    // ═══ GỘP TIỀN TỆ — bậc 4: Tâm Đắc nhập vào Instinct ═══════════════════════════════
+    // Tỉ giá lấy từ chính chỗ tiêu: nâng trọn một chiêu 1→120 trước đây tốn 21💠, nay tốn thêm
+    // ~84.800 Instinct so với đường cong nền — chia ra tròn 4.000 Instinct một viên Tâm Đắc.
+    if (player.tamdac > 0){ player.khi = (player.khi || 0) + player.tamdac * GO_TAMDAC; }
+    delete player.tamdac;
     // ═══ Gỡ hệ Thú Thuần Hóa — hoàn lại cho người chơi đang giữ ════════════════════════
     // Ấn Thuần Thú giá 1500◈ ở tiệm nên hoàn đúng giá đó. Thú đã nuôi thì trả lại số Lõi Nguyên
     // Tố đã cho ăn (feed cộng 2 khi hệ khớp, nên chia đôi làm tròn lên để không hoàn dư).
@@ -5904,7 +5924,7 @@ function computeKillRewards(m, source, P, rng){
   const d = m.def;
   const rw = {
     xp:0, xpMul:1, silver:0, mat:0, khi:0, kills:1,
-    gems:{ tuLa:0, honNguyen:0 }, tienDan:0, bikipVH:0, tamdac:0,
+    gems:{ tuLa:0, honNguyen:0 }, tienDan:0, bikipVH:0,
     noidan:null, mats:{ manh:0, tichMa:0, anTranAi:0, manhCoThan:0 },
     pets:[], wings:[], items:[], autoSold:[],
     bossPity:null, firstDrop:false, chinhPhat:false, dropSrc:null, gotThan:false,
@@ -5915,7 +5935,10 @@ function computeKillRewards(m, source, P, rng){
   rw.xp = Math.round(d.xp * rw.xpMul);
   rw.silver = Math.round((d.silver[0] + R()*(d.silver[1] - d.silver[0])) * (1 + (P.silverPct || 0)/100));
   rw.silver += 4;                      // Anima cũ quy đổi 1:2 sang bạc — xem GO_ANIMA
-  rw.khi = 10;                         // Instinct từ chiến đấu
+  // Instinct từ chiến đấu. Trước đây 10 đều cho mọi con — nay theo loại quái, vì Instinct đã
+  // nhận luôn vai trò của Tâm Đắc (phí cấp mốc). Tâm Đắc buộc người chơi đi săn tinh anh/boss;
+  // giữ lại sức ép đó ở đây thay vì ở một ô đếm riêng.
+  rw.khi = d.bossKind ? 200 : (d.boss || m.type === 'boss') ? 120 : d.elite ? 35 : 10;
   if (R() < 0.3) rw.mat = 1;
   // Thú cưng rơi từ tinh anh (12%) / boss (40%); Cánh từ boss (12%)
   const _oCon = P.inv.length;
@@ -5936,10 +5959,6 @@ function computeKillRewards(m, source, P, rng){
   // Sách Kỹ Năng từ tinh anh/boss
   const _bkR = d.bossKind === 'tranai' ? 0.35 : (d.bossKind === 'thuve' || d.boss) ? 0.12 : d.elite ? 0.03 : 0;
   if (_bkR && R() < _bkR) rw.bikipVH = 1;
-  // Tâm Đắc — nguyên liệu vượt mốc cấp chiêu
-  rw.tamdac = d.bossKind ? (2 + Math.floor(R()*2))
-    : (d.boss || m.type === 'boss') ? (1 + Math.floor(R()*2))
-    : (d.elite && R() < 0.3) ? 1 : 0;
   // Lõi Nguyên Tố — tinh anh 30%, boss 100%. Trước đây còn đòi d.el vì Lõi phải khoá theo hệ
   // của con quái; nay Lõi chỉ có một loại nên bỏ điều kiện đó (mọi def boss/tinh anh đều có el).
   if (d.boss || (d.elite && R() < 0.3)) rw.noidan = 1;
@@ -5995,7 +6014,6 @@ function applyRewards(rw, m){
   if (rw.gems.honNguyen){ player.gems.honNguyen += rw.gems.honNguyen; logCombat('+1 ❖ Hỗn Nguyên Thạch', '#b08ae8'); }
   if (rw.tienDan){ player.tienDan += rw.tienDan; logCombat(`+${rw.tienDan} ◈ Đá Thăng Cấp`, '#7ec850'); }
   if (rw.bikipVH){ player.bikipVH = (player.bikipVH || 0) + rw.bikipVH; addFloat(m.x, m.y-100, '+1 📜 Sách Kỹ Năng', '#ffb15c', 13); }
-  if (rw.tamdac){ player.tamdac = (player.tamdac || 0) + rw.tamdac; addFloat(m.x, m.y-112, `+${rw.tamdac} 💠 Tâm Đắc`, '#7df9ff', 13); }
   if (rw.noidan){
     player.noidan = (player.noidan || 0) + rw.noidan;
     addFloat(m.x, m.y-88, `+${rw.noidan} ● Lõi Nguyên Tố`, '#b08ae8', 12);
@@ -12687,6 +12705,7 @@ window.toggleCheatConsole = function(){
 const GO_ANIMA = 2;        // 1 Anima cũ = 2 bạc
 const GO_CONGHUAN = 2000;  // 1 Công Huân Lệnh cũ = 2000 bạc — cũng là giá một lượt Sảnh Cầu May
 const GO_ANTHUANTHU = 1500; // 1 Ấn Thuần Thú cũ = 1500 bạc — đúng giá bán ở Vũ Khí Phường
+const GO_TAMDAC = 4000;     // 1 Tâm Đắc cũ = 4000 Instinct — xem skMileMult
 function cheatLog(t, color){
   const lg = document.getElementById('cheat-log');
   if (!lg) return;
@@ -14852,7 +14871,7 @@ function legacyUniversalRowHtml(id){
 function renderSkillPanel(){
   vhAutoLearn(); // save cũ / test mode: quét tự ngộ kỹ năng phái
   let html = `<h3>Kỹ Năng — 4 ô cố định (phím 1-4)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%ST/cấp (bạc) · mốc 20/40/60/80/100/120 thêm buff · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · 💠 Tâm Đắc <b>${player.tamdac || 0}</b> · <span style="color:#7fd8e0">Instinct <b>${Math.floor(player.khi || 0).toLocaleString()}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
+  html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%ST/cấp (bạc) · mốc 20/40/60/80/100/120 thêm buff · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · <span style="color:#7fd8e0">Instinct <b>${Math.floor(player.khi || 0).toLocaleString()}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
   html += `<div class="char-tabs">`;
   for (const t of SKILL_TABS) html += `<button class="${t.id===window.skillTab?'active':''}" onclick="switchSkillTab('${t.id}')">${t.name}</button>`;
   html += `</div>`;
