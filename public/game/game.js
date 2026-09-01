@@ -5354,15 +5354,33 @@ function bossStartTele(m, mvId){
     // và rơi xuống cách boss 233px, trong khi bán kính ô sáng là 200 — người đứng sát boss đã nằm
     // sẵn trong vùng an toàn, chiêu thành vô nghĩa. Nay thử vài hướng và giữ hướng XA NHẤT.
     const MIN = mv.r + 90;   // tâm ô sáng phải cách boss đủ để mép ô không trùm lên boss
-    let bx = 0, by = 0, bd = -1;
-    for (let k = 0; k < 8; k++){
-      const a = Math.random() * Math.PI * 2, d = MIN + Math.random() * 180;
-      const x = clamp(m.x + Math.cos(a)*d, mv.r + 40, MAP.w - mv.r - 40);
-      const y = clamp(m.y + Math.sin(a)*d, mv.r + 40, MAP.h - mv.r - 40);
+    // "Thử 8 hướng rồi giữ hướng xa nhất" VẪN CHƯA ĐỦ, vì mỗi ứng viên vẫn bị KẸP vào biên,
+    // mà kẹp thì kéo điểm NGƯỢC VỀ PHÍA BOSS. Boss đứng góc (120,120): mọi hướng chĩa ra ngoài
+    // đều bị kẹp về đúng (240,240) — cách boss 170px, lọt hẳn vào trong bán kính 200 của ô sáng.
+    // Đo 10.000 lượt: 13 lượt rơi dưới ngưỡng, thấp nhất 170. Hiếm, nhưng có thật.
+    // Cách đúng: LOẠI ứng viên ra ngoài biên chứ đừng kẹp; hết ứng viên thì lấy điểm hợp lệ xa
+    // nhất — luôn là một trong bốn góc của vùng hợp lệ, nên có bảo đảm chứ không còn may rủi.
+    // Và cũng KHÔNG lấy "xa nhất": ô sáng xa quá thì chạy không kịp trong thời gian niệm, chiêu
+    // thành đòn không né được. Đích đúng là một DẢI: đủ xa để phải rời chỗ, đủ gần để tới kịp.
+    // Nên quét đều 24 hướng, bỏ hướng ra ngoài biên, rồi giữ điểm GẦN GIỮA DẢI nhất.
+    const lo = mv.r + 40, hiX = MAP.w - mv.r - 40, hiY = MAP.h - mv.r - 40;
+    const DICH = MIN + Math.random() * 180;   // bốc lại mỗi lần niệm — khoảng cách phải đổi, không thì lần nào cũng đúng một cự ly
+    let bx = 0, by = 0, bd = -1, lech = Infinity;
+    const thu = (x, y) => {
+      if (x < lo || x > hiX || y < lo || y > hiY) return;
       const dd = dist(m.x, m.y, x, y);
-      if (dd > bd){ bd = dd; bx = x; by = y; }
-      if (dd >= MIN) break;
+      if (dd < MIN) return;
+      const e = Math.abs(dd - DICH);
+      if (e < lech){ lech = e; bd = dd; bx = x; by = y; }
+    };
+    const jit = Math.random() * 0.262;
+    for (let k = 0; k < 24; k++){
+      const a = (k / 24) * Math.PI * 2 + jit;
+      for (const d of [DICH, MIN + 20, MIN + 175]) thu(m.x + Math.cos(a)*d, m.y + Math.sin(a)*d);
     }
+    // Bản đồ bé đến mức không hướng nào đặt lọt: lấy góc hợp lệ GẦN NHẤT còn đủ xa.
+    if (bd < 0) for (const [cx, cy] of [[lo,lo],[hiX,lo],[lo,hiY],[hiX,hiY]]) thu(cx, cy);
+    if (bd < 0){ bx = clamp(m.x, lo, hiX); by = clamp(m.y, lo, hiY); }
     m.tele.sx = bx; m.tele.sy = by;
     addFloat(m.x, m.y - m.def.size - 40, 'CHẠY VÀO VÒNG SÁNG!', '#7ecbff', 15);
   }
