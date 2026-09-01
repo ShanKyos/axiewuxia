@@ -490,15 +490,34 @@ nhưng đó là môi trường khác — đừng suy ra production từ chúng.
 | Tự động | cron `*/2 * * * * /root/deploy-axiewuxia.sh` |
 | Script | `git fetch origin main --quiet && git reset --hard origin/main --quiet` |
 
-### ⇒ Deploy = MERGE VÀO `main`. Không có bước nào khác.
+### ⇒ Deploy = ĐẨY LÊN `main`. Không có bước nào khác.
+
+**Chủ dự án đã chốt: làm thẳng trên `main`, push thẳng, không nhánh phụ, không PR.**
 
 ```bash
-git checkout main
-git merge <nhánh> --no-edit
-git push origin main          # ≤2 phút sau là live
+git -C /home/user/axie-wuxia add -A
+git -C /home/user/axie-wuxia commit -m "..."
+git -C /home/user/axie-wuxia push origin main    # ≤2 phút sau là live
+```
+
+Đồng bộ nhánh demo khi cần:
+```bash
 git checkout demo-axie-showcase && git merge origin/main --no-edit && git push origin demo-axie-showcase
 git checkout main
 ```
+
+⚠ **Push thẳng lên `main` LÀ deploy.** Không còn PR làm lớp đệm, nên bốn cổng dưới đây là thứ
+duy nhất đứng giữa một commit hỏng và người chơi. Chạy đủ TRƯỚC khi push, và đọc mã thoát cho
+đúng (`cmd > /tmp/x.log 2>&1; rc=$?` — **không** đọc `$?` sau một pipe):
+
+| Cổng | Lệnh |
+|---|---|
+| lint | `npm run lint` |
+| kiểu | `npm run check` |
+| unit | `npm test` |
+| game | bộ hồi quy trong scratchpad (`test_*.js`, ~127 bài) |
+
+Hỏng thì **sửa trước khi push**, đừng push rồi sửa sau — người chơi thấy bản hỏng trong 2 phút.
 
 ### Những chỗ đã vấp, đừng vấp lại
 
