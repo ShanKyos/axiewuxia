@@ -12715,30 +12715,43 @@ function cheatLog(t, color){
   while (lg.children.length > 9) lg.removeChild(lg.firstChild);
 }
 setInterval(() => { try { if (window.TEST_MODE && player && player._god){ player.hp = player.maxHp; player.qi = player.maxQi; } } catch { /* best-effort — bỏ qua nếu lỗi */ } }, 400);
-const CHEAT_HELP = [
-  '/max — mọi thứ tối đa (cấp 120, full đồ +11, full skill Lv 120)',
-  '/lv <1-120> — đặt cấp',
-  '/map <id> — dịch chuyển: ' + 'daohoa, tuongduong, ngoai, chungnam, comoc, tuyettinh, mongco, nhanmon',
-  '/go <x> <y> — dịch chuyển tọa độ',
-  '/silver /mat /dan /khi /manh /tich /an /cothan <n> — tài nguyên (+n để cộng thêm)',
-  '/item [phẩm 0-4] [giai 1-10] — tạo trang bị vào túi',
-  '/god — bật/tắt bất tử',
-  '/kill [bán kính=350] — hạ quái quanh mình',
-  '/realm <0-9> — set cấp đủ để đạt bậc Ascension đó (giờ tự động theo cấp độ)',
-  '/th <amkhi|bow|gangkhi> <0-7> — tầng Thuần Thục',
-  '/tier <0-8> — tầng Thú Cưỡi',
-  '/boss — mở phong ấn & tới Cổng Vực của map',
-  '/seal <0-7> — đặt tiến độ Ngũ Trụ (7 = Kết Mở)',
-  '/speed <hệ số> — tốc chạy × hệ số',
-  '/learn — học toàn bộ Sổ Kỹ Năng',
-  '/fullskill — học hết kỹ năng + 30 dung hợp, mọi kỹ năng Lv 120',
-  '/phi — Starflight ngay: phá bỏ ràng buộc Lớp, bay lượn, skin Starforged',
-  '/bikip <n> — đặt số Sách Kỹ Năng',
-  '/tenui — gỡ Trọng Thương (nhảy Vực Thẳm lại ngay)',
-  '/time [ngày=10] — nhảy thời gian thế giới (Lịch Thế Giới)',
-  '/wipe — xóa save & tải lại game',
-  '/obstacles — bật/tắt lớp debug vùng chặn địa hình (đỏ) để hiệu chỉnh theo art',
-];
+// Bảng /help SINH RA TỪ DỮ LIỆU THẬT, không phải chép tay. Bản cũ trôi khỏi build lúc nào không
+// hay: nó quảng cáo "34 kỹ năng + 30 dung hợp" trong khi VOHOC_DEFS còn 27 và FUSION_DEFS đã rỗng,
+// liệt kê 8 map trong khi /map nhận 15, và gọi hệ Thuần Thục bằng khoá nội bộ amkhi/bow/gangkhi
+// trong khi giao diện gọi chúng là Venom/Archery/Stoneform. Đọc thẳng từ MAPS/TH_SYSTEMS/VOHOC_DEFS
+// thì lần đổi hệ thống sau /help tự đúng theo.
+function cheatHelp(){
+  const _maps = Object.keys(MAPS).filter(k => !MAPS[k].dungeon).join(', ');
+  const _pb   = Object.keys(MAPS).filter(k =>  MAPS[k].dungeon).join(', ');
+  const _th   = Object.keys(TH_SYSTEMS).map(k => `${k}=${TH_SYSTEMS[k].name}`).join(' · ');
+  const _evo  = Object.keys(EVO_PATHS).map(k => `${k}=${EVO_PATHS[k].name}`).join(' · ');
+  return [
+    '── nhân vật ──',
+    '/max — mọi thứ tối đa (cấp 120, full đồ +11, mọi kỹ năng Lv 120)',
+    '/lv <1-120> — đặt cấp · /speed <hệ số> — tốc chạy · /god — bật/tắt bất tử',
+    `/realm <0-${DANTIAN_REALMS.length - 1}> — đặt cấp đủ để đạt bậc Ascension đó (Ascension tự động theo cấp)`,
+    '/ascend — Starflight ngay: phá ràng buộc Lớp, bay lượn, skin Starforged',
+    '── di chuyển ──',
+    '/map <id> — ' + _maps,
+    '/map <phó bản> — ' + _pb,
+    '/go <x> <y> — dịch chuyển tọa độ · /boss — mở phong ấn & tới Cổng Vực · /deep — vào Tầng Sâu',
+    '── kỹ năng ──',
+    `/fullskill — học hết ${Object.keys(VOHOC_DEFS).length} kỹ năng, mọi chiêu Lv 120`,
+    '/learn — học toàn bộ Sổ Kỹ Năng (Di Sản Cũ) · /bikip <n> — số Sách Kỹ Năng',
+    '/slot <1-4> <id chiêu|-> — gán ô thanh chiêu (phím 1-4); /slot — xem đang gán gì',
+    `/evo <id chiêu> <bậc 1-3> <nhánh> — chọn nhánh tiến hóa · ${_evo}`,
+    `/th <hệ> <0-7> — tầng Thuần Thục · ${_th}`,
+    '── tài nguyên ──',
+    '/silver /khi /mat /dan /bikip <n> — bạc · Instinct · Huyền Thiết · Tiên Đan · Sách (+n để cộng)',
+    '/nd <n> — Lõi Nguyên Tố · /jewel <n> — cả bốn Tứ Châu · /gem <n> — Tử La + Hỗn Nguyên',
+    '/manh /tich /an /cothan <n> — mảnh ghép chế tác · /hap <n> — Bảo Hạp mọi tầng',
+    '/item [phẩm 0-4] [giai 1-10] — tạo trang bị vào túi',
+    '── thế giới ──',
+    '/kill [bán kính=350] — hạ quái quanh mình · /seal <0-7> — tiến độ Ngũ Trụ (7 = Kết Mở)',
+    '/time [ngày=10] — nhảy thời gian thế giới · /obstacles — lớp debug vùng chặn địa hình',
+    '/wipe — xóa save & tải lại game',
+  ];
+}
 window.cheatExec = function(raw){
   const parts = (raw || '').trim().split(/\s+/);
   if (!parts[0]) return;
@@ -12746,7 +12759,7 @@ window.cheatExec = function(raw){
   const num = (i, d) => { const v = parseFloat(parts[i]); return isNaN(v) ? d : v; };
   try {
     switch (cmd){
-      case 'help': CHEAT_HELP.forEach(l => cheatLog(l, '#cfe8ff')); return;
+      case 'help': cheatHelp().forEach(l => cheatLog(l, l.startsWith('──') ? '#7fd4ff' : '#cfe8ff')); return;
       case 'max': applyTestBoost(); cheatLog('MAX MODE — mọi tính năng tối đa!', '#7ecbff'); break;
       case 'lv': {
         const n = clamp(Math.round(num(1, 1)), 1, 120);
@@ -12779,7 +12792,8 @@ window.cheatExec = function(raw){
         player.skillLv = player.skillLv || {};
         for (const _sid in SKILL_DEFS) player.skillLv[_sid] = 120;
         player.bikipVH = Math.max(player.bikipVH || 0, 99);
-        calcDerived(); cheatLog('FULL SKILL — 34 kỹ năng + 30 dung hợp, mọi kỹ năng Lv 120 (bấm K gán)', '#ff9ae0'); break;
+        calcDerived();
+        cheatLog(`FULL SKILL — ${Object.keys(VOHOC_DEFS).length} kỹ năng, ${Object.keys(SKILL_DEFS).length} chiêu Lv 120 (bấm K gán)`, '#ff9ae0'); break;
       }
       case 'bikip': {
         player.bikipVH = clamp(Math.round(num(1, 20)), 0, 999);
@@ -12789,7 +12803,8 @@ window.cheatExec = function(raw){
         player.tenuiTT = 0;
         cheatLog('Đã gỡ Trọng Thương — có thể nhảy Vực Thẳm ngay', '#8fd18f'); break;
       }
-      case 'phi': { // Starflight ngay — test giai đoạn Vượt Giới Hạn
+      case 'ascend': { // Starflight ngay — test giai đoạn Vượt Giới Hạn. Lệnh này từng tên là
+                       // '/phi' (phi thăng) — từ vựng tiên hiệp bị cấm, đổi cả trong console.
         player.dantian.realm = DANTIAN_REALMS.length - 1;
         ascendToImmortal();
         cheatLog('☁ Starflight — Vượt Giới Hạn! Mở Cài Đặt (O) đổi Nam/Nữ & trang phục', '#fff2b0'); break;
@@ -12801,6 +12816,41 @@ window.cheatExec = function(raw){
         // CANH_NAMES/gti.canh thuộc Lịch Thế Giới (Can Chi) đã gỡ — để lại thì gõ /time là
         // ném ReferenceError. Đồng hồ thế giới nay chỉ còn ngày/mùa.
         cheatLog(`Đồng Hồ Thế Giới → ${gti.season.name} ${gti.day}/${gti.month} Năm ${gti.year}`, gti.season.color); break;
+      }
+      case 'nd': case 'jewel': case 'gem': case 'hap': {
+        // Bốn hệ tiền tệ ra đời sau bản console cũ nên trước đây không test được bằng lệnh nào.
+        const v2 = Math.max(0, Math.round(num(1, 20)));
+        if (cmd === 'nd'){ player.noidan = v2; player.ndDay = ''; player.ndCount = 0; cheatLog('Lõi Nguyên Tố → ' + v2 + ' (mở lại 3 lượt hấp thụ hôm nay)', '#b08ae8'); }
+        else if (cmd === 'jewel'){ for (const k in JEWEL_NAMES) player.jewels[k] = v2; cheatLog('Tứ Châu → ' + v2 + ' mỗi loại', '#7ecbff'); }
+        else if (cmd === 'gem'){ player.gems.tuLa = v2; player.gems.honNguyen = v2; cheatLog(`Tử La ${v2} · Hỗn Nguyên ${v2}`, '#e8552a'); }
+        else { for (let t = 1; t < BAOHAP_TIERS.length; t++) player.baohap[t] = v2; cheatLog(`Bảo Hạp → ${v2} mỗi tầng (I-${BAOHAP_TIERS.length - 1})`, '#ffd76a'); }
+        break;
+      }
+      case 'slot': {
+        // Thanh chiêu 4 ô (phím 1-4) thêm vào sau bản console cũ — không có lệnh nào chạm tới.
+        if (!parts[1]){ cheatLog('Thanh chiêu: ' + player.skillBar.map((x, i) => `${i+1}=${x || '—'}`).join(' · '), '#cfe8ff'); return; }
+        const sl = clamp(Math.round(num(1, 1)), 1, 4) - 1;
+        const sid = parts[2];
+        if (!sid || sid === '-'){ player.skillBar[sl] = null; cheatLog(`Ô ${sl+1} → trống`, '#8fd18f'); }
+        else if (!SKILL_DEFS[sid]){ cheatLog(`Không có chiêu "${sid}" — /fullskill rồi bấm K để xem danh sách`, '#ff7a6a'); return; }
+        else { player.skillBar[sl] = sid; cheatLog(`Ô ${sl+1} → ${skName(sid)}`, '#8fd18f'); }
+        break;   // thanh chiêu vẽ lại mỗi khung hình trong vòng lặp HUD, không cần gọi tay
+      }
+      case 'evo': {
+        // Nhánh tiến hóa cũng vậy: chọn được trong game nhưng không set được từ console, nên test
+        // một nhánh cụ thể phải cày tới đúng cấp mốc rồi bấm tay.
+        const sid = parts[1], bac = clamp(Math.round(num(2, 1)), 1, EVO_LVS.length), path = parts[3];
+        if (!SKILL_DEFS[sid] || !EVO_PATHS[path]){
+          cheatLog(`/evo <id chiêu> <1-${EVO_LVS.length}> <${Object.keys(EVO_PATHS).join('|')}>`, '#ff7a6a'); return;
+        }
+        player.skillLv = player.skillLv || {};
+        player.skillLv[sid] = Math.max(player.skillLv[sid] || 1, EVO_LVS[bac - 1]);  // phải đủ cấp mốc
+        player.level = Math.max(player.level, player.skillLv[sid]);
+        if (!player.skillEvo) player.skillEvo = {};
+        if (!player.skillEvo[sid]) player.skillEvo[sid] = [];
+        player.skillEvo[sid][bac - 1] = path;
+        calcDerived();
+        cheatLog(`${skName(sid)} bậc ${bac} → ${EVO_PATHS[path].name} (cấp chiêu ${player.skillLv[sid]})`, '#ffd76a'); break;
       }
       case 'silver': case 'mat': case 'khi': case 'manh': case 'tich': case 'an': case 'cothan': case 'dan': {
         const raw2 = parts[1] || '10000';
@@ -12842,14 +12892,14 @@ window.cheatExec = function(raw){
       case 'th': {
         const sys = parts[1];
         const st = sys === 'amkhi' ? player.amkhiX : sys === 'bow' ? player.bow : sys === 'gangkhi' ? player.gangkhi : null;
-        if (!st){ cheatLog('/th amkhi|bow|gangkhi <0-7>', '#ff7a6a'); return; }
+        if (!st){ cheatLog('/th ' + Object.keys(TH_SYSTEMS).join('|') + ' <0-7>', '#ff7a6a'); return; }
         st.tier = clamp(Math.round(num(2, 1)), 0, 7); st.bless = 0;
-        calcDerived(); cheatLog('Thuần Thục ' + sys + ' → tầng ' + st.tier, '#8fd18f'); break;
+        calcDerived(); cheatLog(`Thuần Thục ${TH_SYSTEMS[sys].name} → tầng ${st.tier}`, '#8fd18f'); break;
       }
       case 'tier': {
         player.mount.tier = clamp(Math.round(num(1, 1)), 0, MOUNT_TIERS.length - 1);
         player.mount.out = player.mount.tier > 0;
-        cheatLog('Thú Cưỡi → tầng ' + player.mount.tier, '#8fd18f'); break;
+        cheatLog(`Thú Chiến → ${MOUNT_TIERS[player.mount.tier].name} (giai ${player.mount.tier}/${MOUNT_TIERS.length - 1})`, '#8fd18f'); break;
       }
       case 'boss': {
         const bd = BOSS_DEFS[curMap];
