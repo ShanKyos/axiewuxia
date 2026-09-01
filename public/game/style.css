@@ -1061,3 +1061,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 }
 .pet-hint { font-size:11.5px; color:#9aa8d4; margin-top:5px; line-height:1.6; }
 .pet-hint b { color:#b08ae8; }
+
+/* Box Kundun — kéo ra màn hình để ném */
+.box-row { cursor: grab; }
+.box-row:active { cursor: grabbing; }
+.box-row:hover { border-color: var(--accent-light); background: rgba(76,141,255,.12); }

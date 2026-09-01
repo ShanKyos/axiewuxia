@@ -3762,10 +3762,6 @@ function attachSigil(it, chance){
 }
 // Dòng thông báo khi Khắc Ấn rơi — nêu luôn hiệu ứng, vì cái người chơi cần biết không phải
 // "vừa nhặt được món hiếm" mà là "món này làm chiêu của mình khác đi thế nào".
-function sigilGotLine(k){
-  const s = SIGIL_DEFS[k];
-  return `<b style="color:${s.color}">◆ KHẮC ẤN — ${s.name}</b><br><span style="opacity:.8;font-size:12px">${s.desc}</span>`;
-}
 // Băng-rôn + tiếng khi một Khắc Ấn rơi ra, dùng chung cho cả 3 nguồn
 function sigilAnnounce(k, x, y){
   const s = SIGIL_DEFS[k];
@@ -5687,9 +5683,22 @@ const LOOT_MAX     = 60;    // trần cứng chống phình RAM khi treo AUTO
 const LOOT_GRAB_R  = 46;    // đi ngang qua là nhặt
 const LOOT_REACH_R = 96;    // tầm với của phím J / cú bấm chuột
 const LOOT_G       = 620;   // trọng lực cú nảy
-function lootRar(g){ return g.k === 'jewel' ? 3 : (g.it.rarity || 0); }
-function lootColor(g){ return g.k === 'jewel' ? JEWEL_COLORS[g.jk] : RARITIES[g.it.rarity].color; }
-function lootName(g){ return g.k === 'jewel' ? JEWEL_NAMES[g.jk] : g.it.name; }
+// Đồ HOÀN HẢO đọc bằng MÀU, không phải bằng chữ. Đây là mã màu riêng — cố ý chói hơn xanh
+// phẩm Tinh (#5fc96e) để ở giữa một bãi đồ vẫn nhận ra ngay từ xa, y như đồ Excellent bên MU.
+const PERFECT_COL = '#3ae07a';
+function itemIsPerfect(it){ return !!(it && (it.perfect || (it.exc && it.exc.length))); }
+function lootRar(g){
+  if (g.k === 'jewel') return 3;
+  return itemIsPerfect(g.it) ? Math.max(3, g.it.rarity || 0) : (g.it.rarity || 0);
+}
+function lootColor(g){
+  if (g.k === 'jewel') return JEWEL_COLORS[g.jk];
+  return itemIsPerfect(g.it) ? PERFECT_COL : RARITIES[g.it.rarity].color;
+}
+function lootName(g){
+  if (g.k === 'jewel') return JEWEL_NAMES[g.jk];
+  return (itemIsPerfect(g.it) ? '✦ ' : '') + g.it.name;
+}
 // Bắn item ra khỏi xác theo hình vòng cung rồi đáp xuống — cú nảy chính là thứ báo cho mắt
 // "vừa có cái gì rơi ra", trước khi kịp đọc chữ.
 function dropToGround(o, x, y){
@@ -5713,6 +5722,75 @@ function dropToGround(o, x, y){
       { text:`${RARITIES[g.it.rarity].name.toUpperCase()} RƠI XUỐNG!`, sub: g.it.name, color: col, t:3 }; }
   }
   return g;
+}
+// ═══════════ HẠP NÉM RA ĐẤT ═══════════
+// Bản cũ bấm "Mở Hạp" là mọi thứ nhảy thẳng vào túi rồi in một bảng chữ — không có khoảnh khắc
+// nào để nhìn. Cái hay của MU nằm ở chỗ hạp VĂNG ĐỒ RA ĐẤT: nghe tiếng chạm, thấy đồ toé ra,
+// rồi mới đi nhặt. Nên hạp giờ là một vật thể bay ra khỏi tay, đáp xuống, nằm một nhịp, rồi nổ.
+let boxThrows = [];
+const BOX_IMGS = {};
+function boxImgOf(tier){
+  if (BOX_IMGS[tier]) return BOX_IMGS[tier];
+  const im = new Image(); im.src = consumArtUrl('box', (BAOHAP_TIERS[tier] || {}).color || '#9aa8d4');
+  BOX_IMGS[tier] = im; return im;
+}
+const BOX_REACH = 300;   // ném xa nhất — quá tầm này thì kẹp lại, đừng để quăng qua nửa bản đồ
+function throwBaoHap(tier, wx, wy){
+  const bh = player.baohap || {};
+  if (!bh[tier] || bh[tier] <= 0) return false;
+  bh[tier]--;
+  // kẹp điểm rơi vào tầm với, và tránh ném vào vật cản
+  let dx = wx - player.x, dy = wy - player.y;
+  const d = Math.hypot(dx, dy) || 1;
+  if (d > BOX_REACH){ dx = dx / d * BOX_REACH; dy = dy / d * BOX_REACH; }
+  let tx = player.x + dx, ty = player.y + dy;
+  if (inObstacle(curMap, tx, ty, 12)){ const nf = nearestFree(curMap, tx, ty); tx = nf.x; ty = nf.y; }
+  boxThrows.push({ tier, sx: player.x, sy: player.y - 14, tx, ty, x: player.x, y: player.y - 14,
+                   fly: 0, z: 14, vz: 250, wait: 0, spin: 0, burst: false });
+  player.face = Math.atan2(ty - player.y, tx - player.x);
+  AudioSys.sfx('throw_' + (1 + Math.floor(Math.random() * 2)), 0.75);
+  closePanels(); saveGame();
+  return true;
+}
+function updateBoxThrows(dt){
+  for (let i = boxThrows.length - 1; i >= 0; i--){
+    const b = boxThrows[i];
+    b.spin += dt * 9;
+    if (!b.burst){
+      b.fly = Math.min(1, b.fly + dt * 2.2);
+      b.x = b.sx + (b.tx - b.sx) * b.fly;
+      b.y = b.sy + (b.ty - b.sy) * b.fly;
+      b.vz -= LOOT_G * dt; b.z += b.vz * dt;
+      if (b.z <= 0 && b.fly >= 1){
+        b.z = 0; b.vz = 0; b.burst = true; b.wait = 0.34;   // nằm im một nhịp — chính nhịp này tạo hồi hộp
+        AudioSys.sfx('forge_fail', 0.5);                     // tiếng thùng chạm đất
+        shakeMag = Math.max(shakeMag || 0, 4);
+        addEffect({ type:'ink', x:b.x, y:b.y, vx:0, vy:-30, color:'#6a5a3a' });
+      }
+    } else {
+      b.wait -= dt;
+      if (b.wait <= 0){ burstBaoHap(b.tier, b.x, b.y); boxThrows.splice(i, 1); }
+    }
+  }
+}
+function drawBoxThrows(){
+  for (const b of boxThrows){
+    const d = BAOHAP_TIERS[b.tier] || { color:'#9aa8d4' };
+    ctx.fillStyle = 'rgba(0,0,0,.26)';
+    ctx.beginPath(); ctx.ellipse(b.x, b.y + 4, 13 - b.z*0.04, 5 - b.z*0.015, 0, 0, 7); ctx.fill();
+    const im = boxImgOf(b.tier);
+    ctx.save();
+    ctx.translate(b.x, b.y - 8 - b.z);
+    ctx.rotate(b.burst ? 0 : Math.sin(b.spin) * 0.5);
+    if (b.burst){                                   // nắp hạp rung lên trước khi bung
+      const k = 1 + Math.sin(performance.now() / 40) * 0.06;
+      ctx.scale(k, 2 - k);
+      ctx.shadowColor = d.color; ctx.shadowBlur = 18;
+    }
+    if (im && im.complete && im.naturalWidth) ctx.drawImage(im, -17, -17, 34, 34);
+    else { ctx.fillStyle = d.color; ctx.fillRect(-11, -11, 22, 22); }
+    ctx.restore();
+  }
 }
 function updateGroundLoot(dt){
   if (!groundLoot.length || !player) return;
@@ -7483,6 +7561,7 @@ function update(dt){
   // khi đi ngang qua nữa (dễ hái nhầm/không rõ ràng lúc chỉ còn tự đi tới bằng click)
   for (const p of pickups) if (p.respawn > 0) p.respawn -= dt;
   updateGroundLoot(dt);
+  updateBoxThrows(dt);
 
   // mobs AI
   mobSeparate(dt);
@@ -8162,7 +8241,8 @@ function render(){
     }
   }
 
-  drawGroundLoot(_herbT); // đồ rơi dưới đất — vẽ sau thảo dược, trước NPC/quái
+  drawGroundLoot(_herbT); // đồ rơi dưới đất
+  drawBoxThrows();       // hạp đang bay / sắp nổ — vẽ sau thảo dược, trước NPC/quái
 
   // NPC
   drawNpc();
@@ -16343,11 +16423,13 @@ function bagSecBox(){
   if (!bhTiers.length) h += `<div class="chaos-empty">Chưa có Box Kundun nào — săn Hung Thần hoặc quái Xâm Lăng Vàng.</div>`;
   for (const t of bhTiers){
     const d = BAOHAP_TIERS[t];
-    h += `<div class="inv-item"><span class="s-name" style="display:flex;align-items:center;gap:9px">
+    h += `<div class="inv-item box-row" draggable="true" ondragstart="onBoxDragStart(event,${t})">
+        <span class="s-name" style="display:flex;align-items:center;gap:9px">
         <img class="consum-ic" src="${consumArtUrl('box', d.color)}" alt="">
         <span><b style="color:${d.color}">${d.name}</b> ×${bh[t]}<br>
-        <span class="item-tip">LV${d.min}-${d.max === 999 ? '100+' : d.max} · trang bị cao cấp${d.ancient ? ` · <b style="color:#3ac88a">Cổ Thần ${Math.round(d.ancient*100)}%</b>` : ''} · châu quý</span></span></span>
-      <span><button class="mini-btn" onclick="openBaoHap(${t})">Mở Hạp</button></span></div>`;
+        <span class="item-tip">LV${d.min}-${d.max === 999 ? '100+' : d.max} · trang bị cao cấp${d.ancient ? ` · <b style="color:#3ac88a">Cổ Thần ${Math.round(d.ancient*100)}%</b>` : ''} · châu quý<br>
+        <b style="color:#ffd76a">Kéo hạp ra màn hình</b> để ném tới chỗ bạn chọn</span></span></span>
+      <span><button class="mini-btn" onclick="openBaoHap(${t})">Ném Xuống</button></span></div>`;
   }
   const ndUsed = ndToday();
   const ndCnt = player.noidan || 0;
@@ -20312,62 +20394,78 @@ function playChaosAnim(items, r, success, onReveal){
 }
 
 // ---------- Bảo Hạp (mở từ Túi Đồ) — Cổ Thần chỉ từ đây, KHÔNG pity ----------
-window.openBaoHap = function(t){
-  const bh = player.baohap || {};
-  if (!bh[t] || bh[t] <= 0) return;
+// Nội dung phần thưởng giữ NGUYÊN như bản cũ (tỉ lệ Cổ Thần, Hoàn Hảo, Khắc Ấn, châu, bạc) —
+// chỉ đổi ĐƯỜNG ĐI: thay vì nhảy thẳng vào túi kèm một bảng chữ, mọi thứ văng ra đất qua
+// dropToGround(), thứ vốn đã lo sẵn cú nảy, tiếng động, vòng sáng và biểu ngữ theo phẩm.
+function burstBaoHap(t, x, y){
   const def = BAOHAP_TIERS[t];
-  bh[t]--;
   const lv = Math.max(player.level, def.min);
-  const got = [];
+  const drops = [];
   if (def.ancient > 0 && Math.random() < def.ancient){
     const setIds = Object.keys(ANCIENT_SETS);
-    const it = genAncient(setIds[Math.floor(Math.random()*setIds.length)], ARMOR_SLOTS[Math.floor(Math.random()*ARMOR_SLOTS.length)], lv);
-    if (player.inv.length < 30){
-      player.inv.push(it);
-      got.push(`<b style="color:${ANCIENT_SETS[it.ancient].color}">◈ CỔ THẦN — ${it.name}</b> (${Math.round(def.ancient*100)}% đã mỉm cười!)`);
-      zoneBanner = { text:'◈ CỔ THẦN XUẤT THẾ', sub:`${it.name} — ${ANCIENT_SETS[it.ancient].hint}!`, color:'#3ac88a', t:5 };
-      AudioSys.sfx('levelup', 0.95);
-    } else if (khoList().length < KHO_SIZE){
-      // Trước đây chỗ này quy món CỔ THẦN thành 3000 bạc. Cổ Thần rơi 5-8% từ hộp tầng IV+ và
-      // là thứ hiếm nhất game — đổi nó lấy 3000 bạc vì túi đầy là mất trắng, mà người chơi
-      // thường không kịp đọc dòng chữ báo. Nay rơi thẳng vào Kho.
-      khoList().push(it);
-      got.push(`<b style="color:${ANCIENT_SETS[it.ancient].color}">◈ CỔ THẦN — ${it.name}</b> → túi đầy, đã cất vào KHO`);
-      zoneBanner = { text:'◈ CỔ THẦN XUẤT THẾ', sub:`${it.name} — túi đầy nên đã cất vào Kho!`, color:'#3ac88a', t:5 };
-      AudioSys.sfx('levelup', 0.95);
-    } else { player.silver += 3000; got.push('Túi VÀ kho đều đầy — Cổ Thần quy đổi 3000◈'); }
+    drops.push(genAncient(setIds[Math.floor(Math.random()*setIds.length)],
+                          ARMOR_SLOTS[Math.floor(Math.random()*ARMOR_SLOTS.length)], lv));
   } else {
     let it = null;
     const _bp = BAOHAP_PERFECT[Math.min(t, BAOHAP_PERFECT.length - 1)] || 0;
     for (let i = 0; i < 6; i++){ it = genItem(lv, 0.5 + t*0.06, null, { perfect: _bp }); if (it.rarity >= 2) break; }
-    // Khắc Ấn chỉ từ Bảo Hạp IV trở lên, tỉ lệ tăng dần theo tầng (IV 18% → VII 33%)
     if (t >= 4) attachSigil(it, 0.18 + (t - 4) * 0.05);
-    if (player.inv.length < 30){
-      player.inv.push(it);
-      got.push(`Trang bị: <b class="${RARITIES[it.rarity].cls}">${it.name}</b>`);
-      if (it.sigil) got.push(sigilGotLine(it.sigil));
-    }
-    else if (khoList().length < KHO_SIZE){ khoList().push(it); got.push(`Trang bị: <b class="${RARITIES[it.rarity].cls}">${it.name}</b> → túi đầy, đã cất vào KHO`); }
-    else { player.silver += 800; got.push('Túi VÀ kho đều đầy — trang bị quy đổi 800◈'); }
+    if (it.sigil) setTimeout(() => { if (player) sigilAnnounce(it.sigil, x, y); }, 420);
+    drops.push(it);
   }
-  // Châu kèm theo — tầng càng cao tỉ lệ càng tốt
+  // Châu kèm theo — tầng càng cao tỉ lệ càng tốt (y hệt bảng cũ)
   const jr = Math.random()*100;
   const cp = 22 + t*2, lh = cp + 12 + t, sm = lh + 6 + t*0.5, hd = sm + 3 + t*0.5;
-  if (jr < cp){ player.jewels.chucPhuc++; got.push(JEWEL_NAMES.chucPhuc); }
-  else if (jr < lh){ player.jewels.linhHon++; got.push(JEWEL_NAMES.linhHon); }
-  else if (jr < sm){ player.jewels.sinhMenh++; got.push(JEWEL_NAMES.sinhMenh); }
-  else if (jr < hd){ player.jewels.honDon++; got.push(JEWEL_NAMES.honDon); }
-  const sil = 150 + t*120;
+  let jk = null;
+  if (jr < cp) jk = 'chucPhuc'; else if (jr < lh) jk = 'linhHon';
+  else if (jr < sm) jk = 'sinhMenh'; else if (jr < hd) jk = 'honDon';
+
+  AudioSys.sfx('levelup', 0.8);
+  addEffect({ type:'ring', x, y, r: 70 + t*8, color: def.color, big:true });
+  for (let i = 0; i < 14; i++)
+    addEffect({ type:'ink', x, y, vx: rnd(-130,130), vy: rnd(-170,-40), color: def.color });
+  shakeMag = Math.max(shakeMag || 0, 6);
+
+  // Đồ văng ra đất, giãn nhịp một chút để mắt kịp bắt từng món
+  let hoanHao = false;
+  drops.forEach((it, i) => {
+    if (itemIsPerfect(it)) hoanHao = true;
+    setTimeout(() => { if (player) dropToGround({ k:'item', it }, x, y); }, i * 130);
+  });
+  if (jk) setTimeout(() => { if (player) dropToGround({ k:'jewel', jk }, x, y); }, drops.length * 130);
+
+  const sil = 150 + t*120 + 40*t;
   player.silver += sil;
-  player.silver += 40*t;
-  got.push(`${sil + 40*t}◈ bạc`);
-  addFloat(player.x, player.y-56, `Mở ${def.name}!`, def.color, 15);
-  AudioSys.sfx('coin', 0.7);
+  addFloat(x, y - 46, `+${sil.toLocaleString('vi-VN')}\u25c8`, '#ffd76a', 14);
+  if (hoanHao){
+    zoneBanner = { text:'\u2726 HOÀN HẢO!', sub:'Trang bị Hoàn Hảo vừa rơi xuống — nhặt ngay!', color: PERFECT_COL, t:4 };
+    AudioSys.sfx('quest', 0.95);
+  }
   saveGame(); refreshEqPanels();
-  el('panel-quest').innerHTML = `<h3>${def.name}</h3><button class="close-x" onclick="closePanels()">✕</button>
-    <div style="padding:10px;font-size:13px;line-height:2">Khai mở bảo hạp:<br>${got.join('<br>')}</div>
-    <div class="forge-actions"><button class="mini-btn" onclick="togglePanel('bag')">Xem Túi Đồ</button></div>`;
-  closePanels(); el('panel-quest').classList.remove('hidden');
+}
+// Nút "Mở Hạp" trong túi: ném xuống ngay trước mặt. Muốn chọn chỗ rơi thì KÉO hạp ra màn hình.
+window.openBaoHap = function(t){
+  const ang = player.face || 0;
+  throwBaoHap(t, player.x + Math.cos(ang) * 120, player.y + Math.sin(ang) * 120);
+};
+// Kéo hạp từ túi ra thế giới — thả ở đâu thì hạp bay tới đó.
+// Canvas là bãi thả. Không gắn trong index.html mà gắn ở đây để phần kéo-thả nằm trọn một chỗ.
+(function wireBoxDrop(){
+  const cv = document.getElementById('game');
+  if (!cv) return;
+  cv.addEventListener('dragover', e => { if (window._dragBoxTier != null){ e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } });
+  cv.addEventListener('drop', e => {
+    const t = window._dragBoxTier;
+    window._dragBoxTier = null;
+    if (t == null || !player || dead) return;
+    e.preventDefault();
+    throwBaoHap(t, e.clientX + camera.x, e.clientY + camera.y);
+  });
+  document.addEventListener('dragend', () => { window._dragBoxTier = null; });
+})();
+window.onBoxDragStart = function(ev, t){
+  window._dragBoxTier = t;
+  if (ev.dataTransfer){ ev.dataTransfer.effectAllowed = 'move'; ev.dataTransfer.setData('text/plain', 'box:' + t); }
 };
 
 // ---------- Ma Tôn Giáng Thế — 4 giờ/lần (0h 4h 8h 12h 16h 20h), luân phiên Hạ/Thượng Giới ----------
