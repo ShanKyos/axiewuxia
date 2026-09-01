@@ -936,6 +936,12 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 
 /* ═══════════ TẠO NHÂN VẬT — kiểu MU Online ═══════════
    Màn cũ là 16 lá bài thái cực/bát quái để roll vận mệnh. Nay: chọn lớp, gõ tên, vào game. */
+.npc-head { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.npc-head h3 { margin:0; }
+.npc-head .npc-face { width:52px; height:52px; flex:0 0 52px; object-fit:contain;
+  border-radius:var(--r-md); background:rgba(10,14,32,.55);
+  border:1.5px solid var(--border); padding:2px; }
+@media (max-width:1000px){ .npc-head .npc-face { width:40px; height:40px; flex-basis:40px; } }
 #art-view { position:fixed; inset:0; z-index:9000; background:rgba(4,4,10,.94);
   display:flex; align-items:center; justify-content:center; cursor:pointer; }
 #art-view .av-in { display:flex; align-items:center; gap:24px; padding:20px; }
@@ -948,7 +954,13 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   height:auto; width:24vw; max-width:340px; z-index:12; pointer-events:none;
   opacity:0; transition:opacity 180ms ease-out, transform 180ms ease-out; }
 #cc-splash.on { opacity:1; transform:translateY(-50%) scale(1); }
-@media (max-width:1240px){ #art-view { position:fixed; inset:0; z-index:9000; background:rgba(4,4,10,.94);
+@media (max-width:1240px){ .npc-head { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.npc-head h3 { margin:0; }
+.npc-head .npc-face { width:52px; height:52px; flex:0 0 52px; object-fit:contain;
+  border-radius:var(--r-md); background:rgba(10,14,32,.55);
+  border:1.5px solid var(--border); padding:2px; }
+@media (max-width:1000px){ .npc-head .npc-face { width:40px; height:40px; flex-basis:40px; } }
+#art-view { position:fixed; inset:0; z-index:9000; background:rgba(4,4,10,.94);
   display:flex; align-items:center; justify-content:center; cursor:pointer; }
 #art-view .av-in { display:flex; align-items:center; gap:24px; padding:20px; }
 #art-view img { height:82vh; width:auto; }
