@@ -11187,18 +11187,34 @@ function chBlob(g, x, y, w, h, lo, hi, r){
   g.fill();
 }
 
+// Mỗi lớp một BÓNG DÁNG riêng. Đây là chỗ bản đầu làm sai: năm lớp chung một
+// khuôn, chỉ đổi màu và vũ khí — che màu đi thì không ai phân biệt được. MU
+// phân biệt lớp bằng đường viền ngoài: Dark Knight mũ trụ kín có sừng và giáp
+// vai to; Dark Wizard mũ chóp nhọn với áo thụng loe, không có giáp; Sylvan
+// Ranger để tóc, đuôi tóc và tai nhọn; Spellblade LỆCH một bên vai; Dark Lord
+// vương miện năm chấu với áo choàng. Nhìn bóng đen là biết ai.
+const CHIBI_CFG = {
+  thieulam: { head:'helm',  sh:'spike',  body:'plate'   },
+  toanchan: { head:'hair',  sh:'small',  body:'leather' },
+  baidasan: { head:'hood',  sh:'none',   body:'robe'    },
+  minhgiao: { head:'mane',  sh:'one',    body:'half'    },
+  bug:      { head:'crown', sh:'wide',   body:'cape'    },
+};
+
 function drawChibi(g, sectKey, variant){
   const C = SPLASH_CFG[sectKey] || SPLASH_CFG.thieulam;
-  const V = variant === 'mavuong';                  // biến thể: giáp tối, kim nhũ đỏ
+  const K = CHIBI_CFG[sectKey] || CHIBI_CFG.thieulam;
+  const V = variant === 'mavuong';
   const base = V ? '#5b2a6e' : _lift(C.hue, 0.14);
-  const hi = _lift(base, 0.5), lo = _dim(base, 0.32);
-  const gold = V ? '#e04a3c' : C.gold, gLo = _dim(gold, 0.34);
+  const hi = _lift(base, 0.5), lo = _dim(base, 0.68);
+  const gold = V ? '#e04a3c' : C.gold, gLo = _dim(gold, 0.66);
   const aura = V ? '#ff6a4a' : C.aura;
-  const cx = 210;
+  const cx = 210, skin = '#f3d8b8';
+  const hy = 176, hr = 92;
 
-  // ── Cánh sau lưng: mọc từ ngang vai, KHÔNG che đầu ──
-  // Bản Ma Vương lấy "cánh bậc 2": màng dơi có ngón xương, xoè rộng gần gấp rưỡi.
-  for (const s of [-1, 1]){
+  // ── Cánh (chỉ lớp có cánh; Sylvan Ranger và Spellblade để trống cho gọn) ──
+  const hasWing = V || K.body === 'plate' || K.body === 'cape' || K.body === 'robe';
+  if (hasWing) for (const s of [-1, 1]){
     g.save(); g.translate(cx, 300); g.scale(s, 1);
     if (V){
       const fing = [[132,-150],[176,-96],[186,-30],[156,34]];
@@ -11226,79 +11242,198 @@ function drawChibi(g, sectKey, variant){
     }
     g.restore();
   }
-  // ── Thân + tay chân (chibi: ngắn và mập) ──
-  chBlob(g, cx - 34, 372, 44, 46, lo, base);                  // ủng trái
-  chBlob(g, cx + 34, 372, 44, 46, lo, base);                  // ủng phải
-  chBlob(g, cx, 316, 128, 76, base, hi, 26);                  // thân
-  chBlob(g, cx, 344, 116, 30, gLo, gold, 12);                 // đai
-  chBlob(g, cx - 86, 306, 46, 62, lo, base, 20);              // tay trái
-  chBlob(g, cx + 86, 306, 46, 62, lo, base, 20);              // tay phải
-  g.fillStyle = '#f3d8b8';                                     // bàn tay
+  // ── Áo choàng của Dark Lord: xoè sau lưng, thò ra hai bên thân ──
+  if (K.body === 'cape'){
+    const cg = g.createLinearGradient(cx, 270, cx, 392);
+    cg.addColorStop(0, _lift(C.deep, 0.5)); cg.addColorStop(1, _dim(C.deep, 0.3));
+    g.fillStyle = cg;
+    g.beginPath(); g.moveTo(cx - 74, 272); g.lineTo(cx + 74, 272);
+    g.quadraticCurveTo(cx + 128, 350, cx + 112, 396);
+    g.lineTo(cx - 112, 396); g.quadraticCurveTo(cx - 128, 350, cx - 74, 272);
+    g.closePath(); g.fill();
+  }
+
+  // ── THÂN ──
+  if (K.body === 'robe'){
+    // Áo thụng: loe xuống, KHÔNG thấy chân. Đây là dấu hiệu nhận ra pháp sư.
+    const rg = g.createLinearGradient(cx - 70, 280, cx + 70, 392);
+    rg.addColorStop(0, hi); rg.addColorStop(0.5, base); rg.addColorStop(1, _dim(base, 0.5));
+    g.fillStyle = rg;
+    g.beginPath(); g.moveTo(cx - 52, 278); g.lineTo(cx + 52, 278);
+    g.quadraticCurveTo(cx + 76, 340, cx + 92, 394);
+    g.lineTo(cx - 92, 394); g.quadraticCurveTo(cx - 76, 340, cx - 52, 278);
+    g.closePath(); g.fill();
+    g.fillStyle = gLo;                                          // viền gấu áo
+    g.fillRect(cx - 90, 378, 180, 16);
+    chBlob(g, cx, 322, 30, 92, gLo, gold, 10);                  // dải áo giữa
+  } else {
+    chBlob(g, cx - 34, 372, 44, 46, lo, base);                  // ủng
+    chBlob(g, cx + 34, 372, 44, 46, lo, base);
+    if (K.body === 'leather'){
+      chBlob(g, cx, 318, 106, 74, base, hi, 24);
+      g.save(); g.translate(cx, 318); g.rotate(-0.5);           // dây đeo chéo
+      g.fillStyle = gLo; g.fillRect(-16, -52, 32, 104); g.restore();
+    } else if (K.body === 'half'){
+      chBlob(g, cx, 318, 124, 76, base, hi, 24);
+      g.fillStyle = _dim(base, 0.45);                           // nửa vải bên phải
+      g.beginPath(); g.moveTo(cx + 6, 280); g.lineTo(cx + 62, 280); g.lineTo(cx + 62, 356); g.lineTo(cx - 6, 356); g.closePath(); g.fill();
+    } else {
+      chBlob(g, cx, 316, 128, 76, base, hi, 26);
+      chBlob(g, cx - 32, 310, 50, 54, _dim(base, 0.25), _lift(base, 0.6), 14);   // hai phiến ngực
+      chBlob(g, cx + 32, 310, 50, 54, _dim(base, 0.4), base, 14);
+    }
+    chBlob(g, cx, 348, 112, 28, gLo, gold, 11);                 // đai
+  }
+  chBlob(g, cx - 86, 306, 44, 60, lo, base, 19);                // tay
+  chBlob(g, cx + 86, 306, 44, 60, lo, base, 19);
+  g.fillStyle = skin;
   g.beginPath(); g.arc(cx - 92, 340, 19, 0, 6.2832); g.fill();
   g.beginPath(); g.arc(cx + 92, 340, 19, 0, 6.2832); g.fill();
-  chBlob(g, cx - 84, 268, 66, 40, gLo, gold, 16);             // giáp vai trái
-  chBlob(g, cx + 84, 268, 66, 40, gLo, gold, 16);             // giáp vai phải
-  g.fillStyle = aura;                                          // viên đá giữa ngực
-  g.beginPath(); g.moveTo(cx, 296); g.lineTo(cx + 15, 314); g.lineTo(cx, 332); g.lineTo(cx - 15, 314); g.closePath(); g.fill();
+  g.fillStyle = aura;                                            // đá ngực
+  g.beginPath(); g.moveTo(cx, 294); g.lineTo(cx + 14, 311); g.lineTo(cx, 328); g.lineTo(cx - 14, 311); g.closePath(); g.fill();
 
-  // ── Vũ khí cầm nghiêng, theo đúng lớp ──
+  // ── GIÁP VAI: to nhỏ theo lớp, Spellblade chỉ có MỘT bên ──
+  const pauldron = (s) => {
+    chBlob(g, cx + s * 86, 268, K.sh === 'wide' ? 80 : 66, K.sh === 'wide' ? 46 : 40, gLo, gold, 16);
+    const n = K.sh === 'wide' ? 2 : 3;
+    for (let i = 0; i < n; i++){
+      const px = cx + s * 86 + (i - (n - 1) / 2) * 26;
+      g.fillStyle = gold;
+      g.beginPath(); g.moveTo(px - 10, 250); g.lineTo(px + 10, 250); g.lineTo(px, 208); g.closePath(); g.fill();
+    }
+  };
+  if (K.sh === 'spike' || K.sh === 'wide'){ pauldron(-1); pauldron(1); }
+  else if (K.sh === 'one') pauldron(-1);
+  else if (K.sh === 'small'){
+    chBlob(g, cx - 84, 276, 48, 28, gLo, gold, 12);
+    chBlob(g, cx + 84, 276, 48, 28, gLo, gold, 12);
+  }
+
+  // ── Vũ khí ──
   const arm = V ? 'skullstaff' : C.arm;
   g.save(); g.translate(cx - 128, 250); g.rotate(-0.22);
   if (arm === 'greatsword' || arm === 'flamberge'){
-    chBlob(g, 0, 96, 34, 210, '#8b97b4', '#f2f6ff', 6);          // lưỡi
+    chBlob(g, 0, 96, 34, 210, '#8b97b4', '#f2f6ff', 6);
     g.fillStyle = '#e8eeff';
     g.beginPath(); g.moveTo(-17, 198); g.lineTo(17, 198); g.lineTo(0, 232); g.closePath(); g.fill();
-    chBlob(g, 0, -14, 96, 22, gLo, gold, 8);                     // chắn tay
-    chBlob(g, 0, -52, 18, 62, _dim(gold, 0.5), gLo, 7);          // chuôi
+    chBlob(g, 0, -14, 96, 22, gLo, gold, 8);
+    chBlob(g, 0, -52, 18, 62, _dim(gold, 0.5), gLo, 7);
     g.fillStyle = gold; g.beginPath(); g.arc(0, -86, 14, 0, 6.2832); g.fill();
-    g.restore();
   } else if (arm === 'longbow'){
     g.strokeStyle = gold; g.lineWidth = 16; g.lineCap = 'round';
     g.beginPath(); g.moveTo(0, -110); g.quadraticCurveTo(-58, 60, 0, 230); g.stroke();
     g.strokeStyle = '#e8f0ff'; g.lineWidth = 5;
     g.beginPath(); g.moveTo(0, -110); g.lineTo(0, 230); g.stroke();
-    g.restore();
   } else {
-  chBlob(g, 0, 60, 17, 250, gLo, gold, 8);
-  const kg = g.createRadialGradient(0, -84, 3, 0, -78, 30);
-  kg.addColorStop(0, '#ffffff'); kg.addColorStop(0.5, aura); kg.addColorStop(1, _dim(aura, 0.4));
-  g.fillStyle = kg; g.beginPath(); g.arc(0, -78, 30, 0, 6.2832); g.fill();
-  g.strokeStyle = gold; g.lineWidth = 13; g.lineCap = 'round';
-  g.beginPath(); g.arc(0, -78, 30, 0.6, 5.68); g.stroke();
-  g.fillStyle = aura;
-  g.beginPath(); g.moveTo(0, -108); g.lineTo(19, -78); g.lineTo(0, -46); g.lineTo(-19, -78); g.closePath(); g.fill();
+    chBlob(g, 0, 60, 17, 250, gLo, gold, 8);
+    if (arm === 'skullstaff'){                                   // đầu sọ
+      g.fillStyle = '#e8dcc6';
+      g.beginPath(); g.ellipse(0, -80, 26, 29, 0, 0, 6.2832); g.fill();
+      g.fillRect(-16, -60, 32, 18);
+      g.fillStyle = '#0b0714';
+      g.beginPath(); g.ellipse(-10, -82, 8, 10, 0, 0, 6.2832); g.fill();
+      g.beginPath(); g.ellipse(10, -82, 8, 10, 0, 0, 6.2832); g.fill();
+      g.fillStyle = aura;
+      g.beginPath(); g.arc(-10, -81, 4, 0, 6.2832); g.fill();
+      g.beginPath(); g.arc(10, -81, 4, 0, 6.2832); g.fill();
+    } else {
+      const kg = g.createRadialGradient(0, -84, 3, 0, -78, 30);
+      kg.addColorStop(0, '#ffffff'); kg.addColorStop(0.5, aura); kg.addColorStop(1, _dim(aura, 0.6));
+      g.fillStyle = kg; g.beginPath(); g.arc(0, -78, 30, 0, 6.2832); g.fill();
+      g.strokeStyle = gold; g.lineWidth = 13; g.lineCap = 'round';
+      g.beginPath(); g.arc(0, -78, 30, 0.6, 5.68); g.stroke();
+    }
+  }
   g.restore();
-  }
 
-  // ── ĐẦU: chiếm gần nửa chiều cao — đây mới là chỗ chibi khác người thường ──
-  const hy = 176, hr = 92;
-  chBlob(g, cx, hy, hr * 2, hr * 1.86, base, hi, hr * 0.72);   // mũ trùm
-  g.fillStyle = '#f3d8b8';                                      // mặt
-  g.beginPath(); g.ellipse(cx, hy + 22, 62, 50, 0, 0, 6.2832); g.fill();
-  // mắt to, có tròng và đốm sáng — chibi phải nhìn thấy tròng mắt
-  for (const s of [-1, 1]){
-    const ex = cx + s * 26;
-    g.fillStyle = '#ffffff'; g.beginPath(); g.ellipse(ex, hy + 18, 17, 21, 0, 0, 6.2832); g.fill();
-    g.fillStyle = _dim(C.hue, 0.55); g.beginPath(); g.ellipse(ex + s * 2, hy + 20, 11, 15, 0, 0, 6.2832); g.fill();
-    g.fillStyle = '#0b0714'; g.beginPath(); g.ellipse(ex + s * 2, hy + 21, 6, 9, 0, 0, 6.2832); g.fill();
-    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(ex - 3, hy + 12, 4.4, 0, 6.2832); g.fill();
-    g.strokeStyle = '#0b0714'; g.lineWidth = 6; g.lineCap = 'round';   // lông mày cau lại
-    g.beginPath(); g.moveTo(ex + s * 18, hy - 10); g.lineTo(ex - s * 16, hy + 2); g.stroke();
-  }
-  g.strokeStyle = '#0b0714'; g.lineWidth = 5; g.lineCap = 'round';     // miệng
-  g.beginPath(); g.moveTo(cx - 11, hy + 52); g.quadraticCurveTo(cx, hy + 46, cx + 11, hy + 52); g.stroke();
-  // vành mũ + chóp
-  chBlob(g, cx, hy - 42, hr * 2.02, 34, gLo, gold, 14);
-  for (let i = 0; i < 5; i++){
-    const a = -1.5708 + (i - 2) * 0.5, r = 86, h = i === 2 ? 74 : 48 - Math.abs(i - 2) * 9;
-    const gr = g.createLinearGradient(cx, hy - 40, cx, hy - 40 - h);
-    gr.addColorStop(0, gold); gr.addColorStop(1, _lift(gold, 0.55));
-    g.fillStyle = gr;
-    g.beginPath();
-    g.moveTo(cx + Math.cos(a - 0.13) * r, hy + Math.sin(a - 0.13) * r);
-    g.lineTo(cx + Math.cos(a + 0.13) * r, hy + Math.sin(a + 0.13) * r);
-    g.lineTo(cx + Math.cos(a) * (r + h), hy + Math.sin(a) * (r + h));
+  // ── ĐẦU: đây mới là chỗ phân biệt lớp rõ nhất ──
+  if (K.head === 'hood'){
+    // Mũ chóp cao trùm xuống, chỉ hở nửa mặt dưới.
+    const rg = g.createLinearGradient(cx - hr, hy - 150, cx + hr, hy + 60);
+    rg.addColorStop(0, hi); rg.addColorStop(0.55, base); rg.addColorStop(1, _dim(base, 0.55));
+    g.fillStyle = rg;
+    g.beginPath(); g.moveTo(cx - 88, hy + 62);
+    g.quadraticCurveTo(cx - 96, hy - 74, cx + 6, hy - 156);
+    g.quadraticCurveTo(cx + 86, hy - 66, cx + 88, hy + 62);
     g.closePath(); g.fill();
+    g.fillStyle = skin;
+    g.beginPath(); g.ellipse(cx, hy + 26, 56, 46, 0, 0, 6.2832); g.fill();
+    g.fillStyle = _dim(base, 0.35);                              // bóng vành mũ đổ xuống mắt
+    g.beginPath(); g.ellipse(cx, hy - 12, 58, 34, 0, 0, 6.2832); g.fill();
+  } else {
+    chBlob(g, cx, hy, hr * 2, hr * 1.86, base, hi, hr * 0.72);
+    g.fillStyle = skin;
+    g.beginPath(); g.ellipse(cx, hy + 22, 62, 50, 0, 0, 6.2832); g.fill();
+  }
+  if (K.head === 'hair' || K.head === 'mane'){
+    const hg2 = g.createLinearGradient(cx - 80, hy - 90, cx + 80, hy + 20);
+    hg2.addColorStop(0, _lift(gold, 0.45)); hg2.addColorStop(1, gLo);
+    g.fillStyle = hg2;                                            // tóc trùm đỉnh
+    g.beginPath(); g.ellipse(cx, hy - 26, 92, 62, 0, Math.PI, 0); g.fill();
+    if (K.head === 'hair'){
+      g.beginPath();                                              // đuôi tóc sau gáy
+      g.moveTo(cx + 70, hy - 34); g.quadraticCurveTo(cx + 138, hy + 20, cx + 108, hy + 96);
+      g.quadraticCurveTo(cx + 84, hy + 38, cx + 58, hy + 6); g.closePath(); g.fill();
+      g.fillStyle = skin;                                         // tai nhọn
+      for (const s of [-1, 1]){
+        g.beginPath(); g.moveTo(cx + s * 56, hy + 8); g.lineTo(cx + s * 92, hy - 26); g.lineTo(cx + s * 62, hy + 34); g.closePath(); g.fill();
+      }
+      chBlob(g, cx, hy - 30, hr * 1.9, 20, gLo, gold, 8);         // dải buộc trán
+    } else {
+      g.beginPath();                                              // bờm dài đổ một bên
+      g.moveTo(cx - 66, hy - 40); g.quadraticCurveTo(cx - 146, hy + 40, cx - 104, hy + 120);
+      g.quadraticCurveTo(cx - 74, hy + 40, cx - 50, hy + 4); g.closePath(); g.fill();
+    }
+  }
+  // mắt + miệng (mũ chóp che một phần thì mắt vẫn hiện, chỉ tối hơn)
+  for (const s of [-1, 1]){
+    const ex = cx + s * 26, ey = K.head === 'hood' ? hy + 4 : hy + 18;
+    g.fillStyle = K.head === 'helm' ? '#0b0714' : '#ffffff';
+    g.beginPath(); g.ellipse(ex, ey, 17, 21, 0, 0, 6.2832); g.fill();
+    g.fillStyle = K.head === 'helm' ? aura : _dim(C.hue, 0.45);
+    g.beginPath(); g.ellipse(ex + s * 2, ey + 2, 11, 15, 0, 0, 6.2832); g.fill();
+    if (K.head !== 'helm'){
+      g.fillStyle = '#0b0714'; g.beginPath(); g.ellipse(ex + s * 2, ey + 3, 6, 9, 0, 0, 6.2832); g.fill();
+    }
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(ex - 3, ey - 6, 4.4, 0, 6.2832); g.fill();
+    g.strokeStyle = '#0b0714'; g.lineWidth = 6; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(ex + s * 18, ey - 28); g.lineTo(ex - s * 16, ey - 16); g.stroke();
+  }
+  if (K.head !== 'helm'){
+    g.strokeStyle = '#0b0714'; g.lineWidth = 5;
+    const my = K.head === 'hood' ? hy + 46 : hy + 50;
+    g.beginPath(); g.moveTo(cx - 12, my); g.quadraticCurveTo(cx, my + 8, cx + 12, my); g.stroke();
+  }
+  // ── Đồ đội đầu ──
+  if (K.head === 'helm'){
+    chBlob(g, cx, hy + 40, hr * 1.7, 34, gLo, gold, 12);          // che mặt dưới
+    g.fillStyle = _dim(base, 0.3);                               // sống mũ
+    g.fillRect(cx - 9, hy - 60, 18, 74);
+    for (const s of [-1, 1]){                                    // SỪNG — dấu hiệu Dark Knight
+      const hgg = g.createLinearGradient(cx + s * 60, hy - 40, cx + s * 130, hy - 130);
+      hgg.addColorStop(0, gold); hgg.addColorStop(1, _lift(gold, 0.6));
+      g.fillStyle = hgg;
+      g.beginPath(); g.moveTo(cx + s * 58, hy - 18);
+      g.quadraticCurveTo(cx + s * 140, hy - 40, cx + s * 122, hy - 140);
+      g.quadraticCurveTo(cx + s * 104, hy - 62, cx + s * 52, hy - 52);
+      g.closePath(); g.fill();
+    }
+  } else if (K.head === 'crown'){
+    chBlob(g, cx, hy - 42, hr * 2.02, 30, gLo, gold, 12);
+    for (let i = 0; i < 5; i++){                                 // VƯƠNG MIỆN năm chấu
+      const a = -1.5708 + (i - 2) * 0.5, r = 86, h = i === 2 ? 74 : 48 - Math.abs(i - 2) * 9;
+      const gr = g.createLinearGradient(cx, hy - 40, cx, hy - 40 - h);
+      gr.addColorStop(0, gold); gr.addColorStop(1, _lift(gold, 0.55));
+      g.fillStyle = gr;
+      g.beginPath();
+      g.moveTo(cx + Math.cos(a - 0.13) * r, hy + Math.sin(a - 0.13) * r);
+      g.lineTo(cx + Math.cos(a + 0.13) * r, hy + Math.sin(a + 0.13) * r);
+      g.lineTo(cx + Math.cos(a) * (r + h), hy + Math.sin(a) * (r + h));
+      g.closePath(); g.fill();
+    }
+  } else if (K.head === 'hood'){
+    g.fillStyle = aura;                                          // viên đá trên chóp mũ
+    g.beginPath(); g.arc(cx + 6, hy - 142, 15, 0, 6.2832); g.fill();
   }
 }
 
