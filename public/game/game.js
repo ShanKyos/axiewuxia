@@ -10701,7 +10701,10 @@ function heroCardUrl(sectKey, tier, gv){
   if (_heroCardCache[key]) return _heroCardCache[key];
   const cv = document.createElement('canvas');
   cv.width = HERO_W; cv.height = HERO_H;
-  drawHeroFigure(cv.getContext('2d'), sectKey, tier || 1, 0, HERO_POSE0, gv);
+  const hg = cv.getContext('2d');
+  drawHeroFigure(hg, sectKey, tier || 1, 0, HERO_POSE0, gv);
+  applyFormLight(hg, 0, 0, HERO_W, HERO_H, 0.7);   // nhẹ tay hơn icon: mặt người không nên bị bệt
+  applyEdgeLight(hg, 2, 2, 0.6);
   return (_heroCardCache[key] = cv.toDataURL('image/png'));
 }
 function drawPlayer(){
@@ -14455,10 +14458,15 @@ function consumArtUrl(art, col){
   const g = c.getContext('2d');
   g.save();
   g.translate(ICON_PX/2, ICON_PX/2); g.scale(ICON_PX/100, ICON_PX/100);
-  const bg = g.createRadialGradient(0, 0, 4, 0, 0, 50);        // quầng nền — cùng kiểu với trang bị
-  bg.addColorStop(0, col + '38'); bg.addColorStop(1, col + '00');
-  g.fillStyle = bg; g.fillRect(-50, -50, 100, 100);
   (CONSUM_ART[art] || caStone)(g, cPal(col));
+  applyFormLight(g, -50, -50, 100, 100, 0.85);
+  applyEdgeLight(g, 2.2, 2.2, 0.9);
+  // Quầng nền vẽ SAU rồi chèn xuống dưới: nếu vẽ trước thì nó cũng là "mực đã có",
+  // rìa sáng sẽ bám vào mép quầng chứ không bám vào cái bình.
+  const bg = g.createRadialGradient(0, 0, 4, 0, 0, 50);
+  bg.addColorStop(0, col + '38'); bg.addColorStop(1, col + '00');
+  g.globalCompositeOperation = 'destination-over';
+  g.fillStyle = bg; g.fillRect(-50, -50, 100, 100);
   g.restore();
   u = c.toDataURL();
   _consumCache.set(key, u);
@@ -14482,6 +14490,83 @@ const ITEM_ART = {
   weapon: iaWeapon, staff: iaStaff, bow: iaBow, crossbow: iaCrossbow, helm: iaHelm, armor: iaArmor, gloves: iaGloves, pants: iaPants, boots: iaBoots,
   ring: iaRing, pendPhys: iaPendPhys, pendMagic: iaPendMagic,
 };
+
+// ═══ KHỐI: phủ một lượt ánh sáng có HƯỚNG lên đúng phần đã vẽ ═══
+// Hình vẽ hiện tại là cel-shading phẳng: mỗi mảng một màu đặc (M.hi / M.lo). Nhìn ở cỡ nhỏ thì
+// sạch, nhưng không có khối — mọi mặt đều nhận cùng một lượng sáng nên món kim loại trông như
+// dán giấy màu.
+// Cách này lấy đúng mô hình đã dùng cho khung bảng: MỘT nguồn sáng ở trên-trái. Vẽ xong hình thì
+// phủ một dải chéo sáng→tối, nhưng dùng 'source-atop' nên nó chỉ ăn vào phần đã có mực, không
+// tràn ra nền. Một chỗ sửa, mọi món và mọi bộ giáp đều lên khối.
+// Rẻ: chỉ chạy lúc SINH ảnh (icon và thẻ nhân vật đều cache dataURL), không phải mỗi khung hình.
+function applyFormLight(g, x, y, w, h, strength){
+  const k = strength === undefined ? 1 : strength;
+  g.save();
+  g.globalCompositeOperation = 'source-atop';
+  const lg = g.createLinearGradient(x, y, x + w, y + h);   // chéo từ trên-trái xuống dưới-phải
+  lg.addColorStop(0.00, `rgba(255,255,255,${0.30 * k})`);  // mặt hứng sáng
+  lg.addColorStop(0.26, `rgba(255,255,255,${0.10 * k})`);
+  lg.addColorStop(0.50, 'rgba(255,255,255,0)');            // đường chuyển
+  lg.addColorStop(0.68, `rgba(0,0,0,${0.14 * k})`);
+  lg.addColorStop(1.00, `rgba(0,0,0,${0.46 * k})`);        // mặt khuất
+  g.fillStyle = lg; g.fillRect(x, y, w, h);
+  g.restore();
+}
+
+// RÌA SÁNG / RÌA TỐI — thứ thật sự làm kim loại "ăn".
+// Bóng đổ diện rộng ở trên chỉ cho biết mặt nào sáng mặt nào tối; cái làm mắt đọc ra KHỐI là một
+// đường sáng mảnh chạy dọc mép hứng sáng và một đường tối dọc mép khuất. Không biết trước hình
+// dạng món đồ, nên lấy chính phần đã vẽ làm KHUÔN: đổ đặc nó thành một bóng trắng, dán lệch lên
+// trên-trái (ra rìa sáng), rồi bóng đen dán lệch xuống dưới-phải (ra rìa tối). 'source-atop' giữ
+// cả hai nằm gọn trong thân món.
+// Chỉ chạy lúc SINH ảnh — icon và thẻ nhân vật đều cache dataURL — nên không tốn gì mỗi khung.
+function applyEdgeLight(g, px, py, strength){
+  const cv = g.canvas, W = cv.width, H = cv.height;
+  if (!W || !H) return;
+  const k = strength === undefined ? 1 : strength;
+
+  // Bóng đơn sắc của những gì đã vẽ — dùng làm khuôn.
+  const sil = document.createElement('canvas');
+  sil.width = W; sil.height = H;
+  const t = sil.getContext('2d');
+  t.drawImage(cv, 0, 0);
+  t.globalCompositeOperation = 'source-in';
+  t.fillStyle = '#ffffff'; t.fillRect(0, 0, W, H);
+
+  // Chỉ lấy DẢI VIỀN: bóng dời đi trừ đi bóng gốc. Nếu phủ cả bóng dời
+  // thì ruột hình bị trắng chồng đen hoá xám và món đồ bạc màu.
+  const band = document.createElement('canvas');
+  band.width = W; band.height = H;
+  const bd = band.getContext('2d');
+  // Dải nằm BÊN TRONG hình (source-atop sẽ cắt sạch phần tràn ra ngoài):
+  // lấy bóng gốc trừ đi chính nó dời về phía đối diện.
+  const rim = (dx, dy, col) => {
+    bd.setTransform(1, 0, 0, 1, 0, 0);
+    bd.globalCompositeOperation = 'copy';
+    bd.drawImage(sil, 0, 0);
+    bd.globalCompositeOperation = 'destination-out';
+    bd.drawImage(sil, dx, dy);
+    // Tô bằng dải chuyển tắt dần theo hướng nguồn sáng — vành đều một sắc
+    // thì đọc thành nét viền dán, không ra kim loại.
+    bd.globalCompositeOperation = 'source-in';
+    const gr = dx > 0 ? bd.createLinearGradient(0, 0, W, H)
+                      : bd.createLinearGradient(W, H, 0, 0);
+    gr.addColorStop(0.00, col);
+    gr.addColorStop(0.42, col.replace('rgb(', 'rgba(').replace(')', ',0.34)'));
+    gr.addColorStop(0.72, col.replace('rgb(', 'rgba(').replace(')', ',0)'));
+    bd.fillStyle = gr; bd.fillRect(0, 0, W, H);
+    return band;
+  };
+
+  g.save();
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalCompositeOperation = 'source-atop';
+  g.globalAlpha = 0.58 * k;
+  g.drawImage(rim(px, py, 'rgb(255,246,228)'), 0, 0);   // mặt hứng sáng: rìa trên-trái, ánh ấm
+  g.globalAlpha = 0.62 * k;
+  g.drawImage(rim(-px, -py, 'rgb(4,2,10)'), 0, 0);      // mặt khuất: rìa dưới-phải
+  g.restore();
+}
 
 // Vẽ trọn một icon: nền theo phẩm → hình món → hào quang cường hoá.
 function drawItemIcon(g, def, tier, rarity, plus){
@@ -14513,6 +14598,8 @@ function drawItemIcon(g, def, tier, rarity, plus){
     g.restore();
   }
   g.save(); fn(g, M, def); g.restore();
+  applyFormLight(g, -50, -50, 100, 100);   // lên khối; đặt trước hào quang để quầng sáng không bị tối đi
+  applyEdgeLight(g, 2.4, 2.4);             // rìa sáng trên-trái + rìa tối dưới-phải
   if (st >= 2){                                   // 2. viền sáng ôm sát — mốc +7 phải KHÁC mốc +4
     g.save();
     g.globalCompositeOperation = 'lighter';
