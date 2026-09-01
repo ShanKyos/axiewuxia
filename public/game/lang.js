@@ -49,7 +49,7 @@ function trFrag(s) {
 /* ---- EXACT dictionary: full-string VI -> EN ---- */
 const EXACT = {
   // Brand & chapters
-  'HUYỄN ẢNH CHÍ TÔN': 'SUPREME PHANTOM',
+  'KẺ KHÉP VẾT NỨT': 'THE RIFTCLOSER',
   // Sects & roles
   
   'Bạch Đà Sơn': 'White Camel Mt.', 'Minh Giáo': 'Ming Cult', 'Đoàn Thị': 'Duan Clan',
@@ -67,14 +67,14 @@ const EXACT = {
   'Tông Sư': 'Grandmaster', 'Tuyệt Thế': 'Peerless', 'Khai Sơn': 'Pathfinder', 'Chấn Phái': 'Pillars',
   'Tiêu Dao': 'Carefree', 'Thiên Nhân': 'Celestial Being',
   'Sơ Cấp': 'Basic', 'Trung Cấp': 'Intermediate', 'Cao Cấp': 'Advanced', 'Thần Cấp': 'Godly',
-  'Tiểu Thành': 'Minor Success', 'Đại Thành': 'Major Success', 'Viên Dung': 'Perfection',
+  'Thành Thạo': 'Proficient', 'Điêu Luyện': 'Skilled', 'Lão Luyện': 'Veteran',
   // Realms (NAMING_MAP.md §2: Đan Điền → Ascension; source strings are now English loanwords
   // dropped into Vietnamese grammar, so most bare terms need no EXACT entry — only the ones
   // still paired with a Vietnamese word (Cảnh/Trung Kỳ/Hậu Kỳ) need translating.
   'Molt': 'Molt', 'Radiant Core': 'Radiant Core', 'Starforged': 'Starforged',
   'Resonance · Trung Kỳ': 'Resonance · Mid', 'Resonance · Hậu Kỳ': 'Resonance · Late',
   'Resonance Trung Kỳ': 'Resonance · Mid', 'Resonance Hậu Kỳ': 'Resonance · Late',
-  'Tiến Cấp Đan': 'Advance Pill',
+  'Đá Thăng Cấp': 'Ascent Stone',
   'Thức Tỉnh': 'Awakened', '— ĐÃ THỨC TỈNH ✦': '— AWAKENED ✦', '— TỐI THƯỢNG': '— SUPREME',
   // Stats
   'Công Kích': 'Attack', 'Tấn Công': 'Attack', 'Sinh Lực': 'HP',
@@ -108,7 +108,7 @@ const EXACT = {
   '◎ Chúc Phúc Châu': '◎ Blessing Pearl', '◉ Linh Hồn Châu': '◉ Soul Pearl',
   '❤ Sinh Mệnh Châu': '❤ Life Pearl', '● Hỗn Độn Châu': '● Chaos Pearl',
   '✦ Huyền Thiết ×5': '✦ Mystic Iron ×5', 'Huyền Thiết ×5': 'Mystic Iron ×5',
-  '◈ Đan Ascension Trial': '◈ Ascension Trial Pill', '◈ Tiến Cấp Đan ×3': '◈ Advance Pill ×3',
+  '◈ Đan Ascension Trial': '◈ Ascension Trial Pill', '◈ Đá Thăng Cấp ×3': '◈ Ascent Stone ×3',
   '⚔ Rương Binh Khí': '⚔ Weapon Chest', '⚔ Rương Binh Khí Tinh Tuyển': '⚔ Elite Weapon Chest',
   '🛡 Rương Phòng Cụ': '🛡 Armor Chest', 'bảo hiểm rèn': 'forge insurance', 'rèn +1~+11': 'forge +1~+11',
   'Mua thành công!': 'Purchase successful!',
@@ -118,7 +118,7 @@ const EXACT = {
   '⚔ Bắt Đầu Hành Trình': '⚔ Begin the Journey', 'Tiếp ▸': 'Next ▸', 'Đã học': 'Learned',
   'Thông Tin': 'Info', 'Rèn Luyện': 'Forge', 'Tăng Cường +': 'Enhance +',
   'Ô trống — bấm để gán kỹ năng (K)': 'Empty slot — click to assign a skill (K)',
-  'Trang bị đã tối ưu!': 'Gear fully optimized!', 'Kỹ năng đã viên mãn (Lv 120)!': 'Skill maxed (Lv 120)!',
+  'Trang bị đã tối ưu!': 'Gear fully optimized!', 'Kỹ năng đã đạt cấp tối đa (Lv 120)!': 'Skill maxed (Lv 120)!',
   'Mang trang bị đến lò rèn (phím F) và Tăng Cường một món bất kỳ lên +3.': 'Bring gear to the Forge (F) and Enhance any item to +3.',
   'Hướng dẫn hoàn tất — chúc hành trình phi nước đại!': 'Tutorial complete — ride on, hero!',
   'Console playtest — gõ /help để xem lệnh, Esc để đóng.': 'Playtest console — type /help for commands, Esc to close.',
@@ -151,7 +151,7 @@ const EXACT = {
   // Mounts & stable
   'Xuất Chiến (V)': 'Summon (V)', 'Thu Hồi (V)': 'Recall (V)', 'Thú Cưỡi → tầng': 'Mount → tier',
   '→ tầng': '→ tier', 'Trại Chủ Mục Đồng': 'Stable Master', 'Trại Ngựa Ngoại Ô': 'Outskirts Stable',
-  '(Nhận Emberhide Bull)': '(Claim Emberhide Bull)', 'thu phục linh thú — bấm T': 'tame spirit beasts — press T',
+  '(Nhận Emberhide Bull)': '(Claim Emberhide Bull)', 'thu phục thú tinh anh — bấm T': 'tame elite beasts — press T',
   // Relations & personality
   'Xa Lạ': 'Stranger', 'Quen Biết': 'Acquaintance', 'Hảo Hữu': 'Friend', 'Tri Kỷ': 'Confidant',
   'Chí Giao': 'Bosom Friend', 'Sinh Tử Chi Giao': 'Life-and-Death Bond',
@@ -169,9 +169,9 @@ const EXACT = {
   'Nắng đẹp': 'Clear skies', 'Nắng gắt': 'Scorching', 'Mưa phùn': 'Drizzle',
   'Mưa rào giông': 'Thunderstorm', 'Sương mù': 'Fog', 'Tuyết rơi': 'Snowfall',
   // Titles
-  'Bách Quái Trảm': 'Slayer of a Hundred',
-  'Thiên Quái Trảm': 'Slayer of a Thousand', 'Thợ Rèn Truyền Thuyết': 'Legendary Smith',
- 'Resonance Chân Quân': 'True Lord of Resonance',
+  'Kẻ Diệt Trăm Quái': 'Slayer of a Hundred',
+  'Kẻ Diệt Ngàn Quái': 'Slayer of a Thousand', 'Thợ Rèn Truyền Thuyết': 'Legendary Smith',
+ 'Bậc Thầy Resonance': 'Master of Resonance',
   'Tiêu diệt 100 quái': 'Slay 100 monsters', 'Tiêu diệt 1.000 quái': 'Slay 1,000 monsters',
   'Hoàn thành toàn bộ chính tuyến': 'Complete the entire main storyline',
  'Đỉnh cao mọi hệ thống': 'Pinnacle of all systems',
@@ -226,7 +226,7 @@ const EXACT = {
   'Lên +1 miễn phí, 100% thành công (áp dụng +0 đến +5)': 'Free +1, 100% success (applies to +0–+5)',
   'thất bại: giữ đồ & Ấn, mất nửa vật liệu': 'on failure: keep gear & Seal, lose half the materials',
   'Gói tiết kiệm — chỉ bán theo đợt': 'Budget bundle — sold in batches only',
-  'tấn chức Card': 'promote to Card',
+  'nâng tầng Card': 'promote to Card',
   'dung hợp Huyết Ma Thôn Phệ': 'fuse into Blood Demon Devour',
   'Bình Thuốc Đỏ hồi 55% máu (thay 40%)': 'Red Potion heals 55% HP (instead of 40%)',
   'Rèn đồ +5% tỉ lệ thành công': 'Forge +5% success rate',
@@ -247,7 +247,7 @@ const EXACT = {
   // ── Side-quest panel chrome ──
   'Nhận Nhiệm Vụ': 'Accept Quest', 'Nhận Thưởng': 'Claim Reward',
   'Đang nhận tối đa 3 phụ tuyến — hoàn thành bớt rồi quay lại.': 'Max 3 active side quests — finish some, then come back.',
-  '★ Chính tuyến đã hoàn tất — ngươi chính là Huyễn Ảnh Chí Tôn!': '★ Main storyline complete — you are the Phantom Supreme!',
+  '★ Chính tuyến đã hoàn tất — bạn là Kẻ Khép Vết Nứt!': '★ Main storyline complete — you are the Riftcloser!',
   'gặp': 'to meet',
   // ── Chapter subtitles ──
   // ── Main quest names (35 chương) ──
@@ -258,7 +258,7 @@ const EXACT = {
   'Tuyệt Kỹ Truyền Thừa': 'The Sect\'s Legacy Art', 'Bình Cảnh Chi Chiến': 'Battle of the Threshold',
   'Kiếm Khách Bán Đảo': 'The Islet Swordsman', 'Tình Hoa Độc': 'Passion Flower Poison',
  'Cắt Đứt Tai Mắt': 'Severing Eyes and Ears', 'Cuồng Binh Xung Trận': 'Berserkers Charge the Line',
-  'Huyễn Ảnh Chí Tôn': 'Phantom Supreme',
+  'Kẻ Khép Vết Nứt': 'Riftcloser',
   // ── 50 phụ tuyến Lunacia — tên ──
   'Lễ Vật Đầu Xuân': 'New Year Tribute', 'Phương Thuốc Cứu Dịch': 'Plague-Remedy Prescription',
   'Sói Dữ Vây Làng': 'Wolves at the Gates', 'Hồ Ly Trộm Thuốc': 'The Medicine-Thieving Foxes',
@@ -507,17 +507,17 @@ Object.assign(EXACT, {
   'CHIÊU THỨC CHỦ ĐỘNG — bấm số ô để gán': 'ACTIVE SKILLS — click a slot number to assign',
   '⬆ Mỗi cấp': '⬆ Per level',
   '+2,5% ST': '+2.5% DMG',
-  'Tiểu Thành +8% ST ·': 'Minor Success +8% DMG ·',
-  'Trung Thành −10% hồi chiêu ·': 'Moderate Success −10% cooldown ·',
-  'Đại Thành +12% ST ·': 'Great Success +12% DMG ·',
-  'Xuất Thần +15% ST ·': 'Transcendence +15% DMG ·',
-  'Hóa Cảnh +20% ST — farm quái & bán đồ lấy bạc để tu luyện!': 'Apotheosis +20% DMG — farm monsters & sell loot for silver to train!',
-  'Tiểu Thành': 'Minor Success',
-  'Trung Thành': 'Moderate Success',
-  'Đại Thành': 'Great Success',
-  'Viên Dung': 'Perfection',
-  'Xuất Thần': 'Transcendence',
-  'Hóa Cảnh': 'Apotheosis',
+  'Thành Thạo +8% ST ·': 'Proficient +8% DMG ·',
+  'Tinh Thông −10% hồi chiêu ·': 'Expert −10% cooldown ·',
+  'Điêu Luyện +12% ST ·': 'Skilled +12% DMG ·',
+  'Bậc Thầy +15% ST ·': 'Master +15% DMG ·',
+  'Đại Sư +20% ST — farm quái & bán đồ lấy bạc để rèn luyện!': 'Grandmaster +20% DMG — farm monsters & sell loot for silver to train!',
+  'Thành Thạo': 'Proficient',
+  'Tinh Thông': 'Expert',
+  'Điêu Luyện': 'Skilled',
+  'Lão Luyện': 'Veteran',
+  'Bậc Thầy': 'Master',
+  'Đại Sư': 'Grandmaster',
   'VIÊN MÃN · HÓA CẢNH': 'MAXED · APOTHEOSIS',
   'SỔ KỸ NĂNG': 'SKILL CODEX',
   'Kỹ năng': 'Skills',
@@ -536,7 +536,7 @@ Object.assign(EXACT, {
   'kỹ năng phái khác': "another sect's art",
   'Ô trống — bấm để gán kỹ năng (K)': 'Empty slot — click to assign a skill (K)',
   'Bấm để gỡ': 'Click to unassign',
-  'Kỹ năng đã viên mãn (Lv 120)!': 'Skill maxed (Lv 120)!',
+  'Kỹ năng đã đạt cấp tối đa (Lv 120)!': 'Skill maxed (Lv 120)!',
   // categories
   'Kiếm': 'Sword', 
  'Bổng': 'Staff', 'Tâm Pháp': 'Heart Art', 'Thân Pháp': 'Movement',
@@ -597,7 +597,7 @@ Object.assign(EXACT, {
   'Giai': 'Tier',
   'sách kỹ năng': 'skill tome',
   'Rèn thành công +11': 'Successfully forge to +11',
-  'Sơ Nhập Lunacia': 'Newcomer to Lunacia',
+  'Khách Lạ Lunacia': 'Newcomer to Lunacia',
   // Title stat lines (titleStatText output, wrapped as "— {this}" by renderChar)
   '+5% Công': '+5% ATK', '+10% Bạo': '+10% Crit',
   '+5% tỉ lệ rèn': '+5% forge rate', '+10% Toàn TT': '+10% All Stats', '+15% Toàn TT': '+15% All Stats',
@@ -606,17 +606,29 @@ Object.assign(EXACT, {
  'Kết Đan': 'Core Formation',
  'Luyện Hư': 'Void Tempering',
  'Hợp Thể': 'Body Integration',
-  'Tinh Thạch': 'Mystic Iron', // same currency as ✦ Huyền Thiết (player.mat), just displayed under a different label here
   'Lõi Nguyên Tố': 'Elemental Core',
   'Hạ 10 Chimera': 'Slay 10 Chimeras',
   'Thu 1 Lõi Nguyên Tố': 'Collect 1 Elemental Core',
   'Thông quan 1 phó bản': 'Clear 1 dungeon',
-  'Rèn / tấn chức / tôi cốt 1 lần': 'Forge / promote / temper once',
+  'Rèn / nâng tầng / khảm ngọc 1 lần': 'Forge / advance a tier / socket a jewel once',
   // Character-panel wrapper (renderCharPanel) + CHAR_TABS
-  'Nhân Vật — mọi tu luyện trong một': 'Character — every training system in one place',
-  'Thú Chiến': 'Mount',
-  '🐾 Linh Thú': '🐾 Pets',
-  'LINH THÚ': 'PET',
+  'Nhân Vật — mọi hệ rèn luyện trong một': 'Character — every training system in one place',
+  'Thú Chiến': 'War Beast',
+  'Thuần Thục': 'Mastery',
+  'Thuần Thục — 7 Tầng': 'Mastery — 7 Stages',
+  '🔄 Tái Sinh': '🔄 Reset',
+  'Tái Sinh': 'Reset',
+  'Đài Hội Lực': 'Confluence Dais',
+  'Vườn Thảo Dược': 'Herb Garden',
+  'Cỏ Hồi Máu': 'Bloodroot',
+  'Cỏ Bản Năng': 'Instinct Grass',
+  'Cỏ Bạc': 'Silverleaf',
+  'Kẻ Báo Thù': 'Avenger',
+  'Hiện Thân Starforged': 'Starforged Incarnate',
+  'Khách Lạ Lunacia': 'Stranger to Lunacia',
+  'TỈ LỆ CÔNG KHAI — KHÔNG CỘNG DỒN MAY MẮN': 'PUBLISHED RATES — NO PITY',
+  'Suối Ký Ức': 'Spring of Memory',
+  'Kẻ Được Định Mệnh Chọn': 'Chosen by Fate',
 });
 
 /* ---- Forge / Mount / Ascension / Instinct Channels / Card — sub-panels reachable from Character ---- */
@@ -660,7 +672,7 @@ Object.assign(EXACT, {
   'Chinh Phạt': 'Campaign',
   // Mount (Thú Chiến)
   'Chuồng thú mở khóa ở': 'The Stable unlocks at',
-  'Thú Chiến — Thăng Giai': 'Mount — Advance Tier',
+  'Thú Chiến — Thăng Giai': 'War Beast — Advance Tier',
   'Thuộc tính gia trì:': 'Bonus attributes:',
   'Chiến thú đi theo và': 'Your mount follows you and',
   'tự tấn công': 'auto-attacks',
@@ -676,7 +688,7 @@ Object.assign(EXACT, {
   'Korrveth': 'Korrveth',
   'Thăng Giai (Nhận Emberhide Bull)': 'Advance Tier (Claim Emberhide Bull)',
   'Thất bại! +8% tỉ lệ tích lũy': 'Failed! +8% cumulative rate',
-  'Chưa có chiến thú — mở C → Thú Chiến': 'No mount yet — open C → Mount',
+  'Chưa có chiến thú — mở C → Thú Chiến': 'No war beast yet — open C → War Beast',
   '⚔ Chiến thú xuất trận!': '⚔ Mount deployed!',
   'Chiến thú thu hồi.': 'Mount recalled.',
   // Ascension (Dantian) + Instinct Channels (Kinh Mạch)
@@ -688,7 +700,7 @@ Object.assign(EXACT, {
   'VIÊN MÃN': 'MAXED',
   'Tôi cốt thất bại chỉ mất Instinct, đốt đã thông không mất. Ascension cảnh 4 (Spark Tầng 4) trở lên giảm 20% phí tôi cốt.': 'A failed channel pulse only costs Instinct — unblocked nodes are never lost. Ascension Lv 4 (Spark Stage 4) or higher reduces the pulse cost by 20%.',
   // Card (Di Sản)
-  'Chưa tu luyện — tấn chức tầng 1 để khai mở!': 'Not yet trained — advance to Stage 1 to unlock!',
+  'Chưa rèn giũa — nâng lên Tầng 1 để khai mở!': 'Not yet trained — advance to Stage 1 to unlock!',
 });
 
 /* ---- Settings panel (renderSettings) ---- */
@@ -848,8 +860,8 @@ const RULES = [
   [/^(.+?) · Tầng (\d+)【(.+?)】( — ĐÃ THỨC TỈNH ✦)?$/, (m, a, b, c, d) => `${tr(a)} · Stage ${b}【${tr(c)}】${d ? ' — AWAKENED ✦' : ''}`],
   [/^Luyện lên tầng (\d+)【(.+?)】$/, (m, a, b) => `Advance to Stage ${a}【${tr(b)}】`],
   [/^Lõi Nguyên Tố (\S+)/, (m, e) => `Elemental Core ${m1El(e)}`],
-  [/^Cần: (\d+) Lõi Nguyên Tố \(có (\d+)\) \+ (\d+) Tinh Thạch \(có (\d+)\)$/, (m, a, b, c, d) => `Need: ${a} Elemental Core (have ${b}) + ${c} Mystic Iron (have ${d})`],
-  [/^Thiếu nguyên liệu: cần (\d+) Lõi Nguyên Tố \+ (\d+) Tinh Thạch$/, (m, a, b) => `Missing materials: need ${a} Elemental Core + ${b} Mystic Iron`],
+  [/^Cần: (\d+) Lõi Nguyên Tố \(có (\d+)\) \+ (\d+) Huyền Thiết \(có (\d+)\)$/, (m, a, b, c, d) => `Need: ${a} Elemental Core (have ${b}) + ${c} Mystic Iron (have ${d})`],
+  [/^Thiếu nguyên liệu: cần (\d+) Lõi Nguyên Tố \+ (\d+) Huyền Thiết$/, (m, a, b) => `Missing materials: need ${a} Elemental Core + ${b} Mystic Iron`],
   [/^Dùng Thiên Mệnh Phù — xịt vẫn giữ nguyên cấp \(còn (\d+)\)$/, (m, a) => `Use a Fate Charm — a failure still keeps your level (${a} left)`],
   [/^Lên \+1 với 50% — thất bại tụt 1 cấp \(áp dụng đến \+10, kể cả Phá Thiên Kiếp\)$/, '+1 at 50% success — failure drops 1 level (applies up to +10, including the Heaven-Rending Trial)'],
   [/^Giai (\d+)\/(\d+)$/, 'Tier $1/$2'],
