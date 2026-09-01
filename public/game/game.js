@@ -3824,7 +3824,6 @@ function lerpAng(a, b, t){ // nội suy góc theo đường ngắn nhất (trán
 }
 let shakeT = 0, shakeMag = 0, shakeDir = 0; // rung màn hình khi bị đánh trúng (shakeDir: hướng cú đấm)
 let keys = {};
-let joyVec = { x:0, y:0 };
 let moveTarget = null; // Click-to-move: đích chuột phải (canvas) hoặc bấm minimap — { x, y } world coords
 let moveWaypoint = null; // Nút đang nhắm tới trong movePlan — chỉ để vẽ/gỡ lỗi, xem update()
 // Kế hoạch đường đi ĐÃ CAM KẾT. Bản cũ tính lại đường từ đầu mỗi 0,35 giây rồi lấy path[3] làm
@@ -5396,34 +5395,10 @@ if (miniCvs) miniCvs.addEventListener('click', e=>{
   setMoveTarget(cx / sx, cy / sy);
 });
 
-// touch joystick
-const joy = document.getElementById('joystick'), knob = document.getElementById('joy-knob');
-let joyId = null, joyCenter = null;
-joy.addEventListener('touchstart', e=>{
-  const t = e.changedTouches[0]; joyId = t.identifier;
-  joyCenter = { x: t.clientX, y: t.clientY }; e.preventDefault();
-}, {passive:false});
-window.addEventListener('touchmove', e=>{
-  for (const t of e.changedTouches){
-    if (t.identifier === joyId && joyCenter){
-      const dx = t.clientX - joyCenter.x, dy = t.clientY - joyCenter.y;
-      const d = Math.hypot(dx,dy), max = 38;
-      const k = d > max ? max/d : 1;
-      knob.style.left = (35 + dx*k) + 'px'; knob.style.top = (35 + dy*k) + 'px';
-      joyVec.x = (dx*k)/max; joyVec.y = (dy*k)/max;
-    }
-  }
-}, {passive:true});
-window.addEventListener('touchend', e=>{
-  for (const t of e.changedTouches){
-    if (t.identifier === joyId){
-      joyId = null; joyVec.x = 0; joyVec.y = 0;
-      knob.style.left = '35px'; knob.style.top = '35px';
-    }
-  }
-});
-// Joystick (di chuyển tay) đã bỏ theo GDD Quan Sát — không hiện nữa, kể cả trên di động;
-// mobile vẫn tự chạy tới đích qua bấm minimap hoặc đèn hiệu nhiệm vụ.
+// Joystick chạm đã gỡ hẳn — game chỉ chạy trên PC. Nó vốn đã là code chết trước đó: `joyVec`
+// được GHI ở hai chỗ trong đây nhưng KHÔNG NƠI NÀO ĐỌC, vì lối di chuyển tay đã bỏ theo GDD
+// Quan Sát từ lâu (chỉ còn chọn đích rồi tự chạy tới). Ba trình nghe chạm chỉ để cập nhật một
+// biến không ai dùng.
 
 document.getElementById('sk-basic').addEventListener('click', doBasic);
 document.querySelectorAll('.sk-slot').forEach(b=>{

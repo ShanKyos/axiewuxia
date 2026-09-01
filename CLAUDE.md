@@ -517,7 +517,10 @@ Ba luật kèm theo:
 - **AUTO bật thì nới tầm hút gấp 3.** Lớp tầm xa giết quái cách 200px; để
   nguyên bán kính đi-ngang-qua là treo máy cả tiếng rồi bỏ lại nguyên bãi đồ.
 - Nút J trên thanh kỹ năng phải theo **đúng** thứ tự ưu tiên của phím J
-  (nhặt đồ → hái thuốc → nhảy), không thì điện thoại không có cách nào nhặt.
+  (nhặt đồ → hái thuốc → nhảy). Lý do cũ là "điện thoại không có cách nào nhặt";
+  game nay chỉ chạy PC nên lý do đó hết hiệu lực, nhưng LUẬT thì vẫn giữ: nút và
+  phím phải làm cùng một việc, không thì người bấm nút và người gõ phím thấy hai
+  hành vi khác nhau ở cùng một chỗ.
 
 Hình vật phẩm được vẽ cho **ô túi nền tối**. Đặt thẳng lên bãi cỏ sáng là mất
 hút — mỗi món dưới đất phải có tấm nền tối bo góc + viền màu phẩm.

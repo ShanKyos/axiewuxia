@@ -2,7 +2,10 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- Game chỉ chạy trên PC. maximum-scale + user-scalable=no là chỉ thị chỉ có tác dụng trên
+     thiết bị chạm, và tác dụng duy nhất của nó ở đây là CHẶN phóng to — kể cả trên laptop
+     màn hình chạm, kể cả với người cần phóng to để đọc. Bỏ. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Axie Wuxia (PvE Webgame)</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
 <!-- Bộ chữ tự chứa. Bản trước gọi thẳng fonts.googleapis.com — một bảng kiểu CHẶN VẼ
@@ -87,8 +90,6 @@
 <div id="fx-hurt" class="fx-layer"></div>
 <div id="fx-low" class="fx-layer"></div>
 
-<!-- Joystick (touch) -->
-<div id="joystick" class="hidden"><div id="joy-knob"></div></div>
 
 <!-- Nhật ký chiến đấu: thay cho số sát thương/thông báo bay đầy màn hình lúc AUTO đánh nhiều quái —
      gộp lại thành 1 dòng chữ ở góc, đọc được thay vì rối mắt -->
