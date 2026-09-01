@@ -1,7 +1,28 @@
 # Danh mục trang bị — bám quy mô MU Season 1
 
-> Trạng thái: **bản đề xuất, chờ duyệt.** Chưa viết dòng code nào.
+> **Trạng thái: đề xuất CHƯA làm, nhưng một phần đã ship theo cách khác — đọc mục 0 trước.**
 > Duyệt xong mới vẽ 6 mẫu, mẫu được duyệt mới vẽ nốt phần còn lại.
+
+## 0. Thực tế đang chạy so với đề xuất này
+
+Bản trước ghi "chưa viết dòng code nào". Câu đó nay sai một nửa: **tên đồ đã đổi rồi**, chỉ là
+đổi theo hướng gọn hơn nhiều so với danh mục dưới đây.
+
+| | Đề xuất trong tài liệu này | Đang chạy trong game |
+|---|---|---|
+| Tên giáp/vũ khí | 125 món giáp + 75 vũ khí, đặt tên theo **bộ × lớp** | `ITEM_NAMES` — **một thang 5 nấc dùng chung mọi lớp**, leo theo chất liệu: da → sắt → thép → vảy rồng → hắc nguyệt |
+| Bộ giáp vẽ trên người | 25 bộ | `HERO_SETS` — **5 lớp × 5 bộ = 25 bộ**, đúng như đề xuất |
+| Nối túi đồ ↔ bộ đang mặc | có | **chưa** — món trong túi vẫn chỉ biết `ô + phẩm`, không biết mình thuộc bộ nào |
+| Khoá vũ khí theo lớp | có | **chưa** — mọi lớp vẫn nhặt và cầm được mọi vũ khí |
+
+Nói cách khác: phần *hình vẽ* (25 bộ) đã có; phần *danh mục tên* và *luật khoá theo lớp* thì
+chưa. Nấc đỉnh trong game hiện là dòng **Hắc Nguyệt** (`Ma Kiếm Hắc Nguyệt`,
+`Thánh Giáp Hắc Nguyệt`…), không phải `Hỏa Long`/`Hư Vô` như bảng dưới.
+
+Ba việc còn mở nếu muốn làm tiếp danh mục này:
+1. Nối `HERO_SETS` với món trong túi (mặc đúng bằng hình thấy trên người).
+2. Khoá vũ khí theo lớp.
+3. Thay `ITEM_NAMES` một thang dùng chung bằng bảng tên theo bộ.
 
 ## 1. Nguyên tắc
 
