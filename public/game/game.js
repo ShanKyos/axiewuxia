@@ -18342,9 +18342,11 @@ function hintText(){
   const lv = player.level;
   const parts = [t('hud.hint.clickmove'), t('hud.hint.attack'), t('hud.hint.talk'), t('hud.hint.potion')];
   if (lv >= 3) parts.push(t('hud.hint.quest'));
-  if (lv >= 5) parts.push(t('hud.hint.stats'), t('hud.hint.character'), t('hud.hint.bag'));
+  // Một mục cho cửa sổ nhân vật, không phải hai: C và V nay mở CÙNG một bảng, in cả hai thì
+  // dòng gợi ý tự mâu thuẫn ("V nhân vật · C nhân vật").
+  if (lv >= 5) parts.push(t('hud.hint.character'), t('hud.hint.bag'));
   if (lv >= 8) parts.push(t('hud.hint.map'), t('hud.hint.skills'));
-  if (lv >= 15) parts.push(t('hud.hint.tame'));
+  // 'hud.hint.tame' đã bỏ — hệ Thú Thuần Hóa gỡ rồi, phím T không còn làm gì.
   parts.push(t('hud.hint.loot'));
   return parts.join(' · ');
 }

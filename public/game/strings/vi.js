@@ -8,12 +8,10 @@ window.I18N_VI = {
   'hud.hint.talk': 'E nói chuyện',
   'hud.hint.potion': 'R bình thuốc đỏ',
   'hud.hint.quest': 'Q nhiệm vụ',
-  'hud.hint.character': 'C nhân vật',
-  'hud.hint.stats': 'V nhân vật',
+  'hud.hint.character': 'C/V nhân vật',
   'hud.hint.bag': 'B túi',
   'hud.hint.map': 'M bản đồ',
   'hud.hint.skills': 'K thẻ bài',
-  'hud.hint.tame': 'T thu phục',
   'hud.hint.bonds': 'L nhân mạch',
   'hud.hint.loot': 'J nhặt đồ',
 };
