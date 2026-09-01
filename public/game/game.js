@@ -5212,6 +5212,41 @@ function checkTitles(){
 // mới trừ được 187 máu trong khi máu mình từ 291 xuống 42.
 // Nay boss bị XẾP SAU chứ không bị loại: còn quái thường trong tầm thì đánh quái thường, hết mới
 // tới boss. Đứng cạnh mỗi boss thì vẫn đánh được nó — người chơi đã tự đi tới đó thì họ muốn thế.
+// Vì sao AUTO đang không đánh gì? Trả về đúng LÝ DO THẬT, không phải một câu chung chung.
+// Thứ tự xét đi từ nguyên nhân cụ thể nhất tới mơ hồ nhất.
+function autoIdleReason(){
+  const _ac = player.autoCfg || { range:430, boss:false };
+  const R = Math.max(_ac.range, 600);   // rộng hơn tầm cày: boss có dây xích riêng, đứng ngoài tầm
+  let boss = false, duHiep = false, khacBai = false, coQuai = false;
+  for (const m of mobs){
+    if (m.dead) continue;
+    if (dist(player.x, player.y, m.x, m.y) > R) continue;
+    coQuai = true;
+    if (m.def.bossKind || m.type === 'boss'){ boss = true; continue; }
+    if (m.def.duHiep && !m.revenge){ duHiep = true; continue; }
+    if (player._autoZoneLocked && m.pack !== player._autoPack){ khacBai = true; continue; }
+  }
+  if (boss && !_ac.boss)
+    return { t:'AUTO không tự đánh boss — hãy tự chiến, hoặc bật trong Cài Đặt', c:'#ff9a5a' };
+  if (duHiep && !coQuaiHopLe())
+    return { t:'Quái quanh đây là Phiêu Bạt trung lập — AUTO không đánh chúng', c:'#c0a0ff' };
+  if (khacBai)
+    return { t:'Bãi đã khoá đã sạch quái — đang chờ hồi sinh', c:'#8ab4ff' };
+  if (!coQuai)
+    return { t:'Không còn quái trong tầm — bấm minimap để tới bãi khác', c:'#8ab4ff' };
+  return null;
+}
+function coQuaiHopLe(){
+  const _ac = player.autoCfg || { range:430, boss:false };
+  for (const m of mobs){
+    if (m.dead) continue;
+    if (!_ac.boss && (m.def.bossKind || m.type === 'boss')) continue;
+    if (m.def.duHiep && !m.revenge) continue;
+    if (player._autoZoneLocked && m.pack !== player._autoPack) continue;
+    if (dist(player._autoAX ?? player.x, player._autoAY ?? player.y, m.x, m.y) < _ac.range) return true;
+  }
+  return false;
+}
 function nearestMob(range){
   let best = null, bd = range, boss = null, bbd = range;
   for (const m of mobs){
@@ -5944,6 +5979,7 @@ function update(dt){
       if (player._autoEmptyT > 6){ player._autoZoneLocked = false; player._autoPack = null; player._autoEmptyT = 0; }
     }
     if (_at){
+      player._autoIdleT = 0; player._autoSayT = 0;
       const _ad = dist(player.x, player.y, _at.x, _at.y);
       player.face = Math.atan2(_at.y - player.y, _at.x - player.x);
       // Dark Wizard/Sylvan Ranger đánh xa: AUTO dừng lại ở rìa tầm bắn thay vì lao vào cận chiến (kiểu vây)
@@ -5963,6 +5999,21 @@ function update(dt){
       // hết quái quanh neo → quay về điểm neo chờ quái hồi sinh (không lang thang khắp map)
       const _hd = dist(player.x, player.y, player._autoAX, player._autoAY);
       if (_hd > 60){ mx += (player._autoAX - player.x)/_hd; my += (player._autoAY - player.y)/_hd; }
+      // AUTO đứng im mà KHÔNG nói gì là bế tắc câm — người chơi treo máy, quay lại thấy nhân vật
+      // đứng yên và không có cách nào biết vì sao. Nặng nhất ở phó bản: dọn sạch 4 đợt xong, thứ
+      // duy nhất còn lại là boss, mà AUTO không đánh boss — đo được nhân vật đứng im vô hạn cách
+      // boss 301px, trong khi dòng cảnh báo "Vùng Boss" lại có ngưỡng 300px nên không bao giờ
+      // hiện. Phó bản không thể hoàn thành, và game im lặng tuyệt đối.
+      player._autoIdleT = (player._autoIdleT || 0) + dt;
+      if (player._autoIdleT > 4){
+        player._autoIdleT = 0;
+        player._autoSayT = (player._autoSayT || 0) - 1;
+        if (player._autoSayT <= 0){
+          player._autoSayT = 2;   // nhắc lại sau ~8 giây nữa, đừng spam mỗi 4 giây
+          const _r = autoIdleReason();
+          if (_r) addFloat(player.x, player.y - 78, _r.t, _r.c, 12.5);
+        }
+      }
     }
     // tự uống Hồ Lô Thuốc khi máu dưới 40% (còn thuốc & hết hồi)
     if (_ac.potion && player.hp < player.maxHp*(_ac.potionPct/100) && player.potions > 0 && (player.potionCd || 0) <= 0) usePotion();
