@@ -12543,7 +12543,7 @@ function startGame(sectKey, quze){
   }
   if (window.TEST_MODE) addFloat(player.x, player.y-95, 'TEST MODE — nhấn ` (phím dưới Esc) mở console, gõ /help xem lệnh', '#7fd4ff', 12);
   el('intro-story').classList.add('hidden');
-  el('sect-select').classList.add('hidden');
+  el('sect-select').classList.add('hidden'); titleStop();
   el('hud').classList.remove('hidden');
   el('bottom-hud').classList.remove('hidden');
   el('xp-strip').classList.remove('hidden');
@@ -12570,7 +12570,7 @@ function showMainMenu(){
   const mm = el('max-mode'); if (mm) mm.style.display = 'none';
   const sub = document.querySelector('#sect-select .ss-sub');
   if (sub) sub.textContent = 'Chào mừng trở lại Lunacia — hành trình vẫn đang chờ.';
-  el('sect-select').classList.remove('hidden');
+  el('sect-select').classList.remove('hidden'); titleStart();
   AudioSys.playBgm(BGM_INTRO); // nhạc Ái Đích Phế Khư vang lên ngay màn hình chính
 }
 // `hasSave` phải BIẾT PHIÊN BẢN. Chỉ kiểm tra "có khoá trong localStorage" thì save cũ vẫn
@@ -12589,7 +12589,7 @@ else if (saveStale){
   // Người này ĐÃ chơi rồi — đừng bắt xem lại intro cốt truyện. Đưa thẳng vào màn chọn lớp,
   // kèm lý do. Mất nhân vật mà không hiểu vì sao là thứ tệ nhất một bản cập nhật có thể làm.
   setTimeout(() => {
-    el('sect-select').classList.remove('hidden');
+    el('sect-select').classList.remove('hidden'); titleStart();
     const cards = el('cc-classes'); if (cards) cards.style.display = '';
     const sub = document.querySelector('#sect-select .ss-sub');
     if (sub) sub.innerHTML = `<b style="color:#e8b04a">Khởi đầu lại — đây đã là một game khác</b><br>
@@ -12605,7 +12605,7 @@ else setTimeout(showIntro, 0);        // người mới → cốt truyện (defe
   btn.addEventListener('click', ()=>{ // bind luôn: save cloud có thể đến sau khi menu đã hiện
     if (loadGame()){
       applySkillIcons();
-      el('sect-select').classList.add('hidden');
+      el('sect-select').classList.add('hidden'); titleStop(); titleStop();
       el('hud').classList.remove('hidden');
       el('bottom-hud').classList.remove('hidden');
       el('xp-strip').classList.remove('hidden');
@@ -15986,6 +15986,272 @@ window.openForgePanel = function(){
   AudioSys.sfx('ui', 0.6);
 };
 
+// ═══════════ MÀN HÌNH MỞ ĐẦU — HOẠT CẢNH ═══════════
+// Trước đây màn tạo nhân vật chỉ là một khối HTML trên nền gradient tĩnh. Màn mở đầu là thứ
+// người chơi thấy TRƯỚC KHI thấy game, nên nó phải nói được câu chuyện trong ba giây: một đoàn
+// tàu vượt biển đêm tới vùng đất lạ, nơi Axie đang bị giam trong những lồng phát sáng.
+//
+// Vẽ hoàn toàn bằng canvas, không thêm một file ảnh nào — cùng lối với icon trang bị và icon
+// vật phẩm. Đổi lại là mọi thứ phải suy ra từ thời gian t, nên cảnh không bao giờ "đứng hình".
+//
+// Chỉ chạy khi màn tạo nhân vật đang mở: rời màn là huỷ vòng lặp, không đốt pin nền.
+const TITLE_SKY = [
+  [0.00, '#0a0713'],   // đỉnh trời: gần như đen tím
+  [0.42, '#241536'],   // tím sẫm
+  [0.68, '#5a2740'],   // ráng đỏ mận
+  [0.86, '#b4562f'],   // than hồng sát chân trời
+  [1.00, '#e08a3c'],
+];
+let _titleRAF = 0, _titleT0 = 0;
+
+function titleStop(){ if (_titleRAF) cancelAnimationFrame(_titleRAF); _titleRAF = 0; }
+
+function titleStart(){
+  const cv = document.getElementById('title-fx');
+  if (!cv) return;
+  titleStop();
+  _titleT0 = performance.now();
+  const g = cv.getContext('2d');
+  const step = () => {
+    const host = document.getElementById('sect-select');
+    if (!host || host.classList.contains('hidden')){ _titleRAF = 0; return; }  // rời màn → dừng hẳn
+    const w = cv.clientWidth, h = cv.clientHeight;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (cv.width !== Math.round(w*dpr) || cv.height !== Math.round(h*dpr)){
+      cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+    }
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawTitleScene(g, w, h, (performance.now() - _titleT0) / 1000);
+    _titleRAF = requestAnimationFrame(step);
+  };
+  _titleRAF = requestAnimationFrame(step);
+}
+
+function drawTitleScene(g, W, H, t){
+  const sea = H * 0.58;                       // đường chân trời
+  g.clearRect(0, 0, W, H);
+
+  // ── trời ──
+  const sky = g.createLinearGradient(0, 0, 0, sea);
+  for (const [p, c] of TITLE_SKY) sky.addColorStop(p, c);
+  g.fillStyle = sky; g.fillRect(0, 0, W, sea);
+
+  // sao — chỉ ở nửa trên, mờ dần xuống chân trời
+  for (let i = 0; i < 70; i++){
+    const sx = ((i * 97.13) % 1) * W, sy = ((i * 41.7) % 1) * sea * 0.62;
+    const tw = 0.35 + 0.35 * Math.sin(t * 1.6 + i);
+    g.globalAlpha = tw * (1 - sy / (sea * 0.8)) * 0.9;
+    g.fillStyle = '#dfe6ff';
+    g.fillRect(sx, sy, 1.5, 1.5);
+  }
+  g.globalAlpha = 1;
+
+  // mây — ba dải trôi ngang với tốc độ khác nhau (thị sai)
+  for (let L = 0; L < 3; L++){
+    const sp = 6 + L * 9, yy = sea * (0.30 + L * 0.15), amp = 10 + L * 6;
+    g.fillStyle = ['rgba(30,18,42,.55)','rgba(52,26,48,.5)','rgba(92,42,50,.45)'][L];
+    for (let i = -1; i < 6; i++){
+      const cx = ((i * 320 + t * sp) % (W + 640)) - 320;
+      g.beginPath();
+      g.ellipse(cx, yy + Math.sin(t * 0.3 + i) * 4, 150 + L * 40, amp, 0, 0, 7);
+      g.fill();
+    }
+  }
+
+  // chớp xa — thưa và ngắn, chỉ hắt sáng chứ không vẽ tia
+  const fl = Math.max(0, Math.sin(t * 0.37) - 0.985) * 60;
+  if (fl > 0){ g.fillStyle = `rgba(200,180,255,${fl * 0.5})`; g.fillRect(0, 0, W, sea); }
+
+  // ── vùng đất phía trước: mỏm đá lởm chởm + toà thành vỡ ──
+  drawTitleLand(g, W, sea, t);
+
+  // ── biển ──
+  const wat = g.createLinearGradient(0, sea, 0, H);
+  wat.addColorStop(0, '#2a1830'); wat.addColorStop(0.4, '#141032'); wat.addColorStop(1, '#080614');
+  g.fillStyle = wat; g.fillRect(0, sea, W, H - sea);
+  // cột ánh sáng phản chiếu từ ráng chiều
+  const col = g.createLinearGradient(0, sea, 0, H);
+  col.addColorStop(0, 'rgba(224,138,60,.34)'); col.addColorStop(1, 'rgba(224,138,60,0)');
+  g.fillStyle = col;
+  const rc = W * 0.135;                                  // rọi xuống từ phía toà thành
+  g.beginPath(); g.moveTo(rc - 26, sea); g.lineTo(rc + 26, sea);
+  g.lineTo(rc + 130, H); g.lineTo(rc - 130, H); g.closePath(); g.fill();
+  // sóng: các dải ngang trượt, càng gần càng thưa và dày
+  for (let i = 0; i < 26; i++){
+    const k = i / 25;
+    const y = sea + (H - sea) * k * k * 1.02;
+    const ph = t * (0.5 + k * 1.8) + i;
+    g.strokeStyle = `rgba(190,205,255,${0.05 + k * 0.13})`;
+    g.lineWidth = 0.8 + k * 1.8;
+    g.beginPath();
+    for (let x = 0; x <= W; x += 12){
+      const yy = y + Math.sin(x * (0.012 - k * 0.006) + ph) * (1 + k * 5);
+      x ? g.lineTo(x, yy) : g.moveTo(x, yy);
+    }
+    g.stroke();
+  }
+
+  // ── tàu ──
+  // Khối chọn lớp phủ kín khoảng giữa, nên MỌI tiêu điểm phải nằm ở hai dải bên. Bản đầu đặt
+  // tàu gần ở giữa (W*0.42) và không ai nhìn thấy nó.
+  drawTitleShip(g, W * 0.90, sea + (H - sea) * 0.26, 0.55, t, 0.85);       // tàu xa bên phải
+  drawTitleShip(g, W * 0.09, sea + (H - sea) * 0.40, 0.80, t + 1.7, 1);    // tàu vừa bên trái
+  drawTitleShip(g, W * 0.88, sea + (H - sea) * 0.72, 1.20, t + 0.6, 1);    // tàu gần — có người trên boong
+
+  // ── tro bay ──
+  for (let i = 0; i < 34; i++){
+    const sp = 10 + (i % 5) * 6;
+    const x = ((i * 137.5 + t * sp) % (W + 60)) - 30;
+    const y = ((i * 89.3) % 1) * H - ((t * (8 + i % 4)) % H) + H;
+    g.globalAlpha = 0.10 + 0.2 * Math.abs(Math.sin(t + i));
+    g.fillStyle = i % 3 ? '#ffb15c' : '#ffe0a0';
+    g.fillRect(x, y % H, 2, 2);
+  }
+  g.globalAlpha = 1;
+
+  // tối bốn góc — kéo mắt về giữa
+  const vg = g.createRadialGradient(W/2, H*0.5, Math.min(W,H)*0.28, W/2, H*0.5, Math.max(W,H)*0.72);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,6,.72)');
+  g.fillStyle = vg; g.fillRect(0, 0, W, H);
+}
+
+// Vùng đất mới: rặng đá răng cưa, một toà thành gãy, và những LỒNG GIAM phát sáng — chỗ Axie
+// đang bị nhốt. Ánh lồng nhấp nháy lệch pha nhau để bờ không bị "một bóng đèn".
+function drawTitleLand(g, W, sea, t){
+  const base = sea + 1;
+  g.fillStyle = '#0e0a1c';
+  g.beginPath(); g.moveTo(0, base);
+  const peaks = [[0.03,14],[0.09,30],[0.15,20],[0.22,44],[0.29,26],[0.36,18],
+                 [0.64,22],[0.71,40],[0.78,28],[0.85,52],[0.92,24],[0.98,16]];
+  for (const [px, ph] of peaks){ g.lineTo(W*px, base - ph); g.lineTo(W*(px+0.035), base - ph*0.35); }
+  g.lineTo(W, base); g.closePath(); g.fill();
+
+  // toà thành vỡ ở giữa — bóng đen, chỉ có ô cửa sáng
+  const cx = W * 0.135, ch = 92;   // lệch hẳn sang trái — giữa màn hình bị khối chọn lớp che
+  g.fillStyle = '#0b0818';
+  g.beginPath();
+  g.moveTo(cx - 58, base); g.lineTo(cx - 58, base - 44); g.lineTo(cx - 40, base - 44);
+  g.lineTo(cx - 40, base - ch); g.lineTo(cx - 22, base - ch); g.lineTo(cx - 18, base - ch + 26);
+  g.lineTo(cx + 10, base - ch + 12); g.lineTo(cx + 14, base - ch + 40);
+  g.lineTo(cx + 34, base - ch + 40); g.lineTo(cx + 34, base - 30);
+  g.lineTo(cx + 56, base - 30); g.lineTo(cx + 56, base); g.closePath(); g.fill();
+  g.fillStyle = 'rgba(255,177,92,.55)';
+  for (const [ox, oy] of [[-48,-30],[-32,-70],[-26,-52],[24,-24],[42,-20]]){
+    g.fillRect(cx + ox, base + oy, 3, 5);
+  }
+
+  // LỒNG GIAM AXIE — móc câu của cả cảnh, nên phải ĐỌC ĐƯỢC ở cỡ này. Bản đầu vẽ lồng 10×11px
+  // với quầng 26px: ra một chấm mờ, không ai biết đó là cái gì. Nay lồng cao 30px, có song sắt,
+  // có móc treo, và bên trong là một con vật tròn có sừng đang cựa quậy.
+  const lxs = [0.045, 0.215, 0.80, 0.945];
+  for (let i = 0; i < lxs.length; i++){
+    const lx = W * lxs[i], ly = base - 16 - (i % 2) * 10;
+    const pulse = 0.55 + 0.45 * Math.sin(t * 1.5 + i * 2.1);
+    const CW = 13, CH = 17;                       // nửa rộng / nửa cao lồng
+
+    const gl = g.createRadialGradient(lx, ly - 6, 2, lx, ly - 6, 62);   // quầng sáng
+    gl.addColorStop(0, `rgba(110,232,180,${0.40 * pulse})`);
+    gl.addColorStop(0.45, `rgba(90,200,170,${0.14 * pulse})`);
+    gl.addColorStop(1, 'rgba(110,232,180,0)');
+    g.fillStyle = gl; g.beginPath(); g.arc(lx, ly - 6, 62, 0, 7); g.fill();
+
+    g.strokeStyle = `rgba(40,60,58,.95)`; g.lineWidth = 2;              // móc treo
+    g.beginPath(); g.moveTo(lx, ly - CH - 12); g.lineTo(lx, ly - CH); g.stroke();
+
+    g.fillStyle = `rgba(150,255,215,${0.16 + 0.14 * pulse})`;           // lòng lồng sáng
+    g.fillRect(lx - CW, ly - CH, CW * 2, CH + 6);
+
+    // con vật bên trong — thân tròn, hai sừng, mắt sáng; nhích lên xuống như đang cựa
+    const bob = Math.sin(t * 2.1 + i) * 1.4;
+    g.fillStyle = `rgba(190,255,230,${0.62 + 0.3 * pulse})`;
+    g.beginPath(); g.arc(lx, ly - 6 + bob, 6.2, 0, 7); g.fill();
+    g.beginPath(); g.moveTo(lx - 5, ly - 10 + bob); g.lineTo(lx - 7.5, ly - 16 + bob); g.lineTo(lx - 2.5, ly - 11 + bob); g.fill();
+    g.beginPath(); g.moveTo(lx + 5, ly - 10 + bob); g.lineTo(lx + 7.5, ly - 16 + bob); g.lineTo(lx + 2.5, ly - 11 + bob); g.fill();
+    g.fillStyle = 'rgba(20,50,44,.9)';
+    g.beginPath(); g.arc(lx - 2.2, ly - 7 + bob, 1.2, 0, 7); g.fill();
+    g.beginPath(); g.arc(lx + 2.2, ly - 7 + bob, 1.2, 0, 7); g.fill();
+
+    // khung + SONG SẮT — thứ nói "đang bị nhốt"
+    g.strokeStyle = `rgba(180,255,225,${0.62 + 0.3 * pulse})`; g.lineWidth = 1.8;
+    g.strokeRect(lx - CW, ly - CH, CW * 2, CH + 6);
+    g.lineWidth = 1.1;
+    for (let bxi = -2; bxi <= 2; bxi++){
+      const bx = lx + bxi * (CW / 2.6);
+      g.beginPath(); g.moveTo(bx, ly - CH); g.lineTo(bx, ly + 6); g.stroke();
+    }
+    g.beginPath(); g.moveTo(lx - CW, ly - CH + 6); g.lineTo(lx + CW, ly - CH + 6); g.stroke();  // đai ngang
+  }
+}
+
+// Tàu: thân cong, cột buồm, cánh buồm phồng, dây chằng, đèn lồng. Nhấp nhô theo sin —
+// pha khác nhau cho từng tàu để cả đoàn không cùng lên xuống một nhịp.
+function drawTitleShip(g, x, y, sc, t, alpha){
+  const bob = Math.sin(t * 0.7) * 4 * sc, tilt = Math.sin(t * 0.55) * 0.022;
+  g.save();
+  g.translate(x, y + bob); g.rotate(tilt); g.scale(sc, sc);
+  g.globalAlpha = alpha;
+
+  // buồm
+  const bel = 6 + Math.sin(t * 1.1) * 2.5;              // độ phồng theo gió
+  for (const [my, mh, mw] of [[-96, 54, 30], [-52, 40, 24]]){
+    g.fillStyle = 'rgba(226,214,196,.90)';
+    g.beginPath();
+    g.moveTo(-mw, my); g.quadraticCurveTo(-mw - bel, my + mh/2, -mw, my + mh);
+    g.lineTo(mw, my + mh); g.quadraticCurveTo(mw + bel, my + mh/2, mw, my); g.closePath(); g.fill();
+    g.fillStyle = 'rgba(120,70,60,.30)';                 // bóng dưới mép buồm
+    g.fillRect(-mw, my + mh - 4, mw*2, 4);
+  }
+  // cột + dây chằng
+  g.strokeStyle = '#2a2028'; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(0, -104); g.lineTo(0, -4); g.stroke();
+  g.strokeStyle = 'rgba(200,190,180,.28)'; g.lineWidth = 1;
+  for (const dx of [-46, -30, 30, 46]){ g.beginPath(); g.moveTo(0, -102); g.lineTo(dx, -6); g.stroke(); }
+
+  // thân tàu
+  g.fillStyle = '#241a22';
+  g.beginPath();
+  g.moveTo(-58, -6); g.lineTo(58, -6);
+  g.quadraticCurveTo(70, 2, 44, 20); g.lineTo(-44, 20);
+  g.quadraticCurveTo(-70, 2, -58, -6); g.closePath(); g.fill();
+  g.fillStyle = '#3a2a30'; g.fillRect(-56, -6, 112, 4);   // mạn trên
+  g.fillStyle = 'rgba(255,177,92,.5)';                    // ô cửa sáng
+  for (const dx of [-34, -14, 14, 34]) g.fillRect(dx, 4, 4, 5);
+
+  // đèn lồng đầu mũi — nguồn sáng ấm duy nhất trên tàu
+  const lp = 0.7 + 0.3 * Math.sin(t * 2.2);
+  const lg = g.createRadialGradient(52, -12, 1, 52, -12, 22);
+  lg.addColorStop(0, `rgba(255,190,110,${0.55 * lp})`); lg.addColorStop(1, 'rgba(255,190,110,0)');
+  g.fillStyle = lg; g.beginPath(); g.arc(52, -12, 22, 0, 7); g.fill();
+  g.fillStyle = `rgba(255,214,150,${0.85 * lp})`; g.beginPath(); g.arc(52, -12, 2.6, 0, 7); g.fill();
+
+  // người trên boong — chỉ tàu gần mới có, vẽ thành bóng đen viền sáng theo màu LỚP
+  if (sc >= 1.1){
+    const who = [['#4c8dff', -26], ['#7ec850', -6], ['#e8552a', 16]];
+    for (let i = 0; i < who.length; i++){
+      const [cc, dx] = who[i];
+      const sway = Math.sin(t * 0.9 + i * 1.4) * 1.2;
+      g.save(); g.translate(dx + sway, -8);
+      g.fillStyle = '#0b0812';                       // bóng người
+      g.beginPath(); g.arc(0, -16, 3.4, 0, 7); g.fill();
+      g.fillRect(-3.4, -13, 6.8, 13);
+      g.fillStyle = cc; g.globalAlpha = alpha * 0.55; // viền sáng theo màu lớp
+      g.fillRect(-3.4, -13, 1.4, 13);
+      g.beginPath(); g.arc(-1.2, -16.6, 3.4, Math.PI*0.6, Math.PI*1.5); g.fill();
+      g.globalAlpha = alpha;
+      g.restore();
+    }
+  }
+  // sóng mũi tàu
+  g.strokeStyle = 'rgba(200,220,255,.30)'; g.lineWidth = 1.6;
+  for (let i = 0; i < 3; i++){
+    const sp = 12 + i * 9, ph = (t * 1.3 + i * 0.5) % 1;
+    g.globalAlpha = alpha * (1 - ph) * 0.7;
+    g.beginPath(); g.ellipse(0, 20, 58 + ph * sp, 5 + ph * 4, 0, 0, Math.PI); g.stroke();
+  }
+  g.globalAlpha = 1;
+  g.restore();
+}
+
 // ═══════════ VŨ KHÍ DANH PHÁI — mỗi môn phái một binh khí riêng ═══════════
 const SECT_WEAPONS = { thieulam:'con', toanchan:'kiem', baidasan:'xatruong', minhgiao:'daidao' }; // bug (Dark Lord) không có entry riêng, rơi về fallback 'kiem' — như trước đây
 function drawSectWeapon(p, sect){
@@ -16189,7 +16455,7 @@ let introPage = 0;
 function showIntro(){
   introPage = 0;
   el('intro-story').classList.remove('hidden');
-  el('sect-select').classList.add('hidden');
+  el('sect-select').classList.add('hidden'); titleStop();
   AudioSys.playBgm(BGM_INTRO); // tân thủ mở game — giai điệu hoài niệm dẫn vào cốt truyện
   renderIntroPage();
 }
@@ -17697,7 +17963,7 @@ function ccValidate(){
 }
 function openCreate(){
   ccSect = null;
-  el('sect-select').classList.remove('hidden');
+  el('sect-select').classList.remove('hidden'); titleStart();
   // showMainMenu() ẩn hết phần tạo nhân vật đi (người cũ chỉ cần nút Tiếp Tục) — bật lại toàn bộ,
   // nếu không thì bấm "Tạo nhân vật mới" từ màn chờ ra một trang trống.
   for (const _id of ['cc-classes','cc-detail','btn-create','cc-name-warn']){ const _e = el(_id); if (_e) _e.style.display = ''; }
@@ -17716,7 +17982,7 @@ function openCreate(){
   if (go) go.addEventListener('click', ()=>{
     if (!ccSect) return;
     const nm = sanitizeCharName(el('inp-char-name').value) || genCharName();
-    el('sect-select').classList.add('hidden');
+    el('sect-select').classList.add('hidden'); titleStop();
     startGame(ccSect, { name: nm });
     checkTitles();
     AudioSys.sfx('quest', 0.9);

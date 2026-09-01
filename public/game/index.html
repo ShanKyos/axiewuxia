@@ -132,10 +132,13 @@
 
 <!-- Tạo nhân vật — kiểu MU Online: chọn lớp, đặt tên, vào game -->
 <div id="sect-select" class="hidden">
+  <!-- Hoạt cảnh mở đầu: đoàn tàu vượt biển đêm tới vùng đất giam giữ Axie. Vẽ bằng canvas,
+       chạy khi màn này mở và tự dừng khi rời màn — xem titleStart() trong game.js -->
+  <canvas id="title-fx"></canvas>
   <div class="ss-inner">
-    <h1>Axie Wuxia</h1>
-    <h2>Lunacia · PvE</h2>
-    <p class="ss-sub">Chọn lớp và đặt tên — rồi bước vào Lunacia.</p>
+    <div class="ss-logo"><span class="ss-logo-main">AXIE</span><span class="ss-logo-sub">WUXIA</span></div>
+    <h2>Lunacia · Vùng đất bị xiềng</h2>
+    <p class="ss-sub">Ba con tàu cập bến trong đêm. Trên bờ, những chiếc lồng còn sáng.<br>Chọn lớp và đặt tên — rồi đi cứu chúng về.</p>
     <div id="cc-classes"></div>
     <div id="cc-detail" class="cc-detail"></div>
     <div class="cc-name">

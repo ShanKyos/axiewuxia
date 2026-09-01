@@ -232,13 +232,29 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 
 /* Sect select */
 #sect-select { position:fixed; inset:0; z-index:30; display:flex; align-items:center; justify-content:center;
-  background:radial-gradient(ellipse at 50% 30%, #2a2f66 0%, #10112699 70%); overflow-y:auto; }
+  background:#0a0713; overflow-y:auto; }
+/* Hoạt cảnh mở đầu nằm DƯỚI khối chọn lớp, phủ kín màn hình */
+#title-fx { position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+#sect-select .ss-inner { position:relative; z-index:1; }
+/* Khối chọn lớp cần nền riêng để chữ không chìm vào cảnh */
+#sect-select .ss-inner { background:linear-gradient(180deg, rgba(10,7,19,.30), rgba(10,7,19,.82) 22%, rgba(10,7,19,.92));
+  border-radius:18px; backdrop-filter:blur(2px); }
+/* Logo: kim loại lạnh + viền than hồng, quét sáng chậm ngang mặt chữ */
+.ss-logo { display:flex; flex-direction:column; align-items:center; gap:0; margin-bottom:4px; line-height:.92; }
+.ss-logo span { font-family:var(--font-display); font-weight:800; letter-spacing:.06em; line-height:1;
+  background:linear-gradient(180deg,#fdfbff 6%,#b9c6e6 34%,#5c6a92 52%,#e8eefc 66%,#8fa0c8 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 2px 0 rgba(0,0,0,.55)) drop-shadow(0 0 16px rgba(255,150,70,.34)); }
+.ss-logo-main { font-size:clamp(40px,8.5vw,74px); }
+.ss-logo-sub  { font-size:clamp(18px,3.4vw,30px); letter-spacing:.42em; margin-left:.42em; opacity:.92; }
+.ss-logo::after { content:''; position:absolute; inset:0; pointer-events:none; }
+@media (prefers-reduced-motion: reduce){ #title-fx { display:none; } }
 /* Bái Sư Nhập Phái — chọn môn phái trong game ở cấp 10 */
 #sect-ceremony { position:fixed; inset:0; z-index:35; display:flex; align-items:center; justify-content:center;
   background:radial-gradient(ellipse at 50% 30%, rgba(42,47,102,.97) 0%, rgba(14,15,32,.97) 70%); overflow-y:auto; }
 #ceremony-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; }
 #sect-ceremony .big-btn { margin-top:18px; }
-.ss-inner { text-align:center; padding:30px 16px; max-width:860px; }
+.ss-inner { text-align:center; padding:26px 16px; max-width:720px; }
 .ss-inner h1 { font-family:var(--font-display); font-weight:800; color:#7ecbff; font-size:clamp(30px,6vw,50px); letter-spacing:2px; }
 .ss-inner h2 { color:#9aa8d4; font-size:clamp(13px,2.4vw,18px); letter-spacing:3px; font-weight:600; margin-top:6px; }
 .ss-sub { color:#8890b8; font-size:13px; margin:14px 0 24px; }
