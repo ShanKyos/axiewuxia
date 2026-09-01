@@ -1,0 +1,24 @@
+const { chromium } = require('playwright');
+(async () => {
+  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const errors = [];
+  page.on('pageerror', e => errors.push(String(e)));
+  await page.goto('http://localhost:8853/index.html', { waitUntil: 'networkidle' });
+  await page.waitForFunction(() => window.__gameReady).catch(()=>{});
+  await page.waitForTimeout(500);
+  await page.evaluate(() => { startGame('thieulam', null); });
+  await page.waitForTimeout(500);
+  await page.evaluate(() => { player.resetCount = 3; calcDerived(); saveGame(); });
+  const before = await page.evaluate(() => ({ resetCount: player.resetCount, atk: player.atk }));
+  console.log('before reload:', JSON.stringify(before));
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForFunction(() => window.__gameReady).catch(()=>{});
+  await page.waitForTimeout(500);
+  const loaded = await page.evaluate(() => loadGame());
+  const after = await page.evaluate(() => ({ resetCount: player.resetCount, atk: player.atk }));
+  console.log('loadGame() returned:', loaded);
+  console.log('after loadGame():', JSON.stringify(after));
+  console.log('errors:', JSON.stringify(errors.slice(0,10)));
+  await browser.close();
+})();
