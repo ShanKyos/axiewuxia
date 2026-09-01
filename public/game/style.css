@@ -484,6 +484,48 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .npc-shop-row { display:flex; justify-content:space-between; align-items:center; padding:7px 4px;
   border-bottom:1px dashed var(--border-faint); font-size:12.5px; }
 
+/* ── TIỆM ── hàng bày là MÓN THẬT: icon, viền theo phẩm, giá, rê chuột ra đủ chỉ số */
+.shop-quote { font-size:12.5px; color:#9aa8d4; line-height:1.6; margin-bottom:6px; }
+.shop-purse { font-size:11.5px; color:#9aa8d4; margin-bottom:8px; padding:4px 8px;
+  background:rgba(0,0,10,.3); border-radius:var(--r-sm); border:1px solid var(--border-faint); }
+.shop-purse b { color:#ffd76a; }
+.shop-hint { font-size:11px; color:#7a86ad; margin:2px 0 6px; }
+
+.shop-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(122px,1fr)); gap:8px; margin-bottom:4px; }
+.shop-cell { position:relative; display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding:8px 6px 6px; border-radius:var(--r-md); background:var(--cell);
+  border:1px solid var(--border-faint); transition:background .12s,border-color .12s; }
+.shop-cell:hover { background:var(--cell-hover); }
+.shop-cell.locked { opacity:.55; }
+.shop-cell.rar-0 { border-color:rgba(185,194,230,.5); }  .shop-cell.rar-1 { border-color:rgba(95,201,110,.65); }
+.shop-cell.rar-2 { border-color:rgba(94,160,232,.7); }   .shop-cell.rar-3 { border-color:rgba(177,140,255,.75); }
+.shop-cell.rar-4 { border-color:rgba(255,177,92,.85); }
+.shop-cell .sc-ic { position:relative; width:54px; height:54px; display:flex; align-items:center; justify-content:center; }
+.shop-cell .sc-ic img { width:100%; height:100%; object-fit:contain;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.55)); }
+.shop-cell .sc-name { font-size:10.5px; font-weight:700; text-align:center; line-height:1.25;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.shop-cell .sc-meta { font-size:9.5px; color:#8a95bd; text-align:center; }
+.shop-cell .sc-meta b { color:#cfe0ff; }
+.shop-cell .sc-buy { width:100%; margin-top:2px; padding:4px 0; font-size:11px; font-weight:700;
+  cursor:pointer; border-radius:var(--r-sm); color:#ffe9a8;
+  background:rgba(255,177,92,.14); border:1px solid rgba(255,177,92,.5); }
+.shop-cell .sc-buy:hover { background:rgba(255,177,92,.26); }
+.shop-cell .sc-buy.off { color:#7a7a86; background:rgba(60,60,70,.3);
+  border-color:rgba(120,120,135,.3); cursor:not-allowed; }
+.shop-cell.sold { align-items:center; justify-content:center; min-height:118px;
+  border-style:dashed; border-color:rgba(120,120,135,.28); background:rgba(0,0,10,.22); }
+.shop-cell .sc-sold { font-size:11px; color:#6a6a78; letter-spacing:1px; }
+
+.shop-row { display:flex; align-items:center; gap:9px; padding:7px 4px;
+  border-bottom:1px dashed var(--border-faint); font-size:12.5px; }
+.shop-row.rare { border-color:rgba(176,138,232,.55); }
+.shop-row .sr-ic { flex:0 0 26px; width:26px; text-align:center; font-size:16px; }
+.shop-row .sr-ic .sr-img { width:26px; height:26px; object-fit:contain; margin:0; }
+.shop-row .sr-body { flex:1; display:flex; flex-direction:column; gap:1px; min-width:0; }
+.shop-row .sr-desc { font-size:11px; opacity:.7; line-height:1.4; }
+.shop-row .sr-stat { font-size:11px; color:#7fd8e0; line-height:1.4; }
+
 /* Đập Ngọc — khe ngọc trong bảng rèn */
 .gem-socket { display:flex; gap:10px; align-items:center; margin:8px 0; padding:8px 10px;
   background:rgba(0,0,10,.35); border:1px solid rgba(255,143,207,.35); border-radius:var(--r-md); }

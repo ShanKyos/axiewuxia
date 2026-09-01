@@ -38,10 +38,20 @@ Khi thấy tàn dư wuxia trong code/UI cũ: dọn luôn nếu nằm trong phạ
 Lấy **ý tưởng và phong cách** từ MU Online thì được, nhưng **tên riêng thì không** —
 đây là game sẽ phát hành, không phải bản mod. Text người chơi nhìn thấy phải sạch.
 
-**Cấm xuất hiện trong text người chơi thấy:** Kundun · Lorencia · Noria · Devias ·
+**Cấm xuất hiện trong text người chơi thấy:** ~~Kundun~~ · Lorencia · Noria · Devias ·
 Icarus · Atlans · Tarkan · Fairy Elf · Magic Gladiator · Devil Square · Blood Castle.
 (Nhắc "MU Online" trong *comment* để ghi nguồn cảm hứng thì được — chỉ là đừng ship
 tên riêng của họ thành nội dung game.)
+
+### ✅ NGOẠI LỆ ĐÃ DUYỆT: "Box Kundun"
+
+Chủ dự án yêu cầu đích danh dùng **"Box Kundun"** cho hệ hộp mở đồ (trước là "Bảo Hạp"),
+lý do: người chơi MU quen tên đó, gọi khác thì lạ. Rủi ro đã được nêu — đây là tên riêng
+của MU Online, còn dự án này là tribute IP riêng — và chủ dự án vẫn chốt dùng.
+
+⇒ `BAOHAP_TIERS[].name` = `Box Kundun I…VII`. **Đây là ngoại lệ DUY NHẤT.** Mười tên còn
+lại trong danh sách trên vẫn cấm tuyệt đối. Đừng "sửa ngược" chỗ này tưởng là sót — nếu
+muốn đổi lại thì phải hỏi chủ dự án, không tự quyết.
 
 Kiểm tra bất cứ lúc nào: `node <scratchpad>/test_story.js` — nó quét toàn bộ
 INTRO_PAGES / QUESTS / CLUES / BOSS_LORE / SECTS / NPCS / MOBS / TB_TIER_NAMES.

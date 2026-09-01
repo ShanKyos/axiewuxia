@@ -1,28 +1,28 @@
 # Danh mục trang bị — bám quy mô MU Season 1
 
-> **Trạng thái: đề xuất CHƯA làm, nhưng một phần đã ship theo cách khác — đọc mục 0 trước.**
-> Duyệt xong mới vẽ 6 mẫu, mẫu được duyệt mới vẽ nốt phần còn lại.
+> **Trạng thái: ĐÃ LÀM XONG — 220 món trong `ITEM_DB`. Xem mục 0.**
 
-## 0. Thực tế đang chạy so với đề xuất này
+## 0. Trạng thái: ĐÃ LÀM XONG
 
-Bản trước ghi "chưa viết dòng code nào". Câu đó nay sai một nửa: **tên đồ đã đổi rồi**, chỉ là
-đổi theo hướng gọn hơn nhiều so với danh mục dưới đây.
+Danh mục này đã vào game. Đo bằng cách chạy game rồi đếm `ITEM_DB`:
 
-| | Đề xuất trong tài liệu này | Đang chạy trong game |
+| | Đề xuất | Đang chạy |
 |---|---|---|
-| Tên giáp/vũ khí | 125 món giáp + 75 vũ khí, đặt tên theo **bộ × lớp** | `ITEM_NAMES` — **một thang 5 nấc dùng chung mọi lớp**, leo theo chất liệu: da → sắt → thép → vảy rồng → hắc nguyệt |
-| Bộ giáp vẽ trên người | 25 bộ | `HERO_SETS` — **5 lớp × 5 bộ = 25 bộ**, đúng như đề xuất |
-| Nối túi đồ ↔ bộ đang mặc | có | **chưa** — món trong túi vẫn chỉ biết `ô + phẩm`, không biết mình thuộc bộ nào |
-| Khoá vũ khí theo lớp | có | **chưa** — mọi lớp vẫn nhặt và cầm được mọi vũ khí |
+| Giáp | 25 bộ × 5 ô = 125 món | **125** (`non`/`ao`/`tay`/`quan`/`chan`, mỗi ô 25) |
+| Vũ khí | 5 lớp × 3 dòng × 5 nấc = 75 | **75** (mỗi lớp đúng 15) |
+| Phụ kiện | — | 20 (10 dây chuyền + 5 + 5 nhẫn) |
+| **Tổng** | | **220 món trong `ITEM_DB`** |
+| Khoá vũ khí theo lớp | có | **có** — `itemUsable()` trả `false` cho vũ khí lớp khác |
+| Bộ giáp vẽ trên người | 25 bộ | **có** — `HERO_SETS`, 5 lớp × 5 bộ |
+| Nối túi đồ ↔ bộ đang mặc | có | **có** — món mang `def`, `slotIcon()` vẽ theo đúng bộ |
 
-Nói cách khác: phần *hình vẽ* (25 bộ) đã có; phần *danh mục tên* và *luật khoá theo lớp* thì
-chưa. Nấc đỉnh trong game hiện là dòng **Hắc Nguyệt** (`Ma Kiếm Hắc Nguyệt`,
-`Thánh Giáp Hắc Nguyệt`…), không phải `Hỏa Long`/`Hư Vô` như bảng dưới.
+`ITEM_NAMES` (thang 5 nấc dùng chung) **vẫn còn trong file nhưng chỉ là đường dự phòng** cho
+save cũ chưa có `def`; `assignDef()` ghi đè tên ngay sau đó. Đọc `ITEM_NAMES` rồi kết luận
+"danh mục chưa làm" là SAI — tôi đã mắc đúng lỗi đó ở một bản trước của tài liệu này.
 
-Ba việc còn mở nếu muốn làm tiếp danh mục này:
-1. Nối `HERO_SETS` với món trong túi (mặc đúng bằng hình thấy trên người).
-2. Khoá vũ khí theo lớp.
-3. Thay `ITEM_NAMES` một thang dùng chung bằng bảng tên theo bộ.
+Phần còn lại của tài liệu giữ nguyên làm bản đặc tả gốc. Một chỗ tên đã đổi khi thực thi:
+nấc đỉnh Dark Knight trong game là dòng **Hỏa Long** đúng như bảng dưới, còn `ITEM_NAMES` dự
+phòng thì dùng "Hắc Nguyệt" — hai thứ khác nhau, đừng lẫn.
 
 ## 1. Nguyên tắc
 

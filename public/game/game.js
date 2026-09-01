@@ -3694,15 +3694,20 @@ function sigilAnnounce(k, x, y){
 //          ❤ Sinh Mệnh (+4%→+28% HP theo bậc, xịt về 0) · ● Hỗn Độn (luyện Linh Dực / đổi Cổ Thần)
 const JEWEL_NAMES = { chucPhuc:'◎ Chúc Phúc Châu', linhHon:'◉ Linh Hồn Châu', sinhMenh:'❤ Sinh Mệnh Châu', honDon:'● Hỗn Độn Châu' };
 const JEWEL_COLORS = { chucPhuc:'#7ec850', linhHon:'#b08ae8', sinhMenh:'#e84a6a', honDon:'#7ecbff' };
-// Bảo Hạp 7 tầng — rơi từ Ma Tôn Giáng Thế (4 giờ/lần). Cổ Thần chỉ từ tầng IV+, 5-8%, KHÔNG pity.
+// Bảo Hạp 7 tầng — rơi từ Hung Thần Giáng Thế (4 giờ/lần). Cổ Thần chỉ từ tầng IV+, 5-8%, KHÔNG pity.
+//
+// ⚠ NGOẠI LỆ CÓ CHỦ Ý của Quy tắc số 2 (không dùng tên riêng MU trong chữ người chơi thấy):
+// chủ dự án yêu cầu đích danh dùng "Box Kundun" vì người chơi MU quen tên đó. Đã nêu rủi ro —
+// đây là tên riêng của MU Online, còn dự án này là tribute IP riêng — và chủ dự án vẫn chốt
+// dùng. Ghi lại ở đây để phiên sau đừng "sửa ngược" tưởng là sót.
 const BAOHAP_TIERS = [ null,
-  { name:'Bảo Hạp I',   min:1,  max:14,  ancient:0,    color:'#9aa8d4' },
-  { name:'Bảo Hạp II',  min:15, max:29,  ancient:0,    color:'#7ec850' },
-  { name:'Bảo Hạp III', min:30, max:44,  ancient:0,    color:'#5aa0e8' },
-  { name:'Bảo Hạp IV',  min:45, max:59,  ancient:0.05, color:'#b08ae8' },
-  { name:'Bảo Hạp V',   min:60, max:74,  ancient:0.06, color:'#e8b04a' },
-  { name:'Bảo Hạp VI',  min:75, max:89,  ancient:0.07, color:'#ff6a3a' },
-  { name:'Bảo Hạp VII', min:90, max:999, ancient:0.08, color:'#7ecbff' },
+  { name:'Box Kundun I',   min:1,  max:14,  ancient:0,    color:'#9aa8d4' },
+  { name:'Box Kundun II',  min:15, max:29,  ancient:0,    color:'#7ec850' },
+  { name:'Box Kundun III', min:30, max:44,  ancient:0,    color:'#5aa0e8' },
+  { name:'Box Kundun IV',  min:45, max:59,  ancient:0.05, color:'#b08ae8' },
+  { name:'Box Kundun V',   min:60, max:74,  ancient:0.06, color:'#e8b04a' },
+  { name:'Box Kundun VI',  min:75, max:89,  ancient:0.07, color:'#ff6a3a' },
+  { name:'Box Kundun VII', min:90, max:999, ancient:0.08, color:'#7ecbff' },
 ];
 // Ma Tôn Giáng Thế: 0h/4h/8h/12h/16h/20h — Hạ Giới & Thượng Giới luân phiên
 const MATON_HA = ['daohoa','ngoai','chungnam'];
@@ -4026,6 +4031,12 @@ function tipItemFrom(key){
   const [k, v] = key.split(':');
   if (k === 'inv') return player.inv[+v] || null;
   if (k === 'eq')  return player.equip[v] || null;
+  // Hàng bày trong tiệm dùng CHUNG thẻ rê chuột với túi đồ — cùng chỉ số, cùng phần so với đồ
+  // đang mặc. Viết riêng một thẻ cho tiệm là chắc chắn sẽ lệch khỏi thẻ kia sau vài lần sửa.
+  if (k === 'shop'){
+    const st = (player.shopStock && curShopNpc && player.shopStock[curShopNpc.id]) || null;
+    return (st && st.items && st.items[+v]) || null;
+  }
   return null;
 }
 // Một dòng chỉ số. `cmp` là bảng chỉ số của món đối chiếu — có thì in luôn chênh lệch ngay
@@ -4547,7 +4558,7 @@ function newPlayer(sectKey){
     mount: { tier: 0, out: false },           // Thú Chiến: xuất trận đánh cùng, không cưỡi
     dantian: { realm: 0 },
     jewels: { chucPhuc: 0, linhHon: 0, sinhMenh: 0, honDon: 0 }, // Tứ Châu (Track HT)
-    baohap: {},                            // Bảo Hạp Ma Tôn Giáng Thế { tier: số lượng }
+    baohap: {},                            // Box Kundun Ma Tôn Giáng Thế { tier: số lượng }
     truyna: { day:'', state:'none', map:null }, // Truy Nã Lệnh ngày
     wpUnlocked: { tuongduong: true },      // Điểm dịch chuyển (bảng đồ M) — mở khoá khi đã từng đặt chân tới, xem travelTo()
     resetCount: 0,                         // Tẩy Tủy (Reset kiểu MU) — số lần đã tẩy tủy, +2% Công/Mạng vĩnh viễn/lần
@@ -4565,6 +4576,7 @@ function newPlayer(sectKey){
     potions: 3, potionCd: 0,                   // P0: Hồ Lô Thuốc — hồi 40% máu, cd 20s, tối đa 5 lọ
     buffAtkT: 0,                             // Rượu Hổ Cốt — +12% công lực có thời hạn
     loidonT: 0,                              // Bùa Chắn Sét — giảm 40% ST thiên lôi có thời hạn
+    shopStock: {},                           // kho hàng bày của từng tiệm — xem shopStock()
     noidan: 0,                               // Lõi Nguyên Tố — MỘT ô đếm, chọn chỉ số lúc hấp thụ
     ndBonus: { atk:0, hp:0, def:0, qi:0, crit:0 }, // chỉ số vĩnh viễn từ thôn phệ nội đan
     ndDay: '', ndCount: 0,                   // giới hạn thôn phệ 3 viên/ngày
@@ -4747,6 +4759,7 @@ function loadGame(){
     }
     if (typeof player.noidan !== 'number') player.noidan = 0;
     if (!player.ndBonus) player.ndBonus = { atk:0, hp:0, def:0, qi:0, crit:0 };
+    if (!player.shopStock || typeof player.shopStock !== 'object') player.shopStock = {};
     if (player.ndDay == null){ player.ndDay = ''; player.ndCount = 0; }
     // ═══ GỘP TIỀN TỆ — bậc 4: Tâm Đắc nhập vào Instinct ═══════════════════════════════
     // Tỉ giá lấy từ chính chỗ tiêu: nâng trọn một chiêu 1→120 trước đây tốn 21💠, nay tốn thêm
@@ -4775,7 +4788,7 @@ function loadGame(){
     // và Truy Nã Lệnh thưởng bạc. Bớt một ô đếm mà không mất một cơ chế nào.
     if (player.congHuan > 0){ player.silver += player.congHuan * GO_CONGHUAN; }
     delete player.congHuan;
-    if (!player.baohap) player.baohap = {};               // Bảo Hạp Ma Tôn: { tier: count }
+    if (!player.baohap) player.baohap = {};               // Box Kundun Ma Tôn: { tier: count }
     if (!player.truyna) player.truyna = { day:'', state:'none', map:null }; // Truy Nã Lệnh ngày
     if (player.sectOffered == null) player.sectOffered = false;
     if (!SECTS[player.sect]) player.sect = 'vophai'; // save lỗi phái → về Tán Nhân
@@ -6202,7 +6215,7 @@ function unlockNotices(){
     7:['Mở khóa: Tuyệt kỹ (phím 3)'],
     10:[...(player.sect === 'vophai' ? ['Mở khóa: the Calling — 5 lớp để chọn!'] : []),'Mở khóa: Stoneform (Thuần Thục — phím H)','Mở khóa: Truy Nã Lệnh & Sảnh Cầu May — Bổ Đầu và Thương Nhân Vận May ở Lunaris City'],
     40:['Mở khóa: Lò Bảo Chứng luyện Linh Dực Cấp 1 — Lò Rèn Hoàng Gia, Lunaris City'],
-    45:['Bảo Hạp IV trở lên từ Hung Thần có 5-8% mở ra trang bị CỔ THẦN THỦ HỘ — Hung Thần giáng thế mỗi 4 giờ!'],
+    45:['Box Kundun IV trở lên từ Hung Thần có 5-8% mở ra trang bị CỔ THẦN THỦ HỘ — Hung Thần giáng thế mỗi 4 giờ!'],
     30:['Mở khóa: Archery (Thuần Thục — phím H)','Mở khóa: Nhà Riêng — gặp Quản Gia ở Lunaris City'],
   };
   const list = msgs[player.level];
@@ -7707,7 +7720,7 @@ function showVictory(){
     <p>Thủ Lĩnh Gloam đã bại dưới tay ngươi.<br>
     Từ một hatchling vô danh, ngươi đã bước qua cánh cửa đầu tiên của hành trình.<br><br>
     ${sectLine}<br><br>
-    <i>Lunacia còn dài: rèn Khai Quang +11 · lên bậc Starforged · săn tướng quân của Morvahn mở Bảo Hạp · thu thập thủ bút từ Sát Thủ · giành danh hiệu Người Giữ Lunacia!</i></p>
+    <i>Lunacia còn dài: rèn Khai Quang +11 · lên bậc Starforged · săn tướng quân của Morvahn mở Box Kundun · thu thập thủ bút từ Sát Thủ · giành danh hiệu Người Giữ Lunacia!</i></p>
     <button class="big-btn" onclick="document.getElementById('overlay').classList.add('hidden')">Tiếp Tục Hành Trình</button>`;
   document.getElementById('overlay').classList.remove('hidden');
   saveGame();
@@ -11146,7 +11159,7 @@ function renderChar(){
     if (!own.length){
       html += `<div style="font-size:11.5px;opacity:.62;margin-bottom:6px;line-height:1.7">
         Chưa mang Khắc Ấn nào. Khắc Ấn đổi <b>cách chiêu hoạt động</b>, không cộng thêm chỉ số —
-        rơi từ <b style="color:#b08ae8">Bảo Hạp IV+</b>, <b style="color:#7ecbff">Hung Thần Giáng Thế</b>
+        rơi từ <b style="color:#b08ae8">Box Kundun IV+</b>, <b style="color:#7ecbff">Hung Thần Giáng Thế</b>
         và <b style="color:#ffd76a">Xâm Lăng Vàng</b>.</div>`;
     } else {
       for (const k of own){
@@ -12536,7 +12549,7 @@ function startGame(sectKey, quze){
     applyTestBoost();
     checkTitles();
     addFloat(player.x, player.y-50, 'CHẾ ĐỘ THỬ NGHIỆM — Cấp 100, MỌI TÍNH NĂNG TỐI ĐA!', '#7ecbff', 16);
-    addFloat(player.x, player.y-72, 'Full Chí Tôn +11 · đủ bộ Cổ Thần · 4 Khắc Ấn · Linh Dực c2 · 99 châu · 70 Bảo Hạp', '#a0ffe9', 13);
+    addFloat(player.x, player.y-72, 'Full Chí Tôn +11 · đủ bộ Cổ Thần · 4 Khắc Ấn · Linh Dực c2 · 99 châu · 70 Box Kundun', '#a0ffe9', 13);
     addFloat(player.x, player.y-94, 'C nhân vật · I túi đồ · O cài đặt (rung 3 mức) · M bản đồ · K kỹ năng', '#ffd76a', 12);
   } else {
     addFloat(player.x, player.y-50, 'Lunaris City — hãy đến gặp Trưởng Lão Rell (lại gần, nhấn E)!', '#7ecbff', 15);
@@ -12744,7 +12757,7 @@ function cheatHelp(){
     '── tài nguyên ──',
     '/silver /khi /mat /dan /bikip <n> — bạc · Instinct · Huyền Thiết · Tiên Đan · Sách (+n để cộng)',
     '/nd <n> — Lõi Nguyên Tố · /jewel <n> — cả bốn Tứ Châu · /gem <n> — Tử La + Hỗn Nguyên',
-    '/manh /tich /an /cothan <n> — mảnh ghép chế tác · /hap <n> — Bảo Hạp mọi tầng',
+    '/manh /tich /an /cothan <n> — mảnh ghép chế tác · /hap <n> — Box Kundun mọi tầng',
     '/item [phẩm 0-4] [giai 1-10] — tạo trang bị vào túi',
     '── thế giới ──',
     '/kill [bán kính=350] — hạ quái quanh mình · /seal <0-7> — tiến độ Ngũ Trụ (7 = Kết Mở)',
@@ -12823,7 +12836,7 @@ window.cheatExec = function(raw){
         if (cmd === 'nd'){ player.noidan = v2; player.ndDay = ''; player.ndCount = 0; cheatLog('Lõi Nguyên Tố → ' + v2 + ' (mở lại 3 lượt hấp thụ hôm nay)', '#b08ae8'); }
         else if (cmd === 'jewel'){ for (const k in JEWEL_NAMES) player.jewels[k] = v2; cheatLog('Tứ Châu → ' + v2 + ' mỗi loại', '#7ecbff'); }
         else if (cmd === 'gem'){ player.gems.tuLa = v2; player.gems.honNguyen = v2; cheatLog(`Tử La ${v2} · Hỗn Nguyên ${v2}`, '#e8552a'); }
-        else { for (let t = 1; t < BAOHAP_TIERS.length; t++) player.baohap[t] = v2; cheatLog(`Bảo Hạp → ${v2} mỗi tầng (I-${BAOHAP_TIERS.length - 1})`, '#ffd76a'); }
+        else { for (let t = 1; t < BAOHAP_TIERS.length; t++) player.baohap[t] = v2; cheatLog(`Box Kundun → ${v2} mỗi tầng (I-${BAOHAP_TIERS.length - 1})`, '#ffd76a'); }
         break;
       }
       case 'slot': {
@@ -14685,7 +14698,7 @@ const MAT_ROWS = [
   { icon:'manhtrangbi', name:'Mảnh Trang Bị', get:()=>(player.mats&&player.mats.manh)||0, color:'#7ec8d8', desc:'Tấn Phẩm & Kế Thừa — rơi từ quái/tinh anh' },
   { icon:'tichma', name:'Tịch Ma Thạch', get:()=>(player.mats&&player.mats.tichMa)||0, color:'#e84a6a', desc:'đá lõi ấn — Tấn Phẩm Linh→Thần→Chí Tôn, rơi từ Vệ Binh Trụ' },
   { icon:'antranai', name:'Ấn Cổng Vực', get:()=>(player.mats&&player.mats.anTranAi)||0, color:'#ffb15c', desc:'vé lên Chí Tôn — Chinh Phạt Cổng Vực 1 lần/ngày' },
-  { icon:'manhcothan', name:'Mảnh Cổ Thần', get:()=>(player.mats&&player.mats.manhCoThan)||0, color:'#7ecbff', desc:'×60 đổi Bảo Hạp Cổ Thần chọn bộ (Lò Rèn)' },
+  { icon:'manhcothan', name:'Mảnh Cổ Thần', get:()=>(player.mats&&player.mats.manhCoThan)||0, color:'#7ecbff', desc:'×60 đổi Box Kundun Cổ Thần chọn bộ (Lò Rèn)' },
 ];
 function fmtCount(n){
   n = n || 0;
@@ -14703,7 +14716,7 @@ function matTip(name, desc, val){
 const BAG_TABS = [
   { id:'gear', name:'Trang Bị' },
   { id:'mat',  name:'Vật Liệu' },
-  { id:'box',  name:'Bảo Hạp' },
+  { id:'box',  name:'Box Kundun' },
 ];
 window.bagTab = 'gear';
 window.setBagTab = function(t){ window.bagTab = t; renderBag(); };
@@ -14770,7 +14783,7 @@ function bagSecBox(){
   const bh = player.baohap || {};
   const bhTiers = Object.keys(bh).filter(t => bh[t] > 0);
   let h = `<div class="chaos-sec">BẢO HẠP <span class="chaos-sub">Hung Thần Giáng Thế</span></div>`;
-  if (!bhTiers.length) h += `<div class="chaos-empty">Chưa có Bảo Hạp nào — săn Hung Thần hoặc quái Xâm Lăng Vàng.</div>`;
+  if (!bhTiers.length) h += `<div class="chaos-empty">Chưa có Box Kundun nào — săn Hung Thần hoặc quái Xâm Lăng Vàng.</div>`;
   for (const t of bhTiers){
     const d = BAOHAP_TIERS[t];
     h += `<div class="inv-item"><span class="s-name"><b style="color:${d.color}">${d.name}</b> ×${bh[t]}<br>
@@ -15267,73 +15280,246 @@ function applySkillIcons(){
 // ---------- Hệ thống cửa hàng — mỗi NPC một quầy hàng riêng ----------
 const SHOPS = {
   duoclao: { quote:'"Thuốc bổ hay thuốc độc — khác nhau ở liều lượng thôi, khách quân ạ."', junk:true, rows:[
-    { id:'thuoc',     name:'🧪 Bình Thuốc Đỏ',        price:150, desc:'Hồi 40% máu tức thì (phím R) — túi đựng tối đa 5 lọ' },
-    { id:'trithuong', name:'✚ Trị Thương Toàn Phần', price:100, desc:'Nhà Giả Kim tự tay bào chế thuốc — hồi đầy HP ngay lập tức' },
-    { id:'tukhi',     name:'◎ Lọ Mana',              price:80,  desc:'Hồi đầy Mana (tài nguyên tung chiêu) ngay lập tức' },
-    { id:'loidon',    name:'⚡ Bùa Chắn Sét',           price:600, desc:'5 phút giảm 40% sát thương thiên lôi — mang theo khi vào vùng bão' },
-    { id:'tiendan',   name:'◈ Đá Thăng Cấp ×3',      price:900, desc:'Thuần Thục (Venom / Archery / Stoneform)' },
+    { id:'thuoc',     icon:'🧪', name:'Bình Thuốc Đỏ',        price:150, desc:'Uống bằng phím R — túi đựng tối đa 5 lọ' },
+    { id:'trithuong', icon:'✚',  name:'Trị Thương Toàn Phần', price:100, desc:'Nhà Giả Kim tự tay bào chế — dùng ngay tại chỗ' },
+    { id:'tukhi',     icon:'◎',  name:'Lọ Mana',              price:80,  desc:'Mana là tài nguyên tung chiêu' },
+    { id:'loidon',    icon:'⚡', name:'Bùa Chắn Sét',         price:600, desc:'Mang theo khi vào vùng bão' },
+    { id:'tiendan',   icon:'◈',  name:'Đá Thăng Cấp ×3',      price:900, desc:'Dùng cho Thuần Thục (Venom / Archery / Stoneform)' },
   ]},
-  binhkhi: { quote:'"Binh khí nhà ta ba đời rèn giũa — mở rương là biết liền."', rows:[
-    { id:'ruongvk', name:'⚔ Rương Binh Khí',  price:800, desc:'Vũ khí ngẫu nhiên theo cấp của bạn — có thể ra hàng hiếm' },
-    { id:'ruongpc', name:'🛡 Rương Phòng Cụ', price:700, desc:'Giáp trụ ngẫu nhiên theo cấp — có thể ra trang bị Hoàn Hảo' },
-  ]},
+  // Tiệm binh khí là tiệm DUY NHẤT bày hàng thật — đúng vai của nó, và cũng để hàng bày không
+  // loãng ra khắp ba tiệm.
+  binhkhi: { quote:'"Binh khí nhà ta ba đời rèn giũa — cứ ngắm cho kỹ rồi hẵng trả tiền."',
+    stock:true, rows:[], boxes:[
+      { id:'ruongvk', icon:'◈', name:'Rương Binh Khí',  price:800, desc:'Vũ khí ngẫu nhiên theo cấp của bạn — có thể ra hàng hiếm' },
+      { id:'ruongpc', icon:'❖', name:'Rương Phòng Cụ', price:700, desc:'Giáp trụ ngẫu nhiên theo cấp — có thể ra trang bị Hoàn Hảo' },
+    ]},
   trachu: { quote:'"Vào đây uống chén trà nóng đã — chuyện Lunacia để sau hẵng hay."', rows:[
-    { id:'nghitro', name:'🛏 Nghỉ Trọ',      price:120, desc:'Nghỉ ngơi dưỡng thần — hồi đầy HP và Mana' },
-    { id:'ruou',    name:'🍶 Rượu Hổ Cốt',   price:200, desc:'3 phút +12% công lực — men say bừng bừng sát khí' },
+    { id:'nghitro', icon:'🛏', name:'Nghỉ Trọ',    price:120, desc:'Nghỉ ngơi dưỡng thần' },
+    { id:'ruou',    icon:'🍶', name:'Rượu Hổ Cốt', price:200, desc:'Men say bừng bừng sát khí' },
   ]},
 };
 let curShopNpc = null;
+
+// ═══════════ KHO HÀNG TIỆM — bán MÓN CỤ THỂ, không bán rương mù ═══════════
+// Vấn đề của bản cũ: tiệm chỉ có "Rương Binh Khí — vũ khí ngẫu nhiên theo cấp". Món đồ chưa
+// tồn tại lúc bấm mua, nên KHÔNG THỂ hiện chỉ số — người chơi trả 800◈ để mua một đoạn mô tả.
+// Đó là lý do cả tiệm chỉ toàn chữ.
+// Nay tiệm bày MÓN THẬT: sinh sẵn, cất trong save, hiện icon + đủ chỉ số + so với đồ đang mặc
+// (dùng lại đúng thẻ rê chuột của túi đồ). Rương mù vẫn còn, nhưng lùi về đúng vai của nó —
+// rẻ hơn mà nhắm mắt, còn hàng bày thì đắt hơn mà biết chắc mình mua gì.
+const SHOP_STOCK_N = 8;
+const SHOP_MARKUP = 3.2;      // hàng bày đắt hơn giá thu mua — trả thêm để được NHÌN trước
+function shopBuyPrice(it){ return Math.round(itemSellPrice(it) * SHOP_MARKUP); }
+// Đồng hồ đếm ngược tới lần nhập hàng kế. Bản đầu in thẳng phút:giây nên ra "110:53" — đọc
+// như 110 phút 53 giây, đúng nhưng không ai đọc đồng hồ kiểu đó.
+function shopCountdown(){
+  const s2 = 7200 - Math.floor((Date.now() % 7200000) / 1000);
+  const h = Math.floor(s2 / 3600), m = Math.floor((s2 % 3600) / 60), ss = s2 % 60;
+  return h ? `${h}h${String(m).padStart(2,'0')}m` : `${m}:${String(ss).padStart(2,'0')}`;
+}
+// Khoá kho theo (chu kỳ 2 giờ × giai của người chơi): hết 2 giờ thì đảo hàng, mà lên giai mới
+// cũng đảo — nếu chỉ khoá theo giờ thì người mới lên giai phải đợi tới 2 tiếng mới hết thấy
+// hàng cấp thấp vô dụng.
+function shopStockKey(){ return Math.floor(Date.now() / 7200000) + ':' + itemTier(player.level); }
+function shopStock(npcId){
+  if (!player.shopStock) player.shopStock = {};
+  const key = shopStockKey();
+  const cur = player.shopStock[npcId];
+  if (cur && cur.key === key && Array.isArray(cur.items)) return cur.items;
+  const items = [];
+  // Ép đủ mặt hàng: 3 vũ khí + 5 giáp/phụ kiện. Để genItem tự bốc ô thì có kỳ cả tám món cùng
+  // một ô, tiệm nhìn như hỏng.
+  const seen = new Set();
+  for (let k = 0; k < SHOP_STOCK_N; k++){
+    const wantWeapon = k < 3;
+    let it = null;
+    for (let t = 0; t < 40; t++){
+      // perfect:0 — TIỆM KHÔNG BÁN ĐỒ HOÀN HẢO. Hàng Hoàn Hảo phải tự săn hoặc mở Bảo Hạp;
+      // bày sẵn trên quầy thì mất hẳn lý do đi đánh boss.
+      // Cấp và lớp: genItem lấy giai theo player.level, còn assignDef() bốc định nghĩa theo
+      // player.sect — nên vũ khí bày ra luôn là vũ khí lớp mình cầm được.
+      const g = genItem(player.level, 0.06, null, { perfect: 0 });
+      if (wantWeapon ? g.slot !== 'vukhi' : g.slot === 'vukhi') continue;
+      // Không bày hai món TRÙNG ĐỊNH NGHĨA cạnh nhau: mỗi lớp chỉ có 15 vũ khí nên bốc 3 lần
+      // là hay ra hai "Rìu Hỏa Long" giống hệt, quầy trông như lỗi hiển thị.
+      if (seen.has(g.def)) continue;
+      it = g; break;
+    }
+    if (!it) it = genItem(player.level, 0.06);
+    if (it.def) seen.add(it.def);
+    items.push(it);
+  }
+  player.shopStock[npcId] = { key, items };
+  return items;
+}
+// Bảo Hạp bán ở tiệm: tầng bám theo cấp người chơi. Đây là ĐƯỜNG DUY NHẤT mua được cơ hội
+// ra đồ Cổ Thần/Hoàn Hảo — hàng bày trên quầy cố tình không có, để boss còn lý do tồn tại.
+function shopBaoHapTier(){
+  for (let t = BAOHAP_TIERS.length - 1; t >= 1; t--){
+    if (player.level >= BAOHAP_TIERS[t].min) return t;
+  }
+  return 1;
+}
+function shopBaoHapPrice(t){ return 1200 + t * 900; }
+window.buyBaoHap = function(){
+  const t = shopBaoHapTier(), gia = shopBaoHapPrice(t), d = BAOHAP_TIERS[t];
+  if (player.silver < gia){ addFloat(player.x, player.y-34, `Thiếu ${(gia - player.silver).toLocaleString('vi-VN')}◈`, '#ff7a6a', 12); return; }
+  player.silver -= gia;
+  if (!player.baohap) player.baohap = {};
+  player.baohap[t] = (player.baohap[t] || 0) + 1;
+  addFloat(player.x, player.y-50, `Mua ${d.name}! (mở ở Túi Đồ → Box Kundun)`, d.color, 13);
+  AudioSys.sfx('quest', 0.5);
+  saveGame(); renderShop(curShopNpc);
+};
+window.buyStockItem = function(i){
+  if (!curShopNpc) return;
+  const st = shopStock(curShopNpc.id);
+  const it = st[i];
+  if (!it) return;
+  const price = shopBuyPrice(it);
+  if (player.silver < price){ addFloat(player.x, player.y-34, `Thiếu ${(price - player.silver).toLocaleString('vi-VN')}◈`, '#ff7a6a', 12); return; }
+  if (player.inv.length >= 30){ addFloat(player.x, player.y-34, 'Túi đồ đã đầy!', '#ff7a6a', 12); return; }
+  player.silver -= price;
+  player.inv.push(it);
+  st[i] = null;                       // đã bán thì hết hàng, không nhân bản
+  addFloat(player.x, player.y-50, `Mua ${it.name}!`, RARITIES[it.rarity].color, 13);
+  AudioSys.sfx('quest', 0.5);
+  saveGame(); renderShop(curShopNpc);
+};
 function renderShop(n){
   const shop = SHOPS[n.id];
   if (!shop) return;
   curShopNpc = n;
   let html = `<h3>${n.name}</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">${shop.quote}</div>`;
-  for (const r of shop.rows){
-    html += `<div class="npc-shop-row"><span><b style="color:#7ecbff">${r.name}</b><br>
-      <span style="font-size:11px;opacity:.7">${r.desc}</span></span>
-      <button class="mini-btn" ${player.silver<r.price?'disabled':''} onclick="buyFromShop('${r.id}')">${r.price}◈</button></div>`;
+  html += `<div class="shop-quote">${shop.quote}</div>`;
+  html += `<div class="shop-purse">Túi tiền: <b>${player.silver.toLocaleString('vi-VN')}◈</b> · Túi đồ ${player.inv.length}/30</div>`;
+
+  // ── HÀNG BÀY: món cụ thể, có icon, rê chuột ra đủ chỉ số + so với đồ đang mặc ──
+  if (shop.stock){
+    const st = shopStock(n.id);
+    const left = st.filter(Boolean).length;
+    html += `<div class="stat-sec">HÀNG BÀY — còn ${left}/${SHOP_STOCK_N} món · nhập hàng sau ${shopCountdown()}</div>`;
+    html += `<div class="shop-hint">Rê chuột lên món để xem đủ chỉ số và so với đồ đang mặc.</div>`;
+    html += `<div class="shop-grid">`;
+    st.forEach((it, i) => {
+      if (!it){ html += `<div class="shop-cell sold"><span class="sc-sold">ĐÃ BÁN</span></div>`; return; }
+      const price = shopBuyPrice(it);
+      const need = itemReqLv(it);
+      const eq = player.equip[it.slot];
+      const up = itemUsable(it) && player.level >= need && itemPower(it) > (eq ? itemPower(eq) : 0);
+      const afford = player.silver >= price;
+      const lock = !itemUsable(it);
+      html += `<div class="shop-cell rar-${it.rarity}${lock ? ' locked' : ''}" data-tip="shop:${i}">
+        <div class="sc-ic">${slotIcon(it, '')}${it.plus ? `<span class="bc-plus">+${it.plus}</span>` : ''}
+          ${up ? '<i class="bc-up">▲</i>' : ''}${lock ? '<i class="bc-lock">🔒</i>' : ''}</div>
+        <div class="sc-name ${RARITIES[it.rarity].cls}">${it.name}</div>
+        <div class="sc-meta">Lực chiến <b>${itemPower(it)}</b> · cấp ${need}</div>
+        <button class="sc-buy${afford && !lock ? '' : ' off'}" ${afford && !lock ? '' : 'disabled'}
+          onclick="buyStockItem(${i})">${price.toLocaleString('vi-VN')}◈</button></div>`;
+    });
+    html += `</div>`;
   }
-  // Vật Phẩm Quý — làm mới 2 giờ/lần, mỗi tiệm một món khác nhau (bài học Phường Thị NNTD)
+
+  // ── HÀNG THƯỜNG: đồ tiêu hao. Mô tả sinh TỪ SỐ LIỆU THẬT, không chép tay ──
+  // Bản cũ ghi cứng "Hồi 40% máu" trong khi lượng hồi là player.potionPct — người nâng chỉ số
+  // đó lên đọc mô tả sẽ thấy sai. Cùng lỗi với /help của console: chữ chép tay thì sẽ trôi.
+  if (shop.rows.length) html += `<div class="stat-sec">HÀNG THƯỜNG</div>`;
+  for (const r of shop.rows){
+    const info = shopRowInfo(r.id);
+    html += `<div class="shop-row"><span class="sr-ic">${r.icon || '◈'}</span>
+      <span class="sr-body"><b>${r.name}</b>
+        <span class="sr-desc">${r.desc}</span>
+        ${info.stat ? `<span class="sr-stat">${info.stat}</span>` : ''}</span>
+      <button class="mini-btn" ${player.silver < r.price || info.blocked ? 'disabled' : ''}
+        onclick="buyFromShop('${r.id}')">${r.price.toLocaleString('vi-VN')}◈</button></div>`;
+  }
+
+  // ── RƯƠNG MÙ: rẻ hơn hàng bày, đổi lại là nhắm mắt ──
+  if (shop.boxes){
+    html += `<div class="stat-sec">RƯƠNG — rẻ hơn hàng bày, nhưng không biết trước ra gì</div>`;
+    // Box Kundun: đường DUY NHẤT mua được cơ hội ra đồ Hoàn Hảo / Cổ Thần. Hàng bày trên quầy
+    // cố tình không có hai thứ đó, để boss và Hung Thần còn lý do tồn tại.
+    { const t = shopBaoHapTier(), d = BAOHAP_TIERS[t], gia = shopBaoHapPrice(t);
+      const anc = d.ancient ? ` · <b style="color:#3ac88a">${Math.round(d.ancient*100)}% ra đồ Cổ Thần</b>` : '';
+      html += `<div class="shop-row" style="border-color:${d.color}55">
+        <span class="sr-ic" style="color:${d.color}">▣</span>
+        <span class="sr-body"><b style="color:${d.color}">${d.name}</b>
+          <span class="sr-desc">Mở ra trang bị cấp ${d.min}-${d.max === 999 ? '100+' : d.max} — có thể ra dòng Hoàn Hảo${anc}</span>
+          <span class="sr-stat">Tầng theo cấp của bạn · đang giữ ${(player.baohap && player.baohap[t]) || 0} hạp · mở ở Túi Đồ → Box Kundun</span></span>
+        <button class="mini-btn" ${player.silver < gia ? 'disabled' : ''} onclick="buyBaoHap()">${gia.toLocaleString('vi-VN')}◈</button></div>`; }
+    for (const b of shop.boxes){
+      html += `<div class="shop-row"><span class="sr-ic">${b.icon}</span>
+        <span class="sr-body"><b>${b.name}</b><span class="sr-desc">${b.desc}</span></span>
+        <button class="mini-btn" ${player.silver < b.price ? 'disabled' : ''}
+          onclick="buyFromShop('${b.id}')">${b.price.toLocaleString('vi-VN')}◈</button></div>`;
+    }
+  }
+
+  // Vật Phẩm Quý — làm mới 2 giờ/lần, mỗi tiệm một món khác nhau
   const RARE_POOL = (window.RARE_POOL = window.RARE_POOL || [
-    { id:'r_ruongvk2', name:'⚔ Rương Binh Khí Tinh Tuyển', price:1400, desc:'Tỉ lệ ra hàng hiếm gấp 3 — vũ khí theo cấp của bạn' },
-    { id:'r_tiendan5', name:'◈ Đá Thăng Cấp ×5 (giá hời)', price:1200, desc:'Gói tiết kiệm — chỉ bán theo đợt' },
-    { id:'r_mat5',     name:'✦ Huyền Thiết ×5',            price:750,  desc:'Nguyên liệu rèn +1 đến +6' },
-    { id:'r_tula',     name:'◆ Tu La Tinh Thạch',          price:1800, desc:'Khảm trang bị, rèn +7 trở lên — hiếm có' },
-    { id:'r_hon',      name:'❖ Hỗn Nguyên Thạch',          price:2600, desc:'Rèn +10/+11 — cực hiếm' },
+    { id:'r_tiendan5', icon:'◈', name:'Đá Thăng Cấp ×5 (giá hời)', price:1200, desc:'Gói tiết kiệm — chỉ bán theo đợt' },
+    { id:'r_mat5',     icon:'✦', name:'Huyền Thiết ×5',            price:750,  desc:'Nguyên liệu rèn +1 đến +6' },
+    { id:'r_tula',     icon:'◆', name:'Tu La Tinh Thạch',          price:1800, desc:'Khảm trang bị, rèn +7 trở lên — hiếm có' },
+    { id:'r_hon',      icon:'❖', name:'Hỗn Nguyên Thạch',          price:2600, desc:'Rèn +10/+11 — cực hiếm' },
   ]);
   const cycle = Math.floor(Date.now()/7200000);
   const rare = RARE_POOL[(cycle*7 + n.id.length*3) % RARE_POOL.length];
-  const nextIn = 7200 - Math.floor((Date.now() % 7200000)/1000);
-  html += `<div class="stat-sec">VẬT PHẨM QUÝ — đổi sau ${Math.floor(nextIn/60)}:${String(nextIn%60).padStart(2,'0')}</div>`;
-  html += `<div class="npc-shop-row" style="border-color:rgba(176,138,232,.55)"><span><b style="color:#d8baff">${rare.name}</b><br>
-    <span style="font-size:11px;opacity:.7">${rare.desc}</span></span>
-    <button class="mini-btn" ${player.silver<rare.price?'disabled':''} onclick="buyFromShop('${rare.id}')">${rare.price}◈</button></div>`;
+  html += `<div class="stat-sec">VẬT PHẨM QUÝ — đổi sau ${shopCountdown()}</div>`;
+  html += `<div class="shop-row rare"><span class="sr-ic">${rare.icon}</span>
+    <span class="sr-body"><b style="color:#d8baff">${rare.name}</b><span class="sr-desc">${rare.desc}</span>
+      <span class="sr-stat">${shopRowInfo(rare.id).stat || ''}</span></span>
+    <button class="mini-btn" ${player.silver < rare.price ? 'disabled' : ''}
+      onclick="buyFromShop('${rare.id}')">${rare.price.toLocaleString('vi-VN')}◈</button></div>`;
+
   if (shop.junk){
     const junk = player.inv.filter(it => !it.special && it.rarity <= 1);
     const junkVal = junk.reduce((s2,it)=>s2 + 20 + it.rarity*30 + (it.tier||1)*15, 0);
-    html += `<div class="npc-shop-row"><span><b style="color:#9fd0ff">Bán hết đồ trắng/xanh (${junk.length} món)</b><br>
-      <span style="font-size:11px;opacity:.7">Dọn túi nhanh — nhận bạc ngay</span></span>
-      <button class="mini-btn" ${junk.length?'':'disabled'} onclick="sellJunk()">+${junkVal}◈</button></div>`;
+    html += `<div class="shop-row"><span class="sr-ic">🧹</span>
+      <span class="sr-body"><b>Bán hết đồ trắng/lục (${junk.length} món)</b>
+        <span class="sr-desc">Dọn túi nhanh — nhận bạc ngay</span></span>
+      <button class="mini-btn" ${junk.length?'':'disabled'} onclick="sellJunk()">+${junkVal.toLocaleString('vi-VN')}◈</button></div>`;
   }
-  // GDD Đợt 2 B6: thu mua lẻ đồ phẩm Lam trở lên — giá theo Lực chiến
+  // Thu mua lẻ đồ phẩm Lam trở lên — giá theo Lực chiến
   const _sellable = player.inv.map((it2, i2) => ({ it:it2, i:i2 })).filter(x => !x.it.special && x.it.rarity >= 2).slice(0, 6);
   if (_sellable.length){
     html += `<div class="stat-sec">THU MUA — đồ phẩm cao trong túi (bán 2 lần để xác nhận)</div>`;
     for (const x of _sellable){
-      html += `<div class="npc-shop-row"><span><b class="${RARITIES[x.it.rarity].cls}">${x.it.name}</b><br>
-        <span style="font-size:11px;opacity:.7">Lực chiến ${itemPower(x.it)}</span></span>
-        <button class="mini-btn" onclick="sellItem(${x.i});renderShop(curShopNpc)">+${itemSellPrice(x.it)}◈</button></div>`;
+      html += `<div class="shop-row"><span class="sr-ic">${slotIcon(x.it, 'sr-img')}</span>
+        <span class="sr-body"><b class="${RARITIES[x.it.rarity].cls}">${x.it.name}${x.it.plus?' +'+x.it.plus:''}</b>
+          <span class="sr-desc">Lực chiến ${itemPower(x.it)} · ${giaiName(x.it.tier)}</span></span>
+        <button class="mini-btn" onclick="sellItem(${x.i});renderShop(curShopNpc)">+${itemSellPrice(x.it).toLocaleString('vi-VN')}◈</button></div>`;
     }
   }
   html += aiChatBlock(n.id);
   el('panel-quest').innerHTML = html;
   closePanels(); el('panel-quest').classList.remove('hidden');
 }
+// Dòng số liệu THẬT cho từng mặt hàng tiêu hao — đọc từ trạng thái người chơi, không chép tay.
+function shopRowInfo(id){
+  const P = player;
+  switch (id){
+    case 'thuoc':     return { stat:`Hồi ${Math.round((P.potionPct || 0.4) * 100)}% máu (~${Math.round(P.maxHp * (P.potionPct || 0.4)).toLocaleString('vi-VN')} HP) · đang có ${P.potions}/5`,
+                               blocked: P.potions >= 5 };
+    case 'trithuong': return { stat:`Hồi đầy máu — đang ${Math.round(P.hp).toLocaleString('vi-VN')}/${P.maxHp.toLocaleString('vi-VN')}`, blocked: P.hp >= P.maxHp };
+    case 'tukhi':     return { stat:`Hồi đầy Mana — đang ${Math.round(P.qi)}/${P.maxQi}`, blocked: P.qi >= P.maxQi };
+    case 'nghitro':   return { stat:`Hồi đầy máu và Mana — đang ${Math.round(P.hp).toLocaleString('vi-VN')}/${P.maxHp.toLocaleString('vi-VN')} HP · ${Math.round(P.qi)}/${P.maxQi} Mana`,
+                               blocked: P.hp >= P.maxHp && P.qi >= P.maxQi };
+    case 'ruou':      return { stat:`+12% công lực trong 3 phút${(P.buffAtkT||0) > 0 ? ` · còn ${Math.ceil(P.buffAtkT)}s` : ''}` };
+    case 'loidon':    return { stat:`−40% sát thương thiên lôi trong 5 phút${(P.loidonT||0) > 0 ? ` · còn ${Math.ceil(P.loidonT)}s` : ''}` };
+    case 'tiendan':   return { stat:`+3 Đá Thăng Cấp · đang có ${P.tienDan}` };
+    case 'r_tiendan5':return { stat:`+5 Đá Thăng Cấp · đang có ${P.tienDan}` };
+    case 'r_mat5':    return { stat:`+5 Huyền Thiết · đang có ${P.mat}` };
+    case 'r_tula':    return { stat:`+1 Tu La Tinh Thạch · đang có ${P.gems.tuLa}` };
+    case 'r_hon':     return { stat:`+1 Hỗn Nguyên Thạch · đang có ${P.gems.honNguyen}` };
+    default:          return { stat:'' };
+  }
+}
 window.buyFromShop = function(what){
   if (!curShopNpc) return;
   const shop = SHOPS[curShopNpc.id];
-  const row = shop && (shop.rows.find(r => r.id === what) || (window.RARE_POOL || []).find(r => r.id === what));
+  const row = shop && (shop.rows.find(r => r.id === what)
+    || (shop.boxes || []).find(r => r.id === what)
+    || (window.RARE_POOL || []).find(r => r.id === what));
   if (!row || player.silver < row.price) return;
   if (what==='thuoc'){
     if (player.potions >= 5){ addFloat(player.x, player.y-34, 'Túi thuốc đã đầy (tối đa 5 lọ)!', '#8a8a8a', 12); return; }
@@ -15369,16 +15555,6 @@ window.buyFromShop = function(what){
   else if (what==='r_mat5'){ player.silver -= row.price; player.mat += 5; }
   else if (what==='r_tula'){ player.silver -= row.price; player.gems.tuLa++; }
   else if (what==='r_hon'){ player.silver -= row.price; player.gems.honNguyen++; }
-  else if (what==='r_ruongvk2'){
-    if (player.inv.length >= 30){ addFloat(player.x, player.y-34, 'Túi đồ đã đầy!', '#ff7a6a', 12); return; }
-    player.silver -= row.price;
-    let it = null;
-    for (let i = 0; i < 40; i++){ const g2 = genItem(player.level, 0.25); if (g2.slot === 'vukhi'){ it = g2; break; } }
-    if (!it) it = genItem(player.level, 0.25);
-    player.inv.push(it);
-    addFloat(player.x, player.y-50, `Nhận được ${it.name}!`, RARITIES[it.rarity].color, 13);
-    AudioSys.sfx('quest', 0.5);
-  }
   else if (what==='ruongvk' || what==='ruongpc'){
     if (player.inv.length >= 30){ addFloat(player.x, player.y-34, 'Túi đồ đã đầy!', '#ff7a6a', 12); return; }
     player.silver -= row.price;
@@ -17648,7 +17824,7 @@ function drawDeepHUD(){
   ctx.font = 'bold 13px "Be Vietnam Pro", sans-serif';
   ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
   const hapN = Object.values(b.hap).reduce((a, c) => a + c, 0);
-  const t1 = `Kho tạm: ${b.xp.toLocaleString('vi-VN')} EXP · ${b.silver.toLocaleString('vi-VN')}◈ · ${b.mat}✦${hapN ? ` · ${hapN} Bảo Hạp` : ''}`;
+  const t1 = `Kho tạm: ${b.xp.toLocaleString('vi-VN')} EXP · ${b.silver.toLocaleString('vi-VN')}◈ · ${b.mat}✦${hapN ? ` · ${hapN} Box Kundun` : ''}`;
   ctx.fillStyle = '#ffd76a'; ctx.strokeText(t1, W/2, 46); ctx.fillText(t1, W/2, 46);
   const t2 = 'Chết là MẤT SẠCH — bấm nút Rút Lui để mang về';
   ctx.font = '11.5px "Be Vietnam Pro", sans-serif'; ctx.fillStyle = '#ff9a6a';
@@ -18437,7 +18613,7 @@ function updateMaTon(){
     MATON.map = matonMapFor(MATON.next);
     MATON.endsAt = now + 30*60000;
     MATON.next = matonNextBoundary(now + 60000);
-    zoneBanner = { text:'☠ HUNG THẦN GIÁNG THẾ', sub:`Tà khí phủ ${MAPS[MATON.map].name} — hạ Hung Thần nhận Bảo Hạp!`, color:'#e84a6a', t:6 };
+    zoneBanner = { text:'☠ HUNG THẦN GIÁNG THẾ', sub:`Tà khí phủ ${MAPS[MATON.map].name} — hạ Hung Thần nhận Box Kundun!`, color:'#e84a6a', t:6 };
     AudioSys.sfx('crit', 0.9);
     if (curMap === MATON.map) spawnMaTonMob();
     saveGame();
@@ -18525,14 +18701,14 @@ function spawnGoldenMobs(){
   const lq = packs[packs.length - 1];          // Chúa Đàn đứng giữa map
   goldify(spawnMob(lq.mob, { x: md.spawn.x + (MAP.w/2 - md.spawn.x)*0.7, y: MAP.h/2, r: 60 }, null, true), tier, true);
   GOLDEN.left = n + 1;
-  zoneBanner = { text:'✦ ĐÀN VÀNG TRÀN VÀO', sub:`${GOLDEN.left} quái dát vàng — mỗi con rơi 1 Bảo Hạp!`, color:'#ffd76a', t:5 };
+  zoneBanner = { text:'✦ ĐÀN VÀNG TRÀN VÀO', sub:`${GOLDEN.left} quái dát vàng — mỗi con rơi 1 Box Kundun!`, color:'#ffd76a', t:5 };
 }
 function updateGolden(){
   const now = Date.now();
   if (!GOLDEN.next) GOLDEN.next = goldenNextBoundary(now);
   if (!GOLDEN.active && !GOLDEN.warned && now >= GOLDEN.next - 600000){
     GOLDEN.warned = true;
-    zoneBanner = { text:'✦ ĐÀN VÀNG SẮP XÂM LĂNG', sub:`10 phút nữa — ${MAPS[goldenMapFor(GOLDEN.next)].name}. Săn Bảo Hạp!`, color:'#ffd76a', t:5 };
+    zoneBanner = { text:'✦ ĐÀN VÀNG SẮP XÂM LĂNG', sub:`10 phút nữa — ${MAPS[goldenMapFor(GOLDEN.next)].name}. Săn Box Kundun!`, color:'#ffd76a', t:5 };
     AudioSys.sfx('quest', 0.8);
   }
   if (!GOLDEN.active && now >= GOLDEN.next){
@@ -18551,7 +18727,7 @@ function updateGolden(){
     for (const m of mobs) if (m.def && m.def.golden && !m.dead){ m.dead = true; m.gone = true; m.deadT = 0; fled++;
       addEffect({ type:'ring', x:m.x, y:m.y, r:40, color:'#ffd76a' }); }
     GOLDEN.map = null; GOLDEN.spawnedOn = null;
-    zoneBanner = { text:'Đàn Vàng đã rút lui', sub: fled ? `${fled} con kịp tẩu thoát cùng số Bảo Hạp còn lại.` : 'Hẹn chuyến xâm lăng sau.', color:'#8a8a8a', t:4 };
+    zoneBanner = { text:'Đàn Vàng đã rút lui', sub: fled ? `${fled} con kịp tẩu thoát cùng số Box Kundun còn lại.` : 'Hẹn chuyến xâm lăng sau.', color:'#8a8a8a', t:4 };
   }
 }
 function goldenKilled(m){
@@ -18574,7 +18750,7 @@ function goldenKilled(m){
       zoneBanner = { text:'✦ CHÚA ĐÀN VÀNG GỤC NGÃ', sub:`+1 ${BAOHAP_TIERS[tier].name} — mở trong Túi Đồ (phím I)!`, color:'#ffd76a', t:4 };
     if (GOLDEN.left === 0){
       GOLDEN.active = false; GOLDEN.map = null; GOLDEN.spawnedOn = null;
-      zoneBanner = { text:'✦ ĐÀN VÀNG BỊ QUÉT SẠCH', sub:'Toàn bộ Bảo Hạp đã vào túi — mở trong Túi Đồ (phím I)!', color:'#ffd76a', t:6 };
+      zoneBanner = { text:'✦ ĐÀN VÀNG BỊ QUÉT SẠCH', sub:'Toàn bộ Box Kundun đã vào túi — mở trong Túi Đồ (phím I)!', color:'#ffd76a', t:6 };
       AudioSys.sfx('levelup', 1);
     }
   }
@@ -18619,7 +18795,7 @@ function updateRift(){
     RIFT.endsAt = now + RIFT_WINDOW_MS;
     RIFT.next = riftNextBoundary(now + 60000);
     RIFT.done = {}; RIFT.kills = 0;
-    zoneBanner = { text:'✹ CHÚA TỂ VỰC NỨT GIÁNG THẾ', sub:`Vực nứt toác ở mọi bãi săn — 45 phút, hạ tối đa ${RIFT_MAX_KILLS} con để cướp Bảo Hạp lớn!`, color:'#a06aff', t:6.5 };
+    zoneBanner = { text:'✹ CHÚA TỂ VỰC NỨT GIÁNG THẾ', sub:`Vực nứt toác ở mọi bãi săn — 45 phút, hạ tối đa ${RIFT_MAX_KILLS} con để cướp Box Kundun lớn!`, color:'#a06aff', t:6.5 };
     AudioSys.sfx('levelup', 0.9);
     if (riftCanSpawn()) spawnRiftBoss();
     saveGame();
@@ -18711,7 +18887,7 @@ function eventList(now){
           sub:`ĐANG DIỄN RA tại ${MAPS[MATON.map].name} — còn ${fmtCountdown(MATON.endsAt - now)}` }
       : { icon:'☠', name:'Hung Thần Giáng Thế', map: matonMapFor(MATON.next || matonNextBoundary(now)),
           at: MATON.next || matonNextBoundary(now), active:false, color:'#c07fe0',
-          sub:`${fmtClock(MATON.next || matonNextBoundary(now))} · ${MAPS[matonMapFor(MATON.next || matonNextBoundary(now))].name} — hạ boss nhận Bảo Hạp lớn` });
+          sub:`${fmtClock(MATON.next || matonNextBoundary(now))} · ${MAPS[matonMapFor(MATON.next || matonNextBoundary(now))].name} — hạ boss nhận Box Kundun lớn` });
     list.push(RIFT.active
       ? { icon:'✹', name:'Chúa Tể Vực Nứt', map: null, at: RIFT.endsAt, active:true, color:'#a06aff',
           sub:`ĐANG DIỄN RA ở MỌI bãi săn — còn ${fmtCountdown(RIFT.endsAt - now)} · đã hạ ${RIFT.kills}/${RIFT_MAX_KILLS}` }
@@ -18723,7 +18899,7 @@ function eventList(now){
           sub:`ĐANG DIỄN RA tại ${MAPS[GOLDEN.map].name} — còn ${fmtCountdown(GOLDEN.endsAt - now)} · còn ${GOLDEN.left || '?'} quái vàng` }
       : { icon:'✦', name:'Xâm Lăng Vàng', map: goldenMapFor(GOLDEN.next || goldenNextBoundary(now)),
           at: GOLDEN.next || goldenNextBoundary(now), active:false, color:'#ffd76a',
-          sub:`${fmtClock(GOLDEN.next || goldenNextBoundary(now))} · ${MAPS[goldenMapFor(GOLDEN.next || goldenNextBoundary(now))].name} — mỗi quái vàng rơi 1 Bảo Hạp (I-V theo map)` });
+          sub:`${fmtClock(GOLDEN.next || goldenNextBoundary(now))} · ${MAPS[goldenMapFor(GOLDEN.next || goldenNextBoundary(now))].name} — mỗi quái vàng rơi 1 Box Kundun (I-V theo map)` });
   }
   const mid = new Date(now); mid.setHours(24, 0, 0, 0);
   list.push({ icon:'⚔', name:'Truy Nã Lệnh & Mục Tiêu Ngày', at: mid.getTime(), active:false, color:'#7ecbff',
