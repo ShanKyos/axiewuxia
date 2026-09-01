@@ -69,6 +69,53 @@ kinh tế chết, và không có cách nào cuộn lại mà không cuộn cả 
 | Console cheat | Không sao — chỉ tự phá game của mình | Vô nghĩa, server không tin client |
 | Cần làm gì để có | **Không gì cả — đã chạy rồi** | Toàn bộ phần việc trong tài liệu này |
 
+### "Online" ở đây nghĩa là gì — solo là mặc định, chia sẻ là khoảnh khắc
+
+Làm rõ thêm từ chủ dự án: online **không phải** một thế giới MMO liên tục. Thế giới vẫn là của
+riêng từng người — quái của bạn, đồ rơi của bạn. Cái được chia sẻ là **những khoảnh khắc**: ví dụ
+một con boss vàng đi vào map, ai đang ở đó thì cùng săn. Ngoài những lúc ấy thì **coi như solo**.
+
+Đây là mô hình rẻ nhất mà vẫn có cảm giác online, và nó thu hẹp phạm vi server xuống rất nhiều:
+
+| | Ai làm chủ | Cần đồng bộ liên tục? |
+|---|---|---|
+| Quái thường, đồ rơi thường, nhiệm vụ, cày cuốc | **Client** — như hôm nay | Không |
+| Boss vàng / sự kiện thế giới | **Server** | Chỉ trong lúc sự kiện diễn ra |
+| Vị trí người chơi khác trong cùng map | Server | Chỉ khi đang có sự kiện, hoặc để hiện diện |
+| PvP | Server | Chỉ trong trận |
+| Giao dịch, kho đồ, tiền tệ | **Server** | Theo thao tác, không theo tick |
+
+Hệ quả về con số: **không cần đồng bộ 60 quái mỗi map ở 20 tick/giây**. Toàn bộ ước lượng băng
+thông ở Phần 5 được tính cho mô hình MMO đầy đủ và giờ là thừa. Ở mô hình này, gói tin lớn nhất
+là một con boss cộng vài người chơi — hai chữ số byte mỗi tick, không phải bốn.
+
+### Ngã ba phải chọn: đồ kiếm được lúc solo có bán được không?
+
+Đây là chỗ mà "solo là mặc định" đụng vào "có giao dịch", và **không có cách né**:
+
+Nếu đồ rơi lúc solo do client tự quyết (như hôm nay) **và** đồ đó bán được cho người khác, thì bất
+kỳ ai mở console cũng đúc được đồ hoàn hảo rồi bơm vào nền kinh tế. Kiểm thống kê không bắt được —
+món đồ ấy là thật với mọi người.
+
+Hai lối đi, phải chọn một:
+
+**A. Server sinh mọi vật phẩm, kể cả lúc solo.** Mỗi lần quái chết mà có đồ rơi thì client hỏi
+server "cho tôi món đồ của cú giết này", server tự quay và ghi vào kho. Client vẫn chạy toàn bộ
+phần còn lại.
+*Được:* một hồ vật phẩm duy nhất, mọi thứ bán được, không có luật phụ nào phải giải thích.
+*Mất:* mỗi món đồ tốn một vòng đi-về. Ở CCU 50 thì không đáng kể — đây là vài chục request mỗi
+giây, không phải vài chục nghìn.
+
+**B. Chỉ đồ từ nguồn server mới bán được.** Đồ solo là "của riêng", đóng dấu không giao dịch; đồ
+từ boss vàng, sự kiện, PvP thì bán được.
+*Được:* không đụng gì vào đường solo.
+*Mất:* hai hạng vật phẩm, người chơi phải hiểu và sẽ khó chịu. Và mọi món đồ trong kho phải mang
+thêm một cờ, cùng mọi chỗ hiển thị phải nói rõ nó thuộc hạng nào.
+
+**Khuyến nghị: A.** Ở quy mô 50 người đồng thời, cái giá của A gần như bằng không, còn cái giá của
+B là một luật chơi phải giải thích mãi mãi. B chỉ đáng khi lưu lượng thật sự thành vấn đề — mà ở
+đây thì không.
+
 ### Điều này đổi những gì trong tài liệu
 
 1. **Bậc 1 và 2 không còn là "chuyển đổi", mà là "thêm vào".** Đường chơi offline hôm nay giữ
