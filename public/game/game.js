@@ -12025,6 +12025,7 @@ function drawPlayer(){
   if (petIt){
     const pd = petDef(petIt), im = PET_IMGS[pd.id];
     const side = Math.cos(p.face) >= 0 ? -1 : 1;              // đứng phía sau lưng chủ
+    const petFlip = Math.cos(p.face) < 0;   // GIỐNG HỆT drawMount(): art quay PHẢI, lật khi chủ quay trái
     const now2 = performance.now();
     const px = p.x + side*42, py = p.y - 30 + Math.sin(now2/430)*5;
     const plus = petIt.plus || 0;
@@ -12039,7 +12040,10 @@ function drawPlayer(){
       const ph = 44, pw = ph * (im.naturalWidth / im.naturalHeight);
       ctx.save();
       ctx.translate(px, py);
-      if (side < 0) ctx.scale(-1, 1);   // art vẽ quay TRÁI — lật khi chủ quay phải
+      // Bản đầu lấy `side < 0` làm điều kiện lật, tức NGƯỢC với drawMount, và art pet lại xuất
+      // quay TRÁI trong khi art mount xuất quay PHẢI. Hai cái sai không triệt tiêu nhau: kết quả
+      // là Linh Thú và Thú Chiến đứng cạnh nhau mà nhìn ngược hướng. Nay dùng CHUNG một quy ước.
+      if (petFlip) ctx.scale(-1, 1);
       ctx.drawImage(im, -pw/2, -ph/2, pw, ph);
       ctx.restore();
     } else {
