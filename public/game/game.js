@@ -1333,12 +1333,14 @@ for (const n of NPCS){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = 
 function mapDef(){ return MAPS[curMap]; }
 function zoneType(){ return ZONE_TYPES[mapDef().type]; }
 
-// ---------- Sổ tay kỹ năng: 3 ô cố định (chính/phụ/buff) — xem defaultSkillBar() ----------
+// ---------- Sổ tay kỹ năng: 4 ô cố định (chính/phụ/buff/tuyệt chiêu) — xem defaultSkillBar() ----------
 const SKILL_DEFS = {
   a:       { unlock:1,  kind:'sectA',  icon:s=>SECT_ART[s].iconA,  desc:s=>`${s.skillA.name} — chiêu thức nhập môn ${s.name}.` },
   amkhi:   { unlock:4,  kind:'amkhi',  name:'Venom Dart', cd:4, qi:15, mult:1.2, icon:()=>'assets/skills/amkhi.png', desc:()=>'Phóng phi tiêu tẩm độc — mạnh dần theo tầng Tấn Chức Venom.' },
   tp:      { unlock:7,  kind:'sectTP', icon:s=>SECT_ART[s].iconTP, desc:s=>`${s.tp.name} — Trấn Phái tuyệt kỹ ${s.name}, sát thương lan.` },
-  gangkhi: { unlock:10, kind:'gangkhi', name:'Stone Skin', cd:10, qi:30, icon:()=>'assets/skills/gangkhi.png',
+  // icon để trống → probeSkillIcons() vẽ theo bộ MU. gangkhi.png là art hoạt hình sáng, không
+  // sai chiêu nhưng lạc hẳn giữa ba ô còn lại của Dark Knight vốn là khung đá-thép tối màu.
+  gangkhi: { unlock:10, kind:'gangkhi', name:'Stone Skin', cd:10, qi:30, icon:()=>null,
              req:()=>player.gangkhi.tier>0, reqTxt:'Stoneform tầng 1 (Tấn Chức)', desc:()=>'6s giảm 30% sát thương gánh chịu — lớp vảy đá phủ kín thân.' },
   danchi:  { unlock:20, kind:'danchi', name:'Rupture Bolt', cd:8, qi:35, mult:2.0, icon:()=>'assets/skills/danchi.png',
              req:()=>player.dantian.realm>=4, reqTxt:'Ascension cảnh 4 (Spark Tầng 4)', desc:()=>'Tia lực xuyên giáp — sát thương ×2 và khóa chiêu địch 2.5s.' },
@@ -1392,6 +1394,11 @@ const VOHOC_DEFS = {
   elf_greaterdef:{ name:'Greater Defense', school:'Sylvan Ranger', phai:'toanchan', tier:'trung', cat:'Bị Động', type:'passive', unlock:30, cd:10, qi:25, color:'#5ac8b8', glyph:'✚', fx:{ shieldPct:40, t:6 }, desc:'Khiên năng lượng — hấp thụ sát thương bằng 40% HP tối đa trong 6s.' },
   // Chiêu buff (ô 3 cố định): Greater Damage — đúng bản sắc Sylvan Ranger hỗ trợ trong MU Online.
   elf_greaterdmg:{ name:'Greater Damage', school:'Sylvan Ranger', phai:'toanchan', tier:'cao', cat:'Hỗ Trợ', type:'buff', unlock:15, cd:10, qi:28, color:'#7ecbff', glyph:'⚔', fx:{ dmgPct:35, t:6 }, desc:'Cường hoá sức mạnh — +35% sát thương trong 6s.' },
+  // Penetration (Xuyên Tâm Tiễn) — chiêu duy nhất trong bộ đặc trưng 5 lớp mà game chưa hề có.
+  // Đây cũng là chiêu CHỦ ĐỘNG đầu tiên trong cây lớp của Sylvan Ranger: bốn chiêu cũ (Heal,
+  // Greater Defense, Greater Damage, Swift Wind) đều là bị động/buff, nên Ranger là lớp duy nhất
+  // có 0 chiêu tấn công riêng — mọi lớp khác có 3 tới 5.
+  elf_penetration:{ name:'Penetration', school:'Sylvan Ranger', phai:'toanchan', tier:'cao', cat:'Cung Thuật', type:'proj', unlock:20, cd:7, qi:24, mult:2.4, color:'#a0ffe9', glyph:'➤', fx:{ pierce:true, kb:18 }, desc:'Một mũi tên dồn hết lực xuyên thủng cả hàng địch — càng đứng thẳng hàng càng ăn đủ.' },
   elf_swiftwind: { name:'Swift Wind', school:'Sylvan Ranger', phai:'toanchan', tier:'than', cat:'Bị Động', type:'passive', unlock:55, cd:8, qi:20, color:'#a0ffe9', glyph:'✽', fx:{ selfEva:{ pct:45, t:4 } }, desc:'Gió nhanh theo bước chân — +45% né trong 4s.' },
   // ── Spellblade ──
   mg_powerslash: { name:'Power Slash', school:'Spellblade', phai:'minhgiao', tier:'so', cat:'Lai', type:'cone', unlock:15, cd:6, qi:20, mult:1.8, color:'#e8552a', glyph:'⚔', fx:{}, desc:'Một nhát chém quét ngang, dồn trọn sức nặng vào lưỡi thép.' },
@@ -1415,15 +1422,30 @@ const VOHOC_DEFS = {
 // thành % Công Kích vĩnh viễn, tự động theo cấp/điều kiện đã có, không cần bấm nút nữa (xem calcDerived()
 // và LEGACY_SECT_SKILLS bên dưới).
 const BUFF_SKILL_ID = { thieulam:'gangkhi', toanchan:'elf_greaterdmg', baidasan:'dw_shield', minhgiao:'mg_battlefury', bug:'dl_commandaura' };
-function defaultSkillBar(sect){ return ['a', 'tp', BUFF_SKILL_ID[sect] || null]; }
+// Ô thứ 4 — TUYỆT CHIÊU. Taskbar cũ chỉ có 3 ô (chính/phụ/buff), nên những chiêu mang tính đặc
+// trưng nhất của từng lớp trong MU — Evil Spirit, Power Slash — chỉ tồn tại trong bảng Di Sản Cũ
+// dưới dạng +%ST vĩnh viễn, không bao giờ được BẤM. Ô thứ 4 trả chúng về đúng chỗ.
+// Hai lớp có chiêu người chơi hay gọi tên nhất đã nằm sẵn ở ô 1/ô 2 (Dark Knight: Twisting Slash;
+// Dark Lord: Fire Scream), nên tuyệt chiêu của hai lớp đó lấy chiêu tiêu biểu còn lại, để mọi lớp
+// đều có đúng bốn nút chứ không lớp ba lớp bốn.
+const SIGNATURE_SKILL = {
+  thieulam: 'dk_ragefulblow',    // Rageful Blow — bổ vũ khí xuống đất, chấn động cả vùng
+  toanchan: 'elf_penetration',   // Penetration — mũi tên xuyên cả hàng
+  baidasan: 'dw_evilspirit',     // Evil Spirit — u linh vây quanh
+  minhgiao: 'mg_powerslash',     // Power Slash — sóng ánh sáng từ nhát chém
+  bug:      'dl_chaoticdiseier', // Chaotic Diseier — bầy quạ hỗn loạn
+};
+function defaultSkillBar(sect){ return ['a', 'tp', BUFF_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null]; }
 // Di Sản Cũ: mỗi tầng quy đổi thành % Công Kích vĩnh viễn — điều kiện mở giữ nguyên (tự ngộ theo
 // cấp cho chiêu môn phái qua vhLearned(), hoặc điều kiện Tấn Chức riêng cho 4 kỹ năng phổ thông).
 const LEGACY_TIER_PCT = { so:1.5, trung:2, cao:2.5, than:3.5 };
-const LEGACY_SECT_SKILLS = ['dk_cyclone','dk_ragefulblow','dk_crescent',
-  'dw_lightning','dw_evilspirit','dw_ice','dw_twister','dw_nova',
+// Năm chiêu trong SIGNATURE_SKILL đã rời khỏi đây: chúng nay là chiêu BẤM ĐƯỢC ở ô 4, không còn
+// quy đổi thành %ST vĩnh viễn nữa. Để cả hai chỗ thì một chiêu vừa cộng %ST vừa tung ra được.
+const LEGACY_SECT_SKILLS = ['dk_cyclone','dk_crescent',
+  'dw_lightning','dw_ice','dw_twister','dw_nova',
   'elf_greaterdef','elf_swiftwind',
-  'mg_powerslash','mg_frostnova','mg_flamestrike',
-  'dl_electricspark','dl_darkspirit','dl_chaoticdiseier','dl_darkraven'];
+  'mg_frostnova','mg_flamestrike',
+  'dl_electricspark','dl_darkspirit','dl_darkraven'];
 const LEGACY_UNIVERSAL_PCT = { amkhi:1.5, danchi:2, bow:2, tieuhon:3 };
 // Đăng ký kỹ năng chủ động vào SKILL_DEFS — dùng chung cho castSkill(); chỉ chiêu buff (BUFF_SKILL_ID)
 // thực sự nằm ở taskbar 3 ô, còn lại chỉ tồn tại để tính legacyAtkPct và hiển thị ở tab Di Sản Cũ
@@ -1644,7 +1666,7 @@ function vhKnockback(m, ang, px){
 // VH_VFX: kỹ năng chủ động · style → drawVfx, proj → drawProjStyled.
 // SECT_VFX: 16 tuyệt chiêu môn phái (8 chiêu chính sx_*_a + 8 trấn phái sx_*_c) — hình ảnh riêng từng phái
 const SECT_VFX = {
-  sx_thieulam_a: { style:'windslash',    c2:'#cfe8ff' },                      // Twisting Slash (Dark Knight) — chém xoáy cuốn gió
+  sx_thieulam_a: { style:'bladewhirl',   c2:'#cfe8ff', spin:1.2 },            // Twisting Slash (Dark Knight) — quét trọn vòng quanh thân
   sx_thieulam_c: { style:'fist',         c2:'#ffe9a0' },                      // Đại Lực Kim Cương Chưởng — chưởng ấn khổng lồ
   sx_toanchan_a: { style:'flash',        c2:'#d8f4ff', proj:'arrow' },        // Multi-Shot (Sylvan Ranger) — loạt tên bắn tỉa
   sx_toanchan_c: { style:'hexa',         c2:'#c8ecff', spin:1.5 },            // Thất Tinh Hội Kiếm — trận Bắc Đẩu thất tinh
@@ -1655,7 +1677,7 @@ const SECT_VFX = {
   // QA: Dark Lord (sect id 'bug') chưa từng có entry nào ở đây — cả chiêu chính lẫn Trấn Phái đều rơi
   // về style mặc định chung chung, là lớp DUY NHẤT không có hình ảnh nhận diện riêng khi tung chiêu.
   sx_bug_a:      { style:'windslash',    c2:'#d0e07a' },                      // Force Wave (Dark Lord) — sóng chấn quyền trượng
-  sx_bug_c:      { style:'demonburst',   c2:'#ffb15c' },                      // Fire Scream (Dark Lord) — ma hỏa gào thét tỏa ra
+  sx_bug_c:      { style:'firelines',    c2:'#ffb15c' },                      // Fire Scream (Dark Lord) — ba vệt lửa quét xuống đất rồi bung nổ
   sx_vophai_a:   { style:'fist',         c2:'#e8d8a8' },                      // Du Hiệp Quyền — quyền kình
   sx_vophai_c:   { style:'stormhost',    c2:'#e4ebff' },                      // Tứ Hải Giai Phục — sóng chưởng tứ hải
 };
@@ -1663,6 +1685,13 @@ const SECT_VFX = {
 // riêng (các style khác đã gắn thẳng vào SECT_VFX theo lớp).
 const VH_VFX = {
   dl_darkraven:{ style:'crowswarm', c2:'#ff5a3a' },   // Dark Raven (Dark Lord) — bầy quạ đen xoáy vào
+  // Bốn TUYỆT CHIÊU ô 4 (xem SIGNATURE_SKILL) — mỗi chiêu một hình riêng, không dùng chung style
+  // mặc định theo kiểu chiêu nữa. Tuyệt chiêu mà bung ra y hệt chiêu thường thì không ai nhớ nổi.
+  dw_evilspirit:    { style:'spiritswarm', c2:'#cfffc0' },  // bầy u linh lượn vào tâm
+  dk_ragefulblow:   { style:'groundburst', c2:'#cfe8ff' },  // nền toác thành tia từ điểm giáng
+  mg_powerslash:    { style:'lightwave',   c2:'#ffe9b0' },  // sóng sáng rời kiếm bay đi
+  dl_chaoticdiseier:{ style:'crowswarm',   c2:'#d8e87a' },  // bầy quạ hỗn loạn
+  elf_penetration:  { style:'flash',       c2:'#dfffff', proj:'lance' }, // mũi tên xuyên — xem drawProjStyled
 };
 function _vxLine(x1, y1, x2, y2){ ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
 function _vxBolt(x, y, ang, len, w, col){
@@ -1860,6 +1889,114 @@ function drawVfx(e, k, a){
     }
     disc(X, Y, R*(0.22 + k*0.35), C1, a*0.22);
     _vxGlyph(X, Y - R*0.1, G, 26, C2, a*0.9);
+  } else if (S === 'bladewhirl'){ // Twisting Slash — lưỡi kiếm quét trọn vòng, ba lớp lệch pha
+    // Chiêu này là "xoay tít vũ khí quanh thân", nên hình phải là VÒNG KHÉP KÍN chứ không phải
+    // nhát chém một hướng — style windslash cũ chỉ vẽ về phía mặt, mất hẳn ý nghĩa quét cả vòng.
+    for (let i = 0; i < 3; i++){
+      const a0 = spin + k*9 + i*2.09, rr = R*(0.5 + k*0.55) * (1 - i*0.13);
+      ctx.beginPath();
+      ctx.arc(X, Y, rr, a0, a0 + 1.5);
+      ctx.arc(X, Y, rr*0.62, a0 + 1.5, a0, true);
+      ctx.closePath();
+      // Viền tối trước rồi mới tô: bản đầu chỉ tô màu lớp ở alpha thấp, mà bản đồ tân thủ nền xanh
+      // lá sáng trưng nên cả ba lưỡi quét chìm nghỉm — trong game gần như không thấy chiêu bung ra.
+      ctx.strokeStyle = 'rgba(10,8,18,.55)'; ctx.lineWidth = 2.5; ctx.globalAlpha = a*0.8; ctx.stroke();
+      ctx.fillStyle = i === 1 ? C2 : C1; ctx.globalAlpha = a*(0.95 - i*0.16); ctx.fill();
+    }
+    arc(X, Y, R*(0.5 + k*0.55), 0, 7, C2, 2, a*0.35);
+    for (let i = 0; i < 6; i++){ const aa = i*1.047 + spin - k*4;   // mạt kim loại văng ra
+      disc(X + Math.cos(aa)*R*(0.7 + k*0.5), Y + Math.sin(aa)*R*(0.7 + k*0.5), 2.4*(1-k), '#fff', a*0.7); }
+
+  } else if (S === 'spiritswarm'){ // Evil Spirit — bầy u linh lượn quanh rồi bổ nhào vào trong
+    disc(X, Y, R*(0.55 + k*0.3), '#0c1408', a*0.3);
+    for (let i = 0; i < 7; i++){
+      const aa = i*0.898 + spin + k*3.4;
+      const rr = R*(1.0 - k*0.62);                                   // lượn vào tâm theo thời gian
+      const cx = X + Math.cos(aa)*rr, cy = Y + Math.sin(aa)*rr*0.78;
+      ctx.save(); ctx.translate(cx, cy); ctx.globalAlpha = a*0.9;
+      // Kích thước phải theo R. Bản đầu để cứng 9px, mà chiêu này bán kính 150 — bảy con u linh
+      // 9px rải trên vòng 150px thì trong game không nhìn ra gì ngoài mấy chấm mờ.
+      const sz = R*0.15 + Math.sin(i*2 + k*10)*R*0.02;
+      ctx.fillStyle = i % 2 ? C1 : C2;                               // thân u linh: chóp nhọn, vạt rách
+      ctx.beginPath();
+      ctx.moveTo(0, -sz);
+      ctx.quadraticCurveTo(sz*0.62, -sz*0.5, sz*0.6, sz*0.2);
+      ctx.lineTo(sz*0.3, sz*0.9); ctx.lineTo(0, sz*0.35);
+      ctx.lineTo(-sz*0.3, sz*0.9); ctx.lineTo(-sz*0.6, sz*0.2);
+      ctx.quadraticCurveTo(-sz*0.62, -sz*0.5, 0, -sz);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#fff';                                        // hai đốm mắt
+      ctx.beginPath(); ctx.arc(-sz*0.2, -sz*0.24, sz*0.13, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(sz*0.2, -sz*0.24, sz*0.13, 0, 7); ctx.fill();
+      ctx.restore();
+    }
+    arc(X, Y, R*(0.35 + k*0.6), 0, 7, C2, 2.5, a*0.45);
+
+  } else if (S === 'groundburst'){ // Rageful Blow — giáng vũ khí xuống, nền toác ra thành tia
+    const kk = Math.min(1, k*1.6);
+    disc(X, Y, R*0.3*(1 - kk*0.5), '#fff', a*(1-kk)*0.8);            // lóe trắng ở điểm va chạm
+    for (let i = 0; i < 9; i++){                                     // vết nứt toả ra, dài dần
+      const aa = i*0.698 + spin;
+      const L = R*(0.2 + kk*0.95) * (i % 2 ? 1 : 0.72);
+      ctx.strokeStyle = i % 2 ? C1 : C2; ctx.lineWidth = 5.5*(1 - kk*0.6); ctx.globalAlpha = a*0.9;
+      ctx.beginPath(); ctx.moveTo(X, Y);
+      ctx.lineTo(X + Math.cos(aa + 0.12)*L*0.55, Y + Math.sin(aa + 0.12)*L*0.55);
+      ctx.lineTo(X + Math.cos(aa)*L, Y + Math.sin(aa)*L); ctx.stroke();
+    }
+    arc(X, Y, R*(0.15 + kk*0.9), 0, 7, C2, 4*(1-kk) + 1, a*0.7);
+    for (let i = 0; i < 5; i++){ const aa = i*1.257 + 0.4;           // mảnh đất bắn lên
+      const L = R*(0.3 + kk*0.7);
+      ctx.save(); ctx.translate(X + Math.cos(aa)*L, Y + Math.sin(aa)*L - kk*22); ctx.rotate(aa + k*6);
+      ctx.fillStyle = C1; ctx.globalAlpha = a*(1-kk);
+      ctx.fillRect(-4, -3, 8, 6); ctx.restore(); }
+
+  } else if (S === 'lightwave'){ // Power Slash — sóng ánh sáng rời khỏi lưỡi kiếm và bay đi
+    // MU tả chiêu này là "vung kiếm phóng ra một luồng sóng", nên sóng phải RỜI KHỎI người và
+    // tiến ra xa, khác hẳn crescents (mấy vành trăng đứng yên tại chỗ chém).
+    const push = R*k*0.55;                                            // tâm sóng trôi ra trước
+    const cx = X + Math.cos(F)*push, cy = Y + Math.sin(F)*push;
+    for (let i = 0; i < 3; i++){
+      const rr = R*(0.55 + k*0.5) - i*R*0.16;
+      if (rr <= 2) continue;
+      arc(cx, cy, rr, F - 1.05, F + 1.05, i ? C2 : C1, (7 - i*2)*(1 - k*0.4), a*(0.95 - i*0.28));
+    }
+    arc(cx, cy, R*(0.55 + k*0.5), F - 1.05, F + 1.05, '#ffffff', 2, a*0.9);
+    for (const sy of [-1, 1]){                                       // hai đầu sóng vuốt nhọn
+      const ea = F + sy*1.05, rr = R*(0.55 + k*0.5);
+      ctx.fillStyle = C1; ctx.globalAlpha = a*0.7; ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(ea)*rr, cy + Math.sin(ea)*rr);
+      ctx.lineTo(cx + Math.cos(ea + sy*0.3)*rr*0.78, cy + Math.sin(ea + sy*0.3)*rr*0.78);
+      ctx.lineTo(cx + Math.cos(ea - sy*0.12)*rr*0.86, cy + Math.sin(ea - sy*0.12)*rr*0.86);
+      ctx.closePath(); ctx.fill();
+    }
+
+  } else if (S === 'firelines'){ // Fire Scream — BA vệt lửa quét xuống đất rồi mới bung nổ
+    // Đúng mô tả gốc của chiêu trong MU. Style demonburst cũ bung tám tia đều nhau ngay từ khung
+    // đầu — nhìn giống mọi chiêu diện rộng khác, không có nhịp "quét trước, nổ sau".
+    const quet = Math.min(1, k*2.2);                                  // pha 1: ba vệt lửa chạy ra
+    const no   = Math.max(0, (k - 0.45) / 0.55);                      // pha 2: vụ nổ ở cuối vệt
+    for (const off of [-0.42, 0, 0.42]){
+      const aa = F + off, L = R*0.95*quet;
+      // C1 là màu LỚP (Dark Lord ô-liu), C2 mới là màu chiêu (cam lửa). Bản đầu để C1 làm lõi nên
+      // ngọn lửa ra màu rêu. Nay lớp: quầng ngoài màu lớp — thân lửa C2 — lõi trắng nóng.
+      ctx.strokeStyle = C1; ctx.lineWidth = 15*(1 - k*0.35); ctx.globalAlpha = a*0.32;
+      ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(X + Math.cos(aa)*L, Y + Math.sin(aa)*L); ctx.stroke();
+      ctx.strokeStyle = C2; ctx.lineWidth = 9*(1 - k*0.35); ctx.globalAlpha = a*0.9; ctx.stroke();
+      ctx.strokeStyle = '#fff6d0'; ctx.lineWidth = 3.2*(1 - k*0.35); ctx.globalAlpha = a; ctx.stroke();
+      for (let i = 1; i <= 3; i++){                                   // lưỡi lửa liếm dọc vệt
+        const t = i/3.4, px = X + Math.cos(aa)*L*t, py = Y + Math.sin(aa)*L*t;
+        disc(px, py, (6 - i)*(1 - k*0.4), i % 2 ? '#fff6d0' : C2, a*0.8);
+      }
+      if (no > 0){                                                    // vụ nổ ở cuối vệt
+        const ex = X + Math.cos(aa)*R*0.95, ey = Y + Math.sin(aa)*R*0.95;
+        disc(ex, ey, R*0.4*no, C1, a*(1 - no)*0.4);
+        disc(ex, ey, R*0.28*no, C2, a*(1 - no)*0.9);
+        disc(ex, ey, R*0.14*no, '#fff6d0', a*(1 - no));
+        arc(ex, ey, R*0.4*no, 0, 7, C2, 3*(1-no) + 1, a*(1 - no)*0.9);
+      }
+    }
+    disc(X, Y, R*0.2*(1 - k*0.5), '#fff6d0', a*0.7);
+
   } else if (S === 'crowswarm'){ // Dark Raven (Dark Lord) — bầy quạ đen xoáy vào, cánh nhọn xé gió
     disc(X, Y, R*(0.5 + k*0.2), '#0a0612', a*0.35);
     for (let i = 0; i < 8; i++){
@@ -1915,6 +2052,24 @@ function drawProjStyled(p){
     ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.moveTo(p.x - dx*18 - dy*3, p.y - dy*18 + dx*3); ctx.lineTo(p.x - dx*14, p.y - dy*14); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(p.x - dx*18 + dy*3, p.y - dy*18 - dx*3); ctx.lineTo(p.x - dx*14, p.y - dy*14); ctx.stroke();
+  } else if (s === 'lance'){ // Penetration (Sylvan Ranger) — mũi tên xuyên, kéo theo vệt sáng dài
+    // Mũi tên thường (style 'arrow') dừng ở con đầu tiên, nên nó vẽ ngắn và gọn. Chiêu này XUYÊN
+    // cả hàng, nên hình phải nói được điều đó: một vệt sáng dài chạy suốt phía sau, không đứt.
+    const gr = ctx.createLinearGradient(p.x - dx*46, p.y - dy*46, p.x, p.y);
+    gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.55, p.color); gr.addColorStop(1, '#ffffff');
+    ctx.strokeStyle = gr; ctx.lineWidth = 5; ctx.globalAlpha = 0.9;
+    ctx.beginPath(); ctx.moveTo(p.x - dx*46, p.y - dy*46); ctx.lineTo(p.x - dx*3, p.y - dy*3); ctx.stroke();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.8; ctx.globalAlpha = 1;
+    ctx.beginPath(); ctx.moveTo(p.x - dx*34, p.y - dy*34); ctx.lineTo(p.x - dx*3, p.y - dy*3); ctx.stroke();
+    ctx.fillStyle = p.color; ctx.beginPath();                        // đầu mũi dài và nhọn
+    ctx.moveTo(p.x + dx*11, p.y + dy*11);
+    ctx.lineTo(p.x - dx*5 - dy*5, p.y - dy*5 + dx*5);
+    ctx.lineTo(p.x - dx*1, p.y - dy*1);
+    ctx.lineTo(p.x - dx*5 + dy*5, p.y - dy*5 - dx*5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath();
+    ctx.moveTo(p.x + dx*9, p.y + dy*9);
+    ctx.lineTo(p.x - dx*2 - dy*2, p.y - dy*2 + dx*2);
+    ctx.lineTo(p.x - dx*2 + dy*2, p.y - dy*2 - dx*2); ctx.closePath(); ctx.fill();
   } else { // dart — kiểu cũ mặc định
     ctx.strokeStyle = p.color; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.moveTo(p.x - dx*16, p.y - dy*16); ctx.lineTo(p.x, p.y); ctx.stroke();
@@ -1930,7 +2085,7 @@ function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
     addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:0.55, spin:(c && c.spin) || 0 });
     for (let i = 0; i < 5; i++) addEffect({ type:'ink', x:player.x + Math.cos(ang)*rnd(30,90), y:player.y + Math.sin(ang)*rnd(30,90), vx:rnd(-30,30), vy:rnd(-60,-10), color:c2 });
   } else if (phase === 'cast'){
-    addEffect({ type:'vfx', style:'flash', x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:0.4 });
+    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:0.4 });
   } else if (phase === 'aoe'){
     addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:0.7, big:true, spin:(c && c.spin) || 0 });
     addEffect({ type:'vfx', style:'shock', x:player.x, y:player.y, face:0, r:R, c1:col, c2, glyph, dur:0.5 });
@@ -2302,13 +2457,19 @@ function mountImgOf(i){
 // (paths already wired below for the 2 new classes) and repoint the other 7 the same way —
 // missing images fail gracefully to a flat-color fallback shape elsewhere in the file, so this
 // is safe to ship before art arrives.
+// Mười file art này TỒN TẠI nhưng không vẽ chiêu nào cả — chúng là ảnh mượn tạm từ hồi trước đợt
+// MU-hoá: tl_a/tl_tp là đồng tiền vàng mặt Axie, tc_a/bd_a là cùng một vành trăng lưỡi liềm chỉ đổi
+// màu, mg_a là một mảng hồng nhoè. Người chơi Dark Knight mở game ra thấy ô "Twisting Slash" là
+// một đồng xu. Vì đã có bộ biểu tượng tự vẽ đúng từng chiêu (SK_ICON_SECT_A / SK_ICON_SECT_TP),
+// bỏ trống ở đây để probeSkillIcons() sinh hình đúng chiêu. File vẫn nằm trong repo, chưa xoá —
+// nếu sau này có art vẽ thật thì chỉ cần trỏ lại đường dẫn.
 const SECT_ART = {
-  thieulam: { iconA:'assets/skills/tl_a.png', iconTP:'assets/skills/tl_tp.png' },
-  toanchan: { iconA:'assets/skills/tc_a.png', iconTP:'assets/skills/tc_tp.png' },
-  baidasan: { iconA:'assets/skills/bd_a.png', iconTP:'assets/skills/bd_tp.png' },
-  minhgiao: { iconA:'assets/skills/mg_a.png', iconTP:'assets/skills/mg_tp.png' },
+  thieulam: { },
+  toanchan: { },
+  baidasan: { },
+  minhgiao: { },
   bug:      { },
-  vophai:   { iconA:'assets/skills/slash.png', iconTP:'assets/skills/basic.png' },
+  vophai:   { },
 };
 // ═══════════ ICON KỸ NĂNG TỰ SINH — phong cách MU Online ═══════════
 // Nhiều chiêu (cả 3 ô taskbar của Dark Lord + chiêu buff của 4 lớp còn lại) khai báo đường dẫn art
@@ -2318,7 +2479,7 @@ const SECT_ART = {
 const _skIconCache = {};
 // Từng biểu tượng vẽ trong hệ toạ độ 0..1 (đã dịch/co giãn sẵn), gốc ở tâm ô.
 const SK_ICON_SYMS = {
-  // Greater Damage — lưỡi kiếm bốc lên kèm 2 mũi tăng lực hai bên
+  // ── nền tảng đã có ──────────────────────────────────────────────────────
   blade_up(g, R, c1, c2){
     g.fillStyle = c1;
     g.beginPath(); g.moveTo(0, -R*0.82); g.lineTo(R*0.17, -R*0.42); g.lineTo(R*0.11, R*0.34);
@@ -2326,14 +2487,13 @@ const SK_ICON_SYMS = {
     g.fillStyle = '#fff'; g.globalAlpha = 0.85;
     g.beginPath(); g.moveTo(0, -R*0.78); g.lineTo(R*0.06, -R*0.4); g.lineTo(0, R*0.3); g.closePath(); g.fill();
     g.globalAlpha = 1; g.fillStyle = c2;
-    g.fillRect(-R*0.42, R*0.3, R*0.84, R*0.13);            // chuôi ngang
+    g.fillRect(-R*0.42, R*0.3, R*0.84, R*0.13);
     g.fillRect(-R*0.08, R*0.43, R*0.16, R*0.26);
-    for (const sx of [-1, 1]){                              // 2 mũi tăng lực
+    for (const sx of [-1, 1]){
       g.beginPath(); g.moveTo(sx*R*0.55, -R*0.1); g.lineTo(sx*R*0.78, -R*0.42);
       g.lineTo(sx*R*0.78, -R*0.12); g.lineTo(sx*R*0.55, R*0.2); g.closePath(); g.fill();
     }
   },
-  // Soul Barrier — khiên lục giác có rune ở giữa
   barrier(g, R, c1, c2){
     const hex = (rr) => { g.beginPath();
       for (let i = 0; i < 6; i++){ const a2 = -Math.PI/2 + i*Math.PI/3, x = Math.cos(a2)*rr, y = Math.sin(a2)*rr;
@@ -2344,7 +2504,6 @@ const SK_ICON_SYMS = {
     g.fillStyle = '#fff'; g.globalAlpha = 0.9;
     g.beginPath(); g.arc(0, 0, R*0.16, 0, 7); g.fill(); g.globalAlpha = 1;
   },
-  // Battle Fury — song kiếm bắt chéo, lửa liếm phía trên
   fury(g, R, c1, c2){
     g.lineCap = 'round';
     for (const sx of [-1, 1]){
@@ -2353,12 +2512,11 @@ const SK_ICON_SYMS = {
       g.strokeStyle = '#e8e4f0'; g.lineWidth = R*0.11;
       g.beginPath(); g.moveTo(sx*R*0.3, R*0.28); g.lineTo(-sx*R*0.55, -R*0.55); g.stroke();
     }
-    g.fillStyle = c1;                                        // ngọn lửa giữa
+    g.fillStyle = c1;
     g.beginPath(); g.moveTo(0, -R*0.86); g.quadraticCurveTo(R*0.34, -R*0.3, R*0.14, R*0.02);
     g.quadraticCurveTo(0, -R*0.2, -R*0.14, R*0.02);
     g.quadraticCurveTo(-R*0.34, -R*0.3, 0, -R*0.86); g.closePath(); g.fill();
   },
-  // Force Wave — 3 vòng sóng xung lan ra từ nắm đấm/quyền trượng
   wave(g, R, c1, c2){
     g.lineCap = 'round';
     for (let i = 0; i < 3; i++){
@@ -2369,15 +2527,14 @@ const SK_ICON_SYMS = {
     g.globalAlpha = 1; g.fillStyle = '#fff';
     g.beginPath(); g.arc(-R*0.52, 0, R*0.2, 0, 7); g.fill();
   },
-  // Fire Scream — cột lửa gào thét, lưỡi lửa lệch + tia lửa toả ra
   flame(g, R, c1, c2){
-    for (let i = 0; i < 8; i++){                             // tia lửa nền
+    for (let i = 0; i < 8; i++){
       const a2 = i*Math.PI/4 + 0.4; g.strokeStyle = c2; g.lineWidth = R*0.09; g.globalAlpha = 0.5;
       g.beginPath(); g.moveTo(Math.cos(a2)*R*0.54, Math.sin(a2)*R*0.54);
       g.lineTo(Math.cos(a2)*R*0.95, Math.sin(a2)*R*0.95); g.stroke();
     }
     g.globalAlpha = 1;
-    const lick = (sx, h, w, col) => {                        // 1 lưỡi lửa: đỉnh nhọn, chân loe
+    const lick = (sx, h, w, col) => {
       g.fillStyle = col; g.beginPath();
       g.moveTo(sx*w*0.12, -h);
       g.bezierCurveTo(sx*w*0.95, -h*0.42, sx*w*0.34, -h*0.1, sx*w*0.72, R*0.5);
@@ -2385,16 +2542,15 @@ const SK_ICON_SYMS = {
       g.bezierCurveTo(-sx*w*0.2, -h*0.16, sx*w*0.1, -h*0.3, sx*w*0.12, -h);
       g.closePath(); g.fill();
     };
-    lick(1, R*0.95, R*0.62, c1);                             // lưỡi lớn
-    lick(-1, R*0.6, R*0.36, c2);                             // lưỡi phụ lệch ngược
-    g.fillStyle = '#fff6d0';                                  // lõi trắng nóng
+    lick(1, R*0.95, R*0.62, c1);
+    lick(-1, R*0.6, R*0.36, c2);
+    g.fillStyle = '#fff6d0';
     g.beginPath(); g.moveTo(R*0.02, -R*0.3);
     g.bezierCurveTo(R*0.3, R*0.02, R*0.06, R*0.14, R*0.16, R*0.46);
     g.lineTo(-R*0.16, R*0.46);
     g.bezierCurveTo(-R*0.06, R*0.1, R*0.04, -R*0.02, R*0.02, -R*0.3);
     g.closePath(); g.fill();
   },
-  // Command Aura — vương miện chỉ huy trên vòng hào quang
   crown(g, R, c1, c2){
     g.strokeStyle = c2; g.lineWidth = R*0.1; g.globalAlpha = 0.75;
     g.beginPath(); g.arc(0, R*0.12, R*0.84, Math.PI*0.12, Math.PI*0.88); g.stroke();
@@ -2403,10 +2559,483 @@ const SK_ICON_SYMS = {
     g.lineTo(0, -R*0.68); g.lineTo(R*0.22, -R*0.06); g.lineTo(R*0.52, -R*0.5);
     g.lineTo(R*0.66, R*0.34); g.closePath(); g.fill();
     g.fillStyle = c2; g.fillRect(-R*0.66, R*0.34, R*1.32, R*0.22);
-    g.fillStyle = '#fff';                                     // ngọc giữa
+    g.fillStyle = '#fff';
     g.beginPath(); g.arc(0, R*0.1, R*0.13, 0, 7); g.fill();
   },
+  // Twisting Slash — kiếm xoay: hai vệt quét tròn ôm quanh lưỡi kiếm nghiêng
+  spin_blade(g, R, c1, c2){
+    g.lineCap = 'round';
+    for (const [rr, a0, w, al] of [[R*0.92, -0.5, 0.17, 0.95], [R*0.66, 2.7, 0.12, 0.6]]){
+      g.globalAlpha = al; g.strokeStyle = c2; g.lineWidth = R*w;
+      g.beginPath(); g.arc(0, 0, rr, a0, a0 + 3.5); g.stroke();
+      const ax = Math.cos(a0+3.5)*rr, ay = Math.sin(a0+3.5)*rr;   // mũi vệt quét nhọn dần
+      g.beginPath(); g.moveTo(ax, ay); g.lineTo(ax + Math.cos(a0+4.2)*R*0.3, ay + Math.sin(a0+4.2)*R*0.3);
+      g.lineWidth = R*w*0.5; g.stroke();
+    }
+    g.globalAlpha = 1;
+    g.save(); g.rotate(-0.62);                                    // lưỡi kiếm nghiêng
+    g.fillStyle = c1;
+    g.beginPath(); g.moveTo(0, -R*0.78); g.lineTo(R*0.15, -R*0.42);
+    g.lineTo(R*0.1, R*0.3); g.lineTo(-R*0.1, R*0.3); g.lineTo(-R*0.15, -R*0.42); g.closePath(); g.fill();
+    g.fillStyle = '#fff'; g.globalAlpha = 0.8;
+    g.beginPath(); g.moveTo(0, -R*0.74); g.lineTo(R*0.05, -R*0.4); g.lineTo(0, R*0.26); g.closePath(); g.fill();
+    g.globalAlpha = 1; g.fillStyle = c2;
+    g.fillRect(-R*0.36, R*0.26, R*0.72, R*0.12); g.fillRect(-R*0.07, R*0.38, R*0.14, R*0.24);
+    g.restore();
+  },
+  // Death Stab — mũi đâm thẳng, hai nhịp sát thương thành 2 chevron va chạm
+  stab(g, R, c1, c2){
+    g.fillStyle = c2; g.globalAlpha = 0.55;                        // vệt tốc độ phía sau
+    for (const dy of [-R*0.3, 0, R*0.3]) g.fillRect(-R*0.95, dy - R*0.035, R*0.5, R*0.07);
+    g.globalAlpha = 1;
+    g.fillStyle = c1;                                              // lưỡi đâm sang phải
+    g.beginPath(); g.moveTo(R*0.86, 0); g.lineTo(R*0.34, -R*0.16);
+    g.lineTo(-R*0.4, -R*0.1); g.lineTo(-R*0.4, R*0.1); g.lineTo(R*0.34, R*0.16); g.closePath(); g.fill();
+    g.fillStyle = '#fff'; g.globalAlpha = 0.85;
+    g.beginPath(); g.moveTo(R*0.82, 0); g.lineTo(R*0.3, -R*0.05); g.lineTo(-R*0.36, 0);
+    g.lineTo(R*0.3, R*0.05); g.closePath(); g.fill();
+    g.globalAlpha = 1; g.fillStyle = c2;
+    g.fillRect(-R*0.5, -R*0.3, R*0.12, R*0.6);                     // chắn tay
+    g.strokeStyle = '#fff'; g.lineCap = 'round';                   // 2 nhịp va chạm
+    for (const [ox, w, al] of [[R*0.5, 0.13, 1], [R*0.24, 0.1, 0.6]]){
+      g.globalAlpha = al; g.lineWidth = R*w;
+      g.beginPath(); g.moveTo(ox, -R*0.44); g.lineTo(ox + R*0.2, 0); g.lineTo(ox, R*0.44); g.stroke();
+    }
+    g.globalAlpha = 1;
+  },
+  // Cyclone — bản đầu ba nét mảnh, nhìn thành cái lò xo. Nay ba LƯỠI hình nêm vuốt nhọn.
+  cyclone(g, R, c1, c2){
+    for (let i = 0; i < 3; i++){
+      const a0 = i*2.09, rr = R*0.96 - i*R*0.06;
+      g.fillStyle = i === 1 ? c2 : c1; g.globalAlpha = 1 - i*0.14;
+      g.beginPath();
+      g.arc(0, 0, rr, a0, a0 + 2.0);
+      g.arc(0, 0, rr*0.5, a0 + 2.0, a0, true);
+      g.closePath(); g.fill();
+    }
+    g.globalAlpha = 1;
+    g.fillStyle = 'rgba(8,6,12,.55)'; g.beginPath(); g.arc(0, 0, R*0.3, 0, 7); g.fill();
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(0, 0, R*0.15, 0, 7); g.fill();
+  },
+  // Rageful Blow — cái "hố lõm" vẽ ra thành bậc thềm. Nay bỏ hố: chỉ còn kiếm cắm xuống + chùm
+  // tia chấn động bung ra từ điểm va chạm, kèm hai mảnh văng.
+  groundslam(g, R, c1, c2){
+    const IY = R*0.5;                                              // điểm va chạm
+    g.fillStyle = c2;                                              // chùm tia chấn động
+    for (let i = 0; i < 7; i++){
+      const a2 = Math.PI + (i/6)*Math.PI, lg = (i === 3 ? R*0.3 : R*0.52 + (i%2)*R*0.2);
+      g.save(); g.translate(0, IY); g.rotate(a2 + Math.PI/2);
+      g.beginPath(); g.moveTo(-R*0.09, 0); g.lineTo(R*0.09, 0); g.lineTo(0, lg);
+      g.closePath(); g.fill();
+      g.restore();
+    }
+    g.fillStyle = c1;                                              // kiếm cắm xuống
+    g.beginPath(); g.moveTo(0, IY); g.lineTo(R*0.15, R*0.06);
+    g.lineTo(R*0.11, -R*0.6); g.lineTo(-R*0.11, -R*0.6); g.lineTo(-R*0.15, R*0.06); g.closePath(); g.fill();
+    g.fillStyle = '#fff'; g.globalAlpha = 0.75;
+    g.beginPath(); g.moveTo(0, IY - R*0.06); g.lineTo(R*0.05, R*0.04); g.lineTo(0, -R*0.56); g.closePath(); g.fill();
+    g.globalAlpha = 1; g.fillStyle = c2;
+    g.fillRect(-R*0.42, -R*0.74, R*0.84, R*0.14);                  // chắn tay
+    g.fillStyle = '#ffffff'; g.globalAlpha = 0.9;                  // lóe trắng ở điểm va chạm
+    g.beginPath(); g.ellipse(0, IY, R*0.2, R*0.09, 0, 0, 7); g.fill();
+    g.globalAlpha = 1; g.fillStyle = c1;                           // mảnh văng
+    for (const [dx, dy, s] of [[-R*0.68, R*0.16, 0.13], [R*0.72, R*0.24, 0.1]]){
+      g.beginPath(); g.moveTo(dx, dy - R*s); g.lineTo(dx + R*s, dy);
+      g.lineTo(dx, dy + R*s); g.lineTo(dx - R*s, dy); g.closePath(); g.fill();
+    }
+  },
+  // Crescent Moon Slash — vành trăng lưỡi liềm, kèm một vệt mỏng đi sau
+  crescent(g, R, c1, c2){
+    const moon = (rr, off, col, al) => {
+      g.globalAlpha = al; g.fillStyle = col; g.beginPath();
+      g.arc(0, 0, rr, Math.PI*0.62, Math.PI*1.72);
+      g.arc(off, -off*0.35, rr*1.02, Math.PI*1.72, Math.PI*0.62, true);
+      g.closePath(); g.fill();
+    };
+    moon(R*0.92, R*0.36, c1, 1);
+    moon(R*0.55, R*0.24, c2, 0.7);
+    g.globalAlpha = 1; g.fillStyle = '#fff';                       // lóe sáng ở mũi lưỡi
+    g.beginPath(); g.arc(Math.cos(Math.PI*0.62)*R*0.92, Math.sin(Math.PI*0.62)*R*0.92, R*0.11, 0, 7); g.fill();
+  },
+  // Undying Will — đôi cánh nâng lên kèm tia hồi sinh bốc thẳng
+  revive(g, R, c1, c2){
+    for (const sx of [-1, 1]){
+      g.fillStyle = sx > 0 ? c1 : c2; g.beginPath();
+      g.moveTo(sx*R*0.12, R*0.3);
+      g.quadraticCurveTo(sx*R*0.75, R*0.12, sx*R*0.95, -R*0.55);
+      g.quadraticCurveTo(sx*R*0.5, -R*0.2, sx*R*0.12, -R*0.05);
+      g.closePath(); g.fill();
+    }
+    g.fillStyle = '#fff';                                          // tia bốc lên giữa
+    g.beginPath(); g.moveTo(0, -R*0.92); g.lineTo(R*0.15, -R*0.3);
+    g.lineTo(0, R*0.62); g.lineTo(-R*0.15, -R*0.3); g.closePath(); g.fill();
+  },
+  // Poison — giọt độc rơi kèm hai bọt khí
+  poison(g, R, c1, c2){
+    g.fillStyle = c1; g.beginPath();                               // giọt lớn
+    g.moveTo(0, -R*0.9);
+    g.bezierCurveTo(R*0.62, -R*0.1, R*0.52, R*0.6, 0, R*0.68);
+    g.bezierCurveTo(-R*0.52, R*0.6, -R*0.62, -R*0.1, 0, -R*0.9);
+    g.closePath(); g.fill();
+    g.fillStyle = '#fff'; g.globalAlpha = 0.75;                    // lóe sáng trong giọt
+    g.beginPath(); g.ellipse(-R*0.16, R*0.16, R*0.13, R*0.2, -0.3, 0, 7); g.fill();
+    g.globalAlpha = 1; g.fillStyle = c2;                           // bọt độc
+    g.beginPath(); g.arc(R*0.62, R*0.55, R*0.19, 0, 7); g.fill();
+    g.beginPath(); g.arc(-R*0.58, R*0.68, R*0.13, 0, 7); g.fill();
+  },
+  // Meteor — khối đá lao chéo, đuôi lửa kéo dài phía sau
+  meteor(g, R, c1, c2){
+    g.lineCap = 'round';                                           // đuôi lửa
+    for (const [w, al, col] of [[0.3, 0.4, c2], [0.15, 0.85, c1]]){
+      g.strokeStyle = col; g.lineWidth = R*w; g.globalAlpha = al;
+      g.beginPath(); g.moveTo(-R*0.92, -R*0.78); g.lineTo(R*0.14, R*0.1); g.stroke();
+    }
+    g.globalAlpha = 1;
+    g.fillStyle = c2; g.beginPath();                               // khối đá
+    g.moveTo(R*0.16, -R*0.1); g.lineTo(R*0.78, -R*0.02); g.lineTo(R*0.88, R*0.52);
+    g.lineTo(R*0.3, R*0.82); g.lineTo(R*0.02, R*0.36); g.closePath(); g.fill();
+    g.fillStyle = c1; g.globalAlpha = 0.8; g.beginPath();          // mặt sáng của đá
+    g.moveTo(R*0.2, R*0.02); g.lineTo(R*0.66, R*0.1); g.lineTo(R*0.42, R*0.52); g.closePath(); g.fill();
+    g.globalAlpha = 1;
+  },
+  // Lightning / Electric Spark — tia sét gãy khúc, lõi trắng
+  bolt(g, R, c1, c2){
+    const zig = (w, col) => {
+      g.strokeStyle = col; g.lineWidth = w; g.lineJoin = 'miter'; g.lineCap = 'butt';
+      g.beginPath(); g.moveTo(R*0.34, -R*0.95); g.lineTo(-R*0.3, -R*0.08);
+      g.lineTo(R*0.1, R*0.02); g.lineTo(-R*0.36, R*0.95); g.lineTo(R*0.42, R*0.02);
+      g.lineTo(R*0.02, -R*0.08); g.stroke();
+    };
+    zig(R*0.42, c2); zig(R*0.22, c1); zig(R*0.09, '#ffffff');
+    g.fillStyle = c2; g.globalAlpha = 0.7;                         // tia con hai bên
+    for (const [sx, sy] of [[-0.8, -0.5], [0.82, 0.44]]){
+      g.beginPath(); g.arc(R*sx, R*sy, R*0.1, 0, 7); g.fill();
+    }
+    g.globalAlpha = 1;
+  },
+  // Evil Spirit — bản đầu ra hình con ma Pac-Man tròn ung dung. Nay: mũ trùm NHỌN, hốc mặt tối
+  // om, hai đốm mắt cháy, vạt áo rách thành ba mũi nhọn.
+  spirit(g, R, c1, c2){
+    g.fillStyle = c1; g.beginPath();                               // dáng trùm đầu, chóp nhọn
+    g.moveTo(0, -R*0.98);
+    g.quadraticCurveTo(R*0.56, -R*0.62, R*0.6, R*0.06);
+    g.lineTo(R*0.72, R*0.86); g.lineTo(R*0.3, R*0.4);              // vạt rách
+    g.lineTo(R*0.12, R*0.92); g.lineTo(-R*0.12, R*0.44);
+    g.lineTo(-R*0.42, R*0.9); g.lineTo(-R*0.6, R*0.06);
+    g.quadraticCurveTo(-R*0.56, -R*0.62, 0, -R*0.98);
+    g.closePath(); g.fill();
+    g.fillStyle = 'rgba(6,4,10,.82)'; g.beginPath();               // hốc mặt tối om trong mũ
+    g.moveTo(0, -R*0.72);
+    g.quadraticCurveTo(R*0.4, -R*0.42, R*0.34, R*0.04);
+    g.quadraticCurveTo(0, R*0.2, -R*0.34, R*0.04);
+    g.quadraticCurveTo(-R*0.4, -R*0.42, 0, -R*0.72);
+    g.closePath(); g.fill();
+    for (const sx of [-1, 1]){                                     // hai đốm mắt cháy
+      g.fillStyle = '#ffffff';
+      g.beginPath(); g.ellipse(sx*R*0.17, -R*0.24, R*0.09, R*0.13, sx*0.4, 0, 7); g.fill();
+      g.fillStyle = c2; g.globalAlpha = 0.55;
+      g.beginPath(); g.ellipse(sx*R*0.17, -R*0.24, R*0.16, R*0.21, sx*0.4, 0, 7); g.fill();
+      g.globalAlpha = 1;
+    }
+  },
+  // Ice — cụm tinh thể băng nhọn
+  iceshard(g, R, c1, c2){
+    const shard = (ang, len, w, col) => {
+      g.save(); g.rotate(ang); g.fillStyle = col;
+      g.beginPath(); g.moveTo(0, -len); g.lineTo(w, -len*0.34); g.lineTo(w*0.6, len*0.5);
+      g.lineTo(-w*0.6, len*0.5); g.lineTo(-w, -len*0.34); g.closePath(); g.fill();
+      g.restore();
+    };
+    shard(-0.5, R*0.72, R*0.2, c2); shard(0.62, R*0.66, R*0.18, c2);
+    shard(0.04, R*0.95, R*0.26, c1);
+    g.fillStyle = '#ffffff'; g.globalAlpha = 0.85;
+    g.beginPath(); g.moveTo(0, -R*0.86); g.lineTo(R*0.08, -R*0.3); g.lineTo(0, R*0.36);
+    g.lineTo(-R*0.08, -R*0.3); g.closePath(); g.fill();
+    g.globalAlpha = 1;
+  },
+  // Twister — phễu lốc: các vòng ellipse thu nhỏ dần xuống dưới
+  twister(g, R, c1, c2){
+    g.lineCap = 'round';
+    for (let i = 0; i < 5; i++){
+      const t = i/4, y = -R*0.82 + t*R*1.6, rw = R*(0.9 - t*0.72);
+      g.strokeStyle = i % 2 ? c2 : c1; g.lineWidth = R*(0.16 - t*0.07); g.globalAlpha = 1 - t*0.28;
+      g.beginPath(); g.ellipse(0, y, rw, rw*0.3, 0, 0.3, Math.PI*1.85); g.stroke();
+    }
+    g.globalAlpha = 1; g.fillStyle = '#fff';
+    g.beginPath(); g.arc(0, R*0.78, R*0.11, 0, 7); g.fill();
+  },
+  // Nova — bùng nổ tám tia từ lõi trắng
+  nova(g, R, c1, c2){
+    for (let i = 0; i < 8; i++){
+      const a2 = i*Math.PI/4, lg = i % 2 ? R*0.6 : R*0.98, w = i % 2 ? R*0.1 : R*0.17;
+      g.fillStyle = i % 2 ? c2 : c1;
+      g.save(); g.rotate(a2);
+      g.beginPath(); g.moveTo(0, -lg); g.lineTo(w, -lg*0.28); g.lineTo(0, R*0.06);
+      g.lineTo(-w, -lg*0.28); g.closePath(); g.fill();
+      g.restore();
+    }
+    const cg = g.createRadialGradient(0, 0, 0, 0, 0, R*0.42);
+    cg.addColorStop(0, '#ffffff'); cg.addColorStop(0.55, c1); cg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = cg; g.beginPath(); g.arc(0, 0, R*0.42, 0, 7); g.fill();
+  },
+  // Arcane Insight — phiến rune hình thoi có khắc vạch
+  rune(g, R, c1, c2){
+    g.fillStyle = c2; g.beginPath();
+    g.moveTo(0, -R*0.95); g.lineTo(R*0.62, 0); g.lineTo(0, R*0.95); g.lineTo(-R*0.62, 0);
+    g.closePath(); g.fill();
+    g.strokeStyle = c1; g.lineWidth = R*0.09; g.stroke();
+    g.strokeStyle = '#fff'; g.lineWidth = R*0.08; g.lineCap = 'round';
+    g.beginPath();
+    g.moveTo(0, -R*0.44); g.lineTo(0, R*0.44);
+    g.moveTo(-R*0.24, -R*0.12); g.lineTo(R*0.24, -R*0.12);
+    g.moveTo(-R*0.18, R*0.22); g.lineTo(R*0.18, R*0.22);
+    g.stroke();
+  },
+  // Multi-Shot — ba mũi vẫn dính vào nhau. Nay xoè rộng gần gấp rưỡi và lệch gốc hẳn ra.
+  arrowfan(g, R, c1, c2){
+    const arrow = (ang, len, col, w) => {
+      g.save(); g.rotate(ang);
+      g.fillStyle = col;
+      g.fillRect(-len*0.62, -R*w/2, len*1.14, R*w);
+      g.beginPath(); g.moveTo(len*0.96, 0); g.lineTo(len*0.4, -R*0.24);
+      g.lineTo(len*0.52, 0); g.lineTo(len*0.4, R*0.24); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(-len*0.62, 0); g.lineTo(-len*0.95, -R*0.22);
+      g.lineTo(-len*0.7, 0); g.lineTo(-len*0.95, R*0.22); g.closePath(); g.fill();
+      g.restore();
+    };
+    arrow(-0.86, R*0.82, c2, 0.11);
+    arrow(0.86, R*0.82, c2, 0.11);
+    arrow(0, R*0.98, c1, 0.15);
+  },
+  // Ice Arrow — bản đầu bông tuyết bé tí, nhìn ra cái que. Nay bông tuyết to chiếm nửa ô.
+  icearrow(g, R, c1, c2){
+    g.save(); g.rotate(-0.38);
+    g.fillStyle = c2;                                              // thân + đuôi lông
+    g.fillRect(-R*0.92, -R*0.06, R*1.0, R*0.12);
+    g.beginPath(); g.moveTo(-R*0.92, 0); g.lineTo(-R*0.6, -R*0.24);
+    g.lineTo(-R*0.72, 0); g.lineTo(-R*0.6, R*0.24); g.closePath(); g.fill();
+    g.restore();
+    g.strokeStyle = c1; g.lineWidth = R*0.13; g.lineCap = 'round'; // bông tuyết đầu mũi
+    for (let i = 0; i < 3; i++){
+      const a2 = i*Math.PI/3 + 0.2;
+      g.beginPath();
+      g.moveTo(R*0.34 - Math.cos(a2)*R*0.54, R*0.14 - Math.sin(a2)*R*0.54);
+      g.lineTo(R*0.34 + Math.cos(a2)*R*0.54, R*0.14 + Math.sin(a2)*R*0.54); g.stroke();
+    }
+    g.strokeStyle = '#ffffff'; g.lineWidth = R*0.05;
+    for (let i = 0; i < 3; i++){
+      const a2 = i*Math.PI/3 + 0.2;
+      g.beginPath();
+      g.moveTo(R*0.34 - Math.cos(a2)*R*0.5, R*0.14 - Math.sin(a2)*R*0.5);
+      g.lineTo(R*0.34 + Math.cos(a2)*R*0.5, R*0.14 + Math.sin(a2)*R*0.5); g.stroke();
+    }
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(R*0.34, R*0.14, R*0.13, 0, 7); g.fill();
+  },
+  // Heal — bản đầu hai chiếc lá ôm chữ thập, dính vào nhau thành cái đinh ba. Nay bỏ lá: chữ
+  // thập bo tròn nằm giữa vòng sáng, thêm hai đốm lấp lánh.
+  heal(g, R, c1, c2){
+    g.strokeStyle = c2; g.lineWidth = R*0.12; g.globalAlpha = 0.6;
+    g.beginPath(); g.arc(0, 0, R*0.86, 0, 7); g.stroke();
+    const hg = g.createRadialGradient(0, 0, 0, 0, 0, R*0.8);
+    hg.addColorStop(0, c1); hg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.globalAlpha = 0.4; g.fillStyle = hg; g.beginPath(); g.arc(0, 0, R*0.8, 0, 7); g.fill();
+    g.globalAlpha = 1;
+    g.fillStyle = '#ffffff'; g.strokeStyle = '#ffffff';            // chữ thập bo tròn
+    g.lineWidth = R*0.3; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(0, -R*0.46); g.lineTo(0, R*0.46);
+    g.moveTo(-R*0.46, 0); g.lineTo(R*0.46, 0); g.stroke();
+    g.fillStyle = c1;                                              // đốm lấp lánh
+    for (const [dx, dy, s] of [[-R*0.66, -R*0.6, 0.11], [R*0.68, R*0.56, 0.08]]){
+      g.beginPath(); g.moveTo(dx, dy - R*s*2); g.lineTo(dx + R*s, dy);
+      g.lineTo(dx, dy + R*s*2); g.lineTo(dx - R*s, dy); g.closePath(); g.fill();
+    }
+  },
+  // Swift Wind — ba vệt gió cong nối nhau
+  wind(g, R, c1, c2){
+    g.lineCap = 'round';
+    const gust = (y, len, w, col, al) => {
+      g.globalAlpha = al; g.strokeStyle = col; g.lineWidth = R*w;
+      g.beginPath(); g.moveTo(-len, y);
+      g.quadraticCurveTo(len*0.5, y - R*0.12, len*0.72, y);
+      g.quadraticCurveTo(len*0.92, y + R*0.26, len*0.5, y + R*0.2);
+      g.stroke();
+    };
+    gust(-R*0.46, R*0.8, 0.13, c2, 0.75);
+    gust(R*0.02, R*0.95, 0.17, c1, 1);
+    gust(R*0.52, R*0.66, 0.11, c2, 0.6);
+    g.globalAlpha = 1;
+  },
+  // Penetration — ba tấm chắn vỡ thành một đống giấy vụn. Nay còn HAI tấm, dày gấp rưỡi, và
+  // mũi tên to hẳn lên để nó là thứ đọc được trước tiên.
+  pierce(g, R, c1, c2){
+    for (const [ox, gap, al, tilt] of [[-R*0.3, 0.34, 0.5, 0.26], [R*0.42, 0.2, 0.85, 0.14]]){
+      g.globalAlpha = al; g.fillStyle = c2;
+      for (const sy of [-1, 1]){
+        g.save(); g.translate(ox, sy*R*gap); g.rotate(sy*tilt);
+        g.beginPath();
+        g.moveTo(-R*0.2, 0); g.lineTo(R*0.2, sy*R*0.12);
+        g.lineTo(R*0.2, sy*R*0.78); g.lineTo(-R*0.2, sy*R*0.78);
+        g.closePath(); g.fill();
+        g.restore();
+      }
+    }
+    g.globalAlpha = 1;
+    g.fillStyle = c1; g.beginPath();                               // thân mũi tên, thuôn dần
+    g.moveTo(-R*1.0, -R*0.07); g.lineTo(R*0.44, -R*0.23);
+    g.lineTo(R*0.44, R*0.23); g.lineTo(-R*1.0, R*0.07); g.closePath(); g.fill();
+    g.fillStyle = '#ffffff'; g.globalAlpha = 0.9; g.beginPath();
+    g.moveTo(-R*0.74, -R*0.035); g.lineTo(R*0.44, -R*0.11);
+    g.lineTo(R*0.44, R*0.11); g.lineTo(-R*0.74, R*0.035); g.closePath(); g.fill();
+    g.globalAlpha = 1; g.fillStyle = c1; g.beginPath();            // đầu mũi
+    g.moveTo(R*1.02, 0); g.lineTo(R*0.3, -R*0.5);
+    g.lineTo(R*0.46, 0); g.lineTo(R*0.3, R*0.5); g.closePath(); g.fill();
+    g.fillStyle = '#ffffff'; g.globalAlpha = 0.6; g.beginPath();
+    g.moveTo(R*0.96, 0); g.lineTo(R*0.46, -R*0.22); g.lineTo(R*0.46, R*0.22); g.closePath(); g.fill();
+    g.globalAlpha = 1;
+  },
+  // Fire Slash — bản đầu là một vệt mảnh. Nay dải chém DÀY, mép trên bốc ba lưỡi lửa.
+  fireslash(g, R, c1, c2){
+    g.save(); g.rotate(-0.66);
+    g.fillStyle = c2; g.beginPath();
+    g.moveTo(-R*0.95, R*0.34); g.quadraticCurveTo(0, -R*0.34, R*0.95, -R*0.16);
+    g.quadraticCurveTo(0, R*0.16, -R*0.95, R*0.62); g.closePath(); g.fill();
+    g.fillStyle = c1; g.beginPath();
+    g.moveTo(-R*0.8, R*0.34); g.quadraticCurveTo(0, -R*0.24, R*0.86, -R*0.14);
+    g.quadraticCurveTo(0, R*0.1, -R*0.8, R*0.52); g.closePath(); g.fill();
+    g.fillStyle = '#fff6d0'; g.globalAlpha = 0.9;
+    g.beginPath(); g.moveTo(-R*0.6, R*0.34); g.quadraticCurveTo(0, -R*0.14, R*0.8, -R*0.12);
+    g.quadraticCurveTo(0, R*0.02, -R*0.6, R*0.42); g.closePath(); g.fill();
+    g.globalAlpha = 1; g.restore();
+    for (const [px, py, s] of [[-R*0.42, R*0.1, 0.3], [R*0.02, -R*0.3, 0.24], [R*0.44, -R*0.66, 0.18]]){
+      g.fillStyle = c1; g.beginPath();
+      g.moveTo(px, py - R*s*1.7); g.quadraticCurveTo(px + R*s*0.9, py - R*s*0.4, px, py + R*s*0.5);
+      g.quadraticCurveTo(px - R*s*0.9, py - R*s*0.4, px, py - R*s*1.7); g.closePath(); g.fill();
+    }
+  },
+  // Power Slash — chuôi kiếm vẽ thành dấu trừ lạc lõng. Nay là cả thanh kiếm nằm ở gốc sóng,
+  // chĩa đúng hướng sóng bay.
+  lightslash(g, R, c1, c2){
+    for (const [rr, w, col, al] of [[R*0.52, 0.09, c2, 0.3], [R*0.76, 0.14, c2, 0.55],
+                                    [R*1.0, 0.24, c1, 1]]){
+      g.globalAlpha = al; g.strokeStyle = col; g.lineWidth = R*w; g.lineCap = 'round';
+      g.beginPath(); g.arc(-R*0.78, 0, rr, -1.0, 1.0); g.stroke();
+    }
+    g.globalAlpha = 1; g.strokeStyle = '#ffffff'; g.lineWidth = R*0.08;
+    g.beginPath(); g.arc(-R*0.78, 0, R*1.0, -1.0, 1.0); g.stroke();
+    g.save(); g.translate(-R*0.72, 0); g.rotate(-0.28);            // thanh kiếm ở gốc sóng
+    g.fillStyle = c1;
+    g.beginPath(); g.moveTo(R*0.62, 0); g.lineTo(R*0.2, -R*0.12);
+    g.lineTo(-R*0.16, -R*0.08); g.lineTo(-R*0.16, R*0.08); g.lineTo(R*0.2, R*0.12);
+    g.closePath(); g.fill();
+    g.fillStyle = c2; g.fillRect(-R*0.24, -R*0.26, R*0.1, R*0.52);
+    g.fillRect(-R*0.44, -R*0.07, R*0.2, R*0.14);
+    g.restore();
+  },
+  // Frost Nova — bông tuyết sáu cánh trên vòng lan toả
+  frostnova(g, R, c1, c2){
+    g.strokeStyle = c2; g.lineWidth = R*0.08; g.globalAlpha = 0.55;
+    g.beginPath(); g.arc(0, 0, R*0.92, 0, 7); g.stroke();
+    g.globalAlpha = 1; g.lineCap = 'round';
+    for (let i = 0; i < 6; i++){
+      const a2 = i*Math.PI/3;
+      g.save(); g.rotate(a2);
+      g.strokeStyle = c1; g.lineWidth = R*0.11;
+      g.beginPath(); g.moveTo(0, 0); g.lineTo(0, -R*0.74); g.stroke();
+      g.lineWidth = R*0.08;
+      g.beginPath(); g.moveTo(0, -R*0.4); g.lineTo(R*0.2, -R*0.58);
+      g.moveTo(0, -R*0.4); g.lineTo(-R*0.2, -R*0.58); g.stroke();
+      g.restore();
+    }
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(0, 0, R*0.16, 0, 7); g.fill();
+  },
+  // Iron Will — khiên thép có gân dọc và đinh tán
+  ironwill(g, R, c1, c2){
+    g.fillStyle = c2; g.beginPath();
+    g.moveTo(0, -R*0.92); g.lineTo(R*0.74, -R*0.6); g.lineTo(R*0.66, R*0.3);
+    g.quadraticCurveTo(R*0.36, R*0.86, 0, R*0.96);
+    g.quadraticCurveTo(-R*0.36, R*0.86, -R*0.66, R*0.3);
+    g.lineTo(-R*0.74, -R*0.6); g.closePath(); g.fill();
+    g.strokeStyle = c1; g.lineWidth = R*0.11; g.stroke();
+    g.fillStyle = c1; g.fillRect(-R*0.12, -R*0.66, R*0.24, R*1.4);  // gân dọc
+    g.fillStyle = '#fff'; g.globalAlpha = 0.8;                      // đinh tán
+    for (const [dx, dy] of [[-R*0.42, -R*0.42], [R*0.42, -R*0.42], [-R*0.36, R*0.24], [R*0.36, R*0.24]]){
+      g.beginPath(); g.arc(dx, dy, R*0.09, 0, 7); g.fill();
+    }
+    g.globalAlpha = 1;
+  },
+  // Chaotic Diseier — quạ cùng tông với nền ô-liu nên chìm nghỉm. Nay tô THÂN ĐEN rồi viền sáng:
+  // đọc được trên mọi màu ô, không phụ thuộc màu chiêu.
+  crowstorm(g, R, c1, _c2){
+    const bird = (x, y, s, al) => {
+      g.globalAlpha = al;
+      g.beginPath();
+      g.moveTo(x, y);
+      g.quadraticCurveTo(x - s*0.45, y - s*0.3, x - s*1.1, y - s*0.92);
+      g.quadraticCurveTo(x - s*0.6, y - s*0.14, x, y + s*0.34);
+      g.quadraticCurveTo(x + s*0.6, y - s*0.14, x + s*1.1, y - s*0.92);
+      g.quadraticCurveTo(x + s*0.45, y - s*0.3, x, y);
+      g.closePath();
+      g.fillStyle = '#100d18'; g.fill();
+      g.strokeStyle = c1; g.lineWidth = s*0.16; g.lineJoin = 'round'; g.stroke();
+    };
+    bird(-R*0.46, -R*0.42, R*0.34, 0.8);
+    bird(R*0.5, -R*0.26, R*0.3, 0.7);
+    bird(0, R*0.3, R*0.56, 1);
+    g.globalAlpha = 1;
+  },
+  // Dark Raven — bản đầu đầu chim dính vào cánh, nhìn ra con bướm. Nay cánh GÃY KHÚC nhọn,
+  // đầu tách hẳn ra khỏi thân.
+  raven(g, R, c1, c2){
+    g.fillStyle = c1; g.beginPath();                               // cánh gãy khúc, nhọn
+    g.moveTo(-R*0.16, -R*0.06);
+    g.lineTo(-R*0.54, -R*0.62); g.lineTo(-R*0.5, -R*0.24);
+    g.lineTo(-R*0.99, -R*0.5); g.lineTo(-R*0.86, -R*0.06);
+    g.lineTo(-R*0.5, R*0.16); g.lineTo(-R*0.16, R*0.2); g.closePath(); g.fill();
+    g.beginPath();
+    g.moveTo(R*0.16, -R*0.06);
+    g.lineTo(R*0.54, -R*0.62); g.lineTo(R*0.5, -R*0.24);
+    g.lineTo(R*0.99, -R*0.5); g.lineTo(R*0.86, -R*0.06);
+    g.lineTo(R*0.5, R*0.16); g.lineTo(R*0.16, R*0.2); g.closePath(); g.fill();
+    g.fillStyle = c2;                                              // thân + đuôi
+    g.beginPath(); g.ellipse(0, R*0.24, R*0.2, R*0.42, 0, 0, 7); g.fill();
+    g.beginPath(); g.moveTo(-R*0.18, R*0.5); g.lineTo(0, R*0.98); g.lineTo(R*0.18, R*0.5); g.closePath(); g.fill();
+    g.fillStyle = c1;                                              // đầu tách khỏi thân
+    g.beginPath(); g.arc(0, -R*0.44, R*0.22, 0, 7); g.fill();
+    g.beginPath(); g.moveTo(R*0.14, -R*0.5); g.lineTo(R*0.62, -R*0.38);
+    g.lineTo(R*0.14, -R*0.28); g.closePath(); g.fill();
+    g.fillStyle = '#ff5a3a';
+    g.beginPath(); g.arc(R*0.02, -R*0.5, R*0.08, 0, 7); g.fill();
+  },
+  // Fire Scream — ba lưỡi lửa vẫn trắng như lông vũ, vụ nổ thì mờ. Nay lưỡi lửa dày hơn, vụ nổ
+  // rộng gấp rưỡi và ăn màu nóng.
+  firescream(g, R, c1, c2){
+    const bg = g.createRadialGradient(0, R*0.54, R*0.06, 0, R*0.54, R*1.15);
+    bg.addColorStop(0, '#fff6d0'); bg.addColorStop(0.22, c1);
+    bg.addColorStop(0.55, c2); bg.addColorStop(0.85, 'rgba(0,0,0,.10)');
+    bg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = bg;
+    g.save(); g.translate(0, R*0.54); g.scale(1, 0.5);
+    g.beginPath(); g.arc(0, 0, R*1.15, 0, 7); g.fill(); g.restore();
+    for (const [ang, w, h] of [[-0.5, 0.42, 1.0], [0, 0.5, 1.04], [0.5, 0.42, 1.0]]){
+      g.save(); g.rotate(ang);
+      const tongue = (ww, hh, col, al) => {
+        g.globalAlpha = al; g.fillStyle = col; g.beginPath();
+        g.moveTo(0, -R*hh);
+        g.bezierCurveTo(R*ww*0.85, -R*hh*0.52, R*ww*0.28, -R*hh*0.14, R*ww*0.58, R*0.34);
+        g.quadraticCurveTo(0, R*0.16, -R*ww*0.58, R*0.34);
+        g.bezierCurveTo(-R*ww*0.28, -R*hh*0.14, -R*ww*0.85, -R*hh*0.52, 0, -R*hh);
+        g.closePath(); g.fill();
+      };
+      tongue(w, h, c2, 0.95); tongue(w*0.46, h*0.86, c1, 1);
+      g.restore();
+    }
+    g.globalAlpha = 1; g.fillStyle = '#fff6d0';
+    g.save(); g.translate(0, R*0.54); g.scale(1, 0.44);
+    g.beginPath(); g.arc(0, 0, R*0.3, 0, 7); g.fill(); g.restore();
+  },
 };
+// Khung theo ngôn ngữ hình ảnh MU: một Ổ VÁT bằng đá-thép tối, viền trong ánh hổ phách, hình vẽ
+// nằm chìm trong ổ với bóng đổ đen, và một vệt kính quét chéo góc trên-trái.
 function genSkillIcon(sym, color, glow){
   const key = sym + '|' + color + '|' + (glow || '');
   if (_skIconCache[key]) return _skIconCache[key];
@@ -2415,24 +3044,40 @@ function genSkillIcon(sym, color, glow){
   const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x+r, y);
     g.arcTo(x+w, y, x+w, y+h, r); g.arcTo(x+w, y+h, x, y+h, r);
     g.arcTo(x, y+h, x, y, r); g.arcTo(x, y, x+w, y, r); g.closePath(); };
-  // khung kim loại gothic: nền tối vát sáng trên-trái, tối dưới-phải
+  // 1. khung kim loại gothic — vát sáng trên-trái, tối dưới-phải
   const frame = g.createLinearGradient(0, 0, S, S);
-  frame.addColorStop(0, '#5a5266'); frame.addColorStop(0.5, '#2a2532'); frame.addColorStop(1, '#15121c');
-  rr(1, 1, S-2, S-2, 11); g.fillStyle = frame; g.fill();
-  g.lineWidth = 1.6; g.strokeStyle = 'rgba(255,255,255,.22)'; g.stroke();
-  // ô lõm phát sáng theo màu lớp
-  const inner = g.createRadialGradient(c, c*0.82, 1, c, c, c*0.98);
-  inner.addColorStop(0, color); inner.addColorStop(0.62, shade(color, -0.45)); inner.addColorStop(1, '#0b0910');
-  rr(6, 6, S-12, S-12, 7); g.fillStyle = inner; g.fill();
-  g.lineWidth = 1.2; g.strokeStyle = 'rgba(0,0,0,.55)'; g.stroke();
-  // biểu tượng
-  g.save(); g.translate(c, c);
-  g.shadowColor = 'rgba(0,0,0,.75)'; g.shadowBlur = 3; g.shadowOffsetY = 1;
-  (SK_ICON_SYMS[sym] || SK_ICON_SYMS.blade_up)(g, S*0.3, c2, shade(color, 0.55));
+  frame.addColorStop(0, '#6b6178'); frame.addColorStop(0.42, '#2a2532'); frame.addColorStop(1, '#100e16');
+  rr(1, 1, S-2, S-2, 10); g.fillStyle = frame; g.fill();
+  g.lineWidth = 1.4; g.strokeStyle = 'rgba(255,255,255,.20)'; g.stroke();
+  // 2. viền hổ phách — nét vàng đồng mảnh chạy trong khung, dấu hiệu nhận biết của UI MU
+  rr(4.5, 4.5, S-9, S-9, 7.5); g.lineWidth = 1.3; g.strokeStyle = 'rgba(198,158,74,.85)'; g.stroke();
+  // 3. ổ lõm phát sáng theo màu chiêu
+  const inner = g.createRadialGradient(c, c*0.78, 1, c, c*1.06, c*1.02);
+  inner.addColorStop(0, shade(color, 0.18)); inner.addColorStop(0.5, shade(color, -0.34));
+  inner.addColorStop(1, '#08070d');
+  rr(6.5, 6.5, S-13, S-13, 6); g.fillStyle = inner; g.fill();
+  g.lineWidth = 1.1; g.strokeStyle = 'rgba(0,0,0,.6)'; g.stroke();
+  // 4. hình vẽ, chìm trong ổ nên đổ bóng đen xuống dưới
+  g.save(); rr(6.5, 6.5, S-13, S-13, 6); g.clip();
+  g.translate(c, c);
+  g.shadowColor = 'rgba(0,0,0,.8)'; g.shadowBlur = 3.5; g.shadowOffsetY = 1.5;
+  (SK_ICON_SYMS[sym] || SK_ICON_SYMS.blade_up)(g, S*0.29, c2, shade(color, 0.5));
   g.restore();
-  // đinh tán 4 góc — nét trang trí đặc trưng khung MU
-  g.fillStyle = 'rgba(228,220,240,.55)';
-  for (const [dx, dy] of [[6,6],[S-6,6],[6,S-6],[S-6,S-6]]){ g.beginPath(); g.arc(dx, dy, 1.7, 0, 7); g.fill(); }
+  // 5. vệt kính quét góc trên-trái + tối dần xuống đáy ổ
+  g.save(); rr(6.5, 6.5, S-13, S-13, 6); g.clip();
+  const gl = g.createLinearGradient(6, 6, S*0.72, S*0.66);
+  gl.addColorStop(0, 'rgba(255,255,255,.20)'); gl.addColorStop(0.55, 'rgba(255,255,255,.03)');
+  gl.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gl; g.fillRect(0, 0, S, S);
+  const vg = g.createLinearGradient(0, S*0.52, 0, S-6);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.42)');
+  g.fillStyle = vg; g.fillRect(0, 0, S, S);
+  g.restore();
+  // 6. đinh tán 4 góc
+  for (const [dx, dy] of [[6.5,6.5],[S-6.5,6.5],[6.5,S-6.5],[S-6.5,S-6.5]]){
+    g.fillStyle = 'rgba(20,17,26,.9)'; g.beginPath(); g.arc(dx, dy, 2.3, 0, 7); g.fill();
+    g.fillStyle = 'rgba(226,204,152,.75)'; g.beginPath(); g.arc(dx-.3, dy-.4, 1.5, 0, 7); g.fill();
+  }
   return _skIconCache[key] = cv.toDataURL();
 }
 function shade(hex, amt){ // amt>0 sáng lên, <0 tối đi
@@ -2441,20 +3086,51 @@ function shade(hex, amt){ // amt>0 sáng lên, <0 tối đi
   return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
 }
 // Biểu tượng cho từng chiêu chưa có art (id chiêu → key trong SK_ICON_SYMS)
+// Biểu tượng cho từng chiêu. Trước đây bảng này chỉ khai 8 chiêu, 18 chiêu còn lại rơi hết về
+// 'blade_up' — mở Sổ Kỹ Năng ra thấy một dãy thanh kiếm giống hệt nhau, không phân biệt nổi chiêu
+// nào với chiêu nào. Nay mỗi chiêu một hình riêng.
 const SK_ICON_FOR = {
-  elf_greaterdmg:'blade_up', dw_shield:'barrier', mg_battlefury:'fury',
-  dl_commandaura:'crown', dl_electricspark:'wave', dl_darkspirit:'flame',
-  dl_chaoticdiseier:'blade_up', dl_darkraven:'flame',
+  // Dark Knight
+  dk_cyclone:'cyclone', dk_ragefulblow:'groundslam', dk_crescent:'crescent',
+  dk_fortitude:'barrier', tienthiencong:'revive',
+  // Dark Wizard
+  dw_lightning:'bolt', dw_evilspirit:'spirit', dw_ice:'iceshard', dw_twister:'twister',
+  dw_nova:'nova', dw_shield:'barrier', songthu:'rune',
+  // Sylvan Ranger
+  elf_heal:'heal', elf_greaterdef:'barrier', elf_greaterdmg:'blade_up',
+  elf_swiftwind:'wind', elf_penetration:'pierce',
+  // Spellblade
+  mg_powerslash:'lightslash', mg_frostnova:'frostnova', mg_ironwill:'ironwill',
+  mg_battlefury:'fury', mg_flamestrike:'flame',
+  // Dark Lord
+  dl_electricspark:'bolt', dl_darkspirit:'spirit', dl_chaoticdiseier:'crowstorm',
+  dl_darkraven:'raven', dl_commandaura:'crown',
 };
-// Màu icon theo NGUYÊN TỐ của chiêu, không theo màu lớp — Fire Scream của Dark Lord phải ra lửa cam
-// chứ không phải ô-liu như màu lớp (đúng quy ước MU: icon tô theo hệ, khung mới mang màu lớp).
+// Màu Ổ theo NGUYÊN TỐ của chiêu, không theo màu lớp — Fire Scream của Dark Lord phải ra lửa cam
+// chứ không phải ô-liu như màu lớp (đúng quy ước MU: ổ tô theo hệ, khung mới mang màu lớp).
 const SK_ICON_COLOR = {
-  dl_darkspirit:'#8a5ad8', dl_darkraven:'#6a4a8a', dl_electricspark:'#d8d84a',
-  dw_shield:'#5ab8e8', mg_battlefury:'#e8552a', elf_greaterdmg:'#4c8dff', dl_commandaura:'#c8a83a',
+  dk_cyclone:'#4c8dff', dk_ragefulblow:'#3a6fd8', dk_crescent:'#6aa0ff',
+  dk_fortitude:'#8ab8ff', tienthiencong:'#ffe9a8',
+  dw_lightning:'#7ec850', dw_evilspirit:'#6ab850', dw_ice:'#5ac8e8', dw_twister:'#8ac850',
+  dw_nova:'#ffd76a', dw_shield:'#5ab8e8', songthu:'#d8d8f0',
+  elf_heal:'#3a9d8b', elf_greaterdef:'#5ac8b8', elf_greaterdmg:'#4c8dff',
+  elf_swiftwind:'#a0ffe9', elf_penetration:'#a0ffe9',
+  mg_powerslash:'#ffcf7a', mg_frostnova:'#5ac8e8', mg_ironwill:'#ffb060',
+  mg_battlefury:'#e8552a', mg_flamestrike:'#ff7a3a',
+  dl_electricspark:'#d8d84a', dl_darkspirit:'#8a5ad8', dl_chaoticdiseier:'#a8b85a',
+  dl_darkraven:'#6a4a8a', dl_commandaura:'#c8a83a',
 };
-const SK_ICON_SECT_TP_COLOR = { bug:'#ff7a3a', minhgiao:'#ff7a3a', baidasan:'#ff9a3a', toanchan:'#5ac8e8' };
-const SK_ICON_SECT_A  = { thieulam:'fury', toanchan:'blade_up', baidasan:'flame', minhgiao:'fury', bug:'wave', vophai:'blade_up' };
-const SK_ICON_SECT_TP = { thieulam:'blade_up', toanchan:'barrier', baidasan:'flame', minhgiao:'flame', bug:'flame', vophai:'blade_up' };
+// Màu HÌNH VẼ. Mặc định hình vẽ là kem trắng (#f2ecd8) nổi trên ổ màu — đúng quy ước MU. Nhưng
+// vài chiêu thì CHẤT LIỆU quan trọng hơn quy ước: lửa vẽ màu kem thì nhìn ra lông vũ, không ra lửa.
+const SK_ICON_GLOW = {
+  firescream:'#ffb15c', fireslash:'#ffcf7a', flame:'#ffcf7a', meteor:'#ffcf7a',
+  bolt:'#fff3a0', poison:'#d8ff9a', iceshard:'#dff4ff', icearrow:'#dff4ff', frostnova:'#dff4ff',
+};
+const SK_ICON_PLAIN = { gangkhi: ['ironwill', '#8ab8ff'] };
+const SK_ICON_SECT_TP_COLOR = { thieulam:'#5a7ad8', bug:'#ff7a3a', minhgiao:'#ff7a3a', baidasan:'#ff9a3a', toanchan:'#5ac8e8' };
+// Chiêu chính & Trấn Phái của từng lớp — đúng chiêu MU mà lớp đó cầm (xem SECTS).
+const SK_ICON_SECT_A  = { thieulam:'spin_blade', toanchan:'arrowfan', baidasan:'poison', minhgiao:'fireslash', bug:'wave', vophai:'fury' };
+const SK_ICON_SECT_TP = { thieulam:'stab', toanchan:'icearrow', baidasan:'meteor', minhgiao:'flame', bug:'firescream', vophai:'blade_up' };
 // Thử nạp từng file art đã khai báo; file nào 404 thì thay bằng icon tự sinh (không đụng file có thật).
 function probeSkillIcons(){
   const swap = (get, set, sym, color, glow) => {
@@ -2470,12 +3146,22 @@ function probeSkillIcons(){
   };
   for (const sk in SECTS){
     const s = SECTS[sk], a = SECT_ART[sk]; if (!a) continue;
-    swap(() => a.iconA,  v => a.iconA  = v, SK_ICON_SECT_A[sk]  || 'blade_up', s.color, s.glow);
-    swap(() => a.iconTP, v => a.iconTP = v, SK_ICON_SECT_TP[sk] || 'flame',    SK_ICON_SECT_TP_COLOR[sk] || s.color, s.glow);
+    const _sa = SK_ICON_SECT_A[sk] || 'blade_up', _st = SK_ICON_SECT_TP[sk] || 'flame';
+    swap(() => a.iconA,  v => a.iconA  = v, _sa, s.color, SK_ICON_GLOW[_sa] || s.glow);
+    swap(() => a.iconTP, v => a.iconTP = v, _st, SK_ICON_SECT_TP_COLOR[sk] || s.color, SK_ICON_GLOW[_st] || s.glow);
+  }
+  // Chiêu khai báo thẳng trong SKILL_DEFS (không đi qua VOHOC_DEFS) — hiện chỉ có ô buff của
+  // Dark Knight. icon của chúng là hàm, nên phải ghi đè bằng hàm mới chứ không gán chuỗi.
+  for (const sid in SK_ICON_PLAIN){
+    const d = SKILL_DEFS[sid]; if (!d) continue;
+    const [sym, col] = SK_ICON_PLAIN[sid];
+    const url = genSkillIcon(sym, col, SK_ICON_GLOW[sym]);
+    d.icon = () => url;
   }
   for (const vid in VOHOC_DEFS){
     const v = VOHOC_DEFS[vid];
-    swap(() => v.icon, nv => v.icon = nv, SK_ICON_FOR[vid] || 'blade_up', SK_ICON_COLOR[vid] || v.color || '#9aa8d4');
+    const _sym = SK_ICON_FOR[vid] || 'blade_up';
+    swap(() => v.icon, nv => v.icon = nv, _sym, SK_ICON_COLOR[vid] || v.color || '#9aa8d4', SK_ICON_GLOW[_sym]);
   }
 }
 probeSkillIcons();
@@ -3580,7 +4266,7 @@ function newPlayer(sectKey){
     level: 1, xp: 0, str: 5, agi: 5, def: 5, vit: 5, ene: 5, free: 0,
     hp: 130, qi: 55, silver: 30, mat: 0,
     equip: {}, inv: [], cd: { basic:0, a:0, amkhi:0, tp:0 },
-    skillBar: defaultSkillBar(sectKey),   // 3 ô kỹ năng cố định (chính/phụ/buff) kiểu MU Online
+    skillBar: defaultSkillBar(sectKey),   // 4 ô kỹ năng cố định (chính/phụ/buff/tuyệt chiêu) kiểu MU Online
     pk: false, toiac: 0, toiacT: 0,           // PK & Tội Ác (đỏ tên)
     gkBuffT: 0, poisonT: 0, autoSell: false,
     autoCfg: { skill:true, potion:true, potionPct:40, range:430, boss:false }, // Cài đặt Auto Farm (panel O)
@@ -3720,11 +4406,12 @@ function loadGame(){
     if (!player.bikip) player.bikip = { pieces: [0,0,0], hmtp: false };
     if (player.battuCd == null) player.battuCd = 0;
     // Phase C backfill: thanh kỹ năng, PK, tội ác, buff, độc, auto-sell
-    // Tối giản taskbar (bản mới): luôn ép về đúng 3 ô cố định theo phái (chính/phụ/buff) — bỏ hẳn
-    // ô 4-5 tự gán cũ, tránh save cũ kẹt lại chiêu giờ chỉ còn là bị động (không thể bấm được nữa).
+    // Tối giản taskbar (bản mới): luôn ép về đúng 4 ô cố định theo phái (chính/phụ/buff/tuyệt chiêu)
+    // — bỏ hẳn ô tự gán cũ, tránh save cũ kẹt lại chiêu giờ chỉ còn là bị động (không bấm được nữa).
+    // Ép lại ở đây cũng chính là đường nâng cấp cho save cũ: mọi save 3 ô mở lên là có ngay ô 4.
     player.skillBar = defaultSkillBar(player.sect);
     // Cùng lý do: phím Space có thể còn trỏ vào chiêu đã rút khỏi taskbar (vd 'bow'/'tieuhon' từ save
-    // cũ) — castSkill vẫn còn nhánh cho chúng nên chiêu đó sẽ lén bắn được, phá vỡ thiết kế 3 ô.
+    // cũ) — castSkill vẫn còn nhánh cho chúng nên chiêu đó sẽ lén bắn được, phá vỡ thiết kế 4 ô.
     if (player.spaceSkill && !player.skillBar.includes(player.spaceSkill)) player.spaceSkill = null;
     if (player.pk == null) player.pk = false;
     if (player.toiac == null) player.toiac = 0;
@@ -4358,7 +5045,7 @@ window.addEventListener('keydown', e=>{
   if (e.target && e.target.tagName === 'INPUT') return; // đang gõ console playtest
   keys[e.key.toLowerCase()] = true;
   if (e.key === ' ') { e.preventDefault(); doBasic(); }
-  if (e.key >= '1' && e.key <= '3' && player){ // taskbar 3 ô kỹ năng (chính/phụ/buff)
+  if (e.key >= '1' && e.key <= '4' && player){ // taskbar 4 ô kỹ năng (chính/phụ/buff/tuyệt chiêu)
     const id = player.skillBar[+e.key - 1];
     if (id) castSkill(id); else togglePanel('skill');
   }
@@ -11351,7 +12038,7 @@ function applyTestBoost(){
   // Danh hiệu: mở hết, trang bị danh hiệu cuối cùng
   player.titles.unlocked = TITLES.map(t => t.id);
   player.titles.equipped = TITLES[TITLES.length - 1].id;
-  // Thanh kỹ năng: 3 ô cố định theo phái
+  // Thanh kỹ năng: 4 ô cố định theo phái
   player.skillBar = defaultSkillBar(player.sect);
   // FULL SKILL (bản test): học hết Sổ Kỹ Năng + 30 Dung Hợp, mọi kỹ năng Lv 120
   for (const _vid in VOHOC_DEFS) player.vohoc[_vid] = true;
@@ -13805,7 +14492,7 @@ window.salvage = function(i){
 };
 
 // ---------- Bản Đồ thế giới ----------
-// ---------- Kỹ Năng: 3 ô cố định (chính/phụ/buff) + tab Di Sản Cũ (thông tin, không bấm được) ----------
+// ---------- Kỹ Năng: 4 ô cố định (chính/phụ/buff/tuyệt chiêu) + tab Di Sản Cũ (thông tin) ----------
 // Phiêu Bạt (kỹ năng tự do liên phái) + Dung Hợp đã bị cắt cùng đợt MU-hoá — mọi chiêu giờ đều
 // thuộc riêng 1 trong 5 lớp, không còn nội dung nào cho tab này nữa nên bỏ luôn.
 const SKILL_TABS = [
@@ -13836,7 +14523,7 @@ function heroCastAct(id, d){
 }
 window.skillTab = window.skillTab || 'active';
 window.switchSkillTab = function(t){ window.skillTab = t; renderSkillPanel(); };
-// 3 ô cố định (chính/phụ/buff — xem defaultSkillBar()): không còn gán/gỡ, chỉ hiện thông tin + nâng cấp.
+// 4 ô cố định (chính/phụ/buff/tuyệt chiêu — xem defaultSkillBar()): không gán/gỡ, chỉ xem + nâng cấp.
 function equippedSkillRowHtml(id, roleLabel){
   const info = skillInfo(id);
   return `<div class="skill-row${info.unlocked?'':' locked'}">
@@ -13878,19 +14565,20 @@ function legacyUniversalRowHtml(id){
 }
 function renderSkillPanel(){
   vhAutoLearn(); // save cũ / test mode: quét tự ngộ kỹ năng phái
-  let html = `<h3>Kỹ Năng — 3 ô cố định (phím 1-3)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  let html = `<h3>Kỹ Năng — 4 ô cố định (phím 1-4)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
   html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%ST/cấp (bạc) · mốc 20/40/60/80/100/120 thêm buff · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · 💠 Tâm Đắc <b>${player.tamdac || 0}</b> · <span style="color:#7fd8e0">Instinct <b>${Math.floor(player.khi || 0).toLocaleString()}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
   html += `<div class="char-tabs">`;
   for (const t of SKILL_TABS) html += `<button class="${t.id===window.skillTab?'active':''}" onclick="switchSkillTab('${t.id}')">${t.name}</button>`;
   html += `</div>`;
 
   if (window.skillTab === 'active'){
-    html += `<div class="stat-sec">${SECTS[player.sect].name} — 1 chính · 1 phụ · 1 buff</div>`;
+    html += `<div class="stat-sec">${SECTS[player.sect].name} — 1 chính · 1 phụ · 1 buff · 1 tuyệt chiêu</div>`;
     html += equippedSkillRowHtml('a', 'Chính');
     html += equippedSkillRowHtml('tp', 'Phụ');
-    const buffId = BUFF_SKILL_ID[player.sect];
+    const buffId = BUFF_SKILL_ID[player.sect], sigId = SIGNATURE_SKILL[player.sect];
     html += buffId ? equippedSkillRowHtml(buffId, 'Buff')
-      : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10 để mở khoá bộ 3 chiêu riêng.</div>`;
+      : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10 để mở khoá bộ 4 chiêu riêng.</div>`;
+    if (sigId) html += equippedSkillRowHtml(sigId, '★ Tuyệt Chiêu');
     html += `<div class="stat-sec">BỊ ĐỘNG — tự kích hoạt, không cần gán</div>`;
     for (const ps of PASSIVE_SKILLS){
       const on = ps.req();
@@ -14196,8 +14884,8 @@ function updateHud(){
   { const _th = trackerHtml(); if (window._lastTrack !== _th){ window._lastTrack = _th; el('quest-tracker').innerHTML = _th; } } // GDD Đợt 2 B2: cache để nút bấm không bị render đè
   // hint — theo tầng cấp, tân thủ chỉ thấy phím cốt lõi
   el('hint-bar').textContent = hintText();
-  // taskbar: 3 ô kỹ năng cố định (chính/phụ/buff)
-  for (let i = 0; i < 3; i++){
+  // taskbar: 4 ô kỹ năng cố định (chính/phụ/buff/tuyệt chiêu)
+  for (let i = 0; i < 4; i++){
     const b = el('sk-'+i); if (!b) continue;
     const id = (player.skillBar || [])[i];
     if (!id){
@@ -17060,7 +17748,7 @@ window.chooseSect = function(key){
   player.silver += 500; // quà nhập Tộc
   const w = genItem(10, 0.25); w.slot = 'weapon'; w.slotName = 'Vũ Khí';
   if (player.inv.length < 30) player.inv.push(w); else player.silver += 300;
-  player.skillBar = defaultSkillBar(key); // gán sẵn 3 chiêu cố định của Lớp mới
+  player.skillBar = defaultSkillBar(key); // gán sẵn 4 chiêu cố định của Lớp mới
   // Elder's Relic hiện thân: hành trang Unclassed hóa thành báu vật của Tộc mới
   const _tb = THANBINH[key];
   if (_tb){
