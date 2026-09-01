@@ -89,6 +89,35 @@ Hệ quả về con số: **không cần đồng bộ 60 quái mỗi map ở 20 
 thông ở Phần 5 được tính cho mô hình MMO đầy đủ và giờ là thừa. Ở mô hình này, gói tin lớn nhất
 là một con boss cộng vài người chơi — hai chữ số byte mỗi tick, không phải bốn.
 
+### Gỡ console cheat KHÔNG làm client đáng tin
+
+Chủ dự án nêu: console chỉ để test, bản online sẽ không bao giờ có. **Đúng và nên làm** — nhưng nó
+không giải quyết vấn đề gian lận, vì **devtools của trình duyệt luôn ở đó và không gỡ được**.
+
+Đo thật trên đúng bản phát hành (`RELEASE_BUILD = true`, không `?test=1`, `#cheat-console` đang
+`hidden`), chạy trong ngữ cảnh trang y hệt gõ vào F12:
+
+```
+window.player        →  "undefined"      ← nhìn qua tưởng an toàn
+typeof player        →  "object"         ← nhưng `let player` ở tầng cao nhất vẫn đọc được
+player.silver = 1e9  →  1000000000       ✓
+gainXp(1e9)          →  cấp 120          ✓
+genItem(120,0,'tranai') + gán r4/t10/+11 → "Giáp Hỏa Long r4 t10 +11"  ✓
+saveGame()           →  ghi lại nguyên   ✓
+```
+
+Chỗ bẫy: `window.player` là `undefined`, nên ai kiểm bằng `window.player` rồi kết luận "an toàn"
+là kết luận sai. Khai báo `let` ở tầng cao nhất của script thường **không** gắn vào `window`, nhưng
+vẫn nằm trong phạm vi toàn cục mà console truy cập được.
+
+**Hệ quả cho ngã ba ngay dưới đây:** lối B ("chỉ đồ từ nguồn server mới bán được") dựa vào một cái
+cờ trên món đồ. Mà client đặt được cờ đó — chính bằng cách trên. Nên B chỉ đứng vững nếu server tự
+xác minh nguồn gốc món đồ, tức là B **sụp vào chính A**. Khi đã có giao dịch thì A không phải là
+lựa chọn được khuyến nghị, nó là lựa chọn duy nhất chạy được.
+
+Điều này **không** đổi gì với chế độ offline: ở đó người chơi tự phá game của mình, và đó là quyền
+của họ.
+
 ### Ngã ba phải chọn: đồ kiếm được lúc solo có bán được không?
 
 Đây là chỗ mà "solo là mặc định" đụng vào "có giao dịch", và **không có cách né**:
@@ -112,9 +141,9 @@ từ boss vàng, sự kiện, PvP thì bán được.
 *Mất:* hai hạng vật phẩm, người chơi phải hiểu và sẽ khó chịu. Và mọi món đồ trong kho phải mang
 thêm một cờ, cùng mọi chỗ hiển thị phải nói rõ nó thuộc hạng nào.
 
-**Khuyến nghị: A.** Ở quy mô 50 người đồng thời, cái giá của A gần như bằng không, còn cái giá của
-B là một luật chơi phải giải thích mãi mãi. B chỉ đáng khi lưu lượng thật sự thành vấn đề — mà ở
-đây thì không.
+**Kết luận: A, và B không thật sự tồn tại.** Như đo ở mục ngay trên, client đặt được bất kỳ cờ nào
+lên bất kỳ món đồ nào qua devtools — nên "đồ có dấu server" chỉ có nghĩa khi **server tự xác minh
+nguồn gốc**, tức là đã làm A rồi. Ở quy mô 50 người đồng thời thì giá của A gần bằng không.
 
 ### Điều này đổi những gì trong tài liệu
 
