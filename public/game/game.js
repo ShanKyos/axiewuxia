@@ -1479,24 +1479,37 @@ function evoStage(id){ const lv = skLv(id); return lv >= 120 ? 3 : lv >= 80 ? 2 
 // người chơi chọn 1 trong 2 nhánh cho bậc đó: Bá Đạo (dồn sát thương) hoặc Tốc Chiến (dồn tốc/tiết kiệm).
 // Lựa chọn lưu vĩnh viễn theo từng chiêu, độc lập giữa các chiêu — đa dạng build không tốn art mới.
 const EVO_LVS = [40, 80, 120];
+// Hai nhánh đầu chỉ đổi CON SỐ: chọn +14% sát thương hay −9% hồi chiêu thì cách chơi vẫn y hệt.
+// Từ cấp 10 tới 120 người chơi không đổi cách bấm một lần nào. Nhánh thứ ba đổi HÀNH VI: cùng
+// một chiêu, hoặc dồn vào một mục tiêu, hoặc quét cả bầy — đó mới là thứ tạo ra build.
 const EVO_PATHS = {
-  power: { name:'Bá Đạo', desc:'+14% sát thương của chiêu này (dồn theo bậc)', dmg:0.14 },
-  swift: { name:'Tốc Chiến', desc:'−9% hồi chiêu & −6% tiêu hao Qi của chiêu này (dồn theo bậc)', cd:0.09, qi:0.06 },
+  power: { name:'Bá Đạo',   desc:'+14% sát thương của chiêu này (dồn theo bậc)', dmg:0.14 },
+  swift: { name:'Tốc Chiến', desc:'−9% hồi chiêu & −6% tiêu hao Mana của chiêu này (dồn theo bậc)', cd:0.09, qi:0.06 },
+  spread:{ name:'Lan Toả',  desc:'+45% bán kính, −22% sát thương — đổi chiêu từ dồn một mục tiêu sang quét cả bầy', r:0.45, dmg:-0.22 },
 };
+// Tên chiêu để HIỂN THỊ. skillInfo() trả null cho id không nằm trong SKILL_DEFS (VOHOC_DEFS có
+// 26 chiêu, SKILL_DEFS không phủ hết), mà mấy chỗ gọi lại đọc thẳng .name — ném lỗi và treo luôn
+// luồng nâng cấp chiêu. Bài kiểm Tiến Hóa bắt được đúng ca này.
+function skName(id){
+  const i = skillInfo(id);
+  return (i && i.name) || (VOHOC_DEFS[id] && VOHOC_DEFS[id].name)
+      || (FUSION_DEFS && FUSION_DEFS[id] && FUSION_DEFS[id].name) || id;
+}
 function skEvoMult(id){
   const arr = (player && player.skillEvo && player.skillEvo[id]) || [];
-  let dmg = 1, cd = 1, qi = 1;
+  let dmg = 1, cd = 1, qi = 1, r = 1;
   for (const k of arr){
     const p = EVO_PATHS[k]; if (!p) continue;
-    if (p.dmg) dmg *= 1 + p.dmg; if (p.cd) cd *= 1 - p.cd; if (p.qi) qi *= 1 - p.qi;
+    if (p.dmg) dmg *= 1 + p.dmg; if (p.cd) cd *= 1 - p.cd;
+    if (p.qi) qi *= 1 - p.qi;   if (p.r)  r  *= 1 + p.r;
   }
-  return { dmg, cd, qi };
+  return { dmg, cd, qi, r };
 }
 function showEvoChoice(id, stageIdx){
   const stName = ['Trung Thành · Lv40', 'Viên Dung · Lv80', 'Hóa Cảnh · Lv120'][stageIdx] || '';
   document.getElementById('overlay-inner').innerHTML = `
     <h2 style="letter-spacing:2px">⚡ Tiến Hóa Chiêu Thức</h2>
-    <p style="margin-bottom:10px"><b style="color:#ffd76a">${skillInfo(id).name}</b> đạt mốc <b>${stName}</b> —
+    <p style="margin-bottom:10px"><b style="color:#ffd76a">${skName(id)}</b> đạt mốc <b>${stName}</b> —
     chọn một nhánh tiến hóa (vĩnh viễn cho bậc này, không ảnh hưởng các chiêu khác):</p>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       ${Object.entries(EVO_PATHS).map(([k, p]) => `
@@ -1512,7 +1525,7 @@ window.chooseEvoPath = function(id, stageIdx, path){
   if (!player.skillEvo[id]) player.skillEvo[id] = [];
   player.skillEvo[id][stageIdx] = path;
   document.getElementById('overlay').classList.add('hidden');
-  addFloat(player.x, player.y-58, `⚡ ${skillInfo(id).name} — ${EVO_PATHS[path].name}!`, '#ffd76a', 13);
+  addFloat(player.x, player.y-58, `⚡ ${skName(id)} — ${EVO_PATHS[path].name}!`, '#ffd76a', 13);
   AudioSys.sfx('levelup', 0.6);
   addEffect({ type:'ring', x:player.x, y:player.y, r:70, color:'#ffd76a' });
   saveGame(); renderSkillPanel();
@@ -1545,11 +1558,11 @@ window.upgradeSkillUI = function(id){
   const _ms = _msI >= 0 ? SK_MILESTONES[_msI] : null; // GDD Đợt 2 B6: đạt mốc cảnh giới chiêu
   const _evoIdx = _ms ? EVO_LVS.indexOf(_ms.lv) : -1; // 40/80/120 — mốc tiến hóa có chọn nhánh
   if (_ms){
-    zoneBanner = { text:'◑ ' + skillInfo(id).name, sub:`Đạt mốc ${_ms.name} (cấp ${lv+1}) — ${milestoneTxt(_ms)}${_evoIdx >= 0 ? ' · ⚡ CHIÊU THỨC TIẾN HÓA!' : ''}`, color:'#ffb15c', t:3.5 };
+    zoneBanner = { text:'◑ ' + skName(id), sub:`Đạt mốc ${_ms.name} (cấp ${lv+1}) — ${milestoneTxt(_ms)}${_evoIdx >= 0 ? ' · ⚡ CHIÊU THỨC TIẾN HÓA!' : ''}`, color:'#ffb15c', t:3.5 };
     AudioSys.sfx('quest', 0.8);
     addEffect({ type:'ring', x:player.x, y:player.y, r:80, color:'#ffb15c', big:true });
   }
-  addFloat(player.x, player.y-52, `⬆ ${skillInfo(id).name} → Lv ${lv + 1}!`, '#6ae88a', 13);
+  addFloat(player.x, player.y-52, `⬆ ${skName(id)} → Lv ${lv + 1}!`, '#6ae88a', 13);
   AudioSys.sfx('levelup', 0.4);
   saveGame(); renderSkillPanel();
   if (_evoIdx >= 0) showEvoChoice(id, _evoIdx); // yêu cầu chọn nhánh tiến hóa ngay
@@ -1580,7 +1593,7 @@ function upBtnHtml(id){
 window.assignSpaceUI = function(id){
   if (!player) return;
   player.spaceSkill = (player.spaceSkill === id) ? null : id;
-  addFloat(player.x, player.y-64, player.spaceSkill ? `⌨ Phím Space → ${skillInfo(id).name}` : '⌨ Phím Space → Đòn đánh thường', '#7df9ff', 13);
+  addFloat(player.x, player.y-64, player.spaceSkill ? `⌨ Phím Space → ${skName(id)}` : '⌨ Phím Space → Đòn đánh thường', '#7df9ff', 13);
   AudioSys.sfx('ui', 0.5);
   saveGame(); renderSkillPanel();
 };
@@ -1934,7 +1947,8 @@ function castVohoc(id){
   const tierC = VH_TIER[v.tier].color, col = v.color || tierC;
   const fx = v.fx || {};
   const _st = evoStage(id); // bậc tiến hóa (Lv 40/80/120)
-  const _mul = 1 + (player.skillDmgPct || 0);
+  const _ev = skEvoMult(id);   // nhánh đã chọn: Bá Đạo / Tốc Chiến / Lan Toả
+  const _mul = (1 + (player.skillDmgPct || 0)) * _ev.dmg;
   addFloat(player.x, player.y-46, `《${v.name}》`, col, 14);
   const hitMob = (m, mult) => {
     let dmg = player.atk * mult * _mul * rnd(0.92, 1.08);
@@ -1960,7 +1974,7 @@ function castVohoc(id){
   if (v.type === 'cone'){
     const t = nearestMob(220);
     if (t) player.face = Math.atan2(t.y - player.y, t.x - player.x);
-    const R = 135;
+    const R = 135 * _ev.r;
     spawnSkillVfx(id, v, 'cone', player.face, R);
     aoeHit(() => {
       for (const m of mobs){
@@ -2006,7 +2020,7 @@ function castVohoc(id){
     if (_projCls) AudioSys.sfx('projatk_' + _projCls, 0.45);
   }
   else if (v.type === 'aoe'){
-    const R = (fx.r || 160) * (1 + 0.12 * _st); // tiến hóa: phạm vi +12%/bậc
+    const R = (fx.r || 160) * (1 + 0.12 * _st) * _ev.r; // tiến hóa: phạm vi +12%/bậc · Lan Toả nhân thêm
     spawnSkillVfx(id, v, 'aoe', player.face, R);
     shakeT = Math.max(shakeT, 0.2); shakeMag = Math.max(shakeMag, fx.big ? 7 : 4);
     aoeHit(() => {
