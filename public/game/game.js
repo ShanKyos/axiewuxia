@@ -4557,8 +4557,6 @@ function newPlayer(sectKey){
     noidan: {},                              // Nội Đan yêu thú theo hành { Kim, Mộc, Thổ, Thủy, Hỏa }
     ndBonus: { atk:0, hp:0, def:0, qi:0, crit:0 }, // chỉ số vĩnh viễn từ thôn phệ nội đan
     ndDay: '', ndCount: 0,                   // giới hạn thôn phệ 3 viên/ngày
-    pet: null,                               // Linh Thú đồng hành { type, name, lv, el, feed }
-    phongphu: 0,                             // Ấn Thuần Thú — thu phục thú tinh anh
     abode: { tulinh:0, garden:[null,null,null] }, // Nhà Riêng: Tụ Linh Trận + Dược Viên
     maDao: false,                            // Sa Đọa — Tội Ác cao hắc hóa thành Ma Tu
     daily: { day:'', kills:0, noidan:0, dungeon:0, forge:0, claimed:false }, // Mục Tiêu Hôm Nay
@@ -4727,8 +4725,16 @@ function loadGame(){
     if (!player.noidan) player.noidan = {};
     if (!player.ndBonus) player.ndBonus = { atk:0, hp:0, def:0, qi:0, crit:0 };
     if (player.ndDay == null){ player.ndDay = ''; player.ndCount = 0; }
-    if (player.pet === undefined) player.pet = null;
-    if (player.phongphu == null) player.phongphu = 0;
+    // ═══ Gỡ hệ Thú Thuần Hóa — hoàn lại cho người chơi đang giữ ════════════════════════
+    // Ấn Thuần Thú giá 1500◈ ở tiệm nên hoàn đúng giá đó. Thú đã nuôi thì trả lại số Lõi Nguyên
+    // Tố đã cho ăn (feed cộng 2 khi hệ khớp, nên chia đôi làm tròn lên để không hoàn dư).
+    if (player.phongphu > 0){ player.silver += player.phongphu * GO_ANTHUANTHU; }
+    if (player.pet){
+      const _fed = Math.ceil((player.pet.feed || 0) / 2);
+      if (_fed > 0 && player.noidan) player.noidan[player.pet.el] = (player.noidan[player.pet.el] || 0) + _fed;
+      player.silver += GO_ANTHUANTHU;   // hoàn luôn cái ấn đã dùng để thu phục nó
+    }
+    delete player.phongphu; delete player.pet;
     if (!player.abode) player.abode = { tulinh:0, garden:[null,null,null] };
     if (!player.abode.garden) player.abode.garden = [null,null,null];
     if (player.maDao == null) player.maDao = false;
@@ -4851,7 +4857,7 @@ function buildWorld(){
   decorObs = [];   // xoá TRƯỚC khi rải decor mới — xem ghi chú ở rebuildDecorObs()
   sigilReset(); // Khắc Ấn: vũng độc/sóng hẹn giờ của map cũ không được nổ giữa map mới
   if (player) player.pendingHit = null;   // cùng lý do: đòn thường đã hẹn ở map cũ
-  petObj = null; mountObj = null; // Linh Thú & Thú Chiến xuất hiện lại ở map mới
+  mountObj = null; // Thú Chiến xuất hiện lại ở map mới
   moveTarget = null; moveWaypoint = null; movePlanClear(); // Click-to-move: đích ở map cũ không còn ý nghĩa khi đổi map
   npcTalkTarget = null; // NPC ở map cũ không còn ý nghĩa khi đổi map
   decor = []; mists = []; springTimer = 0;
@@ -5342,7 +5348,6 @@ window.addEventListener('keydown', e=>{
     else if (DEEP) window.deepLeave();
     else travelTo(nearGate.to, curMap);
   }
-  if (e.key.toLowerCase()==='t' && player && !dead) tryTame(); // Ấn Thuần Thú — thu phục tinh anh suy yếu
   if (e.key === 'Escape') closePanels();
 });
 window.addEventListener('keyup', e=> keys[e.key.toLowerCase()] = false);
@@ -6161,7 +6166,6 @@ function unlockNotices(){
     6:['Mở khóa: Thú Chiến — chiến thú đồng hành tự đánh quái (C → Thú Chiến)'],
     7:['Mở khóa: Tuyệt kỹ (phím 3)'],
     10:[...(player.sect === 'vophai' ? ['Mở khóa: the Calling — 5 lớp để chọn!'] : []),'Mở khóa: Stoneform (Thuần Thục — phím H)','Mở khóa: Truy Nã Lệnh & Sảnh Cầu May — Bổ Đầu và Thương Nhân Vận May ở Lunaris City'],
-    15:['Mở khóa: Thú Thuần Hóa — mua Ấn Thuần Thú ở Vũ Khí Phường, đánh tinh anh còn <40% máu rồi bấm T'],
     40:['Mở khóa: Lò Bảo Chứng luyện Linh Dực Cấp 1 — Lò Rèn Hoàng Gia, Lunaris City'],
     45:['Bảo Hạp IV trở lên từ Hung Thần có 5-8% mở ra trang bị CỔ THẦN THỦ HỘ — Hung Thần giáng thế mỗi 4 giờ!'],
     30:['Mở khóa: Archery (Thuần Thục — phím H)','Mở khóa: Nhà Riêng — gặp Quản Gia ở Lunaris City'],
@@ -7141,7 +7145,6 @@ function update(dt){
   updateKyngo(dt); // A2: Kỳ ngộ trên đường
   if (DGN) updateDungeon(dt); // Phó bản: đợt quái → boss → thưởng
   if (DEEP) updateDeep();   // Tầng Sâu: dọn sạch tầng → gửi kho tạm → xuống tầng kế
-  updatePet(dt); // Linh Thú đồng hành
   updateMount(dt); // Thú Chiến đồng hành
   updateHorses(dt); // GDD Đợt 2 B5
   player.qi = Math.min(player.maxQi, player.qi + (player.qireg + player.maxQi*(player.combatT <= 0 ? 0.01 : 0.0025))*dt); // GDD Đợt 2 B1: +1% maxQi/s ngoài combat, +0.25% trong combat
@@ -7914,7 +7917,6 @@ function render(){
     else if (m.deadT > 0) ents.push({ y:m.y, kind:'deadmob', m }); // xác quái tan dần thành vệt mực loang
   }
   ents.push({ y:player.y, kind:'player' });
-  if (petObj) ents.push({ y:petObj.y, kind:'pet' });
   if (mountObj) ents.push({ y:mountObj.y, kind:'mount' });
   for (const h of horses) ents.push({ y:h.y, kind:'horse', h }); // GDD Đợt 2 B5
   for (const d of sortedDecor) if (d.type==='tree') ents.push({ y:d.y, kind:'tree', d });
@@ -7938,7 +7940,6 @@ function render(){
           ctx.strokeStyle = 'rgba(120,230,200,.42)'; ctx.lineWidth = 2; ctx.stroke();
         }
         break;
-      case 'pet': drawPet(); break;
       case 'mount': drawMount(); break;
       case 'horse': drawHorse(e.h); break;
       case 'tree': drawTree(e.d); break;
@@ -12667,6 +12668,7 @@ window.toggleCheatConsole = function(){
 // Đặt thành hằng số có tên để lần gộp sau còn tìm ra chỗ này, thay vì rải số 2 khắp file.
 const GO_ANIMA = 2;        // 1 Anima cũ = 2 bạc
 const GO_CONGHUAN = 2000;  // 1 Công Huân Lệnh cũ = 2000 bạc — cũng là giá một lượt Sảnh Cầu May
+const GO_ANTHUANTHU = 1500; // 1 Ấn Thuần Thú cũ = 1500 bạc — đúng giá bán ở Vũ Khí Phường
 function cheatLog(t, color){
   const lg = document.getElementById('cheat-log');
   if (!lg) return;
@@ -13008,7 +13010,6 @@ const CHAR_TABS = [
   { id:'mount',    name:'Thú Chiến',  lv:6 },
   { id:'taytuy',   name:'🔄 Tái Sinh', lv:MAX_LV },
   { id:'tuyethoc', name:'Thuần Thục', lv:4 },
-  { id:'pet',      name:'🐾 Thú Thuần Hóa', lv:15 },
 ];
 function renderCharPanel(){
   let tab = window.charTab;
@@ -13025,7 +13026,6 @@ function renderCharPanel(){
   else if (tab==='mount') renderMount();
   else if (tab==='taytuy') renderTayTuy();
   else if (tab==='tuyethoc') renderTuyetHoc();
-  else if (tab==='pet') renderPet();
   else renderForge();
 }
 window.switchCharTab = function(t){
@@ -14593,7 +14593,6 @@ const MAT_ROWS = [
   { icon:'tula', name:'Tu La Tinh Thạch', get:()=>player.gems.tuLa, color:'#e84a6a', desc:'rèn +7 trở lên · Áo Choàng' },
   { icon:'honnguyen', name:'Hỗn Nguyên Thạch', get:()=>player.gems.honNguyen, color:'#b08ae8', desc:'rèn +10/+11 · Áo Choàng' },
   { icon:'tiendan', name:'Đá Thăng Cấp', get:()=>player.tienDan, color:'#7ec850', desc:'Thuần Thục' },
-  { icon:'phongphu', name:'Ấn Thuần Thú', get:()=>player.phongphu || 0, color:'#b08ae8', desc:'thu phục thú tinh anh — bấm T' },
   { icon:'phu', name:'Thiên Mệnh Phù', get:()=>player.charms, color:'#7ecbff', desc:'bảo hiểm rèn' },
   { icon:'tanquyen', name:'Mảnh Cổ Thư (Thượng/Trung/Hạ)', get:()=>player.bikip ? player.bikip.pieces.join('/') : '0/0/0', color:'#e84a6a', desc:'dung hợp Huyết Ma Thôn Phệ' },
   { icon:'manhtrangbi', name:'Mảnh Trang Bị', get:()=>(player.mats&&player.mats.manh)||0, color:'#7ec8d8', desc:'Tấn Phẩm & Kế Thừa — rơi từ quái/tinh anh' },
@@ -15188,7 +15187,6 @@ const SHOPS = {
   binhkhi: { quote:'"Binh khí nhà ta ba đời rèn giũa — mở rương là biết liền."', rows:[
     { id:'ruongvk', name:'⚔ Rương Binh Khí',  price:800, desc:'Vũ khí ngẫu nhiên theo cấp của bạn — có thể ra hàng hiếm' },
     { id:'ruongpc', name:'🛡 Rương Phòng Cụ', price:700, desc:'Giáp trụ ngẫu nhiên theo cấp — có thể ra trang bị Hoàn Hảo' },
-    { id:'phongphu', name:'🐾 Ấn Thuần Thú', price:1500, desc:'Thu phục quái tinh anh suy yếu (dưới 40% máu) làm thú đi cùng — đứng gần bấm T' },
   ]},
   trachu: { quote:'"Vào đây uống chén trà nóng đã — chuyện Lunacia để sau hẵng hay."', rows:[
     { id:'nghitro', name:'🛏 Nghỉ Trọ',      price:120, desc:'Nghỉ ngơi dưỡng thần — hồi đầy HP và Mana' },
@@ -15278,7 +15276,6 @@ window.buyFromShop = function(what){
     zoneBanner = { text:'⚡ BÙA CHẮN SÉT', sub:'5 phút giảm 40% sát thương thiên lôi — cứ yên tâm xông vào bão!', color:'#ffb15c', t:2.6 };
     AudioSys.sfx('quest', 0.5);
   }
-  else if (what==='phongphu'){ player.silver -= row.price; player.phongphu = (player.phongphu || 0) + 1; addFloat(player.x, player.y-50, '+1 Ấn Thuần Thú — bấm T gần tinh anh suy yếu', '#b08ae8', 13); }
   else if (what==='r_tiendan5'){ player.silver -= row.price; player.tienDan += 5; }
   else if (what==='r_mat5'){ player.silver -= row.price; player.mat += 5; }
   else if (what==='r_tula'){ player.silver -= row.price; player.gems.tuLa++; }
@@ -15821,9 +15818,8 @@ function drawMinimap(){
     mc.beginPath(); mc.arc(m.x*sx, m.y*sy, d.boss ? 3.5 : d.elite ? 2.6 : 1.6, 0, 7); mc.fill();
     if (d.boss){ mc.strokeStyle = 'rgba(255,255,255,.85)'; mc.lineWidth = 1; mc.stroke(); }
   }
-  // pet / thú chiến — chấm xanh cyan
+  // Thú Chiến — chấm xanh cyan
   mc.fillStyle = '#4ad8e0';
-  if (petObj && !petObj.dead){ mc.beginPath(); mc.arc(petObj.x*sx, petObj.y*sy, 2, 0, 7); mc.fill(); }
   if (mountObj){ mc.beginPath(); mc.arc(mountObj.x*sx, mountObj.y*sy, 2, 0, 7); mc.fill(); }
   // khung nhìn camera
   mc.strokeStyle = 'rgba(255,255,255,.5)';
@@ -16083,7 +16079,6 @@ const SIDE_QUESTS = [
   // ── Học hệ thống — mỗi NV dạy đúng 1 cơ chế nâng cấp nhân vật ──
   { id:'s_sys2', npc:'monkhach',  map:'ngoai',      reqLv:11,  reqMain:10, name:'Trại Ngựa Ngoại Ô',      desc:'Bắt 3 Tuấn Mã Hoang ngoài đồng cỏ Outskirts (rượt đến kiệt sức rồi bấm E) để có thú cưỡi đầu tiên.', type:'catch', need:3, rew:{xp:1800, silver:300, mat:2, thau:1} },
   { id:'s_sys3', npc:'quachtinh', map:'tuongduong', reqLv:12,  reqMain:10, name:'Vũ Khí Của Riêng Ngươi', desc:'Mỗi lớp đều có một Thần Binh đồng hành — xem ở Nhân Vật → Thông Tin. Hãy nâng nó lên tầng kế tiếp bằng Lõi Nguyên Tố và Huyền Thiết.', type:'thanbinh', need:1, rew:{xp:2000, silver:300, mat:3} },
-  { id:'s_sys4', npc:'monkhach',  map:'ngoai',      reqLv:17,  reqMain:12, name:'Thu Phục Thú Hoang',     desc:'Cần Ấn Thuần Thú (mua ở Vũ Khí Phường). Đánh một tinh anh xuống dưới 40% máu rồi thu phục nó làm thú đi cùng.', type:'tame', need:1, rew:{xp:2500, silver:350, mat:2} },
   { id:'s_sys5', npc:'quachtinh', map:'tuongduong', reqLv:19,  reqMain:12, name:'Lò Hỗn Loạn',            desc:'Dư ít nhất 3 món cùng phẩm? Mang đến Lò Rèn Hoàng Gia, ném vào Lò Hỗn Loạn thử vận may lên phẩm cao hơn.', type:'chaos', need:1, rew:{xp:3500, silver:450, mat:3} },
   { id:'s_sys7', npc:'quachtinh', map:'tuongduong', reqLv:32,  reqMain:17, name:'Vườn Thảo Dược',          desc:'Ghé Nhà Riêng (gặp Quản Gia), gieo một luống thảo dược rồi quay lại thu hoạch.', type:'garden', need:1, rew:{xp:14000, silver:1000, mat:3} },
   // ── Cầu nối cốt truyện — dẫn người chơi qua từng vùng mới, không đánh quái lặp lại ──
@@ -17672,133 +17667,10 @@ window.swallowNoidan = function(el2){
 
 
 
-// ==================== THÚ THUẦN HÓA ====================
-// Thu phục quái TINH ANH suy yếu (<40% máu) bằng Ấn Thuần Thú — bấm T khi đứng gần.
-// Thú đi theo, tự săn quái quanh chủ; cho ăn Lõi Nguyên Tố để mạnh lên & tiến hóa (10 viên/bậc, hệ khớp tính 2).
-let petObj = null;
-function ensurePet(){
-  if (!player || !player.pet){ petObj = null; return; }
-  if (petObj) return;
-  const d = MOBS[player.pet.type];
-  if (!d){ player.pet = null; return; }
-  petObj = { type:player.pet.type, def:d, name:player.pet.name,
-    x:player.x-44, y:player.y+34, zone:null, pack:null, hp:1, maxHp:1, atkT:0, dead:false, face:0,
-    shield:0, shieldT:0, hitT:0, wob:Math.random()*10, packAlert:0, lungeT:0, isPet:true };
-}
-function petDmg(){
-  const p = player.pet;
-  return Math.round((8 + p.lv*2 + (p.feed || 0)*4) * (1 + Math.floor((p.feed || 0)/10)*0.2));
-}
-function updatePet(dt){
-  if (!player || dead){ petObj = null; return; }
-  ensurePet();
-  if (!petObj) return;
-  petObj.wob += dt*6;
-  const tx = player.x - 44, ty = player.y + 34;
-  const dd = dist(petObj.x, petObj.y, tx, ty);
-  if (dd > 4){
-    const sp = Math.min(dd*4, 320);
-    petObj.x += (tx-petObj.x)/dd*sp*dt; petObj.y += (ty-petObj.y)/dd*sp*dt;
-  }
-  petObj.atkT -= dt;
-  if (petObj.atkT <= 0){
-    let best = null, bd = 280;
-    for (const m of mobs){
-      if (m.dead || m.def.duHiep) continue;
-      const d2 = dist(petObj.x, petObj.y, m.x, m.y);
-      if (d2 < bd){ bd = d2; best = m; }
-    }
-    if (best){
-      petObj.atkT = 1.2;
-      petObj.face = Math.atan2(best.y-petObj.y, best.x-petObj.x);
-      hurtMob(best, petDmg(), 'pet');
-    } else petObj.atkT = 0.3;
-  }
-}
-function drawPet(){
-  drawMob(petObj);
-  const nh = ELEM[player.pet.el] || { color:'#b08ae8' };
-  ctx.font = '10px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
-  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
-  const label = '🐾 ' + petObj.name;
-  ctx.strokeText(label, petObj.x, petObj.y - petObj.def.size - 22);
-  ctx.fillStyle = nh.color; ctx.fillText(label, petObj.x, petObj.y - petObj.def.size - 22);
-}
-window.tryTame = function(){
-  if (!player || dead) return;
-  if (player.pet){ addFloat(player.x, player.y-40, 'Đã có thú thuần hóa — muốn đổi thì Thả Về trước (Nhân Vật → Thú Thuần Hóa)!', '#8a8a8a', 12); return; }
-  if ((player.phongphu || 0) <= 0){ addFloat(player.x, player.y-40, 'Cần Ấn Thuần Thú — bán ở Vũ Khí Phường!', '#ff7a6a', 12); return; }
-  let best = null, bd = 230;
-  for (const m of mobs){
-    if (m.dead || !m.def.elite || m.def.boss || m.def.duHiep) continue;
-    if (m.hp > m.maxHp*0.4) continue;
-    const d2 = dist(player.x, player.y, m.x, m.y);
-    if (d2 < bd){ bd = d2; best = m; }
-  }
-  if (!best){ addFloat(player.x, player.y-40, 'Không có tinh anh suy yếu (<40% máu) trong tầm — đánh nó xuống trước đã!', '#8a8a8a', 12); return; }
-  player.phongphu--;
-  if (Math.random() < 0.65){
-    player.pet = { type:best.type, name:best.def.name, lv:best.def.lv, el:best.def.el, feed:0 };
-    best.dead = true; best.zone = null;
-    petObj = null;
-    sideOnEvent('tame');
-    zoneBanner = { text:'🐾 THU PHỤC THÀNH CÔNG', sub:`${best.def.name} hệ ${elName(best.def.el)} đã quy phục — xem ở Nhân Vật → Thú Thuần Hóa!`, color:'#b08ae8', t:3.5 };
-    addEffect({ type:'ring', x:player.x, y:player.y, r:90, color:'#b08ae8', big:true });
-    AudioSys.sfx('levelup', 0.8);
-    saveGame();
-  } else {
-    addFloat(player.x, player.y-46, 'Thu phục thất bại — con thú kháng cự quá mạnh!', '#ff7a6a', 13);
-    AudioSys.sfx('hurt', 0.5);
-  }
-};
-function renderPet(){
-  const c = el('char-content'); if (!c) return;
-  const p = player.pet;
-  let html = '';
-  if (!p){
-    html = `<div class="stat-sec">THÚ THUẦN HÓA</div>
-      <div style="font-size:12.5px;color:#9aa8d4;line-height:1.9">Chưa có con thú nào đi cùng.<br><br>
-      <b style="color:#7ecbff">Cách thu phục:</b><br>
-      1. Mua <b style="color:#d8baff">Ấn Thuần Thú</b> ở Vũ Khí Phường (Lunaris City)<br>
-      2. Đánh quái <b>tinh anh</b> (Gloam Marauder, Sát Thủ Sương Mù…) còn dưới 40% máu<br>
-      3. Đứng gần và bấm <b style="color:#7ecbff">T</b> — 65% thành công<br><br>
-      Ấn đang có: <b style="color:#7ecbff">${player.phongphu || 0}</b></div>`;
-  } else {
-    const nh = ELEM[p.el] || { color:'#e4ebff', glyph:'·' };
-    const tier = Math.floor((p.feed || 0)/10);
-    html = `<div class="stat-sec">THÚ THUẦN HÓA</div>
-      <div style="font-size:13px;line-height:2;color:#e4ebff">
-        <b style="color:${nh.color};font-size:15px">${nh.glyph} ${p.name}</b>${tier > 0 ? ` <span style="color:#7ecbff">· Tinh Anh bậc ${tier}</span>` : ''} · hệ ${elName(p.el)} · C${p.lv}<br>
-        Sức mạnh: <b style="color:#7ecbff">${petDmg()} ST</b> mỗi 1.2s — tự săn quái quanh bạn<br>
-        Đã cho ăn: <b>${p.feed || 0}</b> lõi nguyên tố ${`(còn ${10 - (p.feed || 0)%10} viên nữa tiến hóa)`}
-      </div>
-      <div class="forge-actions">
-        <button class="mini-btn" onclick="feedPet()">● Cho Ăn Lõi Nguyên Tố (${elName(p.el)} tính ×2)</button>
-        <button class="mini-btn" style="border-color:#7a4a3a;color:#c88" onclick="releasePet()">Thả Về</button>
-      </div>
-      <div style="font-size:11.5px;opacity:.6;margin-top:4px">Lõi trong túi: ${['Kim','Mộc','Thổ','Thủy','Hỏa'].map(e2=>`${e2} ${(player.noidan && player.noidan[e2]) || 0}`).join(' · ')}</div>`;
-  }
-  c.innerHTML = html;
-}
-window.feedPet = function(){
-  const p = player.pet; if (!p) return;
-  let el2 = null;
-  if (player.noidan && player.noidan[p.el] > 0) el2 = p.el;
-  else el2 = ['Kim','Mộc','Thổ','Thủy','Hỏa'].find(e2 => (player.noidan[e2] || 0) > 0);
-  if (el2 == null){ addFloat(player.x, player.y-40, 'Hết lõi nguyên tố — săn tinh anh/boss để kiếm thêm!', '#8a8a8a', 12); return; }
-  const bonus = el2 === p.el ? 2 : 1;
-  player.noidan[el2]--;
-  p.feed = (p.feed || 0) + bonus;
-  addFloat(player.x, player.y-50, `Thú ăn Lõi Nguyên Tố ${el2} (+${bonus}) — sức mạnh ${petDmg()}!`, ELEM[el2].color, 13);
-  AudioSys.sfx('quest', 0.5);
-  saveGame(); renderPet();
-};
-window.releasePet = function(){
-  if (!player.pet) return;
-  addFloat(player.x, player.y-46, `${player.pet.name} đã được thả về hoang dã…`, '#8a8a8a', 12);
-  player.pet = null; petObj = null;
-  saveGame(); renderPet();
-};
+// Hệ THÚ THUẦN HÓA đã gỡ. Nó và Thú Chiến là hai hệ thú cưng song song giẫm chân nhau: cả hai
+// đều là "con thú đi cạnh và tự đánh quái". Khác biệt duy nhất là Thú Chiến còn CỘNG CHỈ SỐ cho
+// người chơi, còn Thú Thuần Hóa thì không cộng gì — nên khi phải bỏ một, bỏ cái không cộng gì.
+// Người chơi đang giữ thú hoặc Ấn Thuần Thú được hoàn lại khi nạp save — xem GO_ANTHUANTHU.
 
 // ==================== ĐỘNG PHỦ (bài học NNTD + Phi Nguyệt) ====================
 // Đài Hội Lực: tăng tốc mọi khoản tích lũy (nghỉ ngoại tuyến, tĩnh dưỡng, Instinct thụ động).
@@ -17906,8 +17778,6 @@ function sysUnlocked(id){
   const def = (typeof CHAR_TABS !== 'undefined') && CHAR_TABS.find(x=>x.id===id);
   const lv = def ? def.lv : 1;
   if (player.level >= lv) return true;
-  // Thú Thuần Hóa: đã có thú hoặc đã mua Ấn Thuần Thú thì không khóa lại
-  if (id === 'pet' && (player.pet || (player.phongphu || 0) > 0)) return true;
   return false;
 }
 
