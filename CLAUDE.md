@@ -23,7 +23,7 @@ Mọi thứ làm mới từ nay trở đi phải theo MU Online. Cụ thể:
   zone kiểu thị trấn đá phương Tây (Ardhaven)
 - Art: khung kim loại gothic vát cạnh, biểu tượng vector (kiếm/khiên/lửa/sét/băng/vương miện),
   màu tô **theo nguyên tố của chiêu**, không theo màu lớp
-- Số liệu/cơ chế: str/agi/vit/ene, tầm đánh & sát thương khác nhau theo lớp, reset (Tẩy Tủy)
+- Số liệu/cơ chế: str/agi/vit/ene, tầm đánh & sát thương khác nhau theo lớp, reset (Tái Sinh)
 
 **Thứ tự ưu tiên:** QUY TẮC SỐ 2 (bản quyền) > QUY TẮC SỐ 1 (phong cách). Khi hai cái đụng nhau,
 giữ phong cách MU nhưng đổi tên.
