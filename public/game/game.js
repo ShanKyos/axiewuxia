@@ -10583,6 +10583,36 @@ function hHeldWeapon(g, gv, ps, x, y, rot, fallback){
   (ITEM_ART[d.art] || iaWeapon)(g, W, Object.assign({}, d, { rot: 0 }));
   g.restore();
 }
+// Hình nhân vật KÈM lượt đổ khối. Cả hai đường vẽ — sprite nướng sẵn và bản vẽ
+// thẳng lúc trúng đòn — đều phải đi qua đây, nếu không thì khối biến mất đúng
+// 0,3 giây sau mỗi cú đòn rồi hiện lại: nhân vật BẸT đi rồi nổi lên.
+// Nhẹ tay hơn icon: mặt người và hào quang cường hoá không được bệt.
+function drawHeroFigureLit(g, sectKey, tier, now, ps, gv){
+  drawHeroFigure(g, sectKey, tier, now, ps, gv);
+  applyFormLight(g, 0, 0, HERO_W, HERO_H, 0.62);
+  applyEdgeLight(g, 1.6, 1.6, 0.5);
+}
+// Bản vẽ thẳng: applyEdgeLight dùng 'source-atop' trên TOÀN canvas, nên không thể
+// gọi trực tiếp lên canvas chính — nó sẽ nhuộm cả cảnh. Phải qua một canvas phụ
+// dùng lại (dựng mới mỗi khung còn tốn hơn), rồi mới dán sang.
+let _litCv = null, _litCtx = null;
+function drawHeroLit(g, sectKey, tier, now, ps, gv){
+  const W0 = HERO_W + HS_PAD * 2, H0 = HERO_H + HS_PAD * 2;
+  if (!_litCv){
+    _litCv = document.createElement('canvas');
+    _litCv.width = W0; _litCv.height = H0;
+    _litCtx = _litCv.getContext('2d');
+  }
+  _litCtx.setTransform(1, 0, 0, 1, 0, 0);
+  _litCtx.clearRect(0, 0, W0, H0);
+  _litCtx.save();
+  _litCtx.translate(HS_PAD, HS_PAD);
+  drawHeroFigureLit(_litCtx, sectKey, tier, now, ps, gv);
+  _litCtx.restore();
+  g.drawImage(_litCv, -HS_PAD, -HS_PAD);
+}
+window.drawHeroLit = drawHeroLit;
+
 // ═══════════ SPRITE NHÂN VẬT — dựng sẵn, mỗi khung chỉ còn MỘT drawImage ═══════════
 // Đo được: drawHeroFigure() tốn 203 nhát fill + 236 beginPath cho MỘT nhân vật, mỗi khung vẽ lại
 // từ đầu — bịt riêng nó đưa 21 lên 40,7 FPS, tức nó ăn gần nửa khung hình một mình. Nhưng dáng
@@ -10655,13 +10685,7 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw){
   g.translate(HS_PAD, HS_PAD);
   const ps = heroFramePose(kind, idx, act, sw);
   ps.back = !!back;
-  drawHeroFigure(g, sectKey, tier, heroFrameNow(kind, idx), ps, gv);
-  // Đổ khối — CHỈ Ở ĐÂY mới miễn phí. Sprite nướng một lần rồi blit lại mãi, nên
-  // lượt ánh sáng không tốn gì mỗi khung. Trước đây chỉ thẻ nhân vật có khối, còn
-  // người đứng ngoài màn — thứ nhìn cả buổi — vẫn tô phẳng.
-  // Nhẹ tay hơn icon: mặt người và hào quang cường hoá không được bệt.
-  applyFormLight(g, 0, 0, HERO_W, HERO_H, 0.62);
-  applyEdgeLight(g, 1.6, 1.6, 0.5);
+  drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx), ps, gv);
   // CẮT SÁT nội dung. Lề 40 là cần (đo được hào quang tràn ra tới −38..197 ngang, 245 dọc), nhưng
   // blit nguyên tấm có lề là tô thêm 2× diện tích toàn pixel trong suốt mỗi khung — đo được mất
   // 43,9 → 38,9 FPS chỉ vì phần lề đó. Đo hộp bao đúng một lần lúc dựng rồi cắt.
@@ -11741,7 +11765,7 @@ function drawPlayer(){
       ctx.restore();
     }
     if (_spr) heroBlit(ctx, _spr);
-    else drawHeroFigure(ctx, p.sect, _tier, now, _ps, _gv);
+    else drawHeroLit(ctx, p.sect, _tier, now, _ps, _gv);
     ctx.restore();
   }
   // Vũ khí danh phái cầm tay — chỉ hình Thần Hiệp cần, nhân vật khớp xương đã tự cầm vũ khí
@@ -14517,8 +14541,16 @@ function iaStaff(g, M, P){
 }
 
 // ═══ CUNG / NỎ ═══
+// Bậc phải đổi HÌNH, không chỉ đổi màu. Trước đây cả 10 cây cung chỉ khác nhau
+// mỗi bảng màu — lên cấp cả một lớp mà vũ khí nhìn y hệt. Kiếm và trượng đã có
+// blade/guard/pommel/shaft/head đổi theo bậc từ lâu; cung/nỏ/dây chuyền thì không.
+// Nay mặc định suy ra từ `st` (bậc 1–5), bảng vẫn ghi đè được nếu muốn.
+const BOW_TIP  = ['khong', 'khong', 'long', 'luoi', 'moc'];
+const BOW_GRIP = ['quan',  'quan',  'tam',  'tam',  'xuong'];
 function iaBow(g, M, P){
   const st = P.st || 1, kind = P.limb || 'cong';
+  const tip = P.tip || BOW_TIP[Math.min(4, st - 1)] || 'khong';
+  const grip = P.grip || BOW_GRIP[Math.min(4, st - 1)] || 'quan';
   g.save(); g.rotate(P.rot === undefined ? 0.12 : P.rot);
   const H = 43 + st * 1.6;
   const limb = (sd) => {                             // một cánh cung
@@ -14541,43 +14573,102 @@ function iaBow(g, M, P){
     limb(sd); g.fillStyle = iGrad(g, -26, 0, 9, 0, M.lo, M.hi); g.fill();
     limb(sd); g.strokeStyle = 'rgba(0,0,0,.48)'; g.lineWidth = 1.4; g.stroke();
   }
+  // ── ĐẦU CÁNH: chỗ dễ thấy nhất khi món đồ lên bậc ──
+  const tx = kind === 'dai' ? -11 : kind === 'kep' ? -15 : -7;
+  for (const sd of [-1, 1]){
+    const ty = sd * H;
+    if (tip === 'long'){                             // túm lông — ba nan xoè ngược
+      g.fillStyle = M.trim;
+      for (let i = 0; i < 3; i++)
+        iFill(g, [[tx, ty], [tx - 6 - i * 4, ty - sd * (2 + i * 4)], [tx + 2, ty - sd * (1 + i * 2)]], M.trim);
+    } else if (tip === 'luoi'){                      // lưỡi dao gắn đầu cánh
+      iFill(g, [[tx + 2, ty - sd * 3], [tx - 3, ty + sd * 12], [tx - 8, ty + sd * 1]], M.hi);
+      g.strokeStyle = 'rgba(0,0,0,.4)'; g.lineWidth = .9; g.stroke();
+    } else if (tip === 'moc'){                       // móc quặp
+      g.strokeStyle = M.trim; g.lineWidth = 3.2; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(tx, ty);
+      g.quadraticCurveTo(tx - 11, ty + sd * 8, tx + 3, ty + sd * 11); g.stroke();
+    }
+  }
   // dây
   g.strokeStyle = '#e8e0c8'; g.lineWidth = 1.6;
   g.beginPath(); g.moveTo(-10, -H); g.lineTo(-4, 0); g.lineTo(-10, H); g.stroke();
-  // tay nắm
-  iFill(g, [[-7, -15], [8, -15], [7, 15], [-6, 15]], M.trim);
-  g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = .9;
-  for (let i = -1; i <= 1; i++){ g.beginPath(); g.moveTo(-5, i * 7); g.lineTo(5, i * 7); g.stroke(); }
-  if (st >= 3) iGem(g, M, 0, 0, 3 + st * 0.25);
-  if (st >= 4){                                      // trang trí đầu cánh
-    g.fillStyle = M.trim;
-    for (const sd of [-1, 1]) iPoly(g, [[-9, sd * H], [-19, sd * (H + 7)], [-6, sd * (H - 5)]]), g.fill();
+  // ── TAY NẮM ──
+  if (grip === 'tam'){                               // bản thép có đinh tán
+    iFill(g, [[-8, -17], [9, -17], [8, 17], [-7, 17]], iGrad(g, -8, -17, 9, 17, M.hi, M.lo));
+    iFill(g, [[-9, -19], [10, -19], [9, -13], [-8, -13]], M.trim);
+    iFill(g, [[-8, 13], [9, 13], [8, 19], [-7, 19]], M.trim);
+    iRivet(g, M, 0.5, -8, 1.5); iRivet(g, M, 0.5, 8, 1.5);
+  } else if (grip === 'xuong'){                      // chuôi xương loe hai đầu
+    iFill(g, [[-6, -13], [7, -13], [6, 13], [-5, 13]], iGrad(g, -6, -13, 7, 13, M.hi, M.lo));
+    iFill(g, [[-9, -19], [10, -19], [7, -12], [-6, -12]], M.trim);
+    iFill(g, [[-6, 12], [7, 12], [10, 19], [-9, 19]], M.trim);
+  } else {                                           // quấn dây
+    iFill(g, [[-7, -15], [8, -15], [7, 15], [-6, 15]], M.trim);
+    g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = .9;
+    for (let i = -1; i <= 1; i++){ g.beginPath(); g.moveTo(-5, i * 7); g.lineTo(5, i * 7); g.stroke(); }
   }
+  if (st >= 3) iGem(g, M, 0, 0, 3 + st * 0.25);
   g.restore();
 }
+// Nỏ cũng vậy: 5 cây trước đây chung một bóng dáng. Nay cánh · báng · thước ngắm
+// đều đổi theo bậc.
+const XB_ARM   = ['thang', 'thang', 'cong', 'cong', 'doi'];
+const XB_STOCK = ['ngan',  'ngan',  'dai',  'dai',  'rong'];
 function iaCrossbow(g, M, P){
   const st = P.st || 1;
+  const arm = P.arm || XB_ARM[Math.min(4, st - 1)] || 'thang';
+  const stock = P.stock || XB_STOCK[Math.min(4, st - 1)] || 'ngan';
   g.save(); g.rotate(P.rot === undefined ? -0.18 : P.rot);
   const W = 36 + st * 1.8;
   // hai cánh nằm NGANG — đây là thứ tách nỏ khỏi cung ngay từ bóng dáng
-  for (const sd of [-1, 1]){
+  const wing = (sd, k, dy) => {
     g.beginPath();
-    g.moveTo(sd * 5, -8); g.quadraticCurveTo(sd * W * 0.6, -18, sd * W, -7);
-    g.quadraticCurveTo(sd * W * 0.62, -1, sd * 5, 2); g.closePath();
-    g.fillStyle = iGrad(g, 0, -13, 0, 0, M.hi, M.lo); g.fill();
+    g.moveTo(sd * 5, -8 + dy);
+    if (k === 'cong'){                               // cánh quặp ngược ra trước
+      g.quadraticCurveTo(sd * W * 0.55, -22 + dy, sd * W, -14 + dy);
+      g.quadraticCurveTo(sd * W * 0.86, -3 + dy, sd * W * 0.6, -4 + dy);
+      g.quadraticCurveTo(sd * W * 0.5, -2 + dy, sd * 5, 2 + dy);
+    } else {
+      g.quadraticCurveTo(sd * W * 0.6, -18 + dy, sd * W, -7 + dy);
+      g.quadraticCurveTo(sd * W * 0.62, -1 + dy, sd * 5, 2 + dy);
+    }
+    g.closePath();
+    g.fillStyle = iGrad(g, 0, -13 + dy, 0, dy, M.hi, M.lo); g.fill();
     g.strokeStyle = 'rgba(0,0,0,.4)'; g.lineWidth = 1; g.stroke();
+  };
+  for (const sd of [-1, 1]){
+    if (arm === 'doi'){ wing(sd, 'cong', -6); wing(sd, 'cong', 4); }   // nỏ hai tầng cánh
+    else wing(sd, arm, 0);
   }
   g.strokeStyle = '#e8e0c8'; g.lineWidth = 1.5;
   g.beginPath(); g.moveTo(-W, -6); g.lineTo(0, 4); g.lineTo(W, -6); g.stroke();
-  // báng dọc
-  iFill(g, [[-6, -16], [6, -16], [5, 26], [-5, 26]], iGrad(g, -6, -16, 6, 26, M.hi, M.lo));
-  iFill(g, [[-8, -18], [8, -18], [7, -9], [-7, -9]], M.trim);
+  // ── BÁNG ──
+  if (stock === 'rong'){                             // báng rỗng khoét lỗ
+    iFill(g, [[-8, -16], [8, -16], [7, 30], [-7, 30]], iGrad(g, -8, -16, 8, 30, M.hi, M.lo));
+    g.globalCompositeOperation = 'destination-out';
+    iFill(g, [[-4, 2], [4, 2], [3.4, 18], [-3.4, 18]], '#000');
+    g.globalCompositeOperation = 'source-over';
+    iFill(g, [[-9, -18], [9, -18], [8, -9], [-8, -9]], M.trim);
+  } else if (stock === 'dai'){                       // báng dài có đế tì vai
+    iFill(g, [[-6, -16], [6, -16], [5, 30], [-5, 30]], iGrad(g, -6, -16, 6, 30, M.hi, M.lo));
+    iFill(g, [[-9, 28], [9, 28], [8, 36], [-8, 36]], M.trim);
+    iFill(g, [[-8, -18], [8, -18], [7, -9], [-7, -9]], M.trim);
+  } else {
+    iFill(g, [[-6, -16], [6, -16], [5, 26], [-5, 26]], iGrad(g, -6, -16, 6, 26, M.hi, M.lo));
+    iFill(g, [[-8, -18], [8, -18], [7, -9], [-7, -9]], M.trim);
+  }
   iFill(g, [[-5, 14], [5, 14], [11, 29], [2, 29]], M.lo);           // cò
   if (st >= 2) iRivet(g, M, 0, 6, 1.8);
   // Mũi tên nạp CHĨA LÊN từng làm cả cây nỏ thành mớ gai trên tay nhân vật — bỏ, thay bằng
   // rãnh dẫn tên nằm trên báng, đọc ra "nỏ" mà không phá bóng dáng.
   if (st >= 3){ g.strokeStyle = M.trim; g.lineWidth = 2.2;
     g.beginPath(); g.moveTo(0, -14); g.lineTo(0, 10); g.stroke(); }
+  if (st >= 4){                                      // thước ngắm dựng trên báng
+    iFill(g, [[-4, -20], [4, -20], [3, -27], [-3, -27]], M.trim);
+    g.strokeStyle = M.trim; g.lineWidth = 1.4;
+    g.beginPath(); g.arc(0, -28, 3.4, 0, 7); g.stroke();
+  }
   if (st >= 4) iGem(g, M, 0, -4, 3.2);
   g.restore();
 }
@@ -15079,36 +15170,75 @@ function iChain(g, M, st){
     }
   }
 }
+// Mặt dây đổi theo bậc: nanh → vuốt → mảnh vỡ → ấn có cánh.
+const PEND_CHARM = ['nanh', 'nanh', 'vuot', 'manh', 'an'];
 function iaPendPhys(g, M, P){
   const st = P.st || 1;
+  const charm = P.charm || PEND_CHARM[Math.min(4, st - 1)] || 'nanh';
   iChain(g, M, st);
-  // nanh: khối nhọn xuống, có sống giữa
-  iFill(g, [[-9, -3], [9, -3], [5, 20], [0, 30], [-5, 20]], iGrad(g, -9, -3, 9, 30, M.hi, M.lo));
-  iFill(g, [[-2.4, 0], [2.4, 0], [1.4, 18], [0, 26], [-1.4, 18]], M.lo);
-  // gông cổ nanh
+  if (charm === 'vuot'){                    // vuốt quặp
+    iFill(g, [[-8, -3], [8, -3], [9, 14], [1, 30], [-3, 16]], iGrad(g, -8, -3, 9, 30, M.hi, M.lo));
+    iFill(g, [[2, 6], [6, 8], [3, 22]], M.lo);
+  } else if (charm === 'manh'){             // mảnh vỡ có cạnh
+    iFill(g, [[-8, -3], [3, -6], [10, 6], [2, 29], [-6, 12]], iGrad(g, -8, -6, 10, 29, M.hi, M.lo));
+    iFill(g, [[-2, 0], [4, 4], [0, 24]], M.lo);
+  } else if (charm === 'an'){               // ấn có cánh hai bên
+    iFill(g, [[-9, -2], [9, -2], [7, 18], [0, 27], [-7, 18]], iGrad(g, -9, -2, 9, 27, M.hi, M.lo));
+    iFill(g, [[-9, 1], [-20, -4], [-10, 10]], M.trim);
+    iFill(g, [[9, 1], [20, -4], [10, 10]], M.trim);
+    iFill(g, [[-3, 4], [3, 4], [2, 20], [-2, 20]], M.lo);
+  } else {                                  // nanh: khối nhọn xuống, có sống giữa
+    iFill(g, [[-9, -3], [9, -3], [5, 20], [0, 30], [-5, 20]], iGrad(g, -9, -3, 9, 30, M.hi, M.lo));
+    iFill(g, [[-2.4, 0], [2.4, 0], [1.4, 18], [0, 26], [-1.4, 18]], M.lo);
+  }
+  // gông cổ mặt dây
   iFill(g, [[-11, -8], [11, -8], [10, -1], [-10, -1]], M.trim);
   if (st >= 3){ iFill(g, [[-11, -6], [-19, -11], [-10, -12]], M.trim);
                 iFill(g, [[11, -6], [19, -11], [10, -12]], M.trim); }
   if (st >= 2) iGem(g, M, 0, -4.5, 2.6 + st * 0.25);
-  if (st >= 5){ g.strokeStyle = M.trim; g.lineWidth = 1.2;
-    g.beginPath(); g.moveTo(-6, 6); g.lineTo(6, 6); g.stroke(); }
   iSheenArc(g);
 }
+// Lõi đổi theo bậc: cầu → khối cắt mặt → vòng rỗng → con mắt.
+const PEND_ORB = ['cau', 'cau', 'khoi', 'vong', 'mat'];
 function iaPendMagic(g, M, P){
   const st = P.st || 1;
+  const orb = P.orb || PEND_ORB[Math.min(4, st - 1)] || 'cau';
   iChain(g, M, st);
-  // gọng ôm cầu
+  // gọng ôm lõi
   g.strokeStyle = M.trim; g.lineWidth = 3;
   g.beginPath(); g.arc(0, 11, 13.5, -0.85 * Math.PI, -0.15 * Math.PI); g.stroke();
   iFill(g, [[-6, -8], [6, -8], [5, -2], [-5, -2]], M.trim);
-  // cầu pha lê
   const c = M.glow || M.trim;
   const rr = 9 + st * 0.7;
-  const gr = g.createRadialGradient(-rr*0.3, 11 - rr*0.35, 1, 0, 11, rr);
-  gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.35, c); gr.addColorStop(1, M.lo);
-  g.fillStyle = gr; g.beginPath(); g.arc(0, 11, rr, 0, 7); g.fill();
-  g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; g.beginPath(); g.arc(0, 11, rr, 0, 7); g.stroke();
-  if (st >= 3){                               // vành xoay quanh cầu
+  if (orb === 'khoi'){                       // khối cắt mặt — thấy được các mặt
+    const pts = [[0, -rr], [rr * 0.86, -rr * 0.3], [rr * 0.6, rr * 0.8], [-rr * 0.6, rr * 0.8], [-rr * 0.86, -rr * 0.3]];
+    g.save(); g.translate(0, 11);
+    iFill(g, pts, iGrad(g, -rr, -rr, rr, rr, '#ffffff', c));
+    iFill(g, [[0, -rr], [rr * 0.86, -rr * 0.3], [0, rr * 0.15]], c);
+    iFill(g, [[0, -rr], [-rr * 0.86, -rr * 0.3], [0, rr * 0.15]], M.lo);
+    g.restore();
+  } else if (orb === 'vong'){                // vòng rỗng, lõi sáng lơ lửng giữa
+    g.strokeStyle = c; g.lineWidth = 4.2;
+    g.beginPath(); g.arc(0, 11, rr, 0, 7); g.stroke();
+    g.strokeStyle = M.trim; g.lineWidth = 1.4;
+    g.beginPath(); g.arc(0, 11, rr + 2.2, 0, 7); g.stroke();
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(0, 11, rr * 0.34, 0, 7); g.fill();
+  } else if (orb === 'mat'){                 // con mắt
+    g.save(); g.translate(0, 11);
+    g.fillStyle = iGrad(g, -rr, -rr * 0.6, rr, rr * 0.6, '#ffffff', M.lo);
+    g.beginPath(); g.moveTo(-rr * 1.15, 0);
+    g.quadraticCurveTo(0, -rr * 1.05, rr * 1.15, 0);
+    g.quadraticCurveTo(0, rr * 1.05, -rr * 1.15, 0); g.fill();
+    g.fillStyle = c; g.beginPath(); g.arc(0, 0, rr * 0.52, 0, 7); g.fill();
+    g.fillStyle = '#12101a'; g.beginPath(); g.ellipse(0, 0, rr * 0.2, rr * 0.46, 0, 0, 7); g.fill();
+    g.restore();
+  } else {                                   // cầu pha lê
+    const gr = g.createRadialGradient(-rr*0.3, 11 - rr*0.35, 1, 0, 11, rr);
+    gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.35, c); gr.addColorStop(1, M.lo);
+    g.fillStyle = gr; g.beginPath(); g.arc(0, 11, rr, 0, 7); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; g.beginPath(); g.arc(0, 11, rr, 0, 7); g.stroke();
+  }
+  if (st >= 3 && orb !== 'vong'){            // vành xoay quanh lõi
     g.strokeStyle = M.trim; g.lineWidth = 1.6;
     g.save(); g.translate(0, 11); g.scale(1, 0.34);
     g.beginPath(); g.arc(0, 0, rr + 5, 0, 7); g.stroke();
