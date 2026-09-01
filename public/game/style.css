@@ -133,10 +133,50 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #combat-log .cl-row:first-child { opacity:1; }
 
 /* Panels */
+/* ── KHUNG KIM LOẠI CHẠM NỔI ──
+   Bảng cũ là hình chữ nhật bo tròn phẳng, đặt cạnh icon trang bị (vốn đã có vành kim loại, chỉ
+   hổ phách và đinh tán) thì lệch hẳn tông. Khung này dùng ĐÚNG ngôn ngữ hình đó, phóng to lên
+   cỡ bảng: vành ngoài tối, gờ sáng ở mép trên-trái và gờ tối ở mép dưới-phải để tạo khối, một
+   chỉ hổ phách chạy bên trong, rồi lòng bảng lõm xuống.
+   Làm bằng box-shadow nhiều lớp chứ không phải ảnh nền — không thêm file, co giãn theo mọi cỡ,
+   và không dùng blur (dự án cấm). */
 .panel { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:20;
   width:min(520px,94vw); max-height:86vh; overflow-y:auto;
-  background:linear-gradient(170deg,var(--bg-panel-1),var(--bg-panel-2)); border:1px solid var(--border-strong);
-  border-radius:var(--r-lg); padding:16px 18px; color:#e4ebff; box-shadow:0 10px 40px rgba(0,0,0,.6), 0 0 0 4px rgba(76,141,255,.08); }
+  /* Bốn đinh tán vẽ bằng radial-gradient đặt ở bốn góc — box-shadow không nhận offset theo %,
+     nên mẹo pseudo-element không dựng được đinh ở góc phải. */
+  background:
+    /* Đinh tán nằm GỌN trong vành 10px (tâm cách mép 5px), không lấn ra ngoài như bản trước */
+    radial-gradient(circle 3px at 5px 5px, #ffffff 0%, #a7b3dd 38%, #191d33 100%) no-repeat,
+    radial-gradient(circle 3px at calc(100% - 5px) 5px, #ffffff 0%, #a7b3dd 38%, #191d33 100%) no-repeat,
+    radial-gradient(circle 3px at 5px calc(100% - 5px), #ffffff 0%, #a7b3dd 38%, #191d33 100%) no-repeat,
+    radial-gradient(circle 3px at calc(100% - 5px) calc(100% - 5px), #ffffff 0%, #a7b3dd 38%, #191d33 100%) no-repeat,
+    linear-gradient(170deg,var(--bg-panel-1),var(--bg-panel-2)) padding-box,
+    /* Vành kim loại: chóa sáng ở mép trên-trái → thân thép → gần đen ở mép dưới-phải, rồi một
+       vệt sáng hẹp ở chính góc dưới-phải cho ra cảm giác mép cuốn. Bản đầu chạy từ sáng sang
+       sáng nên ra một dải xám phẳng, không thành khối. */
+    linear-gradient(145deg,
+      #e6ecff 0%, #b3bfe4 5%, #7d89b8 13%,   /* chóa sáng mép trên-trái */
+      #5a648f 26%, #434c74 42%,              /* THÂN THÉP — phải đủ rộng và đủ sáng, không thì
+                                                cả vành chìm vào nền và chỉ còn là viền dày */
+      #2a3050 60%, #171b31 78%,              /* đổ tối dần xuống dưới-phải */
+      #3d456b 92%, #98a4cd 100%) border-box; /* vệt sáng mép cuốn ở góc dưới-phải */
+  background-origin: border-box;
+  border:10px solid transparent;
+  border-radius:var(--r-lg); padding:16px 18px; color:#e4ebff;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,6,.9),               /* rãnh tối tách vành khỏi lòng bảng */
+    inset 0 0 0 2px rgba(255,177,92,.34),         /* chỉ hổ phách, cùng ngôn ngữ với icon trang bị */
+    inset 0 2px 0 rgba(226,235,255,.20),          /* gờ sáng mép trên — nguồn sáng ở trên */
+    inset 0 -2px 0 rgba(0,0,0,.6),                /* gờ tối mép dưới */
+    inset 0 8px 22px rgba(0,0,0,.5),              /* lòng bảng lõm xuống */
+    0 3px 0 rgba(0,0,0,.6),                       /* chân khung dày lên */
+    0 16px 48px rgba(0,0,0,.7),
+    0 0 0 1px rgba(0,0,4,.9); }                   /* nét viền ngoài tách khỏi nền */
+/* Tiêu đề bảng ngồi trên một thanh khắc chìm, ngăn với phần thân */
+.panel > h3 { margin:-4px -6px 10px; padding:8px 10px; border-radius:var(--r-sm);
+  background:linear-gradient(180deg, rgba(0,0,8,.5), rgba(0,0,8,.18));
+  box-shadow:inset 0 1px 0 rgba(0,0,0,.6), inset 0 -1px 0 rgba(226,235,255,.16),
+             inset 0 0 0 1px rgba(255,177,92,.14); }
 /* Trang Bị + Túi Đồ mở cùng lúc (xem togglePanel trong game.js) — trên màn hình đủ rộng,
    tách 2 bên để kéo-thả đồ từ Túi Đồ sang ô Trang Bị được (cả 2 phải cùng có mặt trên DOM). */
 @media (min-width:1000px){
@@ -238,7 +278,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #sect-select .ss-inner { position:relative; z-index:1; }
 /* Khối chọn lớp cần nền riêng để chữ không chìm vào cảnh */
 #sect-select .ss-inner { background:linear-gradient(180deg, rgba(10,7,19,.30), rgba(10,7,19,.82) 22%, rgba(10,7,19,.92));
-  border-radius:18px; backdrop-filter:blur(2px); }
+  border-radius:20px; }
 /* Logo: kim loại lạnh + viền than hồng, quét sáng chậm ngang mặt chữ */
 .ss-logo { display:flex; flex-direction:column; align-items:center; gap:0; margin-bottom:4px; line-height:.92; }
 .ss-logo span { font-family:var(--font-display); font-weight:800; letter-spacing:.06em; line-height:1;
