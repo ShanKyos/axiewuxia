@@ -3518,6 +3518,26 @@ const _REALM_ICONS = ['r0_phan_nhan','r1_khi_hai','r2_chu_thien','r3_tu_phu','r4
 // GDD Lấy Võ Nhập Đạo §3 — Giai đoạn 1: cảnh giới tu tiên.
 // Spark (1-4): đột phá vận công theo tỉ lệ. Molt trở lên (5-9): ASCENSION TRIAL 3-9 đợt thiên lôi,
 // mỗi tia gây % maxHP — KHÔNG tụt bậc.
+// ═══════════ SỨC MẠNH THEO CẤP ═══════════
+// Trước đây phần này nấp sau hai hệ tu tiên (cảnh giới + kinh mạch) đã bị gỡ. Cả hai vốn KHÔNG
+// còn là lựa chọn của người chơi — chúng chỉ là hàm của cấp độ đội lốt hệ thống. Nay viết thẳng
+// ra: một hàm, một chỗ, không từ vựng tu tiên. Con số giữ NGUYÊN như cũ để không ai yếu đi.
+//   · bậc nhân theo cấp  : mỗi 12 cấp một nấc, trần ở cấp 108 (bản cũ: cảnh giới)
+//   · cộng thẳng theo cấp: mỗi 6 cấp một điểm, trần 20 điểm ở cấp 120 (bản cũ: kinh mạch)
+const LV_MULT_ATK = [0, 0.05, 0.10, 0.16, 0.24, 0.35, 0.45, 0.55, 0.70, 0.88];
+const LV_MULT_QIREG = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10];
+function levelPower(lv){
+  const b = clamp(Math.floor(lv / 12), 0, LV_MULT_ATK.length - 1);   // bậc nhân
+  const t = clamp(Math.floor(lv / 6), 0, 20);                        // điểm cộng thẳng
+  return {
+    mult: LV_MULT_ATK[b], qireg: LV_MULT_QIREG[b],
+    atk: t * 5, hp: t * 65, def: t * 5, qi: t * 6,
+    crit: t * 0.7, eva: t * 0.4, aspd: t * 0.4,
+    stun: lv >= 48 ? 0.05 : 0,     // mốc cũ: bậc 4
+    reflect: lv >= 60 ? 0.05 : 0,  // mốc cũ: bậc 5
+    tough: lv >= 96,               // chặn 1 đòn chí mạng, hồi 30% HP (180s) — mốc cũ: bậc 8
+  };
+}
 // Hệ cảnh giới (DANTIAN_REALMS) đã GỠ — xem ghi chú ở calcDerived().
 
 
@@ -4560,6 +4580,7 @@ function calcDerived(){
   // Quy tắc 1. Nó vốn đã bị rút ruột thành floor(cấp/12) nên không ai đầu tư vào nó nữa, nhưng
   // vẫn gánh +88% công/máu ở bậc cuối. Chủ dự án chọn gỡ luôn cả phần chỉ số — xem ghi chú
   // cân bằng trong docs/. Mọi cổng cũ theo cảnh đã dịch sang cổng theo CẤP (cảnh N = cấp N×12).
+  const LP = levelPower(player.level);
   player.dStr = s.str; player.dAgi = s.agi; player.dDef = s.def; player.dVit = s.vit; player.dEne = s.ene;
   // Công Kích quy đổi theo atkSrc riêng từng phái (str/agi/ene trọng số khác nhau) thay vì chung str×2
   const atkSrc = sect0.atkSrc || { str: 2.0 };
@@ -4567,8 +4588,8 @@ function calcDerived(){
   // Dòng Hoàn Hảo "ST theo cấp" = cấp ÷ 20. Cộng vào P.atk TRƯỚC khi nhân, để nó ăn mọi hệ số
   // về sau y như sát thương gốc — đây là dòng DUY NHẤT tự lớn theo cấp nhân vật.
   if (P.excAtkLv) P.atk += P.excAtkLv;
-  player.atk = Math.round((P.atk + rawAtk) * (sect0.dmgMult || 1));
-  player.maxHp = Math.round((100 + player.level*15 + s.vit*12 + P.hp) * (sect0.hpMult || 1));
+  player.atk = Math.round((P.atk + rawAtk) * (1 + LP.mult) * (sect0.dmgMult || 1));
+  player.maxHp = Math.round((100 + player.level*15 + s.vit*12 + P.hp) * (1 + LP.mult) * (sect0.hpMult || 1));
   player.maxQi = 50 + player.level*5 + Math.round(s.ene*1.5); // Linh Lực: mỗi điểm +1.5 Chân Khí tối đa (mọi phái)
   player.crit = Math.min(0.45, s.agi*0.003 + P.crit/100);
   // Cương Khí aura: +HP% +DEF%
@@ -4579,10 +4600,10 @@ function calcDerived(){
   if (bw) P.crit += bw.crit;
   // Instinct Channels — cũng tự thông theo cấp độ (không cần tự tay xung mạch từng huyệt nữa),
   // đều nhau cả 8 mạch, chạm mức tối đa (20 đốt/mạch) ở cấp 120
-  player.eva  = Math.min(0.40, s.agi*0.0025 + P.eva/100);
-  player.aspd = Math.max(0.30, 0.85 - s.agi*0.004);
+  player.eva  = Math.min(0.40, s.agi*0.0025 + P.eva/100 + LP.eva/100);
+  player.aspd = Math.max(0.30, 0.85 - s.agi*0.004 - LP.aspd/100);
   player.defRed = s.def/(s.def + 60);
-  player.qireg = 4 + P.qireg;
+  player.qireg = 4 + P.qireg + LP.qireg;
   player.speed = 209;   // mốc cũ của cấp 60+ — giữ nguyên nhịp băng bản đồ (khoảng cách map tuned theo số này)
   // ── Sổ Kỹ Năng: tâm pháp bị động ──
   player.vhCdMult = 1; player.vhRegen = 0; player.vhPoisonRes = 0;
@@ -4597,13 +4618,14 @@ function calcDerived(){
     if (VH.cuuamkinh){ P.atkPct += 8; P.defPct += 8; P.hpPct += 8; }
     if (VH.cuuduongkinh){ player.vhPoisonRes = Math.max(player.vhPoisonRes, 0.7); P.hpPct += 5; }
   }
-  // Ba bị động cũ (phong mạch / phản đòn / bất tử) đi theo hệ cảnh giới đã gỡ.
-  player.stunProc = 0;
-  player.reflect = 0;
-  player.batTu = false;
-  player.atk = Math.round(player.atk);
-  player.maxHp = Math.round(player.maxHp);
-  player.dDef = s.def;
+  player.stunProc = LP.stun;
+  player.reflect = LP.reflect;
+  player.batTu = LP.tough;
+  player.atk = Math.round(player.atk + LP.atk);
+  player.maxHp = Math.round(player.maxHp + LP.hp);
+  player.dDef = s.def + LP.def;
+  player.crit = Math.min(0.60, player.crit + LP.crit/100);
+  player.maxQi += LP.qi;
   // Danh hiệu: chỉ số cộng dồn từ TẤT CẢ danh hiệu đã mở khóa
   let tAtkPct = 0, tAllPct = 0, tHp = 0, tCrit = 0, tForge = 0;
   for (const t of TITLES){
