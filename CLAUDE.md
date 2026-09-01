@@ -443,6 +443,39 @@ Trong test: `window.TEST_MODE = true; startGame('<sect>', null);` rồi gọi th
 ⚠ Khi nhảy thẳng `player.level` trong test, phải tự gọi `vhAutoLearn()` — game thật gọi nó qua
 `gainXp()` → `unlockNotices()` mỗi lần lên cấp.
 
+## ⚠ ĐỨNG ĐÚNG CHỖ TRƯỚC KHI CHẠY GIT
+
+Máy này có **hai repo khác nhau** và tên nhánh trùng nhau — đã suýt push nhầm vì chuyện đó.
+
+| Đường dẫn | Repo | Dùng để |
+|---|---|---|
+| `/home/user/axie-wuxia` | `ShanKyos/axiewuxia` | **game — mọi việc ở đây** |
+| `/home/user/Volamchimong1` | `ShanKyos/Volamchimong1` | repo KHÁC, không liên quan game |
+
+Cạm bẫy: shell của agent **mặc định mở ở `/home/user/Volamchimong1`**, và cả hai repo đều
+từng có nhánh tên `claude/optimistic-davinci-oi5qba`. Một lệnh `git push` quên `cd` là đẩy
+nhầm repo.
+
+**Luật: mọi lệnh git phải có đường dẫn tuyệt đối** — `cd /home/user/axie-wuxia && git …`
+hoặc `git -C /home/user/axie-wuxia …`. Kiểm nhanh trước khi push:
+
+```bash
+git -C /home/user/axie-wuxia remote get-url origin   # phải ra .../axiewuxia
+```
+
+### Còn hai vết sẹo nữa, đừng lặp lại
+
+- **`ln -sfn <đích> node_modules` khi `node_modules` đã là symlink** thì nó **không** thay
+  cái link — nó tạo link *bên trong* thư mục đích, và có lần đã biến `node_modules` của repo
+  chính thành symlink trỏ vào chính nó. Hậu quả im lặng: `npx eslint` thoát **216 không in gì**
+  (npx đi tải qua mạng rồi bị proxy chặn), trông hệt như "lint sạch". Muốn dùng chung
+  `node_modules` cho worktree thì `rm -f node_modules` trước rồi mới `ln -s`.
+- **`rc=$?` sau một pipe là mã của lệnh CUỐI pipe**, không phải của `npm`.
+  `npm run test 2>&1 | tail -6; echo $?` **luôn** ra 0. Muốn lấy mã thật:
+  `npm run test > /tmp/t.log 2>&1; rc=$?`.
+
+Hai cái trên cộng lại từng cho ra "3 cổng CI đều xanh" trong khi **không cổng nào chạy**.
+
 ## 🚀 PRODUCTION — VPS tự kéo từ `main` mỗi 2 phút
 
 **Production LÀ VPS này, không phải Vercel.** Repo có `vercel.json` + `Dockerfile.vercel`
