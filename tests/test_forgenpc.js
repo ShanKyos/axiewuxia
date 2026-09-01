@@ -73,15 +73,28 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   console.log('4) qua NPC:', JSON.stringify(r4));
   if (!r4.mo) fail('bấm NPC Thợ Rèn không mở lò');
 
-  // 5) chưa đủ cấp thì báo, không mở
+  // 5) chưa đủ cấp thì báo, không mở.
+  //    Phải hạ CẢ lvPeak, không chỉ player.level: cổng mở khoá nay bám vào cấp CAO NHẤT từng
+  //    đạt, nên gán mỗi player.level = 2 lên một nhân vật đã lên cấp cao thì đó không phải
+  //    nhân vật cấp thấp — đó là nhân vật vừa Tái Sinh, và lò PHẢI mở cho họ (xem mục 6).
   const r5 = await p.evaluate(() => {
-    player.level = 2; calcDerived();
+    player.level = 2; player.lvPeak = 2; calcDerived();
     closePanels();
     window.openForgePanel();
     return { mo: !el('panel-forge').classList.contains('hidden'), nguong: FORGE_LV };
   });
   console.log('5) chưa đủ cấp:', JSON.stringify(r5));
   if (r5.mo) fail('cấp 2 vẫn mở được lò');
+
+  // 6) đã từng đủ cấp rồi Tái Sinh về cấp 1 thì VẪN mở được — đã mở là mở mãi
+  const r6 = await p.evaluate(() => {
+    player.level = 1; player.lvPeak = MAX_LV; calcDerived();
+    closePanels();
+    window.openForgePanel();
+    return { mo: !el('panel-forge').classList.contains('hidden'), cap: player.level, dinh: player.lvPeak };
+  });
+  console.log('6) sau Tái Sinh:', JSON.stringify(r6));
+  if (!r6.mo) fail('Tái Sinh xong lại đóng lò — đã mở phải là mở mãi');
   if (r5.nguong !== 4) fail(`ngưỡng mở khoá ${r5.nguong}, renderForge kiểm cấp 4`);
 
   await p.waitForTimeout(400);
