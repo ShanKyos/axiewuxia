@@ -4590,7 +4590,12 @@ function newPlayer(sectKey){
 // Save cũ không có `def` trên món nào, nên toàn bộ trang bị sẽ rơi về icon PNG dùng chung và
 // KHÔNG bị khoá lớp — một Dark Wizard save cũ đang cầm kiếm sẽ tiếp tục cầm được. Danh mục 220
 // món đổi hẳn hình dạng vật phẩm nên không có đường vá tại chỗ nào sạch: nâng phiên bản, xoá.
-const SAVE_VERSION = 2;
+// Nâng số này là XOÁ SẠCH mọi save cũ của mọi người chơi, không thể hoàn tác. Chỉ nâng khi bản
+// cập nhật làm nhân vật cũ mất ý nghĩa — và mỗi lần nâng phải sửa luôn dòng lý do ở màn chọn lớp
+// bên dưới (tìm `saveStale`), vì mất nhân vật mà không hiểu vì sao là thứ tệ nhất.
+//   2 → 3: hệ vật phẩm, chiêu thức, tiền tệ và thú cưng đều đã đổi. Nhân vật cũ giữ lại chỉ số
+//          của những hệ không còn tồn tại; đây thực chất là một game khác.
+const SAVE_VERSION = 3;
 function saveGame(){
   if (!player) return;
   try {
@@ -12557,9 +12562,10 @@ else if (saveStale){
     el('sect-select').classList.remove('hidden');
     const cards = el('cc-classes'); if (cards) cards.style.display = '';
     const sub = document.querySelector('#sect-select .ss-sub');
-    if (sub) sub.innerHTML = `<b style="color:#e8b04a">Bản cập nhật lớn — toàn bộ trang bị đã được vẽ lại</b><br>
-      <span style="opacity:.85">Hệ vật phẩm đổi hoàn toàn: 220 món, mỗi món một hình riêng, và vũ khí nay
-      khoá theo lớp. Nhân vật cũ không mang sang được — hãy tạo lại, lần này nhìn đồ là biết đẳng cấp.</span>`;
+    if (sub) sub.innerHTML = `<b style="color:#e8b04a">Khởi đầu lại — đây đã là một game khác</b><br>
+      <span style="opacity:.85">Mỗi lớp nay có bốn chiêu bấm được, mỗi chiêu một biểu tượng và một
+      hiệu ứng riêng. Hệ tiền tệ rút gọn lại, và hệ thú cưng nhập làm một. Nhân vật cũ mang sang thì
+      chỉ còn là những con số của các hệ không còn tồn tại — nên hãy bắt đầu lại từ đầu.</span>`;
   }, 0);
 }
 else setTimeout(showIntro, 0);        // người mới → cốt truyện (defer: chờ module intro ở cuối file nạp xong)
@@ -17153,6 +17159,10 @@ TITLES.push({ id:'tctk', name:'Kẻ Báo Thù', cond:p=>(p.revengeKills||0) >= 3
     if (!msg || msg.type !== 'vlcm:cloud-load' || !msg.data) return;
     try {
       const cloud = JSON.parse(msg.data);
+      // Save cloud cũng phải qua cửa phiên bản. Trước đây nó được ghi thẳng vào localStorage,
+      // nên một bản cloud đời cũ vẫn chui vào được và bật nút "Tiếp Tục" lên — bấm vào thì
+      // loadGame() mới phát hiện quá cũ và xoá. Chặn ngay từ đây thay vì để người chơi bấm hụt.
+      if ((cloud.v || 1) < SAVE_VERSION) return;
       const cloudAt = cloud.savedAt || 0;
       if (cloudAt <= localSavedAt()) return; // bản local mới hơn hoặc bằng — giữ nguyên
       localStorage.setItem('vlcm_save', msg.data);
