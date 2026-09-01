@@ -10656,6 +10656,12 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw){
   const ps = heroFramePose(kind, idx, act, sw);
   ps.back = !!back;
   drawHeroFigure(g, sectKey, tier, heroFrameNow(kind, idx), ps, gv);
+  // Đổ khối — CHỈ Ở ĐÂY mới miễn phí. Sprite nướng một lần rồi blit lại mãi, nên
+  // lượt ánh sáng không tốn gì mỗi khung. Trước đây chỉ thẻ nhân vật có khối, còn
+  // người đứng ngoài màn — thứ nhìn cả buổi — vẫn tô phẳng.
+  // Nhẹ tay hơn icon: mặt người và hào quang cường hoá không được bệt.
+  applyFormLight(g, 0, 0, HERO_W, HERO_H, 0.62);
+  applyEdgeLight(g, 1.6, 1.6, 0.5);
   // CẮT SÁT nội dung. Lề 40 là cần (đo được hào quang tràn ra tới −38..197 ngang, 245 dọc), nhưng
   // blit nguyên tấm có lề là tô thêm 2× diện tích toàn pixel trong suốt mỗi khung — đo được mất
   // 43,9 → 38,9 FPS chỉ vì phần lề đó. Đo hộp bao đúng một lần lúc dựng rồi cắt.
@@ -11499,14 +11505,27 @@ function drawPlayer(){
   if (p.moving) yOff -= Math.abs(Math.sin(now/95)) * 2.4; // nhịp bước chân khi chạy — người "sống" hơn
   // ── LỚP ĐẤT (không theo nhảy/cưỡi): bóng đổ ──
   const _shI = gameTimeInfo(), _shDx = (_shI.frac - 0.5) * 22, _shAl = 1 - skyDarkness()*0.35; // bóng xoay theo quỹ đạo mặt trời (Gói C)
-  const _shRx = riding?27:16, _shRy = riding?9:6;
-  ctx.fillStyle = 'rgba(0,0,0,' + (0.09*_shAl).toFixed(3) + ')'; ctx.beginPath();
+  // Bóng đổ THEO NHỊP NHÚN: người bổng lên thì bóng co lại và nhạt đi. Bóng đứng
+  // yên một cỡ trong khi thân người nhấp nhô làm nhân vật như trượt trên mặt đất.
+  const _bobK = p.moving ? Math.abs(Math.sin(p.walkPh || 0)) : 0;
+  const _shK = 1 - _bobK * 0.20;
+  const _shRx = (riding?27:16) * _shK, _shRy = (riding?9:6) * _shK;
+  ctx.fillStyle = 'rgba(0,0,0,' + (0.09*_shAl*_shK).toFixed(3) + ')'; ctx.beginPath();
   ctx.ellipse(p.x + _shDx, p.y+8, _shRx*1.5, _shRy*1.5, 0, 0, 7); ctx.fill();
-  ctx.fillStyle = 'rgba(0,0,0,' + (0.20*_shAl).toFixed(3) + ')'; ctx.beginPath();
+  ctx.fillStyle = 'rgba(0,0,0,' + (0.20*_shAl*_shK).toFixed(3) + ')'; ctx.beginPath();
   ctx.ellipse(p.x + _shDx*0.45, p.y+8, _shRx, _shRy, 0, 0, 7); ctx.fill();
-  // bụi gót chân khi chạy — tạo cảm giác chuyển động
-  if (!SETTINGS.lowFx && p.moving && !p.ascended && Math.random() < 0.08) // Starflight: ngự kiếm không vấp bụi
-    addEffect({ type:'ink', x:p.x - Math.cos(p.face)*10 + rnd(-4,4), y:p.y + 6 + rnd(-2,2), color:'rgba(150,135,105,.4)' });
+  // Bụi gót chân: nổ ĐÚNG LÚC bàn chân chạm đất, không phải rắc ngẫu nhiên 8% số khung.
+  // Bàn chân chạm khi sải chân mở hết cỡ — tức cos(pha) đổi dấu. Bắt đúng lần đổi dấu
+  // đó thì tiếng bước và bụi trùng nhau, chân mới có cảm giác BÁM đất.
+  if (!SETTINGS.lowFx && p.moving && !p.ascended){
+    const _c = Math.cos(p.walkPh || 0);
+    if (p._lastCos !== undefined && (_c <= 0) !== (p._lastCos <= 0)){
+      const _sd = _c <= 0 ? 1 : -1;                    // chân nào vừa chạm
+      addEffect({ type:'ink', x: p.x - Math.cos(p.face)*8 + _sd*5 + rnd(-2,2),
+                  y: p.y + 7 + rnd(-1,1), color:'rgba(150,135,105,.5)' });
+    }
+    p._lastCos = _c;
+  } else p._lastCos = undefined;
   // Cương Khí hộ thể — vòng chân khí dưới chân, lớn theo tầng
   const gkT = GANGKHI_TIERS[(p.gangkhi && p.gangkhi.tier) || 0];
   if (gkT){
