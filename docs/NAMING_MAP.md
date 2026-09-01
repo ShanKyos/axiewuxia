@@ -1,81 +1,106 @@
-# Axie Wuxia — Naming Map (Phase 0 deliverable)
+# Axie Wuxia — Bảng tên hệ thống
 
-This resolves the "class roster" open decision the proposal calls out, plus the full
-system/vocabulary rename table Phases 1–3 execute against. Everything here is grounded either
-directly in the proposal's own text (marked **canonical**) or in real Axie Infinity class lore
-(the 9 official classes and their Wild/Tide/Savage groupings are Axie's actual class system, not
-invented) crossed with each prototype sect's existing element/role data.
+> **Cập nhật theo build đang chạy**, không phải bản kế hoạch. Mọi con số trong đây đo bằng cách
+> chạy game rồi đọc trạng thái thật (`SECTS`, `MAPS`, `SKILL_DEFS`…), không chép tay.
+> Bản trước là tài liệu Phase 0 — nó vẫn ghi 9 lớp, 8 kinh mạch bấm tay, Anima, Nhân Mạch,
+> Dung Hợp Thần Công. Tất cả những thứ đó đã đổi hoặc đã gỡ; xem mục 5.
 
-## 1. Class roster — 7 sects → 7 classes, + 2 new
+## 1. Lớp nhân vật — 5 lớp + 1 trạng thái chưa chọn
 
-The proposal requires the Wild(Plant, Reptile, Dusk) → Tide(Aquatic, Bird, Dawn) →
-Savage(Beast, Bug, Mech) → Wild triangle, with 7 classes coming from the existing sects and 2
-new ones (Bug, Dawn) "built on existing skill archetypes." Mapped by each sect's real
-in-game element (`Ngũ Hành`) and combat role, not arbitrarily:
+Không còn ánh xạ 9 lớp Axie. Bản chơi được rút về **5 lớp**, mỗi lớp một vai rõ ràng, đúng
+hình dáng MU chứ không phải bộ ba Wild/Tide/Savage.
 
-| Group | Class | Source sect | Element | Role | Why |
-|---|---|---|---|---|---|
-| Savage | **Mech** | Thiếu Lâm | Kim (Metal) | Tank/Control | Iron-body discipline, armored |
-| Tide | **Aquatic** | Toàn Chân | Thủy (Water) | Sword-qi/Support | Direct element match |
-| Wild | **Dusk** | Cổ Mộ | Mộc (Wood) | Assault/Agile | "Ancient Tomb" — shadowy, twilight |
-| Wild | **Reptile** | Bạch Đà Sơn | Thủy (Water) | Poison/Ranged | Snake clan → literal reptile |
-| Savage | **Beast** | Minh Giáo | Hỏa (Fire) | Burst/Flame | Zealot ferocity, raw power |
-| Tide | **Bird** | Đoàn Thị | Thổ (Earth) | Precision/Focus | Finger-point strikes → darting precision |
-| Wild | **Plant** | Đào Hoa | Mộc (Wood) | Burst/Ranged | Falling-petal sword dance → literal flower motif |
-| Savage | **Bug** | *(new)* | — | Swarm/Scrappy | Skill archetype reused from Cái Bang (Beggar Clan) — mob-tactics, group-based, already in `VOHOC_DEFS` as a sect-less school |
-| Tide | **Dawn** | *(new)* | — | Internal/Renewal | Skill archetype reused from Võ Đang — internal cultivation, already sect-less in `VOHOC_DEFS` |
+| id | Tên trong game | Ngũ Hành | Vai | Màu |
+|---|---|---|---|---|
+| `thieulam` | **Dark Knight** | Kim | Tank / Combo cận chiến | `#4c8dff` |
+| `toanchan` | **Sylvan Ranger** | Thủy | Tầm xa / Hỗ trợ (range 380) | `#3a9d8b` |
+| `baidasan` | **Dark Wizard** | Thủy | Pháp thuật / Độc tố (range 420) | `#7ec850` |
+| `minhgiao` | **Spellblade** | Hỏa | Lai / Bộc phát Hoả | `#e8552a` |
+| `bug` | **Dark Lord** | Thổ | Chỉ huy / Triệu hồi | `#8a9a3a` |
+| `vophai` | **Unclassed** | — | Trạng thái trước khi chọn lớp | — |
 
-The prototype's sect-less starter (`vophai`/Tán Nhân) stays sect-less — it's the pre-class
-starting state, matching the proposal's "class chosen at the ceremony that replaces the
-prototype's sect ceremony."
+Khoá `id` giữ tên cũ (`thieulam`, `toanchan`…) vì save của người chơi tham chiếu tới chúng —
+đổi khoá là hỏng save. Chỉ `name` là thứ người chơi thấy.
 
-## 2. Core system vocabulary
+## 2. Từ vựng hệ thống
 
-| Prototype (VN) | Axie Wuxia | System (unchanged mechanically) |
-|---|---|---|
-| Đan Điền — cultivation realm (10 stages) | **Ascension** (10 stages) | `player.dantian.realm` |
-| Đột Phá / Lôi Kiếp — breakthrough / tribulation minigame | **Ascension Trial** | `breakthrough()`, `TRIB` |
-| Tu Vi — realm-progress currency | **Anima** | `player.dantian.tuvi` |
-| Phi Thăng — final ascension | **Starflight** | `ascendToImmortal()` |
-| Kinh Mạch — 8 meridian stat tracks | **Instinct Channels** | `MERIDIANS` |
-| Chân Khí — passive currency for meridians | **Instinct** | `player.khi` |
-| Bạc (◈) — main currency | **Starbits** | `player.silver` |
-| ✦ Huyền Thiết / generic materials | **Essence** | `player.mat` |
-| Sect (Môn Phái) | **Class** | `SECTS` |
-| Bái Sư Nhập Phái — sect ceremony | **The Calling** | sect ceremony flow |
-| Thần Binh — sect signature weapon (10 tiers) | **Elder's Relic** | `THANBINH` |
-| Chiêu thức / Võ Học — skill | **Card** (tagged by class + body part) | `SKILL_DEFS`, `VOHOC_DEFS` |
-| Bí Kíp — manual/fragment currency | **Card Page** | `player.bikipVH` |
-| Dung Hợp Thần Công — fusion ultimate | **Combo Card** | `FUSION_DEFS` |
-| Quẻ Tiên Thiên — trait gacha intro | **The Hatching** | trait-roll intro screen |
-| Nhân Mạch — NPC relationships | **Bonds** | `player.relations` |
-| "Luyện công" offline progression | **Nesting** | offline-gain grant |
-| Tội Ác / PK red-name | **Notoriety** | `player.toiac` |
-| Linh Thú — pet | **Companion Axie** | `PET_DEFS` |
-| Thú Cưỡi — mount | **Steed** | `MOUNT_TIERS` |
-| Cánh — wings | **Wing Charm** | `WING_DEFS` |
-| Áo Choàng — cloak | **Elder Cloak** | `CLOAK_TIERS` |
-| Ma Tôn Giáng Thế — world boss event | **Overlord's Descent** *(canonical — named in proposal)* | `MATON` |
-| Ngũ Ấn / Trấn Ải bosses | **Sigils** *(canonical)* | `BOSS_DEFS` per-map guardian+gate bosses |
-| Giang Hồ (the world) | **Lunacia** *(canonical)* | — |
-| Bảng Xếp Hạng Võ Lâm | **Lunacia's Number One Trainer** board *(canonical — the game's own final title)* | `leaderboard` |
-
-## 3. Regions — 8 maps
-
-| Map id | Level | Zone type | Axie Wuxia region |
+| Từ nguyên mẫu (kiếm hiệp) | Trong game | Nơi trong code | Tình trạng |
 |---|---|---|---|
-| `tuongduong` | hub | safe | **Lunaris City** *(canonical)* |
-| `daohoa` | 1–20 | safe | **Petalshade Isle** *(canonical — starting isle)* |
-| `ngoai` | 10–20 | safe | **Petalshade Outskirts** |
-| `chungnam` | 20–40 | pk | **Thornwood Reach** |
-| `comoc` | 40–60 | pk | **Hollow Roost** |
-| `tuyettinh` | 60–80 | pk | **Frostmire Vale** |
-| `mongco` | 80–100 | pk | **Ashen Steppe** |
-| `nhanmon` | 100+ | freepk | **Stormgate Pass** *(canonical — endgame frontier)* |
+| Đan Điền — cảnh giới | **Ascension**, 10 bậc | `DANTIAN_REALMS` | còn, nhưng **tự động theo cấp** — không còn bấm tay |
+| Tu Vi | ~~Anima~~ | — | **đã gỡ**, quy về bạc (`GO_ANIMA` = 2) |
+| Phi Thăng | **Starflight** | `ascendToImmortal()` | còn |
+| Kinh Mạch — 8 nhánh chỉ số | **Instinct Channels** | `MERIDIANS` (8) | còn về mặt chỉ số, **bảng bấm tay đã gỡ** — nay tự đầy theo cấp |
+| Chân Khí | **Instinct** | `player.khi` | còn — nay còn gánh cả vai của Tâm Đắc |
+| Bạc ◈ | **Bạc** | `player.silver` | còn (tài liệu cũ ghi "Starbits" — không dùng) |
+| ✦ Huyền Thiết | **Huyền Thiết** | `player.mat` | còn (tài liệu cũ ghi "Essence" — không dùng) |
+| Môn Phái | **Lớp** | `SECTS` | còn |
+| Thần Binh | **Thần Binh**, 10 tầng | `player.thanbinh`, `TB_TIER_NAMES` | còn |
+| Bí Kíp | **Sách Kỹ Năng** | `player.bikipVH` | còn |
+| Dung Hợp Thần Công | — | `FUSION_DEFS` | **rỗng** — giữ định danh để code cũ không vỡ |
+| Nhân Mạch | ~~Bonds~~ | — | **đã gỡ** |
+| Linh Thú (thú thuần hoá) | — | `player.pet` | **đã gỡ** — giẫm chân Thú Chiến, và không cộng chỉ số |
+| Thú Cưỡi | **Thú Chiến**, 5 giai | `MOUNT_TIERS` | còn |
+| Cánh | **Cánh**, 2 cấp | `WING_DEFS` | còn |
+| Áo Choàng | **Áo Choàng**, 2 cấp | `CLOAK_TIERS` | còn |
+| Ma Tôn Giáng Thế | **Hung Thần Giáng Thế** | `MATON` | còn |
+| Tội Ác / PK cờ đỏ | **Ma Đạo** | `player.toiac` | còn |
 
-## 4. Not decided here — genuinely open, needs your call
+**Pet vẫn còn — nhưng là ô trang bị, không phải thú thuần hoá.** `PET_DEFS` (3 mẫu) là món
+đeo ở ô `equip.pet`, rơi từ tinh anh/boss. Thứ đã gỡ là hệ *thu phục thú đi theo* (`player.pet`,
+`player.phongphu`). Hai cái tên gần nhau, đừng lẫn.
 
-- **On-chain scope** (proposal flags this explicitly — cosmetics/collectibles mapping is a later decision, out of scope for Phase 1–3).
-- **Final title wording** beyond "Lunacia's Number One Trainer" (already the leaderboard name — confirm it's also the end-game title, or if something else is wanted).
-- **Save/account policy** for existing wuxia-build players, if any migrate — not a Phase 1–3 concern but flagged per the proposal's own open-decisions list.
-- **Individual NPC names and full quest/story prose** — Section 2/3 above renames *systems and places*; the actual questline text, NPC personas, and dialogue are authored content, not mechanical rename, and are being written per-quest as part of Phase 3 (see repo `TODO` for progress).
+## 3. Hệ tiền tệ — sau bốn đợt gộp
+
+Từ 26 ô đếm rút xuống, theo hình dáng MU Season 6. Bốn đợt đã làm:
+
+| Bậc | Gộp gì | Tỉ giá | Hằng số |
+|---|---|---|---|
+| 1 | Anima → bạc · Công Huân Lệnh → bạc | 1:2 · 1:2000 | `GO_ANIMA`, `GO_CONGHUAN` |
+| 2 | Ấn Thuần Thú → bạc (gỡ hệ thú thuần hoá) | 1:1500 | `GO_ANTHUANTHU` |
+| 3 | 5 Lõi Nguyên Tố (Kim/Mộc/Thổ/Thủy/Hỏa) → 1 | 1:1, cộng dồn | — |
+| 4 | Tâm Đắc → Instinct | 1:4000 | `GO_TAMDAC` |
+
+Còn lại trên người chơi: bạc `silver` · Instinct `khi` · Huyền Thiết `mat` · Tiên Đan `tienDan` ·
+Sách Kỹ Năng `bikipVH` · Lõi Nguyên Tố `noidan` · Tứ Châu `jewels` (4 loại) · ngọc `gems`
+(Tử La + Hỗn Nguyên) · Bảo Hạp `baohap` (7 tầng) · 4 mảnh chế tác `mats`.
+
+**Quy tắc cho lần gộp sau:** một loại tiền chỉ có *một nguồn* và *một chỗ tiêu* thì nó không
+phải tiền tệ — nó là một cái cửa gác được viết bằng một ô đếm thừa. Gộp nó đi, và nhớ giữ lại
+**sức ép thiết kế** mà nó tạo ra (xem `rw.khi` theo loại quái, chỗ Tâm Đắc chuyển vào).
+
+## 4. Bản đồ — 8 vùng + 7 phó bản
+
+| id | Tên | Loại |
+|---|---|---|
+| `tuongduong` | **Lunaris City** | thành, an toàn |
+| `daohoa` | **Petalshade Isle** | 1–20, an toàn |
+| `ngoai` | **Petalshade Outskirts** | 10–20, an toàn |
+| `chungnam` | **Thornwood Reach** | 20–40, pk |
+| `comoc` | **Hollow Roost** | 40–60, pk |
+| `tuyettinh` | **Frostmire Vale** | 60–80, pk |
+| `mongco` | **Ashen Steppe** | 80–100, pk |
+| `nhanmon` | **Stormgate Pass** | 100+, freepk |
+
+Bảy phó bản `pb_<id>` — **Trial Chamber: <tên vùng>** — mỗi vùng ngoài `tuongduong` một cái.
+Bảng cũ không có mục này.
+
+## 5. Những gì tài liệu cũ ghi sai
+
+Ghi lại để lần sau đọc bản cũ ở đâu đó thì biết mà bỏ qua:
+
+- **9 lớp Axie** (Mech/Aquatic/Dusk/Reptile/Beast/Bird/Plant/Bug/Dawn) → thực tế **5 lớp**.
+  Cổ Mộ, Đoàn Thị, Đào Hoa, Dawn đều đã bỏ.
+- **Anima, Nhân Mạch, Dung Hợp Thần Công, thú thuần hoá** — đã gỡ hết.
+- **"Starbits" / "Essence" / "Card" / "Card Page"** — chưa bao giờ vào game; trong game vẫn là
+  bạc, Huyền Thiết, chiêu thức, Sách Kỹ Năng.
+- **"Steed"/Thú Cưỡi** → **Thú Chiến**.
+- Thiếu hẳn: 7 phó bản, hệ Thuần Thục (Venom/Archery/Stoneform), Tứ Châu, Bảo Hạp,
+  Lõi Nguyên Tố, thanh chiêu 4 ô.
+
+## 6. Hai quy tắc đặt tên (bất di bất dịch)
+
+1. **Phong cách là MU Online, không phải kiếm hiệp.** Cấm: cảnh giới, đan điền, chân khí,
+   môn phái, giang hồ, độ kiếp, phi thăng.
+2. **Không bao giờ dùng tên riêng của MU Online trong chữ người chơi thấy** — ưu tiên cao hơn
+   quy tắc 1. Cấm: Kundun, Lorencia, Noria, Devias, Icarus, Atlans, Tarkan, Fairy Elf,
+   Magic Gladiator, Devil Square, Blood Castle. Nhắc "MU Online" trong *comment* thì được.

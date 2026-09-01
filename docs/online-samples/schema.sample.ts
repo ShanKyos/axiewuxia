@@ -133,10 +133,11 @@ export const characterProgress = mysqlTable("character_progress", {
 /**
  * MỘT HÀNG cho mỗi loại tiền, KHÔNG phải một cột.
  *
- * Game có ≥12 loại tài nguyên đếm được (silver · mat · tienDan · khi · tamdac · bikipVH ·
+ * Game có >10 loại tài nguyên đếm được (silver · mat · tienDan · khi · bikipVH · noidan ·
  * charms · potions · mats.{manh,tichMa,anTranAi,manhCoThan} · gems.{tuLa,honNguyen} ·
- * jewels.{chucPhuc,linhHon,sinhMenh,honDon} · noidan.{5 hệ}) và danh sách sẽ còn dài ra.
- * Dạng hàng ⇒ thêm loại mới KHÔNG cần migration nào.
+ * jewels.{chucPhuc,linhHon,sinhMenh,honDon} · baohap.{7 tầng}) và danh sách còn động.
+ * Dạng hàng ⇒ thêm loại mới KHÔNG cần migration nào — và bớt một loại cũng vậy: tamdac và
+ * noidan-theo-hệ đã biến mất khỏi danh sách này sau bốn đợt gộp tiền tệ.
  *
  * ⚠ TRỪ TIỀN PHẢI BẰNG MỘT CÂU LỆNH CÓ ĐIỀU KIỆN. Không bao giờ SELECT rồi UPDATE:
  *

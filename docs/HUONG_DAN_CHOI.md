@@ -35,10 +35,9 @@
 | **R** | Uống Hồ Lô Thuốc (hồi 40% máu, hồi chiêu 20 giây, mang tối đa 5 lọ) |
 | **E** | Bắt Tuấn Mã Hoang đang kiệt sức → nếu không có thì trò chuyện với NPC gần đó |
 | **G** | Dùng cổng đang đứng gần: đi map khác / vào phó bản / xuống Tầng Sâu / **rút khỏi Tầng Sâu** |
-| **T** | Thu phục Linh Thú (cần Phong Linh Phù, tinh anh dưới 40% máu, trong 230px) |
 | **Z** | Bật/tắt **AUTO FARM** |
 | **V** | **Cửa sổ Nhân Vật** — cấp, EXP, điểm tiềm năng, bảng chỉ số chiến đấu |
-| **C** | Bảng Nhân Vật nhiều tab: Thông Tin · Rèn Luyện · Thú Chiến · Tấn Chức · Linh Thú · Tẩy Tủy |
+| **C** | Bảng Nhân Vật nhiều tab: Thông Tin · Rèn Luyện · Thú Chiến · Tấn Chức · Tẩy Tủy · Tuyệt Học |
 | **I** | Trang bị (lưới 12 ô kiểu paperdoll) |
 | **B** | Túi đồ |
 | **K** | Kỹ năng |
@@ -111,7 +110,7 @@ Cứ bám **chính tuyến**, nó dạy đủ mọi cơ chế:
 
 - Về thành trình diện, làm chương II (NV 11–15).
 - **Nhận phụ tuyến** ở Trinh Sát Wren và Trưởng Lão Rell — chúng dạy Thú Chiến (cấp 11),
-  Thần Binh (12), Linh Thú (17), Lò Hỗn Loạn (19). Chỉ giữ được 3 cái cùng lúc.
+  Thần Binh (12), Lò Hỗn Loạn (19). Chỉ giữ được 3 cái cùng lúc.
 - Cấp 14 mới qua được ải **Trại Gloam** trong Outskirts.
 - **Cấp 15 là mốc lớn**: từ đây **Chúa Tể Vực Nứt** mới nứt ở bãi bạn đứng, và ô kỹ năng
   buff của bốn lớp mở ra.
@@ -162,7 +161,7 @@ Xếp theo hiệu suất, tốt nhất trước:
 | **Tướng Quân vùng** (Cổng Vực) | 2–3 món, 38% Linh · 52% Thần · 10% Chí Tôn | hồi sinh sau 60 giây |
 | **Rương Boss Săn** (phó bản) | 1–3 món theo bậc Rương | phải hạ Boss Săn sau khi thông quan; AUTO bị khoá |
 | **Vệ Binh Trụ** | 1–3 món: 28% Tinh · 52% Linh · 18% Thần · 2% Chí Tôn | 8 lần liên tiếp không ra phẩm Thần thì lần thứ 9 **bảo đảm ra Thần** |
-| **Tinh anh** | 28–40% rơi 1 món, tối đa phẩm Thần | cũng là chỗ bắt Linh Thú |
+| **Tinh anh** | 28–40% rơi 1 món, tối đa phẩm Thần | 30% rơi Lõi Nguyên Tố · 35 Instinct |
 | **Quái thường** | 7–12%, gần như chỉ phẩm Phàm/Tinh | dùng làm nguyên liệu Lò Hỗn Loạn |
 
 **Ba mẹo cụ thể:**
@@ -231,7 +230,7 @@ nấu Thần → Chí Tôn (25%), **luôn luôn bật phù**, nếu không trung
 1. Đi tới cổng dịch chuyển ở **rìa đông** bản đồ ngoài trời, bấm **G**.
 2. Bạn vào **phòng 1**. Dọn sạch đợt quái → **cửa đá 1 mở** → tiến lên phía Bắc.
 3. Phòng 2 → dọn sạch → cửa đá 2 mở → phòng 3 là **sảnh boss**.
-4. Hạ boss → nhận thưởng thông quan (Tiến Cấp Đan, Huyền Thiết, Instinct, Anima, bạc).
+4. Hạ boss → nhận thưởng thông quan (Tiến Cấp Đan, Huyền Thiết, Instinct, bạc).
 5. Chờ 1,8 giây → **Boss Săn** xuất hiện. **AUTO tự tắt ở đây.** Hạ nó mới mở Rương.
 6. Xong thì ra cổng **Xuất Môn** ở phía Nam.
 
@@ -376,7 +375,7 @@ lại dưới đất và biến mất sau 45 giây.
 | 5 | Lò Hỗn Độn (F) |
 | 6 | Thú Chiến |
 | 10 | **Chọn lớp** · Cương Khí · Truy Nã Lệnh · Sảnh Cầu May · Lunaris City |
-| 15 | Linh Thú (T) · ô buff · **Chúa Tể Vực Nứt** |
+| 15 | ô buff · **Chúa Tể Vực Nứt** |
 | 20 | **Tầng Sâu** |
 | 30 | Cung Tiễn · Động Phủ |
 | 40 / 80 | Linh Dực cấp 1 / cấp 2 |

@@ -682,11 +682,12 @@ export const characterCurrencies = mysqlTable("character_currencies", {
 ```
 
 > **Vì sao một hàng cho mỗi loại tiền, không phải một cột cho mỗi loại?**
-> Game có **ít nhất 12 loại tài nguyên đếm được** (`silver`, `mat`, `tienDan`, `khi`, `tamdac`,
-> `bikipVH`, `charms`, `potions`, `mats.{manh,tichMa,anTranAi,manhCoThan}`, `gems.{tuLa,honNguyen}`,
-> `jewels.{chucPhuc,linhHon,sinhMenh,honDon}`, `noidan.{5 hệ}`) và **danh sách này sẽ còn dài ra**.
+> Game có **hơn 10 loại tài nguyên đếm được** (`silver`, `mat`, `tienDan`, `khi`, `bikipVH`,
+> `noidan`, `charms`, `potions`, `mats.{manh,tichMa,anTranAi,manhCoThan}`, `gems.{tuLa,honNguyen}`,
+> `jewels.{chucPhuc,linhHon,sinhMenh,honDon}`, `baohap.{7 tầng}`) và **danh sách này còn động**.
 > Mỗi loại mới = một migration `ALTER TABLE` trên bảng nóng nếu dùng cột. Dạng hàng thì thêm loại
-> mới **không cần migration nào**. Đánh đổi: đọc ví phải `GROUP BY` — không đáng kể, ví chỉ có ~20 hàng.
+> mới **không cần migration nào** — và, như bốn đợt gộp tiền tệ vừa rồi cho thấy, **bớt** một loại
+> cũng không cần: `tamdac` và `noidan` theo hệ đã biến mất khỏi danh sách này kể từ lúc viết nó. Đánh đổi: đọc ví phải `GROUP BY` — không đáng kể, ví chỉ có ~20 hàng.
 
 ### 4.5 Log giao dịch — thiết kế để TRUY VẾT ĐƯỢC
 

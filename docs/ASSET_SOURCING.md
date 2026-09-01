@@ -580,7 +580,8 @@ source).
 
 ### Dantian / Quze / Tien — design decision is done, but no fitting source art found
 
-With the mechanic now renamed (Instinct Channels / Anima / Starflight, per `docs/NAMING_MAP.md`),
+With the mechanic now renamed (Instinct Channels / Starflight, per `docs/NAMING_MAP.md` — Anima
+has since been merged into silver),
 went looking for energy-flow/crystal/bio-luminescent icon art to match. The one real candidate —
 the ~130-file status-badge library described above — was checked seriously and rejected on two
 independent grounds:

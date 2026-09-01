@@ -62,7 +62,7 @@ Ba trục tiến bộ chạy song song và không thay thế nhau:
 |---|---|---|
 | **Cấp** | 1 → 120, mỗi cấp +5 điểm tiềm năng | EXP từ quái, nhiệm vụ, phó bản |
 | **Trang bị** | phẩm × giai × mức rèn (+0…+11) | đồ rơi, Bảo Hạp, Lò Hỗn Độn |
-| **Hệ dài hạn** | Ascension, Thần Binh, Thú Chiến, Linh Thú, Kỹ năng | vật liệu riêng từng hệ |
+| **Hệ dài hạn** | Ascension, Thần Binh, Thú Chiến, Kỹ năng | vật liệu riêng từng hệ |
 
 ---
 
@@ -377,8 +377,8 @@ Túi Đồ (phím I hoặc B).
 | VI | 75 – 89 | 7% | 40% | 28% |
 | VII | 90+ | 8% | **55%** | **33%** |
 
-Mỗi hạp cho: 1 trang bị (hoặc 1 món Cổ Thần) + có thể 1 viên Châu + bạc (150 + 120×bậc)
-+ Anima (20×bậc). Bậc hạp nhận từ boss thế giới tính theo **cấp người chơi**, không theo
+Mỗi hạp cho: 1 trang bị (hoặc 1 món Cổ Thần) + có thể 1 viên Châu + bạc (150 + 120×bậc,
+cộng thêm 40×bậc từ phần Anima cũ quy đổi). Bậc hạp nhận từ boss thế giới tính theo **cấp người chơi**, không theo
 map — nên tạt qua bãi thấp không bị thưởng đồ vô dụng.
 
 ---
@@ -437,7 +437,8 @@ khoảng 800px). Cần **cấp 20**.
   Số quái = min(14, 4 + tầng×0,7).
 - **Tầng 5 · 10 · 15 · 20 là tầng boss** — một con boss máu ×(1 + tầng×0,22), không phải bầy quái.
 - Mỗi tầng dọn xong, phần thưởng vào **KHO TẠM**, chưa phải của bạn:
-  bạc ≈ 220×t×(1+0,12t) · EXP ≈ 340×t×(1+0,18t) · Anima 120×t · Huyền Thiết 1+t/2 ·
+  bạc ≈ 220×t×(1+0,12t) + 240×t (phần Anima cũ quy đổi) · EXP ≈ 340×t×(1+0,18t) ·
+  Huyền Thiết 1+t/2 ·
   Tiến Cấp Đan mỗi 3 tầng · **1 Bảo Hạp mỗi 5 tầng** (bậc = t/5).
 - **Phần thưởng chỉ vào túi khi bạn CHỦ ĐỘNG bấm Rút Lui** (hoặc bấm G ở cổng — game
   hiểu đó là rút lui, không để bạn mất trắng vì bấm nhầm).
@@ -513,13 +514,12 @@ Khác hẳn hai sự kiện trên ở chỗ nó **không chọn một map**: c�
 
 ---
 
-## 13. Đồng hành: Thú Chiến · Linh Thú · Thần Binh · Cánh · Áo Choàng
+## 13. Đồng hành: Thú Chiến · Thần Binh · Cánh · Áo Choàng
 
 | Hệ | Mở ở cấp | Có bằng cách nào | Cho gì |
 |---|---|---|---|
 | **Thú Chiến** (Nhân Vật → Thú Chiến) | 6 | mua/thăng giai bằng bạc + Huyền Thiết | 5 bậc, cộng thẳng ST/chỉ số, xuất trận đánh cùng |
-| **Linh Thú** (Nhân Vật → Linh Thú) | 15 | mua Phong Linh Phù 1.500◈, đánh tinh anh xuống dưới 40% máu, bấm **T** — **65% thành công** | tự săn quái quanh bạn |
-| **Thần Binh** | 1 | mỗi lớp một cái, nâng bằng Nội Đan + Huyền Thiết | 10 tầng, đổi bảng màu giáp trên người, tầng 6+ toả hào quang |
+| **Thần Binh** | 1 | mỗi lớp một cái, nâng bằng Lõi Nguyên Tố + Huyền Thiết | 10 tầng, đổi bảng màu giáp trên người, tầng 6+ toả hào quang |
 | **Cánh** | — | boss rơi 12%; Linh Dực cấp 2 luyện ở Lò Rèn Hoàng Gia (cấp 80+) | +HP/né/đồng rơi hoặc +ST/bạo/tốc đánh |
 | **Áo Choàng** | — | luyện tại Lò Hỗn Độn, 2 cấp | +% Công, xuyên giáp |
 | **Pet trang bị** | — | tinh anh 12% / boss 40% | +EXP, +đồng rơi, hút sinh lực |
@@ -547,11 +547,11 @@ mở bản đồ mới**:
 | VII · Stormgate Pass | 32 – 35 | Stormgate | Trụ Khoá cuối cùng — kết mở |
 
 **Phụ tuyến — 11 nhiệm vụ, tối đa 3 cái nhận cùng lúc.** Chia hai nhóm: 5 nhiệm vụ
-"học hệ thống" (mỗi cái dạy đúng một cơ chế: Thú Chiến, Thần Binh, Linh Thú, Lò Hỗn
+"học hệ thống" (mỗi cái dạy đúng một cơ chế: Thú Chiến, Thần Binh, Lò Hỗn
 Loạn, Vườn Dược) và 6 nhiệm vụ cầu nối cốt truyện dẫn bạn qua từng vùng mới.
 
-**Mục Tiêu Hôm Nay** — checklist 4 việc mỗi ngày (hạ 10 quái · thu 1 Nội Đan · thông
-quan 1 phó bản · rèn/tấn chức 1 lần). Xong hết nhận 200◈ + 100 Instinct + 50 Anima.
+**Mục Tiêu Hôm Nay** — checklist 4 việc mỗi ngày (hạ 10 quái · thu 1 Lõi Nguyên Tố · thông
+quan 1 phó bản · rèn/tấn chức 1 lần). Xong hết nhận 300◈ + 100 Instinct.
 
 **Truy Nã Lệnh** — Bổ Đầu ở Lunaris City treo mỗi ngày một boss săn theo dải cấp của bạn.
 
@@ -561,13 +561,13 @@ quan 1 phó bản · rèn/tấn chức 1 lần). Xong hết nhận 200◈ + 100 
 
 | Hệ | Mô tả ngắn |
 |---|---|
-| **Ascension** | 9 bậc thăng hoa (Spark 1–4 → Molt → Radiant Core → Resonance ×2 → Starforged). Nâng bằng **Anima** + bạc + Huyền Thiết. Bậc cao nhất cộng +88% Công và +88% HP. Bậc 5 trở lên phải qua Thử Thách Ascension nhiều đợt |
-| **Kỹ năng (phím K)** | Nâng bằng **Instinct**. Các chiêu cũ không còn nằm trên thanh 3 ô đã quy thành **% Công Kích vĩnh viễn**, xem tab "Tuyệt Học Cũ" |
-| **Tấn Chức (phím H)** | Ám Khí (cấp 4) · Cương Khí (cấp 10) · Cung Tiễn (cấp 30), nâng bằng Tiến Cấp Đan |
+| **Ascension** | 9 bậc thăng hoa (Spark 1–4 → Molt → Radiant Core → Resonance ×2 → Starforged). **Tự động theo cấp nhân vật** — không còn bảng bấm tay, không còn tốn Anima. Bậc cao nhất cộng +88% Công và +88% HP |
+| **Kỹ năng (phím K)** | Nâng bằng **bạc + Instinct**. Sáu cấp mốc (20/40/60/80/100/120) tốn Instinct gấp ×2…×7 — đó là chỗ Tâm Đắc cũ chuyển vào. Thanh chiêu **4 ô** (phím 1-4): chính · phụ · buff · tuyệt chiêu. Các chiêu cũ không nằm trên thanh đã quy thành **% Công Kích vĩnh viễn**, xem tab "Tuyệt Học Cũ" |
+| **Tấn Chức (phím H)** | Venom (cấp 4) · Stoneform (cấp 10) · Archery (cấp 30), nâng bằng Tiến Cấp Đan |
 | **Tẩy Tủy** | Đạt cấp **120** thì reset về cấp 1, **giữ nguyên** trang bị / Ascension / kỹ năng / danh hiệu, đổi lấy **+2% Công Kích & Sinh Lực vĩnh viễn** mỗi lần, cộng dồn không bao giờ mất |
 | **Dấu Ấn Khai Sinh** | 3 đặc điểm bẩm sinh bốc ngẫu nhiên lúc tạo nhân vật (khác hẳn Khắc Ấn) |
 | **Danh hiệu** | Tự mở khi đạt điều kiện, cộng chỉ số nhỏ và hiện trước tên |
-| **Động Phủ** (cấp 30) | Tụ Linh Trận (+% tốc độ tích luỹ) và Vườn Dược (gieo → thu Hồ Lô Thuốc / Instinct / Anima) |
+| **Động Phủ** (cấp 30) | Tụ Linh Trận (+% tốc độ tích luỹ) và Vườn Dược (gieo → thu Hồ Lô Thuốc / Instinct / bạc) |
 | **Sảnh Cầu May** | Gacha: 5% sách kỹ năng hiếm · 15% Châu · 25% trang bị · 30% vật liệu · 25% bạc — **không có pity** |
 | **Vực Thẳm** | Ba mỏm đá ở Thornwood / Frostmire / Stormgate. Bấm nút lao xuống thử vận: mất 30% HP + Trọng Thương 15 phút mỗi lần |
 
@@ -582,12 +582,10 @@ quan 1 phó bản · rèn/tấn chức 1 lần). Xong hết nhận 200◈ + 100 
 | ◆ | Tu La Tinh Thạch | rèn +7 trở lên |
 | ❖ | Hỗn Nguyên Thạch | rèn +10/+11, Lò Hỗn Loạn |
 | ◈ | Tiến Cấp Đan | Tấn Chức (Ám Khí / Cương Khí / Cung Tiễn) |
-| ● | Nội Đan (5 hệ) | nâng Thần Binh |
-| 💠 | Tâm Đắc | đột phá chiêu thức |
+| ● | Lõi Nguyên Tố | nâng Thần Binh · hấp thụ lấy chỉ số vĩnh viễn (tự chọn atk/hp/def/mana/chí mạng, 3 viên/ngày) |
 | 📜 | Sách Kỹ Năng | học kỹ năng |
 | ◈ | Mảnh Cổ Thần | 60 mảnh đổi 1 món Cổ Thần |
 | ☬ | Ấn Trấn Ải | Tấn Phẩm bậc cao — 1/ngày từ Tướng Quân vùng |
-| — | Anima | Ascension |
-| — | Instinct | nâng kỹ năng |
+| — | Instinct | nâng kỹ năng — rơi theo loại quái: thường 10 · tinh anh 35 · boss 120 · boss phó bản 200 |
 | ☂ | Thiên Mệnh Phù | bảo hiểm rèn |
 | 🧪 | Hồ Lô Thuốc | hồi 40% máu, tối đa 5 lọ |
