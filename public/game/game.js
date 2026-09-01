@@ -3417,12 +3417,13 @@ function tienImgOf(key){
   return im;
 }
 // ---------- Ascension: cultivation realms (Ascension Trial upgrades) ----------
-// Bonus values are TOTAL at that realm. Đột phá consumes Anima + silver + mats;
-// on failure: silver/mats lost, 50% Anima lost, realm kept.
+// Bonus values are TOTAL at that realm. Bậc Ascension nay TỰ ĐỘNG theo cấp nhân vật (calcDerived);
+// không còn tự tay đột phá, nên cũng không còn tài nguyên nào bị tiêu ở đây. Đó chính là lý do
+// Anima trở thành ô đếm chết và đã bị xoá — xem GO_ANIMA.
 const _REALM_ICONS = ['r0_phan_nhan','r1_khi_hai','r2_chu_thien','r3_tu_phu','r4_quy_nguyen','r5_luong_nghi','r6_thai_hu','r7_tien_thien','r8_hon_nguyen','r8_hon_nguyen'];
 // GDD Lấy Võ Nhập Đạo §3 — Giai đoạn 1: cảnh giới tu tiên.
 // Spark (1-4): đột phá vận công theo tỉ lệ. Molt trở lên (5-9): ASCENSION TRIAL 3-9 đợt thiên lôi,
-// mỗi tia gây % maxHP, thất bại mất 30% Anima tiến độ — KHÔNG tụt cảnh giới.
+// mỗi tia gây % maxHP — KHÔNG tụt bậc.
 const DANTIAN_REALMS = [
   { name:'Hatchling',            atk:0,    hp:0,    qireg:0,  cost:null },
   { name:'Spark · Tầng 1',   atk:0.05, hp:0.05, qireg:1,  cost:{tuvi:150,   silver:300,   mat:3},   rate:100 },
@@ -4524,9 +4525,8 @@ function newPlayer(sectKey){
     shieldBroken: 0, atkAnim: 0, dashT: 0,
     tutStep: 0, tutDist: 0,                     // hướng dẫn tân thủ từng bước
     mount: { tier: 0, out: false },           // Thú Chiến: xuất trận đánh cùng, không cưỡi
-    dantian: { realm: 0, tuvi: 0 },
+    dantian: { realm: 0 },
     jewels: { chucPhuc: 0, linhHon: 0, sinhMenh: 0, honDon: 0 }, // Tứ Châu (Track HT)
-    congHuan: 0,                           // Công Huân Lệnh — tiền tệ Vạn Duyên Các
     baohap: {},                            // Bảo Hạp Ma Tôn Giáng Thế { tier: số lượng }
     truyna: { day:'', state:'none', map:null }, // Truy Nã Lệnh ngày
     wpUnlocked: { tuongduong: true },      // Điểm dịch chuyển (bảng đồ M) — mở khoá khi đã từng đặt chân tới, xem travelTo()
@@ -4646,6 +4646,17 @@ function loadGame(){
     if (player.forged11 == null) player.forged11 = false;
     if (!player.bikip) player.bikip = { pieces: [0,0,0], hmtp: false };
     if (player.battuCd == null) player.battuCd = 0;
+    // ═══ GỘP TIỀN TỆ — bậc 1: xoá Anima ═══════════════════════════════════════════════
+    // Anima (player.dantian.tuvi) được CỘNG ở mười ba nơi và TRỪ ở không nơi nào. Chỗ tiêu cũ là
+    // "đột phá cảnh giới", mà hệ đó đã chuyển sang tự động theo cấp độ — chỗ tiêu bị gỡ, nguồn thu
+    // để nguyên. Nó không phải tiền tệ, nó là một con số chạy vô nghĩa.
+    // Quy đổi 1 Anima = 2 bạc để người chơi không mất gì, rồi xoá hẳn ô đếm. Mọi nguồn cộng Anima
+    // trong game cũng đã đổi sang cộng bạc theo đúng tỉ lệ đó.
+    if (player.dantian && player.dantian.tuvi > 0){
+      player.silver += Math.round(player.dantian.tuvi * GO_ANIMA);
+      player.dantian.tuvi = 0;
+    }
+    if (player.dantian) delete player.dantian.tuvi;
     // Phase C backfill: thanh kỹ năng, PK, tội ác, buff, độc, auto-sell
     // Tối giản taskbar (bản mới): luôn ép về đúng 4 ô cố định theo phái (chính/phụ/buff/tuyệt chiêu)
     // — bỏ hẳn ô tự gán cũ, tránh save cũ kẹt lại chiêu giờ chỉ còn là bị động (không bấm được nữa).
@@ -4715,7 +4726,12 @@ function loadGame(){
     if (!player.daily) player.daily = { day:'', kills:0, noidan:0, dungeon:0, forge:0, claimed:false };
     // Track HT + vòng lặp ngày backfill
     if (!player.jewels) player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
-    if (player.congHuan == null) player.congHuan = 0;     // Công Huân Lệnh (Vạn Duyên Các)
+    // ═══ GỘP TIỀN TỆ — bậc 1: xoá Công Huân Lệnh ═════════════════════════════════════
+    // Một loại tiền kiếm được từ đúng MỘT nguồn (Truy Nã Lệnh mỗi ngày) và tiêu ở đúng MỘT chỗ
+    // (Sảnh Cầu May). Cả vòng đời của nó là một đường thẳng — vậy thì Sảnh Cầu May nhận thẳng bạc,
+    // và Truy Nã Lệnh thưởng bạc. Bớt một ô đếm mà không mất một cơ chế nào.
+    if (player.congHuan > 0){ player.silver += player.congHuan * GO_CONGHUAN; }
+    delete player.congHuan;
     if (!player.baohap) player.baohap = {};               // Bảo Hạp Ma Tôn: { tier: count }
     if (!player.truyna) player.truyna = { day:'', state:'none', map:null }; // Truy Nã Lệnh ngày
     if (player.sectOffered == null) player.sectOffered = false;
@@ -4766,7 +4782,7 @@ function loadGame(){
     calcDerived();
     buildWorld();
     DGN = null; if (mapDef().dungeon) startDungeonRun(curMap); // vào lại phó bản = một lượt mới
-    grantOfflineGains(d.savedAt || 0); // Bế quan offline — thưởng Instinct/Anima theo thời gian vắng mặt
+    grantOfflineGains(d.savedAt || 0); // Nghỉ ngoại tuyến — thưởng Instinct/bạc theo thời gian vắng mặt
     return true;
   } catch { return false; }
 }
@@ -5953,7 +5969,7 @@ function killMob(m, source){
   if (Math.random() < 0.3){ player.mat++; logCombat('+1 ✦ Huyền Thiết', '#9fd0ff'); }
   player.kills++;
   player.khi += 10; // Instinct từ chiến đấu
-  player.dantian.tuvi += 2; // Anima từ chiến đấu — giảm thời gian ngồi thiền thuần túy (QA)
+  player.silver += 4;  // Anima cũ (2/mạng) quy đổi 1:2 sang bạc — xem GO_ANIMA
   dailyTrack('kills'); // Mục Tiêu Hôm Nay
   // gem drops: Tu La (sói+), Hỗn Nguyên (tinh anh/boss), Tiến Cấp Đan (sơn tặc+)
   if (m.def.lv >= 3 && Math.random() < 0.15){ player.gems.tuLa++; logCombat('+1 ◆ Tu La Tinh Thạch', '#e84a6a'); }
@@ -7168,10 +7184,10 @@ function update(dt){
   updateGolden(); // Xâm Lăng Vàng — 2h/6h/10h… (lệch pha để cứ 2 giờ có 1 sự kiện)
   updateRift(); // Chúa Tể Vực Nứt — 0h/6h/12h/18h, 4 lượt/ngày theo giờ thật
 
-  // spirit spring: meditation quest + Anima source (always active)
+  // suối năng lượng: nhiệm vụ ngồi nghỉ + nguồn bạc thụ động (luôn bật)
   const q = currentQuest();
   if (mapDef().spring && dist(player.x,player.y,SPRING.x,SPRING.y) < SPRING.r){
-    player.dantian.tuvi += 6*dt*tulinhMult();
+    player.silver += 12*dt*tulinhMult();   // Anima cũ (6/giây) → bạc, tỉ lệ GO_ANIMA
     player.khi += 6*dt*tulinhMult(); // Tịnh Tâm Tuyền: Instinct ×3 · Tụ Linh Trận tăng thêm
     if (player.toiac > 0){ // Ngồi Thiền gột rửa Tội Ác
       player.toiac = 0; player.toiacT = 0;
@@ -12230,7 +12246,7 @@ function applyTestBoost(){
   player.charms = 99;                              // bảo hiểm rèn +10/+11
   // Ascension: cảnh giới cao nhất (Starforged Cảnh)
   player.dantian.realm = DANTIAN_REALMS.length - 1;
-  player.dantian.tuvi = 999999;
+  player.silver += 999999;
   // Instinct Channels: 8 mạch × 20 đốt — toàn bộ đã thông
   for (const m of MERIDIANS) player.meridians[m.id] = 20;
   // Thú Chiến: giai cao nhất, xuất trận sẵn
@@ -12638,6 +12654,10 @@ window.toggleCheatConsole = function(){
   c.classList.toggle('hidden');
   if (opening){ const inp = document.getElementById('cheat-input'); inp.value = ''; setTimeout(() => inp.focus(), 30); cheatLog('Console playtest — gõ /help để xem lệnh, Esc để đóng.', '#7fd4ff'); }
 };
+// Tỉ lệ quy đổi khi gộp tiền tệ — xem kế hoạch gộp 26 ô đếm về 13 theo hình dáng MU Season 6.
+// Đặt thành hằng số có tên để lần gộp sau còn tìm ra chỗ này, thay vì rải số 2 khắp file.
+const GO_ANIMA = 2;        // 1 Anima cũ = 2 bạc
+const GO_CONGHUAN = 2000;  // 1 Công Huân Lệnh cũ = 2000 bạc — cũng là giá một lượt Sảnh Cầu May
 function cheatLog(t, color){
   const lg = document.getElementById('cheat-log');
   if (!lg) return;
@@ -12652,7 +12672,7 @@ const CHEAT_HELP = [
   '/lv <1-120> — đặt cấp',
   '/map <id> — dịch chuyển: ' + 'daohoa, tuongduong, ngoai, chungnam, comoc, tuyettinh, mongco, nhanmon',
   '/go <x> <y> — dịch chuyển tọa độ',
-  '/silver /mat /dan /tuvi /khi /manh /tich /an /cothan <n> — tài nguyên (+n để cộng thêm)',
+  '/silver /mat /dan /khi /manh /tich /an /cothan <n> — tài nguyên (+n để cộng thêm)',
   '/item [phẩm 0-4] [giai 1-10] — tạo trang bị vào túi',
   '/god — bật/tắt bất tử',
   '/kill [bán kính=350] — hạ quái quanh mình',
@@ -12734,7 +12754,7 @@ window.cheatExec = function(raw){
         // ném ReferenceError. Đồng hồ thế giới nay chỉ còn ngày/mùa.
         cheatLog(`Đồng Hồ Thế Giới → ${gti.season.name} ${gti.day}/${gti.month} Năm ${gti.year}`, gti.season.color); break;
       }
-      case 'silver': case 'mat': case 'tuvi': case 'khi': case 'manh': case 'tich': case 'an': case 'cothan': case 'dan': {
+      case 'silver': case 'mat': case 'khi': case 'manh': case 'tich': case 'an': case 'cothan': case 'dan': {
         const raw2 = parts[1] || '10000';
         const add = raw2.startsWith('+');
         const v = Math.abs(parseFloat(raw2)) || 0;
@@ -12742,7 +12762,6 @@ window.cheatExec = function(raw){
         if (cmd === 'silver') set(() => player.silver, x => player.silver = x);
         else if (cmd === 'mat') set(() => player.mat, x => player.mat = x);
         else if (cmd === 'dan') set(() => player.tienDan, x => player.tienDan = x);
-        else if (cmd === 'tuvi') set(() => player.dantian.tuvi, x => player.dantian.tuvi = x);
         else if (cmd === 'khi') set(() => player.khi, x => player.khi = x);
         else if (cmd === 'manh') set(() => player.mats.manh, x => player.mats.manh = x);
         else if (cmd === 'tich') set(() => player.mats.tichMa, x => player.mats.tichMa = x);
@@ -14642,9 +14661,7 @@ function bagSecMat(){
   h += `<div class="mat-cell" title="${matTip('Bạc', 'tiêu xài khắp Lunacia', player.silver)}">
     <img src="assets/items/mat_bac.png" onerror="this.style.display='none'" alt="">
     <span class="mc-count" style="color:#7ecbff">${fmtCount(player.silver)}</span></div>`;
-  h += `<div class="mat-cell" title="${matTip('Công Huân Lệnh', 'Truy Nã Lệnh mỗi ngày · quay Sảnh Cầu May', player.congHuan||0)}">
-    <span class="mc-glyph">🎖</span>
-    <span class="mc-count" style="color:#ffb15c">${fmtCount(player.congHuan||0)}</span></div></div>`;
+// Công Huân Lệnh đã gộp vào Bạc — không còn ô đếm riêng ở bảng vật liệu.
   const jw = player.jewels || {};
   h += `<div class="chaos-sec">TỨ CHÂU <span class="chaos-sub">bỏ vào khay ở Lò Hỗn Độn</span></div><div class="mat-grid">`;
   for (const jk of ['chucPhuc','linhHon','sinhMenh','honDon']){
@@ -17092,20 +17109,20 @@ function rollKyngo(){
     text = '⚠ MAI PHỤC!'; sub = 'Có kẻ phục kích ngươi giữa đường!'; color = '#ff5a4a';
     AudioSys.sfx('hurt', 0.7);
   } else if (r < 0.74){ // Năng lượng hội tụ
-    player.dantian.tuvi += 30; player.khi += 20;
-    text = 'KHÁM PHÁ · Năng Lượng Hội Tụ'; sub = 'Hít thở nguồn năng lượng quanh mình — +30 Anima · +20 Instinct!'; color = '#7fd8e0';
+    player.silver += 60; player.khi += 20;
+    text = 'KHÁM PHÁ · Năng Lượng Hội Tụ'; sub = 'Hít thở nguồn năng lượng quanh mình — +60◈ bạc · +20 Instinct!'; color = '#7fd8e0';
   } else if (r < 0.90){ // Cao Thủ Ẩn Danh chỉ điểm vài chiêu
     const tv = 40 + ((player.dantian && player.dantian.realm) || 0)*25;
-    player.dantian.tuvi += tv;
-    sub = `Cao thủ ẩn danh xuất hiện, chỉ điểm vài chiêu — +${tv} Anima!`;
+    player.silver += tv*2;
+    sub = `Một tay kiếm ẩn danh chỉ điểm vài đường — +${tv*2}◈ bạc!`;
     text = 'KHÁM PHÁ · Cao Thủ Ẩn Danh'; color = '#d8baff';
   } else { // Giác ngộ bất chợt — trước đây giảm 30% tiêu hao Ascension Trial (cơ chế đột phá thủ
     // công đã tự động hoá từ đợt MU-hoá, giảm giá đó không còn ai tiêu thụ được nữa) — đổi thành
     // thưởng Anima thẳng cho tương xứng với các nhánh Khám Phá khác, giữ nguyên cảm giác "chợt tỉnh ngộ".
     const tv2 = 80 + ((player.dantian && player.dantian.realm) || 0)*30;
-    player.dantian.tuvi += tv2;
+    player.silver += tv2*2;
     text = 'KHÁM PHÁ · Giác Ngộ Bất Chợt'; color = '#9fd0ff';
-    sub = `Chợt lóe lên một tia sáng trí tuệ — +${tv2} Anima!`;
+    sub = `Chợt lóe lên một tia sáng trí tuệ — +${tv2*2}◈ bạc!`;
   }
   zoneBanner = { text, sub, color, t:3.2 };
   AudioSys.sfx('quest', 0.7);
@@ -17331,12 +17348,12 @@ function deepBankFloor(){
 window.deepLeave = function(dest){
   if (!DEEP) return;
   const b = DEEP.bank;
-  player.silver += b.silver; player.dantian.tuvi += b.tuvi; player.mat += b.mat; player.tienDan += b.tienDan;
+  player.silver += b.silver + b.tuvi*2; player.mat += b.mat; player.tienDan += b.tienDan;
   if (b.xp) gainXp(b.xp);
   for (const t in b.hap) player.baohap[t] = (player.baohap[t] || 0) + b.hap[t];
   const hapTxt = Object.keys(b.hap).map(t => `${b.hap[t]}× ${BAOHAP_TIERS[t].name}`).join(' · ');
   zoneBanner = { text: DEEP.finished ? `✦ CHINH PHỤC TRỌN ${DEEP_MAX} TẦNG` : `✦ RÚT LUI Ở TẦNG ${DEEP.floor}`,
-    sub:`${DEEP.finished ? `Trọn ${DEEP_MAX} tầng · ` : ''}+${b.xp.toLocaleString('vi-VN')} EXP · +${b.silver.toLocaleString('vi-VN')} bạc · +${b.tuvi} Anima · +${b.mat} Huyền Thiết${b.tienDan?` · +${b.tienDan} Tiến Cấp Đan`:''}${hapTxt?' · '+hapTxt:''}`,
+    sub:`${DEEP.finished ? `Trọn ${DEEP_MAX} tầng · ` : ''}+${b.xp.toLocaleString('vi-VN')} EXP · +${(b.silver + b.tuvi*2).toLocaleString('vi-VN')} bạc · +${b.mat} Huyền Thiết${b.tienDan?` · +${b.tienDan} Tiến Cấp Đan`:''}${hapTxt?' · '+hapTxt:''}`,
     color:'#6ae88a', t:6 };
   AudioSys.sfx('levelup', 1);
   DEEP = null; calcDerived(); saveGame();
@@ -17442,12 +17459,12 @@ function updateDungeon(dt){
     const td = Math.round(rnd(r.tienDan[0], r.tienDan[1])), mt = Math.round(rnd(r.mat[0], r.mat[1])),
           tl = Math.round(rnd(r.tuLa[0], r.tuLa[1])),     hn = Math.round(rnd(r.hon[0], r.hon[1])),
           sv = Math.round(rnd(r.silver[0], r.silver[1]));
-    player.tienDan += td; player.mat += mt; player.khi += r.khi; player.dantian.tuvi += r.tuvi; player.silver += sv;
+    player.tienDan += td; player.mat += mt; player.khi += r.khi; player.silver += sv + r.tuvi*2;
     dailyTrack('dungeon'); // Mục Tiêu Hôm Nay
     if (tl > 0) player.gems.tuLa += tl;
     if (hn > 0) player.gems.honNguyen += hn;
     zoneBanner = { text:'PHÓ BẢN THÔNG QUAN!',
-      sub:`+${td} Tiến Cấp Đan · +${mt} Huyền Thiết · +${r.khi} Instinct · +${r.tuvi} Anima · +${sv} bạc`,
+      sub:`+${td} Tiến Cấp Đan · +${mt} Huyền Thiết · +${r.khi} Instinct · +${sv + r.tuvi*2}◈ bạc`,
       color:'#b08ae8', t:5 };
     addFloat(player.x, player.y - 80, 'Phần thưởng phó bản đã vào túi!', '#7ecbff', 16);
     AudioSys.sfx('levelup', 0.8);
@@ -17591,7 +17608,7 @@ function grantOfflineGains(savedAt){
   const tuviGain = Math.floor(mins * (1.5 + realm*0.8) * tulinhMult());
   if (khiGain <= 0 && tuviGain <= 0) return;
   player.khi += khiGain;
-  player.dantian.tuvi += tuviGain;
+  player.silver += tuviGain*2;
   showOfflineGains(offSec, khiGain, tuviGain);
 }
 function showOfflineGains(offSec, khiGain, tuviGain){
@@ -17603,7 +17620,7 @@ function showOfflineGains(offSec, khiGain, tuviGain){
     <div style="font-size:13px;color:#9aa8d4;margin-bottom:14px;line-height:1.7">Ngươi rời đi ${hh > 0 ? hh + ' giờ ' : ''}${mm} phút — bản năng vẫn âm thầm mài giũa trong lúc vắng mặt.</div>
     <div style="font-size:15px;line-height:2;color:#e4ebff">
       <div>Instinct <b style="color:#7fd8e0">+${khiGain}</b></div>
-      <div>Anima <b style="color:#9fd0ff">+${tuviGain}</b></div>
+      <div>Bạc <b style="color:#9fd0ff">+${tuviGain*2}</b></div>
     </div>
     <div style="font-size:11.5px;color:#7a86ad;margin-top:12px">Bậc Ascension càng cao, thời gian vắng mặt càng đáng giá · tối đa 8 giờ</div>
     <button id="btn-xuatquan" style="margin-top:16px;padding:9px 36px;background:#4c8dff;border:none;border-radius:6px;color:#262c58;font-weight:700;cursor:pointer;font-size:14px;letter-spacing:2px">Xuất Quan</button>
@@ -17781,7 +17798,7 @@ const TULINH_TIERS = [0, 0.15, 0.30, 0.50, 0.75, 1.00];
 const GARDEN_SEEDS = {
   hoisinh: { name:'Hồi Sinh Thảo', time:3600,  desc:'1 giờ → 2 🧪 Bình Thuốc Đỏ' },
   tukhi:   { name:'Tụ Khí Thảo',   time:7200,  desc:'2 giờ → +200 Instinct' },
-  ngoctam: { name:'Ngọc Tâm Thảo', time:14400, desc:'4 giờ → +150 Anima' },
+  ngoctam: { name:'Ngọc Tâm Thảo', time:14400, desc:'4 giờ → +300◈ bạc' },
 };
 function tulinhMult(){ return 1 + (TULINH_TIERS[(player && player.abode && player.abode.tulinh) || 0] || 0); }
 function renderAbode(){
@@ -17859,8 +17876,8 @@ window.harvestSeed = function(i){
     player.khi += 200;
     addFloat(player.x, player.y-50, 'Thu hoạch: +200 Instinct!', '#7fd8e0', 13);
   } else {
-    player.dantian.tuvi += 150;
-    addFloat(player.x, player.y-50, 'Thu hoạch: +150 Anima!', '#9fd0ff', 13);
+    player.silver += 300;
+    addFloat(player.x, player.y-50, 'Thu hoạch: +300◈ bạc!', '#9fd0ff', 13);
   }
   sideOnEvent('garden');
   AudioSys.sfx('quest', 0.6);
@@ -17926,9 +17943,9 @@ function dailyCheckReward(){
   if (!d || d.claimed) return;
   if (!DAILY_GOALS.every(g => (d[g.id] || 0) >= g.need)) return;
   d.claimed = true;
-  player.silver += 200; player.khi += 100; player.dantian.tuvi += 50;
+  player.silver += 300; player.khi += 100;
   zoneBanner = { text:'☀ HOÀN THÀNH MỤC TIÊU HÔM NAY!',
-    sub:'+200◈ bạc · +100 Instinct · +50 Anima — quay lại ngày mai nhé!',
+    sub:'+300◈ bạc · +100 Instinct — quay lại ngày mai nhé!',
     color:'#7ec850', t:4.5 };
   AudioSys.sfx('levelup', 0.85);
   saveGame();
@@ -18401,8 +18418,8 @@ window.openBaoHap = function(t){
   else if (jr < hd){ player.jewels.honDon++; got.push(JEWEL_NAMES.honDon); }
   const sil = 150 + t*120;
   player.silver += sil;
-  player.dantian.tuvi += 20*t;
-  got.push(`${sil}◈ · ${20*t} Anima`);
+  player.silver += 40*t;
+  got.push(`${sil + 40*t}◈ bạc`);
   addFloat(player.x, player.y-56, `Mở ${def.name}!`, def.color, 15);
   AudioSys.sfx('coin', 0.7);
   saveGame(); refreshEqPanels();
@@ -18790,7 +18807,7 @@ function renderTruyNa(){
     html += `<div class="next-tier"><b style="color:#e8b04a">⚖ Truy Nã Lệnh hôm nay</b><br>
       Mục tiêu: <b style="color:#ff7a6a">${band.name}</b> (sức mạnh theo cấp ${player.level})<br>
       Nơi ẩn náu: <b>${MAPS[band.map].name}</b><br>
-      <span style="opacity:.75">Thưởng: 1 ⚜ Công Huân Lệnh + bạc + Anima — mỗi ngày 1 lần</span></div>
+      <span style="opacity:.75">Thưởng: bạc — mỗi ngày 1 lần</span></div>
       <div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 20px" onclick="truynaAccept()">Nhận Truy Nã</button></div>`;
   } else if (tn.state === 'hunting'){
     html += `<div class="next-tier" style="border-color:#ff7a6a"><b style="color:#ff7a6a">Đang truy nã: ${band.name}</b><br>
@@ -18798,10 +18815,10 @@ function renderTruyNa(){
       <div class="forge-actions"><button class="mini-btn" onclick="closePanels(); travelTo('${tn.map}')">Dịch Chuyển tới ${MAPS[tn.map].name}</button></div>`;
   } else if (tn.state === 'killed'){
     html += `<div class="next-tier" style="border-color:#8fd18f"><b style="color:#8fd18f">✔ Mục tiêu đã phục pháp!</b><br>
-      <span style="opacity:.8">Thưởng: 1 ⚜ Công Huân Lệnh + ${300 + player.level*20}◈ + ${60 + player.level*2} Anima</span></div>
+      <span style="opacity:.8">Thưởng: ${2420 + player.level*24}◈ bạc</span></div>
       <div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 20px" onclick="truynaClaim()">Nhận Thưởng</button></div>`;
   } else {
-    html += `<div style="padding:12px;font-size:12.5px;opacity:.75;text-align:center;line-height:1.8">✔ Truy nã hôm nay đã xong — quay lại ngày mai!<br>⚜ Công Huân Lệnh đang có: <b style="color:#7ecbff">${player.congHuan}</b><br>Mang đến Sảnh Cầu May (Thương Nhân Vận May) để quay thử vận.</div>`;
+    html += `<div style="padding:12px;font-size:12.5px;opacity:.75;text-align:center;line-height:1.8">✔ Truy nã hôm nay đã xong — quay lại ngày mai!<br>Mang bạc đến Sảnh Cầu May (Thương Nhân Vận May) để quay thử vận.</div>`;
   }
   el('panel-quest').innerHTML = html;
   closePanels(); el('panel-quest').classList.remove('hidden');
@@ -18819,9 +18836,9 @@ window.truynaClaim = function(){
   const tn = player.truyna;
   if (!tn || tn.state !== 'killed') return;
   tn.state = 'claimed';
-  player.congHuan++;
+  player.silver += GO_CONGHUAN;
   player.silver += 300 + player.level*20;
-  player.dantian.tuvi += 60 + player.level*2;
+  player.silver += 120 + player.level*4;
   zoneBanner = { text:'⚜ +1 CÔNG HUÂN LỆNH', sub:'Mang đến Sảnh Cầu May — Thương Nhân Vận May sẽ giúp ngươi quay thử vận (5% cổ thư hiếm)!', color:'#7ecbff', t:5 };
   AudioSys.sfx('levelup', 0.9);
   saveGame(); renderTruyNa();
@@ -18944,22 +18961,22 @@ function renderVanDuyen(){
   const n = NPCS.find(x => x.id === 'thantoan');
   let html = `<h3>${n.name}</h3><button class="close-x" onclick="closePanels()">✕</button>`;
   html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">${n.lore}</div>`;
-  html += `<div style="font-size:13px;margin-bottom:6px">⚜ Công Huân Lệnh: <b style="color:#7ecbff">${player.congHuan}</b></div>`;
+  html += `<div style="font-size:13px;margin-bottom:6px">◈ Bạc đang có: <b style="color:#7ecbff">${player.silver.toLocaleString('vi-VN')}</b> · mỗi lượt quay <b>${GO_CONGHUAN.toLocaleString('vi-VN')}◈</b></div>`;
   html += `<div class="stat-sec">TỈ LỆ CÔNG KHAI — KHÔNG GOM DUYÊN (NO PITY)</div>
     <div style="font-size:12px;line-height:1.9;opacity:.9">
     <b style="color:#e84a6a">5%</b> — Cổ thư hiếm: Mảnh Cổ Thư · Huyết Ma Thôn Phệ (đã thành tựu → ● Hỗn Độn Châu)<br>
     <b style="color:#b08ae8">15%</b> — Tứ Châu ngẫu nhiên (Chúc Phúc / Linh Hồn / Sinh Mệnh / Hỗn Độn)<br>
     <b style="color:#5aa0e8">25%</b> — Trang bị theo cấp (phẩm Lam trở lên)<br>
     <b style="color:#7ec850">30%</b> — Vật liệu tu luyện (Tu La / Hỗn Nguyên / Tiến Cấp Đan / Huyền Thiết)<br>
-    <b style="color:#9aa8d4">25%</b> — Bạc + Anima</div>`;
-  html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 22px" ${player.congHuan >= 1 ? '' : 'disabled'} onclick="rollVanDuyen()">◑ Quay Vận May — 1 ⚜</button></div>
+    <b style="color:#9aa8d4">25%</b> — Bạc</div>`;
+  html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 22px" ${player.silver >= GO_CONGHUAN ? '' : 'disabled'} onclick="rollVanDuyen()">◑ Quay Vận May — ${GO_CONGHUAN.toLocaleString('vi-VN')}◈</button></div>
     <div id="vd-result" style="min-height:20px;font-size:12.5px;line-height:1.8;margin-top:6px"></div>`;
   el('panel-quest').innerHTML = html;
   closePanels(); el('panel-quest').classList.remove('hidden');
 }
 window.rollVanDuyen = function(){
-  if (player.congHuan < 1) return;
-  player.congHuan--;
+  if (player.silver < GO_CONGHUAN) return;
+  player.silver -= GO_CONGHUAN;
   let r = Math.random()*100, key = 'bac';
   for (const row of VANDUYEN_RATES){ r -= row.w; if (r < 0){ key = row.k; break; } }
   const out = [];
@@ -18988,12 +19005,12 @@ window.rollVanDuyen = function(){
     else { player.mat += 8; out.push('✦ Huyền Thiết ×8'); }
   } else {
     const sil = 200 + player.level*15, tv = 60 + player.level*2;
-    player.silver += sil; player.dantian.tuvi += tv;
-    out.push(`${sil}◈ bạc + ${tv} Anima`);
+    player.silver += sil + tv*2;
+    out.push(`${sil + tv*2}◈ bạc`);
   }
   AudioSys.sfx(key === 'bikip' ? 'levelup' : 'coin', 0.8);
   saveGame();
-  addFloat(player.x, player.y-56, '◑ Rút duyên: ' + (key === 'bikip' ? 'SÁCH KỸ NĂNG HIẾM!' : key === 'chau' ? 'Tứ Châu' : key === 'trangbi' ? 'Trang bị' : key === 'vatlieu' ? 'Vật liệu' : 'Bạc · Anima'), key === 'bikip' ? '#e84a6a' : '#7ecbff', 14);
+  addFloat(player.x, player.y-56, '◑ Rút duyên: ' + (key === 'bikip' ? 'SÁCH KỸ NĂNG HIẾM!' : key === 'chau' ? 'Tứ Châu' : key === 'trangbi' ? 'Trang bị' : key === 'vatlieu' ? 'Vật liệu' : 'Bạc'), key === 'bikip' ? '#e84a6a' : '#7ecbff', 14);
   renderVanDuyen();
   const res = document.getElementById('vd-result');
   if (res) res.innerHTML = `◑ Kết quả: ${out.join('<br>')}`;
