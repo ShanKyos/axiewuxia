@@ -13153,9 +13153,15 @@ function togglePanel(which){
     }
     return;
   }
+  // Lò rèn không còn là tab, và cũng không mở bằng togglePanel — nó có luật riêng (phải đứng
+  // cạnh Thợ Rèn). Chuyển hướng thay vì rơi xuống dưới: map['forge'] là undefined nên el(undefined)
+  // trả null và câu kế ném "Cannot read properties of null". Mọi chỗ gọi togglePanel('forge') cũ
+  // đều vỡ theo.
+  if (which === 'forge'){ window.openForgePanel(); return; }
   const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', qlog:'panel-qlog' };
   const id = map[which];
   const p = el(id);
+  if (!p) return;                     // khoá lạ thì im lặng bỏ qua, không ném lỗi giữa lượt chơi
   const wasHidden = p.classList.contains('hidden');
   closePanels();
   if (wasHidden){
@@ -16002,29 +16008,36 @@ const TITLE_SKY = [
   [0.86, '#b4562f'],   // than hồng sát chân trời
   [1.00, '#e08a3c'],
 ];
-let _titleRAF = 0, _titleT0 = 0;
-
-function titleStop(){ if (_titleRAF) cancelAnimationFrame(_titleRAF); _titleRAF = 0; }
+// Trạng thái vòng lặp cất trên window, KHÔNG phải `let` ở tầng module. Lý do: khối này nằm cuối
+// file, mà titleStop() bị gọi từ đoạn nạp save ở phía TRÊN. Người chơi có save cũ thì lúc khởi
+// động, titleStop() chạy trước khi câu `let` này kịp thực thi → TDZ ném ReferenceError → script
+// chết giữa chừng → mọi const phía sau (ITEM_DB, …) không bao giờ khởi tạo. Một dòng `let` đặt
+// sai chỗ làm hỏng 10 bài hồi quy theo kiểu rất khó lần ra.
+// window.* không có vùng chết, nên gọi sớm bao nhiêu cũng an toàn.
+function titleStop(){
+  if (window._titleRAF) cancelAnimationFrame(window._titleRAF);
+  window._titleRAF = 0;
+}
 
 function titleStart(){
   const cv = document.getElementById('title-fx');
   if (!cv) return;
   titleStop();
-  _titleT0 = performance.now();
+  window._titleT0 = performance.now();
   const g = cv.getContext('2d');
   const step = () => {
     const host = document.getElementById('sect-select');
-    if (!host || host.classList.contains('hidden')){ _titleRAF = 0; return; }  // rời màn → dừng hẳn
+    if (!host || host.classList.contains('hidden')){ window._titleRAF = 0; return; }  // rời màn → dừng hẳn
     const w = cv.clientWidth, h = cv.clientHeight;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     if (cv.width !== Math.round(w*dpr) || cv.height !== Math.round(h*dpr)){
       cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
     }
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    drawTitleScene(g, w, h, (performance.now() - _titleT0) / 1000);
-    _titleRAF = requestAnimationFrame(step);
+    drawTitleScene(g, w, h, (performance.now() - window._titleT0) / 1000);
+    window._titleRAF = requestAnimationFrame(step);
   };
-  _titleRAF = requestAnimationFrame(step);
+  window._titleRAF = requestAnimationFrame(step);
 }
 
 function drawTitleScene(g, W, H, t){
