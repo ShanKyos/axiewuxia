@@ -118,10 +118,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   box-shadow:0 0 8px rgba(232,66,95,.7); transition:width .18s; }
 
 /* Joystick */
-#joystick { position:fixed; bottom:22px; left:22px; width:110px; height:110px; z-index:11;
-  border-radius:50%; background:rgba(30,32,64,.45); border:1px solid var(--border-faint); }
-#joy-knob { position:absolute; left:35px; top:35px; width:40px; height:40px; border-radius:50%;
-  background:rgba(126,203,255,.8); box-shadow:0 2px 6px rgba(0,0,0,.5); }
 
 /* Nhật ký chiến đấu — góc dưới trái, thay cho số sát thương/thông báo bay rối mắt lúc AUTO
    đánh nhiều quái cùng lúc; dòng mới nhất nằm trên cùng, cuộn được, tự bỏ dòng cũ khi đầy */
@@ -829,7 +825,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   transition:opacity .08s linear; }
 #fx-low  { background:radial-gradient(ellipse at 50% 50%, rgba(190,16,16,0) 34%, rgba(190,16,16,.32) 78%);
   transition:opacity .25s linear; }
-
 
 /* ═══════════ TẠO NHÂN VẬT — kiểu MU Online ═══════════
    Màn cũ là 16 lá bài thái cực/bát quái để roll vận mệnh. Nay: chọn lớp, gõ tên, vào game. */
