@@ -1000,3 +1000,62 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   .cc-card .cc-tag { display:none; }
   .cc-detail { font-size:12px; }
 }
+
+/* ══════════ LINH THÚ ══════════ */
+.pet-intro { font-size:12.5px; color:#9aa8d4; line-height:1.7; margin:4px 0 10px; }
+.pet-pick { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.pet-card { background:rgba(76,141,255,.08); border:1px solid var(--border); border-radius:var(--r-md);
+  padding:8px 6px 10px; cursor:pointer; text-align:center; color:inherit; font:inherit;
+  transition:border-color .15s, background .15s; }
+.pet-card:hover { border-color:var(--accent); background:rgba(76,141,255,.18); }
+.pet-card img { width:100%; max-width:104px; display:block; margin:0 auto 4px;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.45)); }
+.pet-card .pn { font-size:14px; font-weight:700; letter-spacing:.5px; }
+.pet-card .pt { font-size:11px; color:#ffd76a; letter-spacing:1px; margin-bottom:4px; }
+.pet-card .pd { font-size:11.5px; color:#9aa8d4; line-height:1.5; min-height:34px; }
+.pet-card .pc { font-size:11.5px; color:#8fd0ff; margin-top:6px; }
+
+.pet-head { display:flex; align-items:center; gap:12px; margin:6px 0 10px; }
+.pet-art { width:104px; flex:none; filter:drop-shadow(0 6px 12px rgba(0,0,0,.5)); }
+.pet-meta { flex:1; min-width:0; }
+.pet-name { font-size:19px; font-weight:700; letter-spacing:1px; }
+.pet-name em { font-style:normal; color:#ffd76a; font-size:16px; }
+.pet-tag { font-size:12px; color:#9aa8d4; line-height:1.6; margin:2px 0 6px; }
+.pet-meta .tier-pips { text-align:left; letter-spacing:2px; font-size:11px; margin:0; }
+
+.pet-lines { background:rgba(126,203,255,.07); border:1px solid rgba(126,203,255,.26);
+  border-radius:var(--r-md); padding:6px 10px; margin:6px 0 10px; }
+.pet-line { display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+  font-size:12.5px; padding:3px 0; }
+.pet-line b { color:#8fd0ff; font-variant-numeric:tabular-nums; }
+.pet-line b i { font-style:normal; font-size:10.5px; color:#9aa8d4; margin-left:4px; }
+.pet-line.core { border-bottom:1px solid rgba(126,203,255,.2); padding-bottom:5px; margin-bottom:2px; }
+.pet-line.core span { color:#ffd76a; }
+.pet-line.core b { color:#ffd76a; }
+.pet-swap { display:flex; align-items:center; gap:6px; }
+.pet-swap .pet-line { flex:1; padding:2px 0; }
+.pet-swap .pet-line.old { opacity:.45; }
+.pet-swap .pet-line.new b { color:#8fd18f; }
+.pet-swap .arw { color:#9aa8d4; font-size:12px; flex:none; }
+.pet-locked { font-size:11.5px; color:#9aa8d4; padding:5px 0 2px; border-top:1px dashed rgba(140,175,255,.25);
+  margin-top:4px; }
+
+.pet-act { border:1px solid var(--border); border-radius:var(--r-md); padding:7px 12px; margin-top:6px; }
+.pet-act.done { text-align:center; font-size:13px; border-style:dashed; }
+.pet-act-t { font-size:12.5px; margin-bottom:6px; }
+.pet-act-t span { color:#9aa8d4; font-size:11.5px; }
+.pet-cost { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 2px; font-size:12px;
+  font-variant-numeric:tabular-nums; }
+.pet-cost span { border:1px solid var(--border-faint); border-radius:999px; padding:2px 9px; }
+.pet-cost span.ok { color:#8fd0ff; }
+.pet-cost span.no { color:#ff8f8f; border-color:rgba(255,107,107,.4); }
+.pet-cost span i { font-style:normal; opacity:.6; }
+.pet-rate { font-size:12px; color:#9aa8d4; margin-top:4px; }
+.pet-rate b { color:#ffd76a; }
+.pet-safe { font-size:11.5px; color:#8fd18f; margin-top:3px; }
+.pet-msg { text-align:center; min-height:18px; font-size:12.5px; margin-top:8px; }
+
+@media (max-width:1000px){
+  .pet-art { width:88px; }
+  .pet-card img { max-width:76px; }
+}

@@ -301,12 +301,58 @@ const CLOAK_TIERS = [ null,
   { name:'Áo Choàng Thép Xám', color:'#5ea0e8', req:1,  atkPct:5,  pierce:3, defPct:0, cost:{ tuLa:5,  hon:2, silver:2000 } },
   { name:'Áo Choàng Thánh Quang', color:'#7ecbff', req:60, atkPct:10, pierce:6, defPct:5, cost:{ tuLa:10, hon:5, silver:6000 } },
 ];
-// Pet — rơi từ tinh anh (12%) / boss (40%)
+// ══════════ LINH THÚ ══════════
+// KHÔNG còn rơi từ quái. Mở ở cấp 8, chọn MỘT giống, và con đó theo người chơi mãi mãi:
+// không bán được, không rơi mất, thăng cấp hỏng cũng không tụt. Đây là chỗ đốt tài nguyên
+// AN TOÀN duy nhất trong game — mọi chỗ khác (rèn +9, Phá Thiên Kiếp) đều có thể mất đồ,
+// nên người chơi giữ của. Ở đây họ dám đổ vào, vì thứ duy nhất mất đi là nguyên liệu.
+// Dòng GỐC cố định theo giống (không roll được) = căn cước con thú. Dòng phụ thì roll.
 const PET_DEFS = [
-  { id:'holy',   name:'Thánh Linh May Mắn',     color:'#e8a0c0', expPct:10, silverPct:5,                desc:'+10% EXP · +5% đồng rơi' },
-  { id:'hulan',  name:'Huyền Băng Lang', color:'#7ab0d8', expPct:15, silverPct:10, hpLeech:2,   desc:'+15% EXP · +10% đồng · hút 2% sinh lực' },
-  { id:'hothan', name:'Kim Thân Hổ',    color:'#7ecbff', expPct:20, silverPct:15, hpLeech:3, atkPct:3, desc:'+20% EXP · +15% đồng · hút 3% sinh lực · +3% ST' },
+  { id:'acorntail', name:'Acorntail', color:'#e8b45c', img:'assets/pets/acorntail.png',
+    coreK:'expPct', coreV:10, tag:'Tích Trữ', desc:'Nhặt nhạnh không biết mệt — học nhanh hơn.' },
+  { id:'hexhorn',   name:'Hexhorn',   color:'#b06ae0', img:'assets/pets/hexhorn.png',
+    coreK:'atkPct', coreV:6,  tag:'Phá Phách', desc:'Cắn trước, nghĩ sau — đòn của bạn nặng thêm.' },
+  { id:'bloomveil', name:'Bloomveil', color:'#f0b8cc', img:'assets/pets/bloomveil.png',
+    coreK:'hpPct',  coreV:8,  tag:'Chở Che', desc:'Ngủ suốt ngày, nhưng bạn khó chết hơn hẳn.' },
 ];
+const PET_LEGACY = { holy:'acorntail', hulan:'hexhorn', hothan:'bloomveil' }; // pet cũ trong save
+const PET_IMGS = {};
+for (const d of PET_DEFS){ const im = new Image(); im.src = d.img; PET_IMGS[d.id] = im; }
+function hex2rgba(h, a){
+  const n = parseInt(h.slice(1), 16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+}
+// Bể dòng phụ. MỌI khoá ở đây phải có ngăn trong sổ P của calcDerived() — applyLine() lặng lẽ
+// bỏ qua khoá lạ, dòng vẫn hiện trên bảng mà không có tác dụng gì. Đã đối chiếu đủ 10 khoá.
+const PET_SUBS = [
+  { k:'atkPct',    name:'Thêm Sát Thương', min:1, max:5  },
+  { k:'hpPct',     name:'Sinh Lực Tối Đa', min:1, max:5  },
+  { k:'dmgred',    name:'Giảm Sát Thương', min:1, max:4  },
+  { k:'crit',      name:'Bạo Kích',        min:1, max:4  },
+  { k:'evaPct',    name:'Tránh Đòn',       min:3, max:8  },
+  { k:'aspdPct',   name:'Tốc Độ Đánh',     min:1, max:4  },
+  { k:'hpLeech',   name:'Hút Sinh Lực',    min:1, max:3  },
+  { k:'pierce',    name:'Xuyên Giáp',      min:1, max:4  },
+  { k:'silverPct', name:'Đồng Rơi Thêm',   min:8, max:25 },
+  { k:'expPct',    name:'EXP Thêm',        min:4, max:12 },
+];
+const PET_MAX_PLUS = 11;
+// Số dòng phụ mở theo mức thăng cấp — thăng cấp không chỉ cộng số, nó MỞ THÊM Ô.
+// Đây là thứ giữ người chơi leo tiếp sau khi dòng đã roll đẹp: +4 và +8 là hai cái mốc thật.
+function petSlots(plus){ return plus >= 8 ? 4 : plus >= 4 ? 3 : 2; }
+// Bảng phí thăng cấp. Thất bại CHỈ mất nguyên liệu — pet giữ nguyên mức, không bao giờ vỡ.
+function petRule(t){
+  if (t <= 3)  return { rate:100, silver:1500*t,  mat:2*t,  tuLa:0,   hon:0,   jw:{} };
+  if (t <= 6)  return { rate:[0,0,0,0,85,75,65][t], silver:4000*t, mat:5*t, tuLa:t-3, hon:0, jw:{} };
+  if (t <= 9)  return { rate:[0,0,0,0,0,0,0,55,45,38][t], silver:9000*t, mat:9*t, tuLa:t-3, hon:t-6,
+                        jw:{ chucPhuc:t-6 } };
+  return { rate: t === 10 ? 30 : 24, silver:15000*t, mat:14*t, tuLa:t, hon:t-6,
+           jw:{ chucPhuc:t-6, linhHon:t-8, honDon:1 } };
+}
+// Phí roll leo theo mức: roll ở +10 đắt hơn roll ở +0, vì dòng lúc đó đáng giá hơn nhiều.
+function petRollCost(plus){
+  return { silver: 2000 + plus*1800, mat: 2 + plus, jw:{ linhHon: 1 + Math.floor(plus/4) } };
+}
 // Cánh — boss 12%, ngoài hệ 10 cấp trang bị
 const WING_DEFS = [
   { id:'thienthan', name:'Cánh Thiên Thần', color:'#dfe8ff', hpPct:12, evaPct:6, silverPct:20, desc:'+12% HP · +6% né · +20% đồng rơi' },
@@ -3994,7 +4040,138 @@ function specialItem(slot, def, extra){
   }, extra || {});
 }
 function genCloak(t){ return specialItem('aochoang', CLOAK_TIERS[t], { cloakTier: t }); }
-function genPet(i){ return specialItem('pet', PET_DEFS[i], { pet: PET_DEFS[i].id }); }
+// ── LINH THÚ: dựng, chuẩn hoá, roll, thăng cấp ─────────────────────────────
+function petDef(it){
+  if (!it) return null;
+  const id = PET_LEGACY[it.pet] || it.pet;
+  return PET_DEFS.find(d => d.id === id) || PET_DEFS[0];
+}
+function rollPetSubs(plus, coreK){
+  // Loại khoá của dòng GỐC ra khỏi bể: nếu không, bảng hiện hai dòng cùng tên
+  // ("Thêm Sát Thương" ở cả dòng gốc lẫn dòng phụ) — trông như lỗi hiển thị.
+  const bag = PET_SUBS.filter(x => x.k !== coreK), out = [], n = petSlots(plus);
+  while (out.length < n && bag.length){
+    const d = bag.splice(Math.floor(Math.random() * bag.length), 1)[0];
+    out.push({ k:d.k, name:d.name, pct:true,
+               v: Math.round((d.min + Math.random() * (d.max - d.min)) * 10) / 10 });
+  }
+  return out;
+}
+// Một chỗ duy nhất dựng lại hình dạng đúng của con pet: dòng gốc đứng đầu, rồi đủ số ô
+// dòng phụ theo mức hiện tại. Gọi cả lúc mới nhận, lúc thăng cấp qua mốc, và lúc đọc save cũ —
+// nên pet đời cũ (holy/hulan/hothan) tự vá thành pet đời mới mà không phải xoá save của ai.
+function petNormalize(it){
+  if (!it) return null;
+  const d = petDef(it);
+  it.pet = d.id; it.name = d.name; it.nosell = true; it.slot = 'pet'; it.special = true;
+  it.noForge = true;                         // Lò Hỗn Độn không đụng được — chỉ tab Linh Thú nâng
+  if (typeof it.plus !== 'number') it.plus = 0;
+  it.plus = Math.max(0, Math.min(PET_MAX_PLUS, it.plus));
+  const core = { k:d.coreK, name:subName(d.coreK), v:d.coreV, pct:true, core:true };
+  const want = petSlots(it.plus);
+  const kept = (it.subs || []).filter(sb => !sb.core && sb.k !== d.coreK).slice(0, want);
+  if (kept.length < want){                   // vừa qua mốc +4/+8, hoặc pet đời cũ thiếu dòng
+    const used = new Set(kept.map(sb => sb.k));
+    const bag = PET_SUBS.filter(x => !used.has(x.k) && x.k !== d.coreK);
+    while (kept.length < want && bag.length){
+      const x = bag.splice(Math.floor(Math.random() * bag.length), 1)[0];
+      kept.push({ k:x.k, name:x.name, pct:true,
+                  v: Math.round((x.min + Math.random() * (x.max - x.min)) * 10) / 10 });
+    }
+  }
+  it.subs = [core].concat(kept);
+  return it;
+}
+function genPet(i){
+  const d = PET_DEFS[i] || PET_DEFS[0];
+  const it = specialItem('pet', { name:d.name }, { pet:d.id });
+  return petNormalize(it);
+}
+// Đủ tiền chưa? Trả về { ok, rows } — rows dùng luôn cho bảng phí trên giao diện.
+function petAfford(c){
+  const rows = [];
+  rows.push(chaosCost('Bạc', player.silver, c.silver, '◈'));
+  rows.push(chaosCost('Huyền Thiết', player.mat, c.mat, '✦'));
+  if (c.tuLa) rows.push(chaosCost('Tu La Tinh Thạch', player.gems.tuLa, c.tuLa, '◆'));
+  if (c.hon)  rows.push(chaosCost('Hỗn Nguyên', player.gems.honNguyen, c.hon, '❖'));
+  for (const k in (c.jw || {})){
+    const jd = CHAOS_JEWELS.find(x => x.k === k) || { name:k, glyph:'◎' };
+    rows.push(chaosCost(jd.name, player.jewels[k] || 0, c.jw[k], jd.glyph));
+  }
+  return { ok: rows.every(r => r.ok), rows };
+}
+function petPay(c){
+  player.silver -= c.silver; player.mat -= c.mat;
+  if (c.tuLa) player.gems.tuLa -= c.tuLa;
+  if (c.hon)  player.gems.honNguyen -= c.hon;
+  if (c.jw && Object.keys(c.jw).length) spendJewels(c.jw);
+}
+// Con Linh Thú đang có, dù đang mặc hay đã tháo xuống túi. Không dùng riêng player.equip.pet:
+// tháo pet xuống túi rồi mở bảng sẽ hiện lại màn chọn giống và người chơi nhận được con THỨ HAI.
+function petOwned(){
+  if (!player) return null;
+  if (player.equip && player.equip.pet) return player.equip.pet;
+  return (player.inv || []).find(x => x && x.slot === 'pet') || null;
+}
+window.petPick = function(i){
+  if (!player || petOwned()) return;
+  player.equip.pet = genPet(i);
+  calcDerived(); saveGame();
+  const d = PET_DEFS[i];
+  addFloat(player.x, player.y - 52, `${d.name} đã theo bạn!`, d.color, 16);
+  addEffect({ type:'ring', x:player.x, y:player.y, r:90, color:d.color, big:true });
+  renderPet();
+};
+window.petUpgrade = function(){
+  const it = player && player.equip.pet;
+  if (!it || it.plus >= PET_MAX_PLUS || player.petPending) return;
+  const t = it.plus + 1, r = petRule(t);
+  const aff = petAfford(r);
+  if (!aff.ok) return;
+  petPay(r);
+  const before = petSlots(it.plus);
+  if (Math.random() * 100 < r.rate){
+    it.plus = t;
+    petNormalize(it);
+    const opened = petSlots(it.plus) > before;
+    petSay(`✔ ${it.name} lên +${it.plus}!${opened ? ' — MỞ THÊM MỘT DÒNG PHỤ!' : ''}`, '#8fd18f');
+    addFloat(player.x, player.y - 44, `Linh Thú +${it.plus}`, '#8fd18f', 15);
+    AudioSys.sfx('forge_ok', 0.9);
+  } else {
+    // Luật cốt lõi của tính năng: hỏng thì CHỈ mất nguyên liệu. Không tụt cấp, không vỡ pet.
+    petSay(`✘ Không thành — nguyên liệu mất, ${it.name} vẫn nguyên vẹn ở +${it.plus}.`, '#ffd76a');
+    addFloat(player.x, player.y - 44, 'Chưa thành — pet vẫn an toàn', '#ffd76a', 13);
+    AudioSys.sfx('forge_fail', 0.7);
+  }
+  calcDerived(); saveGame(); renderPet();
+};
+window.petRoll = function(){
+  const it = player && player.equip.pet;
+  if (!it || player.petPending) return;
+  const c = petRollCost(it.plus);
+  if (!petAfford(c).ok) return;
+  petPay(c);
+  // Giữ lượt roll TRONG save: người chơi đã trả tiền rồi, đóng bảng hay tải lại trang cũng
+  // không được nuốt mất lượt đó của họ.
+  player.petPending = rollPetSubs(it.plus, petDef(it).coreK);
+  saveGame(); renderPet();
+};
+window.petRollTake = function(take){
+  const it = player && player.equip.pet;
+  if (!it || !player.petPending) return;
+  if (take){
+    it.subs = [it.subs[0]].concat(player.petPending);
+    petSay('✔ Đã thay bộ dòng phụ mới.', '#8fd18f');
+  } else {
+    petSay('Giữ bộ cũ.', '#9aa8d4');
+  }
+  player.petPending = null;
+  calcDerived(); saveGame(); renderPet();
+};
+function petSay(msg, col){
+  const e = el('pet-msg');
+  if (e){ e.textContent = msg; e.style.color = col || '#9aa8d4'; }
+}
 function genWing(i){ return specialItem('canh', WING_DEFS[i], { wing: WING_DEFS[i].id }); }
 function mainName(k){
   return { atk:'Công Kích', def:'Phòng Ngự', vit:'Sinh Lực', str:'Lực Lượng',
@@ -4226,6 +4403,10 @@ function itemSellPrice(it){ return 20 + (it.tier || 1)*15 + it.rarity*40 + Math.
 window.sellItem = function(i){
   const it = player.inv[i];
   if (!it) return;
+  if (it.slot === 'pet'){   // Linh Thú là tính năng, không phải đồ — bán đi là mất cả tiến độ +N
+    addFloat(player.x, player.y-40, 'Linh Thú không bán được — nó theo bạn mãi.', '#ffd76a', 13);
+    AudioSys.sfx('ui', 0.4); return;
+  }
   const precious = it.rarity >= 2 || it.perfect || it.ancient || it.sigil; // xác nhận 2 lớp với đồ quý (Khắc Ấn luôn tính là quý)
   if (precious && window._sellArm !== i){
     window._sellArm = i;
@@ -4683,6 +4864,19 @@ function loadGame(){
     // trong 3 slot phụ tuyến bị chiếm vĩnh viễn và người chơi không nhận thêm được NV nào nữa.
     for (const _sid in sideStates) if (!SIDE_QUESTS.some(q => q.id === _sid)) delete sideStates[_sid];
     if (!player.mount) player.mount = { tier: 0, out: false };
+    // Linh Thú: pet đời cũ (holy/hulan/hothan, chỉ số cố định, nằm cả trong túi) tự vá sang
+    // đời mới. Giữ đúng MỘT con — con đang mặc, hoặc con đầu tiên trong túi — số còn lại quy
+    // ra bạc, vì tính năng mới chỉ có một con duy nhất và nó không bán được nữa.
+    {
+      const _keep = player.equip && player.equip.pet;
+      const _bag = (player.inv || []).filter(x => x && x.slot === 'pet');
+      if (!_keep && _bag.length){
+        player.equip = player.equip || {};
+        player.equip.pet = _bag[0];
+      }
+      player.inv = (player.inv || []).filter(x => !(x && x.slot === 'pet' && x !== player.equip.pet));
+      if (player.equip && player.equip.pet) petNormalize(player.equip.pet);
+    }
     player.mount.out = !!player.mount.out; delete player.mount.riding; // bỏ cơ chế cưỡi
     if (!player.dantian) player.dantian = { realm: 0, tuvi: 0 };
     if (!player.cd) player.cd = { basic:0, a:0, b:0, c:0 };
@@ -5975,7 +6169,7 @@ function computeKillRewards(m, source, P, rng){
     xp:0, xpMul:1, silver:0, mat:0, khi:0, kills:1,
     gems:{ tuLa:0, honNguyen:0 }, tienDan:0, bikipVH:0,
     noidan:null, mats:{ manh:0, tichMa:0, anTranAi:0, manhCoThan:0 },
-    pets:[], wings:[], items:[], autoSold:[],
+    wings:[], items:[], autoSold:[],
     bossPity:null, firstDrop:false, chinhPhat:false, dropSrc:null, gotThan:false,
   };
   // EXP: quái thấp hơn mình >5 cấp thì giảm dần 15%/cấp (tối thiểu 10%) — phạt farm vùng thấp
@@ -5989,14 +6183,12 @@ function computeKillRewards(m, source, P, rng){
   // giữ lại sức ép đó ở đây thay vì ở một ô đếm riêng.
   rw.khi = d.bossKind ? 200 : (d.boss || m.type === 'boss') ? 120 : d.elite ? 35 : 10;
   if (R() < 0.3) rw.mat = 1;
-  // Thú cưng rơi từ tinh anh (12%) / boss (40%); Cánh từ boss (12%)
+  // Cánh rơi từ boss (12%). Linh Thú KHÔNG còn rơi từ quái nữa — nó là tính năng riêng
+  // (bảng Nhân Vật → Linh Thú), nhận một lần ở cấp 8 rồi nuôi lên. Trước đây pet là đồ rơi,
+  // nên săn được con tốt nhất là ô pet chết vĩnh viễn: không còn lý do nhặt con thứ tư.
   const _oCon = P.inv.length;
   let _sotCho = Math.max(0, 30 - _oCon);
-  if (!d.boss && d.elite && R() < 0.12 && _sotCho > 0){
-    const r2 = R(); rw.pets.push(r2 < 0.7 ? 0 : R() < 0.8 ? 1 : 2); _sotCho--;
-  }
   if (d.boss){
-    if (R() < 0.4 && _sotCho > 0){ rw.pets.push(Math.floor(R()*3)); _sotCho--; }
     if (R() < 0.12 && _sotCho > 0){ rw.wings.push(Math.floor(R()*2)); _sotCho--; }
   }
   // đá quý: Tu La (cấp 3+), Hỗn Nguyên (tinh anh), Đá Thăng Cấp (cấp 5+)
@@ -6057,7 +6249,6 @@ function applyRewards(rw, m){
   logCombat(`☠ Hạ ${m.def.name} — Nhận: +${rw.xp} EXP${rw.xpMul < 1 ? ` (-${Math.round((1-rw.xpMul)*100)}% chênh cấp)` : ''} +${rw.silver}◈`, rw.xpMul < 1 ? '#c8b888' : '#7ecbff');
   if (rw.mat) logCombat('+1 ✦ Huyền Thiết', '#9fd0ff');
   dailyTrack('kills');
-  for (const pi of rw.pets){ player.inv.push(genPet(pi)); addFloat(m.x, m.y-88, `Pet: ${PET_DEFS[pi].name}!`, PET_DEFS[pi].color, 13); }
   for (const wi of rw.wings){ player.inv.push(genWing(wi)); addFloat(m.x, m.y-114, `${WING_DEFS[wi].name}!`, WING_DEFS[wi].color, 15); }
   if (rw.gems.tuLa){ player.gems.tuLa += rw.gems.tuLa; logCombat('+1 ◆ Tu La Tinh Thạch', '#e84a6a'); }
   if (rw.gems.honNguyen){ player.gems.honNguyen += rw.gems.honNguyen; logCombat('+1 ❖ Hỗn Nguyên Thạch', '#b08ae8'); }
@@ -11801,18 +11992,41 @@ function drawPlayer(){
       ctx.stroke();
     }
   }
-  // Pet đồng hành — linh quang bay lượn phía sau lưng
+  // Linh Thú đồng hành — bay lửng phía sau lưng, nhìn cùng hướng với chủ.
+  // Trước đây chỗ này chỉ là một khối gradient tròn bán kính 11px; giờ là art Axie thật.
   const petIt = p.equip && p.equip.pet;
   if (petIt){
-    const pd = PET_DEFS.find(d => d.id === petIt.pet) || PET_DEFS[0];
-    const side = Math.cos(p.face) >= 0 ? -1 : 1;
-    const px = p.x + side*40, py = p.y - 34 + Math.sin(performance.now()/350)*4;
-    const pg = ctx.createRadialGradient(px, py, 0, px, py, 11);
-    pg.addColorStop(0, '#ffffff'); pg.addColorStop(0.4, pd.color); pg.addColorStop(1, 'rgba(0,0,0,0)');
+    const pd = petDef(petIt), im = PET_IMGS[pd.id];
+    const side = Math.cos(p.face) >= 0 ? -1 : 1;              // đứng phía sau lưng chủ
+    const now2 = performance.now();
+    const px = p.x + side*42, py = p.y - 30 + Math.sin(now2/430)*5;
+    const plus = petIt.plus || 0;
+    // Quầng nền giữ lại: ở cỡ 44px con thú dễ chìm vào nền tối, và quầng cũng là chỗ
+    // duy nhất màu giống lộ ra khi art bị vật cản che.
+    const pg = ctx.createRadialGradient(px, py, 2, px, py, 30);
+    pg.addColorStop(0, hex2rgba(pd.color, 0.30 + plus*0.02));
+    pg.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = pg;
-    ctx.beginPath(); ctx.arc(px, py, 11, 0, 7); ctx.fill();
-    ctx.fillStyle = pd.color;
-    ctx.beginPath(); ctx.arc(px, py, 3.5, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(px, py, 30, 0, 7); ctx.fill();
+    if (im && im.complete && im.naturalWidth){
+      const ph = 44, pw = ph * (im.naturalWidth / im.naturalHeight);
+      ctx.save();
+      ctx.translate(px, py);
+      if (side < 0) ctx.scale(-1, 1);   // art vẽ quay TRÁI — lật khi chủ quay phải
+      ctx.drawImage(im, -pw/2, -ph/2, pw, ph);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = pd.color;
+      ctx.beginPath(); ctx.arc(px, py, 6, 0, 7); ctx.fill();
+    }
+    // Từ +8 trở lên có bụi sáng bay quanh — nhìn là biết con này đã được nuôi kỹ.
+    if (plus >= 8 && !SETTINGS.lowFx){
+      for (let i = 0; i < 3; i++){
+        const a = now2/620 + i*2.094, rr = 22 + Math.sin(now2/380 + i)*4;
+        ctx.fillStyle = hex2rgba(pd.color, 0.55);
+        ctx.beginPath(); ctx.arc(px + Math.cos(a)*rr, py + Math.sin(a)*rr*0.5, 1.8, 0, 7); ctx.fill();
+      }
+    }
   }
   ctx.restore();
   // ── Danh hiệu trên đỉnh đầu (chọn trong bảng Nhân Vật → tab Thông Tin) ──
@@ -13209,6 +13423,104 @@ function mountAttrLines(t){
   if (t.qireg) parts.push(`Hồi Mana +${t.qireg}`);
   return parts;
 }
+// ══════════ BẢNG LINH THÚ ══════════
+function petCostHtml(rows){
+  return `<div class="pet-cost">` + rows.map(r =>
+    `<span class="${r.ok ? 'ok' : 'no'}">${r.glyph} ${r.need.toLocaleString('vi-VN')}` +
+    `<i>/${(r.have || 0).toLocaleString('vi-VN')}</i></span>`).join('') + `</div>`;
+}
+function petLineHtml(sb, plus, cls){
+  const m = 1 + plus * 0.08;                      // calcDerived() nhân đúng hệ số này
+  const v = Math.round(sb.v * m * 10) / 10;
+  return `<div class="pet-line ${cls || ''}">
+    <span>${sb.core ? '◆ ' : ''}${sb.name}</span>
+    <b>+${v}%${plus && !sb.core ? `<i>(gốc ${sb.v})</i>` : ''}</b></div>`;
+}
+function renderPet(){
+  if (player.level < 8){
+    CE().innerHTML = `<h3>Linh Thú</h3>
+      <div style="padding:14px;font-size:13px">Linh Thú mở khoá ở <b style="color:#7ecbff">cấp 8</b>.</div>`;
+    return;
+  }
+  let it = player.equip.pet;
+  if (!it){
+    const bag = petOwned();                 // đang nằm trong túi → đeo lại, nó vốn không tháo được
+    if (bag){
+      player.inv = player.inv.filter(x => x !== bag);
+      player.equip.pet = it = bag;
+      calcDerived(); saveGame();
+    }
+  }
+  let html = `<h3>Linh Thú</h3>`;
+  if (!it){
+    html += `<div class="pet-intro">Chọn một con theo bạn. <b style="color:#7ecbff">Chỉ chọn một lần</b> —
+      và từ đó nó không rời bạn nữa: không bán được, không rơi mất, thăng cấp hỏng cũng không sao.</div>
+      <div class="pet-pick">` +
+      PET_DEFS.map((d, i) => `<button class="pet-card" onclick="petPick(${i})">
+        <img src="${d.img}" alt="${d.name}">
+        <div class="pn" style="color:${d.color}">${d.name}</div>
+        <div class="pt">${d.tag}</div>
+        <div class="pd">${d.desc}</div>
+        <div class="pc">◆ ${subName(d.coreK)} <b>+${d.coreV}%</b></div>
+      </button>`).join('') + `</div>`;
+    CE().innerHTML = html;
+    return;
+  }
+
+  const d = petDef(it), lines = it.subs || [], pend = player.petPending;
+  html += `<div class="pet-head">
+      <img class="pet-art" src="${d.img}" alt="${d.name}">
+      <div class="pet-meta">
+        <div class="pet-name" style="color:${d.color}">${d.name} <em>+${it.plus}</em></div>
+        <div class="pet-tag">${d.tag} — ${d.desc}</div>
+        <div class="tier-pips">${Array.from({length:PET_MAX_PLUS}, (_,i) =>
+          `<span style="color:${i < it.plus ? d.color : 'rgba(232,236,255,.22)'}">●</span>`).join('')}</div>
+      </div></div>`;
+
+  // ── Dòng chỉ số ──
+  html += `<div class="stat-sec">THUỘC TÍNH</div><div class="pet-lines">`;
+  html += petLineHtml(lines[0], it.plus, 'core');
+  for (let i = 1; i < lines.length; i++){
+    const nw = pend && pend[i-1];
+    html += nw ? `<div class="pet-swap">${petLineHtml(lines[i], it.plus, 'old')}
+        <span class="arw">→</span>${petLineHtml(nw, it.plus, 'new')}</div>`
+      : petLineHtml(lines[i], it.plus);
+  }
+  const nextSlotAt = it.plus < 4 ? 4 : it.plus < 8 ? 8 : 0;
+  if (nextSlotAt) html += `<div class="pet-locked">🔒 Ô dòng phụ thứ ${petSlots(nextSlotAt)} — mở ở <b>+${nextSlotAt}</b></div>`;
+  html += `</div>`;
+
+  // ── Roll ──
+  if (pend){
+    html += `<div class="pet-act"><div class="pet-act-t">Bộ dòng mới đã bốc xong — bạn quyết định:</div>
+      <div class="forge-actions">
+        <button class="mini-btn" style="border-color:#8fd18f;color:#8fd18f" onclick="petRollTake(true)">Thay bộ mới</button>
+        <button class="mini-btn" onclick="petRollTake(false)">Giữ bộ cũ</button></div></div>`;
+  } else {
+    const rc = petRollCost(it.plus), ra = petAfford(rc);
+    html += `<div class="pet-act"><div class="pet-act-t">Bốc lại dòng phụ <span>— xem trước rồi mới quyết, không ưng thì giữ bộ cũ</span></div>
+      ${petCostHtml(ra.rows)}
+      <div class="forge-actions"><button class="mini-btn" onclick="petRoll()" ${ra.ok?'':'disabled'}>Bốc Dòng Phụ</button></div></div>`;
+  }
+
+  // ── Thăng cấp ──
+  if (it.plus >= PET_MAX_PLUS){
+    html += `<div class="pet-act done" style="color:${d.color}">◑ ${d.name} đã đạt +${PET_MAX_PLUS} — không còn gì để thăng nữa.</div>`;
+  } else {
+    const t = it.plus + 1, r = petRule(t), aff = petAfford(r);
+    const opens = petSlots(t) > petSlots(it.plus);
+    html += `<div class="pet-act"><div class="pet-act-t">Thăng cấp +${it.plus} → <b style="color:${d.color}">+${t}</b>
+        <span>— mọi dòng mạnh thêm 8%${opens ? ` · <b style="color:#ffd76a">mở ô dòng phụ thứ ${petSlots(t)}</b>` : ''}</span></div>
+      ${petCostHtml(aff.rows)}
+      <div class="pet-rate">Tỉ lệ thành công <b>${r.rate}%</b></div>
+      <div class="pet-safe">✔ Hỏng thì chỉ mất nguyên liệu — Linh Thú <b>không tụt cấp, không vỡ</b>.</div>
+      <div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 20px"
+        onclick="petUpgrade()" ${aff.ok?'':'disabled'}>Thăng Cấp</button></div></div>`;
+  }
+  html += `<div id="pet-msg" class="pet-msg"></div>`;
+  CE().innerHTML = html;
+}
+window.renderPet = renderPet;
 function renderMount(){
   if (player.level < 6){
     CE().innerHTML = `<h3>Thú Chiến</h3>
@@ -13967,6 +14279,8 @@ window.charTab = 'info';
 const CHAR_TABS = [
   { id:'info',     name:'Thông Tin',  lv:1 },
   { id:'mount',    name:'Thú Chiến',  lv:6 },
+  { id:'linhthu',  name:'Linh Thú',   lv:8 }, // KHÔNG dùng lại mã 'pet' — đó là mã của hệ Thú
+                                            // Thuần Hóa đã gỡ, test_nopet đang gác cho nó không quay lại
   { id:'taytuy',   name:'🔄 Tái Sinh', lv:MAX_LV },
   { id:'tuyethoc', name:'Thuần Thục', lv:4 },
 ];
@@ -13983,6 +14297,7 @@ function renderCharPanel(){
   el('panel-char').innerHTML = html;
   if (tab==='info') renderChar();
   else if (tab==='mount') renderMount();
+  else if (tab==='linhthu') renderPet();
   else if (tab==='taytuy') renderTayTuy();
   else if (tab==='tuyethoc') renderTuyetHoc();
   else renderForge();
