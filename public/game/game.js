@@ -21,8 +21,26 @@ let W = 0, H = 0;
 // Chi phí tô điểm ảnh tỉ lệ với DIỆN TÍCH, nên hạ 40% chiều là còn 36% số điểm ảnh. Đổi lại
 // chữ và nét vẽ mềm đi vì canvas bị phóng to lên đúng bằng cửa sổ — nên mặc định là 100% và
 // chỉ tự hạ khi máy thật sự không gánh nổi, kể cả sau khi đã hạ hiệu ứng xuống mức Thấp.
-const RES_STEPS = [1, 0.85, 0.75, 0.6];
+const RES_STEPS = [1, 0.85, 0.75, 0.6, 0.5];
 let RES = 1, RES_AUTO = true;
+// ĐỘ PHÂN GIẢI THẬT CỦA MÀN HÌNH. canvas.width tính bằng điểm ảnh THIẾT BỊ, nhưng trước đây
+// chỉ nhân W — mà W là điểm ảnh CSS. Trên mọi màn HiDPI (laptop retina, 4K có scale hệ thống)
+// nghĩa là cả thế giới vẽ ở 1/2 độ phân giải rồi để trình duyệt phóng lên gấp đôi. Đó mới là
+// nguyên nhân chính làm hình mềm — không phải nét vẽ hay cỡ sprite.
+// Trần 2: trên mức đó chi phí tăng theo bình phương mà mắt gần như không phân biệt thêm.
+// Bậc 0,5 thêm vào cuối thang để máy yếu trên màn retina vẫn tụt về đúng mức nét như trước
+// (0,5 × 2 = 1,0), chứ không tệ hơn.
+let DPRF = Math.min(2, window.devicePixelRatio || 1);
+// KHỞI ĐỘNG Ở ĐÚNG MỨC NẶNG NHƯ CŨ, RỒI MỚI LEO. Bật thẳng 2× cho mọi máy là sai:
+// đo được số điểm ảnh gấp 4 làm thời gian một khung từ 18,3ms lên 51,2ms (54,6 → 19,5 khung/giây)
+// trên máy không GPU. Nên mặc định chọn bậc RES nhỏ nhất mà RES × DPRF ≥ 1 — tức đúng bằng độ nét
+// hiện nay, không ai tệ đi. Bộ tự chỉnh (autoTune) vốn đã biết NÂNG bậc khi khung hình dư sức,
+// nên máy khoẻ tự leo lên 2× thật trong vài giây, còn máy yếu thì nằm yên ở mức cũ.
+function resFloorForDpr(){
+  for (let i = RES_STEPS.length - 1; i >= 0; i--) if (RES_STEPS[i] * DPRF >= 0.999) return RES_STEPS[i];
+  return RES_STEPS[RES_STEPS.length - 1];
+}
+RES = resFloorForDpr();
 function resize(){
   // W/H là kích thước LOGIC, luôn bằng cửa sổ tính theo điểm ảnh CSS — RES không đụng tới nó.
   // Chỉ BỘ ĐỆM co lại; render() nhân sẵn ctx theo RES nên toàn bộ mã game vẫn vẽ theo W/H như cũ.
@@ -30,8 +48,9 @@ function resize(){
   // TẦM NHÌN (60% là mất 40% bề ngang thế giới) — người máy yếu tự nhiên nhìn được ít hơn người
   // máy khoẻ. Đó là thay đổi lối chơi, không phải thay đổi đồ hoạ.
   W = window.innerWidth; H = window.innerHeight;
-  canvas.width  = Math.round(W * RES);
-  canvas.height = Math.round(H * RES);
+  DPRF = Math.min(2, window.devicePixelRatio || 1);   // đọc lại: kéo cửa sổ sang màn khác là đổi
+  canvas.width  = Math.round(W * RES * DPRF);
+  canvas.height = Math.round(H * RES * DPRF);
   // Việc phủ kín cửa sổ do CSS lo (#game đặt width/height 100% — xem style.css).
 }
 window.addEventListener('resize', resize); resize();
@@ -7812,7 +7831,8 @@ function render(){
   // Đặt lại phép biến hình gốc mỗi khung: mọi thứ bên dưới vẽ theo toạ độ LOGIC (W/H, điểm ảnh
   // CSS), còn bộ đệm thì nhỏ hơn đúng RES lần. Đặt ở đây chứ không ở resize() để không phụ thuộc
   // vào việc mọi save() bên dưới đều có restore() khớp.
-  ctx.setTransform(RES, 0, 0, RES, 0, 0);
+  ctx.setTransform(RES * DPRF, 0, 0, RES * DPRF, 0, 0);
+  ctx.imageSmoothingQuality = 'high';   // sprite dựng 2× rồi thu xuống — bộ lọc tốt hơn thì nét hơn
   // paper background — màu nền theo bản đồ hiện tại
   const md = mapDef();
   ctx.fillStyle = md.ground; ctx.fillRect(0,0,W,H);
@@ -10178,7 +10198,12 @@ function hJoint(g, px, py, ang, fn){
 }
 
 // ── BỘ XƯƠNG: tính góc từng khớp theo trạng thái, không dùng bảng khung hình ──
-const HERO_JOINT = { hipL:[72,142], hipR:[90,142], shL:[52,100], shR:[108,100], neck:[80,94] };
+const HERO_JOINT = { hipL:[72,142], hipR:[90,142], shL:[52,100], shR:[108,100], neck:[80,94],
+                     kneeL:[70,171], kneeR:[90,171] };
+// Như hJoint nhưng nhấc thêm một đoạn: gối gập thì bàn chân phải RỜI mặt đất.
+function hJoint2(g, px, py, ang, lift, fn){
+  g.save(); g.translate(px, py + (lift || 0)); g.rotate(ang); g.translate(-px, -py); fn(); g.restore();
+}
 
 // ── KIỂU RA ĐÒN ──────────────────────────────────────────────────────────────
 // Mỗi kiểu là quỹ đạo tay + vũ khí theo tiến trình p (0 = bắt đầu, 1 = kết thúc).
@@ -10241,14 +10266,25 @@ function heroActOf(sectKey, slot){ return (SECT_ACT[sectKey] || SECT_ACT.vophai)
 function heroPose(wph, mv, atkK, castK, now, act, sway, swayDir){
   const br = Math.sin(now / 620) * 0.035;               // nhịp thở lúc đứng yên
   const st = mv ? Math.sin(wph) : 0;                    // sải chân
+  // Thân trên TRỄ pha so với hông. Nguyên tắc hoạt hình: hông dẫn, vai theo sau
+  // vài khung. Cùng pha thì cả người cứng như một khối.
+  const stU = mv ? Math.sin(wph - 0.45) : 0;
   const k = castK > 0 ? castK : atkK;                   // đòn nào đang chạy
   const A = k > 0 ? (HERO_ACT[act] || HERO_ACT.slash)(1 - Math.min(1, k)) : null;
+  // Gối gập mạnh nhất lúc chân ĐANG ĐƯA QUA THÂN (giữa pha vung), duỗi thẳng lúc
+  // chống đất. Đứng yên thì chùng nhẹ một bên theo nhịp dồn trọng tâm.
+  const flexL = mv ? Math.max(0, Math.cos(wph)) : 0;
+  const flexR = mv ? Math.max(0, -Math.cos(wph)) : 0;
+  const idleSh = mv ? 0 : Math.cos(now / 620);          // đứng yên: dồn trọng tâm qua lại
   return {
     legL: st * 0.42, legR: -st * 0.42,
-    armL: A ? A.armL - st * 0.10 : -st * 0.30 + br,
-    armR: A ? A.armR : st * 0.30 - br,
-    lean: (A ? A.lean : 0) + (mv ? Math.sin(wph) * 0.045 : br * 0.5),
-    head: (A && A.head ? A.head : 0) + (mv ? -Math.sin(wph * 2) * 0.05 : -br),
+    kneeL:  flexL * 0.30 + (mv ? 0 : Math.max(0, idleSh) * 0.05),
+    kneeR: -flexR * 0.30 - (mv ? 0 : Math.max(0, -idleSh) * 0.05),
+    liftL: -flexL * 3.0, liftR: -flexR * 3.0,
+    armL: A ? A.armL - stU * 0.10 : -stU * 0.30 + br,
+    armR: A ? A.armR : stU * 0.30 - br,
+    lean: (A ? A.lean : 0) + (mv ? Math.sin(wph - 0.45) * 0.045 : br * 0.5 + idleSh * 0.018),
+    head: (A && A.head ? A.head : 0) + (mv ? -Math.sin(wph * 2 - 0.9) * 0.05 : -br - idleSh * 0.03),
     bob:  mv ? Math.abs(Math.sin(wph)) * -3.2 : Math.sin(now / 620) * -1.2,
     wrot: A ? A.wrot : 0, wpush: A ? A.wpush : 0,
     sw: A ? A.sw : 0, cast: castK, back: false,
@@ -10263,16 +10299,26 @@ const HERO_POSE0 = heroPose(0, false, 0, 0, 0, 'slash');
 // giáp nhấp nhô theo đúng sải bước thay vì dán chết một chỗ.
 // SM/S (thêm sau gv): bảng màu + tạo hình của ĐÚNG bộ giáp đang mặc. Giáp ống vẽ TRONG khớp
 // hông nên nhấp nhô theo sải bước — vẽ ngoài là thành nhãn dán.
+// Chân có HAI khớp: hông và gối. Trước đây cả chân là một khúc cứng xoay quanh
+// hông — nhìn ra con rối, không ra người đi. Ống chân nay nằm trong khớp gối,
+// nên lúc chân đưa qua thân thì gối gập và bàn chân nhấc lên khỏi mặt đất.
+// Giáp ống cũng vẽ trong khớp gối: nó nằm ở ống chân chứ không phải ở đùi.
 function hLegs(g, P, ps, gv, SM, S){
   hJoint(g, HERO_JOINT.hipL[0], HERO_JOINT.hipL[1], ps.legL, () => {
-    hPoly(g, [[63,140],[80,140],[80,198],[61,198]], P.leg);
-    hPoly(g, [[60,194],[79,194],[81,212],[57,212]], P.boot);
-    hGreave(g, SM || hMetal(1), gv, -1, S);
+    hPoly(g, [[63,140],[80,140],[80,177],[62,177]], P.leg);                 // đùi (thò quá gối để che mối nối)
+    hJoint2(g, HERO_JOINT.kneeL[0], HERO_JOINT.kneeL[1], ps.kneeL || 0, ps.liftL || 0, () => {
+      hPoly(g, [[62,163],[80,163],[80,198],[61,198]], P.leg);               // ống chân
+      hPoly(g, [[60,194],[79,194],[81,212],[57,212]], P.boot);
+      hGreave(g, SM || hMetal(1), gv, -1, S);
+    });
   });
   hJoint(g, HERO_JOINT.hipR[0], HERO_JOINT.hipR[1], ps.legR, () => {
-    hPoly(g, [[80,140],[97,140],[99,198],[80,198]], P.leg);
-    hPoly(g, [[81,194],[100,194],[103,212],[79,212]], P.boot);
-    hGreave(g, SM || hMetal(1), gv, 1, S);
+    hPoly(g, [[80,140],[97,140],[98,177],[80,177]], P.leg);
+    hJoint2(g, HERO_JOINT.kneeR[0], HERO_JOINT.kneeR[1], ps.kneeR || 0, ps.liftR || 0, () => {
+      hPoly(g, [[80,163],[98,163],[99,198],[80,198]], P.leg);
+      hPoly(g, [[81,194],[100,194],[103,212],[79,212]], P.boot);
+      hGreave(g, SM || hMetal(1), gv, 1, S);
+    });
   });
 }
 function hTorso(g, P){ hPoly(g, [[58,96],[102,96],[106,146],[54,146]], P.torso); }
@@ -11143,6 +11189,11 @@ const CHIBI_PX = 420;
 const _chibiCache = {};
 
 function chibiUrl(sectKey, variant){
+  return chibiCanvas(sectKey, variant).toDataURL('image/png');
+}
+// Trả về CANVAS chứ không phải dataURL: vẽ thẳng canvas vào màn thì không phải
+// chờ Image tải xong, nên dùng được ngay trong vòng vẽ.
+function chibiCanvas(sectKey, variant){
   const key = sectKey + '|' + (variant || '-');
   if (_chibiCache[key]) return _chibiCache[key];
   const art = document.createElement('canvas');
@@ -11172,8 +11223,9 @@ function chibiUrl(sectKey, variant){
   ring('#f4f7ff', 9);
   ring('#0b0714', 4);
   g.drawImage(art, 0, 0);
-  return (_chibiCache[key] = out.toDataURL('image/png'));
+  return (_chibiCache[key] = out);
 }
+
 
 // Một khối chibi: bầu, tô chuyển sắc, có đốm sáng ở góc trên-trái.
 function chBlob(g, x, y, w, h, lo, hi, r){
@@ -13714,6 +13766,15 @@ function fxAutoTune(ms){
   _fxT.length = 0;
   // Hạ nhanh, nâng chậm và phải dư sức RÕ RỆT — không thì FXQ nhấp nháy quanh ngưỡng, mà đổi
   // chất lượng giữa trận còn khó chịu hơn là thấp đều.
+  // Độ nét trên MỨC NỀN (mức nét bằng bản cũ) là phần THÊM, nên đuối thì trả nó lại
+  // TRƯỚC KHI hi sinh hiệu ứng. Không có nhánh này thì bộ tự chỉnh leo lên 2× rồi tắt
+  // sạch quầng sáng để nuôi độ nét — đúng ngược thứ tự ưu tiên đã đặt ra bên dưới.
+  if (RES_AUTO && med > 19){
+    const floor = resFloorForDpr(), ri0 = RES_STEPS.indexOf(RES);
+    if (RES > floor + 1e-6 && ri0 >= 0 && ri0 < RES_STEPS.length - 1){
+      resSet(RES_STEPS[ri0 + 1], true); return;
+    }
+  }
   const was = FXQ;
   if (med > 30 && FXQ > 0) FXQ--;
   else if (med > 21 && FXQ > 1) FXQ--;
@@ -13724,7 +13785,7 @@ function fxAutoTune(ms){
   if (!RES_AUTO) return;
   const ri = RES_STEPS.indexOf(RES), i = ri < 0 ? 0 : ri;
   if (med > 19 && FXQ === 0 && i < RES_STEPS.length - 1) resSet(RES_STEPS[i + 1], true);
-  else if (med < 13 && i > 0) resSet(RES_STEPS[i - 1], true);
+  else if (med < 13 && i > 0 && FXQ >= 2) resSet(RES_STEPS[i - 1], true);
 }
 // Đổi độ phân giải. `auto` chỉ để phân biệt người chơi tự chọn (ghi vào Cài Đặt) với bộ tự chỉnh.
 function resSet(v, auto){
@@ -17651,10 +17712,10 @@ function renderSettings(){
         `<button class="mini-btn ${(v === 'auto' ? FXQ_AUTO : (!FXQ_AUTO && FXQ === v)) ? '' : 'danger'}" onclick="setFxq('${v}')">${t}</button>`).join(' ')
     }</span></div>
     <div class="set-row"><span>🔍 Độ nét <i>(hạ xuống để chạy mượt trên máy yếu — chữ sẽ mềm hơn)</i></span><span>${
-      [['auto','Tự Chỉnh'],[1,'100%'],[0.85,'85%'],[0.75,'75%'],[0.6,'60%']].map(([v,t]) =>
+      [['auto','Tự Chỉnh'],[1,'100%'],[0.85,'85%'],[0.75,'75%'],[0.6,'60%'],[0.5,'50%']].map(([v,t]) =>
         `<button class="mini-btn ${(v === 'auto' ? RES_AUTO : (!RES_AUTO && Math.abs(RES - v) < 0.001)) ? '' : 'danger'}" onclick="setRes('${v}')">${t}</button>`).join(' ')
     }</span></div>
-    <div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin:-2px 0 8px">Đang chạy: <b style="color:#8ab4ff">${['Thấp','Vừa','Đầy'][FXQ]}</b>${FXQ_AUTO ? ' <i>(tự chỉnh)</i>' : ''} — mức thấp tắt quầng sáng và lớp phủ, đổi lại khung hình mượt hơn nhiều.</div>
+    <div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin:-2px 0 8px">Màn hình này là <b style="color:#8ab4ff">${(window.devicePixelRatio || 1).toFixed(2)}×</b> — đang vẽ ở <b style="color:#8ab4ff">${(RES * DPRF).toFixed(2)}×</b> điểm ảnh thật.<br>Đang chạy: <b style="color:#8ab4ff">${['Thấp','Vừa','Đầy'][FXQ]}</b>${FXQ_AUTO ? ' <i>(tự chỉnh)</i>' : ''} — mức thấp tắt quầng sáng và lớp phủ, đổi lại khung hình mượt hơn nhiều.</div>
     <div class="set-row"><span>🌐 Ngôn ngữ / Language</span><button class="mini-btn" onclick="window.ghhaSwitchLang && window.ghhaSwitchLang()">${(window.ghhaLang && window.ghhaLang() === 'en') ? '🇻🇳 Tiếng Việt' : '🇬🇧 English'}</button></div>
     <div class="set-row" style="border-bottom:none;justify-content:center"><b style="color:#6ae88a;font-size:12px">— ⚔ AUTO FARM (phím Z) —</b></div>
     <div class="set-row"><span>🗡 Tự tung kỹ năng trên taskbar</span>${togA('skill')}</div>
