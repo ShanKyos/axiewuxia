@@ -12,6 +12,5 @@ window.I18N_VI = {
   'hud.hint.bag': 'B túi',
   'hud.hint.map': 'M bản đồ',
   'hud.hint.skills': 'K thẻ bài',
-  'hud.hint.bonds': 'L nhân mạch',
   'hud.hint.loot': 'J nhặt đồ',
 };

@@ -5381,7 +5381,8 @@ window.addEventListener('keydown', e=>{
   if (e.key.toLowerCase()==='q') togglePanel('qlog');
   if (e.key.toLowerCase()==='u'){ SETTINGS.minimap = !SETTINGS.minimap; saveSettings(); }
   if (e.key.toLowerCase()==='o') togglePanel('settings');
-  if (e.key.toLowerCase()==='f') togglePanel('forge');
+  // F không còn mở lò từ xa nữa — nó ĐƯA NGƯỜI CHƠI TỚI thợ rèn. Đứng cạnh rồi bấm F thì mở.
+  if (e.key.toLowerCase()==='f') window.openForgePanel();
   // Phím T dành riêng cho thu phục Linh Thú — Thú Chiến mở qua C → Thú Chiến, xuất trận/thu hồi bằng X.
   // Trước đây dùng V, nhưng V sau này được gán thêm cho cửa sổ Nhân Vật mà không ai kiểm phím đã
   // có chủ chưa: bấm V một lần là vừa mở bảng vừa lật xuất trận Thú Chiến.
@@ -6218,8 +6219,8 @@ function unlockNotices(){
   const msgs = {
     2:['Mở khóa: Thuần Thục (phím 1)'],
     3:['Mở khóa: Mục Tiêu Hôm Nay — xem góc trái màn hình, xong hết nhận thưởng lớn!'],
-    4:['Mở khóa: Venom Dart (phím 2)','Mở khóa: Thuần Thục Venom (phím H)'],
-    5:['Mở khóa: Rèn Luyện (phím F)'],
+    4:['Mở khóa: Venom Dart (phím 2)','Mở khóa: Thuần Thục Venom (phím H)',
+       'Mở khóa: Lò Hỗn Độn — tới gặp Thợ Rèn ở Lunaris City (phím F dẫn đường)'],
     6:['Mở khóa: Thú Chiến — chiến thú đồng hành tự đánh quái (C → Thú Chiến)'],
     7:['Mở khóa: Tuyệt kỹ (phím 3)'],
     10:[...(player.sect === 'vophai' ? ['Mở khóa: the Calling — 5 lớp để chọn!'] : []),'Mở khóa: Stoneform (Thuần Thục — phím H)','Mở khóa: Truy Nã Lệnh & Sảnh Cầu May — Bổ Đầu và Thương Nhân Vận May ở Lunaris City'],
@@ -6483,7 +6484,7 @@ function currentQuest(){ return questIdx < QUESTS.length ? QUESTS[questIdx] : nu
 
 // ---------- GDD Đợt 2 B3: Nhắc Việc Bấm Ngay ----------
 function anyPanelOpen(){
-  return ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-stage']
+  return ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-stage','panel-forge']
     .some(id => { const e2 = document.getElementById(id); return e2 && !e2.classList.contains('hidden'); });
 }
 function hintCandidates(){
@@ -6499,7 +6500,7 @@ function hintCandidates(){
   }
   if (questIdx >= 4 && player.mat >= 3){
     const weak = Object.values(player.equip).some(it => it && !it.special && (it.plus || 0) < 3);
-    if (weak) out.push({ id:'forge', pri:5, txt:'⚒ Đang dư Huyền Thiết mà trang bị chưa +3 — đi rèn ngay!', btn:'Đi Rèn', act:'hintGoForge()' });
+    if (weak) out.push({ id:'forge', pri:5, txt:'⚒ Đang dư Huyền Thiết mà trang bị chưa +3 — về Lunaris City tìm Thợ Rèn!', btn:'Đi Rèn', act:'hintGoForge()' });
   }
   // QA rà soát: Lò Hỗn Loạn không được tutorial/hint nào nhắc tới — người chơi mới có thể không
   // bao giờ tự tìm ra. Thêm gợi ý đúng lúc điều kiện chín muồi.
@@ -11956,9 +11957,16 @@ window.doChaos = function(){
   setTimeout(renderForge, 700);
 };
 function chaosRateColor(r){ return r >= 100 ? '#8fd18f' : r >= 50 ? '#7ecbff' : r >= 40 ? '#e8b04a' : '#ff7a6a'; }
+// Lò rèn nay có BẢNG RIÊNG và chỉ mở khi đứng cạnh Thợ Rèn. Trước đây nó là một tab trong bảng
+// Nhân Vật, mở được từ giữa bãi quái — trái hẳn MU, nơi phải về thành tìm thợ rèn. Mà chính code
+// này đã tự mâu thuẫn: atRoyalForge() (đứng trong 220px của Thợ Rèn) có sẵn từ lâu nhưng chỉ vài
+// công thức `royal` dùng tới, còn cái tab thì cho rèn ở bất cứ đâu.
+const FORGE_LV = 4;      // trùng với ngưỡng trong renderForge()
+function FE(){ return el('forge-content') || (_feDummy || (_feDummy = document.createElement('div'))); }
+let _feDummy = null;
 function renderForge(){
   if (player.level < 4){
-    CE().innerHTML = `<h3>Lò Hỗn Độn</h3>
+    FE().innerHTML = `<h3>Lò Hỗn Độn</h3>
       <div style="padding:14px;font-size:13px">Lò mở khóa ở <b style="color:#7ecbff">cấp 4</b>.<br>Hãy tiếp tục làm nhiệm vụ!</div>`;
     return;
   }
@@ -12092,7 +12100,7 @@ function renderForge(){
   }
   if (!bag.length) h += `<div class="chaos-empty">Chưa có trang bị nào.</div>`;
   h += `</div>`;
-  CE().innerHTML = h;
+  FE().innerHTML = h;
 }
 window.craftCloak = function(t){
   const c = CLOAK_TIERS[t];
@@ -13085,7 +13093,6 @@ window.charTab = 'info';
 // lv = cấp mở khóa — tab khóa sẽ mờ đi, bấm vào chỉ hiện gợi ý (giảm quá tải tân thủ)
 const CHAR_TABS = [
   { id:'info',     name:'Thông Tin',  lv:1 },
-  { id:'forge',    name:'Rèn Luyện',  lv:5 },
   { id:'mount',    name:'Thú Chiến',  lv:6 },
   { id:'taytuy',   name:'🔄 Tái Sinh', lv:MAX_LV },
   { id:'tuyethoc', name:'Thuần Thục', lv:4 },
@@ -13127,7 +13134,7 @@ function refreshEqPanels(){
 
 // ---------- Panel routing (override) ----------
 function togglePanel(which){
-  const tabbed = { forge:'forge', mount:'mount', tuyethoc:'tuyethoc' };
+  const tabbed = { mount:'mount', tuyethoc:'tuyethoc' };   // forge đã tách ra bảng riêng
   if (tabbed[which]){ // các hệ thống con → mở khung Nhân Vật đúng tab
     if (!sysUnlocked(tabbed[which])){ // hệ thống chưa mở theo tầng cấp
       const def = CHAR_TABS.find(x=>x.id===tabbed[which]);
@@ -13174,7 +13181,7 @@ function renderPanel(which){
   else renderCharPanel();
 }
 function closePanels(){
-  for (const id of ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-stage']){
+  for (const id of ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-stage','panel-forge']){
     const e2 = document.getElementById(id);
     if (e2) e2.classList.add('hidden');
   }
@@ -15957,15 +15964,27 @@ window.sellJunk = function(){
 // Tông Sư Thợ Rèn không còn màn riêng nữa — NPC chỉ mở đúng cỗ máy ở tab Rèn. Trước đây đây là
 // màn THỨ HAI, trùng nội dung với bảng Rèn (Hỗn Độn Lò, Cổ Thần đều có ở cả hai chỗ), và các
 // công thức chỉ-làm-được-ở-đây thì nay tự khoá bằng cờ royal + atRoyalForge().
-function renderBaGua(){
+function renderBaGua(){ window.openForgePanel(); }
+// Mở lò rèn. Chỉ mở được khi ĐỨNG CẠNH Thợ Rèn — đó là điểm khác MU của bản cũ: rèn giữa bãi
+// quái. Đứng xa thì không im lặng mà chỉ đường luôn, vì "bấm không lên" là lỗi khó đoán nhất.
+window.openForgePanel = function(){
+  if (player.level < FORGE_LV){
+    addFloat(player.x, player.y-56, `🔒 Lò Hỗn Độn mở khóa ở cấp ${FORGE_LV}!`, '#a0ffe9', 13);
+    AudioSys.sfx('ui', 0.4); return;
+  }
+  if (!atRoyalForge()){
+    addFloat(player.x, player.y-56, '⚒ Phải tới gặp Thợ Rèn ở Lunaris City mới rèn được', '#ffb15c', 13);
+    AudioSys.sfx('ui', 0.4);
+    window.hintGoForge();          // đặt mốc dẫn đường + dịch chuyển nếu khác map
+    return;
+  }
   chaosGroup = 'ren'; chaosPick = null;
-  if (!sysUnlocked('forge')){ togglePanel('forge'); return; } // để togglePanel báo "khoá ở cấp N"
   closePanels();
-  window.charTab = 'forge';
-  renderCharPanel();
-  el('panel-char').classList.remove('hidden');
+  el('panel-forge').innerHTML = `<div id="forge-content"></div>`;
+  renderForge();
+  el('panel-forge').classList.remove('hidden');
   AudioSys.sfx('ui', 0.6);
-}
+};
 
 // ═══════════ VŨ KHÍ DANH PHÁI — mỗi môn phái một binh khí riêng ═══════════
 const SECT_WEAPONS = { thieulam:'con', toanchan:'kiem', baidasan:'xatruong', minhgiao:'daidao' }; // bug (Dark Lord) không có entry riêng, rơi về fallback 'kiem' — như trước đây
@@ -16204,7 +16223,7 @@ function updateTut(){
   if (!box) return;
   const cur = (!player || player.tutStep == null || player.tutStep < 0 || player.tutStep >= TUT_STEPS.length) ? -99 : player.tutStep;
   // ẩn hướng dẫn khi đang mở bảng — tránh đè nội dung
-  const anyPanel = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog'].some(id => { const e2 = document.getElementById(id); return e2 && !e2.classList.contains('hidden'); });
+  const anyPanel = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-forge'].some(id => { const e2 = document.getElementById(id); return e2 && !e2.classList.contains('hidden'); });
   const key = cur * 10 + (anyPanel ? 1 : 0);
   if (window._tutShown === key) return; // chỉ vẽ lại khi đổi bước/trạng thái — tránh reset nút ✕
   window._tutShown = key;

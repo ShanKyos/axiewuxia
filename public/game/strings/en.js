@@ -12,6 +12,5 @@ window.I18N_EN = {
   'hud.hint.bag': 'B bag',
   'hud.hint.map': 'M map',
   'hud.hint.skills': 'K cards',
-  'hud.hint.bonds': 'L bonds',
   'hud.hint.loot': 'J pick up',
 };
