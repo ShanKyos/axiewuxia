@@ -3524,14 +3524,31 @@ const _REALM_ICONS = ['r0_phan_nhan','r1_khi_hai','r2_chu_thien','r3_tu_phu','r4
 // ra: một hàm, một chỗ, không từ vựng tu tiên. Con số giữ NGUYÊN như cũ để không ai yếu đi.
 //   · bậc nhân theo cấp  : mỗi 12 cấp một nấc, trần ở cấp 108 (bản cũ: cảnh giới)
 //   · cộng thẳng theo cấp: mỗi 6 cấp một điểm, trần 20 điểm ở cấp 120 (bản cũ: kinh mạch)
-const LV_MULT_ATK = [0, 0.05, 0.10, 0.16, 0.24, 0.35, 0.45, 0.55, 0.70, 0.88];
+// ── TỈ TRỌNG CẤP ĐỘ vs ĐIỂM TIỀM NĂNG ──────────────────────────────────
+// Reset kiểu MU đưa cấp về 1 nhưng GIỮ điểm đã cộng. Nó chỉ đáng làm khi ĐIỂM là thứ quyết
+// định sức mạnh — bằng không, người vừa Tái Sinh yếu đi quá nửa và chẳng ai muốn bấm.
+// Đo bản cũ: sau Tái Sinh chỉ còn 34,6% công và 33,6% máu, vì cấp gánh sức mạnh qua BA kênh
+// (chỉ số nền theo cấp, bậc nhân, và cộng thẳng) còn điểm chỉ có một.
+// Gom hết vào một bảng để chỉnh được, và để thấy rõ mình đang dịch trọng số đi đâu.
+const PWR = {
+  atkPerLv:  0.5,   // chỉ số công nền mỗi cấp        (cũ 2)
+  pointAtk:  2.0,   // NHÂN vào trọng số atkSrc của lớp — điểm đổi ra công  (cũ 1)
+  hpPerLv:   6,     // máu nền mỗi cấp                (cũ 15)
+  hpPerVit:  25.5,  // máu mỗi điểm Sinh Lực          (cũ 12)
+  multTop:   0.30,  // trần bậc nhân theo cấp         (cũ 0.88)
+  flatAtk:   2,     // công cộng thẳng mỗi mốc 6 cấp  (cũ 5)
+  flatHp:    30,    // máu cộng thẳng mỗi mốc 6 cấp   (cũ 65)
+};
+// Hình dạng đường cong giữ nguyên, chỉ co lại về trần mới — leo đều, không có nấc nhảy vọt.
+const LV_MULT_SHAPE = [0, 0.05, 0.10, 0.16, 0.24, 0.35, 0.45, 0.55, 0.70, 0.88];
+const LV_MULT_ATK = LV_MULT_SHAPE.map(v => +(v / 0.88 * PWR.multTop).toFixed(4));
 const LV_MULT_QIREG = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10];
 function levelPower(lv){
   const b = clamp(Math.floor(lv / 12), 0, LV_MULT_ATK.length - 1);   // bậc nhân
   const t = clamp(Math.floor(lv / 6), 0, 20);                        // điểm cộng thẳng
   return {
     mult: LV_MULT_ATK[b], qireg: LV_MULT_QIREG[b],
-    atk: t * 5, hp: t * 65, def: t * 5, qi: t * 6,
+    atk: t * PWR.flatAtk, hp: t * PWR.flatHp, def: t * 5, qi: t * 6,
     crit: t * 0.7, eva: t * 0.4, aspd: t * 0.4,
     stun: lv >= 48 ? 0.05 : 0,     // mốc cũ: bậc 4
     reflect: lv >= 60 ? 0.05 : 0,  // mốc cũ: bậc 5
@@ -4524,7 +4541,7 @@ function calcDerived(){
   const b = sect0.bonus;
   const s = { str:player.str+b.str, agi:player.agi+b.agi, def:Math.round((player.def+b.def)*(sect0.defMult||1)), vit:player.vit+b.vit, ene:player.ene+(b.ene||0) };
   // P: tích lũy từ trang bị — flat + chỉ số % theo GDD
-  const P = { atk:8 + player.level*2, hp:0, crit:0, eva:0, qireg:0,
+  const P = { atk:8 + player.level*PWR.atkPerLv, hp:0, crit:0, eva:0, qireg:0,
     hpPct:0, qiPct:0, atkPct:0, dmgred:0, evaPct:0, silverPct:0, reflectPct:0,
     perfect:0, hpLeech:0, qiLeech:0, aspdPct:0, pierce:0, expPct:0, defPct:0, critDmg:0,
     // Ba cơ chế MỚI chỉ đồ Hoàn Hảo có. Thiếu ngăn ở đây thì applyLine() lặng lẽ bỏ qua —
@@ -4580,12 +4597,12 @@ function calcDerived(){
   player.dStr = s.str; player.dAgi = s.agi; player.dDef = s.def; player.dVit = s.vit; player.dEne = s.ene;
   // Công Kích quy đổi theo atkSrc riêng từng phái (str/agi/ene trọng số khác nhau) thay vì chung str×2
   const atkSrc = sect0.atkSrc || { str: 2.0 };
-  const rawAtk = (atkSrc.str || 0) * s.str + (atkSrc.agi || 0) * s.agi + (atkSrc.ene || 0) * s.ene;
+  const rawAtk = ((atkSrc.str || 0) * s.str + (atkSrc.agi || 0) * s.agi + (atkSrc.ene || 0) * s.ene) * PWR.pointAtk;
   // Dòng Hoàn Hảo "ST theo cấp" = cấp ÷ 20. Cộng vào P.atk TRƯỚC khi nhân, để nó ăn mọi hệ số
   // về sau y như sát thương gốc — đây là dòng DUY NHẤT tự lớn theo cấp nhân vật.
   if (P.excAtkLv) P.atk += P.excAtkLv;
   player.atk = Math.round((P.atk + rawAtk) * (1 + LP.mult) * (sect0.dmgMult || 1));
-  player.maxHp = Math.round((100 + player.level*15 + s.vit*12 + P.hp) * (1 + LP.mult) * (sect0.hpMult || 1));
+  player.maxHp = Math.round((100 + player.level*PWR.hpPerLv + s.vit*PWR.hpPerVit + P.hp) * (1 + LP.mult) * (sect0.hpMult || 1));
   player.maxQi = 50 + player.level*5 + Math.round(s.ene*1.5); // Linh Lực: mỗi điểm +1.5 Chân Khí tối đa (mọi phái)
   player.crit = Math.min(0.45, s.agi*0.003 + P.crit/100);
   // Cương Khí aura: +HP% +DEF%
