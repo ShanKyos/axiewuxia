@@ -1419,11 +1419,11 @@ const SKILL_DEFS = {
   gangkhi: { unlock:10, kind:'gangkhi', name:'Stone Skin', cd:10, qi:30, icon:()=>null,
              req:()=>player.gangkhi.tier>0, reqTxt:'Stoneform tầng 1 (Thuần Thục)', desc:()=>'6s giảm 30% sát thương gánh chịu — lớp vảy đá phủ kín thân.' },
   danchi:  { unlock:20, kind:'danchi', name:'Rupture Bolt', cd:8, qi:35, mult:2.0, icon:()=>'assets/skills/danchi.png',
-             req:()=>player.dantian.realm>=4, reqTxt:'Ascension cảnh 4 (Spark Tầng 4)', desc:()=>'Tia lực xuyên giáp — sát thương ×2 và khóa chiêu địch 2.5s.' },
+             req:()=>player.level>=48, reqTxt:'Cấp 48', desc:()=>'Tia lực xuyên giáp — sát thương ×2 và khóa chiêu địch 2.5s.' },
   bow:     { unlock:30, kind:'bow',    name:'Piercing Arrow', cd:6, qi:28, mult:1.3, icon:()=>'assets/skills/bow.png',
              req:()=>player.bow.tier>0, reqTxt:'Archery tầng 1 (Thuần Thục)', desc:()=>'Bắn 3 mũi tên xuyên thấu theo hình quạt trước mặt.' },
   tieuhon: { unlock:20, kind:'tieuhon', name:'Soul Rend', cd:13, qi:60, mult:3.2, icon:()=>'assets/skills/tieuhon.png',
-             req:()=>player.dantian.realm>=6, reqTxt:'Ascension cảnh 6 (Radiant Core)', desc:()=>'Sóng xung kích bóng tối quét sạch quanh người (AoE lớn).' },
+             req:()=>player.level>=72, reqTxt:'Cấp 72', desc:()=>'Sóng xung kích bóng tối quét sạch quanh người (AoE lớn).' },
 };
 const PASSIVE_SKILLS = [
   { name:'Archery (bị động)', req:()=>player.bow.tier>0, desc:'Đòn đánh thường có tỉ lệ bắn thêm một mũi tên — theo tầng Archery.' },
@@ -1749,7 +1749,7 @@ function vhAutoLearn(){ // kỹ năng môn phái tự ngộ khi đạt cấp —
   for (const _vid in VOHOC_DEFS){
     const _v = VOHOC_DEFS[_vid];
     if (!_v.phai || vhLearned(_vid) || player.level < _v.unlock) continue;
-    if (!player.ascended && _v.phai !== player.sect) continue; // Starflight: môn phái phá bỏ — kỹ năng toàn tự do
+    if (_v.phai !== player.sect) continue;
     learnVohoc(_vid);
   }
 }
@@ -3510,16 +3510,6 @@ function probeSkillIcons(){
   }
 }
 probeSkillIcons();
-// Starflight: sprite 3D tiên nhân (nam/nữ × 6 skin) — vẽ sẵn, nền trong suốt
-// 12 sprite × ~230 KB = 2,6 MB, và CHỈ dùng khi nhân vật đã Starflight (cấp cuối). Nạp sẵn hết
-// ngay lúc mở trang là bắt người chơi cấp 1 tải trước phần thưởng của cấp 120.
-const TIEN_IMGS = {};
-function tienImgOf(key){
-  if (TIEN_IMGS[key]) return TIEN_IMGS[key];
-  if (!/^(nam|nu)_(bach|thanh|kim|huyen|hong|lam)$/.test(key)) return null;
-  const im = new Image(); im.src = 'assets/tien/' + key.replace('_', '_') + '.png'; TIEN_IMGS[key] = im;
-  return im;
-}
 // ---------- Ascension: cultivation realms (Ascension Trial upgrades) ----------
 // Bonus values are TOTAL at that realm. Bậc Ascension nay TỰ ĐỘNG theo cấp nhân vật (calcDerived);
 // không còn tự tay đột phá, nên cũng không còn tài nguyên nào bị tiêu ở đây. Đó chính là lý do
@@ -3528,18 +3518,8 @@ const _REALM_ICONS = ['r0_phan_nhan','r1_khi_hai','r2_chu_thien','r3_tu_phu','r4
 // GDD Lấy Võ Nhập Đạo §3 — Giai đoạn 1: cảnh giới tu tiên.
 // Spark (1-4): đột phá vận công theo tỉ lệ. Molt trở lên (5-9): ASCENSION TRIAL 3-9 đợt thiên lôi,
 // mỗi tia gây % maxHP — KHÔNG tụt bậc.
-const DANTIAN_REALMS = [
-  { name:'Hatchling',            atk:0,    hp:0,    qireg:0,  cost:null },
-  { name:'Spark · Tầng 1',   atk:0.05, hp:0.05, qireg:1,  cost:{tuvi:150,   silver:300,   mat:3},   rate:100 },
-  { name:'Spark · Tầng 2',   atk:0.10, hp:0.10, qireg:2,  cost:{tuvi:400,   silver:700,   mat:6},   rate:85 },
-  { name:'Spark · Tầng 3',   atk:0.16, hp:0.16, qireg:3,  cost:{tuvi:900,   silver:1400,  mat:15},  rate:70 },
-  { name:'Spark · Tầng 4',   atk:0.24, hp:0.24, qireg:4,  cost:{tuvi:1800,  silver:2600,  mat:24},  rate:55, unlock:'Rupture Bolt (5% khóa chiêu đối thủ)' },
-  { name:'Molt',         atk:0.35, hp:0.35, qireg:5,  cost:{tuvi:3600,  silver:5000,  mat:42},  trib:3, unlock:'Vòng phản đòn — phản 5% sát thương · thân pháp +10%' },
-  { name:'Radiant Core',         atk:0.45, hp:0.45, qireg:6,  cost:{tuvi:6000,  silver:8000,  mat:55},  trib:4, unlock:'Soul Rend' },
-  { name:'Resonance · Trung Kỳ',atk:0.55, hp:0.55, qireg:7,  cost:{tuvi:9000,  silver:12000, mat:80},  trib:6, unlock:null },
-  { name:'Resonance · Hậu Kỳ',  atk:0.70, hp:0.70, qireg:8,  cost:{tuvi:13000, silver:18000, mat:110}, trib:8, unlock:'Bất Tử — chặn 1 đòn chí mạng, hồi 30% HP (180s)' },
-  { name:'Starforged',             atk:0.88, hp:0.88, qireg:10, cost:{tuvi:20000, silver:28000, mat:160}, trib:9, unlock:'Starforged — nhục thân thăng hoa, toàn thuộc tính vượt cực hạn' },
-];
+// Hệ cảnh giới (DANTIAN_REALMS) đã GỠ — xem ghi chú ở calcDerived().
+
 
 // ═══════════ TRACK HT (GDD §13) — trang bị dark-fantasy kiểu MU Online S2 ═══════════
 // Cổ Thần Thủ Hộ: 5 món/bộ (Nón/Giáp/Tay/Quần/Giày) — CHỈ mở từ Bảo Hạp, không pity.
@@ -3809,16 +3789,8 @@ const TRUYNA_BANDS = [
 const VANDUYEN_RATES = [ { k:'bikip', w:5 }, { k:'chau', w:15 }, { k:'trangbi', w:25 }, { k:'vatlieu', w:30 }, { k:'bac', w:25 } ];
 // ---------- Hệ thống mới theo GDD Dream of Wuxia ----------
 // Instinct Channels: 8 mạch × 20 đốt, tiêu hao Instinct (tích lũy thụ động)
-const MERIDIANS = [
-  { id:'thaiam',   name:'Thái Âm Mạch',  stat:'hp',    per:40,  color:'#e8e8e8', label:'Sinh Lực', img:'k0_thaiam'},
-  { id:'thieuduong',name:'Thiếu Dương Mạch', stat:'qi', per:6,   color:'#5db86a', label:'Mana', img:'k1_thieuduong'},
-  { id:'thaiduong',name:'Thái Dương Mạch', stat:'atk',  per:3,   color:'#5aa0e8', label:'Tấn Công', img:'k2_thaiduong'},
-  { id:'thieuam',  name:'Thiếu Âm Mạch', stat:'def',   per:3,   color:'#b08ae8', label:'Phòng Thủ', img:'k3_thieuam'},
-  { id:'duongminh',name:'Dương Minh Mạch', stat:'eva', per:0.4, color:'#ffb15c', label:'Né Tránh', img:'k4_duongminh'},
-  { id:'quyetam',  name:'Quyết Âm Mạch', stat:'crit',  per:0.4, color:'#e84a3a', label:'Bạo Kích', img:'k5_quyetam'},
-  { id:'nham',     name:'Nhâm Mạch',     stat:'aspd',  per:0.4, color:'#3a9d8b', label:'Tốc Độ Đánh', img:'k6_nham'},
-  { id:'doc',      name:'Đốc Mạch',      stat:'all',   per:1,   color:'#7ecbff', label:'Toàn Thuộc Tính', img:'k7_doc'},
-];
+// Hệ kinh mạch (MERIDIANS) đã GỠ — tên tám mạch là từ vựng tu tiên.
+
 // Venom 7 tầng (điểm Chúc Phúc: đập xịt +1, đủ 10 điểm chắc chắn thành công)
 const AMKHI_TIERS = [ null,
   { name:'Ironthorn',     color:'#5db86a', crit:2, eff:'Độc: 10% gây 500 ST/s trong 3s' },
@@ -3855,12 +3827,11 @@ const TITLES = [
   { id:'bachtram',name:'Kẻ Diệt Trăm Quái',   color:'#d8d8d8', cond:p=>p.kills>=100,             desc:'Tiêu diệt 100 quái',   stats:{atkPct:0.05},   vfx:'' },
   { id:'thientram',name:'Kẻ Diệt Ngàn Quái',  color:'#e84a3a', cond:p=>p.kills>=1000,            desc:'Tiêu diệt 1.000 quái', stats:{crit:10},       vfx:'máu' },
   { id:'thoren',  name:'Thợ Rèn Truyền Thuyết', color:'#5aa0e8', cond:p=>p.forged11,             desc:'Rèn thành công +11',   stats:{forgeRate:5},   vfx:'lửa' },
-  { id:'honnguyen',name:'Bậc Thầy Resonance',  color:'#7ecbff', cond:p=>p.dantian.realm>=8,     desc:'Ascension cảnh 8 (Resonance Hậu Kỳ)', stats:{allPct:0.10}, vfx:'long' },
-  { id:'hoathan', name:'Hiện Thân Starforged',  color:'#fff2b0', cond:p=>p.dantian.realm>=9,     desc:'Vượt Thử Luyện cuối thành Starforged', stats:{allPct:0.15},   vfx:'long' },
+  { id:'honnguyen',name:'Bậc Thầy Resonance',  color:'#7ecbff', cond:p=>p.level>=96,            desc:'Đạt cấp 96', stats:{allPct:0.10}, vfx:'long' },
   // Điều kiện cũ đòi mount.tier >= 8, nhưng MOUNT_TIERS chỉ còn 5 giai — danh hiệu này KHÔNG THỂ
   // đạt được, kể cả khi đã max mọi thứ. Số 8 là tàn dư từ hồi Thú Chiến có 8 giai. Mọi chỗ khác
   // trong file đều so với MOUNT_TIERS.length - 1; chỗ này bị bỏ sót khi rút bảng xuống 5.
-  { id:'tuongduong',name:'Người Giữ Lunacia', color:'#ffd76a', cond:p=>p.dantian.realm>=8 && p.mount.tier>=MOUNT_TIERS.length-1 && p.level>=60, desc:'Đỉnh cao mọi hệ thống', stats:{allPct:0.15}, vfx:'long' },
+  { id:'tuongduong',name:'Người Giữ Lunacia', color:'#ffd76a', cond:p=>p.level>=96 && p.mount.tier>=MOUNT_TIERS.length-1 && p.level>=60, desc:'Đỉnh cao mọi hệ thống', stats:{allPct:0.15}, vfx:'long' },
 ];
 const TAN_QUYEN = ['Thượng','Trung','Hạ']; // Mảnh sách kỹ năng Huyết Ma Thôn Phệ (boss drop)
 
@@ -4585,12 +4556,10 @@ function calcDerived(){
   if (tbTier > 0){ s.str += tbTier*3; s.agi += tbTier*2; s.def += tbTier*2; s.vit += tbTier*3; }
   player.tbDmg = tbTier * 0.025;
   // Ascension realm — MU Online-lite: không cần tự tay Ascension Trial/đốt Anima quản lý nữa, cảnh
-  // giới tự tăng thẳng theo cấp độ (chạm cảnh tối đa Starforged ở cấp 108, dư 12 cấp "đã max" cuối
-  // game). Ghi ngược vào player.dantian.realm để mọi chỗ đọc cũ (mở khóa kỹ năng/danh hiệu/UI) vẫn
-  // đúng như trước, chỉ khác nguồn gán — không còn là lựa chọn/tốn tài nguyên của người chơi nữa.
-  const realm = clamp(Math.floor(player.level / 12), 0, DANTIAN_REALMS.length - 1);
-  if (player.dantian) player.dantian.realm = realm;
-  const dr = DANTIAN_REALMS[realm];
+  // Hệ cảnh giới (đan điền) đã GỠ HẲN: tên gọi lẫn cơ chế đều là từ vựng tu tiên, vi phạm
+  // Quy tắc 1. Nó vốn đã bị rút ruột thành floor(cấp/12) nên không ai đầu tư vào nó nữa, nhưng
+  // vẫn gánh +88% công/máu ở bậc cuối. Chủ dự án chọn gỡ luôn cả phần chỉ số — xem ghi chú
+  // cân bằng trong docs/. Mọi cổng cũ theo cảnh đã dịch sang cổng theo CẤP (cảnh N = cấp N×12).
   player.dStr = s.str; player.dAgi = s.agi; player.dDef = s.def; player.dVit = s.vit; player.dEne = s.ene;
   // Công Kích quy đổi theo atkSrc riêng từng phái (str/agi/ene trọng số khác nhau) thay vì chung str×2
   const atkSrc = sect0.atkSrc || { str: 2.0 };
@@ -4598,8 +4567,8 @@ function calcDerived(){
   // Dòng Hoàn Hảo "ST theo cấp" = cấp ÷ 20. Cộng vào P.atk TRƯỚC khi nhân, để nó ăn mọi hệ số
   // về sau y như sát thương gốc — đây là dòng DUY NHẤT tự lớn theo cấp nhân vật.
   if (P.excAtkLv) P.atk += P.excAtkLv;
-  player.atk = Math.round((P.atk + rawAtk) * (1 + dr.atk) * (sect0.dmgMult || 1));
-  player.maxHp = Math.round((100 + player.level*15 + s.vit*12 + P.hp) * (1 + dr.hp) * (sect0.hpMult || 1));
+  player.atk = Math.round((P.atk + rawAtk) * (sect0.dmgMult || 1));
+  player.maxHp = Math.round((100 + player.level*15 + s.vit*12 + P.hp) * (sect0.hpMult || 1));
   player.maxQi = 50 + player.level*5 + Math.round(s.ene*1.5); // Linh Lực: mỗi điểm +1.5 Chân Khí tối đa (mọi phái)
   player.crit = Math.min(0.45, s.agi*0.003 + P.crit/100);
   // Cương Khí aura: +HP% +DEF%
@@ -4610,29 +4579,11 @@ function calcDerived(){
   if (bw) P.crit += bw.crit;
   // Instinct Channels — cũng tự thông theo cấp độ (không cần tự tay xung mạch từng huyệt nữa),
   // đều nhau cả 8 mạch, chạm mức tối đa (20 đốt/mạch) ở cấp 120
-  const merPts = clamp(Math.floor(player.level / 6), 0, 20);
-  let merAtk = 0, merHp = 0, merDef = 0, merCrit = 0, merEva = 0, merAspd = 0, merQi = 0;
-  if (player.meridians){
-    for (const md of MERIDIANS){
-      player.meridians[md.id] = merPts;
-      const n = merPts;
-      if (!n) continue;
-      if (md.stat==='hp') merHp += n * md.per;
-      else if (md.stat==='qi') merQi += n * md.per;
-      else if (md.stat==='atk') merAtk += n * md.per;
-      else if (md.stat==='def') merDef += n * md.per;
-      else if (md.stat==='eva') merEva += n * md.per;
-      else if (md.stat==='crit') merCrit += n * md.per;
-      else if (md.stat==='aspd') merAspd += n * md.per;
-      else if (md.stat==='all'){ merAtk += n*2; merHp += n*25; merDef += n*2; merCrit += n*0.3; }
-    }
-  }
-  player.eva  = Math.min(0.40, s.agi*0.0025 + P.eva/100 + merEva/100);
-  player.aspd = Math.max(0.30, 0.85 - s.agi*0.004 - merAspd/100);
+  player.eva  = Math.min(0.40, s.agi*0.0025 + P.eva/100);
+  player.aspd = Math.max(0.30, 0.85 - s.agi*0.004);
   player.defRed = s.def/(s.def + 60);
-  player.qireg = 4 + P.qireg + dr.qireg; // GDD Đợt 2 B1: hồi cơ bản 2.5 -> 4.0
-  player.speed = Math.round(190 * (realm >= 5 ? 1.10 : 1));
-  if (player.ascended) player.speed = Math.round(player.speed * 1.25); // Starflight: bay lượn
+  player.qireg = 4 + P.qireg;
+  player.speed = 209;   // mốc cũ của cấp 60+ — giữ nguyên nhịp băng bản đồ (khoảng cách map tuned theo số này)
   // ── Sổ Kỹ Năng: tâm pháp bị động ──
   player.vhCdMult = 1; player.vhRegen = 0; player.vhPoisonRes = 0;
   if (player.vohoc){
@@ -4646,15 +4597,13 @@ function calcDerived(){
     if (VH.cuuamkinh){ P.atkPct += 8; P.defPct += 8; P.hpPct += 8; }
     if (VH.cuuduongkinh){ player.vhPoisonRes = Math.max(player.vhPoisonRes, 0.7); P.hpPct += 5; }
   }
-  // Đan điền passives: Quy Nguyên (t4) phong mạch, Lưỡng Nghi (t5) phản đòn, Hỗn Nguyên (t8) bất tử
-  player.stunProc = realm >= 4 ? 0.05 : 0;
-  player.reflect = realm >= 5 ? 0.05 : 0;
-  player.batTu = realm >= 8;
-  player.atk = Math.round(player.atk + merAtk);
-  player.maxHp = Math.round(player.maxHp + merHp);
-  player.dDef = s.def + merDef;
-  player.crit = Math.min(0.60, player.crit + merCrit/100);
-  player.maxQi += merQi;
+  // Ba bị động cũ (phong mạch / phản đòn / bất tử) đi theo hệ cảnh giới đã gỡ.
+  player.stunProc = 0;
+  player.reflect = 0;
+  player.batTu = false;
+  player.atk = Math.round(player.atk);
+  player.maxHp = Math.round(player.maxHp);
+  player.dDef = s.def;
   // Danh hiệu: chỉ số cộng dồn từ TẤT CẢ danh hiệu đã mở khóa
   let tAtkPct = 0, tAllPct = 0, tHp = 0, tCrit = 0, tForge = 0;
   for (const t of TITLES){
@@ -4681,9 +4630,9 @@ function calcDerived(){
     if (lv && vhLearned(sid)) legacyPct += LEGACY_TIER_PCT[lv.tier] || 0;
   }
   if (player.level >= SKILL_DEFS.amkhi.unlock) legacyPct += LEGACY_UNIVERSAL_PCT.amkhi;
-  if (realm >= 4) legacyPct += LEGACY_UNIVERSAL_PCT.danchi; // Đạn Chỉ Thần Thông — req cũ
+  if (player.level >= 48) legacyPct += LEGACY_UNIVERSAL_PCT.danchi; // mốc cũ: cảnh 4 = cấp 48
   if (player.bow && player.bow.tier > 0) legacyPct += LEGACY_UNIVERSAL_PCT.bow; // Linh Tiễn Xạ — req cũ
-  if (realm >= 6) legacyPct += LEGACY_UNIVERSAL_PCT.tieuhon; // Tiêu Hồn Chưởng — req cũ
+  if (player.level >= 72) legacyPct += LEGACY_UNIVERSAL_PCT.tieuhon; // mốc cũ: cảnh 6 = cấp 72
   player.legacyAtkPct = legacyPct;
   player.atk = Math.round(player.atk * (1 + tAtkPct + tAllPct + legacyPct/100));
   player.maxHp = Math.round((player.maxHp + tHp) * (1 + tAllPct));
@@ -4765,15 +4714,12 @@ function newPlayer(sectKey){
     skillEvo: {},                                // Tiến Hóa Chiêu Thức: {[skillId]: ['power'|'swift', ...]} theo bậc 40/80/120
     tenuiTT: 0,                                    // Té Núi: hết hạn Trọng Thương (timestamp)
     gt: { t: GT_DAY*0.30 },                          // Lịch Thế Giới: đồng hồ thế giới (giây game) — mở màn canh Thìn
-    ascended: false,                               // Starflight: độ kiếp Starforged thành công → phá bỏ môn phái, thần tiên hóa cảnh
     gender: 'nam',                                 // hình dáng tiên nhân: nam / nu
-    tienSkin: 'bach',                              // skin trang phục — xem TIEN_SKINS
     vhDmgT:0, vhDmgPct:0, vhEvaT:0, vhEvaPct:0, vhReflT:0, vhAspdT:0, vhAspdPct:0,
     vhCritT:0, vhLeechT:0, vhShield:0, vhReviveCd:0,
     shieldBroken: 0, atkAnim: 0, dashT: 0,
     tutStep: 0, tutDist: 0,                     // hướng dẫn tân thủ từng bước
     mount: { tier: 0, out: false },           // Thú Chiến: xuất trận đánh cùng, không cưỡi
-    dantian: { realm: 0 },
     jewels: { chucPhuc: 0, linhHon: 0, sinhMenh: 0, honDon: 0 }, // Tứ Châu (Track HT)
     baohap: {},                            // Box Kundun Ma Tôn Giáng Thế { tier: số lượng }
     truyna: { day:'', state:'none', map:null }, // Truy Nã Lệnh ngày
@@ -4781,7 +4727,6 @@ function newPlayer(sectKey){
     resetCount: 0,                         // Tẩy Tủy (Reset kiểu MU) — số lần đã tẩy tủy, +2% Công/Mạng vĩnh viễn/lần
     // Dream of Wuxia systems
     khi: 0,                                    // Instinct đả thông kinh mạch
-    meridians: {},                             // { thaiam: 0..20, ... }
     gems: { tuLa: 0, honNguyen: 0 },           // Tu La Tinh Thạch / Hỗn Nguyên Thạch
     thanbinh: { tier: 1 },                     // Thần Binh môn phái — theo người từ đầu
     mats: { manh:0, tichMa:0, anTranAi:0, manhCoThan:0 }, // Vật liệu Drop v2.0
@@ -4818,7 +4763,6 @@ function newPlayer(sectKey){
     maxJumps: 1,
     hintCd: {}, hintOff: {},                   // Nhắc Việc — GDD Đợt 2 B3 (fix: thiếu ở tạo mới, chỉ có trong loadGame backfill → crash updateHints() cho nhân vật mới chưa qua 1 lần save/load)
   };
-  for (const m of MERIDIANS) player.meridians[m.id] = 0;
   for (const sl of SLOTS) player.equip[sl.id] = null;
   // starter weapon
   const w = genItem(1, 0); w.slot='weapon'; w.slotName='Vũ Khí';
@@ -4887,14 +4831,11 @@ function loadGame(){
       if (player.equip && player.equip.pet) petNormalize(player.equip.pet);
     }
     player.mount.out = !!player.mount.out; delete player.mount.riding; // bỏ cơ chế cưỡi
-    if (!player.dantian) player.dantian = { realm: 0, tuvi: 0 };
     if (!player.cd) player.cd = { basic:0, a:0, b:0, c:0 };
-    // realm cap may have grown — clamp into range
-    player.dantian.realm = Math.min(player.dantian.realm, DANTIAN_REALMS.length - 1);
-    // Dream of Wuxia backfill
     if (player.khi == null) player.khi = 0;
-    if (!player.meridians) player.meridians = {};
-    for (const m of MERIDIANS) if (player.meridians[m.id] == null) player.meridians[m.id] = 0;
+    // Hệ cảnh giới · kinh mạch · Tán Tiên đã gỡ. Dọn khỏi save cũ — nhưng phải để việc
+    // quy đổi Anima tồn dư ra bạc (ngay bên dưới) chạy TRƯỚC, nên chỉ xoá ở cuối loadGame().
+    delete player.meridians; delete player.ascended; delete player.tienSkin;
     // Bộ Cổ Thần đổi tên (Thanh Long… → Sarkaan…): ánh xạ id trên MỌI món đang giữ — cả
     // món trong túi lẫn món đang mặc. Bỏ sót chỗ nào là chỗ đó mất hiệu ứng bộ vĩnh viễn.
     for (const it of (player.inv || [])) if (it && ANCIENT_MIGRATE[it.ancient]) it.ancient = ANCIENT_MIGRATE[it.ancient];
@@ -4915,16 +4856,18 @@ function loadGame(){
     if (!player.bikip) player.bikip = { pieces: [0,0,0], hmtp: false };
     if (player.battuCd == null) player.battuCd = 0;
     // ═══ GỘP TIỀN TỆ — bậc 1: xoá Anima ═══════════════════════════════════════════════
-    // Anima (player.dantian.tuvi) được CỘNG ở mười ba nơi và TRỪ ở không nơi nào. Chỗ tiêu cũ là
+    // Anima (tuvi trong save cũ) được CỘNG ở mười ba nơi và TRỪ ở không nơi nào. Chỗ tiêu cũ là
     // "đột phá cảnh giới", mà hệ đó đã chuyển sang tự động theo cấp độ — chỗ tiêu bị gỡ, nguồn thu
     // để nguyên. Nó không phải tiền tệ, nó là một con số chạy vô nghĩa.
     // Quy đổi 1 Anima = 2 bạc để người chơi không mất gì, rồi xoá hẳn ô đếm. Mọi nguồn cộng Anima
     // trong game cũng đã đổi sang cộng bạc theo đúng tỉ lệ đó.
+    // CHÚ Ý: đọc đúng tên trường TRONG SAVE CŨ là `tuvi`. Lần đổi tên tuvi→bacThem suýt đổi
+    // luôn chỗ này, và save đời cũ sẽ lặng lẽ mất khoản Anima tồn dư (đo được: hụt 1.500 bạc).
     if (player.dantian && player.dantian.tuvi > 0){
       player.silver += Math.round(player.dantian.tuvi * GO_ANIMA);
       player.dantian.tuvi = 0;
     }
-    if (player.dantian) delete player.dantian.tuvi;
+    delete player.dantian;   // hệ cảnh giới đã gỡ — dọn nốt sau khi quy đổi Anima
     // Phase C backfill: thanh kỹ năng, PK, tội ác, buff, độc, auto-sell
     // Tối giản taskbar (bản mới): luôn ép về đúng 4 ô cố định theo phái (chính/phụ/buff/tuyệt chiêu)
     // — bỏ hẳn ô tự gán cũ, tránh save cũ kẹt lại chiêu giờ chỉ còn là bị động (không bấm được nữa).
@@ -4956,11 +4899,7 @@ function loadGame(){
     }
     if (player.auto == null) player.auto = false; // auto farm (treo máy)
     if (!player.autoCfg) player.autoCfg = { skill:true, potion:true, potionPct:40, range:430, boss:false }; // Auto Farm cfg backfill
-    if (player.ascended == null) player.ascended = false; // Starflight backfill
     if (!player.gender) player.gender = 'nam';
-    if (!player.tienSkin) player.tienSkin = 'bach';
-    // Save cũ đã đứng ở Starforged Cảnh trước khi có Starflight → tự thăng khi nạp game
-    if (!player.ascended && player.dantian && player.dantian.realm >= DANTIAN_REALMS.length - 1) ascendToImmortal();
     if (!player.thanbinh) player.thanbinh = { tier: 1 }; // Thần Binh môn phái
     if (!player.mats) player.mats = { manh:0, tichMa:0, anTranAi:0, manhCoThan:0 };
     if (player.bossPity == null) player.bossPity = 0;
@@ -7974,7 +7913,7 @@ function showVictory(){
     <p>Thủ Lĩnh Gloam đã bại dưới tay ngươi.<br>
     Từ một hatchling vô danh, ngươi đã bước qua cánh cửa đầu tiên của hành trình.<br><br>
     ${sectLine}<br><br>
-    <i>Lunacia còn dài: rèn Khai Quang +11 · lên bậc Starforged · săn tướng quân của Morvahn mở Box Kundun · thu thập thủ bút từ Sát Thủ · giành danh hiệu Người Giữ Lunacia!</i></p>
+    <i>Lunacia còn dài: rèn Khai Quang +11 · nuôi Linh Thú lên +11 · săn tướng quân của Morvahn mở Box Kundun · thu thập thủ bút từ Sát Thủ · giành danh hiệu Người Giữ Lunacia!</i></p>
     <button class="big-btn" onclick="document.getElementById('overlay').classList.add('hidden')">Tiếp Tục Hành Trình</button>`;
   document.getElementById('overlay').classList.remove('hidden');
   saveGame();
@@ -9066,132 +9005,6 @@ function drawThanBinh(p){
   ctx.restore();
 }
 
-
-// ═══════════ PHI THĂNG · THẦN TIÊN HÓA CẢNH — tiên nhân vẽ bằng VFX thuần (nam/nữ + 6 skin) ═══════════
-const TIEN_SKINS = {
-  bach:  { name:'Bạch Y Tiên Tử',       robe:'#f2ecdc', trim:'#4c8dff', ribbon:'#7ecbff', halo:'#fff2b0', metal:'#cfd8e8', hair:'#241c18' },
-  thanh: { name:'Thanh Ngọc', robe:'#8ad8c8', trim:'#2a6a5a', ribbon:'#c8f0e4', halo:'#a8ffe0', metal:'#b8d8d0', hair:'#1a2a26' },
-  kim:   { name:'Kim Quang Thánh Quân', robe:'#ffb15c', trim:'#8a5a1a', ribbon:'#ffe8a0', halo:'#ffd76a', metal:'#f0e0b0', hair:'#3a2a12' },
-  huyen: { name:'Huyền Ảnh Dạ Quân',    robe:'#4a3a6a', trim:'#b08ae8', ribbon:'#9a7ad8', halo:'#c09aff', metal:'#7a6a9a', hair:'#16121f' },
-  hong:  { name:'Hồng Nhan Tiên Cơ',    robe:'#f0a8c0', trim:'#b03a5a', ribbon:'#ffd6e4', halo:'#ffb8d0', metal:'#f0d8e0', hair:'#2a1a20' },
-  lam:   { name:'Thương Lam Kiếm Tiên', robe:'#5a8ad8', trim:'#1a3a6a', ribbon:'#a8ccff', halo:'#9fd0ff', metal:'#c0d8f0', hair:'#141c2a' },
-};
-function ascendToImmortal(){
-  if (!player || player.ascended) return;
-  player.ascended = true;
-  player.oldSect = player.sect;
-  // Môn phái phá bỏ hoàn toàn — mọi kỹ năng môn phái tự ngộ, kết hợp không giới hạn
-  let learned = 0;
-  for (const _id in VOHOC_DEFS){ if (VOHOC_DEFS[_id].phai && !vhLearned(_id)){ player.vohoc[_id] = true; learned++; } }
-  closePanels();
-  zoneBanner = { text:'☁ STARFLIGHT · VƯỢT GIỚI HẠN', sub:`Rời khỏi ${SECTS[player.oldSect].name} — ràng buộc Lớp phá bỏ · bay lượn tự do · học được mọi tuyệt kỹ!`, color:'#fff2b0', t:6 };
-  addFloat(player.x, player.y-86, '☁ STARFLIGHT!', '#fff2b0', 24);
-  if (learned) addFloat(player.x, player.y-62, `Ràng buộc Lớp phá bỏ — học thêm ${learned} tuyệt kỹ`, '#a0ffe9', 13);
-  addFloat(player.x, player.y-42, 'Bay lượn — tốc độ +25% · mở Cài Đặt (O) đổi hình dáng & trang phục', '#9fd0ff', 12);
-  addEffect({ type:'vfx', style:'galaxy', x:player.x, y:player.y, r:150, c1:'#fff2b0', c2:'#9fd0ff', glyph:'✧', dur:1.4, big:true, spin:2.5 });
-  addEffect({ type:'vfx', style:'thunderpillar', x:player.x, y:player.y, r:130, c1:'#fff2b0', c2:'#ffb15c', glyph:'✧', dur:1.0 });
-  for (let i = 0; i < 20; i++) addEffect({ type:'ink', x:player.x, y:player.y, vx:rnd(-110,110), vy:rnd(-160,-40), color:'#fff2b0' });
-  AudioSys.sfx('levelup', 1); AudioSys.sfx('quest', 0.9);
-  calcDerived(); saveGame(); checkTitles();
-}
-function drawAscendedFigure(p, now, castK, _atkK, _maxed){
-  const female = p.gender === 'nu';
-  const sk = TIEN_SKINS[p.tienSkin] || TIEN_SKINS.bach;
-  const flip = Math.cos(p.face) < 0 ? -1 : 1;
-  const hover = 7 + Math.sin(now/450)*2.5 + (p.moving ? 3 : 0);
-  const X = p.x, Y = p.y - hover;
-  const sway = Math.sin(now/300), sway2 = Math.sin(now/350 + 1.3);
-  ctx.save();
-  // ── NGỰ KIẾM: phi kiếm dưới chân ──
-  ctx.save(); ctx.translate(X, Y + 4); ctx.rotate(flip * (p.moving ? 0.10 : 0.03*sway));
-  const sg = ctx.createRadialGradient(0, 0, 2, 0, 0, 28);
-  sg.addColorStop(0, sk.halo); sg.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.globalAlpha = 0.35; ctx.fillStyle = sg; ctx.beginPath(); ctx.ellipse(0, 1, 27, 7, 0, 0, 7); ctx.fill();
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = sk.metal; ctx.beginPath();
-  ctx.moveTo(-24, 0); ctx.lineTo(14, -3.2); ctx.lineTo(27, 0); ctx.lineTo(14, 3.2); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = sk.trim; ctx.lineWidth = 1.2; ctx.stroke();
-  ctx.fillStyle = sk.trim; ctx.fillRect(-27, -1.4, 4, 2.8); ctx.fillRect(-20, -4.5, 2.5, 9);
-  ctx.restore();
-  if (p.moving && !SETTINGS.lowFx && Math.random() < 0.45)
-    addEffect({ type:'ink', x:X - Math.cos(p.face)*rnd(12,28), y:Y + rnd(2,7), vx:-Math.cos(p.face)*26, vy:rnd(-8,8), color:sk.halo });
-  // ── hào quang thân ──
-  const aura = ctx.createRadialGradient(X, Y-24, 4, X, Y-24, 44);
-  aura.addColorStop(0, sk.halo); aura.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.globalAlpha = 0.16 + castK*0.25; ctx.fillStyle = aura;
-  ctx.beginPath(); ctx.arc(X, Y-24, 44, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
-  // ── quang hoàn sau đầu (xoay) ──
-  ctx.save(); ctx.translate(X, Y-46); ctx.rotate(now/900);
-  ctx.strokeStyle = sk.halo; ctx.globalAlpha = 0.75 + castK*0.25; ctx.lineWidth = 2.2; ctx.setLineDash([7, 5]);
-  ctx.beginPath(); ctx.arc(0, 0, 13, 0, 7); ctx.stroke(); ctx.setLineDash([]);
-  ctx.globalAlpha = 0.35; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(0, 0, 16.5, 0, 7); ctx.stroke();
-  ctx.restore();
-  // ── hỗn thiên lăng: hai dải lụa phất sau lưng ──
-  for (const side of [-1, 1]){
-    ctx.strokeStyle = sk.ribbon; ctx.globalAlpha = 0.85; ctx.lineWidth = 3; ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(X + side*5, Y - 36);
-    ctx.bezierCurveTo(X - flip*(14 + side*3), Y - 44 + sway*3, X - flip*(26 + side*5), Y - 34 + sway2*5, X - flip*(38 + side*7), Y - 40 + sway*7);
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-  // ── thân: áo bào tiên ──
-  const hem = female ? 13 : 10, hemY = Y - 1;
-  ctx.fillStyle = sk.robe; ctx.beginPath();
-  ctx.moveTo(X - 6, Y - 27);
-  ctx.quadraticCurveTo(X - hem - sway*2, Y - 12, X - hem + sway*2, hemY);
-  ctx.lineTo(X + hem + sway*2, hemY);
-  ctx.quadraticCurveTo(X + hem + sway*2, Y - 12, X + 6, Y - 27);
-  ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = sk.trim; ctx.lineWidth = 1.1; ctx.globalAlpha = 0.9; ctx.stroke(); ctx.globalAlpha = 1;
-  if (!female){ ctx.strokeStyle = sk.trim; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(X, Y - 25); ctx.lineTo(X + sway*1.5, hemY - 1); ctx.stroke(); } // nam: xẻ tà
-  ctx.fillStyle = sk.trim; ctx.fillRect(X - 7, Y - 28, 14, 3); // eo
-  ctx.fillStyle = sk.robe; ctx.beginPath();
-  ctx.moveTo(X - 6.5, Y - 25); ctx.lineTo(X - 7.5, Y - 39); ctx.lineTo(X + 7.5, Y - 39); ctx.lineTo(X + 6.5, Y - 25); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = sk.trim; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(X - 4, Y - 39); ctx.lineTo(X, Y - 33); ctx.lineTo(X + 4, Y - 39); ctx.stroke(); // cổ áo V
-  for (const side of [-1, 1]){ // tay áo rộng phất
-    const wide = female ? 9 : 7;
-    ctx.fillStyle = sk.robe; ctx.beginPath();
-    ctx.moveTo(X + side*6, Y - 37);
-    ctx.quadraticCurveTo(X + side*(8 + wide), Y - 30 + sway*side, X + side*(6 + wide), Y - 21 + sway2*2);
-    ctx.quadraticCurveTo(X + side*8, Y - 24, X + side*5.5, Y - 28);
-    ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = sk.trim; ctx.lineWidth = 0.9; ctx.globalAlpha = 0.7; ctx.stroke(); ctx.globalAlpha = 1;
-  }
-  // ── đầu & tóc (phân nam/nữ) ──
-  const hy = Y - 45;
-  if (female){ // nữ: tóc dài phủ lưng bay mượt
-    ctx.fillStyle = sk.hair; ctx.beginPath();
-    ctx.moveTo(X - 5.5, hy - 2);
-    ctx.quadraticCurveTo(X - 8, Y - 34 + sway, X - 4.5, Y - 30 + sway2*2);
-    ctx.lineTo(X + 4.5, Y - 30 + sway*2);
-    ctx.quadraticCurveTo(X + 8, Y - 34 + sway2, X + 5.5, hy - 2);
-    ctx.closePath(); ctx.fill();
-  }
-  ctx.fillStyle = '#f0d0b0'; ctx.beginPath(); ctx.arc(X, hy, 6.2, 0, 7); ctx.fill();
-  ctx.fillStyle = sk.hair; ctx.beginPath(); ctx.arc(X, hy - 1.5, 6.2, Math.PI, 7); ctx.fill();
-  if (female){ // búi đôi + trâm ngang
-    ctx.fillStyle = sk.hair; ctx.beginPath(); ctx.arc(X - 3.5, hy - 7.5, 3, 0, 7); ctx.arc(X + 3.5, hy - 7.5, 3, 0, 7); ctx.fill();
-    ctx.strokeStyle = sk.trim; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(X - 5, hy - 9); ctx.lineTo(X + 5, hy - 6); ctx.stroke();
-  } else { // nam: búi + quan vàng
-    ctx.fillStyle = sk.hair; ctx.beginPath(); ctx.arc(X, hy - 8, 3.2, 0, 7); ctx.fill();
-    ctx.fillStyle = sk.trim; ctx.fillRect(X - 3, hy - 12.5, 6, 3.2);
-  }
-  ctx.fillStyle = sk.halo; ctx.beginPath(); ctx.arc(X, hy - 2, 1.1, 0, 7); ctx.fill(); // hoa tinh giữa trán
-  if (castK > 0){ // xuất chiêu: ấn triệu hồi vòng gai lóe sáng (vector, không dùng chữ Hán)
-    ctx.save(); ctx.globalAlpha = castK; ctx.strokeStyle = sk.halo; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(X, Y - 64, 13, 0, 7); ctx.stroke();
-    for (let i = 0; i < 6; i++){
-      const a = i * Math.PI / 3 + castK * 0.6;
-      ctx.beginPath();
-      ctx.moveTo(X + Math.cos(a)*13, Y - 64 + Math.sin(a)*13);
-      ctx.lineTo(X + Math.cos(a)*21, Y - 64 + Math.sin(a)*21);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-  ctx.restore();
-}
 
 // ══ NHÂN VẬT CHÍNH VẼ THEO KHỚP XƯƠNG (skeletal) — phong cách MU Online ═════
 // Trước đây mỗi lớp là 1 thẻ Axie PNG tĩnh: không hướng, không khung hình.
@@ -11766,7 +11579,7 @@ function drawPlayer(){
   // Bụi gót chân: nổ ĐÚNG LÚC bàn chân chạm đất, không phải rắc ngẫu nhiên 8% số khung.
   // Bàn chân chạm khi sải chân mở hết cỡ — tức cos(pha) đổi dấu. Bắt đúng lần đổi dấu
   // đó thì tiếng bước và bụi trùng nhau, chân mới có cảm giác BÁM đất.
-  if (!SETTINGS.lowFx && p.moving && !p.ascended){
+  if (!SETTINGS.lowFx && p.moving){
     const _c = Math.cos(p.walkPh || 0);
     if (p._lastCos !== undefined && (_c <= 0) !== (p._lastCos <= 0)){
       const _sd = _c <= 0 ? 1 : -1;                    // chân nào vừa chạm
@@ -11802,7 +11615,6 @@ function drawPlayer(){
   if (maxed) drawThanHiepSeal(p, now);
   ctx.save(); ctx.translate(0, yOff);
   // Ascension aura — rotating orbs grow with realm
-  drawDantianAura(p);
   // Tuyệt học max tầng: hào quang Ám Khí & Cung Tiễn
   drawMaxTuyetHocAura(p);
   // Cung Tiễn — linh cung lơ lửng sau lưng
@@ -11883,118 +11695,86 @@ function drawPlayer(){
   // đúng thứ làm cú chém "nhẹ hều". hSwing(1-atkK) cho thân dồn tới đúng lúc lưỡi chạm.
   const lungeK = Math.max(0, hSwing(1 - Math.min(1, atkK)));
   const pulse = 1 + castK*0.12 + (p.moving ? Math.sin(wph*2)*0.025 : Math.sin(wph)*0.015);
-  if (p.ascended){
-    const _tKey = (p.gender === 'nu' ? 'nu' : 'nam') + '_' + (TIEN_SKINS[p.tienSkin] ? p.tienSkin : 'bach');
-    const _tim = tienImgOf(_tKey);
-    if (_tim && _tim.complete && _tim.naturalWidth){
-      const _tsk = TIEN_SKINS[p.tienSkin] || TIEN_SKINS.bach;
-      const sh = 128, sw = sh * (_tim.naturalWidth/_tim.naturalHeight);
-      const hover = Math.sin(now/520)*3.4; // ngự kiếm: lơ lửng trên phi kiếm
-      ctx.save(); ctx.translate(p.x + Math.cos(p.face)*lungeK*5, p.y + 6 - hover);
-      ctx.scale(pulse, pulse);
-      // hào quang tán tiên sau lưng (màu theo skin)
-      const hg = ctx.createRadialGradient(0, -sh*0.52, 8, 0, -sh*0.52, 72);
-      hg.addColorStop(0, _tsk.halo); hg.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.globalAlpha = 0.32 + 0.12*Math.sin(now/300); ctx.fillStyle = hg;
-      ctx.beginPath(); ctx.arc(0, -sh*0.52, 72, 0, 7); ctx.fill();
-      ctx.globalAlpha = 1;
-      // tuyệt chiêu: kim quang bùng khi thi triển
-      if (castK > 0){
-        const cg = ctx.createRadialGradient(0, -sh*0.4, 4, 0, -sh*0.4, 56);
-        cg.addColorStop(0, _tsk.halo); cg.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.globalAlpha = castK*0.5; ctx.fillStyle = cg;
-        ctx.beginPath(); ctx.arc(0, -sh*0.4, 56, 0, 7); ctx.fill();
-        ctx.globalAlpha = 1;
-        fxShadow(_tsk.halo, 14);
-      }
-      ctx.drawImage(_tim, -sw/2, -sh, sw, sh);
-      ctx.restore();
-    } else {
-      drawAscendedFigure(p, now, castK, atkK, maxed); // fallback VFX khi sprite chưa tải xong
-    }
-  } else {
-    // Nhân vật dựng bằng khớp xương.
-    const sh = 104;
-    const flip = Math.cos(p.face) < 0;
+  // Nhân vật dựng bằng khớp xương.
+  // Nhân vật dựng bằng khớp xương.
+  const sh = 104;
+  const flip = Math.cos(p.face) < 0;
+  ctx.save();
+  ctx.translate(p.x + Math.cos(p.face)*lungeK*7,
+                (p.y - 42) + Math.sin(p.face)*lungeK*3);
+  if (flip) ctx.scale(-1, 1);
+  ctx.scale(pulse, pulse);
+  // Thần Hiệp: hào quang vàng rực sau lưng + viền kim quang quanh thân
+  if (maxed){
+    const hg = ctx.createRadialGradient(0, -8, 6, 0, -8, 64);
+    hg.addColorStop(0, 'rgba(255,228,150,.55)'); hg.addColorStop(0.55, 'rgba(255,177,92,.16)'); hg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalAlpha = 0.85 + 0.15*Math.sin(now/300); ctx.fillStyle = hg;
+    ctx.beginPath(); ctx.arc(0, -8, 64, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1;
+    // Viền kim quang quanh thân KHÔNG đặt shadowBlur ở đây nữa — xem chỗ vẽ dáng người bên dưới.
+  }
+  // tuyệt chiêu: hào quang phái lóe sau lưng
+  if (castK > 0){
+    const cg = ctx.createRadialGradient(0, 0, 4, 0, 0, 52);
+    cg.addColorStop(0, sect.glow); cg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalAlpha = castK*0.55; ctx.fillStyle = cg;
+    ctx.beginPath(); ctx.arc(0, 0, 52, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  const s = sh / HERO_H;
+  ctx.scale(s, s); ctx.translate(-HERO_W/2, -HERO_H/2);
+  const _act = castK > 0 ? (p.castAct || heroActOf(p.sect, 'a'))
+                         : (p.atkAct  || heroActOf(p.sect, 'basic'));
+  const _ps = heroPose(wph, !!p.moving, atkK, Math.min(1, castK), now, _act, p.sway, p.swayDir);
+  // Góc nhìn 3/4 kiểu MU: đi lên trên là thấy LƯNG, đi xuống là thấy mặt.
+  // (Trước đây hướng nào cũng nhìn thẳng vào mặt người chơi, trông rất sai.)
+  _ps.back = Math.sin(p.face) < -0.42;
+  // Trúng đòn: nhân vật giật ngửa ra sau, đầu hất lên, tay bung — trước đây chỉ
+  // có viền đỏ nhấp trên màn hình, còn thân người thì đứng im như không hề gì.
+  const _hurt = Math.min(1, (p.hurtT || 0) / 0.3);
+  if (_hurt > 0){
+    _ps.lean -= 0.24 * _hurt;
+    _ps.head += 0.26 * _hurt;
+    _ps.armL -= 0.42 * _hurt;
+    _ps.armR -= 0.22 * _hurt;
+    _ps.bob  -= 2.2 * _hurt;
+  }
+  const _tier = heroTier(p), _gv = gearVisual(p);
+  // Chọn khung hình. Sprite dùng ở MỌI mức hiệu ứng: sau khi nâng lên 32 khung đi và dựng ở
+  // đúng hộp gốc, nó đo được lệch 0–0,03% pixel so với bản vẽ thẳng, và nhịp giật 15,4% so với
+  // 13,5% của bản liên tục — tức không còn khác biệt để mà đánh đổi.
+  // Chỉ TRÚNG ĐÒN là vẫn vẽ thẳng: giật ngửa phải khớp đúng độ mạnh cú đòn, và chỉ kéo dài 0,3s.
+  // (Trước đây còn một chốt `pulse <= 1.02` với lý do "cú phóng to lúc lên cấp". Sai cả hai vế:
+  //  pulse KHÔNG phải hiệu ứng lên cấp mà là `1 + castK*0,12` — tức nó bật gần như suốt mọi lần
+  //  tung tuyệt kỹ, và chốt đó vô hiệu hoá sprite đúng lúc cần nhất. Mà kể cả có phóng to thì
+  //  cũng chẳng sao: sprite dựng ở 220px trong khi trên màn hình cao 104×1,12 = 116px, vẫn là
+  //  thu nhỏ chứ không phải kéo giãn.)
+  let _spr = null;
+  if (_hurt <= 0){
+    const _kind = castK > 0 ? 'c' : atkK > 0 ? 'a' : (p.moving ? 'w' : 'i');
+    const _n = HS_FRAMES[_kind];
+    const _TAU = Math.PI * 2;
+    const _idx = _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
+               : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)
+               : _kind === 'w' ? ((((wph % _TAU) + _TAU) % _TAU) / _TAU * _n) | 0
+               : ((((now / 620) % _TAU) + _TAU) % _TAU) / _TAU * _n | 0;
+    const _sw = (p.sway || 0) > 0.35 ? 2 : (p.sway || 0) < -0.35 ? 1 : 0;
+    _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back, _sw);
+  }
+  // Thần Hiệp: viền kim quang quanh thân. Trước đây làm bằng cách đặt shadowBlur rồi để nguyên
+  // suốt cả dáng người — đo được 166 trong 204 nhát fill của drawPlayer() bị làm mờ, mỗi nhát là
+  // một mặt vẽ phụ + một lượt ghép riêng. Chi phí KHÔNG phụ thuộc bán kính mờ (thử hạ còn 1/4 chỉ
+  // được 22,8 → 25,6 FPS) mà phụ thuộc SỐ NHÁT vẽ có bóng. Một nhát mờ trên sprite là đủ.
+  if (maxed){
     ctx.save();
-    ctx.translate(p.x + Math.cos(p.face)*lungeK*7,
-                  (p.y - 42) + Math.sin(p.face)*lungeK*3);
-    if (flip) ctx.scale(-1, 1);
-    ctx.scale(pulse, pulse);
-    // Thần Hiệp: hào quang vàng rực sau lưng + viền kim quang quanh thân
-    if (maxed){
-      const hg = ctx.createRadialGradient(0, -8, 6, 0, -8, 64);
-      hg.addColorStop(0, 'rgba(255,228,150,.55)'); hg.addColorStop(0.55, 'rgba(255,177,92,.16)'); hg.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.globalAlpha = 0.85 + 0.15*Math.sin(now/300); ctx.fillStyle = hg;
-      ctx.beginPath(); ctx.arc(0, -8, 64, 0, 7); ctx.fill();
-      ctx.globalAlpha = 1;
-      // Viền kim quang quanh thân KHÔNG đặt shadowBlur ở đây nữa — xem chỗ vẽ dáng người bên dưới.
-    }
-    // tuyệt chiêu: hào quang phái lóe sau lưng
-    if (castK > 0){
-      const cg = ctx.createRadialGradient(0, 0, 4, 0, 0, 52);
-      cg.addColorStop(0, sect.glow); cg.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.globalAlpha = castK*0.55; ctx.fillStyle = cg;
-      ctx.beginPath(); ctx.arc(0, 0, 52, 0, 7); ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-    const s = sh / HERO_H;
-    ctx.scale(s, s); ctx.translate(-HERO_W/2, -HERO_H/2);
-    const _act = castK > 0 ? (p.castAct || heroActOf(p.sect, 'a'))
-                           : (p.atkAct  || heroActOf(p.sect, 'basic'));
-    const _ps = heroPose(wph, !!p.moving, atkK, Math.min(1, castK), now, _act, p.sway, p.swayDir);
-    // Góc nhìn 3/4 kiểu MU: đi lên trên là thấy LƯNG, đi xuống là thấy mặt.
-    // (Trước đây hướng nào cũng nhìn thẳng vào mặt người chơi, trông rất sai.)
-    _ps.back = Math.sin(p.face) < -0.42;
-    // Trúng đòn: nhân vật giật ngửa ra sau, đầu hất lên, tay bung — trước đây chỉ
-    // có viền đỏ nhấp trên màn hình, còn thân người thì đứng im như không hề gì.
-    const _hurt = Math.min(1, (p.hurtT || 0) / 0.3);
-    if (_hurt > 0){
-      _ps.lean -= 0.24 * _hurt;
-      _ps.head += 0.26 * _hurt;
-      _ps.armL -= 0.42 * _hurt;
-      _ps.armR -= 0.22 * _hurt;
-      _ps.bob  -= 2.2 * _hurt;
-    }
-    const _tier = heroTier(p), _gv = gearVisual(p);
-    // Chọn khung hình. Sprite dùng ở MỌI mức hiệu ứng: sau khi nâng lên 32 khung đi và dựng ở
-    // đúng hộp gốc, nó đo được lệch 0–0,03% pixel so với bản vẽ thẳng, và nhịp giật 15,4% so với
-    // 13,5% của bản liên tục — tức không còn khác biệt để mà đánh đổi.
-    // Chỉ TRÚNG ĐÒN là vẫn vẽ thẳng: giật ngửa phải khớp đúng độ mạnh cú đòn, và chỉ kéo dài 0,3s.
-    // (Trước đây còn một chốt `pulse <= 1.02` với lý do "cú phóng to lúc lên cấp". Sai cả hai vế:
-    //  pulse KHÔNG phải hiệu ứng lên cấp mà là `1 + castK*0,12` — tức nó bật gần như suốt mọi lần
-    //  tung tuyệt kỹ, và chốt đó vô hiệu hoá sprite đúng lúc cần nhất. Mà kể cả có phóng to thì
-    //  cũng chẳng sao: sprite dựng ở 220px trong khi trên màn hình cao 104×1,12 = 116px, vẫn là
-    //  thu nhỏ chứ không phải kéo giãn.)
-    let _spr = null;
-    if (_hurt <= 0){
-      const _kind = castK > 0 ? 'c' : atkK > 0 ? 'a' : (p.moving ? 'w' : 'i');
-      const _n = HS_FRAMES[_kind];
-      const _TAU = Math.PI * 2;
-      const _idx = _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
-                 : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)
-                 : _kind === 'w' ? ((((wph % _TAU) + _TAU) % _TAU) / _TAU * _n) | 0
-                 : ((((now / 620) % _TAU) + _TAU) % _TAU) / _TAU * _n | 0;
-      const _sw = (p.sway || 0) > 0.35 ? 2 : (p.sway || 0) < -0.35 ? 1 : 0;
-      _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back, _sw);
-    }
-    // Thần Hiệp: viền kim quang quanh thân. Trước đây làm bằng cách đặt shadowBlur rồi để nguyên
-    // suốt cả dáng người — đo được 166 trong 204 nhát fill của drawPlayer() bị làm mờ, mỗi nhát là
-    // một mặt vẽ phụ + một lượt ghép riêng. Chi phí KHÔNG phụ thuộc bán kính mờ (thử hạ còn 1/4 chỉ
-    // được 22,8 → 25,6 FPS) mà phụ thuộc SỐ NHÁT vẽ có bóng. Một nhát mờ trên sprite là đủ.
-    if (maxed){
-      ctx.save();
-      ctx.shadowColor = '#ffd76a'; ctx.shadowBlur = 15;
-      if (_spr) heroBlit(ctx, _spr);
-      else ctx.drawImage(heroRimCanvas(p.sect, _tier, now, _ps, _gv), 0, 0, HERO_W, HERO_H);
-      ctx.restore();
-    }
+    ctx.shadowColor = '#ffd76a'; ctx.shadowBlur = 15;
     if (_spr) heroBlit(ctx, _spr);
-    else drawHeroLit(ctx, p.sect, _tier, now, _ps, _gv);
+    else ctx.drawImage(heroRimCanvas(p.sect, _tier, now, _ps, _gv), 0, 0, HERO_W, HERO_H);
     ctx.restore();
   }
-  // Vũ khí danh phái cầm tay — chỉ hình Thần Hiệp cần, nhân vật khớp xương đã tự cầm vũ khí
-  if (p.ascended) drawSectWeapon(p, sect);
+  if (_spr) heroBlit(ctx, _spr);
+  else drawHeroLit(ctx, p.sect, _tier, now, _ps, _gv);
+  ctx.restore();
   // weapon arc while attacking
   if (p.atkAnim > 0){
     const k = p.atkAnim/0.22;
@@ -12062,54 +11842,6 @@ function drawPlayer(){
   ctx.restore();
   // ── Danh hiệu trên đỉnh đầu (chọn trong bảng Nhân Vật → tab Thông Tin) ──
   drawOverheadTitle(p, yOff, riding, maxed);
-}
-// Ascension aura: rotating orbs + rings around the character, scaling with realm
-function drawDantianAura(p){
-  const realm = (p.dantian && p.dantian.realm) || 0;
-  if (realm <= 0) return;
-  const now = performance.now();
-  const orbs = Math.min(2 + Math.floor(realm/2), 6); // 2 → 6 châu, không che người
-  const radius = 26 + realm * 4;
-  const colors = ['#5ea0e8','#6fb8f0','#8fd0ff','#c8e0ff','#7ecbff','#ffd76a'];
-  const col = colors[Math.min(realm, 5)];
-  const speed = now / (700 - realm * 60);
-  // soft glow behind character
-  const g = ctx.createRadialGradient(p.x, p.y-16, 4, p.x, p.y-16, radius + 12);
-  g.addColorStop(0, realm >= 5 ? 'rgba(126,203,255,.13)' : 'rgba(94,160,232,.10)');
-  g.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(p.x, p.y-16, radius+12, 0, 7); ctx.fill();
-  // rotating dashed ring (realm 3+)
-  if (realm >= 3){
-    ctx.save();
-    ctx.strokeStyle = col; ctx.globalAlpha = 0.3 + realm*0.04;
-    ctx.setLineDash([7, 11]); ctx.lineDashOffset = -now/40;
-    ctx.lineWidth = 1.6;
-    ctx.beginPath(); ctx.ellipse(p.x, p.y-14, radius, radius*0.40, 0, 0, 7); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
-  }
-  // second counter-rotating ring at Starforged
-  if (realm >= 5){
-    ctx.save();
-    ctx.strokeStyle = '#ffd76a'; ctx.globalAlpha = 0.42;
-    ctx.setLineDash([4, 8]); ctx.lineDashOffset = now/30;
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.ellipse(p.x, p.y-14, radius+9, (radius+9)*0.44, 0, 0, 7); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
-  }
-  // orbiting true-qi orbs — nhỏ gọn, sáng ở lõi
-  for (let i = 0; i < orbs; i++){
-    const ang = speed + i * (Math.PI*2/orbs);
-    const ox = p.x + Math.cos(ang) * radius;
-    const oy = p.y - 14 + Math.sin(ang) * radius * 0.40;
-    const os = 1.7 + realm * 0.42;
-    const og = ctx.createRadialGradient(ox, oy, 0, ox, oy, os*2.1);
-    og.addColorStop(0, 'rgba(255,255,255,.95)'); og.addColorStop(0.4, col); og.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = og;
-    ctx.beginPath(); ctx.arc(ox, oy, os*2.1, 0, 7); ctx.fill();
-  }
 }
 function drawTitleBackdrop(){
   ctx.fillStyle = '#ece2c8'; ctx.fillRect(0,0,W,H);
@@ -12218,7 +11950,7 @@ function renderChar(){
   const p = player, sect = SECTS[p.sect];
   let html = `<h3>Nhân Vật — ${sect.name} Cấp ${p.level}</h3>`;
   // chân dung = chính nhân vật trong game, ở đúng bậc Thần Binh đang mang
-  html += `<img class="char-portrait" src="${p.ascended ? 'assets/tien/' + (p.gender === 'nu' ? 'nu' : 'nam') + '_' + (TIEN_SKINS[p.tienSkin] ? p.tienSkin : 'bach') + '.png' : heroCardUrl(p.sect, heroTier(p), gearVisual(p))}" alt="${sect.name}">${p.ascended ? `<div style="margin-top:4px;font-size:11.5px;color:#fff2b0">☁ Tán Tiên — xuất thế khỏi ${sect.name}, ràng buộc Lớp đã phá bỏ</div>` : ""}`;
+  html += `<img class="char-portrait" src="${heroCardUrl(p.sect, heroTier(p), gearVisual(p))}" alt="${sect.name}">`;
   // Tán Nhân: lối vào lễ Gia Nhập Lớp (cấp 10)
   if (p.sect === 'vophai'){
     html += `<div style="margin:8px 0;padding:10px;border:1px dashed rgba(126,203,255,.45);border-radius:6px;text-align:center">
@@ -13314,7 +13046,7 @@ function renderTuyetHoc(){
       ${thStatLines(sys, nx).join(' · ')}<br>
       <span style="opacity:.75">Phí: ${costTxt} · Tỉ lệ: <b>${rate}%</b>${guaranteed?' <span style="color:#7ecbff">(Chúc Phúc bảo đảm!)</span>':''}<br>
       (thất bại: mất vật liệu, Chúc Phúc +1 — đủ 10 điểm lần sau chắc chắn thành công)</span></div>
-      <div class="tuvi-bar"><div class="fill" style="width:${st.bless*10}%;background:#7ecbff"></div><span>Chúc Phúc ${st.bless}/10</span></div>
+      <div class="bless-bar"><div class="fill" style="width:${st.bless*10}%;background:#7ecbff"></div><span>Chúc Phúc ${st.bless}/10</span></div>
       <div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 20px" onclick="upgradeTH('${sys}')" ${canPay?'':'disabled'}>
       Nâng Tầng ${target}</button></div><div id="th-msg"></div>`;
   } else {
@@ -13400,11 +13132,7 @@ function applyTestBoost(){
   player.gems = { tuLa: 99, honNguyen: 99 };       // rèn +7 trở lên
   player.tienDan = 99;                             // nâng tầng di sản
   player.charms = 99;                              // bảo hiểm rèn +10/+11
-  // Ascension: cảnh giới cao nhất (Starforged Cảnh)
-  player.dantian.realm = DANTIAN_REALMS.length - 1;
   player.silver += 999999;
-  // Instinct Channels: 8 mạch × 20 đốt — toàn bộ đã thông
-  for (const m of MERIDIANS) player.meridians[m.id] = 20;
   // Thú Chiến: giai cao nhất, xuất trận sẵn
   player.mount.tier = MOUNT_TIERS.length - 1;
   player.mount.out = true;
@@ -13892,13 +13620,11 @@ setTimeout(function(){
       if (md0.type === 'safe') player.pk = false;
       snapCamera();
     }
-    // debug params: &tier=8&realm=5&mount=1
+    // debug params: &tier=8&mount=1
     const tq = location.search.match(/tier=(\d)/);
     if (tq){ player.mount.tier = Math.min(8, +tq[1]); }
-    const rq = location.search.match(/realm=(\d)/);
-    if (rq){ player.dantian.realm = Math.min(8, +rq[1]); }
     if (/mount=1/.test(location.search)) player.mount.out = player.mount.tier > 0;
-    if (tq || rq){ calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi; saveGame(); }
+    if (tq){ calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi; saveGame(); }
     const p = location.search.match(/panel=(\w+)/);
     if (p) setTimeout(()=>togglePanel(p[1]), 300);
   }
@@ -13961,8 +13687,6 @@ function cheatHelp(){
     '── nhân vật ──',
     '/max — mọi thứ tối đa (cấp 120, full đồ +11, mọi kỹ năng Lv 120)',
     '/lv <1-120> — đặt cấp · /speed <hệ số> — tốc chạy · /god — bật/tắt bất tử',
-    `/realm <0-${DANTIAN_REALMS.length - 1}> — đặt cấp đủ để đạt bậc Ascension đó (Ascension tự động theo cấp)`,
-    '/ascend — Starflight ngay: phá ràng buộc Lớp, bay lượn, skin Starforged',
     '── di chuyển ──',
     '/map <id> — ' + _maps,
     '/map <phó bản> — ' + _pb,
@@ -14044,12 +13768,6 @@ window.cheatExec = function(raw){
         player.tenuiTT = 0;
         cheatLog('Đã gỡ Trọng Thương — có thể nhảy Vực Thẳm ngay', '#8fd18f'); break;
       }
-      case 'ascend': { // Starflight ngay — test giai đoạn Vượt Giới Hạn. Lệnh này từng tên là
-                       // '/phi' (phi thăng) — từ vựng tiên hiệp bị cấm, đổi cả trong console.
-        player.dantian.realm = DANTIAN_REALMS.length - 1;
-        ascendToImmortal();
-        cheatLog('☁ Starflight — Vượt Giới Hạn! Mở Cài Đặt (O) đổi Nam/Nữ & trang phục', '#fff2b0'); break;
-      }
       case 'time': { // /time [ngày] — nhảy thời gian thế giới (mặc định +10 ngày)
         gameClock();
         player.gt.t += Math.max(0, num(1, 10)) * GT_DAY;
@@ -14123,12 +13841,6 @@ window.cheatExec = function(raw){
         const list = mobs.filter(m => !m.dead && dist(player.x, player.y, m.x, m.y) <= r);
         list.forEach(m => { m.hp = 0; killMob(m, 'cheat'); });
         cheatLog('Đã hạ ' + list.length + ' mục tiêu trong ' + r + 'px.', '#8fd18f'); break;
-      }
-      case 'realm': { // Cảnh giới giờ tự động theo cấp độ (calcDerived()) — set cấp tương ứng thay vì gán thẳng
-        const _r = clamp(Math.round(num(1, 0)), 0, DANTIAN_REALMS.length - 1);
-        player.level = Math.max(player.level, _r * 12);
-        calcDerived(); player.hp = player.maxHp;
-        cheatLog('Ascension → ' + DANTIAN_REALMS[player.dantian.realm].name + ' (cấp ' + player.level + ')', '#8fd18f'); break;
       }
       case 'th': {
         const sys = parts[1];
@@ -17730,98 +17442,6 @@ function drawTitleShip(g, x, y, sc, t, alpha){
 }
 
 // ═══════════ VŨ KHÍ DANH PHÁI — mỗi môn phái một binh khí riêng ═══════════
-const SECT_WEAPONS = { thieulam:'con', toanchan:'kiem', baidasan:'xatruong', minhgiao:'daidao' }; // bug (Dark Lord) không có entry riêng, rơi về fallback 'kiem' — như trước đây
-function drawSectWeapon(p, sect){
-  const kind = SECT_WEAPONS[p.sect] || 'kiem';
-  const k = p.atkAnim > 0 ? p.atkAnim/0.22 : 0;          // 1 → 0 khi chém
-  const swing = k > 0 ? (1-k)*2.5 : 0;                    // quạt mạnh theo đòn đánh
-  const castK = (p.castT || 0) / 0.38;
-  const idleSway = Math.sin(p.walkPh || 0) * (p.moving ? 0.16 : 0.06);
-  const wph = p.walkPh || 0;
-  const bob = p.moving ? Math.abs(Math.sin(wph))*3.2 : Math.sin(wph)*1.2;
-  const hx = p.x + Math.cos(p.face)*5;
-  const hy = p.y - 20 - bob + Math.sin(p.face)*3;
-  const ang = p.face + 1.05 - swing + idleSway - castK*0.8; // nghỉ: xếch xuống · chiêu: giơ cao
-  const wpn = p.equip && p.equip.vukhi;
-  const glowBoost = wpn && wpn.plus >= 9 ? (wpn.plus >= 11 ? 2 : 1.4) : 1;
-  ctx.save(); ctx.translate(hx, hy); ctx.rotate(ang);
-  ctx.lineCap = 'round';
-  // hào quang quanh vũ khí theo màu phái
-  // shadowBlur đặt ở đây CÒN NGUYÊN cho tới ctx.restore(): mọi nhát fill của thân người, giáp,
-  // vũ khí sau dòng này đều bị làm mờ theo. Đo được: bịt riêng chỗ này và các chỗ cùng loại
-  // trong drawPlayer đưa 22,3 → 35,7 FPS.
-  fxShadow(sect.glow, 4*glowBoost + castK*10);
-  if (kind === 'con'){ // Thiếu Lâm — côn
-    ctx.strokeStyle = '#7a5a30'; ctx.lineWidth = 3.4;
-    ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(30, 0); ctx.stroke();
-    ctx.strokeStyle = sect.color; ctx.lineWidth = 4.2;
-    ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(-10, 0); ctx.moveTo(26, 0); ctx.lineTo(30, 0); ctx.stroke();
-  } else if (kind === 'kiem'){ // Toàn Chân — thanh kiếm
-    ctx.strokeStyle = '#5a4a3a'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(-2, 0); ctx.stroke(); // chuôi
-    ctx.strokeStyle = sect.color; ctx.lineWidth = 4.6;
-    ctx.beginPath(); ctx.moveTo(-3.5, -3.4); ctx.lineTo(-3.5, 3.4); ctx.stroke(); // chẩn
-    const bl = ctx.createLinearGradient(0, 0, 32, 0);
-    bl.addColorStop(0, '#d8e8e8'); bl.addColorStop(1, '#f8ffff');
-    ctx.strokeStyle = bl; ctx.lineWidth = 2.8;
-    ctx.beginPath(); ctx.moveTo(-2, 0); ctx.lineTo(30, 0); ctx.stroke();
-    ctx.strokeStyle = sect.glow; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.7;
-    ctx.beginPath(); ctx.moveTo(2, -1.2); ctx.lineTo(28, -1.2); ctx.stroke();
-    ctx.globalAlpha = 1;
-  } else if (kind === 'songhoan'){ // Cổ Mộ — song hoàn
-    for (const off of [-5, 5]){
-      ctx.strokeStyle = sect.color; ctx.lineWidth = 2.4;
-      ctx.beginPath(); ctx.arc(14, off, 7, 0, 7); ctx.stroke();
-      ctx.strokeStyle = sect.glow; ctx.lineWidth = 1; ctx.globalAlpha = 0.8;
-      ctx.beginPath(); ctx.arc(14, off, 5, 0, 7); ctx.stroke();
-      ctx.globalAlpha = 1;
-    }
-  } else if (kind === 'xatruong'){ // Bạch Đà Sơn — xà trượng
-    ctx.strokeStyle = '#3a3028'; ctx.lineWidth = 3.2;
-    ctx.beginPath(); ctx.moveTo(-12, 0); ctx.quadraticCurveTo(10, 1.5, 26, 0); ctx.stroke();
-    ctx.strokeStyle = sect.color; ctx.lineWidth = 2.6; // đầu rắn cuộn
-    ctx.beginPath(); ctx.arc(27, -1, 4.5, -2.4, 2.2); ctx.stroke();
-    ctx.fillStyle = '#c8ffa0';
-    ctx.beginPath(); ctx.arc(28.5, -3.4, 1.2, 0, 7); ctx.fill(); // mắt rắn
-  } else if (kind === 'daidao'){ // Minh Giáo — đại đao
-    ctx.strokeStyle = '#6a2a1a'; ctx.lineWidth = 3.6;
-    ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(2, 0); ctx.stroke(); // cán đỏ
-    ctx.fillStyle = '#d8d8e0';
-    ctx.beginPath(); // lưỡi đao cong lớn
-    ctx.moveTo(2, -2.5); ctx.quadraticCurveTo(22, -7, 32, -3);
-    ctx.quadraticCurveTo(26, 2.5, 4, 2.5); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = sect.glow; ctx.lineWidth = 1; ctx.globalAlpha = 0.8;
-    ctx.beginPath(); ctx.moveTo(4, -2.8); ctx.quadraticCurveTo(22, -7.2, 31, -3.2); ctx.stroke();
-    ctx.globalAlpha = 1;
-  } else if (kind === 'quat'){ // Đoàn Thị — thiết quạt
-    ctx.fillStyle = sect.color; ctx.globalAlpha = 0.9;
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 16, -0.62, 0.62); ctx.closePath(); ctx.fill();
-    ctx.globalAlpha = 1; ctx.strokeStyle = sect.glow; ctx.lineWidth = 1;
-    for (let i = -2; i <= 2; i++){
-      const a = i*0.28;
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a)*15, Math.sin(a)*15); ctx.stroke();
-    }
-    ctx.beginPath(); ctx.arc(0, 0, 16, -0.62, 0.62); ctx.stroke();
-  } else { // Đào Hoa — ngọc tiêu
-    const fl = ctx.createLinearGradient(0, 0, 24, 0);
-    fl.addColorStop(0, '#7ec8a0'); fl.addColorStop(1, '#c8f0d8');
-    ctx.strokeStyle = fl; ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(22, 0); ctx.stroke();
-    ctx.fillStyle = '#3a7a58';
-    for (let i = 0; i < 4; i++){ ctx.beginPath(); ctx.arc(2 + i*5, 0, 1.1, 0, 7); ctx.fill(); }
-    ctx.strokeStyle = sect.color; ctx.lineWidth = 1.6; // tua hồng
-    ctx.beginPath(); ctx.moveTo(-6, 0); ctx.quadraticCurveTo(-9, 4, -8, 8 + Math.sin(wph)*1.5); ctx.stroke();
-  }
-  // tuyệt chiêu: vệt sáng chói dọc binh khí
-  if (castK > 0){
-    ctx.globalAlpha = castK; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.6;
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(26, 0); ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
-  ctx.restore();
-}
-
-// ═══════════ HÀO QUANG DI SẢN MAX TẦNG (Ám Khí 7 · Cung Tiễn 7) ═══════════
 function drawMaxTuyetHocAura(p){
   const t = performance.now()/1000;
   const akTier = (p.amkhiX && p.amkhiX.tier) || 0;
@@ -17991,7 +17611,6 @@ function tutAdvance(stepKey){
 // ═══════════ THẦN HIỆP — trạng thái mọi hệ thống tối đa ═══════════
 function isMaxed(p){
   return p.level >= MAX_LV
-    && p.dantian && p.dantian.realm >= DANTIAN_REALMS.length - 1
     && p.mount && p.mount.tier >= MOUNT_TIERS.length - 1
     && p.amkhiX && p.amkhiX.tier >= AMKHI_TIERS.length - 1
     && p.bow && p.bow.tier >= BOW_TIERS.length - 1
@@ -18270,17 +17889,11 @@ function renderSettings(){
     <div class="set-row"><span>❤ Uống thuốc khi HP dưới</span>${sldA('potionPct', 10, 80, 5, _acS.potionPct + '%')}</div>
     <div class="set-row"><span>🎯 Tầm quét quanh điểm neo</span>${sldA('range', 200, 700, 10, _acS.range + 'px')}</div>
     <div class="set-row"><span>👹 Auto đánh cả Boss <i>(nguy hiểm — mặc định tắt, boss tự mình quyết!)</i></span>${togA('boss')}</div>
-    ${(typeof player !== 'undefined' && player && player.ascended) ? `
-    <div class="set-row" style="border-bottom:none;justify-content:center"><b style="color:#fff2b0;font-size:12px">— ☁ STARFLIGHT —</b></div>
-    <div class="set-row"><span>⚥ Hình dáng Starforged</span><span><button class="mini-btn ${player.gender !== 'nu' ? '' : 'danger'}" onclick="setGender('nam')">NAM</button> <button class="mini-btn ${player.gender === 'nu' ? '' : 'danger'}" onclick="setGender('nu')">NỮ</button></span></div>
-    <div class="set-row"><span>🎨 Trang Phục (skin)</span><span>${Object.keys(TIEN_SKINS).map(k => `<button class="mini-btn" style="color:${TIEN_SKINS[k].halo} !important;border-color:${TIEN_SKINS[k].halo} !important" title="${TIEN_SKINS[k].name}" onclick="setTienSkin('${k}')">${player.tienSkin === k ? '◉' : '●'}</button>`).join('')}</span></div>
-    <div style="font-size:10.5px;color:#9aa8d4;line-height:1.5">Đang mặc: <b style="color:${(TIEN_SKINS[player.tienSkin] || TIEN_SKINS.bach).halo}">${(TIEN_SKINS[player.tienSkin] || TIEN_SKINS.bach).name}</b> — ràng buộc Lớp đã phá bỏ, kỹ năng toàn tự do, bay lượn +25% tốc độ.</div>` : ''}
     <div class="set-row" style="border-bottom:none"><span style="color:#c05a4a">⚠ Xóa dữ liệu & chơi lại</span><button class="mini-btn danger" onclick="wipeSave()">XÓA SAVE</button></div>
     <div style="font-size:11px;color:#9aa8d4;margin-top:8px;line-height:1.5">Âm thanh sẽ phát sau thao tác đầu tiên của bạn (quy định trình duyệt). Mọi cài đặt được lưu tự động.</div>`;
 }
 window.setShake = function(v){ SETTINGS.shake = clamp(v|0, 0, 2); saveSettings(); renderSettings(); };
 window.setGender = function(g){ if (!player) return; player.gender = (g === 'nu') ? 'nu' : 'nam'; saveGame(); renderSettings(); };
-window.setTienSkin = function(id){ if (!player || !TIEN_SKINS[id]) return; player.tienSkin = id; saveGame(); renderSettings(); };
 window.setOpt = function(key, v, quiet){
   SETTINGS[key] = clamp(parseInt(v, 10) || 0, 0, 100);
   saveSettings();
@@ -18831,7 +18444,6 @@ function aiChatBlock(npcId){
 function aiNpcCtx(){
   const p = player;
   const sect = SECTS[p.sect] ? SECTS[p.sect].name : 'Tán Nhân';
-  const realm = (p.dantian && DANTIAN_REALMS[p.dantian.realm]) ? DANTIAN_REALMS[p.dantian.realm].name : 'Hatchling';
   const traits = (p.traits || []).map(tid => { const t = TRAITS.find(x => x.id === tid); return t ? t.name : String(tid); });
   const pers = PERSONALITIES[p.personality] ? PERSONALITIES[p.personality].name : 'Trung Dung';
   const q = currentQuest();
@@ -18839,7 +18451,7 @@ function aiNpcCtx(){
   const wx = weatherNow();
   const _hpV = Math.round((p.hp / p.maxHp) * 100); // NaN/Infinity (player chưa init xong) → mặc định 100
   return {
-    level: p.level || 1, sect, realm,
+    level: p.level || 1, sect,
     hpPct: Number.isFinite(_hpV) ? Math.max(0, Math.min(100, _hpV)) : 100,
     sin: p.toiac || 0, traits, pers,
     mapName: MAPS[curMap].name, questName: q ? q.name : '',
@@ -19520,14 +19132,14 @@ function rollKyngo(){
     player.silver += 60; player.khi += 20;
     text = 'KHÁM PHÁ · Năng Lượng Hội Tụ'; sub = 'Hít thở nguồn năng lượng quanh mình — +60◈ bạc · +20 Instinct!'; color = '#7fd8e0';
   } else if (r < 0.90){ // Cao Thủ Ẩn Danh chỉ điểm vài chiêu
-    const tv = 40 + ((player.dantian && player.dantian.realm) || 0)*25;
+    const tv = 40 + Math.floor(player.level/12)*25;
     player.silver += tv*2;
     sub = `Một tay kiếm ẩn danh chỉ điểm vài đường — +${tv*2}◈ bạc!`;
     text = 'KHÁM PHÁ · Cao Thủ Ẩn Danh'; color = '#d8baff';
   } else { // Giác ngộ bất chợt — trước đây giảm 30% tiêu hao Ascension Trial (cơ chế đột phá thủ
     // công đã tự động hoá từ đợt MU-hoá, giảm giá đó không còn ai tiêu thụ được nữa) — đổi thành
     // thưởng Anima thẳng cho tương xứng với các nhánh Khám Phá khác, giữ nguyên cảm giác "chợt tỉnh ngộ".
-    const tv2 = 80 + ((player.dantian && player.dantian.realm) || 0)*30;
+    const tv2 = 80 + Math.floor(player.level/12)*30;
     player.silver += tv2*2;
     text = 'KHÁM PHÁ · Giác Ngộ Bất Chợt'; color = '#9fd0ff';
     sub = `Chợt lóe lên một tia sáng trí tuệ — +${tv2*2}◈ bạc!`;
@@ -19625,31 +19237,31 @@ Object.assign(BGM_TRACKS, {
 const DUNGEONS = {
   pb_daohoa:   { boss:'boss_hacphong',  bossName:'Thủ Lĩnh Đoàn Gloam',
     waves:[ ['bandit','bandit','wolf'], ['bandit','hautu','bandit'], ['assassin','bandit','wolf'] ],
-    rewards:{ tienDan:[1,2], mat:[4,7],   tuLa:[0,0], hon:[0,0], khi:40,  tuvi:150,  silver:[250,400] },
+    rewards:{ tienDan:[1,2], mat:[4,7],   tuLa:[0,0], hon:[0,0], khi:40,  bacThem:150,  silver:[250,400] },
     huntBoss:'boss_cotma1', boxTier:1, timeLimit:480 },
   pb_ngoai:    { boss:'boss_sontac',    bossName:'Thủ Lĩnh Sói Hoang',
     waves:[ ['bandit','wolf','bandit'], ['bandit','bandit','caodo'], ['assassin','bandit','bandit'] ],
-    rewards:{ tienDan:[1,2], mat:[5,8],   tuLa:[0,0], hon:[0,0], khi:55,  tuvi:220,  silver:[320,480] },
+    rewards:{ tienDan:[1,2], mat:[5,8],   tuLa:[0,0], hon:[0,0], khi:55,  bacThem:220,  silver:[320,480] },
     huntBoss:'boss_cotma2', boxTier:1, timeLimit:480 },
   pb_chungnam: { boss:'boss_phando',    bossName:'Phản Đồ Đại Tướng',
     waves:[ ['phando','bandit','phando'], ['xanu','phando','bandit'], ['bandao','xanu','phando'] ],
-    rewards:{ tienDan:[2,3], mat:[7,11],  tuLa:[0,1], hon:[0,0], khi:90,  tuvi:450,  silver:[550,800] },
+    rewards:{ tienDan:[2,3], mat:[7,11],  tuLa:[0,1], hon:[0,0], khi:90,  bacThem:450,  silver:[550,800] },
     huntBoss:'boss_hacnu1', boxTier:2, timeLimit:540 },
   pb_comoc:    { boss:'boss_mochu',     bossName:'Chúa Tể Lăng Mộ',
     waves:[ ['thinu','mocnhan','thinu'], ['huyetbat','mocnhan','thinu'], ['huyetbat','huyetbat','mocnhan'] ],
-    rewards:{ tienDan:[2,3], mat:[10,14], tuLa:[1,1], hon:[0,0], khi:140, tuvi:800,  silver:[900,1300] },
+    rewards:{ tienDan:[2,3], mat:[10,14], tuLa:[1,1], hon:[0,0], khi:140, bacThem:800,  silver:[900,1300] },
     huntBoss:'boss_hacnu2', boxTier:2, timeLimit:540 },
   pb_tuyettinh:{ boss:'boss_tinhhoa',   bossName:'Xoáy Lá Nguyền',
     waves:[ ['ttdetu','docyeu','ttdetu'], ['docyeu','satthuhy','ttdetu'], ['satthuhy','docyeu','docyeu'] ],
-    rewards:{ tienDan:[3,4], mat:[13,18], tuLa:[1,2], hon:[0,1], khi:200, tuvi:1400, silver:[1400,2000] },
+    rewards:{ tienDan:[3,4], mat:[13,18], tuLa:[1,2], hon:[0,1], khi:200, bacThem:1400, silver:[1400,2000] },
     huntBoss:'boss_hoangkim1', boxTier:3, timeLimit:600 },
   pb_mongco:   { boss:'boss_dothong',   bossName:'Đột Thông Hãn Vương',
     waves:[ ['thamtu','cungthu','kybinh'], ['cungthu','kybinh','thamtu'], ['kybinh','kybinh','cungthu'] ],
-    rewards:{ tienDan:[4,5], mat:[16,22], tuLa:[2,2], hon:[1,1], khi:280, tuvi:2400, silver:[2200,3200] },
+    rewards:{ tienDan:[4,5], mat:[16,22], tuLa:[2,2], hon:[1,1], khi:280, bacThem:2400, silver:[2200,3200] },
     huntBoss:'boss_hoangkim2', boxTier:4, timeLimit:660 },
   pb_nhanmon:  { boss:'boss_thienbinh', bossName:'Thiên Binh Thống Soái',
     waves:[ ['kylan','cuongbinh','daokhach'], ['cuongbinh','daokhach','kylan'], ['daokhach','kylan','kylan'] ],
-    rewards:{ tienDan:[5,6], mat:[20,26], tuLa:[2,3], hon:[2,2], khi:350, tuvi:3500, silver:[3000,4500] },
+    rewards:{ tienDan:[5,6], mat:[20,26], tuLa:[2,3], hon:[2,2], khi:350, bacThem:3500, silver:[3000,4500] },
     huntBoss:'boss_amthan', boxTier:5, timeLimit:720 },
 };
 
@@ -19697,7 +19309,7 @@ const DEEP_MOBS = ['bandit','wolf','caodo','phando','xanu','bandao','thinu','moc
 function deepFloorLv(f){ return clamp(6 + f * 4, 1, 120); }
 // Thưởng mỗi tầng dồn vào "kho tạm" — chưa phải của ngươi cho tới khi rời.
 function deepFloorLoot(f){
-  return { silver: Math.round(220 * f * (1 + f*0.12)), tuvi: Math.round(120 * f),
+  return { silver: Math.round(220 * f * (1 + f*0.12)), bacThem: Math.round(120 * f),
            xp: Math.round(340 * f * (1 + f*0.18)),
            mat: 1 + Math.floor(f/2), tienDan: f % 3 === 0 ? 1 : 0,
            hap: f % 5 === 0 ? clamp(Math.floor(f/5), 1, 7) : 0 };
@@ -19707,7 +19319,7 @@ function deepStart(){
   if (player.level < 20){
     addFloat(player.x, player.y-50, 'Cần cấp 20 để xuống Tầng Sâu', '#ff9a6a', 13); return;
   }
-  DEEP = { floor: 0, bank: { silver:0, tuvi:0, xp:0, mat:0, tienDan:0, hap:{} }, entered: Date.now() };
+  DEEP = { floor: 0, bank: { silver:0, bacThem:0, xp:0, mat:0, tienDan:0, hap:{} }, entered: Date.now() };
   DGN = null; navInvalidate();   // Tầng Sâu gỡ hết tường phòng ⇒ lưới cũ còn ghi tường
   travelTo(DEEP_MAP);
   deepNextFloor();
@@ -19753,19 +19365,19 @@ function deepNextFloor(){
 }
 function deepBankFloor(){
   const l = deepFloorLoot(DEEP.floor), b = DEEP.bank;
-  b.silver += l.silver; b.tuvi += l.tuvi; b.xp += l.xp; b.mat += l.mat; b.tienDan += l.tienDan;
+  b.silver += l.silver; b.bacThem += l.bacThem; b.xp += l.xp; b.mat += l.mat; b.tienDan += l.tienDan;
   if (l.hap) b.hap[l.hap] = (b.hap[l.hap] || 0) + 1;
 }
 // Rời CHỦ ĐỘNG: kho tạm thành của ngươi. Đây là toàn bộ trò chơi của chế độ này.
 window.deepLeave = function(dest){
   if (!DEEP) return;
   const b = DEEP.bank;
-  player.silver += b.silver + b.tuvi*2; player.mat += b.mat; player.tienDan += b.tienDan;
+  player.silver += b.silver + b.bacThem*2; player.mat += b.mat; player.tienDan += b.tienDan;
   if (b.xp) gainXp(b.xp);
   for (const t in b.hap) player.baohap[t] = (player.baohap[t] || 0) + b.hap[t];
   const hapTxt = Object.keys(b.hap).map(t => `${b.hap[t]}× ${BAOHAP_TIERS[t].name}`).join(' · ');
   zoneBanner = { text: DEEP.finished ? `✦ CHINH PHỤC TRỌN ${DEEP_MAX} TẦNG` : `✦ RÚT LUI Ở TẦNG ${DEEP.floor}`,
-    sub:`${DEEP.finished ? `Trọn ${DEEP_MAX} tầng · ` : ''}+${b.xp.toLocaleString('vi-VN')} EXP · +${(b.silver + b.tuvi*2).toLocaleString('vi-VN')} bạc · +${b.mat} Huyền Thiết${b.tienDan?` · +${b.tienDan} Đá Thăng Cấp`:''}${hapTxt?' · '+hapTxt:''}`,
+    sub:`${DEEP.finished ? `Trọn ${DEEP_MAX} tầng · ` : ''}+${b.xp.toLocaleString('vi-VN')} EXP · +${(b.silver + b.bacThem*2).toLocaleString('vi-VN')} bạc · +${b.mat} Huyền Thiết${b.tienDan?` · +${b.tienDan} Đá Thăng Cấp`:''}${hapTxt?' · '+hapTxt:''}`,
     color:'#6ae88a', t:6 };
   AudioSys.sfx('levelup', 1);
   DEEP = null; calcDerived(); saveGame();
@@ -19871,12 +19483,12 @@ function updateDungeon(dt){
     const td = Math.round(rnd(r.tienDan[0], r.tienDan[1])), mt = Math.round(rnd(r.mat[0], r.mat[1])),
           tl = Math.round(rnd(r.tuLa[0], r.tuLa[1])),     hn = Math.round(rnd(r.hon[0], r.hon[1])),
           sv = Math.round(rnd(r.silver[0], r.silver[1]));
-    player.tienDan += td; player.mat += mt; player.khi += r.khi; player.silver += sv + r.tuvi*2;
+    player.tienDan += td; player.mat += mt; player.khi += r.khi; player.silver += sv + r.bacThem*2;
     dailyTrack('dungeon'); // Mục Tiêu Hôm Nay
     if (tl > 0) player.gems.tuLa += tl;
     if (hn > 0) player.gems.honNguyen += hn;
     zoneBanner = { text:'PHÓ BẢN THÔNG QUAN!',
-      sub:`+${td} Đá Thăng Cấp · +${mt} Huyền Thiết · +${r.khi} Instinct · +${sv + r.tuvi*2}◈ bạc`,
+      sub:`+${td} Đá Thăng Cấp · +${mt} Huyền Thiết · +${r.khi} Instinct · +${sv + r.bacThem*2}◈ bạc`,
       color:'#b08ae8', t:5 };
     addFloat(player.x, player.y - 80, 'Phần thưởng phó bản đã vào túi!', '#7ecbff', 16);
     AudioSys.sfx('levelup', 0.8);
@@ -20015,15 +19627,15 @@ function grantOfflineGains(savedAt){
   const offSec = Math.min(8*3600, Math.max(0, (Date.now() - savedAt)/1000));
   if (offSec < 600) return; // dưới 10 phút không tính
   const mins = offSec/60;
-  const realm = player.dantian ? player.dantian.realm : 0;
+  const realm = Math.floor(player.level/12);
   const khiGain = Math.floor(mins * (3 + realm*1.2) * tulinhMult());
-  const tuviGain = Math.floor(mins * (1.5 + realm*0.8) * tulinhMult());
-  if (khiGain <= 0 && tuviGain <= 0) return;
+  const bacGain = Math.floor(mins * (1.5 + realm*0.8) * tulinhMult());
+  if (khiGain <= 0 && bacGain <= 0) return;
   player.khi += khiGain;
-  player.silver += tuviGain*2;
-  showOfflineGains(offSec, khiGain, tuviGain);
+  player.silver += bacGain*2;
+  showOfflineGains(offSec, khiGain, bacGain);
 }
-function showOfflineGains(offSec, khiGain, tuviGain){
+function showOfflineGains(offSec, khiGain, bacGain){
   const ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(10,8,6,.72);backdrop-filter:blur(3px)';
   const hh = Math.floor(offSec/3600), mm = Math.floor((offSec%3600)/60);
@@ -20032,9 +19644,9 @@ function showOfflineGains(offSec, khiGain, tuviGain){
     <div style="font-size:13px;color:#9aa8d4;margin-bottom:14px;line-height:1.7">Bạn rời đi ${hh > 0 ? hh + ' giờ ' : ''}${mm} phút — bản năng vẫn âm thầm mài giũa trong lúc vắng mặt.</div>
     <div style="font-size:15px;line-height:2;color:#e4ebff">
       <div>Instinct <b style="color:#7fd8e0">+${khiGain}</b></div>
-      <div>Bạc <b style="color:#9fd0ff">+${tuviGain*2}</b></div>
+      <div>Bạc <b style="color:#9fd0ff">+${bacGain*2}</b></div>
     </div>
-    <div style="font-size:11.5px;color:#7a86ad;margin-top:12px">Bậc Ascension càng cao, thời gian vắng mặt càng đáng giá · tối đa 8 giờ</div>
+    <div style="font-size:11.5px;color:#7a86ad;margin-top:12px">Cấp càng cao, thời gian vắng mặt càng đáng giá · tối đa 8 giờ</div>
     <button id="btn-xuatquan" style="margin-top:16px;padding:9px 36px;background:#4c8dff;border:none;border-radius:6px;color:#262c58;font-weight:700;cursor:pointer;font-size:14px;letter-spacing:2px">Xuất Quan</button>
   </div>`;
   document.body.appendChild(ov);
@@ -21187,8 +20799,7 @@ function tenuiFreeLearn(preferTier){
   return VOHOC_DEFS[pick];
 }
 function renderTeNui(n){
-  const realm = (player.dantian && player.dantian.realm) || 0;
-  const unlocked = realm >= 5, gold = tenuiGoldenHour(), wounded = tenuiWounded();
+  const unlocked = player.level >= 60, gold = tenuiGoldenHour(), wounded = tenuiWounded();
   let html = npcHead(n);
   html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">${n.lore}</div>`;
   if (!unlocked){
@@ -21219,8 +20830,7 @@ function renderTeNui(n){
 }
 window.doTeNui = function(npcId){
   const n = NPCS.find(x => x.id === npcId);
-  const realm = (player.dantian && player.dantian.realm) || 0;
-  if (realm < 5 || tenuiWounded()) return;
+  if (player.level < 60 || tenuiWounded()) return;
   // cái giá: -30% HP (tối thiểu 1) + Trọng Thương 15 phút
   player.hp = Math.max(1, Math.round(player.hp - player.maxHp * 0.3));
   player.tenuiTT = Date.now() + 15*60*1000;

@@ -261,10 +261,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .tier-pips { text-align:center; letter-spacing:4px; font-size:13px; margin-bottom:8px; }
 .realm-ring { text-align:center; margin:8px 0; }
 .realm-ring .realm-name { font-size:19px; letter-spacing:2px; color:#7ecbff; font-weight:700; }
-.tuvi-bar { position:relative; height:14px; background:rgba(10,10,26,.72); border:1px solid rgba(126,203,255,.45);
+.bless-bar { position:relative; height:14px; background:rgba(10,10,26,.72); border:1px solid rgba(126,203,255,.45);
   border-radius:999px; overflow:hidden; margin:8px 0; }
-.tuvi-bar .fill { height:100%; background:linear-gradient(180deg,#7ecbff,#3a6fe0); transition:width .2s; }
-.tuvi-bar span { position:absolute; inset:0; font-size:10px; line-height:14px; text-align:center; color:#fff; text-shadow:0 1px 2px #000; }
+.bless-bar .fill { height:100%; background:linear-gradient(180deg,#7ecbff,#3a6fe0); transition:width .2s; }
+.bless-bar span { position:absolute; inset:0; font-size:10px; line-height:14px; text-align:center; color:#fff; text-shadow:0 1px 2px #000; }
 .bonus-list { background:rgba(126,203,255,.08); border:1px solid rgba(126,203,255,.3); border-radius:var(--r-md);
   padding:8px 12px; font-size:12.5px; line-height:1.7; margin:8px 0; }
 .next-tier { border:1px dashed rgba(255,215,106,.45); border-radius:var(--r-md); padding:8px 12px; margin-top:8px; font-size:12.5px; }

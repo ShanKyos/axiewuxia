@@ -72,7 +72,6 @@ const EXACT = {
   // dropped into Vietnamese grammar, so most bare terms need no EXACT entry — only the ones
   // still paired with a Vietnamese word (Cảnh/Trung Kỳ/Hậu Kỳ) need translating.
   'Molt': 'Molt', 'Radiant Core': 'Radiant Core', 'Starforged': 'Starforged',
-  'Resonance · Trung Kỳ': 'Resonance · Mid', 'Resonance · Hậu Kỳ': 'Resonance · Late',
   'Resonance Trung Kỳ': 'Resonance · Mid', 'Resonance Hậu Kỳ': 'Resonance · Late',
   'Đá Thăng Cấp': 'Ascent Stone',
   'Thức Tỉnh': 'Awakened', '— ĐÃ THỨC TỈNH ✦': '— AWAKENED ✦', '— TỐI THƯỢNG': '— SUPREME',
@@ -192,7 +191,6 @@ const EXACT = {
   'Dã Ngoại · PK': 'Wilds · PK', 'Huyết Chiến · Free PK': 'Bloodbath · Free PK',
   'PK tự do, không Tội Ác — giết thoải mái.': 'Free PK, no Sin — kill at will.',
   'Giết Du Hiệp không tăng Tội Ác': 'Killing Wanderers adds no Sin',
-  'Dung hợp cần Resonance · Trung Kỳ': 'Fusion requires Resonance · Mid',
   'Chưa lĩnh ngộ đủ 2 môn tiền trệ': 'Prerequisite arts not yet learned',
   '· yêu cầu LV60': '· requires Lv60',
   'Hôm nay nói nhiều rồi, ngày mai ghé lại nhé.': 'Enough talk for today — come back tomorrow.',
@@ -563,7 +561,6 @@ Object.assign(EXACT, {
   'Tàn quyển:': 'Fragments:',
   'Thượng': 'Upper', 'Trung': 'Mid', 'Hạ': 'Lower',
   'Đánh bại Hắc Phong Sát Thủ để thu thập tàn quyển (Thượng 40% · Trung 40% · Hạ 20%).': 'Defeat the Black Wind Slayer to collect manual fragments (Upper 40% · Mid 40% · Lower 20%).',
-  'Starforged — nhục thân thăng hoa, toàn thuộc tính vượt cực hạn': 'Starforged — the flesh ascends, all stats transcend their limits',
   'Rupture Bolt (5% khóa chiêu đối thủ)': 'Rupture Bolt (5% chance to lock the foe\'s skills)',
   'Phù độc đoạt mệnh — trúng địch trúng kịch độc, xuyên giáp.': 'Venom-talisman deathstrike — inflicts deadly poison, pierces armor.',
   'Ma Phái': 'Demonic Sect',
@@ -624,7 +621,6 @@ Object.assign(EXACT, {
   'Cỏ Bản Năng': 'Instinct Grass',
   'Cỏ Bạc': 'Silverleaf',
   'Kẻ Báo Thù': 'Avenger',
-  'Hiện Thân Starforged': 'Starforged Incarnate',
   'Khách Lạ Lunacia': 'Stranger to Lunacia',
   'TỈ LỆ CÔNG KHAI — KHÔNG CỘNG DỒN MAY MẮN': 'PUBLISHED RATES — NO PITY',
   'Suối Ký Ức': 'Spring of Memory',
@@ -691,7 +687,6 @@ Object.assign(EXACT, {
   'Chưa có chiến thú — mở C → Thú Chiến': 'No war beast yet — open C → War Beast',
   '⚔ Chiến thú xuất trận!': '⚔ Mount deployed!',
   'Chiến thú thu hồi.': 'Mount recalled.',
-  // Ascension (Dantian) + Instinct Channels (Kinh Mạch)
   'Ascension mở khóa ở': 'Ascension unlocks at',
   'Anima tích lũy: giết quái và tĩnh tọa tại Tịnh Tâm Tuyền.': 'Gather Anima by slaying monsters and meditating at the Tranquil Spring.',
   'Tịnh Tâm Tuyền': 'Tranquil Spring',
@@ -773,7 +768,6 @@ Object.assign(EXACT, {
 const RULES = [
   [/^Cấp (\d+)$/, 'Lv $1'],
   [/^Cấp (\d+) → (\d+)$/, 'Lv $1 → $2'],
-  [/^Spark · Tầng (\d+)$/, 'Spark · Stage $1'],
   [/^Ascension cảnh (\d+) \((.*)\)$/, (m, a, b) => `Ascension Lv ${a} (${tr(b)})`],
   [/^Chương ([IVX]+) · (.*)$/, (m, a, b) => `Chapter ${a} · ${tr(b) === b ? b : tr(b)}`],
   [/^Bảo Hạp ([IVX]+)$/, 'Relic Chest $1'],
@@ -851,7 +845,6 @@ const RULES = [
     }],
   // ── Character panel + sub-panels (renderChar/renderSettings + Forge/Mount/Ascension/Card) ──
   [/^Nhân Vật — (.+) Cấp (\d+)$/, (m, a, b) => `Character — ${tr(a)} Lv ${b}`],
-  [/^☁ Tán Tiên — xuất thế khỏi (.+), ràng buộc Tộc đã phá bỏ$/, (m, a) => `☁ Ascended — transcended ${tr(a)}, the sect bond broken`],
   [/^hiện cấp (\d+)$/, 'currently Lv $1'],
   [/^☯ QUẺ TIÊN THIÊN · (.+)$/, (m, a) => `☯ THE HATCHING · ${tr(a)}`],
   [/^Trấn Phái: (.+)$/, (m, a) => `Signature Art: ${tr(a)}`],
