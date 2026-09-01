@@ -4578,6 +4578,8 @@ function newPlayer(sectKey){
     buffAtkT: 0,                             // Rượu Hổ Cốt — +12% công lực có thời hạn
     loidonT: 0,                              // Bùa Chắn Sét — giảm 40% ST thiên lôi có thời hạn
     kho: [],                                 // Kho: chỗ cất trang bị cho khỏi đầy túi — xem KHO_SIZE
+    khoNgoc: { hap:{} },                     // Ngăn Ngọc: ngọc/hộp đang CẤT — cất thì không tiêu được
+    autoNgoc: false,                         // tự động gửi ngọc vào kho ngay khi nhặt
     shopStock: {},                           // kho hàng bày của từng tiệm — xem shopStock()
     noidan: 0,                               // Lõi Nguyên Tố — MỘT ô đếm, chọn chỉ số lúc hấp thụ
     ndBonus: { atk:0, hp:0, def:0, qi:0, crit:0 }, // chỉ số vĩnh viễn từ thôn phệ nội đan
@@ -4763,6 +4765,8 @@ function loadGame(){
     if (!player.ndBonus) player.ndBonus = { atk:0, hp:0, def:0, qi:0, crit:0 };
     if (!player.shopStock || typeof player.shopStock !== 'object') player.shopStock = {};
     if (!Array.isArray(player.kho)) player.kho = [];
+    if (!player.khoNgoc || typeof player.khoNgoc !== 'object') player.khoNgoc = { hap:{} };
+    if (player.autoNgoc == null) player.autoNgoc = false;
     if (player.ndDay == null){ player.ndDay = ''; player.ndCount = 0; }
     // ═══ GỘP TIỀN TỆ — bậc 4: Tâm Đắc nhập vào Instinct ═══════════════════════════════
     // Tỉ giá lấy từ chính chỗ tiêu: nâng trọn một chiêu 1→120 trước đây tốn 21💠, nay tốn thêm
@@ -5528,6 +5532,7 @@ function takeLoot(g, idx){
   if (idx < 0) return false;
   if (g.k === 'jewel'){
     player.jewels[g.jk] = (player.jewels[g.jk] || 0) + 1;
+    autoGuiNgoc(g.jk);          // bật "tự động gửi ngọc" thì vào thẳng kho
     addFloat(g.x, g.y - 26, '+1 ' + JEWEL_NAMES[g.jk], JEWEL_COLORS[g.jk], 14);
     logCombat(`✦ Nhặt ${JEWEL_NAMES[g.jk]}`, JEWEL_COLORS[g.jk]);
     AudioSys.sfx('forge_ok', 0.7);
@@ -11929,7 +11934,13 @@ function chaosTrayRemoveItem(uid){
 }
 window.chaosAddJewel = function(j){
   const v = trayView();
-  if (!player.jewels || (player.jewels[j] || 0) <= v.jewels[j]) return; // đã bỏ hết số đang có vào khay
+  if (!player.jewels || (player.jewels[j] || 0) <= v.jewels[j]){
+    // Hết ngọc trong TÚI. Nhưng có thể đang cất trong Ngăn Ngọc — im lặng không cho bỏ thì
+    // người chơi tưởng mình mất ngọc. Nói thẳng chỗ nó đang nằm.
+    const cat = (player.khoNgoc && player.khoNgoc[j]) || 0;
+    if (cat > 0) chaosSay(`✘ ${ngocTen(j)} đang cất trong Kho (${cat} viên) — rút về túi trước`, '#ffb15c');
+    return;
+  }
   if (forgeTray.length >= CHAOS_TRAY_MAX) return;
   forgeTray.push({ k:'jewel', j }); chaosPick = null; renderForge();
 };
@@ -14906,6 +14917,76 @@ const BAG_TABS = [
 // theo đúng bố cục Ngân Hàng Ngọc, nhưng là chỗ XEM — chúng vốn đã an toàn sẵn.
 const KHO_SIZE = 60;
 function khoList(){ if (!player.kho) player.kho = []; return player.kho; }
+
+// ── NGĂN NGỌC ──
+// Ngọc gửi vào kho thì KHÔNG tiêu được cho tới khi rút ra — giống ngân hàng ngọc của MU. Đó là
+// thứ làm ngăn này có nghĩa thật chứ không phải chuyển số qua lại: nó là chỗ CẤT, và cất thì
+// phải rút mới dùng. Lò Hỗn Độn / Rèn chỉ đọc player.jewels, không đọc kho.
+const KHO_NGOC_KEYS = ['chucPhuc','linhHon','sinhMenh','honDon','tuLa','honNguyen'];
+function khoNgoc(){
+  if (!player.khoNgoc) player.khoNgoc = { hap:{} };
+  for (const k of KHO_NGOC_KEYS) if (player.khoNgoc[k] == null) player.khoNgoc[k] = 0;
+  if (!player.khoNgoc.hap) player.khoNgoc.hap = {};
+  return player.khoNgoc;
+}
+// Ngọc nằm ở hai nơi: player.jewels/gems (dùng được) và khoNgoc (đang cất). Hai hàm này là chỗ
+// DUY NHẤT đọc/ghi số trong túi, để không chỗ nào quên mất một trong hai kho.
+function ngocTui(k){
+  if (k === 'tuLa' || k === 'honNguyen') return (player.gems && player.gems[k]) || 0;
+  return (player.jewels && player.jewels[k]) || 0;
+}
+function ngocTuiSet(k, v){
+  if (k === 'tuLa' || k === 'honNguyen'){ if (!player.gems) player.gems = { tuLa:0, honNguyen:0 }; player.gems[k] = v; }
+  else { if (!player.jewels) player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 }; player.jewels[k] = v; }
+}
+function ngocTen(k){
+  return k === 'tuLa' ? 'Tu La Tinh Thạch' : k === 'honNguyen' ? 'Hỗn Nguyên Thạch'
+       : (JEWEL_NAMES[k] || k).replace(/^[^ ]+ /, '');
+}
+window.khoNgocGui = function(k, n){
+  const K = khoNgoc(), co = ngocTui(k);
+  const v = n === 'all' ? co : Math.min(co, n || 1);
+  if (v <= 0) return;
+  ngocTuiSet(k, co - v); K[k] += v;
+  saveGame(); renderBag();
+};
+window.khoNgocRut = function(k, n){
+  const K = khoNgoc();
+  const v = n === 'all' ? K[k] : Math.min(K[k], n || 1);
+  if (v <= 0) return;
+  K[k] -= v; ngocTuiSet(k, ngocTui(k) + v);
+  saveGame(); renderBag();
+};
+window.khoHapGui = function(t, n){
+  const K = khoNgoc(); const bh = player.baohap || (player.baohap = {});
+  const co = bh[t] || 0;
+  const v = n === 'all' ? co : Math.min(co, n || 1);
+  if (v <= 0) return;
+  bh[t] = co - v; K.hap[t] = (K.hap[t] || 0) + v;
+  saveGame(); renderBag();
+};
+window.khoHapRut = function(t, n){
+  const K = khoNgoc(); const bh = player.baohap || (player.baohap = {});
+  const v = n === 'all' ? (K.hap[t] || 0) : Math.min(K.hap[t] || 0, n || 1);
+  if (v <= 0) return;
+  K.hap[t] -= v; bh[t] = (bh[t] || 0) + v;
+  saveGame(); renderBag();
+};
+window.khoNgocGuiHet = function(){
+  let n = 0;
+  for (const k of KHO_NGOC_KEYS){ const v = ngocTui(k); if (v > 0){ khoNgoc()[k] += v; ngocTuiSet(k, 0); n += v; } }
+  const bh = player.baohap || {};
+  for (const t in bh){ if (bh[t] > 0){ khoNgoc().hap[t] = (khoNgoc().hap[t] || 0) + bh[t]; n += bh[t]; bh[t] = 0; } }
+  addFloat(player.x, player.y-40, n ? `Gửi ${n} món vào ngăn ngọc` : 'Không có gì để gửi', n ? '#7ecbff' : '#8a8a8a', 13);
+  saveGame(); renderBag();
+};
+window.toggleAutoNgoc = function(v){ player.autoNgoc = v; saveGame(); };
+// Tự động gửi ngọc: gọi ngay lúc nhặt, nên ngọc mới vào thẳng kho thay vì nằm trong túi.
+function autoGuiNgoc(k){
+  if (!player.autoNgoc) return;
+  const co = ngocTui(k);
+  if (co > 0){ khoNgoc()[k] += co; ngocTuiSet(k, 0); }
+}
 window.khoDeposit = function(i){
   const it = player.inv[i];
   if (!it) return;
@@ -14958,29 +15039,38 @@ function bagSecKho(){
     h += `</div>`;
   }
 
-  // Ngăn ngọc — bố cục theo Ngân Hàng Ngọc của MU, nhưng là chỗ XEM: ngọc và Box Kundun vốn là
-  // ô đếm, không chiếm ô túi nào, nên không có gì để "gửi" cả.
-  h += `<div class="chaos-sec">NGĂN NGỌC <span class="chaos-sub">ô đếm — không chiếm chỗ trong túi</span></div>`;
-  h += `<div class="mat-grid">`;
-  const jw = player.jewels || {};
-  for (const jk of ['chucPhuc','linhHon','sinhMenh','honDon']){
-    h += `<div class="mat-cell" title="${matTip(JEWEL_NAMES[jk], 'ô đếm — luôn an toàn, không chiếm chỗ', jw[jk]||0)}">
-      <img src="${consumArtUrl('orb', JEWEL_COLORS[jk])}" alt="">
-      <span class="mc-count" style="color:${JEWEL_COLORS[jk]}">${fmtCount(jw[jk]||0)}</span></div>`;
+  // Ngăn Ngọc — gửi/rút như ngân hàng ngọc của MU. Ngọc đang CẤT thì không tiêu được: Lò Hỗn
+  // Độn và Rèn chỉ đọc player.jewels/gems, không đọc kho. Đó là thứ làm ngăn này có nghĩa thật.
+  const K = khoNgoc();
+  const tongKho = KHO_NGOC_KEYS.reduce((a, k) => a + K[k], 0)
+                + Object.values(K.hap).reduce((a, b) => a + b, 0);
+  h += `<div class="chaos-sec">NGĂN NGỌC <span class="chaos-sub">đang cất ${tongKho} — cất thì phải rút mới dùng được</span></div>`;
+  h += `<div class="bag-bar">
+    <button class="mini-btn" onclick="khoNgocGuiHet()">⬇ Gửi hết</button>
+    <label><input type="checkbox" ${player.autoNgoc?'checked':''} onchange="window.toggleAutoNgoc(this.checked)"> Tự động gửi ngọc khi nhặt</label></div>`;
+  h += `<div class="ngoc-grid">`;
+  for (const k of KHO_NGOC_KEYS){
+    const la = k === 'tuLa' || k === 'honNguyen';
+    const co = la ? '#e8552a' : JEWEL_COLORS[k];
+    const cor = k === 'honNguyen' ? '#b08ae8' : co;
+    const tui = ngocTui(k), kho = K[k];
+    h += `<div class="ngoc-row">
+      <img class="consum-ic sm" src="${consumArtUrl(la ? 'stone' : 'orb', cor)}" alt="">
+      <span class="ng-name" style="color:${cor}">${ngocTen(k)}</span>
+      <span class="ng-num">túi <b>${tui}</b> · kho <b style="color:${cor}">${kho}</b></span>
+      <button class="mini-btn" ${tui?'':'disabled'} onclick="khoNgocGui('${k}','all')" title="Gửi hết vào kho">⬇</button>
+      <button class="mini-btn" ${kho?'':'disabled'} onclick="khoNgocRut('${k}','all')" title="Rút hết về túi">⬆</button></div>`;
   }
-  for (const g of ['tuLa','honNguyen']){
-    const nm = g === 'tuLa' ? 'Tu La Tinh Thạch' : 'Hỗn Nguyên Thạch';
-    const co = g === 'tuLa' ? '#e8552a' : '#b08ae8';
-    h += `<div class="mat-cell" title="${matTip(nm, 'ô đếm — luôn an toàn, không chiếm chỗ', (player.gems&&player.gems[g])||0)}">
-      <img src="${consumArtUrl('stone', co)}" alt="">
-      <span class="mc-count" style="color:${co}">${fmtCount((player.gems&&player.gems[g])||0)}</span></div>`;
-  }
-  const bh = player.baohap || {};
   for (let t = 1; t < BAOHAP_TIERS.length; t++){
     const d = BAOHAP_TIERS[t];
-    h += `<div class="mat-cell" title="${matTip(d.name, 'mở ở tab Box Kundun', bh[t]||0)}">
-      <img src="${consumArtUrl('box', d.color)}" alt="">
-      <span class="mc-count" style="color:${d.color}">${fmtCount(bh[t]||0)}</span></div>`;
+    const tui = (player.baohap && player.baohap[t]) || 0, kho = K.hap[t] || 0;
+    if (!tui && !kho) continue;                 // không bày tầng nào cả hai bên đều rỗng
+    h += `<div class="ngoc-row">
+      <img class="consum-ic sm" src="${consumArtUrl('box', d.color)}" alt="">
+      <span class="ng-name" style="color:${d.color}">${d.name}</span>
+      <span class="ng-num">túi <b>${tui}</b> · kho <b style="color:${d.color}">${kho}</b></span>
+      <button class="mini-btn" ${tui?'':'disabled'} onclick="khoHapGui(${t},'all')" title="Gửi hết vào kho">⬇</button>
+      <button class="mini-btn" ${kho?'':'disabled'} onclick="khoHapRut(${t},'all')" title="Rút hết về túi">⬆</button></div>`;
   }
   h += `</div>`;
   return h;
@@ -18833,7 +18923,15 @@ window.openBaoHap = function(t){
       got.push(`<b style="color:${ANCIENT_SETS[it.ancient].color}">◈ CỔ THẦN — ${it.name}</b> (${Math.round(def.ancient*100)}% đã mỉm cười!)`);
       zoneBanner = { text:'◈ CỔ THẦN XUẤT THẾ', sub:`${it.name} — ${ANCIENT_SETS[it.ancient].hint}!`, color:'#3ac88a', t:5 };
       AudioSys.sfx('levelup', 0.95);
-    } else { player.silver += 3000; got.push('Túi đầy — Cổ Thần quy đổi 3000◈'); }
+    } else if (khoList().length < KHO_SIZE){
+      // Trước đây chỗ này quy món CỔ THẦN thành 3000 bạc. Cổ Thần rơi 5-8% từ hộp tầng IV+ và
+      // là thứ hiếm nhất game — đổi nó lấy 3000 bạc vì túi đầy là mất trắng, mà người chơi
+      // thường không kịp đọc dòng chữ báo. Nay rơi thẳng vào Kho.
+      khoList().push(it);
+      got.push(`<b style="color:${ANCIENT_SETS[it.ancient].color}">◈ CỔ THẦN — ${it.name}</b> → túi đầy, đã cất vào KHO`);
+      zoneBanner = { text:'◈ CỔ THẦN XUẤT THẾ', sub:`${it.name} — túi đầy nên đã cất vào Kho!`, color:'#3ac88a', t:5 };
+      AudioSys.sfx('levelup', 0.95);
+    } else { player.silver += 3000; got.push('Túi VÀ kho đều đầy — Cổ Thần quy đổi 3000◈'); }
   } else {
     let it = null;
     const _bp = BAOHAP_PERFECT[Math.min(t, BAOHAP_PERFECT.length - 1)] || 0;
@@ -18845,7 +18943,8 @@ window.openBaoHap = function(t){
       got.push(`Trang bị: <b class="${RARITIES[it.rarity].cls}">${it.name}</b>`);
       if (it.sigil) got.push(sigilGotLine(it.sigil));
     }
-    else { player.silver += 800; got.push('Túi đầy — trang bị quy đổi 800◈'); }
+    else if (khoList().length < KHO_SIZE){ khoList().push(it); got.push(`Trang bị: <b class="${RARITIES[it.rarity].cls}">${it.name}</b> → túi đầy, đã cất vào KHO`); }
+    else { player.silver += 800; got.push('Túi VÀ kho đều đầy — trang bị quy đổi 800◈'); }
   }
   // Châu kèm theo — tầng càng cao tỉ lệ càng tốt
   const jr = Math.random()*100;
