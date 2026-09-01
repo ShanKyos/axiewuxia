@@ -9140,11 +9140,15 @@ function drawThanBinh(p){
 // Hộp toạ độ HERO_W×HERO_H, chân chạm y≈212, tâm đầu y≈74.
 const HERO_W = 160, HERO_H = 220;
 const HERO_METAL = [
-  { lo:'#4e5360', hi:'#6d7385', trim:'#7d7048', glow:null },      // 1 Sơ Khai — sắt xỉn
-  { lo:'#575d6c', hi:'#7b8296', trim:'#8d7f4e', glow:null },      // 2 Cường Hóa
-  { lo:'#616880', hi:'#8b93aa', trim:'#a08c52', glow:null },      // 3 Tinh Luyện
-  { lo:'#6a7590', hi:'#9aa4bc', trim:'#c8a84a', glow:null },      // 4 Kỳ Diệu
-  { lo:'#71689a', hi:'#a596c8', trim:'#c8a84a', glow:null },      // 5 Hiếm Có
+  // Năm giai đầu TỪNG là năm sắc xám gần y hệt, chỉ sáng dần vài phần trăm — nên bốn lần nâng
+  // giáp đầu tiên, đúng thứ người chơi mới thấy trước nhất, gần như không khác gì. test_geartier
+  // đo được 6% điểm ảnh đổi ở bước 1→2, so với 26–39% ở các bước từ giai 5 trở lên.
+  // Nay mỗi giai thấp có một CHẤT LIỆU riêng: sắt xỉn → đồng đỏ → thép sáng → thép lam → tím.
+  { lo:'#43474f', hi:'#5f6572', trim:'#6b6250', glow:null },      // 1 Sơ Khai — sắt xỉn, tối nhất
+  { lo:'#6b3f28', hi:'#b4763f', trim:'#d9a05a', glow:null },      // 2 Cường Hóa — đồng đỏ
+  { lo:'#5d6a78', hi:'#aebdcc', trim:'#c9d4de', glow:null },      // 3 Tinh Luyện — thép sáng
+  { lo:'#39557f', hi:'#7ea3d6', trim:'#cfe0f5', glow:null },      // 4 Kỳ Diệu — thép ngả lam
+  { lo:'#5b4494', hi:'#a68fd8', trim:'#e0d2ff', glow:null },      // 5 Hiếm Có — tím
   { lo:'#2f6a58', hi:'#4fa88a', trim:'#d8c060', glow:'#6ff0c0' }, // 6 Tinh Xảo — xanh ngọc
   { lo:'#6a5220', hi:'#c8a84a', trim:'#ffe9a8', glow:'#ffd76a' }, // 7 Cổ Vật — vàng cổ
   { lo:'#7a2a30', hi:'#c85a52', trim:'#ffd08a', glow:'#ff8a6a' }, // 8 Thánh Khí

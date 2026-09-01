@@ -33,7 +33,11 @@ const pass = m => console.log('PASS ' + m);
     // 4,62% → 6,14% → 16,42%. Ngưỡng là 5%, nên cùng một bộ art lúc đạt lúc trượt tuỳ vận may —
     // bài kiểm báo hỏng mà không có gì hỏng, còn nếu art thật sự mờ nhạt thì cũng có lượt lọt.
     // Trung vị của 5 lượt trả lời đúng câu hỏi cần hỏi: LÊN MỘT GIAI THÌ NHÌN CÓ KHÁC KHÔNG.
-    const LUOT = 5;
+    // 11 mẫu thay vì 5: phép đo có ngẫu nhiên (phẩm đồ, màu), trung vị của 5 nhảy quá mạnh.
+    // Nhưng nguyên nhân gốc của lần đỏ không nằm ở số mẫu mà ở BẢNG MÀU: năm giai đầu từng là
+    // năm sắc xám gần y hệt. Đã tách chất liệu (sắt → đồng → thép → thép lam → tím) trong
+    // HERO_METAL, xem ghi chú tại đó.
+    const LUOT = 11;
     const trungVi = (a) => { const b2 = [...a].sort((x, y) => x - y); return b2[b2.length >> 1]; };
     for (const c of cls){
       player.sect = c;
