@@ -1144,14 +1144,14 @@ const AI_PASSES = [
 ];
 function collideAiPass(){
   for (const a of AI_PASSES){
-    if (a.map !== curMap || player.level >= a.reqLv) continue;
+    if (a.map !== curMap || lvPeak() >= a.reqLv) continue;
     const d = dist(player.x, player.y, a.x, a.y);
     if (d < a.r){
       const ang = Math.atan2(player.y - a.y, player.x - a.x);
       player.x = a.x + Math.cos(ang)*a.r; player.y = a.y + Math.sin(ang)*a.r;
       if (!player._aiPassT || performance.now() - player._aiPassT > 4000){
         player._aiPassT = performance.now();
-        addFloat(player.x, player.y - 50, `⛔ ${a.name} — cần cấp ${a.reqLv} mới qua được!`, '#f0a03a', 14);
+        addFloat(player.x, player.y - 50, `⛔ ${a.name} — cần từng đạt cấp ${a.reqLv} mới qua được!`, '#f0a03a', 14);
         AudioSys.sfx('ui', 0.4);
       }
     }
@@ -1182,7 +1182,7 @@ function drawObstaclesDebug(){
 function drawAiPasses(){
   if (!player) return;
   for (const a of AI_PASSES){
-    if (a.map !== curMap || player.level >= a.reqLv) continue;
+    if (a.map !== curMap || lvPeak() >= a.reqLv) continue;
     const t = performance.now()/600;
     ctx.save();
     ctx.strokeStyle = 'rgba(240,100,60,.55)'; ctx.lineWidth = 2;
@@ -4742,6 +4742,7 @@ function newPlayer(sectKey){
     baohap: {},                            // Box Kundun Ma Tôn Giáng Thế { tier: số lượng }
     truyna: { day:'', state:'none', map:null }, // Truy Nã Lệnh ngày
     wpUnlocked: { tuongduong: true },      // Điểm dịch chuyển (bảng đồ M) — mở khoá khi đã từng đặt chân tới, xem travelTo()
+    lvPeak: 1,                             // cấp cao nhất từng đạt — cổng mở khoá bám vào đây
     resetCount: 0,                         // Tẩy Tủy (Reset kiểu MU) — số lần đã tẩy tủy, +2% Công/Mạng vĩnh viễn/lần
     // Dream of Wuxia systems
     khi: 0,                                    // Instinct đả thông kinh mạch
@@ -4992,6 +4993,9 @@ function loadGame(){
     }
     if (player.tutDist == null) player.tutDist = 0;
     if (player.resetCount == null) player.resetCount = 0; // Tẩy Tủy backfill (save cũ chưa có)
+    // Cấp đỉnh cho save cũ: ai đã Tái Sinh ít nhất một lần thì chắc chắn từng chạm tối đa cấp,
+    // nếu không đã không Tái Sinh được — trả lại đúng quyền họ đã mở, không bắt cày lại.
+    if (!player.lvPeak) player.lvPeak = player.resetCount > 0 ? MAX_LV : player.level;
     if (player.ene == null) player.ene = 5; // Linh Lực (stat mới) backfill (save cũ chưa có) — mức khởi điểm giống str/agi/def/vit
     if (d.curMap && MAPS[d.curMap]) curMap = d.curMap;
     // Migrate trang bị cũ (10 ô) sang hệ 12 ô GDD
@@ -6480,6 +6484,7 @@ function gainXp(amount){
   while (player.level < MAX_LV && player.xp >= XP_TABLE[player.level-1]){
     player.xp -= XP_TABLE[player.level-1];
     player.level++; player.free += 5;
+    if (!player.lvPeak || player.level > player.lvPeak) player.lvPeak = player.level;
     AudioSys.sfx('levelup', 0.9);
     calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
     addFloat(player.x, player.y-52, `THĂNG CẤP ${player.level}!`, '#ffd76a', 20);
@@ -12910,7 +12915,7 @@ const FORGE_LV = 4;      // trùng với ngưỡng trong renderForge()
 function FE(){ return el('forge-content') || (_feDummy || (_feDummy = document.createElement('div'))); }
 let _feDummy = null;
 function renderForge(){
-  if (player.level < 4){
+  if (lvPeak() < 4){
     FE().innerHTML = `<h3>Lò Hỗn Độn</h3>
       <div style="padding:14px;font-size:13px">Lò mở khóa ở <b style="color:#7ecbff">cấp 4</b>.<br>Hãy tiếp tục làm nhiệm vụ!</div>`;
     return;
@@ -13329,7 +13334,7 @@ function petLineHtml(sb, plus, cls){
     <b>+${v}%${plus && !sb.core ? `<i>(gốc ${sb.v})</i>` : ''}</b></div>`;
 }
 function renderPet(){
-  if (player.level < 8){
+  if (lvPeak() < 8){
     CE().innerHTML = `<h3>Linh Thú</h3>
       <div style="padding:14px;font-size:13px">Linh Thú mở khoá ở <b style="color:#7ecbff">cấp 8</b>.</div>`;
     return;
@@ -13417,7 +13422,7 @@ function renderPet(){
 }
 window.renderPet = renderPet;
 function renderMount(){
-  if (player.level < 6){
+  if (lvPeak() < 6){
     CE().innerHTML = `<h3>Thú Chiến</h3>
       <div style="padding:14px;font-size:13px">Chuồng thú mở khóa ở <b style="color:#7ecbff">cấp 6</b>.</div>`;
     return;
@@ -17254,7 +17259,7 @@ function renderBaGua(){ window.openForgePanel(); }
 // Mở lò rèn. Chỉ mở được khi ĐỨNG CẠNH Thợ Rèn — đó là điểm khác MU của bản cũ: rèn giữa bãi
 // quái. Đứng xa thì không im lặng mà chỉ đường luôn, vì "bấm không lên" là lỗi khó đoán nhất.
 window.openForgePanel = function(){
-  if (player.level < FORGE_LV){
+  if (lvPeak() < FORGE_LV){
     addFloat(player.x, player.y-56, `🔒 Lò Hỗn Độn mở khóa ở cấp ${FORGE_LV}!`, '#a0ffe9', 13);
     AudioSys.sfx('ui', 0.4); return;
   }
@@ -20010,12 +20015,22 @@ window.harvestSeed = function(i){
 // 3) Hint bar theo cấp — tân thủ chỉ thấy phím cốt lõi.
 
 // ---------- Mở khóa theo tầng ----------
+// CẤP ĐỈNH — cấp cao nhất nhân vật từng đạt, KHÔNG mất khi Tái Sinh.
+//
+// Mọi cổng mở khoá phải bám vào con số này, không phải player.level. Trước đây gác bằng cấp
+// hiện tại, nên vừa Tái Sinh xong (cấp về 1) là: 4 tab còn 1, Lò Rèn đóng, Vực Thẳm đóng, và
+// cả 6 ải bản đồ khoá lại — người vừa lên tối đa cấp bị nhốt về bãi quái tân thủ. Bên MU gốc
+// reset không hề lấy lại quyền vào đâu cả; đã mở là mở.
+function lvPeak(){
+  if (!player) return 1;
+  if (!player.lvPeak || player.lvPeak < player.level) player.lvPeak = player.level;
+  return player.lvPeak;
+}
 function sysUnlocked(id){
   if (!player) return true;
   const def = (typeof CHAR_TABS !== 'undefined') && CHAR_TABS.find(x=>x.id===id);
   const lv = def ? def.lv : 1;
-  if (player.level >= lv) return true;
-  return false;
+  return lvPeak() >= lv;
 }
 
 // ---------- Hint bar theo cấp ----------
@@ -21037,7 +21052,7 @@ function tenuiFreeLearn(preferTier){
   return VOHOC_DEFS[pick];
 }
 function renderTeNui(n){
-  const unlocked = player.level >= 60, gold = tenuiGoldenHour(), wounded = tenuiWounded();
+  const unlocked = lvPeak() >= 60, gold = tenuiGoldenHour(), wounded = tenuiWounded();
   let html = npcHead(n);
   html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">${n.lore}</div>`;
   if (!unlocked){
@@ -21068,7 +21083,7 @@ function renderTeNui(n){
 }
 window.doTeNui = function(npcId){
   const n = NPCS.find(x => x.id === npcId);
-  if (player.level < 60 || tenuiWounded()) return;
+  if (lvPeak() < 60 || tenuiWounded()) return;
   // cái giá: -30% HP (tối thiểu 1) + Trọng Thương 15 phút
   player.hp = Math.max(1, Math.round(player.hp - player.maxHp * 0.3));
   player.tenuiTT = Date.now() + 15*60*1000;
