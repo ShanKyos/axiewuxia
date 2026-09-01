@@ -20532,10 +20532,22 @@ function burstBaoHap(t, x, y){
     addEffect({ type:'ink', x, y, vx: rnd(-130,130), vy: rnd(-170,-40), color: def.color });
   shakeMag = Math.max(shakeMag || 0, 6);
 
-  // Đồ văng ra đất, giãn nhịp một chút để mắt kịp bắt từng món
+  // Đồ văng ra đất, giãn nhịp một chút để mắt kịp bắt từng món.
+  // NGOẠI LỆ khi túi đầy: thả xuống đất một món người chơi CHẮC CHẮN không nhặt nổi thì nó chỉ
+  // nằm đó 45 giây rồi biến mất — mất đồ thật. Lúc đó cất thẳng vào Kho như bản cũ vẫn làm.
   let hoanHao = false;
   drops.forEach((it, i) => {
     if (itemIsPerfect(it)) hoanHao = true;
+    if (player.inv.length + i >= 30){
+      if (khoList().length < KHO_SIZE){
+        khoList().push(it);
+        addFloat(x, y - 66 - i*16, `${it.name} → túi đầy, đã cất vào KHO`, '#9fd0ff', 13);
+      } else {
+        player.silver += 800;
+        addFloat(x, y - 66 - i*16, 'Túi VÀ kho đều đầy — quy đổi 800◈', '#ffb15c', 13);
+      }
+      return;
+    }
     setTimeout(() => { if (player) dropToGround({ k:'item', it }, x, y); }, i * 130);
   });
   if (jk) setTimeout(() => { if (player) dropToGround({ k:'jewel', jk }, x, y); }, drops.length * 130);
