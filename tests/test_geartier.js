@@ -33,10 +33,11 @@ const pass = m => console.log('PASS ' + m);
     // 4,62% → 6,14% → 16,42%. Ngưỡng là 5%, nên cùng một bộ art lúc đạt lúc trượt tuỳ vận may —
     // bài kiểm báo hỏng mà không có gì hỏng, còn nếu art thật sự mờ nhạt thì cũng có lượt lọt.
     // Trung vị của 5 lượt trả lời đúng câu hỏi cần hỏi: LÊN MỘT GIAI THÌ NHÌN CÓ KHÁC KHÔNG.
-    // 11 mẫu thay vì 5: phép đo có ngẫu nhiên (phẩm đồ, màu), trung vị của 5 nhảy quá mạnh.
-    // Nhưng nguyên nhân gốc của lần đỏ không nằm ở số mẫu mà ở BẢNG MÀU: năm giai đầu từng là
-    // năm sắc xám gần y hệt. Đã tách chất liệu (sắt → đồng → thép → thép lam → tím) trong
-    // HERO_METAL, xem ghi chú tại đó.
+    // 11 mẫu thay vì 5. ĐÂY mới là thứ làm bài kiểm hết đỏ, không phải bảng màu HERO_METAL —
+    // đã kiểm chứng bằng cách nhét lại bảng màu CŨ vào trang rồi chạy ba lượt với LUOT=11:
+    // vẫn xanh cả ba, toanchan 1→2 ra 14,2% · 16,4% · 16,5%. Lần đỏ trước đó là do trung vị
+    // của 5 mẫu nhảy quanh ngưỡng 5%, không phải do art.
+    // (toanchan giai 1–2 nằm trong bộ Da Rừng CÓ tint, nên nó không hề đọc HERO_METAL.)
     const LUOT = 11;
     const trungVi = (a) => { const b2 = [...a].sort((x, y) => x - y); return b2[b2.length >> 1]; };
     for (const c of cls){

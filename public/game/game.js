@@ -9140,10 +9140,17 @@ function drawThanBinh(p){
 // Hộp toạ độ HERO_W×HERO_H, chân chạm y≈212, tâm đầu y≈74.
 const HERO_W = 160, HERO_H = 220;
 const HERO_METAL = [
-  // Năm giai đầu TỪNG là năm sắc xám gần y hệt, chỉ sáng dần vài phần trăm — nên bốn lần nâng
-  // giáp đầu tiên, đúng thứ người chơi mới thấy trước nhất, gần như không khác gì. test_geartier
-  // đo được 6% điểm ảnh đổi ở bước 1→2, so với 26–39% ở các bước từ giai 5 trở lên.
-  // Nay mỗi giai thấp có một CHẤT LIỆU riêng: sắt xỉn → đồng đỏ → thép sáng → thép lam → tím.
+  // TẦM VỚI CÓ HẠN — đọc kỹ trước khi sửa bảng này. hSetMetal() vứt bỏ TOÀN BỘ M khi bộ giáp
+  // có tint, mà 24/25 dải bộ trong HERO_SETS đều có tint. Trên NGƯỜI nhân vật, bảng này chỉ
+  // thật sự hiện ở đúng một chỗ: thieulam giai 1–2 (bộ Thiết Vệ, dải duy nhất không tint).
+  // Ngoài ra nó còn tới được ICON TRONG TÚI qua itemPal(), cho những món def không mat/tint —
+  // đo được 10/60 icon mẫu đổi hình khi hoán bảng màu.
+  // Sửa ở đây vì trước đó năm giai đầu là năm sắc xám chỉ sáng dần vài phần trăm, nên lần nâng
+  // giáp ĐẦU TIÊN của Dark Knight gần như không thấy gì. Nay mỗi giai một chất liệu:
+  // sắt xỉn → đồng đỏ → thép sáng → thép lam → tím.
+  // KHÔNG phải nguyên nhân làm test_geartier hết đỏ — đã đo: bảng cũ cũng xanh. Xem chú ở đó.
+  // Muốn "lên một giai nhìn khác" cho 48 tổ hợp lớp×giai còn lại thì phải sửa hSetMetal(),
+  // chỗ mỗi bậc trong một dải chỉ được pha sáng thêm một ít.
   { lo:'#43474f', hi:'#5f6572', trim:'#6b6250', glow:null },      // 1 Sơ Khai — sắt xỉn, tối nhất
   { lo:'#6b3f28', hi:'#b4763f', trim:'#d9a05a', glow:null },      // 2 Cường Hóa — đồng đỏ
   { lo:'#5d6a78', hi:'#aebdcc', trim:'#c9d4de', glow:null },      // 3 Tinh Luyện — thép sáng
