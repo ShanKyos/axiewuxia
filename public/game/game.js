@@ -324,18 +324,29 @@ function hex2rgba(h, a){
 }
 // Bể dòng phụ. MỌI khoá ở đây phải có ngăn trong sổ P của calcDerived() — applyLine() lặng lẽ
 // bỏ qua khoá lạ, dòng vẫn hiện trên bảng mà không có tác dụng gì. Đã đối chiếu đủ 10 khoá.
+// Dải ban đầu đặt THẤP HƠN dải trang bị cho chắc, và nó ra dở: bốc trúng sàn thì dòng ghi
+// "+1.9%" ở +11 — nhìn như hỏng chứ không như một lượt bốc kém. Vấn đề nằm ở SÀN, không phải
+// trần: sàn thấp làm phần lớn lượt bốc thành rác, nên bốc lại chẳng có gì hồi hộp.
+// Nay nâng sàn lên để không lượt nào vô giá trị, trần nhỉnh hơn dải trang bị một chút — bù cho
+// việc Linh Thú chỉ là MỘT ô, tốn cả gia tài mới lên +11, và không đổi được sang con rơi tốt hơn.
+// Đối chiếu: ARMOR_SUBS giáp 1–5 · né 5–10 · đồng 10–30; WEAPON_SUBS công 2–5 · tốc 2–5 · hút 1–3.
 const PET_SUBS = [
-  { k:'atkPct',    name:'Thêm Sát Thương', min:1, max:5  },
-  { k:'hpPct',     name:'Sinh Lực Tối Đa', min:1, max:5  },
-  { k:'dmgred',    name:'Giảm Sát Thương', min:1, max:4  },
-  { k:'crit',      name:'Bạo Kích',        min:1, max:4  },
-  { k:'evaPct',    name:'Tránh Đòn',       min:3, max:8  },
-  { k:'aspdPct',   name:'Tốc Độ Đánh',     min:1, max:4  },
-  { k:'hpLeech',   name:'Hút Sinh Lực',    min:1, max:3  },
-  { k:'pierce',    name:'Xuyên Giáp',      min:1, max:4  },
-  { k:'silverPct', name:'Đồng Rơi Thêm',   min:8, max:25 },
-  { k:'expPct',    name:'EXP Thêm',        min:4, max:12 },
+  { k:'atkPct',    name:'Thêm Sát Thương', min:2,  max:7  },
+  { k:'hpPct',     name:'Sinh Lực Tối Đa', min:2,  max:7  },
+  { k:'dmgred',    name:'Giảm Sát Thương', min:2,  max:6  },
+  { k:'crit',      name:'Bạo Kích',        min:2,  max:6  },
+  { k:'evaPct',    name:'Tránh Đòn',       min:5,  max:12 },
+  { k:'aspdPct',   name:'Tốc Độ Đánh',     min:2,  max:6  },
+  { k:'hpLeech',   name:'Hút Sinh Lực',    min:1,  max:4  },
+  { k:'pierce',    name:'Xuyên Giáp',      min:2,  max:6  },
+  { k:'silverPct', name:'Đồng Rơi Thêm',   min:15, max:40 },
+  { k:'expPct',    name:'EXP Thêm',        min:8,  max:20 },
 ];
+// Sàn nâng thêm cho lượt bốc ở Lò: 0 = bốc thường, 0.55 = chỉ lấy nửa trên của dải.
+function petRollVal(d, floor){
+  const f = floor || 0, lo = d.min + f * (d.max - d.min);
+  return Math.round((lo + Math.random() * (d.max - lo)) * 10) / 10;
+}
 const PET_MAX_PLUS = 11;
 // Số dòng phụ mở theo mức thăng cấp — thăng cấp không chỉ cộng số, nó MỞ THÊM Ô.
 // Đây là thứ giữ người chơi leo tiếp sau khi dòng đã roll đẹp: +4 và +8 là hai cái mốc thật.
@@ -4046,14 +4057,13 @@ function petDef(it){
   const id = PET_LEGACY[it.pet] || it.pet;
   return PET_DEFS.find(d => d.id === id) || PET_DEFS[0];
 }
-function rollPetSubs(plus, coreK){
+function rollPetSubs(plus, coreK, floor){
   // Loại khoá của dòng GỐC ra khỏi bể: nếu không, bảng hiện hai dòng cùng tên
   // ("Thêm Sát Thương" ở cả dòng gốc lẫn dòng phụ) — trông như lỗi hiển thị.
   const bag = PET_SUBS.filter(x => x.k !== coreK), out = [], n = petSlots(plus);
   while (out.length < n && bag.length){
     const d = bag.splice(Math.floor(Math.random() * bag.length), 1)[0];
-    out.push({ k:d.k, name:d.name, pct:true,
-               v: Math.round((d.min + Math.random() * (d.max - d.min)) * 10) / 10 });
+    out.push({ k:d.k, name:d.name, pct:true, v: petRollVal(d, floor) });
   }
   return out;
 }
@@ -4075,8 +4085,7 @@ function petNormalize(it){
     const bag = PET_SUBS.filter(x => !used.has(x.k) && x.k !== d.coreK);
     while (kept.length < want && bag.length){
       const x = bag.splice(Math.floor(Math.random() * bag.length), 1)[0];
-      kept.push({ k:x.k, name:x.name, pct:true,
-                  v: Math.round((x.min + Math.random() * (x.max - x.min)) * 10) / 10 });
+      kept.push({ k:x.k, name:x.name, pct:true, v: petRollVal(x, 0) });
     }
   }
   it.subs = [core].concat(kept);
@@ -4165,7 +4174,7 @@ window.petRollTake = function(take){
   } else {
     petSay('Giữ bộ cũ.', '#9aa8d4');
   }
-  player.petPending = null;
+  player.petPending = null; delete player.petPendingTinh;
   calcDerived(); saveGame(); renderPet();
 };
 function petSay(msg, col){
@@ -12870,6 +12879,37 @@ const CHAOS_RECIPES = [
       AudioSys.sfx('forge_ok', 0.95);
       return true; } },
 
+  // Lò là cỗ máy ăn may của game; Linh Thú nối vào đây bằng lượt bốc SÀN CAO.
+  // Phân vai rõ: bảng Linh Thú là lượt bốc thường, rẻ, làm hằng ngày. Lò là lượt đắt, hiếm,
+  // nhưng mọi dòng chỉ lấy nửa trên của dải. Vẫn giữ nguyên luật xem trước CŨ→MỚI rồi mới
+  // quyết — Lò có thể làm vỡ trang bị, nhưng KHÔNG được đụng tới luật 'Linh Thú không mất'.
+  { id:'petTinh', group:'che', name:'Tinh Luyện Linh Thú', tray:'khay trống · ◉ 3',
+    match(v){
+      if (v.items.length) return null;
+      if (v.nJewel !== 3 || v.jewels.linhHon !== 3) return null;
+      const it = player.equip && player.equip.pet;
+      if (!it) return null;
+      if (player.petPending) return null;   // đang có lượt chờ quyết — đừng đè lên lượt đã trả tiền
+      return { it, need:{ linhHon:3 }, silver: 12000 + it.plus * 6000, mat: 20 + it.plus * 8 };
+    },
+    plan(v, m){ return {
+      title: `${m.it.name} +${m.it.plus} — bốc ${petSlots(m.it.plus)} dòng phụ, mọi dòng lấy NỬA TRÊN của dải`,
+      rate: 100,
+      cost: [ jewelCost('linhHon', v, 3),
+              chaosCost('Bạc', player.silver, m.silver, '◈'),
+              chaosCost('Huyền Thiết', player.mat, m.mat, '✦') ],
+      warn: 'Bốc xong vẫn được xem CŨ→MỚI ở bảng Linh Thú rồi mới quyết giữ hay thay.',
+      charm:false }; },
+    run(v, m){
+      spendJewels(m.need);
+      player.silver -= m.silver; player.mat -= m.mat;
+      player.petPending = rollPetSubs(m.it.plus, petDef(m.it).coreK, 0.55);
+      player.petPendingTinh = true;
+      chaosSay(`◉ Tinh Luyện xong — mở Nhân Vật → Linh Thú để chọn giữ hay thay.`, '#8fd18f');
+      addFloat(player.x, player.y-52, '◉ Bộ dòng tinh luyện đã sẵn sàng!', '#b08ae8', 15);
+      AudioSys.sfx('forge_ok', 0.9);
+      saveGame(); return true; } },
+
   { id:'cothan', group:'che', name:'Triệu Cổ Thần', tray:'khay trống',
     match(v){
       if (v.items.length || v.nJewel) return null;
@@ -13510,7 +13550,9 @@ function renderPet(){
 
   // ── Roll ──
   if (pend){
-    html += `<div class="pet-act"><div class="pet-act-t">Bộ dòng mới đã bốc xong — bạn quyết định:</div>
+    html += `<div class="pet-act"><div class="pet-act-t">${player.petPendingTinh
+        ? '<b style="color:#b08ae8">Bộ TINH LUYỆN</b> từ Lò — mọi dòng lấy nửa trên của dải.'
+        : 'Bộ dòng mới đã bốc xong'} — bạn quyết định:</div>
       <div class="forge-actions">
         <button class="mini-btn" style="border-color:#8fd18f;color:#8fd18f" onclick="petRollTake(true)">Thay bộ mới</button>
         <button class="mini-btn" onclick="petRollTake(false)">Giữ bộ cũ</button></div></div>`;
@@ -13518,7 +13560,8 @@ function renderPet(){
     const rc = petRollCost(it.plus), ra = petAfford(rc);
     html += `<div class="pet-act"><div class="pet-act-t">Bốc lại dòng phụ <span>— xem trước rồi mới quyết, không ưng thì giữ bộ cũ</span></div>
       ${petCostHtml(ra.rows)}
-      <div class="forge-actions"><button class="mini-btn" onclick="petRoll()" ${ra.ok?'':'disabled'}>Bốc Dòng Phụ</button></div></div>`;
+      <div class="forge-actions"><button class="mini-btn" onclick="petRoll()" ${ra.ok?'':'disabled'}>Bốc Dòng Phụ</button></div>
+      <div class="pet-hint">Muốn chắc tay hơn: <b>Tinh Luyện Linh Thú</b> ở Lò Rèn Hoàng Gia (◉ 3) cho mọi dòng rơi vào nửa trên của dải.</div></div>`;
   }
 
   // ── Thăng cấp ──
