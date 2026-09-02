@@ -1174,7 +1174,7 @@ function rebuildDecorObs(){
 // nằm trên đoạn phải phá. Vật cản tĩnh không bao giờ bị đụng tới, nên bố cục map giữ nguyên.
 function decorUnblock(){
   const md = MAPS[curMap]; if (!md || md.dungeon || !md.spawn) return;
-  const CELL = 40, cols = Math.ceil(MAP.w/CELL), rows = Math.ceil(MAP.h/CELL);
+  const CELL = 24, cols = Math.ceil(MAP.w/CELL), rows = Math.ceil(MAP.h/CELL);   // xem ghi chú NAV_CELL
   const idx = (x, y) => Math.min(rows-1, Math.max(0, Math.round(y/CELL))) * cols
                       + Math.min(cols-1, Math.max(0, Math.round(x/CELL)));
   // 0 = đi được · 1 = decor chặn (phá được) · 2 = vật cản tĩnh (không đụng)
@@ -1292,7 +1292,10 @@ function collideObstacles(ent, r){
 // vị trí cây rải ngẫu nhiên — trong khi flood-fill luôn khẳng định map LIÊN THÔNG. Tức là lỗi
 // của bộ giải, không phải của địa hình, nên cứu bằng BFS trên lưới thô là đủ và an toàn: nó chỉ
 // chạy ở đúng những tuyến mà hôm nay người chơi bấm rồi nhân vật đứng im.
-const NAV_CELL = 40;
+// 24 chứ không phải 40: ô 40px lấy mẫu ở TÂM ô nên một gốc cây nằm lọt giữa hai tâm bị bỏ
+// sót, và khe hẹp thật (vd khe 60px giữa dốc tây và tảng đá tây ở Thornwood Reach) lại bị
+// chấm là bịt. Cả hai kiểu sai đều đẩy người chơi vào cảnh 'BFS bảo có đường mà đi không nổi'.
+const NAV_CELL = 24;
 let _navGrid = null, _navW = 0, _navH = 0, _navKey = '';
 function navInvalidate(){ _navGrid = null; _navKey = ''; }
 function navEnsure(){
@@ -4591,6 +4594,23 @@ let moveWaypoint = null; // Nút đang nhắm tới trong movePlan — chỉ đ�
 let movePlan = null, movePlanI = 0, movePlanT = 0;
 function movePlanClear(){ movePlan = null; movePlanI = 0; movePlanT = 0; }
 // Lập kế hoạch tới (tx,ty). `bfs` = đã kẹt một lần rồi, bỏ qua bám mép, đi thẳng bằng BFS.
+// GỠ KẸT GÓC LÕM. Trượt dọc mép chỉ cứu được mép THẲNG; lọt vào góc lõm (hai mép chụm lại, vd
+// khe giữa tảng đá tây và dốc tây ở Thornwood Reach) thì mọi hướng "về phía đích" đều bị đẩy
+// ngược, và tính lại đường bao nhiêu lần cũng vô ích vì đường nào cũng bắt đầu bằng bước đi thẳng
+// vào đá. Thử đủ 16 hướng, chọn hướng THỰC SỰ nhích được xa nhất rồi chạy theo nó nửa giây —
+// đủ để ra khỏi góc, sau đó kế hoạch cũ đi tiếp bình thường.
+function unstickPlayer(spd, dt){
+  const step = Math.max(6, spd*dt*2);
+  let bestA = null, bestD = step*0.35;
+  for (let i = 0; i < 16; i++){
+    const a = i/16*Math.PI*2;
+    const r = resolveObstaclePoint(clamp(player.x + Math.cos(a)*step, 20, MAP.w-20),
+                                   clamp(player.y + Math.sin(a)*step, 20, MAP.h-20), 14);
+    const d = Math.hypot(r.x - player.x, r.y - player.y);
+    if (d > bestD){ bestD = d; bestA = a; }
+  }
+  if (bestA != null){ player._unstickA = bestA; player._unstickT = 0.5; }
+}
 function movePlanMake(tx, ty, bfs){
   const pth = bfs ? (navPath(player.x, player.y, tx, ty) || simulateMovePath(player.x, player.y, tx, ty))
                   : simulateMovePath(player.x, player.y, tx, ty);
@@ -8249,6 +8269,7 @@ function update(dt){
             movePlanI = Math.min(movePlan.length - 1, movePlanI + 5);
             moveWaypoint = null;
           } else { movePlanClear(); moveWaypoint = null; }   // ép tính lại đường ngay khung sau
+          if (player._moveRetry >= 2) unstickPlayer(player.speed || 190, dt);
           // Địa hình nay LUÔN liên thông (xem decorUnblock: cây/đá bịt lối đã bị dọn ngay lúc
           // dựng map), nên "không nhích được" gần như luôn là bộ bám mép đi vào túi lõm chứ
           // không phải đích thật sự không tới được. Bỏ cuộc ở lần thứ 3 vì thế là bỏ oan — đo
@@ -8394,6 +8415,11 @@ function update(dt){
       AudioSys.sfx('hurt', 0.5);
     }
   }
+  // Đang trong nửa giây gỡ kẹt: chạy theo hướng đã chọn, kệ waypoint (xem unstickPlayer)
+  if ((player._unstickT || 0) > 0){
+    player._unstickT -= dt;
+    mx = Math.cos(player._unstickA); my = Math.sin(player._unstickA);
+  }
   const ml = Math.hypot(mx,my);
   player.moving = ml > 0.01;
   player.walkPh = (player.walkPh || 0) + dt * (player.moving ? 11 : 2.2);
@@ -8415,10 +8441,23 @@ function update(dt){
   if (ml > 0.01){
     mx /= Math.max(1,ml); my /= Math.max(1,ml);
     let spd = player.speed || 190;
+    const _px0 = player.x, _py0 = player.y;
     player.x = clamp(player.x + mx*spd*dt, 20, MAP.w-20);
     player.y = clamp(player.y + my*spd*dt, 20, MAP.h-20);
     collideCityWalls();
     collideObstacles(player, 14); collideAiPass(); // GDD Đợt 2 A: địa hình + ải cấp
+    // TRƯỢT DỌC MÉP. resolveObstaclePoint đẩy ngược lại đúng hướng vừa đi, nên khi hướng đi vuông
+    // góc với mép vật cản thì lực đẩy triệt tiêu hoàn toàn bước chân: nhân vật đứng ép vào tảng đá,
+    // mỗi khung nhích 0px, và bộ đi đường tính lại đường bao nhiêu lần cũng vô ích vì đường nào
+    // cũng bắt đầu bằng bước đi thẳng vào đá. Đo được 1/30 lượt tới Vệ Binh Trụ tây của Thornwood
+    // Reach hỏng đúng kiểu này. Không nhích được thì thử lách sang ngang (đổi bên nếu bên này cũng bí).
+    if (moveTarget && Math.hypot(player.x - _px0, player.y - _py0) < spd*dt*0.25){
+      const _sd = player._slide || 1;
+      const _r2 = resolveObstaclePoint(clamp(player.x - my*_sd*spd*dt, 20, MAP.w-20),
+                                       clamp(player.y + mx*_sd*spd*dt, 20, MAP.h-20), 14);
+      if (Math.hypot(_r2.x - player.x, _r2.y - player.y) > spd*dt*0.4){ player.x = _r2.x; player.y = _r2.y; }
+      else player._slide = -_sd;
+    }
     // Cổng Ải (GDD Boss v2.1 §4): vùng Cổng Vực bị phong ấn tới khi hạ đủ 3 Vệ Binh Trụ
     const _bd = BOSS_DEFS[curMap];
     if (_bd){
