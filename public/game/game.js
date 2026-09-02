@@ -119,7 +119,11 @@ function mobDropCount(def, srcK){
 // Tỉ lệ Hoàn Hảo theo tầng Bảo Hạp. Hoàn Hảo GỠ khỏi quái (kể cả boss) — Bảo Hạp chỉ có từ
 // Xâm Lăng Vàng và Hung Thần, nên hai sự kiện thế giới thành con đường DUY NHẤT tới đồ Hoàn
 // Hảo. Đó chính là thứ làm chúng đáng chờ.
-const BAOHAP_PERFECT = [0, 0, 0.06, 0.12, 0.20, 0.30, 0.40, 0.55];
+// Box Kundun LUÔN ra đồ Hoàn Hảo, mọi bậc. Cái hên xui không nằm ở "có Hoàn Hảo hay không"
+// mà ở SỐ DÒNG trên món đó (xem excCount) — mở hộp nào cũng ra đồ Hoàn Hảo, nhưng có món ba
+// dòng và có món một dòng vô dụng. Bậc hộp thì KHÔNG đụng tới phẩm chất, nó chỉ quyết định
+// CẤP ĐỒ, tức chất liệu: bậc I ra đồ vải thô, bậc VII ra đồ giai cuối (xem BAOHAP_TIERS).
+const BAOHAP_PERFECT = [0, 1, 1, 1, 1, 1, 1, 1];
 // ── NGỌC RƠI TỪ MỌI LOẠI QUÁI (vòng kinh tế MU Season 1) ────────────────────
 // Trước đây quái thường rơi ĐÚNG 0 ngọc: muốn rèn thì bắt buộc phải chờ sự kiện thế giới hoặc
 // mở Bảo Hạp. Trong MU thì ngọc rơi từ quái thường — đó là thứ khiến việc cày có nghĩa mỗi ngày.
@@ -182,14 +186,21 @@ const EXC_ARMOR = [
   { k:'hpPct',     name:'Sinh Lực Tối Đa',    v:4  },
 ];
 // Số dòng Hoàn Hảo theo tầng Bảo Hạp: I-II → 1 · III-IV → 1-2 · V-VI → 2-3 · VII → 3
-function excCount(tier){
-  const t = tier || 0;
-  return t >= 7 ? 3 : t >= 5 ? 2 + (Math.random() < 0.5 ? 1 : 0)
-       : t >= 3 ? 1 + (Math.random() < 0.5 ? 1 : 0) : 1;
+// Số dòng Excellent trên một món Hoàn Hảo — NGẪU NHIÊN, không theo bậc hộp.
+// Bản cũ nhận `tier` và chia bậc thang (VII = 3 dòng), nhưng CHƯA TỪNG có nơi nào truyền
+// tham số đó vào: `genItem` đọc `opts.bhTier` mà không ai đặt `bhTier` cả. Hệ quả là
+// excCount(undefined) → luôn trả về 1. Đo thật 180.000 lượt mở hộp bậc I/IV/VII: không ra
+// nổi MỘT món hai dòng. Cả bậc thang là code chết suốt từ đầu.
+// Nay bỏ hẳn tham số bậc: hộp bậc nào cũng bốc từ cùng một bảng, vì bậc hộp chỉ nói lên
+// CẤP đồ chứ không nói lên đồ tốt hay xấu.
+function excCount(){
+  const r = Math.random();
+  return r < 0.55 ? 1 : r < 0.85 ? 2 : r < 0.97 ? 3 : 4;
 }
-function rollExcLines(slotId, tier){
+// `ep` chỉ dùng cho Cổ Thần, nơi số dòng được ấn định thay vì bốc.
+function rollExcLines(slotId, ep){
   const pool = (slotId === 'vukhi' ? EXC_WEAPON : EXC_ARMOR).slice();
-  const n = Math.min(pool.length, excCount(tier));
+  const n = Math.min(pool.length, ep || excCount());
   const out = [];
   for (let i = 0; i < n; i++) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
   return out;
@@ -207,7 +218,10 @@ function rollSubs(slotId, rarity, perfect){
     out.push({ k:def.k, name:def.name, v, pct:true });
   };
   if (perfect) for (const d of vip) take(d);          // Hoàn Hảo: dòng VIP là đặc quyền, luôn có
-  const want = Math.min(all.length, perfect ? 4 : RARITY_SUBS[rarity]);
+  // Đồ Hoàn Hảo trước đây LUÔN có đủ 4 dòng phụ. Cùng với việc mọi hộp nay đều ra Hoàn Hảo,
+  // như thế thì hộp nào cũng cho một món kịch khung — không còn gì để mong. Nay số dòng phụ
+  // cũng bốc 1–4. Giá trị thì vẫn kịch trần: đó mới là đặc quyền của chữ "Hoàn Hảo".
+  const want = Math.min(all.length, perfect ? 1 + Math.floor(Math.random() * 4) : RARITY_SUBS[rarity]);
   const bag = pool.slice();
   while (out.length < want && bag.length) take(bag.splice(Math.floor(Math.random() * bag.length), 1)[0]);
   return out;
@@ -4035,7 +4049,7 @@ function genAncient(setId, slotId, level){
     main: { k: slot.main, v: slot.base(tier, r), name: mainName(slot.main) },
     element: null,                      // Cổ Thần chỉ ra giáp — giáp không mang hệ
     subs, plus: 0,
-    exc: rollExcLines(slot.id, 6),
+    exc: rollExcLines(slot.id, 2 + (Math.random() < 0.5 ? 1 : 0)),  // Cổ Thần: ấn định 2–3 dòng
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
   });
   it.name = set.name + ' · ' + it.name;   // assignDef() đặt tên theo bộ lớp, bộ Cổ Thần đứng trước
@@ -4436,6 +4450,98 @@ window.sellItem = function(i){
   try{ renderInv(); renderBag(); }catch { /* best-effort — bỏ qua nếu lỗi */ }
   saveGame();
 };
+// ════════ DỌN TÚI: vứt xuống đất · bán hàng loạt ════════
+// Đồ Hoàn Hảo, Cổ Thần và món mang Khắc Ấn KHÔNG vứt được. Đây không phải luật cho vui: đồ vứt
+// ra đất chỉ nằm LOOT_TTL giây rồi biến mất, nên một cú bấm nhầm là mất vĩnh viễn thứ hiếm nhất
+// game. Muốn dọn thì BÁN — bán ra bạc, và có bước xác nhận.
+function itemVutDuoc(it){
+  return !!it && !it.special && it.slot !== 'pet'
+      && !itemIsPerfect(it) && !it.ancient && !it.sigil;
+}
+function itemVutLyDo(it){
+  if (!it) return '';
+  if (it.special || it.slot === 'pet') return 'Vật phẩm đặc biệt không vứt được.';
+  if (it.sigil)          return 'Món mang Khắc Ấn — hãy bán, đừng vứt.';
+  if (it.ancient)        return 'Đồ Cổ Thần — hãy bán, đừng vứt.';
+  if (itemIsPerfect(it)) return 'Đồ Hoàn Hảo không vứt được — muốn dọn thì bán ở Thương Nhân.';
+  return '';
+}
+window.dropItem = function(i){
+  const it = player.inv[i];
+  if (!it) return;
+  const lyDo = itemVutLyDo(it);
+  if (lyDo){ addFloat(player.x, player.y-40, lyDo, '#ffd76a', 13); AudioSys.sfx('ui', 0.4); return; }
+  // Từ phẩm Linh trở lên thì hỏi lại một nhịp, y như sellItem: vứt là mất hẳn.
+  if (it.rarity >= 2 && window._vutArm !== i){
+    window._vutArm = i;
+    addFloat(player.x, player.y-40, `Bấm Vứt lần nữa để bỏ ${it.name}`, '#ffb066', 12);
+    AudioSys.sfx('ui', 0.4); return;
+  }
+  window._vutArm = -1;
+  player.inv.splice(i, 1);
+  dropToGround({ k:'item', it, boDi:true }, player.x, player.y);
+  addFloat(player.x, player.y-40, `Vứt ${it.name}`, '#9aa8d4', 12);
+  if (window.bagSel >= player.inv.length) window.bagSel = -1;
+  try{ renderInv(); renderBag(); }catch { /* best-effort — bỏ qua nếu lỗi */ }
+  saveGame();
+};
+
+// Ngưỡng dọn hàng loạt: 0 = chỉ Phàm · 1 = Phàm+Tinh · 2 = tới Linh. Không cho quá Linh:
+// Thần và Chí Tôn phải tự tay xử lý từng món.
+const DON_MUC_TEN = ['chỉ Phàm', 'Phàm + Tinh', 'Phàm + Tinh + Linh'];
+function donMuc(){ return player && player.donMuc != null ? player.donMuc : 1; }
+window.setDonMuc = function(v){ player.donMuc = Math.max(0, Math.min(2, +v)); saveGame(); renderBag(); };
+// Một chỗ duy nhất cho cả túi lẫn kho: hai nơi khác nhau ở CHỖ CHỨA chứ không khác ở luật.
+// Trả về chỉ số theo thứ tự GIẢM DẦN để bên gọi splice không lệch.
+function donChon(list, vut){
+  const muc = donMuc(), out = [];
+  for (let i = list.length - 1; i >= 0; i--){
+    const it = list[i];
+    if (!it || it.special || it.slot === 'pet') continue;
+    if ((it.rarity || 0) > muc) continue;
+    // Cổ Thần và Khắc Ấn thì chừa ra ở CẢ HAI đường. Một món Khắc Ấn phẩm Phàm vẫn là thứ đắt
+    // nhất game, mà dọn hàng loạt thì người chơi không đọc từng dòng — bán nhầm cũng là mất.
+    // Muốn bỏ chúng thì bán lẻ từng món, ở đó có bước xác nhận riêng.
+    if (it.ancient || it.sigil) continue;
+    if (vut && !itemVutDuoc(it)) continue;     // riêng đường VỨT còn chừa thêm đồ Hoàn Hảo
+    out.push(i);
+  }
+  return out;
+}
+window.donRac = function(nguon, cach){
+  const list = nguon === 'kho' ? khoList() : player.inv;
+  const vut = cach === 'vut';
+  const idx = donChon(list, vut);
+  if (!idx.length){
+    addFloat(player.x, player.y-40, `Không có món nào ở mức "${DON_MUC_TEN[donMuc()]}"`, '#8a8a8a', 13);
+    AudioSys.sfx('ui', 0.4); return;
+  }
+  let tien = 0; for (const i of idx) tien += itemSellPrice(list[i]);
+  const key = nguon + ':' + cach;
+  if (window._donArm !== key){
+    window._donArm = key;
+    addFloat(player.x, player.y-40,
+      vut ? `Bấm lần nữa để VỨT ${idx.length} món` : `Bấm lần nữa để BÁN ${idx.length} món (+${tien}◈)`,
+      '#ffb066', 13);
+    AudioSys.sfx('ui', 0.4); return;
+  }
+  window._donArm = '';
+  for (const i of idx){
+    const it = list[i];
+    list.splice(i, 1);
+    if (vut) dropToGround({ k:'item', it, boDi:true },
+                          player.x + (Math.random()*90 - 45), player.y + (Math.random()*56 - 28));
+    else player.silver += itemSellPrice(it);
+  }
+  addFloat(player.x, player.y-40,
+    vut ? `Đã vứt ${idx.length} món` : `Đã bán ${idx.length} món +${tien}◈`,
+    vut ? '#9aa8d4' : '#7ecbff', 14);
+  AudioSys.sfx(vut ? 'ui' : 'quest', 0.5);
+  window.bagSel = -1;
+  try{ renderInv(); renderBag(); }catch { /* best-effort — bỏ qua nếu lỗi */ }
+  saveGame();
+};
+
 // B7: tự mặc đồ mạnh hơn khi nhặt — ≥105% lực chiến, đồ quý (Hoàn Hảo/Cổ Thần/☘Vận) cần ≥115%
 function tryAutoEquip(it){
   if (!player.autoEquip || !it.slot || it.special) return;
@@ -5730,6 +5836,9 @@ function dropToGround(o, x, y){
   g.sx = x; g.sy = y; g.fly = 0;
   groundLoot.push(g);
   const col = lootColor(g);
+  // Món vừa bị VỨT thì không kèn trống: nó vừa bị bỏ đi chứ không phải vừa rơi ra từ quái.
+  // Không chặn ở đây thì vứt một món Linh sẽ nổ biểu ngữ 'LINH RƠI XUỐNG!' — vô lý.
+  if (g.boDi){ AudioSys.sfx('ui', 0.32); return g; }
   addEffect({ type:'spark', x, y: y - 10, r: 20 + lootRar(g) * 9, color: col });
   if (g.k === 'jewel'){
     // Âm riêng cho ngọc. KHÔNG được dùng 'coin': killMob đã gọi sfx('coin') vài phần nghìn
@@ -5830,7 +5939,9 @@ function updateGroundLoot(dt){
     // AUTO đang cày thì nới tầm hút: lớp tầm xa giết quái cách 200px, để nguyên bán kính
     // đi-ngang-qua là treo máy cả tiếng rồi bỏ lại nguyên bãi đồ dưới đất.
     const gr = (player.auto ? LOOT_REACH_R * 3 : LOOT_GRAB_R);
-    if (g.z === 0 && dist(player.x, player.y, g.x, g.y) < gr) takeLoot(g, i);
+    // g.boDi = món do CHÍNH người chơi vứt đi. Không có cờ này thì vứt là vô nghĩa: đồ rơi
+    // cách chân 26–56px, mà bán kính tự nhặt là 46px (AUTO còn gấp ba) — bỏ ra là hút về ngay.
+    if (g.z === 0 && !g.boDi && dist(player.x, player.y, g.x, g.y) < gr) takeLoot(g, i);
   }
 }
 // Trả về true nếu đã nhặt được. Túi đầy thì KHÔNG xoá — đồ nằm lại dưới đất và đổi nhãn cảnh
@@ -5885,7 +5996,7 @@ function drawGroundLoot(now){
     const blink = g.t < LOOT_BLINK ? (0.45 + 0.55 * Math.abs(Math.sin(now / 170))) : 1;
     const bob = g.z > 0 ? 0 : Math.sin(now / 520 + g.wob) * 2.2;
     const iy = g.y - g.z - 12 + bob;
-    ctx.save(); ctx.globalAlpha = blink;
+    ctx.save(); ctx.globalAlpha = blink * (g.boDi ? 0.45 : 1);   // đồ đã vứt: mờ đi cho dễ phân biệt
     // bóng đổ — bẹt ra đúng lúc chạm đất, đó là cái làm cú nảy có sức nặng
     const sq = 1 + g.land * 1.5;
     ctx.fillStyle = `rgba(0,0,0,${0.30 - Math.min(0.22, g.z / 180)})`;
@@ -16318,6 +16429,23 @@ window.khoHapRut = function(t, n){
   K.hap[t] -= v; bh[t] = (bh[t] || 0) + v;
   saveGame(); renderBag();
 };
+
+// Ghép hộp: 3 hộp bậc N trong TÚI → 1 hộp bậc N+1.
+// Có mặt vì bậc hộp nay chặn trần cấp đồ (xem burstBaoHap): nếu không có đường đi lên thì kho
+// hộp bậc thấp của người chơi cấp cao thành rác, mà số hộp đó họ đã tích từ trước khi luật đổi.
+// Ăn 3 đổi 1 nên nó là chỗ TIÊU hộp, không phải chỗ đẻ ra giá trị.
+const GHEP_HAP_CAN = 3;
+window.ghepHap = function(t){
+  const bh = player.baohap || (player.baohap = {});
+  if (t >= BAOHAP_TIERS.length - 1) return;          // bậc cao nhất thì không ghép lên đâu được
+  if ((bh[t] || 0) < GHEP_HAP_CAN) return;
+  bh[t] -= GHEP_HAP_CAN;
+  if (!bh[t]) delete bh[t];
+  bh[t + 1] = (bh[t + 1] || 0) + 1;
+  const d = BAOHAP_TIERS[t + 1];
+  if (player) addFloat(player.x, player.y - 66, `⚒ ${GHEP_HAP_CAN} hộp → 1 ${d.name}`, d.color, 15);
+  saveGame(); renderBag();
+};
 window.khoNgocGuiHet = function(){
   let n = 0;
   for (const k of KHO_NGOC_KEYS){ const v = ngocTui(k); if (v > 0){ khoNgoc()[k] += v; ngocTuiSet(k, 0); n += v; } }
@@ -16371,7 +16499,8 @@ function bagSecKho(){
   let h = `<div class="bag-bar">
     <b style="color:#7ecbff">Kho ${k.length}/${KHO_SIZE}</b>
     <button class="mini-btn" onclick="khoDepositAll()">⬇ Cất đồ thừa</button>
-    <i class="bag-tip">bấm ô trong kho = lấy ra · túi ${player.inv.length}/30</i></div>`;
+    <i class="bag-tip">bấm ô trong kho = lấy ra · túi ${player.inv.length}/30</i></div>
+    ${donBar('kho')}`;
 
   h += `<div class="chaos-sec">NGĂN TRANG BỊ <span class="chaos-sub">chỗ này mới là thứ làm đầy túi</span></div>`;
   if (!k.length) h += `<div class="chaos-empty">Kho trống — bấm "Cất đồ thừa" để dọn túi nhanh.</div>`;
@@ -16415,6 +16544,9 @@ function bagSecKho(){
       <img class="consum-ic sm" src="${consumArtUrl('box', d.color)}" alt="">
       <span class="ng-name" style="color:${d.color}">${d.name}</span>
       <span class="ng-num">túi <b>${tui}</b> · kho <b style="color:${d.color}">${kho}</b></span>
+      ${t < BAOHAP_TIERS.length - 1
+        ? `<button class="mini-btn" ${tui >= GHEP_HAP_CAN ? '' : 'disabled'} onclick="ghepHap(${t})"
+             title="Ghép ${GHEP_HAP_CAN} ${d.name} thành 1 ${BAOHAP_TIERS[t+1].name}">⚒</button>` : ''}
       <button class="mini-btn" ${tui?'':'disabled'} onclick="khoHapGui(${t},'all')" title="Gửi hết vào kho">⬇</button>
       <button class="mini-btn" ${kho?'':'disabled'} onclick="khoHapRut(${t},'all')" title="Rút hết về túi">⬆</button></div>`;
   }
@@ -16424,6 +16556,23 @@ function bagSecKho(){
 window.bagTab = 'gear';
 window.setBagTab = function(t){ window.bagTab = t; renderBag(); };
 
+// Thanh dọn hàng loạt. Dùng chung cho túi và kho vì luật y hệt nhau, chỉ khác chỗ chứa.
+// Nút VỨT chừa đồ Hoàn Hảo/Cổ Thần/Khắc Ấn ra; nút BÁN thì không chừa, vì bán không mất trắng.
+function donBar(nguon){
+  const list = nguon === 'kho' ? khoList() : player.inv;
+  const nVut = donChon(list, true).length, nBan = donChon(list, false).length;
+  let tien = 0; for (const i of donChon(list, false)) tien += itemSellPrice(list[i]);
+  const opt = DON_MUC_TEN.map((t, v) =>
+    `<option value="${v}" ${donMuc() === v ? 'selected' : ''}>${t}</option>`).join('');
+  return `<div class="bag-bar">
+    <span class="don-lb">Dọn từ phẩm</span>
+    <select class="don-sel" onchange="setDonMuc(this.value)">${opt}</select>
+    <button class="mini-btn" ${nVut ? '' : 'disabled'} onclick="donRac('${nguon}','vut')"
+      title="Ném ${nVut} món xuống đất — biến mất sau ${LOOT_TTL} giây. Đồ Hoàn Hảo, Cổ Thần và món có Khắc Ấn được chừa ra.">🗑 Vứt ${nVut} món</button>
+    <button class="mini-btn" ${nBan ? '' : 'disabled'} onclick="donRac('${nguon}','ban')"
+      title="Bán ${nBan} món lấy ${tien}◈. Đây là đường duy nhất dọn được đồ Hoàn Hảo.">◈ Bán ${nBan} món (+${tien})</button>
+    <i class="bag-tip">bấm hai lần để xác nhận</i></div>`;
+}
 function bagSecGear(){
   // Một hàng duy nhất. Bản cũ có hàng tuỳ chọn RỒI thêm một dòng chú thích giải nghĩa ▲ ◆ 🔒
   // dài hai dòng — cả ba ký hiệu đó nay thẻ rê chuột đều nói rõ, chú thích thành thừa.
@@ -16431,7 +16580,8 @@ function bagSecGear(){
     <label><input type="checkbox" ${player.autoSell?'checked':''} onchange="window.toggleAutoSell(this.checked)"> Tự bán trắng/lục</label>
     <label><input type="checkbox" ${player.autoEquip?'checked':''} onchange="window.toggleAutoEquip(this.checked)"> Tự mặc đồ mạnh</label>
     <button class="mini-btn" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất</button>
-    <i class="bag-tip">bấm ô = mặc · <b>⋯</b> = bán / phân giải</i></div>`;
+    <i class="bag-tip">bấm ô = mặc · <b>⋯</b> = bán / phân giải / vứt</i></div>
+    ${donBar('tui')}`;
   if (!player.inv.length) return h + `<div class="chaos-empty">Túi trống — hãy đi farm quái!</div>`;
   h += `<div class="bag-grid">`;
   player.inv.forEach((it, i) => {
@@ -16457,7 +16607,9 @@ function bagSecGear(){
     h += `<div class="bag-act"><b class="${RARITIES[it.rarity].cls}">${it.name}${it.plus?' +'+it.plus:''}</b></div>
       <div class="forge-actions"><button class="mini-btn" onclick="equipItem(${window.bagSel})">Mặc Vào</button>
       <button class="mini-btn" onclick="sellItem(${window.bagSel})">Bán (+${itemSellPrice(it)}◈)</button>
-      <button class="mini-btn" onclick="salvage(${window.bagSel});window.bagSel=-1">Phân Giải (+${(1+it.rarity+Math.floor(it.plus/3)) * (!it.special && !itemUsable(it) ? 2 : 1)}✦)</button></div>`;
+      <button class="mini-btn" onclick="salvage(${window.bagSel});window.bagSel=-1">Phân Giải (+${(1+it.rarity+Math.floor(it.plus/3)) * (!it.special && !itemUsable(it) ? 2 : 1)}✦)</button>
+      <button class="mini-btn" ${itemVutDuoc(it) ? '' : 'disabled'} onclick="dropItem(${window.bagSel})"
+        title="${itemVutDuoc(it) ? 'Ném xuống đất — biến mất sau ' + LOOT_TTL + ' giây' : itemVutLyDo(it)}">Vứt</button></div>`;
   }
   return h;
 }
@@ -20581,7 +20733,11 @@ function playChaosAnim(items, r, success, onReveal){
 // dropToGround(), thứ vốn đã lo sẵn cú nảy, tiếng động, vòng sáng và biểu ngữ theo phẩm.
 function burstBaoHap(t, x, y){
   const def = BAOHAP_TIERS[t];
-  const lv = Math.max(player.level, def.min);
+  // clamp chứ không phải max: bậc hộp quyết định BỂ ĐỒ, nên Box Kundun I mở ở cấp 100 vẫn chỉ
+  // ra đồ giai 1–2 (vải thô), đúng như MU. def.max trước nay khai trong BAOHAP_TIERS mà không
+  // một dòng nào đọc tới. Kho hộp bậc thấp không thành rác: xem ghepHap() — 3 hộp bậc N đổi
+  // được 1 hộp bậc N+1.
+  const lv = clamp(player.level, def.min, def.max);
   const drops = [];
   if (def.ancient > 0 && Math.random() < def.ancient){
     const setIds = Object.keys(ANCIENT_SETS);
