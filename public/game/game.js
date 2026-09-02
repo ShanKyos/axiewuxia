@@ -15856,7 +15856,28 @@ function applyTestBoost(){
     const it = genItem(t * 10, 0); it.tier = t; player.inv.push(it);
   }
   player.pk = false; player.toiac = 0; player.gkBuffT = 0; player.poisonT = 0;
+  // ===== CỔNG TIẾN TRÌNH — phần /max từng bỏ sót =====
+  // Trước đây /max chỉ mở cổng SỨC MẠNH (cấp, đồ, chiêu). Nhưng gần như toàn bộ nội dung hậu kỳ
+  // khoá sau TIẾN TRÌNH: mapGate() tra `questIdx`, masteryOpen() tra `player.mongChiTon`, tab nào
+  // cũng tra `lvPeak()`. Nên /max cho ra một nhân vật cấp 120 đứng ở nhiệm vụ 1 — bảng Đại Thành
+  // hiện tab mà bấm vào vẫn khoá, năm map cuối vẫn "???", và không cách nào tới được Cổng Vực.
+  moHetCong();
   calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
+}
+// Mở mọi cổng tiến trình. Tách riêng vì cả /max, /quest all và /mo đều cần đúng bộ này.
+function moHetCong(){
+  player.lvPeak = Math.max(player.lvPeak || 1, MAX_LV);
+  questIdx = QUESTS.length; questProg = 0; questState = 'all';
+  player.mongChiTon = true; player.mOpened = true;
+  player.storyFlags = player.storyFlags || {};
+  // Phong ấn Vệ Binh Trụ ở MỌI map: không có bước này thì tới Cổng Vực nào cũng bị chặn.
+  player.bossKills = player.bossKills || {};
+  for (const m in BOSS_DEFS) player.bossKills[m] = BOSS_DEFS[m].thuve.map(t => t.id);
+  // Phụ tuyến: mở sẵn để bấm thử, không tự nhận hộ.
+  for (const sq of SIDE_QUESTS) if (!sideStates[sq.id]) sideStates[sq.id] = { st:'active', prog:0 };
+  // Điểm Đại Thành: cấp đủ để tô thử, nhưng KHÔNG tô hộ — bảng phải còn chỗ để bấm.
+  const dt = Math.max(player.mpts || 0, MASTERY_OPEN_GRANT + MASTERY_PER_RESET * 3);
+  player.mpts = dt; player.mptsTotal = Math.max(player.mptsTotal || 0, dt);
 }
 
 // ---------- Thú Chiến panel & upgrade ----------
@@ -16541,12 +16562,13 @@ function cheatHelp(){
   const _evo  = Object.keys(EVO_PATHS).map(k => `${k}=${EVO_PATHS[k].name}`).join(' · ');
   return [
     '── nhân vật ──',
-    '/max — mọi thứ tối đa (cấp 120, full đồ +11, mọi kỹ năng Lv 120)',
+    '/max — mọi thứ tối đa: cấp 120, full đồ +11, mọi kỹ năng Lv 120, VÀ mở hết cổng tiến trình',
     '/lv <1-120> — đặt cấp · /speed <hệ số> — tốc chạy · /god — bật/tắt bất tử',
     '── di chuyển ──',
     '/map <id> — ' + _maps,
     '/map <phó bản> — ' + _pb,
-    '/go <x> <y> — dịch chuyển tọa độ · /boss — mở phong ấn & tới Cổng Vực · /deep — vào Tầng Sâu',
+    '/go <x> <y> — dịch chuyển tọa độ · /boss — mở phong ấn & tới Cổng Vực · /boss reset — dựng lại phong ấn',
+    '/deep — vào Tầng Sâu',
     '── kỹ năng ──',
     `/fullskill — học hết ${Object.keys(VOHOC_DEFS).length} kỹ năng, mọi chiêu Lv 120`,
     '/learn — học toàn bộ Sổ Kỹ Năng (Di Sản Cũ) · /bikip <n> — số Sách Kỹ Năng',
@@ -16559,6 +16581,10 @@ function cheatHelp(){
     '/nd <n> — Lõi Nguyên Tố · /jewel <n> — cả bốn Tứ Châu · /gem <n> — Tử La + Hỗn Nguyên',
     '/manh /tich /an /cothan <n> — mảnh ghép chế tác · /hap <n> — Box Kundun mọi tầng',
     '/item [phẩm 0-4] [giai 1-10] — tạo trang bị vào túi',
+    '── tiến trình (mở nội dung hậu kỳ) ──',
+    '/mo — mở HẾT cổng: xong chính tuyến, cấp đỉnh 120, phá phong ấn mọi map, mở bảng ' + MASTERY_NAME,
+    `/quest <1-${QUESTS.length}|all> — nhảy tới một nhiệm vụ chính tuyến · /chuong — xem mốc từng chương`,
+    '/taisinh <n> — số vòng Tái Sinh (+2% Công/Mạng mỗi vòng) · /tang <n> — nhảy tới tầng n Tầng Sâu',
     '── thế giới ──',
     '/kill [bán kính=350] — hạ quái quanh mình · /seal <0-7> — tiến độ Ngũ Trụ (7 = Kết Mở)',
     '/time [ngày=10] — nhảy thời gian thế giới · /obstacles — lớp debug vùng chặn địa hình',
@@ -16734,6 +16760,15 @@ window.cheatExec = function(raw){
       case 'boss': {
         const bd = BOSS_DEFS[curMap];
         if (!bd){ cheatLog('Map này không có trấn thủ.', '#ff7a6a'); return; }
+        // /boss reset — dựng lại phong ấn. Cần vì /mo và /max phá sẵn phong ấn MỌI map để tới được
+        // Cổng Vực, mà phá rồi thì không còn Vệ Binh Trụ nào để thử đánh.
+        if ((parts[1] || '').toLowerCase() === 'reset'){
+          delete player.bossKills[curMap];
+          mobs = mobs.filter(m => !(m.def && m.def.bossKind));  // dọn boss vùng cũ rồi thả lại
+          spawnZoneBosses();
+          cheatLog(`Dựng lại phong ấn ${MAPS[curMap].name} — ${bd.thuve.length} Vệ Binh Trụ sống lại.`, '#c07fe0');
+          break;
+        }
         player.bossKills[curMap] = bd.thuve.map(t => t.id);
         player.x = bd.tranai.x * MAP.w - 380; player.y = bd.tranai.y * MAP.h; snapCamera();
         cheatLog('Đã mở phong ấn — dịch chuyển tới Cổng Vực.', '#c07fe0'); break;
@@ -16753,6 +16788,64 @@ window.cheatExec = function(raw){
       }
       case 'wipe': window.wipeSave(true); return;
       case 'deep': deepStart(); cheatLog('Tầng Sâu: bắt đầu', '#c07fe0'); return;
+      case 'mo': {                       // /mo — mở HẾT cổng tiến trình, giữ nguyên sức mạnh
+        moHetCong(); calcDerived();
+        cheatLog(`Mở hết cổng: chính tuyến ${QUESTS.length}/${QUESTS.length} · cấp đỉnh ${lvPeak()} · phong ấn ${Object.keys(BOSS_DEFS).length} map · bảng ${MASTERY_NAME} mở (${player.mpts} điểm)`, '#7ecbff');
+        cheatLog('Chưa gỡ Trụ Khoá nào — gõ /seal 7 nếu muốn xem Kết Mở.', '#9aa8d4'); break;
+      }
+      case 'quest': {                    // /quest <n|all> — nhảy thẳng tới một chương
+        const a = (parts[1] || '').toLowerCase();
+        if (a === 'all'){ moHetCong(); calcDerived();
+          cheatLog(`Chính tuyến: xong toàn bộ ${QUESTS.length} nhiệm vụ.`, '#8fd18f'); break; }
+        const n = clamp(Math.round(num(1, 1)), 1, QUESTS.length);
+        questIdx = n - 1; questProg = 0; questState = 'active';
+        player.mongChiTon = false;
+        // Cấp phải theo kịp nhiệm vụ, nếu không mapGate lại chặn ngay ở cổng CẤP.
+        const q = QUESTS[questIdx];      // QUESTS dùng `lv`, không phải `reqLv` (đó là của SIDE_QUESTS)
+        if (player.level < q.lv){ player.level = q.lv; player.xp = 0; }
+        player.lvPeak = Math.max(player.lvPeak || 1, player.level);
+        // Phong ấn của các map thuộc chương TRƯỚC coi như đã phá — người chơi tới đây là đã qua đó.
+        player.bossKills = player.bossKills || {};
+        for (const m in MAPS){
+          if (MAPS[m].reqMain && MAPS[m].reqMain < n && BOSS_DEFS[m])
+            player.bossKills[m] = BOSS_DEFS[m].thuve.map(t => t.id);
+        }
+        calcDerived();
+        cheatLog(`NV${n}/${QUESTS.length} — ${q.chapter || ''} · ${q.name} (cấp ${q.lv}, gặp ${q.npc || '?'})`, '#8fd18f');
+        break;
+      }
+      case 'chuong': {                   // /chuong — liệt kê mốc nhiệm vụ của từng chương
+        let ch = null;
+        QUESTS.forEach((q, i) => {
+          if (q.chapter && q.chapter !== ch){ ch = q.chapter;
+            cheatLog(`  /quest ${i + 1}  →  ${ch} (cấp ${q.lv})`, '#cfe8ff'); }
+        });
+        cheatLog(`  /quest all  →  xong hết ${QUESTS.length} nhiệm vụ`, '#7ecbff');
+        return;
+      }
+      case 'taisinh': {                  // /taisinh <n> — số vòng Tái Sinh, và điểm đi kèm
+        const n = clamp(Math.round(num(1, 1)), 0, 99);
+        player.resetCount = n;
+        player.lvPeak = Math.max(player.lvPeak || 1, MAX_LV);
+        player.mOpened = player.mOpened || n > 0;
+        const them = MASTERY_PER_RESET * n;
+        player.mpts = (player.mpts || 0) + them;
+        player.mptsTotal = (player.mptsTotal || 0) + them;
+        calcDerived();
+        cheatLog(`Tái Sinh ×${n} → +${n * 2}% Công/Mạng vĩnh viễn · +${them} điểm ${MASTERY_NAME}`, '#ffd76a');
+        break;
+      }
+      case 'tang': {                     // /tang <n> — nhảy thẳng tới tầng n của Tầng Sâu
+        const n = clamp(Math.round(num(1, 10)), 1, 999);
+        if (!DEEP) deepStart();
+        if (!DEEP){ cheatLog('Không vào được Tầng Sâu (cần cấp 20).', '#ff7a6a'); return; }
+        let canh = 0;
+        while (DEEP && DEEP.floor < n && canh++ < 1000){
+          const truoc = DEEP.floor; deepNextFloor();
+          if (!DEEP || DEEP.floor === truoc) break;   // không nhích được thì dừng, đừng treo game
+        }
+        cheatLog('Tầng Sâu: tầng ' + (DEEP ? DEEP.floor : 0), '#c07fe0'); return;
+      }
       case 'obstacles': window.SHOW_OBSTACLES = !window.SHOW_OBSTACLES; cheatLog('Debug obstacle overlay: ' + (window.SHOW_OBSTACLES ? 'ON' : 'OFF'), '#cfe8ff'); return;
       default: cheatLog('Lệnh lạ "' + cmd + '" — gõ /help', '#ff7a6a'); return;
     }
