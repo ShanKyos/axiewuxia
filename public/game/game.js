@@ -1091,12 +1091,143 @@ function drawDgnWalls(){
 // pixel nào. Thứ mắt nhìn thấy là vật cản và thứ game thực thi là hai chuyện khác hẳn nhau, và
 // đó mới là gốc của cảm giác "trôi tuột", không phải chuyện map to hay nhỏ.
 // Chỉ dựng lại khi decor đổi (đổi map) — không tính lại mỗi khung hình.
+// ═══ MÉP VÙNG CHẶN — dựng vật để người chơi THẤY chỗ nào không đi được ═══
+// Vật cản tĩnh (hồ, vách núi, tường thành) chỉ tồn tại trong MAP_OBSTACLES: mắt nhìn thấy tranh
+// nền, còn ranh giới chặn thật thì vô hình và không trùng khít với tranh. Người chơi bấm đi rồi
+// thấy nhân vật khựng lại giữa đồng trống — không biết mình vướng cái gì.
+// Nay rải một hàng đá dọc ĐÚNG đường biên chặn: nhìn là biết tới đó là hết đường.
+let _rimPts = [], _rimKey = '';   // khoá theo curMap — đổi map là tự dựng lại
+function rimBuild(){
+  if (_rimKey === curMap) return;
+  _rimKey = curMap; _rimPts = [];
+  const md = MAPS[curMap];
+  if (md && md.dungeon) return;   // phó bản đã có tường đá vẽ sẵn (drawDgnWalls)
+  const STEP = 46;
+  const push = (x, y) => { _rimPts.push({ x, y }); };
+  for (const o of (MAP_OBSTACLES[curMap] || [])){
+    if (o.wd){
+      const per = 2*(o.wd + o.ht), n = Math.max(4, Math.round(per/STEP));
+      for (let i = 0; i < n; i++){
+        const t = i/n*per;
+        if (t < o.wd) push(o.x + t, o.y);
+        else if (t < o.wd + o.ht) push(o.x + o.wd, o.y + (t - o.wd));
+        else if (t < 2*o.wd + o.ht) push(o.x + o.wd - (t - o.wd - o.ht), o.y + o.ht);
+        else push(o.x, o.y + o.ht - (t - 2*o.wd - o.ht));
+      }
+    } else {
+      const per = Math.PI*(3*(o.rx + o.ry) - Math.sqrt((3*o.rx + o.ry)*(o.rx + 3*o.ry)));
+      const n = Math.max(10, Math.round(per/STEP));
+      for (let i = 0; i < n; i++){ const a = i/n*Math.PI*2; push(o.x + Math.cos(a)*o.rx, o.y + Math.sin(a)*o.ry); }
+    }
+  }
+  // Chỉ giữ mép NGOÀI: điểm nào bốn phía đều nằm trong vùng chặn thì nó là mép trong của hai
+  // khối chồng nhau (vd tường thành ghép lại) — vẽ ra chỉ là hàng đá mọc giữa lòng núi.
+  _rimPts = _rimPts.filter(pt => pt.x > 6 && pt.y > 6 && pt.x < MAP.w - 6 && pt.y < MAP.h - 6
+    && [[22,0],[-22,0],[0,22],[0,-22]].some(([dx, dy]) => !inObstacle(curMap, pt.x + dx, pt.y + dy, 6)));
+  // hình dạng cố định theo toạ độ — không đổi giữa các khung, không cần lưu seed
+  for (const pt of _rimPts){
+    const h = Math.abs(Math.sin(pt.x*12.9898 + pt.y*78.233) * 43758.5453) % 1;
+    pt.s = 0.72 + h*0.55; pt.rot = h*6.283; pt.k = h;
+  }
+}
+function drawObstacleRim(){
+  rimBuild();
+  if (!_rimPts.length) return;
+  const md = MAPS[curMap] || {};
+  ctx.save();
+  for (const pt of _rimPts){
+    if (pt.x < camera.x - 60 || pt.x > camera.x + W + 60 || pt.y < camera.y - 60 || pt.y > camera.y + H + 60) continue;
+    const S = 9 * pt.s;
+    ctx.globalAlpha = 0.30;                                   // bóng đổ mềm dưới chân
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(pt.x, pt.y + S*0.42, S*1.05, S*0.42, 0, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.save(); ctx.translate(pt.x, pt.y); ctx.rotate(pt.rot);
+    ctx.fillStyle = md.patch || '#5a5448';                     // thân đá: lấy màu vệt đất của map
+    ctx.beginPath();
+    ctx.moveTo(-S, S*0.35); ctx.lineTo(-S*0.72, -S*0.5); ctx.lineTo(0, -S*0.78);
+    ctx.lineTo(S*0.75, -S*0.42); ctx.lineTo(S, S*0.35); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.22)';                   // mặt trên hứng sáng
+    ctx.beginPath();
+    ctx.moveTo(-S*0.66, -S*0.28); ctx.lineTo(0, -S*0.7); ctx.lineTo(S*0.6, -S*0.24);
+    ctx.lineTo(0, -S*0.04); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(-S*0.2, -S*0.1); ctx.lineTo(S*0.15, S*0.28); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+}
 let decorObs = [];
 function rebuildDecorObs(){
   navInvalidate();   // cây vừa đổi chỗ ⇒ lưới tìm đường cũ không còn đúng
   decorObs = decor.map(d => d.type === 'tree'
     ? { x:d.x, y:d.y, rx:10 + 8*d.s, ry:7 + 5*d.s }     // gốc cây: dẹt theo phối cảnh nhìn xuống
     : { x:d.x, y:d.y, rx:13*d.s,     ry:8*d.s });        // tảng đá
+}
+// ═══ CÂY/ĐÁ KHÔNG ĐƯỢC BỊT ĐƯỜNG ═════════════════════════════════════════
+// Danh sách "chừa trống" ở buildWorld() giữ decor cách xa ĐIỂM nội dung, nhưng không nói gì về
+// HÀNH LANG giữa chúng: ở Stormgate Pass, tường thành + núi bắc chỉ chừa một khe hẹp, và chỉ
+// cần vài gốc cây rơi đúng khe đó là cả nửa map bị cắt rời. Đo bằng đi thử: 1-2 trong 4 lượt
+// rải decor làm người chơi kẹt ngay gần điểm thả, cách bãi quái 1.900px.
+// Cách sửa: sau khi rải xong, tìm đường từ điểm thả tới từng điểm nội dung bằng BFS 0-1 (ô
+// trống giá 0, ô bị CHÍNH DECOR chặn giá 1, ô vật cản tĩnh cấm hẳn) rồi dọn đúng những gốc cây
+// nằm trên đoạn phải phá. Vật cản tĩnh không bao giờ bị đụng tới, nên bố cục map giữ nguyên.
+function decorUnblock(){
+  const md = MAPS[curMap]; if (!md || md.dungeon || !md.spawn) return;
+  const CELL = 40, cols = Math.ceil(MAP.w/CELL), rows = Math.ceil(MAP.h/CELL);
+  const idx = (x, y) => Math.min(rows-1, Math.max(0, Math.round(y/CELL))) * cols
+                      + Math.min(cols-1, Math.max(0, Math.round(x/CELL)));
+  // 0 = đi được · 1 = decor chặn (phá được) · 2 = vật cản tĩnh (không đụng)
+  const cell = new Uint8Array(cols*rows);
+  const _saved = decorObs; decorObs = [];                       // tạm bỏ decor để soi lớp tĩnh
+  for (let gy = 0; gy < rows; gy++) for (let gx = 0; gx < cols; gx++)
+    cell[gy*cols + gx] = inObstacle(curMap, gx*CELL + CELL/2, gy*CELL + CELL/2, 16) ? 2 : 0;
+  decorObs = _saved;
+  for (let gy = 0; gy < rows; gy++) for (let gx = 0; gx < cols; gx++){
+    const i = gy*cols + gx;
+    if (cell[i] === 0 && inObstacle(curMap, gx*CELL + CELL/2, gy*CELL + CELL/2, 16)) cell[i] = 1;
+  }
+  const dich = [];
+  for (const q of (md.packs || [])) dich.push({ x:q.x, y:q.y });
+  for (const n of NPCS) if (n.map === curMap) dich.push({ x:n.x, y:n.y });
+  for (const g of GATES) if (g.map === curMap) dich.push({ x:g.x, y:g.y });
+  for (const h of (HERB_SPOTS[curMap] || [])) dich.push({ x:h.x, y:h.y });
+  const bd = BOSS_DEFS[curMap];
+  if (bd){ for (const tv of (bd.thuve || [])) dich.push({ x:tv.x*MAP.w, y:tv.y*MAP.h });
+           if (bd.tranai) dich.push({ x:bd.tranai.x*MAP.w, y:bd.tranai.y*MAP.h }); }
+  const s0 = idx(md.spawn.x, md.spawn.y);
+  const phaBo = new Set();
+  for (let vong = 0; vong < 4; vong++){
+    // BFS 0-1 bằng hai đầu hàng đợi: bước sang ô trống nối đầu, bước sang ô decor nối đuôi
+    const cost = new Int32Array(cols*rows).fill(0x7fffffff), prev = new Int32Array(cols*rows).fill(-1);
+    const dq = [s0]; cost[s0] = 0;
+    let h = 0;
+    while (h < dq.length){
+      const c = dq[h++]; const cx = c % cols, cy = (c - cx)/cols;
+      for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nx = cx + dx, ny = cy + dy;
+        if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue;
+        const ni = ny*cols + nx;
+        if (cell[ni] === 2) continue;
+        const nc = cost[c] + (cell[ni] === 1 ? 1 : 0);
+        if (nc < cost[ni]){ cost[ni] = nc; prev[ni] = c; (nc === cost[c] ? dq.splice(h, 0, ni) : dq.push(ni)); }
+      }
+    }
+    // Mở đường cho MỌI đích còn phải phá, không chỉ đích tệ nhất: sửa từng cái một thì bốn vòng
+    // không đủ cho map nhiều ngõ cụt (đo được 1/4 lượt ở Stormgate Pass vẫn còn một NPC kẹt).
+    let con = 0;
+    for (const d of dich){
+      const i = idx(d.x, d.y);
+      if (cell[i] === 2 || cost[i] === 0 || cost[i] === 0x7fffffff) continue;
+      con++;
+      for (let c = i; c !== -1; c = prev[c]) if (cell[c] === 1){ phaBo.add(c); cell[c] = 0; }
+    }
+    if (!con) break;                                            // mọi đích đã thông
+  }
+  if (!phaBo.size) return;
+  const truoc = decor.length;
+  decor = decor.filter(d => !phaBo.has(idx(d.x, d.y)));
+  if (decor.length !== truoc) rebuildDecorObs();
 }
 function obstaclesOf(mapId){
   const md = MAPS[mapId];
@@ -1299,7 +1430,7 @@ function setMoveTarget(x, y){
   const nf = inObstacle(curMap, x, y, 14) ? nearestFree(curMap, x, y) : { x, y };
   moveTarget = { x: nf.x, y: nf.y };
   movePlanClear(); player._planD = null;   // đích mới ⇒ kế hoạch cũ vô nghĩa
-  player._moveRetry = 0;   // đích mới → đếm lại số lần gỡ kẹt
+  player._moveRetry = 0; player._planI = 0;   // đích mới → đếm lại số lần gỡ kẹt & tiến độ theo kế hoạch
   addEffect({ type:'ring', x: moveTarget.x, y: moveTarget.y, r:20, color:'#9fd8ff' });
 }
 // Bấm/chuột phải trúng NPC: trả về NPC thay vì chỉ tọa độ, để walkToNpc() có thể tự mở lời thoại
@@ -1369,6 +1500,78 @@ function drawObstaclesDebug(){
       ctx.strokeRect(gx+1, gy+1, TILE-2, TILE-2);
     }
   }
+  ctx.restore();
+}
+// Cổng Vực bị phong ấn tới khi hạ đủ 3 Vệ Binh Trụ (xem update()). Trước đây nó CHỈ là một
+// phép đẩy ngược trong update() cộng một banner 4 giây một lần: người chơi thấy nhân vật khựng
+// lại giữa bãi đất trống, không hiểu vướng gì — đúng nghĩa tường vô hình. Nay vẽ hẳn vòng phong
+// ấn, ba trụ đá quanh vòng (trụ đã phá thì tắt), và ghi rõ còn mấy trụ.
+const TRANAI_SEAL_R = 342;
+function tranAiSeal(){
+  const bd = BOSS_DEFS[curMap];
+  if (!bd || !bd.tranai || !player) return null;
+  const kills = (player.bossKills && player.bossKills[curMap]) || [];
+  const con = bd.thuve.filter(tv => !kills.includes(tv.id));
+  if (!con.length) return null;   // đã phá đủ ba trụ — cổng mở, không vẽ gì
+  return { x: bd.tranai.x*MAP.w, y: bd.tranai.y*MAP.h, con: con.length, tong: bd.thuve.length, ten: bd.tranai.name };
+}
+function drawTranAiSeal(){
+  const s = tranAiSeal(); if (!s) return;
+  if (s.x < camera.x - TRANAI_SEAL_R - 80 || s.x > camera.x + W + TRANAI_SEAL_R + 80 ||
+      s.y < camera.y - TRANAI_SEAL_R - 80 || s.y > camera.y + H + TRANAI_SEAL_R + 80) return;
+  const t = performance.now()/1000;
+  ctx.save();
+  // mặt phong ấn: quầng tím mờ phủ trong vòng, đậm dần ra mép
+  const g = ctx.createRadialGradient(s.x, s.y, TRANAI_SEAL_R*0.55, s.x, s.y, TRANAI_SEAL_R);
+  g.addColorStop(0, 'rgba(150,90,220,0)'); g.addColorStop(1, 'rgba(150,90,220,.20)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s.x, s.y, TRANAI_SEAL_R, 0, 7); ctx.fill();
+  ctx.strokeStyle = 'rgba(192,127,224,.85)'; ctx.lineWidth = 3;
+  ctx.setLineDash([16, 12]); ctx.lineDashOffset = -t*18;
+  ctx.beginPath(); ctx.arc(s.x, s.y, TRANAI_SEAL_R, 0, 7); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.strokeStyle = 'rgba(192,127,224,.35)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(s.x, s.y, TRANAI_SEAL_R - 9, 0, 7); ctx.stroke();
+  // ba trụ đá trên vòng — trụ chưa phá thì sáng và đập nhịp, trụ đã phá thì gãy và tối
+  for (let i = 0; i < s.tong; i++){
+    const a = -Math.PI/2 + i/s.tong*Math.PI*2;
+    const px = s.x + Math.cos(a)*TRANAI_SEAL_R, py = s.y + Math.sin(a)*TRANAI_SEAL_R;
+    const con = i < s.con;
+    const nhip = con ? 0.75 + 0.25*Math.sin(t*2.4 + i) : 1;
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.beginPath(); ctx.ellipse(px, py + 6, 15, 6, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = con ? '#3a2a52' : '#2a2630';
+    ctx.beginPath();
+    ctx.moveTo(px - 11, py + 6); ctx.lineTo(px - 8, py - (con ? 34 : 14));
+    ctx.lineTo(px + 8, py - (con ? 34 : 14)); ctx.lineTo(px + 11, py + 6); ctx.closePath(); ctx.fill();
+    if (con){
+      ctx.globalAlpha = nhip;
+      ctx.fillStyle = '#c07fe0';
+      ctx.beginPath(); ctx.arc(px, py - 22, 5.5, 0, 7); ctx.fill();
+      ctx.strokeStyle = 'rgba(192,127,224,.7)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(px, py - 34); ctx.lineTo(px, py + 2); ctx.stroke();
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.strokeStyle = 'rgba(90,84,100,.9)'; ctx.lineWidth = 2;   // trụ gãy: vết nứt chéo
+      ctx.beginPath(); ctx.moveTo(px - 9, py - 4); ctx.lineTo(px + 9, py - 12); ctx.stroke();
+    }
+  }
+  // Nhãn đặt ở CHỖ NGƯỜI CHƠI CHẠM VÀO vòng, không phải đỉnh vòng: vòng rộng 342px nên đỉnh của
+  // nó thường nằm ngoài màn hình hoặc lọt sau bảng nhiệm vụ — người chơi đâm vào tường mà dòng
+  // giải thích lại ở một góc khác.
+  const _a = Math.atan2(player.y - s.y, player.x - s.x);
+  // Neo ĐÚNG lên vòng rồi nhấc cao 108px (qua khỏi đầu nhân vật cao ~60px): người chơi hoặc đứng ngay trên vòng (bị đẩy ra) hoặc ở
+  // ngoài nó, nên chữ luôn nằm phía trên/phía trong, không đè lên nhân vật.
+  let lx = s.x + Math.cos(_a)*TRANAI_SEAL_R, ly = s.y + Math.sin(_a)*TRANAI_SEAL_R - 108;
+  lx = clamp(lx, camera.x + 180, camera.x + W - 320);   // chừa lề trái/phải cho HUD
+  ly = clamp(ly, camera.y + 70, camera.y + H - 150);
+  ctx.font = 'bold 15px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
+  ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.lineWidth = 4;
+  const txt = `⛨ PHONG ẤN NĂM TRỤ · còn ${s.con}/${s.tong} Trụ Khóa`;
+  ctx.strokeText(txt, lx, ly);
+  ctx.fillStyle = '#d8a8f0'; ctx.fillText(txt, lx, ly);
+  ctx.font = '12px "Be Vietnam Pro", sans-serif'; ctx.fillStyle = 'rgba(216,168,240,.85)';
+  const sub = `Hạ hết Vệ Binh Trụ mới vào được ${s.ten}`;
+  ctx.strokeText(sub, lx, ly + 17); ctx.fillText(sub, lx, ly + 17);
   ctx.restore();
 }
 function drawAiPasses(){
@@ -5832,6 +6035,7 @@ function buildWorld(){
     decor = decor.filter(d => !inObstacle(curMap, d.x, d.y, 4));
   }
   rebuildDecorObs();
+  decorUnblock();  // và nếu vẫn bịt mất một lối đi thì dọn đúng mấy gốc cây đang chắn
   spawnAmbients(); // hạt môi trường + cỏ mặt đất theo chủ đề bản đồ
   spawnHorses(); // GDD Đợt 2 B5: Tuấn Mã Hoang
   // Ma Tôn Giáng Thế & Truy Nã Lệnh: tái xuất hiện khi người chơi vào đúng bản đồ
@@ -8026,16 +8230,36 @@ function update(dt){
       // nhiều giây liền không tiến gần hơn thì huỷ đích, báo người chơi thử điểm khác thay vì kẹt mãi.
       moveProgressT += dt;
       if (moveProgressT > 2.6){   // 1,3s là quá gắt sau khi cây/đá chặn thật — né cục bộ cần thêm nhịp
-        if (_mtd > moveProgressD - 24){
+        // "Có tiến triển" phải đo THEO KẾ HOẠCH, không theo đường chim bay tới đích. Vòng qua một
+        // bức tường thì đoạn đầu BẮT BUỘC đi xa đích ra — đo bằng khoảng cách thẳng thì mấy giây
+        // đó bị chấm là "đứng im" và đích bị huỷ oan, dù nhân vật đang chạy đúng đường. Đây là
+        // nguyên nhân của 2/388 tuyến còn hỏng sau khi địa hình đã bảo đảm liên thông: cả hai đều
+        // là đích nằm sau một khối chắn phải vòng.
+        const _tienTheoPlan = movePlan && movePlanI > (player._planI || 0);
+        player._planI = movePlanI;
+        if (!_tienTheoPlan && _mtd > moveProgressD - 24){
           // Kẹt lần đầu thì ĐỪNG bỏ cuộc ngay: né cục bộ hay chui vào túi giữa mấy gốc cây, chỉ
           // cần vứt waypoint cũ và tính lại từ vị trí mới là thoát. Đo được: bỏ cuộc ngay làm
           // 1/3 số lần bấm đi xa bị huỷ giữa đường sau khi cây bắt đầu chặn thật.
           player._moveRetry = (player._moveRetry || 0) + 1;
+          // Kẹt lần đầu thường KHÔNG phải vì đường sai mà vì nhân vật bị ép sát một gốc cây ngay
+          // cạnh nút kế tiếp: nút đó không bao giờ vào nổi trong 22px nên chuỗi nút đứng luôn.
+          // Nhảy vài nút về phía trước để thoát cái nút hỏng, giữ nguyên kế hoạch đang đi.
+          if (movePlan && player._moveRetry < 3){
+            movePlanI = Math.min(movePlan.length - 1, movePlanI + 5);
+            moveWaypoint = null;
+          } else { movePlanClear(); moveWaypoint = null; }   // ép tính lại đường ngay khung sau
+          // Địa hình nay LUÔN liên thông (xem decorUnblock: cây/đá bịt lối đã bị dọn ngay lúc
+          // dựng map), nên "không nhích được" gần như luôn là bộ bám mép đi vào túi lõm chứ
+          // không phải đích thật sự không tới được. Bỏ cuộc ở lần thứ 3 vì thế là bỏ oan — đo
+          // được vẫn còn 2/485 tuyến hỏng kiểu này. Từ lần 3 ép đi bằng BFS; chỉ khi CHÍNH BFS
+          // cũng không tìm ra đường mới báo người chơi.
           if (player._moveRetry >= 3){
-            addFloat(player.x, player.y-40, 'Không tìm được đường tới đó — hãy thử bấm điểm gần hơn!', '#ff9a6a', 12);
-            moveTarget = null; moveWaypoint = null; movePlanClear(); npcTalkTarget = null; player._moveRetry = 0;
-          } else {
-            movePlanClear(); moveWaypoint = null;   // ép tính lại đường ngay khung sau
+            movePlanMake(moveTarget.x, moveTarget.y, true);
+            if (!movePlan || player._moveRetry >= 6){
+              addFloat(player.x, player.y-40, 'Không tìm được đường tới đó — hãy thử bấm điểm gần hơn!', '#ff9a6a', 12);
+              moveTarget = null; moveWaypoint = null; movePlanClear(); npcTalkTarget = null; player._moveRetry = 0;
+            }
           }
         } else player._moveRetry = 0;
         moveProgressT = 0; moveProgressD = _mtd;
@@ -8941,7 +9165,7 @@ function render(){
   ctx.globalAlpha = 1;
   drawTufts(); // cỏ/vết mực trên mặt đất — phá sự phẳng của nền
   drawWaterFx(); // gợn sóng & lấp lánh mặt nước (Gói F)
-  drawAiPasses(); drawBeacon(); drawObstaclesDebug(); // GDD Đợt 2 A/B2
+  drawTranAiSeal(); drawAiPasses(); drawBeacon(); drawObstaclesDebug(); // GDD Đợt 2 A/B2
   drawMoveTargetPath(); // Click-to-move: đường preview né vật cản + đích đến
 
   // Đào Hoa Đảo: cụm hoa đào tĩnh rụng dưới gốc cây (seed theo vị trí cây)
@@ -9009,6 +9233,8 @@ function render(){
     drawCityHaze();           // lớp sương/tàn lửa ma mị phủ lên trên (vẽ sau cùng)
   }
   drawGates();
+
+  drawObstacleRim();   // hàng đá dọc mép vùng chặn — vẽ trước decor để cây/đá rải phủ lên tự nhiên
 
   // decor (behind entities)
   const sortedDecor = decor.filter(d=>d.x>camera.x-80&&d.x<camera.x+W+80&&d.y>camera.y-120&&d.y<camera.y+H+80);
@@ -20320,6 +20546,13 @@ function drawMinimapStatic(mw, mh, sx, sy, md){
     sc.strokeStyle = 'rgba(168,118,58,.85)'; sc.lineWidth = 1.5;
     sc.strokeRect(CITY_WALL.x1*sx, CITY_WALL.y1*sy, (CITY_WALL.x2-CITY_WALL.x1)*sx, (CITY_WALL.y2-CITY_WALL.y1)*sy);
   }
+  // Mép vùng chặn: chấm xám dọc đúng đường biên đi không qua được — nhìn minimap là thấy hình
+  // dạng hồ/vách núi, khỏi phải đi tới nơi mới biết cụt đường.
+  {
+    rimBuild();
+    sc.fillStyle = 'rgba(60,54,44,.65)';
+    for (const pt of _rimPts) sc.fillRect(pt.x*sx - 1, pt.y*sy - 1, 2, 2);
+  }
   for (const g of GATES){
     if (g.map !== curMap) continue;
     sc.fillStyle = g.portal ? '#b08ae8' : '#d8963a';
@@ -20329,6 +20562,23 @@ function drawMinimapStatic(mw, mh, sx, sy, md){
   }
   _miniStaticCache = off; _miniStaticKey = key;
   return off;
+}
+// Vòng phong ấn vẽ ở lớp ĐỘNG của minimap, không ở lớp tĩnh: nó tắt ngay khi hạ đủ ba Vệ Binh
+// Trụ, mà lớp tĩnh chỉ dựng lại khi đổi map.
+function drawMiniSeal(sc, sx, sy){
+  const s = tranAiSeal(); if (!s) return;
+  sc.save();
+  sc.strokeStyle = 'rgba(192,127,224,.9)'; sc.lineWidth = 1.2;
+  sc.setLineDash([3, 3]);
+  sc.beginPath(); sc.ellipse(s.x*sx, s.y*sy, TRANAI_SEAL_R*sx, TRANAI_SEAL_R*sy, 0, 0, 7); sc.stroke();
+  sc.setLineDash([]);
+  sc.fillStyle = '#c07fe0';
+  for (let i = 0; i < s.tong; i++){
+    const a = -Math.PI/2 + i/s.tong*Math.PI*2;
+    sc.globalAlpha = i < s.con ? 1 : 0.3;
+    sc.beginPath(); sc.arc((s.x + Math.cos(a)*TRANAI_SEAL_R)*sx, (s.y + Math.sin(a)*TRANAI_SEAL_R)*sy, 2, 0, 7); sc.fill();
+  }
+  sc.restore();
 }
 function drawMinimap(){
   if (!miniCtx || !miniCvs) return;
@@ -20341,6 +20591,7 @@ function drawMinimap(){
   const md = mapDef();
   const mc = miniCtx;
   mc.drawImage(drawMinimapStatic(mw, mh, sx, sy, md), 0, 0);
+  drawMiniSeal(mc, sx, sy);   // vòng Phong Ấn Năm Trụ (nếu còn khoá)
   // NPC — chấm vàng viền trắng + tên + dấu nhiệm vụ (! vàng = trả được, … xanh = có NV)
   const qNow = (typeof currentQuest === 'function') ? currentQuest() : null;
   const mapNpcs = NPCS.filter(n => n.map === curMap);
@@ -20524,7 +20775,10 @@ NPCS.push(
     lore:'"Ba năm nằm đây đếm quân địch. Tin xấu: ta đếm hết rồi, và con số đó không cứu được ai."' },
   { id:'laotuong',  name:'Lão Tướng Brann',      map:'nhanmon',    x:520,  y:950,  img:'assets/npcs/laotuong.png',  talk:'quest',
     lore:'"Ta giữ cửa ải này từ trước khi bầu trời nứt. Giờ thứ ta phải giữ lại nằm ở phía bên kia."' },
-  { id:'traichu',   name:'Trại Chủ Mục Đồng',      map:'ngoai',      x:1050, y:700,  img:'assets/npcs/traichu.png', talk:'stable',
+  // (1050,700) nằm LỌT trong gờ đá tây của Petalshade Outskirts ({x:820,y:660,wd:380,ht:110}) —
+  // đi thử 4/4 lượt đều khựng lại cách 72px, tức là Trại Ngựa không bao giờ mở được. Dời
+  // xuống dưới chân gờ đá, vẫn cùng một khu.
+  { id:'traichu',   name:'Trại Chủ Mục Đồng',      map:'ngoai',      x:1050, y:860,  img:'assets/npcs/traichu.png', talk:'stable',
     lore:'"Tuấn mã hoang ngoài đồng kia đấy — rượt cho nó kiệt sức rồi bấm E mà bắt. Mã Thầu thu được dùng khi thăng giai thú cưỡi!"' }, // GDD Đợt 2 B5
 );
 NPCS.push(
