@@ -24458,9 +24458,9 @@ function drawMount(){
   // tên + vòng hào quang theo giai
   ctx.font = '10px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
   ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
-  ctx.strokeText('⚔ ' + t.name, mountObj.x, mountObj.y - 58);
+  ctx.strokeText('⚔ ' + t.name, mountObj.x, mountObj.y + 22);
   ctx.fillStyle = t.color;
-  ctx.fillText('⚔ ' + t.name, mountObj.x, mountObj.y - 58);
+  ctx.fillText('⚔ ' + t.name, mountObj.x, mountObj.y + 22);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
