@@ -138,7 +138,7 @@ function check(name, ok, extra){
     });
     d.curMap = 'towerarena';                                  // map đã bị xoá khỏi MAPS
     d.sideStates = { s_sys1: { st:'active', prog:0 }, s_sys6: { st:'done', prog:1 },
-                     s_b1: { st:'claimed', prog:1 } };        // s_b1 vẫn còn thật → phải giữ
+                     s_b6: { st:'claimed', prog:1 } };        // s_b6 vẫn còn thật → phải giữ (s_b1–s_b5 đã gỡ, trùng chính tuyến)
     return JSON.stringify(d);
   });
 
@@ -162,7 +162,7 @@ function check(name, ok, extra){
                         'herbCount','alchDay','alchCount','pillDmgT','pillDmgPct']
                         .every(k => player[k] === undefined),
       staleSideGone: !sideStates.s_sys1 && !sideStates.s_sys6,
-      realSideKept: !!sideStates.s_b1,
+      realSideKept: !!sideStates.s_b6,
       sideSlotsFree: sideActive().length,
       lv: player.level,
     };
