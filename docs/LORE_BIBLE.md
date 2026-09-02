@@ -1,3 +1,10 @@
+> ⚠ **TÀI LIỆU ĐÃ BỎ — ĐỪNG DÙNG.**
+> File này mô tả cốt truyện Sigil / Warden / Overlord, đã bị thay hẳn bằng canon
+> **Vaeldra — Morvahn — Năm Trụ Khoá**. Không một danh từ riêng nào trong đây còn đúng với game.
+> Canon hiện hành: `CLAUDE.md`, mục "Cốt truyện (canon)". Hiện trạng trong game và chỗ còn lệch:
+> `docs/KHAO_SAT_UX_COTTRUYEN.md`.
+> Giữ lại chỉ để tra lịch sử thiết kế.
+
 # Lore Bible — Axie Wuxia narrative rewrite
 
 This is the Phase 3 "World & story" pass the product proposal (`Axie_Wuxia_Product_Proposal.docx`)

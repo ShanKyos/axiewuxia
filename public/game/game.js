@@ -800,7 +800,7 @@ const MAPS = {
     ], duhiep: null },
   tuongduong: { name:'Lunaris City', min:1, range:'—', type:'safe', ground:'#d8ccb0', patch:'#7a6a4a',
     spawn:{ x:1300, y:1100 }, spawnFrom:{ ngoai:{ x:1300, y:1460 } }, city:true, trees:24, rocks:10,
-    desc:'Trung tâm mọi thứ — Chợ Đấu Giá, Lò Rèn Hoàng Gia, Dược Sư, Quán Trà. An toàn tuyệt đối: trong tường thành không có Chimera. Ra Cổng Nam để săn ở Outskirts.',
+    desc:'Cả khu phố Ardhaven bị vết nứt kéo sang, dân bản địa dựng lại quanh nó thành Lunaris City. Trong tường: Lò Rèn Hoàng Gia, Tiệm Thuốc, Vũ Khí Phường, Trà Quán, Sảnh Cầu May, Truy Nã Lệnh và Nhà Riêng. An toàn tuyệt đối — không Chimera nào vào được. Ra Cổng Nam để săn ở Outskirts.',
     packs: [], duhiep: null },
   ngoai: { name:'Petalshade Outskirts', min:10, range:'14 - 24', type:'safe', ground:'#ddd2ae', patch:'#7a7048',
     spawn:{ x:1300, y:330 }, spawnFrom:{ pb_ngoai:{ x:2000, y:1040 } }, reqMain:10, trees:56, rocks:22, herbs:true,
@@ -1795,16 +1795,30 @@ function drawGates(){
   }
 }
 const NPCS = [
-  { id:'truonglang', name:'Trưởng Làng', map:'daohoa', x:400, y:400, img:'assets/npcs/truonglang.png', talk:'quest' },
+  { id:'truonglang', name:'Trưởng Làng', map:'daohoa', x:400, y:400, img:'assets/npcs/truonglang.png', talk:'quest',
+    // Ông giao 9 trong 10 nhiệm vụ đầu và dẫn truyện gọi ông là người "nhặt ngươi về nuôi" —
+    // vậy mà suốt giờ chơi đầu tiên ông không có một câu nào.
+    lore:{
+      idle:  '"Ta vớt ngươi lên khi bầu trời còn đang nứt. Ngươi không nhớ gì — nhưng bầy nhỏ của ta thì nhớ mùi lửa đêm đó."',
+      offer: '"Cứ ở lại đã. Đảo này nuôi được thêm một miệng ăn, và ngươi chưa đủ sức trả ơn đâu."',
+      active:'"Việc ta nhờ vẫn còn đó. Đảo nhỏ thôi, ngươi không lạc được."',
+      done:  '"Về rồi. Ta nấu sẵn nồi cháo — ngồi xuống ăn trước đã, chuyện nói sau."' },
+    barks:['"Bầy nhỏ hôm nay không chịu ra khỏi tổ."','"Đảo này nuôi được ta ba đời, nuôi thêm ngươi có sao đâu."',
+           '"Đêm trời nứt, biển sáng như ban ngày."','"Ăn gì chưa? Hỏi thật đấy."'] },
   // QA rà soát NPC Lunaris City: Thương Nhân · Chợ Đấu Giá đã bị xoá — cả 3 món trong tiệm đều
   // trùng chỗ khác (Hồ Lô Thuốc = Dược Lão, Thiên Mệnh Phù = mua thẳng trong Rèn Luyện qua buyCharm()),
   // và "Chợ Đấu Giá" chưa từng có cơ chế đấu giá thật — chỉ là tiệm giá cố định như 3 tiệm kia.
   // Đá Thăng Cấp ×3 (món duy nhất không trùng) đã chuyển sang tiệm Dược Lão bên dưới.
-  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'tuongduong', x:1780, y:780, img:'assets/npcs/thoren.png', talk:'forge' },
+  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'tuongduong', x:1780, y:780, img:'assets/npcs/thoren.png', talk:'forge',
+    lore:'"Lò này cháy suốt từ hôm khu phố rơi qua. Ta không dám để nó tắt — sợ nhóm lại không được."',
+    barks:['"Búa này theo ta qua cả vết nứt."','"Đợi lò đỏ đã, đừng giục."',
+           '"Đồ hỏng thì mang đây, đừng vứt."','"Nghe tiếng thép là biết đồ thật hay giả."'] },
   // NV5 (cấp 5) bắt rèn +3, mà lò duy nhất nằm trong Lunaris City khoá tới NV10 — chính tuyến kẹt
   // cứng ở cấp 5, không có đường vòng. Bắt được qua chơi thử. Đặt một lò lưu vong ngay cạnh làng.
   { id:'thoren_dao', name:'Thợ Rèn Lưu Vong', map:'daohoa', x:520, y:560, img:'assets/npcs/thoren.png', talk:'forge',
-    lore:'"Lò của ta rơi qua vết nứt cùng ta. Còn đỏ lửa là còn rèn — đưa đồ đây."' },
+    lore:'"Lò của ta rơi qua vết nứt cùng ta. Còn đỏ lửa là còn rèn — đưa đồ đây."',
+    barks:['"Đảo này không có quặng, ta nấu lại đồ cũ."','"Còn đỏ lửa là còn rèn."',
+           '"Ngươi cầm kiếm sai tay rồi đấy."'] },
 ];
 const NPC_IMGS = {};
 for (const n of NPCS){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; }
@@ -5784,7 +5798,7 @@ function newPlayer(sectKey){
     bossPity: 0,                               // Pity đai: đếm Vệ Binh Trụ không ra Thần
     chinhPhat: { date:'', count:0 },           // Chinh Phạt Cổng Vực 1 lần/ngày
     bossKills: {},                             // { mapId: [bossId...] } — mở cổng ải
-    storySeen: {}, clues: [], storyFlags: {},  // Cốt truyện Ngũ Trụ
+    storySeen: {}, clues: [], storyFlags: {},  // Cốt truyện Năm Trụ Khoá
     charms: 0,                                 // Thiên Mệnh Phù (bảo hiểm rèn đồ)
     potions: 3, potionCd: 0,                   // P0: Hồ Lô Thuốc — hồi 40% máu, cd 20s, tối đa 5 lọ
     buffAtkT: 0,                             // Rượu Hổ Cốt — +12% công lực có thời hạn
@@ -6289,7 +6303,7 @@ function spawnBoss(){
   AudioSys.playBgm(BGM_BOSS); // Hoa Địa Li Lao vang lên — trận chiến sinh tử
 }
 
-// ═══════════ HỆ BOSS VÙNG & TRẤN ẢI (GDD Boss v2.1 + Cốt truyện Ngũ Trụ Khóa) ═══════════
+// ═══════════ HỆ BOSS VÙNG: VỆ BINH TRỤ & TƯỚNG QUÂN (GDD Boss v2.1 + Năm Trụ Khoá) ═══════════
 // QUY TẮC ĐÃ CHỐT — moves của boss ngoài map CHỈ được lấy từ năm chiêu cơ bản
 // vach/vong/xung/goi/cuong. Hai cơ chế nặng 'vogiap' và 'daovung' thuộc riêng boss PHÓ BẢN
 // (MOBS.boss_*), vì boss ngoài map thì đi ngang qua cũng gặp — nhét chú huỷ diệt vào đó là quá
@@ -7447,7 +7461,7 @@ function applyRewards(rw, m){
     if (!player.chinhPhat || player.chinhPhat.date !== _today) player.chinhPhat = { date:_today, count:0 };
     player.chinhPhat.count++;
     player.mats.anTranAi += rw.mats.anTranAi;
-    addFloat(m.x, m.y-106, '☬ ẤN TRẤN ẢI — Chinh Phạt hoàn thành (1/ngày)!', '#ffb15c', 15);
+    addFloat(m.x, m.y-106, '⚑ DẤU TƯỚNG QUÂN — Chinh Phạt hoàn thành (1/ngày)!', '#ffb15c', 15);
   }
 }
 
@@ -7562,7 +7576,7 @@ function killMob(m, source){
     zoneBanner = { text:'⚖ TRUY NÃ HOÀN THÀNH', sub:'Mục tiêu đã phục pháp — về Lunaris City gặp Bổ Đầu nhận Công Huân Lệnh!', color:'#e8b04a', t:5 };
     AudioSys.sfx('quest', 0.85); saveGame();
   }
-  // ── Boss Vùng/Cổng Vực: mở ải + manh mối + cờ cốt truyện (GDD Boss v2.1 / Ngũ Trụ Khóa) ──
+  // ── Boss Vùng/Cổng Vực: mở ải + manh mối + cờ cốt truyện (GDD Boss v2.1 / Năm Trụ Khoá) ──
   if (m.def.bossKind){
     const _bk = (player.bossKills[curMap] = player.bossKills[curMap] || []);
     if (!_bk.includes(m.def.bossId)){
@@ -7573,12 +7587,12 @@ function killMob(m, source){
     if (_bd){
       const doneTv = _bd.thuve.filter(tv => _bk.includes(tv.id)).length;
       if (m.def.bossKind === 'thuve'){
-        zoneBanner = { text:`⚔ THỦ VỆ BỊ HẠ — TRẬN NHÃN ${doneTv}/3`,
-          sub: doneTv >= 3 ? '☬ Cổng Vực đã mở! Cổng Vực chờ ở góc đông nam bản đồ.' : 'Hạ nốt Vệ Binh Trụ còn lại để mở Cổng Vực.',
+        zoneBanner = { text:`⚔ VỆ BINH TRỤ ${doneTv}/3 ĐÃ NGÃ`,
+          sub: doneTv >= 3 ? '⚑ Cổng Vực đã mở — chờ ở góc đông nam bản đồ.' : 'Hạ nốt Vệ Binh Trụ còn lại để mở Cổng Vực.',
           color:'#c07fe0', t:3.5 };
         AudioSys.sfx('quest', 0.8);
       } else {
-        zoneBanner = { text:`☬ TRẤN ẢI ${m.def.name.toUpperCase()} ĐÃ BỊ ĐÁNH BẠI!`,
+        zoneBanner = { text:`⚑ TƯỚNG QUÂN ${m.def.name.toUpperCase()} ĐÃ NGÃ XUỐNG`,
           sub:'Phong ấn nguyên tố vùng này tạm được giữ vững — phần thưởng Chinh Phạt đã trao.', color:'#ffb15c', t:4.5 };
         AudioSys.sfx('levelup', 0.9);
         player.storyFlags['ta_' + curMap] = true;
@@ -9686,7 +9700,7 @@ function render(){
   if (DEEP) drawDeepHUD();   // HUD Tầng Sâu: tầng hiện tại + kho tạm chưa vào túi
   { const _dl = el('deep-leave'); if (_dl) _dl.classList.toggle('hidden', !DEEP); }
 
-  // ☬ Cốt truyện: trời tối dần khi các Cổng Vực vỡ
+  // Cốt truyện: trời tối dần khi các Cổng Vực vỡ — mỗi Trụ Khoá gỡ xuống là vết nứt rộng thêm
   const _nTa = Object.keys(player.storyFlags || {}).filter(k => k.startsWith('ta_')).length;
   if (_nTa >= 3 && !SETTINGS.lowFx){ ctx.fillStyle = `rgba(8,6,20,${Math.min(0.18, 0.05 + _nTa * 0.018)})`; ctx.fillRect(0, 0, W, H); }
 
@@ -14598,7 +14612,7 @@ const CHAOS_RECIPES = [
       cost: [ chaosCost('Huyền Thiết', player.mat, m.r.tinh, '✦'),
               chaosCost('Mảnh Trang Bị', player.mats.manh, m.r.manh, '❖'),
               chaosCost('Tịch Ma Thạch', player.mats.tichMa, m.r.tichMa, '◆'),
-              chaosCost('Ấn Cổng Vực', player.mats.anTranAi, m.r.an, '☬'),
+              chaosCost('Ấn Cổng Vực', player.mats.anTranAi, m.r.an, '⚑'),
               chaosCost('Bạc', player.silver, m.r.silver, '◈') ].filter(c => c.need > 0),
       warn: m.r.rate < 100 ? 'Thất bại: giữ nguyên trang bị, chỉ mất nửa nguyên liệu.' : 'An toàn tuyệt đối.',
       charm:false }; },
@@ -16586,7 +16600,7 @@ function cheatHelp(){
     `/quest <1-${QUESTS.length}|all> — nhảy tới một nhiệm vụ chính tuyến · /chuong — xem mốc từng chương`,
     '/taisinh <n> — số vòng Tái Sinh (+2% Công/Mạng mỗi vòng) · /tang <n> — nhảy tới tầng n Tầng Sâu',
     '── thế giới ──',
-    '/kill [bán kính=350] — hạ quái quanh mình · /seal <0-7> — tiến độ Ngũ Trụ (7 = Kết Mở)',
+    '/kill [bán kính=350] — hạ quái quanh mình · /seal <0-7> — số Tướng Quân đã hạ (7 = Kết Mở)',
     '/time [ngày=10] — nhảy thời gian thế giới · /obstacles — lớp debug vùng chặn địa hình',
     '── tranh ──',
     `/art [lớp=${Object.keys(SPLASH_CFG).join('|')}] [mavuong] — mở tranh minh hoạ + chibi của lớp`,
@@ -16779,7 +16793,7 @@ window.cheatExec = function(raw){
         player.storyFlags = {};
         for (let i = 0; i < n; i++) player.storyFlags['ta_' + order[i]] = true;
         if (n >= 7){ player.storyFlags.ketMo = true; showKetMo(); }
-        cheatLog('Ngũ Trụ: ' + n + '/7 ấn đã vỡ.', '#e8b060'); break;
+        cheatLog(`Đã hạ ${n}/7 Tướng Quân · gỡ ${truDaGo()}/${TRU_TONG} Trụ Khoá.`, '#e8b060'); break;
       }
       case 'speed': {
         const mul = num(1, 1);
@@ -21291,48 +21305,154 @@ window.wipeSave = function(confirmed){
    ═══════════════════════════════════════════════════════════════ */
 
 // ---------- NPC mới theo vùng ----------
+// ── NPC cốt truyện ──────────────────────────────────────────────────────────
+// `lore` nhận BỐN câu thay vì một: idle / offer / active / done — xem npcLoi().
+// `trang` là ba trang thoại của LẦN GẶP ĐẦU, hiện một lần rồi thôi (player.gapNpc).
+// `barks` là câu NPC tự buông khi người chơi đi ngang, không bấm phím — xem drawNpc().
+//
+// Bảy người dẫn chương mỗi người gọi tên người trước, và Brann ở chương cuối gọi tên cả sáu:
+// trước đây mỗi người giữ đúng một chương rồi tắt hẳn, không ai nhắc tới ai.
 NPCS.push(
   { id:'duocsu',    name:'Dược Sư',              map:'daohoa',     x:560,  y:430,  img:'assets/npcs/duocsu.png',    talk:'quest',
-    lore:'"Thuốc hay cứu người, thuốc độc cũng cứu người — tùy ai dùng."' },
+    lore:{
+      idle:  '"Ta pha thuốc cho cả đảo này từ trước khi trời nứt. Giờ nửa số bệnh ta chữa không có trong sách nào cả."',
+      offer: '"Chưa tới lúc. Ngươi còn chưa đứng vững thì ta đưa thuốc cho ai uống?"',
+      active:'"Còn thiếu bao nhiêu? Đừng gật bừa — ta hỏi con số."',
+      done:  '"Được. Đặt xuống đây rồi ngồi nghỉ đi, ngươi run tay từ nãy giờ ta thấy hết."' },
+    barks:['"Rễ này mọc ngược từ hôm trời nứt."','"Ai ho ba ngày thì tới đây, đừng để tới ngày thứ tư."',
+           '"Thuốc hay cứu người, thuốc độc cũng cứu người — tuỳ ai dùng."','"Đừng giẫm lên luống kia."'] },
+
   { id:'quachtinh', name:'Trưởng Lão Rell',      map:'tuongduong', x:1300, y:722,  img:'assets/npcs/quachtinh.png', talk:'quest',
-    lore:'"Ta chỉ huy đội tiên phong vượt vết nứt. Sáu người theo ta. Ngươi là người duy nhất còn đứng."' },
+    lore:{
+      idle:  '"Ta chỉ huy đội tiên phong vượt vết nứt. Sáu người theo ta. Ngươi là người duy nhất còn đứng."',
+      offer: '"Ngồi xuống. Ngươi chưa đủ sức cho việc ta định giao, và ta đã chôn đủ người rồi."',
+      active:'"Đi đi. Ta không đi cùng được — chân ta để lại bên kia vết nứt rồi."',
+      done:  '"Ngươi về thật. Ta đã quen với việc người ta không về."' },
+    trang:[
+      '"Ngồi xuống đã. Ngươi vừa rơi qua một thứ mà phần lớn người rơi qua đều không dậy nổi."',
+      '"Vaeldra không cứu được mình, nên bẻ vết nứt sang một thế giới mà hải đồ ghi là vô chủ. Hải đồ sai. Chỗ này có người ở — có Axie ở — từ trước khi tổ tiên ta biết viết."',
+      '"Đội ta bảy người. Giờ còn ta với ngươi, mà ta thì không đứng dậy nổi nữa. Nên câu hỏi rơi hết vào ngươi: ngươi sang đây để sửa, hay để sống sót?"'],
+    chon:{ a:'"Để sửa."', b:'"Để sống sót đã, rồi tính."' },
+    barks:['"Bên kia vết nứt giờ mấy giờ rồi nhỉ."','"Sáu cái tên. Ta còn nhớ đủ sáu."',
+           '"Đừng gọi ta là chỉ huy nữa."','"Cái chân này báo trời sắp đổi."'] },
+
   { id:'monkhach',  name:'Trinh Sát Wren',       map:'tuongduong', x:1300, y:1120, img:'assets/npcs/monkhach.png',  talk:'quest',
-    lore:'"Ta sinh ra ở đây. Các ngươi thì rơi xuống đây. Nhớ cho kỹ sự khác nhau đó."' },
+    lore:{
+      idle:  '"Ta sinh ra ở đây. Các ngươi thì rơi xuống đây. Nhớ cho kỹ sự khác nhau đó."',
+      offer: '"Chưa. Ngươi đi theo ta bây giờ thì ta phải quay lại kéo ngươi ra."',
+      active:'"Đi men theo mép rừng, đừng cắt ngang. Chỗ giữa có thứ ta chưa đặt tên được."',
+      done:  '"Ngươi để ý được chỗ đó à. Vậy thì được — ta bắt đầu tin ngươi một chút."' },
+    trang:[
+      '"Rell bảo ngươi tới. Ông ấy tin người nhanh hơn ta nhiều."',
+      '"Ta không ghét người Vaeldra. Ta chỉ nhớ rất rõ là trước khi các ngươi tới, rừng ngoài kia không có thứ gì phun độc cả."',
+      '"Nhưng ngươi đang đứng đây thay vì ngồi trong thành, nên ta dẫn ngươi đi một chuyến. Chỉ một chuyến thôi."'],
+    barks:['"Gió đổi hướng từ trưa."','"Cổng Nam có dấu chân lạ, ba bộ."',
+           '"Ta đếm được mười bảy con hôm nay. Hôm qua mười hai."','"Đừng đứng dưới tàng cây đó."'] },
+
   { id:'daosi',     name:'Người Gác Rừng Corran', map:'chungnam',   x:520,  y:1420, img:'assets/npcs/daosi.png',     talk:'quest',
-    lore:'"Rừng này ta giữ ba đời rồi. Người Vaeldra các ngươi tới được một tháng đã đốt mất nửa."' },
+    lore:{
+      idle:  '"Rừng này ta giữ ba đời rồi. Người Vaeldra các ngươi tới được một tháng đã đốt mất nửa."',
+      offer: '"Về đi. Rừng này ăn thịt kẻ vào sớm."',
+      active:'"Còn thở là còn đi được. Trụ Thornwood nằm sâu hơn ngươi tưởng."',
+      done:  '"Xong rồi đấy. Ngươi thấy nhẹ người chứ gì. Ta thì không."' },
+    trang:[
+      '"Wren báo trước là có người sẽ tới. Cô ấy không nói người đó lại đi ầm ĩ thế này."',
+      '"Trụ Khoá thứ nhất nằm giữa rừng. Thủ Hộ Vaeldra đóng nó xuống để ghim miệng vết nứt, rồi Tướng Quân của Morvahn tới ngồi lên nó."',
+      '"Gỡ trụ thì ngươi đi tiếp được. Nhưng miệng vết nứt cũng há thêm một khúc. Ta nói trước để sau này ngươi đừng bảo không ai nói."'],
+    chon:{ a:'"Vậy vẫn gỡ."', b:'"Có cách nào khác không?"' },
+    barks:['"Cây này ta trồng năm mười lăm tuổi."','"Đất chỗ kia lún thêm ba tấc rồi."',
+           '"Chim không hót từ hôm trụ rung."','"Đi nhẹ thôi. Rừng đang nghe."'] },
+
   { id:'thumo',     name:'Sylas, Người Giữ Tổ',  map:'comoc',      x:520,  y:480,  img:'assets/npcs/thumo.png',     talk:'quest',
-    lore:'"Còn hai trăm quả trứng chưa nở. Ta ở lại vì thế. Ngươi ở lại vì cái gì?"' },
+    lore:{
+      idle:  '"Còn hai trăm quả trứng chưa nở. Ta ở lại vì thế. Ngươi ở lại vì cái gì?"',
+      offer: '"Đừng vào trong. Ngươi chưa đủ sức, mà trong đó không có chỗ để lùi."',
+      active:'"Nghe thấy tiếng gõ không? Đó là chúng nó gõ từ bên trong vỏ. Nhanh lên."',
+      done:  '"Ta đếm lại rồi. Vẫn còn một trăm chín mươi tư quả. Sáu quả kia… thôi."' },
+    trang:[
+      '"Corran gửi thư trước ngươi hai ngày. Ông ấy viết đúng bốn chữ: nó sẽ tới đây."',
+      '"Trụ Roost đóng thẳng xuống giữa ổ ấp. Khí Morvahn ngấm qua vỏ trứng — thứ nở ra không còn là Axie nữa. Chúng ta gọi chúng là Chimera vì phải gọi bằng một cái tên nào đó."',
+      '"Ta không cản ngươi gỡ trụ. Ta chỉ xin ngươi làm chuyện đó ở phía bên kia ổ ấp."'],
+    barks:['"Một trăm chín mươi tư."','"Quả này gõ được ba nhịp rồi."',
+           '"Đừng soi đèn vào tổ."','"Ta ngủ ba tiếng một ngày, đủ rồi."'] },
+
   { id:'ttmon',     name:'Liora, Ẩn Sĩ Frostmire', map:'tuyettinh',  x:520,  y:950,  img:'assets/npcs/ttmon.png',     talk:'quest',
-    lore:'"Mỗi sáng ta lại chép: hôm nay vale giống Lunacia ít hơn hôm qua một chút."' },
+    lore:{
+      idle:  '"Mỗi sáng ta lại chép: hôm nay thung lũng giống Lunacia ít hơn hôm qua một chút."',
+      offer: '"Ngồi cạnh lửa đã. Ra ngoài lúc này thì ta lại có thêm một dòng để chép."',
+      active:'"Đi theo vệt băng. Chỗ nào băng cong bất thường là chỗ đất đang bị viết lại."',
+      done:  '"Ta chép xong dòng hôm nay rồi. Lần đầu tiên nó không phải là một dòng buồn."' },
+    trang:[
+      '"Sylas nhắn rằng ngươi bước nhẹ hơn ông ấy tưởng. Ở chỗ ông ấy, đó là lời khen cao nhất."',
+      '"Băng ở đây không phải thời tiết. Nó là vết sẹo. Trụ Frostmire nằm dưới kia, và đất Lunacia quanh nó đang bị viết lại thành đất Vaeldra."',
+      '"Ta chép lại từng ngày để sau này còn có người biết chỗ này từng trông như thế nào. Ngươi gỡ trụ đi. Ta chép tiếp."'],
+    barks:['"Hôm nay thêm bốn tấc băng."','"Chữ ta viết đông cứng trước khi ráo mực."',
+           '"Ngươi nghe tiếng nứt dưới chân không?"','"Ngồi xuống, sưởi đã rồi đi."'] },
+
   { id:'noiung',    name:'Dax, Kẻ Do Thám',      map:'mongco',     x:520,  y:950,  img:'assets/npcs/noiung.png',    talk:'quest',
-    lore:'"Ba năm nằm đây đếm quân địch. Tin xấu: ta đếm hết rồi, và con số đó không cứu được ai."' },
+    lore:{
+      idle:  '"Ba năm nằm đây đếm quân địch. Tin xấu: ta đếm hết rồi, và con số đó không cứu được ai."',
+      offer: '"Nằm xuống. Ngươi đứng thế kia thì cả bình nguyên nhìn thấy."',
+      active:'"Bò, đừng đi. Bên kia gò có mắt."',
+      done:  '"Ngươi về được. Ta đã trừ sẵn ngươi ra khỏi bảng đếm rồi đấy."' },
+    trang:[
+      '"Liora báo ngươi sẽ tới. Bà ấy viết bằng mực, ta thì viết bằng than lên đá — nhưng cùng một tin."',
+      '"Tướng Quân ở đây không thèm giấu nữa. Hắn dựng lều ngay trên Trụ Ashmark, ngồi lên nó như ngồi lên ghế."',
+      '"Ta đếm được bốn nghìn hai trăm quân. Ngươi có một người. Đó là lý do ta vẫn nằm đây thay vì đánh."'],
+    chon:{ a:'"Vậy thì đánh đúng một chỗ."', b:'"Đưa ta bảng đếm."' },
+    barks:['"Bốn nghìn hai trăm mười một."','"Đừng gây tiếng động."',
+           '"Ba năm rồi ta chưa đứng thẳng lưng."','"Khói bên trái, đếm sau."'] },
+
   { id:'laotuong',  name:'Lão Tướng Brann',      map:'nhanmon',    x:520,  y:950,  img:'assets/npcs/laotuong.png',  talk:'quest',
-    lore:'"Ta giữ cửa ải này từ trước khi bầu trời nứt. Giờ thứ ta phải giữ lại nằm ở phía bên kia."' },
+    lore:{
+      idle:  '"Ta giữ cửa ải này từ trước khi bầu trời nứt. Giờ thứ ta phải giữ lại nằm ở phía bên kia."',
+      offer: '"Chưa. Ải này không nhận người chưa sẵn sàng — nhận rồi là ta phải chôn."',
+      active:'"Giữ phòng tuyến. Ta không cần ngươi thắng, ta cần ngươi còn đứng khi trời sáng."',
+      done:  '"Trụ cuối gãy rồi. Đừng nhìn ta như vậy — ngươi làm đúng thứ ngươi phải làm."' },
+    trang:[
+      '"Rell, Wren, Corran, Sylas, Liora, Dax. Sáu người đưa ngươi tới đây. Ta là người thứ bảy, và ta là người cuối."',
+      '"Trụ Stormgate là trụ thứ năm. Gỡ nó xuống thì đường tới Morvahn thông — nhưng đường đó thông cả hai chiều."',
+      '"Ta không bảo ngươi đừng gỡ. Ta chỉ muốn ngươi gỡ nó trong lúc còn tỉnh táo, chứ không phải trong lúc đang giận."'],
+    chon:{ a:'"Tôi tỉnh táo."', b:'"Sáu người kia sẽ nói gì?"' },
+    barks:['"Ải này chưa thủng lần nào."','"Đứng gác đủ lâu thì quên mất mình gác cái gì."',
+           '"Mài kiếm đi, đừng mài lời."','"Trời bên kia đỏ hơn hôm qua."'] },
+
   // (1050,700) nằm LỌT trong gờ đá tây của Petalshade Outskirts ({x:820,y:660,wd:380,ht:110}) —
   // đi thử 4/4 lượt đều khựng lại cách 72px, tức là Trại Ngựa không bao giờ mở được. Dời
   // xuống dưới chân gờ đá, vẫn cùng một khu.
   { id:'traichu',   name:'Trại Chủ Mục Đồng',      map:'ngoai',      x:1050, y:860,  img:'assets/npcs/traichu.png', talk:'stable',
-    lore:'"Tuấn mã hoang ngoài đồng kia đấy — rượt cho nó kiệt sức rồi bấm E mà bắt. Mã Thầu thu được dùng khi thăng giai thú cưỡi!"' }, // GDD Đợt 2 B5
+    lore:'"Tuấn mã hoang ngoài đồng kia đấy — rượt cho nó kiệt sức rồi bấm E mà bắt. Mã Thầu thu được dùng khi thăng giai thú cưỡi!"',
+    barks:['"Con nâu kia bướng nhất bầy."','"Rượt cho nó mệt, đừng rượt cho mình mệt."',
+           '"Cỏ ngoài này ngọt hơn cỏ trong thành."'] }, // GDD Đợt 2 B5
 );
 NPCS.push(
   { id:'duoclao', name:'Nhà Giả Kim · Tiệm Thuốc', map:'tuongduong', x:830, y:760, img:'assets/npcs/duoclao.png', talk:'shop',
-    lore:'"Thuốc hay cứu người — nhưng không trả tiền thì thuốc cũng hóa độc đấy."' },
+    lore:'"Thuốc hay cứu người — nhưng không trả tiền thì thuốc cũng hóa độc đấy."',
+    barks:['"Bình đỏ còn hàng, bình xanh hết."','"Đừng uống hai bình một lúc."','"Trả tiền rồi hẵng mở nút."'] },
   { id:'binhkhi', name:'Binh Khí Chủ · Vũ Khí Phường', map:'tuongduong', x:1770, y:1060, img:'assets/npcs/binhkhi.png', talk:'shop',
-    lore:'"Thép Ardhaven, rèn bên kia vết nứt. Hết lô này là hết, đừng hỏi thêm."' },
+    lore:'"Thép Ardhaven, rèn bên kia vết nứt. Hết lô này là hết, đừng hỏi thêm."',
+    barks:['"Lô này là lô cuối, ta nói thật đấy."','"Thép bên này mềm hơn, ta không nhận."','"Cầm thử đi, đừng ngắm."'] },
   { id:'trachu',  name:'Trà Quán Chủ', map:'tuongduong', x:980, y:1150, img:'assets/npcs/trachu.png', talk:'shop',
-    lore:'"Quán này rơi qua đây nguyên vẹn, cả ấm trà. Đời còn cho gì thì nhận nấy."' },
+    lore:'"Quán này rơi qua đây nguyên vẹn, cả ấm trà. Đời còn cho gì thì nhận nấy."',
+    barks:['"Cả cái quán rơi qua mà không vỡ một chén."','"Ngồi đi, ta rót."','"Ngoài kia ồn quá, trong này yên."'] },
   { id:'quangia', name:'Quản Gia · Nhà Riêng', map:'tuongduong', x:1590, y:1160, img:'assets/npcs/quangia.png', talk:'abode',
-    lore:'"Nhà đã dọn sạch — Đài Hội Lực và Vườn Thảo Dược chỉ còn chờ chủ nhân."' },
+    lore:'"Nhà đã dọn sạch — Đài Hội Lực và Vườn Thảo Dược chỉ còn chờ chủ nhân."',
+    barks:['"Nhà dọn xong từ sáng."','"Vườn sau cần người tưới."','"Chủ nhân về là bếp có lửa ngay."'] },
   { id:'bodau', name:'Bổ Đầu · Truy Nã Lệnh', map:'tuongduong', x:1600, y:690, img:'assets/npcs/bodau.png', talk:'trunya',
-    lore:'"Hội Đồng Lunaris treo thưởng lũ Chimera lộng hành — mỗi ngày một tên. Làm xong, đến Sảnh Cầu May thử vận."' },
+    lore:'"Hội Đồng Lunaris treo thưởng lũ Chimera lộng hành — mỗi ngày một tên. Làm xong, đến Sảnh Cầu May thử vận."',
+    barks:['"Lệnh hôm nay dán rồi đấy."','"Một ngày một tên, không hơn."','"Mang đầu về, đừng mang chuyện về."'] },
   { id:'thantoan', name:'Thương Nhân Vận May · Sảnh Cầu May', map:'tuongduong', x:820, y:1040, img:'assets/npcs/thantoan.png', talk:'vanduyen',
-    lore:'"Một lệnh đổi một lượt quay. Tỉ lệ ta dán ngay trên vách — không giấu, cũng không hứa thêm gì."' },
+    lore:'"Một lệnh đổi một lượt quay. Tỉ lệ ta dán ngay trên vách — không giấu, cũng không hứa thêm gì."',
+    barks:['"Tỉ lệ dán trên vách kia kìa."','"Ta không hứa gì cả, ta chỉ quay."','"Người vừa nãy quay chín lượt."'] },
   { id:'vandai', name:'Skyreach Ledge · Vực Thẳm', map:'chungnam', x:2300, y:350, img:'assets/npcs/vachda.png', talk:'tenui',
-    lore:'"Vách mây ngàn trượng — kẻ liều mạng nhảy xuống, kẻ sợ chết quay đầu."' },
+    lore:'"Vách mây ngàn trượng — kẻ liều mạng nhảy xuống, kẻ sợ chết quay đầu."',
+    barks:['"Nhìn xuống trước, rồi hẵng quyết."','"Dưới đó có gì thì ta không xuống bao giờ."'] },
   { id:'doantruongnhai', name:'Sorrowfall Cliff · Vực Thẳm', map:'tuyettinh', x:350, y:1550, img:'assets/npcs/vachda.png', talk:'tenui',
-    lore:'"Vực sâu này đã nuốt chửng không biết bao kẻ — dưới đáy, kẻ may mắn sẽ đổi đời."' },
+    lore:'"Vực sâu này đã nuốt chửng không biết bao kẻ — dưới đáy, kẻ may mắn sẽ đổi đời."',
+    barks:['"Gió dưới đáy thổi ngược lên."','"Kẻ may đổi đời, kẻ rủi đổi chỗ nằm."'] },
   { id:'dinhbiennhai', name:'Frontier\'s Edge · Vực Thẳm', map:'nhanmon', x:2250, y:1500, img:'assets/npcs/vachda.png', talk:'tenui',
-    lore:'"Gió biên thùy cắt thịt — vận may chỉ dành cho kẻ dám nhảy."' },
+    lore:'"Gió biên thùy cắt thịt — vận may chỉ dành cho kẻ dám nhảy."',
+    barks:['"Gió ở đây cắt được da."','"Nhảy thì nhảy, đừng đứng ngó."'] },
 );
 for (const n of NPCS){ if (!NPC_IMGS[n.id]){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; } }
 function npcName(id){ const n = NPCS.find(x => x.id === id); return n ? n.name : 'Trưởng Làng'; }
@@ -21457,6 +21577,10 @@ const SIDE_QUESTS = [
   // ── Cầu nối cốt truyện — dẫn người chơi qua từng vùng mới, không đánh quái lặp lại ──
   // s_b1→s_b5 (5 phụ tuyến "cầu nối") đã bỏ: mỗi cái trùng 100% với NV mở chương ngay sau, nhận
   // được TRƯỚC khi vào được map đích, giá trị dạy = 0. Chơi thử chấm "bỏ" cả năm.
+  // Dược Sư trước đây là NPC DUY NHẤT bấm E vào mà không có việc gì làm: talk:'quest' nhưng
+  // không nhiệm vụ nào trỏ tới ông. Petalshade Isle đã có sẵn điểm thảo dược, nên cho ông
+  // đúng cái nghề của mình.
+  { id:'s_duocsu', npc:'duocsu', map:'daohoa', reqLv:4, reqMain:3, name:'Thuốc Cho Cả Đảo', desc:'Khí Morvahn làm bệnh mới mọc nhanh hơn thuốc cũ. Hái 5 Thảo Dược quanh Petalshade Isle (đứng gần rồi bấm J) mang về cho Dược Sư.', type:'collect', need:5, rew:{xp:520, silver:120, mat:1} },
   { id:'s_b6', npc:'laotuong',  map:'tuongduong', reqLv:115, reqMain:33, name:'Báo Tin Thắng Trận',     desc:'Về Lunaris City báo cho Trưởng Lão Rell tin cửa ải đã giữ vững.', type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:55000, silver:3500} },
 ];
 
@@ -21766,7 +21890,7 @@ window.enterBossStage = function(mapId, bossId){
 };
 
 // ---------- Danh hiệu kết thúc chính tuyến ----------
-TITLES.push({ id:'mochiton', name:'Kẻ Khép Vết Nứt', color:'#ffd76a',
+TITLES.push({ id:'mochiton', name:'Kẻ Mở Trụ Cuối', color:'#ffd76a',
   cond: p => !!p.mongChiTon, desc:'Hoàn thành toàn bộ chính tuyến', stats:{ allPct:0.20 }, vfx:'long' });
 
 // ---------- Nói chuyện: hoàn thành NV loại "talk" trước khi mở dialog ----------
@@ -21854,11 +21978,64 @@ window.aiChatSend = async function(npcId){
 };
 
 // ---------- Dialog NPC quest giver (chính + phụ theo vùng) ----------
+// Trang thoại lần gặp đầu. Người chơi bấm "Tiếp ▸" để lật; trang cuối hỏi một câu THÁI ĐỘ.
+// Không rẽ nhánh cốt truyện — quá đắt cho quy mô này — nhưng game NHỚ câu trả lời, và người
+// dẫn chương sau đó nhắc lại. Đó là thứ rẻ nhất mua được cảm giác "thế giới có nghe mình nói".
+let _trangI = 0;
+window.trangTiep = function(){ _trangI++; const n = _npcDangNoi; if (n) renderQuestNpc(n); };
+window.trangChon = function(v){
+  const n = _npcDangNoi; if (!n) return;
+  player.thaiDo = player.thaiDo || {};
+  player.thaiDo[n.id] = v;
+  player.gapNpc = player.gapNpc || {};
+  player.gapNpc[n.id] = true;
+  _trangI = 0; saveGame(); renderQuestNpc(n);
+};
+let _npcDangNoi = null;
+// Câu người dẫn chương sau nhắc lại lựa chọn cũ — một dòng, không hơn.
+function nhacThaiDo(){
+  const td = player.thaiDo || {};
+  const ai = Object.keys(td);
+  if (!ai.length) return '';
+  const cuoi = ai[ai.length - 1];
+  const ten = npcName(cuoi);
+  return td[cuoi] === 'a'
+    ? `${ten} có nhắn lại: ngươi trả lời không do dự. Ông ấy bảo đó vừa là điểm mạnh vừa là chỗ đáng lo.`
+    : `${ten} có nhắn lại: ngươi hỏi lại trước khi gật. Ông ấy bảo hiếm ai còn hỏi nữa.`;
+}
 function renderQuestNpc(n){
   questOnTalk(n);
   const panel = el('panel-quest');
+  _npcDangNoi = n;
+  // — Lần gặp đầu: ba trang thoại, rồi mới tới việc —
+  player.gapNpc = player.gapNpc || {};
+  if (n.trang && !player.gapNpc[n.id]){
+    const i = Math.min(_trangI, n.trang.length - 1);
+    const cuoi = i >= n.trang.length - 1;
+    let h = npcHead(n);
+    h += `<div class="npc-trang">${n.trang[i]}</div>`;
+    if (cuoi && i > 0){
+      const nhac = nhacThaiDo();
+      if (nhac) h += `<div class="npc-nhac">${nhac}</div>`;
+    }
+    h += `<div class="npc-trang-nav"><span class="npc-trang-so">${i + 1}/${n.trang.length}</span>`;
+    if (!cuoi){
+      h += `<button class="mini-btn" onclick="trangTiep()">Tiếp ▸</button>`;
+    } else if (n.chon){
+      h += `<button class="mini-btn" onclick="trangChon('a')">${n.chon.a}</button>
+            <button class="mini-btn" onclick="trangChon('b')">${n.chon.b}</button>`;
+    } else {
+      h += `<button class="mini-btn" onclick="trangChon('')">Hiểu rồi</button>`;
+    }
+    h += `</div>`;
+    panel.innerHTML = h;
+    closePanels(); panel.classList.remove('hidden');
+    return;
+  }
+  _trangI = 0;
   let html = npcHead(n);
-  if (n.lore) html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6;font-style:italic">${n.lore}</div>`;
+  const _loi = npcLoi(n);
+  if (_loi) html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6;font-style:italic">${_loi}</div>`;
   const _nsl = typeof npcStoryLine === 'function' ? npcStoryLine() : null;
   if (_nsl) html += `<div style="font-size:12.5px;color:#e8b060;margin-bottom:8px;line-height:1.6;font-style:italic">📜 ${_nsl}</div>`;
 
@@ -21879,11 +22056,18 @@ function renderQuestNpc(n){
         : `<div class="qd-quest"><div class="q-name">★ Chính tuyến ${q.id}: ${q.name}</div>${q.desc}
         <div class="q-rew">Tiến độ: ${prog} · Thưởng: ${q.rew.xp} EXP · ${q.rew.silver||0}◈</div></div>`;
     }
+  } else if (q && q.type === 'talk' && q.targetNpc === n.id){
+    // Người chơi đang đứng trước ĐÚNG người mà nhiệm vụ bảo đi gặp. Trước đây nhánh này không
+    // tồn tại, nên cả 8 nhiệm vụ mở chương đều kết thúc bằng việc người cần gặp không nói gì
+    // về nhiệm vụ đó cả — cuộc gặp mà cốt truyện dựng hẳn một nhiệm vụ để dẫn tới lại rỗng.
+    const giver = NPCS.find(x => x.id === q.npc);
+    html += `<div class="qd-quest" style="border-color:#8fd18f"><div class="q-name" style="color:#8fd18f">★ ${q.name} — ngươi tới nơi rồi</div>${q.desc}
+      <div class="q-rew">Đã gặp. Về <b>${MAPS[q.map].name}</b> báo lại cho <b>${giver ? giver.name : ''}</b> để nhận thưởng.</div></div>`;
   } else if (q){
     const giver = NPCS.find(x => x.id === q.npc);
     html += `<div style="font-size:12px;opacity:.65;margin-bottom:8px">★ Chính tuyến hiện tại: "${q.name}" — hãy đến <b>${MAPS[q.map].name}</b> gặp <b>${giver ? giver.name : ''}</b>.</div>`;
   } else {
-    html += `<div style="font-size:12px;opacity:.65;margin-bottom:8px">★ Chính tuyến đã hoàn tất — bạn là Kẻ Khép Vết Nứt!</div>`;
+    html += `<div style="font-size:12px;opacity:.65;margin-bottom:8px">★ Chính tuyến đã hoàn tất — bạn là Kẻ Mở Trụ Cuối.</div>`;
   }
 
   // — Phụ tuyến của NPC này —
@@ -21985,6 +22169,22 @@ window.turnInQuest = function(){
 // ---------- Nói chuyện NPC (override — định tuyến theo loại) ----------
 // Dấu trên đầu NPC: '!' có NV để trả · '…' có NV để nhận/đang làm · '' không có việc. Dùng chung
 // cho drawNpc() và tryTalk() để cái người chơi THẤY và cái phím E CHỌN là một.
+// Câu NPC nói, chọn theo trạng thái nhiệm vụ của chính NPC đó.
+//   idle   — không phải NPC của nhiệm vụ hiện tại (hoặc chưa tới lượt)
+//   offer  — nhiệm vụ của mình nhưng người chơi chưa đủ cấp
+//   active — đang làm nhiệm vụ của mình
+//   done   — làm xong, về trả
+// Vẫn nhận `lore` là chuỗi để NPC chức năng (tiệm, lò rèn) khỏi phải viết đủ bốn câu.
+function npcLoi(n){
+  if (!n.lore) return '';
+  if (typeof n.lore === 'string') return n.lore;
+  const L = n.lore, q = currentQuest();
+  const cuaMinh = q && q.npc === n.id;
+  if (cuaMinh && questState === 'done')   return L.done   || L.idle || '';
+  if (cuaMinh && questState === 'locked') return L.offer  || L.idle || '';
+  if (cuaMinh)                            return L.active || L.idle || '';
+  return L.idle || '';
+}
 function npcMark(n){
   if (n.talk === 'trunya') return player.truyna && player.truyna.state === 'killed' ? '!' : '';
   if (n.talk !== 'quest') return '';
@@ -22051,9 +22251,25 @@ function tryHarvestHerb(){
 }
 
 // ---------- Vẽ NPC (override — dấu ! / … theo từng NPC) ----------
+const BARK_R = 150;      // trong tầm này thì NPC lên tiếng
+const BARK_CD = 26;      // giây, mỗi NPC một đồng hồ riêng — không để cả thành phố cùng nói
+function tickBark(n){
+  if (!n.barks || !n.barks.length || !player) return;
+  if (n._barkT === undefined) n._barkT = 4 + Math.random() * 10;   // lệch pha lúc mới vào map
+  n._barkT -= _dtBark;
+  if (n._barkT > 0) return;
+  if (dist(player.x, player.y, n.x, n.y) > BARK_R){ n._barkT = 1; return; }
+  n._barkI = ((n._barkI | 0) + 1 + (Math.random() * 2 | 0)) % n.barks.length;
+  addFloat(n.x, n.y - 78, n.barks[n._barkI], '#cfd8ff', 12);
+  n._barkT = BARK_CD + Math.random() * 10;
+}
+let _dtBark = 0;
 function drawNpc(){
+  _dtBark = Math.min(0.1, (performance.now() - (drawNpc._t || performance.now())) / 1000);
+  drawNpc._t = performance.now();
   for (const n of NPCS){
     if (n.map !== curMap) continue;
+    tickBark(n);
     const im = NPC_IMGS[n.id];
     ctx.fillStyle = 'rgba(0,0,0,.18)';
     ctx.beginPath(); ctx.ellipse(n.x, n.y+8, 14, 5, 0, 0, 7); ctx.fill();
@@ -22113,7 +22329,7 @@ function trackerHtml(){
       : `<div>${q.desc}</div>${prog ? `<div style="margin-top:4px;color:#7ecbff">${prog}</div>` : ''}`;
     qt += `<div style="margin-top:5px"><button class="mini-btn" style="font-size:11px;padding:2px 10px" onclick="goQuest()">🧭 Tới Ngay</button></div>`; // GDD Đợt 2 B2
   } else {
-    qt += `<div class="q-title">★ Chính tuyến hoàn tất!</div><div>Bạn là Kẻ Khép Vết Nứt — tự do rèn luyện & làm phụ tuyến…</div>`;
+    qt += `<div class="q-title">★ Chính tuyến hoàn tất!</div><div>Bạn là Kẻ Mở Trụ Cuối — tự do rèn luyện & làm phụ tuyến…</div>`;
   }
   const act = SIDE_QUESTS.filter(sq => sideStates[sq.id] && sideStates[sq.id].st !== 'claimed').slice(0, 2);
   for (const sq of act){
@@ -22200,15 +22416,39 @@ const BOSS_LORE = {
 // Câu dẫn nhập ngắn khi mở vùng mới (thay banner "ĐÃ MỞ VÙNG MỚI" khô khan) — lấy đúng từ lời
 // thoại Tướng Quân trấn giữ (BOSS_LORE.*4) của từng vùng, không bịa thêm để khỏi lệch cốt truyện.
 // Tuyettinh không có câu nào nêu tên Ấn cụ thể trong lore gốc nên giữ giọng văn chung.
+// Năm Trụ Khoá — đặt tên theo ĐỊA DANH, không theo ngũ hành. Hai lý do: ngũ hành nằm trong danh
+// sách cấm của phong cách, và bộ tên cũ tự đá nhau (Trụ Hỏa hiện ở CẢ trụ đầu lẫn trụ cuối, Trụ
+// Mộc hai lần, Trụ Thổ không lần nào — người chơi không thể đếm nổi mình đang ở trụ thứ mấy).
+//
+// Bảy vùng nhưng chỉ NĂM trụ: Petalshade Isle và Outskirts là đất tập, không có trụ. Đó là cách
+// duy nhất để "bảy Tướng Quân" và "năm Trụ Khoá" cùng đúng.
+const TRU_KHOA = {
+  chungnam:  'Trụ Thornwood',
+  comoc:     'Trụ Roost',
+  tuyettinh: 'Trụ Frostmire',
+  mongco:    'Trụ Ashmark',
+  nhanmon:   'Trụ Stormgate',
+};
+const TRU_TONG = Object.keys(TRU_KHOA).length;
+// Số trụ đã gỡ. `ta_<map>` là dấu hạ Tướng Quân của vùng đó; chỉ năm vùng có trụ mới được tính.
+function truDaGo(){
+  const f = (player && player.storyFlags) || {};
+  return Object.keys(TRU_KHOA).filter(m => f['ta_' + m]).length;
+}
+// Số Tướng Quân đã hạ — khác với số trụ, và phải in ra là hai con số khác nhau.
+function tuongQuanDaHa(){
+  const f = (player && player.storyFlags) || {};
+  return Object.keys(f).filter(k => k.startsWith('ta_')).length;
+}
 const REGION_UNLOCK_LORE = {
   tuongduong:{ sub:'Vỏ kén đã phá — trở về Lunaris City trong tiếng hoan hô, chính thức bước vào Chương II.' },
-  daohoa:    { sub:'Trụ Hỏa đầu tiên đã rạn nứt tại Petalshade Isle — hành trình của ngươi bắt đầu từ đây.' },
-  ngoai:     { sub:'"Trụ Mộc đang rung chuyển — ngươi nghe thấy không?" Dấu hiệu đầu tiên Ngũ Trụ không còn vững.' },
-  chungnam:  { sub:'"Trụ Thủy do ta giữ." Một Tướng Quân đơn độc chống đỡ Thornwood Reach.' },
-  comoc:     { sub:'"Trụ Mộc đã mục từ lâu — Lunacia mới là thứ bệnh thật sự." Hollow Roost thì thầm điều đó.' },
-  tuyettinh: { sub:'Frostmire Vale chôn vùi không chỉ lữ khách lạc lối — có lẽ cả một mảnh Ngũ Trụ.' },
-  mongco:    { sub:'"Vì sao dừng ở đây? Vì Trụ Kim đã vỡ!" Ngũ Trụ không còn "sắp vỡ" nữa — đang vỡ thật.' },
-  nhanmon:   { sub:'"Trụ Hỏa cuối cùng…" Stormgate Pass — biên ải cuối của Lunacia, trận chiến cuối của Ngũ Trụ.' },
+  daohoa:    { sub:'Petalshade Isle — hòn đảo đã hứng ngươi khi ngươi rơi xuống. Chưa có trụ nào ở đây, chỉ có hậu quả.' },
+  ngoai:     { sub:'"Đất ngoài thành đang rung." Chưa phải trụ — nhưng là dấu hiệu đầu tiên rằng có trụ đang lung lay.' },
+  chungnam:  { sub:'"Trụ Thornwood do ta giữ." Một Tướng Quân đơn độc chống đỡ cả cánh rừng — trụ thứ nhất trong năm.' },
+  comoc:     { sub:'Trụ Roost đóng thẳng xuống giữa ổ ấp. Hollow Roost thì thầm: thứ nở ra ở đây không còn là Axie nữa.' },
+  tuyettinh: { sub:'Băng của Frostmire Vale là vết sẹo, không phải thời tiết — đất Lunacia đang bị viết lại quanh Trụ Frostmire.' },
+  mongco:    { sub:'Tướng Quân dựng đại bản doanh ngay trên Trụ Ashmark. Hắn thôi không giấu nữa.' },
+  nhanmon:   { sub:'Trụ Stormgate — trụ cuối cùng. Gỡ nó xuống là mở đúng cánh cửa Morvahn đang chờ.' },
 };
 // Hàng thoại trấn thủ — thanh bar dưới màn hình, 3.4s/câu
 let _btQ = [], _btTimer = null;
@@ -22245,12 +22485,13 @@ window.replayBossTalk = function(id){
 // Lời NPC theo tiến độ Ngũ Trụ
 function npcStoryLine(){
   const flags = player.storyFlags || {};
-  const n = Object.keys(flags).filter(k => k.startsWith('ta_')).length;
-  if (flags.ketMo) return 'Bầu trời đỏ như máu… Vết Nứt sắp mở. Người như ngươi — là hy vọng cuối cùng của Lunacia này.';
+  const n = tuongQuanDaHa(), t = truDaGo();
+  if (flags.ketMo) return 'Bầu trời toác hết cỡ rồi. Ngươi gỡ trụ cuối, và giờ chỉ còn ngươi đứng giữa Morvahn với chỗ này.';
   if (n === 0) return null;
-  if (n < 3) return 'Nghe đồn có Tướng Quân cổ đã ngã xuống… Cả Lunacia bắt đầu xôn xao rồi đấy.';
-  if (n < 5) return 'Trời tối hơn mỗi ngày. Nghe nói các bộ lạc đang triệu tập thành viên về giữ lãnh địa.';
-  return 'Ngũ Trụ sắp vỡ hết rồi… Ngươi… vẫn định tiếp tục chứ?';
+  if (t === 0) return 'Nghe đồn có Tướng Quân đã ngã xuống. Chưa ai dám mừng — trụ vẫn còn nguyên cả năm.';
+  if (t < 3) return `Trụ Khoá gỡ được ${t} rồi. Ngươi đi tiếp được xa hơn, và vết nứt cũng rộng thêm một chút.`;
+  if (t < TRU_TONG) return `Còn ${TRU_TONG - t} trụ. Ta không hỏi ngươi có gỡ tiếp không — ta hỏi ngươi có biết mình đang mở cửa cho ai không.`;
+  return 'Năm trụ đã gỡ hết. Đường tới hắn thông rồi, và đó chính là điều đáng sợ.';
 }
 // Kết mở — ấn cuối vỡ, Hung Thần sắp giáng thế
 function showKetMo(){
@@ -22298,8 +22539,16 @@ function renderQlog(){
   } else if (window.qlogTab === 'story'){
     const flags = player.storyFlags || {};
     const nSeal = Object.keys(flags).filter(k => k.startsWith('ta_')).length;
-    html += `<div class="ql-ch">☬ Ngũ Trụ Trấn Hung Thần <span style="opacity:.6">· ${nSeal}/7 Tướng Quân đã hạ</span></div>`;
-    html += `<div class="ql-row" style="opacity:.85;font-size:11.5px;line-height:1.5">${flags.ketMo ? '⚠ ẤN ĐÃ VỠ — Vết Nứt sắp mở. Lunacia chờ ngươi khép ấn lại.' : nSeal === 0 ? 'Ngũ Trụ còn nguyên — Morvahn vẫn ở bên kia Vết Nứt.' : 'Phong ấn đang rạn nứt… bóng đêm phủ xuống Lunacia.'}</div>`;
+    const nTru = truDaGo();
+    html += `<div class="ql-ch">⚑ Năm Trụ Khoá <span style="opacity:.6">· đã gỡ ${nTru}/${TRU_TONG} · ${nSeal}/7 Tướng Quân đã hạ</span></div>`;
+    for (const m in TRU_KHOA){
+      const go = !!flags['ta_' + m];
+      html += `<div class="ql-row"${go ? '' : ' style="opacity:.5"'}><span style="color:${go ? '#ff8f6b' : '#9aa8d4'}">${go ? '✧' : '⚑'}</span> ${TRU_KHOA[m]} <span style="opacity:.6;font-size:11px">· ${mapGate(m).ok ? MAPS[m].name : '???'}${go ? ' — đã gỡ' : ''}</span></div>`;
+    }
+    html += `<div class="ql-row" style="opacity:.85;font-size:11.5px;line-height:1.5">${flags.ketMo
+      ? '⚠ Trụ cuối đã gãy — vết nứt toác hết cỡ. Morvahn đang bước qua.'
+      : nTru === 0 ? 'Năm trụ còn nguyên — Morvahn vẫn ở bên kia vết nứt.'
+      : `Mỗi trụ gỡ xuống là một đoạn đường mở ra, và một khúc vết nứt rộng thêm. Còn ${TRU_TONG - nTru} trụ.`}</div>`;
     const clues = player.clues || [];
     html += `<div class="ql-ch">🔍 Manh Mối <span style="opacity:.6">· ${clues.length}/${Object.keys(CLUES).length}</span></div>`;
     if (!clues.length) html += `<div class="ql-row" style="opacity:.5">Chưa có manh mối — hạ Vệ Binh Trụ / Tướng Quân để thu thập.</div>`;
@@ -22308,14 +22557,14 @@ function renderQlog(){
       html += `<div class="ql-row"><span style="color:#e8b060">✦</span> <b>${c.name}</b><div style="opacity:.65;font-size:11px;padding-left:18px;line-height:1.4">${c.desc}</div></div>`;
     }
     const seen = Object.keys(player.storySeen || {});
-    html += `<div class="ql-ch">☬ Trấn Thủ Đã Gặp <span style="opacity:.6">· ${seen.length}/28</span></div>`;
-    if (!seen.length) html += `<div class="ql-row" style="opacity:.5">Chưa gặp trấn thủ nào.</div>`;
+    html += `<div class="ql-ch">⚑ Tướng Quân Đã Gặp <span style="opacity:.6">· ${seen.length}/28</span></div>`;
+    if (!seen.length) html += `<div class="ql-row" style="opacity:.5">Chưa gặp Tướng Quân nào.</div>`;
     for (const bid of seen){
       const L = BOSS_LORE[bid]; if (!L) continue;
       const killed = Object.values(player.bossKills || {}).some(arr => arr.includes(bid));
       html += `<div class="ql-row"${killed ? '' : ' style="opacity:.55"'}><span>${killed ? '⚔' : '👁'}</span> ${L.name} <button class="mini-btn" onclick="replayBossTalk('${bid}')" style="font-size:10px;padding:1px 6px;margin-left:4px">💬</button></div>`;
     }
-    if (flags.ketMo) html += `<div class="ql-ch" style="color:#ff6b6b">☠ KẾT MỞ — Ấn đã vỡ. Hung Thần sẽ giáng thế…</div>`;
+    if (flags.ketMo) html += `<div class="ql-ch" style="color:#ff6b6b">☠ KẾT MỞ — trụ cuối đã gãy. Morvahn đang bước qua…</div>`;
   } else {
     for (const mapId in MAPS){
       const list = SIDE_QUESTS.filter(sq => sq.map === mapId);
@@ -22336,34 +22585,36 @@ function renderQlog(){
 }
 
 // ═══════════ DẤU ẤN KHAI SINH — gacha tính cách & tiềm năng đầu game ═══════════
+// Khoá (pham/linh/huyen/thien) giữ nguyên để save cũ không hỏng; chỉ tên hiển thị đổi.
+// PHÀM/LINH/HUYỀN/THIÊN là thang bậc tu tiên — game đã có sẵn thang phẩm đúng phong cách để dùng lại.
 const TRAIT_TIERS = {
-  pham:  { name:'PHÀM',  w:55, color:'#cfc8b8' },
-  linh:  { name:'LINH',  w:30, color:'#6ab0f0' },
-  huyen: { name:'HUYỀN', w:12, color:'#b08ae8' },
-  thien: { name:'THIÊN', w:3,  color:'#f0a03a' },
+  pham:  { name:'THƯỜNG', w:55, color:'#cfc8b8' },
+  linh:  { name:'HIẾM',   w:30, color:'#6ab0f0' },
+  huyen: { name:'QUÝ',    w:12, color:'#b08ae8' },
+  thien: { name:'THẦN',   w:3,  color:'#f0a03a' },
 };
 const TRAITS = [
-  { id:'thanluc',   name:'Thần Lực',            tier:'pham',  glyph:'💪', desc:'+8 Tấn Công',                              late:p=>{ p.atk += 8; } },
-  { id:'nhucthan',  name:'Nhục Thân Cường Tráng',tier:'pham', glyph:'🛡', desc:'+55 Sinh Lực tối đa',                       late:p=>{ p.maxHp += 55; } },
+  { id:'thanluc',   name:'Sức Vóc',             tier:'pham',  glyph:'💪', desc:'+8 Tấn Công',                              late:p=>{ p.atk += 8; } },
+  { id:'nhucthan',  name:'Thân Thể Cứng Cáp',    tier:'pham', glyph:'🛡', desc:'+55 Sinh Lực tối đa',                       late:p=>{ p.maxHp += 55; } },
   { id:'anmay',     name:'Ăn May',              tier:'pham',  glyph:'🍀', desc:'+5% tỉ lệ quái rớt đồ',                     late:p=>{ p.dropBonus += 0.05; } },
   { id:'chankhi',   name:'Mana Dồi Dào',        tier:'pham',  glyph:'🔷', desc:'+15 Mana tối đa',                        late:p=>{ p.maxQi += 15; } },
-  { id:'tuctri',    name:'Túc Trí Đa Mưu',      tier:'linh',  glyph:'📖', desc:'+8% Kinh Nghiệm',                           late:p=>{ p.expPct += 8; } },
-  { id:'luyenkhi',  name:'Spark Thiên Phú', tier:'linh',  glyph:'⚒', desc:'Rèn đồ +5% tỉ lệ thành công',               late:p=>{ p.forgeBonus += 5; } },
-  { id:'thanhanh',  name:'Bách Bộ Thần Hành',   tier:'linh',  glyph:'👟', desc:'+6% Tốc Chạy',                              late:p=>{ p.speed = Math.round(p.speed*1.06); } },
-  { id:'thiennhan', name:'Thiên Nhãn',          tier:'linh',  glyph:'👁', desc:'Minimap hiện cả điểm Thảo Dược',            late:p=>{ p.traitHerb = true; } },
-  { id:'longtich',  name:'Long Tích Hổ Bộ',     tier:'huyen', glyph:'🐉', desc:'+5% Né Tránh',                              late:p=>{ p.eva = Math.min(0.45, p.eva+0.05); } },
-  { id:'doanngoc',  name:'Đoạn Ngọc Thủ',       tier:'huyen', glyph:'🎯', desc:'Venom Dart +15% ST · phá khiên lâu thêm 4s',    late:p=>{ p.amkhiPct += 0.15; p.shieldBonus += 4; } },
-  { id:'sattam',    name:'Sát Tâm',             tier:'huyen', glyph:'☾', desc:'Giết Du Hiệp không tăng Tội Ác',            late:p=>{ p.traitSatTam = true; } },
-  { id:'duocthe',   name:'Dược Thể',            tier:'huyen', glyph:'🧪', desc:'Bình Thuốc Đỏ hồi 55% máu (thay 40%)',        late:p=>{ p.potionPct = 0.55; } },
-  { id:'vohon',     name:'Võ Hồn',              tier:'thien', glyph:'⚔', desc:'Thuần Thục +12% Sát Thương',                 late:p=>{ p.skillDmgPct += 0.12; } },
-  { id:'thienmenh', name:'Thiên Mệnh',          tier:'thien', glyph:'◑', desc:'Mỗi màn chơi 1 lần: chết hồi sinh tại chỗ 50% máu', late:p=>{ p.traitRevive = true; } },
-  { id:'kymach',    name:'Khai Mở Mạch Lực',   tier:'thien', glyph:'🌊', desc:'Đả thông Instinct Channels +25% tỉ lệ',             late:p=>{ p.traitMerRate = 1.25; } },
-  { id:'vanvat',    name:'Vạn Vật Hữu Duyên',   tier:'thien', glyph:'💰', desc:'+15% Bạc rơi',                              late:p=>{ p.silverPct += 15; } },
+  { id:'tuctri',    name:'Đầu Óc Sắc Bén',      tier:'linh',  glyph:'📖', desc:'+8% Kinh Nghiệm',                           late:p=>{ p.expPct += 8; } },
+  { id:'luyenkhi',  name:'Tay Nghề Rèn',        tier:'linh',  glyph:'⚒', desc:'Rèn đồ +5% tỉ lệ thành công',               late:p=>{ p.forgeBonus += 5; } },
+  { id:'thanhanh',  name:'Sải Chân Dài',        tier:'linh',  glyph:'👟', desc:'+6% Tốc Chạy',                              late:p=>{ p.speed = Math.round(p.speed*1.06); } },
+  { id:'thiennhan', name:'Mắt Tinh',            tier:'linh',  glyph:'👁', desc:'Minimap hiện cả điểm Thảo Dược',            late:p=>{ p.traitHerb = true; } },
+  { id:'longtich',  name:'Bước Chân Nhẹ',       tier:'huyen', glyph:'🐉', desc:'+5% Né Tránh',                              late:p=>{ p.eva = Math.min(0.45, p.eva+0.05); } },
+  { id:'doanngoc',  name:'Tay Xuyên Giáp',      tier:'huyen', glyph:'🎯', desc:'Venom Dart +15% ST · phá khiên lâu thêm 4s',    late:p=>{ p.amkhiPct += 0.15; p.shieldBonus += 4; } },
+  { id:'sattam',    name:'Máu Lạnh',            tier:'huyen', glyph:'☾', desc:'Giết Du Hiệp không tăng Tội Ác',            late:p=>{ p.traitSatTam = true; } },
+  { id:'duocthe',   name:'Thể Chất Kháng Độc',  tier:'huyen', glyph:'🧪', desc:'Bình Thuốc Đỏ hồi 55% máu (thay 40%)',        late:p=>{ p.potionPct = 0.55; } },
+  { id:'vohon',     name:'Hồn Chiến',           tier:'thien', glyph:'⚔', desc:'Thuần Thục +12% Sát Thương',                 late:p=>{ p.skillDmgPct += 0.12; } },
+  { id:'thienmenh', name:'Số Trời',             tier:'thien', glyph:'◑', desc:'Mỗi màn chơi 1 lần: chết hồi sinh tại chỗ 50% máu', late:p=>{ p.traitRevive = true; } },
+  { id:'kymach',    name:'Dòng Máu Thức Tỉnh', tier:'thien', glyph:'🌊', desc:'Mở nhánh Bản Năng nhanh hơn +25%',                   late:p=>{ p.traitMerRate = 1.25; } },
+  { id:'vanvat',    name:'Duyên May',           tier:'thien', glyph:'💰', desc:'+15% Bạc rơi',                              late:p=>{ p.silverPct += 15; } },
 ];
 const PERSONALITIES = {
-  chinh: { name:'Chính Trực', glyph:'⚖', desc:'Khí chất hiệp nghĩa, đi đâu cũng được người đời kính nể.' },
-  ta:    { name:'Tà Khí',     glyph:'☾', desc:'Con đường tăm tối — Du Hiệp kiêng kị, dân thường e ngại.' },
-  trung: { name:'Trung Dung', glyph:'◑', desc:'Hài hòa âm dương, không thiên vị bên nào.' },
+  chinh: { name:'Ngay Thẳng', glyph:'⚖', desc:'Nói sao làm vậy. Dân Lunaris City chào ngươi trước khi ngươi kịp chào.' },
+  ta:    { name:'Tàn Nhẫn',   glyph:'☾', desc:'Việc cần làm thì làm, không hỏi giá. Kẻ khác tránh đường ngươi vì sợ, không vì nể.' },
+  trung: { name:'Điềm Tĩnh',  glyph:'◑', desc:'Không ngả về bên nào cho tới khi biết đủ. Ít bạn, mà cũng ít kẻ thù.' },
 };
 function rollTrait(excludeIds){
   const pool = TRAITS.filter(t => !excludeIds.includes(t.id));
@@ -24226,7 +24477,7 @@ function renderTruyNa(){
   const band = truynaBand();
   const n = NPCS.find(x => x.id === 'bodau');
   let html = npcHead(n);
-  html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">${n.lore}</div>`;
+  html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">${npcLoi(n)}</div>`;
   if (tn.state === 'none'){
     html += `<div class="next-tier"><b style="color:#e8b04a">⚖ Truy Nã Lệnh hôm nay</b><br>
       Mục tiêu: <b style="color:#ff7a6a">${band.name}</b> (sức mạnh theo cấp ${player.level})<br>
@@ -24307,7 +24558,7 @@ function tenuiFreeLearn(preferTier){
 function renderTeNui(n){
   const unlocked = lvPeak() >= 60, gold = tenuiGoldenHour(), wounded = tenuiWounded();
   let html = npcHead(n);
-  html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">${n.lore}</div>`;
+  html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">${npcLoi(n)}</div>`;
   if (!unlocked){
     html += `<div style="text-align:center;padding:14px 8px;font-size:13px;line-height:1.8;color:#8a8a8a">
       ☁ Vách cao mây phủ — phàm nhân nhảy xuống chỉ có nát thây.<br>
@@ -24383,7 +24634,7 @@ window.doTeNui = function(npcId){
 function renderVanDuyen(){
   const n = NPCS.find(x => x.id === 'thantoan');
   let html = npcHead(n);
-  html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">${n.lore}</div>`;
+  html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">${npcLoi(n)}</div>`;
   html += `<div style="font-size:13px;margin-bottom:6px">◈ Bạc đang có: <b style="color:#7ecbff">${player.silver.toLocaleString('vi-VN')}</b> · mỗi lượt quay <b>${GO_CONGHUAN.toLocaleString('vi-VN')}◈</b></div>`;
   html += `<div class="stat-sec">TỈ LỆ CÔNG KHAI — KHÔNG CỘNG DỒN MAY MẮN</div>
     <div style="font-size:12px;line-height:1.9;opacity:.9">
