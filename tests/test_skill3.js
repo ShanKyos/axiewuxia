@@ -104,7 +104,7 @@ const { chromium } = require('playwright');
     startGame('minhgiao', null);
     player.level = 40; calcDerived();
     const saved = JSON.parse(JSON.stringify(player));
-    saved.skillBar = ['a','amkhi','tp','mg_frostnova','mg_flamestrike']; // simulate an old 5-slot save
+    saved.skillBar = ['a','amkhi','tp','mg_frostnova','mg_flamestrike']; // save đời cũ 5 ô, hai id cuối nay đã bị gỡ khỏi VOHOC_DEFS — càng đúng ca cần dọn
     localStorage.setItem('vlcm_save', JSON.stringify({ player: saved, curMap, sideStates, ts: Date.now() }));
     const ok = loadGame();
     return { loadOk: ok, migratedBar: player.skillBar.slice(), matchesDefault: JSON.stringify(player.skillBar) === JSON.stringify(defaultSkillBar('minhgiao')) };

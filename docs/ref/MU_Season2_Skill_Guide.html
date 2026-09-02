@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MU Online Season 2 — Danh Sách Skill 5 Class</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Roboto:wght@300;400;500;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 50%, #0d0d0d 100%);
+    color: #e0e0e0;
+    font-family: 'Roboto', sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  header {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(180deg, rgba(139,0,0,0.3) 0%, transparent 100%);
+    border-bottom: 2px solid #8b0000;
+    margin-bottom: 40px;
+  }
+
+  header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 2.8rem;
+    color: #ffd700;
+    text-shadow: 0 0 20px rgba(255,215,0,0.5), 0 0 40px rgba(139,0,0,0.3);
+    margin-bottom: 10px;
+  }
+
+  header p {
+    color: #aaa;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+  }
+
+  .class-section {
+    margin-bottom: 50px;
+    background: linear-gradient(145deg, rgba(20,20,20,0.95) 0%, rgba(30,10,10,0.9) 100%);
+    border: 1px solid #333;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  }
+
+  .class-header {
+    display: flex;
+    align-items: center;
+    padding: 25px 30px;
+    background: linear-gradient(90deg, rgba(139,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%);
+    border-bottom: 2px solid #8b0000;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .class-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="0.5"/></svg>');
+    opacity: 0.3;
+  }
+
+  .class-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 3px solid #ffd700;
+    box-shadow: 0 0 20px rgba(255,215,0,0.3);
+    margin-right: 25px;
+    z-index: 1;
+  }
+
+  .class-info h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255,215,0,0.4);
+    margin-bottom: 8px;
+  }
+
+  .class-info .class-desc {
+    color: #bbb;
+    font-size: 0.95rem;
+    font-style: italic;
+  }
+
+  .class-info .class-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 14px;
+    background: rgba(139,0,0,0.5);
+    border: 1px solid #8b0000;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: #ff6b6b;
+    letter-spacing: 1px;
+  }
+
+  .skills-container {
+    padding: 25px 30px;
+  }
+
+  .skill-category {
+    margin-bottom: 25px;
+  }
+
+  .skill-category-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.2rem;
+    color: #ff6b6b;
+    margin-bottom: 15px;
+    padding-left: 15px;
+    border-left: 4px solid #8b0000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .skill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  .skill-card {
+    background: linear-gradient(145deg, rgba(40,40,40,0.8) 0%, rgba(25,25,25,0.9) 100%);
+    border: 1px solid #444;
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .skill-card:hover {
+    border-color: #8b0000;
+    box-shadow: 0 4px 20px rgba(139,0,0,0.3);
+    transform: translateY(-2px);
+  }
+
+  .skill-icon {
+    font-size: 1.8rem;
+    min-width: 36px;
+    text-align: center;
+    filter: drop-shadow(0 0 5px rgba(255,215,0,0.3));
+  }
+
+  .skill-details h4 {
+    color: #ffd700;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+
+  .skill-details p {
+    color: #999;
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+
+  .skill-type-attack { border-left: 3px solid #ff4444; }
+  .skill-type-support { border-left: 3px solid #44ff44; }
+  .skill-type-summon { border-left: 3px solid #aa44ff; }
+  .skill-type-buff { border-left: 3px solid #44aaff; }
+  .skill-type-weapon { border-left: 3px solid #ffaa44; }
+
+  .footer {
+    text-align: center;
+    padding: 30px;
+    color: #666;
+    font-size: 0.85rem;
+    border-top: 1px solid #333;
+    margin-top: 40px;
+  }
+
+  .note-box {
+    background: rgba(139,0,0,0.15);
+    border: 1px solid #8b0000;
+    border-radius: 10px;
+    padding: 20px 25px;
+    margin: 30px 0;
+  }
+
+  .note-box h3 {
+    color: #ffd700;
+    font-family: 'Cinzel', serif;
+    margin-bottom: 10px;
+  }
+
+  .note-box ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .note-box li {
+    padding: 6px 0;
+    color: #bbb;
+    font-size: 0.9rem;
+    padding-left: 20px;
+    position: relative;
+  }
+
+  .note-box li::before {
+    content: '⚔️';
+    position: absolute;
+    left: 0;
+  }
+
+  .animation-section {
+    margin: 30px;
+    padding: 20px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 12px;
+    border: 1px solid #444;
+  }
+
+  .animation-section h3 {
+    color: #ffd700;
+    font-family: 'Cinzel', serif;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+
+  .animation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    justify-items: center;
+  }
+
+  .animation-item {
+    text-align: center;
+  }
+
+  .animation-item img {
+    max-width: 100%;
+    border-radius: 8px;
+    border: 2px solid #555;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  }
+
+  .animation-item p {
+    margin-top: 8px;
+    color: #aaa;
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 768px) {
+    header h1 { font-size: 1.8rem; }
+    .class-header { flex-direction: column; text-align: center; }
+    .class-avatar { margin-right: 0; margin-bottom: 15px; }
+    .skill-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>MU ONLINE SEASON 2</h1>
+  <p>DANH SÁCH SKILL — 5 CLASS CƠ BẢN</p>
+</header>
+
+<!-- ==================== DARK WIZARD ==================== -->
+<div class="class-section">
+  <div class="class-header">
+    <img class="class-avatar" src="https://kimi-web-img.kimi.ai/img/mu.lv/9330b97455313c3f84d7f3f2082967b8331d31fe.jpg" alt="Dark Wizard">
+    <div class="class-info">
+      <h2>Dark Wizard</h2>
+      <p class="class-desc">Pháp Sư Bóng Tối — Chuyên phép thuật tầm xa, sát thương phép cao nhưng thể chất yếu</p>
+      <span class="class-badge">Vũ khí: Gậy phép / Quyển trục</span>
+    </div>
+  </div>
+  <div class="skills-container">
+    <div class="skill-category">
+      <div class="skill-category-title">⚔️ Skill Tấn Công</div>
+      <div class="skill-grid">
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🔮</div><div class="skill-details"><h4>Energy Ball</h4><p>Skill mặc định — bắn quả cầu năng lượng cơ bản</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🔥</div><div class="skill-details"><h4>Fireball</h4><p>Bắn quả cầu lửa gây sát thương phép</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">⚡</div><div class="skill-details"><h4>Power Wave</h4><p>Gửi sóng điện gây sát thương mục tiêu</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🌩️</div><div class="skill-details"><h4>Lightning</h4><p>Tia sét gây sát thương và có khả năng đẩy lùi</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">☄️</div><div class="skill-details"><h4>Meteorite</h4><p>Triệu hồi thiên thạch rơi xuống mục tiêu</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">❄️</div><div class="skill-details"><h4>Ice</h4><p>Đóng băng mục tiêu, gây sát thương và làm chậm</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">☠️</div><div class="skill-details"><h4>Poison</h4><p>Gây sát thương độc theo thời gian</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🔥</div><div class="skill-details"><h4>Flame</h4><p>Tạo cột lửa thiêu đốt mục tiêu và kẻ địch xung quanh</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🌪️</div><div class="skill-details"><h4>Twister</h4><p>Gửi lốc xoáy gây sát thương diện rộng theo đường thẳng</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">👻</div><div class="skill-details"><h4>Evil Spirit</h4><p>Giải phóng năng lượng bóng tối gây sát thương kẻ địch xung quanh</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🔥</div><div class="skill-details"><h4>Hellfire</h4><p>Thiêu đốt mặt đất xung quanh bản thân bằng lửa địa ngục</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">💧</div><div class="skill-details"><h4>Aqua Beam</h4><p>Bắn tia nước gây sát thương theo đường thẳng</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">⭐</div><div class="skill-details"><h4>Cometfall</h4><p>Triệu hồi ánh sáng từ trời xuống mục tiêu và kẻ địch lân cận</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🔥</div><div class="skill-details"><h4>Inferno</h4><p>Tạo vòng lửa bao quanh bản thân gây sát thương liên tục</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">💀</div><div class="skill-details"><h4>Decay</h4><p>Gây sát thương phép mạnh lên một mục tiêu</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🧊</div><div class="skill-details"><h4>Ice Storm</h4><p>Triệu hồi bão băng gây sát thương diện rộng</p></div></div>
+      </div>
+    </div>
+    <div class="skill-category">
+      <div class="skill-category-title">🛡️ Skill Hỗ Trợ</div>
+      <div class="skill-grid">
+        <div class="skill-card skill-type-support"><div class="skill-icon">✨</div><div class="skill-details"><h4>Teleport</h4><p>Dịch chuyển tức thời đến vị trí chỉ định</p></div></div>
+        <div class="skill-card skill-type-support"><div class="skill-icon">🌀</div><div class="skill-details"><h4>Teleport Ally</h4><p>Dịch chuyển đồng đội đến vị trí của mình</p></div></div>
+        <div class="skill-card skill-type-support"><div class="skill-icon">🛡️</div><div class="skill-details"><h4>Soul Barrier</h4><p>Tạo lá chắn giảm sát thương nhận vào</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== DARK KNIGHT ==================== -->
+<div class="class-section">
+  <div class="class-header">
+    <img class="class-avatar" src="https://kimi-web-img.kimi.ai/img/mu.lv/579c32eb746bbfab86df613558fd680616dd222d.jpg" alt="Dark Knight">
+    <div class="class-info">
+      <h2>Dark Knight</h2>
+      <p class="class-desc">Hiệp Sĩ Bóng Tối — Cận chiến cân bằng, sử dụng kiếm, rìu, giáo và khiên</p>
+      <span class="class-badge">Vũ khí: Kiếm / Rìu / Giáo / Khiên</span>
+    </div>
+  </div>
+  <div class="skills-container">
+    <div class="skill-category">
+      <div class="skill-category-title">⚔️ Skill Vũ Khí</div>
+      <div class="skill-grid">
+        <div class="skill-card skill-type-weapon"><div class="skill-icon">🪓</div><div class="skill-details"><h4>Falling Slash</h4><p>Chém xuống từ trên cao gây sát thương gấp đôi (dùng rìu/chùy)</p></div></div>
+        <div class="skill-card skill-type-weapon"><div class="skill-icon">🌪️</div><div class="skill-details"><h4>Cyclone</h4><p>Xoay vũ khí tạo lực ly tâm gây sát thương và tăng tốc đánh</p></div></div>
+        <div class="skill-card skill-type-weapon"><div class="skill-icon">🗡️</div><div class="skill-details"><h4>Lunge</h4><p>Đâm nhanh xuyên giáp đối thủ (dùng kiếm một tay/ngắn)</p></div></div>
+        <div class="skill-card skill-type-weapon"><div class="skill-icon">⬆️</div><div class="skill-details"><h4>Uppercut</h4><p>Chém hướng lên gây sát thương</p></div></div>
+        <div class="skill-card skill-type-weapon"><div class="skill-icon">⚔️</div><div class="skill-details"><h4>Slash</h4><p>Chém đôi bằng cả hai lưỡi kiếm (dùng kiếm khổng lồ)</p></div></div>
+        <div class="skill-card skill-type-weapon"><div class="skill-icon">🔱</div><div class="skill-details"><h4>Impale</h4><p>Xoay vũ khí xung quanh tấn công mọi mục tiêu lân cận (dùng giáo)</p></div></div>
+      </div>
+    </div>
+    <div class="skill-category">
+      <div class="skill-category-title">📜 Skill Orb / Scroll</div>
+      <div class="skill-grid">
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🌀</div><div class="skill-details"><h4>Twisting Slash</h4><p>Xoay vũ khí gây sát thương diện rộng xung quanh (AoE)</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">💨</div><div class="skill-details"><h4>Death Stab</h4><p>Tạo sóng gió gây sát thương mục tiêu và kẻ địch phía trước</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">💥</div><div class="skill-details"><h4>Rageful Blow</h4><p>Đánh mạnh gây sát thương diện rộng, tiêu hao nhiều stamina</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">❄️</div><div class="skill-details"><h4>Explosion</h4><p>Đánh đòn băng giá làm đóng băng và làm chậm kẻ địch</p></div></div>
+      </div>
+    </div>
+    <div class="skill-category">
+      <div class="skill-category-title">🛡️ Skill Hỗ Trợ</div>
+      <div class="skill-grid">
+        <div class="skill-card skill-type-support"><div class="skill-icon">🛡️</div><div class="skill-details"><h4>Defense</h4><p>Giảm 50% sát thương nhận vào trong thời gian ngắn (cần khiên có +Skill)</p></div></div>
+        <div class="skill-card skill-type-buff"><div class="skill-icon">❤️</div><div class="skill-details"><h4>Swell Life</h4><p>Buff tăng HP tối đa cho bản thân và đồng đội</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">⚡</div><div class="skill-details"><h4>Combo</h4><p>Kết hợp 3 skill liên tiếp gây sát thương cực lớn (cần quest Marlon)</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FAIRY ELF ==================== -->
+<div class="class-section">
+  <div class="class-header">
+    <img class="class-avatar" src="https://kimi-web-img.kimi.ai/img/mu.lv/a0986c9cb98b394032f18fba6d46a7903ddc06e2.jpg" alt="Fairy Elf">
+    <div class="class-info">
+      <h2>Fairy Elf</h2>
+      <p class="class-desc">Tiên Tộc — Cung thủ tầm xa, có thể theo hướng Agility (sát thương) hoặc Energy (hỗ trợ)</p>
+      <span class="class-badge">Vũ khí: Cung / Nỏ / Mũi tên</span>
+    </div>
+  </div>
+  <div class="skills-container">
+    <div class="skill-category">
+      <div class="skill-category-title">🏹 Skill Tấn Công</div>
+      <div class="skill-grid">
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🏹</div><div class="skill-details"><h4>Triple Shot</h4><p>Bắn 3 mũi tên cùng lúc gây sát thương gấp 3</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🎯</div><div class="skill-details"><h4>Penetration</h4><p>Bắn mũi tên xuyên giáp xuyên qua mục tiêu</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🧊</div><div class="skill-details"><h4>Ice Arrow</h4><p>Bắn mũi tên băng gây sát thương và đóng băng mục tiêu</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🏹</div><div class="skill-details"><h4>Five Shot</h4><p>Bắn 5 mũi tên cùng lúc gây sát thương gấp 5</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">☠️</div><div class="skill-details"><h4>Poison Arrow</h4><p>Bắn mũi tên độc gây sát thương và độc theo thời gian</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">✨</div><div class="skill-details"><h4>Holy Bolt</h4><p>Tụ năng lượng thánh gây sát thương phép lên một mục tiêu</p></div></div>
+      </div>
+    </div>
+    <div class="skill-category">
+      <div class="skill-category-title">👹 Skill Triệu Hồi</div>
+      <div class="skill-grid">
+        <div class="skill-card skill-type-summon"><div class="skill-icon">👺</div><div class="skill-details"><h4>Summon Goblin</h4><p>Triệu hồi Goblin chiến đấu</p></div></div>
+        <div class="skill-card skill-type-summon"><div class="skill-icon">🗿</div><div class="skill-details"><h4>Summon Stone Golem</h4><p>Triệu hồi Golem Đá</p></div></div>
+        <div class="skill-card skill-type-summon"><div class="skill-icon">🥷</div><div class="skill-details"><h4>Summon Assassin</h4><p>Triệu hồi Sát Thủ</p></div></div>
+        <div class="skill-card skill-type-summon"><div class="skill-icon">🐻</div><div class="skill-details"><h4>Summon Elite Yeti</h4><p>Triệu hồi Elite Yeti</p></div></div>
+        <div class="skill-card skill-type-summon"><div class="skill-icon">🛡️</div><div class="skill-details"><h4>Summon Dark Knight</h4><p>Triệu hồi Dark Knight</p></div></div>
+        <div class="skill-card skill-type-summon"><div class="skill-icon">👹</div><div class="skill-details"><h4>Summon Bali</h4><p>Triệu hồi Bali</p></div></div>
+        <div class="skill-card skill-type-summon"><div class="skill-icon">⚔️</div><div class="skill-details"><h4>Summon Soldier</h4><p>Triệu hồi Chiến Binh</p></div></div>
+      </div>
+    </div>
+    <div class="skill-category">
+      <div class="skill-category-title">💚 Skill Buff / Hỗ Trợ</div>
+      <div class="skill-grid">
+        <div class="skill-card skill-type-buff"><div class="skill-icon">💚</div><div class="skill-details"><h4>Heal</h4><p>Hồi máu cho bản thân hoặc đồng đội</p></div></div>
+        <div class="skill-card skill-type-buff"><div class="skill-icon">🛡️</div><div class="skill-details"><h4>Greater Defense</h4><p>Tăng phòng thủ cho mục tiêu (theo Energy)</p></div></div>
+        <div class="skill-card skill-type-buff"><div class="skill-icon">⚔️</div><div class="skill-details"><h4>Greater Damage</h4><p>Tăng sát thương cho mục tiêu (theo Energy)</p></div></div>
+        <div class="skill-card skill-type-buff"><div class="skill-icon">🧪</div><div class="skill-details"><h4>Cure</h4><p>Giải trừ hiệu ứng bất lợi (choáng, độc, đóng băng...)</p></div></div>
+        <div class="skill-card skill-type-buff"><div class="skill-icon">💚</div><div class="skill-details"><h4>Party Heal</h4><p>Hồi máu cho toàn bộ party</p></div></div>
+        <div class="skill-card skill-type-buff"><div class="skill-icon">🌟</div><div class="skill-details"><h4>Bless</h4><p>Tăng tất cả chỉ số cho bản thân và đồng đội</p></div></div>
+        <div class="skill-card skill-type-buff"><div class="skill-icon">🔋</div><div class="skill-details"><h4>Recovery</h4><p>Hồi phục SD (Shield Defense) cho mục tiêu</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MAGIC GLADIATOR ==================== -->
+<div class="class-section">
+  <div class="class-header">
+    <img class="class-avatar" src="https://kimi-web-img.kimi.ai/img/1.bp.blogspot.com/533c84bdb8b577e0693f220f97f15e7276524019.jpg" alt="Magic Gladiator">
+    <div class="class-info">
+      <h2>Magic Gladiator</h2>
+      <p class="class-desc">Đấu Sĩ Phép Thuật — Lai giữa Dark Knight và Dark Wizard, cân bằng cận chiến và phép thuật</p>
+      <span class="class-badge">Vũ khí: Kiếm / Gậy phép</span>
+    </div>
+  </div>
+  <div class="skills-container">
+    <div class="skill-category">
+      <div class="skill-category-title">⚔️ Skill Tấn Công Đặc Trưng</div>
+      <div class="skill-grid">
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🔥</div><div class="skill-details"><h4>Fire Slash</h4><p>Chém kiếm tẩm năng lượng hắc ám gây sát thương và giảm phòng thủ mục tiêu</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">💨</div><div class="skill-details"><h4>Power Slash</h4><p>Chém tạo sóng gió gây sát thương diện rộng</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🔥</div><div class="skill-details"><h4>Flame Strike</h4><p>Chém hướng mục tiêu gây sát thương lửa diện rộng</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🌪️</div><div class="skill-details"><h4>Gigantic Storm</h4><p>Tạo cơn bão khổng lồ gây sát thương diện rộng cực lớn</p></div></div>
+      </div>
+    </div>
+    <div class="skill-category">
+      <div class="skill-category-title">📜 Skill Kế Thừa</div>
+      <div class="skill-grid">
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🔮</div><div class="skill-details"><h4>Fireball</h4><p>Skill kế thừa từ DW — bắn quả cầu lửa</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">⚡</div><div class="skill-details"><h4>Power Wave</h4><p>Skill kế thừa từ DW — sóng điện</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🌀</div><div class="skill-details"><h4>Twisting Slash</h4><p>Skill kế thừa từ DK — xoay vũ khí AoE</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== DARK LORD ==================== -->
+<div class="class-section">
+  <div class="class-header">
+    <img class="class-avatar" src="https://kimi-web-img.kimi.ai/img/mu.lv/d3dbfbafb925fe77c5750c6225ccd33f6c8d3fa3.jpg" alt="Dark Lord">
+    <div class="class-info">
+      <h2>Dark Lord</h2>
+      <p class="class-desc">Chúa Tể Bóng Tối — Class chỉ huy, sử dụng chùy (scepter) và khiên, có pet Dark Raven & Dark Horse</p>
+      <span class="class-badge">Vũ khí: Chùy / Khiên</span>
+    </div>
+  </div>
+  <div class="skills-container">
+    <div class="skill-category">
+      <div class="skill-category-title">⚔️ Skill Tấn Công</div>
+      <div class="skill-grid">
+        <div class="skill-card skill-type-attack"><div class="skill-icon">💥</div><div class="skill-details"><h4>Force</h4><p>Skill mặc định — bắn luồng năng lượng tập trung</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">💥</div><div class="skill-details"><h4>Force Wave</h4><p>Phiên bản nâng cao của Force, xuyên giáp nhiều mục tiêu</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🔥</div><div class="skill-details"><h4>Fire Burst</h4><p>Bắn chuỗi lửa gây sát thương diện rộng — skill phổ biến nhất của DL</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🌍</div><div class="skill-details"><h4>Earthquake</h4><p>Giậm mạnh gây sát thương khổng lồ và đẩy lùi kẻ địch xung quanh</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">⚡</div><div class="skill-details"><h4>Electric Spark</h4><p>Giải phóng luồng điện mạnh gây sát thương diện rộng, sức mạnh tăng theo party</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🔥</div><div class="skill-details"><h4>Fire Scream</h4><p>Bắn 3 luồng lửa từ phía trước gây sát thương diện rộng</p></div></div>
+        <div class="skill-card skill-type-attack"><div class="skill-icon">🐦‍⬛</div><div class="skill-details"><h4>Birds</h4><p>Triệu hồi đàn quạ đen (Dark Raven) tấn công kẻ địch phía trước</p></div></div>
+      </div>
+    </div>
+    <div class="skill-category">
+      <div class="skill-category-title">🛡️ Skill Hỗ Trợ</div>
+      <div class="skill-grid">
+        <div class="skill-card skill-type-support"><div class="skill-icon">🌀</div><div class="skill-details"><h4>Summon</h4><p>Triệu hồi toàn bộ đồng đội trong party đến vị trí của mình</p></div></div>
+        <div class="skill-card skill-type-buff"><div class="skill-icon">💥</div><div class="skill-details"><h4>Increase Critical Damage</h4><p>Tăng sát thương chí mạng cho bản thân và đồng đội</p></div></div>
+      </div>
+    </div>
+    <div class="skill-category">
+      <div class="skill-category-title">🐦‍⬛ Pet</div>
+      <div class="skill-grid">
+        <div class="skill-card skill-type-summon"><div class="skill-icon">🐦‍⬛</div><div class="skill-details"><h4>Dark Raven</h4><p>Pet tấn công tầm xa, tự động tấn công mục tiêu</p></div></div>
+        <div class="skill-card skill-type-summon"><div class="skill-icon">🐴</div><div class="skill-details"><h4>Dark Horse</h4><p>Pet gia tăng phòng thủ và tốc độ di chuyển, có thể cưỡi</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ANIMATION / HOẠT ẢNH ==================== -->
+<div class="class-section">
+  <div class="animation-section">
+    <h3>🎬 Hoạt Ảnh & Hình Ảnh Tham Khảo</h3>
+    <div class="animation-grid">
+      <div class="animation-item">
+        <img src="https://kimi-web-img.kimi.ai/img/wiki.infinitymu.net/72a29c9322494cd39e72fe9477a4ea295759cb50.gif" alt="Dark Knight Animation">
+        <p>Dark Knight — In-Game Animation</p>
+      </div>
+      <div class="animation-item">
+        <img src="https://kimi-web-img.kimi.ai/img/muimmortalguides.com/ff53115db629eaa98e7fd629b96d6affad549dab.jpg" alt="Twisting Slash">
+        <p>Twisting Slash — Skill Info</p>
+      </div>
+      <div class="animation-item">
+        <img src="https://kimi-web-img.kimi.ai/img/image.webzen.net/1e0436c9794e45b2dcd56d891be59810f0014f3c.gif" alt="Skill Tree">
+        <p>High Elf — Master Skill Tree</p>
+      </div>
+      <div class="animation-item">
+        <img src="https://kimi-web-img.kimi.ai/img/image.webzen.net/20fcbb5f9e5b50b1a0d3e04faf7ef6c665f891fd.gif" alt="Skill Icons">
+        <p>Fist Master — Skill Icons</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== GHI CHÚ ==================== -->
+<div class="note-box">
+  <h3>📋 Ghi Chú Quan Trọng</h3>
+  <ul>
+    <li>Season 2 là phiên bản MU Online cổ điển (2003–2004), chỉ có 5 class cơ bản trên</li>
+    <li>Các skill như <strong>Decay, Ice Storm</strong> (DW) và <strong>Fire Scream</strong> (DL) xuất hiện từ Season 1 trở đi</li>
+    <li><strong>Combo</strong> của DK chỉ mở khóa sau khi hoàn thành <strong>Quest Marlon</strong> tại Level 220</li>
+    <li><strong>Magic Gladiator</strong> mở khóa khi có nhân vật đạt Level 220 trở lên</li>
+    <li><strong>Dark Lord</strong> mở khóa khi có nhân vật đạt Level 250 trở lên</li>
+    <li>MG có thể sử dụng một số skill cơ bản của DW và DK</li>
+  </ul>
+</div>
+
+<div class="footer">
+  <p>MU Online Season 2 — Skill Reference Document</p>
+  <p style="margin-top:5px; color:#444;">Compiled for game design reference</p>
+</div>
+
+</div>
+</body>
+</html>

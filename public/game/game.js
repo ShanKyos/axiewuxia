@@ -507,14 +507,16 @@ const SECTS = {
     hpMult:0.90, defMult:0.85, dmgMult:1.05, atkSrc:{agi:2.0},
     desc:'Cung dài, giáp da nhẹ, chân bước không thành tiếng. Sylvan Ranger rót tên từ ngoài tầm với, đồng thời phủ buff lên cả đội — vừa là sát thủ vừa là chỗ dựa. Tiềm năng: chỉ cần dồn Mẫn Tiệp là đủ mạnh.',
     range:380, basicProj:'arrow',
-    skillA:{ name:'Multi-Shot', type:'proj', cd:4, qi:20, mult:1.5, count:5 },
+    // 3 mũi × 2.5 = tổng sát thương y hệt bản cũ (5 × 1.5), chỉ đổi cho khớp tên MU:
+    // Triple Shot bắn BA mũi, Five Shot (di sản) mới là năm. Mỗi bậc Tiến Hóa +1 mũi.
+    skillA:{ name:'Triple Shot', type:'proj', cd:4, qi:20, mult:2.5, count:3 },
     tp:{ name:'Ice Arrow', mult:2.8 } },
   baidasan: { name:'Dark Wizard', role:'Pháp thuật / Độc tố', element:'Thủy', color:'#7ec850', glow:'#c8ffa0', bonus:{vit:1,def:0,str:0,agi:1,ene:3},
     hpMult:0.72, defMult:0.65, dmgMult:1.30, atkSrc:{ene:1.6, agi:0.6},
     desc:'Áo thụng trùm kín, quyền trượng nạm ngọc, thân thể mỏng như giấy. Dark Wizard đứng xa nhất chiến trường và gọi độc tố cùng thiên thạch xuống thay mình. Tiềm năng: cần cả Mẫn Tiệp lẫn Linh Lực.',
     range:420, basicProj:'orb',
     skillA:{ name:'Poison', type:'proj', cd:4, qi:20, mult:1.5 },
-    tp:{ name:'Meteor', mult:3.2 } },
+    tp:{ name:'Meteorite', mult:3.2 } },
   minhgiao: { name:'Spellblade', role:'Lai / Bộc phát Hoả', element:'Hỏa', color:'#e8552a', glow:'#ffb060', bonus:{vit:1,def:0,str:2,agi:0,ene:2},
     hpMult:1.05, defMult:1.0, dmgMult:1.08, atkSrc:{str:1.1, ene:1.1},
     desc:'Nửa giáp nửa vải, một vai để trần, đại đao bản rộng cháy lửa. Spellblade vừa chém như hiệp sĩ vừa niệm như pháp sư — không cần chờ tới cấp 10 để mạnh. Tiềm năng: cân cả Lực Lượng lẫn Linh Lực.',
@@ -1610,7 +1612,7 @@ const SKILL_DEFS = {
   tp:      { unlock:7,  kind:'sectTP', icon:s=>SECT_ART[s].iconTP, desc:s=>`${s.tp.name} — Trấn Phái tuyệt kỹ ${s.name}, sát thương lan.` },
   // icon để trống → probeSkillIcons() vẽ theo bộ MU. gangkhi.png là art hoạt hình sáng, không
   // sai chiêu nhưng lạc hẳn giữa ba ô còn lại của Dark Knight vốn là khung đá-thép tối màu.
-  gangkhi: { unlock:10, kind:'gangkhi', name:'Stone Skin', cd:10, qi:30, icon:()=>null,
+  gangkhi: { unlock:10, kind:'gangkhi', name:'Defense', cd:10, qi:30, icon:()=>null,
              req:()=>player.gangkhi.tier>0, reqTxt:'Stoneform tầng 1 (Thuần Thục)', desc:()=>'6s giảm 30% sát thương gánh chịu — lớp vảy đá phủ kín thân.' },
   danchi:  { unlock:20, kind:'danchi', name:'Rupture Bolt', cd:8, qi:35, mult:2.0, icon:()=>'assets/skills/danchi.png',
              req:()=>player.level>=48, reqTxt:'Cấp 48', desc:()=>'Tia lực xuyên giáp — sát thương ×2 và khóa chiêu địch 2.5s.' },
@@ -1643,48 +1645,63 @@ const VH_TIER = {
 // Kích vĩnh viễn (xem LEGACY_SECT_SKILLS). Giữ nguyên 2 id 'tienthiencong'/'songthu' vì có code khác gọi thẳng
 // theo id (auto-hồi sinh & miễn hồi chiêu) — chỉ đổi tên hiển thị + đổi phai sang lớp mới.
 const VOHOC_DEFS = {
-  // ── Dark Knight ──
-  dk_cyclone:    { name:'Cyclone', school:'Dark Knight', phai:'thieulam', tier:'so', cat:'Cận Chiến', type:'aoe', unlock:15, cd:7, qi:20, mult:1.8, color:'#4c8dff', glyph:'◉', fx:{ r:150, kb:40 }, desc:'Xoay tít vũ khí quanh thân — đánh trúng mọi địch trong tầm gần.' },
-  dk_ragefulblow:{ name:'Rageful Blow', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Cận Chiến', type:'aoe', unlock:25, cd:8, qi:24, mult:2.2, color:'#3a6fd8', glyph:'✹', fx:{ r:170, kb:55, stun:0.8 }, desc:'Giáng vũ khí xuống đất — chấn động, hất văng & choáng nhẹ.' },
-  dk_crescent:   { name:'Crescent Moon Slash', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Cận Chiến', type:'cone', unlock:35, cd:6, qi:20, mult:2.0, color:'#6aa0ff', glyph:'☾', fx:{ pierce:true }, desc:'Một đường chém hình trăng lưỡi liềm — xuyên thấu hàng dài địch.' },
-  dk_fortitude:  { name:'Greater Fortitude', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Bị Động', type:'passive', unlock:45, color:'#8ab8ff', glyph:'♦', desc:'Bị động: +15% HP, +10% giảm sát thương.' },
-  tienthiencong: { name:'Undying Will', school:'Dark Knight', phai:'thieulam', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#ffe9a8', glyph:'✦', desc:'Bị động: chết tự hồi sinh 50% HP — mỗi 300s một lần.' },
-  // ── Dark Wizard ──
-  dw_lightning:  { name:'Lightning', school:'Dark Wizard', phai:'baidasan', tier:'so', cat:'Pháp Thuật', type:'proj', unlock:15, cd:5, qi:18, mult:1.7, color:'#7ec850', glyph:'⚡', fx:{ kb:20 }, desc:'Một tia sét đánh thẳng vào địch, có thể hất văng.' },
-  dw_evilspirit: { name:'Evil Spirit', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'aoe', unlock:25, cd:7, qi:26, mult:2.0, color:'#6ab850', glyph:'✦', fx:{ r:150 }, desc:'Giải phóng năng lượng bóng tối quanh người — sát thương diện rộng.' },
-  dw_ice:        { name:'Ice', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'proj', unlock:35, cd:6, qi:20, mult:1.6, color:'#5ac8e8', glyph:'❄', fx:{ slow:{ pct:0.5, t:3 } }, desc:'Băng giá xuyên thấu — trúng đòn làm chậm mục tiêu.' },
-  dw_twister:    { name:'Twister', school:'Dark Wizard', phai:'baidasan', tier:'cao', cat:'Pháp Thuật', type:'proj', unlock:45, cd:6, qi:24, mult:1.8, color:'#8ac850', glyph:'◉', fx:{ multi:3, pierce:true }, desc:'Ba cơn lốc xuyên phá — quét qua mọi địch trên đường đi.' },
-  dw_nova:       { name:'Nova', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Pháp Thuật', type:'aoe', unlock:55, cd:10, qi:35, mult:2.8, color:'#ffd76a', glyph:'★', fx:{ r:180, big:true }, desc:'Dồn năng lượng ánh sáng rồi bùng nổ toàn diện — chiêu mạnh nhất phái.' },
-  songthu:       { name:'Arcane Insight', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#d8d8f0', glyph:'✧', desc:'Bị động: 30% chiêu vừa tung không tốn hồi chiêu.' },
-  // Chiêu buff (ô 3 cố định — xem BUFF_SKILL_ID/defaultSkillBar): Dark Wizard mỏng máu nhất nên
-  // được 1 khiên chắn tạm thời, bù lại lúc đứng lại tụ phép giữa tầm xa 420.
-  dw_shield:     { name:'Soul Barrier', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'buff', unlock:15, cd:10, qi:26, color:'#7ec850', glyph:'♦', fx:{ shieldPct:45, t:6 }, desc:'Khiên hồn ma bao bọc — hấp thụ sát thương bằng 45% HP tối đa trong 6s.' },
-  // ── Sylvan Ranger ──
-  elf_heal:      { name:'Heal', school:'Sylvan Ranger', phai:'toanchan', tier:'so', cat:'Bị Động', type:'passive', unlock:15, color:'#3a9d8b', glyph:'✚', desc:'Bị động: tự hồi 1% HP tối đa mỗi giây.' },
-  elf_greaterdef:{ name:'Greater Defense', school:'Sylvan Ranger', phai:'toanchan', tier:'trung', cat:'Bị Động', type:'passive', unlock:30, cd:10, qi:25, color:'#5ac8b8', glyph:'✚', fx:{ shieldPct:40, t:6 }, desc:'Khiên năng lượng — hấp thụ sát thương bằng 40% HP tối đa trong 6s.' },
-  // Chiêu buff (ô 3 cố định): Greater Damage — đúng bản sắc Sylvan Ranger hỗ trợ trong MU Online.
-  elf_greaterdmg:{ name:'Greater Damage', school:'Sylvan Ranger', phai:'toanchan', tier:'cao', cat:'Hỗ Trợ', type:'buff', unlock:15, cd:10, qi:28, color:'#7ecbff', glyph:'⚔', fx:{ dmgPct:35, t:6 }, desc:'Cường hoá sức mạnh — +35% sát thương trong 6s.' },
-  // Penetration (Xuyên Tâm Tiễn) — chiêu duy nhất trong bộ đặc trưng 5 lớp mà game chưa hề có.
-  // Đây cũng là chiêu CHỦ ĐỘNG đầu tiên trong cây lớp của Sylvan Ranger: bốn chiêu cũ (Heal,
-  // Greater Defense, Greater Damage, Swift Wind) đều là bị động/buff, nên Ranger là lớp duy nhất
-  // có 0 chiêu tấn công riêng — mọi lớp khác có 3 tới 5.
+  // ── Dark Knight — binh khí nặng, chấn động nền đất ──
+  dk_cyclone:     { name:'Cyclone', school:'Dark Knight', phai:'thieulam', tier:'so', cat:'Binh Khí', type:'aoe', unlock:15, cd:7, qi:20, mult:1.8, color:'#4c8dff', glyph:'◉', fx:{ r:150, kb:40 }, desc:'Xoay tít vũ khí quanh thân, lực ly tâm cuốn cả bầy — thế nền của mọi bài binh khí.' },
+  dk_lunge:       { name:'Lunge', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Binh Khí', type:'cone', unlock:22, cd:5, qi:18, mult:1.9, color:'#6aa0ff', glyph:'✹', fx:{ pierce:true }, desc:'Cú đâm ngắn và nhanh, mũi kiếm lách qua khe giáp thay vì bổ vào mặt giáp.' },
+  dk_impale:      { name:'Impale', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Binh Khí', type:'aoe', unlock:30, cd:7, qi:22, mult:2.0, color:'#8ab8ff', glyph:'▲', fx:{ r:160 }, desc:'Quay ngang cán giáo, đâm trọn một vòng — mọi kẻ đứng sát đều dính.' },
+  dk_fallingslash:{ name:'Falling Slash', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Binh Khí', type:'cone', unlock:35, cd:6, qi:20, mult:2.4, color:'#3a6fd8', glyph:'☾', fx:{ kb:35 }, desc:'Nhấc rìu quá đầu rồi bổ thẳng xuống — dồn cả trọng lượng người vào một nhát.' },
+  dk_ragefulblow: { name:'Rageful Blow', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Binh Khí', type:'aoe', unlock:25, cd:8, qi:24, mult:2.2, color:'#3a6fd8', glyph:'✹', fx:{ r:170, kb:55, stun:0.8 }, desc:'Giáng vũ khí xuống đất — chấn động, hất văng & choáng nhẹ.' },
+  dk_fortitude:   { name:'Swell Life', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Bị Động', type:'passive', unlock:45, color:'#a0d8ff', glyph:'♦', desc:'Bị động: +15% HP tối đa — sức vóc Dark Knight dày lên theo từng trận sống sót.' },
+  tienthiencong:  { name:'Undying Will', school:'Dark Knight', phai:'thieulam', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#ffe9a8', glyph:'✦', desc:'Bị động: chết tự hồi sinh 50% HP — mỗi 300s một lần.' },
+
+  // ── Sylvan Ranger — cung tên & hỗ trợ ──
+  elf_poisonarrow:{ name:'Poison Arrow', school:'Sylvan Ranger', phai:'toanchan', tier:'so', cat:'Cung Thuật', type:'proj', unlock:15, cd:6, qi:18, mult:1.6, color:'#7ec850', glyph:'☠', fx:{ poison:4 }, desc:'Mũi tên tẩm nhựa độc — trúng rồi thì vết thương tự lan.' },
+  elf_greaterdef: { name:'Greater Defense', school:'Sylvan Ranger', phai:'toanchan', tier:'trung', cat:'Hỗ Trợ', type:'buff', unlock:30, cd:10, qi:25, color:'#5ac8b8', glyph:'✚', fx:{ shieldPct:40, t:6 }, desc:'Phủ một lớp năng lượng lên giáp — đòn tới trượt đi thay vì ăn thẳng.' },
+  elf_holybolt:   { name:'Holy Bolt', school:'Sylvan Ranger', phai:'toanchan', tier:'trung', cat:'Cung Thuật', type:'proj', unlock:38, cd:6, qi:22, mult:2.0, color:'#ffe9a8', glyph:'★', desc:'Tụ ánh sáng lên đầu ngón tay rồi búng đi — không cần tên, không cần cung.' },
+  elf_fiveshot:   { name:'Five Shot', school:'Sylvan Ranger', phai:'toanchan', tier:'cao', cat:'Cung Thuật', type:'proj', unlock:45, cd:7, qi:26, mult:1.6, color:'#a0ffe9', glyph:'✽', fx:{ multi:5 }, desc:'Kẹp năm mũi giữa các ngón, buông một lần — cả nan quạt tên phủ kín phía trước.' },
+  // Ô 3 — buff: Bless. Bốn lớp kia có khiên/giảm ST/tốc đánh/bạo kích; Ranger là lớp DUY NHẤT
+  // hồi máu, đúng vai hỗ trợ trong MU. Giữ id cũ elf_greaterdmg để không mất cấp chiêu đã nâng.
+  elf_greaterdmg: { name:'Bless', school:'Sylvan Ranger', phai:'toanchan', tier:'cao', cat:'Hỗ Trợ', type:'buff', unlock:15, cd:12, qi:28, color:'#ffd76a', glyph:'✦', fx:{ dmgPct:25, healPct:25, t:8 }, desc:'Ban phước: hồi ngay 25% HP tối đa và +25% sát thương trong 8s.' },
   elf_penetration:{ name:'Penetration', school:'Sylvan Ranger', phai:'toanchan', tier:'cao', cat:'Cung Thuật', type:'proj', unlock:20, cd:7, qi:24, mult:2.4, color:'#a0ffe9', glyph:'➤', fx:{ pierce:true, kb:18 }, desc:'Một mũi tên dồn hết lực xuyên thủng cả hàng địch — càng đứng thẳng hàng càng ăn đủ.' },
-  elf_swiftwind: { name:'Swift Wind', school:'Sylvan Ranger', phai:'toanchan', tier:'than', cat:'Bị Động', type:'passive', unlock:55, cd:8, qi:20, color:'#a0ffe9', glyph:'✽', fx:{ selfEva:{ pct:45, t:4 } }, desc:'Gió nhanh theo bước chân — +45% né trong 4s.' },
-  // ── Spellblade ──
-  mg_powerslash: { name:'Power Slash', school:'Spellblade', phai:'minhgiao', tier:'so', cat:'Lai', type:'cone', unlock:15, cd:6, qi:20, mult:1.8, color:'#e8552a', glyph:'⚔', fx:{}, desc:'Một nhát chém quét ngang, dồn trọn sức nặng vào lưỡi thép.' },
-  mg_frostnova:  { name:'Frost Nova', school:'Spellblade', phai:'minhgiao', tier:'trung', cat:'Lai', type:'aoe', unlock:30, cd:8, qi:26, mult:2.0, color:'#5ac8e8', glyph:'❄', fx:{ r:150, slow:{ pct:0.4, t:3 } }, desc:'Bùng nổ băng giá quanh thân — làm chậm mọi địch trong tầm.' },
-  mg_ironwill:   { name:'Iron Will', school:'Spellblade', phai:'minhgiao', tier:'cao', cat:'Bị Động', type:'passive', unlock:40, color:'#ffb060', glyph:'◆', desc:'Bị động: +10% HP, +8% giảm sát thương.' },
-  // Chiêu buff (ô 3 cố định): hybrid cận-pháp — tăng cả sát thương lẫn khí thế trận đấu.
-  mg_battlefury: { name:'Battle Fury', school:'Spellblade', phai:'minhgiao', tier:'trung', cat:'Lai', type:'buff', unlock:15, cd:10, qi:26, color:'#ff9a5a', glyph:'⚔', fx:{ dmgPct:30, t:6 }, desc:'Dồn cả nội lẫn ngoại lực — +30% sát thương trong 6s.' },
-  mg_flamestrike:{ name:'Flame Storm', school:'Spellblade', phai:'minhgiao', tier:'than', cat:'Lai', type:'aoe', unlock:55, cd:11, qi:38, mult:3.0, color:'#ff7a3a', glyph:'☼', fx:{ r:200, kb:60, big:true }, desc:'Bão lửa nuốt trọn cả một vùng — chiêu bộc phát mạnh nhất phái.' },
-  // ── Dark Lord ──
-  dl_electricspark:{ name:'Electric Spark', school:'Dark Lord', phai:'bug', tier:'so', cat:'Chỉ Huy', type:'proj', unlock:15, cd:5, qi:18, mult:1.6, color:'#8a9a3a', glyph:'⚡', fx:{ stun:0.8 }, desc:'Tia điện từ quyền trượng — trúng đòn choáng nhẹ.' },
-  dl_darkspirit: { name:'Dark Spirit', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'aoe', unlock:30, cd:7, qi:24, mult:2.0, color:'#6a7a2a', glyph:'✦', fx:{ r:160 }, desc:'Triệu hồi u linh vây quanh — sát thương diện rộng.' },
-  dl_chaoticdiseier:{ name:'Chaotic Diseier', school:'Dark Lord', phai:'bug', tier:'cao', cat:'Chỉ Huy', type:'proj', unlock:40, cd:6, qi:22, mult:1.8, color:'#a8b85a', glyph:'✦', fx:{ multi:3, pierce:true }, desc:'Ném quyền trượng xoay tít — xuyên thấu hàng dài địch.' },
-  dl_darkraven:  { name:'Dark Raven', school:'Dark Lord', phai:'bug', tier:'than', cat:'Chỉ Huy', type:'aoe', unlock:55, cd:10, qi:34, mult:2.6, color:'#2a1a3a', glyph:'☾', fx:{ r:180, kb:40, big:true }, desc:'Bầy quạ đen lao xuống xé nát mọi thứ trong tầm — chiêu chỉ huy tối thượng.' },
-  // Chiêu buff (ô 3 cố định): khí thế chỉ huy — dồn sức cho bản thân lẫn bầy tùy tùng theo sau.
-  dl_commandaura:{ name:'Command Aura', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'buff', unlock:15, cd:10, qi:26, color:'#a0b04a', glyph:'⚑', fx:{ dmgPct:25, t:6 }, desc:'Hào khí chỉ huy lan tỏa — +25% sát thương trong 6s.' },
+  elf_heal:       { name:'Heal', school:'Sylvan Ranger', phai:'toanchan', tier:'trung', cat:'Bị Động', type:'passive', unlock:25, color:'#3a9d8b', glyph:'✚', desc:'Bị động: tự hồi 1% HP tối đa mỗi giây, kể cả giữa trận.' },
+
+  // ── Dark Wizard — nguyên tố ──
+  dw_lightning:   { name:'Lightning', school:'Dark Wizard', phai:'baidasan', tier:'so', cat:'Pháp Thuật', type:'proj', unlock:15, cd:5, qi:18, mult:1.7, color:'#d8e84a', glyph:'⚡', fx:{ kb:20 }, desc:'Một tia sét đánh thẳng vào địch, có thể hất văng.' },
+  dw_ice:         { name:'Ice', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'proj', unlock:28, cd:6, qi:20, mult:1.6, color:'#5ac8e8', glyph:'❄', fx:{ slow:{ pct:0.5, t:3 } }, desc:'Băng giá xuyên thấu — trúng đòn làm chậm mục tiêu.' },
+  dw_twister:     { name:'Twister', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'proj', unlock:38, cd:6, qi:24, mult:1.8, color:'#8ac850', glyph:'◉', fx:{ multi:3, pierce:true }, desc:'Ba cơn lốc xuyên phá — quét qua mọi địch trên đường đi.' },
+  dw_inferno:     { name:'Inferno', school:'Dark Wizard', phai:'baidasan', tier:'cao', cat:'Pháp Thuật', type:'aoe', unlock:48, cd:10, qi:35, mult:2.8, color:'#ff7a3a', glyph:'☼', fx:{ r:180, big:true }, desc:'Dựng vòng lửa quanh chân rồi để nó nở ra nuốt cả vùng.' },
+  dw_evilspirit:  { name:'Evil Spirit', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'aoe', unlock:25, cd:7, qi:26, mult:2.0, color:'#6ab850', glyph:'✦', fx:{ r:150 }, desc:'Giải phóng năng lượng bóng tối quanh người — sát thương diện rộng.' },
+  // Ô 3 — buff: Soul Barrier, lá chắn hấp thụ. Dark Wizard mỏng máu nhất nên đây là thứ giữ
+  // được mạng lúc đứng tụ phép giữa tầm xa 420.
+  dw_shield:      { name:'Soul Barrier', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'buff', unlock:15, cd:10, qi:26, color:'#5ab8e8', glyph:'♦', fx:{ shieldPct:45, t:6 }, desc:'Khiên hồn ma bao bọc — hấp thụ sát thương bằng 45% HP tối đa trong 6s.' },
+  songthu:        { name:'Arcane Insight', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#d8d8f0', glyph:'✧', desc:'Bị động: 30% chiêu vừa tung không tốn hồi chiêu.' },
+
+  // ── Spellblade — nửa kiếm nửa phép; MU cho lớp lai KẾ THỪA chiêu của hai lớp gốc ──
+  mg_powerslash:  { name:'Power Slash', school:'Spellblade', phai:'minhgiao', tier:'so', cat:'Lai', type:'cone', unlock:15, cd:6, qi:20, mult:1.8, color:'#ffcf7a', glyph:'⚔', fx:{}, desc:'Một nhát chém quét ngang, sóng sáng rời khỏi lưỡi thép bay tiếp.' },
+  mg_fireball:    { name:'Fireball', school:'Spellblade', phai:'minhgiao', tier:'so', cat:'Kế Thừa · Dark Wizard', type:'proj', unlock:18, cd:5, qi:16, mult:1.5, color:'#ff9a5a', glyph:'☼', desc:'Quả cầu lửa học lỏm từ pháp sư — Spellblade niệm được mà không cần bỏ kiếm.' },
+  mg_powerwave:   { name:'Power Wave', school:'Spellblade', phai:'minhgiao', tier:'trung', cat:'Kế Thừa · Dark Wizard', type:'proj', unlock:28, cd:5, qi:18, mult:1.7, color:'#ffcf7a', glyph:'⚡', fx:{ pierce:true }, desc:'Sóng lực dội thẳng theo hướng nhìn — chiêu nhập môn của pháp sư, trong tay kẻ cầm kiếm.' },
+  mg_twistingslash:{ name:'Twisting Slash', school:'Spellblade', phai:'minhgiao', tier:'trung', cat:'Kế Thừa · Dark Knight', type:'aoe', unlock:35, cd:7, qi:22, mult:1.9, color:'#ffb060', glyph:'◉', fx:{ r:150 }, desc:'Vòng chém quanh thân mượn của hiệp sĩ — thép nặng thay cho thép mỏng.' },
+  mg_giganticstorm:{ name:'Gigantic Storm', school:'Spellblade', phai:'minhgiao', tier:'cao', cat:'Lai', type:'aoe', unlock:55, cd:11, qi:38, mult:3.0, color:'#ff7a3a', glyph:'☼', fx:{ r:200, kb:60, big:true }, desc:'Bão lửa khổng lồ nuốt trọn cả một vùng — chiêu riêng, không lớp nào khác có.' },
+  // Ô 3 — buff: Battle Fury. Lớp lai đánh bằng NHỊP, nên buff của nó cộng tốc đánh chứ không
+  // chỉ cộng sát thương như bản cũ (trùng hệt buff của Ranger và Dark Lord).
+  mg_battlefury:  { name:'Battle Fury', school:'Spellblade', phai:'minhgiao', tier:'trung', cat:'Lai', type:'buff', unlock:15, cd:10, qi:26, color:'#e8552a', glyph:'⚔', fx:{ dmgPct:20, aspdPct:22, t:6 }, desc:'Dồn cả nội lẫn ngoại lực — +20% sát thương và +22% tốc đánh trong 6s.' },
+  mg_ironwill:    { name:'Iron Will', school:'Spellblade', phai:'minhgiao', tier:'cao', cat:'Bị Động', type:'passive', unlock:40, color:'#ffb060', glyph:'◆', desc:'Bị động: hút 6% sát thương gây ra thành HP — càng đánh dồn càng khó chết.' },
+
+  // ── Dark Lord — quyền trượng chỉ huy & bầy tùy tùng ──
+  dl_force:       { name:'Force', school:'Dark Lord', phai:'bug', tier:'so', cat:'Chỉ Huy', type:'proj', unlock:15, cd:4, qi:14, mult:1.5, color:'#a8b85a', glyph:'●', desc:'Nắm năng lượng lại thành một khối rồi đẩy đi — chiêu mặc định của quyền trượng.' },
+  dl_electricspark:{ name:'Electric Spark', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'proj', unlock:25, cd:5, qi:18, mult:1.6, color:'#d8d84a', glyph:'⚡', fx:{ stun:0.8 }, desc:'Tia điện từ quyền trượng — trúng đòn choáng nhẹ.' },
+  dl_fireburst:   { name:'Fire Burst', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'aoe', unlock:35, cd:7, qi:24, mult:2.0, color:'#ff9a5a', glyph:'☼', fx:{ r:160 }, desc:'Bắn một chuỗi lửa ngắn liên tiếp — chiêu Dark Lord dùng nhiều nhất khi dọn bãi.' },
+  dl_darkhorse:   { name:'Dark Horse', school:'Dark Lord', phai:'bug', tier:'cao', cat:'Chỉ Huy', type:'aoe', unlock:50, cd:9, qi:30, mult:2.4, color:'#8a6a4a', glyph:'⚑', fx:{ r:170, kb:50 }, desc:'Thúc chiến mã lao qua hàng địch — sức nặng của cả người lẫn ngựa dồn vào cú va.' },
+  // Ô 4 — TUYỆT CHIÊU. Bản cũ là "Chaotic Diseier" dùng CHUNG hoạt ảnh bầy quạ với Dark Raven:
+  // hai chiêu của cùng một lớp trông y hệt nhau. Earthquake là chiêu MU thật của Dark Lord và
+  // có hình riêng (nền đất nứt theo vòng). Giữ id cũ để người chơi không mất cấp chiêu đã nâng.
+  dl_chaoticdiseier:{ name:'Earthquake', school:'Dark Lord', phai:'bug', tier:'cao', cat:'Chỉ Huy', type:'aoe', unlock:40, cd:9, qi:30, mult:2.6, color:'#a87a4a', glyph:'▲', fx:{ r:190, kb:70, stun:0.6, big:true }, desc:'Giậm quyền trượng xuống đất — nền nứt thành vòng, cả bầy bật ngửa.' },
+  // Ô 3 — buff: Increase Critical Damage, đúng tên MU. Dark Lord là lớp chỉ huy sát thương thấp,
+  // đổi lại có một cửa sổ bạo kích tuyệt đối.
+  dl_commandaura: { name:'Increase Critical Damage', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'buff', unlock:15, cd:14, qi:30, color:'#ff6a5a', glyph:'★', fx:{ crit:true, dmgPct:15, t:4 }, desc:'Hô hào toàn quân: mọi đòn đều bạo kích trong 4s, kèm +15% sát thương.' },
+  dl_darkraven:   { name:'Dark Raven', school:'Dark Lord', phai:'bug', tier:'than', cat:'Bị Động', type:'passive', unlock:55, color:'#6a4a8a', glyph:'☾', desc:'Bị động: bầy quạ đen bám theo đánh hôi — +12% sát thương của MỌI chiêu thức.' },
 };
+
 // ═══════════ TỐI GIẢN TASKBAR: 3 Ô CỐ ĐỊNH KIỂU MU ONLINE ═══════════
 // Mỗi phái chỉ còn đúng 3 chiêu chủ động — 1 chiêu chính (skillA), 1 chiêu phụ (Trấn Phái), 1 buff có
 // thời gian riêng từng phái — thay vì 5 ô người chơi tự gán. Toàn bộ chiêu Sổ Kỹ Năng còn lại (Cyclone,
@@ -1703,7 +1720,7 @@ const SIGNATURE_SKILL = {
   toanchan: 'elf_penetration',   // Penetration — mũi tên xuyên cả hàng
   baidasan: 'dw_evilspirit',     // Evil Spirit — u linh vây quanh
   minhgiao: 'mg_powerslash',     // Power Slash — sóng ánh sáng từ nhát chém
-  bug:      'dl_chaoticdiseier', // Chaotic Diseier — bầy quạ hỗn loạn
+  bug:      'dl_chaoticdiseier', // Earthquake — giậm đất, nền nứt thành vòng (id cũ, xem VOHOC_DEFS)
 };
 function defaultSkillBar(sect){ return ['a', 'tp', BUFF_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null]; }
 // Di Sản Cũ: mỗi tầng quy đổi thành % Công Kích vĩnh viễn — điều kiện mở giữ nguyên (tự ngộ theo
@@ -1711,11 +1728,19 @@ function defaultSkillBar(sect){ return ['a', 'tp', BUFF_SKILL_ID[sect] || null, 
 const LEGACY_TIER_PCT = { so:1.5, trung:2, cao:2.5, than:3.5 };
 // Năm chiêu trong SIGNATURE_SKILL đã rời khỏi đây: chúng nay là chiêu BẤM ĐƯỢC ở ô 4, không còn
 // quy đổi thành %ST vĩnh viễn nữa. Để cả hai chỗ thì một chiêu vừa cộng %ST vừa tung ra được.
-const LEGACY_SECT_SKILLS = ['dk_cyclone','dk_crescent',
-  'dw_lightning','dw_ice','dw_twister','dw_nova',
-  'elf_greaterdef','elf_swiftwind',
-  'mg_frostnova','mg_flamestrike',
-  'dl_electricspark','dl_darkspirit','dl_darkraven'];
+// Mỗi lớp ĐÚNG bốn chiêu di sản, cùng bậc sơ/trung/trung/cao = +8,0% Công Kích. Bản cũ chia
+// không đều: Dark Knight được 4,0% còn Dark Wizard 9,5% — cùng một hệ thống mà chênh nhau 5,5%
+// Công Kích vĩnh viễn chỉ vì lớp này tình cờ khai nhiều chiêu hơn lớp kia.
+const LEGACY_SECT_SKILLS = [
+  'dk_cyclone','dk_lunge','dk_impale','dk_fallingslash',
+  'elf_poisonarrow','elf_greaterdef','elf_holybolt','elf_fiveshot',
+  'dw_lightning','dw_ice','dw_twister','dw_inferno',
+  'mg_fireball','mg_powerwave','mg_twistingslash','mg_giganticstorm',
+  'dl_force','dl_electricspark','dl_fireburst','dl_darkhorse'];
+// Bị động CÓ TÁC DỤNG THẬT (xem calcDerived / regen / hurtMob) — không quy đổi thành %ST, vì
+// bản cũ ghi "+15% HP, +10% giảm sát thương" mà không nối vào đâu cả: người chơi đọc xong tưởng
+// mình có, thực tế chỉ được +2,5% Công Kích.
+const CLASS_PASSIVES = ['dk_fortitude','tienthiencong','elf_heal','songthu','mg_ironwill','dl_darkraven'];
 const LEGACY_UNIVERSAL_PCT = { amkhi:1.5, danchi:2, bow:2, tieuhon:3 };
 // Đăng ký kỹ năng chủ động vào SKILL_DEFS — dùng chung cho castSkill(); chỉ chiêu buff (BUFF_SKILL_ID)
 // thực sự nằm ở taskbar 3 ô, còn lại chỉ tồn tại để tính legacyAtkPct và hiển thị ở tab Di Sản Cũ
@@ -1901,7 +1926,11 @@ function upBtnHtml(id){
   const _msNext = SK_MILESTONES.find(x => x.lv === lv + 1); // cấp kế tiếp có phải cấp mốc không
   const _mult = skMileMult(id);
   const _stg = evoStage(id);
-  return `${_spB}<button class="mini-btn vh-learn-btn" style="margin-right:3px" title="Cấp ${lv}/120${cur ? ' · ' + cur.name : ''} · ⚡tiến hóa bậc ${_stg}/3 (mốc 40/80/120, mỗi mốc chọn nhánh Bá Đạo/Tốc Chiến) — nâng: ${skUpCost(id).toLocaleString()} bạc + ${skUpKhi(id).toLocaleString()} Instinct${_msNext ? ` (cấp mốc ${_msNext.name}: Instinct ×${_mult})` : ''}, +2,5% ST, −0,25% hồi chiêu${nm ? ` · mốc kế ${nm.name} (cấp ${nm.lv}): ${milestoneTxt(nm)}` : ''} · cấp kỹ năng ≤ cấp nhân vật" onclick="window.upgradeSkillUI('${id}')">⬆${lv}${_stg ? '⚡' + _stg : ''}${_msNext ? '◆' : ''}</button>${evoBadgeHtml(id)}`;
+  // 📜 Sách Kỹ Năng: nâng thẳng 1 cấp. Đây là chỗ tiêu MỚI của sách sau khi bỏ "di sản ngoại lớp" —
+  // nó không còn mua được chiêu của lớp khác, mà đổ vào chính cây chiêu của lớp mình.
+  const _bk = (player.bikipVH || 0) > 0 && lv < 120 && lv < player.level
+    ? `<button class="mini-btn" style="margin-right:3px;border-color:#ffb15c;color:#ffb15c" title="Dùng 1 Sách Kỹ Năng nâng thẳng ${skName(id)} lên Lv ${lv+1} (đang có ${player.bikipVH||0} quyển)" onclick="window.useSkillBookUI('${id}')">📜</button>` : '';
+  return `${_spB}${_bk}<button class="mini-btn vh-learn-btn" style="margin-right:3px" title="Cấp ${lv}/120${cur ? ' · ' + cur.name : ''} · ⚡tiến hóa bậc ${_stg}/3 (mốc 40/80/120, mỗi mốc chọn nhánh Bá Đạo/Tốc Chiến) — nâng: ${skUpCost(id).toLocaleString()} bạc + ${skUpKhi(id).toLocaleString()} Instinct${_msNext ? ` (cấp mốc ${_msNext.name}: Instinct ×${_mult})` : ''}, +2,5% ST, −0,25% hồi chiêu${nm ? ` · mốc kế ${nm.name} (cấp ${nm.lv}): ${milestoneTxt(nm)}` : ''} · cấp kỹ năng ≤ cấp nhân vật" onclick="window.upgradeSkillUI('${id}')">⬆${lv}${_stg ? '⚡' + _stg : ''}${_msNext ? '◆' : ''}</button>${evoBadgeHtml(id)}`;
 }
 window.assignSpaceUI = function(id){
   if (!player) return;
@@ -1918,26 +1947,38 @@ function learnVohoc(id){
   player.vohoc[id] = true;
   calcDerived(); saveGame();
   addFloat(player.x, player.y-66, `✦ Ngộ được: ${v.name}!`, VH_TIER[v.tier].color, 16);
-  zoneBanner = { text:'DI SẢN', sub:`${v.school} · ${v.name} — +${LEGACY_TIER_PCT[v.tier] || 0}% Công Kích vĩnh viễn (xem K → Di Sản Cũ)`, color:VH_TIER[v.tier].color, t:3.5 };
+  // Bị động của lớp KHÔNG quy đổi thành %ST (xem CLASS_PASSIVES) — báo đúng thứ nó cho, đừng in
+  // "+3,5% Công Kích vĩnh viễn" cho Undying Will rồi để người chơi đi tìm con số đó trong bảng.
+  const _pas = CLASS_PASSIVES.includes(id);
+  zoneBanner = { text: _pas ? 'BỊ ĐỘNG MỚI' : 'DI SẢN',
+    sub: _pas ? `${v.school} · ${v.name} — ${v.desc.replace(/^Bị động:\s*/, '')}`
+              : `${v.school} · ${v.name} — +${LEGACY_TIER_PCT[v.tier] || 0}% Công Kích vĩnh viễn (xem K → Di Sản Cũ)`,
+    color:VH_TIER[v.tier].color, t:3.5 };
   AudioSys.sfx('quest', 0.9);
 }
-// Sách Kỹ Năng (bikipVH) — đường tiêu duy nhất: học di sản NGOẠI LỚP. Kỹ năng của chính lớp mình
-// vẫn tự ngộ miễn phí theo cấp (vhAutoLearn), còn 4 lớp kia phải mua bằng Sách Kỹ Năng — hoặc nhận
-// sạch miễn phí khi Thăng Tiên. QA: điều kiện cũ là `v.phai` → luôn true sau đợt MU-hoá (mọi chiêu
-// đều phai-locked), khiến hàm này không bao giờ chạy được và Sách Kỹ Năng thành tiền tệ chết.
-function crossClassLearnable(id){
-  const v = VOHOC_DEFS[id];
-  return !!(v && v.phai && v.phai !== player.sect && LEGACY_SECT_SKILLS.includes(id));
-}
-window.learnVohocUI = function(id){
-  const v = VOHOC_DEFS[id];
-  if (!v || vhLearned(id) || !crossClassLearnable(id)) return;
-  const cost = VH_TIER[v.tier].cost;
-  if (player.level < v.unlock){ addFloat(player.x, player.y-40, `Cần cấp ${v.unlock}`, '#8a8a8a', 12); return; }
-  if ((player.bikipVH || 0) < cost){ addFloat(player.x, player.y-40, `Thiếu Sách Kỹ Năng (cần ${cost})`, '#ffb15c', 12); return; }
-  player.bikipVH -= cost;
-  learnVohoc(id);
-  renderSkillPanel();
+// ⚠ ĐÃ GỠ: "di sản NGOẠI LỚP". Trước đây Sách Kỹ Năng mua được chiêu của BỐN lớp kia, nên bảng
+// Kỹ Năng của một Sylvan Ranger liệt kê Cyclone/Crescent (Dark Knight) và Lightning/Ice/Twister/
+// Nova (Dark Wizard) — người chơi mở ra thấy cả bộ chiêu pháp sư trong cây cung thủ. MU Online
+// không có khái niệm đó: vũ khí và chiêu thức CHÍNH LÀ bản sắc lớp. Ngoại lệ duy nhất là
+// Spellblade, lớp lai, và nó KẾ THỪA sẵn trong bộ chiêu riêng (mg_fireball/mg_powerwave/
+// mg_twistingslash) chứ không phải mua bằng sách.
+//
+// Sách Kỹ Năng nay nâng thẳng một cấp cho chiêu của CHÍNH lớp mình (xem useSkillBookUI) — vẫn là
+// tiền tệ có chỗ tiêu, nhưng tiêu vào cây chiêu của mình.
+window.useSkillBookUI = function(id){
+  if (!player || !SKILL_DEFS[id]) return;
+  const lv = skLv(id);
+  if (lv >= 120){ addFloat(player.x, player.y-40, 'Kỹ năng đã đạt cấp tối đa (Lv 120)!', '#8a8a8a', 12); return; }
+  if (lv >= player.level){ addFloat(player.x, player.y-40, `Cấp kỹ năng ≤ cấp nhân vật (${player.level})`, '#8a8a8a', 12); return; }
+  if ((player.bikipVH || 0) < 1){ addFloat(player.x, player.y-40, 'Hết Sách Kỹ Năng — rơi từ tinh anh/boss', '#ffb15c', 12); return; }
+  player.bikipVH -= 1;
+  if (!player.skillLv) player.skillLv = {};
+  player.skillLv[id] = lv + 1;
+  addFloat(player.x, player.y-52, `📜 ${skName(id)} → Lv ${lv + 1}`, '#ffb15c', 13);
+  AudioSys.sfx('levelup', 0.4);
+  const _evoIdx = EVO_LVS.indexOf(lv + 1);
+  saveGame(); renderSkillPanel();
+  if (_evoIdx >= 0) showEvoChoice(id, _evoIdx);
 };
 function vhAutoLearn(){ // kỹ năng môn phái tự ngộ khi đạt cấp — mỗi lớp học đúng bộ chiêu của lớp mình
   for (const _vid in VOHOC_DEFS){
@@ -1959,24 +2000,32 @@ function vhKnockback(m, ang, px){
 const SECT_VFX = {
   sx_thieulam_a: { style:'bladewhirl',   c2:'#cfe8ff', spin:1.2, dur:0.7 },   // Twisting Slash (Dark Knight) — quét trọn vòng quanh thân
   sx_thieulam_c: { style:'stabburst',    c2:'#cfe8ff', dur:0.85 },            // Death Stab (Dark Knight) — chuỗi nhát đâm liên tiếp
-  sx_toanchan_a: { style:'flash',        c2:'#d8f4ff', proj:'arrow' },        // Multi-Shot (Sylvan Ranger) — loạt tên bắn tỉa
-  sx_toanchan_b: { style:'icefall',      c2:'#dff4ff', dur:1.0 },             // Ice Arrow (Sylvan Ranger) — phiến băng rơi xuống vỡ tan
-  sx_toanchan_c: { style:'hexa',         c2:'#c8ecff', spin:1.5 },            // Thất Tinh Hội Kiếm — trận Bắc Đẩu thất tinh
+  sx_toanchan_a: { style:'flash',        c2:'#d8f4ff', proj:'arrow' },        // Triple Shot (Sylvan Ranger) — loạt tên bắn tỉa
+  // QA: Trấn Phái của Sylvan Ranger là Ice Arrow, nhưng khoá 'icefall' lại nằm ở `_b` — một khoá
+  // KHÔNG ai đọc (castSkill chỉ tra sx_<lớp>_a và sx_<lớp>_c). Ice Arrow vì thế chạy 'hexa', tức
+  // trận đồ lục tinh còn sót từ bản kiếm hiệp: bắn mũi tên băng mà màn hình hiện một vòng sao.
+  sx_toanchan_c: { style:'icefall',      c2:'#dff4ff', dur:1.0 },             // Ice Arrow (Sylvan Ranger) — phiến băng kết trên cao rồi rơi xuống vỡ
   sx_baidasan_a: { style:'poisonbloom',  c2:'#b8ff9a', proj:'serpent', dur:1.1 }, // Poison (Dark Wizard) — vũng độc loang ra, sủi bọt
-  sx_baidasan_c: { style:'meteor',       c2:'#ffcf7a' },                      // Meteor (Dark Wizard) — vẫn thạch lửa giáng thế
+  sx_baidasan_c: { style:'meteor',       c2:'#ffcf7a' },                      // Meteorite (Dark Wizard) — vẫn thạch lửa giáng thế
   sx_minhgiao_a: { style:'fireslash',    c2:'#ffcf7a' },                      // Fire Slash (Spellblade) — đao quang cuốn lửa
   sx_minhgiao_c: { style:'flamewall',    c2:'#ff9a5a', dur:1.15 },            // Flame Strike (Spellblade) — hàng cột lửa dựng lên phía trước
   // QA: Dark Lord (sect id 'bug') chưa từng có entry nào ở đây — cả chiêu chính lẫn Trấn Phái đều rơi
   // về style mặc định chung chung, là lớp DUY NHẤT không có hình ảnh nhận diện riêng khi tung chiêu.
   sx_bug_a:      { style:'windslash',    c2:'#d0e07a' },                      // Force Wave (Dark Lord) — sóng chấn quyền trượng
   sx_bug_c:      { style:'firepillar',   c2:'#ffb15c', dur:1.15 },            // Fire Scream (Dark Lord) — ba vệt lửa chạy ra rồi dựng cột lửa
-  sx_vophai_a:   { style:'fist',         c2:'#e8d8a8' },                      // Du Hiệp Quyền — quyền kình
-  sx_vophai_c:   { style:'stormhost',    c2:'#e4ebff' },                      // Tứ Hải Giai Phục — sóng chưởng tứ hải
+  sx_vophai_a:   { style:'fist',         c2:'#e8d8a8' },                      // Hatchling Strike (Unclassed) — cú đấm trần, chưa có binh khí
+  sx_vophai_c:   { style:'stormhost',    c2:'#e4ebff' },                      // Wanderer's Resolve (Unclassed) — dồn hết sức vào một đòn
 };
 // VH_VFX: hình ảnh riêng cho chiêu Sổ Kỹ Năng. Sau đợt MU-hoá chỉ còn Dark Raven cần entry
 // riêng (các style khác đã gắn thẳng vào SECT_VFX theo lớp).
 const VH_VFX = {
-  dl_darkraven:{ style:'crowswarm', c2:'#ff5a3a' },   // Dark Raven (Dark Lord) — bầy quạ đen xoáy vào
+  // Năm ô BUFF trước đây không khai style nào cả nên cùng rơi về 'vajra': bấm buff của lớp nào
+  // cũng ra đúng một vòng ấn quay. Nay mỗi lớp một hình theo đúng thứ nó làm.
+  gangkhi:         { style:'seal4',     c2:'#cfe8ff', dur:0.9 },  // Defense (Dark Knight) — ấn khiên bốn phương
+  elf_greaterdmg:  { style:'sunwheel',  c2:'#fff0be', dur:1.1 },  // Bless (Sylvan Ranger) — vòng sáng ban phước
+  dw_shield:       { style:'hexa',      c2:'#cfe8ff', dur:1.0, spin:1.2 }, // Soul Barrier (Dark Wizard) — lồng lục giác
+  mg_battlefury:   { style:'phoenix',   c2:'#ffcf7a', dur:1.1 },  // Battle Fury (Spellblade) — song dực liệt hỏa
+  dl_commandaura:  { style:'galaxy',    c2:'#ffb0a0', dur:1.1, spin:1.4 }, // Increase Critical Damage (Dark Lord) — hào quang chỉ huy xoay quanh
   // Bốn TUYỆT CHIÊU ô 4 (xem SIGNATURE_SKILL) — mỗi chiêu một hình riêng, không dùng chung style
   // mặc định theo kiểu chiêu nữa. Tuyệt chiêu mà bung ra y hệt chiêu thường thì không ai nhớ nổi.
   dw_evilspirit:    { style:'spiritdragon', c2:'#cfffc0', dur:1.2 }, // hai rồng bóng tối cuộn quanh rồi lao ra
@@ -1987,7 +2036,7 @@ const VH_VFX = {
   mg_flamestrike:   { style:'flamewall',   c2:'#ff9a5a', dur:1.15 }, // hàng cột lửa phía trước
   dk_ragefulblow:   { style:'groundburst', c2:'#cfe8ff', dur:0.9 },  // nền toác thành tia từ điểm giáng
   mg_powerslash:    { style:'lightwave',   c2:'#ffe9b0', dur:0.85 }, // sóng sáng rời kiếm bay đi
-  dl_chaoticdiseier:{ style:'crowswarm',   c2:'#d8e87a', dur:0.95 }, // bầy quạ hỗn loạn
+  dl_chaoticdiseier:{ style:'quakeburst',  c2:'#e8c88a', dur:1.0 },  // Earthquake — nền nứt thành vòng, đá bắn lên
   elf_penetration:  { style:'flash',       c2:'#dfffff', proj:'lance' }, // mũi tên xuyên — xem drawProjStyled
 };
 function _vxLine(x1, y1, x2, y2){ ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
@@ -2525,6 +2574,37 @@ function drawVfx(e, k, a){
     }
     ctx.globalAlpha = 1;
 
+  } else if (S === 'quakeburst'){ // Earthquake (Dark Lord) — nền đất nứt theo vòng, đá vụn bật lên
+    // Ba nhịp trong một hoạt ảnh: (1) giậm — vòng bụi NÉN vào tâm, (2) nứt — đường gãy khúc chạy
+    // ra, (3) bật — đá vụn nảy lên rồi rơi. Khác hẳn 'groundburst' của Rageful Blow (một cú giáng,
+    // tia thẳng, không có nhịp nén) — hai chiêu cùng kiểu "đập xuống đất" mà nhìn không lẫn nhau.
+    const nen = Math.min(1, k / 0.22), no = Math.max(0, (k - 0.22) / 0.78);
+    if (nen < 1) arc(X, Y, R*(1.15 - nen*0.5), 0, 7, C2, 4, a*0.5*(1 - nen));
+    if (no > 0){
+      const rr = R*(0.25 + no*0.95);
+      for (let i = 0; i < 3; i++){                       // ba vòng nứt lệch pha
+        const f = no - i*0.13; if (f <= 0) continue;
+        arc(X, Y, R*(0.2 + f*0.95), 0, 7, i ? C2 : C1, 5 - i*1.4, a*0.55*(1 - f));
+      }
+      ctx.strokeStyle = C1; ctx.lineWidth = 3.2; ctx.globalAlpha = a*0.85*(1 - no);
+      for (let i = 0; i < 9; i++){                       // đường nứt gãy khúc
+        const a0 = i/9*Math.PI*2 + spin, a1 = a0 + (i%2 ? 0.16 : -0.16);
+        ctx.beginPath();
+        ctx.moveTo(X + Math.cos(a0)*R*0.12, Y + Math.sin(a0)*R*0.12);
+        ctx.lineTo(X + Math.cos(a0)*rr*0.55, Y + Math.sin(a0)*rr*0.55);
+        ctx.lineTo(X + Math.cos(a1)*rr, Y + Math.sin(a1)*rr);
+        ctx.stroke();
+      }
+      ctx.fillStyle = C2;                                // đá vụn bật lên rồi rơi
+      for (let i = 0; i < 12; i++){
+        const aa = i/12*Math.PI*2 + spin*1.7, d = rr*(0.35 + (i%4)*0.18);
+        const up = Math.sin(Math.min(1, no*1.6)*Math.PI) * 26 * (1 - (i%3)*0.22);
+        ctx.globalAlpha = a*0.8*(1 - no);
+        ctx.fillRect(X + Math.cos(aa)*d - 3, Y + Math.sin(aa)*d*0.72 - up - 3, 6, 6);
+      }
+      ctx.globalAlpha = 1;
+    }
+    _vxGlyph(X, Y, G, 24, C2, a*0.8);
   } else if (S === 'crowswarm'){ // Dark Raven (Dark Lord) — bầy quạ đen xoáy vào, cánh nhọn xé gió
     disc(X, Y, R*(0.5 + k*0.2), '#0a0612', a*0.35);
     for (let i = 0; i < 8; i++){
@@ -2731,6 +2811,13 @@ function castVohoc(id){
     const _bt = Math.round((fx.t || 0) * (1 + 0.5 * _st)); // tiến hóa: buff bền +50%/bậc
     if (fx.dmgPct){ player.vhDmgT = _bt; player.vhDmgPct = fx.dmgPct; addFloat(player.x, player.y-60, `+${fx.dmgPct}% ST (${_bt}s)`, col, 13); }
     if (fx.shieldPct){ player.vhShield = Math.round(player.maxHp * fx.shieldPct * (1 + 0.25 * _st) / 100); addFloat(player.x, player.y-60, `🛡 KHIÊN ${player.vhShield}`, '#8ad8c8', 13); playStatusFx('shield', 'shield', player.x, player.y, 0.55, 0.32); }
+    // Bless (Sylvan Ranger) — lớp hỗ trợ là lớp DUY NHẤT hồi máu bằng chiêu; bốn lớp kia có
+    // khiên / giảm sát thương / tốc đánh / bạo kích, không lớp nào trùng cơ chế lớp nào.
+    if (fx.healPct){
+      const _h = Math.round(player.maxHp * fx.healPct * (1 + 0.25 * _st) / 100);
+      player.hp = Math.min(player.maxHp, player.hp + _h);
+      addFloat(player.x, player.y-74, `✚ +${_h} HP`, '#8fd18f', 13);
+    }
     if (fx.reflect){ player.vhReflT = _bt; addFloat(player.x, player.y-60, `PHẢN ĐÒN ${_bt}s!`, col, 13); }
     if (fx.aspdPct){ player.vhAspdT = _bt; player.vhAspdPct = fx.aspdPct; addFloat(player.x, player.y-60, `TỐC ĐÁNH +${fx.aspdPct}%`, col, 13); }
     if (fx.crit){ player.vhCritT = _bt; addFloat(player.x, player.y-74, `BẠO KÍCH ${_bt}s!`, '#ff6a5a', 13); }
@@ -3784,35 +3871,37 @@ function shade(hex, amt){ // amt>0 sáng lên, <0 tối đi
 // nào với chiêu nào. Nay mỗi chiêu một hình riêng.
 const SK_ICON_FOR = {
   // Dark Knight
-  dk_cyclone:'cyclone', dk_ragefulblow:'groundslam', dk_crescent:'crescent',
-  dk_fortitude:'barrier', tienthiencong:'revive',
-  // Dark Wizard
-  dw_lightning:'bolt', dw_evilspirit:'spirit', dw_ice:'iceshard', dw_twister:'twister',
-  dw_nova:'nova', dw_shield:'barrier', songthu:'rune',
+  dk_cyclone:'cyclone', dk_lunge:'stab', dk_impale:'pierce', dk_fallingslash:'crescent',
+  dk_ragefulblow:'groundslam', dk_fortitude:'plate', tienthiencong:'revive',
   // Sylvan Ranger
-  elf_heal:'heal', elf_greaterdef:'barrier', elf_greaterdmg:'blade_up',
-  elf_swiftwind:'wind', elf_penetration:'pierce',
+  elf_poisonarrow:'poison', elf_greaterdef:'barrier', elf_holybolt:'nova', elf_fiveshot:'arrowfan',
+  elf_greaterdmg:'rune', elf_penetration:'pierce', elf_heal:'heal',
+  // Dark Wizard
+  dw_lightning:'bolt', dw_ice:'iceshard', dw_twister:'twister', dw_inferno:'flame',
+  dw_evilspirit:'spirit', dw_shield:'barrier', songthu:'rune',
   // Spellblade
-  mg_powerslash:'lightslash', mg_frostnova:'frostnova', mg_ironwill:'ironwill',
-  mg_battlefury:'fury', mg_flamestrike:'flame',
+  mg_powerslash:'lightslash', mg_fireball:'meteor', mg_powerwave:'wave',
+  mg_twistingslash:'spin_blade', mg_giganticstorm:'firescream', mg_battlefury:'fury', mg_ironwill:'ironwill',
   // Dark Lord
-  dl_electricspark:'bolt', dl_darkspirit:'spirit', dl_chaoticdiseier:'crowstorm',
-  dl_darkraven:'raven', dl_commandaura:'crown',
+  dl_force:'manaorb', dl_electricspark:'bolt', dl_fireburst:'flame', dl_darkhorse:'crown',
+  dl_chaoticdiseier:'groundslam', dl_commandaura:'fury', dl_darkraven:'raven',
 };
+
 // Màu Ổ theo NGUYÊN TỐ của chiêu, không theo màu lớp — Fire Scream của Dark Lord phải ra lửa cam
 // chứ không phải ô-liu như màu lớp (đúng quy ước MU: ổ tô theo hệ, khung mới mang màu lớp).
 const SK_ICON_COLOR = {
-  dk_cyclone:'#4c8dff', dk_ragefulblow:'#3a6fd8', dk_crescent:'#6aa0ff',
-  dk_fortitude:'#8ab8ff', tienthiencong:'#ffe9a8',
-  dw_lightning:'#7ec850', dw_evilspirit:'#6ab850', dw_ice:'#5ac8e8', dw_twister:'#8ac850',
-  dw_nova:'#ffd76a', dw_shield:'#5ab8e8', songthu:'#d8d8f0',
-  elf_heal:'#3a9d8b', elf_greaterdef:'#5ac8b8', elf_greaterdmg:'#4c8dff',
-  elf_swiftwind:'#a0ffe9', elf_penetration:'#a0ffe9',
-  mg_powerslash:'#ffcf7a', mg_frostnova:'#5ac8e8', mg_ironwill:'#ffb060',
-  mg_battlefury:'#e8552a', mg_flamestrike:'#ff7a3a',
-  dl_electricspark:'#d8d84a', dl_darkspirit:'#8a5ad8', dl_chaoticdiseier:'#a8b85a',
-  dl_darkraven:'#6a4a8a', dl_commandaura:'#c8a83a',
+  dk_cyclone:'#4c8dff', dk_lunge:'#6aa0ff', dk_impale:'#8ab8ff', dk_fallingslash:'#3a6fd8',
+  dk_ragefulblow:'#3a6fd8', dk_fortitude:'#a0d8ff', tienthiencong:'#ffe9a8',
+  elf_poisonarrow:'#7ec850', elf_greaterdef:'#5ac8b8', elf_holybolt:'#ffe9a8', elf_fiveshot:'#a0ffe9',
+  elf_greaterdmg:'#ffd76a', elf_penetration:'#a0ffe9', elf_heal:'#3a9d8b',
+  dw_lightning:'#d8e84a', dw_ice:'#5ac8e8', dw_twister:'#8ac850', dw_inferno:'#ff7a3a',
+  dw_evilspirit:'#6ab850', dw_shield:'#5ab8e8', songthu:'#d8d8f0',
+  mg_powerslash:'#ffcf7a', mg_fireball:'#ff9a5a', mg_powerwave:'#ffcf7a',
+  mg_twistingslash:'#ffb060', mg_giganticstorm:'#ff7a3a', mg_battlefury:'#e8552a', mg_ironwill:'#ffb060',
+  dl_force:'#a8b85a', dl_electricspark:'#d8d84a', dl_fireburst:'#ff9a5a', dl_darkhorse:'#8a6a4a',
+  dl_chaoticdiseier:'#a87a4a', dl_commandaura:'#ff6a5a', dl_darkraven:'#6a4a8a',
 };
+
 // Màu HÌNH VẼ. Mặc định hình vẽ là kem trắng (#f2ecd8) nổi trên ổ màu — đúng quy ước MU. Nhưng
 // vài chiêu thì CHẤT LIỆU quan trọng hơn quy ước: lửa vẽ màu kem thì nhìn ra lông vũ, không ra lửa.
 const SK_ICON_GLOW = {
@@ -5163,7 +5252,7 @@ function calcDerived(){
   let legacyPct = 0;
   for (const sid of LEGACY_SECT_SKILLS){
     const lv = VOHOC_DEFS[sid];
-    if (lv && vhLearned(sid)) legacyPct += LEGACY_TIER_PCT[lv.tier] || 0;
+    if (lv && lv.phai === player.sect && vhLearned(sid)) legacyPct += LEGACY_TIER_PCT[lv.tier] || 0;
   }
   if (player.level >= SKILL_DEFS.amkhi.unlock) legacyPct += LEGACY_UNIVERSAL_PCT.amkhi;
   if (player.level >= 48) legacyPct += LEGACY_UNIVERSAL_PCT.danchi; // mốc cũ: cảnh 4 = cấp 48
@@ -5237,6 +5326,15 @@ function calcDerived(){
   if (MZ.shieldSec) player.shieldBonus = (player.shieldBonus || 0) + MZ.shieldSec;
   if (MZ.dropPct) player.dropBonus = (player.dropBonus || 0) + MZ.dropPct/100;
   player.ltBonus = MZ.ltPct/100;                                        // đọc bởi hurtMob()
+  // ── Bị động riêng của lớp (CLASS_PASSIVES) ──────────────────────────────
+  // Trước đây ba trong sáu cái này chỉ là dòng chữ: Swell Life ghi "+15% HP, +10% giảm sát
+  // thương", Heal ghi "hồi 1% HP/giây", Iron Will ghi "+10% HP, +8% giảm sát thương" — không
+  // dòng nào nối vào chỉ số nào, và cả ba lại được quy đổi thành +%ST y như chiêu di sản. Nay
+  // mỗi lớp có đúng MỘT hiệu ứng bị động, khác cơ chế nhau, và nó chạy thật.
+  if (vhLearned('dk_fortitude')) player.maxHp = Math.round(player.maxHp * 1.15);        // Swell Life
+  if (vhLearned('mg_ironwill'))  player.hpLeech = (player.hpLeech || 0) + 0.06;         // Iron Will
+  if (vhLearned('dl_darkraven')) player.skillDmgPct = (player.skillDmgPct || 0) + 0.12; // Dark Raven
+  player.healRegenPct = vhLearned('elf_heal') ? 0.01 : 0;                               // Heal — đọc ở update()
   player.hp = Math.min(player.hp, player.maxHp);
   player.qi = Math.min(player.qi, player.maxQi);
 }
@@ -8139,7 +8237,10 @@ function update(dt){
   updateMount(dt); // Thú Chiến đồng hành
   updateHorses(dt); // GDD Đợt 2 B5
   player.qi = Math.min(player.maxQi, player.qi + (player.qireg + player.maxQi*(player.combatT <= 0 ? 0.01 : 0.0025))*dt); // GDD Đợt 2 B1: +1% maxQi/s ngoài combat, +0.25% trong combat
-  const regenHp = player.dVit*0.75 + 3 + (player.combatT <= 0 ? player.maxHp*0.05 : 0);
+  // Heal (Sylvan Ranger, bị động): +1% HP tối đa mỗi giây, chạy CẢ trong combat — đây là thứ
+  // giữ lớp cung thủ đứng được ở tầm xa mà không phải uống thuốc liên tục.
+  const regenHp = player.dVit*0.75 + 3 + (player.combatT <= 0 ? player.maxHp*0.05 : 0)
+                + player.maxHp * (player.healRegenPct || 0);
   player.hp = Math.min(player.maxHp, player.hp + regenHp*dt);
 
   // Phase C timers: độc (không giết được — tối thiểu 1 HP), buff Cương Khí, Tội Ác decay, banner
@@ -17671,7 +17772,7 @@ const CONSUM_DB = {
                info:()=>`−40% sát thương thiên lôi trong 5 phút${(player.loidonT||0)>0?` · còn ${Math.ceil(player.loidonT)}s`:''}` },
   phu:       { art:'talisman', col:'#7ecbff', name:'Thiên Mệnh Phù',  use:'Bảo hiểm rèn — hỏng thì không tụt cấp',
                have:()=>player.charms, info:()=>`Đang giữ ${player.charms||0} lá` },
-  sach:      { art:'scroll',   col:'#ffb15c', name:'Sách Kỹ Năng',    use:'Học di sản kỹ năng NGOẠI LỚP (bảng K)',
+  sach:      { art:'scroll',   col:'#ffb15c', name:'Sách Kỹ Năng',    use:'Nâng thẳng 1 cấp cho một chiêu của lớp mình (bảng K)',
                have:()=>player.bikipVH, info:()=>`Đang có ${player.bikipVH||0} quyển · rơi từ tinh anh/boss & Vực Thẳm` },
   tiendan:   { art:'stone',    col:'#7ec850', name:'Đá Thăng Cấp',    use:'Nâng Thuần Thục (Venom / Archery / Stoneform)',
                have:()=>player.tienDan, info:()=>`Đang có ${player.tienDan||0} viên` },
@@ -18792,18 +18893,14 @@ function equippedSkillRowHtml(id, roleLabel){
       <div class="sk-desc">${info.unlocked ? info.desc : '🔒 ' + info.lockTxt}</div></span>
     <span class="assign-btns">${info.unlocked ? upBtnHtml(id) : ''}</span></div>`;
 }
-// Di Sản Cũ (chiêu môn phái không còn trong taskbar): thông tin + % Công Kích vĩnh viễn nó cộng.
-// Chiêu của chính lớp mình tự ngộ theo cấp (vhAutoLearn); chiêu NGOẠI LỚP mua bằng Sách Kỹ Năng —
-// đây là đường tiêu duy nhất của tiền tệ đó (xem learnVohocUI).
+// Di sản của lớp: chiêu tự ngộ theo cấp, không nằm trong 4 ô, quy đổi thành % Công Kích vĩnh viễn.
+// Không còn nhánh "mua chiêu lớp khác" — xem ghi chú ở useSkillBookUI.
 function legacySkillRowHtml(_vid){
   const _v = VOHOC_DEFS[_vid], _t = VH_TIER[_v.tier];
   const learned = vhLearned(_vid), pct = LEGACY_TIER_PCT[_v.tier] || 0;
-  let right;
-  if (learned) right = `<span style="font-size:11px;color:#a0ffe9">+${pct}% ST ✓</span>`;
-  else if (crossClassLearnable(_vid)){
-    const _c = VH_TIER[_v.tier].cost, _can = player.level >= _v.unlock && (player.bikipVH || 0) >= _c;
-    right = `<button class="mini-btn vh-learn-btn" ${_can?'':'disabled'} title="${player.level < _v.unlock ? 'Cần cấp ' + _v.unlock : 'Học di sản ngoại Lớp — +' + pct + '% Công Kích vĩnh viễn'}" onclick="window.learnVohocUI('${_vid}')">Học · ${_c}📜</button>`;
-  } else right = `<span style="font-size:10.5px;opacity:.5">🔒 Lv${_v.unlock}</span>`;
+  const right = learned
+    ? `<span style="font-size:11px;color:#a0ffe9">+${pct}% ST ✓</span>`
+    : `<span style="font-size:10.5px;opacity:.5">🔒 Lv${_v.unlock}</span>`;
   return `<div class="skill-row${learned?'':' locked'}">
     <img src="${_v.icon}" onerror="this.style.display='none'" alt="">
     <span class="sk-info"><b style="color:${learned?_t.color:'#8a8a8a'}">${_v.name}</b>
@@ -18838,6 +18935,11 @@ function renderSkillPanel(){
     html += buffId ? equippedSkillRowHtml(buffId, 'Buff')
       : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10 để mở khoá bộ 4 chiêu riêng.</div>`;
     if (sigId) html += equippedSkillRowHtml(sigId, '★ Tuyệt Chiêu');
+    html += `<div class="shop-row" title="${consumTip('sach')}"><span class="sr-ic">${consumIcon('sach', 'sr-img')}</span>
+        <span class="sr-body"><b style="color:#ffb15c">Sách Kỹ Năng</b>
+          <span class="sr-desc">Bấm nút sách ở dòng chiêu bất kỳ phía trên để nâng thẳng 1 cấp — khỏi tốn bạc lẫn Instinct</span>
+          <span class="sr-stat">${CONSUM_DB.sach.info()}</span></span>
+        <b style="color:#ffb15c;font-size:15px">${player.bikipVH || 0}</b></div>`;
     html += `<div class="stat-sec">BỊ ĐỘNG — tự kích hoạt, không cần gán</div>`;
     for (const ps of PASSIVE_SKILLS){
       const on = ps.req();
@@ -18846,23 +18948,21 @@ function renderSkillPanel(){
         <div class="sk-desc">${on ? ps.desc : '🔒 chưa đạt điều kiện'}</div></span></div>`;
     }
   } else {
-    html += `<div style="font-size:11px;color:#9aa8d4;padding:2px 4px 8px">Thanh chiêu chỉ có 4 ô, nhưng các chiêu dưới đây không hề mất giá trị — tự động dồn thành % Công Kích vĩnh viễn (hiện <b style="color:#ffd76a">+${(player.legacyAtkPct||0).toFixed(1)}%</b>), không cần bấm nút hay học Sách Kỹ Năng nữa.</div>`;
+    html += `<div style="font-size:11px;color:#9aa8d4;padding:2px 4px 8px">Thanh chiêu chỉ có 4 ô, nhưng các chiêu dưới đây không hề mất giá trị — tự động dồn thành % Công Kích vĩnh viễn (hiện <b style="color:#ffd76a">+${(player.legacyAtkPct||0).toFixed(1)}%</b>), tự ngộ theo cấp, không cần bấm nút.</div>`;
     html += `<div class="stat-sec">DI SẢN LỚP — ${SECTS[player.sect].name}</div>`;
     const own = LEGACY_SECT_SKILLS.filter(sid => VOHOC_DEFS[sid] && VOHOC_DEFS[sid].phai === player.sect);
     html += own.length ? own.map(legacySkillRowHtml).join('') : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10.</div>`;
-    // Tuyệt học NGOẠI LỚP: mua bằng Sách Kỹ Năng (đường tiêu duy nhất của tiền tệ đó), hoặc nhận
-    // sạch miễn phí khi Thăng Tiên — và khi đó chúng ĐANG cộng %ST thật, nên bắt buộc phải hiện ra,
-    // nếu không phần thưởng endgame lớn nhất trông như chẳng có tác dụng gì (xem calcDerived()).
-    const _cross = LEGACY_SECT_SKILLS.filter(sid => crossClassLearnable(sid));
-    if (_cross.length){
-      html += `<div class="stat-sec">DI SẢN NGOẠI LỚP</div>
-        <div class="shop-row" title="${consumTip('sach')}"><span class="sr-ic">${consumIcon('sach', 'sr-img')}</span>
-          <span class="sr-body"><b style="color:#ffb15c">Sách Kỹ Năng</b>
-            <span class="sr-desc">Học di sản kỹ năng NGOẠI LỚP — kỹ năng của chính lớp mình thì tự ngộ theo cấp</span>
-            <span class="sr-stat">${CONSUM_DB.sach.info()}</span></span>
-          <b style="color:#ffb15c;font-size:15px">${player.bikipVH || 0}</b></div>`;
-      html += `<div style="font-size:11px;color:#9aa8d4;padding:0 4px 6px">Học xong cộng thẳng %ST vĩnh viễn — Thăng Tiên sẽ mở sạch số còn lại.</div>`;
-      html += _cross.map(legacySkillRowHtml).join('');
+    // Bị động riêng của lớp — có tác dụng THẬT (xem CLASS_PASSIVES trong calcDerived), không quy
+    // đổi thành %ST, nên phải tách khỏi mục di sản để người chơi không tưởng chúng cũng chỉ là %ST.
+    const _pas = CLASS_PASSIVES.filter(sid => VOHOC_DEFS[sid] && VOHOC_DEFS[sid].phai === player.sect);
+    if (_pas.length){
+      html += `<div class="stat-sec">BỊ ĐỘNG CỦA LỚP — luôn bật, không tốn ô</div>`;
+      for (const sid of _pas){
+        const _v = VOHOC_DEFS[sid], on = vhLearned(sid);
+        html += `<div class="skill-row${on?'':' locked'}"><span class="sk-glyph">${_v.glyph}</span>
+          <span class="sk-info"><b style="color:${on?_v.color:'#8a8a8a'}">${_v.name}</b>
+          <div class="sk-desc">${on ? _v.desc : '🔒 tự ngộ ở cấp ' + _v.unlock}</div></span></div>`;
+      }
     }
     html += `<div class="stat-sec">HỆ TẤN CHỨC PHỤ</div>`;
     for (const id of ['amkhi','danchi','bow','tieuhon']) html += legacyUniversalRowHtml(id);
@@ -18934,11 +19034,13 @@ function castSkill(id){
       }
     }
   }
-  else if (d.kind === 'gangkhi'){ // Cương Khí Hộ Thể — buff 6s giảm 30% ST
-    player.gkBuffT = 6 + 2 * _st; // tiến hóa: cương khí bền hơn
-    addFloat(player.x, player.y-52, 'STONE SKIN!', '#7ecbff', 16);
-    addEffect({ type:'ring', x:player.x, y:player.y, r:70, color:'#7ecbff', big:true });
-    addEffect({ type:'ring', x:player.x, y:player.y, r:44, color:'#fff0c0', big:true });
+  else if (d.kind === 'gangkhi'){ // Defense (Dark Knight) — buff 6s giảm 30% sát thương gánh chịu
+    player.gkBuffT = 6 + 2 * _st; // tiến hóa: lớp vảy đá bền hơn
+    addFloat(player.x, player.y-52, 'DEFENSE!', '#9ab8d8', 16);
+    // Nhánh này tự vẽ hai vòng tròn thay vì gọi spawnSkillVfx, nên khoá 'gangkhi' trong VH_VFX
+    // trước đây không bao giờ được đọc — ô buff của Dark Knight là ô DUY NHẤT không có hình riêng.
+    spawnSkillVfx('gangkhi', { color:'#9ab8d8', glyph:'♦' }, 'buff', 0, 95);
+    addEffect({ type:'ring', x:player.x, y:player.y, r:70, color:'#9ab8d8', big:true });
   }
   else if (d.kind === 'danchi'){ // Đạn Chỉ Thần Thông — chỉ lực phong mạch
     const t = nearestMob(520);
@@ -23331,12 +23433,13 @@ function spawnTruyNaMob(){
 // Không pity — tỉ lệ công khai tại vách. Giờ Vàng (12h & 20h): 2 ô hiếm ×2.
 function tenuiGoldenHour(){ const h = new Date().getHours(); return h === 12 || h === 20; }
 function tenuiWounded(){ return (player.tenuiTT || 0) > Date.now(); }
-// Học miễn phí / hiền giả chỉ điểm — tặng thẳng 1 di sản NGOẠI LỚP (thứ bình thường phải mua bằng
-// Sách Kỹ Năng, xem learnVohocUI). QA: bộ lọc cũ là `!VOHOC_DEFS[id].phai`, mà sau đợt MU-hoá KHÔNG
-// còn chiêu nào phai:null nữa → pool luôn rỗng → 2 kết quả jackpot của Vực Thẳm ("hang động giấu cổ
-// thư", "hiền giả chỉ điểm") luôn rơi về nhánh an ủi, dù người chơi đã trả 30% HP + 15 phút Trọng Thương.
+// Học miễn phí / hiền giả chỉ điểm — cho NGỘ SỚM một chiêu của CHÍNH lớp mình, tức là có nó trước
+// khi tới cấp tự ngộ. Bản trước tặng chiêu ngoại lớp; nay không còn khái niệm đó (xem
+// useSkillBookUI), và "ngộ sớm" vẫn là phần thưởng thật: +%ST vĩnh viễn sớm hơn hàng chục cấp.
+// QA: bộ lọc từng là `!VOHOC_DEFS[id].phai`, mà mọi chiêu đều phai-locked → pool luôn rỗng → hai
+// kết quả jackpot luôn rơi về nhánh an ủi, dù người chơi đã trả 30% HP + 15 phút Trọng Thương.
 function tenuiFreeLearn(preferTier){
-  let pool = Object.keys(VOHOC_DEFS).filter(id => crossClassLearnable(id) && !vhLearned(id) && player.level >= VOHOC_DEFS[id].unlock);
+  let pool = LEGACY_SECT_SKILLS.filter(id => VOHOC_DEFS[id] && VOHOC_DEFS[id].phai === player.sect && !vhLearned(id));
   if (preferTier){
     const hi = pool.filter(id => VOHOC_DEFS[id].tier === preferTier);
     if (hi.length) pool = hi;

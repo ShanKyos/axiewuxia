@@ -9,7 +9,7 @@ const { chromium } = require('playwright');
   await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(500);
 
-  // 1) DK Twisting Slash → 'windslash', MG Fire Slash → 'fireslash', Elf Multi-Shot → arrow proj, 5 shots
+  // 1) DK Twisting Slash → 'windslash', MG Fire Slash → 'fireslash', Elf Triple Shot → arrow proj
   const r1 = await page.evaluate(() => {
     window.TEST_MODE = true;
     function castA(sect){

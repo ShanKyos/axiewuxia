@@ -74,16 +74,18 @@ const { chromium } = require('playwright');
   });
   console.log('4) Vực Thẳm jackpot can grant a real skill again:', JSON.stringify(r4));
 
-  // 5) Sách Kỹ Năng now has a working spend path (cross-class learn)
+  // 5) Sách Kỹ Năng now has a working spend path.
+  //    Đường tiêu CŨ là "học di sản ngoại lớp" — đã gỡ cùng đợt làm lại bộ chiêu 5 lớp, vì nó
+  //    nhét chiêu Dark Wizard vào cây kỹ năng của Sylvan Ranger (xem docs/KY_NANG_5_LOP.md).
+  //    Đường tiêu MỚI: 1 quyển = +1 cấp cho một chiêu của chính lớp mình.
   const r5 = await page.evaluate(() => {
     startGame('thieulam', null);
     player.level = 80; player.bikipVH = 50; calcDerived();
-    const target = LEGACY_SECT_SKILLS.find(id => crossClassLearnable(id) && !vhLearned(id));
-    const bkBefore = player.bikipVH, pctBefore = player.legacyAtkPct;
-    learnVohocUI(target);
-    return { target, learned: vhLearned(target), bkBefore, bkAfter: player.bikipVH,
-             pctBefore, pctAfter: player.legacyAtkPct,
-             spentAndGained: player.bikipVH < bkBefore && player.legacyAtkPct > pctBefore };
+    const target = player.skillBar.find(id => id);
+    const bkBefore = player.bikipVH, lvBefore = skLv(target);
+    window.useSkillBookUI(target);
+    return { target, bkBefore, bkAfter: player.bikipVH, lvBefore, lvAfter: skLv(target),
+             spentAndGained: player.bikipVH < bkBefore && skLv(target) > lvBefore };
   });
   console.log('5) Sách Kỹ Năng has a real spend path now:', JSON.stringify(r5));
 

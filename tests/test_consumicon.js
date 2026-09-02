@@ -66,7 +66,10 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     closePanels(); window.bagTab = 'box'; renderBag();
     const bg = el('panel-bag').innerHTML;
     out.tui = { anh: (bg.match(/<img[^>]+src="data:image\/png/g) || []).length, conCham: /">●<\/span>/.test(bg) };
-    closePanels(); renderSkillPanel(); switchSkillTab('khac');
+    // Thẻ Sách Kỹ Năng nay nằm ở tab CHIÊU ĐANG DÙNG, không ở tab di sản nữa: sau khi bỏ "học
+    // di sản ngoại lớp", sách dùng để nâng cấp chiêu của chính mình, và nút 📜 nằm ngay cạnh
+    // từng dòng chiêu ở tab đó (xem docs/KY_NANG_5_LOP.md §5).
+    closePanels(); switchSkillTab('active'); renderSkillPanel();
     const sk = el('panel-skill').innerHTML;
     // Chỉ soi THẺ Sách Kỹ Năng. 📜 ở chỗ khác là ký hiệu ĐƠN VỊ trong nút giá ("Học · 3📜"),
     // giống ◈ cho bạc — nó render bình thường, khác ⚔/🛡 vốn ra ô vuông. Cấm nó khắp nơi là
@@ -79,7 +82,9 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
                    coThe: !!the,
                    theCoAnh: !!(the && the.querySelector('img[src^="data:image/png"]')),
                    theCoGiay: !!(the && /📜/.test(the.textContent)) };
-    out.baOo = /Thanh chiêu chỉ có 4 ô/.test(sk);
+    // Câu "thanh chiêu chỉ có 4 ô" nằm ở tab DI SẢN, không ở tab chiêu đang dùng — đọc riêng.
+    switchSkillTab('khac'); renderSkillPanel();
+    out.baOo = /Thanh chiêu chỉ có 4 ô/.test(el('panel-skill').innerHTML);
     return out;
   });
   console.log('4) các bảng:', JSON.stringify(r4));

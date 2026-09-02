@@ -98,8 +98,11 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     const MAC_DINH = ['crescents', 'suns', 'flash', 'wuxing', 'vajra'];
     // spiritswarm → spiritdragon và firelines → firepillar sau đợt làm HOẠT ẢNH: bầy u linh lượn
     // vòng đổi thành hai con rồng cuộn rồi lao ra, và ba vệt lửa nay dựng lên thành CỘT lửa.
+    // crowswarm → quakeburst ở đợt làm lại bộ chiêu 5 lớp: tuyệt chiêu của Dark Lord dùng CHUNG
+    // bầy quạ với Dark Raven của chính lớp đó — hai chiêu một lớp trông y hệt nhau. Nay nó là
+    // Earthquake, nền đất nứt theo vòng (xem docs/KY_NANG_5_LOP.md).
     const dac = { dw_evilspirit:'spiritdragon', dk_ragefulblow:'groundburst',
-                  mg_powerslash:'lightwave', dl_chaoticdiseier:'crowswarm' };
+                  mg_powerslash:'lightwave', dl_chaoticdiseier:'quakeburst' };
     const sai = [];
     for (const id in dac) if (!VH_VFX[id] || VH_VFX[id].style !== dac[id])
       sai.push(id + '=' + ((VH_VFX[id] && VH_VFX[id].style) || 'không có'));
