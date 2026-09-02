@@ -105,11 +105,19 @@ const { chromium } = require('playwright');
     fail(`thứ tự hiếm của 4 loại ngọc sai: ${JSON.stringify(ng)}`);
   if (r.hh_quaiThuong || r.hh_tinhAnh || r.hh_boss || r.hh_tuongQuan)
     fail(`Hoàn Hảo vẫn rơi từ quái (thường ${r.hh_quaiThuong} · tinh anh ${r.hh_tinhAnh} · boss ${r.hh_boss} · tướng quân ${r.hh_tuongQuan})`);
-  if (!(r.hh_hap.VII > r.hh_hap.IV && r.hh_hap.IV > r.hh_hap.II)) fail(`Hoàn Hảo không leo theo tầng hạp: ${JSON.stringify(r.hh_hap)}`);
+  // LUẬT ĐÃ ĐỔI có chủ đích: Box Kundun nay LUÔN ra đồ Hoàn Hảo ở mọi bậc, cái hên xui chuyển
+  // sang SỐ DÒNG. Nên "Hoàn Hảo leo theo bậc hạp" không còn là mệnh đề đúng — thay bằng mệnh đề
+  // mới: mọi bậc đều phải 100%. Chi tiết luật xem test_boxrule.
+  for (const k in r.hh_hap) if (r.hh_hap[k] !== 100)
+    fail(`Box Kundun bậc ${k} chỉ ra ${r.hh_hap[k]}% đồ Hoàn Hảo — phải 100% ở mọi bậc`);
   if (!r.vuKhiHoanHaoDuoc) fail('VŨ KHÍ vẫn không Hoàn Hảo được — armorGroup còn chặn');
   if (!r.giapHoanHaoDuoc) fail('giáp không Hoàn Hảo được');
-  if (r.vk_soDong !== 3) fail(`Bảo Hạp VII phải cho 3 dòng Hoàn Hảo, ra ${r.vk_soDong}`);
-  if (r.giap_soDong !== 1) fail(`Bảo Hạp II phải cho 1 dòng, ra ${r.giap_soDong}`);
+  // Số dòng nay BỐC NGẪU NHIÊN 1–4, không còn suy từ bậc hộp. Cái phải khoá ở đây là cái TRẦN:
+  // trước đó genItem còn chuyền `opts.bhTier` xuống tham số thứ hai của rollExcLines — mà tham số
+  // đó nay nghĩa là SỐ DÒNG CHÍNH XÁC — nên bhTier:7 đẻ ra 7 dòng. Bài này bắt được đúng lỗi đó.
+  for (const [ten, n] of [['vũ khí', r.vk_soDong], ['giáp', r.giap_soDong]]){
+    if (!(n >= 1 && n <= 4)) fail(`số dòng Hoàn Hảo trên ${ten} ra ${n}, phải nằm trong 1–4`);
+  }
   if (!r.vk_dongTuBangVuKhi) fail('vũ khí roll trúng dòng của GIÁP');
   if (!r.giap_dongTuBangGiap) fail('giáp roll trúng dòng của VŨ KHÍ');
   if (r.tacDung.hoiQi !== 8) fail(`dòng hồi Qi không có tác dụng (${r.tacDung.hoiQi})`);

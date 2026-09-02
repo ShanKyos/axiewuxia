@@ -4031,7 +4031,10 @@ function genItem(level, bias, srcK, opts){
     // không ô nào đọc tới, còn Lò Hỗn Độn thì bán công thức Đổi Hệ ăn 1 Hỗn Độn Châu cho nó.
     element: slot.id === 'vukhi' ? ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)] : null,
     subs, plus: 0,
-    exc: perfect ? rollExcLines(slot.id, opts && opts.bhTier) : null,
+    // KHÔNG truyền gì vào đây. Tham số thứ hai của rollExcLines nay là SỐ DÒNG CHÍNH XÁC
+    // (chỉ Cổ Thần dùng), không còn là bậc hộp. Bản trước vẫn chuyền `opts.bhTier` xuống, nên
+    // một caller đưa bhTier:7 sẽ nhận 7 dòng exc thay vì 1–4 — test_droprate bắt được đúng chỗ này.
+    exc: perfect ? rollExcLines(slot.id) : null,
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
   });
 }
