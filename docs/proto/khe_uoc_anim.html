@@ -1,0 +1,333 @@
+<title>Khế Ước Chimera</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap">
+<style>
+  :root{
+    --bg:#06060e; --bg2:#12142c; --panel:#1e2040; --line:rgba(140,175,255,.35);
+    --line2:rgba(140,175,255,.6); --ink:#e4ebff; --dim:#9aa8d4;
+    --acc:#4c8dff; --acc2:#7ecbff;
+    --r3:#5ea0e8; --r4:#b06ae0; --r5:#ffb15c;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px}
+  h1{font-size:18px;font-weight:700;letter-spacing:.5px;margin:0;color:var(--acc2)}
+  .sub{font-size:12px;color:var(--dim);max-width:760px;text-align:center;line-height:1.55;margin:0}
+  #wrap{position:relative;width:min(880px,96vw);aspect-ratio:16/10;border-radius:8px;
+    overflow:hidden;border:1px solid var(--line2);background:#000;
+    box-shadow:0 8px 26px rgba(76,141,255,.3)}
+  canvas{display:block;width:100%;height:100%}
+  #skip{position:absolute;right:10px;bottom:10px;font-size:11px;color:var(--dim);
+    background:rgba(8,9,22,.72);border:1px solid var(--line);border-radius:999px;
+    padding:4px 12px;pointer-events:none;opacity:0;transition:opacity 180ms ease}
+  #skip.on{opacity:1}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+  button{font:inherit;font-size:13px;font-weight:600;border-radius:6px;padding:8px 16px;
+    border:1px solid var(--line2);background:var(--panel);color:var(--ink);cursor:pointer;
+    transition:background 180ms ease}
+  button:hover{background:#2a2f66}
+  button.p{background:var(--acc2);color:#06060e;border-color:var(--acc2)}
+  button.p:hover{background:#9ed4ff}
+  button:disabled{background:#12142c;color:#5a6183;border-color:var(--line);cursor:default}
+  .leg{display:flex;gap:14px;font-size:11.5px;color:var(--dim);align-items:center;flex-wrap:wrap;justify-content:center}
+  .leg i{display:inline-block;width:20px;height:3px;border-radius:2px;vertical-align:2px;margin-right:5px}
+  .note{font-size:11.5px;color:var(--dim);max-width:760px;line-height:1.6}
+  .note b{color:var(--acc2);font-weight:600}
+</style>
+
+<h1>Khế Ước Chimera — thử hoạt ảnh</h1>
+<p class="sub">Bấm quay để xem cả sáu nhịp. Ba nút dưới cùng ép ra đúng phẩm để so nhịp 2 —
+màu đuôi sao băng là thứ báo kết quả trước khi thấy mặt Chimera.</p>
+
+<div id="wrap"><canvas id="c"></canvas><div id="skip">Bấm phím bất kỳ để bỏ qua</div></div>
+
+<div class="bar">
+  <button class="p" id="b1">Quay ×1</button>
+  <button class="p" id="b10">Quay ×10</button>
+  <button id="f3">Ép 3★</button>
+  <button id="f4">Ép 4★</button>
+  <button id="f5">Ép 5★</button>
+</div>
+<div class="leg">
+  <span><i style="background:#5ea0e8"></i>lam — chỉ có 3★</span>
+  <span><i style="background:#b06ae0"></i>tím — có 4★</span>
+  <span><i style="background:#ffb15c"></i>vàng — có 5★</span>
+</div>
+<p class="note"><b>Nhịp 1–2</b> sao băng bay chéo, đuôi đổi màu theo phẩm cao nhất của lượt —
+đây là chỗ giữ người chơi. <b>Nhịp 3</b> chạm đất, sóng xung + chớp trắng che việc dựng hình.
+<b>Nhịp 4</b> bóng đen hiện dần rồi sáng lên, hạt bay theo màu lớp Axie. <b>Nhịp 5</b> thẻ trượt
+lên, sao nảy từng ngôi. <b>Nhịp 6</b> lượt ×10 chạy hết mười con rồi ra lưới tổng kết.
+5★ có thêm vòng rune dưới chân, rung màn nhẹ và hai vòng sáng xoay ngược chiều.</p>
+
+<script>
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+const skipEl = document.getElementById('skip');
+let W = 0, H = 0;
+function fit(){
+  const r = cv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1);
+  W = r.width; H = r.height;
+  cv.width = Math.round(W * d); cv.height = Math.round(H * d);
+  g.setTransform(d, 0, 0, d, 0, 0);
+}
+new ResizeObserver(fit).observe(cv); fit();
+
+// ── Chimera: 9 lớp Axie, mỗi lớp một màu + một dáng ───────────────────────────
+const LOP = [
+  { ten:'Beast',   mau:'#f0932a', dang:0 }, { ten:'Aquatic', mau:'#3ac8c8', dang:1 },
+  { ten:'Plant',   mau:'#7bc043', dang:2 }, { ten:'Bird',    mau:'#7ecbff', dang:3 },
+  { ten:'Bug',     mau:'#c0304a', dang:4 }, { ten:'Reptile', mau:'#b06ae0', dang:0 },
+  { ten:'Mech',    mau:'#9aa8d4', dang:1 }, { ten:'Dawn',    mau:'#ffd76a', dang:2 },
+  { ten:'Dusk',    mau:'#6a4a8a', dang:3 },
+];
+const DAN5 = [['Aurelion',7],['Netherfang',8],['Tidewarden',1],['Emberjaw',0],['Voltcrest',3],['Ironshell',5]];
+const DAN4 = [['Thornpaw',2],['Glimmerfin',1],['Cinderbeak',3],['Mossback',2],['Hexmite',4],
+              ['Ridgehorn',5],['Coghound',6],['Sunspur',7],['Duskmoth',8],['Barkclaw',0]];
+const MAU_PHAM = { 3:'#5ea0e8', 4:'#b06ae0', 5:'#ffb15c' };
+
+const rnd = (a,b) => a + Math.random()*(b-a);
+function quay(ep){
+  const r = ep || (Math.random() < 0.016 ? 5 : Math.random() < 0.13 ? 4 : 3);
+  if (r === 5){ const [t,i] = DAN5[Math.floor(Math.random()*DAN5.length)]; return { sao:5, ten:t, lop:LOP[i] }; }
+  if (r === 4){ const [t,i] = DAN4[Math.floor(Math.random()*DAN4.length)]; return { sao:4, ten:t, lop:LOP[i] }; }
+  return { sao:3, ten:'Mảnh Huyết Thống', lop:LOP[Math.floor(Math.random()*9)] };
+}
+
+// ── Vẽ một con Chimera bằng hình khối (bản mẫu — art thật thay sau) ───────────
+function veChimera(x, y, s, mau, dang, alpha, bong){
+  g.save(); g.translate(x, y); g.scale(s, s); g.globalAlpha = alpha;
+  const than = bong ? '#05050c' : mau, net = bong ? '#05050c' : '#ffffff';
+  g.fillStyle = than;
+  if (dang === 0){                                   // bốn chân, sừng
+    g.beginPath(); g.ellipse(0, 10, 34, 24, 0, 0, 7); g.fill();
+    g.beginPath(); g.ellipse(26, -14, 20, 18, .2, 0, 7); g.fill();
+    g.beginPath(); g.moveTo(20,-28); g.lineTo(14,-50); g.lineTo(30,-32); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(34,-26); g.lineTo(42,-46); g.lineTo(42,-24); g.closePath(); g.fill();
+    for (const dx of [-20,-2,16]){ g.fillRect(dx, 26, 9, 20); }
+    g.beginPath(); g.moveTo(-32,4); g.quadraticCurveTo(-58,-6,-50,-30); g.lineWidth=8;
+    g.strokeStyle = than; g.lineCap='round'; g.stroke();
+  } else if (dang === 1){                            // vây, đuôi cá
+    g.beginPath(); g.ellipse(0, 8, 36, 22, 0, 0, 7); g.fill();
+    g.beginPath(); g.ellipse(28, -10, 18, 16, .15, 0, 7); g.fill();
+    g.beginPath(); g.moveTo(-30,6); g.lineTo(-58,-16); g.lineTo(-52,10); g.lineTo(-60,28); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(-4,-14); g.lineTo(6,-46); g.lineTo(20,-16); g.closePath(); g.fill();
+  } else if (dang === 2){                            // lá, thân tròn
+    g.beginPath(); g.ellipse(0, 6, 30, 28, 0, 0, 7); g.fill();
+    g.beginPath(); g.ellipse(22, -16, 17, 15, .2, 0, 7); g.fill();
+    for (const a of [-0.5, 0, 0.5]){
+      g.save(); g.translate(4, -34); g.rotate(a);
+      g.beginPath(); g.ellipse(0, -12, 7, 18, 0, 0, 7); g.fill(); g.restore();
+    }
+    for (const dx of [-16, 6]) g.fillRect(dx, 28, 10, 16);
+  } else if (dang === 3){                            // cánh
+    g.beginPath(); g.ellipse(0, 6, 26, 24, 0, 0, 7); g.fill();
+    g.beginPath(); g.ellipse(22, -16, 16, 15, .2, 0, 7); g.fill();
+    g.beginPath(); g.moveTo(38,-18); g.lineTo(52,-10); g.lineTo(38,-6); g.closePath(); g.fill();
+    for (const sy of [-1, 1]){
+      g.beginPath(); g.moveTo(-6, 0);
+      g.quadraticCurveTo(-46, sy*34, -18, sy*44); g.quadraticCurveTo(-14, sy*18, -6, 0); g.fill();
+    }
+  } else {                                           // sáu chân, càng
+    g.beginPath(); g.ellipse(0, 8, 32, 20, 0, 0, 7); g.fill();
+    g.beginPath(); g.ellipse(26, -6, 16, 14, 0, 0, 7); g.fill();
+    for (const sy of [-1, 1]) for (const dx of [-16, 0, 14]){
+      g.beginPath(); g.moveTo(dx, 6); g.lineTo(dx - 6, sy*32); g.lineWidth = 5;
+      g.strokeStyle = than; g.lineCap = 'round'; g.stroke();
+    }
+    g.beginPath(); g.moveTo(34,-14); g.lineTo(50,-26); g.lineTo(44,-8); g.closePath(); g.fill();
+  }
+  if (!bong){                                        // mắt
+    g.fillStyle = net; g.globalAlpha = alpha;
+    g.beginPath(); g.arc(30, dang===4 ? -8 : -14, 3.4, 0, 7); g.fill();
+  }
+  g.restore(); g.globalAlpha = 1;
+}
+
+// ── Máy trạng thái ────────────────────────────────────────────────────────────
+let ket = [], idx = 0, pha = 'cho', t0 = 0, hat = [], runT = 0, saoHien = 0, chay = false;
+const NHIP = { comet:1.15, no:0.42, hien:0.95, the:0.75 };
+
+function batDau(n, ep){
+  ket = []; for (let i = 0; i < n; i++) ket.push(quay(ep));
+  if (n === 10 && !ep && !ket.some(k => k.sao >= 4)) ket[9] = quay(4);   // bảo đảm 4★ mỗi 10 lượt
+  idx = 0; chay = true; skipEl.classList.add('on');
+  sangPha('comet');
+  for (const b of document.querySelectorAll('button')) b.disabled = true;
+}
+function sangPha(p){ pha = p; t0 = performance.now(); if (p === 'the') saoHien = 0; }
+function phamCao(){ return Math.max(...ket.map(k => k.sao)); }
+
+function ketThuc(){
+  chay = false; skipEl.classList.remove('on');
+  for (const b of document.querySelectorAll('button')) b.disabled = false;
+}
+function boQua(){
+  if (!chay) return;
+  if (ket.length > 1){ idx = ket.length; sangPha('luoi'); }
+  else { idx = 0; sangPha('the'); saoHien = 9; }
+}
+addEventListener('keydown', e => { if (chay){ e.preventDefault(); boQua(); } });
+cv.addEventListener('click', () => { if (chay && pha === 'the') tiep(); });
+
+function tiep(){
+  idx++;
+  if (idx >= ket.length){ if (ket.length > 1) sangPha('luoi'); else ketThuc(); }
+  else sangPha('hien');
+}
+
+// ── Vẽ ────────────────────────────────────────────────────────────────────────
+function nen(){
+  const gr = g.createRadialGradient(W*0.5, H*0.42, 0, W*0.5, H*0.42, Math.max(W,H)*0.75);
+  gr.addColorStop(0, '#141834'); gr.addColorStop(1, '#04040a');
+  g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  const t = performance.now()/1000;
+  g.fillStyle = '#ffffff';
+  for (let i = 0; i < 90; i++){
+    const x = (i*137.5 % W), y = ((i*i*37.3) % H);
+    g.globalAlpha = 0.10 + 0.14*Math.abs(Math.sin(t*0.7 + i));
+    g.fillRect(x, y, 1.6, 1.6);
+  }
+  g.globalAlpha = 1;
+}
+function ve(){
+  const now = performance.now(), e = (now - t0)/1000;
+  nen();
+  if (pha === 'cho'){
+    g.fillStyle = 'rgba(154,168,212,.75)'; g.font = '600 15px "Be Vietnam Pro",sans-serif';
+    g.textAlign = 'center'; g.fillText('Bấm QUAY để bắt đầu', W/2, H/2);
+    return requestAnimationFrame(ve);
+  }
+  const cur = ket[Math.min(idx, ket.length-1)];
+  const mp = MAU_PHAM[phamCao()], mc = cur ? MAU_PHAM[cur.sao] : mp;
+
+  if (pha === 'comet'){
+    const k = Math.min(1, e/NHIP.comet), ke = k < .8 ? k/.8 : 1;              // khựng nhẹ cuối
+    const x = -120 + (W*0.5 + 120) * (ke*ke*(3-2*ke)), y = -80 + (H*0.44 + 80) * (ke*ke*(3-2*ke));
+    const gr = g.createLinearGradient(x - 360, y - 250, x, y);
+    gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(.55, mp); gr.addColorStop(1, '#ffffff');
+    g.strokeStyle = gr; g.lineWidth = phamCao() === 5 ? 9 : phamCao() === 4 ? 6 : 4; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(x - 360, y - 250); g.lineTo(x, y); g.stroke();
+    const hg = g.createRadialGradient(x, y, 0, x, y, phamCao() === 5 ? 60 : 34);
+    hg.addColorStop(0, '#fff'); hg.addColorStop(.35, mp); hg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = hg; g.beginPath(); g.arc(x, y, phamCao() === 5 ? 60 : 34, 0, 7); g.fill();
+    if (phamCao() === 5) for (let i = 0; i < 3; i++){                          // vàng: tàn lửa rơi
+      const a = now/220 + i*2.1, d = 26 + 12*Math.sin(a);
+      g.fillStyle = 'rgba(255,214,120,.75)';
+      g.beginPath(); g.arc(x - Math.cos(a)*d*2, y - Math.sin(a)*d, 2.6, 0, 7); g.fill();
+    }
+    if (k >= 1){ hat = []; for (let i = 0; i < 46; i++){ const a = rnd(0,7), v = rnd(60,320);
+        hat.push({ x:W/2, y:H*0.44, vx:Math.cos(a)*v, vy:Math.sin(a)*v, l:rnd(.4,1) }); }
+      sangPha('no'); }
+  }
+  else if (pha === 'no'){
+    const k = Math.min(1, e/NHIP.no);
+    g.strokeStyle = mp; g.lineWidth = 7*(1-k); g.globalAlpha = 1-k;
+    g.beginPath(); g.arc(W/2, H*0.44, 40 + k*Math.max(W,H)*0.55, 0, 7); g.stroke();
+    g.globalAlpha = 1;
+    for (const p of hat){
+      const px = p.x + p.vx*e, py = p.y + p.vy*e + 130*e*e;
+      g.globalAlpha = Math.max(0, p.l - k); g.fillStyle = mp;
+      g.beginPath(); g.arc(px, py, 2.4, 0, 7); g.fill();
+    }
+    g.globalAlpha = Math.max(0, 0.82 - k*2.4); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+    g.globalAlpha = 1;
+    if (k >= 1) sangPha('hien');
+  }
+  else if (pha === 'hien'){
+    const k = Math.min(1, e/NHIP.hien);
+    const cx = W/2, cy = H*0.5, s = 1.5 + 0.5*k;
+    if (cur.sao === 5){                                                        // vòng rune 5★
+      for (const [r, dir] of [[150, 1], [186, -1]]){
+        g.save(); g.translate(cx, cy + 52); g.rotate(now/1400*dir);
+        g.strokeStyle = `rgba(255,177,92,${0.28 + 0.3*k})`; g.lineWidth = 2;
+        g.setLineDash([16, 12]); g.beginPath(); g.ellipse(0, 0, r, r*0.34, 0, 0, 7); g.stroke();
+        g.setLineDash([]); g.restore();
+      }
+      const sh = Math.max(0, 1-k)*7;                                           // rung màn
+      g.save(); g.translate(rnd(-sh, sh), rnd(-sh, sh));
+    }
+    const hg = g.createRadialGradient(cx, cy, 0, cx, cy, 250);
+    hg.addColorStop(0, cur.lop.mau + 'cc'); hg.addColorStop(.5, cur.lop.mau + '33');
+    hg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.globalAlpha = 0.55 + 0.45*Math.sin(k*3.14); g.fillStyle = hg;
+    g.beginPath(); g.arc(cx, cy, 250, 0, 7); g.fill(); g.globalAlpha = 1;
+    veChimera(cx, cy, s, cur.lop.mau, cur.lop.dang, 1, k < 0.55);              // bóng → sáng
+    if (k > 0.55){ g.globalAlpha = (k-0.55)/0.45*0.5; veChimera(cx, cy, s*1.03, '#ffffff', cur.lop.dang, 1, false); g.globalAlpha = 1; }
+    for (let i = 0; i < 22; i++){                                              // hạt nguyên tố bay lên
+      const a = i/22*7 + now/1100, d = 90 + 70*Math.sin(now/700 + i);
+      g.fillStyle = cur.lop.mau; g.globalAlpha = 0.25 + 0.4*Math.abs(Math.sin(now/500 + i));
+      g.beginPath(); g.arc(cx + Math.cos(a)*d, cy + Math.sin(a)*d*0.55 - k*40, 2.2, 0, 7); g.fill();
+    }
+    g.globalAlpha = 1;
+    if (cur.sao === 5) g.restore();
+    if (k >= 1) sangPha('the');
+  }
+  else if (pha === 'the'){
+    const k = Math.min(1, e/NHIP.the), sl = k*k*(3-2*k);
+    const cx = W/2, cy = H*0.5;
+    veChimera(cx, cy - 30, 1.7, cur.lop.mau, cur.lop.dang, 1, false);
+    const cw = Math.min(430, W*0.62), ch = 128;
+    const cyy = H - 40 - ch*sl;
+    g.save(); g.globalAlpha = sl;
+    g.fillStyle = 'rgba(10,10,26,.9)'; g.strokeStyle = mc; g.lineWidth = 2;
+    g.beginPath(); g.roundRect(cx - cw/2, cyy, cw, ch, 8); g.fill(); g.stroke();
+    const gg = g.createLinearGradient(cx - cw/2, cyy, cx + cw/2, cyy);
+    gg.addColorStop(0, mc + '00'); gg.addColorStop(.5, mc + '2e'); gg.addColorStop(1, mc + '00');
+    g.fillStyle = gg; g.fillRect(cx - cw/2, cyy, cw, ch);
+    g.textAlign = 'center';
+    g.fillStyle = '#e4ebff'; g.font = '700 26px "Be Vietnam Pro",sans-serif';
+    g.fillText(cur.ten, cx, cyy + 44);
+    g.fillStyle = cur.lop.mau; g.font = '600 13px "Be Vietnam Pro",sans-serif';
+    g.fillText(cur.sao === 3 ? 'Nguyên liệu nâng Huyết Thống' : cur.lop.ten + ' · Chimera', cx, cyy + 66);
+    const nSao = Math.min(cur.sao, Math.floor(k*9));                            // sao nảy từng ngôi
+    saoHien = Math.max(saoHien, nSao);
+    for (let i = 0; i < cur.sao; i++){
+      const on = i < saoHien, bx = cx - (cur.sao-1)*15 + i*30, by = cyy + 98;
+      const pop = on ? Math.min(1, (k*9 - i)*2.2) : 0;
+      g.save(); g.translate(bx, by); g.scale(0.8 + 0.5*Math.sin(Math.min(1,pop)*3.14/2), 0.8 + 0.5*Math.sin(Math.min(1,pop)*3.14/2));
+      g.fillStyle = on ? mc : 'rgba(120,126,160,.35)';
+      g.beginPath();
+      for (let j = 0; j < 10; j++){ const r = j%2 ? 5 : 11, a = -Math.PI/2 + j*Math.PI/5;
+        j ? g.lineTo(Math.cos(a)*r, Math.sin(a)*r) : g.moveTo(Math.cos(a)*r, Math.sin(a)*r); }
+      g.closePath(); g.fill(); g.restore();
+    }
+    g.restore();
+    if (k >= 1){
+      g.fillStyle = 'rgba(154,168,212,.85)'; g.font = '600 12px "Be Vietnam Pro",sans-serif';
+      g.textAlign = 'center';
+      g.fillText(ket.length > 1 ? `Bấm để xem tiếp · ${idx+1}/${ket.length}` : 'Bấm để đóng ngay', W/2, H - 14);
+      if (e > (ket.length > 1 ? 1.5 : 2.8)) tiep();                             // tự chạy tiếp; bấm để nhanh hơn
+    }
+  }
+  else if (pha === 'luoi'){
+    const k = Math.min(1, e/0.5);
+    g.textAlign = 'center'; g.fillStyle = '#e4ebff'; g.font = '700 17px "Be Vietnam Pro",sans-serif';
+    g.fillText('KẾT QUẢ 10 LƯỢT', W/2, 34);
+    const cols = 5, cw = Math.min(140, W/6), ch = cw*1.15, gap = 10;
+    const x0 = W/2 - (cols*cw + (cols-1)*gap)/2, y0 = 54;
+    ket.forEach((r, i) => {
+      const cx = x0 + (i%cols)*(cw+gap), cy = y0 + Math.floor(i/cols)*(ch+gap);
+      const a = Math.max(0, Math.min(1, k*10 - i*0.6));
+      g.save(); g.globalAlpha = a;
+      g.fillStyle = 'rgba(10,10,26,.92)'; g.strokeStyle = MAU_PHAM[r.sao]; g.lineWidth = r.sao===5?2.4:1.4;
+      g.beginPath(); g.roundRect(cx, cy, cw, ch, 6); g.fill(); g.stroke();
+      veChimera(cx + cw/2, cy + ch*0.44, cw/150, r.lop.mau, r.lop.dang, 1, false);
+      g.fillStyle = MAU_PHAM[r.sao]; g.font = '600 10.5px "Be Vietnam Pro",sans-serif';
+      g.textAlign = 'center'; g.fillText('★'.repeat(r.sao), cx + cw/2, cy + ch - 20);
+      g.fillStyle = '#c8d0ea'; g.font = '600 10px "Be Vietnam Pro",sans-serif';
+      g.fillText(r.ten.length > 15 ? r.ten.slice(0,14)+'…' : r.ten, cx + cw/2, cy + ch - 7);
+      g.restore();
+    });
+    if (k >= 1 && e > 1.2) ketThuc();
+  }
+  requestAnimationFrame(ve);
+}
+requestAnimationFrame(ve);
+
+document.getElementById('b1').onclick  = () => batDau(1);
+document.getElementById('b10').onclick = () => batDau(10);
+document.getElementById('f3').onclick  = () => batDau(1, 3);
+document.getElementById('f4').onclick  = () => batDau(1, 4);
+document.getElementById('f5').onclick  = () => batDau(1, 5);
+</script>
