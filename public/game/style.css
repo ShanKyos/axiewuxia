@@ -268,6 +268,55 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .bonus-list { background:rgba(126,203,255,.08); border:1px solid rgba(126,203,255,.3); border-radius:var(--r-md);
   padding:8px 12px; font-size:12.5px; line-height:1.7; margin:8px 0; }
 .next-tier { border:1px dashed rgba(255,215,106,.45); border-radius:var(--r-md); padding:8px 12px; margin-top:8px; font-size:12.5px; }
+/* Bảng Đại Thành (mastery) — lưới biểu tượng kiểu Master Skill Tree của MU:
+   mỗi nút là một ô hình có khung, số điểm ở góc, các rank nối nhau bằng mũi tên. */
+.mst-head { display:flex; justify-content:space-between; align-items:center; gap:8px;
+  font-size:11.5px; color:#9aa8d4; padding:0 2px 8px; font-variant-numeric:tabular-nums; }
+.mst-head .mst-pts { color:#ffd76a; font-size:15px; }
+.mst-tabs { display:flex; gap:4px; margin-bottom:8px; }
+.mst-tabs button { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+  background:rgba(30,32,64,.7); color:#9aa8d4; border:1px solid var(--border-faint);
+  border-radius:var(--r-md); padding:6px 2px; font-family:inherit; font-size:15px; cursor:pointer; }
+.mst-tabs button span { font-size:10.5px; font-weight:600; letter-spacing:.3px; }
+.mst-tabs button i { font-style:normal; font-size:10px; color:#ffd76a; font-variant-numeric:tabular-nums; }
+.mst-tabs button.active { background:rgba(76,141,255,.28); color:#7ecbff; border-color:var(--accent); }
+.mst-tabs button:hover { background:rgba(76,141,255,.16); }
+.mst-note { font-size:11px; color:#ffb15c; line-height:1.5; margin-bottom:8px; }
+.mst-tree { display:flex; flex-direction:column; align-items:center; gap:2px; }
+.mst-link { color:#8cafff; font-size:11px; line-height:1; opacity:.55; }
+.mst-link.off { opacity:.2; }
+.mst-row { display:flex; justify-content:center; align-items:flex-start; gap:10px;
+  flex-wrap:wrap; padding:6px 4px; }
+.mst-row.locked .mst-cell { opacity:.34; }
+.mst-lock { width:100%; text-align:center; font-size:10.5px; color:#9aa8d4; }
+.mst-cell { position:relative; width:76px; padding:0; background:none; border:0;
+  font-family:inherit; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; }
+.mst-cell:disabled { cursor:default; }
+.mst-cell img { width:56px; height:56px; border-radius:8px; display:block;
+  filter:grayscale(.85) brightness(.6); transition:filter .18s, transform .18s; }
+.mst-cell.on img { filter:none; }
+.mst-cell.full img { filter:none; box-shadow:0 0 10px rgba(126,203,255,.5); }
+.mst-cell:not(:disabled):hover img { transform:translateY(-2px); filter:none; }
+/* Ô đếm điểm nằm GÓC DƯỚI-PHẢI của hình, có nền tối riêng — đặt chồng thẳng lên hình như bản
+   đầu thì con số ăn mất chính cái hình mà nó đang chú thích. */
+.mst-c-pt { position:absolute; top:38px; right:7px; font-style:normal; font-size:11px;
+  font-weight:700; color:#ffd76a; font-variant-numeric:tabular-nums; line-height:1;
+  padding:2px 4px; border-radius:5px; background:rgba(8,7,13,.86);
+  border:1px solid rgba(198,158,74,.55); }
+.mst-c-pt span { font-size:8.5px; color:#e4ebff; opacity:.7; }
+.mst-cell.full .mst-c-pt { color:#7ecbff; border-color:rgba(126,203,255,.6); }
+.mst-c-name { font-size:10.5px; font-weight:600; color:#e4ebff; line-height:1.2;
+  text-align:center; max-width:76px; }
+.mst-cell.full .mst-c-name { color:#7ecbff; }
+.mst-c-bar { display:block; width:56px; height:3px; border-radius:999px;
+  background:rgba(10,10,26,.72); overflow:hidden; }
+.mst-c-bar s { display:block; height:100%; text-decoration:none;
+  background:linear-gradient(180deg,#7ecbff,#3a6fe0); transition:width .18s; }
+.mst-help { text-align:center; font-size:10.5px; color:#9aa8d4; margin:8px 0 4px; }
+@media (prefers-reduced-motion: reduce){
+  .mst-cell img, .mst-c-bar s { transition:none; }
+  .mst-cell:not(:disabled):hover img { transform:none; }
+}
 #mount-msg, #dantian-msg { text-align:center; min-height:18px; font-size:12.5px; margin-top:8px; }
 
 /* Sect select */
