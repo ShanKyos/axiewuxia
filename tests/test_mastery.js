@@ -84,25 +84,33 @@ const PORT = process.argv[2] || '8853';
     o.suaChua = masteryCap();
     o.mocMoiNut = MASTERY_MAX_NODE;
 
-    // ── cổng: chưa Tái Sinh ──
+    // ── cổng: cấp MASTERY_LV VÀ xong chính tuyến — thiếu một trong hai là đóng ──
+    o.capMo = MASTERY_LV; o.thuongMo = MASTERY_OPEN_GRANT; o.thuongMoiLan = MASTERY_PER_RESET;
     o.moTruoc = masteryOpen();
     masteryAdd('ht_thietbi', 5);
     o.tieuDuocKhiChuaMo = masteryPut('ht_thietbi');
     const _lv0 = player.level;
-    gainXp(1e12);
+    gainXp(1e12);                                   // lên tới MAX_LV nhưng CHƯA xong chính tuyến
     o.diemKhiChuaMo = player.mpts || 0;
-    o.capSauCay = player.level;
-    o._lv0 = _lv0;
-
-    // ── Tái Sinh lần đầu: mở bảng + thưởng điểm ──
-    window.doTayTuy(true);
+    o.capSauCay = player.level; o._lv0 = _lv0;
+    o.moDuCapThieuTruyen = masteryOpen();
+    // xong chính tuyến nhưng chưa đủ cấp
+    startGame('thieulam', null); player.mongChiTon = true; masteryCheckOpen();
+    o.moDuTruyenThieuCap = masteryOpen();
+    o.diemKhiThieuCap = player.mpts || 0;
+    // đủ cả hai → mở, cấp điểm khai mở đúng một lần
+    player.level = MASTERY_LV; player.lvPeak = MASTERY_LV; masteryCheckOpen(); masteryCheckOpen();
     o.moSau = masteryOpen();
-    o.diemSauTaiSinh = player.mpts;
-    o.thuongMoiLan = MASTERY_PER_RESET;
-    // 1 điểm mỗi cấp, chỉ tính sau khi bảng đã mở
+    o.diemSauMo = player.mpts;
+    // 1 điểm mỗi cấp một khi đã mở: giả lập đời sau Tái Sinh (cấp đỉnh đã ≥120, cấp hiện tại thấp)
+    player.level = 100; player.xp = 0;
     gainXp(1e12);
     o.diemSauCay = player.mpts;
     o.capToiDa = MAX_LV;
+    // Tái Sinh KHÔNG còn là cổng, nhưng vẫn thưởng điểm và không đóng bảng
+    const _truocTS = player.mpts;
+    window.doTayTuy(true);
+    o.taiSinh = { conMo: masteryOpen(), cong: player.mpts - _truocTS };
 
     // ── cổng rank ──
     const tab = tabs[0];
@@ -154,14 +162,14 @@ const PORT = process.argv[2] || '8853';
     // gác — mà đó đúng là chỗ dễ gõ sai tên khoá nhất, vì chúng dùng nhiều khoá lạ hơn.
     o.nutChet = [];
     for (const sect of LOP){
-      const _lv = player.level, _rs = player.resetCount, _eq = player.equip, _ms = player.mastery;
+      const _lv = player.level, _eq = player.equip, _ms = player.mastery;
       startGame(sect, null);
       // Xoá trait: startGame(sect, null) roll trait NGẪU NHIÊN, và một trait cộng Né/Giảm ST là
       // đủ đẩy chỉ số lên sát trần trước khi mastery kịp cộng gì — bài kiểm khi đó lúc đỏ lúc
       // xanh tuỳ vận may của lượt roll. Mục này hỏi "nút có làm gì không", nên phải đo nút một
       // mình, không đo kèm quà trời cho.
       player.traits = [];
-      player.level = _lv; player.resetCount = _rs || 1;
+      player.level = _lv; player.lvPeak = MASTERY_LV; player.mongChiTon = true;
       dat(); player.mastery = {}; const goc2 = chup();
       for (const t of masteryTabs()) for (const n of t.nodes){
         player.mastery = { [n.id]: MASTERY_MAX_NODE };
@@ -169,7 +177,7 @@ const PORT = process.argv[2] || '8853';
       }
       player.equip = _eq; player.mastery = _ms;
     }
-    startGame('thieulam', null); player.traits = []; player.level = MAX_LV; player.resetCount = 1;
+    startGame('thieulam', null); player.traits = []; player.level = MAX_LV; player.lvPeak = MASTERY_LV; player.mongChiTon = true;
     dat(); player.mastery = {}; const goc = chup();
     if (khac(goc, chup())) o.nutChet.push('mốc gốc không ổn định');
 
@@ -253,27 +261,34 @@ const PORT = process.argv[2] || '8853';
   if (!saiDT) pass('9 khoá đặc trưng nằm đúng lớp — Tốc Chạy chỉ Ranger, Rơi Đồ/Bạc/EXP chỉ Dark Lord, Liên Trảm chỉ Dark Knight…');
 
   // ── 2. sức chứa phải lớn hơn số điểm kiếm được, nếu không thì không có lựa chọn nào cả ──
-  const motVong = r.thuongMoiLan + r.capToiDa - 1;
+  const motVong = r.thuongMo + r.thuongMoiLan + r.capToiDa - 1;   // khai mở + một đời cày + một lần Tái Sinh
   if (r.suaChua <= motVong * 3)
     fail(`bảng chứa ${r.suaChua} điểm, một vòng Tái Sinh kiếm ${motVong} — tô kín quá dễ, mất phần lựa chọn`);
   else pass(`bảng chứa ${r.suaChua} ô, một vòng chỉ kiếm ${motVong} → buộc phải chọn`);
 
-  // ── 3. cổng Tái Sinh ──
-  if (r.moTruoc) fail('bảng đã mở khi chưa Tái Sinh lần nào');
-  else pass('chưa Tái Sinh thì bảng đóng');
+  // ── 3. cổng: cấp 120 + xong chính tuyến (chủ dự án chốt — tách khỏi Tái Sinh) ──
+  if (r.moTruoc) fail('bảng đã mở ngay từ cấp 1');
+  else pass('cấp 1 thì bảng đóng');
   if (r.tieuDuocKhiChuaMo) fail(`tiêu được ${r.tieuDuocKhiChuaMo} điểm vào bảng chưa mở`);
   else pass('bảng đóng thì masteryAdd() từ chối');
-  if (r.diemKhiChuaMo) fail(`cày ${r._lv0}→${r.capSauCay} khi bảng chưa mở mà vẫn được ${r.diemKhiChuaMo} điểm`);
-  else pass('bảng chưa mở thì thăng cấp không cấp điểm');
-  if (!r.moSau) fail('Tái Sinh xong bảng vẫn đóng');
-  else pass('Tái Sinh lần đầu khai mở bảng');
-  if (r.diemSauTaiSinh !== r.thuongMoiLan)
-    fail(`Tái Sinh cho ${r.diemSauTaiSinh} điểm, mong ${r.thuongMoiLan}`);
-  else pass(`Tái Sinh: +${r.thuongMoiLan} điểm`);
-  const mongSauCay = r.thuongMoiLan + r.capToiDa - 1;
+  if (r.moDuCapThieuTruyen || r.diemKhiChuaMo)
+    fail(`đủ cấp ${r.capSauCay} nhưng CHƯA xong chính tuyến mà bảng mở/cấp ${r.diemKhiChuaMo} điểm`);
+  else pass(`cấp ${r.capSauCay} mà chưa xong chính tuyến thì vẫn đóng, 0 điểm`);
+  if (r.moDuTruyenThieuCap || r.diemKhiThieuCap)
+    fail(`xong chính tuyến nhưng cấp 1 mà bảng mở/cấp ${r.diemKhiThieuCap} điểm`);
+  else pass('xong chính tuyến mà chưa đủ cấp thì vẫn đóng');
+  if (!r.moSau) fail(`đủ cấp ${r.capMo} + xong chính tuyến mà bảng vẫn đóng`);
+  else pass(`cấp ${r.capMo} + xong chính tuyến → bảng mở`);
+  if (r.diemSauMo !== r.thuongMo)
+    fail(`khai mở cấp ${r.diemSauMo} điểm, mong ${r.thuongMo} (và chỉ cấp MỘT lần dù gọi hai lần)`);
+  else pass(`khai mở: +${r.thuongMo} điểm, gọi lại không cấp thêm`);
+  const mongSauCay = r.thuongMo + (r.capToiDa - 100);
   if (r.diemSauCay !== mongSauCay)
-    fail(`cày 1→${r.capToiDa} được ${r.diemSauCay} điểm, mong ${mongSauCay} (1 điểm/cấp)`);
-  else pass(`1 điểm mỗi cấp — cày trọn một vòng được ${mongSauCay} điểm`);
+    fail(`cày 100→${r.capToiDa} sau khi mở được ${r.diemSauCay} điểm, mong ${mongSauCay} (1 điểm/cấp)`);
+  else pass(`1 điểm mỗi cấp một khi bảng đã mở (100→${r.capToiDa}: +${r.capToiDa-100})`);
+  if (!r.taiSinh.conMo || r.taiSinh.cong !== r.thuongMoiLan)
+    fail(`Tái Sinh: bảng ${r.taiSinh.conMo ? 'còn mở' : 'BỊ ĐÓNG'}, cộng ${r.taiSinh.cong} điểm (mong ${r.thuongMoiLan})`);
+  else pass(`Tái Sinh không đóng bảng và vẫn +${r.thuongMoiLan} điểm`);
 
   // ── 4. cổng rank + trần nút + tẩy điểm ──
   if (r.rank2SomKhiChua) fail(`rank 2 mở sớm: đã đặt được ${r.rank2SomKhiChua} điểm khi bảng còn trống`);

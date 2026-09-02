@@ -5412,6 +5412,9 @@ function loadGame(){
       player.mpts = player.mptsTotal;
     }
     if (player.mpts == null) player.mpts = 0;
+    // Cổng đổi từ "đã Tái Sinh" sang "cấp 120 + xong chính tuyến": ai đã đủ điều kiện mới mà chưa
+    // nhận điểm khai mở thì nhận ngay lúc tải. Save từng Tái Sinh coi như đã mở.
+    if (player.mOpened == null) player.mOpened = (player.resetCount || 0) > 0;
     // Cấp đỉnh cho save cũ: ai đã Tái Sinh ít nhất một lần thì chắc chắn từng chạm tối đa cấp,
     // nếu không đã không Tái Sinh được — trả lại đúng quyền họ đã mở, không bắt cày lại.
     if (!player.lvPeak) player.lvPeak = player.resetCount > 0 ? MAX_LV : player.level;
@@ -6916,8 +6919,9 @@ function gainXp(amount){
   while (player.level < MAX_LV && player.xp >= XP_TABLE[player.level-1]){
     player.xp -= XP_TABLE[player.level-1];
     player.level++; player.free += 5;
-    if (masteryOpen()) masteryGrant(1);   // Đại Thành: 1 điểm/cấp, chỉ chạy sau lần Tái Sinh đầu
     if (!player.lvPeak || player.level > player.lvPeak) player.lvPeak = player.level;
+    masteryCheckOpen();                     // cấp này có thể vừa chạm MASTERY_LV
+    if (masteryOpen()) masteryGrant(1);     // Đại Thành: 1 điểm/cấp một khi bảng đã mở
     AudioSys.sfx('levelup', 0.9);
     calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
     addFloat(player.x, player.y-52, `THĂNG CẤP ${player.level}!`, '#ffd76a', 20);
@@ -14345,7 +14349,12 @@ const MASTERY_LABEL = { hpPct:'Sinh Lực', dmgred:'Giảm ST', defPct:'Phòng N
   shieldSec:'Cửa Sổ Phá Giáp', dropPct:'Tỉ Lệ Rơi Đồ', ltPct:'ST Liên Trảm' };
 const MASTERY_MAX_NODE = 20;    // trần điểm mỗi nút — đúng luật MU
 const MASTERY_RANK_GATE = 10;   // rank R mở khi đã tiêu (R-1)×10 điểm trong CÙNG bảng
-const MASTERY_PER_RESET = 20;   // thưởng thêm mỗi lần Tái Sinh (lần đầu vừa mở bảng vừa được thưởng)
+const MASTERY_PER_RESET = 20;   // thưởng thêm mỗi lần Tái Sinh
+// Cổng mở bảng — chủ dự án chốt: cấp 120 VÀ đã đi hết chính tuyến (Chương VII, Trụ Khóa cuối).
+// Tách khỏi Tái Sinh, vì Tái Sinh sẽ dời lên MAX_LV = 400 cùng Vùng Vỡ Ấn — buộc mastery vào
+// đó thì cả bảng bị đẩy ra xa hàng trăm giờ. 120 là mốc "đi trọn một vòng cơ bản" của game.
+const MASTERY_LV = 120;
+const MASTERY_OPEN_GRANT = 20;  // điểm khởi đầu lúc bảng vừa mở — mở ra mà 0 điểm thì bảng trống
 const MASTERY_RESPEC_COST = 3000; // phí tẩy điểm (Bạc) — nhân theo số lần đã tẩy
 // Bảng CHUNG — cả 5 lớp đều xài, y như tab Protection của MU.
 const MASTERY_COMMON = { id:'hothe', name:'Hộ Thể', glyph:'⛨', nodes:[
@@ -14597,7 +14606,14 @@ const MASTERY_CLASS = {
 function masteryTabs(){
   return [MASTERY_COMMON].concat((player && MASTERY_CLASS[player.sect]) || []);
 }
-function masteryOpen(){ return !!player && (player.resetCount || 0) >= 1; }
+function masteryOpen(){ return !!player && lvPeak() >= MASTERY_LV && !!player.mongChiTon; }
+// Gọi ở mọi nơi có thể vừa làm cổng mở: thăng cấp, xong chính tuyến, tải save. Cấp một lần.
+function masteryCheckOpen(){
+  if (!player || player.mOpened || !masteryOpen()) return;
+  player.mOpened = true;
+  masteryGrant(MASTERY_OPEN_GRANT, 'khai mở');
+  setTimeout(()=>{ if (player) addFloat(player.x, player.y-84, `✦ Khai mở bảng ${MASTERY_NAME} — bấm C`, '#7ecbff', 15); }, 900);
+}
 // Sức chứa cả bảng, để giao diện nói thẳng "không tô kín được đâu" thay vì để người chơi tự đoán.
 function masteryCap(){ let n = 0; for (const t of masteryTabs()) n += t.nodes.length * MASTERY_MAX_NODE; return n; }
 function masteryPut(id){ return (player && player.mastery && player.mastery[id]) || 0; }
@@ -14683,11 +14699,13 @@ function renderMastery(){
   let html = `<h3>${MASTERY_NAME}</h3>`;
   if (!masteryOpen()){
     html += `<div class="bonus-list" style="line-height:1.8">
-      ◆ Bảng ${MASTERY_NAME} khai mở sau lần <b style="color:#ffd76a">Tái Sinh</b> đầu tiên.<br>
-      ◆ Mỗi lần Tái Sinh: <b>+${MASTERY_PER_RESET}</b> điểm. Sau đó mỗi cấp thăng thêm <b>1</b> điểm.<br>
+      ◆ Bảng ${MASTERY_NAME} khai mở khi đạt <b style="color:#ffd76a">cấp ${MASTERY_LV}</b> và
+        <b style="color:#ffd76a">đi hết chính tuyến</b> (Chương VII — Trụ Khóa cuối).<br>
+      ◆ Khai mở: <b>+${MASTERY_OPEN_GRANT}</b> điểm. Sau đó mỗi cấp thăng thêm <b>1</b> điểm, mỗi lần Tái Sinh thêm <b>${MASTERY_PER_RESET}</b>.<br>
       ◆ Điểm ${MASTERY_NAME} <b style="color:#7ec850">không mất</b> khi Tái Sinh tiếp.<br>
       ◆ Bảng có <b>${masteryCap()}</b> ô điểm — một vòng Tái Sinh chỉ kiếm được khoảng
-      <b>${MASTERY_PER_RESET + MAX_LV - 1}</b>. Không ai tô kín được: phải chọn.</div>`;
+      <b>${MASTERY_PER_RESET + MAX_LV - 1}</b>. Không ai tô kín được: phải chọn.</div>
+      <div style="font-size:12px;color:#9aa8d4;margin-top:6px">Hiện tại: cấp đỉnh <b>${lvPeak()}</b>/${MASTERY_LV} · chính tuyến ${player.mongChiTon ? '<b style="color:#7ec850">đã xong</b>' : '<b style="color:#ff9a6a">chưa xong</b>'}</div>`;
     CE().innerHTML = html; return;
   }
   const nClass = (MASTERY_CLASS[player.sect] || []).length;
@@ -15220,8 +15238,7 @@ function renderTayTuy(){
     • Đưa cấp độ về <b>1</b>, EXP về 0<br>
     • <b style="color:#7ec850">Giữ nguyên</b> trang bị, Ascension bậc, kỹ năng đã học, danh hiệu, điểm dịch chuyển…<br>
     • Cộng thêm <b style="color:#ffd76a">+2%</b> Công Kích &amp; Sinh Lực vĩnh viễn (→ tổng ${nextBonus}%)<br>
-    • ${rc === 0 ? `<b style="color:#7ecbff">Khai mở bảng ${MASTERY_NAME}</b> và cộng` : 'Cộng'}
-      <b style="color:#7ecbff">+${MASTERY_PER_RESET}</b> điểm ${MASTERY_NAME}; từ đó mỗi cấp thăng thêm <b>1</b> điểm nữa</div>`;
+    • Cộng <b style="color:#7ecbff">+${MASTERY_PER_RESET}</b> điểm ${MASTERY_NAME}</div>`;
   if (player.level < MAX_LV){
     html += `<div style="padding:14px;font-size:13px;text-align:center;color:#9aa8d4">Cần đạt <b style="color:#7ecbff">cấp ${MAX_LV}</b> (Tối đa) mới Tái Sinh được.<br>Cấp hiện tại: ${player.level}</div>`;
   } else if (!window._tayTuyConfirm){
@@ -15240,13 +15257,11 @@ window.doTayTuy = function(confirmed){
   if (player.level < MAX_LV) return;
   if (!confirmed){ window._tayTuyConfirm = true; renderCharPanel(); return; }
   window._tayTuyConfirm = false;
-  const _mFirst = (player.resetCount || 0) === 0;   // lần đầu vừa mở bảng Đại Thành vừa được thưởng
   player.resetCount = (player.resetCount || 0) + 1;
-  masteryGrant(MASTERY_PER_RESET);
+  masteryGrant(MASTERY_PER_RESET, 'Tái Sinh');
   player.level = 1; player.xp = 0;
   calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
   zoneBanner = { text:'🔄 TÁI SINH', sub:`Lần thứ ${player.resetCount} — Công Kích & Sinh Lực +${player.resetCount*2}% vĩnh viễn!`, color:'#ffd76a', t:4 };
-  if (_mFirst) setTimeout(()=>{ if (player) addFloat(player.x, player.y-84, `✦ Khai mở bảng ${MASTERY_NAME} — bấm C`, '#7ecbff', 15); }, 900);
   addFloat(player.x, player.y-60, `Tái Sinh thành công! Lần thứ ${player.resetCount}`, '#ffd76a', 16);
   addEffect({ type:'ring', x:player.x, y:player.y, r:110, color:'#ffd76a', big:true });
   AudioSys.sfx('levelup', 0.95);
@@ -15659,8 +15674,8 @@ window.cheatExec = function(raw){
         // Cũng phải nâng lvPeak: tab Đại Thành nằm sau cổng cấp tối đa (sysUnlocked), còn bảng
         // thì mở theo resetCount. Ngoài đời hai điều kiện luôn đi cùng nhau — chỉ có cheat mới
         // tách được chúng ra, và tách ra thì mở bảng bằng /dt xong lại không thấy tab đâu.
-        if (!player.resetCount) player.resetCount = 1;
-        player.lvPeak = Math.max(player.lvPeak || 1, MAX_LV);
+        player.lvPeak = Math.max(player.lvPeak || 1, MASTERY_LV);
+        player.mongChiTon = true; player.mOpened = true;
         const n = clamp(Math.round(num(1, 200)), 0, 9999);
         player.mpts = n; player.mptsTotal = Math.max(player.mptsTotal || 0, n);
         calcDerived(); cheatLog(`${MASTERY_NAME}: mở bảng, ${n} điểm chưa dùng (bảng chứa ${masteryCap()})`, '#8fd18f');
@@ -15876,9 +15891,8 @@ const CHAR_TABS = [
   { id:'linhthu',  name:'Linh Thú',   lv:8 }, // KHÔNG dùng lại mã 'pet' — đó là mã của hệ Thú
                                             // Thuần Hóa đã gỡ, test_nopet đang gác cho nó không quay lại
   { id:'taytuy',   name:'🔄 Tái Sinh', lv:MAX_LV },
-  // Đại Thành hiện cùng lúc với Tái Sinh: bảng chỉ khai mở SAU lần Tái Sinh đầu, mà muốn Tái Sinh
-  // thì phải chạm cấp tối đa — cho tab ló ra sớm hơn chỉ tổ để người chơi bấm vào một ô khoá.
-  { id:'mastery',  name:'✦ Đại Thành', lv:MAX_LV },
+  // Đại Thành ló tab ở cấp MASTERY_LV (120); bên trong còn cần xong chính tuyến — xem masteryOpen().
+  { id:'mastery',  name:'✦ Đại Thành', lv:MASTERY_LV },
   { id:'tuyethoc', name:'Thuần Thục', lv:4 },
 ];
 function renderCharPanel(){
@@ -20764,6 +20778,7 @@ window.turnInQuest = function(){
   }, i * 4600));
   if (questState === 'all'){
     player.mongChiTon = true;
+    masteryCheckOpen();                     // cổng Đại Thành có thể vừa mở nhờ mốc này
     zoneBanner = { text:'KẺ KHÉP VẾT NỨT', sub:'Chính tuyến hoàn tất — danh hiệu tối thượng đã mở (bấm C chọn danh hiệu)', color:'#ffd76a', t: 5 };
     AudioSys.sfx('levelup', 1);
   }
