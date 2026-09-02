@@ -552,6 +552,76 @@ const ROLE = {
 // Kẻ Tiếp Sức còn sống thì cả bầy được chừng này. Giết nó là cả bầy sụt ngay — đó là toàn bộ
 // ý nghĩa của mục tiêu ưu tiên.
 const TIEP_ATK = 1.25, TIEP_HP = 1.20;
+
+// ═══ DỊ BIẾN (elite affix) — docs/VUNG_VO_AN_ENDGAME.md §6 ═══
+// `elite:true` trước nay chỉ cho đúng một lớp khiên. Nay elite mang 2–4 Dị Biến rút từ hồ này.
+// Đây là NHÓM CHỈ SỐ — dựa trên chỉ số và thứ tự giết, chạy ở mọi map. Nhóm né-tránh (Cột Lửa,
+// Tường Vây…) cần telegraph trên mặt đất và chỉ mở ở Vùng Vỡ Ấn — chưa có ở đây, và test_dibien
+// gác để không cái nào lọt vào hồ này trước khi vùng đó tồn tại.
+// `mini` = cường độ khi quái thường trong bầy THỪA HƯỞNG từ elite (ý "Season 11" của tài liệu
+// nguồn): một Dị Biến, 40% sức. Cả bầy có bản sắc thay vì "elite + rác".
+const DIBIEN = {
+  cuongthe:  { name:'Cường Thể', glyph:'⛨', col:'#c8a86a', desc:'máu ×2.5',                          hp:2.5,  mini:1.6 },
+  hutsinh:   { name:'Hút Sinh',  glyph:'🩸', col:'#ff6b6b', desc:'mỗi đòn trúng hồi 8% sát thương đã gây', leech:0.08, mini:0.03 },
+  chieubinh: { name:'Chiêu Binh',glyph:'☍', col:'#d0e07a', desc:'triệu 4 con nhỏ cùng loại, 12s một lần', summon:4, cd:12, mini:2 },
+  loantien:  { name:'Loạn Tiễn', glyph:'⇶', col:'#8fd18f', desc:'mỗi đòn đánh 3 lần, mỗi lần 45%',      dmg:1.35, shots:3, mini:1.14 },
+  nhiemdoc:  { name:'Nhiễm Độc', glyph:'☠', col:'#7ec850', desc:'đòn trúng gây độc 4 giây',           poison:4, mini:1.6 },
+  hoaphu:    { name:'Hoả Phụ',   glyph:'♨', col:'#ff7a3a', desc:'+15% sát thương dạng Hoả',           dmg:1.15, el:'Hỏa', mini:1.06 },
+  bangphu:   { name:'Băng Phụ',  glyph:'❄', col:'#9ed4ff', desc:'+15% sát thương dạng Băng',          dmg:1.15, el:'Thủy', mini:1.06 },
+  loiphu:    { name:'Lôi Phụ',   glyph:'⚡', col:'#ffd76a', desc:'+15% sát thương dạng Lôi',           dmg:1.15, el:'Kim', mini:1.06 },
+  noxac:     { name:'Nổ Xác',    glyph:'✸', col:'#ff9a5a', desc:'chết nổ một vòng sát thương quanh xác', burst:0.6, r:95, mini:0.24 },
+  phanthan:  { name:'Phân Thân', glyph:'⧉', col:'#c07fe0', desc:'có một bản sao 30% máu, 50% sát thương', clone:true },
+  dichanh:   { name:'Dịch Ảnh',  glyph:'✧', col:'#a0ffe9', desc:'mỗi 6 giây chớp tới cạnh người chơi',  tp:6, mini:12 },
+};
+// Tên riêng cho elite — MU và Diablo đều đặt tên cho quái tinh anh, và người chơi nhớ được "Hắc
+// Nha" chứ không nhớ được "Gloam Marauder thứ ba từ trái sang".
+const DB_TEN = ['Hắc','Huyết','Cuồng','Ám','Tà','Bạo','Thiết','Độc','Lôi','Vô Danh','Cổ','Sát'];
+const DB_HAU = ['Nha','Trảo','Nhãn','Ảnh','Hồn','Vương','Khách','Thú','Tinh','Ma'];
+function rollDiBien(m){
+  const keys = Object.keys(DIBIEN);
+  const n = 2 + Math.floor(Math.random() * 3);   // 2–4
+  const db = [];
+  while (db.length < n && db.length < keys.length){
+    const k = keys[Math.floor(Math.random() * keys.length)];
+    if (!db.includes(k)) db.push(k);
+  }
+  m.db = db; m.dbChamp = true; m.dbT = {};
+  m.eliteName = DB_TEN[Math.floor(Math.random()*DB_TEN.length)] + ' ' + DB_HAU[Math.floor(Math.random()*DB_HAU.length)];
+  const A = DIBIEN.cuongthe;
+  if (db.includes('cuongthe')){ m.maxHp = Math.round(m.maxHp * A.hp); m.hp = m.maxHp; }
+  return m;
+}
+// Elite mang Dị Biến của bầy này (mỗi bầy đúng một — xem buildWorld). Không có thì null.
+function packChamp(pack){
+  if (pack == null) return null;
+  for (const x of mobs) if (!x.dead && x.dbChamp && x.pack === pack) return x;
+  return null;
+}
+// Dị Biến con quái này ĐANG chịu ảnh hưởng: elite thì cả danh sách (sức 1), quái thường trong bầy
+// có elite thì đúng một cái đầu tiên của elite (sức mini). Trả về [khoá, tỉ lệ 0..1].
+function dbOf(m, k){
+  if (!m || m.tiep) return 0;
+  if (m.db) return m.db.includes(k) ? 1 : 0;
+  const c = packChamp(m.pack);
+  return (c && c.db && c.db[0] === k) ? 0.4 : 0;
+}
+// Bản sao Phân Thân: đứng cạnh chủ, không hồi sinh, không thưởng riêng (drop: 0)
+function spawnClone(m){
+  const c = spawnMob(m.type, { x:m.x, y:m.y, r:30, count:1 }, m.pack, true, { role: m.role });
+  c.zone = null; c.clone = true; c.def = Object.assign({}, c.def, { drop: 0, xp: Math.round((c.def.xp||0)*0.2) });
+  c.maxHp = c.hp = Math.max(1, Math.round(m.maxHp * 0.3)); c.atkMul = 0.5; c.eliteName = 'Ảnh ' + (m.eliteName || m.name);
+  return c;
+}
+// Quái nhỏ Chiêu Binh triệu ra: vai Bầy Đàn, 50% máu, không hồi sinh, tối đa 6 con sống mỗi chủ
+function dbSummon(m, n){
+  const alive = mobs.filter(x => !x.dead && x.summonedBy === m).length;
+  for (let i = 0; i < n && alive + i < 6; i++){
+    const c = spawnMob(m.type, { x:m.x, y:m.y, r:50, count:1 }, m.pack, true, { role:'bay' });
+    c.zone = null; c.summonedBy = m; c.def = Object.assign({}, c.def, { drop: 0, xp: Math.round((c.def.xp||0)*0.25) });
+    c.maxHp = c.hp = Math.max(1, Math.round(c.maxHp * 0.5)); c.packAlert = 8;
+  }
+  addEffect({ type:'ring', x:m.x, y:m.y, r:70, color:DIBIEN.chieubinh.col, big:true });
+}
 // Vai trò của 28 loại quái đang đứng trong bãi. Không có tên ở đây = 'can'.
 // (Tên MOB_ROLE chứ không phải MOB_ARCH: MOB_ARCH đã là bảng bộ vẽ khung xương ở dưới.)
 const MOB_ROLE = {
@@ -5586,6 +5656,14 @@ function buildWorld(){
       if (inObstacle(curMap, t.x, t.y, 16)){ const _f = nearestFree(curMap, t.x, t.y); t.x = _f.x; t.y = _f.y; }
     }
     syncTiepHp(packId);
+    // Dị Biến: bãi có elite thì đúng MỘT con thành Kẻ Dị Biến (2–4 Dị Biến, tên riêng), các con
+    // còn lại thừa hưởng một Dị Biến ở 40% sức. Năm bãi elite hiện tại mỗi bãi 5 con elite — cho
+    // cả 5 con mang 2–4 Dị Biến là nhân sức bãi lên nhiều lần; một con mới đúng nghĩa "tinh anh".
+    const elites = mobs.filter(x => x.pack === packId && x.def.elite && !x.tiep);
+    if (elites.length){
+      const c = rollDiBien(elites[Math.floor(Math.random() * elites.length)]);
+      if (c.db.includes('phanthan')) spawnClone(c);
+    }
   }
   curBand = -1; // đổi map → tính lại đai, không bắn banner ngay lúc vào
   // Phiêu Bạt Du Hiệp — mục tiêu PK trong map dã ngoại/huyết chiến
@@ -6867,6 +6945,16 @@ function killMob(m, source){
     addFloat(m.x, m.y - 52, `+${player.excHp}`, '#6ae88a', 11);
   }
   sigilFire('kill', m); // Khắc Ấn — móc 'kill' (Hồi Quang, Bùng Cháy…)
+  { const fN = dbOf(m, 'noxac'); if (fN){
+      const R = DIBIEN.noxac.r, pct = fN === 1 ? DIBIEN.noxac.burst : DIBIEN.noxac.mini;
+      addEffect({ type:'ring', x:m.x, y:m.y, r:R, color:DIBIEN.noxac.col, big:true });
+      if (dist(player.x, player.y, m.x, m.y) < R && player.hp > 0){
+        const dmgN = Math.max(1, Math.round(m.def.atk * pct * (1 - player.defRed)));
+        player.hp -= dmgN; player.hurtT = 0.25; player.combatT = 4;
+        addFloat(player.x, player.y - 40, `✸ -${dmgN}`, DIBIEN.noxac.col, 14);
+        if (player.hp <= 0){ player.hp = 0; onDeath(); }
+      }
+  } }
   if (m.tiep){
     syncTiepHp(m.pack);
     addFloat(m.x, m.y - 64, '◈ Kẻ Tiếp Sức gục — cả bầy yếu đi!', ROLE.tiep.col, 15);
@@ -8170,6 +8258,28 @@ function update(dt){
       continue;
     }
     const aggroR = m.packAlert > 0 ? 9999 : m.def.aggro; // cả cụm truy đuổi
+    // Dị Biến theo bộ đếm — chỉ chạy khi đang thấy người chơi, để bãi im không tự nhân quái
+    if (d < aggroR && (dbOf(m, 'chieubinh') || dbOf(m, 'dichanh'))){
+      m.dbT = m.dbT || {};
+      const kCB = dbOf(m, 'chieubinh');
+      if (kCB){
+        m.dbT.chieubinh = (m.dbT.chieubinh == null ? DIBIEN.chieubinh.cd * 0.5 : m.dbT.chieubinh) - dt;
+        if (m.dbT.chieubinh <= 0){ m.dbT.chieubinh = DIBIEN.chieubinh.cd; dbSummon(m, kCB === 1 ? DIBIEN.chieubinh.summon : DIBIEN.chieubinh.mini); }
+      }
+      const kDA = dbOf(m, 'dichanh');
+      if (kDA && d > 70){
+        const cd = kDA === 1 ? DIBIEN.dichanh.tp : DIBIEN.dichanh.mini;
+        m.dbT.dichanh = (m.dbT.dichanh == null ? cd * 0.6 : m.dbT.dichanh) - dt;
+        if (m.dbT.dichanh <= 0){
+          m.dbT.dichanh = cd;
+          addEffect({ type:'ring', x:m.x, y:m.y, r:40, color:DIBIEN.dichanh.col });
+          const a = Math.random() * Math.PI * 2;
+          m.x = clamp(player.x + Math.cos(a) * 44, 40, MAP.w - 40); m.y = clamp(player.y + Math.sin(a) * 44, 40, MAP.h - 40);
+          m.atkT = Math.min(m.atkT, 0.35);
+          addEffect({ type:'ring', x:m.x, y:m.y, r:40, color:DIBIEN.dichanh.col });
+        }
+      }
+    }
     if ((m.fearT || 0) > 0){ // hoảng sợ: bỏ chạy xa người chơi
       const fa = Math.atan2(m.y-player.y, m.x-player.x);
       m.x = clamp(m.x + Math.cos(fa)*m.def.speed*dt, 40, MAP.w-40);
@@ -8198,6 +8308,15 @@ function update(dt){
       } else {
         let dmg = m.def.atk * rnd(0.85,1.15) * (m.atkMul || 1) * (isNightGame() ? 1.1 : 1) * (1 - player.defRed); // Lịch Thế Giới: ban đêm quái +10% công
         if (!m.tiep && packTiepAlive(m.pack)) dmg *= TIEP_ATK;   // Kẻ Tiếp Sức đang nuôi bầy
+        // Dị Biến nhân vào sát thương. Mini = 40% hiệu lực cộng thêm (1.35 → 1.14, 1.15 → 1.06).
+        let _dbEl = null;
+        for (const k of ['loantien','hoaphu','bangphu','loiphu']){
+          const f = dbOf(m, k); if (!f) continue;
+          dmg *= f === 1 ? DIBIEN[k].dmg : DIBIEN[k].mini;
+          if (DIBIEN[k].el) _dbEl = DIBIEN[k].el;
+          if (k === 'loantien') for (let i = 1; i < DIBIEN.loantien.shots; i++)
+            projectiles.push({ cosmetic:true, x:m.x, y:m.y, ang:Math.atan2(player.y-m.y,player.x-m.x) + (i - 1) * 0.22, speed:420, dmg:0, kind:'mobshot', life:d/420, color:DIBIEN.loantien.col });
+        }
         // QA endgame F3: quái cao hơn 6+ cấp gây thêm sát thương (tối đa +120%) — lạc vào map cao là trả giá
         const lvGapM = (m.def.lv || 1) - player.level;
         if (lvGapM > 5) dmg *= 1 + Math.min(1.2, (lvGapM - 5) * 0.08);
@@ -8224,8 +8343,14 @@ function update(dt){
           if (absorbed > 0) addFloat(player.x, player.y-40, `🛡 -${absorbed}`, '#8ad8c8', 12);
         }
         player.hp -= dmg;
+        // Dị Biến sau khi đòn đã trúng: Hút Sinh hồi máu cho quái, Nhiễm Độc gây độc
+        { const fH = dbOf(m, 'hutsinh'); if (fH){ m.hp = Math.min(m.maxHp, m.hp + dmg * (fH === 1 ? DIBIEN.hutsinh.leech : DIBIEN.hutsinh.mini)); addFloat(m.x, m.y - 30, '🩸', DIBIEN.hutsinh.col, 12); } }
+        { const fP = dbOf(m, 'nhiemdoc'); if (fP && player.poisonT <= 0){
+            player.poisonT = fP === 1 ? DIBIEN.nhiemdoc.poison : DIBIEN.nhiemdoc.mini;
+            player.poisonDps = Math.max(1, Math.round(player.maxHp * 0.008 * (1 - (player.vhPoisonRes || 0))));
+            playStatusFx('poison', 'poison_apply', player.x, player.y, 0.5, 0.3); } }
         // đòn đánh trúng: vụ nổ hào quang nguyên tố + rung màn hình
-        const elC2 = (mobEl && ELEM[mobEl]) ? ELEM[mobEl].color : '#ff7a6a';
+        const elC2 = _dbEl && ELEM[_dbEl] ? ELEM[_dbEl].color : (mobEl && ELEM[mobEl]) ? ELEM[mobEl].color : '#ff7a6a';
         addEffect({ type:'ring', x:player.x, y:player.y-10, r:22, color:elC2 });
         for (let i=0;i<4;i++) addEffect({ type:'ink', x:player.x, y:player.y-12, vx:rnd(-70,70), vy:rnd(-90,-20), color:elC2 });
         player.hurtT = 0.25; // viền đỏ nhấp khi trúng đòn
@@ -8328,7 +8453,8 @@ function update(dt){
       // 8 giây đầu rồi tịt hẳn, máu tụt đều về 0 trong khi 6 con vây quanh.
       if (zoneAliveCount(m.zone) < m.zone.count){
         // Kẻ Tiếp Sức chết thì bãi phải sinh lại đúng một Kẻ Tiếp Sức, không phải thêm một con thường
-        spawnMob(m.type, m.zone, m.pack, true, { role: m.role }); m.gone = true;
+        const nm = spawnMob(m.type, m.zone, m.pack, true, { role: m.role }); m.gone = true;
+        if (m.dbChamp){ rollDiBien(nm); if (nm.db.includes('phanthan')) spawnClone(nm); }
         syncTiepHp(m.pack);
       }
       else m.respawnT = 3;
@@ -9526,7 +9652,17 @@ function drawMob(m){
   // huy hiệu nguyên tố (◆♣❄☼▲) + tên quái
   if (!SETTINGS.mobName || m._lbl === false) return;
   const _sl = (m._lblN || 1) > 1 ? ` ×${m._lblN}` : '';
-  const nameTxt = `${d.bossKind === 'tranai' ? '✦ TƯỚNG QUÂN ' : d.bossKind === 'thuve' ? '◆ VỆ BINH TRỤ ' : m.tiep ? '◈ TIẾP SỨC ' : ''}${m.name}${m.revenge ? ' ⚔TRUY THÙ' : ''} · C${d.lv}${_sl}`;
+  const nameTxt = `${d.bossKind === 'tranai' ? '✦ TƯỚNG QUÂN ' : d.bossKind === 'thuve' ? '◆ VỆ BINH TRỤ ' : m.tiep ? '◈ TIẾP SỨC ' : ''}${m.eliteName ? m.eliteName + ' · ' : ''}${m.name}${m.revenge ? ' ⚔TRUY THÙ' : ''} · C${d.lv}${_sl}`;
+  // Dị Biến hiện dưới tên: elite đủ danh sách, quái thường trong bầy một ký hiệu mờ. Hệ hay mà vô
+  // hình thì bằng không — người chơi phải thấy vì sao con này trâu hơn.
+  if (m.db && m.db.length){
+    ctx.font = 'bold 9px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
+    let ox = dx - (m.db.length - 1) * 7;
+    for (const k of m.db){ const D = DIBIEN[k]; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.beginPath(); ctx.arc(ox, topY - 27, 6, 0, 7); ctx.fill();
+      ctx.fillStyle = D.col; ctx.fillText(D.glyph, ox, topY - 24); ox += 14; }
+  } else { const c0 = packChamp(m.pack); if (c0 && c0 !== m && c0.db && !m.tiep){
+    ctx.font = '8px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center'; ctx.globalAlpha = 0.55;
+    ctx.fillStyle = DIBIEN[c0.db[0]].col; ctx.fillText(DIBIEN[c0.db[0]].glyph, dx, topY - 24); ctx.globalAlpha = 1; } }
   ctx.font = '10px "Be Vietnam Pro", sans-serif'; ctx.textAlign='center';
   const eld = d.el && ELEM[d.el];
   const nw = ctx.measureText(nameTxt).width;
@@ -9542,7 +9678,7 @@ function drawMob(m){
   }
   ctx.strokeStyle='rgba(255,255,255,.75)'; ctx.lineWidth=2.5;
   ctx.strokeText(nameTxt, nameX, topY-14);
-  ctx.fillStyle = d.boss ? '#c02020' : m.tiep ? '#1f5f8a' : '#3a3226';
+  ctx.fillStyle = d.boss ? '#c02020' : m.tiep ? '#1f5f8a' : m.db ? '#7a2a5a' : '#3a3226';
   ctx.fillText(nameTxt, nameX, topY-14);
 }
 // Thần Binh lơ lửng theo người chơi — dáng vũ khí riêng từng môn phái, sáng dần theo tầng
