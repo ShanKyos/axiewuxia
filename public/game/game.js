@@ -9332,10 +9332,12 @@ function hSetMetal(M, S, t){
   // đọc ra là cùng một bộ.
   const k = (S.span > 1 && t > S.min) ? Math.max(0, Math.min(1, (t - S.min) / (S.span - 1))) : 0;
   if (k <= 0) return base;
-  return { lo:   _hexMix(base.lo,   '#ffffff', k * 0.12),
-           hi:   _hexMix(base.hi,   '#ffffff', k * 0.26),
-           trim: _hexMix(base.trim, '#ffe9a8', k * 0.40),
-           glow: base.glow ? _hexMix(base.glow, '#ffffff', k * 0.28) : null };
+  // Nâng từ 0,12/0,26/0,40 lên 0,22/0,44/0,55: giai trên trong cùng một dải trước đây chỉ sáng
+  // hơn vài phần trăm, mà đó lại là bước lên giai KHÔNG có gì khác đổi cùng (xem hEngrave).
+  return { lo:   _hexMix(base.lo,   '#ffffff', k * 0.22),
+           hi:   _hexMix(base.hi,   '#ffffff', k * 0.44),
+           trim: _hexMix(base.trim, '#ffe9a8', k * 0.55),
+           glow: base.glow ? _hexMix(base.glow, '#ffffff', k * 0.34) : null };
 }
 // Nấc tạo hình 1..4 theo bậc hiệu dụng — dùng chung cho mọi bộ
 function hStage(t){ return t < 4.5 ? 1 : t < 6.5 ? 2 : t < 8.5 ? 3 : 4; }
@@ -10273,24 +10275,55 @@ function hArmorSheen(g, M, gv){
 // ── C. HOA VĂN KHẢM ──
 // Mật độ chi tiết là thứ mắt đọc ra "đồ đắt" mà không cần biết luật chơi. Số đường tăng theo
 // bậc, MÀU lấy theo độ hiếm — nên `it.rarity` lần đầu tiên có mặt trên người nhân vật.
+// Hoa văn khảm là chỗ DUY NHẤT đổi được ở MỌI giai. Bóng dáng (hStage) chỉ đổi ở giai 5/7/9
+// và bảng màu bộ chỉ đổi ở giai 3/5/7/9 — hai thứ đó trùng mốc nhau, nên chín bước lên giai chỉ
+// có bốn bước được đổi hình. Đo bằng test_geartier trước khi sửa: bước 4→5, 6→7, 8→9 đổi
+// 28–52% điểm ảnh, còn 1→2 và 3→4 chỉ 12–30%, thấp nhất là minhgiao 3→4 = 12,1%.
+//
+// Nay mỗi giai thêm ĐÚNG MỘT thứ, và không giai nào lấy đi thứ giai dưới đã có — nâng cấp mà
+// mất đi một chi tiết thì nhìn như bị tụt hạng:
+//   giai  1  không gì            giai  6  5 nét + khoá ngực
+//   giai  2  1 nét               giai  7  + vạch dọc giữa ngực
+//   giai  3  2 nét               giai  8  + đinh tán hai bên
+//   giai  4  3 nét               giai  9  + vòng cổ
+//   giai  5  4 nét               giai 10  + quầng sáng quanh khoá
 function hEngrave(g, M, gv){
   const t = gv ? gv.t : 0;
-  // Trước đây cũng chia theo mốc 1/3/5/7/9 y như bộ giáp, nên giai chẵn không thêm được nét nào.
-  // Nay mỗi giai từ 3 trở lên thêm một nét, tới giai 10 là 5 nét + khoá ngực.
-  const n = t < 3 ? 0 : Math.max(1, Math.min(5, Math.round((t - 1) / 1.8)));
-  if (!n) return;
+  if (t < 2) return;
+  const col = gv.rcol || M.trim;
+  const n = Math.min(5, t - 1);
   g.save();
-  g.strokeStyle = gv.rcol || M.trim;
-  g.globalAlpha = 0.75; g.lineWidth = 1.2;
-  for (let i = 0; i < n; i++){
-    const y = 104 + i * 8.5;
-    g.beginPath(); g.moveTo(60, y); g.quadraticCurveTo(80, y + 4.5, 100, y); g.stroke();
+
+  if (t >= 9){                                          // vòng cổ — cung ôm dưới cằm
+    g.strokeStyle = col; g.globalAlpha = 0.8; g.lineWidth = 2.4;
+    g.beginPath(); g.arc(80, 84, 15, 0.35, Math.PI - 0.35); g.stroke();
   }
-  if (n >= 4){                                          // khoá ngực hình thoi ở bậc tối cao
-    g.globalAlpha = 0.9; g.fillStyle = gv.rcol || M.trim;
+  if (t >= 10){                                         // quầng sáng quanh khoá — chỉ bậc cuối
+    const ag = g.createRadialGradient(80, 101, 1, 80, 101, 15);
+    ag.addColorStop(0, col); ag.addColorStop(1, 'rgba(0,0,0,0)');
+    g.globalAlpha = 0.5; g.fillStyle = ag;
+    g.beginPath(); g.arc(80, 101, 15, 0, 7); g.fill();
+  }
+  if (t >= 6){                                          // khoá ngực hình thoi
+    g.globalAlpha = 0.9; g.fillStyle = col;
     g.beginPath();
-    g.moveTo(80, 98); g.lineTo(86, 105); g.lineTo(80, 112); g.lineTo(74, 105);
+    g.moveTo(80, 94); g.lineTo(86, 101); g.lineTo(80, 108); g.lineTo(74, 101);
     g.closePath(); g.fill();
+  }
+  g.strokeStyle = col; g.globalAlpha = 0.75; g.lineWidth = 1.2;
+  for (let i = 0; i < n; i++){                          // nét khảm ngang
+    const y = 112 + i * 7;
+    g.beginPath(); g.moveTo(60, y); g.quadraticCurveTo(80, y + 4, 100, y); g.stroke();
+  }
+  if (t >= 7){                                          // vạch dọc nối các nét ngang
+    g.globalAlpha = 0.7; g.lineWidth = 1.6;
+    g.beginPath(); g.moveTo(80, 110); g.lineTo(80, 112 + (n - 1) * 7 + 4); g.stroke();
+  }
+  if (t >= 8){                                          // đinh tán hai bên ngực
+    g.globalAlpha = 0.85; g.fillStyle = col;
+    for (const x of [64, 96]) for (const y of [117, 131]){
+      g.beginPath(); g.arc(x, y, 2.1, 0, 7); g.fill();
+    }
   }
   g.restore();
 }

@@ -103,21 +103,37 @@ const measure = (p, ms=3000) => p.evaluate(async (ms) => {
   //    đó phán xét: máy chạy 59.9 FPS thì "không được hạ gì". Nhưng máy chạy được 59.9 CHÍNH LÀ
   //    NHỜ nó vừa hạ hiệu ứng — lấy kết quả để phủ nhận nguyên nhân. Bài chỉ đỏ khi bộ tự chỉnh
   //    làm việc TỐT tới mức vượt ngưỡng 55, nên càng tối ưu game thì càng hay đỏ.
+  //    Bản trước lấy MỘT mẫu 3 giây rồi phán xét cho 30 giây sau đó: "máy giữ được 59,5 FPS
+  //    nên bộ tự chỉnh không được hạ gì". Mệnh đề đó không đứng vững — một mẫu 3 giây không
+  //    chứng minh được 30 giây kế tiếp cũng trên ngưỡng, mà FPS trên máy dựng thì lên xuống
+  //    theo tải của cả máy. Tụt một nhịp giữa chừng rồi hạ chất lượng CHÍNH LÀ việc bộ tự chỉnh
+  //    phải làm, vậy mà bài kiểm tính đó là hỏng: chạy hai lượt trên cùng một commit ra một
+  //    xanh một đỏ.
+  //    Nay lấy FPS THẤP NHẤT trong suốt cửa sổ quan sát. Nếu chưa từng tụt xuống dưới ngưỡng
+  //    thì mới thật sự là "không có lý do gì để hạ". Bộ tự chỉnh hạ xong thì FPS lên lại, nhưng
+  //    mẫu thấp nhất vẫn giữ được cú tụt đã gây ra việc hạ đó.
   await p.waitForTimeout(3000);
   const before = await p.evaluate(() => ({ fxq: FXQ, res: RES, fps: _perf.fps }));
-  await p.waitForTimeout(30000);
+  const mau = [];
+  for (let i = 0; i < 30; i++){
+    await p.waitForTimeout(1000);
+    const f = await p.evaluate(() => _perf.fps);
+    if (f) mau.push(f);
+  }
+  const day = mau.length ? Math.min(...mau) : 0;
   const tuned = await p.evaluate(() => ({ fxq: FXQ, res: RES, fps: _perf.fps,
     cw: document.getElementById('game').width, W }));
-  console.log('7) tự chỉnh:', JSON.stringify(before), '→', JSON.stringify(tuned));
-  const yeu = before.fps && before.fps < 55;   // máy có đuối lúc CHƯA chỉnh gì không?
+  console.log('7) tự chỉnh:', JSON.stringify(before), '→', JSON.stringify(tuned),
+              `· FPS thấp nhất trong cửa sổ = ${day} (${mau.length} mẫu)`);
+  const yeu = (before.fps && before.fps < 55) || (day && day < 55);
   if (yeu){
     if (tuned.fxq >= before.fxq && tuned.res >= before.res)
       fail(`lúc đầy hiệu ứng chỉ đạt ${before.fps} FPS mà bộ tự chỉnh không hạ gì cả`);
     else console.log(`   (đuối ở ${before.fps} FPS → đã hạ xuống fxq ${tuned.fxq}, nay ${tuned.fps} FPS)`);
   } else {
-    console.log(`   (giữ được ${before.fps} FPS ngay lúc đầy hiệu ứng — không hạ gì là đúng)`);
+    console.log(`   (chưa từng tụt dưới 55 FPS — thấp nhất ${day} — nên không hạ gì là đúng)`);
     if (tuned.fxq < before.fxq || tuned.res < before.res)
-      fail(`máy giữ được ${before.fps} FPS lúc đầy hiệu ứng mà bộ tự chỉnh vẫn hạ chất lượng`);
+      fail(`suốt cửa sổ chưa lúc nào tụt dưới 55 FPS (thấp nhất ${day}) mà bộ tự chỉnh vẫn hạ chất lượng`);
   }
   if (tuned.res < 1 && tuned.fxq !== 0)
     fail(`hạ độ nét xuống ${tuned.res} khi hiệu ứng còn ở mức ${tuned.fxq} — phải hạ hiệu ứng trước`);
