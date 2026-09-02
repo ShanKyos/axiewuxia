@@ -3263,60 +3263,60 @@ function skillInfo(id){
 // là ba ô, ba đường nâng cấp, ba bảng. Chủ dự án chốt cho Chimera nuốt Thú Chiến — hành vi chiến
 // đấu (đi theo, tự đánh) giữ nguyên, chỉ đổi CÁCH CÓ nó: quay được thay vì nâng giai.
 //
-// Art: năm con dùng ảnh Axie thật đã dựng từ rig Spine (assets/mounts/*.png) — đúng năm con của
-// hệ cũ, để người chơi đang có Thú Chiến nhận lại chính con mình đã nuôi. Mười một con còn lại
-// vẽ bằng vector theo dáng của chín lớp Axie; art thật thay vào sau, không đụng tới cơ chế.
+// Art: cả 16 con là ảnh Axie thật, dựng từ 16 rig Spine KHÁC NHAU trong axie-origins-asset-kit
+// (assets/chimera/*.png — xem tools/spine/ và docs/ASSET_SOURCING.md). Cố tình không lấy bản biến
+// thể của cùng một rig: hai con chỉ khác cái mũ thì trong màn nhìn như lỗi trùng ảnh.
 const CHIMERA = [
   // ── 5★ ──────────────────────────────────────────────────────────────────────
-  { id:'aurelion',  ten:'Aurelion',  sao:5, lop:'Dawn',    mau:'#ffd76a', dang:2,
+  { id:'aurelion',  ten:'Aurelion',  sao:5, lop:'Dawn',    mau:'#e0a63c', img:'assets/chimera/aurelion.png',
     thu:{ k:'skillPct', v:12 }, thuTxt:'+12% sát thương chiêu thức',
     chieu:{ ten:'Rạng Đông', cd:14, r:150, mult:2.6, fx:'sun' }, moTa:'Bình minh đọng lại thành hình — nơi nó đứng, bóng tối không tới được.' },
-  { id:'netherfang',ten:'Netherfang',sao:5, lop:'Dusk',    mau:'#8a5ad8', dang:0,
+  { id:'netherfang',ten:'Netherfang',sao:5, lop:'Dusk',    mau:'#8a5ad8', img:'assets/chimera/netherfang.png',
     thu:{ k:'hpLeech', v:6 }, thuTxt:'hút 6% sát thương gây ra thành HP',
     chieu:{ ten:'Màn Đêm', cd:16, r:170, mult:2.2, fx:'dark', slow:0.4 }, moTa:'Sinh ra từ khe nứt. Nó không săn mồi — nó chờ mồi kiệt sức.' },
-  { id:'tidewarden',ten:'Tidewarden',sao:5, lop:'Aquatic', mau:'#3ac8c8', img:'assets/mounts/2_tidenip.png',
+  { id:'tidewarden',ten:'Tidewarden',sao:5, lop:'Aquatic', mau:'#3ac8c8', img:'assets/chimera/tidewarden.png',
     thu:{ k:'hpPct', v:15 }, thuTxt:'+15% HP tối đa',
     chieu:{ ten:'Triều Chắn', cd:18, r:0, mult:0, fx:'shield', shieldPct:30 }, moTa:'Càng nước dựng lên một bức tường, và bức tường đó biết bơi.' },
-  { id:'emberjaw',  ten:'Emberjaw',  sao:5, lop:'Beast',   mau:'#f0932a', img:'assets/mounts/3_emberpaw.png',
+  { id:'emberjaw',  ten:'Emberjaw',  sao:5, lop:'Beast',   mau:'#f0932a', img:'assets/chimera/emberjaw.png',
     thu:{ k:'aspdPct', v:10 }, thuTxt:'+10% tốc độ đánh',
     chieu:{ ten:'Lao Húc', cd:12, r:190, mult:2.8, fx:'charge', kb:60 }, moTa:'Chạy trước, nghĩ sau, và chưa bao giờ thấy cần nghĩ.' },
-  { id:'voltcrest', ten:'Voltcrest', sao:5, lop:'Bird',    mau:'#7ecbff', dang:3,
+  { id:'voltcrest', ten:'Voltcrest', sao:5, lop:'Bird',    mau:'#4fc9d9', img:'assets/chimera/voltcrest.png',
     thu:{ k:'evaPct', v:8 }, thuTxt:'+8% né đòn',
-    chieu:{ ten:'Mào Sét', cd:15, r:320, mult:2.0, fx:'bolt', multi:5 }, moTa:'Đập cánh một cái là năm chỗ khác nhau cùng nổ.' },
-  { id:'ironshell', ten:'Ironshell', sao:5, lop:'Reptile', mau:'#b06ae0', img:'assets/mounts/4_stonetusk.png',
+    chieu:{ ten:'Mào Sét', cd:15, r:320, mult:2.0, fx:'bolt', multi:5 }, moTa:'Cái mào trên đầu tích điện cả ngày. Đập cánh một cái là năm chỗ cùng nổ.' },
+  { id:'ironshell', ten:'Ironshell', sao:5, lop:'Reptile', mau:'#7bbf3a', img:'assets/chimera/ironshell.png',
     thu:{ k:'dmgred', v:10 }, thuTxt:'−10% sát thương gánh chịu',
-    chieu:{ ten:'Khiêu Chiến', cd:17, r:220, mult:1.4, fx:'taunt', taunt:8 }, moTa:'Nó đứng chắn trước mặt bạn và không hiểu vì sao bạn lại lo.' },
+    chieu:{ ten:'Khiêu Chiến', cd:17, r:220, mult:1.4, fx:'taunt', taunt:8 }, moTa:'Vác nguyên tảng đá trên lưng. Nó đứng chắn trước mặt bạn và không hiểu vì sao bạn lại lo.' },
   // ── 4★ ──────────────────────────────────────────────────────────────────────
-  { id:'petalkin',  ten:'Petalkin',  sao:4, lop:'Plant',   mau:'#e87ab0', img:'assets/mounts/1_petalkin.png',
+  { id:'petalkin',  ten:'Petalkin',  sao:4, lop:'Plant',   mau:'#e87ab0', img:'assets/chimera/petalkin.png',
     thu:{ k:'hpPct', v:6 }, thuTxt:'+6% HP tối đa',
     chieu:{ ten:'Bung Cánh', cd:16, r:130, mult:1.6, fx:'sun' }, moTa:'Con Chimera đầu tiên chịu đi theo người lạ.' },
-  { id:'crimsonmaw',ten:'Crimsonmaw',sao:4, lop:'Beast',   mau:'#c0304a', img:'assets/mounts/5_crimsonmaw.png',
+  { id:'crimsonmaw',ten:'Crimsonmaw',sao:4, lop:'Beast',   mau:'#c0304a', img:'assets/chimera/crimsonmaw.png',
     thu:{ k:'atkPct', v:5 }, thuTxt:'+5% Công Kích',
     chieu:{ ten:'Ngoạm', cd:14, r:120, mult:1.9, fx:'charge', kb:30 }, moTa:'Vết cắn của nó không lành lại — chỉ đóng vảy.' },
-  { id:'thornpaw',  ten:'Thornpaw',  sao:4, lop:'Plant',   mau:'#7bc043', dang:2,
+  { id:'thornpaw',  ten:'Thornpaw',  sao:4, lop:'Plant',   mau:'#cf5a52', img:'assets/chimera/thornpaw.png',
     thu:{ k:'crit', v:4 }, thuTxt:'+4% Bạo Kích',
-    chieu:{ ten:'Vuốt Gai', cd:15, r:130, mult:1.7, fx:'charge' }, moTa:'Móng mọc ngược, xé rồi mới rút.' },
-  { id:'glimmerfin',ten:'Glimmerfin',sao:4, lop:'Aquatic', mau:'#3ac8c8', dang:1,
+    chieu:{ ten:'Vuốt Gai', cd:15, r:130, mult:1.7, fx:'charge' }, moTa:'Quả mọng đỏ mọc kín người, và mỗi quả giấu một cái gai.' },
+  { id:'inkmane',   ten:'Inkmane',   sao:4, lop:'Dusk',    mau:'#c2c6d2', img:'assets/chimera/inkmane.png',
     thu:{ k:'hpPct', v:5 }, thuTxt:'+5% HP tối đa',
-    chieu:{ ten:'Sóng Vẩy', cd:16, r:150, mult:1.6, fx:'shield', shieldPct:14 }, moTa:'Vảy nó sáng lên trước khi trời đổi.' },
-  { id:'cinderbeak',ten:'Cinderbeak',sao:4, lop:'Bird',    mau:'#ff9a5a', dang:3,
+    chieu:{ ten:'Vằn Mực', cd:16, r:150, mult:1.6, fx:'shield', shieldPct:14 }, moTa:'Vằn đen trên lưng nó đổi chỗ mỗi lần bạn quay đi.' },
+  { id:'cinderbeak',ten:'Cinderbeak',sao:4, lop:'Bird',    mau:'#f0b45a', img:'assets/chimera/cinderbeak.png',
     thu:{ k:'aspdPct', v:4 }, thuTxt:'+4% tốc độ đánh',
     chieu:{ ten:'Mỏ Than', cd:14, r:280, mult:1.6, fx:'bolt', multi:3 }, moTa:'Rỉa than nóng như rỉa hạt.' },
-  { id:'mossback',  ten:'Mossback',  sao:4, lop:'Plant',   mau:'#5a8a4a', dang:2,
+  { id:'mossback',  ten:'Mossback',  sao:4, lop:'Plant',   mau:'#e7dcc2', img:'assets/chimera/mossback.png',
     thu:{ k:'dmgred', v:4 }, thuTxt:'−4% sát thương gánh chịu',
-    chieu:{ ten:'Vỏ Rêu', cd:18, r:0, mult:0, fx:'shield', shieldPct:16 }, moTa:'Ngủ đủ lâu thì cây mọc trên lưng.' },
-  { id:'hexmite',   ten:'Hexmite',   sao:4, lop:'Bug',     mau:'#c0304a', dang:4,
+    chieu:{ ten:'Vỏ Rêu', cd:18, r:0, mult:0, fx:'shield', shieldPct:16 }, moTa:'Ngủ đủ lâu thì hoa mọc trên lưng. Nó vẫn chưa dậy.' },
+  { id:'hexmite',   ten:'Hexmite',   sao:4, lop:'Bug',     mau:'#d8443c', img:'assets/chimera/hexmite.png',
     thu:{ k:'atkPct', v:4 }, thuTxt:'+4% Công Kích',
     chieu:{ ten:'Bầy Nhỏ', cd:15, r:160, mult:1.5, fx:'dark' }, moTa:'Một con thì không sao. Nó không bao giờ có một con.' },
-  { id:'ridgehorn', ten:'Ridgehorn', sao:4, lop:'Reptile', mau:'#b06ae0', dang:0,
+  { id:'ridgehorn', ten:'Ridgehorn', sao:4, lop:'Reptile', mau:'#b45ad0', img:'assets/chimera/ridgehorn.png',
     thu:{ k:'dmgred', v:4 }, thuTxt:'−4% sát thương gánh chịu',
-    chieu:{ ten:'Húc Sừng', cd:15, r:150, mult:1.8, fx:'charge', kb:36 }, moTa:'Sừng nó dày hơn cả cửa thành.' },
-  { id:'coghound',  ten:'Coghound',  sao:4, lop:'Mech',    mau:'#9aa8d4', dang:1,
+    chieu:{ ten:'Húc Sừng', cd:15, r:150, mult:1.8, fx:'charge', kb:36 }, moTa:'Ba cái sừng, và nó chưa bao giờ dùng quá một cái.' },
+  { id:'coghound',  ten:'Coghound',  sao:4, lop:'Mech',    mau:'#e8e0d0', img:'assets/chimera/coghound.png',
     thu:{ k:'crit', v:4 }, thuTxt:'+4% Bạo Kích',
     chieu:{ ten:'Bánh Răng', cd:14, r:140, mult:1.7, fx:'bolt', multi:2 }, moTa:'Ai đó lắp nó lại từ mảnh vỡ, và nó nhớ ơn.' },
-  { id:'sunspur',   ten:'Sunspur',   sao:4, lop:'Dawn',    mau:'#ffd76a', dang:2,
+  { id:'sunspur',   ten:'Sunspur',   sao:4, lop:'Dawn',    mau:'#efdcb4', img:'assets/chimera/sunspur.png',
     thu:{ k:'atkPct', v:4 }, thuTxt:'+4% Công Kích',
-    chieu:{ ten:'Cựa Nắng', cd:15, r:140, mult:1.7, fx:'sun' }, moTa:'Cựa chân nó giữ nắng của ngày hôm trước.' },
+    chieu:{ ten:'Cựa Nắng', cd:15, r:140, mult:1.7, fx:'sun' }, moTa:'Bộ lông nó giữ nắng của ngày hôm trước, ấm tới tận sáng.' },
 ];
 const CHI_MAP = {}; for (const c of CHIMERA) CHI_MAP[c.id] = c;
 const CHI_SAO_MAU = { 3:'#5ea0e8', 4:'#b06ae0', 5:'#ffb15c' };
@@ -3404,13 +3404,13 @@ function chiDmgMul(){ return chiCon() >= 3 ? 1.25 : 1; }
 const CHI_IMGS = {};
 function chiImg(id){
   const c = CHI_MAP[id];
-  if (!c || !c.img) return null;                       // con vẽ vector — xem veChimera()
+  if (!c || !c.img) return null;                       // chưa có art — rơi về veChimera()
   if (CHI_IMGS[id]) return CHI_IMGS[id];
   const im = new Image(); im.src = c.img; CHI_IMGS[id] = im;
   return im;
 }
-// Chimera vẽ bằng vector cho những con chưa có art thật. Năm dáng theo lớp Axie; art thật thay
-// vào chỉ cần điền `img` trong CHIMERA, không đụng chỗ nào khác.
+// Bóng vector năm dáng — dùng khi ảnh thật CHƯA tải xong (lần đầu vào màn, hoặc bóng đen lúc quay
+// Khế Ước). Cả 16 con đều có `img`, nên đây là hình đệm chứ không còn là art chính.
 function veChimera(gg, x, y, s, mau, dang, bong){
   gg.save(); gg.translate(x, y); gg.scale(s, s);
   const than = bong ? 'rgba(6,6,14,.92)' : mau;
@@ -15982,7 +15982,7 @@ function renderMount(){
   for (const c of dsCo){
     const con = C.co[c.id].con, eq = C.eq === c.id;
     html += `<div class="skill-row${eq ? '' : ' locked'}" style="align-items:center">
-      <span class="sk-glyph" style="color:${c.mau};font-size:18px">${c.sao === 5 ? '★' : '✦'}</span>
+      <img class="chi-anh" src="${c.img}" alt="" style="border-color:${CHI_SAO_MAU[c.sao]}">
       <span class="sk-info"><b style="color:${c.mau}">${c.ten}</b>
         <span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}"> · ${'★'.repeat(c.sao)} · ${c.lop}</span>
         ${con ? `<span style="font-size:10.5px;color:#ffd76a"> · Huyết Thống C${con}</span>` : ''}

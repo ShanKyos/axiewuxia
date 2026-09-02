@@ -179,7 +179,13 @@ Dawn · Dusk) — cùng bộ đã dùng cho Vùng Vỡ Ấn, xem `docs/VUNG_VO_A
 | Voltcrest | Bird | +8% né | sét gọi xuống 5 mục tiêu, 15s |
 | Ironshell | Reptile | −10% sát thương gánh chịu | khiêu khích, kéo địch về mình 8s |
 
-**4★ — 10 con**: mỗi lớp Axie một con + 1 con lai. Bị động một dòng, chủ động một chiêu đơn giản.
+**4★ — 10 con**: Petalkin · Crimsonmaw · Thornpaw · Inkmane · Cinderbeak · Mossback · Hexmite ·
+Ridgehorn · Coghound · Sunspur. Bị động một dòng, chủ động một chiêu đơn giản.
+
+**Art**: cả 16 con là ảnh Axie thật dựng từ 16 rig Spine khác nhau trong `axie-origins-asset-kit`
+(`assets/chimera/*.png`, xem `docs/ASSET_SOURCING.md` mục Mười). Không con nào là bản biến thể của
+con nào — hai con chỉ khác cái mũ thì trong bảng roster nhìn như lỗi trùng ảnh. Lớp và màu của
+từng con chạy theo art, chứ không bắt art chạy theo bảng.
 
 **3★**: không phải Chimera — là **Mảnh Huyết Thống** và nguyên liệu nâng cấp. (Genshin để vũ khí
 3★ ở ô này; ta không có ô vũ khí trong banner này.)

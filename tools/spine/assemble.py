@@ -78,7 +78,13 @@ def bone_world(bones):
 
 def assemble(dirpath, name, out_path, scale=1.0):
     atlas = parse_atlas(os.path.join(dirpath, name + '.atlas'))
-    skel = json.load(open(os.path.join(dirpath, name + '.json')))
+    jp = os.path.join(dirpath, name + '.json')
+    if os.path.exists(jp):
+        skel = json.load(open(jp))
+    else:                                  # rig xuất ở dạng nhị phân
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from skelbin import read_skel
+        skel = read_skel(os.path.join(dirpath, name + '.skel'))
     sheet = Image.open(os.path.join(dirpath, name + '.png')).convert('RGBA')
     world = bone_world(skel['bones'])
 

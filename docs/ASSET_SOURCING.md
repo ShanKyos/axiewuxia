@@ -749,3 +749,66 @@ sẵn khi xuất vì `drawMount()` lật lại khi nhân vật quay trái.
 **Còn 7 con chưa dùng** (`1-1`, `16`, `16-1`, `2-1`, `3-1`, `5-1`, `7`, `12-1`, `17-1` — các bản
 `-N` là biến thể của cùng một con). Cộng với `PvE/Chimeras/*` và `Summoners/*` nay cũng ghép được,
 đây là nguồn art Axie lớn nhất còn chưa khai thác trong repo.
+
+
+## Mười — ĐỌC RIG NHỊ PHÂN: mở nốt 56 rig còn khoá, và 16 con Chimera có art thật
+
+Đợt chín ghép được rig Spine từ file `.json`, nhưng dừng ở đó: 26/38 con trong `PvE/Starters`,
+toàn bộ 22 con `PvE/Chimeras` và 8 con `Summoners` xuất ở dạng `.skel` — cùng dữ liệu, đóng gói
+nhị phân. Kết luận khi ấy là "cần viết thêm bộ đọc nhị phân".
+
+`tools/spine/skelbin.py` là bộ đọc đó (Spine 3.8, `SkeletonBinary`). Nó trả về đúng cấu trúc mà
+`.json` cho ra, nên `assemble.py` dùng lại nguyên si — chỉ thêm một nhánh: không thấy `.json` thì
+đọc `.skel`.
+
+**Ba chỗ dễ sai khi viết bộ đọc:**
+
+- **Số nguyên là varint 7-bit**, không phải 4 byte. Đọc nhầm một con số là lệch con trỏ và mọi
+  thứ phía sau thành rác — mà rác vẫn "đọc được", không báo lỗi ở đâu cả.
+- **Chuỗi đếm cả byte kết**: `0` là null, `1` là chuỗi rỗng, `n` là `n−1` byte UTF-8.
+- **Phải đọc qua cả phần không dùng.** Hoạt ảnh, mesh, ràng buộc IK/transform/path đều không cần
+  cho tư thế gốc, nhưng vẫn phải giải mã đúng số byte của chúng để con trỏ tới đúng chỗ khối skin.
+  Riêng mảng đỉnh của mesh dài ngắn tuỳ có gắn xương hay không — nhánh này sai là hỏng cả file.
+
+**Kết quả:** 38/38 `PvE/Starters` và 8/8 `Summoners` ghép ra ảnh hoàn chỉnh. `PvE/Chimeras` thì
+chỉ vài con ra hình — thân của sói/gấu/dryad làm bằng **mesh**, mà `assemble.py` chỉ dán được mảnh
+`region`; muốn ghép phải làm thêm bước biến hình theo tam giác.
+
+### Đã dùng — 16 Chimera (`assets/chimera/*.png`), thay hẳn `assets/mounts/`
+
+Hệ Thú Chiến bị Chimera nuốt (xem `docs/GACHA_KHE_UOC.md`), nên 5 file `assets/mounts/` cũ bị xoá,
+16 con Chimera lấy art mới theo id. Xuất bằng `tools/spine/xuat_chimera.py`.
+
+| Chimera | rig | Chimera | rig |
+|---|---|---|---|
+| Aurelion (5★) | `Starters/21` | Petalkin | `Starters/12` |
+| Netherfang (5★) | `Starters/18` | Crimsonmaw | `Starters/17` |
+| Tidewarden (5★) | `Starters/3` | Thornpaw | `Starters/24` |
+| Emberjaw (5★) | `Starters/1` | Inkmane | `Starters/23` |
+| Voltcrest (5★) | `Starters/15` | Cinderbeak | `Starters/5` |
+| Ironshell (5★) | `Starters/2` | Mossback | `Starters/16` |
+| | | Hexmite | `Starters/11` |
+| | | Ridgehorn | `Starters/7` |
+| | | Coghound | `Starters/22` |
+| | | Sunspur | `Starters/19` |
+
+**Cố tình không lấy bản biến thể.** Kit đánh số `2` và `2-1` là hai con khác nhau, nhưng ở tư thế
+gốc chúng chỉ khác nhau cái mũ; để cả hai vào cùng một bảng gacha thì người chơi tưởng game lỗi
+trùng ảnh. 16 con = 16 rig gốc khác nhau, không con nào là biến thể của con nào.
+
+**Lớp và màu chạy theo art, không ngược lại.** Con nào art không khớp lớp/màu đã đặt thì sửa
+`lop`/`mau` trong `CHIMERA` cho khớp cái nhìn thấy. Một con phải đổi tên: `glimmerfin` (Aquatic,
+vảy cá) rơi vào rig duy nhất còn lại là một con mèo đen trắng — đổi thành **Inkmane** (Dusk), tên
+và hình mới cùng nói một chuyện.
+
+**Ba bước xử lý sau khi ghép** (`xuat_chimera.py`):
+1. *Bỏ mảnh rời* — vài rig để phụ kiện (quả cà của `22`) nằm tách hẳn khỏi thân ở tư thế gốc; trong
+   màn nó trôi lơ lửng cạnh con vật. Giữ cụm lớn nhất và những cụm cách nó dưới 26px.
+2. *Lật ngang* — art gốc quay TRÁI, `drawMount()` lật lại khi nhân vật quay trái.
+3. *Thu về 480px cạnh dài* — màn quay Khế Ước hiện con ở 150px, `drawMount()` ở 84px; 480 là dư
+   nét mà cả bộ chỉ 2,4MB.
+
+**Không dùng, và vì sao:** `Summoners/*` (8 con: Clover, FruitSloth, LittleRobin, Mavis, Mushroom,
+Sparrow, TrueFanHermitCrab, Trunk) nay ghép ra sạch và đúng nghĩa "thú triệu hồi", nhưng chúng vẽ
+theo lối **painted** đậm bóng, khác hẳn lối phẳng của bộ Starters. Trộn vào cùng một bảng roster là
+tự phá cái đồng nhất mà cả đợt này đang xây. Để dành cho một hệ khác đứng riêng.
