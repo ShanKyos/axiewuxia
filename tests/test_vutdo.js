@@ -16,6 +16,7 @@ const PORT = process.argv[2] || '8853';
 
   const r = await p.evaluate(() => {
     window.TEST_MODE = true; startGame('thieulam', null);
+    player.autoEquip = false; // bài đếm món TRONG TÚI sau khi nhặt — autoEquip nay bật sẵn cho nhân vật mới sẽ mặc luôn
     player.level = 90; player.auto = false;
     const o = {};
     const mon = (extra) => Object.assign(genItem(60, 0, null, { perfect: 0 }), extra);
