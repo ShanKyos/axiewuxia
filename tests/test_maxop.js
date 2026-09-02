@@ -33,12 +33,13 @@ const { chromium } = require('playwright');
         thanBinh: (player.thanbinh||{}).tier,
         chau: Object.values(player.jewels||{}).reduce((a,b)=>a+b,0),
         baoHap: Object.values(player.baohap||{}).reduce((a,b)=>a+b,0),
-        heroTier: heroTier(player),
+        heroTier: heroTier(player), giaiMax: GIAI_MAX,
         gvT: gv ? +gv.t.toFixed(1) : 0,
         gvPlus: gv ? +gv.plus.toFixed(1) : 0,
         mocRen: gv ? plusStage(gv.plus) : -1,
         boGiap: heroSet(player.sect, gv ? gv.t : 0).name,
-        boGiapMongDoi: HERO_SETS[sk][4].name,
+        // Bộ ở ĐỈNH bảng: chỉ số 4 là đỉnh khi còn 5 dải, nay đỉnh là phần tử cuối.
+        boGiapMongDoi: HERO_SETS[sk][HERO_SETS[sk].length - 1].name,
         tuiCoKhacAn: (player.inv||[]).filter(i => i.sigil).length,
       };
     }, sect);
@@ -55,7 +56,7 @@ const { chromium } = require('playwright');
     if (!r.canhCap2) fail(`${sect}: cánh vẫn là cấp 1 (${r.canhTen})`);
     if (!(r.chau >= 300)) fail(`${sect}: chưa cấp châu (${r.chau})`);
     if (!(r.baoHap >= 50)) fail(`${sect}: chưa cấp Bảo Hạp (${r.baoHap})`);
-    if (r.heroTier !== 10) fail(`${sect}: heroTier ${r.heroTier}, cần 10`);
+    if (r.heroTier !== r.giaiMax) fail(`${sect}: heroTier ${r.heroTier}, cần ${r.giaiMax}`);
     if (r.mocRen !== 3) fail(`${sect}: mốc cường hoá ${r.mocRen}, cần 3 (+10 trở lên)`);
     if (!(r.tuiCoKhacAn >= 4)) fail(`${sect}: túi chưa có đồ mang Khắc Ấn (${r.tuiCoKhacAn})`);
     if (r.boGiap !== r.boGiapMongDoi) fail(`${sect}: bộ giáp "${r.boGiap}", cần "${r.boGiapMongDoi}"`);

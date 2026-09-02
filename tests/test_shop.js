@@ -159,7 +159,9 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   console.log('8) Box Kundun:', JSON.stringify(r8));
   if (r8.lv10.tang !== 1) fail(`cấp 10 ra tầng ${r8.lv10.tang}`);
   if (r8.lv50.tang !== 4) fail(`cấp 50 ra tầng ${r8.lv50.tang}`);
-  if (r8.lv95.tang !== 7) fail(`cấp 95 ra tầng ${r8.lv95.tang}`);
+  // Dải hộp nay suy từ GIAI_SPAN: mỗi bậc phủ đúng 2 giai, nên bậc VI là cấp 81–96.
+  // Trước đây bậc VII bắt đầu từ cấp 90 nên cấp 95 ra VII.
+  if (r8.lv95.tang !== 6) fail(`cấp 95 ra tầng ${r8.lv95.tang}, cần 6 (dải VI = cấp 81–96)`);
   if (!/^Box Kundun/.test(r8.lv50.ten)) fail('tên hộp không phải Box Kundun: ' + r8.lv50.ten);
   if (r8.mua.tru !== r8.mua.gia) fail(`mua hộp trừ ${r8.mua.tru}◈, giá ${r8.mua.gia}◈`);
   if (r8.mua.coTrongTui !== 1) fail('mua hộp mà túi không có');

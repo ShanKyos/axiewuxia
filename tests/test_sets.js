@@ -1,4 +1,5 @@
-// 25 bộ giáp (5 lớp × 5 dải). Điều PHẢI chứng minh: 5 lớp KHÁC HẲN nhau khi mặc đồ.
+// 70 bộ giáp (5 lớp × 14 giai). Điều PHẢI chứng minh: 5 lớp KHÁC HẲN nhau khi mặc đồ.
+// Bản cũ là 25 bộ (5 lớp × 5 dải, mỗi dải phủ 2 giai) — mỗi giai một bộ là thứ vừa sửa.
 // Lỗi cũ mà test này khoá lại: 4 lớp hình học vẽ generic cho cả 6 lớp nhân vật ⇒ pháp sư mặc
 // áo choàng lại đeo vai giáp tấm của hiệp sĩ, cả 5 lớp trông như mặc chung một bộ.
 const { chromium } = require('playwright');
@@ -24,6 +25,7 @@ const { chromium } = require('playwright');
     }
     o.soLop = Object.keys(HERO_SETS).length;
     o.soDai = CL.map(k => HERO_SETS[k].length);
+    o.soGiai = GIAI_MAX;
 
     const shot = (sect, t, ps) => {
       const c = document.createElement('canvas'); c.width = HERO_W; c.height = HERO_H;
@@ -44,7 +46,7 @@ const { chromium } = require('playwright');
       o.minKhac = Math.min(o.minKhac, d);
     }
 
-    // ── mỗi lớp: 5 dải phải khác nhau tuần tự ──
+    // ── mỗi lớp: các dải phải khác nhau tuần tự ──
     o.daiKhac = {};
     for (const k of CL){
       const arr = [];
@@ -95,12 +97,12 @@ const { chromium } = require('playwright');
   for (const k in r.bang) console.log(k.padEnd(10), r.bang[k].join(' · '));
   console.log('');
   console.log('khác nhau ở bậc 10 (px):', r.khacNhau.map(x => `${x.a.slice(0,4)}/${x.b.slice(0,4)}=${x.px}`).join('  '));
-  console.log('5 dải khác nhau tuần tự:', JSON.stringify(r.daiKhac));
+  console.log('các dải khác nhau tuần tự:', JSON.stringify(r.daiKhac));
   console.log('Spellblade lệch vai:', JSON.stringify(r.sbLech), '| Dark Knight đối xứng:', r.dkDoiXung);
 
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
   if (r.soLop !== 5) fail(`phải đủ 5 lớp, có ${r.soLop}`);
-  if (r.soDai.some(n => n !== 5)) fail(`mỗi lớp phải 5 dải, có ${JSON.stringify(r.soDai)}`);
+  if (r.soDai.some(n => n !== r.soGiai)) fail(`mỗi lớp phải đủ ${r.soGiai} dải (mỗi giai một bộ), có ${JSON.stringify(r.soDai)}`);
   if (r.thieuHam.length) fail('tạo hình thiếu hàm: ' + r.thieuHam.join(', '));
   if (r.minKhac < 3000) fail(`hai lớp nào đó quá giống nhau — nhỏ nhất chỉ ${r.minKhac} px, cần >3000`);
   for (const k in r.daiKhac) r.daiKhac[k].forEach((d, i) => {
