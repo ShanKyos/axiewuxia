@@ -16361,6 +16361,13 @@ function startGame(sectKey, quze){
       return t && (t.tier === 'huyen' || t.tier === 'thien');
     });
   }
+  // Ba thiên phú vừa roll xong PHẢI được tính vào chỉ số ngay. newPlayer() gọi calcDerived()
+  // TRƯỚC khi tới đoạn roll này, nên trước đây trait của nhân vật mới nằm im cho tới lần
+  // calcDerived() kế tiếp — lên cấp, đổi đồ, bất cứ thứ gì. Nhân vật mới tạo có "Sức Vóc
+  // +8 Tấn Công" mà bảng chỉ số không cộng 8 điểm nào cả. Bài kiểm cheat bắt được chỗ này:
+  // /mo tình cờ là lần tính lại đầu tiên, và Công Kích nhảy 82 → 90 sau một lệnh không đụng
+  // gì tới sức mạnh.
+  calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
   applySkillIcons();
   const maxMode = !RELEASE_BUILD && ((el('chk-max') && el('chk-max').checked) || (el('chk-max-intro') && el('chk-max-intro').checked) || /max=1/.test(location.search));
   if (maxMode){

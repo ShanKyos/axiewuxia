@@ -49,6 +49,26 @@ const PORT = process.argv[2] || '8871';
   if (r2.xong) fail('/quest <n> không được đánh dấu xong chính tuyến'); else pass('chưa đánh dấu xong chính tuyến');
   if (!r2.vaoDuoc) fail('chương VI mà chưa vào được Ashen Steppe'); else pass('vào được map của chương đó');
 
+  // 2b. Thiên phú phải ăn vào chỉ số NGAY lúc tạo nhân vật.
+  // startGame() roll ba thiên phú SAU khi newPlayer() đã gọi calcDerived(), nên trước đây trait
+  // nằm im tới lần tính lại kế tiếp — nhân vật mới có "Sức Vóc +8 Tấn Công" mà bảng chỉ số không
+  // cộng điểm nào. Lỗi lộ ra vì /mo tình cờ là lần calcDerived() đầu tiên.
+  const r2b = await p.evaluate(() => {
+    let sai = 0, thu = 0, viDu = null;
+    for (let i = 0; i < 40; i++){
+      startGame('thieulam', null);
+      if (!(player.traits || []).includes('thanluc')) continue;   // +8 Tấn Công
+      thu++;
+      const truoc = player.atk; calcDerived();
+      if (player.atk !== truoc){ sai++; viDu = { truoc, sau: player.atk }; }
+    }
+    return { thu, sai, viDu };
+  });
+  console.log('2b) thiên phú lúc tạo nhân vật:', JSON.stringify(r2b));
+  if (!r2b.thu) fail('không roll trúng thiên phú nào để kiểm — chỉnh lại vòng lặp');
+  else if (r2b.sai) fail(`thiên phú chưa ăn vào chỉ số lúc tạo nhân vật (${r2b.sai}/${r2b.thu} lần, ví dụ ${JSON.stringify(r2b.viDu)})`);
+  else pass(`thiên phú ăn vào chỉ số ngay lúc tạo nhân vật (${r2b.thu} lần thử)`);
+
   // 3. /mo giữ nguyên sức mạnh, chỉ mở cổng
   const r3 = await p.evaluate(() => {
     startGame('thieulam', null);
