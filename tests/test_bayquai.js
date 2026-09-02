@@ -54,9 +54,23 @@ const PORT = process.argv[2] || '8853';
     // đồng bộ lại hai lần: không được nhân chồng
     syncTiepHp(tiep.pack); syncTiepHp(tiep.pack);
     o.mau.sauDongBo2Lan = mates[0].maxHp;
-    // Kẻ Tiếp Sức đứng rìa, không ở giữa bầy
-    const cx = mates.reduce((a,m)=>a+m.x,0)/mates.length, cy = mates.reduce((a,m)=>a+m.y,0)/mates.length;
-    o.tiepCachTam = Math.round(dist(tiep.x, tiep.y, cx, cy));
+    // Kẻ Tiếp Sức đứng rìa, không ở giữa bầy.
+    // Đo trên MỌI bãi có Kẻ Tiếp Sức rồi lấy trung vị, chứ không đo một mẫu: vị trí thả là ngẫu
+    // nhiên, nên một lượt rơi vào đuôi phân phối (đo được 63px) làm cả bài kiểm đỏ dù luật vẫn
+    // đúng. Chốt luật bằng trung vị, và cho đuôi một biên độ.
+    {
+      const ds = [];
+      for (const t of mobs.filter(m => !m.dead && m.tiep)){
+        const b = mobs.filter(m => !m.dead && !m.tiep && m.pack === t.pack);
+        if (b.length < 2) continue;
+        const bx = b.reduce((a,m)=>a+m.x,0)/b.length, by = b.reduce((a,m)=>a+m.y,0)/b.length;
+        ds.push(Math.round(dist(t.x, t.y, bx, by)));
+      }
+      ds.sort((a,b)=>a-b);
+      o.tiepCachTam = ds.length ? ds[ds.length >> 1] : 0;    // trung vị
+      o.tiepMin = ds[0] || 0; o.tiepSo = ds.length;
+      o.tiepGanTam = ds.filter(d => d < 60).length;          // đuôi: bao nhiêu con lọt vào giữa bầy
+    }
     // sát thương quái gây ra: đo TRƯỚC/SAU khi giết Kẻ Tiếp Sức, tắt né và ngẫu nhiên.
     // Chỉ MỘT con được ở gần người chơi — cả bầy đứng sát nách thì hiệu số máu gộp đòn của
     // nhiều con và tỉ lệ đo ra vô nghĩa (lần đầu đo ra ×1.446 vì đúng lỗi này).
@@ -125,7 +139,9 @@ const PORT = process.argv[2] || '8853';
   if (!(r.don.coTiep > 0 && r.don.khongTiep > 0)) fail(`dựng cảnh sai: đòn ${r.don.coTiep}/${r.don.khongTiep}`);
   else if (Math.abs(r.don.tyLe - r.don.TIEP_ATK) > 0.06) fail(`sát thương có/không Kẻ Tiếp Sức = ×${r.don.tyLe}, mong ×${r.don.TIEP_ATK}`);
   else pass(`Kẻ Tiếp Sức sống → đồng bọn đánh ×${r.don.tyLe} (${r.don.coTiep} vs ${r.don.khongTiep})`);
-  if (r.tiepCachTam < 80) fail(`Kẻ Tiếp Sức đứng giữa bầy (cách tâm ${r.tiepCachTam}px)`); else pass(`Kẻ Tiếp Sức đứng rìa bầy (${r.tiepCachTam}px)`);
+  if (r.tiepCachTam < 80) fail(`Kẻ Tiếp Sức đứng giữa bầy — trung vị ${r.tiepCachTam}px trên ${r.tiepSo} bãi`);
+  else if (r.tiepGanTam > r.tiepSo * 0.25) fail(`${r.tiepGanTam}/${r.tiepSo} Kẻ Tiếp Sức lọt vào giữa bầy (<60px)`);
+  else pass(`Kẻ Tiếp Sức đứng rìa bầy — trung vị ${r.tiepCachTam}px, gần nhất ${r.tiepMin}px, ${r.tiepSo} bãi`);
   if (r.chon.la !== 'tiep') fail(`nearestMob chọn '${r.chon.la}' thay vì Kẻ Tiếp Sức`); else pass('nearestMob chọn Kẻ Tiếp Sức dù có con khác sát nách');
   if (!r.chon.ngoaiTam) fail('Kẻ Tiếp Sức ngoài tầm mà vẫn bị chọn — phải về con gần nhất'); else pass('ngoài tầm thì về con gần nhất');
   if (r.hoiSinh.soTiep !== 1) fail(`hồi sinh ra ${r.hoiSinh.soTiep} Kẻ Tiếp Sức (tổng ${r.hoiSinh.tong}/${r.hoiSinh.zoneCount})`);
