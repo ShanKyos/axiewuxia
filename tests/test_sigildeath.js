@@ -24,6 +24,12 @@ const { chromium } = require('playwright');
     // ── S-1: vũng độc phải TẮT khi chết ──────────────────────────────────
     startGame('baidasan', null);
     player.level = 100; vhAutoLearn(); calcDerived();
+    // startGame() roll BA thiên phú ngẫu nhiên, và một trong số đó là "Số Trời": chết thì hồi
+    // sinh tại chỗ, onDeath() rẽ nhánh sớm và không bao giờ chạy tới đoạn dọn vũng độc. Bài kiểm
+    // này nói về việc dọn Khắc Ấn khi chết, không nói về Số Trời — nên tắt hẳn nó đi.
+    // Không tắt thì bài đỏ đúng những lượt roll trúng (khoảng 1/45 lần chạy), và đó là kiểu đỏ
+    // tốn nhiều giờ nhất để truy: hôm nay chạy riêng 17 lần liên tiếp đều xanh.
+    player.traits = []; player.traitRevive = false; player.reviveUsed = false;
     player.sigils = { dw_vungdoc: 1 };
     sigilReset();
     sigilZones.push({ x: player.x, y: player.y, r: 165, t: 5, tick: 0.5, dps: 100, color: '#8f5ae8' });
