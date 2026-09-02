@@ -75,7 +75,7 @@ const { chromium } = require('playwright');
 
   // 3) talk-type bridge quests still resolve via questOnTalk (reuse of existing mechanic)
   const r3 = await page.evaluate(() => {
-    const q = SIDE_QUESTS.find(x => x.id === 's_b1');
+    const q = SIDE_QUESTS.find(x => x.id === 's_b6') // s_b1–s_b5 đã gỡ (trùng chính tuyến); s_b6 là NV 'talk' còn lại;
     player.level = q.reqLv; questIdx = q.reqMain + 2; questState = 'active'; calcDerived();
     sideStates = {}; sideStates[q.id] = { st: 'active', prog: 0 };
     questOnTalk(NPCS.find(x => x.id === q.targetNpc));

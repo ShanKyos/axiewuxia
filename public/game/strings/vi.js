@@ -11,6 +11,6 @@ window.I18N_VI = {
   'hud.hint.character': 'C/V nhân vật',
   'hud.hint.bag': 'B túi',
   'hud.hint.map': 'M bản đồ',
-  'hud.hint.skills': 'K thẻ bài',
+  'hud.hint.skills': 'K kỹ năng',
   'hud.hint.loot': 'J nhặt đồ',
 };

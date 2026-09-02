@@ -11,6 +11,6 @@ window.I18N_EN = {
   'hud.hint.character': 'C/V character',
   'hud.hint.bag': 'B bag',
   'hud.hint.map': 'M map',
-  'hud.hint.skills': 'K cards',
+  'hud.hint.skills': 'K skills',
   'hud.hint.loot': 'J pick up',
 };

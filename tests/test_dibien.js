@@ -90,7 +90,12 @@ const PORT = process.argv[2] || '8853';
     const e = dung(); e.db = ['loantien','hutsinh'];
     e.x = -9000; e.y = -9000;   // elite sống nhưng ở xa: thừa hưởng tính theo mã bãi, còn đòn của nó không được lẫn vào phép đo
     const mate = spawnMob('bandao', { x:600, y:600, r:0, count:1 }, 777, false, {});
-    o.thuaHuong = { dau: dbOf(mate, 'loantien'), thu2: dbOf(mate, 'hutsinh'), baiKhac: dbOf(spawnMob('bandao',{x:600,y:600,r:0,count:1}, 999, false, {}), 'loantien') };
+    // Con bãi khác CHỈ dùng để đọc dbOf — đọc xong đẩy nó đi xa. Để nó đứng cạnh người chơi thì
+    // đòn của nó (×1) lẫn vào phép đo: có lượt ra ×1 (nó đánh trước), có lượt ×2.14 (hai con cùng
+    // khung) — bài đỏ 1/3 lượt cho cùng một mã.
+    const khac = spawnMob('bandao', { x:600, y:600, r:0, count:1 }, 999, false, {});
+    o.thuaHuong = { dau: dbOf(mate, 'loantien'), thu2: dbOf(mate, 'hutsinh'), baiKhac: dbOf(khac, 'loantien') };
+    khac.x = -9500; khac.y = -9500;
     const dmgMate = danhToi(mate, 30);
     o.thuaHuong.tyLe = +(dmgMate / Math.max(1, mocDmg)).toFixed(2);
     // ── vẽ không nổ ──

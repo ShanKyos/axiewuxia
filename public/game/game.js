@@ -76,6 +76,10 @@ function xp60PlusHourlyRate(l){
   return XP60PLUS_ANCHORS[XP60PLUS_ANCHORS.length - 1][1];
 }
 for (let l = 60; l < 120; l++) XP_TABLE[l-1] = Math.round(xp60PlusHourlyRate(l));
+// Mốc 60 nhảy ×9,8 so với 59 (253.269 → 2.472.993) trong ĐÚNG MỘT cấp, không báo trước — chỗ người
+// chơi bỏ game. Rải phần chênh ra cấp 50→60 theo cấp số nhân: mỗi cấp ×~1,35, tới 60 khớp mốc cũ.
+{ const a = XP_TABLE[48], b = XP_TABLE[59];
+  for (let l = 49; l < 59; l++) XP_TABLE[l] = Math.round(a * Math.pow(b / a, (l - 48) / 11)); }
 // Sàn sát thương: dù giáp quái trừ thẳng nặng tới đâu, một đòn vẫn gây được ngần này phần trăm
 // sát thương gốc. Không có sàn thì người chơi lỡ tay bán mất vũ khí là kẹt cứng vĩnh viễn.
 const DMG_FLOOR = 0.08;
@@ -1589,6 +1593,10 @@ const NPCS = [
   // và "Chợ Đấu Giá" chưa từng có cơ chế đấu giá thật — chỉ là tiệm giá cố định như 3 tiệm kia.
   // Đá Thăng Cấp ×3 (món duy nhất không trùng) đã chuyển sang tiệm Dược Lão bên dưới.
   { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'tuongduong', x:1780, y:780, img:'assets/npcs/thoren.png', talk:'forge' },
+  // NV5 (cấp 5) bắt rèn +3, mà lò duy nhất nằm trong Lunaris City khoá tới NV10 — chính tuyến kẹt
+  // cứng ở cấp 5, không có đường vòng. Bắt được qua chơi thử. Đặt một lò lưu vong ngay cạnh làng.
+  { id:'thoren_dao', name:'Thợ Rèn Lưu Vong', map:'daohoa', x:520, y:560, img:'assets/npcs/thoren.png', talk:'forge',
+    lore:'"Lò của ta rơi qua vết nứt cùng ta. Còn đỏ lửa là còn rèn — đưa đồ đây."' },
 ];
 const NPC_IMGS = {};
 for (const n of NPCS){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; }
@@ -4219,22 +4227,23 @@ const TAN_QUYEN = ['Thượng','Trung','Hạ']; // Mảnh sách kỹ năng Huy�
 
 const QUESTS = [
   { id:1, lv:1, name:'Kẻ Rơi Xuống',  desc:'Ngươi vừa vượt vết nứt và mất sạch ký ức võ nghệ. Đến gặp Trưởng Lão Rell giữa Lunaris City — ông ta là người Vaeldra duy nhất còn nhớ đội tiên phong.',
-    type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:130, silver:50} },
+    // 130 × 1,5 = 195/200: xong NV1 là NV2 khoá "cần cấp 2" ngay trong một thành phố KHÔNG có quái. 140 × 1,5 = 210 → lên cấp 2 ngay.
+    type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:140, silver:50} },
   { id:2, lv:2, name:'Cơn Sốt Của Hòn Đảo', desc:'Khí Morvahn đã liếm tới Petalshade Isle — thú hiền hóa dại. Về đảo (bản đồ M → Dịch Chuyển) hạ 5 Axie Heo Rừng đang húc phá tổ ấp, rồi báo lại Trưởng Làng.',
     type:'kill', mob:'boar', need:5, rew:{xp:190, silver:60} },
   { id:3, lv:3, name:'Thuốc Cho Đàn Con', desc:'Lũ hatchling hít phải khí vết nứt, sốt cao không dứt. Trưởng Làng cần 4 Thảo Dược trong rừng phía đông đảo.',
     type:'collect', herbMap:'daohoa', need:4, rew:{xp:360, silver:90} },
   { id:4, lv:4, name:'Bầy Gai Đã Đổi Mắt', desc:'Axie Gai Tím trong rừng giờ mắt đỏ quạch và không còn biết sợ — dấu hiệu đầu tiên của Chimera hóa. Diệt 6 con trước khi chúng xuống tới làng.',
     type:'kill', mob:'wolf', need:6, rew:{xp:470, silver:110, mat:3, item:'vukhi'} },
-  { id:5, lv:5, name:'Thép Của Ardhaven', desc:'Thợ rèn Ardhaven sống sót qua cuộc giao thoa, lò của ông vẫn đỏ lửa. Mang trang bị tới lò rèn (phím F) và Tăng Cường một món bất kỳ lên +3.',
+  { id:5, lv:5, name:'Thép Của Ardhaven', desc:'Thợ rèn Ardhaven sống sót qua cuộc giao thoa, lò của ông dựng tạm ngay cạnh làng. Mang trang bị tới Thợ Rèn Lưu Vong (phím F dẫn đường) và Tăng Cường một món bất kỳ lên +3.',
     type:'enhance', need:3, rew:{xp:520, silver:130, mat:3} }, // P0: lò rèn mở ở cấp 4 — NV4 thưởng sẵn vũ khí + 3 huyền thiết để rèn ngay
-  { id:6, lv:6, name:'Đoàn Gloam', desc:'Đoàn Gloam — lính Vaeldra đào ngũ — dụ đám Axie nhiễm khí làm tay sai đi cướp phá dân đảo. Diệt 8 Tay Sai Gloam trên đồi phía nam.',
+  { id:6, lv:6, name:'Đoàn Gloam', desc:'Đoàn Gloam — lính Vaeldra đào ngũ — dụ đám Axie nhiễm khí làm tay sai đi cướp phá dân đảo. Diệt 8 Tay Sai Gloam trên đồi phía đông nam.',
     type:'kill', mob:'bandit', need:8, rew:{xp:1200, silver:170} }, // QA bot: tăng XP giữ nhịp cấp với chuỗi NV
   { id:7, lv:7, name:'Mảnh Ký Ức Đầu Tiên', desc:'Nước suối cạnh làng lọc sạch khí vết nứt. Đứng trong suối 8 giây — ký ức võ nghệ Vaeldra của ngươi sẽ nhen lại thành Instinct.',
     type:'meditate', need:8, rew:{xp:920, mat:3} },
-  { id:8, lv:8, name:'Lớp Giáp Bóng Tối', desc:'Một Gloam Marauder đã ngấm khí Morvahn, bọc quanh mình lớp giáp bóng tối — sát thương thường giảm 70%. Dùng Venom Dart (phím 2) chọc thủng lớp giáp rồi kết liễu hắn.',
+  { id:8, lv:8, name:'Lớp Giáp Bóng Tối', desc:'Một Gloam Marauder đã ngấm khí Morvahn, bọc quanh mình lớp giáp bóng tối — sát thương thường giảm 70%. Dùng Trấn Phái (phím 2) phá giáp rồi kết liễu hắn.',
     type:'kill', mob:'assassin', need:1, rew:{xp:1900, silver:220} }, // QA bot: tăng XP giữ nhịp cấp
-  { id:9, lv:9, name:'Bàn Tay Còn Nhớ', desc:'Ký ức chưa về, nhưng bàn tay đã nhớ ra tuyệt kỹ của lớp mình (phím 3). Dùng nó kết liễu 5 Tay Sai Gloam.',
+  { id:9, lv:9, name:'Bàn Tay Còn Nhớ', desc:'Ký ức chưa về, nhưng bàn tay đã nhớ ra tuyệt kỹ của lớp mình — Trấn Phái (phím 2). Dùng nó kết liễu 5 Tay Sai Gloam.',
     type:'tpkill', mob:'bandit', need:5, rew:{xp:1600, silver:320} },
   { id:10, lv:10, name:'Ký Ức Trở Về', desc:'Thủ lĩnh Đoàn Gloam đã dựng trại trên đài phía đông. Hạ hắn — và ký ức đội tiên phong Vaeldra của ngươi sẽ trở về trọn vẹn.',
     type:'boss', mob:'boss', need:1, rew:{xp:2500, silver:500} },
@@ -5248,6 +5257,7 @@ function newPlayer(sectKey){
     pk: false, toiac: 0, toiacT: 0,           // PK & Tội Ác (đỏ tên)
     gkBuffT: 0, poisonT: 0, autoSell: false,
     autoCfg: { skill:true, potion:true, potionPct:40, range:430, boss:false }, // Cài đặt Auto Farm (panel O)
+    autoEquip: true,   // nhân vật MỚI cũng bật — trước đây chỉ backfill trong loadGame nên tân thủ cởi trần tới khi tải lại trang
     vohoc: {}, bikipVH: 0,
     skillLv: {},                                 // cấp từng kỹ năng 1-120                       // Sổ Kỹ Năng: kỹ năng đã học + Sách Kỹ Năng
     skillEvo: {},                                // Tiến Hóa Chiêu Thức: {[skillId]: ['power'|'swift', ...]} theo bậc 40/80/120
@@ -5325,7 +5335,7 @@ function newPlayer(sectKey){
 //          của những hệ không còn tồn tại; đây thực chất là một game khác.
 const SAVE_VERSION = 3;
 function saveGame(){
-  if (!player) return;
+  if (!player || window._wiping) return;   // đang xoá save: beforeunload không được ghi lại
   try {
     const payload = JSON.stringify({
       v: SAVE_VERSION,
@@ -5841,7 +5851,10 @@ function spawnZoneBoss(bd, kind){
   const s = bossScale(bd.lv);
   const hpMul = kind === 'tranai' ? 1.7 : 1, atkMul = kind === 'tranai' ? 1.15 : 1;
   const def = { name: bd.name, lv: bd.lv, hp: Math.round(s.hp*hpMul), atk: Math.round(s.atk*atkMul), def: s.def,
-    xp: s.xp*(kind === 'tranai' ? 3 : 1), silver: s.silver, speed: 60, aggro: 420, range: 42, atkCd: 1.5,
+    // aggro 420 → 260: 10 bãi có tên trong QUESTS đứng cách boss vùng 340-390px, boss kéo sang
+    // AUTO tự tắt ("Vùng Boss") rồi nhân vật đứng chịu đòn. Dò lưới cho thấy dời boss ra ≥560px
+    // là phải dời cả nghìn px, phá bố cục "càng xa càng khó" — hạ aggro dưới 340 thì đủ.
+    xp: s.xp*(kind === 'tranai' ? 3 : 1), silver: s.silver, speed: 60, aggro: 260, range: 42, atkCd: 1.5,
     size: kind === 'tranai' ? 30 : 24, color:'#241a2e', eye:'#ff3a3a', boss:true, elite:true, drop:0, el: bd.el,
     img:'assets/mobs/' + bd.img + '.png', bossKind: kind, bossId: bd.id, moves: bd.moves, _bdRef: bd };
   // bd.img trỏ vào mob vẽ khung xương → boss kế thừa bộ vẽ + bảng màu của nó
@@ -6692,7 +6705,9 @@ function hurtMob(m, dmg, source){
   // Xuyên giáp (áo choàng/cung tiễn): tăng sát thương theo %
   if (player.pierce) final *= 1 + player.pierce;
   if (m.shield > 0){
-    if (source === 'amkhi'){
+    // Venom Dart không còn trên thanh chiêu 4 ô cố định (nó là %ST thụ động ở Di Sản), nên khiên
+    // "chỉ phá bằng amkhi" là khiên KHÔNG AI phá được — NV8 bảo làm điều bất khả. Trấn Phái phá được.
+    if (source === 'amkhi' || source === 'tp'){
       m.shield = 0; m.shieldT = 10 + (player.shieldBonus || 0); // P0: cửa sổ phá khiên 10s · Đoạn Ngọc Thủ +4s
       addFloat(m.x, m.y-24, 'PHÁ GIÁP!', '#c07fe0', 16);
       addEffect({ type:'ring', x:m.x, y:m.y, r:50, color:'#c07fe0' });
@@ -7096,12 +7111,12 @@ function unlockNotices(){
   }
   // Mở khóa theo tầng — mỗi cấp chỉ giới thiệu 1-2 hệ thống để tân thủ không bị ngợp
   const msgs = {
-    2:['Mở khóa: Thuần Thục (phím 1)'],
+    2:['Mở khóa: Thuần Thục (phím H)'],
     3:['Mở khóa: Mục Tiêu Hôm Nay — xem góc trái màn hình, xong hết nhận thưởng lớn!'],
-    4:['Mở khóa: Venom Dart (phím 2)','Mở khóa: Thuần Thục Venom (phím H)',
-       'Mở khóa: Lò Hỗn Độn — tới gặp Thợ Rèn ở Lunaris City (phím F dẫn đường)'],
+    4:['Mở khóa: Venom Dart — cộng %ST vĩnh viễn (K → Di Sản Cũ)','Mở khóa: Thuần Thục Venom (phím H)',
+       'Mở khóa: Lò Hỗn Độn — tới gặp Thợ Rèn (phím F dẫn đường)'],
     6:['Mở khóa: Thú Chiến — chiến thú đồng hành tự đánh quái (C → Thú Chiến)'],
-    7:['Mở khóa: Tuyệt kỹ (phím 3)'],
+    7:['Mở khóa: Trấn Phái — tuyệt kỹ của lớp (phím 2)'],
     10:[...(player.sect === 'vophai' ? ['Mở khóa: the Calling — 5 lớp để chọn!'] : []),'Mở khóa: Stoneform (Thuần Thục — phím H)','Mở khóa: Truy Nã Lệnh & Sảnh Cầu May — Bổ Đầu và Thương Nhân Vận May ở Lunaris City'],
     40:['Mở khóa: Lò Bảo Chứng luyện Linh Dực Cấp 1 — Lò Rèn Hoàng Gia, Lunaris City'],
     45:['Box Kundun IV trở lên từ Hung Thần có 5-8% mở ra trang bị CỔ THẦN THỦ HỘ — Hung Thần giáng thế mỗi 4 giờ!'],
@@ -7322,6 +7337,19 @@ function doBasic(){
   const rng = atkRange();   // Đại Thành có nút cộng tầm — xem atkRange()
   const ranged = rng > 200; // Dark Wizard/Sylvan Ranger: đòn thường bắn đạn tầm xa (đánh xa kiểu vây), phái khác vung cận chiến như trước
   const t = nearestMob(rng);
+  // Ngoài tầm: trước đây bấm Space là IM LẶNG tuyệt đối — không nhích chân, không chữ. Chơi thử:
+  // 70 lần bấm ở cấp 1, 0 quái chết. Tutorial ghi "đánh quái gần nhất" nên ai cũng tưởng nhân vật
+  // tự chạy tới. Nay đúng là tự chạy tới, tới tầm thì đánh (xem _spaceQueued trong update()).
+  if (!t && !player.auto){
+    const far = nearestMob(720);
+    if (far){
+      setMoveTarget(far.x, far.y); player._spaceQueued = true;
+      if ((player._spaceSayT || 0) <= 0){ addFloat(player.x, player.y-44, '→ Chạy tới ' + far.name, '#9fd8ff', 12); player._spaceSayT = 2; }
+    } else if ((player._spaceSayT || 0) <= 0){
+      addFloat(player.x, player.y-44, 'Không có quái trong tầm — mở M hoặc Chọn Trận để tới bãi quái', '#ffb15c', 12); player._spaceSayT = 2.5;
+    }
+    return;
+  }
   if (t) player.face = Math.atan2(t.y-player.y, t.x-player.x);
   player.cd.basic = player.aspd; player.atkAnim = 0.22;
   player.atkAct = heroActOf(player.sect, 'basic'); // tư thế vung khớp vũ khí của lớp
@@ -7371,6 +7399,14 @@ function anyPanelOpen(){
 }
 function hintCandidates(){
   const out = [];
+  // Ba việc quan trọng nhất của tân thủ mà 6 bước tutorial không dạy: mặc đồ, cộng điểm, uống thuốc.
+  // Chơi thử: 215 quái, 19 món trong túi, 12/12 ô trang bị TRỐNG; chết ở cấp 2 với 3 bình còn nguyên.
+  if (player.potions > 0 && player.hp < player.maxHp * 0.4 && player.combatT > 0)
+    out.push({ id:'uongthuoc', pri:0, txt:`🧪 Máu thấp — bấm <b>R</b> uống Bình Thuốc (còn ${player.potions})`, btn:'Uống (R)', act:'usePotion()' });
+  { const _co = (player.inv || []).some(it => it && it.slot && !it.special && it.slot !== 'pet' && !player.equip[it.slot]);
+    if (_co) out.push({ id:'macdo', pri:1, txt:'🛡 Trong túi có đồ mà ô trang bị còn trống — mặc vào là mạnh lên ngay', btn:'Mặc Đồ Tốt Nhất', act:'autoEquipBest();hintHide()' }); }
+  if ((player.free || 0) >= 5 && player.level <= 20)
+    out.push({ id:'tiemnang0', pri:1, txt:`💠 Có <b>${player.free}</b> điểm Tiềm Năng — bấm <b>C</b>, dồn vào chỉ số lớp mình gợi ý`, btn:'Phân Ngay', act:"togglePanel('char')" });
   if ((player.free || 0) >= 10)
     out.push({ id:'tiemnang', pri:2, txt:`💠 Còn <b>${player.free}</b> điểm Tiềm Năng chưa phân — cộng ngay cho khỏi phí!`, btn:'Phân Ngay', act:"togglePanel('char')" });
   if (masteryOpen() && (player.mpts || 0) >= 5)
@@ -7402,8 +7438,12 @@ window.hintGoStable = function(){
   hintHide();
 };
 window.hintGoForge = function(){
-  const n = NPCS.find(x => x.talk === 'forge');
-  if (n){ player.beacon = { map:n.map, x:n.x, y:n.y, label:'Lò Rèn Hoàng Gia' }; if (n.map !== curMap) travelTo(n.map); }
+  // Ưu tiên lò trên map đang đứng; không có thì lò ở map ĐI ĐƯỢC gần nhất trong danh sách; cuối
+  // cùng mới là Lò Rèn Hoàng Gia. Trước đây luôn trỏ về Lunaris City — thành đang khoá thì chỉ
+  // đường vào một cánh cửa đóng.
+  const all = NPCS.filter(x => x.talk === 'forge');
+  const n = forgeNpcHere() || all.find(x => mapGate(x.map).ok) || all[0];
+  if (n){ player.beacon = { map:n.map, x:n.x, y:n.y, label:n.name }; if (n.map !== curMap) travelTo(n.map); }
   hintHide();
 };
 window.hintHide = function(){ const t = el('hint-toast'); if (t) t.classList.add('hidden'); window._hintId = null; };
@@ -7480,6 +7520,12 @@ function sideQuestTarget(sq){
   // đến khi chưa nhận hoặc đã xong nhiệm vụ.
   if (!st || st.st === 'done' || st.st === 'claimed'){
     if (n) return { map:n.map, x:n.x, y:n.y, label:(st && st.st === 'done' ? 'Trả NV: ' : 'Nhận NV: ') + (n ? n.name : ''), npcId:n.id };
+  }
+  // 'talk' có targetNpc: đèn hiệu phải trỏ tới NPC ĐÍCH. Trước đây rơi xuống fallback → ghim
+  // chính NPC vừa giao NV, người chơi đang đứng ngay đó.
+  if (sq.type === 'talk' && sq.targetNpc){
+    const t = NPCS.find(x => x.id === sq.targetNpc);
+    if (t) return { map:t.map, x:t.x, y:t.y, label:'Gặp ' + t.name, npcId:t.id };
   }
   if (sq.type === 'catch'){
     const hz = (typeof HORSE_ZONES !== 'undefined') && HORSE_ZONES[sq.map];
@@ -8164,6 +8210,13 @@ function update(dt){
   updateGroundLoot(dt);
   updateBoxThrows(dt);
 
+  tutTick(dt);
+  // Space bấm khi quái ngoài tầm: đang chạy tới, vào tầm thì tự ra đòn đúng một lần
+  player._spaceSayT = Math.max(0, (player._spaceSayT || 0) - dt);
+  if (player._spaceQueued){
+    if (player.auto || !moveTarget) player._spaceQueued = false;
+    else if (nearestMob(atkRange())){ player._spaceQueued = false; moveTarget = null; doBasic(); }
+  }
   // mobs AI
   mobSeparate(dt);
   for (const m of mobs){
@@ -13811,10 +13864,12 @@ function spendJewels(need){
 }
 // Đang đứng tại Lò Rèn Hoàng Gia? Công thức royal:true đòi có mặt ở đó (giữ nguyên thiết kế cũ:
 // +9 trở lên và Linh Dực chỉ luyện được tại chỗ Tông Sư Thợ Rèn).
+// Lò rèn nào trên map ĐANG ĐỨNG (có hơn một Thợ Rèn — xem NPC thoren_dao).
+function forgeNpcHere(){ return NPCS.find(x => x.talk === 'forge' && x.map === curMap) || null; }
 function atRoyalForge(){
-  const n = NPCS.find(x => x.talk === 'forge');
+  const n = forgeNpcHere();
   if (!n || !player) return false;
-  return curMap === n.map && dist(player.x, player.y, n.x, n.y) < 220;
+  return dist(player.x, player.y, n.x, n.y) < 220;
 }
 
 const CHAOS_RECIPES = [
@@ -15393,7 +15448,7 @@ function renderMount(){
       Thăng Giai ${tier===0?'(Nhận Emberhide Bull)':'→ '+next.name}</button></div><div id="mount-msg"></div>`;
 
   } else {
-    html += `<div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">◑ Đã đạt Azure Wyrm — đỉnh cao của mọi chiến thú!</div>`;
+    html += `<div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">◑ Đã đạt ${MOUNT_TIERS[MOUNT_TIERS.length-1].name} — đỉnh cao của mọi chiến thú!</div>`;
   }
   CE().innerHTML = html;
 }
@@ -15552,6 +15607,7 @@ function showMainMenu(){
   const mm = el('max-mode'); if (mm) mm.style.display = 'none';
   const sub = document.querySelector('#sect-select .ss-sub');
   if (sub) sub.textContent = 'Chào mừng trở lại Lunacia — hành trình vẫn đang chờ.';
+  { const _nb = el('btn-newchar'); if (_nb) _nb.classList.remove('hidden'); }   // luôn có đường tạo nhân vật mới
   el('sect-select').classList.remove('hidden'); titleStart();
   AudioSys.playBgm(BGM_INTRO); // nhạc Ái Đích Phế Khư vang lên ngay màn hình chính
 }
@@ -15929,7 +15985,7 @@ window.cheatExec = function(raw){
         player.speed = 190 * mul;
         cheatLog('Tốc chạy ×' + mul, '#8fd18f'); break;
       }
-      case 'wipe': localStorage.removeItem('vlcm_save'); location.reload(); return;
+      case 'wipe': window.wipeSave(true); return;
       case 'deep': deepStart(); cheatLog('Tầng Sâu: bắt đầu', '#c07fe0'); return;
       case 'obstacles': window.SHOW_OBSTACLES = !window.SHOW_OBSTACLES; cheatLog('Debug obstacle overlay: ' + (window.SHOW_OBSTACLES ? 'ON' : 'OFF'), '#cfe8ff'); return;
       default: cheatLog('Lệnh lạ "' + cmd + '" — gõ /help', '#ff7a6a'); return;
@@ -18766,7 +18822,7 @@ function legacyUniversalRowHtml(id){
 function renderSkillPanel(){
   vhAutoLearn(); // save cũ / test mode: quét tự ngộ kỹ năng phái
   let html = `<h3>Kỹ Năng — 4 ô cố định (phím 1-4)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%ST/cấp (bạc) · mốc 20/40/60/80/100/120 thêm buff · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · <span style="color:#7fd8e0">Instinct <b>${Math.floor(player.khi || 0).toLocaleString()}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
+  html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%ST/cấp (bạc) · mốc 20/40/60/80/100/120 thêm buff · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · <span style="color:#7fd8e0">Instinct <b>${Math.floor(player.khi || 0).toLocaleString('vi-VN')}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
   html += `<div class="char-tabs">`;
   for (const t of SKILL_TABS) html += `<button class="${t.id===window.skillTab?'active':''}" onclick="switchSkillTab('${t.id}')">${t.name}</button>`;
   html += `</div>`;
@@ -19045,7 +19101,7 @@ function updateHud(){
       loiEl.textContent = `⚡ -40% lôi · ${Math.floor(player.loidonT/60)}:${String(Math.floor(player.loidonT%60)).padStart(2,'0')}`;
     } else loiEl.style.display = 'none';
   }
-  el('hud-silver').textContent = `◈ ${player.silver}`;
+  el('hud-silver').textContent = `◈ ${Math.floor(player.silver).toLocaleString('vi-VN')}`;   // Tụ Linh cộng số lẻ mỗi khung — HUD từng in 3114.5463199999385
   el('hud-mat').textContent = `✦ ${player.mat} Huyền Thiết`;
   // Đồng Hồ Thế Giới: giờ thật + đếm ngược sự kiện gần nhất — bấm mở Bảng Sự Kiện
   const gtEl = el('hud-time');
@@ -19449,7 +19505,7 @@ window.openForgePanel = function(){
     AudioSys.sfx('ui', 0.4); return;
   }
   if (!atRoyalForge()){
-    addFloat(player.x, player.y-56, '⚒ Phải tới gặp Thợ Rèn ở Lunaris City mới rèn được', '#ffb15c', 13);
+    addFloat(player.x, player.y-56, '⚒ Phải đứng cạnh Thợ Rèn mới rèn được — đang chỉ đường', '#ffb15c', 13);
     AudioSys.sfx('ui', 0.4);
     window.hintGoForge();          // đặt mốc dẫn đường + dịch chuyển nếu khác map
     return;
@@ -19930,9 +19986,9 @@ Người Lunacia dựng lại quanh đống đổ nát ấy và gọi nó là <b
   `<span class="is-title">KẺ ĐƯỢC PHÁI QUA</span>
 Ngươi thuộc một trong <b>năm lớp chiến binh của Vaeldra</b>, nằm trong đội tiên phong vượt vết nứt để sửa lại thứ mà thế giới ngươi đã gây ra.
 
-Cuộc vượt biên tước sạch của ngươi mọi thứ: <b>Dark Knight</b> ◆ · <b>Dark Wizard</b> ❄ · <b>Sylvan Ranger</b> ❄ · <b>Spellblade</b> ☼ · <b>Dark Lord</b> ▲ — ngươi không còn nhớ mình thuộc lớp nào.
+Cuộc vượt biên tước sạch của ngươi mọi thứ — tên tuổi, ký ức, đồng đội — trừ một điều: bản năng chiến đấu của lớp mình. <b>Dark Knight</b> ◆ · <b>Dark Wizard</b> ❄ · <b>Sylvan Ranger</b> ❄ · <b>Spellblade</b> ☼ · <b>Dark Lord</b> ▲ — hãy chọn lại con đường ấy.
 
-Ngươi dạt vào <b>Petalshade Isle</b>, được một Trưởng Làng Axie nhặt về nuôi. Tới <b>cấp 10</b>, ký ức võ nghệ sẽ trở lại — đó là <b>the Calling</b>.
+Ngươi dạt vào <b>Petalshade Isle</b>, được một Trưởng Làng Axie nhặt về nuôi. Võ nghệ sẽ trở lại theo từng cấp — và Lunacia cần nó.
 
 Mỗi lớp mang một <b>hệ nguyên tố</b> — khắc hệ gây thêm <b>+20% sát thương</b> lên Chimera bị khắc.`,
   `<span class="is-title">NĂM TRỤ KHÓA</span>
@@ -19976,8 +20032,8 @@ el('is-skip').addEventListener('click', closeIntro);
 const TUT_STEPS = [
   { key:'move',  txt:'Bấm <b>chuột phải</b> trên nền đất hoặc bấm vào <b>minimap</b> — nhân vật sẽ tự chạy tới đó, hãy thử một lần', },
   { key:'npc',   txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
-  { key:'map',   txt:'Nhấn <b>M</b> mở bản đồ → <b>Dịch Chuyển</b> tới <b>Petalshade Isle</b> để săn Chimera' },
-  { key:'kill',  txt:'Nhấn <b>SPACE</b> để đánh quái gần nhất — hãy hạ 1 con <b>Axie Heo Rừng</b>' },
+  { key:'map',   txt:'Bấm <b>Đi ngay</b> trên dải nhiệm vụ giữa màn hình (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để dịch chuyển tới <b>Petalshade Isle</b>' },
+  { key:'kill',  txt:'Nhấn <b>SPACE</b> — nhân vật tự chạy tới con quái gần nhất và đánh. Hãy hạ 1 con <b>Axie Heo Rừng</b>' },
   { key:'loot',  txt:'Quái chết có thể rơi đồ hoặc <b>Châu</b> xuống đất — <b>đi ngang qua</b>, bấm <b>J</b> hoặc <b>bấm chuột trúng món</b> để nhặt. Giữ <b>ALT</b> xem tên mọi món trên màn' },
   { key:'quest', txt:'Làm theo nhiệm vụ ở <b>góc phải màn hình</b> · <b>C</b> nhân vật · <b>K</b> kỹ năng · <b>B</b> túi đồ' },
 ];
@@ -19995,6 +20051,16 @@ function updateTut(){
   box.innerHTML = `<span class="tut-step">HƯỚNG DẪN ${cur+1}/${TUT_STEPS.length}</span>
     <span class="tut-x" onclick="player.tutStep=-1; window._tutShown=-99; updateTut()">Đã biết ✕</span>${s.txt}`;
   box.classList.remove('hidden');
+}
+// Bước cuối ('quest') chỉ là bảng tổng kết phím — không có hành động nào đóng nó, nên nó treo
+// mãi (chơi thử: còn nguyên ở cấp 120) và che mất prompt "Nhấn J — Hái Thảo Dược" vẽ cùng chỗ.
+// Tự tắt sau 25 giây kể từ khi tới bước đó.
+function tutTick(dt){
+  if (!player || player.tutStep < 0) return;
+  if (TUT_STEPS[player.tutStep] && TUT_STEPS[player.tutStep].key === 'quest'){
+    player._tutQuestT = (player._tutQuestT || 0) + dt;
+    if (player._tutQuestT > 25) tutAdvance('quest');
+  }
 }
 function tutAdvance(stepKey){
   if (!player || player.tutStep < 0) return;
@@ -20316,8 +20382,14 @@ window.setAutoCfg = function(key, v, quiet){
   saveGame();
   if (!quiet) renderSettings();
 };
-window.wipeSave = function(){
-  if (!confirm('Xóa toàn bộ tiến trình và bắt đầu lại từ đầu?')) return;
+// ⚠ Lỗi cũ: xoá khoá rồi reload, mà reload kích hoạt beforeunload → saveGame() ghi save TRỞ LẠI
+// trước khi trang mới kịp tải. Người chơi bấm xác nhận, tin là đã xoá, mở lại vẫn thấy nhân vật
+// cũ và KHÔNG có cách nào tạo nhân vật mới. Bắt được qua chơi thử. Cờ _wiping chặn saveGame,
+// và gỡ luôn listener cho chắc.
+window.wipeSave = function(confirmed){
+  if (!confirmed && !confirm('Xóa toàn bộ tiến trình và bắt đầu lại từ đầu?')) return;
+  window._wiping = true;
+  window.removeEventListener('beforeunload', saveGame);
   try { localStorage.removeItem('vlcm_save'); localStorage.removeItem('vlcm_settings'); } catch { /* best-effort — bỏ qua nếu lỗi */ }
   location.reload();
 };
@@ -20395,8 +20467,8 @@ QUESTS.push(
     desc:'Bản đồ Vaeldra vô dụng ở đây. Gặp Trinh Sát Wren — một Axie thuộc lòng từng lối mòn Lunacia.',
     type:'talk', targetNpc:'monkhach', need:1, rew:{xp:2800, silver:300} },
   { id:15, lv:14, name:'Trụ Khóa Thứ Nhất', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
-    desc:'Wren dò ra vị trí Trụ Khóa đầu tiên — trong Thornwood Reach. Quét sạch 3 Gloam Marauder canh ngả rẽ ở Petalshade Isle để mở đường lên đó.',
-    type:'kill', mob:'assassin', need:3, rew:{xp:4200, silver:500, mat:2} },
+    desc:'Trụ Khóa thứ nhất nằm trong Thornwood Reach, mà cửa rừng cần cấp 20. Bầy Gai Đầu Đàn quanh Outskirts đang dồn về phía đó — hạ 5 con để dọn đường, và lấy đủ sức vào rừng.',
+    type:'kill', mob:'wolf_alpha', need:5, rew:{xp:4200, silver:500, mat:2} },
 );
 // Chương III — Thornwood Reach
 QUESTS.push(
@@ -20437,7 +20509,7 @@ QUESTS.push(
     desc:'Dân tị nạn Axie chạy vào vale rồi không ra được, hít độc hoa tới mức quên mình là ai, quỳ lạy vết nứt như thánh thần. Giải thoát 7 Kẻ Cuồng Tín.',
     type:'kill', mob:'ttdetu', need:7, rew:{xp:40000, silver:2200} },
   { id:26, lv:68, name:'Gốc Rễ Độc', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
-    desc:'Chimera Cầu Gai kết lại từ chỗ khí vết nứt đọng xuống, độc rỉ theo từng gai. Diệt 6 con — nhớ bật buff hộ thể trước khi vào.',
+    desc:'Chimera Cầu Gai kết lại từ chỗ khí vết nứt đọng xuống, độc rỉ theo từng gai. Diệt 6 con — nhớ bật buff của lớp (phím 3) trước khi vào.',
     type:'kill', mob:'docyeu', need:6, rew:{xp:48000, silver:2600, mat:4} },
   { id:27, lv:73, name:'Mai Phục Trong Sương', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
     desc:'Tướng quân đã biết ngươi đang đi gỡ từng Trụ Khóa, và gửi sát thủ chặn lối ra Ashen Steppe. Diệt 4 tên.',
@@ -20466,12 +20538,12 @@ QUESTS.push(
   { id:33, lv:100, name:'Giữ Phòng Tuyến', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
     desc:'Cuồng Binh Tro Tàn tràn xuống từng đợt như thủy triều. Diệt 6 tên — sau lưng ngươi là đường rút của cả Lunaris City.',
     type:'kill', mob:'cuongbinh', need:6, rew:{xp:140000, silver:5500} },
-  { id:34, lv:100, name:'Thứ Bị Kéo Qua Cùng', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
-    desc:'Chó Ngao Lửa vốn là thú săn của Vaeldra, bị vết nứt kéo qua rồi hóa dại. Thuần hóa 4 con — chúng không có lỗi gì cả.',
+  { id:34, lv:105, name:'Thứ Bị Kéo Qua Cùng', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
+    desc:'Chó Ngao Lửa vốn là thú săn của Vaeldra, bị vết nứt kéo qua rồi hóa dại. Hạ 4 con để chúng được yên — chúng không có lỗi gì cả.',
     type:'kill', mob:'kylan', need:4, rew:{xp:165000, silver:6000, mat:6} },
-  { id:35, lv:100, name:'Trụ Khóa Cuối Cùng', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
+  { id:35, lv:110, name:'Trụ Khóa Cuối Cùng', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
     desc:'Bầy Axie Cuồng Bão canh Trụ Khóa thứ năm. Diệt 5 con — nhưng Brann đã cảnh báo: trụ cuối gãy thì vết nứt mở toang, và Morvahn sẽ bước qua.',
-    type:'kill', mob:'daokhach', need:5, rew:{xp:200000, silver:8000, mat:8} },
+    type:'kill', mob:'daokhach', need:3, rew:{xp:200000, silver:8000, mat:8} },   // lv120 elite có khiên: 5 con ở cấp 100 là bất khả (chơi thử 0/5, 85 lần chết)
 );
 
 // ---------- Phụ tuyến theo vùng (tối đa 3 active cùng lúc) ----------
@@ -20491,11 +20563,8 @@ const SIDE_QUESTS = [
   { id:'s_sys5', npc:'quachtinh', map:'tuongduong', reqLv:19,  reqMain:12, name:'Lò Hỗn Loạn',            desc:'Dư ít nhất 3 món cùng phẩm? Mang đến Lò Rèn Hoàng Gia, ném vào Lò Hỗn Loạn thử vận may lên phẩm cao hơn.', type:'chaos', need:1, rew:{xp:3500, silver:450, mat:3} },
   { id:'s_sys7', npc:'quachtinh', map:'tuongduong', reqLv:32,  reqMain:17, name:'Vườn Thảo Dược',          desc:'Ghé Nhà Riêng (gặp Quản Gia), gieo một luống thảo dược rồi quay lại thu hoạch.', type:'garden', need:1, rew:{xp:14000, silver:1000, mat:3} },
   // ── Cầu nối cốt truyện — dẫn người chơi qua từng vùng mới, không đánh quái lặp lại ──
-  { id:'s_b1', npc:'quachtinh', map:'chungnam',   reqLv:18,  reqMain:14, name:'Lễ Vật Rừng Gai',        desc:'Đem lễ vật của Trưởng Lão Rell lên Thornwood Reach giao cho Corran — đáp lễ nghĩa cử năm xưa.', type:'talk', targetNpc:'daosi', need:1, rew:{xp:1800, silver:260} },
-  { id:'s_b2', npc:'daosi',     map:'comoc',      reqLv:36,  reqMain:18, name:'Thăm Hỏi Hollow Roost',  desc:'Tin tức từ Hollow Roost đã bặt nhiều năm — sang thăm Sylas hỏi thăm tình hình.', type:'talk', targetNpc:'thumo', need:1, rew:{xp:3500, silver:400} },
-  { id:'s_b3', npc:'thumo',     map:'tuyettinh',  reqLv:55,  reqMain:22, name:'Bức Thư Gửi Frostmire',  desc:'Sylas có một bức thư gửi Liora — chuyện xưa giữa hai người vẫn còn dang dở.', type:'talk', targetNpc:'ttmon', need:1, rew:{xp:12000, silver:900} },
-  { id:'s_b4', npc:'ttmon',     map:'mongco',     reqLv:75,  reqMain:26, name:'Mật Tín Ashen Steppe',   desc:'Đưa mật tín cho Dax ở rìa Ashen Steppe — đường đi ngàn dặm, cẩn thận.', type:'talk', targetNpc:'noiung', need:1, rew:{xp:28000, silver:1800} },
-  { id:'s_b5', npc:'noiung',    map:'nhanmon',    reqLv:100, reqMain:30, name:'Tin Tức Biên Ải',        desc:'Đưa tin về tình hình thảo nguyên cho Lão Tướng Brann ở Stormgate Pass.', type:'talk', targetNpc:'laotuong', need:1, rew:{xp:50000, silver:3500} },
+  // s_b1→s_b5 (5 phụ tuyến "cầu nối") đã bỏ: mỗi cái trùng 100% với NV mở chương ngay sau, nhận
+  // được TRƯỚC khi vào được map đích, giá trị dạy = 0. Chơi thử chấm "bỏ" cả năm.
   { id:'s_b6', npc:'laotuong',  map:'tuongduong', reqLv:115, reqMain:33, name:'Báo Tin Thắng Trận',     desc:'Về Lunaris City báo cho Trưởng Lão Rell tin cửa ải đã giữ vững.', type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:55000, silver:3500} },
 ];
 
@@ -20571,12 +20640,16 @@ function mapGate(id){
   // QA regression: NV1 (gặp Quách Đại Hiệp) diễn ra trong thành — tân thủ chưa xong NV1
   // thì không thể bị khóa ngoài cổng thành, tránh kẹt cứng chính tuyến ngay từ đầu.
   if (id === 'tuongduong' && questIdx < 1) return { ok:true };
-  if (md.reqMain && questIdx < md.reqMain){
+  // Cổng chính tuyến có lối vòng theo CẤP: vượt md.min đủ xa (MAP_LV_BYPASS cấp) thì vào được dù
+  // chưa xong chương trước. Chơi thử: cày AUTO lên cấp 120 mà bản đồ vẫn 7 tấm "???" và NV treo
+  // vẫn là NV cấp 3 — cày cho EXP mà không cho tiến độ thì đoạn 20-60 vô hướng hoàn toàn.
+  if (md.reqMain && questIdx < md.reqMain && lvPeak() < md.min + MAP_LV_BYPASS){
     const rq = QUESTS[md.reqMain - 1];
-    return { ok:false, why:'quest', quest: rq ? rq.name : '', chapter: rq ? rq.chapter : '' };
+    return { ok:false, why:'quest', quest: rq ? rq.name : '', chapter: rq ? rq.chapter : '', orLv: md.min + MAP_LV_BYPASS };
   }
   return { ok:true };
 }
+const MAP_LV_BYPASS = 4;
 window.travelTo = function(mapId, from){
   // Đang ở Tầng Sâu mà rời map bằng BẤT KỲ đường nào — cổng, nút "Đi ngay" của banner dẫn
   // nhiệm vụ, nút Dịch Chuyển trong bảng Bản Đồ — đều tính là RÚT LUI. Trước đây chỉ updateGate()
@@ -20669,16 +20742,19 @@ function renderMapPanel(){
     }
     if (!g.ok){
       // vùng chưa mở — che giấu tên thật, chỉ gợi ý điều kiện mở khóa (đủ cả 2)
+      // Vùng khoá vẫn hiện TÊN và DẢI CẤP. Bảy tấm "??? Vùng Đất Chưa Biết" giống hệt nhau không phải
+      // bản đồ, đó là một danh sách khoá — người chơi cần nhìn thấy đích để biết mình cày vì cái gì.
       const hints = [];
       if (player.level < m.min) hints.push(`Cần đạt cấp ${m.min}`);
-      if (m.reqMain && questIdx < m.reqMain){
+      if (m.reqMain && questIdx < m.reqMain && lvPeak() < m.min + MAP_LV_BYPASS){
         const rq = QUESTS[m.reqMain - 1];
-        hints.push(`Hoàn thành "${rq.name}" (${rq.chapter})`);
+        hints.push(`Hoàn thành "${rq.name}" (${rq.chapter}) — hoặc đạt cấp ${m.min + MAP_LV_BYPASS}`);
       }
       html += `<div class="map-row map-locked">
-        <span style="flex:1"><span class="m-name" style="color:#6a6255">??? Vùng Đất Chưa Biết</span>
+        <span style="flex:1"><span class="m-name" style="color:#8a8275">${m.name}</span>
+          <span style="font-size:10.5px;opacity:.6"> · LV ${m.range}</span>
           <span class="zone-badge" style="color:#6a6255;border-color:#6a6255">CHƯA MỞ</span>
-          <div class="m-desc" style="opacity:.55">Chưa ai kể về vùng đất này…<br>🔒 ${hints.join('<br>🔒 ')}</div></span>
+          <div class="m-desc" style="opacity:.55">🔒 ${hints.join('<br>🔒 ')}</div></span>
         <span class="m-side"><span style="font-size:16px;opacity:.5">🔒</span></span></div>`;
       continue;
     }
@@ -20902,7 +20978,12 @@ function renderQuestNpc(n){
         <div style="text-align:center;margin-top:8px"><button class="mini-btn" onclick="turnInQuest()">Nhận Thưởng</button></div></div>`;
     } else {
       const prog = q.type==='talk' ? '—' : (q.type==='meditate' ? `${Math.floor(questProg)}/${q.need}s` : `${questProg}/${q.need}`);
-      html += `<div class="qd-quest"><div class="q-name">★ Chính tuyến ${q.id}: ${q.name}</div>${q.desc}
+      // NV đang KHOÁ cấp: killMob không đếm, nên đừng in "Tiến độ 0/6" như đang chạy — người chơi
+      // đi giết đủ 6 con rồi quay lại thấy vẫn 0/6.
+      html += questState === 'locked'
+        ? `<div class="qd-quest" style="border-color:#f0a03a"><div class="q-name" style="color:#f0a03a">🔒 Chính tuyến ${q.id}: ${q.name} — cần cấp ${q.lv}</div>${q.desc}
+        <div class="q-rew">Đủ cấp ${q.lv} thì nhiệm vụ tự mở · Thưởng: ${q.rew.xp} EXP · ${q.rew.silver||0}◈</div></div>`
+        : `<div class="qd-quest"><div class="q-name">★ Chính tuyến ${q.id}: ${q.name}</div>${q.desc}
         <div class="q-rew">Tiến độ: ${prog} · Thưởng: ${q.rew.xp} EXP · ${q.rew.silver||0}◈</div></div>`;
     }
   } else if (q){
@@ -21123,7 +21204,8 @@ function trackerHtml(){
     qt += questState === 'done'
       ? `<div class="q-done">✔ Hoàn thành — về gặp ${npcName(q.npc)} (E)</div>`
       : questState === 'locked'
-      ? `<div style="color:#f0a03a">🔒 "${q.name}" cần cấp ${q.lv} (hiện tại cấp ${player.level}).<br>Hãy săn quái rèn luyện thêm rồi quay lại!</div>`
+      ? `<div style="color:#f0a03a">🔒 "${q.name}" cần cấp ${q.lv} (hiện tại cấp ${player.level}).<br>${
+          q.lv === player.level + 1 ? `Còn thiếu <b>${Math.max(0, XP_TABLE[player.level-1] - player.xp).toLocaleString('vi-VN')} EXP</b> — săn quái ở ${MAPS[q.map] ? MAPS[q.map].name : 'bãi gần nhất'}.` : `Săn quái ở ${MAPS[q.map] ? MAPS[q.map].name : 'bãi gần nhất'} rồi quay lại.`}</div>`
       : `<div>${q.desc}</div>${prog ? `<div style="margin-top:4px;color:#7ecbff">${prog}</div>` : ''}`;
     qt += `<div style="margin-top:5px"><button class="mini-btn" style="font-size:11px;padding:2px 10px" onclick="goQuest()">🧭 Tới Ngay</button></div>`; // GDD Đợt 2 B2
   } else {
@@ -22235,12 +22317,16 @@ function hintText(){
 }
 
 // ---------- Mục Tiêu Hôm Nay ----------
+// minLv: cấp 1 mà giao "thông quan phó bản" (phó bản đầu cần cấp 12) và "rèn đồ" (chưa gặp Thợ Rèn)
+// là hai trong bốn mục tiêu ngày đầu bất khả thi. Mục tiêu chỉ hiện — và chỉ tính vào điều kiện
+// nhận thưởng — khi người chơi đã tới cấp đó.
 const DAILY_GOALS = [
-  { id:'kills',   icon:'⚔', name:'Hạ 10 Chimera',        need:10 },
-  { id:'noidan',  icon:'●', name:'Thu 1 Lõi Nguyên Tố',        need:1 },
-  { id:'dungeon', icon:'🏯', name:'Thông quan 1 phó bản', need:1 },
-  { id:'forge',   icon:'🔨', name:'Rèn / nâng tầng / khảm ngọc 1 lần', need:1 },
+  { id:'kills',   icon:'⚔', name:'Hạ 10 Chimera',        need:10, minLv:1 },
+  { id:'forge',   icon:'🔨', name:'Rèn / nâng tầng / khảm ngọc 1 lần', need:1, minLv:5 },
+  { id:'noidan',  icon:'●', name:'Thu 1 Lõi Nguyên Tố',        need:1, minLv:10 },
+  { id:'dungeon', icon:'🏯', name:'Thông quan 1 phó bản', need:1, minLv:12 },
 ];
+function dailyGoalsNow(){ return DAILY_GOALS.filter(g => lvPeak() >= (g.minLv || 1)); }
 function dailyReset(){
   if (!player) return;
   if (!player.daily) player.daily = { day:'', kills:0, noidan:0, dungeon:0, forge:0, claimed:false };
@@ -22262,7 +22348,7 @@ function dailyTrack(key, n){
 function dailyCheckReward(){
   const d = player.daily;
   if (!d || d.claimed) return;
-  if (!DAILY_GOALS.every(g => (d[g.id] || 0) >= g.need)) return;
+  if (!dailyGoalsNow().every(g => (d[g.id] || 0) >= g.need)) return;
   d.claimed = true;
   player.silver += 300; player.khi += 100;
   zoneBanner = { text:'☀ HOÀN THÀNH MỤC TIÊU HÔM NAY!',
@@ -22278,7 +22364,7 @@ function dailyHtml(){
   if (d.claimed){
     html += `<div class="q-done">✔ Đã nhận thưởng — quay lại ngày mai!</div>`;
   } else {
-    for (const g of DAILY_GOALS){
+    for (const g of dailyGoalsNow()){
       const done = (d[g.id] || 0) >= g.need;
       // Tên mục tiêu nằm trong span RIÊNG. Trước đây nó dính liền dấu tick và biểu tượng thành
       // một nút văn bản duy nhất ("· ● Thu 1 Lõi Nguyên Tố"), nên lớp dịch tra khoá nguyên văn
