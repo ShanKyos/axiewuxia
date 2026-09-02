@@ -24,13 +24,24 @@ PORT=$(python3 -c "
 import socket
 s=socket.socket(); s.bind(('127.0.0.1',0)); print(s.getsockname()[1]); s.close()")
 
+# Khoá theo thư mục kết quả. Hai lượt chạy CÙNG một $OUT thì lượt sau `rm -rf` mất trạng thái
+# của lượt trước ngay giữa chừng: lượt trước kết thúc sớm và in ra một con số vô nghĩa ("27/28
+# xanh", danh sách ĐỎ rỗng), còn lượt sau đếm cả những dòng lượt trước đã ghi. Nhìn y như bộ
+# kiểm bị hỏng. Đã mắc một lần — chặn hẳn thay vì để nó im lặng làm hỏng kết quả.
+LOCK="$OUT/.reg.pid"
+if [ -f "$LOCK" ] && kill -0 "$(cat "$LOCK" 2>/dev/null)" 2>/dev/null; then
+  echo "LỖI: đã có một lượt chạy (pid $(cat "$LOCK")) đang dùng $OUT."
+  echo "     Chờ nó xong, hoặc chạy lượt này vào thư mục khác: bash tools/reg.sh /tmp/reg-<tên>"
+  exit 2
+fi
 rm -rf "$OUT"; mkdir -p "$OUT/src"
+echo $$ > "$LOCK"
 cp -r "$ROOT/public/game" "$SNAP"
 git -C "$ROOT" rev-parse --short HEAD > "$OUT/commit.txt" 2>/dev/null || echo "?" > "$OUT/commit.txt"
 
 ( cd "$SNAP" && exec python3 -m http.server "$PORT" >/dev/null 2>&1 ) &
 SRV=$!
-trap 'kill $SRV 2>/dev/null' EXIT
+trap 'kill $SRV 2>/dev/null; rm -f "$LOCK"' EXIT
 sleep 2
 # Không phục vụ được thì DỪNG, đừng chạy 134 bài vào hư không.
 if ! curl -sf -o /dev/null "http://localhost:$PORT/index.html"; then

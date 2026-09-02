@@ -81,7 +81,16 @@ const { chromium } = require('playwright');
     o.doiChung_haiKhacAnKhac = Object.keys(player.sigils || {}).length;
 
     // ── 3. ăn đòn phải rung NGƯỢC hướng con vừa nện ──────────────────────
-    startGame('thieulam', null); player.level = 100; calcDerived();
+    startGame('thieulam', null); player.level = 100;
+    // Bỏ né tránh VÀ bỏ trait trước khi dựng cảnh. Mục này đo HƯỚNG RUNG khi ăn đòn, né được
+    // hay không hoàn toàn không liên quan — nhưng cảnh chỉ chạy 2 giây (40 khung × 0,05s) nên
+    // con quái chỉ kịp ra đúng một-hai đòn, và người chơi né trúng đòn duy nhất đó là cả mục
+    // đổ. Đo thật: né 0,086 → cảnh hỏng 1/200 lượt (0,5%). Hiếm, nhưng bộ 138 bài chạy thường
+    // xuyên thì sớm muộn cũng dính, và khi dính thì nó tố cáo sai chỗ ("dựng cảnh sai" chứ
+    // không phải "né trúng"). startGame() còn roll trait ngẫu nhiên nên né không cố định.
+    player.traits = [];
+    calcDerived();
+    player.eva = 0;
     buildWorld(); mobs.length = 0;
     player.x = 600; player.y = 600;
     // Hướng rung TRƯỚC khi ăn đòn — bất kể nó đang là gì (swingFeel có cửa sổ 60ms nên trong
