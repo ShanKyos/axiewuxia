@@ -59,7 +59,7 @@ const { chromium } = require('playwright');
 
     // cache chân dung phải đổi theo mức rèn
     player.thanbinh = { tier: 1 }; player.equip = {};
-    for (const k of HERO_ARMOR_SLOTS){ const it = genItem(100, 0); it.slot = k; it.tier = 10; it.plus = 0; player.equip[k] = it; }
+    for (const k of HERO_ARMOR_SLOTS){ const it = genItem(112, 0); it.slot = k; it.tier = GIAI_MAX; it.plus = 0; player.equip[k] = it; }
     calcDerived();
     const u0 = heroCardUrl('thieulam', heroTier(player), gearVisual(player));
     for (const k of HERO_ARMOR_SLOTS) player.equip[k].plus = 11;
@@ -69,7 +69,7 @@ const { chromium } = require('playwright');
 
     // rèn LỆCH: mỗi mũ +11 còn 4 ô trống thì không được sáng ngang full +11
     player.equip = {};
-    const hat = genItem(100, 0); hat.slot = 'non'; hat.tier = 10; hat.plus = 11;
+    const hat = genItem(112, 0); hat.slot = 'non'; hat.tier = GIAI_MAX; hat.plus = 11;
     player.equip.non = hat; calcDerived();
     o.renLech_plus = +gearVisual(player).plus.toFixed(2);
     o.renLech_moc = plusStage(gearVisual(player).plus);

@@ -26,7 +26,7 @@ const pass = m => console.log('PASS ' + m);
     const diff = (a, b2) => { let d = 0; for (let i = 0; i < N; i++){ const o = i*4;
       if (Math.abs(a[o]-b2[o]) + Math.abs(a[o+1]-b2[o+1]) + Math.abs(a[o+2]-b2[o+2]) + Math.abs(a[o+3]-b2[o+3]) > 24) d++; }
       return d; };
-    const out = { theoLop:{}, tenBo:{} };
+    const out = { theoLop:{}, tenBo:{}, soGiai: GIAI_MAX };
     // ĐO NHIỀU LƯỢT BỐC RỒI LẤY TRUNG VỊ, không đo một lượt.
     // genSpecific() mỗi lần trả về một MÓN KHÁC NHAU trong cùng giai, nên một lượt bốc có thể
     // vô tình rơi vào hai món trông giống nhau. Đo thật ba lượt liên tiếp cho toanchan giai 2:
@@ -45,7 +45,7 @@ const pass = m => console.log('PASS ' + m);
       const theoLuot = [], sets = [];
       for (let r = 0; r < LUOT; r++){
         const shots = [];
-        for (let t = 1; t <= 10; t++){
+        for (let t = 1; t <= GIAI_MAX; t++){
           player.equip = {};
           for (const k of ARM){ const it = genSpecific(k, 0, t*10); it.tier = t; it.plus = 0; it.rarity = 0; player.equip[k] = it; }
           const w = genSpecific('vukhi', 0, t*10); w.tier = t; w.plus = 0; w.rarity = 0; player.equip.vukhi = w;
@@ -72,16 +72,19 @@ const pass = m => console.log('PASS ' + m);
   for (const c in res.theoLop){
     const chet = res.theoLop[c].map((v, i) => [i+2, v]).filter(([, v]) => v < NGUONG);
     if (chet.length) fail(`${c}: giai ${chet.map(([t, v]) => t + ' (' + v + '%)').join(', ')} không nhìn thấy khác biệt`);
-    else pass(`${c}: cả 9 nấc lên giai đều thấy được (thấp nhất ${Math.min(...res.theoLop[c])}%)`);
+    else pass(`${c}: cả ${res.theoLop[c].length} nấc lên giai đều thấy được (thấp nhất ${Math.min(...res.theoLop[c])}%)`);
   }
 
   // Bộ giáp vẫn phải giữ nhận dạng: đúng 5 tên bộ, mỗi tên phủ 2 giai liền nhau.
   for (const c in res.tenBo){
     const names = res.tenBo[c], uniq = [...new Set(names)];
     const lienTuc = names.every((n, i) => i === 0 || n === names[i-1] || !names.slice(0, i).includes(n));
-    if (uniq.length !== 5) fail(`${c}: có ${uniq.length} tên bộ giáp, mong đúng 5 — ${JSON.stringify(uniq)}`);
+    // Mỗi GIAI một bộ mang tên riêng. Bản cũ là 5 bộ trải trên 10 giai (mỗi bộ 2 giai), nên
+    // giai 1 và giai 2 dùng chung một cái tên — đó chính là thứ đã bỏ đi khi mở 14 giai.
+    if (uniq.length !== res.soGiai)
+      fail(`${c}: có ${uniq.length} tên bộ giáp, mong đúng ${res.soGiai} (mỗi giai một bộ) — ${JSON.stringify(uniq)}`);
     else if (!lienTuc) fail(`${c}: tên bộ giáp nhảy qua nhảy lại — ${JSON.stringify(names)}`);
-    else pass(`${c}: 5 bộ giáp, mỗi bộ phủ 2 giai liền nhau — ${uniq.join(' → ')}`);
+    else pass(`${c}: ${uniq.length} bộ giáp, MỖI GIAI MỘT BỘ — ${uniq.join(' → ')}`);
   }
 
   console.log('errors:', JSON.stringify(errs));

@@ -94,7 +94,7 @@ const fs = require('fs');
     out.heroTier_khongTut = heroTier(player) === 7;
     // và phải tăng khi mặc đồ cao hơn Thần Binh
     player.thanbinh = { tier: 1 };
-    for (const k of HERO_ARMOR_SLOTS){ const it = genItem(100, 0); it.slot = k; it.tier = 10; player.equip[k] = it; }
+    for (const k of HERO_ARMOR_SLOTS){ const it = genItem(112, 0); it.slot = k; it.tier = GIAI_MAX; player.equip[k] = it; }
     calcDerived();
     out.heroTier_theoDo = heroTier(player);
 

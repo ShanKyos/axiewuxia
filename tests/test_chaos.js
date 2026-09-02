@@ -92,7 +92,7 @@ const { chromium } = require('playwright');
       o.tanPham = { co, tang: it.rarity > r0 || it.rarity === r0 }; }
     // 3f Kế Thừa
     reset();
-    { const it = player.inv.find(x => !x.special && x.tier != null && x.tier < 10);
+    { const it = player.inv.find(x => !x.special && x.tier != null && x.tier < GIAI_MAX);
       if (it){ const t0 = it.tier; chaosAddItem(it.uid); chaosPickRecipe('kethua'); doChaos();
         o.keThua = { tu: t0, den: it.tier }; } else o.keThua = '(không có đồ dưới giai X)'; }
     // 3g Lò Hỗn Loạn: 3 món cùng phẩm phải BIẾN MẤT dù thành hay bại
