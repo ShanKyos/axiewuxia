@@ -782,7 +782,7 @@ const ZONE_TYPES = {
 const MAPS = {
   daohoa: { name:'Petalshade Isle', min:1, range:'1 - 12', type:'safe', ground:'#ece2c8', patch:'#7a86ad',
     spawn:{ x:460, y:460 }, spawnFrom:{ pb_daohoa:{ x:2250, y:1040 } }, village:true, spring:true, herbs:true, boss:true, trees:70, rocks:26,
-    desc:'Home to the Petalshade hatchery — the newcomer\'s hunting ground. Weak Chimeras, starter drops, a gentle place to learn the ropes.',
+    desc:'Nơi đặt trại ấp Petalshade — bãi săn của người mới. Chimera yếu, đồ rơi nhập môn, chỗ hiền lành để học cách chơi.',
     // Cụm quái xếp theo vòng từ spawn ra: yếu (boar/hautu) gần nhất → mạnh dần (wolf/bandit/
     // caodo) → xa nhất (assassin, trannhan) gần Cổng Vực — người chơi mới thấy rõ "đi sâu = khó
     // hơn" thay vì gặp ngẫu nhiên cả cụm yếu lẫn cụm elite lẫn lộn quanh spawn.
@@ -798,11 +798,11 @@ const MAPS = {
     ], duhiep: null },
   tuongduong: { name:'Lunaris City', min:1, range:'—', type:'safe', ground:'#d8ccb0', patch:'#7a6a4a',
     spawn:{ x:1300, y:1100 }, spawnFrom:{ ngoai:{ x:1300, y:1460 } }, city:true, trees:24, rocks:10,
-    desc:'The central hub — Auction Bazaar, the Forge, the Apothecary, the Teahouse. Fully safe: no Chimeras spawn inside the walls. Head out the South Gate to hunt in the Outskirts.',
+    desc:'Trung tâm mọi thứ — Chợ Đấu Giá, Lò Rèn Hoàng Gia, Dược Sư, Quán Trà. An toàn tuyệt đối: trong tường thành không có Chimera. Ra Cổng Nam để săn ở Outskirts.',
     packs: [], duhiep: null },
   ngoai: { name:'Petalshade Outskirts', min:10, range:'14 - 24', type:'safe', ground:'#ddd2ae', patch:'#7a7048',
     spawn:{ x:1300, y:330 }, spawnFrom:{ pb_ngoai:{ x:2000, y:1040 } }, reqMain:10, trees:56, rocks:22, herbs:true,
-    desc:'Just past the city gates — bandit camps block the road, wolf packs prowl the treeline. No PK here, safe ground to train.',
+    desc:'Ngay ngoài cổng thành — trại Gloam chặn đường, bầy Gai Tím rình rập ven rừng. Không PK, đất an toàn để luyện cấp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     // Rải theo GRADIENT KHOẢNG CÁCH: sát cổng thành là bậc thấp nhất, càng ra xa bậc càng
     // cao, góc xa nhất là elite — cùng nguyên lý bố trí đồng cỏ quanh thị trấn khởi đầu.
@@ -819,7 +819,7 @@ const MAPS = {
     ], duhiep: null },
   chungnam: { name:'Thornwood Reach', min:20, range:'24 - 38', type:'pk', ground:'#d4d0ac', patch:'#6a7a52',
     spawn:{ x:400, y:1500 }, spawnFrom:{ pb_chungnam:{ x:2200, y:890 } }, trees:80, rocks:34,
-    desc:'Rivalries start turning ugly here. Chimeras drop basic Card Pages and loose Starbits.',
+    desc:'Từ đây là đất PK — hạ người khác được, bị hạ cũng được. Chimera rơi Huyền Thiết và Lõi Nguyên Tố bậc đầu.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
       { mob:'chimera_bo', x:800, y:1400, n:6, tiep:true }, { mob:'phando', x:1100, y:900, n:6, tiep:true },
@@ -828,7 +828,7 @@ const MAPS = {
     ], duhiep:'duhiep1' },
   comoc: { name:'Hollow Roost', min:40, range:'42 - 56', type:'pk', ground:'#a89f86', patch:'#4a4436',
     spawn:{ x:400, y:400 }, spawnFrom:{ pb_comoc:{ x:2200, y:990 } }, dark:true, trees:30, rocks:46,
-    desc:'A narrow, twisting warren. Dense Chimera packs drop Steed upgrade materials — contested hunting ground.',
+    desc:'Hang ổ hẹp, ngoằn ngoèo. Bầy Chimera dày đặc rơi nguyên liệu thăng giai Thú Chiến — bãi săn tranh chấp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
       { mob:'thinu', x:557, y:865, n:7, tiep:true }, { mob:'thinu', x:1200, y:500, n:7, tiep:true },
@@ -837,7 +837,7 @@ const MAPS = {
     ], duhiep:'duhiep2' },
   tuyettinh: { name:'Frostmire Vale', min:60, range:'62 - 78', type:'pk', ground:'#ddc9a8', patch:'#8a5a6a',
     spawn:{ x:400, y:950 }, spawnFrom:{ pb_tuyettinh:{ x:2200, y:790 } }, trees:60, rocks:24,
-    desc:'A massive EXP ground. Bring poison resistance — the Chimeras here bite with venom.',
+    desc:'Bãi EXP khổng lồ. Mang theo kháng độc — Chimera ở đây cắn có nọc.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
       { mob:'docyeu', x:1096, y:482, n:6, tiep:true }, { mob:'ttdetu', x:700, y:1500, n:7, tiep:true },
@@ -846,7 +846,7 @@ const MAPS = {
     ], duhiep:'duhiep2' },
   mongco: { name:'Ashen Steppe', min:80, range:'84 - 100', type:'pk', ground:'#cfc09a', patch:'#7a6a42',
     spawn:{ x:400, y:950 }, spawnFrom:{ pb_mongco:{ x:1720, y:680 } }, trees:36, rocks:30,
-    desc:'Wide open plains, tough Chimeras hitting hard. Drops ranged- and blade-art upgrade materials.',
+    desc:'Thảo nguyên mở rộng, Chimera trâu bò đánh đau. Rơi nguyên liệu nâng chiêu tầm xa và đao pháp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
       { mob:'thamtu', x:442, y:574, n:7, tiep:true }, { mob:'thamtu', x:753, y:1497, n:7, tiep:true },
@@ -855,7 +855,7 @@ const MAPS = {
     ], duhiep:'duhiep3' },
   nhanmon: { name:'Stormgate Pass', min:100, range:'102 - 120', type:'freepk', ground:'#b8a68a', patch:'#6a3a2a',
     spawn:{ x:400, y:950 }, spawnFrom:{ pb_nhanmon:{ x:2200, y:890 } }, trees:44, rocks:38,
-    desc:'The endgame training ground, out on Lunacia\'s frontier. PK carries no Notoriety here. Chimeras drop golden-tier gear.',
+    desc:'Bãi luyện cuối game, ngoài biên ải Lunacia. PK ở đây không cộng Tai Tiếng. Chimera rơi trang bị bậc vàng.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
       { mob:'cuongbinh', x:700, y:1400, n:7, tiep:true }, { mob:'cuongbinh', x:1300, y:660, n:7, tiep:true }, // bãi 2 vốn nằm LỌT TRONG tường thành trái (850,800,560,350)
@@ -865,31 +865,31 @@ const MAPS = {
   // ---------- PHÓ BẢN: mỗi map một phó bản + boss tương ứng cấp — chỉ vào qua cổng dịch chuyển ----------
   pb_daohoa: { name:'Trial Chamber: Petalshade', min:12, range:'12+', type:'dungeon', ground:'#8a8272', patch:'#3a342a',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:20, rocks:34,
-    desc:'The isle\'s trial chamber — three waves, then the Gloam Marauder Chieftain. Farm class-tier upgrade essence here.',
+    desc:'Phòng thử thách của hòn đảo — ba đợt quái, rồi Thủ Lĩnh Cướp Gloam. Cày tinh chất nâng bậc lớp ở đây.',
     packs: [], duhiep: null },
   pb_ngoai: { name:'Trial Chamber: Outskirts', min:14, range:'14+', type:'dungeon', ground:'#8a8272', patch:'#3a342a',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:24, rocks:30,
-    desc:'The Outskirts\' trial chamber, guarded by the Bandit Warlord. Farm class-tier upgrade essence here.',
+    desc:'Phòng thử thách của Outskirts, Chiến Chúa Gloam canh giữ. Cày tinh chất nâng bậc lớp ở đây.',
     packs: [], duhiep: null },
   pb_chungnam: { name:'Trial Chamber: Thornwood', min:26, range:'26+', type:'dungeon', ground:'#7e7a68', patch:'#332e24',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:18, rocks:38,
-    desc:'Thornwood\'s trial chamber — the Turncoat General waits at the end. Farm class-tier and forge-tier essence here.',
+    desc:'Phòng thử thách Thornwood — Phản Đồ Đại Tướng chờ ở cuối. Cày tinh chất nâng bậc lớp và bậc rèn.',
     packs: [], duhiep: null },
   pb_comoc: { name:'Trial Chamber: Hollow Roost', min:46, range:'46+', type:'dungeon', ground:'#6e6a58', patch:'#2a2620',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:12, rocks:44,
-    desc:'The Roost\'s trial chamber — the Roost Warden holds the depths. Farm Steed and combo-card upgrade essence here.',
+    desc:'Phòng thử thách của Tổ — Hộ Vệ Tổ giữ tầng sâu. Cày tinh chất thăng giai Thú Chiến ở đây.',
     packs: [], duhiep: null },
   pb_tuyettinh: { name:'Trial Chamber: Frostmire', min:66, range:'66+', type:'dungeon', ground:'#7a6a62', patch:'#38222a',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:22, rocks:26,
-    desc:'Frostmire\'s trial chamber — the Emberveil Tyrant strikes with venom. Farm high-tier forge gems here.',
+    desc:'Phòng thử thách Frostmire — Bạo Chúa Emberveil đánh có nọc độc. Cày ngọc rèn bậc cao ở đây.',
     packs: [], duhiep: null },
   pb_mongco: { name:'Trial Chamber: Ashen Steppe', min:86, range:'86+', type:'dungeon', ground:'#7e725a', patch:'#332a1e',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:16, rocks:32,
-    desc:'The Steppe\'s trial chamber — the Steppe Khan rules the war-camp within. Farm ranged- and blade-art upgrade essence here.',
+    desc:'Phòng thử thách Thảo Nguyên — Đại Hãn cai trị doanh trại bên trong. Cày tinh chất nâng chiêu tầm xa và đao pháp.',
     packs: [], duhiep: null },
   pb_nhanmon: { name:'Trial Chamber: Stormgate', min:100, range:'100+', type:'dungeon', ground:'#8a7a66', patch:'#3a241a',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:14, rocks:36,
-    desc:'Stormgate\'s trial chamber — the Sky Legion Commander stands at the end. The final trial, and the richest reward.',
+    desc:'Phòng thử thách Stormgate — Thiên Binh Thống Soái đứng ở cuối. Thử thách cuối cùng, phần thưởng hậu nhất.',
     packs: [], duhiep: null },
 };
 let curMap = 'daohoa';
@@ -7101,13 +7101,16 @@ function gainXp(amount){
   if (player.level >= MAX_LV) player.xp = 0;
 }
 function unlockNotices(){
+  let tre = 900; // dòng đầu nhường chỗ cho "THĂNG CẤP N!" nổi trước
   // QA bot playtest: NV đang khóa cấp (vd. Bình Cảnh Chi Chiến cần cấp 10) — mở lại khi thăng cấp đủ
   const cq0 = currentQuest();
   if (cq0 && questState === 'locked' && player.level >= cq0.lv){
     questState = 'active';
     if (cq0.type === 'boss') spawnBoss();
-    addFloat(player.x, player.y-64, `Đủ sức đột phá! Nhiệm vụ mở: ${cq0.name}`, '#ffd76a', 15);
+    // Trễ 900ms: "THĂNG CẤP" vừa nổi ở cùng chỗ — ba dòng cùng khung thì không đọc được dòng nào.
+    setTimeout(() => { if (player) addFloat(player.x, player.y-64, `Đủ sức đột phá! Nhiệm vụ mở: ${cq0.name}`, '#ffd76a', 15); }, 900);
     AudioSys.sfx('quest', 0.8);
+    tre += 900;
   }
   // Mở khóa theo tầng — mỗi cấp chỉ giới thiệu 1-2 hệ thống để tân thủ không bị ngợp
   const msgs = {
@@ -7123,7 +7126,7 @@ function unlockNotices(){
     30:['Mở khóa: Archery (Thuần Thục — phím H)','Mở khóa: Nhà Riêng — gặp Quản Gia ở Lunaris City'],
   };
   const list = msgs[player.level];
-  if (list) list.forEach((m, i)=> setTimeout(()=>{ if (player) addFloat(player.x, player.y-70, m, '#a0ffe9', 14); }, i*700));
+  if (list) list.forEach((m, i)=> setTimeout(()=>{ if (player) addFloat(player.x, player.y-70, m, '#a0ffe9', 14); }, tre + i*800));
   // Tán Nhân đạt cấp 10 → mở lễ Bái Sư một lần (sau đó tự chọn ở panel Nhân Vật)
   if (player.level >= 10 && player.sect === 'vophai' && !player.sectOffered){
     player.sectOffered = true;
@@ -15833,7 +15836,7 @@ window.cheatExec = function(raw){
       case 'map': {
         const id = parts[1];
         if (!MAPS[id]){ cheatLog('Không có map "' + id + '". Xem /help', '#ff7a6a'); return; }
-        curMap = id; DGN = null; buildWorld();
+        curMap = id; DGN = null; buildWorld(); closePanels(); // bảng Chọn Trận của map cũ vẫn mở nếu không đóng
         const md = MAPS[id];
         if (md.dungeon) startDungeonRun(id);
         const sp = md.spawn || { x: MAP.w/2, y: MAP.h/2 };
@@ -15958,7 +15961,7 @@ window.cheatExec = function(raw){
         const n = clamp(Math.round(num(1, 200)), 0, 9999);
         player.mpts = n; player.mptsTotal = Math.max(player.mptsTotal || 0, n);
         calcDerived(); cheatLog(`${MASTERY_NAME}: mở bảng, ${n} điểm chưa dùng (bảng chứa ${masteryCap()})`, '#8fd18f');
-        refreshCharTab('mastery'); break;
+        window.openMastery(); break;
       }
       case 'tier': {
         player.mount.tier = clamp(Math.round(num(1, 1)), 0, MOUNT_TIERS.length - 1);
@@ -20460,13 +20463,13 @@ QUESTS.push(
   { id:12, lv:11, name:'Thành Không Còn Thuốc', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
     desc:'Người tị nạn Axie đổ về thành mỗi ngày, kho thuốc đã cạn. Ra Outskirts ngoài cổng hái 6 Thảo Dược đem về.',
     type:'collect', herbMap:'ngoai', need:6, rew:{xp:2600, silver:350, mat:2} },
-  { id:13, lv:12, name:'Chặn Đường Tiếp Tế', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
+  { id:13, lv:16, name:'Chặn Đường Tiếp Tế', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
     desc:'Gloam Cựu Binh chặn đoàn xe tị nạn ngoài Outskirts. Diệt 8 tên để đường về thành thông trở lại.',
     type:'kill', mob:'bandit_vet', need:8, rew:{xp:3200, silver:420} },
-  { id:14, lv:13, name:'Người Bản Địa Biết Đường', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
+  { id:14, lv:16, name:'Người Bản Địa Biết Đường', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
     desc:'Bản đồ Vaeldra vô dụng ở đây. Gặp Trinh Sát Wren — một Axie thuộc lòng từng lối mòn Lunacia.',
     type:'talk', targetNpc:'monkhach', need:1, rew:{xp:2800, silver:300} },
-  { id:15, lv:14, name:'Trụ Khóa Thứ Nhất', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
+  { id:15, lv:17, name:'Trụ Khóa Thứ Nhất', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
     desc:'Trụ Khóa thứ nhất nằm trong Thornwood Reach, mà cửa rừng cần cấp 20. Bầy Gai Đầu Đàn quanh Outskirts đang dồn về phía đó — hạ 5 con để dọn đường, và lấy đủ sức vào rừng.',
     type:'kill', mob:'wolf_alpha', need:5, rew:{xp:4200, silver:500, mat:2} },
 );
@@ -20478,10 +20481,10 @@ QUESTS.push(
   { id:17, lv:22, name:'Kẻ Đổi Phe', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
     desc:'Có những kẻ tự nguyện nhận khí Morvahn để đổi lấy sức mạnh — giờ chỉ còn trơ xương trong lớp giáp cũ. Corran gọi chúng là kẻ phản bội. Diệt 6 tên.',
     type:'kill', mob:'phando', need:6, rew:{xp:6500, silver:700} },
-  { id:18, lv:26, name:'Nọc Của Vết Nứt', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
+  { id:18, lv:27, name:'Nọc Của Vết Nứt', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
     desc:'Chimera Phun Độc nhả thứ khí làm muông thú tự nguyện đi về phía vết nứt. Diệt 6 con để cắt nguồn.',
     type:'kill', mob:'xanu', need:6, rew:{xp:8000, silver:800, mat:2} },
-  { id:19, lv:30, name:'Không Cứu Được Nữa', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
+  { id:19, lv:34, name:'Không Cứu Được Nữa', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
     desc:'Ba Axie đã bị khí Morvahn ăn hết tâm trí, chặn lối xuống Hollow Roost. Corran nói thẳng: không còn gì để cứu. Kết liễu chúng cho nhẹ nợ.',
     type:'kill', mob:'bandao', need:3, rew:{xp:10000, silver:1000, mat:3} },
 );
@@ -20511,7 +20514,7 @@ QUESTS.push(
   { id:26, lv:68, name:'Gốc Rễ Độc', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
     desc:'Chimera Cầu Gai kết lại từ chỗ khí vết nứt đọng xuống, độc rỉ theo từng gai. Diệt 6 con — nhớ bật buff của lớp (phím 3) trước khi vào.',
     type:'kill', mob:'docyeu', need:6, rew:{xp:48000, silver:2600, mat:4} },
-  { id:27, lv:73, name:'Mai Phục Trong Sương', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
+  { id:27, lv:76, name:'Mai Phục Trong Sương', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
     desc:'Tướng quân đã biết ngươi đang đi gỡ từng Trụ Khóa, và gửi sát thủ chặn lối ra Ashen Steppe. Diệt 4 tên.',
     type:'kill', mob:'satthuhy', need:4, rew:{xp:58000, silver:3000, mat:4} },
 );
@@ -20526,7 +20529,7 @@ QUESTS.push(
   { id:30, lv:88, name:'Phá Hàng Cung', chapter:'Chương VI · Ashen Steppe', npc:'noiung', map:'mongco',
     desc:'Cung Thủ Tro Tàn giữ hàng sau, bắn phủ đầu cả thảo nguyên. Diệt 6 tên để mở khoảng trống cho đoàn tị nạn rút qua.',
     type:'kill', mob:'cungthu', need:6, rew:{xp:90000, silver:4000, mat:5} },
-  { id:31, lv:93, name:'Mũi Nhọn', chapter:'Chương VI · Ashen Steppe', npc:'noiung', map:'mongco',
+  { id:31, lv:97, name:'Mũi Nhọn', chapter:'Chương VI · Ashen Steppe', npc:'noiung', map:'mongco',
     desc:'Kỵ Sĩ Tro Tàn là mũi nhọn sẽ chọc thẳng vào Lunaris City. Diệt 4 tên — rồi đường ra Stormgate Pass sẽ mở.',
     type:'kill', mob:'kybinh', need:4, rew:{xp:105000, silver:4500, mat:5} },
 );
@@ -20538,10 +20541,10 @@ QUESTS.push(
   { id:33, lv:100, name:'Giữ Phòng Tuyến', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
     desc:'Cuồng Binh Tro Tàn tràn xuống từng đợt như thủy triều. Diệt 6 tên — sau lưng ngươi là đường rút của cả Lunaris City.',
     type:'kill', mob:'cuongbinh', need:6, rew:{xp:140000, silver:5500} },
-  { id:34, lv:105, name:'Thứ Bị Kéo Qua Cùng', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
+  { id:34, lv:108, name:'Thứ Bị Kéo Qua Cùng', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
     desc:'Chó Ngao Lửa vốn là thú săn của Vaeldra, bị vết nứt kéo qua rồi hóa dại. Hạ 4 con để chúng được yên — chúng không có lỗi gì cả.',
     type:'kill', mob:'kylan', need:4, rew:{xp:165000, silver:6000, mat:6} },
-  { id:35, lv:110, name:'Trụ Khóa Cuối Cùng', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
+  { id:35, lv:116, name:'Trụ Khóa Cuối Cùng', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
     desc:'Bầy Axie Cuồng Bão canh Trụ Khóa thứ năm. Diệt 5 con — nhưng Brann đã cảnh báo: trụ cuối gãy thì vết nứt mở toang, và Morvahn sẽ bước qua.',
     type:'kill', mob:'daokhach', need:3, rew:{xp:200000, silver:8000, mat:8} },   // lv120 elite có khiên: 5 con ở cấp 100 là bất khả (chơi thử 0/5, 85 lần chết)
 );
@@ -20812,6 +20815,7 @@ function renderStageSelect(mapId){
       let tag, color;
       if (gap > 15){ tag = 'NGUY HIỂM'; color = '#ff6b6b'; }
       else if (gap > 5){ tag = 'THỬ THÁCH'; color = '#ffb15c'; }
+      else if (gap < -15){ tag = 'QUÁ DỄ'; color = '#6a6255'; } // cấp 40 mà boss lv6 từng gắn "VỪA SỨC"
       else { tag = 'VỪA SỨC'; color = '#7ec850'; }
       html += `<div class="map-row">
         <span style="flex:1"><span class="m-name">${kind === 'tranai' ? '👑 ' : '★ '}${def.name}</span>
@@ -21090,12 +21094,30 @@ window.turnInQuest = function(){
 };
 
 // ---------- Nói chuyện NPC (override — định tuyến theo loại) ----------
+// Dấu trên đầu NPC: '!' có NV để trả · '…' có NV để nhận/đang làm · '' không có việc. Dùng chung
+// cho drawNpc() và tryTalk() để cái người chơi THẤY và cái phím E CHỌN là một.
+function npcMark(n){
+  if (n.talk === 'trunya') return player.truyna && player.truyna.state === 'killed' ? '!' : '';
+  if (n.talk !== 'quest') return '';
+  const q = currentQuest();
+  if ((q && q.npc === n.id && questState === 'done') ||
+      SIDE_QUESTS.some(sq => sq.npc === n.id && sideStates[sq.id] && sideStates[sq.id].st === 'done')) return '!';
+  if ((q && q.npc === n.id) ||
+      SIDE_QUESTS.some(sq => sq.npc === n.id && (sideAvail(sq) === 'avail' || sideAvail(sq) === 'active'))) return '…';
+  return '';
+}
 function tryTalk(){
-  let best = null, bd = 95;
+  // Trong tầm 95px có thể đứng 2 NPC (Trưởng Làng & Dược Sư cách nhau 163px). Chọn theo VIỆC
+  // trước, khoảng cách sau: đang có NV để trả > có NV để nhận > gần nhất. Chơi thử: về trả NV3
+  // mà hộp thoại Dược Sư bật lên, không có nút Nhận Thưởng.
+  const uuTien = { '!':2, '…':1, '':0 };
+  let best = null, bd = 95, bu = -1;
   for (const n of NPCS){
     if (n.map !== curMap) continue;
     const d = dist(player.x, player.y, n.x, n.y);
-    if (d < bd){ bd = d; best = n; }
+    if (d >= 95) continue;
+    const u = uuTien[npcMark(n)];
+    if (u > bu || (u === bu && d < bd)){ bu = u; bd = d; best = n; }
   }
   if (!best) return;
   tutAdvance('npc');
@@ -21157,14 +21179,7 @@ function drawNpc(){
     ctx.font = '12px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
     ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 3;
     if (n.talk === 'quest'){
-      const q = currentQuest();
-      let mark = '';
-      if ((q && q.npc === n.id && questState === 'done') ||
-          SIDE_QUESTS.some(sq => sq.npc === n.id && sideStates[sq.id] && sideStates[sq.id].st === 'done'))
-        mark = '!';
-      else if ((q && q.npc === n.id) ||
-               SIDE_QUESTS.some(sq => sq.npc === n.id && (sideAvail(sq) === 'avail' || sideAvail(sq) === 'active')))
-        mark = '…';
+      const mark = npcMark(n);
       if (mark){
         ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
         ctx.fillStyle = mark === '!' ? '#ffd76a' : '#9fd0ff';
@@ -21352,6 +21367,7 @@ function npcStoryLine(){
 function showKetMo(){
   const ov = document.getElementById('overlay');
   if (!ov) return;
+  closePanels(); // overlay z-index 40 nằm TRÊN .panel (20): mở khi bảng bản đồ đang mở là hai lớp chữ chồng nhau
   document.getElementById('overlay-inner').innerHTML = `
     <h2 style="color:#ff6b6b">☠ TRỤ CUỐI ĐÃ GÃY</h2>
     <p style="line-height:1.9;font-size:14px">Trụ Khóa thứ năm đổ xuống. Vết Nứt trên bầu trời Lunacia toác ra hết cỡ — <b style="color:#ff8f6b">Morvahn đang bước qua</b>.<br>
@@ -21751,7 +21767,10 @@ const DUNGEONS = {
 // HUD phó bản: nhãn ở giữa trên cùng, đồng hồ đếm ngược tuỳ chọn ngay dưới, thanh máu boss tuỳ
 // chọn dưới nữa.
 function drawArenaHUD({ label, labelColor, timeLeft, activeBoss, barColor }){
-  const x = W/2, y = 26;
+  // y=26 vẽ đúng lên nhãn tên bản đồ (#hud-map, top:12px) — hai lớp chữ đè nhau, chơi thử phải
+  // ẩn dải nhiệm vụ bằng CSS mới thấy có đồng hồ. Hạ xuống dưới nhãn; thanh máu boss kết thúc ở
+  // y+38 = 92, còn trên banner dẫn nhiệm vụ (top:96px).
+  const x = W/2, y = 54;
   ctx.textAlign = 'center';
   ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
   ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3; ctx.fillStyle = labelColor;

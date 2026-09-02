@@ -13,7 +13,8 @@ const { chromium } = require('playwright');
   await page.goto('http://localhost:8853/index.html', { waitUntil: 'networkidle' });
   await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(500);
-  await page.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); });
+  // autoEquip nay bật sẵn cho nhân vật mới — bài này đếm món trong TÚI, nên tắt để món rơi ra không bị mặc ngay.
+  await page.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); player.autoEquip = false; });
   await page.waitForTimeout(300);
 
   // 1) NPC Tông Sư mở đúng cỗ máy (trước đây là một màn rèn RIÊNG, nay đã gộp)

@@ -12,7 +12,8 @@ const { chromium } = require('playwright');
   await p.waitForFunction(() => window.__gameReady).catch(()=>{});
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
 
-  await p.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); travelTo('comoc');
+  // autoEquip nay bật sẵn cho nhân vật mới — bài này đếm món trong TÚI sau khi nhặt, nên tắt.
+  await p.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); player.autoEquip = false; travelTo('comoc');
     player.level = 50; calcDerived(); player.autoSell = false; player.auto = false; });
 
   // ---- 1. Farm 300 con: đồ và ngọc phải NẰM DƯỚI ĐẤT, không nhảy thẳng vào túi ----

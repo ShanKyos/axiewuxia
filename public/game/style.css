@@ -675,7 +675,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .is-skip:hover { color:#c4cdf0; }
 
 /* ── Hướng dẫn tân thủ ── */
-#tut-hint { position:fixed; left:50%; bottom:118px; transform:translateX(-50%); z-index:120;
+#tut-hint { position:fixed; left:50%; bottom:118px; transform:translateX(-50%); z-index:15; /* dưới .panel (20): thẻ hướng dẫn từng vẽ đè lên bảng Chọn Trận, Đại Thành, Sự Kiện */
   max-width:480px; padding:10px 16px; border-radius:var(--r-md); font-size:13.5px; line-height:1.6;
   color:#eef2ff; background:rgba(24,26,54,.92); border:1px solid var(--accent);
   box-shadow:0 4px 18px rgba(0,0,0,.5), 0 0 14px rgba(76,141,255,.25); }
@@ -953,7 +953,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 /* top:150px chứ không phải 84px — chỗ đó là banner dẫn nhiệm vụ, đè lên nhau đọc không ra */
 /* Dạt sang phải: ở giữa-trên nó che hẳn dòng tiêu đề zoneBanner "TẦNG n/20". Cột phải từ
    ~200px trở xuống là chỗ trống duy nhất còn lại (minimap kết thúc quanh 190px). */
-#deep-leave { position:fixed; right:14px; top:206px; z-index:60;
+#deep-leave { position:fixed; right:14px; top:268px; /* 206px đè lên minimap — #hud-right kết thúc ở 257px (đo bằng getBoundingClientRect) */ z-index:60;
   background:linear-gradient(180deg,#2a6a3a,#1d4a2a); color:#d8ffe0; cursor:pointer;
   border:1px solid #6ae88a; border-radius:9px; padding:7px 18px; font-size:13px; font-weight:700;
   box-shadow:0 4px 16px rgba(0,0,0,.5); font-family:inherit; letter-spacing:.02em; }

@@ -90,6 +90,33 @@ const PORT = process.argv[2] || '8853';
     // gợi ý sinh tồn
     player.hp = player.maxHp * 0.2; player.potions = 3;
     o.goiYUong = hintCandidates().some(h => h.id === 'uongthuoc'); player.hp = player.maxHp;
+
+    // ── 10. E chọn NPC có VIỆC, không phải NPC gần nhất ──
+    // Trưởng Làng & Dược Sư cách nhau 163px: đứng gần Dược Sư hơn nhưng đang có NV để trả cho
+    // Trưởng Làng thì phải mở Trưởng Làng.
+    curMap = 'daohoa'; buildWorld();
+    const tl = NPCS.find(x => x.id === 'truonglang'), ds = NPCS.find(x => x.id === 'duocsu');
+    o.npcCach = Math.round(dist(tl.x, tl.y, ds.x, ds.y));
+    questIdx = 2; questState = 'done'; questProg = 4; sideStates = {};
+    const ux = (tl.x - ds.x) / o.npcCach, uy = (tl.y - ds.y) / o.npcCach;
+    player.x = ds.x + ux * 72; player.y = ds.y + uy * 72;   // 72px tới Dược Sư, ~91px tới Trưởng Làng
+    o.dauTL = npcMark(tl); o.dauDS = npcMark(ds);
+    closePanels(); tryTalk();
+    o.moTL = !el('panel-quest').classList.contains('hidden') && el('panel-quest').innerHTML.includes(tl.name);
+    closePanels();
+    questIdx = 0; questState = 'none'; questProg = 0;
+
+    // ── 11. Nhãn boss vùng có bậc QUÁ DỄ ──
+    dat(40); renderStageSelect('daohoa');
+    o.nhanBoss = [...el('panel-stage').querySelectorAll('.zone-badge')].map(e => e.textContent.trim());
+    closePanels(); dat(1);
+
+    // ── 12. Cấp NV diệt quái không thấp hơn cấp quái quá 4 (elite có khiên: 85 lần chết ở NV35) ──
+    o.nvLech = QUESTS.filter(q => q.type === 'kill' && MOBS[q.mob] && (MOBS[q.mob].lv || 1) - q.lv > 4).map(q => `NV${q.id} lv${q.lv} vs ${q.mob} lv${MOBS[q.mob].lv}`);
+    o.nvTang = QUESTS.every((q, i) => i === 0 || q.lv >= QUESTS[i-1].lv);
+
+    // ── 13. Mô tả bản đồ tiếng Việt, không còn thuật ngữ lạ ──
+    o.moTaLa = Object.keys(MAPS).filter(k => MAPS[k].desc && /Card Pages|Starbits|Steed|hunting ground|Chimeras|trial chamber|Farm /.test(MAPS[k].desc));
     return o;
   });
   console.log(JSON.stringify(r, null, 1));
@@ -109,6 +136,10 @@ const PORT = process.argv[2] || '8853';
   if (!/^◈ 3[.,]114$/.test(r.bac)) fail('HUD bạc in số lẻ: ' + r.bac); else pass('HUD bạc làm tròn: ' + r.bac);
   if (!r.tutDong) fail('bước tutorial cuối không tự đóng sau 25s'); else pass('bước tutorial cuối tự đóng');
   if (!r.goiYUong) fail('máu thấp không gợi ý uống thuốc'); else pass('máu thấp → gợi ý R uống thuốc');
+  if (r.dauTL !== '!' || r.dauDS !== '' || !r.moTL) fail(`E chọn nhầm NPC: dấu TL '${r.dauTL}' DS '${r.dauDS}', mở Trưởng Làng ${r.moTL} (cách nhau ${r.npcCach}px)`); else pass('E ưu tiên NPC có NV để trả dù đứng gần NPC khác hơn');
+  if (!r.nhanBoss.includes('QUÁ DỄ') || r.nhanBoss.includes('VỪA SỨC')) fail('cấp 40 ở Petalshade mà nhãn: ' + r.nhanBoss.join(', ')); else pass('cấp 40: mọi bãi/boss Petalshade gắn QUÁ DỄ');
+  if (r.nvLech.length || !r.nvTang) fail(`cấp NV lệch cấp quái: ${r.nvLech.join('; ')} · tăng dần ${r.nvTang}`); else pass('35 NV: cấp tăng dần, NV diệt quái không thấp hơn quái quá 4 cấp');
+  if (r.moTaLa.length) fail('mô tả bản đồ còn tiếng Anh/thuật ngữ lạ: ' + r.moTaLa); else pass('8 mô tả bản đồ tiếng Việt');
 
   // ── 1. Xoá tiến trình phải xoá THẬT, kể cả gọi từ trong game ──
   const c2 = await b.newContext({ viewport: { width: 1100, height: 700 } });
