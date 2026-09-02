@@ -45,7 +45,12 @@ const pass = m => console.log('PASS ' + m);
 
   // ── 3. khoá cấp ────────────────────────────────────────────────────────
   const r3 = await p.evaluate(() => {
-    player.level = 5; renderCharPanel();
+    // Cổng tab bám theo CẤP ĐỈNH (lvPeak — "reset không được khoá lại tính năng đã mở"), không
+    // theo cấp hiện tại. applyTestBoost() đã đưa cấp lên 120, nên muốn giả lập người chơi cấp 5
+    // thì phải hạ cả cấp đỉnh. Trước đây bài này xanh chỉ vì lvPeak() chưa kịp chốt 120 trước khi
+    // r2 hạ cấp về 20 — một tình cờ về thứ tự gọi. Nay calcDerived() → masteryAgg() → masteryOpen()
+    // → lvPeak() chốt đỉnh 120 ngay trong applyTestBoost(), nên tình cờ đó không còn.
+    player.level = 5; player.lvPeak = 5; renderCharPanel();
     const locked = !!document.querySelector('.char-tabs button.locked');
     player.level = 20; return { locked };
   });
