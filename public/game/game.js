@@ -534,6 +534,50 @@ const SECTS = {
 // kit's class-name prefix (sfx_slash_<x>/sfx_cast_<x>/sfx_smash_<x>.mp3). No entry for vophai (pre-Calling,
 // Unclassed) — falls back to the generic 'slash'/'skill' sfx.
 const SECT_SFX = { thieulam:'mech', toanchan:'aquatic', baidasan:'reptile', minhgiao:'beast', bug:'bug' };
+
+// ═══ VAI TRÒ QUÁI (archetype) — xem docs/VUNG_VO_AN_ENDGAME.md §5 ═══
+// Hệ số nhân vào def LÚC SPAWN (spawnMob), không sửa bảng MOBS: mobHp() vẫn là nguồn duy nhất
+// của đường cong máu quái vừa cân xong, vai trò chỉ lệch quanh nó. `bay` theo thiết kế còn
+// "số lượng ×2" — CHƯA áp cho 29 bãi cũ, vì đổi số con là đổi nhịp AUTO đã đo ở test_autopack;
+// để dành cho quái Vùng Vỡ Ấn. `phap`/`xa` theo thiết kế có tầm 320/300 — cũng chỉ áp cho quái
+// mới; quái cũ đang cận chiến mà gán tầm xa là đổi hành vi, không phải đổi chỉ số.
+const ROLE = {
+  nang: { name:'Trọng Giáp',  hp:1.6,  atk:1.3, spd:0.7,  col:'#c8a86a' },
+  phap: { name:'Pháp Sư',     hp:0.6,  atk:1.0, spd:1.0,  col:'#c07fe0' },
+  can:  { name:'Cận Chiến',   hp:1.0,  atk:1.0, spd:1.0,  col:'#e4ebff' },
+  xa:   { name:'Xạ Thủ',      hp:0.8,  atk:1.0, spd:1.0,  col:'#8fd18f' },
+  bay:  { name:'Bầy Đàn',     hp:0.45, atk:1.0, spd:1.35, col:'#ffd76a' },
+  tiep: { name:'Kẻ Tiếp Sức', hp:0.8,  atk:0.5, spd:1.0,  col:'#7ecbff' },
+};
+// Kẻ Tiếp Sức còn sống thì cả bầy được chừng này. Giết nó là cả bầy sụt ngay — đó là toàn bộ
+// ý nghĩa của mục tiêu ưu tiên.
+const TIEP_ATK = 1.25, TIEP_HP = 1.20;
+// Vai trò của 28 loại quái đang đứng trong bãi. Không có tên ở đây = 'can'.
+// (Tên MOB_ROLE chứ không phải MOB_ARCH: MOB_ARCH đã là bảng bộ vẽ khung xương ở dưới.)
+const MOB_ROLE = {
+  boar_tusk:'nang', trannhan:'nang', chimera_bo:'nang', mocnhan:'nang', kybinh:'nang',
+  hautu:'bay', caodo:'bay', caodo_fire:'bay', wolf:'bay', wolf_alpha:'bay', huyetbat:'bay',
+  cungthu:'xa',
+};
+function mobRole(type){ return MOB_ROLE[type] || 'can'; }
+// Bầy này còn Kẻ Tiếp Sức sống không? (đếm theo mã bãi — quái không bãi thì không ai tiếp sức)
+function packTiepAlive(pack){
+  if (pack == null) return false;
+  for (const x of mobs) if (!x.dead && x.tiep && x.pack === pack) return true;
+  return false;
+}
+// Đồng bộ phần MÁU của buff bầy. Công thì nhân thẳng lúc ra đòn (stateless), nhưng máu tối đa
+// phải ghi vào con quái nên cần cờ _tiepHp để không nhân chồng: gọi sau khi dựng bãi, sau mỗi
+// lần hồi sinh, và ngay khi Kẻ Tiếp Sức gục.
+function syncTiepHp(pack){
+  if (pack == null) return;
+  const on = packTiepAlive(pack);
+  for (const x of mobs){
+    if (x.dead || x.tiep || x.pack !== pack) continue;
+    if (on && !x._tiepHp){ x.maxHp = Math.round(x.maxHp * TIEP_HP); x.hp = Math.round(x.hp * TIEP_HP); x._tiepHp = true; }
+    else if (!on && x._tiepHp){ x.maxHp = Math.round(x.maxHp / TIEP_HP); x.hp = Math.min(x.hp, x.maxHp); x._tiepHp = false; }
+  }
+}
 const AMKHI = { name:'Venom Dart', cd:4, qi:15, mult:1.2 };
 const TP_CD = 10, TP_QI = 50, TP_RADIUS = 185;
 
@@ -704,45 +748,45 @@ const MAPS = {
     desc:'Rivalries start turning ugly here. Chimeras drop basic Card Pages and loose Starbits.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'chimera_bo', x:800, y:1400, n:6 }, { mob:'phando', x:1100, y:900, n:6 },
-      { mob:'phando', x:442, y:574, n:6 }, { mob:'xanu', x:1376, y:1272, n:6 },
-      { mob:'xanu', x:1981, y:1295, n:6 }, { mob:'bandao', x:2000, y:600, n:5 },
+      { mob:'chimera_bo', x:800, y:1400, n:6, tiep:true }, { mob:'phando', x:1100, y:900, n:6, tiep:true },
+      { mob:'phando', x:442, y:574, n:6, tiep:true }, { mob:'xanu', x:1376, y:1272, n:6, tiep:true },
+      { mob:'xanu', x:1981, y:1295, n:6, tiep:true }, { mob:'bandao', x:2000, y:600, n:5, tiep:true },
     ], duhiep:'duhiep1' },
   comoc: { name:'Hollow Roost', min:40, range:'42 - 56', type:'pk', ground:'#a89f86', patch:'#4a4436',
     spawn:{ x:400, y:400 }, spawnFrom:{ pb_comoc:{ x:2200, y:990 } }, dark:true, trees:30, rocks:46,
     desc:'A narrow, twisting warren. Dense Chimera packs drop Steed upgrade materials — contested hunting ground.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'thinu', x:557, y:865, n:7 }, { mob:'thinu', x:1200, y:500, n:7 },
-      { mob:'mocnhan', x:600, y:1400, n:5 }, { mob:'mocnhan', x:1272, y:1100, n:5 },
-      { mob:'huyetbat', x:1900, y:600, n:7 }, { mob:'huyetbat', x:1915, y:1351, n:6 },
+      { mob:'thinu', x:557, y:865, n:7, tiep:true }, { mob:'thinu', x:1200, y:500, n:7, tiep:true },
+      { mob:'mocnhan', x:600, y:1400, n:5, tiep:true }, { mob:'mocnhan', x:1272, y:1100, n:5, tiep:true },
+      { mob:'huyetbat', x:1900, y:600, n:7, tiep:true }, { mob:'huyetbat', x:1915, y:1351, n:6, tiep:true },
     ], duhiep:'duhiep2' },
   tuyettinh: { name:'Frostmire Vale', min:60, range:'62 - 78', type:'pk', ground:'#ddc9a8', patch:'#8a5a6a',
     spawn:{ x:400, y:950 }, spawnFrom:{ pb_tuyettinh:{ x:2200, y:790 } }, trees:60, rocks:24,
     desc:'A massive EXP ground. Bring poison resistance — the Chimeras here bite with venom.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'docyeu', x:1096, y:482, n:6 }, { mob:'ttdetu', x:700, y:1500, n:7 },
-      { mob:'ttdetu', x:1131, y:1182, n:7 }, { mob:'docyeu', x:1394, y:895, n:6 },
-      { mob:'satthuhy', x:1856, y:1382, n:5 }, { mob:'satthuhy', x:2100, y:500, n:5 },
+      { mob:'docyeu', x:1096, y:482, n:6, tiep:true }, { mob:'ttdetu', x:700, y:1500, n:7, tiep:true },
+      { mob:'ttdetu', x:1131, y:1182, n:7, tiep:true }, { mob:'docyeu', x:1394, y:895, n:6, tiep:true },
+      { mob:'satthuhy', x:1856, y:1382, n:5, tiep:true }, { mob:'satthuhy', x:2100, y:500, n:5, tiep:true },
     ], duhiep:'duhiep2' },
   mongco: { name:'Ashen Steppe', min:80, range:'84 - 100', type:'pk', ground:'#cfc09a', patch:'#7a6a42',
     spawn:{ x:400, y:950 }, spawnFrom:{ pb_mongco:{ x:1720, y:680 } }, trees:36, rocks:30,
     desc:'Wide open plains, tough Chimeras hitting hard. Drops ranged- and blade-art upgrade materials.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'thamtu', x:442, y:574, n:7 }, { mob:'thamtu', x:753, y:1497, n:7 },
-      { mob:'cungthu', x:1347, y:979, n:6 }, { mob:'cungthu', x:1300, y:400, n:6 },
-      { mob:'kybinh', x:1900, y:1400, n:5 }, { mob:'kybinh', x:2100, y:600, n:5 },
+      { mob:'thamtu', x:442, y:574, n:7, tiep:true }, { mob:'thamtu', x:753, y:1497, n:7, tiep:true },
+      { mob:'cungthu', x:1347, y:979, n:6, tiep:true }, { mob:'cungthu', x:1300, y:400, n:6, tiep:true },
+      { mob:'kybinh', x:1900, y:1400, n:5, tiep:true }, { mob:'kybinh', x:2100, y:600, n:5, tiep:true },
     ], duhiep:'duhiep3' },
   nhanmon: { name:'Stormgate Pass', min:100, range:'102 - 120', type:'freepk', ground:'#b8a68a', patch:'#6a3a2a',
     spawn:{ x:400, y:950 }, spawnFrom:{ pb_nhanmon:{ x:2200, y:890 } }, trees:44, rocks:38,
     desc:'The endgame training ground, out on Lunacia\'s frontier. PK carries no Notoriety here. Chimeras drop golden-tier gear.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'cuongbinh', x:700, y:1400, n:7 }, { mob:'cuongbinh', x:1300, y:660, n:7 }, // bãi 2 vốn nằm LỌT TRONG tường thành trái (850,800,560,350)
-      { mob:'kylan', x:1396, y:1312, n:5 }, { mob:'kylan', x:1450, y:1600, n:5 },
-      { mob:'daokhach', x:2100, y:500, n:5 }, { mob:'daokhach', x:2250, y:1100, n:5 },
+      { mob:'cuongbinh', x:700, y:1400, n:7, tiep:true }, { mob:'cuongbinh', x:1300, y:660, n:7, tiep:true }, // bãi 2 vốn nằm LỌT TRONG tường thành trái (850,800,560,350)
+      { mob:'kylan', x:1396, y:1312, n:5, tiep:true }, { mob:'kylan', x:1450, y:1600, n:5, tiep:true },
+      { mob:'daokhach', x:2100, y:500, n:5, tiep:true }, { mob:'daokhach', x:2250, y:1100, n:5, tiep:true },
     ], duhiep:'duhiep3' },
   // ---------- PHÓ BẢN: mỗi map một phó bản + boss tương ứng cấp — chỉ vào qua cổng dịch chuyển ----------
   pb_daohoa: { name:'Trial Chamber: Petalshade', min:12, range:'12+', type:'dungeon', ground:'#8a8272', patch:'#3a342a',
@@ -5532,7 +5576,16 @@ function buildWorld(){
   // quái mạnh/tinh anh xa hơn rồi — bỏ hẳn bước xáo trộn, spawn đúng như đã thiết kế.
   for (const pk of md.packs){
     const packId = packSeq++;
-    for (let j = 0; j < pk.n; j++) spawnMob(pk.mob, { x:pk.x, y:pk.y, r:115, count:pk.n }, packId); // dàn trải cụm quái, tránh chồng hình
+    const zone = { x:pk.x, y:pk.y, r:115, count:pk.n, tiep: !!pk.tiep };
+    // Bãi có Kẻ Tiếp Sức: một trong n con là nó. Đặt ở RÌA bầy chứ không giữa — đứng giữa thì
+    // người chơi cận chiến không với tới được mục tiêu ưu tiên (docs §3.6).
+    for (let j = 0; j < pk.n - (pk.tiep ? 1 : 0); j++) spawnMob(pk.mob, zone, packId); // dàn trải cụm quái, tránh chồng hình
+    if (pk.tiep){
+      const t = spawnMob(pk.mob, zone, packId, false, { role:'tiep' });
+      const a = Math.random() * Math.PI * 2; t.x = pk.x + Math.cos(a) * 128; t.y = pk.y + Math.sin(a) * 128; t.homeX = t.x; t.homeY = t.y;
+      if (inObstacle(curMap, t.x, t.y, 16)){ const _f = nearestFree(curMap, t.x, t.y); t.x = _f.x; t.y = _f.y; }
+    }
+    syncTiepHp(packId);
   }
   curBand = -1; // đổi map → tính lại đai, không bắn banner ngay lúc vào
   // Phiêu Bạt Du Hiệp — mục tiêu PK trong map dã ngoại/huyết chiến
@@ -5602,10 +5655,18 @@ function buildWorld(){
   if (player && player.truyna && player.truyna.state === 'hunting' && curMap === player.truyna.map && !mobs.some(m => m.truyna && !m.dead)) spawnTruyNaMob();
   spawnZoneBosses(); // GDD Boss v2.1: Vệ Binh Trụ & Cổng Vực theo map
 }
-function spawnMob(type, zone, pack, vfx){
-  const def = MOBS[type];
+function spawnMob(type, zone, pack, vfx, opts){
+  let def = MOBS[type];
+  // Vai trò: clone def rồi nhân — cùng cách Tầng Sâu đã làm với boss của nó. Chỉ clone khi hệ số
+  // khác 1 để 'can' (mặc định) giữ nguyên tham chiếu, giảm bề mặt thay đổi tới mức thấp nhất.
+  const role = (opts && opts.role) || mobRole(type);
+  const A = ROLE[role] || ROLE.can;
+  if (A.hp !== 1 || A.atk !== 1 || A.spd !== 1){
+    def = Object.assign({}, def, { hp: Math.max(1, Math.round(def.hp * A.hp)), atk: Math.max(1, Math.round(def.atk * A.atk)),
+                                   speed: Math.round(def.speed * A.spd), role });
+  }
   const m = {
-    type, def, name: def.name,
+    type, def, name: def.name, role, tiep: role === 'tiep',
     x: zone ? zone.x + rnd(-zone.r, zone.r) : rnd(200, MAP.w-200),
     y: zone ? zone.y + rnd(-zone.r, zone.r) : rnd(200, MAP.h-200),
     zone, pack: pack ?? null, hp: mobHp(def), maxHp: mobHp(def), atkT: rnd(0,1), dead:false, face: 0,
@@ -6806,6 +6867,11 @@ function killMob(m, source){
     addFloat(m.x, m.y - 52, `+${player.excHp}`, '#6ae88a', 11);
   }
   sigilFire('kill', m); // Khắc Ấn — móc 'kill' (Hồi Quang, Bùng Cháy…)
+  if (m.tiep){
+    syncTiepHp(m.pack);
+    addFloat(m.x, m.y - 64, '◈ Kẻ Tiếp Sức gục — cả bầy yếu đi!', ROLE.tiep.col, 15);
+    addEffect({ type:'ring', x:m.x, y:m.y, r:120, color:ROLE.tiep.col, big:true });
+  }
   shakeT = Math.max(shakeT, 0.2); shakeMag = Math.max(shakeMag, m.def.boss ? 8 : m.def.elite ? 5 : 3); // hạ quái có lực
   AudioSys.sfx('die', 0.6);
   AudioSys.sfx('coin', 0.5);
@@ -7081,16 +7147,19 @@ function mobLabelPass(){
     else nhan.push(m);
   }
 }
+// Thứ tự chọn: Kẻ Tiếp Sức trong tầm → con thường gần nhất → boss. Trước đây AUTO không hề
+// "chọn" mục tiêu — con nào gần thì đánh. Có mục tiêu ưu tiên rồi thì AUTO cũng phải biết.
 function nearestMob(range){
-  let best = null, bd = range, boss = null, bbd = range;
+  let best = null, bd = range, boss = null, bbd = range, tiep = null, td = range;
   for (const m of mobs){
     if (m.dead) continue;
     if (m.def.duHiep && !player.pk && !m.revenge) continue; // Du Hiệp chỉ đánh được khi bật PK (trừ kẻ truy thù)
     const d = dist(player.x, player.y, m.x, m.y);
     if (m.def.bossKind || m.def.boss || m.type === 'boss'){ if (d < bbd){ bbd = d; boss = m; } }
+    else if (m.tiep){ if (d < td){ td = d; tiep = m; } }
     else if (d < bd){ bd = d; best = m; }
   }
-  return best || boss;
+  return tiep || best || boss;
 }
 // Vệt kiếm khí — màu theo lớp/nguyên tố của chiêu (mặc định thép trắng).
 // ═══ HIỆU ỨNG THEO HOA VĂN VŨ KHÍ ═══
@@ -8128,6 +8197,7 @@ function update(dt){
         addFloat(player.x, player.y-28, 'Né!', '#a0ffe9', 13);
       } else {
         let dmg = m.def.atk * rnd(0.85,1.15) * (m.atkMul || 1) * (isNightGame() ? 1.1 : 1) * (1 - player.defRed); // Lịch Thế Giới: ban đêm quái +10% công
+        if (!m.tiep && packTiepAlive(m.pack)) dmg *= TIEP_ATK;   // Kẻ Tiếp Sức đang nuôi bầy
         // QA endgame F3: quái cao hơn 6+ cấp gây thêm sát thương (tối đa +120%) — lạc vào map cao là trả giá
         const lvGapM = (m.def.lv || 1) - player.level;
         if (lvGapM > 5) dmg *= 1 + Math.min(1.2, (lvGapM - 5) * 0.08);
@@ -8256,7 +8326,11 @@ function update(dt){
       // quái ĐẦU TIÊN; hạ hết lứa đó là mọi con thay thế đều mang pack=null, không con nào khớp,
       // AUTO đứng im chịu đòn tới chết. Đo được ở bãi tân thủ, lặp lại 3/3 lượt: hạ 3-4 con trong
       // 8 giây đầu rồi tịt hẳn, máu tụt đều về 0 trong khi 6 con vây quanh.
-      if (zoneAliveCount(m.zone) < m.zone.count){ spawnMob(m.type, m.zone, m.pack, true); m.gone = true; }
+      if (zoneAliveCount(m.zone) < m.zone.count){
+        // Kẻ Tiếp Sức chết thì bãi phải sinh lại đúng một Kẻ Tiếp Sức, không phải thêm một con thường
+        spawnMob(m.type, m.zone, m.pack, true, { role: m.role }); m.gone = true;
+        syncTiepHp(m.pack);
+      }
       else m.respawnT = 3;
     }
   }
@@ -9398,6 +9472,19 @@ function drawMob(m){
     ctx.beginPath(); ctx.ellipse(dx, dy+4, d.size+6, (d.size+6)*0.4, 0, 0, 7); ctx.stroke();
     ctx.restore();
   }
+  // Kẻ Tiếp Sức: hào quang nối tới từng con nó đang nuôi — nhìn là biết ai nuôi ai
+  if (m.tiep && !m.dead){
+    ctx.save(); ctx.strokeStyle = ROLE.tiep.col; ctx.lineWidth = 1.5; ctx.setLineDash([5, 6]);
+    ctx.lineDashOffset = -(performance.now() / 60) % 11;
+    for (const x of mobs){
+      if (x.dead || x === m || x.pack !== m.pack || x.pack == null) continue;
+      ctx.globalAlpha = 0.28 + 0.12 * Math.sin(m.wob * 2 + x.wob);
+      ctx.beginPath(); ctx.moveTo(dx, dy - 6); ctx.lineTo(x.x, x.y - 6); ctx.stroke();
+    }
+    ctx.setLineDash([]); ctx.globalAlpha = 0.55 + 0.2 * Math.sin(m.wob * 2.4);
+    ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(dx, dy - 6 + bob*0.4, d.size + 11, 0, 7); ctx.stroke();
+    ctx.restore();
+  }
   // shield aura
   if (m.shield > 0){
     ctx.strokeStyle = 'rgba(192,127,224,.7)'; ctx.lineWidth = 2.5;
@@ -9439,7 +9526,7 @@ function drawMob(m){
   // huy hiệu nguyên tố (◆♣❄☼▲) + tên quái
   if (!SETTINGS.mobName || m._lbl === false) return;
   const _sl = (m._lblN || 1) > 1 ? ` ×${m._lblN}` : '';
-  const nameTxt = `${d.bossKind === 'tranai' ? '✦ TƯỚNG QUÂN ' : d.bossKind === 'thuve' ? '◆ VỆ BINH TRỤ ' : ''}${m.name}${m.revenge ? ' ⚔TRUY THÙ' : ''} · C${d.lv}${_sl}`;
+  const nameTxt = `${d.bossKind === 'tranai' ? '✦ TƯỚNG QUÂN ' : d.bossKind === 'thuve' ? '◆ VỆ BINH TRỤ ' : m.tiep ? '◈ TIẾP SỨC ' : ''}${m.name}${m.revenge ? ' ⚔TRUY THÙ' : ''} · C${d.lv}${_sl}`;
   ctx.font = '10px "Be Vietnam Pro", sans-serif'; ctx.textAlign='center';
   const eld = d.el && ELEM[d.el];
   const nw = ctx.measureText(nameTxt).width;
@@ -9455,7 +9542,7 @@ function drawMob(m){
   }
   ctx.strokeStyle='rgba(255,255,255,.75)'; ctx.lineWidth=2.5;
   ctx.strokeText(nameTxt, nameX, topY-14);
-  ctx.fillStyle = d.boss ? '#c02020' : '#3a3226';
+  ctx.fillStyle = d.boss ? '#c02020' : m.tiep ? '#1f5f8a' : '#3a3226';
   ctx.fillText(nameTxt, nameX, topY-14);
 }
 // Thần Binh lơ lửng theo người chơi — dáng vũ khí riêng từng môn phái, sáng dần theo tầng
