@@ -80,8 +80,9 @@ có chủ đích.
 | Genshin | Ở đây | Kiểu | Nhịp |
 |---|---|---|---|
 | Đột phá nhân vật | **Hoá** | xác định, không may rủi | theo mốc |
-| Thiên phú | **Dạy Chiêu** | xác định | theo mốc |
+| Thiên phú | *(gộp vào cấp)* | xác định | theo mốc |
 | Thánh di vật | **Cốt** | may rủi, vô tận | hằng ngày |
+| — | **Kỹ năng đồng hành** | xác định | mở ở 4 mốc cấp |
 
 ### 3.1 HOÁ — Chimera có cấp
 
@@ -92,20 +93,32 @@ có chủ đích.
 - Cấp làm hai việc, và cả hai đều nhắm vào chỗ đang mục:
   - **nền sát thương** 180 → 540 (5★) · 90 → 270 (4★), tuyến tính theo cấp
   - **hệ số ăn Công người chơi** 0.20 → 0.36, để con số nền thôi mất giá về cuối
-- Kinh nghiệm: **Tinh Trần** (đã có, đang không tiêu được) + rơi thêm từ Trial Chamber.
-- Mỗi lần Hoá cần thêm **Cốt Tướng** — rơi từ Tướng Quân vùng, mỗi vùng một loại. Bảy Tướng
-  Quân đã có sẵn trong game, không cần dựng nội dung mới.
+- Kinh nghiệm: **Đất Hồn**, rơi khi thông quan phó bản. Một viên cho 200 kinh nghiệm.
+- Mỗi lần Hoá tốn Đất Hồn + bạc, giá gấp đôi sau mỗi lần (`chiHoaGia`).
+- Ăn quá trần thì **dừng và trả lại phần thừa** — cho ăn 400 viên mà mất 400 viên thì không ai
+  dám bấm nút.
 
 Vì sao đặt trần 80 chứ không phải 120 như người chơi: Chimera là *đồng hành*, không phải nhân
 vật thứ hai. Trần thấp hơn giữ nó ở vai phụ, và giữ luôn ngân sách ở §7.
 
-### 3.2 DẠY CHIÊU — chiêu của nó lớn lên
+### 3.2 CHIÊU — lớn theo cấp, không cần vòng lặp riêng
 
-- Chiêu có **cấp 1 → 10**.
-- `mult` ×1.00 → ×1.90 · `cd` giảm dần tới −18%.
-- Nguyên liệu: **Sách Hình** ba bậc, rơi từ đúng Trial Chamber ứng với lớp Axie của con đó.
-- Cấp 7 và cấp 10 cần thêm một vật phẩm từ **Hung Thần Giáng Thế** (boss thế giới, 4 giờ một
-  lần — đã có sẵn). Đây là chỗ tương ứng "boss tuần" của Genshin, và nó dùng nội dung đang có.
+Bản thiết kế đầu tách "Dạy Chiêu" thành vòng lặp thứ hai với Sách Hình và một bảng nâng cấp
+riêng. Đã bỏ: nó là bảng thứ ba làm cùng một việc, mà cái giá phải trả — người chơi lại phải
+nhớ thêm một loại nguyên liệu nữa — không đáng.
+
+Chiêu mạnh lên **×1.00 → ×1.90 thẳng theo cấp Chimera**. Nuôi cấp là nuôi cả đòn thường lẫn
+chiêu, một thanh tiến trình duy nhất.
+
+### 3.2b KỸ NĂNG ĐỒNG HÀNH — Chimera buff cho người chơi
+
+Học lối thú cưỡi của Võ Lâm Chi Mộng: con thú không tự đánh mạnh lên, nó **buff người cưỡi**.
+
+- **Chín lớp Axie × bốn kỹ năng**, mở ở cấp Chimera **10 · 25 · 45 · 70**.
+- Hai kỹ năng đầu **luôn bật** (cộng thẳng vào chỉ số người chơi).
+- Hai kỹ năng sau **bật mỗi lần Chimera tung chiêu**, kéo 5–8 giây rồi tự tắt.
+- Bị động riêng của từng con (`thu`) giữ nguyên, không đụng — đây là lớp thưởng thêm cho việc
+  nuôi, chứ không thay thế bản sắc của từng con.
 
 ### 3.3 CỐT — vòng lặp vô tận
 
@@ -121,7 +134,10 @@ Bốn ô, đặt theo bộ phận thân Axie — đúng cách Axie thật hoạt
 - Mỗi Cốt có **1 dòng chính** (cố định theo ô, giá trị bốc) + **tối đa 4 dòng phụ**.
 - Nâng **+0 → +12**; mỗi **+3** mở một dòng phụ mới, hết bốn dòng thì nâng một dòng đã có.
 - Ba phẩm: **Thô / Tinh / Cổ**, trần lần lượt **+8 / +10 / +12**.
-- Nhiên liệu nâng: **Tinh Trần** — cùng loại tiền đang không tiêu được.
+- Nhiên liệu nâng: **chính những mảnh Cốt thừa** + bạc. Không có tiền tệ mới nào — món rác cày
+  ra tự nó là nguyên liệu, nên không lượt rơi nào là vô nghĩa.
+- Hai trong bốn ô nuôi **người chơi** (ô Vảy cho HP, và dòng phụ có cả chỉ số người chơi), để
+  món cày được cho thú vẫn có nghĩa với build của chính mình.
 
 #### Dòng (bộ) — bảy Dòng, mỗi Trial Chamber một Dòng
 
@@ -156,12 +172,11 @@ một hầm ngục ra hai bộ trộn lẫn, nên phân nửa số món rơi ra 
 - **phẩm** Thô / Tinh / Cổ
 - **bốn dòng phụ** và mọi lượt bốc khi nâng
 
-### 4.1 Đúc Lại — chữa nốt tầng may rủi thứ hai
+### 4.1 Đúc Lại — CHƯA LÀM
 
-Ba mảnh Cốt cùng Dòng, không cần cùng ô → đổi lấy **một mảnh Cốt cùng Dòng, ô do người chơi
-chọn**. Phẩm và dòng phụ vẫn ngẫu nhiên.
-
-Giữ lại phần may rủi *thú vị* (dòng phụ), bỏ phần chỉ tổ mất thời gian (mãi không ra đúng ô).
+Ba mảnh Cốt cùng Dòng đổi lấy một mảnh cùng Dòng với **ô do người chơi chọn**, để chữa nốt tầng
+may rủi "mãi không ra đúng ô". Chưa thi công — chờ xem thực tế cày có tắc ở chỗ đó không rồi
+mới quyết, thay vì đoán trước.
 
 ### 4.2 Nhịp ngày — khuyến nghị: cửa mềm, không phải tường
 
@@ -177,16 +192,16 @@ phần nhịp ngày cắm thẳng vào chỗ đang chạy.
 
 ---
 
-## 5. Tiền tệ — mọi thứ đã đúc đều có chỗ tiêu
+## 5. Nguyên liệu
 
-| Tiền | Nguồn | Chỗ tiêu sau thiết kế này |
+| Thứ | Nguồn | Tiêu vào |
 |---|---|---|
-| **Tinh Trần** | 3★ khi quay · Trial Chamber | kinh nghiệm nâng Cốt · kinh nghiệm Hoá |
-| **Nguyệt Trần** | Chimera đã C6 mà quay trúng lại | **cửa hàng**: đổi Cốt chỉ định ô, Sách Hình, Cốt Tướng |
-| **Ấn Giao Kết / Cổ Xưa** | mục tiêu ngày, nhiệm vụ | giữ nguyên — chỉ dùng để quay |
+| **Đất Hồn** | thông quan phó bản (4–6 viên/lượt đủ, 1 viên/lượt giảm) | kinh nghiệm cấp Chimera · Hoá |
+| **Mảnh Cốt thừa** | chính vòng cày | nhiên liệu nâng bậc mảnh khác |
+| **Bạc** | có sẵn | phí Hoá và phí nâng Cốt |
 
-Cửa hàng Nguyệt Trần là van an toàn: người chơi xui cả tháng vẫn mua thẳng được thứ mình
-thiếu, thay vì cày mù.
+**Tinh Trần và Nguyệt Trần không đụng tới** — chủ dự án giữ hai loại đó cho cửa hàng đổi vật
+phẩm, nên phần §1.1 ở trên là mô tả hiện trạng, không phải kế hoạch tiêu.
 
 ---
 
@@ -197,9 +212,10 @@ thiếu, thay vì cày mù.
 | Cấp | — (không có) | 80 |
 | Nền sát thương | 180 | 540 |
 | Hệ số ăn Công | 0.20 | 0.36 |
-| Chiêu | mult gốc | ×1.90, hồi chiêu −18% |
+| Chiêu | mult gốc | ×1.90 theo cấp, cộng −% hồi chiêu từ Cốt |
 | Cốt | không có | 4 mảnh Cổ +12, đủ bộ 4 |
 | Hiệu ứng bộ | không có | một luật mới cho chiêu |
+| Kỹ năng đồng hành | không có | 4 kỹ năng buff cho người chơi |
 
 ---
 
@@ -219,18 +235,19 @@ Nếu con số mô phỏng vượt trần này thì **hạ hệ số Cốt trư�
 
 ## 8. Thi công theo đợt
 
-| Đợt | Việc | Vì sao trước/sau |
-|---|---|---|
-| **1** | Chimera có cấp + Hoá + tiêu Tinh Trần | Lỗ lớn nhất, và tự nó đứng được: không cần UI mới ngoài một thanh cấp. Đóng luôn một trong hai lỗ tiền tệ. |
-| **2** | Cốt · 4 ô · 7 Dòng · rơi từ 7 Trial Chamber | Vòng lặp chính. Phải sau đợt 1 vì hệ số Cốt neo theo cấp Chimera. |
-| **3** | Dạy Chiêu · Đúc Lại · cửa hàng Nguyệt Trần | Phần đánh bóng và van an toàn. Làm sớm quá thì chưa biết cân bằng ở đâu mà đặt giá. |
+| Việc | Trạng thái |
+|---|---|
+| Cấp 1→80 · sáu lần Hoá · Đất Hồn | **xong** |
+| Bốn ô Cốt · bảy Dòng · rơi từ bảy phó bản · nâng bằng mảnh thừa | **xong** |
+| Chín lớp × bốn kỹ năng đồng hành | **xong** |
+| Đúc Lại (ba mảnh đổi một mảnh chọn ô) | chưa làm — xem §4.1 |
+| Cửa hàng đổi vật phẩm bằng Tinh Trần / Nguyệt Trần | chưa làm |
 
 ---
 
-## 9. Ba chỗ cần chủ dự án chốt
+## 9. Ba chỗ đã chốt
 
-1. **Nhịp ngày**: cửa mềm (khuyến nghị) hay chặn cứng kiểu nhựa hồi?
-2. **Bốn ô hay năm ô?** Bốn khớp với cách thân Axie chia bộ phận. Năm bám sát Genshin hơn nhưng
-   kéo dài thời gian dựng thêm khoảng 30%.
-3. **Hiệu ứng 4 mảnh có được mạnh tới mức đổi lối chơi không?** Khuyến nghị: **có**. Nếu nó chỉ
-   là thêm con số thì cả hệ này thành Linh Thú thứ hai, và nguyên tắc ① sụp.
+1. **Nhịp ngày** — cửa mềm: ba lượt đầu trong ngày rơi đủ, từ lượt thứ tư rơi giảm.
+2. **Bốn ô**, theo cách thân Axie chia bộ phận.
+3. **Hiệu ứng 4 mảnh đổi lối chơi**, không chỉ cộng số — nếu chỉ thêm con số thì cả hệ này thành
+   Linh Thú thứ hai và nguyên tắc ① sụp.
