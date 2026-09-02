@@ -100,8 +100,16 @@ const { chromium } = require('playwright');
   if (r.coThanCoHe) fail('đồ Cổ Thần (giáp) vẫn mang hệ');
   if (!(r.st.khac > r.st.trung)) fail(`vũ khí khắc hệ quái không tăng ST (${r.st.trung} → ${r.st.khac})`);
   if (!(r.st.biKhac < r.st.trung)) fail(`bị quái khắc không giảm ST (${r.st.trung} → ${r.st.biKhac})`);
-  if (!(Math.abs(r.st.khac / r.st.trung - 1.2) < 0.02)) fail(`khắc hệ ra ${(r.st.khac/r.st.trung).toFixed(3)}×, cần 1.20×`);
-  if (!(Math.abs(r.st.biKhac / r.st.trung - 0.88) < 0.02)) fail(`bị khắc ra ${(r.st.biKhac/r.st.trung).toFixed(3)}×, cần 0.88×`);
+  // Từ khi giáp quái TRỪ THẲNG một lượng cố định, mọi hệ số nhân đều bị KHUẾCH ĐẠI ở sát thương
+  // cuối: (a×1,2 − F) / (a − F) luôn lớn hơn 1,2. Đây là hành vi cố ý, và cũng đúng cách MU làm —
+  // nó khiến việc chọn đúng hệ, ăn bạo kích hay gắn dòng Hoàn Hảo đáng giá hơn, chứ không phải
+  // lỗi. Nên mệnh đề đổi từ "đúng 1,20×" thành hai mệnh đề chặt hơn và không nói dối:
+  //   a) hệ số vẫn theo đúng CHIỀU và có biên độ hợp lý
+  //   b) khắc hệ luôn ăn đứt bị khắc, khoảng cách không được co lại
+  const kKhac = r.st.khac / r.st.trung, kBi = r.st.biKhac / r.st.trung;
+  if (!(kKhac >= 1.2 && kKhac <= 1.6)) fail(`khắc hệ ra ${kKhac.toFixed(3)}×, phải nằm trong 1,20–1,60× (trừ thẳng khuếch đại lên từ mốc thiết kế 1,20)`);
+  if (!(kBi <= 0.88 && kBi >= 0.60)) fail(`bị khắc ra ${kBi.toFixed(3)}×, phải nằm trong 0,60–0,88×`);
+  if (!(kKhac / kBi >= 1.36)) fail(`khoảng cách khắc/bị khắc co lại còn ${(kKhac/kBi).toFixed(2)}× — phải giữ ít nhất 1,36×`);
   if (!(r.st.lopKhac > r.st.khongVK * 0.99)) fail('cởi vũ khí ra thì hệ LỚP phải tiếp quản');
   if (!/SECTS\[player\.sect\]\.element/.test(r.nguonHeChieuNguoc))
     fail(`chiều quái→người đọc "${r.nguonHeChieuNguoc}" — phải là hệ LỚP, đổi vũ khí không được làm ngươi ăn đòn nặng hơn`);

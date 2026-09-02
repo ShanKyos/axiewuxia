@@ -91,25 +91,30 @@ const PLUS_STEP = 0.13;
 // vào chỉ còn vụn, đồ đã đập lên +9 thì xuyên qua. Công thức bám đúng ba nguồn công của người
 // chơi để hai bên không bao giờ lệch pha khi ta chỉnh một trong ba.
 const FLATDEF_SHARE = 0.66;
-// Máu quái phải đi theo đường cong mới, nếu không game thành bất khả thi: sau khi giáp quái trừ
-// thẳng, sát thương THỰC của người chơi chỉ còn ~38% so với trước.
-// Không sửa tay 46 con quái — thay vào đó suy một HỆ SỐ theo cấp rồi nhân vào máu gốc, nên chênh
-// lệch giữa con dai và con giòn trong cùng một vùng vẫn giữ nguyên như người thiết kế đã đặt.
-// MOB_TTK là số nhát để một nhân vật CÙNG CẤP mặc đồ +9 hạ được quái — đây là núm chỉnh nhịp
-// chiến đấu của cả game, chỉnh một chỗ này là cả 46 con theo.
-const MOB_TTK = 8;
-const MOB_HP_OLD_RATE = 1.047;      // nhịp máu quái của bảng cũ, dùng làm mẫu số quy đổi
-function mobTargetHp(lv){
-  const pts  = PWR.pointK * Math.sqrt(5 * lv * PWR.pointAtk);
-  const gear = 26 * GIAI_POW(itemTier(lv)) * 1.45 * (1 + 9 * PLUS_STEP);
-  const atk9 = (pts + gear) * 1.30;
-  const st9  = Math.max(atk9 * DMG_FLOOR, atk9 - mobFlatDef({ lv }));
-  return MOB_TTK * st9;
+// Máu quái phải bù lại đúng phần sát thương mà người chơi vừa mất, KHÔNG hơn.
+//
+// Bản đầu tôi làm sai chỗ này: lấy `55 × 1,047^cấp` làm mẫu số quy đổi, tưởng đó là đường cong
+// máu quái cũ. Đo lại thì máu thật trong bảng cao hơn công thức đó từ 1,6 tới 44 lần tuỳ cấp —
+// nên hệ số nhân bừa lên và quái thành bất khả thi: test_autopack đo được 60 giây hạ 0 con.
+//
+// Cách đúng: hệ số = (sát thương THỰC mới) / (sát thương THỰC cũ) của một nhân vật cùng cấp mặc
+// đồ +9. Máu gốc của 46 con quái là số đã cân tay, giữ nguyên tương quan giữa chúng; ta chỉ dịch
+// cả bảng theo đúng lượng mà công thức chiến đấu vừa đổi.
+const PLUS_STEP_OLD = 0.08;    // hệ số +N của bản cũ, chỉ dùng để quy đổi
+function _dmg9(lv, moi){
+  const pts  = moi ? PWR.pointK * Math.sqrt(5 * lv * PWR.pointAtk)   // căn bậc hai
+                   : 5 * lv * PWR.pointAtk * 2.0;                    // tuyến tính, bản cũ
+  const t    = itemTier(lv);
+  const gear = (moi ? 26 * GIAI_POW(t) : 10 + t * 20)
+             * 1.45 * (1 + 9 * (moi ? PLUS_STEP : PLUS_STEP_OLD));
+  const atk  = (pts + gear) * 1.30;
+  return moi ? Math.max(atk * DMG_FLOOR, atk - mobFlatDef({ lv }))   // bản mới trừ thẳng
+             : atk;                                                  // bản cũ không có
 }
 function mobHp(def){
   const lv = (def && def.lv) || 1;
-  const cu = 55 * Math.pow(MOB_HP_OLD_RATE, lv - 1);
-  return Math.max(1, Math.round((def.hp || 1) * (mobTargetHp(lv) / cu)));
+  const k  = _dmg9(lv, true) / _dmg9(lv, false);
+  return Math.max(1, Math.round((def.hp || 1) * k));
 }
 function mobFlatDef(m){
   const lv = (m && (m.lv != null ? m.lv : m.def && m.def.lv)) || 1;

@@ -7,8 +7,8 @@
 //
 // Ba luật bài này gác:
 //   1. không mốc cấp nào tụt xuống dưới bảng vàng
-//   2. đỉnh cấp 120 (lối chơi thật, đủ điểm) không lệch quá 5% so với trước — lệch nhiều thì
-//      phải cân bằng lại toàn bộ quái và boss, và đó là việc lớn hơn nhiều
+//   2. đỉnh cấp 120 đúng mốc, VÀ máu quái đã bù đúng lượng công mà người chơi vừa mất —
+//      hai bên phải dịch cùng nhau, lệch pha là vỡ nhịp chiến đấu
 //   3. sau Tái Sinh phải còn ít nhất 60% sức mạnh đỉnh — dưới mức đó thì không ai bấm reset
 const { chromium } = require('playwright');
 const PORT = process.argv[2] || '8853';
@@ -23,9 +23,16 @@ const pass = m => console.log('PASS ' + m);
 // điểm nào. Nhân vật đó không có thật, và sau đợt dịch trọng số cấp→điểm thì chính nó là người
 // duy nhất yếu đi, nên bảng cũ báo động nhầm ở hai mốc cuối.
 // cấp: [công, máu, mana, thủ, bạo×1000, né×1000]
-const VANG = {"1":[27,291,63,10,21,17.5],"12":[117,1049,130,20,35,25.5],"30":[270,2339,238,35,56,37.5],
-"48":[477,3976,346,50,77,49.5],"60":[638,5273,418,60,91,57.5],"96":[1277,10111,634,90,133,81.5],
-"108":[1574,12400,706,100,147,89.5],"120":[1744,13727,778,110,161,97.5]};
+// CỘT CÔNG đo lại sau khi điểm tiềm năng chuyển sang lợi tức giảm dần (căn bậc hai). Nhân vật
+// KHÔNG TRANG BỊ ở cấp 120 nay còn 731 công thay vì 1744 — tụt 58%, và đó là chủ đích: trang bị
+// mới là trục chính, ai không mặc gì thì yếu. Phần tụt đó đã được bù bằng mobHp(), thứ hạ máu
+// quái đúng bằng lượng sát thương thực mà người chơi mất (đo được hệ số 0,27–0,87 tuỳ cấp).
+// Năm cột còn lại — máu, mana, thủ, bạo, né — KHÔNG dính căn bậc hai nên giữ nguyên mốc cũ.
+const VANG = {"1":[27,291,63,10,21,17.5],"12":[117,1049,130,20,35,25.5],"30":[267,2339,238,35,56,37.5],
+"48":[361,3976,346,50,77,49.5],"60":[420,5273,418,60,91,57.5],"96":[616,10111,634,90,133,81.5],
+"108":[689,12400,706,100,147,89.5],"120":[731,13727,778,110,161,97.5]};
+// Đỉnh của bản TRƯỚC, giữ lại để mệnh đề 2 còn đối chiếu được và để không ai quên vì sao tụt.
+const CONG_DINH_CU = 1744;
 const TEN = ['công','máu','mana','thủ','bạo','né'];
 
 (async () => {
@@ -104,9 +111,14 @@ const TEN = ['công','máu','mana','thủ','bạo','né'];
   (!r4.doiGi && !r4.conAscended) ? pass('/ascend và /realm không còn tác dụng')
                                  : fail('lệnh cũ vẫn đổi trạng thái: ' + JSON.stringify(r4));
 
-  // ── 5. đỉnh cấp 120 (lối chơi thật) không được lệch quá 5% ────────────
-  //     Lệch nhiều là phải cân bằng lại toàn bộ quái và boss — việc lớn hơn nhiều lần.
-  const DINH = { atk: 1744, hp: 13727 };   // đo trước đợt dịch trọng số cấp→điểm
+  // ── 5. đỉnh cấp 120 phải KHỚP với lượng bù ở phía quái ────────────────
+  //     Mệnh đề cũ là "không lệch quá 5% so với bản trước, lệch nhiều thì phải cân bằng lại
+  //     quái và boss". Nó đã kêu đúng: đợt chuyển điểm sang lợi tức giảm dần kéo công đỉnh của
+  //     nhân vật KHÔNG TRANG BỊ xuống còn 42%. Việc cân bằng lại quái ĐÃ LÀM — mobHp() hạ máu
+  //     quái theo đúng tỉ lệ sát thương thực bị mất.
+  //     Nên mệnh đề nay hỏi thẳng câu đáng hỏi: hai bên có dịch CÙNG MỘT LƯỢNG không? Nếu ai đó
+  //     sau này chỉnh một bên mà quên bên kia, chỗ này sẽ đỏ.
+  const DINH = { atk: 731, hp: 13727 };    // đỉnh MỚI, đo sau khi chuyển sang căn bậc hai
   const r5 = await p.evaluate(() => {
     const set = (lv, pts) => {
       player.equip = {}; player.inv = []; player.vohoc = {}; player.sigils = {};
@@ -122,8 +134,19 @@ const TEN = ['công','máu','mana','thủ','bạo','né'];
   const dAtk = r5.dinh.atk / DINH.atk, dHp = r5.dinh.hp / DINH.hp;
   console.log('5.', JSON.stringify({ ...r5, tiLeAtk: +dAtk.toFixed(3), tiLeHp: +dHp.toFixed(3) }));
   (Math.abs(dAtk - 1) <= 0.05 && Math.abs(dHp - 1) <= 0.05)
-    ? pass(`đỉnh cấp 120 giữ nguyên (công ${(dAtk*100).toFixed(0)}% · máu ${(dHp*100).toFixed(0)}%) — không phải cân bằng lại quái`)
-    : fail(`đỉnh lệch quá 5%: công ${(dAtk*100).toFixed(0)}% · máu ${(dHp*100).toFixed(0)}% — phải cân bằng lại quái/boss`);
+    ? pass(`đỉnh cấp 120 đúng mốc mới (công ${(dAtk*100).toFixed(0)}% · máu ${(dHp*100).toFixed(0)}%)`)
+    : fail(`đỉnh lệch quá 5% so với mốc mới: công ${(dAtk*100).toFixed(0)}% · máu ${(dHp*100).toFixed(0)}%`);
+  // Hai bên phải dịch cùng một lượng: công người chơi tụt bao nhiêu thì máu quái phải hạ bấy
+  // nhiêu, nếu không nhịp chiến đấu vỡ. Đo trên chính mobHp() của game.
+  const r5b = await p.evaluate(() => {
+    const d = Object.values(MOBS).find(m => m.lv >= 100 && !m.bossKind && !m.elite) || Object.values(MOBS)[0];
+    return { lv: d.lv, goc: d.hp, moi: mobHp(d), heSo: mobHp(d) / d.hp };
+  });
+  const tuotCong = DINH.atk / CONG_DINH_CU;
+  console.log('5b.', JSON.stringify({ ...r5b, tuotCong: +tuotCong.toFixed(3) }));
+  (r5b.heSo < 1 && r5b.heSo > tuotCong * 0.8)
+    ? pass(`quái đã bù: công tụt còn ${(tuotCong*100).toFixed(0)}%, máu quái cấp ${r5b.lv} còn ${(r5b.heSo*100).toFixed(0)}%`)
+    : fail(`quái KHÔNG bù khớp: công tụt còn ${(tuotCong*100).toFixed(0)}% mà máu quái còn ${(r5b.heSo*100).toFixed(0)}% — hai bên lệch pha`);
 
   // ── 6. Tái Sinh phải còn đáng làm ─────────────────────────────────────
   const rAtk = r5.sauReset.atk / r5.dinh.atk, rHp = r5.sauReset.hp / r5.dinh.hp;
