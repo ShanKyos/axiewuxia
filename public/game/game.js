@@ -22765,11 +22765,15 @@ function drawNpc(){
     if (n.map !== curMap) continue;
     tickBark(n);
     const im = NPC_IMGS[n.id];
+    // Nhấp nhô nhẹ. Đo hai khung cách nhau 1,2 giây thì chỉ 2,4% điểm ảnh đổi, và toàn bộ phần
+    // đổi nằm quanh nhân vật — chín NPC trong thành đứng bất động tuyệt đối. Lệch pha theo toạ
+    // độ để cả thành không thở cùng một nhịp.
+    const _nb = SETTINGS.lowFx ? 0 : Math.sin(performance.now()/640 + n.x*0.031 + n.y*0.017) * 2.2;
     ctx.fillStyle = 'rgba(0,0,0,.18)';
-    ctx.beginPath(); ctx.ellipse(n.x, n.y+8, 14, 5, 0, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(n.x, n.y+8, 14 - _nb*0.5, 5, 0, 0, 7); ctx.fill();
     if (im && im.complete && im.naturalWidth){
       const nh = 64, nw = nh * (im.naturalWidth/im.naturalHeight);
-      ctx.drawImage(im, n.x - nw/2, n.y - nh + 10, nw, nh);
+      ctx.drawImage(im, n.x - nw/2, n.y - nh + 10 + _nb, nw, nh);
     } else {
       ctx.fillStyle = '#5a4a30';
       ctx.beginPath(); ctx.ellipse(n.x, n.y-8, 11, 15, 0, 0, 7); ctx.fill();
@@ -24245,7 +24249,12 @@ function drawMountains(){
 
 // Cây đung đưa nhẹ theo gió — giữ nguyên logic vẽ gốc, thêm xoay quanh gốc cây
 function drawTree(d){
-  const sway = (SETTINGS.lowFx) ? 0 : Math.sin(performance.now()/900 + d.x*0.7) * 0.025;
+  // Biên độ cũ 0,025 rad (1,4°) trên chu kỳ 5,6 giây: ngọn cây 100px chỉ dịch ~2,5px, đo hai
+  // khung cách nhau hơn một giây vẫn không bắt được chuyển động nào. Nâng biên độ và chồng
+  // thêm một hoạ ba lệch chu kỳ để nhịp lắc thôi đều như máy đếm.
+  const _t = performance.now();
+  const sway = (SETTINGS.lowFx) ? 0
+    : (Math.sin(_t/900 + d.x*0.7) * 0.045 + Math.sin(_t/430 + d.y*0.31) * 0.014) * (0.7 + d.s*0.3);
   ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(sway); ctx.translate(-d.x, -d.y);
   const tim = (typeof treeImgOf === 'function') && treeImgOf(curMap);
   if (tim && tim.complete && tim.naturalWidth){
@@ -24309,8 +24318,11 @@ function updateMount(dt){
     player.chiTam.t -= dt;
     if (player.chiTam.t <= 0){ player.chiTam = null; calcDerived(); }
   }
-  // bám theo người chơi — đứng lệch bên phải (Linh Thú bên trái)
-  const tx = player.x + 52, ty = player.y + 36;
+  // Bám theo người chơi, đứng SAU LƯNG bên phải — Linh Thú đã đứng sau lưng bên trái (p.y-30).
+  // Trước đây Chimera đứng ở y+36, tức là TRƯỚC MẶT: thứ tự vẽ xếp theo y nên nó luôn đè lên
+  // nhân vật. Chụp lại thấy nhân vật bị chính hai con đồng hành che gần hết ngay giữa màn.
+  // Dời ra sau vừa trả lại tầm nhìn, vừa đúng nghĩa "đi theo".
+  const tx = player.x + 58, ty = player.y - 34;
   const dd = dist(mountObj.x, mountObj.y, tx, ty);
   if (dd > 6){
     const sp = Math.min(dd*4, 340);
@@ -24458,9 +24470,9 @@ function drawMount(){
   // tên + vòng hào quang theo giai
   ctx.font = '10px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
   ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
-  ctx.strokeText('⚔ ' + t.name, mountObj.x, mountObj.y + 22);
+  ctx.strokeText('⚔ ' + t.name, mountObj.x, mountObj.y + 34);
   ctx.fillStyle = t.color;
-  ctx.fillText('⚔ ' + t.name, mountObj.x, mountObj.y + 22);
+  ctx.fillText('⚔ ' + t.name, mountObj.x, mountObj.y + 34);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
