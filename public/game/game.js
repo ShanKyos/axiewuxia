@@ -76,6 +76,47 @@ function xp60PlusHourlyRate(l){
   return XP60PLUS_ANCHORS[XP60PLUS_ANCHORS.length - 1][1];
 }
 for (let l = 60; l < 120; l++) XP_TABLE[l-1] = Math.round(xp60PlusHourlyRate(l));
+// Sàn sát thương: dù giáp quái trừ thẳng nặng tới đâu, một đòn vẫn gây được ngần này phần trăm
+// sát thương gốc. Không có sàn thì người chơi lỡ tay bán mất vũ khí là kẹt cứng vĩnh viễn.
+const DMG_FLOOR = 0.08;
+// Mỗi mức cường hoá cộng bao nhiêu phần chỉ số món. Nâng 0,08 lên 0,13 để cái cổng "+9 mới qua"
+// cắn được ở GIAI THẤP, nơi trang bị còn chiếm ít tổng công nên nhân 1,72 lần gần như vô hình.
+// Ở 0,13 thì +9 nhân 2,17 lần chỉ số món, đủ vượt qua lượng trừ thẳng của giáp quái.
+// Bốn chỗ dùng hằng này — ba chỗ tính chỉ số, một chỗ hiện lên thẻ rê chuột — phải cùng một giá
+// trị, nếu không thẻ nói một đằng chỉ số chạy một nẻo.
+const PLUS_STEP = 0.13;
+// Lượng trừ thẳng của giáp quái, SUY TỪ CẤP QUÁI chứ không khai tay trên từng con: chế độ tầng
+// vô tận cho quái leo cấp không giới hạn, khai tay là không thể theo kịp.
+// Đặt bằng ~62% sát thương mà một nhân vật CÙNG CẤP mặc đồ +0 gây ra — tức đồ chưa đập thì gõ
+// vào chỉ còn vụn, đồ đã đập lên +9 thì xuyên qua. Công thức bám đúng ba nguồn công của người
+// chơi để hai bên không bao giờ lệch pha khi ta chỉnh một trong ba.
+const FLATDEF_SHARE = 0.66;
+// Máu quái phải đi theo đường cong mới, nếu không game thành bất khả thi: sau khi giáp quái trừ
+// thẳng, sát thương THỰC của người chơi chỉ còn ~38% so với trước.
+// Không sửa tay 46 con quái — thay vào đó suy một HỆ SỐ theo cấp rồi nhân vào máu gốc, nên chênh
+// lệch giữa con dai và con giòn trong cùng một vùng vẫn giữ nguyên như người thiết kế đã đặt.
+// MOB_TTK là số nhát để một nhân vật CÙNG CẤP mặc đồ +9 hạ được quái — đây là núm chỉnh nhịp
+// chiến đấu của cả game, chỉnh một chỗ này là cả 46 con theo.
+const MOB_TTK = 8;
+const MOB_HP_OLD_RATE = 1.047;      // nhịp máu quái của bảng cũ, dùng làm mẫu số quy đổi
+function mobTargetHp(lv){
+  const pts  = PWR.pointK * Math.sqrt(5 * lv * PWR.pointAtk);
+  const gear = 26 * GIAI_POW(itemTier(lv)) * 1.45 * (1 + 9 * PLUS_STEP);
+  const atk9 = (pts + gear) * 1.30;
+  const st9  = Math.max(atk9 * DMG_FLOOR, atk9 - mobFlatDef({ lv }));
+  return MOB_TTK * st9;
+}
+function mobHp(def){
+  const lv = (def && def.lv) || 1;
+  const cu = 55 * Math.pow(MOB_HP_OLD_RATE, lv - 1);
+  return Math.max(1, Math.round((def.hp || 1) * (mobTargetHp(lv) / cu)));
+}
+function mobFlatDef(m){
+  const lv = (m && (m.lv != null ? m.lv : m.def && m.def.lv)) || 1;
+  const pts  = PWR.pointK * Math.sqrt(5 * lv * PWR.pointAtk);
+  const gear = 26 * GIAI_POW(itemTier(lv)) * 1.45;
+  return (pts + gear) * 1.30 * FLATDEF_SHARE;
+}
 const MAP = { w: 2600, h: 1900 };
 
 const ELEMENTS = ['Kim','Mộc','Thủy','Hỏa','Thổ'];
@@ -95,6 +136,9 @@ const RARITIES = [
 // tức là TRƯỚC itemTier. Để hai hằng này cạnh itemTier thì trang chết ngay lúc tải vì TDZ.
 // Đổi lại số giai thì sửa ở đúng đây, đừng rải số 8 và 14 ra khắp file.
 const GIAI_MAX = 14, GIAI_SPAN = 8;
+// Nhịp leo của chỉ số trang bị theo giai. 1,335^(t-1): giai 14 gấp 37 lần giai 1.
+const GIAI_RATE = 1.335;
+function GIAI_POW(t){ return Math.pow(GIAI_RATE, clamp((t || 1) - 1, 0, GIAI_MAX - 1)); }
 const GIAI_NAMES = ['Tân Binh','Chiến Binh','Kỳ Binh','Anh Hùng','Chinh Phục','Bá Vương',
   'Hung Thần','Huyền Thoại','Bất Tử','Thần Thoại','Vô Song','Chí Cường','Tối Thượng','Khai Thiên'];
 function giaiName(t){ return GIAI_NAMES[clamp((t||1)-1, 0, GIAI_NAMES.length-1)]; }
@@ -279,13 +323,16 @@ const AWAKENED = [
 
 // 12 ô trang bị theo GDD (base tính theo CẤP trang bị t=1..10, mỗi 10 level = 1 cấp)
 const SLOTS = [
-  { id:'vukhi',     name:'Vũ Khí',     main:'atk', base:(t,r)=>Math.round((10+t*20)*RARITIES[r].mult) },
-  { id:'non',       name:'Nón',        main:'def', base:(t,r)=>Math.round((5+t*10)*RARITIES[r].mult) },
-  { id:'ao',        name:'Áo',         main:'def', base:(t,r)=>Math.round((7+t*13)*RARITIES[r].mult) },
-  { id:'tay',       name:'Tay',        main:'def', base:(t,r)=>Math.round((5+t*10)*RARITIES[r].mult) },
-  { id:'quan',      name:'Quần',       main:'def', base:(t,r)=>Math.round((6+t*11)*RARITIES[r].mult) },
-  { id:'chan',      name:'Chân',       main:'agi', base:(t,r)=>Math.round((4+t*7)*RARITIES[r].mult) },
-  { id:'daychuyen', name:'Dây Chuyền', main:'atk', base:(t,r)=>Math.round((6+t*12)*RARITIES[r].mult) },
+  // Chỉ số chính leo theo CẤP SỐ NHÂN, không tuyến tính. Bản cũ 10+t*20 cho giai 14 chỉ gấp 9,7
+  // lần giai 1 — quá phẳng để trang bị làm trục chính trên đường cong 400 cấp. GIAI_POW dưới đây
+  // cho giai 14 gấp ~37 lần giai 1, và đó là thứ khiến đập đồ lên +9 có nghĩa (xem MOB_FLAT_DEF).
+  { id:'vukhi',     name:'Vũ Khí',     main:'atk', base:(t,r)=>Math.round(26*GIAI_POW(t)*RARITIES[r].mult) },
+  { id:'non',       name:'Nón',        main:'def', base:(t,r)=>Math.round(13*GIAI_POW(t)*RARITIES[r].mult) },
+  { id:'ao',        name:'Áo',         main:'def', base:(t,r)=>Math.round(17*GIAI_POW(t)*RARITIES[r].mult) },
+  { id:'tay',       name:'Tay',        main:'def', base:(t,r)=>Math.round(13*GIAI_POW(t)*RARITIES[r].mult) },
+  { id:'quan',      name:'Quần',       main:'def', base:(t,r)=>Math.round(14*GIAI_POW(t)*RARITIES[r].mult) },
+  { id:'chan',      name:'Chân',       main:'agi', base:(t,r)=>Math.round(9*GIAI_POW(t)*RARITIES[r].mult) },
+  { id:'daychuyen', name:'Dây Chuyền', main:'atk', base:(t,r)=>Math.round(15*GIAI_POW(t)*RARITIES[r].mult) },
   { id:'nhan1',     name:'Nhẫn 1',     main:'crit',base:(t,r)=>+(1.5+r*1+t*0.5).toFixed(1) },
   { id:'nhan2',     name:'Nhẫn 2',     main:'eva', base:(t,r)=>+(1.5+r*1+t*0.5).toFixed(1) },
   { id:'aochoang',  name:'Áo Choàng',  special:true }, // 2 cấp, chỉ từ Luyện Bảo Các
@@ -3550,9 +3597,16 @@ const _REALM_ICONS = ['r0_phan_nhan','r1_khi_hai','r2_chu_thien','r3_tu_phu','r4
 // Đo bản cũ: sau Tái Sinh chỉ còn 34,6% công và 33,6% máu, vì cấp gánh sức mạnh qua BA kênh
 // (chỉ số nền theo cấp, bậc nhân, và cộng thẳng) còn điểm chỉ có một.
 // Gom hết vào một bảng để chỉnh được, và để thấy rõ mình đang dịch trọng số đi đâu.
+// Đường cong 400 cấp. Bản 120 cấp cho điểm tiềm năng đổi ra công TUYẾN TÍNH (điểm × 2,0), ở
+// 120 cấp thì ổn nhưng kéo tới 400 cấp thì công từ điểm gấp 400 lần trong khi trang bị giai 14
+// chỉ gấp 37 lần — trang bị mất sạch ý nghĩa, quái chết trong chưa tới một nhát ở giữa game.
+// Đo bằng mô hình trước khi sửa: xem tools/ hoặc lịch sử commit.
+// Nay công từ điểm là CĂN BẬC HAI: vẫn gấp 20 lần từ cấp 1 tới 400, nhưng không nuốt trang bị.
+// pointK hạ mạnh để điểm chỉ còn ~35% tổng công, phần còn lại thuộc về đồ — đúng lối MU.
 const PWR = {
   atkPerLv:  0.5,   // chỉ số công nền mỗi cấp        (cũ 2)
-  pointAtk:  2.0,   // NHÂN vào trọng số atkSrc của lớp — điểm đổi ra công  (cũ 1)
+  pointAtk:  2.0,   // trọng số mỗi điểm, nằm TRONG căn
+  pointK:    13.0,  // hệ số ngoài căn — đây là núm chỉnh tỉ trọng điểm so với trang bị
   hpPerLv:   6,     // máu nền mỗi cấp                (cũ 15)
   hpPerVit:  25.5,  // máu mỗi điểm Sinh Lực          (cũ 12)
   multTop:   0.30,  // trần bậc nhân theo cấp         (cũ 0.88)
@@ -4251,7 +4305,7 @@ function mainName(k){
 // Gom mọi dòng chỉ số của một món về chung một bảng để trừ nhau được.
 // Khoá có tiền tố để dòng chính / dòng phụ / dòng Thức Tỉnh cùng loại không đè lên nhau.
 function itemStatMap(it){
-  const m = 1 + it.plus * 0.08, o = {};
+  const m = 1 + it.plus * PLUS_STEP, o = {};
   if (it.main) o['m:' + it.main.k] = { name: it.main.name, v: it.main.v * m, pct: false };
   for (const s of it.subs)
     o['s:' + s.k] = { name: s.name, v: s.v * (s.k === 'perfect' ? 1 : m), pct: true };
@@ -4454,7 +4508,7 @@ if (window.matchMedia && window.matchMedia('(hover: hover)').matches){
 }
 
 function itemPower(it){
-  const m = 1 + it.plus * 0.08;
+  const m = 1 + it.plus * PLUS_STEP;
   let p = it.main ? it.main.v * m * 10 : 0;
   for (const s of it.subs) p += s.pct ? s.v * 22 : s.v * 8;
   // Dòng Hoàn Hảo PHẢI vào lực chiến. Bỏ qua thì mũi ▲, tự-mặc-đồ và nút Mặc Đồ Tốt Nhất
@@ -4698,7 +4752,7 @@ function calcDerived(){
   for (const slotId in player.equip){
     const it = player.equip[slotId];
     if (!it) continue;
-    const m = 1 + it.plus * 0.08;
+    const m = 1 + it.plus * PLUS_STEP;
     if (it.main) applyLine(s, it.main.k, it.main.v * m, P);
     for (const sub of it.subs) applyLine(s, sub.k, sub.k === 'perfect' ? sub.v : sub.v * m, P);
     // Dòng Hoàn Hảo KHÔNG nhân theo mức rèn: rèn làm mạnh chỉ số gốc, còn đây là dòng riêng
@@ -4742,7 +4796,9 @@ function calcDerived(){
   player.dStr = s.str; player.dAgi = s.agi; player.dDef = s.def; player.dVit = s.vit; player.dEne = s.ene;
   // Công Kích quy đổi theo atkSrc riêng từng phái (str/agi/ene trọng số khác nhau) thay vì chung str×2
   const atkSrc = sect0.atkSrc || { str: 2.0 };
-  const rawAtk = ((atkSrc.str || 0) * s.str + (atkSrc.agi || 0) * s.agi + (atkSrc.ene || 0) * s.ene) * PWR.pointAtk;
+  // Căn bậc hai chứ không tuyến tính — xem chú thích ở PWR để biết vì sao.
+  const _ptSum = ((atkSrc.str || 0) * s.str + (atkSrc.agi || 0) * s.agi + (atkSrc.ene || 0) * s.ene) * PWR.pointAtk;
+  const rawAtk = PWR.pointK * Math.sqrt(Math.max(0, _ptSum));
   // Dòng Hoàn Hảo "ST theo cấp" = cấp ÷ 20. Cộng vào P.atk TRƯỚC khi nhân, để nó ăn mọi hệ số
   // về sau y như sát thương gốc — đây là dòng DUY NHẤT tự lớn theo cấp nhân vật.
   if (P.excAtkLv) P.atk += P.excAtkLv;
@@ -5348,7 +5404,7 @@ function spawnMob(type, zone, pack, vfx){
     type, def, name: def.name,
     x: zone ? zone.x + rnd(-zone.r, zone.r) : rnd(200, MAP.w-200),
     y: zone ? zone.y + rnd(-zone.r, zone.r) : rnd(200, MAP.h-200),
-    zone, pack: pack ?? null, hp: def.hp, maxHp: def.hp, atkT: rnd(0,1), dead:false, face: 0,
+    zone, pack: pack ?? null, hp: mobHp(def), maxHp: mobHp(def), atkT: rnd(0,1), dead:false, face: 0,
     shield: def.elite ? 1 : 0, shieldT: 0, hitT: 0, wob: Math.random()*10, packAlert: 0,
   };
   if (inObstacle(curMap, m.x, m.y, 16)){ const _f = nearestFree(curMap, m.x, m.y); m.x = _f.x; m.y = _f.y; } // GDD Đợt 2 A: không spawn vào vùng cấm
@@ -5451,7 +5507,7 @@ function spawnZoneBoss(bd, kind){
   if (_src && _src.skel){ def.skel = _src.skel; def.skelPal = _src.skelPal; def.img = ''; }
   const m = { type:'zb_' + bd.id, def, name: bd.name, x: bd.x*MAP.w, y: bd.y*MAP.h,
     zone:{ x: bd.x*MAP.w, y: bd.y*MAP.h, r: 130, count: 1 },
-    pack: null, hp: def.hp, maxHp: def.hp, atkT: 1, dead:false, face: 0,
+    pack: null, hp: mobHp(def), maxHp: mobHp(def), atkT: 1, dead:false, face: 0,
     shield: 0, shieldT: 0, hitT: 0, wob: Math.random()*10, packAlert: 0,
     moveT: 4, moveIdx: 0, tele: null, punishT: 0, introduced: false };
   if (inObstacle(curMap, m.x, m.y, 16)){ const _f2 = nearestFree(curMap, m.x, m.y); m.x = _f2.x; m.y = _f2.y; m.zone.x = _f2.x; m.zone.y = _f2.y; } // GDD Đợt 2 A
@@ -6301,8 +6357,15 @@ function hurtMob(m, dmg, source){
       final *= 0.3; shieldNote = true;
     }
   }
-  // Giáp quái: giảm sát thương theo công thức mềm (trước đây chỉ số def của quái không được dùng)
+  // Giáp quái, HAI TẦNG:
+  //  a) giảm mềm theo phần trăm — giữ nguyên như cũ, lo phần cân bằng chung
+  //  b) TRỪ THẲNG một lượng cố định — đây mới là thứ tạo ra cổng "phải đập đồ lên mới qua".
+  // Giảm phần trăm nhân đều lên mọi mức sát thương nên đồ +0 và đồ +9 chịu y hệt: nó KHÔNG BAO
+  // GIỜ tạo được cổng chặn. Trừ thẳng thì có — đồ yếu gõ vào chỉ còn vụn, đồ đã đập thì xuyên
+  // qua. MU dùng đúng cơ chế này. Đo được ở cấp 45: +9 gây gấp 1,5 lần sát thương của +0.
+  // Sàn DMG_FLOOR giữ cho không ai kẹt cứng ở 0 sát thương — luôn còn đường gỡ, chỉ là rất chậm.
   if (m.def.def) final *= 1 - m.def.def / (m.def.def + 250);
+  final = Math.max(final * DMG_FLOOR, final - mobFlatDef(m));
   final = Math.max(1, Math.round(final));
   m.hp -= final; m.hitT = 0.15;
   // Màu loé theo LOẠI đòn — trước đây `ctx.filter` chỉ làm sáng lên, không phân biệt được gì.
@@ -17274,7 +17337,7 @@ function renderInv(){
     html += `<div class="stat-sec" style="margin-top:10px">ĐANG MẶC (${_worn.length}/${SLOTS.length})</div><div class="eq-list">`;
     for (const sl of _worn){
       const it = player.equip[sl.id], r = RARITIES[it.rarity] || RARITIES[0];
-      const mn = it.main ? ` · ${it.main.name} ${Math.round(it.main.v * (1 + it.plus * 0.08))}` : '';
+      const mn = it.main ? ` · ${it.main.name} ${Math.round(it.main.v * (1 + it.plus * PLUS_STEP))}` : '';
       html += `<div class="eq-li" data-tip="eq:${sl.id}" onclick="unequip('${sl.id}')">
         <b style="color:${it.special ? '#7ecbff' : r.color}">${it.name}${it.plus ? ' +' + it.plus : ''}</b><span>${sl.name}${mn}</span></div>`;
     }
@@ -21842,7 +21905,7 @@ function spawnMaTonMob(){
     color:'#2a0a24', eye:'#ff3a6a', boss:true, elite:true, drop:1, el:'Hỏa', img:'assets/mobs/boss.png' };
   const m = { type:'maton', def, name: def.name,
     x: MAP.w*0.55, y: MAP.h*0.42, zone: null, pack: null,
-    hp: def.hp, maxHp: def.hp, atkT: rnd(0,1), dead: false, face: 0,
+    hp: mobHp(def), maxHp: mobHp(def), atkT: rnd(0,1), dead: false, face: 0,
     shield: 1, shieldT: 0, hitT: 0, wob: Math.random()*10, packAlert: 0 };
   mobs.push(m);
   zoneBanner = { text:'☠ HUNG THẦN XUẤT HIỆN', sub:'Ngay trước mắt — toàn lực ứng chiến!', color:'#e84a6a', t:4 };
@@ -22051,7 +22114,7 @@ function spawnRiftBoss(){
   const _sp = riftFreeSpot(MAP.w*0.5, MAP.h*0.5, def.size + 6);
   const m = { type:'rift', def, name: def.name,
     x: _sp.x, y: _sp.y, zone: null, pack: null,
-    hp: def.hp, maxHp: def.hp, atkT: rnd(0,1), dead: false, face: 0,
+    hp: mobHp(def), maxHp: mobHp(def), atkT: rnd(0,1), dead: false, face: 0,
     shield: 1, shieldT: 0, hitT: 0, wob: Math.random()*10, packAlert: 0 };
   mobs.push(m);
   addEffect({ type:'ring', x:m.x, y:m.y, r:150, color:'#a06aff', big:true });
@@ -22218,7 +22281,7 @@ function spawnTruyNaMob(){
     color:'#3a2a10', eye:'#ffd76a', boss:true, elite:true, drop:1, el:'Thổ', img:'assets/mobs/boss.png' };
   const m = { type:'truyna', def, name: def.name,
     x: rnd(300, MAP.w-300), y: rnd(300, MAP.h-300), zone: null, pack: null,
-    hp: def.hp, maxHp: def.hp, atkT: rnd(0,1), dead: false, face: 0,
+    hp: mobHp(def), maxHp: mobHp(def), atkT: rnd(0,1), dead: false, face: 0,
     shield: 1, shieldT: 0, hitT: 0, wob: Math.random()*10, packAlert: 0, truyna: true };
   mobs.push(m);
   addFloat(m.x, m.y-70, `⚖ Mục tiêu truy nã xuất hiện: ${band.name}!`, '#e8b04a', 15);
