@@ -1120,3 +1120,18 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .box-row { cursor: grab; }
 .box-row:active { cursor: grabbing; }
 .box-row:hover { border-color: var(--accent-light); background: rgba(76,141,255,.12); }
+
+/* ═══ Khế Ước Chimera — lớp phủ hoạt ảnh quay ═══ */
+#gacha-wrap { position:fixed; inset:0; z-index:200; background:#04040a; }
+#gacha-wrap.hidden { display:none; }
+#gacha-cv { display:block; width:100%; height:100%; }
+#gacha-skip { position:absolute; right:16px; bottom:14px; font-size:11.5px; color:#9aa8d4;
+  background:rgba(8,9,22,.72); border:1px solid var(--border); border-radius:999px; padding:4px 12px;
+  pointer-events:none; }
+.ku-banner { border:1px solid var(--border-strong); border-radius:6px; padding:12px 14px; margin-bottom:10px;
+  background:linear-gradient(180deg, rgba(30,32,64,.9), rgba(18,20,44,.9)); }
+.ku-banner h4 { margin:0 0 4px; font-size:15px; color:#ffd76a; }
+.ku-pity { font-size:11.5px; color:#9aa8d4; margin-top:6px; line-height:1.6; }
+.ku-pity b { color:#7ecbff; }
+.ku-ke { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+.ku-ke span { font-size:11px; border:1px solid var(--border); border-radius:999px; padding:2px 9px; }

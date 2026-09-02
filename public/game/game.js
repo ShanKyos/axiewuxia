@@ -3255,31 +3255,205 @@ function skillInfo(id){
   return out;
 }
 
-// ---------- Thú Chiến: 5 bậc AXIE đồng hành ----------
-// Art là Axie THẬT, ghép từ rig Spine trong axieinfinity/axie-origins-asset-kit
-// (PvE/Starters) bằng tools/spine/assemble.py. Tám đợt khảo sát nguồn trước đó
-// đều kết luận thư mục này "không dùng được" vì tấm .png chỉ là chỗ gom các bộ
-// phận rời — nhưng file .json còn nguyên cây xương, đủ dựng lại tư thế gốc.
-// Bậc xếp theo mức DỮ TỢN nhìn thấy được, và lệch màu để phân biệt trong màn:
-// hồng hoa → xanh lơ càng → cam sừng lá → lục ngà đá → đỏ sẫm.
-// Ảnh gốc quay TRÁI, đã lật sẵn khi xuất: drawMount() lật lại khi quay trái.
-// Không cưỡi — chiến thú đi theo và tự tấn công quái quanh người chơi.
-// Upgrade = spend silver + Huyền Thiết (player.mat), roll against success rate; fail keeps tier.
-const MOUNT_TIERS = [ null,
-  { name:'Petalkin',   img:'assets/mounts/1_petalkin.png',   color:'#e87ab0', dmg:15,  str:3,  agi:3,  def:0,  vit:3,  hp:0,    crit:0, qireg:0, reqLv:10, cost:{silver:300,   mat:3},   rate:100 },
-  { name:'Tidenip',    img:'assets/mounts/2_tidenip.png',    color:'#3ac8c8', dmg:45,  str:12, agi:10, def:6,  vit:10, hp:200,  crit:2, qireg:1, reqLv:25, cost:{silver:1500,  mat:14},  rate:80 },
-  { name:'Emberpaw',   img:'assets/mounts/3_emberpaw.png',   color:'#f0932a', dmg:90,  str:24, agi:24, def:18, vit:20, hp:500,  crit:4, qireg:2, reqLv:45, cost:{silver:4500,  mat:38},  rate:60 },
-  { name:'Stonetusk',  img:'assets/mounts/4_stonetusk.png',  color:'#7bc043', dmg:145, str:38, agi:40, def:32, vit:35, hp:900,  crit:6, qireg:4, reqLv:65, cost:{silver:9000,  mat:70},  rate:42 },
-  { name:'Crimsonmaw', img:'assets/mounts/5_crimsonmaw.png', color:'#c0304a', dmg:200, str:55, agi:55, def:55, vit:55, hp:1500, crit:8, qireg:6, reqLv:85, cost:{silver:15000, mat:110}, rate:30 },
+// ═══════════ KHẾ ƯỚC CHIMERA — đồng hành quay ra từ gacha ═══════════
+// Thay hẳn hệ Thú Chiến cũ (5 giai, nâng bằng bạc + Huyền Thiết, thất bại giữ nguyên giai).
+// Thiết kế đầy đủ: docs/GACHA_KHE_UOC.md. Hoạt ảnh quay: docs/proto/khe_uoc_anim.html.
+//
+// Vì sao thay chứ không thêm: game đã có HAI hệ đồng hành (Thú Chiến + Linh Thú), thêm cái thứ ba
+// là ba ô, ba đường nâng cấp, ba bảng. Chủ dự án chốt cho Chimera nuốt Thú Chiến — hành vi chiến
+// đấu (đi theo, tự đánh) giữ nguyên, chỉ đổi CÁCH CÓ nó: quay được thay vì nâng giai.
+//
+// Art: năm con dùng ảnh Axie thật đã dựng từ rig Spine (assets/mounts/*.png) — đúng năm con của
+// hệ cũ, để người chơi đang có Thú Chiến nhận lại chính con mình đã nuôi. Mười một con còn lại
+// vẽ bằng vector theo dáng của chín lớp Axie; art thật thay vào sau, không đụng tới cơ chế.
+const CHIMERA = [
+  // ── 5★ ──────────────────────────────────────────────────────────────────────
+  { id:'aurelion',  ten:'Aurelion',  sao:5, lop:'Dawn',    mau:'#ffd76a', dang:2,
+    thu:{ k:'skillPct', v:12 }, thuTxt:'+12% sát thương chiêu thức',
+    chieu:{ ten:'Rạng Đông', cd:14, r:150, mult:2.6, fx:'sun' }, moTa:'Bình minh đọng lại thành hình — nơi nó đứng, bóng tối không tới được.' },
+  { id:'netherfang',ten:'Netherfang',sao:5, lop:'Dusk',    mau:'#8a5ad8', dang:0,
+    thu:{ k:'hpLeech', v:6 }, thuTxt:'hút 6% sát thương gây ra thành HP',
+    chieu:{ ten:'Màn Đêm', cd:16, r:170, mult:2.2, fx:'dark', slow:0.4 }, moTa:'Sinh ra từ khe nứt. Nó không săn mồi — nó chờ mồi kiệt sức.' },
+  { id:'tidewarden',ten:'Tidewarden',sao:5, lop:'Aquatic', mau:'#3ac8c8', img:'assets/mounts/2_tidenip.png',
+    thu:{ k:'hpPct', v:15 }, thuTxt:'+15% HP tối đa',
+    chieu:{ ten:'Triều Chắn', cd:18, r:0, mult:0, fx:'shield', shieldPct:30 }, moTa:'Càng nước dựng lên một bức tường, và bức tường đó biết bơi.' },
+  { id:'emberjaw',  ten:'Emberjaw',  sao:5, lop:'Beast',   mau:'#f0932a', img:'assets/mounts/3_emberpaw.png',
+    thu:{ k:'aspdPct', v:10 }, thuTxt:'+10% tốc độ đánh',
+    chieu:{ ten:'Lao Húc', cd:12, r:190, mult:2.8, fx:'charge', kb:60 }, moTa:'Chạy trước, nghĩ sau, và chưa bao giờ thấy cần nghĩ.' },
+  { id:'voltcrest', ten:'Voltcrest', sao:5, lop:'Bird',    mau:'#7ecbff', dang:3,
+    thu:{ k:'evaPct', v:8 }, thuTxt:'+8% né đòn',
+    chieu:{ ten:'Mào Sét', cd:15, r:320, mult:2.0, fx:'bolt', multi:5 }, moTa:'Đập cánh một cái là năm chỗ khác nhau cùng nổ.' },
+  { id:'ironshell', ten:'Ironshell', sao:5, lop:'Reptile', mau:'#b06ae0', img:'assets/mounts/4_stonetusk.png',
+    thu:{ k:'dmgred', v:10 }, thuTxt:'−10% sát thương gánh chịu',
+    chieu:{ ten:'Khiêu Chiến', cd:17, r:220, mult:1.4, fx:'taunt', taunt:8 }, moTa:'Nó đứng chắn trước mặt bạn và không hiểu vì sao bạn lại lo.' },
+  // ── 4★ ──────────────────────────────────────────────────────────────────────
+  { id:'petalkin',  ten:'Petalkin',  sao:4, lop:'Plant',   mau:'#e87ab0', img:'assets/mounts/1_petalkin.png',
+    thu:{ k:'hpPct', v:6 }, thuTxt:'+6% HP tối đa',
+    chieu:{ ten:'Bung Cánh', cd:16, r:130, mult:1.6, fx:'sun' }, moTa:'Con Chimera đầu tiên chịu đi theo người lạ.' },
+  { id:'crimsonmaw',ten:'Crimsonmaw',sao:4, lop:'Beast',   mau:'#c0304a', img:'assets/mounts/5_crimsonmaw.png',
+    thu:{ k:'atkPct', v:5 }, thuTxt:'+5% Công Kích',
+    chieu:{ ten:'Ngoạm', cd:14, r:120, mult:1.9, fx:'charge', kb:30 }, moTa:'Vết cắn của nó không lành lại — chỉ đóng vảy.' },
+  { id:'thornpaw',  ten:'Thornpaw',  sao:4, lop:'Plant',   mau:'#7bc043', dang:2,
+    thu:{ k:'crit', v:4 }, thuTxt:'+4% Bạo Kích',
+    chieu:{ ten:'Vuốt Gai', cd:15, r:130, mult:1.7, fx:'charge' }, moTa:'Móng mọc ngược, xé rồi mới rút.' },
+  { id:'glimmerfin',ten:'Glimmerfin',sao:4, lop:'Aquatic', mau:'#3ac8c8', dang:1,
+    thu:{ k:'hpPct', v:5 }, thuTxt:'+5% HP tối đa',
+    chieu:{ ten:'Sóng Vẩy', cd:16, r:150, mult:1.6, fx:'shield', shieldPct:14 }, moTa:'Vảy nó sáng lên trước khi trời đổi.' },
+  { id:'cinderbeak',ten:'Cinderbeak',sao:4, lop:'Bird',    mau:'#ff9a5a', dang:3,
+    thu:{ k:'aspdPct', v:4 }, thuTxt:'+4% tốc độ đánh',
+    chieu:{ ten:'Mỏ Than', cd:14, r:280, mult:1.6, fx:'bolt', multi:3 }, moTa:'Rỉa than nóng như rỉa hạt.' },
+  { id:'mossback',  ten:'Mossback',  sao:4, lop:'Plant',   mau:'#5a8a4a', dang:2,
+    thu:{ k:'dmgred', v:4 }, thuTxt:'−4% sát thương gánh chịu',
+    chieu:{ ten:'Vỏ Rêu', cd:18, r:0, mult:0, fx:'shield', shieldPct:16 }, moTa:'Ngủ đủ lâu thì cây mọc trên lưng.' },
+  { id:'hexmite',   ten:'Hexmite',   sao:4, lop:'Bug',     mau:'#c0304a', dang:4,
+    thu:{ k:'atkPct', v:4 }, thuTxt:'+4% Công Kích',
+    chieu:{ ten:'Bầy Nhỏ', cd:15, r:160, mult:1.5, fx:'dark' }, moTa:'Một con thì không sao. Nó không bao giờ có một con.' },
+  { id:'ridgehorn', ten:'Ridgehorn', sao:4, lop:'Reptile', mau:'#b06ae0', dang:0,
+    thu:{ k:'dmgred', v:4 }, thuTxt:'−4% sát thương gánh chịu',
+    chieu:{ ten:'Húc Sừng', cd:15, r:150, mult:1.8, fx:'charge', kb:36 }, moTa:'Sừng nó dày hơn cả cửa thành.' },
+  { id:'coghound',  ten:'Coghound',  sao:4, lop:'Mech',    mau:'#9aa8d4', dang:1,
+    thu:{ k:'crit', v:4 }, thuTxt:'+4% Bạo Kích',
+    chieu:{ ten:'Bánh Răng', cd:14, r:140, mult:1.7, fx:'bolt', multi:2 }, moTa:'Ai đó lắp nó lại từ mảnh vỡ, và nó nhớ ơn.' },
+  { id:'sunspur',   ten:'Sunspur',   sao:4, lop:'Dawn',    mau:'#ffd76a', dang:2,
+    thu:{ k:'atkPct', v:4 }, thuTxt:'+4% Công Kích',
+    chieu:{ ten:'Cựa Nắng', cd:15, r:140, mult:1.7, fx:'sun' }, moTa:'Cựa chân nó giữ nắng của ngày hôm trước.' },
 ];
-// Người chơi chỉ bao giờ có MỘT giai thú cưỡi, và giai 1 mở ở cấp 10 — nạp sẵn cả tám giai
-// (1,4 MB) ngay lúc mở trang là tải bảy con thú người ta chưa từng thấy.
-const MOUNT_IMGS = {};
-function mountImgOf(i){
-  if (!MOUNT_TIERS[i]) return null;
-  if (MOUNT_IMGS[i]) return MOUNT_IMGS[i];
-  const im = new Image(); im.src = MOUNT_TIERS[i].img; MOUNT_IMGS[i] = im;
+const CHI_MAP = {}; for (const c of CHIMERA) CHI_MAP[c.id] = c;
+const CHI_SAO_MAU = { 3:'#5ea0e8', 4:'#b06ae0', 5:'#ffb15c' };
+// Pool Vĩnh Cửu = ba con 5★ không bao giờ lên kệ Giao Kết. Ba con còn lại luân phiên lên kệ.
+const CHI_VINHCUU5 = ['tidewarden','emberjaw','ironshell'];
+const CHI_KE5 = ['aurelion','netherfang','voltcrest'];   // vòng banner Giao Kết
+const CHI_4 = CHIMERA.filter(c => c.sao === 4).map(c => c.id);
+
+// ── Tỉ lệ & pity: dựng lại đúng mô hình Genshin, đã đối chiếu bằng tools/gacha_sim.js ──
+// 5★: 0,6% tới lượt 73; từ 74 cộng 6 điểm %/lượt; lượt 90 bảo đảm.
+// 4★: 5,1% tới lượt 8; lượt 9 cộng 51 điểm %; lượt 10 bảo đảm. Bộ đếm 4★ KHÔNG reset khi ra 5★.
+const GACHA_HARD5 = 90, GACHA_SOFT5 = 74, GACHA_HARD4 = 10;
+function gachaP5(n){ return n >= GACHA_HARD5 ? 1 : n >= GACHA_SOFT5 ? Math.min(1, 0.006 + 0.06*(n - GACHA_SOFT5 + 1)) : 0.006; }
+function gachaP4(n){ return n >= GACHA_HARD4 ? 1 : n >= GACHA_HARD4 - 1 ? Math.min(1, 0.051 + 0.51) : 0.051; }
+// Chimera đang lên kệ, đổi theo tuần (6 tuần một vòng) — không cần lịch server, tính từ mốc cố định.
+const GACHA_MOC = Date.UTC(2026, 0, 5), GACHA_TUAN = 6;
+function gachaKe(){
+  const tuan = Math.floor((Date.now() - GACHA_MOC) / (7*24*3600*1000));
+  return CHI_KE5[Math.floor(tuan / GACHA_TUAN) % CHI_KE5.length];
+}
+function gachaKe4(){                                  // 3 con 4★ lên kệ cùng đợt
+  const tuan = Math.floor((Date.now() - GACHA_MOC) / (7*24*3600*1000)), k = Math.floor(tuan / GACHA_TUAN);
+  return [0,1,2].map(i => CHI_4[(k*3 + i) % CHI_4.length]);
+}
+// Cộng vé. Mọi nguồn đi qua đây để chỉ có MỘT chỗ đổi nhịp phát vé về sau.
+// Nhịp mục tiêu ~2 Ấn Giao Kết/ngày → ~47 ngày một con 5★ đang lên kệ (xem docs/GACHA_KHE_UOC.md §6).
+function chiVe(n, loai, vi){
+  const C = chiState(), k = vi === 'cx' ? 'cx' : 'gk';
+  C.ve[k] = (C.ve[k] || 0) + n;
+  if (player && !dead) addFloat(player.x, player.y - 84, `✦ +${n} ${k === 'gk' ? 'Ấn Giao Kết' : 'Ấn Cổ Xưa'}${loai ? ' · ' + loai : ''}`, '#ffd76a', 13);
+}
+window.chiVe = chiVe;
+function chiState(){
+  if (!player.chimera) player.chimera = { eq:null, co:{}, out:true, ve:{ gk:0, cx:0 },
+    pity5:0, pity4:0, bd:false, pity5s:0, pity4s:0, nguyet:0, tinh:0, su:[], tanthu:20 };
+  return player.chimera;
+}
+// Nhận một con: chưa có thì thêm mới, có rồi thì lên Huyết Thống (trần C6, dư thì đổi Nguyệt Trần).
+function chiNhan(id){
+  const C = chiState(), c = CHI_MAP[id];
+  if (!C.co[id]){ C.co[id] = { con:0 }; if (!C.eq) C.eq = id; return { moi:true, con:0 }; }
+  if (C.co[id].con < 6){ C.co[id].con++; return { moi:false, con:C.co[id].con }; }
+  C.nguyet += c.sao === 5 ? 25 : 5;
+  return { moi:false, con:6, tran:true };
+}
+// Một lượt quay. banner: 'gk' (Giao Kết, có 50/50) hoặc 'cx' (Vĩnh Cửu).
+function gachaMotLuot(banner){
+  const C = chiState(), gk = banner === 'gk';
+  const k5 = gk ? 'pity5' : 'pity5s', k4 = gk ? 'pity4' : 'pity4s';
+  C[k5]++; C[k4]++;
+  let sao = 3, id = null;
+  if (Math.random() < gachaP5(C[k5])){
+    sao = 5; C[k5] = 0;
+    if (gk){
+      if (C.bd){ id = gachaKe(); C.bd = false; }
+      else if (Math.random() < 0.5) id = gachaKe();
+      else { id = CHI_VINHCUU5[Math.floor(Math.random()*CHI_VINHCUU5.length)]; C.bd = true; }
+    } else id = CHIMERA.filter(c => c.sao === 5)[Math.floor(Math.random()*6)].id;
+  } else if (Math.random() < gachaP4(C[k4])){
+    sao = 4; C[k4] = 0;
+    const ke = gachaKe4();
+    id = (gk && Math.random() < 0.5) ? ke[Math.floor(Math.random()*ke.length)]
+                                     : CHI_4[Math.floor(Math.random()*CHI_4.length)];
+  }
+  if (sao === 3){ C.tinh += 15; return { sao:3, id:null, ten:'Mảnh Huyết Thống', tinh:15 }; }
+  const r = chiNhan(id);
+  C.su.unshift({ t:Date.now(), b:banner, id, sao }); if (C.su.length > 200) C.su.length = 200;
+  return { sao, id, ten:CHI_MAP[id].ten, moi:r.moi, con:r.con, tran:r.tran };
+}
+function gachaQuay(banner, n){
+  const C = chiState(), vi = banner === 'gk' ? 'gk' : 'cx';
+  if ((C.ve[vi] || 0) < n) return null;
+  C.ve[vi] -= n;
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(gachaMotLuot(banner));
+  saveGame();
+  return out;
+}
+// Con đang xuất trận + hệ số Huyết Thống. C1 −10% hồi chiêu · C2/C5 dày thêm bị động ·
+// C3 chiêu mạnh hơn · C4 thêm hiệu ứng · C6 chiêu đánh hai lần.
+function chiCon(){ const C = chiState(); return (C.eq && C.co[C.eq]) ? C.co[C.eq].con : 0; }
+function chiThuMul(){ const c = chiCon(); return 1 + (c >= 5 ? 0.4 : c >= 2 ? 0.2 : 0); }
+function chiCdMul(){ return chiCon() >= 1 ? 0.9 : 1; }
+function chiDmgMul(){ return chiCon() >= 3 ? 1.25 : 1; }
+const CHI_IMGS = {};
+function chiImg(id){
+  const c = CHI_MAP[id];
+  if (!c || !c.img) return null;                       // con vẽ vector — xem veChimera()
+  if (CHI_IMGS[id]) return CHI_IMGS[id];
+  const im = new Image(); im.src = c.img; CHI_IMGS[id] = im;
   return im;
+}
+// Chimera vẽ bằng vector cho những con chưa có art thật. Năm dáng theo lớp Axie; art thật thay
+// vào chỉ cần điền `img` trong CHIMERA, không đụng chỗ nào khác.
+function veChimera(gg, x, y, s, mau, dang, bong){
+  gg.save(); gg.translate(x, y); gg.scale(s, s);
+  const than = bong ? 'rgba(6,6,14,.92)' : mau;
+  gg.fillStyle = than; gg.strokeStyle = than; gg.lineCap = 'round';
+  if (dang === 0){                                      // bốn chân, sừng
+    gg.beginPath(); gg.ellipse(0, 10, 34, 24, 0, 0, 7); gg.fill();
+    gg.beginPath(); gg.ellipse(26, -14, 20, 18, .2, 0, 7); gg.fill();
+    gg.beginPath(); gg.moveTo(20,-28); gg.lineTo(14,-50); gg.lineTo(30,-32); gg.closePath(); gg.fill();
+    gg.beginPath(); gg.moveTo(34,-26); gg.lineTo(42,-46); gg.lineTo(42,-24); gg.closePath(); gg.fill();
+    for (const dx of [-20,-2,16]) gg.fillRect(dx, 26, 9, 20);
+    gg.lineWidth = 8; gg.beginPath(); gg.moveTo(-32,4); gg.quadraticCurveTo(-58,-6,-50,-30); gg.stroke();
+  } else if (dang === 1){                               // vây, đuôi cá
+    gg.beginPath(); gg.ellipse(0, 8, 36, 22, 0, 0, 7); gg.fill();
+    gg.beginPath(); gg.ellipse(28, -10, 18, 16, .15, 0, 7); gg.fill();
+    gg.beginPath(); gg.moveTo(-30,6); gg.lineTo(-58,-16); gg.lineTo(-52,10); gg.lineTo(-60,28); gg.closePath(); gg.fill();
+    gg.beginPath(); gg.moveTo(-4,-14); gg.lineTo(6,-46); gg.lineTo(20,-16); gg.closePath(); gg.fill();
+  } else if (dang === 2){                               // lá, thân tròn
+    gg.beginPath(); gg.ellipse(0, 6, 30, 28, 0, 0, 7); gg.fill();
+    gg.beginPath(); gg.ellipse(22, -16, 17, 15, .2, 0, 7); gg.fill();
+    for (const a of [-0.5, 0, 0.5]){
+      gg.save(); gg.translate(4, -34); gg.rotate(a);
+      gg.beginPath(); gg.ellipse(0, -12, 7, 18, 0, 0, 7); gg.fill(); gg.restore();
+    }
+    for (const dx of [-16, 6]) gg.fillRect(dx, 28, 10, 16);
+  } else if (dang === 3){                               // cánh
+    gg.beginPath(); gg.ellipse(0, 6, 26, 24, 0, 0, 7); gg.fill();
+    gg.beginPath(); gg.ellipse(22, -16, 16, 15, .2, 0, 7); gg.fill();
+    gg.beginPath(); gg.moveTo(38,-18); gg.lineTo(52,-10); gg.lineTo(38,-6); gg.closePath(); gg.fill();
+    for (const sy of [-1, 1]){
+      gg.beginPath(); gg.moveTo(-6, 0);
+      gg.quadraticCurveTo(-46, sy*34, -18, sy*44); gg.quadraticCurveTo(-14, sy*18, -6, 0); gg.fill();
+    }
+  } else {                                              // sáu chân, càng
+    gg.beginPath(); gg.ellipse(0, 8, 32, 20, 0, 0, 7); gg.fill();
+    gg.beginPath(); gg.ellipse(26, -6, 16, 14, 0, 0, 7); gg.fill();
+    gg.lineWidth = 5;
+    for (const sy of [-1, 1]) for (const dx of [-16, 0, 14]){
+      gg.beginPath(); gg.moveTo(dx, 6); gg.lineTo(dx - 6, sy*32); gg.stroke();
+    }
+    gg.beginPath(); gg.moveTo(34,-14); gg.lineTo(50,-26); gg.lineTo(44,-8); gg.closePath(); gg.fill();
+  }
+  if (!bong){ gg.fillStyle = '#fff'; gg.beginPath(); gg.arc(30, dang === 4 ? -8 : -14, 3.4, 0, 7); gg.fill(); }
+  gg.restore();
 }
 
 // ---------- Sect art (portraits + skill icons) ----------
@@ -4513,10 +4687,9 @@ const TITLES = [
   { id:'thientram',name:'Kẻ Diệt Ngàn Quái',  color:'#e84a3a', cond:p=>p.kills>=1000,            desc:'Tiêu diệt 1.000 quái', stats:{crit:10},       vfx:'máu' },
   { id:'thoren',  name:'Thợ Rèn Truyền Thuyết', color:'#5aa0e8', cond:p=>p.forged11,             desc:'Rèn thành công +11',   stats:{forgeRate:5},   vfx:'lửa' },
   { id:'honnguyen',name:'Bậc Thầy Resonance',  color:'#7ecbff', cond:p=>p.level>=96,            desc:'Đạt cấp 96', stats:{allPct:0.10}, vfx:'long' },
-  // Điều kiện cũ đòi mount.tier >= 8, nhưng MOUNT_TIERS chỉ còn 5 giai — danh hiệu này KHÔNG THỂ
-  // đạt được, kể cả khi đã max mọi thứ. Số 8 là tàn dư từ hồi Thú Chiến có 8 giai. Mọi chỗ khác
-  // trong file đều so với MOUNT_TIERS.length - 1; chỗ này bị bỏ sót khi rút bảng xuống 5.
-  { id:'tuongduong',name:'Người Giữ Lunacia', color:'#ffd76a', cond:p=>p.level>=96 && p.mount.tier>=MOUNT_TIERS.length-1 && p.level>=60, desc:'Đỉnh cao mọi hệ thống', stats:{allPct:0.15}, vfx:'long' },
+  // Điều kiện cũ đòi giai Thú Chiến cao nhất; hệ đó đã thay bằng Khế Ước Chimera, nên nay đòi
+  // sở hữu ít nhất một Chimera 5★ — cùng ý nghĩa "đã đi tới cuối một hệ thống".
+  { id:'tuongduong',name:'Người Giữ Lunacia', color:'#ffd76a', cond:p=>p.level>=96 && !!(p.chimera && Object.keys(p.chimera.co||{}).some(id=>CHI_MAP[id] && CHI_MAP[id].sao===5)), desc:'Đỉnh cao mọi hệ thống', stats:{allPct:0.15}, vfx:'long' },
 ];
 const TAN_QUYEN = ['Thượng','Trung','Hạ']; // Mảnh sách kỹ năng Huyết Ma Thôn Phệ (boss drop)
 
@@ -5389,11 +5562,15 @@ function calcDerived(){
     if (n >= 5 && set.b5){ for (const k in set.b5) (P[k] !== undefined ? P[k] += set.b5[k] : 0); act.push(5); }
     player.setActive[sid] = { n, act };
   }
-  // Thú Chiến gia trì (always active once owned — the beast's blessing)
-  const mt = MOUNT_TIERS[(player.mount && player.mount.tier) || 0];
-  if (mt){
-    s.str += mt.str; s.agi += mt.agi; s.def += mt.def; s.vit += mt.vit;
-    P.hp += mt.hp; P.crit += mt.crit; P.qireg += mt.qireg;
+  // Bị động của Chimera đang xuất trận — luôn bật khi có con nào đó được chọn, không cần nó
+  // đang đứng ngoài map. Huyết Thống C2/C5 dày thêm bị động (chiThuMul).
+  {
+    const _ce = (player.chimera && player.chimera.eq) ? CHI_MAP[player.chimera.eq] : null;
+    if (_ce && _ce.thu){
+      const _v = _ce.thu.v * chiThuMul();
+      if (_ce.thu.k === 'skillPct') player.skillDmgPct = (player.skillDmgPct || 0) + _v/100;
+      else applyLine(s, _ce.thu.k, _v, P);
+    }
   }
   // Thần Binh môn phái: mỗi tầng +chỉ số nhỏ; %ST chiêu môn phái (tbDmg) áp trong castSkill
   const tbTier = (player.thanbinh && player.thanbinh.tier) || 0;
@@ -5589,7 +5766,9 @@ function newPlayer(sectKey){
     vhCritT:0, vhLeechT:0, vhShield:0, vhReviveCd:0,
     shieldBroken: 0, atkAnim: 0, dashT: 0,
     tutStep: 0, tutDist: 0,                     // hướng dẫn tân thủ từng bước
-    mount: { tier: 0, out: false },           // Thú Chiến: xuất trận đánh cùng, không cưỡi
+    // Khế Ước Chimera thay hệ Thú Chiến — xem docs/GACHA_KHE_UOC.md
+    chimera: { eq:null, co:{}, out:true, ve:{ gk:3, cx:1 }, pity5:0, pity4:0, bd:false,
+               pity5s:0, pity4s:0, nguyet:0, tinh:0, su:[], tanthu:20 },
     jewels: { chucPhuc: 0, linhHon: 0, sinhMenh: 0, honDon: 0 }, // Tứ Châu (Track HT)
     baohap: {},                            // Box Kundun Ma Tôn Giáng Thế { tier: số lượng }
     truyna: { day:'', state:'none', map:null }, // Truy Nã Lệnh ngày
@@ -5688,7 +5867,18 @@ function loadGame(){
     // cũ. sideActive() đếm theo KEY chứ không đối chiếu SIDE_QUESTS, nên nếu để lại thì 2 slot
     // trong 3 slot phụ tuyến bị chiếm vĩnh viễn và người chơi không nhận thêm được NV nào nữa.
     for (const _sid in sideStates) if (!SIDE_QUESTS.some(q => q.id === _sid)) delete sideStates[_sid];
-    if (!player.mount) player.mount = { tier: 0, out: false };
+    // Save đời Thú Chiến: đổi thẳng sang Chimera. Người chơi đã nuôi tới giai N thì nhận đúng
+    // N con tương ứng (cùng art, cùng tên) chứ không mất trắng, cộng vé bù cho bạc/Huyền Thiết đã đổ vào.
+    if (player.mount && !player.chimera){
+      const _cu = ['petalkin','tidewarden','emberjaw','ironshell','crimsonmaw'];
+      const C0 = { eq:null, co:{}, out:!!player.mount.out, ve:{ gk:3, cx:1 }, pity5:0, pity4:0, bd:false,
+                   pity5s:0, pity4s:0, nguyet:0, tinh:0, su:[], tanthu:20 };
+      const _t = Math.max(0, Math.min(5, player.mount.tier || 0));
+      for (let i = 0; i < _t; i++){ C0.co[_cu[i]] = { con:0 }; C0.eq = _cu[i]; }
+      C0.ve.gk += _t * 4;
+      player.chimera = C0;
+    }
+    delete player.mount; delete player.mountPity;
     // Linh Thú: pet đời cũ (holy/hulan/hothan, chỉ số cố định, nằm cả trong túi) tự vá sang
     // đời mới. Giữ đúng MỘT con — con đang mặc, hoặc con đầu tiên trong túi — số còn lại quy
     // ra bạc, vì tính năng mới chỉ có một con duy nhất và nó không bán được nữa.
@@ -5702,7 +5892,7 @@ function loadGame(){
       player.inv = (player.inv || []).filter(x => !(x && x.slot === 'pet' && x !== player.equip.pet));
       if (player.equip && player.equip.pet) petNormalize(player.equip.pet);
     }
-    player.mount.out = !!player.mount.out; delete player.mount.riding; // bỏ cơ chế cưỡi
+
     if (!player.cd) player.cd = { basic:0, a:0, b:0, c:0 };
     if (player.khi == null) player.khi = 0;
     // Hệ cảnh giới · kinh mạch · Tán Tiên đã gỡ. Dọn khỏi save cũ — nhưng phải để việc
@@ -5761,7 +5951,6 @@ function loadGame(){
     if (player.autoSell == null) player.autoSell = false;
     if (player.autoEquip == null) player.autoEquip = true;  // GDD Đợt 2 B7: mặc định bật tự mặc đồ
     if (player.maThau == null) player.maThau = 0;           // GDD Đợt 2 B5: Mã Thầu (Trại Ngựa)
-    if (player.mountPity == null) player.mountPity = 0;     // GDD Đợt 2 B4: tích lũy thăng giai thú
     if (!player.horseDay) player.horseDay = { d:'', n:0 };  // giới hạn bắt ngựa 5 con/ngày
     if (!player.hintCd) player.hintCd = {};                 // GDD Đợt 2 B3: Nhắc Việc cooldown
     if (!player.hintOff) player.hintOff = {};               // Nhắc Việc: đã tắt (reset khi qua map)
@@ -7376,7 +7565,10 @@ function killMob(m, source){
   // ── Boss Vùng/Cổng Vực: mở ải + manh mối + cờ cốt truyện (GDD Boss v2.1 / Ngũ Trụ Khóa) ──
   if (m.def.bossKind){
     const _bk = (player.bossKills[curMap] = player.bossKills[curMap] || []);
-    if (!_bk.includes(m.def.bossId)) _bk.push(m.def.bossId);
+    if (!_bk.includes(m.def.bossId)){
+      _bk.push(m.def.bossId);
+      chiVe(m.def.bossKind === 'tranai' ? 2 : 1, 'hạ ' + m.def.name + ' lần đầu');   // 28 boss vùng = 35 Ấn
+    }
     const _bd = BOSS_DEFS[curMap];
     if (_bd){
       const doneTv = _bd.thuve.filter(tv => _bk.includes(tv.id)).length;
@@ -7440,13 +7632,14 @@ function unlockNotices(){
     3:['Mở khóa: Mục Tiêu Hôm Nay — xem góc trái màn hình, xong hết nhận thưởng lớn!'],
     4:['Mở khóa: Venom Dart — cộng %ST vĩnh viễn (K → Di Sản Cũ)','Mở khóa: Thuần Thục Venom (phím H)',
        'Mở khóa: Lò Hỗn Độn — tới gặp Thợ Rèn (phím F dẫn đường)'],
-    6:['Mở khóa: Thú Chiến — chiến thú đồng hành tự đánh quái (C → Thú Chiến)'],
+    6:['Mở khóa: Khế Ước Chimera — quay Chimera đồng hành (C → Chimera)'],
     7:['Mở khóa: Trấn Phái — tuyệt kỹ của lớp (phím 2)'],
     10:[...(player.sect === 'vophai' ? ['Mở khóa: the Calling — 5 lớp để chọn!'] : []),'Mở khóa: Stoneform (Thuần Thục — phím H)','Mở khóa: Truy Nã Lệnh & Sảnh Cầu May — Bổ Đầu và Thương Nhân Vận May ở Lunaris City'],
     40:['Mở khóa: Lò Bảo Chứng luyện Linh Dực Cấp 1 — Lò Rèn Hoàng Gia, Lunaris City'],
     45:['Box Kundun IV trở lên từ Hung Thần có 5-8% mở ra trang bị CỔ THẦN THỦ HỘ — Hung Thần giáng thế mỗi 4 giờ!'],
     30:['Mở khóa: Archery (Thuần Thục — phím H)','Mở khóa: Nhà Riêng — gặp Quản Gia ở Lunaris City'],
   };
+  if (player.level % 10 === 0) chiVe(2, `mốc cấp ${player.level}`);
   const list = msgs[player.level];
   if (list) list.forEach((m, i)=> setTimeout(()=>{ if (player) addFloat(player.x, player.y-70, m, '#a0ffe9', 14); }, tre + i*800));
   // Tán Nhân đạt cấp 10 → mở lễ Bái Sư một lần (sau đó tự chọn ở panel Nhân Vật)
@@ -7736,12 +7929,12 @@ function hintCandidates(){
     out.push({ id:'tiemnang', pri:2, txt:`💠 Còn <b>${player.free}</b> điểm Tiềm Năng chưa phân — cộng ngay cho khỏi phí!`, btn:'Phân Ngay', act:"togglePanel('char')" });
   if (masteryOpen() && (player.mpts || 0) >= 5)
     out.push({ id:'daithanh', pri:2, txt:`✦ Còn <b>${player.mpts}</b> điểm ${MASTERY_NAME} chưa phân — mở bảng để chọn nhánh!`, btn:'Mở Bảng', act:"openMastery()" });
-  if (player.mount.tier === 0 && player.level >= 6)
-    out.push({ id:'mount0', pri:3, txt:'🐎 Cấp 10+ đã có thể nhận <b>Emberhide Bull</b> tại Trại Ngựa (Ngoại Ô) — đi bộ mãi làm gì!', btn:'Xem Ngay', act:'hintGoStable()' });
-  else {
-    const nx = MOUNT_TIERS[player.mount.tier + 1];
-    if (nx && nx.cost && player.level >= (nx.reqLv || 1) && player.silver >= nx.cost.silver && player.mat >= Math.max(0, nx.cost.mat - Math.min(player.maThau || 0, 3)*4))
-      out.push({ id:'mountup', pri:4, txt:`🐎 Đủ tư lương thăng giai thú cưỡi → <b style="color:${nx.color}">${nx.name}</b>!`, btn:'Thăng Giai', act:"togglePanel('mount')" });
+  {
+    const _C = player.chimera || {};
+    if (!_C.eq && player.level >= 6)
+      out.push({ id:'chi0', pri:3, txt:'✦ Đã mở <b>Khế Ước Chimera</b> — quay một con đồng hành đi cùng và tự đánh quái!', btn:'Mở Khế Ước', act:"openKheUoc()" });
+    else if (((_C.ve && _C.ve.gk) || 0) >= 10)
+      out.push({ id:'chive', pri:4, txt:`✦ Đang có <b>${_C.ve.gk} Ấn Giao Kết</b> chưa dùng — quay thử một lượt ×10!`, btn:'Quay', act:"openKheUoc()" });
   }
   if (questIdx >= 4 && player.mat >= 3){
     const weak = Object.values(player.equip).some(it => it && !it.special && (it.plus || 0) < 3);
@@ -8103,7 +8296,7 @@ function updateHorses(dt){
   }
 }
 function drawHorse(h){
-  const img = mountImgOf(1); // Tuấn Mã Hoang dùng tạm hình thú cưỡi giai 1 (mượn ảnh, không liên quan tên gọi)
+  const img = chiImg('petalkin'); // Tuấn Mã Hoang mượn tạm art Petalkin (chỉ là ảnh, không liên quan tên gọi)
   const bob = Math.sin(performance.now()/300 + h.hx)*2;
   ctx.save(); ctx.translate(h.x, h.y + bob);
   if (h.state === 'tired') ctx.globalAlpha = 0.75 + Math.sin(performance.now()/150)*0.2;
@@ -8125,15 +8318,15 @@ function drawHorse(h){
 }
 window.renderStable = function(){
   const p = el('panel-quest');
-  const nx = MOUNT_TIERS[player.mount.tier + 1];
   const g = gameTimeInfo(), tk = g.day + '/' + g.month;
   const caught = player.horseDay && player.horseDay.d === tk ? player.horseDay.n : 0;
   let html = `<h3>Trại Ngựa — Mục Đồng</h3><button class="close-x" onclick="closePanels()">✕</button>`;
   html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">"Tuấn mã hoang chạy ngoài đồng kia — lại gần nó sẽ vùng chạy, rượt đến khi <b style="color:#7fd8e0">kiệt sức</b> rồi bấm <b>E</b> mà bắt. Mỗi con cho một cuộn <b style="color:#7fd8e0">Mã Thầu</b>: khi thăng giai thú cưỡi, dùng <b>+7% tỉ lệ</b> hoặc <b>−4✦ phí</b> mỗi cuộn (tối đa 3 cuộn/lần). Ngày chỉ bắt 5 con thôi — ngựa cũng cần nghỉ!"</div>`;
   html += `<div class="mat-row"><span style="width:20px;text-align:center">🪢</span><span style="flex:1">Mã Thầu đang có</span><b style="color:#7fd8e0">${player.maThau || 0}</b></div>`;
   html += `<div class="mat-row"><span style="width:20px;text-align:center">🐎</span><span style="flex:1">Tuấn Mã đã bắt hôm nay</span><b>${caught}/5</b></div>`;
-  html += `<div class="stat-sec">THÚ CHIẾN: ${MOUNT_TIERS[player.mount.tier].name} (Giai ${player.mount.tier}/${MOUNT_TIERS.length - 1})${nx ? ` — kế tiếp: <b style="color:${nx.color}">${nx.name}</b> · cần cấp ${nx.reqLv} · ${nx.cost.silver}◈ + ${nx.cost.mat}✦ · tỉ lệ ${nx.rate}%` : ' — TỐI THƯỢNG'}</div>`;
-  html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:7px 16px" onclick="closePanels();togglePanel('mount')">Mở Trại Thú Cưỡi</button></div>`;
+  { const _ce = (player.chimera && player.chimera.eq) ? CHI_MAP[player.chimera.eq] : null;
+    html += `<div class="stat-sec">CHIMERA ĐỒNG HÀNH: ${_ce ? `<span style="color:${_ce.mau}">${_ce.ten}</span> ${'★'.repeat(_ce.sao)}` : '<span style="opacity:.6">chưa có con nào</span>'}</div>`;
+    html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:7px 16px" onclick="closePanels();openKheUoc()">Mở Khế Ước Chimera</button></div>`; }
   html += `<div style="font-size:11.5px;opacity:.65;margin-top:8px">Tuấn Mã Hoang ở ba đồng cỏ Outskirts (và Ashen Steppe — phụ tuyến «Tuấn Mã Ashen Steppe» cấp 80).</div>`;
   p.innerHTML = html;
   closePanels(); p.classList.remove('hidden');
@@ -15597,9 +15790,10 @@ function applyTestBoost(){
   player.tienDan = 99;                             // nâng tầng di sản
   player.charms = 99;                              // bảo hiểm rèn +10/+11
   player.silver += 999999;
-  // Thú Chiến: giai cao nhất, xuất trận sẵn
-  player.mount.tier = MOUNT_TIERS.length - 1;
-  player.mount.out = true;
+  // Chimera: sở hữu hết, Huyết Thống tối đa, xuất trận sẵn + một nắm vé để thử quay
+  { const C = chiState();
+    for (const c of CHIMERA) C.co[c.id] = { con: 6 };
+    C.eq = 'aurelion'; C.out = true; C.ve.gk = 120; C.ve.cx = 40; C.nguyet = 200; C.tinh = 500; }
   // Tuyệt học: Ám Khí / Cung Tiễn / Cương Khí đều tầng tối đa
   player.amkhiX = { tier: AMKHI_TIERS.length - 1, bless: 0 };
   player.bow = { tier: BOW_TIERS.length - 1, bless: 0 };
@@ -15666,17 +15860,6 @@ function applyTestBoost(){
 }
 
 // ---------- Thú Chiến panel & upgrade ----------
-function mountAttrLines(t){
-  const parts = [`Công Kích ${t.dmg} ST/đòn`];
-  if (t.str) parts.push(`Lực Lượng +${t.str}`);
-  if (t.agi) parts.push(`Mẫn Tiệp +${t.agi}`);
-  if (t.def) parts.push(`Phòng Ngự +${t.def}`);
-  if (t.vit) parts.push(`Sinh Lực +${t.vit}`);
-  if (t.hp) parts.push(`HP +${t.hp}`);
-  if (t.crit) parts.push(`Bạo Kích +${t.crit}%`);
-  if (t.qireg) parts.push(`Hồi Mana +${t.qireg}`);
-  return parts;
-}
 // ══════════ BẢNG LINH THÚ ══════════
 function petCostHtml(rows){
   return `<div class="pet-cost">` + rows.map(r =>
@@ -15780,92 +15963,299 @@ function renderPet(){
 window.renderPet = renderPet;
 function renderMount(){
   if (lvPeak() < 6){
-    CE().innerHTML = `<h3>Thú Chiến</h3>
-      <div style="padding:14px;font-size:13px">Chuồng thú mở khóa ở <b style="color:#7ecbff">cấp 6</b>.</div>`;
+    CE().innerHTML = `<h3>Chimera Đồng Hành</h3>
+      <div style="padding:14px;font-size:13px">Khế Ước mở khóa ở <b style="color:#7ecbff">cấp 6</b>.</div>`;
     return;
   }
-  const tier = player.mount.tier;
-  const cur = MOUNT_TIERS[tier];
-  const next = tier < MOUNT_TIERS.length - 1 ? MOUNT_TIERS[tier+1] : null;
-  let html = `<h3>Thú Chiến — Thăng Giai</h3>`;
-  html += `<div class="tier-pips">${MOUNT_TIERS.slice(1).map((t,i)=>`<span style="color:${i<tier?'#7ecbff':'rgba(232,236,255,.25)'}">●</span>`).join('')}</div>`;
-  if (cur){
-    html += `<img class="mount-img" src="${cur.img}" alt="${cur.name}">
-      <div class="mount-name" style="color:${cur.color}">${cur.name} <span style="font-size:12px;opacity:.7">(Giai ${tier}/${MOUNT_TIERS.length - 1})</span></div>
-      <div class="bonus-list"><b>Thuộc tính gia trì:</b><br>${mountAttrLines(cur).join(' · ')}</div>
-      <div style="font-size:12px;color:#9aa8d4;margin-top:6px">Chiến thú đi theo và <b style="color:#7ecbff">tự tấn công</b> quái quanh bạn, mỗi 1.4s một đòn.</div>
-      <div class="forge-actions"><button class="mini-btn" onclick="toggleMountOut()">${player.mount.out?'Thu Hồi (V)':'Xuất Chiến (V)'}</button></div>`;
-  } else {
-    html += `<div style="text-align:center;padding:8px;opacity:.65;font-size:13px">Chưa có chiến thú nào.<br>Thăng giai lần đầu để nhận <b style="color:#7ecbff">Emberhide Bull</b> đồng hành!</div>`;
+  const C = chiState();
+  const dsCo = CHIMERA.filter(c => C.co[c.id]);
+  let html = `<h3>Chimera Đồng Hành</h3>`;
+  html += `<div style="font-size:11.5px;color:#9aa8d4;line-height:1.55;margin-bottom:8px">Chimera quay được ở <b>Khế Ước</b>. Con đang xuất trận đi theo bạn, tự đánh quái và tung chiêu riêng; bị động của nó luôn bật kể cả khi thu hồi.</div>`;
+  html += `<div class="forge-actions" style="margin-bottom:8px">
+      <button class="mini-btn" style="font-size:13px;padding:7px 18px" onclick="closePanels();openKheUoc()">✦ Mở Khế Ước (${(C.ve.gk||0)} Ấn)</button>
+      <button class="mini-btn" onclick="toggleMountOut()">${C.out ? 'Thu Hồi (X)' : 'Xuất Chiến (X)'}</button></div>`;
+  if (!dsCo.length){
+    html += `<div style="text-align:center;padding:14px;opacity:.7;font-size:13px">Chưa có Chimera nào.<br>Quay ở Khế Ước để nhận con đầu tiên.</div>`;
+    CE().innerHTML = html; return;
   }
-  if (next){
-    const _th = window.stableThau || { n:0, mode:'rate' };
-    const _useN = Math.min(_th.n || 0, player.maThau || 0, 3);
-    const _matNeed = Math.max(0, next.cost.mat - (_th.mode === 'mat' ? _useN*4 : 0));
-    const _rate = Math.min(95, next.rate + (player.mountPity || 0) + (_th.mode === 'rate' ? _useN*7 : 0));
-    const canPay = player.silver >= next.cost.silver && player.mat >= _matNeed && player.level >= (next.reqLv || 1);
-    html += `<div class="next-tier"><b style="color:${next.color}">Giai ${tier+1}: ${next.name}</b><br>
-      ${mountAttrLines(next).join(' · ')}<br>
-      <span style="opacity:.75">Phí: ${next.cost.silver}◈ + ${_matNeed}✦${_matNeed < next.cost.mat ? ` <span style="color:#7fd8e0">(Mã Thầu −${next.cost.mat - _matNeed}✦)</span>` : ''} · Tỉ lệ: <b>${_rate}%</b>${(player.mountPity || 0) ? ` <span style="color:#7fd8e0">(+${player.mountPity}% tích lũy)</span>` : ''} · Yêu cầu: <b style="color:${player.level >= (next.reqLv || 1) ? '#8fd18f' : '#ff7a6a'}">cấp ${next.reqLv || 1}</b> (thất bại giữ nguyên giai, +8% tích lũy)</span></div>`;
-    if ((player.maThau || 0) > 0){
-      html += `<div style="font-size:12px;color:#9aa8d4;margin-top:6px">🪢 Mã Thầu: <b style="color:#7fd8e0">${player.maThau}</b> — dùng
-        ${[0,1,2,3].map(n2 => `<button class="mini-btn" style="${(_th.n || 0) === n2 ? 'border-color:#7fd8e0;color:#7fd8e0' : ''}" onclick="stableThauSet(${n2})">${n2}</button>`).join('')}
-        <button class="mini-btn" style="${_th.mode === 'rate' ? 'border-color:#7fd8e0;color:#7fd8e0' : ''}" onclick="stableThauMode('rate')">+7% tỉ lệ/thầu</button>
-        <button class="mini-btn" style="${_th.mode === 'mat' ? 'border-color:#7fd8e0;color:#7fd8e0' : ''}" onclick="stableThauMode('mat')">−4✦ phí/thầu</button></div>`;
-    }
-    html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 20px" onclick="upgradeMount()" ${canPay?'':'disabled'}>
-      Thăng Giai ${tier===0?'(Nhận Emberhide Bull)':'→ '+next.name}</button></div><div id="mount-msg"></div>`;
-
-  } else {
-    html += `<div style="text-align:center;color:#7ecbff;margin-top:10px;font-size:13px">◑ Đã đạt ${MOUNT_TIERS[MOUNT_TIERS.length-1].name} — đỉnh cao của mọi chiến thú!</div>`;
+  html += `<div class="stat-sec">ĐANG CÓ — ${dsCo.length}/${CHIMERA.length}</div>`;
+  for (const c of dsCo){
+    const con = C.co[c.id].con, eq = C.eq === c.id;
+    html += `<div class="skill-row${eq ? '' : ' locked'}" style="align-items:center">
+      <span class="sk-glyph" style="color:${c.mau};font-size:18px">${c.sao === 5 ? '★' : '✦'}</span>
+      <span class="sk-info"><b style="color:${c.mau}">${c.ten}</b>
+        <span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}"> · ${'★'.repeat(c.sao)} · ${c.lop}</span>
+        ${con ? `<span style="font-size:10.5px;color:#ffd76a"> · Huyết Thống C${con}</span>` : ''}
+        <div class="sk-desc">${c.thuTxt} · Chiêu <b>${c.chieu.ten}</b> (${Math.round(c.chieu.cd)}s)</div></span>
+      ${eq ? '<span style="font-size:11px;color:#8fd18f">ĐANG DÙNG</span>'
+           : `<button class="mini-btn" onclick="window.chiChon('${c.id}')">Chọn</button>`}</div>`;
   }
   CE().innerHTML = html;
 }
-window.stableThauSet = function(n){ window.stableThau = window.stableThau || { n:0, mode:'rate' }; window.stableThau.n = n; renderMount(); };
-window.stableThauMode = function(m){ window.stableThau = window.stableThau || { n:0, mode:'rate' }; window.stableThau.mode = m; renderMount(); };
-window.upgradeMount = function(){
-  const tier = player.mount.tier;
-  const next = MOUNT_TIERS[tier+1];
-  if (!next || !next.cost) return;
-  const msg = document.getElementById('mount-msg');
-  if (player.level < (next.reqLv || 1)){ // GDD Đợt 2 B4: khóa cấp theo giai
-    if (msg){ msg.textContent = `🔒 Cần đạt cấp ${next.reqLv} để thăng ${next.name}`; msg.style.color = '#ff7a6a'; }
-    addFloat(player.x, player.y-46, `Cần cấp ${next.reqLv} mới thăng được!`, '#ff7a6a', 13);
+// ═══════════ KHẾ ƯỚC — màn quay + hoạt ảnh ═══════════
+// Hoạt ảnh port từ bản thử docs/proto/khe_uoc_anim.html, sáu nhịp:
+//   1 sao băng bay chéo · 2 MÀU ĐUÔI báo phẩm cao nhất của lượt · 3 chạm đất, chớp trắng
+//   4 bóng đen hiện dần rồi sáng lên · 5 thẻ trượt lên, sao nảy từng ngôi · 6 lưới tổng kết (×10)
+// Nhịp 2 là nhịp giữ người chơi: nó báo kết quả TRƯỚC khi thấy mặt Chimera. Bỏ nó thì quay 5★ và
+// quay 3★ chỉ khác nhau ở cái thẻ cuối.
+let _kuKq = [], _kuI = 0, _kuPha = 'cho', _kuT0 = 0, _kuHat = [], _kuSao = 0, _kuChay = false, _kuRaf = 0;
+const _KU_NHIP = { comet:1.15, no:0.42, hien:0.95, the:0.75 };
+function kuCv(){ return document.getElementById('gacha-cv'); }
+function kuFit(){
+  const cv = kuCv(); if (!cv) return null;
+  const d = Math.min(2, window.devicePixelRatio || 1);
+  const w = cv.clientWidth || window.innerWidth, h = cv.clientHeight || window.innerHeight;
+  if (cv.width !== Math.round(w*d) || cv.height !== Math.round(h*d)){ cv.width = Math.round(w*d); cv.height = Math.round(h*d); }
+  const g2 = cv.getContext('2d'); g2.setTransform(d, 0, 0, d, 0, 0);
+  return { g:g2, W:w, H:h };
+}
+function kuPha(x){ _kuPha = x; _kuT0 = performance.now(); if (x === 'the') _kuSao = 0; }
+function kuPhamCao(){ return Math.max(..._kuKq.map(k => k.sao)); }
+function kuHet(){
+  _kuChay = false;
+  const w = document.getElementById('gacha-wrap'); if (w) w.classList.add('hidden');
+  if (_kuRaf) cancelAnimationFrame(_kuRaf); _kuRaf = 0;
+  AudioSys.refreshBgmVol && AudioSys.refreshBgmVol();
+  if (typeof renderKheUoc === 'function' && !el('panel-quest').classList.contains('hidden')) renderKheUoc();
+  calcDerived();
+}
+function kuTiep(){
+  _kuI++;
+  if (_kuI >= _kuKq.length){ if (_kuKq.length > 1) kuPha('luoi'); else kuHet(); }
+  else kuPha('hien');
+}
+function kuBoQua(){
+  if (!_kuChay) return;
+  if (_kuKq.length > 1){ _kuI = _kuKq.length; kuPha('luoi'); }
+  else { _kuI = 0; kuPha('the'); _kuSao = 9; }
+}
+function kuVeChi(g2, x, y, s, c, bong){
+  const img = chiImg(c.id);
+  if (img && img.complete && img.naturalWidth && !bong){
+    const hh = 150*s, hw = hh * (img.naturalWidth/img.naturalHeight);
+    g2.drawImage(img, x - hw/2, y - hh*0.62, hw, hh);
+  } else veChimera(g2, x, y, s, c.mau, c.dang || 0, bong);
+}
+function kuVe(){
+  const F = kuFit(); if (!F){ _kuRaf = requestAnimationFrame(kuVe); return; }
+  const g2 = F.g, W2 = F.W, H2 = F.H, now = performance.now(), e = (now - _kuT0)/1000;
+  const gr0 = g2.createRadialGradient(W2*0.5, H2*0.42, 0, W2*0.5, H2*0.42, Math.max(W2,H2)*0.75);
+  gr0.addColorStop(0, '#141834'); gr0.addColorStop(1, '#04040a');
+  g2.fillStyle = gr0; g2.fillRect(0, 0, W2, H2);
+  g2.fillStyle = '#fff';
+  for (let i = 0; i < 90; i++){
+    const x = (i*137.5 % W2), y = ((i*i*37.3) % H2);
+    g2.globalAlpha = 0.10 + 0.14*Math.abs(Math.sin(now/1400 + i));
+    g2.fillRect(x, y, 1.6, 1.6);
+  }
+  g2.globalAlpha = 1;
+  const cur = _kuKq[Math.min(_kuI, _kuKq.length-1)];
+  const mp = CHI_SAO_MAU[kuPhamCao()], mc = cur ? CHI_SAO_MAU[cur.sao] : mp;
+  const cc = cur && cur.id ? CHI_MAP[cur.id] : null;
+
+  if (_kuPha === 'comet'){
+    const k = Math.min(1, e/_KU_NHIP.comet), ke = k < .8 ? k/.8 : 1, ez = ke*ke*(3-2*ke);
+    const x = -120 + (W2*0.5 + 120)*ez, y = -80 + (H2*0.44 + 80)*ez;
+    const gr = g2.createLinearGradient(x - 360, y - 250, x, y);
+    gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(.55, mp); gr.addColorStop(1, '#ffffff');
+    g2.strokeStyle = gr; g2.lineWidth = kuPhamCao() === 5 ? 9 : kuPhamCao() === 4 ? 6 : 4; g2.lineCap = 'round';
+    g2.beginPath(); g2.moveTo(x - 360, y - 250); g2.lineTo(x, y); g2.stroke();
+    const R2 = kuPhamCao() === 5 ? 60 : 34;
+    const hg = g2.createRadialGradient(x, y, 0, x, y, R2);
+    hg.addColorStop(0, '#fff'); hg.addColorStop(.35, mp); hg.addColorStop(1, 'rgba(0,0,0,0)');
+    g2.fillStyle = hg; g2.beginPath(); g2.arc(x, y, R2, 0, 7); g2.fill();
+    if (kuPhamCao() === 5) for (let i = 0; i < 3; i++){
+      const a = now/220 + i*2.1, d = 26 + 12*Math.sin(a);
+      g2.fillStyle = 'rgba(255,214,120,.75)';
+      g2.beginPath(); g2.arc(x - Math.cos(a)*d*2, y - Math.sin(a)*d, 2.6, 0, 7); g2.fill();
+    }
+    if (k >= 1){
+      _kuHat = [];
+      for (let i = 0; i < 46; i++){ const a = Math.random()*7, v = 60 + Math.random()*260;
+        _kuHat.push({ x:W2/2, y:H2*0.44, vx:Math.cos(a)*v, vy:Math.sin(a)*v, l:.4 + Math.random()*.6 }); }
+      AudioSys.sfx(kuPhamCao() === 5 ? 'levelup' : 'ui', kuPhamCao() === 5 ? 0.9 : 0.5);
+      kuPha('no');
+    }
+  } else if (_kuPha === 'no'){
+    const k = Math.min(1, e/_KU_NHIP.no);
+    g2.strokeStyle = mp; g2.lineWidth = 7*(1-k); g2.globalAlpha = 1-k;
+    g2.beginPath(); g2.arc(W2/2, H2*0.44, 40 + k*Math.max(W2,H2)*0.55, 0, 7); g2.stroke();
+    g2.globalAlpha = 1;
+    for (const q of _kuHat){
+      g2.globalAlpha = Math.max(0, q.l - k); g2.fillStyle = mp;
+      g2.beginPath(); g2.arc(q.x + q.vx*e, q.y + q.vy*e + 130*e*e, 2.4, 0, 7); g2.fill();
+    }
+    g2.globalAlpha = Math.max(0, 0.82 - k*2.4); g2.fillStyle = '#fff'; g2.fillRect(0, 0, W2, H2);
+    g2.globalAlpha = 1;
+    if (k >= 1) kuPha('hien');
+  } else if (_kuPha === 'hien'){
+    const k = Math.min(1, e/_KU_NHIP.hien), cx = W2/2, cy = H2*0.5, sc = (1.5 + 0.5*k) * Math.min(1.4, W2/900);
+    let dich = false;
+    if (cur.sao === 5){
+      for (const [r, dir] of [[150, 1], [186, -1]]){
+        g2.save(); g2.translate(cx, cy + 52); g2.rotate(now/1400*dir);
+        g2.strokeStyle = `rgba(255,177,92,${0.28 + 0.3*k})`; g2.lineWidth = 2;
+        g2.setLineDash([16, 12]); g2.beginPath(); g2.ellipse(0, 0, r, r*0.34, 0, 0, 7); g2.stroke();
+        g2.setLineDash([]); g2.restore();
+      }
+      const sh = Math.max(0, 1-k)*7;
+      g2.save(); g2.translate((Math.random()*2-1)*sh, (Math.random()*2-1)*sh); dich = true;
+    }
+    const mau = cc ? cc.mau : '#5ea0e8';
+    const hg = g2.createRadialGradient(cx, cy, 0, cx, cy, 250);
+    hg.addColorStop(0, mau + 'cc'); hg.addColorStop(.5, mau + '33'); hg.addColorStop(1, 'rgba(0,0,0,0)');
+    g2.globalAlpha = 0.55 + 0.45*Math.sin(k*3.14); g2.fillStyle = hg;
+    g2.beginPath(); g2.arc(cx, cy, 250, 0, 7); g2.fill(); g2.globalAlpha = 1;
+    if (cc) kuVeChi(g2, cx, cy, sc, cc, k < 0.55);
+    else { g2.fillStyle = mau; g2.globalAlpha = 0.9;
+      g2.beginPath(); g2.arc(cx, cy, 34 + 10*k, 0, 7); g2.fill(); g2.globalAlpha = 1; }
+    for (let i = 0; i < 22; i++){
+      const a = i/22*7 + now/1100, d = 90 + 70*Math.sin(now/700 + i);
+      g2.fillStyle = mau; g2.globalAlpha = 0.25 + 0.4*Math.abs(Math.sin(now/500 + i));
+      g2.beginPath(); g2.arc(cx + Math.cos(a)*d, cy + Math.sin(a)*d*0.55 - k*40, 2.2, 0, 7); g2.fill();
+    }
+    g2.globalAlpha = 1;
+    if (dich) g2.restore();
+    if (k >= 1) kuPha('the');
+  } else if (_kuPha === 'the'){
+    const k = Math.min(1, e/_KU_NHIP.the), sl = k*k*(3-2*k), cx = W2/2, cy = H2*0.5;
+    if (cc) kuVeChi(g2, cx, cy - 30, 1.7*Math.min(1.4, W2/900), cc, false);
+    const cw = Math.min(460, W2*0.62), ch = 132, cyy = H2 - 46 - ch*sl;
+    g2.save(); g2.globalAlpha = sl;
+    g2.fillStyle = 'rgba(10,10,26,.9)'; g2.strokeStyle = mc; g2.lineWidth = 2;
+    g2.beginPath(); g2.roundRect(cx - cw/2, cyy, cw, ch, 8); g2.fill(); g2.stroke();
+    const gg = g2.createLinearGradient(cx - cw/2, cyy, cx + cw/2, cyy);
+    gg.addColorStop(0, mc + '00'); gg.addColorStop(.5, mc + '2e'); gg.addColorStop(1, mc + '00');
+    g2.fillStyle = gg; g2.fillRect(cx - cw/2, cyy, cw, ch);
+    g2.textAlign = 'center';
+    g2.fillStyle = '#e4ebff'; g2.font = '700 26px "Be Vietnam Pro", sans-serif';
+    g2.fillText(cur.ten, cx, cyy + 42);
+    g2.fillStyle = cc ? cc.mau : '#9aa8d4'; g2.font = '600 13px "Be Vietnam Pro", sans-serif';
+    g2.fillText(cc ? `${cc.lop} · ${cc.thuTxt}` : `+${cur.tinh} Tinh Trần`, cx, cyy + 63);
+    if (cur.moi) { g2.fillStyle = '#8fd18f'; g2.fillText('★ MỚI', cx, cyy + 82); }
+    else if (cur.tran){ g2.fillStyle = '#ffb15c'; g2.fillText('Huyết Thống đã tối đa — đổi Nguyệt Trần', cx, cyy + 82); }
+    else if (cc){ g2.fillStyle = '#ffd76a'; g2.fillText(`Huyết Thống → C${cur.con}`, cx, cyy + 82); }
+    const nS = Math.min(cur.sao, Math.floor(k*9)); _kuSao = Math.max(_kuSao, nS);
+    for (let i = 0; i < cur.sao; i++){
+      const on = i < _kuSao, bx = cx - (cur.sao-1)*15 + i*30, by = cyy + 106;
+      const pop = on ? Math.min(1, (k*9 - i)*2.2) : 0, sc2 = 0.8 + 0.5*Math.sin(Math.min(1,pop)*Math.PI/2);
+      g2.save(); g2.translate(bx, by); g2.scale(sc2, sc2);
+      g2.fillStyle = on ? mc : 'rgba(120,126,160,.35)';
+      g2.beginPath();
+      for (let j = 0; j < 10; j++){ const r = j%2 ? 5 : 11, a = -Math.PI/2 + j*Math.PI/5;
+        j ? g2.lineTo(Math.cos(a)*r, Math.sin(a)*r) : g2.moveTo(Math.cos(a)*r, Math.sin(a)*r); }
+      g2.closePath(); g2.fill(); g2.restore();
+    }
+    g2.restore();
+    if (k >= 1){
+      g2.fillStyle = 'rgba(154,168,212,.85)'; g2.font = '600 12px "Be Vietnam Pro", sans-serif';
+      g2.textAlign = 'center';
+      g2.fillText(_kuKq.length > 1 ? `${_kuI+1}/${_kuKq.length}` : 'Bấm để đóng', W2/2, H2 - 16);
+      if (e > (_kuKq.length > 1 ? 1.5 : 2.8)) kuTiep();
+    }
+  } else if (_kuPha === 'luoi'){
+    const k = Math.min(1, e/0.5);
+    g2.textAlign = 'center'; g2.fillStyle = '#e4ebff'; g2.font = '700 18px "Be Vietnam Pro", sans-serif';
+    g2.fillText('KẾT QUẢ 10 LƯỢT', W2/2, 40);
+    const cols = 5, cw = Math.min(150, W2/6.4), ch = cw*1.15, gap = 10;
+    const x0 = W2/2 - (cols*cw + (cols-1)*gap)/2, y0 = 62;
+    _kuKq.forEach((r, i) => {
+      const cx = x0 + (i%cols)*(cw+gap), cy = y0 + Math.floor(i/cols)*(ch+gap);
+      const a = Math.max(0, Math.min(1, k*10 - i*0.6));
+      const c2 = r.id ? CHI_MAP[r.id] : null;
+      g2.save(); g2.globalAlpha = a;
+      g2.fillStyle = 'rgba(10,10,26,.92)'; g2.strokeStyle = CHI_SAO_MAU[r.sao]; g2.lineWidth = r.sao === 5 ? 2.4 : 1.4;
+      g2.beginPath(); g2.roundRect(cx, cy, cw, ch, 6); g2.fill(); g2.stroke();
+      if (c2) kuVeChi(g2, cx + cw/2, cy + ch*0.44, cw/170, c2, false);
+      g2.fillStyle = CHI_SAO_MAU[r.sao]; g2.font = '600 11px "Be Vietnam Pro", sans-serif'; g2.textAlign = 'center';
+      g2.fillText('★'.repeat(r.sao), cx + cw/2, cy + ch - 21);
+      g2.fillStyle = '#c8d0ea'; g2.font = '600 10px "Be Vietnam Pro", sans-serif';
+      g2.fillText(r.ten.length > 15 ? r.ten.slice(0,14) + '…' : r.ten, cx + cw/2, cy + ch - 7);
+      g2.restore();
+    });
+    if (k >= 1 && e > 1.4) kuHet();
+  }
+  _kuRaf = requestAnimationFrame(kuVe);
+}
+window.kheUocQuay = function(banner, n){
+  const C = chiState(), vi = banner === 'gk' ? 'gk' : 'cx';
+  if ((C.ve[vi] || 0) < n){
+    addFloat(player.x, player.y - 40, `Thiếu ${banner === 'gk' ? 'Ấn Giao Kết' : 'Ấn Cổ Xưa'} (cần ${n})`, '#ffb15c', 13);
     return;
   }
-  const th = window.stableThau || { n:0, mode:'rate' }; // B5: Mã Thầu hỗ trợ
-  const useN = Math.min(th.n || 0, player.maThau || 0, 3);
-  const matNeed = Math.max(0, next.cost.mat - (th.mode === 'mat' ? useN*4 : 0));
-  if (player.silver < next.cost.silver || player.mat < matNeed) return;
-  player.silver -= next.cost.silver; player.mat -= matNeed;
-  if (useN > 0) player.maThau -= useN;
-  const rate = Math.min(95, next.rate + (player.mountPity || 0) + (th.mode === 'rate' ? useN*7 : 0)); // B4: pity +8%/lần trượt
-  window.stableThau = { n:0, mode:'rate' };
-  if (Math.random()*100 < rate){
-    player.mount.tier++; player.mountPity = 0;
-    if (msg){ msg.textContent = `✔ Thăng giai thành công — ${next.name}!`; msg.style.color = '#8fd18f'; }
-    addFloat(player.x, player.y-46, `Thú Chiến: ${next.name}!`, next.color, 16);
-    addEffect({ type:'ring', x:player.x, y:player.y, r:90, color:next.color, big:true });
-    player.mount.out = true;
-    checkTitles();
-  } else {
-    player.mountPity = (player.mountPity || 0) + 8;
-    const _nx2 = MOUNT_TIERS[player.mount.tier+1];
-    const _nr = _nx2 ? Math.min(95, _nx2.rate + player.mountPity) : 0;
-    if (msg){ msg.textContent = `✘ Thăng giai thất bại — +8% tích lũy (lần sau tối thiểu ${_nr}%)`; msg.style.color = '#ff7a6a'; }
-    addFloat(player.x, player.y-46, 'Thất bại! +8% tỉ lệ tích lũy', '#ff7a6a', 13);
+  const kq = gachaQuay(banner, n); if (!kq) return;
+  _kuKq = kq; _kuI = 0; _kuChay = true;
+  closePanels();
+  const w = document.getElementById('gacha-wrap'); if (w) w.classList.remove('hidden');
+  kuFit(); kuPha('comet');
+  if (!_kuRaf) _kuRaf = requestAnimationFrame(kuVe);
+};
+addEventListener('keydown', e2 => { if (_kuChay){ e2.preventDefault(); e2.stopPropagation(); kuBoQua(); } }, true);
+document.addEventListener('click', () => { if (_kuChay && _kuPha === 'the') kuTiep(); });
+
+// ── Màn Khế Ước ──────────────────────────────────────────────────────────────
+function renderKheUoc(){
+  const C = chiState(), p2 = el('panel-quest');
+  const ke5 = CHI_MAP[gachaKe()], ke4 = gachaKe4().map(id => CHI_MAP[id]);
+  const conBd = Math.max(0, GACHA_HARD5 - C.pity5);
+  let html = `<h3>✦ Khế Ước Chimera</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Ấn Giao Kết <b style="color:#ffd76a">${C.ve.gk||0}</b> · Ấn Cổ Xưa <b style="color:#7ecbff">${C.ve.cx||0}</b> · Nguyệt Trần <b>${C.nguyet||0}</b> · Tinh Trần <b>${C.tinh||0}</b></div>`;
+
+  html += `<div class="ku-banner"><h4>Giao Kết — ${ke5.ten} <span style="color:#ffb15c">★★★★★</span></h4>
+    <div style="font-size:11.5px;color:#9aa8d4">${ke5.moTa}</div>
+    <div class="ku-ke">${ke4.map(c => `<span style="color:${c.mau};border-color:${c.mau}">${c.ten} ★★★★</span>`).join('')}</div>
+    <div class="ku-pity">Đã quay <b>${C.pity5}</b> lượt từ 5★ gần nhất — còn <b>${conBd}</b> lượt tới bảo đảm.
+      ${C.bd ? '<br><b style="color:#8fd18f">Lần 5★ tới CHẮC CHẮN là ' + ke5.ten + '</b>' : '<br>Lần 5★ tới: 50% trúng ' + ke5.ten + ', trượt thì lần sau chắc chắn trúng.'}
+      <br>Trần cứng: <b>180 Ấn</b> là chắc chắn có ${ke5.ten}.</div>
+    <div class="forge-actions">
+      <button class="mini-btn" onclick="window.kheUocQuay('gk',1)" ${(C.ve.gk||0)<1?'disabled':''}>Quay ×1</button>
+      <button class="mini-btn" style="font-size:13px;padding:7px 18px" onclick="window.kheUocQuay('gk',10)" ${(C.ve.gk||0)<10?'disabled':''}>Quay ×10</button></div></div>`;
+
+  html += `<div class="ku-banner"><h4 style="color:#7ecbff">Vĩnh Cửu — sáu Chimera 5★, không 50/50</h4>
+    <div class="ku-pity">Đã quay <b>${C.pity5s}</b> lượt — còn <b>${Math.max(0, GACHA_HARD5 - C.pity5s)}</b> lượt tới bảo đảm.</div>
+    <div class="forge-actions">
+      <button class="mini-btn" onclick="window.kheUocQuay('cx',1)" ${(C.ve.cx||0)<1?'disabled':''}>Quay ×1</button>
+      <button class="mini-btn" onclick="window.kheUocQuay('cx',10)" ${(C.ve.cx||0)<10?'disabled':''}>Quay ×10</button></div></div>`;
+
+  html += `<div class="stat-sec">TỈ LỆ CÔNG KHAI</div>
+    <div style="font-size:11.5px;color:#9aa8d4;line-height:1.7">
+      5★ <b>0,6%</b>/lượt tới lượt 73, từ lượt 74 cộng thêm 6 điểm %/lượt, lượt 90 bảo đảm — gộp cả pity là <b>1,6%</b>.<br>
+      4★ <b>5,1%</b>/lượt, bảo đảm trong mỗi 10 lượt — gộp cả pity là <b>13,0%</b>.<br>
+      Trung bình <b>62 lượt</b> ra một con 5★; <b>93 lượt</b> ra một con 5★ đang lên kệ.</div>`;
+
+  if (C.su && C.su.length){
+    html += `<div class="stat-sec">LỊCH SỬ ${Math.min(C.su.length, 12)} LƯỢT GẦN NHẤT</div>`;
+    for (const h of C.su.slice(0, 12)){
+      const c2 = CHI_MAP[h.id]; if (!c2) continue;
+      html += `<div class="mat-row"><span style="flex:1;color:${c2.mau}">${c2.ten}</span>
+        <span style="color:${CHI_SAO_MAU[h.sao]};font-size:11px">${'★'.repeat(h.sao)}</span></div>`;
+    }
   }
-  calcDerived(); saveGame();
-  setTimeout(()=>{ try{ renderMount(); }catch(e){ console.error(e); } }, 800);
+  p2.innerHTML = html;
+  closePanels(); p2.classList.remove('hidden');
+}
+window.renderKheUoc = renderKheUoc;
+window.openKheUoc = function(){
+  if (lvPeak() < 6){ addFloat(player.x, player.y - 40, 'Khế Ước mở ở cấp 6', '#8a8a8a', 12); return; }
+  renderKheUoc();
+};
+window.chiChon = function(id){
+  const C = chiState();
+  if (!C.co[id]) return;
+  C.eq = id; C.out = true; mountObj = null;
+  calcDerived(); saveGame(); refreshCharTab('mount');
+  addFloat(player.x, player.y - 44, `✦ ${CHI_MAP[id].ten} xuất trận!`, CHI_MAP[id].mau, 14);
+  AudioSys.sfx('ui', 0.5);
 };
 window.toggleMountOut = function(){
-  if (!player || player.mount.tier === 0){
-    if (player) addFloat(player.x, player.y-34, 'Chưa có chiến thú — mở C → Thú Chiến', '#8a8a8a', 12);
+  const C = player && chiState();
+  if (!player || !C.eq){
+    if (player) addFloat(player.x, player.y-34, 'Chưa có Chimera — mở C → Chimera để quay', '#8a8a8a', 12);
     return;
   }
-  player.mount.out = !player.mount.out;
+  C.out = !C.out;
   mountObj = null; // triệu hồi lại ở vị trí mới
-  addFloat(player.x, player.y-40, player.mount.out ? '⚔ Chiến thú xuất trận!' : 'Chiến thú thu hồi.', '#7ecbff', 13);
+  addFloat(player.x, player.y-40, C.out ? `✦ ${CHI_MAP[C.eq].ten} xuất trận!` : `${CHI_MAP[C.eq].ten} thu hồi.`, '#7ecbff', 13);
   AudioSys.sfx('ui', 0.5);
   refreshCharTab('mount');
 };
@@ -16087,11 +16477,10 @@ setTimeout(function(){
       if (md0.type === 'safe') player.pk = false;
       snapCamera();
     }
-    // debug params: &tier=8&mount=1
-    const tq = location.search.match(/tier=(\d)/);
-    if (tq){ player.mount.tier = Math.min(8, +tq[1]); }
-    if (/mount=1/.test(location.search)) player.mount.out = player.mount.tier > 0;
-    if (tq){ calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi; saveGame(); }
+    // debug params: &chi=aurelion (nhận thẳng một Chimera để soi hoạt ảnh/đồng hành)
+    const tq = location.search.match(/chi=(\w+)/);
+    if (tq && CHI_MAP[tq[1]]){ chiNhan(tq[1]); chiState().eq = tq[1]; chiState().out = true;
+      calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi; saveGame(); }
     const p = location.search.match(/panel=(\w+)/);
     if (p) setTimeout(()=>togglePanel(p[1]), 300);
   }
@@ -16329,10 +16718,18 @@ window.cheatExec = function(raw){
         calcDerived(); cheatLog(`${MASTERY_NAME}: mở bảng, ${n} điểm chưa dùng (bảng chứa ${masteryCap()})`, '#8fd18f');
         window.openMastery(); break;
       }
-      case 'tier': {
-        player.mount.tier = clamp(Math.round(num(1, 1)), 0, MOUNT_TIERS.length - 1);
-        player.mount.out = player.mount.tier > 0;
-        cheatLog(`Thú Chiến → ${MOUNT_TIERS[player.mount.tier].name} (giai ${player.mount.tier}/${MOUNT_TIERS.length - 1})`, '#8fd18f'); break;
+      case 'chi': {                       // /chi <id|all> — nhận Chimera · /ve <n> — thêm vé
+        const C = chiState(), a = (parts[1] || '').toLowerCase();
+        if (a === 'all'){ for (const c of CHIMERA){ C.co[c.id] = C.co[c.id] || { con:0 }; } C.eq = C.eq || 'aurelion'; C.out = true;
+          cheatLog(`Nhận đủ ${CHIMERA.length} Chimera`, '#8fd18f'); }
+        else if (CHI_MAP[a]){ chiNhan(a); C.eq = a; C.out = true; cheatLog(`Nhận ${CHI_MAP[a].ten} (C${C.co[a].con})`, '#8fd18f'); }
+        else cheatLog('/chi <' + CHIMERA.map(c=>c.id).join('|') + '|all>', '#ff7a6a');
+        calcDerived(); mountObj = null; break;
+      }
+      case 've': {
+        const C = chiState(), n2 = clamp(Math.round(num(1, 10)), 0, 9999);
+        C.ve.gk += n2; C.ve.cx += Math.round(n2/2);
+        cheatLog(`+${n2} Ấn Giao Kết · +${Math.round(n2/2)} Ấn Cổ Xưa`, '#ffb15c'); break;
       }
       case 'boss': {
         const bd = BOSS_DEFS[curMap];
@@ -16516,7 +16913,11 @@ function loop(now){
   const dt = Math.min(0.05, (now - lastTime)/1000);
   lastTime = now;
   const _t0 = performance.now();
-  try { update(dt); render(); drawPerfHud(); } catch(e){ console.error(e); }
+  // Hoạt ảnh Khế Ước phủ kín màn và chạy tới ~35 giây cho lượt ×10. Nếu thế giới vẫn chạy phía
+  // sau thì nhân vật đứng chết trân hứng đòn suốt chừng đó — đo bằng cách quay lại một lượt thật:
+  // chết ngay giữa lượt quay. Dừng hẳn update() trong lúc quay; render() vẫn chạy để khung hình
+  // dưới lớp phủ không đóng băng cứng khi bỏ qua hoạt ảnh.
+  try { if (!_kuChay) update(dt); render(); drawPerfHud(); } catch(e){ console.error(e); }
   const _js = performance.now() - _t0;
   // Đo bằng KHOẢNG CÁCH GIỮA HAI KHUNG, không phải thời gian chạy update+render: phần đắt nhất
   // là raster, xảy ra SAU khi render() trả về, nên đo trong thân hàm sẽ không thấy gì cả.
@@ -16535,7 +16936,7 @@ window.charTab = 'info';
 // lv = cấp mở khóa — tab khóa sẽ mờ đi, bấm vào chỉ hiện gợi ý (giảm quá tải tân thủ)
 const CHAR_TABS = [
   { id:'info',     name:'Thông Tin',  lv:1 },
-  { id:'mount',    name:'Thú Chiến',  lv:6 },
+  { id:'mount',    name:'✦ Chimera',  lv:6 },   // id giữ 'mount' — sysUnlocked/refreshCharTab và bài kiểm cũ tra theo mã này
   { id:'linhthu',  name:'Linh Thú',   lv:8 }, // KHÔNG dùng lại mã 'pet' — đó là mã của hệ Thú
                                             // Thuần Hóa đã gỡ, test_nopet đang gác cho nó không quay lại
   { id:'taytuy',   name:'🔄 Tái Sinh', lv:MAX_LV },
@@ -20447,7 +20848,7 @@ function tutAdvance(stepKey){
 // ═══════════ THẦN HIỆP — trạng thái mọi hệ thống tối đa ═══════════
 function isMaxed(p){
   return p.level >= MAX_LV
-    && p.mount && p.mount.tier >= MOUNT_TIERS.length - 1
+    && !!(p.chimera && Object.keys(p.chimera.co || {}).some(id => CHI_MAP[id] && CHI_MAP[id].sao === 5))
     && p.amkhiX && p.amkhiX.tier >= AMKHI_TIERS.length - 1
     && p.bow && p.bow.tier >= BOW_TIERS.length - 1
     && p.gangkhi && p.gangkhi.tier >= GANGKHI_TIERS.length - 1;
@@ -22382,6 +22783,8 @@ function updateDungeon(dt){
           sv = Math.round(rnd(r.silver[0], r.silver[1]));
     player.tienDan += td; player.mat += mt; player.khi += r.khi; player.silver += sv + r.bacThem*2;
     dailyTrack('dungeon'); // Mục Tiêu Hôm Nay
+    // Phó bản: 1 Ấn Cổ Xưa mỗi lượt thông quan — nhánh vé phụ, chậm hơn Giao Kết.
+    chiVe(1, 'thông quan phó bản', 'cx');
     if (tl > 0) player.gems.tuLa += tl;
     if (hn > 0) player.gems.honNguyen += hn;
     zoneBanner = { text:'PHÓ BẢN THÔNG QUAN!',
@@ -22765,8 +23168,9 @@ function dailyCheckReward(){
   if (!dailyGoalsNow().every(g => (d[g.id] || 0) >= g.need)) return;
   d.claimed = true;
   player.silver += 300; player.khi += 100;
+  chiVe(1, 'Mục Tiêu Hôm Nay');
   zoneBanner = { text:'☀ HOÀN THÀNH MỤC TIÊU HÔM NAY!',
-    sub:'+300◈ bạc · +100 Instinct — quay lại ngày mai nhé!',
+    sub:'+300◈ bạc · +100 Instinct · +1 ✦ Ấn Giao Kết — quay lại ngày mai nhé!',
     color:'#7ec850', t:4.5 };
   AudioSys.sfx('levelup', 0.85);
   saveGame();
@@ -23025,14 +23429,18 @@ function drawTree(d){
 // ============================================================
 let mountObj = null;
 function ensureMount(){
-  if (!player || !player.mount || !player.mount.out || player.mount.tier <= 0){ mountObj = null; return; }
-  if (mountObj) return;
-  mountObj = { tier: player.mount.tier, x: player.x + 52, y: player.y + 36,
-    atkT: 0.6, face: 0, wob: Math.random()*10, lungeT: 0 };
+  const C = player && player.chimera;
+  if (!player || dead || !C || !C.out || !C.eq || !CHI_MAP[C.eq]){ mountObj = null; return; }
+  if (mountObj && mountObj.id === C.eq) return;
+  mountObj = { id: C.eq, x: player.x + 52, y: player.y + 36,
+    atkT: 0.6, skT: 4, face: 0, wob: Math.random()*10, lungeT: 0 };
 }
+// Sát thương đòn thường của Chimera. Bản cũ lấy `dmg` phẳng theo giai; nay 5★ nặng đòn hơn 4★
+// và vẫn bám theo Công Kích người chơi để không lạc hậu ở cuối game.
 function mountDmg(){
-  const t = MOUNT_TIERS[player.mount.tier];
-  return Math.round(t.dmg + (player.atk || 0) * 0.2);
+  const c = CHI_MAP[mountObj && mountObj.id] || CHI_MAP[player.chimera.eq];
+  const nen = c.sao === 5 ? 180 : 90;
+  return Math.round((nen + (player.atk || 0) * 0.2) * chiDmgMul());
 }
 function updateMount(dt){
   if (!player || dead){ mountObj = null; return; }
@@ -23046,6 +23454,18 @@ function updateMount(dt){
   if (dd > 6){
     const sp = Math.min(dd*4, 340);
     mountObj.x += (tx-mountObj.x)/dd*sp*dt; mountObj.y += (ty-mountObj.y)/dd*sp*dt;
+  }
+  // ── Chiêu riêng của từng Chimera, hồi theo `chieu.cd` (C1 giảm 10%) ──
+  const _c = CHI_MAP[mountObj.id];
+  mountObj.skT -= dt;
+  if (_c && _c.chieu && mountObj.skT <= 0){
+    const ch = _c.chieu;
+    const near = mobs.filter(m => !m.dead && !m.def.duHiep && dist(mountObj.x, mountObj.y, m.x, m.y) < Math.max(160, ch.r));
+    const canDung = ch.fx === 'shield' || near.length > 0;
+    if (canDung){
+      mountObj.skT = ch.cd * chiCdMul();
+      chiCastChieu(_c, ch, near);
+    } else mountObj.skT = 0.5;
   }
   // tự tấn công quái gần nhất (không đánh Du Hiệp trung lập)
   mountObj.atkT -= dt;
@@ -23061,14 +23481,59 @@ function updateMount(dt){
       mountObj.face = Math.atan2(best.y-mountObj.y, best.x-mountObj.x);
       mountObj.lungeT = 0.18; // vồ tới trước khi cắn
       hurtMob(best, mountDmg(), 'mount');
-      const t = MOUNT_TIERS[player.mount.tier];
-      addEffect({ type:'ring', x:best.x, y:best.y, r:14, color:t.color });
+      addEffect({ type:'ring', x:best.x, y:best.y, r:14, color:CHI_MAP[mountObj.id].mau });
     } else mountObj.atkT = 0.3;
   }
 }
+// Chiêu chủ động của Chimera. Sáu kiểu, mỗi kiểu một hình riêng — cùng ngôn ngữ hiệu ứng với
+// chiêu của người chơi (xem spawnSkillVfx) nhưng nhỏ hơn, để không át đòn của chính người chơi.
+function chiCastChieu(c, ch, near){
+  const lan = chiCon() >= 6 ? 2 : 1;               // C6: chiêu đánh hai lần
+  for (let i = 0; i < lan; i++) setTimeout(() => {
+    if (!player || dead || !mountObj) return;
+    const mx = mountObj.x, my = mountObj.y;
+    addFloat(mx, my - 46, '✦ ' + ch.ten, c.mau, 12);
+    if (ch.fx === 'shield'){
+      const add = Math.round(player.maxHp * (ch.shieldPct/100) * chiThuMul());
+      player.vhShield = Math.max(player.vhShield || 0, add);
+      addEffect({ type:'ring', x:player.x, y:player.y, r:52, color:c.mau, big:true });
+      addFloat(player.x, player.y - 60, `🛡 ${add}`, c.mau, 13);
+      return;
+    }
+    if (ch.fx === 'taunt'){                        // kéo địch về phía Chimera
+      for (const m of near){ m.aggroT = ch.taunt; m.tauntTo = mountObj; }
+      addEffect({ type:'ring', x:mx, y:my, r:ch.r, color:c.mau, big:true });
+    }
+    const dmg = Math.round((player.atk || 100) * ch.mult * chiDmgMul() * (c.sao === 5 ? 1 : 0.7));
+    if (ch.fx === 'bolt'){                         // sét chia cho tối đa `multi` mục tiêu
+      const ds = near.slice(0, ch.multi || 3);
+      for (const m of ds){
+        hurtMob(m, dmg, 'mount');
+        addEffect({ type:'vfx', style:'boltdown', x:m.x, y:m.y, face:0, r:70, c1:c.mau, c2:'#fff', glyph:'⚡', dur:0.6 });
+      }
+    } else if (ch.fx === 'charge'){                // lao thẳng, hất văng
+      const t0 = near[0]; if (!t0) return;
+      const ang = Math.atan2(t0.y - my, t0.x - mx);
+      mountObj.face = ang; mountObj.lungeT = 0.3;
+      for (const m of near) if (dist(m.x, m.y, t0.x, t0.y) < 80){
+        hurtMob(m, dmg, 'mount'); if (ch.kb) vhKnockback(m, ang, ch.kb);
+      }
+      addEffect({ type:'vfx', style:'windslash', x:mx, y:my, face:ang, r:ch.r, c1:c.mau, c2:'#fff', glyph:'✹', dur:0.5 });
+    } else {                                       // sun / dark — nổ quanh Chimera
+      for (const m of near){
+        hurtMob(m, dmg, 'mount');
+        if (ch.slow){ m.slowT = 3; m.slowPct = ch.slow; }
+      }
+      addEffect({ type:'vfx', style: ch.fx === 'dark' ? 'spiritswarm' : 'sunwheel',
+        x:mx, y:my, face:0, r:ch.r, c1:c.mau, c2:'#fff', glyph:'✦', dur:0.7, big:true });
+    }
+    AudioSys.sfx('skill', 0.35);
+  }, i * 260);
+}
 function drawMount(){
-  const t = MOUNT_TIERS[mountObj.tier];
-  const img = mountImgOf(mountObj.tier);
+  const c = CHI_MAP[mountObj.id];
+  const t = { color: c.mau, name: c.ten };
+  const img = chiImg(mountObj.id);
   // bóng đổ
   ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath();
   ctx.ellipse(mountObj.x, mountObj.y+7, 20, 7, 0, 0, 7); ctx.fill();
@@ -23084,9 +23549,13 @@ function drawMount(){
     ctx.rotate(Math.sin(mountObj.wob)*0.03);
     ctx.drawImage(img, -mw/2, -mh/2, mw, mh);
     ctx.restore();
-  } else {
-    ctx.fillStyle = t.color;
-    ctx.beginPath(); ctx.ellipse(mountObj.x + lx, mountObj.y - 14 - bob + ly, 16, 12, 0, 0, 7); ctx.fill();
+  } else {                                    // con chưa có art thật — vẽ vector
+    const flip2 = Math.cos(mountObj.face) < 0;
+    ctx.save();
+    ctx.translate(mountObj.x + lx, mountObj.y - 24 - bob + ly);
+    if (flip2) ctx.scale(-1, 1);
+    veChimera(ctx, 0, 0, 0.5, c.mau, c.dang || 0, false);
+    ctx.restore();
   }
   // tên + vòng hào quang theo giai
   ctx.font = '10px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';

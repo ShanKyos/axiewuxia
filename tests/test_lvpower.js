@@ -52,7 +52,7 @@ const TEN = ['công','máu','mana','thủ','bạo','né'];
       const pts = (lv - 1) * 5;
       player.equip = {}; player.inv = []; player.vohoc = {}; player.sigils = {};
       player.titles = { unlocked: [], active: null }; player.traits = [];
-      player.mount = { tier:0, out:false }; player.thanbinh = { tier:1 }; player.resetCount = 0;
+      player.chimera = { eq:null, co:{}, out:false, ve:{gk:0,cx:0}, pity5:0, pity4:0, bd:false, pity5s:0, pity4s:0, nguyet:0, tinh:0, su:[], tanthu:20 }; player.thanbinh = { tier:1 }; player.resetCount = 0;
       player.str = 5 + pts*0.5; player.vit = 5 + pts*0.5; player.agi = 5; player.ene = 5; player.def = 5;
       player.level = lv; calcDerived();
       r[lv] = [player.atk, player.maxHp, player.maxQi, player.dDef,
@@ -123,7 +123,7 @@ const TEN = ['công','máu','mana','thủ','bạo','né'];
     const set = (lv, pts) => {
       player.equip = {}; player.inv = []; player.vohoc = {}; player.sigils = {};
       player.titles = { unlocked: [], active: null }; player.traits = [];
-      player.mount = { tier:0, out:false }; player.thanbinh = { tier:1 }; player.resetCount = 0;
+      player.chimera = { eq:null, co:{}, out:false, ve:{gk:0,cx:0}, pity5:0, pity4:0, bd:false, pity5s:0, pity4s:0, nguyet:0, tinh:0, su:[], tanthu:20 }; player.thanbinh = { tier:1 }; player.resetCount = 0;
       player.str = 5 + pts*0.5; player.vit = 5 + pts*0.5; player.agi = 5; player.ene = 5; player.def = 5;
       player.level = lv; calcDerived();
       return { atk: player.atk, hp: player.maxHp };

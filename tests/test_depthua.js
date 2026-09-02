@@ -2,8 +2,9 @@
 //
 // Bài kiểm này gác BA thứ cùng lúc, vì cả ba đều là "tàn dư của một hệ đã đổi mà chỗ khác quên đổi
 // theo" — đúng một loại lỗi, ba chỗ khác nhau:
-//   1. Danh hiệu "Người Giữ Lunacia" đòi mount.tier >= 8 trong khi MOUNT_TIERS chỉ còn 5 giai, nên
-//      nó KHÔNG THỂ đạt được kể cả khi đã max mọi thứ. Số 8 là tàn dư từ hồi Thú Chiến có 8 giai.
+//   1. Danh hiệu "Người Giữ Lunacia" đòi mount.tier >= 8 trong khi bảng chỉ còn 5 giai, nên
+//      nó KHÔNG THỂ đạt được kể cả khi đã max mọi thứ. Hệ Thú Chiến nay đã thay bằng Khế Ước
+//      Chimera, nên điều kiện là sở hữu một Chimera 5★ (xem docs/GACHA_KHE_UOC.md).
 //   2. Anima và Công Huân Lệnh đã bị gỡ khỏi hệ tiền tệ — không được sống lại trong player.
 //   3. Từ vựng tu tiên không được xuất hiện trên bất kỳ bảng nào người chơi mở ra.
 //
@@ -22,14 +23,14 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   await p.evaluate(() => applyTestBoost());
   const r = await p.evaluate(() => {
     // danh hiệu tối thượng phải đạt được khi đã max mọi thứ
-    player.mount.tier = MOUNT_TIERS.length - 1; player.level = 120; calcDerived();
+    chiState().co.aurelion = { con:0 }; chiState().eq = 'aurelion'; player.level = 120; calcDerived();
     const t = TITLES.find(x => x.id === 'tuongduong');
-    return { datDuoc: !!t.cond(player), giaiMax: MOUNT_TIERS.length - 1,
+    return { datDuoc: !!t.cond(player), so5: CHIMERA.filter(c => c.sao === 5).length,
              tuvi: 'tuvi' in (player.dantian||{}), ch: 'congHuan' in player,
              hat: Object.values(GARDEN_SEEDS || {}).map(x => x.name) };
   });
   console.log('1) danh hiệu tối thượng + tàn dư:', JSON.stringify(r));
-  if (!r.datDuoc) fail(`"Người Giữ Lunacia" vẫn không đạt được dù đã max (giai ${r.giaiMax})`);
+  if (!r.datDuoc) fail(`"Người Giữ Lunacia" vẫn không đạt được dù đã max (roster ${r.so5} con 5★)`);
   if (r.tuvi) fail('Anima chưa xoá');
   if (r.ch) fail('Công Huân Lệnh chưa xoá');
   // quét lại từ vựng tu tiên trên UI thật
