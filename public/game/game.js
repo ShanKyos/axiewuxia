@@ -3366,6 +3366,7 @@ window.chiVe = chiVe;
 function chiState(){
   if (!player.chimera) player.chimera = { eq:null, co:{}, out:true, ve:{ gk:0, cx:0 },
     pity5:0, pity4:0, bd:false, pity5s:0, pity4s:0, nguyet:0, tinh:0, su:[], tanthu:20 };
+  if (!player.chimera.kho) player.chimera.kho = [];
   return player.chimera;
 }
 // Nhận một con: chưa có thì thêm mới, có rồi thì lên Huyết Thống (trần C6, dư thì đổi Nguyệt Trần).
@@ -3415,6 +3416,331 @@ function chiCon(){ const C = chiState(); return (C.eq && C.co[C.eq]) ? C.co[C.eq
 function chiThuMul(){ const c = chiCon(); return 1 + (c >= 5 ? 0.4 : c >= 2 ? 0.2 : 0); }
 function chiCdMul(){ return chiCon() >= 1 ? 0.9 : 1; }
 function chiDmgMul(){ return chiCon() >= 3 ? 1.25 : 1; }
+// ════════════════════════════════════════════════════════════════════════════
+// ĐỊNH HÌNH CHIMERA — cấp · bốn ô Cốt · kỹ năng đồng hành
+// Thiết kế: docs/DINH_HINH_CHIMERA.md
+//
+// Trước bản này, quay trúng một con Chimera xong là hết việc: sát thương của nó là một con số
+// nền CỐ ĐỊNH cộng 20% Công người chơi, nên con 5★ ngày thứ 100 mạnh đúng bằng chính nó ngày
+// đầu. Ba thứ dưới đây là ba vòng lặp bù vào chỗ đó, ánh xạ từ đột phá / thiên phú / thánh di
+// vật của Genshin.
+//
+// Tinh Trần và Nguyệt Trần KHÔNG dùng ở đây — chủ dự án giữ hai loại đó cho cửa hàng đổi vật
+// phẩm. Nhiên liệu của hệ này là Đất Hồn (rơi trong màn) và chính những mảnh Cốt thừa.
+// ════════════════════════════════════════════════════════════════════════════
+
+// ── ① CẤP ───────────────────────────────────────────────────────────────────
+const CHI_LV_MAX = 80;
+const CHI_HOA = [20, 40, 50, 60, 70, 80];   // trần cấp sau mỗi lần Hoá (Hoá 0 = trần 20)
+const CHI_XP_MOI = 200;                     // một Đất Hồn đổi bao nhiêu kinh nghiệm
+function chiXpCan(lv){ return Math.round(60 + lv * lv * 2.2); }
+function chiTranCap(o){ return CHI_HOA[Math.min(o.hoa || 0, CHI_HOA.length - 1)]; }
+// Ô dữ liệu của một con: vá thêm trường mới cho save cũ, không đụng `con` đã có.
+function chiO(id){
+  const C = chiState(); const o = C.co[id];
+  if (!o) return null;
+  if (o.lv == null){ o.lv = 1; o.xp = 0; o.hoa = 0; }
+  if (!o.cot) o.cot = { sung:null, vuot:null, vay:null, duoi:null };
+  return o;
+}
+// Hệ số cấp: nền sát thương ×1 → ×3, phần ăn Công người chơi 0.20 → 0.36.
+// Hai con số này nhắm đúng chỗ đang mục: nền cố định thì về cuối game vô nghĩa, mà hệ số ăn
+// Công lại quá thấp để bù.
+function chiLvNen(lv){ return 1 + 2 * (lv - 1) / (CHI_LV_MAX - 1); }
+function chiLvHeSo(lv){ return 0.20 + 0.16 * (lv - 1) / (CHI_LV_MAX - 1); }
+function chiHoaGia(hoa){ return { dat: 6 + hoa * 8, bac: 2000 * Math.pow(2.1, hoa) | 0 }; }
+
+// ── ② CỐT ───────────────────────────────────────────────────────────────────
+// Bốn ô đặt theo bộ phận thân Axie. HAI ô nuôi Chimera, HAI ô nuôi người chơi — để món đồ cày
+// được cho thú cưỡi vẫn có nghĩa với build của chính người chơi.
+const COT_O = {
+  sung: { ten:'Sừng', glyph:'▲', chinh:'cAtk',   chinhTen:'Công Chimera' },
+  vuot: { ten:'Vuốt', glyph:'✦', chinh:'cCrit',  chinhTen:'Bạo Kích Chimera' },
+  vay:  { ten:'Vảy',  glyph:'◆', chinh:'hpPct',  chinhTen:'HP người chơi' },
+  duoi: { ten:'Đuôi', glyph:'≈', chinh:'cCd',    chinhTen:'Giảm hồi chiêu' },
+};
+const COT_O_IDS = Object.keys(COT_O);
+const COT_PHAM = {
+  tho:  { ten:'Thô',  mau:'#9aa8d4', tran:8,  nen:4, buoc:0.7, phu:0.7, xp:40  },
+  tinh: { ten:'Tinh', mau:'#5ea0e8', tran:10, nen:6, buoc:1.0, phu:1.0, xp:90  },
+  co:   { ten:'Cổ',   mau:'#e0a63c', tran:12, nen:8, buoc:1.4, phu:1.3, xp:180 },
+};
+// Bể dòng phụ. Khoá `c*` là chỉ số của CHIMERA (gom trong chiCotGom); khoá còn lại đi thẳng vào
+// sổ P của calcDerived — đã đối chiếu đủ, applyLine() lặng lẽ bỏ qua khoá lạ nên sai một chữ là
+// dòng vẫn hiện trên bảng mà không có tác dụng gì.
+const COT_PHU = [
+  { k:'cAtk',     ten:'Công Chimera',        lo:2.4, hi:5.2 },
+  { k:'cCrit',    ten:'Bạo Kích Chimera',    lo:1.8, hi:3.8 },
+  { k:'cCritDmg', ten:'ST Bạo Chimera',      lo:3.5, hi:7.5 },
+  { k:'cSkill',   ten:'Sát thương chiêu',    lo:2.2, hi:4.8 },
+  { k:'cCd',      ten:'Giảm hồi chiêu',      lo:1.4, hi:3.0 },
+  { k:'atkPct',   ten:'Công Kích',           lo:1.6, hi:3.4 },
+  { k:'hpPct',    ten:'HP tối đa',           lo:2.0, hi:4.2 },
+  { k:'aspdPct',  ten:'Tốc đánh',            lo:1.2, hi:2.6 },
+];
+const COT_PHU_MAP = {}; for (const d of COT_PHU) COT_PHU_MAP[d.k] = d;
+// Bảy Dòng, mỗi Trial Chamber một Dòng. Bốn mảnh ĐỔI LUẬT của chiêu chứ không cộng thêm con số
+// — đó là chỗ tách hệ này khỏi Linh Thú và trang bị người chơi, hai hệ đã làm việc "bốc dòng phụ".
+const COT_DONG = {
+  canhhoa: { ten:'Cánh Hoa', map:'pb_daohoa',    mau:'#e87ab0',
+    hai:{ k:'hpPct', v:8 },   haiTxt:'+8% HP tối đa',
+    bonTxt:'Chiêu của Chimera hồi cho bạn 8% HP tối đa.' },
+  dongco:  { ten:'Đồng Cỏ',  map:'pb_ngoai',     mau:'#7ec850',
+    hai:{ k:'aspdPct', v:6 }, haiTxt:'+6% tốc đánh',
+    bonTxt:'6 giây sau khi tung chiêu, Chimera đánh nhanh gấp đôi.' },
+  regai:   { ten:'Rễ Gai',   map:'pb_chungnam',  mau:'#5a8a4a',
+    hai:{ k:'cAtk', v:8 },    haiTxt:'+8% Công Chimera',
+    bonTxt:'Chiêu để lại vũng gai 4 giây, địch đi qua chậm 30%.' },
+  votrung: { ten:'Vỏ Trứng', map:'pb_comoc',     mau:'#e7dcc2',
+    hai:{ k:'cSkill', v:10 }, haiTxt:'+10% sát thương chiêu',
+    bonTxt:'Chiêu tung hai lần, lần sau 40% sức.' },
+  bangvun: { ten:'Băng Vụn', map:'pb_tuyettinh', mau:'#7ecbff',
+    hai:{ k:'cCrit', v:6 },   haiTxt:'+6% Bạo Kích Chimera',
+    bonTxt:'Chiêu đóng băng mục tiêu 1,2 giây — đổi lại hồi chiêu +2 giây.' },
+  trotan:  { ten:'Tro Tàn',  map:'pb_mongco',    mau:'#c0304a',
+    hai:{ k:'cCritDmg', v:10 }, haiTxt:'+10% ST Bạo Chimera',
+    bonTxt:'Chimera hạ được một mục tiêu thì hồi chiêu giảm 1,5 giây.' },
+  samvun:  { ten:'Sấm Vụn',  map:'pb_nhanmon',   mau:'#b18cff',
+    hai:{ k:'cCd', v:8 },     haiTxt:'−8% hồi chiêu',
+    bonTxt:'Chiêu nổ dây chuyền sang mục tiêu kề trong 200px.' },
+};
+const COT_DONG_IDS = Object.keys(COT_DONG);
+const COT_DONG_THEO_MAP = {}; for (const k of COT_DONG_IDS) COT_DONG_THEO_MAP[COT_DONG[k].map] = k;
+
+let _cotUid = 1;
+function cotMoi(dong, pham){
+  const P = COT_PHAM[pham], o = COT_O_IDS[Math.floor(Math.random() * COT_O_IDS.length)];
+  const c = { uid:'k' + (_cotUid++), dong, o, pham, plus:0, phu:[] };
+  // Dòng chính: giá trị bốc ±15% quanh nền của phẩm.
+  c.chinhV = +(P.nen * (0.85 + Math.random() * 0.3)).toFixed(1);
+  // Số dòng phụ lúc rơi: 0-1 (Thô) · 1-2 (Tinh) · 2-3 (Cổ) — phần còn lại mở dần khi nâng.
+  const dau = pham === 'co' ? 2 + (Math.random() < 0.5 ? 1 : 0)
+            : pham === 'tinh' ? 1 + (Math.random() < 0.5 ? 1 : 0)
+            : (Math.random() < 0.5 ? 1 : 0);
+  for (let i = 0; i < dau; i++) cotThemPhu(c);
+  return c;
+}
+// Sinh một mảnh với ô CHỈ ĐỊNH. Không dùng cotMoi() rồi gán đè `c.o`: dòng phụ đã bốc theo ô
+// ngẫu nhiên ban đầu, gán đè xong là có mảnh mang dòng phụ trùng chính dòng chính của ô.
+function cotMoiO(dong, pham, o){
+  for (let i = 0; i < 40; i++){ const c = cotMoi(dong, pham); if (c.o === o) return c; }
+  const c = cotMoi(dong, pham); c.o = o;
+  c.phu = c.phu.filter(x => x.k !== COT_O[o].chinh);
+  return c;
+}
+function cotThemPhu(c){
+  const P = COT_PHAM[c.pham], chinh = COT_O[c.o].chinh;
+  const co = new Set(c.phu.map(x => x.k));
+  const be = COT_PHU.filter(d => !co.has(d.k) && d.k !== chinh);
+  if (!be.length) return false;
+  const d = be[Math.floor(Math.random() * be.length)];
+  c.phu.push({ k:d.k, v:+((d.lo + Math.random() * (d.hi - d.lo)) * P.phu).toFixed(1) });
+  return true;
+}
+function cotNangPhu(c){                       // đã đủ 4 dòng: bốc thêm cho một dòng có sẵn
+  if (!c.phu.length) return;
+  const P = COT_PHAM[c.pham];
+  const x = c.phu[Math.floor(Math.random() * c.phu.length)];
+  const d = COT_PHU_MAP[x.k]; if (!d) return;
+  x.v = +(x.v + (d.lo + Math.random() * (d.hi - d.lo)) * P.phu).toFixed(1);
+}
+function cotChinhV(c){ return +(c.chinhV + COT_PHAM[c.pham].buoc * c.plus).toFixed(1); }
+function cotTran(c){ return COT_PHAM[c.pham].tran; }
+function cotXpCho(c){                          // ăn một mảnh Cốt được bao nhiêu kinh nghiệm
+  return Math.round(COT_PHAM[c.pham].xp * (1 + c.plus * 0.55));
+}
+function cotXpCan(c){                          // kinh nghiệm cho MỘT bậc kế tiếp
+  return Math.round((60 + c.plus * 42) * (c.pham === 'co' ? 2.2 : c.pham === 'tinh' ? 1.5 : 1));
+}
+function cotTen(c){
+  return `${COT_DONG[c.dong].ten} · ${COT_O[c.o].ten}`;
+}
+window.cotTen = cotTen; window.chiCotGom = chiCotGom; window.chiO = chiO; window.cotMoiO = cotMoiO;
+
+// ── ③ KỸ NĂNG ĐỒNG HÀNH ─────────────────────────────────────────────────────
+// Học theo lối thú cưỡi Võ Lâm Chi Mộng: con thú không tự đánh mạnh lên, nó BUFF NGƯỜI CƯỠI.
+// Bốn kỹ năng mở theo cấp Chimera, chung cho từng lớp Axie — hai kỹ năng luôn bật, hai kỹ năng
+// bật khi Chimera tung chiêu. Bị động riêng (`thu`) của từng con vẫn giữ nguyên, không đụng.
+const CHI_KY_MOC = [10, 25, 45, 70];
+const CHI_KY = {
+  Beast:   [{ ten:'Gầm Vang',    k:'atkPct', v:5,  txt:'+5% Công Kích' },
+            { ten:'Da Dày',      k:'dmgred', v:4,  txt:'−4% sát thương gánh chịu' },
+            { ten:'Máu Săn',     tam:{ k:'atkPct', v:14, t:6 }, txt:'Chiêu nổ: +14% Công Kích trong 6 giây' },
+            { ten:'Bám Riết',    tam:{ k:'aspdPct', v:18, t:6 }, txt:'Chiêu nổ: +18% tốc đánh trong 6 giây' }],
+  Aquatic: [{ ten:'Vảy Nước',    k:'dmgred', v:5,  txt:'−5% sát thương gánh chịu' },
+            { ten:'Thuỷ Triều',  k:'hpPct',  v:6,  txt:'+6% HP tối đa' },
+            { ten:'Cuốn Dòng',   tam:{ k:'evaPct', v:12, t:5 }, txt:'Chiêu nổ: +12% né đòn trong 5 giây' },
+            { ten:'Sóng Ngầm',   tam:{ k:'hpLeech', v:5, t:8 }, txt:'Chiêu nổ: hút 5% sát thương thành HP trong 8 giây' }],
+  Plant:   [{ ten:'Rễ Bám',      k:'hpPct',  v:7,  txt:'+7% HP tối đa' },
+            { ten:'Nhựa Lành',   k:'qireg',  v:4,  txt:'+4 hồi Mana' },
+            { ten:'Nảy Mầm',     tam:{ k:'dmgred', v:12, t:6 }, txt:'Chiêu nổ: −12% sát thương gánh chịu trong 6 giây' },
+            { ten:'Đơm Hoa',     tam:{ k:'hpPct', v:16, t:8 }, txt:'Chiêu nổ: +16% HP tối đa trong 8 giây' }],
+  Bird:    [{ ten:'Sải Cánh',    k:'aspdPct', v:5, txt:'+5% tốc đánh' },
+            { ten:'Mắt Diều',    k:'crit',   v:4,  txt:'+4% Bạo Kích' },
+            { ten:'Bổ Nhào',     tam:{ k:'crit', v:15, t:5 }, txt:'Chiêu nổ: +15% Bạo Kích trong 5 giây' },
+            { ten:'Gió Ngược',   tam:{ k:'aspdPct', v:20, t:5 }, txt:'Chiêu nổ: +20% tốc đánh trong 5 giây' }],
+  Bug:     [{ ten:'Nọc Ngấm',    k:'pierce', v:5,  txt:'+5% xuyên giáp' },
+            { ten:'Vỏ Kitin',    k:'dmgred', v:3,  txt:'−3% sát thương gánh chịu' },
+            { ten:'Bầy Kéo',     tam:{ k:'atkPct', v:12, t:7 }, txt:'Chiêu nổ: +12% Công Kích trong 7 giây' },
+            { ten:'Độc Ngầm',    tam:{ k:'pierce', v:14, t:6 }, txt:'Chiêu nổ: +14% xuyên giáp trong 6 giây' }],
+  Reptile: [{ ten:'Mai Cứng',    k:'dmgred', v:6,  txt:'−6% sát thương gánh chịu' },
+            { ten:'Máu Lạnh',    k:'hpPct',  v:5,  txt:'+5% HP tối đa' },
+            { ten:'Thủ Thế',     tam:{ k:'dmgred', v:14, t:8 }, txt:'Chiêu nổ: −14% sát thương gánh chịu trong 8 giây' },
+            { ten:'Phản Vảy',    tam:{ k:'hpLeech', v:6, t:6 }, txt:'Chiêu nổ: hút 6% sát thương thành HP trong 6 giây' }],
+  Mech:    [{ ten:'Bánh Răng',   k:'aspdPct', v:4, txt:'+4% tốc đánh' },
+            { ten:'Lõi Nạp',     k:'atkPct', v:5,  txt:'+5% Công Kích' },
+            { ten:'Quá Tải',     tam:{ k:'atkPct', v:16, t:5 }, txt:'Chiêu nổ: +16% Công Kích trong 5 giây' },
+            { ten:'Hiệu Chuẩn',  tam:{ k:'crit', v:13, t:7 }, txt:'Chiêu nổ: +13% Bạo Kích trong 7 giây' }],
+  Dawn:    [{ ten:'Ánh Sớm',     k:'expPct', v:8,  txt:'+8% Kinh Nghiệm' },
+            { ten:'Rạng Người',  k:'crit',   v:3,  txt:'+3% Bạo Kích' },
+            { ten:'Bình Minh',   tam:{ k:'atkPct', v:13, t:7 }, txt:'Chiêu nổ: +13% Công Kích trong 7 giây' },
+            { ten:'Chói Loà',    tam:{ k:'evaPct', v:10, t:6 }, txt:'Chiêu nổ: +10% né đòn trong 6 giây' }],
+  Dusk:    [{ ten:'Bóng Đổ',     k:'evaPct', v:4,  txt:'+4% né đòn' },
+            { ten:'Hút Đêm',     k:'hpLeech', v:3, txt:'hút 3% sát thương thành HP' },
+            { ten:'Màn Sương',   tam:{ k:'evaPct', v:14, t:6 }, txt:'Chiêu nổ: +14% né đòn trong 6 giây' },
+            { ten:'Nuốt Bóng',   tam:{ k:'hpLeech', v:7, t:7 }, txt:'Chiêu nổ: hút 7% sát thương thành HP trong 7 giây' }],
+};
+function chiKyCua(id){ const c = CHI_MAP[id]; return (c && CHI_KY[c.lop]) || []; }
+function chiKyMo(id){                          // số kỹ năng đã mở theo cấp
+  const o = chiO(id); if (!o) return 0;
+  let n = 0; for (const m of CHI_KY_MOC) if (o.lv >= m) n++;
+  return n;
+}
+
+// ── GOM CHỈ SỐ ──────────────────────────────────────────────────────────────
+// Trả về { c:{...chỉ số Chimera}, p:[{k,v}...dòng đẩy sang sổ P], bo:{dòng đủ 4 mảnh} }.
+// MỘT chỗ duy nhất gom cả bốn ô Cốt + hiệu ứng bộ, để calcDerived và phần chiến đấu không tự
+// cộng lại theo hai công thức khác nhau.
+function chiCotGom(id){
+  const out = { c:{ cAtk:0, cCrit:0, cCritDmg:0, cSkill:0, cCd:0 }, p:[], bo:null };
+  const o = chiO(id); if (!o) return out;
+  const dem = {};
+  for (const k of COT_O_IDS){
+    const c = o.cot[k]; if (!c) continue;
+    dem[c.dong] = (dem[c.dong] || 0) + 1;
+    const ck = COT_O[c.o].chinh, cv = cotChinhV(c);
+    if (ck in out.c) out.c[ck] += cv; else out.p.push({ k:ck, v:cv });
+    for (const x of c.phu){
+      if (x.k in out.c) out.c[x.k] += x.v; else out.p.push({ k:x.k, v:x.v });
+    }
+  }
+  for (const d in dem){
+    const D = COT_DONG[d]; if (!D) continue;
+    if (dem[d] >= 2){ if (D.hai.k in out.c) out.c[D.hai.k] += D.hai.v; else out.p.push({ k:D.hai.k, v:D.hai.v }); }
+    if (dem[d] >= 4) out.bo = d;
+  }
+  return out;
+}
+// ── HÀNH ĐỘNG ───────────────────────────────────────────────────────────────
+function datHon(){ player.mats = player.mats || {}; return player.mats.datHon || 0; }
+function themDatHon(n){
+  player.mats = player.mats || {};
+  player.mats.datHon = (player.mats.datHon || 0) + n;
+  if (player && !dead) addFloat(player.x, player.y - 70, `◈ +${n} Đất Hồn`, '#b8e87a', 12);
+}
+// Cho Chimera ăn Đất Hồn. Trần cấp do số lần Hoá quyết định — ăn quá trần thì dừng và trả lại
+// phần thừa, chứ không nuốt mất.
+window.chiAnDat = function(id, n){
+  const o = chiO(id); if (!o) return { ok:false };
+  n = Math.min(n | 0, datHon()); if (n <= 0) return { ok:false, vi:'thieu' };
+  const tran = chiTranCap(o);
+  if (o.lv >= tran) return { ok:false, vi:'tran' };
+  let dung = 0, xp = o.xp;
+  for (let i = 0; i < n; i++){
+    if (o.lv >= tran) break;
+    xp += CHI_XP_MOI; dung++;
+    while (o.lv < tran && xp >= chiXpCan(o.lv)){ xp -= chiXpCan(o.lv); o.lv++; }
+  }
+  if (o.lv >= tran) xp = Math.min(xp, chiXpCan(o.lv) - 1);
+  o.xp = xp;
+  player.mats.datHon -= dung;
+  calcDerived(); saveGame();
+  return { ok:true, dung, lv:o.lv };
+};
+window.chiHoa = function(id){
+  const o = chiO(id); if (!o) return { ok:false };
+  if ((o.hoa || 0) >= CHI_HOA.length - 1) return { ok:false, vi:'het' };
+  if (o.lv < chiTranCap(o)) return { ok:false, vi:'chuaDuCap' };
+  const g = chiHoaGia(o.hoa || 0);
+  if (datHon() < g.dat || player.silver < g.bac) return { ok:false, vi:'thieu' };
+  player.mats.datHon -= g.dat; player.silver -= g.bac;
+  o.hoa = (o.hoa || 0) + 1;
+  calcDerived(); saveGame();
+  return { ok:true, hoa:o.hoa, tran:chiTranCap(o) };
+};
+// Kho Cốt chưa đeo.
+function cotKho(){ const C = chiState(); if (!C.kho) C.kho = []; return C.kho; }
+function cotTim(uid){
+  const K = cotKho(); const i = K.findIndex(x => x.uid === uid);
+  if (i >= 0) return { c:K[i], kho:true, i };
+  const C = chiState();
+  for (const id in C.co){ const o = chiO(id); if (!o) continue;
+    for (const k of COT_O_IDS) if (o.cot[k] && o.cot[k].uid === uid) return { c:o.cot[k], kho:false, id, o:k }; }
+  return null;
+}
+window.cotDeo = function(uid, id){
+  const f = cotTim(uid); if (!f || !f.kho) return false;
+  const o = chiO(id); if (!o) return false;
+  const cu = o.cot[f.c.o];
+  cotKho().splice(f.i, 1);
+  o.cot[f.c.o] = f.c;
+  if (cu) cotKho().push(cu);                   // đổi chỗ, không làm mất mảnh cũ
+  calcDerived(); saveGame(); return true;
+};
+window.cotThao = function(id, oKey){
+  const o = chiO(id); if (!o || !o.cot[oKey]) return false;
+  cotKho().push(o.cot[oKey]); o.cot[oKey] = null;
+  calcDerived(); saveGame(); return true;
+};
+// Nâng bậc bằng cách ăn những mảnh Cốt thừa. Mỗi +3 mở một dòng phụ mới; đủ bốn dòng thì bốc
+// thêm cho một dòng đã có — đúng nhịp của Genshin, chỉ khác trần là +12.
+window.cotNang = function(uid, moiUid){
+  const f = cotTim(uid); if (!f) return { ok:false };
+  const c = f.c;
+  if (c.plus >= cotTran(c)) return { ok:false, vi:'tran' };
+  const moi = (moiUid || []).map(u => cotTim(u)).filter(x => x && x.kho && x.c.uid !== uid);
+  if (!moi.length) return { ok:false, vi:'thieuMoi' };
+  let xp = (c.xp || 0);
+  for (const m of moi) xp += cotXpCho(m.c);
+  const bac = moi.length * 400;
+  if (player.silver < bac) return { ok:false, vi:'thieuBac' };
+  player.silver -= bac;
+  // xoá mồi khỏi kho (xoá từ cuối lên để chỉ số không trượt)
+  for (const m of moi.sort((a, b) => b.i - a.i)) cotKho().splice(m.i, 1);
+  let len = 0;
+  while (c.plus < cotTran(c) && xp >= cotXpCan(c)){
+    xp -= cotXpCan(c); c.plus++; len++;
+    if (c.plus % 3 === 0){ if (c.phu.length < 4) cotThemPhu(c); else cotNangPhu(c); }
+  }
+  c.xp = xp;
+  calcDerived(); saveGame();
+  return { ok:true, len, plus:c.plus, du:xp };
+};
+window.cotBo = function(uid){                  // vứt mảnh thừa cho gọn kho
+  const f = cotTim(uid); if (!f || !f.kho) return false;
+  cotKho().splice(f.i, 1); saveGame(); return true;
+};
+const COT_KHO_MAX = 120;
+// Rơi Cốt khi thông quan phó bản: Dòng do CHÍNH phòng quyết định, nên người chơi chọn bộ bằng
+// việc chọn phòng — bỏ đúng tầng may rủi chán nhất của Genshin (cày ra hai bộ trộn lẫn).
+function cotRoi(mapId, lan){
+  const dong = COT_DONG_THEO_MAP[mapId]; if (!dong) return [];
+  const du = lan <= 3;                          // ba lượt đầu trong ngày rơi đủ, sau đó giảm
+  const n = du ? 2 + (Math.random() < 0.45 ? 1 : 0) : 1;
+  const ra = [];
+  for (let i = 0; i < n; i++){
+    const r = Math.random();
+    const pham = du ? (r < 0.14 ? 'co' : r < 0.52 ? 'tinh' : 'tho')
+                    : (r < 0.05 ? 'co' : r < 0.32 ? 'tinh' : 'tho');
+    if (cotKho().length >= COT_KHO_MAX) break;
+    const c = cotMoi(dong, pham); cotKho().push(c); ra.push(c);
+  }
+  themDatHon(du ? 4 + Math.floor(Math.random() * 3) : 1);
+  return ra;
+}
+function chiBoHieu(){                          // dòng đang đủ 4 mảnh của con đang xuất trận
+  const C = chiState(); return C.eq ? chiCotGom(C.eq).bo : null;
+}
 const CHI_IMGS = {};
 function chiImg(id){
   const c = CHI_MAP[id];
@@ -5579,12 +5905,29 @@ function calcDerived(){
   // Bị động của Chimera đang xuất trận — luôn bật khi có con nào đó được chọn, không cần nó
   // đang đứng ngoài map. Huyết Thống C2/C5 dày thêm bị động (chiThuMul).
   {
-    const _ce = (player.chimera && player.chimera.eq) ? CHI_MAP[player.chimera.eq] : null;
+    const _eq = player.chimera && player.chimera.eq;
+    const _ce = _eq ? CHI_MAP[_eq] : null;
     if (_ce && _ce.thu){
       const _v = _ce.thu.v * chiThuMul();
       if (_ce.thu.k === 'skillPct') player.skillDmgPct = (player.skillDmgPct || 0) + _v/100;
       else applyLine(s, _ce.thu.k, _v, P);
     }
+    if (_eq){
+      // Dòng Cốt phía NGƯỜI CHƠI (hai trong bốn ô nuôi người chơi) + hiệu ứng 2 mảnh.
+      for (const _l of chiCotGom(_eq).p){
+        if (_l.k === 'skillPct') player.skillDmgPct = (player.skillDmgPct || 0) + _l.v/100;
+        else applyLine(s, _l.k, _l.v, P);
+      }
+      // Kỹ năng đồng hành LUÔN BẬT — mở dần theo cấp Chimera (kiểu thú cưỡi buff người cưỡi).
+      const _ky = chiKyCua(_eq), _mo = chiKyMo(_eq);
+      for (let i = 0; i < _mo; i++){
+        const _k = _ky[i]; if (!_k || !_k.k) continue;
+        applyLine(s, _k.k, _k.v, P);
+      }
+    }
+    // Buff tạm do chiêu Chimera bật lên — hết giờ thì update() gọi lại calcDerived().
+    const _t = player.chiTam;
+    if (_t && _t.t > 0) applyLine(s, _t.k, _t.v, P);
   }
   // Thần Binh môn phái: mỗi tầng +chỉ số nhỏ; %ST chiêu môn phái (tbDmg) áp trong castSkill
   const tbTier = (player.thanbinh && player.thanbinh.tier) || 0;
@@ -15806,7 +16149,14 @@ function applyTestBoost(){
   player.silver += 999999;
   // Chimera: sở hữu hết, Huyết Thống tối đa, xuất trận sẵn + một nắm vé để thử quay
   { const C = chiState();
-    for (const c of CHIMERA) C.co[c.id] = { con: 6 };
+    for (const c of CHIMERA) C.co[c.id] = { con: 6, lv: CHI_LV_MAX, xp: 0, hoa: CHI_HOA.length - 1,
+                                            cot: { sung:null, vuot:null, vay:null, duoi:null } };
+    player.mats = player.mats || {}; player.mats.datHon = 400;
+    // đủ bốn ô một Dòng để thấy ngay hiệu ứng bộ, cộng một nắm mảnh thừa để thử nâng
+    { const o = C.co.aurelion;
+      for (const k of COT_O_IDS){ const c = cotMoiO('votrung', 'co', k); c.plus = 12;
+        while (c.phu.length < 4) cotThemPhu(c); o.cot[k] = c; }
+      for (let i = 0; i < 24; i++) C.kho.push(cotMoi(COT_DONG_IDS[i % 7], i % 3 === 0 ? 'tinh' : 'tho')); }
     C.eq = 'aurelion'; C.out = true; C.ve.gk = 120; C.ve.cx = 40; C.nguyet = 200; C.tinh = 500; }
   // Tuyệt học: Ám Khí / Cung Tiễn / Cương Khí đều tầng tối đa
   player.amkhiX = { tier: AMKHI_TIERS.length - 1, bless: 0 };
@@ -16013,13 +16363,16 @@ function renderMount(){
     html += `<div style="text-align:center;padding:14px;opacity:.7;font-size:13px">Chưa có Chimera nào.<br>Quay ở Khế Ước để nhận con đầu tiên.</div>`;
     CE().innerHTML = html; return;
   }
+  // ── Con đang xuất trận: cấp · bốn ô Cốt · kỹ năng đồng hành ──
+  if (C.eq) html += chiBangNuoi(C.eq);
   html += `<div class="stat-sec">ĐANG CÓ — ${dsCo.length}/${CHIMERA.length}</div>`;
   for (const c of dsCo){
-    const con = C.co[c.id].con, eq = C.eq === c.id;
+    const o = chiO(c.id), con = o.con, eq = C.eq === c.id;
     html += `<div class="skill-row${eq ? '' : ' locked'}" style="align-items:center">
       <img class="chi-anh" src="${c.img}" alt="" style="border-color:${CHI_SAO_MAU[c.sao]}">
       <span class="sk-info"><b style="color:${c.mau}">${c.ten}</b>
         <span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}"> · ${'★'.repeat(c.sao)} · ${c.lop}</span>
+        <span style="font-size:10.5px;color:#7ecbff"> · Cấp ${o.lv}</span>
         ${con ? `<span style="font-size:10.5px;color:#ffd76a"> · Huyết Thống C${con}</span>` : ''}
         <div class="sk-desc">${c.thuTxt} · Chiêu <b>${c.chieu.ten}</b> (${Math.round(c.chieu.cd)}s)</div></span>
       ${eq ? '<span style="font-size:11px;color:#8fd18f">ĐANG DÙNG</span>'
@@ -16027,6 +16380,115 @@ function renderMount(){
   }
   CE().innerHTML = html;
 }
+// Bảng nuôi một con: thanh cấp + Hoá · bốn ô Cốt · bốn kỹ năng đồng hành.
+function chiBangNuoi(id){
+  const c = CHI_MAP[id], o = chiO(id), G = chiCotGom(id);
+  const tran = chiTranCap(o), day = o.lv >= tran, het = (o.hoa || 0) >= CHI_HOA.length - 1;
+  const can = chiXpCan(o.lv), pct = Math.min(100, Math.round(o.xp / can * 100));
+  const g = chiHoaGia(o.hoa || 0);
+  let h = `<div class="stat-sec">NUÔI — ${c.ten}</div>`;
+
+  // cấp
+  h += `<div class="chi-nuoi">
+    <div class="chi-lvhang">
+      <b style="color:${c.mau}">Cấp ${o.lv}</b>
+      <span class="chi-tran">trần ${tran} · Hoá ${o.hoa || 0}/${CHI_HOA.length - 1}</span>
+      <span class="chi-dat">◈ ${datHon()} Đất Hồn</span>
+    </div>
+    <div class="chi-thanh"><i style="width:${day ? 100 : pct}%;background:${day ? '#e0a63c' : '#7ecbff'}"></i></div>
+    <div class="chi-lvphu">${day ? (het ? 'Đã Hoá hết — cấp tối đa.' : `Đủ cấp để Hoá: cần <b>${g.dat}</b> Đất Hồn + <b>${g.bac.toLocaleString('vi-VN')}◈</b>`)
+      : `${o.xp}/${can} — mỗi Đất Hồn cho ${CHI_XP_MOI} kinh nghiệm`}</div>
+    <div class="forge-actions" style="margin-top:7px">
+      ${day ? (het ? '' : `<button class="mini-btn" ${datHon() >= g.dat && player.silver >= g.bac ? '' : 'disabled'} onclick="window.chiHoa('${id}');refreshCharTab('mount')">✦ Hoá lên trần ${CHI_HOA[(o.hoa||0)+1]}</button>`)
+        : `<button class="mini-btn" ${datHon() ? '' : 'disabled'} onclick="window.chiAnDat('${id}',1);refreshCharTab('mount')">Cho ăn 1</button>
+           <button class="mini-btn" ${datHon() ? '' : 'disabled'} onclick="window.chiAnDat('${id}',999);refreshCharTab('mount')">Cho ăn hết</button>`}
+    </div></div>`;
+
+  // bốn ô Cốt
+  h += `<div class="stat-sec">CỐT — ${COT_O_IDS.filter(k => o.cot[k]).length}/4${G.bo ? ` · đủ bộ <b style="color:${COT_DONG[G.bo].mau}">${COT_DONG[G.bo].ten}</b>` : ''}</div>`;
+  h += `<div class="cot-luoi">`;
+  for (const k of COT_O_IDS){
+    const O = COT_O[k], ct = o.cot[k];
+    if (!ct){
+      h += `<div class="cot-o trong"><div class="cot-glyph">${O.glyph}</div>
+        <b>${O.ten}</b><span>${O.chinhTen}</span><i>trống</i></div>`;
+      continue;
+    }
+    const P = COT_PHAM[ct.pham], D = COT_DONG[ct.dong];
+    h += `<div class="cot-o" style="border-color:${P.mau}">
+      <div class="cot-glyph" style="color:${D.mau}">${O.glyph}</div>
+      <b>${O.ten} <span style="color:${P.mau}">+${ct.plus}</span></b>
+      <span style="color:${D.mau}">${D.ten}</span>
+      <div class="cot-chinh">${O.chinhTen} <b>+${cotChinhV(ct)}%</b></div>
+      ${ct.phu.map(x => `<div class="cot-phu">${(COT_PHU_MAP[x.k] || {}).ten || x.k} +${x.v}%</div>`).join('')}
+      <button class="mini-btn" onclick="window.cotThao('${id}','${k}');refreshCharTab('mount')">Tháo</button></div>`;
+  }
+  h += `</div>`;
+  if (G.bo) h += `<div class="cot-bo">✦ ${COT_DONG[G.bo].ten} — ${COT_DONG[G.bo].bonTxt}</div>`;
+  h += `<div class="forge-actions" style="margin:7px 0 4px">
+    <button class="mini-btn" onclick="window.moKhoCot('${id}')">◆ Kho Cốt (${cotKho().length})</button></div>`;
+
+  // kỹ năng đồng hành
+  const ky = chiKyCua(id), mo = chiKyMo(id);
+  h += `<div class="stat-sec">KỸ NĂNG ĐỒNG HÀNH — ${mo}/4</div>`;
+  h += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:5px;line-height:1.5">Chimera không tự mạnh lên — nó <b>buff cho bạn</b>. Hai kỹ năng đầu luôn bật, hai kỹ năng sau bật mỗi lần nó tung chiêu.</div>`;
+  for (let i = 0; i < ky.length; i++){
+    const k = ky[i], daMo = i < mo;
+    h += `<div class="skill-row${daMo ? '' : ' locked'}" style="align-items:center">
+      <span class="sk-glyph" style="color:${daMo ? c.mau : '#6f7aa6'}">${k.tam ? '✦' : '◆'}</span>
+      <span class="sk-info"><b style="color:${daMo ? '#eef2ff' : '#7a86ad'}">${k.ten}</b>
+        <div class="sk-desc">${daMo ? k.txt : `Mở ở cấp Chimera ${CHI_KY_MOC[i]}`}</div></span></div>`;
+  }
+  return h;
+}
+// Kho Cốt: chọn mảnh để đeo, nâng hoặc bỏ.
+window.moKhoCot = function(id){
+  window._khoChi = id; window._khoLoc = window._khoLoc || 'all'; renderKhoCot();
+};
+window.khoLoc = function(v){ window._khoLoc = v; renderKhoCot(); };
+function renderKhoCot(){
+  const id = window._khoChi, o = chiO(id); if (!o) return;
+  const K = cotKho(), loc = window._khoLoc;
+  const ds = loc === 'all' ? K : K.filter(c => c.o === loc);
+  let h = `<h3>Kho Cốt — ${K.length}/${COT_KHO_MAX}</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  h += `<div style="font-size:11.5px;color:#9aa8d4;line-height:1.55;margin-bottom:8px">Cốt rơi khi thông quan phó bản — <b>mỗi phòng một Dòng</b>, nên chọn phòng là chọn bộ. Nâng bậc bằng cách cho ăn những mảnh thừa; mỗi <b>+3</b> mở thêm một dòng phụ.</div>`;
+  h += `<div class="chaos-tabs"><button class="chaos-tab ${loc === 'all' ? 'on' : ''}" onclick="khoLoc('all')">Tất cả</button>`;
+  for (const k of COT_O_IDS) h += `<button class="chaos-tab ${loc === k ? 'on' : ''}" onclick="khoLoc('${k}')">${COT_O[k].glyph} ${COT_O[k].ten}</button>`;
+  h += `</div>`;
+  if (!ds.length) h += `<div style="text-align:center;padding:16px;opacity:.7;font-size:13px">Chưa có mảnh nào.<br>Thông quan phó bản để nhặt Cốt.</div>`;
+  for (const c of ds){
+    const P = COT_PHAM[c.pham], D = COT_DONG[c.dong], O = COT_O[c.o];
+    const tran = c.plus >= cotTran(c);
+    h += `<div class="skill-row" style="align-items:flex-start;border-color:${P.mau}">
+      <span class="sk-glyph" style="color:${D.mau}">${O.glyph}</span>
+      <span class="sk-info"><b style="color:${P.mau}">${D.ten} · ${O.ten} +${c.plus}</b>
+        <span style="font-size:10.5px;color:${P.mau}"> · ${P.ten} (trần +${P.tran})</span>
+        <div class="sk-desc">${O.chinhTen} <b>+${cotChinhV(c)}%</b>${c.phu.map(x => ` · ${(COT_PHU_MAP[x.k] || {}).ten || x.k} +${x.v}%`).join('')}</div>
+        ${tran ? '' : `<div class="sk-desc" style="opacity:.6">${c.xp || 0}/${cotXpCan(c)} — cần ăn mảnh khác để lên +${c.plus + 1}</div>`}</span>
+      <span class="assign-btns" style="flex-direction:column;gap:3px">
+        <button class="mini-btn" onclick="window.cotDeo('${c.uid}','${id}');renderKhoCot()">Đeo</button>
+        ${tran ? '' : `<button class="mini-btn" onclick="window.cotNuoi('${c.uid}')">Nâng</button>`}
+        <button class="mini-btn danger" onclick="window.cotBo('${c.uid}');renderKhoCot()">Bỏ</button></span></div>`;
+  }
+  el('panel-quest').innerHTML = h;
+  closePanels(); el('panel-quest').classList.remove('hidden');
+}
+window.renderKhoCot = renderKhoCot;
+// Nâng: tự chọn mồi là những mảnh phẩm thấp nhất, chưa nâng, KHÁC mảnh đang nâng — vừa đủ để
+// lên đúng một bậc. Người chơi không phải tick từng cái trong một kho 120 mảnh.
+window.cotNuoi = function(uid){
+  const f = cotTim(uid); if (!f) return;
+  const can = cotXpCan(f.c) - (f.c.xp || 0);
+  const moi = cotKho().filter(x => x.uid !== uid && x.plus === 0)
+    .sort((a, b) => COT_PHAM[a.pham].xp - COT_PHAM[b.pham].xp);
+  const chon = []; let co = 0;
+  for (const m of moi){ if (co >= can) break; chon.push(m.uid); co += cotXpCho(m); }
+  if (!chon.length){ addFloat(player.x, player.y - 60, 'Không còn mảnh thừa để cho ăn', '#ff9a6a', 12); return; }
+  const r = window.cotNang(uid, chon);
+  if (r.ok) addFloat(player.x, player.y - 60, `◆ ${cotTen(f.c)} → +${r.plus}`, '#8fd18f', 13);
+  else if (r.vi === 'thieuBac') addFloat(player.x, player.y - 60, 'Không đủ bạc', '#ff9a6a', 12);
+  renderKhoCot();
+};
 // ═══════════ KHẾ ƯỚC — màn quay + hoạt ảnh ═══════════
 // Hoạt ảnh port từ bản thử docs/proto/khe_uoc_anim.html, sáu nhịp:
 //   1 sao băng bay chéo · 2 MÀU ĐUÔI báo phẩm cao nhất của lượt · 3 chạm đất, chớp trắng
@@ -16602,6 +17064,9 @@ function cheatHelp(){
     '/nd <n> — Lõi Nguyên Tố · /jewel <n> — cả bốn Tứ Châu · /gem <n> — Tử La + Hỗn Nguyên',
     '/manh /tich /an /cothan <n> — mảnh ghép chế tác · /hap <n> — Box Kundun mọi tầng',
     '/item [phẩm 0-4] [giai 1-10] — tạo trang bị vào túi',
+    '── Chimera ──',
+    `/dat <n> — Đất Hồn nuôi cấp · /chilv <1-${CHI_LV_MAX}> — đặt cấp con đang xuất trận`,
+    '/cot <' + COT_DONG_IDS.join('|') + '|all> [n] — nhặt Cốt vào kho',
     '── tiến trình (mở nội dung hậu kỳ) ──',
     '/mo — mở HẾT cổng: xong chính tuyến, cấp đỉnh 120, phá phong ấn mọi map, mở bảng ' + MASTERY_NAME,
     `/quest <1-${QUESTS.length}|all> — nhảy tới một nhiệm vụ chính tuyến · /chuong — xem mốc từng chương`,
@@ -16809,6 +17274,28 @@ window.cheatExec = function(raw){
       }
       case 'wipe': window.wipeSave(true); return;
       case 'deep': deepStart(); cheatLog('Tầng Sâu: bắt đầu', '#c07fe0'); return;
+      case 'dat': {                      // /dat <n> — Đất Hồn nuôi Chimera
+        const n = clamp(Math.round(num(1, 100)), 0, 99999);
+        player.mats = player.mats || {}; player.mats.datHon = (player.mats.datHon || 0) + n;
+        cheatLog(`+${n} Đất Hồn (tổng ${player.mats.datHon})`, '#b8e87a'); break;
+      }
+      case 'chilv': {                    // /chilv <cấp> — đặt thẳng cấp con đang xuất trận
+        const C = chiState(); if (!C.eq){ cheatLog('Chưa chọn Chimera nào.', '#ff7a6a'); return; }
+        const o = chiO(C.eq), n = clamp(Math.round(num(1, CHI_LV_MAX)), 1, CHI_LV_MAX);
+        o.hoa = CHI_HOA.findIndex(t => t >= n); if (o.hoa < 0) o.hoa = CHI_HOA.length - 1;
+        o.lv = n; o.xp = 0; calcDerived();
+        cheatLog(`${CHI_MAP[C.eq].ten} → cấp ${n} (Hoá ${o.hoa}, mở ${chiKyMo(C.eq)}/4 kỹ năng)`, '#7ecbff'); break;
+      }
+      case 'cot': {                      // /cot <dòng|all> [n] — nhặt Cốt vào kho
+        const a = (parts[1] || 'all').toLowerCase(), n = clamp(Math.round(num(2, 8)), 1, 200);
+        const ds = a === 'all' ? COT_DONG_IDS : (COT_DONG[a] ? [a] : null);
+        if (!ds){ cheatLog('/cot <' + COT_DONG_IDS.join('|') + '|all> [n]', '#ff7a6a'); return; }
+        for (let i = 0; i < n; i++){
+          const d = ds[i % ds.length], r = Math.random();
+          cotKho().push(cotMoi(d, r < 0.3 ? 'co' : r < 0.7 ? 'tinh' : 'tho'));
+        }
+        cheatLog(`+${n} Cốt (kho ${cotKho().length}/${COT_KHO_MAX})`, '#b08ae8'); break;
+      }
       case 'mo': {                       // /mo — mở HẾT cổng tiến trình, giữ nguyên sức mạnh
         moHetCong(); calcDerived();
         cheatLog(`Mở hết cổng: chính tuyến ${QUESTS.length}/${QUESTS.length} · cấp đỉnh ${lvPeak()} · phong ấn ${Object.keys(BOSS_DEFS).length} map · bảng ${MASTERY_NAME} mở (${player.mpts} điểm)`, '#7ecbff');
@@ -23136,6 +23623,16 @@ function updateDungeon(dt){
     dailyTrack('dungeon'); // Mục Tiêu Hôm Nay
     // Phó bản: 1 Ấn Cổ Xưa mỗi lượt thông quan — nhánh vé phụ, chậm hơn Giao Kết.
     chiVe(1, 'thông quan phó bản', 'cx');
+    // ── Cốt Chimera: mỗi phòng rơi ĐÚNG một Dòng, nên bộ do người chơi chọn bằng việc chọn
+    // phòng để vào. Ba lượt đầu trong ngày rơi đủ, từ lượt thứ tư rơi giảm — cửa mềm, không
+    // phải tường: cày cả buổi vẫn tiến được, chỉ chậm hơn.
+    const _lan = (player.daily && player.daily.dungeon) || 1;
+    const _cot = cotRoi(curMap, _lan);
+    if (_cot.length){
+      const _co = _cot.filter(c => c.pham === 'co').length;
+      addFloat(player.x, player.y - 110, `◆ +${_cot.length} Cốt ${COT_DONG[_cot[0].dong].ten}${_co ? ` (${_co} Cổ!)` : ''}`,
+               COT_DONG[_cot[0].dong].mau, 14);
+    }
     if (tl > 0) player.gems.tuLa += tl;
     if (hn > 0) player.gems.honNguyen += hn;
     zoneBanner = { text:'PHÓ BẢN THÔNG QUAN!',
@@ -23789,9 +24286,16 @@ function ensureMount(){
 // Sát thương đòn thường của Chimera. Bản cũ lấy `dmg` phẳng theo giai; nay 5★ nặng đòn hơn 4★
 // và vẫn bám theo Công Kích người chơi để không lạc hậu ở cuối game.
 function mountDmg(){
-  const c = CHI_MAP[mountObj && mountObj.id] || CHI_MAP[player.chimera.eq];
-  const nen = c.sao === 5 ? 180 : 90;
-  return Math.round((nen + (player.atk || 0) * 0.2) * chiDmgMul());
+  const id = (mountObj && mountObj.id) || player.chimera.eq;
+  const c = CHI_MAP[id];
+  const o = chiO(id), lv = o ? o.lv : 1;
+  // Cấp làm hai việc: nâng con số nền (×1 → ×3) và nâng phần ăn Công người chơi (0.20 → 0.36).
+  // Trước bản này cả hai đều cố định, nên Chimera càng về cuối game càng mất giá.
+  const nen = (c.sao === 5 ? 180 : 90) * chiLvNen(lv);
+  const G = chiCotGom(id);
+  let d = (nen + (player.atk || 0) * chiLvHeSo(lv)) * chiDmgMul() * (1 + G.c.cAtk / 100);
+  if (Math.random() < G.c.cCrit / 100) d *= 1.5 + G.c.cCritDmg / 100;
+  return Math.round(d);
 }
 function updateMount(dt){
   if (!player || dead){ mountObj = null; return; }
@@ -23799,6 +24303,12 @@ function updateMount(dt){
   if (!mountObj) return;
   mountObj.wob += dt*6;
   mountObj.lungeT = Math.max(0, mountObj.lungeT - dt);
+  mountObj._nhanhT = Math.max(0, (mountObj._nhanhT || 0) - dt);
+  // Buff tạm do chiêu bật lên: hết giờ phải tính LẠI chỉ số, không thì nó bám vĩnh viễn.
+  if (player.chiTam && player.chiTam.t > 0){
+    player.chiTam.t -= dt;
+    if (player.chiTam.t <= 0){ player.chiTam = null; calcDerived(); }
+  }
   // bám theo người chơi — đứng lệch bên phải (Linh Thú bên trái)
   const tx = player.x + 52, ty = player.y + 36;
   const dd = dist(mountObj.x, mountObj.y, tx, ty);
@@ -23814,7 +24324,9 @@ function updateMount(dt){
     const near = mobs.filter(m => !m.dead && !m.def.duHiep && dist(mountObj.x, mountObj.y, m.x, m.y) < Math.max(160, ch.r));
     const canDung = ch.fx === 'shield' || near.length > 0;
     if (canDung){
-      mountObj.skT = ch.cd * chiCdMul();
+      const _G = chiCotGom(mountObj.id);
+      // Băng Vụn đủ 4 mảnh trả giá bằng +2s hồi chiêu — đổi lấy 1,2s đóng băng.
+      mountObj.skT = ch.cd * chiCdMul() * (1 - Math.min(0.6, _G.c.cCd / 100)) + (_G.bo === 'bangvun' ? 2 : 0);
       chiCastChieu(_c, ch, near);
     } else mountObj.skT = 0.5;
   }
@@ -23828,18 +24340,35 @@ function updateMount(dt){
       if (d2 < bd){ bd = d2; best = m; }
     }
     if (best){
-      mountObj.atkT = 1.4;
+      mountObj.atkT = mountObj._nhanhT > 0 ? 0.7 : 1.4;   // Đồng Cỏ 4 mảnh: 6s đánh nhanh gấp đôi
       mountObj.face = Math.atan2(best.y-mountObj.y, best.x-mountObj.x);
       mountObj.lungeT = 0.18; // vồ tới trước khi cắn
       hurtMob(best, mountDmg(), 'mount');
+      if (best.dead && chiBoHieu() === 'trotan') mountObj.skT = Math.max(0, mountObj.skT - 1.5);
       addEffect({ type:'ring', x:best.x, y:best.y, r:14, color:CHI_MAP[mountObj.id].mau });
     } else mountObj.atkT = 0.3;
   }
 }
 // Chiêu chủ động của Chimera. Sáu kiểu, mỗi kiểu một hình riêng — cùng ngôn ngữ hiệu ứng với
 // chiêu của người chơi (xem spawnSkillVfx) nhưng nhỏ hơn, để không át đòn của chính người chơi.
+// Bật một buff tạm lên NGƯỜI CHƠI. Hai kỹ năng đồng hành cuối của mỗi lớp chạy qua đây.
+function chiBatTam(k, v, t){
+  player.chiTam = { k, v, t };
+  calcDerived();
+  addFloat(player.x, player.y - 66, `✦ ${k === 'atkPct' ? 'Công' : k === 'aspdPct' ? 'Tốc đánh'
+    : k === 'crit' ? 'Bạo Kích' : k === 'evaPct' ? 'Né đòn' : k === 'dmgred' ? 'Giáp'
+    : k === 'hpLeech' ? 'Hút máu' : k === 'pierce' ? 'Xuyên giáp' : 'HP'} +${v}%`, '#7ecbff', 12);
+}
 function chiCastChieu(c, ch, near){
-  const lan = chiCon() >= 6 ? 2 : 1;               // C6: chiêu đánh hai lần
+  const id = (mountObj && mountObj.id) || player.chimera.eq;
+  const G = chiCotGom(id);
+  // Kỹ năng đồng hành loại "chiêu nổ thì buff" — mở ở mốc cấp 45 và 70.
+  {
+    const ky = chiKyCua(id), mo = chiKyMo(id);
+    for (let i = 0; i < mo; i++){ const k = ky[i]; if (k && k.tam) chiBatTam(k.tam.k, k.tam.v, k.tam.t); }
+  }
+  // Vỏ Trứng đủ 4 mảnh: chiêu tung hai lần (chồng với C6 thì thành ba).
+  const lan = (chiCon() >= 6 ? 2 : 1) + (G.bo === 'votrung' ? 1 : 0);
   for (let i = 0; i < lan; i++) setTimeout(() => {
     if (!player || dead || !mountObj) return;
     const mx = mountObj.x, my = mountObj.y;
@@ -23855,7 +24384,25 @@ function chiCastChieu(c, ch, near){
       for (const m of near){ m.aggroT = ch.taunt; m.tauntTo = mountObj; }
       addEffect({ type:'ring', x:mx, y:my, r:ch.r, color:c.mau, big:true });
     }
-    const dmg = Math.round((player.atk || 100) * ch.mult * chiDmgMul() * (c.sao === 5 ? 1 : 0.7));
+    const _o = chiO(id);
+    const _lv = _o ? (1 + 0.9 * (_o.lv - 1) / (CHI_LV_MAX - 1)) : 1;   // cấp nâng chiêu tới ×1.9
+    let dmg = Math.round((player.atk || 100) * ch.mult * chiDmgMul() * (c.sao === 5 ? 1 : 0.7)
+                         * _lv * (1 + G.c.cSkill / 100));
+    if (i > 0 && G.bo === 'votrung') dmg = Math.round(dmg * 0.4);      // lần sau 40% sức
+    if (G.bo === 'canhhoa'){                                           // chiêu hồi máu cho NGƯỜI CHƠI
+      const hp = Math.round(player.maxHp * 0.08);
+      player.hp = Math.min(player.maxHp, player.hp + hp);
+      addFloat(player.x, player.y - 52, `✚ ${hp}`, '#8fd18f', 13);
+    }
+    if (G.bo === 'dongco'){ mountObj._nhanhT = 6; }                    // đánh nhanh gấp đôi 6s
+    if (G.bo === 'bangvun') for (const m of near.slice(0, 4)) m.freezeT = Math.max(m.freezeT || 0, 1.2);
+    if (G.bo === 'samvun'){                                            // nổ dây chuyền sang mục tiêu kề
+      const t0 = near[0];
+      if (t0) for (const m of mobs){
+        if (m === t0 || m.dead) continue;
+        if (dist(m.x, m.y, t0.x, t0.y) < 200) hurtMob(m, Math.round(dmg * 0.45), 'mount');
+      }
+    }
     if (ch.fx === 'bolt'){                         // sét chia cho tối đa `multi` mục tiêu
       const ds = near.slice(0, ch.multi || 3);
       for (const m of ds){

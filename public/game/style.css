@@ -581,6 +581,31 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   background:rgba(30,32,64,.8); border:1px solid var(--border-faint); text-align:center; line-height:32px; font-size:16px; flex:none; }
 .skill-row .sk-info { flex:1; font-size:12px; min-width:0; }
 .skill-row .sk-info .sk-desc { font-size:10.5px; opacity:.7; margin-top:1px; line-height:1.35; }
+/* ── Định Hình Chimera: thanh cấp, bốn ô Cốt, kho Cốt ── */
+.chi-nuoi { background:var(--cell); border:1px solid var(--border-faint); border-radius:var(--r-sm);
+  padding:10px 12px; margin:4px 0 8px; }
+.chi-lvhang { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; font-size:13.5px; }
+.chi-tran { font-size:11px; color:var(--text-dim); }
+.chi-dat { margin-left:auto; font-size:11.5px; color:var(--mint); }
+.chi-thanh { height:7px; background:rgba(10,12,28,.75); border-radius:999px; overflow:hidden;
+  margin:6px 0 4px; border:1px solid var(--border-faint); }
+.chi-thanh i { display:block; height:100%; border-radius:999px; transition:width 180ms ease-out; }
+.chi-lvphu { font-size:11px; color:var(--text-dim); line-height:1.5; }
+
+.cot-luoi { display:grid; grid-template-columns:repeat(auto-fit,minmax(148px,1fr)); gap:6px; }
+.cot-o { background:var(--cell); border:1px solid var(--border-faint); border-radius:var(--r-sm);
+  padding:9px 10px; font-size:11.5px; display:flex; flex-direction:column; gap:2px; }
+.cot-o.trong { opacity:.5; }
+.cot-o > b { font-size:12.5px; }
+.cot-o > span { font-size:10.5px; }
+.cot-o > i { font-size:10.5px; color:var(--text-dimmer); font-style:normal; }
+.cot-glyph { font-size:17px; line-height:1; }
+.cot-chinh { margin-top:3px; font-size:11.5px; color:var(--text-bright); }
+.cot-phu { font-size:10.5px; color:var(--text-dim); }
+.cot-o .mini-btn { margin-top:6px; align-self:flex-start; font-size:10.5px; padding:2px 9px; }
+.cot-bo { margin-top:6px; font-size:11.5px; line-height:1.5; color:var(--gold);
+  border-left:2px solid var(--gold); padding-left:9px; }
+
 /* Hộp thoại nhiều trang — lần gặp đầu của bảy người dẫn chương */
 .npc-trang { font-size:14px; line-height:1.75; color:var(--text-bright); padding:4px 2px 12px;
   min-height:96px; }

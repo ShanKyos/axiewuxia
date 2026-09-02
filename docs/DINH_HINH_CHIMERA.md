@@ -3,8 +3,14 @@
 > Quay ra một con Chimera rồi làm gì tiếp? Hiện tại: không làm gì cả. Tài liệu này thiết kế
 > phần còn thiếu, lấy vòng lặp hậu-gacha của Genshin làm khuôn.
 >
-> Trạng thái: **bản thiết kế, chưa thi công.** Số liệu trong đây phải chạy mô phỏng xác nhận
-> trước khi viết code — đúng quy trình đã dùng cho `docs/GACHA_KHE_UOC.md`.
+> Trạng thái: **ĐÃ THI CÔNG.** Gác bằng `tests/test_dinhhinh.js` (36 chốt).
+>
+> Hai chỗ khác bản thiết kế ban đầu, do chủ dự án chốt lại:
+> - **Tinh Trần và Nguyệt Trần không đụng tới** — hai loại đó dành cho cửa hàng đổi vật phẩm.
+>   Nhiên liệu của hệ này là **Đất Hồn** (rơi khi thông quan phó bản) và chính những mảnh Cốt
+>   thừa (nâng bậc bằng cách cho ăn mảnh khác, không tốn tiền tệ nào ngoài bạc).
+> - **Dạy Chiêu gộp thẳng vào cấp** thay vì làm vòng lặp riêng: chiêu mạnh lên ×1.00 → ×1.90
+>   theo cấp Chimera, không cần Sách Hình và không cần thêm một bảng nâng cấp nữa.
 
 ---
 
