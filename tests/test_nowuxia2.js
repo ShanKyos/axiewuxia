@@ -1,6 +1,14 @@
 // QUY TẮC SỐ 1 của CLAUDE.md: phong cách là MU Online, không phải kiếm hiệp.
-// Bài kiểm này quét TỪ VỰNG TU TIÊN trong chuỗi NGƯỜI CHƠI THẤY. Nhắc trong comment thì không
-// sao — quy tắc nói về nội dung game, không nói về ghi chú kỹ thuật.
+// Mục A và B quét TỪ VỰNG TU TIÊN trong chuỗi NGƯỜI CHƠI THẤY — đó là lỗi thật sự.
+// Mục D quét trong CHÚ THÍCH. Trước đây bài này miễn hẳn cho chú thích, và trong một thời gian
+// dài đó là lựa chọn đúng. Nhưng đếm lại thì có 39 chỗ, và phần lớn KHÔNG phải ghi chú lịch sử
+// mà là chú thích mô tả hệ thống ĐANG SỐNG bằng tên cũ ("kỹ năng môn phái", "hồi chân khí",
+// "Cương Khí hộ thể" cho thứ trong mã tên là GANGKHI_TIERS: Stonehide/Slateskin/Ironbell).
+// Chú thích là thứ người viết mã tiếp theo đọc để biết gọi thứ này là gì — nên nó dạy sai từ
+// vựng cho chính người sẽ viết chuỗi hiện ra sau này. Vì thế nay chú thích cũng bị soi.
+// KHÁC BIỆT quan trọng: tên riêng của MU Online (Lorencia, Devil Square, Blood Castle) trong
+// chú thích thì VẪN ĐƯỢC — CLAUDE.md cho phép ghi công nguồn cảm hứng, và bỏ đi thì mất luôn
+// thông tin thật (người sau không biết bố cục quảng trường lấy từ đâu).
 const { chromium } = require('playwright');
 const fs = require('fs');
 let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
@@ -77,6 +85,33 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
   console.log('C) bản tiếng Anh:', JSON.stringify(enText), '· en=' + en);
   if (enText.conVietSot.length)
     fail('bản EN vẫn hiện chữ Việt ' + enText.conVietSot.join(', ') + ' — khoá từ điển mất khớp');
+
+  // D. quét CHÚ THÍCH của game.js — xem đầu tệp để biết vì sao mục này tồn tại
+  {
+    const txt = fs.readFileSync('/home/user/axie-wuxia/public/game/game.js', 'utf-8');
+    const ct = [];
+    // Lấy RA phần chú thích (ngược với mục A, vốn bóc chú thích đi)
+    for (const m of txt.matchAll(/\/\*[\s\S]*?\*\//g)) ct.push(m[0]);
+    txt.split('\n').forEach((l, i) => {
+      const c = l.indexOf('//');
+      if (c < 0) return;
+      const b = l.slice(0, c);
+      // '//' nằm trong chuỗi (https://) thì không phải mở chú thích
+      const nhay = (b.split("'").length-1)%2 || (b.split('"').length-1)%2 || (b.split('`').length-1)%2;
+      if (!nhay) ct.push(`@${i+1} ${l.slice(c)}`);
+    });
+    const dinhCt = [];
+    for (const dong of ct)
+      for (const w of CAM)
+        if (dong.includes(w)) dinhCt.push(`[${w}] ${dong.trim().slice(0, 84)}`);
+    console.log(`D) quét chú thích: ${dinhCt.length} chỗ dính từ cấm`);
+    dinhCt.slice(0, 8).forEach(d => console.log('   ' + d));
+    if (dinhCt.length) fail(`${dinhCt.length} chú thích còn từ vựng tu tiên — xem đầu tệp bài kiểm`);
+    // Ngược lại: tên riêng MU trong chú thích PHẢI còn, không thì ai đó đã "sửa" nhầm chỗ được phép
+    const muCt = ct.filter(d => /Lorencia|Devil Square|Blood Castle/.test(d)).length;
+    console.log(`   (tên riêng MU trong chú thích: ${muCt} — được phép, ghi công nguồn cảm hứng)`);
+    if (!muCt) fail('chú thích ghi công nguồn cảm hứng MU Online đã bị xoá mất — đó là thông tin thật');
+  }
 
   console.log('errors:', JSON.stringify(errs));
   if (errs.length) fail('lỗi trang: ' + errs[0]);
