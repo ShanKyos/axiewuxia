@@ -7573,7 +7573,7 @@ function computeKillRewards(m, source, P, rng){
   // (bảng Nhân Vật → Linh Thú), nhận một lần ở cấp 8 rồi nuôi lên. Trước đây pet là đồ rơi,
   // nên săn được con tốt nhất là ô pet chết vĩnh viễn: không còn lý do nhặt con thứ tư.
   // Túi nay là LƯỚI, nên "còn chỗ" đo bằng Ô TRỐNG chứ không phải số món. Đôi cánh chiếm
-  // 2×5 = 10 ô, nên chỉ quay cánh khi thật sự còn chừng đó chỗ — hợp đồng của hàm này là
+  // 3×2 = 6 ô, nên chỉ quay cánh khi thật sự còn chừng đó chỗ — hợp đồng của hàm này là
   // KHÔNG ghi vào player, nên chỉ ĐẾM ô trống, không đặt thử.
   let _sotCho = bagOTrong();
   if (d.boss){
@@ -17925,7 +17925,7 @@ window.closePanels = closePanels;
 const SLOT_ICONS = {
   vukhi:'vukhi', non:'non', ao:'ao', tay:'tay', quan:'quan', chan:'chan',
   daychuyen:'daychuyen', nhan1:'nhan', nhan2:'nhan',
-  aochoang:'aochoang', canh:'canh',
+  aochoang:'aochoang',                 // cánh KHÔNG ở đây: icon sinh bằng canhIconUrl()
 };
 // ═══════════════ HÌNH VẬT PHẨM — vẽ bằng code, không dùng file PNG ═══════════════
 // 11 file PNG đang phải gánh TOÀN BỘ trang bị: mọi thanh kiếm trong game dùng chung vukhi.png,
@@ -19903,7 +19903,50 @@ function assignDef(it, sect){
   return it;
 }
 
+// ═══ ICON CÁNH — vẽ bằng CHÍNH veCanh(), không phải một tệp PNG riêng ═══
+// Giáp và vũ khí đã sinh icon từ cùng nguồn với hình trên người, nên không có cách nào lệch.
+// Cánh thì lọt lưới vì thêm vào sau: cả 18 đôi (6 lớp × 3 bậc) dùng chung một tệp canh.png,
+// nên Cánh Bạch Vũ và Thần Dực Hư Vô hiện y hệt nhau trong túi. Nay gọi thẳng hàm vẽ trên
+// lưng, nên đổi tranh hay đổi màu bậc thì icon tự theo.
+const CANH_ICON_PX = 128;
+const CANH_ICON_CAP = 40;                 // 18 đôi thật, dư chỗ cho save cũ
+const _canhIconCache = new Map();
+// Đo hộp bao thay vì tính bằng công thức: sải cánh phụ thuộc chất liệu, cỡ riêng `to` và cả
+// mấy món trang trí của bậc 3. Công thức nào rồi cũng lệch khi chỉnh WING_TIERS; đo thì không.
+function _hopBaoCanh(q, W, H){
+  const d = q.getImageData(0, 0, W, H).data;
+  let x0 = W, y0 = H, x1 = -1, y1 = -1;
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++)
+      if (d[(y*W + x)*4 + 3] > 8){ if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return x1 < 0 ? null : [x0, y0, x1 - x0 + 1, y1 - y0 + 1];
+}
+function canhIconUrl(it){
+  const d = wingDef(it); if (!d) return null;
+  const key = (it.wing || '') + '|' + clamp(wingBac(it), 1, 3);
+  { const u = lruLay(_canhIconCache, key); if (u) return u; }
+  const BIG = 560;                        // đủ chứa sải cánh bậc 3 (đo được 376×210 ở co=1)
+  const t = document.createElement('canvas');
+  t.width = BIG; t.height = BIG;
+  const q = t.getContext('2d');
+  // (BIG/2, BIG*0.62) đóng vai điểm (80, 212) của bộ xương — chỗ veCanh neo vào gót nhân vật.
+  veCanh(q, it, BIG/2, BIG*0.62, 0, 0, 1, 0);
+  const bb = _hopBaoCanh(q, BIG, BIG);
+  const c = document.createElement('canvas');
+  c.width = CANH_ICON_PX; c.height = CANH_ICON_PX;
+  if (bb){
+    const g = c.getContext('2d');
+    const co = Math.min((CANH_ICON_PX - 6) / bb[2], (CANH_ICON_PX - 6) / bb[3]);
+    g.drawImage(t, bb[0], bb[1], bb[2], bb[3],
+                (CANH_ICON_PX - bb[2]*co) / 2, (CANH_ICON_PX - bb[3]*co) / 2, bb[2]*co, bb[3]*co);
+  }
+  return lruDat(_canhIconCache, key, c.toDataURL(), CANH_ICON_CAP);
+}
 function slotIcon(it, cls){
+  if (it && it.slot === 'canh' && it.wing){
+    const u = canhIconUrl(it);
+    if (u) return `<span class="item-ic"><img class="${cls||'slot-icon'}" src="${u}" alt=""></span>`;
+  }
   // Món có định nghĩa → vẽ bằng bộ phận. 11 file PNG cũ chỉ còn phục vụ đồ đặc biệt
   // (cánh, áo choàng, pet) và save cũ chưa có def.
   let _d = itemDef(it);
@@ -20064,7 +20107,10 @@ function bagCap(){ return BAG_COLS * bagRows(); }
 const BAG_SIZES = {
   nhan1:[1,1], nhan2:[1,1], daychuyen:[1,2],
   non:[2,2], ao:[2,2], tay:[2,2], quan:[2,2], chan:[2,2],
-  aochoang:[2,3], canh:[2,5],          // cánh 2×5 = 10 ô
+  aochoang:[2,3], canh:[3,2],          // cánh 3×2 = 6 ô, RỘNG chứ không dọc
+  // Đôi cánh bậc 3 đo được 376×210 ở cỡ gốc — rộng gần gấp đôi chiều cao. Bản trước để
+  // [2,5] tức hai cột dọc cao nghêu, nhét hình 1,8:1 vào đó thì nó teo còn một dúm ở giữa.
+  // 3×2 = 6 ô cũng đúng khối cánh của MU, và vẫn nhỏ hơn vũ khí hai tay (2×4 = 8 ô).
   vukhi:[2,4],
 };
 // Vũ khí lệch nhau khá nhiều: thanh kiếm một tay khác cây trường cung. Lấy theo `line` của

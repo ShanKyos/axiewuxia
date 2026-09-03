@@ -50,7 +50,7 @@ const { chromium } = require('playwright');
   check('dây chuyền 1×2', co.daychuyen, [1,2]);
   check('áo 2×2', co.ao, [2,2]);
   check('áo choàng 2×3', co.aochoang, [2,3]);
-  check('CÁNH 2×5 = 10 ô', co.canh, [2,5]);
+  check('CÁNH 3×2 = 6 ô, RỘNG chứ không dọc', co.canh, [3,2]);
   cond('vũ khí cao hơn rộng', co.vukhi, v => v && v[1] > v[0], 'vũ khí phải dài theo chiều dọc');
 
   // không món nào chồng ô của món khác
@@ -72,16 +72,16 @@ const { chromium } = require('playwright');
   const day = await page.evaluate(() => {
     player.inv = []; player.bagPlus = 0;
     let n = 0;
-    while (bagThem(genWing(0))) n++;                      // cánh 10 ô → 64/10 = 6 đôi
+    while (bagThem(genWing(0))) n++;                      // cánh 6 ô → 64/6 = 10 đôi
     return { nhet: n, oTrong: bagOTrong(), conCho: bagConCho(genWing(0)) };
   });
   console.log('nhồi cánh:', JSON.stringify(day));
-  // BỐN, không phải sáu. 64 ô chia 10 ra 6, nhưng lưới không phải cái xô: cánh cao 5 hàng
-  // nên chỉ xếp được một tầng bốn đôi (4 cột đôi × 5 hàng), ba hàng cuối thừa ra không đủ
-  // cao cho đôi thứ năm. Đó CHÍNH LÀ điều làm túi lưới khác túi đếm món — và là lý do
-  // "Xếp Gọn" có nghĩa.
-  check('túi 64 ô chỉ nhét vừa 4 đôi cánh (2×5), không phải 6', day.nhet, 4);
-  check('còn thừa đúng 24 ô lẻ mà không đôi cánh nào nhét vừa', day.oTrong, 24);
+  // TÁM, không phải mười. 64 ô chia 6 ra 10, nhưng lưới không phải cái xô: cánh rộng 3 cột
+  // mà túi có 8, nên mỗi tầng chỉ kê được hai đôi và thừa ra một dải 2 cột chạy dọc suốt
+  // 8 hàng — 16 ô chết mà không đôi cánh nào nhét vừa. Đó CHÍNH LÀ điều làm túi lưới khác
+  // túi đếm món — và là lý do "Xếp Gọn" có nghĩa.
+  check('túi 64 ô chỉ nhét vừa 8 đôi cánh (3×2), không phải 10', day.nhet, 8);
+  check('còn thừa đúng 16 ô lẻ mà không đôi cánh nào nhét vừa', day.oTrong, 16);
   check('hết chỗ thì bagConCho() nói KHÔNG', day.conCho, false);
 
   // ── 2. BẬC THANG NGỌC — đúng MU: ◎ tới +6, ◉ tới +9, trên nữa phải qua lò ──
