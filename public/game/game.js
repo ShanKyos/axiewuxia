@@ -804,7 +804,10 @@ const MAPS = {
     packs: [], duhiep: null },
   ngoai: { name:'Petalshade Outskirts', min:10, range:'14 - 24', type:'safe', ground:'#ddd2ae', patch:'#7a7048',
     spawn:{ x:1300, y:330 }, spawnFrom:{ pb_ngoai:{ x:2000, y:1040 } }, reqMain:10, trees:56, rocks:22, herbs:true,
-    desc:'Ngay ngoài cổng thành — trại Gloam chặn đường, bầy Gai Tím rình rập ven rừng. Không PK, đất an toàn để luyện cấp.',
+    // Câu đầu vốn nằm ở REGION_UNLOCK_LORE.ngoai và chỉ hiện ĐÚNG MỘT LẦN lúc mở khoá vùng.
+    // Dòng người chơi đọc mỗi lần mở Bản Đồ lại là dòng "đất an toàn để luyện cấp" — tức là
+    // vùng đầu tiên báo hiệu chuỗi năm trụ bị giới thiệu như một bãi cỏ giữa hai nhiệm vụ.
+    desc:'Đất ngoài thành đang rung — chưa phải trụ, nhưng là dấu hiệu đầu tiên rằng có trụ đang lung lay. Trại Gloam chặn đường, bầy Gai Tím rình rập ven rừng. Không PK, đất an toàn để luyện cấp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     // Rải theo GRADIENT KHOẢNG CÁCH: sát cổng thành là bậc thấp nhất, càng ra xa bậc càng
     // cao, góc xa nhất là elite — cùng nguyên lý bố trí đồng cỏ quanh thị trấn khởi đầu.
@@ -865,35 +868,56 @@ const MAPS = {
       { mob:'daokhach', x:2100, y:500, n:5, tiep:true }, { mob:'daokhach', x:2250, y:1100, n:5, tiep:true },
     ], duhiep:'duhiep3' },
   // ---------- PHÓ BẢN: mỗi map một phó bản + boss tương ứng cấp — chỉ vào qua cổng dịch chuyển ----------
+  // Bảy phòng thử thách trước đây đều kết thúc bằng CÙNG MỘT mệnh đề cơ học ("cày tinh chất nâng
+  // bậc lớp ở đây") và không phòng nào nói vì sao thế giới này lại có phòng thử thách. Nay mỗi
+  // desc mở đầu bằng cùng một sự thật — Thủ Hộ Vaeldra đào chúng từ trước cuộc giao thoa — nhưng
+  // kể bằng một hình ảnh riêng của phòng đó, rồi mới tới phần cơ học. Chúng là MỘT hệ thống, nên
+  // phải nghe ra là một; nhưng đọc bảy lần liền thì không được ra bảy bản chép dán.
   pb_daohoa: { name:'Trial Chamber: Petalshade', min:12, range:'12+', type:'dungeon', ground:'#8a8272', patch:'#3a342a',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:20, rocks:34,
-    desc:'Phòng thử thách của hòn đảo — ba đợt quái, rồi Thủ Lĩnh Cướp Gloam. Cày tinh chất nâng bậc lớp ở đây.',
+    desc:'Hầm tôi luyện Thủ Hộ Vaeldra đào dưới đảo, có trước cuộc giao thoa rất lâu. Đá tường vẫn còn vết đục thẳng thớm — thứ đang ở trong thì không. Ba đợt quái, rồi Thủ Lĩnh Cướp Gloam. Cày tinh chất nâng bậc lớp ở đây.',
     packs: [], duhiep: null },
   pb_ngoai: { name:'Trial Chamber: Outskirts', min:14, range:'14+', type:'dungeon', ground:'#8a8272', patch:'#3a342a',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:24, rocks:30,
-    desc:'Phòng thử thách của Outskirts, Chiến Chúa Gloam canh giữ. Cày tinh chất nâng bậc lớp ở đây.',
+    desc:'Cùng một tay Thủ Hộ đục xuống, cùng một khí Morvahn rỉ vào. Bọn Gloam không đào hầm này — chúng chỉ dọn vào ở. Chiến Chúa Gloam canh cửa. Cày tinh chất nâng bậc lớp ở đây.',
     packs: [], duhiep: null },
   pb_chungnam: { name:'Trial Chamber: Thornwood', min:26, range:'26+', type:'dungeon', ground:'#7e7a68', patch:'#332e24',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:18, rocks:38,
-    desc:'Phòng thử thách Thornwood — Phản Đồ Đại Tướng chờ ở cuối. Cày tinh chất nâng bậc lớp và bậc rèn.',
+    desc:'Hầm nằm ngay dưới chân Trụ Thornwood, nên khí rỉ xuống đây đặc hơn mọi nơi khác. Thủ Hộ đào nó để tôi luyện lính tiên phong; giờ lính tiên phong nằm lại trong đó. Phản Đồ Đại Tướng chờ ở cuối. Cày tinh chất nâng bậc lớp và bậc rèn.',
     packs: [], duhiep: null },
   pb_comoc: { name:'Trial Chamber: Hollow Roost', min:46, range:'46+', type:'dungeon', ground:'#6e6a58', patch:'#2a2620',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:12, rocks:44,
-    desc:'Phòng thử thách của Tổ — Hộ Vệ Tổ giữ tầng sâu. Cày tinh chất thăng giai Thú Chiến ở đây.',
+    desc:'Thủ Hộ đào hầm này làm chỗ ấp, không phải chỗ đánh. Trứng trong đây vẫn còn ấm sau ngần ấy năm — không ai biết thứ gì đang ấp chúng. Hộ Vệ Tổ giữ tầng sâu. Cày tinh chất thăng giai Thú Chiến ở đây.',
     packs: [], duhiep: null },
   pb_tuyettinh: { name:'Trial Chamber: Frostmire', min:66, range:'66+', type:'dungeon', ground:'#7a6a62', patch:'#38222a',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:22, rocks:26,
-    desc:'Phòng thử thách Frostmire — Bạo Chúa Emberveil đánh có nọc độc. Cày ngọc rèn bậc cao ở đây.',
+    desc:'Băng trong hầm không phải do lạnh: nó đóng lại đúng cái đêm Trụ Frostmire bị ngồi lên. Vết đục của Thủ Hộ còn nguyên dưới lớp băng, đọc được từng nhát. Bạo Chúa Emberveil đánh có nọc độc. Cày ngọc rèn bậc cao ở đây.',
     packs: [], duhiep: null },
   pb_mongco: { name:'Trial Chamber: Ashen Steppe', min:86, range:'86+', type:'dungeon', ground:'#7e725a', patch:'#332a1e',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:16, rocks:32,
-    desc:'Phòng thử thách Thảo Nguyên — Đại Hãn cai trị doanh trại bên trong. Cày tinh chất nâng chiêu tầm xa và đao pháp.',
+    desc:'Hầm sâu nhất trong bảy hầm, và là hầm duy nhất Thủ Hộ đào xong rồi bịt lại. Ai đó đã mở nó ra từ phía dưới. Đại Hãn cai trị doanh trại bên trong. Cày tinh chất nâng chiêu tầm xa và đao pháp.',
     packs: [], duhiep: null },
   pb_nhanmon: { name:'Trial Chamber: Stormgate', min:100, range:'100+', type:'dungeon', ground:'#8a7a66', patch:'#3a241a',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:14, rocks:36,
-    desc:'Phòng thử thách Stormgate — Thiên Binh Thống Soái đứng ở cuối. Thử thách cuối cùng, phần thưởng hậu nhất.',
+    desc:'Hầm cuối, đào ngay dưới Trụ Stormgate — Thủ Hộ biết nếu cửa ải này vỡ thì không còn chỗ nào để lui về mà tôi luyện nữa. Thiên Binh Thống Soái đứng ở cuối. Thử thách cuối cùng, phần thưởng hậu nhất.',
     packs: [], duhiep: null },
 };
+// Số quái THẬT SỰ của một bãi. Không đọc thẳng pk.n ở bất cứ đâu nữa — hai nơi cần con số này
+// (vòng sinh quái, và bảng Bản Đồ / Chọn Trận in "×N"), và nếu chúng tính khác nhau thì bảng sẽ
+// nói ×6 trong khi ngoài màn có 8 con.
+//
+// Mỗi Trụ Khoá gỡ xuống, vết nứt rộng thêm — và thứ chui qua nó thì đông thêm. Đây là chỗ khiến
+// "vết nứt rộng thêm" thành thứ người chơi CẢM THẤY chứ không chỉ nhìn thấy: +8% mỗi trụ, trần
+// +40% ở đủ năm trụ.
+//
+// Chỉ áp cho map type:'pk'. Petalshade Isle và Outskirts là đất luyện cấp của người mới, mà
+// người mới thì chưa gỡ trụ nào — nhưng sau Tái Sinh họ quay lại đó với truDaGo() đã đầy, và
+// tăng mật độ ở bãi tân thủ là phạt nhầm người.
+function bayCo(pk, md){
+  if (!md || md.type !== 'pk') return pk.n;
+  return Math.floor(pk.n * (1 + Math.min(5, truDaGo()) * 0.08));
+}
+
 let curMap = 'daohoa';
 let zoneBanner = null; // { text, sub, color, t }
 
@@ -6523,10 +6547,11 @@ function buildWorld(){
   // quái mạnh/tinh anh xa hơn rồi — bỏ hẳn bước xáo trộn, spawn đúng như đã thiết kế.
   for (const pk of md.packs){
     const packId = packSeq++;
-    const zone = { x:pk.x, y:pk.y, r:115, count:pk.n, tiep: !!pk.tiep };
+    const soCon = bayCo(pk, md);   // KHÔNG dùng thẳng pk.n — xem bayCo()
+    const zone = { x:pk.x, y:pk.y, r:115, count:soCon, tiep: !!pk.tiep };
     // Bãi có Kẻ Tiếp Sức: một trong n con là nó. Đặt ở RÌA bầy chứ không giữa — đứng giữa thì
     // người chơi cận chiến không với tới được mục tiêu ưu tiên (docs §3.6).
-    for (let j = 0; j < pk.n - (pk.tiep ? 1 : 0); j++) spawnMob(pk.mob, zone, packId); // dàn trải cụm quái, tránh chồng hình
+    for (let j = 0; j < soCon - (pk.tiep ? 1 : 0); j++) spawnMob(pk.mob, zone, packId); // dàn trải cụm quái, tránh chồng hình
     if (pk.tiep){
       const t = spawnMob(pk.mob, zone, packId, false, { role:'tiep' });
       const a = Math.random() * Math.PI * 2; t.x = pk.x + Math.cos(a) * 128; t.y = pk.y + Math.sin(a) * 128; t.homeX = t.x; t.homeY = t.y;
@@ -10043,9 +10068,15 @@ function render(){
   if (DEEP) drawDeepHUD();   // HUD Tầng Sâu: tầng hiện tại + kho tạm chưa vào túi
   { const _dl = el('deep-leave'); if (_dl) _dl.classList.toggle('hidden', !DEEP); }
 
-  // Cốt truyện: trời tối dần khi các Cổng Vực vỡ — mỗi Trụ Khoá gỡ xuống là vết nứt rộng thêm
-  const _nTa = Object.keys(player.storyFlags || {}).filter(k => k.startsWith('ta_')).length;
-  if (_nTa >= 3 && !SETTINGS.lowFx){ ctx.fillStyle = `rgba(8,6,20,${Math.min(0.18, 0.05 + _nTa * 0.018)})`; ctx.fillRect(0, 0, W, H); }
+  // Cốt truyện — HAI bộ đếm, không phải một. Trước đây cả hiệu ứng này lẫn chú thích của nó nói
+  // "mỗi Trụ Khoá", nhưng lại đếm cờ `ta_*`, tức là số TƯỚNG QUÂN đã hạ. Bảy Tướng Quân, năm Trụ
+  // Khoá — hai con số khác nhau mà Nhật Ký đã in riêng từ lâu (renderQuestLog), chỉ vòng vẽ là
+  // gộp làm một. Nay:
+  //   · Tướng Quân → trời sập tối dần. Nền, nên trần hạ từ 0.18 xuống 0.10 để không tranh chỗ.
+  //   · Trụ Khoá   → vết nứt trên trời rộng ra, vẽ ở lớp CSS (#fx-crack), năm nấc.
+  const _nTa = tuongQuanDaHa();
+  if (_nTa >= 3 && !SETTINGS.lowFx){ ctx.fillStyle = `rgba(8,6,20,${Math.min(0.10, 0.03 + _nTa * 0.010)})`; ctx.fillRect(0, 0, W, H); }
+  capNhatVetNut();
 
   drawSkyOverlay(); // Lịch Thế Giới: bầu trời ngày/đêm theo canh giờ
 
@@ -17459,6 +17490,15 @@ function fxRays(){
 // Ghi opacity là việc của tầng ghép ảnh, không phải của tầng tô điểm ảnh — rẻ hơn fillRect toàn
 // màn hình vài bậc. Chỉ ghi khi giá trị đổi thật, để khỏi làm bẩn style mỗi khung.
 const _fxOv = {};
+// Ghi số Trụ Khoá đã gỡ vào lớp #fx-crack. Chỉ ghi khi ĐỔI — mỗi lần ghi lại thuộc tính là một
+// lần trình duyệt tính lại kiểu, mà giá trị này thay đổi đúng năm lần trong cả ván chơi.
+let _nutTru = -1;
+function capNhatVetNut(){
+  const n = SETTINGS.lowFx ? 0 : truDaGo();
+  if (n === _nutTru) return;
+  _nutTru = n;
+  const e = el('fx-crack'); if (e) e.dataset.tru = n;
+}
 function fxOverlay(id, k){
   const v = Math.max(0, Math.min(1, k)).toFixed(2);
   if (_fxOv[id] === v) return;
@@ -21970,14 +22010,18 @@ NPCS.push(
   { id:'thantoan', name:'Thương Nhân Vận May · Sảnh Cầu May', map:'tuongduong', x:820, y:1040, img:'assets/npcs/thantoan.png', talk:'vanduyen',
     lore:'"Một lệnh đổi một lượt quay. Tỉ lệ ta dán ngay trên vách — không giấu, cũng không hứa thêm gì."',
     barks:['"Tỉ lệ dán trên vách kia kìa."','"Ta không hứa gì cả, ta chỉ quay."','"Người vừa nãy quay chín lượt."'] },
+  // Ba Vực Thẳm nằm ở Thornwood · Frostmire · Stormgate — ĐÚNG ba vùng có Trụ Khoá. Trước đây
+  // mỗi vách một câu lore rời, không câu nào nối vào Morvahn hay Trụ Khoá, nên ba nơi nguy hiểm
+  // nhất bản đồ đọc như ba câu tục ngữ. Nay cả ba nói cùng một điều: đất nứt ở đây là vì cái trụ
+  // ở gần đó.
   { id:'vandai', name:'Skyreach Ledge · Vực Thẳm', map:'chungnam', x:2300, y:350, img:'assets/npcs/vachda.png', talk:'tenui',
-    lore:'"Vách mây ngàn trượng — kẻ liều mạng nhảy xuống, kẻ sợ chết quay đầu."',
+    lore:'"Vách này không phải trời sinh. Đất nứt ra từ cái đêm Trụ Thornwood bị ngồi lên — kẻ liều mạng nhảy xuống, kẻ sợ chết quay đầu."',
     barks:['"Nhìn xuống trước, rồi hẵng quyết."','"Dưới đó có gì thì ta không xuống bao giờ."'] },
   { id:'doantruongnhai', name:'Sorrowfall Cliff · Vực Thẳm', map:'tuyettinh', x:350, y:1550, img:'assets/npcs/vachda.png', talk:'tenui',
-    lore:'"Vực sâu này đã nuốt chửng không biết bao kẻ — dưới đáy, kẻ may mắn sẽ đổi đời."',
+    lore:'"Trụ Frostmire cách đây không xa, và đất thì nứt theo nó. Vực đã nuốt không biết bao kẻ — dưới đáy, kẻ may mắn đổi đời."',
     barks:['"Gió dưới đáy thổi ngược lên."','"Kẻ may đổi đời, kẻ rủi đổi chỗ nằm."'] },
   { id:'dinhbiennhai', name:'Frontier\'s Edge · Vực Thẳm', map:'nhanmon', x:2250, y:1500, img:'assets/npcs/vachda.png', talk:'tenui',
-    lore:'"Gió biên thùy cắt thịt — vận may chỉ dành cho kẻ dám nhảy."',
+    lore:'"Trụ Stormgate lung lay tới đâu, mép vực lở tới đó. Gió biên thùy cắt thịt — vận may chỉ dành cho kẻ dám nhảy."',
     barks:['"Gió ở đây cắt được da."','"Nhảy thì nhảy, đừng đứng ngó."'] },
 );
 for (const n of NPCS){ if (!NPC_IMGS[n.id]){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; } }
@@ -22107,6 +22151,26 @@ const SIDE_QUESTS = [
   // không nhiệm vụ nào trỏ tới ông. Petalshade Isle đã có sẵn điểm thảo dược, nên cho ông
   // đúng cái nghề của mình.
   { id:'s_duocsu', npc:'duocsu', map:'daohoa', reqLv:4, reqMain:3, name:'Thuốc Cho Cả Đảo', desc:'Khí Morvahn làm bệnh mới mọc nhanh hơn thuốc cũ. Hái 5 Thảo Dược quanh Petalshade Isle (đứng gần rồi bấm J) mang về cho Dược Sư.', type:'collect', need:5, rew:{xp:520, silver:120, mat:1} },
+  // ── Năm cái tên bị gạch — mỗi chương một, rải đúng vào khoảng trống cấp 12→115 ─────
+  // Mỗi cái là MỘT vật chứng + MỘT người để mang tới. Không cơ chế mới, không map mới.
+  // NPC đích cố tình KHÔNG phải người giao: bảy NPC dẫn chương xưa nay không ai nhắc tên ai,
+  // nên chuỗi này bắt họ chuyền tay nhau — và giao đâu nhận đó thì nhiệm vụ tự xong ngay lập
+  // tức, không thành chuyến đi nào cả.
+  { id:'s_td1', npc:'daosi',    map:'chungnam',  reqLv:26,  reqMain:16, clue:'td_giap',
+    name:'Bộ Giáp Không Có Người', desc:'Giữa Thornwood Reach có một bộ giáp Tiên Phong đứng nguyên, khoá đai còn cài. Mang nó về Lunaris City cho Trưởng Lão Rell — ông giữ Bảng Tên, ông có quyền gạch.',
+    type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:9000, silver:800, mat:2} },
+  { id:'s_td2', npc:'thumo',    map:'comoc',     reqLv:46,  reqMain:20, clue:'td_nhatky',
+    name:'Nét Chữ Nhạt Dần',      desc:'Trong ổ ấp Hollow Roost có một quyển nhật ký viết dở, và sáu trang cuối thì không nên đọc một mình. Đưa cho Đạo Sĩ ở Thornwood — ông ta từng đi cùng người viết nó.',
+    type:'talk', targetNpc:'daosi', need:1, rew:{xp:26000, silver:1600, mat:3} },
+  { id:'s_td3', npc:'ttmon',    map:'tuyettinh', reqLv:66,  reqMain:25, clue:'td_huyhieu',
+    name:'Kẻ Đã Đổi Phe',         desc:'Một tinh anh ở Frostmire Vale đeo huy hiệu đội Tiên Phong. Nó nhận ra ngươi — và vẫn không dừng tay. Gỡ huy hiệu, mang tới Thủ Mộ ở Hollow Roost.',
+    type:'talk', targetNpc:'thumo', need:1, rew:{xp:52000, silver:2600, mat:4} },
+  { id:'s_td4', npc:'noiung',   map:'mongco',    reqLv:86,  reqMain:29, clue:'td_bia',
+    name:'Mộ Tự Đào',             desc:'Giữa Ashen Steppe có một nấm mộ đào bằng tay, bia khắc dở. Người nằm dưới biết mình sắp thành thứ ở quyển nhật ký kia, nên dừng trước. Báo cho Trấn Thủ Môn ở Frostmire.',
+    type:'talk', targetNpc:'ttmon', need:1, rew:{xp:88000, silver:3800, mat:5} },
+  { id:'s_td5', npc:'laotuong', map:'nhanmon',   reqLv:106, reqMain:32, clue:'td_trong',
+    name:'Chỗ Trống Thứ Bảy',     desc:'Ngươi đã tìm ra năm. Còn một cái tên trên Bảng Tên chưa bị gạch, và ở Stormgate Pass không có gì để tìm cả. Về hỏi Trưởng Lão Rell xem người thứ bảy là ai.',
+    type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:130000, silver:5200, mat:6} },
   { id:'s_b6', npc:'laotuong',  map:'tuongduong', reqLv:115, reqMain:33, name:'Báo Tin Thắng Trận',     desc:'Về Lunaris City báo cho Trưởng Lão Rell tin cửa ải đã giữ vững.', type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:55000, silver:3500} },
 ];
 
@@ -22150,6 +22214,12 @@ window.acceptSide = function(id){
   sideStates[id] = { st:'active', prog:0 };
   AudioSys.sfx('quest', 0.8);
   addFloat(player.x, player.y-40, `Nhận phụ tuyến: ${q.name}`, '#9fd0ff', 13);
+  // Phụ tuyến có vật chứng: trao ngay lúc nhận, không phải lúc trả. Người chơi phải ĐỌC ĐƯỢC
+  // thứ mình đang mang đi suốt quãng đường, chứ không phải nhận mô tả sau khi mọi chuyện đã xong.
+  if (q.clue && CLUES[q.clue] && !player.clues.includes(q.clue)){
+    player.clues.push(q.clue);
+    addFloat(player.x, player.y-84, `📜 Manh mối: ${CLUES[q.clue].name}`, '#e8dcb0', 13);
+  }
   saveGame();
   const n = NPCS.find(x => x.id === q.npc); if (n) renderQuestNpc(n);
 };
@@ -22338,7 +22408,7 @@ function renderStageSelect(mapId){
     else if (gap < -15){ tag = 'QUÁ DỄ'; color = '#6a6255'; }
     else { tag = 'VỪA SỨC'; color = '#7ec850'; }
     html += `<div class="map-row">
-      <span style="flex:1"><span class="m-name">${mdef.name} ×${pk.n}</span>
+      <span style="flex:1"><span class="m-name">${mdef.name} ×${bayCo(pk, md)}</span>
         <span style="font-size:10.5px;opacity:.6"> · Lv ${mdef.lv||1}</span>
         <span class="zone-badge" style="color:${color};border-color:${color}">${tag}</span></span>
       <span class="m-side"><button class="mini-btn" onclick="enterStage('${mapId}',${i})">⚔ Vào Đánh</button></span></div>`;
@@ -22889,6 +22959,17 @@ const CLUES = {
   buc_hoa:     { name:'Bích Họa Ngũ Trụ',        desc:'Tranh vẽ năm Trụ Khóa cắm khắp Lunacia. Chỗ vẽ trụ thứ nhất giờ chỉ còn một vệt cháy đen.' },
   thu_tinh:    { name:'Lá Thư Chưa Kịp Gửi',     desc:'"Nếu có kiếp sau, ta xin làm dân thường ở một thế giới không ai thèm để ý tới."' },
   lenh_bai_doi:{ name:'Bảng Tên Đội Tiên Phong', desc:'Bảng khắc tên bảy người vượt vết nứt cùng ngươi. Năm cái tên đã bị gạch. Cái thứ sáu là tên ngươi.' },
+  // ── Năm cái tên bị gạch ──────────────────────────────────────────────────────────
+  // Bảng Tên rơi ở chương I rồi im lặng suốt 100 cấp: năm người đó không có tên, không có xác,
+  // không có kết cục, và người thứ bảy thì không ai hỏi là ai. Đây là sợi dây DUY NHẤT nối nhân
+  // vật chính với quá khứ của chính mình, nên nó không được phép bỏ lửng.
+  // Bốn kết cục đầu là bốn cách Lunacia giết người, xếp từ NHANH NHẤT tới CHẬM NHẤT — và cái
+  // chậm nhất là cái đáng sợ nhất. Người thứ năm cố tình không có gì để tìm.
+  td_giap:  { name:'Bộ Giáp Đứng Nguyên',   desc:'Giáp Tiên Phong dựng đứng giữa rừng, khoá đai còn cài, không một vết chém. Bên trong trống không. Tên khắc ở cổ áo: HALLA.' },
+  td_nhatky:{ name:'Nhật Ký Viết Dở',       desc:'"Ngày thứ chín. Tay ta viết chậm hơn ta nghĩ." Sáu trang sau vẫn là nét chữ đó, nhạt dần. Trang cuối không còn là chữ người. Ký tên: MEV.' },
+  td_huyhieu:{ name:'Huy Hiệu Gỡ Từ Xác',  desc:'Huy hiệu đội Tiên Phong, gỡ khỏi ngực một kẻ vừa cố giết ngươi. Mặt sau khắc: ORIN. Hắn nhận ra ngươi trước khi ngã — và vẫn không dừng tay.' },
+  td_bia:   { name:'Bia Tự Khắc',           desc:'Mộ đào bằng tay, nông. Bia khắc dở: "TÊN TA LÀ SERR. TA DỪNG Ở ĐÂY TRONG LÚC CÒN LÀ TA."' },
+  td_trong: { name:'Chỗ Trống Thứ Bảy',     desc:'Không có gì ở đây cả. Không giáp, không xác, không bia. Trên Bảng Tên, cái tên thứ bảy vẫn chưa bị gạch — vì chưa ai chứng minh được là nó nên bị gạch.' },
   co_lenh:     { name:'Quân Lệnh Cũ',            desc:'Văn thư: "Stormgate Pass thất thủ thì cả Lunacia mở toang." Dấu triện đã sáu mươi năm — cũ hơn cuộc giao thoa rất nhiều.' },
   le_thach:    { name:'Đá Khắc Lời Trăng Trối',  desc:'Mảnh đá nhuốm máu: "Đừng tin bất cứ ai nói rằng chuyện này là tai nạn."' },
   mat_lenh:    { name:'Mật Lệnh Rách',           desc:'"…khi đủ năm trụ gãy, Vết Nứt mở toang — Morvahn bước qua, Lunacia thành lò luyện."' },
