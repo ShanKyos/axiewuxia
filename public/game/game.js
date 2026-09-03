@@ -8527,7 +8527,7 @@ function drawQuestCompass(){
   const dist = Math.round(Math.hypot(bx-px, by-py)/10);
   const lx = ax - dx*24, ly = ay - dy*24; // nhãn khoảng cách đặt lùi vào trong (hướng tâm màn hình) để không bị cắt ở mép
   ctx.save();
-  ctx.fillStyle = '#7ecbff'; ctx.font = 'bold 11px "Baloo 2","Be Vietnam Pro",sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#7ecbff'; ctx.font = 'bold 11px "Be Vietnam Pro",sans-serif'; ctx.textAlign = 'center';
   ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
   ctx.strokeText(dist + 'm', lx, ly);
   ctx.fillText(dist + 'm', lx, ly);
@@ -10004,7 +10004,7 @@ function render(){
   ctx.textAlign = 'center';
   for (const f of floats){
     ctx.globalAlpha = Math.min(1, f.t*1.6);
-    ctx.font = `bold ${f.size}px "Baloo 2", "Be Vietnam Pro", sans-serif`;
+    ctx.font = `bold ${f.size}px "Be Vietnam Pro", sans-serif`;
     ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
     ctx.strokeText(f.text, f.x, f.y);
     ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y);
@@ -10052,11 +10052,11 @@ function render(){
   if (zoneBanner){
     const a = Math.min(1, zoneBanner.t / 0.6);
     ctx.globalAlpha = Math.max(0, a);
-    ctx.font = 'bold 34px "Baloo 2", "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
+    ctx.font = 'bold 34px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
     ctx.strokeStyle = 'rgba(0,0,0,.65)'; ctx.lineWidth = 5;
     ctx.strokeText(zoneBanner.text, W/2, H*0.24);
     ctx.fillStyle = zoneBanner.color; ctx.fillText(zoneBanner.text, W/2, H*0.24);
-    ctx.font = 'bold 15px "Baloo 2", "Be Vietnam Pro", sans-serif';
+    ctx.font = 'bold 15px "Be Vietnam Pro", sans-serif';
     ctx.strokeText(zoneBanner.sub, W/2, H*0.24 + 26);
     ctx.fillStyle = '#e4ebff'; ctx.fillText(zoneBanner.sub, W/2, H*0.24 + 26);
     ctx.globalAlpha = 1;
@@ -10082,7 +10082,7 @@ function render(){
 
 // ---------- Drawing helpers ----------
 function drawCalligraphy(text, x, y, color, size){
-  ctx.font = `bold ${size}px "Baloo 2", "Be Vietnam Pro", sans-serif`;
+  ctx.font = `bold ${size}px "Be Vietnam Pro", sans-serif`;
   ctx.textAlign = 'center';
   ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 3;
   ctx.strokeText(text, x, y);
@@ -21482,7 +21482,7 @@ function drawThanHiepSeal(p, now){
   ctx.setLineDash([]);
   // bát quái quanh ấn
   const glyphs = ['✦','✧','☼','⚡','✽','❄','▲','♣'];
-  ctx.font = 'bold 10px "Baloo 2", "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = 'bold 10px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (let i = 0; i < 8; i++){
     const a = t*0.55 + i*(Math.PI/4);
     const gx = p.x + Math.cos(a)*50, gy = p.y + 5 + Math.sin(a)*17;
@@ -21511,7 +21511,7 @@ function drawOverheadTitle(p, yOff, riding, maxed){
   if (!tdef) return;
   const ty = p.y + yOff - (riding ? 92 : 88);
   ctx.save();
-  ctx.font = 'bold 12px "Baloo 2", "Be Vietnam Pro", sans-serif';
+  ctx.font = 'bold 12px "Be Vietnam Pro", sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const label = `【${tdef.name}】`;
   const tw = ctx.measureText(label).width;
@@ -23823,7 +23823,7 @@ function showOfflineGains(offSec, khiGain, bacGain){
   ov.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(10,8,6,.72);backdrop-filter:blur(3px)';
   const hh = Math.floor(offSec/3600), mm = Math.floor((offSec%3600)/60);
   ov.innerHTML = `<div style="max-width:430px;padding:28px 34px;border:1px solid #4c8dff;border-radius:10px;background:linear-gradient(160deg,#262c58,#14163a);text-align:center;box-shadow:0 0 60px rgba(76,141,255,.25)">
-    <div style="font-family:'Baloo 2',sans-serif;font-size:24px;color:#7ecbff;margin-bottom:6px;letter-spacing:2px">Trở Lại Lunacia</div>
+    <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:24px;color:#7ecbff;margin-bottom:6px;letter-spacing:2px">Trở Lại Lunacia</div>
     <div style="font-size:13px;color:#9aa8d4;margin-bottom:14px;line-height:1.7">Bạn rời đi ${hh > 0 ? hh + ' giờ ' : ''}${mm} phút — bản năng vẫn âm thầm mài giũa trong lúc vắng mặt.</div>
     <div style="font-size:15px;line-height:2;color:#e4ebff">
       <div>Instinct <b style="color:#7fd8e0">+${khiGain}</b></div>

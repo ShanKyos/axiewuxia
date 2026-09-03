@@ -178,6 +178,25 @@ const pass = m => console.log('PASS ' + m);
   if (la.length) fail('bảng Nhân Vật còn dùng bộ chữ khác: ' + la.join(', '));
   else pass('bảng Nhân Vật chỉ dùng một bộ chữ');
 
+  // ── 6. Không còn dấu vết bộ chữ đã gỡ trong MÃ NGUỒN ──────────────────────
+  // Phép kiểm ①–⑤ không bắt được chuyện này: `document.fonts` chỉ liệt kê bộ chữ ĐƯỢC NẠP, mà
+  // Baloo 2 thì không còn @font-face nào nên nó vắng mặt ở đó dù mã vẫn gọi tên. Bảy chuỗi
+  // ctx.font còn sót lại chạy đúng nhờ có Be Vietnam Pro đứng kế sau — nhưng một chỗ
+  // (`font-family:'Baloo 2',sans-serif`) không có dự phòng, và nó rơi thẳng xuống bộ chữ chung
+  // của trình duyệt. Chỉ soi mã nguồn mới thấy.
+  // Chỉ đếm chỗ ĐẶT TÊN BỘ CHỮ — tức là tên nằm trong dấu nháy (`'Baloo 2'` / `"Baloo 2"`).
+  // Chú thích giải thích vì sao đã gỡ thì viết trần, không nháy, nên không bị tính nhầm.
+  const src = await p.evaluate(async () => {
+    const out = {};
+    for (const f of ['game.js', 'style.css', 'fonts.css'])
+      out[f] = ((await (await fetch(f)).text()).match(/['"]Baloo 2['"]/g) || []).length;
+    return out;
+  });
+  console.log('bộ chữ đã gỡ:', JSON.stringify(src));
+  const sot = Object.entries(src).filter(([, n]) => n > 0);
+  if (sot.length) fail('mã nguồn còn gọi tên bộ chữ đã gỡ: ' + sot.map(([f, n]) => `${f} ×${n}`).join(', '));
+  else pass('không tệp nào còn gọi tên Baloo 2');
+
   await p.screenshot({ path: 'qa_shots/khung_bang.png' });
   await b.close();
   console.log(bad ? `FAIL(${bad})` : 'ALL PASS');
