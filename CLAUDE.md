@@ -430,13 +430,25 @@ bị gỡ ra: tỉ lệ 8 đầu đứng cạnh chibi là lệch hẳn. Nó ch�
 Art nhân vật do Meowa sinh ra là rig Spine. Game này không có runtime Spine và sẽ không có
 (runtime chính chủ đòi giấy phép), nên đường đi là **nướng sẵn ra bảng khung rồi `drawImage`**.
 
-Toàn bộ hợp đồng toạ độ, hai phép đo bắt buộc, và bốn cái bẫy của định dạng Spine 4.2 nằm ở
-**`.claude/skills/spine-nuong/SKILL.md`**. Công cụ ở `tools/spine/nuong_nv.py`. Đọc trước khi
-sửa `nvBo`/`nvVuKhi`/`canhVeAnh` hay khi có gói art mới — bốn cái bẫy kia đoán không ra được,
-mỗi cái làm hỏng bản dựng theo một kiểu khác nhau.
+Toàn bộ hợp đồng toạ độ, các phép đo bắt buộc, và những cái bẫy của định dạng Spine 4.2 nằm ở
+**`.claude/skills/spine-nuong/SKILL.md`**. Đọc trước khi sửa `nvBo`/`nvVuKhi`/`nvIconUrl`/
+`canhVeAnh` hay khi có gói art mới — mấy cái bẫy kia đoán không ra được, mỗi cái làm hỏng bản
+dựng theo một kiểu khác nhau.
 
-`NV_BO` và `NV_VK` đang để TRỐNG là cố ý: cơ chế xong rồi nhưng mới có 3/30 bộ art, bật lên là
-một lớp đổi kiểu còn năm lớp kia giữ nguyên.
+Ba công cụ, ba việc khác nhau:
+
+| công cụ | việc |
+|---|---|
+| `tools/spine/nuong_nv.py` | thân + vũ khí gốc → bảng khung 80 khung |
+| `tools/spine/nuong_vk.py` | đắp một vũ khí RỜI (pixel art) lên tay theo xương điểm cầm |
+| `tools/spine/nuong_icon.py` | tách bộ giáp thành dải **4 icon**: nón · áo · tay · chân |
+
+Chỉ có **bốn** icon chứ không phải năm — bản mẫu Spine không có khe quần riêng, nên ô Quần chỉ
+tính chỉ số. Đừng thêm ô thứ năm vào dải: `NV_ICON_O` và `NHOM` trong `nuong_icon.py` phải
+trùng nhau, lệch một ô là mọi món sau đó hiện sai hình.
+
+`NV_BO` (thân trần) có 5/5 lớp; `NV_GIAP` (bộ giáp) mới có 1/35 — thiếu khoá thì tự về đường
+vẽ cũ, nên thêm dần từng bộ được, không phải chờ đủ. Xem thử nhanh bằng `/gen <giai> [+rèn]`.
 
 ## Đổ khối: một nguồn sáng, đặt ở TRÊN-TRÁI
 

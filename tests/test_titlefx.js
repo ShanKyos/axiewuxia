@@ -1,7 +1,7 @@
 // Màn hình mở đầu phải CHẠY, và phải DỪNG khi rời màn.
 //
 // Trước đây màn tạo nhân vật chỉ là khối HTML trên nền gradient tĩnh. Nay có hoạt cảnh canvas:
-// đoàn tàu vượt biển đêm tới vùng đất nơi Axie bị nhốt trong lồng.
+// dãy núi đêm, sương trôi ngang chân núi, sao nhấp nháy, bụi sáng bay lên.
 //
 // Hai thứ dễ hỏng nhất với một hoạt cảnh nền, và đây là chỗ gác chúng:
 //   1. "Có canvas" không có nghĩa là "đang chạy" — phải so hai khung xem điểm ảnh có đổi không.
@@ -33,8 +33,8 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   const r2 = await p.evaluate(async () => {
     const c = document.getElementById('title-fx');
     const g = c.getContext('2d');
-    // Lấy mẫu CẢ khung, không phải góc trên-trái: chỗ đó gần như chỉ có trời, mà chuyển động
-    // thì nằm ở biển và tàu phía dưới. Lấy mẫu sai chỗ thì cảnh đang chạy vẫn báo "đứng hình".
+    // Lấy mẫu CẢ khung, không phải một góc: chuyển động rải khắp màn (sương ở giữa, sao ở
+    // trên, bụi ở dưới). Lấy mẫu sai chỗ thì cảnh đang chạy vẫn báo "đứng hình".
     const snap = () => g.getImageData(0, 0, c.width, c.height).data;
     const a = snap();
     await new Promise(r => setTimeout(r, 900));
@@ -44,7 +44,11 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     return { tong: a.length / 4, khac };
   });
   console.log('2) chuyển động:', JSON.stringify(r2), `→ ${Math.round(r2.khac*100/r2.tong)}% điểm ảnh đổi`);
-  if (r2.khac < r2.tong * 0.01) fail(`cảnh gần như đứng hình (${r2.khac}/${r2.tong} điểm ảnh đổi)`);
+  // Ngưỡng 0,2%. Bản đầu để 1% — hợp với cảnh bến cảng cũ, nơi cả mặt biển gợn sóng suốt khung
+  // hình. Cảnh núi mới cố tình TĨNH: nó là không khí sau lưng khối chọn lớp, không phải thứ để
+  // nhìn, nên chỉ sương, sao và bụi động — đo được 0,85%. Thứ bài kiểm này gác là "vòng lặp
+  // chết", mà vòng lặp chết thì cảnh dựng từ t sẽ cho ĐÚNG 0 điểm ảnh đổi, không phải 0,85%.
+  if (r2.khac < r2.tong * 0.002) fail(`cảnh gần như đứng hình (${r2.khac}/${r2.tong} điểm ảnh đổi)`);
 
   // 3) vào game rồi thì vòng lặp phải DỪNG — không đốt pin suốt phiên
   const r3 = await p.evaluate(async () => {

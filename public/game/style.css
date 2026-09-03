@@ -396,23 +396,31 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #mount-msg, #dantian-msg { text-align:center; min-height:18px; font-size:12.5px; margin-top:8px; }
 
 /* Sect select */
-#sect-select { position:fixed; inset:0; z-index:30; display:flex; align-items:center; justify-content:center;
+/* Neo ĐÁY chứ không canh giữa. Canh giữa thì khối chọn lớp trôi lên đúng dải trời — chỗ duy
+   nhất trong bức tranh có toà thành đổ để mà nhìn — và cả bức chỉ còn là bóng tối sau tán rừng. */
+#sect-select { position:fixed; inset:0; z-index:30; display:flex; align-items:flex-end; justify-content:center;
   background:transparent; overflow-y:auto; }   /* nền là canvas #title-fx nằm phía sau */
 /* Hoạt cảnh mở đầu nằm DƯỚI khối chọn lớp, phủ kín màn hình */
 #title-fx { position:fixed; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; }
 #sect-select .ss-inner { position:relative; z-index:1; }
-/* Khối chọn lớp cần nền riêng để chữ không chìm vào cảnh */
-#sect-select .ss-inner { background:linear-gradient(180deg, rgba(10,7,19,.30), rgba(10,7,19,.82) 22%, rgba(10,7,19,.92));
-  border-radius:20px; }
-/* Logo: kim loại lạnh + viền than hồng, quét sáng chậm ngang mặt chữ */
-.ss-logo { display:flex; flex-direction:column; align-items:center; gap:0; margin-bottom:4px; line-height:.92; }
-.ss-logo span { font-family:var(--font-display); font-weight:700; letter-spacing:.06em; line-height:1;
-  background:linear-gradient(180deg,#fdfbff 6%,#b9c6e6 34%,#5c6a92 52%,#e8eefc 66%,#8fa0c8 100%);
-  -webkit-background-clip:text; background-clip:text; color:transparent;
-  filter:drop-shadow(0 2px 0 rgba(0,0,0,.55)) drop-shadow(0 0 16px rgba(255,150,70,.34)); }
-.ss-logo-main { font-size:clamp(40px,8.5vw,74px); }
-.ss-logo-sub  { font-size:clamp(18px,3.4vw,30px); letter-spacing:.42em; margin-left:.42em; opacity:.92; }
-.ss-logo::after { content:''; position:absolute; inset:0; pointer-events:none; }
+/* Chữ vẫn cần nền để đọc được, nhưng một HỘP bo góc đặt lên một bức tranh thì lập tức thành
+   cái hộp — mắt đọc ra cái khung trước khi đọc ra cảnh. Thay bằng một vầng mờ hình bầu dục,
+   đậm ở giữa và TAN HẲN trước khi tới mép: không có đường viền nào để mà nhìn thấy. */
+#sect-select .ss-inner { background:none; border-radius:0; max-width:900px; }
+/* Màn mờ nằm ở #sect-select chứ không ở .ss-inner: khối trong chỉ rộng 900px, đặt vầng mờ vào
+   đó là nó có MÉP — và một cái mép dọc chạy suốt màn hình thì mắt đọc ra ngay cái hộp. */
+#sect-select::before { content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:linear-gradient(180deg, rgba(5,7,20,.42) 0%, rgba(5,7,20,0) 14%,
+             rgba(5,7,20,0) 46%, rgba(4,5,16,.72) 62%, rgba(3,4,12,.93) 78%, rgba(3,4,12,.96) 100%); }
+/* Dòng dẫn duy nhất còn lại: nhỏ, giãn chữ, không phát sáng — chú thích cho bức tranh, không
+   phải tiêu đề. Ghim lên đỉnh màn hình chứ không để trong dòng chảy: trong dòng chảy thì nó
+   nằm ngay sau tán rừng và chìm mất, mà đẩy rừng xuống để nhường chỗ thì mất luôn dãy núi. */
+#sect-select .ss-inner h2, #sect-select .ss-sub { position:fixed; left:0; right:0; z-index:3;
+  margin:0; padding:0 16px; text-align:center; pointer-events:none;
+  text-shadow:0 1px 12px rgba(4,5,16,.95), 0 0 30px rgba(4,5,16,.8); }
+#sect-select .ss-inner h2 { top:20px; font-family:var(--font-display); font-size:14px;
+  font-weight:600; letter-spacing:.24em; text-transform:uppercase; color:#a9b8e4; }
+#sect-select .ss-sub { top:44px; color:#8892b8; font-size:12.5px; line-height:1.55; }
 @media (prefers-reduced-motion: reduce){ #title-fx { display:none; } }
 /* Bái Sư Nhập Phái — chọn môn phái trong game ở cấp 10 */
 #sect-ceremony { position:fixed; inset:0; z-index:35; display:flex; align-items:center; justify-content:center;
@@ -420,6 +428,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #ceremony-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; }
 #sect-ceremony .big-btn { margin-top:18px; }
 .ss-inner { text-align:center; padding:26px 16px; max-width:720px; }
+#sect-select .ss-inner { padding-bottom:34px; }
 .ss-inner h1 { font-family:var(--font-display); font-weight:700; color:var(--accent-light); font-size:clamp(30px,6vw,50px); letter-spacing:2px; }
 .ss-inner h2 { color:var(--text-dim); font-size:clamp(13px,2.4vw,18px); letter-spacing:3px; font-weight:600; margin-top:6px; }
 .ss-sub { color:#8890b8; font-size:var(--fs-lg); margin:14px 0 24px; }
@@ -1297,17 +1306,69 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .cc-slot-yes:hover { background:var(--red); color:var(--on-light); }
 .cc-slot-no { border:1px solid var(--border); background:rgba(30,32,64,.9); color:var(--text-soft); }
 .cc-slot-no:hover { background:rgba(76,141,255,.28); }
-#cc-classes { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin:16px auto 12px; max-width:820px; }
-.cc-card { position:relative; border:1.5px solid var(--border-faint); border-radius:var(--r-md);
-  padding:10px 6px 12px; cursor:pointer; background:linear-gradient(170deg,rgba(180,205,255,.07),rgba(10,11,24,.5));
-  transition:border-color .14s, box-shadow .25s, transform .14s; text-align:center; }
-.cc-card:hover { border-color:var(--border-strong); transform:translateY(-3px); }
-.cc-card.sel { border-color:var(--accent-light); box-shadow:0 0 18px rgba(126,203,255,.45);
-  background:linear-gradient(170deg,rgba(126,203,255,.16),rgba(10,11,24,.55)); }
-.cc-card .cc-art { display:block; width:100%; max-width:118px; height:auto; margin:0 auto 6px;
-  filter:drop-shadow(0 5px 10px rgba(0,0,0,.55)); }
-.cc-card .cc-nm { font-size:13.5px; font-weight:700; letter-spacing:.3px; }
-.cc-card .cc-tag { font-size:10.5px; color:var(--text-dim); margin-top:2px; line-height:1.35; min-height:26px; }
+/* Màn chọn lớp là MỘT SÂN KHẤU, không phải năm cái thẻ rời. Năm nhân vật đứng chung trên một
+   phiến đá, sau lưng là rừng, sau rừng nữa là dãy núi — đúng ba lớp của bộ art side-scrolling,
+   và là bố cục của màn chọn nhân vật trong MU.
+
+   Núi vẽ ở canvas (#title-fx) vì nó phủ cả màn. Còn RỪNG và PHIẾN ĐÁ thì dán thẳng vào
+   #cc-classes bằng ::after và ::before: chúng phải đứng yên SO VỚI GÓT CHÂN, mà gót chân thì
+   trôi theo bố cục dòng chảy của .ss-inner. Neo vào canvas là mỗi cỡ cửa sổ lại lệch một kiểu;
+   neo vào chính hàng thẻ thì cả ba đi cùng nhau, khỏi cần một dòng JS nào canh lại.
+
+   Mép trên phiến đá canh đúng vào gót chân: ảnh thẻ cao 300 đơn vị, gót ở 252, thu về bề rộng
+   118 px ⇒ gót nằm cách đỉnh ảnh 124 px, cộng 10 px đệm trên của thẻ là 134 px.
+   Sân khấu chỉ hiện khi hàng thẻ hiện — tức chỉ trong lúc tạo nhân vật. Ở màn danh sách nhân
+   vật, hàng thẻ bị ẩn nên rừng và đá biến mất theo, chỉ còn dãy núi. */
+#cc-classes { position:relative; z-index:0; isolation:isolate;
+  display:grid; grid-template-columns:repeat(5,1fr); gap:0;
+  margin:16px auto 12px; max-width:820px; }
+/* RỪNG — tràn ra ngoài bề ngang hàng thẻ để không thấy hai mép cắt. Cắt lấy phần ĐÁY của bức
+   (gốc rễ và dương xỉ): đó là phần nằm ngay sau lưng nhân vật; ngọn cây phía trên đã có núi lo. */
+/* Thu bức rừng còn 310px chiều cao rồi LẶP NGANG. Đặt nguyên cỡ (1280px ngang ⇒ 569px cao)
+   thì cả khung hình chỉ còn rễ cây, và dãy núi — thứ vừa thay vào — không còn chỗ nào để thấy.
+   Thu nhỏ cũng đúng về phối cảnh: rừng ở XA hơn nhân vật. Hai mép trái/phải của bức khớp nhau
+   (đo được lệch 5,6/255) nên lặp ngang không để lại đường nối. */
+#cc-classes::after { content:''; position:absolute; left:50%; transform:translateX(-50%);
+  width:100vw; top:-86px; height:220px; z-index:0; pointer-events:none;
+  background:var(--den), url(assets/title/rung.webp) center bottom / auto 220px repeat-x;
+  filter:brightness(.66) saturate(.75);
+  -webkit-mask-image:linear-gradient(180deg, transparent, #000 22%);
+  mask-image:linear-gradient(180deg, transparent, #000 22%); }
+/* Đèn sân khấu: một vệt sáng lạnh hắt lên từ mặt đá. Rừng phía sau gần như đen, mà ba trong
+   năm lớp mặc đồ tối — không có vệt sáng này thì họ chỉ còn là những vệt lờ mờ trên nền đen. */
+#cc-classes { --den:radial-gradient(58% 100% at 50% 100%, rgba(150,180,255,.20) 0%, rgba(150,180,255,.07) 45%, rgba(150,180,255,0) 100%); }
+#cc-detail { position:relative; z-index:2; }
+/* PHIẾN ĐÁ — cũng tràn hết bề ngang cửa sổ. Mặt đá là thứ nhân vật ĐỨNG LÊN, nên mép trên của
+   nó phải trùng đúng gót chân, không xê một điểm ảnh nào. */
+#cc-classes::before { content:''; position:absolute; left:50%; transform:translateX(-50%);
+  width:100vw; top:134px; height:110px; z-index:1; pointer-events:none;
+  background:linear-gradient(180deg, rgba(6,7,20,0) 52%, rgba(6,7,20,.9) 100%),
+             url(assets/title/san_da.webp) center top / 100vw auto no-repeat;
+  filter:brightness(.94) saturate(.95); }
+/* Bóng đổ dưới chân: không có nó thì nhân vật lơ lửng ngay trên nền đá chứ không đứng lên nó. */
+.cc-card::before { content:''; position:absolute; left:50%; transform:translateX(-50%);
+  top:140px; width:66px; height:14px; border-radius:50%; z-index:-1;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,.55), rgba(0,0,0,0) 72%); pointer-events:none; }
+.cc-card { position:relative; z-index:2; border:none; border-radius:var(--r-md);
+  padding:10px 4px 12px; cursor:pointer; background:none;
+  transition:box-shadow .25s, transform .14s; text-align:center; }
+.cc-card:hover { transform:translateY(-3px); }
+/* Đang chọn thì sáng lên bằng QUẦNG DƯỚI CHÂN, không phải viền hộp — hộp thì lại thành thẻ. */
+.cc-card.sel::after { content:''; position:absolute; left:50%; transform:translateX(-50%);
+  top:136px; width:84px; height:22px; border-radius:50%; z-index:-1;
+  background:radial-gradient(ellipse at center, rgba(126,203,255,.55), rgba(126,203,255,0) 70%); }
+.cc-card.sel .cc-nm { text-shadow:0 0 12px rgba(126,203,255,.7); }
+/* 118px bề ngang ⇒ ảnh cao 147px, gót ở 124px tính từ đỉnh ảnh. Đệm dưới đẩy tên lớp xuống
+   quá mép dưới phiến đá (gót +96px) — tên đè lên mặt đá thì cả sân khấu thành một cái nhãn. */
+.cc-card .cc-art { display:block; width:100%; max-width:118px; height:auto; margin:0 auto 82px;
+  filter:drop-shadow(0 6px 12px rgba(0,0,0,.6)); }
+/* Tên lớp là thứ người chơi đọc đầu tiên — cho nó cỡ của một cái TÊN, không phải một nhãn phụ.
+   Dòng vai trò trước đây 10,5px và gãy làm ba dòng lệch nhau giữa năm thẻ; nới cỡ, giãn dòng
+   và khoá hai dòng để năm thẻ cao bằng nhau. */
+.cc-card .cc-nm { font-family:var(--font-display); font-size:15.5px; font-weight:700;
+  letter-spacing:.4px; margin-top:4px; }
+.cc-card .cc-tag { font-size:11.5px; color:var(--text-soft); margin-top:4px; line-height:1.45;
+  min-height:34px; padding:0 2px; }
 .cc-detail { max-width:640px; margin:0 auto 14px; min-height:52px; font-size:12.5px; color:var(--text-soft);
   line-height:1.6; padding:10px 14px; border-radius:var(--r-md);
   border:1px solid var(--border-faint); background:rgba(14,15,32,.5); }

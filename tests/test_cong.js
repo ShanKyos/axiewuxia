@@ -3,9 +3,15 @@
 // thấy nguyên người đè lên cột. Bản mới cao 179px (~1,9 lần nhân vật) nên sai chiều sâu là
 // nhìn thấy ngay: nhân vật lơ lửng trước một cái vòm cao gấp đôi mình.
 //
-// PHÉP ĐO — đếm điểm ảnh MÀU ÁO CHOÀNG TÍM của Dark Wizard nằm trong đúng cột trụ trái.
-// Đứng SAU trụ thì thân người bị trụ che ⇒ 0 điểm tím. Đứng TRƯỚC trụ thì nửa trên đè lên
-// chính cột đó ⇒ vài trăm điểm tím.
+// PHÉP ĐO — đếm điểm ảnh HỒNG CÁNH SEN nằm trong đúng cột trụ trái. Bật TEST_TO_PHANG thì
+// heroSprite() tô đè cả hình nhân vật bằng #ff00ff (source-in: bóng dáng giữ nguyên từng điểm ảnh, chỉ màu
+// bị thay). Đứng SAU trụ thì thân người bị trụ che ⇒ 0 điểm hồng. Đứng TRƯỚC trụ thì nửa trên
+// đè lên chính cột đó ⇒ vài trăm điểm hồng.
+//
+// Bản đầu đếm màu áo choàng tím của chính bộ đồ nhân vật. Nó đúng cho tới lúc art đổi: art
+// Spine mới ngả xanh lam, dải màu cũ bắt được 0 điểm và bài kiểm báo hỏng trong khi chiều sâu
+// vẫn đúng. Dải màu phải là thứ do BÀI KIỂM đặt ra, không phải thứ đi mượn của art — nếu
+// không thì mỗi bộ giáp mới lại phải hiệu chỉnh lại một lần.
 //
 // Ba cách đo trước đó đều hỏng, ghi lại để đừng ai làm lại:
 //   1. Chụp PNG rồi so BYTE — nén PNG khiến hai ảnh gần giống nhau khác nhau hàng nghìn byte.
@@ -15,7 +21,7 @@
 //   3. Vẫn trừ khung, nhưng cùng camera — buildWorld() rải cây/đá NGẪU NHIÊN mỗi lượt, và cây
 //      cũng nằm trong danh sách sắp theo y: có lượt một gốc cây rơi vào ô đo, cả ô cùng "khác".
 // Đếm theo MÀU thì cả ba thứ trên đều không đụng tới được: cây xanh, đá xám, trời xanh lam —
-// không cái nào lọt vào dải màu áo choàng.
+// không cái nào tới gần được hồng cánh sen thuần.
 const { chromium } = require('playwright');
 const URL = 'http://localhost:8871/index.html';
 
@@ -30,7 +36,8 @@ const URL = 'http://localhost:8871/index.html';
   await p.reload(); await p.waitForTimeout(900);
 
   const out = await p.evaluate(async () => {
-    window.TEST_MODE = true; startGame('baidasan', { name:'Đo' });
+    window.TEST_MODE = true; window.TEST_TO_PHANG = true;
+    startGame('baidasan', { name:'Đo' });
     curMap = 'tuongduong'; DGN = null; buildWorld();
     player.tutStep = -1;
     FXQ_AUTO = false; FXQ = 2; RES_AUTO = false; SETTINGS.lowFx = false;
@@ -49,7 +56,7 @@ const URL = 'http://localhost:8871/index.html';
       let tim = 0;
       for (let i = 0; i < d.length; i += 4){
         const R = d[i], G = d[i+1], B = d[i+2];
-        if (B > R + 20 && R > G + 12 && B > 70 && B < 210 && G < 110) tim++;   // dải màu áo choàng
+        if (R > 170 && B > 170 && G < 90) tim++;   // hồng cánh sen của TEST_TO_PHANG
       }
       res({ tim, tong: d.length / 4 });
     })));
@@ -73,12 +80,12 @@ const URL = 'http://localhost:8871/index.html';
   if (out.sau == null || out.truoc == null) fail('ô đo rơi ra ngoài canvas — camera không giữ được cổng trong màn');
   // Chốt chặn chống rỗng: đứng TRƯỚC trụ mà không đếm được gì thì phép đo hỏng, không phải game đúng.
   if (out.truoc < 150)
-    fail(`đứng trước trụ mà chỉ đếm được ${out.truoc} điểm ảnh áo choàng — phép đo hỏng, không phải game đúng`);
+    fail(`đứng trước trụ mà chỉ đếm được ${out.truoc} điểm ảnh nhân vật — phép đo hỏng, không phải game đúng`);
   // Chốt chặn thứ hai: dải màu không được bắt nhầm cảnh vật, nếu không thì "đứng sau = 0" là vô nghĩa.
   if (out.vang > 20)
-    fail(`ô đo không có người mà vẫn đếm ${out.vang} điểm ảnh áo choàng — dải màu đang bắt nhầm cảnh vật`);
+    fail(`ô đo không có người mà vẫn đếm ${out.vang} điểm ảnh nhân vật — dải màu đang bắt nhầm cảnh vật`);
   if (out.sau > out.truoc * 0.15)
-    fail(`đứng SAU trụ vẫn thấy ${out.sau} điểm ảnh áo choàng, đứng trước là ${out.truoc} — cổng không nằm đúng thứ tự chiều sâu`);
+    fail(`đứng SAU trụ vẫn thấy ${out.sau} điểm ảnh nhân vật, đứng trước là ${out.truoc} — cổng không nằm đúng thứ tự chiều sâu`);
 
   console.log('errors:', JSON.stringify(errs));
   console.log(bad === 0 && errs.length === 0 ? 'PASS' : 'FAIL(' + bad + ')');

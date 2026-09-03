@@ -91,10 +91,17 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     const ten = player.inv[0].name;
     khoDeposit(0);
     const khoDay = { tui: player.inv.length, conTen: player.inv[0] && player.inv[0].name === ten };
-    // Đầy = LƯỚI hết chỗ, không phải "đủ 30 món" — xem BAG_COLS/bagChoTrong(). Dùng vũ khí
-    // hai tay cho chắc: món to thì lưới chật nhanh và không lọt vào kẽ ô lẻ.
-    player.kho = [genSpecific('vukhi', 2, 60)]; player.inv = [];
-    for (let i = 0; i < 200 && bagThem(genSpecific('vukhi', 2, 60)); i++){ /* nhồi cho chật */ }
+    // Đầy = LƯỚI hết chỗ, không phải "đủ 30 món" — xem BAG_COLS/bagChoTrong().
+    //
+    // Nhồi bằng NÓN chứ không phải vũ khí. Vũ khí trông "to và chắc chắn chật nhanh", nhưng
+    // bagKichThuoc() tra BAG_SIZES_LINE và mỗi dòng vũ khí một khối ô khác nhau — 1×3, 2×3,
+    // 1×4, 2×4. genSpecific() roll dòng ngẫu nhiên, nên mỗi lượt chạy lưới xếp một kiểu, và
+    // có lượt chừa lại đúng một kẽ vừa vặn món rút từ kho ⇒ bài kiểm đỏ trong khi mã túi
+    // không sai một chữ. Đo được: 5 lượt liên tiếp ra 12/12/12/11/15 món mới chật.
+    // Nón thì luôn 2×2 bất kể định nghĩa nào, nên "vòng lặp dừng" mới thật sự có nghĩa là
+    // "không còn chỗ cho một khối 2×2", và món rút ra cũng đúng khối đó.
+    player.kho = [genSpecific('non', 2, 60)]; player.inv = [];
+    for (let i = 0; i < 200 && bagThem(genSpecific('non', 2, 60)); i++){ /* nhồi cho chật */ }
     const nTruoc = player.inv.length;
     khoWithdraw(0);
     return { khoDay, tuiDay: { tui: player.inv.length, nTruoc, kho: player.kho.length } };

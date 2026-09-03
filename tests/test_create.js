@@ -24,7 +24,14 @@ const pass = m => console.log('PASS ' + m);
       return { hien: !document.getElementById('sect-select').classList.contains('hidden'),
         soThe: cards.length,
         ten: [...document.querySelectorAll('#cc-classes .cc-nm')].map(e => e.textContent.trim()),
-        anhLaHero: [...document.querySelectorAll('#cc-classes .cc-art')].every(i => i.src.startsWith('data:image/png')),
+        // Ảnh thẻ lớp phải là HÌNH NHÂN VẬT THẬT, và có đúng hai nguồn hợp lệ: canvas tự dựng
+        // (data:) hoặc art Spine đã nướng sẵn trong assets/nv/. Bản đầu chỉ nhận data: — lúc
+        // đó chưa có art nướng — nên khi thẻ chuyển sang dùng art nướng thì bài kiểm báo hỏng
+        // trong khi thẻ vẫn hiện đúng nhân vật. Kiểm cả naturalWidth: đường dẫn hỏng thì thẻ
+        // ra một ô vỡ, và đó mới đúng là thứ bài kiểm này phải bắt.
+        anhLaHero: [...document.querySelectorAll('#cc-classes .cc-art')].every(i =>
+          (i.src.startsWith('data:image/png') || /\/assets\/nv\/[^/]+_dung\.png$/.test(i.src))
+          && i.naturalWidth > 0),
         ngoaiMan: r0.filter(x => x.left < 0 || x.right > innerWidth).length,
         nhoQua: r0.filter(x => x.width < 40 || x.height < 40).length,
         coQuze: !!document.getElementById('quze-screen'),
@@ -35,8 +42,8 @@ const pass = m => console.log('PASS ' + m);
     if (!r.hien) fail(lab + ': màn tạo nhân vật không hiện');
     else if (r.soThe !== 5) fail(`${lab}: có ${r.soThe} lớp, mong 5`);
     else pass(`${lab}: 5 lớp — ${r.ten.join(' · ')}`);
-    if (!r.anhLaHero) fail(lab + ': ảnh lớp không phải hình nhân vật dựng từ drawHeroFigure');
-    else pass(lab + ': ảnh mỗi lớp vẽ bằng chính drawHeroFigure của game');
+    if (!r.anhLaHero) fail(lab + ': ảnh lớp không phải hình nhân vật (canvas tự dựng hoặc art nướng), hoặc tải hỏng');
+    else pass(lab + ': ảnh mỗi lớp là hình nhân vật thật và tải được');
     if (r.ngoaiMan) fail(`${lab}: ${r.ngoaiMan} thẻ lớp nằm ngoài màn hình`);
     else if (r.nhoQua) fail(`${lab}: ${r.nhoQua} thẻ nhỏ hơn 40px`);
     else pass(lab + ': 5 thẻ nằm trọn trong màn hình');

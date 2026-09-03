@@ -65,6 +65,14 @@ def nuong(goi, skin):
                 ks.append(ve_khung(d, im, R, tt, hc, i*T/n, skin, W=O_W, H=O_H,
                                    phong=phong, ox=120/O_W, oy=oy, bo_khe=bo))
         ra[lop] = ks
+    # Thêm MỘT ảnh tư thế GỐC (không áp hoạt cảnh nào) cho thẻ chọn lớp: hoạt cảnh 00_Idle
+    # chùng gối và dồn trọng tâm sang một bên, đứng cạnh nhau năm lớp thì nhìn ra lệch hết.
+    # Tư thế gốc thì hai chân đều, tay buông, vũ khí chống xuống — dáng đứng chào của màn chọn.
+    dung = Image.new('RGBA', (O_W, O_H))
+    for bo in (bo_than, tuple(k for k in moiKhe if k not in KHE_VK)):
+        dung.alpha_composite(ve_khung(d, im, R, tt, {}, 0, skin, W=O_W, H=O_H,
+                                      phong=phong, ox=120/O_W, oy=oy, bo_khe=bo))
+    ra['dung'] = dung
     return ra, phong
 
 def bang(ks, duong):
@@ -84,6 +92,9 @@ def main():
     for hau, k in (('', 'than'), ('_vk', 'vukhi')):
         d = os.path.join(thu, ten + hau + '.png')
         print(f'  {os.path.basename(d):20s} {bang(lop[k], d)//1024:>5d} KB  ({len(lop[k])} khung)')
+    dd = os.path.join(thu, ten + '_dung.png')
+    lop['dung'].save(dd, optimize=True)
+    print(f'  {os.path.basename(dd):20s} {os.path.getsize(dd)//1024:>5d} KB  (tư thế đứng)')
     # kiểm hai mốc — sai là nhân vật lệch so với phần còn lại của game
     bb = Image.open(os.path.join(thu, ten + '.png')).crop((0, 0, O_W, O_H)).getchannel('A').getbbox()
     print(f'  gót y={bb[3]-40} (cần {GOT_Y}) · đỉnh đầu y={bb[1]-40} (cần 53) · thu {phong:.4f}'
