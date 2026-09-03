@@ -13037,12 +13037,42 @@ function heroFramePose(kind, idx, act, sw){
 function heroFrameNow(kind, idx){
   return (idx + 0.5) / (HS_FRAMES[kind] || 8) * Math.PI * 2 * 620;
 }
+// ── THỬ: bộ khung nướng sẵn từ art Spine ────────────────────────────────────────────
+// Bảng khung xếp 16 cột, ô 240x300 = HERO_W+HS_PAD*2 x HERO_H+HS_PAD*2, và gốc (80,212) của
+// bộ xương nằm đúng ở (120,252) trong ô — nhờ vậy dán thẳng vào heroSprite là khớp, khỏi
+// phải chỉnh lệch. Thứ tự khung trùng HS_FRAMES: 16 đứng, 32 đi, 16 đánh, 16 tung chiêu.
+const NV_ANH = {};
+// TRỐNG là cố ý: đường nướng đã dựng xong và kiểm được, nhưng mới có 3/30 bộ art nên bật lên
+// là mỗi lớp Dark Wizard giai 9 đổi kiểu còn năm lớp kia giữ nguyên — hai phong cách đá nhau.
+// Bật bằng cách thêm một dòng 'lớp|giai': 'tên-tệp', ví dụ 'baidasan|9': 'dw_t9'.
+// Cách dựng tệp: xem .claude/skills/spine-nuong/SKILL.md
+const NV_BO = {};                                  // lớp|giai -> tệp bảng khung THÂN
+// Vũ khí là LỚP RIÊNG, nướng cùng hệ toạ độ rồi đắp đè. Ba gói art đều dùng chung bộ xương
+// giống nhau từng byte, nên cây gậy nướng từ gói này rơi đúng vào tay của thân nướng từ gói
+// khác — đổi vũ khí không phải nướng lại thân. Và một cây chỉ tốn 58 KB so với 1,4 MB của thân.
+const NV_VK = {};                                  // loại vũ khí -> tệp bảng khung
+const NV_COT = 16, NV_OW = 240, NV_OH = 300;
+const NV_MOC = { i: 0, w: 16, a: 48, c: 64 };
+function nvTai(ten){
+  if (!ten) return null;
+  let im = NV_ANH[ten];
+  if (!im){ im = new Image(); im.src = 'assets/nv/' + ten + '.png'; NV_ANH[ten] = im; }
+  return (im.complete && im.naturalWidth) ? im : null;
+}
+function nvBo(sectKey, tier){ return nvTai(NV_BO[sectKey + '|' + tier]); }
+function nvVuKhi(gv){ return nvTai(NV_VK[(gv && gv.vkLoai) || 'gay']); }
+function nvVeKhung(g, im, kind, idx){
+  const n = HS_FRAMES[kind] || 1;
+  const k = NV_MOC[kind] + (idx % n);
+  g.drawImage(im, (k % NV_COT) * NV_OW, ((k / NV_COT) | 0) * NV_OH, NV_OW, NV_OH,
+                  -HS_PAD, -HS_PAD, NV_OW, NV_OH);
+}
 function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw){
   sw = sw || 0;
   // `act` phải nằm trong khoá cho CẢ đánh lẫn tung chiêu: heroFramePose() đọc act ở cả hai nhánh
   // (mỗi lớp một bộ khung tay/vũ khí riêng), nên bỏ nó ra khỏi khoá ở nhánh 'c' là hai tuyệt kỹ
   // khác nhau dùng chung một ảnh.
-  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${back ? 1 : 0}|${sw}`;
+  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${back ? 1 : 0}|${sw}|${nvBo(sectKey, tier) ? 1 : 0}`;
   let cv = _hsCache.get(key);
   if (cv){                       // chạm — đẩy lên cuối để LRU giữ lại
     _hsHit++;
@@ -13065,7 +13095,13 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw){
   // Vẽ rời còn đúng hơn về bản chất — cánh vỗ liên tục và nhấc người lên khi bay, nướng vào
   // sprite là khoá nó vào đúng mấy chục khung có sẵn. Cánh cũng tràn khỏi lề HS_PAD = 40 px
   // nên nướng vào là bị cắt cụt hai bên (đúng cái mà test_herosprite bắt được).
-  drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx), ps, canhBoRa(gv));
+  const _nvIm = nvBo(sectKey, tier);
+  if (_nvIm){
+    nvVeKhung(g, _nvIm, kind, idx);
+    const _vk = nvVuKhi(gv);                        // vũ khí đắp đè lên thân
+    if (_vk) nvVeKhung(g, _vk, kind, idx);
+  }
+  else drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx), ps, canhBoRa(gv));
   // CẮT SÁT nội dung. Lề 40 là cần (đo được hào quang tràn ra tới −38..197 ngang, 245 dọc), nhưng
   // blit nguyên tấm có lề là tô thêm 2× diện tích toàn pixel trong suốt mỗi khung — đo được mất
   // 43,9 → 38,9 FPS chỉ vì phần lề đó. Đo hộp bao đúng một lần lúc dựng rồi cắt.

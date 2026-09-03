@@ -425,6 +425,19 @@ lớp bằng đường viền ngoài. `CHIBI_CFG` giữ ba trục: `head` / `sh`
 bị gỡ ra: tỉ lệ 8 đầu đứng cạnh chibi là lệch hẳn. Nó chỉ để xem, mở bằng
 `/art <lớp> [mavuong]`.
 
+## Art nướng sẵn từ Spine — có SKILL riêng, đọc trước khi đụng vào
+
+Art nhân vật do Meowa sinh ra là rig Spine. Game này không có runtime Spine và sẽ không có
+(runtime chính chủ đòi giấy phép), nên đường đi là **nướng sẵn ra bảng khung rồi `drawImage`**.
+
+Toàn bộ hợp đồng toạ độ, hai phép đo bắt buộc, và bốn cái bẫy của định dạng Spine 4.2 nằm ở
+**`.claude/skills/spine-nuong/SKILL.md`**. Công cụ ở `tools/spine/nuong_nv.py`. Đọc trước khi
+sửa `nvBo`/`nvVuKhi`/`canhVeAnh` hay khi có gói art mới — bốn cái bẫy kia đoán không ra được,
+mỗi cái làm hỏng bản dựng theo một kiểu khác nhau.
+
+`NV_BO` và `NV_VK` đang để TRỐNG là cố ý: cơ chế xong rồi nhưng mới có 3/30 bộ art, bật lên là
+một lớp đổi kiểu còn năm lớp kia giữ nguyên.
+
 ## Đổ khối: một nguồn sáng, đặt ở TRÊN-TRÁI
 
 `applyFormLight` + `applyEdgeLight` phủ ánh sáng lên hình ĐÃ VẼ bằng `source-atop`.
