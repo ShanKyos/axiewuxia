@@ -150,14 +150,16 @@ function check(name, ok, extra){
   const oldSave = await page.evaluate(() => {
     saveGame();
     const d = JSON.parse(localStorage.getItem('vlcm_save'));
-    Object.assign(d.player, {
+    // v4: nhân vật nằm trong ô đang chơi, không còn ở gốc doc
+    const O = d.slots[d.active];
+    Object.assign(O.player, {
       channelPick: 'dh4', channelId: 'dh4', channelT: 9.5, channelCd: 42,
       towerBest: 17, devilClears: 4, bloodClears: 2, bloodBonusClears: 1,
       herbCount: 33, alchDay: new Date().toDateString(), alchCount: 2,
       pillDmgT: 120, pillDmgPct: 18,
     });
-    d.curMap = 'towerarena';                                  // map đã bị xoá khỏi MAPS
-    d.sideStates = { s_sys1: { st:'active', prog:0 }, s_sys6: { st:'done', prog:1 },
+    O.curMap = 'towerarena';                                  // map đã bị xoá khỏi MAPS
+    O.sideStates = { s_sys1: { st:'active', prog:0 }, s_sys6: { st:'done', prog:1 },
                      s_b6: { st:'claimed', prog:1 } };        // s_b6 vẫn còn thật → phải giữ (s_b1–s_b5 đã gỡ, trùng chính tuyến)
     return JSON.stringify(d);
   });

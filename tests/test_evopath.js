@@ -110,7 +110,9 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     player.skillEvo = {}; window.chooseEvoPath(id, 0, 'spread');
     saveGame();
     const raw = JSON.parse(localStorage.getItem('vlcm_save') || '{}');
-    const se = raw.player && raw.player.skillEvo;
+    // v4: nhân vật nằm trong ô đang chơi, không còn ở gốc doc
+    const O = raw.slots && raw.slots[raw.active];
+    const se = O && O.player && O.player.skillEvo;
     return { luuTrongSave: !!(se && se[id] && se[id][0] === 'spread'),
       trongBoNho: player.skillEvo[id][0] };
   });

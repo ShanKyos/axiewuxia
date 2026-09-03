@@ -158,7 +158,16 @@ const pass = m => console.log('PASS ' + m);
   else pass(`lớp .danger chỉ nằm trên ${dg.ten.length} loại nút phá huỷ: ${dg.ten.join(' · ')}`);
   // Cả hai nút phá huỷ phải THỰC SỰ tìm thấy — nếu không, phép kiểm trên chỉ xanh vì rỗng.
   if (!dg.boCot) fail('không thấy nút "Bỏ" nào trong Kho Cốt — phép kiểm .danger đang rỗng');
-  if (!dg.ten.some(t => /xóa save/i.test(t))) fail('không thấy nút XÓA SAVE trong Cài Đặt');
+  // XÓA SAVE đã gỡ khỏi Cài Đặt: xoá nhân vật nay CHỈ làm được ở màn chờ, từng ô một. Chỗ nó
+  // đứng giờ là đường đi RA màn chờ — không phá huỷ gì nên cũng không mang lớp .danger nữa.
+  const set = await p.evaluate(() => {
+    closePanels(); togglePanel('settings');
+    const t = [...document.querySelectorAll('#panel-settings button')].map(x => x.textContent.trim());
+    closePanels();
+    return { coDuongRa: t.some(x => /chọn nhân vật/i.test(x)), conXoaSave: t.some(x => /xóa save/i.test(x)) };
+  });
+  if (!set.coDuongRa) fail('Cài Đặt không có đường ra màn chọn nhân vật');
+  if (set.conXoaSave) fail('Cài Đặt vẫn còn nút XÓA SAVE — xoá nhân vật phải nằm ở màn chờ');
 
   // ── 5. Chỉ còn MỘT bộ chữ ─────────────────────────────────────────────────
   const chu = await p.evaluate(() => {

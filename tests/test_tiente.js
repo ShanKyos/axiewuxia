@@ -21,7 +21,9 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   const r = await p.evaluate(() => {
     player.silver = 1000; saveGame();
     const raw = JSON.parse(localStorage.getItem('vlcm_save'));
-    raw.player.dantian = { realm:0, tuvi:750 }; raw.player.congHuan = 3; raw.player.silver = 1000;
+    // v4: save chứa NĂM ô nhân vật; nhân vật đang chơi nằm trong slots[active], không còn ở gốc.
+    const O = raw.slots[raw.active];
+    O.player.dantian = { realm:0, tuvi:750 }; O.player.congHuan = 3; O.player.silver = 1000;
     localStorage.setItem('vlcm_save', JSON.stringify(raw));
     loadGame();
     return { bac: player.silver, conAnima: 'tuvi' in (player.dantian||{}), conCH: 'congHuan' in player };

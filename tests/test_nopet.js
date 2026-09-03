@@ -24,9 +24,11 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     player.silver = 1000; player.noidan = 2;
     saveGame();
     const raw = JSON.parse(localStorage.getItem('vlcm_save'));
-    raw.player.silver = 1000; raw.player.phongphu = 4;
-    raw.player.pet = { type:'boar', name:'Heo', lv:9, el:'Hỏa', feed:7 };
-    raw.player.noidan = { Kim:0, 'Mộc':0, 'Thổ':0, 'Thủy':0, 'Hỏa':2 };  // save cũ vẫn dạng object
+    // v4: save chứa NĂM ô nhân vật; nhân vật đang chơi nằm trong slots[active], không còn ở gốc.
+    const O = raw.slots[raw.active];
+    O.player.silver = 1000; O.player.phongphu = 4;
+    O.player.pet = { type:'boar', name:'Heo', lv:9, el:'Hỏa', feed:7 };
+    O.player.noidan = { Kim:0, 'Mộc':0, 'Thổ':0, 'Thủy':0, 'Hỏa':2 };  // save cũ vẫn dạng object
     localStorage.setItem('vlcm_save', JSON.stringify(raw));
     loadGame();
     return { bac: player.silver, hoa: player.noidan,

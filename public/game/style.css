@@ -1142,6 +1142,42 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    CHÉP y nguyên 14 dòng ngay phía trên (npc-head, #art-view, #cc-splash) — chép nhầm vào trong
    vỏ @media, giá trị giống hệt nên không lộ ra thành lỗi nhìn thấy được, chỉ là CSS chết. */
 @media (max-width:1240px){ #cc-splash { display:none; } }
+/* ── Năm ô nhân vật (màn chờ) ─────────────────────────────────────────────────
+   Danh sách dọc chứ không phải lưới: mỗi dòng phải đọc được TÊN, CẤP, LỚP và NƠI ĐANG ĐỨNG
+   trong một lượt mắt — đó là thứ người chơi dùng để phân biệt năm nhân vật của chính mình.
+   Nút xoá nằm ngay trên dòng, và bấm nó KHÔNG xoá ngay: dòng đổi thành câu hỏi lại có tên
+   và cấp của nhân vật, vì hộp confirm() của trình duyệt không nói được hai thứ đó. */
+#cc-slots { display:flex; flex-direction:column; gap:8px; max-width:520px; margin:18px auto 6px; }
+#cc-slots-note { font-size:var(--fs-sm); color:var(--text-dimmer); margin-bottom:10px; letter-spacing:.3px; }
+.cc-slot { position:relative; display:flex; align-items:center; gap:12px; text-align:left;
+  padding:8px 44px 8px 10px; border:1.5px solid var(--border-faint); border-radius:var(--r-md);
+  background:rgba(20,22,58,.62); cursor:pointer; transition:border-color .18s ease, transform .18s ease; }
+.cc-slot:hover { border-color:var(--border-strong); transform:translateY(-2px); }
+.cc-slot.sel { border-color:var(--accent-light); box-shadow:0 0 18px rgba(126,203,255,.35);
+  background:linear-gradient(180deg, rgba(76,141,255,.18), rgba(20,22,58,.72)); }
+.cc-slot-art { width:52px; height:auto; flex:0 0 52px; image-rendering:auto; }
+.cc-slot-txt { flex:1 1 auto; min-width:0; }
+.cc-slot-nm { font-family:var(--font-display); font-weight:700; font-size:var(--fs-lg);
+  color:var(--text-bright); letter-spacing:.3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cc-slot-sub { font-size:var(--fs-md); color:var(--text-soft); margin-top:2px; }
+.cc-slot-loc { font-size:var(--fs-sm); color:var(--text-dimmer); margin-top:2px; }
+.cc-slot.empty { justify-content:center; padding:14px; border-style:dashed; color:var(--text-dim); }
+.cc-slot.empty .cc-slot-nm { font-size:var(--fs-md); font-weight:400; color:var(--text-dim); }
+.cc-slot-add { font-size:var(--fs-xl); color:var(--accent-light); margin-right:6px; }
+.cc-slot-del { position:absolute; right:8px; top:50%; transform:translateY(-50%);
+  width:26px; height:26px; border:1px solid var(--border-faint); border-radius:var(--r-sm);
+  background:rgba(10,11,24,.6); color:var(--text-dimmer); font-size:var(--fs-md); line-height:1; cursor:pointer; }
+.cc-slot-del:hover { border-color:var(--red); color:var(--red); background:rgba(60,16,20,.7); }
+.cc-slot.hoi-xoa { cursor:default; padding:10px; border-color:var(--red); background:rgba(48,14,18,.72); }
+.cc-slot.hoi-xoa .cc-slot-txt { min-width:0; }
+.cc-slot.hoi-xoa:hover { transform:none; border-color:var(--red); }
+.cc-slot.hoi-xoa .cc-slot-nm { color:#ffc4c4; }
+.cc-slot-yes, .cc-slot-no { border-radius:var(--r-sm); padding:6px 12px; font-size:var(--fs-md); white-space:nowrap;
+  font-weight:600; cursor:pointer; letter-spacing:.3px; }
+.cc-slot-yes { border:1px solid var(--red); background:rgba(120,30,36,.85); color:#ffd8d8; }
+.cc-slot-yes:hover { background:var(--red); color:var(--on-light); }
+.cc-slot-no { border:1px solid var(--border); background:rgba(30,32,64,.9); color:var(--text-soft); }
+.cc-slot-no:hover { background:rgba(76,141,255,.28); }
 #cc-classes { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin:16px auto 12px; max-width:820px; }
 .cc-card { position:relative; border:1.5px solid var(--border-faint); border-radius:var(--r-md);
   padding:10px 6px 12px; cursor:pointer; background:linear-gradient(170deg,rgba(180,205,255,.07),rgba(10,11,24,.5));

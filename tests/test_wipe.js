@@ -68,10 +68,13 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     player.level = 42; saveGame();
     const raw = JSON.parse(localStorage.getItem('vlcm_save'));
     const ok = loadGame();
-    return { ghiV: raw.v, napLai: !!ok, cap: player.level };
+    return { ghiV: raw.v, phienBanHienTai: SAVE_VERSION, napLai: !!ok, cap: player.level };
   });
   console.log('3) save đời mới:', JSON.stringify(r3));
-  if (r3.ghiV !== 3) fail(`save mới ghi v=${r3.ghiV}, phải là 3`);
+  // Đọc SAVE_VERSION từ chính trang thay vì ghim số: ghim thì mỗi lần nâng phiên bản là bài
+  // kiểm này đỏ dù nó chẳng phát hiện được gì. Thứ cần gác là save mới ghi ĐÚNG phiên bản
+  // game đang chạy.
+  if (r3.ghiV !== r3.phienBanHienTai) fail(`save mới ghi v=${r3.ghiV}, mà game đang ở ${r3.phienBanHienTai}`);
   if (!r3.napLai || r3.cap !== 42) fail('save đời mới không nạp lại được');
   await c2.close();
 

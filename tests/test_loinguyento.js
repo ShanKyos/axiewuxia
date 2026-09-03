@@ -24,7 +24,9 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   const r1 = await p.evaluate(() => {
     saveGame();
     const raw = JSON.parse(localStorage.getItem('vlcm_save'));
-    raw.player.noidan = { Kim:3, 'Mộc':1, 'Thổ':0, 'Thủy':7, 'Hỏa':2 };
+    // v4: save chứa NĂM ô nhân vật; nhân vật đang chơi nằm trong slots[active], không còn ở gốc.
+    const O = raw.slots[raw.active];
+    O.player.noidan = { Kim:3, 'Mộc':1, 'Thổ':0, 'Thủy':7, 'Hỏa':2 };
     localStorage.setItem('vlcm_save', JSON.stringify(raw));
     loadGame();
     return { kieu: typeof player.noidan, so: player.noidan };

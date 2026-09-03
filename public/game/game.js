@@ -1790,34 +1790,122 @@ function drawPortal(g){
     ctx.strokeText(txt, g.x, g.y - 114); ctx.fillText(txt, g.x, g.y - 114);
   }
 }
-function drawGates(){
-  for (const g of GATES){
-    if (g.map !== curMap) continue;
-    if (g.portal){ drawPortal(g); continue; }
-    // hai cột trụ + xà ngang
-    ctx.fillStyle = '#4a3826';
-    ctx.fillRect(g.x - 73, g.y - 96, 18, 96);
-    ctx.fillRect(g.x + 55, g.y - 96, 18, 96);
-    ctx.fillStyle = '#5a4630'; ctx.fillRect(g.x - 86, g.y - 106, 172, 16);
-    ctx.fillStyle = '#2e2418'; ctx.fillRect(g.x - 78, g.y - 90, 156, 8);
-    // đèn lồng hai bên
-    for (const s of [-1, 1]){
-      ctx.strokeStyle = '#3a2c1e'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(g.x + s*64, g.y - 90); ctx.lineTo(g.x + s*64, g.y - 78); ctx.stroke();
-      ctx.fillStyle = '#d84a2a'; ctx.beginPath(); ctx.ellipse(g.x + s*64, g.y - 70, 6, 8, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = 'rgba(126,203,255,.85)'; ctx.beginPath(); ctx.ellipse(g.x + s*64, g.y - 70, 2.5, 3.5, 0, 0, 7); ctx.fill();
+// ═══════════ CỔNG — đá nặng, đai sắt, lửa (ngôn ngữ hình ảnh MU/Diablo) ═══════════
+// Cổng cũ là hai cột gỗ nâu + một xà ngang, cao 96px — thấp hơn cả tầm với của nhân vật, và
+// trông như cổng vườn chứ không phải lối vào một vùng đất. Bản này cao 179px (~1,9 lần nhân
+// vật): vòm xếp từng viên đá trên hai trụ có đai sắt và đinh tán, lư treo dưới đá đỉnh, hai
+// cột lửa đứng hai bên. Đá lạnh + sắt đen + lửa cam là đúng ba chất liệu của thể loại này.
+//
+// Phần TĨNH nướng sẵn một lần vào canvas phụ. Vẽ thẳng thì mỗi khung tốn ~80 nhát fill cho
+// MỖI cổng, mà Lunaris City có bốn cái cùng lúc — 320 nhát fill một khung chỉ để vẽ thứ
+// không bao giờ đổi. Chỉ hai ngọn lửa là vẽ sống.
+const GATE_PH = 66, GATE_PW = 34;                  // nửa khoảng cách trụ · bề rộng trụ
+const GATE_RO = GATE_PH + GATE_PW/2, GATE_RI = GATE_PH - GATE_PW/2;
+const GATE_FX = GATE_RO + 30;                      // cột lửa đứng cách tâm bao xa
+const GATE_SPRW = (GATE_FX + 20) * 2, GATE_SPRH = 208;
+const GATE_BASE = GATE_SPRH - 16;                  // mặt đất nằm ở đâu trong canvas phụ
+const GATE_TOP = GATE_BASE - 96;                   // chân vòm (đỉnh thân trụ)
+const GATE_BOWL = GATE_BASE - 58;                  // miệng chậu lửa
+let _gateCv = null;
+function gateSprite(){
+  if (_gateCv) return _gateCv;
+  const cv = document.createElement('canvas');
+  cv.width = GATE_SPRW; cv.height = GATE_SPRH;
+  drawGateStatic(cv.getContext('2d'), GATE_SPRW/2, GATE_BASE);
+  _gateCv = cv;
+  return cv;
+}
+function drawGateStatic(g, x, y){
+  const PH = GATE_PH, PW = GATE_PW, TOP = GATE_TOP, RO = GATE_RO, RI = GATE_RI;
+  hEll(g, x, y + 4, GATE_FX + 12, 15, 'rgba(0,0,0,.26)');
+  for (const s of [-1, 1]){                                                    // cột lửa hai bên
+    const fx = x + s * GATE_FX;
+    hPoly(g, [[fx - 13, y], [fx + 13, y], [fx + 9, y - 10], [fx - 9, y - 10]], '#4c4b45');
+    g.fillStyle = '#6b6a63'; g.fillRect(fx - 7, y - 50, 14, 40);
+    g.fillStyle = '#75746c'; g.fillRect(fx - 7, y - 50, 5, 40);
+    hPoly(g, [[fx - 13, y - 50], [fx + 13, y - 50], [fx + 9, GATE_BOWL], [fx - 9, GATE_BOWL]], '#3b3746');
+    hPoly(g, [[fx - 13, y - 50], [fx - 3, y - 50], [fx - 2, GATE_BOWL], [fx - 9, GATE_BOWL]], '#4e4a5c');
+    hEll(g, fx, GATE_BOWL, 9, 3.2, '#241f2c');
+  }
+  for (const s of [-1, 1]){
+    const px = x + s * PH;
+    g.fillStyle = '#4c4b45'; g.fillRect(px - PW/2 - 8, y - 16, PW + 16, 16);   // bệ
+    g.fillStyle = '#5e5d55'; g.fillRect(px - PW/2 - 8, y - 16, PW + 16, 4);
+    for (let i = 0; i < 4; i++){                                               // thân: 4 hàng đá
+      const yy = y - 16 - (i + 1) * 20;
+      g.fillStyle = i % 2 ? '#6b6a63' : '#75746c'; g.fillRect(px - PW/2, yy, PW, 20);
+      g.fillStyle = 'rgba(255,255,255,.07)';      g.fillRect(px - PW/2, yy, PW, 3);
+      g.fillStyle = 'rgba(0,0,0,.22)';            g.fillRect(px - PW/2, yy + 18, PW, 2);
     }
-    drawCalligraphy((g.name || 'Cổng Thành').split(' → ')[0], g.x, g.y - 118, '#6a4a2a', 15);
-    if (nearGate === g){
-      ctx.strokeStyle = 'rgba(126,203,255,.55)'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.ellipse(g.x, g.y, 58 + Math.sin(performance.now()/300)*6, 20, 0, 0, 7); ctx.stroke();
-      ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
-      ctx.strokeStyle = 'rgba(0,0,0,.65)'; ctx.lineWidth = 3; ctx.fillStyle = '#7ecbff';
-      const txt = 'G — ' + g.name;
-      ctx.strokeText(txt, g.x, g.y - 136); ctx.fillText(txt, g.x, g.y - 136);
+    for (const yy of [y - 54, y - 90]){                                        // đai sắt + đinh tán
+      g.fillStyle = '#3b3746'; g.fillRect(px - PW/2 - 4, yy, PW + 8, 9);
+      g.fillStyle = '#4e4a5c'; g.fillRect(px - PW/2 - 4, yy, PW + 8, 3);
+      g.fillStyle = '#6a6578';
+      for (const dx of [-PW/2 + 3, PW/2 - 3]){ g.beginPath(); g.arc(px + dx, yy + 4.5, 2, 0, 7); g.fill(); }
     }
+    g.fillStyle = '#57564f'; g.fillRect(px - PW/2 - 7, TOP - 9, PW + 14, 11);  // mũ trụ
+    g.fillStyle = '#6d6c64'; g.fillRect(px - PW/2 - 7, TOP - 9, PW + 14, 3);
+    hPoly(g, [[px - PW/2 - 8, y], [px + PW/2 + 8, y], [px + PW/2 + 2, y - 12], [px - PW/2 - 2, y - 8]],
+          'rgba(74,90,58,.5)');                                                // rêu chân trụ
+  }
+  const N = 11;                                                                // vòm: 11 viên đá
+  for (let i = 0; i < N; i++){
+    const a0 = Math.PI + i / N * Math.PI, a1 = Math.PI + (i + 1) / N * Math.PI;
+    g.fillStyle = i === (N - 1) / 2 ? '#8a897e' : (i % 2 ? '#6b6a63' : '#75746c');   // đá đỉnh sáng hơn
+    g.beginPath();
+    g.moveTo(x + Math.cos(a0) * RI, TOP + Math.sin(a0) * RI);
+    g.lineTo(x + Math.cos(a0) * RO, TOP + Math.sin(a0) * RO);
+    g.lineTo(x + Math.cos(a1) * RO, TOP + Math.sin(a1) * RO);
+    g.lineTo(x + Math.cos(a1) * RI, TOP + Math.sin(a1) * RI);
+    g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 1; g.stroke();
+  }
+  const kr = (RO + RI) / 2;                                                    // phù văn trên đá đỉnh
+  hPoly(g, [[x, TOP - kr - 9], [x + 7, TOP - kr], [x, TOP - kr + 9], [x - 7, TOP - kr]], '#3b3746');
+  hPoly(g, [[x, TOP - kr - 5], [x + 4, TOP - kr], [x, TOP - kr + 5], [x - 4, TOP - kr]], '#7ecbff');
+  for (const s of [-1, 1]){                                                    // lư treo dưới vòm
+    const a = Math.PI + (s < 0 ? 0.28 : 0.72) * Math.PI;
+    const cx = x + Math.cos(a) * RI, cy = TOP + Math.sin(a) * RI;
+    g.strokeStyle = '#4e4a5c'; g.lineWidth = 2.5;
+    g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx, cy + 15); g.stroke();
+    hPoly(g, [[cx - 6, cy + 15], [cx + 6, cy + 15], [cx + 4, cy + 24], [cx - 4, cy + 24]], '#3b3746');
+    hEll(g, cx, cy + 16, 6, 2.4, '#ffb15c');
   }
 }
+// Một ngọn lửa trong chậu. Vẽ sống nên phải rẻ: hai lưỡi lửa + một quầng sáng.
+function drawGateFlame(px, py, t, ph){
+  const fl = SETTINGS.lowFx ? 0 : Math.sin(t * 5.5 + ph) * 2.2;
+  const gr = ctx.createRadialGradient(px, py - 9, 1, px, py - 9, 24);
+  gr.addColorStop(0, 'rgba(255,215,106,.5)'); gr.addColorStop(1, 'rgba(255,177,92,0)');
+  ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(px, py - 9, 24, 0, 7); ctx.fill();
+  ctx.fillStyle = '#d84a2a';
+  ctx.beginPath(); ctx.moveTo(px - 7, py); ctx.quadraticCurveTo(px - 4, py - 12, px + fl, py - 21);
+  ctx.quadraticCurveTo(px + 4, py - 12, px + 7, py); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#ffb15c';
+  ctx.beginPath(); ctx.moveTo(px - 4, py); ctx.quadraticCurveTo(px - 2.5, py - 8, px + fl * 0.7, py - 14);
+  ctx.quadraticCurveTo(px + 2.5, py - 8, px + 4, py); ctx.closePath(); ctx.fill();
+  hEll(ctx, px, py - 2, 2.6, 3.6, '#fff0be');
+}
+// Cổng nay cao gần gấp đôi nhân vật, nên nó KHÔNG còn là hình nền vẽ một lượt trước mọi thứ
+// được nữa: đứng phía bắc cổng thì nhân vật phải bị vòm che, đứng phía nam thì nhân vật đi
+// đè lên chân trụ. Vì vậy cổng vào thẳng danh sách sắp theo y chung với cây, quái và người —
+// cùng cơ chế đã có sẵn, không phải dựng lượt vẽ tiền cảnh riêng.
+function drawOneGate(g0){
+  const t = performance.now() / 1000;
+  const oy = g0.y - GATE_BASE;                     // gốc canvas phụ trong toạ độ thế giới
+  ctx.drawImage(gateSprite(), g0.x - GATE_SPRW/2, oy);
+  for (const s of [-1, 1]) drawGateFlame(g0.x + s * GATE_FX, oy + GATE_BOWL, t, s);
+  drawCalligraphy((g0.name || 'Cổng Thành').split(' → ')[0], g0.x, oy - 8, '#c9c6b4', 15);
+  if (nearGate === g0){
+    ctx.strokeStyle = 'rgba(126,203,255,.55)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(g0.x, g0.y, 78 + Math.sin(t * 3) * 6, 22, 0, 0, 7); ctx.stroke();
+    ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
+    ctx.strokeStyle = 'rgba(0,0,0,.65)'; ctx.lineWidth = 3; ctx.fillStyle = '#7ecbff';
+    const txt = 'G — ' + g0.name;
+    ctx.strokeText(txt, g0.x, oy - 28); ctx.fillText(txt, g0.x, oy - 28);
+  }
+}
+function gatesHere(){ return GATES.filter(g => g.map === curMap); }
 const NPCS = [
   { id:'truonglang', name:'Trưởng Làng', map:'daohoa', x:400, y:400, img:'assets/npcs/truonglang.png', talk:'quest',
     // Ông giao 9 trong 10 nhiệm vụ đầu và dẫn truyện gọi ông là người "nhặt ngươi về nuôi" —
@@ -6211,15 +6299,58 @@ function newPlayer(sectKey){
 // bên dưới (tìm `saveStale`), vì mất nhân vật mà không hiểu vì sao là thứ tệ nhất.
 //   2 → 3: hệ vật phẩm, chiêu thức, tiền tệ và thú cưng đều đã đổi. Nhân vật cũ giữ lại chỉ số
 //          của những hệ không còn tồn tại; đây thực chất là một game khác.
-const SAVE_VERSION = 3;
-function saveGame(){
-  if (!player || window._wiping) return;   // đang xoá save: beforeunload không được ghi lại
+//   3 → 4: một ô nhân vật thành năm. Đây KHÔNG phải lần nâng xoá dữ liệu — bản v3 được bê
+//          nguyên vẹn vào ô số 1 (xem docSave). Mốc xoá vẫn dừng ở v2.
+const SAVE_VERSION = 4;
+// DƯỚI mốc này là xoá, TỪ mốc này trở lên là chuyển đổi được. Tách hẳn khỏi SAVE_VERSION để lần
+// nâng sau chỉ đổi cách đóng gói (như lần này) không còn kéo theo việc xoá nhân vật của ai nữa.
+const SAVE_COMPAT = 3;
+const MAX_CHARS = 5;     // MU cho mỗi tài khoản 5 ô nhân vật — giữ đúng con số đó
+let activeSlot = -1;     // ô đang chơi; -1 = chưa chọn ô nào
+
+function docTrong(){ return { v:SAVE_VERSION, slots:new Array(MAX_CHARS).fill(null), active:-1, savedAt:0 }; }
+// KHÔNG có bộ nhớ đệm, và đó là quyết định có chủ ý. Bản đầu tôi đệm doc lại trong RAM để
+// khỏi parse cả năm nhân vật mỗi lần lưu — nhưng như vậy thì mọi đường ghi thẳng vào
+// localStorage từ BÊN NGOÀI (save cloud, bài kiểm, console) đều bị lờ đi trong im lặng: game
+// đọc bản trong RAM và không bao giờ thấy. Đo lại thì cái đệm đó chẳng đáng: một nhân vật đầy
+// đủ nặng 44 KB, parse hết 0,16 ms — năm ô là ~0,8 ms, mà saveGame() vốn đã stringify đúng
+// chừng ấy dữ liệu rồi. Đổi một phần nghìn giây lấy một lớp trạng thái có thể lệch: không đáng.
+function docSave(){
+  let mig = false;
+  let out = null;
   try {
-    const payload = JSON.stringify({
-      v: SAVE_VERSION,
-      player, questIdx, questProg, questState, victory, curMap, sideStates,
-      savedAt: Date.now()
-    });
+    const raw = localStorage.getItem('vlcm_save');
+    const d = raw ? JSON.parse(raw) : null;
+    const v = d ? (d.v || 1) : 0;
+    if (!d) out = null;
+    else if (v < SAVE_COMPAT){
+      // Nói rõ ra, đừng lặng lẽ xoá: mất nhân vật mà không hiểu vì sao là thứ tệ nhất.
+      try { localStorage.removeItem('vlcm_save'); } catch { /* best-effort */ }
+      window._saveWiped = true;
+      out = null;
+    } else if (v < 4){
+      // v3 chỉ có MỘT nhân vật, nằm thẳng ở gốc. Bê nguyên vào ô số 1 — không mất gì.
+      out = docTrong();
+      out.slots[0] = { player:d.player, questIdx:d.questIdx, questProg:d.questProg, questState:d.questState,
+                       victory:!!d.victory, curMap:d.curMap, sideStates:d.sideStates || {}, savedAt:d.savedAt || 0 };
+      out.active = 0; out.savedAt = d.savedAt || 0;
+      mig = true;
+    } else {
+      out = docTrong();
+      const src = Array.isArray(d.slots) ? d.slots : [];
+      for (let i = 0; i < MAX_CHARS; i++) out.slots[i] = src[i] || null;
+      out.active = (typeof d.active === 'number' && out.slots[d.active]) ? d.active : out.slots.findIndex(s => !!s);
+      out.savedAt = d.savedAt || 0;
+    }
+  } catch { out = null; }
+  // Ghi lại ngay sau khi chuyển đổi: nếu để đợi lần lưu kế tiếp thì người chơi xem danh
+  // sách rồi thoát sẽ vẫn còn bản v3 trên đĩa, và mọi đường đi đều phải tính tới hai dạng dữ liệu.
+  if (mig) ghiDoc(out);
+  return out;
+}
+function ghiDoc(doc){
+  try {
+    const payload = JSON.stringify(doc);
     localStorage.setItem('vlcm_save', payload);
     // Đồng bộ lên cloud nếu game đang nhúng trong shell React (đã đăng nhập)
     if (window.parent && window.parent !== window){
@@ -6227,17 +6358,40 @@ function saveGame(){
     }
   } catch { /* best-effort — bỏ qua nếu lỗi */ }
 }
-function loadGame(){
+function danhSachO(){ const d = docSave(); return d ? d.slots : new Array(MAX_CHARS).fill(null); }
+function soNhanVat(){ return danhSachO().filter(Boolean).length; }
+function oTrongDauTien(){ return danhSachO().findIndex(s => !s); }
+
+function saveGame(){
+  if (!player || window._wiping) return;   // đang xoá save: beforeunload không được ghi lại
+  const doc = docSave() || docTrong();
+  let i = activeSlot;
+  if (i < 0 || i >= MAX_CHARS) i = doc.slots.findIndex(s => !s);
+  if (i < 0) i = 0;   // đủ 5 ô mà vẫn vào được đây thì ghi đè ô 1 còn hơn để phiên chơi bốc hơi
+  activeSlot = i;
+  doc.slots[i] = { player, questIdx, questProg, questState, victory, curMap, sideStates, savedAt: Date.now() };
+  doc.active = i; doc.savedAt = Date.now();
+  ghiDoc(doc);
+}
+// Xoá từng nhân vật một, và CHỈ gọi được từ màn chờ. Trong game không có đường nào tới đây:
+// bấm nhầm giữa lúc đang chơi là mất một nhân vật cấp 100, không có đường hoàn tác.
+function xoaNhanVat(i){
+  const doc = docSave();
+  if (!doc || !doc.slots[i]) return false;
+  doc.slots[i] = null;
+  if (doc.active === i) doc.active = doc.slots.findIndex(s => !!s);
+  if (activeSlot === i) activeSlot = -1;
+  ghiDoc(doc);
+  return true;
+}
+function loadGame(idx){
   try {
-    const raw = localStorage.getItem('vlcm_save');
-    if (!raw) return false;
-    const d = JSON.parse(raw);
-    if ((d.v || 1) < SAVE_VERSION){
-      // Nói rõ ra, đừng lặng lẽ xoá: mất nhân vật mà không hiểu vì sao là thứ tệ nhất.
-      try { localStorage.removeItem('vlcm_save'); } catch { /* best-effort */ }
-      window._saveWiped = true;
-      return false;
-    }
+    const doc = docSave();
+    if (!doc) return false;
+    const i = (typeof idx === 'number' && idx >= 0 && idx < MAX_CHARS) ? idx : doc.active;
+    const d = doc.slots[i];
+    if (!d || !d.player) return false;
+    activeSlot = i;
     player = d.player; questIdx = d.questIdx; questProg = d.questProg;
     questState = d.questState; victory = !!d.victory;
     sideStates = d.sideStates || {};
@@ -6983,6 +7137,12 @@ const AudioSys = {
     this.bgmName = name;
     if (this.started) this._startTrack();
   },
+  stopBgm(){ this.bgmName = ''; if (this.bgm){ this.bgm.pause(); this.bgm = null; } },
+  // Vào màn chơi / đổi map. BGM_TRACKS đang RỖNG, nên BGM_TRACKS[id] là undefined và
+  // playBgm(undefined) thoát ngay ở dòng đầu — bản nhạc màn chờ cứ thế chạy tiếp vào trong game,
+  // qua cả trận đánh. Cái guard đó viết cho lúc game không có bản nhạc nào; nay đã có nhạc màn
+  // chờ thì "map này không có nhạc riêng" phải nghĩa là TẮT, không phải là "giữ nguyên bài cũ".
+  nhacMap(id){ const t = BGM_TRACKS[id]; if (t) this.playBgm(t); else this.stopBgm(); },
   _startTrack(){
     if (this.bgm) this.bgm.pause();
     // Chưa có bản nhạc nào: dừng hẳn ở đây. Không chốt thì 'assets/music/null.mp3' được yêu cầu
@@ -7916,7 +8076,7 @@ function killMob(m, source){
     }
   }
   sideOnKill(m.type, source);
-  if (m.def.boss) AudioSys.playBgm(BGM_TRACKS[curMap]); // hạ boss — trở lại nhạc map
+  if (m.def.boss) AudioSys.nhacMap(curMap); // hạ boss — trở lại nhạc map
   // Boss: Tàn Quyển sách kỹ năng Huyết Ma Thôn Phệ (Thượng 40% / Trung 40% / Hạ 20%)
   if (m.def.boss && player.bikip && !player.bikip.hmtp){
     const roll = Math.random();
@@ -9846,7 +10006,7 @@ function render(){
     drawCalligraphy('Sảnh Cầu May', 820, 986, '#7a5a9a', 13);
     drawCityHaze();           // lớp sương/tàn lửa ma mị phủ lên trên (vẽ sau cùng)
   }
-  drawGates();
+  // cổng KHÔNG vẽ ở đây nữa — nó đi vào danh sách sắp theo y bên dưới (xem drawOneGate)
 
   drawObstacleRim();   // hàng đá dọc mép vùng chặn — vẽ trước decor để cây/đá rải phủ lên tự nhiên
 
@@ -9905,6 +10065,7 @@ function render(){
   if (mountObj) ents.push({ y:mountObj.y, kind:'mount' });
   for (const h of horses) ents.push({ y:h.y, kind:'horse', h }); // GDD Đợt 2 B5
   for (const d of sortedDecor) if (d.type==='tree') ents.push({ y:d.y, kind:'tree', d });
+  for (const g of gatesHere()) ents.push({ y:g.y, kind:'gate', g });
   ents.sort((a,b)=>a.y-b.y);
   for (const e of ents){
     switch (e.kind){
@@ -9928,6 +10089,7 @@ function render(){
       case 'mount': drawMount(); break;
       case 'horse': drawHorse(e.h); break;
       case 'tree': drawTree(e.d); break;
+      case 'gate': e.g.portal ? drawPortal(e.g) : drawOneGate(e.g); break;
     }
   }
 
@@ -13173,20 +13335,33 @@ const HELD_FIT = {
   bow:      { fn:'iaBow',       k:1.55, dy:0   },
   crossbow: { fn:'iaCrossbow',  k:1.5,  dy:-4  },
 };
+// Vũ khí KHÔNG vẽ tại chỗ — nó được hoãn lại tới sau lớp giáp (xem hFlushWeapon).
+// Lý do: upper() chạy TRƯỚC hGloves/hPauldrons/hHelmCrest, nên tấm vai và mảnh găng phủ đè
+// lên cán vũ khí. Trên cây trượng của Dark Wizard nó rõ tới mức người chơi đọc thành "vũ khí
+// nằm sau lưng nhân vật" — mà thật ra nó nằm trước, chỉ bị hai mảnh giáp cắt ngang.
+// Hoãn thì mất phép biến hình của cánh tay đang cầm nó, nên ghi lại ma trận NGAY TẠI CHỖ
+// rồi đặt lại lúc phát — vũ khí vẫn đu theo vai và theo cú vung y như cũ.
 function hHeldWeapon(g, gv, ps, x, y, rot, fallback){
   const d = gv && gv.wDef;
   const F = d && HELD_FIT[d.art];
-  if (!F){ fallback(); return; }
+  const m = g.getTransform();
+  // Chưa có vũ khí thật: thanh vẽ cứng của lớp cũng phải hoãn y hệt, nếu không thì nhân vật
+  // tay không lại là người DUY NHẤT bị vai giáp cắt ngang vũ khí.
+  if (!F){ ps._wpen = () => { g.save(); g.setTransform(m); fallback(); g.restore(); }; return; }
   const W = itemPal(d, gv.wTier || 1);
-  g.save();
-  g.translate(x + ps.wpush, y); g.rotate(rot + ps.wrot);
-  // Thanh vẽ cứng cũ cao ~112 đơn vị. Icon cao ~77 (chuôi +33 → mũi -44), nên tỉ lệ phải là
-  // ~1.45, không phải 2.5 — ở 2.5 thanh kiếm cao hơn cả người và cắt ngang thân.
-  g.scale(F.k, F.k);
-  g.translate(0, F.dy);                      // điểm nắm rơi đúng vào bàn tay
-  (ITEM_ART[d.art] || iaWeapon)(g, W, Object.assign({}, d, { rot: 0 }));
-  g.restore();
+  ps._wpen = () => {
+    g.save();
+    g.setTransform(m);
+    g.translate(x + ps.wpush, y); g.rotate(rot + ps.wrot);
+    // Thanh vẽ cứng cũ cao ~112 đơn vị. Icon cao ~77 (chuôi +33 → mũi -44), nên tỉ lệ phải là
+    // ~1.45, không phải 2.5 — ở 2.5 thanh kiếm cao hơn cả người và cắt ngang thân.
+    g.scale(F.k, F.k);
+    g.translate(0, F.dy);                      // điểm nắm rơi đúng vào bàn tay
+    (ITEM_ART[d.art] || iaWeapon)(g, W, Object.assign({}, d, { rot: 0 }));
+    g.restore();
+  };
 }
+function hFlushWeapon(ps){ if (ps._wpen){ const f = ps._wpen; ps._wpen = null; f(); } }
 // Hình nhân vật KÈM lượt đổ khối. Cả hai đường vẽ — sprite nướng sẵn và bản vẽ
 // thẳng lúc trúng đòn — đều phải đi qua đây, nếu không thì khối biến mất đúng
 // 0,3 giây sau mỗi cú đòn rồi hiện lại: nhân vật BẸT đi rồi nổi lên.
@@ -13335,6 +13510,7 @@ function drawHeroFigure(g, sectKey, tier, now, ps, gv){
   // (chưa mặc gì / màn chọn lớp) thì SM === M, mọi thứ y như trước.
   const S = gv ? heroSet(sectKey, gv.t) : null, SM = hSetMetal(M, S, gv ? gv.t : 0);
   ps.gv = gv;   // upper() của từng lớp cần gv để vẽ đúng vũ khí đang mặc
+  ps._wpen = null;   // ps thường là HERO_POSE0 dùng chung — đừng để sót hàm vẽ của lượt trước
   g.save();
   hEll(g, 80, 212, 30 - ps.bob * 0.9, 8, 'rgba(0,0,0,.22)'); // bóng co lại khi nhấc chân
   // D. HÀO QUANG — nét hoàn thiện, không phải toàn bộ câu chuyện. Mặc đủ 5 món một bộ Cổ Thần
@@ -13367,6 +13543,7 @@ function drawHeroFigure(g, sectKey, tier, now, ps, gv){
     hGloves(g, SM, ps, S);                                   // A3. găng riêng của bộ
     hPauldrons(g, SM, gv, S, ps);
     hHelmCrest(g, SM, gv, ps, S);
+    hFlushWeapon(ps);                                      // vũ khí nằm TRÊN giáp, không bị vai cắt
     hFigureLight(g);                                       // F. ánh sáng một hướng — vẽ SAU CÙNG
   });
   hPlusSpark(g, SM, gv, now);                                // E. tàn lửa (trước thân)
@@ -16888,21 +17065,23 @@ function startGame(sectKey, quze){
   if (maxMode) player.tutStep = -1; // chế độ thử nghiệm: bỏ qua hướng dẫn
   updateTut();
   snapCamera(); // vào game: camera đặt thẳng vào nhân vật, không pan từ góc (0,0)
-  AudioSys.playBgm(BGM_TRACKS[curMap]); // chuyển từ nhạc intro sang nhạc map
+  AudioSys.nhacMap(curMap); // chuyển từ nhạc intro sang nhạc map
   saveGame();
 }
-// Màn menu chỉ còn dành cho người cũ tiếp tục hành trình — chọn phái đã dời vào trong game (cấp 10)
+// Màn chờ: danh sách năm ô nhân vật. Chọn một ô rồi Vào Game, hoặc bấm ô trống để tạo mới.
 function showMainMenu(){
   // Ô này đổi tên thành #cc-classes khi dựng màn tạo nhân vật. Bỏ sót ở đây là NGƯỜI CHƠI CŨ
   // (có save ⇒ đi thẳng vào showMainMenu) đâm vào null ngay lúc mở game.
   { const _cc = el('cc-classes'); if (_cc) _cc.style.display = 'none'; }
-  for (const _id of ['cc-detail','btn-create']){ const _e = el(_id); if (_e) _e.style.display = 'none'; }
+  for (const _id of ['cc-detail','btn-create','cc-back']){ const _e = el(_id); if (_e) _e.style.display = 'none'; }
   { const _n = document.querySelector('#sect-select .cc-name'); if (_n) _n.style.display = 'none'; }
   { const _w = el('cc-name-warn'); if (_w) _w.style.display = 'none'; }
   const mm = el('max-mode'); if (mm) mm.style.display = 'none';
+  { const _sp = el('cc-splash'); if (_sp){ _sp.classList.remove('on'); _sp.classList.add('hidden'); } }
   const sub = document.querySelector('#sect-select .ss-sub');
   if (sub) sub.textContent = 'Chào mừng trở lại Lunacia — hành trình vẫn đang chờ.';
-  { const _nb = el('btn-newchar'); if (_nb) _nb.classList.remove('hidden'); }   // luôn có đường tạo nhân vật mới
+  { const _sl = el('cc-slots'); if (_sl) _sl.style.display = ''; }
+  ccSlotsRender();
   el('sect-select').classList.remove('hidden'); titleStart();
   AudioSys.playBgm(BGM_INTRO); // nhạc Ái Đích Phế Khư vang lên ngay màn hình chính
 }
@@ -16910,14 +17089,14 @@ function showMainMenu(){
 // hiện nút Tiếp Tục, bấm vào thì loadGame() trả false và người chơi rơi ra màn hình trắng.
 let saveStale = false;
 const hasSave = (() => {
-  try {
-    const raw = localStorage.getItem('vlcm_save');
-    if (!raw) return false;
-    if ((JSON.parse(raw).v || 1) >= SAVE_VERSION) return true;
-    localStorage.removeItem('vlcm_save'); saveStale = true; return false;
-  } catch { return false; }
+  const d = docSave();
+  saveStale = !!window._saveWiped;
+  return !!(d && d.slots.some(Boolean));
 })();
-if (hasSave) showMainMenu();          // người cũ → thẳng màn Tiếp Tục
+// defer: ccSlotsRender() đọc ccSlot/ccHoiXoa, khai báo ở CUỐI file. Gọi thẳng ở đây là chạm
+// vào chúng trước khi chúng tồn tại (TDZ) — và cả module đứng lại ngay dòng đó, game không nạp
+// nổi. Đúng lý do khối `saveStale` ngay dưới cũng phải defer.
+if (hasSave) setTimeout(showMainMenu, 0);   // người cũ → thẳng danh sách nhân vật
 else if (saveStale){
   // Người này ĐÃ chơi rồi — đừng bắt xem lại intro cốt truyện. Đưa thẳng vào màn chọn lớp,
   // kèm lý do. Mất nhân vật mà không hiểu vì sao là thứ tệ nhất một bản cập nhật có thể làm.
@@ -16933,17 +17112,22 @@ else if (saveStale){
 }
 else setTimeout(showIntro, 0);        // người mới → cốt truyện (defer: chờ module intro ở cuối file nạp xong)
 {
+  // Nút này KHÔNG tự hiện theo hasSave nữa — ccSlotsRender() bật nó lên khi có ô đang được chọn.
+  // Không có nhân vật nào thì không có gì để vào, và nút phải tắt.
   const btn = el('btn-continue');
-  if (hasSave) btn.classList.remove('hidden');
   btn.addEventListener('click', ()=>{ // bind luôn: save cloud có thể đến sau khi menu đã hiện
-    if (loadGame()){
+    if (ccSlot < 0) return;
+    if (loadGame(ccSlot)){
       applySkillIcons();
       el('sect-select').classList.add('hidden'); titleStop(); titleStop();
       el('hud').classList.remove('hidden');
       el('bottom-hud').classList.remove('hidden');
       el('xp-strip').classList.remove('hidden');
+      el('combat-log-wrap').classList.remove('hidden');
+      if (el('ghha-lang-toggle')) el('ghha-lang-toggle').style.display = 'none';
+      fxLoad();
       snapCamera(); // tiếp tục hành trình: camera đặt thẳng vào nhân vật
-      AudioSys.playBgm(BGM_TRACKS[curMap]); // chuyển từ nhạc intro sang nhạc map
+      AudioSys.nhacMap(curMap); // chuyển từ nhạc intro sang nhạc map
     }
   });
 }
@@ -21857,7 +22041,7 @@ function renderSettings(){
     <div class="set-row"><span>❤ Uống thuốc khi Sinh Lực dưới</span>${sldA('potionPct', 10, 80, 5, _acS.potionPct + '%')}</div>
     <div class="set-row"><span>🎯 Tầm quét quanh điểm neo</span>${sldA('range', 200, 700, 10, _acS.range + 'px')}</div>
     <div class="set-row"><span>👹 Tự đánh cả Trùm <i>(nguy hiểm — mặc định tắt, trùm tự mình quyết!)</i></span>${togA('boss')}</div>
-    <div class="set-row" style="border-bottom:none"><span style="color:#c05a4a">⚠ Xóa dữ liệu & chơi lại</span><button class="mini-btn danger" onclick="wipeSave()">XÓA SAVE</button></div>
+    <div class="set-row" style="border-bottom:none"><span style="color:#c05a4a">🚪 Đổi nhân vật <i>(lưu lại rồi về màn chọn — xóa nhân vật chỉ làm được ở đó)</i></span><button class="mini-btn" onclick="veManChon()">VỀ MÀN CHỌN NHÂN VẬT</button></div>
     <div style="font-size:11px;color:#9aa8d4;margin-top:8px;line-height:1.5">Âm thanh sẽ phát sau thao tác đầu tiên của bạn (quy định trình duyệt). Mọi cài đặt được lưu tự động.</div>`;
 }
 window.setShake = function(v){ SETTINGS.shake = clamp(v|0, 0, 2); saveSettings(); renderSettings(); };
@@ -21888,6 +22072,10 @@ window.setAutoCfg = function(key, v, quiet){
 // trước khi trang mới kịp tải. Người chơi bấm xác nhận, tin là đã xoá, mở lại vẫn thấy nhân vật
 // cũ và KHÔNG có cách nào tạo nhân vật mới. Bắt được qua chơi thử. Cờ _wiping chặn saveGame,
 // và gỡ luôn listener cho chắc.
+// Trong game KHÔNG có nút xoá nhân vật, chỉ có đường đi ra màn chờ — xoá nằm ở đó. Lưu rồi
+// tải lại trang thay vì tháo trạng thái tại chỗ: một phiên chơi giữ quá nhiều thứ (quái, hiệu
+// ứng, phó bản đang chạy, bộ đếm hồi chiêu) để tin là gỡ tay sẽ không sót cái nào.
+window.veManChon = function(){ saveGame(); location.reload(); };
 window.wipeSave = function(confirmed){
   if (!confirmed && !confirm('Xóa toàn bộ tiến trình và bắt đầu lại từ đầu?')) return;
   window._wiping = true;
@@ -22314,7 +22502,7 @@ window.travelTo = function(mapId, from){
   curMap = mapId;
   closePanels();
   tutAdvance('map'); // hướng dẫn tân thủ: dịch chuyển lần đầu
-  AudioSys.playBgm(BGM_TRACKS[mapId]);
+  AudioSys.nhacMap(mapId);
   buildWorld();
   DGN = null;
   // QA: điểm neo AUTO trỏ về map cũ nếu không xoá ở đây — auto farm có thể kéo người chơi rời
@@ -23294,6 +23482,90 @@ function sanitizeCharName(v){
 // qua rollTraitsSilent(), đúng như đường quick-start vẫn dùng lâu nay.
 let ccSect = null;
 const CC_ORDER = ['thieulam','toanchan','baidasan','minhgiao','bug'];
+
+// ═══════════ NĂM Ô NHÂN VẬT ═══════════
+// MU cho mỗi tài khoản năm ô. Màn chờ liệt kê cả năm: ô có người thì chọn rồi Vào Game, ô trống
+// thì bấm là sang màn tạo. Xoá nhân vật CHỈ có ở đây — trong game không có đường nào tới nó, vì
+// bấm nhầm giữa lúc đang chơi là mất một nhân vật cấp 100 và không có đường hoàn tác.
+let ccSlot = -1;    // ô đang được chọn trên màn chờ
+let ccHoiXoa = -1;  // ô đang hỏi lại trước khi xoá; -1 = không hỏi ai
+function ccKhiNao(t){
+  if (!t) return '';
+  const d = Math.floor((Date.now() - t) / 86400000);
+  if (d <= 0){
+    const h = Math.floor((Date.now() - t) / 3600000);
+    return h <= 0 ? 'vừa xong' : h + ' giờ trước';
+  }
+  return d === 1 ? 'hôm qua' : d + ' ngày trước';
+}
+function ccSlotsRender(){
+  const wrap = el('cc-slots'); if (!wrap) return;
+  const slots = danhSachO();
+  if (ccSlot >= 0 && !slots[ccSlot]) ccSlot = -1;
+  if (ccSlot < 0) ccSlot = slots.findIndex(Boolean);
+  wrap.innerHTML = '';
+  slots.forEach((sv, i) => {
+    const row = document.createElement('div');
+    if (!sv || !sv.player){
+      row.className = 'cc-slot empty';
+      row.setAttribute('role', 'button'); row.tabIndex = 0;
+      row.innerHTML = `<span class="cc-slot-add">＋</span><span class="cc-slot-nm">Ô trống — tạo nhân vật mới</span>`;
+      const mo = () => { AudioSys.sfx('ui', 0.5); openCreate(i); };
+      row.addEventListener('click', mo);
+      row.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); mo(); } });
+      wrap.appendChild(row); return;
+    }
+    const pl = sv.player;
+    const sc = SECTS[pl.sect] || {};
+    if (ccHoiXoa === i){
+      // Hỏi lại NGAY TRÊN DÒNG ĐÓ, không dùng confirm() của trình duyệt: hộp thoại hệ thống
+      // không nói được tên và cấp của nhân vật sắp mất, mà đó chính là thứ cần đọc trước khi bấm.
+      row.className = 'cc-slot hoi-xoa';
+      row.innerHTML = `<div class="cc-slot-txt"><div class="cc-slot-nm">Xóa <b>${pl.name || '—'}</b> · Cấp ${pl.level || 1}?</div>
+        <div class="cc-slot-sub">Nhân vật này biến mất vĩnh viễn — không có đường hoàn tác.</div></div>`;
+      const yes = document.createElement('button');
+      yes.className = 'cc-slot-yes'; yes.type = 'button'; yes.textContent = 'Xóa vĩnh viễn';
+      yes.addEventListener('click', ev => { ev.stopPropagation();
+        xoaNhanVat(i); ccHoiXoa = -1; if (ccSlot === i) ccSlot = -1;
+        AudioSys.sfx('ui', 0.6); ccSlotsRender();
+      });
+      const no = document.createElement('button');
+      no.className = 'cc-slot-no'; no.type = 'button'; no.textContent = 'Hủy';
+      no.addEventListener('click', ev => { ev.stopPropagation(); ccHoiXoa = -1; ccSlotsRender(); });
+      row.appendChild(yes); row.appendChild(no);
+      wrap.appendChild(row); return;
+    }
+    row.className = 'cc-slot' + (ccSlot === i ? ' sel' : '');
+    row.setAttribute('role', 'button'); row.tabIndex = 0;
+    const noi = (MAPS[sv.curMap] && MAPS[sv.curMap].name) || '—';
+    row.innerHTML = `<img class="cc-slot-art" src="${heroCardUrl(pl.sect)}" alt="" onerror="this.style.visibility='hidden'">
+      <div class="cc-slot-txt">
+        <div class="cc-slot-nm">${pl.name || '—'}</div>
+        <div class="cc-slot-sub">Cấp <b>${pl.level || 1}</b> · <span style="color:${sc.color || 'var(--text-dim)'}">${sc.name || '—'}</span></div>
+        <div class="cc-slot-loc">${noi}${sv.savedAt ? ' · ' + ccKhiNao(sv.savedAt) : ''}</div>
+      </div>`;
+    const chon = () => { ccSlot = i; ccHoiXoa = -1; AudioSys.sfx('ui', 0.5); ccSlotsRender(); };
+    row.addEventListener('click', chon);
+    row.addEventListener('dblclick', () => { ccSlot = i; el('btn-continue').click(); });
+    row.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); chon(); } });
+    const del = document.createElement('button');
+    del.className = 'cc-slot-del'; del.type = 'button'; del.title = 'Xóa nhân vật này';
+    del.setAttribute('aria-label', 'Xóa nhân vật ' + (pl.name || ''));
+    del.textContent = '✕';
+    del.addEventListener('click', ev => { ev.stopPropagation(); ccHoiXoa = i; ccSlotsRender(); });
+    row.appendChild(del);
+    wrap.appendChild(row);
+  });
+  const day = slots.every(Boolean);
+  { const b = el('btn-newchar');
+    if (b){ b.classList.remove('hidden'); b.style.display = day ? 'none' : ''; b.textContent = 'Tạo Nhân Vật Mới'; } }
+  { const b = el('btn-continue');
+    if (b) b.classList.toggle('hidden', ccSlot < 0); }
+  { const n = el('cc-slots-note');
+    if (n) n.textContent = day
+      ? 'Đã đủ 5 nhân vật — xóa một ô nếu muốn tạo thêm.'
+      : `${slots.filter(Boolean).length}/${MAX_CHARS} ô đã dùng.`; }
+}
 function ccRender(){
   const wrap = el('cc-classes'); if (!wrap) return;
   wrap.innerHTML = '';
@@ -23340,14 +23612,24 @@ function ccValidate(){
   btn.disabled = !!msg;
   if (warn) warn.textContent = msg;
 }
-function openCreate(){
+let ccOMoi = -1;   // ô sẽ nhận nhân vật vừa tạo
+function openCreate(o){
   ccSect = null;
+  ccOMoi = (typeof o === 'number' && o >= 0) ? o : oTrongDauTien();
+  if (ccOMoi < 0) return;   // đủ năm ô — không còn chỗ nào để tạo
   el('sect-select').classList.remove('hidden'); titleStart();
-  // showMainMenu() ẩn hết phần tạo nhân vật đi (người cũ chỉ cần nút Tiếp Tục) — bật lại toàn bộ,
+  // showMainMenu() ẩn hết phần tạo nhân vật đi (người cũ chỉ thấy danh sách ô) — bật lại toàn bộ,
   // nếu không thì bấm "Tạo nhân vật mới" từ màn chờ ra một trang trống.
   for (const _id of ['cc-classes','cc-detail','btn-create','cc-name-warn']){ const _e = el(_id); if (_e) _e.style.display = ''; }
   { const _n = document.querySelector('#sect-select .cc-name'); if (_n) _n.style.display = ''; }
   const cards = el('cc-classes'); if (cards) cards.style.display = '';
+  // Danh sách ô và hai nút của nó thuộc về màn chờ, không thuộc màn tạo.
+  { const _sl = el('cc-slots'); if (_sl) _sl.style.display = 'none'; }
+  for (const _id of ['btn-continue','btn-newchar']){ const _e = el(_id); if (_e) _e.classList.add('hidden'); }
+  // Chỉ có đường quay lại khi đã có nhân vật để quay về. Người chơi mới tinh không có gì phía sau.
+  { const _b = el('cc-back'); if (_b) _b.style.display = soNhanVat() > 0 ? '' : 'none'; }
+  const sub = document.querySelector('#sect-select .ss-sub');
+  if (sub) sub.innerHTML = 'Bầu trời nứt ra, và ngươi rơi qua. Ký ức võ nghệ ở lại phía bên kia.<br>Chọn lại con đường của mình — rồi đi sửa thứ thế giới ngươi vừa làm hỏng.';
   const inp = el('inp-char-name');
   if (inp && !inp.value) inp.value = genCharName();
   ccRender();
@@ -23360,12 +23642,21 @@ function openCreate(){
   const go = el('btn-create');
   if (go) go.addEventListener('click', ()=>{
     if (!ccSect) return;
+    // Ô đích phải chốt TRƯỚC startGame: activeSlot có thể còn trỏ vào nhân vật vừa chơi xong,
+    // và saveGame() ở cuối startGame sẽ ghi đè đúng ô đó.
+    const o = (ccOMoi >= 0 && !danhSachO()[ccOMoi]) ? ccOMoi : oTrongDauTien();
+    if (o < 0) return;   // đủ năm ô
+    activeSlot = o; ccOMoi = -1;
     const nm = sanitizeCharName(el('inp-char-name').value) || genCharName();
     el('sect-select').classList.add('hidden'); titleStop();
     startGame(ccSect, { name: nm });
     checkTitles();
     AudioSys.sfx('quest', 0.9);
   });
+  const back = el('cc-back');
+  if (back) back.addEventListener('click', ()=>{ ccOMoi = -1; AudioSys.sfx('ui', 0.5); showMainMenu(); });
+  const nc = el('btn-newchar');
+  if (nc) nc.addEventListener('click', ()=>{ AudioSys.sfx('ui', 0.5); openCreate(); });
 }
 
 // Danh hiệu ẩn cũ mở bằng cách lật đủ 3 mảnh HUYỀN ở màn Thẻ Tiên Duyên — màn đó đã gỡ, nay
@@ -23454,15 +23745,14 @@ TITLES.push({ id:'tctk', name:'Kẻ Báo Thù', cond:p=>(p.revengeKills||0) >= 3
       // Save cloud cũng phải qua cửa phiên bản. Trước đây nó được ghi thẳng vào localStorage,
       // nên một bản cloud đời cũ vẫn chui vào được và bật nút "Tiếp Tục" lên — bấm vào thì
       // loadGame() mới phát hiện quá cũ và xoá. Chặn ngay từ đây thay vì để người chơi bấm hụt.
-      if ((cloud.v || 1) < SAVE_VERSION) return;
+      if ((cloud.v || 1) < SAVE_COMPAT) return;
       const cloudAt = cloud.savedAt || 0;
       if (cloudAt <= localSavedAt()) return; // bản local mới hơn hoặc bằng — giữ nguyên
       localStorage.setItem('vlcm_save', msg.data);
       if (!player){
-        // đang ở màn menu → bật nút Tiếp Tục ngay, không cần tải lại
+        // đang ở màn menu → dựng lại danh sách ô ngay, không cần tải lại
         el('intro-story').classList.add('hidden');
         showMainMenu();
-        el('btn-continue').classList.remove('hidden');
       } else {
         addFloat(player.x, player.y-70, '☁ Có save cloud mới hơn — tải lại trang để dùng bản đó', '#7ec8ff', 14);
       }

@@ -91,7 +91,10 @@ const PORT = process.argv[2] || '8853';
     delete saved.chimera;
     saved.mount = { tier: 3, out: true };            // save đời cũ: đã nuôi tới giai 3
     saved.mountPity = 16;
-    localStorage.setItem('vlcm_save', JSON.stringify({ v:SAVE_VERSION, player:saved, curMap, sideStates, ts:Date.now() }));
+    // Dựng save ĐỜI CŨ (một nhân vật ở gốc doc) — đó chính là thứ bài này kiểm: đường vá từ
+    // Thú Chiến sang Chimera phải chạy được trên save cũ. Ghi ở mốc SAVE_COMPAT chứ không
+    // phải SAVE_VERSION: dạng hiện tại không có trường `player` ở gốc nữa.
+    localStorage.setItem('vlcm_save', JSON.stringify({ v:SAVE_COMPAT, player:saved, curMap, sideStates, savedAt:Date.now() }));
     const ok = loadGame();
     const C = chiState();
     return { ok, co:Object.keys(C.co), eq:C.eq, ve:C.ve.gk, conMount:!!player.mount };

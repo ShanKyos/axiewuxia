@@ -17,7 +17,9 @@ const { chromium } = require('playwright');
     questIdx = 5; // past chungnam's reqMain so mapGate('chungnam').ok is realistically true too
     saveGame();
     const raw = JSON.parse(localStorage.getItem('vlcm_save'));
-    delete raw.player.wpUnlocked; // strip the field to simulate a save from before this feature
+    // v4: save chứa NĂM ô nhân vật; nhân vật đang chơi nằm trong slots[active], không còn ở gốc.
+    const O = raw.slots[raw.active];
+    delete O.player.wpUnlocked; // strip the field to simulate a save from before this feature
     localStorage.setItem('vlcm_save', JSON.stringify(raw));
   });
   const loaded = await page.evaluate(() => loadGame());

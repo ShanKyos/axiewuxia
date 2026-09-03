@@ -23,7 +23,9 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   const r1 = await p.evaluate(() => {
     player.khi = 500; saveGame();
     const raw = JSON.parse(localStorage.getItem('vlcm_save'));
-    raw.player.khi = 500; raw.player.tamdac = 7;
+    // v4: save chứa NĂM ô nhân vật; nhân vật đang chơi nằm trong slots[active], không còn ở gốc.
+    const O = raw.slots[raw.active];
+    O.player.khi = 500; O.player.tamdac = 7;
     localStorage.setItem('vlcm_save', JSON.stringify(raw));
     loadGame();
     return { khi: player.khi, con: 'tamdac' in player, gia: GO_TAMDAC };
