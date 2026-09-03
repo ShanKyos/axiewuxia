@@ -69,11 +69,10 @@ const { chromium } = require('playwright');
     function checkPanel(sect){
       startGame(sect, null);
       player.level = 60; calcDerived();
-      window.skillTab = 'active';
       togglePanel('skill');
+      // Một trang duy nhất nay chứa cả bốn ô lẫn phần Di Sản — đọc CÙNG một chuỗi cho cả hai.
       const activeHtml = document.getElementById('panel-skill').innerHTML;
-      switchSkillTab('legacy');
-      const legacyHtml = document.getElementById('panel-skill').innerHTML;
+      const legacyHtml = activeHtml;
       return {
         activeLen: activeHtml.length,
         activeHasBuffLabel: activeHtml.includes('Buff'),

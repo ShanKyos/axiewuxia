@@ -34,7 +34,7 @@ const PORT = process.argv[2] || '8853';
     for (const sect of LOP){
       startGame(sect, null); player.traits = []; player.level = 60; player.lvPeak = 60;
       vhAutoLearn(); calcDerived();
-      window.skillTab = 'legacy'; renderSkillPanel();
+      renderSkillPanel();   // một trang, không còn tab
       const html = el('panel-skill').innerHTML;
       o.lop[sect] = {
         ten: SECTS[sect].name,

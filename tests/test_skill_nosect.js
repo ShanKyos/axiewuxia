@@ -8,7 +8,7 @@ const { chromium } = require('playwright');
   await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(500);
   // baidasan has no VOHOC school defined -> Trấn Phái tab should show a graceful placeholder, not crash
-  await page.evaluate(() => { startGame('baidasan', null); window.skillTab = 'tranphai'; });
+  await page.evaluate(() => { startGame('baidasan', null); });
   await page.waitForTimeout(500);
   await page.evaluate(() => { togglePanel('skill'); });
   await page.waitForTimeout(200);

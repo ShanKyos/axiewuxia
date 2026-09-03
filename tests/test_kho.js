@@ -18,10 +18,11 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   await p.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); });
   await p.waitForTimeout(900);
 
-  // A1) chỉ còn MỘT bảng nhân vật, và phím V mở đúng bảng đó
+  // A1) chỉ còn MỘT bảng nhân vật, và phím C mở đúng bảng đó.
+  // Trước đây phép kiểm này bấm V — đó là phím CŨ. Nay C mở Nhân Vật, V mở Trang Bị.
   const rA = await p.evaluate(() => {
     const conVStat = !!document.getElementById('panel-vstat');
-    window.dispatchEvent(new KeyboardEvent('keydown', { key:'v' }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key:'c' }));
     const moBangChar = !el('panel-char').classList.contains('hidden');
     const tab = window.charTab;
     const h = el('panel-char').innerHTML;
@@ -32,7 +33,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   });
   console.log('A) bảng nhân vật:', JSON.stringify(rA));
   if (rA.conVStat) fail('panel-vstat vẫn còn trong DOM');
-  if (!rA.moBangChar || rA.tab !== 'info') fail('phím V không mở tab Thông Tin');
+  if (!rA.moBangChar || rA.tab !== 'info') fail('phím C không mở tab Thông Tin');
   if (rA.soKhoiThuocTinh !== 1) fail(`THUỘC TÍNH CHIẾN ĐẤU in ${rA.soKhoiThuocTinh} lần, phải 1`);
   if (rA.soKhoiTiemNang !== 1) fail(`điểm tiềm năng in ${rA.soKhoiTiemNang} lần, phải 1`);
   if (!rA.coMana || !rA.coInstinct) fail('gộp mà mất dòng Mana/Bản Năng của bản đầy đủ hơn');
@@ -45,7 +46,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     return { truoc, sau: player.str, con: player.free };
   });
   console.log('   cộng điểm:', JSON.stringify(rA2));
-  if (rA2.sau !== rA2.truoc + 3) fail('nút cộng điểm hỏng sau khi gỡ bảng V');
+  if (rA2.sau !== rA2.truoc + 3) fail('nút cộng điểm hỏng sau khi gỡ bảng chỉ số riêng');
   if (rA2.con !== 7) fail(`điểm còn ${rA2.con}, phải 7`);
 
   // B1) cất và lấy ra

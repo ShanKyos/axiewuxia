@@ -49,7 +49,7 @@ const { chromium } = require('playwright');
   // Bỏ luôn phép kiểm "bảng V phải có thanh EXP": mục 1 ngay trên đã xác nhận EXP nằm cố định ở
   // đáy màn hình dưới viên đá máu. In thêm một thanh EXP trong bảng là đúng loại trùng lặp mà
   // đợt gộp này đi dọn.
-  await p.keyboard.press('v'); await p.waitForTimeout(400);
+  await p.keyboard.press('c'); await p.waitForTimeout(400);   // C mở Nhân Vật (V nay là Trang Bị)
   const v = await p.evaluate(() => {
     const pan = document.getElementById('panel-char');
     const txt = pan.textContent;

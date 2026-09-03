@@ -51,10 +51,20 @@ const pass = m => console.log('PASS ' + m);
     // r2 hạ cấp về 20 — một tình cờ về thứ tự gọi. Nay calcDerived() → masteryAgg() → masteryOpen()
     // → lvPeak() chốt đỉnh 120 ngay trong applyTestBoost(), nên tình cờ đó không còn.
     player.level = 5; player.lvPeak = 5; renderCharPanel();
-    const locked = !!document.querySelector('.bang-tab.khoa');
-    player.level = 20; return { locked };
+    // Linh Thú nay nằm TRONG tab mẹ ✦ Nâng Cấp, và hàng con chỉ hiện khi đang ở trong nhóm.
+    // Tìm '.bang-tab.khoa' bất kỳ là bắt nhầm: ở cấp 5 thì 🔄 Tái Sinh cũng đang khoá, nên phép
+    // kiểm sẽ XANH mà không hề soi tới Linh Thú. Phải vào nhóm rồi tìm ĐÚNG nút đó.
+    // KHÔNG dùng switchCharTab('mount'): ở cấp 5 thì Chimera (cấp 6) đang khoá, mà switchCharTab
+    // bật lại tab khoá về Thông Tin — hàng con sẽ không được vẽ ra chút nào. switchCharNhom() vào
+    // đúng con ĐẦU TIÊN đang mở (Thuần Thục, cấp 4), nên hàng con hiện đủ cả bốn nút.
+    switchCharNhom();
+    const nut = [...document.querySelectorAll('.bang-tab')].find(b => /Linh Thú/.test(b.textContent));
+    const locked = !!(nut && nut.classList.contains('khoa'));
+    switchCharTab('info');
+    player.level = 20; return { locked, timThay: !!nut };
   });
-  r3.locked ? pass('dưới cấp 8 tab Linh Thú bị khoá') : fail('tab không khoá theo cấp');
+  if (!r3.timThay) fail('không tìm thấy nút Linh Thú trong hàng tab con');
+  else r3.locked ? pass('dưới cấp 8 tab Linh Thú bị khoá') : fail('tab Linh Thú không khoá theo cấp');
 
   // ── 4. chọn giống → đúng một con, có dòng gốc ──────────────────────────
   const r4 = await p.evaluate(() => {

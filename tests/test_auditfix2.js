@@ -109,7 +109,7 @@ const { chromium } = require('playwright');
   const r7 = await page.evaluate(() => {
     startGame('minhgiao', null);
     player.level = 80; player.bikipVH = 20; calcDerived();
-    window.skillTab = 'legacy'; togglePanel('skill');
+    togglePanel('skill');   // một trang, không còn tab
     const html = document.getElementById('panel-skill').innerHTML;
     return { hasLearnBtn: html.includes('Học ·'), hasCrossSection: html.includes('NGOẠI LỚP'), len: html.length };
   });

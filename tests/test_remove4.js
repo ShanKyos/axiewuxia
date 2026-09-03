@@ -35,9 +35,18 @@ function check(name, ok, extra){
   const tabs = await page.evaluate(() => {
     player.level = 100; calcDerived();
     togglePanel('char');
+    // Bốn tab (Chimera · Linh Thú · Thuần Thục · Đại Thành) nay nằm trong tab mẹ ✦ Nâng Cấp,
+    // hàng con chỉ hiện KHI đang ở trong nhóm. Nên phải gom nhãn của CẢ HAI trạng thái.
+    const nhan = () => Array.from(document.querySelectorAll('#panel-char .bang-tab')).map(b => b.textContent.trim());
+    const hangDau = nhan();
+    switchCharTab('mount');                       // vào trong nhóm để hàng con hiện ra
+    const trongNhom = nhan();
+    switchCharTab('info');
     return {
-      labels: Array.from(document.querySelectorAll('#panel-char .bang-tab')).map(b => b.textContent.trim()),
+      labels: hangDau,
+      moiNhan: [...new Set([...hangDau, ...trongNhom])],
       ids: CHAR_TABS.map(t => t.id),
+      tenTab: CHAR_TABS.map(t => t.name),
     };
   });
   const banned = ['channel', 'tower', 'arena', 'alchemy'];
@@ -49,9 +58,20 @@ function check(name, ok, extra){
   // lần thêm/bớt một hệ (gỡ Thú Thuần Hóa là còn 5), và mỗi lần đổi lại phải sửa con số ở đây
   // chứ không phát hiện được lỗi nào. Thứ THẬT SỰ hỏng được là nút rỗng: một tab bị gỡ mà nhãn
   // còn nằm lại thành ô trống bấm không ra gì.
-  check('thanh điều hướng không có nút rỗng, và mỗi nút ứng với một tab thật',
-    tabs.labels.length > 0 && tabs.labels.every(l => l.trim().length > 0)
-      && tabs.labels.length === tabs.ids.length, { so: tabs.labels.length, nhan: tabs.labels });
+  // Bản trước so `labels.length === ids.length` — đó là cách nói "mỗi tab có một nút" hồi cả sáu
+  // tab nằm chung một hàng. Nay bốn tab nằm trong tab mẹ nên phép so ấy sai về hình dạng, chứ
+  // không phải phát hiện lỗi. Điều BÀI KIỂM THỰC SỰ QUAN TÂM vẫn giữ nguyên và nay còn chặt hơn:
+  // không nút nào rỗng, và không tab nào không tới được.
+  check('thanh điều hướng không có nút rỗng',
+    tabs.moiNhan.length > 0 && tabs.moiNhan.every(l => l.trim().length > 0),
+    { so: tabs.moiNhan.length, nhan: tabs.moiNhan });
+  // Đếm nút rồi so với đếm tab là sai hình dạng: tab MẸ (✦ Nâng Cấp) cũng là một nút nhưng
+  // không phải một mục trong CHAR_TABS, nên 6 tab cho ra 7 nút. So theo TÊN mới đúng.
+  { const sach = l => l.replace(/^🔒\s*/, '').trim();
+    const co = tabs.moiNhan.map(sach);
+    const thieu = tabs.tenTab.filter(n => !co.includes(n));
+    check('mọi tab trong CHAR_TABS đều tới được (hàng đầu hoặc hàng con)',
+      thieu.length === 0, { thieu, nutCo: co }); }
 
   const gone = await page.evaluate(() => {
     const names = [

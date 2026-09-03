@@ -12,7 +12,7 @@ const { chromium } = require('playwright');
   // 1) FUSION_DEFS empty, SKILL_TABS has only 2 tabs
   const r1 = await page.evaluate(() => ({
     fusionCount: Object.keys(FUSION_DEFS).length,
-    skillTabs: SKILL_TABS.map(t => t.id),
+    skillTabs: typeof SKILL_TABS === 'undefined' ? [] : SKILL_TABS.map(t => t.id),  // đã bỏ tab
     vohocCount: Object.keys(VOHOC_DEFS).length,
   }));
   console.log('1) FUSION empty, SKILL_TABS trimmed, VOHOC count:', JSON.stringify(r1));
@@ -68,9 +68,9 @@ const { chromium } = require('playwright');
   const r5 = await page.evaluate(() => {
     startGame('vophai', null);
     player.sect = 'minhgiao'; player.level = 60; calcDerived();
-    window.skillTab = 'tranphai'; renderSkillPanel();
+    renderSkillPanel();
     const html1 = document.getElementById('panel-skill').innerHTML;
-    window.skillTab = 'khac'; renderSkillPanel();
+    renderSkillPanel();
     const html2 = document.getElementById('panel-skill').innerHTML;
     return { tabButtons: (html1.match(/switchSkillTab/g) || []).length, tranphaiLen: html1.length, khacLen: html2.length, mentionsGiangHo: html1.includes('Giang Hồ') || html2.includes('Giang Hồ') };
   });

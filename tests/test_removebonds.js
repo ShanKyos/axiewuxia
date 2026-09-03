@@ -45,7 +45,7 @@ const { chromium } = require('playwright');
 
   // 4) Open skill panel (Khác tab) — should render fine with no Free Axie section, no crash
   const r4 = await page.evaluate(() => {
-    switchSkillTab('khac');
+    togglePanel('skill');   // bảng Kỹ Năng nay MỘT trang, không còn tab 'khac'
     return { html: document.getElementById('panel-skill').innerHTML.length };
   });
   console.log('4) skill panel Khác tab renders:', JSON.stringify(r4));

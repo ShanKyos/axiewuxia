@@ -1954,7 +1954,7 @@ const VOHOC_DEFS = {
 // và LEGACY_SECT_SKILLS bên dưới).
 const BUFF_SKILL_ID = { thieulam:'gangkhi', toanchan:'elf_greaterdmg', baidasan:'dw_shield', minhgiao:'mg_battlefury', bug:'dl_commandaura' };
 // Ô thứ 4 — TUYỆT CHIÊU. Taskbar cũ chỉ có 3 ô (chính/phụ/buff), nên những chiêu mang tính đặc
-// trưng nhất của từng lớp trong MU — Evil Spirit, Power Slash — chỉ tồn tại trong bảng Di Sản Cũ
+// trưng nhất của từng lớp trong MU — Evil Spirit, Power Slash — chỉ hiện ở mục Di Sản trong bảng K
 // dưới dạng +%ST vĩnh viễn, không bao giờ được BẤM. Ô thứ 4 trả chúng về đúng chỗ.
 // Hai lớp có chiêu người chơi hay gọi tên nhất đã nằm sẵn ở ô 1/ô 2 (Dark Knight: Twisting Slash;
 // Dark Lord: Fire Scream), nên tuyệt chiêu của hai lớp đó lấy chiêu tiêu biểu còn lại, để mọi lớp
@@ -1967,7 +1967,7 @@ const SIGNATURE_SKILL = {
   bug:      'dl_chaoticdiseier', // Earthquake — giậm đất, nền nứt thành vòng (id cũ, xem VOHOC_DEFS)
 };
 function defaultSkillBar(sect){ return ['a', 'tp', BUFF_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null]; }
-// Di Sản Cũ: mỗi tầng quy đổi thành % Công Kích vĩnh viễn — điều kiện mở giữ nguyên (tự ngộ theo
+// Di Sản: mỗi tầng quy đổi thành % Công Kích vĩnh viễn — điều kiện mở giữ nguyên (tự ngộ theo
 // cấp cho chiêu riêng của lớp qua vhLearned(), hoặc điều kiện Tấn Chức riêng cho 4 kỹ năng chung).
 const LEGACY_TIER_PCT = { so:1.5, trung:2, cao:2.5, than:3.5 };
 // Năm chiêu trong SIGNATURE_SKILL đã rời khỏi đây: chúng nay là chiêu BẤM ĐƯỢC ở ô 4, không còn
@@ -1987,7 +1987,7 @@ const LEGACY_SECT_SKILLS = [
 const CLASS_PASSIVES = ['dk_fortitude','tienthiencong','elf_heal','songthu','mg_ironwill','dl_darkraven'];
 const LEGACY_UNIVERSAL_PCT = { amkhi:1.5, danchi:2, bow:2, tieuhon:3 };
 // Đăng ký kỹ năng chủ động vào SKILL_DEFS — dùng chung cho castSkill(); chỉ chiêu buff (BUFF_SKILL_ID)
-// thực sự nằm ở taskbar 3 ô, còn lại chỉ tồn tại để tính legacyAtkPct và hiển thị ở tab Di Sản Cũ
+// thực sự nằm ở taskbar 3 ô, còn lại chỉ tồn tại để tính legacyAtkPct và hiển thị ở mục Di Sản
 for (const _vid in VOHOC_DEFS){
   const _v = VOHOC_DEFS[_vid];
   if (_v.type === 'passive') continue;
@@ -1997,7 +1997,7 @@ for (const _vid in VOHOC_DEFS){
     get icon(){ return _v.icon; },
     req:()=>vhLearned(_vid),
     // Lưu ý: chuỗi này tính NGAY lúc nạp module (player chưa tồn tại) nên không được đọc player ở đây.
-    reqTxt:`Tự ngộ khi đạt cấp ${_v.unlock} nếu đúng Lớp — khác Lớp cần ${VH_TIER[_v.tier].cost} 📜 Sách Kỹ Năng (bấm K → Di Sản Cũ)` };
+    reqTxt:`Tự ngộ khi đạt cấp ${_v.unlock} nếu đúng Lớp — khác Lớp cần ${VH_TIER[_v.tier].cost} 📜 Sách Kỹ Năng (bấm K để xem)` };
 }
 // MU không có khái niệm "dung hợp liên phái" — hệ Dung Hợp (30 chiêu) đã bị cắt hẳn theo hướng tối
 // giản. Giữ FUSION_DEFS rỗng (thay vì xoá luôn định danh) để mọi chỗ tham chiếu cũ (vòng lặp/lookup)
@@ -2174,7 +2174,7 @@ function upBtnHtml(id){
   // nó không còn mua được chiêu của lớp khác, mà đổ vào chính cây chiêu của lớp mình.
   const _bk = (player.bikipVH || 0) > 0 && lv < 120 && lv < player.level
     ? `<button class="mini-btn" style="margin-right:3px;border-color:#ffb15c;color:#ffb15c" title="Dùng 1 Sách Kỹ Năng nâng thẳng ${skName(id)} lên cấp ${lv+1} (đang có ${player.bikipVH||0} quyển)" onclick="window.useSkillBookUI('${id}')">📜</button>` : '';
-  return `${_spB}${_bk}<button class="mini-btn vh-learn-btn" style="margin-right:3px" title="Cấp ${lv}/120${cur ? ' · ' + cur.name : ''} · ⚡tiến hóa bậc ${_stg}/3 (mốc 40/80/120, mỗi mốc chọn nhánh Bá Đạo/Tốc Chiến) — nâng: ${skUpCost(id).toLocaleString()} bạc + ${skUpKhi(id).toLocaleString()} Instinct${_msNext ? ` (cấp mốc ${_msNext.name}: Instinct ×${_mult})` : ''}, +2,5% Sát Thương, −0,25% hồi chiêu${nm ? ` · mốc kế ${nm.name} (cấp ${nm.lv}): ${milestoneTxt(nm)}` : ''} · cấp kỹ năng ≤ cấp nhân vật" onclick="window.upgradeSkillUI('${id}')">⬆${lv}${_stg ? '⚡' + _stg : ''}${_msNext ? '◆' : ''}</button>${evoBadgeHtml(id)}`;
+  return `${_spB}${_bk}<button class="mini-btn vh-learn-btn" style="margin-right:3px" title="Cấp ${lv}/120${cur ? ' · ' + cur.name : ''} · ⚡tiến hóa bậc ${_stg}/3 (mốc 40/80/120, mỗi mốc chọn nhánh Bá Đạo/Tốc Chiến) — nâng: ${skUpCost(id).toLocaleString()} bạc + ${skUpKhi(id).toLocaleString()} Bản Năng${_msNext ? ` (cấp mốc ${_msNext.name}: Instinct ×${_mult})` : ''}, +2,5% Sát Thương, −0,25% hồi chiêu${nm ? ` · mốc kế ${nm.name} (cấp ${nm.lv}): ${milestoneTxt(nm)}` : ''} · cấp kỹ năng ≤ cấp nhân vật" onclick="window.upgradeSkillUI('${id}')">⬆${lv}${_stg ? '⚡' + _stg : ''}${_msNext ? '◆' : ''}</button>${evoBadgeHtml(id)}`;
 }
 window.assignSpaceUI = function(id){
   if (!player) return;
@@ -2196,7 +2196,7 @@ function learnVohoc(id){
   const _pas = CLASS_PASSIVES.includes(id);
   zoneBanner = { text: _pas ? 'BỊ ĐỘNG MỚI' : 'DI SẢN',
     sub: _pas ? `${v.school} · ${v.name} — ${v.desc.replace(/^Bị động:\s*/, '')}`
-              : `${v.school} · ${v.name} — +${LEGACY_TIER_PCT[v.tier] || 0}% Công Kích vĩnh viễn (xem K → Di Sản Cũ)`,
+              : `${v.school} · ${v.name} — +${LEGACY_TIER_PCT[v.tier] || 0}% Công Kích vĩnh viễn (xem ở bảng Kỹ Năng — phím K)`,
     color:VH_TIER[v.tier].color, t:3.5 };
   AudioSys.sfx('quest', 0.9);
 }
@@ -6020,7 +6020,7 @@ function calcDerived(){
   player.forgeBonus = tForge + Math.min(25, luckN * 5); // Vận: +5% tỉ lệ rèn/món, tối đa +25%
   player.luckN = luckN;
   player.critDmgMult = 2 + P.critDmg/100; // Vận + bộ Cổ Thần: sát thương bạo kích ×2 → ×2.x
-  // Di Sản Cũ: chiêu Sổ Kỹ Năng/Tấn Chức không còn nằm trong taskbar 3 ô (xem defaultSkillBar
+  // Di Sản: chiêu Sổ Kỹ Năng/Tấn Chức không còn nằm trong taskbar 3 ô (xem defaultSkillBar
   // và LEGACY_* ở khai báo VOHOC_DEFS) vẫn giữ giá trị — dồn thành % Công Kích vĩnh viễn, tự động
   // theo đúng điều kiện mở khóa gốc, không cần bấm nút hay học Sách Kỹ Năng nữa.
   // QA: điều kiện ở đây từng là `lv.phai === player.sect`, nên phần thưởng lớn nhất của Thăng Tiên
@@ -6962,16 +6962,16 @@ function saveSettings(){ try { localStorage.setItem('vlcm_settings', JSON.string
 // ---------- Âm thanh kiếm hiệp: BGM theo map + SFX ----------
 // Nhạc nền: bgm_safe (làng/thành) · bgm_field (dã ngoại) · bgm_tomb (mật thất) · bgm_war (chiến trường)
 // Mỗi map có nhạc nền riêng; map chưa có bản riêng dùng nhạc nền chung
-// ═══════════ NHẠC NỀN — ĐANG TRỐNG ═══════════
+// ═══════════ NHẠC NỀN ═══════════
 // 13 bản nhạc nền cũ là nhạc phim kiếm hiệp Hoa ngữ (Kiếm Hiệp Tình, Hoa Địa Li Lao, Tiếu Vấn
 // Tình Duyên...) — vi phạm Quy tắc 1 nặng nhất về mặt ÂM THANH, và cũng là thứ định hình bản sắc
 // game mạnh hơn bất cứ dòng chữ nào. Đã xoá cả 13 tệp (21 MB).
-// Chưa có bộ nhạc thay, nên bảng này để TRỐNG thay vì trỏ tới tệp không tồn tại: playBgm() thấy
-// tên rỗng là thoát ngay, không phát sinh một yêu cầu mạng nào, và nút ♪ tự ẩn (xem uiSyncBgmBtn).
+// Nhạc trong màn chơi vẫn TRỐNG, và để trống có chủ ý: playBgm() thấy tên rỗng là thoát ngay,
+// không phát sinh một yêu cầu mạng nào (trỏ tới tệp không có sẽ thành 404 mỗi lần đổi map).
 // Thêm nhạc mới: bỏ tệp vào assets/music/ rồi điền lại đúng ba hằng số dưới đây, không cần sửa
-// chỗ nào khác.
+// chỗ nào khác. Nút ♪ tự hiện khi có ít nhất một bản (xem uiSyncBgmBtn).
 const BGM_TRACKS = {};
-const BGM_INTRO = null;   // màn mở đầu & chọn lớp
+const BGM_INTRO = 'bgm_intro';   // màn mở đầu & chọn nhân vật
 const BGM_BOSS = null;    // boss Cổng Vực / Năm Trụ
 const _BGM_ROMANCE = null;
 const AudioSys = {
@@ -7044,10 +7044,13 @@ window.addEventListener('keydown', e=>{
   }
   if (e.key.toLowerCase()==='e'){ if (!window.tryCatchHorse || !tryCatchHorse()) tryTalk(); } // GDD Đợt 2 B5: E bắt Tuấn Mã kiệt sức trước
   if (e.key.toLowerCase()==='j'){ if (!tryPickLoot()) tryHarvestHerb(); } // nhặt đồ dưới đất → hái thảo dược
-  if (e.key.toLowerCase()==='c') togglePanel('char');
-  // V và C cùng mở MỘT cửa sổ nhân vật — giữ cả hai phím cho quen tay, nhưng chỉ còn một bảng.
-  if (e.key.toLowerCase()==='v'){ window.charTab = 'info'; togglePanel('char'); }
-  if (e.key.toLowerCase()==='i') togglePanel('inv');
+  // Ba phím, ba bảng KHÁC NHAU. Trước đây C và V cùng gọi togglePanel('char') — hai phím một
+  // cửa sổ, tức là một phím bị lãng phí trong khi Trang Bị không có phím tắt riêng nào ngoài I.
+  if (e.key.toLowerCase()==='c'){ window.charTab = 'info'; togglePanel('char'); }  // Nhân Vật
+  // Lưu ý: trên màn ≥1000px, togglePanel('inv') mở CẢ Trang Bị lẫn Túi Đồ cạnh nhau — kéo-thả
+  // HTML5 cần cả hai cùng có mặt trên DOM. Nên V và B rơi vào cùng một cặp bảng; đó là hành vi
+  // có sẵn, không phải do đổi phím. Bỏ alias I để khỏi thành BA phím cho một việc.
+  if (e.key.toLowerCase()==='v') togglePanel('inv');                                // Trang Bị
   if (e.key.toLowerCase()==='b') togglePanel('bag');
   if (e.key.toLowerCase()==='k') togglePanel('skill');
   if (e.key.toLowerCase()==='m') togglePanel('map');
@@ -8009,7 +8012,7 @@ function unlockNotices(){
   const msgs = {
     2:['Mở khóa: Thuần Thục (phím H)'],
     3:['Mở khóa: Mục Tiêu Hôm Nay — xem góc trái màn hình, xong hết nhận thưởng lớn!'],
-    4:['Mở khóa: Venom Dart — cộng %Sát Thương vĩnh viễn (K → Di Sản Cũ)','Mở khóa: Thuần Thục Venom (phím H)',
+    4:['Mở khóa: Venom Dart — cộng %Sát Thương vĩnh viễn (xem ở phím K)','Mở khóa: Thuần Thục Venom (phím H)',
        'Mở khóa: Lò Hỗn Độn — tới gặp Thợ Rèn (phím F dẫn đường)'],
     6:['Mở khóa: Khế Ước Chimera — quay Chimera đồng hành (C → Chimera)'],
     7:['Mở khóa: Trấn Phái — tuyệt kỹ của lớp (phím 2)'],
@@ -16866,7 +16869,7 @@ function startGame(sectKey, quze){
     checkTitles();
     addFloat(player.x, player.y-50, 'CHẾ ĐỘ THỬ NGHIỆM — Cấp 100, MỌI TÍNH NĂNG TỐI ĐA!', '#7ecbff', 16);
     addFloat(player.x, player.y-72, 'Full Chí Tôn +11 · đủ bộ Cổ Thần · 4 Khắc Ấn · Linh Dực c2 · 99 châu · 70 Box Kundun', '#a0ffe9', 13);
-    addFloat(player.x, player.y-94, 'C nhân vật · I túi đồ · O cài đặt (rung 3 mức) · M bản đồ · K kỹ năng', '#ffd76a', 12);
+    addFloat(player.x, player.y-94, 'C nhân vật · V trang bị · B túi đồ · O cài đặt · M bản đồ · K kỹ năng', '#ffd76a', 12);
   } else {
     addFloat(player.x, player.y-50, 'Lunaris City — hãy đến gặp Trưởng Lão Rell (lại gần, nhấn E)!', '#7ecbff', 15);
   }
@@ -17083,7 +17086,7 @@ function cheatHelp(){
     '/deep — vào Tầng Sâu',
     '── kỹ năng ──',
     `/fullskill — học hết ${Object.keys(VOHOC_DEFS).length} kỹ năng, mọi chiêu cấp 120`,
-    '/learn — học toàn bộ Sổ Kỹ Năng (Di Sản Cũ) · /bikip <n> — số Sách Kỹ Năng',
+    '/learn — học toàn bộ Sổ Kỹ Năng · /bikip <n> — số Sách Kỹ Năng',
     '/slot <1-4> <id chiêu|-> — gán ô thanh chiêu (phím 1-4); /slot — xem đang gán gì',
     `/evo <id chiêu> <bậc 1-3> <nhánh> — chọn nhánh tiến hóa · ${_evo}`,
     `/th <hệ> <0-7> — tầng Thuần Thục · ${_th}`,
@@ -17147,7 +17150,7 @@ window.cheatExec = function(raw){
       case 'learn': {
         let _n = 0;
         for (const _vid in VOHOC_DEFS){ if (!vhLearned(_vid)){ player.vohoc[_vid] = true; _n++; } }
-        calcDerived(); cheatLog('Đã học ' + _n + ' kỹ năng — cộng %Sát Thương vĩnh viễn (K → Di Sản Cũ)', '#ffb15c'); break;
+        calcDerived(); cheatLog('Đã học ' + _n + ' kỹ năng — cộng %Sát Thương vĩnh viễn (xem ở phím K)', '#ffb15c'); break;
       }
       case 'fullskill': {
         for (const _vid in VOHOC_DEFS) player.vohoc[_vid] = true;
@@ -17583,12 +17586,47 @@ const CHAR_TABS = [
   { id:'mastery',  name:'✦ Đại Thành', lv:MASTERY_LV },
   { id:'tuyethoc', name:'Thuần Thục', lv:4 },
 ];
+// Sáu tab trên một hàng là quá nhiều: ở bề rộng bảng 464px, hàng tab xuống hai dòng và cái thứ
+// sáu trông như một nút lạc. Bốn trong sáu cái lại cùng một loại việc — thứ người chơi NUÔI LỚN
+// ngoài trang bị — nên gom chúng vào một tab mẹ, hàng đầu còn ba mục.
+//   MÃ TAB GIỮ NGUYÊN. sysUnlocked(), refreshCharTab() và các bài kiểm cũ đều tra theo mã
+//   ('mount', 'linhthu', 'tuyethoc', 'mastery'); đổi mã là làm hỏng cả ba. Đây chỉ là cách BÀY.
+const CHAR_NHOM_ID = 'nangcap';
+const CHAR_NHOM = ['mount', 'linhthu', 'tuyethoc', 'mastery'];
+const charTabDef = id => CHAR_TABS.find(t => t.id === id);
+// Tab mẹ mở khi có ÍT NHẤT MỘT con mở — khoá cả bốn mới khoá nó.
+function charNhomMo(){ return CHAR_NHOM.some(id => sysUnlocked(id)); }
+function charNhomConDau(){ return CHAR_NHOM.find(id => sysUnlocked(id)) || CHAR_NHOM[0]; }
+window.switchCharNhom = function(){
+  // Bấm tab mẹ → vào đúng con đầu tiên đang mở, không phải một trang trung gian rỗng.
+  if (!charNhomMo()) return;
+  window.switchCharTab(CHAR_NHOM.includes(window.charTab) ? window.charTab : charNhomConDau());
+};
 function renderCharPanel(){
   let tab = window.charTab;
   if (!sysUnlocked(tab)) tab = window.charTab = 'info'; // tab đang chọn bị khóa → về Thông Tin
-  let html = moBang({ tieu:'Nhân Vật', chon:tab, ham:'switchCharTab',
-    tabs: CHAR_TABS.map(t => ({ id:t.id, ten:t.name, khoa:!sysUnlocked(t.id),
-      title: sysUnlocked(t.id) ? '' : `Mở khóa ở cấp ${t.lv}` })) });
+  const trongNhom = CHAR_NHOM.includes(tab);
+  // Hàng 1: Thông Tin · ✦ Nâng Cấp · 🔄 Tái Sinh
+  let html = moBang({ tieu:'Nhân Vật', chon: trongNhom ? CHAR_NHOM_ID : tab, ham:'switchCharTab',
+    tabs: [
+      { id:'info', ten:charTabDef('info').name },
+      { id:CHAR_NHOM_ID, ten:'✦ Nâng Cấp', khoa:!charNhomMo(),
+        title: charNhomMo() ? 'Chimera · Linh Thú · Thuần Thục · Đại Thành'
+                            : `Mở khóa ở cấp ${Math.min(...CHAR_NHOM.map(i => charTabDef(i).lv))}` },
+      { id:'taytuy', ten:charTabDef('taytuy').name, khoa:!sysUnlocked('taytuy'),
+        title: sysUnlocked('taytuy') ? '' : `Mở khóa ở cấp ${charTabDef('taytuy').lv}` },
+    ] });
+  // Hàng 2 chỉ hiện KHI đang ở trong nhóm — không thì nó là bốn nút thừa trên mọi trang khác.
+  if (trongNhom){
+    html += `<div class="bang-tabs bang-tabs-con">`;
+    for (const id of CHAR_NHOM){
+      const d = charTabDef(id), mo = sysUnlocked(id);
+      html += `<button class="bang-tab${id === tab ? ' on' : ''}${mo ? '' : ' khoa'}"`
+            + `${mo ? '' : ` title="Mở khóa ở cấp ${d.lv}"`} onclick="switchCharTab('${id}')">`
+            + `${mo ? '' : '🔒 '}${d.name}</button>`;
+    }
+    html += `</div>`;
+  }
   html += `<div id="char-content"></div>`;
   el('panel-char').innerHTML = html;
   if (tab==='info') renderChar();
@@ -17609,6 +17647,7 @@ window.openMastery = function(){
   AudioSys.sfx('ui', 0.6);
 };
 window.switchCharTab = function(t){
+  if (t === CHAR_NHOM_ID) return window.switchCharNhom();
   const def = CHAR_TABS.find(x=>x.id===t);
   if (def && !sysUnlocked(t)){
     addFloat(player.x, player.y-56, `🔒 ${def.name} mở khóa ở cấp ${def.lv}!`, '#a0ffe9', 13);
@@ -20154,13 +20193,14 @@ window.salvage = function(i){
 };
 
 // ---------- Bản Đồ thế giới ----------
-// ---------- Kỹ Năng: 4 ô cố định (chính/phụ/buff/tuyệt chiêu) + tab Di Sản Cũ (thông tin) ----------
+// ---------- Kỹ Năng: 4 ô cố định (chính/phụ/phù trợ/tuyệt chiêu) + mục Di Sản, MỘT trang ----------
 // Phiêu Bạt (kỹ năng tự do liên phái) + Dung Hợp đã bị cắt cùng đợt MU-hoá — mọi chiêu giờ đều
 // thuộc riêng 1 trong 5 lớp, không còn nội dung nào cho tab này nữa nên bỏ luôn.
-const SKILL_TABS = [
-  { id:'active', name:'⚔ Kỹ Năng' },
-  { id:'legacy', name:'✦ Di Sản Cũ' },
-];
+// SKILL_TABS đã bỏ. Hai tab cho MỘT bảng kỹ năng là chia đôi một thứ vốn liền mạch: người chơi
+// mở K ra thấy bốn ô chiêu, không có cách nào biết rằng những chiêu mình đã tự ngộ vẫn đang cộng
+// %Sát Thương vĩnh viễn — trừ khi tình cờ bấm sang tab thứ hai. Tám chỗ khác trong game phải
+// viết "(bấm K → Di Sản Cũ)" chính là bằng chứng: một giao diện cần chú thích đường đi tới nửa
+// còn lại của chính nó thì nửa đó đang bị giấu sai chỗ. Nay tất cả nằm trên một trang, cuộn là hết.
 // Chiêu nào thì tay vung kiểu nào — để tư thế nhân vật khớp với VFX đang bung ra.
 // (Meteor rơi từ trời xuống thì phải GIƠ trượng lên, không thể chĩa ngang.)
 function heroCastAct(id, d){
@@ -20183,8 +20223,6 @@ function heroCastAct(id, d){
   if (t === 'selfaoe' || t === 'dash') return heroActOf(sk, 'tp');
   return heroActOf(sk, 'a');
 }
-window.skillTab = window.skillTab || 'active';
-window.switchSkillTab = function(t){ window.skillTab = t; renderSkillPanel(); };
 // 4 ô cố định (chính/phụ/buff/tuyệt chiêu — xem defaultSkillBar()): không gán/gỡ, chỉ xem + nâng cấp.
 function equippedSkillRowHtml(id, roleLabel){
   const info = skillInfo(id);
@@ -20225,16 +20263,12 @@ function renderSkillPanel(){
   vhAutoLearn(); // save cũ / test mode: quét tự ngộ kỹ năng phái
   let html = moBang({ tieu:'Kỹ Năng', dong:'4 ô cố định · phím 1-4' });
   html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%Sát Thương/cấp (bạc) · mốc 20/40/60/80/100/120 thêm phù trợ · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · <span style="color:#7fd8e0">Bản Năng <b>${Math.floor(player.khi || 0).toLocaleString('vi-VN')}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
-  html += `<div class="bang-tabs">`;
-  for (const t of SKILL_TABS) html += `<button class="bang-tab${t.id===window.skillTab?' on':''}" onclick="switchSkillTab('${t.id}')">${t.name}</button>`;
-  html += `</div>`;
-
-  if (window.skillTab === 'active'){
+  {
     html += `<div class="stat-sec">${SECTS[player.sect].name} — 1 chính · 1 phụ · 1 phù trợ · 1 tuyệt chiêu</div>`;
     html += equippedSkillRowHtml('a', 'Chính');
     html += equippedSkillRowHtml('tp', 'Phụ');
     const buffId = BUFF_SKILL_ID[player.sect], sigId = SIGNATURE_SKILL[player.sect];
-    html += buffId ? equippedSkillRowHtml(buffId, 'Buff')
+    html += buffId ? equippedSkillRowHtml(buffId, 'Phù Trợ')
       : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10 để mở khoá bộ 4 chiêu riêng.</div>`;
     if (sigId) html += equippedSkillRowHtml(sigId, '★ Tuyệt Chiêu');
     html += `<div class="shop-row" title="${consumTip('sach')}"><span class="sr-ic">${consumIcon('sach', 'sr-img')}</span>
@@ -20242,14 +20276,15 @@ function renderSkillPanel(){
           <span class="sr-desc">Bấm nút sách ở dòng chiêu bất kỳ phía trên để nâng thẳng 1 cấp — khỏi tốn bạc lẫn Bản Năng</span>
           <span class="sr-stat">${CONSUM_DB.sach.info()}</span></span>
         <b style="color:#ffb15c;font-size:15px">${player.bikipVH || 0}</b></div>`;
-    html += `<div class="stat-sec">BỊ ĐỘNG — tự kích hoạt, không cần gán</div>`;
+    html += `<div class="stat-sec">BỊ ĐỘNG CHUNG — mở từ Ascension, trang bị và Sách Kỹ Năng</div>`;
     for (const ps of PASSIVE_SKILLS){
       const on = ps.req();
       html += `<div class="skill-row${on?'':' locked'}"><span class="sk-glyph">✚</span>
         <span class="sk-info"><b style="color:${on?'#a0ffe9':'#8a8a8a'}">${ps.name}</b>
         <div class="sk-desc">${on ? ps.desc : '🔒 chưa đạt điều kiện'}</div></span></div>`;
     }
-  } else {
+  }
+  {
     html += `<div style="font-size:11px;color:#9aa8d4;padding:2px 4px 8px">Thanh chiêu chỉ có 4 ô, nhưng các chiêu dưới đây không hề mất giá trị — tự động dồn thành % Công Kích vĩnh viễn (hiện <b style="color:#ffd76a">+${(player.legacyAtkPct||0).toFixed(1)}%</b>), tự ngộ theo cấp, không cần bấm nút.</div>`;
     html += `<div class="stat-sec">DI SẢN LỚP — ${SECTS[player.sect].name}</div>`;
     const own = LEGACY_SECT_SKILLS.filter(sid => VOHOC_DEFS[sid] && VOHOC_DEFS[sid].phai === player.sect);
@@ -20258,7 +20293,7 @@ function renderSkillPanel(){
     // đổi thành %ST, nên phải tách khỏi mục di sản để người chơi không tưởng chúng cũng chỉ là %ST.
     const _pas = CLASS_PASSIVES.filter(sid => VOHOC_DEFS[sid] && VOHOC_DEFS[sid].phai === player.sect);
     if (_pas.length){
-      html += `<div class="stat-sec">BỊ ĐỘNG CỦA LỚP — luôn bật, không tốn ô</div>`;
+      html += `<div class="stat-sec">BỊ ĐỘNG RIÊNG CỦA LỚP — chỉ lớp này mới có</div>`;
       for (const sid of _pas){
         const _v = VOHOC_DEFS[sid], on = vhLearned(sid);
         html += `<div class="skill-row${on?'':' locked'}"><span class="sk-glyph">${_v.glyph}</span>
@@ -23691,7 +23726,7 @@ function nextDungeonWave(){
     const b = spawnMob(DGN.def.boss, { x:R3.cx, y:R3.cy, r:40, count:1 }, null);
     b.zone = null; // không hồi sinh lại theo zone
     DGN.bossRef = b;
-    addFloat(R3.cx, R3.cy + 70, 'BOSS ' + DGN.def.bossName + ' xuất hiện!', '#ff5a4a', 20);
+    addFloat(R3.cx, R3.cy + 70, 'TRÙM ' + DGN.def.bossName + ' xuất hiện!', '#ff5a4a', 20);
     if (player && player.auto){ player._autoAX = R3.cx; player._autoAY = R3.cy; }
     AudioSys.sfx('crit', 0.7);
     return;
@@ -24086,9 +24121,9 @@ function hintText(){
   const lv = player.level;
   const parts = [t('hud.hint.clickmove'), t('hud.hint.attack'), t('hud.hint.talk'), t('hud.hint.potion')];
   if (lv >= 3) parts.push(t('hud.hint.quest'));
-  // Một mục cho cửa sổ nhân vật, không phải hai: C và V nay mở CÙNG một bảng, in cả hai thì
-  // dòng gợi ý tự mâu thuẫn ("V nhân vật · C nhân vật").
-  if (lv >= 5) parts.push(t('hud.hint.character'), t('hud.hint.bag'));
+  // C, V, B nay là BA bảng khác nhau (Nhân Vật · Trang Bị · Túi Đồ) nên in đủ ba. Trước đây
+  // C và V mở cùng một cửa sổ, in cả hai thì dòng gợi ý tự mâu thuẫn.
+  if (lv >= 5) parts.push(t('hud.hint.character'), t('hud.hint.gear'), t('hud.hint.bag'));
   if (lv >= 8) parts.push(t('hud.hint.map'), t('hud.hint.skills'));
   // 'hud.hint.tame' đã bỏ — hệ Thú Thuần Hóa gỡ rồi, phím T không còn làm gì.
   parts.push(t('hud.hint.loot'));
