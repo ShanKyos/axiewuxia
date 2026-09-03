@@ -721,10 +721,17 @@ function mapBgOf(k){
   const im = new Image(); im.src = src; MAP_BG[k] = im;
   return im;
 }
-function mapBgPrefetch(k){
-  // nạp trước hàng xóm khi trình duyệt rảnh — vào cổng là có ảnh sẵn, không chớp một nhịp nền trơn
-  const go = () => { for (const g of (MAPS[k] && MAPS[k].gates) || []) if (g.to) mapBgOf(g.to); };
-  if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 3000 }); else setTimeout(go, 1200);
+let _bgTruoc = null;   // map vừa rời khỏi — giữ lại để quay đầu không chớp một nhịp nền trơn
+// Mỗi ảnh nền 2048×1536 giải nén ra 12 MB RAM (trên đĩa chỉ 200-500 KB). Đi hết 11 map là
+// 117 MB nằm lại vĩnh viễn — một phần đáng kể của việc Chrome sập (Aw, Snap = renderer hết
+// bộ nhớ). Giữ đúng HAI tấm: map đang đứng và map vừa rời. Tải lại một tấm 200-500 KB khi
+// quay lại là chuyện của một nhịp mạng; 117 MB nằm lại là chuyện của cả phiên chơi.
+//
+// Hàm cũ tên là mapBgPrefetch và hứa "nạp trước map hàng xóm" — nhưng nó đọc MAPS[k].gates,
+// một trường KHÔNG TỒN TẠI trong bảng MAPS (0 chỗ khai báo). Nó lặp qua mảng rỗng, tức là
+// chưa từng nạp trước gì cả. Không vá lại: nạp trước là đi ngược đúng hướng cần đi.
+function mapBgDon(k){
+  for (const id in MAP_BG) if (id !== k && id !== _bgTruoc) delete MAP_BG[id];
 }
 // `im.src = '' ` KHÔNG phải là "không nạp gì": trình duyệt coi chuỗi rỗng là đường dẫn tương đối
 // và đi tải lại chính trang hiện tại. Quái dựng bằng khớp xương thì không có ảnh — bỏ hẳn.
@@ -732,22 +739,53 @@ for (const k in MOBS){ if (!MOBS[k].img) continue; const im = new Image(); im.sr
 // Sourced status-effect overlay clips (axieinfinity/axie-origins-asset-kit web-vfx) — generic (not
 // per-class), played once at the moment a status effect actually lands (see playStatusFx below).
 // Grid metadata copied from each clip's clip.json (cols/rows/frameW/frameH/frames/fps/anchor).
+// ⚠ SỐ ĐO Ở ĐÂY LÀ CỦA TỆP ĐÃ THU NHỎ, không phải của clip.json gốc.
+// Sáu tấm atlas này chỉ 12,3 MB trên đĩa nhưng 365 MB khi trình duyệt giải nén ra RGBA
+// (4 byte/điểm ảnh, tấm to nhất 3664×5027). Chúng nạp lười — lần đầu dính choáng thì tải
+// `stunned`, lần đầu trúng độc thì tải `poison_apply` — rồi nằm lại vĩnh viễn. Đó là lý do
+// game sập GIỮA LÚC CHƠI chứ không phải lúc mở, và sập thất thường.
+// Mỗi khung vẽ lên màn ở cỡ ~156px trong khi ảnh gốc là ~460px: thừa gấp 9 lần số điểm ảnh.
+// Đã cắt từng khung, thu nhỏ một nửa mỗi chiều bằng LANCZOS rồi ghép lại — 365 MB còn 91 MB,
+// đĩa 12,3 còn 5,7 MB, cỡ hiển thị y nguyên. `k` là hệ số quy về đơn vị thiết kế cũ, để các
+// chỗ gọi vẫn truyền `scale` theo con số quen thuộc.
 const VFX_ATLAS_DEFS = {
-  stunned:      { cols:8, rows:11, frameW:377, frameH:429, frames:81, fps:30, anchorX:191.4, anchorY:192.5 },
-  bleed_apply:  { cols:8, rows:9,  frameW:467, frameH:440, frames:69, fps:30, anchorX:227.4, anchorY:225.0 },
-  heal:         { cols:8, rows:9,  frameW:432, frameH:437, frames:70, fps:30, anchorX:215.3, anchorY:220.4 },
-  shield:       { cols:8, rows:11, frameW:476, frameH:402, frames:81, fps:30, anchorX:225.6, anchorY:198.9 },
-  poison_apply: { cols:8, rows:11, frameW:458, frameH:457, frames:81, fps:30, anchorX:228.2, anchorY:227.7 },
+  stunned:      { k:2, cols:8, rows:11, frameW:188, frameH:214, frames:81, fps:30, anchorX:95.4,  anchorY:96.0 },
+  bleed_apply:  { k:2, cols:8, rows:9,  frameW:234, frameH:220, frames:69, fps:30, anchorX:113.9, anchorY:112.5 },
+  heal:         { k:2, cols:8, rows:9,  frameW:216, frameH:218, frames:70, fps:30, anchorX:107.7, anchorY:109.9 },
+  shield:       { k:2, cols:8, rows:11, frameW:238, frameH:201, frames:81, fps:30, anchorX:112.8, anchorY:99.5 },
+  poison_apply: { k:2, cols:8, rows:11, frameW:229, frameH:228, frames:81, fps:30, anchorX:114.1, anchorY:113.6 },
   // 'weak' (stat-debuff aura) is the closest-fit substitute for slow/chill — the kit has no
   // literal slow/freeze clip (see docs/ASSET_SOURCING.md's no-force-fit convention).
-  weak:         { cols:8, rows:9,  frameW:494, frameH:497, frames:69, fps:30, anchorX:246.4, anchorY:232.1 },
+  weak:         { k:2, cols:8, rows:9,  frameW:247, frameH:248, frames:69, fps:30, anchorX:123.2, anchorY:115.8 },
 };
 const VFX_ATLAS_IMGS = {};
+const VFX_ATLAS_DUNG = {};   // id → lúc dùng gần nhất (ms)
 function getVfxAtlasImg(id){
   let im = VFX_ATLAS_IMGS[id];
   if (!im){ im = new Image(); im.src = 'assets/vfx/' + id + '/atlas.png'; VFX_ATLAS_IMGS[id] = im; }
+  VFX_ATLAS_DUNG[id] = performance.now();
   return im;
 }
+// Thả tấm nào không dùng tới trong một phút. Mỗi tấm vẫn 13-18 MB RAM sau khi thu nhỏ, mà nó
+// chỉ chớp qua trong ba giây — sáu tấm nằm lại cùng lúc là 91 MB cho thứ không ai đang nhìn.
+// Nạp lại chỉ tốn một nhịp mạng cho tệp dưới 1,5 MB.
+const VFX_ATLAS_GIU = 60000;   // giữ một phút sau lần dùng cuối
+function vfxAtlasDon(now){
+  now = now == null ? performance.now() : now;
+  let bo = 0;
+  for (const id in VFX_ATLAS_IMGS)
+    if (now - (VFX_ATLAS_DUNG[id] || 0) > VFX_ATLAS_GIU){ delete VFX_ATLAS_IMGS[id]; delete VFX_ATLAS_DUNG[id]; bo++; }
+  return bo;
+}
+setInterval(() => vfxAtlasDon(), 30000);
+// Tổng số byte ảnh ĐÃ GIẢI NÉN mà game đang giữ. Đây mới là con số giết renderer — nó không
+// nằm trong performance.memory, nên đo bằng heap JS là đo nhầm chỗ (đã mắc một lần).
+window.anhDangGiuMB = function(){
+  let n = 0;
+  const cong = o => { for (const k in o){ const im = o[k]; if (im && im.naturalWidth) n += im.naturalWidth * im.naturalHeight * 4; } };
+  cong(VFX_ATLAS_IMGS); cong(MAP_BG); cong(TREE_IMGS); cong(MOB_IMGS); cong(NPC_IMGS);
+  return +(n / 1048576).toFixed(1);
+};
 function spawnAtlasVfx(id, x, y, scale){
   const def = VFX_ATLAS_DEFS[id]; if (!def) return;
   addEffect({ type:'atlasVfx', id, x, y, scale: scale || 0.4, dur: def.frames / def.fps });
@@ -10172,12 +10210,13 @@ function render(){
       if (def && img.complete && img.naturalWidth){
         const frameIdx = Math.min(def.frames - 1, Math.floor(e.t * def.fps));
         const col = frameIdx % def.cols, row = Math.floor(frameIdx / def.cols);
-        const dw = def.frameW * e.scale, dh = def.frameH * e.scale;
+        const sc = e.scale * (def.k || 1);   // atlas đã thu nhỏ — quy về đơn vị thiết kế
+        const dw = def.frameW * sc, dh = def.frameH * sc;
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         ctx.globalAlpha = a > 0.15 ? 1 : a / 0.15; // hold full bright, only fade the last sliver
         ctx.drawImage(img, col*def.frameW, row*def.frameH, def.frameW, def.frameH,
-          e.x - def.anchorX*e.scale, e.y - def.anchorY*e.scale, dw, dh);
+          e.x - def.anchorX*sc, e.y - def.anchorY*sc, dw, dh);
         ctx.restore(); ctx.globalAlpha = 1;
       }
     }
@@ -10318,6 +10357,20 @@ function mobFlashPal(P, col){
   const o = {};
   for (const k in P) o[k] = col;
   return o;
+}
+// Chạm vào một khoá rồi cắt bớt phần cũ nhất. Map giữ đúng thứ tự chèn, nên xoá khoá rồi đặt
+// lại là đẩy nó xuống cuối hàng — đúng cơ chế LRU mà _hsCache đã dùng, gom lại một chỗ để mọi
+// kho ảnh cùng một luật thay vì mỗi chỗ một kiểu.
+function lruDat(map, key, val, tran){
+  map.delete(key); map.set(key, val);
+  while (map.size > tran) map.delete(map.keys().next().value);
+  return val;
+}
+function lruLay(map, key){
+  if (!map.has(key)) return undefined;
+  const v = map.get(key);
+  map.delete(key); map.set(key, v);   // chạm ⇒ đẩy xuống cuối
+  return v;
 }
 const _tintCache = new Map();
 function tintedImg(img, key, filter){
@@ -13553,20 +13606,24 @@ function drawHeroFigure(g, sectKey, tier, now, ps, gv){
 // Ảnh chân dung lớp cho màn chọn nhân vật / bảng nhân vật: vẽ thẳng bằng
 // drawHeroFigure() nên card LUÔN khớp với người đứng trong game (trước đây là
 // thẻ Axie tĩnh, chọn Dark Knight xong vào game lại thấy một hình khác hẳn).
-const _heroCardCache = {};
+// Mỗi thẻ là một data-URL PNG ~70 KB, và khoá gồm chữ ký trang bị — nên MỖI LẦN đổi đồ là một
+// thẻ mới. Trước đây không có trần: bật tự mặc đồ rồi cày vài giờ là hàng nghìn thẻ nằm lại.
+// Đo được: 300 lần đổi đồ ⇒ 85 thẻ, 6 MB, và tăng tuyến tính không có điểm dừng.
+const HERO_CARD_CAP = 24;
+const _heroCardCache = new Map();
 // ⚠ Khoá cache PHẢI gồm chữ ký trang bị. Chân dung nay phụ thuộc gv, nên khoá chỉ theo
 // sect:tier như trước sẽ khiến panel Nhân Vật hiện mãi ảnh cũ sau mỗi lần thay đồ.
 function heroCardUrl(sectKey, tier, gv){
   const sig = gv ? `${Math.round(gv.t * 10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor || ''}` : '-';
   const key = sectKey + ':' + (tier || 1) + ':' + sig;
-  if (_heroCardCache[key]) return _heroCardCache[key];
+  { const u = lruLay(_heroCardCache, key); if (u) return u; }
   const cv = document.createElement('canvas');
   cv.width = HERO_W; cv.height = HERO_H;
   const hg = cv.getContext('2d');
   drawHeroFigure(hg, sectKey, tier || 1, 0, HERO_POSE0, gv);
   applyFormLight(hg, 0, 0, HERO_W, HERO_H, 0.7);   // nhẹ tay hơn icon: mặt người không nên bị bệt
   applyEdgeLight(hg, 2, 2, 0.6);
-  return (_heroCardCache[key] = cv.toDataURL('image/png'));
+  return lruDat(_heroCardCache, key, cv.toDataURL('image/png'), HERO_CARD_CAP);
 }
 // ═══════════════════════════════════════════════════════════════════════════════
 // TRANH MINH HOẠ (illustration art) — chân dung lớp cỡ lớn, vẽ mới hoàn toàn
@@ -17149,6 +17206,22 @@ window.addEventListener('beforeunload', saveGame);
       localStorage.setItem(CK, JSON.stringify(arr));
     } catch { /* best-effort — bỏ qua nếu lỗi */ }
   };
+  // Đỉnh bộ nhớ ẢNH. Aw!Snap giết tab trước khi kịp ghi gì, nên không có cách nào bắt tại trận —
+  // nhưng ghi lại ĐỈNH theo thời gian thì lần mở sau vẫn đọc được, và đó là bằng chứng để biết
+  // lần sập có phải do hết bộ nhớ hay không. Ảnh giải nén không nằm trong performance.memory,
+  // nên phải đếm riêng (anhDangGiuMB).
+  const MK = 'vlcm_mem';
+  setInterval(() => {
+    try {
+      const cu = JSON.parse(localStorage.getItem(MK) || '{}');
+      const anh = window.anhDangGiuMB ? window.anhDangGiuMB() : 0;
+      const heap = performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : -1;
+      if (anh > (cu.dinhAnh || 0) || heap > (cu.dinhHeap || 0)){
+        localStorage.setItem(MK, JSON.stringify({
+          dinhAnh: Math.max(anh, cu.dinhAnh || 0), dinhHeap: Math.max(heap, cu.dinhHeap || 0), t: Date.now() }));
+      }
+    } catch { /* best-effort — bỏ qua nếu lỗi */ }
+  }, 15000);
   window.addEventListener('error', e => logErr('error', e.message, e.error && e.error.stack));
   window.addEventListener('unhandledrejection', e => logErr('reject', e.reason && e.reason.message || e.reason, e.reason && e.reason.stack));
   // báo lại nếu phiên trước kết thúc bất thường (crash tab — không chạy beforeunload)
@@ -17714,7 +17787,7 @@ function drawPerfHud(){
   const L = [
     `${_perf.fps} FPS  ·  ${_perf.ms} ms/khung`,
     `JS ${_perf.jsMs} ms  ·  raster ${_perf.rasMs} ms`,
-    `hiệu ứng ${['Thấp','Vừa','Đầy'][FXQ]}${FXQ_AUTO ? '*' : ''}  ·  độ nét ${Math.round(RES*100)}%${RES_AUTO ? '*' : ''}  ·  sprite ${_hsCache.size}`,
+    `hiệu ứng ${['Thấp','Vừa','Đầy'][FXQ]}${FXQ_AUTO ? '*' : ''}  ·  độ nét ${Math.round(RES*100)}%${RES_AUTO ? '*' : ''}  ·  sprite ${_hsCache.size}  ·  ảnh ${window.anhDangGiuMB ? window.anhDangGiuMB() : '?'} MB`,
   ];
   ctx.save();
   ctx.font = 'bold 11.5px ui-monospace, Menlo, Consolas, monospace';
@@ -17925,6 +17998,9 @@ const SLOT_ICONS = {
 // Hệ toạ độ: gốc ở TÂM icon, khung 100×100, y âm là hướng lên. Hàm vẽ nhận (g, M, P):
 // g = ngữ cảnh, M = bảng màu kim loại, P = tham số riêng của món.
 const ICON_PX = 88;
+// Khoá gồm giai × phẩm × mức rèn × mọi bộ phận của món, nên không gian khoá là hàng trăm
+// nghìn. Đo được một phiên cày ngắn đã tạo 650 mục / 13 MB và còn đang lên.
+const ITEM_ART_CAP = 400;
 const _itemArtCache = new Map();
 
 // Bảng màu một món: lấy sắc kim loại theo GIAI — dùng chung HERO_METAL với nhân vật để hình
@@ -19499,14 +19575,13 @@ function itemArtUrl(def, tier, rarity, plus){
   const key = `${def.art}|${def.blade||''}|${def.guard||''}|${def.pommel||''}|${def.motif||''}|${def.shaft||''}|${def.head||''}|${def.limb||''}`
             + `|${def.w||''}|${def.len||''}|${def.gw||''}|${def.st || 1}|${def.mat||''}|${def.tintKey || ''}`
             + `|${tier}|${rarity}|${plus || 0}`;
-  let u = _itemArtCache.get(key);
+  let u = lruLay(_itemArtCache, key);
   if (u) return u;
   const c = document.createElement('canvas');
   c.width = ICON_PX; c.height = ICON_PX;
   drawItemIcon(c.getContext('2d'), def, tier, rarity, plus);
   u = c.toDataURL();
-  _itemArtCache.set(key, u);
-  return u;
+  return lruDat(_itemArtCache, key, u, ITEM_ART_CAP);
 }
 
 // ═══════════════ DANH MỤC TRANG BỊ — 220 món ═══════════════
@@ -22516,7 +22591,8 @@ window.travelTo = function(mapId, from){
   // lại, mà deepNextFloor() rải quái vào cả ba phòng ⇒ kẹt cứng vĩnh viễn ở tầng 1; đồng thời
   // updateDungeon() chạy song song, phát không thưởng "thông quan" và banner phó bản đè lên.
   if (md.dungeon && !DEEP) startDungeonRun(mapId);
-  mapBgOf(mapId); mapBgPrefetch(mapId);
+  _bgTruoc = from || curMap;
+  mapBgOf(mapId); mapBgDon(mapId);
   setTimeout(fxApply, 0);   // lớp phủ CSS theo bản đồ mới (tối / vignette)
   const sp = (from && md.spawnFrom && md.spawnFrom[from]) || md.spawn;
   player.x = sp.x; player.y = sp.y;

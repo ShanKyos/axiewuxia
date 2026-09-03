@@ -3,10 +3,19 @@
 // thấy nguyên người đè lên cột. Bản mới cao 179px (~1,9 lần nhân vật) nên sai chiều sâu là
 // nhìn thấy ngay: nhân vật lơ lửng trước một cái vòm cao gấp đôi mình.
 //
-// Phép đo: đọc thẳng điểm ảnh từ canvas game (KHÔNG chụp PNG rồi so byte — nén PNG làm hai ảnh
-// gần giống nhau ra hàng nghìn byte khác nhau, sàn nhiễu nuốt trọn tín hiệu; đã mắc một lần).
-// Diện tích người nhìn thấy được = số điểm ảnh đổi so với khung không có người trong ô đo.
-// Đứng SAU trụ thì gần như không thấy gì; đứng TRƯỚC trụ thì thấy rõ.
+// PHÉP ĐO — đếm điểm ảnh MÀU ÁO CHOÀNG TÍM của Dark Wizard nằm trong đúng cột trụ trái.
+// Đứng SAU trụ thì thân người bị trụ che ⇒ 0 điểm tím. Đứng TRƯỚC trụ thì nửa trên đè lên
+// chính cột đó ⇒ vài trăm điểm tím.
+//
+// Ba cách đo trước đó đều hỏng, ghi lại để đừng ai làm lại:
+//   1. Chụp PNG rồi so BYTE — nén PNG khiến hai ảnh gần giống nhau khác nhau hàng nghìn byte.
+//   2. Lấy một khung "không có người" rồi trừ đi — drawCityMood() phủ tông chiều tà bằng
+//      gradient NEO THEO CAMERA, mà khung tham chiếu có camera khác, nên cùng một điểm trên
+//      bản đồ nhận sắc khác nhau.
+//   3. Vẫn trừ khung, nhưng cùng camera — buildWorld() rải cây/đá NGẪU NHIÊN mỗi lượt, và cây
+//      cũng nằm trong danh sách sắp theo y: có lượt một gốc cây rơi vào ô đo, cả ô cùng "khác".
+// Đếm theo MÀU thì cả ba thứ trên đều không đụng tới được: cây xanh, đá xám, trời xanh lam —
+// không cái nào lọt vào dải màu áo choàng.
 const { chromium } = require('playwright');
 const URL = 'http://localhost:8871/index.html';
 
@@ -19,70 +28,58 @@ const URL = 'http://localhost:8871/index.html';
   await p.waitForFunction(() => window.__gameReady).catch(()=>{});
   await p.evaluate(() => localStorage.clear());
   await p.reload(); await p.waitForTimeout(900);
-  await p.evaluate(() => {
+
+  const out = await p.evaluate(async () => {
     window.TEST_MODE = true; startGame('baidasan', { name:'Đo' });
     curMap = 'tuongduong'; DGN = null; buildWorld();
     player.tutStep = -1;
-    // Ô đo = ĐÚNG cột trụ trái: rộng 34px (bằng bề rộng trụ), cao 96px (bằng thân trụ).
-    // Bản đầu tôi lấy ô 80px cho rộng rãi — nhưng nhân vật chibi rộng ~44px, rộng hơn cả trụ,
-    // nên hai bên vai luôn thò ra ngoài trụ và LUÔN nhìn thấy được dù đứng ở đâu. Đo như vậy
-    // thì đứng trước hay đứng sau đều ra ~3.600 điểm ảnh, không phân biệt được gì.
-    window.__oDo = (() => {
+    FXQ_AUTO = false; FXQ = 2; RES_AUTO = false; SETTINGS.lowFx = false;
+    const o = (() => {
       const g = GATES.find(x => x.map === 'tuongduong' && x.to === 'ngoai');
       return { gx: g.x, gy: g.y, ph: GATE_PH };
     })();
-    window.__doc = () => new Promise(res => requestAnimationFrame(() => requestAnimationFrame(() => {
-      const o = window.__oDo, cv = document.getElementById('game');
-      const k = cv.width / cv.clientWidth;
+    // Ô đo = ĐÚNG cột trụ trái: rộng 34px (bằng bề rộng trụ), cao 96px (bằng thân trụ).
+    const dem = () => new Promise(res => requestAnimationFrame(() => requestAnimationFrame(() => {
+      const cv = document.getElementById('game'), k = cv.width / cv.clientWidth;
       const sx = Math.round((o.gx - o.ph - 17 - camera.x) * k);
       const sy = Math.round((o.gy - 96 - camera.y) * k);
       const w = Math.round(34 * k), h = Math.round(96 * k);
       if (sx < 0 || sy < 0 || sx + w > cv.width || sy + h > cv.height){ res(null); return; }
-      res(Array.from(cv.getContext('2d').getImageData(sx, sy, w, h).data));
+      const d = cv.getContext('2d').getImageData(sx, sy, w, h).data;
+      let tim = 0;
+      for (let i = 0; i < d.length; i += 4){
+        const R = d[i], G = d[i+1], B = d[i+2];
+        if (B > R + 20 && R > G + 12 && B > 70 && B < 210 && G < 110) tim++;   // dải màu áo choàng
+      }
+      res({ tim, tong: d.length / 4 });
     })));
+    const dat = async (x, y) => {
+      player.x = x; player.y = y; player.vx = 0; player.vy = 0; snapCamera();
+      floats.length = 0; effects.length = 0;
+      await new Promise(r => setTimeout(r, 700));
+      floats.length = 0; effects.length = 0;   // dọn cả thứ vừa sinh ra trong lúc chờ
+      return dem();
+    };
+    const sau   = await dat(o.gx - o.ph, o.gy - 30);    // SAU trụ: thân người nằm gọn trong cột
+    const truoc = await dat(o.gx - o.ph, o.gy + 40);    // TRƯỚC trụ: nửa trên đè lên chính cột đó
+    const vang  = await dat(o.gx - o.ph - 260, o.gy + 40);  // không có người trong ô
+    return { sau: sau && sau.tim, truoc: truoc && truoc.tim, vang: vang && vang.tim,
+             oDo: sau && sau.tong, lop: player.sect };
   });
-  await p.waitForTimeout(500);
 
-  const chup = async (wx, wy) => {
-    // snapCamera() + chờ lâu: camera đuổi theo người có quán tính, và lệch một điểm ảnh thôi
-    // là mọi mép đá trong ô đo đều "khác" — sàn nhiễu phình lên nuốt mất tín hiệu.
-    await p.evaluate(([x, y]) => { player.x = x; player.y = y; player.vx = 0; player.vy = 0; snapCamera(); }, [wx, wy]);
-    await p.waitForTimeout(900);
-    const d = await p.evaluate(() => window.__doc());
-    if (!d) throw new Error('ô đo rơi ra ngoài canvas — camera không giữ được cổng trong màn');
-    return d;
-  };
-  const doDien = (A, B) => {                     // số ĐIỂM ẢNH khác nhau (không phải byte)
-    let n = 0;
-    for (let i = 0; i < A.length; i += 4){
-      if (Math.abs(A[i]-B[i]) + Math.abs(A[i+1]-B[i+1]) + Math.abs(A[i+2]-B[i+2]) > 24) n++;
-    }
-    return n;
-  };
-
-  const G = await p.evaluate(() => window.__oDo);
-  // Khung tham chiếu "không có người": vẫn đứng cạnh cổng (camera phải giữ cổng trong màn),
-  // nhưng lệch sang trái đủ xa để không lọt vào ô 80px đang đo.
-  const XA = [G.gx - G.ph - 260, G.gy];
-  const nen   = await chup(XA[0], XA[1]);
-  // Đứng SAU trụ (y nhỏ hơn): thân người nằm gọn trong cột trụ ⇒ phải bị che gần hết.
-  const sau   = await chup(G.gx - G.ph, G.gy - 30);
-  const nenB  = await chup(XA[0], XA[1]);
-  // Đứng TRƯỚC trụ (y lớn hơn): nửa trên của người đè lên chính cột trụ đó ⇒ phải hiện ra.
-  const truoc = await chup(G.gx - G.ph, G.gy + 40);
-
-  const out = { soDiemAnh: nen.length / 4, nhieuNen: doDien(nen, nenB),
-                hienKhiDungSau: doDien(nen, sau), hienKhiDungTruoc: doDien(nenB, truoc) };
   console.log(JSON.stringify(out, null, 1));
-
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
-  // Chốt chặn chống rỗng: đứng TRƯỚC trụ mà không thấy gì thì phép đo hỏng, không phải game đúng.
-  if (out.hienKhiDungTruoc < 400)
-    fail(`đứng trước trụ mà chỉ thấy ${out.hienKhiDungTruoc} điểm ảnh người — phép đo hỏng, không phải game đúng`);
-  if (out.hienKhiDungTruoc < out.nhieuNen * 3)
-    fail(`tín hiệu (${out.hienKhiDungTruoc}) không vượt nổi sàn nhiễu (${out.nhieuNen})`);
-  if (out.hienKhiDungSau >= out.hienKhiDungTruoc * 0.5)
-    fail(`đứng SAU trụ vẫn thấy ${out.hienKhiDungSau} điểm ảnh người, đứng trước là ${out.hienKhiDungTruoc} — cổng không nằm đúng thứ tự chiều sâu`);
+
+  if (out.sau == null || out.truoc == null) fail('ô đo rơi ra ngoài canvas — camera không giữ được cổng trong màn');
+  // Chốt chặn chống rỗng: đứng TRƯỚC trụ mà không đếm được gì thì phép đo hỏng, không phải game đúng.
+  if (out.truoc < 150)
+    fail(`đứng trước trụ mà chỉ đếm được ${out.truoc} điểm ảnh áo choàng — phép đo hỏng, không phải game đúng`);
+  // Chốt chặn thứ hai: dải màu không được bắt nhầm cảnh vật, nếu không thì "đứng sau = 0" là vô nghĩa.
+  if (out.vang > 20)
+    fail(`ô đo không có người mà vẫn đếm ${out.vang} điểm ảnh áo choàng — dải màu đang bắt nhầm cảnh vật`);
+  if (out.sau > out.truoc * 0.15)
+    fail(`đứng SAU trụ vẫn thấy ${out.sau} điểm ảnh áo choàng, đứng trước là ${out.truoc} — cổng không nằm đúng thứ tự chiều sâu`);
+
   console.log('errors:', JSON.stringify(errs));
   console.log(bad === 0 && errs.length === 0 ? 'PASS' : 'FAIL(' + bad + ')');
   await b.close();
