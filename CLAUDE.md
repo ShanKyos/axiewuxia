@@ -440,6 +440,50 @@ Hai cái bẫy đã mắc:
 Độ dày rìa đo bằng bảng đối chiếu, không đoán: 2.4px trên icon 88px. 3.2px làm
 giáp và ủng bạc màu.
 
+## Sáng theo +N: quầng NẰM NGOÀI, món đồ giữ nguyên màu
+
+**Luật gốc: trang bị là thứ GẮN LÊN người, nên nó phải giữ được bản sắc riêng ở mọi
+mức rèn.** Bộ giáp tím-đen viền đồng ở +11 vẫn phải đọc ra đúng bộ giáp đó. Tín hiệu
+"+N" nằm HOÀN TOÀN ngoài đường bao, không tô đè lên một pixel nào của món đồ.
+
+Hai lối đã thử và ĐỀU HỎNG, đừng làm lại:
+
+- **Cộng sáng đè lên cả người** (`globalCompositeOperation = 'lighter'` rồi vẽ lại
+  chính tấm sprite). Nghe hợp lý vì vùng kim loại sáng vọt còn vải tối gần như đứng
+  yên — nhưng **da và tóc cũng là vùng sáng**. Lên +9 là mặt bợt hẳn, nhân vật hoá
+  ma. Tách được lớp đầu+tóc ra thì đỡ, nhưng vẫn làm giáp bay mất màu.
+- **Ba nguồn cộng sáng chồng nhau** (giáp + cánh + vũ khí, mỗi thứ +11). Cháy trắng
+  thành một khối, không còn phân biệt được cái gì với cái gì. Cuối game ai cũng rơi
+  vào trạng thái này nên không phải trường hợp hiếm.
+
+Cách ĐÚNG — hai lớp, cả hai nằm ngoài silhouette:
+
+1. **Quầng**: làm nhoè kênh alpha của lớp, tô một màu, thổi to 1,05×, vẽ TRƯỚC lớp đó.
+2. **Viền sát bóng**: nở alpha ra rồi TRỪ đi alpha gốc → còn đúng một dải mép ngoài,
+   tô cùng màu. Đây mới là thứ cho cảm giác món đồ đang phát sáng.
+   *(Cùng nguyên lý với rìa sáng ở mục "Đổ khối" — lấy bóng trừ bóng dời, không phủ
+   nguyên bóng lên.)*
+
+**Bậc đọc bằng SẮC, không bằng ĐỘ CHÓI.** Đây là chỗ mấu chốt: chói thì bão hoà, sắc
+thì không. Thang: `+7` vàng `#ffd76a` → `+9` lam băng `#9ef2ff` → `+10` tím `#c07fe0`
+→ `+11` cam rực `#ff9a4d`. Dưới +7 không có quầng.
+
+**Sáng theo CẢ BỘ, lấy `min(+N)` của năm món giáp** — không sáng từng món. Hai lý do,
+lý do sau mạnh hơn:
+- Chest +9 mà giày +2 thì thân sáng chân tối, đọc ra "đồ chắp vá" chứ không ra "đồ khủng".
+- Ngưỡng cả-bộ biến năm món rời rạc thành MỘT cái đích. Ép xong chest mà chưa thấy gì
+  đổi chính là động lực ép nốt bốn món kia. `min` chứ không phải trung bình, vì `min`
+  mới ép nâng đều.
+
+**Vũ khí và cánh sáng RIÊNG, và không tốn gì thêm** — vũ khí có slot riêng, cánh thì
+`veCanh()` vẽ riêng ở toạ độ thế giới. Ba nguồn sáng độc lập mà chỉ trả tiền cho một lớp.
+
+Hai chỗ dễ vấp khi hiện thực:
+- **Bề dày viền phải tính theo TỈ LỆ.** Dải 5px đo trên hình 976px cao; trong màn nhân
+  vật chỉ cao 104px nên nó thành dưới 1px và biến mất sạch.
+- **`+10` tím dễ chìm** khi chính nhân vật cũng tím (Dark Wizard). Hoặc cho mỗi lớp một
+  thang lệch đi, hoặc đổi `+10` sang sắc không lớp nào dùng.
+
 ## Lò Hỗn Độn — MỘT cỗ máy, không phải 7 khối chữ
 
 Trước đây có **hai** màn rèn chồng nhau: bảng `Rèn Luyện` (tab) và `Lò Rèn Hoàng Gia` (NPC).
