@@ -21,7 +21,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   const noiGi = (p, giay) => p.evaluate(async (g) => {
     const thay = new Set();
     const iv = setInterval(() => {
-      for (const f of floats) if (/AUTO|Phiêu Bạt|bãi|quái|boss/i.test(f.text)) thay.add(f.text);
+      for (const f of floats) if (/TỰ ĐÁNH|tự đánh|AUTO|Phiêu Bạt|bãi|quái|trùm|boss/i.test(f.text)) thay.add(f.text);
     }, 120);
     await new Promise(r => setTimeout(r, g*1000));
     clearInterval(iv);
@@ -49,7 +49,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   console.log('1) phó bản, chỉ còn boss:', JSON.stringify(st1));
   console.log('   AUTO nói:', JSON.stringify(say1));
   if (!st1.song || !st1.laBoss) fail(`không dựng được trạng thái chỉ-còn-boss (${st1.song} con)`);
-  else if (!say1.some(t => /boss/i.test(t)))
+  else if (!say1.some(t => /trùm|boss/i.test(t)))
     fail(`chỉ còn boss cách ${st1.cach}px mà AUTO không nói gì — phó bản bế tắc câm`);
   await p1.close();
 

@@ -161,6 +161,35 @@ chuột phải (1000,320)  ĐỐI CHỨNG ngoài hộp   → moveTarget: null �
 ⇒ Ở 1280×720, **13,8% màn hình không click-to-move được và không đánh được**, phần lớn là trời
 trong suốt. Đây là lỗi nghiêm trọng nhất tìm thấy trong góc này, và nó sửa bằng 2 dòng CSS.
 
+> ### ĐÍNH CHÍNH — phiên chính, đo lại
+>
+> **Lỗi có thật, nhưng con số 13,8% nói quá khoảng 5,5 lần, và hai điểm dẫn chứng ở trên không
+> chứng minh được điều chúng định chứng minh.**
+>
+> 13,8% là **diện tích cái hộp**, không phải diện tích vùng hỏng. Phần lớn hộp đó có UI thật nằm
+> trong — minimap, quest tracker, nút PK/AUTO — và bấm vào những chỗ đó thì việc chặn chuột là
+> **đúng**, không phải lỗi.
+>
+> Quét lưới 4px toàn hộp, với mỗi điểm hỏi thêm "phần tử trên cùng ở đây có NHÌN THẤY ĐƯỢC không"
+> (có nền, có chữ, là ảnh/canvas):
+>
+> | | % màn hình 1280×720 |
+> |---|---|
+> | Chặn chuột mà có UI thật ở đó — **đúng** | 6,4% |
+> | Chặn chuột mà chỗ đó trong suốt — **oan** | **2,5%** |
+> | Cộng lại = diện tích hộp | 8,9% |
+>
+> (8,9% chứ không phải 13,8% vì phần dưới hộp đã lọt xuống canvas được.)
+>
+> Hai điểm dẫn trong bảng trên, đo lại: **(1100,320) có một `DIV` nhìn thấy được** và
+> **(1100,520) có một `SPAN` nhìn thấy được**. Chuột phải ở đó không đi — đúng, nhưng nó **không
+> nên đi**, vì có UI ở đó thật. Muốn chứng minh lỗi thì phải lấy điểm trong suốt, ví dụ
+> **(1038,12)** — góc trên-trái hộp, `elementFromPoint` trả về chính `#hud-right`.
+>
+> **Kết luận không đổi: vẫn nên sửa, vẫn đúng 2 dòng CSS đó.** 2,5% màn hình nuốt chuột oan là
+> lỗi thật. Chỉ là nó không phải "lỗi nghiêm trọng nhất trong góc này" — chuyện chữ chồng chữ ở
+> §2.2, xảy ra ở **50,9% vị trí đứng trong thành**, mới là thứ người chơi gặp thường xuyên hơn.
+
 ### 2.4 Số dư dài — giả thuyết của tôi SAI
 
 Tôi đoán số dư hàng triệu sẽ làm vỡ bố cục (xuống dòng hoặc tràn). **Không xảy ra.** Đo ở

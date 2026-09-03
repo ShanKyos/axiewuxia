@@ -28,14 +28,14 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     const soKhoiThuocTinh = (h.match(/THUỘC TÍNH CHIẾN ĐẤU/g) || []).length;
     const soKhoiTiemNang = (h.match(/Điểm tiềm năng|ĐIỂM TIỀM NĂNG/g) || []).length;
     return { conVStat, moBangChar, tab, soKhoiThuocTinh, soKhoiTiemNang,
-             coMana: /<span>Mana<\/span>/.test(h), coInstinct: /Instinct \(nâng kỹ năng\)/.test(h) };
+             coMana: /<span>Mana<\/span>/.test(h), coInstinct: /(Bản Năng|Instinct) \(nâng kỹ năng\)/.test(h) };
   });
   console.log('A) bảng nhân vật:', JSON.stringify(rA));
   if (rA.conVStat) fail('panel-vstat vẫn còn trong DOM');
   if (!rA.moBangChar || rA.tab !== 'info') fail('phím V không mở tab Thông Tin');
   if (rA.soKhoiThuocTinh !== 1) fail(`THUỘC TÍNH CHIẾN ĐẤU in ${rA.soKhoiThuocTinh} lần, phải 1`);
   if (rA.soKhoiTiemNang !== 1) fail(`điểm tiềm năng in ${rA.soKhoiTiemNang} lần, phải 1`);
-  if (!rA.coMana || !rA.coInstinct) fail('gộp mà mất dòng Mana/Instinct của bản đầy đủ hơn');
+  if (!rA.coMana || !rA.coInstinct) fail('gộp mà mất dòng Mana/Bản Năng của bản đầy đủ hơn');
 
   // A2) nút + vẫn cộng được điểm sau khi gỡ bảng kia
   const rA2 = await p.evaluate(() => {

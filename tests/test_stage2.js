@@ -16,7 +16,7 @@ const { chromium } = require('playwright');
   await page.evaluate(() => { openStageSelect('daohoa'); });
   await page.waitForTimeout(200);
   const stageHtml = await page.evaluate(() => document.getElementById('panel-stage').innerHTML);
-  console.log('has BOSS VÙNG section:', stageHtml.includes('BOSS VÙNG'));
+  console.log('has TRÙM VÙNG section:', stageHtml.includes('TRÙM VÙNG'));
   console.log('boss rows (Đến Gần):', (stageHtml.match(/Đến Gần/g) || []).length);
   console.log('has PHÓ BẢN section:', stageHtml.includes('PHÓ BẢN'));
   console.log('has Vào Phó Bản button:', stageHtml.includes('Vào Phó Bản'));

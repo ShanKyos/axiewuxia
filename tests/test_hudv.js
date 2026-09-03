@@ -57,7 +57,7 @@ const { chromium } = require('playwright');
       conBangCu: !!document.getElementById('panel-vstat'),
       coLop: /Sylvan Ranger/.test(txt), coCap: /Cấp 98/.test(txt),
       coDiem: /12/.test(txt),
-      coInstinct: /Instinct/.test(txt), coHeDon: /Hệ đòn đánh/.test(txt),
+      coInstinct: /Bản Năng|Instinct/.test(txt), coHeDon: /Hệ đòn đánh/.test(txt),
       soKhoiThuocTinh: (pan.innerHTML.match(/THUỘC TÍNH CHIẾN ĐẤU/g) || []).length,
       soDongAttr: pan.querySelectorAll('.attr-row').length,
       nutCong: [...pan.querySelectorAll('.attr-row')].map(r2 => r2.querySelectorAll('.plus-btn').length),
@@ -68,7 +68,7 @@ const { chromium } = require('playwright');
   if (v.tab !== 'info') fail(`phím V mở tab "${v.tab}", phải là Thông Tin`);
   if (v.conBangCu) fail('#panel-vstat vẫn còn — hai cửa sổ nhân vật in trùng nội dung');
   if (!v.coLop || !v.coCap) fail('cửa sổ nhân vật thiếu lớp/cấp');
-  if (!v.coInstinct) fail('thiếu Instinct (thứ vừa gỡ khỏi HUD)');
+  if (!v.coInstinct) fail('thiếu Bản Năng (thứ vừa gỡ khỏi HUD)');
   if (!v.coHeDon) fail('thiếu Hệ đòn đánh');
   if (v.soKhoiThuocTinh !== 1) fail(`THUỘC TÍNH CHIẾN ĐẤU in ${v.soKhoiThuocTinh} lần, phải đúng 1`);
   if (v.soDongAttr !== 5) fail(`có ${v.soDongAttr} dòng thuộc tính, cần 5`);

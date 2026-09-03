@@ -229,11 +229,11 @@ function rollRaritySrc(srcK){
 // 1-3 dòng từ bảng dưới. Hệ quả cố ý: một món Rèn Hoàn Hảo có thể đáng mặc hơn một món Thánh
 // Thường, vì nó mang dòng mà đồ thường KHÔNG BAO GIỜ có. Hai thứ để săn song song, không phải một.
 const EXC_WEAPON = [
-  { k:'excQi',     name:'Hạ địch hồi Qi',        v:8,  flat:true },  // cơ chế MỚI
+  { k:'excQi',     name:'Hạ địch hồi Mana',        v:8,  flat:true },  // cơ chế MỚI
   { k:'excHp',     name:'Hạ địch hồi Sinh Lực',  v:8,  flat:true },  // cơ chế MỚI
-  { k:'perfect',   name:'Tỉ lệ ST Hoàn Hảo',     v:10 },
+  { k:'perfect',   name:'Tỉ lệ Sát Thương Hoàn Hảo',     v:10 },
   { k:'atkPct',    name:'Thêm Sát Thương',       v:2  },
-  { k:'excAtkLv',  name:'ST theo cấp',           v:1,  flat:true },  // = cấp ÷ 20, tự lớn theo cấp
+  { k:'excAtkLv',  name:'Sát Thương theo cấp',           v:1,  flat:true },  // = cấp ÷ 20, tự lớn theo cấp
   { k:'aspdPct',   name:'Tốc Độ Đánh',           v:7  },
 ];
 const EXC_ARMOR = [
@@ -299,7 +299,7 @@ const ATTR_INFO = {
   str:{ name:'Lực Lượng', desc:'Công kích (tùy lớp), sát thương phi tiêu' },
   agi:{ name:'Mẫn Tiệp',  desc:'Tốc đánh, bạo kích, né tránh + Công kích (tùy phái)' },
   def:{ name:'Phòng Ngự', desc:'Giảm sát thương nhận vào' },
-  vit:{ name:'Sinh Lực',  desc:'HP tối đa, hồi phục' },
+  vit:{ name:'Sinh Lực',  desc:'Máu tối đa và tốc hồi phục' },
   ene:{ name:'Linh Lực',  desc:'Mana tối đa + Công kích (tùy lớp)' },
 };
 // Phụ phẩm theo GDD: Trang bị giáp & Nhẫn (thường/hoàn hảo)
@@ -315,7 +315,7 @@ const ARMOR_SUBS = [
 const WEAPON_SUBS = [
   // vip: CHỈ đồ Hoàn Hảo mới có, và đã Hoàn Hảo thì CHẮC CHẮN có. Trước đây nó nằm chung
   // bảng nên 5,6% vũ khí phẩm thường cũng mang "ST Hoàn Hảo +10%" — đo 6000 lần rơi: 333 món.
-  { k:'perfect',   name:'ST Hoàn Hảo',      min:10, max:10, fixed:true, vip:true },
+  { k:'perfect',   name:'Sát Thương Hoàn Hảo',      min:10, max:10, fixed:true, vip:true },
   { k:'atkPct',    name:'Thêm Sát Thương',  min:2,  max:5  },
   { k:'qiLeech',   name:'Hút Mana',      min:1,  max:3  },
   { k:'hpLeech',   name:'Hút Sinh Lực',     min:1,  max:3  },
@@ -442,13 +442,13 @@ function petRollCost(plus){
 }
 // Cánh — boss 12%, ngoài hệ 10 cấp trang bị
 const WING_DEFS = [
-  { id:'thienthan', name:'Cánh Thiên Thần', color:'#dfe8ff', hpPct:12, evaPct:6, silverPct:20, desc:'+12% HP · +6% né · +20% đồng rơi' },
-  { id:'tieuquy',   name:'Cánh Tiểu Quỷ',   color:'#b08ae8', atkPct:12, crit:5,  aspdPct:6,    desc:'+12% ST · +5% bạo · +6% tốc đánh' },
+  { id:'thienthan', name:'Cánh Thiên Thần', color:'#dfe8ff', hpPct:12, evaPct:6, silverPct:20, desc:'+12% Sinh Lực · +6% né · +20% đồng rơi' },
+  { id:'tieuquy',   name:'Cánh Tiểu Quỷ',   color:'#b08ae8', atkPct:12, crit:5,  aspdPct:6,    desc:'+12% Sát Thương · +5% bạo · +6% tốc đánh' },
 ];
 // Linh Dực Cấp 2 — luyện tại Lò Bảo Chứng (LV80+), thăng từ cánh cấp 1
 const WING2_DEFS = [
-  { id:'phuongduc', name:'Phượng Hoàng Linh Dực', color:'#ff8a3a', atkPct:20, hpPct:15, crit:8, aspdPct:10, desc:'+20% ST · +15% HP · +8% bạo · +10% tốc đánh' },
-  { id:'hacma',     name:'Hắc Ma Linh Dực',       color:'#c07fe0', atkPct:24, pierce:8, hpLeech:5, crit:10, desc:'+24% ST · +8% xuyên giáp · +5% hút sinh lực · +10% bạo' },
+  { id:'phuongduc', name:'Phượng Hoàng Linh Dực', color:'#ff8a3a', atkPct:20, hpPct:15, crit:8, aspdPct:10, desc:'+20% Sát Thương · +15% Sinh Lực · +8% bạo · +10% tốc đánh' },
+  { id:'hacma',     name:'Hắc Ma Linh Dực',       color:'#c07fe0', atkPct:24, pierce:8, hpLeech:5, crit:10, desc:'+24% Sát Thương · +8% xuyên giáp · +5% hút sinh lực · +10% bạo' },
 ];
 
 // Vòng khắc hệ: Kim > Mộc > Thổ > Thủy > Hỏa > Kim (khắc chế +20% sát thương)
@@ -496,7 +496,7 @@ function hasElem(it){ return !!(it && !it.special && it.slot === 'vukhi' && ELEM
 // trước. VD: Sylvan Ranger chỉ cần dồn Mẫn Tiệp (agi) là đủ mạnh; Dark Wizard cần cả Mẫn Tiệp lẫn Linh
 // Lực (ene). Tổng điểm bonus của mỗi phái GIỮ NGUYÊN so với bản cân bằng trước, chỉ đổi chỗ ghi điểm.
 const SECTS = {
-  thieulam: { name:'Dark Knight', role:'Tank / Combo cận chiến', element:'Kim', color:'#4c8dff', glow:'#ffe9a0', bonus:{vit:3,def:2,str:1,agi:0,ene:0},
+  thieulam: { name:'Dark Knight', role:'Chịu Đòn / Liên Đòn cận chiến', element:'Kim', color:'#4c8dff', glow:'#ffe9a0', bonus:{vit:3,def:2,str:1,agi:0,ene:0},
     hpMult:1.18, defMult:1.20, dmgMult:0.95, atkSrc:{str:2.0},
     desc:'Giáp tấm nặng, mũ trụ có sừng, đại kiếm hai tay. Dark Knight đứng mũi chịu sào, nuốt trọn đòn của cả bầy rồi trả lại bằng một nhát bổ chậm mà không gì cản nổi. Tiềm năng: dồn hết vào Lực Lượng.',
     skillA:{ name:'Twisting Slash', type:'cone',  cd:4, qi:20, mult:1.6 },
@@ -505,7 +505,7 @@ const SECTS = {
   // đạn ở khoảng cách này thay vì vung cận chiến như Dark Knight/Spellblade/Dark Lord (xem doBasic()).
   toanchan: { name:'Sylvan Ranger', role:'Tầm xa / Hỗ trợ', element:'Thủy', color:'#3a9d8b', glow:'#a0ffe9', bonus:{vit:0,def:0,str:0,agi:4,ene:0},
     hpMult:0.90, defMult:0.85, dmgMult:1.05, atkSrc:{agi:2.0},
-    desc:'Cung dài, giáp da nhẹ, chân bước không thành tiếng. Sylvan Ranger rót tên từ ngoài tầm với, đồng thời phủ buff lên cả đội — vừa là sát thủ vừa là chỗ dựa. Tiềm năng: chỉ cần dồn Mẫn Tiệp là đủ mạnh.',
+    desc:'Cung dài, giáp da nhẹ, chân bước không thành tiếng. Sylvan Ranger rót tên từ ngoài tầm với, đồng thời phủ phù trợ lên cả đội — vừa là sát thủ vừa là chỗ dựa. Tiềm năng: chỉ cần dồn Mẫn Tiệp là đủ mạnh.',
     range:380, basicProj:'arrow',
     // 3 mũi × 2.5 = tổng sát thương y hệt bản cũ (5 × 1.5), chỉ đổi cho khớp tên MU:
     // Triple Shot bắn BA mũi, Five Shot (di sản) mới là năm. Mỗi bậc Tiến Hóa +1 mũi.
@@ -661,7 +661,7 @@ const MOBS = {
   boar:    { name:'Axie Heo Rừng',    lv:1, hp:55,  atk:7,  def:0, xp:28,  silver:[4,9],   speed:52, aggro:130, range:30, atkCd:1.4, size:15, color:'#6b5b4a', eye:'#e8ecff', drop:0.14, el:'Thổ', img:'assets/mobs/boar.png' },
   wolf:    { name:'Axie Gai Tím',  lv:4, hp:160, atk:17, def:3, xp:85,  silver:[10,20],  speed:86, aggro:170, range:30, atkCd:1.2, size:15, color:'#5a5f6b', eye:'#ffd76a', drop:0.17, el:'Mộc', img:'assets/mobs/wolf.png' },
   bandit:  { name:'Tay Sai Gloam',   lv:6, hp:270, atk:24, def:7, xp:140, silver:[15,32], speed:66, aggro:190, range:32, atkCd:1.3, size:16, color:'#4a3a30', eye:'#ff6a5a', sash:'#a03028', drop:0.20, el:'Kim', img:'assets/mobs/bandit.png' },
-  assassin:{ name:'Gloam Marauder', lv:10, hp:700, atk:37, def:12, xp:450, silver:[52,89], speed:96, aggro:230, range:34, atkCd:1.1, size:17, color:'#1d1a24', eye:'#c07fe0', elite:true, drop:0.55, el:'Thủy', img:'assets/mobs/assassin.png' },
+  assassin:{ name:'Cướp Đường Gloam', lv:10, hp:700, atk:37, def:12, xp:450, silver:[52,89], speed:96, aggro:230, range:34, atkCd:1.1, size:17, color:'#1d1a24', eye:'#c07fe0', elite:true, drop:0.55, el:'Thủy', img:'assets/mobs/assassin.png' },
   boss:    { name:'Thủ Lĩnh Gloam', lv:10, hp:2600, atk:44, def:16, xp:2500, silver:[300,420], speed:78, aggro:480, range:38, atkCd:1.2, size:26, color:'#120f18', eye:'#ff3a3a', boss:true, elite:true, drop:1, el:'Hỏa', img:'assets/mobs/boss.png' },
 };
 // Quái theo tuyến bản đồ GDD (cấp 1 → 100+)
@@ -778,7 +778,7 @@ const ZONE_TYPES = {
   safe:   { name:'An Toàn', color:'#7ec850', desc:'Không thể PK — giao dịch, nhận nhiệm vụ, tĩnh dưỡng.' },
   pk:     { name:'Dã Ngoại · PK', color:'#e8b04a', desc:'Bãi train — bật PK cướp bãi được, nhưng giết Du Hiệp bị Tội Ác (đỏ tên), chết rớt đồ.' },
   freepk: { name:'Huyết Chiến · Free PK', color:'#e84a3a', desc:'PK tự do, không Tội Ác — giết thoải mái.' },
-  dungeon:{ name:'Phó Bản', color:'#b08ae8', desc:'Phó bản 3 đợt quái + Boss — farm Đá Thăng Cấp & nguyên liệu nâng tầng kỹ năng.' },
+  dungeon:{ name:'Phó Bản', color:'#b08ae8', desc:'Phó bản 3 đợt quái + Trùm — cày Đá Thăng Cấp & nguyên liệu nâng tầng kỹ năng.' },
 };
 // packs: quái đứng thành cụm 5-7 con, đánh 1 con cả cụm lao vào (GDD Mob Mechanics)
 const MAPS = {
@@ -1453,7 +1453,7 @@ function setMoveTarget(x, y){
   if (!player || dead) return;
   // AUTO đang bật thì tự dẫn đường riêng (xem update()), click-to-move bị bỏ qua hoàn toàn —
   // trước đây im lặng không báo gì, người chơi tưởng bấm không ăn/game đứng. Phát hiện qua QA.
-  if (player.auto){ addFloat(player.x, player.y-40, 'Đang AUTO — tắt AUTO (Z) để tự đi chỗ khác', '#ffb15c', 12); return; }
+  if (player.auto){ addFloat(player.x, player.y-40, 'Đang TỰ ĐÁNH — tắt TỰ ĐÁNH (Z) để tự đi chỗ khác', '#ffb15c', 12); return; }
   const nf = inObstacle(curMap, x, y, 14) ? nearestFree(curMap, x, y) : { x, y };
   moveTarget = { x: nf.x, y: nf.y };
   movePlanClear(); player._planD = null;   // đích mới ⇒ kế hoạch cũ vô nghĩa
@@ -1863,14 +1863,14 @@ const SKILL_DEFS = {
   bow:     { unlock:30, kind:'bow',    name:'Piercing Arrow', cd:6, qi:28, mult:1.3, icon:()=>'assets/skills/bow.png',
              req:()=>player.bow.tier>0, reqTxt:'Archery tầng 1 (Thuần Thục)', desc:()=>'Bắn 3 mũi tên xuyên thấu theo hình quạt trước mặt.' },
   tieuhon: { unlock:20, kind:'tieuhon', name:'Soul Rend', cd:13, qi:60, mult:3.2, icon:()=>'assets/skills/tieuhon.png',
-             req:()=>player.level>=72, reqTxt:'Cấp 72', desc:()=>'Sóng xung kích bóng tối quét sạch quanh người (AoE lớn).' },
+             req:()=>player.level>=72, reqTxt:'Cấp 72', desc:()=>'Sóng xung kích bóng tối quét sạch quanh người (sát thương lan lớn).' },
 };
 const PASSIVE_SKILLS = [
   { name:'Archery (bị động)', req:()=>player.bow.tier>0, desc:'Đòn đánh thường có tỉ lệ bắn thêm một mũi tên — theo tầng Archery.' },
-  { name:'Rupture (bị động)', req:()=>player.stunProc>0, desc:'5% đòn đánh khóa chiêu địch — Ascension cảnh 4.' },
-  { name:'Phản Đòn (bị động)', req:()=>player.reflect>0, desc:'Phản lại một phần sát thương — Ascension cảnh 5 / trang bị.' },
-  { name:'Bất Tử (bị động)', req:()=>player.batTu, desc:'Chặn 1 đòn chí mạng, hồi 30% HP — Ascension cảnh 8.' },
-  { name:'Khát Huyết', req:()=>player.bikip && player.bikip.hmtp, desc:'Hút 10% sát thương thành sinh lực + tuyệt chiêu chủ động Nuốt Hồn (gán ở bảng K) — cổ thư thất truyền.' },
+  { name:'Rupture (bị động)', req:()=>player.stunProc>0, desc:'5% đòn đánh khóa chiêu địch — Ascension bậc 4.' },
+  { name:'Riposte (bị động)', req:()=>player.reflect>0, desc:'Phản lại một phần sát thương — Ascension bậc 5 / trang bị.' },
+  { name:'Undying (bị động)', req:()=>player.batTu, desc:'Chặn 1 đòn chí mạng, hồi 30% Sinh Lực — Ascension bậc 8.' },
+  { name:'Bloodthirst', req:()=>player.bikip && player.bikip.hmtp, desc:'Hút 10% sát thương thành sinh lực + tuyệt chiêu chủ động Nuốt Hồn (gán ở bảng K) — cổ thư thất truyền.' },
 ];
 
 // ═══════════ SỔ KỸ NĂNG — kỹ năng tự do, người chơi tự chọn tuyệt chiêu & hướng đi ═══════════
@@ -1895,8 +1895,8 @@ const VOHOC_DEFS = {
   dk_impale:      { name:'Impale', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Binh Khí', type:'aoe', unlock:30, cd:7, qi:22, mult:2.0, color:'#8ab8ff', glyph:'▲', fx:{ r:160 }, desc:'Quay ngang cán giáo, đâm trọn một vòng — mọi kẻ đứng sát đều dính.' },
   dk_fallingslash:{ name:'Falling Slash', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Binh Khí', type:'cone', unlock:35, cd:6, qi:20, mult:2.4, color:'#3a6fd8', glyph:'☾', fx:{ kb:35 }, desc:'Nhấc rìu quá đầu rồi bổ thẳng xuống — dồn cả trọng lượng người vào một nhát.' },
   dk_ragefulblow: { name:'Rageful Blow', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Binh Khí', type:'aoe', unlock:25, cd:8, qi:24, mult:2.2, color:'#3a6fd8', glyph:'✹', fx:{ r:170, kb:55, stun:0.8 }, desc:'Giáng vũ khí xuống đất — chấn động, hất văng & choáng nhẹ.' },
-  dk_fortitude:   { name:'Swell Life', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Bị Động', type:'passive', unlock:45, color:'#a0d8ff', glyph:'♦', desc:'Bị động: +15% HP tối đa — sức vóc Dark Knight dày lên theo từng trận sống sót.' },
-  tienthiencong:  { name:'Undying Will', school:'Dark Knight', phai:'thieulam', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#ffe9a8', glyph:'✦', desc:'Bị động: chết tự hồi sinh 50% HP — mỗi 300s một lần.' },
+  dk_fortitude:   { name:'Swell Life', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Bị Động', type:'passive', unlock:45, color:'#a0d8ff', glyph:'♦', desc:'Bị động: +15% Sinh Lực tối đa — sức vóc Dark Knight dày lên theo từng trận sống sót.' },
+  tienthiencong:  { name:'Undying Will', school:'Dark Knight', phai:'thieulam', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#ffe9a8', glyph:'✦', desc:'Bị động: chết tự hồi sinh 50% Sinh Lực — mỗi 300s một lần.' },
 
   // ── Sylvan Ranger — cung tên & hỗ trợ ──
   elf_poisonarrow:{ name:'Poison Arrow', school:'Sylvan Ranger', phai:'toanchan', tier:'so', cat:'Cung Thuật', type:'proj', unlock:15, cd:6, qi:18, mult:1.6, color:'#7ec850', glyph:'☠', fx:{ poison:4 }, desc:'Mũi tên tẩm nhựa độc — trúng rồi thì vết thương tự lan.' },
@@ -1905,9 +1905,9 @@ const VOHOC_DEFS = {
   elf_fiveshot:   { name:'Five Shot', school:'Sylvan Ranger', phai:'toanchan', tier:'cao', cat:'Cung Thuật', type:'proj', unlock:45, cd:7, qi:26, mult:1.6, color:'#a0ffe9', glyph:'✽', fx:{ multi:5 }, desc:'Kẹp năm mũi giữa các ngón, buông một lần — cả nan quạt tên phủ kín phía trước.' },
   // Ô 3 — buff: Bless. Bốn lớp kia có khiên/giảm ST/tốc đánh/bạo kích; Ranger là lớp DUY NHẤT
   // hồi máu, đúng vai hỗ trợ trong MU. Giữ id cũ elf_greaterdmg để không mất cấp chiêu đã nâng.
-  elf_greaterdmg: { name:'Bless', school:'Sylvan Ranger', phai:'toanchan', tier:'cao', cat:'Hỗ Trợ', type:'buff', unlock:15, cd:12, qi:28, color:'#ffd76a', glyph:'✦', fx:{ dmgPct:25, healPct:25, t:8 }, desc:'Ban phước: hồi ngay 25% HP tối đa và +25% sát thương trong 8s.' },
+  elf_greaterdmg: { name:'Bless', school:'Sylvan Ranger', phai:'toanchan', tier:'cao', cat:'Hỗ Trợ', type:'buff', unlock:15, cd:12, qi:28, color:'#ffd76a', glyph:'✦', fx:{ dmgPct:25, healPct:25, t:8 }, desc:'Ban phước: hồi ngay 25% Sinh Lực tối đa và +25% sát thương trong 8s.' },
   elf_penetration:{ name:'Penetration', school:'Sylvan Ranger', phai:'toanchan', tier:'cao', cat:'Cung Thuật', type:'proj', unlock:20, cd:7, qi:24, mult:2.4, color:'#a0ffe9', glyph:'➤', fx:{ pierce:true, kb:18 }, desc:'Một mũi tên dồn hết lực xuyên thủng cả hàng địch — càng đứng thẳng hàng càng ăn đủ.' },
-  elf_heal:       { name:'Heal', school:'Sylvan Ranger', phai:'toanchan', tier:'trung', cat:'Bị Động', type:'passive', unlock:25, color:'#3a9d8b', glyph:'✚', desc:'Bị động: tự hồi 1% HP tối đa mỗi giây, kể cả giữa trận.' },
+  elf_heal:       { name:'Heal', school:'Sylvan Ranger', phai:'toanchan', tier:'trung', cat:'Bị Động', type:'passive', unlock:25, color:'#3a9d8b', glyph:'✚', desc:'Bị động: tự hồi 1% Sinh Lực tối đa mỗi giây, kể cả giữa trận.' },
 
   // ── Dark Wizard — nguyên tố ──
   dw_lightning:   { name:'Lightning', school:'Dark Wizard', phai:'baidasan', tier:'so', cat:'Pháp Thuật', type:'proj', unlock:15, cd:5, qi:18, mult:1.7, color:'#d8e84a', glyph:'⚡', fx:{ kb:20 }, desc:'Một tia sét đánh thẳng vào địch, có thể hất văng.' },
@@ -1917,7 +1917,7 @@ const VOHOC_DEFS = {
   dw_evilspirit:  { name:'Evil Spirit', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'aoe', unlock:25, cd:7, qi:26, mult:2.0, color:'#6ab850', glyph:'✦', fx:{ r:150 }, desc:'Giải phóng năng lượng bóng tối quanh người — sát thương diện rộng.' },
   // Ô 3 — buff: Soul Barrier, lá chắn hấp thụ. Dark Wizard mỏng máu nhất nên đây là thứ giữ
   // được mạng lúc đứng tụ phép giữa tầm xa 420.
-  dw_shield:      { name:'Soul Barrier', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'buff', unlock:15, cd:10, qi:26, color:'#5ab8e8', glyph:'♦', fx:{ shieldPct:45, t:6 }, desc:'Khiên hồn ma bao bọc — hấp thụ sát thương bằng 45% HP tối đa trong 6s.' },
+  dw_shield:      { name:'Soul Barrier', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'buff', unlock:15, cd:10, qi:26, color:'#5ab8e8', glyph:'♦', fx:{ shieldPct:45, t:6 }, desc:'Khiên hồn ma bao bọc — hấp thụ sát thương bằng 45% Sinh Lực tối đa trong 6s.' },
   songthu:        { name:'Arcane Insight', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#d8d8f0', glyph:'✧', desc:'Bị động: 30% chiêu vừa tung không tốn hồi chiêu.' },
 
   // ── Spellblade — nửa kiếm nửa phép; MU cho lớp lai KẾ THỪA chiêu của hai lớp gốc ──
@@ -1929,7 +1929,7 @@ const VOHOC_DEFS = {
   // Ô 3 — buff: Battle Fury. Lớp lai đánh bằng NHỊP, nên buff của nó cộng tốc đánh chứ không
   // chỉ cộng sát thương như bản cũ (trùng hệt buff của Ranger và Dark Lord).
   mg_battlefury:  { name:'Battle Fury', school:'Spellblade', phai:'minhgiao', tier:'trung', cat:'Lai', type:'buff', unlock:15, cd:10, qi:26, color:'#e8552a', glyph:'⚔', fx:{ dmgPct:20, aspdPct:22, t:6 }, desc:'Dồn cả nội lẫn ngoại lực — +20% sát thương và +22% tốc đánh trong 6s.' },
-  mg_ironwill:    { name:'Iron Will', school:'Spellblade', phai:'minhgiao', tier:'cao', cat:'Bị Động', type:'passive', unlock:40, color:'#ffb060', glyph:'◆', desc:'Bị động: hút 6% sát thương gây ra thành HP — càng đánh dồn càng khó chết.' },
+  mg_ironwill:    { name:'Iron Will', school:'Spellblade', phai:'minhgiao', tier:'cao', cat:'Bị Động', type:'passive', unlock:40, color:'#ffb060', glyph:'◆', desc:'Bị động: hút 6% sát thương gây ra thành Sinh Lực — càng đánh dồn càng khó chết.' },
 
   // ── Dark Lord — quyền trượng chỉ huy & bầy tùy tùng ──
   dl_force:       { name:'Force', school:'Dark Lord', phai:'bug', tier:'so', cat:'Chỉ Huy', type:'proj', unlock:15, cd:4, qi:14, mult:1.5, color:'#a8b85a', glyph:'●', desc:'Nắm năng lượng lại thành một khối rồi đẩy đi — chiêu mặc định của quyền trượng.' },
@@ -2079,7 +2079,7 @@ function skEvoMult(id){
   return { dmg, cd, qi, r };
 }
 function showEvoChoice(id, stageIdx){
-  const stName = ['Tinh Thông · Lv40', 'Lão Luyện · Lv80', 'Đại Sư · Lv120'][stageIdx] || '';
+  const stName = ['Tinh Thông · cấp 40', 'Lão Luyện · cấp 80', 'Đại Sư · cấp 120'][stageIdx] || '';
   document.getElementById('overlay-inner').innerHTML = `
     <h2 style="letter-spacing:2px">⚡ Tiến Hóa Chiêu Thức</h2>
     <p style="margin-bottom:10px"><b style="color:#ffd76a">${skName(id)}</b> đạt mốc <b>${stName}</b> —
@@ -2115,15 +2115,15 @@ function canCastSilent(id){
 function milestoneTxt(m){ return m.dmg ? `+${m.dmg*100}% sát thương` : m.cd ? `−${m.cd*100}% hồi chiêu` : `−${m.qi*100}% tiêu hao Mana`; }
 window.upgradeSkillUI = function(id){
   const lv = skLv(id);
-  if (lv >= 120){ addFloat(player.x, player.y-40, 'Kỹ năng đã đạt cấp tối đa (Lv 120)!', '#8a8a8a', 12); return; }
+  if (lv >= 120){ addFloat(player.x, player.y-40, 'Kỹ năng đã đạt cấp tối đa (120)!', '#8a8a8a', 12); return; }
   if (lv >= player.level){ addFloat(player.x, player.y-40, `Cấp kỹ năng ≤ cấp nhân vật (${player.level})`, '#8a8a8a', 12); return; }
   const cost = skUpCost(id), khiCost = skUpKhi(id);
   if (player.silver < cost){ addFloat(player.x, player.y-40, `Cần ${cost.toLocaleString()} bạc`, '#8a8a8a', 12); return; }
   if ((player.khi || 0) < khiCost){
     const _mn = SK_MILESTONES.find(x => x.lv === lv + 1);
     addFloat(player.x, player.y-40, _mn
-      ? `Cấp mốc ${_mn.name} — cần ${khiCost.toLocaleString()} Instinct (hạ tinh anh/boss được nhiều nhất)`
-      : `Cần ${khiCost.toLocaleString()} Instinct (đánh quái / tĩnh dưỡng ở Suối Ký Ức để tích)`, '#7fd8e0', 12);
+      ? `Cấp mốc ${_mn.name} — cần ${khiCost.toLocaleString()} Bản Năng (hạ tinh anh/trùm được nhiều nhất)`
+      : `Cần ${khiCost.toLocaleString()} Bản Năng (đánh quái / tĩnh dưỡng ở Suối Ký Ức để tích)`, '#7fd8e0', 12);
     return;
   }
   const _msI = SK_MILESTONES.findIndex(x => x.lv === lv + 1);
@@ -2138,7 +2138,7 @@ window.upgradeSkillUI = function(id){
     AudioSys.sfx('quest', 0.8);
     addEffect({ type:'ring', x:player.x, y:player.y, r:80, color:'#ffb15c', big:true });
   }
-  addFloat(player.x, player.y-52, `⬆ ${skName(id)} → Lv ${lv + 1}!`, '#6ae88a', 13);
+  addFloat(player.x, player.y-52, `⬆ ${skName(id)} → cấp ${lv + 1}!`, '#6ae88a', 13);
   AudioSys.sfx('levelup', 0.4);
   saveGame(); renderSkillPanel();
   if (_evoIdx >= 0) showEvoChoice(id, _evoIdx); // yêu cầu chọn nhánh tiến hóa ngay
@@ -2157,13 +2157,13 @@ function evoBadgeHtml(id){
 }
 function upBtnHtml(id){
   const lv = skLv(id);
-  const _spB = `<button class="mini-btn" style="margin-right:3px;${player.spaceSkill === id ? 'border-color:#7df9ff !important;color:#7df9ff !important;' : ''}" title="Gán chiêu này vào phím Space (thay đòn đánh thường; hồi chiêu/thiếu Qi thì tự quay về đòn thường)" onclick="window.assignSpaceUI('${id}')">${player.spaceSkill === id ? '⌨✓' : '⌨'}</button>`;
+  const _spB = `<button class="mini-btn" style="margin-right:3px;${player.spaceSkill === id ? 'border-color:#7df9ff !important;color:#7df9ff !important;' : ''}" title="Gán chiêu này vào phím Space (thay đòn đánh thường; hồi chiêu/thiếu Mana thì tự quay về đòn thường)" onclick="window.assignSpaceUI('${id}')">${player.spaceSkill === id ? '⌨✓' : '⌨'}</button>`;
   if (lv >= 120){
     const _mm = skMile(id), _me = skEvoMult(id);
     const _dPct = Math.round((_mm.dmg * _me.dmg - 1) * 100);
     const _cPct = Math.round((1 - _mm.cd * _me.cd * skCdScale(id)) * 100);
     const _tip = `Đã tối đa 120/120 · +${_dPct}% sát thương · −${_cPct}% hồi chiêu (tính riêng cho chiêu này, gồm cả nhánh tiến hóa đã chọn)`;
-    return `${_spB}<span style="font-size:10px;color:#ffd76a;margin-right:4px" title="${_tip}">Lv120</span>${evoBadgeHtml(id)}`;
+    return `${_spB}<span style="font-size:10px;color:#ffd76a;margin-right:4px" title="${_tip}">cấp 120</span>${evoBadgeHtml(id)}`;
   }
   const nm = SK_MILESTONES.find(x => x.lv > lv);
   const cur = [...SK_MILESTONES].reverse().find(x => lv >= x.lv);
@@ -2173,8 +2173,8 @@ function upBtnHtml(id){
   // 📜 Sách Kỹ Năng: nâng thẳng 1 cấp. Đây là chỗ tiêu MỚI của sách sau khi bỏ "di sản ngoại lớp" —
   // nó không còn mua được chiêu của lớp khác, mà đổ vào chính cây chiêu của lớp mình.
   const _bk = (player.bikipVH || 0) > 0 && lv < 120 && lv < player.level
-    ? `<button class="mini-btn" style="margin-right:3px;border-color:#ffb15c;color:#ffb15c" title="Dùng 1 Sách Kỹ Năng nâng thẳng ${skName(id)} lên Lv ${lv+1} (đang có ${player.bikipVH||0} quyển)" onclick="window.useSkillBookUI('${id}')">📜</button>` : '';
-  return `${_spB}${_bk}<button class="mini-btn vh-learn-btn" style="margin-right:3px" title="Cấp ${lv}/120${cur ? ' · ' + cur.name : ''} · ⚡tiến hóa bậc ${_stg}/3 (mốc 40/80/120, mỗi mốc chọn nhánh Bá Đạo/Tốc Chiến) — nâng: ${skUpCost(id).toLocaleString()} bạc + ${skUpKhi(id).toLocaleString()} Instinct${_msNext ? ` (cấp mốc ${_msNext.name}: Instinct ×${_mult})` : ''}, +2,5% ST, −0,25% hồi chiêu${nm ? ` · mốc kế ${nm.name} (cấp ${nm.lv}): ${milestoneTxt(nm)}` : ''} · cấp kỹ năng ≤ cấp nhân vật" onclick="window.upgradeSkillUI('${id}')">⬆${lv}${_stg ? '⚡' + _stg : ''}${_msNext ? '◆' : ''}</button>${evoBadgeHtml(id)}`;
+    ? `<button class="mini-btn" style="margin-right:3px;border-color:#ffb15c;color:#ffb15c" title="Dùng 1 Sách Kỹ Năng nâng thẳng ${skName(id)} lên cấp ${lv+1} (đang có ${player.bikipVH||0} quyển)" onclick="window.useSkillBookUI('${id}')">📜</button>` : '';
+  return `${_spB}${_bk}<button class="mini-btn vh-learn-btn" style="margin-right:3px" title="Cấp ${lv}/120${cur ? ' · ' + cur.name : ''} · ⚡tiến hóa bậc ${_stg}/3 (mốc 40/80/120, mỗi mốc chọn nhánh Bá Đạo/Tốc Chiến) — nâng: ${skUpCost(id).toLocaleString()} bạc + ${skUpKhi(id).toLocaleString()} Instinct${_msNext ? ` (cấp mốc ${_msNext.name}: Instinct ×${_mult})` : ''}, +2,5% Sát Thương, −0,25% hồi chiêu${nm ? ` · mốc kế ${nm.name} (cấp ${nm.lv}): ${milestoneTxt(nm)}` : ''} · cấp kỹ năng ≤ cấp nhân vật" onclick="window.upgradeSkillUI('${id}')">⬆${lv}${_stg ? '⚡' + _stg : ''}${_msNext ? '◆' : ''}</button>${evoBadgeHtml(id)}`;
 }
 window.assignSpaceUI = function(id){
   if (!player) return;
@@ -2212,13 +2212,13 @@ function learnVohoc(id){
 window.useSkillBookUI = function(id){
   if (!player || !SKILL_DEFS[id]) return;
   const lv = skLv(id);
-  if (lv >= 120){ addFloat(player.x, player.y-40, 'Kỹ năng đã đạt cấp tối đa (Lv 120)!', '#8a8a8a', 12); return; }
+  if (lv >= 120){ addFloat(player.x, player.y-40, 'Kỹ năng đã đạt cấp tối đa (120)!', '#8a8a8a', 12); return; }
   if (lv >= player.level){ addFloat(player.x, player.y-40, `Cấp kỹ năng ≤ cấp nhân vật (${player.level})`, '#8a8a8a', 12); return; }
-  if ((player.bikipVH || 0) < 1){ addFloat(player.x, player.y-40, 'Hết Sách Kỹ Năng — rơi từ tinh anh/boss', '#ffb15c', 12); return; }
+  if ((player.bikipVH || 0) < 1){ addFloat(player.x, player.y-40, 'Hết Sách Kỹ Năng — rơi từ tinh anh/trùm', '#ffb15c', 12); return; }
   player.bikipVH -= 1;
   if (!player.skillLv) player.skillLv = {};
   player.skillLv[id] = lv + 1;
-  addFloat(player.x, player.y-52, `📜 ${skName(id)} → Lv ${lv + 1}`, '#ffb15c', 13);
+  addFloat(player.x, player.y-52, `📜 ${skName(id)} → cấp ${lv + 1}`, '#ffb15c', 13);
   AudioSys.sfx('levelup', 0.4);
   const _evoIdx = EVO_LVS.indexOf(lv + 1);
   saveGame(); renderSkillPanel();
@@ -3053,14 +3053,14 @@ function castVohoc(id){
   else if (v.type === 'buff'){
     spawnSkillVfx(id, v, 'buff', 0, 95);
     const _bt = Math.round((fx.t || 0) * (1 + 0.5 * _st)); // tiến hóa: buff bền +50%/bậc
-    if (fx.dmgPct){ player.vhDmgT = _bt; player.vhDmgPct = fx.dmgPct; addFloat(player.x, player.y-60, `+${fx.dmgPct}% ST (${_bt}s)`, col, 13); }
+    if (fx.dmgPct){ player.vhDmgT = _bt; player.vhDmgPct = fx.dmgPct; addFloat(player.x, player.y-60, `+${fx.dmgPct}% Sát Thương (${_bt}s)`, col, 13); }
     if (fx.shieldPct){ player.vhShield = Math.round(player.maxHp * fx.shieldPct * (1 + 0.25 * _st) / 100); addFloat(player.x, player.y-60, `🛡 KHIÊN ${player.vhShield}`, '#8ad8c8', 13); playStatusFx('shield', 'shield', player.x, player.y, 0.55, 0.32); }
     // Bless (Sylvan Ranger) — lớp hỗ trợ là lớp DUY NHẤT hồi máu bằng chiêu; bốn lớp kia có
     // khiên / giảm sát thương / tốc đánh / bạo kích, không lớp nào trùng cơ chế lớp nào.
     if (fx.healPct){
       const _h = Math.round(player.maxHp * fx.healPct * (1 + 0.25 * _st) / 100);
       player.hp = Math.min(player.maxHp, player.hp + _h);
-      addFloat(player.x, player.y-74, `✚ +${_h} HP`, '#8fd18f', 13);
+      addFloat(player.x, player.y-74, `✚ +${_h} Sinh Lực`, '#8fd18f', 13);
     }
     if (fx.reflect){ player.vhReflT = _bt; addFloat(player.x, player.y-60, `PHẢN ĐÒN ${_bt}s!`, col, 13); }
     if (fx.aspdPct){ player.vhAspdT = _bt; player.vhAspdPct = fx.aspdPct; addFloat(player.x, player.y-60, `TỐC ĐÁNH +${fx.aspdPct}%`, col, 13); }
@@ -3080,7 +3080,7 @@ function castVohoc(id){
 const GT_DAY = 600; // giây thật cho 1 ngày game
 const SEASONS = [
   { id:'xuan', name:'Xuân', icon:'🌸', color:'#f0a8c0', buffTxt:'+5% EXP',         amb:{ kind:'petal', color:'#f5b8cc', n:26 }, dawn:0.25, dusk:0.75 },
-  { id:'ha',   name:'Hạ',   icon:'☀',  color:'#ffd76a', buffTxt:'+5% hồi Qi', amb:{ kind:'rain',  color:'#9ec8e8', n:34 }, dawn:0.23, dusk:0.77 },
+  { id:'ha',   name:'Hạ',   icon:'☀',  color:'#ffd76a', buffTxt:'+5% hồi Mana', amb:{ kind:'rain',  color:'#9ec8e8', n:34 }, dawn:0.23, dusk:0.77 },
   { id:'thu',  name:'Thu',  icon:'🍂', color:'#e8944a', buffTxt:'+8% bạc rơi',      amb:{ kind:'leaf',  color:'#d87a3a', n:26 }, dawn:0.25, dusk:0.75 },
   { id:'dong', name:'Đông', icon:'❄',  color:'#bfe0f0', buffTxt:'+5% phòng thủ',    amb:{ kind:'snow',  color:'#eef4ff', n:32 }, dawn:0.27, dusk:0.73 },
 ];
@@ -3310,10 +3310,10 @@ const CHIMERA = [
     thu:{ k:'skillPct', v:12 }, thuTxt:'+12% sát thương chiêu thức',
     chieu:{ ten:'Rạng Đông', cd:14, r:150, mult:2.6, fx:'sun' }, moTa:'Bình minh đọng lại thành hình — nơi nó đứng, bóng tối không tới được.' },
   { id:'netherfang',ten:'Netherfang',sao:5, lop:'Dusk',    mau:'#8a5ad8', img:'assets/chimera/netherfang.png',
-    thu:{ k:'hpLeech', v:6 }, thuTxt:'hút 6% sát thương gây ra thành HP',
+    thu:{ k:'hpLeech', v:6 }, thuTxt:'hút 6% sát thương gây ra thành Sinh Lực',
     chieu:{ ten:'Màn Đêm', cd:16, r:170, mult:2.2, fx:'dark', slow:0.4 }, moTa:'Sinh ra từ khe nứt. Nó không săn mồi — nó chờ mồi kiệt sức.' },
   { id:'tidewarden',ten:'Tidewarden',sao:5, lop:'Aquatic', mau:'#3ac8c8', img:'assets/chimera/tidewarden.png',
-    thu:{ k:'hpPct', v:15 }, thuTxt:'+15% HP tối đa',
+    thu:{ k:'hpPct', v:15 }, thuTxt:'+15% Sinh Lực tối đa',
     chieu:{ ten:'Triều Chắn', cd:18, r:0, mult:0, fx:'shield', shieldPct:30 }, moTa:'Càng nước dựng lên một bức tường, và bức tường đó biết bơi.' },
   { id:'emberjaw',  ten:'Emberjaw',  sao:5, lop:'Beast',   mau:'#f0932a', img:'assets/chimera/emberjaw.png',
     thu:{ k:'aspdPct', v:10 }, thuTxt:'+10% tốc độ đánh',
@@ -3326,7 +3326,7 @@ const CHIMERA = [
     chieu:{ ten:'Khiêu Chiến', cd:17, r:220, mult:1.4, fx:'taunt', taunt:8 }, moTa:'Vác nguyên tảng đá trên lưng. Nó đứng chắn trước mặt bạn và không hiểu vì sao bạn lại lo.' },
   // ── 4★ ──────────────────────────────────────────────────────────────────────
   { id:'petalkin',  ten:'Petalkin',  sao:4, lop:'Plant',   mau:'#e87ab0', img:'assets/chimera/petalkin.png',
-    thu:{ k:'hpPct', v:6 }, thuTxt:'+6% HP tối đa',
+    thu:{ k:'hpPct', v:6 }, thuTxt:'+6% Sinh Lực tối đa',
     chieu:{ ten:'Bung Cánh', cd:16, r:130, mult:1.6, fx:'sun' }, moTa:'Con Chimera đầu tiên chịu đi theo người lạ.' },
   { id:'crimsonmaw',ten:'Crimsonmaw',sao:4, lop:'Beast',   mau:'#c0304a', img:'assets/chimera/crimsonmaw.png',
     thu:{ k:'atkPct', v:5 }, thuTxt:'+5% Công Kích',
@@ -3335,7 +3335,7 @@ const CHIMERA = [
     thu:{ k:'crit', v:4 }, thuTxt:'+4% Bạo Kích',
     chieu:{ ten:'Vuốt Gai', cd:15, r:130, mult:1.7, fx:'charge' }, moTa:'Quả mọng đỏ mọc kín người, và mỗi quả giấu một cái gai.' },
   { id:'inkmane',   ten:'Inkmane',   sao:4, lop:'Dusk',    mau:'#c2c6d2', img:'assets/chimera/inkmane.png',
-    thu:{ k:'hpPct', v:5 }, thuTxt:'+5% HP tối đa',
+    thu:{ k:'hpPct', v:5 }, thuTxt:'+5% Sinh Lực tối đa',
     chieu:{ ten:'Vằn Mực', cd:16, r:150, mult:1.6, fx:'shield', shieldPct:14 }, moTa:'Vằn đen trên lưng nó đổi chỗ mỗi lần bạn quay đi.' },
   { id:'cinderbeak',ten:'Cinderbeak',sao:4, lop:'Bird',    mau:'#f0b45a', img:'assets/chimera/cinderbeak.png',
     thu:{ k:'aspdPct', v:4 }, thuTxt:'+4% tốc độ đánh',
@@ -3480,7 +3480,7 @@ function chiHoaGia(hoa){ return { dat: 6 + hoa * 8, bac: 2000 * Math.pow(2.1, ho
 const COT_O = {
   sung: { ten:'Sừng', glyph:'▲', chinh:'cAtk',   chinhTen:'Công Chimera' },
   vuot: { ten:'Vuốt', glyph:'✦', chinh:'cCrit',  chinhTen:'Bạo Kích Chimera' },
-  vay:  { ten:'Vảy',  glyph:'◆', chinh:'hpPct',  chinhTen:'HP người chơi' },
+  vay:  { ten:'Vảy',  glyph:'◆', chinh:'hpPct',  chinhTen:'Sinh Lực người chơi' },
   duoi: { ten:'Đuôi', glyph:'≈', chinh:'cCd',    chinhTen:'Giảm hồi chiêu' },
 };
 const COT_O_IDS = Object.keys(COT_O);
@@ -3495,11 +3495,11 @@ const COT_PHAM = {
 const COT_PHU = [
   { k:'cAtk',     ten:'Công Chimera',        lo:2.4, hi:5.2 },
   { k:'cCrit',    ten:'Bạo Kích Chimera',    lo:1.8, hi:3.8 },
-  { k:'cCritDmg', ten:'ST Bạo Chimera',      lo:3.5, hi:7.5 },
+  { k:'cCritDmg', ten:'Sát Thương Bạo Chimera',      lo:3.5, hi:7.5 },
   { k:'cSkill',   ten:'Sát thương chiêu',    lo:2.2, hi:4.8 },
   { k:'cCd',      ten:'Giảm hồi chiêu',      lo:1.4, hi:3.0 },
   { k:'atkPct',   ten:'Công Kích',           lo:1.6, hi:3.4 },
-  { k:'hpPct',    ten:'HP tối đa',           lo:2.0, hi:4.2 },
+  { k:'hpPct',    ten:'Sinh Lực tối đa',           lo:2.0, hi:4.2 },
   { k:'aspdPct',  ten:'Tốc đánh',            lo:1.2, hi:2.6 },
 ];
 const COT_PHU_MAP = {}; for (const d of COT_PHU) COT_PHU_MAP[d.k] = d;
@@ -3507,8 +3507,8 @@ const COT_PHU_MAP = {}; for (const d of COT_PHU) COT_PHU_MAP[d.k] = d;
 // — đó là chỗ tách hệ này khỏi Linh Thú và trang bị người chơi, hai hệ đã làm việc "bốc dòng phụ".
 const COT_DONG = {
   canhhoa: { ten:'Cánh Hoa', map:'pb_daohoa',    mau:'#e87ab0',
-    hai:{ k:'hpPct', v:8 },   haiTxt:'+8% HP tối đa',
-    bonTxt:'Chiêu của Chimera hồi cho bạn 8% HP tối đa.' },
+    hai:{ k:'hpPct', v:8 },   haiTxt:'+8% Sinh Lực tối đa',
+    bonTxt:'Chiêu của Chimera hồi cho bạn 8% Sinh Lực tối đa.' },
   dongco:  { ten:'Đồng Cỏ',  map:'pb_ngoai',     mau:'#7ec850',
     hai:{ k:'aspdPct', v:6 }, haiTxt:'+6% tốc đánh',
     bonTxt:'6 giây sau khi tung chiêu, Chimera đánh nhanh gấp đôi.' },
@@ -3522,7 +3522,7 @@ const COT_DONG = {
     hai:{ k:'cCrit', v:6 },   haiTxt:'+6% Bạo Kích Chimera',
     bonTxt:'Chiêu đóng băng mục tiêu 1,2 giây — đổi lại hồi chiêu +2 giây.' },
   trotan:  { ten:'Tro Tàn',  map:'pb_mongco',    mau:'#c0304a',
-    hai:{ k:'cCritDmg', v:10 }, haiTxt:'+10% ST Bạo Chimera',
+    hai:{ k:'cCritDmg', v:10 }, haiTxt:'+10% Sát Thương Bạo Chimera',
     bonTxt:'Chimera hạ được một mục tiêu thì hồi chiêu giảm 1,5 giây.' },
   samvun:  { ten:'Sấm Vụn',  map:'pb_nhanmon',   mau:'#b18cff',
     hai:{ k:'cCd', v:8 },     haiTxt:'−8% hồi chiêu',
@@ -3592,13 +3592,13 @@ const CHI_KY = {
             { ten:'Máu Săn',     tam:{ k:'atkPct', v:14, t:6 }, txt:'Chiêu nổ: +14% Công Kích trong 6 giây' },
             { ten:'Bám Riết',    tam:{ k:'aspdPct', v:18, t:6 }, txt:'Chiêu nổ: +18% tốc đánh trong 6 giây' }],
   Aquatic: [{ ten:'Vảy Nước',    k:'dmgred', v:5,  txt:'−5% sát thương gánh chịu' },
-            { ten:'Thuỷ Triều',  k:'hpPct',  v:6,  txt:'+6% HP tối đa' },
+            { ten:'Thuỷ Triều',  k:'hpPct',  v:6,  txt:'+6% Sinh Lực tối đa' },
             { ten:'Cuốn Dòng',   tam:{ k:'evaPct', v:12, t:5 }, txt:'Chiêu nổ: +12% né đòn trong 5 giây' },
-            { ten:'Sóng Ngầm',   tam:{ k:'hpLeech', v:5, t:8 }, txt:'Chiêu nổ: hút 5% sát thương thành HP trong 8 giây' }],
-  Plant:   [{ ten:'Rễ Bám',      k:'hpPct',  v:7,  txt:'+7% HP tối đa' },
+            { ten:'Sóng Ngầm',   tam:{ k:'hpLeech', v:5, t:8 }, txt:'Chiêu nổ: hút 5% sát thương thành Sinh Lực trong 8 giây' }],
+  Plant:   [{ ten:'Rễ Bám',      k:'hpPct',  v:7,  txt:'+7% Sinh Lực tối đa' },
             { ten:'Nhựa Lành',   k:'qireg',  v:4,  txt:'+4 hồi Mana' },
             { ten:'Nảy Mầm',     tam:{ k:'dmgred', v:12, t:6 }, txt:'Chiêu nổ: −12% sát thương gánh chịu trong 6 giây' },
-            { ten:'Đơm Hoa',     tam:{ k:'hpPct', v:16, t:8 }, txt:'Chiêu nổ: +16% HP tối đa trong 8 giây' }],
+            { ten:'Đơm Hoa',     tam:{ k:'hpPct', v:16, t:8 }, txt:'Chiêu nổ: +16% Sinh Lực tối đa trong 8 giây' }],
   Bird:    [{ ten:'Sải Cánh',    k:'aspdPct', v:5, txt:'+5% tốc đánh' },
             { ten:'Mắt Diều',    k:'crit',   v:4,  txt:'+4% Bạo Kích' },
             { ten:'Bổ Nhào',     tam:{ k:'crit', v:15, t:5 }, txt:'Chiêu nổ: +15% Bạo Kích trong 5 giây' },
@@ -3608,9 +3608,9 @@ const CHI_KY = {
             { ten:'Bầy Kéo',     tam:{ k:'atkPct', v:12, t:7 }, txt:'Chiêu nổ: +12% Công Kích trong 7 giây' },
             { ten:'Độc Ngầm',    tam:{ k:'pierce', v:14, t:6 }, txt:'Chiêu nổ: +14% xuyên giáp trong 6 giây' }],
   Reptile: [{ ten:'Mai Cứng',    k:'dmgred', v:6,  txt:'−6% sát thương gánh chịu' },
-            { ten:'Máu Lạnh',    k:'hpPct',  v:5,  txt:'+5% HP tối đa' },
+            { ten:'Máu Lạnh',    k:'hpPct',  v:5,  txt:'+5% Sinh Lực tối đa' },
             { ten:'Thủ Thế',     tam:{ k:'dmgred', v:14, t:8 }, txt:'Chiêu nổ: −14% sát thương gánh chịu trong 8 giây' },
-            { ten:'Phản Vảy',    tam:{ k:'hpLeech', v:6, t:6 }, txt:'Chiêu nổ: hút 6% sát thương thành HP trong 6 giây' }],
+            { ten:'Phản Vảy',    tam:{ k:'hpLeech', v:6, t:6 }, txt:'Chiêu nổ: hút 6% sát thương thành Sinh Lực trong 6 giây' }],
   Mech:    [{ ten:'Bánh Răng',   k:'aspdPct', v:4, txt:'+4% tốc đánh' },
             { ten:'Lõi Nạp',     k:'atkPct', v:5,  txt:'+5% Công Kích' },
             { ten:'Quá Tải',     tam:{ k:'atkPct', v:16, t:5 }, txt:'Chiêu nổ: +16% Công Kích trong 5 giây' },
@@ -3620,9 +3620,9 @@ const CHI_KY = {
             { ten:'Bình Minh',   tam:{ k:'atkPct', v:13, t:7 }, txt:'Chiêu nổ: +13% Công Kích trong 7 giây' },
             { ten:'Chói Loà',    tam:{ k:'evaPct', v:10, t:6 }, txt:'Chiêu nổ: +10% né đòn trong 6 giây' }],
   Dusk:    [{ ten:'Bóng Đổ',     k:'evaPct', v:4,  txt:'+4% né đòn' },
-            { ten:'Hút Đêm',     k:'hpLeech', v:3, txt:'hút 3% sát thương thành HP' },
+            { ten:'Hút Đêm',     k:'hpLeech', v:3, txt:'hút 3% sát thương thành Sinh Lực' },
             { ten:'Màn Sương',   tam:{ k:'evaPct', v:14, t:6 }, txt:'Chiêu nổ: +14% né đòn trong 6 giây' },
-            { ten:'Nuốt Bóng',   tam:{ k:'hpLeech', v:7, t:7 }, txt:'Chiêu nổ: hút 7% sát thương thành HP trong 7 giây' }],
+            { ten:'Nuốt Bóng',   tam:{ k:'hpLeech', v:7, t:7 }, txt:'Chiêu nổ: hút 7% sát thương thành Sinh Lực trong 7 giây' }],
 };
 function chiKyCua(id){ const c = CHI_MAP[id]; return (c && CHI_KY[c.lop]) || []; }
 function chiKyMo(id){                          // số kỹ năng đã mở theo cấp
@@ -5014,13 +5014,13 @@ const VANDUYEN_RATES = [ { k:'bikip', w:5 }, { k:'chau', w:15 }, { k:'trangbi', 
 
 // Venom 7 tầng (điểm Chúc Phúc: đập xịt +1, đủ 10 điểm chắc chắn thành công)
 const AMKHI_TIERS = [ null,
-  { name:'Ironthorn',     color:'#5db86a', crit:2, eff:'Độc: 10% gây 500 ST/s trong 3s' },
+  { name:'Ironthorn',     color:'#5db86a', crit:2, eff:'Độc: 10% gây 500 Sát Thương/s trong 3s' },
   { name:'Thornbloom',    color:'#d8d8e8', crit:3, eff:'Làm chậm: 25% giảm 35% tốc chạy địch 2s' },
-  { name:'Heartpiercer',  color:'#b06ae8', crit:4, eff:'Phá Giáp: phá hộ thể tinh anh/boss' },
+  { name:'Heartpiercer',  color:'#b06ae8', crit:4, eff:'Phá Giáp: phá hộ thể tinh anh/trùm' },
   { name:'Nightlotus',    color:'#e0779a', crit:5, eff:'Kịch Độc: độc mạnh gấp đôi' },
   { name:'Soulwither',    color:'#9aa8d4', crit:6, eff:'Mù Lòa: 12% khiến địch đánh trượt 2s' },
   { name:'Plaguefeather', color:'#3a9d8b', crit:8, eff:'Độc Lan: độc lây ra quanh mục tiêu' },
-  { name:'Blightstorm',   color:'#7ecbff', crit:10, eff:'Kết Liễu: 3% hạ gục địch dưới 20% HP' },
+  { name:'Blightstorm',   color:'#7ecbff', crit:10, eff:'Kết Liễu: 3% hạ gục địch dưới 20% Sinh Lực' },
 ];
 // Archery 7 tầng — vũ khí phụ trợ lơ lửng sau lưng (mở ở cấp 30)
 const BOW_TIERS = [ null,
@@ -5069,7 +5069,7 @@ const QUESTS = [
     type:'enhance', need:3, rew:{xp:520, silver:130, mat:3} }, // P0: lò rèn mở ở cấp 4 — NV4 thưởng sẵn vũ khí + 3 huyền thiết để rèn ngay
   { id:6, lv:6, name:'Đoàn Gloam', desc:'Đoàn Gloam — lính Vaeldra đào ngũ — dụ đám Axie nhiễm khí làm tay sai đi cướp phá dân đảo. Diệt 8 Tay Sai Gloam trên đồi phía đông nam.',
     type:'kill', mob:'bandit', need:8, rew:{xp:1200, silver:170} }, // QA bot: tăng XP giữ nhịp cấp với chuỗi NV
-  { id:7, lv:7, name:'Mảnh Ký Ức Đầu Tiên', desc:'Nước suối cạnh làng lọc sạch khí vết nứt. Đứng trong suối 8 giây — ký ức võ nghệ Vaeldra của ngươi sẽ nhen lại thành Instinct.',
+  { id:7, lv:7, name:'Mảnh Ký Ức Đầu Tiên', desc:'Nước suối cạnh làng lọc sạch khí vết nứt. Đứng trong suối 8 giây — ký ức võ nghệ Vaeldra của ngươi sẽ nhen lại thành Bản Năng.',
     type:'meditate', need:8, rew:{xp:920, mat:3} },
   { id:8, lv:8, name:'Lớp Giáp Bóng Tối', desc:'Một Gloam Marauder đã ngấm khí Morvahn, bọc quanh mình lớp giáp bóng tối — sát thương thường giảm 70%. Dùng Trấn Phái (phím 2) phá giáp rồi kết liễu hắn.',
     type:'kill', mob:'assassin', need:1, rew:{xp:1900, silver:220} }, // QA bot: tăng XP giữ nhịp cấp
@@ -5222,7 +5222,7 @@ function itemReqLv(it){
 function subName(k){
   return { atkPct:'Thêm Sát Thương', pierce:'Xuyên Giáp', defPct:'Phòng Ngự', hpPct:'Sinh Lực Tối Đa',
            qiPct:'Mana Tối Đa', evaPct:'Tránh Đòn', silverPct:'Đồng Rơi Thêm', reflectPct:'Phản Sát Thương',
-           dmgred:'Giảm Sát Thương', perfect:'ST Hoàn Hảo', hpLeech:'Hút Sinh Lực', qiLeech:'Hút Mana',
+           dmgred:'Giảm Sát Thương', perfect:'Sát Thương Hoàn Hảo', hpLeech:'Hút Sinh Lực', qiLeech:'Hút Mana',
            aspdPct:'Tốc Độ Đánh', expPct:'EXP Thêm', crit:'Bạo Kích' }[k] || k;
 }
 function genItem(level, bias, srcK, opts){
@@ -5527,7 +5527,7 @@ function tipCard(it, cmpItem, tag){
     sub.push(`<span style="color:${st.color}">◈${st.name}${act ? ' ' + act.n + '/5' : ''}</span>`);
   }
   if (it.luck) sub.push(`<span style="color:#7fd8e0">☘Vận</span>`);
-  if (it.life) sub.push(`<span style="color:#e84a6a">❤+${it.life * 4}%HP</span>`);
+  if (it.life) sub.push(`<span style="color:#e84a6a">❤+${it.life * 4}%Sinh Lực</span>`);
   h += `<div class="itip-sub">${sub.join(' · ')}</div></div>`;
 
   const cmp = cmpItem ? itemStatMap(cmpItem) : null;
@@ -5575,7 +5575,7 @@ function tipVerdict(it){
   const cur = player.equip[it.slot];
   const need = itemReqLv(it);
   const rows = [];
-  if (player.level < need) rows.push(['#ff7a6a', `Chưa đủ cấp — cần LV${need}`]);
+  if (player.level < need) rows.push(['#ff7a6a', `Chưa đủ cấp — cần đạt cấp ${need}`]);
   else {
     const g = itemSigilNew(it);
     if (g) rows.push([SIGIL_DEFS[g].color, `◆ Mới: ${SIGIL_DEFS[g].name}`]);
@@ -6847,7 +6847,7 @@ function bossExecMove(m){
     if (!alive.length){
       // Phá hết kịp giờ: chiêu tắt ngóm, boss choáng — ĐÂY mới là phần thưởng, không phải né được
       m.stunT = Math.max(m.stunT || 0, 5); m.punishT = 6;
-      addFloat(m.x, m.y-50, '✦ CHÚ VỠ — BOSS CHOÁNG!', '#7ecbff', 18);
+      addFloat(m.x, m.y-50, '✦ CHÚ VỠ — TRÙM CHOÁNG!', '#7ecbff', 18);
       addEffect({ type:'ring', x:m.x, y:m.y, r:110, color:'#7ecbff', big:true });
       AudioSys.sfx('levelup', 0.8);
       return;
@@ -7843,7 +7843,7 @@ function killMob(m, source){
   // sát thương (đòn thường, chiêu, Khắc Ấn, pet) đều tính — không phải chỉ đòn tay.
   if (player.excQi && player.qi < player.maxQi){
     player.qi = Math.min(player.maxQi, player.qi + player.excQi);
-    addFloat(m.x, m.y - 40, `+${player.excQi} Qi`, '#7ecbff', 11);
+    addFloat(m.x, m.y - 40, `+${player.excQi} Mana`, '#7ecbff', 11);
   }
   if (player.excHp && player.hp < player.maxHp){
     player.hp = Math.min(player.maxHp, player.hp + player.excHp);
@@ -8009,7 +8009,7 @@ function unlockNotices(){
   const msgs = {
     2:['Mở khóa: Thuần Thục (phím H)'],
     3:['Mở khóa: Mục Tiêu Hôm Nay — xem góc trái màn hình, xong hết nhận thưởng lớn!'],
-    4:['Mở khóa: Venom Dart — cộng %ST vĩnh viễn (K → Di Sản Cũ)','Mở khóa: Thuần Thục Venom (phím H)',
+    4:['Mở khóa: Venom Dart — cộng %Sát Thương vĩnh viễn (K → Di Sản Cũ)','Mở khóa: Thuần Thục Venom (phím H)',
        'Mở khóa: Lò Hỗn Độn — tới gặp Thợ Rèn (phím F dẫn đường)'],
     6:['Mở khóa: Khế Ước Chimera — quay Chimera đồng hành (C → Chimera)'],
     7:['Mở khóa: Trấn Phái — tuyệt kỹ của lớp (phím 2)'],
@@ -8071,13 +8071,13 @@ function autoIdleReason(){
     if (player._autoZoneLocked && m.pack !== player._autoPack){ khacBai = true; continue; }
   }
   if (boss && !_ac.boss)
-    return { t:'AUTO không tự đánh boss — hãy tự chiến, hoặc bật trong Cài Đặt', c:'#ff9a5a' };
+    return { t:'TỰ ĐÁNH không tự đánh trùm — hãy tự chiến, hoặc bật trong Cài Đặt', c:'#ff9a5a' };
   if (duHiep && !coQuaiHopLe())
-    return { t:'Quái quanh đây là Phiêu Bạt trung lập — AUTO không đánh chúng', c:'#c0a0ff' };
+    return { t:'Quái quanh đây là Phiêu Bạt trung lập — TỰ ĐÁNH không đánh chúng', c:'#c0a0ff' };
   if (khacBai)
     return { t:'Bãi đã khoá đã sạch quái — đang chờ hồi sinh', c:'#8ab4ff' };
   if (!coQuai)
-    return { t:'Không còn quái trong tầm — bấm minimap để tới bãi khác', c:'#8ab4ff' };
+    return { t:'Không còn quái trong tầm — bấm bản đồ thu nhỏ để tới bãi khác', c:'#8ab4ff' };
   return null;
 }
 function coQuaiHopLe(){
@@ -8867,13 +8867,13 @@ function update(dt){
   // bấm Z lại (quen tay) là auto đứng hứng trọn chiêu AoE không né. Khoá liên tục suốt pha boss.
   if (player.auto && autoBossLockActive()){
     player.auto = false; updateAutoBtn();
-    addFloat(player.x, player.y-70, 'Boss này phải tự tay chiến — AUTO đã khoá!', '#ff9a5a', 13);
+    addFloat(player.x, player.y-70, 'Trùm này phải tự tay chiến — TỰ ĐÁNH đã khoá!', '#ff9a5a', 13);
   }
   const _ac = player.autoCfg || { skill:true, potion:true, potionPct:40, range:430, boss:false };
   const _bossNear = player.auto && !_ac.boss && mobs.some(b => !b.dead && (b.def.bossKind || b.type === 'boss') && dist(player.x, player.y, b.x, b.y) < 300);
   if (_bossNear){
     player._bossHintT = (player._bossHintT || 0) - dt;
-    if (player._bossHintT <= 0){ addFloat(player.x, player.y-64, '⚠ Vùng Boss — auto tạm dừng, hãy tự chiến!', '#ff9a5a', 13); player._bossHintT = 6; }
+    if (player._bossHintT <= 0){ addFloat(player.x, player.y-64, '⚠ Vùng Trùm — tự đánh tạm dừng, hãy tự chiến!', '#ff9a5a', 13); player._bossHintT = 6; }
     // Lùi thẳng ra xa boss. AUTO không tự khơi trận boss, nhưng nếu đứng im HOÀN TOÀN thì vẫn
     // ăn đòn miễn phí — nên vẫn phải né và vẫn phải uống thuốc.
     //
@@ -8976,14 +8976,14 @@ function update(dt){
     if (_ac.potion && player.hp < player.maxHp*(_ac.potionPct/100) && player.potions > 0 && (player.potionCd || 0) <= 0) usePotion();
     if (player.potions <= 0 && player.hp < player.maxHp*0.5){
       player._autoWarnT = (player._autoWarnT || 0) - dt;
-      if (player._autoWarnT <= 0){ player._autoWarnT = 30; addFloat(player.x, player.y-70, '⚠ Hết thuốc — auto farm không tự hồi máu được!', '#ff9a6a', 12); }
+      if (player._autoWarnT <= 0){ player._autoWarnT = 30; addFloat(player.x, player.y-70, '⚠ Hết thuốc — chế độ tự đánh không tự hồi máu được!', '#ff9a6a', 12); }
     }
     // QA: chữ nổi cảnh báo rất dễ bị bỏ lỡ nếu người chơi đang không nhìn màn hình (đúng lúc treo
     // AUTO). Máu xuống mức nguy hiểm mà hết thuốc thì tự tắt AUTO hẳn (banner to, khó bỏ lỡ hơn)
     // thay vì cứ để auto tiếp tục lao vào ăn đòn tới chết.
     if (player.potions <= 0 && player.hp < player.maxHp*0.2){
       player.auto = false; updateAutoBtn();
-      zoneBanner = { text:'⚠ AUTO ĐÃ TỰ TẮT', sub:'Hết Bình Thuốc Đỏ & máu xuống thấp — tắt AUTO để tránh chết oan. Mua thêm thuốc rồi bật lại!', color:'#ff7a6a', t:5 };
+      zoneBanner = { text:'⚠ TỰ ĐÁNH ĐÃ TỰ TẮT', sub:'Hết Bình Thuốc Đỏ & máu xuống thấp — tắt TỰ ĐÁNH để tránh chết oan. Mua thêm thuốc rồi bật lại!', color:'#ff7a6a', t:5 };
       AudioSys.sfx('hurt', 0.5);
     }
   }
@@ -9196,7 +9196,7 @@ function update(dt){
       if (m.leashBack){ // đang quay về post — không đánh, không tụ chiêu
         if (dist(m.x, m.y, _hx, _hy) < 50){
           m.leashBack = false; m.hp = m.maxHp; m.punishT = 0;
-          addFloat(m.x, m.y - m.def.size - 26, 'Boss trở về lãnh địa — hồi phục toàn bộ!', '#9aa8d4', 12);
+          addFloat(m.x, m.y - m.def.size - 26, 'Trùm trở về lãnh địa — hồi phục toàn bộ!', '#9aa8d4', 12);
         } else {
           const _ah = Math.atan2(_hy - m.y, _hx - m.x);
           m.x += Math.cos(_ah) * m.def.speed * 1.35 * dt; m.y += Math.sin(_ah) * m.def.speed * 1.35 * dt; m.faceT = _ah;
@@ -9209,7 +9209,7 @@ function update(dt){
       // vượt ranh giới lãnh địa HOẶC mất dấu người chơi giữa đường → hủy chiêu, quay về post
       if (dist(m.x, m.y, _hx, _hy) > _leashR || (_dp0 > m.def.aggro && dist(m.x, m.y, _hx, _hy) > 70 && !m.tele)){
         m.leashBack = true; m.tele = null; m.introduced = true;
-        addFloat(m.x, m.y - m.def.size - 26, 'Boss quay về lãnh địa!', '#9aa8d4', 12);
+        addFloat(m.x, m.y - m.def.size - 26, 'Trùm quay về lãnh địa!', '#9aa8d4', 12);
         continue;
       }
     }
@@ -9508,7 +9508,7 @@ function update(dt){
         // LIÊN TRẢM (kỹ năng kết hợp): ám khí trúng trong chuỗi combo chiêu thức → cửa sổ 2.5s
         if (p.kind === 'amkhi' && (player.comboT || 0) > 0 && (player.ltT || 0) <= 0){
           player.ltT = 2.5;
-          addFloat(player.x, player.y-66, '⚡ LIÊN TRẢM — chiêu kế miễn phí Mana, +30% ST!', '#ffd76a', 14);
+          addFloat(player.x, player.y-66, '⚡ LIÊN TRẢM — chiêu kế miễn phí Mana, +30% Sát Thương!', '#ffd76a', 14);
           addEffect({ type:'ring', x:player.x, y:player.y, r:60, color:'#ffd76a', big:true });
           AudioSys.sfx('crit', 0.7);
         }
@@ -9826,7 +9826,7 @@ function render(){
     if (_hx < camera.x - _lr || _hx > camera.x + W + _lr || _hy < camera.y - _lr || _hy > camera.y + H + _lr) continue;
     ctx.beginPath(); ctx.arc(_hx, _hy, _lr, 0, 7);
     ctx.strokeStyle = 'rgba(200,60,40,.30)'; ctx.setLineDash([14, 10]); ctx.lineWidth = 2.5; ctx.stroke(); ctx.setLineDash([]);
-    drawCalligraphy('⚠ Lãnh Địa Boss', _hx, _hy - _lr - 6, '#c05a4a', 13);
+    drawCalligraphy('⚠ Lãnh Địa Trùm', _hx, _hy - _lr - 6, '#c05a4a', 13);
   }
 
   // village / city labels
@@ -14482,7 +14482,7 @@ function autoBossLockActive(){
 window.toggleAuto = function(){
   if (!player) return;
   if (!player.auto && autoBossLockActive()){
-    addFloat(player.x, player.y-56, 'Boss này phải tự tay chiến — không thể bật AUTO lúc này!', '#ff9a5a', 13);
+    addFloat(player.x, player.y-56, 'Trùm này phải tự tay chiến — không thể bật TỰ ĐÁNH lúc này!', '#ff9a5a', 13);
     AudioSys.sfx('ui', 0.3);
     return;
   }
@@ -14499,7 +14499,7 @@ window.toggleAuto = function(){
     // QA: mở khoá bãi quái cũ mỗi lần bật lại AUTO — để nó tự khoá vào bãi gần điểm neo mới nhất
     player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0;
   }
-  addFloat(player.x, player.y-56, player.auto ? '⚔ AUTO FARM: BẬT — ôm 1-2 bãi quái quanh điểm neo, tự tung chiêu, tự uống thuốc' : 'AUTO FARM: TẮT — về chế độ thủ công',
+  addFloat(player.x, player.y-56, player.auto ? '⚔ TỰ ĐÁNH: BẬT — ôm 1-2 bãi quái quanh điểm neo, tự tung chiêu, tự uống thuốc' : 'TỰ ĐÁNH: TẮT — về chế độ thủ công',
     player.auto ? '#6ae88a' : '#b8a888', 13);
   AudioSys.sfx('ui', 0.5);
   updateAutoBtn();
@@ -14510,7 +14510,7 @@ function updateAutoBtn(){
   if (!b || !player) return;
   b.classList.toggle('auto-on', !!player.auto);
   b.classList.toggle('auto-off', !player.auto);
-  b.textContent = player.auto ? '⚔ AUTO: BẬT' : '⚔ AUTO';
+  b.textContent = player.auto ? '⚔ TỰ ĐÁNH: BẬT' : '⚔ TỰ ĐÁNH';
 }
 el('btn-auto').addEventListener('click', ()=>toggleAuto());
 
@@ -14591,7 +14591,7 @@ function renderChar(){
     ['Bạo Kích', Math.round(p.crit*100)+'%'], ['Né Tránh', Math.round(p.eva*100)+'%'],
     ['Tốc Đánh', p.aspd.toFixed(2)+'s'], ['Hồi Mana', p.qireg.toFixed(1)+'/s'],
     // Mana = tài nguyên tung chiêu (hồi liên tục). Instinct = điểm nâng kỹ năng (tích lũy).
-    ['Instinct (nâng kỹ năng)', Math.floor(p.khi || 0).toLocaleString('vi-VN')],
+    ['Bản Năng (nâng kỹ năng)', Math.floor(p.khi || 0).toLocaleString('vi-VN')],
   ];
   if (_ae) stats.push(['Hệ đòn đánh', `<span style="color:${elColor(_ae)}">${ELEM[_ae].glyph} ${elName(_ae)}</span>`]);
   for (const [n,v] of stats) html += `<div class="stat-row"><span>${n}</span><b>${v}</b></div>`;
@@ -14604,7 +14604,7 @@ function renderChar(){
   html += `<div style="margin:2px 0 6px;padding:8px 10px;border:1px solid ${tbD.color}55;border-radius:6px;background:rgba(0,0,0,.22)">
     <div style="font-size:13px;color:${TB_TIER_COLORS[tbTier-1]};font-weight:700">${tbD.name} · Tầng ${tbTier}【${TB_TIER_NAMES[tbTier-1]}】${tbMax ? ' — ĐÃ THỨC TỈNH ✦' : ''}</div>
     <div style="font-size:11px;color:#9aa8d4;font-style:italic;margin:2px 0">${tbD.lore}</div>
-    <div class="stat-row"><span>ST chiêu Lớp</span><b>+${Math.round(tbTier*2.5)}%</b></div>
+    <div class="stat-row"><span>Sát Thương chiêu Lớp</span><b>+${Math.round(tbTier*2.5)}%</b></div>
     <div class="stat-row"><span>Cộng thêm</span><b>+${tbTier*3} Lực · +${tbTier*2} Mẫn · +${tbTier*2} Cốt · +${tbTier*3} Thể</b></div>
     ${tbMax
       ? `<div style="font-size:11.5px;color:#ffe9a8;margin-top:4px">Hình thái cuối — thần binh rực rỡ tối đa ✦</div>`
@@ -14617,7 +14617,7 @@ function renderChar(){
   html += `<div class="stat-row"><span>2 — Venom Dart${akT?` · <span style="color:${akT.color}">${akT.name}</span>`:''}</span><b>${p.level>=4?'×'+AMKHI.mult:'Cấp 4'}</b></div>`;
   html += `<div class="stat-row"><span>3 — Trấn Phái: ${sect.tp.name}</span><b>${p.level>=9?'×'+sect.tp.mult:'Cấp 9'}</b></div>`;
   if (p.bikip && p.bikip.hmtp)
-    html += `<div class="stat-row"><span style="color:#e84a6a">☠ Huyết Ma Thôn Phệ (sách kỹ năng)</span><b>hút 10% ST</b></div>`;
+    html += `<div class="stat-row"><span style="color:#e84a6a">☠ Huyết Ma Thôn Phệ (sách kỹ năng)</span><b>hút 10% Sát Thương</b></div>`;
   // Danh hiệu — chỉ số cộng dồn vĩnh viễn, chọn 1 hiển thị trên đầu
   html += `<div class="stat-sec">DANH HIỆU — bấm để chọn danh hiệu hiển thị trên đỉnh đầu</div>`;
   html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:6px">Mở khóa = cộng dồn chỉ số vĩnh viễn (không cần trang bị). Bấm lần nữa vào danh hiệu đang hiển thị để ẩn.</div>`;
@@ -14633,7 +14633,7 @@ function renderChar(){
 }
 function titleStatText(st){
   const parts = [];
-  if (st.hp) parts.push(`+${st.hp} HP`);
+  if (st.hp) parts.push(`+${st.hp} Sinh Lực`);
   if (st.atkPct) parts.push(`+${Math.round(st.atkPct*100)}% Công`);
   if (st.crit) parts.push(`+${st.crit}% Bạo`);
   if (st.allPct) parts.push(`+${Math.round(st.allPct*100)}% Toàn TT`);
@@ -14931,7 +14931,7 @@ const CHAOS_RECIPES = [
       return { it, need:{ sinhMenh:1 } };
     },
     plan(v, m){ return {
-      title: `${m.it.name} — Sinh Mệnh bậc ${(m.it.life||0)} → ${(m.it.life||0)+1} (+${((m.it.life||0)+1)*4}% HP)`,
+      title: `${m.it.name} — Sinh Mệnh bậc ${(m.it.life||0)} → ${(m.it.life||0)+1} (+${((m.it.life||0)+1)*4}% Sinh Lực)`,
       rate: Math.max(25, 75 - (m.it.life || 0) * 8),
       cost: [ jewelCost('sinhMenh', v, 1) ],
       warn: 'Thất bại: dòng Sinh Mệnh VỀ 0 — mất hết bậc đã khảm.', charm:false }; },
@@ -14939,12 +14939,12 @@ const CHAOS_RECIPES = [
       spendJewels(m.need);
       if (Math.random()*100 < p.rate){
         m.it.life = (m.it.life || 0) + 1;
-        chaosSay(`❤ Sinh Mệnh bậc ${m.it.life} — +${m.it.life*4}% HP tối đa!`, '#8fd18f');
-        addFloat(player.x, player.y-40, `❤ Sinh Mệnh +${m.it.life*4}% HP`, '#e84a6a', 14);
+        chaosSay(`❤ Sinh Mệnh bậc ${m.it.life} — +${m.it.life*4}% Sinh Lực tối đa!`, '#8fd18f');
+        addFloat(player.x, player.y-40, `❤ Sinh Mệnh +${m.it.life*4}% Sinh Lực`, '#e84a6a', 14);
         AudioSys.sfx('forge_ok', 0.9);
       } else {
         m.it.life = 0;
-        chaosSay('✘ Sinh Mệnh tan biến — dòng HP về 0!', '#ff7a6a');
+        chaosSay('✘ Sinh Mệnh tan biến — dòng Sinh Lực về 0!', '#ff7a6a');
         addFloat(player.x, player.y-40, '❤ Xịt — Sinh Mệnh về 0!', '#ff7a6a', 13);
         AudioSys.sfx('forge_fail', 0.85);
       }
@@ -15561,18 +15561,18 @@ const MASTERY_NAME = 'Đại Thành';
 // Khoá hiệu lực của mastery ↔ tên hiển thị. Đây cũng là DANH SÁCH KHOÁ dùng để dựng sổ trong
 // masteryAgg(), nên phải khai trước mọi thứ đọc nó (calcDerived gọi masteryAgg — xem bẫy TDZ cũ
 // của GIAI_SPAN ở đầu file).
-const MASTERY_LABEL = { hpPct:'Sinh Lực', dmgred:'Giảm ST', defPct:'Phòng Ngự', qireg:'Hồi Mana',
-  reflectPct:'Phản Đòn', evaPct:'Né', hpLeech:'Hút Máu', atkPct:'Công Kích', critDmg:'ST Bạo',
+const MASTERY_LABEL = { hpPct:'Sinh Lực', dmgred:'Giảm Sát Thương', defPct:'Phòng Ngự', qireg:'Hồi Mana',
+  reflectPct:'Phản Đòn', evaPct:'Né', hpLeech:'Hút Máu', atkPct:'Công Kích', critDmg:'Sát Thương Bạo',
   pierce:'Xuyên Giáp', crit:'Bạo Kích', aspdPct:'Tốc Đánh', qiPct:'Mana', expPct:'EXP',
   silverPct:'Bạc', wpnPct:'Vũ Khí', armPct:'Giáp', plusStep:'mỗi cấp rèn', excPct:'Hoàn Hảo',
-  skillPct:'ST Kỹ Năng', cdCut:'Hồi Chiêu',
+  skillPct:'Sát Thương Kỹ Năng', cdCut:'Hồi Chiêu',
   // Khoá ĐẶC TRƯNG LỚP — mỗi khoá dưới đây chỉ một (hoặc hai) lớp chạm tới được. Đây là chỗ
   // phân biệt thật giữa năm bảng: cùng khung 4 bảng × 5 rank × 20 điểm, cùng bộ hình, nhưng
   // Sylvan Ranger là lớp DUY NHẤT mua được Tốc Chạy, Dark Wizard là lớp duy nhất mua được ST
   // Venom Dart, Dark Lord là lớp duy nhất mua được tỉ lệ rơi đồ, v.v.
-  perfect:'ST Hoàn Hảo', qiLeech:'Hút Mana',
-  spdPct:'Tốc Chạy', rangePct:'Tầm Đánh', amkhiPct:'ST Venom Dart', potionPct:'Hiệu Quả Bình Thuốc',
-  shieldSec:'Cửa Sổ Phá Giáp', dropPct:'Tỉ Lệ Rơi Đồ', ltPct:'ST Liên Trảm' };
+  perfect:'Sát Thương Hoàn Hảo', qiLeech:'Hút Mana',
+  spdPct:'Tốc Chạy', rangePct:'Tầm Đánh', amkhiPct:'Sát Thương Venom Dart', potionPct:'Hiệu Quả Bình Thuốc',
+  shieldSec:'Cửa Sổ Phá Giáp', dropPct:'Tỉ Lệ Rơi Đồ', ltPct:'Sát Thương Liên Trảm' };
 const MASTERY_MAX_NODE = 20;    // trần điểm mỗi nút — đúng luật MU
 const MASTERY_RANK_GATE = 10;   // rank R mở khi đã tiêu (R-1)×10 điểm trong CÙNG bảng
 const MASTERY_PER_RESET = 20;   // thưởng thêm mỗi lần Tái Sinh
@@ -15665,7 +15665,7 @@ const MASTERY_CLASS = {
       { id:'sr_truongxa', ico:'icearrow',  col:'#a0ffe9', name:'Trường Xạ',  rank:2, per:'+1.2% tầm đánh',   eff:(A,v)=>{ A.rangePct += 1.2*v; } },
       { id:'sr_xuyenvan', ico:'pierce',    col:'#5ac8e8', name:'Xuyên Vân',  rank:2, per:'+0.45% Xuyên Giáp',eff:(A,v)=>{ A.pierce += 0.45*v; } },
       { id:'sr_lienchau', ico:'lightslash',col:'#7ecbff', name:'Liên Châu',  rank:3, per:'+0.6% Tốc Đánh',   eff:(A,v)=>{ A.aspdPct += 0.6*v; } },
-      { id:'sr_trimang',  ico:'stab',      col:'#9ed4ff', name:'Trí Mạng',   rank:3, per:'+1.3% ST Bạo Kích',eff:(A,v)=>{ A.critDmg += 1.3*v; } },
+      { id:'sr_trimang',  ico:'stab',      col:'#9ed4ff', name:'Trí Mạng',   rank:3, per:'+1.3% Sát Thương Bạo Kích',eff:(A,v)=>{ A.critDmg += 1.3*v; } },
       { id:'sr_phongnhan',ico:'crescent',  col:'#3a9d8b', name:'Phong Nhận', rank:4, per:'+0.5% Công Kích và +0.25% Né',
         eff:(A,v)=>{ A.atkPct += 0.5*v; A.evaPct += 0.25*v; } },
       { id:'sr_vantien',  ico:'cyclone',   col:'#a0ffe9', name:'Vạn Tiễn',   rank:5, per:'+1.4% Công Kích và +0.35% Tốc Đánh',
@@ -15694,7 +15694,7 @@ const MASTERY_CLASS = {
       { id:'sr_thancung', ico:'greatsword',col:'#5ea0e8', name:'Thần Cung',  rank:3, per:'+1.9% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.9*v; } },
       { id:'sr_nhelongvu',ico:'helm',      col:'#a0ffe9', name:'Nhẹ Tựa Lông', rank:3, per:'+0.6% chỉ số chính của Giáp và +0.3% Né',
         eff:(A,v)=>{ A.armPct += 0.6*v; A.evaPct += 0.3*v; } },
-      { id:'sr_tamdoc',   ico:'poison',    col:'#7ec850', name:'Tẩm Độc',    rank:4, per:'+0.5% tỉ lệ ST Hoàn Hảo (×2 sát thương)', eff:(A,v)=>{ A.perfect += 0.5*v; } },
+      { id:'sr_tamdoc',   ico:'poison',    col:'#7ec850', name:'Tẩm Độc',    rank:4, per:'+0.5% tỉ lệ Sát Thương Hoàn Hảo (×2 sát thương)', eff:(A,v)=>{ A.perfect += 0.5*v; } },
       { id:'sr_hopnhat',  ico:'fusion',    col:'#a0ffe9', name:'Cung Thần Hợp Nhất', rank:5, per:'+2.4% chỉ số Vũ Khí và +0.4% Tốc Đánh',
         eff:(A,v)=>{ A.wpnPct += 2.4*v; A.aspdPct += 0.4*v; } },
     ]},
@@ -15747,14 +15747,14 @@ const MASTERY_CLASS = {
     { id:'sb_hoakich', name:'Hỏa Kích', glyph:'⚔', nodes:[
       { id:'sb_liethoa',  ico:'fireslash', col:'#e8552a', name:'Liệt Hỏa',   rank:1, per:'+0.6% Công Kích và +0.6% Sát Thương Kỹ Năng',
         eff:(A,v)=>{ A.atkPct += 0.6*v; A.skillPct += 0.6*v; } },
-      { id:'sb_bocphat', ico:'firescream', col:'#ff7a3a', name:'Bộc Phát',   rank:1, per:'+0.45% tỉ lệ ST Hoàn Hảo (×2 sát thương)', eff:(A,v)=>{ A.perfect += 0.45*v; } },
+      { id:'sb_bocphat', ico:'firescream', col:'#ff7a3a', name:'Bộc Phát',   rank:1, per:'+0.45% tỉ lệ Sát Thương Hoàn Hảo (×2 sát thương)', eff:(A,v)=>{ A.perfect += 0.45*v; } },
       { id:'sb_thieuthan',ico:'flame',     col:'#ffb15c', name:'Thiêu Thân', rank:2, per:'+1.4% Sát Thương Bạo Kích', eff:(A,v)=>{ A.critDmg += 1.4*v; } },
       { id:'sb_nhiethuyet',ico:'crescent', col:'#ff6b6b', name:'Nhiệt Huyết',rank:2, per:'+0.3% Hút Máu và +0.5% Công Kích',
         eff:(A,v)=>{ A.hpLeech += 0.3*v; A.atkPct += 0.5*v; } },
       { id:'sb_cuongviem',ico:'meteor',    col:'#e8552a', name:'Cuồng Viêm', rank:3, per:'+0.7% Công Kích và +0.7% Sát Thương Kỹ Năng',
         eff:(A,v)=>{ A.atkPct += 0.7*v; A.skillPct += 0.7*v; } },
       { id:'sb_xichdiem', ico:'pierce',    col:'#ff9a5a', name:'Xích Diễm',  rank:3, per:'+0.4% Xuyên Giáp',    eff:(A,v)=>{ A.pierce += 0.4*v; } },
-      { id:'sb_phanthien',ico:'stab',      col:'#ffcf7a', name:'Phần Thiên', rank:4, per:'+0.5% tỉ lệ ST Hoàn Hảo và +0.35% Bạo Kích',
+      { id:'sb_phanthien',ico:'stab',      col:'#ffcf7a', name:'Phần Thiên', rank:4, per:'+0.5% tỉ lệ Sát Thương Hoàn Hảo và +0.35% Bạo Kích',
         eff:(A,v)=>{ A.perfect += 0.5*v; A.crit += 0.35*v; } },
       { id:'sb_hoathan',  ico:'cyclone',   col:'#ff7a3a', name:'Hỏa Thần',   rank:5, per:'+1.3% Công Kích và +1.3% Sát Thương Kỹ Năng',
         eff:(A,v)=>{ A.atkPct += 1.3*v; A.skillPct += 1.3*v; } },
@@ -16061,7 +16061,7 @@ function renderTuyetHoc(){
       onclick="window.thTab='${k}';renderTuyetHoc()">${s2.glyph} ${s2.name}${locked?` (C${s2.minLv})`:''}</button>`;
   }
   html += `</div>`;
-  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">◈ <b>${player.silver}</b> · ◈ Đá Thăng Cấp <b style="color:#7ec850">${player.tienDan}</b> (rơi từ Tay Sai Gloam trở lên — tinh anh & boss rớt nhiều hơn)</div>`;
+  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">◈ <b>${player.silver}</b> · ◈ Đá Thăng Cấp <b style="color:#7ec850">${player.tienDan}</b> (rơi từ Tay Sai Gloam trở lên — tinh anh & trùm rớt nhiều hơn)</div>`;
   if (player.level < S.minLv){
     html += `<div style="padding:14px;font-size:13px">◆ ${S.name} mở khóa ở <b style="color:#7ecbff">cấp ${S.minLv}</b>.</div>`;
     CE().innerHTML = html; return;
@@ -16100,7 +16100,7 @@ function renderTuyetHoc(){
 function thStatLines(sys, t){
   if (sys === 'amkhi') return [`Bạo Kích +${t.crit}%`, t.eff];
   if (sys === 'bow'){
-    const parts = [`Bạo Kích +${t.crit}%`, `Xuyên Giáp +${Math.round(t.pierce*100)}%`, `Mũi tên: ${t.proc}% gây ${Math.round(t.pdmg*100)}% ST`];
+    const parts = [`Bạo Kích +${t.crit}%`, `Xuyên Giáp +${Math.round(t.pierce*100)}%`, `Mũi tên: ${t.proc}% gây ${Math.round(t.pdmg*100)}% Sát Thương`];
     if (t.double) parts.push(`${Math.round(t.double*100)}% bắn 2 mũi`);
     if (t.stun) parts.push(`${Math.round(t.stun*100)}% chặn đứng 1.5s`);
     if (t.burn) parts.push('Thiêu đốt 3s');
@@ -16460,7 +16460,7 @@ function chiBangNuoi(id){
   // kỹ năng đồng hành
   const ky = chiKyCua(id), mo = chiKyMo(id);
   h += `<div class="stat-sec">KỸ NĂNG ĐỒNG HÀNH — ${mo}/4</div>`;
-  h += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:5px;line-height:1.5">Chimera không tự mạnh lên — nó <b>buff cho bạn</b>. Hai kỹ năng đầu luôn bật, hai kỹ năng sau bật mỗi lần nó tung chiêu.</div>`;
+  h += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:5px;line-height:1.5">Chimera không tự mạnh lên — nó <b>phù trợ cho bạn</b>. Hai kỹ năng đầu luôn bật, hai kỹ năng sau bật mỗi lần nó tung chiêu.</div>`;
   for (let i = 0; i < ky.length; i++){
     const k = ky[i], daMo = i < mo;
     h += `<div class="skill-row${daMo ? '' : ' locked'}" style="align-items:center">
@@ -16730,7 +16730,7 @@ function renderKheUoc(){
   html += `<div class="ku-banner"><h4>Giao Kết — ${ke5.ten} <span style="color:#ffb15c">★★★★★</span></h4>
     <div style="font-size:11.5px;color:#9aa8d4">${ke5.moTa}</div>
     <div class="ku-ke">${ke4.map(c => `<span style="color:${c.mau};border-color:${c.mau}">${c.ten} ★★★★</span>`).join('')}</div>
-    <div class="ku-pity">Đã quay <b>${C.pity5}</b> lượt từ 5★ gần nhất — còn <b>${conBd}</b> lượt tới bảo đảm.
+    <div class="ku-bảo đảm">Đã quay <b>${C.pity5}</b> lượt từ 5★ gần nhất — còn <b>${conBd}</b> lượt tới bảo đảm.
       ${C.bd ? '<br><b style="color:#8fd18f">Lần 5★ tới CHẮC CHẮN là ' + ke5.ten + '</b>' : '<br>Lần 5★ tới: 50% trúng ' + ke5.ten + ', trượt thì lần sau chắc chắn trúng.'}
       <br>Trần cứng: <b>180 Ấn</b> là chắc chắn có ${ke5.ten}.</div>
     <div class="forge-actions">
@@ -16738,15 +16738,15 @@ function renderKheUoc(){
       <button class="mini-btn" style="font-size:13px;padding:7px 18px" onclick="window.kheUocQuay('gk',10)" ${(C.ve.gk||0)<10?'disabled':''}>Quay ×10</button></div></div>`;
 
   html += `<div class="ku-banner"><h4 style="color:#7ecbff">Vĩnh Cửu — sáu Chimera 5★, không 50/50</h4>
-    <div class="ku-pity">Đã quay <b>${C.pity5s}</b> lượt — còn <b>${Math.max(0, GACHA_HARD5 - C.pity5s)}</b> lượt tới bảo đảm.</div>
+    <div class="ku-bảo đảm">Đã quay <b>${C.pity5s}</b> lượt — còn <b>${Math.max(0, GACHA_HARD5 - C.pity5s)}</b> lượt tới bảo đảm.</div>
     <div class="forge-actions">
       <button class="mini-btn" onclick="window.kheUocQuay('cx',1)" ${(C.ve.cx||0)<1?'disabled':''}>Quay ×1</button>
       <button class="mini-btn" onclick="window.kheUocQuay('cx',10)" ${(C.ve.cx||0)<10?'disabled':''}>Quay ×10</button></div></div>`;
 
   html += `<div class="stat-sec">TỈ LỆ CÔNG KHAI</div>
     <div style="font-size:11.5px;color:#9aa8d4;line-height:1.7">
-      5★ <b>0,6%</b>/lượt tới lượt 73, từ lượt 74 cộng thêm 6 điểm %/lượt, lượt 90 bảo đảm — gộp cả pity là <b>1,6%</b>.<br>
-      4★ <b>5,1%</b>/lượt, bảo đảm trong mỗi 10 lượt — gộp cả pity là <b>13,0%</b>.<br>
+      5★ <b>0,6%</b>/lượt tới lượt 73, từ lượt 74 cộng thêm 6 điểm %/lượt, lượt 90 bảo đảm — gộp cả bảo đảm là <b>1,6%</b>.<br>
+      4★ <b>5,1%</b>/lượt, bảo đảm trong mỗi 10 lượt — gộp cả bảo đảm là <b>13,0%</b>.<br>
       Trung bình <b>62 lượt</b> ra một con 5★; <b>93 lượt</b> ra một con 5★ đang lên kệ.</div>`;
 
   if (C.su && C.su.length){
@@ -17074,7 +17074,7 @@ function cheatHelp(){
   const _evo  = Object.keys(EVO_PATHS).map(k => `${k}=${EVO_PATHS[k].name}`).join(' · ');
   return [
     '── nhân vật ──',
-    '/max — mọi thứ tối đa: cấp 120, full đồ +11, mọi kỹ năng Lv 120, VÀ mở hết cổng tiến trình',
+    '/max — mọi thứ tối đa: cấp 120, full đồ +11, mọi kỹ năng cấp 120, VÀ mở hết cổng tiến trình',
     '/lv <1-120> — đặt cấp · /speed <hệ số> — tốc chạy · /god — bật/tắt bất tử',
     '── di chuyển ──',
     '/map <id> — ' + _maps,
@@ -17082,14 +17082,14 @@ function cheatHelp(){
     '/go <x> <y> — dịch chuyển tọa độ · /boss — mở phong ấn & tới Cổng Vực · /boss reset — dựng lại phong ấn',
     '/deep — vào Tầng Sâu',
     '── kỹ năng ──',
-    `/fullskill — học hết ${Object.keys(VOHOC_DEFS).length} kỹ năng, mọi chiêu Lv 120`,
+    `/fullskill — học hết ${Object.keys(VOHOC_DEFS).length} kỹ năng, mọi chiêu cấp 120`,
     '/learn — học toàn bộ Sổ Kỹ Năng (Di Sản Cũ) · /bikip <n> — số Sách Kỹ Năng',
     '/slot <1-4> <id chiêu|-> — gán ô thanh chiêu (phím 1-4); /slot — xem đang gán gì',
     `/evo <id chiêu> <bậc 1-3> <nhánh> — chọn nhánh tiến hóa · ${_evo}`,
     `/th <hệ> <0-7> — tầng Thuần Thục · ${_th}`,
     `/dt [n=200] — mở bảng ${MASTERY_NAME} và cấp n điểm (bảng chứa ${MASTERY_MAX_NODE} điểm/nút)`,
     '── tài nguyên ──',
-    '/silver /khi /mat /dan /bikip <n> — bạc · Instinct · Huyền Thiết · Tiên Đan · Sách (+n để cộng)',
+    '/silver /khi /mat /dan /bikip <n> — bạc · Bản Năng · Huyền Thiết · Tiên Đan · Sách (+n để cộng)',
     '/nd <n> — Lõi Nguyên Tố · /jewel <n> — cả bốn Tứ Châu · /gem <n> — Tử La + Hỗn Nguyên',
     '/manh /tich /an /cothan <n> — mảnh ghép chế tác · /hap <n> — Box Kundun mọi tầng',
     '/item [phẩm 0-4] [giai 1-10] — tạo trang bị vào túi',
@@ -17147,7 +17147,7 @@ window.cheatExec = function(raw){
       case 'learn': {
         let _n = 0;
         for (const _vid in VOHOC_DEFS){ if (!vhLearned(_vid)){ player.vohoc[_vid] = true; _n++; } }
-        calcDerived(); cheatLog('Đã học ' + _n + ' kỹ năng — cộng %ST vĩnh viễn (K → Di Sản Cũ)', '#ffb15c'); break;
+        calcDerived(); cheatLog('Đã học ' + _n + ' kỹ năng — cộng %Sát Thương vĩnh viễn (K → Di Sản Cũ)', '#ffb15c'); break;
       }
       case 'fullskill': {
         for (const _vid in VOHOC_DEFS) player.vohoc[_vid] = true;
@@ -17156,7 +17156,7 @@ window.cheatExec = function(raw){
         for (const _sid in SKILL_DEFS) player.skillLv[_sid] = 120;
         player.bikipVH = Math.max(player.bikipVH || 0, 99);
         calcDerived();
-        cheatLog(`FULL SKILL — ${Object.keys(VOHOC_DEFS).length} kỹ năng, ${Object.keys(SKILL_DEFS).length} chiêu Lv 120 (bấm K gán)`, '#ff9ae0'); break;
+        cheatLog(`FULL SKILL — ${Object.keys(VOHOC_DEFS).length} kỹ năng, ${Object.keys(SKILL_DEFS).length} chiêu cấp 120 (bấm K gán)`, '#ff9ae0'); break;
       }
       case 'bikip': {
         player.bikipVH = clamp(Math.round(num(1, 20)), 0, 999);
@@ -19063,7 +19063,7 @@ const CONSUM_ART = { flask:caFlask, gourd:caGourd, talisman:caTalisman, scroll:c
 const CONSUM_DB = {
   thuoc:     { art:'flask',    col:'#e8434a', name:'Bình Thuốc Đỏ',   use:'Uống bằng phím R',
                have:()=>player.potions, cap:5,
-               info:()=>`Hồi ${Math.round((player.potionPct||0.4)*100)}% máu (~${Math.round(player.maxHp*(player.potionPct||0.4)).toLocaleString('vi-VN')} HP)` },
+               info:()=>`Hồi ${Math.round((player.potionPct||0.4)*100)}% máu (~${Math.round(player.maxHp*(player.potionPct||0.4)).toLocaleString('vi-VN')})` },
   tukhi:     { art:'flask',    col:'#4a86e8', name:'Lọ Mana',         use:'Mana là tài nguyên tung chiêu',
                info:()=>`Hồi đầy Mana — đang ${Math.round(player.qi)}/${player.maxQi}` },
   trithuong: { art:'flask',    col:'#5db86a', name:'Trị Thương Toàn Phần', use:'Dùng ngay tại chỗ',
@@ -19075,7 +19075,7 @@ const CONSUM_DB = {
   phu:       { art:'talisman', col:'#7ecbff', name:'Thiên Mệnh Phù',  use:'Bảo hiểm rèn — hỏng thì không tụt cấp',
                have:()=>player.charms, info:()=>`Đang giữ ${player.charms||0} lá` },
   sach:      { art:'scroll',   col:'#ffb15c', name:'Sách Kỹ Năng',    use:'Nâng thẳng 1 cấp cho một chiêu của lớp mình (bảng K)',
-               have:()=>player.bikipVH, info:()=>`Đang có ${player.bikipVH||0} quyển · rơi từ tinh anh/boss & Vực Thẳm` },
+               have:()=>player.bikipVH, info:()=>`Đang có ${player.bikipVH||0} quyển · rơi từ tinh anh/trùm & Vực Thẳm` },
   tiendan:   { art:'stone',    col:'#7ec850', name:'Đá Thăng Cấp',    use:'Nâng Thuần Thục (Venom / Archery / Stoneform)',
                have:()=>player.tienDan, info:()=>`Đang có ${player.tienDan||0} viên` },
   huyenthiet:{ art:'stone',    col:'#c8d4e8', name:'Huyền Thiết',     use:'Rèn +1 → +6 · thăng giai Thú Chiến',
@@ -20016,7 +20016,7 @@ function bagSecGear(){
     <button class="mini-btn" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất</button>
     <i class="bag-tip">bấm ô = mặc · <b>⋯</b> = bán / phân giải / vứt</i></div>
     ${donBar('tui')}`;
-  if (!player.inv.length) return h + `<div class="chaos-empty">Túi trống — hãy đi farm quái!</div>`;
+  if (!player.inv.length) return h + `<div class="chaos-empty">Túi trống — hãy đi cày quái!</div>`;
   h += `<div class="bag-grid">`;
   player.inv.forEach((it, i) => {
     const _eq2 = player.equip[it.slot], _bp2 = _eq2 ? itemPower(_eq2) : 0;
@@ -20079,7 +20079,7 @@ function bagSecBox(){
         <span class="s-name" style="display:flex;align-items:center;gap:9px">
         <img class="consum-ic" src="${consumArtUrl('box', d.color)}" alt="">
         <span><b style="color:${d.color}">${d.name}</b> ×${bh[t]}<br>
-        <span class="item-tip">LV${d.min}-${d.max === 999 ? '100+' : d.max} · trang bị cao cấp${d.ancient ? ` · <b style="color:#3ac88a">Cổ Thần ${Math.round(d.ancient*100)}%</b>` : ''} · châu quý<br>
+        <span class="item-tip">cấp ${d.min}-${d.max === 999 ? '100+' : d.max} · trang bị cao cấp${d.ancient ? ` · <b style="color:#3ac88a">Cổ Thần ${Math.round(d.ancient*100)}%</b>` : ''} · châu quý<br>
         <b style="color:#ffd76a">Kéo hạp ra màn hình</b> để ném tới chỗ bạn chọn</span></span></span>
       <span><button class="mini-btn" onclick="openBaoHap(${t})">Ném Xuống</button></span></div>`;
   }
@@ -20120,7 +20120,7 @@ window.equipItem = function(i){
   const it = player.inv[i];
   if (!it) return;
   if (player.level < itemReqLv(it)){
-    addFloat(player.x, player.y-30, `Cần LV${itemReqLv(it)} để mặc ${it.name}!`, '#ff7a6a', 13);
+    addFloat(player.x, player.y-30, `Cần cấp ${itemReqLv(it)} để mặc ${it.name}!`, '#ff7a6a', 13);
     return;
   }
   if (!itemUsable(it)){
@@ -20191,7 +20191,7 @@ function equippedSkillRowHtml(id, roleLabel){
   return `<div class="skill-row${info.unlocked?'':' locked'}">
     <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='a'?'⚔':id==='tp'?'⚔':'✚'}</span>'" alt="">
     <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${roleLabel} — ${info.name}</b>
-      <span style="font-size:10.5px;opacity:.6"> · ${info.qi}Qi · ${effCd(id, info.cd).toFixed(1)}s</span>
+      <span style="font-size:10.5px;opacity:.6"> · ${info.qi}Mana · ${effCd(id, info.cd).toFixed(1)}s</span>
       <div class="sk-desc">${info.unlocked ? info.desc : '🔒 ' + info.lockTxt}</div></span>
     <span class="assign-btns">${info.unlocked ? upBtnHtml(id) : ''}</span></div>`;
 }
@@ -20201,8 +20201,8 @@ function legacySkillRowHtml(_vid){
   const _v = VOHOC_DEFS[_vid], _t = VH_TIER[_v.tier];
   const learned = vhLearned(_vid), pct = LEGACY_TIER_PCT[_v.tier] || 0;
   const right = learned
-    ? `<span style="font-size:11px;color:#a0ffe9">+${pct}% ST ✓</span>`
-    : `<span style="font-size:10.5px;opacity:.5">🔒 Lv${_v.unlock}</span>`;
+    ? `<span style="font-size:11px;color:#a0ffe9">+${pct}% Sát Thương ✓</span>`
+    : `<span style="font-size:10.5px;opacity:.5">🔒 cấp ${_v.unlock}</span>`;
   return `<div class="skill-row${learned?'':' locked'}">
     <img src="${_v.icon}" onerror="this.style.display='none'" alt="">
     <span class="sk-info"><b style="color:${learned?_t.color:'#8a8a8a'}">${_v.name}</b>
@@ -20214,7 +20214,7 @@ function legacySkillRowHtml(_vid){
 // từ "chiêu bấm được" thành "% Công Kích vĩnh viễn" khi đủ điều kiện.
 function legacyUniversalRowHtml(id){
   const info = skillInfo(id), pct = LEGACY_UNIVERSAL_PCT[id] || 0;
-  const right = info.unlocked ? `<span style="font-size:11px;color:#a0ffe9">+${pct}% ST ✓</span>` : `<span style="font-size:10.5px;opacity:.5">🔒 ${info.lockTxt}</span>`;
+  const right = info.unlocked ? `<span style="font-size:11px;color:#a0ffe9">+${pct}% Sát Thương ✓</span>` : `<span style="font-size:10.5px;opacity:.5">🔒 ${info.lockTxt}</span>`;
   return `<div class="skill-row${info.unlocked?'':' locked'}">
     <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='amkhi'?'☾':id==='bow'?'↗':id==='danchi'?'●':'✦'}</span>'" alt="">
     <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${info.name}</b>
@@ -20224,13 +20224,13 @@ function legacyUniversalRowHtml(id){
 function renderSkillPanel(){
   vhAutoLearn(); // save cũ / test mode: quét tự ngộ kỹ năng phái
   let html = moBang({ tieu:'Kỹ Năng', dong:'4 ô cố định · phím 1-4' });
-  html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%ST/cấp (bạc) · mốc 20/40/60/80/100/120 thêm buff · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · <span style="color:#7fd8e0">Instinct <b>${Math.floor(player.khi || 0).toLocaleString('vi-VN')}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
+  html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%Sát Thương/cấp (bạc) · mốc 20/40/60/80/100/120 thêm phù trợ · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · <span style="color:#7fd8e0">Bản Năng <b>${Math.floor(player.khi || 0).toLocaleString('vi-VN')}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
   html += `<div class="bang-tabs">`;
   for (const t of SKILL_TABS) html += `<button class="bang-tab${t.id===window.skillTab?' on':''}" onclick="switchSkillTab('${t.id}')">${t.name}</button>`;
   html += `</div>`;
 
   if (window.skillTab === 'active'){
-    html += `<div class="stat-sec">${SECTS[player.sect].name} — 1 chính · 1 phụ · 1 buff · 1 tuyệt chiêu</div>`;
+    html += `<div class="stat-sec">${SECTS[player.sect].name} — 1 chính · 1 phụ · 1 phù trợ · 1 tuyệt chiêu</div>`;
     html += equippedSkillRowHtml('a', 'Chính');
     html += equippedSkillRowHtml('tp', 'Phụ');
     const buffId = BUFF_SKILL_ID[player.sect], sigId = SIGNATURE_SKILL[player.sect];
@@ -20239,7 +20239,7 @@ function renderSkillPanel(){
     if (sigId) html += equippedSkillRowHtml(sigId, '★ Tuyệt Chiêu');
     html += `<div class="shop-row" title="${consumTip('sach')}"><span class="sr-ic">${consumIcon('sach', 'sr-img')}</span>
         <span class="sr-body"><b style="color:#ffb15c">Sách Kỹ Năng</b>
-          <span class="sr-desc">Bấm nút sách ở dòng chiêu bất kỳ phía trên để nâng thẳng 1 cấp — khỏi tốn bạc lẫn Instinct</span>
+          <span class="sr-desc">Bấm nút sách ở dòng chiêu bất kỳ phía trên để nâng thẳng 1 cấp — khỏi tốn bạc lẫn Bản Năng</span>
           <span class="sr-stat">${CONSUM_DB.sach.info()}</span></span>
         <b style="color:#ffb15c;font-size:15px">${player.bikipVH || 0}</b></div>`;
     html += `<div class="stat-sec">BỊ ĐỘNG — tự kích hoạt, không cần gán</div>`;
@@ -20569,7 +20569,7 @@ function updateHud(){
     b.classList.toggle('locked', !info.unlocked);
     b.classList.add('has-img');
     b.style.backgroundImage = `url(${info.icon})`;
-    b.title = info.unlocked ? `${info.name} — ${info.qi} Qi · ${info.cd}s` : `${info.name} — ${info.lockTxt}`;
+    b.title = info.unlocked ? `${info.name} — ${info.qi} Mana · ${info.cd}s` : `${info.name} — ${info.lockTxt}`;
     const cd = player.cd[id] || 0;
     b.querySelector('.sk-cd').style.height = (cd>0 ? (100*cd/info.cd) : 0) + '%';
   }
@@ -20815,11 +20815,11 @@ function renderShop(n){
 function shopRowInfo(id){
   const P = player;
   switch (id){
-    case 'thuoc':     return { stat:`Hồi ${Math.round((P.potionPct || 0.4) * 100)}% máu (~${Math.round(P.maxHp * (P.potionPct || 0.4)).toLocaleString('vi-VN')} HP) · đang có ${P.potions}/5`,
+    case 'thuoc':     return { stat:`Hồi ${Math.round((P.potionPct || 0.4) * 100)}% máu (~${Math.round(P.maxHp * (P.potionPct || 0.4)).toLocaleString('vi-VN')}) · đang có ${P.potions}/5`,
                                blocked: P.potions >= 5 };
     case 'trithuong': return { stat:`Hồi đầy máu — đang ${Math.round(P.hp).toLocaleString('vi-VN')}/${P.maxHp.toLocaleString('vi-VN')}`, blocked: P.hp >= P.maxHp };
     case 'tukhi':     return { stat:`Hồi đầy Mana — đang ${Math.round(P.qi)}/${P.maxQi}`, blocked: P.qi >= P.maxQi };
-    case 'nghitro':   return { stat:`Hồi đầy máu và Mana — đang ${Math.round(P.hp).toLocaleString('vi-VN')}/${P.maxHp.toLocaleString('vi-VN')} HP · ${Math.round(P.qi)}/${P.maxQi} Mana`,
+    case 'nghitro':   return { stat:`Hồi đầy máu và Mana — đang ${Math.round(P.hp).toLocaleString('vi-VN')}/${P.maxHp.toLocaleString('vi-VN')} máu · ${Math.round(P.qi)}/${P.maxQi} Mana`,
                                blocked: P.hp >= P.maxHp && P.qi >= P.maxQi };
     case 'ruou':      return { stat:`+12% công lực trong 3 phút${(P.buffAtkT||0) > 0 ? ` · còn ${Math.ceil(P.buffAtkT)}s` : ''}` };
     case 'loidon':    return { stat:`−40% sát thương thiên lôi trong 5 phút${(P.loidonT||0) > 0 ? ` · còn ${Math.ceil(P.loidonT)}s` : ''}` };
@@ -21439,7 +21439,7 @@ el('is-skip').addEventListener('click', closeIntro);
 
 // ═══════════ HƯỚNG DẪN TÂN THỦ TỪNG BƯỚC ═══════════
 const TUT_STEPS = [
-  { key:'move',  txt:'Bấm <b>chuột phải</b> trên nền đất hoặc bấm vào <b>minimap</b> — nhân vật sẽ tự chạy tới đó, hãy thử một lần', },
+  { key:'move',  txt:'Bấm <b>chuột phải</b> trên nền đất hoặc bấm vào <b>bản đồ thu nhỏ</b> — nhân vật sẽ tự chạy tới đó, hãy thử một lần', },
   { key:'npc',   txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
   { key:'map',   txt:'Bấm <b>Đi ngay</b> trên dải nhiệm vụ giữa màn hình (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để dịch chuyển tới <b>Petalshade Isle</b>' },
   { key:'kill',  txt:'Nhấn <b>SPACE</b> — nhân vật tự chạy tới con quái gần nhất và đánh. Hãy hạ 1 con <b>Axie Heo Rừng</b>' },
@@ -21816,12 +21816,12 @@ function renderSettings(){
     }</span></div>
     <div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin:-2px 0 8px">Màn hình này là <b style="color:#8ab4ff">${(window.devicePixelRatio || 1).toFixed(2)}×</b> — đang vẽ ở <b style="color:#8ab4ff">${(RES * DPRF).toFixed(2)}×</b> điểm ảnh thật.<br>Đang chạy: <b style="color:#8ab4ff">${['Thấp','Vừa','Đầy'][FXQ]}</b>${FXQ_AUTO ? ' <i>(tự chỉnh)</i>' : ''} — mức thấp tắt quầng sáng và lớp phủ, đổi lại khung hình mượt hơn nhiều.</div>
     <div class="set-row"><span>🌐 Ngôn ngữ / Language</span><button class="mini-btn" onclick="window.ghhaSwitchLang && window.ghhaSwitchLang()">${(window.ghhaLang && window.ghhaLang() === 'en') ? '🇻🇳 Tiếng Việt' : '🇬🇧 English'}</button></div>
-    <div class="set-row" style="border-bottom:none;justify-content:center"><b style="color:#6ae88a;font-size:12px">— ⚔ AUTO FARM (phím Z) —</b></div>
+    <div class="set-row" style="border-bottom:none;justify-content:center"><b style="color:#6ae88a;font-size:12px">— ⚔ TỰ ĐÁNH (phím Z) —</b></div>
     <div class="set-row"><span>🗡 Tự tung kỹ năng trên taskbar</span>${togA('skill')}</div>
     <div class="set-row"><span>🧪 Tự uống Bình Thuốc Đỏ</span>${togA('potion')}</div>
-    <div class="set-row"><span>❤ Uống thuốc khi HP dưới</span>${sldA('potionPct', 10, 80, 5, _acS.potionPct + '%')}</div>
+    <div class="set-row"><span>❤ Uống thuốc khi Sinh Lực dưới</span>${sldA('potionPct', 10, 80, 5, _acS.potionPct + '%')}</div>
     <div class="set-row"><span>🎯 Tầm quét quanh điểm neo</span>${sldA('range', 200, 700, 10, _acS.range + 'px')}</div>
-    <div class="set-row"><span>👹 Auto đánh cả Boss <i>(nguy hiểm — mặc định tắt, boss tự mình quyết!)</i></span>${togA('boss')}</div>
+    <div class="set-row"><span>👹 Tự đánh cả Trùm <i>(nguy hiểm — mặc định tắt, trùm tự mình quyết!)</i></span>${togA('boss')}</div>
     <div class="set-row" style="border-bottom:none"><span style="color:#c05a4a">⚠ Xóa dữ liệu & chơi lại</span><button class="mini-btn danger" onclick="wipeSave()">XÓA SAVE</button></div>
     <div style="font-size:11px;color:#9aa8d4;margin-top:8px;line-height:1.5">Âm thanh sẽ phát sau thao tác đầu tiên của bạn (quy định trình duyệt). Mọi cài đặt được lưu tự động.</div>`;
 }
@@ -22089,7 +22089,7 @@ QUESTS.push(
     desc:'Dân tị nạn Axie chạy vào vale rồi không ra được, hít độc hoa tới mức quên mình là ai, quỳ lạy vết nứt như thánh thần. Giải thoát 7 Kẻ Cuồng Tín.',
     type:'kill', mob:'ttdetu', need:7, rew:{xp:40000, silver:2200} },
   { id:26, lv:68, name:'Gốc Rễ Độc', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
-    desc:'Chimera Cầu Gai kết lại từ chỗ khí vết nứt đọng xuống, độc rỉ theo từng gai. Diệt 6 con — nhớ bật buff của lớp (phím 3) trước khi vào.',
+    desc:'Chimera Cầu Gai kết lại từ chỗ khí vết nứt đọng xuống, độc rỉ theo từng gai. Diệt 6 con — nhớ bật phù trợ của lớp (phím 3) trước khi vào.',
     type:'kill', mob:'docyeu', need:6, rew:{xp:48000, silver:2600, mat:4} },
   { id:27, lv:76, name:'Mai Phục Trong Sương', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
     desc:'Tướng quân đã biết ngươi đang đi gỡ từng Trụ Khóa, và gửi sát thủ chặn lối ra Ashen Steppe. Diệt 4 tên.',
@@ -22343,7 +22343,7 @@ function renderMapPanel(){
       // playtest: hiện đủ tên mọi map + phó bản, dịch chuyển tự do
       html += `<div class="map-row" style="${cur?'border-color:#7ecbff;background:rgba(76,141,255,.1)':''}">
         <span style="flex:1"><span class="m-name">${m.name}</span>${_badge(id)}
-          <span style="font-size:10.5px;opacity:.6"> · LV ${m.range}</span>
+          <span style="font-size:10.5px;opacity:.6"> · cấp ${m.range}</span>
           <span class="zone-badge" style="color:${z2.color};border-color:${z2.color}">${m.dungeon ? 'PHÓ BẢN' : z2.name}</span>
           <div class="m-desc">${m.desc}</div>${bandSummaryHtml(m)}</span>
         <span class="m-side">${cur ? '<span style="color:#7ecbff;font-size:11px">ĐANG Ở ĐÂY</span>'
@@ -22362,7 +22362,7 @@ function renderMapPanel(){
       }
       html += `<div class="map-row map-locked">
         <span style="flex:1"><span class="m-name" style="color:#8a8275">${m.name}</span>
-          <span style="font-size:10.5px;opacity:.6"> · LV ${m.range}</span>
+          <span style="font-size:10.5px;opacity:.6"> · cấp ${m.range}</span>
           <span class="zone-badge" style="color:#6a6255;border-color:#6a6255">CHƯA MỞ</span>
           <div class="m-desc" style="opacity:.55">🔒 ${hints.join('<br>🔒 ')}</div></span>
         <span class="m-side"><span style="font-size:16px;opacity:.5">🔒</span></span></div>`;
@@ -22371,7 +22371,7 @@ function renderMapPanel(){
     const wpOk = player.wpUnlocked && player.wpUnlocked[id];
     html += `<div class="map-row" style="${cur?'border-color:#7ecbff;background:rgba(76,141,255,.1)':''}">
       <span style="flex:1"><span class="m-name">${m.name}</span>${_badge(id)}
-        <span style="font-size:10.5px;opacity:.6"> · LV ${m.range}</span>
+        <span style="font-size:10.5px;opacity:.6"> · cấp ${m.range}</span>
         <span class="zone-badge" style="color:${z2.color};border-color:${z2.color}">${z2.name}</span>
         <div class="m-desc">${m.desc}${!wpOk && !cur ? '<br><span style="color:#f0a03a">🚩 Chưa mở khoá điểm dịch chuyển — cần được nhiệm vụ dẫn tới đó 1 lần trước</span>' : ''}</div>${bandSummaryHtml(m)}</span>
       <span class="m-side">${cur ? '<span style="color:#7ecbff;font-size:11px">ĐANG Ở ĐÂY</span>' : ''}
@@ -22392,7 +22392,7 @@ window.openStageSelect = function(mapId){
 function renderStageSelect(mapId){
   const md = MAPS[mapId];
   let html = moBang({ tieu:'Chọn Trận', dong:md.name });
-  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Chọn 1 cụm quái để vào đánh ngay — AUTO tự bật khi vào trận, không cần tự đi bộ tới.</div>`;
+  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Chọn 1 cụm quái để vào đánh ngay — TỰ ĐÁNH tự bật khi vào trận, không cần tự đi bộ tới.</div>`;
   const packs = (md.packs || [])
     .map((pk,i)=>({ pk, i, mdef:MOBS[pk.mob] }))
     .filter(x=>x.mdef)
@@ -22407,7 +22407,7 @@ function renderStageSelect(mapId){
     else { tag = 'VỪA SỨC'; color = '#7ec850'; }
     html += `<div class="map-row">
       <span style="flex:1"><span class="m-name">${mdef.name} ×${bayCo(pk, md)}</span>
-        <span style="font-size:10.5px;opacity:.6"> · Lv ${mdef.lv||1}</span>
+        <span style="font-size:10.5px;opacity:.6"> · cấp ${mdef.lv||1}</span>
         <span class="zone-badge" style="color:${color};border-color:${color}">${tag}</span></span>
       <span class="m-side"><button class="mini-btn" onclick="enterStage('${mapId}',${i})">⚔ Vào Đánh</button></span></div>`;
   }
@@ -22415,7 +22415,7 @@ function renderStageSelect(mapId){
   // boss theo thiết kế sẵn có (phải tự đánh tay) — nên chỉ đưa người chơi tới gần, không bật AUTO.
   const bd = BOSS_DEFS[mapId];
   if (bd){
-    html += `<div class="stat-sec">BOSS VÙNG — cần tự đánh tay, AUTO không tự đánh boss</div>`;
+    html += `<div class="stat-sec">TRÙM VÙNG — cần tự đánh tay, TỰ ĐÁNH không tự đánh trùm</div>`;
     const bosses = [...bd.thuve.map(x=>({def:x, kind:'thuve'})), { def:bd.tranai, kind:'tranai' }];
     for (const { def, kind } of bosses){
       const gap = (def.lv||1) - player.level;
@@ -22426,7 +22426,7 @@ function renderStageSelect(mapId){
       else { tag = 'VỪA SỨC'; color = '#7ec850'; }
       html += `<div class="map-row">
         <span style="flex:1"><span class="m-name">${kind === 'tranai' ? '👑 ' : '★ '}${def.name}</span>
-          <span style="font-size:10.5px;opacity:.6"> · Lv ${def.lv||1}</span>
+          <span style="font-size:10.5px;opacity:.6"> · cấp ${def.lv||1}</span>
           <span class="zone-badge" style="color:${color};border-color:${color}">${tag}</span></span>
         <span class="m-side"><button class="mini-btn" onclick="enterBossStage('${mapId}','${def.id}')">⚔ Đến Gần</button></span></div>`;
     }
@@ -22436,7 +22436,7 @@ function renderStageSelect(mapId){
   if (MAPS[dgId]){
     html += `<div class="stat-sec">PHÓ BẢN</div>
       <div class="map-row"><span style="flex:1"><span class="m-name">${MAPS[dgId].name}</span>
-        <span style="font-size:10.5px;opacity:.6"> · Lv ${MAPS[dgId].min}+</span></span>
+        <span style="font-size:10.5px;opacity:.6"> · cấp ${MAPS[dgId].min}+</span></span>
         <span class="m-side"><button class="mini-btn" onclick="travelTo('${dgId}')">⚔ Vào Phó Bản</button></span></div>`;
   }
   el('panel-stage').innerHTML = html;
@@ -22461,7 +22461,7 @@ window.enterStage = function(mapId, packIdx){
   player.auto = true; player._autoAX = player.x; player._autoAY = player.y; updateAutoBtn();
   snapCamera(); closePanels();
   const mdef = MOBS[pk.mob];
-  addFloat(player.x, player.y-56, '⚔ Vào trận: ' + (mdef ? mdef.name : pk.mob) + ' — AUTO đã bật', '#ffd76a', 14);
+  addFloat(player.x, player.y-56, '⚔ Vào trận: ' + (mdef ? mdef.name : pk.mob) + ' — TỰ ĐÁNH đã bật', '#ffd76a', 14);
   AudioSys.sfx('ui', 0.5);
   saveGame();
 };
@@ -22838,7 +22838,7 @@ function tryHarvestHerb(){
   sideOnEvent('collect'); // luôn kiểm tra nhiệm vụ PHỤ thu thập đang active — không phụ thuộc nhiệm vụ chính có phải loại collect hay không
   if (!usedForQuest){
     player.hp = Math.min(player.maxHp, player.hp + 25);
-    addFloat(target.x, target.y-20, '+25 HP', '#8fd18f', 11);
+    addFloat(target.x, target.y-20, '+25 Sinh Lực', '#8fd18f', 11);
   }
   AudioSys.sfx('ui', 0.5);
   return true;
@@ -23209,9 +23209,9 @@ const TRAITS = [
   { id:'tuctri',    name:'Đầu Óc Sắc Bén',      tier:'linh',  glyph:'📖', desc:'+8% Kinh Nghiệm',                           late:p=>{ p.expPct += 8; } },
   { id:'luyenkhi',  name:'Tay Nghề Rèn',        tier:'linh',  glyph:'⚒', desc:'Rèn đồ +5% tỉ lệ thành công',               late:p=>{ p.forgeBonus += 5; } },
   { id:'thanhanh',  name:'Sải Chân Dài',        tier:'linh',  glyph:'👟', desc:'+6% Tốc Chạy',                              late:p=>{ p.speed = Math.round(p.speed*1.06); } },
-  { id:'thiennhan', name:'Mắt Tinh',            tier:'linh',  glyph:'👁', desc:'Minimap hiện cả điểm Thảo Dược',            late:p=>{ p.traitHerb = true; } },
+  { id:'thiennhan', name:'Mắt Tinh',            tier:'linh',  glyph:'👁', desc:'Bản đồ thu nhỏ hiện cả điểm Thảo Dược',            late:p=>{ p.traitHerb = true; } },
   { id:'longtich',  name:'Bước Chân Nhẹ',       tier:'huyen', glyph:'🐉', desc:'+5% Né Tránh',                              late:p=>{ p.eva = Math.min(0.45, p.eva+0.05); } },
-  { id:'doanngoc',  name:'Tay Xuyên Giáp',      tier:'huyen', glyph:'🎯', desc:'Venom Dart +15% ST · phá khiên lâu thêm 4s',    late:p=>{ p.amkhiPct += 0.15; p.shieldBonus += 4; } },
+  { id:'doanngoc',  name:'Tay Xuyên Giáp',      tier:'huyen', glyph:'🎯', desc:'Venom Dart +15% Sát Thương · phá khiên lâu thêm 4s',    late:p=>{ p.amkhiPct += 0.15; p.shieldBonus += 4; } },
   { id:'sattam',    name:'Máu Lạnh',            tier:'huyen', glyph:'☾', desc:'Giết Du Hiệp không tăng Tội Ác',            late:p=>{ p.traitSatTam = true; } },
   { id:'duocthe',   name:'Thể Chất Kháng Độc',  tier:'huyen', glyph:'🧪', desc:'Bình Thuốc Đỏ hồi 55% máu (thay 40%)',        late:p=>{ p.potionPct = 0.55; } },
   { id:'vohon',     name:'Hồn Chiến',           tier:'thien', glyph:'⚔', desc:'Thuần Thục +12% Sát Thương',                 late:p=>{ p.skillDmgPct += 0.12; } },
@@ -23377,7 +23377,7 @@ function rollKyngo(){
     AudioSys.sfx('hurt', 0.7);
   } else if (r < 0.74){ // Năng lượng hội tụ
     player.silver += 60; player.khi += 20;
-    text = 'KHÁM PHÁ · Năng Lượng Hội Tụ'; sub = 'Hít thở nguồn năng lượng quanh mình — +60◈ bạc · +20 Instinct!'; color = '#7fd8e0';
+    text = 'KHÁM PHÁ · Năng Lượng Hội Tụ'; sub = 'Hít thở nguồn năng lượng quanh mình — +60◈ bạc · +20 Bản Năng!'; color = '#7fd8e0';
   } else if (r < 0.90){ // Cao Thủ Ẩn Danh chỉ điểm vài chiêu
     const tv = 40 + Math.floor(player.level/12)*25;
     player.silver += tv*2;
@@ -23590,7 +23590,7 @@ function deepNextFloor(){
     bm.hp = bm.maxHp = bm.def.hp;
     bm.homeX = bm.x; bm.homeY = bm.y; bm.moveT = 3; bm.punishT = 0; bm.introduced = false;
     zoneBanner = { text:`TẦNG ${f} — ${bm.def.name}`,
-      sub: f >= DEEP_MAX ? 'TẦNG CUỐI. Hạ nó là trọn vẹn chuyến xuống.' : 'Tầng boss — hạ nó để mở lối xuống tiếp',
+      sub: f >= DEEP_MAX ? 'TẦNG CUỐI. Hạ nó là trọn vẹn chuyến xuống.' : 'Tầng trùm — hạ nó để mở lối xuống tiếp',
       color:'#ff5a4a', t:4.5 };
     AudioSys.sfx('crit', 0.9);
     if (player && player.auto){ player._autoAX = DEEP_HALL.cx; player._autoAY = DEEP_HALL.cy; }
@@ -23717,7 +23717,7 @@ function updateDungeon(dt){
     if (DGN.timeLeft <= 0){
       DGN.timeLeft = 0; DGN.failed = true;
       zoneBanner = { text:'⏱ HẾT GIỜ — PHÓ BẢN THẤT BẠI',
-        sub: DGN.cleared ? 'Không hạ được Boss Săn kịp giờ — mất cơ hội mở Rương lần này.' : 'Không thông quan kịp — ra cổng Xuất Môn để thử lại từ đầu.',
+        sub: DGN.cleared ? 'Không hạ được Trùm Săn kịp giờ — mất cơ hội mở Rương lần này.' : 'Không thông quan kịp — ra cổng Xuất Môn để thử lại từ đầu.',
         color:'#ff5a4a', t:5 };
       addFloat(player.x, player.y-80, 'Hết giờ! Phó bản thất bại.', '#ff5a4a', 16);
       AudioSys.sfx('hurt', 0.7);
@@ -23750,7 +23750,7 @@ function updateDungeon(dt){
     if (tl > 0) player.gems.tuLa += tl;
     if (hn > 0) player.gems.honNguyen += hn;
     zoneBanner = { text:'PHÓ BẢN THÔNG QUAN!',
-      sub:`+${td} Đá Thăng Cấp · +${mt} Huyền Thiết · +${r.khi} Instinct · +${sv + r.bacThem*2}◈ bạc`,
+      sub:`+${td} Đá Thăng Cấp · +${mt} Huyền Thiết · +${r.khi} Bản Năng · +${sv + r.bacThem*2}◈ bạc`,
       color:'#b08ae8', t:5 };
     addFloat(player.x, player.y - 80, 'Phần thưởng phó bản đã vào túi!', '#7ecbff', 16);
     AudioSys.sfx('levelup', 0.8);
@@ -23790,11 +23790,11 @@ function spawnHuntBoss(){
   // Boss Săn có chiêu AoE báo trước cần tự tay né (J để né) — AUTO không tự né được nên buộc tắt,
   // người chơi tự chiến trong lãnh địa boss (vòng đỏ nét đứt quanh boss, QA: sảnh phó bản quá rộng
   // để AUTO đứng yên bên trong một cách vô nghĩa như trước)
-  if (player && player.auto){ player.auto = false; updateAutoBtn(); addFloat(player.x, player.y-70, 'Boss Săn cần tự tay chiến — AUTO đã tắt!', '#ff9a5a', 13); }
+  if (player && player.auto){ player.auto = false; updateAutoBtn(); addFloat(player.x, player.y-70, 'Trùm Săn cần tự tay chiến — TỰ ĐÁNH đã tắt!', '#ff9a5a', 13); }
   // Ra mắt kịch tính: rung màn hình + hào quang bùng + 1 câu doạ — xứng với sảnh phó bản rộng
   shakeT = Math.max(shakeT, 0.5); shakeMag = Math.max(shakeMag, 7);
   addEffect({ type:'ring', x:1300, y:430, r:100, color:'#ffd76a', big:true });
-  addFloat(1300, 500, '⚔ BOSS SĂN xuất hiện: ' + def.name + '!', '#ffd76a', 20);
+  addFloat(1300, 500, '⚔ TRÙM SĂN xuất hiện: ' + def.name + '!', '#ffd76a', 20);
   if (HUNT_BOSS_TAUNT[hb]) addFloat(1300, 470, '"' + HUNT_BOSS_TAUNT[hb] + '"', '#ffb0b0', 13);
   AudioSys.sfx('crit', 0.7);
 }
@@ -23848,8 +23848,8 @@ function drawDungeonHUD(){
   if (!DGN || !player) return;
   const label = DGN.failed ? '⏱ HẾT GIỜ — PHÓ BẢN THẤT BẠI (qua cổng Xuất Môn để thử lại)'
     : DGN.huntCleared ? 'Phó bản đã thông quan — qua cổng dịch chuyển để rời đi'
-    : DGN.huntSpawned ? '⚔ BOSS SĂN: ' + MOBS[DGN.def.huntBoss].name
-    : DGN.cleared ? (DGN.def.huntBoss ? 'Cổng Vực đã hạ — Boss Săn sắp xuất hiện…' : 'Phó bản đã thông quan — qua cổng dịch chuyển để rời đi')
+    : DGN.huntSpawned ? '⚔ TRÙM SĂN: ' + MOBS[DGN.def.huntBoss].name
+    : DGN.cleared ? (DGN.def.huntBoss ? 'Cổng Vực đã hạ — Trùm Săn sắp xuất hiện…' : 'Phó bản đã thông quan — qua cổng dịch chuyển để rời đi')
     : DGN.bossRef ? 'BOSS: ' + DGN.def.bossName
     : 'Đợt ' + DGN.wave + '/' + DGN.def.waves.length + ' — dọn sạch quái!';
   const activeBoss = (DGN.huntSpawned && DGN.huntRef && !DGN.huntRef.dead) ? DGN.huntRef
@@ -23905,7 +23905,7 @@ function showOfflineGains(offSec, khiGain, bacGain){
     <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:24px;color:#7ecbff;margin-bottom:6px;letter-spacing:2px">Trở Lại Lunacia</div>
     <div style="font-size:13px;color:#9aa8d4;margin-bottom:14px;line-height:1.7">Bạn rời đi ${hh > 0 ? hh + ' giờ ' : ''}${mm} phút — bản năng vẫn âm thầm mài giũa trong lúc vắng mặt.</div>
     <div style="font-size:15px;line-height:2;color:#e4ebff">
-      <div>Instinct <b style="color:#7fd8e0">+${khiGain}</b></div>
+      <div>Bản Năng <b style="color:#7fd8e0">+${khiGain}</b></div>
       <div>Bạc <b style="color:#9fd0ff">+${bacGain*2}</b></div>
     </div>
     <div style="font-size:11.5px;color:#7a86ad;margin-top:12px">Cấp càng cao, thời gian vắng mặt càng đáng giá · tối đa 8 giờ</div>
@@ -23967,7 +23967,7 @@ window.swallowNoidan = function(stat){
 const TULINH_TIERS = [0, 0.15, 0.30, 0.50, 0.75, 1.00];
 const GARDEN_SEEDS = {
   hoisinh: { name:'Cỏ Hồi Máu',   time:3600,  desc:'1 giờ → 2 🧪 Bình Thuốc Đỏ' },
-  tukhi:   { name:'Cỏ Bản Năng',   time:7200,  desc:'2 giờ → +200 Instinct' },
+  tukhi:   { name:'Cỏ Bản Năng',   time:7200,  desc:'2 giờ → +200 Bản Năng' },
   // "Hoa Anima" đặt theo thứ nó cho, mà Anima vừa bị gỡ — đổi tên theo phần thưởng mới.
   ngoctam: { name:'Cỏ Bạc',        time:14400, desc:'4 giờ → +300◈ bạc' },
 };
@@ -23989,7 +23989,7 @@ function renderAbode(){
   if (t < 5){
     const costS = 500*(t+1), costM = 3*(t+1);
     html += `<div class="npc-shop-row"><span><b style="color:#9fd0ff">Nâng lên bậc ${t+1}</b> — tích lũy nhanh +${Math.round(TULINH_TIERS[t+1]*100)}%<br>
-      <span style="font-size:11px;opacity:.7">Áp dụng: nghỉ ngoại tuyến · tĩnh dưỡng · Instinct thụ động</span></span>
+      <span style="font-size:11px;opacity:.7">Áp dụng: nghỉ ngoại tuyến · tĩnh dưỡng · Bản Năng thụ động</span></span>
       <button class="mini-btn" ${player.silver >= costS && player.mat >= costM ? '' : 'disabled'} onclick="upgradeTulinh()">${costS}◈ + ${costM}✦</button></div>`;
   } else html += `<div style="font-size:12px;color:#8fd18f">Đài Hội Lực đã đạt bậc cao nhất — mạch lực chảy mạnh nhất có thể.</div>`;
   // Dược Viên
@@ -24046,7 +24046,7 @@ window.harvestSeed = function(i){
     addFloat(player.x, player.y-50, 'Thu hoạch: +2 🧪 Bình Thuốc Đỏ!', '#7ec850', 13);
   } else if (plot.seed === 'tukhi'){
     player.khi += 200;
-    addFloat(player.x, player.y-50, 'Thu hoạch: +200 Instinct!', '#7fd8e0', 13);
+    addFloat(player.x, player.y-50, 'Thu hoạch: +200 Bản Năng!', '#7fd8e0', 13);
   } else {
     player.silver += 300;
     addFloat(player.x, player.y-50, 'Thu hoạch: +300◈ bạc!', '#9fd0ff', 13);
@@ -24132,7 +24132,7 @@ function dailyCheckReward(){
   player.silver += 300; player.khi += 100;
   chiVe(1, 'Mục Tiêu Hôm Nay');
   zoneBanner = { text:'☀ HOÀN THÀNH MỤC TIÊU HÔM NAY!',
-    sub:'+300◈ bạc · +100 Instinct · +1 ✦ Ấn Giao Kết — quay lại ngày mai nhé!',
+    sub:'+300◈ bạc · +100 Bản Năng · +1 ✦ Ấn Giao Kết — quay lại ngày mai nhé!',
     color:'#7ec850', t:4.5 };
   AudioSys.sfx('levelup', 0.85);
   saveGame();
@@ -24628,12 +24628,12 @@ window.useJewel = function(kind, uid){
     const rate = Math.max(25, 75 - (it.life || 0) * 8);
     if (Math.random()*100 < rate){
       it.life = (it.life || 0) + 1;
-      say(`❤ Sinh Mệnh bậc ${it.life} — +${it.life*4}% HP tối đa!`, '#8fd18f');
-      addFloat(player.x, player.y-40, `❤ Sinh Mệnh +${it.life*4}% HP`, '#e84a6a', 14);
+      say(`❤ Sinh Mệnh bậc ${it.life} — +${it.life*4}% Sinh Lực tối đa!`, '#8fd18f');
+      addFloat(player.x, player.y-40, `❤ Sinh Mệnh +${it.life*4}% Sinh Lực`, '#e84a6a', 14);
       AudioSys.sfx('forge_ok', 0.9);
     } else {
       it.life = 0;
-      say('✘ Sinh Mệnh tan biến — dòng HP về 0!', '#ff7a6a');
+      say('✘ Sinh Mệnh tan biến — dòng Sinh Lực về 0!', '#ff7a6a');
       addFloat(player.x, player.y-40, '❤ Xịt — Sinh Mệnh về 0!', '#ff7a6a', 13);
       AudioSys.sfx('forge_fail', 0.85);
     }
@@ -25081,13 +25081,13 @@ function eventList(now){
           sub:`ĐANG DIỄN RA tại ${MAPS[MATON.map].name} — còn ${fmtCountdown(MATON.endsAt - now)}` }
       : { icon:'☠', name:'Hung Thần Giáng Thế', map: matonMapFor(MATON.next || matonNextBoundary(now)),
           at: MATON.next || matonNextBoundary(now), active:false, color:'#c07fe0',
-          sub:`${fmtClock(MATON.next || matonNextBoundary(now))} · ${MAPS[matonMapFor(MATON.next || matonNextBoundary(now))].name} — hạ boss nhận Box Kundun lớn` });
+          sub:`${fmtClock(MATON.next || matonNextBoundary(now))} · ${MAPS[matonMapFor(MATON.next || matonNextBoundary(now))].name} — hạ trùm nhận Box Kundun lớn` });
     list.push(RIFT.active
       ? { icon:'✹', name:'Chúa Tể Vực Nứt', map: null, at: RIFT.endsAt, active:true, color:'#a06aff',
           sub:`ĐANG DIỄN RA ở MỌI bãi săn — còn ${fmtCountdown(RIFT.endsAt - now)} · đã hạ ${RIFT.kills}/${RIFT_MAX_KILLS}` }
       : { icon:'✹', name:'Chúa Tể Vực Nứt', map: null,
           at: RIFT.next || riftNextBoundary(now), active:false, color:'#a06aff',
-          sub:`${fmtClock(RIFT.next || riftNextBoundary(now))} · 6 tiếng/lần (0h·6h·12h·18h) — nứt ở mọi bãi săn (cấp ${RIFT_MIN_LV}+), boss luôn trên tầm bạn 6 cấp` });
+          sub:`${fmtClock(RIFT.next || riftNextBoundary(now))} · 6 tiếng/lần (0h·6h·12h·18h) — nứt ở mọi bãi săn (cấp ${RIFT_MIN_LV}+), trùm luôn trên tầm bạn 6 cấp` });
     list.push(GOLDEN.active
       ? { icon:'✦', name:'Xâm Lăng Vàng', map: GOLDEN.map, at: GOLDEN.endsAt, active:true, color:'#ffd76a',
           sub:`ĐANG DIỄN RA tại ${MAPS[GOLDEN.map].name} — còn ${fmtCountdown(GOLDEN.endsAt - now)} · còn ${GOLDEN.left || '?'} quái vàng` }
@@ -25249,7 +25249,7 @@ function renderTeNui(n){
       <b style="color:#b08ae8">${gold ? 10 : 5}%</b> — Hang động giấu cổ thư: <b>học miễn phí 1 kỹ năng tự do</b> (hết → +15 📜)<br>
       <b style="color:#ffd76a">${gold ? 10 : 5}%</b> — Gặp hiền giả ẩn danh: được chỉ điểm <b>1 kỹ năng chưa ngộ</b></div>
       <div style="font-size:11.5px;color:#9aa8d4;margin-top:6px;line-height:1.5">Giờ Vàng (12h & 20h mỗi ngày): tỉ lệ cổ thư/hiền giả ×2.<br>
-      Cái giá mỗi lần nhảy: <b style="color:#ff7a6a">-30% HP</b> (không chết) + <b style="color:#ff7a6a">Trọng Thương 15 phút</b>.</div>`;
+      Cái giá mỗi lần nhảy: <b style="color:#ff7a6a">-30% Sinh Lực</b> (không chết) + <b style="color:#ff7a6a">Trọng Thương 15 phút</b>.</div>`;
     if (wounded){
       const left = Math.ceil(((player.tenuiTT || 0) - Date.now()) / 1000);
       html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 22px" disabled>🩸 Trọng Thương — còn ${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}</button></div>`;
