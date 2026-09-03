@@ -419,7 +419,7 @@ const WING_DEFS = {
                desc:'+12% Sinh Lực · +4% Phòng Ngự · +4% né' },
   toanchan:  { art:'con',  chuKy:240, bien:3.0, id:'w1_sr', name:'Cánh Tiên Sương',    color:'#cfeeff', evaPct:8, aspdPct:6, silverPct:15,
                desc:'+8% né · +6% tốc đánh · +15% Lumen rơi' },
-  baidasan:  { art:'long', chuKy:300, bien:2.4, id:'w1_dw', name:'Cánh Bạch Vũ', color:'#eef2ff', atkPct:12, crit:4, expPct:10,
+  baidasan:  { art:'long', anh:'vu', chuKy:300, bien:2.4, id:'w1_dw', name:'Cánh Bạch Vũ', color:'#eef2ff', atkPct:12, crit:4, expPct:10,
                desc:'+12% Sát Thương · +4% bạo · +10% EXP' },
   minhgiao:  { art:'lai',  to:1.22, chuKy:260, bien:2.6, id:'w1_sb', name:'Cánh Hỏa Vũ', color:'#b08050', atkPct:12, aspdPct:6, crit:5,
                desc:'+12% Sát Thương · +6% tốc đánh · +5% bạo' },
@@ -433,7 +433,7 @@ const WING2_DEFS = {
                desc:'+20% Sinh Lực · +12% Sát Thương · +6% Phòng Ngự · +6% né' },
   toanchan:  { art:'con',  chuKy:230, bien:3.4, id:'w2_sr', name:'Sương Lâm Dực',  color:'#2f9fe0', atkPct:20, aspdPct:12, evaPct:8, crit:6,
                desc:'+20% Sát Thương · +12% tốc đánh · +8% né · +6% bạo' },
-  baidasan:  { art:'long', chuKy:290, bien:2.8, id:'w2_dw', name:'Hoại Vụ Dực',    color:'#2fb04a', atkPct:22, crit:10, pierce:6, expPct:12,
+  baidasan:  { art:'long', anh:'vu', chuKy:290, bien:2.8, id:'w2_dw', name:'Hoại Vụ Dực',    color:'#2fb04a', atkPct:22, crit:10, pierce:6, expPct:12,
                desc:'+22% Sát Thương · +10% bạo · +6% xuyên giáp · +12% EXP' },
   minhgiao:  { art:'tia',  to:1.45, chuKy:250, bien:3.0, id:'w2_sb', name:'Liệt Hỏa Dực',   color:'#ff5a10', atkPct:24, aspdPct:10, crit:8, hpLeech:4,
                desc:'+24% Sát Thương · +10% tốc đánh · +8% bạo · +4% hút sinh lực' },
@@ -449,7 +449,7 @@ const WING3_DEFS = {
                desc:'+30% Sinh Lực · +18% Sát Thương · +10% Phòng Ngự · +8% né · +5% xuyên giáp' },
   toanchan:  { art:'con',  chuKy:220, bien:3.8, id:'w3_sr', name:'Thần Dực Nguyệt Lâm', color:'#9ef2ff', atkPct:30, aspdPct:16, evaPct:12, crit:10, pierce:5,
                desc:'+30% Sát Thương · +16% tốc đánh · +12% né · +10% bạo · +5% xuyên giáp' },
-  baidasan:  { art:'long', chuKy:280, bien:3.2, id:'w3_dw', name:'Thần Dực Hư Vô',     color:'#d8a8ff', atkPct:32, crit:14, pierce:10, defPct:8,
+  baidasan:  { art:'long', anh:'vu', chuKy:280, bien:3.2, id:'w3_dw', name:'Thần Dực Hư Vô',     color:'#d8a8ff', atkPct:32, crit:14, pierce:10, defPct:8,
                desc:'+32% Sát Thương · +14% bạo · +10% xuyên giáp · +8% Phòng Ngự' },
   minhgiao:  { art:'tia',  to:1.3, chuKy:240, bien:3.4, id:'w3_sb', name:'Thần Dực Vực Lửa',   color:'#ffb15c', atkPct:34, aspdPct:14, crit:12, hpLeech:7, pierce:5,
                desc:'+34% Sát Thương · +14% tốc đánh · +12% bạo · +7% hút sinh lực · +5% xuyên giáp' },
@@ -13170,15 +13170,17 @@ const _heroCardCache = new Map();
 function heroCardUrl(sectKey, tier, gv){
   // Cánh PHẢI nằm trong chữ ký, không thì thăng bậc xong thẻ nhân vật vẫn hiện đôi cũ mãi —
   // đúng cái bẫy mà dòng chú thích ngay trên đã cảnh báo, chỉ là lần này với món khác.
-  const wsig = gv && gv.canh ? `${gv.canh.wing}${wingBac(gv.canh)}` : '-';
+  const wd = gv && gv.canh ? wingDef(gv.canh) : null;
+  const woi = wd && wd.anh && !canhAnh(wd.anh) ? 'o' : '';   // 'o' = tranh còn đang tải
+  const wsig = gv && gv.canh ? `${gv.canh.wing}${wingBac(gv.canh)}${woi}` : '-';
   const sig = gv ? `${Math.round(gv.t * 10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor || ''}_${wsig}` : '-';
   const key = sectKey + ':' + (tier || 1) + ':' + sig;
   { const u = lruLay(_heroCardCache, key); if (u) return u; }
   // Khung rộng thêm hai bên để CHỨA ĐƯỢC SẢI CÁNH. Mút cánh bậc 3 nằm ở x = 80 + 14 + 102·1,12
-  // ≈ 208, cộng quầng loe nữa là tràn khỏi khung 160 px chừng 60 px — vẽ trong khung cũ thì
+  // ≈ 208, cộng quầng loe nữa là tràn khỏi khung 160 px chừng 90 px — vẽ trong khung cũ thì
   // đôi cánh to nhất game bị cắt cụt. Ảnh rộng ra nhưng CSS đặt bề rộng cố định
   // (.char-portrait 120px), nên hình chỉ thu nhỏ lại một chút chứ bố cục không xê dịch.
-  const PAD = 86, CW = HERO_W + PAD*2;
+  const PAD = 116, CW = HERO_W + PAD*2;
   const cv = document.createElement('canvas');
   cv.width = CW; cv.height = HERO_H;
   const hg = cv.getContext('2d');
@@ -13948,6 +13950,64 @@ function drawChibi(g, sectKey, variant){
 const CANH_GOC_X = 14, CANH_GOC_Y = -108;   // (80±14, 212-108) = (66,104)/(94,104) — bả vai
 const CANH_CO_MAN = 104 / HERO_H;           // từ hệ xương ra pixel thế giới
 const CANH_CHAN_MAN = 6;                    // hero y=212 rơi vào world y = p.y + 6
+// ── TRANH CÁNH ─────────────────────────────────────────────────────────────────────
+// Một đôi cánh có thể thay hình-dựng-bằng-đường bằng TRANH vẽ tay. Quy ước của tệp tranh:
+// vẽ MỘT bên cánh, gốc cắm nằm sát mép trái, thân chìa sang phải, và tô XÁM (kênh L) chứ
+// không tô màu — màu là do bậc cánh quyết định, đổ vào lúc chạy bằng phép nhân.
+// Nhờ vậy một tấm tranh phục vụ được cả ba bậc của một lớp, khỏi phải vẽ ba tấm.
+// Tranh KHÔNG thay cả đôi cánh, nó chỉ thay MỘT THÙY. Vòng lặp thùy giữ nguyên, nên bậc 1
+// xếp 2 lớp lông, bậc 2 xếp 3, bậc 3 xếp 4 và tách chữ X — đúng nấc thang của WING_TIERS.
+const CANH_ANH = {};
+function canhAnh(ten){
+  if (!ten) return null;
+  let im = CANH_ANH[ten];
+  if (!im){ im = new Image(); im.src = 'assets/canh/' + ten + '.png'; CANH_ANH[ten] = im; }
+  return (im.complete && im.naturalWidth) ? im : null;
+}
+for (const bang of WING_BANG) for (const sk in bang) canhAnh(bang[sk].anh);
+// Nhuộm tranh xám thành màu của bậc. Nhân (multiply) giữ nguyên tương quan sáng-tối nên nếp
+// lông vẫn còn; sau đó cắt lại đúng vùng có lông vì fillRect vừa phủ kín cả khung.
+const CANH_ANH_MAU = new Map();
+const CANH_ANH_MAU_CAP = 24;
+function canhAnhMau(ten, im, mau){
+  const khoa = ten + '|' + mau;
+  const co = CANH_ANH_MAU.get(khoa);
+  if (co){ CANH_ANH_MAU.delete(khoa); CANH_ANH_MAU.set(khoa, co); return co; }
+  const c = document.createElement('canvas');
+  c.width = im.naturalWidth; c.height = im.naturalHeight;
+  const q = c.getContext('2d');
+  q.drawImage(im, 0, 0);
+  q.globalCompositeOperation = 'multiply';
+  q.fillStyle = mau; q.fillRect(0, 0, c.width, c.height);
+  q.globalCompositeOperation = 'destination-in';
+  q.drawImage(im, 0, 0);
+  // Nhân xong thì mảng sáng nhất cũng chỉ bằng đúng màu bậc, cánh bệt lại. Trả một phần ánh
+  // sáng gốc về bằng phép cộng — chỉ trong khung tranh này nên không đụng tới da và tóc.
+  q.globalCompositeOperation = 'lighter';
+  q.globalAlpha = 0.20; q.drawImage(im, 0, 0);
+  CANH_ANH_MAU.set(khoa, c);
+  if (CANH_ANH_MAU.size > CANH_ANH_MAU_CAP) CANH_ANH_MAU.delete(CANH_ANH_MAU.keys().next().value);
+  return c;
+}
+// Vẽ một thùy bằng tranh. Khung toạ độ vào đây đã là khung của thùy: gốc ở bả vai, +x ra
+// NGOÀI, và người gọi đã xoay sẵn góc xoè. Việc còn lại là đặt gốc cắm của tranh vào gốc toạ
+// độ rồi ngửa tranh lên cho mút cánh trỏ đúng hướng mà xương cánh dựng hình vẫn trỏ.
+const CANH_ANH_GOC = [0.016, 0.655];   // gốc cắm, theo tỉ lệ bề rộng/bề cao tranh
+const CANH_ANH_XOAY = -0.55;           // ngửa lên cho khớp mút xương cánh (~31°)
+const CANH_ANH_DAI = 1.75;             // chiều dài tranh, theo RX
+function canhVeAnh(g, d, T, im, RX, duoiX){
+  const c = canhAnhMau(d.anh, im, d.color);
+  const gx = (d.anhGoc || CANH_ANH_GOC)[0], gy = (d.anhGoc || CANH_ANH_GOC)[1];
+  const S = RX * (d.anhDai || CANH_ANH_DAI) / c.width;
+  const xoay = d.anhXoay == null ? CANH_ANH_XOAY : d.anhXoay;
+  g.save();
+  // Cặp DƯỚI của hình chữ X đã bị người gọi quay quá phương ngang để đổ xuống. Tranh có mặt
+  // trên rõ rệt — mép trước ở trên, lông rủ xuống dưới — nên quay không thôi thì nó nằm ngửa.
+  // Lật theo trục ngang rồi ngửa ngược chiều: ra đúng dáng cặp cánh dưới úp xuống.
+  if (duoiX){ g.scale(1, -1); g.rotate(-xoay); } else g.rotate(xoay);
+  g.drawImage(c, -gx * c.width * S, -gy * c.height * S, c.width * S, c.height * S);
+  g.restore();
+}
 // Xương cánh (mép trước), ghép từ hai đoạn bậc hai. Tham số t chạy 0 (gốc) → 1 (mút).
 // Cánh vọt gần THẲNG ĐỨNG khỏi bả vai rồi mới ngả ra — đó là dáng chung của cả ba tấm ảnh,
 // và là thứ bản cũ thiếu: nó bung ngang ngay từ gốc nên ra cái vây cá cắm ngang sườn.
@@ -14040,7 +14100,7 @@ function veCanh(g, it, px, py, sway, swayDir, co, bay){
       // Spellblade dùng được cả cánh thiên thần lẫn cánh quỷ, nên đeo bộ LAI: tầng trên là
       // lông vũ, tầng dưới là màng dơi.
       const art = d.art === 'lai' ? (kk === 0 ? 'long' : 'doi') : d.art;
-      canhVeThuy(g, d, T, art, RX, RY, kk, now);
+      canhVeThuy(g, d, T, art, RX, RY, kk, now, duoiX);
       g.restore();
     }
     canhOpVai(g, d, T);                          // ốp gốc: chỗ đôi cánh CẮM vào lưng
@@ -14082,7 +14142,9 @@ function canhToBong(g, T, RX, RY, nhe){
   bong.addColorStop(1, 'rgba(0,0,0,0)');
   g.fillStyle = bong; g.fill();
 }
-function canhVeThuy(g, d, T, art, RX, RY, k, now){
+function canhVeThuy(g, d, T, art, RX, RY, k, now, duoiX){
+  const anh = d.anh ? canhAnh(d.anh) : null;
+  if (anh){ canhVeAnh(g, d, T, anh, RX, duoiX); canhDauHieuBac(g, d, T, art, RX, RY, k, now); return; }
   if      (art === 'doi')  veThuyDoi(g, d, T, RX, RY);
   else if (art === 'long') veThuyLong(g, d, T, RX, RY, k);
   else if (art === 'con')  veThuyCon(g, d, T, RX, RY, now);

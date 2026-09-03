@@ -434,7 +434,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .skill.has-img { background-size:cover; background-position:center; }
 .skill.has-img .sk-ico { display:none; }
 .skill .sk-key { position:absolute; bottom:1px; right:3px; text-shadow:0 1px 2px #000; }
-.char-portrait { display:block; width:120px; margin:0 auto 6px; filter:drop-shadow(0 4px 8px rgba(0,0,0,.4)); }
+.char-portrait { display:block; width:142px; margin:0 auto 6px; filter:drop-shadow(0 4px 8px rgba(0,0,0,.4)); }
 .sect-card .s-title { font-size:17px; letter-spacing:.5px; margin-bottom:4px; font-weight:700; }
 .sect-card .s-role { font-size:var(--fs-sm); color:var(--text-dim); margin-bottom:8px; }
 .sect-card .s-desc { font-size:11.5px; line-height:1.55; opacity:.85; }
