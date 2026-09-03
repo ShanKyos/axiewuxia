@@ -377,15 +377,112 @@ const CLOAK_TIERS = [ null,
 ];
 // Bể dòng phụ. MỌI khoá ở đây phải có ngăn trong sổ P của calcDerived() — applyLine() lặng lẽ
 // Cánh — boss 12%, ngoài hệ 10 cấp trang bị
-const WING_DEFS = [
-  { id:'thienthan', name:'Cánh Thiên Thần', color:'#dfe8ff', hpPct:12, evaPct:6, silverPct:20, desc:'+12% Sinh Lực · +6% né · +20% đồng rơi' },
-  { id:'tieuquy',   name:'Cánh Tiểu Quỷ',   color:'#b08ae8', atkPct:12, crit:5,  aspdPct:6,    desc:'+12% Sát Thương · +5% bạo · +6% tốc đánh' },
+// ══════════ CÁNH — ba bậc, mỗi lớp một đôi riêng (khảo sát: docs/KHAO_SAT_CANH.md) ══════════
+// MU cho mỗi lớp một đôi cánh riêng ở cả ba bậc, và cánh khoá theo lớp y như kiếm/gậy/cung.
+// Trước đây game này có đúng HAI đôi bậc 1 và HAI đôi bậc 2, quay ngẫu nhiên giữa chúng — nghĩa
+// là cánh không nói lên ngươi là ai, và "quay lại cho ra con kia" chỉ là thuế bấm lại chứ không
+// phải rủi ro có ý nghĩa. Nay: 3 bậc × 5 lớp = 15 đôi, tra thẳng theo `player.sect`.
+//
+// Thang chỉ số nội suy từ số ĐANG CÓ chứ không bịa thang mới: dòng chính 12 → 24 → 34
+// (bước +12 rồi +10, giảm dần đúng hướng GIAI_POW). Đối chiếu MU: 12% → 32% → 39%, cũng giảm dần.
+// `art` quyết định DÁNG vẽ; `sai` là sải cánh mỗi bên tính bằng pixel; `thuy` là số thùy.
+// Ba bậc cánh KHÔNG được chỉ khác nhau ở chỗ to hơn — nhìn cái bóng là phải biết ngay bậc mấy,
+// đó mới là thứ khiến người ta muốn lên bậc. Theo khảo sát (docs/KHAO_SAT_CANH_BAY.md), MU tách
+// bậc bằng SÁU TRỤC KHÁC NHAU, mỗi bậc thắng ở một trục chứ không phải cùng một trục to dần:
+//   (a) số tầng thùy    1 → 2 → 4
+//   (b) mút cánh        tù bo tròn → nhọn có móc → nhọn kéo vệt
+//   (c) gai / khung      không → gai + khung dày → khung mảnh, nhường chỗ cho ánh sáng
+//   (d) đuôi rủ          không → ngắn → dài
+//   (e) phát sáng        KHÔNG GÌ CẢ → viền mép → viền + lõi + hạt bay, ruột bán trong suốt
+//   (f) màu              nhạt đơn sắc → bão hoà cực đại → sáng cao, bão hoà giảm
+// Bậc 1 tuyệt đối không phát sáng: đó là mốc để bậc 2 và 3 còn chỗ mà leo.
+//
+// Kích thước tính bằng pixel của bộ xương (cao 220, đỉnh đầu y=53, vai y=100, hông y=142),
+// quy từ tỉ lệ khảo sát: sải cánh 0,55 / 0,75 / 0,95 chiều cao thân; đỉnh cánh so với đỉnh đầu
+// −0,02 / +0,06 / +0,15. Cánh CAO HƠN LÀ RỘNG — đây là chỗ bản cũ sai nặng nhất.
+//   sai — tầm vươn NGANG tính từ gốc · cao — tầm vươn LÊN tính từ gốc
+const WING_TIERS = [
+  { bac:1, ten:'Cánh',     sai:56, cao:62, thuy:2, xoe:0.42, nhon:0,    lv:40,
+    vien:0,   gai:0, duoi:0, duoiDai:0,    hat:0, hao:0, trong:0, nhan:0 },
+  { bac:2, ten:'Linh Dực', sai:84, cao:78, thuy:3, xoe:0.36, nhon:0.55, lv:80,
+    vien:1.7, gai:4, duoi:2, duoiDai:0.55, hat:0, hao:0, trong:0, nhan:1 },
+  { bac:3, ten:'Thần Dực', sai:102, cao:92, thuy:4, xoe:0.30, nhon:1,   lv:100,
+    vien:2.4, gai:5, duoi:3, duoiDai:1,    hat:1, hao:1, trong:1, nhan:2, chuX:1 },
 ];
-// Linh Dực Cấp 2 — luyện tại Lò Bảo Chứng (LV80+), thăng từ cánh cấp 1
-const WING2_DEFS = [
-  { id:'phuongduc', name:'Phượng Hoàng Linh Dực', color:'#ff8a3a', atkPct:20, hpPct:15, crit:8, aspdPct:10, desc:'+20% Sát Thương · +15% Sinh Lực · +8% bạo · +10% tốc đánh' },
-  { id:'hacma',     name:'Hắc Ma Linh Dực',       color:'#c07fe0', atkPct:24, pierce:8, hpLeech:5, crit:10, desc:'+24% Sát Thương · +8% xuyên giáp · +5% hút sinh lực · +10% bạo' },
-];
+// Góc ngả CHUNG của cả đôi cánh, tính từ phương thẳng đứng. Không có nó thì hai cánh dựng
+// sát hai bên sọ; ảnh MU nào cũng cho thấy chúng ngả ra thành chữ V.
+const CANH_NGHIENG = 0.24;
+// art: 'phien' phiến kim loại gãy · 'long' lông vũ có gân · 'quang' màn sáng · 'than' màng
+// lệch hai bên có đốm than · 'co' hai lá cờ đuôi nheo treo trên thanh ngang.
+const WING_DEFS = {
+  thieulam:  { art:'doi', chuKy:360, bien:1.6, id:'w1_dk', name:'Cánh Quỷ Đen',  color:'#5a4436', hpPct:12, defPct:4, evaPct:4,
+               desc:'+12% Sinh Lực · +4% Phòng Ngự · +4% né' },
+  toanchan:  { art:'con',  chuKy:240, bien:3.0, id:'w1_sr', name:'Cánh Tiên Sương',    color:'#cfeeff', evaPct:8, aspdPct:6, silverPct:15,
+               desc:'+8% né · +6% tốc đánh · +15% Lumen rơi' },
+  baidasan:  { art:'long', chuKy:300, bien:2.4, id:'w1_dw', name:'Cánh Bạch Vũ', color:'#eef2ff', atkPct:12, crit:4, expPct:10,
+               desc:'+12% Sát Thương · +4% bạo · +10% EXP' },
+  minhgiao:  { art:'lai',  to:1.22, chuKy:260, bien:2.6, id:'w1_sb', name:'Cánh Hỏa Vũ', color:'#b08050', atkPct:12, aspdPct:6, crit:5,
+               desc:'+12% Sát Thương · +6% tốc đánh · +5% bạo' },
+  bug:       { art:'doi',    chuKy:300, bien:2.2, id:'w1_dl', name:'Cánh Quỷ Hoang',   color:'#4a3f2e', hpPct:10, atkPct:8, silverPct:20,
+               desc:'+10% Sinh Lực · +8% Sát Thương · +20% Lumen rơi' },
+  vophai:    { art:'rach',  chuKy:280, bien:2.4, id:'w1_tn', name:'Cánh Lữ Hành',   color:'#c0b49a', hpPct:8, evaPct:5, silverPct:10,
+               desc:'+8% Sinh Lực · +5% né · +10% Lumen rơi' },
+};
+const WING2_DEFS = {
+  thieulam:  { art:'doi', chuKy:340, bien:2.0, id:'w2_dk', name:'Hắc Nguyệt Dực', color:'#4632c8', hpPct:20, atkPct:12, defPct:6, evaPct:6,
+               desc:'+20% Sinh Lực · +12% Sát Thương · +6% Phòng Ngự · +6% né' },
+  toanchan:  { art:'con',  chuKy:230, bien:3.4, id:'w2_sr', name:'Sương Lâm Dực',  color:'#2f9fe0', atkPct:20, aspdPct:12, evaPct:8, crit:6,
+               desc:'+20% Sát Thương · +12% tốc đánh · +8% né · +6% bạo' },
+  baidasan:  { art:'long', chuKy:290, bien:2.8, id:'w2_dw', name:'Hoại Vụ Dực',    color:'#2fb04a', atkPct:22, crit:10, pierce:6, expPct:12,
+               desc:'+22% Sát Thương · +10% bạo · +6% xuyên giáp · +12% EXP' },
+  minhgiao:  { art:'tia',  to:1.45, chuKy:250, bien:3.0, id:'w2_sb', name:'Liệt Hỏa Dực',   color:'#ff5a10', atkPct:24, aspdPct:10, crit:8, hpLeech:4,
+               desc:'+24% Sát Thương · +10% tốc đánh · +8% bạo · +4% hút sinh lực' },
+  bug:       { art:'ao',    chuKy:290, bien:2.6, id:'w2_dl', name:'Bào Bạo Chúa',   color:'#b01f2f', atkPct:18, hpPct:15, defPct:6, silverPct:25,
+               desc:'+18% Sát Thương · +15% Sinh Lực · +6% Phòng Ngự · +25% Lumen rơi' },
+  vophai:    { art:'rach',  chuKy:270, bien:2.8, id:'w2_tn', name:'Lữ Hành Dực',    color:'#b0762a', atkPct:16, hpPct:12, evaPct:8, silverPct:15,
+               desc:'+16% Sát Thương · +12% Sinh Lực · +8% né · +15% Lumen rơi' },
+};
+// Mọi đôi cánh bậc 3 đều mang CÙNG một dòng đặc biệt — xuyên giáp. Đó là thứ tách bậc 3 khỏi
+// bậc 2 về CƠ CHẾ chứ không chỉ về con số, và là lý do người ta còn muốn leo nốt bậc cuối.
+const WING3_DEFS = {
+  thieulam:  { art:'doi', chuKy:320, bien:2.4, id:'w3_dk', name:'Thần Dực Bão Thép',  color:'#8fb0ff', hpPct:30, atkPct:18, defPct:10, evaPct:8, pierce:5,
+               desc:'+30% Sinh Lực · +18% Sát Thương · +10% Phòng Ngự · +8% né · +5% xuyên giáp' },
+  toanchan:  { art:'con',  chuKy:220, bien:3.8, id:'w3_sr', name:'Thần Dực Nguyệt Lâm', color:'#9ef2ff', atkPct:30, aspdPct:16, evaPct:12, crit:10, pierce:5,
+               desc:'+30% Sát Thương · +16% tốc đánh · +12% né · +10% bạo · +5% xuyên giáp' },
+  baidasan:  { art:'long', chuKy:280, bien:3.2, id:'w3_dw', name:'Thần Dực Hư Vô',     color:'#d8a8ff', atkPct:32, crit:14, pierce:10, defPct:8,
+               desc:'+32% Sát Thương · +14% bạo · +10% xuyên giáp · +8% Phòng Ngự' },
+  minhgiao:  { art:'tia',  to:1.3, chuKy:240, bien:3.4, id:'w3_sb', name:'Thần Dực Vực Lửa',   color:'#ffb15c', atkPct:34, aspdPct:14, crit:12, hpLeech:7, pierce:5,
+               desc:'+34% Sát Thương · +14% tốc đánh · +12% bạo · +7% hút sinh lực · +5% xuyên giáp' },
+  bug:       { art:'ao',    chuKy:280, bien:3.0, id:'w3_dl', name:'Bào Ngai Đen',  color:'#ffd76a', atkPct:28, hpPct:22, defPct:10, silverPct:35, pierce:5,
+               desc:'+28% Sát Thương · +22% Sinh Lực · +10% Phòng Ngự · +35% Lumen rơi · +5% xuyên giáp' },
+  vophai:    { art:'rach',  chuKy:260, bien:3.2, id:'w3_tn', name:'Thần Dực Lữ Hành',   color:'#f2e6cc', atkPct:26, hpPct:20, evaPct:12, silverPct:25, pierce:5,
+               desc:'+26% Sát Thương · +20% Sinh Lực · +12% né · +25% Lumen rơi · +5% xuyên giáp' },
+};
+const WING_BANG = [WING_DEFS, WING2_DEFS, WING3_DEFS];
+// Độ cao lơ lửng theo bậc cánh, tính bằng pixel. Bậc 1 vừa đủ để thấy chân rời đất; bậc 3 thì
+// nhìn từ xa cũng biết người kia đang bay.
+const BAY_CAO = [11, 17, 24];
+// Cộng tốc độ di chuyển theo bậc cánh (xem BAY_TOCDO ở calcDerived).
+const BAY_TOCDO = [0.06, 0.10, 0.14];
+// Độ cao ĐANG lơ lửng, nội suy dần về BAY_CAO[bậc] mỗi khung hình để cất/hạ cánh cho mượt.
+// Giữ ở biến MODULE chứ không nhét vào `player`: đây là trạng thái VẼ, không phải trạng thái
+// trò chơi. Nhét vào player thì nó chui vào save, rồi lần nạp sau nhân vật xuất hiện lơ lửng ở
+// một độ cao cũ chẳng liên quan gì tới đôi cánh đang mặc.
+let bayCao = 0;
+// Bậc của một đôi cánh, đọc từ chính món đồ. Món đời cũ mang id 'thienthan'/'tieuquy'
+// (bậc 1) hoặc 'phuongduc'/'hacma' (bậc 2) — loadGame() đổi chúng sang đôi của lớp.
+function wingBac(it){ return (it && it.wingBac) || 1; }
+function wingDef(it){
+  if (!it) return null;
+  const b = WING_BANG[clamp(wingBac(it) - 1, 0, 2)];
+  for (const sk in b) if (b[sk].id === it.wing) return b[sk];
+  return b[(player && player.sect)] || b.thieulam;
+}
+// Lớp nào dùng được đôi này. Cánh khoá theo lớp y hệt kiếm/gậy/cung — xem itemUsable().
+function wingSect(it){
+  for (let t = 0; t < 3; t++) for (const sk in WING_BANG[t]) if (WING_BANG[t][sk].id === (it && it.wing)) return sk;
+  return null;
+}
 
 // Vòng khắc hệ: Kim > Mộc > Thổ > Thủy > Hỏa > Kim (khắc chế +20% sát thương)
 // Vòng khắc 5 hệ. KHÓA đối tượng giữ nguyên (chúng nằm trong save của người chơi và rải khắp
@@ -5106,7 +5203,11 @@ function genCloak(t){ return specialItem('aochoang', CLOAK_TIERS[t], { cloakTier
 // gia tài mới lên +11, và không đổi được sang con rơi tốt hơn'. Nó còn chồng vai với Chimera —
 // cả hai đều là con thú đi theo cộng chỉ số — mà Chimera có gacha, có bộ sưu tập, có chiêu riêng.
 // Con đang nuôi được quy ra Lumen khi tải save cũ.
-function genWing(i){ return specialItem('canh', WING_DEFS[i], { wing: WING_DEFS[i].id }); }
+function genWing(sect, bac){
+  const b = WING_BANG[clamp((bac || 1) - 1, 0, 2)];
+  const d = b[sect] || b[(player && player.sect)] || b.thieulam;
+  return specialItem('canh', d, { wing: d.id, wingBac: (bac || 1) });
+}
 function mainName(k){
   return { atk:'Công Kích', def:'Phòng Ngự', vit:'Sinh Lực', str:'Lực Lượng',
            agi:'Mẫn Tiệp', hp:'Sinh Lực tối đa', crit:'Bạo Kích %', qireg:'Hồi Mana' }[k] || k;
@@ -5414,7 +5515,7 @@ function tryAutoEquip(it){
   const idx = player.inv.indexOf(it);
   if (idx < 0) return;
   player.inv.splice(idx, 1);
-  if (cur) player.inv.push(cur);
+  if (cur) bagThem(cur);
   player.equip[it.slot] = it;
   addFloat(player.x, player.y-62, `⚡ Tự mặc ${it.name} (+${np-cp} LC)`, '#6ae88a', 12);
   calcDerived();
@@ -5434,7 +5535,7 @@ window.autoEquipBest = function(){
       const it2 = player.inv[bi];
       gained += itemPower(it2) - (player.equip[sl.id] ? itemPower(player.equip[sl.id]) : 0);
       player.inv.splice(bi, 1);
-      if (player.equip[sl.id]) player.inv.push(player.equip[sl.id]);
+      if (player.equip[sl.id]) bagThem(player.equip[sl.id]);
       player.equip[sl.id] = it2;
       swapped++;
       calcDerived();
@@ -5671,6 +5772,10 @@ function calcDerived(){
   if (MZ.skillPct) player.skillDmgPct = (player.skillDmgPct || 0) + MZ.skillPct/100;
   if (MZ.cdCut) player.vhCdMult = Math.max(0.35, (player.vhCdMult || 1) * (1 - MZ.cdCut/100));
   if (MZ.spdPct) player.speed = Math.round(player.speed * (1 + MZ.spdPct/100));
+  // Cánh không chỉ để nhìn: trong MU, mang cánh là lơ lửng và đi NHANH HƠN cả chạy. Mức cộng
+  // để nhỏ (6/10/14%) vì khoảng cách giữa các điểm trên bản đồ đã căn theo player.speed = 209.
+  const _canhSpd = player.equip && player.equip.canh;
+  if (_canhSpd) player.speed = Math.round(player.speed * (1 + BAY_TOCDO[clamp(wingBac(_canhSpd), 1, 3) - 1]));
   player.rangePct = MZ.rangePct/100;                                   // đọc bởi atkRange()
   if (MZ.amkhiPct) player.amkhiPct = (player.amkhiPct || 0) + MZ.amkhiPct/100;
   if (MZ.potionPct) player.potionPct = (player.potionPct || 0.4) + MZ.potionPct/100;
@@ -5768,7 +5873,7 @@ function newPlayer(sectKey){
   for (const sl of SLOTS) player.equip[sl.id] = null;
   // starter weapon
   const w = genItem(1, 0); w.slot='weapon'; w.slotName='Vũ Khí';
-  player.inv.push(w);
+  bagThem(w);
   questIdx = 0; questProg = 0; questState = 'active'; // quest 1 auto-accepted
   sideStates = {};
   victory = false; dead = false;
@@ -5906,6 +6011,25 @@ function loadGame(idx){
     // quy đổi Anima tồn dư ra Lumen (ngay bên dưới) chạy TRƯỚC, nên chỉ xoá ở cuối loadGame().
     delete player.meridians; delete player.ascended; delete player.tienSkin;
     player.pendingHit = null;   // đòn thường đang hẹn không được sống sót qua lần tải lại
+    // ══ Cánh đời cũ → đôi cánh của CHÍNH LỚP mình ═══════════════════════════════════
+    // Bản cũ có đúng hai đôi bậc 1 (thienthan/tieuquy) và hai đôi bậc 2 (phuongduc/hacma),
+    // quay ngẫu nhiên khi chế — nên nửa số người chơi đang đeo đôi không hợp lớp mình. Nay cánh
+    // khoá theo lớp, và món cũ mà để nguyên thì `wingSect()` trả về null ⇒ nó vẫn mặc được
+    // nhưng vẽ ra dáng mặc định, và tên thì chẳng khớp gì với bộ giáp. Đổi thẳng sang đôi tương
+    // ứng: GIỮ NGUYÊN BẬC, chỉ đổi lớp — không ai lên bậc miễn phí, cũng không ai bị tụt.
+    {
+      const _doiCanh = (it) => {
+        if (!it || it.slot !== 'canh') return it;
+        if (it.wingBac && wingSect(it)) return it;         // đã là cánh đời mới
+        const _bac = it.wing2 ? 2 : 1;
+        const _moi = genWing(player.sect, _bac);
+        _moi.uid = it.uid; _moi.gx = it.gx; _moi.gy = it.gy;   // giữ chỗ trong lưới và mã món
+        return _moi;
+      };
+      if (player.equip && player.equip.canh) player.equip.canh = _doiCanh(player.equip.canh);
+      if (Array.isArray(player.inv)) player.inv = player.inv.map(_doiCanh);
+      if (Array.isArray(player.kho)) player.kho = player.kho.map(_doiCanh);
+    }
     if (!player.gems) player.gems = { tuLa: 0, honNguyen: 0 };
     if (player.charms == null) player.charms = 0;
     if (player.tienDan == null) player.tienDan = 0;
@@ -6171,10 +6295,43 @@ function loadGame(idx){
     for (const s2 in player.equip){
       const it = migrateItem(player.equip[s2]);
       if (!it) continue;
-      if (!newEquip[it.slot]) newEquip[it.slot] = it; else player.inv.push(it);
+      if (!newEquip[it.slot]) newEquip[it.slot] = it; else player.inv.push(it);   // xếp lại ở bagXepLai() ngay dưới
     }
     player.equip = newEquip;
-    player.inv = player.inv.map(migrateItem).filter(Boolean).slice(0, bagCap());
+    player.inv = player.inv.map(migrateItem).filter(Boolean);
+    // ══ Túi phẳng (30 ô, mỗi món một ô) → lưới 8 cột, mỗi món một khối ô ══════════════
+    // Save cũ không có gx/gy. Xếp lại từ đầu: món to trước, món bé nhét vào kẽ.
+    // KHÔNG được để ai mất đồ vì đổi cách chứa: nếu 64 ô không đủ thì NỚI THÊM HÀNG miễn phí
+    // cho tới khi vừa, chứ không bán bớt. Ba mươi món to nhất (vũ khí hai tay 2×4) là 240 ô,
+    // tức tối đa 30 hàng — vẫn là một con số hữu hạn và người chơi giữ nguyên mọi thứ.
+    // Số ô nới bằng Shard trước đây đếm theo Ô (+5 mỗi lần), nay đếm theo HÀNG (+1 = 8 ô).
+    // Đổi đơn vị TRƯỚC khi xếp lưới, không thì vòng nới hàng bên dưới chạy trên số sai.
+    if (player.bagPlus > BAG_MAX_PLUS && !player.bagRowsV5) player.bagPlus = Math.round(player.bagPlus / 5);
+    player.bagRowsV5 = true;
+    if (player.inv.some(x => x && x.gx == null)){
+      const _rowCu = player.bagPlus || 0;
+      let _du = bagXepLai();
+      let _tran = 32;                       // chốt vòng lặp, đừng để một món lỗi làm treo game
+      while (_du.length && bagRows() < _tran){
+        player.bagPlus = (player.bagPlus || 0) + 1;
+        player.inv = player.inv.concat(_du);
+        _du = bagXepLai();
+      }
+      if (_du.length){                      // hết đường: chỉ tới đây mới quy ra Lumen
+        let _bu = 0;
+        for (const _it of _du) _bu += itemSellPrice(_it);
+        player.silver += _bu;
+        setTimeout(() => { if (player) zoneBanner = { text:'⚠ TÚI ĐỔI SANG LƯỚI',
+          sub:`${_du.length} món không còn chỗ — đã quy ra ${_bu.toLocaleString('vi-VN')}◈ Lumen`,
+          color:'#ffb15c', t:8 }; }, 1600);
+      } else if ((player.bagPlus || 0) > _rowCu){
+        const _them = (player.bagPlus || 0) - _rowCu;
+        setTimeout(() => { if (player) zoneBanner = { text:'🎒 TÚI ĐỒ THÀNH LƯỚI',
+          sub:`Mỗi món nay chiếm khối ô theo hình dáng — tặng ${_them} hàng để không mất món nào`,
+          color:'#7ec850', t:7 }; }, 1600);
+      }
+    }
+
     // clamp old +12..+15 gear to the new +11 cap
     for (const s in player.equip) if (player.equip[s] && player.equip[s].plus > 11) player.equip[s].plus = 11;
     for (const it of player.inv) if (it.plus > 11) it.plus = 11;
@@ -6821,7 +6978,7 @@ window.addEventListener('keydown', e=>{
     else if (DEEP) window.deepLeave();
     else travelTo(nearGate.to, curMap);
   }
-  if (e.key === 'Escape') closePanels();
+  if (e.key === 'Escape'){ if (window.ngocCam) window.buongNgoc(); else closePanels(); }
 });
 window.addEventListener('keyup', e=> keys[e.key.toLowerCase()] = false);
 // Giữ ALT: hiện nhãn tên MỌI món dưới đất, không chỉ món gần. Nhả ra là về như cũ.
@@ -7048,9 +7205,9 @@ function takeLoot(g, idx){
     logCombat(`✦ Nhặt ${JEWEL_NAMES[g.jk]}`, JEWEL_COLORS[g.jk]);
     AudioSys.sfx('forge_ok', 0.7);
   } else {
-    if (player.inv.length >= bagCap()){ g.full = true; g.t = Math.max(g.t, LOOT_BLINK + 1); return false; }
+    if (!bagConCho(g.it)){ g.full = true; g.t = Math.max(g.t, LOOT_BLINK + 1); return false; }
     g.full = false;
-    player.inv.push(g.it);
+    bagThem(g.it);
     addFloat(g.x, g.y - 26, g.it.name, RARITIES[g.it.rarity].color, 13);
     logCombat(`▣ Nhặt ${g.it.name}`, RARITIES[g.it.rarity].color);
     AudioSys.sfx(g.it.rarity >= 2 ? 'levelup' : 'ui', g.it.rarity >= 2 ? 0.85 : 0.5);
@@ -7415,10 +7572,13 @@ function computeKillRewards(m, source, P, rng){
   // Cánh rơi từ boss (12%). Linh Thú KHÔNG còn rơi từ quái nữa — nó là tính năng riêng
   // (bảng Nhân Vật → Linh Thú), nhận một lần ở cấp 8 rồi nuôi lên. Trước đây pet là đồ rơi,
   // nên săn được con tốt nhất là ô pet chết vĩnh viễn: không còn lý do nhặt con thứ tư.
-  const _oCon = P.inv.length;
-  let _sotCho = Math.max(0, bagCap() - _oCon);
+  // Túi nay là LƯỚI, nên "còn chỗ" đo bằng Ô TRỐNG chứ không phải số món. Đôi cánh chiếm
+  // 2×5 = 10 ô, nên chỉ quay cánh khi thật sự còn chừng đó chỗ — hợp đồng của hàm này là
+  // KHÔNG ghi vào player, nên chỉ ĐẾM ô trống, không đặt thử.
+  let _sotCho = bagOTrong();
   if (d.boss){
-    if (R() < 0.12 && _sotCho > 0){ rw.wings.push(Math.floor(R()*2)); _sotCho--; }
+    const _oCanh = BAG_SIZES.canh[0] * BAG_SIZES.canh[1];
+    if (R() < 0.12 && _sotCho >= _oCanh){ rw.wings.push(Math.floor(R()*2)); _sotCho -= _oCanh; }
   }
   // đá quý: Tu La (cấp 3+), Hỗn Nguyên (tinh anh), Đá Thăng Cấp (cấp 5+)
   if (d.lv >= 3 && R() < 0.15) rw.gems.tuLa = 1;
@@ -7474,7 +7634,13 @@ function applyRewards(rw, m){
   player.kills += rw.kills;
   logCombat(`☠ Hạ ${m.def.name} — Nhận: +${rw.xp} EXP${rw.xpMul < 1 ? ` (-${Math.round((1-rw.xpMul)*100)}% chênh cấp)` : ''} +${rw.silver}◈`, rw.xpMul < 1 ? '#c8b888' : '#7ecbff');
   dailyTrack('kills');
-  for (const wi of rw.wings){ player.inv.push(genWing(wi)); addFloat(m.x, m.y-114, `${WING_DEFS[wi].name}!`, WING_DEFS[wi].color, 15); }
+  // Cánh rơi ra là ĐÔI CỦA LỚP MÌNH. Rơi ra đôi của lớp khác thì đó không phải phần thưởng,
+  // đó là một dòng chữ vàng rồi một món đồ không mặc được.
+  for (let _n = 0; _n < rw.wings.length; _n++){
+    const _w = genWing(player.sect, 1), _d = wingDef(_w);
+    if (bagThem(_w)) addFloat(m.x, m.y-114, `${_d.name}!`, _d.color, 15);
+    else dropToGround({ k:'item', it:_w }, m.x, m.y);
+  }
   if (rw.gems.tuLa){ player.gems.tuLa += rw.gems.tuLa; logCombat('+1 ◆ Tu La Tinh Thạch', '#e84a6a'); }
   if (rw.gems.honNguyen){ player.gems.honNguyen += rw.gems.honNguyen; logCombat('+1 ❖ Hỗn Nguyên Thạch', '#b08ae8'); }
   if (rw.tienDan){ player.tienDan += rw.tienDan; logCombat(`+${rw.tienDan} ◈ Đá Thăng Cấp`, '#7ec850'); }
@@ -7688,7 +7854,9 @@ function unlockNotices(){
     6:['Mở khóa: Khế Ước Chimera — quay Chimera đồng hành (C → Chimera)'],
     7:['Mở khóa: Trấn Phái — tuyệt kỹ của lớp (phím 2)'],
     10:[...(player.sect === 'vophai' ? ['Mở khóa: the Calling — 5 lớp để chọn!'] : []),'Mở khóa: Stoneform (Thuần Thục — phím H)','Mở khóa: Truy Nã Lệnh & Sảnh Cầu May — Bổ Đầu và Thương Nhân Vận May ở Lunaris City'],
-    40:['Mở khóa: Lò Bảo Chứng luyện Linh Dực Cấp 1 — Lò Rèn Hoàng Gia, Lunaris City'],
+    40:['Mở khóa: Luyện Cánh bậc 1 — Lò Hỗn Độn tại Lò Rèn Hoàng Gia, Lunaris City'],
+    80:['Mở khóa: Thăng Linh Dực bậc 2 — cánh mạnh gấp đôi, cùng chỗ Lò Rèn Hoàng Gia'],
+    100:['Mở khóa: Thần Dực bậc 3 — bậc cánh cuối, cần thêm một món Chí Tôn +9 hiến tế'],
     45:['Box Kundun IV trở lên từ Hung Thần có 5-8% mở ra trang bị CỔ THẦN THỦ HỘ — Hung Thần giáng thế mỗi 4 giờ!'],
     30:['Mở khóa: Archery (Thuần Thục — phím H)'],
   };
@@ -10440,6 +10608,10 @@ function gearVisual(p){
     // Trước đây chỉ đưa ra wTier/wPlus, mà hai trường đó không ai đọc: mỗi lớp vẽ cứng
     // một thanh, nên nâng vũ khí không hiện lên người một chút nào.
     wDef: itemDef(w),
+    // Cánh. Thiếu dòng này thì `drawHeroFigure` không có đường nào biết người chơi đang đeo
+    // cánh — và đó chính là lý do bảng Nhân Vật xưa nay vẽ ra một nhân vật không cánh trong
+    // khi ngoài màn thì có. Trang bị mà không NHÌN THẤY được thì coi như chưa mặc.
+    canh: p.equip.canh || null,
     setColor,
   };
 }
@@ -12803,7 +12975,10 @@ function drawHeroLit(g, sectKey, tier, now, ps, gv){
   _litCtx.clearRect(0, 0, W0, H0);
   _litCtx.save();
   _litCtx.translate(HS_PAD, HS_PAD);
-  drawHeroFigureLit(_litCtx, sectKey, tier, now, ps, gv);
+  // Bỏ cánh ra, cùng lý do với heroSprite(): drawPlayer đã vẽ cánh riêng bằng veCanh() rồi.
+  // Đây là đường vẽ dùng khi nhân vật TRÚNG ĐÒN; nếu nó vẫn nướng cánh vào thì cứ mỗi lần ăn
+  // đòn là hiện thêm một đôi cánh thứ hai trong 0,3 giây, và hai đường vẽ ra hai hình khác nhau.
+  drawHeroFigureLit(_litCtx, sectKey, tier, now, ps, canhBoRa(gv));
   _litCtx.restore();
   g.drawImage(_litCv, -HS_PAD, -HS_PAD);
 }
@@ -12841,6 +13016,9 @@ const HS_PAD = 40;
 const HS_CAP = 420;                              // trần LRU — dựng lười nên thực dùng bằng đúng số tư thế đã gặp
 const _hsCache = new Map();
 let _hsHit = 0, _hsMiss = 0;
+// Bỏ cánh khỏi bộ trang phục trước khi nướng sprite hoặc viền kim quang — xem chú thích ở
+// heroSprite(). Trả về CHÍNH gv khi không mặc cánh, để khỏi tạo rác mỗi khung hình.
+function canhBoRa(gv){ return gv && gv.canh ? { ...gv, canh: null } : gv; }
 function heroGearSig(gv){
   return gv ? `${Math.round(gv.t*10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor||''}` : '-';
 }
@@ -12881,7 +13059,13 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw){
   g.translate(HS_PAD, HS_PAD);
   const ps = heroFramePose(kind, idx, act, sw);
   ps.back = !!back;
-  drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx), ps, gv);
+  // Cánh KHÔNG nướng vào sprite: drawPlayer đã vẽ nó riêng bằng veCanh(). Nướng vào đây là vẽ
+  // HAI đôi cánh chồng lên nhau — và tệ hơn, heroGearSig() không có cánh trong chữ ký, nên tấm
+  // đệm giữ mãi đôi cánh của lần dựng đầu tiên: đổi cánh hay tháo cánh cũng không đổi được ảnh.
+  // Vẽ rời còn đúng hơn về bản chất — cánh vỗ liên tục và nhấc người lên khi bay, nướng vào
+  // sprite là khoá nó vào đúng mấy chục khung có sẵn. Cánh cũng tràn khỏi lề HS_PAD = 40 px
+  // nên nướng vào là bị cắt cụt hai bên (đúng cái mà test_herosprite bắt được).
+  drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx), ps, canhBoRa(gv));
   // CẮT SÁT nội dung. Lề 40 là cần (đo được hào quang tràn ra tới −38..197 ngang, 245 dọc), nhưng
   // blit nguyên tấm có lề là tô thêm 2× diện tích toàn pixel trong suốt mỗi khung — đo được mất
   // 43,9 → 38,9 FPS chỉ vì phần lề đó. Đo hộp bao đúng một lần lúc dựng rồi cắt.
@@ -12916,7 +13100,9 @@ function heroRimCanvas(sectKey, tier, now, ps, gv){
     _rimCtx = _rimCv.getContext('2d');
   }
   _rimCtx.clearRect(0, 0, HERO_W, HERO_H);
-  drawHeroFigure(_rimCtx, sectKey, tier, now, ps, gv);
+  // Bỏ cánh ra, cùng lý do với heroSprite(): drawPlayer đã vẽ cánh riêng rồi. Khung này còn
+  // đúng 160×220 nên đôi cánh vẽ vào đây cũng bị cắt cụt hai bên.
+  drawHeroFigure(_rimCtx, sectKey, tier, now, ps, canhBoRa(gv));
   return _rimCv;
 }
 function drawHeroFigure(g, sectKey, tier, now, ps, gv){
@@ -12939,6 +13125,11 @@ function drawHeroFigure(g, sectKey, tier, now, ps, gv){
     g.beginPath(); g.arc(80, 120, 86, 0, 7); g.fill(); g.globalAlpha = 1;
   }
   hPlusAura(g, SM, gv, now);                                 // E. hào quang cường hoá (sau lưng)
+  // Cánh nằm SAU lưng và TRƯỚC áo choàng — cùng thứ tự lớp như ngoài màn. veCanh() vẽ THẲNG
+  // trong hệ của bộ xương này (gốc giữa hai bàn chân, hero 80/212), nên ở đây tỉ lệ đúng bằng
+  // 1 và không có hệ số phỏng đoán nào cả. Trước đây chỗ này nhân đại 1,9 rồi truyền chân
+  // y=200 — lệch 12 px, đủ để gốc cánh tụt xuống ngang hông.
+  if (gv && gv.canh) veCanh(g, gv.canh, 80, 212, 0, ps.lean * 0.5, 1, 0);
   if (G.cape && !ps.back) hCape(g, G.cape[0], G.cape[1], ps);
   hLegs(g, P, ps, gv, SM, S);
   g.translate(0, ps.bob);                                    // nhún theo bước chân
@@ -12977,14 +13168,24 @@ const _heroCardCache = new Map();
 // ⚠ Khoá cache PHẢI gồm chữ ký trang bị. Chân dung nay phụ thuộc gv, nên khoá chỉ theo
 // sect:tier như trước sẽ khiến panel Nhân Vật hiện mãi ảnh cũ sau mỗi lần thay đồ.
 function heroCardUrl(sectKey, tier, gv){
-  const sig = gv ? `${Math.round(gv.t * 10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor || ''}` : '-';
+  // Cánh PHẢI nằm trong chữ ký, không thì thăng bậc xong thẻ nhân vật vẫn hiện đôi cũ mãi —
+  // đúng cái bẫy mà dòng chú thích ngay trên đã cảnh báo, chỉ là lần này với món khác.
+  const wsig = gv && gv.canh ? `${gv.canh.wing}${wingBac(gv.canh)}` : '-';
+  const sig = gv ? `${Math.round(gv.t * 10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor || ''}_${wsig}` : '-';
   const key = sectKey + ':' + (tier || 1) + ':' + sig;
   { const u = lruLay(_heroCardCache, key); if (u) return u; }
+  // Khung rộng thêm hai bên để CHỨA ĐƯỢC SẢI CÁNH. Mút cánh bậc 3 nằm ở x = 80 + 14 + 102·1,12
+  // ≈ 208, cộng quầng loe nữa là tràn khỏi khung 160 px chừng 60 px — vẽ trong khung cũ thì
+  // đôi cánh to nhất game bị cắt cụt. Ảnh rộng ra nhưng CSS đặt bề rộng cố định
+  // (.char-portrait 120px), nên hình chỉ thu nhỏ lại một chút chứ bố cục không xê dịch.
+  const PAD = 86, CW = HERO_W + PAD*2;
   const cv = document.createElement('canvas');
-  cv.width = HERO_W; cv.height = HERO_H;
+  cv.width = CW; cv.height = HERO_H;
   const hg = cv.getContext('2d');
+  hg.translate(PAD, 0);
   drawHeroFigure(hg, sectKey, tier || 1, 0, HERO_POSE0, gv);
-  applyFormLight(hg, 0, 0, HERO_W, HERO_H, 0.7);   // nhẹ tay hơn icon: mặt người không nên bị bệt
+  hg.setTransform(1, 0, 0, 1, 0, 0);
+  applyFormLight(hg, 0, 0, CW, HERO_H, 0.7);   // nhẹ tay hơn icon: mặt người không nên bị bệt
   applyEdgeLight(hg, 2, 2, 0.6);
   return lruDat(_heroCardCache, key, cv.toDataURL('image/png'), HERO_CARD_CAP);
 }
@@ -13724,20 +13925,569 @@ function drawChibi(g, sectKey, variant){
   }
 }
 
+// ══════════ VẼ CÁNH — một hàm, dùng cho cả trong màn lẫn bảng Nhân Vật ══════════════════
+// Năm dáng khác hẳn nhau, chứ không phải một dáng đổi màu. Bậc đọc ra được từ SẢI CÁNH
+// (40 → 52 → 66 px) và SỐ THÙY (2 → 3 → 4) — nhìn lướt là biết người kia đang ở bậc nào.
+//
+// Cánh là bộ phận MỀM, nên nó phải đọc `sway`/`swayDir` của nhân vật chứ không đọc thẳng đồng
+// hồ: trước đây `Math.sin(performance.now()/280)` khiến cánh vỗ đều tăm tắp kể cả lúc đứng yên
+// hay đang bị hất lùi — đôi cánh là bộ phận mềm DUY NHẤT trong game phá luật quán tính đó.
+// ═══ CÁNH ═════════════════════════════════════════════════════════════════════════
+// Toạ độ ở đây là HỆ CỦA BỘ XƯƠNG NHÂN VẬT (hHead/hTorso/HERO_JOINT), gốc đặt giữa hai
+// bàn chân — hero (80, 212). Mốc trên bộ xương: đỉnh đầu y=53 · khớp vai y=100, hai vai cách
+// nhau 56 px · hông y=142 · chân y=212.
+//
+// Ba điều dưới đây đọc từ ẢNH CÁNH THẬT trong MU (Fairy · Heaven · Satan, đều là cánh BẬC 1),
+// và cả ba đều ngược với thứ mình đoán trước đó:
+//   1. Cánh bậc 1 ĐÃ vươn quá đỉnh đầu rồi. Không có chuyện "bậc 1 chỉ nhú qua vai".
+//   2. Ba bậc khác nhau ở ĐỘ PHỨC TẠP nhiều hơn ở KÍCH THƯỚC — cánh bậc 1 đã to sẵn.
+//   3. Mỗi lớp một CHẤT LIỆU khác hẳn, không phải cùng một dáng đổi màu:
+//      Dark Knight đeo cánh quỷ (màng dơi có nan ngón và vuốt), Dark Wizard đeo cánh thiên
+//      thần (lông vũ trắng xếp lớp), Elf đeo cánh tiên (màng côn trùng trong suốt có gân).
+//      Magic Gladiator dùng được cả hai loại nên cho lai. Dark Lord cũng đeo cánh quỷ.
+const CANH_GOC_X = 14, CANH_GOC_Y = -108;   // (80±14, 212-108) = (66,104)/(94,104) — bả vai
+const CANH_CO_MAN = 104 / HERO_H;           // từ hệ xương ra pixel thế giới
+const CANH_CHAN_MAN = 6;                    // hero y=212 rơi vào world y = p.y + 6
+// Xương cánh (mép trước), ghép từ hai đoạn bậc hai. Tham số t chạy 0 (gốc) → 1 (mút).
+// Cánh vọt gần THẲNG ĐỨNG khỏi bả vai rồi mới ngả ra — đó là dáng chung của cả ba tấm ảnh,
+// và là thứ bản cũ thiếu: nó bung ngang ngay từ gốc nên ra cái vây cá cắm ngang sườn.
+function canhXuong(RX, RY, nhon, t){
+  const P1 = { x: RX * 0.58, y: -RY };
+  const P2 = { x: RX * (1.02 + 0.10 * nhon), y: -RY * (0.50 - 0.06 * nhon) };
+  if (t < 0.5){
+    const u = t * 2, v = 1 - u;
+    return { x: 2*u*v*(RX*0.30) + u*u*P1.x, y: 2*u*v*(-RY*0.62) + u*u*P1.y };
+  }
+  const u = t * 2 - 1, v = 1 - u;
+  const C = { x: RX * (0.82 + 0.06 * nhon), y: -RY * (0.98 + 0.06 * nhon) };
+  return { x: v*v*P1.x + 2*u*v*C.x + u*u*P2.x, y: v*v*P1.y + 2*u*v*C.y + u*u*P2.y };
+}
+// Đường nền mép sau, u chạy 0 (mút) → 1 (chỗ cắm vào lưng).
+function canhNen(RX, RY, nhon, u){
+  const M = canhXuong(RX, RY, nhon, 1);
+  const C = { x: RX * (0.66 - 0.06 * nhon), y: RY * 0.08 };
+  const E = { x: RX * 0.16, y: RY * 0.36 }, v = 1 - u;
+  return { x: v*v*M.x + 2*u*v*C.x + u*u*E.x, y: v*v*M.y + 2*u*v*C.y + u*u*E.y };
+}
+function canhMepTruoc(g, RX, RY, nhon){
+  const P1 = canhXuong(RX, RY, nhon, 0.5), P2 = canhXuong(RX, RY, nhon, 1);
+  g.beginPath();
+  g.moveTo(0, 0);
+  g.quadraticCurveTo(RX * 0.30, -RY * 0.62, P1.x, P1.y);
+  g.quadraticCurveTo(RX * (0.82 + 0.06 * nhon), -RY * (0.98 + 0.06 * nhon), P2.x, P2.y);
+}
+// Mép sau răng cưa: đi dọc đường nền, mỗi khấc vồng ra (loi>0, đầu lông vũ) hay hóp vào
+// (loi<0, màng dơi căng giữa hai nan ngón). Đây là thứ tách chất liệu này khỏi chất liệu kia,
+// chứ không phải mấy nét gân vẽ đè lên một mảng phẳng.
+function canhMepSau(g, RX, RY, nhon, rang, loi){
+  let P = canhXuong(RX, RY, nhon, 1);
+  for (let i = 1; i <= rang; i++){
+    const Q = canhNen(RX, RY, nhon, i / rang);
+    const mx = (P.x + Q.x) / 2, my = (P.y + Q.y) / 2;
+    const L = Math.hypot(mx, my) || 1, bien = RX * 0.11 * loi;
+    g.quadraticCurveTo(mx + mx / L * bien, my + my / L * bien, Q.x, Q.y);
+    P = Q;
+  }
+}
+// Một chiếc lông vũ: phiến thon từ gốc (trên xương cánh) ra mút (trên mép sau).
+function canhLongVu(g, B, M, rong){
+  const dx = M.x - B.x, dy = M.y - B.y, L = Math.hypot(dx, dy) || 1;
+  const nx = -dy / L, ny = dx / L;
+  const cx = B.x + dx * 0.45, cy = B.y + dy * 0.45;
+  g.beginPath();
+  g.moveTo(B.x, B.y);
+  g.quadraticCurveTo(cx + nx * rong, cy + ny * rong, M.x, M.y);
+  g.quadraticCurveTo(cx - nx * rong * 0.5, cy - ny * rong * 0.5, B.x, B.y);
+  g.closePath();
+}
+function veCanh(g, it, px, py, sway, swayDir, co, bay){
+  const d = wingDef(it); if (!d) return;
+  const bac = clamp(wingBac(it), 1, 3);
+  const T = WING_TIERS[bac - 1];
+  const now = performance.now();
+  const B = clamp(bay || 0, 0, 1);              // 0 = đứng đất, 1 = bay cao nhất
+  // Đang bay thì cánh phải vỗ MẠNH hơn và NHANH hơn — đôi cánh đứng im mà người vẫn lơ lửng
+  // là thứ tố cáo ngay rằng cái độ cao kia chỉ là vẽ dịch lên vài pixel.
+  const chuKy = d.chuKy / (1 + B * 0.4);
+  const bienGoc = d.bien * 0.035 * (1 + B * 0.9) * (1 + (bac - 1) * 0.14);
+  g.save();
+  g.translate(px, py); g.scale(co || 1, co || 1);
+  if (d.art === 'ao'){ veCanhAo(g, d, T, swayDir, now, B); g.restore(); return; }
+  if (T.hao) canhHaoQuang(g, d, T, now);        // bậc 3: vòng hào quang sau lưng, vẽ dưới cùng
+  for (const side of [-1, 1]){
+    g.save();
+    g.translate(side * CANH_GOC_X, CANH_GOC_Y);
+    g.scale(side, 1);                            // từ đây +x luôn là HƯỚNG RA NGOÀI
+    if (T.duoi) canhDuoi(g, d, T, now, swayDir); // dải đuôi rủ — vẽ SAU lưng đôi cánh
+    for (let k = T.thuy - 1; k >= 0; k--){       // thùy ngoài vẽ trước, thùy chính đè lên
+      // Thùy dưới ngắn và THẤP hơn hẳn: cánh thiên thần trong ảnh là một tầng lớn cõng một
+      // tầng nhỏ, không phải hai tầng bằng nhau xoè ra như cái quạt giấy.
+      // Cặp DƯỚI của hình chữ X ngắn hơn cặp trên, đúng như cánh bướm và cánh thiên sứ
+      // trong ảnh: cặp trên gánh diện tích, cặp dưới chỉ kéo dài thành đuôi.
+      const duoiX = T.chuX && k >= T.thuy / 2;
+      const kk = duoiX ? k - T.thuy / 2 : k;
+      const co1 = duoiX ? 0.86 : 1;
+      const toLop = d.to || 1;              // cỡ riêng của đôi cánh, xem chú thích ở WING_DEFS
+      const RX = T.sai * co1 * toLop * (1 - 0.20 * kk),
+            RY = T.cao * co1 * toLop * (1 - 0.26 * kk);
+      // Trễ pha theo thùy: cùng pha thì mấy thùy dính lại thành một mảng cứng.
+      const vo = Math.sin(now / chuKy + k * 0.55) * bienGoc * (1 - 0.2 * kk);
+      // Cặp dưới quay quá phương ngang để đổ XUỐNG, không phải chỉ xoè thấp hơn một chút.
+      const goc = duoiX ? Math.PI * 0.78 + T.xoe * kk : CANH_NGHIENG + T.xoe * kk;
+      g.save();
+      g.rotate(goc + vo + sway * 0.10 + swayDir * 0.05);
+      g.globalAlpha = Math.max(0.34, 0.96 - 0.1 * k);
+      // Spellblade dùng được cả cánh thiên thần lẫn cánh quỷ, nên đeo bộ LAI: tầng trên là
+      // lông vũ, tầng dưới là màng dơi.
+      const art = d.art === 'lai' ? (kk === 0 ? 'long' : 'doi') : d.art;
+      canhVeThuy(g, d, T, art, RX, RY, kk, now);
+      g.restore();
+    }
+    canhOpVai(g, d, T);                          // ốp gốc: chỗ đôi cánh CẮM vào lưng
+    g.restore();
+  }
+  if (T.nhan) canhOpLung(g, d, T, now);          // bậc 2+: khối ốp giữa sống lưng
+  if (T.hat) canhHatSang(g, d, T, now);          // bậc 3: hạt sáng rơi khỏi cánh
+  g.restore();
+}
+// Đổ màu nền một thùy. Bậc 3 là ÁNH SÁNG (lõi trắng loang ra màu lớp), bậc 1-2 là VẬT LIỆU.
+function canhToNen(g, d, T, RX, RY, trong){
+  if (T.hao){
+    const gr = g.createLinearGradient(0, RY * 0.1, RX * 0.8, -RY * 0.8);
+    gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.34, d.color); gr.addColorStop(1, d.color + '55');
+    g.fillStyle = gr;
+  } else if (trong){
+    const gr = g.createLinearGradient(0, 0, RX, -RY * 0.5);
+    gr.addColorStop(0, d.color); gr.addColorStop(0.5, d.color + '99'); gr.addColorStop(1, d.color + '44');
+    g.fillStyle = gr;
+  } else g.fillStyle = d.color;
+}
+// Viền đường bao vừa vẽ. Bậc 3 thay viền tối bằng quầng loe — ánh sáng thì không có đường bao.
+function canhToVien(g, d, T, RX, a0){
+  if (T.hao){
+    g.globalAlpha = a0 * 0.3; g.strokeStyle = d.color; g.lineWidth = RX * 0.16;
+    g.lineJoin = 'round'; g.stroke();
+    g.globalAlpha = a0 * 0.75; g.strokeStyle = '#ffffff'; g.lineWidth = RX * 0.02; g.stroke();
+  } else {
+    g.globalAlpha = a0 * 0.72; g.strokeStyle = '#12142c'; g.lineWidth = RX * 0.045;
+    g.lineJoin = 'round'; g.stroke();
+  }
+  g.globalAlpha = a0;
+}
+// Bóng đổ trong lòng cánh, cho ra CHIỀU DÀY. Bậc 3 là ánh sáng nên bỏ qua.
+function canhToBong(g, T, RX, RY, nhe){
+  if (T.hao) return;
+  const bong = g.createLinearGradient(0, RY * 0.2, RX * 0.5, -RY * 0.8);
+  bong.addColorStop(0, 'rgba(0,0,0,' + (nhe ? '.16' : '.34') + ')');
+  bong.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = bong; g.fill();
+}
+function canhVeThuy(g, d, T, art, RX, RY, k, now){
+  if      (art === 'doi')  veThuyDoi(g, d, T, RX, RY);
+  else if (art === 'long') veThuyLong(g, d, T, RX, RY, k);
+  else if (art === 'con')  veThuyCon(g, d, T, RX, RY, now);
+  else if (art === 'tia')  veThuyTia(g, d, T, RX, RY);
+  else                     veThuyRach(g, d, T, RX, RY);
+  canhDauHieuBac(g, d, T, art, RX, RY, k, now);
+}
+// ── CÁNH QUỶ ────────────────────────────────────────────────────────────────────────
+// Bóng của nó do BỐN NAN NGÓN quyết định, không do cái màng. Nan chìa ra QUÁ mép màng, màng
+// thì hóp sâu vào giữa hai nan — nhìn thấy ngay là bàn tay có vuốt, không lẫn với cánh chim.
+// Nan ngón toả theo GÓC quanh bả vai, không bám theo đường mép sau. Bản trước cho cả bốn nan
+// nằm dọc chính cái mép sau, nên vùng màng bao được gần bằng 0 — vẽ ra chỉ còn mấy sợi dây.
+// Nan 0 là "cánh tay", trùng với mép trước và kết ở mút cánh (góc ≈ 1,11 rad); ba nan còn lại
+// nằm DƯỚI nó, toả xuống tới 1,92 rad và ngắn dần.
+function doiNgon(RX, RY, nhon, f, N){
+  if (f === 0) return canhXuong(RX, RY, nhon, 1);
+  const u = f / (N - 1);
+  const a = 1.20 + 0.72 * u, L = RY * (0.98 - 0.34 * u);
+  return { x: Math.sin(a) * L * (RX / RY) * 1.05, y: -Math.cos(a) * L };
+}
+function veThuyDoi(g, d, T, RX, RY){
+  const a0 = g.globalAlpha, N = 5;
+  const ngon = [];
+  for (let f = 0; f < N; f++) ngon.push(doiNgon(RX, RY, T.nhon, f, N));
+  // Màng: dừng ở 0,86 chiều dài nan để đầu nan chìa hẳn ra ngoài.
+  g.beginPath();
+  g.moveTo(0, 0);
+  g.quadraticCurveTo(RX * 0.30, -RY * 0.62, ngon[0].x * 0.95, ngon[0].y * 0.95);
+  for (let f = 1; f < N; f++){
+    const A = ngon[f - 1], B = ngon[f];
+    // Khoang màng chỉ HÓP được khi điểm điều khiển co NHIỀU HƠN hai đầu mút. Bản trước hai
+    // đầu co 0,86 mà điểm điều khiển cũng co 0,86 (= 0,43 của tổng A+B, vì trung điểm là 0,5)
+    // — tức cả đường bao chỉ là hình nan quạt thu nhỏ đều, phẳng lì, không khoang nào cả.
+    // Giờ mút giữ 0,95 còn điểm điều khiển co về 0,72 quãng trung điểm.
+    const mx = (A.x + B.x) * 0.36, my = (A.y + B.y) * 0.36;
+    g.quadraticCurveTo(mx, my, B.x * 0.95, B.y * 0.95);
+  }
+  g.quadraticCurveTo(RX * 0.10, RY * 0.24, 0, 0);
+  g.closePath();
+  canhToNen(g, d, T, RX, RY, false); g.fill();
+  canhToBong(g, T, RX, RY, false);
+  canhToVien(g, d, T, RX, a0);
+  // Nan ngón + vuốt ở đầu mỗi nan
+  g.globalAlpha = a0 * 0.85; g.strokeStyle = T.hao ? '#ffffff' : '#241a16'; g.lineCap = 'round';
+  for (let f = 0; f < N; f++){
+    g.lineWidth = RX * (0.042 - 0.006 * f);
+    g.beginPath(); g.moveTo(0, 0); g.lineTo(ngon[f].x, ngon[f].y); g.stroke();
+  }
+  g.globalAlpha = a0 * 0.9; g.strokeStyle = T.hao ? '#ffffff' : '#9a8a72';
+  g.lineWidth = RX * 0.034;
+  for (let f = 0; f < 2; f++){
+    const P = ngon[f], L = RX * 0.13;
+    g.beginPath(); g.moveTo(P.x, P.y);
+    g.quadraticCurveTo(P.x + L * 0.7, P.y - L * 0.7, P.x + L * 0.4, P.y - L * 1.3);
+    g.stroke();
+  }
+  g.globalAlpha = a0;
+}
+// ── CÁNH LÔNG VŨ ────────────────────────────────────────────────────────────────────
+// Mép trên trơn một đường cong liền, mép dưới là dãy đầu lông LỒI. Không nan, không gai chìa
+// ra — bóng của nó là hình lưỡi liềm mềm, ngược hẳn với cánh quỷ.
+function veThuyLong(g, d, T, RX, RY, k){
+  const a0 = g.globalAlpha;
+  canhMepTruoc(g, RX, RY, T.nhon);
+  canhMepSau(g, RX, RY, T.nhon, 5, 1);
+  g.quadraticCurveTo(RX * 0.03, RY * 0.18, 0, 0);
+  g.closePath();
+  canhToNen(g, d, T, RX, RY, false); g.fill();
+  canhToBong(g, T, RX, RY, false);
+  canhToVien(g, d, T, RX, a0);
+  // Từng chiếc lông: gốc trên xương cánh, mút chạm mép sau. Vẽ chiếc NGOÀI trước để chiếc
+  // trong lợp lên — đúng thứ tự lợp của lông cánh thật.
+  const n = 3 + (T.thuy - k);
+  for (let f = 0; f < n; f++){
+    const t = f / (n - 1);
+    const B = canhXuong(RX, RY, T.nhon, 0.74 - 0.56 * t);
+    const M = canhNen(RX, RY, T.nhon, 0.05 + 0.80 * t);
+    canhLongVu(g, B, M, RX * 0.165);
+    g.globalAlpha = a0; g.fillStyle = d.color; g.fill();
+    if (f % 2){ g.globalAlpha = a0 * 0.16; g.fillStyle = '#12142c'; g.fill(); }
+    g.globalAlpha = a0 * 0.2; g.strokeStyle = '#12142c'; g.lineWidth = RX * 0.012; g.stroke();
+  }
+  g.globalAlpha = a0;
+}
+// ── CÁNH TIÊN ───────────────────────────────────────────────────────────────────────
+// HAI phiến RỜI NHAU có khe hở ở giữa — phiến trên to tròn, phiến dưới nhỏ thon như đuôi bướm.
+// Đây là dáng bướm: không mép răng cưa nào, không nan nào, và cái khe hở là dấu hiệu nhận ra
+// từ xa nhất.
+// Chỉ DỰNG ĐƯỜNG, không đụng tới chồng trạng thái — việc xoay để hàm gọi lo. Bản trước hàm
+// này tự save() rồi không restore, hàm gọi lại save() thêm lần nữa: lệch một tầng, và mọi thứ
+// vẽ sau đó nằm sai chỗ.
+function conPhien(g, dai, rong){
+  g.beginPath();
+  g.moveTo(0, 0);
+  g.quadraticCurveTo(rong, -dai * 0.42, rong * 0.62, -dai);
+  g.quadraticCurveTo(rong * 0.06, -dai * 1.12, -rong * 0.34, -dai * 0.72);
+  g.quadraticCurveTo(-rong * 0.42, -dai * 0.24, 0, 0);
+  g.closePath();
+}
+function veThuyCon(g, d, T, RX, RY, now){
+  const a0 = g.globalAlpha;
+  const phien = [[-0.02, RY, RX * 0.72], [0.62, RY * 0.66, RX * 0.42]];
+  for (let i = 0; i < 2; i++){
+    const [goc, dai, rong] = phien[i];
+    g.save();
+    g.rotate(goc);
+    g.globalAlpha = a0 * (i ? 0.86 : 1);
+    conPhien(g, dai, rong);
+    canhToNen(g, d, T, RX, RY, true); g.fill();
+    canhToBong(g, T, RX, RY, true);
+    canhToVien(g, d, T, RX, g.globalAlpha);
+    // gân: bốn nan dọc + hai nan ngang, bò từ gốc phiến ra mút
+    g.globalAlpha = a0 * 0.42; g.strokeStyle = '#ffffff'; g.lineWidth = RX * 0.02;
+    const G = [];
+    for (let f = 1; f <= 4; f++){
+      const x = rong * (0.9 - 0.32 * f) * 0.9, y = -dai * (0.25 + 0.19 * f);
+      G.push([x, y]);
+      g.beginPath(); g.moveTo(0, 0); g.lineTo(x, y); g.stroke();
+    }
+    g.globalAlpha = a0 * 0.24; g.lineWidth = RX * 0.012;
+    for (const t of [0.5, 0.8]){
+      g.beginPath();
+      G.forEach((P, j) => j ? g.lineTo(P[0] * t, P[1] * t) : g.moveTo(P[0] * t, P[1] * t));
+      g.stroke();
+    }
+    g.restore();
+  }
+  // vệt sáng trôi dọc mép ngoài phiến trên — màng trong suốt bắt sáng
+  const t0 = ((now / 2600) % 1) * 0.6 + 0.2;
+  g.globalAlpha = a0 * 0.5; g.strokeStyle = '#ffffff'; g.lineWidth = RX * 0.05; g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(RX * 0.72 * (1 - t0 * 0.4), -RY * t0);
+  g.lineTo(RX * 0.72 * (1 - (t0 + 0.2) * 0.4), -RY * (t0 + 0.2));
+  g.stroke();
+  g.globalAlpha = a0;
+}
+// ── CÁNH TIA ────────────────────────────────────────────────────────────────────────
+// Không có màng. Chỉ là một nan quạt gồm những chiếc TIA thon dài toả từ bả vai, mỗi tia lõi
+// trắng và mút nhọn hoắt. Bóng của nó là bó kim, không phải mảng liền.
+function veThuyTia(g, d, T, RX, RY){
+  const a0 = g.globalAlpha, N = 5;
+  for (let f = 0; f < N; f++){
+    const u = f / (N - 1);
+    const goc = 0.02 + 0.62 * u;
+    const dai = RY * (1.06 - 0.26 * Math.abs(u - 0.3));
+    const P = { x: Math.sin(goc) * dai * (RX / RY), y: -Math.cos(goc) * dai };
+    canhLongVu(g, { x: 0, y: 0 }, P, RX * (0.10 - 0.03 * u));
+    const gr = g.createLinearGradient(0, 0, P.x, P.y);
+    gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.4, d.color); gr.addColorStop(1, d.color + (T.hao ? '77' : 'cc'));
+    g.globalAlpha = a0 * (0.94 - 0.05 * (f % 3)); g.fillStyle = gr; g.fill();
+    g.globalAlpha = a0 * (T.hao ? 0.5 : 0.34);
+    g.strokeStyle = T.hao ? d.color : '#12142c'; g.lineWidth = RX * (T.hao ? 0.05 : 0.016);
+    g.lineJoin = 'round'; g.stroke();
+  }
+  g.globalAlpha = a0;
+}
+// ── CÁNH VẢI RÁCH ───────────────────────────────────────────────────────────────────
+// Tán Nhân không có cánh của lớp nào cả: hai tấm vải bạt căng trên hai thanh nẹp, gấu xé
+// thành răng nhọn không đều, có đường chỉ khâu vá. Bóng gãy khúc, thô — đúng đồ tự chế.
+function veThuyRach(g, d, T, RX, RY){
+  const a0 = g.globalAlpha;
+  const M = canhXuong(RX, RY, T.nhon, 1), E = canhNen(RX, RY, T.nhon, 1);
+  g.beginPath();
+  g.moveTo(0, 0);
+  g.lineTo(RX * 0.26, -RY * 0.74);           // nẹp trên, thẳng đuột
+  g.lineTo(M.x, M.y);
+  const RANG = [0.16, 0.34, 0.12, 0.30, 0.10];   // độ xé của từng răng, cố định chứ không random
+  for (let f = 0; f < RANG.length; f++){
+    const A = canhNen(RX, RY, T.nhon, (f + 0.5) / RANG.length);
+    const B = canhNen(RX, RY, T.nhon, (f + 1) / RANG.length);
+    g.lineTo(A.x * (1 - RANG[f]), A.y * (1 - RANG[f]));   // hõm xé
+    g.lineTo(B.x, B.y);                                    // đỉnh răng
+  }
+  g.lineTo(E.x * 0.4, E.y * 0.6);
+  g.closePath();
+  canhToNen(g, d, T, RX, RY, false); g.fill();
+  canhToBong(g, T, RX, RY, false);
+  canhToVien(g, d, T, RX, a0);
+  // hai thanh nẹp + đường chỉ khâu
+  g.globalAlpha = a0 * 0.72; g.strokeStyle = '#4a3c2a'; g.lineWidth = RX * 0.05; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(0, 0); g.lineTo(RX * 0.26, -RY * 0.74); g.lineTo(M.x, M.y); g.stroke();
+  g.beginPath(); g.moveTo(0, 0); g.lineTo(canhNen(RX, RY, T.nhon, 0.5).x, canhNen(RX, RY, T.nhon, 0.5).y);
+  g.stroke();
+  g.globalAlpha = a0 * 0.4; g.lineWidth = RX * 0.014; g.setLineDash([RX * 0.05, RX * 0.05]);
+  const S = canhNen(RX, RY, T.nhon, 0.3);
+  g.beginPath(); g.moveTo(RX * 0.16, -RY * 0.46); g.lineTo(S.x * 0.8, S.y * 0.8); g.stroke();
+  g.setLineDash([]);
+  g.globalAlpha = a0;
+}
+// Dấu hiệu theo BẬC, chỉ gắn lên thùy chính: gai xương · khung/lõi dọc mép trước.
+function canhDauHieuBac(g, d, T, art, RX, RY, k, now){
+  if (k !== 0) return;
+  // Gai và viền mép chỉ gắn lên chất liệu có MÀNG. Cắm gai lên bó tia hay lên cánh bướm
+  // là xoá đúng cái dáng vừa dựng riêng cho chúng.
+  const mang = art === 'doi' || art === 'long' || art === 'rach';
+  if (!mang) return;
+  if (T.gai){
+    g.globalAlpha = 0.9; g.fillStyle = d.color;
+    for (let f = 0; f < T.gai; f++){
+      const t = 0.22 + 0.5 * (f / Math.max(1, T.gai - 1));
+      const b = canhXuong(RX, RY, T.nhon, t);
+      const L = RX * (0.20 + 0.08 * T.nhon) * (1 - 0.35 * t);
+      g.beginPath();
+      g.moveTo(b.x - RX * 0.05, b.y + RY * 0.03);
+      g.lineTo(b.x + L * 0.85, b.y - L * 0.55);
+      g.lineTo(b.x + RX * 0.06, b.y - RY * 0.005);
+      g.closePath(); g.fill();
+    }
+  }
+  if (!T.vien) return;
+  if (T.trong){                                   // bậc 3 — lõi sáng thở
+    g.globalAlpha = 0.3 + 0.12 * Math.sin(now / 320);
+    g.strokeStyle = d.color; g.lineWidth = T.vien * 2.6; g.lineCap = 'round';
+    canhMepTruoc(g, RX, RY, T.nhon); g.stroke();
+    g.globalAlpha = 0.8; g.strokeStyle = '#ffffff'; g.lineWidth = T.vien * 0.55;
+  } else {                                        // bậc 2 — khung kim loại ĐẶC, không phát sáng
+    g.globalAlpha = 0.92; g.strokeStyle = '#23262f'; g.lineWidth = T.vien * 2.2; g.lineCap = 'round';
+    canhMepTruoc(g, RX, RY, T.nhon); g.stroke();
+    g.globalAlpha = 0.7; g.strokeStyle = d.color; g.lineWidth = T.vien * 0.8;
+  }
+  canhMepTruoc(g, RX, RY, T.nhon); g.stroke();
+}
+// Ốp gốc cánh: khối nhỏ ngay trên bả vai. Không có nó thì đôi cánh trông như dán lên nền
+// chứ không phải CẮM vào lưng người — đúng cảm giác "cánh bị rời ra" mà mắt bắt ngay.
+function canhOpVai(g, d, T){
+  const R = T.sai * 0.24;
+  g.save();
+  g.globalAlpha = 0.95; g.rotate(-0.9);
+  g.fillStyle = '#39404f';
+  g.beginPath(); g.ellipse(0, 0, R, R * 0.5, 0, 0, 7); g.fill();
+  g.globalAlpha = 0.78; g.fillStyle = d.color;
+  g.beginPath(); g.ellipse(R * 0.2, -R * 0.08, R * 0.5, R * 0.24, 0, 0, 7); g.fill();
+  g.restore();
+}
+// Dải đuôi rủ sau lưng (bậc 2+): mấy dải hẹp buông từ gốc cánh xuống, phất theo người nghiêng.
+// Bậc 2 ngắn, bậc 3 dài gần chấm hông. Nhìn từ xa cũng đủ tách hai bậc.
+function canhDuoi(g, d, T, now, swayDir){
+  g.save();
+  g.strokeStyle = d.color; g.lineCap = 'round';
+  for (let i = 0; i < T.duoi; i++){
+    const D = T.cao * T.duoiDai * (0.52 + 0.15 * i);
+    const phat = Math.sin(now / (420 + i * 90)) * T.sai * 0.13 + swayDir * T.sai * 0.09;
+    g.globalAlpha = 0.55 - 0.1 * i;
+    g.lineWidth = T.sai * (0.09 - 0.015 * i);
+    g.beginPath();
+    g.moveTo(T.sai * 0.06, T.sai * 0.04);
+    g.quadraticCurveTo(T.sai * (0.16 + 0.09 * i) + phat, D * 0.55,
+                       T.sai * (0.04 + 0.12 * i) + phat * 1.6, D);
+    g.stroke();
+  }
+  g.restore();
+}
+// Vòng hào quang sau lưng (bậc 3): nằm sau người, thở theo nhịp. Cùng với hạt sáng và ruột
+// cánh bán trong suốt, đây là thứ báo "cánh cuối bảng" ngay cả khi nhân vật đứng im.
+function canhHaoQuang(g, d, T, now){
+  const R = T.cao * 0.62, cy = CANH_GOC_Y + T.cao * 0.04;
+  const tho = 0.9 + 0.1 * Math.sin(now / 620);
+  g.save();
+  const gr = g.createRadialGradient(0, cy, R * 0.55, 0, cy, R * 1.05);
+  gr.addColorStop(0, d.color + '00'); gr.addColorStop(0.62, d.color + '55'); gr.addColorStop(1, d.color + '00');
+  g.globalAlpha = 0.85; g.fillStyle = gr;
+  g.beginPath(); g.arc(0, cy, R * 1.05 * tho, 0, 7); g.fill();
+  g.globalAlpha = 0.5; g.strokeStyle = d.color; g.lineWidth = T.cao * 0.02;
+  g.beginPath(); g.arc(0, cy, R * tho, 0, 7); g.stroke();
+  g.restore();
+}
+// Hạt sáng rơi khỏi cánh (bậc 3). Quỹ đạo tính THẲNG từ thời gian chứ không sinh ngẫu nhiên
+// mỗi khung — chân dung là ảnh tĩnh có bộ nhớ đệm, dùng random thì mỗi lần vẽ ra một kiểu.
+function canhHatSang(g, d, T, now){
+  g.save();
+  g.fillStyle = d.color;
+  for (let i = 0; i < 12; i++){
+    const pha = ((now / 1400) + i * 0.083) % 1;
+    const ben = i % 2 ? 1 : -1;
+    const x = ben * (CANH_GOC_X + T.sai * (0.2 + 0.85 * ((i * 0.37) % 1)));
+    const y = CANH_GOC_Y - T.cao * 0.72 + pha * T.cao * 1.5;
+    g.globalAlpha = 0.6 * (1 - pha) * (1 - pha);
+    g.beginPath(); g.arc(x, y, T.sai * 0.035, 0, 7); g.fill();
+  }
+  g.restore();
+}
+// Khối ốp giữa sống lưng (bậc 2+). Ở Darkness Wings, cái nổi nhất trên lưng không phải đôi
+// cánh mà là KHỐI GIÁP có viên ngọc sáng nằm chính giữa, hai cánh mọc ra từ đó. Thiếu nó thì
+// hai cánh trông như hai miếng dán rời, không phải một bộ trang bị liền khối.
+function canhOpLung(g, d, T, now){
+  const R = T.sai * 0.155, cy = CANH_GOC_Y - T.cao * 0.10;
+  g.save();
+  g.translate(0, cy);
+  // tấm giáp
+  g.globalAlpha = 0.95; g.fillStyle = '#2b3040';
+  g.beginPath();
+  g.moveTo(0, -R * 1.25);
+  g.lineTo(R * 0.85, -R * 0.35); g.lineTo(R * 0.55, R * 1.05);
+  g.lineTo(-R * 0.55, R * 1.05); g.lineTo(-R * 0.85, -R * 0.35);
+  g.closePath(); g.fill();
+  g.globalAlpha = 0.8; g.strokeStyle = '#c8a86a'; g.lineWidth = R * 0.16; g.stroke();
+  // hai cánh tay ốp vươn ra bả vai — nối khối giữa với gốc cánh
+  g.globalAlpha = 0.9; g.strokeStyle = '#2b3040'; g.lineWidth = R * 0.42; g.lineCap = 'round';
+  for (const side of [-1, 1]){
+    g.beginPath(); g.moveTo(side * R * 0.5, -R * 0.3);
+    g.lineTo(side * CANH_GOC_X, T.cao * 0.10); g.stroke();
+  }
+  // viên ngọc: bậc 3 sáng và thở mạnh hơn hẳn bậc 2
+  const tho = T.hao ? 0.72 + 0.28 * Math.abs(Math.sin(now / 520)) : 0.6;
+  const gr = g.createRadialGradient(0, 0, 0, 0, 0, R * 1.5);
+  gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.35, d.color); gr.addColorStop(1, d.color + '00');
+  g.globalAlpha = tho; g.fillStyle = gr;
+  g.beginPath(); g.arc(0, 0, R * 1.5, 0, 7); g.fill();
+  g.globalAlpha = 0.95; g.fillStyle = '#ffffff';
+  g.beginPath(); g.arc(0, 0, R * 0.3, 0, 7); g.fill();
+  g.restore();
+}
+// ÁO CHOÀNG CỦA CHÚA TỂ — Dark Lord không mang cánh mà mang một tấm bào dài chấm gót, viền
+// kim tuyến, cổ áo có một điểm sáng trắng. Bản trước dựng thành hai lá cờ treo trên sào: sai
+// hẳn loại trang bị, không phải sai chi tiết.
+function veCanhAo(g, d, T, swayDir, now, B){
+  // Bề ngang phải VƯỢT bóng người (thân rộng ±24 px trên bộ xương), không thì tấm bào
+  // lọt hết sau lưng và người xem chỉ thấy hai vệt vải mỏng ở hai sườn.
+  const VAI = 26;                                 // bề ngang cổ áo, ôm vừa hai vai
+  const GAU = VAI + T.sai * 0.46;                 // bề ngang gấu áo, xoè rộng
+  const y0 = CANH_GOC_Y - T.cao * 0.06;           // mép trên, ngang bả vai
+  const DAI = T.cao * (T.hao ? 1.30 : 1.14);      // bậc 3 dài hơn hẳn
+  const y1 = y0 + DAI;
+  const phat = swayDir * T.sai * 0.09 + Math.sin(now / 620) * T.sai * 0.035 * (1 + B);
+  g.save();
+  // thân áo
+  const gr = g.createLinearGradient(0, y0, 0, y1);
+  gr.addColorStop(0, d.color); gr.addColorStop(1, '#12142c');
+  g.globalAlpha = 0.94; g.fillStyle = gr;
+  g.beginPath();
+  g.moveTo(-VAI, y0);
+  g.lineTo(VAI, y0);
+  g.quadraticCurveTo(GAU * 0.9 + phat * 0.6, y0 + DAI * 0.6, GAU + phat, y1);
+  // gấu áo lượn sóng — ba nếp, phất theo người nghiêng
+  for (let i = 0; i < 3; i++){
+    const x0 = GAU - (2 * GAU) * (i / 3), x1 = GAU - (2 * GAU) * ((i + 1) / 3);
+    g.quadraticCurveTo((x0 + x1) / 2 + phat, y1 + (i % 2 ? -T.cao * 0.09 : T.cao * 0.07),
+                       x1 + phat * (1 - i * 0.3), y1);
+  }
+  g.quadraticCurveTo(-GAU * 0.9 + phat * 0.2, y0 + DAI * 0.6, -VAI, y0);
+  g.closePath(); g.fill();
+  // nếp gấp dọc: tấm vải phẳng lì thì nhìn như miếng bìa
+  g.globalAlpha = 0.22; g.strokeStyle = '#000000'; g.lineWidth = T.sai * 0.022;
+  for (const t of [-0.5, 0, 0.5]){
+    g.beginPath(); g.moveTo(VAI * t, y0);
+    g.quadraticCurveTo(GAU * t * 0.9 + phat * 0.5, y0 + DAI * 0.6, GAU * t + phat * 0.8, y1);
+    g.stroke();
+  }
+  // viền kim tuyến chạy dọc hai mép và quanh gấu
+  g.globalAlpha = 0.85; g.strokeStyle = '#e0c88a'; g.lineWidth = T.sai * (T.hao ? 0.035 : 0.024);
+  g.beginPath();
+  g.moveTo(-VAI, y0);
+  g.quadraticCurveTo(-GAU * 0.9 + phat * 0.2, y0 + DAI * 0.6, -GAU + phat * 0.4, y1);
+  g.moveTo(VAI, y0);
+  g.quadraticCurveTo(GAU * 0.9 + phat * 0.6, y0 + DAI * 0.6, GAU + phat, y1);
+  g.stroke();
+  // cổ áo dựng + điểm sáng trắng ở giữa
+  g.globalAlpha = 0.95; g.fillStyle = '#1a1d2c';
+  g.beginPath();
+  g.moveTo(-VAI, y0); g.lineTo(-VAI * 0.75, y0 - T.cao * 0.16);
+  g.lineTo(VAI * 0.75, y0 - T.cao * 0.16); g.lineTo(VAI, y0);
+  g.closePath(); g.fill();
+  g.globalAlpha = 0.85; g.strokeStyle = '#e0c88a'; g.lineWidth = T.sai * 0.02; g.stroke();
+  const R = T.sai * 0.10, cy = y0 - T.cao * 0.09;
+  const sg = g.createRadialGradient(0, cy, 0, 0, cy, R * 2.4);
+  sg.addColorStop(0, '#ffffff'); sg.addColorStop(0.3, d.color); sg.addColorStop(1, d.color + '00');
+  g.globalAlpha = T.hao ? 0.75 + 0.25 * Math.abs(Math.sin(now / 520)) : 0.7;
+  g.fillStyle = sg;
+  g.beginPath(); g.arc(0, cy, R * 2.4, 0, 7); g.fill();
+  g.restore();
+  if (T.hao) canhHaoQuang(g, d, T, now);
+}
 function drawPlayer(){
   const sect = SECTS[player.sect];
   const p = player;
   // ═══ LAYERING: đất → sau lưng → người → vũ khí → aura quỹ đạo → danh hiệu ═══
   const riding = false; // Thú Chiến không cưỡi — chiến thú là đồng đội riêng (drawMount)
   const now = performance.now();
-  let yOff = 0;
-  if (p.moving) yOff -= Math.abs(Math.sin(now/95)) * 2.4; // nhịp bước chân khi chạy — người "sống" hơn
+  // ══ BAY ══════════════════════════════════════════════════════════════════════════
+  // Trong MU, cánh là để BAY — không phải để đeo cho đẹp. Mang cánh là nhân vật rời mặt đất,
+  // và mọi thứ dính tới mặt đất phải theo: bóng đổ co lại, nhịp bước chân tắt, bụi gót không
+  // còn chỗ để nổ. Bậc cánh càng cao thì bay càng cao.
+  //
+  // Giữ ở biến MODULE chứ không nhét vào `player`: đây là trạng thái VẼ, không phải trạng thái
+  // trò chơi. Nhét vào player thì nó chui vào save, rồi lần nạp sau nhân vật xuất hiện ở một
+  // độ cao cũ chẳng liên quan gì tới đôi cánh đang mặc.
+  const _canhIt = p.equip && p.equip.canh;
+  const _bayDich = _canhIt ? BAY_CAO[clamp(wingBac(_canhIt), 1, 3) - 1] : 0;
+  // Xấp xỉ hàm mũ theo KHUNG HÌNH: giá trị chỉ dùng để vẽ, lệch vài phần trăm giữa 60 và
+  // 144 Hz không ai thấy được, mà đổi lại không phải luồn dt xuống tận đây.
+  bayCao += (_bayDich - bayCao) * 0.08;
+  if (Math.abs(_bayDich - bayCao) < 0.05) bayCao = _bayDich;
+  const bayK = bayCao / Math.max(1, BAY_CAO[2]);        // 0 = chạm đất, 1 = bay cao nhất
+  let yOff = -bayCao;
+  // Nhịp bước chân chỉ có nghĩa khi chân còn chạm đất. Đang bay mà vẫn nhún như đang chạy bộ
+  // là thứ phá cảm giác bay nhanh nhất.
+  if (p.moving) yOff -= Math.abs(Math.sin(now/95)) * 2.4 * (1 - bayK); // nhịp bước chân khi chạy
   // ── LỚP ĐẤT (không theo nhảy/cưỡi): bóng đổ ──
   const _shI = gameTimeInfo(), _shDx = (_shI.frac - 0.5) * 22, _shAl = 1 - skyDarkness()*0.35; // bóng xoay theo quỹ đạo mặt trời (Gói C)
   // Bóng đổ THEO NHỊP NHÚN: người bổng lên thì bóng co lại và nhạt đi. Bóng đứng
   // yên một cỡ trong khi thân người nhấp nhô làm nhân vật như trượt trên mặt đất.
   const _bobK = p.moving ? Math.abs(Math.sin(p.walkPh || 0)) : 0;
-  const _shK = 1 - _bobK * 0.20;
+  // Bay cao thì bóng vừa CO lại vừa NHẠT đi — đó là tín hiệu duy nhất cho biết nhân vật đang
+  // lơ lửng chứ không phải chỉ được vẽ dịch lên vài pixel.
+  const _shK = (1 - _bobK * 0.20) * (1 - bayK * 0.42);
   const _shRx = (riding?27:16) * _shK, _shRy = (riding?9:6) * _shK;
   ctx.fillStyle = 'rgba(0,0,0,' + (0.09*_shAl*_shK).toFixed(3) + ')'; ctx.beginPath();
   ctx.ellipse(p.x + _shDx, p.y+8, _shRx*1.5, _shRy*1.5, 0, 0, 7); ctx.fill();
@@ -13746,7 +14496,7 @@ function drawPlayer(){
   // Bụi gót chân: nổ ĐÚNG LÚC bàn chân chạm đất, không phải rắc ngẫu nhiên 8% số khung.
   // Bàn chân chạm khi sải chân mở hết cỡ — tức cos(pha) đổi dấu. Bắt đúng lần đổi dấu
   // đó thì tiếng bước và bụi trùng nhau, chân mới có cảm giác BÁM đất.
-  if (!SETTINGS.lowFx && p.moving){
+  if (!SETTINGS.lowFx && p.moving && bayK < 0.3){   // chân không chạm đất thì không có bụi gót
     const _c = Math.cos(p.walkPh || 0);
     if (p._lastCos !== undefined && (_c <= 0) !== (p._lastCos <= 0)){
       const _sd = _c <= 0 ? 1 : -1;                    // chân nào vừa chạm
@@ -13824,35 +14574,14 @@ function drawPlayer(){
     ctx.globalAlpha = 0.5; ctx.strokeStyle = cd2.color; ctx.lineWidth = 1.4; ctx.stroke();
     ctx.restore();
   }
-  // Cánh (Thiên Thần / Tiểu Quỷ) — đôi cánh vỗ sau lưng, vẽ trước sprite
+  // Cánh — vẽ trước sprite. Xem veCanh(): một hàm dùng chung cho cả nhân vật trong màn lẫn
+  // hình trong bảng Nhân Vật, để hai nơi không bao giờ vẽ ra hai đôi cánh khác nhau.
   const wingIt = p.equip && p.equip.canh;
-  if (wingIt){
-    // Linh Dực cấp 2 ghi id vào field `wing2` (xem specialItem('canh', WING2_DEFS[j], {wing2:…})),
-    // KHÔNG phải `wing`. Trước đây chỉ tra WING_DEFS theo `wing` nên cánh cấp 2 luôn find() ra
-    // undefined và rơi về WING_DEFS[0] — người chơi LV80 tốn 1 Hỗn Độn + 20 Hồn Nguyên + 10.000
-    // Lumen để thăng Phượng Hoàng/Hắc Ma Linh Dực thì cánh lại chuyển thành TRẮNG Thiên Thần,
-    // tức là nâng cấp xong nhìn còn kém hơn trước.
-    const wd = (wingIt.wing2 && WING2_DEFS.find(w => w.id === wingIt.wing2))
-            || WING_DEFS.find(w => w.id === wingIt.wing) || WING_DEFS[0];
-    const lift = Math.sin(performance.now()/280) * 0.22 * 10; // vỗ cánh
-    ctx.save();
-    ctx.fillStyle = wd.color;
-    for (const side of [-1, 1]){
-      ctx.globalAlpha = 0.88; // thùy cánh chính — vươn rộng ra ngoài thân nhân vật
-      ctx.beginPath();
-      ctx.moveTo(p.x + side*6, p.y - 24);
-      ctx.quadraticCurveTo(p.x + side*26, p.y - 44 - lift, p.x + side*46, p.y - 32 - lift);
-      ctx.quadraticCurveTo(p.x + side*34, p.y - 16, p.x + side*8, p.y - 15);
-      ctx.closePath(); ctx.fill();
-      ctx.globalAlpha = 0.6; // thùy cánh phụ
-      ctx.beginPath();
-      ctx.moveTo(p.x + side*6, p.y - 18);
-      ctx.quadraticCurveTo(p.x + side*22, p.y - 26 - lift*0.6, p.x + side*38, p.y - 16 - lift*0.6);
-      ctx.quadraticCurveTo(p.x + side*26, p.y - 8, p.x + side*6, p.y - 10);
-      ctx.closePath(); ctx.fill();
-    }
-    ctx.restore();
-  }
+  // (p.x, p.y + CANH_CHAN_MAN) là điểm ứng với hero (80, 212) sau khi thu bộ xương 220 px
+  // xuống 104 px — tức là ĐÚNG giữa hai bàn chân, cùng gốc mà chân dung dùng.
+  if (wingIt) veCanh(ctx, wingIt, p.x, p.y + CANH_CHAN_MAN, p.sway || 0, p.swayDir || 0,
+                     CANH_CO_MAN, bayK);
+
   const wph = p.walkPh || 0;
   const castK = (p.castT || 0) / 0.38;
   const atkK = (p.atkAnim || 0) / 0.22;
@@ -13917,7 +14646,10 @@ function drawPlayer(){
   //  thu nhỏ chứ không phải kéo giãn.)
   let _spr = null;
   if (_hurt <= 0){
-    const _kind = castK > 0 ? 'c' : atkK > 0 ? 'a' : (p.moving ? 'w' : 'i');
+    // Mang cánh là LƠ LỬNG THAY CHO đi bộ. Đang bay mà vẫn lấy khung 'w' thì nhân vật sải chân
+    // giữa không trung — mắt bắt ngay, và trái hẳn cái mà đôi cánh vừa hứa. Đổi sang khung
+    // đứng: chân buông, còn việc di chuyển để đôi cánh lo.
+    const _kind = castK > 0 ? 'c' : atkK > 0 ? 'a' : (p.moving && bayK < 0.5 ? 'w' : 'i');
     const _n = HS_FRAMES[_kind];
     const _TAU = Math.PI * 2;
     const _idx = _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
@@ -14308,6 +15040,13 @@ function atRoyalForge(){
   return dist(player.x, player.y, n.x, n.y) < 220;
 }
 
+const NGOC_EP = {
+  chucPhuc: { ten:'Chúc Phúc Châu', glyph:'◎', mau:'#7ec850', tran:6, rate:100,
+              mo:'100% lên +1, an toàn tuyệt đối — dùng được tới +6.' },
+  linhHon:  { ten:'Linh Hồn Châu',  glyph:'◉', mau:'#b08ae8', tran:9, rate:50,
+              mo:'50% lên +1, hỏng thì TỤT 1 CẤP — dùng được tới +9.' },
+};
+
 const CHAOS_RECIPES = [
   // ── Nhóm RÈN ────────────────────────────────────────────────────────────
   { id:'ren', group:'ren', name:'Rèn Thường', tray:'1 trang bị (+0 → +9)',
@@ -14367,47 +15106,43 @@ const CHAOS_RECIPES = [
     } },
 
   // ── Nhóm NGỌC ───────────────────────────────────────────────────────────
-  { id:'bless', group:'ngoc', name:'Ngọc Chúc Phúc', tray:'1 trang bị (+0 → +5) · ◎ 1',
+  // Hai công thức ngọc dưới đây CHỈ là mặt tiền: luật nằm ở NGOC_EP/epNgoc, dùng chung với
+  // đường ép thẳng trong Túi Đồ (đúng kiểu MU — xem khối ÉP NGỌC THẲNG VÀO ĐỒ). Để lò cũng
+  // làm được vì lò là nơi thấy rõ tỉ lệ, phí, và Thiên Mệnh Phù cùng một chỗ.
+  ...['chucPhuc','linhHon'].map(_k => ({
+    id: _k === 'chucPhuc' ? 'bless' : 'soul', group:'ngoc',
+    name: 'Ngọc ' + NGOC_EP[_k].ten.replace(' Châu', ''),
+    tray: `1 trang bị (dưới +${NGOC_EP[_k].tran}) · ${NGOC_EP[_k].glyph} 1`,
     match(v){
       if (v.items.length !== 1) return null;
       const it = v.items[0];
-      if (it.noForge || it.plus > 5) return null;
-      return { it, need:{ chucPhuc:1 } };
+      if (it.noForge || (it.plus || 0) >= NGOC_EP[_k].tran) return null;
+      return { it, need: { [_k]: 1 } };
     },
-    plan(v, m){ return {
-      title: `${m.it.name} +${m.it.plus} → +${m.it.plus + 1}`, rate: 100,
-      cost: [ jewelCost('chucPhuc', v, 1) ],
-      warn: 'An toàn tuyệt đối — không có thất bại.', charm:false }; },
-    run(v, m){ spendJewels(m.need); m.it.plus++;
-      chaosSay(`◎ Chúc Phúc — ${m.it.name} lên +${m.it.plus}!`, '#8fd18f');
-      addFloat(player.x, player.y-40, `◎ +${m.it.plus} (Chúc Phúc)`, '#7ec850', 14);
-      AudioSys.sfx('forge_ok', 0.9); chaosAwakenNote(m.it); return true; } },
-
-  { id:'soul', group:'ngoc', name:'Ngọc Linh Hồn', tray:'1 trang bị (dưới +11) · ◉ 1',
-    match(v){
-      if (v.items.length !== 1) return null;
-      const it = v.items[0];
-      if (it.noForge || it.plus >= 11) return null;
-      return { it, need:{ linhHon:1 } };
-    },
-    plan(v, m){ return {
-      title: `${m.it.name} +${m.it.plus} → +${m.it.plus + 1}`, rate: 50,
-      cost: [ jewelCost('linhHon', v, 1) ],
-      warn: 'Thất bại: trang bị TỤT 1 CẤP.', charm:false }; },
+    plan(v, m){
+      const d = NGOC_EP[_k];
+      return { title: `${m.it.name} +${m.it.plus} → +${m.it.plus + 1}`, rate: ngocRate(_k),
+        cost: [ jewelCost(_k, v, 1) ],
+        warn: d.rate >= 100 ? 'An toàn tuyệt đối — không có thất bại.' : 'Thất bại: trang bị TỤT 1 CẤP.',
+        charm: false }; },
     run(v, m){
-      spendJewels(m.need);
-      if (Math.random() < 0.5){
-        m.it.plus++;
-        chaosSay(`◉ Linh Hồn — ${m.it.name} lên +${m.it.plus}!`, '#8fd18f');
-        addFloat(player.x, player.y-40, `◉ +${m.it.plus} (Linh Hồn)`, '#b08ae8', 14);
-        AudioSys.sfx('forge_ok', 0.9); chaosAwakenNote(m.it);
+      const d = NGOC_EP[_k];
+      // Khay là chuyện riêng của lò; epNgoc() chỉ biết tới kho ngọc. Nhả viên ra ở đây, đừng
+      // gọi spendJewels() vì nó sẽ trừ kho lần thứ hai.
+      const _i = forgeTray.findIndex(e => e.k === 'jewel' && e.j === _k);
+      if (_i >= 0) forgeTray.splice(_i, 1);
+      const r = epNgoc(m.it, _k);          // epNgoc tự trừ viên ngọc — đừng spendJewels thêm lần nữa
+      if (!r.ok){ chaosSay('✘ ' + r.loi, '#ff7a6a'); return false; }
+      if (r.thang){
+        chaosSay(`${d.glyph} ${d.ten} — ${m.it.name} lên +${r.sau}!`, '#8fd18f');
+        addFloat(player.x, player.y-40, `${d.glyph} +${r.sau}`, d.mau, 14);
+        AudioSys.sfx('jewel', 0.95); chaosAwakenNote(m.it);
       } else {
-        m.it.plus = Math.max(0, m.it.plus - 1);
-        chaosSay(`✘ Linh Hồn thất bại — tụt còn +${m.it.plus}`, '#ff7a6a');
-        addFloat(player.x, player.y-40, `◉ Xịt — tụt còn +${m.it.plus}`, '#ff7a6a', 13);
+        chaosSay(`✘ ${d.ten} thất bại — tụt còn +${r.sau}`, '#ff7a6a');
+        addFloat(player.x, player.y-40, `${d.glyph} Xịt — tụt còn +${r.sau}`, '#ff7a6a', 13);
         AudioSys.sfx('forge_fail', 0.85);
       }
-      return true; } },
+      return true; } })),
 
   { id:'life', group:'ngoc', name:'Ngọc Sinh Mệnh', tray:'1 giáp trụ · ❤ 1',
     match(v){
@@ -14502,61 +15237,89 @@ const CHAOS_RECIPES = [
       charm:false }; },
     run(v, m){ craftCloak(m.t); return true; } },
 
-  { id:'wing1', group:'che', name:'Luyện Linh Dực', royal:true, tray:'1 trang bị Hoàn Hảo +4 (hiến tế) · ● 1',
+  // ── Ba bậc cánh. Cả ba đều royal:true — cánh là việc của Lò Rèn Hoàng Gia, đúng như
+  // Chaos Machine của MU. Không còn quay xổ số giữa hai đôi: ra ĐÚNG đôi của lớp đang chơi.
+  ...WING_TIERS.map((T, ti) => ({
+    id: 'wing' + T.bac, group:'che', royal:true,
+    name: T.bac === 1 ? 'Luyện Cánh' : `Thăng ${T.ten} bậc ${T.bac}`,
+    tray: T.bac === 1 ? '1 trang bị Hoàn Hảo +4 (hiến tế) · ● 1'
+        : T.bac === 2 ? '1 Cánh bậc 1 · ● 1'
+        : '1 Linh Dực bậc 2 · 1 trang bị Chí Tôn rèn ≥+9 (hiến tế) · ● 2',
     match(v){
-      if (v.items.length !== 1) return null;
-      const it = v.items[0];
-      if (!it.perfect || it.plus < 4 || it.noForge) return null;
-      return { it, need:{ honDon:1 } };
+      const nHon = T.bac === 3 ? 2 : 1;
+      if (T.bac === 1){
+        if (v.items.length !== 1) return null;
+        const it = v.items[0];
+        if (it.slot === 'canh' || !it.perfect || it.plus < 4 || it.noForge) return null;
+        return { it, need:{ honDon: nHon } };
+      }
+      // Bậc 2 và 3: khay phải có đúng ĐÔI CÁNH đang ở bậc ngay dưới.
+      const canh = v.items.find(x => x.slot === 'canh' && wingBac(x) === T.bac - 1);
+      if (!canh) return null;
+      if (T.bac === 2){
+        if (v.items.length !== 1) return null;
+        return { it: canh, need:{ honDon: nHon } };
+      }
+      // Bậc 3 còn ăn thêm một món Chí Tôn rèn ≥ +9 làm vật hiến tế — đây là cái giá thật sự.
+      if (v.items.length !== 2) return null;
+      const te = v.items.find(x => x !== canh);
+      if (!te || te.noForge || te.rarity < 4 || (te.plus || 0) < 9) return null;
+      return { it: canh, te, need:{ honDon: nHon } };
     },
-    plan(v, m){ return {
-      title: `Linh Dực Cấp 1 — Thiên Thần / Tiểu Quỷ ngẫu nhiên`,
-      rate: 100,
-      cost: [ jewelCost('honDon', v, 1),
-              chaosCost('Hỗn Nguyên', player.gems.honNguyen, 10, '❖'),
-              chaosCost('Lumen', player.silver, 5000, '◈'),
-              chaosCost('Cấp nhân vật', player.level, 40, '★') ],
-      warn: `${m.it.name} +${m.it.plus} sẽ bị TIÊU HỦY làm vật hiến tế.`, charm:false }; },
-    run(v, m){
-      spendJewels(m.need);
-      destroyItem(m.it.uid);
-      player.gems.honNguyen -= 10; player.silver -= 5000;
-      const wi = Math.floor(Math.random()*2), w = genWing(wi);
-      if (player.inv.length < bagCap()) player.inv.push(w); else player.silver += 2000;
-      zoneBanner = { text:'◈ LINH DỰC XUẤT THẾ', sub:`Lò Hỗn Độn luyện thành ${WING_DEFS[wi].name}!`, color:WING_DEFS[wi].color, t:4.5 };
-      chaosSay(`✔ Luyện thành ${WING_DEFS[wi].name}!`, '#8fd18f');
-      addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:WING_DEFS[wi].color, big:true });
-      AudioSys.sfx('forge_ok', 0.95);
-      return true; } },
-
-  { id:'wing2', group:'che', name:'Thăng Linh Dực 2', royal:true, tray:'1 Linh Dực cấp 1 · ● 1',
-    match(v){
-      if (v.items.length !== 1) return null;
-      const it = v.items[0];
-      if (it.slot !== 'canh' || it.wing2) return null;
-      return { it, need:{ honDon:1 } };
+    plan(v, m){
+      const d = (WING_BANG[ti][player.sect] || WING_BANG[ti].thieulam);
+      const hon = [10, 20, 40][ti], bac = [5000, 10000, 30000][ti];
+      return {
+        title: `${T.ten} bậc ${T.bac} — ${d.name}`,
+        rate: T.bac === 3 ? 70 : 100,
+        cost: [ jewelCost('honDon', v, m.need.honDon),
+                chaosCost('Hỗn Nguyên', player.gems.honNguyen, hon, '❖'),
+                chaosCost('Lumen', player.silver, bac, '◈'),
+                chaosCost('Cấp nhân vật', player.level, T.lv, '★') ],
+        warn: T.bac === 1 ? `${m.it.name} +${m.it.plus} sẽ bị TIÊU HỦY làm vật hiến tế.`
+            : T.bac === 2 ? 'Cánh bậc 1 được thăng tại chỗ — không mất gì thêm.'
+            : `${m.te.name} +${m.te.plus} bị TIÊU HỦY. Thất bại: đôi cánh bậc 2 TỤT VỀ BẬC 1 (dùng ☂ để giữ).`,
+        charm: T.bac === 3, hon, bac };
     },
-    plan(v, _m){ return {
-      title: 'Linh Dực Cấp 2 — Phượng Dực / Hắc Ma Dực',
-      rate: 100,
-      cost: [ jewelCost('honDon', v, 1),
-              chaosCost('Hỗn Nguyên', player.gems.honNguyen, 20, '❖'),
-              chaosCost('Lumen', player.silver, 10000, '◈'),
-              chaosCost('Cấp nhân vật', player.level, 80, '★') ],
-      warn: 'Cánh cấp 1 được thăng tại chỗ — không mất gì thêm.', charm:false }; },
-    run(v, m){
+    run(v, m, p){
       spendJewels(m.need);
-      player.gems.honNguyen -= 20; player.silver -= 10000;
-      const j = Math.floor(Math.random()*2);
-      const w2 = specialItem('canh', WING2_DEFS[j], { wing2: WING2_DEFS[j].id });
-      const loc = itemLoc(m.it.uid);
-      if (loc){ if (loc.where === 'equip') player.equip[loc.key] = w2; else player.inv[loc.key] = w2; }
-      else player.inv.push(w2);
-      zoneBanner = { text:'◈ LINH DỰC THĂNG HOA', sub:`${WING2_DEFS[j].name} — sức mạnh vượt trần!`, color:WING2_DEFS[j].color, t:5 };
-      chaosSay(`✔ Thăng thành ${WING2_DEFS[j].name}!`, '#8fd18f');
-      addEffect({ type:'ring', x:player.x, y:player.y, r:130, color:WING2_DEFS[j].color, big:true });
+      player.gems.honNguyen -= p.hon; player.silver -= p.bac;
+      if (T.bac === 1) destroyItem(m.it.uid);
+      if (T.bac === 3) destroyItem(m.te.uid);
+      // Bậc 3 là bậc đầu tiên có rủi ro — MU cũng vậy (chuỗi chế cánh 3 chỉ ~24% mỗi lượt).
+      // Ở đây 70% và hỏng thì TỤT MỘT BẬC chứ không vỡ vụn: mất một đôi cánh bậc 2 đã cày cả
+      // chục giờ vì một lần quay số là hình phạt không tương xứng với thứ game này đang là.
+      if (T.bac === 3 && Math.random()*100 >= Math.min(100, p.rate + (player.forgeBonus || 0))){
+        if (forgeUseCharm && player.charms > 0){
+          player.charms--;
+          chaosSay(`☂ Thiên Mệnh Phù bảo hộ — ${m.it.name} còn nguyên`, '#7ecbff');
+          AudioSys.sfx('forge_ok', 0.7);
+          return true;
+        }
+        const cu1 = genWing(player.sect, 1), loc0 = itemLoc(m.it.uid);
+        if (loc0){ if (loc0.where === 'equip') player.equip[loc0.key] = cu1; else player.inv[loc0.key] = cu1; }
+        chaosSay('✘ Thăng bậc thất bại — cánh tụt về bậc 1', '#ff7a6a');
+        addEffect({ type:'ring', x:player.x, y:player.y, r:110, color:'#ff6b6b', big:true });
+        AudioSys.sfx('forge_fail', 0.9);
+        return true;
+      }
+      const w = genWing(player.sect, T.bac), d = wingDef(w);
+      if (T.bac === 1){
+        if (!bagThem(w)) dropToGround({ k:'item', it:w }, player.x, player.y);
+      } else {
+        // Thăng TẠI CHỖ: cánh đang mặc thì mặc luôn cánh mới, đang trong túi thì đứng nguyên ô cũ.
+        const loc = itemLoc(m.it.uid);
+        if (loc){
+          if (loc.where === 'equip') player.equip[loc.key] = w;
+          else { w.gx = player.inv[loc.key].gx; w.gy = player.inv[loc.key].gy; player.inv[loc.key] = w; }
+        } else if (!bagThem(w)) dropToGround({ k:'item', it:w }, player.x, player.y);
+      }
+      zoneBanner = { text: T.bac === 1 ? '◈ ĐÔI CÁNH ĐẦU TIÊN' : '◈ CÁNH THĂNG HOA',
+                     sub:`${d.name} — ${d.desc}`, color:d.color, t:5 };
+      chaosSay(`✔ ${T.bac === 1 ? 'Luyện' : 'Thăng'} thành ${d.name}!`, '#8fd18f');
+      addEffect({ type:'ring', x:player.x, y:player.y, r:110 + T.bac*14, color:d.color, big:true });
       AudioSys.sfx('forge_ok', 0.95);
-      return true; } },
+      return true; } })),
 
   // Lò Hỗn Loạn — 3 món CÙNG PHẨM đổi lấy 1 món phẩm cao hơn, thất bại là mất sạch. Đây vốn đã
   // là Chaos Machine đúng nghĩa, chỉ bị chôn trong danh sách chữ của màn NPC.
@@ -14598,7 +15361,7 @@ const CHAOS_RECIPES = [
       }
       playChaosAnim(snapshot, m.r, success, () => {
         if (success){
-          if (player.inv.length < bagCap()){ player.inv.push(newItem); tryAutoEquip(newItem); }
+          if (bagThem(newItem)){ tryAutoEquip(newItem); }
           zoneBanner = { text:'◑ LÒ HỖN LOẠN — THÀNH CÔNG!', sub:`3 món hoá thành ${newItem.name}!`, color:RARITIES[newItem.rarity].color, t:5 };
           addFloat(player.x, player.y-56, `◑ ${newItem.name}`, RARITIES[newItem.rarity].color, 16);
         } else {
@@ -14887,13 +15650,14 @@ window.craftCloak = function(t){
   // t===2 replaces the equipped/inv aochoang in place (net-zero) unless neither exists — only
   // that fallback path actually grows the inventory, same as the t!==2 path below.
   const willAddSlot = t === 2 ? (!player.equip.aochoang && player.inv.findIndex(x => x.slot === 'aochoang') < 0) : true;
-  if (willAddSlot && player.inv.length >= bagCap()){ addFloat(player.x, player.y-40, 'Túi đồ đầy!', '#ff7a6a', 12); return; }
+  if (willAddSlot && !bagConCho({ slot:'aochoang' })){ addFloat(player.x, player.y-40, 'Túi đồ đầy!', '#ff7a6a', 12); return; }
   player.gems.tuLa -= c.cost.tuLa; player.gems.honNguyen -= c.cost.hon; player.silver -= c.cost.silver;
   const it = genCloak(t);
   if (t === 2){
     if (player.equip.aochoang) player.equip.aochoang = it;
-    else { const i = player.inv.findIndex(x => x.slot === 'aochoang'); if (i >= 0) player.inv[i] = it; else player.inv.push(it); }
-  } else player.inv.push(it);
+    else { const i = player.inv.findIndex(x => x.slot === 'aochoang');
+           if (i >= 0){ it.gx = player.inv[i].gx; it.gy = player.inv[i].gy; player.inv[i] = it; } else bagThem(it); }
+  } else bagThem(it);
   addFloat(player.x, player.y-46, `Luyện thành: ${c.name}!`, c.color, 16);
   addEffect({ type:'ring', x:player.x, y:player.y, r:100, color:c.color, big:true });
   calcDerived(); saveGame();
@@ -15507,7 +16271,7 @@ function genSpecific(slotId, r, level){
   const slot = SLOTS.find(s => s.id === slotId);
   if (slot.special){
     if (slotId === 'aochoang') return genCloak(1);
-    return genWing(0);
+    return genWing(player.sect, 1);
   }
   const tier = itemTier(level);
   const armorGroup = ARMOR_SLOTS.includes(slotId);
@@ -15566,7 +16330,7 @@ function applyTestBoost(){
   }
   // Đồ đặc biệt tối thượng: Áo Choàng cấp 2, Linh Dực CẤP 2 (không phải cánh cấp 1)
   player.equip.aochoang = genCloak(2);
-  player.equip.canh = specialItem('canh', WING2_DEFS[1], { wing2: WING2_DEFS[1].id });
+  player.equip.canh = genWing(player.sect, 3);   // max mode: cánh bậc 3 của chính lớp đang chơi
   // Châu + Bảo Hạp: để thử nguyên vòng rèn/mở hạp mà không phải cày
   player.jewels = { chucPhuc: 99, linhHon: 99, sinhMenh: 99, honDon: 99 };
   player.baohap = {};
@@ -15588,9 +16352,9 @@ function applyTestBoost(){
   for (const _sid in SKILL_DEFS) player.skillLv[_sid] = 120;
   // Túi đồ: loot mẫu để xem hình
   player.inv = [];
-  for (let i=0;i<6;i++) player.inv.push(genItem(MAX_LV, 1.5));
+  for (let i=0;i<6;i++) bagThem(genItem(MAX_LV, 1.5));
   for (const t of [2, 5, 8]){
-    const it = genItem(t * 10, 0); it.tier = t; player.inv.push(it);
+    const it = genItem(t * 10, 0); it.tier = t; bagThem(it);
   }
   player.pk = false; player.toiac = 0; player.gkBuffT = 0; player.poisonT = 0;
   // ===== CỔNG TIẾN TRÌNH — phần /max từng bỏ sót =====
@@ -16035,9 +16799,9 @@ function quayShardHang(){
     { id:'ve_cx', gia:40, ten:'Ấn Cổ Xưa ×1', ico:'✦', mau:'#7ecbff',
       mo:'Vé quay banner Vĩnh Cửu — banner có con Cổ.',
       dong:`đang có ${C.ve.cx || 0}`, mua:()=>{ chiVe(1, 'Quầy Shard', 'cx'); } },
-    { id:'tui', gia:25, ten:`Nới túi +${BAG_STEP} ô`, ico:'🎒', mau:'#7ec850',
-      mo:'Thêm chỗ chứa trang bị trong Túi Đồ.',
-      dong:`${bagCap()} ô · tối đa ${BAG_BASE + BAG_MAX_PLUS}`,
+    { id:'tui', gia:25, ten:`Nới túi +1 hàng (${BAG_COLS} ô)`, ico:'🎒', mau:'#7ec850',
+      mo:'Thêm một hàng ô cho lưới Túi Đồ.',
+      dong:`${BAG_COLS}×${bagRows()} = ${bagCap()} ô · tối đa ${BAG_COLS}×${BAG_ROWS_BASE + BAG_MAX_PLUS}`,
       het:()=>(player.bagPlus || 0) >= BAG_MAX_PLUS,
       mua:()=>{ player.bagPlus = (player.bagPlus || 0) + BAG_STEP; } },
     { id:'kho', gia:30, ten:`Nới kho +${KHO_STEP} ô`, ico:'🗄', mau:'#7ecbff',
@@ -16568,7 +17332,7 @@ window.cheatExec = function(raw){
         const it = genItem(Math.min(100, (g-1)*10 + 10), 0, 'tranai');
         it.rarity = r; it.tier = g; it.level = (g-1)*10 + 10; it.perfect = false;
         rerollItemRarity(it);
-        player.inv.push(it);
+        bagThem(it);
         cheatLog('+' + it.name + ' [' + giaiName(g) + ']', RARITIES[r].color); break;
       }
       case 'god': player._god = !player._god; cheatLog(player._god ? 'BẤT TỬ: BẬT' : 'BẤT TỬ: TẮT', '#7ecbff'); break;
@@ -19007,15 +19771,24 @@ function pickItemDef(slot, sect, band){
 // Lớp này mặc được món này không. Khoá cứng kiểu MU: kiếm chỉ Dark Knight, gậy chỉ Dark
 // Wizard, cung chỉ Sylvan Ranger. Dây chuyền và nhẫn thì ai cũng đeo được.
 function itemUsable(it){
+  // Cánh khoá theo lớp y hệt kiếm/gậy/cung, nhưng nó là `specialItem` nên không có `def` trong
+  // ITEM_DB — phải tra qua bảng cánh. Đặt ở ĐÂY chứ không ở chỗ mặc đồ, vì itemUsable() là cái
+  // cửa duy nhất mà cả ba đường mặc đồ (bấm tay · tự mặc khi nhặt · Mặc Đồ Tốt Nhất) đều đi qua.
+  if (it && it.slot === 'canh'){
+    const ws = wingSect(it);
+    return !ws || ws === (player && player.sect);
+  }
   const d = itemDef(it);
   return !d || !d.sect || d.sect === (player && player.sect);
 }
 // Câu giải thích cho người chơi — món không mặc được thì phải NÓI RÕ vì sao, đừng im lặng.
 function itemLockMsg(it){
-  const d = itemDef(it);
-  if (!d || !d.sect) return '';
-  const sc = SECTS[d.sect];
-  return `${it.name} — chỉ ${sc ? sc.name : d.sect} dùng được`;
+  const _ws = it && it.slot === 'canh' ? wingSect(it) : null;
+  const d = _ws ? null : itemDef(it);
+  const sk = _ws || (d && d.sect);
+  if (!sk) return '';
+  const sc = SECTS[sk];
+  return `${it.name} — chỉ ${sc ? sc.name : sk} dùng được`;
 }
 // 10 giai trải đều lên 5 dải: giai 1-2 → dải I, 3-4 → II, 5-6 → III, 7-8 → IV, 9-10 → V.
 // MỘT dải = MỘT giai. Bản cũ ceil(t/2)-1 gộp hai giai vào một dải, nên giai 1 và giai 2 rơi ra
@@ -19108,6 +19881,12 @@ function renderInv(){
 window._dragBagIdx = -1;
 window.onBagItemDragStart = function(e, i){
   window._dragBagIdx = i;
+  const _it = player.inv[i];
+  if (_it && e.currentTarget && e.currentTarget.getBoundingClientRect){
+    const _r = e.currentTarget.getBoundingClientRect(), _s = bagKichThuoc(_it);
+    window._dragOff = { x: clamp(Math.floor((e.clientX - _r.left) / (_r.width  / _s[0])), 0, _s[0]-1),
+                        y: clamp(Math.floor((e.clientY - _r.top ) / (_r.height / _s[1])), 0, _s[1]-1) };
+  } else window._dragOff = { x:0, y:0 };
   e.dataTransfer.effectAllowed = 'move';
   try { e.dataTransfer.setData('text/plain', String(i)); } catch { /* một số trình duyệt kén định dạng — bỏ qua, đã có _dragBagIdx */ }
 };
@@ -19168,13 +19947,110 @@ const BAG_TABS = [
 // Thứ THẬT SỰ làm đầy túi là TRANG BỊ: player.inv có 30 ô, và 7 chỗ trong game phải chặn người
 // chơi vì "Túi đồ đã đầy". Nên kho này cất trang bị. Ngọc và Box Kundun vẫn hiện ở đây, xếp
 // theo đúng bố cục Ngân Hàng Ngọc, nhưng là chỗ XEM — chúng vốn đã an toàn sẵn.
-// Số ô túi/kho — xem BAG_BASE, nới bằng Shard.
-function bagCap(){ return BAG_BASE + ((player && player.bagPlus) || 0); }
+// ══════════ TÚI ĐỒ DẠNG LƯỚI — đúng kiểu MU Online ══════════════════════════════════
+// Trong MU túi đồ là một mặt LƯỚI 8 cột, và mỗi món chiếm một khối ô theo đúng hình dáng của
+// nó: cái nhẫn một ô, bộ giáp bốn ô, đôi cánh mười ô. Đó không phải trang trí — nó là thứ làm
+// cho "hết chỗ" thành một quyết định (bỏ cây trượng dài để nhét vừa đôi cánh) thay vì một con
+// số đếm món. Và nó là mặt phẳng để KÉO VIÊN NGỌC THẢ THẲNG LÊN MÓN ĐỒ.
+//
+// Cách lưu: mỗi món mang `gx`,`gy` = ô trên-trái nó chiếm. `player.inv` VẪN là mảng phẳng như
+// cũ, nên 70 chỗ đang `find`/`filter`/`splice`/`forEach` trên nó không phải sửa một dòng nào —
+// chỉ hai việc đổi: THÊM món (phải tìm chỗ đặt) và HỎI CÒN CHỖ KHÔNG.
+const BAG_COLS = 8;                  // đúng số cột của MU
+const BAG_ROWS_BASE = 8;             // 8×8 = 64 ô, cũng đúng túi khởi điểm của MU
+const BAG_MAX_PLUS = 4, BAG_STEP = 1;   // Quầy Shard nới theo HÀNG, tối đa +4 hàng → 96 ô
+function bagRows(){ return BAG_ROWS_BASE + Math.max(0, (player && player.bagPlus) || 0); }
+function bagCap(){ return BAG_COLS * bagRows(); }
+// Kích thước từng loại món, tính bằng ô. Bám theo tỉ lệ của MU: đồ đeo tay bé, giáp vuông,
+// vũ khí dài theo chiều dọc, cánh là món to nhất trong túi.
+const BAG_SIZES = {
+  nhan1:[1,1], nhan2:[1,1], daychuyen:[1,2],
+  non:[2,2], ao:[2,2], tay:[2,2], quan:[2,2], chan:[2,2],
+  aochoang:[2,3], canh:[2,5],          // cánh 2×5 = 10 ô
+  vukhi:[2,4],
+};
+// Vũ khí lệch nhau khá nhiều: thanh kiếm một tay khác cây trường cung. Lấy theo `line` của
+// định nghĩa (WEAPON_LINES) — cùng cái tên dùng để chọn dáng vẽ, nên hình trong túi và khối ô
+// nó chiếm luôn khớp nhau.
+const BAG_SIZES_LINE = {
+  kiem:[1,3], makiem:[1,3], songdao:[2,3], daikiem:[2,4], riu:[2,3], bua:[2,3], chuy:[1,3],
+  kich:[2,4], quyentruong:[1,4], lenhtruong:[1,4], tinhtruong:[1,4], gay:[1,4],
+  cungngan:[2,3], truongcung:[2,4], no:[2,3],
+};
+function bagKichThuoc(it){
+  if (!it) return [1,1];
+  if (it.slot === 'vukhi'){
+    const d = itemDef(it);
+    if (d && BAG_SIZES_LINE[d.line]) return BAG_SIZES_LINE[d.line];
+  }
+  return BAG_SIZES[it.slot] || [1,1];
+}
+// Bản đồ ô đã chiếm. `bo` = món được coi như không có mặt (dùng khi đang thử dời chính nó).
+function bagLuoi(bo){
+  const R = bagRows();
+  const g = Array.from({ length: R }, () => new Array(BAG_COLS).fill(null));
+  for (const it of (player.inv || [])){
+    if (!it || it === bo || it.gx == null) continue;
+    const [w, h] = bagKichThuoc(it);
+    for (let y = it.gy; y < it.gy + h; y++)
+      for (let x = it.gx; x < it.gx + w; x++)
+        if (g[y] && g[y][x] === null) g[y][x] = it;
+  }
+  return g;
+}
+function bagVua(g, x, y, w, h){
+  if (x < 0 || y < 0 || x + w > BAG_COLS || y + h > g.length) return false;
+  for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (g[j][i]) return false;
+  return true;
+}
+// Ô trên-trái đầu tiên đặt vừa, quét trái→phải rồi trên→xuống (đúng thứ tự MU tự xếp).
+function bagChoTrong(it, g){
+  const [w, h] = bagKichThuoc(it);
+  g = g || bagLuoi(it);
+  for (let y = 0; y <= g.length - h; y++)
+    for (let x = 0; x <= BAG_COLS - w; x++)
+      if (bagVua(g, x, y, w, h)) return { x, y };
+  return null;
+}
+function bagConCho(it){ return !!bagChoTrong(it); }
+// THÊM món vào túi. Trả về true nếu đặt được — MỌI chỗ thêm đồ phải đi qua đây, đừng
+// `player.inv.push()` thẳng nữa: món không có gx/gy là món vô hình trên lưới.
+function bagThem(it){
+  if (!it) return false;
+  const p = bagChoTrong(it);
+  if (!p) return false;
+  it.gx = p.x; it.gy = p.y;
+  player.inv.push(it);
+  return true;
+}
+// Dời một món tới ô (x,y) — dùng khi người chơi kéo thả sắp xếp lại túi.
+function bagDoi(it, x, y){
+  const [w, h] = bagKichThuoc(it);
+  const g = bagLuoi(it);
+  if (!bagVua(g, x, y, w, h)) return false;
+  it.gx = x; it.gy = y;
+  return true;
+}
+// Xếp lại toàn bộ túi: món to trước (khó nhét nhất), rồi tới món bé. Trả về mảng món KHÔNG
+// còn chỗ. Dùng khi nạp save cũ và khi người chơi bấm "Xếp Gọn".
+function bagXepLai(list){
+  const ds = (list || player.inv || []).slice()
+    .sort((a, b) => { const A = bagKichThuoc(a), B = bagKichThuoc(b);
+                      return (B[0]*B[1]) - (A[0]*A[1]); });
+  player.inv = [];
+  const du = [];
+  for (const it of ds){ if (!bagThem(it)) du.push(it); }
+  return du;
+}
+// Số ô còn trống — dùng cho chỗ đoán "còn nhét được mấy món nữa" khi rơi đồ.
+function bagOTrong(){
+  const g = bagLuoi();
+  let n = 0;
+  for (const hang of g) for (const o of hang) if (!o) n++;
+  return n;
+}
 function khoCap(){ return KHO_SIZE + ((player && player.khoPlus) || 0); }
 const KHO_SIZE = 60;
-// Túi và Kho nới bằng Shard ở Quầy Shard. Trước đây cả hai là hằng số nằm rải ở 12 chỗ
-// (`player.inv.length >= bagCap()`); gom về hai hàm để chỉ có MỘT nơi biết luật.
-const BAG_BASE = 30, BAG_MAX_PLUS = 15, BAG_STEP = 5;
 const KHO_MAX_PLUS = 40, KHO_STEP = 10;
 function khoList(){ if (!player.kho) player.kho = []; return player.kho; }
 
@@ -19277,8 +20153,8 @@ window.khoWithdraw = function(i){
   const k = khoList();
   const it = k[i];
   if (!it) return;
-  if (player.inv.length >= bagCap()){ addFloat(player.x, player.y-34, 'Túi đồ đã đầy!', '#ff7a6a', 12); return; }
-  k.splice(i, 1); player.inv.push(it);
+  if (!bagConCho(it)){ addFloat(player.x, player.y-34, 'Túi đồ đã đầy!', '#ff7a6a', 12); return; }
+  k.splice(i, 1); bagThem(it);
   saveGame(); renderBag(); renderInv();
 };
 // Gửi hết: chỉ đẩy đồ KHÔNG mặc được hoặc yếu hơn đồ đang mặc — thứ đang chờ xử lý chứ không
@@ -19379,32 +20255,81 @@ function donBar(nguon){
 function bagSecGear(){
   // Một hàng duy nhất. Bản cũ có hàng tuỳ chọn RỒI thêm một dòng chú thích giải nghĩa ▲ ◆ 🔒
   // dài hai dòng — cả ba ký hiệu đó nay thẻ rê chuột đều nói rõ, chú thích thành thừa.
+  const cam = window.ngocCam;
   let h = `<div class="bag-bar">
     <label><input type="checkbox" ${player.autoSell?'checked':''} onchange="window.toggleAutoSell(this.checked)"> Tự bán trắng/lục</label>
     <label><input type="checkbox" ${player.autoEquip?'checked':''} onchange="window.toggleAutoEquip(this.checked)"> Tự mặc đồ mạnh</label>
     <button class="mini-btn" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất</button>
-    <i class="bag-tip">bấm ô = mặc · <b>⋯</b> = bán / phân giải / vứt</i></div>
+    <button class="mini-btn" onclick="window.xepGonTui()" title="Xếp lại lưới: món to lên trước, dồn hết kẽ trống">🧩 Xếp Gọn</button>
+    <i class="bag-tip">bấm ô = mặc · kéo để dời chỗ · <b>⋯</b> = bán / phân giải / vứt</i></div>
     ${donBar('tui')}`;
+
+  // ── Giá ngọc: cầm một viên rồi bấm thẳng vào món đồ. Đây là thao tác của MU ──
+  h += `<div class="ngoc-bar${cam ? ' dang-cam' : ''}">`;
+  for (const k of ['chucPhuc','linhHon']){
+    const d = NGOC_EP[k], co = (player.jewels && player.jewels[k]) || 0;
+    h += `<button class="ngoc-nut${cam === k ? ' on' : ''}" style="--nc:${d.mau}" ${co ? '' : 'disabled'}
+        draggable="${co ? 'true' : 'false'}" ondragstart="window.ngocKeoBatDau(event,'${k}')" ondragend="window.ngocKeoXong()"
+        onclick="window.camNgoc('${k}')" title="${d.ten} — ${d.mo}&#10;Bấm rồi bấm tiếp vào món đồ, hoặc kéo thả thẳng lên món.">
+      <span class="ngoc-vien" style="color:${d.mau}">${d.glyph}</span><b>${co}</b></button>`;
+  }
+  h += cam
+    ? `<i class="ngoc-huong">Đang cầm <b style="color:${NGOC_EP[cam].mau}">${NGOC_EP[cam].ten}</b> — bấm vào món muốn ép (Esc để bỏ)</i>`
+    : `<i class="ngoc-huong">Bấm viên ngọc rồi bấm món đồ để ép thẳng — không cần tới lò.</i>`;
+  h += `</div>`;
+
+  // Tự vá: món nào lọt vào túi mà chưa có chỗ trên lưới thì xếp ngay bây giờ. Không có bước
+  // này thì một `player.inv.push()` sót ở đâu đó tạo ra món VÔ HÌNH — vẫn ăn sức chứa, vẫn nằm
+  // trong save, mà không hiện ô nào. Món thật sự không còn chỗ thì hiện ở dải cuối, không giấu.
+  const _lac = [];
+  for (const it of player.inv){
+    if (!it || it.gx != null) continue;
+    const p = bagChoTrong(it);
+    if (p){ it.gx = p.x; it.gy = p.y; } else _lac.push(it);
+  }
   if (!player.inv.length) return h + `<div class="chaos-empty">Túi trống — hãy đi cày quái!</div>`;
-  h += `<div class="bag-grid">`;
+
+  // ── LƯỚI. Hai lớp chồng khít nhau, cùng một grid-template: lớp dưới là ô nền trống, lớp
+  // trên là các món chiếm nhiều ô bằng grid-column/row span. Nhờ span nên không phải tính
+  // toạ độ pixel — trình duyệt tự canh, và lưới co giãn theo bề rộng bảng.
+  const R = bagRows();
+  h += `<div class="bag-luoi" style="--cols:${BAG_COLS};--rows:${R}">`;
+  h += `<div class="bag-nen">${'<i class="bag-o"></i>'.repeat(BAG_COLS * R)}</div>`;
+  h += `<div class="bag-mon-lop" ondragover="window.bagLuoiKeoQua(event)" ondrop="window.bagLuoiTha(event)">`;
   player.inv.forEach((it, i) => {
+    if (it.gx == null) return;                       // món chưa có chỗ — bagXepLai() sẽ lo
+    const [w, hh] = bagKichThuoc(it);
     const _eq2 = player.equip[it.slot], _bp2 = _eq2 ? itemPower(_eq2) : 0;
     const _lock = !it.special && !itemUsable(it);
     const _up = !it.special && !_lock && player.level >= itemReqLv(it) && itemPower(it) > _bp2;
-    const tip = _lock ? itemLockMsg(it)
+    const _epDuoc = cam ? !ngocEpDuoc(it, cam) : false;
+    const tip = cam
+      ? (_epDuoc ? `Ép ${NGOC_EP[cam].ten} vào ${it.name} +${it.plus||0}` : ngocEpDuoc(it, cam))
+      : _lock ? itemLockMsg(it)
       : `${it.name} — bấm để MẶC NGAY, hoặc kéo thả vào ô Trang Bị${_up ? ' (mạnh hơn đang mặc!)' : ''}`;
-    h += `<div class="bag-cell rar-${it.rarity}${_lock?' locked':''}" draggable="true"
-      ondragstart="onBagItemDragStart(event,${i})" onclick="equipItem(${i})" data-tip="inv:${i}" aria-label="${tip}">
+    h += `<div class="bag-mon rar-${it.rarity}${_lock?' locked':''}${cam ? (_epDuoc ? ' ngoc-nhan' : ' ngoc-chan') : ''}"
+      style="grid-column:${it.gx+1}/span ${w};grid-row:${it.gy+1}/span ${hh}"
+      draggable="true" data-inv="${i}"
+      ondragstart="onBagItemDragStart(event,${i})" onclick="window.bagMonBam(${i})"
+      ondragover="window.bagMonKeoQua(event,${i})" ondrop="window.bagMonTha(event,${i})"
+      data-tip="inv:${i}" aria-label="${tip}">
       ${slotIcon(it, '')}<span class="bc-plus">${it.plus?'+'+it.plus:''}</span>
       ${_up ? '<i class="bc-up">▲</i>' : ''}${_lock ? '<i class="bc-lock">🔒</i>' : ''}
       <i class="bc-more" onclick="event.stopPropagation();window.selectBagItem(${i})">⋯</i></div>`;
   });
-  h += `</div>`;
+  h += `</div></div>`;
+  if (_lac.length){
+    h += `<div class="chaos-warn danger">⚠ ${_lac.length} món không còn chỗ trên lưới:
+      ${_lac.map(x => x.name).join(' · ')} — bán bớt hoặc nới thêm hàng ở Quầy Shard.</div>`;
+  }
+
   if (window.bagSel >= 0 && player.inv[window.bagSel]){
     const it = player.inv[window.bagSel];
+    const [w, hh] = bagKichThuoc(it);
     // Chỉ tên + nút. Chỉ số và so sánh đã nằm trong thẻ rê chuột ngay trên ô — in lại ở đây
-    // là đẩy người chơi cuộn xuống hết lưới 30 ô để đọc thứ vừa thấy.
-    h += `<div class="bag-act"><b class="${RARITIES[it.rarity].cls}">${it.name}${it.plus?' +'+it.plus:''}</b></div>
+    // là đẩy người chơi cuộn xuống hết lưới để đọc thứ vừa thấy.
+    h += `<div class="bag-act"><b class="${RARITIES[it.rarity].cls}">${it.name}${it.plus?' +'+it.plus:''}</b>
+        <span style="opacity:.6;font-size:11px"> · chiếm ${w}×${hh} = ${w*hh} ô</span></div>
       <div class="forge-actions"><button class="mini-btn" onclick="equipItem(${window.bagSel})">Mặc Vào</button>
       <button class="mini-btn" onclick="sellItem(${window.bagSel})">Bán (+${itemSellPrice(it)}◈)</button>
       <button class="mini-btn" onclick="salvage(${window.bagSel});window.bagSel=-1">Phân Giải (+${(1+it.rarity+Math.floor(it.plus/3)) * (!it.special && !itemUsable(it) ? 2 : 1)}✦)</button>
@@ -19413,6 +20338,196 @@ function bagSecGear(){
   }
   return h;
 }
+// Bấm vào một món trong lưới: đang cầm ngọc thì ÉP, không thì mặc như cũ.
+window.bagMonBam = function(i){
+  if (window.ngocCam) return window.epNgocVaoTui(i);
+  equipItem(i);
+};
+window.xepGonTui = function(){
+  const du = bagXepLai();
+  if (du.length) player.inv = player.inv.concat(du);   // không đặt được thì trả về chỗ cũ
+  saveGame(); renderBag();
+};
+
+// ══════════ ÉP NGỌC THẲNG VÀO ĐỒ — thao tác của MU Online ══════════════════════════════
+// Trong MU, Ngọc Chúc Phúc và Ngọc Linh Hồn KHÔNG cần tới lò: bấm viên ngọc trong túi rồi bấm
+// món đồ, ở bất cứ đâu, bất cứ lúc nào. Chỉ Chaos Machine mới đòi phải về thành — và ở game
+// này đúng phần đó vẫn gác ở Lò Rèn Hoàng Gia (Phá Thiên Kiếp +10/+11, luyện cánh, ghép đồ).
+//
+// Thang bậc, bám đúng MU:
+//   +1 … +6   ◎ Chúc Phúc  — 100%, không bao giờ hỏng
+//   +7 … +9   ◉ Linh Hồn   — 50%, hỏng thì TỤT 1 CẤP
+//   +10, +11  Phá Thiên Kiếp tại Lò Rèn Hoàng Gia (khay + ngọc + Lumen, hỏng thì VỠ VỤN)
+// Trước đây Linh Hồn cho tới +11 với đúng 1 viên và cùng tỉ lệ 50% — tức là nó ĂN ĐỨT Phá
+// Thiên Kiếp ở cả hai mức đó (Phá Thiên đòi 1 Hỗn Độn + 3 Chúc Phúc + 3 Linh Hồn + Lumen +
+// Tu La + Hỗn Nguyên, phải đi tới lò, và hỏng thì mất trắng món đồ). Không ai có lý do bấm
+// Phá Thiên Kiếp. Chốt Linh Hồn ở +9 vừa trả lại chỗ đứng cho Phá Thiên, vừa đúng bậc thang MU.
+function ngocRate(k){ return Math.min(100, NGOC_EP[k].rate + (player.forgeBonus || 0)); }
+// Lý do KHÔNG ép được, dạng câu nói thẳng với người chơi. Trả null = ép được.
+function ngocEpDuoc(it, k){
+  const d = NGOC_EP[k];
+  if (!d) return 'Viên này không ép thẳng vào đồ được.';
+  if (!it) return 'Chưa chọn món nào.';
+  if (it.noForge) return `${it.name} không rèn được.`;
+  if ((it.plus || 0) >= d.tran)
+    return `${it.name} đã +${it.plus} — ${d.ten} chỉ tới +${d.tran}.`;
+  if (((player.jewels && player.jewels[k]) || 0) <= 0){
+    const cat = (player.khoNgoc && player.khoNgoc[k]) || 0;
+    return cat > 0 ? `${d.ten} đang cất trong Kho (${cat} viên) — rút về túi trước` : `Hết ${d.ten}.`;
+  }
+  return null;
+}
+// Ăn viên ngọc, đổi mức rèn. KHÔNG đụng tới giao diện hay âm thanh — chỗ gọi lo phần đó,
+// nhờ vậy cả đường trong túi lẫn công thức trong Lò Hỗn Độn dùng chung đúng một bộ luật.
+function epNgoc(it, k){
+  const loi = ngocEpDuoc(it, k);
+  if (loi) return { ok:false, loi };
+  player.jewels[k]--;
+  const truoc = it.plus || 0;
+  const thang = ngocRate(k) >= 100 || Math.random() * 100 < ngocRate(k);
+  it.plus = thang ? truoc + 1 : Math.max(0, truoc - 1);
+  return { ok:true, thang, truoc, sau: it.plus, k };
+}
+window.ngocCam = null;            // viên ngọc đang cầm trên tay
+window.camNgoc = function(k){
+  if (!NGOC_EP[k]) return;
+  window.ngocCam = (window.ngocCam === k) ? null : k;
+  AudioSys.sfx('ui', 0.35);
+  renderBag();
+};
+window.buongNgoc = function(){ if (window.ngocCam){ window.ngocCam = null; renderBag(); } };
+window.ngocKeoBatDau = function(e, k){
+  window._dragNgoc = k;
+  if (e.dataTransfer){ e.dataTransfer.effectAllowed = 'copy';
+    try { e.dataTransfer.setData('text/plain', 'ngoc:' + k); } catch { /* trình duyệt kén định dạng */ } }
+};
+window.ngocKeoXong = function(){ window._dragNgoc = null; };
+
+// Ép viên đang cầm vào món thứ i trong túi, kèm hoạt ảnh.
+window.epNgocVaoTui = function(i, tuEl){
+  const k = window.ngocCam || window._dragNgoc;
+  const it = player.inv[i];
+  if (!k || !it) return;
+  const loi = ngocEpDuoc(it, k);
+  if (loi){ addFloat(player.x, player.y - 40, loi, '#ffb15c', 12); AudioSys.sfx('ui', 0.4); return; }
+  const nguon = tuEl || document.querySelector(`.ngoc-nut.on`) || document.querySelector('.ngoc-nut');
+  const dich  = document.querySelector(`.bag-mon[data-inv="${i}"]`);
+  const r = epNgoc(it, k);
+  window.ngocCam = null; window._dragNgoc = null;
+  // Vẽ lại bảng ở CUỐI hoạt ảnh, không phải ngay bây giờ: vẽ lại là con số +N nhảy lên trước
+  // khi viên ngọc kịp chạm vào món — mất trọn cái khoảnh khắc mà cả hoạt ảnh này tồn tại vì nó.
+  hoatAnhEpNgoc(nguon, dich, k, r, () => { calcDerived(); saveGame(); renderBag(); });
+};
+
+// ── HOẠT ẢNH: viên ngọc bay vào món đồ, nổ sáng, +N nảy lên ────────────────────────────
+// Chạy trên một lớp phủ `position:fixed` gắn thẳng vào <body>, KHÔNG nằm trong bảng Túi Đồ:
+// bảng đó bị vẽ lại ngay sau khi ép (số ngọc đổi, mức +N đổi), mà vẽ lại thì mọi phần tử con
+// biến mất giữa chừng — hoạt ảnh sẽ đứt. Lớp phủ sống độc lập nên nó chạy trọn vẹn.
+function fxLop(){
+  let l = document.getElementById('ngoc-fx');
+  if (!l){ l = document.createElement('div'); l.id = 'ngoc-fx'; document.body.appendChild(l); }
+  return l;
+}
+function hoatAnhEpNgoc(nguon, dich, k, r, xong){
+  const d = NGOC_EP[k];
+  if (!dich || !nguon || !d){ if (xong) xong(); return; }
+  const L = fxLop();
+  const a = nguon.getBoundingClientRect(), b = dich.getBoundingClientRect();
+  const ax = a.left + a.width/2, ay = a.top + a.height/2;
+  const bx = b.left + b.width/2, by = b.top + b.height/2;
+
+  // 1) viên ngọc bay theo một cung vồng lên — đường thẳng trông như bị kéo, cung mới ra "ném"
+  const bay = document.createElement('i');
+  bay.className = 'ngoc-bay'; bay.textContent = d.glyph;
+  bay.style.color = d.mau; bay.style.left = ax + 'px'; bay.style.top = ay + 'px';
+  L.appendChild(bay);
+  const cao = Math.max(38, Math.abs(bx - ax) * 0.34);
+  const BAY = 260;
+  bay.animate([
+    { transform:'translate(-50%,-50%) scale(1)', opacity:1 },
+    { transform:`translate(${(bx-ax)/2 - 0}px, ${(by-ay)/2 - cao}px) translate(-50%,-50%) scale(1.35)`, opacity:1, offset:0.5 },
+    { transform:`translate(${bx-ax}px, ${by-ay}px) translate(-50%,-50%) scale(0.55)`, opacity:0.9 },
+  ], { duration: BAY, easing:'cubic-bezier(.4,.05,.6,1)', fill:'forwards' });
+
+  setTimeout(() => {
+    bay.remove();
+    // 2) chạm — vòng sáng nở ra + tia bắn, và ĐÚNG LÚC NÀY mới kêu "ting ting"
+    const no = document.createElement('i');
+    no.className = 'ngoc-no' + (r.thang ? '' : ' xit');
+    no.style.left = bx + 'px'; no.style.top = by + 'px';
+    no.style.setProperty('--nc', r.thang ? d.mau : '#ff6b6b');
+    L.appendChild(no);
+    // Loé trắng phủ ĐÚNG khối ô của món. Một vòng tròn mảnh nở ra thì trên ảnh tĩnh gần như
+    // không thấy gì; mảng sáng bằng cả món mới là thứ mắt bắt được ngay giữa lúc đang bấm nhanh.
+    const loe = document.createElement('i');
+    loe.className = 'ngoc-loe' + (r.thang ? '' : ' xit');
+    loe.style.left = b.left + 'px'; loe.style.top = b.top + 'px';
+    loe.style.width = b.width + 'px'; loe.style.height = b.height + 'px';
+    loe.style.setProperty('--nc', r.thang ? d.mau : '#ff6b6b');
+    L.appendChild(loe);
+    setTimeout(() => loe.remove(), 640);
+    for (let i = 0; i < 8; i++){
+      const t = document.createElement('i');
+      t.className = 'ngoc-tia';
+      const g = (i / 8) * Math.PI * 2 + Math.random() * 0.4;
+      const xa = 26 + Math.random() * 22;
+      t.style.left = bx + 'px'; t.style.top = by + 'px';
+      t.style.background = r.thang ? d.mau : '#ff6b6b';
+      t.style.setProperty('--tx', Math.cos(g) * xa + 'px');
+      t.style.setProperty('--ty', Math.sin(g) * xa + 'px');
+      L.appendChild(t);
+      setTimeout(() => t.remove(), 520);
+    }
+    AudioSys.sfx(r.thang ? 'jewel' : 'forge_fail', r.thang ? 0.95 : 0.85);
+    if (r.thang && r.sau >= 7) AudioSys.sfx('levelup', 0.5);   // mốc hào quang, MU cũng đổi dáng từ +7
+    // 3) con số bật lên ngay tại chỗ
+    const so = document.createElement('i');
+    so.className = 'ngoc-so' + (r.thang ? '' : ' xit');
+    so.textContent = (r.thang ? '+' : '') + r.sau;
+    so.style.left = bx + 'px'; so.style.top = by + 'px';
+    so.style.color = r.thang ? d.mau : '#ff6b6b';
+    L.appendChild(so);
+    setTimeout(() => { no.remove(); so.remove(); }, 900);
+    if (xong) xong();
+    // 4) ô vừa ép nháy sáng — tìm lại sau khi bảng đã vẽ lại
+    requestAnimationFrame(() => {
+      const o = document.querySelector('.bag-mon.vua-ep');
+      if (o) o.classList.remove('vua-ep');
+      const moi = dich.dataset ? document.querySelector(`.bag-mon[data-inv="${dich.dataset.inv}"]`) : null;
+      if (moi){ moi.classList.add(r.thang ? 'vua-ep' : 'vua-xit');
+                setTimeout(() => moi.classList.remove('vua-ep', 'vua-xit'), 620); }
+    });
+  }, BAY);
+}
+
+// ── Kéo thả trong lưới: dời chỗ món, hoặc thả viên ngọc lên món ────────────────────────
+function bagOTuChuot(e, lop){
+  const r = lop.getBoundingClientRect(), R = bagRows();
+  return { x: clamp(Math.floor((e.clientX - r.left) / (r.width  / BAG_COLS)), 0, BAG_COLS - 1),
+           y: clamp(Math.floor((e.clientY - r.top ) / (r.height / R)), 0, R - 1) };
+}
+window.bagLuoiKeoQua = function(e){
+  if (window._dragNgoc || window._dragBagIdx >= 0) e.preventDefault();
+};
+function bagThaDoiCho(e, lop){
+  if (window._dragNgoc) return;                 // ngọc chỉ có nghĩa khi thả TRÚNG một món
+  const i = window._dragBagIdx; window._dragBagIdx = -1;
+  const it = player.inv[i];
+  if (!it || !lop) return;
+  const o = bagOTuChuot(e, lop), off = window._dragOff || { x:0, y:0 };
+  if (bagDoi(it, o.x - off.x, o.y - off.y)){ saveGame(); renderBag(); }
+}
+window.bagLuoiTha = function(e){ e.preventDefault(); bagThaDoiCho(e, e.currentTarget); };
+window.bagMonKeoQua = function(e){
+  if (window._dragNgoc || window._dragBagIdx >= 0){ e.preventDefault(); e.stopPropagation(); }
+};
+window.bagMonTha = function(e, i){
+  e.preventDefault(); e.stopPropagation();
+  if (window._dragNgoc){ window.epNgocVaoTui(i); return; }
+  // Thả món lên món khác: cứ thử đặt đúng ô con trỏ đang chỉ. Không vừa thì món tự về chỗ cũ —
+  // không tráo đổi ngầm, vì tráo hai món khác kích thước gần như luôn hỏng bố cục.
+  bagThaDoiCho(e, e.currentTarget.parentElement);
+};
 function bagSecMat(){
   let h = `<div class="chaos-sec">VẬT LIỆU QUÝ <span class="chaos-sub">di chuột vào ô để xem công dụng</span></div><div class="mat-grid">`;
   for (const r of MAT_ROWS){
@@ -19465,7 +20580,10 @@ function bagSecBox(){
 }
 function renderBag(){
   const T = window.bagTab || 'gear';
-  let html = moBang({ tieu:'Túi Đồ', dong:`${player.inv.length}/${bagCap()}` });
+  // Đầu bảng đếm theo Ô, không theo MÓN: túi nay là lưới, và "9/64" trong khi chín món kia
+  // đã ăn hết hai phần ba mặt lưới là một con số nói dối.
+  const _oDung = bagCap() - bagOTrong();
+  let html = moBang({ tieu:'Túi Đồ', dong:`${_oDung}/${bagCap()} ô` });
   html += `<div class="bang-tabs">`;
   for (const t of BAG_TABS){
     // đếm ngay trên tab: khỏi phải mở từng cái xem có gì mới
@@ -19495,7 +20613,7 @@ window.equipItem = function(i){
     return;
   }
   player.inv.splice(i,1);
-  if (player.equip[it.slot]) player.inv.push(player.equip[it.slot]);
+  if (player.equip[it.slot]) bagThem(player.equip[it.slot]);
   player.equip[it.slot] = it;
   window.bagSel = -1;
   calcDerived(); refreshEqPanels(); saveGame();
@@ -19503,7 +20621,7 @@ window.equipItem = function(i){
 window.unequip = function(slotId){
   const it = player.equip[slotId];
   if (!it || player.inv.length>=30) return;
-  player.equip[slotId] = null; player.inv.push(it);
+  player.equip[slotId] = null; bagThem(it);
   calcDerived(); refreshEqPanels(); saveGame();
 };
 window.salvage = function(i){
@@ -20031,9 +21149,9 @@ window.buyStockItem = function(i){
   if (!it) return;
   const price = shopBuyPrice(it);
   if (player.silver < price){ addFloat(player.x, player.y-34, `Thiếu ${(price - player.silver).toLocaleString('vi-VN')}◈`, '#ff7a6a', 12); return; }
-  if (player.inv.length >= bagCap()){ addFloat(player.x, player.y-34, 'Túi đồ đã đầy!', '#ff7a6a', 12); return; }
+  if (!bagConCho(it)){ addFloat(player.x, player.y-34, `Không đủ chỗ trống cho ${it.name}!`, '#ff7a6a', 12); return; }
   player.silver -= price;
-  player.inv.push(it);
+  bagThem(it);
   st[i] = null;                       // đã bán thì hết hàng, không nhân bản
   addFloat(player.x, player.y-50, `Mua ${it.name}!`, RARITIES[it.rarity].color, 13);
   AudioSys.sfx('quest', 0.5);
@@ -20223,7 +21341,10 @@ window.buyFromShop = function(what){
   else if (what==='r_tula'){ player.silver -= row.price; player.gems.tuLa++; }
   else if (what==='r_hon'){ player.silver -= row.price; player.gems.honNguyen++; }
   else if (what==='ruongvk' || what==='ruongpc'){
-    if (player.inv.length >= bagCap()){ addFloat(player.x, player.y-34, 'Túi đồ đã đầy!', '#ff7a6a', 12); return; }
+    // Món trong rương chưa sinh ra lúc này, nên đo bằng món TO NHẤT rương có thể nhả: vũ khí
+    // hai tay 2×4 hoặc bộ giáp 2×2. Chặt hơn thực tế một chút, nhưng không bao giờ nuốt món.
+    if (!bagConCho({ slot: what === 'ruongvk' ? 'vukhi' : 'ao' })){
+      addFloat(player.x, player.y-34, 'Không đủ chỗ trống trong túi!', '#ff7a6a', 12); return; }
     player.silver -= row.price;
     const wantWeapon = what === 'ruongvk';
     let it = null;
@@ -20232,7 +21353,7 @@ window.buyFromShop = function(what){
       if (wantWeapon ? g2.slot === 'vukhi' : ARMOR_SLOTS.includes(g2.slot)){ it = g2; break; }
     }
     if (!it) it = genItem(player.level, 0.08);
-    player.inv.push(it);
+    if (!bagThem(it)){ dropToGround({ k:'item', it }, player.x, player.y); }
     addFloat(player.x, player.y-50, `Nhận được ${it.name}!`, RARITIES[it.rarity].color, 13);
     AudioSys.sfx('quest', 0.5);
   }
@@ -22074,10 +23195,12 @@ window.turnInQuest = function(){
   const q = currentQuest();
   if (!q || questState !== 'done') return;
   player.silver += q.rew.silver || 0;
-  if (q.rew.item && player.inv.length < bagCap()){
+  if (q.rew.item){
     const gi = genSpecific(q.rew.item, 0, Math.max(1, player.level));
-    player.inv.push(gi);
-    addFloat(player.x, player.y-64, `Nhận được: ${gi.name}!`, '#9fd0ff', 14);
+    // Túi chật thì thả xuống đất chứ đừng nuốt phần thưởng cốt truyện.
+    if (bagThem(gi)) addFloat(player.x, player.y-64, `Nhận được: ${gi.name}!`, '#9fd0ff', 14);
+    else { dropToGround({ k:'item', it:gi }, player.x, player.y);
+           addFloat(player.x, player.y-64, `Túi chật — ${gi.name} rơi xuống đất!`, '#ffb15c', 14); }
   }
   gainXp(q.rew.xp);
   questIdx++;
@@ -23263,8 +24386,8 @@ function grantHuntBox(){
     if (player.autoSell && it.rarity <= 0){
       const v = 20 + it.rarity*30 + (it.tier||1)*15;
       player.silver += v; gained.push(`${it.name}(bán +${v}◈)`);
-    } else if (player.inv.length < bagCap()){
-      player.inv.push(it); gained.push(it.name);
+    } else if (bagThem(it)){
+      gained.push(it.name);
       if (it.rarity >= 2) addEffect({ type:'spark', x:player.x, y:player.y-12, r:32 + it.rarity*8, color:RARITIES[it.rarity].color });
       tryAutoEquip(it);
     } else gained.push(`${it.name}(túi đầy, mất)`);
@@ -23554,7 +24677,7 @@ window.chooseSect = function(key){
   const s = SECTS[key];
   player.silver += 500; // quà nhập Tộc
   const w = genItem(10, 0.25); w.slot = 'weapon'; w.slotName = 'Vũ Khí';
-  if (player.inv.length < bagCap()) player.inv.push(w); else player.silver += 300;
+  if (!bagThem(w)) player.silver += 300;
   player.skillBar = defaultSkillBar(key); // gán sẵn 4 chiêu cố định của Lớp mới
   applySkillIcons();
   calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
@@ -24673,7 +25796,7 @@ window.rollVanDuyen = function(){
   } else if (key === 'trangbi'){
     let it = null;
     for (let i = 0; i < 6; i++){ it = genItem(player.level, 0.7); if (it.rarity >= 2) break; }
-    if (player.inv.length < bagCap()){ player.inv.push(it); out.push(`Trang bị: <b class="${RARITIES[it.rarity].cls}">${it.name}</b>`); }
+    if (bagThem(it)){ out.push(`Trang bị: <b class="${RARITIES[it.rarity].cls}">${it.name}</b>`); }
     else { player.silver += 600; out.push('Túi đầy — trang bị quy đổi 600◈'); }
   } else if (key === 'vatlieu'){
     const jr = Math.random()*100;

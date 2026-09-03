@@ -91,14 +91,17 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     const ten = player.inv[0].name;
     khoDeposit(0);
     const khoDay = { tui: player.inv.length, conTen: player.inv[0] && player.inv[0].name === ten };
-    player.kho = [genItem(40,0)]; player.inv = [];
-    for (let i = 0; i < 30; i++) player.inv.push(genItem(40, 0));
+    // Đầy = LƯỚI hết chỗ, không phải "đủ 30 món" — xem BAG_COLS/bagChoTrong(). Dùng vũ khí
+    // hai tay cho chắc: món to thì lưới chật nhanh và không lọt vào kẽ ô lẻ.
+    player.kho = [genSpecific('vukhi', 2, 60)]; player.inv = [];
+    for (let i = 0; i < 200 && bagThem(genSpecific('vukhi', 2, 60)); i++){ /* nhồi cho chật */ }
+    const nTruoc = player.inv.length;
     khoWithdraw(0);
-    return { khoDay, tuiDay: { tui: player.inv.length, kho: player.kho.length } };
+    return { khoDay, tuiDay: { tui: player.inv.length, nTruoc, kho: player.kho.length } };
   });
   console.log('   chặn khi đầy:', JSON.stringify(rB3));
   if (!rB3.khoDay.conTen || rB3.khoDay.tui !== 1) fail('kho đầy mà vẫn nuốt mất món trong túi');
-  if (rB3.tuiDay.tui !== 30 || rB3.tuiDay.kho !== 1) fail('túi đầy mà vẫn lấy mất món khỏi kho');
+  if (rB3.tuiDay.tui !== rB3.tuiDay.nTruoc || rB3.tuiDay.kho !== 1) fail('túi đầy mà vẫn lấy mất món khỏi kho');
 
   // B4) tab Kho vẽ được, và ngăn ngọc là chỗ XEM (không có nút gửi)
   const rB4 = await p.evaluate(() => {

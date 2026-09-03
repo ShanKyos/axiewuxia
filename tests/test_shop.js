@@ -113,14 +113,24 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     buyStockItem(i);
     const hetTien = { bac: player.silver, conHang: !!shopStock('binhkhi')[i] };
     player.silver = 5e6;
-    while (player.inv.length < 30) player.inv.push(genItem(50, 0));
+    // Túi là LƯỚI (8×8 ô, món to chiếm nhiều ô) chứ không còn là danh sách phẳng có trần 30.
+    // Phải nhồi qua bagThem() cho tới khi hết chỗ THẬT — nhét thẳng vào player.inv thì món
+    // không có gx/gy, không chiếm ô nào, và cái "túi đầy" của bài kiểm là túi rỗng.
+    //
+    // Nhồi bằng NHẪN (1×1), không phải món ngẫu nhiên: bagThem() trả false ngay khi CÁI MÓN
+    // ĐANG CẦM không vừa, trong khi lưới vẫn còn thừa ô cho món nhỏ hơn. Nhồi ngẫu nhiên thì
+    // vòng lặp dừng sớm, túi chưa đầy thật, cửa hàng bán được và bài kiểm đỏ oan.
+    let canh = 0;
+    while (bagThem(genSpecific('nhan1', 0, 50)) && ++canh < 200);
+    const truoc = player.inv.length;
     buyStockItem(i);
-    return { hetTien, tuiDay: { tui: player.inv.length, conHang: !!shopStock('binhkhi')[i] } };
+    return { hetTien, tuiDay: { truoc, tui: player.inv.length, oTrong: bagOTrong(),
+                                conHang: !!shopStock('binhkhi')[i] } };
   });
   console.log('6) chặn mua:', JSON.stringify(r6));
   if (r6.hetTien.bac < 0) fail('mua khi hết tiền làm bạc âm');
   if (!r6.hetTien.conHang) fail('hết tiền mà vẫn lấy mất hàng');
-  if (r6.tuiDay.tui > 30) fail('túi đầy vẫn nhét thêm được');
+  if (r6.tuiDay.tui > r6.tuiDay.truoc) fail('túi đầy vẫn nhét thêm được');
   if (!r6.tuiDay.conHang) fail('túi đầy mà vẫn lấy mất hàng');
 
   // 7) TIỆM KHÔNG BÁN ĐỒ HOÀN HẢO — hàng Hoàn Hảo phải tự săn hoặc mở Box Kundun

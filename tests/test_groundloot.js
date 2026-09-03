@@ -73,21 +73,34 @@ const { chromium } = require('playwright');
   // ---- 3. TÚI ĐẦY: đồ phải NẰM LẠI + đổi nhãn, KHÔNG mất trắng ----
   const day = await p.evaluate(() => {
     groundLoot = []; player.inv = [];
-    for (let i = 0; i < 30; i++) player.inv.push(genItem(50, 0, 'mob'));
+    // Túi là LƯỚI ô, không phải ô đếm món. Nhồi bằng NHẪN (1×1) chứ không phải món ngẫu nhiên:
+    // bagThem() trả false ngay khi CÁI MÓN ĐANG CẦM không vừa, trong khi túi vẫn còn thừa ô cho
+    // món nhỏ hơn. Nhồi bằng món ngẫu nhiên thì vòng lặp dừng sớm, túi chưa đầy thật, món thả
+    // xuống đất bị nhặt luôn và groundLoot[0] thành undefined — bài kiểm đỏ oan khoảng một
+    // phần ba số lượt. Nhẫn 1×1 lấp được mọi ô lẻ nên "hết chỗ" là hết chỗ thật.
+    for (let i = 0; i < 200 && bagThem(genSpecific('nhan1', 0, 50)); i++){ /* nhồi kín lưới */ }
     const g = dropToGround({ k:'item', it: genItem(50, 0, 'elite') }, 3000, 3000);
     g.z = 0; g.vz = 0; g.fly = 1; player.x = g.x; player.y = g.y;
     updateGroundLoot(0.016);
     const r = { conDuoiDat: groundLoot.length, nhanTuiDay: !!(groundLoot[0] && groundLoot[0].full),
-                tui: player.inv.length };
-    // dọn 1 ô rồi đi qua lại → phải nhặt được
-    player.inv.pop(); updateGroundLoot(0.016);
+                tui: player.inv.length, oTrongLucDay: bagOTrong() };
+    if (!groundLoot[0]) return r;              // túi chưa đầy thật — để phần kiểm bên dưới bắt
+    // Dọn chỗ rồi đi qua lại → phải nhặt được. Bỏ ĐÚNG tới lúc món dưới đất nhét vừa, chứ
+    // không bỏ đại sáu món: túi là lưới, sáu ô lẻ rải rác chưa chắc ghép thành khối vừa cây
+    // trượng 2×4, nên bản cũ đỏ oan tuỳ theo cỡ mấy món ngẫu nhiên vừa nhồi vào.
+    let boRa = 0;
+    while (player.inv.length && !bagConCho(groundLoot[0].it) && boRa < 30){
+      player.inv.pop(); boRa++;
+    }
+    r.boRa = boRa;
+    updateGroundLoot(0.016);
     r.sauKhiDonTui = groundLoot.length; r.tuiSau = player.inv.length;
     return r;
   });
   console.log('túi đầy:', JSON.stringify(day));
   if (day.conDuoiDat !== 1) fail('túi đầy mà đồ vẫn bốc hơi — đúng lỗi cũ');
   if (!day.nhanTuiDay) fail('đồ nằm lại nhưng không đổi nhãn cảnh báo TÚI ĐẦY');
-  if (day.sauKhiDonTui !== 0 || day.tuiSau !== 30) fail('dọn túi rồi vẫn không nhặt lại được');
+  if (day.sauKhiDonTui !== 0 || day.tuiSau !== day.tui - day.boRa + 1) fail('dọn túi rồi vẫn không nhặt lại được');
 
   // ---- 4. Hết hạn + trần cứng + đổi map thì sạch ----
   const doi = await p.evaluate(() => {

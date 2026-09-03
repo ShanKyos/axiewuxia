@@ -36,7 +36,7 @@ const { chromium } = require('playwright');
   const target = setup.find(it => validSlots.includes(it.slot));
   console.log('using target item:', JSON.stringify(target));
   const dragResult = await page.evaluate((slot) => {
-    const bagCell = [...document.querySelectorAll('#panel-bag .bag-cell')].find(el => el.querySelector(`img[src*="assets/items/${slot}"]`));
+    const bagCell = [...document.querySelectorAll('#panel-bag .bag-mon')].find(el => el.querySelector(`img[src*="assets/items/${slot}"]`));
     const eqSlot = [...document.querySelectorAll('.eq-slot')].find(el => el.getAttribute('ondrop').includes(`'${slot}'`));
     if (!bagCell || !eqSlot) return { error: 'element not found', bagCell: !!bagCell, eqSlot: !!eqSlot };
     const dt = new DataTransfer();

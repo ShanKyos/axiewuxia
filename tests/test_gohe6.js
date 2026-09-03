@@ -82,6 +82,7 @@ const { chromium } = require('playwright');
     await page.evaluate(() => getComputedStyle(document.getElementById('hud-right')).pointerEvents), 'none');
 
   // ── 5) Quầy Shard tiêu thật ────────────────────────────────────────────────
+  const BAG_COLS_T = await page.evaluate(() => BAG_COLS);
   const mua = await page.evaluate(() => {
     window.moQuayShard();
     const truoc = { shard: player.shard, ve: player.chimera.ve.gk, bag: bagCap(), kho: khoCap() };
@@ -90,7 +91,8 @@ const { chromium } = require('playwright');
   });
   check('Shard trừ đúng 5+25+30', mua.truoc.shard - mua.sau.shard, 60);
   check('vé +1',   mua.sau.ve  - mua.truoc.ve, 1);
-  check('túi +5',  mua.sau.bag - mua.truoc.bag, 5);
+  // Quầy Shard nay nới theo HÀNG, không theo ô lẻ: +1 hàng = BAG_COLS ô.
+  check('túi +1 hàng',  mua.sau.bag - mua.truoc.bag, BAG_COLS_T);
   check('kho +10', mua.sau.kho - mua.truoc.kho, 10);
   check('hết Shard thì không mua được nữa', await page.evaluate(() => {
     const b = bagCap(); window.muaShard('tui'); return bagCap() === b; }), true);

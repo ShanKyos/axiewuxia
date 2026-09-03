@@ -21,7 +21,7 @@ const { chromium } = require('playwright');
   await p.waitForTimeout(500);
 
   // ---- 1. Rê vào ô túi → thẻ hiện, ĐÚNG HAI thẻ (món này + đang mặc) ----
-  await p.locator('#panel-bag .bag-cell').nth(1).hover();
+  await p.locator('#panel-bag .bag-mon').nth(1).hover();
   await p.waitForTimeout(400);
   const t1 = await p.evaluate(() => {
     const t = document.querySelector('.itip');
@@ -99,8 +99,8 @@ const { chromium } = require('playwright');
   // ---- 5. Không còn title= trên ô đồ (tooltip trình duyệt sẽ chồng lên thẻ) ----
   const t6 = await p.evaluate(() => { closePanels(); renderBag();
     document.getElementById('panel-bag').classList.remove('hidden');
-    return { bagTitle: [...document.querySelectorAll('#panel-bag .bag-cell')].filter(e => e.hasAttribute('title')).length,
-             bagTip:   [...document.querySelectorAll('#panel-bag .bag-cell')].filter(e => e.hasAttribute('data-tip')).length }; });
+    return { bagTitle: [...document.querySelectorAll('#panel-bag .bag-mon')].filter(e => e.hasAttribute('title')).length,
+             bagTip:   [...document.querySelectorAll('#panel-bag .bag-mon')].filter(e => e.hasAttribute('data-tip')).length }; });
   console.log('title/data-tip:', JSON.stringify(t6));
   if (t6.bagTitle) fail(`${t6.bagTitle} ô túi còn title= — tooltip trình duyệt sẽ đè lên thẻ`);
   if (!t6.bagTip) fail('ô túi chưa gắn data-tip');

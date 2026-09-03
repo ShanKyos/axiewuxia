@@ -25,7 +25,9 @@ const { chromium } = require('playwright');
         oDayDu: SLOTS.filter(s => eq[s.id]).length + '/' + SLOTS.length,
         phamCaoNhat: Math.max(...Object.values(eq).map(i => i.rarity || 0)),
         renTrungBinh: +(arm.reduce((a,i)=>a+(i.plus||0),0) / Math.max(1,arm.length)).toFixed(1),
-        canhCap2: !!(eq.canh && eq.canh.wing2),
+        // `wing2` là cờ của thời cánh chỉ có hai bậc; nay bậc nằm ở `wingBac`, và tối đa
+        // hoá phải đẩy tới bậc 3 chứ không phải chỉ qua khỏi bậc 1.
+        canhBac: eq.canh ? wingBac(eq.canh) : 0,
         canhTen: eq.canh ? eq.canh.name : '(không)',
         chau: Object.values(player.jewels||{}).reduce((a,b)=>a+b,0),
         baoHap: Object.values(player.baohap||{}).reduce((a,b)=>a+b,0),
@@ -47,7 +49,7 @@ const { chromium } = require('playwright');
     if (r.cap !== 120) fail(`${sect}: chưa max cấp (${r.cap})`);
     if (r.phamCaoNhat !== 4) fail(`${sect}: phẩm cao nhất mới ${r.phamCaoNhat}, cần 4 (Chí Tôn)`);
     if (r.renTrungBinh !== 11) fail(`${sect}: rèn trung bình ${r.renTrungBinh}, cần 11`);
-    if (!r.canhCap2) fail(`${sect}: cánh vẫn là cấp 1 (${r.canhTen})`);
+    if (r.canhBac < 3) fail(`${sect}: cánh mới bậc ${r.canhBac}, cần bậc 3 (${r.canhTen})`);
     if (!(r.chau >= 300)) fail(`${sect}: chưa cấp châu (${r.chau})`);
     if (!(r.baoHap >= 50)) fail(`${sect}: chưa cấp Box Kundun (${r.baoHap})`);
     if (!(r.shard > 0)) fail(`${sect}: max mode không cấp Shard (${r.shard}) — Quầy Shard không thử được`);

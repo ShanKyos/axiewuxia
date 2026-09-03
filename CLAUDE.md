@@ -461,6 +461,52 @@ phần tử vào bảng, không đụng vào phần vẽ. Mỗi công thức kha
 tính — dùng `jewelCost()`. Thứ **số lượng lớn** (Lumen, Tu La, Mảnh…) trừ thẳng từ kho
 và chỉ hiện trong bảng — dùng `chaosCost()`. Đừng trộn hai loại.
 
+### Túi đồ là một LƯỚI, không phải mảng đếm món
+
+`player.inv` vẫn là mảng phẳng — 70 chỗ đang `find`/`filter`/`splice` trên nó không đổi — nhưng
+mỗi món nay mang `gx`,`gy` = ô trên-trái nó chiếm, và chiếm một KHỐI ô theo hình dáng:
+
+| | ô | | ô |
+|---|---|---|---|
+| nhẫn | 1×1 | áo choàng | 2×3 |
+| dây chuyền | 1×2 | **cánh** | **2×5 = 10** |
+| giáp (5 ô mặc) | 2×2 | vũ khí | 1×2 → 2×4 theo `line` |
+
+- **Thêm đồ phải đi qua `bagThem(it)`**, không `player.inv.push()` thẳng. Món không có `gx/gy`
+  là món VÔ HÌNH: vẫn ăn sức chứa, vẫn nằm trong save, mà không hiện ô nào. `bagSecGear()` có
+  bước tự vá nhưng đó là lưới an toàn, không phải chỗ dựa.
+- **Hỏi còn chỗ bằng `bagConCho(it)`**, không `player.inv.length >= bagCap()`. Cây trường cung
+  2×4 có thể không nhét được trong khi vẫn còn sáu ô lẻ rải rác — đó chính là điểm của cái lưới.
+- Kích thước ở `BAG_SIZES` / `BAG_SIZES_LINE`; đo bằng `bagKichThuoc(it)`.
+- Quầy Shard nới theo **HÀNG** (`BAG_COLS` = 8 ô), không theo ô lẻ.
+
+### Ép ngọc thẳng vào đồ
+
+Chúc Phúc và Linh Hồn **không cần tới lò** — bấm viên ngọc trong túi rồi bấm món đồ, ở bất cứ
+đâu, đúng như MU. Luật nằm ở **`NGOC_EP` / `epNgoc()`**, và Lò Hỗn Độn chỉ là mặt tiền gọi lại
+cùng hàm đó. Sửa tỉ lệ hay trần thì sửa `NGOC_EP`, đừng sửa hai nơi.
+
+| | trần | tỉ lệ | hỏng thì |
+|---|---|---|---|
+| ◎ Chúc Phúc | +6 | 100% | không bao giờ hỏng |
+| ◉ Linh Hồn | +9 | 50% | tụt 1 cấp |
+| Phá Thiên Kiếp | +11 | 50/45% | VỠ VỤN (☂ giữ được) |
+
+⚠ Linh Hồn từng cho tới +11 — tức là nó ăn đứt Phá Thiên Kiếp ở cả hai mức. Đừng nới lại trần
+đó mà không gỡ Phá Thiên Kiếp đi cùng.
+
+### Cánh — 3 bậc × 6 lớp, khoá theo lớp
+
+`WING_BANG = [WING_DEFS, WING2_DEFS, WING3_DEFS]`, tra theo `player.sect`. Bậc đọc từ
+`it.wingBac`; `wingSect(it)` cho biết lớp nào dùng được và **`itemUsable()` là cửa duy nhất**
+gác chuyện đó (cả ba đường mặc đồ đều đi qua đó).
+
+- Vẽ bằng **một hàm duy nhất `veCanh(g, it, px, py, sway, swayDir, co)`** — dùng cho cả nhân vật
+  trong màn lẫn chân dung bảng Nhân Vật. Toạ độ CỤC BỘ (gốc = chân), `co` là tỉ lệ.
+- Cánh là **bộ phận mềm**: phải đọc `sway`/`swayDir`, không đọc `performance.now()` một mình.
+- Thêm cánh mới thì nhớ `heroCardUrl()` — khoá cache phải gồm chữ ký cánh, không thì chân dung
+  hiện mãi đôi cũ sau khi thăng bậc.
+
 ### Ba loại tiền thường trực (ví ở góc trên bên phải)
 
 | Tên người chơi thấy | Ký hiệu | Trường | Kiếm ở đâu | Tiêu ở đâu |

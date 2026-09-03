@@ -190,7 +190,20 @@ hơn 1–5 cấp → ×0,85; hơn 6–10 cấp → ×0,6; hơn 10 cấp → **×
 ## 6. Trang bị
 
 **11 ô**: Vũ Khí · Nón · Áo · Tay · Quần · Chân · Dây Chuyền · Nhẫn 1 · Nhẫn 2 ·
-Áo Choàng · Cánh. Túi chứa **30 món**, nới thêm tối đa +15 ô bằng Shard (xem §16).
+Áo Choàng · Cánh.
+
+**Túi đồ là một LƯỚI 8 cột × 8 hàng = 64 ô**, đúng kiểu MU: mỗi món chiếm một khối ô theo hình
+dáng của nó, chứ không phải "một món một ô".
+
+| Món | Ô | Món | Ô |
+|---|---|---|---|
+| Nhẫn | 1×1 | Áo Choàng | 2×3 |
+| Dây Chuyền | 1×2 | **Cánh** | **2×5 = 10** |
+| Nón · Áo · Tay · Quần · Chân | 2×2 | Vũ Khí | 1×2 → 2×4 tuỳ loại |
+
+Kéo món để dời chỗ, bấm **🧩 Xếp Gọn** để dồn lại. Nới thêm tối đa **+4 hàng** (32 ô) ở Quầy
+Shard. Hệ quả cố ý: 64 ô chỉ nhét vừa **4 đôi cánh**, không phải 6 — cánh cao 5 hàng nên ba hàng
+cuối thừa ra không đủ chỗ. "Hết chỗ" nay là một bài toán xếp hình, không phải một con số đếm.
 
 Một món đồ có bốn trục độc lập:
 
@@ -267,6 +280,21 @@ mà khay đó thoả → chọn → bấm KẾT HỢP.** Không có màn rèn th
 | Chế | Luyện Linh Dực | 1 trang bị Hoàn Hảo +4 (hiến tế) · ● 1 | Lò Rèn Hoàng Gia |
 | Chế | Thăng Linh Dực 2 | 1 Linh Dực cấp 1 · ● 1 | Lò Rèn Hoàng Gia |
 | Chế | **Lò Hỗn Loạn** | 3 trang bị **cùng phẩm** | 3 món tan biến ngay khi ném vào |
+
+### Ép ngọc thẳng vào đồ — không cần tới lò
+
+Trong MU, Ngọc Chúc Phúc và Ngọc Linh Hồn dùng được **ở bất cứ đâu**: bấm viên ngọc trong túi
+rồi bấm món đồ. Ở đây cũng vậy — mở Túi Đồ, bấm viên ngọc trên giá, món nào ép được sẽ **sáng
+viền vàng**, bấm vào là xong. Kéo–thả viên ngọc lên món cũng được.
+
+| Viên | Tới mức | Tỉ lệ | Hỏng thì sao |
+|---|---|---|---|
+| ◎ Chúc Phúc Châu | **+6** | 100% | không bao giờ hỏng |
+| ◉ Linh Hồn Châu | **+9** | 50% | **tụt 1 cấp** |
+| Phá Thiên Kiếp (Lò Rèn Hoàng Gia) | **+11** | 50% / 45% | **VỠ VỤN** — ☂ Thiên Mệnh Phù giữ được |
+
+Đó là đúng bậc thang của MU: ngọc lo từ +1 tới +9, còn +10 và +11 là việc của cỗ máy trong thành.
+Lò Hỗn Độn vẫn làm được cả hai loại ngọc (ở đó thấy rõ tỉ lệ và phí), chỉ là không bắt buộc nữa.
 
 ### Bảng tỉ lệ rèn (Rèn Thường + Phá Thiên Kiếp)
 
@@ -463,12 +491,73 @@ Khác hẳn hai sự kiện trên ở chỗ nó **không chọn một map**: c�
 | Hệ | Mở ở cấp | Có bằng cách nào | Cho gì |
 |---|---|---|---|
 | **Chimera** (Nhân Vật → Chimera) | 6 | quay Khế Ước bằng **Ấn Giao Kết** / **Ấn Cổ Xưa** | đồng hành xuất trận đánh cùng, Cốt cộng chỉ số |
-| **Cánh** | — | boss rơi 12%; Linh Dực cấp 2 luyện ở Lò Rèn Hoàng Gia (cấp 80+) | +HP/né/đồng rơi hoặc +ST/bạo/tốc đánh |
+| **Cánh** | 40 / 80 / 100 | luyện và thăng bậc tại **Lò Rèn Hoàng Gia** | xem bảng dưới |
 | **Áo Choàng** | — | luyện tại Lò Hỗn Độn, 2 cấp | +% Công, xuyên giáp |
 
-> **Thú Chiến · Thần Binh · Linh Thú đều đã GỠ.** Thú Chiến nhường chỗ cho Khế Ước Chimera;
-> Thần Binh (10 tầng, ăn Lõi Nguyên Tố + Huyền Thiết) và Linh Thú (nuôi tới +11) là hai trục
-> nâng cấp song song bị cắt trong đợt về mô hình MU. Save cũ được hoàn lại đầy đủ.
+### Ba bậc Cánh — mỗi lớp một đôi riêng, khoá theo lớp
+
+Đúng như MU: cánh không phải món nhặt chung, nó là **cột mốc bản sắc của lớp**. Đôi của lớp khác
+mặc không được, và game nói thẳng vì sao.
+
+Kích thước dưới đây tính bằng **pixel của bộ xương nhân vật** (bộ xương cao 220, đỉnh đầu ở
+`y=53`, khớp vai `y=100`, gốc cánh cắm ở `y=104`) — không phải pixel trên màn hình.
+
+| Bậc | Cổng cấp | Vươn ngang | Vươn lên | Số thùy | Dòng chính | Chế ở đâu |
+|---|---|---|---|---|---|---|
+| 1 · **Cánh …** | 40 | 56 px | 62 px | 2 | 12 | 1 trang bị Hoàn Hảo +4 (hiến tế) + ● 1 |
+| 2 · **… Dực** | 80 | 84 px | 78 px | 3 | 24 | thăng tại chỗ từ bậc 1 + ● 1 |
+| 3 · **Thần Dực …** | 100 | 102 px | 92 px | 4 | 34 | bậc 2 + 1 món **Chí Tôn rèn ≥ +9** (hiến tế) + ● 2 |
+
+**Ba bậc không phân biệt bằng kích thước** — cánh bậc 1 đã vươn quá đỉnh đầu sẵn, phóng to
+thêm thì mắt không đọc ra. Chúng phân biệt bằng **sáu trục hình khối**, mỗi bậc thắng ở một
+trục khác nhau (bài kiểm `test_canh3bac.js` chốt luật này):
+
+| Trục | Bậc 1 | Bậc 2 | Bậc 3 |
+|---|---|---|---|
+| số tầng thùy | 2 | 3 | 4 |
+| mút cánh | tù, bo tròn | nhọn có móc | nhọn kéo vệt |
+| gai · khung | không có | 4 gai trên khung kim loại đặc | 5 gai, khung nhường chỗ cho ánh sáng |
+| đuôi rủ | không có | 2 sợi ngắn | 3 sợi dài |
+| phát sáng | **không gì cả** | viền mép | lõi trắng + quầng loe + hạt bay + hào quang |
+| bố cục | một nan quạt | một nan quạt, nở ngang | **hình chữ X** — thêm một cặp đổ xuống |
+
+Bậc 1 tuyệt đối không phát sáng: đó là mốc để hai bậc trên còn chỗ mà leo. Bậc 2 nở theo **bề
+ngang** là chính (đỉnh cánh gần như đứng yên). Từ bậc 2 trở lên còn có **khối ốp sống lưng** —
+tấm giáp viền vàng có viên ngọc ở giữa, hai cánh mọc ra từ đó.
+
+**Bậc 3 là bậc duy nhất có rủi ro** — 70%, hỏng thì cánh **tụt về bậc 1** (không vỡ vụn), và
+☂ Thiên Mệnh Phù giữ được. Cả ba bậc đều phải tới **Lò Rèn Hoàng Gia**.
+
+Mỗi lớp một **chất liệu** khác hẳn, và khác ở ĐƯỜNG BAO chứ không ở lớp trang trí: mỗi chất
+liệu tự dựng đường bao riêng (`veThuyDoi` · `veThuyLong` · `veThuyCon` · `veThuyTia` ·
+`veThuyRach`). Chỉ đổi hoa văn trên mép thì ở cỡ 100 px mắt không đọc ra, và năm đôi cánh sẽ
+chỉ khác nhau ở màu.
+
+| Lớp | Bậc 1 | Bậc 2 | Bậc 3 | Chất liệu |
+|---|---|---|---|---|
+| Dark Knight | Cánh Quỷ Đen | Hắc Nguyệt Dực | Thần Dực Bão Thép | **màng dơi** — 4 nan ngón, mép sau hóp vào, mút có vuốt móc |
+| Sylvan Ranger | Cánh Tiên Sương | Sương Lâm Dực | Thần Dực Nguyệt Lâm | **màng côn trùng** trong suốt — gân dọc + gân ngang, vệt sáng trôi |
+| Dark Wizard | Cánh Bạch Vũ | Hoại Vụ Dực | Thần Dực Hư Vô | **lông vũ** — từng chiếc một, lợp lên nhau |
+| Spellblade | Cánh Hỏa Vũ | Liệt Hỏa Dực | Thần Dực Vực Lửa | bậc 1 **lai** (trên lông vũ, dưới màng dơi); **bậc 2-3 là bó tia** — không có màng nào |
+| Dark Lord | Cánh Quỷ Hoang | Bào Bạo Chúa | Bào Ngai Đen | bậc 1 màng dơi; **bậc 2-3 là áo choàng** dài chấm gót, viền kim tuyến |
+| Tán Nhân | Cánh Lữ Hành | Lữ Hành Dực | Thần Dực Lữ Hành | **vải bạt** căng trên nẹp thẳng, gấu xé răng nhọn — đồ tự chế |
+
+Dark Lord không có cánh riêng ở bậc 1 nên mượn cánh quỷ, đúng như MU; từ bậc 2 lớp này đổi hẳn
+sang **tấm bào** chứ không phải đôi cánh.
+
+Hai lớp ĐỔI CHẤT LIỆU giữa chừng (Spellblade lai → tia, Dark Lord dơi → bào) cần đo lại diện
+tích phủ, không thể tin vào `sai`/`cao`: bó tia không có mặt phẳng nào nên ở cùng kích thước nó
+chỉ phủ chừng hai phần ba mấy chất liệu có màng. Đó là lý do `WING_DEFS` có trường `to` —
+Spellblade để 1,45 ở bậc 2, không thì đôi cánh mới lại phủ ít pixel hơn đôi cũ và người chơi đọc
+ra là bị tụt hạng. Cách đo: vẽ cánh ra canvas rời rồi đếm pixel có alpha (`tests/test_canh3bac.js`).
+
+Bản sắc lớp đọc được qua dòng phụ: Dark Knight độc quyền `hpPct` làm dòng chính · Sylvan Ranger
+né và tốc đánh cao nhất · Dark Wizard độc quyền `expPct` · Spellblade độc quyền hút sinh lực ·
+Dark Lord độc quyền Lumen rơi.
+
+Khảo sát đầy đủ: `docs/KHAO_SAT_CANH.md` (bảng chỉ số) và `docs/KHAO_SAT_CANH_BAY.md`
+(điểm gắn, tỉ lệ, cơ chế bay). Tỉ lệ và chất liệu hiện tại đọc từ ảnh cánh MU thật do chủ
+dự án cung cấp — chúng thay thế mấy con số ước lượng trong hai tài liệu đó.
 
 ---
 

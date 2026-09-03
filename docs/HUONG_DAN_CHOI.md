@@ -182,10 +182,10 @@ Xếp theo hiệu suất, tốt nhất trước:
 ### Thứ tự nên đi
 
 ```
-+0 → +6   : Rèn Thường. 100%, KHÔNG THỂ HỎNG. Cứ đập thẳng, đừng phí ngọc.
-            (Ngọc Chúc Phúc ◎ cũng lên +1 an toàn tới +6 — để dành, đừng dùng ở đây.)
-+6 → +9   : Rèn Thường 75% / 65% / 50%. Hỏng thì TỤT 1 CẤP, không vỡ.
-            → Bật ☂ Thiên Mệnh Phù nếu không muốn tụt.
++0 → +6   : ◎ Ngọc Chúc Phúc, ép THẲNG trong túi — 100%, KHÔNG THỂ HỎNG, không cần
+            tới lò. Hoặc Rèn Thường bằng Lumen nếu muốn để dành ngọc.
++6 → +9   : ◉ Ngọc Linh Hồn 50% (hỏng TỤT 1 CẤP), cũng ép thẳng trong túi.
+            Hoặc Rèn Thường 75% / 65% / 50% ở lò — ở lò thì bật được ☂ Thiên Mệnh Phù.
 +9 → +11  : "Phá Thiên Kiếp", CHỈ tại Lò Rèn Hoàng Gia (Lunaris City).
             50% / 45%. Hỏng thì TRANG BỊ VỠ VỤN — mất vĩnh viễn.
             → BẮT BUỘC bật ☂ Thiên Mệnh Phù.
@@ -194,10 +194,10 @@ Xếp theo hiệu suất, tốt nhất trước:
 ### Sáu luật thực dụng
 
 1. **Trước +7, đừng bao giờ dùng Thiên Mệnh Phù.** Không có gì để hỏng.
-2. **Ngọc Chúc Phúc ◎ để dành cho mức +4/+5/+6 của món ĐẮT** khi bạn cạn Lumen —
-   nó là +1 an toàn tuyệt đối, nhưng chỉ dùng được tới +5.
-3. **Ngọc Linh Hồn ◉ chỉ 50% và hỏng thì tụt cấp.** Ngang Rèn Thường ở mức +9, nhưng
-   tốn ngọc. Chỉ dùng khi cạn Lumen/Tu La.
+2. **Ngọc ép THẲNG vào đồ, không cần tới lò** — mở Túi Đồ, bấm viên ngọc trên giá, món
+   nào ép được sẽ sáng viền vàng, bấm vào là xong. Kéo–thả viên lên món cũng được.
+3. **Chúc Phúc ◎ tới +6, Linh Hồn ◉ tới +9.** Trên nữa là việc của Phá Thiên Kiếp ở
+   Lò Rèn Hoàng Gia. Chúc Phúc không bao giờ hỏng; Linh Hồn 50% và hỏng thì tụt 1 cấp.
 4. **Mua Thiên Mệnh Phù trước, đừng mua giữa chừng.** 500◈/cái, mua thẳng trong màn Lò
    Hỗn Độn. Trước khi đánh +10 hãy có sẵn ít nhất 3–4 cái.
 5. **Chỉ đưa lên +10/+11 món bạn sẽ dùng lâu dài** — nghĩa là món Hoàn Hảo, hoặc món
@@ -331,7 +331,7 @@ AUTO **KHÔNG** làm:
 - Hết thuốc và máu dưới **20%** → **AUTO tự tắt hẳn** kèm banner to, để bạn không chết oan.
 
 **Cách treo AUTO hiệu quả:** đứng giữa hai cụm quái đúng dải cấp, mua đủ 5 Hồ Lô Thuốc,
-dọn túi cho trống ít nhất 10 ô rồi mới bấm Z. Túi đầy thì AUTO vẫn giết nhưng đồ nằm
+dọn túi cho trống ít nhất một mảng ô rồi mới bấm Z. Hết chỗ thì AUTO vẫn giết nhưng đồ nằm
 lại dưới đất và biến mất sau 45 giây.
 
 ---
@@ -340,7 +340,7 @@ lại dưới đất và biến mất sau 45 giây.
 
 | Bẫy | Chuyện gì xảy ra | Cách tránh |
 |---|---|---|
-| **Túi 30 ô đầy mà vẫn cày** | Đồ rơi nằm lại dưới đất với nhãn `⚠ TÚI ĐẦY` rồi **biến mất sau 45 giây** | Dọn túi trước mỗi lần treo AUTO. Bán đồ trắng/xanh hàng loạt ở Nhà Giả Kim |
+| **Lưới túi hết chỗ mà vẫn cày** | Đồ rơi nằm lại dưới đất với nhãn `⚠ TÚI ĐẦY` rồi **biến mất sau 45 giây** | Dọn túi trước mỗi lần treo AUTO. Bấm 🧩 Xếp Gọn để dồn kẽ trống, bán đồ trắng/xanh hàng loạt ở Nhà Giả Kim |
 | **Rèn +10 mà quên bật Thiên Mệnh Phù** | Trang bị **vỡ vụn, mất vĩnh viễn** ở tỉ lệ 50% | Nhìn dòng cảnh báo đỏ trong màn lò trước khi bấm Kết Hợp |
 | **Ném đồ vào Lò Hỗn Loạn để "thử"** | Cả 3 món tan biến **ngay lúc bấm**, kể cả khi thất bại | Chỉ nấu khi có phù, hoặc chỉ nấu bằng đồ thừa thật sự |
 | **Chết trong Tầng Sâu** | Mất **sạch** kho tạm cả lượt | Rút Lui ngay sau một tầng boss nếu máu/thuốc đã cạn |
@@ -364,7 +364,7 @@ lại dưới đất và biến mất sau 45 giây.
 |---|---|
 | Rèn an toàn tuyệt đối tới | **+6** |
 | Rèn vỡ đồ từ | **+10** (bắt buộc dùng ☂) |
-| Túi đồ | **30 ô** — đầy là đồ nằm dưới đất 45 giây rồi mất |
+| Túi đồ | **lưới 8×8 = 64 ô**, mỗi món chiếm một khối ô theo hình dáng (cánh 2×5 = 10 ô) — hết chỗ là đồ nằm dưới đất 45 giây rồi mất. Nới +4 hàng ở Quầy Shard |
 
 **Bốn mốc cấp mở hệ thống**
 

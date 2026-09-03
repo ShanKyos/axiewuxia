@@ -502,8 +502,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .ic-giai { position:absolute; bottom:-4px; right:-4px; font-style:normal; font-size:8.5px; font-weight:700;
   line-height:1; padding:2px 4px; border-radius:6px; color:#141633; background:linear-gradient(180deg,#7ecbff,#4c8dff);
   box-shadow:0 1px 3px rgba(0,0,0,.5); letter-spacing:.5px; }
-.bag-cell .item-ic { width:100%; height:100%; border:none; background:transparent; box-shadow:none; }
-.bag-cell .item-ic img { width:78%; height:78%; }
+.bag-cell .item-ic, .bag-mon .item-ic { width:100%; height:100%; border:none; background:transparent; box-shadow:none; }
+.bag-cell .item-ic img, .bag-mon .item-ic img { width:82%; height:82%; }
 
 /* ── Thanh thoại trấn thủ (Cốt truyện Ngũ Ấn) ── */
 #boss-talk { position:fixed; left:50%; bottom:86px; transform:translateX(-50%); z-index:15;
@@ -632,7 +632,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .bag-cell:hover { background:var(--cell-hover); }
 .bag-cell img { width:78%; height:78%; object-fit:contain; pointer-events:none;
   filter:drop-shadow(0 2px 4px rgba(0,0,0,.5)); }
-.bag-cell .bc-plus { position:absolute; top:2px; right:5px; font-size:var(--fs-xs); color:var(--accent-light); text-shadow:0 1px 2px #000; }
+.bag-cell .bc-plus, .bag-mon .bc-plus { position:absolute; top:2px; right:5px; font-size:var(--fs-xs); color:var(--accent-light); text-shadow:0 1px 2px #000; font-weight:700; }
 .bag-cell .bc-name { position:absolute; bottom:1px; left:0; right:0; text-align:center; font-size:9px;
   color:var(--text-body); text-shadow:0 1px 2px #000; white-space:nowrap; overflow:hidden; }
 .bag-cell.sel { border-color:var(--accent-light); box-shadow:0 0 10px rgba(126,203,255,.45); }
@@ -980,18 +980,112 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   padding:7px; background:rgba(6,9,20,.5); border:1px solid var(--border); border-radius:var(--r-md); }
 
 /* ── Túi đồ: hàng nút trên cùng + chú giải + ô đồ ─────────────────────────── */
+/* ══════════ TÚI ĐỒ DẠNG LƯỚI — mỗi món chiếm một khối ô ══════════════════════════════
+   Hai lớp CHỒNG KHÍT: `.bag-nen` là mặt lưới ô trống, `.bag-mon-lop` nằm đè lên, cùng một
+   grid-template nên hai lớp tự canh nhau — không phải tính một toạ độ pixel nào. Món đồ dùng
+   grid-column/row span để chiếm đúng khối ô của nó. */
+.bag-luoi { position:relative; margin-top:8px; }
+.bag-nen, .bag-mon-lop { display:grid; gap:3px;
+  grid-template-columns:repeat(var(--cols), 1fr);
+  grid-template-rows:repeat(var(--rows), 1fr); }
+.bag-nen .bag-o { aspect-ratio:1; border-radius:var(--r-sm); background:rgba(18,20,44,.55);
+  border:1px solid var(--border-faint); box-shadow:inset 0 1px 0 rgba(226,235,255,.05); }
+.bag-mon-lop { position:absolute; inset:0; pointer-events:none; }
+.bag-mon { position:relative; pointer-events:auto; cursor:pointer; border-radius:var(--r-sm);
+  border:1px solid var(--border); background:rgba(30,32,64,.9); overflow:visible;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .14s ease-out, border-color .14s ease-out, transform .14s ease-out; }
+.bag-mon:hover { background:rgba(76,141,255,.24); border-color:var(--border-strong); z-index:2; }
+.bag-mon img { width:84%; height:84%; object-fit:contain; pointer-events:none; }
+.bag-mon.rar-0 { border-color:rgba(185,194,230,.5); } .bag-mon.rar-1 { border-color:rgba(95,201,110,.65); }
+.bag-mon.rar-2 { border-color:rgba(94,160,232,.7); }  .bag-mon.rar-3 { border-color:rgba(177,140,255,.75); }
+.bag-mon.rar-4 { border-color:rgba(255,177,92,.85); }
+
+/* Giá ngọc: cầm một viên rồi bấm thẳng vào món — thao tác của MU */
+.ngoc-bar { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin:7px 0 2px;
+  padding:6px 8px; border:1px solid var(--border-faint); border-radius:var(--r-sm);
+  background:rgba(18,20,44,.5); }
+.ngoc-nut { display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-family:inherit;
+  padding:4px 11px 5px; border-radius:999px; color:var(--text-bright);
+  background:rgba(30,32,64,.9); border:1px solid var(--nc);
+  transition:background .14s ease-out, box-shadow .14s ease-out; }
+.ngoc-nut:hover:not(:disabled) { background:color-mix(in srgb, var(--nc) 22%, transparent); }
+.ngoc-nut.on { background:color-mix(in srgb, var(--nc) 30%, transparent);
+  box-shadow:0 0 0 2px color-mix(in srgb, var(--nc) 45%, transparent), 0 0 14px color-mix(in srgb, var(--nc) 40%, transparent); }
+.ngoc-nut:disabled { opacity:1; color:var(--text-dimmer); border-color:var(--border-faint); cursor:default; }
+.ngoc-nut .ngoc-vien { font-size:var(--fs-lg); line-height:1; }
+.ngoc-nut b { font-variant-numeric:tabular-nums; }
+.ngoc-huong { flex:1; min-width:180px; text-align:right; font-style:normal; font-size:11px; color:var(--text-dim); }
+/* Đang cầm ngọc: món ép được thì sáng lên, món không ép được thì mờ đi — người chơi thấy
+   ngay chỗ nào bấm có nghĩa, khỏi phải bấm thử từng cái rồi đọc câu từ chối. */
+.bag-mon.ngoc-nhan { border-color:var(--gold); box-shadow:0 0 0 1px var(--gold), 0 0 12px rgba(255,215,106,.4); }
+.bag-mon.ngoc-chan { opacity:.35; filter:grayscale(.6); cursor:not-allowed; }
+.bag-mon.vua-ep  { animation:ngoc-nhay .6s ease-out; }
+.bag-mon.vua-xit { animation:ngoc-rung .5s ease-out; }
+@keyframes ngoc-nhay {
+  0%   { box-shadow:0 0 0 3px #fff, 0 0 30px #fff; transform:scale(1.1); }
+  40%  { box-shadow:0 0 0 2px var(--gold), 0 0 20px rgba(255,215,106,.7); transform:scale(1.03); }
+  100% { box-shadow:none; transform:scale(1); }
+}
+@keyframes ngoc-rung {
+  0%,100% { transform:translateX(0); }
+  20% { transform:translateX(-4px); } 45% { transform:translateX(4px); }
+  70% { transform:translateX(-2px); }
+}
+
+/* Lớp phủ hoạt ảnh ép ngọc — nằm ngoài bảng Túi Đồ nên bảng vẽ lại cũng không cắt ngang nó */
+#ngoc-fx { position:fixed; inset:0; z-index:9000; pointer-events:none; }
+#ngoc-fx i { position:absolute; display:block; }
+.ngoc-bay { font-size:26px; line-height:1; text-shadow:0 0 12px currentColor; transform:translate(-50%,-50%); }
+.ngoc-no { width:14px; height:14px; margin:-7px 0 0 -7px; border-radius:50%;
+  border:3px solid var(--nc); animation:ngoc-no .55s ease-out forwards; }
+.ngoc-loe { border-radius:var(--r-sm); animation:ngoc-loe .6s ease-out forwards; }
+@keyframes ngoc-loe {
+  0%   { background:#fff; box-shadow:0 0 34px 12px var(--nc), inset 0 0 20px #fff; opacity:1; transform:scale(1.14); }
+  30%  { background:color-mix(in srgb, var(--nc) 70%, #fff); box-shadow:0 0 24px 6px var(--nc); opacity:.85; transform:scale(1.06); }
+  100% { background:transparent; box-shadow:0 0 0 0 var(--nc); opacity:0; transform:scale(1); }
+}
+@keyframes ngoc-no {
+  0%   { transform:scale(.3); opacity:1; box-shadow:0 0 26px 10px var(--nc); }
+  100% { transform:scale(6.5); opacity:0; box-shadow:0 0 0 0 var(--nc); }
+}
+.ngoc-tia { width:3px; height:3px; margin:-1.5px 0 0 -1.5px; border-radius:50%;
+  animation:ngoc-tia .5s ease-out forwards; }
+@keyframes ngoc-tia {
+  0%   { transform:translate(0,0) scale(1.6); opacity:1; }
+  100% { transform:translate(var(--tx), var(--ty)) scale(.2); opacity:0; }
+}
+.ngoc-so { font-size:34px; font-weight:800; letter-spacing:.5px; text-shadow:0 2px 6px #000, 0 0 16px currentColor;
+  transform:translate(-50%,-50%); animation:ngoc-so .85s cubic-bezier(.2,1.5,.4,1) forwards; }
+.ngoc-so.xit { animation-name:ngoc-so-xit; }
+@keyframes ngoc-so {
+  0%   { transform:translate(-50%,-50%) scale(.2); opacity:0; }
+  35%  { transform:translate(-50%,-90%) scale(1.5); opacity:1; }
+  100% { transform:translate(-50%,-190%) scale(1.1); opacity:0; }
+}
+@keyframes ngoc-so-xit {
+  0%   { transform:translate(-50%,-50%) scale(1.3); opacity:1; }
+  100% { transform:translate(-50%,30%) scale(.8); opacity:0; }
+}
+@media (prefers-reduced-motion: reduce){
+  .bag-mon, .ngoc-nut { transition:none; }
+  .bag-mon.vua-ep, .bag-mon.vua-xit { animation:none; }
+  .ngoc-bay, .ngoc-no, .ngoc-loe, .ngoc-tia, .ngoc-so { animation-duration:.01s; }
+}
+
 .bag-bar { display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; margin-bottom:7px;
   font-size:11.5px; color:var(--text-dim); }
 .bag-bar label { display:inline-flex; align-items:center; gap:4px; cursor:pointer; }
 /* .bag-legend đã bỏ — ba ký hiệu ▲ ◆ 🔒 nay do thẻ rê chuột giải nghĩa */
 .bag-cell { position:relative; }
-.bag-cell.locked { opacity:.42; filter:grayscale(.7); cursor:not-allowed; }
-.bag-cell .bc-up, .bag-cell .bc-sg, .bag-cell .bc-lock, .bag-cell .bc-more {
+.bag-cell.locked, .bag-mon.locked { opacity:.42; filter:grayscale(.7); cursor:not-allowed; }
+.bag-cell .bc-up, .bag-cell .bc-sg, .bag-cell .bc-lock, .bag-cell .bc-more,
+.bag-mon .bc-up, .bag-mon .bc-sg, .bag-mon .bc-lock, .bag-mon .bc-more {
   position:absolute; font-style:normal; font-weight:700; text-shadow:0 1px 2px #000; pointer-events:none; }
-.bag-cell .bc-up   { bottom:0; left:2px;  color:#6ae88a; font-size:var(--fs-sm); }
+.bag-cell .bc-up, .bag-mon .bc-up   { bottom:0; left:2px;  color:#6ae88a; font-size:var(--fs-sm); }
 .bag-cell .bc-sg   { bottom:0; right:2px; color:var(--gold); font-size:var(--fs-sm); }
-.bag-cell .bc-lock { top:1px;  left:2px;  font-size:var(--fs-xs); }
-.bag-cell .bc-more { top:-3px; right:2px; color:#c9b889; font-size:var(--fs-md); cursor:pointer; pointer-events:auto; }
+.bag-cell .bc-lock, .bag-mon .bc-lock { top:1px;  left:2px;  font-size:var(--fs-xs); }
+.bag-cell .bc-more, .bag-mon .bc-more { top:-3px; right:2px; color:#c9b889; font-size:var(--fs-md); cursor:pointer; pointer-events:auto; }
 
 /* Dòng Hoàn Hảo — khối riêng, không trộn vào dãy dòng thường */
 .exc-block { margin-top:6px; padding:6px 9px; border-left:2px solid #ffd76a; border-radius:0 4px 4px 0;

@@ -24,7 +24,7 @@ const { chromium } = require('playwright');
   await page.evaluate(() => { togglePanel('bag'); });
   await page.waitForTimeout(200);
   const clickEquip = await page.evaluate(() => {
-    document.querySelector('#panel-bag .bag-cell').click();
+    document.querySelector('#panel-bag .bag-mon').click();
     return { equippedAny: Object.values(player.equip).some(Boolean) };
   });
   console.log('click-to-equip result:', JSON.stringify(clickEquip));
