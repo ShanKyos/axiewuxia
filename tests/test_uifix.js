@@ -96,7 +96,7 @@ const over = (a, b) => a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y +
     bn.classList.remove('hidden'); bn.style.display = 'flex';
     togglePanel('char');
     const pn = document.getElementById('panel-char');
-    const tabs = pn && pn.querySelector('.tabs, .panel-tabs, .char-tabs');
+    const tabs = pn && pn.querySelector('.tabs, .panel-tabs, .bang-tabs');
     const zb = getComputedStyle(bn).zIndex, zp = getComputedStyle(pn).zIndex;
     const r = tabs ? tabs.getBoundingClientRect() : null;
     const a = bn.getBoundingClientRect();

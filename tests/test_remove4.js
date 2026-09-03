@@ -36,7 +36,7 @@ function check(name, ok, extra){
     player.level = 100; calcDerived();
     togglePanel('char');
     return {
-      labels: Array.from(document.querySelectorAll('#panel-char .char-tabs button')).map(b => b.textContent.trim()),
+      labels: Array.from(document.querySelectorAll('#panel-char .bang-tab')).map(b => b.textContent.trim()),
       ids: CHAR_TABS.map(t => t.id),
     };
   });

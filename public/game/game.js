@@ -8677,7 +8677,7 @@ window.renderStable = function(){
   const p = el('panel-quest');
   const g = gameTimeInfo(), tk = g.day + '/' + g.month;
   const caught = player.horseDay && player.horseDay.d === tk ? player.horseDay.n : 0;
-  let html = `<h3>Trại Ngựa — Mục Đồng</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  let html = moBang({ tieu:'Trại Ngựa — Mục Đồng' });
   html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">"Tuấn mã hoang chạy ngoài đồng kia — lại gần nó sẽ vùng chạy, rượt đến khi <b style="color:#7fd8e0">kiệt sức</b> rồi bấm <b>E</b> mà bắt. Mỗi con cho một cuộn <b style="color:#7fd8e0">Mã Thầu</b>: khi thăng giai thú cưỡi, dùng <b>+7% tỉ lệ</b> hoặc <b>−4✦ phí</b> mỗi cuộn (tối đa 3 cuộn/lần). Ngày chỉ bắt 5 con thôi — ngựa cũng cần nghỉ!"</div>`;
   html += `<div class="mat-row"><span style="width:20px;text-align:center">🪢</span><span style="flex:1">Mã Thầu đang có</span><b style="color:#7fd8e0">${player.maThau || 0}</b></div>`;
   html += `<div class="mat-row"><span style="width:20px;text-align:center">🐎</span><span style="flex:1">Tuấn Mã đã bắt hôm nay</span><b>${caught}/5</b></div>`;
@@ -14487,7 +14487,7 @@ el('btn-auto').addEventListener('click', ()=>toggleAuto());
 
 function renderChar(){
   const p = player, sect = SECTS[p.sect];
-  let html = `<h3>Nhân Vật — ${sect.name} Cấp ${p.level}</h3>`;
+  let html = `<div class="stat-sec">${sect.name} · Cấp ${p.level}</div>`;
   // chân dung = chính nhân vật trong game, ở đúng bậc Thần Binh đang mang
   html += `<img class="char-portrait" src="${heroCardUrl(p.sect, heroTier(p), gearVisual(p))}" alt="${sect.name}">`;
   // Tán Nhân: lối vào lễ Gia Nhập Lớp (cấp 10)
@@ -15350,7 +15350,7 @@ function FE(){ return el('forge-content') || (_feDummy || (_feDummy = document.c
 let _feDummy = null;
 function renderForge(){
   if (lvPeak() < 4){
-    FE().innerHTML = `<h3>Lò Hỗn Độn</h3>
+    FE().innerHTML = moBang({ tieu:'Lò Hỗn Độn' }) + `
       <div style="padding:14px;font-size:13px">Lò mở khóa ở <b style="color:#7ecbff">cấp 4</b>.<br>Hãy tiếp tục làm nhiệm vụ!</div>`;
     return;
   }
@@ -15359,7 +15359,7 @@ function renderForge(){
   const cur = chaosCurrent();
   const ms = chaosMatches();
   const J = player.jewels || { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
-  let h = `<h3>⚙ Lò Hỗn Độn</h3>`;
+  let h = moBang({ tieu:'⚙ Lò Hỗn Độn' });
 
   // ── kho: tiền + nguyên liệu số lượng lớn ──
   h += `<div class="chaos-bank">
@@ -15374,10 +15374,10 @@ function renderForge(){
   </div>`;
 
   // ── tab nhóm ──
-  h += `<div class="chaos-tabs">`;
+  h += `<div class="bang-tabs">`;
   for (const g of CHAOS_GROUPS){
     const n = ms.filter(x => x.rec.group === g.id).length;
-    h += `<button class="chaos-tab${chaosGroup===g.id?' on':''}" onclick="chaosSetGroup('${g.id}')">${g.name}${n?` <i>${n}</i>`:''}</button>`;
+    h += `<button class="bang-tab${chaosGroup===g.id?' on':''}" onclick="chaosSetGroup('${g.id}')">${g.name}${n?` <i>${n}</i>`:''}</button>`;
   }
   h += `</div>`;
 
@@ -15893,7 +15893,7 @@ window.masteryClick = function(ev, id){
 function renderMastery(){
   const tabs = masteryTabs();
   if (!window.mTab || !tabs.find(t => t.id === window.mTab)) window.mTab = tabs[0].id;
-  let html = `<h3>${MASTERY_NAME}</h3>`;
+  let html = `<div class="stat-sec">${MASTERY_NAME}</div>`;
   if (!masteryOpen()){
     html += `<div class="bonus-list" style="line-height:1.8">
       ◆ Bảng ${MASTERY_NAME} khai mở khi đạt <b style="color:#ffd76a">cấp ${MASTERY_LV}</b> và
@@ -16023,7 +16023,7 @@ function renderTuyetHoc(){
   const sys = window.thTab;
   const S = TH_SYSTEMS[sys];
   const st = thState(sys);
-  let html = `<h3>Thuần Thục — 7 Tầng</h3>`;
+  let html = `<div class="stat-sec">Thuần Thục — 7 Tầng</div>`;
   html += `<div style="display:flex;gap:6px;margin-bottom:8px">`;
   for (const k in TH_SYSTEMS){
     const s2 = TH_SYSTEMS[k];
@@ -16260,7 +16260,7 @@ function petLineHtml(sb, plus, cls){
 }
 function renderPet(){
   if (lvPeak() < 8){
-    CE().innerHTML = `<h3>Linh Thú</h3>
+    CE().innerHTML = `<div class="stat-sec">Linh Thú</div>
       <div style="padding:14px;font-size:13px">Linh Thú mở khoá ở <b style="color:#7ecbff">cấp 8</b>.</div>`;
     return;
   }
@@ -16273,7 +16273,7 @@ function renderPet(){
       calcDerived(); saveGame();
     }
   }
-  let html = `<h3>Linh Thú</h3>`;
+  let html = `<div class="stat-sec">Linh Thú</div>`;
   if (!it){
     html += `<div class="pet-intro">Chọn một con theo bạn. <b style="color:#7ecbff">Chỉ chọn một lần</b> —
       và từ đó nó không rời bạn nữa: không bán được, không rơi mất, thăng cấp hỏng cũng không sao.</div>
@@ -16348,13 +16348,13 @@ function renderPet(){
 window.renderPet = renderPet;
 function renderMount(){
   if (lvPeak() < 6){
-    CE().innerHTML = `<h3>Chimera Đồng Hành</h3>
+    CE().innerHTML = `<div class="stat-sec">Chimera Đồng Hành</div>
       <div style="padding:14px;font-size:13px">Khế Ước mở khóa ở <b style="color:#7ecbff">cấp 6</b>.</div>`;
     return;
   }
   const C = chiState();
   const dsCo = CHIMERA.filter(c => C.co[c.id]);
-  let html = `<h3>Chimera Đồng Hành</h3>`;
+  let html = `<div class="stat-sec">Chimera Đồng Hành</div>`;
   html += `<div style="font-size:11.5px;color:#9aa8d4;line-height:1.55;margin-bottom:8px">Chimera quay được ở <b>Khế Ước</b>. Con đang xuất trận đi theo bạn, tự đánh quái và tung chiêu riêng; bị động của nó luôn bật kể cả khi thu hồi.</div>`;
   html += `<div class="forge-actions" style="margin-bottom:8px">
       <button class="mini-btn" style="font-size:13px;padding:7px 18px" onclick="closePanels();openKheUoc()">✦ Mở Khế Ước (${(C.ve.gk||0)} Ấn)</button>
@@ -16450,10 +16450,10 @@ function renderKhoCot(){
   const id = window._khoChi, o = chiO(id); if (!o) return;
   const K = cotKho(), loc = window._khoLoc;
   const ds = loc === 'all' ? K : K.filter(c => c.o === loc);
-  let h = `<h3>Kho Cốt — ${K.length}/${COT_KHO_MAX}</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  let h = moBang({ tieu:'Kho Cốt', dong:`${K.length}/${COT_KHO_MAX}` });
   h += `<div style="font-size:11.5px;color:#9aa8d4;line-height:1.55;margin-bottom:8px">Cốt rơi khi thông quan phó bản — <b>mỗi phòng một Dòng</b>, nên chọn phòng là chọn bộ. Nâng bậc bằng cách cho ăn những mảnh thừa; mỗi <b>+3</b> mở thêm một dòng phụ.</div>`;
-  h += `<div class="chaos-tabs"><button class="chaos-tab ${loc === 'all' ? 'on' : ''}" onclick="khoLoc('all')">Tất cả</button>`;
-  for (const k of COT_O_IDS) h += `<button class="chaos-tab ${loc === k ? 'on' : ''}" onclick="khoLoc('${k}')">${COT_O[k].glyph} ${COT_O[k].ten}</button>`;
+  h += `<div class="bang-tabs"><button class="bang-tab ${loc === 'all' ? 'on' : ''}" onclick="khoLoc('all')">Tất cả</button>`;
+  for (const k of COT_O_IDS) h += `<button class="bang-tab ${loc === k ? 'on' : ''}" onclick="khoLoc('${k}')">${COT_O[k].glyph} ${COT_O[k].ten}</button>`;
   h += `</div>`;
   if (!ds.length) h += `<div style="text-align:center;padding:16px;opacity:.7;font-size:13px">Chưa có mảnh nào.<br>Thông quan phó bản để nhặt Cốt.</div>`;
   for (const c of ds){
@@ -16695,7 +16695,7 @@ function renderKheUoc(){
   const C = chiState(), p2 = el('panel-quest');
   const ke5 = CHI_MAP[gachaKe()], ke4 = gachaKe4().map(id => CHI_MAP[id]);
   const conBd = Math.max(0, GACHA_HARD5 - C.pity5);
-  let html = `<h3>✦ Khế Ước Chimera</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  let html = moBang({ tieu:'✦ Khế Ước Chimera' });
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Ấn Giao Kết <b style="color:#ffd76a">${C.ve.gk||0}</b> · Ấn Cổ Xưa <b style="color:#7ecbff">${C.ve.cx||0}</b> · Nguyệt Trần <b>${C.nguyet||0}</b> · Tinh Trần <b>${C.tinh||0}</b></div>`;
 
   html += `<div class="ku-banner"><h4>Giao Kết — ${ke5.ten} <span style="color:#ffb15c">★★★★★</span></h4>
@@ -16762,7 +16762,7 @@ window.toggleMountOut = function(){
 function renderTayTuy(){
   const rc = player.resetCount || 0;
   const curBonus = rc * 2, nextBonus = (rc + 1) * 2;
-  let html = `<h3>Tái Sinh</h3>`;
+  let html = `<div class="stat-sec">Tái Sinh</div>`;
   html += `<div style="text-align:center;padding:6px 0 10px">
     <div style="font-size:34px">🔄</div>
     <div style="font-size:15px;color:#ffd76a">Số lần Tái Sinh: <b>${rc}</b></div>
@@ -17548,13 +17548,10 @@ const CHAR_TABS = [
 function renderCharPanel(){
   let tab = window.charTab;
   if (!sysUnlocked(tab)) tab = window.charTab = 'info'; // tab đang chọn bị khóa → về Thông Tin
-  let html = `<h3>Nhân Vật</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div class="char-tabs">`;
-  for (const t of CHAR_TABS){
-    const locked = !sysUnlocked(t.id);
-    html += `<button class="${t.id===tab?'active':''}${locked?' locked':''}" ${locked?`title="Mở khóa ở cấp ${t.lv}"`:''} onclick="switchCharTab('${t.id}')">${locked?'🔒 ':''}${t.name}</button>`;
-  }
-  html += `</div><div id="char-content"></div>`;
+  let html = moBang({ tieu:'Nhân Vật', chon:tab, ham:'switchCharTab',
+    tabs: CHAR_TABS.map(t => ({ id:t.id, ten:t.name, khoa:!sysUnlocked(t.id),
+      title: sysUnlocked(t.id) ? '' : `Mở khóa ở cấp ${t.lv}` })) });
+  html += `<div id="char-content"></div>`;
   el('panel-char').innerHTML = html;
   if (tab==='info') renderChar();
   else if (tab==='mount') renderMount();
@@ -19652,7 +19649,7 @@ function slotIcon(it, cls){
 
 // ---------- Trang Bị (override): lưới paperdoll 12 ô, kéo-thả từ Túi Đồ để mặc ----------
 function renderInv(){
-  let html = `<h3>Trang Bị</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  let html = moBang({ tieu:'Trang Bị' });
   // Dòng này trước đây dài tới mức xuống hàng và bỏ rơi một chữ "ô" lẻ loi ở dòng dưới, lại còn
   // chen với nút bên phải. Ngắn gọn thôi — thao tác đã tự hiển nhiên khi nhìn thấy người mặc đồ.
   html += `<div class="stat-sec">Bấm để tháo · kéo từ Túi Đồ để mặc <button class="mini-btn" style="float:right" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất</button></div>`;
@@ -20064,15 +20061,15 @@ function bagSecBox(){
 }
 function renderBag(){
   const T = window.bagTab || 'gear';
-  let html = `<h3>Túi Đồ (${player.inv.length}/30)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div class="chaos-tabs">`;
+  let html = moBang({ tieu:'Túi Đồ', dong:`${player.inv.length}/30` });
+  html += `<div class="bang-tabs">`;
   for (const t of BAG_TABS){
     // đếm ngay trên tab: khỏi phải mở từng cái xem có gì mới
     const n = t.id === 'gear' ? player.inv.length
             : t.id === 'box'  ? Object.values(player.baohap || {}).reduce((a, b) => a + b, 0)
             : t.id === 'kho'  ? khoList().length
             : Object.values(player.jewels || {}).reduce((a, b) => a + b, 0);
-    html += `<button class="chaos-tab${T===t.id?' on':''}" onclick="setBagTab('${t.id}')">${t.name}${n?` <i>${n}</i>`:''}</button>`;
+    html += `<button class="bang-tab${T===t.id?' on':''}" onclick="setBagTab('${t.id}')">${t.name}${n?` <i>${n}</i>`:''}</button>`;
   }
   html += `</div>`;
   html += T === 'mat' ? bagSecMat() : T === 'box' ? bagSecBox() : T === 'kho' ? bagSecKho() : bagSecGear();
@@ -20188,10 +20185,10 @@ function legacyUniversalRowHtml(id){
 }
 function renderSkillPanel(){
   vhAutoLearn(); // save cũ / test mode: quét tự ngộ kỹ năng phái
-  let html = `<h3>Kỹ Năng — 4 ô cố định (phím 1-4)</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  let html = moBang({ tieu:'Kỹ Năng', dong:'4 ô cố định · phím 1-4' });
   html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%ST/cấp (bạc) · mốc 20/40/60/80/100/120 thêm buff · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · <span style="color:#7fd8e0">Instinct <b>${Math.floor(player.khi || 0).toLocaleString('vi-VN')}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
-  html += `<div class="char-tabs">`;
-  for (const t of SKILL_TABS) html += `<button class="${t.id===window.skillTab?'active':''}" onclick="switchSkillTab('${t.id}')">${t.name}</button>`;
+  html += `<div class="bang-tabs">`;
+  for (const t of SKILL_TABS) html += `<button class="bang-tab${t.id===window.skillTab?' on':''}" onclick="switchSkillTab('${t.id}')">${t.name}</button>`;
   html += `</div>`;
 
   if (window.skillTab === 'active'){
@@ -20659,8 +20656,10 @@ window.buyStockItem = function(i){
 function npcHead(n){
   const img = n && n.img
     ? `<img class="npc-face" src="${n.img}" alt="" onerror="this.style.display='none'">` : '';
-  return `<div class="npc-head">${img}<h3>${n.name}</h3></div>` +
-         `<button class="close-x" onclick="closePanels()">✕</button>`;
+  // Đi qua moBang() như mọi bảng khác: chân dung nằm TRONG thanh tiêu đề khắc chìm, không phải
+  // trong một hàng .npc-head riêng nằm ngoài nó. Trước đây đây là bảng duy nhất trong game mở ra
+  // thấy tiêu đề trần — nói chuyện với NPC ra một kiểu, mở túi đồ ra một kiểu khác.
+  return moBang({ tieu:n.name, mat:img });
 }
 function renderShop(n){
   const shop = SHOPS[n.id];
@@ -21719,30 +21718,63 @@ function drawMinimap(){
   mc.fillText(md.name, 6, mh - 6);
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// moBang() — MỘT chỗ duy nhất dựng phần ĐẦU của mọi bảng
+//
+// Trước bản này, hai mươi hàm dựng bảng mỗi hàm tự viết lấy tiêu đề, nút đóng và hàng tab của
+// mình. Ba lỗi cùng mọc ra từ đó, và chúng là MỘT lỗi chứ không phải ba:
+//   · TÁM màn mất thanh tiêu đề khắc chìm, vì CSS bắt theo con trực tiếp `.panel > h3` mà <h3>
+//     của chúng nằm sâu hơn một tầng — sáu tab của khung Nhân Vật (viết vào #char-content),
+//     Lò Hỗn Độn (viết vào #forge-content) và hội thoại NPC (bọc trong .npc-head);
+//   · bảng Nhân Vật có HAI tiêu đề chồng nhau — khung ngoài in một cái, rồi cả sáu tab in tiếp;
+//   · Lò Hỗn Độn là bảng duy nhất trong mười bốn bảng không có nút ✕.
+// Sửa từng chỗ là sửa hai mươi lần cho một lỗi, và lỗi thứ hai mươi mốt sẽ mọc ở hàm tiếp theo
+// ai đó viết. Nên phần đầu bảng chỉ có đúng một nơi phát ra.
+//
+//   tieu   tiêu đề · dong: dòng phụ mờ đi kèm (số lượng, cấp…)
+//   mat    HTML chân dung đặt TRƯỚC tên, trong cùng thanh khắc chìm (hộp thoại NPC)
+//   tabs   [{ id, ten, badge, khoa, title }] · chon: id đang chọn · ham: tên hàm nhận cú bấm
+//   dong-x false thì không vẽ nút đóng (bảng lồng trong hộp thoại NPC tự lo phần đó)
+function moBang({ tieu, dong, mat, tabs, chon, ham, dongX = true }){
+  let h = `<h3 class="bang-tieu">${mat || ''}${mat ? `<span>${tieu}</span>` : tieu}`
+        + `${dong ? `<span class="bang-dong">${dong}</span>` : ''}</h3>`;
+  if (dongX) h += `<button class="close-x" onclick="closePanels()">✕</button>`;
+  if (tabs && tabs.length){
+    h += `<div class="bang-tabs">`;
+    for (const t of tabs){
+      const cl = `bang-tab${t.id === chon ? ' on' : ''}${t.khoa ? ' khoa' : ''}`;
+      h += `<button class="${cl}"${t.title ? ` title="${t.title}"` : ''} onclick="${ham}('${t.id}')">`
+         + `${t.khoa ? '🔒 ' : ''}${t.ten}${t.badge ? ` <i>${t.badge}</i>` : ''}</button>`;
+    }
+    h += `</div>`;
+  }
+  return h;
+}
+
 // ---------- Bảng Cài Đặt ----------
 function renderSettings(){
   const p = el('panel-settings'); if (!p) return;
   const slider = (key, val) => `<input type="range" min="0" max="100" value="${val}" oninput="setOpt('${key}', this.value, true)" onchange="setOpt('${key}', this.value)">`;
-  const tog = (key) => `<button class="mini-btn ${SETTINGS[key] ? '' : 'danger'}" onclick="toggleOpt('${key}')">${SETTINGS[key] ? 'BẬT' : 'TẮT'}</button>`;
+  const tog = (key) => `<button class="mini-btn ${SETTINGS[key] ? '' : 'tat'}" onclick="toggleOpt('${key}')">${SETTINGS[key] ? 'BẬT' : 'TẮT'}</button>`;
   const _acS = (typeof player !== 'undefined' && player && player.autoCfg) ? player.autoCfg : { skill:true, potion:true, potionPct:40, range:430, boss:false };
-  const togA = (key) => `<button class="mini-btn ${_acS[key] ? '' : 'danger'}" onclick="toggleAutoCfg('${key}')">${_acS[key] ? 'BẬT' : 'TẮT'}</button>`;
+  const togA = (key) => `<button class="mini-btn ${_acS[key] ? '' : 'tat'}" onclick="toggleAutoCfg('${key}')">${_acS[key] ? 'BẬT' : 'TẮT'}</button>`;
   const sldA = (key, min, max, step, txt) => `<input type="range" min="${min}" max="${max}" step="${step}" value="${_acS[key]}" oninput="setAutoCfg('${key}', this.value, true)" onchange="setAutoCfg('${key}', this.value)"><span style="font-size:11px;color:#ffb15c">${txt}</span>`;
-  p.innerHTML = `<h3>Cài Đặt</h3><button class="close-x" onclick="closePanels()">✕</button>
+  p.innerHTML = moBang({ tieu:'Cài Đặt' }) + `
     <div class="set-row"><span>🎵 Nhạc nền</span>${slider('bgm', SETTINGS.bgm)}</div>
     <div class="set-row"><span>🔔 Hiệu ứng âm thanh</span>${slider('sfx', SETTINGS.sfx)}</div>
     <div class="set-row"><span>🗺 Bản đồ thu nhỏ <i>(phím U)</i></span>${tog('minimap')}</div>
     <div class="set-row"><span>🏷 Tên quái vật</span>${tog('mobName')}</div>
     <div class="set-row"><span>💥 Số sát thương trên đầu quái</span>${tog('dmgNum')}</div>
     <div class="set-row"><span>📳 Rung màn hình</span><span>${[[0,'TẮT'],[1,'NHẸ'],[2,'ĐẦY']].map(([v,t]) =>
-      `<button class="mini-btn ${(SETTINGS.shake|0) === v ? '' : 'danger'}" onclick="setShake(${v})">${t}</button>`).join(' ')}</span></div>
+      `<button class="mini-btn ${(SETTINGS.shake|0) === v ? '' : 'tat'}" onclick="setShake(${v})">${t}</button>`).join(' ')}</span></div>
     <div class="set-row"><span>📈 Bảng đo hiệu năng <i>(FPS · JS · raster)</i></span>${tog('perfHud')}</div>
     <div class="set-row"><span>🍃 Hiệu ứng <i>(Tự Chỉnh sẽ hạ mức khi máy đuối)</i></span><span>${
       [['auto','Tự Chỉnh'],[2,'Đầy'],[1,'Vừa'],[0,'Thấp']].map(([v,t]) =>
-        `<button class="mini-btn ${(v === 'auto' ? FXQ_AUTO : (!FXQ_AUTO && FXQ === v)) ? '' : 'danger'}" onclick="setFxq('${v}')">${t}</button>`).join(' ')
+        `<button class="mini-btn ${(v === 'auto' ? FXQ_AUTO : (!FXQ_AUTO && FXQ === v)) ? '' : 'tat'}" onclick="setFxq('${v}')">${t}</button>`).join(' ')
     }</span></div>
     <div class="set-row"><span>🔍 Độ nét <i>(hạ xuống để chạy mượt trên máy yếu — chữ sẽ mềm hơn)</i></span><span>${
       [['auto','Tự Chỉnh'],[1,'100%'],[0.85,'85%'],[0.75,'75%'],[0.6,'60%'],[0.5,'50%']].map(([v,t]) =>
-        `<button class="mini-btn ${(v === 'auto' ? RES_AUTO : (!RES_AUTO && Math.abs(RES - v) < 0.001)) ? '' : 'danger'}" onclick="setRes('${v}')">${t}</button>`).join(' ')
+        `<button class="mini-btn ${(v === 'auto' ? RES_AUTO : (!RES_AUTO && Math.abs(RES - v) < 0.001)) ? '' : 'tat'}" onclick="setRes('${v}')">${t}</button>`).join(' ')
     }</span></div>
     <div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin:-2px 0 8px">Màn hình này là <b style="color:#8ab4ff">${(window.devicePixelRatio || 1).toFixed(2)}×</b> — đang vẽ ở <b style="color:#8ab4ff">${(RES * DPRF).toFixed(2)}×</b> điểm ảnh thật.<br>Đang chạy: <b style="color:#8ab4ff">${['Thấp','Vừa','Đầy'][FXQ]}</b>${FXQ_AUTO ? ' <i>(tự chỉnh)</i>' : ''} — mức thấp tắt quầng sáng và lớp phủ, đổi lại khung hình mượt hơn nhiều.</div>
     <div class="set-row"><span>🌐 Ngôn ngữ / Language</span><button class="mini-btn" onclick="window.ghhaSwitchLang && window.ghhaSwitchLang()">${(window.ghhaLang && window.ghhaLang() === 'en') ? '🇻🇳 Tiếng Việt' : '🇬🇧 English'}</button></div>
@@ -22224,7 +22256,7 @@ window.travelTo = function(mapId, from){
 // ---------- Map panel: vùng chưa mở = ??? ----------
 function renderMapPanel(){
   const zt = zoneType();
-  let html = `<h3>Bản Đồ Lunacia</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  let html = moBang({ tieu:'Bản Đồ Lunacia' });
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Đang ở: <b style="color:${zt.color}">${mapDef().name}</b> · ${zt.name} · <span style="opacity:.7">Nhiệm vụ: phím Q</span>${window.TEST_MODE ? ' · <span style="color:#7fd4ff">[CHẾ ĐỘ TEST — dịch chuyển tự do]</span>' : ''}</div>`;
   // GDD Đợt 2 B2: badge mục tiêu NV trên từng vùng
   const _qt = questTarget(currentQuest());
@@ -22291,7 +22323,7 @@ window.openStageSelect = function(mapId){
 };
 function renderStageSelect(mapId){
   const md = MAPS[mapId];
-  let html = `<h3>Chọn Trận — ${md.name}</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  let html = moBang({ tieu:'Chọn Trận', dong:md.name });
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Chọn 1 cụm quái để vào đánh ngay — AUTO tự bật khi vào trận, không cần tự đi bộ tới.</div>`;
   const packs = (md.packs || [])
     .map((pk,i)=>({ pk, i, mdef:MOBS[pk.mob] }))
@@ -23010,11 +23042,10 @@ function showKetMo(){
 window.setQlogTab = function(t){ window.qlogTab = t; AudioSys.sfx('ui', 0.5); renderQlog(); };
 function renderQlog(){
   const p = el('panel-qlog'); if (!p) return;
-  let html = `<h3>Nhật Ký Nhiệm Vụ</h3><button class="close-x" onclick="closePanels()">✕</button>`;
-  html += `<div style="display:flex;gap:8px;margin-bottom:8px">
-    <button class="mini-btn ${window.qlogTab === 'main' ? '' : 'danger'}" onclick="setQlogTab('main')">★ Chính Tuyến</button>
-    <button class="mini-btn ${window.qlogTab === 'side' ? '' : 'danger'}" onclick="setQlogTab('side')">◈ Phụ Tuyến</button>
-    <button class="mini-btn ${window.qlogTab === 'story' ? '' : 'danger'}" onclick="setQlogTab('story')">📜 Nhật Ký</button></div>`;
+  // Ba tab này trước đây dùng .mini-btn.danger — CÙNG class với nút "XÓA SAVE", nên tab chưa
+  // chọn trông y hệt nút xoá dữ liệu và người chơi cẩn thận sẽ không dám bấm.
+  let html = moBang({ tieu:'Nhật Ký Nhiệm Vụ', chon:window.qlogTab, ham:'setQlogTab',
+    tabs:[{ id:'main', ten:'★ Chính Tuyến' }, { id:'side', ten:'◈ Phụ Tuyến' }, { id:'story', ten:'📜 Nhật Ký' }] });
   if (window.qlogTab === 'main'){
     let lastCh = '';
     QUESTS.forEach((q, i) => {
@@ -23864,7 +23895,7 @@ const GARDEN_SEEDS = {
 function tulinhMult(){ return 1 + (TULINH_TIERS[(player && player.abode && player.abode.tulinh) || 0] || 0); }
 function renderAbode(){
   if (player.level < 30){ // mở theo tầng — tân thủ tập trung chiến đấu & nhiệm vụ trước
-    el('panel-quest').innerHTML = `<h3>Nhà Riêng</h3><button class="close-x" onclick="closePanels()">✕</button>
+    el('panel-quest').innerHTML = moBang({ tieu:'Nhà Riêng' }) + `
       <div style="padding:14px;font-size:13px;line-height:1.8">Quản Gia lắc đầu: <i>"Dòng chảy dưới nền nhà này còn quá mạnh so với sức người mới tới."</i><br><br>
       Nhà Riêng mở khóa ở <b style="color:#7ecbff">cấp 30</b> — hãy rèn thân đã!</div>`;
     closePanels(); el('panel-quest').classList.remove('hidden');
@@ -23872,7 +23903,7 @@ function renderAbode(){
   }
   const ab = player.abode;
   const t = ab.tulinh;
-  let html = `<h3>Nhà Riêng</h3><button class="close-x" onclick="closePanels()">✕</button>`;
+  let html = moBang({ tieu:'Nhà Riêng' });
   html += `<div style="font-size:12.5px;color:#9aa8d4;margin-bottom:8px;line-height:1.6">"Nhà nhỏ, nhưng dựng ngay trên một mạch lực của Lunacia — nghỉ ở đây một đêm bằng cả tuần ngoài kia."</div>`;
   // Tụ Linh Trận
   html += `<div class="stat-sec">ĐÀI HỘI LỰC — BẬC ${t}/5 · tích lũy nhanh +${Math.round(TULINH_TIERS[t]*100)}%</div>`;

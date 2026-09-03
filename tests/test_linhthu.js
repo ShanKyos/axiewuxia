@@ -51,7 +51,7 @@ const pass = m => console.log('PASS ' + m);
     // r2 hạ cấp về 20 — một tình cờ về thứ tự gọi. Nay calcDerived() → masteryAgg() → masteryOpen()
     // → lvPeak() chốt đỉnh 120 ngay trong applyTestBoost(), nên tình cờ đó không còn.
     player.level = 5; player.lvPeak = 5; renderCharPanel();
-    const locked = !!document.querySelector('.char-tabs button.locked');
+    const locked = !!document.querySelector('.bang-tab.khoa');
     player.level = 20; return { locked };
   });
   r3.locked ? pass('dưới cấp 8 tab Linh Thú bị khoá') : fail('tab không khoá theo cấp');
