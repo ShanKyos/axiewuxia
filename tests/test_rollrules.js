@@ -44,11 +44,7 @@ const { chromium } = require('playwright');
       if (it.exc && it.exc.length){ o.hoanHao.coExc++;
         o.hoanHao.soDongExc[it.exc.length] = (o.hoanHao.soDongExc[it.exc.length] || 0) + 1; }
     }
-    // Cổ Thần: cũng perfect:true — có được đối xử như đồ Hoàn Hảo không?
-    const anc = genAncient(Object.keys(ANCIENT_SETS)[0], 'ao', 80);
-    o.coThan = { perfect: anc.perfect, soDong: anc.subs.length,
-                 kichMax: anc.subs.every(s => MAXOF[s.k] && s.v === MAXOF[s.k].max),
-                 coExc: !!(anc.exc && anc.exc.length) };
+    // (Khối Cổ Thần đã bỏ cùng hệ Cổ Thần.)
     return o;
   });
 
@@ -59,7 +55,6 @@ const { chromium } = require('playwright');
   console.log('HOÀN HẢO   số dòng phụ      :', JSON.stringify(r.hoanHao.soDong));
   console.log('HOÀN HẢO   dòng không kịch max:', r.hoanHao.khongMax.length, r.hoanHao.khongMax.slice(0,5));
   console.log('HOÀN HẢO   có dòng Hoàn Hảo :', r.hoanHao.coExc, '· phân bố số dòng:', JSON.stringify(r.hoanHao.soDongExc));
-  console.log('CỔ THẦN                     :', JSON.stringify(r.coThan));
 
   // ── Luật 1: dòng VIP "ST Hoàn Hảo" KHÔNG được rơi trên đồ thường ──
   if (r.thuong.dongVIP) fail(`"ST Hoàn Hảo" rơi ${r.thuong.dongVIP}/${6000} lần trên đồ KHÔNG Hoàn Hảo — dòng VIP phải là đặc quyền của đồ Hoàn Hảo`);
@@ -81,8 +76,6 @@ const { chromium } = require('playwright');
   if (r.hoanHao.khongMax.length) fail(`${r.hoanHao.khongMax.length} dòng trên đồ Hoàn Hảo KHÔNG kịch max`);
   if (r.hoanHao.coExc !== 6000) fail(`chỉ ${r.hoanHao.coExc}/6000 món Hoàn Hảo có DÒNG HOÀN HẢO`);
   // ── Luật 5: Cổ Thần cũng là đồ Hoàn Hảo, phải được đối xử như vậy ──
-  if (!r.coThan.kichMax) fail('đồ Cổ Thần không kịch max dòng phụ');
-  if (!r.coThan.coExc) fail('đồ Cổ Thần mang cờ perfect nhưng KHÔNG có DÒNG HOÀN HẢO — trong khi món Hoàn Hảo thường thì có');
 
   console.log('errors:', JSON.stringify(errs));
   console.log(bad === 0 && errs.length === 0 ? 'PASS' : 'FAIL(' + bad + ')');

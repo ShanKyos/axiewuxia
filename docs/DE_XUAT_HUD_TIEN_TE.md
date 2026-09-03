@@ -1,5 +1,24 @@
 # Đề xuất: sắp xếp lại khối tiền tệ ở góc trên bên phải HUD
 
+> ## ĐÃ THAY THẾ — đọc mục này trước
+>
+> Tài liệu này viết **trước** đợt "về mô hình MU". Số đo trong đây vẫn đúng và vẫn đáng đọc
+> (chữ chồng chữ ở 50,9% vị trí đứng trong thành, 2,5% màn hình nuốt chuột oan), nhưng **kết
+> luận thì không còn**: nó khuyến nghị Phương án A — ví hai dòng dọc gồm Bạc và Huyền Thiết.
+>
+> Cái đã dựng thật khác ở ba điểm, theo quyết định của chủ dự án:
+>
+> | | Đề xuất này | Đã dựng |
+> |---|---|---|
+> | Bố cục | A — hai dòng **dọc** | **B — ba ô nằm ngang** (`#hud-vi`, `.vi-o`) |
+> | Nội dung | Bạc + Huyền Thiết | **Lumen** ◈ · **Ấn Giao Kết** ✦ · **Shard** ♦ |
+> | Huyền Thiết | giữ, là loại thứ hai | **đã gỡ hẳn** — quy ra Lumen ×150 |
+>
+> Ba bản vá bắt buộc ở §4.2 thì **đã làm đủ**: `pointer-events` tách khỏi hộp `#hud-right`,
+> luật chết `#hud-khi` đã xoá, và ký hiệu `✦` trùng nghĩa đã tách (sự kiện Xâm Lăng Vàng
+> chuyển sang `✹`).
+
+
 Tài liệu ĐỀ XUẤT. Không sửa mã trong `public/game/`. Mọi số đo dưới đây lấy từ Playwright chạy
 thật trên bản sao của `public/game/` (Chromium, `deviceScaleFactor:1`, `?test=1`,
 `startGame('thieulam') → applyTestBoost() → moHetCong()`), không phải ước lượng.

@@ -30,7 +30,6 @@ const { chromium } = require('playwright');
       else { cnt.khac++; if (it.element) cnt.khacCoHe++; }
     }
     o.gan = cnt;
-    o.coThanCoHe = !!genAncient(Object.keys(ANCIENT_SETS)[0], 'ao', 60).element;
 
     // ── 3. Sát thương lên quái ĐỔI theo hệ vũ khí ──
     const sectEl = SECTS[player.sect].element;

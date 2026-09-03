@@ -70,17 +70,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   if (r3.sau4 !== r3.sau3) fail('viên thứ 4 vẫn bị tiêu');
   if (r3.atk4 !== r3.atk3) fail('viên thứ 4 vẫn cộng chỉ số');
 
-  // 4) nâng Thần Binh vẫn trừ đúng
-  const r4 = await p.evaluate(() => {
-    player.noidan = 50; player.mat = 500; player.thanbinh = { tier: 1 };
-    const c = tbCost(1);
-    const truoc = player.noidan;
-    upgradeThanBinh();
-    return { can: c.noidan, truoc, sau: player.noidan, tang: player.thanbinh.tier };
-  });
-  console.log('4) nâng Thần Binh:', JSON.stringify(r4));
-  if (r4.tang !== 2) fail('không nâng được tầng');
-  if (r4.truoc - r4.sau !== r4.can) fail(`trừ ${r4.truoc - r4.sau} lõi, phải ${r4.can}`);
+  // (Mục 4 — nâng Thần Binh — đã bỏ cùng hệ Thần Binh.)
 
   // 5) UI túi đồ: một ô đếm + năm nút chỉ số, không còn dòng theo hệ
   const r5 = await p.evaluate(() => {

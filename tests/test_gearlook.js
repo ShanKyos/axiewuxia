@@ -89,11 +89,10 @@ const fs = require('fs');
       let ok = true; try { gearVisual(null); gearVisual(window.player); heroCardUrl('thieulam', 1); }
       catch (e){ ok = false; out.crashMsg = String(e); } window.player = _p; return ok; })();
 
-    // heroTier phải >= bậc Thần Binh (không ai bị tụt so với trước)
-    player.thanbinh = { tier: 7 }; player.equip = {}; calcDerived();
-    out.heroTier_khongTut = heroTier(player) === 7;
-    // và phải tăng khi mặc đồ cao hơn Thần Binh
-    player.thanbinh = { tier: 1 };
+    // heroTier nay CHỈ theo trang bị — Thần Binh đã gỡ, không còn trục thứ hai nào đẩy nó lên,
+    // nên cởi hết đồ là về bậc 1 (trước đây nó bị Thần Binh giữ ở tầng đang có).
+    player.equip = {}; calcDerived();
+    out.heroTier_tranTrui = heroTier(player);
     for (const k of HERO_ARMOR_SLOTS){ const it = genItem(112, 0); it.slot = k; it.tier = GIAI_MAX; player.equip[k] = it; }
     calcDerived();
     out.heroTier_theoDo = heroTier(player);
@@ -136,9 +135,9 @@ const fs = require('fs');
     fail(`bậc cao nhất đổi viền quá ít (${vien[vien.length-1]}) — hào quang đổi được màu nhưng không đổi được dáng`);
   if (vien.filter(v => v > 40).length < 3)
     fail(`chỉ ${vien.filter(v => v > 40).length}/6 nấc có viền khác trần trụi, cần ≥3`);
-  if (res.mauBo < 200) fail('màu bộ Cổ Thần không nhuốm được hào quang');
+  if (res.mauBo < 200) fail('màu bộ giáp không nhuốm được hào quang');
   if (!res.gvNull_khiChuaCoPlayer) fail('crash khi chưa có player (màn chọn lớp): ' + res.crashMsg);
-  if (!res.heroTier_khongTut) fail('heroTier tụt xuống dưới bậc Thần Binh');
+  if (res.heroTier_tranTrui !== 1) fail(`cởi hết đồ mà heroTier vẫn ${res.heroTier_tranTrui}, phải về 1`);
   if (res.heroTier_theoDo < 9) fail(`mặc full giai 10 mà heroTier chỉ ${res.heroTier_theoDo}`);
   if (!res.cache_doiTheoDo) fail('cache chân dung không đổi khi thay đồ — panel sẽ hiện ảnh cũ');
 

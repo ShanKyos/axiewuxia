@@ -10,7 +10,10 @@ Mọi thứ làm mới từ nay trở đi phải theo MU Online. Cụ thể:
 **KHÔNG dùng:**
 - Chữ Hán/kanji làm hình ảnh (icon, biểu tượng, glyph trang trí trên UI).
   Toàn bộ file **hiện không còn ký tự CJK nào** — kiểm tra lại bất cứ lúc nào bằng:
-  `python3 -c "import re;print(sum(1 for l in open('public/game/game.js',encoding='utf-8') if re.search(r'[一-鿿]',l)))"`
+  `python3 -c "import re;print(sum(1 for l in open('public/game/game.js',encoding='utf-8') if re.search(r'[　-〿一-鿿＀-￯゠-ヿ぀-ゟ]',l)))"`
+  Dải kiểm nay gồm cả **dấu câu CJK** (`【】《》`) và **ký tự toàn rộng** (`＋`), không chỉ chữ Hán:
+  bản cũ chỉ quét U+4E00–U+9FFF nên 9 cặp `【…】` ở nhãn danh hiệu và tên bộ đồ lọt qua suốt
+  nhiều đợt, dù chúng hiện thẳng trên HUD.
   Trường `glyph:` nay dùng ký hiệu phương Tây: `⚔ ✚ ✦ ✧ ✹ ◆ ♣ ▲ ❄ ☼ ⚡ ☾ ☠ ⚑ ★ ◉ ♦ ✽ ● ◑`
 - Thuật ngữ tu tiên: cảnh giới, đan điền, kinh mạch, chân khí, tu vi, độ kiếp, bí kíp, môn phái,
   giang hồ, "Tộc", tiên hiệp, phi thăng...
@@ -455,8 +458,23 @@ phần tử vào bảng, không đụng vào phần vẽ. Mỗi công thức kha
 | `royal:true` | chỉ chạy tại Lò Rèn Hoàng Gia (`atRoyalForge()`) |
 
 **Quy ước phân loại nguyên liệu:** thứ **rời rạc** (trang bị, ngọc Tứ Châu) phải bỏ vào khay mới
-tính — dùng `jewelCost()`. Thứ **số lượng lớn** (bạc, Huyền Thiết, Tu La, Mảnh…) trừ thẳng từ kho
+tính — dùng `jewelCost()`. Thứ **số lượng lớn** (Lumen, Tu La, Mảnh…) trừ thẳng từ kho
 và chỉ hiện trong bảng — dùng `chaosCost()`. Đừng trộn hai loại.
+
+### Ba loại tiền thường trực (ví ở góc trên bên phải)
+
+| Tên người chơi thấy | Ký hiệu | Trường | Kiếm ở đâu | Tiêu ở đâu |
+|---|---|---|---|---|
+| **Lumen** | `◈` | `player.silver` | rơi từ quái, bán đồ, nhiệm vụ | tiệm · rèn · nâng kỹ năng · Lò Hỗn Độn |
+| **Ấn Giao Kết** | `✦` | `player.chimera.ve.gk` | boss vùng lần đầu · điểm danh · phó bản | quay Khế Ước Chimera |
+| **Shard** | `♦` | `player.shard` | KHÔNG rơi từ quái — chỉ mốc mỗi ngày và thông quan | Quầy Shard: vé quay · nới túi · nới kho |
+
+- `player.silver` **giữ nguyên tên trường**; chỉ chữ người chơi thấy đổi thành "Lumen". Đừng đổi
+  tên trường — mọi save đang lưu và 12 chỗ trong `loadGame()` đọc `silver`.
+- Shard **không được cộng chỉ số**. Chỗ tiêu duy nhất chạm tới sức mạnh là đổi vé quay, và nó đi
+  vòng qua gacha chứ không mua thẳng. Thêm hàng vào `quayShardHang()` thì giữ đúng luật đó.
+- Số ô túi/kho đọc bằng `bagCap()` / `khoCap()`, **không** viết thẳng `30` / `60` nữa — hai con số
+  đó nới được bằng Shard và trước đây nằm rải ở 17 chỗ.
 
 **Ba cái bẫy đã sập một lần, đừng sập lại:**
 1. `chaosSyncGroup()` phải chạy theo `chaosPick`. Nếu không, bảng DANH SÁCH công thức và bảng

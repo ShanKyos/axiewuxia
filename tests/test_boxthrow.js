@@ -93,8 +93,6 @@ const pass = m => console.log('PASS ' + m);
     const src = burstBaoHap.toString();
     return {
       coHoanHao: /BAOHAP_PERFECT\[Math\.min\(t, BAOHAP_PERFECT\.length - 1\)\]/.test(src),
-      coCoThan:  /def\.ancient > 0 && Math\.random\(\) < def\.ancient/.test(src),
-      coKhacAn:  /attachSigil\(it, 0\.18 \+ \(t - 4\) \* 0\.05\)/.test(src),
       coChau:    /22 \+ t\*2/.test(src),
       coBac:     /150 \+ t\*120 \+ 40\*t/.test(src),
     };

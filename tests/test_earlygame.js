@@ -133,7 +133,7 @@ const PORT = process.argv[2] || '8853';
   if (r.daily1.join() !== 'kills' || r.daily12 !== r.dailyTong) fail(`mục tiêu ngày: cấp 1 thấy ${r.daily1}, cấp 12 thấy ${r.daily12}/${r.dailyTong}`); else pass('mục tiêu ngày mở dần theo cấp');
   if (r.sBCu.length) fail('NV cầu nối trùng chính tuyến vẫn còn: ' + r.sBCu); else pass('s_b1–s_b5 đã gỡ');
   if (r.s6Dich !== r.s6Muon || r.s6Dich === r.s6Giao) fail(`NV talk ghim đèn hiệu vào ${r.s6Dich}, phải là ${r.s6Muon}`); else pass('NV talk ghim đèn hiệu vào NPC đích');
-  if (!/^◈ 3[.,]114$/.test(r.bac)) fail('HUD bạc in số lẻ: ' + r.bac); else pass('HUD bạc làm tròn: ' + r.bac);
+  if (!/^3[.,]114$/.test(r.bac)) fail('HUD bạc in số lẻ: ' + r.bac); else pass('HUD bạc làm tròn: ' + r.bac);
   if (!r.tutDong) fail('bước tutorial cuối không tự đóng sau 25s'); else pass('bước tutorial cuối tự đóng');
   if (!r.goiYUong) fail('máu thấp không gợi ý uống thuốc'); else pass('máu thấp → gợi ý R uống thuốc');
   if (r.dauTL !== '!' || r.dauDS !== '' || !r.moTL) fail(`E chọn nhầm NPC: dấu TL '${r.dauTL}' DS '${r.dauDS}', mở Trưởng Làng ${r.moTL} (cách nhau ${r.npcCach}px)`); else pass('E ưu tiên NPC có NV để trả dù đứng gần NPC khác hơn');

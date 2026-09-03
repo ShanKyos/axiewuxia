@@ -25,14 +25,11 @@ const { chromium } = require('playwright');
         oDayDu: SLOTS.filter(s => eq[s.id]).length + '/' + SLOTS.length,
         phamCaoNhat: Math.max(...Object.values(eq).map(i => i.rarity || 0)),
         renTrungBinh: +(arm.reduce((a,i)=>a+(i.plus||0),0) / Math.max(1,arm.length)).toFixed(1),
-        boCoThan: (player.setActive && Object.entries(player.setActive).map(([k,v])=>`${k} ${v.n}/5`).join(',')) || '(không)',
-        khacAnDangCo: Object.keys(player.sigils || {}).length,
-        khacAnCoThe: sigilPool(player.sect).length,
         canhCap2: !!(eq.canh && eq.canh.wing2),
         canhTen: eq.canh ? eq.canh.name : '(không)',
-        thanBinh: (player.thanbinh||{}).tier,
         chau: Object.values(player.jewels||{}).reduce((a,b)=>a+b,0),
         baoHap: Object.values(player.baohap||{}).reduce((a,b)=>a+b,0),
+        shard: player.shard || 0, oTui: bagCap(), oKho: khoCap(),
         heroTier: heroTier(player), giaiMax: GIAI_MAX,
         gvT: gv ? +gv.t.toFixed(1) : 0,
         gvPlus: gv ? +gv.plus.toFixed(1) : 0,
@@ -40,7 +37,6 @@ const { chromium } = require('playwright');
         boGiap: heroSet(player.sect, gv ? gv.t : 0).name,
         // Bộ ở ĐỈNH bảng: chỉ số 4 là đỉnh khi còn 5 dải, nay đỉnh là phần tử cuối.
         boGiapMongDoi: HERO_SETS[sk][HERO_SETS[sk].length - 1].name,
-        tuiCoKhacAn: (player.inv||[]).filter(i => i.sigil).length,
       };
     }, sect);
   }
@@ -51,14 +47,12 @@ const { chromium } = require('playwright');
     if (r.cap !== 120) fail(`${sect}: chưa max cấp (${r.cap})`);
     if (r.phamCaoNhat !== 4) fail(`${sect}: phẩm cao nhất mới ${r.phamCaoNhat}, cần 4 (Chí Tôn)`);
     if (r.renTrungBinh !== 11) fail(`${sect}: rèn trung bình ${r.renTrungBinh}, cần 11`);
-    if (!/\b5\/5\b/.test(r.boCoThan)) fail(`${sect}: bộ Cổ Thần chưa đủ 5 (${r.boCoThan})`);
-    if (r.khacAnDangCo !== r.khacAnCoThe) fail(`${sect}: mới có ${r.khacAnDangCo}/${r.khacAnCoThe} Khắc Ấn`);
     if (!r.canhCap2) fail(`${sect}: cánh vẫn là cấp 1 (${r.canhTen})`);
     if (!(r.chau >= 300)) fail(`${sect}: chưa cấp châu (${r.chau})`);
-    if (!(r.baoHap >= 50)) fail(`${sect}: chưa cấp Bảo Hạp (${r.baoHap})`);
+    if (!(r.baoHap >= 50)) fail(`${sect}: chưa cấp Box Kundun (${r.baoHap})`);
+    if (!(r.shard > 0)) fail(`${sect}: max mode không cấp Shard (${r.shard}) — Quầy Shard không thử được`);
     if (r.heroTier !== r.giaiMax) fail(`${sect}: heroTier ${r.heroTier}, cần ${r.giaiMax}`);
     if (r.mocRen !== 3) fail(`${sect}: mốc cường hoá ${r.mocRen}, cần 3 (+10 trở lên)`);
-    if (!(r.tuiCoKhacAn >= 4)) fail(`${sect}: túi chưa có đồ mang Khắc Ấn (${r.tuiCoKhacAn})`);
     if (r.boGiap !== r.boGiapMongDoi) fail(`${sect}: bộ giáp "${r.boGiap}", cần "${r.boGiapMongDoi}"`);
   }
   console.log('errors:', JSON.stringify(errs));

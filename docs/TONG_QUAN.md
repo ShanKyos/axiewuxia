@@ -43,15 +43,15 @@ tướng quân của Morvahn chiếm cả năm. Gỡ trụ thì đi tiếp đư�
 ```
 Nhận nhiệm vụ ở Lunaris City / bãi săn
         ↓
-Đi bãi săn đúng dải cấp  →  giết quái  →  EXP · bạc · Huyền Thiết · Châu · đồ rơi xuống đất
+Đi bãi săn đúng dải cấp  →  giết quái  →  EXP · Lumen · Châu · đồ rơi xuống đất
         ↓                                             ↓
 Lên cấp → cộng 5 điểm tiềm năng/cấp            Nhặt đồ → so sánh (rê chuột) → mặc
         ↓                                             ↓
-Đủ cấp → mở bãi mới, phó bản mới        Đồ dư → Lò Hỗn Độn: rèn +N, khảm ngọc, tấn phẩm
+Đủ cấp → mở bãi mới, phó bản mới        Đồ dư → Lò Hỗn Độn: rèn +N, khảm ngọc, kế thừa
         ↓                                             ↓
-Hạ 3 Vệ Binh Trụ → mở Cổng Vực → hạ Tướng Quân vùng → Mảnh Cổ Thần, Ấn Trấn Ải
+Hạ 3 Vệ Binh Trụ → mở Cổng Vực → hạ Tướng Quân vùng → Tịch Ma Thạch, Shard
         ↓
-Sự kiện thế giới theo giờ thật → Bảo Hạp → trang bị Hoàn Hảo · Cổ Thần · Khắc Ấn
+Sự kiện thế giới theo giờ thật → Box Kundun → trang bị Hoàn Hảo · Thức Tỉnh
         ↓
 Cấp 120 → Tẩy Tủy (reset) → +2% Công & Sinh Lực vĩnh viễn, chơi lại từ cấp 1
 ```
@@ -61,8 +61,8 @@ Ba trục tiến bộ chạy song song và không thay thế nhau:
 | Trục | Đo bằng | Nguồn |
 |---|---|---|
 | **Cấp** | 1 → 120, mỗi cấp +5 điểm tiềm năng | EXP từ quái, nhiệm vụ, phó bản |
-| **Trang bị** | phẩm × giai × mức rèn (+0…+11) | đồ rơi, Bảo Hạp, Lò Hỗn Độn |
-| **Hệ dài hạn** | Ascension, Thần Binh, Thú Chiến, Kỹ năng | vật liệu riêng từng hệ |
+| **Trang bị** | phẩm × giai × mức rèn (+0…+11) | đồ rơi, Box Kundun, Lò Hỗn Độn |
+| **Hệ dài hạn** | Ascension, Chimera, Kỹ năng, Đại Thành | vật liệu riêng từng hệ |
 
 ---
 
@@ -189,8 +189,8 @@ hơn 1–5 cấp → ×0,85; hơn 6–10 cấp → ×0,6; hơn 10 cấp → **×
 
 ## 6. Trang bị
 
-**12 ô**: Vũ Khí · Nón · Áo · Tay · Quần · Chân · Dây Chuyền · Nhẫn 1 · Nhẫn 2 ·
-Áo Choàng · Pet · Cánh. Túi chứa tối đa **30 món**.
+**11 ô**: Vũ Khí · Nón · Áo · Tay · Quần · Chân · Dây Chuyền · Nhẫn 1 · Nhẫn 2 ·
+Áo Choàng · Cánh. Túi chứa **30 món**, nới thêm tối đa +15 ô bằng Shard (xem §16).
 
 Một món đồ có bốn trục độc lập:
 
@@ -202,67 +202,19 @@ Một món đồ có bốn trục độc lập:
 | **Hoàn Hảo** | có / không | mở thêm 1–3 **dòng riêng** mà đồ thường không bao giờ có |
 
 **Dòng Hoàn Hảo** là bộ dòng riêng, không phải "dòng cũ roll max". Vũ khí: hạ địch hồi
-Qi · hạ địch hồi Sinh Lực · tỉ lệ ST Hoàn Hảo · thêm sát thương · ST theo cấp · tốc đánh.
-Giáp: đồng rơi thêm · tỉ lệ đỡ đòn · phản sát thương · giảm sát thương · Qi tối đa ·
+Mana · hạ địch hồi Sinh Lực · tỉ lệ ST Hoàn Hảo · thêm sát thương · ST theo cấp · tốc đánh.
+Giáp: đồng rơi thêm · tỉ lệ đỡ đòn · phản sát thương · giảm sát thương · Mana tối đa ·
 Sinh Lực tối đa. Hệ quả cố ý: **một món Hoàn Hảo phẩm thấp có thể đáng mặc hơn một món
 Thần thường.**
 
 **Thức Tỉnh** — món rèn tới **+10** trở lên được thêm một dòng cộng thẳng (Bạo Kích +5%,
-Né +5%, Công +25, HP +200, Hồi Qi +3, hoặc Lực Lượng +8).
+Né +5%, Công +25, HP +200, Hồi Mana +3, hoặc Lực Lượng +8).
 
-**Cổ Thần Thủ Hộ** — 4 bộ giáp 5 món (Sarkaan · Velmyr · Ashvard · Korrveth), chỉ ra từ
-Bảo Hạp bậc IV trở lên (5–8%) hoặc đúc tại Lò Hỗn Độn. Hiệu ứng bộ ẩn, mở ở mốc **2/3/5 món**.
-
-### 6.1 Hệ vũ khí — CHỈ có tác dụng lên quái
-
-Năm hệ, khắc nhau thành vòng kín:
-
-```
-Steel ◆ ⟶ Verdant ♣ ⟶ Stone ▲ ⟶ Frost ❄ ⟶ Ember ☼ ⟶ Steel
-(thép đốn cây · rễ nứt đá · đất vùi băng · băng dập lửa · lửa nung thép)
-```
-
-| Tình huống | Hiệu quả |
-|---|---|
-| Hệ **vũ khí đang cầm** khắc hệ quái | **+20%** sát thương |
-| Hệ quái khắc hệ vũ khí của bạn | **−12%** sát thương |
-
-Quan trọng: hệ chỉ nằm trên **vũ khí**, và chỉ tính **chiều bạn đánh quái**. Chiều quái
-đánh bạn luôn tính theo hệ của **lớp**, nên đổi vũ khí không bao giờ làm bạn ăn đòn nặng
-hơn. Đổi hệ vũ khí được — công thức "Đổi Hệ" ở Lò Hỗn Độn, tốn 1 Hỗn Độn Châu, hệ mới
-ngẫu nhiên nhưng chắc chắn khác hệ cũ.
-
-### 6.2 Khắc Ấn — đồ đổi CÁCH chiêu chạy, không đổi con số
-
-12 Khắc Ấn, gắn trên **một món đồ**, mặc vào là có hiệu lực. Mỗi lớp dùng được đúng 4
-(2 dùng chung + 2 riêng của lớp); Khắc Ấn của lớp khác vẫn nằm trên món đồ nhưng nằm im.
-
-| Khắc Ấn | Dùng cho | Làm gì |
-|---|---|---|
-| **Hồi Quang** | mọi lớp | hạ một địch rút ngắn 10% hồi chiêu còn lại của mọi chiêu |
-| **Vọng Khí** | mọi lớp | đòn bạo kích nổ vòng khí, 45% sát thương lên địch bên cạnh |
-| **Lan Trảm** | Dark Knight | chiêu chính bật sang địch khác trong 160px với 55% sát thương |
-| **Thành Luỹ** | Dark Knight | mỗi địch trúng chiêu chính cộng khiên 3% HP tối đa (trần 25%) |
-| **Tách Tiễn** | Sylvan Ranger | mũi tên chiêu chính tách đôi, hai mũi tạt ngang 40% sát thương |
-| **Mưa Tiễn** | Sylvan Ranger | 1,1s sau khi tung Trấn Phái, một loạt tên rơi lại chính chỗ đó |
-| **Vũng Tà Độc** | Dark Wizard | Trấn Phái để lại vũng độc 5s |
-| **Vọng Âm** | Dark Wizard | 35% chiêu chính nổ thêm lần hai, 70% sát thương diện rộng |
-| **Bùng Cháy** | Spellblade | địch trúng chiêu chính cháy 3s; gục lúc còn cháy thì nổ tung |
-| **Xung Phong** | Spellblade | tung chiêu chính khi địch ngoài tầm sẽ lướt tới rồi mới chém |
-| **Trùng Sóng** | Dark Lord | chiêu chính phóng thêm sóng thứ hai rộng hơn sau 0,35s, 60% sát thương |
-| **Hiệu Triệu** | Dark Lord | chiêu chính quét trúng ≥3 địch thì Trấn Phái hồi ngay một nửa thời gian chờ |
-
-**Chỉ có 3 nguồn Khắc Ấn**, tất cả đều là nội dung cuối game:
-
-| Nguồn | Tỉ lệ |
-|---|---|
-| Bảo Hạp IV → VII | 18% → 23% → 28% → **33%** |
-| Chúa Tể Vực Nứt | **60%** |
-| Hung Thần Giáng Thế | **45%** |
-| Xâm Lăng Vàng — Chúa Đàn Vàng | 35% |
-| Xâm Lăng Vàng — quái vàng thường | 8% |
-
-Hệ bốc ưu tiên Khắc Ấn bạn **chưa có**, nên lần đầu gần như không bị trùng.
+> **Cổ Thần Thủ Hộ và Khắc Ấn đã GỠ.** Cả hai là trục sức mạnh chạy song song với trang bị
+> (bộ đồ ẩn cộng chỉ số ở mốc 2/3/5 món; 12 con dấu đổi cách chiêu chạy). Dự án kéo về đúng mô
+> hình MU — sức mạnh đến từ **cấp** và **trang bị**, không phải từ năm sáu trục cày song song.
+> Món đồ đang mang chúng vẫn giữ nguyên mọi chỉ số của chính nó khi nạp save cũ; xem khối
+> HOÀN LẠI trong `loadGame()`.
 
 ### 6.3 Đồ rơi XUỐNG ĐẤT
 
@@ -275,12 +227,12 @@ Quái chết thì đồ và Châu **rơi thành vật thể dưới đất**, kh
   **bấm chuột trúng món** · giữ **ALT** để hiện nhãn tên **mọi** món trên màn hình rồi chọn.
 - Bật **AUTO** thì bán kính đi-ngang-qua nới lên gấp 3 (288px) — lớp tầm xa giết quái cách
   200px vẫn hút được đồ.
-- **Túi đầy (30 món) thì đồ NẰM LẠI dưới đất** và đổi nhãn `⚠ TÚI ĐẦY`, không mất trắng.
+- **Túi đầy thì đồ NẰM LẠI dưới đất** và đổi nhãn `⚠ TÚI ĐẦY`, không mất trắng.
   Dọn túi rồi quay lại nhặt vẫn kịp.
 - Rơi đồ phẩm Linh trở lên thì có tiếng riêng + vòng sáng; phẩm Thần/Chí Tôn thì rung
   màn hình và hiện banner giữa màn hình.
 
-Vật liệu vụn (Huyền Thiết, Tu La, Tiến Cấp Đan…) vẫn cộng thẳng và chỉ ghi vào nhật ký
+Vật liệu vụn (Lumen, Tu La, Đá Thăng Cấp…) vẫn cộng thẳng và chỉ ghi vào nhật ký
 chiến đấu — chữ bay giữa màn hình để dành cho đồ và Châu.
 
 ### 6.4 Thẻ vật phẩm khi rê chuột
@@ -289,9 +241,7 @@ Rê chuột lên bất kỳ ô đồ nào (túi hoặc ô đang mặc) thì sau 
 ngay cạnh con trỏ**, kèm **thẻ món đang mặc cùng ô đặt sát bên để so**. Chênh lệch từng
 dòng in ngay sau con số (`+4`, `−2%`). Thẻ này cũng nêu rõ:
 
-- **Được / mất Khắc Ấn** nếu đổi món — nêu **trước** lực chiến, vì món kém 10% chỉ số mà
-  mang Khắc Ấn chưa có thường vẫn đáng mặc.
-- Cảnh báo khi đổi món sẽ **rời bộ Cổ Thần** (mốc 2/3/5 mà bảng chỉ số không thấy).
+- Chênh lệch **lực chiến** và từng dòng chỉ số, kèm dấu ▲/▼ cho biết nên đổi hay không.
 
 Trên điện thoại (không có con trỏ) thẻ này tắt; xem chi tiết bằng nút `⋯` ở góc ô.
 
@@ -302,7 +252,7 @@ Trên điện thoại (không có con trỏ) thẻ này tắt; xem chi tiết b�
 Mở bằng phím **F**. Cách dùng: **bỏ đồ và ngọc vào KHAY → máy tự liệt kê những công thức
 mà khay đó thoả → chọn → bấm KẾT HỢP.** Không có màn rèn thứ hai nào khác.
 
-**14 công thức**, chia ba nhóm:
+**11 công thức**, chia ba nhóm:
 
 | Nhóm | Công thức | Khay cần | Ghi chú |
 |---|---|---|---|
@@ -312,25 +262,22 @@ mà khay đó thoả → chọn → bấm KẾT HỢP.** Không có màn rèn th
 | Ngọc | Ngọc Linh Hồn ◉ | 1 trang bị dưới +11 · 1 viên | 50%, hỏng thì **tụt 1 cấp** |
 | Ngọc | Ngọc Sinh Mệnh ❤ | 1 giáp trụ · 1 viên | hỏng thì dòng Sinh Mệnh về 0 |
 | Ngọc | Đổi Hệ ● | 1 vũ khí · 1 Hỗn Độn Châu | hệ mới ngẫu nhiên, chắc chắn khác hệ cũ |
-| Chế | Tấn Phẩm | 1 trang bị dưới Chí Tôn | leo phẩm |
 | Chế | Kế Thừa | 1 trang bị dưới giai X | leo giai, giữ trọn mọi dòng, chỉ số gốc còn 90% |
 | Chế | Luyện Áo Choàng | khay trống | 2 cấp |
 | Chế | Luyện Linh Dực | 1 trang bị Hoàn Hảo +4 (hiến tế) · ● 1 | Lò Rèn Hoàng Gia |
 | Chế | Thăng Linh Dực 2 | 1 Linh Dực cấp 1 · ● 1 | Lò Rèn Hoàng Gia |
 | Chế | **Lò Hỗn Loạn** | 3 trang bị **cùng phẩm** | 3 món tan biến ngay khi ném vào |
-| Chế | Đổi Cổ Thần | 3 món Cổ Thần · ● 1 | chọn cả bộ lẫn ô |
-| Chế | Triệu Cổ Thần | khay trống | 60 Mảnh Cổ Thần |
 
 ### Bảng tỉ lệ rèn (Rèn Thường + Phá Thiên Kiếp)
 
 | Mức đích | Tỉ lệ | Nguyên liệu | Hỏng thì sao |
 |---|---|---|---|
-| +1 … +6 | **100%** | 1–2 Huyền Thiết | không thể hỏng |
-| +7 | 75% | 1 Huyền Thiết + 1 Tu La | **tụt 1 cấp** |
-| +8 | 65% | 1 Huyền Thiết + 1 Tu La | **tụt 1 cấp** |
-| +9 | 50% | 1 Huyền Thiết + 1 Tu La | **tụt 1 cấp** |
-| **+10** | **50%** | 2 Huyền Thiết + 3 Tu La + 1 Hỗn Nguyên + ngọc | **VỠ VỤN — mất vĩnh viễn** |
-| **+11** | **45%** | 3 Huyền Thiết + 5 Tu La + 2 Hỗn Nguyên + ngọc | **VỠ VỤN — mất vĩnh viễn** |
+| +1 … +6 | **100%** | 150–300 Lumen | không thể hỏng |
+| +7 | 75% | 150 Lumen + 1 Tu La | **tụt 1 cấp** |
+| +8 | 65% | 150 Lumen + 1 Tu La | **tụt 1 cấp** |
+| +9 | 50% | 150 Lumen + 1 Tu La | **tụt 1 cấp** |
+| **+10** | **50%** | 300 Lumen + 3 Tu La + 1 Hỗn Nguyên + ngọc | **VỠ VỤN — mất vĩnh viễn** |
+| **+11** | **45%** | 450 Lumen + 5 Tu La + 2 Hỗn Nguyên + ngọc | **VỠ VỤN — mất vĩnh viễn** |
 
 **Thiên Mệnh Phù ☂** (mua 500◈ thẳng trong lò) bảo hộ: thất bại vẫn giữ nguyên mức rèn.
 Chỉ dùng được cho công thức có rủi ro. Danh hiệu "Thợ Rèn Truyền Thuyết" cộng thêm +5%
@@ -338,7 +285,7 @@ tỉ lệ rèn vĩnh viễn.
 
 ### Lò Hỗn Loạn — 3 món cùng phẩm đổi 1 món phẩm cao hơn
 
-| Phẩm gốc | Tỉ lệ | Hỗn Nguyên | Bạc |
+| Phẩm gốc | Tỉ lệ | Hỗn Nguyên | Lumen |
 |---|---|---|---|
 | Phàm → Tinh | 70% | 2 | 300◈ |
 | Tinh → Linh | 55% | 4 | 800◈ |
@@ -355,29 +302,29 @@ Thiên Mệnh Phù ở đây kéo tỉ lệ lên **100%**.
 | Chúc Phúc | ◎ | +1 mức rèn, an toàn tuyệt đối (chỉ tới +6) |
 | Linh Hồn | ◉ | +1 mức rèn, 50%, hỏng tụt 1 cấp (tới +11) |
 | Sinh Mệnh | ❤ | khảm dòng Sinh Mệnh lên giáp trụ |
-| Hỗn Độn | ● | nguyên liệu công thức cao (Đổi Hệ, Linh Dực, Cổ Thần, Phá Thiên Kiếp) |
+| Hỗn Độn | ● | nguyên liệu công thức cao (Đổi Hệ, Linh Dực, Phá Thiên Kiếp) |
 
 Châu rơi từ **mọi loại quái** — quái thường 0,10–0,9%/viên, tinh anh 0,8–4,5%, Vệ Binh
 Trụ 3–20%, Tướng Quân 12–100%; nhân thêm ×1,0 → ×1,8 theo dải cấp map.
 
 ---
 
-## 8. Bảo Hạp
+## 8. Box Kundun
 
 Rương phần thưởng 7 bậc, chỉ đến từ sự kiện thế giới, phó bản và Tầng Sâu. Mở trong
 Túi Đồ (phím I hoặc B).
 
-| Bậc | Khoảng cấp đồ | Cổ Thần | Hoàn Hảo | Khắc Ấn |
-|---|---|---|---|---|
-| I | 1 – 14 | — | — | — |
-| II | 15 – 29 | — | 6% | — |
-| III | 30 – 44 | — | 12% | — |
-| IV | 45 – 59 | 5% | 20% | 18% |
-| V | 60 – 74 | 6% | 30% | 23% |
-| VI | 75 – 89 | 7% | 40% | 28% |
-| VII | 90+ | 8% | **55%** | **33%** |
+| Bậc | Khoảng cấp đồ | Hoàn Hảo |
+|---|---|---|
+| I | 1 – 14 | — |
+| II | 15 – 29 | 6% |
+| III | 30 – 44 | 12% |
+| IV | 45 – 59 | 20% |
+| V | 60 – 74 | 30% |
+| VI | 75 – 89 | 40% |
+| VII | 90+ | **55%** |
 
-Mỗi hạp cho: 1 trang bị (hoặc 1 món Cổ Thần) + có thể 1 viên Châu + bạc (150 + 120×bậc,
+Mỗi hạp cho: 1 trang bị + có thể 1 viên Châu + Lumen (150 + 120×bậc,
 cộng thêm 40×bậc từ phần Anima cũ quy đổi). Bậc hạp nhận từ boss thế giới tính theo **cấp người chơi**, không theo
 map — nên tạt qua bãi thấp không bị thưởng đồ vô dụng.
 
@@ -408,17 +355,17 @@ banner "⛨ CỬA ĐÁ MỞ".
 
 Sau 3 đợt quái là **Boss phó bản**. Hạ boss xong nhận thưởng thông quan, rồi **Boss Săn**
 xuất hiện thêm (không bắt buộc) — hạ nó mới mở **Rương** chứa 1–3 trang bị theo bảng
-riêng, cộng bạc và Tiến Cấp Đan. **AUTO bị khoá suốt pha Boss Săn** — phải tự tay đánh.
+riêng, cộng Lumen và Đá Thăng Cấp. **AUTO bị khoá suốt pha Boss Săn** — phải tự tay đánh.
 
-| Phó bản | Cấp vào | Giới hạn giờ | Bậc Rương | Thưởng thông quan (bạc) |
+| Phó bản | Cấp vào | Giới hạn giờ | Bậc Rương | Thưởng thông quan (Lumen) |
 |---|---|---|---|---|
-| Trial Chamber: Petalshade | 12 | 8:00 | I | 250 – 400 |
-| Trial Chamber: Outskirts | 14 | 8:00 | I | 320 – 480 |
-| Trial Chamber: Thornwood | 26 | 9:00 | II | 550 – 800 |
-| Trial Chamber: Hollow Roost | 46 | 9:00 | II | 900 – 1.300 |
-| Trial Chamber: Frostmire | 66 | 10:00 | III | 1.400 – 2.000 |
-| Trial Chamber: Ashen Steppe | 86 | 11:00 | IV | 2.200 – 3.200 |
-| Trial Chamber: Stormgate | 100 | 12:00 | V | 3.000 – 4.500 |
+| Trial Chamber: Petalshade | 12 | 8:00 | I | 850 – 1.450 |
+| Trial Chamber: Outskirts | 14 | 8:00 | I | 1.070 – 1.680 |
+| Trial Chamber: Thornwood | 26 | 9:00 | II | 1.600 – 2.450 |
+| Trial Chamber: Hollow Roost | 46 | 9:00 | II | 2.400 – 3.400 |
+| Trial Chamber: Frostmire | 66 | 10:00 | III | 3.350 – 4.700 |
+| Trial Chamber: Ashen Steppe | 86 | 11:00 | IV | 4.600 – 6.500 |
+| Trial Chamber: Stormgate | 100 | 12:00 | V | 6.000 – 8.400 |
 
 Hết giờ trước khi xong là **thất bại** — mất cơ hội mở Rương lần đó, nhưng không mất
 phần thưởng đã nhận. Ra cổng Xuất Môn để chạy lại từ đầu.
@@ -437,14 +384,13 @@ khoảng 800px). Cần **cấp 20**.
   Số quái = min(14, 4 + tầng×0,7).
 - **Tầng 5 · 10 · 15 · 20 là tầng boss** — một con boss máu ×(1 + tầng×0,22), không phải bầy quái.
 - Mỗi tầng dọn xong, phần thưởng vào **KHO TẠM**, chưa phải của bạn:
-  bạc ≈ 220×t×(1+0,12t) + 240×t (phần Anima cũ quy đổi) · EXP ≈ 340×t×(1+0,18t) ·
-  Huyền Thiết 1+t/2 ·
-  Tiến Cấp Đan mỗi 3 tầng · **1 Bảo Hạp mỗi 5 tầng** (bậc = t/5).
+  Lumen ≈ 220×t×(1+0,12t) + 240×t (phần Anima cũ) + 150×(1+t/2) (phần Huyền Thiết cũ) ·
+  EXP ≈ 340×t×(1+0,18t) · Đá Thăng Cấp mỗi 3 tầng · **1 Box Kundun mỗi 5 tầng** (bậc = t/5).
 - **Phần thưởng chỉ vào túi khi bạn CHỦ ĐỘNG bấm Rút Lui** (hoặc bấm G ở cổng — game
   hiểu đó là rút lui, không để bạn mất trắng vì bấm nhầm).
 - **Chết là mất SẠCH kho tạm cả lượt.**
-- Xuống hết 20 tầng thì kho tạm được nhân **×1,5** và tặng thêm một **Bảo Hạp VII**,
-  rồi tự động trao — không bắt bấm Rút Lui lần nữa.
+- Xuống hết 20 tầng thì kho tạm được nhân **×1,5** và tặng thêm một **Box Kundun VII**,
+  cộng **10 ♦ Shard**, rồi tự động trao — không bắt bấm Rút Lui lần nữa.
 
 HUD giữa màn hình luôn hiện kho tạm đang tích để bạn thấy mình đang đặt cược bao nhiêu.
 
@@ -466,13 +412,12 @@ sự kiện chồng nhau.
 
 ### ☠ Hung Thần Giáng Thế
 Một con boss đơn (`Hung Thần · Hỗn Độn`) xuất hiện giữa map được chọn, cấp = cấp tối
-thiểu của map + 12 (trần 110). Hạ nó nhận **1 Bảo Hạp** bậc tính theo cấp bạn, và **45%
-rơi thẳng một món mang Khắc Ấn**.
+thiểu của map + 12 (trần 110). Hạ nó nhận **1 Box Kundun** bậc tính theo cấp bạn.
 
-### ✦ Xâm Lăng Vàng
+### ✹ Xâm Lăng Vàng
 Một **đàn quái dát vàng** tràn vào 1 map thường trong 12 phút: 8 quái vàng + 1
 **Chúa Đàn Vàng** đứng giữa map. Quái vàng có máu ×6 (chúa đàn ×14), công ×1,4 (×1,7),
-EXP ×3, bạc ×3, và **mỗi con CHẮC CHẮN rơi 1 Bảo Hạp** theo bậc map:
+EXP ×3, Lumen ×3, và **mỗi con CHẮC CHẮN rơi 1 Box Kundun** theo bậc map:
 
 | Map | Bậc hạp rơi ra |
 |---|---|
@@ -493,8 +438,7 @@ Khác hẳn hai sự kiện trên ở chỗ nó **không chọn một map**: c�
 - Boss **luôn trên tầm bạn 6 cấp** (`max(map.min + 10, cấp bạn + 6)`, trần 120),
   máu `9.000 + cấp²×11`. Không phải bức tường vô lý khi bạn tạt qua bãi thấp.
 - **Tối đa 3 con mỗi lượt** — mỗi map chỉ nứt một lần, muốn hạ đủ 3 thì phải chạy map khác.
-- Hạ mỗi con: **1 Bảo Hạp** (bậc = cấp/15 + 2) + **2 Hỗn Độn Châu** + **60% một món
-  mang Khắc Ấn** — tỉ lệ Khắc Ấn cao nhất game.
+- Hạ mỗi con: **1 Box Kundun** (bậc = cấp/15 + 2) + **2 Hỗn Độn Châu**.
 - Hạ đủ 3 con thì cửa vực khép sớm.
 
 ---
@@ -508,26 +452,23 @@ Khác hẳn hai sự kiện trên ở chỗ nó **không chọn một map**: c�
 - Tội Ác giảm 1 điểm mỗi **300 giây**; ngồi thiền ở suối Tịnh Tâm gột sạch ngay.
 - **Tội Ác ≥ 5 → hắc hoá**. Về 0 thì trở lại bình thường.
 - Axie Lang Thang **ghi thù**: giết cùng loại 2 lần trở lên thì lần sau gặp nó chủ động
-  truy thù bạn. Hạ được kẻ truy thù thì thưởng thêm 120◈ và 2 Huyền Thiết.
+  truy thù bạn. Hạ được kẻ truy thù thì thưởng thêm 120◈ Lumen.
 - **AUTO không bao giờ tự khơi PK**, kể cả khi bạn quên bật nút PK — nó chỉ tự vệ nếu
   bị Axie Lang Thang truy thù trước.
 
 ---
 
-## 13. Đồng hành: Thú Chiến · Thần Binh · Cánh · Áo Choàng
+## 13. Đồng hành: Chimera · Cánh · Áo Choàng
 
 | Hệ | Mở ở cấp | Có bằng cách nào | Cho gì |
 |---|---|---|---|
-| **Thú Chiến** (Nhân Vật → Thú Chiến) | 6 | mua/thăng giai bằng bạc + Huyền Thiết | 5 bậc, cộng thẳng ST/chỉ số, xuất trận đánh cùng |
-| **Thần Binh** | 1 | mỗi lớp một cái, nâng bằng Lõi Nguyên Tố + Huyền Thiết | 10 tầng, đổi bảng màu giáp trên người, tầng 6+ toả hào quang |
+| **Chimera** (Nhân Vật → Chimera) | 6 | quay Khế Ước bằng **Ấn Giao Kết** / **Ấn Cổ Xưa** | đồng hành xuất trận đánh cùng, Cốt cộng chỉ số |
 | **Cánh** | — | boss rơi 12%; Linh Dực cấp 2 luyện ở Lò Rèn Hoàng Gia (cấp 80+) | +HP/né/đồng rơi hoặc +ST/bạo/tốc đánh |
 | **Áo Choàng** | — | luyện tại Lò Hỗn Độn, 2 cấp | +% Công, xuyên giáp |
-| **Pet trang bị** | — | tinh anh 12% / boss 40% | +EXP, +đồng rơi, hút sinh lực |
 
-Năm bậc Thú Chiến: Emberhide Bull (cấp 10) → Frosthorn Bull (25) → Voltclaw Panther (45)
-→ Sunfeather Phoenix (65) → Azure Wyrm (85). Tỉ lệ thăng giai tụt dần 100% → 80% → 60%
-→ 42% → 30%; bắt **Tuấn Mã Hoang** ngoài Outskirts (tối đa 5 con/ngày) đổi **Mã Thầu** để
-cộng +7% tỉ lệ hoặc bớt 4 Huyền Thiết mỗi lần thăng.
+> **Thú Chiến · Thần Binh · Linh Thú đều đã GỠ.** Thú Chiến nhường chỗ cho Khế Ước Chimera;
+> Thần Binh (10 tầng, ăn Lõi Nguyên Tố + Huyền Thiết) và Linh Thú (nuôi tới +11) là hai trục
+> nâng cấp song song bị cắt trong đợt về mô hình MU. Save cũ được hoàn lại đầy đủ.
 
 ---
 
@@ -547,11 +488,11 @@ mở bản đồ mới**:
 | VII · Stormgate Pass | 32 – 35 | Stormgate | Trụ Khoá cuối cùng — kết mở |
 
 **Phụ tuyến — 11 nhiệm vụ, tối đa 3 cái nhận cùng lúc.** Chia hai nhóm: 5 nhiệm vụ
-"học hệ thống" (mỗi cái dạy đúng một cơ chế: Thú Chiến, Thần Binh, Lò Hỗn
-Loạn, Vườn Dược) và 6 nhiệm vụ cầu nối cốt truyện dẫn bạn qua từng vùng mới.
+"học hệ thống" (mỗi cái dạy đúng một cơ chế: Khế Ước Chimera, Lò Hỗn
+Loạn, Lò Rèn) và 6 nhiệm vụ cầu nối cốt truyện dẫn bạn qua từng vùng mới.
 
 **Mục Tiêu Hôm Nay** — checklist 4 việc mỗi ngày (hạ 10 quái · thu 1 Lõi Nguyên Tố · thông
-quan 1 phó bản · rèn/tấn chức 1 lần). Xong hết nhận 300◈ + 100 Instinct.
+quan 1 phó bản · rèn/tấn chức 1 lần). Xong hết nhận 300◈ Lumen + 100 Instinct + 1 ✦ Ấn Giao Kết + 2 ♦ Shard.
 
 **Truy Nã Lệnh** — Bổ Đầu ở Lunaris City treo mỗi ngày một boss săn theo dải cấp của bạn.
 
@@ -562,30 +503,39 @@ quan 1 phó bản · rèn/tấn chức 1 lần). Xong hết nhận 300◈ + 100 
 | Hệ | Mô tả ngắn |
 |---|---|
 | **Ascension** | 9 bậc thăng hoa (Spark 1–4 → Molt → Radiant Core → Resonance ×2 → Starforged). **Tự động theo cấp nhân vật** — không còn bảng bấm tay, không còn tốn Anima. Bậc cao nhất cộng +88% Công và +88% HP |
-| **Kỹ năng (phím K)** | Nâng bằng **bạc + Instinct**. Sáu cấp mốc (20/40/60/80/100/120) tốn Instinct gấp ×2…×7 — đó là chỗ Tâm Đắc cũ chuyển vào. Thanh chiêu **4 ô** (phím 1-4): chính · phụ · buff · tuyệt chiêu. Các chiêu cũ không nằm trên thanh đã quy thành **% Công Kích vĩnh viễn**, xem tab "Tuyệt Học Cũ" |
-| **Tấn Chức (phím H)** | Venom (cấp 4) · Stoneform (cấp 10) · Archery (cấp 30), nâng bằng Tiến Cấp Đan |
+| **Kỹ năng (phím K)** | Nâng bằng **Lumen + Instinct**. Sáu cấp mốc (20/40/60/80/100/120) tốn Instinct gấp ×2…×7 — đó là chỗ Tâm Đắc cũ chuyển vào. Thanh chiêu **4 ô** (phím 1-4): chính · phụ · buff · tuyệt chiêu. Các chiêu cũ không nằm trên thanh đã quy thành **% Công Kích vĩnh viễn**, xem tab "Tuyệt Học Cũ" |
+| **Thuần Thục (phím H)** | Venom (cấp 4) · Stoneform (cấp 10) · Archery (cấp 30), nâng bằng Đá Thăng Cấp |
 | **Tẩy Tủy** | Đạt cấp **120** thì reset về cấp 1, **giữ nguyên** trang bị / Ascension / kỹ năng / danh hiệu, đổi lấy **+2% Công Kích & Sinh Lực vĩnh viễn** mỗi lần, cộng dồn không bao giờ mất |
-| **Dấu Ấn Khai Sinh** | 3 đặc điểm bẩm sinh bốc ngẫu nhiên lúc tạo nhân vật (khác hẳn Khắc Ấn) |
+| **Dấu Ấn Khai Sinh** | 3 đặc điểm bẩm sinh bốc ngẫu nhiên lúc tạo nhân vật |
 | **Danh hiệu** | Tự mở khi đạt điều kiện, cộng chỉ số nhỏ và hiện trước tên |
-| **Động Phủ** (cấp 30) | Tụ Linh Trận (+% tốc độ tích luỹ) và Vườn Dược (gieo → thu Hồ Lô Thuốc / Instinct / bạc) |
-| **Sảnh Cầu May** | Gacha: 5% sách kỹ năng hiếm · 15% Châu · 25% trang bị · 30% vật liệu · 25% bạc — **không có pity** |
+| **Sảnh Cầu May** | Gacha: 5% sách kỹ năng hiếm · 15% Châu · 25% trang bị · 30% vật liệu · 25% Lumen — **không có pity** |
+| **Quầy Shard** | Bấm ô ♦ trên ví: đổi Ấn Giao Kết / Ấn Cổ Xưa, nới ô túi, nới ô kho. Không có hàng nào cộng chỉ số |
 | **Vực Thẳm** | Ba mỏm đá ở Thornwood / Frostmire / Stormgate. Bấm nút lao xuống thử vận: mất 30% HP + Trọng Thương 15 phút mỗi lần |
 
 ---
 
 ## 16. Tiền tệ và vật liệu
 
+**Ba loại thường trực** nằm trên ví ở góc trên bên phải; mọi loại còn lại xem ở
+Túi Đồ → Vật Liệu (bấm ô ◈ trên ví là mở thẳng tới đó).
+
+| Ký hiệu | Tên | Kiếm ở đâu | Dùng cho |
+|---|---|---|---|
+| ◈ | **Lumen** | rơi từ quái, bán đồ, nhiệm vụ, phân giải | mua bán · mọi công thức rèn · nâng kỹ năng |
+| ✦ | **Ấn Giao Kết** | boss vùng lần đầu · Mục Tiêu Hôm Nay · phó bản · Quầy Shard | quay Khế Ước Chimera |
+| ♦ | **Shard** | KHÔNG rơi từ quái. Mục Tiêu Hôm Nay +2 · Truy Nã Lệnh +3 · mỗi boss vùng lần đầu +1 · trọn 20 tầng Tầng Sâu +10 | Quầy Shard: đổi vé quay · nới ô túi (+5, tối đa 45) · nới ô kho (+10, tối đa 100) |
+
+**Vật liệu** (Túi Đồ → Vật Liệu):
+
 | Ký hiệu | Tên | Dùng cho |
 |---|---|---|
-| ◈ | Bạc | mua bán, mọi công thức rèn |
-| ✦ | Huyền Thiết | rèn +1 → +11, thăng giai Thú Chiến, Ascension |
-| ◆ | Tu La Tinh Thạch | rèn +7 trở lên |
-| ❖ | Hỗn Nguyên Thạch | rèn +10/+11, Lò Hỗn Loạn |
-| ◈ | Tiến Cấp Đan | Tấn Chức (Ám Khí / Cương Khí / Cung Tiễn) |
-| ● | Lõi Nguyên Tố | nâng Thần Binh · hấp thụ lấy chỉ số vĩnh viễn (tự chọn atk/hp/def/mana/chí mạng, 3 viên/ngày) |
+| ◆ | Tu La Tinh Thạch | rèn +7 trở lên · Áo Choàng |
+| ❖ | Hỗn Nguyên Thạch | rèn +10/+11 · Áo Choàng · Lò Hỗn Loạn |
+| ◈ | Đá Thăng Cấp | Thuần Thục (Ám Khí / Cương Khí / Cung Tiễn) |
+| ● | Lõi Nguyên Tố | hấp thụ lấy chỉ số vĩnh viễn (tự chọn atk/hp/def/mana/chí mạng, 3 viên/ngày) |
+| ❖ | Mảnh Trang Bị | Kế Thừa — rơi từ quái/tinh anh |
+| ◆ | Tịch Ma Thạch | Kế Thừa leo giai — rơi từ Vệ Binh Trụ |
 | 📜 | Sách Kỹ Năng | học kỹ năng |
-| ◈ | Mảnh Cổ Thần | 60 mảnh đổi 1 món Cổ Thần |
-| ☬ | Ấn Trấn Ải | Tấn Phẩm bậc cao — 1/ngày từ Tướng Quân vùng |
 | — | Instinct | nâng kỹ năng — rơi theo loại quái: thường 10 · tinh anh 35 · boss 120 · boss phó bản 200 |
 | ☂ | Thiên Mệnh Phù | bảo hiểm rèn |
 | 🧪 | Hồ Lô Thuốc | hồi 40% máu, tối đa 5 lọ |

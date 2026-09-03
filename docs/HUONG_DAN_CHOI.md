@@ -37,7 +37,7 @@
 | **G** | Dùng cổng đang đứng gần: đi map khác / vào phó bản / xuống Tầng Sâu / **rút khỏi Tầng Sâu** |
 | **Z** | Bật/tắt **AUTO FARM** |
 | **V** | **Cửa sổ Nhân Vật** — cấp, EXP, điểm tiềm năng, bảng chỉ số chiến đấu |
-| **C** | Bảng Nhân Vật nhiều tab: Thông Tin · Rèn Luyện · Thú Chiến · Tấn Chức · Tẩy Tủy · Tuyệt Học |
+| **C** | Bảng Nhân Vật nhiều tab: Thông Tin · Chimera · Tái Sinh · Đại Thành · Thuần Thục |
 | **I** | Trang bị (lưới 12 ô kiểu paperdoll) |
 | **B** | Túi đồ |
 | **K** | Kỹ năng |
@@ -53,7 +53,7 @@
 > kéo–thả đồ từ Túi Đồ sang ô Trang Bị. Màn hình hẹp thì chỉ mở một bảng.
 
 > ⚠ **Phím V hiện đang làm HAI việc cùng lúc**: vừa mở cửa sổ Nhân Vật, vừa
-> **xuất trận / thu hồi Thú Chiến**. Nếu bạn đã có Thú Chiến thì mỗi lần bấm V để xem
+> **xuất trận / thu hồi Chimera**. Nếu bạn đã có Chimera thì mỗi lần bấm V để xem
 > chỉ số, con thú cũng bị gọi ra hoặc thu về. Muốn chỉ mở cửa sổ Nhân Vật thì bấm nút
 > 🧙 trên thanh dưới rồi chọn tab, hoặc chấp nhận bấm V hai lần để con thú về trạng
 > thái cũ. (Đây là lỗi trùng phím trong code, không phải thiết kế.)
@@ -70,7 +70,8 @@ tiên như phím J). Di chuyển bằng bấm minimap.
 
 - **Hai viên cầu** hai đầu thanh dưới: đỏ = Sinh Lực, xanh = Qi (tài nguyên tung chiêu).
 - **Thanh EXP** mảnh chạy dọc mép dưới cùng.
-- **Góc phải trên**: bạc ◈ · Huyền Thiết ✦ · nút PK · nút AUTO · minimap · bảng nhiệm vụ.
+- **Góc phải trên**: **ví ba ô** — Lumen ◈ · Ấn Giao Kết ✦ · Shard ♦ (bấm từng ô để mở
+  Túi Đồ · Khế Ước · Quầy Shard) · nút PK · nút AUTO · minimap · bảng nhiệm vụ.
 - **Chip đồng hồ ⏱** góc trái trên: giờ thật + đếm ngược sự kiện thế giới gần nhất.
   **Bấm vào để mở Bảng Sự Kiện** — đây là chỗ duy nhất xem được lịch đầy đủ.
 - **Vòng đỏ / quạt đỏ** dưới chân boss = chiêu đang tụ, sắp nổ ở đúng vùng đó.
@@ -91,13 +92,13 @@ Cứ bám **chính tuyến**, nó dạy đủ mọi cơ chế:
 | 3 | Hái 4 Thảo Dược | Mục Tiêu Hôm Nay |
 | 4 | Hạ 6 Axie Gai Tím | ô kỹ năng 2 (Ám Khí) + Tấn Chức (H) |
 | 5 | **Rèn một món lên +3** | Lò Hỗn Độn (F) |
-| 6 | Hạ 8 Tay Sai Gloam | Thú Chiến (C → Thú Chiến) |
+| 6 | Hạ 8 Tay Sai Gloam | Khế Ước Chimera (C → Chimera) |
 | 7 | Đứng trong suối 8 giây | ô kỹ năng 3 (Trấn Phái) |
 | 8 | Hạ 1 Gloam Marauder bằng Ám Khí | — |
 | 9 | Dùng Trấn Phái kết liễu 5 Tay Sai Gloam | — |
 | 10 | **The Calling — hạ Thủ Lĩnh Đoàn Gloam** | **CHỌN LỚP** + mở Lunaris City |
 
-Đừng bỏ nhiệm vụ 5. Nó thưởng sẵn vũ khí + 3 Huyền Thiết để bạn rèn ngay, và rèn tới
+Đừng bỏ nhiệm vụ 5. Nó thưởng sẵn vũ khí + Lumen để bạn rèn ngay, và rèn tới
 +6 thì **không thể thất bại** — cứ đập thẳng, không cần suy nghĩ.
 
 **Chọn lớp** ở cấp 10 là quyết định vĩnh viễn. Gợi ý:
@@ -109,8 +110,8 @@ Cứ bám **chính tuyến**, nó dạy đủ mọi cơ chế:
 ### Chặng 2 · Cấp 10 – 24 — Lunaris City + Outskirts
 
 - Về thành trình diện, làm chương II (NV 11–15).
-- **Nhận phụ tuyến** ở Trinh Sát Wren và Trưởng Lão Rell — chúng dạy Thú Chiến (cấp 11),
-  Thần Binh (12), Lò Hỗn Loạn (19). Chỉ giữ được 3 cái cùng lúc.
+- **Nhận phụ tuyến** ở Trinh Sát Wren và Trưởng Lão Rell — chúng dạy Khế Ước Chimera
+  (cấp 11) và Lò Hỗn Loạn (19). Chỉ giữ được 3 cái cùng lúc.
 - Cấp 14 mới qua được ải **Trại Gloam** trong Outskirts.
 - **Cấp 15 là mốc lớn**: từ đây **Chúa Tể Vực Nứt** mới nứt ở bãi bạn đứng, và ô kỹ năng
   buff của bốn lớp mở ra.
@@ -123,7 +124,7 @@ Cứ bám **chính tuyến**, nó dạy đủ mọi cơ chế:
   chuyện với bạn, và AUTO cũng không tự khơi PK.
 - Cày chính tuyến chương III–IV, xen phó bản Thornwood (cấp 26) và Hollow Roost (cấp 46).
 - Bắt đầu **săn Vệ Binh Trụ**: mỗi map có 3 con, hạ đủ 3 thì phong ấn quanh **Cổng Vực**
-  tan và bạn đánh được Tướng Quân vùng. Tướng Quân cho **2 Mảnh Cổ Thần** + **1 Ấn Trấn Ải
+  tan và bạn đánh được Tướng Quân vùng. Tướng Quân cho **Tịch Ma Thạch** + **1 ♦ Shard
   (1 lần/ngày)** + rơi 2–3 món phẩm cao — đây là nguồn đồ tốt ổn định nhất giai đoạn giữa.
 - Ải cấp chặn: Cổng Rừng Gai cần **26**, Cửa Tổ Sâu cần **50**.
 
@@ -133,7 +134,7 @@ Cứ bám **chính tuyến**, nó dạy đủ mọi cơ chế:
   trước khi lao vào cụm.
 - **Phó bản Frostmire (cấp 66) trở đi rơi Rương bậc III–IV** — đây là chỗ ăn đồ chính.
 - Cấp 80 mở **Lò Bảo Chứng** luyện Linh Dực; cấp 40 đã mở Linh Dực cấp 1.
-- Từ khoảng cấp 45, **Bảo Hạp IV trở lên bắt đầu ra Cổ Thần và Khắc Ấn** — từ đây sự
+- Từ khoảng cấp 45, **Box Kundun IV trở lên ra đồ Hoàn Hảo đều hơn hẳn** — từ đây sự
   kiện thế giới đáng bỏ dở việc đang làm để chạy tới.
 
 ### Chặng 5 · Cấp 100 – 120 — Stormgate Pass
@@ -141,7 +142,7 @@ Cứ bám **chính tuyến**, nó dạy đủ mọi cơ chế:
 - Free PK: PK thoải mái, không Tội Ác.
 - Phó bản Stormgate (cấp 100) — Rương **bậc V**, bảng rơi tốt nhất game
   (60% ra phẩm Chí Tôn, 25% Hoàn Hảo).
-- Chạy trọn **Tầng Sâu 20 tầng** để lấy Bảo Hạp VII.
+- Chạy trọn **Tầng Sâu 20 tầng** để lấy Box Kundun VII.
 - Hạ Chúa Tể Vực Nứt đủ 3 con mỗi lượt sự kiện.
 - Cấp 120 → **Tẩy Tủy**: về cấp 1, giữ nguyên trang bị / Ascension / kỹ năng / danh hiệu,
   đổi lấy **+2% Công Kích & Sinh Lực vĩnh viễn**. Reset càng nhiều càng mạnh, và số cộng
@@ -155,9 +156,9 @@ Xếp theo hiệu suất, tốt nhất trước:
 
 | Nguồn | Được gì | Chú ý |
 |---|---|---|
-| **Chúa Tể Vực Nứt** (0h·6h·12h·18h) | Bảo Hạp lớn + **2 Hỗn Độn Châu** + **60% món mang Khắc Ấn** | tối đa 3 con/lượt, mỗi map một con — phải chạy map |
-| **Hung Thần Giáng Thế** (0h·4h·8h…) | Bảo Hạp + **45% món mang Khắc Ấn** | 1 con duy nhất, 30 phút |
-| **Xâm Lăng Vàng** (2h·6h·10h…) | **9 Bảo Hạp chắc chắn** (mỗi quái vàng 1 cái) | chỉ 12 phút — đây là sự kiện gấp nhất |
+| **Chúa Tể Vực Nứt** (0h·6h·12h·18h) | Box Kundun lớn + **2 Hỗn Độn Châu** | tối đa 3 con/lượt, mỗi map một con — phải chạy map |
+| **Hung Thần Giáng Thế** (0h·4h·8h…) | Box Kundun bậc theo cấp bạn | 1 con duy nhất, 30 phút |
+| **Xâm Lăng Vàng** (2h·6h·10h…) | **9 Box Kundun chắc chắn** (mỗi quái vàng 1 cái) | chỉ 12 phút — đây là sự kiện gấp nhất |
 | **Tướng Quân vùng** (Cổng Vực) | 2–3 món, 38% Linh · 52% Thần · 10% Chí Tôn | hồi sinh sau 60 giây |
 | **Rương Boss Săn** (phó bản) | 1–3 món theo bậc Rương | phải hạ Boss Săn sau khi thông quan; AUTO bị khoá |
 | **Vệ Binh Trụ** | 1–3 món: 28% Tinh · 52% Linh · 18% Thần · 2% Chí Tôn | 8 lần liên tiếp không ra phẩm Thần thì lần thứ 9 **bảo đảm ra Thần** |
@@ -166,11 +167,11 @@ Xếp theo hiệu suất, tốt nhất trước:
 
 **Ba mẹo cụ thể:**
 
-1. **Đồ Hoàn Hảo CHỈ đến từ Bảo Hạp** — quái không rơi, kể cả boss. Muốn đồ Hoàn Hảo
-   thì phải chờ sự kiện thế giới hoặc chạy Tầng Sâu / phó bản lấy hạp. Bảo Hạp VII cho
+1. **Đồ Hoàn Hảo CHỈ đến từ Box Kundun** — quái không rơi, kể cả boss. Muốn đồ Hoàn Hảo
+   thì phải chờ sự kiện thế giới hoặc chạy Tầng Sâu / phó bản lấy hạp. Box Kundun VII cho
    **55% Hoàn Hảo**.
-2. **Khắc Ấn quý hơn chỉ số.** Một món kém 10% chỉ số mà mang Khắc Ấn bạn chưa có thì
-   vẫn nên mặc. Thẻ so sánh khi rê chuột nêu Khắc Ấn **trước** lực chiến vì lý do đó.
+2. **Đọc thẻ so sánh khi rê chuột.** Nó đặt món đang mặc ngay cạnh món mới và in chênh
+   lệch từng dòng — nhanh hơn nhẩm lực chiến trong đầu.
 3. **Đừng vội bán.** Ba món **cùng phẩm** ném vào Lò Hỗn Loạn đổi được 1 món phẩm cao
    hơn. Đồ Phàm/Tinh dư chính là nguyên liệu, không phải rác.
 
@@ -193,14 +194,14 @@ Xếp theo hiệu suất, tốt nhất trước:
 ### Sáu luật thực dụng
 
 1. **Trước +7, đừng bao giờ dùng Thiên Mệnh Phù.** Không có gì để hỏng.
-2. **Ngọc Chúc Phúc ◎ để dành cho mức +4/+5/+6 của món ĐẮT** khi bạn hết Huyền Thiết —
+2. **Ngọc Chúc Phúc ◎ để dành cho mức +4/+5/+6 của món ĐẮT** khi bạn cạn Lumen —
    nó là +1 an toàn tuyệt đối, nhưng chỉ dùng được tới +5.
 3. **Ngọc Linh Hồn ◉ chỉ 50% và hỏng thì tụt cấp.** Ngang Rèn Thường ở mức +9, nhưng
-   tốn ngọc. Chỉ dùng khi cạn Huyền Thiết/Tu La.
+   tốn ngọc. Chỉ dùng khi cạn Lumen/Tu La.
 4. **Mua Thiên Mệnh Phù trước, đừng mua giữa chừng.** 500◈/cái, mua thẳng trong màn Lò
    Hỗn Độn. Trước khi đánh +10 hãy có sẵn ít nhất 3–4 cái.
-5. **Chỉ đưa lên +10/+11 món bạn sẽ dùng lâu dài** — nghĩa là món có Khắc Ấn phù hợp
-   lớp, hoặc món Hoàn Hảo, hoặc món thuộc bộ Cổ Thần bạn đang gom. Rèn +11 một cái vũ
+5. **Chỉ đưa lên +10/+11 món bạn sẽ dùng lâu dài** — nghĩa là món Hoàn Hảo, hoặc món
+   giai cao đúng lớp bạn đang chơi. Rèn +11 một cái vũ
    khí phẩm Tinh là ném tiền qua cửa sổ.
 6. **Rèn tới +10 mở thêm dòng Thức Tỉnh** (Bạo +5% / Né +5% / Công +25 / HP +200 /
    Hồi Qi +3 / Lực Lượng +8) — đây mới là phần thưởng thật của việc leo qua mốc +9.
@@ -217,10 +218,10 @@ nấu Thần → Chí Tôn (25%), **luôn luôn bật phù**, nếu không trung
 
 | Cấp bạn đang có | Nên chạy | Vì sao |
 |---|---|---|
-| 12 – 20 | Trial Chamber: Petalshade / Outskirts | học kết cấu 3 phòng, lấy Tiến Cấp Đan đầu tiên |
-| 20+ | **Tầng Sâu** (giếng đá Lunaris City) | nguồn EXP và Bảo Hạp tốt nhất giai đoạn này |
+| 12 – 20 | Trial Chamber: Petalshade / Outskirts | học kết cấu 3 phòng, lấy Đá Thăng Cấp đầu tiên |
+| 20+ | **Tầng Sâu** (giếng đá Lunaris City) | nguồn EXP và Box Kundun tốt nhất giai đoạn này |
 | 26 – 45 | Trial Chamber: Thornwood | bắt đầu ra Tu La Tinh Thạch (rèn +7) |
-| 46 – 65 | Trial Chamber: Hollow Roost | Rương bậc II, nhiều Huyền Thiết |
+| 46 – 65 | Trial Chamber: Hollow Roost | Rương bậc II, nhiều Lumen |
 | 66 – 85 | Trial Chamber: Frostmire | **Rương bậc III** — mốc đồ tốt thật sự |
 | 86 – 99 | Trial Chamber: Ashen Steppe | Rương bậc IV, ra Hỗn Nguyên Thạch (rèn +10/+11) |
 | 100 – 120 | Trial Chamber: Stormgate | **Rương bậc V** — 60% Chí Tôn, 25% Hoàn Hảo |
@@ -230,7 +231,7 @@ nấu Thần → Chí Tôn (25%), **luôn luôn bật phù**, nếu không trung
 1. Đi tới cổng dịch chuyển ở **rìa đông** bản đồ ngoài trời, bấm **G**.
 2. Bạn vào **phòng 1**. Dọn sạch đợt quái → **cửa đá 1 mở** → tiến lên phía Bắc.
 3. Phòng 2 → dọn sạch → cửa đá 2 mở → phòng 3 là **sảnh boss**.
-4. Hạ boss → nhận thưởng thông quan (Tiến Cấp Đan, Huyền Thiết, Instinct, bạc).
+4. Hạ boss → nhận thưởng thông quan (Đá Thăng Cấp, Instinct, Lumen).
 5. Chờ 1,8 giây → **Boss Săn** xuất hiện. **AUTO tự tắt ở đây.** Hạ nó mới mở Rương.
 6. Xong thì ra cổng **Xuất Môn** ở phía Nam.
 
@@ -246,21 +247,21 @@ mất sạch cả lượt.**
 
 Kho tạm mỗi tầng (tầng `t`):
 
-| Tầng | Bạc dồn thêm | EXP dồn thêm | Bảo Hạp |
+| Tầng | Lumen dồn thêm | EXP dồn thêm | Box Kundun |
 |---|---|---|---|
 | 3 | ~900 | ~1.570 | — |
-| 5 | ~1.760 | ~3.230 | **Bảo Hạp I** |
-| 10 | ~4.840 | ~9.520 | **Bảo Hạp II** |
-| 15 | ~9.240 | ~18.870 | **Bảo Hạp III** |
-| 20 | ~14.960 | ~31.280 | **Bảo Hạp IV** + thưởng trọn chuyến ×1,5 + **Bảo Hạp VII** |
+| 5 | ~1.760 | ~3.230 | **Box Kundun I** |
+| 10 | ~4.840 | ~9.520 | **Box Kundun II** |
+| 15 | ~9.240 | ~18.870 | **Box Kundun III** |
+| 20 | ~14.960 | ~31.280 | **Box Kundun IV** + thưởng trọn chuyến ×1,5 + **Box Kundun VII** + **10 ♦ Shard** |
 
 Ba mốc quyết định:
 
 - **Tầng 5 · 10 · 15 · 20 là tầng boss.** Nếu bạn vừa qua tầng boss mà máu chỉ còn dưới
   nửa và hết Hồ Lô Thuốc → **rút ngay**. Tầng kế tiếp quái dày máu thêm 28% nữa.
-- Quái tầng sâu **không rơi gì cả** — bạc, EXP, đồ đều chảy vào kho tạm. Đừng trông vào
+- Quái tầng sâu **không rơi gì cả** — Lumen, EXP, đồ đều chảy vào kho tạm. Đừng trông vào
   đồ rơi để đánh giá tiến độ; nhìn dòng **Kho tạm** trên HUD.
-- Nếu đã tới tầng 15+ thì cố xuống nốt 20: **thưởng ×1,5 và một Bảo Hạp VII** chỉ có ở
+- Nếu đã tới tầng 15+ thì cố xuống nốt 20: **thưởng ×1,5 và một Box Kundun VII** chỉ có ở
   đáy, và xuống tới đáy thì game **tự trao** kho tạm, không cần bấm Rút Lui.
 
 Bấm **G** ở cổng khi đang trong Tầng Sâu cũng được tính là Rút Lui — game cố ý không để
@@ -288,7 +289,7 @@ Bấm chip **⏱** trên HUD để xem Bảng Sự Kiện. Lịch tính theo **g
 ```
 
 **Thứ tự ưu tiên khi hai sự kiện chồng nhau:**
-Xâm Lăng Vàng chỉ mở **12 phút** và cho **9 Bảo Hạp chắc chắn** → chạy nó trước.
+Xâm Lăng Vàng chỉ mở **12 phút** và cho **9 Box Kundun chắc chắn** → chạy nó trước.
 Vực Nứt mở tận 45 phút, làm sau vẫn kịp.
 
 **Chuẩn bị trước khi sự kiện bắt đầu** (game báo trước 10 phút, riêng Vực Nứt báo 15 phút):
@@ -297,7 +298,7 @@ Vực Nứt mở tận 45 phút, làm sau vẫn kịp.
 **Vực Nứt có ba điều khác biệt:**
 - Cần **cấp 15+** thì vực mới nứt trong bãi bạn đứng.
 - Boss **luôn cao hơn bạn 6 cấp** — không phải bức tường vô lý, nhưng cũng không dễ.
-- **Tối đa 3 con/lượt**, mỗi map chỉ nứt một lần. Muốn ăn đủ 3 Bảo Hạp thì hạ xong phải
+- **Tối đa 3 con/lượt**, mỗi map chỉ nứt một lần. Muốn ăn đủ 3 Box Kundun thì hạ xong phải
   chạy sang map khác (bấm M → dịch chuyển).
 
 ---
@@ -343,14 +344,12 @@ lại dưới đất và biến mất sau 45 giây.
 | **Rèn +10 mà quên bật Thiên Mệnh Phù** | Trang bị **vỡ vụn, mất vĩnh viễn** ở tỉ lệ 50% | Nhìn dòng cảnh báo đỏ trong màn lò trước khi bấm Kết Hợp |
 | **Ném đồ vào Lò Hỗn Loạn để "thử"** | Cả 3 món tan biến **ngay lúc bấm**, kể cả khi thất bại | Chỉ nấu khi có phù, hoặc chỉ nấu bằng đồ thừa thật sự |
 | **Chết trong Tầng Sâu** | Mất **sạch** kho tạm cả lượt | Rút Lui ngay sau một tầng boss nếu máu/thuốc đã cạn |
-| **Bán/tự-bán món có Khắc Ấn** | Xoá vĩnh viễn thứ hiếm nhất game vì vài đồng bạc | Game đã chặn ba lớp (auto-bán bỏ qua món có Khắc Ấn; bán tay phải bấm 2 lần xác nhận) — nhưng vẫn đừng bấm bừa |
-| **Auto-mặc tháo mất Khắc Ấn** | Món mới hơn 5% chỉ số mà không có Khắc Ấn | Game đã chặn: nút "Mặc Đồ Tốt Nhất" xếp hạng theo Khắc Ấn **trước**, lực chiến sau |
 | **Đánh boss cao hơn mình 10 cấp** | Sát thương của bạn ×**0,35**, boss đánh bạn ×1,6 | Xem cấp boss trên thanh máu. Chênh dưới 6 cấp mới đáng đánh |
 | **Farm bãi quá thấp so với cấp** | Chênh trên 5 cấp thì EXP giảm 15%/cấp, sàn 10% | Bám đúng dải cấp ghi trong bảng bản đồ |
 | **Quên tắt nút PK rồi đi cày** | Đánh nhầm Axie Lang Thang → Tội Ác, đỏ tên, tới 5 điểm thì hắc hoá | Vào vùng An Toàn là PK tự tắt; ở vùng PK thì cứ để tắt trừ khi cố ý |
 | **Đứng chờ hết 5 giây chiêu "Vỡ Giáp"** | Ăn đòn **không né được**, càng còn nhiều Cầu Giáp càng đau | Phá cho hết 4 Cầu Giáp → boss **choáng 5 giây** + 6 giây cửa sổ phản công |
 | **Chạy lung tung khi boss dùng "Tử Vực"** | **Cả sân chết** | Chỉ có **một vòng sáng** là an toàn, và nó nằm cách boss 260–460px — chạy ra xa khỏi boss, đừng nép sát |
-| **Bấm V để xem chỉ số** | Thú Chiến bị gọi ra / thu về cùng lúc | Xem mục cảnh báo ở phần Điều khiển |
+| **Bấm V để xem chỉ số** | Chimera bị gọi ra / thu về cùng lúc | Xem mục cảnh báo ở phần Điều khiển |
 | **Bấm chuột trái để nhặt đồ mà cứ vung kiếm** | Bán kính bấm trúng món chỉ 26px | Dùng **phím J** (tầm 96px), hoặc giữ **ALT** để thấy nhãn rồi bấm chính xác |
 | **Đi thẳng vào cây/đá** | Cây và đá **chặn thật** — nhân vật dừng lại | Cứ bấm chuột phải tới đích, hệ tự tính đường vòng |
 | **Lỡ khung giờ sự kiện** | Không lưu state — đến trễ là hết | Chip ⏱ luôn đếm ngược. Đặt chuông theo lịch ở mục 8 |
@@ -373,11 +372,11 @@ lại dưới đất và biến mất sau 45 giây.
 |---|---|
 | 4 | Ám Khí + Tấn Chức (H) |
 | 5 | Lò Hỗn Độn (F) |
-| 6 | Thú Chiến |
+| 6 | Khế Ước Chimera |
 | 10 | **Chọn lớp** · Cương Khí · Truy Nã Lệnh · Sảnh Cầu May · Lunaris City |
 | 15 | ô buff · **Chúa Tể Vực Nứt** |
 | 20 | **Tầng Sâu** |
-| 30 | Cung Tiễn · Động Phủ |
+| 30 | Cung Tiễn |
 | 40 / 80 | Linh Dực cấp 1 / cấp 2 |
 | 120 | **Tẩy Tủy** |
 

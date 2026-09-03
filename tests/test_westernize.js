@@ -13,10 +13,9 @@ const { chromium } = require('playwright');
   await page.waitForTimeout(500);
 
   const r1 = await page.evaluate(() => ({
-    tierNames: TB_TIER_NAMES,
     rankNames: GIAI_NAMES,
   }));
-  console.log('1) tier/rank name arrays renamed:', JSON.stringify(r1));
+  console.log('1) rank name array renamed:', JSON.stringify(r1));
 
   const r2 = await page.evaluate(() => {
     window.TEST_MODE = true;

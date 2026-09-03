@@ -26,8 +26,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     chiState().co.aurelion = { con:0 }; chiState().eq = 'aurelion'; player.level = 120; calcDerived();
     const t = TITLES.find(x => x.id === 'tuongduong');
     return { datDuoc: !!t.cond(player), so5: CHIMERA.filter(c => c.sao === 5).length,
-             tuvi: 'tuvi' in (player.dantian||{}), ch: 'congHuan' in player,
-             hat: Object.values(GARDEN_SEEDS || {}).map(x => x.name) };
+             tuvi: 'tuvi' in (player.dantian||{}), ch: 'congHuan' in player };
   });
   console.log('1) danh hiệu tối thượng + tàn dư:', JSON.stringify(r));
   if (!r.datDuoc) fail(`"Người Giữ Lunacia" vẫn không đạt được dù đã max (roster ${r.so5} con 5★)`);
@@ -37,8 +36,10 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   const r2 = await p.evaluate(() => {
     const CAM = ['tu luyện','bế quan','ngồi thiền','tẩy tủy','tấn chức','tiến cấp đan',
                  'linh thú','phong linh phù','tôi cốt','chân quân','viên mãn','hóa cảnh',
-                 'tụ linh trận','dược viên','gom duyên','đột phá','anima','công huân'];
-    const mo = [renderChar, renderCharPanel, renderSkillPanel, renderAbode, renderTuyetHoc];
+                 'tụ linh trận','dược viên','gom duyên','đột phá','anima','công huân',
+                 // sáu hệ gỡ trong đợt "về mô hình MU" — không được còn chữ nào trên UI
+                 'huyền thiết','thần binh','khắc ấn','cổ thần','tấn phẩm','nhà riêng'];
+    const mo = [renderChar, renderCharPanel, renderSkillPanel];
     const thay = new Set();
     for (const f of mo){ try { f(); } catch { /* bảng cần điều kiện — bỏ qua */ } }
     const txt = document.body.innerText.toLowerCase();

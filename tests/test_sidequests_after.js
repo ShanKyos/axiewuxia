@@ -37,24 +37,13 @@ const { chromium } = require('playwright');
       results[id] = { prog: st.prog, st: st.st, need: q.need };
     }
 
-    // s_sys2: Mount (catch) — reuse existing horse-catch flow
-    testQuest('s_sys2', () => {
-      travelTo('ngoai');
-      player.horseDay = { d: '', n: 0 };
-      spawnHorses();
-      horses[0].state = 'tired';
-      player.x = horses[0].x; player.y = horses[0].y;
-    }, () => { window.tryCatchHorse(); });
+    // s_sys2 (Thú Chiến) · s_sys3 (Thần Binh) · s_sys4 (Thú Thuần Hóa) đều đã gỡ cùng hệ
+    // của chúng. Chỗ trống được lấp bằng s_shard — NV dạy ví ba ô và Quầy Shard.
 
-    // s_sys3: Thần Binh
-    testQuest('s_sys3', () => {
-      player.thanbinh = { tier: 1 };
-      player.noidan = { Kim: 50, Mộc: 50, Thổ: 50, Thủy: 50, Hỏa: 50 };
-      player.mat = 999;
-    }, () => { window.upgradeThanBinh(); });
-
-    // s_sys4 (Thu Phục Thú Hoang) đã gỡ cùng hệ Thú Thuần Hóa — nó và Thú Chiến giẫm chân
-    // nhau, và Thú Thuần Hóa là cái không cộng chỉ số gì cho người chơi.
+    // s_shard: Quầy Shard
+    testQuest('s_shard', () => {
+      player.shard = 99;
+    }, () => { window.muaShard('ve_gk'); });
 
     // s_sys5: Chaos Machine
     testQuest('s_sys5', () => {
@@ -64,10 +53,7 @@ const { chromium } = require('playwright');
       chaosClear(); player.inv.forEach(it => chaosAddItem(it.uid)); chaosPickRecipe('hopnhat');
     }, () => { window.doChaos(); });
 
-    // s_sys7: Garden
-    testQuest('s_sys7', () => {
-      player.abode = { tulinh: 0, garden: [{ seed: 'tukhi', readyAt: Date.now() - 1000 }, null, null] };
-    }, () => { window.harvestSeed(0); });
+    // s_sys7 (Vườn Thảo Dược) đã gỡ cùng Nhà Riêng.
 
     return results;
   });

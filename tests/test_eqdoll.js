@@ -30,7 +30,8 @@ const pass = m => console.log('PASS ' + m);
              caption: (document.querySelector('.eq-fig-cap') || {}).innerText || '' };
   });
   console.log('1.', JSON.stringify(r1));
-  const want = { trai:['non','ao','tay','quan','chan','vukhi'], phai:['canh','aochoang','daychuyen','nhan1','nhan2','pet'] };
+  // Ô 'pet' đã gỡ cùng hệ Linh Thú — cột phải còn 5 ô.
+  const want = { trai:['non','ao','tay','quan','chan','vukhi'], phai:['canh','aochoang','daychuyen','nhan1','nhan2'] };
   if (r1.soCot !== 2) fail('phải có đúng 2 cột ô đồ, đang ' + r1.soCot);
   else pass('2 cột ô đồ hai bên');
   if (JSON.stringify(r1.trai) !== JSON.stringify(want.trai)) fail('cột trái sai thứ tự: ' + JSON.stringify(r1.trai));
@@ -84,7 +85,7 @@ const pass = m => console.log('PASS ' + m);
   else if (!r4.daMac) fail('kéo-thả từ túi vào ô không mặc được');
   else pass('kéo-thả từ Túi Đồ vào ô mặc được');
 
-  // ── 5. nhân vật chưa mặc gì vẫn dựng đủ 12 ô ───────────────────────────
+  // ── 5. nhân vật chưa mặc gì vẫn dựng đủ 11 ô (ô Pet đã gỡ cùng hệ Linh Thú) ──
   await p.evaluate(() => { player.equip = {}; calcDerived(); renderInv(); });
   // lang.js dịch bằng MutationObserver — đọc ngay sau renderInv() là đọc bản CHƯA dịch, rồi
   // kết luận nhầm là giao diện lẫn hai thứ tiếng. Chờ một nhịp cho bộ quan sát chạy xong.
@@ -97,8 +98,8 @@ const pass = m => console.log('PASS ' + m);
              lang: window.ghhaLang ? window.ghhaLang() : '?' };
   });
   console.log('5.', JSON.stringify(r5));
-  if (r5.soO !== 12 || r5.oTrong !== 12) fail(`chưa mặc gì: ${r5.soO} ô / ${r5.oTrong} ô trống (mong 12/12)`);
-  else pass('chưa mặc gì: đủ 12 ô trống, mỗi ô có nhãn tên vị trí');
+  if (r5.soO !== 11 || r5.oTrong !== 11) fail(`chưa mặc gì: ${r5.soO} ô / ${r5.oTrong} ô trống (mong 11/11)`);
+  else pass('chưa mặc gì: đủ 11 ô trống, mỗi ô có nhãn tên vị trí');
   // Đối chiếu với DANH SÁCH nhãn, không đoán theo dấu tiếng Việt: "Tay" và "Pet" không có dấu
   // nào cả nên phép đoán đó luôn báo lẫn ngôn ngữ dù bảng hoàn toàn nhất quán.
   const VI = ['Nón','Áo','Tay','Quần','Chân','Vũ Khí','Cánh','Áo Choàng','Dây Chuyền','Nhẫn 1','Nhẫn 2','Pet'];
@@ -106,7 +107,7 @@ const pass = m => console.log('PASS ' + m);
   const set = r5.lang === 'en' ? EN : VI;
   const lac = r5.nhan.filter(n => !set.includes(n));
   if (lac.length) fail(`ngôn ngữ hiện tại "${r5.lang}" nhưng ${lac.length} nhãn không thuộc bộ đó: ` + JSON.stringify(lac));
-  else pass(`nhãn 12 ô cùng bộ ngôn ngữ "${r5.lang}"`);
+  else pass(`nhãn 11 ô cùng bộ ngôn ngữ "${r5.lang}"`);
 
   // ── 6. bố cục không tràn ở cả hai khổ màn hình ─────────────────────────
   for (const [w, h] of [[1366,768],[390,844]]){
@@ -121,7 +122,7 @@ const pass = m => console.log('PASS ' + m);
     });
     if (r6.ngoai) fail(`${w}×${h}: ${r6.ngoai} ô nằm ngoài màn hình`);
     else if (r6.nho) fail(`${w}×${h}: ${r6.nho} ô dưới ngưỡng chạm 24px`);
-    else pass(`${w}×${h}: 12 ô nằm trong màn hình, đều đạt ngưỡng chạm (bảng rộng ${r6.rong}px)`);
+    else pass(`${w}×${h}: 11 ô nằm trong màn hình, đều đạt ngưỡng chạm (bảng rộng ${r6.rong}px)`);
   }
 
   console.log('errors:', JSON.stringify(errs));

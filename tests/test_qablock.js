@@ -22,8 +22,7 @@ const { chromium } = require('playwright');
     // ── 1. Chiêu quạt KHÔNG được tự hất tung đội hình của mình ────────────
     // Dark Lord: skillA type 'cone'. 4 quái bất động ngay trong tầm, tung 12 lượt.
     startGame('bug', null); player.level = 100; vhAutoLearn(); calcDerived();
-    buildWorld(); mobs.length = 0; sigilReset();
-    player.sigils = { dl_hieutrieu: 1 };
+    buildWorld(); mobs.length = 0;
     player.x = 600; player.y = 600; player.face = 0;
     const tgts = [];
     for (let i = 0; i < 4; i++){
@@ -50,14 +49,13 @@ const { chromium } = require('playwright');
     hurtMob(solo, solo.maxHp * 0.5, 'hit');
     o.doiChung_donDon_dayRa = +(dist(600, 600, solo.x, solo.y) - 100).toFixed(1);
 
-    // ── 2. autoEquipBest không được mặc đồ rác để lấy Khắc Ấn đã có ───────
+    // ── 2. autoEquipBest phải mặc món MẠNH nhất trong ô ─────────────────
     let _uid = 0;
     const mk = (slot, tier, rar, sigil) => {
       const sd = SLOTS.find(s => s.id === slot);
       return {
         uid: ++_uid, slot, slotName: sd.name, name: slot + '-t' + tier,
-        rarity: rar, level: 1, tier, perfect:false, luck:false, life:0, ancient:null,
-        sigil: sigil || null, element: 'Kim',
+        rarity: rar, level: 1, tier, perfect:false, luck:false, life:0, element: 'Kim',
         main: { k: sd.main, v: sd.base(tier, rar), name: mainName(sd.main) },
         subs: [{ k:'atkPct', name: subName('atkPct'), v: 5, pct: true }],
         plus: 0, awakened: AWAKENED[0],
@@ -66,19 +64,11 @@ const { chromium } = require('playwright');
     startGame('thieulam', null); player.level = 100; calcDerived();
     player.equip = {}; player.inv = [];
     const quanManh = mk('quan', 10, 4, null);
-    player.inv.push(mk('ao', 1, 0, 'dk_lantram'), mk('quan', 1, 0, 'dk_lantram'), quanManh);
+    player.inv.push(mk('ao', 1, 0), mk('quan', 1, 0), quanManh);
     autoEquipBest();
     o.autoEquip_quanDaChon = player.equip.quan ? player.equip.quan.name : '(trống)';
     o.autoEquip_lucChienQuan = player.equip.quan ? itemPower(player.equip.quan) : 0;
     o.autoEquip_lucChienQuanManh = itemPower(quanManh);
-    o.autoEquip_soKhacAn = Object.keys(player.sigils || {}).length;
-
-    // ĐỐI CHỨNG: Khắc Ấn KHÁC nhau thì vẫn phải ưu tiên lấy đủ cả hai
-    startGame('thieulam', null); player.level = 100; calcDerived();
-    player.equip = {}; player.inv = [];
-    player.inv.push(mk('ao', 1, 0, 'dk_lantram'), mk('quan', 1, 0, 'dk_thanhluy'), mk('quan', 10, 4, null));
-    autoEquipBest();
-    o.doiChung_haiKhacAnKhac = Object.keys(player.sigils || {}).length;
 
     // ── 3. ăn đòn phải rung NGƯỢC hướng con vừa nện ──────────────────────
     startGame('thieulam', null); player.level = 100;
@@ -142,9 +132,6 @@ const { chromium } = require('playwright');
 
   if (r.autoEquip_lucChienQuan !== r.autoEquip_lucChienQuanManh)
     fail(`autoEquipBest mặc "${r.autoEquip_quanDaChon}" (LC ${r.autoEquip_lucChienQuan}) thay vì món mạnh (LC ${r.autoEquip_lucChienQuanManh})`);
-  if (r.autoEquip_soKhacAn !== 1) fail(`Khắc Ấn thu được ${r.autoEquip_soKhacAn}, kỳ vọng 1 (hai món cùng một Khắc Ấn)`);
-  if (r.doiChung_haiKhacAnKhac !== 2)
-    fail(`đối chứng hỏng: hai Khắc Ấn KHÁC nhau mà chỉ lấy được ${r.doiChung_haiKhacAnKhac} — ưu tiên Khắc Ấn đã hỏng`);
 
   if (!(r.rung_matMau > 0)) fail('dựng cảnh sai: người chơi không ăn đòn nào');
   if (Math.abs(r.rung_sauKhiAnDon - r.rung_truocKhiAnDon) < 0.5)

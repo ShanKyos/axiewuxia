@@ -50,11 +50,7 @@ const PORT = process.argv[2] || '8853';
     }
     window.genItem = _gen; window.dropToGround = _drop; window.sigilAnnounce = _sig;
 
-    // Cổ Thần vẫn phải được ấn định 2–3 dòng, không bốc như đồ thường
-    const ancExc = [];
-    for (let i = 0; i < 400; i++)
-      ancExc.push(genAncient(Object.keys(ANCIENT_SETS)[0], 'ao', 80).exc.length);
-    o.coThan = { min: Math.min(...ancExc), max: Math.max(...ancExc) };
+    // (Khối đo Cổ Thần đã bỏ cùng lúc với hệ Cổ Thần.)
 
     // Ghép hộp
     player.baohap = { 2: 3 };
@@ -77,7 +73,6 @@ const PORT = process.argv[2] || '8853';
     console.log(`${d.ten.padEnd(15)} cấp đồ ${d.capMin}–${d.capMax} (khai ${d.min}–${d.max})`
       + ` · giai ${JSON.stringify(d.giai)} · dòng exc ${JSON.stringify(d.exc)} · dòng phụ ${JSON.stringify(d.sub)}`);
   }
-  console.log('Cổ Thần số dòng exc:', JSON.stringify(r.coThan));
   console.log('ghép hộp:', JSON.stringify(r.ghep));
 
   // ── 1. Mọi bậc đều LUÔN ra đồ Hoàn Hảo ──
@@ -117,10 +112,7 @@ const PORT = process.argv[2] || '8853';
   }
   if (!loi4) pass('số dòng phụ trên đồ Hoàn Hảo cũng hên xui');
 
-  // ── 5. Cổ Thần vẫn được ấn định 2–3 dòng ──
-  if (r.coThan.min !== 2 || r.coThan.max !== 3)
-    fail(`Cổ Thần ra ${r.coThan.min}–${r.coThan.max} dòng exc, phải là 2–3`);
-  else pass('Cổ Thần giữ đúng 2–3 dòng exc');
+  // (Mục 5 — Cổ Thần — đã bỏ cùng hệ Cổ Thần.)
 
   // ── 6. Ghép hộp ──
   if (r.ghep.duBa['3'] !== 1 || r.ghep.duBa['2'])

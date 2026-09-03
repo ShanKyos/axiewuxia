@@ -31,8 +31,14 @@
   </div>
   <div id="hud-map"></div>
   <div id="hud-right">
-    <div id="hud-silver">◈ 0</div>
-    <div id="hud-mat">✦ 0</div>
+    <div id="hud-vi" role="group" aria-label="Ví">
+      <button class="vi-o vi-lumen" title="Lumen — tiền chính: tiệm, rèn, nâng kỹ năng. Bấm mở Túi Đồ · Vật Liệu"
+              onclick="window.moViTien()"><i>◈</i><b id="hud-silver">0</b></button>
+      <button class="vi-o vi-ve" title="Ấn Giao Kết — vé quay Khế Ước Chimera. Bấm mở bảng Khế Ước"
+              onclick="window.openKheUoc()"><i>✦</i><b id="hud-ve">0</b></button>
+      <button class="vi-o vi-shard" title="Shard — tiền cao cấp: đổi vé quay, nới túi và kho. Bấm mở Quầy Shard"
+              onclick="window.moQuayShard()"><i>♦</i><b id="hud-shard">0</b></button>
+    </div>
     <button id="btn-pk" class="hbtn pk-off hidden" title="Bật/tắt chế độ PK">PK: Tắt</button>
     <button id="btn-auto" class="hbtn auto-off hidden" title="Tự đánh — treo máy: tự đánh quái & tung kỹ năng quanh điểm neo, tối đa 1-2 bãi (Z)">⚔ AUTO</button>
     <div id="minimap-wrap">

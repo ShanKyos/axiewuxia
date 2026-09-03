@@ -26,10 +26,8 @@ const PORT = process.argv[2] || '8853';
       thuong:  itemVutDuoc(mon({ rarity: 0, perfect: false, exc: null })),
       hoanHao: itemVutDuoc(mon({ perfect: true })),
       coExc:   itemVutDuoc(mon({ perfect: false, exc: [{ k:'atkPct', v:2 }] })),
-      coThan:  itemVutDuoc(mon({ ancient: 'x' })),
-      khacAn:  itemVutDuoc(mon({ sigil: 'y' })),
     };
-    o.lyDo = { hoanHao: itemVutLyDo(mon({ perfect: true })), khacAn: itemVutLyDo(mon({ sigil:'y' })) };
+    o.lyDo = { hoanHao: itemVutLyDo(mon({ perfect: true })) };
 
     // ── B. vứt một món: rời túi, nằm dưới đất, mang cờ boDi ──
     groundLoot.length = 0; player.inv = [];
@@ -67,7 +65,6 @@ const PORT = process.argv[2] || '8853';
       mon({ rarity: 1, perfect: false, exc: null }),   // vứt được
       mon({ rarity: 2, perfect: false, exc: null }),   // trên ngưỡng → giữ
       mon({ rarity: 0, perfect: true }),               // Hoàn Hảo → giữ khi VỨT
-      mon({ rarity: 0, perfect: false, exc: null, sigil: 'y' }), // Khắc Ấn → giữ ở CẢ HAI đường
     ];
     player.inv = dat.slice();
     o.demVut = donChon(player.inv, true).length;
@@ -76,13 +73,13 @@ const PORT = process.argv[2] || '8853';
     o.sauLan1 = player.inv.length;
     donRac('tui', 'vut');                                // lần 2 = làm thật
     o.sauLan2 = { conLai: player.inv.length, duoiDat: groundLoot.length,
-                  conGi: player.inv.map(it => `r${it.rarity}${it.perfect?'-HH':''}${it.sigil?'-KA':''}`) };
+                  conGi: player.inv.map(it => `r${it.rarity}${it.perfect?'-HH':''}`) };
 
-    // ── F. dọn hàng loạt: BÁN — dọn được đồ Hoàn Hảo, vẫn chừa Khắc Ấn ──
+    // ── F. dọn hàng loạt: BÁN — dọn được cả đồ Hoàn Hảo ──
     player.inv = dat.slice(); player.silver = 0; window._donArm = '';
     donRac('tui', 'ban'); donRac('tui', 'ban');
     o.sauBan = { conLai: player.inv.length, bac: player.silver,
-                 conGi: player.inv.map(it => `r${it.rarity}${it.sigil?'-KA':''}`) };
+                 conGi: player.inv.map(it => `r${it.rarity}`) };
 
     // ── G. kho dùng chung đúng bộ luật ──
     player.kho = dat.slice(); window._donArm = '';
@@ -104,10 +101,8 @@ const PORT = process.argv[2] || '8853';
   // 1. luật
   if (!r.luat.thuong) fail('đồ thường phải vứt được');
   if (r.luat.hoanHao || r.luat.coExc) fail('đồ Hoàn Hảo (cờ perfect hoặc có dòng exc) không được vứt');
-  if (r.luat.coThan)  fail('đồ Cổ Thần không được vứt');
-  if (r.luat.khacAn)  fail('món mang Khắc Ấn không được vứt');
-  if (!r.lyDo.hoanHao || !r.lyDo.khacAn) fail('chặn mà không nói lý do cho người chơi');
-  if (!bad) pass('đúng luật: thường vứt được · Hoàn Hảo / Cổ Thần / Khắc Ấn thì không');
+  if (!r.lyDo.hoanHao) fail('chặn mà không nói lý do cho người chơi');
+  if (!bad) pass('đúng luật: đồ thường vứt được · đồ Hoàn Hảo thì không');
 
   // 2. vứt một món
   if (r.motMon.conTrongTui !== 0 || r.motMon.duoiDat !== 1)
@@ -128,27 +123,26 @@ const PORT = process.argv[2] || '8853';
   else pass('đồ đã vứt không bị hút lại, còn đồ rơi bình thường vẫn nhặt như cũ');
 
   // 5. đếm đúng
-  if (r.demVut !== 2) fail(`đếm VỨT ra ${r.demVut}, mong 2 (r0 + r1, chừa r2/Hoàn Hảo/Khắc Ấn)`);
-  if (r.demBan !== 3) fail(`đếm BÁN ra ${r.demBan}, mong 3 (r0 + r1 + r0-Hoàn Hảo, chừa r2/Khắc Ấn)`);
+  if (r.demVut !== 2) fail(`đếm VỨT ra ${r.demVut}, mong 2 (r0 + r1, chừa r2 và Hoàn Hảo)`);
+  if (r.demBan !== 3) fail(`đếm BÁN ra ${r.demBan}, mong 3 (r0 + r1 + r0-Hoàn Hảo, chừa r2)`);
   if (r.demVut === 2 && r.demBan === 3) pass('đếm đúng: vứt 2 · bán 3');
 
   // 6. phải bấm hai lần
-  if (r.sauLan1 !== 5) fail(`bấm một lần đã dọn luôn (còn ${r.sauLan1}/5) — phải hỏi lại trước`);
+  if (r.sauLan1 !== 4) fail(`bấm một lần đã dọn luôn (còn ${r.sauLan1}/4) — phải hỏi lại trước`);
   else pass('dọn hàng loạt bắt bấm xác nhận lần hai');
 
   // 7. vứt hàng loạt chừa đúng thứ cần chừa
-  if (r.sauLan2.conLai !== 3 || r.sauLan2.duoiDat !== 2)
-    fail(`vứt hàng loạt ra ${JSON.stringify(r.sauLan2)}, mong còn 3 trong túi · 2 dưới đất`);
-  else pass('vứt hàng loạt: bỏ 2 món rác, giữ lại r2 + Hoàn Hảo + Khắc Ấn');
+  if (r.sauLan2.conLai !== 2 || r.sauLan2.duoiDat !== 2)
+    fail(`vứt hàng loạt ra ${JSON.stringify(r.sauLan2)}, mong còn 2 trong túi · 2 dưới đất`);
+  else pass('vứt hàng loạt: bỏ 2 món rác, giữ lại r2 + Hoàn Hảo');
 
-  // 8. bán hàng loạt dọn được Hoàn Hảo, vẫn chừa Khắc Ấn
-  if (r.sauBan.conLai !== 2) fail(`bán hàng loạt còn ${r.sauBan.conLai}, mong 2 (r2 + Khắc Ấn)`);
-  else if (!r.sauBan.conGi.some(x => x.includes('KA'))) fail('bán hàng loạt nuốt mất món Khắc Ấn');
-  else if (!(r.sauBan.bac > 0)) fail('bán hàng loạt không cộng bạc');
-  else pass(`bán hàng loạt dọn được cả đồ Hoàn Hảo, chừa Khắc Ấn, +${r.sauBan.bac}◈`);
+  // 8. bán hàng loạt dọn được cả đồ Hoàn Hảo
+  if (r.sauBan.conLai !== 1) fail(`bán hàng loạt còn ${r.sauBan.conLai}, mong 1 (r2)`);
+  else if (!(r.sauBan.bac > 0)) fail('bán hàng loạt không cộng Lumen');
+  else pass(`bán hàng loạt dọn được cả đồ Hoàn Hảo, chừa r2, +${r.sauBan.bac}◈`);
 
   // 9. kho dùng chung luật
-  if (r.sauKho.conLai !== 2) fail(`kho sau khi bán còn ${r.sauKho.conLai}, mong 2 — kho phải dùng chung luật với túi`);
+  if (r.sauKho.conLai !== 1) fail(`kho sau khi bán còn ${r.sauKho.conLai}, mong 1 — kho phải dùng chung luật với túi`);
   else pass('kho dùng chung đúng bộ luật với túi');
 
   console.log('errors:', JSON.stringify(errs));

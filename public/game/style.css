@@ -76,10 +76,39 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   color:#fff; text-shadow:0 1px 2px #000; letter-spacing:.5px; }
 .bar.xp { height:10px; } .bar.xp span { line-height:10px; font-size:8px; }
 .bar.xp .fill { background:linear-gradient(180deg,#ffd76a,#e8a83a); }
-#hud-right { position:absolute; top:12px; right:12px; text-align:right; pointer-events:auto;
+#hud-right { position:absolute; top:12px; right:12px; text-align:right; pointer-events:none;
   display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
-#hud-silver,#hud-mat { color:var(--text-bright); font-size:var(--fs-lg); text-shadow:0 1px 3px #000; font-weight:600; }
-#hud-mat { color:var(--accent-light); }
+#hud-right > * { pointer-events:auto; }
+
+/* Ví — ba ô NẰM NGANG: Lumen · Ấn Giao Kết · Shard. Ba loại này là ba loại DUY NHẤT thường trực
+   trên HUD; mọi loại còn lại xem ở Túi Đồ → Vật Liệu (ô Lumen bấm vào là mở thẳng tới đó).
+   Có nền vì trước đây dòng số trần nằm đè lên tranh vẽ: ở 1280×720 nó chồng lên nhãn
+   "Thợ Rèn · Lò Rèn Hoàng Gia" 55,5×12px. */
+#hud-vi { display:flex; gap:4px; align-items:stretch; }
+.vi-o { display:flex; align-items:center; gap:5px; cursor:pointer;
+  background:rgba(18,20,44,.78); border:1px solid var(--border-faint); border-radius:999px;
+  padding:4px 11px 5px; font-family:inherit; color:var(--text-bright);
+  box-shadow:inset 0 1px 0 rgba(226,235,255,.12), 0 2px 8px rgba(0,0,0,.45);
+  transition:background .16s ease-out, border-color .16s ease-out; }
+.vi-o:hover { background:rgba(76,141,255,.24); border-color:var(--border-strong); }
+.vi-o i { font-style:normal; font-size:var(--fs-md); line-height:1; }
+/* tabular-nums: Lumen cộng số lẻ mỗi khung trong Tụ Linh Trận — chữ số biến thiên bề rộng làm
+   cả ô rung. min-width giữ mép trái đứng yên từ "0" tới "9.999.999.999". */
+.vi-o b { font-variant-numeric:tabular-nums; font-weight:600; font-size:var(--fs-md);
+  text-shadow:0 1px 3px #000; min-width:34px; text-align:right; }
+.vi-lumen i { color:var(--gold); } .vi-lumen b { min-width:74px; font-size:var(--fs-lg); }
+.vi-ve i { color:var(--accent-light); }
+.vi-shard i { color:var(--purple); }
+@media (prefers-reduced-motion: reduce){ .vi-o { transition:none; } }
+
+/* Quầy Shard — mỗi dòng: biểu tượng · tên + mô tả · số đang có · nút giá */
+.shard-row { display:grid; grid-template-columns:26px 1fr auto auto; align-items:center; gap:9px;
+  padding:8px 4px; border-bottom:1px solid var(--border-faint); }
+.shard-row:last-of-type { border-bottom:none; }
+.shard-ico { font-style:normal; font-size:var(--fs-xl); text-align:center; }
+.shard-ten { display:flex; flex-direction:column; gap:2px; font-size:var(--fs-md); }
+.shard-ten em { font-style:normal; font-size:var(--fs-xs); color:var(--text-dim); }
+.shard-dong { font-size:var(--fs-xs); color:var(--text-dim); white-space:nowrap; }
 .hud-btns { margin-top:2px; }
 .hbtn { pointer-events:auto; background:rgba(30,32,64,.88); color:var(--text-body); border:1px solid var(--border);
   padding:6px 13px; margin-left:5px; border-radius:999px; font-family:inherit; font-size:var(--fs-md); font-weight:600; cursor:pointer; }
@@ -544,7 +573,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 }
 
 /* ===== v2: HUD mở rộng ===== */
-#hud-khi { color:var(--accent-light); font-size:11.5px; text-shadow:0 1px 3px #000; margin-top:2px; letter-spacing:.5px; }
 #hud-time { font-size:11.5px; text-shadow:0 1px 3px #000; margin-top:3px; letter-spacing:.5px; color:var(--pink);
   background:rgba(18,20,44,.4); border:1px solid rgba(126,203,255,.3); border-radius:999px; padding:2px 9px; display:inline-block; }
 #hud-buff { color:var(--orange); font-size:11.5px; text-shadow:0 1px 3px #000; margin-top:2px; letter-spacing:.5px; }
@@ -946,9 +974,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .chaos-go:disabled { cursor:not-allowed; color:#8590ad; background:rgba(255,255,255,.06); box-shadow:none; }
 .chaos-msg { min-height:17px; margin-top:7px; font-size:var(--fs-md); text-align:center; }
 .chaos-setpick { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
-.chaos-setbtn { padding:4px 9px; font-size:var(--fs-sm); cursor:pointer; color:var(--sc,#9fd0ff);
-  background:rgba(255,255,255,.03); border:1px solid var(--sc,#9fd0ff); border-radius:var(--r-md); opacity:.55; }
-.chaos-setbtn.on { opacity:1; background:color-mix(in srgb,var(--sc) 20%,transparent); }
 .chaos-empty { padding:10px; font-size:var(--fs-md); line-height:1.6; color:#93a2cc;
   background:rgba(255,255,255,.025); border:1px dashed var(--border); border-radius:var(--r-md); }
 .chaos-bag { display:grid; grid-template-columns:repeat(8,1fr); gap:4px; max-height:148px; overflow-y:auto;
@@ -1209,67 +1234,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   .cc-card .cc-tag { display:none; }
   .cc-detail { font-size:var(--fs-md); }
 }
-
-/* ══════════ LINH THÚ ══════════ */
-.pet-intro { font-size:12.5px; color:var(--text-dim); line-height:1.7; margin:4px 0 10px; }
-.pet-pick { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-.pet-card { background:rgba(76,141,255,.08); border:1px solid var(--border); border-radius:var(--r-md);
-  padding:8px 6px 10px; cursor:pointer; text-align:center; color:inherit; font:inherit;
-  transition:border-color .15s, background .15s; }
-.pet-card:hover { border-color:var(--accent); background:rgba(76,141,255,.18); }
-.pet-card img { width:100%; max-width:104px; display:block; margin:0 auto 4px;
-  filter:drop-shadow(0 4px 8px rgba(0,0,0,.45)); }
-.pet-card .pn { font-size:14px; font-weight:700; letter-spacing:.5px; }
-.pet-card .pt { font-size:var(--fs-sm); color:var(--gold); letter-spacing:1px; margin-bottom:4px; }
-.pet-card .pd { font-size:11.5px; color:var(--text-dim); line-height:1.5; min-height:34px; }
-.pet-card .pc { font-size:11.5px; color:#8fd0ff; margin-top:6px; }
-
-.pet-head { display:flex; align-items:center; gap:12px; margin:6px 0 10px; }
-.pet-art { width:104px; flex:none; filter:drop-shadow(0 6px 12px rgba(0,0,0,.5)); }
-.pet-meta { flex:1; min-width:0; }
-.pet-name { font-size:19px; font-weight:700; letter-spacing:1px; }
-.pet-name em { font-style:normal; color:var(--gold); font-size:var(--fs-xl); }
-.pet-tag { font-size:var(--fs-md); color:var(--text-dim); line-height:1.6; margin:2px 0 6px; }
-.pet-meta .tier-pips { text-align:left; letter-spacing:2px; font-size:var(--fs-sm); margin:0; }
-
-.pet-lines { background:rgba(126,203,255,.07); border:1px solid rgba(126,203,255,.26);
-  border-radius:var(--r-md); padding:6px 10px; margin:6px 0 10px; }
-.pet-line { display:flex; justify-content:space-between; align-items:baseline; gap:8px;
-  font-size:12.5px; padding:3px 0; }
-.pet-line b { color:#8fd0ff; font-variant-numeric:tabular-nums; }
-.pet-line b i { font-style:normal; font-size:10.5px; color:var(--text-dim); margin-left:4px; }
-.pet-line.core { border-bottom:1px solid rgba(126,203,255,.2); padding-bottom:5px; margin-bottom:2px; }
-.pet-line.core span { color:var(--gold); }
-.pet-line.core b { color:var(--gold); }
-.pet-swap { display:flex; align-items:center; gap:6px; }
-.pet-swap .pet-line { flex:1; padding:2px 0; }
-.pet-swap .pet-line.old { opacity:.45; }
-.pet-swap .pet-line.new b { color:#8fd18f; }
-.pet-swap .arw { color:var(--text-dim); font-size:var(--fs-md); flex:none; }
-.pet-locked { font-size:11.5px; color:var(--text-dim); padding:5px 0 2px; border-top:1px dashed rgba(140,175,255,.25);
-  margin-top:4px; }
-
-.pet-act { border:1px solid var(--border); border-radius:var(--r-md); padding:7px 12px; margin-top:6px; }
-.pet-act.done { text-align:center; font-size:var(--fs-lg); border-style:dashed; }
-.pet-act-t { font-size:12.5px; margin-bottom:6px; }
-.pet-act-t span { color:var(--text-dim); font-size:11.5px; }
-.pet-cost { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 2px; font-size:var(--fs-md);
-  font-variant-numeric:tabular-nums; }
-.pet-cost span { border:1px solid var(--border-faint); border-radius:999px; padding:2px 9px; }
-.pet-cost span.ok { color:#8fd0ff; }
-.pet-cost span.no { color:#ff8f8f; border-color:rgba(255,107,107,.4); }
-.pet-cost span i { font-style:normal; opacity:.6; }
-.pet-rate { font-size:var(--fs-md); color:var(--text-dim); margin-top:4px; }
-.pet-rate b { color:var(--gold); }
-.pet-safe { font-size:11.5px; color:#8fd18f; margin-top:3px; }
-.pet-msg { text-align:center; min-height:18px; font-size:12.5px; margin-top:8px; }
-
-@media (max-width:1000px){
-  .pet-art { width:88px; }
-  .pet-card img { max-width:76px; }
-}
-.pet-hint { font-size:11.5px; color:var(--text-dim); margin-top:5px; line-height:1.6; }
-.pet-hint b { color:#b08ae8; }
 
 /* Box Kundun — kéo ra màn hình để ném */
 .box-row { cursor: grab; }

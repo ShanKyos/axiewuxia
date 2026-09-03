@@ -37,7 +37,6 @@ const KUNDUN_OK = 'Box Kundun';
       Object.values(SECTS).map(s => s.name + ' ' + s.desc + ' ' + s.role).join(' '),
       NPCS.map(n => n.name + ' ' + (n.lore||'')).join(' '),
       Object.values(MOBS).map(m => m.name).join(' '),
-      TB_TIER_NAMES.join(' '),
     ].join(' ');
     out.banned = BANNED.filter(w => blob.includes(w));
     // "Kundun" chỉ được phép trong đúng cụm "Box Kundun". Bỏ hết cụm đó ra rồi soi phần còn

@@ -14,7 +14,6 @@ const { chromium } = require('playwright');
       const out = { cls };
       out.playerExists = !!player;
       out.sectName = player ? SECTS[player.sect].name : null;
-      out.thanbinh = player ? THANBINH[player.sect].name : null;
       try { castSkill('a'); out.castA = 'ok'; } catch (e) { out.castA = 'ERR:' + e; }
       try { window.toggleAuto(); } catch (e) { out.autoErr = 'ERR:' + e; }
       return out;

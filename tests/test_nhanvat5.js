@@ -34,7 +34,7 @@ const URL = 'http://localhost:8871/index.html';
       const raw = JSON.parse(localStorage.getItem('vlcm_save') || '{}');
       const rows = [...document.querySelectorAll('#cc-slots .cc-slot')];
       return {
-        v3_phienBanTrenDia: raw.v,
+        v3_phienBanTrenDia: raw.v, SAVE_VERSION,
         v3_soOTrenDia: Array.isArray(raw.slots) ? raw.slots.filter(Boolean).length : -1,
         v3_tenGiuNguyen: raw.slots && raw.slots[0] && raw.slots[0].player.name,
         v3_capGiuNguyen: raw.slots && raw.slots[0] && raw.slots[0].player.level,
@@ -168,7 +168,8 @@ const URL = 'http://localhost:8871/index.html';
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
 
   // 1) chuyển đổi v3 → v4
-  if (out.v3_phienBanTrenDia !== 4) fail(`save chưa được ghi lại ở v4 (thấy ${out.v3_phienBanTrenDia})`);
+  if (out.v3_phienBanTrenDia !== out.SAVE_VERSION)
+    fail(`save chưa được ghi lại ở v${out.SAVE_VERSION} (thấy ${out.v3_phienBanTrenDia})`);
   if (out.v3_soOTrenDia !== 1) fail(`v3 phải thành ĐÚNG một ô, thấy ${out.v3_soOTrenDia}`);
   if (out.v3_tenGiuNguyen !== 'Người Cũ') fail(`mất tên nhân vật cũ (${out.v3_tenGiuNguyen})`);
   if (out.v3_capGiuNguyen !== 57) fail(`mất cấp nhân vật cũ (${out.v3_capGiuNguyen})`);

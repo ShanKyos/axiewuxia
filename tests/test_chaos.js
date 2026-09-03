@@ -79,17 +79,12 @@ const { chromium } = require('playwright');
       chaosAddItem(it.uid); chaosAddJewel('sinhMenh'); chaosPickRecipe('life');
       const rate = chaosCurrent().p.rate; doChaos();
       o.sinhMenh = { rate, bac: it.life }; }
-    // 3d Rèn thường: trừ bạc + Huyền Thiết
+    // 3d Rèn thường: Huyền Thiết đã gỡ, phí rèn nay TRỌN VẸN bằng Lumen (xem GO_HUYENTHIET)
     reset();
-    { const it = player.equip.tay; it.plus = 0; const s0 = player.silver, m0 = player.mat;
+    { const it = player.equip.tay; it.plus = 0; const s0 = player.silver;
       chaosAddItem(it.uid); chaosPickRecipe('ren'); doChaos();
-      o.renThuong = { plus: it.plus, truBac: s0 - player.silver > 0, truThiet: m0 - player.mat > 0 }; }
-    // 3e Tấn Phẩm
-    reset();
-    { const it = player.inv.find(x => x.rarity != null && x.rarity < 4 && !x.special && !x.ancient && !x.noForge);
-      const r0 = it.rarity; chaosAddItem(it.uid); chaosPickRecipe('tanpham');
-      const co = !!chaosMatches().find(x => x.rec.id === 'tanpham'); doChaos();
-      o.tanPham = { co, tang: it.rarity > r0 || it.rarity === r0 }; }
+      o.renThuong = { plus: it.plus, truBac: s0 - player.silver > 0 }; }
+    // (3e Tấn Phẩm đã gỡ cùng công thức.)
     // 3f Kế Thừa
     reset();
     { const it = player.inv.find(x => !x.special && x.tier != null && x.tier < GIAI_MAX);
@@ -106,17 +101,7 @@ const { chromium } = require('playwright');
         chaosPickRecipe('hopnhat'); doChaos();
         o.honLoan = { co, conLai: three.filter(x => player.inv.includes(x)).length, tuiGiam: n0 - player.inv.length, khaySach: forgeTray.length };
       } }
-    // 3h Đổi Cổ Thần
-    reset(); 
-    { const anc = [];
-      for (let i = 0; i < 3; i++){ const it = genAncient('velmyr', 'non', 100); player.inv.push(it); anc.push(it); }
-      for (const it of anc) chaosAddItem(it.uid);
-      chaosAddJewel('honDon'); chaosPickRecipe('doicothan');
-      chaosSetCoThan('korrveth'); chaosSetSlot('chan');
-      const co = !!chaosMatches().find(x => x.rec.id === 'doicothan');
-      doChaos();
-      const moi = player.inv.filter(x => x.ancient === 'korrveth' && x.slot === 'chan');
-      o.doiCoThan = { co, hienTe: anc.filter(x => player.inv.includes(x)).length, nhanDuoc: moi.length > 0 }; }
+    // (3h Đổi Cổ Thần đã gỡ cùng hệ Cổ Thần.)
 
     // ── 4. Khay tự nhả món đã biến mất (không giữ uid ma) ─────────────
     reset();
@@ -139,8 +124,8 @@ const { chromium } = require('playwright');
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
   if (r.tenDinhKiemHiep.length) fail(`còn tên kiếm hiệp: ${r.tenDinhKiemHiep.join(', ')}`);
   if (r.soTen !== 45) fail(`bảng tên có ${r.soTen} tên, cần 45`);
-  if (!r.khayTrong.includes('cloak') || !r.khayTrong.includes('cothan'))
-    fail(`khay trống + chưa có áo choàng phải ra cả cloak lẫn cothan: ${JSON.stringify(r.khayTrong)}`);
+  if (!r.khayTrong.includes('cloak'))
+    fail(`khay trống + chưa có áo choàng phải ra công thức cloak: ${JSON.stringify(r.khayTrong)}`);
   if (r.khayTrong_coAoChoang.includes('cloak'))
     fail('đã có áo choàng cấp 2 mà công thức luyện áo choàng vẫn bật');
   if (!r.motMon_plus3.includes('ren')) fail('1 món +3 trong khay mà không ra Rèn Thường');
@@ -156,15 +141,11 @@ const { chromium } = require('playwright');
   if (r.doiHe.nhanGiap) fail('Đổi Hệ vẫn nhận GIÁP — giáp không có hệ, ăn 1 Hỗn Độn Châu cho không');
   if (r.sinhMenh.rate !== 75) fail(`Sinh Mệnh bậc 0 phải 75%, đo ${r.sinhMenh.rate}`);
   if (r.renThuong.plus !== 1) fail(`Rèn Thường +0→+1 hỏng (ra +${r.renThuong.plus})`);
-  if (!r.renThuong.truBac || !r.renThuong.truThiet) fail('Rèn Thường không trừ bạc/Huyền Thiết');
-  if (!r.tanPham.co) fail('không nhận ra công thức Tấn Phẩm');
+  if (!r.renThuong.truBac) fail('Rèn Thường không trừ Lumen');
   if (r.keThua.den !== r.keThua.tu + 1) fail(`Kế Thừa: giai ${r.keThua.tu} → ${r.keThua.den}`);
   if (!r.honLoan.co) fail('không nhận ra công thức Lò Hỗn Loạn');
   if (r.honLoan.conLai !== 0) fail(`Lò Hỗn Loạn còn sót ${r.honLoan.conLai} món hiến tế`);
   if (r.honLoan.khaySach !== 0) fail('Lò Hỗn Loạn không dọn khay');
-  if (!r.doiCoThan.co) fail('không nhận ra công thức Đổi Cổ Thần');
-  if (r.doiCoThan.hienTe !== 0) fail(`Đổi Cổ Thần còn sót ${r.doiCoThan.hienTe} món hiến tế`);
-  if (!r.doiCoThan.nhanDuoc) fail('Đổi Cổ Thần không ra đúng bộ/ô đã chọn');
   if (r.khayTuDon !== 0) fail('khay còn giữ món đã biến mất khỏi túi');
   if (!r.npcMoMay.panelForge) fail(`NPC không mở cỗ máy: ${JSON.stringify(r.npcMoMay)}`);
   if (r.npcMoMay.panelChar) fail('mở lò mà bảng Nhân Vật cũng bật theo — hai bảng đã tách rồi');
