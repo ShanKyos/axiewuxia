@@ -55,7 +55,7 @@ const TRAN_ANH_GIU_MB = 170;   // tổng ảnh giải nén sau khi đi hết map
       if (i % 3 === 0){ player.equip[it.slot] = it; heroCardUrl(player.sect, heroTier(player), gearVisual(player)); }
     }
 
-    // ④ dọn atlas: giả bộ cả sáu tấm đã lâu không dùng
+    // ④ dọn atlas: giả bộ MỌI tấm đã lâu không dùng
     for (const id in VFX_ATLAS_DUNG) VFX_ATLAS_DUNG[id] = -1e9;
     const daBo = vfxAtlasDon();
 
@@ -66,7 +66,7 @@ const TRAN_ANH_GIU_MB = 170;   // tổng ảnh giải nén sau khi đi hết map
       itemArt: _itemArtCache.size, tranItemArt: ITEM_ART_CAP,
       heroCard: _heroCardCache.size, tranHeroCard: HERO_CARD_CAP,
       hs: _hsCache.size, tranHs: HS_CAP,
-      daBo, conAtlas: Object.keys(VFX_ATLAS_IMGS).length,
+      daBo, conAtlas: Object.keys(VFX_ATLAS_IMGS).length, soAtlas: ids.length,
       anhGiuMB: window.anhDangGiuMB(),
     };
   });
@@ -81,9 +81,11 @@ const TRAN_ANH_GIU_MB = 170;   // tổng ảnh giải nén sau khi đi hết map
       fail(`atlas ${a.id} chiếm ${a.mb} MB RAM khi giải nén (trần ${TRAN_MOT_ATLAS_MB} MB) — ảnh quá to so với cỡ vẽ ra màn`);
   }
   if (out.tongAtlasMB > TRAN_TONG_ATLAS_MB)
-    fail(`sáu atlas cộng lại ${out.tongAtlasMB} MB (trần ${TRAN_TONG_ATLAS_MB} MB)`);
-  if (out.daBo !== 6 || out.conAtlas !== 0)
-    fail(`dọn atlas hỏng: bỏ ${out.daBo}, còn ${out.conAtlas} — atlas không dùng phải được thả ra`);
+    fail(`${out.atlas.length} atlas cộng lại ${out.tongAtlasMB} MB (trần ${TRAN_TONG_ATLAS_MB} MB)`);
+  // Đếm theo BẢNG KHAI, không viết cứng số 6: mỗi lần thêm một tấm hiệu ứng mới (Flame
+  // Cyclone là tấm thứ bảy) bài này lại đỏ oan trong khi cơ chế dọn vẫn chạy đúng.
+  if (out.daBo !== out.soAtlas || out.conAtlas !== 0)
+    fail(`dọn atlas hỏng: bỏ ${out.daBo}/${out.soAtlas}, còn ${out.conAtlas} — atlas không dùng phải được thả ra`);
   if (out.bgTruocDon < 5) fail(`chỉ nạp được ${out.bgTruocDon} ảnh nền — phép đo dọn ảnh nền rỗng`);
   if (out.bgSauDon > 2) fail(`dọn xong vẫn giữ ${out.bgSauDon} ảnh nền map (chỉ được giữ map đang đứng + map vừa rời)`);
   if (out.itemArt > out.tranItemArt) fail(`kho ảnh vật phẩm ${out.itemArt} vượt trần ${out.tranItemArt}`);

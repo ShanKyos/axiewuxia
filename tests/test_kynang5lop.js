@@ -74,7 +74,12 @@ const PORT = process.argv[2] || '8853';
       const key = { 0:'sx_' + sect + '_a', 1:'sx_' + sect + '_c' };
       player.skillBar.forEach((id, i) => {
         if (!id) return;
-        const c = VH_VFX[id] || SECT_VFX[key[i]] || SECT_VFX[id] || null;
+        // Chiêu có ĐƯỜNG VẼ RIÊNG (tấm khung hình thật thay cho hình vector chung) thì không
+        // khai trong VH_VFX — nhưng nó vẫn có chữ ký hình ảnh, thậm chí rõ hơn cả. Ghi tên
+        // đường vẽ đó ra để chỗ kiểm bên dưới không báo thiếu.
+        const RIENG = { dk_cyclone:'vongKiem' };
+        const c = RIENG[id] ? { style: RIENG[id] }
+                : VH_VFX[id] || SECT_VFX[key[i]] || SECT_VFX[id] || null;
         // Chữ ký hình ảnh = kiểu hoạt ảnh + kiểu đạn. Triple Shot và Penetration cùng dùng cú
         // loé 'flash' lúc xuất chiêu, nhưng thứ người chơi nhìn là viên đạn: ba mũi tên ngắn
         // ('arrow') so với một mũi dài kéo vệt sáng xuyên cả hàng ('lance').

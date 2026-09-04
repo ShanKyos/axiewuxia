@@ -793,6 +793,18 @@ const VFX_ATLAS_DEFS = {
   // literal slow/freeze clip (see docs/ASSET_SOURCING.md's no-force-fit convention).
   weak:         { k:2, cols:8, rows:9,  frameW:247, frameH:248, frames:69, fps:30, anchorX:123.2, anchorY:115.8 },
 };
+// ═══ Vòng Kiếm Lửa — hằng số hình học ═══
+// Tâm elip cao hơn bàn chân bấy nhiêu. Dùng cho CẢ ba việc: cắt vòng lửa làm nửa sau / nửa
+// trước, làm tâm quỹ đạo cho vũ khí bay quanh, và làm tâm cho chính vệt lửa — ba thứ đó phải
+// chung một tâm, lệch một chút là vũ khí chạy trên một vòng còn lửa cháy trên một vòng khác.
+// 52 chứ không 80: nhân vật ngoài thế giới chỉ cao 104px, để tâm ở 80 là vòng lửa quét ngang
+// ĐẦU chứ không quanh thân — chụp lại thấy rõ nó treo lơ lửng trên đỉnh đầu. 52 rơi vào
+// khoảng ngực-bụng, đúng tầm một cú vung ngang.
+const VONGKIEM_TAM = 52;
+const VONGKIEM_RX = 148, VONGKIEM_RY = 68;   // vành lửa
+const VONGKIEM_VKX = 132, VONGKIEM_VKY = 62; // quỹ đạo vũ khí, hơi lọt vào trong vành lửa
+const VONGKIEM_QUET = Math.PI * 1.15;        // vệt lửa dài bao nhiêu radian, tính từ đầu vệt
+const VONGKIEM_VONG = 2;                     // số vòng trọn trong một lần tung
 const VFX_ATLAS_IMGS = {};
 const VFX_ATLAS_DUNG = {};   // id → lúc dùng gần nhất (ms)
 function getVfxAtlasImg(id){
@@ -821,6 +833,104 @@ window.anhDangGiuMB = function(){
   cong(VFX_ATLAS_IMGS); cong(MAP_BG); cong(TREE_IMGS); cong(MOB_IMGS); cong(NPC_IMGS);
   return +(n / 1048576).toFixed(1);
 };
+// ═══ Vòng Kiếm Lửa ═══
+// Vẽ LÀM HAI LƯỢT quanh nhân vật: nửa trên vành elip đi TRƯỚC lớp entity (nằm sau lưng), nửa
+// dưới đi SAU (che chân). Một lượt duy nhất thì vòng lửa dán bẹt lên mặt người — mất hẳn cảm
+// giác nó quét vòng quanh, mà đó chính là toàn bộ ý của chiêu này.
+//
+// Vũ khí bay theo cùng một elip, vẽ bằng ITEM_ART của CHÍNH món đang cầm — nên đổi vũ khí là
+// đổi luôn hình bay quanh. Không nướng thêm khung Spine: bản mẫu chỉ có bốn hoạt cảnh
+// (đứng/đi/đánh/phép) và Meowa chỉ tô lại trong bóng cố định chứ không thêm được chuyển động.
+function veVongKiem(g, e, nua){
+  const cyc = e.y - VONGKIEM_TAM;                  // tâm elip, chung cho lửa lẫn vũ khí
+  const k = clamp(e.t / (e.dur || 1), 0, 1);
+  const mo = k > 0.86 ? (1 - k) / 0.14 : 1;        // chỉ tắt ở khúc cuối
+  const dau = -Math.PI / 2 + k * Math.PI * 2 * VONGKIEM_VONG;   // đầu vệt lửa
+  const sauNua = (nua === 'sau');
+  const N = 26;                                    // số đốt dựng nên vệt lửa
+
+  g.save();
+  g.lineCap = 'round';
+  // Vệt lửa: dựng từ N đốt ngắn nối nhau, mỗi đốt một màu và một bề dày. Không dùng gradient
+  // dọc theo đường cong được — canvas chỉ có gradient thẳng và gradient toả tròn, mà đây là
+  // một cung elip. Đủ đốt và bo đầu tròn thì mắt đọc thành một dải liền.
+  for (let i = 0; i < N; i++){
+    const t0 = i / N, t1 = (i + 1) / N;            // 0 = đầu vệt (nóng nhất) → 1 = đuôi
+    const a0 = dau - t0 * VONGKIEM_QUET, a1 = dau - t1 * VONGKIEM_QUET;
+    const s0 = Math.sin(a0), s1 = Math.sin(a1);
+    // Nửa dưới elip là phần GẦN người xem. Mỗi lượt vẽ chỉ nhận đúng nửa của mình; đốt nào vắt
+    // qua ranh giới thì bỏ, đốt kế bên đã phủ chỗ đó rồi nên không hở.
+    if ((s0 < 0) !== sauNua || (s1 < 0) !== sauNua) continue;
+    const x0 = e.x + Math.cos(a0) * VONGKIEM_RX, y0 = cyc + s0 * VONGKIEM_RY;
+    const x1 = e.x + Math.cos(a1) * VONGKIEM_RX, y1 = cyc + s1 * VONGKIEM_RY;
+    // Nửa gần vẽ dày hơn nửa xa — chính chỗ này làm vòng lửa trông có chiều sâu chứ không phải
+    // một cái vòng dán bẹt.
+    const gan = 1 + s0 * 0.30;
+    const day = (16 - t0 * 11) * gan;
+    const mau = t0 < 0.16 ? '#fff6d8' : t0 < 0.34 ? '#ffd76a'
+              : t0 < 0.58 ? '#ff9a2e' : t0 < 0.80 ? '#e8552a' : '#8f2418';
+    // Quầng mềm vẽ TRƯỚC và rộng gấp đôi: thiếu nó thì vệt lửa ra như một dải ruy băng nhựa,
+    // sắc cạnh đều tăm tắp. Lửa phải có mép loang.
+    g.globalAlpha = mo * (1 - t0 * 0.72) * 0.26;
+    g.strokeStyle = mau; g.lineWidth = day * 2.1;
+    g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+    g.globalAlpha = mo * (1 - t0 * 0.72) * 0.92;
+    g.lineWidth = day;
+    g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+    // Lõi trắng chỉ ở khúc đầu — đó là chỗ lưỡi kiếm vừa quét qua, phải chói hơn hẳn phần đuôi.
+    if (t0 < 0.30){
+      g.globalAlpha = mo * (1 - t0 / 0.30) * 0.85;
+      g.strokeStyle = '#ffffff'; g.lineWidth = day * 0.34;
+      g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+    }
+  }
+  // Tàn lửa bắn ra ngoài — sinh từ chính vị trí đầu vệt, không random mỗi khung (nhấp nháy).
+  g.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 7; i++){
+    const a = dau - i * 0.19, s = Math.sin(a);
+    if ((s < 0) !== sauNua) continue;
+    const r = 1 + i * 0.055;                       // càng về sau càng văng xa
+    const x = e.x + Math.cos(a) * VONGKIEM_RX * r, y = cyc + s * VONGKIEM_RY * r - i * 3;
+    g.globalAlpha = mo * (1 - i / 7) * 0.8;
+    g.fillStyle = i < 3 ? '#fff0be' : '#ffb15c';
+    g.beginPath(); g.arc(x, y, 2.6 - i * 0.22, 0, 7); g.fill();
+  }
+  g.restore();
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+
+  // Vũ khí bay quanh — cùng elip, cùng tâm, chỉ nhỏ hơn một chút để nó chạy trong lòng vệt lửa
+  const W = e.wpn;
+  if (W){
+    const ang = -Math.PI / 2 + k * Math.PI * 2 * VONGKIEM_VONG;
+    const s = Math.sin(ang);
+    if ((s < 0) === sauNua){
+      const gan = 1 + s * 0.22;                    // nửa gần to hơn nửa xa
+      g.save();
+      g.translate(e.x + Math.cos(ang) * VONGKIEM_VKX, cyc + s * VONGKIEM_VKY);
+      g.rotate(ang + Math.PI / 2);                 // lưỡi nằm theo tiếp tuyến
+      g.scale(gan * W.k, gan * W.k);
+      g.translate(0, W.dy);
+      W.ve(g);
+      g.restore();
+    }
+  }
+}
+// Gom thông tin vẽ vũ khí MỘT LẦN lúc tung chiêu, không phải mỗi khung: ITEM_ART tra theo
+// def.art còn itemPal dựng lại cả bảng màu, chạy 60 lần/giây cho thứ không đổi là phí.
+function vongKiemVuKhi(){
+  const it = player.equip && player.equip.vukhi;
+  const d = it && itemDef(it);
+  const F = d && HELD_FIT[d.art];
+  if (!F) return null;
+  const P = itemPal(d, it.tier || 1);
+  const fn = ITEM_ART[d.art] || iaWeapon;
+  const dd = Object.assign({}, d, { rot: 0 });
+  // HELD_FIT.k đo trong HỆ CỦA BỘ XƯƠNG (người cao HERO_H = 220 đơn vị), còn đây vẽ thẳng ra
+  // toạ độ thế giới nơi người chỉ cao 104px. Dùng thẳng k là cây búa to gần bằng cả vòng lửa —
+  // đã chụp lại thấy rõ. Nhân thêm đúng tỉ lệ mà heroSprite() dùng để thu người xuống.
+  const THEGIOI = 104 / HERO_H;
+  return { k: F.k * THEGIOI, dy: F.dy, ve: (g) => fn(g, P, dd) };
+}
 function spawnAtlasVfx(id, x, y, scale){
   const def = VFX_ATLAS_DEFS[id]; if (!def) return;
   addEffect({ type:'atlasVfx', id, x, y, scale: scale || 0.4, dur: def.frames / def.fps });
@@ -2051,11 +2161,23 @@ const VH_TIER = {
 // theo id (auto-hồi sinh & miễn hồi chiêu) — chỉ đổi tên hiển thị + đổi phai sang lớp mới.
 const VOHOC_DEFS = {
   // ── Dark Knight — binh khí nặng, chấn động nền đất ──
-  dk_cyclone:     { name:'Cyclone', school:'Dark Knight', phai:'thieulam', tier:'so', cat:'Binh Khí', type:'aoe', unlock:15, cd:7, qi:20, mult:1.8, color:'#4c8dff', glyph:'◉', fx:{ r:150, kb:40 }, desc:'Xoay tít vũ khí quanh thân, lực ly tâm cuốn cả bầy — thế nền của mọi bài binh khí.' },
+  // TUYỆT CHIÊU ô 4 của Dark Knight (xem SIGNATURE_SKILL). Trước đây nó nằm ở nhóm Di Sản, chỉ
+  // quy đổi thành %Công Kích vĩnh viễn chứ không bấm được — mà mô tả của nó ("xoay tít vũ khí
+  // quanh thân") lại đúng là hình ảnh tuyệt chiêu mà chủ dự án muốn. Nên đổi chỗ với Rageful
+  // Blow: chiêu xoay lên ô 4, chiêu giáng đất lui về Di Sản. Chỉ số nâng lên đúng bằng chỗ cũ
+  // của Rageful Blow (2.2 / r170 / kb50) để sức mạnh của lớp không tụt vì một lần đổi chỗ.
+  //
+  // cd:0 — đây là chiêu gán sẵn vào phím Space, và Space theo thiết kế là ô KHÔNG chờ hồi.
+  // Cái ghìm nó lại là MANA: 20 Mana mỗi lần, hết Mana thì Space tự rơi về đòn đánh thường
+  // (xem doBasic). Ai bấm liên tục sẽ cạn Mana trong vài giây rồi phải đánh chay chờ hồi.
+  dk_cyclone:     { name:'Flame Cyclone', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Binh Khí', type:'aoe', unlock:15, cd:0, qi:20, mult:2.2, color:'#ff8c2a', glyph:'◉', fx:{ r:170, kb:50 }, desc:'Vũ khí rời tay, xoay tròn quanh thân trong một vòng lửa — lực ly tâm cuốn cả bầy.' },
   dk_lunge:       { name:'Lunge', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Binh Khí', type:'cone', unlock:22, cd:5, qi:18, mult:1.9, color:'#6aa0ff', glyph:'✹', fx:{ pierce:true }, desc:'Cú đâm ngắn và nhanh, mũi kiếm lách qua khe giáp thay vì bổ vào mặt giáp.' },
   dk_impale:      { name:'Impale', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Binh Khí', type:'aoe', unlock:30, cd:7, qi:22, mult:2.0, color:'#8ab8ff', glyph:'▲', fx:{ r:160 }, desc:'Quay ngang cán giáo, đâm trọn một vòng — mọi kẻ đứng sát đều dính.' },
   dk_fallingslash:{ name:'Falling Slash', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Binh Khí', type:'cone', unlock:35, cd:6, qi:20, mult:2.4, color:'#3a6fd8', glyph:'☾', fx:{ kb:35 }, desc:'Nhấc rìu quá đầu rồi bổ thẳng xuống — dồn cả trọng lượng người vào một nhát.' },
-  dk_ragefulblow: { name:'Rageful Blow', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Binh Khí', type:'aoe', unlock:25, cd:8, qi:24, mult:2.2, color:'#3a6fd8', glyph:'✹', fx:{ r:170, kb:55, stun:0.8 }, desc:'Giáng vũ khí xuống đất — chấn động, hất văng & choáng nhẹ.' },
+  // Lui về nhóm Di Sản, đổi chỗ cho Flame Cyclone. Bậc hạ 'trung' → 'so' để tổng Di Sản của
+  // Dark Knight vẫn đúng 8,0% Công Kích (1,5 + 2 + 2 + 2,5) — không thì riêng lớp này được
+  // thêm nửa phần trăm vĩnh viễn chỉ vì hai chiêu hoán chỗ cho nhau.
+  dk_ragefulblow: { name:'Rageful Blow', school:'Dark Knight', phai:'thieulam', tier:'so', cat:'Binh Khí', type:'aoe', unlock:25, cd:8, qi:24, mult:2.2, color:'#3a6fd8', glyph:'✹', fx:{ r:170, kb:55, stun:0.8 }, desc:'Giáng vũ khí xuống đất — chấn động, hất văng & choáng nhẹ.' },
   dk_fortitude:   { name:'Swell Life', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Bị Động', type:'passive', unlock:45, color:'#a0d8ff', glyph:'♦', desc:'Bị động: +15% Sinh Lực tối đa — sức vóc Dark Knight dày lên theo từng trận sống sót.' },
   tienthiencong:  { name:'Undying Will', school:'Dark Knight', phai:'thieulam', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#ffe9a8', glyph:'✦', desc:'Bị động: chết tự hồi sinh 50% Sinh Lực — mỗi 300s một lần.' },
 
@@ -2121,13 +2243,26 @@ const BUFF_SKILL_ID = { thieulam:'gangkhi', toanchan:'elf_greaterdmg', baidasan:
 // Dark Lord: Fire Scream), nên tuyệt chiêu của hai lớp đó lấy chiêu tiêu biểu còn lại, để mọi lớp
 // đều có đúng bốn nút chứ không lớp ba lớp bốn.
 const SIGNATURE_SKILL = {
-  thieulam: 'dk_ragefulblow',    // Rageful Blow — bổ vũ khí xuống đất, chấn động cả vùng
+  thieulam: 'dk_cyclone',        // Flame Cyclone — vũ khí rời tay xoay quanh thân trong vòng lửa
   toanchan: 'elf_penetration',   // Penetration — mũi tên xuyên cả hàng
   baidasan: 'dw_evilspirit',     // Evil Spirit — u linh vây quanh
   minhgiao: 'mg_powerslash',     // Power Slash — sóng ánh sáng từ nhát chém
   bug:      'dl_chaoticdiseier', // Earthquake — giậm đất, nền nứt thành vòng (id cũ, xem VOHOC_DEFS)
 };
 function defaultSkillBar(sect){ return ['a', 'tp', BUFF_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null]; }
+// Phím Space gán sẵn TUYỆT CHIÊU của lớp — trước đây Space mặc định là đòn đánh thường, nên ô
+// 4 nằm đó mà phần lớn người chơi không bao giờ bấm tới: nó chỉ hiện trên thanh, muốn dùng
+// phải rê chuột xuống bấm giữa lúc đang đánh nhau.
+//
+// CHỈ gán MỘT LẦN. Ai tự tắt Space đi (assignSpaceUI bấm lần hai → null) thì lần nạp sau không
+// được gán lại — nếu không thì mỗi lần vào game lại thấy chiêu tự bật lên, sửa mãi không xong.
+function spaceMacDinh(){
+  if (!player || player.spaceMD) return;
+  player.spaceMD = true;
+  if (player.spaceSkill) return;                    // đã tự chọn thì tôn trọng
+  const id = SIGNATURE_SKILL[player.sect];
+  if (id && player.skillBar.includes(id)) player.spaceSkill = id;
+}
 // Di Sản: mỗi tầng quy đổi thành % Công Kích vĩnh viễn — điều kiện mở giữ nguyên (tự ngộ theo
 // cấp cho chiêu riêng của lớp qua vhLearned(), hoặc điều kiện Tấn Chức riêng cho 4 kỹ năng chung).
 const LEGACY_TIER_PCT = { so:1.5, trung:2, cao:2.5, than:3.5 };
@@ -2137,7 +2272,7 @@ const LEGACY_TIER_PCT = { so:1.5, trung:2, cao:2.5, than:3.5 };
 // không đều: Dark Knight được 4,0% còn Dark Wizard 9,5% — cùng một hệ thống mà chênh nhau 5,5%
 // Công Kích vĩnh viễn chỉ vì lớp này tình cờ khai nhiều chiêu hơn lớp kia.
 const LEGACY_SECT_SKILLS = [
-  'dk_cyclone','dk_lunge','dk_impale','dk_fallingslash',
+  'dk_ragefulblow','dk_lunge','dk_impale','dk_fallingslash',
   'elf_poisonarrow','elf_greaterdef','elf_holybolt','elf_fiveshot',
   'dw_lightning','dw_ice','dw_twister','dw_inferno',
   'mg_fireball','mg_powerwave','mg_twistingslash','mg_giganticstorm',
@@ -3091,6 +3226,13 @@ function drawProjStyled(p){
   ctx.restore();
 }
 function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
+  // Flame Cyclone có đường vẽ RIÊNG: một tấm khung hình thật, cắt làm hai lớp quanh nhân vật,
+  // kèm vũ khí đang cầm bay quanh. Hình vector chung ở dưới sẽ chồng thêm một vòng sáng nữa
+  // lên đúng chỗ đó, thành hai vòng lệch nhau — nên chặn hẳn ở đây.
+  if (id === 'dk_cyclone'){
+    addEffect({ type:'vongKiem', x:player.x, y:player.y, dur:1.0, scale:1, wpn: vongKiemVuKhi() });
+    return;
+  }
   const c = VH_VFX[id] || SECT_VFX[id] || null;
   const col = v.color || '#7ecbff', c2 = (c && c.c2) || '#ffffff', glyph = v.glyph || '✦';
   const style = (c && c.style) || ({ cone:'crescents', cast:'flash', aoe:'suns', dash:'wuxing', buff:'vajra' })[phase] || 'flash';
@@ -6096,6 +6238,7 @@ function loadGame(idx){
     // Cùng lý do: phím Space có thể còn trỏ vào chiêu đã rút khỏi taskbar (vd 'bow'/'tieuhon' từ save
     // cũ) — castSkill vẫn còn nhánh cho chúng nên chiêu đó sẽ lén bắn được, phá vỡ thiết kế 4 ô.
     if (player.spaceSkill && !player.skillBar.includes(player.spaceSkill)) player.spaceSkill = null;
+    spaceMacDinh();
     if (player.pk == null) player.pk = false;
     if (player.toiac == null) player.toiac = 0;
     if (player.toiacT == null) player.toiacT = 0;
@@ -6968,7 +7111,7 @@ document.getElementById('btn-music').addEventListener('click', ()=>{
 window.addEventListener('keydown', e=>{
   if (e.target && e.target.tagName === 'INPUT') return; // đang gõ console playtest
   keys[e.key.toLowerCase()] = true;
-  if (e.key === ' ') { e.preventDefault(); doBasic(); }
+  if (e.key === ' ') { e.preventDefault(); doSpace(); }
   if (e.key >= '1' && e.key <= '4' && player){ // taskbar 4 ô kỹ năng (chính/phụ/buff/tuyệt chiêu)
     const id = player.skillBar[+e.key - 1];
     if (id) castSkill(id); else togglePanel('skill');
@@ -8087,10 +8230,18 @@ function usePotion(){
   playStatusFx('heal', 'heal', player.x, player.y, 0.5, 0.34); // sourced heal SFX+VFX layered on top of the existing quest chime & procedural ring/ink burst above
   saveGame();
 }
+// PHÍM SPACE — và chỉ phím Space. Nhánh này trước đây nằm trong doBasic(), mà doBasic() cũng
+// chính là đòn đánh CHUỘT TRÁI (xem canvas mousedown) và đòn đánh của TỰ ĐÁNH. Nên từ lúc ô
+// Space được gán sẵn tuyệt chiêu, mỗi cú bấm chuột cũng hoá thành tuyệt chiêu: đòn thường biến
+// mất khỏi game cho tới khi cạn Mana, kéo theo cả hoa văn vũ khí (kiếm lửa/ma kiếm/kiếm gai)
+// vì hiệu ứng của chúng nằm trong đường đòn thường. Tách ra thì "phím Space" đúng nghĩa đen.
+function doSpace(){
+  if (!player || dead) return;
+  if (player.spaceSkill && canCastSilent(player.spaceSkill)){ castSkill(player.spaceSkill); return; }
+  doBasic();                       // chưa gán, đang hồi, hay thiếu Mana → đòn thường
+}
 function doBasic(){
   if (!player || dead) return;
-  // Phím Space gán chiêu: ưu tiên tung chiêu — đang hồi/thiếu mana thì tự quay về đòn thường
-  if (player.spaceSkill && canCastSilent(player.spaceSkill)){ castSkill(player.spaceSkill); return; }
   if (player.cd.basic > 0) return;
   const sect = SECTS[player.sect] || SECTS.vophai;
   const rng = atkRange();   // Đại Thành có nút cộng tầm — xem atkRange()
@@ -9012,7 +9163,7 @@ function update(dt){
   player._spaceSayT = Math.max(0, (player._spaceSayT || 0) - dt);
   if (player._spaceQueued){
     if (player.auto || !moveTarget) player._spaceQueued = false;
-    else if (nearestMob(atkRange())){ player._spaceQueued = false; moveTarget = null; doBasic(); }
+    else if (nearestMob(atkRange())){ player._spaceQueued = false; moveTarget = null; doSpace(); }
   }
   // mobs AI
   mobSeparate(dt);
@@ -9754,6 +9905,12 @@ function render(){
   for (const d of sortedDecor) if (d.type==='tree') ents.push({ y:d.y, kind:'tree', d });
   for (const g of gatesHere()) ents.push({ y:g.y, kind:'gate', g });
   ents.sort((a,b)=>a.y-b.y);
+
+  // Nửa SAU của Vòng Kiếm Lửa — phải nằm dưới lớp entity, nếu không thì cả vòng lửa dán bẹt
+  // lên mặt nhân vật. Lượt còn lại (nửa trước) chạy ở khối effects bên dưới.
+  for (const e of effects) if (e.type === 'vongKiem') veVongKiem(ctx, e, 'sau');
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+
   for (const e of ents){
     switch (e.kind){
       case 'mob': drawMob(e.m); break;
@@ -9853,6 +10010,9 @@ function render(){
       ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(0, 0, r*1.05, -sp*0.86, sp*0.86); ctx.stroke();
       ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    } else if (e.type==='vongKiem'){
+      veVongKiem(ctx, e, 'truoc');                 // nửa sau đã vẽ trước lớp entity
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     } else if (e.type==='atlasVfx'){
       const def = VFX_ATLAS_DEFS[e.id];
       const img = getVfxAtlasImg(e.id);
@@ -13086,13 +13246,21 @@ const NV_BO = {                                    // lớp|giai -> tệp bảng
 // giai 3 của lớp đó. Lớp|giai nào chưa có art thì không có khoá — icon tự về đường cũ.
 const NV_GIAP = {
   'baidasan|1': 'hemp1',
+  'thieulam|1': 'dkgs1',
 };
 // Mỗi bộ giáp có bộ vũ khí RIÊNG: `<bộ>_vk<N>.png`, N theo GIAI VŨ KHÍ. Nướng riêng cho từng
 // bộ là bắt buộc chứ không phải cho đẹp — nuong_vk.py đo hệ số thu và bù mặt đất trên CHÍNH
 // gói đó (bộ vải thô ra 0,1336, bản trần ra 0,1358), lấy chéo là vũ khí lệch tay.
 // Bộ vải thô có 8 cây trượng cho 14 giai: giai 9-14 dùng lại cây 8. Không phải lười — 8 cây đã
 // đi hết dải chất liệu (gỗ → pha lê → vàng → thần khí), thêm nữa thì không còn gì để leo.
-const NV_VK_SO = { hemp1: 8 };
+// Bộ giáp thép của Dark Knight mới có ĐÚNG MỘT cây đại kiếm — cây đi kèm chính gói Spine của
+// nó. Mọi giai đều dùng cây đó cho tới khi có art riêng từng giai.
+const NV_VK_SO = { hemp1: 8, dkgs1: 1 };
+// Tranh CHỌN LỚP ở màn tạo nhân vật — bộ art anh hùng, không phải hình chibi nướng từ Spine.
+// Phải khai Ở ĐÂY chứ không cạnh heroPickUrl(): vòng nạp sớm ngay dưới đọc bảng này, mà nó
+// chạy ở dòng 13k còn heroPickUrl nằm ở 13,6k — `const` chưa khởi tạo thì cả tệp ném lỗi và
+// trang trắng bóc. Đã mắc đúng một lần.
+const NV_PICK = { thieulam:1, baidasan:1, toanchan:1, minhgiao:1, bug:1 };
 function nvBoGiap(sectKey, gv){
   // Chỉ đổi sang art giáp khi người chơi THẬT SỰ đang mặc đồ. heroTier() kẹp sàn ở 1, nên
   // người cởi trần và người mặc đủ bộ giai 1 cùng báo về "giai 1" — phân biệt bằng gv.n.
@@ -13145,6 +13313,7 @@ function nvVuKhi(sectKey, tier, gv){
 // Thân trần KHÔNG có tệp vũ khí: vũ khí mặc định của bản mẫu Spine không ăn nhập với art vũ
 // khí của game, và nhân vật mới thì chưa cầm gì cả. Vũ khí chỉ đi kèm BỘ GIÁP (xem NV_VK_SO).
 for (const k in NV_BO){ nvTai(NV_BO[k], 'webp'); nvTai(NV_BO[k] + '_dung', 'png'); }
+for (const k in NV_PICK) nvTai('pick_' + k, 'webp');   // tranh chọn lớp — nạp sớm kẻo thẻ nhấp nháy
 for (const k in NV_GIAP){
   const t = NV_GIAP[k];
   nvTai(t + '_icon', 'webp'); nvTai(t, 'webp'); nvTai(t + '_dung', 'png');
@@ -13462,7 +13631,20 @@ function heroCardUrl(sectKey, tier, gv){
 // chừa 116 px mỗi bên cho sải cánh bậc 3, mà màn chọn lớp thì chưa ai có cánh — dùng chung thì
 // object-fit co ảnh theo bề rộng 392 px và nhân vật teo còn hơn một phần ba ô. Ở đây cắt sát
 // người nên ảnh gần như toàn là nhân vật, thẻ hiện to hết cỡ mà không phải đụng tới CSS.
+// Tranh chọn lớp: bộ art anh hùng, KHÔNG phải hình chibi nướng từ Spine.
+//
+// Năm bức này đóng đúng khuôn mà phiến đá và bóng đổ đang trông vào — gót chân nằm ở 84% chiều
+// cao ảnh — nên đổi art không phải canh lại một dòng CSS nào. Canvas rộng 320 thay vì 240 (áo
+// choàng và vũ khí của bộ mới xoè rộng hơn nhiều so với hình chibi); tỉ lệ neo giữ nguyên nên
+// chỉ cần nới .cc-art theo đúng tỉ lệ đó, xem style.css.
+//
+// Thân cả năm đều cao đúng 232 đơn vị: đo theo THÂN ĐẶC chứ không theo hộp bao alpha, vì bộ
+// nào có hào quang bay xa sẽ bị thu nhỏ lại và cả hàng cao thấp lộn xộn dù cùng một khuôn.
 function heroPickUrl(sectKey){
+  if (NV_PICK[sectKey]){
+    const im = nvTai('pick_' + sectKey, 'webp');
+    if (im) return im.src;
+  }
   const ten = nvTen(sectKey, 1);
   const im = ten ? nvTai(ten + '_dung', 'png') : null;
   if (im) return im.src;                           // ảnh tĩnh sẵn, không phải dựng lại
@@ -17287,6 +17469,7 @@ function startGame(sectKey, quze){
   // /mo tình cờ là lần tính lại đầu tiên, và Công Kích nhảy 82 → 90 sau một lệnh không đụng
   // gì tới sức mạnh.
   calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
+  spaceMacDinh();                 // nhân vật mới cũng phải có sẵn tuyệt chiêu trên phím Space
   applySkillIcons();
   const maxMode = !RELEASE_BUILD && ((el('chk-max') && el('chk-max').checked) || (el('chk-max-intro') && el('chk-max-intro').checked) || /max=1/.test(location.search));
   if (maxMode){
@@ -17348,6 +17531,7 @@ window.svChon = function(id){
 // Ẩn màn chọn máy chủ, hiện danh sách nhân vật.
 function svAn(){
   { const e = el('sv-pick'); if (e) e.classList.add('hidden'); }
+  { const h = el('cc-hero'); if (h) h.classList.remove('hidden'); }   // tranh anh hùng: chỉ ở màn này
   { const _ss = el('sect-select'); if (_ss) _ss.classList.remove('man-server'); }
   for (const _id of ['cc-slots', 'cc-slots-note']){ const _e = el(_id); if (_e) _e.style.display = ''; }
   for (const _id of ['btn-continue', 'btn-newchar']){ const _e = el(_id); if (_e) _e.classList.remove('hidden'); }
@@ -17355,6 +17539,7 @@ function svAn(){
 }
 window.svHien = function(){
   for (const _id of ['cc-slots', 'cc-slots-note']){ const _e = el(_id); if (_e) _e.style.display = 'none'; }
+  { const h = el('cc-hero'); if (h) h.classList.add('hidden'); }      // màn máy chủ: logo là chính, không chen tranh
   { const _sv = el('sv-pick'); if (_sv) _sv.classList.add('hidden'); }
   { const _ss = el('sect-select'); if (_ss) _ss.classList.remove('man-server'); }
   for (const _id of ['btn-continue', 'btn-newchar']){ const _e = el(_id); if (_e) _e.classList.add('hidden'); }
@@ -24252,6 +24437,9 @@ function openCreate(o){
   // nó lơ lửng giữa cảnh ở màn tạo nhân vật, không dính vào thứ gì.
   for (const _id of ['cc-slots', 'cc-slots-note']){ const _e = el(_id); if (_e) _e.style.display = 'none'; }
   for (const _id of ['btn-continue','btn-newchar']){ const _e = el(_id); if (_e) _e.classList.add('hidden'); }
+  // Màn TẠO nhân vật có hàng 5 thẻ lớp đứng trên phiến đá — đó mới là thứ phải nhìn ở đây.
+  // Để tranh anh hùng đứng cạnh thì nó vừa che mất một thẻ, vừa nói dối: nó là Dark Knight.
+  { const h = el('cc-hero'); if (h) h.classList.add('hidden'); }
   // Chỉ có đường quay lại khi đã có nhân vật để quay về. Người chơi mới tinh không có gì phía sau.
   { const _b = el('cc-back'); if (_b) _b.style.display = soNhanVat() > 0 ? '' : 'none'; }
   const sub = document.querySelector('#sect-select .ss-sub');

@@ -30,7 +30,10 @@ const pass = m => console.log('PASS ' + m);
         // trong khi thẻ vẫn hiện đúng nhân vật. Kiểm cả naturalWidth: đường dẫn hỏng thì thẻ
         // ra một ô vỡ, và đó mới đúng là thứ bài kiểm này phải bắt.
         anhLaHero: [...document.querySelectorAll('#cc-classes .cc-art')].every(i =>
-          (i.src.startsWith('data:image/png') || /\/assets\/nv\/[^/]+_dung\.png$/.test(i.src))
+          // Ba nguồn hợp lệ: dựng bằng canvas (dataURL), ảnh tư thế đứng nướng từ Spine, hoặc
+          // bộ tranh anh hùng pick_<lớp>.webp — đường mới, xem NV_PICK / heroPickUrl().
+          (i.src.startsWith('data:image/png') || /\/assets\/nv\/[^/]+_dung\.png$/.test(i.src)
+           || /\/assets\/nv\/pick_[a-z]+\.webp$/.test(i.src))
           && i.naturalWidth > 0),
         ngoaiMan: r0.filter(x => x.left < 0 || x.right > innerWidth).length,
         nhoQua: r0.filter(x => x.width < 40 || x.height < 40).length,

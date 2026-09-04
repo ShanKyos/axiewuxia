@@ -1374,9 +1374,14 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    118 px ⇒ gót nằm cách đỉnh ảnh 124 px, cộng 10 px đệm trên của thẻ là 134 px.
    Sân khấu chỉ hiện khi hàng thẻ hiện — tức chỉ trong lúc tạo nhân vật. Ở màn danh sách nhân
    vật, hàng thẻ bị ẩn nên rừng và đá biến mất theo, chỉ còn dãy núi. */
+/* PHÁ KHUNG .ss-inner (rộng 900px). Hàng thẻ nay là art anh hùng vẽ tay chứ không phải hình
+   chibi phẳng: ở bề rộng 820px mỗi thẻ chỉ được 164px, nhân vật cao 146px, và ở cỡ đó thì giáp
+   nhiều lớp với hoa văn vàng chỉ còn là một vệt tối — đúng thứ bộ art này sinh ra để tránh.
+   1180px cho mỗi thẻ 236px, nhân vật cao 206px: đọc được mặt, đọc được vũ khí. */
 #cc-classes { position:relative; z-index:0; isolation:isolate;
   display:grid; grid-template-columns:repeat(5,1fr); gap:0;
-  margin:16px auto 12px; max-width:820px; }
+  margin:16px auto 12px; width:min(1300px, 96vw); max-width:none;
+  left:50%; transform:translateX(-50%); }
 /* RỪNG — tràn ra ngoài bề ngang hàng thẻ để không thấy hai mép cắt. Cắt lấy phần ĐÁY của bức
    (gốc rễ và dương xỉ): đó là phần nằm ngay sau lưng nhân vật; ngọn cây phía trên đã có núi lo. */
 /* Thu bức rừng còn 310px chiều cao rồi LẶP NGANG. Đặt nguyên cỡ (1280px ngang ⇒ 569px cao)
@@ -1396,13 +1401,13 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 /* PHIẾN ĐÁ — cũng tràn hết bề ngang cửa sổ. Mặt đá là thứ nhân vật ĐỨNG LÊN, nên mép trên của
    nó phải trùng đúng gót chân, không xê một điểm ảnh nào. */
 #cc-classes::before { content:''; position:absolute; left:50%; transform:translateX(-50%);
-  width:100vw; top:134px; height:110px; z-index:1; pointer-events:none;
+  width:100vw; top:179px; height:110px; z-index:1; pointer-events:none;
   background:linear-gradient(180deg, rgba(6,7,20,0) 52%, rgba(6,7,20,.9) 100%),
              url(assets/title/san_da.webp) center top / 100vw auto no-repeat;
   filter:brightness(.94) saturate(.95); }
 /* Bóng đổ dưới chân: không có nó thì nhân vật lơ lửng ngay trên nền đá chứ không đứng lên nó. */
 .cc-card::before { content:''; position:absolute; left:50%; transform:translateX(-50%);
-  top:140px; width:66px; height:14px; border-radius:50%; z-index:-1;
+  top:204px; width:104px; height:20px; border-radius:50%; z-index:-1;
   background:radial-gradient(ellipse at center, rgba(0,0,0,.55), rgba(0,0,0,0) 72%); pointer-events:none; }
 .cc-card { position:relative; z-index:2; border:none; border-radius:var(--r-md);
   padding:10px 4px 12px; cursor:pointer; background:none;
@@ -1410,12 +1415,16 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .cc-card:hover { transform:translateY(-3px); }
 /* Đang chọn thì sáng lên bằng QUẦNG DƯỚI CHÂN, không phải viền hộp — hộp thì lại thành thẻ. */
 .cc-card.sel::after { content:''; position:absolute; left:50%; transform:translateX(-50%);
-  top:136px; width:84px; height:22px; border-radius:50%; z-index:-1;
+  top:199px; width:132px; height:32px; border-radius:50%; z-index:-1;
   background:radial-gradient(ellipse at center, rgba(126,203,255,.55), rgba(126,203,255,0) 70%); }
 .cc-card.sel .cc-nm { text-shadow:0 0 12px rgba(126,203,255,.7); }
 /* 118px bề ngang ⇒ ảnh cao 147px, gót ở 124px tính từ đỉnh ảnh. Đệm dưới đẩy tên lớp xuống
    quá mép dưới phiến đá (gót +96px) — tên đè lên mặt đá thì cả sân khấu thành một cái nhãn. */
-.cc-card .cc-art { display:block; width:100%; max-width:118px; height:auto; margin:0 auto 82px;
+.cc-card /* 157px chứ không 118px: tranh lớp nay đóng trên canvas rộng 320 thay vì 240 (áo choàng và
+   vũ khí của bộ art anh hùng xoè rộng hơn hình chibi cũ nhiều). 118 × 320/240 = 157 — nới ĐÚNG
+   theo tỉ lệ canvas thì gót chân vẫn rơi vào 134px như cũ, nên phiến đá, bóng đổ và quầng chọn
+   không phải canh lại. Cột thẻ rộng 820/5 = 164px nên 157 vẫn lọt. */
+.cc-art { display:block; width:100%; max-width:250px; height:auto; margin:0 auto 64px;
   filter:drop-shadow(0 6px 12px rgba(0,0,0,.6)); }
 /* Tên lớp là thứ người chơi đọc đầu tiên — cho nó cỡ của một cái TÊN, không phải một nhãn phụ.
    Dòng vai trò trước đây 10,5px và gãy làm ba dòng lệch nhau giữa năm thẻ; nới cỡ, giãn dòng
@@ -1464,3 +1473,39 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .ku-pity b { color:var(--accent-light); }
 .ku-ke { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
 .ku-ke span { font-size:var(--fs-sm); border:1px solid var(--border); border-radius:999px; padding:2px 9px; }
+
+
+/* ═══ Tranh anh hùng ở màn danh sách nhân vật ═══
+   Năm hình chibi trên phiến đá là THẺ CHỌN LỚP — chúng phải nhỏ và phải có năm cái. Nhưng ở màn
+   danh sách nhân vật thì hàng thẻ đó đã ẩn, mặt tiền trống hẳn: chỉ còn dãy núi và một cột ô
+   nhân vật. Đây là chỗ đặt được một bức to mà không phá thứ gì.
+
+   Neo theo MÉP MÀN HÌNH chứ không theo cột .ss-inner (rộng 900px): bức tranh phải đứng lệch hẳn
+   sang trái cột ô, và cột ô thì luôn ở giữa. Dùng calc từ 50% để hai thứ không bao giờ chồng.
+
+   Chiều cao dùng clamp thay vì một số cứng: màn 720p và màn 1440p mà cùng 470px thì cái thứ hai
+   nhìn như dán tem. 62vh giữ tỉ lệ so với cảnh, hai đầu kẹp lại cho khỏi quá lố. */
+#cc-hero {
+  /* Neo theo MÉP PHẢI của chính bức tranh, không theo mép trái. Cột ô nhân vật rộng 520px nằm
+     giữa màn, tức mép trái của nó luôn ở 50% − 260px. Neo trái thì bề ngang tranh đổi theo
+     chiều cao màn (width:auto), và ở màn cao thì mũi kiếm thò sang chui sau thẻ nhân vật — đã
+     chụp lại thấy rõ. Neo phải thì mép tranh đứng yên cách cột ô đúng 8px dù cao bao nhiêu. */
+  position:fixed; bottom:0; right:calc(50% + 268px);
+  height:clamp(340px, 62vh, 560px); width:auto;
+  z-index:1; pointer-events:none; user-select:none;
+  filter:drop-shadow(0 0 26px rgba(90,120,255,.34)) drop-shadow(0 6px 14px rgba(0,0,0,.55));
+  animation:hero-in .9s ease-out both;
+}
+/* Bóng đổ dưới chân: bức tranh cắt sát nên không có nền, không có bóng — thiếu nó thì nhân vật
+   trông như đang lơ lửng trước dãy núi chứ không đứng trên mặt đất. */
+#cc-hero + .ss-inner::before {
+  content:''; position:fixed; bottom:6px; right:calc(50% + 360px);
+  width:clamp(150px, 22vh, 250px); height:clamp(20px, 3.4vh, 34px);
+  border-radius:50%; z-index:0; pointer-events:none;
+  background:radial-gradient(50% 50% at 50% 50%, rgba(6,8,20,.62) 0%, rgba(6,8,20,.28) 55%, rgba(6,8,20,0) 100%);
+}
+@keyframes hero-in { from { opacity:0; transform:translateY(22px) } to { opacity:1; transform:none } }
+@media (prefers-reduced-motion:reduce){ #cc-hero { animation:none } }
+/* Màn hẹp: cột ô nhân vật rộng 520px nằm giữa, tranh cao 340px rộng chừng 270px — dưới 1080px
+   là hai thứ chạm nhau. Ẩn hẳn còn hơn để nó thò một nửa ra sau danh sách. */
+@media (max-width:1080px){ #cc-hero, #cc-hero + .ss-inner::before { display:none } }
