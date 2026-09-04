@@ -137,8 +137,14 @@ const pass = m => console.log('PASS ' + m);
   else pass('đang tung chiêu vẫn dùng sprite');
 
   // 4c. nhịp giật của sprite phải ngang bản vẽ thẳng
+  //
+  // PHẢI SO CÙNG MỘT THỨ. drawHeroFigure() nay vẽ THÂN TRẦN — lớp giáp vector đã gỡ, giáp là
+  // art Spine nằm trong chính bảng khung. So sprite MẶC ĐỒ với bản vẽ thẳng TRẦN là so nhiều
+  // chi tiết với ít chi tiết: sprite đổi nhiều điểm ảnh hơn mỗi khung chỉ vì nó có nhiều thứ
+  // hơn để đổi, không phải vì nó giật. Đo được lúc so lệch: 13,3% với 8% ⇒ đỏ vĩnh viễn dù có
+  // tăng HS_FRAMES.w bao nhiêu. Nên cả hai bên cùng lấy gv = null: thân trần với thân trần.
   const r4c = await p.evaluate(() => {
-    const gv = gearVisual(player), tier = heroTier(player);
+    const gv = null, tier = heroTier(player);
     const SH = 104, SW = Math.round(HERO_W * SH / HERO_H);
     const mk = () => { const c = document.createElement('canvas'); c.width = SW*2; c.height = SH*2; return c; };
     const dif = (A,B) => { const a2 = A.getImageData(0,0,SW*2,SH*2).data, b2 = B.getImageData(0,0,SW*2,SH*2).data;

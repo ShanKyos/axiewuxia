@@ -55,38 +55,19 @@ const { chromium } = require('playwright');
     o.sway_sau12 = +(player.sway || 0).toFixed(3);
     o.cape_lang = capeAt();
 
-    // ══ 2. Vai giáp xoay theo tay ══
-    const gv = { n:5, rarity:4, t:10, plus:0, rcol:RARITIES[4].color, wTier:10, wPlus:0, setColor:null };
-    // chỉ vẽ RIÊNG vai giáp, hai tư thế tay khác nhau
-    function shoulderOnly(armR){
-      const c = document.createElement('canvas'); c.width = HERO_W; c.height = HERO_H;
-      const q = c.getContext('2d');
-      const ps = Object.assign({}, HERO_POSE0, { armR, armL: -armR });
-      hPauldrons(q, hMetal(10), gv, heroSet('thieulam', 10), ps);
-      return q.getImageData(0, 0, HERO_W, HERO_H).data;
-    }
+    // ══ 2. (đã gỡ) Vai giáp xoay theo tay ══
+    // Mục này đo hPauldrons — lớp vai giáp VECTOR. Giáp nay là art Spine nướng sẵn, vai nằm
+    // trong chính bảng khung nên nó xoay theo tay bằng bộ xương, không còn hàm nào để đo.
+    const gv = { n:5, rarity:4, t:GIAI_MAX, plus:0, rcol:RARITIES[4].color, wTier:GIAI_MAX, wPlus:0, setColor:null };
     const diff = (a, b) => { let n = 0; for (let i = 0; i < a.length; i += 4)
       if (a[i] !== b[i] || a[i+3] !== b[i+3]) n++; return n; };
-    o.vai_tayHa = 0;
-    o.vai_doiTheoTay = diff(shoulderOnly(-0.7), shoulderOnly(1.2));
-    // vai KHÔNG được xoay bằng đúng góc tay (chỉ ~35%) — nếu bằng nhau là quay quá tay
-    const d35 = diff(shoulderOnly(0), shoulderOnly(1.0));
-    const d100 = diff(shoulderOnly(0), (() => {
-      const c = document.createElement('canvas'); c.width = HERO_W; c.height = HERO_H;
-      const q = c.getContext('2d');
-      q.translate(HERO_JOINT.shR[0], HERO_JOINT.shR[1]); q.rotate(1.0);
-      q.translate(-HERO_JOINT.shR[0], -HERO_JOINT.shR[1]);
-      hPauldrons(q, hMetal(10), gv, heroSet('thieulam', 10), Object.assign({}, HERO_POSE0, { armR:0, armL:0 }));
-      return q.getImageData(0, 0, HERO_W, HERO_H).data;
-    })());
-    o.vai_khongQuayQuaTay = d35 < d100;
 
     // ══ Toàn hình: cả 3 cộng lại phải đổi khung hình khi đang đánh ══
     function frame(t, armR){
       const c = document.createElement('canvas'); c.width = HERO_W; c.height = HERO_H;
       const q = c.getContext('2d');
       const ps = heroPose(2.0, true, t, 0, 900, 'slash', 0.8, -0.6);
-      drawHeroFigure(q, 'thieulam', 10, 900, ps, gv);
+      drawHeroFigure(q, 'thieulam', GIAI_MAX, 900, ps, gv);
       return q.getImageData(0, 0, HERO_W, HERO_H).data;
     }
     o.khungDanh_khac = diff(frame(0.85), frame(0.35));   // hai thời điểm trong cùng cú chém
@@ -104,7 +85,6 @@ const { chromium } = require('playwright');
   console.log(`sway: đang chạy ${r.sway_dangChay} → vừa dừng ${r.sway_vuaDung} → +0,16s ${r.sway_sau016} → +1,2s ${r.sway_sau12}`);
   console.log(`áo choàng: vừa dừng ${r.cape_vuaDung} → đã lắng ${r.cape_lang}`);
   console.log('── 2. Vai theo tay ──');
-  console.log(`vai đổi khi tay đổi: ${r.vai_doiTheoTay} px · không quay quá tay: ${r.vai_khongQuayQuaTay}`);
   console.log(`khung đánh khác nhau: ${r.khungDanh_khac} px`);
 
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
@@ -121,8 +101,6 @@ const { chromium } = require('playwright');
   if (Math.abs(r.sway_sau12) > 0.08) fail(`1,2s sau vẫn còn sway ${r.sway_sau12} — lò xo không lắng, sẽ rung mãi`);
   if (Math.abs(r.cape_vuaDung - r.cape_lang) < 10) fail('áo choàng không khác gì giữa lúc vừa dừng và lúc đã lắng');
 
-  if (r.vai_doiTheoTay < 200) fail(`vai giáp không xoay theo tay (${r.vai_doiTheoTay} px)`);
-  if (!r.vai_khongQuayQuaTay) fail('vai giáp xoay bằng hoặc hơn góc tay — phải chỉ ~35%');
   if (r.khungDanh_khac < 500) fail('hai thời điểm trong cùng cú chém gần như giống nhau');
 
   console.log('errors:', JSON.stringify(errs));

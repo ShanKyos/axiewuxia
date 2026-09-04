@@ -17,17 +17,35 @@ const { chromium } = require('playwright');
     o.tong = ids.length;
     o.theoLoai = {};
     for (const id of ids){ const d = ITEM_DB[id]; o.theoLoai[d.kind] = (o.theoLoai[d.kind]||0)+1; }
-    // mỗi món vẽ ra một ảnh — gom lại xem có món nào trùng ảnh không
-    const seen = new Map(); const trung = [];
-    let loi = 0;
+    // Mỗi món phải VẼ RA ĐƯỢC. Còn "phải khác nhau" thì nay chỉ đòi ở món CÓ ART THẬT:
+    // giáp và vũ khí chưa có art dùng chung ô chờ art (một bóng dáng phẳng cho mỗi loại), nên
+    // Kiếm Đồng và Rìu Đồng ra cùng một ảnh là ĐÚNG — chúng chưa được vẽ. Bắt lỗi chỗ đó thì
+    // bài kiểm đỏ suốt cho tới khi đủ 105 tấm vũ khí, mà đỏ liên miên thì không ai đọc nữa.
+    // Món CÓ art vẫn phải riêng biệt: hai gói Spine khác nhau mà ra cùng một icon là lỗi thật.
+    // NGUỒN ART của một món — hai món CÙNG nguồn thì ra cùng ảnh là đúng, không phải lỗi.
+    // Ba dòng trượng Dark Wizard hiện dùng chung một tấm tk_dwstaff.png: 21 món, một nguồn.
+    // Chỉ khi hai NGUỒN KHÁC NHAU cho ra cùng một ảnh mới là lỗi thật.
+    const nguon = (d) => {
+      if (d.kind === 'acc') return 'acc:' + d.id;                       // mỗi phụ kiện một hình vector
+      if (d.kind === 'weapon'){ const A = vkAnh(d); return A ? 'vk:' + A.tep : null; }
+      if (d.kind === 'armor'){ const g = NV_GIAP[d.sect + '|' + d.tier]; return g ? 'giap:' + g + ':' + d.slot : null; }
+      return null;
+    };
+    const seen = new Map(); const trung = []; const daXet = new Set();
+    let loi = 0, oCho = 0;
     for (const id of ids){
       const d = ITEM_DB[id];
       let u = null;
       try { u = itemArtUrl(d, d.tier, 2, 0); } catch { loi++; continue; }
       if (!u || u.length < 500){ loi++; continue; }
+      const ng = nguon(d);
+      if (!ng){ oCho++; continue; }
+      if (daXet.has(ng)) continue;                                      // nguồn này đã đo rồi
+      daXet.add(ng);
       if (seen.has(u)) trung.push([seen.get(u), id]); else seen.set(u, id);
     }
     o.veLoi = loi; o.anhTrung = trung.length; o.viDuTrung = trung.slice(0, 4);
+    o.coArt = ids.length - oCho; o.oChoArt = oCho; o.soNguon = daXet.size;
     // tên không trùng
     const names = ids.map(i => ITEM_DB[i].name);
     o.tenTrung = names.length - new Set(names).size;
@@ -74,13 +92,14 @@ const { chromium } = require('playwright');
   });
 
   console.log(JSON.stringify(r, null, 1));
+  console.log(`\nĐỘ PHỦ ART MÓN ĐỒ: ${r.coArt}/${r.tong} — còn ${r.oChoArt} món dùng ô chờ art (${r.soNguon} nguồn art rời)\n`);
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
   if (r.tong !== 273) fail(`danh mục có ${r.tong} món, cần 273`);
   if (r.theoLoai.armor !== 140) fail(`giáp ${r.theoLoai.armor}, cần 140 (35 bộ × 4 ô)`);
   if (r.theoLoai.weapon !== 105) fail(`vũ khí ${r.theoLoai.weapon}, cần 105`);
   if (r.theoLoai.acc !== 28) fail(`phụ kiện ${r.theoLoai.acc}, cần 28`);
   if (r.veLoi) fail(`${r.veLoi} món KHÔNG vẽ được`);
-  if (r.anhTrung) fail(`${r.anhTrung} cặp món ra CÙNG một ảnh: ${JSON.stringify(r.viDuTrung)}`);
+  if (r.anhTrung) fail(`${r.anhTrung} cặp món CÓ ART ra CÙNG một ảnh: ${JSON.stringify(r.viDuTrung)}`);
   if (r.tenTrung) fail(`${r.tenTrung} tên bị trùng`);
   for (const sk in r.theoLop){
     if (r.theoLop[sk].vukhi !== 21) fail(`${sk}: ${r.theoLop[sk].vukhi} vũ khí, cần 21 (3 dòng × 7 giai)`);

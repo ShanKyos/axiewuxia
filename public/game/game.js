@@ -1041,40 +1041,57 @@ function veVongKiem(g, e, nua){
     }
   }
 }
-// Gom thông tin vẽ vũ khí MỘT LẦN lúc tung chiêu, không phải mỗi khung: ITEM_ART tra theo
-// def.art còn itemPal dựng lại cả bảng màu, chạy 60 lần/giây cho thứ không đổi là phí.
+// Gom thông tin vẽ vũ khí MỘT LẦN lúc tung chiêu, không phải mỗi khung.
+// Chỉ vẽ được cây nào CÓ TRANH trong VK_ANH. Dòng chưa có tranh thì vòng kiếm quay không —
+// vẫn là một vòng lửa đầy đủ, chỉ thiếu mấy lưỡi kiếm bay quanh.
 function vongKiemVuKhi(){
   const it = player.equip && player.equip.vukhi;
   const d = it && itemDef(it);
-  const F = d && HELD_FIT[d.art];
-  if (!F) return null;
-  const P = itemPal(d, it.tier || 1);
-  const fn = ITEM_ART[d.art] || iaWeapon;
-  const dd = Object.assign({}, d, { rot: 0 });
-  // HELD_FIT.k đo trong HỆ CỦA BỘ XƯƠNG (người cao HERO_H = 220 đơn vị), còn đây vẽ thẳng ra
-  // toạ độ thế giới nơi người chỉ cao 104px. Dùng thẳng k là cây búa to gần bằng cả vòng lửa —
-  // đã chụp lại thấy rõ. Nhân thêm đúng tỉ lệ mà heroSprite() dùng để thu người xuống.
-  const THEGIOI = 104 / HERO_H;
-  return { k: F.k * THEGIOI, dy: F.dy, ve: (g) => fn(g, P, dd) };
+  const A = d && vkAnh(d);
+  if (!A) return null;
+  const im = nvTai(A.tep, 'png');
+  if (!(im && im.complete && im.naturalWidth)) return null;
+  // Tranh chuẩn hoá nằm ngang (mũi dọc +X); vòng kiếm cần lưỡi DỌC nên quay −90° sẵn.
+  const k = (104 / HERO_H) * VK_VONGKIEM;
+  return { k, dy: 0, ve: (g) => { g.rotate(-Math.PI / 2); g.translate(-A.x, -A.y); g.drawImage(im, 0, 0); } };
 }
 // ═══════════════ THẦN KHÍ — vũ khí bay theo người ═══════════════
-// Vẽ THẲNG từ món đang trang bị bằng ITEM_ART — 15 dòng vũ khí × 7 giai = 105 cây, cây nào ra
-// cây nấy: đúng lưỡi, đúng chắn tay, đúng chuôi, đúng hoa văn, đúng màu chất liệu của giai đó.
-// Đổi vũ khí trong túi là thần khí đổi theo ngay khung sau, không tốn một byte art nào.
+// Vũ khí là TRANH VẼ, không còn hình vector nào. Đường vector cũ (iaWeapon/iaStaff/iaBow/
+// iaCrossbow, 359 dòng) đã gỡ hẳn: nó dựng cây vũ khí từ tổ hợp lưỡi/chắn tay/chuôi/hoa văn,
+// tiện nhưng nhìn ra ngay là hình dựng máy, và nó chắn đường tranh thật.
 //
-// Đường TRANH VẼ TAY vẫn còn cho món nào đáng được vẽ riêng: khai vào TK_ANH theo `line`, tấm
-// phải CHUẨN HOÁ trước (mũi nằm dọc trục +X, chỗ nắm ở x/y) thì mọi phép xoay dưới đây mới đúng.
-const TK_ANH = {
+// ┌─ BẢNG KHAI ART VŨ KHÍ ────────────────────────────────────────────────────────────────┐
+// │ Thêm một cây = THÊM MỘT DÒNG vào VK_ANH. Không đụng chỗ nào khác.                     │
+// │                                                                                        │
+// │ Khoá:  '<dòng>|<giai>'  cho tranh riêng của đúng một giai                              │
+// │        '<dòng>'         cho tranh dùng chung cả 7 giai của dòng đó                     │
+// │ Tra theo thứ tự đó: có tranh riêng thì lấy tranh riêng, không thì lui về tranh chung.  │
+// │                                                                                        │
+// │ Giá trị: { tep, x, y }                                                                 │
+// │   tep — tên tệp trong assets/nv/, KHÔNG kèm đuôi (.png)                                │
+// │   x,y — CHỖ NẮM tính theo điểm ảnh của chính tấm đó                                    │
+// │                                                                                        │
+// │ Tấm phải CHUẨN HOÁ trước khi khai: mũi nằm dọc trục +X, cắt sát, cạnh dài ~172px.      │
+// │ tools/spine/nuong_vk.py lo việc đó — đưa ảnh vẽ dọc (mũi lên) là nó tự xoay và tự cắt. │
+// │                                                                                        │
+// │ 15 dòng × 7 giai = 105 cây. Đang có 1 tấm dùng chung cho 3 dòng trượng Dark Wizard.    │
+// └────────────────────────────────────────────────────────────────────────────────────────┘
+const VK_ANH = {
   // Trượng vẽ tay của Dark Wizard. Tấm gốc là ảnh chéo 512x512; đã CHUẨN HOÁ trước khi đưa vào:
   // đo trục chính bằng PCA (120,1°), xoay 300,1° cho đầu trượng nằm dọc +X, cắt sát rồi thu về
   // 172px. Chỗ nắm (65,33) lấy trên thân trượng, khoảng 38% từ đầu có quả cầu.
-  // Khai cho CẢ BA dòng trượng của Dark Wizard. Chỉ khai `tinhtruong` thì /gen bốc trúng
-  // `gay` hay `quyentruong` là rơi về hình vector, đứng cạnh bộ giáp vẽ tay nhìn lệch hẳn.
+  // Khai ở mức DÒNG (không kèm giai) nên cả 7 giai của ba dòng trượng đều dùng tấm này, tới khi
+  // có tranh riêng từng giai thì thêm khoá 'gay|3' … và nó tự thắng tấm chung.
   gay:         { tep:'tk_dwstaff', x:65, y:33 },
   quyentruong: { tep:'tk_dwstaff', x:65, y:33 },
   tinhtruong:  { tep:'tk_dwstaff', x:65, y:33 },
 };
-const TK_TAY = 24;                 // chỗ nắm trong hệ ITEM_ART — chuôi trải y 17..31
+// Tra art của một món vũ khí: tranh riêng của giai trước, tranh chung của dòng sau.
+function vkAnh(d){
+  if (!d || !d.line) return null;
+  return VK_ANH[d.line + '|' + (d.tier || 1)] || VK_ANH[d.line] || null;
+}
+const VK_VONGKIEM = 1.0;           // cỡ lưỡi bay quanh chiêu Vòng Kiếm Lửa
 const TK_PHONG = 1.35;             // thần khí to hơn lúc cầm tay: nó là bảo vật, không phải đồ nghề
 // Trả về { dai, ve } — `ve` vẽ cây vũ khí với CHỖ NẮM ở gốc và MŨI dọc trục +X, đơn vị px thế
 // giới. Nhờ chuẩn hoá đó mà thanKhiTuThe() chỉ cần lo quỹ đạo, không cần biết đang cầm cây gì.
@@ -1082,28 +1099,13 @@ function thanKhiNguon(p){
   const it = p.equip && p.equip.vukhi;
   const d  = it && itemDef(it);
   if (!d) return null;                         // tay không thì không có gì bay theo
-  const A = TK_ANH[d.line];
-  if (A){
-    const im = nvTai(A.tep, 'png');
-    if (im && im.complete && im.naturalWidth){
-      const s = 104 / HERO_H;
-      return { art: d.art, dai: im.naturalWidth * s,
-               ve: (g) => { g.scale(s, s); g.translate(-A.x, -A.y); g.drawImage(im, 0, 0); } };
-    }
-  }
-  const F = HELD_FIT[d.art];
-  if (!F) return null;                         // dòng chưa có cách cầm thì cũng chưa có cách bay
-  const P  = itemPal(d, it.tier || 1);
-  const fn = ITEM_ART[d.art] || iaWeapon;
-  const dd = Object.assign({}, d, { rot: 0 });
-  // ITEM_ART vẽ trong hệ RIÊNG của nó: chuôi quanh gốc, lưỡi chĩa theo −Y. Quay sẵn +90° để mũi
-  // về đúng trục +X, rồi kéo chỗ nắm về gốc. `big` được nhân BÊN TRONG iaWeapon nên chỗ nắm cũng
-  // giãn theo — phải bù đúng hệ số đó, không thì cây to cầm hụt xuống dưới chuôi.
-  const big = d.big || 1;
-  const k   = F.k * (104 / HERO_H) * TK_PHONG;
-  const dai = (TK_TAY - (d.len || -44)) * big * k;
-  return { art: d.art, dai,
-           ve: (g) => { g.scale(k, k); g.rotate(Math.PI / 2); g.translate(0, -TK_TAY * big); fn(g, P, dd); } };
+  const A = vkAnh(d);
+  if (!A) return null;                         // dòng chưa có tranh thì chưa có gì bay theo
+  const im = nvTai(A.tep, 'png');
+  if (!(im && im.complete && im.naturalWidth)) return null;
+  const s = (104 / HERO_H) * TK_PHONG;
+  return { art: d.art, dai: im.naturalWidth * s,
+           ve: (g) => { g.scale(s, s); g.translate(-A.x, -A.y); g.drawImage(im, 0, 0); } };
 }
 // LỐI RA ĐÒN theo LOẠI vũ khí. Cùng một quỹ đạo cho mọi cây là chỗ hỏng dễ thấy nhất: cây cung
 // mà quét một cung 166° như thanh đại kiếm thì người chơi đọc thành lỗi hiển thị, không đọc thành
@@ -10729,15 +10731,10 @@ function heroTier(p){
 // MU Online làm theo kiểu khác: mỗi lớp có DÒNG GIÁP RIÊNG, đổi cả tạo hình lẫn bảng màu theo
 // mốc cấp, và mỗi bộ có TÊN để người chơi gọi tên nhau. Đó mới là "nhìn là biết đẳng cấp".
 //
-// `style` chọn bộ tạo hình (vai/mũ/chân/eo), `tint` đổi bảng màu — nên bậc vẫn đọc được qua
-// màu, nhưng mỗi lớp đi theo một dải màu riêng thay vì cả 5 lớp cùng đỏ ở bậc 10.
-// TÊN QUYẾT ĐỊNH HÌNH. Mỗi bộ phủ ĐÚNG MỘT giai và mang đặc trưng của chính cái tên nó:
-//   style  hàm vẽ vai nền (SET_SHOULDER)     crest  mào trên đầu (CREST_FN)
-//   sh.chest  hoa văn thân áo (CHEST_ART) — đây là thứ nói lên cái tên
-//   sh.boot   kiểu ủng (BOOT_ART)
-//   sh còn lại: spike/layer/fringe/stud/fin/orb — nét đè lên vai (hShoulderMods)
-// Bản đầu chỉ đổi `tint`, nên Vải Thô với Xương ra hình y hệt chỉ khác tông màu. Nay Xương có
-// xương sườn trên ngực, mào sừng, vuốt ở ủng; còn Vải Thô chỉ là nếp vải và mũ trùm.
+// TÊN QUYẾT ĐỊNH HÌNH: mỗi bộ phủ ĐÚNG MỘT giai và mang đặc trưng của chính cái tên nó — đó là
+// yêu cầu đặt ra cho gói art, không còn là tổ hợp tham số dựng máy. Từng có một đường vector
+// dựng bộ giáp từ style/crest/sh (vai nền, mào đầu, hoa văn ngực, kiểu ủng, gai, nếp, đinh
+// tán); đường đó đã gỡ hẳn để nhường chỗ cho art Spine thật.
 // HERO_SETS đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
 const HERO_SETS = window.HERO_SETS;
 // Bộ giáp ứng với bậc hiệu dụng t. Trả null khi chưa mặc gì (màn chọn lớp, nhân vật mới).
@@ -10748,12 +10745,6 @@ function heroSet(sectKey, t){
   for (const s of line) if (t >= s.min) best = s;
   return best || line[0];
 }
-// Mỗi bộ phủ ĐÚNG MỘT giai (span = 1), nên `k` trong hSetMetal luôn bằng 0 và không còn nội
-// suy sáng dần trong dải. Giữ phép tính span vì nó vẫn đúng nếu sau này gộp giai trở lại.
-for (const _k in HERO_SETS){
-  const _L = HERO_SETS[_k];
-  _L.forEach((s0, i) => { s0.span = (_L[i+1] ? _L[i+1].min : GIAI_MAX + 1) - s0.min; });
-}
 function _hexMix(a0, b0, k){
   if (!a0 || !b0) return a0;
   const A = parseInt(a0.slice(1), 16), B = parseInt(b0.slice(1), 16);
@@ -10762,33 +10753,16 @@ function _hexMix(a0, b0, k){
   const b1 = Math.round((A & 255) + (((B & 255) - (A & 255)) * k));
   return '#' + ((1<<24) + (r<<16) + (g0<<8) + b1).toString(16).slice(1);
 }
-// Bảng màu của bộ đè lên bảng màu bậc. Không có tint thì giữ nguyên HERO_METAL.
-function hSetMetal(M, S, t){
+// MÀU NHẬN DIỆN của bộ đè lên bảng màu bậc. Không có tint thì giữ nguyên HERO_METAL.
+// Từ khi giáp là art Spine, bảng màu này không vẽ ra mảnh giáp nào nữa — nó chỉ còn tô hào
+// quang rèn (+4/+7/+10), dải sáng quét thân và quầng sáng dưới chân. Vẫn đáng giữ: nhờ nó mà
+// đập đồ lên vẫn thấy đúng màu của bộ đang mặc, chứ không phải một màu vàng chung cho cả game.
+function hSetMetal(M, S){
   if (!S || !S.tint) return M;
-  const base = { lo: S.tint.lo || M.lo, hi: S.tint.hi || M.hi,
-                 trim: S.tint.trim || M.trim,
-                 glow: S.tint.glow !== undefined ? S.tint.glow : M.glow };
-  // Tint của bộ ghi đè TOÀN BỘ bảng màu bậc, mà hStage() và hEngrave() cũng chia theo đúng các
-  // mốc 1/3/5/7/9 — nên bên trong một dải thì không một thứ gì đổi. Đo được (đủ 5 món, +0):
-  // lên giai 8 và giai 10 đổi ĐÚNG 0% pixel ở Dark Knight, Spellblade và Dark Lord. Giai 10 là
-  // thứ khó kiếm nhất game mà mặc vào nhìn y hệt giai 9.
-  // Nâng dần bảng màu theo vị trí trong dải: giai trên sáng và ánh kim hơn giai dưới, mà vẫn
-  // đọc ra là cùng một bộ.
-  const k = (S.span > 1 && t > S.min) ? Math.max(0, Math.min(1, (t - S.min) / (S.span - 1))) : 0;
-  if (k <= 0) return base;
-  // Nâng từ 0,12/0,26/0,40 lên 0,22/0,44/0,55: giai trên trong cùng một dải trước đây chỉ sáng
-  // hơn vài phần trăm, mà đó lại là bước lên giai KHÔNG có gì khác đổi cùng (xem hEngrave).
-  return { lo:   _hexMix(base.lo,   '#ffffff', k * 0.22),
-           hi:   _hexMix(base.hi,   '#ffffff', k * 0.44),
-           trim: _hexMix(base.trim, '#ffe9a8', k * 0.55),
-           glow: base.glow ? _hexMix(base.glow, '#ffffff', k * 0.34) : null };
+  return { lo: S.tint.lo || M.lo, hi: S.tint.hi || M.hi,
+           trim: S.tint.trim || M.trim,
+           glow: S.tint.glow !== undefined ? S.tint.glow : M.glow };
 }
-// Nấc tạo hình 1..4 theo bậc hiệu dụng — dùng chung cho mọi bộ
-// Nấc tạo hình 1..5 theo giai. Trải lại cho 7 giai: đổi dáng ở giai 2, 4, 5, 7.
-// Cố ý LỆCH khỏi mốc đổi bộ (mỗi giai một bộ) thì KHÔNG còn làm được nữa — 7 giai mà 5 nấc
-// dáng thì nấc nào cũng phải rơi vào một mốc đổi bộ. Nên bù bằng cách rải không đều: hai
-// giai đầu mỗi giai một dáng (chỗ người chơi nhìn kỹ nhất), rồi thưa dần về cuối.
-function hStage(t){ return t < 2 ? 1 : t < 4 ? 2 : t < 5 ? 3 : t < 7 ? 4 : 5; }
 
 // ⚠ CÁC MỐC `t` DƯỚI ĐÂY NẰM TRÊN THANG 1..GIAI_MAX (nay là 1..7).
 // Chúng vốn được dò tay trên thang 1..14, rồi khi rút còn 7 giai thì quy đổi tuyến tính
@@ -10797,1119 +10771,14 @@ function hStage(t){ return t < 2 ? 1 : t < 4 ? 2 : t < 5 ? 3 : t < 7 ? 4 : 5; }
 // làm tròn là hai mốc dồn vào một giai và giai đó mọc hai thứ cùng lúc.
 // Nhớ: `t` đã NHÂN ĐỘ PHỦ (xem gearVisual) nên mặc 2/4 món giai 7 chỉ ra t = 3,5.
 
-// ── A. BÓNG DÁNG: vai giáp ──
-// Đây là lớp đáng giá nhất. Màu sắc và hào quang biến mất khi nhân vật nhỏ hoặc nền rối;
-// đường viền ngoài thì không — cứ mọc thêm gai là từ xa vẫn biết người kia mặc đồ nặng hơn.
-// Vai giáp phải đủ to để vượt RA NGOÀI đường viền cánh tay (tay vẽ tới x≈122); nằm gọn bên
-// trong thì nó chỉ còn là một mảng màu, mất hẳn tác dụng đổi dáng.
-function hShoulderPlate(g, M, st, w, h){
-  g.fillStyle = M.hi;                                 // vòm vai
-  g.beginPath();
-  g.moveTo(-w * 0.55, h * 0.55);
-  g.quadraticCurveTo(-w * 0.7, -h, 0, -h * 1.05);
-  g.quadraticCurveTo(w * 0.85, -h * 0.9, w, h * 0.5);
-  g.closePath(); g.fill();
-  g.fillStyle = M.lo;                                 // mặt dưới tối → ra khối, không phẳng
-  g.beginPath();
-  g.moveTo(-w * 0.55, h * 0.55); g.lineTo(w, h * 0.5);
-  g.lineTo(w * 0.8, h * 0.95); g.lineTo(-w * 0.4, h);
-  g.closePath(); g.fill();
-  if (st >= 2){                                       // đường khảm chạy vòng vai
-    g.strokeStyle = M.trim; g.lineWidth = 1.4;
-    g.beginPath(); g.moveTo(-w * 0.5, h * 0.3);
-    g.quadraticCurveTo(0, -h * 0.75, w * 0.9, h * 0.28); g.stroke();
-  }
-  if (st >= 3){                                       // gai — phá đường viền mạnh nhất
-    g.fillStyle = M.trim;
-    const nS = st === 3 ? 2 : 3;
-    for (let i = 0; i < nS; i++){
-      const a = -0.85 + i * (1.55 / Math.max(1, nS - 1));
-      const bx = Math.sin(a) * w * 0.8, by = -Math.cos(a) * h * 0.88;
-      g.beginPath();
-      g.moveTo(bx - 2.4, by); g.lineTo(bx + 2.4, by);
-      g.lineTo(bx + Math.sin(a) * 9, by - Math.cos(a) * 9);
-      g.closePath(); g.fill();
-    }
-  }
-  if (st >= 4){                                       // vây hất ra sau ở bậc tối cao
-    g.fillStyle = M.hi;
-    g.beginPath();
-    g.moveTo(w * 0.5, h * 0.2); g.lineTo(w * 1.5, -h * 0.55); g.lineTo(w * 1.22, h * 0.85);
-    g.closePath(); g.fill();
-  }
-}
-// HỎA LONG — vai giáp là một cái ĐẦU RỒNG chĩa ra ngoài, không phải tấm thép. Đây là chỗ
-// khác biệt lớn nhất giữa hai bộ: cùng một chỗ trên người, một bên là hình học, một bên là
-// sinh vật. Nhìn từ xa vẫn phân biệt được ngay cả khi mất hết màu.
-function hShoulderDragon(g, M, st, w, h){
-  for (let i = 2; i >= 0; i--){                       // vảy cổ xếp lớp làm nền
-    const k = 1 - i * 0.2;
-    g.fillStyle = i ? M.lo : M.hi;
-    g.beginPath();
-    g.moveTo(-w * 0.5 * k, h * 0.55);
-    g.quadraticCurveTo(-w * 0.62 * k, -h * 0.95 * k, 0, -h * 1.05 * k);
-    g.quadraticCurveTo(w * 0.55 * k, -h * 0.95 * k, w * 0.62 * k, h * 0.45);
-    g.closePath(); g.fill();
-  }
-  // Sọ NGẮN và SÂU, có gờ mày nhô che mắt. Bản đầu mõm dài w*1.42 và thuôn đều nên đọc ra
-  // thành mỏ vịt — thú dữ thì mõm ngắn, trán cao, mắt lùi sâu dưới gờ mày.
-  g.fillStyle = M.hi;
-  g.beginPath();
-  g.moveTo(w * 0.15, -h * 0.95);                      // gáy
-  g.lineTo(w * 0.70, -h * 1.05);                      // đỉnh gờ mày
-  g.lineTo(w * 1.02, -h * 0.55);                      // sống mũi dốc xuống
-  g.lineTo(w * 1.14, h * 0.02);                       // chóp mõm
-  g.lineTo(w * 0.95, h * 0.22);
-  g.lineTo(w * 0.15, h * 0.30);
-  g.closePath(); g.fill();
-  g.fillStyle = M.trim;                               // gờ mày đậm nhô ra
-  g.beginPath();
-  g.moveTo(w * 0.42, -h * 0.98); g.lineTo(w * 0.80, -h * 0.92);
-  g.lineTo(w * 0.86, -h * 0.62); g.lineTo(w * 0.44, -h * 0.66);
-  g.closePath(); g.fill();
-  g.fillStyle = M.lo;                                 // hàm dưới hé mở
-  g.beginPath();
-  g.moveTo(w * 0.30, h * 0.22); g.lineTo(w * 1.02, h * 0.20);
-  g.lineTo(w * 0.92, h * 0.55); g.lineTo(w * 0.32, h * 0.52);
-  g.closePath(); g.fill();
-  g.fillStyle = '#f3ead6';                            // răng nanh
-  for (let i = 0; i < 3; i++){
-    const tx = w * (0.62 + i * 0.16);
-    g.beginPath(); g.moveTo(tx, h * 0.20); g.lineTo(tx + w * 0.06, h * 0.20);
-    g.lineTo(tx + w * 0.03, h * 0.42); g.closePath(); g.fill();
-  }
-  g.fillStyle = M.glow || '#ffb060';                  // mắt rực, lùi sâu dưới gờ mày
-  g.beginPath(); g.ellipse(w * 0.66, -h * 0.50, w * 0.09, h * 0.08, 0, 0, 7); g.fill();
-  g.fillStyle = '#2a0d0d';                            // lỗ mũi
-  g.beginPath(); g.ellipse(w * 1.00, -h * 0.18, w * 0.045, h * 0.05, 0.3, 0, 7); g.fill();
-  g.fillStyle = M.trim;                               // sừng vuốt ngược ra sau
-  g.beginPath();
-  g.moveTo(w * 0.42, -h * 0.72);
-  g.quadraticCurveTo(w * 0.15, -h * 1.85, -w * 0.55, -h * 1.75);
-  g.quadraticCurveTo(w * 0.05, -h * 1.45, w * 0.20, -h * 0.62);
-  g.closePath(); g.fill();
-  if (st >= 2){
-    g.beginPath();
-    g.moveTo(w * 0.62, -h * 0.62);
-    g.quadraticCurveTo(w * 0.55, -h * 1.35, w * 0.05, -h * 1.42);
-    g.quadraticCurveTo(w * 0.50, -h * 1.05, w * 0.50, -h * 0.50);
-    g.closePath(); g.fill();
-  }
-  if (st >= 3){                                       // lửa phun khỏi mõm
-    const fl = M.glow || '#ff7a3a';
-    for (let i = 0; i < 3; i++){
-      g.globalAlpha = 0.85 - i * 0.22;
-      g.fillStyle = i ? fl : '#ffe9a8';
-      const L = w * (0.5 + i * 0.45), sp = h * (0.16 + i * 0.13);
-      g.beginPath();
-      g.moveTo(w * 1.05, h * 0.26);
-      g.quadraticCurveTo(w * 1.05 + L * 0.6, h * 0.26 - sp, w * 1.05 + L, h * 0.32);
-      g.quadraticCurveTo(w * 1.05 + L * 0.6, h * 0.32 + sp, w * 1.05, h * 0.44);
-      g.closePath(); g.fill();
-    }
-    g.globalAlpha = 1;
-  }
-}
-// ── VAI: các bộ tạo hình còn lại ──
-// Dark Knight II — giáp lưới: tấm vai gọn + lưới xích rủ xuống
-function hShoulderChain(g, M, st, w, h){
-  g.fillStyle = M.hi;
-  g.beginPath();
-  g.moveTo(-w * 0.5, h * 0.4);
-  g.quadraticCurveTo(-w * 0.6, -h * 0.85, 0, -h * 0.95);
-  g.quadraticCurveTo(w * 0.8, -h * 0.8, w * 0.88, h * 0.35);
-  g.closePath(); g.fill();
-  g.fillStyle = M.lo;                                  // lưới xích: chấm so le
-  for (let r = 0; r < 2; r++) for (let i = 0; i < 5; i++){
-    g.beginPath();
-    g.arc(-w * 0.35 + i * w * 0.3, h * 0.5 + r * 4.5 + (i % 2) * 2.2, 2.1, 0, 7);
-    g.fill();
-  }
-  if (st >= 2){                                        // đinh tán
-    g.fillStyle = M.trim;
-    for (let i = 0; i < 3; i++){ g.beginPath(); g.arc(-w * 0.2 + i * w * 0.4, -h * 0.35, 1.8, 0, 7); g.fill(); }
-  }
-}
-// Dark Knight IV — dải CHUYỂN TIẾP: vảy bắt đầu mọc ở mép, sừng cong nhẹ. Nửa hình học
-// nửa sinh vật, để bước sang Hỏa Long không bị hẫng.
-function hShoulderDrake(g, M, st, w, h){
-  g.fillStyle = M.hi;
-  g.beginPath();
-  g.moveTo(-w * 0.5, h * 0.5);
-  g.quadraticCurveTo(-w * 0.65, -h * 0.9, 0, -h);
-  g.quadraticCurveTo(w * 0.85, -h * 0.85, w * 0.95, h * 0.4);
-  g.closePath(); g.fill();
-  g.fillStyle = M.lo;                                  // mép vảy
-  for (let i = 0; i < 4; i++){
-    const x = -w * 0.4 + i * w * 0.36;
-    g.beginPath(); g.moveTo(x, h * 0.35);
-    g.quadraticCurveTo(x + w * 0.18, h * 0.85, x + w * 0.36, h * 0.35);
-    g.closePath(); g.fill();
-  }
-  g.fillStyle = M.trim;                                // sừng cong
-  g.beginPath();
-  g.moveTo(w * 0.3, -h * 0.85);
-  g.quadraticCurveTo(w * 0.95, -h * 1.5, w * 1.25, -h * 0.85);
-  g.quadraticCurveTo(w * 0.8, -h * 1.1, w * 0.45, -h * 0.7);
-  g.closePath(); g.fill();
-  if (st >= 3){
-    g.beginPath();
-    g.moveTo(-w * 0.1, -h * 0.95);
-    g.quadraticCurveTo(w * 0.2, -h * 1.6, w * 0.55, -h * 1.15);
-    g.quadraticCurveTo(w * 0.2, -h * 1.2, -w * 0.05, -h * 0.8);
-    g.closePath(); g.fill();
-  }
-}
-// Dark Wizard I-II — VẢI/LÔNG, tuyệt đối không kim loại. Đây là chỗ bản nháp trước sai:
-// pháp sư mặc áo choàng mà đeo vai giáp tấm của hiệp sĩ.
-function hShoulderCloth(g, M, st, w, h){
-  g.fillStyle = M.lo;                                  // cụm vải rủ
-  g.beginPath();
-  g.moveTo(-w * 0.45, -h * 0.3);
-  g.quadraticCurveTo(w * 0.1, -h * 0.85, w * 0.75, -h * 0.05);
-  g.quadraticCurveTo(w * 0.5, h * 0.95, -w * 0.3, h * 0.7);
-  g.closePath(); g.fill();
-  g.fillStyle = M.hi;                                  // tua lông thú
-  const n = 3 + st;
-  for (let i = 0; i < n; i++){
-    const a = -0.5 + i * (1.5 / Math.max(1, n - 1));
-    const bx = Math.sin(a) * w * 0.6, by = -Math.cos(a) * h * 0.5;
-    g.beginPath();
-    g.moveTo(bx, by);
-    g.quadraticCurveTo(bx + w * 0.25, by + h * 0.35, bx + w * 0.1, by + h * 0.9);
-    g.quadraticCurveTo(bx - w * 0.05, by + h * 0.4, bx - w * 0.12, by);
-    g.closePath(); g.fill();
-  }
-}
-// Dark Wizard III — Nhân Sư: vạt vải CỨNG kẻ sọc kiểu Ai Cập, vẫn không phải tấm giáp
-function hShoulderSphinx(g, M, st, w, h){
-  g.fillStyle = M.hi;
-  g.beginPath();
-  g.moveTo(-w * 0.4, -h * 0.4); g.lineTo(w * 0.55, -h * 0.55);
-  g.lineTo(w * 0.95, h * 0.9); g.lineTo(-w * 0.25, h * 0.75);
-  g.closePath(); g.fill();
-  g.fillStyle = M.trim;                                // sọc ngang
-  for (let i = 0; i < 3; i++){
-    const y = -h * 0.15 + i * h * 0.42;
-    g.beginPath();
-    g.moveTo(-w * 0.32, y); g.lineTo(w * (0.68 + i * 0.08), y - h * 0.06);
-    g.lineTo(w * (0.7 + i * 0.08), y + h * 0.14); g.lineTo(-w * 0.3, y + h * 0.2);
-    g.closePath(); g.fill();
-  }
-  if (st >= 2){                                        // khoen kim loại ở đỉnh
-    g.beginPath(); g.ellipse(w * 0.1, -h * 0.55, w * 0.4, h * 0.16, -0.12, 0, 7); g.fill();
-  }
-}
-// Dark Wizard IV-V — mảnh phép LƠ LỬNG thay hẳn cho vai giáp
-function hShoulderArcane(g, M, st, w, h){
-  if (M.glow){                                         // quầng sáng nền
-    g.save(); g.globalAlpha = 0.42; g.fillStyle = M.glow;
-    g.beginPath(); g.ellipse(w * 0.4, -h * 0.5, w * 0.85, h, 0, 0, 7); g.fill(); g.restore();
-  }
-  g.fillStyle = M.hi;
-  const n = 2 + st;
-  for (let i = 0; i < n; i++){
-    const a = -1.0 + i * (2.0 / Math.max(1, n - 1));
-    const r = w * (0.85 + (i % 2) * 0.35);
-    const x = Math.sin(a) * r, y = -Math.cos(a) * h * 1.25, sz = 3 + st * 0.9;
-    g.beginPath();
-    g.moveTo(x, y - sz * 1.7); g.lineTo(x + sz * 0.75, y);
-    g.lineTo(x, y + sz * 1.7); g.lineTo(x - sz * 0.75, y);
-    g.closePath(); g.fill();
-  }
-}
-// Sylvan Ranger I-II — miếng da tròn khâu chỉ
-function hShoulderHide(g, M, st, w, h){
-  g.fillStyle = M.hi;
-  g.beginPath(); g.ellipse(w * 0.2, -h * 0.05, w * 0.72, h * 0.72, -0.15, 0, 7); g.fill();
-  g.fillStyle = M.lo;
-  g.beginPath(); g.ellipse(w * 0.28, h * 0.2, w * 0.6, h * 0.42, -0.15, 0, 7); g.fill();
-  g.strokeStyle = M.trim; g.lineWidth = 1; g.setLineDash([2, 2]);
-  g.beginPath(); g.ellipse(w * 0.2, -h * 0.05, w * 0.55, h * 0.55, -0.15, 0, 7); g.stroke();
-  g.setLineDash([]);
-  if (st >= 3){                                        // tấm lá kim loại khâu thêm
-    g.fillStyle = M.trim;
-    for (const d of [-0.4, 0.25]){
-      g.beginPath(); g.ellipse(w * 0.55, h * d, w * 0.22, h * 0.34, 0.5, 0, 7); g.fill();
-    }
-  }
-}
-// Sylvan Ranger III — lá xếp lớp
-function hShoulderLeaf(g, M, st, w, h){
-  const n = 2 + st;
-  for (let i = n - 1; i >= 0; i--){
-    g.fillStyle = i % 2 ? M.lo : M.hi;
-    const k = 1 - i * 0.12;
-    g.save(); g.rotate(-0.45 + i * 0.24);
-    g.beginPath();
-    g.moveTo(-w * 0.1, 0);
-    g.quadraticCurveTo(w * 0.45 * k, -h * 0.6 * k, w * 1.05 * k, 0);
-    g.quadraticCurveTo(w * 0.45 * k, h * 0.6 * k, -w * 0.1, 0);
-    g.closePath(); g.fill();
-    g.restore();
-  }
-  g.strokeStyle = M.trim; g.lineWidth = 1;
-  g.beginPath(); g.moveTo(0, h * 0.15); g.lineTo(w * 0.95, -h * 0.2); g.stroke();
-}
-// Sylvan Ranger IV-V — cụm lông vũ hất ra sau. To ngang vai giáp Hỏa Long nhưng NHẸ:
-// nhiều lớp mảnh thay vì một khối đặc.
-function hShoulderPlume(g, M, st, w, h){
-  const n = 3 + st;
-  for (let i = n - 1; i >= 0; i--){
-    g.fillStyle = i % 2 ? M.lo : M.hi;
-    const L = w * (1.5 - i * 0.12), W = h * (0.30 - i * 0.02);
-    g.save(); g.rotate(-0.15 - i * 0.2);
-    g.beginPath();
-    g.moveTo(-w * 0.15, 0);
-    g.quadraticCurveTo(L * 0.5, -W, L, -W * 0.25);
-    g.quadraticCurveTo(L * 0.55, W * 0.55, -w * 0.15, W * 0.5);
-    g.closePath(); g.fill();
-    g.restore();
-  }
-  g.fillStyle = M.trim;                                // gốc lông bọc kim loại
-  g.beginPath(); g.ellipse(-w * 0.05, h * 0.05, w * 0.3, h * 0.45, 0, 0, 7); g.fill();
-}
-// Spellblade — LỆCH VAI: một bên giáp dày, một bên trần. Đây là chữ ký của lớp, giữ suốt
-// cả 5 dải. Hàm nhận `side` và CỐ Ý vẽ khác nhau hai bên.
-function hShoulderHalf(g, M, st, w, h, side){
-  if (side > 0){                                       // bên TRẦN — chỉ còn dây đai chéo
-    g.fillStyle = M.lo;
-    g.beginPath();
-    g.moveTo(-w * 0.5, -h * 0.15); g.lineTo(-w * 0.15, -h * 0.35);
-    g.lineTo(w * 0.1, h * 0.9); g.lineTo(-w * 0.25, h * 1.05);
-    g.closePath(); g.fill();
-    if (st >= 3){                                      // vết cháy trên da trần
-      g.save(); g.globalAlpha = 0.5; g.fillStyle = M.glow || '#ff7a3a';
-      for (let i = 0; i < 3; i++){
-        g.beginPath(); g.ellipse(w * 0.2 + i * w * 0.16, -h * 0.1 + i * h * 0.3, 1.6, 3.2, 0.4, 0, 7); g.fill();
-      }
-      g.restore();
-    }
-    return;
-  }
-  g.fillStyle = M.hi;                                  // bên CÓ giáp — dày hơn plate thường
-  g.beginPath();
-  g.moveTo(-w * 0.55, h * 0.55);
-  g.quadraticCurveTo(-w * 0.7, -h * 1.05, 0, -h * 1.15);
-  g.quadraticCurveTo(w * 0.9, -h * 0.95, w * 1.05, h * 0.5);
-  g.closePath(); g.fill();
-  g.fillStyle = M.lo;
-  g.beginPath();
-  g.moveTo(-w * 0.55, h * 0.55); g.lineTo(w * 1.05, h * 0.5);
-  g.lineTo(w * 0.85, h); g.lineTo(-w * 0.4, h * 1.05);
-  g.closePath(); g.fill();
-  if (st >= 2){                                        // lửa liếm dọc vai
-    g.fillStyle = M.glow || M.trim;
-    const n = 1 + st;
-    for (let i = 0; i < n; i++){
-      const a = -0.7 + i * (1.4 / Math.max(1, n - 1));
-      const bx = Math.sin(a) * w * 0.72, by = -Math.cos(a) * h * 0.95, L = 7 + st * 3.5;
-      g.beginPath();
-      g.moveTo(bx - 2.2, by);
-      g.quadraticCurveTo(bx + Math.sin(a) * L * 0.4 - 3.2, by - Math.cos(a) * L * 0.7,
-                         bx + Math.sin(a) * L, by - Math.cos(a) * L);
-      g.quadraticCurveTo(bx + Math.sin(a) * L * 0.5 + 3.2, by - Math.cos(a) * L * 0.5, bx + 2.2, by);
-      g.closePath(); g.fill();
-    }
-  }
-}
-// Dark Lord — bệ vai nghi lễ: răng lược + vải rủ. KHÔNG gai nhọn kiểu Dark Knight;
-// Dark Lord là quý tộc chỉ huy, không phải chiến binh tuyến đầu.
-function hShoulderRegal(g, M, st, w, h){
-  g.fillStyle = M.hi;
-  g.beginPath();
-  g.moveTo(-w * 0.5, h * 0.35); g.lineTo(-w * 0.4, -h * 0.7);
-  g.lineTo(w * 0.95, -h * 0.5); g.lineTo(w * 0.88, h * 0.45);
-  g.closePath(); g.fill();
-  g.fillStyle = M.trim;                                // răng lược
-  const n = 2 + st;
-  for (let i = 0; i < n; i++){
-    const x = -w * 0.3 + i * (w * 1.05 / n), hh = h * (0.5 + (i % 2) * 0.25);
-    g.beginPath();
-    g.moveTo(x, -h * 0.6); g.lineTo(x + w * 0.15, -h * 0.62);
-    g.lineTo(x + w * 0.075, -h * 0.6 - hh);
-    g.closePath(); g.fill();
-  }
-  g.fillStyle = M.lo; g.globalAlpha = 0.92;            // vải rủ
-  g.beginPath();
-  g.moveTo(-w * 0.4, h * 0.35); g.lineTo(w * 0.88, h * 0.42);
-  g.quadraticCurveTo(w * 0.62, h * (1.5 + st * 0.28), -w * 0.12, h * (1.25 + st * 0.22));
-  g.closePath(); g.fill();
-  g.globalAlpha = 1;
-}
 
-// ── CHÓP MŨ: các bộ còn lại ──
-// Dark Wizard I-II — mũ TRÙM mềm rủ che nửa mặt. Pháp sư không đội mũ sắt.
-function hCrestHood(g, M, st, ps){
-  g.fillStyle = M.hi;
-  g.beginPath();
-  g.moveTo(58, 82);
-  g.quadraticCurveTo(56, 48, 80, 44);
-  g.quadraticCurveTo(104, 48, 102, 82);
-  g.quadraticCurveTo(80, 74, 58, 82);
-  g.closePath(); g.fill();
-  if (!ps.back){
-    g.fillStyle = 'rgba(0,0,0,.55)';                   // bóng trong mũ trùm nuốt mất khuôn mặt
-    g.beginPath(); g.ellipse(80, 72, 15, 13, 0, 0, 7); g.fill();
-    if (st >= 2){                                      // chỉ còn hai đốm mắt trong bóng tối
-      g.fillStyle = M.glow || '#a88aff';
-      g.beginPath(); g.ellipse(74, 72, 2.4, 2.8, 0, 0, 7); g.fill();
-      g.beginPath(); g.ellipse(86, 72, 2.4, 2.8, 0, 0, 7); g.fill();
-    }
-  }
-  g.fillStyle = M.lo;                                  // chóp mũ rủ ra sau
-  g.beginPath();
-  g.moveTo(74, 48); g.lineTo(86, 48);
-  g.quadraticCurveTo(82, 34, 70 - st * 2, 32);
-  g.quadraticCurveTo(74, 42, 74, 48);
-  g.closePath(); g.fill();
-}
-// Dark Wizard III — Nhân Sư: mũ nemes hai vạt vải cứng xoè hai bên má, kẻ sọc, rắn hổ mang
-function hCrestNemes(g, M, st, ps){
-  g.fillStyle = M.hi;
-  for (const s of [-1, 1]){
-    g.beginPath();
-    g.moveTo(80 + s * 8, 54); g.lineTo(80 + s * 26, 66);
-    g.lineTo(80 + s * 22, 94); g.lineTo(80 + s * 9, 88);
-    g.closePath(); g.fill();
-  }
-  g.fillStyle = M.trim;                                // sọc ngang đặc trưng
-  for (const s of [-1, 1]) for (let i = 0; i < 3; i++){
-    const y = 68 + i * 8;
-    g.beginPath();
-    g.moveTo(80 + s * 10, y); g.lineTo(80 + s * (24 - i * 1.5), y + 2.5);
-    g.lineTo(80 + s * (24 - i * 1.5), y + 5); g.lineTo(80 + s * 10, y + 3);
-    g.closePath(); g.fill();
-  }
-  g.beginPath();                                       // vành trán
-  g.moveTo(60, 58); g.lineTo(100, 58); g.lineTo(98, 64); g.lineTo(62, 64);
-  g.closePath(); g.fill();
-  if (!ps.back && st >= 2){                            // rắn hổ mang dựng giữa trán
-    g.fillStyle = M.glow || '#7ee0d8';
-    g.beginPath();
-    g.moveTo(80, 58); g.quadraticCurveTo(75, 48, 80, 44);
-    g.quadraticCurveTo(85, 48, 80, 58);
-    g.closePath(); g.fill();
-  }
-}
-// Dark Wizard IV-V — mũ nhọn cao + vòng hào quang sau đầu
-function hCrestHalo(g, M, st, ps){
-  g.fillStyle = M.hi;
-  g.beginPath();
-  g.moveTo(60, 60);
-  g.quadraticCurveTo(74, 40 - st * 5, 83, 30 - st * 6);
-  g.quadraticCurveTo(88, 46, 100, 60);
-  g.closePath(); g.fill();
-  g.fillStyle = M.lo;                                  // vành mũ
-  g.beginPath(); g.ellipse(80, 60, 24, 5.5, 0, 0, 7); g.fill();
-  if (st >= 2){                                        // vòng hào quang — nét hở, không phải đĩa đặc
-    g.save();
-    g.strokeStyle = M.glow || '#7ecbff'; g.lineWidth = 2.2; g.globalAlpha = 0.85;
-    g.beginPath(); g.ellipse(80, 62, 26, 9, 0, 0, 7); g.stroke();
-    g.restore();
-  }
-  if (st >= 3 && !ps.back){                            // rune trên vành
-    g.fillStyle = M.glow || '#7ecbff';
-    for (let i = 0; i < 3; i++){ g.beginPath(); g.arc(70 + i * 10, 60, 1.6, 0, 7); g.fill(); }
-  }
-}
-// Sylvan Ranger I-II — mũ da mềm có vành + một chiếc lông cắm nghiêng
-function hCrestCap(g, M, st, _ps){
-  g.fillStyle = M.hi;
-  g.beginPath();
-  g.moveTo(61, 62); g.quadraticCurveTo(80, 44, 99, 62);
-  g.closePath(); g.fill();
-  g.fillStyle = M.lo;
-  g.beginPath(); g.ellipse(80, 62, 23, 4.5, 0, 0, 7); g.fill();
-  if (st >= 2){
-    g.fillStyle = M.trim;
-    g.beginPath();
-    g.moveTo(94, 58);
-    g.quadraticCurveTo(110, 46, 114, 34);
-    g.quadraticCurveTo(104, 46, 93, 55);
-    g.closePath(); g.fill();
-  }
-}
-// Sylvan Ranger III — hai chiếc lá dựng như sừng nai non
-function hCrestLeaf(g, M, st, _ps){
-  g.fillStyle = M.hi;
-  for (const s of [-1, 1]){
-    g.beginPath();
-    g.moveTo(80 + s * 10, 62);
-    g.quadraticCurveTo(80 + s * 24, 48, 80 + s * 16, 32 - st * 3);
-    g.quadraticCurveTo(80 + s * 12, 48, 80 + s * 7, 62);
-    g.closePath(); g.fill();
-    g.strokeStyle = M.trim; g.lineWidth = 1;
-    g.beginPath(); g.moveTo(80 + s * 9, 60); g.lineTo(80 + s * 16, 34 - st * 3); g.stroke();
-  }
-  g.fillStyle = M.lo;                                  // dây quấn trán
-  g.beginPath();
-  g.moveTo(61, 60); g.lineTo(99, 60); g.lineTo(98, 65); g.lineTo(62, 65);
-  g.closePath(); g.fill();
-}
-// Sylvan Ranger IV-V — vương miện gạc nai. Nhánh phụ mọc thêm theo bậc.
-function hCrestAntler(g, M, st, _ps){
-  g.fillStyle = M.hi;
-  for (const s of [-1, 1]){
-    g.beginPath();
-    g.moveTo(80 + s * 11, 62);
-    g.quadraticCurveTo(80 + s * 20, 44, 80 + s * 17, 26 - st * 2);
-    g.quadraticCurveTo(80 + s * 15, 44, 80 + s * 8, 62);
-    g.closePath(); g.fill();
-    for (let i = 0; i < 1 + Math.min(2, st - 1); i++){
-      const y = 48 - i * 10;
-      g.beginPath();
-      g.moveTo(80 + s * 17, y);
-      g.quadraticCurveTo(80 + s * 30, y - 6, 80 + s * 33, y - 14);
-      g.quadraticCurveTo(80 + s * 26, y - 4, 80 + s * 16, y + 3);
-      g.closePath(); g.fill();
-    }
-  }
-  g.fillStyle = M.trim;
-  g.beginPath();
-  g.moveTo(60, 59); g.lineTo(100, 59); g.lineTo(98, 66); g.lineTo(62, 66);
-  g.closePath(); g.fill();
-}
-// Spellblade — mặt nạ NỬA MẶT, khe mắt rực, mào lửa. Cùng lối lệch như vai giáp.
-function hCrestHalfMask(g, M, st, ps){
-  if (!ps.back){
-    g.fillStyle = M.hi;
-    g.beginPath();
-    g.moveTo(60, 60); g.lineTo(82, 58); g.lineTo(82, 88); g.lineTo(62, 84);
-    g.closePath(); g.fill();
-    g.fillStyle = M.glow || '#ff8a3a';
-    g.beginPath();
-    g.moveTo(64, 71); g.lineTo(78, 69); g.lineTo(78, 75); g.lineTo(64, 76);
-    g.closePath(); g.fill();
-    if (st >= 3){                                      // vết nứt để lộ lửa bên trong
-      g.strokeStyle = M.glow || '#ffb020'; g.lineWidth = 1.3;
-      g.beginPath(); g.moveTo(68, 60); g.lineTo(72, 68); g.lineTo(66, 78); g.stroke();
-    }
-  } else {
-    g.fillStyle = M.lo;
-    g.beginPath(); g.ellipse(80, 72, 20, 15, 0, 0, 7); g.fill();
-  }
-  if (st >= 2){                                        // mào lửa trên đỉnh
-    g.fillStyle = M.glow || M.trim;
-    for (let i = 0; i < 3; i++){
-      const x = 72 + i * 8, hh = 14 + st * 3 - Math.abs(i - 1) * 5;
-      g.beginPath();
-      g.moveTo(x - 3, 56);
-      g.quadraticCurveTo(x + 2, 56 - hh * 0.6, x, 56 - hh);
-      g.quadraticCurveTo(x - 1, 56 - hh * 0.5, x + 3, 56);
-      g.closePath(); g.fill();
-    }
-  }
-}
-// Dark Lord — vương miện. Bậc tối cao thì nó LƠ LỬNG cách đầu vài pixel, không chạm.
-function hCrestCrown(g, M, st, ps){
-  const lift = st >= 4 ? 5 : 0;
-  g.fillStyle = M.hi;
-  g.beginPath();
-  g.moveTo(59, 58 - lift); g.lineTo(101, 58 - lift);
-  g.lineTo(99, 48 - lift); g.lineTo(61, 48 - lift);
-  g.closePath(); g.fill();
-  g.fillStyle = M.trim;
-  const n = st >= 3 ? 5 : 3, mid = Math.floor(n / 2);
-  for (let i = 0; i < n; i++){
-    const x = 64 + i * (32 / (n - 1));
-    const hh = 12 + st * 2.5 - (i === mid ? -5 : Math.abs(i - mid) * 3);
-    g.beginPath();
-    g.moveTo(x - 3.2, 50 - lift); g.lineTo(x + 3.2, 50 - lift);
-    g.lineTo(x, 50 - lift - hh);
-    g.closePath(); g.fill();
-  }
-  if (st >= 3 && !ps.back){                            // mạng che mặt bằng dây kim loại
-    g.save(); g.strokeStyle = M.trim; g.lineWidth = 0.9; g.globalAlpha = 0.75;
-    for (let i = 0; i < 4; i++){
-      g.beginPath(); g.moveTo(66 + i * 9, 60 - lift); g.lineTo(64 + i * 9, 84); g.stroke();
-    }
-    g.restore();
-  }
-}
 
-// ── GIÁP CHÂN: các bộ còn lại ──
-// Sylvan Ranger — giày nhẹ, dây quấn, cựa sau gót
-function hGreaveLight(g, M, st, x0, dir){
-  g.fillStyle = M.hi;
-  g.beginPath();
-  g.moveTo(x0 + dir * 2, 182); g.lineTo(x0 + dir * 17, 182);
-  g.lineTo(x0 + dir * 18, 200); g.lineTo(x0 + dir * 1, 200);
-  g.closePath(); g.fill();
-  g.fillStyle = M.lo;                                  // hai dây quấn ống chân
-  for (let i = 0; i < 2; i++){
-    const y = 170 + i * 7;
-    g.beginPath();
-    g.moveTo(x0 + dir * 1, y); g.lineTo(x0 + dir * 17, y - 2);
-    g.lineTo(x0 + dir * 17, y + 2.6); g.lineTo(x0 + dir * 1, y + 4.6);
-    g.closePath(); g.fill();
-  }
-  if (st >= 2){
-    g.fillStyle = M.trim;
-    g.beginPath(); g.ellipse(x0 + dir * 10, 176, 6.5, 9, dir * 0.35, 0, 7); g.fill();
-  }
-  if (st >= 3){                                        // cựa sau gót
-    g.fillStyle = M.trim;
-    g.beginPath();
-    g.moveTo(x0 + dir * 2, 202); g.lineTo(x0 + dir * 2, 210); g.lineTo(x0 - dir * 7, 208);
-    g.closePath(); g.fill();
-  }
-}
-// Dark Wizard — gấu áo choàng phủ xuống, KHÔNG có kim loại. Bậc cao thì gấu tan thành khói.
-function hGreaveRobe(g, M, st, x0, dir){
-  g.fillStyle = M.lo;
-  g.beginPath();
-  g.moveTo(x0, 168);
-  g.quadraticCurveTo(x0 + dir * 20, 178, x0 + dir * 19, 202);
-  g.lineTo(x0 + dir * 1, 200);
-  g.closePath(); g.fill();
-  g.fillStyle = M.trim;                                // viền thêu ở gấu
-  g.beginPath();
-  g.moveTo(x0 + dir * 1, 196); g.lineTo(x0 + dir * 19, 198);
-  g.lineTo(x0 + dir * 19, 202); g.lineTo(x0 + dir * 1, 200);
-  g.closePath(); g.fill();
-  if (st >= 3){
-    g.save(); g.fillStyle = M.lo;
-    for (let i = 0; i < 3; i++){
-      g.globalAlpha = 0.5 - i * 0.14;
-      g.beginPath(); g.ellipse(x0 + dir * (4 + i * 6), 206 + i * 3, 4.5, 3, 0, 0, 7); g.fill();
-    }
-    g.restore();
-  }
-}
 
-// ── ĐAI LƯNG: các bộ còn lại ──
-// Dark Wizard — đai vải quấn chéo, nút thắt lệch, đuôi đai rủ
-function hBeltSash(g, M, st){
-  g.fillStyle = M.lo;
-  g.beginPath();
-  g.moveTo(54, 140); g.lineTo(106, 136); g.lineTo(106, 148); g.lineTo(54, 152);
-  g.closePath(); g.fill();
-  g.fillStyle = M.trim;
-  g.beginPath(); g.ellipse(96, 143, 6.5, 5.5, 0.2, 0, 7); g.fill();
-  g.fillStyle = M.lo;                                  // đuôi đai — dài thêm theo bậc
-  g.beginPath();
-  g.moveTo(94, 147); g.lineTo(103, 146);
-  g.quadraticCurveTo(101, 166 + st * 5, 92, 172 + st * 5);
-  g.quadraticCurveTo(93, 158, 90, 148);
-  g.closePath(); g.fill();
-  if (st >= 2){                                        // rune chạy dọc đai
-    g.fillStyle = M.glow || M.trim;
-    for (let i = 0; i < 4; i++){ g.beginPath(); g.arc(60 + i * 11, 145 - i * 0.8, 1.5, 0, 7); g.fill(); }
-  }
-}
-// Sylvan Ranger — váy lá/lông so le
-function hBeltLeafSkirt(g, M, st){
-  g.fillStyle = M.lo; g.fillRect(56, 139, 48, 6);
-  const n = 4 + st;
-  for (let i = 0; i < n; i++){
-    const x = 58 + i * (48 / n);
-    g.fillStyle = i % 2 ? M.hi : M.lo;
-    g.beginPath();
-    g.moveTo(x, 145);
-    g.quadraticCurveTo(x + 7, 152, x + 3.5, 162 + st * 2);
-    g.quadraticCurveTo(x, 152, x - 3, 145);
-    g.closePath(); g.fill();
-  }
-  g.fillStyle = M.trim;
-  g.beginPath(); g.ellipse(80, 142, 5.5, 4.5, 0, 0, 7); g.fill();
-}
-// Dark Lord — đai bản rộng + huy hiệu + vải rủ dài giữa hai chân
-function hBeltDrape(g, M, st){
-  g.fillStyle = M.lo; g.fillRect(53, 136, 54, 11 + st);
-  g.fillStyle = M.hi;
-  g.beginPath();
-  g.moveTo(80, 132); g.lineTo(90, 141); g.lineTo(85, 154); g.lineTo(75, 154); g.lineTo(70, 141);
-  g.closePath(); g.fill();
-  g.fillStyle = M.trim;
-  g.beginPath(); g.ellipse(80, 143, 3.6, 4.6, 0, 0, 7); g.fill();
-  g.save(); g.fillStyle = M.lo; g.globalAlpha = 0.94;
-  g.beginPath();
-  g.moveTo(70, 150); g.lineTo(90, 150);
-  g.quadraticCurveTo(88, 176 + st * 8, 80, 184 + st * 9);
-  g.quadraticCurveTo(72, 176 + st * 8, 70, 150);
-  g.closePath(); g.fill();
-  g.restore();
-  if (st >= 2){                                        // tua kim loại ở gấu vải
-    g.fillStyle = M.trim;
-    for (let i = 0; i < 3; i++){ g.beginPath(); g.arc(74 + i * 6, 182 + st * 8, 1.8, 0, 7); g.fill(); }
-  }
-}
-// Spellblade — CHỈ MỘT tấm hông, khoá lệch. Cùng chữ ký lệch như vai giáp và mặt nạ.
-function hBeltHalf(g, M, st){
-  g.fillStyle = M.lo; g.fillRect(56, 138, 48, 7 + st);
-  g.fillStyle = M.trim;
-  g.beginPath();
-  g.moveTo(68, 136); g.lineTo(77, 143); g.lineTo(70, 152); g.lineTo(62, 143);
-  g.closePath(); g.fill();
-  g.fillStyle = M.hi;
-  g.beginPath();
-  g.moveTo(64, 145); g.lineTo(49, 145);
-  g.lineTo(53, 166 + st * 3); g.lineTo(65, 161 + st * 2);
-  g.closePath(); g.fill();
-  if (st >= 3){                                        // mép ửng đỏ như còn nóng
-    g.save(); g.fillStyle = M.glow || '#ff7a3a'; g.globalAlpha = 0.6;
-    g.beginPath();
-    g.moveTo(53, 166 + st * 3); g.lineTo(65, 161 + st * 2);
-    g.lineTo(64, 165 + st * 2); g.lineTo(52, 170 + st * 3);
-    g.closePath(); g.fill(); g.restore();
-  }
-}
 
-const SET_SHOULDER = {
-  plate: hShoulderPlate, chain: hShoulderChain, drake: hShoulderDrake, hoalong: hShoulderDragon,
-  cloth: hShoulderCloth, sphinx: hShoulderSphinx, arcane: hShoulderArcane,
-  hide: hShoulderHide, leaf: hShoulderLeaf, plume: hShoulderPlume,
-  halfplate: hShoulderHalf, regal: hShoulderRegal,
-};
-// ── NÉT RIÊNG TRÊN TỪNG MÓN ─────────────────────────────────────────────────
-// Vai và mào đổi theo bộ rồi, nhưng THÂN ÁO / QUẦN / ỦNG vẫn do hàm thân của LỚP vẽ, dùng
-// P.leg và P.boot — nghĩa là mọi bộ giống hệt nhau ở đúng phần chiếm nhiều diện tích nhất.
-// Đổi mỗi bảng màu thì nhìn vẫn ra "cùng một bộ đồ nhuộm lại". Ba hàm dưới vẽ ĐÈ lên đúng
-// những món đó, theo sh.chest / sh.boot / sh.glove khai riêng cho từng bộ.
-//
-// Khung toạ độ thân: x 56–104, y 96–140 (đai lưng ở y≈140). Ống chân và ủng nằm trong hJoint
-// của chân nên nhận toạ độ cục bộ đã dịch sẵn.
-// CHEST_ART đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
-const CHEST_ART = window.CHEST_ART;
-function hChestMods(g, M, sh){
-  const fn = sh && sh.chest && CHEST_ART[sh.chest];
-  if (!fn) return;
-  g.save(); fn(g, M); g.restore();
-}
-// Ủng và ống chân. Vẽ trong hệ toạ độ của chân, nên nhận x tâm của ống chân đó.
-const BOOT_ART = {
-  cuff(g, M, x){ g.fillStyle = M.hi;
-    g.beginPath(); g.moveTo(x - 13, 192); g.lineTo(x + 13, 192);
-    g.lineTo(x + 10, 200); g.lineTo(x - 10, 200); g.closePath(); g.fill(); },
-  plate(g, M, x){ g.fillStyle = M.hi;
-    g.beginPath(); g.roundRect(x - 10, 196, 20, 9, 2); g.fill();
-    g.fillStyle = M.trim;
-    g.beginPath(); g.roundRect(x - 9, 168, 18, 7, 2); g.fill(); },      // tấm gối
-  wrap(g, M, x){ g.strokeStyle = M.trim; g.lineWidth = 2;
-    for (let i = 0; i < 3; i++){ const y = 182 + i * 8;
-      g.beginPath(); g.moveTo(x - 10, y); g.lineTo(x + 10, y - 2); g.stroke(); } },
-  claw(g, M, x){ g.fillStyle = M.trim;
-    for (let i = 0; i < 3; i++){ const cx = x - 7 + i * 7;
-      g.beginPath(); g.moveTo(cx - 2, 210); g.lineTo(cx + 2, 210);
-      g.lineTo(cx, 217); g.closePath(); g.fill(); } },
-};
-function hLegMods(g, M, sh, side){
-  const fn = sh && sh.boot && BOOT_ART[sh.boot];
-  if (!fn) return;
-  g.save(); fn(g, M, side < 0 ? 70 : 90); g.restore();
-}
 
-// ── NÓN VÀ GĂNG THEO TỪNG BỘ ────────────────────────────────────────────────
-// Vòm nón nằm CỨNG trong upper() của từng lớp, găng cũng vậy — nên mọi bộ đội chung một cái nón
-// và đeo chung một đôi găng, chỉ khác màu. Hai bảng dưới vẽ ĐÈ lên đúng hai món đó, trong cùng
-// khớp đầu / khớp tay, nên không phải viết lại năm hàm upper().
-// Nón vẽ quanh tâm đầu (80, 74); găng vẽ ở bàn tay (48,116) trái và (112,116) phải.
-// HELM_ART đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
-const HELM_ART = window.HELM_ART;
-const GLOVE_ART = {
-  cuff(g, M, x){ g.fillStyle = M.hi;
-    g.beginPath(); g.moveTo(x - 12, 104); g.lineTo(x + 12, 104);
-    g.lineTo(x + 9, 114); g.lineTo(x - 9, 114); g.closePath(); g.fill(); },
-  claw(g, M, x){ g.fillStyle = M.trim;
-    for (let i = 0; i < 3; i++){ const cx = x - 6 + i * 6;
-      g.beginPath(); g.moveTo(cx - 1.8, 128); g.lineTo(cx + 1.8, 128);
-      g.lineTo(cx, 137); g.closePath(); g.fill(); } },
-  stud(g, M, x){ g.fillStyle = M.trim;
-    for (let i = 0; i < 4; i++){
-      g.beginPath(); g.arc(x - 5 + (i % 2) * 10, 110 + Math.floor(i / 2) * 9, 2, 0, 7); g.fill(); } },
-  plate(g, M, x){ g.fillStyle = M.hi;
-    g.beginPath(); g.roundRect(x - 10, 106, 20, 11, 2); g.fill();
-    g.strokeStyle = M.trim; g.lineWidth = 1.1; g.stroke(); },
-  wrap(g, M, x){ g.strokeStyle = M.lo; g.lineWidth = 2.4;
-    for (let i = 0; i < 3; i++){ const y = 108 + i * 7;
-      g.beginPath(); g.moveTo(x - 10, y); g.lineTo(x + 10, y - 2); g.stroke(); } },
-};
-// Suy từ style + leo theo giai, chỉ ghi đè theo TÊN ở vài bộ. Cách này khỏi phải khai lại 70
-// dòng mà vẫn cho nón nặng dần: giai 1–2 để đầu trần, giai 11 trở lên đội kín mặt.
-const HELM_OF_STYLE = { plate:'visor', chain:'band', drake:'horned', hoalong:'horned',
-  cloth:'veil', sphinx:'band', arcane:'veil', hide:'band', leaf:'band', plume:'wing',
-  halfplate:'mask', regal:'band' };
-const GLOVE_OF_STYLE = { plate:'plate', chain:'wrap', drake:'claw', hoalong:'claw',
-  cloth:'wrap', sphinx:'cuff', arcane:'cuff', hide:'wrap', leaf:'cuff', plume:'claw',
-  halfplate:'plate', regal:'cuff' };
-const HELM_BY_NAME = { 'Xương':'mask', 'Cốt Giáp':'mask', 'Quỷ Vương':'mask', 'Hắc Ám':'veil',
-  'Tế Đàn':'veil', 'Hắc Đế':'mask', 'Ngai Đen':'mask' };
-function setHelm(S, t){
-  if (!S) return null;
-  if (t < 1.9) return null;                        // hai giai đầu để đầu trần, thấy rõ mặt
-  if (S.sh && S.sh.helm) return S.sh.helm;
-  if (HELM_BY_NAME[S.name]) return HELM_BY_NAME[S.name];
-  if (t >= 5.6 && HELM_OF_STYLE[S.style] !== 'wing') return 'mask';
-  return HELM_OF_STYLE[S.style] || 'visor';
-}
-function setGlove(S){
-  if (!S) return null;
-  return (S.sh && S.sh.glove) || GLOVE_OF_STYLE[S.style] || 'plate';
-}
-function hHelmShell(g, M, gv, ps, S){
-  const t = gv ? gv.t : 0;
-  const fn = HELM_ART[setHelm(S, t)];
-  if (!fn) return;
-  hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
-    if (ps.back) return;                           // quay lưng thì không thấy mặt nạ
-    g.save(); fn(g, M); g.restore();
-  });
-}
-function hGloves(g, M, ps, S){
-  const fn = GLOVE_ART[setGlove(S)];
-  if (!fn) return;
-  hArmL(g, null, ps, () => { g.save(); fn(g, M, 48); g.restore(); });
-  hArmR(g, null, ps, () => { g.save(); fn(g, M, 112); g.restore(); });
-}
 
-// ── LỚP BIẾN HÌNH THEO TỪNG BỘ ──────────────────────────────────────────────
-// Bóng dáng vai do SET_SHOULDER[style] vẽ, mà hàm đó chỉ nhận `st` (nấc 1–5). Nghĩa là mọi bộ
-// dùng chung một style thì bóng dáng Y HỆT nhau, chỉ khác màu — "vải thô" với "xương" trông
-// giống nhau đúc. Nay mỗi bộ khai thêm `sh`, và những nét dưới đây vẽ đè lên bóng dáng gốc để
-// hai bộ cùng style vẫn ra hai hình khác nhau.
-//   spike  n gai mọc theo vành vai        layer  n tấm giáp xếp chồng phía dưới
-//   fringe n tua rủ xuống                 stud   n đinh tán trên mặt vai
-//   fin    vây hất ra sau                 orb    viên ngọc nổi trên vai
-function hShoulderMods(g, M, sh, w, h){
-  if (!sh) return;
-  if (sh.spike){
-    g.fillStyle = M.trim;
-    for (let i = 0; i < sh.spike; i++){
-      const a = -0.95 + i * (1.9 / Math.max(1, sh.spike - 1));
-      const bx = Math.sin(a) * w * 0.82, by = -Math.cos(a) * h * 0.9;
-      const L = 7 + (sh.spikeL || 0);
-      g.beginPath();
-      g.moveTo(bx - 2.6, by); g.lineTo(bx + 2.6, by);
-      g.lineTo(bx + Math.sin(a) * L, by - Math.cos(a) * L);
-      g.closePath(); g.fill();
-    }
-  }
-  if (sh.layer){
-    for (let i = 0; i < sh.layer; i++){
-      const k = 1 - i * 0.16, y = h * (0.75 + i * 0.42);
-      g.fillStyle = i % 2 ? M.lo : M.hi;
-      g.beginPath();
-      g.moveTo(-w * 0.5 * k, y); g.lineTo(w * 0.92 * k, y * 0.94);
-      g.lineTo(w * 0.78 * k, y + h * 0.34); g.lineTo(-w * 0.36 * k, y + h * 0.38);
-      g.closePath(); g.fill();
-    }
-  }
-  if (sh.fringe){
-    g.fillStyle = M.lo;
-    for (let i = 0; i < sh.fringe; i++){
-      const x = -w * 0.34 + i * (w * 1.12 / Math.max(1, sh.fringe - 1));
-      const L = h * (0.9 + (i % 2) * 0.45);
-      g.beginPath();
-      g.moveTo(x - 2.2, h * 0.72); g.lineTo(x + 2.2, h * 0.72);
-      g.lineTo(x + 0.6, h * 0.72 + L); g.closePath(); g.fill();
-    }
-  }
-  if (sh.stud){
-    g.fillStyle = M.trim;
-    for (let i = 0; i < sh.stud; i++){
-      const a = -0.6 + i * (1.2 / Math.max(1, sh.stud - 1));
-      g.beginPath();
-      g.arc(Math.sin(a) * w * 0.5, -Math.cos(a) * h * 0.45, 2, 0, 7); g.fill();
-    }
-  }
-  if (sh.fin){
-    g.fillStyle = M.hi;
-    g.beginPath();
-    g.moveTo(-w * 0.42, -h * 0.15);
-    g.quadraticCurveTo(-w * 1.15, -h * 0.75, -w * 1.35, h * 0.35);
-    g.quadraticCurveTo(-w * 0.85, h * 0.1, -w * 0.42, h * 0.4);
-    g.closePath(); g.fill();
-  }
-  if (sh.orb){
-    const c = M.glow || M.trim;
-    const gr = g.createRadialGradient(w * 0.18, -h * 0.95, 1, w * 0.18, -h * 0.95, 7);
-    gr.addColorStop(0, c); gr.addColorStop(1, 'rgba(0,0,0,0)');
-    g.fillStyle = gr; g.beginPath(); g.arc(w * 0.18, -h * 0.95, 7, 0, 7); g.fill();
-    g.fillStyle = c; g.beginPath(); g.arc(w * 0.18, -h * 0.95, 2.6, 0, 7); g.fill();
-  }
-}
-function hPauldrons(g, M, gv, S, ps){
-  const t = gv ? gv.t : 0;
-  const _style = (S && S.style) || 'plate';
-  // Spellblade vào sớm hơn: chữ ký của lớp là LỆCH VAI (một bên giáp, một bên trần), mà dải I
-  // của nó tên là "Bán Giáp" — chặn ở 2.5 thì dải đó không có vai nào cả và cái tên nói dối.
-  if (t < (_style === 'halfplate' ? 1.1 : 1.7)) return;
-  const st = hStage(t), fn = SET_SHOULDER[_style] || hShoulderPlate;
-  const dragon = _style === 'hoalong';
-  for (const side of [-1, 1]){
-    // Xoay quanh KHỚP VAI theo ~35% góc cánh tay. Trước đây vai giáp chỉ nằm trong khớp
-    // `lean` nên vung tay mà tấm vai đứng im như dán lên ngực. Giáp thật gắn vào bả vai nên
-    // đi theo tay, chỉ ít hơn vì nó nặng và có dây buộc giữ lại.
-    const _J = side < 0 ? HERO_JOINT.shL : HERO_JOINT.shR;
-    const _arm = ps ? (side < 0 ? ps.armL : ps.armR) : 0;
-    g.save();
-    g.translate(_J[0], _J[1]); g.rotate(_arm * 0.35); g.translate(-_J[0], -_J[1]);
-    g.translate(80 + side * 29, 98);
-    g.scale(side, 1);                                 // vẽ một bên rồi soi gương
-    // đầu rồng cần khung hẹp hơn tấm thép, nếu không mõm thò quá xa khỏi khung 160px
-    const w = dragon ? 12 + st * 2.6 : 14 + st * 3.4;
-    const h = dragon ? 9 + st * 2.1 : 9 + st * 2.4;
-    const rim = plusRim(M, gv);
-    if (rim){   // viền cường hoá: chính hình đó, to hơn 12%, màu sáng, nằm dưới
-      g.save(); g.globalAlpha = 0.34 + clamp(((gv.plus || 0) - 3) / 8, 0, 1) * 0.34; g.scale(1.12, 1.12);
-      fn(g, { lo:rim, hi:rim, trim:rim, glow:rim }, st, w, h, side);
-      g.restore();
-    }
-    fn(g, M, st, w, h, side);
-    hShoulderMods(g, M, S && S.sh, w, h);
-    g.restore();
-  }
-}
 
-// ── A. BÓNG DÁNG: chóp mũ ──
-function hCrestHorn(g, M, st, ps){
-  const hh = 7 + st * 4;
-  g.fillStyle = M.trim;                               // sống mũ dựng đứng
-  g.beginPath(); g.moveTo(80, 56 - hh); g.lineTo(85, 58); g.lineTo(75, 58); g.closePath(); g.fill();
-  if (st >= 2){                                       // sừng hai bên
-    g.fillStyle = M.hi;
-    for (const s of [-1, 1]){
-      g.beginPath();
-      g.moveTo(80 + s * 15, 62);
-      g.quadraticCurveTo(80 + s * 26, 54, 80 + s * 23, 42);
-      g.quadraticCurveTo(80 + s * 20, 52, 80 + s * 11, 64);
-      g.closePath(); g.fill();
-    }
-  }
-  // ngọc trán: mặt trước mới có — quay lưng mà vẫn vẽ thì thành nhãn dán trên gáy
-  if (st >= 3 && !ps.back){
-    g.fillStyle = M.glow || M.trim;
-    g.beginPath(); g.ellipse(80, 62, 3.4, 4.2, 0, 0, 7); g.fill();
-  }
-}
-// HỎA LONG — mũ rồng: sừng lớn vuốt ngược, vây sống giữa, khe mắt rực thay cho ngọc trán
-function hCrestDragon(g, M, st, ps){
-  g.fillStyle = M.hi;
-  for (const s of [-1, 1]){
-    g.beginPath();                                    // sừng chính
-    g.moveTo(80 + s * 13, 66);
-    g.quadraticCurveTo(80 + s * 34, 58, 80 + s * 33, 34);
-    g.quadraticCurveTo(80 + s * 27, 50, 80 + s * 17, 60);
-    g.closePath(); g.fill();
-    if (st >= 2){                                     // sừng phụ thấp hơn
-      g.beginPath();
-      g.moveTo(80 + s * 15, 70);
-      g.quadraticCurveTo(80 + s * 30, 70, 80 + s * 32, 56);
-      g.quadraticCurveTo(80 + s * 24, 64, 80 + s * 16, 66);
-      g.closePath(); g.fill();
-    }
-  }
-  g.fillStyle = M.trim;                               // vây sống chạy dọc đỉnh mũ
-  for (let i = 0; i < 3; i++){
-    const hh = 16 + st * 4 - i * 4.5, y0 = 56 + i * 5;
-    g.beginPath();
-    g.moveTo(80 - 3.4, y0); g.lineTo(80 + 3.4, y0); g.lineTo(80, y0 - hh);
-    g.closePath(); g.fill();
-  }
-  if (!ps.back){                                      // khe mắt rực — chỉ mặt trước
-    g.fillStyle = M.glow || '#ff7a3a';
-    g.beginPath(); g.moveTo(70, 73); g.lineTo(78, 71); g.lineTo(78, 76); g.lineTo(70, 77);
-    g.closePath(); g.fill();
-    g.beginPath(); g.moveTo(90, 73); g.lineTo(82, 71); g.lineTo(82, 76); g.lineTo(90, 77);
-    g.closePath(); g.fill();
-  }
-}
-const SET_CREST = {
-  plate: hCrestHorn, chain: hCrestHorn, drake: hCrestDragon, hoalong: hCrestDragon,
-  cloth: hCrestHood, sphinx: hCrestNemes, arcane: hCrestHalo,
-  hide: hCrestCap, leaf: hCrestLeaf, plume: hCrestAntler,
-  halfplate: hCrestHalfMask, regal: hCrestCrown,
-};
-// `S.crest` cho từng BỘ chọn mào riêng, không còn suy cứng từ style: hai bộ cùng style vẫn
-// đội hai thứ khác nhau trên đầu. Ngưỡng hạ từ 4.5 xuống 2 vì nay mỗi giai là một bộ — chặn ở
-// 4.5 nghĩa là bốn giai đầu, đúng đoạn người chơi mới nhìn nhiều nhất, đầu ai cũng trống trơn.
-const CREST_FN = { hood:hCrestHood, nemes:hCrestNemes, halo:hCrestHalo, cap:hCrestCap,
-  leaf:hCrestLeaf, antler:hCrestAntler, halfmask:hCrestHalfMask, crown:hCrestCrown,
-  horn:hCrestHorn, dragon:hCrestDragon };
-function hHelmCrest(g, M, gv, ps, S){
-  const t = gv ? gv.t : 0;
-  if (t < 1.5) return;
-  const fn = (S && S.crest && CREST_FN[S.crest]) || SET_CREST[(S && S.style) || 'plate'] || hCrestHorn;
-  const rim = plusRim(M, gv);
-  hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
-    if (rim){   // cùng thủ thuật viền như vai giáp, xoay quanh tâm đầu
-      g.save(); g.globalAlpha = 0.34 + clamp(((gv.plus || 0) - 3) / 8, 0, 1) * 0.34;
-      g.translate(80, 74); g.scale(1.14, 1.14); g.translate(-80, -74);
-      fn(g, { lo:rim, hi:rim, trim:rim, glow:rim }, hStage(t), ps);
-      g.restore();
-    }
-    fn(g, M, hStage(t), ps);
-  });
-}
 
-// ── A. BÓNG DÁNG: giáp ống chân + đai lưng ──
-// Hai vùng trước nay hoàn toàn trơn: chân chỉ là 2 khối màu đặc, eo không có gì. Thêm chi tiết
-// ở đây đáng giá gấp đôi vì chân CHUYỂN ĐỘNG — giáp ống nhấp nhô theo sải bước, mắt bắt ngay.
-// Vẽ trong khớp hông (xem hLegs) nên tự đi theo chu kỳ bước chân; vẽ ngoài là thành nhãn dán.
-function hGreavePlate(g, M, st, x0, dir){
-  g.fillStyle = M.hi;                                 // tấm che ống quyển
-  g.beginPath();
-  g.moveTo(x0 + dir * 2, 170); g.lineTo(x0 + dir * 17, 170);
-  g.lineTo(x0 + dir * 18, 196); g.lineTo(x0 + dir * 1, 196);
-  g.closePath(); g.fill();
-  g.fillStyle = M.lo;                                 // rãnh giữa → tách khối
-  g.fillRect(Math.min(x0 + dir * 8, x0 + dir * 10), 172, 2, 22);
-  if (st >= 2){                                       // chụp gối
-    g.fillStyle = M.hi;
-    g.beginPath(); g.ellipse(x0 + dir * 9, 168, 10, 8, 0, 0, 7); g.fill();
-    g.strokeStyle = M.trim; g.lineWidth = 1.3;
-    g.beginPath(); g.ellipse(x0 + dir * 9, 168, 10, 8, 0, 0, 7); g.stroke();
-  }
-  if (st >= 3){                                       // gai gối chĩa ra ngoài
-    g.fillStyle = M.trim;
-    g.beginPath();
-    g.moveTo(x0 + dir * 16, 164); g.lineTo(x0 + dir * 16, 172);
-    g.lineTo(x0 + dir * 27, 165);
-    g.closePath(); g.fill();
-  }
-}
-// HỎA LONG — ống chân phủ vảy xếp lớp, mũi giày là vuốt rồng
-function hGreaveDragon(g, M, st, x0, dir){
-  for (let i = 0; i < 4; i++){                        // vảy xếp lớp
-    const y = 166 + i * 8;
-    g.fillStyle = i % 2 ? M.lo : M.hi;
-    g.beginPath();
-    g.moveTo(x0 + dir * 1, y);
-    g.quadraticCurveTo(x0 + dir * 10, y + 5, x0 + dir * 18, y);
-    g.lineTo(x0 + dir * 18, y + 8);
-    g.quadraticCurveTo(x0 + dir * 10, y + 12, x0 + dir * 1, y + 8);
-    g.closePath(); g.fill();
-  }
-  g.fillStyle = M.hi;                                 // chụp gối
-  g.beginPath(); g.ellipse(x0 + dir * 9, 164, 11, 9, 0, 0, 7); g.fill();
-  g.fillStyle = M.trim;                               // gai gối
-  g.beginPath();
-  g.moveTo(x0 + dir * 15, 159); g.lineTo(x0 + dir * 15, 169);
-  g.lineTo(x0 + dir * 30, 160); g.closePath(); g.fill();
-  if (st >= 2){                                       // vuốt rồng ở mũi giày
-    g.fillStyle = M.trim;
-    for (let i = 0; i < 3; i++){
-      const cx = x0 + dir * (3 + i * 7);
-      g.beginPath();
-      g.moveTo(cx, 206); g.lineTo(cx + dir * 5, 206); g.lineTo(cx + dir * 3, 216);
-      g.closePath(); g.fill();
-    }
-  }
-}
-const SET_LEG = {
-  plate: hGreavePlate, chain: hGreavePlate, drake: hGreaveDragon, hoalong: hGreaveDragon,
-  cloth: hGreaveRobe, sphinx: hGreaveRobe, arcane: hGreaveRobe,
-  hide: hGreaveLight, leaf: hGreaveLight, plume: hGreaveLight,
-  halfplate: hGreavePlate, regal: hGreavePlate,
-};
-function hGreave(g, M, gv, side, S){
-  const t = gv ? gv.t : 0;
-  if (t < 2.2) return;
-  const fn = SET_LEG[(S && S.style) || 'plate'] || hGreavePlate;
-  g.save();
-  fn(g, M, t < 3.1 ? 1 : t < 4.0 ? 2 : 3, side < 0 ? 61 : 80, side < 0 ? -1 : 1);
-  g.restore();
-}
-function hBeltPlate(g, M, st){
-  g.fillStyle = M.lo;                                 // bản đai
-  g.fillRect(54, 138, 52, 7 + st);
-  g.fillStyle = M.trim;                               // khoá đai giữa bụng
-  const bw = 7 + st * 2.2;
-  g.beginPath();
-  g.moveTo(80, 136); g.lineTo(80 + bw * 0.5, 141.5 + st * 0.5);
-  g.lineTo(80, 148 + st); g.lineTo(80 - bw * 0.5, 141.5 + st * 0.5);
-  g.closePath(); g.fill();
-  if (st >= 2){                                       // hai tấm hông rủ xuống
-    g.fillStyle = M.hi;
-    for (const s of [-1, 1]){
-      g.beginPath();
-      g.moveTo(80 + s * 16, 144); g.lineTo(80 + s * 30, 144);
-      g.lineTo(80 + s * (26 + st * 2), 160 + st * 3); g.lineTo(80 + s * 15, 158 + st * 2);
-      g.closePath(); g.fill();
-    }
-  }
-}
-// HỎA LONG — váy vảy hai hàng, khoá hàm rồng, tấm hông có vuốt
-function hBeltDragon(g, M, _st){
-  g.fillStyle = M.lo; g.fillRect(54, 137, 52, 9);
-  for (let row = 0; row < 2; row++){                  // váy vảy so le
-    for (let i = 0; i < 5; i++){
-      const x = 56 + i * 10 + row * 5, y = 145 + row * 8;
-      g.fillStyle = (i + row) % 2 ? M.hi : M.lo;
-      g.beginPath();
-      g.moveTo(x, y); g.lineTo(x + 9, y);
-      g.quadraticCurveTo(x + 4.5, y + 11, x, y);
-      g.closePath(); g.fill();
-    }
-  }
-  g.fillStyle = M.trim;                               // khoá hình hàm rồng
-  g.beginPath();
-  g.moveTo(80, 134); g.lineTo(89, 141); g.lineTo(84, 150); g.lineTo(76, 150); g.lineTo(71, 141);
-  g.closePath(); g.fill();
-  g.fillStyle = M.glow || '#ff7a3a';
-  g.beginPath(); g.ellipse(80, 142, 3, 4, 0, 0, 7); g.fill();
-  for (const s of [-1, 1]){                           // tấm hông + vuốt
-    g.fillStyle = M.hi;
-    g.beginPath();
-    g.moveTo(80 + s * 17, 143); g.lineTo(80 + s * 31, 143);
-    g.lineTo(80 + s * 28, 168); g.lineTo(80 + s * 16, 163);
-    g.closePath(); g.fill();
-    g.fillStyle = M.trim;
-    g.beginPath();
-    g.moveTo(80 + s * 28, 166); g.lineTo(80 + s * 22, 164); g.lineTo(80 + s * 26, 177);
-    g.closePath(); g.fill();
-  }
-}
-const SET_HIP = {
-  plate: hBeltPlate, chain: hBeltPlate, drake: hBeltDragon, hoalong: hBeltDragon,
-  cloth: hBeltSash, sphinx: hBeltSash, arcane: hBeltSash,
-  hide: hBeltLeafSkirt, leaf: hBeltLeafSkirt, plume: hBeltLeafSkirt,
-  halfplate: hBeltHalf, regal: hBeltDrape,
-};
-function hBelt(g, M, gv, S){
-  const t = gv ? gv.t : 0;
-  if (t < 1.5) return;
-  const fn = SET_HIP[(S && S.style) || 'plate'] || hBeltPlate;
-  g.save();
-  fn(g, M, t < 2.9 ? 1 : t < 4.2 ? 2 : 3);
-  g.restore();
-}
-// ── B. CHẤT LIỆU ──
-// Không làm giáp SÁNG hơn, mà làm nó PHẢN CHIẾU khác đi: bậc thấp là sắt nhám (chuyển sắc mờ,
-// không có dải phản quang), bậc cao là thép đánh bóng (dải phản quang hẹp và gắt).
-// ── CHẤT LIỆU: đổ bóng theo BỀ MẶT, không chỉ theo màu ──────────────────────
-// Trước đây mọi bộ dùng chung một lượt bóng, nên "vải thô" với "thép" chỉ khác tông màu — mà
-// hai thứ đó ngoài đời khác nhau ở CÁCH BẮT SÁNG chứ không ở màu. Mỗi kiểu dưới đây đổ bóng
-// một kiểu: thép có vệt loé hẹp và cứng, vải chuyển mềm không loé, da ánh mờ ấm, xương phẳng
-// phấn có đốm, vảy loé thành từng hàng, phép thì phát sáng từ giữa ra.
-// Suy từ `style` để khỏi phải khai lại 70 dòng; chỉ những bộ mà cái TÊN đòi khác mới ghi đè.
-const MAT_OF_STYLE = { plate:'metal', chain:'metal', halfplate:'metal', regal:'metal',
-  drake:'scale', hoalong:'scale', cloth:'cloth', leaf:'cloth', plume:'cloth',
-  hide:'leather', sphinx:'arcane', arcane:'arcane' };
-const MAT_BY_NAME = { 'Xương':'bone', 'Cốt Giáp':'bone', 'Tế Đàn':'bone', 'Ngân Giáp':'metal' };
-function setMat(S){
-  if (!S) return 'metal';
-  return MAT_BY_NAME[S.name] || MAT_OF_STYLE[S.style] || 'metal';
-}
-// MAT_PASS đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
-const MAT_PASS = window.MAT_PASS;
-function hArmorSheen(g, M, gv, S){
-  const t = gv ? gv.t : 0;
-  if (t < 1) return;
-  const k = Math.min(1, t / GIAI_MAX);       // chuẩn hoá theo số giai, không ghim con số nào
-  g.save();
-  g.beginPath();                                        // giới hạn trong khối thân
-  g.moveTo(56, 94); g.lineTo(104, 94); g.lineTo(108, 142); g.lineTo(52, 142);
-  g.closePath(); g.clip();
-  const gr = g.createLinearGradient(0, 94, 0, 142);     // sáng trên, tối dưới — nền chung
-  gr.addColorStop(0, `rgba(255,255,255,${(0.05 + k * 0.16).toFixed(3)})`);
-  gr.addColorStop(0.45, 'rgba(255,255,255,0)');
-  gr.addColorStop(1, `rgba(0,0,0,${(0.10 + k * 0.16).toFixed(3)})`);
-  g.fillStyle = gr; g.fillRect(50, 92, 60, 54);
-  (MAT_PASS[setMat(S)] || MAT_PASS.metal)(g, k, M);
-  g.restore();
-}
 
 // ── ÁNH SÁNG MỘT HƯỚNG CHO CẢ DÁNG NGƯỜI ────────────────────────────────────
 // Từng mảnh vốn tô phẳng nên nhân vật đọc ra như hình cắt giấy. Một lượt sáng THỐNG NHẤT từ
@@ -11936,62 +10805,6 @@ function hFigureLight(g){
     g.fillStyle = rg;
     g.save(); g.translate(x, y); g.scale(rx / Math.max(rx, ry), ry / Math.max(rx, ry));
     g.translate(-x, -y); g.beginPath(); g.arc(x, y, Math.max(rx, ry), 0, 7); g.fill(); g.restore();
-  }
-  g.restore();
-}
-// ── C. HOA VĂN KHẢM ──
-// Mật độ chi tiết là thứ mắt đọc ra "đồ đắt" mà không cần biết luật chơi. Số đường tăng theo
-// bậc, MÀU lấy theo độ hiếm — nên `it.rarity` lần đầu tiên có mặt trên người nhân vật.
-// Hoa văn khảm là chỗ DUY NHẤT đổi được ở MỌI giai. Bóng dáng (hStage) chỉ đổi ở giai 5/7/9
-// và bảng màu bộ chỉ đổi ở giai 3/5/7/9 — hai thứ đó trùng mốc nhau, nên chín bước lên giai chỉ
-// có bốn bước được đổi hình. Đo bằng test_geartier trước khi sửa: bước 4→5, 6→7, 8→9 đổi
-// 28–52% điểm ảnh, còn 1→2 và 3→4 chỉ 12–30%, thấp nhất là minhgiao 3→4 = 12,1%.
-//
-// Nay mỗi giai thêm ĐÚNG MỘT thứ, và không giai nào lấy đi thứ giai dưới đã có — nâng cấp mà
-// mất đi một chi tiết thì nhìn như bị tụt hạng:
-//   giai  1  không gì            giai  8  + vạch dọc giữa ngực
-//   giai  2–6  1→5 nét khảm      giai 10  + đinh tán hai bên
-//   giai  7  + khoá ngực         giai 12  + vòng cổ
-//                                giai 7   + quầng sáng quanh khoá
-// Trải thưa hơn bản 10 giai vì nay MỖI giai đã đổi hẳn bộ đồ và bảng màu — hoa văn chỉ còn
-// là lớp tín hiệu thứ hai, không phải thứ gánh cả việc phân biệt.
-function hEngrave(g, M, gv){
-  const t = gv ? gv.t : 0;
-  if (t < 1.5) return;
-  const col = gv.rcol || M.trim;
-  const n = Math.min(5, t - 1);
-  g.save();
-
-  if (t >= 6.1){                                        // vòng cổ — cung ôm dưới cằm
-    g.strokeStyle = col; g.globalAlpha = 0.8; g.lineWidth = 2.4;
-    g.beginPath(); g.arc(80, 84, 15, 0.35, Math.PI - 0.35); g.stroke();
-  }
-  if (t >= 7){                                          // quầng sáng quanh khoá — chỉ giai cuối
-    const ag = g.createRadialGradient(80, 101, 1, 80, 101, 15);
-    ag.addColorStop(0, col); ag.addColorStop(1, 'rgba(0,0,0,0)');
-    g.globalAlpha = 0.5; g.fillStyle = ag;
-    g.beginPath(); g.arc(80, 101, 15, 0, 7); g.fill();
-  }
-  if (t >= 3.8){                                        // khoá ngực hình thoi
-    g.globalAlpha = 0.9; g.fillStyle = col;
-    g.beginPath();
-    g.moveTo(80, 94); g.lineTo(86, 101); g.lineTo(80, 108); g.lineTo(74, 101);
-    g.closePath(); g.fill();
-  }
-  g.strokeStyle = col; g.globalAlpha = 0.75; g.lineWidth = 1.2;
-  for (let i = 0; i < n; i++){                          // nét khảm ngang
-    const y = 112 + i * 7;
-    g.beginPath(); g.moveTo(60, y); g.quadraticCurveTo(80, y + 4, 100, y); g.stroke();
-  }
-  if (t >= 4.2){                                        // vạch dọc nối các nét ngang
-    g.globalAlpha = 0.7; g.lineWidth = 1.6;
-    g.beginPath(); g.moveTo(80, 110); g.lineTo(80, 112 + (n - 1) * 7 + 4); g.stroke();
-  }
-  if (t >= 5.2){                                        // đinh tán hai bên ngực
-    g.globalAlpha = 0.85; g.fillStyle = col;
-    for (const x of [64, 96]) for (const y of [117, 131]){
-      g.beginPath(); g.arc(x, y, 2.1, 0, 7); g.fill();
-    }
   }
   g.restore();
 }
@@ -12056,9 +10869,6 @@ function hPlusSweep(g, M, gv, now){
   g.fillStyle = gr; g.fillRect(50, 88, 60, 62);
   g.restore();
 }
-// Màu viền sáng cho vai/mũ (null nếu chưa tới mốc +4). Cách tạo viền: vẽ lại CHÍNH hình đó
-// to hơn ~12% bằng màu sáng ở lớp dưới — rẻ hơn nhiều so với dựng mặt nạ silhouette mỗi khung.
-function plusRim(M, gv){ return plusStage(gv ? gv.plus : 0) >= 1 ? (M.glow || '#ffe9a8') : null; }
 
 function hPoly(g, pts, c){
   g.fillStyle = c; g.beginPath();
@@ -12176,15 +10986,12 @@ const HERO_POSE0 = heroPose(0, false, 0, 0, 0, 'slash');
 // Chân có HAI khớp: hông và gối. Trước đây cả chân là một khúc cứng xoay quanh
 // hông — nhìn ra con rối, không ra người đi. Ống chân nay nằm trong khớp gối,
 // nên lúc chân đưa qua thân thì gối gập và bàn chân nhấc lên khỏi mặt đất.
-// Giáp ống cũng vẽ trong khớp gối: nó nằm ở ống chân chứ không phải ở đùi.
-function hLegs(g, P, ps, gv, SM, S){
+function hLegs(g, P, ps){
   hJoint(g, HERO_JOINT.hipL[0], HERO_JOINT.hipL[1], ps.legL, () => {
     hPoly(g, [[63,140],[80,140],[80,177],[62,177]], P.leg);                 // đùi (thò quá gối để che mối nối)
     hJoint2(g, HERO_JOINT.kneeL[0], HERO_JOINT.kneeL[1], ps.kneeL || 0, ps.liftL || 0, () => {
       hPoly(g, [[62,163],[80,163],[80,198],[61,198]], P.leg);               // ống chân
       hPoly(g, [[60,194],[79,194],[81,212],[57,212]], P.boot);
-      hGreave(g, SM || hMetal(1), gv, -1, S);
-      hLegMods(g, SM || hMetal(1), S && S.sh, -1);
     });
   });
   hJoint(g, HERO_JOINT.hipR[0], HERO_JOINT.hipR[1], ps.legR, () => {
@@ -12192,8 +10999,6 @@ function hLegs(g, P, ps, gv, SM, S){
     hJoint2(g, HERO_JOINT.kneeR[0], HERO_JOINT.kneeR[1], ps.kneeR || 0, ps.liftR || 0, () => {
       hPoly(g, [[80,163],[98,163],[99,198],[80,198]], P.leg);
       hPoly(g, [[81,194],[100,194],[103,212],[79,212]], P.boot);
-      hGreave(g, SM || hMetal(1), gv, 1, S);
-      hLegMods(g, SM || hMetal(1), S && S.sh, 1);
     });
   });
 }
@@ -12467,7 +11272,7 @@ function hHeldWeapon(g, gv, ps, x, y, rot, fallback){
     // ~1.45, không phải 2.5 — ở 2.5 thanh kiếm cao hơn cả người và cắt ngang thân.
     g.scale(F.k, F.k);
     g.translate(0, F.dy);                      // điểm nắm rơi đúng vào bàn tay
-    (ITEM_ART[d.art] || iaWeapon)(g, W, Object.assign({}, d, { rot: 0 }));
+    (ITEM_ART[d.art] || iaChuaArt)(g, W, Object.assign({}, d, { rot: 0 }));
     g.restore();
   };
 }
@@ -12635,7 +11440,7 @@ function nvBo(sectKey, tier, gv){ return nvTai(nvBoTen(sectKey, tier, gv), 'webp
 // Gỡ kèm: hằng NV_VK_SO, 9 tệp hemp1_vk*.png / dkgs1_vk1.png, và lời gọi trong heroSprite.
 for (const k in NV_BO) nvTai(NV_BO[k], 'webp');
 for (const k in NV_PICK) nvTai('pick_' + k, 'webp');   // tranh chọn lớp — nạp sớm kẻo thẻ nhấp nháy
-for (const k in TK_ANH) nvTai(TK_ANH[k].tep, 'png');   // thần khí có tranh vẽ tay
+for (const k in VK_ANH) nvTai(VK_ANH[k].tep, 'png');   // tranh vũ khí
 for (const k in NV_GIAP){
   const t = NV_GIAP[k];
   nvTai(t + '_icon', 'webp'); nvTai(t, 'webp');
@@ -12678,7 +11483,7 @@ const HS_MAU_DO = '#ff00ff';
 function nvHaoQuangSau(g, sectKey, tier, gv, now){
   if (!gv) return;
   const S = heroSet(sectKey, gv.t);
-  hPlusAura(g, hSetMetal(hMetal(tier), S, gv.t), gv, now);
+  hPlusAura(g, hSetMetal(hMetal(tier), S), gv, now);
 }
 // Cắt MỘT khung khỏi bảng khung ra canvas riêng — nền cho hai hiệu ứng bám bóng dáng bên dưới.
 function _nvKhungRa(im, kind, idx){
@@ -12736,7 +11541,7 @@ function nvHaoQuangTruoc(g, sectKey, tier, gv, now, im, kind, idx){
   if (!gv) return;
   const st = plusStage(gv.plus);
   if (st < 1) return;
-  const SM = hSetMetal(hMetal(tier), heroSet(sectKey, gv.t), gv.t);
+  const SM = hSetMetal(hMetal(tier), heroSet(sectKey, gv.t));
   const k = clamp(((gv.plus || 0) - 3) / 8, 0, 1);          // 0 ở +4, 1 ở +11
   nvVienSang(g, im, kind, idx, (gv.setColor || SM.glow || '#ffe9a8'), 0.16 + st * 0.09 + k * 0.14);
   if (st >= 3) nvDaiQuet(g, im, kind, idx, now);
@@ -12849,7 +11654,7 @@ function drawHeroFigure(g, sectKey, tier, now, ps, gv){
   gv = gv || null;
   // Bộ giáp riêng của lớp: đổi cả TẠO HÌNH (vai/mũ/chân/eo) lẫn BẢNG MÀU. Không có bộ
   // (chưa mặc gì / màn chọn lớp) thì SM === M, mọi thứ y như trước.
-  const S = gv ? heroSet(sectKey, gv.t) : null, SM = hSetMetal(M, S, gv ? gv.t : 0);
+  const S = gv ? heroSet(sectKey, gv.t) : null, SM = hSetMetal(M, S);
   ps.gv = gv;   // upper() của từng lớp cần gv để vẽ đúng vũ khí đang mặc
   ps._wpen = null;   // ps thường là HERO_POSE0 dùng chung — đừng để sót hàm vẽ của lượt trước
   g.save();
@@ -12869,27 +11674,17 @@ function drawHeroFigure(g, sectKey, tier, now, ps, gv){
   // y=200 — lệch 12 px, đủ để gốc cánh tụt xuống ngang hông.
   if (gv && gv.canh) veCanh(g, gv.canh, 80, 212, 0, ps.lean * 0.5, 1, 0);
   if (G.cape && !ps.back) hCape(g, G.cape[0], G.cape[1], ps);
-  hLegs(g, P, ps, gv, SM, S);
+  hLegs(g, P, ps);
   g.translate(0, ps.bob);                                    // nhún theo bước chân
   hJoint(g, 80, 146, ps.lean, () => {
     // SM chứ không phải M: giáp thân của lớp phải cùng bảng màu với vai/mũ/chân của BỘ,
     // nếu không thì mũ ra một màu (theo bậc) còn vai ra màu khác (theo bộ) — lạc hẳn nhau.
     G.upper(g, SM, ps, P);
-    hArmorSheen(g, M, gv, S);                                // B. chất liệu — đổ bóng theo BỀ MẶT
-    hChestMods(g, SM, S && S.sh);                            // B2. nét riêng của bộ trên thân áo
-    hEngrave(g, M, gv);                                      // C. hoa văn khảm
-    hPlusSweep(g, SM, gv, now);                              // E. dải sáng quét thân (+10)
-    hBelt(g, SM, gv, S);                                     // A. đai lưng + tấm hông
+    hPlusSweep(g, SM, gv, now);                              // dải sáng quét thân (+10)
     // quay lưng: áo choàng phủ lên trên thân, đúng như nhìn nhân vật đi ra xa
     if (G.cape && ps.back) hCape(g, G.cape[0], G.cape[1], ps);
-    // A. bóng dáng vẽ SAU áo choàng: vai giáp nằm cao hơn mép áo choàng, phải thấy được cả
-    // khi nhân vật quay lưng, nếu không thì đi ra xa là mất sạch phần dễ nhận ra nhất.
-    hHelmShell(g, SM, gv, ps, S);                            // A2. vòm nón riêng của bộ
-    hGloves(g, SM, ps, S);                                   // A3. găng riêng của bộ
-    hPauldrons(g, SM, gv, S, ps);
-    hHelmCrest(g, SM, gv, ps, S);
-    hFlushWeapon(ps);                                      // vũ khí nằm TRÊN giáp, không bị vai cắt
-    hFigureLight(g);                                       // F. ánh sáng một hướng — vẽ SAU CÙNG
+    hFlushWeapon(ps);
+    hFigureLight(g);                                       // ánh sáng một hướng — vẽ SAU CÙNG
   });
   hPlusSpark(g, SM, gv, now);                                // E. tàn lửa (trước thân)
   g.restore();
@@ -17906,736 +16701,15 @@ function iGem(g, M, x, y, r){
 //   9 lưỡi × 7 chắn tay × 4 chuôi × 6 hoa văn  →  thừa sức cho 75 vũ khí mà không trùng dáng.
 // Quy ước: lưỡi vẽ từ chắn tay (y = +12) hướng lên tới mũi (y = len, âm). w = NỬA bề ngang.
 
-// ── LƯỠI ────────────────────────────────────────────────────────────────────────
-const IBLADE = {
-  // kiếm một tay thường: thuôn đều
-  thang(g, M, w, len){
-    iFill(g, [[-w, 12], [-w*0.86, len*0.5], [0, len], [w*0.86, len*0.5], [w, 12]], M.hi);
-    iFill(g, [[-w*0.28, 9], [-w*0.24, len*0.5], [0, len*0.82], [w*0.24, len*0.5], [w*0.28, 9]], M.lo);
-  },
-  // KIẾM LA MÃ: ngắn, bè, vai lưỡi gãy khúc rõ rồi mới vào mũi tam giác
-  lama(g, M, w, len){
-    const W = w * 1.55, sh = len * 0.62;
-    iFill(g, [[-W, 12], [-W, sh], [-W*0.9, sh*1.06], [0, len], [W*0.9, sh*1.06], [W, sh], [W, 12]], M.hi);
-    iFill(g, [[-W*0.26, 10], [-W*0.26, sh], [0, len*0.86], [W*0.26, sh], [W*0.26, 10]], M.lo);
-    g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 0.9;
-    g.beginPath(); g.moveTo(-W, sh); g.lineTo(W, sh); g.stroke();
-  },
-  // KRIS: lưỡi lượn sóng
-  song(g, M, w, len){
-    const N = 5;
-    const side = (s) => {
-      const pts = [];
-      for (let i = 0; i <= N; i++){
-        const t = i / N, y = 12 + (len - 12) * t;
-        const amp = (1 - t * 0.55) * w * 0.75;
-        pts.push([s * (w * (1 - t * 0.35) + Math.sin(t * Math.PI * 2.6) * amp * 0.5), y]);
-      }
-      return pts;
-    };
-    const L = side(-1), R = side(1).reverse();
-    iFill(g, [...L, [0, len], ...R], M.hi);
-    iFill(g, [[-w*0.22, 9], [-w*0.2, len*0.5], [0, len*0.8], [w*0.2, len*0.5], [w*0.22, 9]], M.lo);
-  },
-  // KIẾM ĐIỆN: hai ngạnh chẻ, cạnh gãy khúc kiểu tia sét
-  chietia(g, M, w, len){
-    const zig = (s) => [
-      [s*w, 12], [s*w*1.5, len*0.30], [s*w*0.55, len*0.42],
-      [s*w*1.35, len*0.66], [s*w*0.5, len*0.74], [s*w*0.95, len*0.92],
-    ];
-    iFill(g, [...zig(-1), [0, len], ...zig(1).reverse()], M.hi);
-    iFill(g, [[-w*0.3, 10], [-w*0.22, len*0.6], [0, len*0.9], [w*0.22, len*0.6], [w*0.3, 10]], M.lo);
-  },
-  // ĐAO: một lưỡi, sống thẳng, bụng cong
-  cong(g, M, w, len){
-    g.beginPath();
-    g.moveTo(-w, 12);
-    g.quadraticCurveTo(-w * 1.9, len * 0.55, -w * 0.25, len);
-    g.lineTo(w * 0.55, len * 0.95);
-    g.quadraticCurveTo(w * 0.85, len * 0.5, w * 0.8, 12);
-    g.closePath();
-    g.fillStyle = M.hi; g.fill();
-    g.strokeStyle = M.lo; g.lineWidth = 1.6;
-    g.beginPath(); g.moveTo(w * 0.4, 10); g.quadraticCurveTo(w * 0.5, len * 0.55, w * 0.35, len * 0.9); g.stroke();
-  },
-  // KIẾM BĂNG: khối pha lê gãy mặt, không có sống
-  pha_le(g, M, w, len){
-    const W = w * 1.2;
-    iFill(g, [[-W, 12], [-W*0.75, len*0.42], [-W*0.5, len*0.7], [0, len], [W*0.5, len*0.7], [W*0.75, len*0.42], [W, 12]], M.hi);
-    // ba mặt cắt
-    iFill(g, [[-W, 12], [-W*0.75, len*0.42], [0, len*0.36], [0, 12]], M.lo);
-    g.save(); g.globalAlpha = .55;
-    iFill(g, [[0, 12], [0, len*0.36], [W*0.75, len*0.42], [W, 12]], '#ffffff');
-    g.restore();
-    iFill(g, [[-W*0.5, len*0.7], [0, len], [W*0.5, len*0.7], [0, len*0.62]], M.lo);
-  },
-  // lưỡi răng cưa
-  rangcua(g, M, w, len){
-    iFill(g, [[-w, 12], [-w*0.8, len*0.55], [0, len], [w*0.8, len*0.55], [w, 12]], M.hi);
-    g.fillStyle = M.lo;
-    for (let i = 0; i < 5; i++){
-      const t = 0.14 + i * 0.16, y = 12 + (len - 12) * t;
-      const ww = w * (1 - t * 0.42);
-      iPoly(g, [[ww, y], [ww + 3.4, y - 2.6], [ww, y - 5.2]]); g.fill();
-    }
-    iFill(g, [[-w*0.26, 9], [-w*0.22, len*0.55], [0, len*0.8], [w*0.22, len*0.55], [w*0.26, 9]], M.lo);
-  },
-  // ĐẠI KIẾM: to bản, có khấc gần chắn tay
-  daikiem(g, M, w, len){
-    const W = w * 1.7;
-    iFill(g, [[-W, 12], [-W, len*0.22], [-W*1.25, len*0.3], [-W*0.92, len*0.38],
-              [-W*0.8, len*0.72], [0, len], [W*0.8, len*0.72], [W*0.92, len*0.38],
-              [W*1.25, len*0.3], [W, len*0.22], [W, 12]], M.hi);
-    iFill(g, [[-W*0.3, 9], [-W*0.26, len*0.62], [0, len*0.85], [W*0.26, len*0.62], [W*0.3, 9]], M.lo);
-  },
-  // RÌU: đầu rìu bè một bên cán, cán xuyên suốt
-  riu(g, M, w, len){
-    const H = len * 0.62;                       // đầu rìu chiếm phần trên
-    iFill(g, [[-w*0.5, 12], [w*0.5, 12], [w*0.5, len], [-w*0.5, len]], M.lo);   // cán
-    g.beginPath();                              // lưỡi bè sang phải
-    g.moveTo(w*0.4, H*0.35);
-    g.quadraticCurveTo(w*3.4, H*0.5, w*3.1, H);
-    g.quadraticCurveTo(w*2.2, len*0.94, w*0.4, len*0.9);
-    g.closePath();
-    g.fillStyle = iGrad(g, w*0.4, H, w*3.4, len, M.hi, M.lo); g.fill();
-    g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = 1; g.stroke();
-    iFill(g, [[-w*0.4, H*0.5], [-w*1.7, H*0.75], [-w*1.5, len*0.9], [-w*0.4, len*0.85]], M.trim);  // ngạnh sau
-    iFill(g, [[-w*0.5, len], [w*0.5, len], [0, len*1.14]], M.trim);             // mũi nhọn đỉnh cán
-  },
-  // CHÙY: đầu khối có cánh, dùng để phá giáp
-  chuy(g, M, w, len){
-    const H = len * 0.66;
-    iFill(g, [[-w*0.5, 12], [w*0.5, 12], [w*0.5, H*0.9], [-w*0.5, H*0.9]], M.lo);  // cán
-    const R = w * 2.2;
-    g.fillStyle = iGrad(g, -R, H, R, len, M.hi, M.lo);
-    g.beginPath(); g.ellipse(0, (H + len) / 2, R, Math.abs(len - H) * 0.58, 0, 0, 7); g.fill();
-    g.fillStyle = M.trim;                        // 4 cánh phá giáp
-    for (const sd of [-1, 1]){
-      iPoly(g, [[sd*R*0.6, H*0.98], [sd*R*1.85, (H+len)/2], [sd*R*0.6, len*0.98]]); g.fill();
-    }
-    iPoly(g, [[-w*0.7, len*0.95], [w*0.7, len*0.95], [0, len*1.2]]); g.fill();
-    g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = 1;
-    g.beginPath(); g.ellipse(0, (H + len) / 2, R, Math.abs(len - H) * 0.58, 0, 0, 7); g.stroke();
-  },
-  // KIẾM MẢNH: đâm, gần như không bề ngang
-  manh(g, M, w, len){
-    const W = w * 0.5;
-    iFill(g, [[-W, 12], [-W, len*0.78], [0, len], [W, len*0.78], [W, 12]], M.hi);
-    g.strokeStyle = M.lo; g.lineWidth = 1.2;
-    g.beginPath(); g.moveTo(0, 10); g.lineTo(0, len*0.85); g.stroke();
-  },
-};
 
-// ── CHẮN TAY ────────────────────────────────────────────────────────────────────
-const IGUARD = {
-  thanh(g, M, gw){ iFill(g, [[-gw, 12], [-gw*0.82, 17.5], [gw*0.82, 17.5], [gw, 12], [gw*0.74, 9.4], [-gw*0.74, 9.4]], M.trim); },
-  quat(g, M, gw){  // quillon vuốt lên
-    iFill(g, [[-gw, 12], [-gw*0.8, 17], [gw*0.8, 17], [gw, 12], [gw*0.72, 9.4], [-gw*0.72, 9.4]], M.trim);
-    iFill(g, [[-gw, 12.5], [-gw-4.5, 4], [-gw*0.7, 9.4]], M.trim);
-    iFill(g, [[gw, 12.5], [gw+4.5, 4], [gw*0.7, 9.4]], M.trim);
-  },
-  canh(g, M, gw){  // cánh xoè
-    for (const s of [-1, 1]){
-      g.save(); g.scale(s, 1);
-      g.beginPath(); g.moveTo(0, 9);
-      g.quadraticCurveTo(gw*0.7, 4, gw*1.25, 12);
-      g.quadraticCurveTo(gw*0.8, 18, 0, 17); g.closePath();
-      g.fillStyle = M.trim; g.fill();
-      g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = .8; g.stroke();
-      g.restore();
-    }
-  },
-  luoiliem(g, M, gw){ // lưỡi liềm ngửa
-    g.beginPath();
-    g.moveTo(-gw*1.15, 15); g.quadraticCurveTo(0, 2.5, gw*1.15, 15);
-    g.quadraticCurveTo(0, 10, -gw*1.15, 15); g.closePath();
-    g.fillStyle = M.trim; g.fill();
-  },
-  vuot(g, M, gw){  // vuốt quặp xuống
-    iFill(g, [[-gw*0.7, 9.4], [gw*0.7, 9.4], [gw*0.7, 15], [-gw*0.7, 15]], M.trim);
-    for (const s of [-1, 1]) iFill(g, [[s*gw*0.6, 10], [s*gw*1.45, 20], [s*gw*0.95, 21], [s*gw*0.55, 15]], M.trim);
-  },
-  soc(g, M, gw){   // ổ giữa + hai ngạnh nhỏ
-    iFill(g, [[-gw*0.9, 11], [gw*0.9, 11], [gw*0.75, 17], [-gw*0.75, 17]], M.trim);
-    for (const s of [-1, 1]) iFill(g, [[s*gw*0.9, 11], [s*gw*1.3, 13.6], [s*gw*0.85, 17]], M.trim);
-  },
-  khong(g){ void g; },  // gậy / cung: không có chắn tay
-};
 
-// ── CHUÔI ───────────────────────────────────────────────────────────────────────
-const IPOMMEL = {
-  tron(g, M, r){ g.fillStyle = M.trim; g.beginPath(); g.arc(0, 33, r, 0, 7); g.fill(); },
-  da(g, M, r){ g.fillStyle = M.trim; g.beginPath(); g.arc(0, 33, r, 0, 7); g.fill(); iGem(g, M, 0, 33, r*0.55); },
-  gai(g, M, r){ iFill(g, [[-r, 30], [r, 30], [0, 30 + r*2.2]], M.trim);
-                g.fillStyle = M.trim; g.beginPath(); g.arc(0, 30, r*0.8, 0, 7); g.fill(); },
-  vuot(g, M, r){ g.fillStyle = M.trim; g.beginPath(); g.arc(0, 32, r*0.9, 0, 7); g.fill();
-                 for (const s of [-1, 1]) iFill(g, [[s*r*0.5, 30], [s*r*1.9, 36], [s*r*0.4, 35]], M.trim); },
-};
 
-// ── HOA VĂN trên lưỡi — thứ biến "thanh kiếm" thành "KIẾM ĐIỆN" ────────────────
-// Màu hoa văn thuộc về MÓN, không thuộc về giai. Bản đầu lấy M.glow nên Kiếm Điện, Kiếm Băng
-// và Kiếm Lửa cùng giai thì cùng một màu vàng — mất sạch bản sắc. Trong MU thì Kiếm Điện xanh
-// điện ở mọi cấp.
-const MOTIF_COL = { set:'#8fe0ff', bang:'#bfe8ff', lua:'#ff8a2a', runes:'#c8a8ff', gai:null, mach:'#c8a8ff' };
-const IMOTIF = {
-  khong(g){ void g; },
-  set(g, M, len){          // tia sét gãy khúc
-    const c = MOTIF_COL.set;
-    const path = () => { g.beginPath();
-      g.moveTo(-3, 6); g.lineTo(2.6, len*0.34); g.lineTo(-2.8, len*0.46);
-      g.lineTo(3, len*0.72); g.lineTo(-1.4, len*0.84); };
-    g.save();
-    // rãnh tối lót dưới — không có nó thì nét sáng tan vào lưỡi kim loại sáng
-    g.strokeStyle = 'rgba(0,0,0,.55)'; g.lineWidth = 4.6; g.lineJoin = 'miter'; path(); g.stroke();
-    g.globalCompositeOperation = 'lighter';
-    g.strokeStyle = c; g.globalAlpha = .45; g.lineWidth = 5; path(); g.stroke();
-    g.globalAlpha = 1; g.lineWidth = 2.2; path(); g.stroke();
-    g.strokeStyle = '#ffffff'; g.lineWidth = 0.9; path(); g.stroke();
-    g.restore();
-  },
-  bang(g, M, len){         // gai băng mọc chéo hai bên sống
-    const c = MOTIF_COL.bang;
-    const spikes = () => { g.beginPath();
-      for (let i = 0; i < 4; i++){
-        const y = 4 + (len - 4) * (0.18 + i * 0.2);
-        g.moveTo(0, y); g.lineTo(-5.4, y - 5.2); g.moveTo(0, y); g.lineTo(5.4, y - 5.2);
-      }
-      g.moveTo(0, 6); g.lineTo(0, len*0.88); };
-    g.save(); g.lineCap = 'round';
-    g.strokeStyle = 'rgba(0,40,70,.55)'; g.lineWidth = 4.2; spikes(); g.stroke();
-    g.globalCompositeOperation = 'lighter';
-    g.strokeStyle = c; g.globalAlpha = .5; g.lineWidth = 4; spikes(); g.stroke();
-    g.globalAlpha = 1; g.lineWidth = 1.7; spikes(); g.stroke();
-    g.restore();
-  },
-  lua(g, M, len){          // lưỡi lửa liếm dọc sống
-    const c = MOTIF_COL.lua;
-    const flames = () => { g.beginPath();
-      for (let i = 0; i < 3; i++){
-        const y = 4 + (len - 4) * (0.2 + i * 0.26), sd = i % 2 ? 1 : -1;
-        g.moveTo(0, y);
-        g.quadraticCurveTo(sd * 7, y - 6, 0, y - 13.5);
-        g.quadraticCurveTo(sd * 2.4, y - 6, 0, y);
-      } };
-    g.save();
-    g.fillStyle = 'rgba(60,10,0,.5)'; flames(); g.fill();
-    g.globalCompositeOperation = 'lighter';
-    g.fillStyle = c; g.globalAlpha = .95; flames(); g.fill();
-    g.globalAlpha = .8; g.fillStyle = '#ffe08a';
-    g.save(); g.scale(0.5, 0.72); flames(); g.fill(); g.restore();
-    g.restore();
-  },
-  runes(g, M, len){        // ký tự khắc chìm
-    g.save(); g.strokeStyle = MOTIF_COL.runes; g.lineWidth = 1.5; g.globalAlpha = 1;
-    for (let i = 0; i < 4; i++){
-      const y = 4 + (len - 4) * (0.2 + i * 0.19);
-      g.beginPath(); g.moveTo(-2.2, y); g.lineTo(2.2, y - 2.4); g.moveTo(2.2, y); g.lineTo(-2.2, y - 2.4); g.stroke();
-    }
-    g.restore();
-  },
-  gai(g, M, len){          // ngạnh mọc ra khỏi lưỡi
-    g.fillStyle = M.trim;
-    for (let i = 0; i < 3; i++){
-      const y = 4 + (len - 4) * (0.26 + i * 0.24);
-      iPoly(g, [[-3, y], [-9.5, y - 3.2], [-3, y - 5.5]]); g.fill();
-      iPoly(g, [[3, y], [9.5, y - 3.2], [3, y - 5.5]]); g.fill();
-    }
-  },
-  mach(g, M, len){         // mạch sáng chạy giữa sống
-    const c = MOTIF_COL.mach;
-    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .75;
-    g.strokeStyle = c; g.lineWidth = 2.6; g.lineCap = 'round';
-    g.beginPath(); g.moveTo(0, 6); g.lineTo(0, len*0.86); g.stroke();
-    g.lineWidth = 1; g.globalAlpha = 1; g.strokeStyle = '#ffffff';
-    g.beginPath(); g.moveTo(0, 6); g.lineTo(0, len*0.86); g.stroke();
-    g.restore();
-  },
-};
 
-// Lắp một vũ khí từ 4 bộ phận. P = { blade, guard, pommel, motif, w, len, gw, st }
-function iaWeapon(g, M, P){
-  const st = P.st || 1;
-  g.save(); g.rotate(P.rot === undefined ? -0.42 : P.rot);
-  // Tỉ lệ là thứ nói "món này NẶNG". Bản đầu mọi thanh dài xấp xỉ nhau nên đại kiếm trông
-  // chẳng to hơn dao găm chút nào — cỡ phải chênh thật.
-  const len = P.len || -44, w = P.w || 5.5, gw = P.gw || 15;
-  if (P.big) g.scale(P.big, P.big);
-  // Viền tối: vẽ lưỡi một lần bằng màu gần-đen ở cỡ nhỉnh hơn để tạo contour. Không có nó thì
-  // lưỡi sáng nằm trên nền sáng là mất hẳn bóng dáng — đây là thứ mọi icon MU đều có.
-  const DK = { lo:'#0a0c12', hi:'#0a0c12', trim:'#0a0c12', glow:null };
-  g.save(); g.translate(0, 0.6); g.scale(1.1, 1.03);
-  (IBLADE[P.blade] || IBLADE.thang)(g, DK, w, len);
-  g.restore();
-  (IBLADE[P.blade] || IBLADE.thang)(g, M, w, len);
-  (IMOTIF[P.motif] || IMOTIF.khong)(g, M, len);
-  // cán
-  iFill(g, [[-3.4, 17], [3.4, 17], [3, 31], [-3, 31]], M.lo);
-  g.strokeStyle = M.hi; g.lineWidth = 1.5;
-  for (let i = 0; i < 4; i++){ const y = 19 + i * 3.4;
-    g.beginPath(); g.moveTo(-3.3, y); g.lineTo(3.3, y + 1.6); g.stroke(); }
-  (IGUARD[P.guard] || IGUARD.thanh)(g, M, gw);
-  (IPOMMEL[P.pommel] || IPOMMEL.tron)(g, M, 4.4 + st * 0.3);
-  if (st >= 3) iGem(g, M, 0, 13.4, 2.1 + st * 0.18);
-  g.restore();
-}
 
-// ═══ GẬY / TRƯỢNG — thân + đầu, giống kiếm là lưỡi + chắn tay ═══
-// Dark Wizard và Dark Lord không cầm kiếm. Dùng chung bộ phận lưỡi cho họ là sai từ gốc.
-const ISHAFT = {
-  thang(g, M, len){                                  // thân trơn
-    iFill(g, [[-3.2, 34], [3.2, 34], [2.6, len], [-2.6, len]], iGrad(g, -3, 34, 3, len, M.hi, M.lo));
-  },
-  xoan(g, M, len){                                   // thân xoắn thừng
-    iFill(g, [[-3.4, 34], [3.4, 34], [2.8, len], [-2.8, len]], iGrad(g, -3, 34, 3, len, M.hi, M.lo));
-    g.strokeStyle = 'rgba(0,0,0,.34)'; g.lineWidth = 1.3;
-    for (let i = 0; i < 9; i++){
-      const y = 32 - i * (32 - len) / 9;
-      g.beginPath(); g.moveTo(-3.2, y); g.lineTo(3.2, y - 4.5); g.stroke();
-    }
-  },
-  dot(g, M, len){                                    // thân chia đốt
-    iFill(g, [[-3.2, 34], [3.2, 34], [2.6, len], [-2.6, len]], iGrad(g, -3, 34, 3, len, M.hi, M.lo));
-    g.fillStyle = M.trim;
-    for (let i = 1; i < 5; i++){
-      const y = 34 - i * (34 - len) / 5;
-      g.fillRect(-4.4, y - 2, 8.8, 4);
-    }
-  },
-  xuong(g, M, len){                                  // thân xương, phình đốt
-    iFill(g, [[-3, 34], [3, 34], [2.4, len], [-2.4, len]], iGrad(g, -3, 34, 3, len, M.hi, M.lo));
-    g.fillStyle = M.hi;
-    for (let i = 0; i < 4; i++){
-      const y = 28 - i * (28 - len) / 4;
-      g.beginPath(); g.ellipse(0, y, 5.2, 3, 0, 0, 7); g.fill();
-      g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = .8; g.stroke();
-    }
-  },
-};
-const IHEAD = {
-  cau(g, M, y, st){                                  // cầu phép
-    const c = M.glow || M.trim, r = 8 + st * 0.9;
-    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .4;
-    g.fillStyle = c; g.beginPath(); g.arc(0, y, r + 6, 0, 7); g.fill(); g.restore();
-    const gr = g.createRadialGradient(-r * .3, y - r * .35, 1, 0, y, r);
-    gr.addColorStop(0, '#fff'); gr.addColorStop(.4, c); gr.addColorStop(1, M.lo);
-    g.fillStyle = gr; g.beginPath(); g.arc(0, y, r, 0, 7); g.fill();
-    if (st >= 3){ g.strokeStyle = M.trim; g.lineWidth = 2.4;   // gọng ôm
-      g.beginPath(); g.arc(0, y, r + 3.4, Math.PI * .8, Math.PI * 2.2); g.stroke(); }
-  },
-  liem(g, M, y, st){                                 // lưỡi liềm
-    g.beginPath();
-    g.moveTo(-13, y + 6); g.quadraticCurveTo(-17, y - 16, 0, y - 20);
-    g.quadraticCurveTo(15, y - 16, 12, y + 6);
-    g.quadraticCurveTo(9, y - 8, 0, y - 10);
-    g.quadraticCurveTo(-9, y - 8, -13, y + 6);
-    g.closePath(); g.fillStyle = M.trim; g.fill();
-    if (st >= 3) iGem(g, M, 0, y - 4, 3);
-  },
-  so(g, M, y, st){                                   // sọ
-    g.fillStyle = M.hi;
-    g.beginPath(); g.ellipse(0, y - 5, 9, 10, 0, 0, 7); g.fill();
-    iFill(g, [[-6, y + 3], [6, y + 3], [4.6, y + 10], [-4.6, y + 10]], M.hi);
-    g.fillStyle = '#0a0c12';
-    g.beginPath(); g.arc(-3.6, y - 6, 2.7, 0, 7); g.arc(3.6, y - 6, 2.7, 0, 7); g.fill();
-    g.fillRect(-1.6, y + 1, 3.2, 3);
-    if (st >= 4){ g.fillStyle = M.trim;                 // sừng hai bên sọ
-      iPoly(g, [[-8, y - 10], [-18, y - 20], [-6, y - 14]]); g.fill();
-      iPoly(g, [[8, y - 10], [18, y - 20], [6, y - 14]]); g.fill(); }
-  },
-  tinhthe(g, M, y, st){                              // cụm tinh thể
-    const c = M.glow || M.trim;
-    const shard = (dx, dy, h, w) => { iPoly(g, [[dx - w, y + dy], [dx, y + dy - h], [dx + w, y + dy]]); g.fill(); };
-    g.fillStyle = M.lo; shard(-7, 4, 14, 4.5); shard(7, 5, 12, 4);
-    g.fillStyle = c;    shard(0, 6, 22 + st, 5.5);
-    g.fillStyle = 'rgba(255,255,255,.6)'; shard(-1.6, 4, 14, 2);
-  },
-  canh(g, M, y, st){                                 // đôi cánh ôm viên đá
-    for (const sd of [-1, 1]){
-      g.save(); g.translate(sd * 5, y); g.scale(sd, 1); g.fillStyle = M.trim;
-      for (let i = 0; i < 3; i++){
-        g.beginPath(); g.moveTo(0, 4 - i * 2);
-        g.quadraticCurveTo(9 + i * 2, -6 - i * 4, 14 + i * 3, -2 - i * 6);
-        g.quadraticCurveTo(7 + i, 2 - i * 3, 0, 6 - i * 2); g.fill();
-      }
-      g.restore();
-    }
-    iGem(g, M, 0, y - 2, 4.6 + st * 0.4);
-  },
-  vong(g, M, y, st){                                 // vòng lệnh
-    g.strokeStyle = M.trim; g.lineWidth = 4 + st * 0.4;
-    g.beginPath(); g.arc(0, y - 6, 11, 0, 7); g.stroke();
-    if (st >= 3){ g.lineWidth = 1.6; g.strokeStyle = M.glow || M.hi;
-      g.beginPath(); g.arc(0, y - 6, 11, 0, 7); g.stroke(); }
-    iGem(g, M, 0, y - 6, 3.4 + st * 0.3);
-  },
-  vuot(g, M, y, st){                                 // vuốt quặp giữ đá
-    g.fillStyle = M.trim;
-    for (const sd of [-1, 1]){
-      g.beginPath(); g.moveTo(sd * 3, y + 8);
-      g.quadraticCurveTo(sd * 13, y + 2, sd * 10, y - 14);
-      g.quadraticCurveTo(sd * 9, y - 2, sd * 1, y + 6); g.closePath(); g.fill();
-    }
-    iGem(g, M, 0, y - 1, 5 + st * 0.5);
-  },
-};
-function iaStaff(g, M, P){
-  const st = P.st || 1;
-  g.save(); g.rotate(P.rot === undefined ? -0.26 : P.rot);
-  const len = P.len || -30;                          // đỉnh thân (đầu gậy nằm trên nữa)
-  const DK = { lo:'#0a0c12', hi:'#0a0c12', trim:'#0a0c12', glow:null };
-  g.save(); g.scale(1.5, 1.02); (ISHAFT[P.shaft] || ISHAFT.thang)(g, DK, len); g.restore();
-  (ISHAFT[P.shaft] || ISHAFT.thang)(g, M, len);
-  (IHEAD[P.head] || IHEAD.cau)(g, M, len - 6, st);
-  // đai tay
-  iFill(g, [[-4.6, 16], [4.6, 16], [4, 26], [-4, 26]], M.trim);
-  if (st >= 2) iRivet(g, M, 0, 21, 1.6);
-  if (st >= 4) iFill(g, [[-3.4, 34], [3.4, 34], [0, 42]], M.trim);   // chân nhọn
-  g.restore();
-}
 
-// ═══ CUNG / NỎ ═══
-// Bậc phải đổi HÌNH, không chỉ đổi màu. Trước đây cả 10 cây cung chỉ khác nhau
-// mỗi bảng màu — lên cấp cả một lớp mà vũ khí nhìn y hệt. Kiếm và trượng đã có
-// blade/guard/pommel/shaft/head đổi theo bậc từ lâu; cung/nỏ/dây chuyền thì không.
-// Nay mặc định suy ra từ `st` (bậc 1–5), bảng vẫn ghi đè được nếu muốn.
-const BOW_TIP  = ['khong', 'khong', 'long', 'luoi', 'moc'];
-const BOW_GRIP = ['quan',  'quan',  'tam',  'tam',  'xuong'];
-function iaBow(g, M, P){
-  const st = P.st || 1, kind = P.limb || 'cong';
-  const tip = P.tip || BOW_TIP[Math.min(4, st - 1)] || 'khong';
-  const grip = P.grip || BOW_GRIP[Math.min(4, st - 1)] || 'quan';
-  g.save(); g.rotate(P.rot === undefined ? 0.12 : P.rot);
-  const H = 43 + st * 1.6;
-  const limb = (sd) => {                             // một cánh cung
-    g.beginPath();
-    // Bề ngang cánh phải THẤY ĐƯỢC. Bản đầu mép trong và mép ngoài gần trùng nhau nên cả cây
-    // cung chỉ còn là một nét mảnh, ở 44px thì mất hẳn.
-    g.moveTo(2, sd * 5);
-    if (kind === 'dai') g.quadraticCurveTo(-19, sd * H * 0.55, -11, sd * H);        // trường cung: cong đều
-    else if (kind === 'kep'){ g.quadraticCurveTo(-23, sd * H * 0.45, -10, sd * H * 0.76);
-                              g.quadraticCurveTo(-1, sd * H * 0.94, -15, sd * H); } // cung kép: gập ngược đầu
-    else g.quadraticCurveTo(-26, sd * H * 0.5, -7, sd * H);                         // cung ngắn: cong sâu
-    g.lineTo(0, sd * (H - 5));
-    if (kind === 'dai') g.quadraticCurveTo(-9, sd * H * 0.55, 9, sd * 5);
-    else if (kind === 'kep'){ g.quadraticCurveTo(-4, sd * H * 0.88, -1, sd * H * 0.72);
-                              g.quadraticCurveTo(-14, sd * H * 0.45, 9, sd * 5); }
-    else g.quadraticCurveTo(-15, sd * H * 0.5, 9, sd * 5);
-    g.closePath();
-  };
-  for (const sd of [-1, 1]){
-    limb(sd); g.fillStyle = iGrad(g, -26, 0, 9, 0, M.lo, M.hi); g.fill();
-    limb(sd); g.strokeStyle = 'rgba(0,0,0,.48)'; g.lineWidth = 1.4; g.stroke();
-  }
-  // ── ĐẦU CÁNH: chỗ dễ thấy nhất khi món đồ lên bậc ──
-  const tx = kind === 'dai' ? -11 : kind === 'kep' ? -15 : -7;
-  for (const sd of [-1, 1]){
-    const ty = sd * H;
-    if (tip === 'long'){                             // túm lông — ba nan xoè ngược
-      g.fillStyle = M.trim;
-      for (let i = 0; i < 3; i++)
-        iFill(g, [[tx, ty], [tx - 6 - i * 4, ty - sd * (2 + i * 4)], [tx + 2, ty - sd * (1 + i * 2)]], M.trim);
-    } else if (tip === 'luoi'){                      // lưỡi dao gắn đầu cánh
-      iFill(g, [[tx + 2, ty - sd * 3], [tx - 3, ty + sd * 12], [tx - 8, ty + sd * 1]], M.hi);
-      g.strokeStyle = 'rgba(0,0,0,.4)'; g.lineWidth = .9; g.stroke();
-    } else if (tip === 'moc'){                       // móc quặp
-      g.strokeStyle = M.trim; g.lineWidth = 3.2; g.lineCap = 'round';
-      g.beginPath(); g.moveTo(tx, ty);
-      g.quadraticCurveTo(tx - 11, ty + sd * 8, tx + 3, ty + sd * 11); g.stroke();
-    }
-  }
-  // dây
-  g.strokeStyle = '#e8e0c8'; g.lineWidth = 1.6;
-  g.beginPath(); g.moveTo(-10, -H); g.lineTo(-4, 0); g.lineTo(-10, H); g.stroke();
-  // ── TAY NẮM ──
-  if (grip === 'tam'){                               // bản thép có đinh tán
-    iFill(g, [[-8, -17], [9, -17], [8, 17], [-7, 17]], iGrad(g, -8, -17, 9, 17, M.hi, M.lo));
-    iFill(g, [[-9, -19], [10, -19], [9, -13], [-8, -13]], M.trim);
-    iFill(g, [[-8, 13], [9, 13], [8, 19], [-7, 19]], M.trim);
-    iRivet(g, M, 0.5, -8, 1.5); iRivet(g, M, 0.5, 8, 1.5);
-  } else if (grip === 'xuong'){                      // chuôi xương loe hai đầu
-    iFill(g, [[-6, -13], [7, -13], [6, 13], [-5, 13]], iGrad(g, -6, -13, 7, 13, M.hi, M.lo));
-    iFill(g, [[-9, -19], [10, -19], [7, -12], [-6, -12]], M.trim);
-    iFill(g, [[-6, 12], [7, 12], [10, 19], [-9, 19]], M.trim);
-  } else {                                           // quấn dây
-    iFill(g, [[-7, -15], [8, -15], [7, 15], [-6, 15]], M.trim);
-    g.strokeStyle = 'rgba(0,0,0,.3)'; g.lineWidth = .9;
-    for (let i = -1; i <= 1; i++){ g.beginPath(); g.moveTo(-5, i * 7); g.lineTo(5, i * 7); g.stroke(); }
-  }
-  if (st >= 3) iGem(g, M, 0, 0, 3 + st * 0.25);
-  g.restore();
-}
-// Nỏ cũng vậy: 5 cây trước đây chung một bóng dáng. Nay cánh · báng · thước ngắm
-// đều đổi theo bậc.
-const XB_ARM   = ['thang', 'thang', 'cong', 'cong', 'doi'];
-const XB_STOCK = ['ngan',  'ngan',  'dai',  'dai',  'rong'];
-function iaCrossbow(g, M, P){
-  const st = P.st || 1;
-  const arm = P.arm || XB_ARM[Math.min(4, st - 1)] || 'thang';
-  const stock = P.stock || XB_STOCK[Math.min(4, st - 1)] || 'ngan';
-  g.save(); g.rotate(P.rot === undefined ? -0.18 : P.rot);
-  const W = 36 + st * 1.8;
-  // hai cánh nằm NGANG — đây là thứ tách nỏ khỏi cung ngay từ bóng dáng
-  const wing = (sd, k, dy) => {
-    g.beginPath();
-    g.moveTo(sd * 5, -8 + dy);
-    if (k === 'cong'){                               // cánh quặp ngược ra trước
-      g.quadraticCurveTo(sd * W * 0.55, -22 + dy, sd * W, -14 + dy);
-      g.quadraticCurveTo(sd * W * 0.86, -3 + dy, sd * W * 0.6, -4 + dy);
-      g.quadraticCurveTo(sd * W * 0.5, -2 + dy, sd * 5, 2 + dy);
-    } else {
-      g.quadraticCurveTo(sd * W * 0.6, -18 + dy, sd * W, -7 + dy);
-      g.quadraticCurveTo(sd * W * 0.62, -1 + dy, sd * 5, 2 + dy);
-    }
-    g.closePath();
-    g.fillStyle = iGrad(g, 0, -13 + dy, 0, dy, M.hi, M.lo); g.fill();
-    g.strokeStyle = 'rgba(0,0,0,.4)'; g.lineWidth = 1; g.stroke();
-  };
-  for (const sd of [-1, 1]){
-    if (arm === 'doi'){ wing(sd, 'cong', -6); wing(sd, 'cong', 4); }   // nỏ hai tầng cánh
-    else wing(sd, arm, 0);
-  }
-  g.strokeStyle = '#e8e0c8'; g.lineWidth = 1.5;
-  g.beginPath(); g.moveTo(-W, -6); g.lineTo(0, 4); g.lineTo(W, -6); g.stroke();
-  // ── BÁNG ──
-  if (stock === 'rong'){                             // báng rỗng khoét lỗ
-    iFill(g, [[-8, -16], [8, -16], [7, 30], [-7, 30]], iGrad(g, -8, -16, 8, 30, M.hi, M.lo));
-    g.globalCompositeOperation = 'destination-out';
-    iFill(g, [[-4, 2], [4, 2], [3.4, 18], [-3.4, 18]], '#000');
-    g.globalCompositeOperation = 'source-over';
-    iFill(g, [[-9, -18], [9, -18], [8, -9], [-8, -9]], M.trim);
-  } else if (stock === 'dai'){                       // báng dài có đế tì vai
-    iFill(g, [[-6, -16], [6, -16], [5, 30], [-5, 30]], iGrad(g, -6, -16, 6, 30, M.hi, M.lo));
-    iFill(g, [[-9, 28], [9, 28], [8, 36], [-8, 36]], M.trim);
-    iFill(g, [[-8, -18], [8, -18], [7, -9], [-7, -9]], M.trim);
-  } else {
-    iFill(g, [[-6, -16], [6, -16], [5, 26], [-5, 26]], iGrad(g, -6, -16, 6, 26, M.hi, M.lo));
-    iFill(g, [[-8, -18], [8, -18], [7, -9], [-7, -9]], M.trim);
-  }
-  iFill(g, [[-5, 14], [5, 14], [11, 29], [2, 29]], M.lo);           // cò
-  if (st >= 2) iRivet(g, M, 0, 6, 1.8);
-  // Mũi tên nạp CHĨA LÊN từng làm cả cây nỏ thành mớ gai trên tay nhân vật — bỏ, thay bằng
-  // rãnh dẫn tên nằm trên báng, đọc ra "nỏ" mà không phá bóng dáng.
-  if (st >= 3){ g.strokeStyle = M.trim; g.lineWidth = 2.2;
-    g.beginPath(); g.moveTo(0, -14); g.lineTo(0, 10); g.stroke(); }
-  if (st >= 4){                                      // thước ngắm dựng trên báng
-    iFill(g, [[-4, -20], [4, -20], [3, -27], [-3, -27]], M.trim);
-    g.strokeStyle = M.trim; g.lineWidth = 1.4;
-    g.beginPath(); g.arc(0, -28, 3.4, 0, 7); g.stroke();
-  }
-  if (st >= 4) iGem(g, M, 0, -4, 3.2);
-  g.restore();
-}
 
-// ═══ GIÁP — bóng dáng theo KIỂU BỘ, không phải một dáng tô lại màu ═══
-// 12 kiểu lấy thẳng từ HERO_SETS[].style, nên hình trong túi và hình trên người là CÙNG một
-// bộ. Mũ pháp sư phải là mũ trùm vải, không được là mũ hiệp sĩ đổi màu.
-const ARMOR_TRAIT = {
-  plate:     { soft:0, crest:'sung',   tex:'tam',    round:0.15 },
-  chain:     { soft:0, crest:'khong',  tex:'luoi',   round:0.85 },
-  drake:     { soft:0, crest:'vuot',   tex:'vay',    round:0.25 },
-  hoalong:   { soft:0, crest:'rong',   tex:'vay',    round:0.20 },
-  cloth:     { soft:1, crest:'khong',  tex:'nep',    round:1.00 },
-  sphinx:    { soft:0, crest:'nemes',  tex:'soc',    round:0.30 },
-  arcane:    { soft:1, crest:'cau',    tex:'rune',   round:0.90 },
-  hide:      { soft:1, crest:'khong',  tex:'khau',   round:0.75 },
-  leaf:      { soft:1, crest:'la',     tex:'la',     round:0.80 },
-  plume:     { soft:0, crest:'canh',   tex:'vu',     round:0.55 },
-  halfplate: { soft:0, crest:'lech',   tex:'tam',    round:0.25, asym:1 },
-  regal:     { soft:0, crest:'vuong',  tex:'vien',   round:0.35 },
-};
-function aTrait(P){ return ARMOR_TRAIT[P.style] || ARMOR_TRAIT.plate; }
 
-// Hoạ tiết bề mặt — phủ lên một vùng đã vẽ, cắt theo đường bao hiện tại.
-function aTex(g, M, T, st, x0, y0, x1, y1){
-  g.save(); g.clip();
-  const w = x1 - x0, h = y1 - y0;
-  if (T.tex === 'luoi'){                       // giáp lưới: chấm tròn so le
-    g.fillStyle = 'rgba(0,0,0,.30)';
-    for (let y = y0 + 2; y < y1; y += 4.2)
-      for (let x = x0 + ((Math.round((y - y0) / 4.2) % 2) ? 2 : 0); x < x1; x += 4.2){
-        g.beginPath(); g.arc(x, y, 1.35, 0, 7); g.fill();
-      }
-  } else if (T.tex === 'vay'){                 // vảy: cung xếp lớp
-    g.strokeStyle = 'rgba(0,0,0,.34)'; g.lineWidth = 1.1;
-    for (let y = y0 + 3; y < y1; y += 5)
-      for (let x = x0; x < x1 + 5; x += 6.5){
-        g.beginPath(); g.arc(x + ((Math.round((y - y0) / 5) % 2) ? 3.2 : 0), y, 3.4, Math.PI * 0.15, Math.PI * 0.85); g.stroke();
-      }
-  } else if (T.tex === 'nep'){                 // vải: nếp rủ dọc
-    g.strokeStyle = 'rgba(0,0,0,.26)'; g.lineWidth = 1.3;
-    for (let i = 1; i < 5; i++){
-      const x = x0 + w * i / 5;
-      g.beginPath(); g.moveTo(x, y0); g.quadraticCurveTo(x + 2.5, y0 + h * 0.5, x, y1); g.stroke();
-    }
-  } else if (T.tex === 'khau'){                // da: đường khâu
-    g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = 1; g.setLineDash([2.4, 2.6]);
-    for (let i = 1; i < 4; i++){
-      const y = y0 + h * i / 4;
-      g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
-    }
-    g.setLineDash([]);
-  } else if (T.tex === 'la'){                  // lá: gân chéo
-    g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 1.1;
-    for (let i = 0; i < 5; i++){
-      const y = y0 + h * (i + .5) / 5;
-      g.beginPath(); g.moveTo(x0, y); g.quadraticCurveTo((x0 + x1) / 2, y - 4.5, x1, y); g.stroke();
-    }
-  } else if (T.tex === 'vu'){                  // lông vũ: cung chồng
-    g.strokeStyle = 'rgba(255,255,255,.24)'; g.lineWidth = 1.2;
-    for (let y = y0 + 4; y < y1; y += 5.5){
-      g.beginPath(); g.moveTo(x0, y); g.quadraticCurveTo((x0 + x1) / 2, y + 5.5, x1, y); g.stroke();
-    }
-  } else if (T.tex === 'soc'){                 // nhân sư: sọc ngang đậm nhạt
-    for (let i = 0; i < 6; i++){
-      g.fillStyle = i % 2 ? 'rgba(0,0,0,.26)' : 'rgba(255,255,255,.14)';
-      g.fillRect(x0, y0 + h * i / 6, w, h / 12);
-    }
-  } else if (T.tex === 'rune'){                // ma thuật: ký tự phát sáng
-    g.strokeStyle = M.glow || M.trim; g.lineWidth = 1.2; g.globalAlpha = .85;
-    for (let i = 0; i < 4; i++){
-      const x = x0 + w * (i + .5) / 4, y = y0 + h * 0.5;
-      g.beginPath(); g.moveTo(x - 2.6, y - 3); g.lineTo(x + 2.6, y + 3);
-      g.moveTo(x + 2.6, y - 3); g.lineTo(x - 2.6, y + 3); g.stroke();
-    }
-  } else if (T.tex === 'vien'){                // vương giả: viền kép
-    g.strokeStyle = M.trim; g.lineWidth = 1.4;
-    g.strokeRect(x0 + 2.5, y0 + 2.5, w - 5, h - 5);
-    g.globalAlpha = .5; g.strokeRect(x0 + 5, y0 + 5, w - 10, h - 10);
-  } else {                                     // tấm: đường ghép ngang
-    g.strokeStyle = 'rgba(0,0,0,.30)'; g.lineWidth = 1.3;
-    for (let i = 1; i < 3 + (st >= 3 ? 1 : 0); i++){
-      const y = y0 + h * i / (3 + (st >= 3 ? 1 : 0));
-      g.beginPath(); g.moveTo(x0, y); g.quadraticCurveTo((x0 + x1) / 2, y + 3, x1, y); g.stroke();
-    }
-  }
-  g.restore();
-}
 
-// ── MŨ TRỤ ──────────────────────────────────────────────────────────────────────
-function iaHelm(g, M, P){
-  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
-  g.translate(0, 3);
-  // ĐƯỜNG BAO — khác hẳn nhau theo kiểu, đây mới là thứ đọc được ở cỡ 44px
-  const dome = () => {
-    g.beginPath();
-    if (style === 'cloth' || style === 'arcane'){        // mũ TRÙM có chóp
-      g.moveTo(-20, 16);
-      g.bezierCurveTo(-23, -12, -14, -26, -3, -34);      // chóp lệch ra sau
-      g.bezierCurveTo(6, -28, 21, -12, 20, 16);
-    } else if (style === 'sphinx'){                       // khăn nemes: xoè hình thang
-      g.moveTo(-25, 18); g.lineTo(-17, -14);
-      g.quadraticCurveTo(0, -26, 17, -14); g.lineTo(25, 18);
-    } else if (style === 'hide' || style === 'leaf'){     // mũ da thấp
-      g.moveTo(-20, 14);
-      g.bezierCurveTo(-21, -6, -12, -19, 0, -19);
-      g.bezierCurveTo(12, -19, 21, -6, 20, 14);
-    } else if (style === 'regal'){                        // vương miện: hở đỉnh
-      g.moveTo(-21, 16); g.lineTo(-21, -6); g.lineTo(21, -6); g.lineTo(21, 16);
-    } else if (style === 'chain'){                        // khăn lưới trùm cổ
-      g.moveTo(-22, 20);
-      g.bezierCurveTo(-24, -8, -13, -23, 0, -23);
-      g.bezierCurveTo(13, -23, 24, -8, 22, 20);
-    } else {                                              // mũ trụ kim loại
-      g.moveTo(-21, 14);
-      g.bezierCurveTo(-23, -10, -12, -25, 0, -25);
-      g.bezierCurveTo(12, -25, 23, -10, 21, 14);
-    }
-    g.closePath();
-  };
-  dome();
-  g.fillStyle = iGrad(g, -22, -30, 22, 18, M.hi, M.lo); g.fill();
-  iaSetMotif(g, M, P.sh, 'helm', dome, 0.72, defSet(P), P.tier);
-  dome(); aTex(g, M, T, st, -22, -22, 22, 16);
-  dome(); g.strokeStyle = 'rgba(0,0,0,.42)'; g.lineWidth = 1.2; g.stroke();
-
-  // KHE MẮT / MẶT — đồ vải thì để hở bóng tối, đồ kim loại thì có khe ngang
-  if (T.soft){
-    g.fillStyle = 'rgba(6,8,16,.88)';
-    g.beginPath(); g.ellipse(0, 4, 11, 9, 0, 0, 7); g.fill();
-    if (style === 'arcane'){                              // hai đốm sáng trong bóng tối
-      g.fillStyle = M.glow || '#a88aff';
-      g.beginPath(); g.arc(-4.5, 3, 1.9, 0, 7); g.arc(4.5, 3, 1.9, 0, 7); g.fill();
-    }
-  } else if (style === 'regal'){
-    g.fillStyle = 'rgba(6,8,16,.55)'; g.fillRect(-16, -2, 32, 9);
-  } else {
-    iFill(g, [[-14, -3], [14, -3], [12, 5], [-12, 5]], '#0a0c12');
-    g.fillStyle = M.lo; g.fillRect(-1.7, -3, 3.4, 8);
-    if (P.asym) iFill(g, [[1, -4], [15, -4], [13, 14], [1, 16]], M.hi);  // nửa mặt nạ
-  }
-  // vành trán
-  if (style !== 'regal' && style !== 'arcane'){
-    iFill(g, [[-22, -4], [22, -4], [21, -9], [-21, -9]], M.trim);
-    if (st >= 2){ iRivet(g, M, -16, -6.5, 1.7); iRivet(g, M, 16, -6.5, 1.7); }
-  }
-  // MÀO — chữ ký của kiểu
-  const C = T.crest;
-  if (C === 'sung' && st >= 2){                    // sừng thẳng
-    iFill(g, [[-17, -15], [-29, -32], [-21, -13]], M.trim);
-    iFill(g, [[17, -15], [29, -32], [21, -13]], M.trim);
-  } else if (C === 'vuot'){                        // sừng vuốt ngược
-    for (const s of [-1, 1]){
-      g.beginPath(); g.moveTo(s * 18, -14);
-      g.quadraticCurveTo(s * 34, -20, s * 30, -34);
-      g.quadraticCurveTo(s * 26, -22, s * 21, -12); g.closePath();
-      g.fillStyle = M.trim; g.fill();
-    }
-  } else if (C === 'rong'){                        // đầu rồng: sừng cong + mào lửa
-    for (const s of [-1, 1]){
-      g.beginPath(); g.moveTo(s * 17, -16);
-      g.bezierCurveTo(s * 36, -22, s * 40, -40, s * 26, -44);
-      g.bezierCurveTo(s * 33, -32, s * 27, -20, s * 20, -13); g.closePath();
-      g.fillStyle = M.trim; g.fill();
-    }
-    g.fillStyle = M.glow || '#ff8a3a';
-    for (let i = 0; i < 3; i++){
-      const x = -6 + i * 6;
-      iPoly(g, [[x - 3, -25], [x, -25 - 9 - i % 2 * 4], [x + 3, -25]]); g.fill();
-    }
-  } else if (C === 'nemes'){                       // khăn nhân sư: hai vạt buông
-    iFill(g, [[-25, 18], [-32, 6], [-24, -6], [-19, 10]], M.trim);
-    iFill(g, [[25, 18], [32, 6], [24, -6], [19, 10]], M.trim);
-    iFill(g, [[-6, -20], [6, -20], [4, -30], [-4, -30]], M.trim);     // rắn hổ mang
-    if (st >= 3) iGem(g, M, 0, -26, 2.6);
-  } else if (C === 'cau'){                         // cầu phép lơ lửng trên chóp
-    const c = M.glow || '#a88aff';
-    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .5;
-    g.fillStyle = c; g.beginPath(); g.arc(-3, -40, 8 + st, 0, 7); g.fill(); g.restore();
-    g.fillStyle = c; g.beginPath(); g.arc(-3, -40, 4 + st * 0.5, 0, 7); g.fill();
-    g.fillStyle = '#fff'; g.beginPath(); g.arc(-4.4, -41.6, 1.6, 0, 7); g.fill();
-  } else if (C === 'la'){                          // vành lá quanh trán
-    g.fillStyle = M.trim;
-    for (let i = 0; i < 5; i++){
-      const a = -Math.PI * (0.2 + i * 0.15);
-      g.save(); g.translate(Math.cos(a) * 20, Math.sin(a) * 17 - 2); g.rotate(a + Math.PI / 2);
-      g.beginPath(); g.ellipse(0, -5, 3.2, 7.5, 0, 0, 7); g.fill(); g.restore();
-    }
-  } else if (C === 'canh'){                        // cánh hai bên
-    for (const s of [-1, 1]){
-      g.save(); g.translate(s * 19, -6); g.scale(s, 1);
-      g.fillStyle = M.trim;
-      for (let i = 0; i < 3; i++){
-        g.beginPath(); g.moveTo(0, 2 - i * 3);
-        g.quadraticCurveTo(9 + i * 3, -6 - i * 4, 17 + i * 4, -3 - i * 6);
-        g.quadraticCurveTo(8 + i * 2, 1 - i * 3, 0, 4 - i * 3); g.fill();
-      }
-      g.restore();
-    }
-  } else if (C === 'vuong'){                       // vương miện: răng nhọn
-    const n = 3 + Math.min(2, st - 1);
-    for (let i = 0; i < n; i++){
-      const x = -18 + i * (36 / (n - 1));
-      const h = i === Math.floor(n / 2) ? 20 : 13;
-      iFill(g, [[x - 5, -6], [x, -6 - h], [x + 5, -6]], M.trim);
-      if (st >= 3) iGem(g, M, x, -10, 1.9);
-    }
-    iFill(g, [[-22, -2], [22, -2], [21, -8], [-21, -8]], M.trim);
-  } else if (C === 'lech' && st >= 2){             // Spellblade: MỘT sừng, lệch hẳn
-    iFill(g, [[15, -16], [30, -34], [21, -13]], M.trim);
-  }
-  if (st >= 4 && C !== 'cau' && C !== 'vuong') iGem(g, M, 0, -13, 2.7);
-  iSheenArc(g);
-}
 
 // Vệt sáng chéo phủ lên toàn hình — làm mảng phẳng thành bề mặt cong.
 function iSheenArc(g){
@@ -18645,279 +16719,9 @@ function iSheenArc(g){
   g.restore();
 }
 
-// ── ÁO GIÁP ─────────────────────────────────────────────────────────────────────
-// Hoa văn của bộ, vẽ vào icon bằng CHÍNH hàm đang vẽ trên người. CHEST_ART viết trong hệ toạ độ
-// nhân vật (ngực nằm ở x 56–104, y 96–140, tâm 80/118), nên đổi hệ rồi cắt theo dáng áo.
-// Dùng lại thay vì chép: trước đó icon chỉ nhận `style` và `tint`, nên "Cốt Giáp" trong túi
-// không có xương sườn — giống hệt mọi áo cùng style, chỉ khác màu.
-// key: chest | boot | helm | glove. Mỗi thứ nằm ở một tâm khác trong hệ toạ độ nhân vật,
-// nên bảng ORIGIN nói rõ phải dịch về đâu; tất cả đều dùng LẠI hàm đang vẽ trên người.
-const MOTIF_ORIGIN = { chest:[80,118], boot:[80,200], helm:[80,74], glove:[48,118] };
-function iaSetMotif(g, M, sh, key, clip, sc, S, tier){
-  let fn = null;
-  if (key === 'chest') fn = sh && sh.chest && CHEST_ART[sh.chest];
-  else if (key === 'boot') fn = sh && sh.boot && BOOT_ART[sh.boot];
-  else if (key === 'helm') fn = HELM_ART[setHelm(S, tier || 14)];
-  else if (key === 'glove') fn = GLOVE_ART[setGlove(S)];
-  if (!fn) return;
-  const [ox, oy] = MOTIF_ORIGIN[key];
-  g.save();
-  clip(); g.clip();
-  g.globalAlpha = 0.92;
-  const k = sc || 0.78;
-  g.scale(k, k);
-  g.translate(-ox, -oy);
-  if (key === 'boot') fn(g, M, 80);
-  else if (key === 'glove') fn(g, M, 48);
-  else fn(g, M);
-  g.restore();
-}
-// Món giáp trong túi không mang sẵn định nghĩa BỘ, nên tra ngược từ setName.
-function defSet(P){
-  if (!P || !P.setName) return null;
-  for (const k in HERO_SETS){ const f = HERO_SETS[k].find(x => x.name === P.setName); if (f) return f; }
-  return null;
-}
-function iaArmor(g, M, P){
-  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
-  g.translate(0, 2);
-  const body = () => {
-    g.beginPath();
-    if (T.soft){                                   // ÁO CHOÀNG: buông xuống, loe ra
-      g.moveTo(-14, -20); g.lineTo(14, -20);
-      g.bezierCurveTo(20, -2, 24, 14, 26, 26);
-      g.lineTo(-26, 26);
-      g.bezierCurveTo(-24, 14, -20, -2, -14, -20);
-    } else if (style === 'chain'){                 // ÁO LƯỚI: bo tròn, không có góc
-      g.moveTo(-16, -20);
-      g.bezierCurveTo(-21, -4, -20, 12, -14, 24);
-      g.lineTo(14, 24);
-      g.bezierCurveTo(20, 12, 21, -4, 16, -20);
-    } else if (style === 'regal'){                 // ÁO CHOÀNG NGHI LỄ: cổ cao, tà dài
-      g.moveTo(-16, -24); g.lineTo(16, -24);
-      g.lineTo(20, -4); g.lineTo(15, 27); g.lineTo(-15, 27); g.lineTo(-20, -4);
-    } else {                                       // GIÁP TẤM
-      g.moveTo(-17, -20); g.lineTo(-20, -6); g.lineTo(-14, 16);
-      g.lineTo(-9, 25); g.lineTo(9, 25); g.lineTo(14, 16); g.lineTo(20, -6); g.lineTo(17, -20);
-    }
-    g.closePath();
-  };
-  body(); g.fillStyle = iGrad(g, -22, -22, 22, 26, M.hi, M.lo); g.fill();
-  body(); aTex(g, M, T, st, -24, -20, 24, 26);
-  iaSetMotif(g, M, P.sh, 'chest', body, 0.74);       // hoa văn riêng của bộ — xem iaSetMotif
-  body(); g.strokeStyle = 'rgba(0,0,0,.40)'; g.lineWidth = 1.2; g.stroke();
-  // cổ áo
-  if (style === 'regal'){                          // cổ dựng cao hai bên
-    iFill(g, [[-16, -24], [-7, -22], [-9, -32], [-17, -30]], M.trim);
-    iFill(g, [[16, -24], [7, -22], [9, -32], [17, -30]], M.trim);
-    iFill(g, [[-7, -22], [7, -22], [4, -12], [-4, -12]], '#0a0c12');
-  } else {
-    iFill(g, [[-8, -21], [8, -21], [5, -12], [0, -9], [-5, -12]], '#0a0c12');
-  }
-  // đai / dây chằng
-  if (T.soft){
-    iFill(g, [[-16, 4], [16, 4], [15, 11], [-15, 11]], M.trim);
-    if (st >= 3) iGem(g, M, 0, 7.5, 3);
-  } else {
-    g.strokeStyle = M.trim; g.lineWidth = 1.7;
-    g.beginPath(); g.moveTo(-16, -4); g.quadraticCurveTo(0, 3, 16, -4); g.stroke();
-  }
-  // VAI — chữ ký lớn nhất của kiểu
-  const pw = 9 + st * 1.9;
-  const shoulder = (sd) => {
-    g.save(); g.translate(sd * 15, -17); g.scale(sd, 1);
-    if (T.soft && style !== 'arcane'){              // tay áo vải rủ
-      g.beginPath(); g.moveTo(-4, -4);
-      g.quadraticCurveTo(pw * 0.9, -6, pw * 1.05, 6);
-      g.quadraticCurveTo(pw * 0.8, 16, -3, 12); g.closePath();
-      g.fillStyle = iGrad(g, 0, -6, 0, 14, M.hi, M.lo); g.fill();
-    } else if (style === 'arcane'){                 // phiến đá lơ lửng, KHÔNG chạm vai
-      const c = M.glow || '#a88aff';
-      g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .35;
-      g.fillStyle = c; g.beginPath(); g.arc(pw * 0.6, -2, 8, 0, 7); g.fill(); g.restore();
-      iFill(g, [[pw * 0.25, -8], [pw * 1.05, -4], [pw * 0.85, 6], [pw * 0.15, 2]], M.trim);
-    } else if (style === 'plume'){                  // lớp lông vũ xếp
-      g.fillStyle = M.trim;
-      for (let i = 0; i < 3; i++){
-        g.beginPath(); g.moveTo(-3, 6 - i * 3);
-        g.quadraticCurveTo(pw * 0.7, -2 - i * 4, pw * 1.1 + i * 2, 2 - i * 5);
-        g.quadraticCurveTo(pw * 0.6, 6 - i * 2, -3, 9 - i * 3); g.fill();
-      }
-    } else {                                        // tấm vai kim loại
-      g.beginPath();
-      g.moveTo(-5, 9); g.quadraticCurveTo(-7, -6, 3, -8);
-      g.quadraticCurveTo(pw, -7, pw + 1, 8);
-      g.quadraticCurveTo(pw * 0.5, 12, -5, 9); g.closePath();
-      g.fillStyle = iGrad(g, 0, -8, 0, 10, M.hi, M.lo); g.fill();
-      g.strokeStyle = 'rgba(0,0,0,.30)'; g.lineWidth = .9; g.stroke();
-      if (st >= 3){ g.strokeStyle = M.trim; g.lineWidth = 1.3;
-        g.beginPath(); g.moveTo(-3, 3); g.quadraticCurveTo(pw * 0.5, -4, pw * 0.9, 4); g.stroke(); }
-      if (st >= 4 && (style === 'drake' || style === 'hoalong' || style === 'plate'))
-        iFill(g, [[pw * 0.45, -7], [pw * 0.75, -18], [pw * 0.95, -4]], M.trim);   // gai
-    }
-    g.restore();
-  };
-  if (T.asym){ shoulder(1); iFill(g, [[-17, -19], [-9, -20], [-11, -8], [-18, -6]], M.lo); }  // MỘT bên trần
-  else { shoulder(-1); shoulder(1); }
-  if (st >= 2 && !T.soft){ iRivet(g, M, -13, -14, 1.8); iRivet(g, M, 13, -14, 1.8); }
-  if (st >= 4) iGem(g, M, 0, -3, 3.2);
-  iSheenArc(g);
-}
 
-// ── GĂNG TAY ────────────────────────────────────────────────────────────────────
-function iaGloves(g, M, P){
-  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
-  g.save(); g.rotate(-0.1); g.translate(1, 4);
-  const _cuffClip = () => { g.beginPath(); g.rect(-22, -30, 44, 52); };
-  const fl = [13, 15.5, 14.5, 11.5];
-  for (let i = 0; i < 4; i++){
-    const x = -10.5 + i * 7;
-    // đồ vải/da: ngón NGẮN, hở đầu ngón — đồ kim loại: ngón dài kín
-    const cut = T.soft ? 6 : 0;
-    const top = -12 - fl[i] + cut;
-    g.fillStyle = i % 2 ? M.lo : M.hi;
-    g.beginPath();
-    g.moveTo(x - 2.9, -8); g.lineTo(x - 2.5, top + 3);
-    if (T.soft) g.lineTo(x + 2.5, top + 3);
-    else g.quadraticCurveTo(x, top - 1.5, x + 2.5, top + 3);
-    g.lineTo(x + 2.9, -8); g.closePath(); g.fill();
-    g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = 0.9; g.stroke();
-    if (st >= 2 && !T.soft){ g.strokeStyle = M.trim; g.lineWidth = 1.1;
-      g.beginPath(); g.moveTo(x - 2.6, top + 8); g.lineTo(x + 2.6, top + 8); g.stroke(); }
-  }
-  g.save(); g.translate(-13, -4); g.rotate(-0.55);
-  g.fillStyle = M.hi;
-  g.beginPath(); g.moveTo(-3.2, 6); g.lineTo(-2.8, -6);
-  g.quadraticCurveTo(0, -9.5, 2.8, -6); g.lineTo(3.2, 6); g.closePath(); g.fill();
-  g.strokeStyle = 'rgba(0,0,0,.32)'; g.lineWidth = 0.9; g.stroke();
-  g.restore();
-  const hand = () => {
-    g.beginPath();
-    g.moveTo(-11, 12); g.lineTo(11, 12);
-    g.lineTo(14, -4); g.quadraticCurveTo(14.5, -10, 12, -11);
-    g.lineTo(-12, -11); g.quadraticCurveTo(-14.5, -10, -14, -4);
-    g.closePath();
-  };
-  hand(); g.fillStyle = iGrad(g, -14, -11, 14, 12, M.hi, M.lo); g.fill();
-  hand(); aTex(g, M, T, st, -14, -11, 14, 12);
-  hand(); g.strokeStyle = 'rgba(0,0,0,.38)'; g.lineWidth = 1.1; g.stroke();
-  if (st >= 4) iGem(g, M, 0, 1, 3);
-  // CỔ TAY — kim loại thì loe cứng, vải thì quấn dây
-  if (T.soft){
-    iFill(g, [[-13, 11], [13, 11], [12, 26], [-12, 26]], iGrad(g, -13, 11, 13, 26, M.hi, M.lo));
-    g.strokeStyle = M.trim; g.lineWidth = 1.8;
-    for (let i = 0; i < 3; i++){ const y = 14 + i * 4;
-      g.beginPath(); g.moveTo(-12.5, y); g.lineTo(12.5, y + 1.4); g.stroke(); }
-  } else {
-    iFill(g, [[-14, 11], [14, 11], [15.5, 18], [-15.5, 18]], M.trim);
-    iFill(g, [[-13, 18], [13, 18], [11.5, 27], [-11.5, 27]], iGrad(g, -13, 18, 13, 27, M.hi, M.lo));
-    if (st >= 3){ iRivet(g, M, -8, 14.5, 1.6); iRivet(g, M, 8, 14.5, 1.6); }
-    if (st >= 5) iFill(g, [[-15.5, 14], [-25, 8], [-15, 20]], M.trim);
-  }
-  if (style === 'plume' && st >= 3){                 // lông vũ mọc từ cổ tay
-    g.fillStyle = M.trim;
-    for (let i = 0; i < 3; i++){
-      g.beginPath(); g.moveTo(13, 14 + i * 3);
-      g.quadraticCurveTo(24 + i * 3, 8 + i * 2, 28 + i * 4, 14 + i * 4);
-      g.quadraticCurveTo(22, 16 + i * 3, 13, 17 + i * 3); g.fill();
-    }
-  }
-  iaSetMotif(g, M, P.sh, 'glove', _cuffClip, 0.72, defSet(P), P.tier);  // cổ găng riêng của bộ
-  g.restore();
-  iSheenArc(g);
-}
 
-// ── GIÁP ĐÙI ────────────────────────────────────────────────────────────────────
-function iaPants(g, M, P){
-  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
-  g.translate(0, 2);
-  // đai
-  iFill(g, [[-20, -22], [20, -22], [19, -13], [-19, -13]], iGrad(g, -20, -22, 20, -13, M.hi, M.lo));
-  iFill(g, [[-7, -24], [7, -24], [6, -11], [-6, -11]], M.trim);
-  if (st >= 4) iGem(g, M, 0, -17.5, 3);
-  if (T.soft || style === 'regal'){
-    // VÁY GIÁP: một khối loe, không tách hai ống
-    const skirt = () => { g.beginPath();
-      g.moveTo(-17, -13); g.lineTo(17, -13);
-      g.bezierCurveTo(23, 4, 26, 18, 27, 28);
-      g.lineTo(-27, 28);
-      g.bezierCurveTo(-26, 18, -23, 4, -17, -13); g.closePath(); };
-    skirt(); g.fillStyle = iGrad(g, -24, -13, 24, 28, M.hi, M.lo); g.fill();
-    skirt(); aTex(g, M, T, st, -26, -13, 26, 28);
-    skirt(); g.strokeStyle = 'rgba(0,0,0,.38)'; g.lineWidth = 1.1; g.stroke();
-    if (st >= 3){                                   // dải rủ trước
-      iFill(g, [[-5, -12], [5, -12], [4, 27], [-4, 27]], M.trim);
-      if (style === 'leaf'){ g.fillStyle = M.trim;
-        for (let i = 0; i < 3; i++){ g.beginPath();
-          g.ellipse(0, 0 + i * 9, 4, 7, 0, 0, 7); g.fill(); } }
-    }
-  } else {
-    // HAI TẤM ĐÙI rời
-    for (const sd of [-1, 1]){
-      g.save(); g.translate(sd * 10, -12);
-      const th = () => { g.beginPath();
-        g.moveTo(-8, 0); g.lineTo(8, 0);
-        g.bezierCurveTo(10, 14, 7, 26, 0, 30);
-        g.bezierCurveTo(-7, 26, -10, 14, -8, 0); g.closePath(); };
-      th(); g.fillStyle = iGrad(g, -8, 0, 8, 30, M.hi, M.lo); g.fill();
-      th(); aTex(g, M, T, st, -9, 0, 9, 30);
-      th(); g.strokeStyle = 'rgba(0,0,0,.36)'; g.lineWidth = 1; g.stroke();
-      if (st >= 2) iRivet(g, M, 0, 2.5, 1.7);
-      if (st >= 5) iFill(g, [[sd * 8, 6], [sd * 15, 2], [sd * 8, 12]], M.trim);
-      g.restore();
-    }
-  }
-  iSheenArc(g);
-}
 
-// ── ỦNG ─────────────────────────────────────────────────────────────────────────
-function iaBoots(g, M, P){
-  const st = P.st || 1, T = aTrait(P), style = P.style || 'plate';
-  for (const sd of [-1, 1]){
-    g.save(); g.translate(sd * 11, 0); g.rotate(sd * 0.06);
-    const shaft = () => { g.beginPath();
-      if (T.soft){                                  // giày mềm: ống thấp, bo tròn
-        g.moveTo(-8, -14); g.quadraticCurveTo(-9, -4, -7, 6);
-        g.lineTo(7, 6); g.quadraticCurveTo(9, -4, 8, -14); g.closePath();
-      } else {
-        g.moveTo(-8, -24); g.lineTo(8, -24); g.lineTo(7, 6); g.lineTo(-7, 6); g.closePath();
-      }
-    };
-    shaft(); g.fillStyle = iGrad(g, -8, -24, 8, 6, M.hi, M.lo); g.fill();
-    shaft(); aTex(g, M, T, st, -8, T.soft ? -14 : -24, 8, 6);
-    shaft(); g.strokeStyle = 'rgba(0,0,0,.38)'; g.lineWidth = 1; g.stroke();
-    // vành ống
-    if (T.soft) iFill(g, [[-9, -16], [9, -16], [8.5, -10], [-8.5, -10]], M.trim);
-    else iFill(g, [[-9.5, -26], [9.5, -26], [9, -19], [-9, -19]], M.trim);
-    // bàn chân
-    g.beginPath();
-    g.moveTo(-7, 4); g.lineTo(7, 4);
-    g.lineTo(sd > 0 ? 15 : 9, 16); g.lineTo(sd > 0 ? 13 : 7, 21);
-    g.lineTo(-9, 21); g.closePath();
-    g.fillStyle = iGrad(g, -7, 4, 10, 21, M.hi, M.lo); g.fill();
-    g.strokeStyle = 'rgba(0,0,0,.36)'; g.lineWidth = 1; g.stroke();
-    iFill(g, [[-9.5, 20], [sd > 0 ? 13.5 : 7.5, 20], [sd > 0 ? 13 : 7, 24], [-9, 24]], M.lo);
-    if (st >= 2 && !T.soft){ g.strokeStyle = M.trim; g.lineWidth = 1.3;
-      g.beginPath(); g.moveTo(-7, -8); g.lineTo(7, -8); g.stroke(); }
-    if (T.soft && st >= 2){                          // dây buộc chéo
-      g.strokeStyle = M.trim; g.lineWidth = 1.4;
-      for (let i = 0; i < 3; i++){ const y = -10 + i * 5;
-        g.beginPath(); g.moveTo(-7, y); g.lineTo(7, y + 3); g.stroke(); }
-    }
-    if (st >= 3 && !T.soft) iRivet(g, M, 0, -13, 1.6);
-    if (style === 'plume' && st >= 3){                // cánh cổ chân
-      g.fillStyle = M.trim;
-      for (let i = 0; i < 3; i++){
-        g.beginPath(); g.moveTo(-8, -18 + i * 3);
-        g.quadraticCurveTo(-19 - i * 3, -24 - i * 3, -24 - i * 4, -18 - i * 4);
-        g.quadraticCurveTo(-16, -16 - i * 2, -8, -15 + i * 3); g.fill();
-      }
-    } else if (st >= 4 && !T.soft) iFill(g, [[-8, -22], [-15, -30], [-7, -27]], M.trim);
-    if (st >= 5) iGem(g, M, 0, -2, 2.4);
-    g.restore();
-  }
-  iSheenArc(g);
-}
 
 // ── PHỤ KIỆN: nhẫn — dùng chung mọi lớp ─────────────────────────────────────────
 function iaRing(g, M, P){
@@ -19240,8 +17044,38 @@ function consumTip(id){
   if (d.cap) parts.push(`Túi đựng tối đa ${d.cap}`);
   return parts.filter(Boolean).join('\n').replace(/"/g, '&quot;');
 }
+// ── Ô "CHƯA CÓ ART" ─────────────────────────────────────────────────────────────
+// Giáp và vũ khí không còn hình vector nào. Cho tới khi gói Spine / tranh vũ khí về, món phải
+// hiện MỘT CÁI GÌ trong túi — ô trống thì không phân biệt nổi món với chỗ trống, không kéo thả
+// được, không so sánh được.
+//
+// Cố ý vẽ THÔ: một bóng dáng phẳng, đúng một màu, không khối, không hoa văn, không đổi theo
+// giai. Nó phải đọc ra ngay là "chỗ này đang chờ art", không được đẹp tới mức có người tưởng
+// đây là art thật rồi để nguyên. Tám dáng cho tám loại — đủ để nhìn là biết món gì.
+const CHUA_ART = {
+  weapon:   [[0,-40],[7,-30],[7,18],[-7,18],[-7,-30]],            // lưỡi thẳng
+  staff:    [[3,-42],[7,-34],[4,-26],[4,30],[-4,30],[-4,-26],[-7,-34],[-3,-42]],
+  bow:      [[-4,-38],[6,-18],[6,18],[-4,38],[-1,34],[2,16],[2,-16],[-1,-34]],
+  crossbow: [[-24,-8],[24,-8],[24,0],[5,0],[5,30],[-5,30],[-5,0],[-24,0]],
+  helm:     [[-20,6],[-20,-10],[-11,-22],[11,-22],[20,-10],[20,6],[11,6],[11,-8],[-11,-8],[-11,6]],
+  armor:    [[-22,-20],[22,-20],[26,24],[-26,24]],
+  gloves:   [[-14,-18],[14,-18],[18,10],[10,22],[-10,22],[-18,10]],
+  boots:    [[-12,-24],[10,-24],[12,10],[24,20],[24,26],[-14,26],[-14,-6]],
+  pants:    [[-16,-22],[16,-22],[12,26],[2,26],[0,2],[-2,26],[-12,26]],
+};
+function iaChuaArt(g, M, P){
+  const pts = CHUA_ART[(P && P.art)] || CHUA_ART.armor;
+  g.save();
+  g.beginPath();
+  pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y));
+  g.closePath();
+  g.fillStyle = M.lo; g.fill();
+  g.lineWidth = 2; g.strokeStyle = M.trim; g.stroke();
+  g.restore();
+}
+// Chỉ còn phụ kiện dùng hình vector — nhẫn và dây chuyền ở cỡ 44px trong ô túi thì hình vẽ
+// đọc rõ hơn tranh, nên chủ dự án chốt giữ lại. Mọi `art` khác rơi về ô chờ art.
 const ITEM_ART = {
-  weapon: iaWeapon, staff: iaStaff, bow: iaBow, crossbow: iaCrossbow, helm: iaHelm, armor: iaArmor, gloves: iaGloves, pants: iaPants, boots: iaBoots,
   ring: iaRing, pendPhys: iaPendPhys, pendMagic: iaPendMagic,
 };
 
@@ -19340,7 +17174,7 @@ function drawItemIcon(g, def, tier, rarity, plus){
   const pl = plus || 0;
   const st = plusStage(pl);
   const k = clamp((pl - 3) / 8, 0, 1);            // 0 tại +3 → 1 tại +11, chạy liên tục
-  const fn = ITEM_ART[def.art] || iaWeapon;
+  const fn = ITEM_ART[def.art] || iaChuaArt;
   const GC = M.glow || '#ffe9a8';
   const gl = { lo: GC, hi: GC, trim: GC, glow: null };
   if (st >= 1){

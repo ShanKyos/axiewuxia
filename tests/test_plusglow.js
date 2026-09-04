@@ -12,6 +12,9 @@ const { chromium } = require('playwright');
   await p.goto('http://localhost:8853/index.html');
   await p.waitForFunction(() => window.__gameReady).catch(()=>{});
   await p.waitForTimeout(700);
+  // Bảng khung là tệp ảnh ~480 KB. Không chờ tải xong thì nvBo() trả null và mọi phép đo dưới
+  // đây vẽ vào canvas rỗng — bài kiểm báo "rèn lên không đổi gì" một cách hoàn toàn sai.
+  await p.waitForFunction(() => !!nvTai('dkgs1', 'webp'), { timeout: 20000 }).catch(()=>{});
 
   const r = await p.evaluate(() => {
     window.TEST_MODE = true;
@@ -19,12 +22,24 @@ const { chromium } = require('playwright');
     player.level = 100; vhAutoLearn(); calcDerived();
     const o = {};
 
-    const gv = pl => ({ n:5, rarity:4, t:10, plus:pl, rcol:RARITIES[4].color, wTier:10, wPlus:pl, setColor:null });
+    // ĐO TRÊN ĐƯỜNG ART NƯỚNG, không phải hình vector.
+    // Bản trước gọi thẳng drawHeroFigure — đó là hình VẼ ĐƯỜNG, nay chỉ còn là lối lui khi lớp
+    // chưa có bảng khung. Người chơi nhìn thấy art Spine: hào quang rèn vẽ bằng nvHaoQuangSau
+    // (quầng sau lưng) và nvVienSang (viền dựng từ chính bóng dáng khung hình). Đo sai đường
+    // thì bài kiểm báo "rèn lên không đổi gì" trong khi ngoài màn nó đổi rất rõ.
+    // Đo ở GIAI 1: đó là giai duy nhất của Dark Knight đang có bảng khung (dkgs1). Mức rèn mới
+    // là thứ bài này đo, mà hào quang rèn không phụ thuộc giai — nên giai 1 đo được đủ.
+    const gv = pl => ({ n:4, rarity:4, t:1, plus:pl, rcol:RARITIES[4].color,
+                        wTier:1, wPlus:pl, setColor:null, canh:null });
+    const IM = nvBo('thieulam', 1, gv(0));
     const shot = (pl, now) => {
-      const c = document.createElement('canvas'); c.width = HERO_W; c.height = HERO_H;
+      const c = document.createElement('canvas'); c.width = NV_OW; c.height = NV_OH;
       const q = c.getContext('2d');
-      drawHeroFigure(q, 'thieulam', 10, now === undefined ? 900 : now, HERO_POSE0, gv(pl));
-      return q.getImageData(0, 0, HERO_W, HERO_H).data;
+      const t = now === undefined ? 900 : now;
+      nvHaoQuangSau(q, 'thieulam', 1, gv(pl), t);
+      nvVeKhung(q, IM, 'i', 0);
+      nvHaoQuangTruoc(q, 'thieulam', 1, gv(pl), t, IM, 'i', 0);
+      return q.getImageData(0, 0, NV_OW, NV_OH).data;
     };
     const diff = (a, b) => { let n = 0; for (let i = 0; i < a.length; i += 4)
       if (a[i] !== b[i] || a[i+1] !== b[i+1] || a[i+2] !== b[i+2] || a[i+3] !== b[i+3]) n++; return n; };
@@ -51,10 +66,12 @@ const { chromium } = require('playwright');
     o.dong_plus0  = diff(shot(0, 0), shot(0, 900));
 
     // +0 phải giống hệt "không có gv" — không được tự dưng sáng khi chưa rèn
-    const bare = (() => { const c=document.createElement('canvas'); c.width=HERO_W;c.height=HERO_H;
+    const bare = (() => { const c=document.createElement('canvas'); c.width=NV_OW; c.height=NV_OH;
       const q=c.getContext('2d');
-      drawHeroFigure(q,'thieulam',10,900,HERO_POSE0,{n:5,rarity:4,t:10,plus:0,rcol:RARITIES[4].color,wTier:10,wPlus:0,setColor:null});
-      return q.getImageData(0,0,HERO_W,HERO_H).data; })();
+      nvHaoQuangSau(q, 'thieulam', 1, gv(0), 900);
+      nvVeKhung(q, IM, 'i', 0);
+      nvHaoQuangTruoc(q, 'thieulam', 1, gv(0), 900, IM, 'i', 0);
+      return q.getImageData(0,0,NV_OW,NV_OH).data; })();
     o.plus0_khongSang = diff(bare, shot(0)) === 0;
 
     // cache chân dung phải đổi theo mức rèn

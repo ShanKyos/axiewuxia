@@ -185,188 +185,69 @@ window.BOSS_DEFS = {
 // MU Online làm theo kiểu khác: mỗi lớp có DÒNG GIÁP RIÊNG, đổi cả tạo hình lẫn bảng màu theo
 // mốc cấp, và mỗi bộ có TÊN để người chơi gọi tên nhau. Đó mới là "nhìn là biết đẳng cấp".
 //
-// `style` chọn bộ tạo hình (vai/mũ/chân/eo), `tint` đổi bảng màu — nên bậc vẫn đọc được qua
-// màu, nhưng mỗi lớp đi theo một dải màu riêng thay vì cả 5 lớp cùng đỏ ở bậc 10.
-// TÊN QUYẾT ĐỊNH HÌNH. Mỗi bộ phủ ĐÚNG MỘT giai và mang đặc trưng của chính cái tên nó:
-//   style  hàm vẽ vai nền (SET_SHOULDER)     crest  mào trên đầu (CREST_FN)
-//   sh.chest  hoa văn thân áo (CHEST_ART) — đây là thứ nói lên cái tên
-//   sh.boot   kiểu ủng (BOOT_ART)
-//   sh còn lại: spike/layer/fringe/stud/fin/orb — nét đè lên vai (hShoulderMods)
-// Bản đầu chỉ đổi `tint`, nên Vải Thô với Xương ra hình y hệt chỉ khác tông màu. Nay Xương có
-// xương sườn trên ngực, mào sừng, vuốt ở ủng; còn Vải Thô chỉ là nếp vải và mũ trùm.
+// TÊN QUYẾT ĐỊNH HÌNH: mỗi bộ phủ ĐÚNG MỘT giai và mang đặc trưng của chính cái tên nó — đó là
+// yêu cầu đặt ra cho gói art, không còn là tổ hợp tham số dựng máy. Từng có một đường vector
+// dựng bộ giáp từ style/crest/sh (vai nền, mào đầu, hoa văn ngực, kiểu ủng, gai, nếp, đinh
+// tán); đường đó đã gỡ hẳn để nhường chỗ cho art Spine thật.
 window.HERO_SETS = {
-  // Dark Knight — giáp tấm nặng. Thiết Phiến ra giáp phiến xếp lớp, Cốt Giáp ra xương
-  // sườn, ba bộ Long ra vảy rồng, Lôi Đình ra tia sét, Băng Nguyên ra gai băng
+  // BẢY BỘ GIÁP mỗi lớp, một bộ một giai. Sau khi gỡ hết hình vector thì mỗi bộ chỉ còn ĐÚNG
+  // ba thứ, và cả ba đều còn việc để làm:
+  //   min  — giai của bộ (1..7), cũng là khoá tra art trong NV_GIAP
+  //   name — tên bộ; tên vũ khí cùng giai lấy đúng chữ này
+  //   tint — MÀU NHẬN DIỆN của bộ. Không phải để vẽ giáp nữa (giáp là art Spine), mà để tô
+  //          hào quang rèn +4/+7/+10 và ánh sáng quanh chân — nhờ vậy đập đồ lên vẫn nhìn ra
+  //          màu của chính bộ đang mặc. Khi có gói Spine thì lấy màu chủ đạo của gói đặt vào.
+  // Đã gỡ: style · crest · sh — ba trường chỉ nuôi hàm vẽ giáp vector, nay không còn ai đọc.
+  // Dark Knight
   thieulam: [
-    { min:1, name:'Thiết Phiến', style:'plate', crest:'horn',
-      sh:{ chest:'lame', boot:'cuff' },
-      tint:{ lo:'#3f444e', hi:'#5c6270', trim:'#8a92a4', glow:null } },
-    { min:2, name:'Giáp Đồng', style:'chain', crest:'horn',
-      sh:{ chest:'plate', boot:'plate', layer:1 },
-      tint:{ lo:'#5d6a78', hi:'#aebdcc', trim:'#c9d4de', glow:null } },
-    { min:3, name:'Ngân Giáp', style:'plate', crest:'horn',
-      sh:{ chest:'lame', boot:'plate', layer:2, stud:3 },
-      tint:{ lo:'#6a7382', hi:'#c6d0dc', trim:'#eef4fb', glow:'#a8c4e0' } },
-    { min:4, name:'Vảy Rồng', style:'drake', crest:'dragon',
-      sh:{ chest:'scale', boot:'claw', spike:2, fin:1 },
-      tint:{ lo:'#3a1f22', hi:'#7a3a34', trim:'#c8a84a', glow:'#c8703a' } },
-    { min:5, name:'Bạo Long', style:'drake', crest:'dragon',
-      sh:{ chest:'crack', boot:'claw', spike:4, fin:1 },
-      tint:{ lo:'#5a2a10', hi:'#b85a1c', trim:'#ffc06a', glow:'#ff7a20' } },
-    { min:6, name:'Lôi Đình', style:'plate', crest:'horn',
-      sh:{ chest:'bolt', boot:'plate', spike:4, orb:1 },
-      tint:{ lo:'#1e2a5a', hi:'#3a6ad0', trim:'#bfe4ff', glow:'#6aa8ff' } },
-    { min:7, name:'Long Vương', style:'hoalong', crest:'dragon',
-      sh:{ chest:'scale', boot:'claw', spike:4, orb:1, layer:3, fin:1 },
-      tint:{ lo:'#4a3a6a', hi:'#b0a0e8', trim:'#ffffff', glow:'#e0d0ff' } },
+    { min:1, name:'Thiết Phiến', tint:{ lo:'#3f444e', hi:'#5c6270', trim:'#8a92a4', glow:null } },
+    { min:2, name:'Giáp Đồng', tint:{ lo:'#5d6a78', hi:'#aebdcc', trim:'#c9d4de', glow:null } },
+    { min:3, name:'Ngân Giáp', tint:{ lo:'#6a7382', hi:'#c6d0dc', trim:'#eef4fb', glow:'#a8c4e0' } },
+    { min:4, name:'Vảy Rồng', tint:{ lo:'#3a1f22', hi:'#7a3a34', trim:'#c8a84a', glow:'#c8703a' } },
+    { min:5, name:'Bạo Long', tint:{ lo:'#5a2a10', hi:'#b85a1c', trim:'#ffc06a', glow:'#ff7a20' } },
+    { min:6, name:'Lôi Đình', tint:{ lo:'#1e2a5a', hi:'#3a6ad0', trim:'#bfe4ff', glow:'#6aa8ff' } },
+    { min:7, name:'Long Vương', tint:{ lo:'#4a3a6a', hi:'#b0a0e8', trim:'#ffffff', glow:'#e0d0ff' } },
   ],
-  // Dark Wizard — VẢI, tuyệt đối không giáp tấm. Xương ra xương sườn, Ánh Trăng ra trăng
-  // khuyết, Quỷ Vương ra đầu lâu, Tinh Vân ra sao, Hư Vô ra mạch tối
+  // Dark Wizard
   baidasan: [
-    { min:1, name:'Vải Thô', style:'cloth', crest:'hood',
-      sh:{ chest:'weave', fringe:2 },
-      tint:{ lo:'#4a4038', hi:'#6b5c4c', trim:'#8a7a5c', glow:null } },
-    { min:2, name:'Nhân Sư', style:'sphinx', crest:'nemes',
-      sh:{ chest:'lame', boot:'cuff', layer:1 },
-      tint:{ lo:'#5a4a2c', hi:'#c8b070', trim:'#3ac8c0', glow:'#7ee0d8' } },
-    { min:3, name:'Triệu Hồn', style:'cloth', crest:'halo',
-      sh:{ chest:'skull', fringe:4, orb:1 },
-      tint:{ lo:'#16304a', hi:'#2f6fa8', trim:'#9ed4ff', glow:'#5ea0e8' } },
-    { min:4, name:'Thần Ma', style:'sphinx', crest:'antler',
-      sh:{ chest:'eye', boot:'claw', spike:3, fin:1 },
-      tint:{ lo:'#3e1020', hi:'#a02040', trim:'#ff9ab0', glow:'#e04060' } },
-    { min:5, name:'Quỷ Vương', style:'cloth', crest:'antler',
-      sh:{ chest:'skull', boot:'claw', spike:4, fringe:3 },
-      tint:{ lo:'#14361e', hi:'#2e8a48', trim:'#a8f0b8', glow:'#5ad078' } },
-    { min:6, name:'Tinh Vân', style:'sphinx', crest:'halo',
-      sh:{ chest:'star', orb:1, spike:2, stud:3 },
-      tint:{ lo:'#2a1a5a', hi:'#6a4ad0', trim:'#d0c0ff', glow:'#a88aff' } },
-    { min:7, name:'Hư Vô', style:'arcane', crest:'halo',
-      sh:{ chest:'web', spike:4, orb:1, fin:1, layer:2 },
-      tint:{ lo:'#160f2c', hi:'#3a2a6a', trim:'#7ecbff', glow:'#6ff0ff' } },
+    { min:1, name:'Vải Thô', tint:{ lo:'#4a4038', hi:'#6b5c4c', trim:'#8a7a5c', glow:null } },
+    { min:2, name:'Nhân Sư', tint:{ lo:'#5a4a2c', hi:'#c8b070', trim:'#3ac8c0', glow:'#7ee0d8' } },
+    { min:3, name:'Triệu Hồn', tint:{ lo:'#16304a', hi:'#2f6fa8', trim:'#9ed4ff', glow:'#5ea0e8' } },
+    { min:4, name:'Thần Ma', tint:{ lo:'#3e1020', hi:'#a02040', trim:'#ff9ab0', glow:'#e04060' } },
+    { min:5, name:'Quỷ Vương', tint:{ lo:'#14361e', hi:'#2e8a48', trim:'#a8f0b8', glow:'#5ad078' } },
+    { min:6, name:'Tinh Vân', tint:{ lo:'#2a1a5a', hi:'#6a4ad0', trim:'#d0c0ff', glow:'#a88aff' } },
+    { min:7, name:'Hư Vô', tint:{ lo:'#160f2c', hi:'#3a2a6a', trim:'#7ecbff', glow:'#6ff0ff' } },
   ],
-  // Sylvan Ranger — da nhẹ, lá và lông vũ. Lá Thép và Gai Rừng ra lá, ba bộ Lông ra lông vũ,
-  // Sương Mai ra gai băng, Gió Bão ra tia sét
+  // Sylvan Ranger
   toanchan: [
-    { min:1, name:'Da Rừng', style:'hide', crest:'cap',
-      sh:{ chest:'weave', boot:'wrap', fringe:2 },
-      tint:{ lo:'#4a3c2c', hi:'#6e5a40', trim:'#8a7448', glow:null } },
-    { min:2, name:'Lá Thép', style:'hide', crest:'leaf',
-      sh:{ chest:'leaf', boot:'cuff', layer:1, spike:2 },
-      tint:{ lo:'#2f4436', hi:'#4a6b52', trim:'#9aa858', glow:null } },
-    { min:3, name:'Gai Rừng', style:'leaf', crest:'leaf',
-      sh:{ chest:'leaf', boot:'claw', spike:4 },
-      tint:{ lo:'#24402f', hi:'#3e6b4a', trim:'#8ad86a', glow:'#7ad86a' } },
-    { min:4, name:'Lông Cú', style:'plume', crest:'cap',
-      sh:{ chest:'feather', boot:'claw', fringe:5 },
-      tint:{ lo:'#4a3a28', hi:'#8a7050', trim:'#e0cfa8', glow:'#c0a878' } },
-    { min:5, name:'Sương Mai', style:'plume', crest:'leaf',
-      sh:{ chest:'ice', boot:'cuff', orb:1, fringe:2 },
-      tint:{ lo:'#48586a', hi:'#a8c0d8', trim:'#f0f8ff', glow:'#c0e0f8' } },
-    { min:6, name:'Nguyệt Quế', style:'leaf', crest:'crown',
-      sh:{ chest:'leaf', boot:'cuff', layer:2, orb:1 },
-      tint:{ lo:'#5a5218', hi:'#c0b040', trim:'#fff0a8', glow:'#e0d060' } },
-    { min:7, name:'Bạch Phượng', style:'plume', crest:'crown',
-      sh:{ chest:'feather', boot:'claw', fin:1, spike:4, orb:1 },
-      tint:{ lo:'#6a3a4a', hi:'#e0a0b0', trim:'#fff0f4', glow:'#ffc0d0' } },
+    { min:1, name:'Da Rừng', tint:{ lo:'#4a3c2c', hi:'#6e5a40', trim:'#8a7448', glow:null } },
+    { min:2, name:'Lá Thép', tint:{ lo:'#2f4436', hi:'#4a6b52', trim:'#9aa858', glow:null } },
+    { min:3, name:'Gai Rừng', tint:{ lo:'#24402f', hi:'#3e6b4a', trim:'#8ad86a', glow:'#7ad86a' } },
+    { min:4, name:'Lông Cú', tint:{ lo:'#4a3a28', hi:'#8a7050', trim:'#e0cfa8', glow:'#c0a878' } },
+    { min:5, name:'Sương Mai', tint:{ lo:'#48586a', hi:'#a8c0d8', trim:'#f0f8ff', glow:'#c0e0f8' } },
+    { min:6, name:'Nguyệt Quế', tint:{ lo:'#5a5218', hi:'#c0b040', trim:'#fff0a8', glow:'#e0d060' } },
+    { min:7, name:'Bạch Phượng', tint:{ lo:'#6a3a4a', hi:'#e0a0b0', trim:'#fff0f4', glow:'#ffc0d0' } },
   ],
-  // Spellblade — nửa giáp LỆCH VAI suốt cả 14 giai, đó là chữ ký của lớp. Khác biệt giữa các
-  // giai dồn vào hoa văn thân: Hoả ra lửa, Nham/Dung ra vết nứt dung nham
+  // Spellblade
   minhgiao: [
-    { min:1, name:'Bán Giáp', style:'halfplate', crest:'halfmask',
-      sh:{ chest:'strap', boot:'wrap' },
-      tint:{ lo:'#4a4038', hi:'#7a6a58', trim:'#9a7a4a', glow:null } },
-    { min:2, name:'Da Nung', style:'halfplate', crest:'horn',
-      sh:{ chest:'weave', boot:'wrap', layer:1 },
-      tint:{ lo:'#5a3a20', hi:'#9a6438', trim:'#d8a060', glow:null } },
-    { min:3, name:'Tro Tàn', style:'halfplate', crest:'hood',
-      sh:{ chest:'weave', boot:'wrap', fringe:3, stud:2 },
-      tint:{ lo:'#3e3a38', hi:'#78706c', trim:'#c0b4a8', glow:'#9a8e84' } },
-    { min:4, name:'Lửa Dữ', style:'halfplate', crest:'halfmask',
-      sh:{ chest:'flame', boot:'claw', spike:2, fin:1 },
-      tint:{ lo:'#6a1e10', hi:'#d85a22', trim:'#ffd08a', glow:'#ff6a1a' } },
-    { min:5, name:'Dung Nham', style:'halfplate', crest:'dragon',
-      sh:{ chest:'crack', boot:'claw', spike:4, orb:1 },
-      tint:{ lo:'#521004', hi:'#b83010', trim:'#ffa050', glow:'#ff5a10' } },
-    { min:6, name:'Long Diễm', style:'halfplate', crest:'crown',
-      sh:{ chest:'scale', boot:'claw', spike:2, orb:1 },
-      tint:{ lo:'#5e3a04', hi:'#e0a018', trim:'#fff4c8', glow:'#ffcc30' } },
-    { min:7, name:'Viêm Đế', style:'halfplate', crest:'crown',
-      sh:{ chest:'flame', boot:'claw', spike:4, fin:1, orb:1, layer:3 },
-      tint:{ lo:'#6a1000', hi:'#ff3a10', trim:'#ffe08a', glow:'#ff8000' } },
+    { min:1, name:'Bán Giáp', tint:{ lo:'#4a4038', hi:'#7a6a58', trim:'#9a7a4a', glow:null } },
+    { min:2, name:'Da Nung', tint:{ lo:'#5a3a20', hi:'#9a6438', trim:'#d8a060', glow:null } },
+    { min:3, name:'Tro Tàn', tint:{ lo:'#3e3a38', hi:'#78706c', trim:'#c0b4a8', glow:'#9a8e84' } },
+    { min:4, name:'Lửa Dữ', tint:{ lo:'#6a1e10', hi:'#d85a22', trim:'#ffd08a', glow:'#ff6a1a' } },
+    { min:5, name:'Dung Nham', tint:{ lo:'#521004', hi:'#b83010', trim:'#ffa050', glow:'#ff5a10' } },
+    { min:6, name:'Long Diễm', tint:{ lo:'#5e3a04', hi:'#e0a018', trim:'#fff4c8', glow:'#ffcc30' } },
+    { min:7, name:'Viêm Đế', tint:{ lo:'#6a1000', hi:'#ff3a10', trim:'#ffe08a', glow:'#ff8000' } },
   ],
-  // Dark Lord — nghi lễ, chỉ huy. Vương Giáp và Đế Vương ra huy hiệu vương triều, Kim Miện
-  // và Thiên Mệnh ra vầng dương, Tế Đàn và Hắc Đế ra đầu lâu
+  // Dark Lord
   bug: [
-    { min:1, name:'Lệnh Giáp', style:'regal', crest:'crown',
-      sh:{ chest:'lame', boot:'cuff' },
-      tint:{ lo:'#454a30', hi:'#6a7248', trim:'#8a8a58', glow:null } },
-    { min:2, name:'Thân Vệ', style:'regal', crest:'crown',
-      sh:{ chest:'chain', boot:'plate', layer:1 },
-      tint:{ lo:'#2a3a52', hi:'#4a6a92', trim:'#9ab8dc', glow:null } },
-    { min:3, name:'Kim Miện', style:'regal', crest:'crown',
-      sh:{ chest:'sun', boot:'plate', orb:1, layer:1 },
-      tint:{ lo:'#6a5808', hi:'#e8c428', trim:'#fff4b0', glow:'#ffd840' } },
-    { min:4, name:'Bạo Chúa', style:'regal', crest:'horn',
-      sh:{ chest:'eye', boot:'claw', spike:3, fringe:2 },
-      tint:{ lo:'#3a1a4a', hi:'#7a3a9a', trim:'#d8a0f0', glow:'#b060d8' } },
-    { min:5, name:'Ngai Đen', style:'regal', crest:'nemes',
-      sh:{ chest:'web', boot:'plate', layer:3, fin:1 },
-      tint:{ lo:'#16161c', hi:'#38384a', trim:'#9a9ac0', glow:'#6a6a98' } },
-    { min:6, name:'Hắc Đế', style:'regal', crest:'hood',
-      sh:{ chest:'skull', boot:'claw', spike:4, fin:1 },
-      tint:{ lo:'#0e0e12', hi:'#2a2a34', trim:'#c0a040', glow:'#8a7020' } },
-    { min:7, name:'Đế Vương', style:'regal', crest:'crown',
-      sh:{ chest:'emblem', boot:'plate', spike:3, orb:1, layer:3, fin:1 },
-      tint:{ lo:'#5a5230', hi:'#f0e4b0', trim:'#ffffff', glow:'#fff0c0' } },
+    { min:1, name:'Lệnh Giáp', tint:{ lo:'#454a30', hi:'#6a7248', trim:'#8a8a58', glow:null } },
+    { min:2, name:'Thân Vệ', tint:{ lo:'#2a3a52', hi:'#4a6a92', trim:'#9ab8dc', glow:null } },
+    { min:3, name:'Kim Miện', tint:{ lo:'#6a5808', hi:'#e8c428', trim:'#fff4b0', glow:'#ffd840' } },
+    { min:4, name:'Bạo Chúa', tint:{ lo:'#3a1a4a', hi:'#7a3a9a', trim:'#d8a0f0', glow:'#b060d8' } },
+    { min:5, name:'Ngai Đen', tint:{ lo:'#16161c', hi:'#38384a', trim:'#9a9ac0', glow:'#6a6a98' } },
+    { min:6, name:'Hắc Đế', tint:{ lo:'#0e0e12', hi:'#2a2a34', trim:'#c0a040', glow:'#8a7020' } },
+    { min:7, name:'Đế Vương', tint:{ lo:'#5a5230', hi:'#f0e4b0', trim:'#ffffff', glow:'#fff0c0' } },
   ],
-};
-
-window.MAT_PASS = {
-  metal(g, k){                                          // vệt loé hẹp, rìa cứng
-    const sg = g.createLinearGradient(60, 0, 60 + (17 - k * 9), 0);
-    sg.addColorStop(0, 'rgba(255,255,255,0)');
-    sg.addColorStop(0.5, `rgba(255,255,255,${(0.14 + k * 0.30).toFixed(3)})`);
-    sg.addColorStop(1, 'rgba(255,255,255,0)');
-    g.fillStyle = sg; g.fillRect(50, 92, 60, 54);
-  },
-  cloth(g, k){                                          // chuyển mềm, KHÔNG loé — thêm nếp gấp
-    g.strokeStyle = `rgba(0,0,0,${(0.10 + k * 0.10).toFixed(3)})`; g.lineWidth = 2.2;
-    for (let i = 0; i < 3; i++){
-      const x = 64 + i * 12;
-      g.beginPath(); g.moveTo(x, 94); g.quadraticCurveTo(x + 3, 118, x - 1, 142); g.stroke();
-    }
-  },
-  leather(g, k){                                        // ánh mờ ấm, rộng
-    const sg = g.createLinearGradient(58, 0, 92, 0);
-    sg.addColorStop(0, 'rgba(255,232,196,0)');
-    sg.addColorStop(0.5, `rgba(255,232,196,${(0.08 + k * 0.13).toFixed(3)})`);
-    sg.addColorStop(1, 'rgba(255,232,196,0)');
-    g.fillStyle = sg; g.fillRect(50, 92, 60, 54);
-  },
-  bone(g){                                              // phẳng phấn, lấm tấm
-    g.fillStyle = 'rgba(0,0,0,.13)';
-    for (let i = 0; i < 14; i++){
-      const x = 58 + (i * 37) % 44, y = 96 + (i * 23) % 44;
-      g.beginPath(); g.arc(x, y, 1.5, 0, 7); g.fill();
-    }
-  },
-  scale(g, k){                                          // loé theo từng hàng vảy
-    for (let r = 0; r < 5; r++){
-      const y = 96 + r * 9.4;
-      const sg = g.createLinearGradient(0, y, 0, y + 5);
-      sg.addColorStop(0, `rgba(255,255,255,${(0.10 + k * 0.20).toFixed(3)})`);
-      sg.addColorStop(1, 'rgba(255,255,255,0)');
-      g.fillStyle = sg; g.fillRect(50, y, 60, 5);
-    }
-  },
-  arcane(g, k, M){                                      // phát sáng từ giữa ra
-    const c = M.glow || M.trim;
-    const rg = g.createRadialGradient(80, 118, 2, 80, 118, 30);
-    rg.addColorStop(0, c); rg.addColorStop(1, 'rgba(0,0,0,0)');
-    g.globalAlpha = 0.13 + k * 0.17; g.fillStyle = rg;
-    g.fillRect(50, 92, 60, 54); g.globalAlpha = 1;
-  },
 };
 
 // ── VŨ KHÍ: 5 lớp × 3 dòng × 14 nấc = 210 ───────────────────────────────────
@@ -375,146 +256,157 @@ window.MAT_PASS = {
 // nên nhìn cây vũ khí là biết người kia đang ở giai nào mà không cần rê chuột.
 // Dáng đổi ở giai 4 / 7 / 10 / 13 cho khớp hStage; chất liệu và cỡ thì đổi từng giai.
 window.WEAPON_LINES = [
-  // ══ thieulam ══
+  // MƯỜI LĂM DÒNG vũ khí, mỗi dòng bảy nấc. Sau khi gỡ hình vector, mỗi nấc chỉ còn TÊN và —
+  // ở nấc nào có — HOA VĂN. Đã gỡ: blade · guard · pommel · shaft · w · len · gw · big · mat,
+  // chín trường dựng cây vũ khí từ tổ hợp bộ phận cho hàm vẽ vector.
+  //
+  // Hai trường CÒN LẠI có việc thật, đừng dọn tiếp:
+  //   base.art — weapon | staff | bow | crossbow. Không phải để vẽ, mà để chọn LỐI RA ĐÒN của
+  //              thần khí (TK_LOI): chém vòng cung · đâm thẳng · giương ngang · ngắm bằng.
+  //   motif    — set | bang | lua | runes | mach | gai. Lái HIỆU ỨNG CHẠM ĐÒN qua MOTIF_FX:
+  //              kiếm điện loé xanh, kiếm băng bắn mảnh, kiếm lửa ra tàn than.
+  //
+  // Tranh của từng cây khai riêng trong VK_ANH ở game.js, tra theo '<line>|<giai>'.
+  // ══ Dark Knight ══
   { sect:'thieulam', line:'kiem', slot:'vukhi', desc:'cân bằng',
-    base:{ art:'weapon', blade:'thang', guard:'thanh', pommel:'tron', motif:'khong', w:5.4, len:-42, gw:14 },
-    t:[ ['Kiếm Đồng', { mat:'dong', big:0.88 }],
-        ['Kiếm Thép', { mat:'thep', big:0.927 }],
-        ['Kiếm Bạc', { mat:'bac', big:0.973, guard:'quat', w:6.0 }],
-        ['Kiếm Vảy Rồng', { mat:'rong', big:1.02, guard:'vuot', motif:'gai', pommel:'da' }],
-        ['Kiếm Bạo Long', { mat:'lua', big:1.067, guard:'vuot', motif:'gai', pommel:'da' }],
-        ['Kiếm Lôi Đình', { mat:'ma', big:1.113, guard:'vuot', motif:'lua', pommel:'gai' }],
-        ['Kiếm Long Vương', { mat:'thanh', big:1.16, guard:'vuot', motif:'mach', pommel:'gai', w:6.4 }] ] },
+    base:{ art:'weapon' },
+    t:[ ['Kiếm Đồng', {}],
+        ['Kiếm Thép', {}],
+        ['Kiếm Bạc', {}],
+        ['Kiếm Vảy Rồng', { motif:'gai' }],
+        ['Kiếm Bạo Long', { motif:'gai' }],
+        ['Kiếm Lôi Đình', { motif:'lua' }],
+        ['Kiếm Long Vương', { motif:'mach' }] ] },
   { sect:'thieulam', line:'riu', slot:'vukhi', desc:'sát thương cao, chậm',
-    base:{ art:'weapon', blade:'riu', guard:'khong', pommel:'tron', motif:'khong', w:5.0, len:-40, gw:10 },
-    t:[ ['Rìu Đồng', { mat:'dong', big:0.88 }],
-        ['Rìu Thép', { mat:'thep', big:0.927 }],
-        ['Rìu Bạc', { mat:'bac', big:0.973, w:5.6 }],
-        ['Rìu Vảy Rồng', { mat:'rong', big:1.02, motif:'gai' }],
-        ['Rìu Bạo Long', { mat:'lua', big:1.067, motif:'gai' }],
-        ['Rìu Lôi Đình', { mat:'ma', big:1.113, motif:'lua', pommel:'gai' }],
-        ['Rìu Long Vương', { mat:'thanh', big:1.16, motif:'mach', pommel:'gai', w:6.2 }] ] },
+    base:{ art:'weapon' },
+    t:[ ['Rìu Đồng', {}],
+        ['Rìu Thép', {}],
+        ['Rìu Bạc', {}],
+        ['Rìu Vảy Rồng', { motif:'gai' }],
+        ['Rìu Bạo Long', { motif:'gai' }],
+        ['Rìu Lôi Đình', { motif:'lua' }],
+        ['Rìu Long Vương', { motif:'mach' }] ] },
   { sect:'thieulam', line:'chuy', slot:'vukhi', desc:'phá giáp',
-    base:{ art:'weapon', blade:'chuy', guard:'khong', pommel:'tron', motif:'khong', w:4.6, len:-38, gw:10 },
-    t:[ ['Chùy Đồng', { mat:'dong', big:0.88 }],
-        ['Chùy Thép', { mat:'thep', big:0.927 }],
-        ['Chùy Bạc', { mat:'bac', big:0.973, w:5.2 }],
-        ['Chùy Vảy Rồng', { mat:'rong', big:1.02, motif:'gai' }],
-        ['Chùy Bạo Long', { mat:'lua', big:1.067, motif:'gai' }],
-        ['Chùy Lôi Đình', { mat:'ma', big:1.113, motif:'lua', pommel:'gai' }],
-        ['Chùy Long Vương', { mat:'thanh', big:1.16, motif:'mach', pommel:'gai', w:5.8 }] ] },
-  // ══ baidasan ══
+    base:{ art:'weapon' },
+    t:[ ['Chùy Đồng', {}],
+        ['Chùy Thép', {}],
+        ['Chùy Bạc', {}],
+        ['Chùy Vảy Rồng', { motif:'gai' }],
+        ['Chùy Bạo Long', { motif:'gai' }],
+        ['Chùy Lôi Đình', { motif:'lua' }],
+        ['Chùy Long Vương', { motif:'mach' }] ] },
+  // ══ Dark Wizard ══
   { sect:'baidasan', line:'gay', slot:'vukhi', desc:'sát thương phép',
-    base:{ art:'staff', shaft:'thang', head:'cau', len:-30 },
-    t:[ ['Gậy Gỗ', { mat:'xuong', big:0.88 }],
-        ['Gậy Nhân Sư', { mat:'vang', big:0.927 }],
-        ['Gậy Triệu Hồn', { mat:'bang', big:0.973, shaft:'xuong' }],
-        ['Gậy Thần Ma', { mat:'huyet', big:1.02, shaft:'dot' }],
-        ['Gậy Quỷ Vương', { mat:'luc', big:1.067, shaft:'dot' }],
-        ['Gậy Tinh Vân', { mat:'ma', big:1.113, shaft:'xoan', len:-32 }],
-        ['Gậy Hư Vô', { mat:'bang', big:1.16, shaft:'xoan', len:-34 }] ] },
+    base:{ art:'staff' },
+    t:[ ['Gậy Gỗ', {}],
+        ['Gậy Nhân Sư', {}],
+        ['Gậy Triệu Hồn', {}],
+        ['Gậy Thần Ma', {}],
+        ['Gậy Quỷ Vương', {}],
+        ['Gậy Tinh Vân', {}],
+        ['Gậy Hư Vô', {}] ] },
   { sect:'baidasan', line:'quyentruong', slot:'vukhi', desc:'tốc niệm',
-    base:{ art:'staff', shaft:'dot', head:'canh', len:-30 },
-    t:[ ['Trượng Gỗ', { mat:'xuong', big:0.88 }],
-        ['Trượng Nhân Sư', { mat:'vang', big:0.927 }],
-        ['Trượng Triệu Hồn', { mat:'bang', big:0.973, shaft:'thang' }],
-        ['Trượng Thần Ma', { mat:'huyet', big:1.02, shaft:'xuong' }],
-        ['Trượng Quỷ Vương', { mat:'luc', big:1.067, shaft:'xuong' }],
-        ['Trượng Tinh Vân', { mat:'ma', big:1.113, shaft:'xoan', len:-32 }],
-        ['Trượng Hư Vô', { mat:'bang', big:1.16, shaft:'xoan', len:-36 }] ] },
+    base:{ art:'staff' },
+    t:[ ['Trượng Gỗ', {}],
+        ['Trượng Nhân Sư', {}],
+        ['Trượng Triệu Hồn', {}],
+        ['Trượng Thần Ma', {}],
+        ['Trượng Quỷ Vương', {}],
+        ['Trượng Tinh Vân', {}],
+        ['Trượng Hư Vô', {}] ] },
   { sect:'baidasan', line:'tinhtruong', slot:'vukhi', desc:'bạo kích',
-    base:{ art:'staff', shaft:'xuong', head:'so', len:-30 },
-    t:[ ['Tinh Trượng Gỗ', { mat:'xuong', big:0.88 }],
-        ['Tinh Trượng Nhân Sư', { mat:'vang', big:0.927 }],
-        ['Tinh Trượng Triệu Hồn', { mat:'bang', big:0.973, shaft:'dot' }],
-        ['Tinh Trượng Thần Ma', { mat:'huyet', big:1.02, shaft:'thang' }],
-        ['Tinh Trượng Quỷ Vương', { mat:'luc', big:1.067, shaft:'thang' }],
-        ['Tinh Trượng Tinh Vân', { mat:'ma', big:1.113, shaft:'xoan', len:-33 }],
-        ['Tinh Trượng Hư Vô', { mat:'bang', big:1.16, shaft:'xoan', len:-35 }] ] },
-  // ══ toanchan ══
+    base:{ art:'staff' },
+    t:[ ['Tinh Trượng Gỗ', {}],
+        ['Tinh Trượng Nhân Sư', {}],
+        ['Tinh Trượng Triệu Hồn', {}],
+        ['Tinh Trượng Thần Ma', {}],
+        ['Tinh Trượng Quỷ Vương', {}],
+        ['Tinh Trượng Tinh Vân', {}],
+        ['Tinh Trượng Hư Vô', {}] ] },
+  // ══ Sylvan Ranger ══
   { sect:'toanchan', line:'cungngan', slot:'vukhi', desc:'bắn nhanh',
-    base:{ art:'bow', limb:'cong' },
-    t:[ ['Cung Gỗ', { mat:'xuong', big:0.88 }],
-        ['Cung Sồi', { mat:'sat', big:0.927 }],
-        ['Cung Gai Rừng', { mat:'luc', big:0.973 }],
-        ['Cung Lông Cú', { mat:'dong', big:1.02 }],
-        ['Cung Sương Mai', { mat:'bac', big:1.067 }],
-        ['Cung Nguyệt Quế', { mat:'vang', big:1.113 }],
-        ['Cung Bạch Phượng', { mat:'huyet', big:1.16 }] ] },
+    base:{ art:'bow' },
+    t:[ ['Cung Gỗ', {}],
+        ['Cung Sồi', {}],
+        ['Cung Gai Rừng', {}],
+        ['Cung Lông Cú', {}],
+        ['Cung Sương Mai', {}],
+        ['Cung Nguyệt Quế', {}],
+        ['Cung Bạch Phượng', {}] ] },
   { sect:'toanchan', line:'truongcung', slot:'vukhi', desc:'tầm xa',
-    base:{ art:'bow', limb:'dai' },
-    t:[ ['Trường Cung Gỗ', { mat:'xuong', big:0.88 }],
-        ['Trường Cung Sồi', { mat:'sat', big:0.927 }],
-        ['Trường Cung Gai Rừng', { mat:'luc', big:0.973 }],
-        ['Trường Cung Lông Cú', { mat:'dong', big:1.02 }],
-        ['Trường Cung Sương Mai', { mat:'bac', big:1.067 }],
-        ['Trường Cung Nguyệt Quế', { mat:'vang', big:1.113 }],
-        ['Trường Cung Bạch Phượng', { mat:'huyet', big:1.16 }] ] },
+    base:{ art:'bow' },
+    t:[ ['Trường Cung Gỗ', {}],
+        ['Trường Cung Sồi', {}],
+        ['Trường Cung Gai Rừng', {}],
+        ['Trường Cung Lông Cú', {}],
+        ['Trường Cung Sương Mai', {}],
+        ['Trường Cung Nguyệt Quế', {}],
+        ['Trường Cung Bạch Phượng', {}] ] },
   { sect:'toanchan', line:'no', slot:'vukhi', desc:'nặng, xuyên giáp',
     base:{ art:'crossbow' },
-    t:[ ['Nỏ Gỗ', { mat:'xuong', big:0.88 }],
-        ['Nỏ Sồi', { mat:'sat', big:0.927 }],
-        ['Nỏ Gai Rừng', { mat:'luc', big:0.973 }],
-        ['Nỏ Lông Cú', { mat:'dong', big:1.02 }],
-        ['Nỏ Sương Mai', { mat:'bac', big:1.067 }],
-        ['Nỏ Nguyệt Quế', { mat:'vang', big:1.113 }],
-        ['Nỏ Bạch Phượng', { mat:'huyet', big:1.16 }] ] },
-  // ══ minhgiao ══
+    t:[ ['Nỏ Gỗ', {}],
+        ['Nỏ Sồi', {}],
+        ['Nỏ Gai Rừng', {}],
+        ['Nỏ Lông Cú', {}],
+        ['Nỏ Sương Mai', {}],
+        ['Nỏ Nguyệt Quế', {}],
+        ['Nỏ Bạch Phượng', {}] ] },
+  // ══ Spellblade ══
   { sect:'minhgiao', line:'songdao', slot:'vukhi', desc:'nhanh',
-    base:{ art:'weapon', blade:'cong', guard:'canh', pommel:'tron', motif:'khong', w:5.2, len:-40, gw:13 },
-    t:[ ['Song Đao Thô', { mat:'dong', big:0.88 }],
-        ['Song Đao Da Nung', { mat:'thep', big:0.927 }],
-        ['Song Đao Tro Tàn', { mat:'xuong', big:0.973, motif:'lua' }],
-        ['Song Đao Lửa Dữ', { mat:'huyet', big:1.02, motif:'lua', pommel:'gai' }],
-        ['Song Đao Dung Nham', { mat:'lua', big:1.067, motif:'lua', pommel:'gai' }],
-        ['Song Đao Long Diễm', { mat:'vang', big:1.113, motif:'lua', guard:'vuot', pommel:'gai' }],
-        ['Song Đao Viêm Đế', { mat:'thanh', big:1.16, motif:'mach', guard:'vuot', pommel:'gai', w:5.8 }] ] },
+    base:{ art:'weapon' },
+    t:[ ['Song Đao Thô', {}],
+        ['Song Đao Da Nung', {}],
+        ['Song Đao Tro Tàn', { motif:'lua' }],
+        ['Song Đao Lửa Dữ', { motif:'lua' }],
+        ['Song Đao Dung Nham', { motif:'lua' }],
+        ['Song Đao Long Diễm', { motif:'lua' }],
+        ['Song Đao Viêm Đế', { motif:'mach' }] ] },
   { sect:'minhgiao', line:'daikiem', slot:'vukhi', desc:'nặng',
-    base:{ art:'weapon', blade:'daikiem', guard:'thanh', pommel:'vuot', motif:'khong', w:5.4, len:-44, gw:16 },
-    t:[ ['Đại Kiếm Thô', { mat:'dong', big:0.88 }],
-        ['Đại Kiếm Da Nung', { mat:'thep', big:0.927 }],
-        ['Đại Kiếm Tro Tàn', { mat:'xuong', big:0.973, motif:'lua' }],
-        ['Đại Kiếm Lửa Dữ', { mat:'huyet', big:1.02, motif:'lua', motifX:1 }],
-        ['Đại Kiếm Dung Nham', { mat:'lua', big:1.067, motif:'lua', motifX:1 }],
-        ['Đại Kiếm Long Diễm', { mat:'vang', big:1.113, motif:'lua', pommel:'gai' }],
-        ['Đại Kiếm Viêm Đế', { mat:'thanh', big:1.16, motif:'mach', pommel:'gai', w:6.0 }] ] },
+    base:{ art:'weapon' },
+    t:[ ['Đại Kiếm Thô', {}],
+        ['Đại Kiếm Da Nung', {}],
+        ['Đại Kiếm Tro Tàn', { motif:'lua' }],
+        ['Đại Kiếm Lửa Dữ', { motif:'lua' }],
+        ['Đại Kiếm Dung Nham', { motif:'lua' }],
+        ['Đại Kiếm Long Diễm', { motif:'lua' }],
+        ['Đại Kiếm Viêm Đế', { motif:'mach' }] ] },
   { sect:'minhgiao', line:'makiem', slot:'vukhi', desc:'lai phép',
-    base:{ art:'weapon', blade:'song', guard:'canh', pommel:'da', motif:'runes', w:5.4, len:-43, gw:14 },
-    t:[ ['Ma Kiếm Thô', { mat:'dong', big:0.88 }],
-        ['Ma Kiếm Da Nung', { mat:'thep', big:0.927 }],
-        ['Ma Kiếm Tro Tàn', { mat:'xuong', big:0.973, motif:'mach' }],
-        ['Ma Kiếm Lửa Dữ', { mat:'huyet', big:1.02, motif:'mach', pommel:'vuot' }],
-        ['Ma Kiếm Dung Nham', { mat:'lua', big:1.067, motif:'mach', pommel:'vuot' }],
-        ['Ma Kiếm Long Diễm', { mat:'vang', big:1.113, motif:'lua', pommel:'vuot' }],
-        ['Ma Kiếm Viêm Đế', { mat:'thanh', big:1.16, motif:'mach', pommel:'gai', guard:'vuot' }] ] },
-  // ══ bug ══
+    base:{ art:'weapon' },
+    t:[ ['Ma Kiếm Thô', { motif:'runes' }],
+        ['Ma Kiếm Da Nung', { motif:'runes' }],
+        ['Ma Kiếm Tro Tàn', { motif:'mach' }],
+        ['Ma Kiếm Lửa Dữ', { motif:'mach' }],
+        ['Ma Kiếm Dung Nham', { motif:'mach' }],
+        ['Ma Kiếm Long Diễm', { motif:'lua' }],
+        ['Ma Kiếm Viêm Đế', { motif:'mach' }] ] },
+  // ══ Dark Lord ══
   { sect:'bug', line:'lenhtruong', slot:'vukhi', desc:'chỉ huy',
-    base:{ art:'staff', shaft:'dot', head:'vong', len:-30 },
-    t:[ ['Lệnh Trượng Gỗ', { mat:'xuong', big:0.88 }],
-        ['Lệnh Trượng Cận Vệ', { mat:'sat', big:0.927 }],
-        ['Lệnh Trượng Kim Miện', { mat:'thanh', big:0.973, len:-32 }],
-        ['Lệnh Trượng Bạo Chúa', { mat:'ma', big:1.02, shaft:'xoan', len:-32 }],
-        ['Lệnh Trượng Ngai Đen', { mat:'hacKim', big:1.067, shaft:'xoan', len:-32 }],
-        ['Lệnh Trượng Hắc Đế', { mat:'hacKim', big:1.113, shaft:'thang', len:-34 }],
-        ['Lệnh Trượng Đế Vương', { mat:'thanh', big:1.16, shaft:'xoan', len:-36 }] ] },
+    base:{ art:'staff' },
+    t:[ ['Lệnh Trượng Gỗ', {}],
+        ['Lệnh Trượng Cận Vệ', {}],
+        ['Lệnh Trượng Kim Miện', {}],
+        ['Lệnh Trượng Bạo Chúa', {}],
+        ['Lệnh Trượng Ngai Đen', {}],
+        ['Lệnh Trượng Hắc Đế', {}],
+        ['Lệnh Trượng Đế Vương', {}] ] },
   { sect:'bug', line:'bua', slot:'vukhi', desc:'nặng',
-    base:{ art:'weapon', blade:'chuy', guard:'khong', pommel:'tron', motif:'khong', w:4.8, len:-38, gw:10 },
-    t:[ ['Búa Gỗ', { mat:'xuong', big:0.88 }],
-        ['Búa Cận Vệ', { mat:'sat', big:0.927 }],
-        ['Búa Kim Miện', { mat:'thanh', big:0.973, w:5.4 }],
-        ['Búa Bạo Chúa', { mat:'ma', big:1.02, motif:'runes' }],
-        ['Búa Ngai Đen', { mat:'hacKim', big:1.067, motif:'runes' }],
-        ['Búa Hắc Đế', { mat:'hacKim', big:1.113, motif:'runes', pommel:'gai' }],
-        ['Búa Đế Vương', { mat:'thanh', big:1.16, motif:'mach', pommel:'gai', w:6.0 }] ] },
+    base:{ art:'weapon' },
+    t:[ ['Búa Gỗ', {}],
+        ['Búa Cận Vệ', {}],
+        ['Búa Kim Miện', {}],
+        ['Búa Bạo Chúa', { motif:'runes' }],
+        ['Búa Ngai Đen', { motif:'runes' }],
+        ['Búa Hắc Đế', { motif:'runes' }],
+        ['Búa Đế Vương', { motif:'mach' }] ] },
   { sect:'bug', line:'kich', slot:'vukhi', desc:'tầm với',
-    base:{ art:'staff', shaft:'thang', head:'liem', len:-32 },
-    t:[ ['Kích Gỗ', { mat:'xuong', big:0.88 }],
-        ['Kích Cận Vệ', { mat:'sat', big:0.927 }],
-        ['Kích Kim Miện', { mat:'thanh', big:0.973, len:-30 }],
-        ['Kích Bạo Chúa', { mat:'ma', big:1.02, shaft:'dot' }],
-        ['Kích Ngai Đen', { mat:'hacKim', big:1.067, shaft:'dot' }],
-        ['Kích Hắc Đế', { mat:'hacKim', big:1.113, shaft:'xoan' }],
-        ['Kích Đế Vương', { mat:'thanh', big:1.16, shaft:'xuong', len:-34 }] ] },
+    base:{ art:'staff' },
+    t:[ ['Kích Gỗ', {}],
+        ['Kích Cận Vệ', {}],
+        ['Kích Kim Miện', {}],
+        ['Kích Bạo Chúa', {}],
+        ['Kích Ngai Đen', {}],
+        ['Kích Hắc Đế', {}],
+        ['Kích Đế Vương', {}] ] },
 ];
 
 // Cấu hình từng phó bản: 3 đợt quái (quái của map cha) → Boss → thưởng nguyên liệu nâng tầng kỹ năng
@@ -948,337 +840,6 @@ window.HERO_METAL = [
   { lo:'#20204a', hi:'#4a4ac0', trim:'#c8c8ff', glow:'#8a8aff' }, // 13 Tối Thượng — lam sâu
   { lo:'#6a6250', hi:'#f0e8c8', trim:'#ffffff', glow:'#fff0c0' }, // 14 Khai Thiên — trắng ngà
 ];
-
-// ── NÉT RIÊNG TRÊN TỪNG MÓN ─────────────────────────────────────────────────
-// Vai và mào đổi theo bộ rồi, nhưng THÂN ÁO / QUẦN / ỦNG vẫn do hàm thân của LỚP vẽ, dùng
-// P.leg và P.boot — nghĩa là mọi bộ giống hệt nhau ở đúng phần chiếm nhiều diện tích nhất.
-// Đổi mỗi bảng màu thì nhìn vẫn ra "cùng một bộ đồ nhuộm lại". Ba hàm dưới vẽ ĐÈ lên đúng
-// những món đó, theo sh.chest / sh.boot / sh.glove khai riêng cho từng bộ.
-//
-// Khung toạ độ thân: x 56–104, y 96–140 (đai lưng ở y≈140). Ống chân và ủng nằm trong hJoint
-// của chân nên nhận toạ độ cục bộ đã dịch sẵn.
-window.CHEST_ART = {
-  // xương sườn — dùng cho bộ Xương, Cốt Giáp: bốn cặp xương cong thu dần
-  rib(g, M){
-    g.strokeStyle = M.trim; g.lineWidth = 2.6; g.lineCap = 'round';
-    for (let i = 0; i < 4; i++){
-      const y = 106 + i * 8, w = 19 - i * 2.6;
-      g.beginPath(); g.moveTo(80 - w, y); g.quadraticCurveTo(80, y + 5.5, 80 + w, y); g.stroke();
-    }
-    g.lineWidth = 3.4; g.beginPath(); g.moveTo(80, 102); g.lineTo(80, 138); g.stroke();
-    g.lineCap = 'butt';
-  },
-  // vảy xếp lợp — bộ rồng
-  scale(g, M){
-    for (let r = 0; r < 4; r++)
-      for (let c = 0; c < 4; c++){
-        const x = 63 + c * 11 + (r % 2 ? 5.5 : 0), y = 104 + r * 9;
-        if (x < 60 || x > 100) continue;
-        g.fillStyle = (r + c) % 2 ? M.hi : M.lo;
-        g.beginPath(); g.moveTo(x, y + 7); g.quadraticCurveTo(x, y - 2, x + 5.5, y - 2);
-        g.quadraticCurveTo(x + 11, y - 2, x + 11, y + 7); g.closePath(); g.fill();
-      }
-  },
-  // giáp lam — dải tấm ngang chồng lên nhau
-  lame(g, M){
-    for (let i = 0; i < 5; i++){
-      const y = 102 + i * 7.6, w = 21 - i * 1.1;
-      g.fillStyle = i % 2 ? M.hi : M.lo;
-      g.beginPath(); g.roundRect(80 - w, y, w * 2, 6.4, 2); g.fill();
-      g.strokeStyle = M.trim; g.lineWidth = 0.7; g.stroke();
-    }
-  },
-  // dây đeo chéo chữ X
-  strap(g, M){
-    g.strokeStyle = M.lo; g.lineWidth = 6;
-    g.beginPath(); g.moveTo(62, 98); g.lineTo(99, 138); g.stroke();
-    g.beginPath(); g.moveTo(99, 98); g.lineTo(62, 138); g.stroke();
-    g.fillStyle = M.trim;
-    g.beginPath(); g.arc(80, 118, 4.4, 0, 7); g.fill();
-  },
-  // yếm giáp liền khối, viền nổi
-  plate(g, M){
-    g.fillStyle = M.hi;
-    g.beginPath();
-    g.moveTo(63, 100); g.lineTo(97, 100); g.lineTo(94, 132);
-    g.quadraticCurveTo(80, 142, 66, 132); g.closePath(); g.fill();
-    g.strokeStyle = M.trim; g.lineWidth = 1.6; g.stroke();
-    g.fillStyle = M.lo;
-    g.beginPath(); g.moveTo(80, 102); g.lineTo(86, 118); g.lineTo(80, 134);
-    g.lineTo(74, 118); g.closePath(); g.fill();
-  },
-  // cột rune phát sáng — bộ phép
-  rune(g, M){
-    const c = M.glow || M.trim;
-    g.strokeStyle = c; g.lineWidth = 1.3; g.globalAlpha = 0.9;
-    g.beginPath(); g.moveTo(80, 100); g.lineTo(80, 136); g.stroke();
-    for (let i = 0; i < 4; i++){
-      const y = 104 + i * 9.5, w = 8 - i;
-      g.beginPath(); g.moveTo(80 - w, y); g.lineTo(80, y + 4); g.lineTo(80 + w, y); g.stroke();
-    }
-    g.globalAlpha = 1;
-    g.fillStyle = c; g.beginPath(); g.arc(80, 120, 3, 0, 7); g.fill();
-  },
-  // nếp vải dệt — bộ vải, bộ da
-  weave(g, M){
-    g.strokeStyle = M.lo; g.lineWidth = 1.5; g.globalAlpha = 0.75;
-    for (let i = 0; i < 5; i++){
-      const y = 102 + i * 8;
-      g.beginPath(); g.moveTo(62, y); g.quadraticCurveTo(80, y + 3.2, 98, y); g.stroke();
-    }
-    g.globalAlpha = 1;
-  },
-  // mắt xích — bộ Giáp Xích
-  chain(g, M){
-    g.strokeStyle = M.hi; g.lineWidth = 1.7;
-    for (let r = 0; r < 5; r++)
-      for (let c = 0; c < 5; c++){
-        const x = 64 + c * 8 + (r % 2 ? 4 : 0), y = 104 + r * 7.6;
-        if (x < 61 || x > 99) continue;
-        g.beginPath(); g.ellipse(x, y, 3.4, 2.6, 0, 0, 7); g.stroke();
-      }
-  },
-  // tia sét — Lôi Đình
-  bolt(g, M){
-    const c = M.glow || M.trim;
-    g.fillStyle = c;
-    g.beginPath();
-    g.moveTo(84, 98); g.lineTo(74, 118); g.lineTo(81, 118);
-    g.lineTo(74, 140); g.lineTo(90, 114); g.lineTo(82, 114); g.lineTo(90, 98);
-    g.closePath(); g.fill();
-    g.strokeStyle = c; g.globalAlpha = 0.5; g.lineWidth = 1.2;
-    g.beginPath(); g.moveTo(64, 106); g.lineTo(69, 116); g.lineTo(64, 126); g.stroke();
-    g.beginPath(); g.moveTo(97, 106); g.lineTo(92, 116); g.lineTo(97, 126); g.stroke();
-    g.globalAlpha = 1;
-  },
-  // gai băng — Băng Nguyên
-  ice(g, M){
-    const c = M.glow || M.trim;
-    for (let i = 0; i < 5; i++){
-      const x = 64 + i * 8.4, h = 13 + (i % 2) * 8;
-      g.fillStyle = i % 2 ? c : M.hi; g.globalAlpha = 0.9;
-      g.beginPath(); g.moveTo(x - 3.4, 138); g.lineTo(x + 3.4, 138);
-      g.lineTo(x, 138 - h - 12); g.closePath(); g.fill();
-    }
-    g.globalAlpha = 1;
-  },
-  // trăng khuyết — Ánh Trăng, Huyết Nguyệt
-  moon(g, M){
-    const c = M.trim;
-    // Vẽ vành trăng bằng HAI CUNG nối nhau, KHÔNG dùng destination-out. Bản đầu khoét bằng
-    // destination-out cho nhanh, nhưng phép đó xoá thủng mọi thứ đã vẽ bên dưới trên cùng lớp
-    // canvas — nó ăn mất mặt nhân vật, để lại một lỗ đen ngay chỗ cằm. Nhìn ảnh mới thấy.
-    g.fillStyle = c;
-    g.beginPath();
-    g.arc(80, 116, 13, 0.55, Math.PI * 2 - 0.55);              // bụng ngoài
-    g.arc(86, 114, 11.5, Math.PI * 2 - 0.95, 0.95, true);      // bụng trong, quét ngược
-    g.closePath(); g.fill();
-    g.fillStyle = M.glow || c; g.globalAlpha = 0.8;
-    for (let i = 0; i < 3; i++){ g.beginPath(); g.arc(66 + i * 4, 132 - i * 5, 1.4, 0, 7); g.fill(); }
-    g.globalAlpha = 1;
-  },
-  // đầu lâu — Quỷ Vương, Hắc Ám
-  skull(g, M){
-    g.fillStyle = M.trim;
-    g.beginPath(); g.ellipse(80, 114, 10, 11, 0, Math.PI, 0); g.fill();
-    g.fillRect(72, 114, 16, 8);
-    g.fillStyle = M.lo;
-    g.beginPath(); g.arc(76, 113, 2.8, 0, 7); g.fill();
-    g.beginPath(); g.arc(84, 113, 2.8, 0, 7); g.fill();
-    for (let i = 0; i < 3; i++) g.fillRect(74 + i * 5, 122, 3, 5);
-    g.fillStyle = M.trim;
-    g.beginPath(); g.moveTo(66, 128); g.lineTo(94, 128); g.lineTo(94, 132); g.lineTo(66, 132); g.closePath(); g.fill();
-  },
-  // sao — Tinh Vân, Thiên Vũ
-  star(g, M){
-    const c = M.glow || M.trim;
-    const P = [[80,110,6],[68,120,3.4],[92,118,3.8],[74,131,2.6],[88,130,2.6],[80,100,2.4]];
-    for (const [x, y, r] of P){
-      g.fillStyle = c; g.globalAlpha = 0.95;
-      g.beginPath();
-      for (let i = 0; i < 8; i++){
-        const a = i * Math.PI / 4, rr = i % 2 ? r * 0.36 : r;
-        const fx = x + Math.cos(a) * rr, fy = y + Math.sin(a) * rr;
-        i ? g.lineTo(fx, fy) : g.moveTo(fx, fy);
-      }
-      g.closePath(); g.fill();
-    }
-    g.globalAlpha = 1;
-  },
-  // lưỡi lửa — Lửa Dữ, Hoả Ngục, Viêm Đế
-  flame(g, M){
-    for (let i = 0; i < 4; i++){
-      const x = 66 + i * 9.4, h = 20 + (i % 2) * 10;
-      g.fillStyle = i % 2 ? (M.glow || M.trim) : M.hi; g.globalAlpha = 0.92;
-      g.beginPath();
-      g.moveTo(x - 5, 138);
-      g.quadraticCurveTo(x - 6.5, 138 - h * 0.55, x, 138 - h);
-      g.quadraticCurveTo(x + 6.5, 138 - h * 0.55, x + 5, 138);
-      g.closePath(); g.fill();
-    }
-    g.globalAlpha = 1;
-  },
-  // vết nứt dung nham — Nham Thạch, Dung Nham
-  crack(g, M){
-    g.strokeStyle = M.glow || M.trim; g.lineWidth = 2;
-    const L = [[[62,102],[72,114],[66,126],[76,138]], [[98,104],[88,116],[95,128],[86,138]],
-               [[80,100],[84,116],[78,128]]];
-    for (const path of L){
-      g.beginPath(); g.moveTo(path[0][0], path[0][1]);
-      for (let i = 1; i < path.length; i++) g.lineTo(path[i][0], path[i][1]);
-      g.stroke();
-    }
-  },
-  // lá — Lá Thép, Vỏ Sồi, Gai Rừng
-  leaf(g, M){
-    for (let i = 0; i < 5; i++){
-      const x = 66 + (i % 3) * 14, y = 104 + Math.floor(i / 3) * 16 + (i % 2) * 6;
-      g.fillStyle = i % 2 ? M.hi : M.trim;
-      g.beginPath();
-      g.moveTo(x, y + 9);
-      g.quadraticCurveTo(x - 7, y, x, y - 9);
-      g.quadraticCurveTo(x + 7, y, x, y + 9);
-      g.closePath(); g.fill();
-    }
-  },
-  // lông vũ — Lông Cú, Lông Ưng, Bạch Phượng
-  feather(g, M){
-    for (let i = 0; i < 5; i++){
-      const x = 64 + i * 8.4, L = 16 + (i % 2) * 7;
-      g.fillStyle = i % 2 ? M.hi : M.trim; g.globalAlpha = 0.92;
-      g.beginPath();
-      g.moveTo(x, 100);
-      g.quadraticCurveTo(x - 4.6, 100 + L * 0.55, x, 100 + L);
-      g.quadraticCurveTo(x + 4.6, 100 + L * 0.55, x, 100);
-      g.closePath(); g.fill();
-    }
-    g.globalAlpha = 1;
-  },
-  // vầng dương — Thánh Long, Thiên Mệnh
-  sun(g, M){
-    const c = M.glow || M.trim;
-    g.fillStyle = c;
-    for (let i = 0; i < 12; i++){
-      const a = i * Math.PI / 6;
-      g.beginPath();
-      g.moveTo(80 + Math.cos(a) * 7, 116 + Math.sin(a) * 7);
-      g.lineTo(80 + Math.cos(a + 0.18) * 16, 116 + Math.sin(a + 0.18) * 16);
-      g.lineTo(80 + Math.cos(a - 0.18) * 16, 116 + Math.sin(a - 0.18) * 16);
-      g.closePath(); g.fill();
-    }
-    g.fillStyle = M.hi; g.beginPath(); g.arc(80, 116, 7, 0, 7); g.fill();
-  },
-  // con mắt — Ma Vương, Thần Ma
-  eye(g, M){
-    g.fillStyle = M.trim;
-    g.beginPath(); g.moveTo(64, 116);
-    g.quadraticCurveTo(80, 100, 96, 116);
-    g.quadraticCurveTo(80, 132, 64, 116); g.closePath(); g.fill();
-    g.fillStyle = M.lo; g.beginPath(); g.arc(80, 116, 6.4, 0, 7); g.fill();
-    g.fillStyle = M.glow || M.hi; g.beginPath(); g.arc(80, 116, 3, 0, 7); g.fill();
-  },
-  // huy hiệu vương triều — Vương Giáp, Đế Vương
-  emblem(g, M){
-    g.fillStyle = M.hi;
-    g.beginPath();
-    g.moveTo(80, 98); g.lineTo(95, 106); g.lineTo(95, 124);
-    g.quadraticCurveTo(80, 140, 65, 124); g.lineTo(65, 106); g.closePath(); g.fill();
-    g.strokeStyle = M.trim; g.lineWidth = 1.8; g.stroke();
-    g.fillStyle = M.trim;
-    for (let i = 0; i < 3; i++){
-      const x = 72 + i * 8;
-      g.beginPath(); g.moveTo(x - 3.4, 118); g.lineTo(x + 3.4, 118); g.lineTo(x, 106); g.closePath(); g.fill();
-    }
-  },
-  // mạch tối — Hư Vô
-  web(g, M){
-    g.strokeStyle = M.glow || M.trim; g.lineWidth = 1.1; g.globalAlpha = 0.8;
-    for (let i = 0; i < 6; i++){
-      const a = i * Math.PI / 3;
-      g.beginPath(); g.moveTo(80, 118);
-      g.quadraticCurveTo(80 + Math.cos(a) * 10, 118 + Math.sin(a) * 10,
-                         80 + Math.cos(a) * 19, 118 + Math.sin(a) * 19);
-      g.stroke();
-    }
-    g.globalAlpha = 1;
-    g.fillStyle = M.glow || M.trim; g.beginPath(); g.arc(80, 118, 3.4, 0, 7); g.fill();
-  },
-  // lông thú viền cổ
-  fur(g, M){
-    g.fillStyle = M.hi;
-    for (let i = 0; i < 7; i++){
-      const x = 62 + i * 6;
-      g.beginPath(); g.arc(x, 100, 4.6, 0, 7); g.fill();
-    }
-    g.fillStyle = M.lo;
-    for (let i = 0; i < 6; i++){
-      const x = 65 + i * 6;
-      g.beginPath(); g.arc(x, 103, 3.2, 0, 7); g.fill();
-    }
-  },
-};
-
-// ── NÓN VÀ GĂNG THEO TỪNG BỘ ────────────────────────────────────────────────
-// Vòm nón nằm CỨNG trong upper() của từng lớp, găng cũng vậy — nên mọi bộ đội chung một cái nón
-// và đeo chung một đôi găng, chỉ khác màu. Hai bảng dưới vẽ ĐÈ lên đúng hai món đó, trong cùng
-// khớp đầu / khớp tay, nên không phải viết lại năm hàm upper().
-// Nón vẽ quanh tâm đầu (80, 74); găng vẽ ở bàn tay (48,116) trái và (112,116) phải.
-window.HELM_ART = {
-  visor(g, M){                                     // khe chữ T + gờ mày
-    g.fillStyle = M.trim; g.fillRect(78, 58, 4, 20);
-    g.fillRect(66, 70, 28, 4);
-    g.fillStyle = M.lo;
-    g.beginPath(); g.moveTo(60, 66); g.lineTo(100, 66); g.lineTo(98, 60); g.lineTo(62, 60);
-    g.closePath(); g.fill();
-  },
-  mask(g, M){                                      // mặt nạ kín, chỉ chừa hai khe mắt
-    g.fillStyle = M.hi;
-    g.beginPath(); g.moveTo(62, 62); g.lineTo(98, 62); g.lineTo(94, 88);
-    g.quadraticCurveTo(80, 96, 66, 88); g.closePath(); g.fill();
-    g.fillStyle = '#15111c';
-    g.fillRect(68, 72, 9, 3.4); g.fillRect(83, 72, 9, 3.4);
-    g.fillStyle = M.trim; g.fillRect(79, 70, 2.4, 16);
-  },
-  band(g, M){                                      // vòng trán + viên ngọc giữa
-    g.fillStyle = M.trim; g.fillRect(60, 64, 40, 5);
-    const c = M.glow || M.hi;
-    g.fillStyle = c;
-    g.beginPath(); g.moveTo(80, 60); g.lineTo(85, 66.5); g.lineTo(80, 73); g.lineTo(75, 66.5);
-    g.closePath(); g.fill();
-  },
-  wing(g, M){                                      // hai cánh nhỏ hai bên thái dương
-    g.fillStyle = M.hi;
-    for (const sd of [-1, 1]){
-      g.beginPath();
-      g.moveTo(80 + sd * 18, 66);
-      g.quadraticCurveTo(80 + sd * 34, 56, 80 + sd * 38, 68);
-      g.quadraticCurveTo(80 + sd * 26, 68, 80 + sd * 18, 74);
-      g.closePath(); g.fill();
-    }
-  },
-  veil(g, M){                                      // vải rủ hai bên mặt
-    g.fillStyle = M.lo; g.globalAlpha = 0.9;
-    for (const sd of [-1, 1]){
-      g.beginPath();
-      g.moveTo(80 + sd * 15, 58);
-      g.quadraticCurveTo(80 + sd * 26, 74, 80 + sd * 20, 96);
-      g.lineTo(80 + sd * 11, 92);
-      g.quadraticCurveTo(80 + sd * 17, 74, 80 + sd * 11, 60);
-      g.closePath(); g.fill();
-    }
-    g.globalAlpha = 1;
-  },
-  horned(g, M){                                    // sừng mọc ngang hai bên
-    g.fillStyle = M.trim;
-    for (const sd of [-1, 1]){
-      g.beginPath();
-      g.moveTo(80 + sd * 17, 62); g.lineTo(80 + sd * 17, 72);
-      g.quadraticCurveTo(80 + sd * 32, 70, 80 + sd * 34, 56);
-      g.quadraticCurveTo(80 + sd * 26, 62, 80 + sd * 17, 62);
-      g.closePath(); g.fill();
-    }
-  },
-};
 
 // ═══════════ CỐT TRUYỆN DẪN NHẬP — trước khi chọn lớp ═══════════
 window.INTRO_PAGES = [

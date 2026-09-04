@@ -127,20 +127,41 @@ const pass = m => console.log('PASS ' + m);
       let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 24) n++;
       return { co:true, pixel:n, k:+e.wpn.k.toFixed(3) };
     };
+    // Ba trạng thái, không phải hai. Hình vector của vũ khí đã gỡ hẳn — cây bay quanh nay vẽ
+    // từ TRANH khai trong VK_ANH, mà mới có 3/15 dòng có tranh (ba dòng trượng Dark Wizard).
+    // Nên "cầm vũ khí" tự nó không còn đủ: dòng chưa có tranh thì vòng lửa quay không, và đó
+    // là trạng thái ĐÚNG, không phải lỗi. Gác cả ba để không nhầm lẫn về sau.
     for (const k in player.equip) player.equip[k] = null;
     effects.length = 0; castSkill('dk_cyclone');
     const tayKhong = veRa();
-    cheatExec('/gen 3 +9');                       // mặc cả bộ, có vũ khí
+
+    // (a) dòng CHƯA có tranh — /gen bốc kiếm/rìu/chùy của Dark Knight, cả ba đều chưa vẽ
+    cheatExec('/gen 3 +9');
+    const tenChuaVe = player.equip.vukhi && player.equip.vukhi.name;
+    const dChuaVe = itemDef(player.equip.vukhi);
     effects.length = 0; castSkill('dk_cyclone');
-    const coVK = veRa();
-    return { tayKhong, coVK, tenVK: player.equip.vukhi && player.equip.vukhi.name };
+    const chuaVe = veRa();
+
+    // (b) dòng ĐÃ có tranh — gắn thẳng một cây trượng Dark Wizard vào ô vũ khí. Mặc bình thường
+    // thì itemUsable() chặn (khoá lớp), nhưng ở đây chỉ cần ĐƯỜNG VẼ, không cần luật mặc đồ.
+    player.equip.vukhi.def = 'baidasan_quyentruong_2';
+    player.equip.vukhi.tier = 3;
+    calcDerived();
+    const tenDaVe = itemDef(player.equip.vukhi).name;
+    effects.length = 0; castSkill('dk_cyclone');
+    const daVe = veRa();
+    return { tayKhong, chuaVe, daVe, tenChuaVe, tenDaVe,
+             anhChuaVe: !!vkAnh(dChuaVe), anhDaVe: !!vkAnh(itemDef(player.equip.vukhi)) };
   });
   console.log('6) vũ khí bay quanh:', JSON.stringify(r6));
   if (r6.tayKhong.co) fail('tay không mà vẫn có hình vũ khí bay quanh');
-  else if (!r6.coVK.co) fail(`cầm ${r6.tenVK} mà không có vũ khí bay quanh`);
-  else if (r6.coVK.pixel < 200) fail(`hình vũ khí chỉ ${r6.coVK.pixel} pixel — vẽ ra gần như rỗng`);
-  else if (r6.coVK.k > 1) fail(`vũ khí phóng ×${r6.coVK.k} — chưa quy về tỉ lệ thế giới, sẽ to hơn cả vòng lửa`);
-  else pass(`cầm ${r6.tenVK}: bay quanh với ${r6.coVK.pixel} pixel, tỉ lệ ×${r6.coVK.k}`);
+  else if (r6.anhChuaVe) fail(`${r6.tenChuaVe} hoá ra ĐÃ có tranh — chọn lại một dòng chưa vẽ để gác nhánh này`);
+  else if (r6.chuaVe.co) fail(`${r6.tenChuaVe} chưa có tranh trong VK_ANH mà vẫn có hình bay quanh — hình vector đã lẻn về`);
+  else if (!r6.anhDaVe) fail('trượng Dark Wizard mất tranh trong VK_ANH — mục này không gác được gì nữa');
+  else if (!r6.daVe.co) fail(`cầm ${r6.tenDaVe} (CÓ tranh) mà không có vũ khí bay quanh`);
+  else if (r6.daVe.pixel < 200) fail(`hình vũ khí chỉ ${r6.daVe.pixel} pixel — vẽ ra gần như rỗng`);
+  else if (r6.daVe.k > 1) fail(`vũ khí phóng ×${r6.daVe.k} — chưa quy về tỉ lệ thế giới, sẽ to hơn cả vòng lửa`);
+  else pass(`${r6.tenChuaVe} chưa vẽ ⇒ vòng lửa quay không · ${r6.tenDaVe} có tranh ⇒ bay quanh ${r6.daVe.pixel} pixel, tỉ lệ ×${r6.daVe.k}`);
 
   const t404 = miss.filter(x => /vongkiem|atlas/.test(x));
   if (t404.length) fail('404: ' + t404.join(', '));

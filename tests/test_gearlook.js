@@ -1,97 +1,100 @@
-// Trang bị phải NHÌN THẤY ĐƯỢC trên nhân vật.
-// Trước thay đổi này, mặc full Chí Tôn giai đỉnh +11 Hoàn Hảo Cổ Thần chỉ đổi 718/62.400 px
-// (1,15%), và toàn bộ 718 px đó là một đốm sáng cạnh bàn tay — thân người 0 px.
-// Test đo lại đúng phép đo đó, cộng thêm: từng lớp (bóng dáng / chất liệu / hoa văn) phải
-// đóng góp riêng, và đường VIỀN NGOÀI phải đổi (hào quang không đổi được viền).
+// TRANG BỊ PHẢI NHÌN THẤY ĐƯỢC TRÊN NHÂN VẬT — đo trên ĐÚNG đường người chơi nhìn.
+//
+// Bản trước đo drawHeroFigure(), hình vẽ đường: 11 kiểu vai, chỏm mũ, giáp ống, hoa văn khảm.
+// Toàn bộ lớp đó đã gỡ. Giáp nay là art Spine nướng sẵn, còn drawHeroFigure chỉ là lối lui cho
+// lớp chưa có bảng khung — đo ở đó thì bài kiểm báo "mặc đồ không thấy gì" trong khi ngoài màn
+// nhân vật đổi hẳn bộ giáp. Nên bài này chuyển sang đo ba lớp CÒN THẬT, trên đường art nướng:
+//
+//   1. BỘ GIÁP  — mặc đủ bộ có art phải khác hẳn thân trần (bóng dáng, không chỉ màu)
+//   2. RÈN +N   — hào quang và viền sáng phải leo theo mức rèn
+//   3. THẺ NHÂN VẬT — heroCardUrl phải đổi khi thay đồ, không được trả ảnh trong đệm
+//
+// Còn "mỗi giai một dáng khác nhau" thì nay là tính chất của GÓI ART, không phải của mã:
+// test_sets gác độ phủ và gác từng bộ có art phải khác thân trần.
 const { chromium } = require('playwright');
 const fs = require('fs');
 
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
-  const p = await b.newPage({ viewport: { width: 1280, height: 760 } });
+  const p = await b.newPage({ viewport: { width: 1280, height: 900 } });
   const errs = [];
   p.on('pageerror', e => errs.push(String(e)));
   p.on('console', m => { if (m.type() === 'error' && !/404|ERR_CONNECTION/.test(m.text())) errs.push(m.text()); });
   await p.goto('http://localhost:8853/index.html');
   await p.waitForFunction(() => window.__gameReady).catch(()=>{});
-  await p.waitForTimeout(700);
+  await p.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); });
+  // Bảng khung nặng ~480 KB. Chưa tải xong thì nvBo() trả null, mọi phép đo vẽ vào canvas rỗng.
+  await p.waitForFunction(() => !!nvTai('dkgs1', 'webp') && !!nvTai('dk1', 'webp'),
+                          { timeout: 20000 }).catch(()=>{});
 
   const res = await p.evaluate(() => {
-    window.TEST_MODE = true;
-    startGame('thieulam', null);
     player.level = 100; vhAutoLearn(); calcDerived();
     const out = { shots: {} };
 
-    // vẽ nhân vật với một cấu hình trang bị cho trước
-    function shot(gv, tier){
-      const cv = document.createElement('canvas'); cv.width = HERO_W; cv.height = HERO_H;
-      const g = cv.getContext('2d');
-      drawHeroFigure(g, 'thieulam', tier, 0, HERO_POSE0, gv);
-      return { data: g.getImageData(0, 0, HERO_W, HERO_H).data, url: cv.toDataURL('image/png') };
-    }
+    const gvOf = (t, n, plus, rarity, setColor) => ({
+      n, rarity, t, plus, rcol: RARITIES[rarity] ? RARITIES[rarity].color : null,
+      wTier: t, wPlus: plus, setColor: setColor || null, canh: null });
+
+    // Vẽ nhân vật ĐÚNG như trong màn: hào quang sau · bảng khung · hào quang trước.
+    const shot = (gv, tier) => {
+      const c = document.createElement('canvas'); c.width = NV_OW; c.height = NV_OH;
+      const q = c.getContext('2d');
+      const im = nvBo('thieulam', tier, gv);
+      if (!im) return null;
+      if (gv) nvHaoQuangSau(q, 'thieulam', tier, gv, 900);
+      nvVeKhung(q, im, 'i', 0);
+      if (gv) nvHaoQuangTruoc(q, 'thieulam', tier, gv, 900, im, 'i', 0);
+      return { data: q.getImageData(0, 0, NV_OW, NV_OH).data, url: c.toDataURL('image/png') };
+    };
     const diff = (a, b) => { let n = 0; for (let i = 0; i < a.length; i += 4)
       if (a[i] !== b[i] || a[i+1] !== b[i+1] || a[i+2] !== b[i+2] || a[i+3] !== b[i+3]) n++; return n; };
-    // Đường viền ngoài của phần THÂN ĐẶC.
-    // Ngưỡng alpha phải cao (180), không phải >8: hào quang bậc cao là một đĩa gradient bán
-    // trong suốt phủ kín khung, lấy ngưỡng thấp thì "đường viền" hoá ra là mép đĩa hào quang
-    // và phép đo mất sạch ý nghĩa (đo nhầm cho ra 912 px trong khi thân người chỉ đổi 117).
+    // Đường viền ngoài của phần THÂN ĐẶC. Ngưỡng alpha phải CAO (180): hào quang bậc cao là một
+    // đĩa gradient bán trong suốt phủ kín khung, lấy ngưỡng thấp thì "đường viền" hoá ra là mép
+    // đĩa hào quang và phép đo mất sạch ý nghĩa.
     const OPAQUE = 180;
     const outline = a => { const S = new Set();
-      for (let y = 1; y < HERO_H-1; y++) for (let x = 1; x < HERO_W-1; x++){
-        const i = (y*HERO_W+x)*4; if (a[i+3] < OPAQUE) continue;
-        if (a[i-4+3] < OPAQUE || a[i+4+3] < OPAQUE || a[i-HERO_W*4+3] < OPAQUE || a[i+HERO_W*4+3] < OPAQUE) S.add(x+','+y);
+      for (let y = 1; y < NV_OH-1; y++) for (let x = 1; x < NV_OW-1; x++){
+        const i = (y*NV_OW+x)*4; if (a[i+3] < OPAQUE) continue;
+        if (a[i-4+3] < OPAQUE || a[i+4+3] < OPAQUE || a[i-NV_OW*4+3] < OPAQUE || a[i+NV_OW*4+3] < OPAQUE) S.add(x+','+y);
       } return S; };
     const outlineDiff = (a, b) => { const A = outline(a), B = outline(b);
       let n = 0; for (const k of A) if (!B.has(k)) n++; for (const k of B) if (!A.has(k)) n++; return n; };
 
-    // dựng gv thủ công theo bậc hiệu dụng
-    const GM = GIAI_MAX;
-    const mkGv = (t, n, rarity, setColor) => ({ n, rarity, t, plus: 0,
-      rcol: RARITIES[rarity] ? RARITIES[rarity].color : null, wTier: 0, setColor: setColor || null });
+    // ── 1. BỘ GIÁP so với THÂN TRẦN ──
+    // Giai 1 của Dark Knight là bộ Thiết Phiến (dkgs1) — giai duy nhất hiện có art.
+    const tran = shot(null, 1);                                   // gv null ⇒ thân trần
+    const macDo = shot(gvOf(1, 4, 0, 4, null), 1);                // đủ 4 món giai 1
+    out.giapDoi = diff(tran.data, macDo.data);
+    out.giapDoiVien = outlineDiff(tran.data, macDo.data);
+    out.shots.A_thanTran = tran.url; out.shots.B_macDo = macDo.url;
 
-    const A = shot(null, 1);                                  // trần trụi, Thần Binh 1
-    const B = shot(mkGv(GM, 5, 4, '#3ac88a'), GM);            // full giai đỉnh, Chí Tôn, đủ bộ Cổ Thần
-    out.tongDoi = diff(A.data, B.data);
-    out.tongDoiPct = +(100 * out.tongDoi / (HERO_W*HERO_H)).toFixed(2);
-    out.vienNgoaiDoi = outlineDiff(A.data, B.data);
-    out.shots.A_tranTrui = A.url; out.shots.B_fullDo = B.url;
-
-    // ── từng lớp đóng góp riêng bao nhiêu ──
-    // (so ở cùng bậc bảng màu đỉnh, chỉ đổi gv ⇒ chênh lệch CHỈ đến từ 4 lớp mới)
-    const base = shot(null, GM);                              // bảng màu bậc đỉnh, KHÔNG có gv
-    out.lop_tatCa = diff(base.data, shot(mkGv(GM, 5, 4, null), GM).data);
-    out.lop_chiChatLieu_hoaVan = diff(base.data, shot(mkGv(2.0, 5, 4, null), GM).data); // >1,7 ⇒ đã có vai bậc1
-    // bậc thấp: chỉ chất liệu (t=1.2 → chưa có vai <1,7, chưa chỏm mũ <1,9)
-    out.lop_chiChatLieu = diff(base.data, shot(mkGv(1.2, 5, 0, null), GM).data);
-    out.shots.C_bacDinh_khongDo = base.url;
-
-    // ── thang bậc ──
-    // Đo TÍCH LUỸ so với trần trụi, không so nấc-với-nấc: các mốc mọc thêm chi tiết nằm ở
-    // 1,7/1,9/2,2/2,9/3,1/3,8/4,2/5,2/5,6/6,1, lấy mẫu thưa thì có nấc rơi vào giữa hai mốc và
-    // "không đổi viền" chỉ là chuyện lấy mẫu, không phải chuyện bộ giáp. Điều thật sự cần
-    // chứng minh là: đồ càng cao thì đường viền càng phình ra, đều đặn.
-    out.thang = [];
-    const bare = shot(null, GM).data;
-    let prev = null;
-    for (const t of [0, 1.5, 2.5, 3.5, 5, GM]){
-      const s = shot(t ? mkGv(t, 5, Math.min(4, Math.floor(t/1.4)), null) : null, GM);
-      out.thang.push({ t,
-        vienSoVoiTranTrui: outlineDiff(bare, s.data),
-        doiSoVoiNacTruoc: prev ? diff(prev, s.data) : null });
-      out.shots['T' + t] = s.url;
+    // ── 2. RÈN +N ──
+    // Mốc theo MU: +0..3 trơ · +4 · +7 · +10. Trong mỗi mốc vẫn phải leo liên tục.
+    out.ren = [];
+    let prev = macDo.data;
+    for (const pl of [4, 7, 10, 11]){
+      const s = shot(gvOf(1, 4, pl, 4, null), 1);
+      out.ren.push({ plus: pl, doiSoVoiNacTruoc: diff(prev, s.data), vienSoVoiTran: outlineDiff(tran.data, s.data) });
+      out.shots['P' + pl] = s.url;
       prev = s.data;
     }
+    // hào quang phải ĐỘNG, không phải đèn dán
+    const _t0 = (() => { const c=document.createElement('canvas'); c.width=NV_OW; c.height=NV_OH;
+      const q=c.getContext('2d'); const gv=gvOf(1,4,11,4,null); const im=nvBo('thieulam',1,gv);
+      nvHaoQuangSau(q,'thieulam',1,gv,0); nvVeKhung(q,im,'i',0); nvHaoQuangTruoc(q,'thieulam',1,gv,0,im,'i',0);
+      return q.getImageData(0,0,NV_OW,NV_OH).data; })();
+    out.haoQuangDong = diff(_t0, prev);
 
-    // ── màu bộ Cổ Thần phải nhuốm được hào quang ──
-    out.mauBo = diff(shot(mkGv(GM,5,4,null),GM).data, shot(mkGv(GM,5,4,'#ff6a3a'),GM).data);
+    // ── 3. màu bộ nhuốm được hào quang ──
+    out.mauBo = diff(shot(gvOf(1, 4, 11, 4, null), 1).data,
+                     shot(gvOf(1, 4, 11, 4, '#ff6a3a'), 1).data);
 
-    // ── an toàn ──
+    // ── 4. an toàn: chưa có player (màn chọn lớp) ──
     out.gvNull_khiChuaCoPlayer = (() => { const _p = window.player; window.player = null;
       let ok = true; try { gearVisual(null); gearVisual(window.player); heroCardUrl('thieulam', 1); }
       catch (e){ ok = false; out.crashMsg = String(e); } window.player = _p; return ok; })();
 
-    // heroTier nay CHỈ theo trang bị — Thần Binh đã gỡ, không còn trục thứ hai nào đẩy nó lên,
-    // nên cởi hết đồ là về bậc 1 (trước đây nó bị Thần Binh giữ ở tầng đang có).
+    // ── 5. heroTier chỉ theo trang bị ──
     player.equip = {}; calcDerived();
     out.heroTier_tranTrui = heroTier(player);
     for (const k of HERO_ARMOR_SLOTS){ const it = genItem(112, 0); it.slot = k; it.tier = GIAI_MAX; player.equip[k] = it; }
@@ -99,12 +102,11 @@ const fs = require('fs');
     out.heroTier_theoDo = heroTier(player);
     out.giaiMax = GIAI_MAX;
 
-    // cache chân dung phải đổi theo trang bị
+    // ── 6. thẻ nhân vật phải đổi khi thay đồ ──
     const u1 = heroCardUrl('thieulam', heroTier(player), gearVisual(player));
     player.equip = {}; calcDerived();
     const u2 = heroCardUrl('thieulam', heroTier(player), gearVisual(player));
     out.cache_doiTheoDo = u1 !== u2;
-
     return out;
   });
 
@@ -119,24 +121,20 @@ const fs = require('fs');
 
   let bad = 0;
   const fail = m => { console.log('FAIL', m); bad++; };
-  // Mốc cũ: 718 px (1,15%). Đặt ngưỡng cao hơn hẳn để "vẫn gần như vô hình" bị trượt.
-  if (res.tongDoi < 4000) fail(`đổi quá ít pixel: ${res.tongDoi} (mốc cũ 718; cần >4000)`);
-  if (res.vienNgoaiDoi < 300) fail(`ĐƯỜNG VIỀN gần như không đổi: ${res.vienNgoaiDoi} — hào quang đổi được màu nhưng không đổi được dáng, đây mới là thứ thấy từ xa`);
-  if (res.lop_chiChatLieu < 400) fail('lớp CHẤT LIỆU không đóng góp gì');
-  if (res.lop_tatCa < 3000) fail('4 lớp cộng lại vẫn quá mờ nhạt');
-  for (let i = 1; i < res.thang.length; i++){
-    const r = res.thang[i];
-    if (r.doiSoVoiNacTruoc < 150) fail(`nấc bậc ${r.t} không khác nấc trước (${r.doiSoVoiNacTruoc} px)`);
-  }
-  // đường viền phải PHÌNH DẦN theo bậc, không được tụt lại
-  const vien = res.thang.map(r => r.vienSoVoiTranTrui);
-  for (let i = 1; i < vien.length; i++)
-    if (vien[i] < vien[i-1] - 30)
-      fail(`đường viền TỤT ở bậc ${res.thang[i].t}: ${vien[i-1]} → ${vien[i]} (đồ cao hơn phải to hơn)`);
-  if (vien[vien.length-1] < 300)
-    fail(`bậc cao nhất đổi viền quá ít (${vien[vien.length-1]}) — hào quang đổi được màu nhưng không đổi được dáng`);
-  if (vien.filter(v => v > 40).length < 3)
-    fail(`chỉ ${vien.filter(v => v > 40).length}/6 nấc có viền khác trần trụi, cần ≥3`);
+  if (res.giapDoi < 4000) fail(`mặc đủ bộ mà chỉ đổi ${res.giapDoi} px so với thân trần (cần >4000)`);
+  if (res.giapDoiVien < 300) fail(`ĐƯỜNG VIỀN gần như không đổi: ${res.giapDoiVien} — bộ giáp phải đổi được BÓNG DÁNG, đó mới là thứ thấy từ xa`);
+  for (const r of res.ren)
+    if (r.doiSoVoiNacTruoc < 400) fail(`rèn lên +${r.plus} không đổi gì trên hình (${r.doiSoVoiNacTruoc} px)`);
+  // Viền sáng dựng từ chính BÓNG DÁNG khung hình, nên trên +4 nó gần như không đổi bề dày —
+  // khác hẳn bản vector cũ, nơi mỗi mốc rèn mọc thêm gai và viền phình ra thật. Đo được:
+  // +4 · 1186 → +7 · 1187 → +10 · 1117 (tụt 6% vì dải quét và tàn lửa che bớt vài điểm mép).
+  // Nên gác "viền phải ĐỦ DÀY ở mọi mốc", không gác "phải phình dần" — gác monotonic ở đây là
+  // gác một tính chất mà đường art nướng không hứa.
+  const vien = res.ren.map(r => r.vienSoVoiTran);
+  res.ren.forEach((r, i) => {
+    if (vien[i] < 600) fail(`viền sáng ở +${r.plus} quá mỏng (${vien[i]} px) — rèn cao mà nhìn từ xa không thấy`);
+  });
+  if (res.haoQuangDong < 500) fail(`hào quang +11 không nhúc nhích theo nhịp (${res.haoQuangDong} px) — thành đèn dán`);
   if (res.mauBo < 200) fail('màu bộ giáp không nhuốm được hào quang');
   if (!res.gvNull_khiChuaCoPlayer) fail('crash khi chưa có player (màn chọn lớp): ' + res.crashMsg);
   if (res.heroTier_tranTrui !== 1) fail(`cởi hết đồ mà heroTier vẫn ${res.heroTier_tranTrui}, phải về 1`);
