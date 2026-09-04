@@ -80,7 +80,7 @@ const pass = m => console.log('PASS ' + m);
     const names = res.tenBo[c], uniq = [...new Set(names)];
     const lienTuc = names.every((n, i) => i === 0 || n === names[i-1] || !names.slice(0, i).includes(n));
     // Mỗi GIAI một bộ mang tên riêng. Bản cũ là 5 bộ trải trên 10 giai (mỗi bộ 2 giai), nên
-    // giai 1 và giai 2 dùng chung một cái tên — đó chính là thứ đã bỏ đi khi mở 14 giai.
+    // giai 1 và giai 2 dùng chung một cái tên — đó chính là thứ đã bỏ đi khi mỗi giai một bộ.
     if (uniq.length !== res.soGiai)
       fail(`${c}: có ${uniq.length} tên bộ giáp, mong đúng ${res.soGiai} (mỗi giai một bộ) — ${JSON.stringify(uniq)}`);
     else if (!lienTuc) fail(`${c}: tên bộ giáp nhảy qua nhảy lại — ${JSON.stringify(names)}`);

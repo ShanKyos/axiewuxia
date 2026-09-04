@@ -1,5 +1,5 @@
 // Trang bị phải NHÌN THẤY ĐƯỢC trên nhân vật.
-// Trước thay đổi này, mặc full Chí Tôn giai 10 +11 Hoàn Hảo Cổ Thần chỉ đổi 718/62.400 px
+// Trước thay đổi này, mặc full Chí Tôn giai đỉnh +11 Hoàn Hảo Cổ Thần chỉ đổi 718/62.400 px
 // (1,15%), và toàn bộ 718 px đó là một đốm sáng cạnh bàn tay — thân người 0 px.
 // Test đo lại đúng phép đo đó, cộng thêm: từng lớp (bóng dáng / chất liệu / hoa văn) phải
 // đóng góp riêng, và đường VIỀN NGOÀI phải đổi (hào quang không đổi được viền).
@@ -45,35 +45,36 @@ const fs = require('fs');
       let n = 0; for (const k of A) if (!B.has(k)) n++; for (const k of B) if (!A.has(k)) n++; return n; };
 
     // dựng gv thủ công theo bậc hiệu dụng
+    const GM = GIAI_MAX;
     const mkGv = (t, n, rarity, setColor) => ({ n, rarity, t, plus: 0,
       rcol: RARITIES[rarity] ? RARITIES[rarity].color : null, wTier: 0, setColor: setColor || null });
 
     const A = shot(null, 1);                                  // trần trụi, Thần Binh 1
-    const B = shot(mkGv(10, 5, 4, '#3ac88a'), 10);            // full giai 10, Chí Tôn, đủ bộ Cổ Thần
+    const B = shot(mkGv(GM, 5, 4, '#3ac88a'), GM);            // full giai đỉnh, Chí Tôn, đủ bộ Cổ Thần
     out.tongDoi = diff(A.data, B.data);
     out.tongDoiPct = +(100 * out.tongDoi / (HERO_W*HERO_H)).toFixed(2);
     out.vienNgoaiDoi = outlineDiff(A.data, B.data);
     out.shots.A_tranTrui = A.url; out.shots.B_fullDo = B.url;
 
     // ── từng lớp đóng góp riêng bao nhiêu ──
-    // (so ở cùng bậc bảng màu 10, chỉ đổi gv ⇒ chênh lệch CHỈ đến từ 4 lớp mới)
-    const base = shot(null, 10);                              // bảng màu bậc 10, KHÔNG có gv
-    out.lop_tatCa = diff(base.data, shot(mkGv(10, 5, 4, null), 10).data);
-    out.lop_chiChatLieu_hoaVan = diff(base.data, shot(mkGv(2.9, 5, 4, null), 10).data); // <2.5? không, 2.9 ⇒ có vai bậc1
-    // bậc thấp: chỉ chất liệu (t=1.5 → chưa có vai <2.5, chưa hoa văn <3, chưa chóp mũ <4.5)
-    out.lop_chiChatLieu = diff(base.data, shot(mkGv(1.5, 5, 0, null), 10).data);
-    out.shots.C_bac10_khongDo = base.url;
+    // (so ở cùng bậc bảng màu đỉnh, chỉ đổi gv ⇒ chênh lệch CHỈ đến từ 4 lớp mới)
+    const base = shot(null, GM);                              // bảng màu bậc đỉnh, KHÔNG có gv
+    out.lop_tatCa = diff(base.data, shot(mkGv(GM, 5, 4, null), GM).data);
+    out.lop_chiChatLieu_hoaVan = diff(base.data, shot(mkGv(2.0, 5, 4, null), GM).data); // >1,7 ⇒ đã có vai bậc1
+    // bậc thấp: chỉ chất liệu (t=1.2 → chưa có vai <1,7, chưa chỏm mũ <1,9)
+    out.lop_chiChatLieu = diff(base.data, shot(mkGv(1.2, 5, 0, null), GM).data);
+    out.shots.C_bacDinh_khongDo = base.url;
 
     // ── thang bậc ──
     // Đo TÍCH LUỸ so với trần trụi, không so nấc-với-nấc: các mốc mọc thêm chi tiết nằm ở
-    // 2.5/3.5/4.5/5.5/6.5/7.5/8.5, lấy mẫu ở t chẵn thì có nấc rơi đúng vào giữa hai mốc và
+    // 1,7/1,9/2,2/2,9/3,1/3,8/4,2/5,2/5,6/6,1, lấy mẫu thưa thì có nấc rơi vào giữa hai mốc và
     // "không đổi viền" chỉ là chuyện lấy mẫu, không phải chuyện bộ giáp. Điều thật sự cần
     // chứng minh là: đồ càng cao thì đường viền càng phình ra, đều đặn.
     out.thang = [];
-    const bare = shot(null, 10).data;
+    const bare = shot(null, GM).data;
     let prev = null;
-    for (const t of [0, 2, 4, 6, 8, 10]){
-      const s = shot(t ? mkGv(t, 5, Math.min(4, Math.floor(t/2.5)), null) : null, 10);
+    for (const t of [0, 1.5, 2.5, 3.5, 5, GM]){
+      const s = shot(t ? mkGv(t, 5, Math.min(4, Math.floor(t/1.4)), null) : null, GM);
       out.thang.push({ t,
         vienSoVoiTranTrui: outlineDiff(bare, s.data),
         doiSoVoiNacTruoc: prev ? diff(prev, s.data) : null });
@@ -82,7 +83,7 @@ const fs = require('fs');
     }
 
     // ── màu bộ Cổ Thần phải nhuốm được hào quang ──
-    out.mauBo = diff(shot(mkGv(10,5,4,null),10).data, shot(mkGv(10,5,4,'#ff6a3a'),10).data);
+    out.mauBo = diff(shot(mkGv(GM,5,4,null),GM).data, shot(mkGv(GM,5,4,'#ff6a3a'),GM).data);
 
     // ── an toàn ──
     out.gvNull_khiChuaCoPlayer = (() => { const _p = window.player; window.player = null;
@@ -96,6 +97,7 @@ const fs = require('fs');
     for (const k of HERO_ARMOR_SLOTS){ const it = genItem(112, 0); it.slot = k; it.tier = GIAI_MAX; player.equip[k] = it; }
     calcDerived();
     out.heroTier_theoDo = heroTier(player);
+    out.giaiMax = GIAI_MAX;
 
     // cache chân dung phải đổi theo trang bị
     const u1 = heroCardUrl('thieulam', heroTier(player), gearVisual(player));
@@ -138,7 +140,7 @@ const fs = require('fs');
   if (res.mauBo < 200) fail('màu bộ giáp không nhuốm được hào quang');
   if (!res.gvNull_khiChuaCoPlayer) fail('crash khi chưa có player (màn chọn lớp): ' + res.crashMsg);
   if (res.heroTier_tranTrui !== 1) fail(`cởi hết đồ mà heroTier vẫn ${res.heroTier_tranTrui}, phải về 1`);
-  if (res.heroTier_theoDo < 9) fail(`mặc full giai 10 mà heroTier chỉ ${res.heroTier_theoDo}`);
+  if (res.heroTier_theoDo !== res.giaiMax) fail(`mặc full giai đỉnh mà heroTier chỉ ${res.heroTier_theoDo}/${res.giaiMax}`);
   if (!res.cache_doiTheoDo) fail('cache chân dung không đổi khi thay đồ — panel sẽ hiện ảnh cũ');
 
   console.log('errors:', JSON.stringify(errs));

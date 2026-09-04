@@ -1,4 +1,4 @@
-// 70 bộ giáp (5 lớp × 14 giai). Điều PHẢI chứng minh: 5 lớp KHÁC HẲN nhau khi mặc đồ.
+// 35 bộ giáp (5 lớp × 7 giai). Điều PHẢI chứng minh: 5 lớp KHÁC HẲN nhau khi mặc đồ.
 // Bản cũ là 25 bộ (5 lớp × 5 dải, mỗi dải phủ 2 giai) — mỗi giai một bộ là thứ vừa sửa.
 // Lỗi cũ mà test này khoá lại: 4 lớp hình học vẽ generic cho cả 6 lớp nhân vật ⇒ pháp sư mặc
 // áo choàng lại đeo vai giáp tấm của hiệp sĩ, cả 5 lớp trông như mặc chung một bộ.
@@ -38,7 +38,7 @@ const { chromium } = require('playwright');
       if (a[i] !== b[i] || a[i+1] !== b[i+1] || a[i+2] !== b[i+2] || a[i+3] !== b[i+3]) n++; return n; };
 
     // ── mỗi lớp phải khác MỌI lớp còn lại ở bậc cuối ──
-    const F = {}; for (const k of CL) F[k] = shot(k, 10);
+    const F = {}; for (const k of CL) F[k] = shot(k, GIAI_MAX);
     o.khacNhau = []; o.minKhac = 1e9;
     for (let i = 0; i < CL.length; i++) for (let j = i+1; j < CL.length; j++){
       const d = diff(F[CL[i]], F[CL[j]]);
@@ -50,8 +50,11 @@ const { chromium } = require('playwright');
     o.daiKhac = {};
     for (const k of CL){
       const arr = [];
-      let prev = shot(k, 2);
-      for (const t of [4, 6, 8, 10]){ const cur = shot(k, t); arr.push(diff(prev, cur)); prev = cur; }
+      // Quét TỪNG giai một, không nhảy cách: 7 giai thì mỗi giai một bộ, nên bước nào cũng
+      // phải thấy khác. Bản 14 giai lấy mẫu cách quãng [2,4,6,8,10] — nay 8 và 10 vượt bảng,
+      // clamp về 7 nên hai mẫu cuối ra ảnh y hệt và bài kiểm báo "0 px" oan.
+      let prev = shot(k, 1);
+      for (let t = 2; t <= GIAI_MAX; t++){ const cur = shot(k, t); arr.push(diff(prev, cur)); prev = cur; }
       o.daiKhac[k] = arr;
     }
 
@@ -75,7 +78,7 @@ const { chromium } = require('playwright');
       } return n; };
     o.sbLech = [2, 6, 10].map(t => ({ t, asym: asymOf(vaiOnly('minhgiao', t)) }));
     // đối chứng: vai giáp Dark Knight vẽ đối xứng hai bên
-    o.dkDoiXung = asymOf(vaiOnly('thieulam', 10));
+    o.dkDoiXung = asymOf(vaiOnly('thieulam', GIAI_MAX));
 
     // ── mọi tạo hình khai báo phải có đủ 4 hàm ──
     o.thieuHam = [];
@@ -97,7 +100,7 @@ const { chromium } = require('playwright');
   for (const k in r.bang) console.log(k.padEnd(10), r.bang[k].join(' · '));
   console.log('');
   console.log('khác nhau ở bậc 10 (px):', r.khacNhau.map(x => `${x.a.slice(0,4)}/${x.b.slice(0,4)}=${x.px}`).join('  '));
-  console.log('các dải khác nhau tuần tự:', JSON.stringify(r.daiKhac));
+  console.log('các giai khác nhau tuần tự:', JSON.stringify(r.daiKhac));
   console.log('Spellblade lệch vai:', JSON.stringify(r.sbLech), '| Dark Knight đối xứng:', r.dkDoiXung);
 
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
@@ -106,7 +109,7 @@ const { chromium } = require('playwright');
   if (r.thieuHam.length) fail('tạo hình thiếu hàm: ' + r.thieuHam.join(', '));
   if (r.minKhac < 3000) fail(`hai lớp nào đó quá giống nhau — nhỏ nhất chỉ ${r.minKhac} px, cần >3000`);
   for (const k in r.daiKhac) r.daiKhac[k].forEach((d, i) => {
-    if (d < 800) fail(`${k}: dải ${i+1}→${i+2} gần như không đổi (${d} px)`);
+    if (d < 800) fail(`${k}: giai ${i+1}→${i+2} gần như không đổi (${d} px)`);
   });
   if (!r.dwKhongGiapTam) fail('Dark Wizard đang dùng tạo hình giáp tấm — pháp sư mặc áo choàng không được đeo vai sắt');
   if (!r.sbToanHalfplate) fail('Spellblade có dải không dùng halfplate — mất chữ ký lệch vai');

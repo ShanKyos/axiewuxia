@@ -44,28 +44,28 @@ const { chromium } = require('playwright');
                daTrung: m.hp < m.maxHp, stDaGay: m.maxHp - m.hp };
     };
     wear(null);                       o.tayKhong = swing();
-    wear('thieulam_kiem_1');          o.kiemTron = swing();     // Kiếm Sắt — motif 'khong'
-    wear('thieulam_kiem_9');          o.kiemLua  = swing();     // Kiếm Hỏa Long (giai 10) — motif 'lua'
-    wear('minhgiao_makiem_3');        o.maKiem   = swing();     // Ma Kiếm Than Hồng (giai 4) — motif 'mach'
-    wear('thieulam_kiem_6');          o.kiemGai  = swing();     // Kiếm Vảy Rồng (giai 7) — motif 'gai'
+    wear('thieulam_kiem_1');          o.kiemTron = swing();     // Kiếm Thép (giai 2) — motif 'khong'
+    wear('thieulam_kiem_5');          o.kiemLua  = swing();     // Kiếm Lôi Đình (giai 6) — motif 'lua'
+    wear('minhgiao_makiem_3');        o.maKiem   = swing();     // Ma Kiếm Lửa Dữ (giai 4) — motif 'mach'
+    wear('thieulam_kiem_3');          o.kiemGai  = swing();     // Kiếm Vảy Rồng (giai 4) — motif 'gai'
     // Bạo kích và Hoàn Hảo phải ĐÈ LÊN màu hoa văn — đây là hành vi cố ý, chốt lại luôn
     {
-      wear('thieulam_kiem_9');            // hoa văn lửa
+      wear('thieulam_kiem_5');            // hoa văn lửa
       buildWorld(); mobs.length = 0; player.x = 600; player.y = 600;
       const m1 = mk(660, 9e8); player.crit = 0; player.perfectProc = 1; hurtMob(m1, 100, 'hit');
       o.hoanHaoDeLenHoaVan = (m1.hitCol || '').toLowerCase();
       const m2 = mk(700, 9e8); player.perfectProc = 0; hurtMob(m2, 100, 'crit');
       o.baoKichDeLenHoaVan = (m2.hitCol || '').toLowerCase();
     }
-    o.motifs = { kiem1: ITEM_DB['thieulam_kiem_1'].motif, kiem4: ITEM_DB['thieulam_kiem_9'].motif,
-                 ma4: ITEM_DB['minhgiao_makiem_3'].motif, kiem3: ITEM_DB['thieulam_kiem_6'].motif };
+    o.motifs = { kiem1: ITEM_DB['thieulam_kiem_1'].motif, kiem4: ITEM_DB['thieulam_kiem_5'].motif,
+                 ma4: ITEM_DB['minhgiao_makiem_3'].motif, kiem3: ITEM_DB['thieulam_kiem_3'].motif };
     // Sát thương KHÔNG được đổi theo hoa văn. Phải đo trên CÙNG MỘT MÓN, chỉ đổi mỗi `def` —
     // sinh hai món rồi so là sai, chênh lệch khi đó là do dòng phụ ngẫu nhiên.
     {
       wear('thieulam_kiem_1');
       const it = player.equip.vukhi;
       o.atkTron = player.atk;
-      it.def = 'thieulam_kiem_9';      // đổi sang món CÓ hoa văn lửa, giữ nguyên mọi chỉ số
+      it.def = 'thieulam_kiem_5';      // đổi sang món CÓ hoa văn lửa, giữ nguyên mọi chỉ số
       calcDerived();
       o.atkLua = player.atk;
       o.hoaVanDaDoi = (itemDef(it) || {}).motif;

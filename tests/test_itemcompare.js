@@ -25,7 +25,7 @@ const { chromium } = require('playwright');
     let _tuid = 90000;
     const SUBK = ['atkPct','defPct','hpPct','crit'];
     const mk = (plus, rar, nSubs) => {
-      const sl = SLOTS.find(s => s.id === 'non'), tier = 9;
+      const sl = SLOTS.find(s => s.id === 'non'), tier = 5;   // giai 5 ⇒ đòi cấp 65, dưới cấp 90 của món thử
       return {
         uid: ++_tuid, slot:'non', slotName:'Nón', name:`Nón thử ${rar}/+${plus}`,
         rarity: rar, level: 90, tier, perfect:false, luck:false, life:0, ancient:null, sigil:null,

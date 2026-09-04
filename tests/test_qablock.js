@@ -64,7 +64,7 @@ const { chromium } = require('playwright');
     startGame('thieulam', null); player.level = 100; calcDerived();
     player.equip = {}; player.inv = [];
     // Ô Quần đã gỡ khỏi SLOTS; phép thử "mặc món mạnh nhất trong ô" dời sang ô Chân.
-    const quanManh = mk('chan', 10, 4, null);
+    const quanManh = mk('chan', GIAI_MAX, 4, null);   // giai đỉnh ⇒ đòi cấp 97, dưới cấp 100 ở trên
     player.inv.push(mk('ao', 1, 0), mk('chan', 1, 0), quanManh);
     autoEquipBest();
     o.autoEquip_quanDaChon = player.equip.chan ? player.equip.chan.name : '(trống)';

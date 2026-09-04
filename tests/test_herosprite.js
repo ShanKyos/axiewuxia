@@ -79,7 +79,7 @@ const pass = m => console.log('PASS ' + m);
     // Bậc: so với gv=null. Khi ĐANG mặc một bộ giáp, tint của bộ ghi đè trọn bảng màu bậc (xem
     // hSetMetal) nên tham số tier không đổi được gì — đó là thiết kế, không phải rò bộ nhớ đệm.
     const e1 = key({ sect:'thieulam', tier:1,  gv:null });
-    const e2 = key({ sect:'thieulam', tier:10, gv:null });
+    const e2 = key({ sect:'thieulam', tier:7, gv:null });
     return { lopKhac: a !== b2, bacKhac: e1 !== e2, doKhac: a !== d2 };
   });
   console.log('3.', JSON.stringify(r3));

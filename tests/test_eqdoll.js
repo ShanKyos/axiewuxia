@@ -42,8 +42,8 @@ const pass = m => console.log('PASS ' + m);
   if (!r1.coHinh || !r1.srcData) fail('thiếu hình nhân vật ở giữa bảng');
   else if (r1.wImg < 60 || r1.hImg < 90) fail(`hình nhân vật quá nhỏ: ${r1.wImg}×${r1.hImg}`);
   else pass(`hình nhân vật ${r1.wImg}×${r1.hImg}, vẽ từ drawHeroFigure`);
-  // Đỉnh bảng nay là giai 14 (bộ Long Vương), trước là giai 10 (Hỏa Long).
-  if (!/Long Vương|giai 14/.test(r1.caption)) fail('chú thích không ghi tên bộ giáp: ' + JSON.stringify(r1.caption));
+  // Đỉnh bảng nay là giai 7 (bộ Long Vương) — bảng 14 giai cũ cũng kết ở đúng bộ đó.
+  if (!/Long Vương|giai 7/.test(r1.caption)) fail('chú thích không ghi tên bộ giáp: ' + JSON.stringify(r1.caption));
   else pass('chú thích ghi lớp + tên bộ: ' + r1.caption.replace(/\n/g, ' · '));
 
   // ── 2. thẻ rê chuột vẫn gắn vào ô có đồ ────────────────────────────────

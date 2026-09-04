@@ -140,16 +140,23 @@ const RARITIES = [
 
 // ── Drop v2.0 (GDD Trang Bị v2.0): Thập Giai Binh Khí + drop theo nguồn ──
 // Giai = thời đại của món đồ (theo map), Phẩm = chất lượng rèn (Phàm→Chí Tôn)
-// 14 giai trải trên MAX_LV=120: mỗi giai 8 cấp, giai 14 mở ở cấp 105. Bản cũ là 10 giai × 10 cấp.
+// 7 giai trải trên MAX_LV=120: mỗi giai 16 cấp, giai 7 mở ở cấp 97. Bản trước là 14 giai × 8 cấp.
+//
+// VÌ SAO RÚT 14 XUỐNG 7: mỗi giai phải có một BỘ ART RIÊNG. 14 giai × 5 lớp = 70 gói Spine phải
+// đặt vẽ; 7 giai còn 35. Cắt đôi số gói mà không cắt đôi chiều dài game — khoảng cấp mỗi giai
+// nhân đôi (8 → 16), nên MAX_LV vẫn 120 và người chơi vẫn đi hết chừng đó đường.
+//
 // PHẢI khai ở đây, trên cùng: BAOHAP_TIERS suy dải cấp từ GIAI_SPAN mà nó nằm ở dòng ~3800,
 // tức là TRƯỚC itemTier. Để hai hằng này cạnh itemTier thì trang chết ngay lúc tải vì TDZ.
-// Đổi lại số giai thì sửa ở đúng đây, đừng rải số 8 và 14 ra khắp file.
-const GIAI_MAX = 14, GIAI_SPAN = 8;
-// Nhịp leo của chỉ số trang bị theo giai. 1,335^(t-1): giai 14 gấp 37 lần giai 1.
-const GIAI_RATE = 1.335;
+// Đổi lại số giai thì sửa ở đúng đây, đừng rải số 16 và 7 ra khắp file.
+const GIAI_MAX = 7, GIAI_SPAN = 16;
+// Nhịp leo của chỉ số trang bị theo giai. Giữ NGUYÊN khoảng cách đầu-cuối của bảng 14 giai
+// (1,335^13 = 37 lần) nhưng nén vào 6 bước thay vì 13: 37^(1/6) = 1,825. Nhờ vậy đồ giai 7 mạnh
+// đúng bằng đồ giai 14 cũ, không phải cân lại quái hay chỉ số nhân vật.
+const GIAI_RATE = 1.825;
 function GIAI_POW(t){ return Math.pow(GIAI_RATE, clamp((t || 1) - 1, 0, GIAI_MAX - 1)); }
-const GIAI_NAMES = ['Tân Binh','Chiến Binh','Kỳ Binh','Anh Hùng','Chinh Phục','Bá Vương',
-  'Hung Thần','Huyền Thoại','Bất Tử','Thần Thoại','Vô Song','Chí Cường','Tối Thượng','Khai Thiên'];
+// Bảy danh xưng lấy từ 14 cái cũ theo đúng nhịp đã chọn cho bộ giáp: giai 1·3·5·7·9·11·14.
+const GIAI_NAMES = ['Tân Binh','Kỳ Binh','Chinh Phục','Hung Thần','Bất Tử','Vô Song','Khai Thiên'];
 function giaiName(t){ return GIAI_NAMES[clamp((t||1)-1, 0, GIAI_NAMES.length-1)]; }
 // Quái thường chỉ rơi fodder Phàm + vật liệu; đồ dùng được (Tinh+) chỉ từ tinh anh/boss
 // ── TỈ LỆ RƠI TRANG BỊ: theo DẢI QUÁI × LOẠI ────────────────────────────────
@@ -331,9 +338,9 @@ const AWAKENED = [
 
 // 12 ô trang bị theo GDD (base tính theo CẤP trang bị t=1..10, mỗi 10 level = 1 cấp)
 const SLOTS = [
-  // Chỉ số chính leo theo CẤP SỐ NHÂN, không tuyến tính. Bản cũ 10+t*20 cho giai 14 chỉ gấp 9,7
+  // Chỉ số chính leo theo CẤP SỐ NHÂN, không tuyến tính. Bản cũ 10+t*20 cho giai đỉnh chỉ gấp 9,7
   // lần giai 1 — quá phẳng để trang bị làm trục chính trên đường cong 400 cấp. GIAI_POW dưới đây
-  // cho giai 14 gấp ~37 lần giai 1, và đó là thứ khiến đập đồ lên +9 có nghĩa (xem MOB_FLAT_DEF).
+  // cho giai 7 gấp ~37 lần giai 1, và đó là thứ khiến đập đồ lên +9 có nghĩa (xem MOB_FLAT_DEF).
   { id:'vukhi',     name:'Vũ Khí',     main:'atk', base:(t,r)=>Math.round(26*GIAI_POW(t)*RARITIES[r].mult) },
   // Hệ số Thủ ĐÃ DỒN LẠI sau khi bỏ ô Quần. Bốn ô giáp cũ góp 13+17+13+14 = 57 điểm Thủ; bỏ
   // Quần đi mà giữ nguyên ba ô kia là cả hệ tụt xuống 43, tức mọi nhân vật mất gần một phần
@@ -1051,7 +1058,7 @@ function vongKiemVuKhi(){
   return { k: F.k * THEGIOI, dy: F.dy, ve: (g) => fn(g, P, dd) };
 }
 // ═══════════════ THẦN KHÍ — vũ khí bay theo người ═══════════════
-// Vẽ THẲNG từ món đang trang bị bằng ITEM_ART — 15 dòng vũ khí × 14 giai = 210 cây, cây nào ra
+// Vẽ THẲNG từ món đang trang bị bằng ITEM_ART — 15 dòng vũ khí × 7 giai = 105 cây, cây nào ra
 // cây nấy: đúng lưỡi, đúng chắn tay, đúng chuôi, đúng hoa văn, đúng màu chất liệu của giai đó.
 // Đổi vũ khí trong túi là thần khí đổi theo ngay khung sau, không tốn một byte art nào.
 //
@@ -4980,7 +4987,7 @@ probeSkillIcons();
 // (chỉ số nền theo cấp, bậc nhân, và cộng thẳng) còn điểm chỉ có một.
 // Gom hết vào một bảng để chỉnh được, và để thấy rõ mình đang dịch trọng số đi đâu.
 // Đường cong 400 cấp. Bản 120 cấp cho điểm tiềm năng đổi ra công TUYẾN TÍNH (điểm × 2,0), ở
-// 120 cấp thì ổn nhưng kéo tới 400 cấp thì công từ điểm gấp 400 lần trong khi trang bị giai 14
+// 120 cấp thì ổn nhưng kéo tới 400 cấp thì công từ điểm gấp 400 lần trong khi trang bị giai 7
 // chỉ gấp 37 lần — trang bị mất sạch ý nghĩa, quái chết trong chưa tới một nhát ở giữa game.
 // Đo bằng mô hình trước khi sửa: xem tools/ hoặc lịch sử commit.
 // Nay công từ điểm là CĂN BẬC HAI: vẫn gấp 20 lần từ cấp 1 tới 400, nhưng không nuốt trang bị.
@@ -5036,15 +5043,16 @@ const JEWEL_COLORS = { chucPhuc:'#7ec850', linhHon:'#b08ae8', sinhMenh:'#e84a6a'
 // chủ dự án yêu cầu đích danh dùng "Box Kundun" vì người chơi MU quen tên đó. Đã nêu rủi ro —
 // đây là tên riêng của MU Online, còn dự án này là tribute IP riêng — và chủ dự án vẫn chốt
 // dùng. Ghi lại ở đây để phiên sau đừng "sửa ngược" tưởng là sót.
-// Mỗi bậc hộp phủ ĐÚNG HAI GIAI, nên bảy bậc trải kín 14 giai: I ra giai 1–2, VII ra giai
-// 13–14. Dải cấp suy thẳng từ GIAI_SPAN, không viết tay — đổi GIAI_SPAN là dải tự theo.
+// Bảy bậc hộp giờ khớp MỘT-MỘT với bảy giai: I ra giai 1, VII ra giai 7. Trước đây mỗi bậc phủ
+// hai giai vì có 14 giai; rút còn 7 thì phép chia biến mất, bậc hộp = giai luôn.
+// Dải cấp suy thẳng từ GIAI_SPAN, không viết tay — đổi GIAI_SPAN là dải tự theo.
 const BAOHAP_TIERS = [ null,
   ...[['I','#9aa8d4'],['II','#7ec850'],['III','#5aa0e8'],['IV','#b08ae8'],
       ['V','#e8b04a'],['VI','#ff6a3a'],['VII','#7ecbff']]
     .map(([so, color], i) => ({
       name: `Box Kundun ${so}`, color,
-      min: i * 2 * GIAI_SPAN + 1,                         // giai 2i+1 mở ở cấp này
-      max: i === 6 ? 999 : (i * 2 + 2) * GIAI_SPAN,       // hết giai 2i+2
+      min: i * GIAI_SPAN + 1,                             // giai i+1 mở ở cấp này
+      max: i === GIAI_MAX - 1 ? 999 : (i + 1) * GIAI_SPAN,// hết giai i+1
     })),
 ];
 // Ma Tôn Giáng Thế: 0h/4h/8h/12h/16h/20h — Hạ Giới & Thượng Giới luân phiên
@@ -5207,7 +5215,7 @@ function rollRarity(bias){
   for (const p of pool){ roll -= p.w; if (roll <= 0) return p.i; }
   return 0;
 }
-// Cấp trang bị: mỗi 10 level = 1 cấp, tổng 10 cấp (cánh/áo choàng/pet ngoài hệ này)
+// Giai của món rơi ra: mỗi GIAI_SPAN cấp = 1 giai (cánh/áo choàng/pet ngoài hệ này)
 function itemTier(level){ return clamp(Math.ceil(level / GIAI_SPAN), 1, GIAI_MAX); }
 
 // ── Chuyển save từ 10 giai sang 14 giai ──────────────────────────────────────
@@ -5230,6 +5238,27 @@ function migrateGiai14(){
   (player.inv || []).forEach(doi);
   (player.kho || []).forEach(doi);
   player.giai14 = true;
+}
+// ── Chuyển save từ 14 giai sang 7 giai ───────────────────────────────────────
+// Cùng cái bẫy như bước 10→14, chỉ ngược chiều. Món trong save ghi cứng `tier` 1–14; bảng mới
+// chỉ có tới 7, nên không chuyển thì mọi món giai 8+ bị clamp về 7 một cách âm thầm và món
+// giai 14 (đỉnh bảng cũ) nằm chung một bậc với món giai 13, 12, 11...
+//
+// Cách chuyển: hai giai cũ gộp thành một giai mới, LÀM TRÒN LÊN — ceil(t/2). Không món nào bị
+// tụt hạng, đồ đỉnh vẫn là đồ đỉnh. Còn cấp yêu cầu thì ghim lại theo công thức của bảng CŨ
+// ((t-1)*8+1), y hệt bước trước: giai 14 cũ đòi cấp 105, đổi sang giai 7 mới sẽ đòi cấp 97 —
+// lần này là NỚI ra chứ không siết, nhưng vẫn ghim để người chơi không thấy con số nhảy.
+function migrateGiai7(){
+  if (!player || player.giai7) return;
+  const doi = (it) => {
+    if (!it || !it.tier) return;
+    if (it.reqLv == null) it.reqLv = (it.tier - 1) * 8 + 1;   // đúng công thức của bảng 14 giai
+    it.tier = clamp(Math.ceil(it.tier / 2), 1, GIAI_MAX);
+  };
+  for (const k in (player.equip || {})) doi(player.equip[k]);
+  (player.inv || []).forEach(doi);
+  (player.kho || []).forEach(doi);
+  player.giai7 = true;
 }
 // Ô QUẦN bị gỡ khỏi game — save cũ vẫn còn đồ quần, cả đang mặc lẫn nằm trong túi và kho.
 //
@@ -6386,6 +6415,7 @@ function loadGame(idx){
     if (!player.lvPeak) player.lvPeak = player.resetCount > 0 ? MAX_LV : player.level;
     if (player.ene == null) player.ene = 5; // Linh Lực (stat mới) backfill (save cũ chưa có) — mức khởi điểm giống str/agi/def/vit
     migrateGiai14();                                      // 10 giai → 14 giai, xem hàm để biết vì sao
+    migrateGiai7();                                       // 14 giai → 7 giai, phải chạy SAU bước trên
     migrateBoQuan();                                      // ô Quần bị gỡ — đồ quần cũ thành đồ chân
     migrateBoLoi();                                       // hệ Lõi Nguyên Tố bị gỡ
     if (d.curMap && MAPS[d.curMap]) curMap = d.curMap;
@@ -10754,11 +10784,18 @@ function hSetMetal(M, S, t){
            glow: base.glow ? _hexMix(base.glow, '#ffffff', k * 0.34) : null };
 }
 // Nấc tạo hình 1..4 theo bậc hiệu dụng — dùng chung cho mọi bộ
-// Nấc tạo hình 1..5 theo giai. Trải lại cho 14 giai: đổi dáng ở giai 4, 7, 10, 13.
-// Cố ý LỆCH khỏi mốc đổi bộ (mỗi giai một bộ) để hai thứ không dồn vào cùng một bước —
-// bài học từ bản 10 giai, nơi bóng dáng và bảng màu cùng đổi ở giai 5/7/9 nên bốn bước
-// còn lại chẳng có gì đổi.
-function hStage(t){ return t < 4 ? 1 : t < 7 ? 2 : t < 10 ? 3 : t < 13 ? 4 : 5; }
+// Nấc tạo hình 1..5 theo giai. Trải lại cho 7 giai: đổi dáng ở giai 2, 4, 5, 7.
+// Cố ý LỆCH khỏi mốc đổi bộ (mỗi giai một bộ) thì KHÔNG còn làm được nữa — 7 giai mà 5 nấc
+// dáng thì nấc nào cũng phải rơi vào một mốc đổi bộ. Nên bù bằng cách rải không đều: hai
+// giai đầu mỗi giai một dáng (chỗ người chơi nhìn kỹ nhất), rồi thưa dần về cuối.
+function hStage(t){ return t < 2 ? 1 : t < 4 ? 2 : t < 5 ? 3 : t < 7 ? 4 : 5; }
+
+// ⚠ CÁC MỐC `t` DƯỚI ĐÂY NẰM TRÊN THANG 1..GIAI_MAX (nay là 1..7).
+// Chúng vốn được dò tay trên thang 1..14, rồi khi rút còn 7 giai thì quy đổi tuyến tính
+// mới = 1 + (cũ − 1) × 6/13 — giữ nguyên THỨ TỰ mọc chi tiết và khoảng cách tương đối, chỉ
+// nén lại. Vì vậy mới có những con số lẻ như 1,7 · 2,2 · 3,1 · 5,6: đừng làm tròn cho "đẹp",
+// làm tròn là hai mốc dồn vào một giai và giai đó mọc hai thứ cùng lúc.
+// Nhớ: `t` đã NHÂN ĐỘ PHỦ (xem gearVisual) nên mặc 2/4 món giai 7 chỉ ra t = 3,5.
 
 // ── A. BÓNG DÁNG: vai giáp ──
 // Đây là lớp đáng giá nhất. Màu sắc và hào quang biến mất khi nhân vật nhỏ hoặc nền rối;
@@ -11500,10 +11537,10 @@ const HELM_BY_NAME = { 'Xương':'mask', 'Cốt Giáp':'mask', 'Quỷ Vương':'
   'Tế Đàn':'veil', 'Hắc Đế':'mask', 'Ngai Đen':'mask' };
 function setHelm(S, t){
   if (!S) return null;
-  if (t < 3) return null;                          // hai giai đầu để đầu trần, thấy rõ mặt
+  if (t < 1.9) return null;                        // hai giai đầu để đầu trần, thấy rõ mặt
   if (S.sh && S.sh.helm) return S.sh.helm;
   if (HELM_BY_NAME[S.name]) return HELM_BY_NAME[S.name];
-  if (t >= 11 && HELM_OF_STYLE[S.style] !== 'wing') return 'mask';
+  if (t >= 5.6 && HELM_OF_STYLE[S.style] !== 'wing') return 'mask';
   return HELM_OF_STYLE[S.style] || 'visor';
 }
 function setGlove(S){
@@ -11597,7 +11634,7 @@ function hPauldrons(g, M, gv, S, ps){
   const _style = (S && S.style) || 'plate';
   // Spellblade vào sớm hơn: chữ ký của lớp là LỆCH VAI (một bên giáp, một bên trần), mà dải I
   // của nó tên là "Bán Giáp" — chặn ở 2.5 thì dải đó không có vai nào cả và cái tên nói dối.
-  if (t < (_style === 'halfplate' ? 1.2 : 2.5)) return;
+  if (t < (_style === 'halfplate' ? 1.1 : 1.7)) return;
   const st = hStage(t), fn = SET_SHOULDER[_style] || hShoulderPlate;
   const dragon = _style === 'hoalong';
   for (const side of [-1, 1]){
@@ -11692,7 +11729,7 @@ const CREST_FN = { hood:hCrestHood, nemes:hCrestNemes, halo:hCrestHalo, cap:hCre
   horn:hCrestHorn, dragon:hCrestDragon };
 function hHelmCrest(g, M, gv, ps, S){
   const t = gv ? gv.t : 0;
-  if (t < 2) return;
+  if (t < 1.5) return;
   const fn = (S && S.crest && CREST_FN[S.crest]) || SET_CREST[(S && S.style) || 'plate'] || hCrestHorn;
   const rim = plusRim(M, gv);
   hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head, () => {
@@ -11768,10 +11805,10 @@ const SET_LEG = {
 };
 function hGreave(g, M, gv, side, S){
   const t = gv ? gv.t : 0;
-  if (t < 3.5) return;
+  if (t < 2.2) return;
   const fn = SET_LEG[(S && S.style) || 'plate'] || hGreavePlate;
   g.save();
-  fn(g, M, t < 5.5 ? 1 : t < 7.5 ? 2 : 3, side < 0 ? 61 : 80, side < 0 ? -1 : 1);
+  fn(g, M, t < 3.1 ? 1 : t < 4.0 ? 2 : 3, side < 0 ? 61 : 80, side < 0 ? -1 : 1);
   g.restore();
 }
 function hBeltPlate(g, M, st){
@@ -11832,10 +11869,10 @@ const SET_HIP = {
 };
 function hBelt(g, M, gv, S){
   const t = gv ? gv.t : 0;
-  if (t < 2) return;
+  if (t < 1.5) return;
   const fn = SET_HIP[(S && S.style) || 'plate'] || hBeltPlate;
   g.save();
-  fn(g, M, t < 5 ? 1 : t < 8 ? 2 : 3);
+  fn(g, M, t < 2.9 ? 1 : t < 4.2 ? 2 : 3);
   g.restore();
 }
 // ── B. CHẤT LIỆU ──
@@ -11860,7 +11897,7 @@ const MAT_PASS = window.MAT_PASS;
 function hArmorSheen(g, M, gv, S){
   const t = gv ? gv.t : 0;
   if (t < 1) return;
-  const k = Math.min(1, t / GIAI_MAX);       // trước là t/10 — từ khi mở 14 giai thì bão hoà sớm
+  const k = Math.min(1, t / GIAI_MAX);       // chuẩn hoá theo số giai, không ghim con số nào
   g.save();
   g.beginPath();                                        // giới hạn trong khối thân
   g.moveTo(56, 94); g.lineTo(104, 94); g.lineTo(108, 142); g.lineTo(52, 142);
@@ -11915,27 +11952,27 @@ function hFigureLight(g){
 //   giai  1  không gì            giai  8  + vạch dọc giữa ngực
 //   giai  2–6  1→5 nét khảm      giai 10  + đinh tán hai bên
 //   giai  7  + khoá ngực         giai 12  + vòng cổ
-//                                giai 14  + quầng sáng quanh khoá
+//                                giai 7   + quầng sáng quanh khoá
 // Trải thưa hơn bản 10 giai vì nay MỖI giai đã đổi hẳn bộ đồ và bảng màu — hoa văn chỉ còn
 // là lớp tín hiệu thứ hai, không phải thứ gánh cả việc phân biệt.
 function hEngrave(g, M, gv){
   const t = gv ? gv.t : 0;
-  if (t < 2) return;
+  if (t < 1.5) return;
   const col = gv.rcol || M.trim;
   const n = Math.min(5, t - 1);
   g.save();
 
-  if (t >= 12){                                         // vòng cổ — cung ôm dưới cằm
+  if (t >= 6.1){                                        // vòng cổ — cung ôm dưới cằm
     g.strokeStyle = col; g.globalAlpha = 0.8; g.lineWidth = 2.4;
     g.beginPath(); g.arc(80, 84, 15, 0.35, Math.PI - 0.35); g.stroke();
   }
-  if (t >= 14){                                         // quầng sáng quanh khoá — chỉ giai cuối
+  if (t >= 7){                                          // quầng sáng quanh khoá — chỉ giai cuối
     const ag = g.createRadialGradient(80, 101, 1, 80, 101, 15);
     ag.addColorStop(0, col); ag.addColorStop(1, 'rgba(0,0,0,0)');
     g.globalAlpha = 0.5; g.fillStyle = ag;
     g.beginPath(); g.arc(80, 101, 15, 0, 7); g.fill();
   }
-  if (t >= 7){                                          // khoá ngực hình thoi
+  if (t >= 3.8){                                        // khoá ngực hình thoi
     g.globalAlpha = 0.9; g.fillStyle = col;
     g.beginPath();
     g.moveTo(80, 94); g.lineTo(86, 101); g.lineTo(80, 108); g.lineTo(74, 101);
@@ -11946,11 +11983,11 @@ function hEngrave(g, M, gv){
     const y = 112 + i * 7;
     g.beginPath(); g.moveTo(60, y); g.quadraticCurveTo(80, y + 4, 100, y); g.stroke();
   }
-  if (t >= 8){                                          // vạch dọc nối các nét ngang
+  if (t >= 4.2){                                        // vạch dọc nối các nét ngang
     g.globalAlpha = 0.7; g.lineWidth = 1.6;
     g.beginPath(); g.moveTo(80, 110); g.lineTo(80, 112 + (n - 1) * 7 + 4); g.stroke();
   }
-  if (t >= 10){                                         // đinh tán hai bên ngực
+  if (t >= 5.2){                                        // đinh tán hai bên ngực
     g.globalAlpha = 0.85; g.fillStyle = col;
     for (const x of [64, 96]) for (const y of [117, 131]){
       g.beginPath(); g.arc(x, y, 2.1, 0, 7); g.fill();
@@ -12511,7 +12548,7 @@ let _hsHit = 0, _hsMiss = 0;
 function canhBoRa(gv){ return gv && gv.canh ? { ...gv, canh: null } : gv; }
 function heroGearSig(gv){
   // VŨ KHÍ phải nằm trong chữ ký. Bản đầu chỉ có giáp — đổi vũ khí thì bộ đệm trả lại đúng ảnh
-  // cũ, cầm gậy mới mà trên tay vẫn cây gậy cũ. Trước đây lỗi này ẩn vì cả 14 giai vũ khí dùng
+  // cũ, cầm gậy mới mà trên tay vẫn cây gậy cũ. Trước đây lỗi này ẩn vì mọi giai vũ khí dùng
   // chung một hình vẽ; nay art nướng chọn cây trượng theo GIAI VŨ KHÍ nên nó lộ ra ngay.
   if (!gv) return '-';
   const w = (gv.wDef ? gv.wDef.id : '') + ':' + (gv.wTier || 0) + ':' + (gv.wPlus || 0);
@@ -15563,7 +15600,7 @@ const MASTERY_COMMON = { id:'hothe', name:'Hộ Thể', glyph:'⛨', nodes:[
   // có tác dụng. Bản thân chuyện giáp bão hoà từ giai 5 là một lỗi cân bằng RIÊNG, có trước
   // mastery và lớn hơn mastery; đã báo chủ dự án, chưa sửa ở đây.
   //
-  // ĐO ĐƯỢC ở cấp 120, bộ giai 14 đập +9, KHÔNG một điểm Đại Thành nào:
+  // ĐO ĐƯỢC ở cấp 120, bộ giai đỉnh đập +9, KHÔNG một điểm Đại Thành nào:
   //     defRed 0.780/0.78  → ĐÃ ĐỤNG TRẦN ở cả năm lớp; mọi điểm Phòng Ngự sau đó là số 0
   //     eva    0.400/0.45  → riêng Mẫn Tiệp đã chốt ở trần thứ nhất (0.40), evaPct chỉ còn
   //                          đúng 5 điểm phần trăm để chạy — nút Né trả về một nửa lời hứa
@@ -17816,7 +17853,7 @@ const WEAPON_MAT = {
   xuong:   { lo:'#5a5344', hi:'#cfc6ac', trim:'#efe8d2', glow:null },       // xương
   ma:      { lo:'#2a1f4a', hi:'#6a4fb0', trim:'#c8a8ff', glow:'#a88aff' },  // ma thuật
   rong:    { lo:'#5a1418', hi:'#c0342c', trim:'#ffc24a', glow:'#ff6a2a' },  // vảy rồng
-  // Bốn chất liệu thêm cho các nấc cao sau khi mở 10 → 14 giai. Không có chúng thì bốn nấc
+  // Bốn chất liệu thêm cho các nấc cao từ hồi bảng 14 giai. Không có chúng thì bốn nấc
   // cuối của mọi dòng vũ khí phải dùng lại chất liệu của nấc dưới, tức là lên giai mà cầm
   // đúng cây cũ đổi tên.
   bac:     { lo:'#6a7382', hi:'#d8e2ee', trim:'#ffffff', glow:'#c0dcf0' },  // bạc
@@ -19362,20 +19399,20 @@ function itemArtUrl(def, tier, rarity, plus){
   return lruDat(_itemArtCache, key, u, ITEM_ART_CAP);
 }
 
-// ═══════════════ DANH MỤC TRANG BỊ — 220 món ═══════════════
+// ═══════════════ DANH MỤC TRANG BỊ — 273 món ═══════════════
 // Mỗi món là một DÒNG DỮ LIỆU, hình vẽ suy ra từ tổ hợp bộ phận. Không có hàm vẽ riêng cho
 // từng món, nên thêm món mới = thêm một dòng.
 //
 // Khoá lớp: `sect` khác null nghĩa là CHỈ lớp đó dùng được. Vũ khí và giáp đều khoá; dây
 // chuyền và nhẫn thì không (MU cũng vậy).
-// `lv` = cấp yêu cầu, suy từ dải: 1 / 21 / 41 / 61 / 81.
+// `lv` = cấp yêu cầu, suy từ dải: 1 / 17 / 33 / 49 / 65 / 81 / 97.
 // Suy thẳng từ giai, không viết tay: dải i phục vụ giai i+1, mở ở cấp i*GIAI_SPAN+1.
 const BAND_TIER = Array.from({ length: GIAI_MAX }, (_, i) => i + 1);
 const BAND_LV   = BAND_TIER.map(t => (t - 1) * GIAI_SPAN + 1);
 const ITEM_DB = {};
 function regItem(d){ ITEM_DB[d.id] = d; return d; }
 
-// ── GIÁP: 25 bộ × 5 ô, sinh thẳng từ HERO_SETS ───────────────────────────────
+// ── GIÁP: 5 lớp × 7 giai × 4 ô = 140 món, sinh thẳng từ HERO_SETS ────────────
 // Nhờ sinh từ đó mà hình trong túi và hình trên người dùng CHUNG một nguồn — không có cách
 // nào lệch nhau, kể cả khi sau này đổi bảng màu bộ.
 const ARMOR_PIECES = [
@@ -19398,11 +19435,11 @@ for (const sect in HERO_SETS){
   });
 }
 
-// ── VŨ KHÍ: 5 lớp × 3 dòng × 14 nấc = 210 ───────────────────────────────────
-// Viết theo DÒNG + đè theo nấc, thay vì 210 dòng đầy đủ: đọc ra ngay dòng nào leo thế nào.
+// ── VŨ KHÍ: 5 lớp × 3 dòng × 7 nấc = 105 ────────────────────────────────────
+// Viết theo DÒNG + đè theo nấc, thay vì 105 dòng đầy đủ: đọc ra ngay dòng nào leo thế nào.
 // Tên nấc = <loại vũ khí> + <danh xưng giai của lớp>, trùng danh xưng với bộ giáp cùng giai,
 // nên nhìn cây vũ khí là biết người kia đang ở giai nào mà không cần rê chuột.
-// Dáng đổi ở giai 4 / 7 / 10 / 13 cho khớp hStage; chất liệu và cỡ thì đổi từng giai.
+// Dáng đổi ở giai 2 / 4 / 5 / 7 cho khớp hStage; chất liệu và cỡ thì đổi từng giai.
 // WEAPON_LINES đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
 const WEAPON_LINES = window.WEAPON_LINES;
 for (const L of WEAPON_LINES){
@@ -19415,26 +19452,22 @@ for (const L of WEAPON_LINES){
   });
 }
 
-// ── PHỤ KIỆN: 20 món, KHÔNG khoá lớp ─────────────────────────────────────────
+// ── PHỤ KIỆN: 4 dòng × 7 giai = 28 món, KHÔNG khoá lớp ─────────────────────────────────────────
 // Dây chuyền chia hai nhánh VẬT LÝ / PHÉP — phân biệt bằng bóng dáng (nanh vs cầu pha lê),
 // không bằng màu: ở 44px trong ô túi thì màu là thứ mất trước tiên.
 const ACC_LINES = [
   { slot:'daychuyen', line:'phys', art:'pendPhys', branch:'phys', pre:'Dây Chuyền ',
-    names:['Nanh Đồng','Nanh Sắt','Nanh Thép','Nanh Hắc Kim','Nanh Bạc','Nanh Xương','Nanh Rồng',
-           'Nanh Huyết','Nanh Lửa','Nanh Bạo Long','Nanh Lôi Đình','Nanh Băng Nguyên','Nanh Thánh Long','Nanh Long Vương'],
-    mats:['dong','sat','thep','hacKim','bac','xuong','rong','huyet','lua','rong','ma','bang','vang','thanh'] },
+    names:['Nanh Đồng','Nanh Thép','Nanh Bạc','Nanh Rồng','Nanh Lửa','Nanh Lôi Đình','Nanh Long Vương'],
+    mats:['dong','thep','bac','rong','lua','ma','thanh'] },
   { slot:'daychuyen', line:'magic', art:'pendMagic', branch:'magic', pre:'Dây Chuyền ',
-    names:['Ngọc Lam','Ngọc Bích','Pha Lê','Ma Thuật','Triệu Hồn','Ma Vương','Thần Ma',
-           'Ánh Trăng','Quỷ Vương','Hắc Ám','Tinh Vân','Huyết Nguyệt','Thiên Ma','Hư Vô'],
-    mats:['dong','thep','bang','ma','bang','ma','huyet','bac','luc','hacKim','ma','huyet','vang','thanh'] },
+    names:['Ngọc Lam','Pha Lê','Triệu Hồn','Thần Ma','Quỷ Vương','Tinh Vân','Hư Vô'],
+    mats:['dong','bang','bang','huyet','luc','ma','thanh'] },
   { slot:'nhan1', line:'r1', art:'ring',
-    names:['Nhẫn Đồng','Nhẫn Bạc','Nhẫn Ngọc Lục','Nhẫn Hắc Kim','Nhẫn Tinh Vân','Nhẫn Xương','Nhẫn Vảy Rồng',
-           'Nhẫn Huyết','Nhẫn Hoả','Nhẫn Nguyệt Quang','Nhẫn Lôi Đình','Nhẫn Băng Nguyên','Nhẫn Thiên Mệnh','Nhẫn Khai Thiên'],
-    mats:['dong','thep','luc','hacKim','ma','xuong','rong','huyet','lua','bac','ma','bang','vang','thanh'] },
+    names:['Nhẫn Đồng','Nhẫn Ngọc Lục','Nhẫn Tinh Vân','Nhẫn Vảy Rồng','Nhẫn Hoả','Nhẫn Lôi Đình','Nhẫn Khai Thiên'],
+    mats:['dong','luc','ma','rong','lua','ma','thanh'] },
   { slot:'nhan2', line:'r2', art:'ring',
-    names:['Nhẫn Thô Sơ','Nhẫn Chạm Khắc','Nhẫn Cổ Ngữ','Nhẫn Phong Ấn','Nhẫn Vĩnh Hằng','Nhẫn Tro Tàn','Nhẫn Cốt Vương',
-           'Nhẫn Huyết Thệ','Nhẫn Hoả Ngục','Nhẫn Bạch Diệm','Nhẫn Vương Quyền','Nhẫn Hắc Đế','Nhẫn Bạo Quân','Nhẫn Đế Vương'],
-    mats:['sat','dong','vang','ma','bang','lua','bac','hacKim','thanh','vang','luc','ma','huyet','xuong'] },
+    names:['Nhẫn Thô Sơ','Nhẫn Cổ Ngữ','Nhẫn Vĩnh Hằng','Nhẫn Cốt Vương','Nhẫn Hoả Ngục','Nhẫn Vương Quyền','Nhẫn Đế Vương'],
+    mats:['sat','vang','bang','bac','thanh','luc','xuong'] },
 ];
 for (const A of ACC_LINES){
   A.names.forEach((name, band) => {
@@ -19485,9 +19518,9 @@ function itemLockMsg(it){
   const sc = SECTS[sk];
   return `${it.name} — chỉ ${sc ? sc.name : sk} dùng được`;
 }
-// 10 giai trải đều lên 5 dải: giai 1-2 → dải I, 3-4 → II, 5-6 → III, 7-8 → IV, 9-10 → V.
-// MỘT dải = MỘT giai. Bản cũ ceil(t/2)-1 gộp hai giai vào một dải, nên giai 1 và giai 2 rơi ra
-// cùng một bộ đồ mang cùng một cái tên — đó là gốc của chuyện "lên giai mà nhìn y hệt".
+// MỘT dải = MỘT giai, thẳng tuột. Bản 10 giai từng dùng ceil(t/2)-1 gộp hai giai vào một dải,
+// nên giai 1 và giai 2 rơi ra cùng một bộ đồ mang cùng một cái tên — đó là gốc của chuyện
+// "lên giai mà nhìn y hệt". Đừng gộp lại.
 function bandOfTier(t){ return clamp((t || 1) - 1, 0, GIAI_MAX - 1); }
 function itemDef(it){ return it && it.def ? ITEM_DB[it.def] : null; }
 // Gắn định nghĩa + TÊN theo danh mục. Lớp quyết định món nào rơi ra được: vũ khí và giáp đều
