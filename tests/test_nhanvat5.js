@@ -12,7 +12,14 @@ const URL = 'http://localhost:8871/index.html';
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const errs = [];
   const out = {};
-  const nap = async p => { await p.goto(URL); await p.waitForFunction(() => window.__gameReady).catch(()=>{}); };
+  // Menu chính nay MỞ RA MÀN CHỌN MÁY CHỦ trước (nhịp mở đầu kiểu MU): #cc-slots và hai nút
+  // Tiếp Tục / Tạo Nhân Vật Mới bị ẩn cho tới khi chọn xong một cụm. Bài này đo phần NẰM SAU
+  // bước đó, nên mỗi lần trang nạp lại phải bấm qua màn máy chủ y như người chơi.
+  const quaServer = async p => { await p.evaluate(() => {
+    const sv = document.getElementById('sv-pick');
+    if (sv && !sv.classList.contains('hidden')) window.svChon(SERVERS[0].id);
+  }).catch(()=>{}); };
+  const nap = async p => { await p.goto(URL); await p.waitForFunction(() => window.__gameReady).catch(()=>{}); await quaServer(p); };
 
   // ── 1) SAVE v3 → v4: bê nguyên vào ô số 1 ──────────────────────────────────────────────
   {
@@ -29,7 +36,7 @@ const URL = 'http://localhost:8871/index.html';
         sideStates: {}, savedAt: Date.now(),
       }));
     });
-    await p.reload(); await p.waitForTimeout(900);
+    await p.reload(); await p.waitForTimeout(900); await quaServer(p);
     Object.assign(out, await p.evaluate(() => {
       const raw = JSON.parse(localStorage.getItem('vlcm_save') || '{}');
       const rows = [...document.querySelectorAll('#cc-slots .cc-slot')];
@@ -66,7 +73,7 @@ const URL = 'http://localhost:8871/index.html';
     p.on('pageerror', e => errs.push('tao: ' + e));
     await nap(p);
     await p.evaluate(() => localStorage.removeItem('vlcm_save'));
-    await p.reload(); await p.waitForTimeout(700);
+    await p.reload(); await p.waitForTimeout(700); await quaServer(p);
 
     for (let i = 0; i < 5; i++){
       if (i === 0){
@@ -75,6 +82,7 @@ const URL = 'http://localhost:8871/index.html';
       } else {
         await p.evaluate(() => showMainMenu());
         await p.waitForTimeout(150);
+        await quaServer(p);                    // showMainMenu() cũng mở lại màn chọn máy chủ
         const trong = await p.$('#cc-slots .cc-slot.empty');
         if (!trong){ errs.push('không còn ô trống ở vòng ' + i); break; }
         await trong.click();
@@ -89,10 +97,10 @@ const URL = 'http://localhost:8871/index.html';
       await p.waitForTimeout(120);
       await p.click('#btn-create');
       await p.waitForTimeout(500);
-      if (i < 4){ await p.reload(); await p.waitForTimeout(700); }   // veManChon() cũng chỉ là lưu + tải lại
+      if (i < 4){ await p.reload(); await p.waitForTimeout(700); await quaServer(p); }   // veManChon() cũng chỉ là lưu + tải lại
     }
     Object.assign(out, await p.evaluate(() => ({ tao_nhacTrongGame: AudioSys.bgmName })));
-    await p.reload(); await p.waitForTimeout(800);
+    await p.reload(); await p.waitForTimeout(800); await quaServer(p);
     Object.assign(out, await p.evaluate(() => {
       const raw = JSON.parse(localStorage.getItem('vlcm_save') || '{}');
       const rows = [...document.querySelectorAll('#cc-slots .cc-slot')];

@@ -1,4 +1,5 @@
-// Danh mục 616 món + khoá lớp. (220 khi còn 10 giai / 5 dải — nay 14 giai, mỗi giai một dải.) Mỗi món phải VẼ ĐƯỢC và phải KHÁC món khác — nếu hai món ra
+// Danh mục 546 món + khoá lớp. (220 khi còn 10 giai / 5 dải — nay 14 giai, mỗi giai một dải;
+// 616 khi còn ô Quần — bỏ ô đó đi là mỗi bộ còn 4 ô giáp, 14×5×4 = 280 thay vì 350.) Mỗi món phải VẼ ĐƯỢC và phải KHÁC món khác — nếu hai món ra
 // cùng một ảnh thì danh mục chỉ to trên giấy.
 const { chromium } = require('playwright');
 (async () => {
@@ -74,8 +75,8 @@ const { chromium } = require('playwright');
 
   console.log(JSON.stringify(r, null, 1));
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
-  if (r.tong !== 616) fail(`danh mục có ${r.tong} món, cần 616`);
-  if (r.theoLoai.armor !== 350) fail(`giáp ${r.theoLoai.armor}, cần 350 (70 bộ × 5 ô)`);
+  if (r.tong !== 546) fail(`danh mục có ${r.tong} món, cần 546`);
+  if (r.theoLoai.armor !== 280) fail(`giáp ${r.theoLoai.armor}, cần 280 (70 bộ × 4 ô)`);
   if (r.theoLoai.weapon !== 210) fail(`vũ khí ${r.theoLoai.weapon}, cần 210`);
   if (r.theoLoai.acc !== 56) fail(`phụ kiện ${r.theoLoai.acc}, cần 56`);
   if (r.veLoi) fail(`${r.veLoi} món KHÔNG vẽ được`);
@@ -83,7 +84,7 @@ const { chromium } = require('playwright');
   if (r.tenTrung) fail(`${r.tenTrung} tên bị trùng`);
   for (const sk in r.theoLop){
     if (r.theoLop[sk].vukhi !== 42) fail(`${sk}: ${r.theoLop[sk].vukhi} vũ khí, cần 42 (3 dòng × 14 giai)`);
-    if (r.theoLop[sk].giap !== 70) fail(`${sk}: ${r.theoLop[sk].giap} giáp, cần 70 (14 giai × 5 ô)`);
+    if (r.theoLop[sk].giap !== 56) fail(`${sk}: ${r.theoLop[sk].giap} giáp, cần 56 (14 giai × 4 ô)`);
   }
   if (r.phuKienKhoaLop !== 0) fail('phụ kiện bị khoá lớp — dây chuyền và nhẫn phải dùng chung');
   if (!r.dk_mackiem) fail('Dark Knight không mặc được kiếm của chính mình');

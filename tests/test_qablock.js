@@ -63,11 +63,12 @@ const { chromium } = require('playwright');
     };
     startGame('thieulam', null); player.level = 100; calcDerived();
     player.equip = {}; player.inv = [];
-    const quanManh = mk('quan', 10, 4, null);
-    player.inv.push(mk('ao', 1, 0), mk('quan', 1, 0), quanManh);
+    // Ô Quần đã gỡ khỏi SLOTS; phép thử "mặc món mạnh nhất trong ô" dời sang ô Chân.
+    const quanManh = mk('chan', 10, 4, null);
+    player.inv.push(mk('ao', 1, 0), mk('chan', 1, 0), quanManh);
     autoEquipBest();
-    o.autoEquip_quanDaChon = player.equip.quan ? player.equip.quan.name : '(trống)';
-    o.autoEquip_lucChienQuan = player.equip.quan ? itemPower(player.equip.quan) : 0;
+    o.autoEquip_quanDaChon = player.equip.chan ? player.equip.chan.name : '(trống)';
+    o.autoEquip_lucChienQuan = player.equip.chan ? itemPower(player.equip.chan) : 0;
     o.autoEquip_lucChienQuanManh = itemPower(quanManh);
 
     // ── 3. ăn đòn phải rung NGƯỢC hướng con vừa nện ──────────────────────

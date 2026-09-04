@@ -157,6 +157,9 @@
          (mất nhân vật, đổi phiên bản save) chứ không phải chỗ kể chuyện. -->
     <h2>Lunacia · Bên dưới vết nứt</h2>
     <p class="ss-sub">Bầu trời nứt ra, và ngươi rơi qua.</p>
+    <!-- CHỌN MÁY CHỦ — bước đầu tiên, đúng nhịp của MU: tên game dựng to ở giữa, dưới là các
+         cụm máy chủ. Chọn xong mới tới danh sách nhân vật. Dựng bằng JS (svRender). -->
+    <div id="sv-pick" class="hidden"></div>
     <!-- Năm ô nhân vật (màn chờ). Ẩn khi đang ở màn tạo nhân vật. -->
     <div id="cc-slots"></div>
     <div id="cc-slots-note"></div>
@@ -178,8 +181,6 @@
 
 <!-- The Calling: Unclassed chọn Tộc ở cấp 10 -->
 <div id="sect-ceremony" class="hidden">
-  <!-- Tranh minh hoạ lớp: hiện khi đã chọn một lớp. Vẽ bằng canvas (splashUrl) -->
-  <img id="cc-splash" class="hidden" alt="">
   <div class="ss-inner">
     <h1>The Calling</h1>
     <p class="ss-sub">Mười cấp trưởng thành đã đủ bản lĩnh — 5 lớp cùng mở cửa đón nhận.<br>Chọn một, con đường của ngươi sẽ đổi thay mãi mãi.</p>

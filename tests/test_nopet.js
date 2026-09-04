@@ -21,7 +21,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   await p.waitForTimeout(900);
   // save CŨ có thú + 4 ấn + đã cho ăn 7 lõi
   const r = await p.evaluate(() => {
-    player.silver = 1000; player.noidan = 2;
+    player.silver = 1000;
     saveGame();
     const raw = JSON.parse(localStorage.getItem('vlcm_save'));
     // v4: save chứa NĂM ô nhân vật; nhân vật đang chơi nằm trong slots[active], không còn ở gốc.
@@ -31,14 +31,16 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     O.player.noidan = { Kim:0, 'Mộc':0, 'Thổ':0, 'Thủy':0, 'Hỏa':2 };  // save cũ vẫn dạng object
     localStorage.setItem('vlcm_save', JSON.stringify(raw));
     loadGame();
-    return { bac: player.silver, hoa: player.noidan,
+    return { bac: player.silver, conLoi: 'noidan' in player,
              conPet: 'pet' in player, conAn: 'phongphu' in player };
   });
-  const mongBac = 1000 + 4*1500 + 1500;      // 4 ấn chưa dùng + 1 ấn đã dùng cho con thú
-  const mongHoa = 2 + Math.ceil(7/2);        // lõi đã cho ăn được trả lại (object cũ gộp về số)
-  console.log('1) hoàn lại khi gỡ hệ:', JSON.stringify(r), '· mong bạc', mongBac, '· mong lõi', mongHoa);
+  // Hệ Lõi Nguyên Tố nay đã gỡ, nên 4 lõi từng cho thú ăn không trả lại bằng lõi nữa mà quy ra
+  // Lumen theo GO_HUYENTHIET (4 × 150 = 600◈). Số lõi người chơi đang CẦM thì không hoàn: lõi
+  // vốn nhặt từ quái chứ không mua bằng tiền — xem migrateBoLoi.
+  const mongBac = 1000 + 4*1500 + 1500 + Math.ceil(7/2)*150;
+  console.log('1) hoàn lại khi gỡ hệ:', JSON.stringify(r), '· mong bạc', mongBac);
   if (r.bac !== mongBac) fail(`bạc ${r.bac}, phải ${mongBac}`);
-  if (r.hoa !== mongHoa) fail(`Lõi Nguyên Tố ${r.hoa}, phải ${mongHoa}`);
+  if (r.conLoi) fail('player.noidan chưa xoá sau khi gỡ hệ Lõi');
   if (r.conPet || r.conAn) fail('ô đếm chưa xoá khỏi player');
 
   const r2 = await p.evaluate(() => {

@@ -422,6 +422,61 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   font-weight:600; letter-spacing:.24em; text-transform:uppercase; color:#a9b8e4; }
 #sect-select .ss-sub { top:44px; color:#8892b8; font-size:12.5px; line-height:1.55; }
 @media (prefers-reduced-motion: reduce){ #title-fx { display:none; } }
+/* ── CHỌN MÁY CHỦ ────────────────────────────────────────────────────────────
+   Nhịp của MU: tên game chiếm hẳn phần trên, cụm máy chủ nằm thành một hàng bên dưới. Chữ
+   dựng bằng gradient kim loại lạnh — đó là thứ làm nên cái logo MU, không phải font nào cả:
+   một dải sáng ở trên, một vệt tối ở giữa thân chữ, rồi sáng lại ở chân. */
+#sv-pick { display:flex; flex-direction:column; align-items:center; gap:0; margin:0 auto 8px; }
+/* Màn chọn máy chủ canh GIỮA, không neo đáy. Neo đáy là luật của sân khấu chọn lớp — ở đó
+   năm nhân vật phải đứng trên phiến đá nên khối chữ buộc phải tụt xuống. Màn này không có
+   sân khấu nào, dồn xuống đáy chỉ làm nó trông như bị rơi. */
+#sect-select.man-server { align-items:center; }
+#sect-select.man-server .ss-inner { padding-bottom:26px; }
+/* gap .34em: hai chữ phải TÁCH ra. Để .14em thì chân chữ E và bụng chữ R chạm nhau và mắt
+   đọc thành một từ "AXIERIFT" — đo trên ảnh dựng thật mới thấy, trong mã thì không. */
+.sv-logo { display:flex; align-items:baseline; gap:.34em; line-height:1;
+  font-family:var(--font-display); font-weight:700; letter-spacing:.02em;
+  margin-bottom:6px; }
+.sv-logo span {
+  background:linear-gradient(180deg,#ffffff 4%,#c8d4f0 26%,#5a6790 50%,#8f9dc4 56%,#f2f6ff 76%,#7d8bb4 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 2px 0 rgba(0,0,0,.6)) drop-shadow(0 0 18px rgba(126,203,255,.35)); }
+.sv-logo-a { font-size:clamp(38px,7vw,66px); }
+.sv-logo-b { font-size:clamp(38px,7vw,66px); letter-spacing:.10em; }
+.sv-nhan { font-size:11.5px; letter-spacing:.28em; text-transform:uppercase;
+  color:#8894b8; margin-bottom:14px; }
+.sv-hang { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+/* Nút máy chủ: khối chữ nhật thấp, viền mảnh — cố ý giống nút xám của MU chứ không phải thẻ
+   bo tròn của phần còn lại trong game. Đây là màn KHÁC, và nó nên thấy khác. */
+.sv-nut { display:flex; flex-direction:column; align-items:flex-start; gap:3px;
+  min-width:194px; padding:11px 14px 9px; cursor:pointer; text-align:left;
+  background:linear-gradient(180deg, rgba(30,34,66,.92), rgba(14,16,38,.94));
+  border:1px solid var(--border); border-radius:var(--r-sm);
+  color:var(--text-body); transition:border-color .15s, transform .12s, box-shadow .15s; }
+.sv-nut:hover { transform:translateY(-2px); border-color:var(--border-strong); }
+.sv-nut.on { border-color:var(--accent-light); box-shadow:0 0 12px rgba(126,203,255,.28); }
+.sv-ten { font-family:var(--font-display); font-size:15px; font-weight:700; color:var(--text-bright); }
+.sv-nut.on .sv-ten { color:var(--accent-light); }
+.sv-mo { font-size:11px; color:var(--text-dim); line-height:1.4; }
+.sv-thanh { display:block; width:100%; height:4px; margin-top:5px; border-radius:999px;
+  background:rgba(10,12,28,.9); overflow:hidden; }
+.sv-thanh i { display:block; height:100%; border-radius:999px; }
+.sv-thap { background:#8fd18f; }
+.sv-vua  { background:#ffd76a; }
+.sv-cao  { background:#ff8a5c; }
+.sv-tt { font-size:10.5px; color:var(--text-dim); letter-spacing:.03em; }
+/* Nói thẳng đây là nghi thức chứ không phải máy chủ thật — người chơi tưởng có người khác
+   trong đó rồi đi tìm mới là thứ đáng trách. */
+/* Nút đổi máy chủ nằm lẫn trong dòng chú thích dưới danh sách nhân vật — nó là lối đi phụ,
+   không đáng chiếm một nút to. */
+.sv-doi { background:none; border:none; padding:0; cursor:pointer;
+  font:inherit; font-size:inherit; color:var(--text-dim);
+  text-decoration:underline; text-underline-offset:2px; }
+.sv-doi:hover { color:var(--accent-light); }
+.sv-doi b { color:var(--text-body); font-weight:600; }
+.sv-ghi { display:block; margin-top:14px; font-size:10.5px; color:#6f7a9c; font-style:normal; }
+@media (max-width:720px){ .sv-nut { min-width:0; flex:1 1 44%; } }
+
 /* Bái Sư Nhập Phái — chọn môn phái trong game ở cấp 10 */
 #sect-ceremony { position:fixed; inset:0; z-index:35; display:flex; align-items:center; justify-content:center;
   background:radial-gradient(ellipse at 50% 30%, rgba(42,47,102,.97) 0%, rgba(14,15,32,.97) 70%); overflow-y:auto; }

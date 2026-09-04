@@ -20,7 +20,7 @@ const { chromium } = require('playwright');
 
   const seed = await page.evaluate(() => {
     startGame('vophai', null);
-    player.level = 60; player.silver = 0; player.noidan = 0;
+    player.level = 60; player.silver = 0;
     player.gems = { tuLa:0, honNguyen:0 };
     player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
     player.baohap = {}; player.mats = { manh:0, tichMa:0 };
@@ -53,7 +53,7 @@ const { chromium } = require('playwright');
     if (pre.v !== 4) return { loi: 'bản seed bị ghi đè, v=' + pre.v };
     if (!loadGame(i)) return { loi: 'loadGame() trả false' };
     return {
-      silver: player.silver, noidan: player.noidan, tuLa: player.gems.tuLa,
+      silver: player.silver, conLoi: 'noidan' in player, tuLa: player.gems.tuLa,
       baohap: player.baohap[shopBaoHapTier()] || 0,
       conMat: 'mat' in player, conTb: 'thanbinh' in player, conAbode: 'abode' in player,
       conPet: !!(player.equip && player.equip.pet),
@@ -68,13 +68,16 @@ const { chromium } = require('playwright');
 
   if (S.loi){ console.log('LỖI:', S.loi); console.log('FAIL'); await browser.close(); process.exit(1); }
 
-  const BAC = 1500 + 22500 + 2850 + 100 + 29800 + 1500 + 6000;   // 64.250◈
+  // Hệ Lõi Nguyên Tố nay cũng gỡ rồi, nên khoản Thần Binh từng trả bằng 20 Lõi chuyển thành
+  // Lumen theo đúng tỉ giá GO_HUYENTHIET (20 × 150 = 3.000◈). Hoàn bằng một thứ đã chết thì
+  // chẳng khác gì không hoàn.
+  const BAC = 1500 + 22500 + 2850 + 100 + 29800 + 1500 + 6000 + 3000;   // 67.250◈
   const ok = [];
   const check = (ten, dat, mong) => { const p = dat === mong; ok.push(p);
     console.log(`${p ? 'OK  ' : 'FAIL'} ${ten}: ${dat}${p ? '' : ` (mong ${mong})`}`); };
 
   check('bạc hoàn lại',        S.silver, BAC);
-  check('Lõi Nguyên Tố',       S.noidan, 20);
+  check('Lõi Nguyên Tố đã xoá', S.conLoi, false);
   check('Tu La Tinh Thạch',    S.tuLa, 1);
   check('Box Kundun',          S.baohap, 2);
   check('player.mat đã xoá',   S.conMat, false);

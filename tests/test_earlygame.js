@@ -150,14 +150,23 @@ const PORT = process.argv[2] || '8853';
   await p2.evaluate(() => { window.TEST_MODE = true; startGame('toanchan', null); player.level = 7; saveGame(); });
   const coSave = await p2.evaluate(() => !!localStorage.getItem('vlcm_save'));
   await p2.reload({ waitUntil:'load' }); await p2.waitForTimeout(1200);
-  const menu = await p2.evaluate(() => ({
-    tiepTuc: !el('btn-continue').classList.contains('hidden'),
-    nutMoi: !!el('btn-newchar') && !el('btn-newchar').classList.contains('hidden') }));
+  // Menu chính nay MỞ RA MÀN CHỌN MÁY CHỦ trước (nhịp mở đầu kiểu MU): danh sách nhân vật và
+  // hai nút Tiếp Tục / Tạo Nhân Vật Mới bị ẩn cho tới khi người chơi chọn xong một cụm. Bài này
+  // đo cái nằm SAU bước đó, nên phải bấm qua màn máy chủ y như người chơi.
+  const menu = await p2.evaluate(() => {
+    window.svChon(SERVERS[0].id);
+    return { tiepTuc: !el('btn-continue').classList.contains('hidden'),
+             nutMoi: !!el('btn-newchar') && !el('btn-newchar').classList.contains('hidden') };
+  });
   // vào game rồi xoá — đúng đường người chơi đi (Cài Đặt → Xoá tiến trình)
   await p2.evaluate(() => { window.TEST_MODE = true; startGame('toanchan', null); player.level = 7; saveGame(); });
   await p2.evaluate(() => { window.wipeSave(true); }).catch(()=>{});
   await p2.waitForLoadState('load'); await p2.waitForTimeout(1200);
-  const sau = await p2.evaluate(() => ({ save: !!localStorage.getItem('vlcm_save'), tiepTuc: !el('btn-continue').classList.contains('hidden') }));
+  const sau = await p2.evaluate(() => {
+    window.svChon(SERVERS[0].id);                        // qua màn máy chủ lần nữa sau khi nạp lại
+    return { save: !!localStorage.getItem('vlcm_save'),
+             tiepTuc: !el('btn-continue').classList.contains('hidden') };
+  });
   console.log('wipe:', JSON.stringify({ coSave, menu, sau }));
   if (!coSave) fail('dựng cảnh sai: saveGame() không ghi save');
   if (!menu.tiepTuc) fail('có save mà menu không mời Tiếp Tục');

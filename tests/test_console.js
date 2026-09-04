@@ -36,8 +36,8 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     }
     const mauTest = { lv:'60', map:'daohoa', go:'1000 1000', realm:'5', th:'amkhi 5', tier:'3',
       seal:'3', speed:'2', bikip:'9', time:'5', item:'4 9', silver:'5000', khi:'5000', mat:'99',
-      dan:'99', manh:'99', tich:'99', an:'99', cothan:'99', nd:'9', jewel:'9', gem:'9', hap:'9',
-      slot:'4 dk_ragefulblow', evo:'dk_ragefulblow 1 power', kill:'100' };
+      dan:'99', manh:'99', tich:'99', an:'99', cothan:'99', jewel:'9', gem:'9', hap:'9',
+      gen:'1 +11', slot:'4 dk_ragefulblow', evo:'dk_ragefulblow 1 power', kill:'100' };
     const out = {};
     for (const t of ten){
       if (t === 'wipe') continue;            // nạp lại trang giữa bài thì mất phiên
@@ -75,18 +75,18 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 
   // 3) lệnh mới phải đổi ĐÚNG trạng thái, không chỉ in chữ
   const r3 = await p.evaluate(() => {
-    player.noidan = 0; player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
+    player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
     player.gems = { tuLa:0, honNguyen:0 }; player.baohap = {}; player.skillEvo = {};
-    cheatExec('/nd 7'); cheatExec('/jewel 5'); cheatExec('/gem 4'); cheatExec('/hap 2');
+    cheatExec('/jewel 5'); cheatExec('/gem 4'); cheatExec('/hap 2');
     cheatExec('/slot 3 dk_ragefulblow');
     cheatExec('/evo dk_ragefulblow 2 spread');
-    return { nd: player.noidan, chau: player.jewels.honDon, ngoc: player.gems.tuLa,
+    return { chau: player.jewels.honDon, ngoc: player.gems.tuLa,
              hap: player.baohap[1], hapCuoi: player.baohap[BAOHAP_TIERS.length - 1],
              o3: player.skillBar[2],
              evo: (player.skillEvo.dk_ragefulblow || [])[1], evoLv: skLv('dk_ragefulblow') };
   });
   console.log('3) lệnh mới đổi trạng thái:', JSON.stringify(r3));
-  if (r3.nd !== 7) fail(`/nd 7 → noidan ${r3.nd}`);
+  // (/nd đã gỡ cùng hệ Lõi Nguyên Tố — xem migrateBoLoi.)
   if (r3.chau !== 5) fail(`/jewel 5 → Hỗn Độn Châu ${r3.chau}`);
   if (r3.ngoc !== 4) fail(`/gem 4 → Tử La ${r3.ngoc}`);
   if (r3.hap !== 2 || r3.hapCuoi !== 2) fail(`/hap 2 không phủ hết tầng: ${r3.hap}..${r3.hapCuoi}`);

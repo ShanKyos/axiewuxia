@@ -335,10 +335,13 @@ const SLOTS = [
   // lần giai 1 — quá phẳng để trang bị làm trục chính trên đường cong 400 cấp. GIAI_POW dưới đây
   // cho giai 14 gấp ~37 lần giai 1, và đó là thứ khiến đập đồ lên +9 có nghĩa (xem MOB_FLAT_DEF).
   { id:'vukhi',     name:'Vũ Khí',     main:'atk', base:(t,r)=>Math.round(26*GIAI_POW(t)*RARITIES[r].mult) },
-  { id:'non',       name:'Nón',        main:'def', base:(t,r)=>Math.round(13*GIAI_POW(t)*RARITIES[r].mult) },
-  { id:'ao',        name:'Áo',         main:'def', base:(t,r)=>Math.round(17*GIAI_POW(t)*RARITIES[r].mult) },
-  { id:'tay',       name:'Tay',        main:'def', base:(t,r)=>Math.round(13*GIAI_POW(t)*RARITIES[r].mult) },
-  { id:'quan',      name:'Quần',       main:'def', base:(t,r)=>Math.round(14*GIAI_POW(t)*RARITIES[r].mult) },
+  // Hệ số Thủ ĐÃ DỒN LẠI sau khi bỏ ô Quần. Bốn ô giáp cũ góp 13+17+13+14 = 57 điểm Thủ; bỏ
+  // Quần đi mà giữ nguyên ba ô kia là cả hệ tụt xuống 43, tức mọi nhân vật mất gần một phần
+  // tư giáp chỉ vì một thay đổi về ART. Nhân ba ô còn lại lên 57/43 để tổng không đổi:
+  // 13→17, 17→23, 13→17. (Ô Chân tính Nhanh Nhẹn chứ không phải Thủ nên không dính vào.)
+  { id:'non',       name:'Nón',        main:'def', base:(t,r)=>Math.round(17*GIAI_POW(t)*RARITIES[r].mult) },
+  { id:'ao',        name:'Áo',         main:'def', base:(t,r)=>Math.round(23*GIAI_POW(t)*RARITIES[r].mult) },
+  { id:'tay',       name:'Tay',        main:'def', base:(t,r)=>Math.round(17*GIAI_POW(t)*RARITIES[r].mult) },
   { id:'chan',      name:'Chân',       main:'agi', base:(t,r)=>Math.round(9*GIAI_POW(t)*RARITIES[r].mult) },
   { id:'daychuyen', name:'Dây Chuyền', main:'atk', base:(t,r)=>Math.round(15*GIAI_POW(t)*RARITIES[r].mult) },
   { id:'nhan1',     name:'Nhẫn 1',     main:'crit',base:(t,r)=>+(1.5+r*1+t*0.5).toFixed(1) },
@@ -346,14 +349,14 @@ const SLOTS = [
   { id:'aochoang',  name:'Áo Choàng',  special:true }, // 2 cấp, chỉ từ Luyện Bảo Các
   { id:'canh',      name:'Cánh',       special:true }, // Thiên Thần / Tiểu Quỷ — ngoài 10 cấp
 ];
-const ARMOR_SLOTS = ['non','ao','tay','quan','chan','nhan1','nhan2']; // có thể Hoàn Hảo
+const ARMOR_SLOTS = ['non','ao','tay','chan','nhan1','nhan2']; // có thể Hoàn Hảo
 // Bảng trang bị kiểu MU/Diablo: NGƯỜI ĐỨNG GIỮA, ô đồ xếp hai bên theo đúng chỗ trên cơ thể.
 // Bản cũ là lưới 3×4 phẳng không có hình nhân vật — nhìn vào chỉ thấy 12 ô vuông, không biết
 // món nào mặc ở đâu, và cũng không thấy được thành quả mặc lên người.
 //   cột TRÁI  = đồ mặc trên người, xếp từ đầu xuống chân rồi tới vũ khí trên tay
 //   cột PHẢI  = trang sức và đồ khoác ngoài
 const EQUIP_DOLL = {
-  left:  ['non','ao','tay','quan','chan','vukhi'],
+  left:  ['non','ao','tay','chan','vukhi'],
   right: ['canh','aochoang','daychuyen','nhan1','nhan2'],
 };
 // Tên trang bị đi theo PHẨM (Phàm→Chí Tôn), leo theo CHẤT LIỆU như đồ MU: da → sắt → thép →
@@ -364,7 +367,6 @@ const ITEM_NAMES = {
   non:['Mũ Da','Mũ Sắt','Mũ Trụ Thép','Mũ Trụ Vảy Rồng','Vương Miện Hắc Nguyệt'],
   ao:['Giáp Da','Giáp Sắt','Giáp Bản Thép','Giáp Vảy Rồng','Thánh Giáp Hắc Nguyệt'],
   tay:['Găng Da','Găng Sắt','Găng Thép','Găng Vảy Rồng','Găng Hắc Nguyệt'],
-  quan:['Quần Da','Giáp Đùi Sắt','Giáp Đùi Thép','Giáp Đùi Vảy Rồng','Giáp Đùi Hắc Nguyệt'],
   chan:['Giày Da','Giày Sắt','Ủng Thép','Ủng Vảy Rồng','Ủng Hắc Nguyệt'],
   daychuyen:['Dây Chuyền Đồng','Dây Chuyền Bạc','Dây Chuyền Ngọc Lam','Dây Chuyền Hồng Ngọc','Dây Chuyền Tinh Vân'],
   nhan1:['Nhẫn Đồng','Nhẫn Bạc','Nhẫn Ngọc Lục','Nhẫn Hắc Kim','Nhẫn Tinh Vân'],
@@ -895,7 +897,7 @@ const MAPS = {
     ], duhiep: null },
   chungnam: { name:'Thornwood Reach', min:20, range:'24 - 38', type:'pk', ground:'#d4d0ac', patch:'#6a7a52',
     spawn:{ x:400, y:1500 }, spawnFrom:{ pb_chungnam:{ x:2200, y:890 } }, trees:80, rocks:34,
-    desc:'Từ đây là đất PK — hạ người khác được, bị hạ cũng được. Chimera rơi Lõi Nguyên Tố bậc đầu.',
+    desc:'Từ đây là đất PK — hạ người khác được, bị hạ cũng được. Chimera ở đây rơi Cốt bậc đầu.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
       { mob:'chimera_bo', x:800, y:1400, n:6, tiep:true }, { mob:'phando', x:1100, y:900, n:6, tiep:true },
@@ -5141,6 +5143,44 @@ function migrateGiai14(){
   (player.kho || []).forEach(doi);
   player.giai14 = true;
 }
+// Ô QUẦN bị gỡ khỏi game — save cũ vẫn còn đồ quần, cả đang mặc lẫn nằm trong túi và kho.
+//
+// Không được lặng lẽ xoá: đó là đồ người chơi đã rèn, đã khảm. Cũng không giữ nguyên slot
+// 'quan' được — SLOTS không còn dòng đó nên món ấy thành thứ không mặc được, không bán được,
+// không rèn được, chỉ chiếm chỗ trong túi mà không ai hiểu tại sao.
+//
+// Nên: ĐỔI THÀNH ĐỒ CHÂN. Cùng nhóm giáp, cùng cách tính chỉ số, và trong bộ art mới thì
+// nhóm 'chân' vốn đã gồm cả ống quần lẫn giày — nên về mặt hình ảnh nó cũng là chỗ đúng.
+// Mức rèn, phẩm, dòng phụ, ngọc Sinh Mệnh đều giữ nguyên; chỉ tên và định nghĩa đổi theo.
+// Đang mặc quần mà ô Chân đã có đồ thì món đổi ra rơi xuống túi.
+// Hệ Lõi Nguyên Tố đã gỡ. Save cũ còn ô đếm lõi và bảng chỉ số đã hấp thụ — chủ dự án chốt
+// "gỡ luôn cho sạch", nên xoá cả hai. Không hoàn lại gì: lõi vốn nhặt được từ quái chứ không
+// mua bằng tiền, và chỉ số cộng vào thì đằng nào cũng vô hình với người chơi.
+function migrateBoLoi(){
+  if (!player || player.boLoi) return;
+  delete player.noidan; delete player.ndBonus; delete player.ndDay; delete player.ndCount;
+  if (player.daily) delete player.daily.noidan;
+  player.boLoi = true;
+}
+function migrateBoQuan(){
+  if (!player || player.boQuan) return;
+  const doi = (it) => {
+    if (!it || it.slot !== 'quan') return null;
+    it.slot = 'chan';
+    it.slotName = (SLOTS.find(s2 => s2.id === 'chan') || {}).name || 'Chân';
+    assignDef(it, player.sect);          // đặt lại tên + định nghĩa theo ô mới
+    return it;
+  };
+  const eq = player.equip || {};
+  if (eq.quan){
+    const it = doi(eq.quan);
+    eq.quan = null;
+    if (it){ if (!eq.chan) eq.chan = it; else (player.inv = player.inv || []).push(it); }
+  }
+  delete eq.quan;
+  for (const ds of [player.inv, player.kho]) (ds || []).forEach(doi);
+  player.boQuan = true;
+}
 // it.reqLv: chỉ save CŨ mới có, do bước chuyển 10→14 giai ghim lại. Không có nó thì món giai 10
 // cũ (đòi cấp 91) sau khi đổi thành giai 14 sẽ đòi cấp 105 — người chơi cấp 91–104 bị cởi mất
 // đúng bộ đồ đang mặc. Đồ mới thì suy thẳng từ giai như bình thường.
@@ -5194,7 +5234,11 @@ function specialItem(slot, def, extra){
   }
   return Object.assign({
     uid: itemSeq++, slot, slotName: (SLOTS.find(s=>s.id===slot) || {}).name || slot,
-    name: def.name, rarity: 4, level: 1, tier: 0, special: true, noForge: true,
+    name: def.name, rarity: 4, level: 1, tier: 0, special: true,
+    // CÁNH rèn được như trang bị thường (Chúc Phúc → +6, Linh Hồn → +9). Áo choàng và pet thì
+    // không: chúng lên cấp bằng đường riêng (CLOAK_TIERS / hệ Linh Thú), cho rèn nữa là hai
+    // thang tiến hoá chồng lên nhau trên cùng một món.
+    noForge: slot !== 'canh',
     main: null, element: 'Kim', subs, plus: 0, awakened: AWAKENED[0],
   }, extra || {});
 }
@@ -5744,13 +5788,6 @@ function calcDerived(){
     const tr = TRAITS.find(t => t.id === tid);
     if (tr && tr.late) tr.late(player);
   }
-  // Hấp thụ Lõi Nguyên Tố — chỉ số vĩnh viễn cộng thẳng
-  const ndB = player.ndBonus || {};
-  if (ndB.atk) player.atk += ndB.atk;
-  if (ndB.hp) player.maxHp += ndB.hp;
-  if (ndB.qi) player.maxQi += ndB.qi;
-  if (ndB.def) player.defRed = Math.min(0.78, player.defRed + ndB.def*0.002);
-  if (ndB.crit) player.crit = Math.min(0.65, player.crit + ndB.crit/100);
   // Tẩy Tủy (Reset kiểu MU): mỗi lần tẩy tủy cộng vĩnh viễn +2% Công/Mạng,
   // không bao giờ mất kể cả tẩy tủy tiếp — chỉ cấp độ/EXP bị đưa về 1, xem window.doTayTuy()
   if (player.resetCount){
@@ -5850,11 +5887,8 @@ function newPlayer(sectKey){
     khoNgoc: { hap:{} },                     // Ngăn Ngọc: ngọc/hộp đang CẤT — cất thì không tiêu được
     autoNgoc: false,                         // tự động gửi ngọc vào kho ngay khi nhặt
     shopStock: {},                           // kho hàng bày của từng tiệm — xem shopStock()
-    noidan: 0,                               // Lõi Nguyên Tố — MỘT ô đếm, chọn chỉ số lúc hấp thụ
-    ndBonus: { atk:0, hp:0, def:0, qi:0, crit:0 }, // chỉ số vĩnh viễn từ hấp thụ Lõi Nguyên Tố
-    ndDay: '', ndCount: 0,                   // giới hạn hấp thụ 3 lõi/ngày
     maDao: false,                            // Sa Đọa — Tội Ác cao hắc hóa thành Ma Tu
-    daily: { day:'', kills:0, noidan:0, dungeon:0, forge:0, claimed:false }, // Mục Tiêu Hôm Nay
+    daily: { day:'', kills:0, dungeon:0, forge:0, claimed:false }, // Mục Tiêu Hôm Nay
     sectOffered: false,                      // đã mời bái sư ở cấp 10 chưa (chỉ dành cho Tán Nhân)
     traits: [], personality: 'trung',          // The Hatching: 3 trait + tính cách
     dhHate: {}, revengeKills: 0,                 // A3: thù hận Du Hiệp (nemesis-lite)
@@ -6106,15 +6140,6 @@ function loadGame(idx){
     if (player.potionCd == null) player.potionCd = 0;
     if (player.buffAtkT == null) player.buffAtkT = 0;
     if (player.loidonT == null) player.loidonT = 0;
-    // ═══ GỘP TIỀN TỆ — bậc 3: năm Lõi Nguyên Tố về một ════════════════════════════════
-    // Save cũ giữ object { Kim:.., Mộc:.. }; cộng cả năm hệ lại thành một số. Tỉ lệ 1:1, không
-    // ai mất viên nào — năm hệ vốn đã tiêu chung một chỗ.
-    if (player.noidan && typeof player.noidan === 'object'){
-      let _n = 0; for (const e in player.noidan) _n += player.noidan[e] || 0;
-      player.noidan = _n;
-    }
-    if (typeof player.noidan !== 'number') player.noidan = 0;
-
     // ═══ VỀ MÔ HÌNH MU — hoàn lại sáu hệ đã gỡ + Huyền Thiết ══════════════════════════
     // Sáu trục nâng cấp chạy song song với trang bị (Thần Binh · Đài Hội Lực + Vườn ·
     // Tấn Phẩm · Linh Thú · Khắc Ấn · Cổ Thần) và loại nguyên liệu nuôi chúng (Huyền Thiết)
@@ -6135,11 +6160,13 @@ function loadGame(idx){
       delete player.mat;
       // Thần Binh — phí nâng tầng t→t+1 cũ là { noidan: t*2, mat: t*15 }. Tầng khởi điểm là 1,
       // nên ai đang ở tầng T đã trả cho t = 1..T-1: Σ2t = T(T-1) Lõi, Σ15t = 15·T(T-1)/2 Huyền Thiết.
+      // Hệ Lõi Nguyên Tố nay cũng gỡ rồi, nên phần Lõi quy thẳng ra Lumen — hoàn bằng một thứ
+      // đã chết thì chẳng khác gì không hoàn.
       const _tbT = (player.thanbinh && player.thanbinh.tier) || 0;
       if (_tbT > 1){
         const _n = _tbT * (_tbT - 1);
-        player.noidan += _n;
-        _hoan.push(`Thần Binh tầng ${_tbT} +${_n} Lõi Nguyên Tố`);
+        _hoan.push(`Thần Binh tầng ${_tbT} (${_n} Lõi cũ → Lumen)`);
+        _bac(_n * GO_HUYENTHIET, 'Thần Binh · Lõi');
         _bac(15 * _tbT * (_tbT - 1) / 2 * GO_HUYENTHIET, 'Thần Binh');
       }
       delete player.thanbinh;
@@ -6208,7 +6235,6 @@ function loadGame(idx){
         }, 1400);
       }
     }
-    if (!player.ndBonus) player.ndBonus = { atk:0, hp:0, def:0, qi:0, crit:0 };
     if (!player.shopStock || typeof player.shopStock !== 'object') player.shopStock = {};
     if (!Array.isArray(player.kho)) player.kho = [];
     if (player.shard == null) player.shard = 0;        // Shard backfill
@@ -6216,7 +6242,6 @@ function loadGame(idx){
     if (player.khoPlus == null) player.khoPlus = 0;
     if (!player.khoNgoc || typeof player.khoNgoc !== 'object') player.khoNgoc = { hap:{} };
     if (player.autoNgoc == null) player.autoNgoc = false;
-    if (player.ndDay == null){ player.ndDay = ''; player.ndCount = 0; }
     // ═══ GỘP TIỀN TỆ — bậc 4: Tâm Đắc nhập vào Instinct ═══════════════════════════════
     // Tỉ giá lấy từ chính chỗ tiêu: nâng trọn một chiêu 1→120 trước đây tốn 21💠, nay tốn thêm
     // ~84.800 Instinct so với đường cong nền — chia ra tròn 4.000 Instinct một viên Tâm Đắc.
@@ -6228,12 +6253,12 @@ function loadGame(idx){
     if (player.phongphu > 0){ player.silver += player.phongphu * GO_ANTHUANTHU; }
     if (player.pet){
       const _fed = Math.ceil((player.pet.feed || 0) / 2);
-      if (_fed > 0) player.noidan = (player.noidan || 0) + _fed;
+      if (_fed > 0) player.silver += _fed * GO_HUYENTHIET;   // Lõi đã gỡ — hoàn bằng Lumen
       player.silver += GO_ANTHUANTHU;   // hoàn luôn cái ấn đã dùng để thu phục nó
     }
     delete player.phongphu; delete player.pet;
     if (player.maDao == null) player.maDao = false;
-    if (!player.daily) player.daily = { day:'', kills:0, noidan:0, dungeon:0, forge:0, claimed:false };
+    if (!player.daily) player.daily = { day:'', kills:0, dungeon:0, forge:0, claimed:false };
     // Track HT + vòng lặp ngày backfill
     if (!player.jewels) player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
     // ═══ GỘP TIỀN TỆ — bậc 1: xoá Công Huân Lệnh ═════════════════════════════════════
@@ -6272,9 +6297,11 @@ function loadGame(idx){
     if (!player.lvPeak) player.lvPeak = player.resetCount > 0 ? MAX_LV : player.level;
     if (player.ene == null) player.ene = 5; // Linh Lực (stat mới) backfill (save cũ chưa có) — mức khởi điểm giống str/agi/def/vit
     migrateGiai14();                                      // 10 giai → 14 giai, xem hàm để biết vì sao
+    migrateBoQuan();                                      // ô Quần bị gỡ — đồ quần cũ thành đồ chân
+    migrateBoLoi();                                       // hệ Lõi Nguyên Tố bị gỡ
     if (d.curMap && MAPS[d.curMap]) curMap = d.curMap;
     // Migrate trang bị cũ (10 ô) sang hệ 12 ô GDD
-    const SLOT_MIGRATE = { weapon:'vukhi', helm:'non', armor:'ao', bracer:'tay', belt:'quan',
+    const SLOT_MIGRATE = { weapon:'vukhi', helm:'non', armor:'ao', bracer:'tay', belt:null,
                            boots:'chan', neck:'daychuyen', ring:'nhan1', jade:'nhan2', amkhi:null };
     const migrateItem = (it) => {
       if (!it) return null;
@@ -7554,7 +7581,7 @@ function computeKillRewards(m, source, P, rng){
   const rw = {
     xp:0, xpMul:1, silver:0, khi:0, kills:1,
     gems:{ tuLa:0, honNguyen:0 }, tienDan:0, bikipVH:0,
-    noidan:null, mats:{ manh:0, tichMa:0 },
+    mats:{ manh:0, tichMa:0 },
     wings:[], items:[], autoSold:[],
     bossPity:null, firstDrop:false, chinhPhat:false, dropSrc:null, gotThan:false,
   };
@@ -7591,7 +7618,6 @@ function computeKillRewards(m, source, P, rng){
   if (_bkR && R() < _bkR) rw.bikipVH = 1;
   // Lõi Nguyên Tố — tinh anh 30%, boss 100%. Trước đây còn đòi d.el vì Lõi phải khoá theo hệ
   // của con quái; nay Lõi chỉ có một loại nên bỏ điều kiện đó (mọi def boss/tinh anh đều có el).
-  if (d.boss || (d.elite && R() < 0.3)) rw.noidan = 1;
   // ── Bảng rơi đồ theo nguồn ──
   rw.dropSrc = d.huntBoss ? null : d.bossKind === 'tranai' ? 'tranai'
     : (d.boss || d.bossKind) ? 'thuve' : (d.elite ? 'elite' : 'mob');
@@ -7645,11 +7671,6 @@ function applyRewards(rw, m){
   if (rw.gems.honNguyen){ player.gems.honNguyen += rw.gems.honNguyen; logCombat('+1 ❖ Hỗn Nguyên Thạch', '#b08ae8'); }
   if (rw.tienDan){ player.tienDan += rw.tienDan; logCombat(`+${rw.tienDan} ◈ Đá Thăng Cấp`, '#7ec850'); }
   if (rw.bikipVH){ player.bikipVH = (player.bikipVH || 0) + rw.bikipVH; addFloat(m.x, m.y-100, '+1 📜 Sách Kỹ Năng', '#ffb15c', 13); }
-  if (rw.noidan){
-    player.noidan = (player.noidan || 0) + rw.noidan;
-    addFloat(m.x, m.y-88, `+${rw.noidan} ● Lõi Nguyên Tố`, '#b08ae8', 12);
-    dailyTrack('noidan');
-  }
   if (rw.firstDrop) player._daRoiMonDau = true;
   for (const s of rw.autoSold){ player.silver += s.gia; addFloat(m.x, m.y-54, `Tự bán ${s.it.name} +${s.gia}◈`, '#9aa8d4', 11); }
   for (const it of rw.items){
@@ -10580,7 +10601,7 @@ function hMetal(tier){ return HERO_METAL[clamp(((tier|0) || 1) - 1, 0, HERO_META
 //   D. HÀO QUANG  — giữ, nhưng chỉ là nét hoàn thiện ở bậc cao
 //
 // Cả 4 lớp vẽ GENERIC trong drawHeroFigure, không đụng một dòng nào trong 6 entry HERO_GEAR.
-const HERO_ARMOR_SLOTS = ['non','ao','tay','quan','chan'];
+const HERO_ARMOR_SLOTS = ['non','ao','tay','chan'];
 // Chữ ký ngoại hình rút từ trang bị THẬT. Trả null khi chưa có nhân vật (màn chọn lớp gọi
 // heroCardUrl trước khi `player` tồn tại — đọc player.equip ở đó là crash trắng màn hình).
 function gearVisual(p){
@@ -13107,14 +13128,23 @@ function nvTen(sectKey, tier){ return NV_BO[sectKey + '|' + tier]; }
 function nvBoTen(sectKey, tier, gv){ return nvBoGiap(sectKey, gv) || nvTen(sectKey, tier); }
 function nvBo(sectKey, tier, gv){ return nvTai(nvBoTen(sectKey, tier, gv), 'webp'); }
 function nvVuKhi(sectKey, tier, gv){
+  // KHÔNG có vũ khí trên tay thì không vẽ gì. Bản trước trả bảng khung vô điều kiện, nên nhân
+  // vật vừa tạo — chưa cầm gì cả — vẫn hiện một cây trượng: đó là vũ khí MẶC ĐỊNH của bản mẫu
+  // Spine, nướng kèm trong <bộ>_vk.png, chứ không phải món nào trong game.
+  if (!gv || !gv.wDef) return null;
   const t = nvBoTen(sectKey, tier, gv);
   if (!t) return null;
+  // Chỉ BỘ GIÁP mới có art vũ khí (khai trong NV_VK_SO). Thân trần thì không: người mặc mỗi
+  // cái khố mà cầm cây trượng thần khí là hình ảnh sai, và tệp _vk của thân trần đã xoá rồi —
+  // không chặn ở đây thì mỗi khung hình lại xin một tệp không tồn tại, 404 dài dài trong log.
   const n = NV_VK_SO[t];
-  if (!n) return nvTai(t + '_vk', 'png');            // bộ chỉ có một cây
+  if (!n) return null;
   const i = clamp(Math.round((gv && gv.wTier) || 1), 1, n);
   return nvTai(t + '_vk' + i, 'png');
 }
-for (const k in NV_BO){ nvTai(NV_BO[k], 'webp'); nvTai(NV_BO[k] + '_vk', 'png'); nvTai(NV_BO[k] + '_dung', 'png'); }
+// Thân trần KHÔNG có tệp vũ khí: vũ khí mặc định của bản mẫu Spine không ăn nhập với art vũ
+// khí của game, và nhân vật mới thì chưa cầm gì cả. Vũ khí chỉ đi kèm BỘ GIÁP (xem NV_VK_SO).
+for (const k in NV_BO){ nvTai(NV_BO[k], 'webp'); nvTai(NV_BO[k] + '_dung', 'png'); }
 for (const k in NV_GIAP){
   const t = NV_GIAP[k];
   nvTai(t + '_icon', 'webp'); nvTai(t, 'webp'); nvTai(t + '_dung', 'png');
@@ -13229,7 +13259,7 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw){
   // `act` phải nằm trong khoá cho CẢ đánh lẫn tung chiêu: heroFramePose() đọc act ở cả hai nhánh
   // (mỗi lớp một bộ khung tay/vũ khí riêng), nên bỏ nó ra khỏi khoá ở nhánh 'c' là hai tuyệt kỹ
   // khác nhau dùng chung một ảnh.
-  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${back ? 1 : 0}|${sw}|${nvBoTen(sectKey, tier, gv) || ''}|${window.TEST_TO_PHANG ? 'D' : ''}`;
+  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${back ? 1 : 0}|${sw}|${nvBoTen(sectKey, tier, gv) || ''}${nvBo(sectKey, tier, gv) ? '' : '?'}|${window.TEST_TO_PHANG ? 'D' : ''}`;
   let cv = _hsCache.get(key);
   if (cv){                       // chạm — đẩy lên cuối để LRU giữ lại
     _hsHit++;
@@ -13395,7 +13425,12 @@ function heroCardUrl(sectKey, tier, gv){
   // Bảng khung nướng sẵn cũng phải nằm trong chữ ký: nếu chưa tải xong thì thẻ đầu tiên nướng
   // bằng hình dựng đường rồi nằm lì trong bộ nhớ đệm — cùng cái bẫy đã gặp hai lần ở cánh.
   const _nvIm = nvBo(sectKey, tier || 1, gv);
-  const key = sectKey + ':' + (tier || 1) + ':' + sig + ':' + (nvBoTen(sectKey, tier || 1, gv) || '');
+  // Khoá phải mang CẢ tên bộ LẪN "art đã tải xong chưa". Bản trước chỉ có tên bộ: bảng khung
+  // nặng ~480 KB nên lượt dựng đầu tiên thường chạy lúc ảnh chưa về, rơi về hình vẽ vector —
+  // rồi cất vào đệm DƯỚI ĐÚNG CÁI TÊN CỦA ART. Ảnh về sau đó cũng không đổi được khoá, nên
+  // thẻ nhân vật giữ mãi bản vector. Dấu '?' tách hai trạng thái ra làm hai khoá khác nhau.
+  const key = sectKey + ':' + (tier || 1) + ':' + sig + ':'
+            + (nvBoTen(sectKey, tier || 1, gv) || '') + (_nvIm ? '' : '?');
   { const u = lruLay(_heroCardCache, key); if (u) return u; }
   // Khung rộng thêm hai bên để CHỨA ĐƯỢC SẢI CÁNH. Mút cánh bậc 3 nằm ở x = 80 + 14 + 102·1,12
   // ≈ 208, cộng quầng loe nữa là tràn khỏi khung 160 px chừng 90 px — vẽ trong khung cũ thì
@@ -15349,7 +15384,12 @@ const NGOC_EP = {
               mo:'100% lên +1, an toàn tuyệt đối — dùng được tới +6.' },
   linhHon:  { ten:'Linh Hồn Châu',  glyph:'◉', mau:'#b08ae8', tran:9, rate:50,
               mo:'50% lên +1, hỏng thì TỤT 1 CẤP — dùng được tới +9.' },
+  // Sinh Mệnh không đụng tới mức rèn — nó nâng DÒNG SINH LỰC, một thang riêng 7 bậc. Vì thế
+  // mới có trường `loai`: hai viên trên ăn vào `it.plus`, viên này ăn vào `it.life`.
+  sinhMenh: { ten:'Sinh Mệnh Châu', glyph:'❤', mau:'#e84a6a', loai:'life', tran:7, rate:50,
+              mo:'50% lên 1 bậc (+4% Sinh Lực), hỏng thì VỀ 0 — 7 bậc, tổng +28%.' },
 };
+const NGOC_LIFE_PCT = 4;        // mỗi bậc Sinh Mệnh cộng bấy nhiêu % Sinh Lực tối đa
 
 const CHAOS_RECIPES = [
   // ── Nhóm RÈN ────────────────────────────────────────────────────────────
@@ -15457,7 +15497,10 @@ const CHAOS_RECIPES = [
     },
     plan(v, m){ return {
       title: `${m.it.name} — Sinh Mệnh bậc ${(m.it.life||0)} → ${(m.it.life||0)+1} (+${((m.it.life||0)+1)*4}% Sinh Lực)`,
-      rate: Math.max(25, 75 - (m.it.life || 0) * 8),
+      // 50% PHẲNG mọi bậc, dùng chung con số với đường ép thẳng trong túi (NGOC_EP.sinhMenh).
+      // Bản cũ giảm dần 75→27 theo bậc; hai đường mà hai tỉ lệ thì người chơi không hiểu nổi
+      // vì sao cùng một viên ngọc, cùng một món đồ, mà lò lại ăn chắc hơn túi.
+      rate: NGOC_EP.sinhMenh.rate,
       cost: [ jewelCost('sinhMenh', v, 1) ],
       warn: 'Thất bại: dòng Sinh Mệnh VỀ 0 — mất hết bậc đã khảm.', charm:false }; },
     run(v, m, p){
@@ -17274,6 +17317,68 @@ function startGame(sectKey, quze){
   saveGame();
 }
 // Màn chờ: danh sách năm ô nhân vật. Chọn một ô rồi Vào Game, hoặc bấm ô trống để tạo mới.
+// ═══════════ CHỌN MÁY CHỦ ═══════════
+// Nhịp mở đầu của MU: tên game dựng to, dưới là cụm máy chủ, chọn xong mới tới nhân vật.
+//
+// NÓI THẲNG: game này chạy hoàn toàn trên máy người chơi, save nằm ở localStorage. Máy chủ ở
+// đây là NGHI THỨC, không phải hạ tầng — không có kết nối nào, không có người chơi khác. Vì
+// thế tên cụm lấy từ chính thế giới trong game chứ không bịa ra "PK tự do" hay "Tân thủ":
+// hứa hẹn một thứ không tồn tại thì tệ hơn là không hứa gì.
+//
+// (Tên riêng của MU — Lorencia, Devias… — bị Quy tắc số 2 cấm, xem CLAUDE.md.)
+const SERVERS = [
+  { id:'lunacia', ten:'Lunacia',  mo:'Vùng trời nứt — nơi ngươi rơi xuống' },
+  { id:'vaeldra', ten:'Vaeldra',  mo:'Cao nguyên của những kẻ còn nhớ' },
+  { id:'lunaris', ten:'Lunaris',  mo:'Thành phố dưới chân vách đá' },
+];
+// Tải giả lập: suy từ id chứ không random, để mỗi lần mở game con số không nhảy lung tung —
+// một cụm máy chủ đang đông thì phải đông ổn định, nếu không thì nó lộ ra là số bịa.
+function svTai(id){
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return 0.28 + (h % 55) / 100;                      // 28% … 82%
+}
+function svDangChon(){ return SETTINGS.server || SERVERS[0].id; }
+window.svChon = function(id){
+  if (!SERVERS.some(s2 => s2.id === id)) return;
+  SETTINGS.server = id; saveSettings();
+  AudioSys.sfx('ui', 0.6);
+  svAn();
+};
+// Ẩn màn chọn máy chủ, hiện danh sách nhân vật.
+function svAn(){
+  { const e = el('sv-pick'); if (e) e.classList.add('hidden'); }
+  { const _ss = el('sect-select'); if (_ss) _ss.classList.remove('man-server'); }
+  for (const _id of ['cc-slots', 'cc-slots-note']){ const _e = el(_id); if (_e) _e.style.display = ''; }
+  for (const _id of ['btn-continue', 'btn-newchar']){ const _e = el(_id); if (_e) _e.classList.remove('hidden'); }
+  ccSlotsRender();
+}
+window.svHien = function(){
+  for (const _id of ['cc-slots', 'cc-slots-note']){ const _e = el(_id); if (_e) _e.style.display = 'none'; }
+  { const _sv = el('sv-pick'); if (_sv) _sv.classList.add('hidden'); }
+  { const _ss = el('sect-select'); if (_ss) _ss.classList.remove('man-server'); }
+  for (const _id of ['btn-continue', 'btn-newchar']){ const _e = el(_id); if (_e) _e.classList.add('hidden'); }
+  svRender();
+  { const e = el('sv-pick'); if (e) e.classList.remove('hidden'); }
+  { const _ss = el('sect-select'); if (_ss) _ss.classList.add('man-server'); }
+};
+function svRender(){
+  const box = el('sv-pick'); if (!box) return;
+  const dang = svDangChon();
+  box.innerHTML = `
+    <div class="sv-logo"><span class="sv-logo-a">AXIE</span><span class="sv-logo-b">RIFT</span></div>
+    <div class="sv-nhan">Chọn máy chủ</div>
+    <div class="sv-hang">` + SERVERS.map(sv => {
+      const t = svTai(sv.id), pct = Math.round(t * 100);
+      const mau = t < 0.5 ? 'thap' : t < 0.75 ? 'vua' : 'cao';
+      return `<button class="sv-nut${sv.id === dang ? ' on' : ''}" type="button" onclick="window.svChon('${sv.id}')">
+        <b class="sv-ten">${sv.ten}</b>
+        <span class="sv-mo">${sv.mo}</span>
+        <span class="sv-thanh"><i class="sv-${mau}" style="width:${pct}%"></i></span>
+        <span class="sv-tt">Tiếp nhận · ${pct}%</span></button>`;
+    }).join('') + `</div>
+    <i class="sv-ghi">Máy chủ ở đây chỉ là nghi thức — game chạy trên máy của bạn, nhân vật lưu tại chỗ.</i>`;
+}
 function showMainMenu(){
   // Ô này đổi tên thành #cc-classes khi dựng màn tạo nhân vật. Bỏ sót ở đây là NGƯỜI CHƠI CŨ
   // (có save ⇒ đi thẳng vào showMainMenu) đâm vào null ngay lúc mở game.
@@ -17285,8 +17390,7 @@ function showMainMenu(){
   { const _sp = el('cc-splash'); if (_sp){ _sp.classList.remove('on'); _sp.classList.add('hidden'); } }
   const sub = document.querySelector('#sect-select .ss-sub');
   if (sub) sub.textContent = 'Chào mừng trở lại Lunacia — hành trình vẫn đang chờ.';
-  { const _sl = el('cc-slots'); if (_sl) _sl.style.display = ''; }
-  ccSlotsRender();
+  window.svHien();                                   // chọn máy chủ trước, rồi mới tới nhân vật
   el('sect-select').classList.remove('hidden'); titleStart();
   AudioSys.playBgm(BGM_INTRO); // nhạc Ái Đích Phế Khư vang lên ngay màn hình chính
 }
@@ -17498,7 +17602,7 @@ function cheatHelp(){
     `/dt [n=200] — mở bảng ${MASTERY_NAME} và cấp n điểm (bảng chứa ${MASTERY_MAX_NODE} điểm/nút)`,
     '── tài nguyên ──',
     '/silver /shard /khi /dan /bikip <n> — Lumen · Shard · Bản Năng · Tiên Đan · Sách (+n để cộng)',
-    '/nd <n> — Lõi Nguyên Tố · /jewel <n> — cả bốn Tứ Châu · /gem <n> — Tử La + Hỗn Nguyên',
+    '/jewel <n> — cả bốn Tứ Châu · /gem <n> — Tử La + Hỗn Nguyên',
     '/manh /tich <n> — mảnh ghép chế tác · /hap <n> — Box Kundun mọi tầng',
     '/item [phẩm 0-4] [giai 1-10] — tạo trang bị vào túi',
     `/gen <giai 1-${GIAI_MAX}> [+rèn 0-11] [phẩm 0-${RARITIES.length-1}] [cánh 0-3] — MẶC THẲNG cả bộ, ví dụ: /gen 1 +11`,
@@ -17583,11 +17687,11 @@ window.cheatExec = function(raw){
         // ném ReferenceError. Đồng hồ thế giới nay chỉ còn ngày/mùa.
         cheatLog(`Đồng Hồ Thế Giới → ${gti.season.name} ${gti.day}/${gti.month} Năm ${gti.year}`, gti.season.color); break;
       }
-      case 'nd': case 'jewel': case 'gem': case 'hap': {
-        // Bốn hệ tiền tệ ra đời sau bản console cũ nên trước đây không test được bằng lệnh nào.
+      case 'jewel': case 'gem': case 'hap': {
+        // Ba hệ tiền tệ ra đời sau bản console cũ nên trước đây không test được bằng lệnh nào.
+        // (Lệnh /nd của Lõi Nguyên Tố đã bỏ cùng hệ đó.)
         const v2 = Math.max(0, Math.round(num(1, 20)));
-        if (cmd === 'nd'){ player.noidan = v2; player.ndDay = ''; player.ndCount = 0; cheatLog('Lõi Nguyên Tố → ' + v2 + ' (mở lại 3 lượt hấp thụ hôm nay)', '#b08ae8'); }
-        else if (cmd === 'jewel'){ for (const k in JEWEL_NAMES) player.jewels[k] = v2; cheatLog('Tứ Châu → ' + v2 + ' mỗi loại', '#7ecbff'); }
+        if (cmd === 'jewel'){ for (const k in JEWEL_NAMES) player.jewels[k] = v2; cheatLog('Tứ Châu → ' + v2 + ' mỗi loại', '#7ecbff'); }
         else if (cmd === 'gem'){ player.gems.tuLa = v2; player.gems.honNguyen = v2; cheatLog(`Tử La ${v2} · Hỗn Nguyên ${v2}`, '#e8552a'); }
         else { for (let t = 1; t < BAOHAP_TIERS.length; t++) player.baohap[t] = v2; cheatLog(`Box Kundun → ${v2} mỗi tầng (I-${BAOHAP_TIERS.length - 1})`, '#ffd76a'); }
         break;
@@ -18161,10 +18265,14 @@ function closePanels(){
 window.closePanels = closePanels;
 
 // ---------- Icon trang bị / vật liệu ----------
+// Chỉ còn ÁO CHOÀNG và PET. Trang bị thường xưa cũng có tệp PNG riêng ở đây, nhưng từ khi
+// mọi món đều đi qua assignDef() thì chúng luôn có `def` và luôn dựng icon bằng bộ phận —
+// tám tệp kia (nón, áo, tay, chân, quần, dây chuyền, nhẫn, vũ khí — 724 KB) chỉ còn phục vụ
+// save từ thời chưa có def, tức là không ai còn. Áo choàng và pet thì khác: chúng là
+// `specialItem`, KHÔNG có def, nên vẫn phải có tệp thật.
+// Cánh cũng không có def nhưng không nằm đây — icon sinh bằng canhIconUrl().
 const SLOT_ICONS = {
-  vukhi:'vukhi', non:'non', ao:'ao', tay:'tay', quan:'quan', chan:'chan',
-  daychuyen:'daychuyen', nhan1:'nhan', nhan2:'nhan',
-  aochoang:'aochoang',                 // cánh KHÔNG ở đây: icon sinh bằng canhIconUrl()
+  aochoang:'aochoang', pet:'pet',
 };
 // ═══════════════ HÌNH VẬT PHẨM — vẽ bằng code, không dùng file PNG ═══════════════
 // 11 file PNG đang phải gánh TOÀN BỘ trang bị: mọi thanh kiếm trong game dùng chung vukhi.png,
@@ -19557,8 +19665,6 @@ const CONSUM_DB = {
                have:()=>player.gems.tuLa, info:()=>`Đang có ${player.gems.tuLa||0}` },
   honnguyen: { art:'stone',    col:'#b08ae8', name:'Hỗn Nguyên Thạch', use:'Rèn +10/+11 · luyện Áo Choàng',
                have:()=>player.gems.honNguyen, info:()=>`Đang có ${player.gems.honNguyen||0}` },
-  noidan:    { art:'orb',      col:'#b08ae8', name:'Lõi Nguyên Tố',   use:'Hấp thụ lấy chỉ số vĩnh viễn',
-               have:()=>player.noidan, info:()=>`Đang có ${player.noidan||0} · hôm nay còn ${Math.max(0,3-ndToday())}/3 lượt hấp thụ` },
 };
 const _consumCache = new Map();
 // Icon vẽ một lần rồi nhớ theo (hình|màu): mọi ô cùng loại dùng lại đúng một dataURL.
@@ -19778,7 +19884,6 @@ const ARMOR_PIECES = [
   { slot:'non',  art:'helm',   pre:'Mũ Trụ' },
   { slot:'ao',   art:'armor',  pre:'Giáp' },
   { slot:'tay',  art:'gloves', pre:'Găng' },
-  { slot:'quan', art:'pants',  pre:'Giáp Đùi' },
   { slot:'chan', art:'boots',  pre:'Ủng' },
 ];
 for (const sect in HERO_SETS){
@@ -20204,7 +20309,8 @@ function slotIcon(it, cls){
     const bd = it.tier ? `<i class="ic-giai">${GIAI_LA_MA[clamp(it.tier-1,0,13)]}</i>` : '';
     return `<span class="item-ic${rc}"><img class="${cls||'slot-icon'}" src="${itemArtUrl(_d, it.tier || 1, it.rarity || 0, it.plus || 0)}" alt="">${bd}</span>`;
   }
-  const f = SLOT_ICONS[it.slot] || 'vukhi';
+  const f = SLOT_ICONS[it.slot];
+  if (!f) return `<span class="item-ic"></span>`;   // không có tệp thì thôi, đừng xin một ảnh 404
   // Drop v2.0: viền màu theo phẩm, xoay màu theo giai, huy hiệu số giai góc trái
   const hue = it.tier ? (it.tier-1)*22 : 0;
   const rcls = (it.rarity != null && !it.special) ? ' ic-r' + it.rarity : '';
@@ -20355,7 +20461,7 @@ function bagCap(){ return BAG_COLS * bagRows(); }
 // vũ khí dài theo chiều dọc, cánh là món to nhất trong túi.
 const BAG_SIZES = {
   nhan1:[1,1], nhan2:[1,1], daychuyen:[1,2],
-  non:[2,2], ao:[2,2], tay:[2,2], quan:[2,2], chan:[2,2],
+  non:[2,2], ao:[2,2], tay:[2,2], chan:[2,2],
   aochoang:[2,3], canh:[3,2],          // cánh 3×2 = 6 ô, RỘNG chứ không dọc
   // Đôi cánh bậc 3 đo được 376×210 ở cỡ gốc — rộng gần gấp đôi chiều cao. Bản trước để
   // [2,5] tức hai cột dọc cao nghêu, nhét hình 1,8:1 vào đó thì nó teo còn một dúm ở giữa.
@@ -20659,7 +20765,7 @@ function bagSecGear(){
 
   // ── Giá ngọc: cầm một viên rồi bấm thẳng vào món đồ. Đây là thao tác của MU ──
   h += `<div class="ngoc-bar${cam ? ' dang-cam' : ''}">`;
-  for (const k of ['chucPhuc','linhHon']){
+  for (const k of ['chucPhuc','linhHon','sinhMenh']){
     const d = NGOC_EP[k], co = (player.jewels && player.jewels[k]) || 0;
     h += `<button class="ngoc-nut${cam === k ? ' on' : ''}" style="--nc:${d.mau}" ${co ? '' : 'disabled'}
         draggable="${co ? 'true' : 'false'}" ondragstart="window.ngocKeoBatDau(event,'${k}')" ondragend="window.ngocKeoXong()"
@@ -20762,7 +20868,14 @@ function ngocEpDuoc(it, k){
   if (!d) return 'Viên này không ép thẳng vào đồ được.';
   if (!it) return 'Chưa chọn món nào.';
   if (it.noForge) return `${it.name} không rèn được.`;
-  if ((it.plus || 0) >= d.tran)
+  if (d.loai === 'life'){
+    // Sinh Mệnh chỉ khảm được vào GIÁP TRỤ — nó cộng Sinh Lực, mà Sinh Lực là chuyện của giáp.
+    if (!ARMOR_SLOTS.includes(it.slot))
+      return `${d.ten} chỉ khảm được vào giáp trụ.`;
+    if ((it.life || 0) >= d.tran)
+      return `${it.name} đã đủ ${d.tran} bậc Sinh Mệnh (+${d.tran * NGOC_LIFE_PCT}% Sinh Lực).`;
+  }
+  else if ((it.plus || 0) >= d.tran)
     return `${it.name} đã +${it.plus} — ${d.ten} chỉ tới +${d.tran}.`;
   if (((player.jewels && player.jewels[k]) || 0) <= 0){
     const cat = (player.khoNgoc && player.khoNgoc[k]) || 0;
@@ -20776,8 +20889,16 @@ function epNgoc(it, k){
   const loi = ngocEpDuoc(it, k);
   if (loi) return { ok:false, loi };
   player.jewels[k]--;
-  const truoc = it.plus || 0;
+  const d = NGOC_EP[k];
   const thang = ngocRate(k) >= 100 || Math.random() * 100 < ngocRate(k);
+  if (d.loai === 'life'){
+    // Xịt là VỀ 0, không phải tụt một bậc. Đây là luật đã có sẵn trong Lò Hỗn Độn và chủ dự án
+    // chốt giữ nguyên — nó là thứ khiến bậc 7 đáng giá thay vì chỉ là chuyện thời gian.
+    const truoc = it.life || 0;
+    it.life = thang ? truoc + 1 : 0;
+    return { ok:true, thang, truoc, sau: it.life, k, life:true };
+  }
+  const truoc = it.plus || 0;
   it.plus = thang ? truoc + 1 : Math.max(0, truoc - 1);
   return { ok:true, thang, truoc, sau: it.plus, k };
 }
@@ -20956,18 +21077,6 @@ function bagSecBox(){
         <span class="item-tip">cấp ${d.min}-${d.max === 999 ? '100+' : d.max} · trang bị cao cấp · châu quý<br>
         <b style="color:#ffd76a">Kéo hạp ra màn hình</b> để ném tới chỗ bạn chọn</span></span></span>
       <span><button class="mini-btn" onclick="openBaoHap(${t})">Ném Xuống</button></span></div>`;
-  }
-  const ndUsed = ndToday();
-  const ndCnt = player.noidan || 0;
-  // Một ô đếm, năm nút chọn: người chơi quyết lấy chỉ số nào, không phải con quái nào vừa chết.
-  h += `<div class="chaos-sec">LÕI NGUYÊN TỐ <span class="chaos-sub">có ${ndCnt} · hôm nay còn ${Math.max(0, 3-ndUsed)}/3 lần</span></div>`;
-  if (!ndCnt) h += `<div class="chaos-empty">Chưa có Lõi nào — săn quái tinh anh hoặc Hung Thần để rơi.</div>`;
-  for (const st of ['atk','hp','def','qi','crit']){
-    const ef = ND_EFFECT[st];
-    const co = (player.ndBonus && player.ndBonus[ef.k]) || 0;
-    h += `<div class="mat-row" title="${consumTip('noidan')}"><img class="consum-ic sm" src="${consumArtUrl('orb', ef.color)}" alt="">
-      <span style="flex:1">${ef.ten} <span style="opacity:.55;font-size:11px">— ${ef.desc} vĩnh viễn${co ? ` · đang có +${co % 1 ? co.toFixed(1) : co}` : ''}</span></span>
-      <button class="mini-btn" ${ndCnt > 0 && ndUsed < 3 ? '' : 'disabled'} onclick="swallowNoidan('${st}')">Hấp Thụ</button></div>`;
   }
   return h;
 }
@@ -24071,9 +24180,15 @@ function ccSlotsRender(){
   { const b = el('btn-continue');
     if (b) b.classList.toggle('hidden', ccSlot < 0); }
   { const n = el('cc-slots-note');
-    if (n) n.textContent = day
-      ? 'Đã đủ 5 nhân vật — xóa một ô nếu muốn tạo thêm.'
-      : `${slots.filter(Boolean).length}/${MAX_CHARS} ô đã dùng.`; }
+    if (n){
+      const _sv = SERVERS.find(x => x.id === svDangChon()) || SERVERS[0];
+      // Đường quay lại màn chọn máy chủ. Không có nó thì chọn xong là kẹt luôn ở đây — mà tên
+      // máy chủ đang dùng cũng nên hiện ra, vì đó là thứ vừa bắt người chơi bấm để vào.
+      n.innerHTML = (day
+          ? 'Đã đủ 5 nhân vật — xóa một ô nếu muốn tạo thêm.'
+          : `${slots.filter(Boolean).length}/${MAX_CHARS} ô đã dùng.`)
+        + ` · <button type="button" class="sv-doi" onclick="window.svHien()">Máy chủ: <b>${_sv.ten}</b> — đổi</button>`;
+    } }
 }
 function ccRender(){
   const wrap = el('cc-classes'); if (!wrap) return;
@@ -24095,11 +24210,11 @@ function ccRender(){
   // Bản phóng to của lớp đang chọn — dùng ĐÚNG hình nhân vật của game (heroCardUrl), thứ
   // người chơi sẽ thấy suốt cả hành trình. Bản chibi từng được thử ở đây rồi bỏ vì không hợp
   // tông; bản minh hoạ vẫn giữ, xem bằng lệnh /art.
-  const spl = el('cc-splash');
-  if (spl){
-    if (ccSect){ spl.src = heroCardUrl(ccSect); spl.classList.remove('hidden'); requestAnimationFrame(() => spl.classList.add('on')); }
-    else { spl.classList.remove('on'); spl.classList.add('hidden'); }
-  }
+  // KHÔNG còn tranh lớp phóng to ở mép trái. Nó có lý khi hàng thẻ còn là năm hình vẽ nhỏ xíu
+  // — cần một bản to để nhìn cho rõ. Nay năm nhân vật đứng trên phiến đá đã là art thật cỡ lớn,
+  // nên tấm ở mép trái chỉ còn là bản sao thứ hai của cùng một nhân vật, dán đè lên tranh nền
+  // và bị cắt cụt ở lề màn hình.
+  { const spl = el('cc-splash'); if (spl){ spl.classList.remove('on'); spl.classList.add('hidden'); } }
   const det = el('cc-detail');
   if (det){
     const sc = ccSect && SECTS[ccSect];
@@ -24133,7 +24248,9 @@ function openCreate(o){
   { const _n = document.querySelector('#sect-select .cc-name'); if (_n) _n.style.display = ''; }
   const cards = el('cc-classes'); if (cards) cards.style.display = '';
   // Danh sách ô và hai nút của nó thuộc về màn chờ, không thuộc màn tạo.
-  { const _sl = el('cc-slots'); if (_sl) _sl.style.display = 'none'; }
+  // Cả hai, không phải mỗi cái danh sách: #cc-slots-note là dòng "0/5 ô đã dùng", bỏ sót thì
+  // nó lơ lửng giữa cảnh ở màn tạo nhân vật, không dính vào thứ gì.
+  for (const _id of ['cc-slots', 'cc-slots-note']){ const _e = el(_id); if (_e) _e.style.display = 'none'; }
   for (const _id of ['btn-continue','btn-newchar']){ const _e = el(_id); if (_e) _e.classList.add('hidden'); }
   // Chỉ có đường quay lại khi đã có nhân vật để quay về. Người chơi mới tinh không có gì phía sau.
   { const _b = el('cc-back'); if (_b) _b.style.display = soNhanVat() > 0 ? '' : 'none'; }
@@ -24752,43 +24869,12 @@ function showOfflineGains(offSec, khiGain, bacGain){
 
 
 // ==================== NỘI ĐAN YÊU THÚ (bài học Phi Nguyệt Tiên Hành Lục) ====================
-// Quái tinh anh/boss rớt Lõi Nguyên Tố — hấp thụ tăng chỉ số VĨNH VIỄN, tối đa 3 viên/ngày.
-// Lõi Nguyên Tố gộp từ NĂM ô đếm (Kim/Mộc/Thổ/Thủy/Hỏa) về MỘT. Năm ô đó vốn đã làm việc của
-// đòi đúng hệ. Chỗ DUY NHẤT hệ nguyên tố có nghĩa là lúc hấp thụ lấy chỉ số vĩnh viễn — mà ở đó
-// nó lại quyết hộ người chơi: muốn +công thì phải đi tìm quái hệ Kim.
-// Nay bảng này khoá theo CHỈ SỐ, và người chơi tự chọn. Cùng năm lựa chọn, một ô đếm, và lựa
-// chọn thuộc về người chơi thay vì thuộc về con quái nào tình cờ chết.
-const ND_EFFECT = {
-  atk:  { k:'atk',  v:6,   ten:'Công Lực',  desc:'+6 công lực',    color:'#c8d4e8' },
-  hp:   { k:'hp',   v:40,  ten:'Sinh Lực',  desc:'+40 sinh lực',   color:'#5db86a' },
-  def:  { k:'def',  v:4,   ten:'Phòng Ngự', desc:'+4 phòng ngự',   color:'#c08a4a' },
-  qi:   { k:'qi',   v:25,  ten:'Mana',      desc:'+25 Mana',       color:'#7ec8ff' },
-  crit: { k:'crit', v:0.5, ten:'Chí Mạng',  desc:'+0,5% chí mạng', color:'#e8552a' },
-};
-function ndToday(){
-  const d = new Date().toDateString();
-  if (player.ndDay !== d){ player.ndDay = d; player.ndCount = 0; }
-  return player.ndCount || 0;
-}
-// Tham số nay là CHỈ SỐ muốn nhận (atk/hp/def/qi/crit), không phải hệ nguyên tố.
-window.swallowNoidan = function(stat){
-  const ef = ND_EFFECT[stat];
-  if (!ef || !((player.noidan || 0) > 0)) return;
-  if (ndToday() >= 3){
-    addFloat(player.x, player.y-40, 'Đã hấp thụ hết hôm nay — mai quay lại!', '#8a8a8a', 12);
-    return;
-  }
-  player.noidan--;
-  player.ndBonus[ef.k] = (player.ndBonus[ef.k] || 0) + ef.v;
-  player.ndCount = ndToday() + 1;
-  calcDerived();
-  addFloat(player.x, player.y-50, `Hấp Thụ Lõi Nguyên Tố: ${ef.desc} VĨNH VIỄN!`, ef.color, 14);
-  addEffect({ type:'ring', x:player.x, y:player.y, r:60, color:ef.color });
-  AudioSys.sfx('levelup', 0.5);
-  saveGame(); renderBag();
-};
-
-
+// Hệ LÕI NGUYÊN TỐ đã GỠ. Nó là một trục cộng chỉ số thứ ba nằm ngoài trang bị và ngoài
+// cấp độ: nhặt lõi từ quái tinh anh rồi bấm một nút để cộng vĩnh viễn +6 công / +40 máu…
+// tối đa 3 lần mỗi ngày. Ba chỗ hỏng: nó thưởng cho việc MỞ GAME MỖI NGÀY chứ không thưởng
+// cho việc chơi giỏi, con số cộng vào vô hình với người chơi (không hiện ở đâu ngoài đúng
+// bảng đó), và nó chồng lên đúng việc mà Tẩy Tủy và trang bị đã làm rồi.
+// Chỉ số đã hấp thụ từ save cũ cũng gỡ luôn — xem migrateBoLoi().
 
 // Hệ THÚ THUẦN HÓA đã gỡ. Nó và Thú Chiến là hai hệ thú cưng song song giẫm chân nhau: cả hai
 // đều là "con thú đi cạnh và tự đánh quái". Khác biệt duy nhất là Thú Chiến còn CỘNG CHỈ SỐ cho
@@ -24846,16 +24932,15 @@ function hintText(){
 const DAILY_GOALS = [
   { id:'kills',   icon:'⚔', name:'Hạ 10 Chimera',        need:10, minLv:1 },
   { id:'forge',   icon:'🔨', name:'Rèn / nâng tầng / khảm ngọc 1 lần', need:1, minLv:5 },
-  { id:'noidan',  icon:'●', name:'Thu 1 Lõi Nguyên Tố',        need:1, minLv:10 },
   { id:'dungeon', icon:'🏯', name:'Thông quan 1 phó bản', need:1, minLv:12 },
 ];
 function dailyGoalsNow(){ return DAILY_GOALS.filter(g => lvPeak() >= (g.minLv || 1)); }
 function dailyReset(){
   if (!player) return;
-  if (!player.daily) player.daily = { day:'', kills:0, noidan:0, dungeon:0, forge:0, claimed:false };
+  if (!player.daily) player.daily = { day:'', kills:0, dungeon:0, forge:0, claimed:false };
   const today = new Date().toDateString();
   if (player.daily.day !== today)
-    player.daily = { day:today, kills:0, noidan:0, dungeon:0, forge:0, claimed:false };
+    player.daily = { day:today, kills:0, dungeon:0, forge:0, claimed:false };
   if (!player.truyna || player.truyna.day !== today)
     player.truyna = { day: today, state:'none', map: null };
 }
@@ -25364,7 +25449,10 @@ window.useJewel = function(kind, uid){
   } else if (kind === 'sinhMenh'){
     if (J.sinhMenh < 1 || !ARMOR_SLOTS.includes(it.slot) || (it.life || 0) >= 7) return;
     J.sinhMenh--;
-    const rate = Math.max(25, 75 - (it.life || 0) * 8);
+    // 50% PHẲNG mọi bậc — MỘT con số duy nhất cho cả ba đường ép Sinh Mệnh (ép thẳng trong
+    // túi, Lò Hỗn Loạn, và đường này ở NPC Thợ Rèn). Bản cũ ở đây còn giảm dần 75→27, nên
+    // cùng một viên ngọc, cùng một món đồ, mà ba chỗ lại ba tỉ lệ khác nhau.
+    const rate = NGOC_EP.sinhMenh.rate;
     if (Math.random()*100 < rate){
       it.life = (it.life || 0) + 1;
       say(`❤ Sinh Mệnh bậc ${it.life} — +${it.life*4}% Sinh Lực tối đa!`, '#8fd18f');

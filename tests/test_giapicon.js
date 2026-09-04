@@ -85,10 +85,11 @@ const pass = m => console.log('PASS ' + m);
              canh: !!e.canh, gvPlus: +gearVisual(player).plus.toFixed(1) };
   });
   console.log('4) /gen 1 +11:', JSON.stringify(r4));
-  if (r4.soMon !== 6) fail(`/gen chỉ mặc ${r4.soMon}/6 ô`);
+  // Năm ô, không sáu: ô Quần đã gỡ khỏi SLOTS (nón · áo · tay · chân · vũ khí).
+  if (r4.soMon !== 5) fail(`/gen chỉ mặc ${r4.soMon}/5 ô`);
   else if (r4.giai !== 1 || r4.plus !== 11) fail(`/gen ra giai ${r4.giai} +${r4.plus}, mong giai 1 +11`);
   else if (r4.canh) fail('/gen giai 1 mà vẫn đeo cánh — giai 1-4 phải để trống');
-  else pass('/gen 1 +11 mặc đủ 6 ô, đúng giai 1 mức +11, không cánh');
+  else pass('/gen 1 +11 mặc đủ 5 ô, đúng giai 1 mức +11, không cánh');
   if (r4.gvPlus < 11) fail(`gearVisual thấy +${r4.gvPlus} — hào quang sẽ không lên đúng mốc`);
   else pass('gearVisual đọc đúng +11 ⇒ hào quang lên mốc cao nhất');
 

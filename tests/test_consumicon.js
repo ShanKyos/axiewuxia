@@ -62,10 +62,12 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     renderShop(NPCS.find(x => x.id === 'duoclao'));
     const sh = el('panel-quest').innerHTML;
     out.tiem = { anh: (sh.match(/<img[^>]+src="data:image\/png/g) || []).length, conEmoji: /🧪|◎|⚡|✚/.test(sh) };
-    player.baohap = { 3:2 }; player.noidan = 5;
+    // Ba tầng hạp chứ không một: hàng Lõi Nguyên Tố từng góp icon ở tab này đã gỡ cùng cả
+    // hệ, nên muốn còn đo được "tab này vẽ nhiều icon" thì phải cho nó nhiều hạp.
+    player.baohap = { 1:1, 3:2, 5:1 };
     closePanels(); window.bagTab = 'box'; renderBag();
     const bg = el('panel-bag').innerHTML;
-    out.tui = { anh: (bg.match(/<img[^>]+src="data:image\/png/g) || []).length, conCham: /">●<\/span>/.test(bg) };
+    out.tui = { anh: (bg.match(/<img[^>]+src="data:image\/png/g) || []).length };
     // Thẻ Sách Kỹ Năng nay nằm ở tab CHIÊU ĐANG DÙNG, không ở tab di sản nữa: sau khi bỏ "học
     // di sản ngoại lớp", sách dùng để nâng cấp chiêu của chính mình, và nút 📜 nằm ngay cạnh
     // từng dòng chiêu ở tab đó (xem docs/KY_NANG_5_LOP.md §5).
@@ -90,7 +92,6 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   if (r4.tiem.anh < 5) fail(`tiệm chỉ có ${r4.tiem.anh} icon vẽ`);
   if (r4.tiem.conEmoji) fail('tiệm còn emoji cho món đã có icon');
   if (r4.tui.anh < 3) fail(`túi đồ chỉ có ${r4.tui.anh} icon vẽ`);
-  if (r4.tui.conCham) fail('Lõi Nguyên Tố vẫn dùng ký tự ●');
   if (!r4.kyNang.anh) fail('bảng kỹ năng không có icon vẽ nào');
   if (!r4.kyNang.coThe) fail('không tìm thấy thẻ Sách Kỹ Năng trong bảng kỹ năng');
   if (!r4.kyNang.theCoAnh) fail('thẻ Sách Kỹ Năng chưa có hình');

@@ -75,7 +75,9 @@ const { chromium } = require('playwright');
       o.doiHe.nhanGiap = !!rec.match({ items:[player.equip.ao], jewels:{ honDon:1 } }); }
     // 3c Sinh Mệnh
     reset();
-    { const it = player.equip.quan; it.life = 0;
+    // Ô Quần đã gỡ khỏi game (SLOTS), đồ quần cũ trong save chuyển thành đồ Chân —
+    // nên chỗ thử ngọc Sinh Mệnh cũng dời sang ô Chân.
+    { const it = player.equip.chan; it.life = 0;
       chaosAddItem(it.uid); chaosAddJewel('sinhMenh'); chaosPickRecipe('life');
       const rate = chaosCurrent().p.rate; doChaos();
       o.sinhMenh = { rate, bac: it.life }; }
@@ -123,7 +125,8 @@ const { chromium } = require('playwright');
   console.log(JSON.stringify(r, null, 1));
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
   if (r.tenDinhKiemHiep.length) fail(`còn tên kiếm hiệp: ${r.tenDinhKiemHiep.join(', ')}`);
-  if (r.soTen !== 45) fail(`bảng tên có ${r.soTen} tên, cần 45`);
+  // 40 chứ không 45: ô Quần đã gỡ, ITEM_NAMES.quan (5 tên) đi theo.
+  if (r.soTen !== 40) fail(`bảng tên có ${r.soTen} tên, cần 40`);
   if (!r.khayTrong.includes('cloak'))
     fail(`khay trống + chưa có áo choàng phải ra công thức cloak: ${JSON.stringify(r.khayTrong)}`);
   if (r.khayTrong_coAoChoang.includes('cloak'))
@@ -139,7 +142,9 @@ const { chromium } = require('playwright');
   if (r.chucPhuc.khayConDo !== 1) fail('khay nhả luôn món đồ — phải giữ lại để khảm tiếp');
   if (!r.doiHe.doi) fail(`Đổi Hệ không đổi được hệ (${r.doiHe.heCu} → ${r.doiHe.heMoi})`);
   if (r.doiHe.nhanGiap) fail('Đổi Hệ vẫn nhận GIÁP — giáp không có hệ, ăn 1 Hỗn Độn Châu cho không');
-  if (r.sinhMenh.rate !== 75) fail(`Sinh Mệnh bậc 0 phải 75%, đo ${r.sinhMenh.rate}`);
+  // 50% PHẲNG mọi bậc, dùng chung con số với đường ép thẳng trong túi (NGOC_EP.sinhMenh.rate).
+  // Bản cũ giảm dần 75→27 nên cùng một viên ngọc mà lò và túi lại hai tỉ lệ khác nhau.
+  if (r.sinhMenh.rate !== 50) fail(`Sinh Mệnh mọi bậc phải 50%, đo ${r.sinhMenh.rate}`);
   if (r.renThuong.plus !== 1) fail(`Rèn Thường +0→+1 hỏng (ra +${r.renThuong.plus})`);
   if (!r.renThuong.truBac) fail('Rèn Thường không trừ Lumen');
   if (r.keThua.den !== r.keThua.tu + 1) fail(`Kế Thừa: giai ${r.keThua.tu} → ${r.keThua.den}`);
