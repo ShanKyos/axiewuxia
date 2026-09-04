@@ -25,9 +25,9 @@ const pass = m => console.log('PASS ' + m);
   await p.evaluate(() => { window.TEST_MODE = true; startGame('baidasan', { name:'Đo' }); });
   // Dải icon là tệp ảnh: nvIconUrl() trả null tới khi nó tải xong. Không chờ thì cả bài kiểm
   // đo nhầm đường lui và báo xanh trong khi art chưa bao giờ hiện.
-  const daiTai = await p.waitForFunction(() => !!nvTai('hemp1_icon', 'webp'), { timeout: 20000 })
+  const daiTai = await p.waitForFunction(() => !!nvTai('dwsm1_icon', 'webp'), { timeout: 20000 })
                         .then(() => true).catch(() => false);
-  if (!daiTai) fail('dải icon hemp1_icon.webp không tải được');
+  if (!daiTai) fail('dải icon dwsm1_icon.webp không tải được');
   else pass('dải icon tải xong');
 
   // 1) bốn ô có art, ô Quần về đường cũ
@@ -106,9 +106,9 @@ const pass = m => console.log('PASS ' + m);
   else pass('/gen đeo đúng cánh bậc 2 của lớp đang chơi');
 
   // 6) MẶC LÊN NGƯỜI — bộ giáp phải thắng thân trần, và chỉ khi thật sự đang mặc đồ
-  const daiThan = await p.waitForFunction(() => !!nvTai('hemp1', 'webp'), { timeout: 25000 })
+  const daiThan = await p.waitForFunction(() => !!nvTai('dwsm1', 'webp'), { timeout: 25000 })
                          .then(() => true).catch(() => false);
-  if (!daiThan) fail('bảng khung thân hemp1.webp không tải được');
+  if (!daiThan) fail('bảng khung thân dwsm1.webp không tải được');
   const r6 = await p.evaluate(() => {
     for (const k of Object.keys(player.equip)) player.equip[k] = null;
     const tran = nvBoTen('baidasan', heroTier(player), gearVisual(player));
@@ -120,12 +120,16 @@ const pass = m => console.log('PASS ' + m);
     return { tran, mac, motMon, giaiTran: heroTier(player) };
   });
   console.log('6) thân trần ↔ bộ giáp:', JSON.stringify(r6));
-  if (r6.tran === 'hemp1') fail('cởi trần mà vẫn mặc art giáp — heroTier() kẹp sàn ở 1, phải phân biệt bằng gv.n');
-  else if (r6.mac !== 'hemp1') fail(`mặc đủ bộ giai 1 mà vẫn dùng "${r6.mac}", mong hemp1`);
-  else if (r6.motMon === 'hemp1') fail('còn mỗi một món mà vẫn hiện nguyên bộ giáp');
-  else pass('cởi trần → thân trần · đủ bộ → hemp1 · còn một món → về thân trần');
+  if (r6.tran === 'dwsm1') fail('cởi trần mà vẫn mặc art giáp — heroTier() kẹp sàn ở 1, phải phân biệt bằng gv.n');
+  else if (r6.mac !== 'dwsm1') fail(`mặc đủ bộ giai 1 mà vẫn dùng "${r6.mac}", mong dwsm1`);
+  else if (r6.motMon === 'dwsm1') fail('còn mỗi một món mà vẫn hiện nguyên bộ giáp');
+  else pass('cởi trần → thân trần · đủ bộ → dwsm1 · còn một món → về thân trần');
 
-  // 7) TRƯỢNG đổi theo GIAI VŨ KHÍ, không theo giai giáp
+  // 7) VŨ KHÍ NƯỚNG SẴN phải TẮT khi thần khí đang lo vũ khí
+  // Bài này trước đây gác chuyện ngược lại: trượng nướng sẵn đổi theo giai vũ khí (8 cây trong
+  // hemp1_vk1..8). Từ khi có thần khí — vũ khí rời tay, bay theo người, vẽ từ món ĐANG trang bị
+  // — đường nướng sẵn phải im hẳn, nếu không thì hai vũ khí cùng lúc: một cây trên tay, một cây
+  // bay quanh. Đảo chiều bài kiểm cho khớp thiết kế mới.
   const r7 = await p.evaluate(() => {
     cheatExec('/gen 1 +0');
     const ra = [];
@@ -135,16 +139,14 @@ const pass = m => console.log('PASS ' + m);
       const im = nvVuKhi('baidasan', heroTier(player), gv);
       ra.push({ wt, src: im ? im.src.split('/').pop() : null });
     }
-    return ra;
+    // và thần khí PHẢI có, không thì nhân vật tay không
+    const S = thanKhiNguon(player);
+    return { ra, tk: S ? S.art : null };
   });
-  console.log('7) trượng theo giai vũ khí:', JSON.stringify(r7));
-  {
-    const src = r7.map(x => x.src);
-    if (src.some(x => !x)) fail('có giai vũ khí không lấy được bảng khung trượng');
-    else if (src[0] === src[1] || src[1] === src[2]) fail(`giai 1/5/8 ra cùng một cây: ${src.join(' · ')}`);
-    else if (src[3] !== src[2]) fail(`giai 13 phải dùng lại cây 8 (chỉ có 8 cây), nhưng ra ${src[3]}`);
-    else pass(`trượng đổi theo giai vũ khí: ${src.join(' · ')}`);
-  }
+  console.log('7) vũ khí nướng sẵn vs thần khí:', JSON.stringify(r7));
+  if (r7.ra.some(x => x.src)) fail(`thần khí đang bật mà vũ khí nướng sẵn vẫn trả bảng khung: ${r7.ra.map(x => x.src).join(' · ')}`);
+  else if (!r7.tk) fail('tắt vũ khí nướng sẵn rồi mà thần khí cũng không có — nhân vật sẽ tay không');
+  else pass(`vũ khí nướng sẵn đã tắt, thần khí lo cây "${r7.tk}"`);
 
   // 8) đổi RIÊNG vũ khí phải làm mới bộ đệm sprite — nếu không thì cầm gậy mới, hiện gậy cũ
   const r8 = await p.evaluate(() => {

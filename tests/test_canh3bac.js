@@ -57,8 +57,11 @@ const { chromium } = require('playwright');
   check('dòng chính LEO theo bậc ở mọi lớp', bang.leo, []);
   // Kích thước tính bằng pixel bộ xương (cao 220), không phải pixel thế giới. Tỉ lệ đọc từ
   // ảnh cánh MU thật: cánh bậc 1 ĐÃ vươn quá đỉnh đầu (y=53) — mốc này từng bị đoán ngược.
-  check('tầm vươn ngang leo 56 → 84 → 102', bang.sai, [56,84,102]);
-  check('tầm vươn lên leo 62 → 78 → 92', bang.cao, [62,78,92]);
+  // Thu BỀ NGANG lại (56/84/102 → 39/59/71) sau khi đo trên nhân vật thật: bản cũ cho Thần Dực
+  // rộng ±90px trên một người ngang 40px — 4,5 lần, nuốt cả nhân vật lẫn quái đứng cạnh. Chiều
+  // cao thì KHÔNG thu theo, vì còn mốc "đỉnh cánh vượt đỉnh đầu" ngay dưới.
+  check('tầm vươn ngang leo 39 → 59 → 71', bang.sai, [39,59,71]);
+  check('tầm vươn lên leo 58 → 68 → 78', bang.cao, [58,68,78]);
   check('số tầng thùy leo 2 → 3 → 4', bang.thuy, [2,3,4]);
   cond('đỉnh cánh vượt đỉnh đầu ở CẢ BA bậc', bang.cao,
        v => v.every(c => 108 - c < 53), 'cánh không vượt được đầu thì không ra dáng cánh MU');

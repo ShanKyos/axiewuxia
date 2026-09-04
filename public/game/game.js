@@ -403,61 +403,79 @@ const CLOAK_TIERS = [ null,
 // quy từ tỉ lệ khảo sát: sải cánh 0,55 / 0,75 / 0,95 chiều cao thân; đỉnh cánh so với đỉnh đầu
 // −0,02 / +0,06 / +0,15. Cánh CAO HƠN LÀ RỘNG — đây là chỗ bản cũ sai nặng nhất.
 //   sai — tầm vươn NGANG tính từ gốc · cao — tầm vươn LÊN tính từ gốc
+// SẢI CÁNH đo bằng chính nhân vật, không đoán. Bản trước: Thần Dực của Spellblade rộng ±90px
+// và cao 115px trên một nhân vật cao 104px, ngang 40px — tức 4,5 lần bề ngang và cao hơn cả
+// người. Trên màn nó nuốt luôn nhân vật và cả con quái đứng cạnh.
+// Thang mới nhắm: bậc 1 ≈ 1,5 lần bề ngang người · bậc 2 ≈ 2,0 · bậc 3 ≈ 2,5 — đúng tầm cánh
+// bậc 3 trong MU. Chỉ thu BỀ NGANG. Chiều cao giữ đủ để ĐỈNH CÁNH VƯỢT ĐỈNH ĐẦU ở cả ba bậc —
+// đó là mốc đọc từ ảnh cánh MU thật (test_canh3bac gác), và lần đầu thu mình đã thu cả hai trục
+// nên bậc 1 với bậc 2 tụt xuống dưới đầu, mất luôn dáng cánh. `to` của từng lớp bên dưới kéo cả năm về cùng một thang, vì mỗi loại art
+// (dơi · lông vũ · côn trùng) xoè ra một kiểu khác nhau từ cùng một con số.
 const WING_TIERS = [
-  { bac:1, ten:'Cánh',     sai:56, cao:62, thuy:2, xoe:0.42, nhon:0,    lv:40,
+  { bac:1, ten:'Cánh',     sai:39, cao:58, thuy:2, xoe:0.42, nhon:0,    lv:40,
     vien:0,   gai:0, duoi:0, duoiDai:0,    hat:0, hao:0, trong:0, nhan:0 },
-  { bac:2, ten:'Linh Dực', sai:84, cao:78, thuy:3, xoe:0.36, nhon:0.55, lv:80,
+  { bac:2, ten:'Linh Dực', sai:59, cao:68, thuy:3, xoe:0.36, nhon:0.55, lv:80,
     vien:1.7, gai:4, duoi:2, duoiDai:0.55, hat:0, hao:0, trong:0, nhan:1 },
-  { bac:3, ten:'Thần Dực', sai:102, cao:92, thuy:4, xoe:0.30, nhon:1,   lv:100,
+  { bac:3, ten:'Thần Dực', sai:71, cao:78, thuy:4, xoe:0.30, nhon:1,   lv:100,
     vien:2.4, gai:5, duoi:3, duoiDai:1,    hat:1, hao:1, trong:1, nhan:2, chuX:1 },
 ];
 // Góc ngả CHUNG của cả đôi cánh, tính từ phương thẳng đứng. Không có nó thì hai cánh dựng
 // sát hai bên sọ; ảnh MU nào cũng cho thấy chúng ngả ra thành chữ V.
 const CANH_NGHIENG = 0.24;
+// …nhưng 0,24 chỉ đúng cho những loại vẽ GẦN PHƯƠNG NGANG (cánh dơi, cánh lông vũ). Cánh côn
+// trùng vẽ DỌC theo trục thùy, nên với cùng con số đó nó dựng gần như thẳng đứng: hai bên chụm
+// vào nhau ngay giữa lưng, rõ nhất ở bậc 1 nơi sải cánh mới có 26px — trên màn đọc thành "một
+// cục xám sau gáy" chứ không ra đôi cánh. Ngả thêm cho riêng loại đó.
+const CANH_NGHIENG_ART = { con: 0.34 };
 // art: 'phien' phiến kim loại gãy · 'long' lông vũ có gân · 'quang' màn sáng · 'than' màng
 // lệch hai bên có đốm than · 'co' hai lá cờ đuôi nheo treo trên thanh ngang.
 const WING_DEFS = {
-  thieulam:  { art:'doi', chuKy:360, bien:1.6, id:'w1_dk', name:'Cánh Quỷ Đen',  color:'#5a4436', hpPct:12, defPct:4, evaPct:4,
+  thieulam:  { art:'doi', to:1.0, chuKy:360, bien:1.6, id:'w1_dk', name:'Cánh Quỷ Đen',  color:'#24365e', hpPct:12, defPct:4, evaPct:4,
                desc:'+12% Sinh Lực · +4% Phòng Ngự · +4% né' },
-  toanchan:  { art:'con',  chuKy:240, bien:3.0, id:'w1_sr', name:'Cánh Tiên Sương',    color:'#cfeeff', evaPct:8, aspdPct:6, silverPct:15,
+  toanchan:  { art:'con', to:1.19, chuKy:240, bien:3.0, id:'w1_sr', name:'Cánh Tiên Sương',    color:'#1f5f55', evaPct:8, aspdPct:6, silverPct:15,
                desc:'+8% né · +6% tốc đánh · +15% Lumen rơi' },
-  baidasan:  { art:'long', anh:'vu', chuKy:300, bien:2.4, id:'w1_dw', name:'Cánh Bạch Vũ', color:'#eef2ff', atkPct:12, crit:4, expPct:10,
+  baidasan:  { art:'long', to:0.86, anh:'vu', chuKy:300, bien:2.4, id:'w1_dw', name:'Cánh Bạch Vũ', color:'#2c1640', atkPct:12, crit:4, expPct:10,
                desc:'+12% Sát Thương · +4% bạo · +10% EXP' },
-  minhgiao:  { art:'lai',  to:1.22, chuKy:260, bien:2.6, id:'w1_sb', name:'Cánh Hỏa Vũ', color:'#b08050', atkPct:12, aspdPct:6, crit:5,
+  minhgiao:  { art:'lai', to:1.03, chuKy:260, bien:2.6, id:'w1_sb', name:'Cánh Hỏa Vũ', color:'#7a2a12', atkPct:12, aspdPct:6, crit:5,
                desc:'+12% Sát Thương · +6% tốc đánh · +5% bạo' },
-  bug:       { art:'doi',    chuKy:300, bien:2.2, id:'w1_dl', name:'Cánh Quỷ Hoang',   color:'#4a3f2e', hpPct:10, atkPct:8, silverPct:20,
+  bug:  { art:'doi', to:1.0, chuKy:300, bien:2.2, id:'w1_dl', name:'Cánh Quỷ Hoang',   color:'#4a5320', hpPct:10, atkPct:8, silverPct:20,
                desc:'+10% Sinh Lực · +8% Sát Thương · +20% Lumen rơi' },
   vophai:    { art:'rach',  chuKy:280, bien:2.4, id:'w1_tn', name:'Cánh Lữ Hành',   color:'#c0b49a', hpPct:8, evaPct:5, silverPct:10,
                desc:'+8% Sinh Lực · +5% né · +10% Lumen rơi' },
 };
+// MỖI LỚP MỘT LOẠI CÁNH, KHOÁ CẢ BA BẬC. Bản cũ để Spellblade nhảy 'lai' → 'tia' và Dark Lord
+// nhảy 'doi' → 'ao' giữa chừng, nên lên bậc là đôi cánh hoá thành con khác — mà `art` mới là thứ
+// người chơi nhận ra lớp, không phải chỉ số. Đã dựng ảnh đối chiếu cả hai phương án: 'tia' ở bậc 1
+// gần như không nhìn thấy gì và ở bậc cao chỉ là mấy vệt nhọn, đọc thành hiệu ứng phép chứ không
+// ra cánh; 'ao' là một tấm phẳng rủ sau lưng, ba bậc gần như y hệt nhau, không có nấc thang.
 const WING2_DEFS = {
-  thieulam:  { art:'doi', chuKy:340, bien:2.0, id:'w2_dk', name:'Hắc Nguyệt Dực', color:'#4632c8', hpPct:20, atkPct:12, defPct:6, evaPct:6,
+  thieulam:  { art:'doi',  to:1.00, chuKy:340, bien:2.0, id:'w2_dk', name:'Hắc Nguyệt Dực', color:'#4c8dff', hpPct:20, atkPct:12, defPct:6, evaPct:6,
                desc:'+20% Sinh Lực · +12% Sát Thương · +6% Phòng Ngự · +6% né' },
-  toanchan:  { art:'con',  chuKy:230, bien:3.4, id:'w2_sr', name:'Sương Lâm Dực',  color:'#2f9fe0', atkPct:20, aspdPct:12, evaPct:8, crit:6,
+  toanchan:  { art:'con',  to:1.19, chuKy:230, bien:3.4, id:'w2_sr', name:'Sương Lâm Dực',  color:'#3a9d8b', atkPct:20, aspdPct:12, evaPct:8, crit:6,
                desc:'+20% Sát Thương · +12% tốc đánh · +8% né · +6% bạo' },
-  baidasan:  { art:'long', anh:'vu', chuKy:290, bien:2.8, id:'w2_dw', name:'Hoại Vụ Dực',    color:'#2fb04a', atkPct:22, crit:10, pierce:6, expPct:12,
+  baidasan:  { art:'long', to:0.86, anh:'vu', chuKy:290, bien:2.8, id:'w2_dw', name:'Hoại Vụ Dực', color:'#6b4183', atkPct:22, crit:10, pierce:6, expPct:12,
                desc:'+22% Sát Thương · +10% bạo · +6% xuyên giáp · +12% EXP' },
-  minhgiao:  { art:'tia',  to:1.45, chuKy:250, bien:3.0, id:'w2_sb', name:'Liệt Hỏa Dực',   color:'#ff5a10', atkPct:24, aspdPct:10, crit:8, hpLeech:4,
+  minhgiao:  { art:'lai',  to:1.03, chuKy:250, bien:3.0, id:'w2_sb', name:'Liệt Hỏa Dực',   color:'#e8552a', atkPct:24, aspdPct:10, crit:8, hpLeech:4,
                desc:'+24% Sát Thương · +10% tốc đánh · +8% bạo · +4% hút sinh lực' },
-  bug:       { art:'ao',    chuKy:290, bien:2.6, id:'w2_dl', name:'Bào Bạo Chúa',   color:'#b01f2f', atkPct:18, hpPct:15, defPct:6, silverPct:25,
+  bug:       { art:'doi',  to:1.00, chuKy:290, bien:2.6, id:'w2_dl', name:'Dực Bạo Chúa',   color:'#8a9a3a', atkPct:18, hpPct:15, defPct:6, silverPct:25,
                desc:'+18% Sát Thương · +15% Sinh Lực · +6% Phòng Ngự · +25% Lumen rơi' },
-  vophai:    { art:'rach',  chuKy:270, bien:2.8, id:'w2_tn', name:'Lữ Hành Dực',    color:'#b0762a', atkPct:16, hpPct:12, evaPct:8, silverPct:15,
+  vophai:    { art:'rach', chuKy:270, bien:2.8, id:'w2_tn', name:'Lữ Hành Dực',    color:'#b0762a', atkPct:16, hpPct:12, evaPct:8, silverPct:15,
                desc:'+16% Sát Thương · +12% Sinh Lực · +8% né · +15% Lumen rơi' },
 };
 // Mọi đôi cánh bậc 3 đều mang CÙNG một dòng đặc biệt — xuyên giáp. Đó là thứ tách bậc 3 khỏi
 // bậc 2 về CƠ CHẾ chứ không chỉ về con số, và là lý do người ta còn muốn leo nốt bậc cuối.
 const WING3_DEFS = {
-  thieulam:  { art:'doi', chuKy:320, bien:2.4, id:'w3_dk', name:'Thần Dực Bão Thép',  color:'#8fb0ff', hpPct:30, atkPct:18, defPct:10, evaPct:8, pierce:5,
+  thieulam:  { art:'doi',  to:1.00, chuKy:320, bien:2.4, id:'w3_dk', name:'Thần Dực Bão Thép', color:'#a8c8ff', hpPct:30, atkPct:18, defPct:10, evaPct:8, pierce:5,
                desc:'+30% Sinh Lực · +18% Sát Thương · +10% Phòng Ngự · +8% né · +5% xuyên giáp' },
-  toanchan:  { art:'con',  chuKy:220, bien:3.8, id:'w3_sr', name:'Thần Dực Nguyệt Lâm', color:'#9ef2ff', atkPct:30, aspdPct:16, evaPct:12, crit:10, pierce:5,
+  toanchan:  { art:'con',  to:1.19, chuKy:220, bien:3.8, id:'w3_sr', name:'Thần Dực Nguyệt Lâm', color:'#a0ffe9', atkPct:30, aspdPct:16, evaPct:12, crit:10, pierce:5,
                desc:'+30% Sát Thương · +16% tốc đánh · +12% né · +10% bạo · +5% xuyên giáp' },
-  baidasan:  { art:'long', anh:'vu', chuKy:280, bien:3.2, id:'w3_dw', name:'Thần Dực Hư Vô',     color:'#d8a8ff', atkPct:32, crit:14, pierce:10, defPct:8,
+  baidasan:  { art:'long', to:0.86, anh:'vu', chuKy:280, bien:3.2, id:'w3_dw', name:'Thần Dực Hư Vô', color:'#b995c8', atkPct:32, crit:14, pierce:10, defPct:8,
                desc:'+32% Sát Thương · +14% bạo · +10% xuyên giáp · +8% Phòng Ngự' },
-  minhgiao:  { art:'tia',  to:1.3, chuKy:240, bien:3.4, id:'w3_sb', name:'Thần Dực Vực Lửa',   color:'#ffb15c', atkPct:34, aspdPct:14, crit:12, hpLeech:7, pierce:5,
+  minhgiao:  { art:'lai',  to:1.03, chuKy:240, bien:3.4, id:'w3_sb', name:'Thần Dực Vực Lửa', color:'#ffb060', atkPct:34, aspdPct:14, crit:12, hpLeech:7, pierce:5,
                desc:'+34% Sát Thương · +14% tốc đánh · +12% bạo · +7% hút sinh lực · +5% xuyên giáp' },
-  bug:       { art:'ao',    chuKy:280, bien:3.0, id:'w3_dl', name:'Bào Ngai Đen',  color:'#ffd76a', atkPct:28, hpPct:22, defPct:10, silverPct:35, pierce:5,
+  bug:       { art:'doi',  to:1.00, chuKy:280, bien:3.0, id:'w3_dl', name:'Thần Dực Ngai Đen', color:'#d0e07a', atkPct:28, hpPct:22, defPct:10, silverPct:35, pierce:5,
                desc:'+28% Sát Thương · +22% Sinh Lực · +10% Phòng Ngự · +35% Lumen rơi · +5% xuyên giáp' },
-  vophai:    { art:'rach',  chuKy:260, bien:3.2, id:'w3_tn', name:'Thần Dực Lữ Hành',   color:'#f2e6cc', atkPct:26, hpPct:20, evaPct:12, silverPct:25, pierce:5,
+  vophai:    { art:'rach', chuKy:260, bien:3.2, id:'w3_tn', name:'Thần Dực Lữ Hành', color:'#f2e6cc', atkPct:26, hpPct:20, evaPct:12, silverPct:25, pierce:5,
                desc:'+26% Sát Thương · +20% Sinh Lực · +12% né · +25% Lumen rơi · +5% xuyên giáp' },
 };
 const WING_BANG = [WING_DEFS, WING2_DEFS, WING3_DEFS];
@@ -841,6 +859,146 @@ window.anhDangGiuMB = function(){
 // Vũ khí bay theo cùng một elip, vẽ bằng ITEM_ART của CHÍNH món đang cầm — nên đổi vũ khí là
 // đổi luôn hình bay quanh. Không nướng thêm khung Spine: bản mẫu chỉ có bốn hoạt cảnh
 // (đứng/đi/đánh/phép) và Meowa chỉ tô lại trong bóng cố định chứ không thêm được chuyển động.
+// ═══════════════ U LINH — tuyệt chiêu Evil Spirit của Dark Wizard ═══════════════
+// Vẽ BẰNG MÃ, không dùng tấm khung hình. Gói art gửi tới không dùng được: mỗi khung Godot khai
+// 640x640 nhưng bên trong lại xếp 9 ô con (hoạt ảnh thật là 144 khung ~213px, .tres khai sai
+// lưới), alpha bị nhị phân hoá nên thủng lỗ xuyên qua chính tấm tranh, và quan trọng nhất là
+// MỌI KHUNG ĐỀU CÓ SẴN NGƯỜI PHÁP SƯ trong đó — game đã tự vẽ Dark Wizard rồi, dán vào là hai
+// ông pháp sư khác kiểu chồng lên nhau.
+//
+// Giữ lại thứ dùng được: HƯỚNG NGHỆ THUẬT. Bốn thứ đọc ra từ ảnh gốc, làm lại đủ cả bốn —
+//   ① vũng sáng tím loang dưới chân
+//   ② những VUỐT LINH HỒN cong dài vươn ra rồi thu về (đây là hình ảnh nhận diện của chiêu)
+//   ③ một cú loé trắng-tím ở đỉnh chiêu
+//   ④ tàn lửa trắng nóng bay lên
+const ULINH_TAM = 46;                     // tâm hiệu ứng, cao hơn bàn chân
+const ULINH_RX = 122, ULINH_RY = 54;      // vũng sáng dưới chân
+const ULINH_VUOT = 8;                     // số cánh — tám thì vòng kín, sáu còn hở ở hai bên
+const ULINH_GOC = 74;                     // vuốt bắt đầu ở đâu — bán kính vành vũng sáng
+// Mũi cánh vươn tới ĐÚNG tầm sát thương của chiêu (dw_evilspirit fx.r = 150), không xa hơn.
+// Vẽ rộng hơn tầm đánh là hứa suông: người chơi thấy cánh hoa trùm qua con quái mà nó không
+// mất máu. Đổi fx.r cho khớp hình thì lại là lén sửa cân bằng — nên hình chạy theo cơ chế.
+const ULINH_DAI = 152;                    // vuốt vươn xa nhất bao nhiêu px
+// Dải màu lấy MẪU THẲNG từ ảnh gốc (102.988 pixel vùng tím, gom theo độ sáng), không phải tự
+// chọn: tối → sáng dần, kết ở gần trắng.
+const ULINH_MAU = ['#1f004f', '#340665', '#501188', '#853ab5', '#c67be1', '#f0c5f4'];
+// Tám cánh CÙNG MỘT KHUÔN, chỉ lệch vài phần trăm cho khỏi cứng như bánh răng. Bản trước cho
+// mỗi cánh một chiều dài, một độ cong, một độ trễ riêng — ra đám gai mọc lộn xộn, không ra bông
+// hoa. Muốn "nở rồi khép lại nuốt" thì tám cánh phải đi cùng nhịp, đây là điều kiện tiên quyết.
+const ULINH_LECH = [0, 0.045, -0.030, 0.055, -0.020, 0.035, -0.050, 0.025];
+function uLinhVuot(g, ex, cy, g0, N, dai, day, mau, mo){
+  const B = 14;                                    // số đốt trên thân vuốt
+  const tren = [], duoi = [];
+  for (let u = 0; u <= B; u++){
+    const f = u / B;
+    const a = g0 + N.cong * f;
+    // Vuốt DỰNG TRÊN VÀNH vũng sáng, không mọc ra từ giữa người. Bản trước cho gốc ở r = 16 nên
+    // sáu cái đều chui ra từ ngực nhân vật — đọc thành "người phát ra tia", không đọc thành
+    // "bị vây giữa một vòng u linh". Cho gốc lùi hẳn ra vành thì nhân vật đứng LỌT GIỮA vòng.
+    const r = ULINH_GOC + (dai - ULINH_GOC) * f;
+    const x = ex + Math.cos(a) * r;
+    // Độ bốc phải NHỎ hơn bán trục đứng của quỹ đạo, không thì mấy vuốt hướng xuống bị nhấc
+    // ngược lên đè chồng lên mấy vuốt hướng lên — đo bản trước: bốc 67px trên một elip chỉ cao
+    // ±79px, sáu vuốt dồn hết về nửa trên màn.
+    const y = cy + Math.sin(a) * r * 0.50 - f * f * 62 * N.boc;
+    // Bề dày: phình ở khoảng 1/4 thân rồi thon tới mũi. Số mũ 0,7 giữ cho đoạn gốc không bị
+    // tóp lại — vuốt phải MỌC RA từ bóng người, không lơ lửng bằng một cái chuôi mảnh.
+    const w = day * Math.pow(Math.sin(Math.PI * (0.18 + f * 0.82)), 0.7) * (1 - f * 0.25);
+    // Pháp tuyến KHÔNG dẹt theo 0,44. Hệ số đó thuộc về QUỸ ĐẠO (elip nhìn nghiêng 3/4), không
+    // thuộc về bề dày của chính cái vuốt. Nhân vào đây thì vuốt nào nằm ngang — tức phần lớn —
+    // chỉ còn 44% bề dày: đo được một vuốt dài 103px mà hộp bao cao vỏn vẹn 26px, trên màn coi
+    // như biến mất.
+    const na = a + Math.PI / 2;
+    const nx = Math.cos(na) * w, ny = Math.sin(na) * w;
+    tren.push([x + nx, y + ny]); duoi.push([x - nx, y - ny]);
+  }
+  g.globalAlpha = mo;
+  g.fillStyle = mau;
+  g.beginPath();
+  tren.forEach((P, k) => k ? g.lineTo(P[0], P[1]) : g.moveTo(P[0], P[1]));
+  for (let k = duoi.length - 1; k >= 0; k--) g.lineTo(duoi[k][0], duoi[k][1]);
+  g.closePath(); g.fill();
+}
+function veULinh(g, e, nua){
+  // Đồng hồ hiệu ứng ĐẾM LÊN (`e.t += dt` trong vòng cập nhật), giống hệt veVongKiem đọc.
+  // Viết ngược thành `1 - e.t/e.dur` là chiêu chạy giật lùi: lúc vừa tung đã ở cuối nhịp,
+  // mà cuối nhịp thì sin(k·π) = 0 nên sáu cái vuốt có bề dày đúng 0 — hiện ra mỗi vũng sáng.
+  const t = clamp(e.t / (e.dur || 1), 0, 1);       // 0 ở khung đầu → 1 lúc tắt
+  const cy = e.y - ULINH_TAM;
+  const no = t < 0.26 ? t / 0.26 : 1;              // nhịp nở
+  const tan = t < 0.62 ? 1 : 1 - (t - 0.62) / 0.38; // nhịp tàn
+  const S = e.scale || 1;
+  g.save();
+  // ① VŨNG SÁNG DƯỚI CHÂN — nằm dưới cùng, chỉ vẽ ở lượt 'sau'
+  if (nua === 'sau'){
+    const rx = ULINH_RX * S * (0.35 + no * 0.65), ry = ULINH_RY * S * (0.35 + no * 0.65);
+    const q = g.createRadialGradient(e.x, e.y + 6, 0, e.x, e.y + 6, rx);
+    q.addColorStop(0.00, ULINH_MAU[2]); q.addColorStop(0.40, ULINH_MAU[1]);
+    q.addColorStop(1.00, 'rgba(0,0,0,0)');
+    g.globalAlpha = 0.34 * tan; g.fillStyle = q;
+    g.beginPath(); g.ellipse(e.x, e.y + 6, rx, ry, 0, 0, 7); g.fill();
+    // vành ngoài sáng, chạy nhanh hơn vũng
+    g.globalAlpha = 0.34 * tan * no;
+    g.strokeStyle = ULINH_MAU[4]; g.lineWidth = 2;
+    g.beginPath(); g.ellipse(e.x, e.y + 6, rx * 1.05, ry * 1.05, 0, 0, 7); g.stroke();
+  }
+  // ② VUỐT LINH HỒN — nửa sau vẽ ba vuốt phía xa, nửa trước ba vuốt phía gần, để nhân vật
+  //    đứng LỌT GIỮA đám u linh chứ không bị dán đè lên mặt.
+  // NHỊP CHUNG cho cả tám cánh — hai chặng nối nhau:
+  //   NỞ   (0 → 0,46): cánh bung ra ngoài, mũi chếch lên, vòng mở rộng hết cỡ
+  //   KHÉP (0,46 → 1): mũi cong vào trong và trùm lên trên, vòng thít lại nuốt gọn vùng ở giữa
+  const k = clamp(t / 0.86, 0, 1);
+  const khep = clamp((k - 0.46) / 0.54, 0, 1);
+  const vuon = Math.pow(Math.sin(k * Math.PI), 0.55);
+  for (let i = 0; i < ULINH_VUOT; i++){
+    const g0 = e.goc + (i / ULINH_VUOT) * Math.PI * 2;
+    // Vuốt nào nằm ở NỬA XA của vòng thì vẽ sau lưng, nửa gần thì vẽ trước mặt. Bản trước chia
+    // theo chẵn/lẻ chỉ số — tức chia bừa: cái đang đứng ngay trước bụng nhân vật vẫn có thể bị
+    // xếp ra sau, nên vòng u linh không bao giờ đọc ra CHIỀU SÂU.
+    // sin(g0) < 0 là nửa trên elip, tức xa ống kính hơn (trục y hướng xuống).
+    if ((Math.sin(g0) < 0) !== (nua === 'sau')) continue;
+    if (vuon <= 0.01) continue;
+    const L = ULINH_LECH[i];
+    // Cong: ra ngoài lúc nở, quặp vào trong lúc khép. Đây là thứ làm động tác đọc ra "NUỐT"
+    // chứ không phải "xoè ra rồi tắt".
+    const N = { cong: 0.26 + khep * 1.34 + L, boc: 0.60 + khep * 0.90 + L * 2 };
+    const dai = ULINH_DAI * S * vuon * (1 + L * 0.5);
+    const day = 22 * S * vuon;
+    const mo = (0.40 + 0.48 * vuon) * tan;
+    // Ba lớp lồng nhau: thân tối rộng · ruột sáng · lõi gần trắng mảnh. Đó là thứ cho vuốt có
+    // KHỐI thay vì một vệt màu phẳng.
+    // Quỹ đạo chạy quanh MẶT ĐẤT (cùng cao độ với vũng sáng), không quanh tâm cao 46px. Lấy tâm
+    // cao thì mấy vuốt ở nửa xa bị đẩy lên thêm 88px nữa: đo được chúng lơ lửng ở 83–134px trên
+    // mặt đất, tức ngang và trên đầu nhân vật — nhìn thành "vòng u linh bay trên trời".
+    const dat = e.y + 6;
+    uLinhVuot(g, e.x, dat, g0, N, dai, day,        ULINH_MAU[2], mo * 0.85);
+    uLinhVuot(g, e.x, dat, g0, N, dai, day * 0.58, ULINH_MAU[3], mo);
+    uLinhVuot(g, e.x, dat, g0, N, dai * 0.96, day * 0.22, ULINH_MAU[5], mo * 0.9);
+  }
+  // ③ LOÉ ĐỈNH CHIÊU + ④ TÀN LỬA — chỉ ở lượt trước, cho nó nằm trên cùng
+  if (nua === 'truoc'){
+    if (t < 0.34){
+      const f = 1 - t / 0.34;
+      g.globalAlpha = 0.46 * f * f;
+      const r = 82 * S * (0.4 + (1 - f) * 1.5);
+      const q = g.createRadialGradient(e.x, cy, 0, e.x, cy, r);
+      q.addColorStop(0, ULINH_MAU[5]); q.addColorStop(0.4, ULINH_MAU[4]);
+      q.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = q; g.beginPath(); g.arc(e.x, cy, r, 0, 7); g.fill();
+    }
+    for (let i = 0; i < 11; i++){
+      const a = e.goc * 1.7 + i * 2.31;
+      const k = (t + i * 0.09) % 1;
+      const r = (30 + i % 4 * 24) * S * (0.3 + k);
+      g.globalAlpha = (1 - k) * 0.8 * tan;
+      g.fillStyle = i % 3 ? ULINH_MAU[5] : ULINH_MAU[4];
+      const px = e.x + Math.cos(a) * r, py = cy + Math.sin(a) * r * 0.44 - k * 56 * S;
+      g.beginPath(); g.arc(px, py, (2.2 - k * 1.3) * S, 0, 7); g.fill();
+    }
+  }
+  g.restore();
+  g.globalAlpha = 1;
+}
 function veVongKiem(g, e, nua){
   const cyc = e.y - VONGKIEM_TAM;                  // tâm elip, chung cho lửa lẫn vũ khí
   const k = clamp(e.t / (e.dur || 1), 0, 1);
@@ -930,6 +1088,222 @@ function vongKiemVuKhi(){
   // đã chụp lại thấy rõ. Nhân thêm đúng tỉ lệ mà heroSprite() dùng để thu người xuống.
   const THEGIOI = 104 / HERO_H;
   return { k: F.k * THEGIOI, dy: F.dy, ve: (g) => fn(g, P, dd) };
+}
+// ═══════════════ THẦN KHÍ — vũ khí bay theo người ═══════════════
+// Vẽ THẲNG từ món đang trang bị bằng ITEM_ART — 15 dòng vũ khí × 14 giai = 210 cây, cây nào ra
+// cây nấy: đúng lưỡi, đúng chắn tay, đúng chuôi, đúng hoa văn, đúng màu chất liệu của giai đó.
+// Đổi vũ khí trong túi là thần khí đổi theo ngay khung sau, không tốn một byte art nào.
+//
+// Đường TRANH VẼ TAY vẫn còn cho món nào đáng được vẽ riêng: khai vào TK_ANH theo `line`, tấm
+// phải CHUẨN HOÁ trước (mũi nằm dọc trục +X, chỗ nắm ở x/y) thì mọi phép xoay dưới đây mới đúng.
+const TK_ANH = {
+  // Trượng vẽ tay của Dark Wizard. Tấm gốc là ảnh chéo 512x512; đã CHUẨN HOÁ trước khi đưa vào:
+  // đo trục chính bằng PCA (120,1°), xoay 300,1° cho đầu trượng nằm dọc +X, cắt sát rồi thu về
+  // 172px. Chỗ nắm (65,33) lấy trên thân trượng, khoảng 38% từ đầu có quả cầu.
+  // Khai cho CẢ BA dòng trượng của Dark Wizard. Chỉ khai `tinhtruong` thì /gen bốc trúng
+  // `gay` hay `quyentruong` là rơi về hình vector, đứng cạnh bộ giáp vẽ tay nhìn lệch hẳn.
+  gay:         { tep:'tk_dwstaff', x:65, y:33 },
+  quyentruong: { tep:'tk_dwstaff', x:65, y:33 },
+  tinhtruong:  { tep:'tk_dwstaff', x:65, y:33 },
+};
+const TK_TAY = 24;                 // chỗ nắm trong hệ ITEM_ART — chuôi trải y 17..31
+const TK_PHONG = 1.35;             // thần khí to hơn lúc cầm tay: nó là bảo vật, không phải đồ nghề
+// Trả về { dai, ve } — `ve` vẽ cây vũ khí với CHỖ NẮM ở gốc và MŨI dọc trục +X, đơn vị px thế
+// giới. Nhờ chuẩn hoá đó mà thanKhiTuThe() chỉ cần lo quỹ đạo, không cần biết đang cầm cây gì.
+function thanKhiNguon(p){
+  const it = p.equip && p.equip.vukhi;
+  const d  = it && itemDef(it);
+  if (!d) return null;                         // tay không thì không có gì bay theo
+  const A = TK_ANH[d.line];
+  if (A){
+    const im = nvTai(A.tep, 'png');
+    if (im && im.complete && im.naturalWidth){
+      const s = 104 / HERO_H;
+      return { art: d.art, dai: im.naturalWidth * s,
+               ve: (g) => { g.scale(s, s); g.translate(-A.x, -A.y); g.drawImage(im, 0, 0); } };
+    }
+  }
+  const F = HELD_FIT[d.art];
+  if (!F) return null;                         // dòng chưa có cách cầm thì cũng chưa có cách bay
+  const P  = itemPal(d, it.tier || 1);
+  const fn = ITEM_ART[d.art] || iaWeapon;
+  const dd = Object.assign({}, d, { rot: 0 });
+  // ITEM_ART vẽ trong hệ RIÊNG của nó: chuôi quanh gốc, lưỡi chĩa theo −Y. Quay sẵn +90° để mũi
+  // về đúng trục +X, rồi kéo chỗ nắm về gốc. `big` được nhân BÊN TRONG iaWeapon nên chỗ nắm cũng
+  // giãn theo — phải bù đúng hệ số đó, không thì cây to cầm hụt xuống dưới chuôi.
+  const big = d.big || 1;
+  const k   = F.k * (104 / HERO_H) * TK_PHONG;
+  const dai = (TK_TAY - (d.len || -44)) * big * k;
+  return { art: d.art, dai,
+           ve: (g) => { g.scale(k, k); g.rotate(Math.PI / 2); g.translate(0, -TK_TAY * big); fn(g, P, dd); } };
+}
+// LỐI RA ĐÒN theo LOẠI vũ khí. Cùng một quỹ đạo cho mọi cây là chỗ hỏng dễ thấy nhất: cây cung
+// mà quét một cung 166° như thanh đại kiếm thì người chơi đọc thành lỗi hiển thị, không đọc thành
+// "thần khí đang bắn". Mỗi lối trả về vị trí trên quỹ đạo (goc/ban/cao), góc lưỡi trên màn (xoay),
+// và nó nằm trước hay sau thân người.
+//
+// Ghi nhớ về `xoay`: tấm đã chuẩn hoá MŨI DỌC TRỤC +X, nên xoay = 0 là mũi chỉ sang phải,
+// π/2 là mũi chúc xuống, 1,5π là mũi chĩa lên.
+// BỀ NGANG ĐÔI CÁNH trên màn, theo bậc — px thế giới, nhân vật cao 104px. Đo bằng cách vẽ
+// riêng từng đôi rồi lấy hộp bao alpha, lấy lớp rộng nhất trong năm; KHÔNG suy ra từ
+// WING_TIERS.sai được, vì mỗi bậc còn cộng số thùy, độ xoè, dải đuôi và vòng hào quang — số đo
+// thật gấp rưỡi con số trong bảng (Thần Dực khai sai:102 nhưng đo ra ±78).
+const TK_CANH_RONG = [0, 46, 65, 78];
+const TK_LOI = {
+  // KIẾM · RÌU · CHUỲ · BÚA — bổ. Lấy đà sau lưng, quét vòng ra trước mặt rồi thu về.
+  weapon: {
+    nghi: (f, di, wph, now) => ({
+      goc: f + Math.PI + di * 0.34,              // đi thì tụt thêm ra sau
+      ban: 20 + di * 7,
+      cao: 82 + Math.sin(now / 680) * 3.5 + di * Math.sin(wph * 2) * 2.5,
+      // Nghỉ thì MŨI CHÚC XUỐNG và chếch RA SAU (0,70π = 126°). Chĩa lên là tư thế sẵn sàng
+      // chém, giữ hoài thì trông như kẹt khung hình; dựng đứng thì cây kiếm dài 73px trên một
+      // nhân vật cao 104px che mất cả thân người.
+      xoay: Math.PI * 0.70 + Math.sin(now / 880) * 0.08 + di * Math.sin(wph) * 0.10,
+    }),
+    don: (f, e) => {
+      const goc = f + 2.4 - e * 2.9;             // quét 166° từ sau lưng ra trước mặt
+      return {
+        goc,
+        ban: 22 + 30 * Math.sin(Math.min(1, e) * Math.PI),
+        cao: 86 - 40 * e,                        // giơ cao rồi bổ xuống
+        // `goc` là hướng LA BÀN trên quỹ đạo, không phải góc của lưỡi kiếm trên màn. Quỹ đạo là
+        // một elip dẹt 0,42 (góc nhìn 3/4), nên muốn lưỡi nằm ĐÚNG trong mặt phẳng quét thì phải
+        // ép cùng hệ số dẹt đó rồi mới lấy atan2. Gán thẳng xoay = goc là trộn hai hệ toạ độ:
+        // đo được mũi kiếm kết thúc ở 96px trên mặt đất, tức chĩa ngược lên trời sau cú bổ.
+        xoay: Math.atan2(Math.sin(goc) * 0.42, Math.cos(goc)) + 0.22,
+        truoc: e > 0.30,                         // qua ngang người thì ra trước mặt
+        vet: Math.sin(Math.min(1, e) * Math.PI), // vệt đuôi đậm nhất ở giữa cú quét
+      };
+    },
+  },
+  // TRƯỢNG · KÍCH — đâm. Đầu trượng chĩa lên lúc nghỉ, rút về lấy đà rồi phóng thẳng ra trước.
+  staff: {
+    nghi: (f, di, wph, now) => ({
+      goc: f + Math.PI * 0.86 + di * 0.20,
+      ban: 24 + di * 5,
+      // Đầu trượng CHĨA LÊN (1,5π) nên cả thân cây nằm TRÊN chỗ nắm. Nắm phải hạ xuống ngang
+      // hông, không thì cây trượng dài 68px trôi hết lên trời, trên màn chỉ còn thấy mỗi cái chỏm.
+      cao: 40 + Math.sin(now / 700) * 3 + di * Math.sin(wph * 2) * 2.5,
+      xoay: Math.PI * 1.5 + Math.sin(now / 900) * 0.06 + di * Math.sin(wph) * 0.08,
+    }),
+    don: (f, e) => {
+      const d2 = e < 0.42 ? -0.5 + e / 0.42 * 0.5 : 1 - (e - 0.42) / 0.58 * 0.55;
+      return { goc: f, ban: 6 + d2 * 20, cao: 66 - d2 * 6,
+               xoay: f + 0.10,                   // mũi trượng đi trước, dọc đúng hướng mặt
+               truoc: d2 > 0.15, vet: Math.max(0, d2) * 0.5 };
+    },
+  },
+  // CUNG — giương ngang đường ngắm, giật lùi lúc buông dây. Không quét, không đâm.
+  bow: {
+    nghi: (f, di, wph, now) => ({
+      goc: f + Math.PI * 0.80, ban: 22 + di * 5,
+      cao: 66 + Math.sin(now / 700) * 3 + di * Math.sin(wph * 2) * 2.5,
+      xoay: f + Math.PI * 0.5 + Math.sin(now / 900) * 0.05,   // thân cung dựng vuông góc hướng bắn
+    }),
+    don: (f, e) => {
+      const giat = Math.sin(Math.min(1, e) * Math.PI);
+      return { goc: f - 0.30, ban: 26 - giat * 9,             // giật LÙI về người, không lao ra
+               cao: 70 + giat * 4, xoay: f + Math.PI * 0.5 - giat * 0.16, truoc: true };
+    },
+  },
+  // NỎ — nằm NGANG, mũi chỉ đúng chỗ sắp bắn. Dựng đứng như cung là sai: nỏ ngắm bằng thân.
+  crossbow: {
+    nghi: (f, di, wph, now) => ({
+      goc: f + Math.PI * 0.72, ban: 24 + di * 5,
+      cao: 68 + Math.sin(now / 700) * 3 + di * Math.sin(wph * 2) * 2.5,
+      xoay: f + Math.sin(now / 900) * 0.05,
+    }),
+    don: (f, e) => {
+      const giat = Math.sin(Math.min(1, e) * Math.PI);
+      return { goc: f - 0.20, ban: 24 - giat * 10, cao: 70 + giat * 3,
+               xoay: f - giat * 0.20, truoc: true };
+    },
+  },
+};
+// Trả về tư thế thần khí ở khung này, hoặc null. Toạ độ THẾ GIỚI, không phải hệ bộ xương.
+//
+// Bốn nhịp, mỗi nhịp một tính cách:
+//   đứng — lơ lửng sau vai, thở nhẹ. Kiếm nghỉ, không phải kiếm chờ.
+//   đi   — tụt lại phía sau và nghiêng theo bước chân: nó ĐUỔI THEO người, có quán tính.
+//   chém — lấy đà ra sau rồi bổ vòng ra trước, cuối nhịp thu về. Đây là chỗ phải khớp với cú
+//          vung tay của bộ xương, nếu không thì tay vung một đằng kiếm bay một nẻo.
+//   niệm — dựng đứng trên đầu và xoay chậm. Không quét, vì chiêu phép không phải chiêu chém.
+function thanKhiTuThe(p, atkK, castK, wph, now){
+  const S = thanKhiNguon(p);
+  if (!S) return null;
+  const L = TK_LOI[S.art] || TK_LOI.weapon;
+  const f = p.face || 0;
+  let goc, ban, cao, xoay, truoc, vet = 0;
+  if (castK > 0){
+    const k = 1 - Math.min(1, castK);
+    goc = f + Math.PI; ban = 6;
+    // Nâng lên trên đầu, nhưng KHÔNG quá tay. Bản cũ để 104 + 26 — trên một cây trượng vẽ tay
+    // dài 81px quay quanh chỗ nắm, đo được mũi vọt tới 189px trên mặt đất, tức ra khỏi khung
+    // hình. Vũ khí vector ngắn hơn nên trước giờ không lộ.
+    cao = 88 + 16 * Math.sin(k * Math.PI);
+    xoay = Math.PI * 0.5 + now / 240;            // xoay tròn, mũi vẫn chúc xuống
+    truoc = false;
+  } else if (atkK > 0){
+    // atkAnim ĐẾM NGƯỢC (1 ở khung đầu, 0 ở khung cuối) — xem chú thích ngay dưới atkK.
+    const k = 1 - atkK;
+    // Ba đoạn: lấy đà chậm · bổ nhanh · thu về. Đều tốc độ thì cú chém không có sức nặng.
+    const e = k < 0.30 ? (k / 0.30) * 0.16
+            : k < 0.58 ? 0.16 + ((k - 0.30) / 0.28) * 0.94
+            : 1.10 - ((k - 0.58) / 0.42) * 0.14;
+    const t = L.don(f, e, now);
+    goc = t.goc; ban = t.ban; cao = t.cao; xoay = t.xoay; truoc = t.truoc; vet = t.vet || 0;
+  } else {
+    const di = p.moving ? 1 : 0;
+    const t = L.nghi(f, di, wph, now);
+    goc = t.goc; ban = t.ban; cao = t.cao; xoay = t.xoay; truoc = false;
+    // ĐEO CÁNH thì thần khí phải tránh đường. Tư thế nghỉ đậu sau vai — đúng ngay chỗ đôi cánh
+    // mọc ra. Đôi Thần Dực rộng tới ±78px trên một nhân vật cao 104px, mà thứ tự vẽ lại là
+    // cánh → thần khí → thân, nên thanh kiếm nằm CHEN GIỮA: trên màn nó đọc thành "kiếm cắt
+    // ngang đôi cánh", không đọc thành "kiếm bay phía sau".
+    // Hai việc cùng lúc, và cả hai đều KHÔNG đụng tới quỹ đạo ra đòn: đẩy ra ngoài mép cánh, và
+    // vẽ ĐÈ lên tất cả — nằm gần ống kính hơn thì chồng hình đọc thành CHIỀU SÂU chứ không phải lỗi.
+    const cIt = p.equip && p.equip.canh;
+    const rong = cIt ? TK_CANH_RONG[clamp(wingBac(cIt), 1, 3)] : 0;
+    if (rong){ ban += rong * 0.30; truoc = true; }
+  }
+  return { S, mo: 1, vet,
+           x: p.x + Math.cos(goc) * ban,
+           y: p.y - cao + Math.sin(goc) * ban * 0.42,   // elip: trục đứng dẹt hơn, đúng góc nhìn 3/4
+           xoay, truoc };
+}
+function veThanKhi(g, t, p){
+  const dai = t.S.dai;
+  // HÀO QUANG — không phải trang trí. Một thanh kiếm lơ lửng mà không phát sáng thì người chơi
+  // đọc thành LỖI HIỂN THỊ (vũ khí rớt khỏi tay), không đọc thành "thần khí đi theo". Vệt sáng
+  // là thứ nói rằng chuyện này là cố ý.
+  const mau = (SECTS[(p || player).sect] || {}).glow || '#9fd0ff';
+  g.save();
+  g.globalCompositeOperation = 'lighter';
+  g.globalAlpha = t.mo * 0.30;
+  const q = g.createRadialGradient(t.x, t.y, 0, t.x, t.y, dai * 0.62);
+  q.addColorStop(0, mau); q.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = q;
+  g.beginPath(); g.arc(t.x, t.y, dai * 0.62, 0, 7); g.fill();
+  g.restore();
+  // Vệt đuôi khi đang quét: ba bản mờ lùi lại theo cung, cho thấy nó vừa đi qua đâu.
+  if (t.vet){
+    g.save(); g.globalCompositeOperation = 'lighter';
+    for (let i = 1; i <= 3; i++){
+      g.save();
+      g.globalAlpha = t.mo * 0.16 * (1 - i / 4);
+      g.translate(t.x, t.y); g.rotate(t.xoay - t.vet * i * 0.30);
+      t.S.ve(g);
+      g.restore();
+    }
+    g.restore();
+  }
+  g.save();
+  g.globalAlpha = t.mo;
+  g.translate(t.x, t.y); g.rotate(t.xoay);
+  t.S.ve(g);
+  g.restore();
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
 }
 function spawnAtlasVfx(id, x, y, scale){
   const def = VFX_ATLAS_DEFS[id]; if (!def) return;
@@ -2197,7 +2571,7 @@ const VOHOC_DEFS = {
   dw_ice:         { name:'Ice', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'proj', unlock:28, cd:6, qi:20, mult:1.6, color:'#5ac8e8', glyph:'❄', fx:{ slow:{ pct:0.5, t:3 } }, desc:'Băng giá xuyên thấu — trúng đòn làm chậm mục tiêu.' },
   dw_twister:     { name:'Twister', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'proj', unlock:38, cd:6, qi:24, mult:1.8, color:'#8ac850', glyph:'◉', fx:{ multi:3, pierce:true }, desc:'Ba cơn lốc xuyên phá — quét qua mọi địch trên đường đi.' },
   dw_inferno:     { name:'Inferno', school:'Dark Wizard', phai:'baidasan', tier:'cao', cat:'Pháp Thuật', type:'aoe', unlock:48, cd:10, qi:35, mult:2.8, color:'#ff7a3a', glyph:'☼', fx:{ r:180, big:true }, desc:'Dựng vòng lửa quanh chân rồi để nó nở ra nuốt cả vùng.' },
-  dw_evilspirit:  { name:'Evil Spirit', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'aoe', unlock:25, cd:7, qi:26, mult:2.0, color:'#6ab850', glyph:'✦', fx:{ r:150 }, desc:'Giải phóng năng lượng bóng tối quanh người — sát thương diện rộng.' },
+  dw_evilspirit:  { name:'Evil Spirit', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'aoe', unlock:25, cd:7, qi:26, mult:2.0, color:'#853ab5', glyph:'✦', fx:{ r:150 }, desc:'Sáu vuốt u linh vươn ra từ bóng của chính mình, quét sạch một vòng quanh người.' },
   // Ô 3 — buff: Soul Barrier, lá chắn hấp thụ. Dark Wizard mỏng máu nhất nên đây là thứ giữ
   // được mạng lúc đứng tụ phép giữa tầm xa 420.
   dw_shield:      { name:'Soul Barrier', school:'Dark Wizard', phai:'baidasan', tier:'trung', cat:'Pháp Thuật', type:'buff', unlock:15, cd:10, qi:26, color:'#5ab8e8', glyph:'♦', fx:{ shieldPct:45, t:6 }, desc:'Khiên hồn ma bao bọc — hấp thụ sát thương bằng 45% Sinh Lực tối đa trong 6s.' },
@@ -3231,6 +3605,12 @@ function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
   // lên đúng chỗ đó, thành hai vòng lệch nhau — nên chặn hẳn ở đây.
   if (id === 'dk_cyclone'){
     addEffect({ type:'vongKiem', x:player.x, y:player.y, dur:1.0, scale:1, wpn: vongKiemVuKhi() });
+    return;
+  }
+  // Evil Spirit cũng có đường vẽ riêng, cùng lý do: hình vector chung sẽ chồng thêm một vòng
+  // sáng nữa lên đúng chỗ đám u linh đang toả ra.
+  if (id === 'dw_evilspirit'){
+    addEffect({ type:'uLinh', x:player.x, y:player.y, dur:1.15, scale:1, goc: Math.random() * 6.28 });
     return;
   }
   const c = VH_VFX[id] || SECT_VFX[id] || null;
@@ -9909,6 +10289,7 @@ function render(){
   // Nửa SAU của Vòng Kiếm Lửa — phải nằm dưới lớp entity, nếu không thì cả vòng lửa dán bẹt
   // lên mặt nhân vật. Lượt còn lại (nửa trước) chạy ở khối effects bên dưới.
   for (const e of effects) if (e.type === 'vongKiem') veVongKiem(ctx, e, 'sau');
+  for (const e of effects) if (e.type === 'uLinh') veULinh(ctx, e, 'sau');
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
 
   for (const e of ents){
@@ -10012,6 +10393,9 @@ function render(){
       ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     } else if (e.type==='vongKiem'){
       veVongKiem(ctx, e, 'truoc');                 // nửa sau đã vẽ trước lớp entity
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    } else if (e.type==='uLinh'){
+      veULinh(ctx, e, 'truoc');                    // nửa sau đã vẽ trước lớp entity
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     } else if (e.type==='atlasVfx'){
       const def = VFX_ATLAS_DEFS[e.id];
@@ -13181,6 +13565,12 @@ window.drawHeroLit = drawHeroLit;
 // liên tục cùng khoảng thời gian đó chỉ lệch 0,7–5% — tức hoạt ảnh thô hơn 7–10 lần, và đó chính
 // là thứ mắt bắt được. 32 khung đưa bước nhảy về ngang mức vẽ thẳng.
 const HS_FRAMES = { i: 16, w: 32, a: 16, c: 16 };  // đứng · đi · đánh · tung chiêu
+// CỬA SỔ LƠ LỬNG trong khối đi. Khối đi có 32 khung; khung khớp dáng bay nhất là 8/12 của hoạt
+// cảnh gốc, tức 8/12 × 32 ≈ 21. Lắc ±2 khung theo một nhịp chậm để nó còn thở, không đứng hình.
+const BAY_KHUNG = 21, BAY_LAC = 2;
+// Lớp nào KHÔNG vung vũ khí lúc đánh thường thì đọc khung đánh từ khối khác. Dark Wizard dùng
+// khối 'c' — nướng từ '05_MagicAttack' của bản mẫu, đã có sẵn, không tốn thêm khung nào.
+const KHOI_DANH = { baidasan: 'c' };
 // Dựng ở ĐÚNG hộp gốc 160×220. Trong game dáng người cao 104px nên đây là hơn 2× độ phân giải
 // hiển thị — blit xuống là có khử răng cưa, nét hơn cả vẽ thẳng ở cỡ đó.
 const HS_SCALE = 1;
@@ -13245,7 +13635,7 @@ const NV_BO = {                                    // lớp|giai -> tệp bảng
 // người chơi: trong túi có thể nằm một cái nón giai 3 của lớp khác, và nó phải hiện đúng nón
 // giai 3 của lớp đó. Lớp|giai nào chưa có art thì không có khoá — icon tự về đường cũ.
 const NV_GIAP = {
-  'baidasan|1': 'hemp1',
+  'baidasan|1': 'dwsm1',
   'thieulam|1': 'dkgs1',
 };
 // Mỗi bộ giáp có bộ vũ khí RIÊNG: `<bộ>_vk<N>.png`, N theo GIAI VŨ KHÍ. Nướng riêng cho từng
@@ -13255,6 +13645,8 @@ const NV_GIAP = {
 // đi hết dải chất liệu (gỗ → pha lê → vàng → thần khí), thêm nữa thì không còn gì để leo.
 // Bộ giáp thép của Dark Knight mới có ĐÚNG MỘT cây đại kiếm — cây đi kèm chính gói Spine của
 // nó. Mọi giai đều dùng cây đó cho tới khi có art riêng từng giai.
+// Bộ nào có tệp vũ khí nướng sẵn thì khai ở đây. dwsm1 CỐ Ý không có: thần khí đã vẽ cây
+// trượng bay theo rồi, khai thêm là hai vũ khí cùng lúc — một cây trên tay, một cây bay quanh.
 const NV_VK_SO = { hemp1: 8, dkgs1: 1 };
 // Tranh CHỌN LỚP ở màn tạo nhân vật — bộ art anh hùng, không phải hình chibi nướng từ Spine.
 // Phải khai Ở ĐÂY chứ không cạnh heroPickUrl(): vòng nạp sớm ngay dưới đọc bảng này, mà nó
@@ -13302,6 +13694,10 @@ function nvVuKhi(sectKey, tier, gv){
   if (!gv || !gv.wDef) return null;
   const t = nvBoTen(sectKey, tier, gv);
   if (!t) return null;
+  // THẦN KHÍ bay theo thì không nướng vũ khí vào khung hình nữa — bật cả hai đường là hai thanh
+  // kiếm cùng lúc, một cái trong tay một cái bay quanh. Điều kiện ở đây phải TRÙNG KHÍT với
+  // thanKhiNguon(): dòng nào có cách cầm (HELD_FIT) là dòng đó có thần khí.
+  if (gv.wDef.art && HELD_FIT[gv.wDef.art]) return null;
   // Chỉ BỘ GIÁP mới có art vũ khí (khai trong NV_VK_SO). Thân trần thì không: người mặc mỗi
   // cái khố mà cầm cây trượng thần khí là hình ảnh sai, và tệp _vk của thân trần đã xoá rồi —
   // không chặn ở đây thì mỗi khung hình lại xin một tệp không tồn tại, 404 dài dài trong log.
@@ -13314,6 +13710,7 @@ function nvVuKhi(sectKey, tier, gv){
 // khí của game, và nhân vật mới thì chưa cầm gì cả. Vũ khí chỉ đi kèm BỘ GIÁP (xem NV_VK_SO).
 for (const k in NV_BO){ nvTai(NV_BO[k], 'webp'); nvTai(NV_BO[k] + '_dung', 'png'); }
 for (const k in NV_PICK) nvTai('pick_' + k, 'webp');   // tranh chọn lớp — nạp sớm kẻo thẻ nhấp nháy
+for (const k in TK_ANH) nvTai(TK_ANH[k].tep, 'png');   // thần khí có tranh vẽ tay
 for (const k in NV_GIAP){
   const t = NV_GIAP[k];
   nvTai(t + '_icon', 'webp'); nvTai(t, 'webp'); nvTai(t + '_dung', 'png');
@@ -13423,12 +13820,16 @@ function nvHaoQuangTruoc(g, sectKey, tier, gv, now, im, kind, idx){
   if (st >= 3) nvDaiQuet(g, im, kind, idx, now);
   hPlusSpark(g, SM, gv, now);                              // tàn lửa, từ +7
 }
-function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw){
+// `blk` — KHỐI KHUNG để đọc trên bảng art nướng, mặc định trùng `kind`. Tách đôi vì hai thứ trả
+// lời hai câu khác nhau: `kind` là "nhân vật đang LÀM GÌ" (quyết định chỉ số khung, tư thế vector,
+// khoá cache), `blk` là "lấy tấm khung TỪ ĐÂU" (xem KHOI_DANH).
+function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk){
   sw = sw || 0;
+  blk = blk || kind;
   // `act` phải nằm trong khoá cho CẢ đánh lẫn tung chiêu: heroFramePose() đọc act ở cả hai nhánh
   // (mỗi lớp một bộ khung tay/vũ khí riêng), nên bỏ nó ra khỏi khoá ở nhánh 'c' là hai tuyệt kỹ
   // khác nhau dùng chung một ảnh.
-  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${back ? 1 : 0}|${sw}|${nvBoTen(sectKey, tier, gv) || ''}${nvBo(sectKey, tier, gv) ? '' : '?'}|${window.TEST_TO_PHANG ? 'D' : ''}`;
+  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${blk}|${back ? 1 : 0}|${sw}|${nvBoTen(sectKey, tier, gv) || ''}${nvBo(sectKey, tier, gv) ? '' : '?'}|${window.TEST_TO_PHANG ? 'D' : ''}`;
   let cv = _hsCache.get(key);
   if (cv){                       // chạm — đẩy lên cuối để LRU giữ lại
     _hsHit++;
@@ -13455,9 +13856,9 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw){
   if (_nvIm){
     const _now = heroFrameNow(kind, idx);
     nvHaoQuangSau(g, sectKey, tier, gv, _now);      // hào quang cường hoá nằm SAU lưng
-    nvVeKhung(g, _nvIm, kind, idx);
+    nvVeKhung(g, _nvIm, blk, idx);
     const _vk = nvVuKhi(sectKey, tier, gv);         // vũ khí đắp đè lên thân
-    if (_vk) nvVeKhung(g, _vk, kind, idx);
+    if (_vk) nvVeKhung(g, _vk, blk, idx);
     nvHaoQuangTruoc(g, sectKey, tier, gv, _now, _nvIm, kind, idx);   // viền + quét + tàn lửa
   }
   else drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx), ps, canhBoRa(gv));
@@ -14406,7 +14807,14 @@ function drawChibi(g, sectKey, variant){
 //      Dark Knight đeo cánh quỷ (màng dơi có nan ngón và vuốt), Dark Wizard đeo cánh thiên
 //      thần (lông vũ trắng xếp lớp), Elf đeo cánh tiên (màng côn trùng trong suốt có gân).
 //      Magic Gladiator dùng được cả hai loại nên cho lai. Dark Lord cũng đeo cánh quỷ.
-const CANH_GOC_X = 14, CANH_GOC_Y = -108;   // (80±14, 212-108) = (66,104)/(94,104) — bả vai
+const CANH_GOC_X = 9, CANH_GOC_Y = -108;    // (80±9, 212-108) = (71,104)/(89,104) — KHỚP VAI
+// Đo THẲNG TỪ BỘ XƯƠNG, không đọc chú thích. Hai xương cánh tay `左手`/`右手` là con của thân
+// trên, nên gốc của chúng CHÍNH LÀ khớp vai. Tính ma trận thế giới ở tư thế nghỉ rồi quy về hệ
+// hero: vai phải (75,6 · 103,4) · vai trái (94,0 · 104,1) → cách nhau ±9,2, cao 103,7.
+//
+// Chú thích cũ ở khối trên ghi 'hai vai cách nhau 56 px' — SAI, và tôi đã tin nó: sửa ±14 thành
+// ±23 cho 'đúng bả vai', tức đẩy đôi cánh ra XA khớp vai thật hơn cả bản đầu. Bộ xương này là
+// người 4 đầu, thân hẹp; ±9 trông sát nhau nhưng đó mới là chỗ đôi cánh mọc ra.
 const CANH_CO_MAN = 104 / HERO_H;           // từ hệ xương ra pixel thế giới
 const CANH_CHAN_MAN = 6;                    // hero y=212 rơi vào world y = p.y + 6
 // ── TRANH CÁNH ─────────────────────────────────────────────────────────────────────
@@ -14552,7 +14960,8 @@ function veCanh(g, it, px, py, sway, swayDir, co, bay){
       // Trễ pha theo thùy: cùng pha thì mấy thùy dính lại thành một mảng cứng.
       const vo = Math.sin(now / chuKy + k * 0.55) * bienGoc * (1 - 0.2 * kk);
       // Cặp dưới quay quá phương ngang để đổ XUỐNG, không phải chỉ xoè thấp hơn một chút.
-      const goc = duoiX ? Math.PI * 0.78 + T.xoe * kk : CANH_NGHIENG + T.xoe * kk;
+      const goc = duoiX ? Math.PI * 0.78 + T.xoe * kk
+                        : CANH_NGHIENG + (CANH_NGHIENG_ART[d.art] || 0) + T.xoe * kk;
       g.save();
       g.rotate(goc + vo + sway * 0.10 + swayDir * 0.05);
       g.globalAlpha = Math.max(0.34, 0.96 - 0.1 * k);
@@ -15104,6 +15513,18 @@ function drawPlayer(){
                      CANH_CO_MAN, bayK);
 
   const wph = p.walkPh || 0;
+  // ═══ THẦN KHÍ — vũ khí KHÔNG nằm trong tay, nó bay theo người ═══
+  // Đường cũ nướng vũ khí vào từng khung hình (<bộ>_vk<N>.png, 80 khung/cây, 2,1 MB cả bộ) và
+  // buộc nó vào xương bàn tay. Cách đó khoá cứng ba thứ: mỗi bộ giáp phải nướng riêng, mỗi giai
+  // vũ khí một tệp, và vũ khí KHÔNG đổi theo món người chơi đang cầm — dkgs1 có đúng một cây
+  // đại kiếm cho mọi thanh kiếm trong game.
+  //
+  // Bay theo thì gỡ cả ba: một tấm 9 KB, đặt ở toạ độ thế giới, chuyển động do mã quyết định.
+  // Và bỏ vũ khí ra khỏi khung hình KHÔNG để lại bàn tay hụt — bộ xương nắm đấm rồi vung theo
+  // cung, đọc thành "ra hiệu điều khiển" chứ không phải "quên cầm đồ". Đã chụp lại đối chiếu.
+  const _tk = thanKhiTuThe(p, (p.atkAnim || 0) / 0.22, (p.castT || 0) / 0.38, p.walkPh || 0, now);
+  if (_tk && !_tk.truoc) veThanKhi(ctx, _tk, p);        // nằm sau lưng: vẽ TRƯỚC thân
+
   const castK = (p.castT || 0) / 0.38;
   const atkK = (p.atkAnim || 0) / 0.22;
   // `atkAnim` ĐẾM NGƯỢC nên atkK = 1 ở khung ĐẦU và 0 ở khung cuối: thân người dồn tới xa nhất
@@ -15167,18 +15588,29 @@ function drawPlayer(){
   //  thu nhỏ chứ không phải kéo giãn.)
   let _spr = null;
   if (_hurt <= 0){
-    // Mang cánh là LƠ LỬNG THAY CHO đi bộ. Đang bay mà vẫn lấy khung 'w' thì nhân vật sải chân
-    // giữa không trung — mắt bắt ngay, và trái hẳn cái mà đôi cánh vừa hứa. Đổi sang khung
-    // đứng: chân buông, còn việc di chuyển để đôi cánh lo.
-    const _kind = castK > 0 ? 'c' : atkK > 0 ? 'a' : (p.moving && bayK < 0.5 ? 'w' : 'i');
+    // BAY không có khối khung riêng, và không cần. Đo bằng chỉ số chồng khít giữa tư thế bay
+    // mong muốn với cả 20 hoạt cảnh × 12 khung của bản mẫu: khớp nhất là chính '00_Walk' khung
+    // 8/12 — 0,915, bỏ xa á quân '00_Run' 0,718. Đó là khoảnh khắc hai chân chụm lại và mũi
+    // bàn chân chúc xuống, tức đúng dáng lơ lửng. Nên bay = khối ĐI, nhưng ghim quanh cửa sổ
+    // đó thay vì chạy hết chu kỳ sải chân.
+    // (Bản trước nướng thêm hẳn một khối '00_Squat' cho việc này — 16 khung × 8 bộ, 0,7 MB.
+    //  Đo xong thì thừa: dáng cần đã nằm sẵn trong khối đi.)
+    const _bay = bayK >= 0.5;
+    const _kind = castK > 0 ? 'c' : atkK > 0 ? 'a' : (_bay || p.moving) ? 'w' : 'i';
     const _n = HS_FRAMES[_kind];
     const _TAU = Math.PI * 2;
     const _idx = _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
                : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)
-               : _kind === 'w' ? ((((wph % _TAU) + _TAU) % _TAU) / _TAU * _n) | 0
+               : _kind === 'w' ? (_bay ? BAY_KHUNG + Math.round(Math.sin(now / 700) * BAY_LAC)
+                                       : ((((wph % _TAU) + _TAU) % _TAU) / _TAU * _n) | 0)
                : ((((now / 620) % _TAU) + _TAU) % _TAU) / _TAU * _n | 0;
     const _sw = (p.sway || 0) > 0.35 ? 2 : (p.sway || 0) < -0.35 ? 1 : 0;
-    _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back, _sw);
+    // Dark Wizard KHÔNG vung kiếm. Bản mẫu Spine có sẵn '05_MagicAttack' — nướng rồi, nằm ở
+    // khối 'c'. Đổi khối vẽ mà GIỮ NGUYÊN `_kind` semantics: chỉ số khung vẫn tính theo atkK,
+    // chỉ có tấm khung đọc từ chỗ khác. Gán thẳng _kind='c' thì chỉ số rơi về nhánh castK — mà
+    // castK = 0 lúc đánh thường — nên khung đứng im ở 0.
+    const _blk = (_kind === 'a' && KHOI_DANH[p.sect]) || _kind;
+    _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back, _sw, _blk);
   }
   // Thần Hiệp: viền kim quang quanh thân. Trước đây làm bằng cách đặt shadowBlur rồi để nguyên
   // suốt cả dáng người — đo được 166 trong 204 nhát fill của drawPlayer() bị làm mờ, mỗi nhát là
@@ -15194,6 +15626,7 @@ function drawPlayer(){
   if (_spr) heroBlit(ctx, _spr);
   else drawHeroLit(ctx, p.sect, _tier, now, _ps, _gv);
   ctx.restore();
+  if (_tk && _tk.truoc) veThanKhi(ctx, _tk, p);        // quét ra trước mặt: vẽ SAU thân
   // weapon arc while attacking
   if (p.atkAnim > 0){
     const k = p.atkAnim/0.22;
