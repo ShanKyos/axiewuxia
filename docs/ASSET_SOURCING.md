@@ -774,10 +774,15 @@ nhị phân. Kết luận khi ấy là "cần viết thêm bộ đọc nhị ph�
 chỉ vài con ra hình — thân của sói/gấu/dryad làm bằng **mesh**, mà `assemble.py` chỉ dán được mảnh
 `region`; muốn ghép phải làm thêm bước biến hình theo tam giác.
 
-### Đã dùng — 16 Chimera (`assets/chimera/*.png`), thay hẳn `assets/mounts/`
+### Đã dùng — 16 Chimera (`assets/chimera/*.webp`), thay hẳn `assets/mounts/`
 
 Hệ Thú Chiến bị Chimera nuốt (xem `docs/GACHA_KHE_UOC.md`), nên 5 file `assets/mounts/` cũ bị xoá,
-16 con Chimera lấy art mới theo id. Xuất bằng `tools/spine/xuat_chimera.py`.
+16 con Chimera lấy art mới theo id.
+
+> **Cập nhật 2026-09-05** — art nay là **bảng khung hình**, không còn ảnh tĩnh: `<id>.webp` (16
+> khung nhịp thở) và `<id>_q.webp` (12 khung `activity/appear` + 12 khung thở). Nướng bằng
+> `tools/spine/nuong_chi.py`, không phải `xuat_chimera.py` nữa. Chi tiết và ba chỗ dễ sai:
+> `docs/ART_CHIMERA_HOATCANH.md`.
 
 | Chimera | rig | Chimera | rig |
 |---|---|---|---|
@@ -801,12 +806,13 @@ trùng ảnh. 16 con = 16 rig gốc khác nhau, không con nào là biến thể
 vảy cá) rơi vào rig duy nhất còn lại là một con mèo đen trắng — đổi thành **Inkmane** (Dusk), tên
 và hình mới cùng nói một chuyện.
 
-**Ba bước xử lý sau khi ghép** (`xuat_chimera.py`):
+**Ba bước xử lý sau khi ghép** — của `xuat_chimera.py`, đường xuất ảnh tĩnh đời đầu. Đã **xoá**
+cùng đợt thay sang bảng khung hình; chép lại đây vì hai bài học đầu vẫn đúng cho `nuong_chi.py`:
 1. *Bỏ mảnh rời* — vài rig để phụ kiện (quả cà của `22`) nằm tách hẳn khỏi thân ở tư thế gốc; trong
-   màn nó trôi lơ lửng cạnh con vật. Giữ cụm lớn nhất và những cụm cách nó dưới 26px.
-2. *Lật ngang* — art gốc quay TRÁI, `drawMount()` lật lại khi nhân vật quay trái.
-3. *Thu về 480px cạnh dài* — màn quay Khế Ước hiện con ở 150px, `drawMount()` ở 84px; 480 là dư
-   nét mà cả bộ chỉ 2,4MB.
+   màn nó trôi lơ lửng cạnh con vật. (Đường mới không cần bước này: nó bỏ thẳng hai khe `back` và
+   `shadow` theo tên, chính xác hơn là dò cụm pixel.)
+2. *Lật ngang* — art gốc quay TRÁI, `drawMount()` lật lại khi nhân vật quay trái. Vẫn đúng.
+3. *Thu về 480px cạnh dài* — nay thay bằng hai cỡ ô: 132px cho bảng thở, 360px cho bảng quay.
 
 **Không dùng, và vì sao:** `Summoners/*` (8 con: Clover, FruitSloth, LittleRobin, Mavis, Mushroom,
 Sparrow, TrueFanHermitCrab, Trunk) nay ghép ra sạch và đúng nghĩa "thú triệu hồi", nhưng chúng vẽ

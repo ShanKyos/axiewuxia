@@ -182,8 +182,9 @@ Dawn · Dusk) — cùng bộ đã dùng cho Vùng Vỡ Ấn, xem `docs/VUNG_VO_A
 **4★ — 10 con**: Petalkin · Crimsonmaw · Thornpaw · Inkmane · Cinderbeak · Mossback · Hexmite ·
 Ridgehorn · Coghound · Sunspur. Bị động một dòng, chủ động một chiêu đơn giản.
 
-**Art**: cả 16 con là ảnh Axie thật dựng từ 16 rig Spine khác nhau trong `axie-origins-asset-kit`
-(`assets/chimera/*.png`, xem `docs/ASSET_SOURCING.md` mục Mười). Không con nào là bản biến thể của
+**Art**: cả 16 con là Axie thật dựng từ 16 rig Spine khác nhau trong `axie-origins-asset-kit`,
+nay ở dạng **bảng khung hình** nên con vật thở và có hoạt cảnh hiện hình riêng
+(`assets/chimera/*.webp`, xem `docs/ART_CHIMERA_HOATCANH.md`). Không con nào là bản biến thể của
 con nào — hai con chỉ khác cái mũ thì trong bảng roster nhìn như lỗi trùng ảnh. Lớp và màu của
 từng con chạy theo art, chứ không bắt art chạy theo bảng.
 
