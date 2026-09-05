@@ -169,7 +169,15 @@ const pass = m => console.log('PASS ' + m);
   if (!set.coDuongRa) fail('Cài Đặt không có đường ra màn chọn nhân vật');
   if (set.conXoaSave) fail('Cài Đặt vẫn còn nút XÓA SAVE — xoá nhân vật phải nằm ở màn chờ');
 
-  // ── 5. Chỉ còn MỘT bộ chữ ─────────────────────────────────────────────────
+  // ── 5. Hai bộ chữ, và bộ thứ hai phải NẰM YÊN chỗ của nó ──────────────────
+  // Mốc cũ là "đúng một Be Vietnam Pro". Nay có hai: Baloo 2 quay lại làm chữ hiển thị cho
+  // RIÊNG mặt Khế Ước Chimera (token --font-chi), vì chữ hiển thị chính chủ của Axie là Lilita
+  // One mà nó không có bộ dấu tiếng Việt — "Khế Ước" ra thành "Kh   c".
+  //
+  // Cái phải gác không còn là SỐ bộ chữ mà là PHẠM VI: Baloo 2 từng bị gỡ khỏi --font-display
+  // vì chữ bo tròn kiểu hoạt hình trên khung thép đinh tán là hai ngôn ngữ hình ảnh chửi nhau.
+  // Lý do đó vẫn đúng, nên bảng Nhân Vật (và mọi bảng khác) phải sạch bóng nó.
+  const CHU_CHO = ['Be Vietnam Pro', 'Baloo 2'];
   const chu = await p.evaluate(() => {
     const ho = new Set();
     for (const f of document.fonts) ho.add(f.family.replace(/['"]/g, ''));
@@ -177,34 +185,41 @@ const pass = m => console.log('PASS ' + m);
     const dung = new Set();
     for (const e of document.querySelectorAll('#panel-char *, #panel-char'))
       dung.add(getComputedStyle(e).fontFamily.split(',')[0].replace(/['"]/g, '').trim());
-    return { tai: [...ho], dung: [...dung] };
+    return { tai: [...ho], dung: [...dung],
+             display: getComputedStyle(document.documentElement).getPropertyValue('--font-display').trim(),
+             chi: getComputedStyle(document.documentElement).getPropertyValue('--font-chi').trim() };
   });
   console.log('chữ:', JSON.stringify(chu));
-  if (chu.tai.length !== 1 || chu.tai[0] !== 'Be Vietnam Pro')
-    fail('bộ chữ tải về không phải đúng một Be Vietnam Pro: ' + chu.tai.join(', '));
-  else pass('chỉ tải một bộ chữ: Be Vietnam Pro');
+  const la0 = chu.tai.filter(f => !CHU_CHO.includes(f));
+  if (la0.length) fail('có bộ chữ ngoài danh sách cho phép: ' + la0.join(', '));
+  else pass('chỉ tải ' + CHU_CHO.join(' + '));
   const la = chu.dung.filter(f => f !== 'Be Vietnam Pro');
   if (la.length) fail('bảng Nhân Vật còn dùng bộ chữ khác: ' + la.join(', '));
   else pass('bảng Nhân Vật chỉ dùng một bộ chữ');
+  if (/Baloo/.test(chu.display)) fail('--font-display lại trỏ vào Baloo 2 — nó chỉ được ở --font-chi');
+  else pass('--font-display vẫn là Be Vietnam Pro');
+  if (!/Baloo/.test(chu.chi)) fail('--font-chi không còn Baloo 2: ' + chu.chi);
+  else pass('--font-chi giữ Baloo 2 cho mặt Khế Ước');
 
-  // ── 6. Không còn dấu vết bộ chữ đã gỡ trong MÃ NGUỒN ──────────────────────
-  // Phép kiểm ①–⑤ không bắt được chuyện này: `document.fonts` chỉ liệt kê bộ chữ ĐƯỢC NẠP, mà
-  // Baloo 2 thì không còn @font-face nào nên nó vắng mặt ở đó dù mã vẫn gọi tên. Bảy chuỗi
-  // ctx.font còn sót lại chạy đúng nhờ có Be Vietnam Pro đứng kế sau — nhưng một chỗ
-  // (`font-family:'Baloo 2',sans-serif`) không có dự phòng, và nó rơi thẳng xuống bộ chữ chung
-  // của trình duyệt. Chỉ soi mã nguồn mới thấy.
-  // Chỉ đếm chỗ ĐẶT TÊN BỘ CHỮ — tức là tên nằm trong dấu nháy (`'Baloo 2'` / `"Baloo 2"`).
-  // Chú thích giải thích vì sao đã gỡ thì viết trần, không nháy, nên không bị tính nhầm.
+  // ── 6. Baloo 2 chỉ được gọi tên ở ĐÚNG HAI CHỖ ────────────────────────────
+  // Phép kiểm ⑤ không bắt được chuyện này: nó đọc kiểu ĐÃ TÍNH của bảng đang mở, nên một chuỗi
+  // `ctx.font = '700 20px "Baloo 2"'` nằm trong đường vẽ canvas của bảng khác thì vô hình.
+  // Chỉ đếm chỗ ĐẶT TÊN BỘ CHỮ — tên nằm trong dấu nháy. Chú thích viết trần thì không tính.
+  //
+  // Cho phép: style.css có 6 khối @font-face (3 dải chữ × 2 nét) + 1 dòng --font-chi = 7;
+  // game.js có đúng 1 hằng KU_CHU và 1 lần document.fonts.load() hâm nóng nó = 2.
+  const TRAN_BALOO = { 'game.js': 2, 'style.css': 7, 'fonts.css': 0 };
   const src = await p.evaluate(async () => {
     const out = {};
     for (const f of ['game.js', 'style.css', 'fonts.css'])
       out[f] = ((await (await fetch(f)).text()).match(/['"]Baloo 2['"]/g) || []).length;
     return out;
   });
-  console.log('bộ chữ đã gỡ:', JSON.stringify(src));
-  const sot = Object.entries(src).filter(([, n]) => n > 0);
-  if (sot.length) fail('mã nguồn còn gọi tên bộ chữ đã gỡ: ' + sot.map(([f, n]) => `${f} ×${n}`).join(', '));
-  else pass('không tệp nào còn gọi tên Baloo 2');
+  console.log('gọi tên Baloo 2:', JSON.stringify(src), 'trần:', JSON.stringify(TRAN_BALOO));
+  const sot = Object.entries(src).filter(([f, n]) => n > TRAN_BALOO[f]);
+  if (sot.length) fail('Baloo 2 lan ra ngoài phạm vi cho phép: '
+                       + sot.map(([f, n]) => `${f} ×${n} (trần ${TRAN_BALOO[f]})`).join(', '));
+  else pass('Baloo 2 chỉ nằm trong @font-face, --font-chi và KU_CHU');
 
   await p.screenshot({ path: 'qa_shots/khung_bang.png' });
   await b.close();
