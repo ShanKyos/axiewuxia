@@ -33,7 +33,6 @@ const { chromium } = require('playwright');
       startGame(sect, null);
       player.level = 60; calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
       vhAutoLearn(); // real play reaches this via gainXp()/unlockNotices() on every level-up; jumping level directly in a test must replay it explicitly
-      if (sect === 'thieulam') player.gangkhi = { tier: 1, bless: 0 }; // Cương Khí Tấn Chức tier 1 — DK's buff gate, separate from vhLearned()
       calcDerived();
       for (const k in player.cd) player.cd[k] = 0;
       const before = { hp: player.hp, qi: player.qi };

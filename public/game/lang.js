@@ -73,7 +73,6 @@ const EXACT = {
   // still paired with a Vietnamese word (Cảnh/Trung Kỳ/Hậu Kỳ) need translating.
   'Molt': 'Molt', 'Radiant Core': 'Radiant Core', 'Starforged': 'Starforged',
   'Resonance Trung Kỳ': 'Resonance · Mid', 'Resonance Hậu Kỳ': 'Resonance · Late',
-  'Đá Thăng Cấp': 'Ascent Stone',
   'Thức Tỉnh': 'Awakened', '— ĐÃ THỨC TỈNH ✦': '— AWAKENED ✦', '— TỐI THƯỢNG': '— SUPREME',
   // Stats
   'Công Kích': 'Attack', 'Tấn Công': 'Attack', 'Sinh Lực': 'HP',
@@ -107,7 +106,7 @@ const EXACT = {
   '◎ Chúc Phúc Châu': '◎ Blessing Pearl', '◉ Linh Hồn Châu': '◉ Soul Pearl',
   '❤ Sinh Mệnh Châu': '❤ Life Pearl', '● Hỗn Độn Châu': '● Chaos Pearl',
   '✦ Huyền Thiết ×5': '✦ Mystic Iron ×5', 'Huyền Thiết ×5': 'Mystic Iron ×5',
-  '◈ Đan Ascension Trial': '◈ Ascension Trial Pill', '◈ Đá Thăng Cấp ×3': '◈ Ascent Stone ×3',
+  '◈ Đan Ascension Trial': '◈ Ascension Trial Pill',
   '⚔ Rương Binh Khí': '⚔ Weapon Chest', '⚔ Rương Binh Khí Tinh Tuyển': '⚔ Elite Weapon Chest',
   '🛡 Rương Phòng Cụ': '🛡 Armor Chest', 'bảo hiểm rèn': 'forge insurance', 'rèn +1~+11': 'forge +1~+11',
   'Mua thành công!': 'Purchase successful!',
@@ -246,9 +245,10 @@ const EXACT = {
   'Khai Mở Mạch Lực': 'Open Channels', 'Vạn Vật Hữu Duyên': 'Fortune\'s Favorite',
   '+8 Tấn Công': '+8 Attack', '+55 Sinh Lực tối đa': '+55 Max HP',
  '+5% tỉ lệ quái rớt đồ': '+5% monster drop rate',
-  'Venom Dart +15% Sát Thương · phá khiên lâu thêm 4s': 'Hidden Weapons +15% DMG · shield-break lasts 4s longer',
   'Giết Du Hiệp không tăng Tội Ác': 'Slaying Wandering Heroes grants no Sin',
   'Card +12% Sát Thương': 'Card +12% Damage', '+15% Bạc rơi': '+15% silver drops',
+  'Kỹ năng +15% Sát Thương · phá khiên lâu thêm 4s': 'Skills +15% DMG · shield-break lasts 4s longer',
+  'Kỹ năng +12% Sát Thương': 'Skills +12% Damage',
   // ── Tính cách ──
   'Chính Trực': 'Righteous', 'Tà Khí': 'Heretical', 'Trung Dung': 'Balanced',
   '⌨ Phím Space': '⌨ Space key',
@@ -272,13 +272,10 @@ Object.assign(EXACT, {
   // ── Dung Hợp: 30 descs ──
   
   // ── SKILL_DEFS names + descs ──
-  'Venom Dart': 'Venom Dart',
   'Rupture Bolt': 'Rupture Bolt',
   
-  'Piercing Arrow': 'Piercing Arrow',
   'Soul Rend': 'Soul Rend',
   // ── PASSIVE_SKILLS: 6 names + 6 descs ──
-  'Archery (bị động)': 'Archery (passive)',
   'Huyết Ma Thôn Phệ': 'Blood Demon Devour',
   // ── Sect skill names (16) ──
 
@@ -349,8 +346,6 @@ Object.assign(EXACT, {
   'Rèn / nâng tầng / khảm ngọc 1 lần': 'Forge / advance a tier / socket a jewel once',
   // Character-panel wrapper (renderCharPanel) + CHAR_TABS
   'Thú Chiến': 'War Beast',
-  'Thuần Thục': 'Mastery',
-  'Thuần Thục — 7 Tầng': 'Mastery — 7 Stages',
   '🔄 Tái Sinh': '🔄 Reset',
   'Tái Sinh': 'Reset',
   'Đài Hội Lực': 'Confluence Dais',

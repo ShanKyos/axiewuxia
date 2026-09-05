@@ -72,7 +72,7 @@ const PORT = process.argv[2] || '8853';
     }
     // Khoá ĐẶC TRƯNG: lớp nào chạm được khoá nào.
     o.aiChamDuoc = {};
-    for (const k of ['spdPct','rangePct','amkhiPct','potionPct','shieldSec','dropPct','ltPct','expPct','silverPct'])
+    for (const k of ['spdPct','rangePct','potionPct','shieldSec','dropPct','ltPct','expPct','silverPct'])
       o.aiChamDuoc[k] = LOP.filter(sc => o.lop[sc].hoSo[k] > 0);
 
     startGame('thieulam', null);
@@ -154,7 +154,7 @@ const PORT = process.argv[2] || '8853';
       skill:player.skillDmgPct||0, cd:player.vhCdMult||1,
       // các khoá ĐẶC TRƯNG LỚP — thiếu chúng ở đây thì nút của bốn lớp mới trông như nút chết
       qiLeech:player.qiLeech||0, perfect:player.perfectProc||0, speed:player.speed||0,
-      tam:atkRange(), amkhi:player.amkhiPct||0, potion:player.potionPct||0,
+      tam:atkRange(), potion:player.potionPct||0,
       shield:player.shieldBonus||0, drop:player.dropBonus||0, lt:player.ltBonus||0 }; };
     const khac = (a, c) => Object.keys(a).some(k => Math.abs(a[k]-c[k]) > 1e-9);
 
@@ -248,7 +248,9 @@ const PORT = process.argv[2] || '8853';
   else pass(`cả ${LOP.length*(LOP.length-1)/2} cặp lớp đều khác nhau rõ rệt về chỉ số`);
   // Khoá đặc trưng: đúng lớp nào chạm được thì chỉ lớp đó
   const MONG = {
-    spdPct:['toanchan'], rangePct:['toanchan','baidasan'], amkhiPct:['baidasan'],
+    // amkhiPct đã gỡ cùng hệ Thuần Thục — nút Độc Nhiễm của Dark Wizard nay cộng %ST Kỹ Năng
+    // (skillPct) như ba nút cùng bảng, nên lớp này còn ĐÚNG MỘT khoá đặc trưng: potionPct.
+    spdPct:['toanchan'], rangePct:['toanchan','baidasan'],
     potionPct:['baidasan'], shieldSec:['minhgiao'], dropPct:['bug'],
     ltPct:['thieulam'], expPct:['bug'], silverPct:['bug'],
   };
@@ -258,7 +260,7 @@ const PORT = process.argv[2] || '8853';
     const mong = MONG[k].slice().sort().join(',');
     if (co !== mong){ fail(`khoá đặc trưng ${k}: lớp chạm được là [${co}], phải là [${mong}]`); saiDT++; }
   }
-  if (!saiDT) pass('9 khoá đặc trưng nằm đúng lớp — Tốc Chạy chỉ Ranger, Rơi Đồ/Bạc/EXP chỉ Dark Lord, Liên Trảm chỉ Dark Knight…');
+  if (!saiDT) pass('8 khoá đặc trưng nằm đúng lớp — Tốc Chạy chỉ Ranger, Rơi Đồ/Bạc/EXP chỉ Dark Lord, Liên Trảm chỉ Dark Knight…');
 
   // ── 2. sức chứa phải lớn hơn số điểm kiếm được, nếu không thì không có lựa chọn nào cả ──
   const motVong = r.thuongMo + r.thuongMoiLan + r.capToiDa - 1;   // khai mở + một đời cày + một lần Tái Sinh

@@ -46,14 +46,13 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     const bo = spawnMob('boss_hacphong', { x: player.x + 90, y: player.y, r:1, count:1 }, null);
     const rq = computeKillRewards(q, 'hit', player), rb = computeKillRewards(bo, 'hit', player);
     return { quai: { xp:rq.xp, bac:rq.silver > 0, khi:rq.khi },
-             boss: { xp:rb.xp, khi:rb.khi, tienDan:rb.tienDan, dropSrc:rb.dropSrc } };
+             boss: { xp:rb.xp, khi:rb.khi, dropSrc:rb.dropSrc } };
   });
   console.log('2) trả về gì:', JSON.stringify(r2));
   if (!(r2.quai.xp > 0) || !r2.quai.bac || !(r2.quai.khi > 0)) fail('quái thường không ra thưởng cơ bản');
   if (!(r2.boss.xp > r2.quai.xp)) fail('boss cho EXP không hơn quái thường');
   // Tâm Đắc đã gộp vào Instinct — cái đáng gác nay là boss phải cho NHIỀU Instinct hơn quái
   // thường, vì đó là chỗ sức ép "đi săn boss" chuyển sang sau khi bỏ ô đếm riêng.
-  if (!(r2.boss.tienDan > 0)) fail('boss không cho Đá Thăng Cấp');
   if (!(r2.boss.khi > r2.quai.khi)) fail(`boss cho ${r2.boss.khi} Instinct, không hơn quái thường ${r2.quai.khi}`);
 
   // ---- 3. Giết THẬT vẫn phải cộng vào player như cũ ----

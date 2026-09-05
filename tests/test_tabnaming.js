@@ -16,7 +16,7 @@ const { chromium } = require('playwright');
     window.TEST_MODE = true;
     startGame('thieulam', null);
     player.level = 60; calcDerived();
-    window.charTab = 'tuyethoc'; renderCharPanel();
+    window.charTab = 'mastery'; renderCharPanel();
     return { html: document.getElementById('panel-char').innerHTML.slice(0, 400) };
   });
   console.log('2) Tấn Chức tab renders correctly:', JSON.stringify(r2));

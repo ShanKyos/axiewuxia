@@ -35,7 +35,7 @@ function check(name, ok, extra){
   const tabs = await page.evaluate(() => {
     player.level = 100; calcDerived();
     togglePanel('char');
-    // Bốn tab (Chimera · Linh Thú · Thuần Thục · Đại Thành) nay nằm trong tab mẹ ✦ Nâng Cấp,
+    // Ba tab (Chimera · Linh Thú · Đại Thành) nay nằm trong tab mẹ ✦ Nâng Cấp,
     // hàng con chỉ hiện KHI đang ở trong nhóm. Nên phải gom nhãn của CẢ HAI trạng thái.
     const nhan = () => Array.from(document.querySelectorAll('#panel-char .bang-tab')).map(b => b.textContent.trim());
     const hangDau = nhan();
@@ -132,7 +132,7 @@ function check(name, ok, extra){
     await page.waitForTimeout(320);
   }
   // mở lần lượt mọi bảng còn lại
-  for (const t of ['info', 'forge', 'mount', 'tuyethoc', 'pet', 'taytuy']){
+  for (const t of ['info', 'forge', 'mount', 'pet', 'taytuy']){
     await page.evaluate((tab) => { switchCharTab(tab); }, t);
     await page.waitForTimeout(120);
   }

@@ -76,7 +76,10 @@ const pass = m => console.log('PASS ' + m);
              ai: AI_PASSES.filter(x => lvPeak() >= x.reqLv).length };
   });
   console.log('4.', JSON.stringify(r4));
-  (r4.congSau > r4.congTruoc && r4.tab >= 5 && r4.ai === 6)
+  // `tab >= 4`, không còn 5: CHAR_TABS mất mục 'tuyethoc' khi gỡ hệ Thuần Thục, nên bảng
+  // Nhân Vật còn bốn tab (Thông Tin · Chimera · Đại Thành · Tẩy Tuỷ). Mệnh đề bài này gác
+  // là "Tái Sinh không khoá lại tab nào", không phải "có đúng chừng này tab".
+  (r4.congSau > r4.congTruoc && r4.tab >= 4 && r4.ai === 6)
     ? pass(`Tái Sinh ${r4.sl} lần: thưởng cộng dồn (công ${r4.congTruoc}→${r4.congSau}), quyền vẫn nguyên`)
     : fail('nhiều lần Tái Sinh sai: ' + JSON.stringify(r4));
 

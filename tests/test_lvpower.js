@@ -28,9 +28,16 @@ const pass = m => console.log('PASS ' + m);
 // mới là trục chính, ai không mặc gì thì yếu. Phần tụt đó đã được bù bằng mobHp(), thứ hạ máu
 // quái đúng bằng lượng sát thương thực mà người chơi mất (đo được hệ số 0,27–0,87 tuỳ cấp).
 // Năm cột còn lại — máu, mana, thủ, bạo, né — KHÔNG dính căn bậc hai nên giữ nguyên mốc cũ.
-const VANG = {"1":[27,291,63,10,21,17.5],"12":[117,1049,130,20,35,25.5],"30":[267,2339,238,35,56,37.5],
-"48":[361,3976,346,50,77,49.5],"60":[420,5273,418,60,91,57.5],"96":[616,10111,634,90,133,81.5],
-"108":[689,12400,706,100,147,89.5],"120":[731,13727,778,110,161,97.5]};
+// CỘT CÔNG hạ 1,5% từ cấp 4 trở lên sau khi gỡ hệ Thuần Thục. Nguồn duy nhất: dòng
+// `if (player.level >= SKILL_DEFS.amkhi.unlock) legacyPct += 1.5` — Venom Dart cộng 1,5% Công
+// vĩnh viễn ngay khi tới cấp 4. Chiêu đó đã xoá theo yêu cầu chủ dự án nên phần thưởng của nó
+// cũng đi theo; không có lý gì giữ một khoản +1,5% không còn gắn với thứ gì.
+// (Mục bow 2% cùng bảng KHÔNG ảnh hưởng bảng này: nó đòi Archery tầng ≥1, mà nhân vật đo ở đây
+//  chưa từng nâng tầng nào — đo được đúng 1,5%, không phải 3,5%.)
+// Cấp 1 và 12 không đổi: cấp 1 chưa tới mốc 4, còn mốc 12 vốn đã dư sàn.
+const VANG = {"1":[27,291,63,10,21,17.5],"12":[117,1049,130,20,35,25.5],"30":[263,2339,238,35,56,37.5],
+"48":[356,3976,346,50,77,49.5],"60":[414,5273,418,60,91,57.5],"96":[607,10111,634,90,133,81.5],
+"108":[679,12400,706,100,147,89.5],"120":[720,13727,778,110,161,97.5]};
 // Đỉnh của bản TRƯỚC, giữ lại để mệnh đề 2 còn đối chiếu được và để không ai quên vì sao tụt.
 const CONG_DINH_CU = 1744;
 const TEN = ['công','máu','mana','thủ','bạo','né'];

@@ -104,8 +104,10 @@ const pass = m => console.log('PASS ' + m);
   if (nv.info.hang !== 1 || nv.ts.hang !== 1)
     fail('hàng tab con hiện cả khi KHÔNG ở trong nhóm — bốn nút thừa trên mọi trang khác');
   else pass('hàng tab con chỉ hiện khi đang ở trong nhóm');
-  if (!nv.chi.con || nv.chi.con.length !== 3) fail('nhóm không có đủ 3 tab con');
-  else pass('nhóm có 3 tab con: ' + nv.chi.con.join(' · '));
+  // HAI tab con, không phải ba: nhánh Thuần Thục đã gỡ theo yêu cầu chủ dự án, CHAR_NHOM còn
+  // ['mount', 'mastery'] (Chimera·Linh Thú và Đại Thành).
+  if (!nv.chi.con || nv.chi.con.length !== 2) fail(`nhóm có ${nv.chi.con ? nv.chi.con.length : 0} tab con, phải là 2`);
+  else pass('nhóm có 2 tab con: ' + nv.chi.con.join(' · '));
   for (const [ten, o] of [['Chimera', nv.chi], ['Đại Thành', nv.dt]]){
     if (!o.chaOn.some(x => /Nâng Cấp/.test(x))) fail(`${ten}: tab mẹ không sáng`);
     if (!o.conOn || o.conOn.length !== 1) fail(`${ten}: tab con sáng ${o.conOn ? o.conOn.length : 0} mục, phải đúng 1`);

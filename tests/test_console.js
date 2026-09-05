@@ -3,7 +3,7 @@
 // Console là công cụ test — nó không đi cùng bản online. Nhưng chính vì thế nó âm thầm trôi khỏi
 // build: không bài nào chạy nó, không người chơi nào báo lỗi. Bản cũ quảng cáo "34 kỹ năng + 30
 // dung hợp" trong khi VOHOC_DEFS còn 27 và FUSION_DEFS đã rỗng; liệt kê 8 map trong khi /map nhận
-// 15; gọi hệ Thuần Thục bằng khoá nội bộ amkhi/bow/gangkhi trong khi giao diện gọi Venom/Archery/
+// 15. (Mục gác tên hệ Thuần Thục đã bỏ cùng hệ đó.
 // Stoneform; và bốn hệ tiền tệ mới thì không có lệnh nào chạm tới.
 //
 // Bài này gác ba thứ:
@@ -60,7 +60,6 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     return {
       soChieuTrongHelp: soChieu && +soChieu, soChieuThat: Object.keys(VOHOC_DEFS).length,
       mapThieu: Object.keys(MAPS).filter(k => !h.includes(k)),
-      thThieu: Object.keys(TH_SYSTEMS).filter(k => !h.includes(TH_SYSTEMS[k].name)),
       evoThieu: Object.keys(EVO_PATHS).filter(k => !h.includes(EVO_PATHS[k].name)),
       dungHop: /dung hợp/.test(h), phiThang: /\/phi\b/.test(h),
     };
@@ -68,7 +67,6 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   console.log('2) /help so với bảng thật:', JSON.stringify(r2));
   if (r2.soChieuTrongHelp !== r2.soChieuThat) fail(`/help nói ${r2.soChieuTrongHelp} kỹ năng, thật ${r2.soChieuThat}`);
   if (r2.mapThieu.length) fail('/help thiếu map: ' + r2.mapThieu.join(', '));
-  if (r2.thThieu.length) fail('/help gọi hệ Thuần Thục sai tên: ' + r2.thThieu.join(', '));
   if (r2.evoThieu.length) fail('/help thiếu nhánh tiến hóa: ' + r2.evoThieu.join(', '));
   if (r2.dungHop) fail('/help vẫn quảng cáo "dung hợp" — FUSION_DEFS đã rỗng');
   if (r2.phiThang) fail('/phi vẫn còn — "phi thăng" là từ vựng bị cấm');

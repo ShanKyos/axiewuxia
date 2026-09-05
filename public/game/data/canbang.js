@@ -415,31 +415,31 @@ window.WEAPON_LINES = [
 window.DUNGEONS = {
   pb_daohoa:   { boss:'boss_hacphong',  bossName:'Thủ Lĩnh Đoàn Gloam',
     waves:[ ['bandit','bandit','wolf'], ['bandit','hautu','bandit'], ['assassin','bandit','wolf'] ],
-    rewards:{ tienDan:[1,2],  tuLa:[0,0], hon:[0,0], khi:40,  bacThem:150,  silver:[850,1450] },
+    rewards:{ sach:[1,2],  tuLa:[0,0], hon:[0,0], khi:40,  bacThem:150,  silver:[850,1450] },
     huntBoss:'boss_cotma1', boxTier:1, timeLimit:480 },
   pb_ngoai:    { boss:'boss_sontac',    bossName:'Thủ Lĩnh Sói Hoang',
     waves:[ ['bandit','wolf','bandit'], ['bandit','bandit','caodo'], ['assassin','bandit','bandit'] ],
-    rewards:{ tienDan:[1,2],  tuLa:[0,0], hon:[0,0], khi:55,  bacThem:220,  silver:[1070,1680] },
+    rewards:{ sach:[1,2],  tuLa:[0,0], hon:[0,0], khi:55,  bacThem:220,  silver:[1070,1680] },
     huntBoss:'boss_cotma2', boxTier:1, timeLimit:480 },
   pb_chungnam: { boss:'boss_phando',    bossName:'Phản Đồ Đại Tướng',
     waves:[ ['phando','bandit','phando'], ['xanu','phando','bandit'], ['bandao','xanu','phando'] ],
-    rewards:{ tienDan:[2,3],  tuLa:[0,1], hon:[0,0], khi:90,  bacThem:450,  silver:[1600,2450] },
+    rewards:{ sach:[2,3],  tuLa:[0,1], hon:[0,0], khi:90,  bacThem:450,  silver:[1600,2450] },
     huntBoss:'boss_hacnu1', boxTier:2, timeLimit:540 },
   pb_comoc:    { boss:'boss_mochu',     bossName:'Chúa Tể Lăng Mộ',
     waves:[ ['thinu','mocnhan','thinu'], ['huyetbat','mocnhan','thinu'], ['huyetbat','huyetbat','mocnhan'] ],
-    rewards:{ tienDan:[2,3],  tuLa:[1,1], hon:[0,0], khi:140, bacThem:800,  silver:[2400,3400] },
+    rewards:{ sach:[2,3],  tuLa:[1,1], hon:[0,0], khi:140, bacThem:800,  silver:[2400,3400] },
     huntBoss:'boss_hacnu2', boxTier:2, timeLimit:540 },
   pb_tuyettinh:{ boss:'boss_tinhhoa',   bossName:'Xoáy Lá Nguyền',
     waves:[ ['ttdetu','docyeu','ttdetu'], ['docyeu','satthuhy','ttdetu'], ['satthuhy','docyeu','docyeu'] ],
-    rewards:{ tienDan:[3,4],  tuLa:[1,2], hon:[0,1], khi:200, bacThem:1400, silver:[3350,4700] },
+    rewards:{ sach:[3,4],  tuLa:[1,2], hon:[0,1], khi:200, bacThem:1400, silver:[3350,4700] },
     huntBoss:'boss_hoangkim1', boxTier:3, timeLimit:600 },
   pb_mongco:   { boss:'boss_dothong',   bossName:'Đột Thông Hãn Vương',
     waves:[ ['thamtu','cungthu','kybinh'], ['cungthu','kybinh','thamtu'], ['kybinh','kybinh','cungthu'] ],
-    rewards:{ tienDan:[4,5],  tuLa:[2,2], hon:[1,1], khi:280, bacThem:2400, silver:[4600,6500] },
+    rewards:{ sach:[4,5],  tuLa:[2,2], hon:[1,1], khi:280, bacThem:2400, silver:[4600,6500] },
     huntBoss:'boss_hoangkim2', boxTier:4, timeLimit:660 },
   pb_nhanmon:  { boss:'boss_thienbinh', bossName:'Thiên Binh Thống Soái',
     waves:[ ['kylan','cuongbinh','daokhach'], ['cuongbinh','daokhach','kylan'], ['daokhach','kylan','kylan'] ],
-    rewards:{ tienDan:[5,6],  tuLa:[2,3], hon:[2,2], khi:350, bacThem:3500, silver:[6000,8400] },
+    rewards:{ sach:[5,6],  tuLa:[2,3], hon:[2,2], khi:350, bacThem:3500, silver:[6000,8400] },
     huntBoss:'boss_amthan', boxTier:5, timeLimit:720 },
 };
 
@@ -722,7 +722,7 @@ window.NPCS = [
   // QA rà soát NPC Lunaris City: Thương Nhân · Chợ Đấu Giá đã bị xoá — cả 3 món trong tiệm đều
   // trùng chỗ khác (Bình Thuốc Đỏ = Dược Sư, Thiên Mệnh Phù = mua thẳng trong Rèn Luyện qua buyCharm()),
   // và "Chợ Đấu Giá" chưa từng có cơ chế đấu giá thật — chỉ là tiệm giá cố định như 3 tiệm kia.
-  // Đá Thăng Cấp ×3 (món duy nhất không trùng) đã chuyển sang tiệm Dược Lão bên dưới.
+  // Đá Thăng Cấp đã gỡ hẳn cùng hệ Thuần Thục — nó không còn nơi tiêu.
   { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'tuongduong', x:1780, y:780, img:'assets/npcs/thoren.png', talk:'forge',
     lore:'"Lò này cháy suốt từ hôm khu phố rơi qua. Ta không dám để nó tắt — sợ nhóm lại không được."',
     barks:['"Búa này theo ta qua cả vết nứt."','"Đợi lò đỏ đã, đừng giục."',

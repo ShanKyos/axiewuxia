@@ -52,8 +52,8 @@ const PORT = process.argv[2] || '8853';
 
     // ── 2. năm ô buff, năm cơ chế ──
     for (const [sect, bid] of Object.entries(BUFF_SKILL_ID)){
+      if (!bid) continue;   // lớp chưa có chiêu buff (Dark Knight sau khi gỡ hệ Thuần Thục)
       startGame(sect, null); player.traits = []; player.level = 60; player.lvPeak = 60;
-      if (sect === 'thieulam') player.gangkhi.tier = 1;   // Defense cần Stoneform tầng 1
       vhAutoLearn(); calcDerived();
       const t0 = { atk:player.atk, aspd:player.aspd, crit:player.crit, shield:player.vhShield || 0, gk:player.gkBuffT || 0 };
       player.hp = Math.round(player.maxHp * 0.5); const hp0 = player.hp;
@@ -114,7 +114,15 @@ const PORT = process.argv[2] || '8853';
     const la = d.hienLan.filter(n => !(sect === 'minhgiao' && KE_THUA.includes(n)));
     if (la.length) fail(`bảng K của ${d.ten} hiện chiêu lớp khác: ${la.join(', ')}`);
     if (d.conNutHoc) fail(`bảng K của ${d.ten} vẫn còn mục/nút học di sản NGOẠI LỚP`);
-    if (d.bar.some(x => !x)) fail(`${d.ten} thiếu chiêu ở thanh 4 ô: ${JSON.stringify(d.bar)}`);
+    // Ô 3 (buff) của Dark Knight ĐANG TRỐNG CÓ CHỦ Ý: nó vốn trỏ vào 'gangkhi' (Defense), mà
+    // chiêu đó đi cùng hệ Thuần Thục đã gỡ theo yêu cầu chủ dự án. Cây kỹ năng Dark Knight
+    // không còn chiêu buff CHỦ ĐỘNG nào khác (dk_fortitude/Swell Life đang là bị động). Lấp lại
+    // là việc của đợt rework kỹ năng 5 lớp — tới lúc đó dòng gác này phải siết lại thành
+    // `d.bar.some(x => !x)` cho cả năm lớp.
+    const _oTrong = d.bar.map((x, i) => x ? -1 : i).filter(i => i >= 0);
+    const _choPhep = sect === 'thieulam' ? [2] : [];
+    const _thieu = _oTrong.filter(i => !_choPhep.includes(i));
+    if (_thieu.length) fail(`${d.ten} thiếu chiêu ở ô ${_thieu.join(',')} của thanh 4 ô: ${JSON.stringify(d.bar)}`);
     if (d.diSan.length !== 4) fail(`${d.ten} có ${d.diSan.length} chiêu di sản, phải là 4`);
     if (!d.biDong.length) fail(`${d.ten} không có bị động riêng`);
   }
@@ -131,8 +139,10 @@ const PORT = process.argv[2] || '8853';
   else pass('không tên chiêu nào dùng chung giữa hai lớp');
 
   // ── 2. buff ──
+  // BỐN lớp, không phải năm: Dark Knight không còn chiêu buff (xem chú thích ở mục 1).
   const B = r.buff;
-  if (!(B.thieulam.giamST > 0)) fail('Defense (Dark Knight) không bật cửa sổ giảm sát thương'); else pass(`Defense: giảm sát thương ${B.thieulam.giamST}s`);
+  if (B.thieulam) fail('Dark Knight lại có chiêu buff — nếu là cố ý thì siết luôn mục 1 lại');
+  else pass('Dark Knight chưa có chiêu buff — đúng trạng thái sau khi gỡ hệ Thuần Thục');
   if (!(B.toanchan.hoiMau > 0 && B.toanchan.stX > 1)) fail('Bless (Sylvan Ranger) không hồi máu'); else pass(`Bless: +${B.toanchan.hoiMau} HP và ×${B.toanchan.stX} ST`);
   if (!(B.baidasan.khien > 0)) fail('Soul Barrier (Dark Wizard) không tạo khiên'); else pass(`Soul Barrier: khiên ${B.baidasan.khien}`);
   if (!(B.minhgiao.tocDanhX > 1.1 && B.minhgiao.stX > 1)) fail('Battle Fury (Spellblade) không cộng tốc đánh'); else pass(`Battle Fury: ×${B.minhgiao.stX} ST và ×${B.minhgiao.tocDanhX} tốc đánh`);

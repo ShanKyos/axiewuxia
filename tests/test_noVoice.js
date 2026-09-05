@@ -23,7 +23,7 @@ const BAN = ['ám khí','cương khí','đạn chỉ','linh tiễn','tiêu hồn
   // tung đủ các chiêu để chắc chắn đường mã hô tên chiêu (nếu còn) sẽ chạy
   await p.evaluate(() => {
     travelTo('daohoa');
-    for (const id of ['a','tp','amkhi','gangkhi','danchi','bow','tieuhon']){
+    for (const id of ['a','tp','danchi','tieuhon']){
       try { player.cd = {}; player.qi = player.maxQi; castSkill(id); } catch(e){}
     }
     for (let i = 0; i < 60; i++) update(1/60);
@@ -38,21 +38,20 @@ const BAN = ['ám khí','cương khí','đạn chỉ','linh tiễn','tiêu hồn
     nutLoa: !!document.getElementById('btn-voice'),
     coSkillVoice: typeof window.SkillVoice !== 'undefined',
     tenChieu: Object.keys(SKILL_DEFS).map(id => { const i = skillInfo(id); return i ? i.name : ''; }).filter(Boolean),
-    tenTanChuc: Object.keys(TH_SYSTEMS || {}).map(k => TH_SYSTEMS[k].name),
   }));
   console.log('tên chiêu:', JSON.stringify(r2.tenChieu));
-  console.log('tấn chức :', JSON.stringify(r2.tenTanChuc));
   if (r2.nutLoa) fail('nút 🗣 giọng hô tên chiêu vẫn còn trên thanh HUD');
   else pass('nút 🗣 đã gỡ khỏi thanh HUD');
   if (r2.coSkillVoice) fail('đối tượng SkillVoice vẫn tồn tại');
   else pass('hệ hô tên chiêu đã gỡ khỏi mã');
 
-  const dinh = [...r2.tenChieu, ...r2.tenTanChuc].filter(n => BAN.some(w => n.toLowerCase().includes(w)));
+  const dinh = r2.tenChieu.filter(n => BAN.some(w => n.toLowerCase().includes(w)));
   if (dinh.length) fail('tên còn từ vựng kiếm hiệp: ' + JSON.stringify(dinh));
-  else pass(`${r2.tenChieu.length} tên chiêu + ${r2.tenTanChuc.length} tên Tấn Chức đều sạch`);
+  else pass(`${r2.tenChieu.length} tên chiêu đều sạch`);
 
-  // bảng Kỹ Năng (K) và bảng Tấn Chức (H) mở được, không lỗi
-  for (const [key, id] of [['K','skill'],['H','tuyethoc'],['C','char']]){
+  // bảng Kỹ Năng (K) và Nhân Vật (C) mở được, không lỗi. Bảng Tấn Chức (phím H) đã gỡ cùng
+  // hệ Thuần Thục — không còn bảng nào để mở bằng phím đó.
+  for (const [key, id] of [['K','skill'],['C','char']]){
     const ok = await p.evaluate(i => { try { closePanels(); togglePanel(i); return true; } catch(e){ return String(e); } }, id);
     if (ok !== true) fail(`mở bảng ${key} lỗi: ${ok}`);
   }
