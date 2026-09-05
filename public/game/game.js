@@ -17378,6 +17378,18 @@ function vkTranhCuaMon(def){
 
 // Vẽ trọn một icon: nền theo GIAI → hình món → hào quang cường hoá.
 // Tham số `rarity` giữ chỗ để không phải sửa mọi lời gọi cùng lúc; nó không còn ai đọc.
+// ── THANG NẤC RÈN CHO ICON TRONG TÚI ────────────────────────────────────────────────
+// KHÁC plusStage() (thang trên NGƯỜI, 4 nấc) một cách có chủ ý, và không được gộp lại:
+//   · Trên người, món đang mặc chỉ có một mức rèn TRUNG BÌNH của cả bộ và người chơi nhìn nó
+//     lướt qua giữa lúc đánh nhau — bốn nấc là vừa đọc.
+//   · Trong túi, người chơi soi từng món một, cạnh nhau, và ba mức 7·8·9 là ba chặng rèn RẤT
+//     đắt: mỗi mức phải đọc ra ngay ở ô 92px. Nên tách thành nấc riêng.
+// Sáu nấc: 0 (+0..3 trơ) · 1 (+4..6 quầng) · 2 (+7 viền) · 3 (+8 tàn lửa) · 4 (+9 vòng hào
+// quang) · 5 (+10,11 dải sáng quét). Mỗi nấc THÊM MỘT DẤU HIỆU MỚI chứ không chỉ tăng độ
+// sáng — độ sáng thôi thì trong một ô nhỏ ba mức nhoè vào nhau.
+function icStage(pl){
+  return !(pl > 0) ? 0 : pl < 4 ? 0 : pl < 7 ? 1 : pl < 8 ? 2 : pl < 9 ? 3 : pl < 10 ? 4 : 5;
+}
 function drawItemIcon(g, def, tier, _rarity, plus, ty){
   const _ty = ty || 1;
   const _nua = 50 * _ty;                       // nửa chiều cao khung, tính trong hệ ảo 100 đơn vị
@@ -17395,12 +17407,15 @@ function drawItemIcon(g, def, tier, _rarity, plus, ty){
   // đổi ở đúng 3 mốc: rèn từ +7 lên +9 là cả một chặng dài, tốn Tu La và có thể tụt cấp, mà
   // icon không đổi một điểm ảnh nào. Đo được: +5 +6 +8 +9 +11 đều ra 0px khác biệt.
   const pl = plus || 0;
-  const st = plusStage(pl);
+  const st = icStage(pl);
   const k = clamp((pl - 3) / 8, 0, 1);            // 0 tại +3 → 1 tại +11, chạy liên tục
   const GC = M.glow || '#ffe9a8';
   const gl = { lo: GC, hi: GC, trim: GC, glow: null };
   // Vũ khí có tranh thì vẽ tranh; mọi thứ khác (và vũ khí chưa có tranh) về ô chờ art.
   // So sánh THAM CHIẾU với `gl` để biết đang ở lượt hào quang — đó là dấu chắc chắn duy nhất.
+  // Bán kính quỹ đạo bám theo khung: khung vũ khí CAO nên vòng tàn lửa và vòng hào quang phải
+  // là hình bầu dục theo đúng khung, không thì chúng cắt ngang thân cây trượng.
+  const _rx = 32, _ry = Math.max(32, _nua - 14);
   const _vkIm = vkTranhCuaMon(def);
   const fn = _vkIm ? ((gg, pal) => veVkTranh(gg, _vkIm, pal === gl ? GC : null, _ty)) : iaChuaArt;
   if (st >= 1){
@@ -17408,13 +17423,27 @@ function drawItemIcon(g, def, tier, _rarity, plus, ty){
     // Viền ôm sát ở bước 2 chỉ là một dải mỏng quanh bóng, đổi chừng 1.100 điểm ảnh;
     // một bước rèn thường đã đổi 630 vì quầng nền phủ diện rộng. Muốn cái mốc đọc ra
     // là NẤC thì nó cũng phải tác động lên diện rộng — nên nấc nằm ở quầng nền.
-    const stA = st >= 3 ? 0.14 : st >= 2 ? 0.08 : 0;
-    const stS = st >= 3 ? 0.13 : st >= 2 ? 0.07 : 0;
+    const stA = st >= 5 ? 0.14 : st >= 4 ? 0.11 : st >= 3 ? 0.09 : st >= 2 ? 0.06 : 0;
+    const stS = st >= 5 ? 0.13 : st >= 4 ? 0.10 : st >= 3 ? 0.08 : st >= 2 ? 0.05 : 0;
     g.save();
     g.globalCompositeOperation = 'lighter';
     g.globalAlpha = 0.05 + k * 0.17 + stA;
     g.scale(1.10 + k * 0.12 + stS, 1.10 + k * 0.12 + stS);
     fn(g, gl, def);
+    g.restore();
+  }
+  if (st >= 4){                                   // 4. VÒNG HÀO QUANG — từ +9. Vẽ TRƯỚC món nên
+    // nó nằm sau lưng, không cắt ngang thân món. Nấc +9 phải đọc ra bằng HÌNH DẠNG chứ không
+    // phải độ sáng: ba mức 7·8·9 mà chỉ khác nhau ở alpha thì trong ô túi 92px chúng nhoè vào
+    // nhau — đo được +8 với +9 chỉ lệch 3.691 trên 15.488 điểm ảnh, phần lớn ở rìa quầng.
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.strokeStyle = GC;
+    g.globalAlpha = 0.34 + (st - 4) * 0.14;
+    g.lineWidth = 1.8 + (st - 4) * 0.9;
+    g.beginPath();
+    g.ellipse(0, 0, Math.min(46, _rx + 10), Math.min(_nua - 4, _ry + 2), 0, 0, Math.PI * 2);
+    g.stroke();
     g.restore();
   }
   g.save(); fn(g, M, def); g.restore();
@@ -17431,16 +17460,36 @@ function drawItemIcon(g, def, tier, _rarity, plus, ty){
     g.scale(1.055, 1.055); fn(g, gl, def);
     g.restore();
   }
-  if (st >= 3){                                   // 3. tàn lửa quanh món — chỉ +10 trở lên
+  if (st >= 3){                                   // 3. TÀN LỬA quanh món — từ +8
     g.save();
     g.globalCompositeOperation = 'lighter';
     g.fillStyle = GC;
-    const n = 4 + Math.round((pl - 9) * 2);
+    const n = 4 + Math.max(0, pl - 7) * 2;        // +8: 6 đốm · +9: 8 · +10: 10 · +11: 12
     for (let i = 0; i < n; i++){
-      const a = (i / n) * Math.PI * 2 + pl * 0.3, r = 32 + (i % 3) * 5;
+      const a = (i / n) * Math.PI * 2 + pl * 0.3;
       g.globalAlpha = 0.35 + (i % 2) * 0.25;
-      g.beginPath(); g.arc(Math.cos(a) * r, Math.sin(a) * r * 0.9, 1.5 + (i % 2) * 0.9, 0, 7); g.fill();
+      g.beginPath();
+      g.arc(Math.cos(a) * (_rx + (i % 3) * 5), Math.sin(a) * (_ry - (i % 3) * 4),
+            1.5 + (i % 2) * 0.9, 0, 7);
+      g.fill();
     }
+    g.restore();
+  }
+  if (st >= 5){                                   // 5. DẢI SÁNG QUÉT DỌC — chỉ +10 trở lên
+    // Cùng ngôn ngữ với mốc cao nhất trên người: kim loại còn đang nung.
+    g.save();
+    // 'source-atop' chứ không phải 'lighter': dải sáng chỉ ăn vào những điểm ảnh ĐÃ CÓ MỰC,
+    // tức mặt món và quầng của nó. Đổ theo 'lighter' lên cả ô thì nó thành một vệt kẻ chéo
+    // vắt ngang ô trống — nhìn ra vết xước chứ không ra kim loại đang nung.
+    g.globalCompositeOperation = 'source-atop';
+    const sw = g.createLinearGradient(-40, -_nua, 40, _nua);
+    sw.addColorStop(0, GC + '00');
+    sw.addColorStop(0.42, GC + '00');
+    sw.addColorStop(0.5, GC + 'cc');
+    sw.addColorStop(0.58, GC + '00');
+    sw.addColorStop(1, GC + '00');
+    g.globalAlpha = 0.6 + (pl - 10) * 0.2;
+    g.fillStyle = sw; g.fillRect(-50, -_nua, 100, _nua * 2);
     g.restore();
   }
   g.restore();

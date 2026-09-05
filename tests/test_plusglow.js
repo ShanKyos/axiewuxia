@@ -102,8 +102,11 @@ const { chromium } = require('playwright');
       let ip = ipx(0);
       for (let plv = 1; plv <= 11; plv++){ const cur = ipx(plv); o.icon_moiCap.push({ pl: plv, doi: diff(ip, cur) }); ip = cur; }
       const iat = plv => (o.icon_moiCap.find(x => x.pl === plv) || {}).doi || 0;
-      o.icon_nhay = { p7: iat(7), p10: iat(10) };
-      o.icon_trongMoc = { p5: iat(5), p8: iat(8), p11: iat(11) };
+      o.icon_nhay = { p7: iat(7), p8: iat(8), p9: iat(9), p10: iat(10) };
+      o.icon_trongMoc = { p5: iat(5), p11: iat(11) };
+      // Thang nấc RIÊNG của icon: 6 nấc, vì trong túi người chơi soi từng món cạnh nhau và
+      // ba chặng rèn 7·8·9 rất đắt — mỗi mức phải đọc ra ngay trong một ô 92px.
+      o.icon_moc = [0,1,2,3,4,5,6,7,8,9,10,11].map(icStage);
       // khoá cache phải theo MỨC RÈN THẬT: +8 và +9 không được dùng chung một ảnh
       o.icon_cacheRieng = itemArtUrl(def, 7, 3, 8) !== itemArtUrl(def, 7, 3, 9);
     }
@@ -151,6 +154,18 @@ const { chromium } = require('playwright');
   if (r.icon_nhay.p7 < r.icon_trongMoc.p5 * 1.8)
     fail(`icon: ngưỡng +7 (${r.icon_nhay.p7}) không nổi hơn bước thường mốc 1 (${r.icon_trongMoc.p5})`);
   if (r.icon_nhay.p10 <= 0) fail('icon: vượt +10 không đổi gì');
+  // NĂM DẢI NHÌN THẤY: 0–3 · 4–6 · 7 · 8 · 9 (rồi 10–11). Chủ dự án chốt như vậy để mỗi
+  // chặng rèn đắt tiền có một dấu hiệu riêng, không phải cùng một quầng sáng đậm dần.
+  console.log('icon nấc     :', JSON.stringify(r.icon_moc));
+  const MONG = [0,0,0,0,1,1,1,2,3,4,5,5];
+  if (JSON.stringify(r.icon_moc) !== JSON.stringify(MONG))
+    fail(`icon: thang nấc phải là ${JSON.stringify(MONG)} (0–3 · 4–6 · 7 · 8 · 9 · 10–11)`);
+  // +8 và +9 mỗi mức phải là một NẤC, không phải một bước thường: mỗi cái thêm một dấu hiệu
+  // mới (tàn lửa · vòng hào quang) nên phải đổi mạnh ngang cỡ cú nhảy ngưỡng +7.
+  for (const [ten, v] of [['+8', r.icon_nhay.p8], ['+9', r.icon_nhay.p9]]){
+    if (v < r.icon_trongMoc.p5 * 1.8)
+      fail(`icon: ${ten} (${v}) chỉ đậm thêm chứ không thành nấc riêng — bước thường mốc 1 là ${r.icon_trongMoc.p5}`);
+  }
   if (!r.icon_cacheRieng) fail('icon: +8 và +9 dùng chung một ảnh — khoá cache theo mốc thay vì mức rèn');
 
   console.log('errors:', JSON.stringify(errs));
