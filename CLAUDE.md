@@ -349,19 +349,30 @@ Taskbar cố định **3 ô**: chiêu chính (`a`) · chiêu phụ (`tp`) · buf
 **% Công Kích vĩnh viễn** (`LEGACY_SECT_SKILLS` / `legacyAtkPct` trong `calcDerived()`), hiện ở
 tab "Tuyệt Học Cũ" (panel K).
 
-## ⚠ QUY TẮC SỐ 3: KHÔNG VẼ VECTOR NỮA — ART ĐI QUA meowa.ai
+## ⚠ QUY TẮC SỐ 3: KHÔNG DÙNG VECTOR. CHẤM HẾT.
 
-Chủ dự án chốt (phiên 2026-09-05): **từ giờ không cần vẽ vector nữa.** Mọi art mới —
-trang bị, vũ khí, giáp, nhân vật, cảnh vật — đều sinh bằng **meowa.ai** rồi nối vào game
-qua một BẢNG KHAI (`VK_ANH` cho vũ khí, `NV_GIAP` cho giáp, `NV_BO` cho thân…).
+Chủ dự án chốt hai lần (phiên 2026-09-05): **không vẽ vector, và cũng đừng nhắc tới nó
+nữa.** Không đề xuất "tạm vẽ vector", không giữ lại đường vector cũ làm lối lui, không
+so sánh hai lối. Vector đã bị gỡ khỏi hệ trang bị và nó không quay lại.
 
-Nên khi thiếu art, việc đúng là:
+Mọi art — trang bị, vũ khí, giáp, nhân vật, cảnh vật — là TRANH THẬT, nối vào game qua
+một BẢNG KHAI (`VK_ANH` cho vũ khí, `NV_GIAP` cho giáp, `NV_BO` cho thân…).
 
-1. **Viết bản mô tả cho meowa** (kích thước, hướng, chỗ nắm, nền trong suốt, khung xương
-   nếu là nhân vật) và đưa cho chủ dự án — KHÔNG ngồi dựng hình bằng `ctx.beginPath()`.
-2. Nối tấm nhận về bằng **một dòng** trong bảng khai tương ứng.
+**Nguồn art, theo thứ tự phải thử:**
+
+1. **GÓI SPINE ĐÃ CÓ.** Mỗi gói nhân vật kèm sẵn một bộ giáp ĐẦY ĐỦ và một cây vũ khí
+   trong atlas của nó. Đây là chỗ phải nhìn TRƯỚC TIÊN, và đã có lần bỏ sót: đợt nối
+   vũ khí đầu tiên em đi thẳng sang meowa trong khi năm cây kiếm/nỏ/quyền trượng nằm
+   sẵn trong atlas, cùng hoạ sĩ với bộ giáp. Xem `docs/ART_VUKHI_SPINE.md` và
+   `tools/spine/`.
+2. **meowa.ai** — chỉ khi gói Spine không có thứ cần. Viết bản mô tả (kích thước, hướng,
+   chỗ nắm, nền trong suốt) rồi đưa chủ dự án; sandbox không gọi được meowa (chặn egress).
+   Nếu có khoá API thì truyền qua **biến môi trường**, không bao giờ ghi vào tệp trong repo.
 3. Món chưa có tấm thì rơi về **ô chờ art** (`iaChuaArt`) — một bóng dáng phẳng, cố ý vẽ
-   thô để không ai tưởng là art thật rồi để nguyên.
+   thô để không ai tưởng là art thật rồi để nguyên. Đó KHÔNG phải "vẽ vector", đó là chỗ
+   trống có nhãn.
+
+Và KHÔNG ngồi dựng hình bằng `ctx.beginPath()` trong mọi trường hợp.
 
 Sandbox KHÔNG gọi được meowa.ai (chặn egress), nên bước sinh ảnh là việc của chủ dự án.
 Nếu có khoá API, truyền qua **biến môi trường** — không bao giờ ghi vào tệp trong repo.
