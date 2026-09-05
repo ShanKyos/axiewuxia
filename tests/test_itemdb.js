@@ -35,6 +35,31 @@ const { chromium } = require('playwright');
     };
     // Không còn MỘT hàm vẽ vector nào cho trang bị. Bảng tra ITEM_ART đã gỡ hẳn; mọi món đi
     // thẳng vào iaChuaArt. Gác ở đây để lần sau không ai lặng lẽ thêm lại một món "cho đẹp".
+    // ── ICON VŨ KHÍ PHẢI LÀ TRANH THẬT ──
+    // Lỗi thật đã gặp: drawItemIcon cho MỌI món qua iaChuaArt, nên cây trượng Dark Wizard cầm
+    // trên tay là tranh vẽ mà trong túi lại là một thanh chữ nhật phẳng — hai hình cho cùng một
+    // món. Gác cả ba mặt: có tấm, icon KHÁC ô chờ art, và nó phải là ẢNH MÀU chứ không phải
+    // bóng đen (bản đầu tô nhầm bóng vì đoán lượt hào quang qua `pal.glow === null`).
+    o.vk = {};
+    { const d = ITEM_DB['baidasan_gay_0'];
+      o.vk.coTranh = !!vkTranhCuaMon(d);
+      const uThat = itemArtUrl(d, d.tier, 0, 0);
+      // dựng lại đúng món đó nhưng ÉP về ô chờ art, để so
+      const c = document.createElement('canvas');
+      c.width = ICON_PX; c.height = ICON_PX;
+      const g2 = c.getContext('2d');
+      g2.translate(ICON_PX/2, ICON_PX/2); g2.scale(ICON_PX/100, ICON_PX/100);
+      iaChuaArt(g2, itemPal(d, d.tier), d);
+      o.vk.khacOCho = uThat !== c.toDataURL();
+      // đếm màu trong tấm icon: tranh thật nhiều màu, bóng đặc thì rất ít
+      const c2 = document.createElement('canvas');
+      c2.width = ICON_PX; c2.height = ICON_PX;
+      drawItemIcon(c2.getContext('2d'), d, d.tier, 0, 0);
+      const px = c2.getContext('2d').getImageData(0, 0, ICON_PX, ICON_PX).data;
+      const mau = new Set();
+      for (let i = 0; i < px.length; i += 4) if (px[i+3] > 200) mau.add((px[i]<<16)|(px[i+1]<<8)|px[i+2]);
+      o.vk.soMau = mau.size;
+    }
     o.conVector = [];
     if (typeof ITEM_ART    !== 'undefined') o.conVector.push('ITEM_ART');
     if (typeof iaRing      !== 'undefined') o.conVector.push('iaRing');
@@ -104,6 +129,9 @@ const { chromium } = require('playwright');
   console.log(JSON.stringify(r, null, 1));
   console.log(`\nĐỘ PHỦ ART MÓN ĐỒ: ${r.coArt}/${r.tong} — còn ${r.oChoArt} món dùng ô chờ art (${r.soNguon} nguồn art rời)\n`);
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
+  if (!r.vk.coTranh) fail('baidasan_gay_0 không lấy được tranh vũ khí — VK_ANH hoặc đường nạp hỏng');
+  if (!r.vk.khacOCho) fail('icon vũ khí CÓ TRANH vẫn ra y hệt ô chờ art — drawItemIcon chưa dùng tranh');
+  if (r.vk.soMau < 200) fail(`icon vũ khí chỉ có ${r.vk.soMau} màu — nhiều khả năng đang tô thành BÓNG ĐẶC thay vì vẽ tranh`);
   if (r.conVector.length) fail(`còn hình vector cho trang bị: ${r.conVector.join(', ')} — phải xoá hết, mọi món về ô chờ art`);
   if (r.tong !== 273) fail(`danh mục có ${r.tong} món, cần 273`);
   if (r.theoLoai.armor !== 140) fail(`giáp ${r.theoLoai.armor}, cần 140 (35 bộ × 4 ô)`);

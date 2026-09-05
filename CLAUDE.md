@@ -349,7 +349,36 @@ Taskbar cố định **3 ô**: chiêu chính (`a`) · chiêu phụ (`tp`) · buf
 **% Công Kích vĩnh viễn** (`LEGACY_SECT_SKILLS` / `legacyAtkPct` trong `calcDerived()`), hiện ở
 tab "Tuyệt Học Cũ" (panel K).
 
+## ⚠ QUY TẮC SỐ 3: KHÔNG VẼ VECTOR NỮA — ART ĐI QUA meowa.ai
+
+Chủ dự án chốt (phiên 2026-09-05): **từ giờ không cần vẽ vector nữa.** Mọi art mới —
+trang bị, vũ khí, giáp, nhân vật, cảnh vật — đều sinh bằng **meowa.ai** rồi nối vào game
+qua một BẢNG KHAI (`VK_ANH` cho vũ khí, `NV_GIAP` cho giáp, `NV_BO` cho thân…).
+
+Nên khi thiếu art, việc đúng là:
+
+1. **Viết bản mô tả cho meowa** (kích thước, hướng, chỗ nắm, nền trong suốt, khung xương
+   nếu là nhân vật) và đưa cho chủ dự án — KHÔNG ngồi dựng hình bằng `ctx.beginPath()`.
+2. Nối tấm nhận về bằng **một dòng** trong bảng khai tương ứng.
+3. Món chưa có tấm thì rơi về **ô chờ art** (`iaChuaArt`) — một bóng dáng phẳng, cố ý vẽ
+   thô để không ai tưởng là art thật rồi để nguyên.
+
+Sandbox KHÔNG gọi được meowa.ai (chặn egress), nên bước sinh ảnh là việc của chủ dự án.
+Nếu có khoá API, truyền qua **biến môi trường** — không bao giờ ghi vào tệp trong repo.
+
+Lịch sử: hình vector của giáp, vũ khí, nhẫn và dây chuyền đã bị gỡ hết trong hai đợt
+(`2ed74f6`, `f151948`). Đừng thêm lại. `test_itemdb` gác: `ITEM_ART`, `iaRing`,
+`iaPendPhys`, `iaPendMagic`, `iSheenArc` sống lại là bài đỏ.
+
+*Ngoại lệ còn giữ:* icon vật phẩm TIÊU HAO (bình thuốc, sách, bùa, hộp) vẫn vẽ bằng canvas
+— chúng nhỏ, không thuộc hệ trang bị, và không đứng cạnh art thật để lộ chênh lệch.
+
+---
+
 ## Hình vật phẩm — LẮP TỪ BỘ PHẬN, không phải file PNG
+
+> ⚠ Mục này là LỊCH SỬ. Hệ lắp-từ-bộ-phận cho GIÁP và VŨ KHÍ đã gỡ — xem Quy tắc số 3.
+> Phần còn đúng: cách `ITEM_DB` khai một món bằng một dòng dữ liệu, và cách tra bảng khai art.
 
 220 món, **0 byte**. Trước đây 11 file PNG (2,3 MB) phải gánh toàn bộ trang bị: mọi thanh
 kiếm dùng chung `vukhi.png`, khác nhau đúng một bộ lọc xoay màu theo giai.

@@ -17049,6 +17049,59 @@ function applyEdgeLight(g, px, py, strength){
   g.restore();
 }
 
+// ── TRANH VŨ KHÍ TRONG Ô ICON ───────────────────────────────────────────────────
+// Dòng nào đã có tranh trong VK_ANH thì icon phải là CHÍNH tấm đó, không phải ô chờ art.
+// Trước đây mọi món đều đi qua iaChuaArt, nên cây trượng Dark Wizard cầm trên tay là tranh vẽ
+// thật mà trong túi lại là một thanh chữ nhật phẳng — hai hình cho cùng một món.
+//
+// Tấm gốc đã chuẩn hoá sẵn (mũi dọc trục +X, cắt sát) nên chỉ cần xoay chéo và thu vừa khung.
+const VK_ICON_GOC = -Math.PI / 4;   // mũi chỉ lên trên-phải, đúng dáng đặt vũ khí trong ô túi
+const VK_ICON_KHUNG = 92;           // chừa 4px mỗi bên trong hệ 100x100 của icon
+// Hai lượt hào quang mức rèn vẽ lại CHÍNH bóng dáng món bằng một màu đặc. Với hình vector thì
+// chỉ việc đổi bảng màu; với tranh thì phải tô lại thành bóng — 'source-in' giữ đúng vùng có
+// mực của tấm rồi đổ kín một màu.
+const _vkBongCache = new Map();
+const VK_BONG_CAP = 24;
+function vkBong(im, col){
+  const key = im.src + '|' + col;
+  let c = _vkBongCache.get(key);
+  if (c) return c;
+  c = document.createElement('canvas');
+  c.width = im.naturalWidth; c.height = im.naturalHeight;
+  const q = c.getContext('2d');
+  q.drawImage(im, 0, 0);
+  q.globalCompositeOperation = 'source-in';
+  q.fillStyle = col; q.fillRect(0, 0, c.width, c.height);
+  if (_vkBongCache.size >= VK_BONG_CAP) _vkBongCache.delete(_vkBongCache.keys().next().value);
+  _vkBongCache.set(key, c);
+  return c;
+}
+// `bongMau` khác null ⇒ vẽ BÓNG ĐẶC một màu (hai lượt hào quang mức rèn); null ⇒ tấm gốc.
+// Nhận thẳng màu chứ KHÔNG đoán từ bảng màu: bản đầu em nhận `pal` rồi coi `pal.glow === null`
+// là dấu của lượt hào quang — sai, vì itemPal() trả glow null một cách hợp lệ cho chất liệu
+// không phát sáng (giai thấp, tint có glow:null). Hệ quả đo được: lượt vẽ CHÍNH cũng ra bóng
+// đen, cây trượng trong túi thành một vệt đen thay vì tranh màu.
+function veVkTranh(g, im, bongMau){
+  const w = im.naturalWidth, h = im.naturalHeight;
+  if (!w || !h) return;
+  const src = bongMau ? vkBong(im, bongMau) : im;
+  // Xoay 45° thì hộp bao vuông cạnh (w+h)/√2 — thu theo đúng cạnh đó là vừa khít, không tràn.
+  const co = VK_ICON_KHUNG / ((w + h) / Math.SQRT2);
+  g.save();
+  g.rotate(VK_ICON_GOC);
+  g.scale(co, co);
+  g.drawImage(src, -w / 2, -h / 2);
+  g.restore();
+}
+// Tấm tranh của một món vũ khí, hoặc null nếu dòng đó chưa có tranh / tranh chưa tải xong.
+function vkTranhCuaMon(def){
+  if (!def || def.kind !== 'weapon') return null;
+  const A = vkAnh(def);
+  if (!A) return null;
+  const im = nvTai(A.tep, 'png');
+  return (im && im.complete && im.naturalWidth) ? im : null;
+}
+
 // Vẽ trọn một icon: nền theo GIAI → hình món → hào quang cường hoá.
 // Tham số `rarity` giữ chỗ để không phải sửa mọi lời gọi cùng lúc; nó không còn ai đọc.
 function drawItemIcon(g, def, tier, _rarity, plus){
@@ -17068,9 +17121,12 @@ function drawItemIcon(g, def, tier, _rarity, plus){
   const pl = plus || 0;
   const st = plusStage(pl);
   const k = clamp((pl - 3) / 8, 0, 1);            // 0 tại +3 → 1 tại +11, chạy liên tục
-  const fn = iaChuaArt;
   const GC = M.glow || '#ffe9a8';
   const gl = { lo: GC, hi: GC, trim: GC, glow: null };
+  // Vũ khí có tranh thì vẽ tranh; mọi thứ khác (và vũ khí chưa có tranh) về ô chờ art.
+  // So sánh THAM CHIẾU với `gl` để biết đang ở lượt hào quang — đó là dấu chắc chắn duy nhất.
+  const _vkIm = vkTranhCuaMon(def);
+  const fn = _vkIm ? ((gg, pal) => veVkTranh(gg, _vkIm, pal === gl ? GC : null)) : iaChuaArt;
   if (st >= 1){
     // 1. quầng sau lưng — to dần, đậm dần theo k, CỘNG một nấc rời tại mỗi mốc.
     // Viền ôm sát ở bước 2 chỉ là một dải mỏng quanh bóng, đổi chừng 1.100 điểm ảnh;
@@ -17118,7 +17174,11 @@ function drawItemIcon(g, def, tier, _rarity, plus){
 function itemArtUrl(def, tier, rarity, plus){
   const key = `${def.art}|${def.blade||''}|${def.guard||''}|${def.pommel||''}|${def.motif||''}|${def.shaft||''}|${def.head||''}|${def.limb||''}`
             + `|${def.w||''}|${def.len||''}|${def.gw||''}|${def.st || 1}|${def.mat||''}|${def.tintKey || ''}`
-            + `|${tier}|${rarity}|${plus || 0}`;
+            + `|${tier}|${rarity}|${plus || 0}`
+            // Tranh vũ khí nặng hơn nên thường CHƯA về lúc dựng icon đầu tiên. Nếu hai trạng
+            // thái dùng chung khoá thì bản ô chờ art bị cất lại và không bao giờ đổi nữa —
+            // đúng cái bẫy đã gặp hai lần ở cánh và ở thẻ nhân vật. Dấu '?' tách chúng ra.
+            + `|${vkTranhCuaMon(def) ? 'V' : (def.kind === 'weapon' && vkAnh(def) ? '?' : '')}`;
   let u = lruLay(_itemArtCache, key);
   if (u) return u;
   const c = document.createElement('canvas');
