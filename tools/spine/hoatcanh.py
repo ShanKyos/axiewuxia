@@ -312,9 +312,19 @@ def _tam_giac(dst, src, P, Q, tris):
         khung = dst[mny:mxy, mnx:mxx].astype(np.float32)
         dst[mny:mxy, mnx:mxx] = (khung*(1-a) + lay_[..., :4].astype(np.float32)*a).astype(np.uint8)
 
-def ve_khung(d, im, R, tt, hc, t, skinName, W=900, H=1100, phong=1.0, ox=0.5, oy=0.94, bo_khe=()):
+def ve_khung(d, im, R, tt, hc, t, skinName, W=900, H=1100, phong=1.0, ox=0.5, oy=0.94,
+             bo_khe=(), doi_manh=None):
+    """`doi_manh` — ép một KHE dùng mảnh khác mảnh hoạt cảnh chọn, dạng {tên khe: tên mảnh}.
+
+    Dùng để đổi KHUÔN MẶT: khe đầu có sẵn bốn mảnh (thường · vui · đau đớn · nhắm mắt) ở
+    mọi skin, mà hoạt cảnh nào cũng chỉ trỏ vào mảnh thường. Nướng khối 'trúng đòn' thì
+    ép sang mặt đau, khối 'chết' và 'ngồi' thì ép sang nhắm mắt — không tốn khung nào.
+    """
     ap_hoat_canh(tt, hc, t); tt.tinh(); ap_ik(tt, d, hc, t)
     manh   = mảnh_theo_khe(d, hc, t)
+    if doi_manh:
+        for _k, _v in doi_manh.items():
+            if _k in manh: manh[_k] = _v
     thutu  = thu_tu_ve(d, hc, t)
     bd     = bien_dang(hc, t, skinName)
     skins  = {s['name']: s['attachments'] for s in d['skins']}

@@ -6141,6 +6141,10 @@ function atkRange(){
 }
 function isRanged(){ return atkRange() > 200; }
 function calcDerived(){
+  // Kéo sẵn bảng khung của ĐÚNG bộ đang mặc. calcDerived() chạy lúc vào game và mỗi lần đổi
+  // trang bị, tức đúng hai thời điểm bộ giáp có thể đổi. nvTai() có bộ đệm nên gọi lại là một
+  // phép tra Map, không phải một lượt tải.
+  try { nvBoTruoc(player.sect, heroTier(player), gearVisual(player)); } catch { /* chưa dựng xong */ }
   const sect0 = SECTS[player.sect];
   const b = sect0.bonus;
   const s = { str:player.str+b.str, agi:player.agi+b.agi, def:Math.round((player.def+b.def)*(sect0.defMult||1)), vit:player.vit+b.vit, ene:player.ene+(b.ene||0) };
@@ -8666,6 +8670,7 @@ function doBasic(){
   }
   if (t) player.face = Math.atan2(t.y-player.y, t.x-player.x);
   player.cd.basic = player.aspd; player.atkAnim = 0.22;
+  player.nhat2 = !player.nhat2;   // đổi nhát: Dark Knight/Spellblade có hai dáng chém
   player.atkAct = heroActOf(player.sect, 'basic'); // tư thế vung khớp vũ khí của lớp
   const _basicCls = SECT_SFX[player.sect];
   AudioSys.sfx(_basicCls ? 'slash_' + _basicCls : 'slash', 0.55);
@@ -9155,6 +9160,9 @@ function update(dt){
   player.atkAnim = Math.max(0, player.atkAnim - dt);
   player.castT = Math.max(0, (player.castT || 0) - dt);
   player.hurtT = Math.max(0, (player.hurtT || 0) - dt);
+  player.noiT  = Math.max(0, (player.noiT || 0) - dt);   // dáng bắt chuyện NPC
+  player.nhayT = Math.max(0, (player.nhayT || 0) - dt);  // lệnh /nhay
+  if (dead) player.deadT = (player.deadT || 0) + dt;     // khối chết chạy MỘT LẦN rồi giữ khung cuối
   shakeT = Math.max(0, shakeT - dt);
   player.battuCd = Math.max(0, (player.battuCd || 0) - dt);
   if ((player.buffAtkT || 0) > 0){ // Rượu Hổ Cốt hết men
@@ -9975,7 +9983,7 @@ function onDeath(){
   // màn hình bại trận rồi chạy tiếp ở TOẠ ĐỘ CŨ sau khi hồi sinh — có khi ở tận map khác.
   player.pendingHit = null; // đòn thường đã hẹn cũng phải huỷ: update() return sớm khi dead nên
                             // nó đóng băng nguyên vẹn rồi nổ vào con quái đứng cạnh điểm hồi sinh
-  dead = true;
+  dead = true; player.deadT = 0;
   const ov = document.getElementById('overlay');
   const _kb = player._killedByBoss; player._killedByBoss = null;
   document.getElementById('overlay-inner').innerHTML = _kb ? `
@@ -11746,7 +11754,19 @@ window.drawHeroLit = drawHeroLit;
 // Số khung: ĐO rồi mới chọn. Ở 12 khung đi, hai khung liền nhau lệch 25–50% pixel, trong khi vẽ
 // liên tục cùng khoảng thời gian đó chỉ lệch 0,7–5% — tức hoạt ảnh thô hơn 7–10 lần, và đó chính
 // là thứ mắt bắt được. 32 khung đưa bước nhảy về ngang mức vẽ thẳng.
-const HS_FRAMES = { i: 16, w: 32, a: 16, c: 16, r: 16 };  // đứng · đi · đánh · tung chiêu · CHẠY
+// BẢNG MỘT — vẽ ở mọi khung hình. BẢNG HAI (NV_BANG2) chỉ hiện trong chốc lát hoặc ở một
+// trạng thái riêng, nên nó là TỆP RIÊNG và nạp khi cần: một bảng sau giải nén là 27,6 MB,
+// nhân bảy bộ là 193 MB — mà đo được cả 193 MB đó đang nạp sẵn lúc mở trang trong khi người
+// chơi chỉ vẽ đúng lớp của mình.
+const HS_FRAMES = { i: 16, w: 32, a: 16, c: 16, r: 16,          // BẢNG MỘT
+                    h: 8, p: 12, s: 16, d: 10, j: 10, q: 6, n: 6, t: 6, e: 10 };  // BẢNG HAI
+// Khối nào nằm ở bảng hai. Thứ tự trong NV_MOC2 phải trùng KHUNG2 của tools/spine/nuong_nv.py.
+const NV_BANG2 = { h:1, p:1, s:1, d:1, j:1, q:1, n:1, t:1, e:1 };
+const NV_MOC2  = { h:0, p:8, s:20, d:36, j:46, q:56, n:62, t:68, e:74 };
+// Khối ĐÁNH đã nướng RIÊNG cho từng lớp (xem --danh của bộ nướng), nên không còn phải đổi
+// khối lúc vẽ nữa: Sylvan Ranger bắn nỏ, Dark Wizard và Dark Lord niệm chú, ngay trong khối 'a'.
+// Lớp nào có nhát thứ hai thì đòn thường luân phiên 'a' ↔ 's'.
+const DANH_HAI_NHAT = { thieulam: 1, minhgiao: 1 };
 // SẢI CHÂN mỗi VÒNG hoạt cảnh, tính bằng px TRÊN MÀN (nhân vật cao NV_CAO).
 // Đo trên chính bảng khung: lấy dải 10px sát đất của từng khung (= bàn chân), gom hết 32/16
 // khung rồi lấy khoảng x lớn nhất, nhân hệ số thu NV_CAO/CAO_THAN = 118/159.
@@ -11759,9 +11779,10 @@ const CHAY_TU = 150;
 // CỬA SỔ LƠ LỬNG trong khối đi. Khối đi có 32 khung; khung khớp dáng bay nhất là 8/12 của hoạt
 // cảnh gốc, tức 8/12 × 32 ≈ 21. Lắc ±2 khung theo một nhịp chậm để nó còn thở, không đứng hình.
 const BAY_KHUNG = 21, BAY_LAC = 2;
-// Lớp nào KHÔNG vung vũ khí lúc đánh thường thì đọc khung đánh từ khối khác. Dark Wizard dùng
-// khối 'c' — nướng từ '05_MagicAttack' của bản mẫu, đã có sẵn, không tốn thêm khung nào.
-const KHOI_DANH = { baidasan: 'c' };
+// KHOI_DANH ĐÃ GỠ. Nó từng đá Dark Wizard sang khối 'c' lúc đánh thường, vì khối 'a' của mọi
+// bộ đều nướng từ '08_SwordAttack'. Nay khối 'a' nướng RIÊNG cho từng lớp (--danh của bộ
+// nướng): Dark Knight và Spellblade chém, Sylvan Ranger bắn nỏ, Dark Wizard và Dark Lord niệm
+// chú — đúng khối 'a' của chính bộ đó. Không còn gì phải đá đi đâu nữa.
 // Dựng ở ĐÚNG hộp gốc 160×220. Trong game dáng người cao 104px nên đây là hơn 2× độ phân giải
 // hiển thị — blit xuống là có khử răng cưa, nét hơn cả vẽ thẳng ở cỡ đó.
 const HS_SCALE = 1;
@@ -11860,7 +11881,7 @@ const NV_ICON_PX = 128;
 const NV_ICON_CAP = 80;
 const _nvIconCache = new Map();
 const NV_COT = 16, NV_OW = 240, NV_OH = 300;
-const NV_MOC = { i: 0, w: 16, a: 48, c: 64, r: 80 };
+const NV_MOC = { i: 0, w: 16, a: 48, c: 64, r: 80 };   // trong BẢNG MỘT
 // Thân dùng WEBP (bảng 3840x1500, nén còn ~36%), vũ khí dùng PNG — lớp vũ khí gần như trong
 // suốt hoàn toàn, mà PNG nén khoảng trong suốt giỏi hơn WEBP: đo được 69 KB PNG so với 124 KB.
 function nvTai(ten, duoi){
@@ -11875,17 +11896,32 @@ function nvTen(sectKey, tier){ return NV_BO[sectKey + '|' + tier]; }
 // thân, vũ khí, viền sáng — nên không có cách nào thân một bộ mà tay áo một bộ khác.
 function nvBoTen(sectKey, tier, gv){ return nvBoGiap(sectKey, gv) || nvTen(sectKey, tier); }
 function nvBo(sectKey, tier, gv){ return nvTai(nvBoTen(sectKey, tier, gv), 'webp'); }
+// Bảng chứa khối `kind`, và mốc khung trong CHÍNH bảng đó. Trả null khi bảng hai chưa về —
+// mọi chỗ gọi đều phải chịu được null và lui về khối đứng, y như hồi chưa có art.
+function nvBang(sectKey, tier, gv, kind){
+  const ten = nvBoTen(sectKey, tier, gv);
+  if (!ten) return null;
+  return NV_BANG2[kind] ? nvTai(ten + '2', 'webp') : nvTai(ten, 'webp');
+}
+function nvMoc(kind){ return NV_BANG2[kind] ? NV_MOC2[kind] : NV_MOC[kind]; }
 // ĐƯỜNG VŨ KHÍ NƯỚNG SẴN ĐÃ GỠ. Trước đây `nvVuKhi()` trả bảng khung <bộ>_vk<N>.png để đắp
 // lên thân. Từ khi có thần khí (vũ khí rời tay, vẽ từ món ĐANG trang bị) nó thoát ở dòng chặn
 // trước khi dùng tới bảng — và đó là mọi trường hợp: cả 15 dòng vũ khí đều thuộc 4 loại art
 // (weapon · staff · bow · crossbow), mà HELD_FIT phủ đúng cả 4. Tức hàm luôn trả null.
 // Gỡ kèm: hằng NV_VK_SO, 9 tệp hemp1_vk*.png / dkgs1_vk1.png, và lời gọi trong heroSprite.
-for (const k in NV_BO) nvTai(NV_BO[k], 'webp');
+// NẠP KHI CẦN, không nạp sẵn. Bản trước kéo về CẢ 5 thân lẫn mọi bộ giáp ngay lúc mở trang —
+// đo được 27 tấm, 49,1 triệu điểm ảnh, 187 MB sau giải nén — trong khi người chơi chỉ vẽ đúng
+// lớp của mình. Sáu phần bảy số đó nằm chơi. Nay nvTai() tự kéo lúc nvBo()/nvBang() hỏi tới,
+// và nvBoTruoc() kéo sẵn đúng bộ của người chơi ngay khi vào game nên không thấy nhấp nháy.
+// (Bảng khung TO mới bỏ nạp sẵn. Icon và tranh chọn lớp thì nhỏ, giữ nguyên: chúng hiện ngay
+//  ở màn đầu, mà nạp muộn là thẻ chọn lớp nhấp nháy.)
 for (const k in NV_PICK) nvTai('pick_' + k, 'webp');   // tranh chọn lớp — nạp sớm kẻo thẻ nhấp nháy
 for (const k in VK_ANH) nvTai(VK_ANH[k].tep, 'png');   // tranh vũ khí
-for (const k in NV_GIAP){
-  const t = NV_GIAP[k];
-  nvTai(t + '_icon', 'webp'); nvTai(t, 'webp');
+for (const k in NV_GIAP) nvTai(NV_GIAP[k] + '_icon', 'webp');   // icon món giáp trong túi
+// Kéo sẵn hai bảng của ĐÚNG bộ đang mặc. Gọi lúc vào game và mỗi lần đổi bộ giáp.
+function nvBoTruoc(sectKey, tier, gv){
+  const t = nvBoTen(sectKey, tier, gv);
+  if (t){ nvTai(t, 'webp'); nvTai(t + '2', 'webp'); }
 }
 // Icon một món giáp: cắt đúng ô của nó khỏi dải 4 ô. Trả về null khi chưa có art — mọi chỗ
 // gọi đều phải chịu được null và về đường cũ, vì 34 trong 35 bộ vẫn chưa có tranh.
@@ -11910,7 +11946,7 @@ function nvIconUrl(it){
 }
 function nvVeKhung(g, im, kind, idx){
   const n = HS_FRAMES[kind] || 1;
-  const k = NV_MOC[kind] + (idx % n);
+  const k = nvMoc(kind) + (idx % n);
   g.drawImage(im, (k % NV_COT) * NV_OW, ((k / NV_COT) | 0) * NV_OH, NV_OW, NV_OH,
                   -HS_PAD, -HS_PAD, NV_OW, NV_OH);
 }
@@ -11998,7 +12034,7 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk){
   // `act` phải nằm trong khoá cho CẢ đánh lẫn tung chiêu: heroFramePose() đọc act ở cả hai nhánh
   // (mỗi lớp một bộ khung tay/vũ khí riêng), nên bỏ nó ra khỏi khoá ở nhánh 'c' là hai tuyệt kỹ
   // khác nhau dùng chung một ảnh.
-  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${blk}|${back ? 1 : 0}|${sw}|${nvBoTen(sectKey, tier, gv) || ''}${nvBo(sectKey, tier, gv) ? '' : '?'}|${window.TEST_TO_PHANG ? 'D' : ''}`;
+  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${blk}|${back ? 1 : 0}|${sw}|${nvBoTen(sectKey, tier, gv) || ''}${nvBo(sectKey, tier, gv) ? '' : '?'}${NV_BANG2[blk] && !nvBang(sectKey, tier, gv, blk) ? '!' : ''}|${window.TEST_TO_PHANG ? 'D' : ''}`;
   let cv = _hsCache.get(key);
   if (cv){                       // chạm — đẩy lên cuối để LRU giữ lại
     _hsHit++;
@@ -12021,11 +12057,14 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk){
   // Vẽ rời còn đúng hơn về bản chất — cánh vỗ liên tục và nhấc người lên khi bay, nướng vào
   // sprite là khoá nó vào đúng mấy chục khung có sẵn. Cánh cũng tràn khỏi lề HS_PAD = 40 px
   // nên nướng vào là bị cắt cụt hai bên (đúng cái mà test_herosprite bắt được).
-  const _nvIm = nvBo(sectKey, tier, gv);
+  // Tấm khung lấy theo KHỐI — khối ở bảng hai thì đọc tệp <bộ>2. Bảng hai nạp khi cần, nên
+  // nó có thể CHƯA VỀ ở mấy khung đầu: lúc đó lui về bảng một khối đứng, không rơi về hình vẽ.
+  const _nvIm = nvBang(sectKey, tier, gv, blk) || (NV_BANG2[blk] ? nvBo(sectKey, tier, gv) : null);
+  const _blkVe = (NV_BANG2[blk] && !nvBang(sectKey, tier, gv, blk)) ? 'i' : blk;
   if (_nvIm){
     const _now = heroFrameNow(kind, idx);
     nvHaoQuangSau(g, sectKey, tier, gv, _now);      // hào quang cường hoá nằm SAU lưng
-    nvVeKhung(g, _nvIm, blk, idx);
+    nvVeKhung(g, _nvIm, _blkVe, idx);
     nvHaoQuangTruoc(g, sectKey, tier, gv, _now, _nvIm, kind, idx);   // viền + quét + tàn lửa
   }
   else drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx), ps, canhBoRa(gv));
@@ -13706,17 +13745,45 @@ function drawPlayer(){
     // (Bản trước nướng thêm hẳn một khối '00_Squat' cho việc này — 16 khung × 8 bộ, 0,7 MB.
     //  Đo xong thì thừa: dáng cần đã nằm sẵn trong khối đi.)
     const _bay = bayK >= 0.5;
+    const _catCanh = bayK > 0.06 && bayK < 0.5;    // đang bốc lên hoặc hạ xuống
     // Đang di chuyển ở tốc độ thường ⇒ khối CHẠY. Khối ĐI để dành cho lúc bị làm chậm.
     // Bay thì vẫn đọc khối ĐI (BAY_KHUNG ghim vào một khung trong đó).
-    const _diBo = p.moving && !_bay;
-    const _kind = castK > 0 ? 'c' : atkK > 0 ? 'a'
+    const _diBo = p.moving && !_bay && !_catCanh;
+    // Ba trạng thái đứng yên, đọc từ chính biến game đã có — không thêm cờ nào.
+    const _suoi = !p.moving && mapDef().spring &&
+                  dist(p.x, p.y, SPRING.x, SPRING.y) < SPRING.r;
+    const _noi  = !p.moving && (p.noiT || 0) > 0;
+    const _tt   = !p.moving && ((p.poisonT || 0) > 0 || (p.buffAtkT || 0) > 0);
+    // THỨ TỰ QUAN TRỌNG. Chết đè lên tất cả; trúng đòn đè lên đánh, vì phản hồi ăn đòn phải
+    // thấy ngay cả khi đang giữa cú vung; ba dáng đứng yên xếp cuối.
+    const _kind = dead ? 'd'
+                : (p.hurtT || 0) > 0 ? 'h'
+                : castK > 0 ? 'c'
+                : atkK > 0 ? 'a'
+                : _catCanh ? 'j'
                 : _bay ? 'w'
                 : _diBo ? ((p.speed || 209) >= CHAY_TU ? 'r' : 'w')
+                : (!p.moving && (p.nhayT || 0) > 0) ? 'e'
+                : _suoi ? 'q'
+                : _noi ? 'n'
+                : _tt ? 't'
                 : 'i';
-    const _n = HS_FRAMES[_kind];
+    // KHỐI vẽ khác KHỐI tính chỉ số ở đúng một chỗ: đòn thường.
+    //   tay không          → 'p' (đấm)  — nhân vật mới tạo không có vũ khí nào
+    //   Dark Knight/Spellblade → luân phiên 'a' ↔ 's' cho hai nhát khác nhau
+    // Spellblade sau này mang hai kiếm thì 's' chính là nhát của tay phụ.
+    const _blk = _kind !== 'a' ? _kind
+               : !(p.equip && p.equip.vukhi) ? 'p'
+               : (DANH_HAI_NHAT[p.sect] && p.nhat2) ? 's' : 'a';
+    // Số khung lấy theo KHỐI VẼ, không theo _kind: khối đấm có 12 khung còn khối chém 16,
+    // tính chỉ số bằng 16 rồi chia dư cho 12 là thứ tự khung đảo lộn giữa cú đấm.
+    const _n = HS_FRAMES[_blk] || HS_FRAMES[_kind];
     const _TAU = Math.PI * 2;
     const _idx = _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
                : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)
+               : _kind === 'h' ? clamp((((0.3 - (p.hurtT || 0)) / 0.3) * _n) | 0, 0, _n - 1)
+               : _kind === 'd' ? clamp((((p.deadT || 0) / 1.2) * _n) | 0, 0, _n - 1)
+               : _kind === 'j' ? clamp((bayK / 0.5 * _n) | 0, 0, _n - 1)
                : (_kind === 'w' || _kind === 'r')
                    ? (_bay ? BAY_KHUNG + Math.round(Math.sin(now / 700) * BAY_LAC)
                            : ((((wph % _TAU) + _TAU) % _TAU) / _TAU * _n) | 0)
@@ -13726,8 +13793,8 @@ function drawPlayer(){
     // khối 'c'. Đổi khối vẽ mà GIỮ NGUYÊN `_kind` semantics: chỉ số khung vẫn tính theo atkK,
     // chỉ có tấm khung đọc từ chỗ khác. Gán thẳng _kind='c' thì chỉ số rơi về nhánh castK — mà
     // castK = 0 lúc đánh thường — nên khung đứng im ở 0.
-    const _blk = (_kind === 'a' && KHOI_DANH[p.sect]) || _kind;
     _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back, _sw, _blk);
+    window.__khoiVe = _blk;   // bài kiểm đọc cờ này
   }
   // Thần Hiệp: viền kim quang quanh thân. Trước đây làm bằng cách đặt shadowBlur rồi để nguyên
   // suốt cả dáng người — đo được 166 trong 204 nhát fill của drawPlayer() bị làm mờ, mỗi nhát là
@@ -13744,7 +13811,12 @@ function drawPlayer(){
   // Một phép gán chuỗi mỗi khung — rẻ hơn nhiều so với để lỗi đó quay lại mà không ai thấy.
   window.__veThan = _spr ? 'sprite' : 'vector';
   if (_spr){
-    if (_hurt > 0){
+    // Cú xoay ngửa dưới đây là bản CHỮA CHÁY hồi chưa có khối trúng đòn: sprite nướng sẵn không
+    // nhận tư thế, nên phải giả bằng phép biến hình lúc blit. Nay khối 'h' đã nướng từ chính
+    // '03_Hurt' của gói, có cả mặt đau — nên khi khối đó vẽ được thì KHÔNG xoay nữa, xoay thêm
+    // là giật hai lần. Bảng hai chưa về thì vẫn xoay như cũ.
+    const _coKhoiDau = window.__khoiVe === 'h';
+    if (_hurt > 0 && !_coKhoiDau){
       // Gót chân của bộ xương nằm ở (80, 212) trong hệ 160x220 — xoay quanh đúng điểm đó thì
       // thân ngửa ra sau mà chân vẫn bám đất. Góc âm vì sau `flip` nhân vật luôn nhìn về +x:
       // điểm ở trên gót có y âm, muốn nó chạy về -x thì sin(góc) phải âm.
@@ -16266,6 +16338,9 @@ window.cheatExec = function(raw){
     switch (cmd){
       case 'help': cheatHelp().forEach(l => cheatLog(l, l.startsWith('──') ? '#7fd4ff' : '#cfe8ff')); return;
       case 'max': applyTestBoost(); cheatLog('MAX MODE — mọi tính năng tối đa!', '#7ecbff'); break;
+      // Gói Spine có sẵn hai điệu nhảy. Game chưa có hệ emote, mà dựng hẳn một hệ chỉ vì có
+      // sẵn hoạt cảnh là làm ngược. Nên cho nó đúng MỘT lệnh — chỗ dùng thật, không phải hệ mới.
+      case 'nhay': player.nhayT = num(1, 4); cheatLog('Nhảy ' + player.nhayT + ' giây', '#ffd76a'); break;
       case 'art': {
         const k = SPLASH_CFG[parts[1]] ? parts[1] : (player && player.sect) || 'thieulam';
         const v = (parts[2] || parts[1] || '').toLowerCase() === 'mavuong' ? 'mavuong' : null;
@@ -20925,6 +21000,7 @@ function npcMark(n){
   return '';
 }
 function tryTalk(){
+  if (player) player.noiT = 0.9;   // dáng bắt chuyện — khối 'n'
   // Trong tầm 95px có thể đứng 2 NPC (Trưởng Làng & Dược Sư cách nhau 163px). Chọn theo VIỆC
   // trước, khoảng cách sau: đang có NV để trả > có NV để nhận > gần nhất. Chơi thử: về trả NV3
   // mà hộp thoại Dược Sư bật lên, không có nút Nhận Thưởng.
