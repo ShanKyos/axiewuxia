@@ -86,7 +86,13 @@ const pass = m => console.log('PASS ' + m);
   if (!r3.lopKhac || !r3.bacKhac || !r3.doKhac) fail('bộ nhớ đệm rò giữa lớp/bậc/bộ đồ: ' + JSON.stringify(r3));
   else pass('khoá bộ nhớ đệm tách đúng theo lớp · bậc · chữ ký trang bị');
 
-  // 4. trúng đòn → vẽ thẳng, không lấy sprite.
+  // 4. TRÚNG ĐÒN CŨNG PHẢI LẤY SPRITE — luật này đã ĐẢO CÓ CHỦ Ý.
+  //    Bản cũ chặn sprite lúc trúng đòn để giữ tư thế giật ngửa (giật ngửa nằm trong `_ps`, mà
+  //    sprite nướng sẵn không nhận tư thế). Cái giá đo được ngoài game đắt hơn nhiều: suốt 0,3
+  //    giây sau MỖI cú đòn, nhân vật đổi sang dáng người vẽ bằng đường — Dark Wizard đang mặc
+  //    bộ Spine thật hoá thành một áo choàng tím trơn. Quái đánh liên tục thì gần như không lúc
+  //    nào thấy đúng bộ đồ đang mặc. Nay giật ngửa làm bằng phép xoay quanh gót lúc blit, nên
+  //    giữ được cả art thật lẫn phản hồi trúng đòn.
   //    Phải hạ mức hiệu ứng trước: ở mức ĐẦY thì drawPlayer luôn vẽ thẳng (người chơi chọn chất
   //    lượng thì trả lại chất lượng), nên không có sprite nào để mà so.
   await p.evaluate(() => setFxq(1));
@@ -101,9 +107,9 @@ const pass = m => console.log('PASS ' + m);
     return { khiTrungDon: t1 - t0, khiBinhThuong: t2 - t1 };
   });
   console.log('4.', JSON.stringify(r4));
-  if (r4.khiTrungDon > 0) fail('trúng đòn vẫn lấy sprite — tư thế giật ngửa sẽ sai');
+  if (r4.khiTrungDon < 5) fail('trúng đòn rơi về hình vẽ đường — bộ giáp thật biến mất mỗi lần bị đánh');
   else if (r4.khiBinhThuong < 5) fail('bình thường lại KHÔNG dùng sprite');
-  else pass('trúng đòn vẽ thẳng, bình thường dùng sprite');
+  else pass('trúng đòn vẫn giữ art nướng, bình thường cũng vậy');
 
   // 4b. sprite dùng ở MỌI mức hiệu ứng (chất lượng đã đo là ngang bản vẽ thẳng)
   const r4b = await p.evaluate(() => {

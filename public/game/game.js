@@ -171,6 +171,22 @@ function GIAI_POW(t){ return Math.pow(GIAI_RATE, clamp((t || 1) - 1, 0, GIAI_MAX
 // Bảy danh xưng lấy từ 14 cái cũ theo đúng nhịp đã chọn cho bộ giáp: giai 1·3·5·7·9·11·14.
 const GIAI_NAMES = ['Tân Binh','Kỳ Binh','Chinh Phục','Hung Thần','Bất Tử','Vô Song','Khai Thiên'];
 function giaiName(t){ return GIAI_NAMES[clamp((t||1)-1, 0, GIAI_NAMES.length-1)]; }
+// ── TRẦN GIẢM SÁT THƯƠNG ────────────────────────────────────────────────────
+// Chủ dự án chốt: trục này tối đa 4% MỖI MÓN trên đúng SÁU ô — nón · áo · tay · chân · 2 nhẫn
+// (chính là ARMOR_SLOTS). Vũ khí và dây chuyền không có dòng này. Trần tổng 24%.
+//
+// Vì sao phải chặn CỨNG chứ không chỉ hạ max của dòng: calcDerived nhân mọi dòng phụ với
+// 1 + plus×PLUS_STEP, nên 4% ở +9 thành 8,7%, sáu món thành 52% — gấp đôi trần. Cộng thêm dòng
+// Hoàn Hảo "Giảm Sát Thương +4" nữa thì còn hơn. Đo được trước khi chặn: cột giảm sát thương
+// nhảy loạn 29% → 73% giữa các mốc giai, đúng cái lạm phát chủ dự án nói.
+//
+// PHẢI KHAI Ở ĐÂY, trên cùng: EXC_ARMOR (dòng ~330) và ARMOR_SUBS (dòng ~430) đều đọc
+// DMGRED_MOI_MON, mà cả hai chạy trước ARMOR_SLOTS. Đặt cạnh ARMOR_SLOTS cho gọn thì trang
+// chết ngay lúc tải vì TDZ — đã mắc đúng một lần. Số 6 viết thẳng, kèm bài kiểm gác cho khớp
+// ARMOR_SLOTS.length.
+const DMGRED_MOI_MON = 4;
+const DMGRED_SO_O = 6;                                     // nón · áo · tay · chân · 2 nhẫn
+const DMGRED_TRAN = DMGRED_MOI_MON * DMGRED_SO_O;          // 24%
 // Quái thường rơi trang bị + vật liệu; tinh anh và boss rơi dày hơn hẳn
 // ── TỈ LỆ RƠI TRANG BỊ: theo DẢI QUÁI × LOẠI ────────────────────────────────
 // Trước đây DROP_SRC.chance chỉ có 4 ngăn cứng, nên Axie Heo Rừng cấp 1 và Cuồng Binh Tro Tàn
@@ -325,7 +341,7 @@ const EXC_ARMOR = [
   { k:'silverPct', name:'Đồng Rơi Thêm',      v:40 },
   { k:'excBlock',  name:'Tỉ lệ Đỡ Đòn',       v:10 },                // cơ chế MỚI
   { k:'reflectPct',name:'Phản Sát Thương',    v:5  },
-  { k:'dmgred',    name:'Giảm Sát Thương',    v:4  },
+  { k:'dmgred',    name:'Giảm Sát Thương',    v:DMGRED_MOI_MON },
   { k:'qiPct',     name:'Mana Tối Đa',          v:4  },
   { k:'hpPct',     name:'Sinh Lực Tối Đa',    v:4  },
 ];
@@ -428,7 +444,7 @@ const ATTR_INFO = {
 };
 // Phụ phẩm theo GDD: Trang bị giáp & Nhẫn (thường/hoàn hảo)
 const ARMOR_SUBS = [
-  { k:'dmgred',    name:'Giảm Sát Thương',  min:1,  max:5  },
+  { k:'dmgred',    name:'Giảm Sát Thương',  min:1,  max:DMGRED_MOI_MON },
   { k:'hpPct',     name:'Sinh Lực Tối Đa',  min:1,  max:5  },
   { k:'qiPct',     name:'Mana Tối Đa',   min:1,  max:4  },
   { k:'evaPct',    name:'Tránh Đòn',        min:5,  max:10 },
@@ -464,9 +480,23 @@ const SLOTS = [
   // Quần đi mà giữ nguyên ba ô kia là cả hệ tụt xuống 43, tức mọi nhân vật mất gần một phần
   // tư giáp chỉ vì một thay đổi về ART. Nhân ba ô còn lại lên 57/43 để tổng không đổi:
   // 13→17, 17→23, 13→17. (Ô Chân tính Nhanh Nhẹn chứ không phải Thủ nên không dính vào.)
-  { id:'non',       name:'Nón',        main:'def', base:(t)=>Math.round(17*GIAI_POW(t)) },
-  { id:'ao',        name:'Áo',         main:'def', base:(t)=>Math.round(23*GIAI_POW(t)) },
-  { id:'tay',       name:'Tay',        main:'def', base:(t)=>Math.round(17*GIAI_POW(t)) },
+  // ── GIÁP KHÔNG CÒN CHO PHÒNG NGỰ ──
+  // Chủ dự án chốt: Phòng Ngự chỉ đến từ CHỈ SỐ NHÂN VẬT (điểm tiềm năng + bonus lớp) và thú
+  // cưỡi. Ba ô giáp chuyển sang SINH LỰC.
+  //
+  // Vì sao là Sinh Lực chứ không phải "Giảm Sát Thương %": defRed gộp cả `def` lẫn dmgred/defPct
+  // rồi kẹp trần 0,78. Đổ giáp vào nhánh % là đụng lại đúng cái trần đó — đo được giáp giai 3
+  // đã chạm trần, mọi điểm sau là số chết. Sinh Lực là trục RIÊNG, không trần, nhân được với
+  // phần giảm sát thương nên hai thứ bổ nhau thay vì giẫm chân.
+  //
+  // ĐƯỜNG CONG PHẲNG, không phải GIAI_POW. Bản đầu em dùng GIAI_POW(t) như mọi chỉ số chính
+  // khác rồi đo ra thảm hoạ: sinh lực hiệu dụng giai 7 vọt +521% so với bản cũ. Lý do là `def`
+  // có LỢI TỨC GIẢM DẦN — def/(def+60) — nên 4.570 điểm Phòng Ngự chỉ mua được 78%; còn Sinh
+  // Lực thì cộng thẳng, nhân với GIAI_POW 37 lần là nổ. Nay tuyến tính theo giai.
+  // Hệ số dò bằng ĐO THẬT ở bốn mốc giai 1/3/5/7 — xem bảng trong thân commit.
+  { id:'non',       name:'Nón',        main:'hp',  base:(t)=>giapHp(t, 0.30) },
+  { id:'ao',        name:'Áo',         main:'hp',  base:(t)=>giapHp(t, 0.40) },
+  { id:'tay',       name:'Tay',        main:'hp',  base:(t)=>giapHp(t, 0.30) },
   { id:'chan',      name:'Chân',       main:'agi', base:(t)=>Math.round(9*GIAI_POW(t)) },
   { id:'daychuyen', name:'Dây Chuyền', main:'atk', base:(t)=>Math.round(15*GIAI_POW(t)) },
   { id:'nhan1',     name:'Nhẫn 1',     main:'crit',base:(t)=>+(1.5+t*0.9).toFixed(1) },
@@ -939,7 +969,7 @@ window.anhDangGiuMB = function(){
 // dưới đi SAU (che chân). Một lượt duy nhất thì vòng lửa dán bẹt lên mặt người — mất hẳn cảm
 // giác nó quét vòng quanh, mà đó chính là toàn bộ ý của chiêu này.
 //
-// Vũ khí bay theo cùng một elip, vẽ bằng ITEM_ART của CHÍNH món đang cầm — nên đổi vũ khí là
+// Vũ khí bay theo cùng một elip, vẽ bằng chính bóng dáng của món đang cầm — nên đổi vũ khí là
 // đổi luôn hình bay quanh. Không nướng thêm khung Spine: bản mẫu chỉ có bốn hoạt cảnh
 // (đứng/đi/đánh/phép) và Meowa chỉ tô lại trong bóng cố định chứ không thêm được chuyển động.
 // ═══════════════ U LINH — tuyệt chiêu Evil Spirit của Dark Wizard ═══════════════
@@ -5511,6 +5541,24 @@ function genWing(sect, bac){
   const d = b[sect] || b[(player && player.sect)] || b.thieulam;
   return specialItem('canh', d, { wing: d.id, wingBac: (bac || 1) });
 }
+// Tổng Sinh Lực mà BA Ô GIÁP cho ở một giai, chia theo tỉ lệ cũ của Phòng Ngự (30/40/30).
+//
+// Hai số này DÒ BẰNG ĐO, không chọn bừa: quét 800/155 · 650/125 · 500/100 · 0/0 rồi so sinh lực
+// hiệu dụng (maxHp ÷ ((1−giảm sát thương) × (1−đỡ đòn))) với bản trước ở bốn mốc giai 1/3/5/7,
+// mỗi mốc trung bình 12 lượt sinh đồ. Đo hai KIỂU CHƠI, vì hệ mới tách hẳn chúng ra:
+//   • dồn điểm vào Phòng Ngự : 500/100 ra   0% · −5% · +42% · +59%
+//   • không điểm Phòng Ngự nào: 500/100 ra −9% · −51% · −38% · −38%
+// Chọn 500/100 vì đây là đường THẤP NHẤT còn giữ được giai 1 ngang bản cũ — bộ đồ đầu tiên của
+// người mới không được yếu đi. Bỏ hẳn (0/0) thì người không cộng Phòng Ngự mất 62–64%, quá tay.
+//
+// Phần phình còn lại ở giai 5–7 của kiểu dồn Phòng Ngự KHÔNG đến từ hai số này mà từ trần 0,78
+// có sẵn: chỉ riêng điểm Phòng Ngự của nhân vật đã đủ chạm trần, nên bản cũ ném đi toàn bộ
+// Phòng Ngự trên giáp (đo được: bỏ sạch giáp mà kiểu dồn Phòng Ngự chỉ mất 9–19%). Muốn hạ nốt
+// thì phải hạ TRẦN, và đó là một thay đổi cân bằng riêng, không gộp vào đợt này.
+const GIAP_HP_GOC = 500, GIAP_HP_BUOC = 100;
+function giapHp(t, phan){
+  return Math.round((GIAP_HP_GOC + (clamp(t || 1, 1, GIAI_MAX) - 1) * GIAP_HP_BUOC) * phan);
+}
 function mainName(k){
   return { atk:'Công Kích', def:'Phòng Ngự', vit:'Sinh Lực', str:'Lực Lượng',
            agi:'Mẫn Tiệp', hp:'Sinh Lực tối đa', crit:'Bạo Kích %', qireg:'Hồi Mana' }[k] || k;
@@ -6051,7 +6099,11 @@ function calcDerived(){
   player.maxHp = Math.round(player.maxHp * (1 + P.hpPct/100));
   player.maxQi = Math.round(player.maxQi * (1 + P.qiPct/100));
   player.atk = Math.round(player.atk * (1 + P.atkPct/100));
-  player.defRed = Math.min(0.78, player.defRed + P.dmgred/100 + P.defPct/100);
+  // Chặn NHÁNH dmgred ở 24% TRƯỚC khi cộng vào defRed. Chặn ở đây chứ không ở trần 0,78 chung:
+  // trần chung gộp cả Phòng Ngự lẫn defPct của cánh/áo choàng/Đại Thành, nên chặn ở đó thì
+  // dmgred vẫn tự do phình rồi lặng lẽ đẩy ba nguồn kia ra khỏi phép cộng.
+  player.dmgred = Math.min(DMGRED_TRAN, P.dmgred);
+  player.defRed = Math.min(0.78, player.defRed + player.dmgred/100 + P.defPct/100);
   player.eva = Math.min(0.45, player.eva + P.evaPct/100);
   player.aspd = Math.max(0.25, player.aspd * (1 - P.aspdPct/100));
   player.reflect = (player.reflect || 0) + P.reflectPct/100;
@@ -10853,6 +10905,9 @@ function drawMob(m){
 // Thứ tự lớp: áo choàng → chân → thân → giáp → mũ → tay → vũ khí.
 // Hộp toạ độ HERO_W×HERO_H, chân chạm y≈212, tâm đầu y≈74.
 const HERO_W = 160, HERO_H = 220;
+// Gót chân của bộ xương trong hệ 160x220 — cùng điểm mà bảng khung Spine neo vào.
+// Dùng làm trục xoay cho cú giật ngửa lúc trúng đòn (xem drawPlayer).
+const HERO_GOT_X = 80, HERO_GOT_Y = 212;
 // HERO_METAL đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
 const HERO_METAL = window.HERO_METAL;
 function hMetal(tier){ return HERO_METAL[clamp(((tier|0) || 1) - 1, 0, HERO_METAL.length - 1)]; }
@@ -11463,7 +11518,7 @@ function hHeldWeapon(g, gv, ps, x, y, rot, fallback){
     // ~1.45, không phải 2.5 — ở 2.5 thanh kiếm cao hơn cả người và cắt ngang thân.
     g.scale(F.k, F.k);
     g.translate(0, F.dy);                      // điểm nắm rơi đúng vào bàn tay
-    (ITEM_ART[d.art] || iaChuaArt)(g, W, Object.assign({}, d, { rot: 0 }));
+    iaChuaArt(g, W, Object.assign({}, d, { rot: 0 }));
     g.restore();
   };
 }
@@ -13489,8 +13544,18 @@ function drawPlayer(){
   //  tung tuyệt kỹ, và chốt đó vô hiệu hoá sprite đúng lúc cần nhất. Mà kể cả có phóng to thì
   //  cũng chẳng sao: sprite dựng ở 220px trong khi trên màn hình cao 104×1,12 = 116px, vẫn là
   //  thu nhỏ chứ không phải kéo giãn.)
+  // TRÚNG ĐÒN CŨNG DÙNG SPRITE. Trước đây khối này bị chặn bằng `if (_hurt <= 0)`, tức trong
+  // 0,3 giây sau mỗi cú đòn nhân vật RƠI VỀ drawHeroFigure — dáng người dựng bằng đường vẽ.
+  // Với Dark Wizard (và Dark Knight) đang có gói Spine thật, người chơi thấy bộ giáp thật biến
+  // mất và một nhân vật khác hẳn hiện ra chớp một cái mỗi lần bị đánh. Quái đánh liên tục thì
+  // gần như không lúc nào thấy đúng bộ đồ mình đang mặc.
+  //
+  // Lý do cũ là "giật ngửa phải khớp đúng độ mạnh cú đòn", mà giật ngửa nằm trong `_ps` —
+  // sprite nướng sẵn không nhận tư thế. Nay làm bằng PHÉP BIẾN HÌNH lúc blit: xoay quanh gót
+  // chân + nhấc thân lên, đúng hướng và đúng biên độ cũ. Đổi lại là các khớp không bung riêng
+  // lẻ — cái giá rẻ hơn nhiều so với đổi hẳn nhân vật.
   let _spr = null;
-  if (_hurt <= 0){
+  {
     // BAY không có khối khung riêng, và không cần. Đo bằng chỉ số chồng khít giữa tư thế bay
     // mong muốn với cả 20 hoạt cảnh × 12 khung của bản mẫu: khớp nhất là chính '00_Walk' khung
     // 8/12 — 0,915, bỏ xa á quân '00_Run' 0,718. Đó là khoảnh khắc hai chân chụm lại và mũi
@@ -13526,7 +13591,22 @@ function drawPlayer(){
     else ctx.drawImage(heroRimCanvas(p.sect, _tier, now, _ps, _gv), 0, 0, HERO_W, HERO_H);
     ctx.restore();
   }
-  if (_spr) heroBlit(ctx, _spr);
+  // Bài kiểm đọc cờ này để gác đúng lỗi vừa sửa: trúng đòn KHÔNG được rơi về hình vẽ đường.
+  // Một phép gán chuỗi mỗi khung — rẻ hơn nhiều so với để lỗi đó quay lại mà không ai thấy.
+  window.__veThan = _spr ? 'sprite' : 'vector';
+  if (_spr){
+    if (_hurt > 0){
+      // Gót chân của bộ xương nằm ở (80, 212) trong hệ 160x220 — xoay quanh đúng điểm đó thì
+      // thân ngửa ra sau mà chân vẫn bám đất. Góc âm vì sau `flip` nhân vật luôn nhìn về +x:
+      // điểm ở trên gót có y âm, muốn nó chạy về -x thì sin(góc) phải âm.
+      ctx.save();
+      ctx.translate(HERO_GOT_X, HERO_GOT_Y);         // dời gốc về gót
+      ctx.rotate(-0.14 * _hurt);                     // ngửa ra sau
+      ctx.translate(-HERO_GOT_X, -HERO_GOT_Y - 2.2 * _hurt);   // trả gốc + nhấc thân đúng biên độ `bob` cũ
+      heroBlit(ctx, _spr);
+      ctx.restore();
+    } else heroBlit(ctx, _spr);
+  }
   else drawHeroLit(ctx, p.sect, _tier, now, _ps, _gv);
   ctx.restore();
   if (_tk && _tk.truoc) veThanKhi(ctx, _tk, p);        // quét ra trước mặt: vẽ SAU thân
@@ -15165,6 +15245,27 @@ function genSpecific(slotId, level){
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
   });
 }
+// ── ?test=1: mặc sẵn nguyên bộ art thật ──────────────────────────────────────────
+// Chỉ GIAI 1 có art nướng từ gói Spine của Meowa — NV_GIAP phủ thieulam|1 (dkgs1) và
+// baidasan|1 (dwsm1), còn vũ khí thì VK_ANH phủ ba dòng gậy của Dark Wizard (tk_dwstaff).
+// Người vào bằng ?test=1 mà cởi trần thì nhìn thấy đúng thân trần và một ô chờ art, tức là
+// xem được ĐÚNG phần chưa làm xong. Nên phát sẵn nguyên bộ giai 1 của chính lớp đang chơi.
+//
+// Vì sao GIAI 1 chứ không phải giai cao: art chỉ có ở giai 1. /max phát đồ giai 7 — mạnh hơn
+// nhiều nhưng KHÔNG món nào có art, nên hai chế độ phục vụ hai việc khác nhau và không gộp.
+//
+// Phải phát CẢ BỐN ô giáp: nvBoGiap() đòi đủ độ phủ mới đổi sang bộ giáp, thiếu một ô là về
+// thân trần (test_giapicon mục 6 gác đúng chỗ này).
+function tangDoThuNghiem(){
+  for (const sl of SLOTS){
+    if (sl.special) continue;                  // cánh và áo choàng đi đường riêng, không thuộc bộ
+    const it = genSpecific(sl.id, 1);          // cấp 1 → giai 1 → đúng giai đang có art
+    it.plus = 0;
+    player.equip[sl.id] = it;
+  }
+  calcDerived();
+  player.hp = player.maxHp; player.qi = player.maxQi;
+}
 function applyTestBoost(){
   // ===== CHẾ ĐỘ THỬ NGHIỆM: MỌI TÍNH NĂNG TỐI ĐA =====
   player.level = MAX_LV; player.xp = 0;            // cấp 100 — mở hết mọi hệ thống & map
@@ -15823,6 +15924,16 @@ function startGame(sectKey, quze){
     addFloat(player.x, player.y-72, 'Full Chí Tôn +11 · Linh Dực c2 · 99 châu · 70 Box Kundun', '#a0ffe9', 13);
     addFloat(player.x, player.y-94, 'C nhân vật · V trang bị · B túi đồ · O cài đặt · M bản đồ · K kỹ năng', '#ffd76a', 12);
   } else {
+    // ?test=1 (không kèm ?max=1): không lên cấp, không phát tiền — chỉ mặc sẵn bộ giai 1 để
+    // người thử nhìn thấy art thật ngay từ giây đầu thay vì một nhân vật cởi trần.
+    // Đọc TEST_DO chứ KHÔNG đọc TEST_MODE: 115 bài kiểm tự đặt `window.TEST_MODE = true` rồi
+    // gọi startGame để mở cổng dịch chuyển. Treo việc phát đồ vào TEST_MODE là mọi bài kiểm
+    // cân bằng (DPS lớp, sát thương quái, thời gian hạ mục tiêu) đột nhiên đo một nhân vật mặc
+    // full đồ Hoàn Hảo. TEST_DO chỉ suy từ URL nên không bài nào chạm tới.
+    if (window.TEST_DO){
+      tangDoThuNghiem();
+      addFloat(player.x, player.y-72, 'Chế độ test — mặc sẵn nguyên bộ giai 1 và vũ khí của lớp', '#a0ffe9', 13);
+    }
     addFloat(player.x, player.y-50, 'Lunaris City — hãy đến gặp Trưởng Lão Rell (lại gần, nhấn E)!', '#7ecbff', 15);
   }
   if (window.TEST_MODE) addFloat(player.x, player.y-95, 'TEST MODE — nhấn ` (phím dưới Esc) mở console, gõ /help xem lệnh', '#7fd4ff', 12);
@@ -16032,6 +16143,9 @@ window.addEventListener('beforeunload', saveGame);
 // TEST_MODE (?test=1 hoặc ?max=1): playtest — dịch chuyển tự do mọi map/phó bản, bỏ qua điều kiện mở
 // Bản phát hành vẫn mở cho người chơi chủ động trải nghiệm full: thêm ?test=1 (hoặc ?max=1) vào link
 window.TEST_MODE = /([?&])(test|max)=1/.test(location.search);
+// Riêng ?test=1 (không tính ?max=1) còn phát sẵn nguyên bộ giai 1 — xem tangDoThuNghiem().
+// Cờ RIÊNG, suy thẳng từ URL: bài kiểm ghi đè TEST_MODE nên không dùng chung được.
+window.TEST_DO = /([?&])test=1/.test(location.search);
 // TEST_MODE: hiện checkbox "Chế độ thử nghiệm" trên các màn hình bắt đầu (mặc định ẩn trong index.html)
 if (window.TEST_MODE) setTimeout(() => {
   for (const id of ['max-mode', 'max-mode-intro']) { const l = el(id); if (l) l.style.display = 'block'; }
@@ -16907,139 +17021,9 @@ function iGem(g, M, x, y, r){
 
 
 
-// Vệt sáng chéo phủ lên toàn hình — làm mảng phẳng thành bề mặt cong.
-function iSheenArc(g){
-  g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.16;
-  g.fillStyle = iGrad(g, -30, -30, 6, 20, 'rgba(255,255,255,1)', 'rgba(255,255,255,0)');
-  g.beginPath(); g.arc(0, 0, 46, 0, 7); g.fill();
-  g.restore();
-}
-
-
-
-
-
-// ── PHỤ KIỆN: nhẫn — dùng chung mọi lớp ─────────────────────────────────────────
-function iaRing(g, M, P){
-  const st = P.st || 1;
-  g.save(); g.translate(0, 6);
-  const bw2 = 6 + st * 0.9;                 // bề dày vành
-  // Vành phải KÍN. Bản đầu vẽ một cung hở nên ra hình móng ngựa, không ai đọc là nhẫn.
-  g.save(); g.scale(1, 0.94);
-  g.lineWidth = bw2;
-  g.strokeStyle = iGrad(g, 0, -24, 0, 24, M.hi, M.lo);
-  g.beginPath(); g.arc(0, 0, 20, 0, 7); g.stroke();
-  g.lineWidth = bw2 * 0.34; g.strokeStyle = 'rgba(255,255,255,.34)';
-  g.beginPath(); g.arc(0, 0, 20 + bw2 * 0.28, Math.PI * 0.62, Math.PI * 1.28); g.stroke();
-  g.lineWidth = bw2 * 0.30; g.strokeStyle = 'rgba(0,0,0,.30)';
-  g.beginPath(); g.arc(0, 0, 20 - bw2 * 0.30, Math.PI * 1.62, Math.PI * 0.28); g.stroke();
-  g.restore();
-  // ổ nạm ngồi TRÊN vành
-  iFill(g, [[-9, -18], [9, -18], [7, -27], [-7, -27]], M.trim);
-  if (st >= 3){ iFill(g, [[-9, -19], [-17, -25], [-8, -25]], M.trim);
-                iFill(g, [[9, -19], [17, -25], [8, -25]], M.trim); }
-  iGem(g, M, 0, -25, 4.6 + st * 0.55);
-  if (st >= 4){ iRivet(g, M, -15, -11, 1.5); iRivet(g, M, 15, -11, 1.5); }
-  g.restore();
-  iSheenArc(g);
-}
-// ── PHỤ KIỆN: dây chuyền — hai nhánh, NHÌN LÀ BIẾT ──────────────────────────────
-// Nhánh vật lý đeo NANH kim loại; nhánh phép đeo CẦU pha lê. Phân biệt bằng bóng dáng
-// chứ không bằng màu — ở cỡ 44px trong ô túi, màu là thứ mất trước tiên.
-function iChain(g, M, st){
-  g.strokeStyle = M.lo; g.lineWidth = 3.4;
-  g.beginPath(); g.moveTo(-19, -30); g.quadraticCurveTo(-13, -6, 0, -2); g.stroke();
-  g.beginPath(); g.moveTo(19, -30); g.quadraticCurveTo(13, -6, 0, -2); g.stroke();
-  g.strokeStyle = M.hi; g.lineWidth = 1.5;
-  g.beginPath(); g.moveTo(-19, -30); g.quadraticCurveTo(-13, -7, -1, -3); g.stroke();
-  if (st >= 2){                              // mắt xích thấy rõ ở nấc cao
-    for (let i = 1; i <= 3; i++){
-      const t = i / 4, x = -19 + (19) * t, y = -30 + 28 * t * t;
-      iRivet(g, M, x, y, 1.5); iRivet(g, M, -x, y, 1.5);
-    }
-  }
-}
-// Mặt dây đổi theo bậc: nanh → vuốt → mảnh vỡ → ấn có cánh.
-const PEND_CHARM = ['nanh', 'nanh', 'vuot', 'manh', 'an'];
-function iaPendPhys(g, M, P){
-  const st = P.st || 1;
-  const charm = P.charm || PEND_CHARM[Math.min(4, st - 1)] || 'nanh';
-  iChain(g, M, st);
-  if (charm === 'vuot'){                    // vuốt quặp
-    iFill(g, [[-8, -3], [8, -3], [9, 14], [1, 30], [-3, 16]], iGrad(g, -8, -3, 9, 30, M.hi, M.lo));
-    iFill(g, [[2, 6], [6, 8], [3, 22]], M.lo);
-  } else if (charm === 'manh'){             // mảnh vỡ có cạnh
-    iFill(g, [[-8, -3], [3, -6], [10, 6], [2, 29], [-6, 12]], iGrad(g, -8, -6, 10, 29, M.hi, M.lo));
-    iFill(g, [[-2, 0], [4, 4], [0, 24]], M.lo);
-  } else if (charm === 'an'){               // ấn có cánh hai bên
-    iFill(g, [[-9, -2], [9, -2], [7, 18], [0, 27], [-7, 18]], iGrad(g, -9, -2, 9, 27, M.hi, M.lo));
-    iFill(g, [[-9, 1], [-20, -4], [-10, 10]], M.trim);
-    iFill(g, [[9, 1], [20, -4], [10, 10]], M.trim);
-    iFill(g, [[-3, 4], [3, 4], [2, 20], [-2, 20]], M.lo);
-  } else {                                  // nanh: khối nhọn xuống, có sống giữa
-    iFill(g, [[-9, -3], [9, -3], [5, 20], [0, 30], [-5, 20]], iGrad(g, -9, -3, 9, 30, M.hi, M.lo));
-    iFill(g, [[-2.4, 0], [2.4, 0], [1.4, 18], [0, 26], [-1.4, 18]], M.lo);
-  }
-  // gông cổ mặt dây
-  iFill(g, [[-11, -8], [11, -8], [10, -1], [-10, -1]], M.trim);
-  if (st >= 3){ iFill(g, [[-11, -6], [-19, -11], [-10, -12]], M.trim);
-                iFill(g, [[11, -6], [19, -11], [10, -12]], M.trim); }
-  if (st >= 2) iGem(g, M, 0, -4.5, 2.6 + st * 0.25);
-  iSheenArc(g);
-}
-// Lõi đổi theo bậc: cầu → khối cắt mặt → vòng rỗng → con mắt.
-const PEND_ORB = ['cau', 'cau', 'khoi', 'vong', 'mat'];
-function iaPendMagic(g, M, P){
-  const st = P.st || 1;
-  const orb = P.orb || PEND_ORB[Math.min(4, st - 1)] || 'cau';
-  iChain(g, M, st);
-  // gọng ôm lõi
-  g.strokeStyle = M.trim; g.lineWidth = 3;
-  g.beginPath(); g.arc(0, 11, 13.5, -0.85 * Math.PI, -0.15 * Math.PI); g.stroke();
-  iFill(g, [[-6, -8], [6, -8], [5, -2], [-5, -2]], M.trim);
-  const c = M.glow || M.trim;
-  const rr = 9 + st * 0.7;
-  if (orb === 'khoi'){                       // khối cắt mặt — thấy được các mặt
-    const pts = [[0, -rr], [rr * 0.86, -rr * 0.3], [rr * 0.6, rr * 0.8], [-rr * 0.6, rr * 0.8], [-rr * 0.86, -rr * 0.3]];
-    g.save(); g.translate(0, 11);
-    iFill(g, pts, iGrad(g, -rr, -rr, rr, rr, '#ffffff', c));
-    iFill(g, [[0, -rr], [rr * 0.86, -rr * 0.3], [0, rr * 0.15]], c);
-    iFill(g, [[0, -rr], [-rr * 0.86, -rr * 0.3], [0, rr * 0.15]], M.lo);
-    g.restore();
-  } else if (orb === 'vong'){                // vòng rỗng, lõi sáng lơ lửng giữa
-    g.strokeStyle = c; g.lineWidth = 4.2;
-    g.beginPath(); g.arc(0, 11, rr, 0, 7); g.stroke();
-    g.strokeStyle = M.trim; g.lineWidth = 1.4;
-    g.beginPath(); g.arc(0, 11, rr + 2.2, 0, 7); g.stroke();
-    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(0, 11, rr * 0.34, 0, 7); g.fill();
-  } else if (orb === 'mat'){                 // con mắt
-    g.save(); g.translate(0, 11);
-    g.fillStyle = iGrad(g, -rr, -rr * 0.6, rr, rr * 0.6, '#ffffff', M.lo);
-    g.beginPath(); g.moveTo(-rr * 1.15, 0);
-    g.quadraticCurveTo(0, -rr * 1.05, rr * 1.15, 0);
-    g.quadraticCurveTo(0, rr * 1.05, -rr * 1.15, 0); g.fill();
-    g.fillStyle = c; g.beginPath(); g.arc(0, 0, rr * 0.52, 0, 7); g.fill();
-    g.fillStyle = '#12101a'; g.beginPath(); g.ellipse(0, 0, rr * 0.2, rr * 0.46, 0, 0, 7); g.fill();
-    g.restore();
-  } else {                                   // cầu pha lê
-    const gr = g.createRadialGradient(-rr*0.3, 11 - rr*0.35, 1, 0, 11, rr);
-    gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.35, c); gr.addColorStop(1, M.lo);
-    g.fillStyle = gr; g.beginPath(); g.arc(0, 11, rr, 0, 7); g.fill();
-    g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; g.beginPath(); g.arc(0, 11, rr, 0, 7); g.stroke();
-  }
-  if (st >= 3 && orb !== 'vong'){            // vành xoay quanh lõi
-    g.strokeStyle = M.trim; g.lineWidth = 1.6;
-    g.save(); g.translate(0, 11); g.scale(1, 0.34);
-    g.beginPath(); g.arc(0, 0, rr + 5, 0, 7); g.stroke();
-    g.restore();
-  }
-  if (st >= 5){ g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = .45;
-    g.fillStyle = c; g.beginPath(); g.arc(0, 11, rr + 6, 0, 7); g.fill(); g.restore(); }
-  iSheenArc(g);
-}
 
 // ═══════════ ICON VẬT PHẨM TIÊU HAO — vẽ bằng canvas, không cần file ảnh ═══════════
-// Trang bị đã có icon sinh từ ITEM_ART; bình thuốc / sách phép / bùa / hộp thì chưa, nên mọi
+// Trang bị đã có icon sinh từ ô chờ art; bình thuốc / sách phép / bùa / hộp thì chưa, nên mọi
 // chỗ hiện chúng đều phải mượn emoji hoặc chỉ in chữ. Emoji thì phụ thuộc font máy người chơi
 // (⚔ và 🛡 đã hiện thành ô vuông trong tiệm), còn chữ thì không nói được "đây là một món".
 // Bộ này vẽ chúng cùng một ngôn ngữ hình với trang bị: cùng khung 100×100, cùng quầng nền,
@@ -17241,13 +17225,14 @@ function consumTip(id){
   return parts.filter(Boolean).join('\n').replace(/"/g, '&quot;');
 }
 // ── Ô "CHƯA CÓ ART" ─────────────────────────────────────────────────────────────
-// Giáp và vũ khí không còn hình vector nào. Cho tới khi gói Spine / tranh vũ khí về, món phải
+// KHÔNG món trang bị nào còn hình vector — giáp, vũ khí, nhẫn, dây chuyền đều đã xoá. Cho tới
+// khi gói Spine / tranh vũ khí về, món phải
 // hiện MỘT CÁI GÌ trong túi — ô trống thì không phân biệt nổi món với chỗ trống, không kéo thả
 // được, không so sánh được.
 //
 // Cố ý vẽ THÔ: một bóng dáng phẳng, đúng một màu, không khối, không hoa văn, không đổi theo
 // giai. Nó phải đọc ra ngay là "chỗ này đang chờ art", không được đẹp tới mức có người tưởng
-// đây là art thật rồi để nguyên. Tám dáng cho tám loại — đủ để nhìn là biết món gì.
+// đây là art thật rồi để nguyên. Mười hai dáng cho mười hai loại — đủ để nhìn là biết món gì.
 const CHUA_ART = {
   weapon:   [[0,-40],[7,-30],[7,18],[-7,18],[-7,-30]],            // lưỡi thẳng
   staff:    [[3,-42],[7,-34],[4,-26],[4,30],[-4,30],[-4,-26],[-7,-34],[-3,-42]],
@@ -17258,6 +17243,12 @@ const CHUA_ART = {
   gloves:   [[-14,-18],[14,-18],[18,10],[10,22],[-10,22],[-18,10]],
   boots:    [[-12,-24],[10,-24],[12,10],[24,20],[24,26],[-14,26],[-14,-6]],
   pants:    [[-16,-22],[16,-22],[12,26],[2,26],[0,2],[-2,26],[-12,26]],
+  // Nhẫn vẽ bằng MỘT đường kín có lỗ: vòng ngoài đi thuận, vòng trong đi ngược, nối bằng một
+  // đường may ở đỉnh. iaChuaArt chỉ tô một path nên đây là cách duy nhất ra được hình khuyên.
+  ring:     [[0,-20],[14,-14],[20,0],[14,14],[0,20],[-14,14],[-20,0],[-14,-14],
+             [0,-20],[0,-11],[-8,-8],[-11,0],[-8,8],[0,11],[8,8],[11,0],[8,-8],[0,-11]],
+  pendPhys: [[-4,-32],[4,-32],[4,-22],[11,-14],[6,10],[0,28],[-6,10],[-11,-14],[-4,-22]],
+  pendMagic:[[-4,-32],[4,-32],[4,-20],[13,-12],[13,8],[0,22],[-13,8],[-13,-12],[-4,-20]],
 };
 function iaChuaArt(g, M, P){
   const pts = CHUA_ART[(P && P.art)] || CHUA_ART.armor;
@@ -17269,11 +17260,6 @@ function iaChuaArt(g, M, P){
   g.lineWidth = 2; g.strokeStyle = M.trim; g.stroke();
   g.restore();
 }
-// Chỉ còn phụ kiện dùng hình vector — nhẫn và dây chuyền ở cỡ 44px trong ô túi thì hình vẽ
-// đọc rõ hơn tranh, nên chủ dự án chốt giữ lại. Mọi `art` khác rơi về ô chờ art.
-const ITEM_ART = {
-  ring: iaRing, pendPhys: iaPendPhys, pendMagic: iaPendMagic,
-};
 
 // ═══ KHỐI: phủ một lượt ánh sáng có HƯỚNG lên đúng phần đã vẽ ═══
 // Hình vẽ hiện tại là cel-shading phẳng: mỗi mảng một màu đặc (M.hi / M.lo). Nhìn ở cỡ nhỏ thì
@@ -17371,7 +17357,7 @@ function drawItemIcon(g, def, tier, _rarity, plus){
   const pl = plus || 0;
   const st = plusStage(pl);
   const k = clamp((pl - 3) / 8, 0, 1);            // 0 tại +3 → 1 tại +11, chạy liên tục
-  const fn = ITEM_ART[def.art] || iaChuaArt;
+  const fn = iaChuaArt;
   const GC = M.glow || '#ffe9a8';
   const gl = { lo: GC, hi: GC, trim: GC, glow: null };
   if (st >= 1){

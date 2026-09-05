@@ -110,6 +110,30 @@ const fs = require('fs');
     return out;
   });
 
+  // ── 7. TRÚNG ĐÒN vẫn phải là art nướng, không rơi về hình vẽ đường ────────────────
+  // Lỗi thật đã gặp: drawPlayer chặn nhánh sprite bằng `if (_hurt <= 0)`, nên suốt 0,3 giây sau
+  // mỗi cú đòn nhân vật đổi thành dáng người vẽ bằng đường — Dark Wizard đang mặc bộ Spine thật
+  // bỗng thành một cái áo choàng tím trơn. Quái đánh liên tục thì gần như không lúc nào thấy
+  // đúng bộ đồ đang mặc. Gác bằng cờ window.__veThan mà drawPlayer đặt mỗi khung.
+  await p.evaluate(() => {
+    startGame('baidasan', null);
+    for (const sl of SLOTS){ if (sl.special) continue;
+      const it = genSpecific(sl.id, 1); it.plus = 0; player.equip[sl.id] = it; }
+    calcDerived(); player.hurtT = 0;
+  });
+  await p.waitForFunction(() => !!nvTai('dwsm1', 'webp'), { timeout: 20000 }).catch(()=>{});
+  await p.waitForTimeout(500);
+  res.veThan_thuong = await p.evaluate(() => window.__veThan);
+  // hurtT tụt dần theo update(), nên ghim lại mỗi khung trong lúc đo
+  res.veThan_dau = await p.evaluate(async () => {
+    for (let i = 0; i < 8; i++){
+      player.hurtT = 0.3;
+      await new Promise(r => requestAnimationFrame(() => r()));
+    }
+    player.hurtT = 0.3;
+    return await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => r(window.__veThan))));
+  });
+
   const dir = __dirname + '/gearlook';
   fs.mkdirSync(dir, { recursive: true });
   for (const [k, url] of Object.entries(res.shots))
@@ -140,6 +164,8 @@ const fs = require('fs');
   if (res.heroTier_tranTrui !== 1) fail(`cởi hết đồ mà heroTier vẫn ${res.heroTier_tranTrui}, phải về 1`);
   if (res.heroTier_theoDo !== res.giaiMax) fail(`mặc full giai đỉnh mà heroTier chỉ ${res.heroTier_theoDo}/${res.giaiMax}`);
   if (!res.cache_doiTheoDo) fail('cache chân dung không đổi khi thay đồ — panel sẽ hiện ảnh cũ');
+  if (res.veThan_thuong !== 'sprite') fail(`đứng yên mà đã vẽ bằng ${res.veThan_thuong} — art nướng không vào được`);
+  if (res.veThan_dau !== 'sprite') fail(`TRÚNG ĐÒN rơi về hình vẽ đường (${res.veThan_dau}) — bộ giáp thật biến mất mỗi lần bị đánh`);
 
   console.log('errors:', JSON.stringify(errs));
   console.log(bad === 0 && errs.length === 0 ? 'PASS' : 'FAIL(' + bad + ')');

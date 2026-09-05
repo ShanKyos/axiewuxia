@@ -168,6 +168,24 @@ const { chromium } = require('playwright');
     const plain = mkHH('ao', 2); const excCopy = JSON.parse(JSON.stringify(plain));
     plain.exc = null;
     o.lucChien = { coHH: itemPower(excCopy), khongHH: itemPower(plain) };
+
+    // ── TRẦN GIẢM SÁT THƯƠNG: 4% × 6 ô ────────────────────────────────────────────
+    // DMGRED_SO_O viết thẳng số 6 trong game.js vì lý do TDZ (EXC_ARMOR và ARMOR_SUBS đọc
+    // DMGRED_MOI_MON trước khi ARMOR_SLOTS tồn tại). Số viết tay thì phải có bài gác, kẻo
+    // ai đó thêm một ô giáp thứ bảy mà trần vẫn nằm ở 24%.
+    o.tran = { moiMon: DMGRED_MOI_MON, soO: DMGRED_SO_O, tran: DMGRED_TRAN,
+               oGiap: ARMOR_SLOTS.slice().sort() };
+    // Nhồi quá trần rồi xem calcDerived có chặn không. Sáu món giáp Hoàn Hảo rèn +9: mỗi món
+    // 4% × (1 + 9×PLUS_STEP) ≈ 8,7 cộng dòng phụ nữa — thừa sức vượt 24 nếu không có Math.min.
+    player.equip = {};
+    for (const sl of ARMOR_SLOTS){
+      const it = mkHH(sl, 7); it.plus = 9;
+      it.subs = [{ k:'dmgred', name:'Giảm Sát Thương', v: DMGRED_MOI_MON, pct:true }];
+      it.exc = [{ k:'dmgred', name:'Giảm Sát Thương', v: DMGRED_MOI_MON }];
+      player.equip[sl] = it;
+    }
+    calcDerived();
+    o.tran.doDuoc = +player.dmgred.toFixed(2);
     return o;
   });
 
@@ -257,6 +275,19 @@ const { chromium } = require('playwright');
   if (r.tacDung.doDon < 10) fail(`dòng Đỡ Đòn không có tác dụng (${r.tacDung.doDon}%)`);
   if (!(r.lucChien.coHH > r.lucChien.khongHH))
     fail(`lực chiến MÙ trước dòng Hoàn Hảo (${r.lucChien.coHH} = ${r.lucChien.khongHH}) — auto sẽ tháo mất đồ Hoàn Hảo`);
+
+  // ── TRẦN GIẢM SÁT THƯƠNG ──
+  const tr = r.tran;
+  if (tr.moiMon !== 4) fail(`Giảm Sát Thương mỗi món ${tr.moiMon}%, chủ dự án chốt 4%`);
+  if (tr.soO !== tr.oGiap.length)
+    fail(`DMGRED_SO_O = ${tr.soO} nhưng ARMOR_SLOTS có ${tr.oGiap.length} ô (${tr.oGiap.join(',')}) — số viết tay đã lệch`);
+  if (tr.oGiap.join(',') !== 'ao,chan,nhan1,nhan2,non,tay')
+    fail(`bể ô mang Giảm Sát Thương sai: ${tr.oGiap.join(',')} — phải là nón/áo/tay/chân/2 nhẫn`);
+  if (tr.tran !== 24) fail(`trần tổng ${tr.tran}%, phải là 4 × 6 = 24%`);
+  if (tr.doDuoc > tr.tran + 1e-9)
+    fail(`nhồi 6 món +9 ra ${tr.doDuoc}% giảm sát thương — vượt trần ${tr.tran}%, calcDerived không chặn`);
+  if (tr.doDuoc < tr.tran - 1e-9)
+    fail(`nhồi kịch mà chỉ ra ${tr.doDuoc}% — chưa chạm trần ${tr.tran}%, bài gác không còn đo đúng chỗ`);
 
   console.log('errors:', JSON.stringify(errs));
   console.log(bad === 0 && errs.length === 0 ? 'PASS' : 'FAIL(' + bad + ')');

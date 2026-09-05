@@ -25,12 +25,22 @@ const { chromium } = require('playwright');
     // NGUỒN ART của một món — hai món CÙNG nguồn thì ra cùng ảnh là đúng, không phải lỗi.
     // Ba dòng trượng Dark Wizard hiện dùng chung một tấm tk_dwstaff.png: 21 món, một nguồn.
     // Chỉ khi hai NGUỒN KHÁC NHAU cho ra cùng một ảnh mới là lỗi thật.
+    // Phụ kiện NAY CŨNG về ô chờ art: chủ dự án chốt xoá nốt hình vector của nhẫn và dây
+    // chuyền (đợt trước còn giữ lại hai bộ này). Nên chúng trả null như giáp/vũ khí chưa có
+    // tranh — 28 món dùng chung 3 bóng dáng phẳng là ĐÚNG, không phải trùng ảnh.
     const nguon = (d) => {
-      if (d.kind === 'acc') return 'acc:' + d.id;                       // mỗi phụ kiện một hình vector
       if (d.kind === 'weapon'){ const A = vkAnh(d); return A ? 'vk:' + A.tep : null; }
       if (d.kind === 'armor'){ const g = NV_GIAP[d.sect + '|' + d.tier]; return g ? 'giap:' + g + ':' + d.slot : null; }
       return null;
     };
+    // Không còn MỘT hàm vẽ vector nào cho trang bị. Bảng tra ITEM_ART đã gỡ hẳn; mọi món đi
+    // thẳng vào iaChuaArt. Gác ở đây để lần sau không ai lặng lẽ thêm lại một món "cho đẹp".
+    o.conVector = [];
+    if (typeof ITEM_ART    !== 'undefined') o.conVector.push('ITEM_ART');
+    if (typeof iaRing      !== 'undefined') o.conVector.push('iaRing');
+    if (typeof iaPendPhys  !== 'undefined') o.conVector.push('iaPendPhys');
+    if (typeof iaPendMagic !== 'undefined') o.conVector.push('iaPendMagic');
+    if (typeof iSheenArc   !== 'undefined') o.conVector.push('iSheenArc');
     const seen = new Map(); const trung = []; const daXet = new Set();
     let loi = 0, oCho = 0;
     for (const id of ids){
@@ -94,6 +104,7 @@ const { chromium } = require('playwright');
   console.log(JSON.stringify(r, null, 1));
   console.log(`\nĐỘ PHỦ ART MÓN ĐỒ: ${r.coArt}/${r.tong} — còn ${r.oChoArt} món dùng ô chờ art (${r.soNguon} nguồn art rời)\n`);
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
+  if (r.conVector.length) fail(`còn hình vector cho trang bị: ${r.conVector.join(', ')} — phải xoá hết, mọi món về ô chờ art`);
   if (r.tong !== 273) fail(`danh mục có ${r.tong} món, cần 273`);
   if (r.theoLoai.armor !== 140) fail(`giáp ${r.theoLoai.armor}, cần 140 (35 bộ × 4 ô)`);
   if (r.theoLoai.weapon !== 105) fail(`vũ khí ${r.theoLoai.weapon}, cần 105`);
