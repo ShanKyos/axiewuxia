@@ -87,9 +87,10 @@ const EXACT = {
   // Slots
   'Vũ Khí': 'Weapon', 'Nón': 'Helm', 'Áo': 'Armor', 'Tay': 'Gloves', 'Quần': 'Pants',
   'Chân': 'Boots', 'Dây Chuyền': 'Amulet', 'Nhẫn 1': 'Ring 1', 'Nhẫn 2': 'Ring 2',
+  'Vũ Khí 2': 'Weapon 2',
   'Binh Khí': 'Weapon', 'đang mặc': 'equipped', 'túi': 'bag',
   // 'Cánh' và 'Pet' từng thiếu, nên bảng Trang Bị hiện 10 nhãn tiếng Anh xen 2 nhãn tiếng Việt
-  'Cánh': 'Wings', 'Pet': 'Pet', 'Chưa mặc giáp': 'No armor equipped',
+  'Cánh': 'Wings', 'Pet': 'Pet', 'Thú Cưng': 'Pet', 'Chưa mặc giáp': 'No armor equipped',
   'Bấm để tháo · kéo từ Túi Đồ để mặc': 'Click to unequip · drag from Bag to equip',
   'Trang Bị': 'Equipment',
   // Materials & shop

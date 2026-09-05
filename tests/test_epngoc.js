@@ -49,7 +49,7 @@ const { chromium } = require('playwright');
   check('nhẫn 1×1', co.nhan1, [1,1]);
   check('dây chuyền 1×2', co.daychuyen, [1,2]);
   check('áo 2×2', co.ao, [2,2]);
-  check('CÁNH 3×2 = 6 ô, RỘNG chứ không dọc', co.canh, [3,2]);
+  check('CÁNH 4×2 = 8 ô, RỘNG chứ không dọc', co.canh, [4,2]);
   cond('vũ khí cao hơn rộng', co.vukhi, v => v && v[1] > v[0], 'vũ khí phải dài theo chiều dọc');
 
   // không món nào chồng ô của món khác
@@ -67,20 +67,38 @@ const { chromium } = require('playwright');
   });
   check('không ô nào bị hai món cùng chiếm', chong, 0);
 
+  // Khối món phải VẼ RA những đường chia bên trong. Người chơi MU đọc món đồ bằng SỐ Ô nó ăn
+  // — nón bốn ô, trượng sáu ô — nên một khối chữ nhật trơn là mất thông tin đó. Đếm ô con
+  // thay vì chụp ảnh: số ô con phải khớp đúng w×h của từng món.
+  await page.evaluate(() => { togglePanel('bag'); renderBag(); });
+  await page.waitForTimeout(250);
+  const chia = await page.evaluate(() => {
+    const r = [];
+    document.querySelectorAll('#panel-bag .bag-mon').forEach((e, i) => {
+      const it = player.inv[+e.dataset.inv];
+      const [w, hh] = bagKichThuoc(it);
+      r.push({ mong: w * hh, co: e.querySelectorAll('.bc-luoi u').length });
+    });
+    return r;
+  });
+  console.log('chia ô:', JSON.stringify(chia));
+  cond('mỗi khối vẽ đúng số ô con của nó', chia,
+       a => a.length > 0 && a.every(x => x.co === x.mong), 'khối món phải chia ô như MU');
+
   // hết chỗ thì phải TỪ CHỐI, không nuốt món
   const day = await page.evaluate(() => {
     player.inv = []; player.bagPlus = 0;
     let n = 0;
-    while (bagThem(genWing(0))) n++;                      // cánh 6 ô → 64/6 = 10 đôi
+    while (bagThem(genWing(0))) n++;                      // cánh 8 ô, túi 64 ô
     return { nhet: n, oTrong: bagOTrong(), conCho: bagConCho(genWing(0)) };
   });
   console.log('nhồi cánh:', JSON.stringify(day));
-  // TÁM, không phải mười. 64 ô chia 6 ra 10, nhưng lưới không phải cái xô: cánh rộng 3 cột
-  // mà túi có 8, nên mỗi tầng chỉ kê được hai đôi và thừa ra một dải 2 cột chạy dọc suốt
-  // 8 hàng — 16 ô chết mà không đôi cánh nào nhét vừa. Đó CHÍNH LÀ điều làm túi lưới khác
-  // túi đếm món — và là lý do "Xếp Gọn" có nghĩa.
-  check('túi 64 ô chỉ nhét vừa 8 đôi cánh (3×2), không phải 10', day.nhet, 8);
-  check('còn thừa đúng 16 ô lẻ mà không đôi cánh nào nhét vừa', day.oTrong, 16);
+  // Cánh rộng 4 cột = ĐÚNG NỬA bề ngang túi, nên hai đôi kê khít một tầng và lưới lấp kín:
+  // 8 đôi, 0 ô thừa. (Hồi cánh 3 cột thì mỗi tầng chỉ kê được hai đôi rồi bỏ lại một dải 2
+  // cột chạy dọc suốt lưới — 16 ô chết. Nới lên 4 cột dọn sạch dải đó.)
+  // Điều bài này gác vẫn thế: hết chỗ thì phải TỪ CHỐI, không nuốt món.
+  check('túi 64 ô nhét vừa đúng 8 đôi cánh (4×2)', day.nhet, 8);
+  check('cánh 4 cột lấp kín lưới, không còn ô chết', day.oTrong, 0);
   check('hết chỗ thì bagConCho() nói KHÔNG', day.conCho, false);
 
   // ── 2. BẬC THANG NGỌC — đúng MU: ◎ tới +6, ◉ tới +9, trên nữa phải qua lò ──

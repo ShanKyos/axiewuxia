@@ -249,6 +249,15 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 @media (min-width:1000px){
   #panel-inv { left:30%; width:min(440px,42vw); }
   #panel-bag { left:71%; width:min(440px,42vw); }
+  /* Mở CẢ Nhân Vật lẫn Trang Bị (phím C và V nay không loại nhau) ⇒ ba bảng, ba cột.
+     Không có nhánh này thì bảng Nhân Vật nằm giữa màn hình và bị Trang Bị đè lên.
+     Ba cột KHÔNG chia đều: bảng Trang Bị chỉ có hình nhân vật với mười ô nên hẹp là đủ, còn
+     Túi Đồ phải chứa lưới 8 cột cộng hàng nút — cho nó 360px như hai bảng kia thì chữ hướng
+     dẫn bị bóp thành một cột dọc một chữ mỗi dòng. `left` ở đây là TÂM bảng (transform
+     translate -50%), nên mỗi mốc = lề trái + nửa bề ngang. */
+  body.bang-ba-cot #panel-char { left:17.5%; width:min(360px,25vw); }
+  body.bang-ba-cot #panel-inv  { left:47%;   width:min(345px,24vw); }
+  body.bang-ba-cot #panel-bag  { left:79%;   width:min(440px,30vw); }
 }
 .panel h3 { font-family:var(--font-display); font-weight:700; color:var(--accent-light); letter-spacing:.5px; margin-bottom:10px; font-size:18px;
   border-bottom:1px solid var(--border-faint); padding-bottom:6px; }
@@ -275,10 +284,20 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 
 /* Trang Bị — lưới paperdoll 12 ô (thay danh sách dọc), kéo-thả từ Túi Đồ để mặc */
 /* ═══ Bảng trang bị kiểu MU/Diablo: người đứng giữa, ô đồ hai bên ═══ */
-.eq-doll { display:grid; grid-template-columns:58px 1fr 58px; gap:10px; align-items:stretch;
-  max-width:376px; margin:2px auto 6px; }
-.eq-col { display:flex; flex-direction:column; gap:6px; }
-.eq-col .eq-slot { width:58px; height:58px; aspect-ratio:auto; flex:none; }
+/* Lưới trang bị kiểu MU: ba cột ô LỚN, không có hình nhân vật chen giữa. Ô to hẳn ra thì
+   mới phân biệt được cây trượng với cây gậy — ở 58px của bản cũ chúng ra cùng một vệt.
+   `minmax(0,1fr)` chứ không `1fr`: ô có ảnh bên trong, mà `1fr` lấy kích thước tối thiểu theo
+   nội dung nên một icon rộng là cột đó phình ra và cả lưới lệch. */
+.eq-doll { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px;
+  max-width:300px; margin:2px auto 8px; }
+/* Dây chuyền và hai nhẫn là ô NHỎ — trong MU chúng cũng nhỏ hơn giáp, và nhờ vậy nhìn lướt
+   là biết ngay đâu là trang sức, đâu là giáp. Bọc một tầng để ô con co lại mà ô lưới vẫn đủ. */
+.eq-small { display:flex; align-items:center; justify-content:center; }
+.eq-small .eq-slot { width:62%; aspect-ratio:1; }
+/* Hai nhẫn chung một ô lưới, nằm cạnh nhau — mỗi cái hẹp lại để cả cặp vừa đúng bề ngang cột. */
+.eq-doi { gap:6px; }
+.eq-doi .eq-slot { width:46%; }
+.eq-hole { }
 .eq-fig { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
   border-radius:var(--r-md); border:1px solid var(--border-faint); padding:6px 4px 4px; min-height:0;
   background:radial-gradient(ellipse at 50% 34%, rgba(126,203,255,.10), rgba(10,11,24,.55) 72%); }
@@ -288,8 +307,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .eq-fig-cap b { display:block; font-size:12.5px; letter-spacing:.3px; }
 .eq-fig-cap span { display:block; font-size:10.5px; color:var(--text-dim); }
 @media (max-width:720px){
-  .eq-doll { grid-template-columns:48px 1fr 48px; gap:7px; max-width:300px; }
-  .eq-col .eq-slot { width:48px; height:48px; }
+  .eq-doll { gap:6px; max-width:246px; }
 }
 .eq-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; max-width:280px; margin:0 auto 4px; }
 .eq-slot { position:relative; aspect-ratio:1; border-radius:var(--r-md); border:1.5px dashed var(--border-faint);
@@ -568,6 +586,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   line-height:1; padding:2px 4px; border-radius:6px; color:#141633; background:linear-gradient(180deg,#7ecbff,#4c8dff);
   box-shadow:0 1px 3px rgba(0,0,0,.5); letter-spacing:.5px; }
 .bag-cell .item-ic, .bag-mon .item-ic { width:100%; height:100%; border:none; background:transparent; box-shadow:none; }
+/* Tranh món nằm TRÊN lưới ô con (.bc-luoi định vị tuyệt đối nên mặc định vẽ đè lên nội dung tĩnh). */
+.bag-mon .item-ic { position:relative; z-index:1; }
 .bag-cell .item-ic img, .bag-mon .item-ic img { width:82%; height:82%; }
 
 /* ── Thanh thoại trấn thủ (Cốt truyện Ngũ Ấn) ── */
@@ -1050,6 +1070,18 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .bag-mon.giai-3 { border-color:rgba(94,160,232,.7); }  .bag-mon.giai-4 { border-color:rgba(126,203,255,.72); }
 .bag-mon.giai-5 { border-color:rgba(177,140,255,.75); } .bag-mon.giai-6 { border-color:rgba(255,177,92,.85); }
 .bag-mon.giai-7 { border-color:rgba(255,107,107,.95); }
+
+/* Ô CON TRONG KHỐI MÓN — cái làm túi MU khác một danh sách có ảnh.
+   Người chơi MU đọc món đồ bằng SỐ Ô nó ăn: cái nón là bốn ô, cây trượng là sáu, đôi cánh
+   là sáu nằm ngang. Nếu khối chỉ là một hình chữ nhật trơn thì thông tin đó biến mất — mắt
+   chỉ thấy "một món to". Nên vẽ lại đúng những đường chia bên trong khối.
+   Lưới con dùng CÙNG gap 3px với .bag-nen, nên các đường chia nằm khít mạch nền: kéo món đi
+   chỗ khác thì khối vẫn ăn khớp từng ô một, không lệch nửa mạch. */
+.bag-mon .bc-luoi { position:absolute; inset:0; display:grid; gap:3px; pointer-events:none;
+  grid-template-columns:repeat(var(--w), 1fr); grid-template-rows:repeat(var(--h), 1fr); }
+.bag-mon .bc-luoi u { border:1px solid rgba(140,175,255,.16); border-radius:var(--r-sm);
+  box-shadow:inset 0 1px 0 rgba(226,235,255,.04); }
+.bag-mon:hover .bc-luoi u { border-color:rgba(140,175,255,.3); }
 
 /* Giá ngọc: cầm một viên rồi bấm thẳng vào món — thao tác của MU */
 .ngoc-bar { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin:7px 0 2px;

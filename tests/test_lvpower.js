@@ -28,18 +28,25 @@ const pass = m => console.log('PASS ' + m);
 // mới là trục chính, ai không mặc gì thì yếu. Phần tụt đó đã được bù bằng mobHp(), thứ hạ máu
 // quái đúng bằng lượng sát thương thực mà người chơi mất (đo được hệ số 0,27–0,87 tuỳ cấp).
 // Năm cột còn lại — máu, mana, thủ, bạo, né — KHÔNG dính căn bậc hai nên giữ nguyên mốc cũ.
-// CỘT CÔNG hạ 1,5% từ cấp 4 trở lên sau khi gỡ hệ Thuần Thục. Nguồn duy nhất: dòng
-// `if (player.level >= SKILL_DEFS.amkhi.unlock) legacyPct += 1.5` — Venom Dart cộng 1,5% Công
-// vĩnh viễn ngay khi tới cấp 4. Chiêu đó đã xoá theo yêu cầu chủ dự án nên phần thưởng của nó
-// cũng đi theo; không có lý gì giữ một khoản +1,5% không còn gắn với thứ gì.
-// (Mục bow 2% cùng bảng KHÔNG ảnh hưởng bảng này: nó đòi Archery tầng ≥1, mà nhân vật đo ở đây
-//  chưa từng nâng tầng nào — đo được đúng 1,5%, không phải 3,5%.)
-// Cấp 1 và 12 không đổi: cấp 1 chưa tới mốc 4, còn mốc 12 vốn đã dư sàn.
-const VANG = {"1":[27,291,63,10,21,17.5],"12":[117,1049,130,20,35,25.5],"30":[263,2339,238,35,56,37.5],
-"48":[356,3976,346,50,77,49.5],"60":[414,5273,418,60,91,57.5],"96":[607,10111,634,90,133,81.5],
-"108":[679,12400,706,100,147,89.5],"120":[720,13727,778,110,161,97.5]};
-// Đỉnh của bản TRƯỚC, giữ lại để mệnh đề 2 còn đối chiếu được và để không ai quên vì sao tụt.
-const CONG_DINH_CU = 1744;
+// CỘT CÔNG HẠ MỘT NỬA — CỐ Ý, không phải hồi quy. Chủ dự án chốt hạ thang sát thương để người
+// chơi CẢM được sức mạnh lớn dần thay vì đọc bốn chữ số ngay từ cấp 1 (xem THANG_ST trong
+// game.js). Đo trước: cấp 1 tay không gõ 34; sau: 17, rồi leo tới ~400 ở cấp 120.
+//
+// Hạ CẢ HAI nguồn công cùng lúc (PWR.pointK và công nền vũ khí/dây chuyền), vì lượng trừ thẳng
+// của giáp quái suy từ chính hai nguồn đó — hạ mỗi công thì sát thương rơi xuống sàn 8%.
+//
+// Năm cột còn lại — máu, mana, thủ, bạo, né — KHÔNG dính THANG_ST nên giữ nguyên mốc cũ.
+// (Đợt trước cột công đã hạ 1,5% khi gỡ Venom Dart; lần này hạ tiếp một nửa từ chính mốc đó.)
+//
+// ĐO LẠI đợt cân bằng "vạch xuất phát": công cấp thấp TỤT so với bảng trước, và đó là chủ đích.
+// Nhân vật vừa tạo có sẵn 5 điểm mỗi chỉ số, mà căn bậc hai dồn giá trị về đầu đường cong nên
+// chính 5 điểm đó đã cho gần hết số công của cấp 1 — cấp 1 gõ 57 trong khi cấp 120 mới 280,
+// cả hành trình chỉ gấp 4,9 lần. Nay trừ đi 80% phần nền ấy (DIEM_KHOI_DAU/NEN_TRU trong
+// game.js): cấp 1 tay không về ~23, còn mặc đồ đúng giai thì leo từ 51 tới 340.
+// CỘT MÁU thì TĂNG (291 → 456 ở cấp 1) vì chỉ số chính của giáp đã đổi từ Thủ sang Sinh Lực.
+const VANG = {"1":[23,456,63,10,21,17.5],"12":[65,1445,130,20,35,25.5],"30":[110,3090,238,35,56,37.5],
+"48":[153,4918,346,50,77,49.5],"60":[180,6246,418,60,91,57.5],"96":[268,10729,634,90,133,81.5],
+"108":[300,12582,706,100,147,89.5],"120":[319,13925,778,110,161,97.5]};
 const TEN = ['công','máu','mana','thủ','bạo','né'];
 
 (async () => {
@@ -125,7 +132,7 @@ const TEN = ['công','máu','mana','thủ','bạo','né'];
   //     quái theo đúng tỉ lệ sát thương thực bị mất.
   //     Nên mệnh đề nay hỏi thẳng câu đáng hỏi: hai bên có dịch CÙNG MỘT LƯỢNG không? Nếu ai đó
   //     sau này chỉnh một bên mà quên bên kia, chỗ này sẽ đỏ.
-  const DINH = { atk: 731, hp: 13727 };    // đỉnh MỚI, đo sau khi chuyển sang căn bậc hai
+  const DINH = { atk: 319, hp: 13925 };    // đỉnh MỚI, đo sau đợt trừ vạch xuất phát
   const r5 = await p.evaluate(() => {
     const set = (lv, pts) => {
       player.equip = {}; player.inv = []; player.vohoc = {}; player.sigils = {};
@@ -143,17 +150,41 @@ const TEN = ['công','máu','mana','thủ','bạo','né'];
   (Math.abs(dAtk - 1) <= 0.05 && Math.abs(dHp - 1) <= 0.05)
     ? pass(`đỉnh cấp 120 đúng mốc mới (công ${(dAtk*100).toFixed(0)}% · máu ${(dHp*100).toFixed(0)}%)`)
     : fail(`đỉnh lệch quá 5% so với mốc mới: công ${(dAtk*100).toFixed(0)}% · máu ${(dHp*100).toFixed(0)}%`);
-  // Hai bên phải dịch cùng một lượng: công người chơi tụt bao nhiêu thì máu quái phải hạ bấy
-  // nhiêu, nếu không nhịp chiến đấu vỡ. Đo trên chính mobHp() của game.
+  // Hai bên phải dịch CÙNG NHAU. Bản trước đo việc đó bằng cách so máu quái với một hằng số
+  // chụp từ bản cũ (CONG_DINH_CU = 1744) — thước đo ấy hỏng dần theo mỗi đợt cân bằng, và tới
+  // đợt này thì nó so với một phiên bản đã hai đời không còn tồn tại, nên đỏ mà không nói được
+  // điều gì thật.
+  //
+  // Nay hỏi thẳng câu đáng hỏi, bằng ĐƠN VỊ KHÔNG BAO GIỜ HẾT HẠN: một nhân vật mặc đồ ĐÚNG
+  // GIAI của cấp mình cần bao nhiêu nhát thường để hạ một con quái thường cùng cấp? Con số đó
+  // phải nằm trong khoảng chơi được, VÀ phải xấp xỉ nhau ở đầu và cuối game. Ai chỉnh một bên
+  // mà quên bên kia thì hai đầu lệch nhau ngay, dù có đổi thang sát thương bao nhiêu lần.
+  const NHAT_MIN = 3, NHAT_MAX = 12, LECH_TOI_DA = 2.5;
   const r5b = await p.evaluate(() => {
-    const d = Object.values(MOBS).find(m => m.lv >= 100 && !m.bossKind && !m.elite) || Object.values(MOBS)[0];
-    return { lv: d.lv, goc: d.hp, moi: mobHp(d), heSo: mobHp(d) / d.hp };
+    const thuong = Object.values(MOBS).filter(m => !m.boss && !m.elite && !m.duHiep && !m.bossKind);
+    const gan = lv => thuong.reduce((a, b) =>
+      Math.abs((b.lv||1) - lv) < Math.abs((a.lv||1) - lv) ? b : a);
+    const doNhat = (d) => {
+      const lv = d.lv || 1;
+      player.equip = {}; player.vohoc = {}; player.sigils = {};
+      player.titles = { unlocked: [], active: null }; player.traits = [];
+      player.str = 5 + (lv-1)*5*0.6; player.vit = 5 + (lv-1)*5*0.4;
+      player.agi = 5; player.ene = 5; player.def = 5; player.level = lv;
+      // genSpecific() nhận CẤP rồi tự suy ra giai — truyền thẳng giai vào là nhận đồ giai 1
+      for (const sl of SLOTS){ if (sl.special) continue;
+        const it = genSpecific(sl.id, lv); if (it){ it.plus = 0; player.equip[sl.id] = it; } }
+      calcDerived();
+      const st = Math.max(player.atk * DMG_FLOOR, player.atk - mobFlatDef(d));
+      return { lv, mob: mobHp(d), dame: Math.round(st), nhat: +(mobHp(d)/st).toFixed(1) };
+    };
+    return { dau: doNhat(gan(8)), cuoi: doNhat(gan(102)) };
   });
-  const tuotCong = DINH.atk / CONG_DINH_CU;
-  console.log('5b.', JSON.stringify({ ...r5b, tuotCong: +tuotCong.toFixed(3) }));
-  (r5b.heSo < 1 && r5b.heSo > tuotCong * 0.8)
-    ? pass(`quái đã bù: công tụt còn ${(tuotCong*100).toFixed(0)}%, máu quái cấp ${r5b.lv} còn ${(r5b.heSo*100).toFixed(0)}%`)
-    : fail(`quái KHÔNG bù khớp: công tụt còn ${(tuotCong*100).toFixed(0)}% mà máu quái còn ${(r5b.heSo*100).toFixed(0)}% — hai bên lệch pha`);
+  const lechNhat = Math.max(r5b.dau.nhat, r5b.cuoi.nhat) / Math.max(0.01, Math.min(r5b.dau.nhat, r5b.cuoi.nhat));
+  console.log('5b.', JSON.stringify({ ...r5b, lechNhat: +lechNhat.toFixed(2) }));
+  const trongKhoang = v => v >= NHAT_MIN && v <= NHAT_MAX;
+  (trongKhoang(r5b.dau.nhat) && trongKhoang(r5b.cuoi.nhat) && lechNhat <= LECH_TOI_DA)
+    ? pass(`nhịp hạ quái đều: ${r5b.dau.nhat} nhát ở cấp ${r5b.dau.lv} · ${r5b.cuoi.nhat} nhát ở cấp ${r5b.cuoi.lv} (lệch ${lechNhat.toFixed(2)}x)`)
+    : fail(`nhịp hạ quái lệch pha: ${r5b.dau.nhat} nhát ở cấp ${r5b.dau.lv} · ${r5b.cuoi.nhat} nhát ở cấp ${r5b.cuoi.lv} — phải nằm trong ${NHAT_MIN}-${NHAT_MAX} nhát và lệch nhau không quá ${LECH_TOI_DA}x`);
 
   // ── 6. Tái Sinh phải còn đáng làm ─────────────────────────────────────
   const rAtk = r5.sauReset.atk / r5.dinh.atk, rHp = r5.sauReset.hp / r5.dinh.hp;

@@ -32,7 +32,9 @@ const pass = m => console.log('PASS ' + m);
 
   // 1) bốn ô có art, ô Quần về đường cũ
   const r1 = await p.evaluate(() => {
-    const lam = sl => assignDef({ slot: sl, tier: 1, plus: 0, rarity: 0 }, 'baidasan');
+    // tier phải là giai CÓ ART của lớp này (Dark Wizard: 7), không phải hằng 1
+    const G = giaiCoArt('baidasan');
+    const lam = sl => assignDef({ slot: sl, tier: G, plus: 0, rarity: 0 }, 'baidasan');
     const co = {}, dai = {};
     for (const sl of ['non','ao','tay','quan','chan']){
       const it = lam(sl);
@@ -57,7 +59,7 @@ const pass = m => console.log('PASS ' + m);
   const r2 = await p.evaluate(() => {
     const u = {};
     for (const sl of ['non','ao','tay','chan'])
-      u[sl] = nvIconUrl(assignDef({ slot: sl, tier: 1, plus: 0, rarity: 0 }, 'baidasan'));
+      u[sl] = nvIconUrl(assignDef({ slot: sl, tier: giaiCoArt('baidasan'), plus: 0, rarity: 0 }, 'baidasan'));
     const ds = Object.values(u);
     return { soKhac: new Set(ds).size, so: ds.length };
   });
@@ -112,18 +114,20 @@ const pass = m => console.log('PASS ' + m);
   const r6 = await p.evaluate(() => {
     for (const k of Object.keys(player.equip)) player.equip[k] = null;
     const tran = nvBoTen('baidasan', heroTier(player), gearVisual(player));
-    cheatExec('/gen 1 +0');
+    // KHÔNG ghi cứng số giai: Grand Soul của Dark Wizard ở giai 7, bộ Dark Knight ở giai 1.
+    // Hỏi thẳng giaiCoArt() để thêm bộ mới vào NV_GIAP là bài kiểm tự theo.
+    cheatExec('/gen ' + giaiCoArt('baidasan') + ' +0');
     const mac = nvBoTen('baidasan', heroTier(player), gearVisual(player));
     // cởi 4/5 ô: độ phủ tụt còn 1/5 ⇒ bậc hiệu dụng làm tròn về 0 ⇒ phải quay lại thân trần
     for (const k of ['ao','tay','quan','chan']) player.equip[k] = null;
     const motMon = nvBoTen('baidasan', heroTier(player), gearVisual(player));
-    return { tran, mac, motMon, giaiTran: heroTier(player) };
+    return { tran, mac, motMon, giaiTran: heroTier(player), giaiArt: giaiCoArt('baidasan') };
   });
   console.log('6) thân trần ↔ bộ giáp:', JSON.stringify(r6));
   if (r6.tran === 'dwsm1') fail('cởi trần mà vẫn mặc art giáp — heroTier() kẹp sàn ở 1, phải phân biệt bằng gv.n');
-  else if (r6.mac !== 'dwsm1') fail(`mặc đủ bộ giai 1 mà vẫn dùng "${r6.mac}", mong dwsm1`);
+  else if (r6.mac !== 'dwsm1') fail(`mặc đủ bộ giai ${r6.giaiArt} mà vẫn dùng "${r6.mac}", mong dwsm1`);
   else if (r6.motMon === 'dwsm1') fail('còn mỗi một món mà vẫn hiện nguyên bộ giáp');
-  else pass('cởi trần → thân trần · đủ bộ → dwsm1 · còn một món → về thân trần');
+  else pass(`cởi trần → thân trần · đủ bộ giai ${r6.giaiArt} → dwsm1 · còn một món → về thân trần`);
 
   // 7) ĐƯỜNG VŨ KHÍ NƯỚNG SẴN phải BIẾN MẤT hẳn — thần khí lo vũ khí
   // Bài này trước đây gác chuyện ngược lại: trượng nướng sẵn đổi theo giai vũ khí (8 cây trong

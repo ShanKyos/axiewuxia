@@ -307,22 +307,15 @@ window.WEAPON_LINES = [
         ['Gậy Hư Vô', {}] ] },
   { sect:'baidasan', line:'quyentruong', slot:'vukhi', desc:'tốc niệm',
     base:{ art:'staff' },
-    t:[ ['Trượng Gỗ', {}],
-        ['Trượng Nhân Sư', {}],
-        ['Trượng Triệu Hồn', {}],
-        ['Trượng Thần Ma', {}],
-        ['Trượng Quỷ Vương', {}],
-        ['Trượng Tinh Vân', {}],
-        ['Trượng Hư Vô', {}] ] },
-  { sect:'baidasan', line:'tinhtruong', slot:'vukhi', desc:'bạo kích',
-    base:{ art:'staff' },
-    t:[ ['Tinh Trượng Gỗ', {}],
-        ['Tinh Trượng Nhân Sư', {}],
-        ['Tinh Trượng Triệu Hồn', {}],
-        ['Tinh Trượng Thần Ma', {}],
-        ['Tinh Trượng Quỷ Vương', {}],
-        ['Tinh Trượng Tinh Vân', {}],
-        ['Tinh Trượng Hư Vô', {}] ] },
+    // Tên tiếng Anh đi kèm ghi ở chú thích: game chưa dịch tên món (strings/en.js không có
+    // khoá nào cho tên vũ khí), nên đây là chỗ duy nhất giữ lại tên gốc cho đợt i18n sau.
+    t:[ ['Cốt Linh Trượng', {}],                       // SoulBone Staff
+        ['Thiên Linh Quyền Trượng', {}],                  // Celestial Spirit Scepter
+        ['Mãng Xà Trượng', {}],                        // Serpent Staff
+        ['Thiên Lôi Trượng', {}],                      // Thunderlord Staff
+        ['Mỹ Xà Quyền Trượng', {}],                    // Gorgon Scepter
+        ['Huyền Cổ Thần Trượng', {}],                  // Elder God Staff
+        ['Cửu Thế Phục Sinh Trượng', {}] ] },          // Eternal Rebirth Staff
   // ══ Sylvan Ranger ══
   { sect:'toanchan', line:'cungngan', slot:'vukhi', desc:'bắn nhanh',
     base:{ art:'bow' },

@@ -19,33 +19,50 @@ const pass = m => console.log('PASS ' + m);
 
   // ── 1. cấu trúc ────────────────────────────────────────────────────────
   const r1 = await p.evaluate(() => {
-    const cols = [...document.querySelectorAll('.eq-doll .eq-col')];
-    const idOf = el2 => (el2.getAttribute('onclick') || '').match(/unequip\('([a-z0-9]+)'\)/i);
-    const side = c => [...c.querySelectorAll('.eq-slot')].map(e => (idOf(e) || [])[1] || '?');
-    const img = document.querySelector('.eq-fig img');
-    return { soCot: cols.length, trai: cols[0] ? side(cols[0]) : [], phai: cols[1] ? side(cols[1]) : [],
-             coHinh: !!img, srcData: !!(img && img.src.startsWith('data:image/png')),
-             wImg: img ? Math.round(img.getBoundingClientRect().width) : 0,
-             hImg: img ? Math.round(img.getBoundingClientRect().height) : 0,
-             caption: (document.querySelector('.eq-fig-cap') || {}).innerText || '' };
+    const doll = document.querySelector('.eq-doll');
+    const idOf = e2 => ((e2.getAttribute('onclick') || '').match(/unequip\('([a-z0-9]+)'\)/i) || [])[1] || '?';
+    // Đọc theo THỨ TỰ DOM — chính là thứ tự người chơi nhìn thấy trên lưới.
+    const o = [...doll.querySelectorAll('.eq-slot')].map(idOf);
+    const nho = [...doll.querySelectorAll('.eq-small .eq-slot')].map(idOf);
+    const cs = getComputedStyle(doll);
+    const oLon = doll.querySelector('.eq-slot:not(.eq-small .eq-slot)');
+    const oNho = doll.querySelector('.eq-small .eq-slot');
+    return { o, nho, cot: cs.gridTemplateColumns.split(' ').length,
+             conHinh: !!document.querySelector('.eq-fig img'),
+             wLon: oLon ? Math.round(oLon.getBoundingClientRect().width) : 0,
+             wNho: oNho ? Math.round(oNho.getBoundingClientRect().width) : 0,
+             // bảng bố cục là NGUỒN SỰ THẬT — đọc thẳng nó rồi so với DOM
+             bang: EQUIP_DOLL.map(h => h.map(c =>
+               !c ? null : typeof c === 'string' ? c : c.doi ? c.doi.slice() : c.o)) };
   });
   console.log('1.', JSON.stringify(r1));
-  // Ô 'pet' đã gỡ cùng hệ Linh Thú, ô 'quan' cũng đã gỡ (đồ quần cũ chuyển thành đồ Chân).
-  // Ô 'aochoang' gỡ nốt vì trùng vai với Cánh — nên cột phải nay còn BỐN, lệch một ô so với
-  // cột trái. Cố ý: doll của MU cũng không đối xứng.
-  const want = { trai:['non','ao','tay','chan','vukhi'], phai:['canh','daychuyen','nhan1','nhan2'] };
-  if (r1.soCot !== 2) fail('phải có đúng 2 cột ô đồ, đang ' + r1.soCot);
-  else pass('2 cột ô đồ hai bên');
-  if (JSON.stringify(r1.trai) !== JSON.stringify(want.trai)) fail('cột trái sai thứ tự: ' + JSON.stringify(r1.trai));
-  else pass('cột trái đúng: đầu → chân → vũ khí');
-  if (JSON.stringify(r1.phai) !== JSON.stringify(want.phai)) fail('cột phải sai thứ tự: ' + JSON.stringify(r1.phai));
-  else pass('cột phải đúng: trang sức + khoác ngoài');
-  if (!r1.coHinh || !r1.srcData) fail('thiếu hình nhân vật ở giữa bảng');
-  else if (r1.wImg < 60 || r1.hImg < 90) fail(`hình nhân vật quá nhỏ: ${r1.wImg}×${r1.hImg}`);
-  else pass(`hình nhân vật ${r1.wImg}×${r1.hImg}, vẽ từ drawHeroFigure`);
-  // Đỉnh bảng nay là giai 7 (bộ Long Vương) — bảng 14 giai cũ cũng kết ở đúng bộ đó.
-  if (!/Long Vương|giai 7/.test(r1.caption)) fail('chú thích không ghi tên bộ giáp: ' + JSON.stringify(r1.caption));
-  else pass('chú thích ghi lớp + tên bộ: ' + r1.caption.replace(/\n/g, ' · '));
+  // ĐỔI SANG LƯỚI KIỂU MU. Bản trước là hai cột ô kẹp một tấm chibi ở giữa; ô đồ khi đó bị
+  // ép còn 58px, mà ở 58px thì cây trượng và cây gậy ra cùng một vệt. Cửa sổ trang bị của MU
+  // là lưới ô thuần, mỗi món một ô đủ lớn để NHÌN RA nó. Bỏ tấm chibi không mất gì: bảng Nhân
+  // Vật (phím C) vẫn hiện đúng hình đó, và hai bảng nay mở được cùng lúc.
+  // Chủ dự án chốt chỗ: ÁO ở chính giữa với vũ khí kế bên, HAI NHẪN nằm giữa tay và chân.
+  const MONG = [['pet','non','canh'], [null,'daychuyen',null],
+                ['vukhi','ao','vukhi2'], ['tay',['nhan1','nhan2'],'chan']];
+  if (JSON.stringify(r1.bang) !== JSON.stringify(MONG))
+    fail('EQUIP_DOLL sai bố cục: ' + JSON.stringify(r1.bang));
+  else pass('EQUIP_DOLL đúng bố cục lưới MU');
+  // DOM phải khớp CHÍNH bảng đó — bảng đúng mà hàm vẽ bỏ sót một ô thì vẫn hỏng.
+  const phang = MONG.flat(2).filter(Boolean);
+  if (JSON.stringify(r1.o) !== JSON.stringify(phang))
+    fail('lưới vẽ ra lệch với EQUIP_DOLL: ' + JSON.stringify(r1.o));
+  else pass('lưới vẽ ra đúng thứ tự bảng: ' + phang.join(' · '));
+  if (r1.cot !== 3) fail('lưới phải 3 cột, đang ' + r1.cot);
+  else pass('lưới 3 cột kiểu MU');
+  if (r1.conHinh) fail('vẫn còn tấm chibi giữa lưới — bố cục MU không có nó');
+  else pass('không còn tấm chibi chen giữa');
+  // Trang sức PHẢI nhỏ hơn giáp: nhìn lướt là biết ngay đâu là nhẫn, đâu là áo.
+  if (JSON.stringify(r1.nho) !== JSON.stringify(['daychuyen','nhan1','nhan2']))
+    fail('ba ô trang sức phải là ô nhỏ: ' + JSON.stringify(r1.nho));
+  else if (!(r1.wNho < r1.wLon)) fail(`ô trang sức ${r1.wNho}px không nhỏ hơn ô giáp ${r1.wLon}px`);
+  else pass(`ô giáp ${r1.wLon}px · ô trang sức ${r1.wNho}px`);
+  // Ô đủ to để phân biệt món: đây chính là lý do đổi bố cục.
+  if (r1.wLon < 70) fail(`ô đồ chỉ ${r1.wLon}px — vẫn quá nhỏ để nhìn ra món`);
+  else pass(`ô đồ rộng ${r1.wLon}px, đủ để nhìn ra từng món`);
 
   // ── 2. thẻ rê chuột vẫn gắn vào ô có đồ ────────────────────────────────
   const r2 = await p.evaluate(() => {
@@ -87,7 +104,7 @@ const pass = m => console.log('PASS ' + m);
   else if (!r4.daMac) fail('kéo-thả từ túi vào ô không mặc được');
   else pass('kéo-thả từ Túi Đồ vào ô mặc được');
 
-  // ── 5. nhân vật chưa mặc gì vẫn dựng đủ 10 ô (Pet và Quần đều đã gỡ) ──
+  // ── 5. chưa mặc gì vẫn dựng đủ 11 ô (Quần đã gỡ; Thú Cưng và Vũ Khí 2 vừa thêm) ──
   await p.evaluate(() => { player.equip = {}; calcDerived(); renderInv(); });
   // lang.js dịch bằng MutationObserver — đọc ngay sau renderInv() là đọc bản CHƯA dịch, rồi
   // kết luận nhầm là giao diện lẫn hai thứ tiếng. Chờ một nhịp cho bộ quan sát chạy xong.
@@ -102,12 +119,12 @@ const pass = m => console.log('PASS ' + m);
   console.log('5.', JSON.stringify(r5));
   // CHÍN ô, không phải mười: ô 'aochoang' đã gỡ (trùng vai với Cánh). Con số này đi theo
   // EQUIP_DOLL — sửa bảng đó thì sửa luôn ở đây, đừng nới lỏng phép so thành `>=`.
-  if (r5.soO !== 9 || r5.oTrong !== 9) fail(`chưa mặc gì: ${r5.soO} ô / ${r5.oTrong} ô trống (mong 9/9)`);
-  else pass('chưa mặc gì: đủ 9 ô trống, mỗi ô có nhãn tên vị trí');
+  if (r5.soO !== 11 || r5.oTrong !== 11) fail(`chưa mặc gì: ${r5.soO} ô / ${r5.oTrong} ô trống (mong 11/11)`);
+  else pass('chưa mặc gì: đủ 11 ô trống, mỗi ô có nhãn tên vị trí');
   // Đối chiếu với DANH SÁCH nhãn, không đoán theo dấu tiếng Việt: "Tay" và "Pet" không có dấu
   // nào cả nên phép đoán đó luôn báo lẫn ngôn ngữ dù bảng hoàn toàn nhất quán.
-  const VI = ['Nón','Áo','Tay','Quần','Chân','Vũ Khí','Cánh','Dây Chuyền','Nhẫn 1','Nhẫn 2','Pet'];
-  const EN = ['Helm','Armor','Gloves','Pants','Boots','Weapon','Wings','Amulet','Ring 1','Ring 2','Pet'];
+  const VI = ['Nón','Áo','Tay','Quần','Chân','Vũ Khí','Cánh','Dây Chuyền','Nhẫn 1','Nhẫn 2','Pet','Thú Cưng','Vũ Khí 2'];
+  const EN = ['Helm','Armor','Gloves','Pants','Boots','Weapon','Wings','Amulet','Ring 1','Ring 2','Pet','Weapon 2'];
   const set = r5.lang === 'en' ? EN : VI;
   const lac = r5.nhan.filter(n => !set.includes(n));
   if (lac.length) fail(`ngôn ngữ hiện tại "${r5.lang}" nhưng ${lac.length} nhãn không thuộc bộ đó: ` + JSON.stringify(lac));
@@ -129,6 +146,44 @@ const pass = m => console.log('PASS ' + m);
     else if (r6.nho) fail(`${w}×${h}: ${r6.nho} ô dưới ngưỡng chạm 24px`);
     else pass(`${w}×${h}: ${r6.tong} ô nằm trong màn hình, đều đạt ngưỡng chạm (bảng rộng ${r6.rong}px)`);
   }
+
+  // ── 7. Ô ĐẶC BIỆT phải sinh ra ĐÚNG loại đồ ────────────────────────────
+  // Hồi ô Cánh là ô đặc biệt DUY NHẤT, genSpecific() cứ thấy special là trả về một đôi cánh.
+  // Thêm Thú Cưng và Vũ Khí 2 vào là nhánh đó lặng lẽ đẻ thêm hai đôi cánh nữa, cả ba cùng
+  // mang slot 'canh' — nạp save là hai đôi thừa rơi xuống túi, đúng cái món "mọc thêm" mà
+  // test_epngoc bắt được. Gác từ gốc: mỗi ô đặc biệt một nguồn riêng.
+  await p.setViewportSize({ width: 1366, height: 768 });
+  const r7 = await p.evaluate(() => {
+    const lay = (id) => { const it = genSpecific(id, 100); return it ? it.slot : null; };
+    return { canh: lay('canh'), pet: lay('pet'), vukhi2: lay('vukhi2') };
+  });
+  if (r7.canh !== 'canh')     fail(`ô Cánh phải sinh ra đồ ô cánh, ra "${r7.canh}"`);
+  else if (r7.pet !== null)   fail(`ô Thú Cưng chưa có nguồn sinh, phải trả null — ra "${r7.pet}"`);
+  else if (r7.vukhi2 !== 'vukhi') fail(`ô Vũ Khí 2 phải sinh ra VŨ KHÍ, ra "${r7.vukhi2}"`);
+  else pass(`mỗi ô đặc biệt một nguồn riêng: ${JSON.stringify(r7)}`);
+
+  // ── 8. Vũ Khí 2 phải SỐNG SÓT qua một lượt nạp save ────────────────────
+  // Vòng gộp trang bị khi nạp save gom theo it.slot. Thanh kiếm phụ mang slot 'vukhi' nên nó
+  // trùng khoá với thanh chính và bị đá xuống túi — MỖI LẦN nạp. Nay gom theo khoá ô đang mặc.
+  const r8 = await p.evaluate(() => {
+    const w2 = genSpecific('vukhi2', 100);
+    player.equip.vukhi2 = w2;
+    const tenCu = w2.name, tuiCu = player.inv.length;
+    saveGame();
+    const doc = JSON.parse(localStorage.getItem('vlcm_save'));
+    window._slot = doc.active;
+    return { tenCu, tuiCu };
+  });
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.waitForTimeout(600);
+  const r8b = await p.evaluate((i) => {
+    if (!loadGame(i)) return { loi: 'loadGame trả false' };
+    return { con: player.equip.vukhi2 ? player.equip.vukhi2.name : null, tui: player.inv.length };
+  }, await p.evaluate(() => window._slot));
+  if (r8b.loi) fail(r8b.loi);
+  else if (r8b.con !== r8.tenCu) fail(`nạp save xong Vũ Khí 2 biến mất khỏi ô (còn "${r8b.con}", mong "${r8.tenCu}")`);
+  else if (r8b.tui !== r8.tuiCu) fail(`nạp save xong túi đổi từ ${r8.tuiCu} sang ${r8b.tui} món`);
+  else pass(`Vũ Khí 2 giữ nguyên ở ô qua một lượt nạp save (${r8b.con}), túi vẫn ${r8b.tui} món`);
 
   console.log('errors:', JSON.stringify(errs));
   if (errs.length) fail('có pageerror');

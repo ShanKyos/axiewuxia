@@ -1,4 +1,4 @@
-// Danh mục 273 món + khoá lớp. (220 khi còn 10 giai / 5 dải, 546 khi 14 giai — nay 7 giai;
+// Danh mục 266 món + khoá lớp. (220 khi còn 10 giai / 5 dải, 546 khi 14 giai — nay 7 giai;
 // 616 khi còn ô Quần — bỏ ô đó đi là mỗi bộ còn 4 ô giáp, 7×5×4 = 140.) Mỗi món phải VẼ
 // ĐƯỢC và phải KHÁC món khác — nếu hai món ra cùng một ảnh thì danh mục chỉ to trên giấy.
 const { chromium } = require('playwright');
@@ -23,7 +23,8 @@ const { chromium } = require('playwright');
     // bài kiểm đỏ suốt cho tới khi đủ 105 tấm vũ khí, mà đỏ liên miên thì không ai đọc nữa.
     // Món CÓ art vẫn phải riêng biệt: hai gói Spine khác nhau mà ra cùng một icon là lỗi thật.
     // NGUỒN ART của một món — hai món CÙNG nguồn thì ra cùng ảnh là đúng, không phải lỗi.
-    // Ba dòng trượng Dark Wizard hiện dùng chung một tấm tk_dwstaff.png: 21 món, một nguồn.
+    // Ba dòng trượng Dark Wizard phần lớn dùng chung tấm tk_dwstaff.png. Hai cây đã có tranh
+    // riêng (quyentruong giai 1 và 2) nên tách ra nguồn riêng — đó là đích đến, không phải lỗi.
     // Chỉ khi hai NGUỒN KHÁC NHAU cho ra cùng một ảnh mới là lỗi thật.
     // Phụ kiện NAY CŨNG về ô chờ art: chủ dự án chốt xoá nốt hình vector của nhẫn và dây
     // chuyền (đợt trước còn giữ lại hai bộ này). Nên chúng trả null như giáp/vũ khí chưa có
@@ -90,8 +91,13 @@ const { chromium } = require('playwright');
       o.theoLop[sk] = {
         vukhi: ids.filter(i => ITEM_DB[i].kind === 'weapon' && ITEM_DB[i].sect === sk).length,
         giap:  ids.filter(i => ITEM_DB[i].kind === 'armor'  && ITEM_DB[i].sect === sk).length,
+        // Số dòng vũ khí KHÔNG còn bằng nhau giữa các lớp: Dark Wizard đã dẹp dòng Tinh Trượng
+        // (nó và dòng Gậy vẽ ra cùng một tấm, giai 7 có hai món trùng hình). Suy từ WEAPON_LINES
+        // thay vì ghi cứng 3 — thêm hay bớt dòng nào thì bài kiểm tự theo.
+        soDong: WEAPON_LINES.filter(L => L.sect === sk).length,
       };
     }
+    o.giaiMax = GIAI_MAX;
     o.phuKien = ids.filter(i => ITEM_DB[i].kind === 'acc').length;
     o.phuKienKhoaLop = ids.filter(i => ITEM_DB[i].kind === 'acc' && ITEM_DB[i].sect).length;
 
@@ -133,15 +139,18 @@ const { chromium } = require('playwright');
   if (!r.vk.khacOCho) fail('icon vũ khí CÓ TRANH vẫn ra y hệt ô chờ art — drawItemIcon chưa dùng tranh');
   if (r.vk.soMau < 200) fail(`icon vũ khí chỉ có ${r.vk.soMau} màu — nhiều khả năng đang tô thành BÓNG ĐẶC thay vì vẽ tranh`);
   if (r.conVector.length) fail(`còn hình vector cho trang bị: ${r.conVector.join(', ')} — phải xoá hết, mọi món về ô chờ art`);
-  if (r.tong !== 273) fail(`danh mục có ${r.tong} món, cần 273`);
+  // 266 chứ không 273: đã dẹp dòng Tinh Trượng của Dark Wizard (7 món).
+  if (r.tong !== 266) fail(`danh mục có ${r.tong} món, cần 266`);
   if (r.theoLoai.armor !== 140) fail(`giáp ${r.theoLoai.armor}, cần 140 (35 bộ × 4 ô)`);
-  if (r.theoLoai.weapon !== 105) fail(`vũ khí ${r.theoLoai.weapon}, cần 105`);
+  if (r.theoLoai.weapon !== 98) fail(`vũ khí ${r.theoLoai.weapon}, cần 98 (14 dòng × 7 giai)`);
   if (r.theoLoai.acc !== 28) fail(`phụ kiện ${r.theoLoai.acc}, cần 28`);
   if (r.veLoi) fail(`${r.veLoi} món KHÔNG vẽ được`);
   if (r.anhTrung) fail(`${r.anhTrung} cặp món CÓ ART ra CÙNG một ảnh: ${JSON.stringify(r.viDuTrung)}`);
   if (r.tenTrung) fail(`${r.tenTrung} tên bị trùng`);
   for (const sk in r.theoLop){
-    if (r.theoLop[sk].vukhi !== 21) fail(`${sk}: ${r.theoLop[sk].vukhi} vũ khí, cần 21 (3 dòng × 7 giai)`);
+    const _can = r.theoLop[sk].soDong * r.giaiMax;
+    if (r.theoLop[sk].vukhi !== _can)
+      fail(`${sk}: ${r.theoLop[sk].vukhi} vũ khí, cần ${_can} (${r.theoLop[sk].soDong} dòng × ${r.giaiMax} giai)`);
     if (r.theoLop[sk].giap !== 28) fail(`${sk}: ${r.theoLop[sk].giap} giáp, cần 28 (7 giai × 4 ô)`);
   }
   if (r.phuKienKhoaLop !== 0) fail('phụ kiện bị khoá lớp — dây chuyền và nhẫn phải dùng chung');
