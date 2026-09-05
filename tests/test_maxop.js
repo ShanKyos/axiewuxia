@@ -23,8 +23,12 @@ const { chromium } = require('playwright');
       return {
         cap: player.level,
         oDayDu: SLOTS.filter(s => eq[s.id]).length + '/' + SLOTS.length,
-        giaiCaoNhat: Math.max(...Object.values(eq).map(i => i.tier || 0)),
-        deuHoanHao: Object.values(eq).every(i => i.special || i.perfect),
+        // LỌC null. `player.equip` được phép mang null ở ô trống — chính unequip() ghi vào
+        // như vậy — nên duyệt thẳng Object.values() là một lần nổ chờ sẵn. Trước nay không
+        // nổ chỉ vì applyTestBoost() lấp kín mọi ô; từ khi ô Thú Cưng chưa có nguồn sinh thì
+        // nó để trống, và bài kiểm đổ ngay ở dòng này.
+        giaiCaoNhat: Math.max(...Object.values(eq).filter(Boolean).map(i => i.tier || 0)),
+        deuHoanHao: Object.values(eq).filter(Boolean).every(i => i.special || i.perfect),
         renTrungBinh: +(arm.reduce((a,i)=>a+(i.plus||0),0) / Math.max(1,arm.length)).toFixed(1),
         // `wing2` là cờ của thời cánh chỉ có hai bậc; nay bậc nằm ở `wingBac`, và tối đa
         // hoá phải đẩy tới bậc 3 chứ không phải chỉ qua khỏi bậc 1.
