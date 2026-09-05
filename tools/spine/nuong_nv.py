@@ -22,7 +22,10 @@ from PIL import Image
 KHE_VK  = ('左手武器', '左手武器2b', '左手武器2c')   # vũ khí bị cắt 4 mảnh trên 3 khe
 KHE_HFX = ('爆炸特效', '爆炸特效(残影）')            # hiệu ứng nổ — game tự lo, không nướng
 KHE_TOC = ('背后头发',)                              # tóc sau, chỉ dùng lúc ĐO
-KHUNG   = [('00_Idle', 16), ('00_Walk', 32), ('08_SwordAttack', 16), ('05_MagicAttack', 16)]
+# Khối CHẠY đứng CUỐI, không chen vào giữa: bốn khối đầu giữ nguyên vị trí nên bảng khung
+# đời cũ và đời mới cùng đọc được bằng một bộ mốc — chỉ khối mới là phần thêm ra.
+KHUNG   = [('00_Idle', 16), ('00_Walk', 32), ('08_SwordAttack', 16), ('05_MagicAttack', 16),
+           ('00_Run', 16)]
 O_W, O_H, COT = 240, 300, 16
 CAO_THAN, GOT_Y = 159, 212     # đỉnh đầu y=53 → gót y=212, theo HERO_JOINT
 

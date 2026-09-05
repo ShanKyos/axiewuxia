@@ -9397,7 +9397,17 @@ function update(dt){
   }
   const ml = Math.hypot(mx,my);
   player.moving = ml > 0.01;
-  player.walkPh = (player.walkPh || 0) + dt * (player.moving ? 11 : 2.2);
+  // NHỊP BƯỚC THEO TỐC ĐỘ THẬT, không phải một hằng số.
+  // Số 11 cũ là con số dò tay cho hình vector đời trước, và mọi lớp mọi trạng thái dùng chung.
+  // Đo trên art thật: người chơi chạy 252 px/giây trong khi sải chân của khối ĐI chỉ tải được
+  // 1,74 vòng/giây × 94 px = 165 px/giây — tức 35% quãng đường là TRƯỢT CHÂN. Nhìn ra ngay.
+  // Nay nhịp = quãng đường / sải chân, nên nhanh chậm gì bàn chân cũng bám đất: bị làm chậm
+  // thì bước ngắn lại, có Cánh tăng tốc thì sải dài ra, không phải dò lại con số nào.
+  {
+    const _v = player.speed || 209;
+    const _sai = SAI_CHAN[_v >= CHAY_TU ? 'r' : 'w'];
+    player.walkPh = (player.walkPh || 0) + dt * (player.moving ? (_v / _sai) * Math.PI * 2 : 2.2);
+  }
   // ── QUÁN TÍNH PHỤ (secondary motion) ──
   // Trước đây áo choàng đọc thẳng tư thế tức thời nên nó DÍNH vào chân: dừng là dừng ngay,
   // đổi hướng là bật ngay, không có sức nặng. Hai con lò xo dưới đây chạy TRỄ sau chuyển
@@ -11736,7 +11746,16 @@ window.drawHeroLit = drawHeroLit;
 // Số khung: ĐO rồi mới chọn. Ở 12 khung đi, hai khung liền nhau lệch 25–50% pixel, trong khi vẽ
 // liên tục cùng khoảng thời gian đó chỉ lệch 0,7–5% — tức hoạt ảnh thô hơn 7–10 lần, và đó chính
 // là thứ mắt bắt được. 32 khung đưa bước nhảy về ngang mức vẽ thẳng.
-const HS_FRAMES = { i: 16, w: 32, a: 16, c: 16 };  // đứng · đi · đánh · tung chiêu
+const HS_FRAMES = { i: 16, w: 32, a: 16, c: 16, r: 16 };  // đứng · đi · đánh · tung chiêu · CHẠY
+// SẢI CHÂN mỗi VÒNG hoạt cảnh, tính bằng px TRÊN MÀN (nhân vật cao NV_CAO).
+// Đo trên chính bảng khung: lấy dải 10px sát đất của từng khung (= bàn chân), gom hết 32/16
+// khung rồi lấy khoảng x lớn nhất, nhân hệ số thu NV_CAO/CAO_THAN = 118/159.
+// Một VÒNG là HAI BƯỚC, nên quãng đường một vòng tải được = 2 × khoảng đó.
+const SAI_CHAN = { w: 94, r: 158 };
+// Trên ngưỡng này thì CHẠY. Dưới thì đi — dành cho lúc bị làm chậm.
+// 150 nằm giữa hai mức mà mỗi hoạt cảnh tải được ở đúng nhịp tác giả vẽ: đi 118 px/giây
+// (0,800 s một vòng), chạy 264 px/giây (0,600 s). Tốc độ nền của người chơi là 209.
+const CHAY_TU = 150;
 // CỬA SỔ LƠ LỬNG trong khối đi. Khối đi có 32 khung; khung khớp dáng bay nhất là 8/12 của hoạt
 // cảnh gốc, tức 8/12 × 32 ≈ 21. Lắc ±2 khung theo một nhịp chậm để nó còn thở, không đứng hình.
 const BAY_KHUNG = 21, BAY_LAC = 2;
@@ -11776,7 +11795,7 @@ function heroFramePose(kind, idx, act, sw){
   const sway = HS_SWAY[sw] || 0;
   const ps = kind === 'c' ? heroPose(0, false, 0, (idx + 0.5) / HS_FRAMES.c, 0, act, sway, sway)
            : kind === 'a' ? heroPose(0, false, (idx + 0.5) / HS_FRAMES.a, 0, 0, act, sway, sway)
-           : kind === 'w' ? heroPose((idx + 0.5) / HS_FRAMES.w * TAU, true, 0, 0, 0, act, sway, sway)
+           : (kind === 'w' || kind === 'r') ? heroPose((idx + 0.5) / HS_FRAMES[kind] * TAU, true, 0, 0, 0, act, sway, sway)
            : heroPose(0, false, 0, 0, (idx + 0.5) / HS_FRAMES.i * TAU * 620, act, sway, sway); // nhịp thở
   return ps;
 }
@@ -11841,7 +11860,7 @@ const NV_ICON_PX = 128;
 const NV_ICON_CAP = 80;
 const _nvIconCache = new Map();
 const NV_COT = 16, NV_OW = 240, NV_OH = 300;
-const NV_MOC = { i: 0, w: 16, a: 48, c: 64 };
+const NV_MOC = { i: 0, w: 16, a: 48, c: 64, r: 80 };
 // Thân dùng WEBP (bảng 3840x1500, nén còn ~36%), vũ khí dùng PNG — lớp vũ khí gần như trong
 // suốt hoàn toàn, mà PNG nén khoảng trong suốt giỏi hơn WEBP: đo được 69 KB PNG so với 124 KB.
 function nvTai(ten, duoi){
@@ -13687,13 +13706,20 @@ function drawPlayer(){
     // (Bản trước nướng thêm hẳn một khối '00_Squat' cho việc này — 16 khung × 8 bộ, 0,7 MB.
     //  Đo xong thì thừa: dáng cần đã nằm sẵn trong khối đi.)
     const _bay = bayK >= 0.5;
-    const _kind = castK > 0 ? 'c' : atkK > 0 ? 'a' : (_bay || p.moving) ? 'w' : 'i';
+    // Đang di chuyển ở tốc độ thường ⇒ khối CHẠY. Khối ĐI để dành cho lúc bị làm chậm.
+    // Bay thì vẫn đọc khối ĐI (BAY_KHUNG ghim vào một khung trong đó).
+    const _diBo = p.moving && !_bay;
+    const _kind = castK > 0 ? 'c' : atkK > 0 ? 'a'
+                : _bay ? 'w'
+                : _diBo ? ((p.speed || 209) >= CHAY_TU ? 'r' : 'w')
+                : 'i';
     const _n = HS_FRAMES[_kind];
     const _TAU = Math.PI * 2;
     const _idx = _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
                : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)
-               : _kind === 'w' ? (_bay ? BAY_KHUNG + Math.round(Math.sin(now / 700) * BAY_LAC)
-                                       : ((((wph % _TAU) + _TAU) % _TAU) / _TAU * _n) | 0)
+               : (_kind === 'w' || _kind === 'r')
+                   ? (_bay ? BAY_KHUNG + Math.round(Math.sin(now / 700) * BAY_LAC)
+                           : ((((wph % _TAU) + _TAU) % _TAU) / _TAU * _n) | 0)
                : ((((now / 620) % _TAU) + _TAU) % _TAU) / _TAU * _n | 0;
     const _sw = (p.sway || 0) > 0.35 ? 2 : (p.sway || 0) < -0.35 ? 1 : 0;
     // Dark Wizard KHÔNG vung kiếm. Bản mẫu Spine có sẵn '05_MagicAttack' — nướng rồi, nằm ở
