@@ -1,5 +1,36 @@
 /* ===== Axie Wuxia — playful Axie UI ===== */
+
+/* Baloo 2 — chữ hiển thị cho RIÊNG mặt Khế Ước Chimera và những chỗ mang art Axie.
+   Vì sao lại là nó: mặt chữ hiển thị trong gói starter chính chủ của Axie
+   (axieinfinity/godot-axie-starter-3d) là Lilita One, mà Lilita One chỉ có latin + latin-ext —
+   "Khế Ước" hiện ra thành "Kh   c". Baloo 2 cùng chất mập-tròn ấy và CÓ bộ dấu tiếng Việt.
+   Ba khối tách theo unicode-range như Google Fonts cắt sẵn: máy chỉ tải phần chữ nó thật sự
+   gặp, và ba khối phải có unicode-range — bỏ đi thì khối cuối nuốt hết, mà khối cuối chỉ chứa
+   mấy chữ có dấu.
+   KHÔNG dùng nó cho thân bài và tiêu đề bảng: đã gỡ Baloo 2 khỏi --font-display một lần vì
+   chữ bo tròn kiểu hoạt hình đặt trên khung thép đinh tán là hai ngôn ngữ hình ảnh chửi nhau.
+   Chỗ nó hợp là chỗ có con Axie đứng cạnh. */
+@font-face { font-family:'Baloo 2'; font-style:normal; font-weight:700; font-display:swap;
+  src:url(fonts/baloo-2-latin-700-normal.woff2) format('woff2');
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family:'Baloo 2'; font-style:normal; font-weight:700; font-display:swap;
+  src:url(fonts/baloo-2-latin-ext-700-normal.woff2) format('woff2');
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family:'Baloo 2'; font-style:normal; font-weight:700; font-display:swap;
+  src:url(fonts/baloo-2-vietnamese-700-normal.woff2) format('woff2');
+  unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB; }
+@font-face { font-family:'Baloo 2'; font-style:normal; font-weight:800; font-display:swap;
+  src:url(fonts/baloo-2-latin-800-normal.woff2) format('woff2');
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family:'Baloo 2'; font-style:normal; font-weight:800; font-display:swap;
+  src:url(fonts/baloo-2-latin-ext-800-normal.woff2) format('woff2');
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family:'Baloo 2'; font-style:normal; font-weight:800; font-display:swap;
+  src:url(fonts/baloo-2-vietnamese-800-normal.woff2) format('woff2');
+  unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB; }
+
 :root {
+  --font-chi: 'Baloo 2', 'Be Vietnam Pro', 'Segoe UI', sans-serif;
   --bg-deep: #10122a;
   --bg-panel-1: #262c58;
   --bg-panel-2: #14163a;
@@ -776,7 +807,24 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   border-top:1px solid var(--border-faint); padding-top:10px; flex-wrap:wrap; }
 .npc-trang-so { margin-right:auto; font-size:var(--fs-sm); color:var(--text-dimmer);
   font-variant-numeric:tabular-nums; }
-.skill-row img.chi-anh { object-fit:contain; background:rgba(18,20,44,.9); border-width:2px; }
+/* Ô Chimera — DẢI 16 khung nhịp thở xếp 8 cột × 2 hàng, không phải một tấm ảnh. Chạy bằng hai
+   animation steps() lồng nhau: một cái nhảy cột trong 0,889s, một cái nhảy hàng ở nhịp chậm gấp
+   đôi, nên hết một vòng cột là sang hàng — đúng 16 khung trong 1,778s, khớp CHI_THO_FPS = 9.
+   --w/--h do chiO34() ghi vào thẻ vì mỗi con một tỉ lệ ô riêng. */
+.skill-row i.chi-anh {
+  display:block; flex:0 0 auto; width:var(--w); height:var(--h);
+  border:2px solid; border-radius:var(--r-sm);
+  background:rgba(18,20,44,.9) var(--sh) no-repeat 0 0;
+  background-size:calc(var(--w) * 8) calc(var(--h) * 2);
+  animation:chi-tho-x .889s steps(8) infinite, chi-tho-y 1.778s steps(2) infinite;
+}
+@keyframes chi-tho-x { from { background-position-x:0 } to { background-position-x:calc(var(--w) * -8) } }
+@keyframes chi-tho-y { from { background-position-y:0 } to { background-position-y:calc(var(--h) * -2) } }
+@media (prefers-reduced-motion: reduce) { .skill-row i.chi-anh { animation:none } }
+/* Huy hiệu lớp Axie chính chủ — dải 9 ô 48px, thứ tự khớp LOP_DAI trong game.js. */
+.lop-hd { display:inline-block; width:13px; height:13px; vertical-align:-2px; margin-right:3px;
+  background:url(assets/ui/lop.webp) no-repeat; background-size:calc(13px * 9) 13px;
+  background-position:calc(var(--i) * -13px) 0; }
 .skill-row .assign-btns { display:flex; gap:3px; }
 .skill-row .assign-btns button { width:24px; height:24px; font-size:var(--fs-sm); padding:0; margin:0; }
 .skill-row.locked { opacity:.5; }
@@ -1478,7 +1526,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   pointer-events:none; }
 .ku-banner { border:1px solid var(--border-strong); border-radius:6px; padding:12px 14px; margin-bottom:10px;
   background:linear-gradient(180deg, rgba(30,32,64,.9), rgba(18,20,44,.9)); }
-.ku-banner h4 { margin:0 0 4px; font-size:15px; color:var(--gold); }
+.ku-banner h4 { margin:0 0 4px; font-size:16px; color:var(--gold);
+  font-family:var(--font-chi); letter-spacing:.2px; }
 .ku-bd { font-size:11.5px; color:var(--text-dim); margin-top:6px; line-height:1.6; }
 .ku-bd b { color:var(--accent-light); }
 .ku-ke { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }

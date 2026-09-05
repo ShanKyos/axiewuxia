@@ -1097,6 +1097,10 @@ const VFX_ATLAS_DEFS = {
   // 'weak' (stat-debuff aura) is the closest-fit substitute for slow/chill — the kit has no
   // literal slow/freeze clip (see docs/ASSET_SOURCING.md's no-force-fit convention).
   weak:         { k:2, cols:8, rows:9,  frameW:247, frameH:248, frames:69, fps:30, anchorX:123.2, anchorY:115.8 },
+  // Hai clip dưới đây KHÔNG dùng cho trạng thái trong trận — chúng chỉ chạy trên màn quay Khế
+  // Ước, vẽ thẳng bằng veVfxAtlas() chứ không qua addEffect(). Nhập bằng tools/vfx_nhap.py.
+  power_awaken:   { k:2, cols:8, rows:9,  frameW:283, frameH:256, frames:69, fps:30, anchorX:140.0, anchorY:127.4 },
+  summon_on_cast: { k:2, cols:8, rows:11, frameW:267, frameH:219, frames:81, fps:30, anchorX:132.4, anchorY:117.0 },
 };
 // ═══ Vòng Kiếm Lửa — hằng số hình học ═══
 // Tâm elip cao hơn bàn chân bấy nhiêu. Dùng cho CẢ ba việc: cắt vòng lửa làm nửa sau / nửa
@@ -1129,13 +1133,14 @@ function vfxAtlasDon(now){
     if (now - (VFX_ATLAS_DUNG[id] || 0) > VFX_ATLAS_GIU){ delete VFX_ATLAS_IMGS[id]; delete VFX_ATLAS_DUNG[id]; bo++; }
   return bo;
 }
-setInterval(() => vfxAtlasDon(), 30000);
+setInterval(() => { vfxAtlasDon(); chiQuayDon(); }, 30000);
 // Tổng số byte ảnh ĐÃ GIẢI NÉN mà game đang giữ. Đây mới là con số giết renderer — nó không
 // nằm trong performance.memory, nên đo bằng heap JS là đo nhầm chỗ (đã mắc một lần).
 window.anhDangGiuMB = function(){
   let n = 0;
   const cong = o => { for (const k in o){ const im = o[k]; if (im && im.naturalWidth) n += im.naturalWidth * im.naturalHeight * 4; } };
   cong(VFX_ATLAS_IMGS); cong(MAP_BG); cong(TREE_IMGS); cong(MOB_IMGS); cong(NPC_IMGS);
+  cong(CHI_IMGS); cong(CHI_QUAY);
   return +(n / 1048576).toFixed(1);
 };
 // ═══ Vòng Kiếm Lửa ═══
@@ -4026,11 +4031,14 @@ function skillInfo(id){
 // là ba ô, ba đường nâng cấp, ba bảng. Chủ dự án chốt cho Chimera nuốt Thú Chiến — hành vi chiến
 // đấu (đi theo, tự đánh) giữ nguyên, chỉ đổi CÁCH CÓ nó: quay được thay vì nâng giai.
 //
-// Art: cả 16 con là ảnh Axie thật, dựng từ 16 rig Spine KHÁC NHAU trong axie-origins-asset-kit
-// (assets/chimera/*.png — xem tools/spine/ và docs/ASSET_SOURCING.md). Cố tình không lấy bản biến
-// thể của cùng một rig: hai con chỉ khác cái mũ thì trong màn nhìn như lỗi trùng ảnh.
+// Art: cả 16 con là Axie thật, nướng từ 16 rig Spine KHÁC NHAU trong axie-origins-asset-kit
+// thành BẢNG KHUNG HÌNH — assets/chimera/<id>.webp (nhịp thở) và <id>_q.webp (hiện hình + thở).
+// Xem tools/spine/nuong_chi.py. Cố tình không lấy bản biến thể của cùng một rig: hai con chỉ
+// khác cái mũ thì trong màn nhìn như lỗi trùng ảnh.
 // CHIMERA đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
 const CHIMERA = window.CHIMERA;
+// Hình học bảng khung Chimera — data/chi_anh.js, do tools/spine/nuong_chi.py ghi ra.
+const CHI_ANH = window.CHI_ANH;
 const CHI_MAP = {}; for (const c of CHIMERA) CHI_MAP[c.id] = c;
 const CHI_SAO_MAU = { 3:'#5ea0e8', 4:'#b06ae0', 5:'#ffb15c' };
 // Pool Vĩnh Cửu = ba con 5★ không bao giờ lên kệ Giao Kết. Ba con còn lại luân phiên lên kệ.
@@ -4404,59 +4412,99 @@ function cotRoi(mapId, lan){
 function chiBoHieu(){                          // dòng đang đủ 4 mảnh của con đang xuất trận
   const C = chiState(); return C.eq ? chiCotGom(C.eq).bo : null;
 }
-const CHI_IMGS = {};
+// ═══════════════ BẢNG KHUNG CHIMERA ═══════════════
+// Mỗi con hai bảng, nướng từ chính rig Spine của Axie (tools/spine/nuong_chi.py):
+//   <id>.webp    16 khung 'action/idle/normal', ô ~130px — danh sách, đồng hành, lưới 10 lượt
+//   <id>_q.webp  12 khung 'activity/appear' rồi 12 khung thở, ô ~360px — CHỈ màn quay
+// Hình học từng con nằm ở CHI_ANH (data/chi_anh.js), do chính đường nướng ghi ra.
+//
+// Bảng nhỏ nạp cả 16 con: 1,4 MB, và con nào cũng có thể hiện trong danh sách bất cứ lúc nào.
+// Bảng quay nặng gấp năm, mà một lượt quay chỉ nhìn ĐÚNG MỘT con — nên nạp theo nhu cầu rồi
+// thả sau một phút, cùng cách và cùng lý do với atlas hiệu ứng (xem VFX_ATLAS_GIU).
+const CHI_IMGS = {}, CHI_QUAY = {}, CHI_QUAY_DUNG = {};
 function chiImg(id){
-  const c = CHI_MAP[id];
-  if (!c || !c.img) return null;                       // chưa có art — rơi về veChimera()
-  if (CHI_IMGS[id]) return CHI_IMGS[id];
-  const im = new Image(); im.src = c.img; CHI_IMGS[id] = im;
+  if (!CHI_MAP[id]) return null;
+  let im = CHI_IMGS[id];
+  if (!im){ im = new Image(); im.src = 'assets/chimera/' + id + '.webp'; CHI_IMGS[id] = im; }
   return im;
 }
-// Bóng vector năm dáng — dùng khi ảnh thật CHƯA tải xong (lần đầu vào màn, hoặc bóng đen lúc quay
-// Khế Ước). Cả 16 con đều có `img`, nên đây là hình đệm chứ không còn là art chính.
-function veChimera(gg, x, y, s, mau, dang, bong){
-  gg.save(); gg.translate(x, y); gg.scale(s, s);
-  const than = bong ? 'rgba(6,6,14,.92)' : mau;
-  gg.fillStyle = than; gg.strokeStyle = than; gg.lineCap = 'round';
-  if (dang === 0){                                      // bốn chân, sừng
-    gg.beginPath(); gg.ellipse(0, 10, 34, 24, 0, 0, 7); gg.fill();
-    gg.beginPath(); gg.ellipse(26, -14, 20, 18, .2, 0, 7); gg.fill();
-    gg.beginPath(); gg.moveTo(20,-28); gg.lineTo(14,-50); gg.lineTo(30,-32); gg.closePath(); gg.fill();
-    gg.beginPath(); gg.moveTo(34,-26); gg.lineTo(42,-46); gg.lineTo(42,-24); gg.closePath(); gg.fill();
-    for (const dx of [-20,-2,16]) gg.fillRect(dx, 26, 9, 20);
-    gg.lineWidth = 8; gg.beginPath(); gg.moveTo(-32,4); gg.quadraticCurveTo(-58,-6,-50,-30); gg.stroke();
-  } else if (dang === 1){                               // vây, đuôi cá
-    gg.beginPath(); gg.ellipse(0, 8, 36, 22, 0, 0, 7); gg.fill();
-    gg.beginPath(); gg.ellipse(28, -10, 18, 16, .15, 0, 7); gg.fill();
-    gg.beginPath(); gg.moveTo(-30,6); gg.lineTo(-58,-16); gg.lineTo(-52,10); gg.lineTo(-60,28); gg.closePath(); gg.fill();
-    gg.beginPath(); gg.moveTo(-4,-14); gg.lineTo(6,-46); gg.lineTo(20,-16); gg.closePath(); gg.fill();
-  } else if (dang === 2){                               // lá, thân tròn
-    gg.beginPath(); gg.ellipse(0, 6, 30, 28, 0, 0, 7); gg.fill();
-    gg.beginPath(); gg.ellipse(22, -16, 17, 15, .2, 0, 7); gg.fill();
-    for (const a of [-0.5, 0, 0.5]){
-      gg.save(); gg.translate(4, -34); gg.rotate(a);
-      gg.beginPath(); gg.ellipse(0, -12, 7, 18, 0, 0, 7); gg.fill(); gg.restore();
-    }
-    for (const dx of [-16, 6]) gg.fillRect(dx, 28, 10, 16);
-  } else if (dang === 3){                               // cánh
-    gg.beginPath(); gg.ellipse(0, 6, 26, 24, 0, 0, 7); gg.fill();
-    gg.beginPath(); gg.ellipse(22, -16, 16, 15, .2, 0, 7); gg.fill();
-    gg.beginPath(); gg.moveTo(38,-18); gg.lineTo(52,-10); gg.lineTo(38,-6); gg.closePath(); gg.fill();
-    for (const sy of [-1, 1]){
-      gg.beginPath(); gg.moveTo(-6, 0);
-      gg.quadraticCurveTo(-46, sy*34, -18, sy*44); gg.quadraticCurveTo(-14, sy*18, -6, 0); gg.fill();
-    }
-  } else {                                              // sáu chân, càng
-    gg.beginPath(); gg.ellipse(0, 8, 32, 20, 0, 0, 7); gg.fill();
-    gg.beginPath(); gg.ellipse(26, -6, 16, 14, 0, 0, 7); gg.fill();
-    gg.lineWidth = 5;
-    for (const sy of [-1, 1]) for (const dx of [-16, 0, 14]){
-      gg.beginPath(); gg.moveTo(dx, 6); gg.lineTo(dx - 6, sy*32); gg.stroke();
-    }
-    gg.beginPath(); gg.moveTo(34,-14); gg.lineTo(50,-26); gg.lineTo(44,-8); gg.closePath(); gg.fill();
+function chiQuayImg(id){
+  if (!CHI_MAP[id]) return null;
+  let im = CHI_QUAY[id];
+  if (!im){
+    im = new Image(); im.src = 'assets/chimera/' + id + '_q.webp'; CHI_QUAY[id] = im;
+    CHI_QUAY_DUNG[id] = performance.now();
+    chiQuayDon();                         // dọn NGAY lúc thêm, đừng đợi nhịp quét 30 giây
   }
-  if (!bong){ gg.fillStyle = '#fff'; gg.beginPath(); gg.arc(30, dang === 4 ? -8 : -14, 3.4, 0, 7); gg.fill(); }
-  gg.restore();
+  CHI_QUAY_DUNG[id] = performance.now();
+  return im;
+}
+// Giữ nhiều nhất ba bảng quay cùng lúc. Một bảng giải nén ra chừng 17 MB — quay ×10 mà cứ giữ
+// hết là 170 MB cho mười con đã xem xong, đúng kiểu rò bộ nhớ đã làm Chrome sập một lần
+// (xem VFX_ATLAS_GIU và window.anhDangGiuMB). Ba là vừa: con đang xem, con vừa xem, con nạp trước.
+const CHI_QUAY_TOI_DA = 3;
+function chiQuayDon(now){
+  now = now == null ? performance.now() : now;
+  const bo = id => { delete CHI_QUAY[id]; delete CHI_QUAY_DUNG[id]; };
+  for (const id in CHI_QUAY)
+    if (now - (CHI_QUAY_DUNG[id] || 0) > VFX_ATLAS_GIU) bo(id);
+  const con = Object.keys(CHI_QUAY);
+  if (con.length > CHI_QUAY_TOI_DA && !window.__giuHet){   // __giuHet: bài kiểm cần giữ cả 16
+    con.sort((a, b2) => (CHI_QUAY_DUNG[a] || 0) - (CHI_QUAY_DUNG[b2] || 0));
+    for (let i = 0; i < con.length - CHI_QUAY_TOI_DA; i++) bo(con[i]);
+  }
+}
+const CHI_THO_FPS = 9;              // nhịp thở: 12 khung cho một vòng 1,33 giây
+function chiSan(im){ return !!(im && im.complete && im.naturalWidth); }
+// Bàn chân của con vật nằm ở đâu trong ô, và thân cao mấy phần ô — hai số này do đường nướng
+// đo rồi ghi ra, đừng đoán lại ở đây.
+//
+// `thanPx` là CHIỀU CAO THÂN muốn vẽ, không phải chiều cao ô: ô có rìa trong suốt do những
+// khung cựa quậy nhất nhô ra, lấy ô làm thước thì con nào động nhiều lại bị vẽ bé đi. `y` giữ
+// đúng mốc của đời ảnh tĩnh — điểm 62% chiều cao thân — nên mọi chỗ gọi khỏi phải dịch lại.
+function _chiVe(g, im, A, cot, oW, oH, i, x, y, thanPx){
+  const hh = thanPx / A.thanCao, hw = hh * (oW / oH);
+  const chan = y + thanPx * 0.38;
+  g.drawImage(im, (i % cot) * oW, ((i / cot) | 0) * oH, oW, oH,
+              x - hw / 2, chan - hh * A.neoY, hw, hh);
+}
+function chiVeNho(g, id, i, x, y, thanPx){
+  const A = CHI_ANH.o[id], im = chiImg(id);
+  if (!A || !chiSan(im)) return false;
+  _chiVe(g, im, A, CHI_ANH.cotNho, A.nhoRong, A.nhoCao,
+         ((i % CHI_ANH.nKhung) + CHI_ANH.nKhung) % CHI_ANH.nKhung, x, y, thanPx);
+  return true;
+}
+// `i` chạy 0..nQuay-1: nHien khung hiện hình rồi phần còn lại là thở. Bảng quay chưa về thì
+// lui về bảng nhỏ phóng to — hơi mềm nét trong một nhịp, nhưng không bao giờ để trống chỗ.
+function chiVeQuay(g, id, i, x, y, thanPx){
+  const A = CHI_ANH.o[id];
+  if (!A) return false;
+  const im = chiQuayImg(id);
+  if (!chiSan(im)) return chiVeNho(g, id, Math.max(0, i - CHI_ANH.nHien), x, y, thanPx);
+  _chiVe(g, im, A, CHI_ANH.cotQuay, A.oRong, A.oCao,
+         clamp(i | 0, 0, CHI_ANH.nQuay - 1), x, y, thanPx);
+  return true;
+}
+// Bóng đen cùng hình — lúc con vật chưa lộ mặt. drawImage không tô màu được, nên vẽ ra một
+// canvas phụ rồi phủ đen theo đúng vùng đặc. Canvas phụ dùng lại, không tạo mới mỗi khung.
+let _chiBongCv = null;
+function chiVeBong(g, id, i, x, y, thanPx){
+  const A = CHI_ANH.o[id];
+  if (!A) return false;
+  const hh = thanPx / A.thanCao, hw = Math.ceil(hh * (A.oRong / A.oCao)), hi = Math.ceil(hh);
+  if (!_chiBongCv) _chiBongCv = document.createElement('canvas');
+  const cv = _chiBongCv;
+  if (cv.width !== hw || cv.height !== hi){ cv.width = hw; cv.height = hi; }
+  const q = cv.getContext('2d');
+  q.clearRect(0, 0, hw, hi);
+  // đặt đỉnh ô đúng vào y=0 của canvas phụ: chan - hh*neoY = 0  ⇒  y = hh*neoY - thanPx*0.38
+  if (!chiVeQuay(q, id, i, hw / 2, hh * A.neoY - thanPx * 0.38, thanPx)) return false;
+  q.globalCompositeOperation = 'source-in';
+  q.fillStyle = 'rgba(6,6,14,.92)'; q.fillRect(0, 0, hw, hi);
+  q.globalCompositeOperation = 'source-over';
+  g.drawImage(cv, x - hw / 2, y + thanPx * 0.38 - hh * A.neoY);
+  return true;
 }
 
 // ---------- Sect art (portraits + skill icons) ----------
@@ -15447,9 +15495,9 @@ function renderMount(){
   for (const c of dsCo){
     const o = chiO(c.id), con = o.con, eq = C.eq === c.id;
     html += `<div class="skill-row${eq ? '' : ' locked'}" style="align-items:center">
-      <img class="chi-anh" src="${c.img}" alt="" style="border-color:${CHI_SAO_MAU[c.sao]}">
+      ${chiO34(c)}
       <span class="sk-info"><b style="color:${c.mau}">${c.ten}</b>
-        <span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}"> · ${'★'.repeat(c.sao)} · ${c.lop}</span>
+        <span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}"> · ${'★'.repeat(c.sao)} · </span>${lopHuyHieu(c.lop)}<span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}">${c.lop}</span>
         <span style="font-size:10.5px;color:#7ecbff"> · Cấp ${o.lv}</span>
         ${con ? `<span style="font-size:10.5px;color:#ffd76a"> · Huyết Thống C${con}</span>` : ''}
         <div class="sk-desc">${c.thuTxt} · Chiêu <b>${c.chieu.ten}</b> (${Math.round(c.chieu.cd)}s)</div></span>
@@ -15457,6 +15505,19 @@ function renderMount(){
            : `<button class="mini-btn" onclick="window.chiChon('${c.id}')">Chọn</button>`}</div>`;
   }
   CE().innerHTML = html;
+}
+// Ô Chimera 34px trong danh sách. Không dùng <img> nữa vì art nay là DẢI 16 khung — trình
+// duyệt chạy nó bằng hai animation steps() lồng nhau (xem .chi-anh trong style.css), nên phải
+// là một khối có background chứ không phải một tấm ảnh.
+function chiO34(c){
+  const A = CHI_ANH.o[c.id], cao = 34, rong = A ? Math.round(cao * A.nhoRong / A.nhoCao) : cao;
+  return `<i class="chi-anh" style="--sh:url(assets/chimera/${c.id}.webp);--w:${rong}px;`
+       + `--h:${cao}px;border-color:${CHI_SAO_MAU[c.sao]}"></i>`;
+}
+// Huy hiệu lớp Axie chính chủ, cắt từ dải lop.webp theo đúng thứ tự LOP_DAI.
+function lopHuyHieu(lop){
+  const i = LOP_DAI.indexOf(lop);
+  return i < 0 ? '' : `<i class="lop-hd" style="--i:${i}" title="${lop}"></i>`;
 }
 // Bảng nuôi một con: thanh cấp + Hoá · bốn ô Cốt · bốn kỹ năng đồng hành.
 function chiBangNuoi(id){
@@ -15595,6 +15656,7 @@ function kuHet(){
   calcDerived();
 }
 function kuTiep(){
+  { const n = _kuKq[_kuI + 1]; if (n && n.id) chiQuayImg(n.id); }   // lượt sau khỏi phải chờ tải
   _kuI++;
   if (_kuI >= _kuKq.length){ if (_kuKq.length > 1) kuPha('luoi'); else kuHet(); }
   else kuPha('hien');
@@ -15604,12 +15666,73 @@ function kuBoQua(){
   if (_kuKq.length > 1){ _kuI = _kuKq.length; kuPha('luoi'); }
   else { _kuI = 0; kuPha('the'); _kuSao = 9; }
 }
-function kuVeChi(g2, x, y, s, c, bong){
-  const img = chiImg(c.id);
-  if (img && img.complete && img.naturalWidth && !bong){
-    const hh = 150*s, hw = hh * (img.naturalWidth/img.naturalHeight);
-    g2.drawImage(img, x - hw/2, y - hh*0.62, hw, hh);
-  } else veChimera(g2, x, y, s, c.mau, c.dang || 0, bong);
+// Vẽ MỘT khung của atlas hiệu ứng lên bất kỳ ngữ cảnh nào. addEffect() chỉ vẽ được lên canvas
+// thế giới, mà màn Khế Ước có canvas riêng — nên cần đường vẽ thẳng như thế này.
+//
+// `giay` là GIÂY ĐÃ TRÔI, không phải tiến độ 0..1. Lý do: hai clip này dài 2,3s và 2,7s, mà
+// pha 'nổ' chỉ 0,42s — kéo giãn theo pha thì clip chạy nhanh gấp năm, và tệ hơn, phần đuôi
+// atlas là khung RỖNG (xem việc #108) nên ánh xạ đều lên cả 69/81 khung là quá nửa thời gian
+// vẽ ra khoảng không. Đếm theo fps thật thì luôn rơi vào khúc còn sáng.
+function veVfxAtlas(g, id, x, y, giay, ty, mo){
+  const d = VFX_ATLAS_DEFS[id]; if (!d) return;
+  const im = getVfxAtlasImg(id); if (!chiSan(im)) return;
+  const i = clamp(Math.floor(giay * d.fps), 0, d.frames - 1);
+  g.save();
+  g.globalCompositeOperation = 'lighter';        // cả hai clip kit khai blend: additive
+  g.globalAlpha = mo == null ? 1 : mo;
+  g.drawImage(im, (i % d.cols) * d.frameW, ((i / d.cols) | 0) * d.frameH, d.frameW, d.frameH,
+              x - d.anchorX * ty, y - d.anchorY * ty, d.frameW * ty, d.frameH * ty);
+  g.restore();
+}
+// Khung gỗ vẽ tay của kit, căng theo kiểu chín mảnh: bốn góc giữ nguyên, bốn cạnh và ruột mới
+// giãn. Căng thẳng cả tấm thì góc méo — mà góc chính là chỗ có nét vẽ.
+const KHUNG_BIEN = 48;                            // bề dày góc trong ảnh nguồn 300x300
+let _khungIm = null;
+function veKhungGo(g, x, y, w, h){
+  if (!_khungIm){ _khungIm = new Image(); _khungIm.src = 'assets/ui/khung.webp'; }
+  const im = _khungIm; if (!chiSan(im)) return false;
+  const b = KHUNG_BIEN, W = im.naturalWidth, H = im.naturalHeight;
+  const bx = Math.min(b, w / 2), by = Math.min(b, h / 2);
+  const sx = [0, b, W - b], sw = [b, W - 2*b, b];
+  const sy = [0, b, H - b], sh = [b, H - 2*b, b];
+  const dx = [x, x + bx, x + w - bx], dw = [bx, w - 2*bx, bx];
+  const dy = [y, y + by, y + h - by], dh = [by, h - 2*by, by];
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++)
+    if (dw[c] > 0 && dh[r] > 0) g.drawImage(im, sx[c], sy[r], sw[c], sh[r], dx[c], dy[r], dw[c], dh[r]);
+  return true;
+}
+// Chín huy hiệu lớp Axie chính chủ, xếp một dải ngang 48px (assets/ui/lop.webp). Thứ tự dưới
+// đây LÀ thứ tự trong dải — đổi một chỗ phải đổi cả hai.
+const LOP_DAI = ['Aquatic','Beast','Bird','Bug','Plant','Reptile','Mech','Dawn','Dusk'];
+const LOP_O = 48;
+let _lopIm = null;
+function veLop(g, lop, x, y, cao){
+  const i = LOP_DAI.indexOf(lop); if (i < 0) return false;
+  if (!_lopIm){ _lopIm = new Image(); _lopIm.src = 'assets/ui/lop.webp'; }
+  const im = _lopIm; if (!chiSan(im)) return false;
+  g.drawImage(im, i * LOP_O, 0, LOP_O, LOP_O, x - cao/2, y - cao/2, cao, cao);
+  return true;
+}
+// Ngôi sao hình lục giác vàng của Axie, thay cho đa giác mười đỉnh vẽ tay.
+let _saoIm = null;
+function veSao(g, x, y, cao, sang){
+  if (!_saoIm){ _saoIm = new Image(); _saoIm.src = 'assets/ui/sao.webp'; }
+  const im = _saoIm; if (!chiSan(im)) return false;
+  g.save(); g.globalAlpha = sang ? 1 : 0.26;
+  g.drawImage(im, x - cao/2, y - cao/2, cao, cao); g.restore();
+  return true;
+}
+// Chữ hiển thị của màn Khế Ước. Baloo 2 là mặt chữ mập-tròn cùng chất với chữ hiển thị trong
+// gói starter của chính Axie (Lilita One) — mà Lilita One không có bộ dấu tiếng Việt, "Khế Ước"
+// ra thành "Kh c". Thân bài vẫn Be Vietnam Pro: khung thép đinh tán không hợp chữ bo tròn.
+const KU_CHU = '"Baloo 2", "Be Vietnam Pro", sans-serif';
+// Bảng khung chưa về thì KHÔNG vẽ gì — con vật hiện ra trễ một nhịp, thế thôi. Trước đây chỗ
+// này có một hình đệm dựng bằng ctx.beginPath(); đã gỡ hẳn: art là art, và một cái bóng tự vẽ
+// đứng cạnh mười lăm con Axie thật chỉ làm người ta tưởng game hỏng.
+function kuVeChi(g2, x, y, s, c, bong, khung){
+  const thanPx = 150 * s, i = khung || 0;
+  if (bong) chiVeBong(g2, c.id, i, x, y, thanPx);
+  else chiVeQuay(g2, c.id, i, x, y, thanPx);
 }
 function kuVe(){
   const F = kuFit(); if (!F){ _kuRaf = requestAnimationFrame(kuVe); return; }
@@ -15662,6 +15785,8 @@ function kuVe(){
     }
     g2.globalAlpha = Math.max(0, 0.82 - k*2.4); g2.fillStyle = '#fff'; g2.fillRect(0, 0, W2, H2);
     g2.globalAlpha = 1;
+    // 5★ thì nổ bằng hiệu ứng thật của Axie Origins chứ không phải vòng tròn vẽ tay
+    if (kuPhamCao() === 5) veVfxAtlas(g2, 'power_awaken', W2/2, H2*0.44, e, Math.min(W2,H2)/350);
     if (k >= 1) kuPha('hien');
   } else if (_kuPha === 'hien'){
     const k = Math.min(1, e/_KU_NHIP.hien), cx = W2/2, cy = H2*0.5, sc = (1.5 + 0.5*k) * Math.min(1.4, W2/900);
@@ -15681,7 +15806,20 @@ function kuVe(){
     hg.addColorStop(0, mau + 'cc'); hg.addColorStop(.5, mau + '33'); hg.addColorStop(1, 'rgba(0,0,0,0)');
     g2.globalAlpha = 0.55 + 0.45*Math.sin(k*3.14); g2.fillStyle = hg;
     g2.beginPath(); g2.arc(cx, cy, 250, 0, 7); g2.fill(); g2.globalAlpha = 1;
-    if (cc) kuVeChi(g2, cx, cy, sc, cc, k < 0.55);
+    // Bóng đen giữ tới 0,45 để còn hồi hộp, rồi 'activity/appear' chạy nốt: nhắm mắt → nảy
+    // người → mở mắt. Đó là hoạt cảnh Axie dựng sẵn cho đúng khoảnh khắc này, không chế thêm.
+    const _kh = Math.min(CHI_ANH.nHien - 1,
+                         Math.floor(Math.max(0, (k - 0.45) / 0.55) * CHI_ANH.nHien));
+    // Hào quang 5★ chạy TIẾP từ pha nổ sang đây — cộng thêm độ dài pha nổ để không giật lại
+    // từ khung 0. Triệu hồi thì bắt đầu ngay tại pha này.
+    // Cỡ hiệu ứng lấy theo cạnh NGẮN của màn chia cho ~350: ở 1440x860 ra chừng 640px, tức
+    // rộng hơn con vật (~400px). Chia cho 700 như lần đầu thì vòng triệu hồi nhỏ hơn con vật
+    // và nằm gọn sau lưng nó — vẽ mà như không vẽ.
+    const _tyFx = Math.min(W2, H2) / 350;
+    if (cur.sao === 5)
+      veVfxAtlas(g2, 'power_awaken', cx, cy, e + _KU_NHIP.no, _tyFx, 1 - k*0.55);
+    veVfxAtlas(g2, 'summon_on_cast', cx, cy + 70, e, _tyFx, 0.95);
+    if (cc) kuVeChi(g2, cx, cy, sc, cc, k < 0.45, _kh);
     else { g2.fillStyle = mau; g2.globalAlpha = 0.9;
       g2.beginPath(); g2.arc(cx, cy, 34 + 10*k, 0, 7); g2.fill(); g2.globalAlpha = 1; }
     for (let i = 0; i < 22; i++){
@@ -15694,17 +15832,28 @@ function kuVe(){
     if (k >= 1) kuPha('the');
   } else if (_kuPha === 'the'){
     const k = Math.min(1, e/_KU_NHIP.the), sl = k*k*(3-2*k), cx = W2/2, cy = H2*0.5;
-    if (cc) kuVeChi(g2, cx, cy - 30, 1.7*Math.min(1.4, W2/900), cc, false);
+    // Sau khi hiện hình thì con vật THỞ tiếp — khung hiện hình đã hết, phần còn lại của bảng
+    // quay là vòng lặp 'action/idle/normal'.
+    const _nT = CHI_ANH.nQuay - CHI_ANH.nHien;
+    if (cc) kuVeChi(g2, cx, cy - 30, 1.7*Math.min(1.4, W2/900), cc, false,
+                    CHI_ANH.nHien + (Math.floor(e * CHI_THO_FPS) % _nT));
     const cw = Math.min(460, W2*0.62), ch = 132, cyy = H2 - 46 - ch*sl;
     g2.save(); g2.globalAlpha = sl;
-    g2.fillStyle = 'rgba(10,10,26,.9)'; g2.strokeStyle = mc; g2.lineWidth = 2;
-    g2.beginPath(); g2.roundRect(cx - cw/2, cyy, cw, ch, 8); g2.fill(); g2.stroke();
+    g2.fillStyle = 'rgba(10,10,26,.9)';
+    g2.beginPath(); g2.roundRect(cx - cw/2, cyy, cw, ch, 8); g2.fill();
     const gg = g2.createLinearGradient(cx - cw/2, cyy, cx + cw/2, cyy);
     gg.addColorStop(0, mc + '00'); gg.addColorStop(.5, mc + '2e'); gg.addColorStop(1, mc + '00');
     g2.fillStyle = gg; g2.fillRect(cx - cw/2, cyy, cw, ch);
+    // Khung gỗ vẽ tay của kit. Chưa tải xong thì vẫn còn viền màu bậc như cũ — mất khung thì
+    // thẻ trôi lơ lửng không có mép.
+    if (!veKhungGo(g2, cx - cw/2 - 10, cyy - 10, cw + 20, ch + 20)){
+      g2.strokeStyle = mc; g2.lineWidth = 2;
+      g2.beginPath(); g2.roundRect(cx - cw/2, cyy, cw, ch, 8); g2.stroke();
+    }
     g2.textAlign = 'center';
-    g2.fillStyle = '#e4ebff'; g2.font = '700 26px "Be Vietnam Pro", sans-serif';
+    g2.fillStyle = '#e4ebff'; g2.font = '700 27px ' + KU_CHU;
     g2.fillText(cur.ten, cx, cyy + 42);
+    if (cc) veLop(g2, cc.lop, cx - g2.measureText(cur.ten).width/2 - 24, cyy + 33, 30);
     g2.fillStyle = cc ? cc.mau : '#9aa8d4'; g2.font = '600 13px "Be Vietnam Pro", sans-serif';
     g2.fillText(cc ? `${cc.lop} · ${cc.thuTxt}` : `+${cur.tinh} Tinh Trần`, cx, cyy + 63);
     if (cur.moi) { g2.fillStyle = '#8fd18f'; g2.fillText('★ MỚI', cx, cyy + 82); }
@@ -15715,11 +15864,14 @@ function kuVe(){
       const on = i < _kuSao, bx = cx - (cur.sao-1)*15 + i*30, by = cyy + 106;
       const pop = on ? Math.min(1, (k*9 - i)*2.2) : 0, sc2 = 0.8 + 0.5*Math.sin(Math.min(1,pop)*Math.PI/2);
       g2.save(); g2.translate(bx, by); g2.scale(sc2, sc2);
-      g2.fillStyle = on ? mc : 'rgba(120,126,160,.35)';
-      g2.beginPath();
-      for (let j = 0; j < 10; j++){ const r = j%2 ? 5 : 11, a = -Math.PI/2 + j*Math.PI/5;
-        j ? g2.lineTo(Math.cos(a)*r, Math.sin(a)*r) : g2.moveTo(Math.cos(a)*r, Math.sin(a)*r); }
-      g2.closePath(); g2.fill(); g2.restore();
+      if (!veSao(g2, 0, 0, 26, on)){                    // ảnh chưa về — vẽ tạm sao mười đỉnh
+        g2.fillStyle = on ? mc : 'rgba(120,126,160,.35)';
+        g2.beginPath();
+        for (let j = 0; j < 10; j++){ const r = j%2 ? 5 : 11, a = -Math.PI/2 + j*Math.PI/5;
+          j ? g2.lineTo(Math.cos(a)*r, Math.sin(a)*r) : g2.moveTo(Math.cos(a)*r, Math.sin(a)*r); }
+        g2.closePath(); g2.fill();
+      }
+      g2.restore();
     }
     g2.restore();
     if (k >= 1){
@@ -15730,7 +15882,7 @@ function kuVe(){
     }
   } else if (_kuPha === 'luoi'){
     const k = Math.min(1, e/0.5);
-    g2.textAlign = 'center'; g2.fillStyle = '#e4ebff'; g2.font = '700 18px "Be Vietnam Pro", sans-serif';
+    g2.textAlign = 'center'; g2.fillStyle = '#e4ebff'; g2.font = '700 19px ' + KU_CHU;
     g2.fillText('KẾT QUẢ 10 LƯỢT', W2/2, 40);
     const cols = 5, cw = Math.min(150, W2/6.4), ch = cw*1.15, gap = 10;
     const x0 = W2/2 - (cols*cw + (cols-1)*gap)/2, y0 = 62;
@@ -15741,9 +15893,15 @@ function kuVe(){
       g2.save(); g2.globalAlpha = a;
       g2.fillStyle = 'rgba(10,10,26,.92)'; g2.strokeStyle = CHI_SAO_MAU[r.sao]; g2.lineWidth = r.sao === 5 ? 2.4 : 1.4;
       g2.beginPath(); g2.roundRect(cx, cy, cw, ch, 6); g2.fill(); g2.stroke();
-      if (c2) kuVeChi(g2, cx + cw/2, cy + ch*0.44, cw/170, c2, false);
-      g2.fillStyle = CHI_SAO_MAU[r.sao]; g2.font = '600 11px "Be Vietnam Pro", sans-serif'; g2.textAlign = 'center';
-      g2.fillText('★'.repeat(r.sao), cx + cw/2, cy + ch - 21);
+      // Ô nhỏ dùng BẢNG NHỎ: mười ô cùng lúc mà đòi bảng quay là mười tệp nửa mê-ga.
+      if (c2) chiVeNho(g2, r.id, Math.floor(now/1000*CHI_THO_FPS) + i*3,
+                       cx + cw/2, cy + ch*0.44, 150*(cw/170));
+      g2.textAlign = 'center';
+      for (let j = 0; j < r.sao; j++)
+        if (!veSao(g2, cx + cw/2 - (r.sao-1)*7 + j*14, cy + ch - 25, 15, true)){
+          g2.fillStyle = CHI_SAO_MAU[r.sao]; g2.font = '600 11px "Be Vietnam Pro", sans-serif';
+          g2.fillText('★'.repeat(r.sao), cx + cw/2, cy + ch - 21); break;
+        }
       g2.fillStyle = '#c8d0ea'; g2.font = '600 10px "Be Vietnam Pro", sans-serif';
       g2.fillText(r.ten.length > 15 ? r.ten.slice(0,14) + '…' : r.ten, cx + cw/2, cy + ch - 7);
       g2.restore();
@@ -15760,6 +15918,11 @@ window.kheUocQuay = function(banner, n){
   }
   const kq = gachaQuay(banner, n); if (!kq) return;
   _kuKq = kq; _kuI = 0; _kuChay = true;
+  // Nạp trước NGAY: bảng quay của con đầu (và con thứ hai, để lượt sau khỏi chờ), hai atlas
+  // hiệu ứng, và mặt chữ hiển thị — canvas không chờ font như DOM, không gọi thì khung đầu
+  // rơi về chữ dự phòng rồi nhảy cỡ giữa chừng.
+  for (const r of kq.slice(0, 2)) if (r.id) chiQuayImg(r.id);
+  getVfxAtlasImg('summon_on_cast'); if (kuPhamCao() === 5) getVfxAtlasImg('power_awaken');
   closePanels();
   const w = document.getElementById('gacha-wrap'); if (w) w.classList.remove('hidden');
   kuFit(); kuPha('comet');
@@ -15812,6 +15975,11 @@ function renderKheUoc(){
 window.renderKheUoc = renderKheUoc;
 window.openKheUoc = function(){
   if (lvPeak() < 6){ addFloat(player.x, player.y - 40, 'Khế Ước mở ở cấp 6', '#8a8a8a', 12); return; }
+  // Nạp trước từ lúc MỞ MÀN, không đợi tới lúc bấm Quay: hai atlas hiệu ứng cộng lại 2,7 MB,
+  // mà pha 'nổ' bắt đầu 1,2 giây sau cú bấm. Đợi tới đó mới xin tệp là lượt quay đầu tiên
+  // chắc chắn không kịp thấy hiệu ứng — đo rồi, không phải phòng xa.
+  getVfxAtlasImg('summon_on_cast'); getVfxAtlasImg('power_awaken');
+  if (document.fonts && document.fonts.load) document.fonts.load('700 27px "Baloo 2"');
   renderKheUoc();
 };
 // ══════════ SHARD — tiền cao cấp ══════════════════════════════════════════════════
@@ -22659,28 +22827,21 @@ function chiCastChieu(c, ch, near){
 function drawMount(){
   const c = CHI_MAP[mountObj.id];
   const t = { color: c.mau, name: c.ten };
-  const img = chiImg(mountObj.id);
   // bóng đổ
   ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath();
   ctx.ellipse(mountObj.x, mountObj.y+7, 20, 7, 0, 0, 7); ctx.fill();
   const bob = Math.abs(Math.sin(mountObj.wob)) * 3;
   const lunge = mountObj.lungeT > 0 ? (mountObj.lungeT/0.18)*9 : 0;
   const lx = Math.cos(mountObj.face)*lunge, ly = Math.sin(mountObj.face)*lunge;
-  if (img && img.complete && img.naturalWidth){
-    const mh = 84, mw = mh * (img.naturalWidth/img.naturalHeight);
+  // `bob` là cái nhún theo bước đi — vẫn giữ, vì bảng khung chỉ có nhịp THỞ tại chỗ. Hai thứ
+  // chồng lên nhau đúng như con vật thật: thân phập phồng trong khi cả người nhấp nhô.
+  {
     const flip = Math.cos(mountObj.face) < 0;
     ctx.save();
     ctx.translate(mountObj.x + lx, mountObj.y - 20 - bob + ly);
     if (flip) ctx.scale(-1, 1);
     ctx.rotate(Math.sin(mountObj.wob)*0.03);
-    ctx.drawImage(img, -mw/2, -mh/2, mw, mh);
-    ctx.restore();
-  } else {                                    // con chưa có art thật — vẽ vector
-    const flip2 = Math.cos(mountObj.face) < 0;
-    ctx.save();
-    ctx.translate(mountObj.x + lx, mountObj.y - 24 - bob + ly);
-    if (flip2) ctx.scale(-1, 1);
-    veChimera(ctx, 0, 0, 0.5, c.mau, c.dang || 0, false);
+    chiVeNho(ctx, mountObj.id, Math.floor(performance.now()/1000*CHI_THO_FPS), 0, 0, 84);
     ctx.restore();
   }
   // tên + vòng hào quang theo giai

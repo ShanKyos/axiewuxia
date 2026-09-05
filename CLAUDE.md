@@ -381,8 +381,23 @@ Lịch sử: hình vector của giáp, vũ khí, nhẫn và dây chuyền đã b
 (`2ed74f6`, `f151948`). Đừng thêm lại. `test_itemdb` gác: `ITEM_ART`, `iaRing`,
 `iaPendPhys`, `iaPendMagic`, `iSheenArc` sống lại là bài đỏ.
 
+`veChimera()` — hình đệm vector năm dáng cho 16 Chimera — cũng đã gỡ (phiên 2026-09-05),
+cùng đợt thay art Chimera sang bảng khung hình. Bảng chưa tải xong thì KHÔNG vẽ gì, con vật
+hiện trễ một nhịp. `test_chianh` gác độ phủ bảng khung.
+
 *Ngoại lệ còn giữ:* icon vật phẩm TIÊU HAO (bình thuốc, sách, bùa, hộp) vẫn vẽ bằng canvas
 — chúng nhỏ, không thuộc hệ trang bị, và không đứng cạnh art thật để lộ chênh lệch.
+
+### Chữ hiển thị — Baloo 2 CHỈ cho mặt Khế Ước
+
+Quét cả 54 repo `axieinfinity`: chữ hiển thị chính chủ của Axie là **Lilita One**
+(`godot-axie-starter-3d`), nhưng nó chỉ có latin + latin-ext — "Khế Ước" hiện ra thành
+"Kh   c". Thay bằng **Baloo 2** (cùng chất mập-tròn, CÓ bộ dấu), tự chứa trong
+`public/game/fonts/`, gắn vào token `--font-chi`.
+
+Nó **không** đụng `--font-display`. Baloo 2 từng bị gỡ khỏi `--font-display` vì chữ bo tròn
+kiểu hoạt hình trên khung thép đinh tán là hai ngôn ngữ hình ảnh chửi nhau — lý do đó vẫn
+đúng. Chỉ dùng ở chỗ có con Axie đứng cạnh.
 
 ---
 
