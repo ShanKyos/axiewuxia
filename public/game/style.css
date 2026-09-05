@@ -1479,8 +1479,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .ku-banner { border:1px solid var(--border-strong); border-radius:6px; padding:12px 14px; margin-bottom:10px;
   background:linear-gradient(180deg, rgba(30,32,64,.9), rgba(18,20,44,.9)); }
 .ku-banner h4 { margin:0 0 4px; font-size:15px; color:var(--gold); }
-.ku-pity { font-size:11.5px; color:var(--text-dim); margin-top:6px; line-height:1.6; }
-.ku-pity b { color:var(--accent-light); }
+.ku-bd { font-size:11.5px; color:var(--text-dim); margin-top:6px; line-height:1.6; }
+.ku-bd b { color:var(--accent-light); }
 .ku-ke { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
 .ku-ke span { font-size:var(--fs-sm); border:1px solid var(--border); border-radius:999px; padding:2px 9px; }
 

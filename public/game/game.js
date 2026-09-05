@@ -15779,7 +15779,7 @@ function renderKheUoc(){
   html += `<div class="ku-banner"><h4>Giao Kết — ${ke5.ten} <span style="color:#ffb15c">★★★★★</span></h4>
     <div style="font-size:11.5px;color:#9aa8d4">${ke5.moTa}</div>
     <div class="ku-ke">${ke4.map(c => `<span style="color:${c.mau};border-color:${c.mau}">${c.ten} ★★★★</span>`).join('')}</div>
-    <div class="ku-bảo đảm">Đã quay <b>${C.pity5}</b> lượt từ 5★ gần nhất — còn <b>${conBd}</b> lượt tới bảo đảm.
+    <div class="ku-bd">Đã quay <b>${C.pity5}</b> lượt từ 5★ gần nhất — còn <b>${conBd}</b> lượt tới bảo đảm.
       ${C.bd ? '<br><b style="color:#8fd18f">Lần 5★ tới CHẮC CHẮN là ' + ke5.ten + '</b>' : '<br>Lần 5★ tới: 50% trúng ' + ke5.ten + ', trượt thì lần sau chắc chắn trúng.'}
       <br>Trần cứng: <b>180 Ấn</b> là chắc chắn có ${ke5.ten}.</div>
     <div class="forge-actions">
@@ -15787,7 +15787,7 @@ function renderKheUoc(){
       <button class="mini-btn" style="font-size:13px;padding:7px 18px" onclick="window.kheUocQuay('gk',10)" ${(C.ve.gk||0)<10?'disabled':''}>Quay ×10</button></div></div>`;
 
   html += `<div class="ku-banner"><h4 style="color:#7ecbff">Vĩnh Cửu — sáu Chimera 5★, không 50/50</h4>
-    <div class="ku-bảo đảm">Đã quay <b>${C.pity5s}</b> lượt — còn <b>${Math.max(0, GACHA_HARD5 - C.pity5s)}</b> lượt tới bảo đảm.</div>
+    <div class="ku-bd">Đã quay <b>${C.pity5s}</b> lượt — còn <b>${Math.max(0, GACHA_HARD5 - C.pity5s)}</b> lượt tới bảo đảm.</div>
     <div class="forge-actions">
       <button class="mini-btn" onclick="window.kheUocQuay('cx',1)" ${(C.ve.cx||0)<1?'disabled':''}>Quay ×1</button>
       <button class="mini-btn" onclick="window.kheUocQuay('cx',10)" ${(C.ve.cx||0)<10?'disabled':''}>Quay ×10</button></div></div>`;
