@@ -86,8 +86,20 @@ def goc_truc(im):
     return math.degrees(math.atan2(vy, vx))
 
 
-def dau_ben_phai(im):
-    """ĐẦU (quả cầu/lưỡi) phải nằm ở +X: nửa nào nặng hơn thì nửa đó sang phải."""
+def dau_ben_phai(im, lat=None):
+    """ĐẦU (quả cầu/lưỡi) phải nằm ở +X.
+
+    Mặc định đoán: nửa nào NẶNG hơn thì nửa đó sang phải. Đúng với trượng và quyền
+    trượng — đầu là một khối cầu/hoa văn to. SAI với kiếm: lưỡi kiếm dài nhưng mỏng,
+    còn chuôi thì ngắn mà đặc, nên tổng alpha nửa chuôi có thể lớn hơn. Đo được trên
+    hai cây lấy từ gói Spine: đại kiếm và mã kiếm đều bị lật ngược, chuôi nằm bên phải.
+
+    Không có phép đoán nào phủ được cả hai họ — với trượng thì "đầu" là đầu DÀY, với
+    kiếm thì "đầu" là mũi NHỌN, hai dấu hiệu ngược nhau. Nên `lat` cho phép ép thẳng:
+    True là xoay 180°, False là giữ nguyên, None là để nó tự đoán như cũ.
+    """
+    if lat is not None:
+        return im.transpose(Image.ROTATE_180) if lat else im
     a = np.array(im)[:, :, 3].astype(float)
     nua = a.shape[1] // 2
     if a[:, :nua].sum() > a[:, nua:].sum():
@@ -95,11 +107,15 @@ def dau_ben_phai(im):
     return im
 
 
-def cho_nam(im):
-    """Toạ độ tay nắm: NAM_TU_DUOI dọc trục, lấy giữa THÂN ở đúng cột đó."""
+def cho_nam(im, ti=None):
+    """Toạ độ tay nắm: `ti` phần chiều dài tính từ ĐUÔI, lấy giữa THÂN ở đúng cột đó.
+
+    Mặc định NAM_TU_DUOI = 0,38 — đo trên cây trượng, nơi hai tay nắm giữa thân. Kiếm
+    thì nắm sát chuôi hơn nhiều (chừng 0,15–0,20), để 0,38 là bàn tay rơi lên LƯỠI.
+    """
     a = np.array(im)[:, :, 3]
     w = a.shape[1]
-    x = int(round(NAM_TU_DUOI * (w - 1)))
+    x = int(round((NAM_TU_DUOI if ti is None else ti) * (w - 1)))
     for dx in range(0, w):                      # cột đó có thể rỗng — dò sang hai bên
         for c in (x - dx, x + dx):
             if 0 <= c < w:
@@ -109,17 +125,17 @@ def cho_nam(im):
     raise ValueError('không tìm được thân cây để đặt tay nắm')
 
 
-def chuan_hoa(duong, ra_thumuc):
+def chuan_hoa(duong, ra_thumuc, lat=None, ti=None):
     im = Image.open(duong).convert('RGBA')
     im, da_bo = bo_manh_roi(im)
     im = cat_sat(im)
     im = im.rotate(goc_truc(im), resample=Image.BICUBIC, expand=True)
-    im = dau_ben_phai(cat_sat(im))
+    im = dau_ben_phai(cat_sat(im), lat)
     if im.width != DAI_CHUAN:                   # thu/phóng giữ nguyên tỉ lệ
         cao = max(1, round(im.height * DAI_CHUAN / im.width))
         im = im.resize((DAI_CHUAN, cao), Image.LANCZOS)
     im = cat_sat(im)
-    x, y = cho_nam(im)
+    x, y = cho_nam(im, ti)
     ten = os.path.splitext(os.path.basename(duong))[0]
     os.makedirs(ra_thumuc, exist_ok=True)
     im.save(os.path.join(ra_thumuc, ten + '.png'))
@@ -130,12 +146,19 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('tep', nargs='+')
     ap.add_argument('--ra', default='public/game/assets/nv')
+    # Hai tham số ÉP THẲNG, dùng khi phép đoán sai (xem dau_ben_phai / cho_nam).
+    # Áp cho MỌI tệp trong một lượt gọi, nên cây nào cần ép thì gọi riêng cây đó.
+    ap.add_argument('--lat', choices=['co', 'khong'], default=None,
+                    help="'co' = xoay 180 độ, 'khong' = giữ nguyên. Bỏ trống thì tự đoán.")
+    ap.add_argument('--nam', type=float, default=None,
+                    help='chỗ nắm, tính bằng phần chiều dài từ ĐUÔI (mặc định 0.38)')
     n = ap.parse_args()
     print('// dán vào VK_ANH trong game.js:')
     loi = 0
     for d in n.tep:
         try:
-            ten, w, h, x, y, da_bo = chuan_hoa(d, n.ra)
+            _lat = None if n.lat is None else (n.lat == 'co')
+            ten, w, h, x, y, da_bo = chuan_hoa(d, n.ra, _lat, n.nam)
             ghi = f'   // {w}x{h}' + (f' · đã bỏ {da_bo} mảnh rời' if da_bo else '')
             print(f"  DONG_O_DAY:  {{ tep:'{ten}', x:{x}, y:{y} }},{ghi}")
         except Exception as e:                  # một tấm hỏng không được chặn cả mẻ

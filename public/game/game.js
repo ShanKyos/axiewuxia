@@ -1403,6 +1403,24 @@ const VK_ANH = {
   // có tranh riêng từng giai thì thêm khoá 'gay|3' … và nó tự thắng tấm chung.
   gay:         { tep:'tk_dwstaff', x:65, y:33 },
   quyentruong: { tep:'tk_dwstaff', x:65, y:33 },
+  // ── Vũ khí LẤY TỪ CHÍNH GÓI SPINE của từng lớp ──────────────────────────────────────
+  // Mỗi gói nhân vật kèm sẵn một khe "vũ khí tay trái" — cây vũ khí gốc mà bộ xương cầm.
+  // (Tên khe trong atlas viết bằng chữ Hán; xem docs/ART_VUKHI_SPINE.md nếu cần tra.) Trước nay
+  // nó bị bỏ qua vì đường vẽ cũ nướng vũ khí vào từng khung hình rồi vứt cả bộ đi khi
+  // chuyển sang thần khí. Nhưng TẤM TRANH thì vẫn còn, và nó là art thật của cùng một hoạ
+  // sĩ đã vẽ bộ giáp — hợp tông hơn bất cứ thứ gì sinh ra ngoài. Cắt ra khỏi atlas, chạy
+  // qua tools/chuanhoavk.py, khai một dòng.
+  //   DK        → thanh trường kiếm          → kiem
+  //   Gunmetal  → đại kiếm hai tay            → daikiem
+  //   Spellblade→ mã kiếm lưỡi cong           → makiem
+  //   DL        → quyền trượng nạm ngọc lam   → lenhtruong
+  //   ELF       → nỏ gỗ                       → no
+  //   DW        → trượng (đã dùng: tk_dwstaff)
+  kiem:        { tep:'vk_kiem',       x:29, y:26 },
+  daikiem:     { tep:'vk_daikiem',    x:26, y:24 },
+  makiem:      { tep:'vk_makiem',     x:29, y:14 },
+  lenhtruong:  { tep:'vk_lenhtruong', x:51, y:22 },
+  no:          { tep:'vk_no',         x:48, y:42 },
   // ── Tranh riêng từng giai (thắng tấm chung ở trên) ──
   // Sinh bằng meowa.ai rồi chạy qua tools/chuanhoavk.py — công cụ tự xoay về trục +X, lật đầu
   // trượng sang phải, thu về 172px và tính chỗ nắm. Xem docs/ART_VUKHI_DARKWIZARD.md.
@@ -1522,7 +1540,11 @@ const TK_LOI = {
   // NỎ — nằm NGANG, mũi chỉ đúng chỗ sắp bắn. Dựng đứng như cung là sai: nỏ ngắm bằng thân.
   crossbow: {
     nghi: (f, di, wph, now) => ({
-      goc: f + Math.PI * 0.72, ban: 24 + di * 5,
+      // ban 42 chứ không 24: con số cũ đo trên cây nỏ VECTOR đời trước, nhỏ hơn hẳn. Tranh
+      // thật của gói Spine là một khối 172x91 — gần 2:1, bè nhất trong các dòng vũ khí — nên
+      // ở 24px nó nằm trọn sau thân người, chỉ ló ra mỗi cái báng. Đo ở tư thế nghỉ: tâm nỏ
+      // chỉ lệch 15px khỏi trục người trong khi nửa bề ngang của nó đã 46px.
+      goc: f + Math.PI * 0.72, ban: 42 + di * 5,
       cao: 68 + Math.sin(now / 700) * 3 + di * Math.sin(wph * 2) * 2.5,
       xoay: f + Math.sin(now / 900) * 0.05,
     }),
