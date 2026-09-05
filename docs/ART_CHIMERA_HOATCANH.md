@@ -71,8 +71,25 @@ chừng 17 MB, quay ×10 mà giữ hết là 170 MB — đúng kiểu rò bộ n
 | `luoi` | ảnh tĩnh + chữ ★ | 10 ô đều thở, sao lục giác |
 
 Hai clip hiệu ứng đếm theo **giây thật** chứ không kéo giãn theo pha: chúng dài 2,3s và 2,7s
-trong khi pha `no` chỉ 0,42s, mà phần đuôi atlas là khung rỗng (việc #108) — ánh xạ đều lên cả
-69/81 khung thì quá nửa thời gian vẽ ra khoảng không.
+trong khi pha `no` chỉ 0,42s.
+
+## Kèm theo: cắt khung rỗng trong cả 8 atlas hiệu ứng (việc #108)
+
+Thêm hai clip mới làm tổng atlas vọt lên 130 MB, vượt trần 100 MB mà `test_bonho` dựng ra sau
+lần Chrome sập. Nguyên nhân thật không phải hai clip mới: clip trong kit chạy tới hết
+`clipDuration` của Unity, mà phần lớn hiệu ứng tắt trước đó khá lâu.
+
+| clip | khung | còn hình | | clip | khung | còn hình |
+|---|---|---|---|---|---|---|
+| `stunned` | 81 | 81 | | `weak` | 69 | **60** |
+| `bleed_apply` | 69 | **40** | | `power_awaken` | 69 | **53** |
+| `heal` | 70 | **62** | | `summon_on_cast` | 81 | **49** |
+| `shield` | 81 | **28** | | `poison_apply` | 81 | 81 |
+
+`vfx_nhap.py` nay tự cắt đuôi rỗng lúc nhập (khung nào dưới 1% pixel đặc của khung đậm nhất thì
+bỏ). Tổng tám atlas: **122,7 → 99,1 MB**, cả tám vẫn giữ nguyên độ nét k:2. Nó sửa luôn chỗ hoạt
+cảnh chạy hụt — game ánh xạ tiến độ lên `frames`, nên `shield` trước đây dành 65% thời gian vẽ
+ra khoảng không.
 
 ## Chạy lại
 

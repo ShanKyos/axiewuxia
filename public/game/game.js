@@ -1089,18 +1089,24 @@ for (const k in MOBS){ if (!MOBS[k].img) continue; const im = new Image(); im.sr
 // đĩa 12,3 còn 5,7 MB, cỡ hiển thị y nguyên. `k` là hệ số quy về đơn vị thiết kế cũ, để các
 // chỗ gọi vẫn truyền `scale` theo con số quen thuộc.
 const VFX_ATLAS_DEFS = {
-  stunned:      { k:2, cols:8, rows:11, frameW:188, frameH:214, frames:81, fps:30, anchorX:95.4,  anchorY:96.0 },
-  bleed_apply:  { k:2, cols:8, rows:9,  frameW:234, frameH:220, frames:69, fps:30, anchorX:113.9, anchorY:112.5 },
-  heal:         { k:2, cols:8, rows:9,  frameW:216, frameH:218, frames:70, fps:30, anchorX:107.7, anchorY:109.9 },
-  shield:       { k:2, cols:8, rows:11, frameW:238, frameH:201, frames:81, fps:30, anchorX:112.8, anchorY:99.5 },
-  poison_apply: { k:2, cols:8, rows:11, frameW:229, frameH:228, frames:81, fps:30, anchorX:114.1, anchorY:113.6 },
-  // 'weak' (stat-debuff aura) is the closest-fit substitute for slow/chill — the kit has no
-  // literal slow/freeze clip (see docs/ASSET_SOURCING.md's no-force-fit convention).
-  weak:         { k:2, cols:8, rows:9,  frameW:247, frameH:248, frames:69, fps:30, anchorX:123.2, anchorY:115.8 },
+  // `frames` là số khung CÒN HÌNH, không phải số khung Unity xuất ra. Clip trong kit chạy tới hết
+  // clipDuration của Unity, mà phần lớn hiệu ứng tắt trước đó khá lâu — `shield` 81 khung thì 53
+  // khung cuối là ảnh trong suốt. tools/vfx_nhap.py cắt đuôi rỗng lúc nhập, và điều đó sửa HAI
+  // thứ cùng lúc: tổng tám atlas hạ từ 122,7 xuống 92,2 MB (trần test_bonho là 100), và hoạt cảnh
+  // hết chạy hụt — game ánh xạ tiến độ lên `frames`, nên đuôi rỗng làm quá nửa thời gian vẽ ra
+  // khoảng không.
+  stunned:        { k:2, cols:8, rows:11, frameW:188, frameH:214, frames:81, fps:30, anchorX:95.7,  anchorY:96.3 },
+  bleed_apply:    { k:2, cols:8, rows:5,  frameW:233, frameH:220, frames:40, fps:30, anchorX:113.7, anchorY:112.5 },
+  heal:           { k:2, cols:8, rows:8,  frameW:216, frameH:218, frames:62, fps:30, anchorX:107.7, anchorY:110.2 },
+  shield:         { k:2, cols:8, rows:4,  frameW:238, frameH:201, frames:28, fps:30, anchorX:112.8, anchorY:99.4 },
+  poison_apply:   { k:2, cols:8, rows:11, frameW:229, frameH:228, frames:81, fps:30, anchorX:114.1, anchorY:113.9 },
+  // 'weak' (hào quang tụt chỉ số) là thứ gần nhất thay cho làm chậm/đóng băng — kit không có clip
+  // nào đúng nghĩa đó (xem quy ước không-ép-bừa trong docs/ASSET_SOURCING.md).
+  weak:           { k:2, cols:8, rows:8,  frameW:247, frameH:248, frames:60, fps:30, anchorX:123.2, anchorY:116.1 },
   // Hai clip dưới đây KHÔNG dùng cho trạng thái trong trận — chúng chỉ chạy trên màn quay Khế
-  // Ước, vẽ thẳng bằng veVfxAtlas() chứ không qua addEffect(). Nhập bằng tools/vfx_nhap.py.
-  power_awaken:   { k:2, cols:8, rows:9,  frameW:283, frameH:256, frames:69, fps:30, anchorX:140.0, anchorY:127.4 },
-  summon_on_cast: { k:2, cols:8, rows:11, frameW:267, frameH:219, frames:81, fps:30, anchorX:132.4, anchorY:117.0 },
+  // Ước, vẽ thẳng bằng veVfxAtlas() chứ không qua addEffect().
+  power_awaken:   { k:2, cols:8, rows:7,  frameW:283, frameH:256, frames:53, fps:30, anchorX:140.0, anchorY:127.4 },
+  summon_on_cast: { k:2, cols:8, rows:7,  frameW:267, frameH:219, frames:49, fps:30, anchorX:132.4, anchorY:117.0 },
 };
 // ═══ Vòng Kiếm Lửa — hằng số hình học ═══
 // Tâm elip cao hơn bàn chân bấy nhiêu. Dùng cho CẢ ba việc: cắt vòng lửa làm nửa sau / nửa
@@ -15812,9 +15818,9 @@ function kuVe(){
                          Math.floor(Math.max(0, (k - 0.45) / 0.55) * CHI_ANH.nHien));
     // Hào quang 5★ chạy TIẾP từ pha nổ sang đây — cộng thêm độ dài pha nổ để không giật lại
     // từ khung 0. Triệu hồi thì bắt đầu ngay tại pha này.
-    // Cỡ hiệu ứng lấy theo cạnh NGẮN của màn chia cho ~350: ở 1440x860 ra chừng 640px, tức
-    // rộng hơn con vật (~400px). Chia cho 700 như lần đầu thì vòng triệu hồi nhỏ hơn con vật
-    // và nằm gọn sau lưng nó — vẽ mà như không vẽ.
+    // Cỡ hiệu ứng lấy theo cạnh NGẮN của màn chia cho 350: ở 1440x860 ra chừng 640px, tức rộng
+    // hơn con vật (~400px). Chia cho 700 như lần đầu thì vòng triệu hồi nhỏ hơn con vật và nằm
+    // gọn sau lưng nó — vẽ mà như không vẽ.
     const _tyFx = Math.min(W2, H2) / 350;
     if (cur.sao === 5)
       veVfxAtlas(g2, 'power_awaken', cx, cy, e + _KU_NHIP.no, _tyFx, 1 - k*0.55);
