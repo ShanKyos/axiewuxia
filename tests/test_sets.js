@@ -21,9 +21,14 @@ const { chromium } = require('playwright');
   await p.goto('http://localhost:8853/index.html');
   await p.waitForFunction(() => window.__gameReady).catch(()=>{});
   await p.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', { name:'Đo' }); });
-  // Bảng khung là tệp ảnh — không chờ tải xong thì mục 5 đo nhầm thân trần với thân trần.
-  await p.waitForFunction(() => !!nvTai('dkgs1', 'webp') && !!nvTai('dwsm1', 'webp'),
-                          { timeout: 20000 }).catch(()=>{});
+  // Bảng khung là tệp ảnh — không chờ TẢI XONG thì mục 5 đo nhầm thân trần với thân trần.
+  // Phải hỏi `.complete && .naturalWidth`, không được chỉ hỏi nvTai() có trả về đối tượng hay
+  // không: từ khi bảng khung nạp theo nhu cầu, nvTai() tạo Image RỖNG rồi trả về ngay, nên
+  // phép thử `!!nvTai(...)` đúng ngay ở nhịp thăm dò đầu tiên và bài chạy trước lúc ảnh về.
+  await p.waitForFunction(() => {
+    const ten = [...Object.values(NV_BO), ...Object.values(NV_GIAP)];
+    return ten.every(t => { const im = nvTai(t, 'webp'); return im && im.complete && im.naturalWidth; });
+  }, { timeout: 30000 }).catch(()=>{});
 
   const r = await p.evaluate(() => {
     const CL = ['thieulam','baidasan','toanchan','minhgiao','bug'];
