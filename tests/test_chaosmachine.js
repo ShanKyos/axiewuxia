@@ -32,7 +32,7 @@ const { chromium } = require('playwright');
   const ba = () => page.evaluate(() => {
     chaosClear();
     const three = [];
-    for (let i = 0; i < 3; i++){ const it = genItem(20, 0, 'mob'); it.rarity = 0; rerollItemRarity(it); player.inv.push(it); three.push(it); }
+    for (let i = 0; i < 3; i++){ const it = genItem(20, 0, 'mob'); it.tier = 2; rerollItemTier(it); player.inv.push(it); three.push(it); }
     for (const it of three) chaosAddItem(it.uid);
     chaosPickRecipe('hopnhat');
     const cur = chaosCurrent();
@@ -53,7 +53,7 @@ const { chromium } = require('playwright');
   await page.waitForTimeout(3200); // chờ hoạt cảnh lò nhả đồ
   const r2b = await page.evaluate(() => {
     const it = player.inv[player.inv.length - 1];
-    return { invSauHoatCanh: player.inv.length, phamMoi: it ? it.rarity : null, tenMoi: it ? it.name : null };
+    return { invSauHoatCanh: player.inv.length, giaiMoi: it ? it.tier : null, tenMoi: it ? it.name : null };
   });
   console.log('2) ép thành công (Phù):', JSON.stringify({ ...pre2, ...r2, ...r2b }));
 
@@ -74,7 +74,7 @@ const { chromium } = require('playwright');
   // 4) Chốt chặn phẩm lệch: khay 3 món KHÁC phẩm thì công thức KHÔNG được hiện ra
   const r4 = await page.evaluate(() => {
     player.inv = []; chaosClear();
-    const mk = r => { const x = genItem(20,0,'mob'); x.rarity = r; rerollItemRarity(x); player.inv.push(x); return x; };
+    const mk = r => { const x = genItem(20,0,'mob'); x.tier = r; rerollItemTier(x); player.inv.push(x); return x; };
     const a = mk(0), b = mk(1), c = mk(0);
     for (const it of [a,b,c]) chaosAddItem(it.uid);
     const lech = chaosMatches().some(x => x.rec.id === 'hopnhat');
@@ -89,13 +89,15 @@ const { chromium } = require('playwright');
   if (!setup.moPanelForge) fail(`NPC không mở cỗ máy: ${JSON.stringify(setup)}`);
   if (setup.conPanelRengThuHai) fail('NPC vẫn mở màn rèn thứ hai — chưa gộp xong');
   if (pre2.congThuc !== 'hopnhat') fail(`3 món cùng phẩm không ra công thức Lò Hỗn Loạn (${pre2.congThuc})`);
-  if (pre2.tiLe !== 70) fail(`tỉ lệ phẩm Phàm phải 70%, đo ${pre2.tiLe}`);
+  // Ba món GIAI 2 (bài dựng ở trên) ⇒ tra CHAOS_RATE[2] = 60%. Bảng nay đánh chỉ số theo
+  // GIAI chứ không theo phẩm — hệ phẩm đã gỡ, lò chuyển sang nâng giai.
+  if (pre2.tiLe !== 60) fail(`tỉ lệ nâng giai 2 phải 60%, đo ${pre2.tiLe}`);
   if (r2.invBefore - r2.invNgaySau !== 3) fail(`3 món hiến tế chưa biến mất ngay (${r2.invBefore}→${r2.invNgaySau})`);
   if (r2.khay !== 0) fail('khay không được dọn sau khi ném vào lò');
   if (r2.honAfter >= r2.honBefore) fail('không trừ Hỗn Nguyên');
   if (r2.silverAfter >= r2.silverBefore) fail('không trừ bạc');
   if (r2.charmsAfter !== r2.charmsBefore - 1) fail('Thiên Mệnh Phù không bị tiêu');
-  if (r2b.phamMoi !== 1) fail(`món mới phải phẩm 1 (Tinh), đo ${r2b.phamMoi}`);
+  if (r2b.giaiMoi !== 3) fail(`món mới phải giai 3, đo ${r2b.giaiMoi}`);
   if (r2b.invSauHoatCanh !== r2.invNgaySau + 1) fail('hoạt cảnh không nhả món mới ra túi');
   if (r3.invBefore - r3.invNgaySau !== 3) fail('thất bại mà 3 món không mất');
   if (r3b.invSauHoatCanh !== r3.invNgaySau) fail('thất bại mà vẫn nhả ra món mới');

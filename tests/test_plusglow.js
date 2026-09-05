@@ -29,7 +29,7 @@ const { chromium } = require('playwright');
     // thì bài kiểm báo "rèn lên không đổi gì" trong khi ngoài màn nó đổi rất rõ.
     // Đo ở GIAI 1: đó là giai duy nhất của Dark Knight đang có bảng khung (dkgs1). Mức rèn mới
     // là thứ bài này đo, mà hào quang rèn không phụ thuộc giai — nên giai 1 đo được đủ.
-    const gv = pl => ({ n:4, rarity:4, t:1, plus:pl, rcol:RARITIES[4].color,
+    const gv = pl => ({ n:4, rarity:4, t:1, plus:pl, rcol:giaiMau(1),
                         wTier:1, wPlus:pl, setColor:null, canh:null });
     const IM = nvBo('thieulam', 1, gv(0));
     const shot = (pl, now) => {

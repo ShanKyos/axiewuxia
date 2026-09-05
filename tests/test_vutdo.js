@@ -23,7 +23,7 @@ const PORT = process.argv[2] || '8853';
 
     // ── A. luật vứt được / không vứt được ──
     o.luat = {
-      thuong:  itemVutDuoc(mon({ rarity: 0, perfect: false, exc: null })),
+      thuong:  itemVutDuoc(mon({ perfect: false, exc: null })),
       hoanHao: itemVutDuoc(mon({ perfect: true })),
       coExc:   itemVutDuoc(mon({ perfect: false, exc: [{ k:'atkPct', v:2 }] })),
     };
@@ -31,7 +31,9 @@ const PORT = process.argv[2] || '8853';
 
     // ── B. vứt một món: rời túi, nằm dưới đất, mang cờ boDi ──
     groundLoot.length = 0; player.inv = [];
-    const m1 = mon({ rarity: 0, perfect: false, exc: null });
+    // `plus:0, luck:false` bắt buộc: itemQuy() hỏi xác nhận với món Hoàn Hảo hoặc ĐÃ RÈN, và
+    // mục này đo cú vứt MỘT LẦN BẤM — món quý thì lần bấm đầu chỉ để hỏi.
+    const m1 = mon({ perfect: false, exc: null, plus: 0, luck: false });
     player.inv.push(m1);
     dropItem(0);
     o.motMon = { conTrongTui: player.inv.length, duoiDat: groundLoot.length,
@@ -45,7 +47,7 @@ const PORT = process.argv[2] || '8853';
 
     // ── D. TỰ NHẶT LẠI: đứng ngay trên món vừa vứt, chạy vòng lặp, phải KHÔNG hút về ──
     groundLoot.length = 0; player.inv = [];
-    player.inv.push(mon({ rarity: 0, perfect: false, exc: null }));
+    player.inv.push(mon({ perfect: false, exc: null, plus: 0, luck: false }));
     dropItem(0);
     const g = groundLoot[0];
     g.z = 0; g.vz = 0; g.x = player.x; g.y = player.y;   // ép nằm ĐÚNG chân người chơi
@@ -53,18 +55,19 @@ const PORT = process.argv[2] || '8853';
     o.khongHutLai = { duoiDat: groundLoot.length, trongTui: player.inv.length };
     // đối chứng: món rơi bình thường (không boDi) ở cùng chỗ thì PHẢI bị hút về
     groundLoot.length = 0; player.inv = [];
-    dropToGround({ k:'item', it: mon({ rarity: 0 }) }, player.x, player.y);
+    dropToGround({ k:'item', it: mon({ plus: 0 }) }, player.x, player.y);
     const g2 = groundLoot[0]; g2.z = 0; g2.vz = 0; g2.x = player.x; g2.y = player.y;
     for (let i = 0; i < 30; i++) updateGroundLoot(0.05);
     o.doiChung = { duoiDat: groundLoot.length, trongTui: player.inv.length };
 
     // ── E. dọn hàng loạt: VỨT ──
-    groundLoot.length = 0; player.inv = []; player.donMuc = 1;   // Phàm + Tinh
+    // Hệ phẩm đã gỡ. Mốc "đáng tiếc" nay là ĐÃ RÈN và HOÀN HẢO, không phải phẩm.
+    groundLoot.length = 0; player.inv = []; player.donMuc = 1;   // trơn + có Vận
     const dat = [
-      mon({ rarity: 0, perfect: false, exc: null }),   // vứt được
-      mon({ rarity: 1, perfect: false, exc: null }),   // vứt được
-      mon({ rarity: 2, perfect: false, exc: null }),   // trên ngưỡng → giữ
-      mon({ rarity: 0, perfect: true }),               // Hoàn Hảo → giữ khi VỨT
+      mon({ perfect: false, exc: null, plus: 0, luck: false }),  // trơn      → dọn được
+      mon({ perfect: false, exc: null, plus: 0, luck: true  }),  // có Vận    → dọn được ở mức 1
+      mon({ perfect: false, exc: null, plus: 4, luck: false }),  // đã rèn +4 → GIỮ
+      mon({ perfect: true,  plus: 0 }),                          // Hoàn Hảo  → GIỮ khi VỨT
     ];
     player.inv = dat.slice();
     o.demVut = donChon(player.inv, true).length;
@@ -73,13 +76,13 @@ const PORT = process.argv[2] || '8853';
     o.sauLan1 = player.inv.length;
     donRac('tui', 'vut');                                // lần 2 = làm thật
     o.sauLan2 = { conLai: player.inv.length, duoiDat: groundLoot.length,
-                  conGi: player.inv.map(it => `r${it.rarity}${it.perfect?'-HH':''}`) };
+                  conGi: player.inv.map(it => `${it.plus?'+'+it.plus:'tron'}${it.perfect?'-HH':''}`) };
 
     // ── F. dọn hàng loạt: BÁN — dọn được cả đồ Hoàn Hảo ──
     player.inv = dat.slice(); player.silver = 0; window._donArm = '';
     donRac('tui', 'ban'); donRac('tui', 'ban');
     o.sauBan = { conLai: player.inv.length, bac: player.silver,
-                 conGi: player.inv.map(it => `r${it.rarity}`) };
+                 conGi: player.inv.map(it => `${it.plus?'+'+it.plus:'tron'}`) };
 
     // ── G. kho dùng chung đúng bộ luật ──
     player.kho = dat.slice(); window._donArm = '';
@@ -123,8 +126,8 @@ const PORT = process.argv[2] || '8853';
   else pass('đồ đã vứt không bị hút lại, còn đồ rơi bình thường vẫn nhặt như cũ');
 
   // 5. đếm đúng
-  if (r.demVut !== 2) fail(`đếm VỨT ra ${r.demVut}, mong 2 (r0 + r1, chừa r2 và Hoàn Hảo)`);
-  if (r.demBan !== 3) fail(`đếm BÁN ra ${r.demBan}, mong 3 (r0 + r1 + r0-Hoàn Hảo, chừa r2)`);
+  if (r.demVut !== 2) fail(`đếm VỨT ra ${r.demVut}, mong 2 (trơn + Vận; chừa món đã rèn và Hoàn Hảo)`);
+  if (r.demBan !== 2) fail(`đếm BÁN ra ${r.demBan}, mong 2 (trơn + Vận; món đã rèn và Hoàn Hảo đều chừa)`);
   if (r.demVut === 2 && r.demBan === 3) pass('đếm đúng: vứt 2 · bán 3');
 
   // 6. phải bấm hai lần
@@ -134,15 +137,16 @@ const PORT = process.argv[2] || '8853';
   // 7. vứt hàng loạt chừa đúng thứ cần chừa
   if (r.sauLan2.conLai !== 2 || r.sauLan2.duoiDat !== 2)
     fail(`vứt hàng loạt ra ${JSON.stringify(r.sauLan2)}, mong còn 2 trong túi · 2 dưới đất`);
-  else pass('vứt hàng loạt: bỏ 2 món rác, giữ lại r2 + Hoàn Hảo');
+  else pass('vứt hàng loạt: bỏ 2 món rác, giữ lại món đã rèn + Hoàn Hảo');
 
   // 8. bán hàng loạt dọn được cả đồ Hoàn Hảo
-  if (r.sauBan.conLai !== 1) fail(`bán hàng loạt còn ${r.sauBan.conLai}, mong 1 (r2)`);
+  if (r.sauBan.conLai !== 2) fail(`bán hàng loạt còn ${r.sauBan.conLai}, mong 2 (món đã rèn + Hoàn Hảo)`);
   else if (!(r.sauBan.bac > 0)) fail('bán hàng loạt không cộng Lumen');
-  else pass(`bán hàng loạt dọn được cả đồ Hoàn Hảo, chừa r2, +${r.sauBan.bac}◈`);
+  else pass(`bán hàng loạt dọn 2 món rác, chừa món đã rèn + Hoàn Hảo, +${r.sauBan.bac}◈`);
 
   // 9. kho dùng chung luật
-  if (r.sauKho.conLai !== 1) fail(`kho sau khi bán còn ${r.sauKho.conLai}, mong 1 — kho phải dùng chung luật với túi`);
+  // Mong 2, giống túi ở mục F: món đã rèn và món Hoàn Hảo đều được chừa.
+  if (r.sauKho.conLai !== 2) fail(`kho sau khi bán còn ${r.sauKho.conLai}, mong 2 — kho phải dùng chung luật với túi`);
   else pass('kho dùng chung đúng bộ luật với túi');
 
   console.log('errors:', JSON.stringify(errs));

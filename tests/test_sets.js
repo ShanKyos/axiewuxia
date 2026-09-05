@@ -54,7 +54,7 @@ const { chromium } = require('playwright');
     o.doPhu = `${o.coArt.length}/${CL.length * GIAI_MAX}`;
 
     // 4) tra art theo giai: có thì ra tên bộ, chưa có thì null (⇒ thân trần)
-    const gvOf = t => ({ n:4, rarity:4, t, plus:0, rcol:RARITIES[4].color, wTier:t, wPlus:0, setColor:null, canh:null });
+    const gvOf = t => ({ n:4, rarity:4, t, plus:0, rcol:giaiMau(t), wTier:t, wPlus:0, setColor:null, canh:null });
     o.traArt = {};
     for (const k of CL){
       o.traArt[k] = [];

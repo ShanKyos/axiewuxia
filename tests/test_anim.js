@@ -58,7 +58,7 @@ const { chromium } = require('playwright');
     // ══ 2. (đã gỡ) Vai giáp xoay theo tay ══
     // Mục này đo hPauldrons — lớp vai giáp VECTOR. Giáp nay là art Spine nướng sẵn, vai nằm
     // trong chính bảng khung nên nó xoay theo tay bằng bộ xương, không còn hàm nào để đo.
-    const gv = { n:5, rarity:4, t:GIAI_MAX, plus:0, rcol:RARITIES[4].color, wTier:GIAI_MAX, wPlus:0, setColor:null };
+    const gv = { n:5, rarity:4, t:GIAI_MAX, plus:0, rcol:giaiMau(GIAI_MAX), wTier:GIAI_MAX, wPlus:0, setColor:null };
     const diff = (a, b) => { let n = 0; for (let i = 0; i < a.length; i += 4)
       if (a[i] !== b[i] || a[i+3] !== b[i+3]) n++; return n; };
 

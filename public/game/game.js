@@ -130,16 +130,29 @@ const MAP = { w: 2600, h: 1900 };
 
 const ELEMENTS = ['Kim','Mộc','Thủy','Hỏa','Thổ'];
 
-const RARITIES = [
-  { name:'Phàm',    color:'#b9b9b9', cls:'r0', mult:1.0, w:52 },
-  { name:'Tinh',    color:'#5fc96e', cls:'r1', mult:1.3, w:27 },
-  { name:'Linh',    color:'#5ea0e8', cls:'r2', mult:1.65,w:14 },
-  { name:'Thần',    color:'#c07fe0', cls:'r3', mult:2.1, w:6  },
-  { name:'Chí Tôn', color:'#f39c3d', cls:'r4', mult:2.7, w:1  },
-];
+// ── HỆ PHẨM ĐÃ GỠ ───────────────────────────────────────────────────────────
+// Phàm · Tinh · Linh · Thần · Chí Tôn không còn. MU Online không có hệ phẩm: hai món cùng
+// loại khác nhau ở GIAI, MỨC RÈN, và có Hoàn Hảo / có Vận hay không. Ba trục đó đã đủ, mà
+// lại đọc được ngay trên nhãn món.
+//
+// Vì sao gỡ: `rarity` đang gánh BỐN việc cùng lúc, và việc thứ ba là chỗ hỏng —
+//   1. tên món            → nay chỉ còn tên bộ
+//   2. hệ số chỉ số chính → ×1,0…×2,7, nay bỏ; chỉ số chính chỉ theo GIAI
+//   3. SỐ DÒNG PHỤ 0–4    → đo được 80% đồ rơi từ quái thường là phẩm Phàm, tức KHÔNG DÒNG
+//                           NÀO. Bốn trên năm món nhặt lên là một cục chỉ số trống trơn — đó
+//                           mới là gốc của cảm giác "rơi nhiều mà toàn rác". Nay mọi món bốc
+//                           thẳng 1–4 dòng.
+//   4. màu viền ô đồ      → nay theo GIAI, bảng ngay dưới đây
+//
+// Bỏ hệ số ×1,0…2,7 làm đồ yếu đi bao nhiêu? Trung bình có trọng số của đồ rơi từ quái
+// thường là ×1,06 (80% Phàm ×1,0 · 19% Tinh ×1,3 · 1% Linh ×1,65) — tức khoảng 6%, nằm
+// trong sai số của một bước rèn. Đồ /gen phẩm cao thì yếu đi rõ hơn, nhưng đó là đồ cheat.
+const GIAI_MAU = ['#b9c2e6', '#5fc96e', '#5ea0e8', '#7ecbff', '#c07fe0', '#f39c3d', '#ff6b6b'];
+function giaiMau(t){ return GIAI_MAU[clamp((t || 1) - 1, 0, GIAI_MAU.length - 1)]; }
+function giaiCls(t){ return 'g' + clamp(t || 1, 1, GIAI_MAU.length); }
 
 // ── Drop v2.0 (GDD Trang Bị v2.0): Thập Giai Binh Khí + drop theo nguồn ──
-// Giai = thời đại của món đồ (theo map), Phẩm = chất lượng rèn (Phàm→Chí Tôn)
+// Giai = thời đại của món đồ (theo map). Hệ Phẩm đã gỡ — xem khối GIAI_MAU.
 // 7 giai trải trên MAX_LV=120: mỗi giai 16 cấp, giai 7 mở ở cấp 97. Bản trước là 14 giai × 8 cấp.
 //
 // VÌ SAO RÚT 14 XUỐNG 7: mỗi giai phải có một BỘ ART RIÊNG. 14 giai × 5 lớp = 70 gói Spine phải
@@ -158,7 +171,7 @@ function GIAI_POW(t){ return Math.pow(GIAI_RATE, clamp((t || 1) - 1, 0, GIAI_MAX
 // Bảy danh xưng lấy từ 14 cái cũ theo đúng nhịp đã chọn cho bộ giáp: giai 1·3·5·7·9·11·14.
 const GIAI_NAMES = ['Tân Binh','Kỳ Binh','Chinh Phục','Hung Thần','Bất Tử','Vô Song','Khai Thiên'];
 function giaiName(t){ return GIAI_NAMES[clamp((t||1)-1, 0, GIAI_NAMES.length-1)]; }
-// Quái thường chỉ rơi fodder Phàm + vật liệu; đồ dùng được (Tinh+) chỉ từ tinh anh/boss
+// Quái thường rơi trang bị + vật liệu; tinh anh và boss rơi dày hơn hẳn
 // ── TỈ LỆ RƠI TRANG BỊ: theo DẢI QUÁI × LOẠI ────────────────────────────────
 // Trước đây DROP_SRC.chance chỉ có 4 ngăn cứng, nên Axie Heo Rừng cấp 1 và Cuồng Binh Tro Tàn
 // cấp 102 rơi đồ với xác suất Y HỆT nhau: 6%. Về cuối game mỗi con quái tốn nhiều thời gian
@@ -281,26 +294,21 @@ function rollJewels(def, srcK, x, y){
 //
 // Rương Boss Săn (box1..box5) từng là con đường THỨ BA, 5–25% — gấp 10 tới 50 lần đường quái,
 // đủ để làm cả hai đường kia thành vô nghĩa. Đã đưa về 0: rương phó bản vẫn hào phóng ở PHẨM
-// (bảng `rar` giữ nguyên, box5 ra 60% Chí Tôn), chỉ không còn phát Hoàn Hảo.
+// (số món và giai của món giữ nguyên), chỉ không còn phát Hoàn Hảo.
 const DROP_PERFECT = 0.005;
 const DROP_SRC = {
-  mob:    { rar:[80,19,1,0,0],  perfect:DROP_PERFECT },
-  elite:  { rar:[0,70,28,2,0],  perfect:DROP_PERFECT },
-  thuve:  { rar:[0,28,52,18,2], perfect:DROP_PERFECT },
-  tranai: { rar:[0,0,38,52,10], perfect:DROP_PERFECT },
-  // Rương Boss Săn (phó bản, MU Online-style) — 5 cấp, cấp càng cao càng chắc ra phẩm cao
-  box1: { chance:1, rar:[70,25,5,0,0],  perfect:0 },
-  box2: { chance:1, rar:[0,60,32,8,0],  perfect:0 },
-  box3: { chance:1, rar:[0,10,55,30,5], perfect:0 },
-  box4: { chance:1, rar:[0,0,30,55,15], perfect:0 },
-  box5: { chance:1, rar:[0,0,5,35,60],  perfect:0 },
+  mob:    { perfect:DROP_PERFECT },
+  elite:  { perfect:DROP_PERFECT },
+  thuve:  { perfect:DROP_PERFECT },
+  tranai: { perfect:DROP_PERFECT },
+  // Rương Boss Săn (phó bản, MU Online-style) — 5 cấp. Bảng `rar` của chúng đã gỡ cùng hệ
+  // phẩm; thứ phân biệt cấp rương nay là SỐ MÓN và giai của món (xem grantHuntBox).
+  box1: { chance:1, perfect:0 },
+  box2: { chance:1, perfect:0 },
+  box3: { chance:1, perfect:0 },
+  box4: { chance:1, perfect:0 },
+  box5: { chance:1, perfect:0 },
 };
-function rollRaritySrc(srcK){
-  const w = DROP_SRC[srcK].rar; let tot = 0; for (const x of w) tot += x;
-  let roll = Math.random()*tot;
-  for (let i = 0; i < w.length; i++){ roll -= w[i]; if (roll <= 0) return i; }
-  return 0;
-}
 // ── DÒNG HOÀN HẢO — bộ dòng RIÊNG, không phải "dòng cũ roll max" ───────────
 // Đây là chỗ hai trục tách hẳn nhau: ĐỘ HIẾM quyết định SỐ dòng thường (0-4), HOÀN HẢO thêm
 // 1-3 dòng từ bảng dưới. Hệ quả cố ý: một món Rèn Hoàn Hảo có thể đáng mặc hơn một món Thánh
@@ -340,7 +348,6 @@ function rollExcLines(slotId, ep){
   for (let i = 0; i < n; i++) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
   return out;
 }
-const RARITY_SUBS = [0,1,2,3,4]; // số dòng phụ mở theo phẩm Phàm..Chí Tôn
 // ── CHỐNG ĐỠ: dòng CỨNG của mọi món ─────────────────────────────────────────
 // Không bốc ngẫu nhiên: hai món cùng giai thì Chống Đỡ y hệt nhau. Đây là phần "thân đồ" —
 // thứ người chơi được bảo đảm khi lên giai, đối trọng với dòng phụ vốn hên xui hoàn toàn.
@@ -365,7 +372,7 @@ function chongDoGiai(t){ return +(CHONGDO_GOC + (clamp(t || 1, 1, GIAI_MAX) - 1)
 const VAN_STMAX = [1, 5];
 // Bốc dòng phụ. Một chỗ duy nhất cho cả lúc rơi lẫn lúc Tấn Phẩm — trước đây hai nơi chép
 // cùng một đoạn, nên sửa luật ở nơi này mà quên nơi kia là đồ rơi và đồ tấn phẩm khác luật nhau.
-function rollSubs(slotId, rarity, perfect, tier, luck){
+function rollSubs(slotId, perfect, tier, luck){
   const all = (ARMOR_SLOTS.includes(slotId) ? ARMOR_SUBS : WEAPON_SUBS);
   const vip = all.filter(d => d.vip), pool = all.filter(d => !d.vip);
   const out = [];
@@ -375,10 +382,13 @@ function rollSubs(slotId, rarity, perfect, tier, luck){
     out.push({ k:def.k, name:def.name, v, pct:true });
   };
   if (perfect) for (const d of vip) take(d);          // Hoàn Hảo: dòng VIP là đặc quyền, luôn có
-  // Đồ Hoàn Hảo trước đây LUÔN có đủ 4 dòng phụ. Cùng với việc mọi hộp nay đều ra Hoàn Hảo,
-  // như thế thì hộp nào cũng cho một món kịch khung — không còn gì để mong. Nay số dòng phụ
-  // cũng bốc 1–4. Giá trị thì vẫn kịch trần: đó mới là đặc quyền của chữ "Hoàn Hảo".
-  const want = Math.min(all.length, perfect ? 1 + Math.floor(Math.random() * 4) : RARITY_SUBS[rarity]);
+  // MỌI món bốc 1–4 dòng phụ, không phân biệt gì cả. Trước đây số dòng suy từ phẩm
+  // (RARITY_SUBS = [0,1,2,3,4]) nên 80% đồ rơi từ quái thường là phẩm Phàm ⇒ KHÔNG DÒNG NÀO.
+  // Hệ phẩm đã gỡ, và cùng với nó là cái luật khiến bốn trên năm món nhặt lên chỉ là một cục
+  // chỉ số trống trơn.
+  // Đặc quyền của chữ "Hoàn Hảo" nay nằm ở GIÁ TRỊ (luôn kịch trần), ở dòng VIP, và ở bộ dòng
+  // Hoàn Hảo riêng — không nằm ở số dòng nữa.
+  const want = Math.min(all.length, 1 + Math.floor(Math.random() * 4));
   const bag = pool.slice();
   while (out.length < want && bag.length) take(bag.splice(Math.floor(Math.random() * bag.length), 1)[0]);
   return themDongCung(out, tier, luck);
@@ -397,12 +407,14 @@ function themDongCung(out, tier, luck){
                        pct:true, van:true });
   return out;
 }
-// Roll lại tên + chỉ số gốc + dòng phụ khi phẩm đổi (Tấn Phẩm / pity đai)
-function rerollItemRarity(it){
-  it.name = (it.perfect ? 'Hoàn Hảo ' : '') + ITEM_NAMES[it.slot][it.rarity];
+// Roll lại tên + chỉ số gốc + dòng phụ sau khi GIAI của món đổi (Lò Hỗn Loạn, pity đai).
+// Trước đây hàm này roll lại theo PHẨM; hệ phẩm đã gỡ nên trục duy nhất còn đổi được là giai.
+function rerollItemTier(it){
+  it.name = (it.perfect ? 'Hoàn Hảo ' : '') + ITEM_NAMES[it.slot];
   const slot = SLOTS.find(s => s.id === it.slot);
-  if (slot && it.main) it.main.v = slot.base(it.tier, it.rarity);
-  it.subs = rollSubs(it.slot, it.rarity, it.perfect, it.tier, it.luck);
+  if (slot && it.main) it.main.v = slot.base(it.tier);
+  it.subs = rollSubs(it.slot, it.perfect, it.tier, it.luck);
+  assignDef(it, player && player.sect);
 }
 // str/agi/ene mỗi phái quy đổi ra Công Kích theo TRỌNG SỐ RIÊNG (SECTS[x].atkSrc) — không còn dùng
 // chung 1 công thức "str × 2" cho mọi phái. VD: Sylvan Ranger chỉ cần dồn Mẫn Tiệp là đủ mạnh, Dark Wizard
@@ -447,18 +459,18 @@ const SLOTS = [
   // Chỉ số chính leo theo CẤP SỐ NHÂN, không tuyến tính. Bản cũ 10+t*20 cho giai đỉnh chỉ gấp 9,7
   // lần giai 1 — quá phẳng để trang bị làm trục chính trên đường cong 400 cấp. GIAI_POW dưới đây
   // cho giai 7 gấp ~37 lần giai 1, và đó là thứ khiến đập đồ lên +9 có nghĩa (xem MOB_FLAT_DEF).
-  { id:'vukhi',     name:'Vũ Khí',     main:'atk', base:(t,r)=>Math.round(26*GIAI_POW(t)*RARITIES[r].mult) },
+  { id:'vukhi',     name:'Vũ Khí',     main:'atk', base:(t)=>Math.round(26*GIAI_POW(t)) },
   // Hệ số Thủ ĐÃ DỒN LẠI sau khi bỏ ô Quần. Bốn ô giáp cũ góp 13+17+13+14 = 57 điểm Thủ; bỏ
   // Quần đi mà giữ nguyên ba ô kia là cả hệ tụt xuống 43, tức mọi nhân vật mất gần một phần
   // tư giáp chỉ vì một thay đổi về ART. Nhân ba ô còn lại lên 57/43 để tổng không đổi:
   // 13→17, 17→23, 13→17. (Ô Chân tính Nhanh Nhẹn chứ không phải Thủ nên không dính vào.)
-  { id:'non',       name:'Nón',        main:'def', base:(t,r)=>Math.round(17*GIAI_POW(t)*RARITIES[r].mult) },
-  { id:'ao',        name:'Áo',         main:'def', base:(t,r)=>Math.round(23*GIAI_POW(t)*RARITIES[r].mult) },
-  { id:'tay',       name:'Tay',        main:'def', base:(t,r)=>Math.round(17*GIAI_POW(t)*RARITIES[r].mult) },
-  { id:'chan',      name:'Chân',       main:'agi', base:(t,r)=>Math.round(9*GIAI_POW(t)*RARITIES[r].mult) },
-  { id:'daychuyen', name:'Dây Chuyền', main:'atk', base:(t,r)=>Math.round(15*GIAI_POW(t)*RARITIES[r].mult) },
-  { id:'nhan1',     name:'Nhẫn 1',     main:'crit',base:(t,r)=>+(1.5+r*1+t*0.5).toFixed(1) },
-  { id:'nhan2',     name:'Nhẫn 2',     main:'eva', base:(t,r)=>+(1.5+r*1+t*0.5).toFixed(1) },
+  { id:'non',       name:'Nón',        main:'def', base:(t)=>Math.round(17*GIAI_POW(t)) },
+  { id:'ao',        name:'Áo',         main:'def', base:(t)=>Math.round(23*GIAI_POW(t)) },
+  { id:'tay',       name:'Tay',        main:'def', base:(t)=>Math.round(17*GIAI_POW(t)) },
+  { id:'chan',      name:'Chân',       main:'agi', base:(t)=>Math.round(9*GIAI_POW(t)) },
+  { id:'daychuyen', name:'Dây Chuyền', main:'atk', base:(t)=>Math.round(15*GIAI_POW(t)) },
+  { id:'nhan1',     name:'Nhẫn 1',     main:'crit',base:(t)=>+(1.5+t*0.9).toFixed(1) },
+  { id:'nhan2',     name:'Nhẫn 2',     main:'eva', base:(t)=>+(1.5+t*0.9).toFixed(1) },
   { id:'aochoang',  name:'Áo Choàng',  special:true }, // 2 cấp, chỉ từ Luyện Bảo Các
   { id:'canh',      name:'Cánh',       special:true }, // Thiên Thần / Tiểu Quỷ — ngoài 10 cấp
 ];
@@ -472,18 +484,15 @@ const EQUIP_DOLL = {
   left:  ['non','ao','tay','chan','vukhi'],
   right: ['canh','aochoang','daychuyen','nhan1','nhan2'],
 };
-// Tên trang bị đi theo PHẨM (Phàm→Chí Tôn), leo theo CHẤT LIỆU như đồ MU: da → sắt → thép →
+// TÊN LUI theo Ô. Trước đây leo theo PHẨM (da → sắt → thép → vảy rồng → hắc nguyệt); hệ phẩm
 // vảy rồng → hắc nguyệt. Bộ tên cũ mượn thẳng binh khí kiếm hiệp (Huyền Thiết Trọng Kiếm,
-// Lăng Ba Hài, Chí Tôn Long Giáp…) — vi phạm Quy tắc số 1.
+// đã gỡ nên còn một tên mỗi ô. Tên thật của món lấy từ ITEM_DB qua assignDef().
+// TÊN LUI, cho ô nào không tra được món trong ITEM_DB. Trước đây là năm tên mỗi ô, chọn theo
+// phẩm; hệ phẩm đã gỡ nên còn đúng một tên. Gần như không bao giờ hiện: assignDef() ghi đè
+// bằng tên thật của món ngay sau đó.
 const ITEM_NAMES = {
-  vukhi:['Kiếm Đồng','Kiếm Sắt','Trọng Kiếm Thép','Kiếm Vảy Rồng','Ma Kiếm Hắc Nguyệt'],
-  non:['Mũ Da','Mũ Sắt','Mũ Trụ Thép','Mũ Trụ Vảy Rồng','Vương Miện Hắc Nguyệt'],
-  ao:['Giáp Da','Giáp Sắt','Giáp Bản Thép','Giáp Vảy Rồng','Thánh Giáp Hắc Nguyệt'],
-  tay:['Găng Da','Găng Sắt','Găng Thép','Găng Vảy Rồng','Găng Hắc Nguyệt'],
-  chan:['Giày Da','Giày Sắt','Ủng Thép','Ủng Vảy Rồng','Ủng Hắc Nguyệt'],
-  daychuyen:['Dây Chuyền Đồng','Dây Chuyền Bạc','Dây Chuyền Ngọc Lam','Dây Chuyền Hồng Ngọc','Dây Chuyền Tinh Vân'],
-  nhan1:['Nhẫn Đồng','Nhẫn Bạc','Nhẫn Ngọc Lục','Nhẫn Hắc Kim','Nhẫn Tinh Vân'],
-  nhan2:['Nhẫn Thô Sơ','Nhẫn Chạm Khắc','Nhẫn Cổ Ngữ','Nhẫn Phong Ấn','Nhẫn Vĩnh Hằng'],
+  vukhi:'Vũ Khí Vô Danh', non:'Mũ Vô Danh', ao:'Giáp Vô Danh', tay:'Găng Vô Danh',
+  chan:'Ủng Vô Danh', daychuyen:'Dây Chuyền Vô Danh', nhan1:'Nhẫn Vô Danh', nhan2:'Nhẫn Vô Danh',
 };
 // Áo Choàng — 2 cấp, chỉ luyện chế tại Luyện Bảo Các (Rèn)
 const CLOAK_TIERS = [ null,
@@ -5317,12 +5326,6 @@ const HERB_SPOTS = {
 
 // ---------- Item generation ----------
 let itemSeq = 1;
-function rollRarity(bias){
-  let pool = RARITIES.map((r,i)=>({ i, w: Math.max(0.1, r.w * (1 + bias * i * 0.35)) }));
-  let tot = pool.reduce((s,p)=>s+p.w,0), roll = Math.random()*tot;
-  for (const p of pool){ roll -= p.w; if (roll <= 0) return p.i; }
-  return 0;
-}
 // Giai của món rơi ra: mỗi GIAI_SPAN cấp = 1 giai (cánh/áo choàng/pet ngoài hệ này)
 function itemTier(level){ return clamp(Math.ceil(level / GIAI_SPAN), 1, GIAI_MAX); }
 
@@ -5367,6 +5370,28 @@ function migrateGiai7(){
   (player.inv || []).forEach(doi);
   (player.kho || []).forEach(doi);
   player.giai7 = true;
+}
+// ── Chuyển save: gỡ hệ phẩm ─────────────────────────────────────────────────
+// Món trong save cũ mang `rarity` 0–4 và một cái TÊN sinh từ phẩm đó. Không chuyển thì hai
+// chuyện xảy ra: (a) trường `rarity` nằm lại vô nghĩa, và (b) món giữ nguyên cái tên cũ trong
+// khi mọi món mới đều lấy tên từ ITEM_DB — hai kiểu tên lẫn lộn trong cùng một túi.
+//
+// KHÔNG đền bù gì cho người từng có đồ Chí Tôn. Phẩm không còn là một trục sức mạnh: chỉ số
+// chính nay chỉ theo giai, mà giai thì món cũ giữ nguyên. Người chơi mất cái nhãn màu cam,
+// không mất sức mạnh — trừ đúng khoản hệ số ×1,0…×2,7 cũ, và đó chính là thứ được gỡ.
+function migrateBoPham(){
+  if (!player || player.boPham) return;
+  const doi = (it) => {
+    if (!it || it.special) return;
+    delete it.rarity;
+    // Đặt lại tên theo ITEM_DB. Món nào không tra được thì về tên lui trong ITEM_NAMES.
+    if (it.def && ITEM_DB[it.def]) it.name = (it.perfect ? 'Hoàn Hảo ' : '') + ITEM_DB[it.def].name;
+    else if (ITEM_NAMES[it.slot]) it.name = (it.perfect ? 'Hoàn Hảo ' : '') + ITEM_NAMES[it.slot];
+  };
+  for (const k in (player.equip || {})) doi(player.equip[k]);
+  (player.inv || []).forEach(doi);
+  (player.kho || []).forEach(doi);
+  player.boPham = true;
 }
 // Ô QUẦN bị gỡ khỏi game — save cũ vẫn còn đồ quần, cả đang mặc lẫn nằm trong túi và kho.
 //
@@ -5425,8 +5450,6 @@ function genItem(level, bias, srcK, opts){
   const dsIds = opts && opts.slots;
   const dropSlots = dsIds ? SLOTS.filter(s => dsIds.includes(s.id)) : SLOTS.filter(s => !s.special);
   const slot = dropSlots[Math.floor(Math.random()*dropSlots.length)];
-  // Drop v2.0: nguồn boss/tinh anh dùng bảng phẳng — xóa bias lv/10 thổi phồng Chí Tôn
-  const r = srcK ? rollRaritySrc(srcK) : rollRarity(bias || 0);
   const tier = itemTier(level);
   const ilvl = (tier-1)*10 + Math.ceil(Math.random()*10);
   // `armorGroup &&` từng chặn ở đây, nên ô vũ khí LUÔN ra false: người chơi không thể có vũ
@@ -5439,7 +5462,7 @@ function genItem(level, bias, srcK, opts){
   // Bản trước là 6% + 2,5%/phẩm, tức chưa tới một phần mười. Phải khai TRƯỚC rollSubs vì dòng
   // "Sát Thương Tối Đa" của Vận sinh ra trong đó.
   const luck = Math.random() < VAN_TILE;
-  const subs = rollSubs(slot.id, r, perfect, tier, luck);
+  const subs = rollSubs(slot.id, perfect, tier, luck);
   // Rèn sẵn: chỉ đường RƠI TỪ QUÁI. Không áp cho rương phó bản, Box Kundun, tiệm hay Lò Hỗn
   // Loạn — mỗi nguồn đó đã có kiểu hào phóng riêng, chồng thêm nữa là không đọc ra nguồn nào
   // cho cái gì. `opts.plus9` để bài kiểm ép được tỉ lệ mà không phải sửa hằng.
@@ -5448,9 +5471,9 @@ function genItem(level, bias, srcK, opts){
   const _plus = Math.random() < _p9r ? DROP_PLUS9_MUC : 0;
   return assignDef({
     uid: itemSeq++, slot: slot.id, slotName: slot.name,
-    name: (perfect ? 'Hoàn Hảo ' : '') + ITEM_NAMES[slot.id][r],   // ghi đè bởi assignDef()
-    rarity: r, level: ilvl, tier, perfect, luck, life: 0,
-    main: { k: slot.main, v: slot.base(tier, r), name: mainName(slot.main) },
+    name: (perfect ? 'Hoàn Hảo ' : '') + ITEM_NAMES[slot.id],   // ghi đè bởi assignDef()
+    level: ilvl, tier, perfect, luck, life: 0,
+    main: { k: slot.main, v: slot.base(tier), name: mainName(slot.main) },
     // Hệ chỉ gắn lên VŨ KHÍ: nó là hệ của ĐÒN ĐÁNH. Trước đây mọi món đều mang một hệ mà
     // không ô nào đọc tới, còn Lò Hỗn Độn thì bán công thức Đổi Hệ ăn 1 Hỗn Độn Châu cho nó.
     element: slot.id === 'vukhi' ? ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)] : null,
@@ -5470,7 +5493,7 @@ function specialItem(slot, def, extra){
   }
   return Object.assign({
     uid: itemSeq++, slot, slotName: (SLOTS.find(s=>s.id===slot) || {}).name || slot,
-    name: def.name, rarity: 4, level: 1, tier: 0, special: true,
+    name: def.name, level: 1, tier: 0, special: true,
     // CÁNH rèn được như trang bị thường (Chúc Phúc → +6, Linh Hồn → +9). Áo choàng và pet thì
     // không: chúng lên cấp bằng đường riêng (CLOAK_TIERS / hệ Linh Thú), cho rèn nữa là hai
     // thang tiến hoá chồng lên nhau trên cùng một món.
@@ -5560,8 +5583,7 @@ function tipStatRow(st, cmp, key, cls){
 }
 function tipCard(it, cmpItem, tag){
   if (!it) return '';
-  const r = RARITIES[it.rarity] || RARITIES[0];
-  const col = it.special ? '#7ecbff' : r.color;
+  const col = it.special ? '#7ecbff' : giaiMau(it.tier);
   let h = `<div class="itip-card" style="--rc:${col}">`;
   if (tag) h += `<div class="itip-tag">${tag}</div>`;
   h += `<div class="itip-top">${slotIcon(it, 'itip-ic')}
@@ -5571,7 +5593,7 @@ function tipCard(it, cmpItem, tag){
 
   // Dòng phụ đề gộp phẩm + giai + mọi nhãn đặc biệt vào MỘT hàng. Bản trước tách thành hai
   // hàng thẻ chip rồi thêm một hàng huy hiệu nữa — ba hàng cho thứ đọc lướt trong nửa giây.
-  const sub = [`<span style="color:${col}">${r.name}</span>`, `${giaiName(it.tier)} · C${it.tier}`];
+  const sub = [`<span style="color:${col}">${giaiName(it.tier)} · C${it.tier}</span>`];
   if (it.perfect) sub.push(`<span style="color:#ffd76a">✦Hoàn Hảo</span>`);
   if (it.luck) sub.push(`<span style="color:#7fd8e0">☘Vận</span>`);
   if (it.life) sub.push(`<span style="color:#e84a6a">❤+${it.life * 4}%Sinh Lực</span>`);
@@ -5682,11 +5704,26 @@ function itemPower(it){
 }
 
 // ---------- GDD Đợt 2 B6/B7: giá bán theo Lực chiến · bán lẻ · tự mặc đồ ----------
-function itemSellPrice(it){ return 20 + (it.tier || 1)*15 + it.rarity*40 + Math.round(itemPower(it)*0.8); }
+// HAI MỐC KHÁC NHAU, đừng dùng lẫn:
+//
+// · TRƠN — không Vận, không Hoàn Hảo, chưa rèn. Đây là "hàng bán tiệm", thay cho luật cũ
+//   `rarity <= 0`. Dùng cho TỰ BÁN và DỌN TÚI hàng loạt.
+// · QUÝ  — Hoàn Hảo, hoặc đã tốn ngọc rèn. Dùng cho BƯỚC XÁC NHẬN khi bán/vứt lẻ.
+//
+// Vì sao phải tách: bản đầu em dùng chung `!itemTron` cho cả hai. Vận nay có trên 50% số món,
+// nên một nửa túi đồ bỗng đòi bấm xác nhận hai lần mới vứt được — nhiều ma sát hơn hẳn luật cũ
+// (chỉ đồ phẩm Linh trở lên mới hỏi). Vận là thứ thường gặp, không phải thứ tiếc.
+function itemTron(it){
+  return !!it && !it.special && !it.perfect && !it.luck && !it.plus;
+}
+function itemQuy(it){
+  return !!it && !it.special && (it.perfect || (it.plus || 0) > 0);
+}
+function itemSellPrice(it){ return 20 + (it.tier || 1)*15 + (it.perfect ? 120 : 0) + (it.luck ? 30 : 0) + Math.round(itemPower(it)*0.8); }
 window.sellItem = function(i){
   const it = player.inv[i];
   if (!it) return;
-  const precious = it.rarity >= 2 || it.perfect;   // xác nhận 2 lớp với đồ quý
+  const precious = itemQuy(it);                   // xác nhận 2 lớp: Hoàn Hảo hoặc đã rèn
   if (precious && window._sellArm !== i){
     window._sellArm = i;
     addFloat(player.x, player.y-40, `Bấm Bán lần nữa để xác nhận bán ${it.name}`, '#ffb066', 12);
@@ -5722,7 +5759,7 @@ window.dropItem = function(i){
   const lyDo = itemVutLyDo(it);
   if (lyDo){ addFloat(player.x, player.y-40, lyDo, '#ffd76a', 13); AudioSys.sfx('ui', 0.4); return; }
   // Từ phẩm Linh trở lên thì hỏi lại một nhịp, y như sellItem: vứt là mất hẳn.
-  if (it.rarity >= 2 && window._vutArm !== i){
+  if (itemQuy(it) && window._vutArm !== i){
     window._vutArm = i;
     addFloat(player.x, player.y-40, `Bấm Vứt lần nữa để bỏ ${it.name}`, '#ffb066', 12);
     AudioSys.sfx('ui', 0.4); return;
@@ -5736,9 +5773,17 @@ window.dropItem = function(i){
   saveGame();
 };
 
-// Ngưỡng dọn hàng loạt: 0 = chỉ Phàm · 1 = Phàm+Tinh · 2 = tới Linh. Không cho quá Linh:
-// Thần và Chí Tôn phải tự tay xử lý từng món.
-const DON_MUC_TEN = ['chỉ Phàm', 'Phàm + Tinh', 'Phàm + Tinh + Linh'];
+// Ba mức dọn túi. Trước đây chia theo phẩm ('chỉ Phàm' … ); hệ phẩm đã gỡ nên chia theo thứ
+// người chơi thật sự tiếc: món đã rèn, món có Vận, món Hoàn Hảo.
+const DON_MUC_TEN = ['chỉ đồ trơn', 'đồ trơn + đồ có Vận', 'mọi món chưa rèn, trừ Hoàn Hảo'];
+// Mức 1 và 2 hiện cùng luật — chừa mức 2 lại cho lúc có thêm nhãn đáng tiếc khác (bộ Cổ Thần…).
+// Món này có nằm trong mức dọn `muc` không.
+function donDuoc(it, muc){
+  if (it.perfect) return false;                 // Hoàn Hảo không bao giờ bị dọn hàng loạt
+  if (it.plus) return false;                    // đã tốn ngọc rèn thì không dọn
+  if (muc <= 0) return itemTron(it);            // mức 0: chỉ đồ trơn
+  return true;                                  // mức 1-2: thêm đồ có Vận
+}
 function donMuc(){ return player && player.donMuc != null ? player.donMuc : 1; }
 window.setDonMuc = function(v){ player.donMuc = Math.max(0, Math.min(2, +v)); saveGame(); renderBag(); };
 // Một chỗ duy nhất cho cả túi lẫn kho: hai nơi khác nhau ở CHỖ CHỨA chứ không khác ở luật.
@@ -5748,7 +5793,7 @@ function donChon(list, vut){
   for (let i = list.length - 1; i >= 0; i--){
     const it = list[i];
     if (!it || it.special) continue;
-    if ((it.rarity || 0) > muc) continue;
+    if (!donDuoc(it, muc)) continue;
     // nhất game, mà dọn hàng loạt thì người chơi không đọc từng dòng — bán nhầm cũng là mất.
     // Muốn bỏ chúng thì bán lẻ từng món, ở đó có bước xác nhận riêng.
     if (vut && !itemVutDuoc(it)) continue;     // riêng đường VỨT còn chừa thêm đồ Hoàn Hảo
@@ -6543,6 +6588,7 @@ function loadGame(idx){
     if (player.ene == null) player.ene = 5; // Linh Lực (stat mới) backfill (save cũ chưa có) — mức khởi điểm giống str/agi/def/vit
     migrateGiai14();                                      // 10 giai → 14 giai, xem hàm để biết vì sao
     migrateGiai7();                                       // 14 giai → 7 giai, phải chạy SAU bước trên
+    migrateBoPham();                                      // gỡ hệ phẩm — xem hàm để biết vì sao không đền bù
     migrateBoQuan();                                      // ô Quần bị gỡ — đồ quần cũ thành đồ chân
     migrateBoLoi();                                       // hệ Lõi Nguyên Tố bị gỡ
     if (d.curMap && MAPS[d.curMap]) curMap = d.curMap;
@@ -7303,11 +7349,11 @@ const PERFECT_COL = '#3ae07a';
 function itemIsPerfect(it){ return !!(it && (it.perfect || (it.exc && it.exc.length))); }
 function lootRar(g){
   if (g.k === 'jewel') return 3;
-  return itemIsPerfect(g.it) ? Math.max(3, g.it.rarity || 0) : (g.it.rarity || 0);
+  return itemIsPerfect(g.it) ? 4 : (g.it.luck ? 2 : (g.it.tier || 1) >= 5 ? 1 : 0);
 }
 function lootColor(g){
   if (g.k === 'jewel') return JEWEL_COLORS[g.jk];
-  return itemIsPerfect(g.it) ? PERFECT_COL : RARITIES[g.it.rarity].color;
+  return itemIsPerfect(g.it) ? PERFECT_COL : giaiMau(g.it.tier);
 }
 function lootName(g){
   if (g.k === 'jewel') return JEWEL_NAMES[g.jk];
@@ -7336,7 +7382,7 @@ function dropToGround(o, x, y){
     AudioSys.sfx('quest', 0.75);
     addEffect({ type:'ring', x, y, r: 46 + lootRar(g) * 14, color: col, big:true });
     if (lootRar(g) >= 3){ shakeMag = Math.max(shakeMag || 0, 5); zoneBanner = zoneBanner ||
-      { text:`${RARITIES[g.it.rarity].name.toUpperCase()} RƠI XUỐNG!`, sub: g.it.name, color: col, t:3 }; }
+      { text:`${giaiName(g.it.tier).toUpperCase()} RƠI XUỐNG!`, sub: g.it.name, color: col, t:3 }; }
   }
   return g;
 }
@@ -7446,9 +7492,10 @@ function takeLoot(g, idx){
     if (!bagConCho(g.it)){ g.full = true; g.t = Math.max(g.t, LOOT_BLINK + 1); return false; }
     g.full = false;
     bagThem(g.it);
-    addFloat(g.x, g.y - 26, g.it.name, RARITIES[g.it.rarity].color, 13);
-    logCombat(`▣ Nhặt ${g.it.name}`, RARITIES[g.it.rarity].color);
-    AudioSys.sfx(g.it.rarity >= 2 ? 'levelup' : 'ui', g.it.rarity >= 2 ? 0.85 : 0.5);
+    addFloat(g.x, g.y - 26, g.it.name, giaiMau(g.it.tier), 13);
+    logCombat(`▣ Nhặt ${g.it.name}`, giaiMau(g.it.tier));
+    { const _quy = itemIsPerfect(g.it) || g.it.luck;
+      AudioSys.sfx(_quy ? 'levelup' : 'ui', _quy ? 0.85 : 0.5); }
     tryAutoEquip(g.it);
   }
   addEffect({ type:'ring', x: g.x, y: g.y, r: 26, color: lootColor(g) });
@@ -7509,7 +7556,7 @@ function drawGroundLoot(now){
       ctx.beginPath(); ctx.roundRect(g.x - R, iy - R, R*2, R*2, 6); ctx.stroke();
       ctx.globalAlpha = blink;
       const d = itemDef(g.it);
-      const url = d && itemArtUrl(d, g.it.tier || 1, g.it.rarity || 0, g.it.plus || 0);
+      const url = d && itemArtUrl(d, g.it.tier || 1, 0, g.it.plus || 0);
       const im = url && _lootImg(url);
       if (im && im.complete && im.naturalWidth) ctx.drawImage(im, g.x - 17, iy - 17, 34, 34);
       else { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(g.x, iy, 8, 0, 7); ctx.fill(); }
@@ -7842,15 +7889,21 @@ function computeKillRewards(m, source, P, rng){
       if (!_baoDam && R() >= _dr + (P.dropBonus || 0)) continue;
       if (_baoDam) rw.firstDrop = true;
       const it = genItem(Math.max(1, d.lv + (R() < 0.3 ? 1 : 0)), 0, rw.dropSrc, { slots: DROP_O_TRANGBI });
-      // Pity đai: Vệ Binh Trụ 8 lần liên tiếp không ra Thần+ → bảo đảm 1 món Thần
-      if (rw.dropSrc === 'thuve' && d.bossKind === 'thuve' && (P.bossPity || 0) >= 8 && it.rarity < 3){
-        it.rarity = 3; rerollItemRarity(it); it._pity = true;
+      // Pity đai: Vệ Binh Trụ 8 lần liên tiếp không ra món đáng giá → bảo đảm 1 món HOÀN HẢO.
+      // Trước đây mốc "đáng giá" là phẩm Thần+; hệ phẩm đã gỡ nên mốc chuyển sang Hoàn Hảo —
+      // đó cũng là thứ hiếm nhất còn lại mà quái rơi được (0,5%).
+      if (rw.dropSrc === 'thuve' && d.bossKind === 'thuve' && (P.bossPity || 0) >= 8 && !it.perfect){
+        it.perfect = true;
+        it.subs = rollSubs(it.slot, true, it.tier, it.luck);
+        it.exc = rollExcLines(it.slot);
+        it.name = 'Hoàn Hảo ' + it.name;
+        it._pity = true;
       }
-      if (it.rarity >= 3) rw.gotThan = true;
-      // độ hiếm thấp, bán tự động là xoá vĩnh viễn thứ hiếm nhất game vì vài đồng Lumen.
-      // `!it.plus` chặn đúng chỗ đó: món rớt thẳng +9 có thể là phẩm Phàm (0,1% không hỏi phẩm),
-      // mà Phàm thì tự bán nuốt luôn — người chơi mất cú ăn may ba tiếng một lần và không hề hay.
-      if (P.autoSell && it.rarity <= 0 && !it.plus) rw.autoSold.push({ it, gia: 20 + it.rarity*30 + (it.tier||1)*15 });
+      if (it.perfect) rw.gotThan = true;
+      // TỰ BÁN: món TRƠN — không Vận, không Hoàn Hảo, chưa rèn. Trước đây mốc là phẩm Phàm;
+      // hệ phẩm đã gỡ nên mốc chuyển sang "trơn", vốn cũng chính là thứ MU coi là hàng bán tiệm.
+      // `!it.plus` bắt buộc: món rớt thẳng +9 có thể trơn, mà bán mất nó thì người chơi không hề hay.
+      if (P.autoSell && itemTron(it)) rw.autoSold.push({ it, gia: itemSellPrice(it) });
       else rw.items.push(it);
     }
     if (d.bossKind === 'thuve') rw.bossPity = rw.gotThan ? 0 : (P.bossPity || 0) + 1;
@@ -7859,8 +7912,8 @@ function computeKillRewards(m, source, P, rng){
     // để săn lâu dài, không phải thứ rơi thành xâu.
     if (R() < DROP_PHUKIEN + (P.dropBonus || 0)){
       const _pk = genItem(Math.max(1, d.lv + (R() < 0.3 ? 1 : 0)), 0, rw.dropSrc, { slots: DROP_O_PHUKIEN });
-      if (_pk.rarity >= 3) rw.gotThan = true;
-      if (P.autoSell && _pk.rarity <= 0 && !_pk.plus) rw.autoSold.push({ it:_pk, gia: 20 + _pk.rarity*30 + (_pk.tier||1)*15 });
+      if (_pk.perfect) rw.gotThan = true;
+      if (P.autoSell && itemTron(_pk)) rw.autoSold.push({ it:_pk, gia: itemSellPrice(_pk) });
       else rw.items.push(_pk);
     }
   }
@@ -7897,7 +7950,7 @@ function applyRewards(rw, m){
   for (const s of rw.autoSold){ player.silver += s.gia; addFloat(m.x, m.y-54, `Tự bán ${s.it.name} +${s.gia}◈`, '#9aa8d4', 11); }
   for (const it of rw.items){
     if (it._pity){ delete it._pity; addFloat(m.x, m.y-110, '☘ VẬN MAY TÍCH LŨY — bảo đảm Thần phẩm!', '#7fd8e0', 13); }
-    // Món rớt thẳng +9 phải KÊU LÊN. Nó nằm lẫn dưới đất giữa mấy món Phàm rác, mà mức rèn thì
+    // Món rớt thẳng +9 phải KÊU LÊN. Nó nằm lẫn dưới đất giữa mấy món trơn, mà mức rèn thì
     // chỉ thấy khi rê chuột vào — không báo là người chơi đi ngang qua cú ăn may ba tiếng một lần.
     if (it.plus >= DROP_PLUS9_MUC){
       addFloat(m.x, m.y-126, `✦ ${it.name} +${it.plus} — RÈN SẴN!`, '#ffd76a', 16);
@@ -8099,7 +8152,7 @@ function unlockNotices(){
     10:[...(player.sect === 'vophai' ? ['Mở khóa: the Calling — 5 lớp để chọn!'] : []),'Mở khóa: Stoneform (Thuần Thục — phím H)','Mở khóa: Truy Nã Lệnh & Sảnh Cầu May — Bổ Đầu và Thương Nhân Vận May ở Lunaris City'],
     40:['Mở khóa: Luyện Cánh bậc 1 — Lò Hỗn Độn tại Lò Rèn Hoàng Gia, Lunaris City'],
     80:['Mở khóa: Thăng Linh Dực bậc 2 — cánh mạnh gấp đôi, cùng chỗ Lò Rèn Hoàng Gia'],
-    100:['Mở khóa: Thần Dực bậc 3 — bậc cánh cuối, cần thêm một món Chí Tôn +9 hiến tế'],
+    100:['Mở khóa: Thần Dực bậc 3 — bậc cánh cuối, cần thêm một món Hoàn Hảo +9 hiến tế'],
     45:['Box Kundun IV trở lên từ Hung Thần có 5-8% mở ra trang bị CỔ THẦN THỦ HỘ — Hung Thần giáng thế mỗi 4 giờ!'],
     30:['Mở khóa: Archery (Thuần Thục — phím H)'],
   };
@@ -8411,9 +8464,9 @@ function hintCandidates(){
   // bao giờ tự tìm ra. Thêm gợi ý đúng lúc điều kiện chín muồi.
   if (player.level >= 15){
     const _rTally = {};
-    for (const it of player.inv) if (it && !it.noForge && it.rarity != null && it.rarity < 4) _rTally[it.rarity] = (_rTally[it.rarity] || 0) + 1;
+    for (const it of player.inv) if (it && !it.noForge && !it.special && it.tier > 0 && it.tier < GIAI_MAX) _rTally[it.tier] = (_rTally[it.tier] || 0) + 1;
     if (Object.values(_rTally).some(n => n >= 3))
-      out.push({ id:'chaosmachine', pri:6, txt:'◑ Đang dư ít nhất 3 món cùng phẩm — ném vào Lò Hỗn Loạn (Lò Rèn Hoàng Gia) để thử lên phẩm cao hơn!', btn:'Đi Xem', act:'hintGoForge()' });
+      out.push({ id:'chaosmachine', pri:6, txt:'◑ Đang dư ít nhất 3 món CÙNG GIAI — ném vào Lò Hỗn Loạn (Lò Rèn Hoàng Gia) để thử lên giai cao hơn!', btn:'Đi Xem', act:'hintGoForge()' });
   }
   return out;
 }
@@ -10805,7 +10858,7 @@ const HERO_METAL = window.HERO_METAL;
 function hMetal(tier){ return HERO_METAL[clamp(((tier|0) || 1) - 1, 0, HERO_METAL.length - 1)]; }
 
 // ═══════════ TRANG BỊ HIỆN LÊN NGƯỜI — 4 lớp, không lớp nào là "phát sáng" ═══════════
-// Đo trước khi làm: nhân vật mặc full Chí Tôn giai 10 +11 Hoàn Hảo chỉ khác nhân vật
+// Đo trước khi làm: nhân vật mặc full giai đỉnh +11 Hoàn Hảo chỉ khác nhân vật
 // mới tạo đúng 718/62.400 pixel (1,15%) — và toàn bộ 718 px đó là một đốm sáng cạnh bàn tay.
 // Trên THÂN NGƯỜI: 0 pixel. 7/9 ô chỉ số (nón/áo/tay/quần/chân/dây chuyền/2 nhẫn) đổi đúng 0 px.
 //
@@ -10827,11 +10880,13 @@ function gearVisual(p){
   for (const k of HERO_ARMOR_SLOTS){
     const it = p.equip[k];
     if (!it) continue;
-    n++; tsum += it.tier || 1; psum += it.plus || 0; rmax = Math.max(rmax, it.rarity || 0);
+    n++; tsum += it.tier || 1; psum += it.plus || 0; if (it.perfect) rmax = 4; else if (it.luck) rmax = Math.max(rmax, 2);
   }
   const w = p.equip.vukhi;
   let setColor = null;
   return {
+    // `rarity` cũ nay chỉ còn là MỨC QUÝ (0 trơn · 2 có Vận · 4 Hoàn Hảo) — dùng cho màu
+    // hào quang và chữ ký bộ đệm, không còn liên quan gì tới hệ phẩm đã gỡ.
     n, rarity: rmax,
     // bậc HIỆU DỤNG: bậc trung bình nhân độ phủ — mặc 3 món giai 10 không được nhìn ngang
     // với mặc đủ 5 món giai 10, nếu không thì lộ nguyên bộ giáp mà vẫn trông như full plate
@@ -10839,7 +10894,7 @@ function gearVisual(p){
     // Nhân độ phủ y như `t`. Thiếu bước này thì đeo mỗi cái mũ +11 rồi bỏ trống 4 ô vẫn
     // phát sáng ngang full +11 — lộ nguyên người mà vẫn rực như mặc đủ bộ.
     plus: n ? (psum / n) * (n / HERO_ARMOR_SLOTS.length) : 0,
-    rcol: RARITIES[rmax] ? RARITIES[rmax].color : null,
+    rcol: giaiMau(Math.round(tsum / Math.max(1, n))),
     wTier: w ? (w.tier || 1) : 0,
     wPlus: w ? (w.plus || 0) : 0,
     // Định nghĩa vũ khí — để thanh trên tay nhân vật vẽ bằng CHÍNH bộ phận dựng icon.
@@ -13734,7 +13789,7 @@ function forgeRule(target){
   return { rate:45, matBac: 3*GO_HUYENTHIET, tuLa:5, hon:2, fail:'break', bagua:true };
 }
 // ── Drop v2.0: KẾ THỪA (leo giai) · ĐỔI HỆ ──
-// TẤN PHẨM (leo phẩm Phàm→Chí Tôn) đã GỠ: đó là trục thứ hai chạy song song với cường hoá +N,
+// TẤN PHẨM (leo phẩm) đã GỠ từ trước, và nay cả hệ phẩm cũng gỡ: đó là trục thứ hai song song với +N,
 // cùng ăn một túi nguyên liệu, cùng ở Lò Rèn, và người chơi phải học hai bảng giá cho hai thứ
 // nghe na ná nhau. MU chỉ có MỘT trục trên món đồ: +N bằng ngọc. Phẩm nay do món rơi ra quyết định.
 // Mảnh Trang Bị và Tịch Ma Thạch KHÔNG chết theo — Kế Thừa vẫn ăn đúng hai thứ đó.
@@ -13753,7 +13808,7 @@ window.doKeThua = function(uid){
   it.tier++;
   it.level = (it.tier-1)*10 + 10;
   const slot = SLOTS.find(s => s.id === it.slot);
-  if (slot && it.main) it.main.v = Math.max(1, Math.round(slot.base(it.tier, it.rarity) * 0.9));
+  if (slot && it.main) it.main.v = Math.max(1, Math.round(slot.base(it.tier) * 0.9));
   addFloat(player.x, player.y-52, `⚒ KẾ THỪA — lên giai[${giaiName(it.tier)}]!`, '#9fd0ff', 15);
   addEffect({ type:'ring', x:player.x, y:player.y, r:80, color:'#9fd0ff', big:true });
   AudioSys.sfx('levelup', 0.7);
@@ -14021,7 +14076,7 @@ const CHAOS_RECIPES = [
       player.mats.manh -= m.cost.manh; player.mats.tichMa -= m.cost.tichMa; player.silver -= m.cost.silver;
       m.it.tier++; m.it.level = (m.it.tier-1)*10 + 10;
       const sl = SLOTS.find(s => s.id === m.it.slot);
-      if (sl && m.it.main) m.it.main.v = Math.max(1, Math.round(sl.base(m.it.tier, m.it.rarity) * 0.9));
+      if (sl && m.it.main) m.it.main.v = Math.max(1, Math.round(sl.base(m.it.tier) * 0.9));
       chaosSay(`⚒ Kế Thừa — lên giai[${giaiName(m.it.tier)}]!`, '#9fd0ff');
       addFloat(player.x, player.y-52, `⚒ KẾ THỪA —[${giaiName(m.it.tier)}]!`, '#9fd0ff', 15);
       addEffect({ type:'ring', x:player.x, y:player.y, r:80, color:'#9fd0ff', big:true });
@@ -14054,7 +14109,7 @@ const CHAOS_RECIPES = [
     name: T.bac === 1 ? 'Luyện Cánh' : `Thăng ${T.ten} bậc ${T.bac}`,
     tray: T.bac === 1 ? '1 trang bị Hoàn Hảo +4 (hiến tế) · ● 1'
         : T.bac === 2 ? '1 Cánh bậc 1 · ● 1'
-        : '1 Linh Dực bậc 2 · 1 trang bị Chí Tôn rèn ≥+9 (hiến tế) · ● 2',
+        : '1 Linh Dực bậc 2 · 1 trang bị Hoàn Hảo rèn ≥+9 (hiến tế) · ● 2',
     match(v){
       const nHon = T.bac === 3 ? 2 : 1;
       if (T.bac === 1){
@@ -14070,10 +14125,11 @@ const CHAOS_RECIPES = [
         if (v.items.length !== 1) return null;
         return { it: canh, need:{ honDon: nHon } };
       }
-      // Bậc 3 còn ăn thêm một món Chí Tôn rèn ≥ +9 làm vật hiến tế — đây là cái giá thật sự.
+      // Bậc 3 còn ăn thêm một món HOÀN HẢO rèn ≥ +9 làm vật hiến tế — đây là cái giá thật sự.
+      // (Trước đây đòi phẩm Chí Tôn; hệ phẩm đã gỡ, Hoàn Hảo là mốc quý tương đương.)
       if (v.items.length !== 2) return null;
       const te = v.items.find(x => x !== canh);
-      if (!te || te.noForge || te.rarity < 4 || (te.plus || 0) < 9) return null;
+      if (!te || te.noForge || !te.perfect || (te.plus || 0) < 9) return null;
       return { it: canh, te, need:{ honDon: nHon } };
     },
     plan(v, m){
@@ -14131,21 +14187,23 @@ const CHAOS_RECIPES = [
       AudioSys.sfx('forge_ok', 0.95);
       return true; } })),
 
-  // Lò Hỗn Loạn — 3 món CÙNG PHẨM đổi lấy 1 món phẩm cao hơn, thất bại là mất sạch. Đây vốn đã
-  // là Chaos Machine đúng nghĩa, chỉ bị chôn trong danh sách chữ của màn NPC.
-  { id:'hopnhat', group:'che', name:'Lò Hỗn Loạn', tray:'3 trang bị CÙNG PHẨM (dưới Chí Tôn)',
+  // Lò Hỗn Loạn — 3 món CÙNG GIAI đổi lấy 1 món giai cao hơn, thất bại là mất sạch.
+  // Trước đây nó nâng PHẨM (3 món Phàm → 1 món Tinh). Hệ phẩm đã gỡ, nên lò chuyển sang nâng
+  // GIAI — và như thế lại ĐÚNG Chaos Machine của MU hơn bản cũ: ở MU người ta ném đồ vào lò để
+  // ra món cấp cao hơn, không phải để đổi "độ hiếm".
+  { id:'hopnhat', group:'che', name:'Lò Hỗn Loạn', tray:'3 trang bị CÙNG GIAI (dưới giai cuối)',
     match(v){
       if (v.items.length !== 3 || v.nJewel) return null;
-      const r = v.items[0].rarity;
-      if (r == null || r >= 4) return null;
-      if (!v.items.every(x => x.rarity === r && !x.noForge && !x.special)) return null;
+      const r = v.items[0].tier;
+      if (r == null || r >= GIAI_MAX) return null;
+      if (!v.items.every(x => x.tier === r && !x.noForge && !x.special)) return null;
       if (!v.items.every(x => itemLoc(x.uid) && itemLoc(x.uid).where === 'inv')) return null;
       return { r, items: v.items };
     },
     plan(v, m){
       const useCharm = forgeUseCharm && player.charms > 0;
       return {
-        title: `3 món ${RARITIES[m.r].name} → 1 món ${RARITIES[m.r+1].name}`,
+        title: `3 món ${giaiName(m.r)} → 1 món ${giaiName(m.r + 1)}`,
         rate: useCharm ? 100 : Math.min(100, CHAOS_RATE[m.r] + (player.forgeBonus || 0)),
         cost: [ chaosCost('Hỗn Nguyên', player.gems.honNguyen, CHAOS_HON_COST[m.r], '❖'),
                 chaosCost('Lumen', player.silver, CHAOS_SILVER_COST[m.r], '◈') ],
@@ -14167,13 +14225,13 @@ const CHAOS_RECIPES = [
       if (success){
         const avgLevel = Math.max(1, Math.round(snapshot.reduce((a,x) => a + x.level, 0) / 3));
         newItem = genItem(avgLevel, 0, 'mob');
-        newItem.rarity = m.r + 1; rerollItemRarity(newItem);
+        newItem.tier = m.r + 1; rerollItemTier(newItem);
       }
       playChaosAnim(snapshot, m.r, success, () => {
         if (success){
           if (bagThem(newItem)){ tryAutoEquip(newItem); }
-          zoneBanner = { text:'◑ LÒ HỖN LOẠN — THÀNH CÔNG!', sub:`3 món hoá thành ${newItem.name}!`, color:RARITIES[newItem.rarity].color, t:5 };
-          addFloat(player.x, player.y-56, `◑ ${newItem.name}`, RARITIES[newItem.rarity].color, 16);
+          zoneBanner = { text:'◑ LÒ HỖN LOẠN — THÀNH CÔNG!', sub:`3 món hoá thành ${newItem.name}!`, color:giaiMau(newItem.tier), t:5 };
+          addFloat(player.x, player.y-56, `◑ ${newItem.name}`, giaiMau(newItem.tier), 16);
         } else {
           zoneBanner = { text:'◑ LÒ HỖN LOẠN — THẤT BẠI', sub:'3 món đã tan thành tro bụi — Hỗn Loạn vô thường.', color:'#ff5a4a', t:5 };
           addFloat(player.x, player.y-56, 'Thất bại — mất sạch!', '#ff5a4a', 16);
@@ -15077,7 +15135,10 @@ window.upgradeTH = function(sys){
 };
 
 // ---------- Test mode: max-level character ----------
-function genSpecific(slotId, r, level){
+// Sinh một món ĐÚNG Ô CHỈ ĐỊNH: /gen, /max và đồ thưởng nhiệm vụ. Khác genItem ở chỗ ô là
+// tham số chứ không bốc, và dòng phụ lấy KỊCH TRẦN (đây là đường của đồ thử nghiệm).
+// Tham số `r` (phẩm) đã gỡ cùng hệ phẩm — cả ba lời gọi đều đã bỏ nó.
+function genSpecific(slotId, level){
   const slot = SLOTS.find(s => s.id === slotId);
   if (slot.special){
     if (slotId === 'aochoang') return genCloak(1);
@@ -15096,9 +15157,9 @@ function genSpecific(slotId, r, level){
   themDongCung(subs, tier, _van);
   return assignDef({
     uid: itemSeq++, slot: slot.id, slotName: slot.name,
-    name: (armorGroup ? 'Hoàn Hảo ' : '') + ITEM_NAMES[slot.id][r],
-    rarity: r, level, tier, perfect: armorGroup, luck: _van,
-    main: { k: slot.main, v: slot.base(tier, r), name: mainName(slot.main) },
+    name: (armorGroup ? 'Hoàn Hảo ' : '') + ITEM_NAMES[slot.id],
+    level, tier, perfect: armorGroup, luck: _van,
+    main: { k: slot.main, v: slot.base(tier), name: mainName(slot.main) },
     element: slot.id === 'vukhi' ? ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)] : null,
     subs, plus: 0,
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
@@ -15136,7 +15197,7 @@ function applyTestBoost(){
   player.forged11 = true;
   // Full 12 ô Chí Tôn (phẩm cao nhất) giai 10, rèn +11 hoàn hảo
   for (const sl of SLOTS){
-    const it = genSpecific(sl.id, RARITIES.length - 1, MAX_LV);
+    const it = genSpecific(sl.id, MAX_LV);
     it.plus = 11; it.perfect = true;
     player.equip[sl.id] = it;
   }
@@ -16073,7 +16134,7 @@ function cheatHelp(){
     '/jewel <n> — cả bốn Tứ Châu · /gem <n> — Tử La + Hỗn Nguyên',
     '/manh /tich <n> — mảnh ghép chế tác · /hap <n> — Box Kundun mọi tầng',
     '/item [phẩm 0-4] [giai 1-10] — tạo trang bị vào túi',
-    `/gen <giai 1-${GIAI_MAX}> [+rèn 0-11] [phẩm 0-${RARITIES.length-1}] [cánh 0-3] — MẶC THẲNG cả bộ, ví dụ: /gen 1 +11`,
+    `/gen <giai 1-${GIAI_MAX}> [+rèn 0-11] [cánh 0-3] — MẶC THẲNG cả bộ, ví dụ: /gen 1 +11`,
     '── Chimera ──',
     `/dat <n> — Đất Hồn nuôi cấp · /chilv <1-${CHI_LV_MAX}> — đặt cấp con đang xuất trận`,
     '/cot <' + COT_DONG_IDS.join('|') + '|all> [n] — nhặt Cốt vào kho',
@@ -16204,13 +16265,12 @@ window.cheatExec = function(raw){
         cheatLog('OK', '#8fd18f'); break;
       }
       case 'item': {
-        const r = clamp(Math.round(num(1, 3)), 0, 4);
-        const g = clamp(Math.round(num(2, 5)), 1, 10);
-        const it = genItem(Math.min(100, (g-1)*10 + 10), 0, 'tranai');
-        it.rarity = r; it.tier = g; it.level = (g-1)*10 + 10; it.perfect = false;
-        rerollItemRarity(it);
+        const g = clamp(Math.round(num(1, 5)), 1, GIAI_MAX);
+        const it = genItem(Math.min(MAX_LV, (g-1)*GIAI_SPAN + GIAI_SPAN), 0, 'tranai');
+        it.tier = g; it.level = (g-1)*GIAI_SPAN + GIAI_SPAN; it.perfect = false;
+        rerollItemTier(it);
         bagThem(it);
-        cheatLog('+' + it.name + ' [' + giaiName(g) + ']', RARITIES[r].color); break;
+        cheatLog('+' + it.name + ' [' + giaiName(g) + ']', giaiMau(g)); break;
       }
       // MẶC THẲNG một bộ đồ đúng giai, đúng mức rèn, kèm cánh — để nhìn thấy ngay bộ đó trông
       // ra sao. Khác /item ở chỗ /item chỉ ném MỘT món vào túi rồi phải tự đi mặc; khác /max ở
@@ -16219,14 +16279,13 @@ window.cheatExec = function(raw){
         const g  = clamp(Math.round(num(1, 1)), 1, GIAI_MAX);
         // Nhận cả "/gen 1 +11" lẫn "/gen 1 11" — dấu cộng là thứ người ta gõ theo phản xạ.
         const pl = clamp(Math.round(parseFloat(String(parts[2] || '0').replace('+', '')) || 0), 0, 11);
-        const r  = clamp(Math.round(num(3, RARITIES.length - 1)), 0, RARITIES.length - 1);
-        const lv = clamp((g - 1) * 10 + 10, 1, MAX_LV);
+        const lv = clamp((g - 1) * GIAI_SPAN + GIAI_SPAN, 1, MAX_LV);
         let n = 0;
         for (const sl of SLOTS){
           if (sl.special) continue;                    // cánh/áo choàng lo riêng bên dưới
-          const it = genSpecific(sl.id, r, lv);
+          const it = genSpecific(sl.id, lv);
           it.tier = g; it.level = lv; it.plus = pl;
-          it.main.v = sl.base(g, r);                   // genSpecific() tính theo itemTier(level), ép lại cho khớp giai đã chọn
+          it.main.v = sl.base(g);                      // genSpecific() tính theo itemTier(level), ép lại cho khớp giai đã chọn
           player.equip[sl.id] = it; n++;
         }
         // Cánh: bậc lấy từ tham số thứ tư, mặc định theo giai — giai 1-4 chưa có cánh, để trống
@@ -16238,10 +16297,9 @@ window.cheatExec = function(raw){
         calcDerived();
         try { renderInv(); renderBag(); } catch { /* bảng chưa mở — không sao */ }
         saveGame();
-        cheatLog(`Đã mặc ${n} món · ${giaiName(g)} · +${pl} · ${RARITIES[r].name}`
-                 + (wb ? ` · cánh bậc ${wb}` : ' · không cánh'), RARITIES[r].color);
-        cheatLog('Cú pháp: /gen <giai 1-' + GIAI_MAX + '> [+rèn 0-11] [phẩm 0-'
-                 + (RARITIES.length - 1) + '] [cánh 0-3]', '#8894b8');
+        cheatLog(`Đã mặc ${n} món · ${giaiName(g)} · +${pl}`
+                 + (wb ? ` · cánh bậc ${wb}` : ' · không cánh'), giaiMau(g));
+        cheatLog('Cú pháp: /gen <giai 1-' + GIAI_MAX + '> [+rèn 0-11] [cánh 0-3]', '#8894b8');
         break;
       }
       case 'god': player._god = !player._god; cheatLog(player._god ? 'BẤT TỬ: BẬT' : 'BẤT TỬ: TẮT', '#7ecbff'); break;
@@ -17294,10 +17352,11 @@ function applyEdgeLight(g, px, py, strength){
   g.restore();
 }
 
-// Vẽ trọn một icon: nền theo phẩm → hình món → hào quang cường hoá.
-function drawItemIcon(g, def, tier, rarity, plus){
+// Vẽ trọn một icon: nền theo GIAI → hình món → hào quang cường hoá.
+// Tham số `rarity` giữ chỗ để không phải sửa mọi lời gọi cùng lúc; nó không còn ai đọc.
+function drawItemIcon(g, def, tier, _rarity, plus){
   const M = itemPal(def, tier);
-  const R = RARITIES[Math.max(0, Math.min(4, rarity || 0))];
+  const R = { color: giaiMau(tier) };
   g.save();
   g.translate(ICON_PX / 2, ICON_PX / 2);
   g.scale(ICON_PX / 100, ICON_PX / 100);
@@ -17358,6 +17417,7 @@ function drawItemIcon(g, def, tier, rarity, plus){
   g.restore();
 }
 // data-URL có cache. Khoá gồm mọi thứ đổi hình: món, giai, phẩm, mức rèn.
+// `rarity` chỉ còn giữ chỗ trong chữ ký — hệ phẩm đã gỡ, mọi lời gọi truyền 0.
 function itemArtUrl(def, tier, rarity, plus){
   const key = `${def.art}|${def.blade||''}|${def.guard||''}|${def.pommel||''}|${def.motif||''}|${def.shaft||''}|${def.head||''}|${def.limb||''}`
             + `|${def.w||''}|${def.len||''}|${def.gw||''}|${def.st || 1}|${def.mat||''}|${def.tintKey || ''}`
@@ -17555,7 +17615,7 @@ function slotIcon(it, cls){
   // lẫn ô trang bị vì cả hai đều đi qua slotIcon().
   { const u = nvIconUrl(it);
     if (u){
-      const rc = (it.rarity != null && !it.special) ? ' ic-r' + it.rarity : '';
+      const rc = it.special ? '' : ' ic-g' + clamp(it.tier || 1, 1, GIAI_MAX);
       const bd = it.tier ? `<i class="ic-giai">${GIAI_LA_MA[clamp(it.tier-1,0,13)]}</i>` : '';
       return `<span class="item-ic${rc}"><img class="${cls||'slot-icon'}" src="${u}" alt="">${bd}</span>`;
     } }
@@ -17563,15 +17623,15 @@ function slotIcon(it, cls){
   // (cánh, áo choàng, pet) và save cũ chưa có def.
   let _d = itemDef(it);
   if (_d){
-    const rc = (it.rarity != null && !it.special) ? ' ic-r' + it.rarity : '';
+    const rc = it.special ? '' : ' ic-g' + clamp(it.tier || 1, 1, GIAI_MAX);
     const bd = it.tier ? `<i class="ic-giai">${GIAI_LA_MA[clamp(it.tier-1,0,13)]}</i>` : '';
-    return `<span class="item-ic${rc}"><img class="${cls||'slot-icon'}" src="${itemArtUrl(_d, it.tier || 1, it.rarity || 0, it.plus || 0)}" alt="">${bd}</span>`;
+    return `<span class="item-ic${rc}"><img class="${cls||'slot-icon'}" src="${itemArtUrl(_d, it.tier || 1, 0, it.plus || 0)}" alt="">${bd}</span>`;
   }
   const f = SLOT_ICONS[it.slot];
   if (!f) return `<span class="item-ic"></span>`;   // không có tệp thì thôi, đừng xin một ảnh 404
   // Drop v2.0: viền màu theo phẩm, xoay màu theo giai, huy hiệu số giai góc trái
   const hue = it.tier ? (it.tier-1)*22 : 0;
-  const rcls = (it.rarity != null && !it.special) ? ' ic-r' + it.rarity : '';
+  const rcls = it.special ? '' : ' ic-g' + clamp(it.tier || 1, 1, GIAI_MAX);
   const badge = it.tier ? `<i class="ic-giai">${GIAI_LA_MA[clamp(it.tier-1,0,13)]}</i>` : '';
   return `<span class="item-ic${rcls}"><img class="${cls||'slot-icon'}" style="filter:hue-rotate(${hue}deg)" src="assets/items/${f}.png" onerror="this.style.display='none'" alt="">${badge}</span>`;
 }
@@ -17585,7 +17645,7 @@ function renderInv(){
   const slotCell = (slotId) => {
     const sl = SLOTS.find(s2 => s2.id === slotId);
     const it = player.equip[slotId];
-    const r = it ? (it.special ? { color:'#7ecbff' } : (RARITIES[it.rarity] || RARITIES[0])) : null;
+    const r = it ? { color: it.special ? '#7ecbff' : giaiMau(it.tier) } : null;
     return `<div class="eq-slot${it ? ' filled' : ''}" ${it ? `data-tip="eq:${slotId}"` : ''}
       ${it ? `style="border-color:${r.color};box-shadow:0 0 8px ${r.color}33"` : ''}
       aria-label="${it ? it.name + (it.plus ? ' +' + it.plus : '') : sl.name}"
@@ -17620,7 +17680,7 @@ function renderInv(){
   if (_worn.length){
     html += `<div class="stat-sec" style="margin-top:10px">ĐANG MẶC (${_worn.length}/${SLOTS.length})</div><div class="eq-list">`;
     for (const sl of _worn){
-      const it = player.equip[sl.id], r = RARITIES[it.rarity] || RARITIES[0];
+      const it = player.equip[sl.id], r = { color: giaiMau(it.tier), cls: giaiCls(it.tier) };
       const mn = it.main ? ` · ${it.main.name} ${Math.round(it.main.v * (1 + it.plus * PLUS_STEP))}` : '';
       html += `<div class="eq-li" data-tip="eq:${sl.id}" onclick="unequip('${sl.id}')">
         <b style="color:${it.special ? '#7ecbff' : r.color}">${it.name}${it.plus ? ' +' + it.plus : ''}</b><span>${sl.name}${mn}</span></div>`;
@@ -17943,7 +18003,7 @@ function bagSecKho(){
   else {
     h += `<div class="bag-grid">`;
     k.forEach((it, i) => {
-      h += `<div class="bag-cell rar-${it.rarity}" onclick="khoWithdraw(${i})" data-tip="kho:${i}"
+      h += `<div class="bag-cell giai-${clamp(it.tier || 1, 1, GIAI_MAX)}" onclick="khoWithdraw(${i})" data-tip="kho:${i}"
         aria-label="${it.name} — bấm để lấy về túi">
         ${slotIcon(it, '')}<span class="bc-plus">${it.plus?'+'+it.plus:''}</span></div>`;
     });
@@ -18064,7 +18124,7 @@ function bagSecGear(){
       ? (_epDuoc ? `Ép ${NGOC_EP[cam].ten} vào ${it.name} +${it.plus||0}` : ngocEpDuoc(it, cam))
       : _lock ? itemLockMsg(it)
       : `${it.name} — bấm để MẶC NGAY, hoặc kéo thả vào ô Trang Bị${_up ? ' (mạnh hơn đang mặc!)' : ''}`;
-    h += `<div class="bag-mon rar-${it.rarity}${_lock?' locked':''}${cam ? (_epDuoc ? ' ngoc-nhan' : ' ngoc-chan') : ''}"
+    h += `<div class="bag-mon giai-${clamp(it.tier || 1, 1, GIAI_MAX)}${_lock?' locked':''}${cam ? (_epDuoc ? ' ngoc-nhan' : ' ngoc-chan') : ''}"
       style="grid-column:${it.gx+1}/span ${w};grid-row:${it.gy+1}/span ${hh}"
       draggable="true" data-inv="${i}"
       ondragstart="onBagItemDragStart(event,${i})" onclick="window.bagMonBam(${i})"
@@ -18085,11 +18145,11 @@ function bagSecGear(){
     const [w, hh] = bagKichThuoc(it);
     // Chỉ tên + nút. Chỉ số và so sánh đã nằm trong thẻ rê chuột ngay trên ô — in lại ở đây
     // là đẩy người chơi cuộn xuống hết lưới để đọc thứ vừa thấy.
-    h += `<div class="bag-act"><b class="${RARITIES[it.rarity].cls}">${it.name}${it.plus?' +'+it.plus:''}</b>
+    h += `<div class="bag-act"><b class="${giaiCls(it.tier)}">${it.name}${it.plus?' +'+it.plus:''}</b>
         <span style="opacity:.6;font-size:11px"> · chiếm ${w}×${hh} = ${w*hh} ô</span></div>
       <div class="forge-actions"><button class="mini-btn" onclick="equipItem(${window.bagSel})">Mặc Vào</button>
       <button class="mini-btn" onclick="sellItem(${window.bagSel})">Bán (+${itemSellPrice(it)}◈)</button>
-      <button class="mini-btn" onclick="salvage(${window.bagSel});window.bagSel=-1">Phân Giải (+${(1+it.rarity+Math.floor(it.plus/3)) * (!it.special && !itemUsable(it) ? 2 : 1)}✦)</button>
+      <button class="mini-btn" onclick="salvage(${window.bagSel});window.bagSel=-1">Phân Giải (+${(1+Math.ceil((it.tier||1)/2)+(it.perfect?3:0)+Math.floor(it.plus/3)) * (!it.special && !itemUsable(it) ? 2 : 1)}✦)</button>
       <button class="mini-btn" ${itemVutDuoc(it) ? '' : 'disabled'} onclick="dropItem(${window.bagSel})"
         title="${itemVutDuoc(it) ? 'Ném xuống đất — biến mất sau ' + LOOT_TTL + ' giây' : itemVutLyDo(it)}">Vứt</button></div>`;
   }
@@ -18390,7 +18450,7 @@ window.salvage = function(i){
   // Khoá lớp nghĩa là 4/5 số vũ khí nhặt được là đồ vô dụng. Phân giải ×2 biến chúng thành
   // nguyên liệu thật, chứ không phải rác phải bấm bán từng món.
   const wrong = !it.special && !itemUsable(it);
-  const gain = (1 + it.rarity + Math.floor(it.plus/3)) * (wrong ? 2 : 1) * GO_HUYENTHIET;
+  const gain = (1 + Math.ceil((it.tier||1)/2) + (it.perfect?3:0) + Math.floor(it.plus/3)) * (wrong ? 2 : 1) * GO_HUYENTHIET;
   player.silver += gain;
   player.inv.splice(i,1);
   addFloat(player.x, player.y-30, `Phân giải +${gain.toLocaleString('vi-VN')}◈${wrong ? ' (đồ khác lớp ×2)' : ''}`, '#9fd0ff', 12);
@@ -18913,7 +18973,7 @@ window.buyStockItem = function(i){
   player.silver -= price;
   bagThem(it);
   st[i] = null;                       // đã bán thì hết hàng, không nhân bản
-  addFloat(player.x, player.y-50, `Mua ${it.name}!`, RARITIES[it.rarity].color, 13);
+  addFloat(player.x, player.y-50, `Mua ${it.name}!`, giaiMau(it.tier), 13);
   AudioSys.sfx('quest', 0.5);
   saveGame(); renderShop(curShopNpc);
 };
@@ -18953,10 +19013,10 @@ function renderShop(n){
       const up = itemUsable(it) && player.level >= need && itemPower(it) > (eq ? itemPower(eq) : 0);
       const afford = player.silver >= price;
       const lock = !itemUsable(it);
-      html += `<div class="shop-cell rar-${it.rarity}${lock ? ' locked' : ''}" data-tip="shop:${i}">
+      html += `<div class="shop-cell giai-${clamp(it.tier || 1, 1, GIAI_MAX)}${lock ? ' locked' : ''}" data-tip="shop:${i}">
         <div class="sc-ic">${slotIcon(it, '')}${it.plus ? `<span class="bc-plus">+${it.plus}</span>` : ''}
           ${up ? '<i class="bc-up">▲</i>' : ''}${lock ? '<i class="bc-lock">🔒</i>' : ''}</div>
-        <div class="sc-name ${RARITIES[it.rarity].cls}">${it.name}</div>
+        <div class="sc-name ${giaiCls(it.tier)}">${it.name}</div>
         <div class="sc-meta">Lực chiến <b>${itemPower(it)}</b> · cấp ${need}</div>
         <button class="sc-buy${afford && !lock ? '' : ' off'}" ${afford && !lock ? '' : 'disabled'}
           onclick="buyStockItem(${i})">${price.toLocaleString('vi-VN')}◈</button></div>`;
@@ -19019,20 +19079,20 @@ function renderShop(n){
       onclick="buyFromShop('${rare.id}')">${rare.price.toLocaleString('vi-VN')}◈</button></div>`;
 
   if (shop.junk){
-    const junk = player.inv.filter(it => !it.special && it.rarity <= 1);
-    const junkVal = junk.reduce((s2,it)=>s2 + 20 + it.rarity*30 + (it.tier||1)*15, 0);
+    const junk = player.inv.filter(it => itemTron(it));
+    const junkVal = junk.reduce((s2,it)=>s2 + itemSellPrice(it), 0);
     html += `<div class="shop-row"><span class="sr-ic">🧹</span>
       <span class="sr-body"><b>Bán hết đồ trắng/lục (${junk.length} món)</b>
         <span class="sr-desc">Dọn túi nhanh — nhận Lumen ngay</span></span>
       <button class="mini-btn" ${junk.length?'':'disabled'} onclick="sellJunk()">+${junkVal.toLocaleString('vi-VN')}◈</button></div>`;
   }
   // Thu mua lẻ đồ phẩm Lam trở lên — giá theo Lực chiến
-  const _sellable = player.inv.map((it2, i2) => ({ it:it2, i:i2 })).filter(x => !x.it.special && x.it.rarity >= 2).slice(0, 6);
+  const _sellable = player.inv.map((it2, i2) => ({ it:it2, i:i2 })).filter(x => !x.it.special && itemQuy(x.it)).slice(0, 6);
   if (_sellable.length){
     html += `<div class="stat-sec">THU MUA — đồ phẩm cao trong túi (bán 2 lần để xác nhận)</div>`;
     for (const x of _sellable){
       html += `<div class="shop-row"><span class="sr-ic">${slotIcon(x.it, 'sr-img')}</span>
-        <span class="sr-body"><b class="${RARITIES[x.it.rarity].cls}">${x.it.name}${x.it.plus?' +'+x.it.plus:''}</b>
+        <span class="sr-body"><b class="${giaiCls(x.it.tier)}">${x.it.name}${x.it.plus?' +'+x.it.plus:''}</b>
           <span class="sr-desc">Lực chiến ${itemPower(x.it)} · ${giaiName(x.it.tier)}</span></span>
         <button class="mini-btn" onclick="sellItem(${x.i});renderShop(curShopNpc)">+${itemSellPrice(x.it).toLocaleString('vi-VN')}◈</button></div>`;
     }
@@ -19114,7 +19174,7 @@ window.buyFromShop = function(what){
     }
     if (!it) it = genItem(player.level, 0.08);
     if (!bagThem(it)){ dropToGround({ k:'item', it }, player.x, player.y); }
-    addFloat(player.x, player.y-50, `Nhận được ${it.name}!`, RARITIES[it.rarity].color, 13);
+    addFloat(player.x, player.y-50, `Nhận được ${it.name}!`, giaiMau(it.tier), 13);
     AudioSys.sfx('quest', 0.5);
   }
   addFloat(player.x, player.y-34, 'Mua thành công!', '#7ecbff', 12);
@@ -19122,9 +19182,9 @@ window.buyFromShop = function(what){
 };
 window.sellJunk = function(){
   const keep = [], junk = [];
-  for (const it of player.inv) (it.special || it.rarity > 1 ? keep : junk).push(it);
+  for (const it of player.inv) (it.special || !itemTron(it) ? keep : junk).push(it);
   if (!junk.length) return;
-  const val = junk.reduce((s2,it)=>s2 + 20 + it.rarity*30 + (it.tier||1)*15, 0);
+  const val = junk.reduce((s2,it)=>s2 + itemSellPrice(it), 0);
   player.inv = keep; player.silver += val;
   addFloat(player.x, player.y-34, `Bán ${junk.length} món +${val}◈`, '#7ecbff', 13);
   saveGame(); if (curShopNpc) renderShop(curShopNpc);
@@ -20758,7 +20818,7 @@ window.turnInQuest = function(){
   if (!q || questState !== 'done') return;
   player.silver += q.rew.silver || 0;
   if (q.rew.item){
-    const gi = genSpecific(q.rew.item, 0, Math.max(1, player.level));
+    const gi = genSpecific(q.rew.item, Math.max(1, player.level));
     // Túi chật thì thả xuống đất chứ đừng nuốt phần thưởng cốt truyện.
     if (bagThem(gi)) addFloat(player.x, player.y-64, `Nhận được: ${gi.name}!`, '#9fd0ff', 14);
     else { dropToGround({ k:'item', it:gi }, player.x, player.y);
@@ -21866,12 +21926,12 @@ function grantHuntBox(){
   for (let i = 0; i < nItems; i++){
     const it = genItem(bossLv, 0, srcK);
     // món đó là xoá vĩnh viễn thứ hiếm nhất game vì vài đồng Lumen.
-    if (player.autoSell && it.rarity <= 0){
-      const v = 20 + it.rarity*30 + (it.tier||1)*15;
+    if (player.autoSell && itemTron(it)){
+      const v = itemSellPrice(it);
       player.silver += v; gained.push(`${it.name}(bán +${v}◈)`);
     } else if (bagThem(it)){
       gained.push(it.name);
-      if (it.rarity >= 2) addEffect({ type:'spark', x:player.x, y:player.y-12, r:32 + it.rarity*8, color:RARITIES[it.rarity].color });
+      if (it.tier >= 3) addEffect({ type:'spark', x:player.x, y:player.y-12, r:24 + it.tier*6, color:giaiMau(it.tier) });
       tryAutoEquip(it);
     } else gained.push(`${it.name}(túi đầy, mất)`);
   }
@@ -22576,17 +22636,20 @@ window.useJewel = function(kind, uid){
 };
 
 // ---------- Bảng giá Lò Hỗn Loạn (công thức 'hopnhat' của Lò Hỗn Độn) ----------
-const CHAOS_RATE = [70, 55, 40, 25]; // % theo phẩm gốc: Phàm→Tinh, Tinh→Linh, Linh→Thần, Thần→ChíTôn
-const CHAOS_HON_COST = [2, 4, 7, 12];
-const CHAOS_SILVER_COST = [300, 800, 2000, 5000];
+// Chi phí và tỉ lệ của Lò Hỗn Loạn, tra theo GIAI GỐC (1..6 — giai 7 là đỉnh, không nâng nữa).
+// Ba bảng đánh chỉ số từ 1, nên ngăn [0] bỏ trống. Bảng cũ có 4 ngăn theo bốn bước phẩm; nay
+// 6 bước giai, giãn theo đúng tinh thần cũ: càng lên cao càng rẻ tỉ lệ, càng đắt nguyên liệu.
+const CHAOS_RATE         = [0, 70, 60, 50, 40, 30, 22];
+const CHAOS_HON_COST     = [0,  2,  3,  5,  7, 10, 14];
+const CHAOS_SILVER_COST  = [0, 300, 600, 1200, 2200, 3800, 6000];
 // Cảnh ghép đồ kiểu MU Online: yêu tinh tung quả cầu Hỗn Nguyên trong lúc luyện —
 // mutation & lưu game đã chạy synchronous ở chaosCombine, hàm này chỉ diễn hoạt rồi gọi onReveal
 // để lấy dữ liệu hiển thị (tên/màu vật phẩm mới) đúng lúc "khui" kết quả.
 function playChaosAnim(items, r, success, onReveal){
-  const nextColor = (RARITIES[r+1] || RARITIES[r]).color;
+  const nextColor = giaiMau(r + 1);
   const slotsHtml = items.map(it => `<div class="chaos-slot">${slotIcon(it)}</div>`).join('');
   document.getElementById('overlay-inner').innerHTML = `
-    <h2 style="color:${RARITIES[r].color}">◑ Lò Hỗn Loạn</h2>
+    <h2 style="color:${giaiMau(r)}">◑ Lò Hỗn Loạn</h2>
     <p style="margin-bottom:10px">Yêu tinh giữ lò đang tung Hỗn Nguyên Thạch, luyện hoá 3 món...</p>
     <div class="chaos-scene" id="chaos-scene" style="--oc:${nextColor}">
       <div class="chaos-slots">${slotsHtml}</div>
@@ -22608,7 +22671,7 @@ function playChaosAnim(items, r, success, onReveal){
     if (success && data.newItem){
       document.getElementById('chaos-result-item').innerHTML = slotIcon(data.newItem);
       txt.textContent = `THÀNH CÔNG! → ${data.newItem.name}`;
-      txt.style.color = RARITIES[data.newItem.rarity].color;
+      txt.style.color = giaiMau(data.newItem.tier);
       AudioSys.sfx('forge_ok', 0.95);
     } else {
       txt.textContent = 'THẤT BẠI — mất sạch!';
@@ -22637,7 +22700,9 @@ function burstBaoHap(t, x, y){
   {
     let it = null;
     const _bp = BAOHAP_PERFECT[Math.min(t, BAOHAP_PERFECT.length - 1)] || 0;
-    for (let i = 0; i < 6; i++){ it = genItem(lv, 0.5 + t*0.06, null, { perfect: _bp }); if (it.rarity >= 2) break; }
+    // Bản cũ bốc tới 6 lần cho tới khi ra phẩm Linh trở lên. Hệ phẩm đã gỡ nên vòng lặp đó
+    // không còn chọn được gì — mọi lần bốc đều tương đương. Bốc MỘT lần.
+    it = genItem(lv, 0, null, { perfect: _bp });
     drops.push(it);
   }
   // Châu kèm theo — tầng càng cao tỉ lệ càng tốt (y hệt bảng cũ)
@@ -23249,8 +23314,8 @@ window.rollVanDuyen = function(){
     out.push(`<b style="color:${JEWEL_COLORS[k]}">${JEWEL_NAMES[k]}</b>`);
   } else if (key === 'trangbi'){
     let it = null;
-    for (let i = 0; i < 6; i++){ it = genItem(player.level, 0.7); if (it.rarity >= 2) break; }
-    if (bagThem(it)){ out.push(`Trang bị: <b class="${RARITIES[it.rarity].cls}">${it.name}</b>`); }
+    it = genItem(player.level, 0);   // hệ phẩm đã gỡ — bốc lại nhiều lần không chọn được gì
+    if (bagThem(it)){ out.push(`Trang bị: <b class="${giaiCls(it.tier)}">${it.name}</b>`); }
     else { player.silver += 600; out.push('Túi đầy — trang bị quy đổi 600◈'); }
   } else if (key === 'vatlieu'){
     const jr = Math.random()*100;

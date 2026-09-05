@@ -23,7 +23,8 @@ const { chromium } = require('playwright');
       return {
         cap: player.level,
         oDayDu: SLOTS.filter(s => eq[s.id]).length + '/' + SLOTS.length,
-        phamCaoNhat: Math.max(...Object.values(eq).map(i => i.rarity || 0)),
+        giaiCaoNhat: Math.max(...Object.values(eq).map(i => i.tier || 0)),
+        deuHoanHao: Object.values(eq).every(i => i.special || i.perfect),
         renTrungBinh: +(arm.reduce((a,i)=>a+(i.plus||0),0) / Math.max(1,arm.length)).toFixed(1),
         // `wing2` là cờ của thời cánh chỉ có hai bậc; nay bậc nằm ở `wingBac`, và tối đa
         // hoá phải đẩy tới bậc 3 chứ không phải chỉ qua khỏi bậc 1.
@@ -47,7 +48,8 @@ const { chromium } = require('playwright');
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
   for (const [sect, r] of Object.entries(out)){
     if (r.cap !== 120) fail(`${sect}: chưa max cấp (${r.cap})`);
-    if (r.phamCaoNhat !== 4) fail(`${sect}: phẩm cao nhất mới ${r.phamCaoNhat}, cần 4 (Chí Tôn)`);
+    // Hệ phẩm đã gỡ. /max nay phải ra đồ GIAI ĐỈNH, và genSpecific() cho đồ giáp Hoàn Hảo.
+    if (r.giaiCaoNhat !== r.giaiMax) fail(`${sect}: giai cao nhất mới ${r.giaiCaoNhat}, cần ${r.giaiMax}`);
     if (r.renTrungBinh !== 11) fail(`${sect}: rèn trung bình ${r.renTrungBinh}, cần 11`);
     if (r.canhBac < 3) fail(`${sect}: cánh mới bậc ${r.canhBac}, cần bậc 3 (${r.canhTen})`);
     if (!(r.chau >= 300)) fail(`${sect}: chưa cấp châu (${r.chau})`);

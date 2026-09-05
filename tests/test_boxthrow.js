@@ -45,7 +45,7 @@ const pass = m => console.log('PASS ' + m);
     const exc    = { k:'item', it:{ rarity:0, exc:[{k:'atkPct',v:5}], name:'Z' } };
     return { mauThuong: lootColor(thuong), mauHH: lootColor(hh), mauExc: lootColor(exc),
              hangHH: lootRar(hh), hangThuong: lootRar(thuong),
-             tenHH: lootName(hh), xanhPham1: RARITIES[1].color };
+             tenHH: lootName(hh), xanhPham1: giaiMau(2) };
   });
   console.log('2.', JSON.stringify(r2));
   (r2.mauHH === '#3ae07a' && r2.mauExc === '#3ae07a' && r2.mauThuong !== r2.mauHH

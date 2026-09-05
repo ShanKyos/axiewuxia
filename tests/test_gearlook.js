@@ -32,7 +32,7 @@ const fs = require('fs');
     const out = { shots: {} };
 
     const gvOf = (t, n, plus, rarity, setColor) => ({
-      n, rarity, t, plus, rcol: RARITIES[rarity] ? RARITIES[rarity].color : null,
+      n, rarity, t, plus, rcol: giaiMau(t),
       wTier: t, wPlus: plus, setColor: setColor || null, canh: null });
 
     // Vẽ nhân vật ĐÚNG như trong màn: hào quang sau · bảng khung · hào quang trước.

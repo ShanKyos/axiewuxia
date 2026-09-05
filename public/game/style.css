@@ -309,7 +309,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .jewel-drag:active { cursor:grabbing; }
 .jewel-drag[draggable="false"] { opacity:.35; cursor:not-allowed; }
 .forge-drop-zone { width:56px; height:56px; border-radius:var(--r-md); border:1.5px dashed var(--border-faint); transition:box-shadow .12s,border-color .12s,background .12s; }
-.r0{color:#b9c2e6}.r1{color:#5fc96e}.r2{color:#5ea0e8}.r3{color:var(--purple)}.r4{color:var(--orange)}
+/* Màu chữ theo GIAI (1..7). Hệ phẩm Phàm/Tinh/Linh/Thần/Chí Tôn đã gỡ — các lớp .r0..r4 cũ
+   đi cùng nó. Bảy màu dưới đây khớp GIAI_MAU trong game.js, sửa một bên phải sửa bên kia. */
+.g1{color:#b9c2e6}.g2{color:#5fc96e}.g3{color:#5ea0e8}.g4{color:#7ecbff}
+.g5{color:var(--purple)}.g6{color:var(--orange)}.g7{color:#ff6b6b}
 .item-tip { font-size:var(--fs-sm); opacity:.85; line-height:1.5; margin-top:2px; }
 .mini-btn { background:rgba(76,141,255,.2); color:var(--accent-light); border:1px solid var(--accent);
   border-radius:999px; padding:4px 12px; font-size:11.5px; font-weight:600; cursor:pointer; font-family:inherit; margin-left:6px;}
@@ -559,10 +562,12 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   width:38px; height:38px; border-radius:var(--r-sm); border:1.5px solid rgba(190,205,240,.45);
   background:rgba(10,10,26,.35); flex:0 0 auto; }
 .item-ic img { width:82%; height:82%; object-fit:contain; pointer-events:none; }
-.item-ic.ic-r1 { border-color:rgba(95,201,110,.7); box-shadow:0 0 6px rgba(95,201,110,.25); }
-.item-ic.ic-r2 { border-color:rgba(94,160,232,.8); box-shadow:0 0 7px rgba(94,160,232,.3); }
-.item-ic.ic-r3 { border-color:rgba(177,140,255,.85); box-shadow:0 0 8px rgba(177,140,255,.35); }
-.item-ic.ic-r4 { border-color:rgba(255,177,92,.95); box-shadow:0 0 10px rgba(255,177,92,.45); }
+.item-ic.ic-g2 { border-color:rgba(95,201,110,.7); box-shadow:0 0 6px rgba(95,201,110,.25); }
+.item-ic.ic-g3 { border-color:rgba(94,160,232,.8); box-shadow:0 0 7px rgba(94,160,232,.3); }
+.item-ic.ic-g4 { border-color:rgba(126,203,255,.85); box-shadow:0 0 8px rgba(126,203,255,.32); }
+.item-ic.ic-g5 { border-color:rgba(177,140,255,.85); box-shadow:0 0 8px rgba(177,140,255,.35); }
+.item-ic.ic-g6 { border-color:rgba(255,177,92,.95); box-shadow:0 0 10px rgba(255,177,92,.45); }
+.item-ic.ic-g7 { border-color:rgba(255,107,107,1); box-shadow:0 0 12px rgba(255,107,107,.5); }
 .ic-giai { position:absolute; bottom:-4px; right:-4px; font-style:normal; font-size:8.5px; font-weight:700;
   line-height:1; padding:2px 4px; border-radius:6px; color:#141633; background:linear-gradient(180deg,#7ecbff,#4c8dff);
   box-shadow:0 1px 3px rgba(0,0,0,.5); letter-spacing:.5px; }
@@ -700,9 +705,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .bag-cell .bc-name { position:absolute; bottom:1px; left:0; right:0; text-align:center; font-size:9px;
   color:var(--text-body); text-shadow:0 1px 2px #000; white-space:nowrap; overflow:hidden; }
 .bag-cell.sel { border-color:var(--accent-light); box-shadow:0 0 10px rgba(126,203,255,.45); }
-.bag-cell.rar-0 { border-color:rgba(185,194,230,.5); } .bag-cell.rar-1 { border-color:rgba(95,201,110,.65); }
-.bag-cell.rar-2 { border-color:rgba(94,160,232,.7); } .bag-cell.rar-3 { border-color:rgba(177,140,255,.75); }
-.bag-cell.rar-4 { border-color:rgba(255,177,92,.85); }
+.bag-cell.giai-1 { border-color:rgba(185,194,230,.5); } .bag-cell.giai-2 { border-color:rgba(95,201,110,.65); }
+.bag-cell.giai-3 { border-color:rgba(94,160,232,.7); }  .bag-cell.giai-4 { border-color:rgba(126,203,255,.72); }
+.bag-cell.giai-5 { border-color:rgba(177,140,255,.75); } .bag-cell.giai-6 { border-color:rgba(255,177,92,.85); }
+.bag-cell.giai-7 { border-color:rgba(255,107,107,.95); }
 .mat-row { display:flex; align-items:center; gap:10px; padding:5px 2px; font-size:12.5px;
   border-bottom:1px dashed var(--border-faint); }
 .mat-row img { width:30px; height:30px; object-fit:contain; }
@@ -794,9 +800,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   border:1px solid var(--border-faint); transition:background .12s,border-color .12s; }
 .shop-cell:hover { background:var(--cell-hover); }
 .shop-cell.locked { opacity:.55; }
-.shop-cell.rar-0 { border-color:rgba(185,194,230,.5); }  .shop-cell.rar-1 { border-color:rgba(95,201,110,.65); }
-.shop-cell.rar-2 { border-color:rgba(94,160,232,.7); }   .shop-cell.rar-3 { border-color:rgba(177,140,255,.75); }
-.shop-cell.rar-4 { border-color:rgba(255,177,92,.85); }
+.shop-cell.giai-1 { border-color:rgba(185,194,230,.5); }  .shop-cell.giai-2 { border-color:rgba(95,201,110,.65); }
+.shop-cell.giai-3 { border-color:rgba(94,160,232,.7); }   .shop-cell.giai-4 { border-color:rgba(126,203,255,.72); }
+.shop-cell.giai-5 { border-color:rgba(177,140,255,.75); } .shop-cell.giai-6 { border-color:rgba(255,177,92,.85); }
+.shop-cell.giai-7 { border-color:rgba(255,107,107,.95); }
 .shop-cell .sc-ic { position:relative; width:54px; height:54px; display:flex; align-items:center; justify-content:center; }
 .shop-cell .sc-ic img { width:100%; height:100%; object-fit:contain;
   filter:drop-shadow(0 2px 4px rgba(0,0,0,.55)); }
@@ -1061,9 +1068,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   transition:background .14s ease-out, border-color .14s ease-out, transform .14s ease-out; }
 .bag-mon:hover { background:rgba(76,141,255,.24); border-color:var(--border-strong); z-index:2; }
 .bag-mon img { width:84%; height:84%; object-fit:contain; pointer-events:none; }
-.bag-mon.rar-0 { border-color:rgba(185,194,230,.5); } .bag-mon.rar-1 { border-color:rgba(95,201,110,.65); }
-.bag-mon.rar-2 { border-color:rgba(94,160,232,.7); }  .bag-mon.rar-3 { border-color:rgba(177,140,255,.75); }
-.bag-mon.rar-4 { border-color:rgba(255,177,92,.85); }
+.bag-mon.giai-1 { border-color:rgba(185,194,230,.5); } .bag-mon.giai-2 { border-color:rgba(95,201,110,.65); }
+.bag-mon.giai-3 { border-color:rgba(94,160,232,.7); }  .bag-mon.giai-4 { border-color:rgba(126,203,255,.72); }
+.bag-mon.giai-5 { border-color:rgba(177,140,255,.75); } .bag-mon.giai-6 { border-color:rgba(255,177,92,.85); }
+.bag-mon.giai-7 { border-color:rgba(255,107,107,.95); }
 
 /* Giá ngọc: cầm một viên rồi bấm thẳng vào món — thao tác của MU */
 .ngoc-bar { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin:7px 0 2px;

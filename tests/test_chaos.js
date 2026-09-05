@@ -36,7 +36,7 @@ const { chromium } = require('playwright');
     const CAM = ['Huyền Thiết Trọng Kiếm','Lăng Ba Hài','Truy Phong Hài','Chí Tôn Long Giáp',
                  'Du Long','Thiên Tôn Miện','Hổ Đầu Khôi','Kim Lân Giáp','Lân Khố','Ngọc Giới'];
     const moiTen = [];
-    for (const sl in ITEM_NAMES) for (const n of ITEM_NAMES[sl]) moiTen.push(n);
+    for (const sl in ITEM_NAMES) moiTen.push(ITEM_NAMES[sl]);
     o.tenDinhKiemHiep = moiTen.filter(n => CAM.some(c => n.includes(c)));
     o.soTen = moiTen.length;
 
@@ -125,8 +125,9 @@ const { chromium } = require('playwright');
   console.log(JSON.stringify(r, null, 1));
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
   if (r.tenDinhKiemHiep.length) fail(`còn tên kiếm hiệp: ${r.tenDinhKiemHiep.join(', ')}`);
-  // 40 chứ không 45: ô Quần đã gỡ, ITEM_NAMES.quan (5 tên) đi theo.
-  if (r.soTen !== 40) fail(`bảng tên có ${r.soTen} tên, cần 40`);
+  // 8 chứ không 40: hệ phẩm đã gỡ nên ITEM_NAMES còn ĐÚNG MỘT tên lui mỗi ô, không phải năm
+  // tên chọn theo phẩm. (Trước đó là 40 = 8 ô × 5 phẩm; trước nữa là 45 khi còn ô Quần.)
+  if (r.soTen !== 8) fail(`bảng tên có ${r.soTen} tên, cần 8 (mỗi ô một tên lui)`);
   if (!r.khayTrong.includes('cloak'))
     fail(`khay trống + chưa có áo choàng phải ra công thức cloak: ${JSON.stringify(r.khayTrong)}`);
   if (r.khayTrong_coAoChoang.includes('cloak'))

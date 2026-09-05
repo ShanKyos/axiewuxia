@@ -1,5 +1,11 @@
 // Luật roll khi rơi đồ: đồ thường KHÔNG được có dòng VIP và phải roll trong khoảng min–max;
 // đồ Hoàn Hảo phải kịch max + có dòng Hoàn Hảo riêng.
+//
+// HAI DÒNG CỨNG (Chống Đỡ · Sát Thương Tối Đa của Vận) KHÔNG theo luật này và phải bỏ qua
+// trong mọi phép đo dưới đây. Chúng không phải dòng BỐC: Chống Đỡ suy thẳng từ giai, còn dòng
+// Vận bốc 1–5 theo bảng RIÊNG của nó. Trộn chúng vào là bài đỏ oan — đã đỏ đúng hai lần như
+// vậy: atkPct "ra ngoài khoảng [2,5] — thấy [1,5]" (dòng Vận), và 2.348 dòng trên đồ Hoàn Hảo
+// "không kịch max" (cũng dòng Vận). Chúng có bài gác riêng trong test_droprate.
 const { chromium } = require('playwright');
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
@@ -19,15 +25,14 @@ const { chromium } = require('playwright');
                 hoanHao:{ soDong:{}, khongMax:[], coExc:0, soDongExc:{} },
                 dinhNghia:{ WEAPON_SUBS: WEAPON_SUBS.map(d=>[d.k,d.min,d.max,!!d.fixed]),
                             ARMOR_SUBS:  ARMOR_SUBS.map(d=>[d.k,d.min,d.max,!!d.fixed]),
-                            RARITY_SUBS } };
+                            SO_DONG_MONG:[1,4] } };
     const MAXOF = {}; for (const d of [...WEAPON_SUBS, ...ARMOR_SUBS]) MAXOF[d.k] = d;
 
     for (let i = 0; i < N; i++){
       const it = gen({ perfect: 0 });
-      const key = 'pham' + it.rarity;
-      o.thuong.soDong[key] = o.thuong.soDong[key] || [];
-      o.thuong.soDong[key].push(it.subs.length);
-      for (const s of it.subs){
+      const boc = it.subs.filter(x => !x.cung && !x.van);   // chỉ dòng BỐC
+      (o.thuong.soDong.moiMon = o.thuong.soDong.moiMon || []).push(boc.length);
+      for (const s of boc){
         (o.thuong.giaTri[s.k] = o.thuong.giaTri[s.k] || []).push(s.v);
         if (s.k === 'perfect') o.thuong.dongVIP++;   // "ST Hoàn Hảo" trên món KHÔNG Hoàn Hảo
       }
@@ -38,8 +43,9 @@ const { chromium } = require('playwright');
 
     for (let i = 0; i < N; i++){
       const it = gen({ perfect: 1, bhTier: 6 });
-      o.hoanHao.soDong[it.subs.length] = (o.hoanHao.soDong[it.subs.length] || 0) + 1;
-      for (const s of it.subs) if (MAXOF[s.k] && s.v !== MAXOF[s.k].max)
+      const boc = it.subs.filter(x => !x.cung && !x.van);
+      o.hoanHao.soDong[boc.length] = (o.hoanHao.soDong[boc.length] || 0) + 1;
+      for (const s of boc) if (MAXOF[s.k] && s.v !== MAXOF[s.k].max)
         o.hoanHao.khongMax.push(`${s.k}=${s.v} (max ${MAXOF[s.k].max})`);
       if (it.exc && it.exc.length){ o.hoanHao.coExc++;
         o.hoanHao.soDongExc[it.exc.length] = (o.hoanHao.soDongExc[it.exc.length] || 0) + 1; }
@@ -49,7 +55,7 @@ const { chromium } = require('playwright');
   });
 
   console.log('định nghĩa dòng:', JSON.stringify(r.dinhNghia, null, 1));
-  console.log('ĐỒ THƯỜNG  số dòng theo phẩm:', JSON.stringify(r.thuong.soDong));
+  console.log('ĐỒ THƯỜNG  số dòng BỐC     :', JSON.stringify(r.thuong.soDong));
   console.log('ĐỒ THƯỜNG  giá trị roll     :', JSON.stringify(r.thuong.giaTri, null, 1));
   console.log('ĐỒ THƯỜNG  dính dòng VIP    :', r.thuong.dongVIP, '· có dòng Hoàn Hảo:', r.thuong.coExc);
   console.log('HOÀN HẢO   số dòng phụ      :', JSON.stringify(r.hoanHao.soDong));
@@ -66,11 +72,16 @@ const { chromium } = require('playwright');
     if (g.min < d[1] || g.max > d[2]) fail(`${k}: roll ra ngoài khoảng [${d[1]},${d[2]}] — thấy [${g.min},${g.max}]`);
     if (d[1] !== d[2] && g.min === g.max) fail(`${k}: đồ thường lúc nào cũng ${g.min} — không hề random trong [${d[1]},${d[2]}]`);
   }
-  // ── Luật 3: số dòng leo theo phẩm ──
-  const nOf = k => r.thuong.soDong[k] && r.thuong.soDong[k].tb;
-  for (let i = 1; i <= 4; i++){
-    const a = nOf('pham' + (i-1)), c = nOf('pham' + i);
-    if (a != null && c != null && !(c > a)) fail(`phẩm ${i} không nhiều dòng hơn phẩm ${i-1} (${a} vs ${c})`);
+  // ── Luật 3: MỌI món bốc 1–4 dòng ──
+  // Hệ phẩm đã gỡ nên không còn "số dòng leo theo phẩm". Luật thay thế gắt hơn về một mặt:
+  // KHÔNG món nào được ra 0 dòng. Trước đây 80% đồ rơi từ quái thường là phẩm Phàm, tức không
+  // dòng nào — bốn trên năm món nhặt lên là một cục chỉ số trống trơn.
+  const sd = r.thuong.soDong.moiMon;
+  if (!sd) fail('không đo được số dòng');
+  else {
+    if (sd.min < 1) fail(`có món ra ${sd.min} dòng phụ — mọi món phải có ít nhất 1`);
+    if (sd.max > 4) fail(`có món ra ${sd.max} dòng phụ — trần là 4`);
+    if (sd.tb < 2.2 || sd.tb > 2.8) fail(`trung bình ${sd.tb} dòng/món — bốc đều 1–4 phải ra ~2,5`);
   }
   // ── Luật 4: Hoàn Hảo kịch max + có dòng Hoàn Hảo ──
   if (r.hoanHao.khongMax.length) fail(`${r.hoanHao.khongMax.length} dòng trên đồ Hoàn Hảo KHÔNG kịch max`);
