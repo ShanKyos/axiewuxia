@@ -17,8 +17,15 @@ const { chromium } = require('playwright');
     player.level = 50; calcDerived(); player.autoSell = false; player.auto = false; });
 
   // ---- 1. Farm 300 con: đồ và ngọc phải NẰM DƯỚI ĐẤT, không nhảy thẳng vào túi ----
+  //
+  // ÉP TỈ LỆ NGỌC LÊN 100% trong đúng mục này. Bài kiểm này gác CƠ CHẾ — ngọc đi xuống đất chứ
+  // không cộng thẳng vào túi — chứ không gác tỉ lệ. Từ khi nhịp ngọc về đích 3 Chúc Phúc/giờ
+  // thì trung bình ~1.200 con mới ra một viên, nên 300 con là mẫu quá nhỏ và bài đỏ oan vì một
+  // con số cân bằng hoàn toàn hợp lệ. Tỉ lệ thật do test_droprate gác, ở đó có cỡ mẫu 300k.
   const farm = await p.evaluate(() => {
     const md = MAPS[curMap], q = md.packs[2];
+    const _luu = JSON.parse(JSON.stringify(JEWEL_DROP.mob));
+    for (const k in JEWEL_DROP.mob) JEWEL_DROP.mob[k] = k === 'chucPhuc' ? 1 : 0;
     const invT = player.inv.length, jT = Object.values(player.jewels).reduce((a,b)=>a+b,0);
     let roi = 0, ngoc = 0, imLang = 0;
     groundLoot = [];
@@ -33,6 +40,7 @@ const { chromium } = require('playwright');
       mobs = mobs.filter(x => x !== m);
       if (groundLoot.length > 40) groundLoot = [];   // tránh chạm trần LOOT_MAX làm sai phép đếm
     }
+    Object.assign(JEWEL_DROP.mob, _luu);
     return { roi, ngoc, imLang, vaoTuiThang: player.inv.length - invT,
              ngocCongThang: Object.values(player.jewels).reduce((a,b)=>a+b,0) - jT };
   });
@@ -40,7 +48,7 @@ const { chromium } = require('playwright');
   if (farm.vaoTuiThang !== 0) fail(`${farm.vaoTuiThang} món vẫn nhảy thẳng vào túi, phải rơi xuống đất hết`);
   if (farm.ngocCongThang !== 0) fail(`${farm.ngocCongThang} ngọc vẫn cộng thẳng, phải rơi xuống đất`);
   if (!(farm.roi > 10)) fail(`chỉ ${farm.roi} món rơi xuống đất trong 300 kill — nghi bảng rơi hỏng`);
-  if (!farm.ngoc) fail('300 kill không viên ngọc nào rơi xuống đất');
+  if (!farm.ngoc) fail('ép tỉ lệ ngọc lên 100% mà vẫn không viên nào xuống đất — rollJewels không đi qua dropToGround');
 
   // ---- 2. Nhặt: đi ngang qua, bấm J, bấm chuột ----
   const nhat = await p.evaluate(() => {
@@ -142,6 +150,9 @@ const { chromium } = require('playwright');
     AudioSys.sfx = (n, v) => { seen.push(n); return orig(n, v); };
     groundLoot = []; player.x = 100; player.y = 100;
     const md = MAPS[curMap], q = md.packs[2];
+    // Ép tỉ lệ y như mục 1, cùng một lý do: đây là bài kiểm ÂM THANH, không phải bài kiểm tỉ lệ.
+    const _luu = JSON.parse(JSON.stringify(JEWEL_DROP.mob));
+    for (const k in JEWEL_DROP.mob) JEWEL_DROP.mob[k] = k === 'chucPhuc' ? 1 : 0;
     let lan = 0;
     for (let i = 0; i < 400 && lan < 3; i++){
       const m = spawnMob(q.mob, { x:1600, y:1600, r:20 }, null, true);
@@ -149,9 +160,11 @@ const { chromium } = require('playwright');
       m.hp = 1; killMob(m, 'hit');
       mobs = mobs.filter(x => x !== m);
       if (groundLoot.slice(g0).some(g => g.k === 'jewel')){ lan++;
-        if (!seen.includes('forge_ok')) return { loi: 'ngọc rơi mà không gọi âm riêng: ' + seen.join(',') }; }
+        if (!seen.includes('forge_ok')){ Object.assign(JEWEL_DROP.mob, _luu); AudioSys.sfx = orig;
+          return { loi: 'ngọc rơi mà không gọi âm riêng: ' + seen.join(',') }; } }
       groundLoot = [];
     }
+    Object.assign(JEWEL_DROP.mob, _luu);
     AudioSys.sfx = orig;
     return { lan, ok: lan === 3 };
   });

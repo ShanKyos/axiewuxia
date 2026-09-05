@@ -35,19 +35,101 @@ const { chromium } = require('playwright');
       for (let i = 0; i < n; i++) rollJewels(def, srcK);
       return { ...player.jewels };
     };
-    // 40k chứ không phải N=5000: chucPhuc kỳ vọng 63 vs linhHon 49 với sd≈8 — cỡ mẫu 5000
-    // thỉnh thoảng cho hoà (đã bắt được một lần 49/49), làm phép so thứ tự hiếm đỏ oan.
-    o.ngoc_thuong_daiIII = đếmNgọc('mob', 50, 40000);
+    // 1 TRIỆU con, không phải 40k. Từ khi nhịp ngọc về đích 3 Chúc Phúc/giờ thì tỉ lệ mỗi con
+    // hạ ~11 lần: ở 40k, chucPhuc kỳ vọng 33 vs linhHon 22 với sd≈5,5 — hai phân bố chồng lên
+    // nhau và phép so thứ tự hiếm HOÀ thường xuyên (đã bắt được một lần 32/32, bài đỏ oan trong
+    // khi bảng hoàn toàn đúng). Ở 1 triệu thì 833 vs 555, sd≈29 — cách nhau gần 10 sd.
+    o.ngoc_thuong_daiIII = đếmNgọc('mob', 50, 1000000);
     o.ngoc_tinhanh_daiIII = đếmNgọc('elite', 50, 200);
     o.ngoc_boss_daiV = đếmNgọc('thuve', 100, 50);
-    // ── Hoàn Hảo: quái KHÔNG được rơi, Bảo Hạp thì có ──
+    // ── NGỌC MỖI GIỜ: con số người chơi thật sự cảm nhận ──
+    // Đích chủ dự án chốt: ~3 Chúc Phúc · 2 Linh Hồn · 1 Sinh Mệnh mỗi giờ, neo ở DẢI GIỮA
+    // (cấp 41–60) vì đó là chỗ tốn nhiều giờ chơi nhất. Quy đổi bằng NHIP_CAY — nhịp cày đo
+    // được bằng AUTO. Không đọc hằng số: mô phỏng thẳng qua rollJewels().
+    const ngocMoiGio = (lv, dai) => {
+      // 2 triệu: loại hiếm nhất (Hỗn Độn, 0,5/giờ) kỳ vọng 278 viên, sd≈16,7 — dung sai ±25%
+      // của bài là ±69 viên, tức 4,1 sd. Ở 300k thì chỉ còn 1,6 sd và bài đỏ ngẫu nhiên ~11%
+      // số lần chạy. Đo được đúng một lần như thế: 0,67 viên/giờ trên đích 0,5.
+      const n = 2000000;
+      const đ = đếmNgọc('mob', lv, n);
+      const K = NHIP_CAY;                    // dải giữa cày xấp xỉ đúng nhịp tham chiếu
+      const r2 = {};
+      for (const k in đ) r2[k] = +(đ[k] / n * K).toFixed(2);
+      return r2;
+    };
+    o.ngocMoiGio_daiGiua = ngocMoiGio(50, 2);
+    o.dichNgoc = { ...NGOC_MOI_GIO };
+
+    // ── PHỤ KIỆN TÁCH CUỘN RIÊNG ──
+    // Hai điều phải đúng cùng lúc: (a) bể ô trang bị KHÔNG còn dây chuyền/nhẫn, (b) tỉ lệ phụ
+    // kiện đúng 1%/con. Thiếu (a) thì phụ kiện rơi cả hai đường và 1% chỉ là con số trên giấy.
+    const đếmÔ = (slots, n) => { const c = {};
+      for (let i = 0; i < n; i++){ const it = genItem(50, 0, 'mob', { slots }); c[it.slot] = (c[it.slot]||0)+1; }
+      return c; };
+    o.oTrangBi = Object.keys(đếmÔ(DROP_O_TRANGBI, 4000)).sort();
+    o.oPhuKien = Object.keys(đếmÔ(DROP_O_PHUKIEN, 4000)).sort();
+    o.tiLePhuKien = DROP_PHUKIEN;
+    o.phuKienMoiGio = +(DROP_PHUKIEN * NHIP_CAY).toFixed(1);
+
+    // ── CÚ RỚT THẲNG +9 ──
+    // 0,1% trên món đã rơi, CHỈ đường quái. Rương phó bản, Box Kundun và tiệm phải bằng 0.
+    const đếmP9 = (srcK, n, opts) => { let c = 0;
+      for (let i = 0; i < n; i++) if (genItem(50, 0, srcK, opts).plus >= DROP_PLUS9_MUC) c++;
+      return +(c / n * 100).toFixed(3); };
+    o.p9_quai   = đếmP9('mob', 400000);
+    o.p9_boss   = đếmP9('thuve', 400000);
+    o.p9_ruong  = đếmP9('box5', 100000);
+    o.p9_khongNguon = đếmP9(null, 100000);           // tiệm, Lò Hỗn Loạn, đồ tặng
+    o.p9_mucRen = DROP_PLUS9_MUC;
+    // ép tỉ lệ: mức rèn phải đúng DROP_PLUS9_MUC, không phải một con số khác
+    o.p9_mucThucTe = (() => { const it = genItem(50, 0, 'mob', { plus9: 1 }); return it.plus; })();
+
+    // ── CHỐNG ĐỠ: dòng CỨNG trên MỌI món, mọi đường sinh đồ ──
+    // Ba điều: (a) có trên 100% món, kể cả phụ kiện; (b) CỨNG — cùng giai thì cùng con số,
+    // không bốc ngẫu nhiên; (c) lên theo mức rèn.
+    const cdCua = (slots, n) => { let co = 0; const gt = new Set();
+      for (let i = 0; i < n; i++){
+        const d = genItem(50, 0, 'mob', { slots }).subs.find(x => x.cung);
+        if (d){ co++; gt.add(d.v); }
+      }
+      return { pct: +(co/n*100).toFixed(1), soGiaTri: gt.size, giaTri: [...gt][0] };
+    };
+    o.cd_trangBi = cdCua(DROP_O_TRANGBI, 3000);
+    o.cd_phuKien = cdCua(DROP_O_PHUKIEN, 3000);
+    // genSpecific() là ĐƯỜNG THỨ HAI (/gen, đồ thưởng nhiệm vụ) — nó tự dựng dòng phụ nên rất
+    // dễ bị bỏ quên. Đã quên đúng một lần: đo ra tỉ lệ đỡ đòn bằng 0 sau khi /gen đủ bộ giai 7.
+    o.cd_genSpecific = +(Array.from({length:600}, () =>
+      genSpecific('ao', 2, 100).subs.some(x => x.cung) ? 1 : 0).reduce((a,c)=>a+c,0) / 600 * 100).toFixed(1);
+    o.cd_theoGiai = [1,4,7].map(t => chongDoGiai(t));
+    // lên theo mức rèn: đủ bộ giai 7, +0 so với +9
+    const doDon = (plus) => { cheatExec('/gen 7 +' + plus); calcDerived();
+      return +(player.excBlock * 100).toFixed(1); };
+    o.cd_doDon_plus0 = doDon(0);
+    o.cd_doDon_plus9 = doDon(9);
+
+    // ── VẬN: 50% món rơi, mỗi món có Vận kèm một dòng Sát Thương Tối Đa 1–5% ──
+    let van = 0, coDong = 0; const gtST = new Set();
+    for (let i = 0; i < 20000; i++){
+      const it = genItem(50, 0, 'mob', { slots: DROP_O_TRANGBI });
+      if (!it.luck) continue;
+      van++;
+      const d = it.subs.find(x => x.van);
+      if (d){ coDong++; gtST.add(d.v); }
+    }
+    o.van_pct = +(van/20000*100).toFixed(1);
+    o.van_moiMonCoDong = van === coDong;
+    o.van_giaTri = [...gtST].sort((a,c)=>a-c);
+
+    // ── Hoàn Hảo: quái rơi 0,5% (chủ dự án chốt), Box Kundun luôn ra ──
     const đếmHH = (srcK, n) => { let c = 0;
       for (let i = 0; i < n; i++) if (genItem(50, 0, srcK).perfect) c++;
-      return c; };
-    o.hh_quaiThuong = đếmHH('mob', 2000);
-    o.hh_tinhAnh    = đếmHH('elite', 2000);
-    o.hh_boss       = đếmHH('thuve', 2000);
-    o.hh_tuongQuan  = đếmHH('tranai', 2000);
+      return +(c / n * 100).toFixed(2); };
+    o.hh_quaiThuong = đếmHH('mob', 200000);
+    o.hh_tinhAnh    = đếmHH('elite', 200000);
+    o.hh_boss       = đếmHH('thuve', 200000);
+    o.hh_tuongQuan  = đếmHH('tranai', 200000);
+    // Rương Boss Săn KHÔNG còn là con đường thứ ba tới Hoàn Hảo
+    o.hh_ruongSan = {}; for (const t of [1,2,3,4,5]) o.hh_ruongSan['box'+t] = đếmHH('box'+t, 20000);
     const đếmHHHap = (t, n) => { let c = 0;
       for (let i = 0; i < n; i++) if (genItem(50, 0.5, null, { perfect: BAOHAP_PERFECT[t] }).perfect) c++;
       return +(c / n * 100).toFixed(1); };
@@ -92,19 +174,66 @@ const { chromium } = require('playwright');
   console.log(JSON.stringify(r, null, 1));
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
   const T = r.tiLeRoi;
-  for (const [d, exp] of [['I',7],['II',8],['III',9],['IV',10],['V',12]]){
-    if (Math.abs(T[d].mob - exp) > 1.6) fail(`dải ${d}: quái thường rơi ${T[d].mob}%, bảng chốt ~${exp}%`);
+  // ĐÍCH: mười con một món, PHẲNG qua cả năm dải. `drop:0.5` của con quái thử nhân vào ±20%
+  // nên mức đo được là 10 × (0,80 + 0,40×0,5) = 10,0%.
+  for (const d of ['I','II','III','IV','V']){
+    if (Math.abs(T[d].mob - 10) > 0.3) fail(`dải ${d}: quái thường rơi ${T[d].mob}%, đích 10% (mười con một món)`);
     if (T[d].elite < T[d].mob * 2.8) fail(`dải ${d}: tinh anh (${T[d].elite}%) không cách quái thường đủ xa`);
   }
-  if (!(T.V.mob > T.I.mob)) fail('dải V không rơi nhiều hơn dải I — bảng vẫn phẳng');
   if (!(r.giauNgheo.giau > r.giauNgheo.ngheo * 1.15)) fail(`46 giá trị drop: vẫn là trường chết (${r.giauNgheo.ngheo} vs ${r.giauNgheo.giau})`);
-  if (r.giauNgheo.giau > 9) fail(`con "giàu" dải I rơi ${r.giauNgheo.giau}% — phá mức đã chốt cho dải`);
+  if (r.giauNgheo.giau > 12.5) fail(`con "giàu" dải I rơi ${r.giauNgheo.giau}% — phá mức đã chốt (trần ±20% của 10%)`);
   const ng = r.ngoc_thuong_daiIII;
   if (!(ng.chucPhuc > 0)) fail('quái THƯỜNG vẫn rơi 0 ngọc — vòng kinh tế MU chưa nối');
   if (!(ng.chucPhuc > ng.linhHon && ng.linhHon > ng.sinhMenh && ng.sinhMenh > ng.honDon))
     fail(`thứ tự hiếm của 4 loại ngọc sai: ${JSON.stringify(ng)}`);
-  if (r.hh_quaiThuong || r.hh_tinhAnh || r.hh_boss || r.hh_tuongQuan)
-    fail(`Hoàn Hảo vẫn rơi từ quái (thường ${r.hh_quaiThuong} · tinh anh ${r.hh_tinhAnh} · boss ${r.hh_boss} · tướng quân ${r.hh_tuongQuan})`);
+  // Hoàn Hảo từ quái: 0,5% TRÊN MÓN ĐÃ RƠI, cả bốn nguồn quái như nhau. Sai số ±0,12 ở cỡ mẫu
+  // 200k (sd ≈ 0,016%, nên 0,12 là rất rộng — chỉ để bắt lỗi bảng, không bắt nhiễu).
+  for (const [ten, v] of [['thường',r.hh_quaiThuong],['tinh anh',r.hh_tinhAnh],
+                          ['boss',r.hh_boss],['tướng quân',r.hh_tuongQuan]])
+    if (Math.abs(v - 0.5) > 0.12) fail(`Hoàn Hảo từ quái ${ten}: ${v}%, bảng chốt 0,5%`);
+  for (const k in r.hh_ruongSan) if (r.hh_ruongSan[k] !== 0)
+    fail(`Rương Boss Săn ${k} vẫn ra ${r.hh_ruongSan[k]}% Hoàn Hảo — đó là con đường THỨ BA, phải bằng 0`);
+
+  // ── NHỊP NGỌC MỖI GIỜ ──
+  for (const k in r.dichNgoc){
+    const co = r.ngocMoiGio_daiGiua[k], can = r.dichNgoc[k];
+    if (Math.abs(co - can) > can * 0.25)
+      fail(`${k}: ${co} viên/giờ ở dải giữa, đích ${can} (lệch quá 25%)`);
+  }
+  // ── CÚ RỚT THẲNG +9 ──
+  for (const [ten, v] of [['quái thường', r.p9_quai], ['boss', r.p9_boss]])
+    if (Math.abs(v - 0.1) > 0.045) fail(`rớt thẳng +9 từ ${ten}: ${v}%, đích 0,1%`);
+  if (r.p9_ruong !== 0) fail(`Rương Boss Săn ra ${r.p9_ruong}% món rèn sẵn — chỉ đường QUÁI mới có`);
+  if (r.p9_khongNguon !== 0) fail(`đồ không từ quái (tiệm/Lò/tặng) ra ${r.p9_khongNguon}% món rèn sẵn`);
+  if (r.p9_mucThucTe !== r.p9_mucRen) fail(`ép tỉ lệ ra món +${r.p9_mucThucTe}, phải +${r.p9_mucRen}`);
+
+  // ── CHỐNG ĐỠ ──
+  for (const [ten, c] of [['trang bị', r.cd_trangBi], ['phụ kiện', r.cd_phuKien]]){
+    if (c.pct !== 100) fail(`Chống Đỡ chỉ có trên ${c.pct}% món ${ten} — phải là dòng cứng của MỌI món`);
+    if (c.soGiaTri !== 1) fail(`Chống Đỡ trên ${ten} ra ${c.soGiaTri} giá trị khác nhau cùng một giai — phải CỨNG, không bốc`);
+  }
+  if (r.cd_genSpecific !== 100)
+    fail(`genSpecific() chỉ gắn Chống Đỡ cho ${r.cd_genSpecific}% món — /gen và đồ thưởng nhiệm vụ sẽ thiếu`);
+  if (!(r.cd_theoGiai[0] < r.cd_theoGiai[1] && r.cd_theoGiai[1] < r.cd_theoGiai[2]))
+    fail(`Chống Đỡ không leo theo giai: ${JSON.stringify(r.cd_theoGiai)}`);
+  if (!(r.cd_doDon_plus9 > r.cd_doDon_plus0 * 1.5))
+    fail(`ép ngọc lên +9 mà Chống Đỡ gần như không đổi (${r.cd_doDon_plus0}% → ${r.cd_doDon_plus9}%)`);
+  if (r.cd_doDon_plus9 >= 40)
+    fail(`đủ bộ giai đỉnh +9 đã chạm trần đỡ đòn 40% (${r.cd_doDon_plus9}%) — không còn chỗ cho dòng Hoàn Hảo`);
+
+  // ── VẬN ──
+  if (Math.abs(r.van_pct - 50) > 1.5) fail(`Vận ra ${r.van_pct}% món, chủ dự án chốt 50%`);
+  if (!r.van_moiMonCoDong) fail('có món mang Vận mà KHÔNG có dòng Sát Thương Tối Đa');
+  if (r.van_giaTri.join(',') !== '1,2,3,4,5')
+    fail(`dòng Sát Thương Tối Đa ra các giá trị ${r.van_giaTri.join(',')}, phải trải đủ 1–5`);
+
+  // ── PHỤ KIỆN ──
+  if (r.oTrangBi.join(',') !== 'ao,chan,non,tay,vukhi')
+    fail(`bể ô TRANG BỊ sai: ${r.oTrangBi.join(',')} — dây chuyền/nhẫn lọt vào là 1% thành vô nghĩa`);
+  if (r.oPhuKien.join(',') !== 'daychuyen,nhan1,nhan2')
+    fail(`bể ô PHỤ KIỆN sai: ${r.oPhuKien.join(',')}`);
+  if (Math.abs(r.tiLePhuKien - 0.01) > 1e-9)
+    fail(`tỉ lệ phụ kiện ${r.tiLePhuKien}, chủ dự án chốt 1%`);
   // LUẬT ĐÃ ĐỔI có chủ đích: Box Kundun nay LUÔN ra đồ Hoàn Hảo ở mọi bậc, cái hên xui chuyển
   // sang SỐ DÒNG. Nên "Hoàn Hảo leo theo bậc hạp" không còn là mệnh đề đúng — thay bằng mệnh đề
   // mới: mọi bậc đều phải 100%. Chi tiết luật xem test_boxrule.
@@ -122,7 +251,10 @@ const { chromium } = require('playwright');
   if (!r.giap_dongTuBangGiap) fail('giáp roll trúng dòng của VŨ KHÍ');
   if (r.tacDung.hoiQi !== 8) fail(`dòng hồi Qi không có tác dụng (${r.tacDung.hoiQi})`);
   if (!r.tacDung.atkTang) fail('dòng ST theo cấp không làm tăng sát thương');
-  if (r.tacDung.doDon !== 10) fail(`dòng Đỡ Đòn không có tác dụng (${r.tacDung.doDon}%)`);
+  // 11% chứ không phải 10%: dòng Hoàn Hảo "Tỉ lệ Đỡ Đòn" cho 10, còn dòng CỨNG Chống Đỡ của
+  // chính món đó cộng thêm ~1 ở giai đang thử. Hai thứ CHỒNG vào cùng một nhánh excBlock, đó
+  // là chủ ý — Chống Đỡ là nền mọi món đều có, dòng Hoàn Hảo là phần thưởng chồng lên.
+  if (r.tacDung.doDon < 10) fail(`dòng Đỡ Đòn không có tác dụng (${r.tacDung.doDon}%)`);
   if (!(r.lucChien.coHH > r.lucChien.khongHH))
     fail(`lực chiến MÙ trước dòng Hoàn Hảo (${r.lucChien.coHH} = ${r.lucChien.khongHH}) — auto sẽ tháo mất đồ Hoàn Hảo`);
 

@@ -163,13 +163,42 @@ function giaiName(t){ return GIAI_NAMES[clamp((t||1)-1, 0, GIAI_NAMES.length-1)]
 // Trước đây DROP_SRC.chance chỉ có 4 ngăn cứng, nên Axie Heo Rừng cấp 1 và Cuồng Binh Tro Tàn
 // cấp 102 rơi đồ với xác suất Y HỆT nhau: 6%. Về cuối game mỗi con quái tốn nhiều thời gian
 // hơn hẳn, tỉ lệ phải bù lại.
+// ĐÍCH: MƯỜI CON MỘT MÓN (chủ dự án chốt) ⇒ 1/10 = 0,10 mỗi con, PHẲNG qua cả năm dải.
+// Bản trước leo 0,07 → 0,12 theo dải với lý do "cuối game mỗi con tốn nhiều thời gian hơn".
+// Lý do đó không còn đứng: đo được cuối game giết 5.100 con/giờ so với 3.600 ở đầu game, tức
+// NHANH hơn chứ không chậm hơn. Leo tỉ lệ theo dải là cộng dồn hai lần lên cùng một hướng.
+// Tinh anh và boss giữ nguyên bảng cũ — chúng hiếm gặp, nhịp của chúng là chuyện khác.
+const DROP_1_TREN = 10;                     // mười con một món
 const DROP_RATE = {          // dải:  I     II    III   IV    V
-  mob:    [0.07, 0.08, 0.09, 0.10, 0.12],
+  mob:    Array(5).fill(1 / DROP_1_TREN),
   elite:  [0.28, 0.30, 0.33, 0.36, 0.40],
   thuve:  [1, 1, 1, 1, 1],
   tranai: [1, 1, 1, 1, 1],
 };
 const DROP_COUNT = { thuve:[1,2,2,2,3], tranai:[2,2,3,3,3] };
+// ── PHỤ KIỆN TÁCH RA MỘT CUỘN RIÊNG ─────────────────────────────────────────
+// Trước đây genItem() bốc ĐỀU trong cả 8 ô rơi được, nên dây chuyền và hai nhẫn ăn 3/8 = 37,5%
+// mọi món rơi ra. Ở nhịp 3.600 con/giờ với 9%/con thì đó là ~121 món phụ kiện MỖI GIỜ — nhiều
+// tới mức không món nào còn nghĩa lý, đúng cái "loãng game" mà chủ dự án nói.
+//
+// Nay tách hẳn hai cuộn:
+//   · TRANG BỊ — 5 ô (vũ khí · nón · áo · tay · chân), giữ NGUYÊN nhịp cũ. Nhịp cũ ×5/8 chính
+//     là phần trang bị vẫn luôn rơi, nên người chơi không thấy đồ mặc ít đi.
+//   · PHỤ KIỆN — 1% mỗi con, KHÔNG theo dải, không theo loại quái. Chủ dự án chốt con số này.
+//     Ở nhịp 3.600 con/giờ ra ~36 món/giờ, so với 121 trước đây.
+const DROP_O_TRANGBI = ['vukhi', 'non', 'ao', 'tay', 'chan'];
+const DROP_O_PHUKIEN = ['daychuyen', 'nhan1', 'nhan2'];
+const DROP_PHUKIEN = 0.01;
+// ── CÚ ĂN MAY: MÓN RỚT RA ĐÃ SẴN +9 ─────────────────────────────────────────
+// 0,1% TRÊN MÓN ĐÃ RƠI (chủ dự án chốt) — cùng đơn vị với DROP_PERFECT, không phải mỗi con.
+// Ở nhịp 10 con/món và 3.600 con/giờ thì ra ~0,36 món mỗi giờ, tức trung bình gần ba giờ một
+// lần. Đủ hiếm để nhớ được lần nào cũng nhớ, đủ thường để tin là có thật.
+//
+// Vì sao +9 chứ không phải +11: +9 là mốc CUỐI của đường rèn an toàn (Chúc Phúc tới +6, Linh
+// Hồn tới +9). Từ +10 trở lên phải đánh cược tụt cấp. Cho rơi thẳng +9 là tặng đúng cái phần
+// dài dòng nhất của quá trình, mà vẫn chừa lại đoạn đáng hồi hộp nhất.
+const DROP_PLUS9 = 0.001;
+const DROP_PLUS9_MUC = 9;
 function mobBand(lv){ return lv <= 20 ? 0 : lv <= 40 ? 1 : lv <= 60 ? 2 : lv <= 80 ? 3 : 4; }
 // 46 giá trị `drop:` đã cân sẵn trên từng con quái (0,14 → 1,0) nay SỐNG lại — nhưng làm hệ số
 // TRONG dải, không phải tỉ lệ tuyệt đối: con "giàu" rơi nhiều hơn con "nghèo" cùng dải chừng
@@ -190,17 +219,44 @@ function mobDropCount(def, srcK){
 // dòng và có món một dòng vô dụng. Bậc hộp thì KHÔNG đụng tới phẩm chất, nó chỉ quyết định
 // CẤP ĐỒ, tức chất liệu: bậc I ra đồ vải thô, bậc VII ra đồ giai cuối (xem BAOHAP_TIERS).
 const BAOHAP_PERFECT = [0, 1, 1, 1, 1, 1, 1, 1];
-// ── NGỌC RƠI TỪ MỌI LOẠI QUÁI (vòng kinh tế MU Season 1) ────────────────────
-// Trước đây quái thường rơi ĐÚNG 0 ngọc: muốn rèn thì bắt buộc phải chờ sự kiện thế giới hoặc
-// mở Bảo Hạp. Trong MU thì ngọc rơi từ quái thường — đó là thứ khiến việc cày có nghĩa mỗi ngày.
-// Nhân theo dải quái ×1,0 → ×1,8: cuối game mỗi con tốn nhiều thời gian hơn hẳn.
-const JEWEL_DROP = {
-  mob:    { chucPhuc:0.009, linhHon:0.007, sinhMenh:0.0025, honDon:0.0010 },
-  elite:  { chucPhuc:0.045, linhHon:0.035, sinhMenh:0.016,  honDon:0.008  },
-  thuve:  { chucPhuc:0.20,  linhHon:0.12,  sinhMenh:0.06,   honDon:0.03   },
-  tranai: { chucPhuc:1.00,  linhHon:0.45,  sinhMenh:0.22,   honDon:0.12   },
-};
-const JEWEL_BAND_MUL = [1.0, 1.2, 1.4, 1.6, 1.8];
+// ── NGỌC RƠI TỪ MỌI LOẠI QUÁI ───────────────────────────────────────────────
+// MỘT BẢNG DUY NHẤT. Trước đây có HAI đường rơi ngọc chạy song song: bảng này, cộng thêm một
+// khối viết cứng trong onKill (boss 41% · tinh anh 3% Chúc Phúc). Hai đường cùng bắn vào một
+// túi nên không ai chỉnh được nhịp: sửa bảng thì khối kia vẫn rơi, sửa khối kia thì bảng vẫn
+// rơi. Khối đó đã gộp hẳn vào đây.
+//
+// ── NHỊP CÀY THAM CHIẾU ─────────────────────────────────────────────────────
+// ĐO ĐƯỢC bằng AUTO, mỗi mốc một trang sạch, 10 phút giờ game, lấy TRUNG VỊ theo phút:
+//     cấp 10 · Rừng Sương    60 con/phút → 3.600 con/giờ
+//     cấp 30 · Ngoại Thành   39 con/phút → 2.340 con/giờ
+//     cấp 50 · Cổ Mộc        61 con/phút → 3.660 con/giờ
+//     cấp 100 · Tro Tàn      85 con/phút → 5.100 con/giờ
+// (Dải cấp 61–80 chưa đo sạch được — xem ghi chú trong tools/dokiemngoc.cjs.)
+// Lấy 3.600 làm mốc quy đổi. Mọi con số "mỗi giờ" dưới đây chia cho nó ra tỉ lệ mỗi con.
+//
+// ĐÍCH THIẾT KẾ (chủ dự án chốt): một giờ cày ra ~3 Chúc Phúc · 2 Linh Hồn · 1 Sinh Mệnh.
+// Thứ tự đó mượn từ MU: Bless và Soul là tiền tệ hằng ngày, Life là món hiếm để dành. Hỗn Độn
+// thêm 0,5/giờ — nó chỉ dùng để đổi hệ nên không cần nhiều.
+// Đo lại bằng: node tools/dokiemngoc.cjs (mô phỏng cả bốn nguồn trên nhịp cày đo được).
+const NHIP_CAY = 3600;
+const NGOC_MOI_GIO = { chucPhuc: 3, linhHon: 2, sinhMenh: 1, honDon: 0.5 };
+// Tỉ lệ ĐỈNH cho quái thường ở dải giữa. Ba nguồn còn lại giữ ĐÚNG tỉ số cũ so với quái
+// thường (tinh anh ×5, Vệ Binh Trụ ×22, Trấn Ải ×111) — đợt này chỉ hạ ĐỘ LỚN, không đụng
+// tới cán cân giữa các nguồn, vì cán cân đó vốn đã cân sẵn.
+const JEWEL_SRC_MUL = { mob: 1, elite: 5, thuve: 22, tranai: 111 };
+const JEWEL_DROP = (() => {
+  const goc = {}, T = {};
+  for (const k in NGOC_MOI_GIO) goc[k] = NGOC_MOI_GIO[k] / NHIP_CAY;
+  for (const src in JEWEL_SRC_MUL){
+    T[src] = {};
+    for (const k in goc) T[src][k] = goc[k] * JEWEL_SRC_MUL[src];
+  }
+  return T;
+})();
+// Dải quái nhân nhẹ thôi (×0,85 → ×1,15). Bản cũ là ×1,0 → ×1,8, mà cuối game người chơi CÒN
+// giết nhanh hơn hẳn (5.100 so với 3.600 con/giờ) — hai thứ nhân vào nhau là cuối game ra gấp
+// hơn hai lần rưỡi đầu game. Neo ở dải giữa (cấp 41–60) vì đó là chỗ tốn nhiều giờ chơi nhất.
+const JEWEL_BAND_MUL = [0.85, 0.92, 1.0, 1.08, 1.15];
 function rollJewels(def, srcK, x, y){
   const tbl = JEWEL_DROP[srcK]; if (!tbl) return;
   const mul = JEWEL_BAND_MUL[mobBand(def.lv || 1)];
@@ -213,17 +269,31 @@ function rollJewels(def, srcK, x, y){
       addFloat(player.x, player.y - 70, '+1 ' + JEWEL_NAMES[k], JEWEL_COLORS[k], 13); AudioSys.sfx('forge_ok', 0.85); }
   }
 }
+// ── ĐỒ HOÀN HẢO: CHỈ HAI CON ĐƯỜNG ──────────────────────────────────────────
+// `perfect` ở đây là "món vừa rơi có phải Hoàn Hảo không", tính TRÊN MÓN ĐÃ RƠI chứ không phải
+// trên mỗi con quái. Quái thường rơi đồ 9%/con, nên 0,5% của số đó ra ~0,045%/con — khoảng 1,6
+// món Hoàn Hảo mỗi giờ ở nhịp cày 3.600 con/giờ.
+//
+//   1. QUÁI — 0,5% (chủ dự án chốt). Áp cho cả bốn nguồn quái, không phân biệt thường hay boss:
+//      boss vốn đã rơi 3 món một lần nên tự nó đã gấp ba cơ hội.
+//   2. BOX KUNDUN — LUÔN ra Hoàn Hảo (xem BAOHAP_PERFECT). Cái hên xui nằm ở SỐ DÒNG, không
+//      nằm ở "có Hoàn Hảo hay không".
+//
+// Rương Boss Săn (box1..box5) từng là con đường THỨ BA, 5–25% — gấp 10 tới 50 lần đường quái,
+// đủ để làm cả hai đường kia thành vô nghĩa. Đã đưa về 0: rương phó bản vẫn hào phóng ở PHẨM
+// (bảng `rar` giữ nguyên, box5 ra 60% Chí Tôn), chỉ không còn phát Hoàn Hảo.
+const DROP_PERFECT = 0.005;
 const DROP_SRC = {
-  mob:    { rar:[80,19,1,0,0],  perfect:0 },
-  elite:  { rar:[0,70,28,2,0],  perfect:0 },
-  thuve:  { rar:[0,28,52,18,2], perfect:0 },
-  tranai: { rar:[0,0,38,52,10], perfect:0 },
+  mob:    { rar:[80,19,1,0,0],  perfect:DROP_PERFECT },
+  elite:  { rar:[0,70,28,2,0],  perfect:DROP_PERFECT },
+  thuve:  { rar:[0,28,52,18,2], perfect:DROP_PERFECT },
+  tranai: { rar:[0,0,38,52,10], perfect:DROP_PERFECT },
   // Rương Boss Săn (phó bản, MU Online-style) — 5 cấp, cấp càng cao càng chắc ra phẩm cao
-  box1: { chance:1, rar:[70,25,5,0,0],  perfect:0    },
-  box2: { chance:1, rar:[0,60,32,8,0],  perfect:0.05 },
-  box3: { chance:1, rar:[0,10,55,30,5], perfect:0.10 },
-  box4: { chance:1, rar:[0,0,30,55,15], perfect:0.15 },
-  box5: { chance:1, rar:[0,0,5,35,60],  perfect:0.25 },
+  box1: { chance:1, rar:[70,25,5,0,0],  perfect:0 },
+  box2: { chance:1, rar:[0,60,32,8,0],  perfect:0 },
+  box3: { chance:1, rar:[0,10,55,30,5], perfect:0 },
+  box4: { chance:1, rar:[0,0,30,55,15], perfect:0 },
+  box5: { chance:1, rar:[0,0,5,35,60],  perfect:0 },
 };
 function rollRaritySrc(srcK){
   const w = DROP_SRC[srcK].rar; let tot = 0; for (const x of w) tot += x;
@@ -271,9 +341,31 @@ function rollExcLines(slotId, ep){
   return out;
 }
 const RARITY_SUBS = [0,1,2,3,4]; // số dòng phụ mở theo phẩm Phàm..Chí Tôn
+// ── CHỐNG ĐỠ: dòng CỨNG của mọi món ─────────────────────────────────────────
+// Không bốc ngẫu nhiên: hai món cùng giai thì Chống Đỡ y hệt nhau. Đây là phần "thân đồ" —
+// thứ người chơi được bảo đảm khi lên giai, đối trọng với dòng phụ vốn hên xui hoàn toàn.
+//
+// LÀ TỈ LỆ ĐỠ ĐÒN, KHÔNG PHẢI PHÒNG NGỰ. Bản đầu em đổ nó vào chỉ số `def` cho gọn, rồi đo
+// thấy KHÔNG ĐỔI GÌ: defRed = def/(def+60) chạm trần 0,78 từ khoảng def ≈ 213, mà một bộ giáp
+// giai 2 đã vượt mốc đó. Mọi điểm Phòng Ngự sau đấy là số chết. Nên Chống Đỡ đi vào nhánh
+// `excBlock` — xác suất đỡ trọn một đòn, trần riêng 40%, còn chỗ để lớn.
+// (Ghi lại luôn cái phát hiện kia: Phòng Ngự trên giáp giai 3+ gần như vô nghĩa. Đó là chuyện
+//  cân bằng có sẵn từ trước, không phải do đợt này — nêu ra để đừng ai tưởng đã sửa.)
+//
+// LÊN THEO MỨC RÈN mà không cần một dòng mã nào: calcDerived nhân mọi dòng phụ với
+// m = 1 + plus×PLUS_STEP. Ép Chúc Phúc lên +1 +2 +3 +4 là Chống Đỡ tự leo theo.
+// Cân sao cho đủ bộ 8 món giai 7 rèn +9 tới sát trần mà không tràn:
+// 8 × 1,98% × (1 + 9×0,13) = 34% trên trần 40%.
+const VAN_TILE = 0.50;             // nửa số món rơi ra có Vận
+const CHONGDO_GOC = 0.30, CHONGDO_BUOC = 0.28;
+function chongDoGiai(t){ return +(CHONGDO_GOC + (clamp(t || 1, 1, GIAI_MAX) - 1) * CHONGDO_BUOC).toFixed(2); }
+// ── VẬN: dòng SÁT THƯƠNG TỐI ĐA ─────────────────────────────────────────────
+// Món có Vận được thêm một dòng bốc ngẫu nhiên 1–5% sát thương tối đa. Game tính sát thương
+// bằng MỘT con số (không tách min/max như MU), nên "tối đa" ở đây chính là sát thương đòn đánh.
+const VAN_STMAX = [1, 5];
 // Bốc dòng phụ. Một chỗ duy nhất cho cả lúc rơi lẫn lúc Tấn Phẩm — trước đây hai nơi chép
 // cùng một đoạn, nên sửa luật ở nơi này mà quên nơi kia là đồ rơi và đồ tấn phẩm khác luật nhau.
-function rollSubs(slotId, rarity, perfect){
+function rollSubs(slotId, rarity, perfect, tier, luck){
   const all = (ARMOR_SLOTS.includes(slotId) ? ARMOR_SUBS : WEAPON_SUBS);
   const vip = all.filter(d => d.vip), pool = all.filter(d => !d.vip);
   const out = [];
@@ -289,6 +381,20 @@ function rollSubs(slotId, rarity, perfect){
   const want = Math.min(all.length, perfect ? 1 + Math.floor(Math.random() * 4) : RARITY_SUBS[rarity]);
   const bag = pool.slice();
   while (out.length < want && bag.length) take(bag.splice(Math.floor(Math.random() * bag.length), 1)[0]);
+  return themDongCung(out, tier, luck);
+}
+// HAI DÒNG CỨNG của mọi món: Chống Đỡ (theo giai) và Sát Thương Tối Đa (nếu có Vận).
+// Gắn SAU cùng nên chúng không ăn vào hạn ngạch dòng phụ.
+//
+// TÁCH RA MỘT HÀM vì có HAI đường sinh đồ, không phải một: rollSubs() lo đồ rơi và đồ Tấn
+// Phẩm, còn genSpecific() tự dựng dòng phụ riêng và lo /gen cùng đồ thưởng nhiệm vụ. Bản đầu
+// em chỉ gắn vào rollSubs, đo ra tỉ lệ đỡ đòn bằng 0 khi /gen đủ bộ giai 7 — đồ thưởng nhiệm
+// vụ cũng thiếu Chống Đỡ y như vậy, mà đó là đồ người chơi thật sự mặc.
+function themDongCung(out, tier, luck){
+  if (tier) out.push({ k:'excBlock', name:'Chống Đỡ', v: chongDoGiai(tier), pct:true, cung:true });
+  if (luck) out.push({ k:'atkPct', name:'☘ Sát Thương Tối Đa',
+                       v: VAN_STMAX[0] + Math.floor(Math.random() * (VAN_STMAX[1] - VAN_STMAX[0] + 1)),
+                       pct:true, van:true });
   return out;
 }
 // Roll lại tên + chỉ số gốc + dòng phụ khi phẩm đổi (Tấn Phẩm / pity đai)
@@ -296,7 +402,7 @@ function rerollItemRarity(it){
   it.name = (it.perfect ? 'Hoàn Hảo ' : '') + ITEM_NAMES[it.slot][it.rarity];
   const slot = SLOTS.find(s => s.id === it.slot);
   if (slot && it.main) it.main.v = slot.base(it.tier, it.rarity);
-  it.subs = rollSubs(it.slot, it.rarity, it.perfect);
+  it.subs = rollSubs(it.slot, it.rarity, it.perfect, it.tier, it.luck);
 }
 // str/agi/ene mỗi phái quy đổi ra Công Kích theo TRỌNG SỐ RIÊNG (SECTS[x].atkSrc) — không còn dùng
 // chung 1 công thức "str × 2" cho mọi phái. VD: Sylvan Ranger chỉ cần dồn Mẫn Tiệp là đủ mạnh, Dark Wizard
@@ -5314,7 +5420,10 @@ function subName(k){
            aspdPct:'Tốc Độ Đánh', expPct:'EXP Thêm', crit:'Bạo Kích' }[k] || k;
 }
 function genItem(level, bias, srcK, opts){
-  const dropSlots = SLOTS.filter(s => !s.special);
+  // opts.slots giới hạn bể ô. Không truyền thì bốc đều trong CẢ TÁM ô rơi được — đường đó vẫn
+  // đúng cho Box Kundun, tiệm và Lò Hỗn Loạn, nơi phụ kiện và trang bị cùng một bể.
+  const dsIds = opts && opts.slots;
+  const dropSlots = dsIds ? SLOTS.filter(s => dsIds.includes(s.id)) : SLOTS.filter(s => !s.special);
   const slot = dropSlots[Math.floor(Math.random()*dropSlots.length)];
   // Drop v2.0: nguồn boss/tinh anh dùng bảng phẳng — xóa bias lv/10 thổi phồng Chí Tôn
   const r = srcK ? rollRaritySrc(srcK) : rollRarity(bias || 0);
@@ -5326,9 +5435,17 @@ function genItem(level, bias, srcK, opts){
   const _pRate = opts && opts.perfect != null ? opts.perfect
                : srcK ? DROP_SRC[srcK].perfect : 0;
   const perfect = Math.random() < _pRate;
-  const subs = rollSubs(slot.id, r, perfect);
-  // Vận (Luck) — chỉ xuất hiện khi rơi, không rèn được: +5% ST bạo kích/món, +5% tỉ lệ rèn (tối đa +25%)
-  const luck = Math.random() < 0.06 + r*0.025 + (srcK ? 0 : (bias||0)*0.04);
+  // ── VẬN: 50% mọi món rơi ra (chủ dự án chốt) ──
+  // Bản trước là 6% + 2,5%/phẩm, tức chưa tới một phần mười. Phải khai TRƯỚC rollSubs vì dòng
+  // "Sát Thương Tối Đa" của Vận sinh ra trong đó.
+  const luck = Math.random() < VAN_TILE;
+  const subs = rollSubs(slot.id, r, perfect, tier, luck);
+  // Rèn sẵn: chỉ đường RƠI TỪ QUÁI. Không áp cho rương phó bản, Box Kundun, tiệm hay Lò Hỗn
+  // Loạn — mỗi nguồn đó đã có kiểu hào phóng riêng, chồng thêm nữa là không đọc ra nguồn nào
+  // cho cái gì. `opts.plus9` để bài kiểm ép được tỉ lệ mà không phải sửa hằng.
+  const _p9r = opts && opts.plus9 != null ? opts.plus9
+             : (srcK && !String(srcK).startsWith('box')) ? DROP_PLUS9 : 0;
+  const _plus = Math.random() < _p9r ? DROP_PLUS9_MUC : 0;
   return assignDef({
     uid: itemSeq++, slot: slot.id, slotName: slot.name,
     name: (perfect ? 'Hoàn Hảo ' : '') + ITEM_NAMES[slot.id][r],   // ghi đè bởi assignDef()
@@ -5337,7 +5454,7 @@ function genItem(level, bias, srcK, opts){
     // Hệ chỉ gắn lên VŨ KHÍ: nó là hệ của ĐÒN ĐÁNH. Trước đây mọi món đều mang một hệ mà
     // không ô nào đọc tới, còn Lò Hỗn Độn thì bán công thức Đổi Hệ ăn 1 Hỗn Độn Châu cho nó.
     element: slot.id === 'vukhi' ? ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)] : null,
-    subs, plus: 0,
+    subs, plus: _plus,
     // KHÔNG truyền gì vào đây. Tham số thứ hai của rollExcLines nay là SỐ DÒNG CHÍNH XÁC
     // một caller đưa bhTier:7 sẽ nhận 7 dòng exc thay vì 1–4 — test_droprate bắt được đúng chỗ này.
     exc: perfect ? rollExcLines(slot.id) : null,
@@ -5385,8 +5502,16 @@ function mainName(k){
 function itemStatMap(it){
   const m = 1 + it.plus * PLUS_STEP, o = {};
   if (it.main) o['m:' + it.main.k] = { name: it.main.name, v: it.main.v * m, pct: false };
-  for (const s of it.subs)
-    o['s:' + s.k] = { name: s.name, v: s.v * (s.k === 'perfect' ? 1 : m), pct: true };
+  // `pct: s.pct !== false` chứ không phải `pct: true`. Từ khi có dòng CỨNG Chống Đỡ — một số
+  // phẳng, không phải phần trăm — ép cứng true thì một dòng số phẳng sẽ in ra kèm dấu %.
+  //
+  // Khoá phải tách hai dòng CỨNG khỏi dòng phụ CÙNG TÊN KHOÁ. Dòng Vận dùng k='atkPct', mà vũ
+  // khí cũng bốc được dòng phụ 'atkPct' — chung khoá thì món ghi đè lên món và bảng so sánh
+  // nuốt mất một dòng, người chơi thấy vũ khí có Vận yếu hơn thực tế.
+  for (const s of it.subs){
+    const tag = s.cung ? ':cung' : s.van ? ':van' : '';
+    o['s:' + s.k + tag] = { name: s.name, v: s.v * (s.k === 'perfect' ? 1 : m), pct: s.pct !== false };
+  }
   if (it.plus >= 10 && it.awakened)
     o['a:' + it.awakened.k] = { name: '☆ ' + it.awakened.name, v: it.awakened.v, pct: false };
   return o;
@@ -7716,17 +7841,28 @@ function computeKillRewards(m, source, P, rng){
       const _baoDam = _phatDau && i === 0;
       if (!_baoDam && R() >= _dr + (P.dropBonus || 0)) continue;
       if (_baoDam) rw.firstDrop = true;
-      const it = genItem(Math.max(1, d.lv + (R() < 0.3 ? 1 : 0)), 0, rw.dropSrc);
+      const it = genItem(Math.max(1, d.lv + (R() < 0.3 ? 1 : 0)), 0, rw.dropSrc, { slots: DROP_O_TRANGBI });
       // Pity đai: Vệ Binh Trụ 8 lần liên tiếp không ra Thần+ → bảo đảm 1 món Thần
       if (rw.dropSrc === 'thuve' && d.bossKind === 'thuve' && (P.bossPity || 0) >= 8 && it.rarity < 3){
         it.rarity = 3; rerollItemRarity(it); it._pity = true;
       }
       if (it.rarity >= 3) rw.gotThan = true;
       // độ hiếm thấp, bán tự động là xoá vĩnh viễn thứ hiếm nhất game vì vài đồng Lumen.
-      if (P.autoSell && it.rarity <= 0) rw.autoSold.push({ it, gia: 20 + it.rarity*30 + (it.tier||1)*15 });
+      // `!it.plus` chặn đúng chỗ đó: món rớt thẳng +9 có thể là phẩm Phàm (0,1% không hỏi phẩm),
+      // mà Phàm thì tự bán nuốt luôn — người chơi mất cú ăn may ba tiếng một lần và không hề hay.
+      if (P.autoSell && it.rarity <= 0 && !it.plus) rw.autoSold.push({ it, gia: 20 + it.rarity*30 + (it.tier||1)*15 });
       else rw.items.push(it);
     }
     if (d.bossKind === 'thuve') rw.bossPity = rw.gotThan ? 0 : (P.bossPity || 0) + 1;
+    // Phụ kiện: cuộn RIÊNG, một lần mỗi con, không nhân theo dải cũng không theo DROP_COUNT.
+    // Boss rơi 3 món trang bị nhưng vẫn chỉ cuộn phụ kiện MỘT lần — dây chuyền và nhẫn là thứ
+    // để săn lâu dài, không phải thứ rơi thành xâu.
+    if (R() < DROP_PHUKIEN + (P.dropBonus || 0)){
+      const _pk = genItem(Math.max(1, d.lv + (R() < 0.3 ? 1 : 0)), 0, rw.dropSrc, { slots: DROP_O_PHUKIEN });
+      if (_pk.rarity >= 3) rw.gotThan = true;
+      if (P.autoSell && _pk.rarity <= 0 && !_pk.plus) rw.autoSold.push({ it:_pk, gia: 20 + _pk.rarity*30 + (_pk.tier||1)*15 });
+      else rw.items.push(_pk);
+    }
   }
   // Vật liệu
   if (!d.boss && !d.bossKind && R() < (d.elite ? 1 : 0.08)) rw.mats.manh = 1;
@@ -7761,6 +7897,13 @@ function applyRewards(rw, m){
   for (const s of rw.autoSold){ player.silver += s.gia; addFloat(m.x, m.y-54, `Tự bán ${s.it.name} +${s.gia}◈`, '#9aa8d4', 11); }
   for (const it of rw.items){
     if (it._pity){ delete it._pity; addFloat(m.x, m.y-110, '☘ VẬN MAY TÍCH LŨY — bảo đảm Thần phẩm!', '#7fd8e0', 13); }
+    // Món rớt thẳng +9 phải KÊU LÊN. Nó nằm lẫn dưới đất giữa mấy món Phàm rác, mà mức rèn thì
+    // chỉ thấy khi rê chuột vào — không báo là người chơi đi ngang qua cú ăn may ba tiếng một lần.
+    if (it.plus >= DROP_PLUS9_MUC){
+      addFloat(m.x, m.y-126, `✦ ${it.name} +${it.plus} — RÈN SẴN!`, '#ffd76a', 16);
+      AudioSys.sfx('forge_ok', 1);
+      logCombat(`✦ ${it.name} +${it.plus} rơi ra đã rèn sẵn`, '#ffd76a');
+    }
     dropToGround({ k:'item', it }, m.x, m.y);
   }
   if (rw.dropSrc) rollJewels(m.def, rw.dropSrc, m.x, m.y);
@@ -7867,16 +8010,9 @@ function killMob(m, source){
     player.bikip.pieces[piece]++;
     addFloat(m.x, m.y-90, `Mảnh Cổ Thư · ${TAN_QUYEN[piece]}!`, '#e84a6a', 14);
   }
-  // Tứ Châu (Track HT): boss 41% rơi châu, tinh anh 3% Chúc Phúc
-  if (m.def.boss && player.jewels){
-    const jr = Math.random();
-    let jk = null;
-    if (jr < 0.20) jk = 'chucPhuc'; else if (jr < 0.32) jk = 'linhHon';
-    else if (jr < 0.38) jk = 'sinhMenh'; else if (jr < 0.41) jk = 'honDon';
-    if (jk) dropToGround({ k:'jewel', jk }, m.x, m.y);
-  } else if (m.def.elite && player.jewels && Math.random() < 0.03){
-    dropToGround({ k:'jewel', jk:'chucPhuc' }, m.x, m.y);
-  }
+  // Ngọc rơi ở MỘT chỗ duy nhất: rollJewels(), gọi từ applyRewards(). Ở đây từng có một khối
+  // viết cứng thứ hai (boss 41% · tinh anh 3% Chúc Phúc) chạy song song với bảng JEWEL_DROP —
+  // hai nguồn cùng bắn vào một túi nên không cách nào chỉnh được nhịp cày. Đã gộp vào bảng.
   // Ma Tôn Giáng Thế: hạ boss nhận Bảo Hạp theo vùng cấp
   if (m.type === 'maton') matonKilled(m);
   if (m.def && m.def.goldBox) goldenKilled(m);
@@ -14956,10 +15092,12 @@ function genSpecific(slotId, r, level){
     const def = pool.splice(idx,1)[0];
     subs.push({ k:def.k, name:def.name, v: def.max, pct:true }); // đồ test: chỉ số tối đa
   }
+  const _van = Math.random() < VAN_TILE;
+  themDongCung(subs, tier, _van);
   return assignDef({
     uid: itemSeq++, slot: slot.id, slotName: slot.name,
     name: (armorGroup ? 'Hoàn Hảo ' : '') + ITEM_NAMES[slot.id][r],
-    rarity: r, level, tier, perfect: armorGroup,
+    rarity: r, level, tier, perfect: armorGroup, luck: _van,
     main: { k: slot.main, v: slot.base(tier, r), name: mainName(slot.main) },
     element: slot.id === 'vukhi' ? ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)] : null,
     subs, plus: 0,
