@@ -42,9 +42,7 @@ const { chromium } = require('playwright');
 
     // ── 2. KHỚP CÔNG THỨC theo khay ───────────────────────────────────
     reset(); goRoyal(false);
-    o.khayTrong_coAoChoang = ids();          // đã có áo choàng cấp 2 → công thức cloak phải TẮT
-    player.equip.aochoang = null; player.inv = player.inv.filter(x => x.slot !== 'aochoang');
-    o.khayTrong = ids();                     // chưa có áo choàng → cloak phải BẬT
+    o.khayTrong = ids();                     // khay trống — công thức 'cloak' đã gỡ hẳn
     const w = player.equip.vukhi; w.plus = 3;
     chaosAddItem(w.uid);  o.motMon_plus3 = ids();
     chaosAddJewel('chucPhuc'); o.themChucPhuc = idsReady();
@@ -128,10 +126,10 @@ const { chromium } = require('playwright');
   // 8 chứ không 40: hệ phẩm đã gỡ nên ITEM_NAMES còn ĐÚNG MỘT tên lui mỗi ô, không phải năm
   // tên chọn theo phẩm. (Trước đó là 40 = 8 ô × 5 phẩm; trước nữa là 45 khi còn ô Quần.)
   if (r.soTen !== 8) fail(`bảng tên có ${r.soTen} tên, cần 8 (mỗi ô một tên lui)`);
-  if (!r.khayTrong.includes('cloak'))
-    fail(`khay trống + chưa có áo choàng phải ra công thức cloak: ${JSON.stringify(r.khayTrong)}`);
-  if (r.khayTrong_coAoChoang.includes('cloak'))
-    fail('đã có áo choàng cấp 2 mà công thức luyện áo choàng vẫn bật');
+  // Công thức 'Luyện Áo Choàng' đã gỡ cùng cả hệ Áo Choàng — nó trùng vai với Cánh (theo định
+  // nghĩa chủ dự án chốt: Cánh CHÍNH LÀ áo choàng của Dark Lord). Gác ngược lại: nó phải BIẾN MẤT.
+  if (r.khayTrong.includes('cloak'))
+    fail(`công thức 'cloak' vẫn còn trong Lò Hỗn Độn: ${JSON.stringify(r.khayTrong)}`);
   if (!r.motMon_plus3.includes('ren')) fail('1 món +3 trong khay mà không ra Rèn Thường');
   if (!r.themChucPhuc.includes('bless')) fail('bỏ Chúc Phúc vào khay mà công thức bless chưa đủ');
   if (!r.plus9_ngoaiLoRen.includes('phathien(khoá)'))

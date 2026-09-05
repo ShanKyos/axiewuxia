@@ -501,7 +501,6 @@ const SLOTS = [
   { id:'daychuyen', name:'Dây Chuyền', main:'atk', base:(t)=>Math.round(15*GIAI_POW(t)) },
   { id:'nhan1',     name:'Nhẫn 1',     main:'crit',base:(t)=>+(1.5+t*0.9).toFixed(1) },
   { id:'nhan2',     name:'Nhẫn 2',     main:'eva', base:(t)=>+(1.5+t*0.9).toFixed(1) },
-  { id:'aochoang',  name:'Áo Choàng',  special:true }, // 2 cấp, chỉ từ Luyện Bảo Các
   { id:'canh',      name:'Cánh',       special:true }, // Thiên Thần / Tiểu Quỷ — ngoài 10 cấp
 ];
 const ARMOR_SLOTS = ['non','ao','tay','chan','nhan1','nhan2']; // có thể Hoàn Hảo
@@ -512,7 +511,10 @@ const ARMOR_SLOTS = ['non','ao','tay','chan','nhan1','nhan2']; // có thể Hoà
 //   cột PHẢI  = trang sức và đồ khoác ngoài
 const EQUIP_DOLL = {
   left:  ['non','ao','tay','chan','vukhi'],
-  right: ['canh','aochoang','daychuyen','nhan1','nhan2'],
+  // Cột phải còn BỐN ô sau khi dẹp Áo Choàng — lệch một ô so với cột trái, và để nguyên
+  // như vậy: hình nhân vật neo giữa, hai cột xếp từ trên xuống, thiếu một ô ở đáy phải không
+  // làm bố cục xô lệch. Doll của MU cũng không đối xứng.
+  right: ['canh','daychuyen','nhan1','nhan2'],
 };
 // TÊN LUI theo Ô. Trước đây leo theo PHẨM (da → sắt → thép → vảy rồng → hắc nguyệt); hệ phẩm
 // vảy rồng → hắc nguyệt. Bộ tên cũ mượn thẳng binh khí kiếm hiệp (Huyền Thiết Trọng Kiếm,
@@ -524,11 +526,6 @@ const ITEM_NAMES = {
   vukhi:'Vũ Khí Vô Danh', non:'Mũ Vô Danh', ao:'Giáp Vô Danh', tay:'Găng Vô Danh',
   chan:'Ủng Vô Danh', daychuyen:'Dây Chuyền Vô Danh', nhan1:'Nhẫn Vô Danh', nhan2:'Nhẫn Vô Danh',
 };
-// Áo Choàng — 2 cấp, chỉ luyện chế tại Luyện Bảo Các (Rèn)
-const CLOAK_TIERS = [ null,
-  { name:'Áo Choàng Thép Xám', color:'#5ea0e8', req:1,  atkPct:5,  pierce:3, defPct:0, cost:{ tuLa:5,  hon:2, silver:2000 } },
-  { name:'Áo Choàng Thánh Quang', color:'#7ecbff', req:60, atkPct:10, pierce:6, defPct:5, cost:{ tuLa:10, hon:5, silver:6000 } },
-];
 // Bể dòng phụ. MỌI khoá ở đây phải có ngăn trong sổ P của calcDerived() — applyLine() lặng lẽ
 // Cánh — boss 12%, ngoài hệ 10 cấp trang bị
 // ══════════ CÁNH — ba bậc, mỗi lớp một đôi riêng (khảo sát: docs/KHAO_SAT_CANH.md) ══════════
@@ -5431,7 +5428,7 @@ function migrateBoQuan(){
 // đúng bộ đồ đang mặc. Đồ mới thì suy thẳng từ giai như bình thường.
 function itemReqLv(it){
   if (it && it.reqLv != null) return it.reqLv;
-  return it && it.tier ? (it.tier - 1) * GIAI_SPAN + 1 : (it && it.cloakTier === 2 ? 60 : 1);
+  return it && it.tier ? (it.tier - 1) * GIAI_SPAN + 1 : 1;
 }
 function subName(k){
   return { atkPct:'Thêm Sát Thương', pierce:'Xuyên Giáp', defPct:'Phòng Ngự', hpPct:'Sinh Lực Tối Đa',
@@ -5479,7 +5476,7 @@ function genItem(level, bias, srcK, opts){
     awakened: AWAKENED[Math.floor(Math.random()*AWAKENED.length)],
   });
 }
-// Trang bị đặc biệt (Áo Choàng / Pet / Cánh): chỉ số cố định, không rèn
+// Trang bị đặc biệt (Cánh): chỉ số cố định, không rèn
 function specialItem(slot, def, extra){
   const subs = [];
   for (const k in def){
@@ -5489,14 +5486,13 @@ function specialItem(slot, def, extra){
   return Object.assign({
     uid: itemSeq++, slot, slotName: (SLOTS.find(s=>s.id===slot) || {}).name || slot,
     name: def.name, level: 1, tier: 0, special: true,
-    // CÁNH rèn được như trang bị thường (Chúc Phúc → +6, Linh Hồn → +9). Áo choàng và pet thì
-    // không: chúng lên cấp bằng đường riêng (CLOAK_TIERS / hệ Linh Thú), cho rèn nữa là hai
-    // thang tiến hoá chồng lên nhau trên cùng một món.
+    // CÁNH rèn được như trang bị thường (Chúc Phúc → +6, Linh Hồn → +9). Các món đặc biệt
+    // khác thì không — chúng lên cấp bằng đường riêng, cho rèn nữa là hai thang tiến hoá
+    // chồng lên nhau trên cùng một món.
     noForge: slot !== 'canh',
     main: null, element: 'Kim', subs, plus: 0, awakened: AWAKENED[0],
   }, extra || {});
 }
-function genCloak(t){ return specialItem('aochoang', CLOAK_TIERS[t], { cloakTier: t }); }
 // LINH THÚ đã GỠ. Chú thích cũ ngay trên PET_DEFS đã tự nhận nó yếu: 'chỉ là MỘT ô, tốn cả
 // gia tài mới lên +11, và không đổi được sang con rơi tốt hơn'. Nó còn chồng vai với Chimera —
 // cả hai đều là con thú đi theo cộng chỉ số — mà Chimera có gacha, có bộ sưu tập, có chiêu riêng.
@@ -6363,6 +6359,12 @@ function loadGame(idx){
     // Save cũ mang ba trường của hệ Thuần Thục đã gỡ — dọn luôn, đừng để chúng nằm lại
     // rồi có ngày ai đó đọc phải và tưởng hệ vẫn còn.
     delete player.amkhiX; delete player.bow; delete player.gangkhi;
+    // Ô Áo Choàng đã dẹp (trùng vai với Cánh — theo định nghĩa Cánh CHÍNH LÀ áo choàng của
+    // Dark Lord). Save cũ còn một tấm nằm trong ô đó và có thể còn vài tấm trong túi: ô thì
+    // không còn tồn tại trong SLOTS nên nó thành đồ ma — không tháo được, không bán được, mà
+    // vẫn chiếm ô lưới túi. Dọn cả hai chỗ.
+    if (player.equip) delete player.equip.aochoang;
+    player.inv = (player.inv || []).filter(x => !(x && x.slot === 'aochoang'));
     if (!player.titles) player.titles = { unlocked: [], equipped: null };
     if (player.kills == null) player.kills = 0;
     if (player.forged11 == null) player.forged11 = false;
@@ -13297,25 +13299,6 @@ function drawPlayer(){
   if (maxed) drawThanHiepSeal(p, now);
   ctx.save(); ctx.translate(0, yOff);
   // Ascension aura — rotating orbs grow with realm
-  // Áo Choàng (Luyện Bảo Các) — tấm phi phong phất sau lưng, vẽ trước cánh & sprite
-  const cloakIt = p.equip && p.equip.aochoang;
-  if (cloakIt && cloakIt.cloakTier){
-    const cd2 = CLOAK_TIERS[cloakIt.cloakTier];
-    const sway = Math.sin(performance.now()/320) * 4;
-    const backAng = p.face + Math.PI;
-    const bx2 = Math.cos(backAng), by2 = Math.sin(backAng);
-    ctx.save();
-    ctx.fillStyle = cd2.color; ctx.globalAlpha = 0.82;
-    ctx.beginPath();
-    ctx.moveTo(p.x - 8, p.y - 30);
-    ctx.lineTo(p.x + 8, p.y - 30);
-    ctx.quadraticCurveTo(p.x + bx2*20 + 12, p.y + by2*8 - 6 + sway, p.x + bx2*26 + sway, p.y + 10);
-    ctx.quadraticCurveTo(p.x + bx2*14, p.y + 14 + sway*0.5, p.x - bx2*26 - sway, p.y + 10);
-    ctx.quadraticCurveTo(p.x + bx2*20 - 12, p.y + by2*8 - 6 + sway, p.x - 8, p.y - 30);
-    ctx.closePath(); ctx.fill();
-    ctx.globalAlpha = 0.5; ctx.strokeStyle = cd2.color; ctx.lineWidth = 1.4; ctx.stroke();
-    ctx.restore();
-  }
   // Cánh — vẽ trước sprite. Xem veCanh(): một hàm dùng chung cho cả nhân vật trong màn lẫn
   // hình trong bảng Nhân Vật, để hai nơi không bao giờ vẽ ra hai đôi cánh khác nhau.
   const wingIt = p.equip && p.equip.canh;
@@ -14015,25 +13998,6 @@ const CHAOS_RECIPES = [
       AudioSys.sfx('levelup', 0.7);
       return true; } },
 
-  { id:'cloak', group:'che', name:'Luyện Áo Choàng', tray:'khay trống',
-    match(v){
-      if (v.items.length || v.nJewel) return null;
-      const c = player.equip.aochoang || player.inv.find(x => x.slot === 'aochoang');
-      const t = !c ? 1 : (c.cloakTier === 1 ? 2 : 0);
-      if (!t) return null;
-      return { t, def: CLOAK_TIERS[t] };
-    },
-    plan(v, m){ const c = m.def; return {
-      title: `${c.name} (Cấp ${m.t})${player.level < c.req ? ` — cần LV${c.req}` : ''}`,
-      rate: 100,
-      cost: [ chaosCost('Tu La Tinh Thạch', player.gems.tuLa, c.cost.tuLa, '◆'),
-              chaosCost('Hỗn Nguyên', player.gems.honNguyen, c.cost.hon, '❖'),
-              chaosCost('Lumen', player.silver, c.cost.silver, '◈'),
-              chaosCost('Cấp nhân vật', player.level, c.req, '★') ],
-      warn: `Thêm Sát Thương +${c.atkPct}% · Xuyên Giáp +${c.pierce}%${c.defPct?` · Phòng Ngự +${c.defPct}%`:''}`,
-      charm:false }; },
-    run(v, m){ craftCloak(m.t); return true; } },
-
   // ── Ba bậc cánh. Cả ba đều royal:true — cánh là việc của Lò Rèn Hoàng Gia, đúng như
   // Chaos Machine của MU. Không còn quay xổ số giữa hai đôi: ra ĐÚNG đôi của lớp đang chơi.
   ...WING_TIERS.map((T, ti) => ({
@@ -14442,27 +14406,6 @@ function renderForge(){
   h += `</div>`;
   FE().innerHTML = h;
 }
-window.craftCloak = function(t){
-  const c = CLOAK_TIERS[t];
-  if (!c) return;
-  if (player.level < c.req) return;
-  if (player.gems.tuLa < c.cost.tuLa || player.gems.honNguyen < c.cost.hon || player.silver < c.cost.silver) return;
-  // t===2 replaces the equipped/inv aochoang in place (net-zero) unless neither exists — only
-  // that fallback path actually grows the inventory, same as the t!==2 path below.
-  const willAddSlot = t === 2 ? (!player.equip.aochoang && player.inv.findIndex(x => x.slot === 'aochoang') < 0) : true;
-  if (willAddSlot && !bagConCho({ slot:'aochoang' })){ addFloat(player.x, player.y-40, 'Túi đồ đầy!', '#ff7a6a', 12); return; }
-  player.gems.tuLa -= c.cost.tuLa; player.gems.honNguyen -= c.cost.hon; player.silver -= c.cost.silver;
-  const it = genCloak(t);
-  if (t === 2){
-    if (player.equip.aochoang) player.equip.aochoang = it;
-    else { const i = player.inv.findIndex(x => x.slot === 'aochoang');
-           if (i >= 0){ it.gx = player.inv[i].gx; it.gy = player.inv[i].gy; player.inv[i] = it; } else bagThem(it); }
-  } else bagThem(it);
-  addFloat(player.x, player.y-46, `Luyện thành: ${c.name}!`, c.color, 16);
-  addEffect({ type:'ring', x:player.x, y:player.y, r:100, color:c.color, big:true });
-  calcDerived(); saveGame();
-  setTimeout(renderForge, 800);
-};
 window.buyCharm = function(){
   if (player.silver < 500) return;
   player.silver -= 500; player.charms++;
@@ -14951,7 +14894,6 @@ function masteryLine(nd, v){
 function genSpecific(slotId, level){
   const slot = SLOTS.find(s => s.id === slotId);
   if (slot.special){
-    if (slotId === 'aochoang') return genCloak(1);
     return genWing(player.sect, 1);
   }
   const tier = itemTier(level);
@@ -15028,8 +14970,7 @@ function applyTestBoost(){
     it.plus = 11; it.perfect = true;
     player.equip[sl.id] = it;
   }
-  // Đồ đặc biệt tối thượng: Áo Choàng cấp 2, Linh Dực CẤP 2 (không phải cánh cấp 1)
-  player.equip.aochoang = genCloak(2);
+  // Đồ đặc biệt tối thượng: Linh Dực bậc 3 của chính lớp đang chơi
   player.equip.canh = genWing(player.sect, 3);   // max mode: cánh bậc 3 của chính lớp đang chơi
   // Châu + Bảo Hạp: để thử nguyên vòng rèn/mở hạp mà không phải cày
   player.jewels = { chucPhuc: 99, linhHon: 99, sinhMenh: 99, honDon: 99 };
@@ -16618,15 +16559,12 @@ function closePanels(){
 window.closePanels = closePanels;
 
 // ---------- Icon trang bị / vật liệu ----------
-// Chỉ còn ÁO CHOÀNG và PET. Trang bị thường xưa cũng có tệp PNG riêng ở đây, nhưng từ khi
-// mọi món đều đi qua assignDef() thì chúng luôn có `def` và luôn dựng icon bằng bộ phận —
-// tám tệp kia (nón, áo, tay, chân, quần, dây chuyền, nhẫn, vũ khí — 724 KB) chỉ còn phục vụ
-// save từ thời chưa có def, tức là không ai còn. Áo choàng và pet thì khác: chúng là
+// Chỉ còn PET. Trang bị thường xưa cũng có tệp PNG riêng ở đây, nhưng từ khi mọi món đều đi
+// qua assignDef() thì chúng luôn có `def` và luôn dựng icon bằng bộ phận. Pet thì khác: nó là
 // `specialItem`, KHÔNG có def, nên vẫn phải có tệp thật.
+// (Áo choàng đã dẹp — nó trùng vai với Cánh, xem ghi chú ở EQUIP_DOLL.)
 // Cánh cũng không có def nhưng không nằm đây — icon sinh bằng canhIconUrl().
-const SLOT_ICONS = {
-  aochoang:'aochoang', pet:'pet',
-};
+const SLOT_ICONS = { pet:'pet' };
 // ═══════════════ HÌNH VẬT PHẨM — vẽ bằng code, không dùng file PNG ═══════════════
 // 11 file PNG đang phải gánh TOÀN BỘ trang bị: mọi thanh kiếm trong game dùng chung vukhi.png,
 // khác nhau đúng một bộ lọc xoay màu theo giai. Nay mỗi món một hình riêng, vẽ bằng code y như
@@ -16893,7 +16831,7 @@ const CONSUM_DB = {
                have:()=>player.bikipVH, info:()=>`Đang có ${player.bikipVH||0} quyển · rơi từ tinh anh/trùm & Vực Thẳm` },
   tula:      { art:'stone',    col:'#e8552a', name:'Tu La Tinh Thạch', use:'Khảm trang bị · rèn +7 trở lên',
                have:()=>player.gems.tuLa, info:()=>`Đang có ${player.gems.tuLa||0}` },
-  honnguyen: { art:'stone',    col:'#b08ae8', name:'Hỗn Nguyên Thạch', use:'Rèn +10/+11 · luyện Áo Choàng',
+  honnguyen: { art:'stone',    col:'#b08ae8', name:'Hỗn Nguyên Thạch', use:'Rèn +10/+11',
                have:()=>player.gems.honNguyen, info:()=>`Đang có ${player.gems.honNguyen||0}` },
 };
 const _consumCache = new Map();
@@ -17473,8 +17411,8 @@ window.onEquipSlotDrop = function(e, slotId){
 window.bagSel = -1;
 const MAT_ROWS = [
   { icon:'shard', name:'Shard', get:()=>(player&&player.shard)||0, color:'#b18cff', desc:'Quầy Shard — đổi vé quay · nới túi/kho' },
-  { icon:'tula', name:'Tu La Tinh Thạch', get:()=>player.gems.tuLa, color:'#e84a6a', desc:'rèn +7 trở lên · Áo Choàng' },
-  { icon:'honnguyen', name:'Hỗn Nguyên Thạch', get:()=>player.gems.honNguyen, color:'#b08ae8', desc:'rèn +10/+11 · Áo Choàng' },
+  { icon:'tula', name:'Tu La Tinh Thạch', get:()=>player.gems.tuLa, color:'#e84a6a', desc:'rèn +7 trở lên' },
+  { icon:'honnguyen', name:'Hỗn Nguyên Thạch', get:()=>player.gems.honNguyen, color:'#b08ae8', desc:'rèn +10/+11' },
   { icon:'phu', name:'Thiên Mệnh Phù', get:()=>player.charms, color:'#7ecbff', desc:'bảo hiểm rèn' },
   { icon:'tanquyen', name:'Mảnh Cổ Thư (Thượng/Trung/Hạ)', get:()=>player.bikip ? player.bikip.pieces.join('/') : '0/0/0', color:'#e84a6a', desc:'dung hợp Huyết Ma Thôn Phệ' },
   { icon:'manhtrangbi', name:'Mảnh Trang Bị', get:()=>(player.mats&&player.mats.manh)||0, color:'#7ec8d8', desc:'Kế Thừa — rơi từ quái/tinh anh' },
@@ -17528,7 +17466,7 @@ function bagCap(){ return BAG_COLS * bagRows(); }
 const BAG_SIZES = {
   nhan1:[1,1], nhan2:[1,1], daychuyen:[1,2],
   non:[2,2], ao:[2,2], tay:[2,2], chan:[2,2],
-  aochoang:[2,3], canh:[3,2],          // cánh 3×2 = 6 ô, RỘNG chứ không dọc
+  canh:[3,2],                          // cánh 3×2 = 6 ô, RỘNG chứ không dọc
   // Đôi cánh bậc 3 đo được 376×210 ở cỡ gốc — rộng gần gấp đôi chiều cao. Bản trước để
   // [2,5] tức hai cột dọc cao nghêu, nhét hình 1,8:1 vào đó thì nó teo còn một dúm ở giữa.
   // 3×2 = 6 ô cũng đúng khối cánh của MU, và vẫn nhỏ hơn vũ khí hai tay (2×4 = 8 ô).

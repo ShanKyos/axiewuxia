@@ -34,8 +34,8 @@ const { chromium } = require('playwright');
     applyTestBoost();
     player.inv = []; player.bagPlus = 0;
     // mỗi loại một món, để đo đủ các cỡ
-    const mau = ['nhan1','daychuyen','ao','aochoang','canh','vukhi'].map(sl => {
-      const it = sl === 'canh' ? genWing(0) : sl === 'aochoang' ? genCloak(1) : genSpecific(sl, 2, 60);
+    const mau = ['nhan1','daychuyen','ao','canh','vukhi'].map(sl => {
+      const it = sl === 'canh' ? genWing(0) : genSpecific(sl, 2, 60);
       return it;
     }).filter(Boolean);
     for (const it of mau) bagThem(it);
@@ -49,7 +49,6 @@ const { chromium } = require('playwright');
   check('nhẫn 1×1', co.nhan1, [1,1]);
   check('dây chuyền 1×2', co.daychuyen, [1,2]);
   check('áo 2×2', co.ao, [2,2]);
-  check('áo choàng 2×3', co.aochoang, [2,3]);
   check('CÁNH 3×2 = 6 ô, RỘNG chứ không dọc', co.canh, [3,2]);
   cond('vũ khí cao hơn rộng', co.vukhi, v => v && v[1] > v[0], 'vũ khí phải dài theo chiều dọc');
 

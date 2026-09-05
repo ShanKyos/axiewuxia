@@ -87,7 +87,7 @@ const EXACT = {
   // Slots
   'Vũ Khí': 'Weapon', 'Nón': 'Helm', 'Áo': 'Armor', 'Tay': 'Gloves', 'Quần': 'Pants',
   'Chân': 'Boots', 'Dây Chuyền': 'Amulet', 'Nhẫn 1': 'Ring 1', 'Nhẫn 2': 'Ring 2',
-  'Áo Choàng': 'Cloak', 'Binh Khí': 'Weapon', 'đang mặc': 'equipped', 'túi': 'bag',
+  'Binh Khí': 'Weapon', 'đang mặc': 'equipped', 'túi': 'bag',
   // 'Cánh' và 'Pet' từng thiếu, nên bảng Trang Bị hiện 10 nhãn tiếng Anh xen 2 nhãn tiếng Việt
   'Cánh': 'Wings', 'Pet': 'Pet', 'Chưa mặc giáp': 'No armor equipped',
   'Bấm để tháo · kéo từ Túi Đồ để mặc': 'Click to unequip · drag from Bag to equip',
@@ -188,7 +188,7 @@ const EXACT = {
   'Tấn Phẩm & Kế Thừa — rơi từ quái/tinh anh': 'Promotion & Inheritance — drops from monsters/elites',
   'Khảm trang bị, rèn +7 trở lên — hiếm có': 'Socket gear, forge +7 and above — rare',
   'Rèn +10/+11 — cực hiếm': 'Forge +10/+11 — extremely rare',
-  'rèn +7 trở lên · Áo Choàng': 'forge +7 and above · Cloak', 'rèn +10/+11 · Áo Choàng': 'forge +10/+11 · Cloak',
+  'rèn +7 trở lên': 'forge +7 and above', 'rèn +10/+11': 'forge +10/+11',
   'Gói tiết kiệm — chỉ bán theo đợt': 'Budget bundle — sold in batches only',
   'dung hợp Huyết Ma Thôn Phệ': 'fuse into Blood Demon Devour',
   'Bình Thuốc Đỏ hồi 55% máu (thay 40%)': 'Red Potion heals 55% HP (instead of 40%)',

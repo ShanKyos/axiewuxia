@@ -2,7 +2,7 @@
 //
 // Trước đây specialItem() đóng dấu noForge:true cho MỌI đồ đặc biệt, nên cánh — món đắt nhất
 // game — lại là món duy nhất không rèn được. Nay cánh mở, còn áo choàng và pet vẫn khoá: hai
-// thứ đó lên cấp bằng đường riêng (CLOAK_TIERS / hệ Linh Thú), cho rèn nữa là hai thang tiến
+// thứ đó lên cấp bằng đường riêng, cho rèn nữa là hai thang tiến
 // hoá chồng lên nhau trên cùng một món.
 //
 // Sinh Mệnh là viên NGỌC KHÁC LOẠI: hai viên kia ăn vào it.plus, viên này ăn vào it.life —
@@ -36,7 +36,6 @@ const pass = m => console.log('PASS ' + m);
     for (let i = 0; i < 900 && (w.plus||0) < 9; i++) epNgoc(w, 'linhHon');
     o.sauLinhHon = w.plus;
     o.chanO9 = ngocEpDuoc(w, 'linhHon') !== null;
-    o.aoChoangVanKhoa = !!genCloak(1).noForge;
     // ── Sinh Mệnh ──
     o.rate = NGOC_EP.sinhMenh.rate;
     o.tran = NGOC_EP.sinhMenh.tran;
@@ -87,8 +86,6 @@ const pass = m => console.log('PASS ' + m);
   if (r.sauLinhHon !== 9) fail(`Linh Hồn đưa cánh tới +${r.sauLinhHon}, mong +9`);
   else if (!r.chanO9) fail('Linh Hồn không dừng ở +9 — Phá Thiên Kiếp mất chỗ đứng');
   else pass('Linh Hồn: cánh → +9 rồi dừng');
-  if (!r.aoChoangVanKhoa) fail('áo choàng cũng mở rèn — chỉ CÁNH mới được mở');
-  else pass('áo choàng vẫn khoá rèn, đúng chủ ý');
 
   if (r.rate !== 50) fail(`Sinh Mệnh tỉ lệ ${r.rate}%, chủ dự án chốt 50% phẳng`);
   else pass('Sinh Mệnh 50% phẳng mọi bậc');

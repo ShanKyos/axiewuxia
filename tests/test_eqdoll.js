@@ -30,9 +30,10 @@ const pass = m => console.log('PASS ' + m);
              caption: (document.querySelector('.eq-fig-cap') || {}).innerText || '' };
   });
   console.log('1.', JSON.stringify(r1));
-  // Ô 'pet' đã gỡ cùng hệ Linh Thú — cột phải còn 5 ô.
-  // Ô 'quan' cũng đã gỡ (đồ quần cũ chuyển thành đồ Chân) — cột trái còn 5 ô.
-  const want = { trai:['non','ao','tay','chan','vukhi'], phai:['canh','aochoang','daychuyen','nhan1','nhan2'] };
+  // Ô 'pet' đã gỡ cùng hệ Linh Thú, ô 'quan' cũng đã gỡ (đồ quần cũ chuyển thành đồ Chân).
+  // Ô 'aochoang' gỡ nốt vì trùng vai với Cánh — nên cột phải nay còn BỐN, lệch một ô so với
+  // cột trái. Cố ý: doll của MU cũng không đối xứng.
+  const want = { trai:['non','ao','tay','chan','vukhi'], phai:['canh','daychuyen','nhan1','nhan2'] };
   if (r1.soCot !== 2) fail('phải có đúng 2 cột ô đồ, đang ' + r1.soCot);
   else pass('2 cột ô đồ hai bên');
   if (JSON.stringify(r1.trai) !== JSON.stringify(want.trai)) fail('cột trái sai thứ tự: ' + JSON.stringify(r1.trai));
@@ -99,16 +100,18 @@ const pass = m => console.log('PASS ' + m);
              lang: window.ghhaLang ? window.ghhaLang() : '?' };
   });
   console.log('5.', JSON.stringify(r5));
-  if (r5.soO !== 10 || r5.oTrong !== 10) fail(`chưa mặc gì: ${r5.soO} ô / ${r5.oTrong} ô trống (mong 10/10)`);
-  else pass('chưa mặc gì: đủ 10 ô trống, mỗi ô có nhãn tên vị trí');
+  // CHÍN ô, không phải mười: ô 'aochoang' đã gỡ (trùng vai với Cánh). Con số này đi theo
+  // EQUIP_DOLL — sửa bảng đó thì sửa luôn ở đây, đừng nới lỏng phép so thành `>=`.
+  if (r5.soO !== 9 || r5.oTrong !== 9) fail(`chưa mặc gì: ${r5.soO} ô / ${r5.oTrong} ô trống (mong 9/9)`);
+  else pass('chưa mặc gì: đủ 9 ô trống, mỗi ô có nhãn tên vị trí');
   // Đối chiếu với DANH SÁCH nhãn, không đoán theo dấu tiếng Việt: "Tay" và "Pet" không có dấu
   // nào cả nên phép đoán đó luôn báo lẫn ngôn ngữ dù bảng hoàn toàn nhất quán.
-  const VI = ['Nón','Áo','Tay','Quần','Chân','Vũ Khí','Cánh','Áo Choàng','Dây Chuyền','Nhẫn 1','Nhẫn 2','Pet'];
-  const EN = ['Helm','Armor','Gloves','Pants','Boots','Weapon','Wings','Cloak','Amulet','Ring 1','Ring 2','Pet'];
+  const VI = ['Nón','Áo','Tay','Quần','Chân','Vũ Khí','Cánh','Dây Chuyền','Nhẫn 1','Nhẫn 2','Pet'];
+  const EN = ['Helm','Armor','Gloves','Pants','Boots','Weapon','Wings','Amulet','Ring 1','Ring 2','Pet'];
   const set = r5.lang === 'en' ? EN : VI;
   const lac = r5.nhan.filter(n => !set.includes(n));
   if (lac.length) fail(`ngôn ngữ hiện tại "${r5.lang}" nhưng ${lac.length} nhãn không thuộc bộ đó: ` + JSON.stringify(lac));
-  else pass(`nhãn 10 ô cùng bộ ngôn ngữ "${r5.lang}"`);
+  else pass(`nhãn 9 ô cùng bộ ngôn ngữ "${r5.lang}"`);
 
   // ── 6. bố cục không tràn ở cả hai khổ màn hình ─────────────────────────
   for (const [w, h] of [[1366,768],[390,844]]){
@@ -117,13 +120,14 @@ const pass = m => console.log('PASS ' + m);
     const r6 = await p.evaluate(() => {
       const s = [...document.querySelectorAll('.eq-doll .eq-slot')].map(e => e.getBoundingClientRect());
       const d = document.querySelector('.eq-doll').getBoundingClientRect();
-      return { ngoai: s.filter(x => x.left < 0 || x.right > innerWidth).length,
+      return { tong: s.length,
+               ngoai: s.filter(x => x.left < 0 || x.right > innerWidth).length,
                nho: s.filter(x => x.width < 24 || x.height < 24).length,
                rong: Math.round(d.width) };
     });
     if (r6.ngoai) fail(`${w}×${h}: ${r6.ngoai} ô nằm ngoài màn hình`);
     else if (r6.nho) fail(`${w}×${h}: ${r6.nho} ô dưới ngưỡng chạm 24px`);
-    else pass(`${w}×${h}: 10 ô nằm trong màn hình, đều đạt ngưỡng chạm (bảng rộng ${r6.rong}px)`);
+    else pass(`${w}×${h}: ${r6.tong} ô nằm trong màn hình, đều đạt ngưỡng chạm (bảng rộng ${r6.rong}px)`);
   }
 
   console.log('errors:', JSON.stringify(errs));

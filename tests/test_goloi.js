@@ -64,7 +64,6 @@ const pass = m => console.log('PASS ' + m);
     o.thuong  = itemVutDuoc(thuong);
     o.hoanHao = itemVutDuoc(hoanHao);
     o.canh    = itemVutDuoc(genWing('baidasan', 1));
-    o.aoChoang = itemVutDuoc(genCloak(1));
     o.lyDoHoanHao = itemVutLyDo(hoanHao);
     o.lyDoCanh    = itemVutLyDo(genWing('baidasan', 1));
     // vứt thật: món rời túi và NẰM DƯỚI ĐẤT, không phải bốc hơi
@@ -83,8 +82,6 @@ const pass = m => console.log('PASS ' + m);
   if (v.canh) fail('cánh vứt được — phải chặn');
   else if (!v.lyDoCanh) fail('chặn cánh nhưng không nói lý do');
   else pass('cánh bị chặn, có kèm lý do');
-  if (v.aoChoang) fail('áo choàng vứt được — đồ đặc biệt phải chặn');
-  else pass('áo choàng bị chặn');
   if (v.tuiCon !== 0) fail(`vứt rồi mà túi vẫn còn ${v.tuiCon} món`);
   else if (v.duoiDat !== 1) fail('món bị vứt không nằm dưới đất — nó bốc hơi mất');
   else pass('món vứt ra rơi xuống đất, nhặt lại được');
