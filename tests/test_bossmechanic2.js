@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài kiểm
 
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
@@ -8,6 +9,9 @@ const { chromium } = require('playwright');
   await page.goto('http://localhost:8853/index.html', { waitUntil: 'networkidle' });
   await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(500);
+  // pb_nhanmon đã gỡ — dựng lại phòng cuối trên phòng bài kiểm. Thứ đang đo là BOSS SĂN
+  // boss_amthan (bộ 5 chiêu đầy đủ, máu cao nhất), nên khoá đúng nó vào cấu hình.
+  await page.evaluate(dungPbThu, { boss:'boss_thienbinh', huntBoss:'boss_amthan', min:100, cha:'nhanmon' });
   await page.evaluate(() => { startGame('thieulam', null); });
   await page.waitForTimeout(300);
 
@@ -17,7 +21,7 @@ const { chromium } = require('playwright');
     questIdx = 35; questState = 'active';
     calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
     player.auto = false;
-    travelTo('pb_nhanmon'); // boss_amthan — hp cao nhất, đủ thời gian quan sát vòng đời chiêu
+    travelTo('pb_thu'); // boss_amthan — hp cao nhất, đủ thời gian quan sát vòng đời chiêu
     return { curMap, maxHp: player.maxHp };
   });
   console.log('setup:', JSON.stringify(setup));

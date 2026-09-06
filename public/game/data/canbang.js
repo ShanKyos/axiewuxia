@@ -405,36 +405,15 @@ window.WEAPON_LINES = [
 // Cấu hình từng phó bản: 3 đợt quái (quái của map cha) → Boss → thưởng nguyên liệu nâng tầng kỹ năng
 // timeLimit (giây): học Devil Square/Blood Castle của MU Online — phó bản có đồng hồ đếm ngược,
 // hết giờ là thất bại mất trắng, thay vì AUTO đứng farm vô thời hạn như trước.
-window.DUNGEONS = {
-  pb_daohoa:   { boss:'boss_hacphong',  bossName:'Thủ Lĩnh Đoàn Gloam',
-    waves:[ ['bandit','bandit','wolf'], ['bandit','hautu','bandit'], ['assassin','bandit','wolf'] ],
-    rewards:{ sach:[1,2],  tuLa:[0,0], hon:[0,0], khi:40,  bacThem:150,  silver:[850,1450] },
-    huntBoss:'boss_cotma1', boxTier:1, timeLimit:480 },
-  pb_ngoai:    { boss:'boss_sontac',    bossName:'Thủ Lĩnh Sói Hoang',
-    waves:[ ['bandit','wolf','bandit'], ['bandit','bandit','caodo'], ['assassin','bandit','bandit'] ],
-    rewards:{ sach:[1,2],  tuLa:[0,0], hon:[0,0], khi:55,  bacThem:220,  silver:[1070,1680] },
-    huntBoss:'boss_cotma2', boxTier:1, timeLimit:480 },
-  pb_chungnam: { boss:'boss_phando',    bossName:'Phản Đồ Đại Tướng',
-    waves:[ ['phando','bandit','phando'], ['xanu','phando','bandit'], ['bandao','xanu','phando'] ],
-    rewards:{ sach:[2,3],  tuLa:[0,1], hon:[0,0], khi:90,  bacThem:450,  silver:[1600,2450] },
-    huntBoss:'boss_hacnu1', boxTier:2, timeLimit:540 },
-  pb_comoc:    { boss:'boss_mochu',     bossName:'Chúa Tể Lăng Mộ',
-    waves:[ ['thinu','mocnhan','thinu'], ['huyetbat','mocnhan','thinu'], ['huyetbat','huyetbat','mocnhan'] ],
-    rewards:{ sach:[2,3],  tuLa:[1,1], hon:[0,0], khi:140, bacThem:800,  silver:[2400,3400] },
-    huntBoss:'boss_hacnu2', boxTier:2, timeLimit:540 },
-  pb_tuyettinh:{ boss:'boss_tinhhoa',   bossName:'Xoáy Lá Nguyền',
-    waves:[ ['ttdetu','docyeu','ttdetu'], ['docyeu','satthuhy','ttdetu'], ['satthuhy','docyeu','docyeu'] ],
-    rewards:{ sach:[3,4],  tuLa:[1,2], hon:[0,1], khi:200, bacThem:1400, silver:[3350,4700] },
-    huntBoss:'boss_hoangkim1', boxTier:3, timeLimit:600 },
-  pb_mongco:   { boss:'boss_dothong',   bossName:'Đột Thông Hãn Vương',
-    waves:[ ['thamtu','cungthu','kybinh'], ['cungthu','kybinh','thamtu'], ['kybinh','kybinh','cungthu'] ],
-    rewards:{ sach:[4,5],  tuLa:[2,2], hon:[1,1], khi:280, bacThem:2400, silver:[4600,6500] },
-    huntBoss:'boss_hoangkim2', boxTier:4, timeLimit:660 },
-  pb_nhanmon:  { boss:'boss_thienbinh', bossName:'Thiên Binh Thống Soái',
-    waves:[ ['kylan','cuongbinh','daokhach'], ['cuongbinh','daokhach','kylan'], ['daokhach','kylan','kylan'] ],
-    rewards:{ sach:[5,6],  tuLa:[2,3], hon:[2,2], khi:350, bacThem:3500, silver:[6000,8400] },
-    huntBoss:'boss_amthan', boxTier:5, timeLimit:720 },
-};
+// Bảy phó bản tĩnh ĐÃ GỠ (xem CLAUDE.md · CHẨN ĐOÁN GỐC). Chúng là một địa hình dùng bảy lần;
+// map sẽ được dựng lại từ đầu ở phần đo map, rồi cắm lại vào đây. Máy chạy phó bản trong
+// game.js (DGN · startDungeonRun · updateDungeon · boss săn · thưởng) GIỮ NGUYÊN, đang nằm chờ:
+// thêm một khoá vào bảng này cùng một map type:'dungeon' là nó chạy lại ngay.
+//
+// Khuôn một mục, để dựng lại đúng hình cũ:
+//   <mapId>: { boss, bossName, waves:[[3 loài],[3],[3]], huntBoss, boxTier:1-5, timeLimit,
+//              rewards:{ sach:[lo,hi], tuLa:[lo,hi], hon:[lo,hi], khi, bacThem, silver:[lo,hi] } }
+window.DUNGEONS = {};
 
 // Internal object keys are stable identifiers (referenced throughout combat/save logic) and are
 // intentionally left unchanged by the Axie Wuxia reskin — only player-facing fields below (name,
@@ -498,7 +477,7 @@ window.SECTS = {
 // packs: quái đứng thành cụm 5-7 con, đánh 1 con cả cụm lao vào (GDD Mob Mechanics)
 window.MAPS = {
   daohoa: { name:'Petalshade Isle', min:1, range:'1 - 12', type:'safe', ground:'#ece2c8', patch:'#7a86ad',
-    spawn:{ x:460, y:460 }, spawnFrom:{ pb_daohoa:{ x:2250, y:1040 } }, village:true, spring:true, herbs:true, boss:true, trees:70, rocks:26,
+    spawn:{ x:460, y:460 }, village:true, spring:true, herbs:true, boss:true, trees:70, rocks:26,
     desc:'Nơi đặt trại ấp Petalshade — bãi săn của người mới. Chimera yếu, đồ rơi nhập môn, chỗ hiền lành để học cách chơi.',
     // Cụm quái xếp theo vòng từ spawn ra: yếu (boar/hautu) gần nhất → mạnh dần (wolf/bandit/
     // caodo) → xa nhất (assassin, trannhan) gần Cổng Vực — người chơi mới thấy rõ "đi sâu = khó
@@ -518,7 +497,7 @@ window.MAPS = {
     desc:'Cả khu phố Ardhaven bị vết nứt kéo sang, dân bản địa dựng lại quanh nó thành Lunaris City. Trong tường: Lò Rèn Hoàng Gia, Tiệm Thuốc, Vũ Khí Phường, Trà Quán, Sảnh Cầu May và Truy Nã Lệnh. An toàn tuyệt đối — không Chimera nào vào được. Ra Cổng Nam để săn ở Outskirts.',
     packs: [], duhiep: null },
   ngoai: { name:'Petalshade Outskirts', min:10, range:'14 - 24', type:'safe', ground:'#ddd2ae', patch:'#7a7048',
-    spawn:{ x:1300, y:330 }, spawnFrom:{ pb_ngoai:{ x:2000, y:1040 } }, reqMain:10, trees:56, rocks:22, herbs:true,
+    spawn:{ x:1300, y:330 }, reqMain:10, trees:56, rocks:22, herbs:true,
     // Câu đầu vốn nằm ở REGION_UNLOCK_LORE.ngoai và chỉ hiện ĐÚNG MỘT LẦN lúc mở khoá vùng.
     // Dòng người chơi đọc mỗi lần mở Bản Đồ lại là dòng "đất an toàn để luyện cấp" — tức là
     // vùng đầu tiên báo hiệu chuỗi năm trụ bị giới thiệu như một bãi cỏ giữa hai nhiệm vụ.
@@ -538,7 +517,7 @@ window.MAPS = {
       { mob:'chimera_bo', x:600,  y:1550, n:5 },  // d≈1407 · lv24
     ], duhiep: null },
   chungnam: { name:'Thornwood Reach', min:20, range:'24 - 38', type:'pk', ground:'#d4d0ac', patch:'#6a7a52',
-    spawn:{ x:400, y:1500 }, spawnFrom:{ pb_chungnam:{ x:2200, y:890 } }, trees:80, rocks:34,
+    spawn:{ x:400, y:1500 }, trees:80, rocks:34,
     desc:'Từ đây là đất PK — hạ người khác được, bị hạ cũng được. Chimera ở đây rơi Cốt bậc đầu.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
@@ -547,7 +526,7 @@ window.MAPS = {
       { mob:'xanu', x:1981, y:1295, n:6, tiep:true }, { mob:'bandao', x:2000, y:600, n:5, tiep:true },
     ], duhiep:'duhiep1' },
   comoc: { name:'Hollow Roost', min:40, range:'42 - 56', type:'pk', ground:'#a89f86', patch:'#4a4436',
-    spawn:{ x:400, y:400 }, spawnFrom:{ pb_comoc:{ x:2200, y:990 } }, dark:true, trees:30, rocks:46,
+    spawn:{ x:400, y:400 }, dark:true, trees:30, rocks:46,
     desc:'Hang ổ hẹp, ngoằn ngoèo. Bầy Chimera dày đặc rơi nguyên liệu thăng giai Thú Chiến — bãi săn tranh chấp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
@@ -556,7 +535,7 @@ window.MAPS = {
       { mob:'huyetbat', x:1900, y:600, n:7, tiep:true }, { mob:'huyetbat', x:1915, y:1351, n:6, tiep:true },
     ], duhiep:'duhiep2' },
   tuyettinh: { name:'Frostmire Vale', min:60, range:'62 - 78', type:'pk', ground:'#ddc9a8', patch:'#8a5a6a',
-    spawn:{ x:400, y:950 }, spawnFrom:{ pb_tuyettinh:{ x:2200, y:790 } }, trees:60, rocks:24,
+    spawn:{ x:400, y:950 }, trees:60, rocks:24,
     desc:'Bãi EXP khổng lồ. Mang theo kháng độc — Chimera ở đây cắn có nọc.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
@@ -565,7 +544,7 @@ window.MAPS = {
       { mob:'satthuhy', x:1856, y:1382, n:5, tiep:true }, { mob:'satthuhy', x:2100, y:500, n:5, tiep:true },
     ], duhiep:'duhiep2' },
   mongco: { name:'Ashen Steppe', min:80, range:'84 - 100', type:'pk', ground:'#cfc09a', patch:'#7a6a42',
-    spawn:{ x:400, y:950 }, spawnFrom:{ pb_mongco:{ x:1720, y:680 } }, trees:36, rocks:30,
+    spawn:{ x:400, y:950 }, trees:36, rocks:30,
     desc:'Thảo nguyên mở rộng, Chimera trâu bò đánh đau. Rơi nguyên liệu nâng chiêu tầm xa và đao pháp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
@@ -574,7 +553,7 @@ window.MAPS = {
       { mob:'kybinh', x:1900, y:1400, n:5, tiep:true }, { mob:'kybinh', x:2100, y:600, n:5, tiep:true },
     ], duhiep:'duhiep3' },
   nhanmon: { name:'Stormgate Pass', min:100, range:'102 - 120', type:'freepk', ground:'#b8a68a', patch:'#6a3a2a',
-    spawn:{ x:400, y:950 }, spawnFrom:{ pb_nhanmon:{ x:2200, y:890 } }, trees:44, rocks:38,
+    spawn:{ x:400, y:950 }, trees:44, rocks:38,
     desc:'Bãi luyện cuối game, ngoài biên ải Lunacia. PK ở đây không cộng Tai Tiếng. Chimera rơi trang bị bậc vàng.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
@@ -582,39 +561,17 @@ window.MAPS = {
       { mob:'kylan', x:1396, y:1312, n:5, tiep:true }, { mob:'kylan', x:1450, y:1600, n:5, tiep:true },
       { mob:'daokhach', x:2100, y:500, n:5, tiep:true }, { mob:'daokhach', x:2250, y:1100, n:5, tiep:true },
     ], duhiep:'duhiep3' },
-  // ---------- PHÓ BẢN: mỗi map một phó bản + boss tương ứng cấp — chỉ vào qua cổng dịch chuyển ----------
-  // Bảy phòng thử thách trước đây đều kết thúc bằng CÙNG MỘT mệnh đề cơ học ("cày tinh chất nâng
-  // bậc lớp ở đây") và không phòng nào nói vì sao thế giới này lại có phòng thử thách. Nay mỗi
-  // desc mở đầu bằng cùng một sự thật — Thủ Hộ Vaeldra đào chúng từ trước cuộc giao thoa — nhưng
-  // kể bằng một hình ảnh riêng của phòng đó, rồi mới tới phần cơ học. Chúng là MỘT hệ thống, nên
-  // phải nghe ra là một; nhưng đọc bảy lần liền thì không được ra bảy bản chép dán.
-  pb_daohoa: { name:'Trial Chamber: Petalshade', min:12, range:'12+', type:'dungeon', ground:'#8a8272', patch:'#3a342a',
-    spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:20, rocks:34,
-    desc:'Hầm tôi luyện Thủ Hộ Vaeldra đào dưới đảo, có trước cuộc giao thoa rất lâu. Đá tường vẫn còn vết đục thẳng thớm — thứ đang ở trong thì không. Ba đợt quái, rồi Thủ Lĩnh Cướp Gloam. Cày tinh chất nâng bậc lớp ở đây.',
-    packs: [], duhiep: null },
-  pb_ngoai: { name:'Trial Chamber: Outskirts', min:14, range:'14+', type:'dungeon', ground:'#8a8272', patch:'#3a342a',
-    spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:24, rocks:30,
-    desc:'Cùng một tay Thủ Hộ đục xuống, cùng một khí Morvahn rỉ vào. Bọn Gloam không đào hầm này — chúng chỉ dọn vào ở. Chiến Chúa Gloam canh cửa. Cày tinh chất nâng bậc lớp ở đây.',
-    packs: [], duhiep: null },
-  pb_chungnam: { name:'Trial Chamber: Thornwood', min:26, range:'26+', type:'dungeon', ground:'#7e7a68', patch:'#332e24',
-    spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:18, rocks:38,
-    desc:'Hầm nằm ngay dưới chân Trụ Thornwood, nên khí rỉ xuống đây đặc hơn mọi nơi khác. Thủ Hộ đào nó để tôi luyện lính tiên phong; giờ lính tiên phong nằm lại trong đó. Phản Đồ Đại Tướng chờ ở cuối. Cày tinh chất nâng bậc lớp và bậc rèn.',
-    packs: [], duhiep: null },
-  pb_comoc: { name:'Trial Chamber: Hollow Roost', min:46, range:'46+', type:'dungeon', ground:'#6e6a58', patch:'#2a2620',
-    spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:12, rocks:44,
-    desc:'Thủ Hộ đào hầm này làm chỗ ấp, không phải chỗ đánh. Trứng trong đây vẫn còn ấm sau ngần ấy năm — không ai biết thứ gì đang ấp chúng. Hộ Vệ Tổ giữ tầng sâu. Cày tinh chất thăng giai Thú Chiến ở đây.',
-    packs: [], duhiep: null },
-  pb_tuyettinh: { name:'Trial Chamber: Frostmire', min:66, range:'66+', type:'dungeon', ground:'#7a6a62', patch:'#38222a',
-    spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:22, rocks:26,
-    desc:'Băng trong hầm không phải do lạnh: nó đóng lại đúng cái đêm Trụ Frostmire bị ngồi lên. Vết đục của Thủ Hộ còn nguyên dưới lớp băng, đọc được từng nhát. Bạo Chúa Emberveil đánh có nọc độc. Cày ngọc rèn bậc cao ở đây.',
-    packs: [], duhiep: null },
-  pb_mongco: { name:'Trial Chamber: Ashen Steppe', min:86, range:'86+', type:'dungeon', ground:'#7e725a', patch:'#332a1e',
-    spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:16, rocks:32,
-    desc:'Hầm sâu nhất trong bảy hầm, và là hầm duy nhất Thủ Hộ đào xong rồi bịt lại. Ai đó đã mở nó ra từ phía dưới. Đại Hãn cai trị doanh trại bên trong. Cày tinh chất nâng chiêu tầm xa và đao pháp.',
-    packs: [], duhiep: null },
-  pb_nhanmon: { name:'Trial Chamber: Stormgate', min:100, range:'100+', type:'dungeon', ground:'#8a7a66', patch:'#3a241a',
-    spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:14, rocks:36,
-    desc:'Hầm cuối, đào ngay dưới Trụ Stormgate — Thủ Hộ biết nếu cửa ải này vỡ thì không còn chỗ nào để lui về mà tôi luyện nữa. Thiên Binh Thống Soái đứng ở cuối. Thử thách cuối cùng, phần thưởng hậu nhất.',
+  // ---------- PHÓ BẢN: ĐÃ GỠ ----------
+  // Bảy map pb_* đã xoá — xem CLAUDE.md · CHẨN ĐOÁN GỐC. Bảy cửa nhưng chung MỘT địa hình:
+  // cả bảy cùng spawn 1300,1560 · cùng cửa ra 1300,1660 · cùng packs:[] · cùng duhiep:null,
+  // chỉ khác hai mã màu và số cây/đá. Tầng map sẽ dựng lại từ đầu ở phần đo map.
+
+  // Tầng Sâu TỰ ĐỨNG, không mượn địa hình phó bản nữa. Trước đây DEEP_MAP='pb_daohoa' nên
+  // xoá phòng đầu là mất luôn 20 tầng — nay nó có map riêng, không ai gỡ nhầm được.
+  // Không có cổng nào trỏ tới đây: chỉ vào bằng deepStart().
+  deep: { name:'Tầng Sâu', min:1, range:'—', type:'dungeon', ground:'#6a6458', patch:'#241f1a',
+    spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:10, rocks:40,
+    desc:'Đường nứt Thủ Hộ Vaeldra không kịp bịt, ăn thẳng xuống dưới lớp đá nền. Càng xuống sâu khí Morvahn càng đặc, và không tầng nào giống tầng nào.',
     packs: [], duhiep: null },
 };
 

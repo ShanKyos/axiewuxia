@@ -93,29 +93,55 @@ Chỉ khác `ground`/`patch` và số `trees`/`rocks`.
 **Chữa bằng cách thêm map thứ 8 là làm bệnh nặng thêm.** Chữa bằng máy sinh địa hình
 + từ khoá biến đổi phòng (đã đặc tả sẵn ở `docs/DE_XUAT_MAP.md`, mục C1/C2 và issue #90).
 
-### ⛔ ĐỪNG XOÁ PHÓ BẢN — có thứ treo trên đó mà nhìn map không thấy
+Trạng thái hiện tại: **bảy phòng đã gỡ hẳn** (mục kế tiếp), tầng map đang chờ dựng lại.
 
-7 phó bản nhìn thì là một phòng, nhưng về cơ học là **bảy cái cửa khác nhau**. Mỗi cửa
-là nguồn ĐỘC NHẤT của một Dòng Cốt Chimera — người chơi chọn Dòng để nuôi **bằng cách
-chọn phòng để vào**. Xoá phòng = xoá luôn cơ chế chọn build đó, im lặng, không báo lỗi.
+### 🗑 BẢY PHÓ BẢN ĐÃ GỠ — và những gì đã phải gỡ theo
 
-| Phòng | Dòng Cốt độc quyền |
+Chủ dự án quyết xoá hẳn bảy map `pb_*` để dựng lại tầng map từ đầu. Đã gỡ:
+`window.DUNGEONS` (còn `{}`) · 7 mục `pb_*` trong `MAPS` · 14 cổng trong `GATES` ·
+7 nền · 7 mục nhạc · 7 `spawnFrom`.
+
+**MÁY chạy phó bản thì GIỮ NGUYÊN** — `DGN` · `startDungeonRun` · `updateDungeon` ·
+`DGN_ROOMS` · `drawDgnWalls` · `drawDungeonHUD` · `spawnHuntBoss` · thưởng · `boxTier`.
+Nó chạy hoàn toàn theo dữ liệu: thêm một khoá vào `MAPS` (có `type:'dungeon'`,
+`dungeon:true`) và một khoá cùng tên vào `window.DUNGEONS` là phòng chạy lại ngay,
+không phải sửa một dòng máy nào. Khuôn một mục nằm trong chú thích ở `data/canbang.js`.
+
+Quy ước khoá vẫn còn hiệu lực: **phó bản của map X là `pb_X`**. Nút "Vào Phó Bản" trong
+bảng Chọn Trận đọc đúng quy ước đó, nên đặt tên mới theo nó là nút tự hiện lại.
+
+Ba thứ từng treo trên phó bản, đã phải rời chỗ khi gỡ — **nhớ trả về khi dựng lại**:
+
+| Thứ | Trước | Nay |
+|---|---|---|
+| Địa hình Tầng Sâu | `DEEP_MAP = 'pb_daohoa'` | map riêng `deep` trong `MAPS` |
+| Nguồn Cốt Chimera | thông quan phòng | **cầu tạm**: boss vùng của 7 map cha (`cotBossVung`) |
+| `COT_DONG[*].map` | `pb_*` | map cha ngoài trời |
+
+`cotBossVung` là **cầu tạm, không phải thiết kế**. Nó tồn tại vì một hệ không còn cửa
+nào là một hệ chết. Dựng lại tầng phó bản xong thì trả cửa về chỗ cũ và gỡ nó đi.
+
+Bảy Dòng Cốt vẫn giữ nguyên quan hệ một-đổi-một với bảy vùng — đây là **cơ chế chọn
+build**, không phải trang trí: người chơi chọn Dòng để nuôi bằng cách chọn nơi để cày.
+
+| Vùng | Dòng Cốt độc quyền |
 |---|---|
-| `pb_daohoa` | Cánh Hoa |
-| `pb_ngoai` | Đồng Cỏ |
-| `pb_chungnam` | Rễ Gai |
-| `pb_comoc` | Vỏ Trứng |
-| `pb_tuyettinh` | Băng Vụn |
-| `pb_mongco` | Tro Tàn |
-| `pb_nhanmon` | Sấm Vụn |
+| `daohoa` | Cánh Hoa |
+| `ngoai` | Đồng Cỏ |
+| `chungnam` | Rễ Gai |
+| `comoc` | Vỏ Trứng |
+| `tuyettinh` | Băng Vụn |
+| `mongco` | Tro Tàn |
+| `nhanmon` | Sấm Vụn |
 
-Còn treo trên phó bản: Sách Kỹ Năng (`sach`), Tinh Luyện (`tuLa`), Hồn (`hon`),
-Bản Năng (`khi`), `bacThem`, Box Kundun theo `boxTier` 1-5, vé gacha Chimera mỗi lượt
-thông quan, và `huntBoss` (7 boss săn). Thêm nữa: `const DEEP_MAP = 'pb_daohoa'` —
-Tầng Sâu 20 tầng **mượn địa hình phòng này**, xoá nó là mất luôn Tầng Sâu.
+Sách Kỹ Năng · Tinh Luyện · Bản Năng · Box Kundun **không chết theo** vì còn nguồn khác
+(Tầng Sâu, cửa hàng, quái, nhiệm vụ). Chỉ Cốt là độc quyền, nên chỉ Cốt cần cầu tạm.
 
-**Việc đúng là GỘP, không phải XOÁ:** giữ 7 cửa + 7 ổ nguyên liệu, thay MỘT địa hình
-tĩnh dùng chung bằng máy sinh + từ khoá biến đổi.
+**Bài kiểm:** 14 bài từng vào `pb_daohoa`/`pb_nhanmon` nay tự cắm phòng của mình bằng
+`tests/pbthu.js` (`dungPbThu`). Việc đó vừa giữ máy phó bản có người gác, vừa **kiểm
+luôn lời hứa "máy chạy theo dữ liệu"** — nếu một khoá là đủ để phòng chạy từ đầu tới
+cuối thì cắm lại bảy phòng thật cũng chỉ là điền dữ liệu. `tools/reg.sh` đã sửa để chép
+cả tệp phụ trợ trong `tests/`, không chỉ `test_*.js`.
 
 ### Bốn tài liệu thiết kế — đọc theo thứ tự này
 1. `docs/CAU_TRUC_MAP.md` — đo map hiện tại, đối chiếu Ragnarok / Path of Exile

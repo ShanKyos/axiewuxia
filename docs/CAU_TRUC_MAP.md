@@ -1,5 +1,10 @@
 # Cấu trúc map — đo hiện trạng, đối chiếu Ragnarok & Path of Exile
 
+> ⚠ **CẬP NHẬT — bảy map `pb_*` đã gỡ hẳn khỏi game.**
+> Số đo và lập luận dưới đây vẫn đúng (chúng chính là lý do gỡ), nhưng chỗ nào nói
+> "7 phó bản" thì nay đọc là "7 phòng đã gỡ, tầng map đang chờ dựng lại". Máy chạy
+> phó bản vẫn còn nguyên và chạy theo dữ liệu. Xem `CLAUDE.md` · CHẨN ĐOÁN GỐC.
+
 Nghiên cứu cho câu hỏi: *làm sao tạo được cảm giác map giống Ragnarok Online và Path of Exile.*
 Phần 1 là số đo thật của game lúc này, không phải ấn tượng. Phần 2-3 tách ra thứ tạo nên cảm
 giác của hai game kia. Phần 4 nói thẳng chỗ mâu thuẫn. Phần 5 là đề xuất, có thứ tự ưu tiên.

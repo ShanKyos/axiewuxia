@@ -1046,10 +1046,7 @@ const MAP_BG_SRC = {
   ngoai:'assets/maps/bg_ngoai.jpg', chungnam:'assets/maps/bg_chungnam.jpg',
   comoc:'assets/maps/bg_comoc.jpg', tuyettinh:'assets/maps/bg_tuyettinh.jpg',
   mongco:'assets/maps/bg_mongco.jpg', nhanmon:'assets/maps/bg_nhanmon.jpg',
-  pb_daohoa:'assets/maps/bg_dungeon_stone.jpg', pb_ngoai:'assets/maps/bg_dungeon_stone.jpg',
-  pb_chungnam:'assets/maps/bg_dungeon_stone.jpg', pb_comoc:'assets/maps/bg_dungeon_stone.jpg',
-  pb_mongco:'assets/maps/bg_dungeon_stone.jpg',
-  pb_tuyettinh:'assets/maps/bg_dungeon_fire.jpg', pb_nhanmon:'assets/maps/bg_dungeon_fire.jpg',
+  deep:'assets/maps/bg_dungeon_stone.jpg',   // Tầng Sâu — nền hầm duy nhất còn dùng
 };
 // Nạp NỀN THEO NHU CẦU. Trước đây nạp cả 15 mục ngay khi tải trang — 3,2 MB ảnh nền cho 15 bản
 // đồ mà người chơi mới chỉ đứng ở đúng MỘT. Nay chỉ nạp map đang vào (và nạp trước những map đi
@@ -1637,6 +1634,11 @@ const GATES = [
   // KHÔNG dùng `to` — nó không dẫn tới một map cố định mà mở một lượt xuống tầng, xem deepStart().
   { map:'tuongduong', x:1080, y:620,  deep:true, portal:true, label:'Tầng Sâu',
     name:'Giếng Vực Sâu — xuống Tầng Sâu (cấp 20+)' },
+  // Cửa ra của Tầng Sâu. Trước đây Tầng Sâu mượn địa hình pb_daohoa nên dùng ké cổng "Xuất Môn"
+  // của phòng đó; gỡ bảy phó bản là mất luôn cửa ra, người chơi xuống rồi không có cổng nào để
+  // đi lên. Phím G ở đây chạy nhánh RÚT LUI (deepLeave) chứ không travelTo — `to` chỉ là chỗ về.
+  { map:'deep', x:1300, y:1660, to:'tuongduong', portal:true, label:'Xuất Môn',
+    name:'Rời Tầng Sâu → Lunaris City' },
 ];
 let nearGate = null;
 function cityWallRects(){
@@ -3773,7 +3775,7 @@ const WX_INFO = {
 };
 function weatherNow(){
   if (typeof player === 'undefined' || !player || !player.gt) return null;
-  if (!curMap || curMap.startsWith('pb_')) return null; // phó bản không có thời tiết
+  if (!curMap || (MAPS[curMap] && MAPS[curMap].dungeon)) return null; // trong hầm thì không có trời để mà đổi
   const g = gameTimeInfo();
   const h = Math.abs(Math.sin((g.year*4096 + g.month*97 + g.day*13 + 7) * 12.9898) * 43758.5453) % 1;
   const tbl = WX_TABLE[g.season.id] || WX_TABLE.xuan;
@@ -3860,7 +3862,7 @@ function tickGameClock(dt){
 }
 function seasonAmbientCfg(cfg){ // hạt mùa phủ lên map ngoài trời — phó bản giữ than hồng
   if (typeof player === 'undefined' || !player || !player.gt) return cfg;
-  if (curMap && curMap.startsWith('pb_')) return cfg;
+  if (curMap && MAPS[curMap] && MAPS[curMap].dungeon) return cfg;
   const sa = gameTimeInfo().season.amb;
   return { kind: sa.kind, color: sa.color, n: Math.max(cfg.n, sa.n) };
 }
@@ -4120,28 +4122,32 @@ const COT_PHU = [
   { k:'aspdPct',  ten:'Tốc đánh',            lo:1.2, hi:2.6 },
 ];
 const COT_PHU_MAP = {}; for (const d of COT_PHU) COT_PHU_MAP[d.k] = d;
-// Bảy Dòng, mỗi Trial Chamber một Dòng. Bốn mảnh ĐỔI LUẬT của chiêu chứ không cộng thêm con số
+// Bảy Dòng, mỗi VÙNG một Dòng. Bốn mảnh ĐỔI LUẬT của chiêu chứ không cộng thêm con số
 // — đó là chỗ tách hệ này khỏi Linh Thú và trang bị người chơi, hai hệ đã làm việc "bốc dòng phụ".
+//
+// `map` trước đây trỏ vào bảy phó bản pb_*, nên chọn phòng để vào CHÍNH LÀ chọn Dòng để nuôi.
+// Bảy phòng đó đã gỡ, nên `map` nay trỏ vào map cha ngoài trời — quyền chọn Dòng vẫn nằm ở
+// tay người chơi (chọn vùng để cày), chỉ đổi cửa. Dựng lại tầng phó bản thì trỏ lại vào pb_*.
 const COT_DONG = {
-  canhhoa: { ten:'Cánh Hoa', map:'pb_daohoa',    mau:'#e87ab0',
+  canhhoa: { ten:'Cánh Hoa', map:'daohoa',    mau:'#e87ab0',
     hai:{ k:'hpPct', v:8 },   haiTxt:'+8% Sinh Lực tối đa',
     bonTxt:'Chiêu của Chimera hồi cho bạn 8% Sinh Lực tối đa.' },
-  dongco:  { ten:'Đồng Cỏ',  map:'pb_ngoai',     mau:'#7ec850',
+  dongco:  { ten:'Đồng Cỏ',  map:'ngoai',     mau:'#7ec850',
     hai:{ k:'aspdPct', v:6 }, haiTxt:'+6% tốc đánh',
     bonTxt:'6 giây sau khi tung chiêu, Chimera đánh nhanh gấp đôi.' },
-  regai:   { ten:'Rễ Gai',   map:'pb_chungnam',  mau:'#5a8a4a',
+  regai:   { ten:'Rễ Gai',   map:'chungnam',  mau:'#5a8a4a',
     hai:{ k:'cAtk', v:8 },    haiTxt:'+8% Công Chimera',
     bonTxt:'Chiêu để lại vũng gai 4 giây, địch đi qua chậm 30%.' },
-  votrung: { ten:'Vỏ Trứng', map:'pb_comoc',     mau:'#e7dcc2',
+  votrung: { ten:'Vỏ Trứng', map:'comoc',     mau:'#e7dcc2',
     hai:{ k:'cSkill', v:10 }, haiTxt:'+10% sát thương chiêu',
     bonTxt:'Chiêu tung hai lần, lần sau 40% sức.' },
-  bangvun: { ten:'Băng Vụn', map:'pb_tuyettinh', mau:'#7ecbff',
+  bangvun: { ten:'Băng Vụn', map:'tuyettinh', mau:'#7ecbff',
     hai:{ k:'cCrit', v:6 },   haiTxt:'+6% Bạo Kích Chimera',
     bonTxt:'Chiêu đóng băng mục tiêu 1,2 giây — đổi lại hồi chiêu +2 giây.' },
-  trotan:  { ten:'Tro Tàn',  map:'pb_mongco',    mau:'#c0304a',
+  trotan:  { ten:'Tro Tàn',  map:'mongco',    mau:'#c0304a',
     hai:{ k:'cCritDmg', v:10 }, haiTxt:'+10% Sát Thương Bạo Chimera',
     bonTxt:'Chimera hạ được một mục tiêu thì hồi chiêu giảm 1,5 giây.' },
-  samvun:  { ten:'Sấm Vụn',  map:'pb_nhanmon',   mau:'#b18cff',
+  samvun:  { ten:'Sấm Vụn',  map:'nhanmon',   mau:'#b18cff',
     hai:{ k:'cCd', v:8 },     haiTxt:'−8% hồi chiêu',
     bonTxt:'Chiêu nổ dây chuyền sang mục tiêu kề trong 200px.' },
 };
@@ -4326,8 +4332,12 @@ window.cotBo = function(uid){                  // vứt mảnh thừa cho gọn 
   cotKho().splice(f.i, 1); saveGame(); return true;
 };
 const COT_KHO_MAX = 120;
-// Rơi Cốt khi thông quan phó bản: Dòng do CHÍNH phòng quyết định, nên người chơi chọn bộ bằng
-// việc chọn phòng — bỏ đúng tầng may rủi chán nhất của Genshin (cày ra hai bộ trộn lẫn).
+// Rơi Cốt: Dòng do CHÍNH nơi đứng quyết định, nên người chơi chọn bộ bằng việc chọn nơi cày —
+// bỏ đúng tầng may rủi chán nhất của Genshin (cày ra hai bộ trộn lẫn).
+//
+// Cửa cũ là "thông quan phó bản". Bảy phó bản đã gỡ, mà một hệ không có cửa nào thì là một hệ
+// chết, nên tạm nối vào BOSS VÙNG của bảy map cha (cotBossVung, gọi từ applyRewards). Đây là
+// CẦU TẠM: dựng lại tầng phó bản xong thì trả cửa về chỗ cũ và gỡ nhánh boss vùng đi.
 function cotRoi(mapId, lan){
   const dong = COT_DONG_THEO_MAP[mapId]; if (!dong) return [];
   const du = lan <= 3;                          // ba lượt đầu trong ngày rơi đủ, sau đó giảm
@@ -4342,6 +4352,18 @@ function cotRoi(mapId, lan){
   }
   themDatHon(du ? 4 + Math.floor(Math.random() * 3) : 1);
   return ra;
+}
+// CẦU TẠM (xem chú thích trên cotRoi): boss vùng thả Cốt của Dòng thuộc map đó. Dùng chính
+// bộ đếm phó bản trong Mục Tiêu Hôm Nay để giữ nguyên cửa mềm "ba lượt đầu rơi đủ".
+function cotBossVung(x, y){
+  if (!player || !COT_DONG_THEO_MAP[curMap]) return;
+  dailyTrack('dungeon');
+  const lan = (player.daily && player.daily.dungeon) || 1;
+  const cot = cotRoi(curMap, lan);
+  if (!cot.length) return;
+  const co = cot.filter(c => c.pham === 'co').length;
+  addFloat(x, y - 110, `◆ +${cot.length} Cốt ${COT_DONG[cot[0].dong].ten}${co ? ` (${co} Cổ!)` : ''}`,
+           COT_DONG[cot[0].dong].mau, 14);
 }
 function chiBoHieu(){                          // dòng đang đủ 4 mảnh của con đang xuất trận
   const C = chiState(); return C.eq ? chiCotGom(C.eq).bo : null;
@@ -7449,10 +7471,7 @@ const BGM_TRACKS = {
   tuyettinh:  'bgm_tuyettinh',   // lunar_bloodmoon — thung lũng băng
   mongco:     'bgm_mongco',      // lunar_battle — thảo nguyên tro
   nhanmon:    'bgm_nhanmon',     // pvp — ải cuối, căng nhất
-  // Bảy phó bản dùng chung một bản: chúng là hầm ngắn, đổi nhạc mỗi lần vào là rối hơn là hay.
-  pb_daohoa:'bgm_dungeon', pb_ngoai:'bgm_dungeon', pb_chungnam:'bgm_dungeon',
-  pb_comoc:'bgm_dungeon', pb_mongco:'bgm_dungeon', pb_tuyettinh:'bgm_dungeon',
-  pb_nhanmon:'bgm_dungeon',
+  deep: 'bgm_dungeon',         // Tầng Sâu
 };
 const BGM_INTRO = 'bgm_intro';   // màn mở đầu & chọn nhân vật
 // boss.wav trong kho, chuyển sang mp3. Chỗ gọi playBgm(BGM_BOSS) lúc vào trận trùm đã có sẵn
@@ -8246,6 +8265,7 @@ function applyRewards(rw, m){
   if (rw.gems.tuLa){ player.gems.tuLa += rw.gems.tuLa; logCombat('+1 ◆ Tu La Tinh Thạch', '#e84a6a'); }
   if (rw.gems.honNguyen){ player.gems.honNguyen += rw.gems.honNguyen; logCombat('+1 ❖ Hỗn Nguyên Thạch', '#b08ae8'); }
   if (rw.bikipVH){ player.bikipVH = (player.bikipVH || 0) + rw.bikipVH; addFloat(m.x, m.y-100, '+1 📜 Sách Kỹ Năng', '#ffb15c', 13); }
+  if (m.def.boss) cotBossVung(m.x, m.y);   // cầu tạm cho Cốt Chimera — xem chú thích trên cotRoi
   if (rw.firstDrop) player._daRoiMonDau = true;
   for (const s of rw.autoSold){ player.silver += s.gia; addFloat(m.x, m.y-54, `Tự bán ${s.it.name} +${s.gia}◈`, '#9aa8d4', 11); }
   for (const it of rw.items){
@@ -15565,11 +15585,11 @@ function renderKhoCot(){
   const K = cotKho(), loc = window._khoLoc;
   const ds = loc === 'all' ? K : K.filter(c => c.o === loc);
   let h = moBang({ tieu:'Kho Cốt', dong:`${K.length}/${COT_KHO_MAX}` });
-  h += `<div style="font-size:11.5px;color:#9aa8d4;line-height:1.55;margin-bottom:8px">Cốt rơi khi thông quan phó bản — <b>mỗi phòng một Dòng</b>, nên chọn phòng là chọn bộ. Nâng bậc bằng cách cho ăn những mảnh thừa; mỗi <b>+3</b> mở thêm một dòng phụ.</div>`;
+  h += `<div style="font-size:11.5px;color:#9aa8d4;line-height:1.55;margin-bottom:8px">Cốt rơi từ <b>Trùm Vùng</b> — <b>mỗi vùng một Dòng</b>, nên chọn vùng là chọn bộ. Nâng bậc bằng cách cho ăn những mảnh thừa; mỗi <b>+3</b> mở thêm một dòng phụ.</div>`;
   h += `<div class="bang-tabs"><button class="bang-tab ${loc === 'all' ? 'on' : ''}" onclick="khoLoc('all')">Tất cả</button>`;
   for (const k of COT_O_IDS) h += `<button class="bang-tab ${loc === k ? 'on' : ''}" onclick="khoLoc('${k}')">${COT_O[k].glyph} ${COT_O[k].ten}</button>`;
   h += `</div>`;
-  if (!ds.length) h += `<div style="text-align:center;padding:16px;opacity:.7;font-size:13px">Chưa có mảnh nào.<br>Thông quan phó bản để nhặt Cốt.</div>`;
+  if (!ds.length) h += `<div style="text-align:center;padding:16px;opacity:.7;font-size:13px">Chưa có mảnh nào.<br>Hạ Trùm Vùng để nhặt Cốt.</div>`;
   for (const c of ds){
     const P = COT_PHAM[c.pham], D = COT_DONG[c.dong], O = COT_O[c.o];
     const tran = c.plus >= cotTran(c);
@@ -20803,6 +20823,8 @@ function renderStageSelect(mapId){
     }
   }
   // PHÓ BẢN — dùng lại nguyên travelTo() sẵn có, không cần đi bộ tới cổng dịch chuyển vật lý.
+  // Quy ước khoá: phó bản của map X là 'pb_X'. Bảng MAPS hiện không còn mục pb_* nào (đã gỡ),
+  // nên nhánh này im; cắm map mới theo đúng quy ước là nút hiện lại, không phải sửa gì ở đây.
   const dgId = 'pb_' + mapId;
   if (MAPS[dgId]){
     html += `<div class="stat-sec">PHÓ BẢN</div>
@@ -21945,7 +21967,8 @@ let DEEP = null; // { floor, bank, entered }
 const DEEP_MAX = 20;      // CÓ ĐÁY. Vô hạn thì phần thưởng không có trần và cũng chẳng có cái
                           // kết nào để hướng tới — chỉ còn là cày cho tới lúc chán hoặc chết.
 const DEEP_BOSS_EVERY = 5;  // tầng 5·10·15·20 là tầng boss
-const DEEP_MAP = 'pb_daohoa';   // Tầng Sâu mượn địa hình map này; KHÔNG chạy lượt phó bản của nó
+const DEEP_MAP = 'deep';   // map RIÊNG của Tầng Sâu (data/canbang.js). Trước đây mượn 'pb_daohoa',
+                          // nên gỡ phó bản là mất luôn 20 tầng — nay không dính vào nhau nữa.
 // Tầng Sâu là MỘT sảnh, không phải ba phòng. Bán kính 380 nằm gọn trong tầm quét 430 của AUTO:
 // rải quái theo DGN_ROOMS (ba tâm phòng cách nhau tới 960px) thì AUTO neo ở phòng 1 không bao giờ
 // với tới quái phòng 3 — tầng không bao giờ sạch, và cả chế độ đứng im vĩnh viễn.
@@ -22260,20 +22283,7 @@ function drawDungeonHUD(){
 
 // Cổng dịch chuyển: map cha → phó bản (và cổng thoát ngược lại)
 GATES.push(
-  { map:'daohoa',      x:2250, y:950,  to:'pb_daohoa',   name:'Phó Bản · Trại Gloam',       portal:true, label:'Phó Bản' },
-  { map:'pb_daohoa',   x:1300, y:1660, to:'daohoa',      name:'Rời Phó Bản → Petalshade Isle',      portal:true, label:'Xuất Môn' },
-  { map:'ngoai',       x:2250, y:950,  to:'pb_ngoai',    name:'Phó Bản · Doanh Trại Gloam',        portal:true, label:'Phó Bản' },
-  { map:'pb_ngoai',    x:1300, y:1660, to:'ngoai',       name:'Rời Phó Bản → Petalshade Outskirts', portal:true, label:'Xuất Môn' },
-  { map:'chungnam',    x:2200, y:790,  to:'pb_chungnam', name:'Phó Bản · Phản Đồ Mật Thất',     portal:true, label:'Phó Bản' },
-  { map:'pb_chungnam', x:1300, y:1660, to:'chungnam',    name:'Rời Phó Bản → Thornwood Reach',   portal:true, label:'Xuất Môn' },
-  { map:'comoc',       x:2200, y:890,  to:'pb_comoc',    name:'Phó Bản · Mộ Chủ Địa Cung',      portal:true, label:'Phó Bản' },
-  { map:'pb_comoc',    x:1300, y:1660, to:'comoc',       name:'Rời Phó Bản → Hollow Roost',      portal:true, label:'Xuất Môn' },
-  { map:'tuyettinh',   x:2200, y:690,  to:'pb_tuyettinh',name:'Phó Bản · Băng Hỏa Luyện Ngục',  portal:true, label:'Phó Bản' },
-  { map:'pb_tuyettinh',x:1300, y:1660, to:'tuyettinh',   name:'Rời Phó Bản → Frostmire Vale',    portal:true, label:'Xuất Môn' },
-  { map:'mongco',      x:2200, y:790,  to:'pb_mongco',   name:'Phó Bản · Trại Tro Tàn',         portal:true, label:'Phó Bản' },
-  { map:'pb_mongco',   x:1300, y:1660, to:'mongco',      name:'Rời Phó Bản → Ashen Steppe',      portal:true, label:'Xuất Môn' },
-  { map:'nhanmon',     x:2200, y:790,  to:'pb_nhanmon',  name:'Phó Bản · Thiên Binh Đài',       portal:true, label:'Phó Bản' },
-  { map:'pb_nhanmon',  x:1300, y:1660, to:'nhanmon',     name:'Rời Phó Bản → Stormgate Pass',    portal:true, label:'Xuất Môn' },
+  // 14 cổng phó bản đã gỡ cùng 7 map pb_* — dựng lại ở phần đo map.
 );
 
 
@@ -22370,13 +22380,18 @@ function hintText(){
 }
 
 // ---------- Mục Tiêu Hôm Nay ----------
-// minLv: cấp 1 mà giao "thông quan phó bản" (phó bản đầu cần cấp 12) và "rèn đồ" (chưa gặp Thợ Rèn)
+// minLv: cấp 1 mà giao mục tiêu phó bản (phòng đầu cần cấp 12) và "rèn đồ" (chưa gặp Thợ Rèn)
 // là hai trong bốn mục tiêu ngày đầu bất khả thi. Mục tiêu chỉ hiện — và chỉ tính vào điều kiện
 // nhận thưởng — khi người chơi đã tới cấp đó.
+//
+// Khoá 'dungeon' giữ nguyên (bản lưu cũ đang đếm theo nó), nhưng CHỮ phải nói đúng thứ hoàn
+// thành được: bảy phó bản đã gỡ, nên một mục tiêu "thông quan phó bản" sẽ khoá luôn cả phần
+// thưởng ngày cho mọi người từ cấp 12 trở lên. Nay đếm theo trùm vùng — cùng cái cửa đang thả
+// Cốt Chimera (cotBossVung). Dựng lại phó bản thì đổi chữ về, đừng đổi khoá.
 const DAILY_GOALS = [
   { id:'kills',   icon:'⚔', name:'Hạ 10 Chimera',        need:10, minLv:1 },
   { id:'forge',   icon:'🔨', name:'Rèn / nâng tầng / khảm ngọc 1 lần', need:1, minLv:5 },
-  { id:'dungeon', icon:'🏯', name:'Thông quan 1 phó bản', need:1, minLv:12 },
+  { id:'dungeon', icon:'🏯', name:'Hạ 1 Trùm Vùng',      need:1, minLv:12 },
 ];
 function dailyGoalsNow(){ return DAILY_GOALS.filter(g => lvPeak() >= (g.minLv || 1)); }
 function dailyReset(){
@@ -22512,7 +22527,7 @@ function spawnAmbients(){
   for (let i = 0; i < 130; i++){
     tufts.push({ x: rnd(0,MAP.w), y: rnd(0,MAP.h), k: rnd(0,Math.PI*2), len: 4+rnd(0,7), rock: rnd(0,1) > 0.72 });
   }
-  let cfg = MAP_AMBIENT[curMap] || (curMap && curMap.startsWith('pb_') ? DUNGEON_AMBIENT : { kind:'mote', color:'#e8d8a8', n:14 });
+  let cfg = MAP_AMBIENT[curMap] || (curMap && MAPS[curMap] && MAPS[curMap].dungeon ? DUNGEON_AMBIENT : { kind:'mote', color:'#e8d8a8', n:14 });
   cfg = seasonAmbientCfg(cfg);
   const _wx = weatherNow(); // thời tiết ngày phủ lên hạt môi trường (Gói B)
   if (_wx){

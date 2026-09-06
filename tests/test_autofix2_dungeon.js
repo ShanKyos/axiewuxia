@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài kiểm
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -7,11 +8,12 @@ const { chromium } = require('playwright');
   await page.goto('http://localhost:8853/index.html', { waitUntil: 'networkidle' });
   await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(500);
+  await page.evaluate(dungPbThu);   // 7 map pb_* đã gỡ — bài kiểm tự cắm phòng của mình
   const r4 = await page.evaluate(() => {
     window.TEST_MODE = true;
     startGame('thieulam', null);
     player.level = 60; questIdx = 35; questState = 'active'; calcDerived(); player.hp = player.maxHp; player.potions = 5;
-    travelTo('pb_daohoa');
+    travelTo('pb_thu');
     toggleAuto();
     let sawWave2 = false, diedOrFailed = false;
     for (let i = 0; i < 500; i++){

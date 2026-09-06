@@ -173,17 +173,17 @@ const PORT = process.argv[2] || '8853';
       for (const c of ra) if (c.dong !== COT_DONG_THEO_MAP[mapId]) sai.push(mapId + '→' + c.dong);
     }
     C.kho = [];
-    const dau = cotRoi('pb_daohoa', 1).length, sau = cotRoi('pb_daohoa', 9).length;
-    const ngoai = cotRoi('daohoa', 1).length;    // map thường không rơi Cốt
+    const dau = cotRoi('daohoa', 1).length, sau = cotRoi('daohoa', 9).length;
+    const ngoai = cotRoi('tuongduong', 1).length;  // map KHÔNG thuộc Dòng nào thì không rơi Cốt
     return { sai, dem, dau, sau, ngoai, dat: player.mats.datHon };
   });
   console.log('6) rơi:', JSON.stringify(r6));
-  if (r6.sai.length) fail('phó bản rơi sai Dòng: ' + r6.sai.join(', '));
-  else pass('cả 7 phó bản rơi đúng Dòng của mình');
+  if (r6.sai.length) fail('vùng rơi sai Dòng: ' + r6.sai.join(', '));
+  else pass('cả 7 vùng rơi đúng Dòng của mình');
   if (!(r6.dau > r6.sau)) fail(`cửa mềm không hoạt động: lượt 1 rơi ${r6.dau}, lượt 9 rơi ${r6.sau}`);
   else pass(`cửa mềm: lượt đầu ${r6.dau} mảnh, lượt thứ 9 còn ${r6.sau}`);
-  if (r6.ngoai) fail('map thường cũng rơi Cốt'); else pass('chỉ phó bản rơi Cốt');
-  if (!(r6.dat > 0)) fail('phó bản không rơi Đất Hồn'); else pass(`phó bản rơi Đất Hồn (${r6.dat} viên)`);
+  if (r6.ngoai) fail('map ngoài bảy Dòng cũng rơi Cốt'); else pass('chỉ bảy vùng có Dòng mới rơi Cốt');
+  if (!(r6.dat > 0)) fail('rơi Cốt mà không rơi Đất Hồn'); else pass(`rơi kèm Đất Hồn (${r6.dat} viên)`);
 
   // ── 7. kỹ năng đồng hành mở theo cấp và BUFF NGƯỜI CHƠI ──
   const r7 = await p.evaluate(() => {

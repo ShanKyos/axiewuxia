@@ -3,6 +3,7 @@
 // còn lại là boss mà AUTO không đánh boss; đo được nhân vật đứng im vô hạn cách boss 301px,
 // trong khi dòng "Vùng Boss" lại có ngưỡng 300px nên không bao giờ hiện.
 const { chromium } = require('playwright');
+const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài kiểm
 let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
@@ -12,6 +13,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     p.on('pageerror', e => errs.push(String(e).split('\n')[0]));
     await p.goto('http://localhost:8861/index.html?max=1', { waitUntil:'load' });
     await p.waitForFunction(() => window.__gameReady).catch(()=>{});
+    await p.evaluate(dungPbThu);   // 7 map pb_* đã gỡ — bài kiểm tự cắm phòng của mình
     await p.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); });
     await p.waitForTimeout(900);
     return p;
@@ -35,7 +37,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   // trạng thái cần đo: xoá sạch quái thường, để lại đúng một boss trong tầm nhìn.
   const p1 = await boot();
   await p1.evaluate(() => { applyTestBoost && applyTestBoost();
-    travelTo('tuongduong'); travelTo('pb_daohoa');
+    travelTo('tuongduong'); travelTo('pb_thu');
     mobs.length = 0;
     spawnMob('boss_hacphong', { x: player.x + 340, y: player.y, r: 1, count: 1 }, null);
     mobs.forEach(m => { m.hp = m.maxHp = 1e9; });

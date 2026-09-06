@@ -46,7 +46,9 @@ const URL = 'http://localhost:8871/index.html?max=1';
   console.log(JSON.stringify(out, null, 1));
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
   if (out.manCho !== 'bgm_intro') fail(`màn chờ không phát nhạc intro (${out.manCho})`);
-  if (out.soMap < 10) fail(`chỉ thấy ${out.soMap} bản đồ — phép đo rỗng`);
+  // Ngưỡng này chỉ để bắt PHÉP ĐO RỖNG (MAPS chưa nạp), không phải để đếm map. Trước là 10 khi
+  // còn 15 map; gỡ bảy phó bản còn 9 nên nó bắt vạ oan. Đặt ở 5 — dưới ngần ấy chắc chắn là hỏng.
+  if (out.soMap < 5) fail(`chỉ thấy ${out.soMap} bản đồ — phép đo rỗng`);
   if (out.mapKhongNhac.length) fail(`bản đồ không có nhạc: ${out.mapKhongNhac.join(', ')}`);
   if (out.soBanKhacNhau < 8) fail(`chỉ ${out.soBanKhacNhau} bản nhạc khác nhau — cả thế giới nghe gần như một bài`);
   if (!out.nhacTrum) fail('trận trùm không có nhạc riêng — playBgm(BGM_BOSS) đang chạy rỗng');

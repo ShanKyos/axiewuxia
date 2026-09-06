@@ -2,6 +2,7 @@
 // cùng một chỗ trong MỘT phòng trống → boss rơi xuống đúng chỗ đó), và boss cuối phó bản không
 // có moveset nào cả — chỉ đánh thường.
 const { chromium } = require('playwright');
+const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài kiểm
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const p = await b.newPage({ viewport: { width: 1100, height: 700 } });
@@ -10,6 +11,7 @@ const { chromium } = require('playwright');
   await p.goto('http://localhost:8853/index.html?max=1'); await p.waitForTimeout(800);
   await p.waitForFunction(() => window.__gameReady).catch(()=>{});
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
+  await p.evaluate(dungPbThu);   // 7 map pb_* đã gỡ — bài kiểm tự cắm phòng của mình
   await p.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); applyTestBoost(); calcDerived(); });
 
   // ── 1. Boss ngoài map KHÔNG được mang cơ chế phó bản ──
@@ -33,7 +35,7 @@ const { chromium } = require('playwright');
 
   // ── 2. PHÒNG NỐI PHÒNG: cửa khoá cho tới khi dọn sạch phòng ──
   const rooms = await p.evaluate(() => {
-    travelTo('pb_daohoa'); startDungeonRun('pb_daohoa');
+    travelTo('pb_thu'); startDungeonRun('pb_thu');
     const o = { cua: [], quaiTheoPhong: [], quaCuaDuoc: [] };
     const gx = (DGN_GATE.x0 + DGN_GATE.x1)/2;
     for (let w = 1; w <= 3; w++){
@@ -43,7 +45,7 @@ const { chromium } = require('playwright');
       const R = DGN_ROOMS[w-1];
       o.quaiTheoPhong.push(alive.length ? alive.every(m => m.y > R.y0 - 60 && m.y < R.y1 + 60) : null);
       // khe cửa của tường w-1 có chặn không?
-      if (w <= 2) o.quaCuaDuoc.push(!inObstacle('pb_daohoa', gx, DGN_WALLS[w-1].y + DGN_WALLS[w-1].h/2, 14));
+      if (w <= 2) o.quaCuaDuoc.push(!inObstacle('pb_thu', gx, DGN_WALLS[w-1].y + DGN_WALLS[w-1].h/2, 14));
       mobs.forEach(m => { m.hp = 1; killMob(m, 'hit'); });
       updateDungeon(0.016);
     }
@@ -117,7 +119,7 @@ const { chromium } = require('playwright');
     // đang trong Tầng Sâu mà đi cổng THOÁT → phải coi như rút lui, không mất trắng
     for (let i = 0; i < 2; i++){ mobs.forEach(m => { m.hp = 1; killMob(m,'hit'); }); updateDeep(); }
     const kho = DEEP.bank.silver, s0 = player.silver;
-    const gx = GATES.find(x => x.map === 'pb_daohoa' && x.to);
+    const gx = GATES.find(x => x.map === DEEP_MAP && x.to);   // cổng ra NẰM TRONG Tầng Sâu
     player.x = gx.x; player.y = gx.y; updateGate();
     if (nearGate && !nearGate.deep && DEEP) window.deepLeave();
     return { co:true, viTri:[g.x,g.y], batDuoc, vaoDuoc, khoTruoc: kho,

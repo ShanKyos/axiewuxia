@@ -1,10 +1,13 @@
 const { chromium } = require('playwright');
+const { PB_THU, dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài kiểm
 
+// Bảy phòng thật đã gỡ. Bốn ca dưới đây dựng lại ĐÚNG bốn cấu hình boss săn / bậc Rương cũ
+// trên phòng bài kiểm — thứ đang đo là luồng updateDungeon, không phải bảy khoá tên map.
 const CASES = [
-  { dungeon: 'pb_daohoa', level: 15, huntBoss: 'boss_cotma1', boxTier: 1 },
-  { dungeon: 'pb_chungnam', level: 30, huntBoss: 'boss_hacnu1', boxTier: 2 },
-  { dungeon: 'pb_tuyettinh', level: 66, huntBoss: 'boss_hoangkim1', boxTier: 3 },
-  { dungeon: 'pb_nhanmon', level: 110, huntBoss: 'boss_amthan', boxTier: 5 },
+  { dungeon: PB_THU, level: 15,  boss: 'boss_hacphong',  huntBoss: 'boss_cotma1',    boxTier: 1 },
+  { dungeon: PB_THU, level: 30,  boss: 'boss_phando',    huntBoss: 'boss_hacnu1',    boxTier: 2 },
+  { dungeon: PB_THU, level: 66,  boss: 'boss_tinhhoa',   huntBoss: 'boss_hoangkim1', boxTier: 3 },
+  { dungeon: PB_THU, level: 110, boss: 'boss_thienbinh', huntBoss: 'boss_amthan',    boxTier: 5 },
 ];
 
 (async () => {
@@ -19,6 +22,7 @@ const CASES = [
   await page.waitForTimeout(300);
 
   for (const c of CASES) {
+    await page.evaluate(dungPbThu, c);   // cắm lại phòng theo cấu hình của ca này
     const r = await page.evaluate(async ({ dungeon, level, huntBoss, boxTier }) => {
       player.level = level; questIdx = 35; questState = 'active'; player.free = 0; player.equip = {};
       player.str = 20 + level*3; player.agi = 20 + level*3; player.def = 20 + level*3; player.vit = 20 + level*3;

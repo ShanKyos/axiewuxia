@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài kiểm
 
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
@@ -8,13 +9,14 @@ const { chromium } = require('playwright');
   await page.goto('http://localhost:8853/index.html', { waitUntil: 'networkidle' });
   await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(500);
+  await page.evaluate(dungPbThu);   // 7 map pb_* đã gỡ — bài kiểm tự cắm phòng của mình
   await page.evaluate(() => { startGame('thieulam', null); });
   await page.waitForTimeout(300);
 
   const setup = await page.evaluate(() => {
     player.level = 15; questIdx = 35; questState = 'active';
     calcDerived(); player.hp = player.maxHp;
-    travelTo('pb_daohoa');
+    travelTo('pb_thu');
     return { curMap, timeLimit: DGN.def.timeLimit, timeLeft: DGN.timeLeft, failed: DGN.failed };
   });
   console.log('1) setup, initial timer state:', JSON.stringify(setup));
@@ -51,7 +53,7 @@ const { chromium } = require('playwright');
   // 5) re-entering the dungeon (fresh run) should reset timer/failed cleanly
   const r5 = await page.evaluate(() => {
     travelTo('daohoa');
-    travelTo('pb_daohoa');
+    travelTo('pb_thu');
     return { timeLeft: DGN.timeLeft, failed: DGN.failed, wave: DGN.wave };
   });
   console.log('5) fresh re-entry resets timer:', JSON.stringify(r5));

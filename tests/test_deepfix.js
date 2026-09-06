@@ -1,6 +1,7 @@
 // Tầng Sâu: các lỗi CHẶN mà test_dungeon2.js không bắt được vì nó gọi thẳng updateDeep() và
 // giết MỌI quái không phân biệt khoảng cách — tức bỏ qua cả tường lẫn updateDungeon().
 const { chromium } = require('playwright');
+const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài kiểm
 let bad = 0;
 const fail = (m) => { bad++; console.log('FAIL ' + m); };
 const pass = (m) => console.log('PASS ' + m);
@@ -15,6 +16,7 @@ const pass = (m) => console.log('PASS ' + m);
   await p.waitForTimeout(900);
 
   // ── 1. DGN không được sống song song với DEEP ───────────────────────────
+  await p.evaluate(dungPbThu);   // 7 map pb_* đã gỡ — bài kiểm tự cắm phòng của mình
   const r1 = await p.evaluate(() => {
     window.TEST_MODE = true; startGame('thieulam', null); applyTestBoost();
     player.level = 60; calcDerived();
@@ -74,7 +76,7 @@ const pass = (m) => console.log('PASS ' + m);
   // ── 4. phó bản THƯỜNG vẫn phải chạy đúng như cũ ─────────────────────────
   const r4 = await p.evaluate(() => {
     travelTo('tuongduong');
-    travelTo('pb_daohoa');
+    travelTo('pb_thu');
     return { conDGN: !!DGN, wave: DGN && DGN.wave, tuong: dgnWallObs().length, conDEEP: !!DEEP };
   });
   console.log('4.', JSON.stringify(r4));

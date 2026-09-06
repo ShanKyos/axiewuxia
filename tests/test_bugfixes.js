@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài kiểm
 
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
@@ -8,6 +9,7 @@ const { chromium } = require('playwright');
   await page.goto('http://localhost:8853/index.html', { waitUntil: 'networkidle' });
   await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(500);
+  await page.evaluate(dungPbThu);   // 7 map pb_* đã gỡ — bài kiểm tự cắm phòng của mình
   await page.evaluate(() => { startGame('thieulam', null); });
   await page.waitForTimeout(500);
   await page.evaluate(() => { travelTo('daohoa'); });
@@ -55,7 +57,7 @@ const { chromium } = require('playwright');
 
   // 4) dungeon AUTO anchor fix
   await page.evaluate(() => { if (player.auto) toggleAuto(); player.level = 15; calcDerived(); player.hp = player.maxHp; });
-  await page.evaluate(() => { travelTo('pb_daohoa'); });
+  await page.evaluate(() => { travelTo('pb_thu'); });
   await page.waitForTimeout(300);
   await page.evaluate(() => { toggleAuto(); });
   await page.waitForTimeout(200);

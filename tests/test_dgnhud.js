@@ -1,6 +1,7 @@
 // Phần CÒN GIÁ TRỊ của test_hudrefactor.js sau khi gỡ Tower/Devil/Blood:
 // drawArenaHUD() dùng chung vẫn phải vẽ được HUD phó bản (DGN) — cả pha đợt quái lẫn pha Boss Săn.
 const { chromium } = require('playwright');
+const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài kiểm
 const PORT = process.argv[2] || '8853';
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
@@ -10,12 +11,13 @@ const PORT = process.argv[2] || '8853';
   await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'networkidle' });
   await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(500);
+  await page.evaluate(dungPbThu);   // 7 map pb_* đã gỡ — bài kiểm tự cắm phòng của mình
   const r = await page.evaluate(() => {
     window.TEST_MODE = true;
     startGame('thieulam', null);
     player.level = 60; calcDerived(); player.hp = player.maxHp; player.silver = 999999;
     const out = {};
-    travelTo('pb_daohoa');
+    travelTo('pb_thu');
     try { drawDungeonHUD(); out.dungeonWaves = 'ok'; } catch (e){ out.dungeonWaves = String(e); }
     // ép sang pha Boss để chạy nhánh thanh máu boss của drawArenaHUD
     try {

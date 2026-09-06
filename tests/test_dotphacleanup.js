@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài kiểm
 
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
@@ -9,6 +10,7 @@ const { chromium } = require('playwright');
   await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(500);
 
+  await page.evaluate(dungPbThu);   // 7 map pb_* đã gỡ — bài kiểm tự cắm phòng của mình
   const r1 = await page.evaluate(() => {
     window.TEST_MODE = true;
     startGame('thieulam', null);
@@ -19,7 +21,7 @@ const { chromium } = require('playwright');
   // 2) dungeon clear no longer grants/mentions dotpha
   const r2 = await page.evaluate(() => {
     player.level = 15; questIdx = 35; questState = 'active'; calcDerived(); player.hp = player.maxHp;
-    travelTo('pb_daohoa');
+    travelTo('pb_thu');
     // force-clear: kill all mobs repeatedly until DGN.cleared
     for (let i = 0; i < 2000 && DGN && !DGN.cleared; i++){
       for (const m of mobs) if (!m.dead) hurtMob(m, 9999999, 'hit');

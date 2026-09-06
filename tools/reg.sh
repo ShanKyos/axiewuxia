@@ -50,6 +50,11 @@ fi
 echo "cổng $PORT · commit $(cat "$OUT/commit.txt")" >> "$OUT/all.log"
 
 export NODE_PATH="${NODE_PATH:-/opt/node22/lib/node_modules}"
+# Tệp phụ trợ trong tests/ (không phải test_*.js) phải đi theo: bài kiểm require chúng theo
+# đường dẫn tương đối, mà bài thì chạy từ $OUT/src chứ không phải từ tests/.
+for h in "$ROOT"/tests/*.js; do
+  case "$(basename "$h")" in test_*) ;; *) cp "$h" "$OUT/src/" ;; esac
+done
 do=0
 for f in "$ROOT"/tests/test_*.js; do
   n=$(basename "$f")

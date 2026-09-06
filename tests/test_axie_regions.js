@@ -12,8 +12,9 @@ const { chromium } = require('playwright');
   await page.waitForTimeout(1200);
   await page.evaluate(() => { window.TEST_MODE = true; window.cheatExec('/max'); });
 
-  const regions = ['daohoa','tuongduong','ngoai','chungnam','comoc','tuyettinh','mongco','nhanmon',
-    'pb_daohoa','pb_ngoai','pb_chungnam','pb_comoc','pb_tuyettinh','pb_mongco','pb_nhanmon'];
+  // Bảy map pb_* đã gỡ (CLAUDE.md · CHẨN ĐOÁN GỐC). Đọc thẳng MAPS thay vì chép cứng danh sách:
+  // dựng lại tầng map xong thì bài kiểm này tự đi qua map mới, không phải sửa lại lần nữa.
+  const regions = await page.evaluate(() => Object.keys(MAPS));
   const results = [];
   for (const r of regions) {
     const info = await page.evaluate((r) => {

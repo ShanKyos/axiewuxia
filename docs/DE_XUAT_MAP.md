@@ -1,5 +1,10 @@
 # Đề xuất: cấu trúc map — 10 việc, 4 đợt
 
+> ⚠ **CẬP NHẬT — bảy map `pb_*` đã gỡ hẳn khỏi game.**
+> Số đo và lập luận dưới đây vẫn đúng (chúng chính là lý do gỡ), nhưng chỗ nào nói
+> "7 phó bản" thì nay đọc là "7 phòng đã gỡ, tầng map đang chờ dựng lại". Máy chạy
+> phó bản vẫn còn nguyên và chạy theo dữ liệu. Xem `CLAUDE.md` · CHẨN ĐOÁN GỐC.
+
 Bản đề xuất chi tiết cho câu hỏi *làm sao map có cảm giác như Ragnarok Online và Path of Exile*.
 Số đo hiện trạng và phần đối chiếu hai game nằm ở **[docs/CAU_TRUC_MAP.md](CAU_TRUC_MAP.md)** —
 đọc cái đó trước. Tài liệu này chỉ nói **làm gì, sửa ở đâu, tốn bao nhiêu, đo bằng cách nào**.
