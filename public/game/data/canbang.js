@@ -476,15 +476,28 @@ window.MAPS = {
     // Cụm quái xếp theo vòng từ spawn ra: yếu (boar/hautu) gần nhất → mạnh dần (wolf/bandit/
     // caodo) → xa nhất (assassin, trannhan) gần Cổng Vực — người chơi mới thấy rõ "đi sâu = khó
     // hơn" thay vì gặp ngẫu nhiên cả cụm yếu lẫn cụm elite lẫn lộn quanh spawn.
-    packs: [
-      // Bãi đầu tiên đặt gần điểm thả (460,460): người chơi mới phải THẤY quái ngay, không
-      // phải đi tìm. Trước đây bãi gần nhất cách 450px — năm giây đi bộ trong im lặng.
-      { mob:'boar', x:906, y:254, n:6 }, { mob:'boar', x:660, y:690, n:5 },
-      { mob:'hautu', x:1000, y:1000, n:6 }, { mob:'wolf', x:1500, y:560, n:7 },
-      { mob:'wolf', x:754, y:1555, n:6 }, { mob:'bandit', x:1290, y:1244, n:7 },
-      { mob:'bandit', x:1648, y:724, n:7, vai:'xa' }, { mob:'caodo', x:1424, y:1445, n:6 },
-      { mob:'assassin', x:1900, y:420, n:1 }, // P0: 1 con (trước 5 — NV8 thành bức tường, bot chết 16 lần liên tiếp)
-      { mob:'trannhan', x:2043, y:1240, n:5 },
+    voi: 1765,
+    // ── A4 · MIỀN DÂN SỐ ──────────────────────────────────────────────────
+    // Bãi quái KHÔNG còn chép cứng toạ độ. Mỗi miền là một DẢI KHOẢNG CÁCH (`dai`, tỉ lệ của
+    // `voi`) × một CUNG GÓC (`cung`, độ, quanh điểm thả) mang một dân số. banRaiVung() bung nó
+    // thành các cụm trại, hạt bốc từ tên map nên bố cục CỐ ĐỊNH — xem khối A4 trong game.js.
+    // Sửa cân bằng = sửa `n` của miền hoặc kéo `dai`; không phải đi dịch từng toạ độ.
+    // `vai` là danh sách rải theo lượt cho các cụm: cùng loài, cụm này Cận Chiến, cụm kia Xạ Thủ.
+    vung: [
+      { id:'boar', ten:'Đồng Heo Rừng', dai:[0.12,0.315], cung:[-43,67], cum:[2,2],
+        dan:[{ mob:'boar', n:11 }] },   // C1 · Axie Heo Rừng
+      { id:'hautu', ten:'Ruộng Bí Ngô', dai:[0.345,0.505], cung:[19,71], cum:[1,1],
+        dan:[{ mob:'hautu', n:6 }] },   // C2 · Axie Bí Ngô
+      { id:'wolf', ten:'Bìa Rừng Gai Tím', dai:[0.535,0.625], cung:[-13,93], cum:[2,2],
+        dan:[{ mob:'wolf', n:13 }] },   // C4 · Axie Gai Tím
+      { id:'bandit', ten:'Trại Tay Sai Gloam', dai:[0.655,0.705], cung:[-5,61], cum:[2,2],
+        dan:[{ mob:'bandit', n:14, vai:['can','xa'] }] },   // C6 · Tay Sai Gloam
+      { id:'caodo', ten:'Vạt Cỏ Dại', dai:[0.735,0.785], cung:[20,72], cum:[1,1],
+        dan:[{ mob:'caodo', n:6 }] },   // C8 · Axie Cỏ Dại
+      { id:'assassin', ten:'Ngã Ba Cướp Đường', dai:[0.815,0.885], cung:[-28,24], cum:[1,1],
+        dan:[{ mob:'assassin', n:1 }] },   // C10 · Cướp Đường Gloam
+      { id:'trannhan', ten:'Hàng Tượng Canh Cổng', dai:[0.915,1.0], cung:[0,52], cum:[1,1],
+        dan:[{ mob:'trannhan', n:5 }] },   // C12 · Tượng Đá Canh Cổng
     ], duhiep: null },
   tuongduong: { name:'Lunaris City', min:1, range:'—', type:'safe', ground:'#d8ccb0', patch:'#7a6a4a',
     spawn:{ x:1300, y:1100 }, spawnFrom:{ ngoai:{ x:1300, y:1460 } }, city:true, trees:24, rocks:10,
@@ -500,60 +513,123 @@ window.MAPS = {
     // Rải theo GRADIENT KHOẢNG CÁCH: sát cổng thành là bậc thấp nhất, càng ra xa bậc càng
     // cao, góc xa nhất là elite — cùng nguyên lý bố trí đồng cỏ quanh thị trấn khởi đầu.
     // Bộ quái RIÊNG của vùng này (bậc 14-24), không dùng lại bộ lv1-12 của Petalshade Isle.
-    packs: [
-      { mob:'boar_tusk',  x:1300, y:860,  n:6 },  // d≈530  · lv14
-      { mob:'boar_tusk',  x:1900, y:560,  n:6 },  // d≈643  · lv14
-      { mob:'wolf_alpha', x:551,  y:356,  n:6 },  // d≈749  · lv16
-      { mob:'wolf_alpha', x:2000, y:820,  n:7 },  // d≈854  · lv16
-      { mob:'bandit_vet', x:900,  y:1200, n:7, vai:'xa' },  // d≈958  · lv18
-      { mob:'caodo_fire', x:1945, y:1110, n:6 },  // d≈1012 · lv20
-      { mob:'gloam_scout',x:1872, y:1520, n:1 },  // d≈1320 · lv22 ELITE
-      { mob:'chimera_bo', x:600,  y:1550, n:5 },  // d≈1407 · lv24
+    voi: 1407,
+    // ── A4 · MIỀN DÂN SỐ ──────────────────────────────────────────────────
+    // Bãi quái KHÔNG còn chép cứng toạ độ. Mỗi miền là một DẢI KHOẢNG CÁCH (`dai`, tỉ lệ của
+    // `voi`) × một CUNG GÓC (`cung`, độ, quanh điểm thả) mang một dân số. banRaiVung() bung nó
+    // thành các cụm trại, hạt bốc từ tên map nên bố cục CỐ ĐỊNH — xem khối A4 trong game.js.
+    // Sửa cân bằng = sửa `n` của miền hoặc kéo `dai`; không phải đi dịch từng toạ độ.
+    // `vai` là danh sách rải theo lượt cho các cụm: cùng loài, cụm này Cận Chiến, cụm kia Xạ Thủ.
+    vung: [
+      { id:'boar_tusk', ten:'Bãi Heo Nhiễm Khí', dai:[0.12,0.485], cung:[3,108], cum:[2,2],
+        dan:[{ mob:'boar_tusk', n:12 }] },   // C14 · Heo Rừng Nhiễm Khí
+      { id:'wolf_alpha', ten:'Đất Đầu Đàn', dai:[0.515,0.605], cung:[17,196], cum:[2,2],
+        dan:[{ mob:'wolf_alpha', n:13 }] },   // C16 · Gai Tím Đầu Đàn
+      { id:'bandit_vet', ten:'Chốt Cựu Binh Gloam', dai:[0.635,0.685], cung:[89,141], cum:[1,1],
+        dan:[{ mob:'bandit_vet', n:7, vai:['xa'] }] },   // C18 · Gloam Cựu Binh
+      { id:'caodo_fire', ten:'Vạt Cỏ Bén Lửa', dai:[0.715,0.815], cung:[24,76], cum:[1,1],
+        dan:[{ mob:'caodo_fire', n:6 }] },   // C20 · Cỏ Dại Bén Lửa
+      { id:'gloam_scout', ten:'Vọng Gác Gloam', dai:[0.845,0.945], cung:[38,90], cum:[1,1],
+        dan:[{ mob:'gloam_scout', n:1 }] },   // C22 · Trinh Sát Gloam
+      { id:'chimera_bo', ten:'Bãi Tượng Vỡ Lệnh', dai:[0.975,1.0], cung:[94,146], cum:[1,1],
+        dan:[{ mob:'chimera_bo', n:5 }] },   // C24 · Tượng Đá Vỡ Lệnh
     ], duhiep: null },
   chungnam: { name:'Thornwood Reach', min:20, range:'24 - 38', type:'pk', ground:'#d4d0ac', patch:'#6a7a52',
     spawn:{ x:400, y:1500 }, trees:80, rocks:34,
     desc:'Từ đây là đất PK — hạ người khác được, bị hạ cũng được. Chimera ở đây rơi Cốt bậc đầu.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
-    packs: [
-      { mob:'chimera_bo', x:800, y:1400, n:6, tiep:true }, { mob:'phando', x:1100, y:900, n:6, tiep:true },
-      { mob:'phando', x:442, y:574, n:6, tiep:true, vai:'xa' }, { mob:'xanu', x:1376, y:1272, n:6, tiep:true },
-      { mob:'xanu', x:1981, y:1295, n:6, tiep:true, vai:'phap' }, { mob:'bandao', x:2000, y:600, n:5, tiep:true, vai:'bay' },
+    voi: 1836,
+    // ── A4 · MIỀN DÂN SỐ ──────────────────────────────────────────────────
+    // Bãi quái KHÔNG còn chép cứng toạ độ. Mỗi miền là một DẢI KHOẢNG CÁCH (`dai`, tỉ lệ của
+    // `voi`) × một CUNG GÓC (`cung`, độ, quanh điểm thả) mang một dân số. banRaiVung() bung nó
+    // thành các cụm trại, hạt bốc từ tên map nên bố cục CỐ ĐỊNH — xem khối A4 trong game.js.
+    // Sửa cân bằng = sửa `n` của miền hoặc kéo `dai`; không phải đi dịch từng toạ độ.
+    // `vai` là danh sách rải theo lượt cho các cụm: cùng loài, cụm này Cận Chiến, cụm kia Xạ Thủ.
+    vung: [
+      { id:'chimera_bo', ten:'Bãi Tượng Vỡ Lệnh', dai:[0.12,0.345], cung:[-40,12], cum:[1,1], tiep:true,
+        dan:[{ mob:'chimera_bo', n:6 }] },   // C24 · Tượng Đá Vỡ Lệnh
+      { id:'phando', ten:'Nghĩa Địa Phản Loạn', dai:[0.375,0.585], cung:[-105,-23], cum:[2,2], tiep:true,
+        dan:[{ mob:'phando', n:12, vai:['can','xa'] }] },   // C26 · Bộ Xương Phản Loạn
+      { id:'xanu', ten:'Đầm Phun Độc', dai:[0.615,0.825], cung:[-36,16], cum:[2,2], tiep:true,
+        dan:[{ mob:'xanu', n:12, vai:['can','phap'] }] },   // C31 · Chimera Phun Độc
+      { id:'bandao', ten:'Dốc Sa Ngã', dai:[0.855,1.0], cung:[-55,-3], cum:[1,1], tiep:true,
+        dan:[{ mob:'bandao', n:5, vai:['bay'] }] },   // C38 · Axie Sa Ngã
     ], duhiep:'duhiep1' },
   comoc: { name:'Hollow Roost', min:40, range:'42 - 56', type:'pk', ground:'#a89f86', patch:'#4a4436',
     spawn:{ x:400, y:400 }, dark:true, trees:30, rocks:46,
     desc:'Hang ổ hẹp, ngoằn ngoèo. Bầy Chimera dày đặc rơi nguyên liệu thăng giai Thú Chiến — bãi săn tranh chấp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
-    packs: [
-      { mob:'thinu', x:557, y:865, n:7, tiep:true }, { mob:'thinu', x:1200, y:500, n:7, tiep:true, vai:'phap' },
-      { mob:'mocnhan', x:600, y:1400, n:5, tiep:true }, { mob:'mocnhan', x:1272, y:1100, n:5, tiep:true, vai:'xa' },
-      { mob:'huyetbat', x:1900, y:600, n:7, tiep:true }, { mob:'huyetbat', x:1915, y:1351, n:6, tiep:true },
+    voi: 1789,
+    // ── A4 · MIỀN DÂN SỐ ──────────────────────────────────────────────────
+    // Bãi quái KHÔNG còn chép cứng toạ độ. Mỗi miền là một DẢI KHOẢNG CÁCH (`dai`, tỉ lệ của
+    // `voi`) × một CUNG GÓC (`cung`, độ, quanh điểm thả) mang một dân số. banRaiVung() bung nó
+    // thành các cụm trại, hạt bốc từ tên map nên bố cục CỐ ĐỊNH — xem khối A4 trong game.js.
+    // Sửa cân bằng = sửa `n` của miền hoặc kéo `dai`; không phải đi dịch từng toạ độ.
+    // `vai` là danh sách rải theo lượt cho các cụm: cùng loài, cụm này Cận Chiến, cụm kia Xạ Thủ.
+    vung: [
+      { id:'thinu', ten:'Ổ Ấp Bỏ Hoang', dai:[0.12,0.465], cung:[-11,89], cum:[2,2], tiep:true,
+        dan:[{ mob:'thinu', n:14, vai:['can','phap'] }] },   // C42 · Oan Hồn Ổ Ấp
+      { id:'mocnhan', ten:'Cánh Đồng Golem', dai:[0.495,0.735], cung:[21,97], cum:[2,2], tiep:true,
+        dan:[{ mob:'mocnhan', n:10, vai:['can','xa'] }] },   // C48 · Axie Golem
+      { id:'huyetbat', ten:'Hang Dơi Chimera', dai:[0.765,1.0], cung:[-10,50], cum:[2,2], tiep:true,
+        dan:[{ mob:'huyetbat', n:13 }] },   // C56 · Dơi Chimera
     ], duhiep:'duhiep2' },
   tuyettinh: { name:'Frostmire Vale', min:60, range:'62 - 78', type:'pk', ground:'#ddc9a8', patch:'#8a5a6a',
     spawn:{ x:400, y:950 }, trees:60, rocks:24,
     desc:'Bãi EXP khổng lồ. Mang theo kháng độc — Chimera ở đây cắn có nọc.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
-    packs: [
-      { mob:'docyeu', x:1096, y:482, n:6, tiep:true }, { mob:'ttdetu', x:700, y:1500, n:7, tiep:true },
-      { mob:'ttdetu', x:1131, y:1182, n:7, tiep:true, vai:'nang' }, { mob:'docyeu', x:1394, y:895, n:6, tiep:true, vai:'phap' },
-      { mob:'satthuhy', x:1856, y:1382, n:5, tiep:true, vai:'bay' }, { mob:'satthuhy', x:2100, y:500, n:5, tiep:true, vai:'xa' },
+    voi: 1759,
+    // ── A4 · MIỀN DÂN SỐ ──────────────────────────────────────────────────
+    // Bãi quái KHÔNG còn chép cứng toạ độ. Mỗi miền là một DẢI KHOẢNG CÁCH (`dai`, tỉ lệ của
+    // `voi`) × một CUNG GÓC (`cung`, độ, quanh điểm thả) mang một dân số. banRaiVung() bung nó
+    // thành các cụm trại, hạt bốc từ tên map nên bố cục CỐ ĐỊNH — xem khối A4 trong game.js.
+    // Sửa cân bằng = sửa `n` của miền hoặc kéo `dai`; không phải đi dịch từng toạ độ.
+    // `vai` là danh sách rải theo lượt cho các cụm: cùng loài, cụm này Cận Chiến, cụm kia Xạ Thủ.
+    vung: [
+      { id:'ttdetu', ten:'Trại Cuồng Tín', dai:[0.12,0.445], cung:[0,79], cum:[2,2], tiep:true,
+        dan:[{ mob:'ttdetu', n:14, vai:['can','nang'] }] },   // C62 · Kẻ Cuồng Tín Lạc Lối
+      { id:'docyeu', ten:'Bãi Cầu Gai', dai:[0.475,0.705], cung:[-52,15], cum:[2,2], tiep:true,
+        dan:[{ mob:'docyeu', n:12, vai:['can','phap'] }] },   // C70 · Chimera Cầu Gai
+      { id:'satthuhy', ten:'Rẻo Sương Mù', dai:[0.735,1.0], cung:[-33,35], cum:[2,2], tiep:true,
+        dan:[{ mob:'satthuhy', n:10, vai:['bay','xa'] }] },   // C78 · Sát Thủ Sương Mù
     ], duhiep:'duhiep2' },
   mongco: { name:'Ashen Steppe', min:80, range:'84 - 100', type:'pk', ground:'#cfc09a', patch:'#7a6a42',
     spawn:{ x:400, y:950 }, trees:36, rocks:30,
     desc:'Thảo nguyên mở rộng, Chimera trâu bò đánh đau. Rơi nguyên liệu nâng chiêu tầm xa và đao pháp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
-    packs: [
-      { mob:'thamtu', x:442, y:574, n:7, tiep:true }, { mob:'thamtu', x:753, y:1497, n:7, tiep:true, vai:'phap' },
-      { mob:'cungthu', x:1347, y:979, n:6, tiep:true }, { mob:'cungthu', x:1300, y:400, n:6, tiep:true },
-      { mob:'kybinh', x:1900, y:1400, n:5, tiep:true }, { mob:'kybinh', x:2100, y:600, n:5, tiep:true, vai:'bay' },
+    voi: 1736,
+    // ── A4 · MIỀN DÂN SỐ ──────────────────────────────────────────────────
+    // Bãi quái KHÔNG còn chép cứng toạ độ. Mỗi miền là một DẢI KHOẢNG CÁCH (`dai`, tỉ lệ của
+    // `voi`) × một CUNG GÓC (`cung`, độ, quanh điểm thả) mang một dân số. banRaiVung() bung nó
+    // thành các cụm trại, hạt bốc từ tên map nên bố cục CỐ ĐỊNH — xem khối A4 trong game.js.
+    // Sửa cân bằng = sửa `n` của miền hoặc kéo `dai`; không phải đi dịch từng toạ độ.
+    // `vai` là danh sách rải theo lượt cho các cụm: cùng loài, cụm này Cận Chiến, cụm kia Xạ Thủ.
+    vung: [
+      { id:'thamtu', ten:'Vành Đai Trinh Sát', dai:[0.12,0.425], cung:[-102,75], cum:[2,2], tiep:true,
+        dan:[{ mob:'thamtu', n:14, vai:['can','phap'] }] },   // C84 · Trinh Sát Tro Tàn
+      { id:'cungthu', ten:'Trường Bắn Tro Tàn', dai:[0.455,0.735], cung:[-49,20], cum:[2,2], tiep:true,
+        dan:[{ mob:'cungthu', n:12 }] },   // C92 · Cung Thủ Tro Tàn
+      { id:'kybinh', ten:'Bãi Ngựa Tro Tàn', dai:[0.765,1.0], cung:[-30,35], cum:[2,2], tiep:true,
+        dan:[{ mob:'kybinh', n:10, vai:['can','bay'] }] },   // C100 · Kỵ Sĩ Tro Tàn
     ], duhiep:'duhiep3' },
   nhanmon: { name:'Stormgate Pass', min:100, range:'102 - 120', type:'freepk', ground:'#b8a68a', patch:'#6a3a2a',
     spawn:{ x:400, y:950 }, trees:44, rocks:38,
     desc:'Bãi luyện cuối game, ngoài biên ải Lunacia. PK ở đây không cộng Tai Tiếng. Chimera rơi trang bị bậc vàng.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
-    packs: [
-      { mob:'cuongbinh', x:700, y:1400, n:7, tiep:true, vai:'nang' }, { mob:'cuongbinh', x:1300, y:660, n:7, tiep:true, vai:'phap' }, // bãi 2 vốn nằm LỌT TRONG tường thành trái (850,800,560,350)
-      { mob:'kylan', x:1396, y:1312, n:5, tiep:true }, { mob:'kylan', x:1450, y:1600, n:5, tiep:true, vai:'bay' },
-      { mob:'daokhach', x:2100, y:500, n:5, tiep:true }, { mob:'daokhach', x:2250, y:1100, n:5, tiep:true, vai:'xa' },
+    voi: 1856,
+    // ── A4 · MIỀN DÂN SỐ ──────────────────────────────────────────────────
+    // Bãi quái KHÔNG còn chép cứng toạ độ. Mỗi miền là một DẢI KHOẢNG CÁCH (`dai`, tỉ lệ của
+    // `voi`) × một CUNG GÓC (`cung`, độ, quanh điểm thả) mang một dân số. banRaiVung() bung nó
+    // thành các cụm trại, hạt bốc từ tên map nên bố cục CỐ ĐỊNH — xem khối A4 trong game.js.
+    // Sửa cân bằng = sửa `n` của miền hoặc kéo `dai`; không phải đi dịch từng toạ độ.
+    // `vai` là danh sách rải theo lượt cho các cụm: cùng loài, cụm này Cận Chiến, cụm kia Xạ Thủ.
+    vung: [
+      { id:'cuongbinh', ten:'Doanh Trại Cuồng Binh', dai:[0.12,0.495], cung:[-36,74], cum:[2,2], tiep:true,
+        dan:[{ mob:'cuongbinh', n:14, vai:['nang','phap'] }] },   // C102 · Cuồng Binh Tro Tàn
+      { id:'kylan', ten:'Chuồng Chó Ngao', dai:[0.525,0.765], cung:[0,52], cum:[2,2], tiep:true,
+        dan:[{ mob:'kylan', n:10, vai:['can','bay'] }] },   // C112 · Chó Ngao Lửa
+      { id:'daokhach', ten:'Mắt Bão', dai:[0.795,1.0], cung:[-33,23], cum:[2,2], tiep:true,
+        dan:[{ mob:'daokhach', n:10, vai:['can','xa'] }] },   // C120 · Axie Cuồng Bão
     ], duhiep:'duhiep3' },
   // ---------- PHÓ BẢN: ĐÃ GỠ ----------
   // Bảy map pb_* đã xoá — xem CLAUDE.md · CHẨN ĐOÁN GỐC. Bảy cửa nhưng chung MỘT địa hình:

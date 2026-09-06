@@ -16,9 +16,16 @@ const SAN = {
   thoang:   55,      // % ô lưới đi được — hiện thấp nhất 60,7% (comoc). Sàn này ĐO ĐƯỢC chứ
                      // không phải đoán: bản đầu tôi đặt 80 theo cảm giác và nó bắt vạ 5/8 map.
 };
-// Vật che: chốt sau đợt trụ đá. Trung bình 30,2% → 44,8%, thấp nhất Ashen Steppe 21,6% (map
-// trống nhất, 84,9% đi được với 4 khối tĩnh). Sàn 18 để bắt trường hợp trụ đá ngừng được đặt.
-const SAN_CHE = 18;
+// ⚠ VẬT CHE — SÀN NÀY ĐÃ TỤT, VÀ ĐÓ LÀ MỘT VIỆC CÒN NỢ, KHÔNG PHẢI MỘT KẾT QUẢ.
+// Sàn cũ là 18%, chốt khi còn bộ trụ đá (trung bình 44,8%). Trụ đá đã bị GỠ vì nó chỉ là sprite
+// đá phóng to ~3 lần, nhìn xấu và chọi với nền tranh — chủ dự án xem ảnh chụp rồi yêu cầu bỏ.
+// Gỡ xong thì trung bình tụt 44,8% → 30,0% (phần lớn map vẫn còn địa hình), nhưng thiệt hại
+// dồn vào MỘT chỗ: Ashen Steppe — map trống nhất, 90,9% đi được — tụt còn 9,1%.
+//
+// Sàn 8 dưới đây KHÔNG phải là "đạt". Nó là bánh cóc giữ cho đừng tụt tiếp, trong lúc chờ
+// TRANH RIÊNG cho khối đá cỡ lớn. Khi có tranh thật thì kéo sàn này về ≥18 và xoá đoạn ghi chú
+// này. ĐỪNG hạ nó thêm lần nữa để cho bài kiểm xanh.
+const SAN_CHE = 8;
 const TRAN = {
   duongKinh: 2600,   // px đi bộ giữa hai điểm xa nhau nhất — hiện cao nhất 2352
   keNhau:     700,   // px trung vị tới điểm gần nhất — nhịp giữa hai lần đánh
@@ -148,9 +155,8 @@ const TRAN = {
     if (m.soLoai > 0 && m.soLoai < SAN.loai) fail(`${id}: chỉ ${m.soLoai} loài (sàn ${SAN.loai})`);
     // Chỉ map có bãi quái mới cần địa hình đánh nhau — thành thì không.
     if (m.soLoai > 0 && m.che < SAN_CHE) fail(`${id}: vật che ${m.che}% (sàn ${SAN_CHE}%) — không có địa hình cỡ trận đánh`);
-    if (m.soLoai > 0 && m.soTru === 0) fail(`${id}: không đặt được trụ đá nào — raiTruDa() im`);
   }
-  if (!bad) pass(`${ids.length} map đều qua bánh cóc: loài ≥${SAN.loai} · mật độ ≥${SAN.matDo} · đi được ≥${SAN.thoang}% · vật che ≥${SAN_CHE}% · kính ≤${TRAN.duongKinh}px`);
+  if (!bad) pass(`${ids.length} map đều qua bánh cóc: loài ≥${SAN.loai} · mật độ ≥${SAN.matDo} · đi được ≥${SAN.thoang}% · vật che ≥${SAN_CHE}% (sàn TẠM, xem ghi chú) · kính ≤${TRAN.duongKinh}px`);
 
   // ── BÁNH CÓC THEO TỪNG MAP ────────────────────────────────────────────────
   // Đây mới là chỗ đo cái bệnh chính: số loài TỤT khi lên cấp (7 xuống 3). Hiện trạng đang

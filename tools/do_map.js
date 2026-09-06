@@ -172,7 +172,6 @@ function doTrongTrang(){
       soLoai: loai.length, loaiTen: loai,
       tiLeHanhLang: +(100 * hanhLang / Math.max(oThoang, 1)).toFixed(1),
       tiLeChe: +(100 * coChe / Math.max(datTrong, 1)).toFixed(1),
-      soTru: (typeof decor !== 'undefined' ? decor.filter(d => d.tru).length : 0),
       duongKinhPx: Math.round(duongKinh * NAV_CELL),
       keNhauPx: Math.round(trungVi * NAV_CELL),
       capXa: capXa ? [capXa[0].ten || capXa[0].k, capXa[1].ten || capXa[1].k] : null,
@@ -207,11 +206,11 @@ function doTrongTrang(){
   s += `> nên số ở đây là thứ game THỰC THI, không phải một mô hình riêng.\n`;
   s += `> Đây là **mốc so** cho bước 3 của \`docs/KE_HOACH_DO_MAP.md\`.\n\n`;
   s += `## Bảng số\n\n`;
-  s += `| Map | Cấp | Đi được | Điểm | Mật độ | Loài | **Vật che** | Trụ | Đường kính | Điểm kề |\n`;
-  s += `|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|\n`;
+  s += `| Map | Cấp | Đi được | Điểm | Mật độ | Loài | **Vật che** | Đường kính | Điểm kề |\n`;
+  s += `|---|--:|--:|--:|--:|--:|--:|--:|--:|\n`;
   for (const i of ids){
     const m = M[i];
-    s += `| **${m.ten}**<br>\`${i}\` | ${m.min} | ${m.tiLeThoang}% | ${m.soDiem} | ${m.matDo} | ${m.soLoai} | **${m.tiLeChe}%** | ${m.soTru} | ${m.duongKinhPx}px | ${m.keNhauPx}px |\n`;
+    s += `| **${m.ten}**<br>\`${i}\` | ${m.min} | ${m.tiLeThoang}% | ${m.soDiem} | ${m.matDo} | ${m.soLoai} | **${m.tiLeChe}%** | ${m.duongKinhPx}px | ${m.keNhauPx}px |\n`;
   }
   s += `\n**Trung bình:** đi được ${tb('tiLeThoang')}% · mật độ ${tb('matDo')} · loài ${tb('soLoai')} · **vật che ${tb('tiLeChe')}%** · đường kính ${tb('duongKinhPx')}px · điểm kề ${tb('keNhauPx')}px\n\n`;
 

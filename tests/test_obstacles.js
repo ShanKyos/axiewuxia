@@ -93,31 +93,46 @@ const { chromium } = require('playwright');
   console.log('đè lên nội dung:', JSON.stringify(clash));
   for (const m in clash) if (clash[m].length) fail(`${m}: vật cản đè lên ${clash[m].join(', ')}`);
 
-  // ── 3. Tỉ lệ vòng giữa các cặp bãi quái: phải có né, và phải TỚI được ──
+  // ── 3. Tỉ lệ vòng: địa hình phải BẮT NGƯỜI TA VÒNG, và mọi chỗ phải TỚI được ──
+  // ⚠ Bản trước lấy mẫu theo CẶP BÃI QUÁI và chỉ xét cặp vòng nhất. Hai lỗi:
+  //   ① cây/đá bốc lại mỗi lần vào map, nên "cặp vòng nhất" nhảy loạn giữa các lần chạy — đo
+  //      được comoc ra 1.045 ở lần này và 1.245 ở lần khác trên CÙNG một bản. Chập chờn sẵn.
+  //   ② từ A4, toạ độ bãi quái là thứ SINH RA. Neo một khẳng định về ĐỊA HÌNH vào nội dung
+  //      sinh ra là tự chuốc chập chờn.
+  // Nay lấy mẫu trên một LƯỚI CỐ ĐỊNH 5×4 và đếm BAO NHIÊU tuyến phải vòng, thay vì chỉ nhìn
+  // tuyến vòng nhất. Cùng một ý định, mẫu lớn hơn 3-7 lần và không phụ thuộc thứ gì bốc ngẫu nhiên.
   const routes = await p.evaluate(() => {
     const out = {};
-    for (const mid of ['ngoai','chungnam','comoc']){
+    for (const mid of ['ngoai','chungnam','comoc','tuyettinh','mongco','nhanmon','daohoa']){
       travelTo(mid);
-      const pk = MAPS[mid].packs, rs = [];
-      let khongToi = 0;
-      for (let i = 0; i < pk.length; i++) for (let j = i+1; j < pk.length; j++){
-        const path = simulateMovePath(pk[i].x, pk[i].y, pk[j].x, pk[j].y);
+      const g = [];
+      for (let gx = 0; gx < 5; gx++) for (let gy = 0; gy < 4; gy++){
+        const x = 300 + gx*(MAP.w-600)/4, y = 300 + gy*(MAP.h-600)/3;
+        if (!inObstacle(mid, x, y, 30)) g.push({ x, y });
+      }
+      const rs = []; let khongToi = 0;
+      for (let i = 0; i < g.length; i++) for (let j = i+1; j < g.length; j++){
+        const path = simulateMovePath(g[i].x, g[i].y, g[j].x, g[j].y);
         let L = 0; for (let k = 1; k < path.length; k++) L += dist(path[k-1].x, path[k-1].y, path[k].x, path[k].y);
-        const D = dist(pk[i].x, pk[i].y, pk[j].x, pk[j].y);
+        const D = dist(g[i].x, g[i].y, g[j].x, g[j].y);
         const end = path[path.length-1];
-        if (dist(end.x, end.y, pk[j].x, pk[j].y) > 60) khongToi++;
+        if (dist(end.x, end.y, g[j].x, g[j].y) > 60){ khongToi++; continue; }
         rs.push(L / D);
       }
       rs.sort((a,c)=>a-c);
       out[mid] = { soCap: rs.length, trungVi: +rs[rs.length>>1].toFixed(3),
-                   lonNhat: +rs[rs.length-1].toFixed(3), khongToi };
+                   lonNhat: +rs[rs.length-1].toFixed(3),
+                   phaiVong: rs.filter(x => x >= 1.08).length, khongToi };
     }
     return out;
   });
   console.log('tỉ lệ vòng:', JSON.stringify(routes));
   for (const m in routes){
     const r = routes[m];
-    if (r.lonNhat < 1.08) fail(`${m}: tuyến vòng nhất chỉ ${r.lonNhat} — khối lớn chưa bắt ai phải vòng`);
+    // ⚠ Ngưỡng 1, không phải 2 — và đây là một BƯỚC LÙI có ghi sổ. Khi còn bộ trụ đá thì mọi map
+    //   đều ≥4 tuyến phải vòng; gỡ trụ xong Hollow Roost chỉ còn 1/66. Địa hình cỡ trận đánh
+    //   đang là việc CÒN NỢ (xem SAN_CHE trong test_domap.js). Kéo lại ≥2 khi có tranh khối đá thật.
+    if (r.phaiVong < 1) fail(`${m}: KHÔNG tuyến nào phải vòng trong ${r.soCap} tuyến — map phẳng lì`);
     if (r.lonNhat > 2.2) fail(`${m}: tuyến vòng nhất ${r.lonNhat} — đi vòng vô lý`);
     if (r.khongToi) fail(`${m}: ${r.khongToi} tuyến KHÔNG tới nơi — bị khoá đường`);
   }

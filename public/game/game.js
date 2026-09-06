@@ -31,7 +31,9 @@ let W = 0, H = 0;
 // ReferenceError). Đã dính đúng bẫy này một lần, lỗi báo ra lại là tên một hằng khác hẳn ở tận
 // dưới. Xem CLAUDE.md · vùng chết của const.
 const ZOOM_MUC = { gan: 1.75, vua: 1.45, xa: 1.0 };
-let ZOOM_CHON = 'vua';
+// Mặc định là 'xa' (không phóng): chủ dự án chốt sau khi chơi thử — vào game phải thấy rộng.
+// Trước đây để 'vua' (1,45×). Người chơi đổi được ở Cài Đặt và lựa chọn đó lưu vào SETTINGS.
+let ZOOM_CHON = 'xa';
 let VW = 0, VH = 0;
 function zoomNow(){ return ZOOM_MUC[ZOOM_CHON] || ZOOM_MUC.vua; }
 function capNhatTamNhin(){ const z = zoomNow(); VW = W / z; VH = H / z; }
@@ -1850,151 +1852,25 @@ function rebuildDecorObs(){
     ? { x:d.x, y:d.y, rx:10 + 8*d.s, ry:7 + 5*d.s }     // gốc cây: dẹt theo phối cảnh nhìn xuống
     : { x:d.x, y:d.y, rx:13*d.s,     ry:8*d.s });        // tảng đá (và trụ đá — cùng công thức, khác cỡ)
 }
+// ── HẠT BỐC CỐ ĐỊNH ──────────────────────────────────────────────────────
+// Băm chuỗi → hạt, và một bộ sinh số giả ngẫu nhiên ĐỊNH TRƯỚC. Dùng ở khắp nơi cần "bốc ngẫu
+// nhiên nhưng luôn ra một kết quả": Miền Dân Số (A4), Rương Canh (B3.1), Vỉa Cốt (B3.3).
+// KHÔNG dùng Math.random cho những thứ đó — bố cục phải giống nhau mọi lần vào, nếu không thì
+// không ai học được bản đồ, mà học được bản đồ mới là chỗ bản đồ có nghĩa.
+function _bamChuoi(s){ let h = 2166136261; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function _hatRng(hat){ let x = hat >>> 0 || 1; return () => { x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; return x / 4294967296; }; }
 
-// ═══ TRỤ ĐÁ — ĐỊA HÌNH CỠ CHIẾN ĐẤU ══════════════════════════════════════════
-// Đo trước khi làm (tools/do_map.js): 84% khối trong MAP_OBSTACLES có cạnh ngắn >120px, và tỉ lệ
-// "hành lang" cao nhất trong 8 map là 2,2%. Nghĩa là vật cản đang ở CỠ BẢN ĐỒ — tường phải đi
-// vòng — chứ không ở CỠ TRẬN ĐÁNH. Còn cây/đá thì ngược lại: đường kính 30-44px, tức là sỏi.
+// ── TRỤ ĐÁ ĐÃ GỠ ─────────────────────────────────────────────────────────
+// Từng có ở đây một bộ rải "trụ đá" (raiTruDa) dựng vành đá quanh mỗi bãi quái và rào ngắn
+// giữa hai bãi, để có địa hình mà kite. Ý định đúng, THỰC THI SAI: nó không có tranh riêng mà
+// dùng lại chính sprite đá trang trí rồi phóng to ~3 lần (s ≈ 3,1 so với 0,6-1,4 của đá thường).
+// Phóng to một sprite lên ba lần thì ra khối hộp bẹt, viền cứng, chọi hẳn với nền tranh sáng của
+// Axie. Chủ dự án nhìn ảnh chụp và yêu cầu gỡ — đúng.
 //
-// Tệ hơn: bộ lọc "chừa trống" ở buildWorld() quét sạch decor trong bán kính (bãi+70)≈160px quanh
-// MỌI bãi quái — đúng chỗ đánh nhau thì đúng chỗ không có gì. Địa hình không thiếu, nó bị dọn đi.
-//
-// Trụ đá sửa đúng chỗ đó: khối cỡ ~0,6 lần chiều cao nhân vật, đặt CÓ CHỦ Ý thành vành quanh bãi
-// quái và thành rào ngắn giữa hai bãi. Ở cỡ này thì kite được (chạy vòng, quái phải đi vòng theo),
-// chắn được đạn, mà vẫn không cản đường vì khe giữa hai trụ rộng hơn người.
-//
-// Đặt theo HẠT cố định từ tên map + số thứ tự bãi, không phải Math.random: bố cục một bãi phải
-// giống nhau mọi lần vào, nếu không thì không ai học được địa hình — mà học được địa hình mới là
-// chỗ địa hình có nghĩa. (Cây/đá vẫn rải ngẫu nhiên như cũ: chúng là trang trí, không phải bố cục.)
-const TRU_BK   = 0.30 * NV_CAO;   // bán kính cản một trụ ≈ 40px ⇒ rộng ≈ 79px
-const TRU_HO   = 0.85 * NV_CAO;   // khe hở giữa hai trụ kề ≈ 112px — lọt người, nhưng phải lách
-const TRU_VANH  = [1.30, 2.35];   // vành TRONG, tính theo bán kính bãi quái — chỗ kite
-const TRU_VANH2 = [2.90, 4.10];   // vành NGOÀI — chỗ chắn tầm nhìn khi mới tới bãi
-const TRU_MOI_BAI = [4, 6];       // số trụ vành trong mỗi bãi
-const TRU_NGOAI   = [3, 5];       // số trụ vành ngoài (CUNG, không phải vòng — phải chừa hướng thoáng)
-const TRU_RAO     = 3;            // số trụ mỗi rào giữa hai bãi
-const TRU_GO      = [12, 34];     // số gò đá — map càng TRỐNG thì càng nhiều gò. Ashen Steppe
-                                  // đo ra 90,8% đi được với đúng 4 khối tĩnh: một con số cố định
-                                  // sẽ phủ đủ cho map chật mà bỏ trắng map trống.
-const TRU_GO_N    = [3, 5];       // số trụ mỗi gò
-function _bamChuoi(s){
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return h >>> 0;
-}
-function _hatRng(hat){            // xorshift32 — nhỏ, đủ tản, và LẶP LẠI ĐƯỢC
-  let x = hat >>> 0 || 1;
-  return () => { x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; return x / 4294967296; };
-}
-// Một trụ chỉ được đặt khi: không đè vật cản tĩnh, không chạm bất kỳ vùng cấm nào trong `tranh`
-// (điểm nội dung + LÒNG mọi bãi quái), và cách trụ đã đặt ít nhất một khe người lách qua.
-function _datTru(ra, x, y, tranh){
-  if (x < 80 || y < 80 || x > MAP.w - 80 || y > MAP.h - 80) return false;
-  if (inObstacle(curMap, x, y, TRU_BK + 8)) return false;
-  for (const c of tranh) if (dist(x, y, c.x, c.y) < c.r) return false;
-  // Khe giữa hai trụ = TRU_HO*0.8 ≈ 90px: rộng gấp hơn hai lần bán kính người, nên vẫn lách
-  // qua thoải mái, mà đủ hẹp để nhét được nhiều trụ hơn — thưa quá thì không thành địa hình.
-  for (const t of ra) if (dist(x, y, t.x, t.y) < 2 * TRU_BK + TRU_HO * 0.8) return false;
-  return true;
-}
-function raiTruDa(){
-  const md = MAPS[curMap];
-  if (!md || md.dungeon || !md.packs || !md.packs.length) return 0;
-  const rng = _hatRng(_bamChuoi('tru:' + curMap));
-  // Điểm nội dung KHÔNG phải bãi quái thì trụ phải tránh hẳn — cổng, NPC, thảo dược, boss, điểm thả.
-  const tranh = [];
-  if (md.spawn) tranh.push({ x:md.spawn.x, y:md.spawn.y, r:170 });
-  for (const n of NPCS) if (n.map === curMap) tranh.push({ x:n.x, y:n.y, r:170 });
-  for (const h of (HERB_SPOTS[curMap] || [])) tranh.push({ x:h.x, y:h.y, r:90 });
-  for (const g of GATES) if (g.map === curMap) tranh.push({ x:g.x, y:g.y, r:170 });
-  const bd = BOSS_DEFS[curMap];
-  if (bd){
-    for (const tv of (bd.thuve || [])) tranh.push({ x:tv.x*MAP.w, y:tv.y*MAP.h, r:210 });
-    if (bd.tranai) tranh.push({ x:bd.tranai.x*MAP.w, y:bd.tranai.y*MAP.h, r:250 });
-  }
-  if (md.spring && typeof SPRING !== 'undefined') tranh.push({ x:SPRING.x, y:SPRING.y, r:160 });
-  // LÒNG BÃI QUÁI là vùng cấm CHUNG, không riêng vành của chính bãi đó. Bản đầu chỉ chặn ở vành
-  // (qua banKinhCam) nên rào giữa hai bãi vẫn rơi được vào lòng một bãi THỨ BA — test_obstacles
-  // bắt được ở Petalshade Isle. Bán kính 104 > ngưỡng 90 của bài kiểm, và < vành trong 1,30×90=117.
-  for (const q of md.packs) tranh.push({ x:q.x, y:q.y, r: Math.max(q.r || 90, 90) + 14 });
+// ⚠ ĐỪNG DỰNG LẠI BẰNG CÁCH PHÓNG TO SPRITE. Muốn có địa hình chiến đấu thì phải có TRANH RIÊNG
+// cho khối đá cỡ lớn (xem CLAUDE.md · Quy tắc 3 về nguồn tranh). Đây là lần thứ hai cùng một bài
+// học: trước đó đã chữa vấn đề bố cục bằng lớp phủ tối và cũng phải gỡ.
 
-  const tru = [];
-  // ── 1. Vành quanh từng bãi: đây là "địa hình để diệt quái" ──
-  md.packs.forEach((q, i) => {
-    const bk = q.r || 90;
-    const n = TRU_MOI_BAI[0] + Math.floor(rng() * (TRU_MOI_BAI[1] - TRU_MOI_BAI[0] + 1));
-    const goc0 = rng() * Math.PI * 2;
-    for (let k = 0; k < n; k++){
-      // Góc rải đều rồi lệch nhẹ: đều tăm tắp thì đọc ra là hàng rào nhân tạo, lệch quá thì dồn cục.
-      const a = goc0 + (k / n) * Math.PI * 2 + (rng() - 0.5) * (Math.PI / n) * 0.7;
-      const r = bk * (TRU_VANH[0] + rng() * (TRU_VANH[1] - TRU_VANH[0]));
-      const x = q.x + Math.cos(a) * r, y = q.y + Math.sin(a) * r;
-      if (_datTru(tru, x, y, tranh))
-        tru.push({ type:'rock', tru:true, x, y, s: TRU_BK / 13 * (0.85 + rng() * 0.3) });
-    }
-    // Vành NGOÀI là một CUNG chứ không phải vòng tròn: bọc kín bãi thì thành cái chuồng, người
-    // chơi phải lách vào mới đánh được. Cung ~200° chừa lại một hướng thoáng để tiếp cận.
-    const n2 = TRU_NGOAI[0] + Math.floor(rng() * (TRU_NGOAI[1] - TRU_NGOAI[0] + 1));
-    const cung0 = rng() * Math.PI * 2, cungRong = Math.PI * 1.1;
-    for (let k = 0; k < n2; k++){
-      const a = cung0 + (k / Math.max(n2 - 1, 1)) * cungRong;
-      const r = bk * (TRU_VANH2[0] + rng() * (TRU_VANH2[1] - TRU_VANH2[0]));
-      const x = q.x + Math.cos(a) * r, y = q.y + Math.sin(a) * r;
-      if (_datTru(tru, x, y, tranh))
-        tru.push({ type:'rock', tru:true, x, y, s: TRU_BK / 13 * (0.85 + rng() * 0.35) });
-    }
-    // ── 2. Rào ngắn giữa bãi này và bãi kế: chỗ này mới sinh ra "phải chọn đường" ──
-    const kle = md.packs[(i + 1) % md.packs.length];
-    if (kle === q) return;
-    const d = dist(q.x, q.y, kle.x, kle.y);
-    if (d < 420 || d > 1500) return;   // quá gần thì rào bịt luôn bãi; quá xa thì rào chẳng chắn gì
-    const mx = (q.x + kle.x) / 2, my = (q.y + kle.y) / 2;
-    const a = Math.atan2(kle.y - q.y, kle.x - q.x) + Math.PI / 2;   // vuông góc với tuyến nối
-    const lech = (rng() - 0.5) * 160;
-    for (let k = 0; k < TRU_RAO; k++){
-      const t = (k - (TRU_RAO - 1) / 2) * (2 * TRU_BK + TRU_HO);
-      const x = mx + Math.cos(a) * (t + lech), y = my + Math.sin(a) * (t + lech);
-      if (_datTru(tru, x, y, tranh))
-        tru.push({ type:'rock', tru:true, x, y, s: TRU_BK / 13 * (0.9 + rng() * 0.25) });
-    }
-  });
-  // ── 3. Gò đá ở khoảng trống ──
-  // Vành + rào mới chỉ phủ quanh bãi quái. Giữa các bãi vẫn là bãi trống mênh mông — mà đó chính
-  // là chỗ đo ra "không map nào có hình". Gò đá lấp vào đó: cụm 3-5 trụ, đặt ở nơi cách MỌI điểm
-  // nội dung ít nhất một tầm nhìn ngắn, để chúng chia không gian mà không chen vào nội dung.
-  const xaNoiDung = (x, y) => {
-    for (const c of tranh) if (dist(x, y, c.x, c.y) < c.r + 120) return false;
-    for (const q of md.packs) if (dist(x, y, q.x, q.y) < (q.r || 90) * 4.4) return false;
-    return true;
-  };
-  // Ước lượng độ trống bằng cách chấm 600 điểm — rẻ, và chỉ để chọn số gò nên không cần chính xác.
-  let trong = 0;
-  for (let i = 0; i < 600; i++){
-    const x = rng() * MAP.w, y = rng() * MAP.h;
-    if (!inObstacle(curMap, x, y, 16)) trong++;
-  }
-  const soGo = Math.round(TRU_GO[0] + (TRU_GO[1] - TRU_GO[0]) * Math.max(0, Math.min(1, (trong / 600 - 0.55) / 0.4)));
-  for (let g = 0; g < soGo; g++){
-    let cx = 0, cy = 0, ok = false;
-    for (let thu = 0; thu < 30 && !ok; thu++){
-      cx = 160 + rng() * (MAP.w - 320); cy = 160 + rng() * (MAP.h - 320);
-      ok = xaNoiDung(cx, cy) && !inObstacle(curMap, cx, cy, TRU_BK + 40);
-    }
-    if (!ok) continue;
-    const n = TRU_GO_N[0] + Math.floor(rng() * (TRU_GO_N[1] - TRU_GO_N[0] + 1));
-    const goc0 = rng() * Math.PI * 2;
-    for (let k = 0; k < n; k++){
-      const a = goc0 + (k / n) * Math.PI * 2 + (rng() - 0.5) * 0.6;
-      const r = (2 * TRU_BK + TRU_HO) * (0.55 + rng() * 0.35);
-      const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
-      if (_datTru(tru, x, y, tranh))
-        tru.push({ type:'rock', tru:true, x, y, s: TRU_BK / 13 * (0.8 + rng() * 0.35) });
-    }
-  }
-
-  for (const t of tru) decor.push(t);
-  return tru.length;
-}
 // ═══ CÂY/ĐÁ KHÔNG ĐƯỢC BỊT ĐƯỜNG ═════════════════════════════════════════
 // Danh sách "chừa trống" ở buildWorld() giữ decor cách xa ĐIỂM nội dung, nhưng không nói gì về
 // HÀNH LANG giữa chúng: ở Stormgate Pass, tường thành + núi bắc chỉ chừa một khe hẹp, và chỉ
@@ -4578,7 +4454,7 @@ function viaNgay(){ return new Date().toDateString(); }
 function viaChonDiem(mid, ra){
   const md = MAPS[mid]; if (!md) return null;
   const tranh = [];
-  for (const q of (md.packs || [])) tranh.push({ x:q.x, y:q.y, r:VIA_CACH_BAI });
+  for (const q of packsOf(mid)) tranh.push({ x:q.x, y:q.y, r:VIA_CACH_BAI });
   if (md.spawn) tranh.push({ x:md.spawn.x, y:md.spawn.y, r:VIA_CACH_MOC });
   for (const k in (md.spawnFrom || {})) tranh.push({ x:md.spawnFrom[k].x, y:md.spawnFrom[k].y, r:VIA_CACH_MOC });
   for (const h of (HERB_SPOTS[mid] || [])) tranh.push({ x:h.x, y:h.y, r:VIA_CACH_MOC });
@@ -4689,10 +4565,10 @@ function ruongCuaMap(mid){
   const md = MAPS[mid];
   // Cửa duy nhất là CÓ BÃI QUÁI. Đừng thêm điều kiện type:'safe' — Outskirts khai type 'safe'
   // (không PK) nhưng vẫn là bãi săn 8 bãi quái, chặn nó là vùng đông người nhất mất hết rương.
-  if (!md || !md.packs || !md.packs.length){ _ruongCache[mid] = []; return _ruongCache[mid]; }
+  if (!md || !packsOf(mid).length){ _ruongCache[mid] = []; return _ruongCache[mid]; }
   const ra = _hatRng(_bamChuoi('ruong:' + mid));
   const tranh = [];
-  for (const q of (md.packs || [])) tranh.push({ x:q.x, y:q.y, r:RUONG_CACH_BAI });
+  for (const q of packsOf(mid)) tranh.push({ x:q.x, y:q.y, r:RUONG_CACH_BAI });
   if (md.spawn) tranh.push({ x:md.spawn.x, y:md.spawn.y, r:RUONG_CACH_MOC });
   for (const k in (md.spawnFrom || {})) tranh.push({ x:md.spawnFrom[k].x, y:md.spawnFrom[k].y, r:RUONG_CACH_MOC });
   if (typeof GATES !== 'undefined') for (const g of GATES) if (g.map === mid) tranh.push({ x:g.x, y:g.y, r:RUONG_CACH_MOC });
@@ -4706,7 +4582,7 @@ function ruongCuaMap(mid){
       if (tranh.some(t => dist(x, y, t.x, t.y) < t.r - noi)) continue;
       if (ds.some(o => dist(x, y, o.x, o.y) < RUONG_CACH_NHAU - noi)) continue;
       dat = { id: mid + ':' + i, map: mid, x: Math.round(x), y: Math.round(y),
-              mob: md.packs[Math.floor(ra() * md.packs.length)].mob };
+              mob: packsOf(mid)[Math.floor(ra() * packsOf(mid).length)].mob };
       break;
     }
     if (dat) ds.push(dat);
@@ -7429,14 +7305,15 @@ const BAND_NAMES = ['Ngoại Vi', 'Trung Tâm', 'Hạt Nhân'];
 const BAND_COLORS = ['#7ec850', '#e8b04a', '#ff6a5a'];
 let curBand = -1;
 function bandOfDist(md, x, y){ // đai theo khoảng cách từ điểm vào map
-  if (!md.packs || !md.packs.length) return -1;
+  const _pk = packsMd(md);
+  if (!_pk.length) return -1;
   let maxD = 1;
-  for (const pk of md.packs){ const d = dist(pk.x, pk.y, md.spawn.x, md.spawn.y); if (d > maxD) maxD = d; }
+  for (const pk of _pk){ const d = dist(pk.x, pk.y, md.spawn.x, md.spawn.y); if (d > maxD) maxD = d; }
   const t = dist(x, y, md.spawn.x, md.spawn.y) / maxD;
   return t < 0.45 ? 0 : t < 0.8 ? 1 : 2;
 }
 function bandLvText(md, b){
-  const lvs = md.packs.map(pk => MOBS[pk.mob].lv).sort((a,c)=>a-c);
+  const lvs = packsMd(md).map(pk => MOBS[pk.mob].lv).sort((a,c)=>a-c);
   const n = lvs.length; if (!n) return '';
   const pick = b === 0 ? lvs.slice(0, Math.ceil(n/3)) : b === 1 ? lvs.slice(Math.floor(n/3), Math.ceil(2*n/3)) : lvs.slice(Math.floor(2*n/3));
   return `C${pick[0]}–${pick[pick.length-1]}`;
@@ -7457,10 +7334,10 @@ function bandLvText(md, b){
 // bảng Bản Đồ nói dối, mà nói dối kiểu đó không ai phát hiện được.
 function mapBanSac(id){
   const md = MAPS[id];
-  if (!md || !md.packs || !md.packs.length) return null;
+  if (!md || !packsOf(id).length) return null;
   const dan = {}, he = {};
   let tong = 0;
-  for (const q of md.packs){
+  for (const q of packsOf(id)){
     const d = MOBS[q.mob]; if (!d) continue;
     const n = q.n || 5; tong += n;
     dan[q.mob] = (dan[q.mob] || 0) + n;
@@ -7502,13 +7379,141 @@ function banSacHtml(id){
   }
   return `<div class="m-desc" style="margin-top:3px">◆ ${bits.join(' · ')}</div>` + via + ruong;
 }
+// ═══════════════ A4 · MIỀN DÂN SỐ — bãi quái sinh ra từ vùng, không chép cứng toạ độ ═══════════
+// Đo trước khi làm: cả bảy map ngoài trời VỐN ĐÃ là một gradient theo khoảng cách từ điểm thả —
+// cấp quái tăng đơn điệu theo d(spawn), và góc rải rất hẹp (đa số nằm trong một cung 100-140°,
+// vì điểm thả nằm ở góc/mép map). Cái đó trước nay chỉ tồn tại trong ĐẦU người đặt toạ độ và
+// trong một dòng chú thích ở buildWorld; dữ liệu thì vẫn là 6-10 cặp (x,y) chép tay.
+//
+// A4 đưa nó thành dữ liệu: một MIỀN = một DẢI KHOẢNG CÁCH × một CUNG GÓC quanh điểm thả, mang
+// một dân số. Bung ra thì thành các cụm trại như cũ. Được ba thứ:
+//   ① sửa cân bằng = sửa dân số của miền, không phải đi dịch từng toạ độ
+//   ② cụm to nhỏ khác nhau (dân số chia không đều) thay vì tất cả đều 5-7 con
+//   ③ một miền mang được NHIỀU VAI: cùng loài, cụm này Xạ Thủ, cụm kia Pháp Sư — đúng cơ chế A1
+//
+// ⚠ BỐ CỤC CỐ ĐỊNH, KHÔNG ĐỔI THEO NGÀY. Hạt bốc từ TÊN MAP. Thế giới này chỉ nên có ĐÚNG MỘT
+// bộ phận biết đi: Vỉa Cốt. Rương Canh đứng yên để học thuộc được (B3.1), và trại quái cũng
+// vậy — cho trại chạy lung tung mỗi ngày là vừa phá mốc định hướng, vừa làm Vỉa Cốt hết đặc biệt.
+//
+// ⚠ md.packs nay là KẾT QUẢ BUNG RA, không phải nguồn. Mọi chỗ đọc bãi quái của MỘT MAP KHÁC
+// (Vỉa Cốt, Rương Canh, bảng Bản Đồ) phải gọi packsOf(mid) trước, nếu không sẽ đọc mảng rỗng.
+const VUNG_CUM_CACH = 300;   // hai cụm trong cùng một miền phải cách nhau chừng này
+const VUNG_CACH_THA = 280;   // và không cụm nào mọc ngay điểm thả
+function _vungDatCum(mid, sx, sy, voi, v, ra, daDat, noi){
+  const md = MAPS[mid];
+  const cam = [{ x:sx, y:sy, r:VUNG_CACH_THA }];
+  for (const k in (md.spawnFrom || {})) cam.push({ x:md.spawnFrom[k].x, y:md.spawnFrom[k].y, r:VUNG_CACH_THA });
+  if (typeof GATES !== 'undefined') for (const g of GATES) if (g.map === mid) cam.push({ x:g.x, y:g.y, r:200 });
+  // Trùm Vùng là điểm CỐ ĐỊNH (toạ độ tỉ lệ trong BOSS_DEFS) và đã có cả một đợt việc riêng để
+  // dời chúng ra khỏi bãi quái. Cụm là thứ sinh ra SAU, nên chính cụm phải tránh trùm — nếu
+  // không, đợt A4 này lặng lẽ đẩy 13 con trùm nằm đè lên tâm bãi trở lại.
+  const _bd = (typeof BOSS_DEFS !== 'undefined') && BOSS_DEFS[mid];
+  if (_bd){
+    for (const tv of (_bd.thuve || [])) cam.push({ x: tv.x * MAP.w, y: tv.y * MAP.h, r: 300 });
+    if (_bd.tranai) cam.push({ x: _bd.tranai.x * MAP.w, y: _bd.tranai.y * MAP.h, r: 340 });
+  }
+  for (let thu = 0; thu < 500; thu++){
+    const t = v.dai[0] + ra() * (v.dai[1] - v.dai[0]);
+    const g = (v.cung[0] + ra() * (v.cung[1] - v.cung[0])) * Math.PI / 180;
+    const x = sx + Math.cos(g) * t * voi, y = sy + Math.sin(g) * t * voi;
+    if (x < 200 || y < 200 || x > MAP.w - 200 || y > MAP.h - 200) continue;
+    if (inObstacle(mid, x, y, 60 - noi * 0.5)) continue;
+    if (cam.some(c => dist(x, y, c.x, c.y) < c.r - noi)) continue;
+    if (daDat.some(o => dist(x, y, o.x, o.y) < VUNG_CUM_CACH - noi)) continue;
+    return { x: Math.round(x), y: Math.round(y) };
+  }
+  return null;
+}
+// Chia dân số cho các cụm: KHÔNG chia đều. Cụm đầu (gần tâm cung nhất) đông nhất rồi thưa dần —
+// đó là thứ làm miền đọc ra là "một vùng có dân" thay vì "mấy cái chuồng bằng nhau".
+function _vungChiaDan(tong, nCum){
+  if (nCum <= 1) return [tong];
+  const w = [];
+  for (let i = 0; i < nCum; i++) w.push(1 - i * 0.22);
+  const tongW = w.reduce((a, c) => a + c, 0);
+  const ra = w.map(x => Math.max(3, Math.round(tong * x / tongW)));
+  // bù cho khớp tổng — dân số của miền là con số cân bằng, không được trôi
+  let lech = tong - ra.reduce((a, c) => a + c, 0);
+  for (let i = 0; lech !== 0 && i < 200; i++){
+    const k = i % nCum;
+    if (lech > 0){ ra[k]++; lech--; }
+    else if (ra[k] > 3){ ra[k]--; lech++; }
+  }
+  return ra;
+}
+function banRaiVung(mid){
+  const md = MAPS[mid];
+  const ra = _hatRng(_bamChuoi('vung:' + mid));
+  const sx = md.spawn.x, sy = md.spawn.y, voi = md.voi || 1700;
+  const out = [], daDat = [];
+  for (const v of md.vung){
+    const nCum = Math.max(1, Math.round(v.cum[0] + ra() * (v.cum[1] - v.cum[0])));
+    // Mỗi cụm mang ĐÚNG MỘT loài (pk.mob là một trường, không phải danh sách). Nhiều loài trong
+    // một miền thì chia lượt cho các cụm — miền vẫn trộn loài, từng trại vẫn thuần một loài.
+    const loai = [];
+    for (let k = 0; k < nCum; k++) loai.push(v.dan[k % v.dan.length]);
+    const demLoai = {};
+    for (const d of loai) demLoai[d.mob] = (demLoai[d.mob] || 0) + 1;
+    const conLai = {};
+    for (const d of v.dan) conLai[d.mob] = _vungChiaDan(d.n, demLoai[d.mob] || 1);
+    const chiSo = {};
+    for (let k = 0; k < nCum; k++){
+      const d = loai[k];
+      let p = _vungDatCum(mid, sx, sy, voi, v, ra, daDat, 0);
+      if (!p) p = _vungDatCum(mid, sx, sy, voi, v, ra, daDat, 120);   // miền chật thì nới dần
+      if (!p) p = _vungDatCum(mid, sx, sy, voi, v, ra, [], 220);      // và cuối cùng bỏ luôn giãn cách
+      if (!p) continue;                                              // thà thiếu một cụm còn hơn đặt vào tường
+      const i = (chiSo[d.mob] = (chiSo[d.mob] || 0));
+      chiSo[d.mob]++;
+      const n = conLai[d.mob][i] || 3;
+      const vai = d.vai ? d.vai[i % d.vai.length] : null;
+      const pk = { mob: d.mob, x: p.x, y: p.y, n, r: 90 + n * 4, vung: v.id };
+      if (vai) pk.vai = vai;
+      if (v.tiep) pk.tiep = true;
+      out.push(pk); daDat.push(p);
+    }
+  }
+  return out;
+}
+// Cửa duy nhất để đọc bãi quái của MỘT MAP BẤT KỲ. Bung lười + nhớ kết quả: gọi bao nhiêu lần
+// cũng ra đúng một bố cục, và không có bẫy TDZ nào vì mọi thứ chạy lúc GỌI chứ không lúc nạp.
+// Hai cửa: packsOf(id) khi chỗ gọi biết id, packsMd(md) khi nó chỉ cầm object map (bảng Bản Đồ,
+// đai cấp…). Cả hai cùng một đường bung, nên không có chuyện hai chỗ ra hai bố cục khác nhau.
+let _mapIdDaGan = false;
+function ganMapId(){ if (_mapIdDaGan) return; for (const k in MAPS) MAPS[k]._id = k; _mapIdDaGan = true; }
+function packsMd(md){
+  if (!md) return [];
+  if (!md._vungDaBung && md.vung && md.vung.length){
+    ganMapId();
+    md.packs = banRaiVung(md._id);
+    md._vungDaBung = true;
+  }
+  return md.packs || [];
+}
+function packsOf(mid){ return packsMd(MAPS[mid]); }
+// packsOf/packsMd là cửa AN TOÀN, nhưng chúng không cứu được code đọc THẲNG `md.packs` của một
+// map chưa ai vào — ở đó `packs` còn undefined và `.map(...)` là ném lỗi. Đã dẫm đúng bẫy này
+// ngay trong đợt A4 (ba bài kiểm đọc thẳng md.packs của map chưa tới). Nên: bung SẠCH một lượt
+// ngay khi vào game. Gọi ở startGame là an toàn tuyệt đối với TDZ — lúc đó cả file đã nạp xong.
+function bungMoiVung(){ for (const k in MAPS) packsMd(MAPS[k]); }
+window.bungMoiVung = bungMoiVung;
+// Hook QA: bung lại toàn bộ map (dùng khi sửa dữ liệu miền rồi muốn xem lại ngay)
+window.debugVung = function(mid){
+  const m = mid || curMap;
+  MAPS[m]._vungDaBung = false; packsOf(m);
+  _ruongCache = {}; _viaCache = { key:'', ds:[] };
+  if (m === curMap){ buildWorld(); navInvalidate(); }
+  return MAPS[m].packs;
+};
+
 function bandSummaryHtml(md){
-  if (!md.packs || !md.packs.length) return '';
+  if (!packsMd(md).length) return '';
   return `<div class="m-desc" style="opacity:.85;margin-top:2px">` +
     BAND_NAMES.map((n,b)=>`<span style="color:${BAND_COLORS[b]}">●</span> ${n} ${bandLvText(md,b)}`).join(' · ') + `</div>`;
 }
 function buildWorld(){
   const md = mapDef();
+  packsMd(md);   // A4: bung miền dân số thành bãi quái TRƯỚC mọi thứ khác đọc md.packs
   mobs = []; pickups = []; projectiles = []; effects = []; floats = []; groundLoot = []; // đồ dưới đất KHÔNG theo người sang map khác
   decorObs = [];   // xoá TRƯỚC khi rải decor mới — xem ghi chú ở rebuildDecorObs()
   if (player) player.pendingHit = null;   // cùng lý do: đòn thường đã hẹn ở map cũ
@@ -7527,7 +7532,7 @@ function buildWorld(){
   for (const pk of md.packs){
     const packId = packSeq++;
     const soCon = bayCo(pk, md);   // KHÔNG dùng thẳng pk.n — xem bayCo()
-    const zone = { x:pk.x, y:pk.y, r:115, count:soCon, tiep: !!pk.tiep };
+    const zone = { x:pk.x, y:pk.y, r: Math.max(100, pk.r || 115), count:soCon, tiep: !!pk.tiep };
     // Bãi có Kẻ Tiếp Sức: một trong n con là nó. Đặt ở RÌA bầy chứ không giữa — đứng giữa thì
     // người chơi cận chiến không với tới được mục tiêu ưu tiên (docs §3.6).
     // `pk.vai` (nếu có) THẮNG vai mặc định của loài — đây là toàn bộ cơ chế A1: cùng một loài,
@@ -7611,10 +7616,7 @@ function buildWorld(){
     // và không mọc chồng lên vật cản tĩnh (hồ, tường) — vẽ ra thì thành cây mọc giữa hồ
     decor = decor.filter(d => !inObstacle(curMap, d.x, d.y, 4));
   }
-  // Trụ đá đặt SAU bộ lọc "chừa trống" — chúng là bố cục có chủ ý, không phải trang trí rơi
-  // nhầm chỗ, nên không được để bộ lọc đó quét đi. decorUnblock() bên dưới vẫn là lưới an toàn:
-  // trụ nào bịt mất lối đi bắt buộc thì vẫn bị dọn như mọi decor khác.
-  raiTruDa();
+  // (Trụ đá từng rải ở đây — đã gỡ, xem khối "TRỤ ĐÁ ĐÃ GỠ".)
   rebuildDecorObs();
   decorUnblock();  // và nếu vẫn bịt mất một lối đi thì dọn đúng mấy gốc cây đang chắn
   spawnAmbients(); // hạt môi trường + cỏ mặt đất theo chủ đề bản đồ
@@ -7914,7 +7916,7 @@ function drawBossTele(m){
 // shake: 0 TẮT · 1 NHẸ (mặc định) · 2 ĐẦY. Trước đây là boolean và mặc định `false` để chống
 // chóng mặt — nhưng bật/tắt là quá thô, và hậu quả là TOÀN BỘ 12 chỗ đặt shakeT/shakeMag trong
 // game không ai nhìn thấy. Diablo luôn rung, chỉ là rung rất khẽ và CÓ HƯỚNG.
-const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto', dmgNum:true, zoom:'vua' },
+const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto', dmgNum:true, zoom:'xa' },
   (()=>{ try { return JSON.parse(localStorage.getItem('vlcm_settings') || '{}'); } catch { return {}; } })());
 // Save cũ lưu `shake` là boolean. Không di trú thì Object.assign ghi đè `false` lên mặc định
 // mới và người chơi cũ mắc kẹt ở mức TẮT vĩnh viễn — mà họ chưa từng chọn tắt, đó chỉ là
@@ -9331,8 +9333,8 @@ function questTarget(q){
     let best = null;
     for (const id in MAPS){
       const md = MAPS[id];
-      if (md.dungeon || !md.packs) continue;
-      const pk = md.packs.find(p => p.mob === q.mob);
+      if (md.dungeon) continue;
+      const pk = packsOf(id).find(p => p.mob === q.mob);
       if (pk && (!best || id === q.map)){ best = { map:id, x:pk.x, y:pk.y }; if (id === q.map) break; }
     }
     if (best){
@@ -9371,7 +9373,7 @@ function sideQuestTarget(sq){
   }
   if (sq.mob){
     const md = MAPS[sq.map];
-    const pk = md && md.packs ? md.packs.find(p => p.mob === sq.mob) : null;
+    const pk = md ? packsOf(sq.map).find(p => p.mob === sq.mob) : null;
     if (pk){
       const mdef = (typeof MOBS !== 'undefined') && MOBS[sq.mob];
       return { map:sq.map, x:pk.x, y:pk.y, label:'Săn ' + (mdef ? mdef.name : sq.mob) };
@@ -16711,6 +16713,7 @@ window.doTayTuy = function(confirmed){
 };
 // ---------- Sect select / boot ----------
 function startGame(sectKey, quze){
+  bungMoiVung();   // A4: bung miền của MỌI map ngay ở đây, xem ghi chú tại bungMoiVung()
   newPlayer(sectKey);
   player.name = (quze && quze.name) || genCharName(); // danh tính phiêu bạt (bước đặt tên)
   // The Hatching: từ màn roll (người chơi thật) hoặc roll ngầm (quick-start/test)
@@ -21340,23 +21343,42 @@ function renderStageSelect(mapId){
   const md = MAPS[mapId];
   let html = moBang({ tieu:'Chọn Trận', dong:md.name });
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Chọn 1 cụm quái để vào đánh ngay — TỰ ĐÁNH tự bật khi vào trận, không cần tự đi bộ tới.</div>`;
-  const packs = (md.packs || [])
+  const packs = packsOf(mapId)
     .map((pk,i)=>({ pk, i, mdef:MOBS[pk.mob] }))
     .filter(x=>x.mdef)
     .sort((a,b)=>(a.mdef.lv||0)-(b.mdef.lv||0));
   if (!packs.length) html += `<div style="opacity:.5;font-size:12px;padding:8px">Vùng này không có cụm quái để chọn (khu an toàn/thành thị).</div>`;
-  for (const { pk, i, mdef } of packs){
-    const gap = (mdef.lv||1) - player.level;
-    let tag, color;
-    if (gap > 15){ tag = 'NGUY HIỂM'; color = '#ff6b6b'; }
-    else if (gap > 5){ tag = 'THỬ THÁCH'; color = '#ffb15c'; }
-    else if (gap < -15){ tag = 'QUÁ DỄ'; color = '#6a6255'; }
-    else { tag = 'VỪA SỨC'; color = '#7ec850'; }
-    html += `<div class="map-row">
-      <span style="flex:1"><span class="m-name">${mdef.name} ×${bayCo(pk, md)}</span>
-        <span style="font-size:10.5px;opacity:.6"> · cấp ${mdef.lv||1}</span>
-        <span class="zone-badge" style="color:${color};border-color:${color}">${tag}</span></span>
-      <span class="m-side"><button class="mini-btn" onclick="enterStage('${mapId}',${i})">⚔ Vào Đánh</button></span></div>`;
+  // A4: gom theo MIỀN. Trước đây đây là một danh sách phẳng các cụm rời — người chơi đọc ra
+  // "tám ô đánh nhau", không đọc ra "vùng này có mấy vạt đất và mỗi vạt là của ai".
+  const _mienDs = (MAPS[mapId] && MAPS[mapId].vung) || [];
+  const _nhom = [];
+  for (const v of _mienDs){
+    const con = packs.filter(x => x.pk.vung === v.id);
+    if (con.length) _nhom.push({ ten: v.ten || v.id, con, lv: Math.min(...con.map(x => x.mdef.lv || 1)) });
+  }
+  const _leo = packs.filter(x => !x.pk.vung);      // map chưa chuyển sang miền thì vẫn liệt kê phẳng
+  if (_leo.length) _nhom.push({ ten: null, con: _leo, lv: Math.min(..._leo.map(x => x.mdef.lv || 1)) });
+  _nhom.sort((a, b) => a.lv - b.lv);
+  for (const nh of _nhom){
+    if (nh.ten){
+      const _dan = nh.con.reduce((a, x) => a + bayCo(x.pk, md), 0);
+      html += `<div class="stat-sec">${nh.ten} — ${nh.con.length} trại · ${_dan} con</div>`;
+    }
+    for (const { pk, i, mdef } of nh.con){
+      const gap = (mdef.lv||1) - player.level;
+      let tag, color;
+      if (gap > 15){ tag = 'NGUY HIỂM'; color = '#ff6b6b'; }
+      else if (gap > 5){ tag = 'THỬ THÁCH'; color = '#ffb15c'; }
+      else if (gap < -15){ tag = 'QUÁ DỄ'; color = '#6a6255'; }
+      else { tag = 'VỪA SỨC'; color = '#7ec850'; }
+      const _vaiTen = pk.vai && ROLE[pk.vai] ? ROLE[pk.vai].name : null;
+      html += `<div class="map-row">
+        <span style="flex:1"><span class="m-name">${mdef.name} ×${bayCo(pk, md)}</span>
+          <span style="font-size:10.5px;opacity:.6"> · cấp ${mdef.lv||1}</span>
+          ${_vaiTen ? `<span style="font-size:10.5px;color:${ROLE[pk.vai].col};opacity:.9"> · ${_vaiTen}</span>` : ''}
+          <span class="zone-badge" style="color:${color};border-color:${color}">${tag}</span></span>
+        <span class="m-side"><button class="mini-btn" onclick="enterStage('${mapId}',${i})">⚔ Vào Đánh</button></span></div>`;
+    }
   }
   // BOSS VÙNG — Vệ Binh Trụ (3) + Cổng Vực (1): tách riêng khỏi quái thường, vì AUTO farm tự tạm dừng gần
   // boss theo thiết kế sẵn có (phải tự đánh tay) — nên chỉ đưa người chơi tới gần, không bật AUTO.
@@ -21392,7 +21414,7 @@ function renderStageSelect(mapId){
 }
 window.enterStage = function(mapId, packIdx){
   const md = MAPS[mapId];
-  const pk = md && md.packs && md.packs[packIdx];
+  const pk = md && packsOf(mapId)[packIdx];
   if (!pk || !player) return;
   if (curMap !== mapId) travelTo(mapId);
   let tx = pk.x, ty = pk.y;
@@ -23723,7 +23745,7 @@ function spawnGoldenMobs(){
   if (GOLDEN.spawnedOn === curMap) return;
   GOLDEN.spawnedOn = curMap;
   const md = MAPS[GOLDEN.map], tier = GOLDEN_BOX[GOLDEN.map] || 1;
-  const packs = md.packs.slice(0, 4);
+  const packs = packsOf(GOLDEN.map).slice(0, 4);
   let n = 0;
   for (const q of packs){
     for (let i = 0; i < 2; i++){ goldify(spawnMob(q.mob, { x:q.x, y:q.y, r:90 }, null, true), tier, false); n++; }

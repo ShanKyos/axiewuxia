@@ -267,6 +267,64 @@ chuỗi cũ từ git — thiết kế lại từ đầu cùng với lore. Khuôn
 thích ở `data/canbang.js`. Máy chạy nhiệm vụ **giữ nguyên** và chạy theo dữ liệu: điền bảng là
 chuỗi sống lại.
 
+### 🎥 Camera mặc định là **xa** (`zoom:'xa'`, 1,0×)
+
+Chủ dự án chốt sau khi chơi thử: vào game phải thấy rộng. Trước đó để `'vua'` (1,45×). Đổi ở
+**hai** chỗ, thiếu một là lệch nhau: `let ZOOM_CHON = 'xa'` (giá trị trước khi `SETTINGS` khai)
+và `zoom:'xa'` trong `SETTINGS`. Người chơi vẫn đổi được ở Cài Đặt và lựa chọn đó được lưu.
+
+### ⛰ TRỤ ĐÁ ĐÃ GỠ — và địa hình cỡ trận đánh đang là VIỆC CÒN NỢ
+
+Từng có `raiTruDa()` dựng vành đá quanh mỗi bãi quái và rào ngắn giữa hai bãi, để có thứ mà kite.
+**Ý định đúng, thực thi sai:** nó không có tranh riêng mà dùng lại chính sprite đá trang trí rồi
+**phóng to ~3 lần** (`s ≈ 3,1` so với `0,6–1,4`). Phóng to một sprite lên ba lần thì ra khối hộp
+bẹt viền cứng, chọi hẳn với nền tranh sáng của Axie. Chủ dự án nhìn ảnh chụp và yêu cầu gỡ.
+
+**Cái giá, đo được, không giấu — nhưng cũng đừng nói quá:** vật che trung bình 44,8% → **30,0%**,
+tức phần lớn map vẫn còn địa hình. Thiệt hại dồn vào **một** chỗ: Ashen Steppe (map trống nhất,
+90,9% đi được) tụt còn **9%**, và Hollow Roost từ ≥4 tuyến phải đi vòng còn **1/66**.
+Vì vậy `SAN_CHE` trong `test_domap.js` hạ 18 → **8** và ngưỡng `phaiVong` trong
+`test_obstacles.js` hạ 2 → **1**. Cả hai là **bánh cóc tạm**, có ghi chú tại chỗ. Khi có tranh
+khối đá thật thì kéo lại và xoá ghi chú.
+
+**⚠ ĐỪNG DỰNG LẠI BẰNG CÁCH PHÓNG TO SPRITE.** Đây là lần thứ hai cùng một bài học: trước đó đã
+chữa vấn đề bố cục bằng lớp phủ tối và cũng phải gỡ. *Đừng chữa vấn đề thị giác bằng cách kéo
+giãn hoặc đè màu lên tài nguyên có sẵn — phải có tranh đúng cho việc đó.*
+
+### ▦ MIỀN DÂN SỐ (A4) — `md.packs` nay là KẾT QUẢ, không phải nguồn
+
+Đây là một cuộc **thay móng**, đọc kỹ trước khi chạm vào bãi quái.
+
+Dữ liệu map không còn `packs: [{x,y,n}…]`. Nó khai **`vung`**: mỗi miền là một **dải khoảng
+cách** (`dai`, tỉ lệ của `voi`) × một **cung góc** (`cung`, độ) quanh điểm thả, mang một dân số.
+`banRaiVung()` bung nó thành các cụm trại.
+
+**Vì sao mô hình này chứ không phải hộp toạ độ:** đo trước khi làm thì cả bảy map ngoài trời
+VỐN ĐÃ là một gradient theo khoảng cách — cấp quái tăng đơn điệu theo `d(spawn)` ở cả 7/7 map,
+và góc rải rất hẹp vì điểm thả nằm ở góc/mép. Cái đó trước nay chỉ nằm trong đầu người đặt toạ
+độ và trong một dòng chú thích. A4 đưa nó thành dữ liệu.
+
+**⚠ CÁC DẢI `dai` KHÔNG ĐƯỢC CHỒNG NHAU.** Vị trí cụm = `t × voi` nên dải không chồng ⇒ thứ tự
+cấp theo khoảng cách là **đảm bảo tuyệt đối**. Bản đầu tôi để chúng chồng nhau và gradient hỏng
+ngay: `daohoa` sinh ra một cụm C6 đứng gần hơn một cụm C4 đúng 1px. `test_vung.js §2` khoá lại.
+
+**⚠ Cụm phải TRÁNH Trùm Vùng.** Trùm là điểm cố định (toạ độ tỉ lệ trong `BOSS_DEFS`) và đã có
+hẳn một đợt việc riêng để dời chúng ra khỏi bãi quái. Cụm sinh ra SAU nên chính cụm phải tránh —
+quên một lần là 13 con trùm nằm đè lên tâm bãi trở lại (`test_bossplace` bắt được).
+
+**⚠ Đọc bãi quái của map nào cũng phải qua `packsOf(id)` / `packsMd(md)`.** Đọc thẳng
+`md.packs` của map chưa ai vào thì nó còn `undefined` và `.map(...)` ném lỗi — đã dẫm đúng bẫy
+này với ba bài kiểm. Đã bịt ở gốc bằng `bungMoiVung()` gọi trong `startGame`, nhưng vẫn dùng
+`packsOf` cho đúng.
+
+**Bố cục CỐ ĐỊNH, hạt bốc từ TÊN MAP.** Thế giới này chỉ nên có **đúng một** bộ phận biết đi:
+Vỉa Cốt. Rương Canh đứng yên để học thuộc được, trại quái cũng vậy — cho trại chạy mỗi ngày là
+vừa phá mốc định hướng vừa làm Vỉa Cốt hết đặc biệt.
+
+Được thêm: cụm to nhỏ khác nhau (dân số chia lệch, không đều tăm tắp), một miền mang **nhiều
+vai** (cùng loài, cụm này Xạ Thủ cụm kia Pháp Sư — đúng cơ chế A1), và bảng **Chọn Trận** gom
+theo miền thay vì một danh sách phẳng. QA: `window.debugVung(map)`.
+
 ### ◆ VỈA CỐT (B3.3) — thứ đầu tiên trong game buộc phải ĐI TỚI một toạ độ
 
 `viaHomNay()` bốc **ba** trong bảy vùng có Dòng, mỗi vùng **một điểm**, hạt từ chính chuỗi

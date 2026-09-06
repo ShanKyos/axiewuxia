@@ -138,7 +138,7 @@ với bộ tìm đường, không phải với câu đố.
 2. ~~**B3.1 rương canh bởi trại quái**~~ — **ĐÃ LÀM**, dựng thành **Rương Canh** (xem CLAUDE.md ·
    RƯƠNG CANH). Dựng khái niệm "vật thể thế giới có người canh". Đây là
    viên gạch mà A4 và B1 đều dựa vào.
-3. **A4 dân số** — giờ mới làm, vì mỗi miền đã có thứ để canh.
+3. ~~**A4 dân số**~~ — **ĐÃ LÀM** (xem CLAUDE.md · MIỀN DÂN SỐ). Giờ mới làm, vì mỗi miền đã có thứ để canh.
 4. **B1 + B2** — cuối cùng, khi dọc đường đã có thứ đáng dừng lại.
 
 Đảo thứ tự này (làm B1 trước) là bắt người chơi đi bộ qua tám bãi trống.
