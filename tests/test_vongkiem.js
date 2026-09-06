@@ -135,10 +135,20 @@ const pass = m => console.log('PASS ' + m);
     effects.length = 0; castSkill('dk_cyclone');
     const tayKhong = veRa();
 
-    // (a) dòng CHƯA có tranh — /gen bốc kiếm/rìu/chùy của Dark Knight, cả ba đều chưa vẽ
+    // (a) dòng CHƯA có tranh. TÌM một dòng như thế thay vì /gen rồi cầu may: bản cũ bốc ngẫu
+    // nhiên "kiếm/rìu/chùy của Dark Knight, cả ba đều chưa vẽ" — nhưng từ đợt thêm vk_kiem thì
+    // KIẾM đã có tranh, nên một phần ba số lần chạy bài này đỏ oan. Quét bảng lấy đúng một dòng
+    // vũ khí còn trống tranh; hết dòng trống thì mục 6 tự bỏ qua, vì lúc đó nhánh nó gác không
+    // còn tồn tại nữa.
     cheatExec('/gen 3 +9');
-    const tenChuaVe = player.equip.vukhi && player.equip.vukhi.name;
-    const dChuaVe = itemDef(player.equip.vukhi);
+    let dChuaVe = null;
+    for (const id in ITEM_DB){
+      const d = ITEM_DB[id];
+      if (d.slot !== 'vukhi' || vkAnh(d)) continue;
+      dChuaVe = d; break;
+    }
+    if (dChuaVe){ player.equip.vukhi.def = dChuaVe.id; player.equip.vukhi.tier = dChuaVe.tier || 1; calcDerived(); }
+    const tenChuaVe = dChuaVe ? dChuaVe.name : null;
     effects.length = 0; castSkill('dk_cyclone');
     const chuaVe = veRa();
 
@@ -155,7 +165,9 @@ const pass = m => console.log('PASS ' + m);
   });
   console.log('6) vũ khí bay quanh:', JSON.stringify(r6));
   if (r6.tayKhong.co) fail('tay không mà vẫn có hình vũ khí bay quanh');
-  else if (r6.anhChuaVe) fail(`${r6.tenChuaVe} hoá ra ĐÃ có tranh — chọn lại một dòng chưa vẽ để gác nhánh này`);
+  else if (r6.tenChuaVe === null)
+    console.log('BỎ QUA nhánh "chưa có tranh": mọi dòng vũ khí đều đã có tranh — nhánh này hết chỗ dùng');
+  else if (r6.anhChuaVe) fail(`${r6.tenChuaVe} hoá ra ĐÃ có tranh — hàm dò dòng trống tranh đang sai`);
   else if (r6.chuaVe.co) fail(`${r6.tenChuaVe} chưa có tranh trong VK_ANH mà vẫn có hình bay quanh — hình vector đã lẻn về`);
   else if (!r6.anhDaVe) fail('trượng Dark Wizard mất tranh trong VK_ANH — mục này không gác được gì nữa');
   else if (!r6.daVe.co) fail(`cầm ${r6.tenDaVe} (CÓ tranh) mà không có vũ khí bay quanh`);

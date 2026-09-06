@@ -80,39 +80,112 @@ standing at the centre"*.
 
 ---
 
-## 5. Prompt mẫu
+## 5. Bốn prompt — copy dán thẳng vào Meowa
 
-Khung chung, thay phần in đậm cho từng chiêu:
+Thước chung: **nhân vật cao 118px**. Mọi mô tả cỡ dưới đây quy theo thước đó.
+
+### ① Cột Lửa — neo ở chỗ trúng đòn
+
+Ô đứng, vì cột lửa cao và hẹp. Chân cột ở giữa ngang, gần đáy khung.
 
 ```
 2D game skill VFX sprite animation, top-down three-quarter view.
-**<MÔ TẢ HIỆU ỨNG>**
-IMPORTANT: visual effect ONLY — no character, no creature, no weapon,
-no ground, no shadow, no background. Fully transparent background.
+A towering pillar of fire erupting straight up out of the ground: the ground
+cracks and glows first, then a dense column of orange-gold flame bursts upward,
+roaring and twisting, with embers and sparks spiralling around it, and a ring of
+scorched heat haze spreading at its base. The pillar rises fast, holds, then
+collapses back down into drifting smoke and dying embers.
+The pillar stands about 2.5 times the height of a human character; its base is
+centred horizontally near the bottom of the frame.
+IMPORTANT: visual effect ONLY - no character, no creature, no weapon, no ground
+texture, no shadow, no background. Fully transparent background.
 Soft anti-aliased alpha edges, no hard cutout.
-40 frames, 30 fps, 320x320 square canvas, effect centred.
+40 frames, 30 fps, 320x448 canvas.
 Painterly stylised game art, saturated colours, dark fantasy MMO.
 ```
 
-### Poison — `sx_baidasan_a`
-> a pool of toxic acid-green liquid spreading outward on the ground, bubbling and
-> hissing, wisps of green vapour rising, dripping venom highlights
+### ② Mưa Sao Băng — neo ở chỗ trúng đòn
 
-### Meteorite — `sx_baidasan_c`
-> a burning meteor falling from above and slamming down, orange-gold fire trail,
-> shockwave ring of embers bursting outward on impact, cracked glowing debris
+Ô nằm ngang, vì nó rải ra một vùng rộng. Tầm sát thương thật là **r = 185**, tức đường kính
+370px ≈ **3,1 lần chiều cao nhân vật** — vẽ rộng hơn là hứa suông.
 
-### Soul Barrier — `dw_shield`
-> a translucent pale-blue hexagonal energy shield forming around an empty space,
-> facets lighting up one by one then slowly rotating, frost-like shimmer
+```
+2D game skill VFX sprite animation, top-down three-quarter view.
+A meteor shower slamming down into a wide area: five or six burning rocks streak
+in steeply from the upper part of the frame trailing orange-gold fire, each one
+bursting on impact into a flash, a shockwave ring of embers and a puff of dust,
+the impacts staggered a few frames apart across the width of the frame. Cracked
+glowing debris is left smouldering, then fades.
+The impact zone spans about 3 times the height of a human character, centred
+horizontally in the lower half of the frame.
+IMPORTANT: visual effect ONLY - no character, no creature, no weapon, no ground
+texture, no shadow, no background. Fully transparent background.
+Soft anti-aliased alpha edges, no hard cutout.
+45 frames, 30 fps, 512x384 canvas.
+Painterly stylised game art, saturated colours, dark fantasy MMO.
+```
 
-### Evil Spirit — `dw_evilspirit` *(làm lại cho đúng)*
-> six long curved spectral claws of dark violet energy sweeping outward in a full
-> circle from the centre then retracting, a violet glow pool underneath,
-> white-hot embers drifting up, a purple-white flash at the peak
+### ③ Mưa Độc Tố — neo ở chỗ trúng đòn
 
-Dải màu tím của Evil Spirit tôi đã lấy mẫu thẳng từ ảnh anh gửi lần trước, dùng lại cho khớp:
-`#1f004f` → `#340665` → `#501188` → `#853ab5` → `#c67be1` → `#f0c5f4`
+```
+2D game skill VFX sprite animation, top-down three-quarter view.
+A rain of acid-green venom falling into a small area: thin toxic droplets streak
+down from the top of the frame, splashing as they land, and a bubbling pool of
+glowing acid-green liquid spreads outward on the ground beneath, hissing, with
+wisps of green vapour curling upward and small bubbles popping on the surface.
+The pool keeps seething, then thins out and evaporates.
+The pool spreads to about 1.5 times the height of a human character, centred
+horizontally in the lower half of the frame.
+IMPORTANT: visual effect ONLY - no character, no creature, no weapon, no ground
+texture, no shadow, no background. Fully transparent background.
+Soft anti-aliased alpha edges, no hard cutout.
+40 frames, 30 fps, 384x384 canvas.
+Painterly stylised game art, saturated colours, dark fantasy MMO.
+```
+
+### ④ Lightning Ball — đòn đánh thường, KHÁC BA CÁI TRÊN
+
+Đây không phải hiệu ứng nổ một lần tại chỗ — nó là **viên đạn BAY** từ tay pháp sư tới con
+quái (tầm bắn 420px), nên cần **hoạt ảnh lặp liền mạch**: khung cuối phải nối được vào khung
+đầu, không giật. Ô nhỏ vì viên đạn chỉ chừng 40px trên màn.
+
+```
+2D game skill VFX sprite animation, seamless perfect loop.
+A crackling sphere of electric energy hovering in place: a bright white-hot core
+wrapped in arcs of pale yellow-green lightning that writhe and snap around it,
+with a faint electric aura and a few sparks flicking outward. The motion loops
+perfectly - the last frame flows into the first with no jump.
+The sphere fills most of the frame.
+IMPORTANT: visual effect ONLY - no character, no creature, no weapon, no hand,
+no ground, no shadow, no background. Fully transparent background.
+Soft anti-aliased alpha edges, no hard cutout.
+20 frames, 30 fps, 128x128 canvas.
+Painterly stylised game art, saturated colours, dark fantasy MMO.
+```
+
+**Kèm một gói thứ hai cho lúc viên đạn CHẠM** (không bắt buộc, nhưng có thì đẹp hơn nhiều —
+không có thì đạn biến mất đột ngột):
+
+```
+2D game skill VFX sprite animation, top-down three-quarter view.
+A small electric impact burst: a sphere of lightning shattering on contact into a
+white flash, a quick ring of pale yellow-green electric arcs snapping outward,
+and a handful of sparks scattering and fading.
+IMPORTANT: visual effect ONLY - no character, no creature, no ground, no shadow,
+no background. Fully transparent background.
+Soft anti-aliased alpha edges, no hard cutout.
+18 frames, 30 fps, 192x192 canvas.
+Painterly stylised game art, saturated colours, dark fantasy MMO.
+```
+
+### Dải màu cho khớp game
+
+| chiêu | dải màu |
+|---|---|
+| Cột Lửa | `#3a1200` → `#8a2a00` → `#ff7a3a` → `#ffcf7a` → `#fff0be` |
+| Mưa Sao Băng | `#2a0f00` → `#a03a00` → `#ff9a3a` → `#ffcf7a` → `#fffbe8` |
+| Mưa Độc Tố | `#0d2a08` → `#2f6b1a` → `#7ec850` → `#b8ff9a` → `#e8ffd8` |
+| Lightning Ball | `#1a2a00` → `#6a8a10` → `#d8e84a` → `#eaffb0` → `#ffffff` |
 
 ---
 
