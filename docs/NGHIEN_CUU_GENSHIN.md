@@ -132,7 +132,8 @@ với bộ tìm đường, không phải với câu đố.
 
 ## 6. Thứ tự tôi đề nghị, sau nghiên cứu này
 
-1. **B3.3 mạch thu hoạch đổi chỗ** — rẻ nhất, vì `MATON` đã có sẵn khung, và nó là mục duy nhất
+1. ~~**B3.3 mạch thu hoạch đổi chỗ**~~ — **ĐÃ LÀM**, dựng thành **Vỉa Cốt** (xem CLAUDE.md · VỈA CỐT).
+   Rẻ nhất, vì `MATON` đã có sẵn khung, và nó là mục duy nhất
    cho ngay một lý do "hôm nay phải ra ngoài".
 2. **B3.1 rương canh bởi trại quái** — dựng khái niệm "vật thể thế giới có người canh". Đây là
    viên gạch mà A4 và B1 đều dựa vào.

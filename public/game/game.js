@@ -4548,6 +4548,115 @@ function cotBossVung(x, y){
   addFloat(x, y - 110, `◆ +${cot.length} Cốt ${COT_DONG[cot[0].dong].ten}${co ? ` (${co} Cổ!)` : ''}`,
            COT_DONG[cot[0].dong].mau, 14);
 }
+// ═══════════════ VỈA CỐT — mỏ Cốt trồi lên CHỖ KHÁC mỗi ngày ═══════════════
+// B3.3. Bài toán: bản đồ ngoài trời không có gì để đi tới. Người chơi chốt một bãi quái rồi
+// bật AUTO, và 2600×1900 pixel còn lại không bao giờ được nhìn thấy. Sự kiện thế giới sẵn có
+// (Hung Thần, Xâm Lăng Vàng) đổi MAP theo giờ nhưng KHÔNG đổi CHỖ — vẫn là "về đúng bãi cũ".
+//
+// Vỉa Cốt đổi TOẠ ĐỘ. Mỗi ngày ba trong bảy vùng có Dòng mọc lên một vỉa, ở một điểm bốc ngẫu
+// nhiên nhưng CỐ TÌNH cách xa mọi bãi quái — nên tới được nó là một chuyến đi, không phải thứ
+// nhặt được trong lúc cày. Hạt bốc từ chính chuỗi ngày (toDateString), nên:
+//   · tải lại trang không đổi vỉa (không có state nào phải lưu cho vị trí)
+//   · mọi nhân vật trong cùng một ngày thấy đúng một tấm bản đồ
+//   · hôm sau là ba nơi hoàn toàn khác
+//
+// ⚠ MỖI NGÀY MỘT LẦN cho mỗi nhân vật, cho mỗi vùng. Đây là điều kiện sống của cả thiết kế:
+// một mỏ hồi sinh theo phút thì AUTO đứng cạnh nó là xong, và ta lại quay về đúng chỗ cũ.
+const VIA_SO_NGAY   = 3;    // mỗi ngày bao nhiêu vùng có vỉa
+const VIA_TAM       = 46;   // đứng trong tầm này thì khai được
+const VIA_CACH_BAI  = 320;  // phải cách MỌI bãi quái chừng này — đây là chỗ tạo ra chuyến đi
+const VIA_CACH_MOC  = 230;  // và cách điểm thả / cổng / bãi thảo dược
+let _viaCache = { key: '', ds: [] };
+
+function viaNgay(){ return new Date().toDateString(); }
+// Bốc điểm CHỈ từ dữ liệu tĩnh (vật cản tĩnh + bãi + cổng), không cần nạp map — nhờ vậy bảng
+// Bản Đồ và danh sách sự kiện chỉ được đúng chỗ vỉa của cả bảy vùng mà không phải đi tới.
+// Cây/đá là decor bốc lại mỗi lần vào map, nên chúng được xử lý ở buildWorld (_keep) chứ không ở đây.
+function viaChonDiem(mid, ra){
+  const md = MAPS[mid]; if (!md) return null;
+  const tranh = [];
+  for (const q of (md.packs || [])) tranh.push({ x:q.x, y:q.y, r:VIA_CACH_BAI });
+  if (md.spawn) tranh.push({ x:md.spawn.x, y:md.spawn.y, r:VIA_CACH_MOC });
+  for (const k in (md.spawnFrom || {})) tranh.push({ x:md.spawnFrom[k].x, y:md.spawnFrom[k].y, r:VIA_CACH_MOC });
+  for (const h of (HERB_SPOTS[mid] || [])) tranh.push({ x:h.x, y:h.y, r:VIA_CACH_MOC });
+  if (typeof GATES !== 'undefined') for (const g of GATES) if (g.map === mid) tranh.push({ x:g.x, y:g.y, r:VIA_CACH_MOC });
+  // Nới dần: vùng chật (nhiều bãi + hồ lớn) có thể không còn điểm nào thoả. Thà đặt vỉa gần
+  // bãi hơn một chút còn hơn hôm đó vùng mất vỉa — nhưng chỉ nới sau khi đã thử 300 lần.
+  for (let thu = 0, noi = 0; thu < 600; thu++){
+    if (thu === 300) noi = 110;
+    const x = 150 + ra() * (MAP.w - 300), y = 150 + ra() * (MAP.h - 300);
+    if (inObstacle(mid, x, y, 42)) continue;
+    if (tranh.some(t => dist(x, y, t.x, t.y) < t.r - noi)) continue;
+    return { x: Math.round(x), y: Math.round(y) };
+  }
+  return null;
+}
+function viaHomNay(){
+  const key = viaNgay();
+  if (_viaCache.key === key) return _viaCache.ds;
+  const ra = _hatRng(_bamChuoi('via:' + key));
+  const con = COT_DONG_IDS.map(k => COT_DONG[k].map);        // bảy vùng có Dòng
+  for (let i = con.length - 1; i > 0; i--){ const j = Math.floor(ra() * (i + 1)); const t = con[i]; con[i] = con[j]; con[j] = t; }
+  const ds = [];
+  for (const mid of con.slice(0, VIA_SO_NGAY)){
+    const p = viaChonDiem(mid, ra);
+    if (p) ds.push({ map: mid, x: p.x, y: p.y, dong: COT_DONG_THEO_MAP[mid] });
+  }
+  _viaCache = { key, ds };
+  return ds;
+}
+function viaCuaMap(mid){ return viaHomNay().find(v => v.map === mid) || null; }
+function viaDaLay(mid){
+  if (!player) return false;
+  const v = player.via;
+  return !!(v && v.day === viaNgay() && v[mid]);
+}
+// Rơi hào phóng hơn Trùm Vùng một bậc — đó là cái giá của quãng đường và của việc mỗi ngày
+// chỉ được một lần. Cửa Cổ 28% (Trùm Vùng lượt đầu là 14%).
+function viaKhai(){
+  const v = viaCuaMap(curMap);
+  if (!v || !player || dead) return false;
+  if (dist(player.x, player.y, v.x, v.y) > VIA_TAM) return false;
+  if (viaDaLay(curMap)) return false;
+  const today = viaNgay();
+  if (!player.via || player.via.day !== today) player.via = { day: today };
+  player.via[curMap] = 1;
+  const D = COT_DONG[v.dong], ra = [];
+  for (let i = 0; i < 3; i++){
+    if (cotKho().length >= COT_KHO_MAX) break;
+    const r = Math.random();
+    const c = cotMoi(v.dong, r < 0.28 ? 'co' : r < 0.68 ? 'tinh' : 'tho');
+    cotKho().push(c); ra.push(c);
+  }
+  themDatHon(6 + Math.floor(Math.random() * 4));
+  for (const p of pickups) if (p.type === 'via'){ p.respawn = 999999; }
+  addEffect({ type:'spark', x:v.x, y:v.y - 8, r:70, color:D.mau });
+  if (ra.length){
+    const co = ra.filter(c => c.pham === 'co').length;
+    addFloat(v.x, v.y - 120, `◆ Khai vỉa: +${ra.length} Cốt ${D.ten}${co ? ` (${co} Cổ!)` : ''}`, D.mau, 15);
+  } else {
+    addFloat(v.x, v.y - 120, 'Kho Cốt đã đầy — nung bớt rồi quay lại', '#ffd76a', 14);
+  }
+  zoneBanner = { text:'◆ VỈA CỐT ĐÃ KHAI', sub:`Vỉa ${D.ten} tại ${MAPS[curMap].name} — hôm nay hết phần ở vùng này.`, color:D.mau, t:4 };
+  AudioSys.sfx('levelup', 0.85);
+  saveGame();
+  return true;
+}
+// Hook QA: dời vỉa của map đang đứng về ngay cạnh chân, và xoá dấu đã-khai của hôm nay.
+window.debugVia = function(mid){
+  const m = mid || curMap, v = viaCuaMap(m);
+  if (!v) return null;
+  if (player && player.via) delete player.via[m];
+  if (m === curMap && player){ v.x = Math.round(player.x + 20); v.y = Math.round(player.y); viaThemPickup(); }
+  return v;
+};
+function viaThemPickup(){
+  for (let i = pickups.length - 1; i >= 0; i--) if (pickups[i].type === 'via') pickups.splice(i, 1);
+  const v = viaCuaMap(curMap);
+  if (!v) return;
+  pickups.push({ type:'via', x:v.x, y:v.y, dong:v.dong, respawn: viaDaLay(curMap) ? 999999 : 0 });
+}
+
 function chiBoHieu(){                          // dòng đang đủ 4 mảnh của con đang xuất trận
   const C = chiState(); return C.eq ? chiCotGom(C.eq).bo : null;
 }
@@ -7256,7 +7365,17 @@ function banSacHtml(id){
   const bits = [`Đất của <b style="color:#ffd76a">${b.tenChuDao}</b> <span style="opacity:.6">${b.tyLe}%</span>`];
   if (b.he && ELEM[b.he]) bits.push(`hệ <b style="color:${ELEM[b.he].color}">${b.he}</b> <span style="opacity:.6">${b.tyLeHe}%</span>`);
   if (b.cot && COT_DONG[b.cot]) bits.push(`nơi <b>duy nhất</b> rơi Cốt <b style="color:${COT_DONG[b.cot].mau}">${COT_DONG[b.cot].ten}</b>`);
-  return `<div class="m-desc" style="margin-top:3px">◆ ${bits.join(' · ')}</div>`;
+  let via = '';
+  if (typeof viaCuaMap === 'function'){
+    const v = viaCuaMap(id);
+    if (v){
+      const D = COT_DONG[v.dong], het = viaDaLay(id);
+      via = `<div class="m-desc" style="margin-top:2px;color:${het ? '#8a8a8a' : D.mau}">` +
+            (het ? `◆ Vỉa Cốt hôm nay: <b>đã khai</b> — mai mọc chỗ khác`
+                 : `◆ <b>Vỉa Cốt ${D.ten} HÔM NAY</b> mọc ở vùng này — mỗi ngày một lần`) + `</div>`;
+    }
+  }
+  return `<div class="m-desc" style="margin-top:3px">◆ ${bits.join(' · ')}</div>` + via;
 }
 function bandSummaryHtml(md){
   if (!md.packs || !md.packs.length) return '';
@@ -7324,6 +7443,7 @@ function buildWorld(){
   }
   if (md.boss && questIdx >= 9 && questState !== 'all' && !victory) spawnBoss();
   if (md.herbs) for (const s of (HERB_SPOTS[curMap] || [])) pickups.push({ type:'herb', x:s.x, y:s.y, respawn:0 });
+  viaThemPickup();   // Vỉa Cốt hôm nay (nếu vùng này có) — xem khối VỈA CỐT
   // decor: ink trees, rocks theo địa hình map
   for (let i = 0; i < (md.trees ?? 70); i++)
     decor.push({ type:'tree', x:rnd(60,MAP.w-60), y:rnd(60,MAP.h-60), s:rnd(0.7,1.5) });
@@ -7351,6 +7471,7 @@ function buildWorld(){
     if (md.spawn) _keep.push({ x:md.spawn.x, y:md.spawn.y, r:150 });
     for (const k in (md.spawnFrom || {})) _keep.push({ x:md.spawnFrom[k].x, y:md.spawnFrom[k].y, r:150 });
     for (const h of (HERB_SPOTS[curMap] || [])) _keep.push({ x:h.x, y:h.y, r:60 });
+    { const _v = viaCuaMap(curMap); if (_v) _keep.push({ x:_v.x, y:_v.y, r:110 }); }
     for (const a of AI_PASSES) if (a.map === curMap) _keep.push({ x:a.x, y:a.y, r:a.r + 80 });
     if (typeof GATES !== 'undefined') for (const g of GATES) if (g.map === curMap) _keep.push({ x:g.x, y:g.y, r:130 });
     const _bd = BOSS_DEFS[curMap];
@@ -7792,7 +7913,7 @@ window.addEventListener('keydown', e=>{
     if (id) castSkill(id); else togglePanel('skill');
   }
   if (e.key.toLowerCase()==='e'){ if (!window.tryCatchHorse || !tryCatchHorse()) tryTalk(); } // GDD Đợt 2 B5: E bắt Tuấn Mã kiệt sức trước
-  if (e.key.toLowerCase()==='j'){ if (!tryPickLoot()) tryHarvestHerb(); } // nhặt đồ dưới đất → hái thảo dược
+  if (e.key.toLowerCase()==='j'){ if (!tryPickLoot() && !viaKhai()) tryHarvestHerb(); } // nhặt đồ dưới đất → khai Vỉa Cốt → hái thảo dược
   // Ba phím, ba bảng KHÁC NHAU. Trước đây C và V cùng gọi togglePanel('char') — hai phím một
   // cửa sổ, tức là một phím bị lãng phí trong khi Trang Bị không có phím tắt riêng nào ngoài I.
   if (e.key.toLowerCase()==='c'){ window.charTab = 'info'; togglePanel('char'); }  // Nhân Vật
@@ -7883,7 +8004,7 @@ document.querySelectorAll('.sk-slot').forEach(b=>{
 // Ô cuối thanh kỹ năng nay là NHẶT ĐỒ (trước là Phiêu Vân Bộ — nhảy). Trên điện thoại không
 // có bàn phím nên đây là đường DUY NHẤT để nhặt đồ dưới đất.
 document.getElementById('sk-loot').addEventListener('click', () => {
-  if (!tryPickLoot()) tryHarvestHerb();
+  if (!tryPickLoot() && !viaKhai()) tryHarvestHerb();
 });
 
 // ---------- Combat ----------
@@ -10506,6 +10627,7 @@ function render(){
   // pickups (herbs) — bụi thuốc 5 lá + hoa, lấp lánh báo hái được; héo xám sau khi hái
   const _herbT = performance.now();
   for (const p of pickups){
+    if (p.type === 'via'){ veVia(p, _herbT); continue; }
     if (p.respawn > 0){ // đã hái — cành héo xám chờ hồi sinh
       ctx.strokeStyle = 'rgba(120,116,100,.6)'; ctx.lineWidth = 1.6;
       ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.quadraticCurveTo(p.x-3, p.y-7, p.x-2, p.y-11); ctx.stroke();
@@ -10763,12 +10885,16 @@ function render(){
   if (nearNpc)
     drawCalligraphy(`Nhấn E — ${nearNpc.name}`, W/2, H-130, '#7ecbff', 15, true);
   // interact hint — bụi thảo dược còn hái được gần nhất
-  let nearHerb = null;
+  let nearHerb = null, nearVia = null;
   for (const p of pickups){
-    if (p.type !== 'herb' || p.respawn > 0) continue;
-    if (dist(player.x, player.y, p.x, p.y) < 36){ nearHerb = p; break; }
+    if (p.respawn > 0) continue;
+    if (p.type === 'via' && dist(player.x, player.y, p.x, p.y) < VIA_TAM){ nearVia = p; continue; }
+    if (p.type === 'herb' && !nearHerb && dist(player.x, player.y, p.x, p.y) < 36) nearHerb = p;
   }
-  if (nearHerb)
+  if (nearVia)
+    drawCalligraphy(`Nhấn J — Khai Vỉa Cốt ${COT_DONG[nearVia.dong].ten}`, W/2, H-(nearNpc?108:130),
+                    COT_DONG[nearVia.dong].mau, 15, true);
+  else if (nearHerb)
     drawCalligraphy('Nhấn J — Hái Thảo Dược', W/2, H-(nearNpc?108:130), '#8fd18f', 15, true);
 }
 
@@ -10779,6 +10905,50 @@ function drawCalligraphy(text, x, y, color, size){
   ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 3;
   ctx.strokeText(text, x, y);
   ctx.fillStyle = color; ctx.fillText(text, x, y);
+}
+// Vỉa Cốt: một khe đá nứt, bên trong lộ ra mấy mảnh xương phát sáng theo màu Dòng của vùng.
+// Đã khai rồi thì khe khép lại thành vết sẹo xám — vẫn thấy chỗ đó có gì, nhưng hết phần hôm nay.
+function veVia(p, t){
+  const D = COT_DONG[p.dong] || { mau:'#e0a63c' };
+  const het = p.respawn > 0;
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  // khe đá
+  ctx.fillStyle = het ? 'rgba(70,66,60,.55)' : 'rgba(38,32,28,.75)';
+  ctx.beginPath(); ctx.ellipse(0, 0, 26, 12, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = het ? 'rgba(120,116,104,.5)' : 'rgba(20,16,14,.8)';
+  ctx.lineWidth = 2; ctx.stroke();
+  if (het){
+    ctx.strokeStyle = 'rgba(140,136,124,.55)'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(-11, 1); ctx.lineTo(-2, -4); ctx.lineTo(7, 2); ctx.stroke();
+    ctx.restore(); return;
+  }
+  const nhip = 0.55 + 0.45 * Math.sin(t / 340);
+  ctx.globalAlpha = 0.30 + 0.22 * nhip;
+  ctx.fillStyle = D.mau;
+  ctx.beginPath(); ctx.ellipse(0, -4, 34 + 5 * nhip, 22 + 4 * nhip, 0, 0, 7); ctx.fill();
+  ctx.globalAlpha = 1;
+  // ba mảnh xương nhô lên khỏi khe
+  ctx.fillStyle = D.mau; ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 1.2;
+  const manh = [[-9, -14, 4.2], [1, -20, 5.4], [10, -12, 3.8]];
+  for (const [mx, my, mr] of manh){
+    ctx.beginPath();
+    ctx.moveTo(mx, 2); ctx.lineTo(mx - mr, my + mr); ctx.lineTo(mx, my); ctx.lineTo(mx + mr, my + mr);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  ctx.fillStyle = '#fff';
+  ctx.globalAlpha = 0.5 + 0.5 * nhip;
+  ctx.beginPath(); ctx.arc(1, -22 - 3 * nhip, 2.4, 0, 7); ctx.fill();
+  // Cột sáng: vỉa nằm giữa đồng trống, mà cả thiết kế là "thấy nó ở đâu rồi đi tới đó" — một
+  // khe đá cao 20px thì lẫn vào đá cảnh. Cột sáng cho nó nổi lên trên mọi decor xung quanh.
+  const g = ctx.createLinearGradient(0, -34, 0, -230);
+  g.addColorStop(0, D.mau); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.globalAlpha = 0.26 + 0.14 * nhip;
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-13, -30); ctx.lineTo(13, -30); ctx.lineTo(5, -230); ctx.lineTo(-5, -230);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
 }
 function drawRock(d){
   const rim = (typeof ROCK_IMGS !== 'undefined') && ROCK_IMGS[Math.abs(((d.x*7+d.y*13)|0)) % ROCK_IMGS.length];
@@ -16730,6 +16900,7 @@ function cheatHelp(){
     '── thế giới ──',
     '/kill [bán kính=350] — hạ quái quanh mình · /seal <0-7> — số Tướng Quân đã hạ (7 = Kết Mở)',
     '/time [ngày=10] — nhảy thời gian thế giới · /obstacles — lớp debug vùng chặn địa hình',
+    '/via — kéo Vỉa Cốt hôm nay về sát chân (và mở lại) · /via ds — ba vùng nào có vỉa hôm nay',
     '── tranh ──',
     `/art [lớp=${Object.keys(SPLASH_CFG).join('|')}] [mavuong] — mở tranh minh hoạ + chibi của lớp`,
     '/wipe — xóa save & tải lại game',
@@ -16936,6 +17107,20 @@ window.cheatExec = function(raw){
         player.bossKills[curMap] = bd.thuve.map(t => t.id);
         player.x = bd.tranai.x * MAP.w - 380; player.y = bd.tranai.y * MAP.h; snapCamera();
         cheatLog('Đã mở phong ấn — dịch chuyển tới Cổng Vực.', '#c07fe0'); break;
+      }
+      case 'via': {                       // /via — kéo Vỉa Cốt hôm nay về sát chân, /via ds — liệt kê cả ba
+        if ((parts[1] || '').toLowerCase() === 'ds'){
+          const ds = viaHomNay();
+          cheatLog(`Vỉa Cốt ${viaNgay()} — ${ds.length} vùng:`, '#e0a63c');
+          for (const v of ds)
+            cheatLog(`  ◆ ${COT_DONG[v.dong].ten} · ${MAPS[v.map].name} (${v.x},${v.y})${viaDaLay(v.map) ? ' — đã khai' : ''}`,
+                     COT_DONG[v.dong].mau);
+          break;
+        }
+        const v = viaCuaMap(curMap);
+        if (!v){ cheatLog(`Hôm nay ${MAPS[curMap].name} không có vỉa. Gõ /via ds xem ba vùng nào có.`, '#ff7a6a'); break; }
+        window.debugVia(curMap);
+        cheatLog(`Vỉa ${COT_DONG[v.dong].ten} đã dời về cạnh chân và mở lại — nhấn J để khai.`, COT_DONG[v.dong].mau); break;
       }
       case 'seal': {
         const n = clamp(Math.round(num(1, 0)), 0, 7);
@@ -20287,6 +20472,19 @@ function drawMinimapStatic(mw, mh, sx, sy, md){
     sc.fillStyle = '#6ae88a';
     for (const h of (HERB_SPOTS[curMap] || [])){ sc.beginPath(); sc.arc(h.x*sx, h.y*sy, 1.8, 0, 7); sc.fill(); }
   }
+  // Vỉa Cốt hôm nay — viên kim cương to, màu Dòng; xám đi khi đã khai. Phải nổi hơn thảo dược
+  // vì cả thiết kế là "nhìn thấy nó ở đâu rồi đi tới đó".
+  {
+    const _v = viaCuaMap(curMap);
+    if (_v){
+      const _het = viaDaLay(curMap), _D = COT_DONG[_v.dong];
+      sc.save(); sc.translate(_v.x*sx, _v.y*sy); sc.rotate(Math.PI/4);
+      sc.fillStyle = _het ? 'rgba(130,126,116,.6)' : _D.mau;
+      sc.fillRect(-3.4, -3.4, 6.8, 6.8);
+      sc.strokeStyle = 'rgba(0,0,0,.6)'; sc.lineWidth = 1; sc.strokeRect(-3.4, -3.4, 6.8, 6.8);
+      sc.restore();
+    }
+  }
   // Tường thành + cổng thành
   if (curMap === CITY_WALL.map){
     sc.strokeStyle = 'rgba(168,118,58,.85)'; sc.lineWidth = 1.5;
@@ -23517,6 +23715,19 @@ function eventList(now){
       : { icon:'✹', name:'Xâm Lăng Vàng', map: goldenMapFor(GOLDEN.next || goldenNextBoundary(now)),
           at: GOLDEN.next || goldenNextBoundary(now), active:false, color:'#ffd76a',
           sub:`${fmtClock(GOLDEN.next || goldenNextBoundary(now))} · ${MAPS[goldenMapFor(GOLDEN.next || goldenNextBoundary(now))].name} — mỗi quái vàng rơi 1 Box Kundun (I-V theo map)` });
+  }
+  // Vỉa Cốt — sự kiện duy nhất trong danh sách này KHÔNG chạy theo đồng hồ mà theo NGÀY, và là
+  // cái duy nhất chỉ đúng một CHỖ chứ không chỉ một map. Vì vậy mỗi vỉa một dòng riêng.
+  if (typeof viaHomNay === 'function'){
+    const _mai = new Date(); _mai.setHours(24, 0, 0, 0);
+    for (const v of viaHomNay()){
+      const D = COT_DONG[v.dong], het = viaDaLay(v.map);
+      list.push({ icon:'◆', name:`Vỉa Cốt ${D.ten}`, map: v.map, at: _mai.getTime(), active: !het,
+        color: het ? '#8a8a8a' : D.mau,
+        sub: het
+          ? `Đã khai hôm nay tại ${MAPS[v.map].name} — mai vỉa mọc chỗ khác`
+          : `${MAPS[v.map].name} — mỗi ngày MỘT lần, 3 mảnh Cốt ${D.ten} (28% ra Cổ). Xem chấm kim cương trên bản đồ nhỏ.` });
+    }
   }
   const mid = new Date(now); mid.setHours(24, 0, 0, 0);
   list.push({ icon:'⚔', name:'Truy Nã Lệnh & Mục Tiêu Ngày', at: mid.getTime(), active:false, color:'#7ecbff',

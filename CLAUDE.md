@@ -267,6 +267,29 @@ chuỗi cũ từ git — thiết kế lại từ đầu cùng với lore. Khuôn
 thích ở `data/canbang.js`. Máy chạy nhiệm vụ **giữ nguyên** và chạy theo dữ liệu: điền bảng là
 chuỗi sống lại.
 
+### ◆ VỈA CỐT (B3.3) — thứ đầu tiên trong game buộc phải ĐI TỚI một toạ độ
+
+`viaHomNay()` bốc **ba** trong bảy vùng có Dòng, mỗi vùng **một điểm**, hạt từ chính chuỗi
+`new Date().toDateString()`. Không lưu vị trí ở đâu cả — tải lại trang, đổi máy, đổi nhân vật
+đều ra đúng một tấm bản đồ; qua nửa đêm là ba nơi hoàn toàn khác.
+
+**Ba điều là cả thiết kế, đừng "tối ưu" mất cái nào:**
+1. **Cách bãi quái ≥ 320px** (`VIA_CACH_BAI`). Vỉa mọc cạnh bãi là AUTO nhặt được, và ta lại
+   quay về đúng cái vòng "chốt một bãi, không bao giờ rời". Đây là lý do vỉa tồn tại.
+2. **Đổi TOẠ ĐỘ, không chỉ đổi map.** Hung Thần và Xâm Lăng Vàng đã đổi map theo giờ từ lâu —
+   nhưng "về đúng bãi cũ ở map khác" thì vẫn là bãi cũ. Toạ độ mới là chỗ AUTO không lên lịch
+   cứng được.
+3. **Một lần / ngày / vùng / nhân vật** (`player.via = { day, <map>:1 }`). Một mỏ hồi theo phút
+   là một bãi cày, không phải một chuyến đi.
+
+Điểm bốc **chỉ từ dữ liệu tĩnh** (`obstaclesOf` + packs + cổng + điểm thả), nên bảng Bản Đồ và
+danh sách sự kiện nói đúng chỗ vỉa của cả bảy vùng mà không phải nạp map. Cây/đá là decor bốc
+lại mỗi lần vào map nên chúng bị chừa trống ở `buildWorld` (`_keep`), không xử ở khâu bốc điểm.
+
+Ba cửa chỉ đường, thiếu một là người chơi không biết đi đâu: chấm kim cương trên **bản đồ nhỏ**,
+dòng riêng cho **từng vỉa** trong danh sách sự kiện (mỗi cái một CHỖ nên không gộp được), và một
+dòng trên hàng map trong bảng **Bản Đồ**. QA: `/via` · `/via ds` · `window.debugVia(map)`.
+
 ### Bốn tài liệu thiết kế — đọc theo thứ tự này
 1. `docs/CAU_TRUC_MAP.md` — đo map hiện tại, đối chiếu Ragnarok / Path of Exile
 2. `docs/DE_XUAT_MAP.md` — 10 hạng mục / 4 đợt, có C1 (từ khoá phòng) + C2 (máy sinh)
