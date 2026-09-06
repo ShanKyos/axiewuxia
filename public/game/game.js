@@ -3618,6 +3618,25 @@ function drawVfx(e, k, a){
   }
   ctx.restore();
 }
+// ═══ Tranh cho ĐẠN BAY ═══
+// Để bảng riêng chứ không nhét vào VFX_ATLAS_DEFS, vì đạn khác hiệu ứng ở hai chỗ:
+//   · Đạn vẽ LIÊN TỤC suốt trận, không chớp một cái rồi thôi — nên nạp sẵn và giữ luôn.
+//     Cả bảng này mới 0,3 MB sau giải nén, bằng 1/50 một tấm atlas hiệu ứng.
+//   · Đi qua trần LRU thì tấm có thể bị thả ĐÚNG lúc một viên đạn đang bay giữa đường:
+//     đạn nằm trong `projectiles` chứ không phải `effects`, nên vfxDangChay() không che được.
+// `px` là đường kính vẽ ra màn. Nhân vật cao 118px, nên 52 là viên đạn bằng gần nửa người —
+// nghe to, nhưng phần lớn diện tích đó là hạt điện thưa, lõi sáng chỉ chừng 18px. Chỉnh sống
+// từ console bằng window.__orbPx để ướm cỡ mà không phải nướng lại.
+const PROJ_ANH = {
+  orb: { tep:'energy_ball', o:96, n:8, fps:14, px:52 },
+};
+const PROJ_IMGS = {};
+function projAnh(k){
+  const d = PROJ_ANH[k]; if (!d) return null;
+  let im = PROJ_IMGS[k];
+  if (!im){ im = new Image(); im.src = 'assets/vfx/' + d.tep + '/atlas.png'; PROJ_IMGS[k] = im; }
+  return im;
+}
 function drawProjStyled(p){
   const s = p.style || 'dart', dx = Math.cos(p.ang), dy = Math.sin(p.ang);
   ctx.save(); ctx.lineCap = 'round';
@@ -3644,10 +3663,18 @@ function drawProjStyled(p){
     ctx.beginPath(); ctx.arc(p.x - dx*12, p.y - dy*12, 3.5, 0, 7); ctx.stroke();
   } else if (s === 'sword'){ // phi kiếm
     _vxSword(p.x, p.y, p.ang, 24, p.color, 0.95);
-  } else if (s === 'orb'){ // quang cầu
-    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 9);
-    g.addColorStop(0, '#fff'); g.addColorStop(0.4, p.color); g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0, 7); ctx.fill();
+  } else if (s === 'orb'){ // quang cầu — Energy Ball, đòn đánh thường của Dark Wizard
+    const A = PROJ_ANH.orb, im = projAnh('orb');
+    if (chiSan(im)){
+      // KHÔNG xoay theo hướng bay: quả cầu không có đầu đuôi, xoay chỉ làm tia điện giật.
+      // Cũng KHÔNG tô theo p.color: tranh đã có màu tím riêng của Dark Wizard, tô đè là mất.
+      const _i = Math.floor(performance.now() / 1000 * A.fps) % A.n, _d = window.__orbPx || A.px;
+      ctx.drawImage(im, _i * A.o, 0, A.o, A.o, p.x - _d/2, p.y - _d/2, _d, _d);
+    } else {                                  // tranh chưa về — quang cầu tạm một nhịp
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 9);
+      g.addColorStop(0, '#fff'); g.addColorStop(0.4, p.color); g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0, 7); ctx.fill();
+    }
   } else if (s === 'arrow'){ // Multi-Shot (Sylvan Ranger) — thân tên + mũi nhọn + lông vũ đuôi
     ctx.strokeStyle = p.color; ctx.lineWidth = 2.2;
     ctx.beginPath(); ctx.moveTo(p.x - dx*18, p.y - dy*18); ctx.lineTo(p.x - dx*4, p.y - dy*4); ctx.stroke();
