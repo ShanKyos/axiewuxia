@@ -47,12 +47,15 @@ const measure = (p, ms=3000) => p.evaluate(async (ms) => {
     c.dispatchEvent(new MouseEvent('contextmenu', { clientX: 500, clientY: 400, bubbles: true }));
     return moveTarget ? { x: Math.round(moveTarget.x), y: Math.round(moveTarget.y) } : null;
   });
-  // Toạ độ logic = toạ độ CSS, nên camera 0,0 ⇒ điểm CSS (500,400) là đúng điểm thế giới (500,400)
-  // BẤT KỂ độ nét. Nếu ra (300,240) tức là có ai đó nhân RES vào toạ độ chuột — thừa.
-  console.log('3) chuột phải ở CSS(500,400) khi độ nét 60% → thế giới:', JSON.stringify(r3));
+  // Camera 0,0 ⇒ điểm CSS (500,400) là điểm thế giới (500/zoom, 400/zoom) — camera CÓ zoom
+  // (xem ZOOM_MUC). Thứ bài này gác là ĐỘ NÉT: RES không được lọt vào phép đổi toạ độ chuột.
+  // Nên mốc phải tính theo zoom thật, không chép cứng — nếu nhân RES vào thì lệch tiếp một lần nữa.
+  const zoom3 = await p.evaluate(() => zoomNow());
+  const dx3 = 500 / zoom3, dy3 = 400 / zoom3;
+  console.log(`3) chuột phải ở CSS(500,400) khi độ nét 60%, zoom ${zoom3} → thế giới:`, JSON.stringify(r3));
   if (!r3) fail('chuột phải không đặt được đích');
-  else if (Math.hypot(r3.x - 500, r3.y - 400) > 70)
-    fail(`đích lệch: mong ~(500,400) nhưng ra (${r3.x},${r3.y}) — độ nét không được làm lệch chuột`);
+  else if (Math.hypot(r3.x - dx3, r3.y - dy3) > 70)
+    fail(`đích lệch: mong ~(${Math.round(dx3)},${Math.round(dy3)}) nhưng ra (${r3.x},${r3.y}) — độ nét không được làm lệch chuột`);
 
   // 4. hạ độ nét phải thật sự nhanh hơn
   await p.evaluate(() => { FXQ_AUTO = false; setFxq(2); RES_AUTO = false; travelTo('daohoa'); });

@@ -68,6 +68,38 @@ function doTrongTrang(){
     let oThoang = 0;
     for (let i = 0; i < N; i++) if (thoang(i)) oThoang++;
 
+    // ── 2b. VẬT CHE trong tầm đánh ────────────────────────────────────────────
+    // "Hành lang" (dưới) đo khe hẹp cỡ MỘT Ô, tức 24px — hẹp hơn cả người, nên nó gần như luôn
+    // ~0 và không nói được gì về việc có địa hình đánh nhau hay không. Chỉ số dùng để chấm việc
+    // đó là ĐÂY: bao nhiêu phần đất đi được có một khối ĐỦ LỚN trong tầm 120px.
+    // Ngưỡng "đủ lớn" = 0,40 lần chiều cao nhân vật: nhỏ hơn thì là sỏi, chạy vòng quanh nó
+    // không đổi được gì trong trận.
+    const NHO = 0.40 * NV_CAO, TAM_CHE = 120;
+    const khoiLon = obstaclesOf(id).filter(o => {
+      const w = o.wd ? Math.min(o.wd, o.ht) : 2 * Math.min(o.rx, o.ry);
+      return w >= NHO;
+    });
+    const gLon = new Uint8Array(N);
+    for (let gy = 0; gy < H; gy++) for (let gx = 0; gx < W; gx++){
+      const x = gx*C + C/2, y = gy*C + C/2;
+      for (const o of khoiLon){
+        if (o.wd){ const qx = Math.max(o.x, Math.min(x, o.x+o.wd)), qy = Math.max(o.y, Math.min(y, o.y+o.ht));
+                   if ((x-qx)*(x-qx)+(y-qy)*(y-qy) < 256){ gLon[gy*W+gx] = 1; break; } }
+        else { const dx = (x-o.x)/(o.rx+16), dy = (y-o.y)/(o.ry+16); if (dx*dx+dy*dy < 1){ gLon[gy*W+gx] = 1; break; } }
+      }
+    }
+    let coChe = 0, datTrong = 0;
+    { const R = Math.round(TAM_CHE / C), d = new Int32Array(N).fill(-1), q = new Int32Array(N);
+      let qh = 0, qt = 0;
+      for (let i = 0; i < N; i++) if (gLon[i]){ d[i] = 0; q[qt++] = i; }
+      while (qh < qt){ const c0 = q[qh++], cx = c0 % W, cy = (c0 - cx) / W;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){
+          if (!dx && !dy) continue;
+          const nx = cx+dx, ny = cy+dy; if (nx<0||ny<0||nx>=W||ny>=H) continue;
+          const ni = ny*W+nx; if (d[ni] >= 0) continue; d[ni] = d[c0]+1; q[qt++] = ni; } }
+      for (let i = 0; i < N; i++){ if (gLon[i] || _navGrid[i]) continue; datTrong++; if (d[i] >= 0 && d[i] <= R) coChe++; }
+    }
+
     // ── 2. tỉ lệ HÀNH LANG: ô thoáng mà chỉ có ≤2 hàng xóm trực giao thoáng ───
     // Đây là chỗ tách "cánh đồng" khỏi "ống nước". RO nhiều đồng, hành lang thì không.
     let hanhLang = 0;
@@ -139,6 +171,8 @@ function doTrongTrang(){
       matDo: +(1000 * diem.length / Math.max(oThoang, 1)).toFixed(2),
       soLoai: loai.length, loaiTen: loai,
       tiLeHanhLang: +(100 * hanhLang / Math.max(oThoang, 1)).toFixed(1),
+      tiLeChe: +(100 * coChe / Math.max(datTrong, 1)).toFixed(1),
+      soTru: (typeof decor !== 'undefined' ? decor.filter(d => d.tru).length : 0),
       duongKinhPx: Math.round(duongKinh * NAV_CELL),
       keNhauPx: Math.round(trungVi * NAV_CELL),
       capXa: capXa ? [capXa[0].ten || capXa[0].k, capXa[1].ten || capXa[1].k] : null,
@@ -163,6 +197,7 @@ function doTrongTrang(){
   if (loi.length){ console.error('LỖI TRANG:', loi.join(' | ')); process.exit(1); }
 
   const M = r.o, ids = Object.keys(M);
+  const zoomTxt = 'GẦN 1,75× · VỪA 1,45× · XA 1,0×';
   const num = k => ids.map(i => M[i][k]);
   const tb = k => (num(k).reduce((a, x) => a + x, 0) / ids.length).toFixed(1);
 
@@ -172,13 +207,13 @@ function doTrongTrang(){
   s += `> nên số ở đây là thứ game THỰC THI, không phải một mô hình riêng.\n`;
   s += `> Đây là **mốc so** cho bước 3 của \`docs/KE_HOACH_DO_MAP.md\`.\n\n`;
   s += `## Bảng số\n\n`;
-  s += `| Map | Cấp | Đi được | Điểm nội dung | Mật độ | Loài | Hành lang | Đường kính | Điểm kề | Có vòng |\n`;
-  s += `|---|--:|--:|--:|--:|--:|--:|--:|--:|:-:|\n`;
+  s += `| Map | Cấp | Đi được | Điểm | Mật độ | Loài | **Vật che** | Trụ | Đường kính | Điểm kề |\n`;
+  s += `|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|\n`;
   for (const i of ids){
     const m = M[i];
-    s += `| **${m.ten}**<br>\`${i}\` | ${m.min} | ${m.tiLeThoang}% | ${m.soDiem} | ${m.matDo} | ${m.soLoai} | ${m.tiLeHanhLang}% | ${m.duongKinhPx}px | ${m.keNhauPx}px | ${m.coVong === null ? '—' : m.coVong ? '✅' : '❌'} |\n`;
+    s += `| **${m.ten}**<br>\`${i}\` | ${m.min} | ${m.tiLeThoang}% | ${m.soDiem} | ${m.matDo} | ${m.soLoai} | **${m.tiLeChe}%** | ${m.soTru} | ${m.duongKinhPx}px | ${m.keNhauPx}px |\n`;
   }
-  s += `\n**Trung bình:** đi được ${tb('tiLeThoang')}% · mật độ ${tb('matDo')} · loài ${tb('soLoai')} · hành lang ${tb('tiLeHanhLang')}% · đường kính ${tb('duongKinhPx')}px · điểm kề ${tb('keNhauPx')}px\n\n`;
+  s += `\n**Trung bình:** đi được ${tb('tiLeThoang')}% · mật độ ${tb('matDo')} · loài ${tb('soLoai')} · **vật che ${tb('tiLeChe')}%** · đường kính ${tb('duongKinhPx')}px · điểm kề ${tb('keNhauPx')}px\n\n`;
 
   s += `## Từng cột nói gì\n\n`;
   s += `| Cột | Nghĩa | Đọc thế nào |\n|---|---|---|\n`;
@@ -186,7 +221,10 @@ function doTrongTrang(){
   s += `| **Điểm nội dung** | bãi quái + NPC + thảo dược + boss + cổng | thứ người chơi thật sự đi tới |\n`;
   s += `| **Mật độ** | điểm nội dung trên 1000 ô đi được | thấp = map rỗng, đọc ra là map to |\n`;
   s += `| **Loài** | số loài quái khác nhau trong \`packs\` | **đây là chỉ số đang tụt khi lên cấp** |\n`;
-  s += `| **Hành lang** | % ô thoáng chỉ có ≤2 hàng xóm trực giao thoáng | cao = ống nước · thấp = cánh đồng |\n`;
+  s += `| **Vật che** | % đất đi được có khối ≥${Math.round(0.40*132)}px trong tầm 120px | **đây là chỉ số chấm "có địa hình để đánh nhau"** |\n`;
+  s += `| **Trụ** | số trụ đá đặt có chủ ý quanh bãi quái & khoảng trống | 0 = map chưa có địa hình cỡ trận đánh |\n`;
+  s += `\n> **Zoom:** camera phóng ${zoomTxt} (Cài Đặt · Tầm nhìn). Ở mức VỪA, một khung hình 1920×1080\n`;
+  s += `> chỉ chứa ${Math.round(1920/1.45)}×${Math.round(1080/1.45)} thế giới — cả map bằng ~${((2600*1900)/((1920/1.45)*(1080/1.45))).toFixed(1)} màn hình thay vì 2,4.\n`;
   s += `| **Đường kính** | quãng đi bộ xa nhất giữa hai điểm nội dung | thời gian đi bộ tệ nhất |\n`;
   s += `| **Điểm kề** | trung vị quãng từ một điểm tới điểm gần nó nhất | nhịp giữa hai lần đánh |\n`;
   s += `| **Có vòng** | bịt đường ngắn nhất rồi vẫn tới được? | ✅ = đi về không phải lộn lại đường cũ |\n`;

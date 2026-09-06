@@ -12,6 +12,29 @@ const ctx = canvas.getContext('2d');
 const miniCvs = document.getElementById('minimap');
 const miniCtx = miniCvs ? miniCvs.getContext('2d') : null;
 let W = 0, H = 0;
+// ═══ ZOOM — BAO NHIÊU THẾ GIỚI LỌT TRONG MỘT KHUNG HÌNH ══════════════════════
+// Trước bản này camera KHÔNG có zoom: 1px thế giới = 1px màn hình. Đo ra trên màn 1920×1080
+// người chơi thấy 42% diện tích map trong MỘT khung hình — cả bản đồ chỉ bằng 2,4 màn hình.
+// Đặt ngã rẽ ở đâu thì cả hai nhánh cũng nằm gọn trong tầm mắt, nên nó không phải một lựa chọn,
+// chỉ là một cái hình. Đó là lý do "nhiều đường đi" không cảm nhận được dù bố cục có nhánh.
+//
+// Đã thử cách khác trước: phủ một lớp tối ngoài tầm nhìn. Bỏ — mảng tối đánh nhau với art sáng
+// của Axie, nhìn ra là một cái mặt nạ chứ không ra một thế giới. Zoom đạt cùng mục đích mà
+// không đụng vào màu: map không to ra, nhưng mỗi khung hình chứa ít thế giới hơn.
+//
+// W/H vẫn là cỡ MÀN HÌNH (điểm ảnh CSS) — mọi mã HUD giữ nguyên. VW/VH là cỡ THẾ GIỚI lọt
+// trong khung: mọi phép cắt bỏ ngoài màn, kẹp camera và đổi toạ độ chuột phải dùng VW/VH.
+//
+// ⚠ ZOOM_CHON là `let` RIÊNG chứ không đọc thẳng SETTINGS. resize() chạy ngay lúc nạp tệp
+// (dòng ~60) trong khi SETTINGS khai bằng `const` mãi dòng ~7600 — chạm vào nó lúc đó là rơi
+// vào vùng chết của const, và `typeof` KHÔNG cứu được (typeof trên const chưa khởi tạo vẫn ném
+// ReferenceError). Đã dính đúng bẫy này một lần, lỗi báo ra lại là tên một hằng khác hẳn ở tận
+// dưới. Xem CLAUDE.md · vùng chết của const.
+const ZOOM_MUC = { gan: 1.75, vua: 1.45, xa: 1.0 };
+let ZOOM_CHON = 'vua';
+let VW = 0, VH = 0;
+function zoomNow(){ return ZOOM_MUC[ZOOM_CHON] || ZOOM_MUC.vua; }
+function capNhatTamNhin(){ const z = zoomNow(); VW = W / z; VH = H / z; }
 // ── Độ phân giải vẽ ──────────────────────────────────────────────────────────
 // Đòn bẩy fill-rate lớn nhất còn lại, và là đòn duy nhất chắc chắn đạt 60 FPS trên MỌI máy.
 // Đo trên máy dựng game (KHÔNG có card đồ hoạ, SwiftShader ~634 triệu điểm ảnh/giây), cảnh 60
@@ -48,6 +71,7 @@ function resize(){
   // TẦM NHÌN (60% là mất 40% bề ngang thế giới) — người máy yếu tự nhiên nhìn được ít hơn người
   // máy khoẻ. Đó là thay đổi lối chơi, không phải thay đổi đồ hoạ.
   W = window.innerWidth; H = window.innerHeight;
+  capNhatTamNhin();   // VW/VH suy từ W/H và mức zoom
   DPRF = Math.min(2, window.devicePixelRatio || 1);   // đọc lại: kéo cửa sổ sang màn khác là đổi
   canvas.width  = Math.round(W * RES * DPRF);
   canvas.height = Math.round(H * RES * DPRF);
@@ -1781,7 +1805,7 @@ function drawObstacleRim(){
   const md = MAPS[curMap] || {};
   ctx.save();
   for (const pt of _rimPts){
-    if (pt.x < camera.x - 60 || pt.x > camera.x + W + 60 || pt.y < camera.y - 60 || pt.y > camera.y + H + 60) continue;
+    if (pt.x < camera.x - 60 || pt.x > camera.x + VW + 60 || pt.y < camera.y - 60 || pt.y > camera.y + VH + 60) continue;
     const S = 9 * pt.s;
     ctx.globalAlpha = 0.30;                                   // bóng đổ mềm dưới chân
     ctx.fillStyle = '#000';
@@ -1807,7 +1831,152 @@ function rebuildDecorObs(){
   navInvalidate();   // cây vừa đổi chỗ ⇒ lưới tìm đường cũ không còn đúng
   decorObs = decor.map(d => d.type === 'tree'
     ? { x:d.x, y:d.y, rx:10 + 8*d.s, ry:7 + 5*d.s }     // gốc cây: dẹt theo phối cảnh nhìn xuống
-    : { x:d.x, y:d.y, rx:13*d.s,     ry:8*d.s });        // tảng đá
+    : { x:d.x, y:d.y, rx:13*d.s,     ry:8*d.s });        // tảng đá (và trụ đá — cùng công thức, khác cỡ)
+}
+
+// ═══ TRỤ ĐÁ — ĐỊA HÌNH CỠ CHIẾN ĐẤU ══════════════════════════════════════════
+// Đo trước khi làm (tools/do_map.js): 84% khối trong MAP_OBSTACLES có cạnh ngắn >120px, và tỉ lệ
+// "hành lang" cao nhất trong 8 map là 2,2%. Nghĩa là vật cản đang ở CỠ BẢN ĐỒ — tường phải đi
+// vòng — chứ không ở CỠ TRẬN ĐÁNH. Còn cây/đá thì ngược lại: đường kính 30-44px, tức là sỏi.
+//
+// Tệ hơn: bộ lọc "chừa trống" ở buildWorld() quét sạch decor trong bán kính (bãi+70)≈160px quanh
+// MỌI bãi quái — đúng chỗ đánh nhau thì đúng chỗ không có gì. Địa hình không thiếu, nó bị dọn đi.
+//
+// Trụ đá sửa đúng chỗ đó: khối cỡ ~0,6 lần chiều cao nhân vật, đặt CÓ CHỦ Ý thành vành quanh bãi
+// quái và thành rào ngắn giữa hai bãi. Ở cỡ này thì kite được (chạy vòng, quái phải đi vòng theo),
+// chắn được đạn, mà vẫn không cản đường vì khe giữa hai trụ rộng hơn người.
+//
+// Đặt theo HẠT cố định từ tên map + số thứ tự bãi, không phải Math.random: bố cục một bãi phải
+// giống nhau mọi lần vào, nếu không thì không ai học được địa hình — mà học được địa hình mới là
+// chỗ địa hình có nghĩa. (Cây/đá vẫn rải ngẫu nhiên như cũ: chúng là trang trí, không phải bố cục.)
+const TRU_BK   = 0.30 * NV_CAO;   // bán kính cản một trụ ≈ 40px ⇒ rộng ≈ 79px
+const TRU_HO   = 0.85 * NV_CAO;   // khe hở giữa hai trụ kề ≈ 112px — lọt người, nhưng phải lách
+const TRU_VANH  = [1.30, 2.35];   // vành TRONG, tính theo bán kính bãi quái — chỗ kite
+const TRU_VANH2 = [2.90, 4.10];   // vành NGOÀI — chỗ chắn tầm nhìn khi mới tới bãi
+const TRU_MOI_BAI = [4, 6];       // số trụ vành trong mỗi bãi
+const TRU_NGOAI   = [3, 5];       // số trụ vành ngoài (CUNG, không phải vòng — phải chừa hướng thoáng)
+const TRU_RAO     = 3;            // số trụ mỗi rào giữa hai bãi
+const TRU_GO      = [12, 34];     // số gò đá — map càng TRỐNG thì càng nhiều gò. Ashen Steppe
+                                  // đo ra 90,8% đi được với đúng 4 khối tĩnh: một con số cố định
+                                  // sẽ phủ đủ cho map chật mà bỏ trắng map trống.
+const TRU_GO_N    = [3, 5];       // số trụ mỗi gò
+function _bamChuoi(s){
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function _hatRng(hat){            // xorshift32 — nhỏ, đủ tản, và LẶP LẠI ĐƯỢC
+  let x = hat >>> 0 || 1;
+  return () => { x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; return x / 4294967296; };
+}
+// Một trụ chỉ được đặt khi: không đè vật cản tĩnh, không chạm bất kỳ vùng cấm nào trong `tranh`
+// (điểm nội dung + LÒNG mọi bãi quái), và cách trụ đã đặt ít nhất một khe người lách qua.
+function _datTru(ra, x, y, tranh){
+  if (x < 80 || y < 80 || x > MAP.w - 80 || y > MAP.h - 80) return false;
+  if (inObstacle(curMap, x, y, TRU_BK + 8)) return false;
+  for (const c of tranh) if (dist(x, y, c.x, c.y) < c.r) return false;
+  // Khe giữa hai trụ = TRU_HO*0.8 ≈ 90px: rộng gấp hơn hai lần bán kính người, nên vẫn lách
+  // qua thoải mái, mà đủ hẹp để nhét được nhiều trụ hơn — thưa quá thì không thành địa hình.
+  for (const t of ra) if (dist(x, y, t.x, t.y) < 2 * TRU_BK + TRU_HO * 0.8) return false;
+  return true;
+}
+function raiTruDa(){
+  const md = MAPS[curMap];
+  if (!md || md.dungeon || !md.packs || !md.packs.length) return 0;
+  const rng = _hatRng(_bamChuoi('tru:' + curMap));
+  // Điểm nội dung KHÔNG phải bãi quái thì trụ phải tránh hẳn — cổng, NPC, thảo dược, boss, điểm thả.
+  const tranh = [];
+  if (md.spawn) tranh.push({ x:md.spawn.x, y:md.spawn.y, r:170 });
+  for (const n of NPCS) if (n.map === curMap) tranh.push({ x:n.x, y:n.y, r:170 });
+  for (const h of (HERB_SPOTS[curMap] || [])) tranh.push({ x:h.x, y:h.y, r:90 });
+  for (const g of GATES) if (g.map === curMap) tranh.push({ x:g.x, y:g.y, r:170 });
+  const bd = BOSS_DEFS[curMap];
+  if (bd){
+    for (const tv of (bd.thuve || [])) tranh.push({ x:tv.x*MAP.w, y:tv.y*MAP.h, r:210 });
+    if (bd.tranai) tranh.push({ x:bd.tranai.x*MAP.w, y:bd.tranai.y*MAP.h, r:250 });
+  }
+  if (md.spring && typeof SPRING !== 'undefined') tranh.push({ x:SPRING.x, y:SPRING.y, r:160 });
+  // LÒNG BÃI QUÁI là vùng cấm CHUNG, không riêng vành của chính bãi đó. Bản đầu chỉ chặn ở vành
+  // (qua banKinhCam) nên rào giữa hai bãi vẫn rơi được vào lòng một bãi THỨ BA — test_obstacles
+  // bắt được ở Petalshade Isle. Bán kính 104 > ngưỡng 90 của bài kiểm, và < vành trong 1,30×90=117.
+  for (const q of md.packs) tranh.push({ x:q.x, y:q.y, r: Math.max(q.r || 90, 90) + 14 });
+
+  const tru = [];
+  // ── 1. Vành quanh từng bãi: đây là "địa hình để diệt quái" ──
+  md.packs.forEach((q, i) => {
+    const bk = q.r || 90;
+    const n = TRU_MOI_BAI[0] + Math.floor(rng() * (TRU_MOI_BAI[1] - TRU_MOI_BAI[0] + 1));
+    const goc0 = rng() * Math.PI * 2;
+    for (let k = 0; k < n; k++){
+      // Góc rải đều rồi lệch nhẹ: đều tăm tắp thì đọc ra là hàng rào nhân tạo, lệch quá thì dồn cục.
+      const a = goc0 + (k / n) * Math.PI * 2 + (rng() - 0.5) * (Math.PI / n) * 0.7;
+      const r = bk * (TRU_VANH[0] + rng() * (TRU_VANH[1] - TRU_VANH[0]));
+      const x = q.x + Math.cos(a) * r, y = q.y + Math.sin(a) * r;
+      if (_datTru(tru, x, y, tranh))
+        tru.push({ type:'rock', tru:true, x, y, s: TRU_BK / 13 * (0.85 + rng() * 0.3) });
+    }
+    // Vành NGOÀI là một CUNG chứ không phải vòng tròn: bọc kín bãi thì thành cái chuồng, người
+    // chơi phải lách vào mới đánh được. Cung ~200° chừa lại một hướng thoáng để tiếp cận.
+    const n2 = TRU_NGOAI[0] + Math.floor(rng() * (TRU_NGOAI[1] - TRU_NGOAI[0] + 1));
+    const cung0 = rng() * Math.PI * 2, cungRong = Math.PI * 1.1;
+    for (let k = 0; k < n2; k++){
+      const a = cung0 + (k / Math.max(n2 - 1, 1)) * cungRong;
+      const r = bk * (TRU_VANH2[0] + rng() * (TRU_VANH2[1] - TRU_VANH2[0]));
+      const x = q.x + Math.cos(a) * r, y = q.y + Math.sin(a) * r;
+      if (_datTru(tru, x, y, tranh))
+        tru.push({ type:'rock', tru:true, x, y, s: TRU_BK / 13 * (0.85 + rng() * 0.35) });
+    }
+    // ── 2. Rào ngắn giữa bãi này và bãi kế: chỗ này mới sinh ra "phải chọn đường" ──
+    const kle = md.packs[(i + 1) % md.packs.length];
+    if (kle === q) return;
+    const d = dist(q.x, q.y, kle.x, kle.y);
+    if (d < 420 || d > 1500) return;   // quá gần thì rào bịt luôn bãi; quá xa thì rào chẳng chắn gì
+    const mx = (q.x + kle.x) / 2, my = (q.y + kle.y) / 2;
+    const a = Math.atan2(kle.y - q.y, kle.x - q.x) + Math.PI / 2;   // vuông góc với tuyến nối
+    const lech = (rng() - 0.5) * 160;
+    for (let k = 0; k < TRU_RAO; k++){
+      const t = (k - (TRU_RAO - 1) / 2) * (2 * TRU_BK + TRU_HO);
+      const x = mx + Math.cos(a) * (t + lech), y = my + Math.sin(a) * (t + lech);
+      if (_datTru(tru, x, y, tranh))
+        tru.push({ type:'rock', tru:true, x, y, s: TRU_BK / 13 * (0.9 + rng() * 0.25) });
+    }
+  });
+  // ── 3. Gò đá ở khoảng trống ──
+  // Vành + rào mới chỉ phủ quanh bãi quái. Giữa các bãi vẫn là bãi trống mênh mông — mà đó chính
+  // là chỗ đo ra "không map nào có hình". Gò đá lấp vào đó: cụm 3-5 trụ, đặt ở nơi cách MỌI điểm
+  // nội dung ít nhất một tầm nhìn ngắn, để chúng chia không gian mà không chen vào nội dung.
+  const xaNoiDung = (x, y) => {
+    for (const c of tranh) if (dist(x, y, c.x, c.y) < c.r + 120) return false;
+    for (const q of md.packs) if (dist(x, y, q.x, q.y) < (q.r || 90) * 4.4) return false;
+    return true;
+  };
+  // Ước lượng độ trống bằng cách chấm 600 điểm — rẻ, và chỉ để chọn số gò nên không cần chính xác.
+  let trong = 0;
+  for (let i = 0; i < 600; i++){
+    const x = rng() * MAP.w, y = rng() * MAP.h;
+    if (!inObstacle(curMap, x, y, 16)) trong++;
+  }
+  const soGo = Math.round(TRU_GO[0] + (TRU_GO[1] - TRU_GO[0]) * Math.max(0, Math.min(1, (trong / 600 - 0.55) / 0.4)));
+  for (let g = 0; g < soGo; g++){
+    let cx = 0, cy = 0, ok = false;
+    for (let thu = 0; thu < 30 && !ok; thu++){
+      cx = 160 + rng() * (MAP.w - 320); cy = 160 + rng() * (MAP.h - 320);
+      ok = xaNoiDung(cx, cy) && !inObstacle(curMap, cx, cy, TRU_BK + 40);
+    }
+    if (!ok) continue;
+    const n = TRU_GO_N[0] + Math.floor(rng() * (TRU_GO_N[1] - TRU_GO_N[0] + 1));
+    const goc0 = rng() * Math.PI * 2;
+    for (let k = 0; k < n; k++){
+      const a = goc0 + (k / n) * Math.PI * 2 + (rng() - 0.5) * 0.6;
+      const r = (2 * TRU_BK + TRU_HO) * (0.55 + rng() * 0.35);
+      const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+      if (_datTru(tru, x, y, tranh))
+        tru.push({ type:'rock', tru:true, x, y, s: TRU_BK / 13 * (0.8 + rng() * 0.35) });
+    }
+  }
+
+  for (const t of tru) decor.push(t);
+  return tru.length;
 }
 // ═══ CÂY/ĐÁ KHÔNG ĐƯỢC BỊT ĐƯỜNG ═════════════════════════════════════════
 // Danh sách "chừa trống" ở buildWorld() giữ decor cách xa ĐIỂM nội dung, nhưng không nói gì về
@@ -2135,8 +2304,8 @@ function drawObstaclesDebug(){
   // bằng đúng hàm inObstacle() (bán kính 14, giống va chạm nhân vật thật) nên viền hiện ra
   // khớp chính xác vùng chặn thật, dễ soi để hiệu chỉnh theo art hơn 1 khối mờ lớn.
   const TILE = 32;
-  const x0 = Math.floor(camera.x/TILE)*TILE, x1 = camera.x + W + TILE;
-  const y0 = Math.floor(camera.y/TILE)*TILE, y1 = camera.y + H + TILE;
+  const x0 = Math.floor(camera.x/TILE)*TILE, x1 = camera.x + VW + TILE;
+  const y0 = Math.floor(camera.y/TILE)*TILE, y1 = camera.y + VH + TILE;
   ctx.save();
   ctx.fillStyle = 'rgba(232,74,74,.45)';
   ctx.strokeStyle = 'rgba(255,160,160,.9)';
@@ -2165,8 +2334,8 @@ function tranAiSeal(){
 }
 function drawTranAiSeal(){
   const s = tranAiSeal(); if (!s) return;
-  if (s.x < camera.x - TRANAI_SEAL_R - 80 || s.x > camera.x + W + TRANAI_SEAL_R + 80 ||
-      s.y < camera.y - TRANAI_SEAL_R - 80 || s.y > camera.y + H + TRANAI_SEAL_R + 80) return;
+  if (s.x < camera.x - TRANAI_SEAL_R - 80 || s.x > camera.x + VW + TRANAI_SEAL_R + 80 ||
+      s.y < camera.y - TRANAI_SEAL_R - 80 || s.y > camera.y + VH + TRANAI_SEAL_R + 80) return;
   const t = performance.now()/1000;
   ctx.save();
   // mặt phong ấn: quầng tím mờ phủ trong vòng, đậm dần ra mép
@@ -2210,8 +2379,8 @@ function drawTranAiSeal(){
   // Neo ĐÚNG lên vòng rồi nhấc cao 108px (qua khỏi đầu nhân vật cao ~60px): người chơi hoặc đứng ngay trên vòng (bị đẩy ra) hoặc ở
   // ngoài nó, nên chữ luôn nằm phía trên/phía trong, không đè lên nhân vật.
   let lx = s.x + Math.cos(_a)*TRANAI_SEAL_R, ly = s.y + Math.sin(_a)*TRANAI_SEAL_R - 108;
-  lx = clamp(lx, camera.x + 180, camera.x + W - 320);   // chừa lề trái/phải cho HUD
-  ly = clamp(ly, camera.y + 70, camera.y + H - 150);
+  lx = clamp(lx, camera.x + 180, camera.x + VW - 320);   // chừa lề trái/phải cho HUD
+  ly = clamp(ly, camera.y + 70, camera.y + VH - 150);
   ctx.font = 'bold 15px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
   ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.lineWidth = 4;
   const txt = `⛨ PHONG ẤN NĂM TRỤ · còn ${s.con}/${s.tong} Trụ Khóa`;
@@ -3831,7 +4000,7 @@ function drawWaterFx(){
   ctx.save();
   for (const z of zs){
     const zx = z.fx*MAP.w, zy = z.fy*MAP.h, zrx = z.frx*MAP.w, zry = z.fry*MAP.h;
-    if (zx + zrx < camera.x || zx - zrx > camera.x+W || zy + zry < camera.y || zy - zry > camera.y+H) continue;
+    if (zx + zrx < camera.x || zx - zrx > camera.x+VW || zy + zry < camera.y || zy - zry > camera.y+VH) continue;
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.beginPath(); ctx.ellipse(zx, zy, zrx, zry, 0, 0, 7); ctx.fill();
     for (let i = 0; i < 3; i++){
@@ -5510,8 +5679,8 @@ let camera = { x:0, y:0 };
 let hitStop = 0;
 function snapCamera(){
   if (!player) return;
-  camera.x = clamp(player.x - W/2, 0, Math.max(0, MAP.w - W));
-  camera.y = clamp(player.y - H/2, 0, Math.max(0, MAP.h - H));
+  camera.x = clamp(player.x - VW/2, 0, Math.max(0, MAP.w - VW));
+  camera.y = clamp(player.y - VH/2, 0, Math.max(0, MAP.h - VH));
 }
 function lerpAng(a, b, t){ // nội suy góc theo đường ngắn nhất (tránh xoay ngược vòng)
   let d = (b - a) % (Math.PI*2);
@@ -7102,7 +7271,7 @@ function buildWorld(){
     decor.push({ type:'tree', x:rnd(60,MAP.w-60), y:rnd(60,MAP.h-60), s:rnd(0.7,1.5) });
   for (let i = 0; i < (md.rocks ?? 26); i++)
     decor.push({ type:'rock', x:rnd(60,MAP.w-60), y:rnd(60,MAP.h-60), s:rnd(0.6,1.4) });
-  for (let i = 0; i < 14; i++) mists.push({ x:rnd(0,W), y:rnd(0,H), r:rnd(120,300), v:rnd(4,14), a:rnd(0.04,0.1) });
+  for (let i = 0; i < 14; i++) mists.push({ x:rnd(0,VW), y:rnd(0,VH), r:rnd(120,300), v:rnd(4,14), a:rnd(0.04,0.1) });
   // giữ khu làng & suối trống
   if (md.village) decor = decor.filter(d => dist(d.x,d.y,NPC.x,NPC.y) > 160 && dist(d.x,d.y,SPRING.x,SPRING.y) > 120);
   // Thành: chừa trống quảng trường + 4 lối lát đá ra cổng — trước đây cây rải ngẫu nhiên mọc đè cả
@@ -7136,6 +7305,10 @@ function buildWorld(){
     // và không mọc chồng lên vật cản tĩnh (hồ, tường) — vẽ ra thì thành cây mọc giữa hồ
     decor = decor.filter(d => !inObstacle(curMap, d.x, d.y, 4));
   }
+  // Trụ đá đặt SAU bộ lọc "chừa trống" — chúng là bố cục có chủ ý, không phải trang trí rơi
+  // nhầm chỗ, nên không được để bộ lọc đó quét đi. decorUnblock() bên dưới vẫn là lưới an toàn:
+  // trụ nào bịt mất lối đi bắt buộc thì vẫn bị dọn như mọi decor khác.
+  raiTruDa();
   rebuildDecorObs();
   decorUnblock();  // và nếu vẫn bịt mất một lối đi thì dọn đúng mấy gốc cây đang chắn
   spawnAmbients(); // hạt môi trường + cỏ mặt đất theo chủ đề bản đồ
@@ -7387,7 +7560,7 @@ function drawBossTele(m){
     // ĐẢO NGƯỢC: tô đỏ CẢ SÂN rồi khoét một lỗ an toàn. Dùng quy tắc evenodd nên chỉ một
     // đường path, không cần lớp vẽ riêng.
     ctx.beginPath();
-    ctx.rect(camera.x - 40, camera.y - 40, W + 80, H + 80);
+    ctx.rect(camera.x - 40, camera.y - 40, VW + 80, VH + 80);
     ctx.arc(t.sx, t.sy, mv.r, 0, Math.PI*2);
     ctx.fill('evenodd');
     ctx.globalAlpha = 0.85;
@@ -7429,13 +7602,16 @@ function drawBossTele(m){
 // shake: 0 TẮT · 1 NHẸ (mặc định) · 2 ĐẦY. Trước đây là boolean và mặc định `false` để chống
 // chóng mặt — nhưng bật/tắt là quá thô, và hậu quả là TOÀN BỘ 12 chỗ đặt shakeT/shakeMag trong
 // game không ai nhìn thấy. Diablo luôn rung, chỉ là rung rất khẽ và CÓ HƯỚNG.
-const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto', dmgNum:true },
+const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto', dmgNum:true, zoom:'vua' },
   (()=>{ try { return JSON.parse(localStorage.getItem('vlcm_settings') || '{}'); } catch { return {}; } })());
 // Save cũ lưu `shake` là boolean. Không di trú thì Object.assign ghi đè `false` lên mặc định
 // mới và người chơi cũ mắc kẹt ở mức TẮT vĩnh viễn — mà họ chưa từng chọn tắt, đó chỉ là
 // mặc định cũ. `true` (đã tự bật) thì cho lên ĐẦY.
 if (typeof SETTINGS.shake === 'boolean') SETTINGS.shake = SETTINGS.shake ? 2 : 1;
 SETTINGS.shake = clamp(SETTINGS.shake | 0, 0, 2);
+// Bơm mức zoom đã lưu vào biến riêng (xem ghi chú ở ZOOM_CHON) rồi tính lại VW/VH.
+if (ZOOM_MUC[SETTINGS.zoom]) ZOOM_CHON = SETTINGS.zoom;
+capNhatTamNhin();
 function saveSettings(){ try { localStorage.setItem('vlcm_settings', JSON.stringify(SETTINGS)); } catch { /* best-effort — bỏ qua nếu lỗi */ } }
 
 // ---------- Âm thanh kiếm hiệp: BGM theo map + SFX ----------
@@ -7590,14 +7766,14 @@ window.addEventListener('keydown', e => { if (e.key === 'Alt'){ window._lootShow
 window.addEventListener('keyup',   e => { if (e.key === 'Alt') window._lootShowAll = false; });
 window.addEventListener('blur',    () => { window._lootShowAll = false; }); // Alt+Tab: đừng kẹt bật
 canvas.addEventListener('mousemove', e=>{
-  mouseWorld.x = e.clientX + camera.x; mouseWorld.y = e.clientY + camera.y;
+  mouseWorld.x = e.clientX / zoomNow() + camera.x; mouseWorld.y = e.clientY / zoomNow() + camera.y;
   chuotDaRe = true;
 });
 canvas.addEventListener('mousedown', e=>{
   if (!player || dead) return;
   if (e.button !== 0) return; // chuột phải dành cho click-to-move (xem contextmenu bên dưới)
   closePanels(); // click the world = close any open window
-  mouseWorld.x = e.clientX + camera.x; mouseWorld.y = e.clientY + camera.y;
+  mouseWorld.x = e.clientX / zoomNow() + camera.x; mouseWorld.y = e.clientY / zoomNow() + camera.y;
   chuotDaRe = true;
   const npcHit = npcAt(mouseWorld.x, mouseWorld.y);
   if (npcHit){ walkToNpc(npcHit); return; } // bấm trúng NPC: tự đi tới + tự mở lời thoại, không cần bấm E
@@ -7611,7 +7787,7 @@ canvas.addEventListener('contextmenu', e=>{
   e.preventDefault();
   if (!player || dead) return;
   closePanels();
-  const wx = e.clientX + camera.x, wy = e.clientY + camera.y;
+  const wx = e.clientX / zoomNow() + camera.x, wy = e.clientY / zoomNow() + camera.y;
   mouseWorld.x = wx; mouseWorld.y = wy; chuotDaRe = true;   // chuột phải cũng là một lần chỉ chỗ
   const npcHit = npcAt(wx, wy);
   if (npcHit){ walkToNpc(npcHit); return; }
@@ -7848,7 +8024,7 @@ function drawGroundLoot(now){
   const alt = !!window._lootShowAll;
   const labels = [];
   for (const g of groundLoot){
-    if (g.x < camera.x - 60 || g.x > camera.x + W + 60 || g.y < camera.y - 90 || g.y > camera.y + H + 60) continue;
+    if (g.x < camera.x - 60 || g.x > camera.x + VW + 60 || g.y < camera.y - 90 || g.y > camera.y + VH + 60) continue;
     const rar = lootRar(g), col = lootColor(g);
     const blink = g.t < LOOT_BLINK ? (0.45 + 0.55 * Math.abs(Math.sin(now / 170))) : 1;
     const bob = g.z > 0 ? 0 : Math.sin(now / 520 + g.wob) * 2.2;
@@ -9983,8 +10159,8 @@ function update(dt){
   updateHints(dt); // GDD Đợt 2 B3: Nhắc Việc thông minh
 
   // camera mềm: bám theo có gia tốc ease-out — đổi hướng không còn giật cứng
-  const _ctx = clamp(player.x - W/2, 0, Math.max(0, MAP.w - W));
-  const _cty = clamp(player.y - H/2, 0, Math.max(0, MAP.h - H));
+  const _ctx = clamp(player.x - VW/2, 0, Math.max(0, MAP.w - VW));
+  const _cty = clamp(player.y - VH/2, 0, Math.max(0, MAP.h - VH));
   const _cf = Math.min(1, dt*7.5);
   camera.x += (_ctx - camera.x) * _cf;
   camera.y += (_cty - camera.y) * _cf;
@@ -10160,6 +10336,9 @@ function render(){
     const _amp = shakeMag * _lv * _osc;
     ctx.translate(Math.cos(shakeDir) * _amp, Math.sin(shakeDir) * _amp);
   }
+  // Zoom nhân vào ĐÂY, ngay trước khi dời camera: mọi thứ bên dưới vẫn vẽ theo toạ độ THẾ GIỚI
+  // như cũ, không phải sửa một phép vẽ nào. HUD nằm sau ctx.restore() nên không bị phóng theo.
+  ctx.scale(zoomNow(), zoomNow());
   ctx.translate(-camera.x, -camera.y);
 
   // nền bản đồ vẽ tay — phủ toàn bộ thế giới, nằm dưới mọi decor/thực thể
@@ -10178,8 +10357,8 @@ function render(){
 
   // ground texture: faint brush patches
   ctx.globalAlpha = 0.05; ctx.fillStyle = md.patch;
-  for (let gx = Math.floor(camera.x/160)*160; gx < camera.x+W+160; gx += 160)
-    for (let gy = Math.floor(camera.y/160)*160; gy < camera.y+H+160; gy += 160){
+  for (let gx = Math.floor(camera.x/160)*160; gx < camera.x+VW+160; gx += 160)
+    for (let gy = Math.floor(camera.y/160)*160; gy < camera.y+VH+160; gy += 160){
       ctx.beginPath(); ctx.ellipse(gx+80, gy+80, 55, 30, (gx*7+gy*13)%3, 0, 7); ctx.fill();
     }
   ctx.globalAlpha = 1;
@@ -10193,7 +10372,7 @@ function render(){
     ctx.fillStyle = 'rgba(255,183,197,.55)';
     for (const d of decor){
       if (d.type !== 'tree') continue;
-      if (d.x < camera.x-60 || d.x > camera.x+W+60 || d.y < camera.y-60 || d.y > camera.y+H+60) continue;
+      if (d.x < camera.x-60 || d.x > camera.x+VW+60 || d.y < camera.y-60 || d.y > camera.y+VH+60) continue;
       for (let i = 0; i < 4; i++){
         const sd = Math.sin(d.x*0.37 + i*97.3)*24634.6; const f = sd - Math.floor(sd);
         ctx.beginPath();
@@ -10232,7 +10411,7 @@ function render(){
     if (m.dead || !(m.type === 'boss' || m.def.bossKind)) continue;
     const _hx = m.homeX ?? (m.zone ? m.zone.x : m.x), _hy = m.homeY ?? (m.zone ? m.zone.y : m.y);
     const _lr = m.def.bossKind ? 470 : 540;
-    if (_hx < camera.x - _lr || _hx > camera.x + W + _lr || _hy < camera.y - _lr || _hy > camera.y + H + _lr) continue;
+    if (_hx < camera.x - _lr || _hx > camera.x + VW + _lr || _hy < camera.y - _lr || _hy > camera.y + VH + _lr) continue;
     ctx.beginPath(); ctx.arc(_hx, _hy, _lr, 0, 7);
     ctx.strokeStyle = 'rgba(200,60,40,.30)'; ctx.setLineDash([14, 10]); ctx.lineWidth = 2.5; ctx.stroke(); ctx.setLineDash([]);
     drawCalligraphy('⚠ Lãnh Địa Trùm', _hx, _hy - _lr - 6, '#c05a4a', 13);
@@ -10257,7 +10436,7 @@ function render(){
   drawObstacleRim();   // hàng đá dọc mép vùng chặn — vẽ trước decor để cây/đá rải phủ lên tự nhiên
 
   // decor (behind entities)
-  const sortedDecor = decor.filter(d=>d.x>camera.x-80&&d.x<camera.x+W+80&&d.y>camera.y-120&&d.y<camera.y+H+80);
+  const sortedDecor = decor.filter(d=>d.x>camera.x-80&&d.x<camera.x+VW+80&&d.y>camera.y-120&&d.y<camera.y+VH+80);
   for (const d of sortedDecor){ if (d.type==='rock') drawRock(d); }
 
   // pickups (herbs) — bụi thuốc 5 lá + hoa, lấp lánh báo hái được; héo xám sau khi hái
@@ -10303,7 +10482,7 @@ function render(){
   const CULL_MARGIN = 220;
   const ents = [];
   for (const m of mobs){
-    if (m.x < camera.x-CULL_MARGIN || m.x > camera.x+W+CULL_MARGIN || m.y < camera.y-CULL_MARGIN || m.y > camera.y+H+CULL_MARGIN) continue;
+    if (m.x < camera.x-CULL_MARGIN || m.x > camera.x+VW+CULL_MARGIN || m.y < camera.y-CULL_MARGIN || m.y > camera.y+VH+CULL_MARGIN) continue;
     if (!m.dead) ents.push({ y:m.y, kind:'mob', m });
     else if (m.deadT > 0) ents.push({ y:m.y, kind:'deadmob', m }); // xác quái tan dần thành vệt mực loang
   }
@@ -20223,6 +20402,9 @@ function renderSettings(){
   p.innerHTML = moBang({ tieu:'Cài Đặt' }) + `
     <div class="set-row"><span>🎵 Nhạc nền</span>${slider('bgm', SETTINGS.bgm)}</div>
     <div class="set-row"><span>🔔 Hiệu ứng âm thanh</span>${slider('sfx', SETTINGS.sfx)}</div>
+    <div class="set-row"><span>🔭 Tầm nhìn <i>(kéo gần thì mỗi khung hình chứa ít thế giới hơn — map thấy rộng hơn)</i></span><span>${
+      [['gan','GẦN'],['vua','VỪA'],['xa','XA']].map(([v,t]) =>
+      `<button class="mini-btn ${SETTINGS.zoom === v ? '' : 'tat'}" onclick="setZoom('${v}')">${t}</button>`).join(' ')}</span></div>
     <div class="set-row"><span>🗺 Bản đồ thu nhỏ <i>(phím U)</i></span>${tog('minimap')}</div>
     <div class="set-row"><span>🏷 Tên quái vật</span>${tog('mobName')}</div>
     <div class="set-row"><span>💥 Số sát thương trên đầu quái</span>${tog('dmgNum')}</div>
@@ -20249,6 +20431,9 @@ function renderSettings(){
     <div style="font-size:11px;color:#9aa8d4;margin-top:8px;line-height:1.5">Âm thanh sẽ phát sau thao tác đầu tiên của bạn (quy định trình duyệt). Mọi cài đặt được lưu tự động.</div>`;
 }
 window.setShake = function(v){ SETTINGS.shake = clamp(v|0, 0, 2); saveSettings(); renderSettings(); };
+// Đổi zoom phải cập nhật VW/VH NGAY: camera kẹp theo chúng, để lệch một khung là giật một cái.
+window.setZoom = function(v){ SETTINGS.zoom = ZOOM_CHON = ZOOM_MUC[v] ? v : 'vua'; capNhatTamNhin(); navInvalidate();
+  saveSettings(); renderSettings(); };
 window.setGender = function(g){ if (!player) return; player.gender = (g === 'nu') ? 'nu' : 'nam'; saveGame(); renderSettings(); };
 window.setOpt = function(key, v, quiet){
   SETTINGS[key] = clamp(parseInt(v, 10) || 0, 0, 100);
@@ -22561,7 +22746,7 @@ function updateAmbients(dt){
     else if (k === 'mote'){ p.y -= 5*dt; p.x += Math.sin(t*0.7 + p.ph)*7*dt; }
     else { p.y += (10 + p.sp*12)*dt; p.x += Math.sin(t*1.2 + p.ph)*14*dt; } // petal/leaf: rơi + đu đưa
     // wrap quanh camera để hạt luôn phủ quanh người chơi
-    const L = camera.x - 160, R = camera.x + W + 160, T = camera.y - 160, B = camera.y + H + 160;
+    const L = camera.x - 160, R = camera.x + VW + 160, T = camera.y - 160, B = camera.y + VH + 160;
     if (p.x < L) p.x = R; else if (p.x > R) p.x = L;
     if (p.y < T) p.y = B; else if (p.y > B) p.y = T;
   }
@@ -22573,7 +22758,7 @@ function drawTufts(){
   ctx.lineWidth = 1.5;
   for (const g of tufts){
     // culling theo view (tọa độ thế giới)
-    if (g.x < camera.x-20 || g.x > camera.x+W+20 || g.y < camera.y-20 || g.y > camera.y+H+20) continue;
+    if (g.x < camera.x-20 || g.x > camera.x+VW+20 || g.y < camera.y-20 || g.y > camera.y+VH+20) continue;
     if (g.rock){
       ctx.fillStyle = patch + '28';
       ctx.beginPath(); ctx.ellipse(g.x, g.y, g.len*0.9, g.len*0.42, g.k, 0, Math.PI*2); ctx.fill();
@@ -22591,7 +22776,7 @@ function drawAmbients(){
   if (SETTINGS.lowFx || typeof camera === 'undefined') return;
   const t = performance.now()/1000;
   for (const p of ambients){
-    if (p.x < camera.x-20 || p.x > camera.x+W+20 || p.y < camera.y-20 || p.y > camera.y+H+20) continue;
+    if (p.x < camera.x-20 || p.x > camera.x+VW+20 || p.y < camera.y-20 || p.y > camera.y+VH+20) continue;
     if (p.kind === 'petal' || p.kind === 'leaf'){
       ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(t*1.5 + p.ph);
       ctx.fillStyle = p.color; ctx.globalAlpha = 0.75;
@@ -23054,7 +23239,7 @@ window.openBaoHap = function(t){
     window._dragBoxTier = null;
     if (t == null || !player || dead) return;
     e.preventDefault();
-    throwBaoHap(t, e.clientX + camera.x, e.clientY + camera.y);
+    throwBaoHap(t, e.clientX / zoomNow() + camera.x, e.clientY / zoomNow() + camera.y);
   });
   document.addEventListener('dragend', () => { window._dragBoxTier = null; });
 })();

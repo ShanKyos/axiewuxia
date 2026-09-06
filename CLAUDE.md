@@ -143,6 +143,68 @@ luôn lời hứa "máy chạy theo dữ liệu"** — nếu một khoá là đ�
 cuối thì cắm lại bảy phòng thật cũng chỉ là điền dữ liệu. `tools/reg.sh` đã sửa để chép
 cả tệp phụ trợ trong `tests/`, không chỉ `test_*.js`.
 
+### 📏 LUẬT MAP — rút từ số đo, không từ cảm giác
+
+Số đo hiện trạng: `docs/DO_MAP_HIEN_TRANG.md` (sinh bằng `tools/do_map.js`, **đừng sửa tay**).
+Bánh cóc: `tests/test_domap.js` — map chỉ được tốt lên, không được tệ đi.
+
+**Ba cỡ, ba công cụ. Đừng lẫn.**
+
+| Cỡ | Đơn vị | Công cụ | Chỉ số chấm |
+|---|---|---|---|
+| **Chiến đấu** | 40-120px | trụ đá (`raiTruDa`) | **vật che %** |
+| **Một màn hình** | ~1400px | ngã rẽ có giá, khe 60-140px | (chưa có chỉ số) |
+| **Bản đồ** | 2600×1900 | **zoom camera** hoặc phóng to map | số màn hình/map |
+
+**Camera có ZOOM** (`ZOOM_MUC`: GẦN 1,75× · VỪA 1,45× · XA 1,0×; mặc định VỪA).
+
+Trước đó không có: 1px thế giới = 1px màn hình, và trên màn 1920×1080 người chơi thấy **42%
+diện tích map** trong một khung hình — cả map chỉ bằng **2,4 màn hình**. Đặt ngã rẽ ở đâu thì
+cả hai nhánh cũng nằm gọn trong tầm mắt, nên nó không phải lựa chọn, chỉ là một cái hình. Ở mức
+VỪA, map thành **~5 màn hình** mà không tốn một file art nào.
+
+**Đã thử và BỎ: phủ lớp tối ngoài tầm nhìn.** Nó đạt cùng mục đích trên giấy, nhưng mảng tối
+đánh nhau với art sáng của Axie — nhìn ra là một cái mặt nạ chứ không ra một thế giới. Bài học
+chung: đừng chữa vấn đề *bố cục* bằng cách đè lên *màu*.
+
+**⚠ `W`/`H` là cỡ MÀN HÌNH · `VW`/`VH` là cỡ THẾ GIỚI lọt trong khung.** Mọi phép cắt bỏ ngoài
+màn, kẹp camera và đổi toạ độ chuột phải dùng `VW`/`VH` (= `W`/zoom). Dùng nhầm `W` thì quái
+biến mất ở mép màn hình, hoặc chuột trỏ lệch — hai lỗi này nhìn không ra là cùng một nguyên nhân.
+
+**⚠ `ZOOM_CHON` là `let` riêng, KHÔNG đọc thẳng `SETTINGS`.** `resize()` chạy lúc nạp tệp
+(dòng ~60) còn `SETTINGS` là `const` ở dòng ~7600 — chạm vào là rơi vùng chết của const, và
+`typeof` **không** cứu được (typeof trên const chưa khởi tạo vẫn ném). Đã dính đúng bẫy này, lỗi
+báo ra lại là tên một hằng khác hẳn ở tận dưới.
+
+**Vật cản phải đúng cỡ.** Trước đợt trụ đá: 84% khối trong `MAP_OBSTACLES` có cạnh ngắn >120px
+(tường phải đi vòng), còn cây/đá thì 30-44px (sỏi). Ở giữa — cỡ trận đánh — trống trơn. Tệ hơn:
+bộ lọc "chừa trống" ở `buildWorld()` quét sạch decor trong bán kính ≈160px quanh **mọi bãi quái**,
+tức đúng chỗ đánh nhau thì đúng chỗ không có gì. Địa hình không thiếu, nó **bị dọn đi**.
+
+**Luật đang có hiệu lực:**
+1. Trụ đá đặt theo **HẠT cố định** từ tên map, không phải `Math.random` — bố cục một bãi phải
+   giống nhau mọi lần vào, nếu không thì không ai học được địa hình, mà học được mới là chỗ địa
+   hình có nghĩa. (Cây/đá vẫn ngẫu nhiên: chúng là trang trí, không phải bố cục.)
+2. Khe giữa hai trụ ≥ `TRU_HO*0.8` ≈ 90px — lọt người, phải lách.
+3. Vành ngoài quanh bãi là **CUNG ~200°**, không phải vòng tròn: bọc kín thì thành cái chuồng.
+4. Lòng bãi quái phải trống (`bk*1.05`) — quái còn chỗ đứng, AUTO còn chỗ đánh.
+5. Zoom nhân vào phép biến hình **ngay trước khi dời camera** (`ctx.scale` rồi `ctx.translate`)
+   — mọi phép vẽ bên dưới giữ nguyên toạ độ thế giới, HUD nằm sau `ctx.restore()` nên không bị
+   phóng theo. Đừng phóng bằng cách sửa `W`/`H`: HUD sẽ to theo.
+6. Đổi zoom phải gọi `capNhatTamNhin()` **ngay**, không đợi khung sau — camera kẹp theo `VW/VH`,
+   lệch một khung là giật một cái.
+7. **Bài kiểm nào đổi toạ độ MÀN HÌNH ↔ THẾ GIỚI đều phải nhân zoom.** Đợt thêm zoom làm đỏ 4
+   bài cùng một nguyên nhân, mà triệu chứng thì trông khác hẳn nhau: chuột phải lệch đích ·
+   chiêu không rơi chỗ con trỏ · bấm minimap "chỉ đi được 30px" · ô đếm điểm ảnh trả về 0. Công
+   thức đúng: `screen = (world − camera) × zoom`, rồi mới tới tỉ lệ bộ đệm/CSS nếu đọc pixel.
+8. **Đừng chép cứng số đã có hàm.** `test_ngamchuot` chép `chanDy` = 13 (đúng hồi `NV_CAO` = 118);
+   nay là 19 và bài trượt ngưỡng đúng 0,06px. Đọc thẳng từ game.
+9. Ngưỡng trong `test_domap.js` phải **đo được**, không được đoán. (Bản đầu tôi đặt sàn "80% map
+   đi được" theo cảm tính; số thật là 60,7% và nó bắt vạ 5/8 map.)
+
+**Chưa làm, cố ý:** phóng to map (C2) và nối nhiều map nhỏ (C3) — xem `docs/KE_HOACH_DO_MAP.md`.
+Phóng to cả 8 map là nhân bản lần nữa, chỉ khác là nhân bản chỗ trống.
+
 ### Bốn tài liệu thiết kế — đọc theo thứ tự này
 1. `docs/CAU_TRUC_MAP.md` — đo map hiện tại, đối chiếu Ragnarok / Path of Exile
 2. `docs/DE_XUAT_MAP.md` — 10 hạng mục / 4 đợt, có C1 (từ khoá phòng) + C2 (máy sinh)

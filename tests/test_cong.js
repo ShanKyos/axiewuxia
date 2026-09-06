@@ -47,7 +47,10 @@ const URL = 'http://localhost:8871/index.html';
     })();
     // Ô đo = ĐÚNG cột trụ trái: rộng 34px (bằng bề rộng trụ), cao 96px (bằng thân trụ).
     const dem = () => new Promise(res => requestAnimationFrame(() => requestAnimationFrame(() => {
-      const cv = document.getElementById('game'), k = cv.width / cv.clientWidth;
+      // Thế giới → điểm ảnh bộ đệm đi qua HAI hệ số: zoom camera (ZOOM_MUC) rồi mới tới tỉ lệ
+      // bộ đệm/CSS. Bản đầu chỉ nhân k, nên khi camera có zoom thì ô đo vừa lệch chỗ vừa sai cỡ
+      // và đếm được 0 điểm ảnh — trông y như game vẽ sai.
+      const cv = document.getElementById('game'), k = (cv.width / cv.clientWidth) * zoomNow();
       const sx = Math.round((o.gx - o.ph - 17 - camera.x) * k);
       const sy = Math.round((o.gy - 96 - camera.y) * k);
       const w = Math.round(34 * k), h = Math.round(96 * k);

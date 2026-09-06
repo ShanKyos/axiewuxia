@@ -1,6 +1,16 @@
 # Kế hoạch phần ĐO MAP — dựng lại tầng bản đồ từ đầu
 
-> Trạng thái: **kế hoạch, chưa cài đặt.** Viết trước khi động vào code, theo yêu cầu.
+> Trạng thái: **bước 1 và 2 XONG · đợt A + C1 đã làm.** Bước 3-4 chưa.
+>
+> | Bước | Trạng thái |
+> |---|---|
+> | 1. Thước đo | ✅ `tools/do_map.js` · `tests/test_domap.js` · `docs/DO_MAP_HIEN_TRANG.md` |
+> | 2. Luật map | ✅ `CLAUDE.md` · mục LUẬT MAP |
+> | A. Địa hình cỡ chiến đấu | ✅ `raiTruDa()` — vật che 30,2% → 44,8% |
+> | C1. Thu tầm nhìn | ✅ **bằng ZOOM** (`ZOOM_MUC`) — map 2,4 → ~5 màn hình. Bản phủ lớp tối đã thử rồi bỏ: đánh nhau với art sáng của Axie |
+> | 3. Máy sinh địa hình | ⬜ |
+> | 4. Cắm lại phó bản | ⬜ |
+> | C2. Phóng to map · C3. Nối map nhỏ | ⬜ — cố ý hoãn, xem CLAUDE.md |
 > Bối cảnh: bảy map `pb_*` đã gỡ hẳn. Máy chạy phó bản còn nguyên và chạy theo dữ liệu.
 > Đọc trước: `CLAUDE.md` · CHẨN ĐOÁN GỐC · `docs/CAU_TRUC_MAP.md` · `docs/DE_XUAT_MAP.md`.
 

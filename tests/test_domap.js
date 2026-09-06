@@ -16,6 +16,9 @@ const SAN = {
   thoang:   55,      // % ô lưới đi được — hiện thấp nhất 60,7% (comoc). Sàn này ĐO ĐƯỢC chứ
                      // không phải đoán: bản đầu tôi đặt 80 theo cảm giác và nó bắt vạ 5/8 map.
 };
+// Vật che: chốt sau đợt trụ đá. Trung bình 30,2% → 44,8%, thấp nhất Ashen Steppe 21,6% (map
+// trống nhất, 84,9% đi được với 4 khối tĩnh). Sàn 18 để bắt trường hợp trụ đá ngừng được đặt.
+const SAN_CHE = 18;
 const TRAN = {
   duongKinh: 2600,   // px đi bộ giữa hai điểm xa nhau nhất — hiện cao nhất 2352
   keNhau:     700,   // px trung vị tới điểm gần nhất — nhịp giữa hai lần đánh
@@ -71,6 +74,25 @@ const TRAN = {
       for (const g of GATES.filter(g => g.map === id)) diem.push({ k:'cổng', ten:g.name, x:g.x, y:g.y });
 
       let thoang = 0; for (let i = 0; i < N; i++) if (!_navGrid[i]) thoang++;
+      // vật che: khối ĐỦ LỚN (≥0,40 lần chiều cao nhân vật) trong tầm 120px
+      const NHO = 0.40 * NV_CAO;
+      const lon = obstaclesOf(id).filter(o => {
+        const w = o.wd ? Math.min(o.wd, o.ht) : 2*Math.min(o.rx, o.ry); return w >= NHO; });
+      const gL = new Uint8Array(N);
+      for (let gy=0; gy<H; gy++) for (let gx=0; gx<W; gx++){
+        const x=gx*C+C/2, y=gy*C+C/2;
+        for (const o of lon){
+          if (o.wd){ const qx=Math.max(o.x,Math.min(x,o.x+o.wd)), qy=Math.max(o.y,Math.min(y,o.y+o.ht));
+                     if ((x-qx)**2+(y-qy)**2 < 256){ gL[gy*W+gx]=1; break; } }
+          else { const dx=(x-o.x)/(o.rx+16), dy=(y-o.y)/(o.ry+16); if (dx*dx+dy*dy<1){ gL[gy*W+gx]=1; break; } } } }
+      let che=0, trong=0;
+      { const R=Math.round(120/C), dd=new Int32Array(N).fill(-1), qq=new Int32Array(N); let a=0,z=0;
+        for (let i=0;i<N;i++) if (gL[i]){ dd[i]=0; qq[z++]=i; }
+        while(a<z){ const c0=qq[a++],cx=c0%W,cy=(c0-cx)/W;
+          for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy)continue;
+            const nx=cx+dx,ny=cy+dy; if(nx<0||ny<0||nx>=W||ny>=H)continue;
+            const ni=ny*W+nx; if(dd[ni]>=0)continue; dd[ni]=dd[c0]+1; qq[z++]=ni; } }
+        for(let i=0;i<N;i++){ if(gL[i]||_navGrid[i])continue; trong++; if(dd[i]>=0&&dd[i]<=R) che++; } }
       const oDiem = diem.map(d => oCua(d.x, d.y));
       let kinh = 0; const gan = []; const hong = [];
       for (let a = 0; a < oDiem.length; a++){
@@ -89,6 +111,8 @@ const TRAN = {
       o[id] = {
         min: M.min,
         soLoai: new Set((M.packs || []).map(q => q.mob)).size,
+        che: +(100*che/Math.max(trong,1)).toFixed(1),
+        soTru: decor.filter(d => d.tru).length,
         soDiem: diem.length,
         thoang: +(100 * thoang / N).toFixed(1),
         matDo: +(1000 * diem.length / Math.max(thoang, 1)).toFixed(2),
@@ -122,8 +146,11 @@ const TRAN = {
     if (m.keNhau > TRAN.keNhau) fail(`${id}: điểm kề ${m.keNhau}px (trần ${TRAN.keNhau}) — nhịp đánh thưa`);
     // Map không có bãi quái nào (thành) thì không xét số loài.
     if (m.soLoai > 0 && m.soLoai < SAN.loai) fail(`${id}: chỉ ${m.soLoai} loài (sàn ${SAN.loai})`);
+    // Chỉ map có bãi quái mới cần địa hình đánh nhau — thành thì không.
+    if (m.soLoai > 0 && m.che < SAN_CHE) fail(`${id}: vật che ${m.che}% (sàn ${SAN_CHE}%) — không có địa hình cỡ trận đánh`);
+    if (m.soLoai > 0 && m.soTru === 0) fail(`${id}: không đặt được trụ đá nào — raiTruDa() im`);
   }
-  if (!bad) pass(`${ids.length} map đều qua bánh cóc: loài ≥${SAN.loai} · mật độ ≥${SAN.matDo} · đi được ≥${SAN.thoang}% · kính ≤${TRAN.duongKinh}px`);
+  if (!bad) pass(`${ids.length} map đều qua bánh cóc: loài ≥${SAN.loai} · mật độ ≥${SAN.matDo} · đi được ≥${SAN.thoang}% · vật che ≥${SAN_CHE}% · kính ≤${TRAN.duongKinh}px`);
 
   // ── BÁNH CÓC THEO TỪNG MAP ────────────────────────────────────────────────
   // Đây mới là chỗ đo cái bệnh chính: số loài TỤT khi lên cấp (7 xuống 3). Hiện trạng đang
@@ -140,6 +167,7 @@ const TRAN = {
   // Thang cấp, in ra để nhìn thấy cái bệnh mỗi lần chạy chứ không phải mở tài liệu mới thấy.
   const thang = ids.filter(i => r[i].soLoai > 0).sort((a, c) => r[a].min - r[c].min);
   console.log('thang loài theo cấp: ' + thang.map(i => `${r[i].min}→${r[i].soLoai}`).join(' · '));
+  console.log('vật che theo cấp:   ' + thang.map(i => `${r[i].min}→${r[i].che}%`).join(' · '));
   console.log('errors:', JSON.stringify(errs));
   console.log(bad === 0 && errs.length === 0 ? 'PASS' : 'FAIL(' + bad + ')');
   process.exit(bad === 0 && errs.length === 0 ? 0 : 1);

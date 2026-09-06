@@ -42,8 +42,13 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   const r3 = await p.evaluate(async () => {
     const x0 = player.x, y0 = player.y;
     const rect = miniCvs.getBoundingClientRect();
+    // Bấm vào GÓC XA NHẤT so với chỗ đang đứng. Bản đầu bấm cứng ở 20%,20%: bài trước đó vừa
+    // cho nhân vật chạy tới gần đúng chỗ ấy, nên cú bấm này chỉ đi được 30px và bị bắt vạ oan —
+    // hỏng vì hai bài dính vào nhau, không phải vì minimap hỏng.
+    const fx = (player.x / MAP.w) < 0.5 ? 0.88 : 0.12;
+    const fy = (player.y / MAP.h) < 0.5 ? 0.88 : 0.12;
     miniCvs.dispatchEvent(new MouseEvent('click', {
-      clientX: Math.round(rect.left + rect.width*0.2), clientY: Math.round(rect.top + rect.height*0.2), bubbles: true }));
+      clientX: Math.round(rect.left + rect.width*fx), clientY: Math.round(rect.top + rect.height*fy), bubbles: true }));
     await new Promise(r => setTimeout(r, 1400));
     return { diChuyen: Math.round(Math.hypot(player.x - x0, player.y - y0)) };
   });

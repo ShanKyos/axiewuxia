@@ -11,7 +11,9 @@ const pass = m => console.log('PASS ' + m);
 
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  // Khung 1600×1000 chứ không phải 1280×900: có zoom rồi thì 600px thế giới = 870px màn hình,
+  // khung cũ không đủ chỗ để ngắm ra ngoài tầm 420 mà con trỏ vẫn nằm trong khung.
+  const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
   await page.goto('http://localhost:8853/index.html', { waitUntil: 'networkidle' });
@@ -25,8 +27,17 @@ const pass = m => console.log('PASS ' + m);
     player.hp = player.maxHp; player.qi = player.maxQi;
     mobs.length = 0; effects.length = 0;
     for (const k in player.cd) player.cd[k] = 0;
-    return { x: player.x, y: player.y, cx: camera.x, cy: camera.y };
+    // Đứng GIỮA MAP: đứng gần mép thì camera bị kẹp, nhân vật lệch hẳn sang một bên màn hình và
+    // lề trái còn lại không đủ để ngắm ra ngoài tầm chiêu.
+    player.x = 1300; player.y = 1250; snapCamera();
+    return { x: player.x, y: player.y, cx: camera.x, cy: camera.y, chan: chanDy() };
   });
+
+  // ĐỔI TOẠ ĐỘ THẾ GIỚI → ĐIỂM ẢNH MÀN HÌNH. Camera CÓ zoom (ZOOM_MUC), nên screen =
+  // (world − camera) × zoom. Bản đầu của bài này viết thẳng `p.x - p.cx + 260`, tức ngầm giả
+  // định zoom = 1; thêm zoom vào là cả bốn phép ngắm lệch đúng một hệ số và bài bắt vạ oan.
+  const ZOOM = await page.evaluate(() => zoomNow());
+  const mh = (wx, wy, cx, cy) => [(wx - cx) * ZOOM, (wy - cy) * ZOOM];
 
   // Chỗ tấm dán rơi xuống = tâm hiệu ứng atlasVfx vừa sinh ra.
   const noNo = () => page.evaluate(() => {
@@ -38,7 +49,7 @@ const pass = m => console.log('PASS ' + m);
   {
     const p = await dat();
     // đặt con trỏ lệch hẳn sang một bên, trong tầm 420 của Meteorite
-    const mx = p.x - p.cx + 260, my = p.y - p.cy - 120;
+    const [mx, my] = mh(p.x + 260, p.y - 120, p.cx, p.cy);
     await page.mouse.move(mx, my);
     await page.keyboard.press('2');
     await page.waitForTimeout(60);
@@ -59,14 +70,21 @@ const pass = m => console.log('PASS ' + m);
     // Ngắm sang TRÁI: nửa phải màn hình bị bảng Nhiệm Vụ (HTML) che, con trỏ ở trên đó thì
     // mousemove của canvas không nổ và mouseWorld đứng nguyên giá trị cũ — bài kiểm sẽ đo nhầm
     // lần ngắm trước chứ không phải lần này.
-    await page.mouse.move(p.x - p.cx - 600, p.y - p.cy);   // 600 > tam 420
+    // Khoảng cách ngắm đo TỪ LỀ MÀN HÌNH THẬT chứ không chép cứng 600: có zoom thì 600px thế
+    // giới thành 870px màn hình, con trỏ rơi ra ngoài khung và trình duyệt kẹp nó về mép — bài
+    // kiểm khi đó đo một điểm ngắm khác hẳn cái nó tưởng.
+    const dLe = Math.floor(((p.x - p.cx) * ZOOM - 40) / ZOOM);
+    const d = Math.min(dLe, 600);
+    await page.mouse.move(...mh(p.x - d, p.y, p.cx, p.cy));
     await page.keyboard.press('2');
     await page.waitForTimeout(60);
     const o = await noNo();
-    const xa = o ? Math.hypot(o.x - p.x, o.y - p.y) : -1;
-    console.log('2) ngoài tầm:', JSON.stringify({ tam, xa: Math.round(xa) }));
-    if (!o) fail('chỉ ra ngoài tầm thì chiêu câm hẳn — phải rơi ở mép tầm');
-    else if (Math.abs(xa - tam) > 25) fail(`chỉ ra 600px, chiêu rơi cách ${Math.round(xa)}px (tầm ${tam})`);
+    const xa = o ? Math.hypot(o.x - p.x, o.y - (p.y + p.chan)) : -1;
+    const muon = Math.min(d, tam);
+    console.log('2) ngoài tầm:', JSON.stringify({ tam, ngam: d, xa: Math.round(xa), muon }));
+    if (!(d > tam + 40)) fail(`khung quá hẹp: chỉ ngắm ra được ${d}px mà tầm đã ${tam}px — bài kiểm không đo được gì`);
+    else if (!o) fail('chỉ ra ngoài tầm thì chiêu câm hẳn — phải rơi ở mép tầm');
+    else if (Math.abs(xa - muon) > 25) fail(`chỉ ra ${d}px, chiêu rơi cách ${Math.round(xa)}px (tầm ${tam})`);
     else pass(`chỉ ra ngoài tầm thì rơi ở mép tầm: ${Math.round(xa)}px / ${tam}px`);
   }
 
@@ -79,11 +97,13 @@ const pass = m => console.log('PASS ' + m);
       const m = mobs[mobs.length - 1];
       return { x: Math.round(m.x), y: Math.round(m.y) };
     });
-    await page.mouse.move(q.x - p.cx + 55, q.y - p.cy + 40);   // lệch ~68px, trong BAN_HUT 90
+    await page.mouse.move(...mh(q.x + 55, q.y + 40, p.cx, p.cy));   // lệch ~68px, trong BAN_HUT 90
     await page.keyboard.press('2');
     await page.waitForTimeout(60);
     const o = await noNo();
-    const lech = o ? Math.hypot(o.x - q.x, o.y - q.y - 13) : 1e9;
+    // Lấy chanDy() TỪ GAME. Bản đầu chép cứng 13 — đúng hồi NV_CAO còn 118; nay là 132 nên
+    // chanDy ≈ 19, và bài kiểm trượt ngưỡng đúng 0,06px. Một nguồn sự thật, không chép số.
+    const lech = o ? Math.hypot(o.x - q.x, o.y - q.y - p.chan) : 1e9;
     console.log('3) hút vào quái:', JSON.stringify({ q, o, lech: Math.round(lech) }));
     if (lech > 8) fail(`ngắm lệch 68px thì chiêu không bám vào quái (còn cách ${Math.round(lech)}px)`);
     else pass('ngắm lệch vài chục pixel vẫn bám thẳng vào con quái');
@@ -103,7 +123,7 @@ const pass = m => console.log('PASS ' + m);
       return { gan: { x: Math.round(gan.x), y: Math.round(gan.y), hp: gan.hp },
                xa:  { x: Math.round(xa.x),  y: Math.round(xa.y),  hp: xa.hp } };
     });
-    await page.mouse.move(r.xa.x - p.cx, r.xa.y - p.cy);
+    await page.mouse.move(...mh(r.xa.x, r.xa.y, p.cx, p.cy));
     await page.keyboard.press('3');
     await page.waitForTimeout(120);
     const sau = await page.evaluate(() => {
@@ -121,14 +141,14 @@ const pass = m => console.log('PASS ' + m);
   // ── 5. chuột phải để đi cũng là một lần chỉ chỗ ─────────────────────────────
   {
     const p = await dat();
-    const mx = p.x - p.cx - 200, my = p.y - p.cy + 150;
+    const [mx, my] = mh(p.x - 200, p.y + 150, p.cx, p.cy);
     await page.mouse.click(mx, my, { button: 'right' });
     await page.waitForTimeout(50);
     const diTo = await page.evaluate(() => moveTarget && { x: Math.round(moveTarget.x), y: Math.round(moveTarget.y) });
     await page.keyboard.press('2');
     await page.waitForTimeout(60);
     const o = await noNo();
-    const lech = o ? Math.hypot(o.x - (p.x - 200), o.y - (p.y + 150)) : 1e9;
+    const lech = o ? Math.hypot(o.x - (p.x - 200), o.y - (p.y + 150 + p.chan)) : 1e9;
     console.log('5) chuột phải:', JSON.stringify({ diTo, o, lech: Math.round(lech) }));
     if (!diTo) fail('chuột phải không đặt được đích di chuyển');
     else if (lech > 20) fail(`chiêu không rơi ở chỗ vừa chuột phải (lệch ${Math.round(lech)}px)`);

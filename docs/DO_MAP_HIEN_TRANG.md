@@ -7,18 +7,18 @@
 
 ## Bảng số
 
-| Map | Cấp | Đi được | Điểm nội dung | Mật độ | Loài | Hành lang | Đường kính | Điểm kề | Có vòng |
-|---|--:|--:|--:|--:|--:|--:|--:|--:|:-:|
-| **Petalshade Isle**<br>`daohoa` | 1 | 85.7% | 25 | 3.34 | 7 | 2% | 1848px | 168px | ✅ |
-| **Lunaris City**<br>`tuongduong` | 1 | 49.2% | 13 | 3.03 | 0 | 0.3% | 1440px | 216px | ✅ |
-| **Petalshade Outskirts**<br>`ngoai` | 10 | 79.3% | 22 | 3.18 | 6 | 1.8% | 1848px | 264px | ✅ |
-| **Thornwood Reach**<br>`chungnam` | 20 | 73.7% | 12 | 1.87 | 4 | 1.5% | 1848px | 288px | ✅ |
-| **Hollow Roost**<br>`comoc` | 40 | 60.4% | 11 | 2.09 | 3 | 1.8% | 1728px | 384px | ✅ |
-| **Frostmire Vale**<br>`tuyettinh` | 60 | 62.1% | 12 | 2.22 | 3 | 2% | 1896px | 336px | ✅ |
-| **Ashen Steppe**<br>`mongco` | 80 | 90.6% | 11 | 1.39 | 3 | 1.1% | 1800px | 384px | ✅ |
-| **Stormgate Pass**<br>`nhanmon` | 100 | 63.5% | 12 | 2.17 | 3 | 1% | 2352px | 336px | ✅ |
+| Map | Cấp | Đi được | Điểm | Mật độ | Loài | **Vật che** | Trụ | Đường kính | Điểm kề |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| **Petalshade Isle**<br>`daohoa` | 1 | 79.7% | 25 | 3.6 | 7 | **38.9%** | 43 | 1848px | 192px |
+| **Lunaris City**<br>`tuongduong` | 1 | 49.1% | 13 | 3.03 | 0 | **29.6%** | 0 | 1440px | 216px |
+| **Petalshade Outskirts**<br>`ngoai` | 10 | 73.3% | 22 | 3.44 | 6 | **47.2%** | 44 | 1848px | 264px |
+| **Thornwood Reach**<br>`chungnam` | 20 | 69.3% | 12 | 1.99 | 4 | **50.8%** | 38 | 1848px | 288px |
+| **Hollow Roost**<br>`comoc` | 40 | 56.6% | 11 | 2.23 | 3 | **62.8%** | 32 | 1776px | 384px |
+| **Frostmire Vale**<br>`tuyettinh` | 60 | 57.5% | 12 | 2.39 | 3 | **59.1%** | 34 | 1896px | 336px |
+| **Ashen Steppe**<br>`mongco` | 80 | 85% | 11 | 1.48 | 3 | **21.8%** | 44 | 1800px | 384px |
+| **Stormgate Pass**<br>`nhanmon` | 100 | 59.4% | 12 | 2.32 | 3 | **49%** | 30 | 2352px | 336px |
 
-**Trung bình:** đi được 70.6% · mật độ 2.4 · loài 3.6 · hành lang 1.4% · đường kính 1845.0px · điểm kề 297.0px
+**Trung bình:** đi được 66.2% · mật độ 2.6 · loài 3.6 · **vật che 44.9%** · đường kính 1851.0px · điểm kề 300.0px
 
 ## Từng cột nói gì
 
@@ -28,7 +28,11 @@
 | **Điểm nội dung** | bãi quái + NPC + thảo dược + boss + cổng | thứ người chơi thật sự đi tới |
 | **Mật độ** | điểm nội dung trên 1000 ô đi được | thấp = map rỗng, đọc ra là map to |
 | **Loài** | số loài quái khác nhau trong `packs` | **đây là chỉ số đang tụt khi lên cấp** |
-| **Hành lang** | % ô thoáng chỉ có ≤2 hàng xóm trực giao thoáng | cao = ống nước · thấp = cánh đồng |
+| **Vật che** | % đất đi được có khối ≥53px trong tầm 120px | **đây là chỉ số chấm "có địa hình để đánh nhau"** |
+| **Trụ** | số trụ đá đặt có chủ ý quanh bãi quái & khoảng trống | 0 = map chưa có địa hình cỡ trận đánh |
+
+> **Zoom:** camera phóng GẦN 1,75× · VỪA 1,45× · XA 1,0× (Cài Đặt · Tầm nhìn). Ở mức VỪA, một khung hình 1920×1080
+> chỉ chứa 1324×745 thế giới — cả map bằng ~5.0 màn hình thay vì 2,4.
 | **Đường kính** | quãng đi bộ xa nhất giữa hai điểm nội dung | thời gian đi bộ tệ nhất |
 | **Điểm kề** | trung vị quãng từ một điểm tới điểm gần nó nhất | nhịp giữa hai lần đánh |
 | **Có vòng** | bịt đường ngắn nhất rồi vẫn tới được? | ✅ = đi về không phải lộn lại đường cũ |
@@ -39,22 +43,22 @@
 
 Số loài theo cấp: 1→**7** · 10→**6** · 20→**4** · 40→**3** · 60→**3** · 80→**3** · 100→**3**
 
-Từ `daohoa` (cấp 1) tới `nhanmon` (cấp 100): loài **7 → 3**, điểm nội dung **25 → 12**, mật độ **3.34 → 2.17** (-35%).
+Từ `daohoa` (cấp 1) tới `nhanmon` (cấp 100): loài **7 → 3**, điểm nội dung **25 → 12**, mật độ **3.6 → 2.32** (-36%).
 Người chơi càng chơi lâu càng nhận được ÍT hơn — đúng chiều ngược với mọi game cày.
 
 **2. Không map nào có HÌNH.**
 
-Tỉ lệ hành lang cao nhất trong 8 map là **2%**. Nghĩa là gần như toàn bộ diện tích đi được là bãi trống liền một khối: không phòng, không lối hẹp, không chỗ nào bắt phải chọn đường. Cột "Có vòng" toàn ✅ nhưng **không nói lên gì** — trên một bãi trống thì đi hướng nào cũng tới. Đây mới là chỗ khác Ragnarok và Path of Exile, không phải kích thước map.
+Tỉ lệ hành lang cao nhất trong 8 map là **4.5%**. Nghĩa là gần như toàn bộ diện tích đi được là bãi trống liền một khối: không phòng, không lối hẹp, không chỗ nào bắt phải chọn đường. Cột "Có vòng" toàn ✅ nhưng **không nói lên gì** — trên một bãi trống thì đi hướng nào cũng tới. Đây mới là chỗ khác Ragnarok và Path of Exile, không phải kích thước map.
 
-**3. Đường kính ~1845.0px trên khổ 2600×1900.**
+**3. Đường kính ~1851.0px trên khổ 2600×1900.**
 
 Tức là hai điểm xa nhau nhất gần bằng cả đường chéo map — nội dung bị rải ra tận bốn mép thay vì gom thành cụm. Cộng với mục 2 (không có hình), quãng đường đó là đi bộ suông.
 
 **4. Nhịp đánh thưa dần đúng lúc nội dung nghèo đi.**
 
-Quãng tới điểm gần nhất: 1→**168px** · 10→**264px** · 20→**288px** · 40→**384px** · 60→**336px** · 80→**384px** · 100→**336px**
+Quãng tới điểm gần nhất: 1→**192px** · 10→**264px** · 20→**288px** · 40→**384px** · 60→**336px** · 80→**384px** · 100→**336px**
 
-Từ `daohoa` tới `nhanmon`, quãng đi bộ giữa hai lần đánh tăng **168 → 336px** (+100%). Cộng dồn với mục 1: ít loài hơn, ít điểm hơn, mà lại phải đi xa hơn giữa hai lần đánh.
+Từ `daohoa` tới `nhanmon`, quãng đi bộ giữa hai lần đánh tăng **192 → 336px** (+75%). Cộng dồn với mục 1: ít loài hơn, ít điểm hơn, mà lại phải đi xa hơn giữa hai lần đánh.
 
 
 ## Chi tiết từng map
@@ -82,7 +86,7 @@ Từ `daohoa` tới `nhanmon`, quãng đi bộ giữa hai lần đánh tăng **1
 ### Hollow Roost `comoc` — cấp 40+ · pk
 
 - Loài (3): thinu · mocnhan · huyetbat
-- Hai điểm xa nhau nhất: Sylas, Người Giữ Tổ ↔ Tướng Quân Hollow Roost — 1728px
+- Hai điểm xa nhau nhất: Sylas, Người Giữ Tổ ↔ Tướng Quân Hollow Roost — 1776px
 
 ### Frostmire Vale `tuyettinh` — cấp 60+ · pk
 
