@@ -120,6 +120,12 @@ const pass = m => console.log('PASS ' + m);
       spawnMob(t, { x: player.x + 330, y: player.y, r: 0 }, null, false);
       const [gan, xa] = mobs.slice(-2);
       gan.hp = xa.hp = 1e9;
+      // TẮT PHẢN ĐÒN. Con "cạnh chân" đứng cách người niệm 40px nên nó ĐÁNH ĐƯỢC người chơi, và
+      // Thái Cực hộ thể phản lại `Math.max(1, ...)` — đúng 1 máu, đi thẳng vào m.hp KHÔNG qua
+      // hurtMob. Bài này đo "vùng sát thương có đi theo con trỏ không", mà ngưỡng lại là
+      // `ganMat > 0`, nên một điểm máu của một cơ chế khác hẳn cũng làm nó đỏ — đo được 1/3 lượt,
+      // và có sẵn từ trước đợt vai trò (thử lại trên bản cũ: y hệt). Cô lập đúng thứ đang đo.
+      player.reflect = 0;
       return { gan: { x: Math.round(gan.x), y: Math.round(gan.y), hp: gan.hp },
                xa:  { x: Math.round(xa.x),  y: Math.round(xa.y),  hp: xa.hp } };
     });

@@ -199,11 +199,47 @@ tức đúng chỗ đánh nhau thì đúng chỗ không có gì. Địa hình kh
    thức đúng: `screen = (world − camera) × zoom`, rồi mới tới tỉ lệ bộ đệm/CSS nếu đọc pixel.
 8. **Đừng chép cứng số đã có hàm.** `test_ngamchuot` chép `chanDy` = 13 (đúng hồi `NV_CAO` = 118);
    nay là 19 và bài trượt ngưỡng đúng 0,06px. Đọc thẳng từ game.
-9. Ngưỡng trong `test_domap.js` phải **đo được**, không được đoán. (Bản đầu tôi đặt sàn "80% map
+9. **Phản đòn ghi thẳng `m.hp`, KHÔNG qua `hurtMob`** (`player.reflect`, `Math.max(1, …)`).
+   Bài kiểm nào đo "con này phải mất ĐÚNG 0 máu" mà để quái đứng trong tầm đánh của nó thì sẽ
+   đỏ 1/3 lượt vì đúng một điểm máu của cơ chế khác. Tắt `player.reflect` trong phần dựng cảnh.
+10. Ngưỡng trong `test_domap.js` phải **đo được**, không được đoán. (Bản đầu tôi đặt sàn "80% map
    đi được" theo cảm tính; số thật là 60,7% và nó bắt vạ 5/8 map.)
 
 **Chưa làm, cố ý:** phóng to map (C2) và nối nhiều map nhỏ (C3) — xem `docs/KE_HOACH_DO_MAP.md`.
 Phóng to cả 8 map là nhân bản lần nữa, chỉ khác là nhân bản chỗ trống.
+
+### 🎭 VAI TRÒ QUÁI GÁN THEO **BÃI**, KHÔNG PHẢI THEO LOÀI
+
+`MOB_ROLE` (loài → vai) là **lớp nền**, chỉ dùng cho quái không thuộc bãi nào. Bãi nào khai
+`vai:'phap'` thì bãi đó thắng — xem `buildWorld` chỗ `pk.vai`.
+
+Vì sao: vai theo loài là ngõ cụt. Ba map cuối chỉ có 3 loài, nên đo ra Frostmire Vale và
+Stormgate Pass mỗi map đúng **2 vai** — `can` cộng Kẻ Tiếp Sức. Cả đoạn cấp 62-120 đánh y hệt
+nhau. Vai theo bãi cho **3 loài × 6 vai = 18 hồ sơ** mà không tốn một tệp art nào.
+
+Sau đợt gán: vai/map từ `3,3,3,4,2,4,2` lên `4,4,6,6,6,6,6` — **tăng dần**, không tụt.
+
+- Vai đánh xa (`phap` 320 · `xa` 300) phải **đánh xa thật**: `spawnMob` bật `range`+`ranged`.
+  Đổi con số mà không đổi cách đánh thì không sinh ra hồ sơ nào mới. Loài **vốn đã** đánh xa
+  (Cung Thủ Tro Tàn) giữ nguyên tầm — nâng lên là âm thầm buff một con đã cân xong.
+- Map cấp 1-24 **cố ý không có Pháp Sư**: đó là chỗ học cách chơi.
+- Từ cấp 24 trở đi mỗi map phải có **≥1 bãi Pháp Sư và ≥1 Kẻ Tiếp Sức** — hai thứ AUTO xử lý
+  dở nhất, cũng là lý do người chơi phải tự cầm chuột. `tests/test_bansac.js` gác.
+
+### 🗺 BẢN SẮC MAP SUY RA TỪ DỮ LIỆU, KHÔNG CHÉP CỨNG
+
+`mapBanSac(id)` tính **loài chủ đạo · hệ trội · Dòng Cốt độc quyền** từ chính `packs`, và
+`banSacHtml()` hiện một dòng kiểu Ragnarok trên bảng Bản Đồ. Chép cứng thì sửa `packs` một lần
+là bảng Bản Đồ nói dối — mà nói dối kiểu đó không ai phát hiện được.
+
+**Cố ý KHÔNG làm `monRoi`** (món chỉ rơi ở map này) như đề xuất gốc: chính đề xuất đó cảnh báo
+món độc quyền phải thật sự cần cho một thứ gì đó, không thì chỉ là "món rác mang tên đẹp".
+Dựng bảy nền kinh tế mới cho bảy món là đúng cái bệnh nhân bản. Mỗi map **đã có sẵn** một thứ
+độc quyền thật — một Dòng Cốt Chimera, có nơi tiêu thật. Việc của A2 là **cho thấy**, không
+phải **thêm**.
+
+Đây cũng là chỗ chữa cho khắc hệ: `el:` chạy trong `hurtMob` (±20% / −12%) từ lâu nhưng người
+chơi không có cách nào biết map nào hệ gì. Nay hệ trội nằm ngay trên bảng Bản Đồ.
 
 ### Bốn tài liệu thiết kế — đọc theo thứ tự này
 1. `docs/CAU_TRUC_MAP.md` — đo map hiện tại, đối chiếu Ragnarok / Path of Exile

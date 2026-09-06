@@ -7,6 +7,8 @@
 > | 1. Thước đo | ✅ `tools/do_map.js` · `tests/test_domap.js` · `docs/DO_MAP_HIEN_TRANG.md` |
 > | 2. Luật map | ✅ `CLAUDE.md` · mục LUẬT MAP |
 > | A. Địa hình cỡ chiến đấu | ✅ `raiTruDa()` — vật che 30,2% → 44,8% |
+> | A1. Vai trò theo BÃI | ✅ vai/map 3,3,3,4,2,4,2 → **4,4,6,6,6,6,6** · `phap` lần đầu được dùng |
+> | A2. Bản sắc map | ✅ `mapBanSac()` — loài chủ đạo · hệ trội · Cốt độc quyền, hiện trên bảng Bản Đồ |
 > | C1. Thu tầm nhìn | ✅ **bằng ZOOM** (`ZOOM_MUC`) — map 2,4 → ~5 màn hình. Bản phủ lớp tối đã thử rồi bỏ: đánh nhau với art sáng của Axie |
 > | 3. Máy sinh địa hình | ⬜ |
 > | 4. Cắm lại phó bản | ⬜ |

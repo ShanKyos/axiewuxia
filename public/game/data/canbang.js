@@ -488,7 +488,7 @@ window.MAPS = {
       { mob:'boar', x:906, y:254, n:6 }, { mob:'boar', x:660, y:690, n:5 },
       { mob:'hautu', x:1000, y:1000, n:6 }, { mob:'wolf', x:1500, y:560, n:7 },
       { mob:'wolf', x:754, y:1555, n:6 }, { mob:'bandit', x:1290, y:1244, n:7 },
-      { mob:'bandit', x:1648, y:724, n:7 }, { mob:'caodo', x:1424, y:1445, n:6 },
+      { mob:'bandit', x:1648, y:724, n:7, vai:'xa' }, { mob:'caodo', x:1424, y:1445, n:6 },
       { mob:'assassin', x:1900, y:420, n:1 }, // P0: 1 con (trước 5 — NV8 thành bức tường, bot chết 16 lần liên tiếp)
       { mob:'trannhan', x:2043, y:1240, n:5 },
     ], duhiep: null },
@@ -511,7 +511,7 @@ window.MAPS = {
       { mob:'boar_tusk',  x:1900, y:560,  n:6 },  // d≈643  · lv14
       { mob:'wolf_alpha', x:551,  y:356,  n:6 },  // d≈749  · lv16
       { mob:'wolf_alpha', x:2000, y:820,  n:7 },  // d≈854  · lv16
-      { mob:'bandit_vet', x:900,  y:1200, n:7 },  // d≈958  · lv18
+      { mob:'bandit_vet', x:900,  y:1200, n:7, vai:'xa' },  // d≈958  · lv18
       { mob:'caodo_fire', x:1945, y:1110, n:6 },  // d≈1012 · lv20
       { mob:'gloam_scout',x:1872, y:1520, n:1 },  // d≈1320 · lv22 ELITE
       { mob:'chimera_bo', x:600,  y:1550, n:5 },  // d≈1407 · lv24
@@ -522,16 +522,16 @@ window.MAPS = {
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
       { mob:'chimera_bo', x:800, y:1400, n:6, tiep:true }, { mob:'phando', x:1100, y:900, n:6, tiep:true },
-      { mob:'phando', x:442, y:574, n:6, tiep:true }, { mob:'xanu', x:1376, y:1272, n:6, tiep:true },
-      { mob:'xanu', x:1981, y:1295, n:6, tiep:true }, { mob:'bandao', x:2000, y:600, n:5, tiep:true },
+      { mob:'phando', x:442, y:574, n:6, tiep:true, vai:'xa' }, { mob:'xanu', x:1376, y:1272, n:6, tiep:true },
+      { mob:'xanu', x:1981, y:1295, n:6, tiep:true, vai:'phap' }, { mob:'bandao', x:2000, y:600, n:5, tiep:true, vai:'bay' },
     ], duhiep:'duhiep1' },
   comoc: { name:'Hollow Roost', min:40, range:'42 - 56', type:'pk', ground:'#a89f86', patch:'#4a4436',
     spawn:{ x:400, y:400 }, dark:true, trees:30, rocks:46,
     desc:'Hang ổ hẹp, ngoằn ngoèo. Bầy Chimera dày đặc rơi nguyên liệu thăng giai Thú Chiến — bãi săn tranh chấp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'thinu', x:557, y:865, n:7, tiep:true }, { mob:'thinu', x:1200, y:500, n:7, tiep:true },
-      { mob:'mocnhan', x:600, y:1400, n:5, tiep:true }, { mob:'mocnhan', x:1272, y:1100, n:5, tiep:true },
+      { mob:'thinu', x:557, y:865, n:7, tiep:true }, { mob:'thinu', x:1200, y:500, n:7, tiep:true, vai:'phap' },
+      { mob:'mocnhan', x:600, y:1400, n:5, tiep:true }, { mob:'mocnhan', x:1272, y:1100, n:5, tiep:true, vai:'xa' },
       { mob:'huyetbat', x:1900, y:600, n:7, tiep:true }, { mob:'huyetbat', x:1915, y:1351, n:6, tiep:true },
     ], duhiep:'duhiep2' },
   tuyettinh: { name:'Frostmire Vale', min:60, range:'62 - 78', type:'pk', ground:'#ddc9a8', patch:'#8a5a6a',
@@ -540,26 +540,26 @@ window.MAPS = {
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
       { mob:'docyeu', x:1096, y:482, n:6, tiep:true }, { mob:'ttdetu', x:700, y:1500, n:7, tiep:true },
-      { mob:'ttdetu', x:1131, y:1182, n:7, tiep:true }, { mob:'docyeu', x:1394, y:895, n:6, tiep:true },
-      { mob:'satthuhy', x:1856, y:1382, n:5, tiep:true }, { mob:'satthuhy', x:2100, y:500, n:5, tiep:true },
+      { mob:'ttdetu', x:1131, y:1182, n:7, tiep:true, vai:'nang' }, { mob:'docyeu', x:1394, y:895, n:6, tiep:true, vai:'phap' },
+      { mob:'satthuhy', x:1856, y:1382, n:5, tiep:true, vai:'bay' }, { mob:'satthuhy', x:2100, y:500, n:5, tiep:true, vai:'xa' },
     ], duhiep:'duhiep2' },
   mongco: { name:'Ashen Steppe', min:80, range:'84 - 100', type:'pk', ground:'#cfc09a', patch:'#7a6a42',
     spawn:{ x:400, y:950 }, trees:36, rocks:30,
     desc:'Thảo nguyên mở rộng, Chimera trâu bò đánh đau. Rơi nguyên liệu nâng chiêu tầm xa và đao pháp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'thamtu', x:442, y:574, n:7, tiep:true }, { mob:'thamtu', x:753, y:1497, n:7, tiep:true },
+      { mob:'thamtu', x:442, y:574, n:7, tiep:true }, { mob:'thamtu', x:753, y:1497, n:7, tiep:true, vai:'phap' },
       { mob:'cungthu', x:1347, y:979, n:6, tiep:true }, { mob:'cungthu', x:1300, y:400, n:6, tiep:true },
-      { mob:'kybinh', x:1900, y:1400, n:5, tiep:true }, { mob:'kybinh', x:2100, y:600, n:5, tiep:true },
+      { mob:'kybinh', x:1900, y:1400, n:5, tiep:true }, { mob:'kybinh', x:2100, y:600, n:5, tiep:true, vai:'bay' },
     ], duhiep:'duhiep3' },
   nhanmon: { name:'Stormgate Pass', min:100, range:'102 - 120', type:'freepk', ground:'#b8a68a', patch:'#6a3a2a',
     spawn:{ x:400, y:950 }, trees:44, rocks:38,
     desc:'Bãi luyện cuối game, ngoài biên ải Lunacia. PK ở đây không cộng Tai Tiếng. Chimera rơi trang bị bậc vàng.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     packs: [
-      { mob:'cuongbinh', x:700, y:1400, n:7, tiep:true }, { mob:'cuongbinh', x:1300, y:660, n:7, tiep:true }, // bãi 2 vốn nằm LỌT TRONG tường thành trái (850,800,560,350)
-      { mob:'kylan', x:1396, y:1312, n:5, tiep:true }, { mob:'kylan', x:1450, y:1600, n:5, tiep:true },
-      { mob:'daokhach', x:2100, y:500, n:5, tiep:true }, { mob:'daokhach', x:2250, y:1100, n:5, tiep:true },
+      { mob:'cuongbinh', x:700, y:1400, n:7, tiep:true, vai:'nang' }, { mob:'cuongbinh', x:1300, y:660, n:7, tiep:true, vai:'phap' }, // bãi 2 vốn nằm LỌT TRONG tường thành trái (850,800,560,350)
+      { mob:'kylan', x:1396, y:1312, n:5, tiep:true }, { mob:'kylan', x:1450, y:1600, n:5, tiep:true, vai:'bay' },
+      { mob:'daokhach', x:2100, y:500, n:5, tiep:true }, { mob:'daokhach', x:2250, y:1100, n:5, tiep:true, vai:'xa' },
     ], duhiep:'duhiep3' },
   // ---------- PHÓ BẢN: ĐÃ GỠ ----------
   // Bảy map pb_* đã xoá — xem CLAUDE.md · CHẨN ĐOÁN GỐC. Bảy cửa nhưng chung MỘT địa hình:

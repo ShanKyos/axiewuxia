@@ -912,11 +912,16 @@ const SECT_SFX = { thieulam:'mech', toanchan:'aquatic', baidasan:'reptile', minh
 // "số lượng ×2" — CHƯA áp cho 29 bãi cũ, vì đổi số con là đổi nhịp AUTO đã đo ở test_autopack;
 // để dành cho quái Vùng Vỡ Ấn. `phap`/`xa` theo thiết kế có tầm 320/300 — cũng chỉ áp cho quái
 // mới; quái cũ đang cận chiến mà gán tầm xa là đổi hành vi, không phải đổi chỉ số.
+//
+// `tam`: vai ĐÁNH XA thì phải đánh xa thật, không thì "Pháp Sư" chỉ là một con cận chiến máu
+// giấy — đổi con số mà không đổi cách đánh thì không tạo ra hồ sơ chiến đấu nào mới. Máy đánh xa
+// của quái đã có sẵn (MOBS.cungthu khai range+ranged, AI đọc m.def.range), nên đây chỉ là bật nó.
+// Loài NÀO ĐÃ đánh xa sẵn thì giữ nguyên tầm của nó — không nâng, để khỏi âm thầm buff.
 const ROLE = {
   nang: { name:'Trọng Giáp',  hp:1.6,  atk:1.3, spd:0.7,  col:'#c8a86a' },
-  phap: { name:'Pháp Sư',     hp:0.6,  atk:1.0, spd:1.0,  col:'#c07fe0' },
+  phap: { name:'Pháp Sư',     hp:0.6,  atk:1.0, spd:1.0,  col:'#c07fe0', tam:320 },
   can:  { name:'Cận Chiến',   hp:1.0,  atk:1.0, spd:1.0,  col:'#e4ebff' },
-  xa:   { name:'Xạ Thủ',      hp:0.8,  atk:1.0, spd:1.0,  col:'#8fd18f' },
+  xa:   { name:'Xạ Thủ',      hp:0.8,  atk:1.0, spd:1.0,  col:'#8fd18f', tam:300 },
   bay:  { name:'Bầy Đàn',     hp:0.45, atk:1.0, spd:1.35, col:'#ffd76a' },
   tiep: { name:'Kẻ Tiếp Sức', hp:0.8,  atk:0.5, spd:1.0,  col:'#7ecbff' },
 };
@@ -995,6 +1000,15 @@ function dbSummon(m, n){
 }
 // Vai trò của 28 loại quái đang đứng trong bãi. Không có tên ở đây = 'can'.
 // (Tên MOB_ROLE chứ không phải MOB_ARCH: MOB_ARCH đã là bảng bộ vẽ khung xương ở dưới.)
+// Vai MẶC ĐỊNH của loài. Đây là lớp nền — bãi nào khai `vai:` thì bãi đó thắng (xem buildWorld).
+//
+// ⚠ Vai theo LOÀI là ngõ cụt của đa dạng: 30 loài × 1 vai = 30 hồ sơ đánh nhau, và ba map cuối
+// chỉ có 3 loài nên chỉ có 3. Đo được: Frostmire Vale và Stormgate Pass mỗi map đúng 2 vai —
+// 'can' cộng Kẻ Tiếp Sức. Cả đoạn cấp 62-120 đánh y hệt nhau.
+//
+// Vai theo BÃI gỡ đúng chỗ đó: cùng một loài, đứng bãi khác thì đánh khác. 3 loài × 6 vai = 18
+// hồ sơ, không tốn một tệp art nào. Bảng dưới giữ nguyên làm mặc định cho quái không thuộc bãi
+// nào (hồi sinh lẻ, Tầng Sâu, quái triệu ra).
 const MOB_ROLE = {
   boar_tusk:'nang', trannhan:'nang', chimera_bo:'nang', mocnhan:'nang', kybinh:'nang',
   hautu:'bay', caodo:'bay', caodo_fire:'bay', wolf:'bay', wolf_alpha:'bay', huyetbat:'bay',
@@ -7203,6 +7217,47 @@ function bandLvText(md, b){
   const pick = b === 0 ? lvs.slice(0, Math.ceil(n/3)) : b === 1 ? lvs.slice(Math.floor(n/3), Math.ceil(2*n/3)) : lvs.slice(Math.floor(2*n/3));
   return `C${pick[0]}–${pick[pick.length-1]}`;
 }
+// ═══ A2 · BẢN SẮC MAP ════════════════════════════════════════════════════════
+// Vấn đề đo được: bảy map chỉ khác nhau ở màu nền và dải cấp. Không map nào có câu "đi đó vì
+// cái này", nên chọn đi đâu chỉ là chọn con số cấp.
+//
+// Đề xuất gốc (docs/DE_XUAT_MAP.md · A2) đòi thêm `monRoi` — một món CHỈ rơi ở map này. Không
+// làm theo, và đây là lý do: chính đề xuất đó cảnh báo món độc quyền phải THẬT SỰ cần cho một
+// thứ gì đó, không thì chỉ là "món rác mang tên đẹp". Dựng bảy nền kinh tế mới cho bảy món là
+// đúng cái bệnh nhân bản đã chẩn đoán.
+//
+// Mỗi map ĐÃ CÓ SẴN một thứ độc quyền thật: một Dòng Cốt Chimera (COT_DONG_THEO_MAP), có nơi
+// tiêu thật (nuôi Chimera). Việc của A2 vì thế không phải THÊM mà là CHO THẤY.
+//
+// Ba trường đều SUY RA từ dữ liệu chứ không chép cứng: chép cứng thì sửa `packs` một lần là
+// bảng Bản Đồ nói dối, mà nói dối kiểu đó không ai phát hiện được.
+function mapBanSac(id){
+  const md = MAPS[id];
+  if (!md || !md.packs || !md.packs.length) return null;
+  const dan = {}, he = {};
+  let tong = 0;
+  for (const q of md.packs){
+    const d = MOBS[q.mob]; if (!d) continue;
+    const n = q.n || 5; tong += n;
+    dan[q.mob] = (dan[q.mob] || 0) + n;
+    if (d.el) he[d.el] = (he[d.el] || 0) + n;
+  }
+  if (!tong) return null;
+  const troi = o => Object.keys(o).sort((a,b) => o[b] - o[a])[0];
+  const cd = troi(dan), ht = troi(he);
+  return { chuDao: cd, tenChuDao: (MOBS[cd] || {}).name || cd,
+           tyLe: Math.round(100 * dan[cd] / tong),
+           he: ht || null, tyLeHe: ht ? Math.round(100 * he[ht] / tong) : 0,
+           cot: COT_DONG_THEO_MAP[id] || null };
+}
+// Một dòng, kiểu Ragnarok: đất của ai · khắc hệ gì · nơi duy nhất rơi cái gì.
+function banSacHtml(id){
+  const b = mapBanSac(id); if (!b) return '';
+  const bits = [`Đất của <b style="color:#ffd76a">${b.tenChuDao}</b> <span style="opacity:.6">${b.tyLe}%</span>`];
+  if (b.he && ELEM[b.he]) bits.push(`hệ <b style="color:${ELEM[b.he].color}">${b.he}</b> <span style="opacity:.6">${b.tyLeHe}%</span>`);
+  if (b.cot && COT_DONG[b.cot]) bits.push(`nơi <b>duy nhất</b> rơi Cốt <b style="color:${COT_DONG[b.cot].mau}">${COT_DONG[b.cot].ten}</b>`);
+  return `<div class="m-desc" style="margin-top:3px">◆ ${bits.join(' · ')}</div>`;
+}
 function bandSummaryHtml(md){
   if (!md.packs || !md.packs.length) return '';
   return `<div class="m-desc" style="opacity:.85;margin-top:2px">` +
@@ -7231,7 +7286,10 @@ function buildWorld(){
     const zone = { x:pk.x, y:pk.y, r:115, count:soCon, tiep: !!pk.tiep };
     // Bãi có Kẻ Tiếp Sức: một trong n con là nó. Đặt ở RÌA bầy chứ không giữa — đứng giữa thì
     // người chơi cận chiến không với tới được mục tiêu ưu tiên (docs §3.6).
-    for (let j = 0; j < soCon - (pk.tiep ? 1 : 0); j++) spawnMob(pk.mob, zone, packId); // dàn trải cụm quái, tránh chồng hình
+    // `pk.vai` (nếu có) THẮNG vai mặc định của loài — đây là toàn bộ cơ chế A1: cùng một loài,
+    // bãi khác thì vai khác, nên map ba loài vẫn có sáu kiểu đánh.
+    const _vai = pk.vai ? { role: pk.vai } : undefined;
+    for (let j = 0; j < soCon - (pk.tiep ? 1 : 0); j++) spawnMob(pk.mob, zone, packId, false, _vai); // dàn trải cụm quái, tránh chồng hình
     if (pk.tiep){
       const t = spawnMob(pk.mob, zone, packId, false, { role:'tiep' });
       const a = Math.random() * Math.PI * 2; t.x = pk.x + Math.cos(a) * 128; t.y = pk.y + Math.sin(a) * 128; t.homeX = t.x; t.homeY = t.y;
@@ -7326,9 +7384,12 @@ function spawnMob(type, zone, pack, vfx, opts){
   // khác 1 để 'can' (mặc định) giữ nguyên tham chiếu, giảm bề mặt thay đổi tới mức thấp nhất.
   const role = (opts && opts.role) || mobRole(type);
   const A = ROLE[role] || ROLE.can;
-  if (A.hp !== 1 || A.atk !== 1 || A.spd !== 1){
+  if (A.hp !== 1 || A.atk !== 1 || A.spd !== 1 || A.tam){
     def = Object.assign({}, def, { hp: Math.max(1, Math.round(def.hp * A.hp)), atk: Math.max(1, Math.round(def.atk * A.atk)),
                                    speed: Math.round(def.speed * A.spd), role });
+    // Vai đánh xa: chỉ bật cho loài vốn CẬN CHIẾN. Loài đã đánh xa sẵn (Cung Thủ Tro Tàn) giữ
+    // nguyên tầm của nó — nâng lên là âm thầm buff một con đã cân xong.
+    if (A.tam && !def.ranged){ def.range = A.tam; def.ranged = true; }
   }
   const m = {
     type, def, name: def.name, role, tiep: role === 'tiep',
@@ -7403,7 +7464,10 @@ function spawnZoneBoss(bd, kind){
   // (file PNG của nhóm này đã xoá; không kế thừa thì boss rơi về hình mực dự phòng)
   const _src = MOBS[bd.img];
   if (_src && _src.skel){ def.skel = _src.skel; def.skelPal = _src.skelPal; def.img = ''; }
-  const m = { type:'zb_' + bd.id, def, name: bd.name, x: bd.x*MAP.w, y: bd.y*MAP.h,
+  // role:'can' cho có, không phải để dùng: boss vùng dựng thẳng ở đây chứ không qua spawnMob nên
+  // trước giờ `m.role` là undefined. Không ai đọc nên không vỡ, nhưng đếm vai trò trong một map
+  // thì hiện ra một khoá "undefined" — số liệu bẩn là số liệu không tin được.
+  const m = { type:'zb_' + bd.id, def, name: bd.name, role:'can', x: bd.x*MAP.w, y: bd.y*MAP.h,
     zone:{ x: bd.x*MAP.w, y: bd.y*MAP.h, r: 130, count: 1 },
     pack: null, hp: mobHp(def), maxHp: mobHp(def), atkT: 1, dead:false, face: 0,
     shield: 0, shieldT: 0, hitT: 0, wob: Math.random()*10, packAlert: 0,
@@ -20921,7 +20985,7 @@ function renderMapPanel(){
         <span style="flex:1"><span class="m-name">${m.name}</span>${_badge(id)}
           <span style="font-size:10.5px;opacity:.6"> · cấp ${m.range}</span>
           <span class="zone-badge" style="color:${z2.color};border-color:${z2.color}">${m.dungeon ? 'PHÓ BẢN' : z2.name}</span>
-          <div class="m-desc">${m.desc}</div>${bandSummaryHtml(m)}</span>
+          <div class="m-desc">${m.desc}</div>${banSacHtml(id)}${bandSummaryHtml(m)}</span>
         <span class="m-side">${cur ? '<span style="color:#7ecbff;font-size:11px">ĐANG Ở ĐÂY</span>'
           : `<button class="mini-btn" onclick="travelTo('${id}')">Dịch Chuyển</button>`}</span></div>`;
       continue;
@@ -20949,7 +21013,7 @@ function renderMapPanel(){
       <span style="flex:1"><span class="m-name">${m.name}</span>${_badge(id)}
         <span style="font-size:10.5px;opacity:.6"> · cấp ${m.range}</span>
         <span class="zone-badge" style="color:${z2.color};border-color:${z2.color}">${z2.name}</span>
-        <div class="m-desc">${m.desc}${!wpOk && !cur ? '<br><span style="color:#f0a03a">🚩 Chưa mở khoá điểm dịch chuyển — cần được nhiệm vụ dẫn tới đó 1 lần trước</span>' : ''}</div>${bandSummaryHtml(m)}</span>
+        <div class="m-desc">${m.desc}${!wpOk && !cur ? '<br><span style="color:#f0a03a">🚩 Chưa mở khoá điểm dịch chuyển — cần được nhiệm vụ dẫn tới đó 1 lần trước</span>' : ''}</div>${banSacHtml(id)}${bandSummaryHtml(m)}</span>
       <span class="m-side">${cur ? '<span style="color:#7ecbff;font-size:11px">ĐANG Ở ĐÂY</span>' : ''}
         ${wpOk && !cur ? `<button class="mini-btn" onclick="travelTo('${id}')">Dịch Chuyển</button>` : ''}
         ${!wpOk ? '<span style="font-size:11px;color:#6a6255" title="Đã đủ điều kiện, nhưng chưa từng đặt chân tới">🚩 Chưa mở khoá</span>' : ''}
