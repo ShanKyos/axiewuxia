@@ -1116,18 +1116,6 @@ const VFX_ATLAS_DEFS = {
   fire_pillar:    { k:1, cols:8, rows:2,  frameW:384, frameH:384, frames:16, fps:20, anchorX:183.0, anchorY:317.4, neoR:192.0, cong:false },
   meteor_rain:    { k:1, cols:7, rows:2,  frameW:384, frameH:384, frames:14, fps:22, anchorX:191.1, anchorY:344.1, neoR:191.7, cong:false },
 };
-// ═══ Vòng Kiếm Lửa — hằng số hình học ═══
-// Tâm elip cao hơn bàn chân bấy nhiêu. Dùng cho CẢ ba việc: cắt vòng lửa làm nửa sau / nửa
-// trước, làm tâm quỹ đạo cho vũ khí bay quanh, và làm tâm cho chính vệt lửa — ba thứ đó phải
-// chung một tâm, lệch một chút là vũ khí chạy trên một vòng còn lửa cháy trên một vòng khác.
-// 52 chứ không 80: nhân vật ngoài thế giới chỉ cao 104px, để tâm ở 80 là vòng lửa quét ngang
-// ĐẦU chứ không quanh thân — chụp lại thấy rõ nó treo lơ lửng trên đỉnh đầu. 52 rơi vào
-// khoảng ngực-bụng, đúng tầm một cú vung ngang.
-const VONGKIEM_TAM = 52;
-const VONGKIEM_RX = 148, VONGKIEM_RY = 68;   // vành lửa
-const VONGKIEM_VKX = 132, VONGKIEM_VKY = 62; // quỹ đạo vũ khí, hơi lọt vào trong vành lửa
-const VONGKIEM_QUET = Math.PI * 1.15;        // vệt lửa dài bao nhiêu radian, tính từ đầu vệt
-const VONGKIEM_VONG = 2;                     // số vòng trọn trong một lần tung
 const VFX_ATLAS_IMGS = {};
 const VFX_ATLAS_DUNG = {};   // id → lúc dùng gần nhất (ms)
 function getVfxAtlasImg(id){
@@ -1495,12 +1483,37 @@ function vkAnh(d){
 // thần khí, và cỡ lưỡi Vòng Kiếm Lửa. Chép cứng ba lần nghĩa là muốn phóng to nhân vật thì
 // phải nhớ sửa đủ ba chỗ — quên một chỗ là vũ khí đứng nguyên trong khi người lớn lên.
 // Gom về một hằng để chúng luôn đi cùng nhau, còn TỈ LỆ giữa chúng thì do TK_PHONG quyết.
-const NV_CAO = 118;
+// 118 → 132 (phiên 2026-09-06): chủ dự án chốt nhân vật to lên một chút. Mọi thứ đo theo thân
+// người — thần khí, vòng kiếm, sải chân, chỗ bàn chân chạm đất, cỡ Chimera — đều DẪN XUẤT từ
+// hằng này, nên đổi một chỗ là cả bộ đi theo. Chép cứng lại là mở đường cho chúng lệch nhau.
+const NV_CAO = 132;
+// Nhân vật vẽ ở (p.x, p.y − NV_LECH_Y) rồi mới thu tỉ lệ — xem veHero(). Tách ra thành hằng vì
+// chanDy() cần chính con số này để tính bàn chân rơi ở đâu.
+const NV_LECH_Y = 42;
 const VK_VONGKIEM = 1.0;           // cỡ lưỡi bay quanh chiêu Vòng Kiếm Lửa
 // Tỉ lệ thần khí so với nhân vật. 1,0 chứ không 1,35: ở 1,35 cây trượng cao gần bằng cả người
 // và hút hết mắt khỏi bộ giáp. Chủ dự án chốt "nhân vật to lên, vũ khí nhỏ lại" — nên NV_CAO
 // tăng 104 → 118 còn số này hạ xuống, hai đầu cùng kéo tỉ lệ về đúng hướng.
 const TK_PHONG = 1.0;
+
+// ═══ Vòng Kiếm Lửa — hằng số hình học ═══
+// Khối này PHẢI nằm dưới NV_CAO: nó đo theo thân người, mà `const` thì có vùng chết — đặt ở
+// trên là cả game.js chết ngay lúc nạp, và lỗi báo ra lại là một hằng khác ở tận dưới.
+// Tâm elip cao hơn bàn chân bấy nhiêu. Dùng cho CẢ ba việc: cắt vòng lửa làm nửa sau / nửa
+// trước, làm tâm quỹ đạo cho vũ khí bay quanh, và làm tâm cho chính vệt lửa — ba thứ đó phải
+// chung một tâm, lệch một chút là vũ khí chạy trên một vòng còn lửa cháy trên một vòng khác.
+// 0,44 chứ không 0,68 thân người: để tâm ở 0,68 là vòng lửa quét ngang ĐẦU chứ không quanh
+// thân — chụp lại thấy rõ nó treo lơ lửng trên đỉnh đầu. 0,44 rơi vào khoảng ngực-bụng, đúng
+// tầm một cú vung ngang.
+//
+// Viết theo TỈ LỆ THÂN NGƯỜI chứ không px: bộ số cũ (52/148/68/132/62) đã chép cứng cho một
+// NV_CAO nhất định, nên phóng to nhân vật một cái là vòng lửa đứng nguyên còn người thì lớn
+// lên — đúng cái bẫy mà NV_CAO sinh ra để tránh.
+const VONGKIEM_TAM = 0.44 * NV_CAO;
+const VONGKIEM_RX = 1.254 * NV_CAO, VONGKIEM_RY = 0.576 * NV_CAO;   // vành lửa
+const VONGKIEM_VKX = 1.119 * NV_CAO, VONGKIEM_VKY = 0.525 * NV_CAO; // quỹ đạo vũ khí, hơi lọt vào trong vành lửa
+const VONGKIEM_QUET = Math.PI * 1.15;        // vệt lửa dài bao nhiêu radian, tính từ đầu vệt
+const VONGKIEM_VONG = 2;                     // số vòng trọn trong một lần tung
 // Trả về { dai, ve } — `ve` vẽ cây vũ khí với CHỖ NẮM ở gốc và MŨI dọc trục +X, đơn vị px thế
 // giới. Nhờ chuẩn hoá đó mà thanKhiTuThe() chỉ cần lo quỹ đạo, không cần biết đang cầm cây gì.
 function thanKhiNguon(p){
@@ -3698,10 +3711,11 @@ function diemGiang(tam){
   const m = mobGanDiem(x, y, BAN_HUT);               // ② hút vào quái gần điểm ngắm
   return m ? { x:m.x, y:m.y } : { x, y };
 }
-// Chân nhân vật thấp hơn tâm p.y bấy nhiêu: veHero dịch tới (p.x, p.y-42) rồi thu tỉ lệ
-// NV_CAO/HERO_H, mà trong hộp gốc bàn chân nằm ở y≈212 (tâm hộp 110) → 42 − 102×118/220 ≈ −13.
-// Chiêu giáng xuống ĐẤT thì phải neo vào đây, neo vào p.y là nổ ngang bụng.
-const CHAN_DY = 13;
+// Chân nhân vật thấp hơn tâm p.y bấy nhiêu. Chiêu giáng xuống ĐẤT phải neo vào đây; neo vào
+// p.y là nổ ngang bụng. TÍNH RA chứ không chép cứng: nó phụ thuộc NV_CAO, mà NV_CAO thì đổi.
+// Là hàm chứ không phải hằng vì HERO_H/HERO_GOT khai ở dưới xa — hằng ở đây sẽ đọc trúng vùng
+// chết của `const` ngay lúc nạp trang.
+function chanDy(){ return (HERO_GOT - HERO_H / 2) * (NV_CAO / HERO_H) - NV_LECH_Y; }
 function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
   // Chiêu đã có tranh thì DỪNG Ở ĐÂY. Hình vector chung bên dưới sẽ chồng thêm một vòng sáng
   // nữa lên đúng chỗ tranh đang toả ra, thành hai lớp lệch nhau — một lớp vẽ tay, một lớp hình
@@ -3713,7 +3727,7 @@ function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
     else if (_tr.ve === 'uLinh')
       addEffect({ type:'uLinh', x:player.x, y:player.y, dur:1.15, scale:1, goc: Math.random() * 6.28 });
     else {
-      const _cx = x0 == null ? player.x : x0, _cy = (y0 == null ? player.y : y0) + CHAN_DY;
+      const _cx = x0 == null ? player.x : x0, _cy = (y0 == null ? player.y : y0) + chanDy();
       spawnAtlasVfx(_tr.atlas, _cx, _cy, (_tr.co || 1) * R / VFX_ATLAS_DEFS[_tr.atlas].neoR);
     }
     return;
@@ -4545,6 +4559,28 @@ function _chiVe(g, im, A, cot, oW, oH, i, x, y, thanPx){
   const chan = y + thanPx * 0.38;
   g.drawImage(im, (i % cot) * oW, ((i / cot) | 0) * oH, oW, oH,
               x - hw / 2, chan - hh * A.neoY, hw, hh);
+}
+// ═══ CỠ CHIMERA TRONG MÀN — không bao giờ được lấn át nhân vật ═══
+//
+// Chép cứng "thân cao 84px" là chưa đủ, và đó chính là chỗ đã hỏng: 16 con nướng ra 16 cỡ ô
+// khác nhau, tỉ lệ rộng/cao chạy từ 1,07 (Coghound) tới 1,52 (Ridgehorn). Cùng một chiều cao
+// thân thì con rộng nhất vẽ ra 146px NGANG, trong khi nhân vật chỉ chiếm chừng 45px — gấp hơn
+// ba lần, và mắt đọc thành "con thú dắt theo một người" chứ không phải ngược lại.
+//
+// Nên khoá theo HỘP VẼ RA, cả cao LẪN rộng, và khoá tương đối với NV_CAO. Con nào vượt trần thì
+// tự thu nhỏ đúng phần vượt. Nhờ thế lời hứa "không bao giờ lấn át" đúng cho cả 16 con hiện có
+// lẫn mọi con nướng thêm sau này, không phải dò tay từng con.
+const CHI_THAN = 0.45;   // thân Chimera cao bằng ngần này lần chiều cao nhân vật…
+const CHI_TRAN = 0.55;   // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
+function chiCoTrongMan(id){
+  const A = CHI_ANH.o[id];
+  let than = NV_CAO * CHI_THAN;
+  if (!A) return { than, cao: than, rong: than };
+  const tran = NV_CAO * CHI_TRAN;
+  let cao = than / A.thanCao, rong = cao * (A.oRong / A.oCao);
+  const qua = Math.max(cao, rong) / tran;
+  if (qua > 1){ than /= qua; cao /= qua; rong /= qua; }
+  return { than, cao, rong };
 }
 function chiVeNho(g, id, i, x, y, thanPx){
   const A = CHI_ANH.o[id], im = chiImg(id);
@@ -11220,8 +11256,8 @@ function drawMob(m){
 // mà MU Online dùng, không phải chuỗi ảnh. Nhờ vậy có sải chân, vung vũ khí,
 // ngả người, áo choàng bay… mà không tốn một file art nào.
 // Thứ tự lớp: áo choàng → chân → thân → giáp → mũ → tay → vũ khí.
-// Hộp toạ độ HERO_W×HERO_H, chân chạm y≈212, tâm đầu y≈74.
-const HERO_W = 160, HERO_H = 220;
+// Hộp toạ độ HERO_W×HERO_H, chân chạm y = HERO_GOT, tâm đầu y≈74.
+const HERO_W = 160, HERO_H = 220, HERO_GOT = 212;
 // Gót chân của bộ xương trong hệ 160x220 — cùng điểm mà bảng khung Spine neo vào.
 // Dùng làm trục xoay cho cú giật ngửa lúc trúng đòn (xem drawPlayer).
 const HERO_GOT_X = 80, HERO_GOT_Y = 212;
@@ -11901,15 +11937,21 @@ const NV_MOC2  = { h:0, p:8, s:20, d:36, j:46, q:56, n:62, t:68, e:74 };
 // khối lúc vẽ nữa: Sylvan Ranger bắn nỏ, Dark Wizard và Dark Lord niệm chú, ngay trong khối 'a'.
 // Lớp nào có nhát thứ hai thì đòn thường luân phiên 'a' ↔ 's'.
 const DANH_HAI_NHAT = { thieulam: 1, minhgiao: 1 };
-// SẢI CHÂN mỗi VÒNG hoạt cảnh, tính bằng px TRÊN MÀN (nhân vật cao NV_CAO).
-// Đo trên chính bảng khung: lấy dải 10px sát đất của từng khung (= bàn chân), gom hết 32/16
-// khung rồi lấy khoảng x lớn nhất, nhân hệ số thu NV_CAO/CAO_THAN = 118/159.
-// Một VÒNG là HAI BƯỚC, nên quãng đường một vòng tải được = 2 × khoảng đó.
-const SAI_CHAN = { w: 94, r: 158 };
-// Trên ngưỡng này thì CHẠY. Dưới thì đi — dành cho lúc bị làm chậm.
-// 150 nằm giữa hai mức mà mỗi hoạt cảnh tải được ở đúng nhịp tác giả vẽ: đi 118 px/giây
-// (0,800 s một vòng), chạy 264 px/giây (0,600 s). Tốc độ nền của người chơi là 209.
-const CHAY_TU = 150;
+// SẢI CHÂN mỗi VÒNG hoạt cảnh. Đo trên chính bảng khung: lấy dải 10px sát đất của từng khung
+// (= bàn chân), gom hết 32/16 khung rồi lấy khoảng x lớn nhất. Một VÒNG là HAI BƯỚC, nên quãng
+// đường một vòng tải được = 2 × khoảng đó.
+//
+// Giữ con số ĐO TRÊN BẢNG KHUNG (cao CAO_THAN_NUONG) rồi mới thu theo NV_CAO, chứ không chép
+// con số đã thu sẵn: nhịp bước = quãng đường / sải chân, nên đổi NV_CAO mà quên sửa hai số này
+// là bàn chân trượt đất ngay — mà nhìn thì chỉ thấy "hình như đi hơi lạ", rất khó lần ra.
+const CAO_THAN_NUONG = 159;                       // tools/spine/nuong_nv.py · CAO_THAN
+const SAI_CHAN_NUONG = { w: 126.6, r: 212.9 };    // px trên bảng khung
+const SAI_CHAN = { w: SAI_CHAN_NUONG.w * NV_CAO / CAO_THAN_NUONG,
+                   r: SAI_CHAN_NUONG.r * NV_CAO / CAO_THAN_NUONG };
+// Trên ngưỡng này thì CHẠY. Dưới thì đi — dành cho lúc bị làm chậm. Viết theo THÂN NGƯỜI mỗi
+// giây chứ không theo px: người to hơn thì cùng một tốc độ px/giây đọc ra chậm hơn, nên ngưỡng
+// phải lớn lên theo. Tốc độ nền của người chơi là 209 px/giây, vẫn nằm trên ngưỡng.
+const CHAY_TU = 1.271 * NV_CAO;
 // CỬA SỔ LƠ LỬNG trong khối đi. Khối đi có 32 khung; khung khớp dáng bay nhất là 8/12 của hoạt
 // cảnh gốc, tức 8/12 × 32 ≈ 21. Lắc ±2 khung theo một nhịp chậm để nó còn thở, không đứng hình.
 const BAY_KHUNG = 21, BAY_LAC = 2;
@@ -13811,7 +13853,7 @@ function drawPlayer(){
   const flip = Math.cos(p.face) < 0;
   ctx.save();
   ctx.translate(p.x + Math.cos(p.face)*lungeK*7,
-                (p.y - 42) + Math.sin(p.face)*lungeK*3);
+                (p.y - NV_LECH_Y) + Math.sin(p.face)*lungeK*3);
   if (flip) ctx.scale(-1, 1);
   ctx.scale(pulse, pulse);
   // Thần Hiệp: hào quang vàng rực sau lưng + viền kim quang quanh thân
@@ -22932,9 +22974,11 @@ function chiCastChieu(c, ch, near){
 function drawMount(){
   const c = CHI_MAP[mountObj.id];
   const t = { color: c.mau, name: c.ten };
-  // bóng đổ
+  const _co = chiCoTrongMan(mountObj.id);
+  // bóng đổ — co theo chính con vật, không phải một cái elip cố định: thu nhỏ con thú mà để
+  // nguyên vũng bóng thì nó thành ra đứng trên một cái đĩa.
   ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath();
-  ctx.ellipse(mountObj.x, mountObj.y+7, 20, 7, 0, 0, 7); ctx.fill();
+  ctx.ellipse(mountObj.x, mountObj.y+7, _co.rong*0.28, _co.rong*0.10, 0, 0, 7); ctx.fill();
   const bob = Math.abs(Math.sin(mountObj.wob)) * 3;
   const lunge = mountObj.lungeT > 0 ? (mountObj.lungeT/0.18)*9 : 0;
   const lx = Math.cos(mountObj.face)*lunge, ly = Math.sin(mountObj.face)*lunge;
@@ -22943,10 +22987,13 @@ function drawMount(){
   {
     const flip = Math.cos(mountObj.face) < 0;
     ctx.save();
-    ctx.translate(mountObj.x + lx, mountObj.y - 20 - bob + ly);
+    // BÀN CHÂN neo cố định ở mountObj.y + 12, bất kể con vật to nhỏ thế nào — _chiVe() đặt gót
+    // ở y + than*0,38 nên phải trừ ngược lại. Chép cứng −20 như trước thì thu nhỏ con vật một
+    // cái là nó lơ lửng trên không.
+    ctx.translate(mountObj.x + lx, mountObj.y + 12 - _co.than*0.38 - bob + ly);
     if (flip) ctx.scale(-1, 1);
     ctx.rotate(Math.sin(mountObj.wob)*0.03);
-    chiVeNho(ctx, mountObj.id, Math.floor(performance.now()/1000*CHI_THO_FPS), 0, 0, 84);
+    chiVeNho(ctx, mountObj.id, Math.floor(performance.now()/1000*CHI_THO_FPS), 0, 0, _co.than);
     ctx.restore();
   }
   // tên + vòng hào quang theo giai

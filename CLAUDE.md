@@ -502,6 +502,39 @@ kiếm hay do dấu ấn.
 ngựa (vẽ cung hở), găng ra thanh sô-cô-la (4 khối chữ nhật bằng nhau), kiếm cao hơn cả người
 (hệ số 2.5 thay vì 1.45). Vẽ xong phải render ra ảnh mà nhìn.
 
+## Mọi thứ trong màn đo theo `NV_CAO`, không chép cứng px
+
+`NV_CAO` (hiện **132**) là chiều cao nhân vật trên màn. Nó là **thước đo chung**: thần khí
+(`TK_PHONG`), hình học Vòng Kiếm Lửa (`VONGKIEM_TAM/RX/RY/VKX/VKY`), sải chân (`SAI_CHAN`),
+ngưỡng chạy (`CHAY_TU`), chỗ bàn chân chạm đất (`chanDy()`) và cỡ Chimera đi theo — **tất cả
+đều dẫn xuất từ nó**. Chép cứng lại một con số đã thu sẵn là mở đường cho chúng lệch nhau, và
+kiểu lệch ấy rất khó lần: phóng to nhân vật thì bàn chân trượt đất, vòng lửa quét ngang đầu,
+chiêu giáng xuống nổ ngang bụng — mà nhìn thì chỉ thấy "hình như hơi lạ".
+
+Sải chân giữ con số **đo trên bảng khung** (`SAI_CHAN_NUONG`, ở `CAO_THAN_NUONG` = 159px) rồi
+mới thu theo `NV_CAO`; nhịp bước = quãng đường ÷ sải chân nên sai một chút là trượt chân ngay.
+
+⚠ **Thứ tự khai báo**: hằng nào nhân với `NV_CAO` thì phải nằm **dưới** nó trong `game.js`.
+`const` có vùng chết — đặt ở trên là cả tệp chết ngay lúc nạp, mà lỗi báo ra lại là một hằng
+khác ở tận dưới ("Cannot access 'X' before initialization"). eslint và tsc **không** bắt được;
+chỉ mở trang mới thấy. Đã mắc một lần với `VONGKIEM_TAM`.
+
+## Chimera đi theo KHÔNG BAO GIỜ được lấn át nhân vật
+
+Chủ dự án chốt bằng đúng chữ "không bao giờ", nên luật phải là **cấu trúc**, không phải một
+con số dò tay. 16 con nướng ra 16 cỡ ô khác nhau (tỉ lệ rộng/cao 1,07 → 1,52), nên khoá theo
+"thân cao 84px" như bản cũ là chưa đủ: con rộng nhất vẽ ra **146px ngang** trong khi nhân vật
+chỉ chiếm ~45px — mắt đọc thành "con thú dắt theo một người".
+
+`chiCoTrongMan(id)` khoá theo **hộp vẽ ra**, cả cao lẫn rộng, và khoá **tương đối với
+`NV_CAO`**: `CHI_THAN` = 0,45 (thân cao mấy phần thân người) và `CHI_TRAN` = 0,55 (trần cho
+chiều nào cũng vậy). Con nào vượt thì tự thu đúng phần vượt — nên lời hứa đúng cho cả 16 con
+hiện có lẫn mọi con nướng thêm sau này. `test_cothu.js` quét cả bộ, không kiểm một con mẫu.
+
+Gót chân neo cố định ở `mountObj.y + 12` bất kể con to nhỏ (`_chiVe()` đặt gót ở
+`y + than*0,38` nên chỗ vẽ phải trừ ngược lại), và vũng bóng co theo chính con vật — thu nhỏ
+con thú mà để nguyên elip bóng thì nó thành ra đứng trên một cái đĩa.
+
 ## Hai lối vẽ nhân vật — ĐỪNG TRỘN VÀO NHAU
 
 Game có **ba** bộ dựng nhân vật, mỗi bộ một việc. Nhầm chỗ là ra hình lạc quẻ.
