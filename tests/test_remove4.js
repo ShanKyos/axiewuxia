@@ -184,7 +184,9 @@ function check(name, ok, extra){
                         'herbCount','alchDay','alchCount','pillDmgT','pillDmgPct']
                         .every(k => player[k] === undefined),
       staleSideGone: !sideStates.s_sys1 && !sideStates.s_sys6,
-      realSideKept: !!sideStates.s_b6,
+      // ⚠ Trước đây có s_b6 "phụ tuyến thật vẫn giữ". Nay TẤT CẢ nhiệm vụ đã gỡ sạch
+      // (CLAUDE.md · NHIỆM VỤ ĐÃ GỠ SẠCH) nên save cũ phải bị dọn TRỐNG hoàn toàn.
+      conSot: Object.keys(sideStates).length,
       sideSlotsFree: sideActive().length,
       lv: player.level,
     };
@@ -192,8 +194,8 @@ function check(name, ok, extra){
   check('save cũ nạp được, không crash', loaded.ok === true, loaded);
   check('map towerarena đã xoá → tự lùi về map hợp lệ', loaded.mapExists && loaded.curMap !== 'towerarena', loaded.curMap);
   check('field ma của 4 hệ bị dọn khỏi player', loaded.ghostFieldsGone === true);
-  check('phụ tuyến đã gỡ không còn chiếm slot; phụ tuyến thật vẫn giữ',
-    loaded.staleSideGone && loaded.realSideKept && loaded.sideSlotsFree === 0, loaded);
+  check('save cũ mang phụ tuyến đã gỡ → dọn sạch, không chiếm slot',
+    loaded.staleSideGone && loaded.conSot === 0 && loaded.sideSlotsFree === 0, loaded);
 
   // chạy tiếp vài giây trên save vừa nạp
   await page2.evaluate(() => {

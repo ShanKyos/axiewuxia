@@ -35,19 +35,10 @@ const PORT = process.argv[2] || '8871';
   if (r1.peak < 120) fail('lvPeak chưa tới 120'); else pass('cấp đỉnh ' + r1.peak);
   if (!r1.an) fail('chưa phá phong ấn map nào'); else pass(`phá phong ấn ${r1.an} map`);
 
-  // 2. /quest <n> nhảy đúng chương và kéo cấp theo
-  const r2 = await p.evaluate(() => {
-    startGame('thieulam', null);
-    cheatExec('/quest 28');
-    const q = QUESTS[questIdx];
-    return { q:questIdx+1, lv:player.level, req:q.lv, ten:q.name, xong:!!player.mongChiTon,
-             vaoDuoc: mapGate('mongco').ok };
-  });
-  console.log('2) /quest 28:', JSON.stringify(r2));
-  if (r2.q !== 28) fail('/quest 28 không nhảy đúng'); else pass(`/quest 28 → ${r2.ten}`);
-  if (r2.lv < r2.req) fail(`cấp ${r2.lv} thấp hơn yêu cầu ${r2.req}`); else pass(`cấp kéo theo lên ${r2.lv}`);
-  if (r2.xong) fail('/quest <n> không được đánh dấu xong chính tuyến'); else pass('chưa đánh dấu xong chính tuyến');
-  if (!r2.vaoDuoc) fail('chương VI mà chưa vào được Ashen Steppe'); else pass('vào được map của chương đó');
+  // 2. /quest — ĐÃ BỎ
+  // ⚠ Phần đo NHIỆM VỤ đã gỡ khỏi bài này: chuỗi nhiệm vụ đã xoá sạch để dựng lại
+  // (CLAUDE.md · NHIỆM VỤ ĐÃ GỠ SẠCH). Khi dựng lại chuỗi, viết bài kiểm mới theo thiết kế mới —
+  // đừng khôi phục phần cũ từ git, nó đo một chuỗi không còn tồn tại.
 
   // 2b. Thiên phú phải ăn vào chỉ số NGAY lúc tạo nhân vật.
   // startGame() roll ba thiên phú SAU khi newPlayer() đã gọi calcDerived(), nên trước đây trait

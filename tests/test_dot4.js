@@ -95,51 +95,16 @@ const pass = m => console.log('PASS ' + m);
     fail(`bảng Chọn Trận in ×${bang.so.join('/')} nhưng ngoài màn có ${bang.that.join('/')} con`);
   else pass('bảng Chọn Trận in đúng số quái thật sự sinh ra');
 
-  // ═══ ② NĂM CÁI TÊN BỊ GẠCH ═══════════════════════════════════════════════
-  const td = await p.evaluate(() => {
-    sideStates = {}; player.clues = [];
-    player.level = 120; player.lvPeak = 120; questIdx = QUESTS.length;
-    const ds = SIDE_QUESTS.filter(q => String(q.id).startsWith('s_td'));
-    const out = [];
-    for (const q of ds){
-      sideStates = {}; player.clues = [];
-      const co = sideAvail(q);
-      acceptSide(q.id);
-      const manh = player.clues.includes(q.clue);
-      questOnTalk(NPCS.find(x => x.id === q.targetNpc));
-      const t = NPCS.find(x => x.id === q.targetNpc);
-      out.push({ id:q.id, co, manh, xong: sideStates[q.id] && sideStates[q.id].st,
-                 giao:q.npc, dich:q.targetNpc, giaoMap:q.map, dichMap:t && t.map,
-                 lv:q.reqLv, main:q.reqMain, congMap: MAPS[q.map] && MAPS[q.map].reqMain,
-                 desc:(q.desc||'').length });
-    }
-    return { so: ds.length, out };
-  });
-  console.log('năm tên:', JSON.stringify(td.out));
-  if (td.so !== 5) fail(`phải có đúng 5 phụ tuyến s_td*, đang có ${td.so}`);
-  else pass('đủ 5 phụ tuyến — mỗi chương một');
-  for (const q of td.out){
-    if (q.co !== 'avail')   fail(`${q.id}: không nhận được (${q.co})`);
-    if (!q.manh)            fail(`${q.id}: nhận nhiệm vụ mà không được trao vật chứng`);
-    if (q.xong !== 'done')  fail(`${q.id}: nói chuyện với NPC đích mà không hoàn thành`);
-    if (q.giao === q.dich)  fail(`${q.id}: người giao trùng người nhận — tự xong tại chỗ`);
-    if (q.giaoMap === q.dichMap) fail(`${q.id}: NPC đích cùng map — không thành chuyến đi`);
-    // Cổng phụ tuyến phải qua được cổng BẢN ĐỒ của chính map đó, không thì nhận trước khi tới nơi
-    if (q.congMap && q.main < q.congMap)
-      fail(`${q.id}: reqMain ${q.main} < cổng bản đồ ${q.giaoMap} (${q.congMap}) — mở trước khi tới được`);
-  }
-  if (!bad) pass('cả 5: nhận được · có vật chứng · là chuyến đi thật · trả đúng chỗ');
-  const lv = td.out.map(x => x.lv);
-  if (!lv.every((v,i)=> i===0 || v > lv[i-1])) fail('cấp mở khoá không tăng dần: ' + lv.join('/'));
-  else pass(`rải đều khoảng trống cấp ${lv[0]}→${lv[lv.length-1]}`);
+  // ═══ ② NĂM CÁI TÊN BỊ GẠCH — ĐÃ BỎ ═════════════════════════════════════
+  // ⚠ Phần đo PHỤ TUYẾN (s_td*) đã gỡ khỏi bài này: toàn bộ nhiệm vụ chính +
+  // phụ đã xoá sạch để dựng lại (CLAUDE.md · NHIỆM VỤ ĐÃ GỠ SẠCH). Khi dựng lại,
+  // viết bài kiểm mới theo thiết kế mới — đừng khôi phục phần cũ từ git.
 
   // ═══ ③ LÝ DO TỒN TẠI ═════════════════════════════════════════════════════
   const noi = await p.evaluate(() => {
-    const pb = Object.keys(MAPS).filter(k => k.startsWith('pb_'));
+    // ⚠ Phần đo phó bản (pb_*) đã gỡ: 7 map phó bản đã xoá để dựng lại bằng phần dọn map.
     const cau = t => (t || '').split(/[.!?—]\s+/).filter(x => x.trim().length > 8).length;
     return {
-      pb: pb.map(k => ({ k, cau: cau(MAPS[k].desc), len:(MAPS[k].desc||'').length,
-                         chiCoCoHoc: /^Phòng thử thách/.test(MAPS[k].desc || '') })),
       ngoai: { cau: cau(MAPS.ngoai.desc), rung: /đang rung|lung lay/.test(MAPS.ngoai.desc || '') },
       vuc: NPCS.filter(n => /Vực Thẳm/.test(n.name || ''))
               .map(n => ({ id:n.id, tru: /Trụ (Thornwood|Roost|Frostmire|Ashmark|Stormgate)/.test(n.lore || '') })),
@@ -148,9 +113,6 @@ const pass = m => console.log('PASS ' + m);
     };
   });
   console.log('nơi chốn:', JSON.stringify(noi));
-  const moc = noi.pb.filter(x => x.cau < 3 || x.chiCoCoHoc);
-  if (moc.length) fail('phó bản chưa có câu neo vào truyện: ' + moc.map(x=>x.k).join(', '));
-  else pass(`cả ${noi.pb.length} phó bản có lý do tồn tại, không chỉ "cày tinh chất"`);
   if (!noi.ngoai.rung || noi.ngoai.cau < 3) fail('Outskirts vẫn chỉ là bãi luyện cấp');
   else pass('Outskirts là vùng đầu tiên báo hiệu chuỗi năm trụ');
   const vucSai = noi.vuc.filter(x => !x.tru);

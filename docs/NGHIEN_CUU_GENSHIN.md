@@ -13,14 +13,18 @@
 |---|--:|--:|--:|--:|
 | Petalshade Isle | 1-12 | 8 | 0 | **8** |
 | Lunaris City | — | 0 | 5 | 5 |
-| Petalshade Outskirts | 14-24 | 0 | 1 | **1** |
+| Petalshade Outskirts | 14-24 | 8 | 1 | **9** |
 | Thornwood Reach | 24-38 | 0 | 0 | **0** |
 | Hollow Roost | 42-56 | 0 | 0 | **0** |
 | Frostmire Vale | 62-78 | 0 | 0 | **0** |
 | Ashen Steppe | 84-100 | 0 | 0 | **0** |
 | Stormgate Pass | 102-120 | 0 | 0 | **0** |
 
-**Từ cấp 24 trở đi, ngoài trời KHÔNG CÓ GÌ ngoài quái.** `HERB_SPOTS` chỉ khai cho hai map đầu.
+**Từ cấp 24 trở đi, ngoài trời KHÔNG CÓ GÌ ngoài quái.** `HERB_SPOTS` chỉ khai cho hai map đầu
+(daohoa và ngoai, 8 điểm mỗi map), và chỉ hai map đó bật cờ `herbs:true`. **5/7 bãi săn có đúng 0.**
+
+> Bản đầu của bảng này ghi nhầm Outskirts là 0 thảo dược — bộ đếm của tôi bỏ sót mục cuối trong
+> `HERB_SPOTS`. Số đúng là 8. Kết luận không đổi, nhưng con số thì phải đúng.
 
 Đây là câu trả lời cho vì sao "đi bộ" trong game này chưa bao giờ đáng: **đi bộ không dẫn tới
 cái gì cả**. Và nó cũng giải thích vì sao AUTO nuốt trọn được game — 100% giá trị nằm ở việc

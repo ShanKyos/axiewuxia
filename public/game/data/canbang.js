@@ -116,29 +116,23 @@ window.CHI_KY = {
             { ten:'Nuốt Bóng',   tam:{ k:'hpLeech', v:7, t:7 }, txt:'Chiêu nổ: hút 7% sát thương thành Sinh Lực trong 7 giây' }],
 };
 
-window.QUESTS = [
-  { id:1, lv:1, name:'Kẻ Rơi Xuống',  desc:'Ngươi vừa vượt vết nứt và mất sạch ký ức võ nghệ. Đến gặp Trưởng Lão Rell giữa Lunaris City — ông ta là người Vaeldra duy nhất còn nhớ đội tiên phong.',
-    // 130 × 1,5 = 195/200: xong NV1 là NV2 khoá "cần cấp 2" ngay trong một thành phố KHÔNG có quái. 140 × 1,5 = 210 → lên cấp 2 ngay.
-    type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:140, silver:50} },
-  { id:2, lv:2, name:'Cơn Sốt Của Hòn Đảo', desc:'Khí Morvahn đã liếm tới Petalshade Isle — thú hiền hóa dại. Về đảo (bản đồ M → Dịch Chuyển) hạ 5 Axie Heo Rừng đang húc phá tổ ấp, rồi báo lại Trưởng Làng.',
-    type:'kill', mob:'boar', need:5, rew:{xp:190, silver:60} },
-  { id:3, lv:3, name:'Thuốc Cho Đàn Con', desc:'Lũ hatchling hít phải khí vết nứt, sốt cao không dứt. Trưởng Làng cần 4 Thảo Dược trong rừng phía đông đảo.',
-    type:'collect', herbMap:'daohoa', need:4, rew:{xp:360, silver:90} },
-  { id:4, lv:4, name:'Bầy Gai Đã Đổi Mắt', desc:'Axie Gai Tím trong rừng giờ mắt đỏ quạch và không còn biết sợ — dấu hiệu đầu tiên của Chimera hóa. Diệt 6 con trước khi chúng xuống tới làng.',
-    type:'kill', mob:'wolf', need:6, rew:{xp:470, silver:560, item:'vukhi'} },
-  { id:5, lv:5, name:'Thép Của Ardhaven', desc:'Thợ rèn Ardhaven sống sót qua cuộc giao thoa, lò của ông dựng tạm ngay cạnh làng. Mang trang bị tới Thợ Rèn Lưu Vong (phím F dẫn đường) và Tăng Cường một món bất kỳ lên +3.',
-    type:'enhance', need:3, rew:{xp:520, silver:580} },   // P0: lò rèn mở ở cấp 4 — NV4 thưởng sẵn vũ khí + Lumen để rèn ngay
-  { id:6, lv:6, name:'Đoàn Gloam', desc:'Đoàn Gloam — lính Vaeldra đào ngũ — dụ đám Axie nhiễm khí làm tay sai đi cướp phá dân đảo. Diệt 8 Tay Sai Gloam trên đồi phía đông nam.',
-    type:'kill', mob:'bandit', need:8, rew:{xp:1200, silver:170} }, // QA bot: tăng XP giữ nhịp cấp với chuỗi NV
-  { id:7, lv:7, name:'Mảnh Ký Ức Đầu Tiên', desc:'Nước suối cạnh làng lọc sạch khí vết nứt. Đứng trong suối 8 giây — ký ức võ nghệ Vaeldra của ngươi sẽ nhen lại thành Bản Năng.',
-    type:'meditate', need:8, rew:{xp:920, silver:450} },
-  { id:8, lv:8, name:'Lớp Giáp Bóng Tối', desc:'Một Gloam Marauder đã ngấm khí Morvahn, bọc quanh mình lớp giáp bóng tối — sát thương thường giảm 70%. Dùng Trấn Phái (phím 2) phá giáp rồi kết liễu hắn.',
-    type:'kill', mob:'assassin', need:1, rew:{xp:1900, silver:220} }, // QA bot: tăng XP giữ nhịp cấp
-  { id:9, lv:9, name:'Bàn Tay Còn Nhớ', desc:'Ký ức chưa về, nhưng bàn tay đã nhớ ra tuyệt kỹ của lớp mình — Trấn Phái (phím 2). Dùng nó kết liễu 5 Tay Sai Gloam.',
-    type:'tpkill', mob:'bandit', need:5, rew:{xp:1600, silver:320} },
-  { id:10, lv:10, name:'Ký Ức Trở Về', desc:'Thủ lĩnh Đoàn Gloam đã dựng trại trên đài phía đông. Hạ hắn — và ký ức đội tiên phong Vaeldra của ngươi sẽ trở về trọn vẹn.',
-    type:'boss', mob:'boss', need:1, rew:{xp:2500, silver:500} },
-];
+// ═══ NHIỆM VỤ CHÍNH TUYẾN — ĐÃ GỠ SẠCH, CHỜ DỰNG LẠI ═══════════════════════
+// Chủ dự án gỡ toàn bộ nhiệm vụ để thiết kế lại: lối chơi đã đổi khá nhiều (bỏ 7 phó bản, vai
+// trò theo bãi, bản sắc map, zoom camera), nên chuỗi nhiệm vụ cũ dẫn người chơi đi qua một game
+// không còn tồn tại. Giữ một chuỗi sai còn tệ hơn không có chuỗi nào.
+//
+// Máy chạy nhiệm vụ GIỮ NGUYÊN và chạy theo dữ liệu: currentQuest() trả null khi bảng rỗng,
+// bảng theo dõi tự ẩn, NPC tự rơi về lời thoại thường. Điền lại bảng này là chuỗi sống lại.
+//
+// Khuôn một mục:
+//   { id, lv, name, desc, type, need, rew:{ xp, silver, item? } }
+//   type: 'talk' (+targetNpc) · 'kill' (+mob) · 'tpkill' (+mob) · 'boss' (+mob)
+//         'collect' (+herbMap) · 'enhance' · 'meditate'
+//
+// ⚠ CỔNG MAP KHÔNG CÒN DỰA VÀO NHIỆM VỤ. `reqMain` đã gỡ khỏi mọi map — nay mở khoá bằng CẤP
+// (md.min) là đủ. Dựng lại chuỗi thì cân nhắc kỹ trước khi cắm `reqMain` lại: khoá map sau một
+// nhiệm vụ nghĩa là nhiệm vụ đó hỏng thì map đó mất.
+window.QUESTS = [];
 
 window.BOSS_DEFS = {
   daohoa: { thuve:[
@@ -497,7 +491,7 @@ window.MAPS = {
     desc:'Cả khu phố Ardhaven bị vết nứt kéo sang, dân bản địa dựng lại quanh nó thành Lunaris City. Trong tường: Lò Rèn Hoàng Gia, Tiệm Thuốc, Vũ Khí Phường, Trà Quán, Sảnh Cầu May và Truy Nã Lệnh. An toàn tuyệt đối — không Chimera nào vào được. Ra Cổng Nam để săn ở Outskirts.',
     packs: [], duhiep: null },
   ngoai: { name:'Petalshade Outskirts', min:10, range:'14 - 24', type:'safe', ground:'#ddd2ae', patch:'#7a7048',
-    spawn:{ x:1300, y:330 }, reqMain:10, trees:56, rocks:22, herbs:true,
+    spawn:{ x:1300, y:330 }, trees:56, rocks:22, herbs:true,
     // Câu đầu vốn nằm ở REGION_UNLOCK_LORE.ngoai và chỉ hiện ĐÚNG MỘT LẦN lúc mở khoá vùng.
     // Dòng người chơi đọc mỗi lần mở Bản Đồ lại là dòng "đất an toàn để luyện cấp" — tức là
     // vùng đầu tiên báo hiệu chuỗi năm trụ bị giới thiệu như một bãi cỏ giữa hai nhiệm vụ.
@@ -837,41 +831,10 @@ Những Axie ở đây không gây ra chuyện này. <b>Hãy cứu lấy chúng.
 //     sideOnEvent bên dưới trong game.js — chaosCombine...);
 // (2) NV "cầu nối cốt truyện" (type:'talk', giữ nguyên từ bản cũ) — không nhàm vì không phải
 //     đánh quái lặp lại, chỉ là mắt xích đưa người chơi qua vùng mới.
-window.SIDE_QUESTS = [
-  // ── Học hệ thống — mỗi NV dạy đúng 1 cơ chế nâng cấp nhân vật ──
-  { id:'s_shard', npc:'monkhach', map:'tuongduong', reqLv:12, reqMain:10, name:'Đồng Tiền Thứ Ba',
-    desc:'Ba ô ở góc trên bên phải là ví của ngươi: Lumen ◈, Ấn Giao Kết ✦, và Shard ♦. Shard không rơi từ quái — nó tới từ Mục Tiêu Hôm Nay, Truy Nã Lệnh và mỗi con boss vùng ngươi hạ lần đầu. Bấm ô ♦ mở Quầy Shard rồi tiêu thử một lần.',
-    type:'shard', need:1, rew:{xp:2600, silver:800} },
-  { id:'s_sys5', npc:'quachtinh', map:'tuongduong', reqLv:19,  reqMain:12, name:'Lò Hỗn Loạn',            desc:'Dư ít nhất 3 món cùng phẩm? Mang đến Lò Rèn Hoàng Gia, ném vào Lò Hỗn Loạn thử vận may lên phẩm cao hơn.', type:'chaos', need:1, rew:{xp:3500, silver:900} },
-  // ── Cầu nối cốt truyện — dẫn người chơi qua từng vùng mới, không đánh quái lặp lại ──
-  // s_b1→s_b5 (5 phụ tuyến "cầu nối") đã bỏ: mỗi cái trùng 100% với NV mở chương ngay sau, nhận
-  // được TRƯỚC khi vào được map đích, giá trị dạy = 0. Chơi thử chấm "bỏ" cả năm.
-  // Dược Sư trước đây là NPC DUY NHẤT bấm E vào mà không có việc gì làm: talk:'quest' nhưng
-  // không nhiệm vụ nào trỏ tới ông. Petalshade Isle đã có sẵn điểm thảo dược, nên cho ông
-  // đúng cái nghề của mình.
-  { id:'s_duocsu', npc:'duocsu', map:'daohoa', reqLv:4, reqMain:3, name:'Thuốc Cho Cả Đảo', desc:'Khí Morvahn làm bệnh mới mọc nhanh hơn thuốc cũ. Hái 5 Thảo Dược quanh Petalshade Isle (đứng gần rồi bấm J) mang về cho Dược Sư.', type:'collect', need:5, rew:{xp:520, silver:270} },
-  // ── Năm cái tên bị gạch — mỗi chương một, rải đúng vào khoảng trống cấp 12→115 ─────
-  // Mỗi cái là MỘT vật chứng + MỘT người để mang tới. Không cơ chế mới, không map mới.
-  // NPC đích cố tình KHÔNG phải người giao: bảy NPC dẫn chương xưa nay không ai nhắc tên ai,
-  // nên chuỗi này bắt họ chuyền tay nhau — và giao đâu nhận đó thì nhiệm vụ tự xong ngay lập
-  // tức, không thành chuyến đi nào cả.
-  { id:'s_td1', npc:'daosi',    map:'chungnam',  reqLv:26,  reqMain:16, clue:'td_giap',
-    name:'Bộ Giáp Không Có Người', desc:'Giữa Thornwood Reach có một bộ giáp Tiên Phong đứng nguyên, khoá đai còn cài. Mang nó về Lunaris City cho Trưởng Lão Rell — ông giữ Bảng Tên, ông có quyền gạch.',
-    type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:9000, silver:1100} },
-  { id:'s_td2', npc:'thumo',    map:'comoc',     reqLv:46,  reqMain:20, clue:'td_nhatky',
-    name:'Nét Chữ Nhạt Dần',      desc:'Trong ổ ấp Hollow Roost có một quyển nhật ký viết dở, và sáu trang cuối thì không nên đọc một mình. Đưa cho Đạo Sĩ ở Thornwood — ông ta từng đi cùng người viết nó.',
-    type:'talk', targetNpc:'daosi', need:1, rew:{xp:26000, silver:2050} },
-  { id:'s_td3', npc:'ttmon',    map:'tuyettinh', reqLv:66,  reqMain:25, clue:'td_huyhieu',
-    name:'Kẻ Đã Đổi Phe',         desc:'Một tinh anh ở Frostmire Vale đeo huy hiệu đội Tiên Phong. Nó nhận ra ngươi — và vẫn không dừng tay. Gỡ huy hiệu, mang tới Thủ Mộ ở Hollow Roost.',
-    type:'talk', targetNpc:'thumo', need:1, rew:{xp:52000, silver:3200} },
-  { id:'s_td4', npc:'noiung',   map:'mongco',    reqLv:86,  reqMain:29, clue:'td_bia',
-    name:'Mộ Tự Đào',             desc:'Giữa Ashen Steppe có một nấm mộ đào bằng tay, bia khắc dở. Người nằm dưới biết mình sắp thành thứ ở quyển nhật ký kia, nên dừng trước. Báo cho Trấn Thủ Môn ở Frostmire.',
-    type:'talk', targetNpc:'ttmon', need:1, rew:{xp:88000, silver:4550} },
-  { id:'s_td5', npc:'laotuong', map:'nhanmon',   reqLv:106, reqMain:32, clue:'td_trong',
-    name:'Chỗ Trống Thứ Bảy',     desc:'Ngươi đã tìm ra năm. Còn một cái tên trên Bảng Tên chưa bị gạch, và ở Stormgate Pass không có gì để tìm cả. Về hỏi Trưởng Lão Rell xem người thứ bảy là ai.',
-    type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:130000, silver:6100} },
-  { id:'s_b6', npc:'laotuong',  map:'tuongduong', reqLv:115, reqMain:33, name:'Báo Tin Thắng Trận',     desc:'Về Lunaris City báo cho Trưởng Lão Rell tin cửa ải đã giữ vững.', type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:55000, silver:3500} },
-];
+// ═══ NHIỆM VỤ PHỤ TUYẾN — ĐÃ GỠ SẠCH, CHỜ DỰNG LẠI ═════════════════════════
+// Cùng lý do với QUESTS ở trên. Khuôn một mục:
+//   { id, npc, name, desc, reqLv, reqMain, type, mob?, need, rew:{ xp, silver, ... } }
+window.SIDE_QUESTS = [];
 
 // ═══════════ CỐT TRUYỆN NGŨ ẤN × TÔNG MÔN — manh mối, lời thoại trấn thủ, kết mở ═══════════
 window.CLUES = {

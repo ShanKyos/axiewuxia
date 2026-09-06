@@ -174,7 +174,10 @@ const { chromium } = require('playwright');
 
   // ── 6. Đi thật trong game: phải tới nơi, và phải có né ──
   const walk = await p.evaluate(() => {
-    travelTo('comoc'); player.auto = false;
+    // Dọn sạch quái trước khi đo. Bài này đo ĐỊA HÌNH có khoá đường không; để quái sống thì
+    // đánh nhau giữa đường cắt ngang lệnh đi và bài chập chờn ~1/2 lần chạy (đã dựng lại được
+    // trên đúng bản đã push, không phải do đợt sửa nào gây ra).
+    travelTo('comoc'); player.auto = false; mobs.length = 0;
     const a = MAPS.comoc.packs[0], c = MAPS.comoc.packs[4];
     player.x = a.x; player.y = a.y; moveTarget = null; moveWaypoint = null;
     setMoveTarget(c.x, c.y);
@@ -187,8 +190,10 @@ const { chromium } = require('playwright');
     cachDich: moveTarget ? Math.round(dist(player.x, player.y, moveTarget.x, moveTarget.y)) : 0,
     toiNoi: dist(player.x, player.y, MAPS.comoc.packs[4].x, MAPS.comoc.packs[4].y) < 120,
   }));
+  const pass = m => console.log('PASS ' + m);
   console.log('đi thật:', JSON.stringify(walk), '→', JSON.stringify(walked));
   if (!walked.toiNoi) fail(`đi 9s vẫn chưa tới bãi quái (còn cách ${walked.cachDich}px) — vật cản khoá đường`);
+  else pass('đi thật xuyên map: tới được bãi quái ở đầu kia, địa hình không khoá đường');
 
   console.log('errors:', JSON.stringify(errs));
   console.log(bad === 0 && errs.length === 0 ? 'PASS' : 'FAIL(' + bad + ')');

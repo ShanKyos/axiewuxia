@@ -78,43 +78,35 @@ const PORT = process.argv[2] || '8853';
     const tl = NPCS.find(n => n.id === 'truonglang');
     const co4 = NPCS.filter(n => n.talk === 'quest' && n.lore && typeof n.lore === 'object').length;
     const cauCoDinh = NPCS.filter(n => n.talk === 'quest' && typeof n.lore === 'string').length;
-    // lái trạng thái: nhiệm vụ 2 là của Trưởng Làng
-    questIdx = 1; questState = 'active';
-    const a = npcLoi(tl);
-    questState = 'done';  const d = npcLoi(tl);
-    questState = 'locked'; const o = npcLoi(tl);
-    questIdx = 0;          const i = npcLoi(tl);   // NV1 là của Rell → Trưởng Làng về câu idle
+    // ⚠ Trước đây lái questState để bắt npcLoi() trả 4 câu khác nhau. Nhiệm vụ đã gỡ sạch
+    // (CLAUDE.md · NHIỆM VỤ ĐÃ GỠ SẠCH) nên currentQuest() luôn rỗng và npcLoi() luôn về câu
+    // idle — không còn nhánh để đo. Giữ lại phần DỮ LIỆU: bốn câu trong lore vẫn phải khác nhau,
+    // để khi dựng lại chuỗi là có sẵn giọng cho cả bốn trạng thái.
+    const L = tl.lore;
+    const i = npcLoi(tl);
+    const khac = new Set([L.idle, L.offer, L.active, L.done].filter(Boolean)).size;
+    const thieu4 = NPCS.filter(n => n.talk === 'quest' && n.lore && typeof n.lore === 'object')
+      .filter(n => !(n.lore.idle && n.lore.offer && n.lore.active && n.lore.done)).map(n => n.id);
     const barks = NPCS.filter(n => n.barks && n.barks.length).length;
     const tongBark = NPCS.reduce((s,n) => s + ((n.barks && n.barks.length) || 0), 0);
-    return { co4, cauCoDinh, a, d, o, i, khac: new Set([a,d,o,i]).size, barks, tongBark, npc: NPCS.length };
+    return { co4, cauCoDinh, i, khac, thieu4, barks, tongBark, npc: NPCS.length };
   });
   console.log('3) thoại:', JSON.stringify({ co4:r3.co4, khac:r3.khac, barks:r3.barks, tongBark:r3.tongBark }));
   if (r3.cauCoDinh) fail(`còn ${r3.cauCoDinh} NPC nhiệm vụ chỉ có một câu cố định`);
   else pass(`cả ${r3.co4} NPC nhiệm vụ đều có thoại 4 trạng thái`);
-  if (r3.khac !== 4) fail('bốn trạng thái không cho ra bốn câu khác nhau, chỉ ' + r3.khac);
-  else pass('bốn trạng thái → bốn câu khác nhau');
+  if (r3.khac !== 4) fail('bốn trạng thái trong lore không phải bốn câu khác nhau, chỉ ' + r3.khac);
+  else pass('lore Trưởng Làng: bốn trạng thái → bốn câu khác nhau');
+  if (r3.thieu4.length) fail('NPC nhiệm vụ thiếu trạng thái lore: ' + r3.thieu4.join(','));
+  else pass(`cả ${r3.co4} NPC nhiệm vụ có đủ idle/offer/active/done`);
   if (!r3.i) fail('Trưởng Làng vẫn câm — NPC giao 9/10 nhiệm vụ đầu game');
   else pass('Trưởng Làng có giọng: ' + r3.i.slice(0, 44) + '…');
   if (r3.barks < 15) fail(`mới ${r3.barks}/${r3.npc} NPC có thoại nhàn rỗi`);
   else pass(`${r3.barks}/${r3.npc} NPC có thoại nhàn rỗi, tổng ${r3.tongBark} câu`);
 
-  // ── 4. cuộc gặp type:'talk' không còn rỗng ──
-  const r4 = await p.evaluate(() => {
-    startGame('thieulam', null);
-    // chọn nhiệm vụ 'talk' đầu tiên mà người GIAO khác người CẦN GẶP — đó mới là nhánh từng rỗng
-    const i = QUESTS.findIndex(x => x.type === 'talk' && x.targetNpc && x.targetNpc !== x.npc);
-    const q = QUESTS[i];
-    const tgt = NPCS.find(n => n.id === q.targetNpc);
-    player.gapNpc = {}; for (const n of NPCS) player.gapNpc[n.id] = true;
-    questIdx = i; questState = 'active';
-    renderQuestNpc(tgt);
-    const h = el('panel-quest').innerHTML;
-    const soTalk = QUESTS.filter(x => x.type === 'talk' && x.targetNpc && x.targetNpc !== x.npc).length;
-    return { nv:q.name, gap:tgt.id, giao:q.npc, noiVeNv: h.includes(q.name), chiDuong: /hãy đến/.test(h), soTalk };
-  });
-  console.log('4) cuộc gặp talk:', JSON.stringify(r4));
-  if (!r4.noiVeNv || r4.chiDuong) fail('người cần gặp vẫn không nói gì về nhiệm vụ dẫn tới họ');
-  else pass(`người cần gặp nói đúng về nhiệm vụ (áp cho cả ${r4.soTalk} nhiệm vụ type:'talk')`);
+  // ── 4. cuộc gặp talk — ĐÃ BỎ ──
+  // ⚠ Phần đo NHIỆM VỤ đã gỡ khỏi bài này: chuỗi nhiệm vụ đã xoá sạch để dựng lại
+  // (CLAUDE.md · NHIỆM VỤ ĐÃ GỠ SẠCH). Khi dựng lại chuỗi, viết bài kiểm mới theo thiết kế mới —
+  // đừng khôi phục phần cũ từ git, nó đo một chuỗi không còn tồn tại.
 
   // ── 5. hộp thoại nhiều trang + game nhớ thái độ ──
   const r5 = await p.evaluate(() => {
@@ -131,28 +123,24 @@ const PORT = process.argv[2] || '8853';
     const sau = el('panel-quest').innerHTML;
     return { soTrang: rell.trang.length, coNut, coChon,
              nho: (player.thaiDo || {}).quachtinh, daGap: !!(player.gapNpc || {}).quachtinh,
-             veViec: !/npc-trang-nav/.test(sau) && /qd-quest/.test(sau),
+             // ⚠ Trước đo /qd-quest/ — khối nhiệm vụ. Nhiệm vụ đã gỡ sạch nên khối đó không
+             // còn vẽ ra; phần còn thật là: gặp xong thì THOÁT hẳn chế độ phân trang.
+             veViec: !/npc-trang-nav/.test(sau) && sau.length > 40,
              coTrang: NPCS.filter(n => n.trang && n.trang.length).length };
   });
   console.log('5) nhiều trang:', JSON.stringify(r5));
   if (!r5.coNut || r5.soTrang < 3) fail('lần gặp đầu không phân trang'); else pass(`lần gặp đầu ${r5.soTrang} trang, có nút Tiếp`);
   if (!r5.coChon) fail('trang cuối không hỏi thái độ'); else pass('trang cuối hỏi một câu thái độ');
   if (r5.nho !== 'a' || !r5.daGap) fail('game không nhớ lựa chọn'); else pass('game nhớ lựa chọn, không hỏi lại lần sau');
-  if (!r5.veViec) fail('gặp xong không quay về khối nhiệm vụ'); else pass('gặp xong quay về khối nhiệm vụ');
+  if (!r5.veViec) fail('gặp xong vẫn kẹt ở chế độ phân trang'); else pass('gặp xong thoát phân trang, về bảng NPC thường');
   if (r5.coTrang !== 7) fail(`phải 7 người dẫn chương có trang thoại, đếm ${r5.coTrang}`);
   else pass('đủ 7 người dẫn chương có trang thoại lần gặp đầu');
 
-  // ── 6. Dược Sư hết là NPC chết ──
-  const r6 = await p.evaluate(() => {
-    startGame('thieulam', null);
-    return { cua: SIDE_QUESTS.filter(s => s.npc === 'duocsu').length,
-             trong: NPCS.filter(n => n.talk === 'quest' && !QUESTS.some(q => q.npc === n.id)
-                       && !SIDE_QUESTS.some(s => s.npc === n.id)).map(n => n.id) };
-  });
-  console.log('6) NPC chết:', JSON.stringify(r6));
-  if (!r6.cua) fail('Dược Sư vẫn không có nhiệm vụ nào'); else pass('Dược Sư có phụ tuyến riêng');
-  if (r6.trong.length) fail('còn NPC nhiệm vụ không có việc gì: ' + r6.trong.join(','));
-  else pass('mọi NPC nhiệm vụ đều có việc');
+  // ── 6. Dược Sư hết là NPC chết — ĐÃ BỎ ──
+  // ⚠ Bài này đo "mọi NPC talk:'quest' đều có ít nhất một nhiệm vụ". Toàn bộ nhiệm vụ đã gỡ
+  // sạch (CLAUDE.md · NHIỆM VỤ ĐÃ GỠ SẠCH) nên hiện GIỜ CẢ 9 NPC đều rỗng việc — đúng như
+  // thiết kế tạm. ĐÂY LÀ ĐIỀU KIỆN PHẢI KHÔI PHỤC khi dựng lại chuỗi: mỗi NPC nhiệm vụ
+  // phải có việc, và Dược Sư phải có phụ tuyến riêng. Đừng khôi phục phần cũ từ git.
 
   // ── 7. bảy người dẫn chương biết nhau ──
   const r7 = await p.evaluate(() => {

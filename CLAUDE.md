@@ -241,6 +241,32 @@ phải **thêm**.
 Đây cũng là chỗ chữa cho khắc hệ: `el:` chạy trong `hurtMob` (±20% / −12%) từ lâu nhưng người
 chơi không có cách nào biết map nào hệ gì. Nay hệ trội nằm ngay trên bảng Bản Đồ.
 
+### 📌 NHIỆM VỤ ĐÃ GỠ SẠCH — VIỆC CÒN NỢ, PHẢI DỰNG LẠI
+
+`QUESTS` và `SIDE_QUESTS` nay đều **rỗng**. Đây **không phải** dọn dẹp — đây là một hệ thống bị
+tháo ra để thiết kế lại, và **nó phải được dựng lại**. Đừng đọc bảng rỗng rồi kết luận game này
+không cần nhiệm vụ.
+
+**Vì sao gỡ:** lối chơi đã đổi quá nhiều so với lúc viết chuỗi — bỏ 7 phó bản, vai trò theo bãi,
+bản sắc map, zoom camera, cổng map bỏ `reqMain`. Chuỗi cũ dẫn người chơi đi qua một game không
+còn tồn tại. Giữ một chuỗi sai còn tệ hơn không có chuỗi nào.
+
+**⚠ GỠ Ở HAI NƠI, KHÔNG PHẢI MỘT.** `data/canbang.js` khai 10 mục, rồi `game.js` `QUESTS.push(...)`
+thêm **6 chương / 25 mục nữa**. Rỗng bảng dữ liệu mà quên phần push thì `QUESTS.length` vẫn ra
+**25** — đã mắc đúng lỗi đó một lần trong chính đợt gỡ này.
+
+**Đã đổi theo:**
+- `reqMain` gỡ khỏi **mọi** map (kể cả một cái khai lẫn trong `MAPS.ngoai`). Map nay mở khoá bằng
+  **cấp** là đủ. Nhánh đọc `md.reqMain` trong `mapGate()` vẫn còn — cắm lại một giá trị là khoá
+  sống lại. *Cân nhắc kỹ: khoá map sau một nhiệm vụ nghĩa là nhiệm vụ hỏng thì map mất.*
+- Bảng theo dõi và Nhật Ký Nhiệm Vụ nói **"chưa có nhiệm vụ"**, không nói "hoàn tất". Một bảng
+  rỗng mà khoe "chính tuyến hoàn tất, tự do làm phụ tuyến" là nói dối người chơi.
+
+**Khi dựng lại:** chủ dự án đã nói có thể **xây lại cả hệ thống lore** cùng lúc, nên đừng vá
+chuỗi cũ từ git — thiết kế lại từ đầu cùng với lore. Khuôn dữ liệu của cả hai bảng nằm trong chú
+thích ở `data/canbang.js`. Máy chạy nhiệm vụ **giữ nguyên** và chạy theo dữ liệu: điền bảng là
+chuỗi sống lại.
+
 ### Bốn tài liệu thiết kế — đọc theo thứ tự này
 1. `docs/CAU_TRUC_MAP.md` — đo map hiện tại, đối chiếu Ragnarok / Path of Exile
 2. `docs/DE_XUAT_MAP.md` — 10 hạng mục / 4 đợt, có C1 (từ khoá phòng) + C2 (máy sinh)

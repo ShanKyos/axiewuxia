@@ -1,3 +1,9 @@
+// ⚠ Bài này VỐN đo bộ phụ tuyến "hướng dẫn hệ thống" (s_shard · s_sys5 · s_b6…).
+// Toàn bộ nhiệm vụ chính + phụ đã xoá sạch để dựng lại (CLAUDE.md · NHIỆM VỤ ĐÃ GỠ SẠCH),
+// nên phần đo chuỗi nhiệm vụ đã gỡ. Giữ lại phần còn có giá trị: những HÀNH ĐỘNG THẬT mà
+// mấy nhiệm vụ đó từng bám vào (Quầy Shard, Chaos Machine) vẫn phải chạy, và bảng nhiệm vụ
+// vẫn phải vẽ được khi trong game KHÔNG còn nhiệm vụ nào.
+// Khi dựng lại chuỗi, viết bài kiểm mới theo thiết kế mới — đừng khôi phục phần cũ từ git.
 const { chromium } = require('playwright');
 
 (async () => {
@@ -9,78 +15,56 @@ const { chromium } = require('playwright');
   await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(500);
 
-  // 1) basic structure sanity
-  const r1 = await page.evaluate(() => ({
-    count: SIDE_QUESTS.length,
-    ids: SIDE_QUESTS.map(q => q.id),
-    allNpcsQuestType: SIDE_QUESTS.every(q => {
-      const n = NPCS.find(x => x.id === q.npc);
-      return n && n.talk === 'quest';
-    }),
-  }));
-  console.log('1) structure:', JSON.stringify(r1));
+  let bad = 0;
+  const fail = m => { bad++; console.log('  ✗ ' + m); };
+  const pass = m => console.log('  ✓ ' + m);
 
-  // 2) each system-guidance quest tracks progress via its real action, end to end
+  // 1) bảng nhiệm vụ đang thật sự rỗng
+  const r1 = await page.evaluate(() => ({ side: SIDE_QUESTS.length, main: QUESTS.length }));
+  console.log('1) số nhiệm vụ:', JSON.stringify(r1));
+  if (r1.side || r1.main) fail(`vẫn còn nhiệm vụ (${r1.main} chính / ${r1.side} phụ) — đợt gỡ chưa sạch`);
+  else pass('không còn nhiệm vụ nào trong game — đúng như đợt gỡ');
+
+  // 2) hai hành động thật mà phụ tuyến từng bám vào vẫn chạy
   const r2 = await page.evaluate(() => {
     window.TEST_MODE = true;
     startGame('thieulam', null);
-    const results = {};
+    const out = {};
 
-    function testQuest(id, setupFn, actionFn){
-      const q = SIDE_QUESTS.find(x => x.id === id);
-      player.level = q.reqLv; questIdx = q.reqMain + 5; questState = 'active'; calcDerived();
-      sideStates = {};
-      sideStates[id] = { st: 'active', prog: 0 };
-      setupFn();
-      actionFn();
-      const st = sideStates[id];
-      results[id] = { prog: st.prog, st: st.st, need: q.need };
-    }
+    player.shard = 99;
+    const gkTruoc = player.inv.length;
+    window.muaShard('ve_gk');
+    out.shard = { conShard: player.shard, themDo: player.inv.length - gkTruoc };
 
-    // s_sys2 (Thú Chiến) · s_sys3 (Thần Binh) · s_sys4 (Thú Thuần Hóa) đều đã gỡ cùng hệ
-    // của chúng. Chỗ trống được lấp bằng s_shard — NV dạy ví ba ô và Quầy Shard.
-
-    // s_shard: Quầy Shard
-    testQuest('s_shard', () => {
-      player.shard = 99;
-    }, () => { window.muaShard('ve_gk'); });
-
-    // s_sys5: Chaos Machine
-    testQuest('s_sys5', () => {
-      player.gems.honNguyen = 999; player.silver = 99999;
-      player.inv = [];
-      for (let i = 0; i < 3; i++){ const it = genItem(30, 0.9, 'mob'); it.rarity = 1; player.inv.push(it); }
-      chaosClear(); player.inv.forEach(it => chaosAddItem(it.uid)); chaosPickRecipe('hopnhat');
-    }, () => { window.doChaos(); });
-
-    // s_sys7 (Vườn Thảo Dược) đã gỡ cùng Nhà Riêng.
-
-    return results;
+    player.gems.honNguyen = 999; player.silver = 99999;
+    player.inv = [];
+    for (let i = 0; i < 3; i++){ const it = genItem(30, 0.9, 'mob'); it.rarity = 1; player.inv.push(it); }
+    chaosClear(); player.inv.forEach(it => chaosAddItem(it.uid)); chaosPickRecipe('hopnhat');
+    const truoc = player.inv.length;
+    window.doChaos();
+    out.chaos = { truoc, sau: player.inv.length };
+    return out;
   });
-  console.log('2) system-guidance quests track progress via real actions:', JSON.stringify(r2, null, 1));
+  console.log('2) hành động thật:', JSON.stringify(r2));
+  if (r2.shard.conShard >= 99) fail('mua ở Quầy Shard mà không trừ shard');
+  else pass(`Quầy Shard trừ shard đúng (còn ${r2.shard.conShard})`);
+  if (r2.chaos.sau === r2.chaos.truoc) fail('Chaos Machine chạy mà túi không đổi — công thức hợp nhất câm');
+  else pass(`Chaos Machine ăn nguyên liệu: ${r2.chaos.truoc} → ${r2.chaos.sau} món`);
 
-  // 3) talk-type bridge quests still resolve via questOnTalk (reuse of existing mechanic)
+  // 3) bảng theo dõi + bảng NPC vẫn vẽ được khi KHÔNG còn nhiệm vụ
   const r3 = await page.evaluate(() => {
-    const q = SIDE_QUESTS.find(x => x.id === 's_b6') // s_b1–s_b5 đã gỡ (trùng chính tuyến); s_b6 là NV 'talk' còn lại;
-    player.level = q.reqLv; questIdx = q.reqMain + 2; questState = 'active'; calcDerived();
-    sideStates = {}; sideStates[q.id] = { st: 'active', prog: 0 };
-    questOnTalk(NPCS.find(x => x.id === q.targetNpc));
-    return sideStates[q.id];
-  });
-  console.log('3) talk-type bridge quest resolves on talking to targetNpc:', JSON.stringify(r3));
-
-  // 4) quest panel/tracker render without crashing for the new quest set
-  const r4 = await page.evaluate(() => {
     sideStates = {};
-    for (const q of SIDE_QUESTS.slice(0, 3)) sideStates[q.id] = { st: 'active', prog: 0 };
     const track = trackerHtml();
     const n = NPCS.find(x => x.id === 'quachtinh');
     renderQuestNpc(n);
-    const npcHtml = document.getElementById('panel-quest').innerHTML;
-    return { trackerLen: track.length, npcHtmlLen: npcHtml.length };
+    return { trackerLen: track.length, npcHtmlLen: document.getElementById('panel-quest').innerHTML.length };
   });
-  console.log('4) tracker + quest-npc panel render OK:', JSON.stringify(r4));
+  console.log('3) vẽ bảng:', JSON.stringify(r3));
+  if (!r3.npcHtmlLen) fail('bảng NPC trống trơn khi không còn nhiệm vụ');
+  else pass('bảng theo dõi + bảng NPC vẫn vẽ được với 0 nhiệm vụ');
 
-  console.log('errors:', JSON.stringify(errors.slice(0, 20)));
+  if (errors.length) fail('lỗi trang: ' + errors.slice(0, 3).join(' | '));
   await browser.close();
+  console.log(bad ? `FAIL(${bad})` : 'ALL PASS');
+  process.exit(bad ? 1 : 0);
 })();

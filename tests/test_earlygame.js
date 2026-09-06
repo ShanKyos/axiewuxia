@@ -51,15 +51,16 @@ const PORT = process.argv[2] || '8853';
     mobs.splice(0); moveTarget = null; doBasic();
     o.khongQuaiKhongChay = !moveTarget && !player._spaceQueued;
 
-    // ── 4. Cổng chính tuyến có lối vòng theo cấp ──
+    // ── ĐÃ BỎ: cổng chính tuyến có lối vòng theo cấp ──
+    // `reqMain` đã gỡ khỏi mọi map cùng với chuỗi nhiệm vụ (CLAUDE.md · NHIỆM VỤ ĐÃ GỠ SẠCH),
+    // nên không còn "khoá theo nhiệm vụ" để mà vòng. Map nay mở bằng CẤP là đủ — nhánh dưới
+    // chốt đúng điều đó. Dựng lại chuỗi mà cắm `reqMain` lại thì viết lại phần vòng ở đây.
     questIdx = 0; questState = 'none';
     const dat = lv => { player.level = lv; player.lvPeak = lv; calcDerived(); };
-    dat(12); const g2 = mapGate('ngoai');   // min 10 + reqMain 10 → cần cấp 14 để vòng
-    o.chuaVong = g2.ok === false && g2.why === 'quest' && g2.orLv === 10 + MAP_LV_BYPASS;
-    dat(14); o.vongDuoc = mapGate('ngoai').ok === true;
-    dat(23); o.chungnamChua = mapGate('chungnam').ok === false;
-    dat(24); o.chungnamVong = mapGate('chungnam').ok === true;
+    dat(9);  o.congDuoiCap = mapGate('ngoai').ok === false && mapGate('ngoai').why === 'lv';
+    dat(10); o.congDuCap  = mapGate('ngoai').ok === true;
     dat(12); o.cuaTheoCap = mapGate('chungnam').why === 'lv';
+    dat(20); o.chungnamMo = mapGate('chungnam').ok === true;
 
     // ── 5. EXP 49→60 tăng đều, không bậc thang ×9,8 ──
     const xp = []; for (let l = 48; l <= 59; l++) xp.push(XP_TABLE[l]);
@@ -71,13 +72,11 @@ const PORT = process.argv[2] || '8853';
     dat(1);  o.daily1 = dailyGoalsNow().map(g => g.id);
     dat(12); o.daily12 = dailyGoalsNow().length; o.dailyTong = DAILY_GOALS.length;
 
-    // ── 7. NV phụ ──
-    o.sBCu = SIDE_QUESTS.filter(q => /^s_b[1-5]$/.test(q.id)).map(q => q.id);
-    const s6 = SIDE_QUESTS.find(q => q.id === 's_b6');
-    sideStates = {}; sideStates.s_b6 = { st:'active', prog:0 };
-    const tgt = sideQuestTarget(s6);
-    o.s6Dich = tgt ? tgt.npcId : null; o.s6Muon = s6.targetNpc; o.s6Giao = s6.npc;
-    sideStates = {};
+    // ── 7. NV phụ — ĐÃ BỎ ──
+    // ⚠ Phần đo NHIỆM VỤ đã gỡ khỏi bài này: chuỗi nhiệm vụ đã xoá sạch để dựng lại (CLAUDE.md ·
+    // NHIỆM VỤ ĐÃ GỠ SẠCH). Dựng lại chuỗi thì viết bài kiểm mới theo thiết kế mới, đừng khôi phục
+    // phần cũ từ git — nó đo một chuỗi không còn tồn tại.
+
 
     // ── 8. HUD bạc ──
     player.silver = 3114.5463199999385; updateHud(); o.bac = el('hud-silver').textContent;
@@ -91,29 +90,28 @@ const PORT = process.argv[2] || '8853';
     player.hp = player.maxHp * 0.2; player.potions = 3;
     o.goiYUong = hintCandidates().some(h => h.id === 'uongthuoc'); player.hp = player.maxHp;
 
-    // ── 10. E chọn NPC có VIỆC, không phải NPC gần nhất ──
-    // Trưởng Làng & Dược Sư cách nhau 163px: đứng gần Dược Sư hơn nhưng đang có NV để trả cho
-    // Trưởng Làng thì phải mở Trưởng Làng.
+    // ── ĐÃ BỎ: E chọn NPC có VIỆC, không phải NPC gần nhất ──
+    // Không còn nhiệm vụ nào nên không NPC nào "có việc" — phép đo mất mất đối tượng. Giữ lại
+    // phần còn đo được: E vẫn mở đúng NPC ĐỨNG GẦN NHẤT.
     curMap = 'daohoa'; buildWorld();
     const tl = NPCS.find(x => x.id === 'truonglang'), ds = NPCS.find(x => x.id === 'duocsu');
     o.npcCach = Math.round(dist(tl.x, tl.y, ds.x, ds.y));
-    questIdx = 2; questState = 'done'; questProg = 4; sideStates = {};
+    sideStates = {};
     const ux = (tl.x - ds.x) / o.npcCach, uy = (tl.y - ds.y) / o.npcCach;
-    player.x = ds.x + ux * 72; player.y = ds.y + uy * 72;   // 72px tới Dược Sư, ~91px tới Trưởng Làng
-    o.dauTL = npcMark(tl); o.dauDS = npcMark(ds);
+    player.x = ds.x + ux * 40; player.y = ds.y + uy * 40;   // 40px tới Dược Sư — hắn phải thắng
     closePanels(); tryTalk();
-    o.moTL = !el('panel-quest').classList.contains('hidden') && el('panel-quest').innerHTML.includes(tl.name);
+    o.moGanNhat = !el('panel-quest').classList.contains('hidden') && el('panel-quest').innerHTML.includes(ds.name);
     closePanels();
-    questIdx = 0; questState = 'none'; questProg = 0;
 
     // ── 11. Nhãn boss vùng có bậc QUÁ DỄ ──
     dat(40); renderStageSelect('daohoa');
     o.nhanBoss = [...el('panel-stage').querySelectorAll('.zone-badge')].map(e => e.textContent.trim());
     closePanels(); dat(1);
 
-    // ── 12. Cấp NV diệt quái không thấp hơn cấp quái quá 4 (elite có khiên: 85 lần chết ở NV35) ──
-    o.nvLech = QUESTS.filter(q => q.type === 'kill' && MOBS[q.mob] && (MOBS[q.mob].lv || 1) - q.lv > 4).map(q => `NV${q.id} lv${q.lv} vs ${q.mob} lv${MOBS[q.mob].lv}`);
-    o.nvTang = QUESTS.every((q, i) => i === 0 || q.lv >= QUESTS[i-1].lv);
+    // ── 12. Cấp NV — ĐÃ BỎ ──
+    // ⚠ Phần đo NHIỆM VỤ đã gỡ khỏi bài này: chuỗi nhiệm vụ đã xoá sạch để dựng lại (CLAUDE.md ·
+    // NHIỆM VỤ ĐÃ GỠ SẠCH). Dựng lại chuỗi thì viết bài kiểm mới theo thiết kế mới, đừng khôi phục
+    // phần cũ từ git — nó đo một chuỗi không còn tồn tại.
 
     // ── 13. Mô tả bản đồ tiếng Việt, không còn thuật ngữ lạ ──
     o.moTaLa = Object.keys(MAPS).filter(k => MAPS[k].desc && /Card Pages|Starbits|Steed|hunting ground|Chimeras|trial chamber|Farm /.test(MAPS[k].desc));
@@ -127,18 +125,15 @@ const PORT = process.argv[2] || '8853';
   if (!r.spaceQueued) fail('Space ngoài tầm không đặt mục tiêu chạy tới'); else pass('Space ngoài tầm → chạy tới quái gần nhất');
   if (!r.spaceHit || !r.spaceCoTat) fail(`Space chạy tới rồi không đánh (trúng ${r.spaceHit}, cờ tắt ${r.spaceCoTat}, ${r.spaceKhung} khung)`); else pass(`Space chạy tới rồi tự ra đòn sau ${r.spaceKhung} khung, cờ tắt`);
   if (!r.khongQuaiKhongChay) fail('không có quái mà Space vẫn đặt mục tiêu di chuyển'); else pass('không có quái: Space không chạy đi đâu');
-  if (!r.chuaVong || !r.vongDuoc) fail(`lối vòng theo cấp sai: cấp 12 ${JSON.stringify(r.chuaVong)}, cấp 14 ${r.vongDuoc}`); else pass('Petalshade Outskirts: khoá ở cấp 12, vòng được ở cấp 14');
-  if (!r.chungnamChua || !r.chungnamVong || !r.cuaTheoCap) fail('Thornwood Reach: cổng cấp/NV/lối vòng sai'); else pass('Thornwood Reach: cấp 12 khoá cấp, 23 khoá NV, 24 vòng được');
+  if (!r.congDuoiCap || !r.congDuCap) fail(`cổng Outskirts sai: dưới cấp ${r.congDuoiCap}, đủ cấp ${r.congDuCap}`); else pass('Petalshade Outskirts: khoá dưới cấp 10, mở đúng cấp 10');
+  if (!r.cuaTheoCap || !r.chungnamMo) fail(`cổng Thornwood sai: lý do khoá ${r.cuaTheoCap}, mở ở cấp 20 ${r.chungnamMo}`); else pass('Thornwood Reach: khoá vì CẤP (không còn khoá vì nhiệm vụ), mở ở cấp 20');
   if (!r.xpTang || r.xpBuocMax > 1.5) fail(`EXP 49→60 không đều (bước lớn nhất ×${r.xpBuocMax})`); else pass(`EXP 49→60 tăng đều, bước lớn nhất ×${r.xpBuocMax}, mốc 60 giữ ${r.xp60}`);
   if (r.daily1.join() !== 'kills' || r.daily12 !== r.dailyTong) fail(`mục tiêu ngày: cấp 1 thấy ${r.daily1}, cấp 12 thấy ${r.daily12}/${r.dailyTong}`); else pass('mục tiêu ngày mở dần theo cấp');
-  if (r.sBCu.length) fail('NV cầu nối trùng chính tuyến vẫn còn: ' + r.sBCu); else pass('s_b1–s_b5 đã gỡ');
-  if (r.s6Dich !== r.s6Muon || r.s6Dich === r.s6Giao) fail(`NV talk ghim đèn hiệu vào ${r.s6Dich}, phải là ${r.s6Muon}`); else pass('NV talk ghim đèn hiệu vào NPC đích');
   if (!/^3[.,]114$/.test(r.bac)) fail('HUD bạc in số lẻ: ' + r.bac); else pass('HUD bạc làm tròn: ' + r.bac);
   if (!r.tutDong) fail('bước tutorial cuối không tự đóng sau 25s'); else pass('bước tutorial cuối tự đóng');
   if (!r.goiYUong) fail('máu thấp không gợi ý uống thuốc'); else pass('máu thấp → gợi ý R uống thuốc');
-  if (r.dauTL !== '!' || r.dauDS !== '' || !r.moTL) fail(`E chọn nhầm NPC: dấu TL '${r.dauTL}' DS '${r.dauDS}', mở Trưởng Làng ${r.moTL} (cách nhau ${r.npcCach}px)`); else pass('E ưu tiên NPC có NV để trả dù đứng gần NPC khác hơn');
+  if (!r.moGanNhat) fail(`E không mở NPC gần nhất (hai NPC cách nhau ${r.npcCach}px)`); else pass('E mở đúng NPC đứng gần nhất');
   if (!r.nhanBoss.includes('QUÁ DỄ') || r.nhanBoss.includes('VỪA SỨC')) fail('cấp 40 ở Petalshade mà nhãn: ' + r.nhanBoss.join(', ')); else pass('cấp 40: mọi bãi/boss Petalshade gắn QUÁ DỄ');
-  if (r.nvLech.length || !r.nvTang) fail(`cấp NV lệch cấp quái: ${r.nvLech.join('; ')} · tăng dần ${r.nvTang}`); else pass('35 NV: cấp tăng dần, NV diệt quái không thấp hơn quái quá 4 cấp');
   if (r.moTaLa.length) fail('mô tả bản đồ còn tiếng Anh/thuật ngữ lạ: ' + r.moTaLa); else pass('8 mô tả bản đồ tiếng Việt');
 
   // ── 1. Xoá tiến trình phải xoá THẬT, kể cả gọi từ trong game ──

@@ -16983,6 +16983,8 @@ window.cheatExec = function(raw){
         const a = (parts[1] || '').toLowerCase();
         if (a === 'all'){ moHetCong(); calcDerived();
           cheatLog(`Chính tuyến: xong toàn bộ ${QUESTS.length} nhiệm vụ.`, '#8fd18f'); break; }
+        // Bảng nhiệm vụ đang RỖNG (đã gỡ, xem CLAUDE.md) — không có gì để nhảy tới.
+        if (!QUESTS.length){ cheatLog('Chưa có nhiệm vụ nào trong game — chuỗi đã gỡ để dựng lại.', '#c8b888'); break; }
         const n = clamp(Math.round(num(1, 1)), 1, QUESTS.length);
         questIdx = n - 1; questProg = 0; questState = 'active';
         player.mongChiTon = false;
@@ -20698,106 +20700,13 @@ NPCS.push(
 for (const n of NPCS){ if (!NPC_IMGS[n.id]){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; } }
 function npcName(id){ const n = NPCS.find(x => x.id === id); return n ? n.name : 'Trưởng Làng'; }
 
-// ---------- Chính tuyến: gắn chương I cho 10 NV cũ ----------
-QUESTS.forEach(q => {
-  // QA regression: chỉ NV1 ở Tương Dương — NV2 trả tại Trưởng Làng, vì cổng thành khóa (reqMain 10)
-  // sau khi rời thành, nếu trả NV2 cho Trưởng Lão Rell thì tân thủ bị kẹt cứng không thể vào lại thành.
-  if (q.id <= 1){ q.npc = 'quachtinh'; q.map = 'tuongduong'; q.chapter = 'Chương I · Kẻ Từ Thế Giới Khác'; }
-  else { q.npc = 'truonglang'; q.map = 'daohoa'; q.chapter = 'Chương I · Petalshade Isle'; }
-});
-// Chương II — Lunaris City (mở sau khi phá vỏ kén)
-QUESTS.push(
-  { id:11, lv:10, name:'Nửa Thành Ngoại Lai', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
-    desc:'Ngươi đã nhớ ra mình là ai. Về Lunaris City trình diện Trưởng Lão Rell — nửa thành này là đá Ardhaven rơi qua cùng ngươi.',
-    type:'talk', targetNpc:'quachtinh', need:1, rew:{xp:2000, silver:300} },
-  { id:12, lv:11, name:'Thành Không Còn Thuốc', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
-    desc:'Người tị nạn Axie đổ về thành mỗi ngày, kho thuốc đã cạn. Ra Outskirts ngoài cổng hái 6 Thảo Dược đem về.',
-    type:'collect', herbMap:'ngoai', need:6, rew:{xp:2600, silver:650} },
-  { id:13, lv:16, name:'Chặn Đường Tiếp Tế', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
-    desc:'Gloam Cựu Binh chặn đoàn xe tị nạn ngoài Outskirts. Diệt 8 tên để đường về thành thông trở lại.',
-    type:'kill', mob:'bandit_vet', need:8, rew:{xp:3200, silver:420} },
-  { id:14, lv:16, name:'Người Bản Địa Biết Đường', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
-    desc:'Bản đồ Vaeldra vô dụng ở đây. Gặp Trinh Sát Wren — một Axie thuộc lòng từng lối mòn Lunacia.',
-    type:'talk', targetNpc:'monkhach', need:1, rew:{xp:2800, silver:300} },
-  { id:15, lv:17, name:'Trụ Khóa Thứ Nhất', chapter:'Chương II · Lunaris City', npc:'quachtinh', map:'tuongduong',
-    desc:'Trụ Khóa thứ nhất nằm trong Thornwood Reach, mà cửa rừng cần cấp 20. Bầy Gai Đầu Đàn quanh Outskirts đang dồn về phía đó — hạ 5 con để dọn đường, và lấy đủ sức vào rừng.',
-    type:'kill', mob:'wolf_alpha', need:5, rew:{xp:4200, silver:800} },
-);
-// Chương III — Thornwood Reach
-QUESTS.push(
-  { id:16, lv:20, name:'Trụ Thứ Nhất', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
-    desc:'Trụ Khóa đầu tiên nằm sâu trong Thornwood Reach. Gặp Người Gác Rừng Corran ở cửa rừng — ông ta là Axie, và ông ta không ưa người Vaeldra.',
-    type:'talk', targetNpc:'daosi', need:1, rew:{xp:5500, silver:600} },
-  { id:17, lv:22, name:'Kẻ Đổi Phe', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
-    desc:'Có những kẻ tự nguyện nhận khí Morvahn để đổi lấy sức mạnh — giờ chỉ còn trơ xương trong lớp giáp cũ. Corran gọi chúng là kẻ phản bội. Diệt 6 tên.',
-    type:'kill', mob:'phando', need:6, rew:{xp:6500, silver:700} },
-  { id:18, lv:27, name:'Nọc Của Vết Nứt', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
-    desc:'Chimera Phun Độc nhả thứ khí làm muông thú tự nguyện đi về phía vết nứt. Diệt 6 con để cắt nguồn.',
-    type:'kill', mob:'xanu', need:6, rew:{xp:8000, silver:1100} },
-  { id:19, lv:34, name:'Không Cứu Được Nữa', chapter:'Chương III · Thornwood Reach', npc:'daosi', map:'chungnam',
-    desc:'Ba Axie đã bị khí Morvahn ăn hết tâm trí, chặn lối xuống Hollow Roost. Corran nói thẳng: không còn gì để cứu. Kết liễu chúng cho nhẹ nợ.',
-    type:'kill', mob:'bandao', need:3, rew:{xp:10000, silver:1450} },
-);
-// Chương IV — Hollow Roost
-QUESTS.push(
-  { id:20, lv:40, name:'Ổ Ấp Cuối Cùng', chapter:'Chương IV · Hollow Roost', npc:'thumo', map:'comoc',
-    desc:'Hollow Roost là ổ ấp lớn nhất Lunacia — giờ im như nghĩa địa. Tìm Sylas, người vẫn ở lại canh những quả trứng chưa nở.',
-    type:'talk', targetNpc:'thumo', need:1, rew:{xp:14000, silver:1200} },
-  { id:21, lv:43, name:'Tiếng Khóc Trong Đêm', chapter:'Chương IV · Hollow Roost', npc:'thumo', map:'comoc',
-    desc:'Oan Hồn Ổ Ấp là những hatchling chết trước khi kịp nở. Đêm nào chúng cũng khóc quanh tổ. Giải thoát 7 con.',
-    type:'kill', mob:'thinu', need:7, rew:{xp:17000, silver:1400} },
-  { id:22, lv:47, name:'Lính Gác Hỏng', chapter:'Chương IV · Hollow Roost', npc:'thumo', map:'comoc',
-    desc:'Axie Golem — lính gác Thủ Hộ Vaeldra ghép từ thân gỗ Lunacia để bảo vệ trứng — đã bị khí Morvahn bẻ lệnh, giờ đập vỡ chính thứ mình canh. Phá hủy 5 con.',
-    type:'kill', mob:'mocnhan', need:5, rew:{xp:21000, silver:2050} },
-  { id:23, lv:52, name:'Kẻ Rút Trứng', chapter:'Chương IV · Hollow Roost', npc:'thumo', map:'comoc',
-    desc:'Bầy Dơi Chimera hút cạn trứng trong tổ để nuôi Trụ Khóa mà tướng quân đang chiếm. Diệt 6 con — lối lên Frostmire Vale sẽ mở.',
-    type:'kill', mob:'huyetbat', need:6, rew:{xp:26000, silver:2250} },
-);
-// Chương V — Frostmire Vale
-QUESTS.push(
-  { id:24, lv:60, name:'Thung Lũng Đang Đổi', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
-    desc:'Frostmire Vale đang bị vết nứt viết lại — đất Lunacia hóa dần thành đất Vaeldra. Tìm Liora, người chép lại từng thay đổi mỗi ngày.',
-    type:'talk', targetNpc:'ttmon', need:1, rew:{xp:34000, silver:2000} },
-  { id:25, lv:63, name:'Những Kẻ Lạc Lối', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
-    desc:'Dân tị nạn Axie chạy vào vale rồi không ra được, hít độc hoa tới mức quên mình là ai, quỳ lạy vết nứt như thánh thần. Giải thoát 7 Kẻ Cuồng Tín.',
-    type:'kill', mob:'ttdetu', need:7, rew:{xp:40000, silver:2200} },
-  { id:26, lv:68, name:'Gốc Rễ Độc', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
-    desc:'Chimera Cầu Gai kết lại từ chỗ khí vết nứt đọng xuống, độc rỉ theo từng gai. Diệt 6 con — nhớ bật phù trợ của lớp (phím 3) trước khi vào.',
-    type:'kill', mob:'docyeu', need:6, rew:{xp:48000, silver:3200} },
-  { id:27, lv:76, name:'Mai Phục Trong Sương', chapter:'Chương V · Frostmire Vale', npc:'ttmon', map:'tuyettinh',
-    desc:'Tướng quân đã biết ngươi đang đi gỡ từng Trụ Khóa, và gửi sát thủ chặn lối ra Ashen Steppe. Diệt 4 tên.',
-    type:'kill', mob:'satthuhy', need:4, rew:{xp:58000, silver:3600} },
-);
-// Chương VI — Ashen Steppe
-QUESTS.push(
-  { id:28, lv:80, name:'Đếm Quân', chapter:'Chương VI · Ashen Steppe', npc:'noiung', map:'mongco',
-    desc:'Cả một đại quân đang tụ trên Ashen Steppe. Tìm Dax ở rìa thảo nguyên — hắn đã nằm đó ba năm chỉ để đếm xem địch đông cỡ nào.',
-    type:'talk', targetNpc:'noiung', need:1, rew:{xp:68000, silver:3200} },
-  { id:29, lv:83, name:'Bịt Mắt Đại Quân', chapter:'Chương VI · Ashen Steppe', npc:'noiung', map:'mongco',
-    desc:'Trinh Sát Tro Tàn rải khắp thảo nguyên, báo về từng bước chân ngươi đi. Diệt 7 tên.',
-    type:'kill', mob:'thamtu', need:7, rew:{xp:78000, silver:3600} },
-  { id:30, lv:88, name:'Phá Hàng Cung', chapter:'Chương VI · Ashen Steppe', npc:'noiung', map:'mongco',
-    desc:'Cung Thủ Tro Tàn giữ hàng sau, bắn phủ đầu cả thảo nguyên. Diệt 6 tên để mở khoảng trống cho đoàn tị nạn rút qua.',
-    type:'kill', mob:'cungthu', need:6, rew:{xp:90000, silver:4750} },
-  { id:31, lv:97, name:'Mũi Nhọn', chapter:'Chương VI · Ashen Steppe', npc:'noiung', map:'mongco',
-    desc:'Kỵ Sĩ Tro Tàn là mũi nhọn sẽ chọc thẳng vào Lunaris City. Diệt 4 tên — rồi đường ra Stormgate Pass sẽ mở.',
-    type:'kill', mob:'kybinh', need:4, rew:{xp:105000, silver:5250} },
-);
-// Chương VII — Stormgate Pass (chung kết)
-QUESTS.push(
-  { id:32, lv:100, name:'Dưới Miệng Vết Nứt', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
-    desc:'Stormgate Pass nằm ngay dưới miệng vết nứt. Gặp Lão Tướng Brann — Trụ Khóa cuối cùng ở đây, và ông ta biết chuyện gì xảy ra khi nó gãy.',
-    type:'talk', targetNpc:'laotuong', need:1, rew:{xp:120000, silver:5000} },
-  { id:33, lv:100, name:'Giữ Phòng Tuyến', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
-    desc:'Cuồng Binh Tro Tàn tràn xuống từng đợt như thủy triều. Diệt 6 tên — sau lưng ngươi là đường rút của cả Lunaris City.',
-    type:'kill', mob:'cuongbinh', need:6, rew:{xp:140000, silver:5500} },
-  { id:34, lv:108, name:'Thứ Bị Kéo Qua Cùng', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
-    desc:'Chó Ngao Lửa vốn là thú săn của Vaeldra, bị vết nứt kéo qua rồi hóa dại. Hạ 4 con để chúng được yên — chúng không có lỗi gì cả.',
-    type:'kill', mob:'kylan', need:4, rew:{xp:165000, silver:6900} },
-  { id:35, lv:116, name:'Trụ Khóa Cuối Cùng', chapter:'Chương VII · Stormgate Pass', npc:'laotuong', map:'nhanmon',
-    desc:'Bầy Axie Cuồng Bão canh Trụ Khóa thứ năm. Diệt 5 con — nhưng Brann đã cảnh báo: trụ cuối gãy thì vết nứt mở toang, và Morvahn sẽ bước qua.',
-    type:'kill', mob:'daokhach', need:3, rew:{xp:200000, silver:9200} },   // lv120 elite có khiên: 5 con ở cấp 100 là bất khả (chơi thử 0/5, 85 lần chết)
-);
+// ---------- Chính tuyến: ĐÃ GỠ SẠCH ----------
+// Sáu chương (25 nhiệm vụ) từng được `QUESTS.push(...)` ngay tại đây, nối tiếp 10 nhiệm vụ khai
+// trong data/canbang.js. Gỡ cả hai nơi cùng lúc, nếu không thì bảng "rỗng" ở tệp dữ liệu vẫn ra
+// 25 mục — đã mắc đúng lỗi đó một lần trong đợt này.
+//
+// Máy chạy nhiệm vụ giữ nguyên: currentQuest() trả null khi bảng rỗng, bảng theo dõi tự ẩn.
+// Khuôn dữ liệu và ghi chú để dựng lại nằm ở data/canbang.js chỗ `window.QUESTS`.
 
 // ---------- Phụ tuyến theo vùng (tối đa 3 active cùng lúc) ----------
 // QA: 66 NV phụ đời trước gần 80% là "diệt N con X" lặp đi lặp lại (nhàm chán, trùng nội dung với
@@ -20873,13 +20782,12 @@ window.turnInSide = function(id){
   closePanels(); saveGame();
 };
 
-// ---------- Khóa map: đủ cấp + xong chương trước ----------
-MAPS.tuongduong.reqMain = 10; // xong Chương I (phá Bình Cảnh)
-MAPS.chungnam.reqMain   = 15; // xong Chương II
-MAPS.comoc.reqMain      = 19; // xong Chương III
-MAPS.tuyettinh.reqMain  = 23; // xong Chương IV
-MAPS.mongco.reqMain     = 27; // xong Chương V
-MAPS.nhanmon.reqMain    = 31; // xong Chương VI
+// ---------- Khóa map: CHỈ CÒN ĐỦ CẤP ----------
+// `reqMain` (đòi xong chương trước) đã gỡ cùng với toàn bộ nhiệm vụ — xem data/canbang.js.
+// Ghi lại cho lần dựng lại: sáu dòng cũ đòi questIdx ≥ 10/15/19/23/27/31, trong khi bảng QUESTS
+// chỉ có 10 mục. Nghĩa là năm map cuối THỰC TẾ đã mở bằng lối vòng theo cấp (MAP_LV_BYPASS) từ
+// lâu chứ không phải bằng nhiệm vụ. Khoá map sau một nhiệm vụ nghĩa là nhiệm vụ hỏng thì map mất.
+// Nhánh đọc `md.reqMain` trong mapGate() vẫn còn: cắm lại một giá trị là khoá sống lại.
 // BẢN THỬ NGHIỆM: mở toàn bộ map (đặt false để bật lại khóa theo cấp + nhiệm vụ)
 let OPEN_ALL_MAPS = false; // QA endgame F1: cổng map phải có hiệu lực — cấp/điều kiện NV kiểm soát tiến trình (true chỉ dùng khi dev test)
 function mapGate(id){
@@ -21570,7 +21478,11 @@ function trackerHtml(){
       : `<div>${q.desc}</div>${prog ? `<div style="margin-top:4px;color:#7ecbff">${prog}</div>` : ''}`;
     qt += `<div style="margin-top:5px"><button class="mini-btn" style="font-size:11px;padding:2px 10px" onclick="goQuest()">🧭 Tới Ngay</button></div>`; // GDD Đợt 2 B2
   } else {
-    qt += `<div class="q-title">★ Chính tuyến hoàn tất!</div><div>Bạn là Kẻ Mở Trụ Cuối — tự do rèn luyện & làm phụ tuyến…</div>`;
+    // Nhánh này chạy cho CẢ HAI trường hợp: đã đi hết chuỗi, và (nay) chưa có chuỗi nào. Nói
+    // "hoàn tất, tự do làm phụ tuyến" trong khi bảng nhiệm vụ rỗng sạch là nói dối người chơi.
+    qt += QUESTS.length
+      ? `<div class="q-title">★ Chính tuyến hoàn tất!</div><div>Bạn là Kẻ Mở Trụ Cuối — tự do rèn luyện.</div>`
+      : `<div class="q-title">✦ Chưa có nhiệm vụ</div><div>Chuỗi nhiệm vụ đang được dựng lại. Cứ đi săn, rèn đồ và nuôi Chimera — mọi hệ thống khác vẫn chạy.</div>`;
   }
   const act = SIDE_QUESTS.filter(sq => sideStates[sq.id] && sideStates[sq.id].st !== 'claimed').slice(0, 2);
   for (const sq of act){
@@ -21707,6 +21619,7 @@ function renderQlog(){
   let html = moBang({ tieu:'Nhật Ký Nhiệm Vụ', chon:window.qlogTab, ham:'setQlogTab',
     tabs:[{ id:'main', ten:'★ Chính Tuyến' }, { id:'side', ten:'◈ Phụ Tuyến' }, { id:'story', ten:'📜 Nhật Ký' }] });
   if (window.qlogTab === 'main'){
+    if (!QUESTS.length) html += `<div class="ql-row" style="opacity:.7">Chưa có nhiệm vụ chính tuyến. Chuỗi cũ đã gỡ để dựng lại theo lối chơi mới.</div>`;
     let lastCh = '';
     QUESTS.forEach((q, i) => {
       if (q.chapter !== lastCh){
@@ -21755,6 +21668,7 @@ function renderQlog(){
     }
     if (flags.ketMo) html += `<div class="ql-ch" style="color:#ff6b6b">☠ KẾT MỞ — trụ cuối đã gãy. Morvahn đang bước qua…</div>`;
   } else {
+    if (!SIDE_QUESTS.length) html += `<div class="ql-row" style="opacity:.7">Chưa có nhiệm vụ phụ tuyến. Chuỗi cũ đã gỡ để dựng lại theo lối chơi mới.</div>`;
     for (const mapId in MAPS){
       const list = SIDE_QUESTS.filter(sq => sq.map === mapId);
       if (!list.length) continue;
