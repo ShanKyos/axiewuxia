@@ -1124,7 +1124,11 @@ const VFX_ATLAS_IMGS = {};
 const VFX_ATLAS_DUNG = {};   // id → lúc dùng gần nhất (ms)
 function getVfxAtlasImg(id){
   let im = VFX_ATLAS_IMGS[id];
-  if (!im){ im = new Image(); im.src = 'assets/vfx/' + id + '/atlas.png'; VFX_ATLAS_IMGS[id] = im; }
+  if (!im){
+    im = new Image(); im.src = 'assets/vfx/' + id + '/atlas.png'; VFX_ATLAS_IMGS[id] = im;
+    VFX_ATLAS_DUNG[id] = performance.now();
+    vfxAtlasDon();               // dọn NGAY lúc thêm, đừng đợi nhịp quét 30 giây
+  }
   VFX_ATLAS_DUNG[id] = performance.now();
   return im;
 }
@@ -1132,11 +1136,36 @@ function getVfxAtlasImg(id){
 // chỉ chớp qua trong ba giây — sáu tấm nằm lại cùng lúc là 91 MB cho thứ không ai đang nhìn.
 // Nạp lại chỉ tốn một nhịp mạng cho tệp dưới 1,5 MB.
 const VFX_ATLAS_GIU = 60000;   // giữ một phút sau lần dùng cuối
+// TRẦN SỐ LƯỢNG, bên cạnh trần thời gian. Hai thứ chặn hai kiểu hỏng khác nhau:
+//   · VFX_ATLAS_GIU chặn tấm ĐÃ XEM XONG nằm lại — nhưng chỉ sau một phút.
+//   · VFX_ATLAS_TOI_DA chặn NHIỀU TẤM CÙNG SỐNG trong vòng một phút đó.
+// Chỉ có trần thời gian là chưa đủ: tám atlas hiện tại giải nén ra 99,1 MB, mà trận đánh nào
+// cũng nổ vài loại trạng thái liên tiếp nên cả tám dễ cùng nằm trong cửa sổ 60 giây. Thêm
+// vài chiêu có art nữa là con số đó nhân lên — đúng đường đã dẫn tới lần Chrome sập.
+// Bốn là vừa: đo trong trận thì nhiều nhất ba loại trạng thái nổ chồng nhau.
+const VFX_ATLAS_TOI_DA = 4;
+// Tấm nào đang có hiệu ứng CHẠY DỞ thì không được thả, dù nó là tấm lâu không đụng nhất —
+// thả giữa chừng là hiệu ứng biến mất ngay trước mắt người chơi. Màn Khế Ước vẽ thẳng chứ
+// không qua addEffect(), nên hai clip của nó nhận diện bằng dấu _kuChay.
+function vfxDangChay(){
+  const d = new Set();
+  for (const e of effects) if (e.type === 'atlasVfx' && e.id) d.add(e.id);
+  if (_kuChay){ d.add('summon_on_cast'); d.add('power_awaken'); }
+  return d;
+}
 function vfxAtlasDon(now){
   now = now == null ? performance.now() : now;
+  const chay = vfxDangChay();
+  const bo1 = id => { delete VFX_ATLAS_IMGS[id]; delete VFX_ATLAS_DUNG[id]; };
   let bo = 0;
   for (const id in VFX_ATLAS_IMGS)
-    if (now - (VFX_ATLAS_DUNG[id] || 0) > VFX_ATLAS_GIU){ delete VFX_ATLAS_IMGS[id]; delete VFX_ATLAS_DUNG[id]; bo++; }
+    if (!chay.has(id) && now - (VFX_ATLAS_DUNG[id] || 0) > VFX_ATLAS_GIU){ bo1(id); bo++; }
+  const con = Object.keys(VFX_ATLAS_IMGS).filter(id => !chay.has(id));
+  if (Object.keys(VFX_ATLAS_IMGS).length > VFX_ATLAS_TOI_DA){
+    con.sort((x, y) => (VFX_ATLAS_DUNG[x] || 0) - (VFX_ATLAS_DUNG[y] || 0));
+    const canBo = Object.keys(VFX_ATLAS_IMGS).length - VFX_ATLAS_TOI_DA;
+    for (let i = 0; i < Math.min(canBo, con.length); i++){ bo1(con[i]); bo++; }
+  }
   return bo;
 }
 setInterval(() => { vfxAtlasDon(); chiQuayDon(); }, 30000);

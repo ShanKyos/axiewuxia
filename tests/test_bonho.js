@@ -11,7 +11,12 @@ const URL = 'http://localhost:8871/index.html?max=1';
 
 // Trần cho TỪNG tấm atlas. Bản gốc là 52-70 MB một tấm — đúng thứ phải chặn không cho quay lại.
 const TRAN_MOT_ATLAS_MB = 22;
-const TRAN_TONG_ATLAS_MB = 100;
+// Trần cho TỔNG — nhưng không phải tổng của MỌI tấm nữa. Từ khi có VFX_ATLAS_TOI_DA, game chỉ
+// giữ tối đa ngần ấy tấm cùng lúc, nên con số đáng sợ là tổng của N TẤM NẶNG NHẤT chứ không
+// phải tổng cả bộ. Đổi mốc như vậy để bài này không cản việc thêm clip mới: thêm clip thứ 20
+// hay 40 cũng không làm đỉnh nhích lên, miễn từng tấm còn dưới trần và trần số lượng còn đó.
+// (Mốc cũ là 100 MB cho tổng cả bộ — nó đã suýt chặn đợt thêm hai clip cho màn Khế Ước.)
+const TRAN_NANG_NHAT_MB = 70;
 const TRAN_ANH_GIU_MB = 170;   // tổng ảnh giải nén sau khi đi hết map + nổ hết hiệu ứng
 
 (async () => {
@@ -29,15 +34,23 @@ const TRAN_ANH_GIU_MB = 170;   // tổng ảnh giải nén sau khi đi hết map
     applyTestBoost(); player.tutStep = -1;
     const mb = px => +(px * 4 / 1048576).toFixed(1);
 
-    // ① nổ hết sáu hiệu ứng trạng thái ⇒ nạp cả sáu atlas
+    // ① Cỡ từng atlas suy THẲNG TỪ BẢNG KHAI, không phải từ ảnh đã nạp: nay có trần số lượng
+    //    nên nạp cả bộ rồi đo là đo nhầm — mấy tấm đầu đã bị thả trước khi đọc tới.
     const ids = Object.keys(VFX_ATLAS_DEFS);
+    const atlas = ids.map(id => { const d = VFX_ATLAS_DEFS[id];
+      return { id, mb: mb(d.cols * d.frameW * d.rows * d.frameH) }; });
+
+    // ①b Trần số lượng có chạy thật không: xin cả bộ, chỉ được giữ lại tối đa VFX_ATLAS_TOI_DA.
+    effects.length = 0;
     ids.forEach(getVfxAtlasImg);
     await new Promise(r => setTimeout(r, 3000));
-    const atlas = ids.map(id => {
-      const im = VFX_ATLAS_IMGS[id];
-      return { id, taiXong: !!(im && im.complete && im.naturalWidth),
-               mb: im && im.naturalWidth ? mb(im.naturalWidth * im.naturalHeight) : -1 };
-    });
+    const giuSauKhiXinHet = Object.keys(VFX_ATLAS_IMGS).length;
+    // ①c Tấm đang có hiệu ứng CHẠY DỞ không được thả, dù bị ép vượt trần.
+    effects.length = 0;
+    spawnAtlasVfx(ids[0], player.x, player.y, 0.4);
+    ids.forEach(getVfxAtlasImg);
+    const giuTamDangChay = !!VFX_ATLAS_IMGS[ids[0]];
+    effects.length = 0;
 
     // ② đi hết mọi map ngoài trời ⇒ nạp hết ảnh nền
     const ds = Object.keys(MAPS).filter(k => !MAPS[k].dungeon);
@@ -60,8 +73,9 @@ const TRAN_ANH_GIU_MB = 170;   // tổng ảnh giải nén sau khi đi hết map
     const daBo = vfxAtlasDon();
 
     return {
-      atlas,
-      tongAtlasMB: +atlas.reduce((n, a) => n + Math.max(0, a.mb), 0).toFixed(1),
+      atlas, giuSauKhiXinHet, giuTamDangChay, tranSoLuong: VFX_ATLAS_TOI_DA,
+      nangNhatMB: +atlas.map(a => a.mb).sort((x, y) => y - x)
+                        .slice(0, VFX_ATLAS_TOI_DA).reduce((n, v) => n + v, 0).toFixed(1),
       bgTruocDon, bgSauDon, bgMB,
       itemArt: _itemArtCache.size, tranItemArt: ITEM_ART_CAP,
       heroCard: _heroCardCache.size, tranHeroCard: HERO_CARD_CAP,
@@ -73,19 +87,30 @@ const TRAN_ANH_GIU_MB = 170;   // tổng ảnh giải nén sau khi đi hết map
 
   console.log(JSON.stringify(out, null, 1));
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
+  const pass = m => console.log('PASS', m);
 
-  // Chốt chặn chống rỗng: không tải được atlas thì mọi phép đo bên dưới xanh vì KHÔNG ĐO GÌ.
+  // Chốt chặn chống rỗng: bảng khai rỗng thì mọi phép đo bên dưới xanh vì KHÔNG ĐO GÌ.
+  if (!out.atlas.length) fail('VFX_ATLAS_DEFS rỗng — phép đo rỗng');
   for (const a of out.atlas){
-    if (!a.taiXong) fail(`atlas ${a.id} không tải được — phép đo rỗng`);
-    else if (a.mb > TRAN_MOT_ATLAS_MB)
+    if (a.mb > TRAN_MOT_ATLAS_MB)
       fail(`atlas ${a.id} chiếm ${a.mb} MB RAM khi giải nén (trần ${TRAN_MOT_ATLAS_MB} MB) — ảnh quá to so với cỡ vẽ ra màn`);
   }
-  if (out.tongAtlasMB > TRAN_TONG_ATLAS_MB)
-    fail(`${out.atlas.length} atlas cộng lại ${out.tongAtlasMB} MB (trần ${TRAN_TONG_ATLAS_MB} MB)`);
-  // Đếm theo BẢNG KHAI, không viết cứng số 6: mỗi lần thêm một tấm hiệu ứng mới (Flame
-  // Cyclone là tấm thứ bảy) bài này lại đỏ oan trong khi cơ chế dọn vẫn chạy đúng.
-  if (out.daBo !== out.soAtlas || out.conAtlas !== 0)
-    fail(`dọn atlas hỏng: bỏ ${out.daBo}/${out.soAtlas}, còn ${out.conAtlas} — atlas không dùng phải được thả ra`);
+  if (out.nangNhatMB > TRAN_NANG_NHAT_MB)
+    fail(`${out.tranSoLuong} tấm nặng nhất cộng lại ${out.nangNhatMB} MB (trần ${TRAN_NANG_NHAT_MB} MB)`);
+  else pass(`đỉnh xấu nhất ${out.nangNhatMB} MB — ${out.tranSoLuong} tấm nặng nhất trong ${out.atlas.length} clip`);
+  if (out.giuSauKhiXinHet > out.tranSoLuong)
+    fail(`xin cả ${out.atlas.length} atlas thì giữ lại ${out.giuSauKhiXinHet} — trần số lượng là ${out.tranSoLuong}`);
+  else pass(`trần số lượng chạy: xin ${out.atlas.length}, giữ ${out.giuSauKhiXinHet}`);
+  if (!out.giuTamDangChay)
+    fail('tấm đang có hiệu ứng chạy dở bị thả — hiệu ứng sẽ biến mất giữa chừng');
+  else pass('tấm đang chạy dở không bị thả dù vượt trần');
+  // Thứ phải đúng là CÒN LẠI BAO NHIÊU, không phải bỏ bao nhiêu. Trần số lượng khiến chỉ vài
+  // tấm còn sống lúc quét, nên `daBo === soAtlas` là mốc sai từ khi có trần — nó đòi bỏ 8 tấm
+  // trong khi trước đó chỉ có 4 tấm trong tay. Ép mọi tấm thành "lâu không dùng" thì phải
+  // sạch bằng 0, đó mới là điều kiện thật.
+  if (out.conAtlas !== 0)
+    fail(`dọn atlas hỏng: còn ${out.conAtlas} tấm sau khi ép mọi tấm thành lâu không dùng`);
+  else pass(`dọn sạch atlas không dùng (bỏ ${out.daBo} tấm đang giữ)`);
   if (out.bgTruocDon < 5) fail(`chỉ nạp được ${out.bgTruocDon} ảnh nền — phép đo dọn ảnh nền rỗng`);
   if (out.bgSauDon > 2) fail(`dọn xong vẫn giữ ${out.bgSauDon} ảnh nền map (chỉ được giữ map đang đứng + map vừa rời)`);
   if (out.itemArt > out.tranItemArt) fail(`kho ảnh vật phẩm ${out.itemArt} vượt trần ${out.tranItemArt}`);
