@@ -290,55 +290,38 @@ Không lưu state sự kiện — mốc giờ tính lại được từ đồng 
 
 ⚠ Sự kiện mới PHẢI vào `eventList()` để hiện trên Bảng Sự Kiện + chip đồng hồ.
 
-## Khắc Ấn — đồ đổi CÁCH CHIÊU CHẠY, không đổi con số
+## ~~Khắc Ấn~~ — ĐÃ GỠ, đừng dựng lại
 
-Bài học từ Diablo 3 (Loot 2.0 / legendary power). Trước hệ này **không một món đồ nào**
-làm chiêu thức hành xử khác đi: 15 dòng phụ (`subName`) đều là `pct:true`, 6 dòng
-`AWAKENED` là số cộng thẳng, bonus 4 bộ `ANCIENT_SETS` cũng chỉ %. Mọi hệ sản xuất đồ
-(rèn, Bảo Hạp, Cổ Thần, gacha, sự kiện…) vì thế đổ về cùng một phần thưởng vô vị.
+Cả hệ Khắc Ấn (`SIGIL_DEFS`, `_sigilTag`, `sigilTick`, `rollSigil`…) **đã bị gỡ khỏi game**
+trong đợt kéo về mô hình MU. `game.js` ghi rõ lý do ở chỗ cũ: *"Đó là cơ chế của Diablo, không
+phải của MU — MU không có món đồ nào ĐỔI CÁCH một chiêu hoạt động."* Nó cũng là hệ tốn nhất
+trong sáu hệ bị gỡ: 110 chỗ nhắc tới, luồn qua cả `castSkill`, đường bay của đạn và `hurtMob`.
 
-- `SIGIL_DEFS` — **12 Khắc Ấn**, mỗi lớp dùng được đúng 4 (2 riêng + 2 dùng chung).
-  Gắn trên MỘT món đồ (`it.sigil`), mặc vào là có; `calcDerived()` gom vào `player.sigils`.
-  Khắc Ấn của lớp khác vẫn nằm trên món đồ nhưng **không kích hoạt** (`sigilUsable()`).
-- **4 móc**: `pre(tag)` trước khi tung · `hit(m,final,source,tag)` mỗi lần chạm ·
-  `cast(tag,hits)` sau khi tung (biết đã trúng mấy con) · `kill(m)` khi địch gục.
-  `tag`: `'a'` chiêu chính · `'tp'` Trấn Phái · `null` đòn thường/chiêu cũ.
-- **Ngữ cảnh `tag`** đi qua 2 đường: chiêu chạm-ngay đọc cờ toàn cục `_sigilTag` (castSkill
-  chạy đồng bộ); chiêu bắn đạn gắn `p.tag='a'` lên viên đạn và dựng lại cờ lúc đạn trúng.
-- ⚠ `_sigilBusy` chặn đệ quy — sát thương do Khắc Ấn gây ra mang `source:'sigil'` và
-  **không** kích Khắc Ấn lần nữa. Bỏ cái này thì Lan Trảm tự bật vòng đến tràn ngăn xếp.
-- `sigilTimers` / `sigilZones` (đòn hẹn giờ, vũng độc) chạy trong `sigilTick(dt)`,
-  **không lưu save**, và `sigilReset()` được gọi trong `buildWorld()` — nếu không, quả
-  Trấn Phái tung ở map cũ sẽ nổ giữa map mới.
-- **Nguồn rơi (chỉ 3)**: Bảo Hạp IV+ (18%→33% theo tầng) · Hung Thần Giáng Thế (45%) ·
-  Xâm Lăng Vàng (Chúa Đàn 35%, quái vàng 8%). Đây là **bản sắc riêng** của Xâm Lăng Vàng —
-  trước đó sự kiện này không có gì khác ngoài "Bảo Hạp bậc cao hơn".
-- `rollSigil()` **ưu tiên Khắc Ấn người chơi chưa có**. Mỗi lớp chỉ có 4 cái hợp lệ nên
-  random thuần sẽ trả trùng ngay lần thứ hai và hỏng hẳn cảm giác săn.
-- ⚠ Tên "Khắc Ấn" cố ý KHÁC "**Dấu Ấn Khai Sinh**" (đặc điểm bẩm sinh, `TRAITS`) — hai hệ
-  khác hẳn nhau và cùng hiện trong panel Nhân Vật, đừng đặt trùng tên lại.
+Mục này trước đây mô tả nó như một hệ **đang chạy**, và đã kịp làm lạc hướng một phiên làm việc
+(2026-09-06) — nên giữ lại đúng cái tiêu đề này để cảnh báo, thay vì xoá trắng và để người sau
+đọc `SIGIL_DEFS` trong lịch sử git rồi tưởng nó còn.
 
-Test: `node <scratchpad>/test_sigil.js` — chạy A/B từng Khắc Ấn (tắt vs bật) và bắt buộc
-số đo phải khác nhau; "có mô tả nhưng không làm gì" sẽ bị đánh trượt.
+**Trục "đổi cách chiêu chạy" hiện nay là `EVO_PATHS`** (Tiến Hoá, mốc cấp 40/80/120): Bá Đạo /
+Tốc Chiến chỉ đổi con số, còn **Lan Toả** đổi hành vi thật — +45% bán kính, −22% sát thương, tức
+chuyển chiêu từ dồn một mục tiêu sang quét cả bầy. Xem `docs/NHIP_CAP_1_120.md`.
 
 ## So sánh trang bị — nửa còn lại của Loot 2.0
 
 Với 15 dòng phụ đều là % thuần, người chơi không tự nhìn ra món vừa nhặt hơn hay kém.
 Trước đây túi đồ chỉ có mũi `▲` xanh dựa trên `itemPower()`: nói được "to hơn", không nói
-được "khác chỗ nào", và **mù hoàn toàn với Khắc Ấn**.
+được "khác chỗ nào".
 
 - `itemCompareHtml(it)` — phán quyết + chênh lệch TỪNG DÒNG so với món đang mặc cùng ô.
-  Nêu Khắc Ấn **trước** lực chiến: món kém 10% mà mang Khắc Ấn chưa có thường vẫn đáng mặc.
-  Cũng cảnh báo khi đổi món sẽ **rời bộ Cổ Thần** (mốc 2/3/5 mà bảng chỉ số không thấy).
+  Cảnh báo khi đổi món sẽ **rời bộ Cổ Thần** (mốc 2/3/5 mà bảng chỉ số không thấy).
 - `itemStatMap(it)` gom dòng chính/phụ/Thức Tỉnh về một bảng trừ được nhau (khoá có tiền tố
   `m:`/`s:`/`a:` để dòng cùng loại không đè nhau).
-- `itemSigilNew(it)` / `itemSigilLost(slot, incoming)` — được/mất Khắc Ấn nếu đổi món.
-- ⚠ **Ba cái bẫy Khắc Ấn tạo ra, đều đã chặn** (dễ tái phạm khi thêm hệ đồ mới):
-  1. `tryAutoEquip` + `autoEquipBest` từng tháo mất Khắc Ấn chỉ vì món mới hơn 5% chỉ số.
-  2. `autoEquipBest` xếp hạng theo **hai khoá** — (có Khắc Ấn mới) rồi mới tới lực chiến.
-     Nhân lực chiến với hệ số cố định là sai: Khắc Ấn khan hiếm hơn hẳn nên chênh chỉ số
-     bao nhiêu cũng không mua lại được.
-  3. Auto-bán (3 chỗ) + `sellItem` một chạm: món có `sigil` luôn tính là đồ quý.
+- ⚠ **Ba cái bẫy mà bất kỳ "thuộc tính khan hiếm" nào cũng tạo ra.** Chúng từng phát sinh với
+  Khắc Ấn (nay đã gỡ), và sẽ phát sinh y hệt với hệ đồ khan hiếm tiếp theo:
+  1. `tryAutoEquip` + `autoEquipBest` tháo mất thuộc tính hiếm chỉ vì món mới hơn 5% chỉ số.
+  2. `autoEquipBest` phải xếp hạng theo **hai khoá** — (có thứ hiếm) rồi mới tới lực chiến.
+     Nhân lực chiến với một hệ số cố định là sai: thứ khan hiếm thì chênh chỉ số bao nhiêu
+     cũng không mua lại được.
+  3. Auto-bán (3 chỗ) + `sellItem` một chạm phải coi món mang thuộc tính hiếm là đồ quý.
 
 Test: `node <scratchpad>/test_itemcompare.js`.
 
@@ -505,9 +488,9 @@ này. **Vũ khí trên tay cũng vẽ bằng chính bộ phận dựng icon** (`
 Ranger. Chặn ở **cả ba** chỗ mặc đồ — bấm tay, tự mặc khi nhặt, nút Mặc Đồ Tốt Nhất. Bỏ sót
 một chỗ là auto lách được luật. Dây chuyền và nhẫn không khoá.
 
-**Hiệu ứng chém theo `motif` là THUẦN HÌNH ẢNH.** Cơ chế chiến đấu là việc của Khắc Ấn — cho
-vũ khí làm cả hai thì hai hệ giẫm chân nhau và người chơi không biết sát thương lan ra là do
-kiếm hay do dấu ấn.
+**Hiệu ứng chém theo `motif` là THUẦN HÌNH ẢNH.** Cơ chế chiến đấu là việc của chiêu thức và
+Tiến Hoá — cho vũ khí làm cả hai thì hai hệ giẫm chân nhau và người chơi không biết sát thương
+lan ra là do kiếm hay do chiêu.
 
 ⚠ **Ba lỗi hình chỉ lộ khi CHỤP RA XEM, không lỗi nào lộ khi đọc code**: nhẫn ra hình móng
 ngựa (vẽ cung hở), găng ra thanh sô-cô-la (4 khối chữ nhật bằng nhau), kiếm cao hơn cả người
@@ -762,9 +745,9 @@ gác chuyện đó (cả ba đường mặc đồ đều đi qua đó).
 ## Cảm giác chiến đấu — 3 luật dễ vi phạm lại
 
 **1. AoE KHÔNG được hất lùi.** `hurtMob()` tự hất lùi mọi đòn `source === 'hit'|'crit'`.
-Chiêu diện rộng mà đẩy địch ra thì chính nó phá tan đội hình cho đòn kế tiếp của mình —
-Khắc Ấn Hiệu Triệu (trúng ≥3 địch) ngừng kích hoạt vì con thứ ba bị đẩy ra đúng 1 pixel.
-Đừng chữa bằng cách đổi `source`: `source` còn chi phối bạo kích, âm thanh, móc Khắc Ấn.
+Chiêu diện rộng mà đẩy địch ra thì chính nó phá tan đội hình cho đòn kế tiếp của mình — ca đã
+gặp: một hiệu ứng cần "trúng ≥3 địch" ngừng kích hoạt vì con thứ ba bị đẩy ra đúng 1 pixel.
+Đừng chữa bằng cách đổi `source`: `source` còn chi phối bạo kích và âm thanh.
 **Bọc vòng lặp trúng-nhiều-mục-tiêu trong `aoeHit(() => { … })`.** Chiêu nào MUỐN hất lùi
 thì khai báo `fx.kb` như cũ. Hiện có 6 chỗ: sectA cone/selfaoe, Võ Học Phổ cone/aoe và 2 sóng
 dư chấn của chúng.
