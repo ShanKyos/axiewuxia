@@ -4,6 +4,9 @@ Nghiên cứu cho câu hỏi: *làm sao tạo được cảm giác map giống R
 Phần 1 là số đo thật của game lúc này, không phải ấn tượng. Phần 2-3 tách ra thứ tạo nên cảm
 giác của hai game kia. Phần 4 nói thẳng chỗ mâu thuẫn. Phần 5 là đề xuất, có thứ tự ưu tiên.
 
+
+Bản đọc cho dễ: https://claude.ai/code/artifact/7f131749-3c3a-4304-a18a-2f5ad18d20ad — khi hai bên lệch nhau thì **tệp này** đúng.
+
 ---
 
 ## 1. Hiện trạng, đo được

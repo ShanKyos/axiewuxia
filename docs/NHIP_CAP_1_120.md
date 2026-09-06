@@ -8,6 +8,9 @@ số đo chứng minh điều đó, bốn cần gạt đã dựng xong đang n�
 
 Đọc kèm: [CAU_TRUC_MAP.md](CAU_TRUC_MAP.md) (số đo map) · [DE_XUAT_MAP.md](DE_XUAT_MAP.md) (đề xuất map).
 
+
+Bản đọc cho dễ: https://claude.ai/code/artifact/dbf4dccc-8e8c-4f61-b08f-4829f6832207 — khi hai bên lệch nhau thì **tệp này** đúng.
+
 ---
 
 ## 1. Hình dạng thật của 1-120
