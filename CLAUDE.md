@@ -290,6 +290,34 @@ Ba cửa chỉ đường, thiếu một là người chơi không biết đi đ�
 dòng riêng cho **từng vỉa** trong danh sách sự kiện (mỗi cái một CHỖ nên không gộp được), và một
 dòng trên hàng map trong bảng **Bản Đồ**. QA: `/via` · `/via ds` · `window.debugVia(map)`.
 
+### ▣ RƯƠNG CANH (B3.1) — hòm có người giữ, mở MỘT lần trong đời
+
+Vỉa Cốt cho thế giới lý do đi tới **mỗi ngày**. Rương Canh cho nó lý do đi tới **một lần**. Hai
+việc khác nhau, **đừng gộp** — và bài kiểm `test_ruong.js` §2 khoá đúng chỗ tách đó: rương phải
+đứng yên qua nhiều ngày, vỉa phải đổi.
+
+- Vị trí bốc từ **tên map** (`_bamChuoi('ruong:' + mid)`), không từ ngày ⇒ **không bao giờ đổi
+  chỗ**. Đi qua một lần là nhớ, và cái nhớ đó là thứ biến 2600×1900 pixel thành một nơi chốn.
+- 4 rương / vùng có bãi quái (7 vùng, kể cả Outskirts). ⚠ **Đừng thêm điều kiện `type:'safe'`** —
+  Outskirts khai `safe` (không PK) nhưng vẫn là bãi săn 8 bãi; chặn nó là vùng đông người nhất
+  mất sạch rương. Cửa duy nhất đúng là **có bãi quái**.
+- Mỗi rương một **trại canh 4 con, 4 vai** (`nang·can·xa·phap`, dùng lại A1). Trại còn sống thì
+  rương **khoá**. Trại **cố ý không có Kẻ Tiếp Sức**: nó phải chết được trong một lần đánh để mở
+  rương, không phải một bãi cày hồi máu lẫn nhau.
+- Rương **đã mở thì trại tan hẳn** và không dựng lại — nếu không, map đã vét sạch rương vẫn gánh
+  16 con quái thừa mãi mãi.
+
+**⚠ ĐỀ XUẤT CŨ GHI "hồi 20-40 phút" — KHÔNG LÀM THẾ.** Hòm hồi theo phút là bãi cày có thêm hoạt
+ảnh: AUTO đứng cạnh nó là xong. Rương ở đây mở **một lần vĩnh viễn cho mỗi nhân vật**
+(`player.ruong['<map>:<i>']`). Phần **lặp lại** của thế giới đã có Vỉa Cốt lo.
+
+Đây là viên gạch mà **A4** (miền dân số canh một vật thể) và **B1** (dọc đường có thứ đáng dừng)
+đều dựa vào: khái niệm *vật thể thế giới CÓ NGƯỜI CANH* được dựng ở đây.
+
+⚠ Trại canh mang `m.pack = 'ruong:<id>'`. Bài kiểm nào gom quái theo `m.pack` để đo **bãi quái**
+phải **bỏ tiền tố `ruong:`** — `test_bayquai` và `test_dibien` đã sửa; bài mới cũng phải nhớ.
+QA: `/ruong` · `/ruong ds` · `window.debugRuong()`.
+
 ### Bốn tài liệu thiết kế — đọc theo thứ tự này
 1. `docs/CAU_TRUC_MAP.md` — đo map hiện tại, đối chiếu Ragnarok / Path of Exile
 2. `docs/DE_XUAT_MAP.md` — 10 hạng mục / 4 đợt, có C1 (từ khoá phòng) + C2 (máy sinh)

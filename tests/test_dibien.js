@@ -33,7 +33,8 @@ const PORT = process.argv[2] || '8853';
     for (const k of ['ngoai','chungnam','tuyettinh','mongco','nhanmon']){
       curMap = k; buildWorld();
       const byPack = {};
-      for (const m of mobs){ if (m.pack == null || m.clone) continue; const e = (byPack[m.pack] = byPack[m.pack] || { elite:0, champ:0, tiepChamp:0, n:0, soDb:[] });
+      // ⚠ Bỏ 'ruong:*' — trại canh Rương Canh (B3.1) không phải bãi quái, không có elite.
+      for (const m of mobs){ if (m.pack == null || m.clone || String(m.pack).startsWith('ruong:')) continue; const e = (byPack[m.pack] = byPack[m.pack] || { elite:0, champ:0, tiepChamp:0, n:0, soDb:[] });
         e.n++; if (m.def.elite) e.elite++; if (m.dbChamp){ e.champ++; e.soDb.push(m.db.length); if (m.tiep) e.tiepChamp++; } }
       const P = Object.values(byPack);
       o.bai[k] = { coElite: P.filter(x=>x.elite).length, dung1: P.filter(x=>x.elite && x.champ===1).length,

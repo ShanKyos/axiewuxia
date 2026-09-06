@@ -38,7 +38,10 @@ const PORT = process.argv[2] || '8853';
     for (const k of ['chungnam','comoc','tuyettinh','mongco','nhanmon']){
       curMap = k; buildWorld();
       const byPack = {};
-      for (const m of mobs){ if (m.pack == null) continue; (byPack[m.pack] = byPack[m.pack] || { n:0, tiep:0 }); byPack[m.pack].n++; if (m.tiep) byPack[m.pack].tiep++; }
+      // ⚠ Bỏ 'ruong:*' — đó là TRẠI CANH của Rương Canh (B3.1), không phải bãi quái của map.
+      //   Trại canh là tiểu đội 4 vai cố định, cố ý KHÔNG có Kẻ Tiếp Sức: nó phải chết được
+      //   trong một lần đánh để mở rương, chứ không phải một bãi cày hồi máu lẫn nhau.
+      for (const m of mobs){ if (m.pack == null || String(m.pack).startsWith('ruong:')) continue; (byPack[m.pack] = byPack[m.pack] || { n:0, tiep:0 }); byPack[m.pack].n++; if (m.tiep) byPack[m.pack].tiep++; }
       const packs = Object.values(byPack);
       o.dai1[k] = { bai: packs.length, baiCoDung1: packs.filter(x => x.tiep === 1).length,
                     baiSai: packs.filter(x => x.tiep !== 1).map(x => x.tiep) };

@@ -488,6 +488,9 @@ const DROP_SRC = {
   elite:  { perfect:DROP_PERFECT },
   thuve:  { perfect:DROP_PERFECT },
   tranai: { perfect:DROP_PERFECT },
+  // Rương Canh (B3.1): mở MỘT lần trong đời cho mỗi nhân vật, nên cửa Hoàn Hảo gấp 2,5 lần
+  // quái thường — đây là phần thưởng của một chuyến đi, không phải của một nhịp cày.
+  ruong:  { perfect:DROP_PERFECT * 2.5 },
   // Rương Boss Săn (phó bản, MU Online-style) — 5 cấp. Bảng `rar` của chúng đã gỡ cùng hệ
   // phẩm; thứ phân biệt cấp rương nay là SỐ MÓN và giai của món (xem grantHuntBox).
   box1: { chance:1, perfect:0 },
@@ -4580,6 +4583,7 @@ function viaChonDiem(mid, ra){
   for (const k in (md.spawnFrom || {})) tranh.push({ x:md.spawnFrom[k].x, y:md.spawnFrom[k].y, r:VIA_CACH_MOC });
   for (const h of (HERB_SPOTS[mid] || [])) tranh.push({ x:h.x, y:h.y, r:VIA_CACH_MOC });
   if (typeof GATES !== 'undefined') for (const g of GATES) if (g.map === mid) tranh.push({ x:g.x, y:g.y, r:VIA_CACH_MOC });
+  for (const r of ruongCuaMap(mid)) tranh.push({ x:r.x, y:r.y, r:200 });   // hai vật thể chồng nhau thì không đọc ra cái nào
   // Nới dần: vùng chật (nhiều bãi + hồ lớn) có thể không còn điểm nào thoả. Thà đặt vỉa gần
   // bãi hơn một chút còn hơn hôm đó vùng mất vỉa — nhưng chỉ nới sau khi đã thử 300 lần.
   for (let thu = 0, noi = 0; thu < 600; thu++){
@@ -4656,6 +4660,117 @@ function viaThemPickup(){
   if (!v) return;
   pickups.push({ type:'via', x:v.x, y:v.y, dong:v.dong, respawn: viaDaLay(curMap) ? 999999 : 0 });
 }
+
+// ═══════════════ RƯƠNG CANH — hòm có người giữ, mở MỘT lần trong đời ═══════════════
+// B3.1. Vỉa Cốt cho thế giới một lý do đi tới MỖI NGÀY. Rương Canh cho nó một lý do đi tới
+// MỘT LẦN — và đó là hai việc khác nhau, đừng gộp.
+//
+// ⚠ ĐỀ XUẤT CŨ GHI "hồi 20-40 phút". KHÔNG LÀM THẾ. Một cái hòm hồi theo phút là một bãi cày
+// có thêm hoạt ảnh: AUTO đứng cạnh nó là xong, và ta lại quay về đúng cái vòng cũ. Rương ở đây
+// mở MỘT lần cho mỗi nhân vật, vĩnh viễn. Phần LẶP LẠI của thế giới đã có Vỉa Cốt lo (mỗi ngày,
+// đổi chỗ); rương lo phần KHÁM PHÁ (một lần, đứng yên, học thuộc được).
+//
+// Vì vậy vị trí rương bốc từ TÊN MAP chứ không từ ngày: nó không bao giờ đổi chỗ. Đi qua một
+// lần là nhớ, và cái nhớ đó chính là thứ biến 2600×1900 pixel thành một nơi chốn.
+//
+// Đây cũng là viên gạch mà A4 (miền dân số canh một vật thể) và B1 (dọc đường có thứ đáng dừng)
+// đều dựa vào: khái niệm "vật thể thế giới CÓ NGƯỜI CANH" được dựng ở đây.
+const RUONG_MOI_MAP = 4;
+const RUONG_CANH    = 4;    // mấy con canh một rương
+const RUONG_TAM     = 54;   // tầm mở
+const RUONG_CACH_BAI = 260;
+const RUONG_CACH_MOC = 210;
+const RUONG_CACH_NHAU = 420;
+const RUONG_VAI = ['nang', 'can', 'xa', 'phap'];   // một tiểu đội đủ vai, không phải bốn con giống nhau
+let _ruongCache = {};
+
+function ruongCuaMap(mid){
+  if (_ruongCache[mid]) return _ruongCache[mid];
+  const md = MAPS[mid];
+  // Cửa duy nhất là CÓ BÃI QUÁI. Đừng thêm điều kiện type:'safe' — Outskirts khai type 'safe'
+  // (không PK) nhưng vẫn là bãi săn 8 bãi quái, chặn nó là vùng đông người nhất mất hết rương.
+  if (!md || !md.packs || !md.packs.length){ _ruongCache[mid] = []; return _ruongCache[mid]; }
+  const ra = _hatRng(_bamChuoi('ruong:' + mid));
+  const tranh = [];
+  for (const q of (md.packs || [])) tranh.push({ x:q.x, y:q.y, r:RUONG_CACH_BAI });
+  if (md.spawn) tranh.push({ x:md.spawn.x, y:md.spawn.y, r:RUONG_CACH_MOC });
+  for (const k in (md.spawnFrom || {})) tranh.push({ x:md.spawnFrom[k].x, y:md.spawnFrom[k].y, r:RUONG_CACH_MOC });
+  if (typeof GATES !== 'undefined') for (const g of GATES) if (g.map === mid) tranh.push({ x:g.x, y:g.y, r:RUONG_CACH_MOC });
+  const ds = [];
+  for (let i = 0; i < RUONG_MOI_MAP; i++){
+    let dat = null;
+    for (let thu = 0, noi = 0; thu < 700; thu++){
+      if (thu === 350) noi = 80;
+      const x = 170 + ra() * (MAP.w - 340), y = 170 + ra() * (MAP.h - 340);
+      if (inObstacle(mid, x, y, 46)) continue;
+      if (tranh.some(t => dist(x, y, t.x, t.y) < t.r - noi)) continue;
+      if (ds.some(o => dist(x, y, o.x, o.y) < RUONG_CACH_NHAU - noi)) continue;
+      dat = { id: mid + ':' + i, map: mid, x: Math.round(x), y: Math.round(y),
+              mob: md.packs[Math.floor(ra() * md.packs.length)].mob };
+      break;
+    }
+    if (dat) ds.push(dat);
+  }
+  _ruongCache[mid] = ds;
+  return ds;
+}
+function ruongDaMo(id){ return !!(player && player.ruong && player.ruong[id]); }
+function ruongConLai(mid){ return ruongCuaMap(mid).filter(r => !ruongDaMo(r.id)).length; }
+// Trại canh chỉ dựng cho rương CHƯA mở. Mở rồi thì trại tan — nếu không, một map đã vét sạch
+// rương vẫn phải gánh 16 con quái thừa mãi mãi.
+function ruongDungTrai(){
+  for (const r of ruongCuaMap(curMap)){
+    if (ruongDaMo(r.id)) continue;
+    const zone = { x:r.x, y:r.y, r:96 };
+    for (let i = 0; i < RUONG_CANH; i++)
+      spawnMob(r.mob, zone, 'ruong:' + r.id, false, { role: RUONG_VAI[i % RUONG_VAI.length] });
+  }
+}
+function ruongCanhSong(id){ return mobs.some(m => m.pack === 'ruong:' + id && !m.dead); }
+function ruongGan(){
+  if (!player) return null;
+  for (const r of ruongCuaMap(curMap))
+    if (dist(player.x, player.y, r.x, r.y) <= RUONG_TAM) return r;
+  return null;
+}
+function ruongMo(){
+  const r = ruongGan();
+  if (!r || dead || ruongDaMo(r.id)) return false;
+  if (ruongCanhSong(r.id)){
+    addFloat(r.x, r.y - 70, '🔒 Trại canh còn sống — dọn sạch mới mở được', '#ffd76a', 13);
+    AudioSys.sfx('ui', 0.5);
+    return true;   // đã "dùng" phím J: đừng để nó rơi xuống hái thảo dược
+  }
+  player.ruong = player.ruong || {};
+  player.ruong[r.id] = 1;
+  const md = MAPS[curMap], lv = clamp((md.min || 1) + 6, 1, 120);
+  for (let i = 0; i < 2; i++) dropToGround({ k:'item', it: genItem(lv, 1.15, 'ruong') }, r.x, r.y - 6);
+  const bac = 400 + lv * 55;
+  player.silver += bac;
+  let hop = 0;
+  if (Math.random() < 0.35){
+    const t = clamp((typeof GOLDEN_BOX !== 'undefined' && GOLDEN_BOX[curMap]) || 1, 1, 7);
+    player.baohap[t] = (player.baohap[t] || 0) + 1;
+    hop = t;
+  }
+  addEffect({ type:'ring', x:r.x, y:r.y, r:90, color:'#ffd76a', big:true });
+  addFloat(r.x, r.y - 96, `+${bac.toLocaleString('vi-VN')}◈${hop ? ` · +1 ${BAOHAP_TIERS[hop].name}` : ''}`, '#ffd76a', 15);
+  zoneBanner = { text:'▣ RƯƠNG CANH ĐÃ MỞ',
+    sub:`${MAPS[curMap].name} — còn ${ruongConLai(curMap)}/${RUONG_MOI_MAP} rương chưa ai chạm tới.`,
+    color:'#ffd76a', t:4 };
+  AudioSys.sfx('forge_ok', 1);
+  saveGame();
+  return true;
+}
+// Hook QA: dời rương chưa mở gần nhất về cạnh chân và dọn sạch trại canh của nó.
+window.debugRuong = function(){
+  const ds = ruongCuaMap(curMap).filter(r => !ruongDaMo(r.id));
+  if (!ds.length || !player) return null;
+  const r = ds.sort((a,b) => dist(player.x,player.y,a.x,a.y) - dist(player.x,player.y,b.x,b.y))[0];
+  r.x = Math.round(player.x + 24); r.y = Math.round(player.y);
+  mobs = mobs.filter(m => m.pack !== 'ruong:' + r.id);
+  return r;
+};
 
 function chiBoHieu(){                          // dòng đang đủ 4 mảnh của con đang xuất trận
   const C = chiState(); return C.eq ? chiCotGom(C.eq).bo : null;
@@ -7365,6 +7480,16 @@ function banSacHtml(id){
   const bits = [`Đất của <b style="color:#ffd76a">${b.tenChuDao}</b> <span style="opacity:.6">${b.tyLe}%</span>`];
   if (b.he && ELEM[b.he]) bits.push(`hệ <b style="color:${ELEM[b.he].color}">${b.he}</b> <span style="opacity:.6">${b.tyLeHe}%</span>`);
   if (b.cot && COT_DONG[b.cot]) bits.push(`nơi <b>duy nhất</b> rơi Cốt <b style="color:${COT_DONG[b.cot].mau}">${COT_DONG[b.cot].ten}</b>`);
+  let ruong = '';
+  if (typeof ruongCuaMap === 'function'){
+    const ds = ruongCuaMap(id);
+    if (ds.length){
+      const con = ds.filter(r => !ruongDaMo(r.id)).length;
+      ruong = `<div class="m-desc" style="margin-top:2px;color:${con ? '#ffd76a' : '#8a8a8a'}">` +
+              (con ? `▣ Rương Canh: <b>${con}/${ds.length}</b> chưa mở — mỗi cái một trại canh, mở một lần duy nhất`
+                   : `▣ Rương Canh: đã vét sạch ${ds.length}/${ds.length}`) + `</div>`;
+    }
+  }
   let via = '';
   if (typeof viaCuaMap === 'function'){
     const v = viaCuaMap(id);
@@ -7375,7 +7500,7 @@ function banSacHtml(id){
                  : `◆ <b>Vỉa Cốt ${D.ten} HÔM NAY</b> mọc ở vùng này — mỗi ngày một lần`) + `</div>`;
     }
   }
-  return `<div class="m-desc" style="margin-top:3px">◆ ${bits.join(' · ')}</div>` + via;
+  return `<div class="m-desc" style="margin-top:3px">◆ ${bits.join(' · ')}</div>` + via + ruong;
 }
 function bandSummaryHtml(md){
   if (!md.packs || !md.packs.length) return '';
@@ -7444,6 +7569,7 @@ function buildWorld(){
   if (md.boss && questIdx >= 9 && questState !== 'all' && !victory) spawnBoss();
   if (md.herbs) for (const s of (HERB_SPOTS[curMap] || [])) pickups.push({ type:'herb', x:s.x, y:s.y, respawn:0 });
   viaThemPickup();   // Vỉa Cốt hôm nay (nếu vùng này có) — xem khối VỈA CỐT
+  ruongDungTrai();   // trại canh cho các Rương Canh CHƯA mở — xem khối RƯƠNG CANH
   // decor: ink trees, rocks theo địa hình map
   for (let i = 0; i < (md.trees ?? 70); i++)
     decor.push({ type:'tree', x:rnd(60,MAP.w-60), y:rnd(60,MAP.h-60), s:rnd(0.7,1.5) });
@@ -7472,6 +7598,7 @@ function buildWorld(){
     for (const k in (md.spawnFrom || {})) _keep.push({ x:md.spawnFrom[k].x, y:md.spawnFrom[k].y, r:150 });
     for (const h of (HERB_SPOTS[curMap] || [])) _keep.push({ x:h.x, y:h.y, r:60 });
     { const _v = viaCuaMap(curMap); if (_v) _keep.push({ x:_v.x, y:_v.y, r:110 }); }
+    for (const _r of ruongCuaMap(curMap)) _keep.push({ x:_r.x, y:_r.y, r:150 });   // cả rương lẫn trại canh của nó
     for (const a of AI_PASSES) if (a.map === curMap) _keep.push({ x:a.x, y:a.y, r:a.r + 80 });
     if (typeof GATES !== 'undefined') for (const g of GATES) if (g.map === curMap) _keep.push({ x:g.x, y:g.y, r:130 });
     const _bd = BOSS_DEFS[curMap];
@@ -7913,7 +8040,7 @@ window.addEventListener('keydown', e=>{
     if (id) castSkill(id); else togglePanel('skill');
   }
   if (e.key.toLowerCase()==='e'){ if (!window.tryCatchHorse || !tryCatchHorse()) tryTalk(); } // GDD Đợt 2 B5: E bắt Tuấn Mã kiệt sức trước
-  if (e.key.toLowerCase()==='j'){ if (!tryPickLoot() && !viaKhai()) tryHarvestHerb(); } // nhặt đồ dưới đất → khai Vỉa Cốt → hái thảo dược
+  if (e.key.toLowerCase()==='j'){ if (!tryPickLoot() && !ruongMo() && !viaKhai()) tryHarvestHerb(); } // nhặt đồ → mở Rương Canh → khai Vỉa Cốt → hái thảo dược
   // Ba phím, ba bảng KHÁC NHAU. Trước đây C và V cùng gọi togglePanel('char') — hai phím một
   // cửa sổ, tức là một phím bị lãng phí trong khi Trang Bị không có phím tắt riêng nào ngoài I.
   if (e.key.toLowerCase()==='c'){ window.charTab = 'info'; togglePanel('char'); }  // Nhân Vật
@@ -8004,7 +8131,7 @@ document.querySelectorAll('.sk-slot').forEach(b=>{
 // Ô cuối thanh kỹ năng nay là NHẶT ĐỒ (trước là Phiêu Vân Bộ — nhảy). Trên điện thoại không
 // có bàn phím nên đây là đường DUY NHẤT để nhặt đồ dưới đất.
 document.getElementById('sk-loot').addEventListener('click', () => {
-  if (!tryPickLoot() && !viaKhai()) tryHarvestHerb();
+  if (!tryPickLoot() && !ruongMo() && !viaKhai()) tryHarvestHerb();
 });
 
 // ---------- Combat ----------
@@ -10626,6 +10753,7 @@ function render(){
 
   // pickups (herbs) — bụi thuốc 5 lá + hoa, lấp lánh báo hái được; héo xám sau khi hái
   const _herbT = performance.now();
+  for (const _r of ruongCuaMap(curMap)) veRuong(_r, _herbT);
   for (const p of pickups){
     if (p.type === 'via'){ veVia(p, _herbT); continue; }
     if (p.respawn > 0){ // đã hái — cành héo xám chờ hồi sinh
@@ -10891,7 +11019,12 @@ function render(){
     if (p.type === 'via' && dist(player.x, player.y, p.x, p.y) < VIA_TAM){ nearVia = p; continue; }
     if (p.type === 'herb' && !nearHerb && dist(player.x, player.y, p.x, p.y) < 36) nearHerb = p;
   }
-  if (nearVia)
+  const _rg = ruongGan();
+  if (_rg && !ruongDaMo(_rg.id))
+    drawCalligraphy(ruongCanhSong(_rg.id) ? '🔒 Rương Canh — dọn sạch trại canh mới mở được'
+                                          : 'Nhấn J — Mở Rương Canh',
+                    W/2, H-(nearNpc?108:130), ruongCanhSong(_rg.id) ? '#c8a86a' : '#ffd76a', 15, true);
+  else if (nearVia)
     drawCalligraphy(`Nhấn J — Khai Vỉa Cốt ${COT_DONG[nearVia.dong].ten}`, W/2, H-(nearNpc?108:130),
                     COT_DONG[nearVia.dong].mau, 15, true);
   else if (nearHerb)
@@ -10948,6 +11081,51 @@ function veVia(p, t){
   ctx.beginPath();
   ctx.moveTo(-13, -30); ctx.lineTo(13, -30); ctx.lineTo(5, -230); ctx.lineTo(-5, -230);
   ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+// Rương Canh: hòm gỗ đai sắt. Chưa mở mà trại canh còn sống thì có ổ khoá và không phát sáng —
+// người chơi phải đọc ra "chưa tới lượt" trước khi đi tới tận nơi. Dọn sạch trại thì khoá rơi và
+// hòm rung nhẹ. Mở rồi thì nắp bật, hòm rỗng, xám lại — vẫn thấy nó ở đó nhưng hết phần.
+function veRuong(r, t){
+  const daMo = ruongDaMo(r.id), khoa = !daMo && ruongCanhSong(r.id);
+  ctx.save();
+  ctx.translate(r.x, r.y);
+  if (!daMo && !khoa){
+    const nhip = 0.5 + 0.5 * Math.sin(t / 300);
+    ctx.globalAlpha = 0.20 + 0.16 * nhip;
+    ctx.fillStyle = '#ffd76a';
+    ctx.beginPath(); ctx.ellipse(0, -4, 46 + 6 * nhip, 26 + 4 * nhip, 0, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.rotate(Math.sin(t / 150) * 0.02);
+  }
+  ctx.fillStyle = 'rgba(0,0,0,.28)';
+  ctx.beginPath(); ctx.ellipse(0, 3, 24, 8, 0, 0, 7); ctx.fill();
+  const than = daMo ? '#6b6152' : '#8a5f34', vien = daMo ? '#4a463c' : '#c8a86a';
+  // thân hòm
+  ctx.fillStyle = than; ctx.strokeStyle = 'rgba(20,14,10,.75)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.rect(-22, -16, 44, 18); ctx.fill(); ctx.stroke();
+  // nắp: mở rồi thì hất ra sau
+  ctx.save();
+  if (daMo){ ctx.translate(0, -16); ctx.rotate(-0.95); ctx.translate(0, 16); }
+  ctx.fillStyle = daMo ? '#5c5548' : '#a3703f';
+  ctx.beginPath(); ctx.moveTo(-22, -16); ctx.lineTo(-22, -25); ctx.quadraticCurveTo(0, -34, 22, -25);
+  ctx.lineTo(22, -16); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+  // đai sắt
+  ctx.strokeStyle = vien; ctx.lineWidth = 2.4;
+  ctx.beginPath(); ctx.moveTo(-11, -25); ctx.lineTo(-11, 2); ctx.moveTo(11, -25); ctx.lineTo(11, 2); ctx.stroke();
+  if (daMo){ ctx.restore(); return; }
+  if (khoa){
+    // ổ khoá
+    ctx.fillStyle = '#c8a86a'; ctx.strokeStyle = 'rgba(20,14,10,.75)'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.rect(-5, -14, 10, 9); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, -14, 4, Math.PI, 0); ctx.stroke();
+    ctx.restore(); return;
+  }
+  // đã dọn trại: khoá rơi, ánh vàng lọt qua khe nắp
+  ctx.globalAlpha = 0.55 + 0.45 * Math.sin(t / 220);
+  ctx.fillStyle = '#fff0be';
+  ctx.beginPath(); ctx.rect(-20, -18, 40, 3); ctx.fill();
   ctx.restore();
 }
 function drawRock(d){
@@ -16901,6 +17079,7 @@ function cheatHelp(){
     '/kill [bán kính=350] — hạ quái quanh mình · /seal <0-7> — số Tướng Quân đã hạ (7 = Kết Mở)',
     '/time [ngày=10] — nhảy thời gian thế giới · /obstacles — lớp debug vùng chặn địa hình',
     '/via — kéo Vỉa Cốt hôm nay về sát chân (và mở lại) · /via ds — ba vùng nào có vỉa hôm nay',
+    '/ruong — kéo Rương Canh chưa mở gần nhất về sát chân + dọn trại · /ruong ds — rương của mọi vùng',
     '── tranh ──',
     `/art [lớp=${Object.keys(SPLASH_CFG).join('|')}] [mavuong] — mở tranh minh hoạ + chibi của lớp`,
     '/wipe — xóa save & tải lại game',
@@ -17107,6 +17286,19 @@ window.cheatExec = function(raw){
         player.bossKills[curMap] = bd.thuve.map(t => t.id);
         player.x = bd.tranai.x * MAP.w - 380; player.y = bd.tranai.y * MAP.h; snapCamera();
         cheatLog('Đã mở phong ấn — dịch chuyển tới Cổng Vực.', '#c07fe0'); break;
+      }
+      case 'ruong': {                     // /ruong — kéo rương chưa mở gần nhất về sát chân, dọn trại canh
+        if ((parts[1] || '').toLowerCase() === 'ds'){
+          for (const m of Object.keys(MAPS)){
+            const ds = ruongCuaMap(m); if (!ds.length) continue;
+            cheatLog(`▣ ${MAPS[m].name}: ${ds.filter(r => !ruongDaMo(r.id)).length}/${ds.length} chưa mở — ` +
+                     ds.map(r => `(${r.x},${r.y})${ruongDaMo(r.id) ? '✓' : ''}`).join(' '), '#ffd76a');
+          }
+          break;
+        }
+        const r = window.debugRuong();
+        if (!r){ cheatLog(`${MAPS[curMap].name} không còn rương nào chưa mở.`, '#ff7a6a'); break; }
+        cheatLog(`Rương đã dời về cạnh chân và trại canh đã dọn — nhấn J để mở.`, '#ffd76a'); break;
       }
       case 'via': {                       // /via — kéo Vỉa Cốt hôm nay về sát chân, /via ds — liệt kê cả ba
         if ((parts[1] || '').toLowerCase() === 'ds'){
@@ -20484,6 +20676,15 @@ function drawMinimapStatic(mw, mh, sx, sy, md){
       sc.strokeStyle = 'rgba(0,0,0,.6)'; sc.lineWidth = 1; sc.strokeRect(-3.4, -3.4, 6.8, 6.8);
       sc.restore();
     }
+  }
+  // Rương Canh — ô vuông vàng khi chưa mở, xám khi đã mở. Đây là thứ người chơi học thuộc:
+  // vị trí rương KHÔNG đổi, nên nhìn bản đồ nhỏ là biết vùng này còn gì chưa lấy.
+  for (const _r of ruongCuaMap(curMap)){
+    const _mo = ruongDaMo(_r.id);
+    sc.fillStyle = _mo ? 'rgba(130,126,116,.55)' : '#ffd76a';
+    sc.fillRect(_r.x*sx - 3, _r.y*sy - 2.4, 6, 4.8);
+    sc.strokeStyle = 'rgba(0,0,0,.6)'; sc.lineWidth = 1;
+    sc.strokeRect(_r.x*sx - 3, _r.y*sy - 2.4, 6, 4.8);
   }
   // Tường thành + cổng thành
   if (curMap === CITY_WALL.map){
