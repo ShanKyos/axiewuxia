@@ -23,7 +23,17 @@ một tấm sheet cộng một tệp `.tres` của Godot. Ba việc riêng ở �
    cắt khung theo hộp cho trước, `--neo` chỉ chỗ chạm đất, `--sat` chỉ bán kính vùng nổ trên
    nền — trong màn chỉ việc chia bán kính sát thương thật cho nó là ra tỉ lệ vẽ.
 
-⑤ CHỌN ĐOẠN KHUNG. Meowa hay sinh cả đoạn "hình thành" lẫn đoạn "chạy vòng" trong một gói;
+⑤ VÁ SƯƠNG RUNG. Dạng hỏng khác hẳn ô caro ở ③: alpha ĐỦ 256 mức, nhưng vùng sương mờ lại
+   bị xuất thành LƯỚI RUNG — alpha nhảy 0 ↔ ~0,3 theo ô 25px thay vì một lớp mờ mượt. Nó sửa
+   được đúng nghĩa chứ không phải xoá đi: trung bình hoá đúng một chu kì lưới là ra lại lớp
+   sương tác giả định vẽ. `--suong` làm việc đó, chừa nét đặc ra để bóng ma và vành không nhoè.
+
+⑥ NÂNG SÁNG. Gói vẽ trên nền trắng của trình sinh ảnh thì trong màn tối nó biến mất: bản đồ
+   ban đêm sáng ~52, mà gói Dragon Spirit gốc chỉ sáng ~25 — nghĩa là hiệu ứng TỐI HƠN nền,
+   mắt đọc thành một vệt bóng chứ không thành một chiêu. `--sang gamma,gain,sat` nâng trung
+   gian và kéo màu về lại, giữ nguyên vùng tối sâu để không thành xám đục.
+
+⑦ CHỌN ĐOẠN KHUNG. Meowa hay sinh cả đoạn "hình thành" lẫn đoạn "chạy vòng" trong một gói;
    đạn bay chỉ cần đoạn chạy vòng, `--khung a:b` cắt lấy đúng đoạn đó.
 """
 import os, re, sys, argparse, glob
@@ -116,6 +126,40 @@ def bo_o_caro(im):
     return Image.fromarray(np.clip(np.dstack([out, al]), 0, 255).astype('uint8'))
 
 
+P_SUONG = 25       # chu kì lưới rung, đo bằng FFT trên gói Evil Spirit
+DAC = 150          # alpha từ đây trở lên là NÉT ĐẶC — giữ nguyên, không đụng vào
+
+
+def va_suong(im):
+    """Trả lại lớp sương mượt từ lưới alpha bị rung.
+
+    Trung bình theo lối NHÂN SẴN (premultiplied): làm mượt cả `rgb*alpha` lẫn `alpha` bằng cùng
+    một nhân, rồi mới chia ngược. Làm mượt riêng alpha thì màu của ô rỗng (thường là xám hoặc
+    đen) lẫn vào, ra một lớp bẩn xám; nhân sẵn thì ô rỗng có trọng số 0 nên không góp gì.
+    Nét đặc bị loại khỏi cả tử lẫn mẫu, nếu không thì bóng ma trắng loang ra thành quầng."""
+    a = np.asarray(im).astype(float)
+    rgb, al = a[..., :3], a[..., 3]
+    dac = al >= DAC
+    mo = (~dac).astype(float)
+    mau = ndimage.uniform_filter(mo, P_SUONG)
+    alv = ndimage.uniform_filter(al * mo, P_SUONG) / np.maximum(mau, 1e-6)
+    out = rgb.copy()
+    for c in range(3):
+        tu = ndimage.uniform_filter(rgb[..., c] * al * mo, P_SUONG) / np.maximum(mau, 1e-6)
+        out[..., c] = np.where(dac, rgb[..., c], tu / np.maximum(alv, 1e-3))
+    return Image.fromarray(np.clip(np.dstack([out, np.where(dac, al, alv)]), 0, 255).astype('uint8'))
+
+
+def nang_sang(im, g, gain, sat):
+    """Nâng sáng theo gamma rồi kéo lại độ đậm màu. Cộng thẳng một hằng số thì vùng trong suốt
+    cũng sáng lên thành màng xám; gamma chỉ nâng trung gian nên đen vẫn đen."""
+    a = np.asarray(im).astype(float)
+    r = np.clip(255 * (a[..., :3] / 255) ** g * gain, 0, 255)
+    lum = (r[..., 0] * .3 + r[..., 1] * .59 + r[..., 2] * .11)[..., None]
+    r = np.clip(lum + (r - lum) * sat, 0, 255)
+    return Image.fromarray(np.dstack([r, a[..., 3]]).astype('uint8'))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('goi'); ap.add_argument('id')
@@ -124,7 +168,9 @@ def main():
     ap.add_argument('--o', type=int, default=96)
     ap.add_argument('--fps', type=int, default=14)
     ap.add_argument('--khong-canh', action='store_true')   # cắt theo tâm ô thay vì theo lõi
-    ap.add_argument('--caro', action='store_true')         # vá lưới ô caro trong suốt bị nướng vào tranh
+    ap.add_argument('--caro', action='store_true')
+    ap.add_argument('--suong', action='store_true')
+    ap.add_argument('--sang', default='')                 # "gamma,gain,sat" — nâng sáng cho đọc được trên nền tối       # vá lưới rung trong vùng sương mờ         # vá lưới ô caro trong suốt bị nướng vào tranh
     ap.add_argument('--cat', default='')                   # "x0,y0,x1,y1" — cắt theo hộp, bỏ qua --ban-kinh
     ap.add_argument('--neo', default='')                   # "x,y" trên khung gốc — chỗ chiêu chạm đất
     ap.add_argument('--sat', type=int, default=0)          # bán kính vùng nổ trên nền, tính bằng pixel gốc
@@ -152,6 +198,11 @@ def main():
     khung = khung[i0:i1]
     if a.caro:
         khung = [bo_o_caro(c) for c in khung]
+    if a.suong:
+        khung = [va_suong(c) for c in khung]
+    if a.sang:
+        _g, _k, _s = (float(v) for v in a.sang.split(','))
+        khung = [nang_sang(c, _g, _k, _s) for c in khung]
 
     R = a.ban_kinh
     ks = []

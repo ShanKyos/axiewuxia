@@ -1,7 +1,7 @@
 // Ô thứ 4 — TUYỆT CHIÊU, bộ biểu tượng riêng cho từng chiêu, và chiêu Penetration mới.
 //
 // Ba vấn đề bài kiểm này chốt lại:
-//   1. Taskbar chỉ có 3 ô, nên Evil Spirit (Dark Wizard) và Power Slash (Spellblade) — hai chiêu
+//   1. Taskbar chỉ có 3 ô, nên tuyệt chiêu Dark Wizard và Power Slash (Spellblade) — hai chiêu
 //      đặc trưng nhất của hai lớp đó trong MU — chỉ tồn tại ở bảng Di Sản Cũ dưới dạng +%ST vĩnh
 //      viễn. Người chơi không bao giờ bấm được chúng.
 //   2. 26 chiêu lớp dùng chung 6 biểu tượng, 18 chiêu rơi hết về 'blade_up'; và 10 file art của
@@ -104,7 +104,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   const r4 = await p3.evaluate(() => {
     const MAC_DINH = ['crescents', 'suns', 'flash', 'wuxing', 'vajra'];
     // firelines → firepillar sau đợt làm HOẠT ẢNH: ba vệt lửa nay dựng lên thành CỘT lửa.
-    // Evil Spirit rời khỏi bảng này vì đã có tranh thật — xem vòng kiểm CHIEU_TRANH ngay dưới.
+    // Tuyệt chiêu Dark Wizard rời khỏi bảng này vì đã có tranh thật — xem vòng kiểm CHIEU_TRANH ngay dưới.
     // crowswarm → quakeburst ở đợt làm lại bộ chiêu 5 lớp: tuyệt chiêu của Dark Lord dùng CHUNG
     // bầy quạ với Dark Raven của chính lớp đó — hai chiêu một lớp trông y hệt nhau. Nay nó là
     // Earthquake, nền đất nứt theo vòng (xem docs/KY_NANG_5_LOP.md).
@@ -115,7 +115,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
       sai.push(id + '=' + ((VH_VFX[id] && VH_VFX[id].style) || 'không có'));
     // Chiêu đã có TRANH THẬT thì không khai style vector nữa (giữ cả hai là chồng hai lớp lên
     // nhau) — chữ ký hình ảnh của nó nằm ở CHIEU_TRANH.
-    for (const id of ['dw_evilspirit', 'dw_inferno', 'sx_baidasan_c']){
+    for (const id of ['dw_dragonspirit', 'dw_inferno', 'sx_baidasan_c']){
       if (!CHIEU_TRANH[id]) sai.push(id + '=chưa khai tranh');
       else if (VH_VFX[id] || SECT_VFX[id]) sai.push(id + '=vừa có tranh vừa có hình vector');
     }

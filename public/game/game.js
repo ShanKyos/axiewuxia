@@ -1112,6 +1112,10 @@ const VFX_ATLAS_DEFS = {
   // mất — cả cụm khói bốc lên sẽ không thấy gì. `neoR`: bán kính vùng nổ trên nền ĐO NGAY TRÊN
   // TRANH (190px gốc), để chỗ gọi chia bán kính sát thương thật cho nó là ra tỉ lệ vẽ — vẽ trùm
   // qua con quái mà nó không mất máu thì là hứa suông.
+  // Dragon Spirit (ô 4 của Dark Wizard) — bầy long hồn xoáy ra từ lõi tối rồi giăng thành vòng.
+  // Gói gốc sáng ~25 trong khi bản đồ ban đêm sáng ~52: hiệu ứng TỐI HƠN nền thì mắt đọc thành
+  // vệt bóng chứ không thành một chiêu. Đã nâng sáng lúc nhập (tools/vfx_meowa.py --sang).
+  dragon_spirit:  { k:1, cols:8, rows:1,  frameW:384, frameH:384, frames:8,  fps:14, anchorX:195.0, anchorY:192.0, neoR:165.0 },
   // Inferno (ô 3 của Dark Wizard) — cột lửa mọc từ vòng dung nham, hồn lửa xanh bay quanh.
   fire_pillar:    { k:1, cols:8, rows:2,  frameW:384, frameH:384, frames:16, fps:20, anchorX:183.0, anchorY:317.4, neoR:192.0, cong:false },
   meteor_rain:    { k:1, cols:7, rows:2,  frameW:384, frameH:384, frames:14, fps:22, anchorX:191.1, anchorY:344.1, neoR:191.7, cong:false },
@@ -1182,146 +1186,6 @@ window.anhDangGiuMB = function(){
 // Vũ khí bay theo cùng một elip, vẽ bằng chính bóng dáng của món đang cầm — nên đổi vũ khí là
 // đổi luôn hình bay quanh. Không nướng thêm khung Spine: bản mẫu chỉ có bốn hoạt cảnh
 // (đứng/đi/đánh/phép) và Meowa chỉ tô lại trong bóng cố định chứ không thêm được chuyển động.
-// ═══════════════ U LINH — tuyệt chiêu Evil Spirit của Dark Wizard ═══════════════
-// Vẽ BẰNG MÃ, không dùng tấm khung hình. Gói art gửi tới không dùng được: mỗi khung Godot khai
-// 640x640 nhưng bên trong lại xếp 9 ô con (hoạt ảnh thật là 144 khung ~213px, .tres khai sai
-// lưới), alpha bị nhị phân hoá nên thủng lỗ xuyên qua chính tấm tranh, và quan trọng nhất là
-// MỌI KHUNG ĐỀU CÓ SẴN NGƯỜI PHÁP SƯ trong đó — game đã tự vẽ Dark Wizard rồi, dán vào là hai
-// ông pháp sư khác kiểu chồng lên nhau.
-//
-// Giữ lại thứ dùng được: HƯỚNG NGHỆ THUẬT. Bốn thứ đọc ra từ ảnh gốc, làm lại đủ cả bốn —
-//   ① vũng sáng tím loang dưới chân
-//   ② những VUỐT LINH HỒN cong dài vươn ra rồi thu về (đây là hình ảnh nhận diện của chiêu)
-//   ③ một cú loé trắng-tím ở đỉnh chiêu
-//   ④ tàn lửa trắng nóng bay lên
-const ULINH_TAM = 46;                     // tâm hiệu ứng, cao hơn bàn chân
-const ULINH_RX = 122, ULINH_RY = 54;      // vũng sáng dưới chân
-const ULINH_VUOT = 8;                     // số cánh — tám thì vòng kín, sáu còn hở ở hai bên
-const ULINH_GOC = 74;                     // vuốt bắt đầu ở đâu — bán kính vành vũng sáng
-// Mũi cánh vươn tới ĐÚNG tầm sát thương của chiêu (dw_evilspirit fx.r = 150), không xa hơn.
-// Vẽ rộng hơn tầm đánh là hứa suông: người chơi thấy cánh hoa trùm qua con quái mà nó không
-// mất máu. Đổi fx.r cho khớp hình thì lại là lén sửa cân bằng — nên hình chạy theo cơ chế.
-const ULINH_DAI = 152;                    // vuốt vươn xa nhất bao nhiêu px
-// Dải màu lấy MẪU THẲNG từ ảnh gốc (102.988 pixel vùng tím, gom theo độ sáng), không phải tự
-// chọn: tối → sáng dần, kết ở gần trắng.
-const ULINH_MAU = ['#1f004f', '#340665', '#501188', '#853ab5', '#c67be1', '#f0c5f4'];
-// Tám cánh CÙNG MỘT KHUÔN, chỉ lệch vài phần trăm cho khỏi cứng như bánh răng. Bản trước cho
-// mỗi cánh một chiều dài, một độ cong, một độ trễ riêng — ra đám gai mọc lộn xộn, không ra bông
-// hoa. Muốn "nở rồi khép lại nuốt" thì tám cánh phải đi cùng nhịp, đây là điều kiện tiên quyết.
-const ULINH_LECH = [0, 0.045, -0.030, 0.055, -0.020, 0.035, -0.050, 0.025];
-function uLinhVuot(g, ex, cy, g0, N, dai, day, mau, mo){
-  const B = 14;                                    // số đốt trên thân vuốt
-  const tren = [], duoi = [];
-  for (let u = 0; u <= B; u++){
-    const f = u / B;
-    const a = g0 + N.cong * f;
-    // Vuốt DỰNG TRÊN VÀNH vũng sáng, không mọc ra từ giữa người. Bản trước cho gốc ở r = 16 nên
-    // sáu cái đều chui ra từ ngực nhân vật — đọc thành "người phát ra tia", không đọc thành
-    // "bị vây giữa một vòng u linh". Cho gốc lùi hẳn ra vành thì nhân vật đứng LỌT GIỮA vòng.
-    const r = ULINH_GOC + (dai - ULINH_GOC) * f;
-    const x = ex + Math.cos(a) * r;
-    // Độ bốc phải NHỎ hơn bán trục đứng của quỹ đạo, không thì mấy vuốt hướng xuống bị nhấc
-    // ngược lên đè chồng lên mấy vuốt hướng lên — đo bản trước: bốc 67px trên một elip chỉ cao
-    // ±79px, sáu vuốt dồn hết về nửa trên màn.
-    const y = cy + Math.sin(a) * r * 0.50 - f * f * 62 * N.boc;
-    // Bề dày: phình ở khoảng 1/4 thân rồi thon tới mũi. Số mũ 0,7 giữ cho đoạn gốc không bị
-    // tóp lại — vuốt phải MỌC RA từ bóng người, không lơ lửng bằng một cái chuôi mảnh.
-    const w = day * Math.pow(Math.sin(Math.PI * (0.18 + f * 0.82)), 0.7) * (1 - f * 0.25);
-    // Pháp tuyến KHÔNG dẹt theo 0,44. Hệ số đó thuộc về QUỸ ĐẠO (elip nhìn nghiêng 3/4), không
-    // thuộc về bề dày của chính cái vuốt. Nhân vào đây thì vuốt nào nằm ngang — tức phần lớn —
-    // chỉ còn 44% bề dày: đo được một vuốt dài 103px mà hộp bao cao vỏn vẹn 26px, trên màn coi
-    // như biến mất.
-    const na = a + Math.PI / 2;
-    const nx = Math.cos(na) * w, ny = Math.sin(na) * w;
-    tren.push([x + nx, y + ny]); duoi.push([x - nx, y - ny]);
-  }
-  g.globalAlpha = mo;
-  g.fillStyle = mau;
-  g.beginPath();
-  tren.forEach((P, k) => k ? g.lineTo(P[0], P[1]) : g.moveTo(P[0], P[1]));
-  for (let k = duoi.length - 1; k >= 0; k--) g.lineTo(duoi[k][0], duoi[k][1]);
-  g.closePath(); g.fill();
-}
-function veULinh(g, e, nua){
-  // Đồng hồ hiệu ứng ĐẾM LÊN (`e.t += dt` trong vòng cập nhật), giống hệt veVongKiem đọc.
-  // Viết ngược thành `1 - e.t/e.dur` là chiêu chạy giật lùi: lúc vừa tung đã ở cuối nhịp,
-  // mà cuối nhịp thì sin(k·π) = 0 nên sáu cái vuốt có bề dày đúng 0 — hiện ra mỗi vũng sáng.
-  const t = clamp(e.t / (e.dur || 1), 0, 1);       // 0 ở khung đầu → 1 lúc tắt
-  const cy = e.y - ULINH_TAM;
-  const no = t < 0.26 ? t / 0.26 : 1;              // nhịp nở
-  const tan = t < 0.62 ? 1 : 1 - (t - 0.62) / 0.38; // nhịp tàn
-  const S = e.scale || 1;
-  g.save();
-  // ① VŨNG SÁNG DƯỚI CHÂN — nằm dưới cùng, chỉ vẽ ở lượt 'sau'
-  if (nua === 'sau'){
-    const rx = ULINH_RX * S * (0.35 + no * 0.65), ry = ULINH_RY * S * (0.35 + no * 0.65);
-    const q = g.createRadialGradient(e.x, e.y + 6, 0, e.x, e.y + 6, rx);
-    q.addColorStop(0.00, ULINH_MAU[2]); q.addColorStop(0.40, ULINH_MAU[1]);
-    q.addColorStop(1.00, 'rgba(0,0,0,0)');
-    g.globalAlpha = 0.34 * tan; g.fillStyle = q;
-    g.beginPath(); g.ellipse(e.x, e.y + 6, rx, ry, 0, 0, 7); g.fill();
-    // vành ngoài sáng, chạy nhanh hơn vũng
-    g.globalAlpha = 0.34 * tan * no;
-    g.strokeStyle = ULINH_MAU[4]; g.lineWidth = 2;
-    g.beginPath(); g.ellipse(e.x, e.y + 6, rx * 1.05, ry * 1.05, 0, 0, 7); g.stroke();
-  }
-  // ② VUỐT LINH HỒN — nửa sau vẽ ba vuốt phía xa, nửa trước ba vuốt phía gần, để nhân vật
-  //    đứng LỌT GIỮA đám u linh chứ không bị dán đè lên mặt.
-  // NHỊP CHUNG cho cả tám cánh — hai chặng nối nhau:
-  //   NỞ   (0 → 0,46): cánh bung ra ngoài, mũi chếch lên, vòng mở rộng hết cỡ
-  //   KHÉP (0,46 → 1): mũi cong vào trong và trùm lên trên, vòng thít lại nuốt gọn vùng ở giữa
-  const k = clamp(t / 0.86, 0, 1);
-  const khep = clamp((k - 0.46) / 0.54, 0, 1);
-  const vuon = Math.pow(Math.sin(k * Math.PI), 0.55);
-  for (let i = 0; i < ULINH_VUOT; i++){
-    const g0 = e.goc + (i / ULINH_VUOT) * Math.PI * 2;
-    // Vuốt nào nằm ở NỬA XA của vòng thì vẽ sau lưng, nửa gần thì vẽ trước mặt. Bản trước chia
-    // theo chẵn/lẻ chỉ số — tức chia bừa: cái đang đứng ngay trước bụng nhân vật vẫn có thể bị
-    // xếp ra sau, nên vòng u linh không bao giờ đọc ra CHIỀU SÂU.
-    // sin(g0) < 0 là nửa trên elip, tức xa ống kính hơn (trục y hướng xuống).
-    if ((Math.sin(g0) < 0) !== (nua === 'sau')) continue;
-    if (vuon <= 0.01) continue;
-    const L = ULINH_LECH[i];
-    // Cong: ra ngoài lúc nở, quặp vào trong lúc khép. Đây là thứ làm động tác đọc ra "NUỐT"
-    // chứ không phải "xoè ra rồi tắt".
-    const N = { cong: 0.26 + khep * 1.34 + L, boc: 0.60 + khep * 0.90 + L * 2 };
-    const dai = ULINH_DAI * S * vuon * (1 + L * 0.5);
-    const day = 22 * S * vuon;
-    const mo = (0.40 + 0.48 * vuon) * tan;
-    // Ba lớp lồng nhau: thân tối rộng · ruột sáng · lõi gần trắng mảnh. Đó là thứ cho vuốt có
-    // KHỐI thay vì một vệt màu phẳng.
-    // Quỹ đạo chạy quanh MẶT ĐẤT (cùng cao độ với vũng sáng), không quanh tâm cao 46px. Lấy tâm
-    // cao thì mấy vuốt ở nửa xa bị đẩy lên thêm 88px nữa: đo được chúng lơ lửng ở 83–134px trên
-    // mặt đất, tức ngang và trên đầu nhân vật — nhìn thành "vòng u linh bay trên trời".
-    const dat = e.y + 6;
-    uLinhVuot(g, e.x, dat, g0, N, dai, day,        ULINH_MAU[2], mo * 0.85);
-    uLinhVuot(g, e.x, dat, g0, N, dai, day * 0.58, ULINH_MAU[3], mo);
-    uLinhVuot(g, e.x, dat, g0, N, dai * 0.96, day * 0.22, ULINH_MAU[5], mo * 0.9);
-  }
-  // ③ LOÉ ĐỈNH CHIÊU + ④ TÀN LỬA — chỉ ở lượt trước, cho nó nằm trên cùng
-  if (nua === 'truoc'){
-    if (t < 0.34){
-      const f = 1 - t / 0.34;
-      g.globalAlpha = 0.46 * f * f;
-      const r = 82 * S * (0.4 + (1 - f) * 1.5);
-      const q = g.createRadialGradient(e.x, cy, 0, e.x, cy, r);
-      q.addColorStop(0, ULINH_MAU[5]); q.addColorStop(0.4, ULINH_MAU[4]);
-      q.addColorStop(1, 'rgba(0,0,0,0)');
-      g.fillStyle = q; g.beginPath(); g.arc(e.x, cy, r, 0, 7); g.fill();
-    }
-    for (let i = 0; i < 11; i++){
-      const a = e.goc * 1.7 + i * 2.31;
-      const k = (t + i * 0.09) % 1;
-      const r = (30 + i % 4 * 24) * S * (0.3 + k);
-      g.globalAlpha = (1 - k) * 0.8 * tan;
-      g.fillStyle = i % 3 ? ULINH_MAU[5] : ULINH_MAU[4];
-      const px = e.x + Math.cos(a) * r, py = cy + Math.sin(a) * r * 0.44 - k * 56 * S;
-      g.beginPath(); g.arc(px, py, (2.2 - k * 1.3) * S, 0, 7); g.fill();
-    }
-  }
-  g.restore();
-  g.globalAlpha = 1;
-}
 function veVongKiem(g, e, nua){
   const cyc = e.y - VONGKIEM_TAM;                  // tâm elip, chung cho lửa lẫn vũ khí
   const k = clamp(e.t / (e.dur || 1), 0, 1);
@@ -2714,7 +2578,7 @@ const VOHOC_DEFS = window.VOHOC_DEFS;
 // động. defaultSkillBar() chịu được null nên ô thứ ba chỉ đơn giản là trống.
 // Muốn lấp thì cách sát MU nhất là đổi Swell Life thành buff chủ động — chờ chủ dự án chốt.
 // Ô 3 của từng lớp. KHÔNG nhất thiết là chiêu phù trợ: bộ bốn nút của Dark Wizard trong MU là
-// Poison · Meteorite · Inferno · Evil Spirit, nên ô 3 của lớp này là Inferno chứ không phải Soul
+// Poison · Meteorite · Inferno · Dragon Spirit, nên ô 3 của lớp này là Inferno chứ không phải Soul
 // Barrier. Soul Barrier chuyển sang Di Sản (+%Công Kích vĩnh viễn) đúng như chiêu buff của Dark
 // Knight đã làm — một chiêu không thể vừa bấm được vừa cộng %ST vĩnh viễn.
 const O3_SKILL_ID = { thieulam:null, toanchan:'elf_greaterdmg', baidasan:'dw_inferno', minhgiao:'mg_battlefury', bug:'dl_commandaura' };
@@ -2725,7 +2589,7 @@ for (const _sk in O3_SKILL_ID){
   BUFF_SKILL_ID[_sk] = (_o3 && VOHOC_DEFS[_o3] && VOHOC_DEFS[_o3].type === 'buff') ? _o3 : null;
 }
 // Ô thứ 4 — TUYỆT CHIÊU. Taskbar cũ chỉ có 3 ô (chính/phụ/buff), nên những chiêu mang tính đặc
-// trưng nhất của từng lớp trong MU — Evil Spirit, Power Slash — chỉ hiện ở mục Di Sản trong bảng K
+// trưng nhất của từng lớp — tuyệt chiêu Dark Wizard, Power Slash — chỉ hiện ở mục Di Sản trong bảng K
 // dưới dạng +%ST vĩnh viễn, không bao giờ được BẤM. Ô thứ 4 trả chúng về đúng chỗ.
 // Hai lớp có chiêu người chơi hay gọi tên nhất đã nằm sẵn ở ô 1/ô 2 (Dark Knight: Twisting Slash;
 // Dark Lord: Fire Scream), nên tuyệt chiêu của hai lớp đó lấy chiêu tiêu biểu còn lại, để mọi lớp
@@ -2733,10 +2597,15 @@ for (const _sk in O3_SKILL_ID){
 const SIGNATURE_SKILL = {
   thieulam: 'dk_cyclone',        // Flame Cyclone — vũ khí rời tay xoay quanh thân trong vòng lửa
   toanchan: 'elf_penetration',   // Penetration — mũi tên xuyên cả hàng
-  baidasan: 'dw_evilspirit',     // Evil Spirit — u linh vây quanh
+  baidasan: 'dw_dragonspirit',   // Dragon Spirit — bầy long hồn giăng vòng quanh người
   minhgiao: 'mg_powerslash',     // Power Slash — sóng ánh sáng từ nhát chém
   bug:      'dl_chaoticdiseier', // Earthquake — giậm đất, nền nứt thành vòng (id cũ, xem VOHOC_DEFS)
 };
+// Chiêu đã đổi id qua các bản. Giữ lại để save cũ không mất cấp đã nâng — mỗi dòng là một lần
+// đổi tên thật, xoá đi là bỏ rơi người chơi đang có save.
+const DOI_TEN_CHIEU = [
+  ['dw_evilspirit', 'dw_dragonspirit'],   // Evil Spirit → Dragon Spirit (art mới, bầy long hồn)
+];
 function defaultSkillBar(sect){ return ['a', 'tp', O3_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null]; }
 // Phím Space gán sẵn TUYỆT CHIÊU của lớp — trước đây Space mặc định là đòn đánh thường, nên ô
 // 4 nằm đó mà phần lớn người chơi không bao giờ bấm tới: nó chỉ hiện trên thanh, muốn dùng
@@ -3288,31 +3157,6 @@ function drawVfx(e, k, a){
     for (let i = 0; i < 6; i++){ const aa = i*1.047 + spin - k*4;   // mạt kim loại văng ra
       disc(X + Math.cos(aa)*R*(0.7 + k*0.5), Y + Math.sin(aa)*R*(0.7 + k*0.5), 2.4*(1-k), '#fff', a*0.7); }
 
-  } else if (S === 'spiritswarm'){ // Evil Spirit — bầy u linh lượn quanh rồi bổ nhào vào trong
-    disc(X, Y, R*(0.55 + k*0.3), '#0c1408', a*0.3);
-    for (let i = 0; i < 7; i++){
-      const aa = i*0.898 + spin + k*3.4;
-      const rr = R*(1.0 - k*0.62);                                   // lượn vào tâm theo thời gian
-      const cx = X + Math.cos(aa)*rr, cy = Y + Math.sin(aa)*rr*0.78;
-      ctx.save(); ctx.translate(cx, cy); ctx.globalAlpha = a*0.9;
-      // Kích thước phải theo R. Bản đầu để cứng 9px, mà chiêu này bán kính 150 — bảy con u linh
-      // 9px rải trên vòng 150px thì trong game không nhìn ra gì ngoài mấy chấm mờ.
-      const sz = R*0.15 + Math.sin(i*2 + k*10)*R*0.02;
-      ctx.fillStyle = i % 2 ? C1 : C2;                               // thân u linh: chóp nhọn, vạt rách
-      ctx.beginPath();
-      ctx.moveTo(0, -sz);
-      ctx.quadraticCurveTo(sz*0.62, -sz*0.5, sz*0.6, sz*0.2);
-      ctx.lineTo(sz*0.3, sz*0.9); ctx.lineTo(0, sz*0.35);
-      ctx.lineTo(-sz*0.3, sz*0.9); ctx.lineTo(-sz*0.6, sz*0.2);
-      ctx.quadraticCurveTo(-sz*0.62, -sz*0.5, 0, -sz);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#fff';                                        // hai đốm mắt
-      ctx.beginPath(); ctx.arc(-sz*0.2, -sz*0.24, sz*0.13, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.arc(sz*0.2, -sz*0.24, sz*0.13, 0, 7); ctx.fill();
-      ctx.restore();
-    }
-    arc(X, Y, R*(0.35 + k*0.6), 0, 7, C2, 2.5, a*0.45);
-
   } else if (S === 'groundburst'){ // Rageful Blow — giáng vũ khí xuống, nền toác ra thành tia
     const kk = Math.min(1, k*1.6);
     disc(X, Y, R*0.3*(1 - kk*0.5), '#fff', a*(1-kk)*0.8);            // lóe trắng ở điểm va chạm
@@ -3658,11 +3502,11 @@ function drawProjStyled(p){
 }
 // MỌI chiêu đã có tranh thật, gom về một chỗ. Có mặt ở đây nghĩa là chiêu ấy KHÔNG còn hình
 // vector nào: `atlas` chạy tấm khung hình trong VFX_ATLAS_DEFS, `ve` chạy đường vẽ riêng đã
-// dựng sẵn (vòng lửa của Flame Cyclone, đám u linh của Evil Spirit). Bảng này cũng là chỗ bài
+// dựng sẵn (vòng lửa của Flame Cyclone). Bảng này cũng là chỗ bài
 // kiểm tra cứu "chiêu nào có chữ ký hình ảnh riêng" — trước đây mỗi nơi giữ một danh sách.
 const CHIEU_TRANH = {
   dk_cyclone:    { ve:'vongKiem' },         // Flame Cyclone — vũ khí rời tay bay quanh trong vòng lửa
-  dw_evilspirit: { ve:'uLinh' },            // Evil Spirit — u linh vây quanh rồi toả ra
+  dw_dragonspirit: { atlas:'dragon_spirit' }, // Dragon Spirit — bầy long hồn xoáy ra rồi giăng thành vòng
   // `neo:'quai'`: chiêu GIÁNG XUỐNG ĐẤT thì nổ ở chỗ bầy quái, không phải dưới chân người niệm —
   // vừa đúng nghĩa "gọi thiên thạch xuống đầu nó", vừa để nhân vật không bị tranh trùm kín.
   // Vùng sát thương dời theo luôn, không chỉ mỗi hình.
@@ -3724,8 +3568,6 @@ function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
   if (_tr){
     if (_tr.ve === 'vongKiem')
       addEffect({ type:'vongKiem', x:player.x, y:player.y, dur:1.0, scale:1, wpn: vongKiemVuKhi() });
-    else if (_tr.ve === 'uLinh')
-      addEffect({ type:'uLinh', x:player.x, y:player.y, dur:1.15, scale:1, goc: Math.random() * 6.28 });
     else {
       const _cx = x0 == null ? player.x : x0, _cy = (y0 == null ? player.y : y0) + chanDy();
       spawnAtlasVfx(_tr.atlas, _cx, _cy, (_tr.co || 1) * R / VFX_ATLAS_DEFS[_tr.atlas].neoR);
@@ -4886,7 +4728,7 @@ const SK_ICON_SYMS = {
     }
     g.globalAlpha = 1;
   },
-  // Evil Spirit — bản đầu ra hình con ma Pac-Man tròn ung dung. Nay: mũ trùm NHỌN, hốc mặt tối
+  // Hồn ma (dùng cho biểu tượng chiêu hệ bóng tối) — bản đầu ra hình con ma Pac-Man tròn ung
   // om, hai đốm mắt cháy, vạt áo rách thành ba mũi nhọn.
   spirit(g, R, c1, c2){
     g.fillStyle = c1; g.beginPath();                               // dáng trùm đầu, chóp nhọn
@@ -5425,7 +5267,7 @@ const SK_ICON_FOR = {
   elf_greaterdmg:'rune', elf_penetration:'pierce', elf_heal:'heal',
   // Dark Wizard
   dw_lightning:'bolt', dw_ice:'iceshard', dw_twister:'twister', dw_inferno:'flame',
-  dw_evilspirit:'spirit', dw_shield:'barrier', songthu:'rune',
+  dw_dragonspirit:'spirit', dw_shield:'barrier', songthu:'rune',
   // Spellblade
   mg_powerslash:'lightslash', mg_fireball:'meteor', mg_powerwave:'wave',
   mg_twistingslash:'spin_blade', mg_giganticstorm:'firescream', mg_battlefury:'fury', mg_ironwill:'ironwill',
@@ -5442,7 +5284,7 @@ const SK_ICON_COLOR = {
   elf_poisonarrow:'#7ec850', elf_greaterdef:'#5ac8b8', elf_holybolt:'#ffe9a8', elf_fiveshot:'#a0ffe9',
   elf_greaterdmg:'#ffd76a', elf_penetration:'#a0ffe9', elf_heal:'#3a9d8b',
   dw_lightning:'#d8e84a', dw_ice:'#5ac8e8', dw_twister:'#8ac850', dw_inferno:'#ff7a3a',
-  dw_evilspirit:'#6ab850', dw_shield:'#5ab8e8', songthu:'#d8d8f0',
+  dw_dragonspirit:'#6ab850', dw_shield:'#5ab8e8', songthu:'#d8d8f0',
   mg_powerslash:'#ffcf7a', mg_fireball:'#ff9a5a', mg_powerwave:'#ffcf7a',
   mg_twistingslash:'#ffb060', mg_giganticstorm:'#ff7a3a', mg_battlefury:'#e8552a', mg_ironwill:'#ffb060',
   dl_force:'#a8b85a', dl_electricspark:'#d8d84a', dl_fireburst:'#ff9a5a', dl_darkhorse:'#8a6a4a',
@@ -6819,6 +6661,15 @@ function loadGame(idx){
     // Tối giản taskbar (bản mới): luôn ép về đúng 4 ô cố định theo phái (chính/phụ/buff/tuyệt chiêu)
     // — bỏ hẳn ô tự gán cũ, tránh save cũ kẹt lại chiêu giờ chỉ còn là bị động (không bấm được nữa).
     // Ép lại ở đây cũng chính là đường nâng cấp cho save cũ: mọi save 3 ô mở lên là có ngay ô 4.
+    // Đổi tên chiêu thì cấp đã nâng phải đi theo, không thì save cũ mở lên là ô 4 tụt về cấp 1
+    // trong im lặng. skillBar tự ép lại ngay dưới nên chỉ còn `skillLv` cần dắt sang khoá mới.
+    for (const [cu, moi] of DOI_TEN_CHIEU){
+      if (player.skillLv && player.skillLv[cu] != null){
+        if (player.skillLv[moi] == null) player.skillLv[moi] = player.skillLv[cu];
+        delete player.skillLv[cu];
+      }
+      if (player.spaceSkill === cu) player.spaceSkill = moi;
+    }
     player.skillBar = defaultSkillBar(player.sect);
     // Cùng lý do: phím Space có thể còn trỏ vào chiêu đã rút khỏi taskbar (vd 'tieuhon' từ save
     // cũ) — castSkill vẫn còn nhánh cho chúng nên chiêu đó sẽ lén bắn được, phá vỡ thiết kế 4 ô.
@@ -10446,7 +10297,6 @@ function render(){
   // Nửa SAU của Vòng Kiếm Lửa — phải nằm dưới lớp entity, nếu không thì cả vòng lửa dán bẹt
   // lên mặt nhân vật. Lượt còn lại (nửa trước) chạy ở khối effects bên dưới.
   for (const e of effects) if (e.type === 'vongKiem') veVongKiem(ctx, e, 'sau');
-  for (const e of effects) if (e.type === 'uLinh') veULinh(ctx, e, 'sau');
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
 
   for (const e of ents){
@@ -10550,9 +10400,6 @@ function render(){
       ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     } else if (e.type==='vongKiem'){
       veVongKiem(ctx, e, 'truoc');                 // nửa sau đã vẽ trước lớp entity
-      ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-    } else if (e.type==='uLinh'){
-      veULinh(ctx, e, 'truoc');                    // nửa sau đã vẽ trước lớp entity
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     } else if (e.type==='atlasVfx'){
       const def = VFX_ATLAS_DEFS[e.id];
@@ -22965,7 +22812,7 @@ function chiCastChieu(c, ch, near){
         hurtMob(m, dmg, 'mount');
         if (ch.slow){ m.slowT = 3; m.slowPct = ch.slow; }
       }
-      addEffect({ type:'vfx', style: ch.fx === 'dark' ? 'spiritswarm' : 'sunwheel',
+      addEffect({ type:'vfx', style: ch.fx === 'dark' ? 'vortex' : 'sunwheel',
         x:mx, y:my, face:0, r:ch.r, c1:c.mau, c2:'#fff', glyph:'✦', dur:0.7, big:true });
     }
     AudioSys.sfx('skill', 0.35);

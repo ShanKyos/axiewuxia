@@ -144,7 +144,7 @@ const PORT = process.argv[2] || '8853';
   if (B.thieulam) fail('Dark Knight lại có chiêu buff — nếu là cố ý thì siết luôn mục 1 lại');
   else pass('Dark Knight chưa có chiêu buff — đúng trạng thái sau khi gỡ hệ Thuần Thục');
   // Dark Wizard cũng vậy: ô 3 của lớp này là Inferno (đúng bộ bốn nút Poison · Meteorite ·
-  // Inferno · Evil Spirit trong MU), còn Soul Barrier chuyển sang Di Sản.
+  // Inferno · Dragon Spirit), còn Soul Barrier chuyển sang Di Sản.
   if (B.baidasan) fail('Dark Wizard lại có chiêu buff ở ô 3 — ô đó nay là Inferno');
   else pass('Dark Wizard ô 3 là Inferno, không phải chiêu buff');
   if (!(B.toanchan.hoiMau > 0 && B.toanchan.stX > 1)) fail('Bless (Sylvan Ranger) không hồi máu'); else pass(`Bless: +${B.toanchan.hoiMau} HP và ×${B.toanchan.stX} ST`);

@@ -350,7 +350,7 @@ không còn bấm được đã quy thành **% Công Kích vĩnh viễn** (`LEGA
 `legacyAtkPct` trong `calcDerived()`), hiện ở mục Di Sản trong panel K.
 
 Ô 3 **không nhất thiết là chiêu buff**. Bộ bốn nút phải là bộ bốn chiêu mà lớp ấy thực sự nổi
-tiếng vì nó. Dark Wizard là Poison · Meteorite · Inferno · Evil Spirit, nên Soul Barrier
+tiếng vì nó. Dark Wizard là Poison · Meteorite · Inferno · Dragon Spirit, nên Soul Barrier
 nhường chỗ cho Inferno và chuyển sang Di Sản — y như chiêu buff của Dark Knight đã làm.
 `BUFF_SKILL_ID` nay **suy ra** từ `O3_SKILL_ID` (ô 3 nào có `type:'buff'`), không khai tay.
 
@@ -402,9 +402,20 @@ Có mặt trong bảng nghĩa là chiêu ấy **không còn khai `style` ở `VH
 hai là chồng hai lớp lệch tâm lên nhau. Bài kiểm đọc thẳng bảng này, đừng chép danh sách sang
 chỗ khác.
 
-Đường nhập art: `tools/vfx_meowa.py` (gói Meowa → atlas, có `--caro` vá lưới ô caro trong suốt
-bị nướng vào tranh, `--cat/--neo/--sat` để neo theo vạch nền) và `tools/icon_chieu.py` (cắt
-icon **ra từ chính tấm dán của chiêu đó** — ô kỹ năng và thứ nổ trên màn hình phải là một).
+Đường nhập art: `tools/vfx_meowa.py` (gói Meowa → atlas) và `tools/icon_chieu.py` (cắt icon
+**ra từ chính tấm dán của chiêu đó** — ô kỹ năng và thứ nổ trên màn hình phải là một).
+
+Ba dạng hỏng đã gặp ở gói Meowa, mỗi dạng một cờ, **đừng trộn**:
+
+| Dấu hiệu | Vì sao | Cờ |
+|---|---|---|
+| Ô vuông đen / thủng lỗ giữa dải nền sáng, ô ~11px | xuất KHÔNG bật "preserve translucent areas" → lưới ô caro của trình vẽ nướng thẳng vào tranh | `--caro` |
+| Vùng sương mờ thành lưới rung, alpha nhảy 0 ↔ 0,3 theo ô ~25px | alpha đủ 256 mức nhưng lớp mờ bị dither | `--suong` (trung bình một chu kì, theo lối nhân sẵn, chừa nét đặc ≥150) |
+| Hiệu ứng chìm nghỉm trong màn | gói vẽ trên nền trắng: bản đồ ban đêm sáng ~52 mà gói chỉ sáng ~25, tức TỐI HƠN nền | `--sang gamma,gain,sat` |
+
+Và một luật vẽ: **art tối thì phải cộng sáng.** `cong:false` (vẽ đè) chỉ hợp với gói sáng hơn
+nền — Meteorite, Inferno. Gói tối như Dragon Spirit vẽ đè thì thành vệt bóng; bỏ `cong:false`
+cho nó cộng sáng là bầy long hồn phát sáng lên ngay. Đã thử cả hai và chụp lại để so.
 
 ## ⚠ QUY TẮC SỐ 3: KHÔNG DÙNG VECTOR. CHẤM HẾT.
 
