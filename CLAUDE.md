@@ -378,9 +378,16 @@ một con số, nhưng gọi đúng tên thứ mà lớp ấy dùng để đánh
 
 Hai luật đi kèm, vì chúng là chỗ dễ nói dối nhất:
 
-1. **`tam` phải là tầm THẬT.** Chiêu khai `tam` > 0 thì nó nổ ở chỗ mục tiêu, không phải dưới
-   chân người niệm — `diemGiang(tam)` chọn bầy quái gần nhất trong đúng tầm ấy. Đánh dấu
-   `neo:'quai'` trong `CHIEU_TRANH`.
+1. **`tam` phải là tầm THẬT, và nó ngắm theo CON TRỎ.** Chiêu khai `tam` > 0 thì nổ ở chỗ
+   người chơi đang chỉ chuột, không phải dưới chân người niệm. `diemGiang(tam)` kẹp điểm ngắm
+   vào trong `tam` (chỉ ra ngoài tầm thì rơi ở mép tầm, không câm tiếng), rồi hút vào con quái
+   gần điểm ngắm nhất trong `BAN_HUT` = 90px. Đánh dấu `neo:'quai'` trong `CHIEU_TRANH`.
+   Lối chơi là chuột phải để đi + phím 1-4 để tung chiêu, nên con trỏ luôn nằm sẵn ở chỗ người
+   chơi đang nhìn; nhắm theo "bầy gần người niệm nhất" là cướp mất quyền chọn ấy — đứng giữa
+   hai bầy thì chiêu tự chọn sai và không có cách nào bảo nó khác đi.
+   `mouseWorld` khởi tạo (0,0) = góc bản đồ, nên phải hỏi cờ `chuotDaRe` trước khi tin nó.
+   Bài kiểm `test_ngamchuot.js` lái bằng sự kiện chuột/phím THẬT: chỗ dễ hỏng không phải phép
+   tính điểm ngắm mà là sợi dây nối từ con trỏ tới nó.
 2. **`pham` phải khớp thứ vẽ ra.** Hình được phép nhỏ hơn vòng sát thương (`co` trong
    `CHIEU_TRANH`, hiện 0,62 — vẽ đúng bán kính thật thì một con quái cao 70px lọt thỏm trong
    đám cháy 370px), nhưng **không bao giờ lớn hơn**: vẽ trùm qua con quái mà nó không mất máu

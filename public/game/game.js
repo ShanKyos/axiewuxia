@@ -3659,12 +3659,44 @@ const CHIEU_TRANH = {
   sx_baidasan_c: { atlas:'meteor_rain', neo:'quai', co:0.62 },  // Meteorite — thiên thạch tím rơi xuống, nổ tung nền đất
   dw_inferno:    { atlas:'fire_pillar', neo:'quai', co:0.62 },  // Inferno — cột lửa dựng lên từ vòng dung nham
 };
-// Chỗ chiêu giáng xuống: bầy quái gần nhất trong tầm, không có thì một điểm phía trước mặt.
+// Chỗ chiêu giáng xuống: CHUỘT CHỈ ĐÂU, CHIÊU GIÁNG ĐÓ.
+//
+// Lối chơi là chuột phải để đi, phím 1-4 để tung chiêu — nên trong lúc đánh nhau con trỏ luôn
+// nằm sẵn ở chỗ người chơi đang nhìn. Nhắm theo "bầy quái gần người niệm nhất" thì cướp mất
+// quyền chọn ấy: đứng giữa hai bầy là chiêu tự chọn bầy sai, và người chơi không có cách nào
+// bảo nó khác đi.
+//
+// Ba lớp, theo đúng thứ tự:
+//  ① kẹp điểm ngắm vào trong `tam` — chỉ ra ngoài tầm thì chiêu rơi ở mép tầm, không câm tiếng;
+//  ② hút vào con quái gần điểm ngắm nhất trong BAN_HUT — ngắm lệch vài pixel vẫn phải trúng,
+//     đừng bắt người chơi rê chuột chính xác giữa lúc cả bầy đang chạy;
+//  ③ chuột chưa hề rê lần nào (vừa vào màn, hoặc chơi hoàn toàn bằng bàn phím) thì mới quay về
+//     bầy gần nhất — mouseWorld lúc đó vẫn là (0,0), tức góc bản đồ.
+const BAN_HUT = 90;      // ngắm cách quái trong ngần này thì bám thẳng vào nó
+function mobGanDiem(x, y, ban){
+  let g = null, gd = ban;
+  for (const m of mobs){
+    if (m.dead) continue;
+    const d = dist(x, y, m.x, m.y);
+    if (d < gd){ gd = d; g = m; }
+  }
+  return g;
+}
 function diemGiang(tam){
-  const t = nearestMob(tam);
-  if (t) return { x:t.x, y:t.y };
-  const d = Math.min(tam, 200);
-  return { x: player.x + Math.cos(player.face)*d, y: player.y + Math.sin(player.face)*d };
+  if (!chuotDaRe){                                   // ③ chưa có con trỏ để mà theo
+    const t = nearestMob(tam);
+    if (t) return { x:t.x, y:t.y };
+    const d = Math.min(tam, 200);
+    return { x: player.x + Math.cos(player.face)*d, y: player.y + Math.sin(player.face)*d };
+  }
+  let x = mouseWorld.x, y = mouseWorld.y;            // ① kẹp vào tầm
+  const d = dist(player.x, player.y, x, y);
+  if (d > tam){
+    const a = Math.atan2(y - player.y, x - player.x);
+    x = player.x + Math.cos(a)*tam; y = player.y + Math.sin(a)*tam;
+  }
+  const m = mobGanDiem(x, y, BAN_HUT);               // ② hút vào quái gần điểm ngắm
+  return m ? { x:m.x, y:m.y } : { x, y };
 }
 // Chân nhân vật thấp hơn tâm p.y bấy nhiêu: veHero dịch tới (p.x, p.y-42) rồi thu tỉ lệ
 // NV_CAO/HERO_H, mà trong hộp gốc bàn chân nằm ở y≈212 (tâm hộp 110) → 42 − 102×118/220 ≈ −13.
@@ -3790,6 +3822,7 @@ function castVohoc(id){
     const R = (fx.r || 160) * (1 + 0.12 * _st) * _ev.r; // tiến hóa: phạm vi +12%/bậc · Lan Toả nhân thêm
     const _aA = CHIEU_TRANH[id];
     const _aC = (_aA && _aA.neo === 'quai') ? diemGiang(v.tam || 500) : { x:player.x, y:player.y };
+    if (_aC.x !== player.x || _aC.y !== player.y) player.face = Math.atan2(_aC.y - player.y, _aC.x - player.x);
     spawnSkillVfx(id, v, 'aoe', player.face, R, _aC.x, _aC.y);
     shakeT = Math.max(shakeT, 0.2); shakeMag = Math.max(shakeMag, fx.big ? 7 : 4);
     aoeHit(() => {
@@ -5624,6 +5657,9 @@ function movePlanMake(tx, ty, bfs){
 let moveProgressT = 0, moveProgressD = Infinity; // Lưới an toàn chống kẹt vĩnh viễn khi tự đi — xem update()
 let npcTalkTarget = null; // Click vào NPC / đèn hiệu nhiệm vụ: id NPC cần tự mở lời thoại khi tới nơi
 let mouseWorld = { x:0, y:0 };
+// mouseWorld khởi tạo (0,0) — góc bản đồ, KHÔNG phải chỗ con trỏ. Cờ này phân biệt "con trỏ
+// đang ở góc trên-trái" với "chưa hề có con trỏ", để diemGiang() đừng nhắm vào góc bản đồ.
+let chuotDaRe = false;
 let lastTime = performance.now();
 let saveTimer = 0;
 
@@ -7649,12 +7685,14 @@ window.addEventListener('keyup',   e => { if (e.key === 'Alt') window._lootShowA
 window.addEventListener('blur',    () => { window._lootShowAll = false; }); // Alt+Tab: đừng kẹt bật
 canvas.addEventListener('mousemove', e=>{
   mouseWorld.x = e.clientX + camera.x; mouseWorld.y = e.clientY + camera.y;
+  chuotDaRe = true;
 });
 canvas.addEventListener('mousedown', e=>{
   if (!player || dead) return;
   if (e.button !== 0) return; // chuột phải dành cho click-to-move (xem contextmenu bên dưới)
   closePanels(); // click the world = close any open window
   mouseWorld.x = e.clientX + camera.x; mouseWorld.y = e.clientY + camera.y;
+  chuotDaRe = true;
   const npcHit = npcAt(mouseWorld.x, mouseWorld.y);
   if (npcHit){ walkToNpc(npcHit); return; } // bấm trúng NPC: tự đi tới + tự mở lời thoại, không cần bấm E
   if (tryPickLoot(mouseWorld.x, mouseWorld.y)) return; // bấm trúng đồ dưới đất: nhặt
@@ -7668,6 +7706,7 @@ canvas.addEventListener('contextmenu', e=>{
   if (!player || dead) return;
   closePanels();
   const wx = e.clientX + camera.x, wy = e.clientY + camera.y;
+  mouseWorld.x = wx; mouseWorld.y = wy; chuotDaRe = true;   // chuột phải cũng là một lần chỉ chỗ
   const npcHit = npcAt(wx, wy);
   if (npcHit){ walkToNpc(npcHit); return; }
   setMoveTarget(wx, wy);
@@ -19055,6 +19094,7 @@ function castSkill(id){
     const _tpId = 'sx_' + player.sect + '_c';
     const _tpA = CHIEU_TRANH[_tpId];
     const _tpC = (_tpA && _tpA.neo === 'quai') ? diemGiang(info.tam || sect.range) : { x:player.x, y:player.y };
+    if (_tpC.x !== player.x || _tpC.y !== player.y) player.face = Math.atan2(_tpC.y - player.y, _tpC.x - player.x);
     spawnSkillVfx(_tpId, { color:sect.color, glyph:'⚔' }, 'aoe', player.face, _tpR, _tpC.x, _tpC.y);
     // Hai vòng và sáu nhát chém dưới đây là hình VẼ BẰNG MÃ. Lớp nào đã có gói art thì bỏ hẳn:
     // tấm dán đã có vành nổ và tia sáng của chính nó, chồng thêm vòng vector lên là lộ ngay hai
