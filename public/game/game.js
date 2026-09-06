@@ -1107,6 +1107,14 @@ const VFX_ATLAS_DEFS = {
   // Ước, vẽ thẳng bằng veVfxAtlas() chứ không qua addEffect().
   power_awaken:   { k:2, cols:8, rows:7,  frameW:283, frameH:256, frames:53, fps:30, anchorX:140.0, anchorY:127.4 },
   summon_on_cast: { k:2, cols:8, rows:7,  frameW:267, frameH:219, frames:49, fps:30, anchorX:132.4, anchorY:117.0 },
+  // Meteorite (Trấn Phái của Dark Wizard) — gói art riêng, không phải clip kit, nên khai khác
+  // hai chỗ. `cong:false`: tranh này có KHÓI TỐI, mà cộng sáng thì mọi thứ tối hơn nền đều biến
+  // mất — cả cụm khói bốc lên sẽ không thấy gì. `neoR`: bán kính vùng nổ trên nền ĐO NGAY TRÊN
+  // TRANH (190px gốc), để chỗ gọi chia bán kính sát thương thật cho nó là ra tỉ lệ vẽ — vẽ trùm
+  // qua con quái mà nó không mất máu thì là hứa suông.
+  // Inferno (ô 3 của Dark Wizard) — cột lửa mọc từ vòng dung nham, hồn lửa xanh bay quanh.
+  fire_pillar:    { k:1, cols:8, rows:2,  frameW:384, frameH:384, frames:16, fps:20, anchorX:183.0, anchorY:317.4, neoR:192.0, cong:false },
+  meteor_rain:    { k:1, cols:7, rows:2,  frameW:384, frameH:384, frames:14, fps:22, anchorX:191.1, anchorY:344.1, neoR:191.7, cong:false },
 };
 // ═══ Vòng Kiếm Lửa — hằng số hình học ═══
 // Tâm elip cao hơn bàn chân bấy nhiêu. Dùng cho CẢ ba việc: cắt vòng lửa làm nửa sau / nửa
@@ -2692,7 +2700,17 @@ const VOHOC_DEFS = window.VOHOC_DEFS;
 // Dark Knight không còn chiêu buff CHỦ ĐỘNG nào khác: dk_fortitude (Swell Life) đang là bị
 // động. defaultSkillBar() chịu được null nên ô thứ ba chỉ đơn giản là trống.
 // Muốn lấp thì cách sát MU nhất là đổi Swell Life thành buff chủ động — chờ chủ dự án chốt.
-const BUFF_SKILL_ID = { thieulam:null, toanchan:'elf_greaterdmg', baidasan:'dw_shield', minhgiao:'mg_battlefury', bug:'dl_commandaura' };
+// Ô 3 của từng lớp. KHÔNG nhất thiết là chiêu phù trợ: bộ bốn nút của Dark Wizard trong MU là
+// Poison · Meteorite · Inferno · Evil Spirit, nên ô 3 của lớp này là Inferno chứ không phải Soul
+// Barrier. Soul Barrier chuyển sang Di Sản (+%Công Kích vĩnh viễn) đúng như chiêu buff của Dark
+// Knight đã làm — một chiêu không thể vừa bấm được vừa cộng %ST vĩnh viễn.
+const O3_SKILL_ID = { thieulam:null, toanchan:'elf_greaterdmg', baidasan:'dw_inferno', minhgiao:'mg_battlefury', bug:'dl_commandaura' };
+// Lớp nào có chiêu PHÙ TRỢ thật ở ô 3 — suy ra từ chính kiểu chiêu, không khai tay hai lần.
+const BUFF_SKILL_ID = {};
+for (const _sk in O3_SKILL_ID){
+  const _o3 = O3_SKILL_ID[_sk];
+  BUFF_SKILL_ID[_sk] = (_o3 && VOHOC_DEFS[_o3] && VOHOC_DEFS[_o3].type === 'buff') ? _o3 : null;
+}
 // Ô thứ 4 — TUYỆT CHIÊU. Taskbar cũ chỉ có 3 ô (chính/phụ/buff), nên những chiêu mang tính đặc
 // trưng nhất của từng lớp trong MU — Evil Spirit, Power Slash — chỉ hiện ở mục Di Sản trong bảng K
 // dưới dạng +%ST vĩnh viễn, không bao giờ được BẤM. Ô thứ 4 trả chúng về đúng chỗ.
@@ -2706,7 +2724,7 @@ const SIGNATURE_SKILL = {
   minhgiao: 'mg_powerslash',     // Power Slash — sóng ánh sáng từ nhát chém
   bug:      'dl_chaoticdiseier', // Earthquake — giậm đất, nền nứt thành vòng (id cũ, xem VOHOC_DEFS)
 };
-function defaultSkillBar(sect){ return ['a', 'tp', BUFF_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null]; }
+function defaultSkillBar(sect){ return ['a', 'tp', O3_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null]; }
 // Phím Space gán sẵn TUYỆT CHIÊU của lớp — trước đây Space mặc định là đòn đánh thường, nên ô
 // 4 nằm đó mà phần lớn người chơi không bao giờ bấm tới: nó chỉ hiện trên thanh, muốn dùng
 // phải rê chuột xuống bấm giữa lúc đang đánh nhau.
@@ -2731,7 +2749,7 @@ const LEGACY_TIER_PCT = { so:1.5, trung:2, cao:2.5, than:3.5 };
 const LEGACY_SECT_SKILLS = [
   'dk_ragefulblow','dk_lunge','dk_impale','dk_fallingslash',
   'elf_poisonarrow','elf_greaterdef','elf_holybolt','elf_fiveshot',
-  'dw_lightning','dw_ice','dw_twister','dw_inferno',
+  'dw_lightning','dw_ice','dw_twister','dw_shield',   // Inferno rời khỏi đây: nay là ô 3 bấm được
   'mg_fireball','mg_powerwave','mg_twistingslash','mg_giganticstorm',
   'dl_force','dl_electricspark','dl_fireburst','dl_darkhorse'];
 // Bị động CÓ TÁC DỤNG THẬT (xem calcDerived / regen / hurtMob) — không quy đổi thành %ST, vì
@@ -2998,12 +3016,9 @@ const SECT_VFX = {
   sx_thieulam_a: { style:'bladewhirl',   c2:'#cfe8ff', spin:1.2, dur:0.7 },   // Twisting Slash (Dark Knight) — quét trọn vòng quanh thân
   sx_thieulam_c: { style:'stabburst',    c2:'#cfe8ff', dur:0.85 },            // Death Stab (Dark Knight) — chuỗi nhát đâm liên tiếp
   sx_toanchan_a: { style:'flash',        c2:'#d8f4ff', proj:'arrow' },        // Triple Shot (Sylvan Ranger) — loạt tên bắn tỉa
-  // QA: Trấn Phái của Sylvan Ranger là Ice Arrow, nhưng khoá 'icefall' lại nằm ở `_b` — một khoá
-  // KHÔNG ai đọc (castSkill chỉ tra sx_<lớp>_a và sx_<lớp>_c). Ice Arrow vì thế chạy 'hexa', tức
-  // trận đồ lục tinh còn sót từ bản kiếm hiệp: bắn mũi tên băng mà màn hình hiện một vòng sao.
   sx_toanchan_c: { style:'icefall',      c2:'#dff4ff', dur:1.0 },             // Ice Arrow (Sylvan Ranger) — phiến băng kết trên cao rồi rơi xuống vỡ
   sx_baidasan_a: { style:'poisonbloom',  c2:'#b8ff9a', proj:'serpent', dur:1.1 }, // Poison (Dark Wizard) — vũng độc loang ra, sủi bọt
-  sx_baidasan_c: { style:'meteor',       c2:'#ffcf7a' },                      // Meteorite (Dark Wizard) — vẫn thạch lửa giáng thế
+  // Meteorite (Dark Wizard) KHÔNG khai style: nó chạy gói art thật, xem CHIEU_TRANH.
   sx_minhgiao_a: { style:'fireslash',    c2:'#ffcf7a' },                      // Fire Slash (Spellblade) — đao quang cuốn lửa
   sx_minhgiao_c: { style:'flamewall',    c2:'#ff9a5a', dur:1.15 },            // Flame Strike (Spellblade) — hàng cột lửa dựng lên phía trước
   // QA: Dark Lord (sect id 'bug') chưa từng có entry nào ở đây — cả chiêu chính lẫn Trấn Phái đều rơi
@@ -3019,12 +3034,10 @@ const VH_VFX = {
   // Năm ô BUFF trước đây không khai style nào cả nên cùng rơi về 'vajra': bấm buff của lớp nào
   // cũng ra đúng một vòng ấn quay. Nay mỗi lớp một hình theo đúng thứ nó làm.
   elf_greaterdmg:  { style:'sunwheel',  c2:'#fff0be', dur:1.1 },  // Bless (Sylvan Ranger) — vòng sáng ban phước
-  dw_shield:       { style:'hexa',      c2:'#cfe8ff', dur:1.0, spin:1.2 }, // Soul Barrier (Dark Wizard) — lồng lục giác
   mg_battlefury:   { style:'phoenix',   c2:'#ffcf7a', dur:1.1 },  // Battle Fury (Spellblade) — song dực liệt hỏa
   dl_commandaura:  { style:'galaxy',    c2:'#ffb0a0', dur:1.1, spin:1.4 }, // Increase Critical Damage (Dark Lord) — hào quang chỉ huy xoay quanh
   // Bốn TUYỆT CHIÊU ô 4 (xem SIGNATURE_SKILL) — mỗi chiêu một hình riêng, không dùng chung style
   // mặc định theo kiểu chiêu nữa. Tuyệt chiêu mà bung ra y hệt chiêu thường thì không ai nhớ nổi.
-  dw_evilspirit:    { style:'spiritdragon', c2:'#cfffc0', dur:1.2 }, // hai rồng bóng tối cuộn quanh rồi lao ra
   dw_lightning:     { style:'boltdown',    c2:'#eaffb0', dur:0.75 }, // sét giáng từ trên trời xuống
   dw_nova:          { style:'novaburst',   c2:'#fff0b0', dur:1.3 },  // dồn năng lượng rồi mới bung
   dw_ice:           { style:'icefall',     c2:'#dff4ff', dur:1.0 },  // phiến băng rơi xuống vỡ tan
@@ -3099,45 +3112,6 @@ function _vxFlameCol(x, gy, h, w, kk, ph, c1, c2, al){
   }
   ctx.globalAlpha = 1;
 }
-// Thân rồng cuộn: một chuỗi đốt chạy dọc cung tròn, đốt to ở đầu và thuôn dần về đuôi.
-// a0 là góc của ĐẦU rồng, coil là số radian thân trải ra phía sau nó.
-function _vxDragon(cx, cy, a0, rr, coil, seg, sz, c1, c2, al){
-  const pt = (t) => {                                        // t=0 là đầu, t=1 là chót đuôi
-    const ang = a0 + coil*t, r2 = rr*(1 - t*0.16);
-    return [cx + Math.cos(ang)*r2, cy + Math.sin(ang)*r2*0.72];
-  };
-  // THÂN TỐI, VIỀN SÁNG. Bản đầu tô đốt bằng chính màu chiêu: Evil Spirit màu lục nhạt trên bản đồ
-  // tân thủ cũng lục nhạt, nên cả con rồng chìm nghỉm — quay phim lại mới thấy nó vẫn ở đó suốt.
-  // Rồng bóng tối thì thân vốn phải tối; màu chiêu chuyển hết sang viền, đọc được trên mọi nền.
-  ctx.globalAlpha = al*0.9;
-  for (let i = seg; i >= 1; i--){                            // vẽ từ đuôi lên đầu để đầu nằm trên
-    const t = i/seg, [px, py] = pt(t), rs = sz*(1 - t*0.72);
-    ctx.fillStyle = '#100d18';
-    ctx.beginPath(); ctx.arc(px, py, rs, 0, 7); ctx.fill();
-    ctx.strokeStyle = i % 2 ? c1 : c2; ctx.lineWidth = Math.max(1.4, rs*0.32);
-    ctx.beginPath(); ctx.arc(px, py, rs, 0, 7); ctx.stroke();
-  }
-  const [hx, hy] = pt(0), [nx, ny] = pt(0.16);
-  const ha = Math.atan2(hy - ny, hx - nx);                   // đầu hướng theo chiều bay
-  ctx.save(); ctx.translate(hx, hy); ctx.rotate(ha); ctx.scale(1.45, 1.45);
-  ctx.globalAlpha = al;
-  ctx.beginPath();                                            // hàm rồng: mõm nhọn, gáy phình
-  ctx.moveTo(sz*2.1, 0);
-  ctx.lineTo(sz*0.5, -sz*0.95); ctx.lineTo(-sz*0.7, -sz*0.75);
-  ctx.lineTo(-sz*0.7, sz*0.75); ctx.lineTo(sz*0.5, sz*0.95);
-  ctx.closePath();
-  ctx.fillStyle = '#100d18'; ctx.fill();
-  ctx.strokeStyle = c1; ctx.lineWidth = sz*0.38; ctx.lineJoin = 'round'; ctx.stroke();
-  for (const sy of [-1, 1]){                                  // hai sừng ngả về sau
-    ctx.beginPath(); ctx.moveTo(-sz*0.2, sy*sz*0.7);
-    ctx.lineTo(-sz*1.6, sy*sz*1.6); ctx.lineTo(-sz*0.4, sy*sz*0.35); ctx.closePath();
-    ctx.fillStyle = c2; ctx.fill();
-  }
-  ctx.fillStyle = '#fff';                                     // mắt
-  ctx.beginPath(); ctx.arc(sz*0.55, -sz*0.32, sz*0.26, 0, 7); ctx.fill();
-  ctx.restore();
-  ctx.globalAlpha = 1;
-}
 function drawVfx(e, k, a){
   const S = e.style, X = e.x, Y = e.y, F = e.face || 0, R = e.r || 100, C1 = e.c1 || '#fff', C2 = e.c2 || '#fff', G = e.glyph || '✦';
   const spin = e.ang || 0;
@@ -3192,11 +3166,6 @@ function drawVfx(e, k, a){
       const ox = X + Math.cos(aa)*rr, oy = Y + Math.sin(aa)*rr*0.8;
       disc(ox, oy, 9*(1-k) + 4, i%2 ? C1 : C2, a*0.9); disc(ox, oy, 3, '#fff', a); }
     arc(X, Y, R*(0.3 + k*0.65), 0, 7, C1, 3.5, a*0.6);
-  } else if (S === 'hexa'){ // Bát Hoang / Bát Quái — trận đồ lục tinh
-    const rr = R*(0.5 + k*0.35);
-    poly(X, Y, rr, 3, spin, C1, 3.5, a*0.9); poly(X, Y, rr, 3, spin + Math.PI/3, C2, 3.5, a*0.9);
-    for (let i = 0; i < 6; i++){ const aa = i*1.0472 + spin; disc(X + Math.cos(aa)*rr, Y + Math.sin(aa)*rr, 3.5, C2, a*0.8); }
-    _vxGlyph(X, Y, G, 22, C1, a);
   } else if (S === 'bonemist'){ // Hóa Cốt — miên chưởng sương xương trắng xám
     for (let i = 0; i < 7; i++){ const ang = F + (i-3)*0.3; const L = R*(0.25 + k*0.6)*(0.8 + ((i*29)%10)/25);
       disc(X + Math.cos(ang)*L, Y + Math.sin(ang)*L, 10*(1-k) + 4, i%2 ? C1 : C2, a*0.4); }
@@ -3288,20 +3257,6 @@ function drawVfx(e, k, a){
       const ex = X + Math.cos(ang2)*rr, ey = Y + Math.sin(ang2)*rr - t2*6;
       disc(ex, ey - 4, 3.5*(1 - t2*0.4), i%2 ? C1 : C2, a*0.75); }
     _vxGlyph(X + Math.cos(F)*rr*0.6, Y + Math.sin(F)*rr*0.6, G, 22, C2, a*0.85);
-  } else if (S === 'meteor'){ // Meteor (Dark Wizard) — vẫn thạch lửa giáng thế, nổ tung khi chạm đất
-    for (let i = 0; i < 6; i++){
-      const seed = i*53.7;
-      const fx0 = X + Math.cos(seed)*R*0.6, fy0 = Y - R*(1.05 + (i%3)*0.22);
-      const tx = X + Math.cos(seed + 1.7)*R*0.3, ty = Y + Math.sin(seed + 1.7)*R*0.2;
-      const kk = Math.min(1, k*1.4 - i*0.09); if (kk <= 0) continue;
-      const px = fx0 + (tx-fx0)*kk, py = fy0 + (ty-fy0)*kk;
-      ctx.strokeStyle = C1; ctx.lineWidth = 4; ctx.globalAlpha = a*0.7;
-      _vxLine(px, py, px - (tx-fx0)*0.18, py - (ty-fy0)*0.18);
-      disc(px, py, 7*(1 - kk*0.3), C1, a*0.9); disc(px, py, 3.2, C2, a);
-      if (kk >= 0.94) arc(tx, ty, 14 + (k - 0.75)*90, 0, 7, C2, 4, a*0.85);
-    }
-    disc(X, Y, R*(0.22 + k*0.35), C1, a*0.22);
-    _vxGlyph(X, Y - R*0.1, G, 26, C2, a*0.9);
   } else if (S === 'bladewhirl'){ // Twisting Slash — lưỡi kiếm quét trọn vòng, ba lớp lệch pha
     // Chiêu này là "xoay tít vũ khí quanh thân", nên hình phải là VÒNG KHÉP KÍN chứ không phải
     // nhát chém một hướng — style windslash cũ chỉ vẽ về phía mặt, mất hẳn ý nghĩa quét cả vòng.
@@ -3409,25 +3364,6 @@ function drawVfx(e, k, a){
       }
     }
     disc(X, Y, R*0.2*(1 - k*0.5), '#fff6d0', a*0.7);
-
-  } else if (S === 'spiritdragon'){ // Evil Spirit — hai con rồng bóng tối cuộn quanh rồi lao ra
-    // Bản trước (spiritswarm) là bảy bóng ma lượn vòng — đúng nghĩa đen cái tên, nhưng trong MU
-    // chiêu này bung ra hai con RỒNG quấn quanh người niệm rồi phóng đi. Chia làm hai nhịp:
-    // nửa đầu cuộn siết vào, nửa sau duỗi thẳng lao ra ngoài.
-    const siet = Math.min(1, k*2);                 // nhịp 1: cuộn vào
-    const lao  = Math.max(0, (k - 0.5)*2);         // nhịp 2: lao ra
-    disc(X, Y, R*(0.3 + siet*0.35), '#0c1408', a*0.34*(1 - lao*0.6));
-    for (let d = 0; d < 2; d++){
-      const goc = d*Math.PI + spin + siet*3.2 + lao*2.4;
-      const ban = R*(0.72 - siet*0.3 + lao*0.95);  // siết vào rồi bung ra xa
-      const cuon = 2.5 - lao*1.9;                  // đang cuộn thì thân xoắn, lao ra thì duỗi thẳng
-      _vxDragon(X, Y, goc, ban, cuon, 18, R*0.095 + 3, d ? C2 : C1, d ? C1 : C2, a*0.95);
-    }
-    for (let i = 0; i < 6; i++){                   // khói âm bốc lên từ chỗ đứng
-      const t = ((k*1.4 + i*0.17) % 1);
-      disc(X + Math.sin(i*2.7 + k*5)*R*0.4, Y - t*R*0.55, (3.4 - t*2)*1.2, i%2 ? C2 : C1, a*(1-t)*0.55);
-    }
-    arc(X, Y, R*(0.35 + k*0.55), 0, 7, C2, 2, a*0.3);
 
   } else if (S === 'firepillar'){ // Fire Scream — ba vệt lửa chạy ra, tới cuối thì DỰNG CỘT LỬA
     // Mô tả gốc trong MU: "phun ba vệt lửa xuống đất, các vệt lửa sau đó nổ tung". Bản trước vẽ
@@ -3670,11 +3606,10 @@ function drawProjStyled(p){
       // Cũng KHÔNG tô theo p.color: tranh đã có màu tím riêng của Dark Wizard, tô đè là mất.
       const _i = Math.floor(performance.now() / 1000 * A.fps) % A.n, _d = window.__orbPx || A.px;
       ctx.drawImage(im, _i * A.o, 0, A.o, A.o, p.x - _d/2, p.y - _d/2, _d, _d);
-    } else {                                  // tranh chưa về — quang cầu tạm một nhịp
-      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 9);
-      g.addColorStop(0, '#fff'); g.addColorStop(0.4, p.color); g.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0, 7); ctx.fill();
     }
+    // Không có nhánh dự phòng vẽ bằng mã: tấm dán chỉ 107 KB, chậm nhất cũng về trong một nhịp,
+    // và một quả cầu gradient tạm bợ chớp qua trước khi tranh thật hiện ra còn xấu hơn là không
+    // vẽ gì. Cùng lý do, hình vector không được giữ làm lưới an toàn ở bất cứ đâu khác.
   } else if (s === 'arrow'){ // Multi-Shot (Sylvan Ranger) — thân tên + mũi nhọn + lông vũ đuôi
     ctx.strokeStyle = p.color; ctx.lineWidth = 2.2;
     ctx.beginPath(); ctx.moveTo(p.x - dx*18, p.y - dy*18); ctx.lineTo(p.x - dx*4, p.y - dy*4); ctx.stroke();
@@ -3708,18 +3643,47 @@ function drawProjStyled(p){
   }
   ctx.restore();
 }
+// MỌI chiêu đã có tranh thật, gom về một chỗ. Có mặt ở đây nghĩa là chiêu ấy KHÔNG còn hình
+// vector nào: `atlas` chạy tấm khung hình trong VFX_ATLAS_DEFS, `ve` chạy đường vẽ riêng đã
+// dựng sẵn (vòng lửa của Flame Cyclone, đám u linh của Evil Spirit). Bảng này cũng là chỗ bài
+// kiểm tra cứu "chiêu nào có chữ ký hình ảnh riêng" — trước đây mỗi nơi giữ một danh sách.
+const CHIEU_TRANH = {
+  dk_cyclone:    { ve:'vongKiem' },         // Flame Cyclone — vũ khí rời tay bay quanh trong vòng lửa
+  dw_evilspirit: { ve:'uLinh' },            // Evil Spirit — u linh vây quanh rồi toả ra
+  // `neo:'quai'`: chiêu GIÁNG XUỐNG ĐẤT thì nổ ở chỗ bầy quái, không phải dưới chân người niệm —
+  // vừa đúng nghĩa "gọi thiên thạch xuống đầu nó", vừa để nhân vật không bị tranh trùm kín.
+  // Vùng sát thương dời theo luôn, không chỉ mỗi hình.
+  // `co`: tranh vẽ nhỏ hơn vòng sát thương. Vẽ đúng bằng bán kính thật thì một con quái cao 70px
+  // nằm lọt thỏm trong đám cháy 370px — nhìn ra "nổ tung cả góc màn hình" chứ không ra "trúng
+  // con quái kia". Sát thương KHÔNG đổi theo hệ số này, nó chỉ là cỡ hình.
+  sx_baidasan_c: { atlas:'meteor_rain', neo:'quai', co:0.62 },  // Meteorite — thiên thạch tím rơi xuống, nổ tung nền đất
+  dw_inferno:    { atlas:'fire_pillar', neo:'quai', co:0.62 },  // Inferno — cột lửa dựng lên từ vòng dung nham
+};
+// Chỗ chiêu giáng xuống: bầy quái gần nhất trong tầm, không có thì một điểm phía trước mặt.
+function diemGiang(tam){
+  const t = nearestMob(tam);
+  if (t) return { x:t.x, y:t.y };
+  const d = Math.min(tam, 200);
+  return { x: player.x + Math.cos(player.face)*d, y: player.y + Math.sin(player.face)*d };
+}
+// Chân nhân vật thấp hơn tâm p.y bấy nhiêu: veHero dịch tới (p.x, p.y-42) rồi thu tỉ lệ
+// NV_CAO/HERO_H, mà trong hộp gốc bàn chân nằm ở y≈212 (tâm hộp 110) → 42 − 102×118/220 ≈ −13.
+// Chiêu giáng xuống ĐẤT thì phải neo vào đây, neo vào p.y là nổ ngang bụng.
+const CHAN_DY = 13;
 function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
-  // Flame Cyclone có đường vẽ RIÊNG: một tấm khung hình thật, cắt làm hai lớp quanh nhân vật,
-  // kèm vũ khí đang cầm bay quanh. Hình vector chung ở dưới sẽ chồng thêm một vòng sáng nữa
-  // lên đúng chỗ đó, thành hai vòng lệch nhau — nên chặn hẳn ở đây.
-  if (id === 'dk_cyclone'){
-    addEffect({ type:'vongKiem', x:player.x, y:player.y, dur:1.0, scale:1, wpn: vongKiemVuKhi() });
-    return;
-  }
-  // Evil Spirit cũng có đường vẽ riêng, cùng lý do: hình vector chung sẽ chồng thêm một vòng
-  // sáng nữa lên đúng chỗ đám u linh đang toả ra.
-  if (id === 'dw_evilspirit'){
-    addEffect({ type:'uLinh', x:player.x, y:player.y, dur:1.15, scale:1, goc: Math.random() * 6.28 });
+  // Chiêu đã có tranh thì DỪNG Ở ĐÂY. Hình vector chung bên dưới sẽ chồng thêm một vòng sáng
+  // nữa lên đúng chỗ tranh đang toả ra, thành hai lớp lệch nhau — một lớp vẽ tay, một lớp hình
+  // học. Đó chính là thứ phải bỏ, không phải thứ để làm nền dự phòng.
+  const _tr = CHIEU_TRANH[id];
+  if (_tr){
+    if (_tr.ve === 'vongKiem')
+      addEffect({ type:'vongKiem', x:player.x, y:player.y, dur:1.0, scale:1, wpn: vongKiemVuKhi() });
+    else if (_tr.ve === 'uLinh')
+      addEffect({ type:'uLinh', x:player.x, y:player.y, dur:1.15, scale:1, goc: Math.random() * 6.28 });
+    else {
+      const _cx = x0 == null ? player.x : x0, _cy = (y0 == null ? player.y : y0) + CHAN_DY;
+      spawnAtlasVfx(_tr.atlas, _cx, _cy, (_tr.co || 1) * R / VFX_ATLAS_DEFS[_tr.atlas].neoR);
+    }
     return;
   }
   const c = VH_VFX[id] || SECT_VFX[id] || null;
@@ -3824,16 +3788,18 @@ function castVohoc(id){
   }
   else if (v.type === 'aoe'){
     const R = (fx.r || 160) * (1 + 0.12 * _st) * _ev.r; // tiến hóa: phạm vi +12%/bậc · Lan Toả nhân thêm
-    spawnSkillVfx(id, v, 'aoe', player.face, R);
+    const _aA = CHIEU_TRANH[id];
+    const _aC = (_aA && _aA.neo === 'quai') ? diemGiang(v.tam || 500) : { x:player.x, y:player.y };
+    spawnSkillVfx(id, v, 'aoe', player.face, R, _aC.x, _aC.y);
     shakeT = Math.max(shakeT, 0.2); shakeMag = Math.max(shakeMag, fx.big ? 7 : 4);
     aoeHit(() => {
       for (const m of mobs){
         if (m.dead) continue;
-        if (dist(player.x, player.y, m.x, m.y) < R + m.def.size) hitMob(m, v.mult);
+        if (dist(_aC.x, _aC.y, m.x, m.y) < R + m.def.size) hitMob(m, v.mult);
       }
     });
     for (let _w = 1; _w <= _st; _w++){ // tiến hóa: dư chấn nổ tiếp thành từng vòng
-      const _wm = _w === 1 ? 0.5 : 0.35, _Rw = R * (1 + 0.15 * _w), _px = player.x, _py = player.y;
+      const _wm = _w === 1 ? 0.5 : 0.35, _Rw = R * (1 + 0.15 * _w), _px = _aC.x, _py = _aC.y;
       setTimeout(() => {
         if (!player || dead) return;
         addEffect({ type:'ring', x:_px, y:_py, r:_Rw, color:col, big:true });
@@ -4070,15 +4036,32 @@ function drawSkyOverlay(){ // screen-space — gọi sau vignette, trước zone
   if (dk > 0.15 && curMap === 'tuongduong' && FXQ >= 1 && typeof camera !== 'undefined') drawLanternGlow(dk);
 }
 
+// Tầm mặc định theo loại chiêu, cho những chiêu không khai `tam` riêng. 'lop' = lấy tầm của lớp.
+const SKILL_TAM_MD = { sectA:'lop', sectTP:0, vh:'lop', danchi:520, tieuhon:0 };
 function skillInfo(id){
   const sect = SECTS[player.sect];
   const d = SKILL_DEFS[id];
   if (!d) return null;
   const out = { id, icon: typeof d.icon==='function' ? d.icon(player.sect) : d.icon, desc: typeof d.desc==='function' ? d.desc(sect) : d.desc };
-  if (d.kind==='sectA'){ out.name = sect.skillA.name; out.cd = sect.skillA.cd; out.qi = sect.skillA.qi; }
-  else if (d.kind==='sectTP'){ out.name = sect.tp.name; out.cd = TP_CD; out.qi = player.level < 20 ? Math.round(TP_QI*0.7) : TP_QI; } // tân thủ <20: tuyệt chiêu -30% mana
-  else if (d.kind==='vh'){ const _v = VOHOC_DEFS[id] || FUSION_DEFS[id]; out.name = _v.name; out.cd = _v.cd; out.qi = _v.qi; }
-  else { out.name = d.name; out.cd = d.cd; out.qi = d.qi; }
+  if (d.kind==='sectA'){ const _a = sect.skillA; out.name = _a.name; out.cd = _a.cd; out.qi = _a.qi;
+    out.he = _a.mult; out.tam = _a.tam != null ? _a.tam : (_a.type === 'cone' ? 130 : sect.range);
+    out.pham = _a.pham != null ? _a.pham : (_a.type === 'cone' ? 125 : 0); }
+  else if (d.kind==='sectTP'){ out.name = sect.tp.name; out.cd = TP_CD; out.qi = player.level < 20 ? Math.round(TP_QI*0.7) : TP_QI; // tân thủ <20: tuyệt chiêu -30% mana
+    out.he = sect.tp.mult; out.tam = sect.tp.tam != null ? sect.tp.tam : 0; out.pham = TP_RADIUS; }
+  else if (d.kind==='vh'){ const _v = VOHOC_DEFS[id] || FUSION_DEFS[id]; out.name = _v.name; out.cd = _v.cd; out.qi = _v.qi;
+    out.he = _v.mult || 0; out.tam = _v.tam != null ? _v.tam : (_v.type === 'aoe' ? 0 : _v.type === 'buff' ? 0 : sect.range);
+    out.pham = _v.pham != null ? _v.pham : ((_v.fx && _v.fx.r) || 0); }
+  else { out.name = d.name; out.cd = d.cd; out.qi = d.qi; out.tam = d.tam; out.pham = d.pham; out.he = d.mult; }
+  // BỐN thông số bắt buộc của mọi chiêu (xem CLAUDE.md · Quy ước kỹ năng):
+  //   tam  — khoảng cách sử dụng: xa nhất tới chỗ chiêu phát ra, 0 = ngay tại chỗ đứng
+  //   cd   — thời gian hồi chiêu (giây)
+  //   he   — hệ số Công Kích (Dark Wizard đọc là Sức Mạnh Phép Thuật)
+  //   pham — phạm vi ảnh hưởng: bán kính vùng trúng, 0 = đánh trúng đúng một mục tiêu
+  // Chiêu nào chưa khai thì suy ra từ chính lớp / hiệu ứng của nó, KHÔNG bỏ trống — ô kỹ năng
+  // hiện đủ bốn dòng, thiếu một dòng là người chơi không so được hai chiêu với nhau.
+  if (out.tam == null) out.tam = SKILL_TAM_MD[d.kind] === 'lop' ? sect.range : (SKILL_TAM_MD[d.kind] || 0);
+  if (out.pham == null) out.pham = 0;
+  if (out.he == null) out.he = 1;
   out.unlocked = player.level >= d.unlock && (!d.req || d.req());
   out.lockTxt = player.level < d.unlock ? `Mở khóa ở cấp ${d.unlock}` : (d.reqTxt || '');
   // hồi chiêu theo định nghĩa từng chiêu (dải 8-20s) — nhịp rõ để giọng hô tên chiêu không bị dồn
@@ -4585,7 +4568,9 @@ function chiVeBong(g, id, i, x, y, thanPx){
 const SECT_ART = {
   thieulam: { },
   toanchan: { },
-  baidasan: { },
+  // Meteorite cắt icon ra từ chính tấm dán meteor_rain (xem tools/icon_chieu.py) — ô kỹ năng và
+  // thứ nổ ra trên màn hình là một, không phải hai bản vẽ rời nhau.
+  baidasan: { iconTP:'assets/skills/meteorite.png' },
   minhgiao: { },
   bug:      { },
   vophai:   { },
@@ -10503,7 +10488,7 @@ function render(){
         const sc = e.scale * (def.k || 1);   // atlas đã thu nhỏ — quy về đơn vị thiết kế
         const dw = def.frameW * sc, dh = def.frameH * sc;
         ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
+        if (def.cong !== false) ctx.globalCompositeOperation = 'lighter';
         ctx.globalAlpha = a > 0.15 ? 1 : a / 0.15; // hold full bright, only fade the last sliver
         ctx.drawImage(img, col*def.frameW, row*def.frameH, def.frameW, def.frameH,
           e.x - def.anchorX*sc, e.y - def.anchorY*sc, dw, dh);
@@ -15740,7 +15725,7 @@ function veVfxAtlas(g, id, x, y, giay, ty, mo){
   const im = getVfxAtlasImg(id); if (!chiSan(im)) return;
   const i = clamp(Math.floor(giay * d.fps), 0, d.frames - 1);
   g.save();
-  g.globalCompositeOperation = 'lighter';        // cả hai clip kit khai blend: additive
+  if (d.cong !== false) g.globalCompositeOperation = 'lighter';   // clip kit khai blend: additive
   g.globalAlpha = mo == null ? 1 : mo;
   g.drawImage(im, (i % d.cols) * d.frameW, ((i / d.cols) | 0) * d.frameH, d.frameW, d.frameH,
               x - d.anchorX * ty, y - d.anchorY * ty, d.frameW * ty, d.frameH * ty);
@@ -18945,12 +18930,22 @@ function heroCastAct(id, d){
   return heroActOf(sk, 'a');
 }
 // 4 ô cố định (chính/phụ/buff/tuyệt chiêu — xem defaultSkillBar()): không gán/gỡ, chỉ xem + nâng cấp.
+// NĂM thông số bắt buộc của mọi chiêu (xem CLAUDE.md · Quy ước kỹ năng). Dark Wizard đọc Công
+// Kích thành Sức Mạnh Phép Thuật — cùng một con số, nhưng gọi đúng tên thứ lớp ấy dùng để đánh.
+function skThongSo(info){
+  const stTen = player.sect === 'baidasan' ? 'Phép Thuật' : 'Công Kích';
+  const tam = info.tam > 0 ? `${Math.round(info.tam)}` : 'tại chỗ';
+  const pham = info.pham > 0 ? `${Math.round(info.pham)}` : '1 mục tiêu';
+  return `<span>⇥ Tầm <b>${tam}</b></span><span>⟳ Hồi <b>${effCd(info.id, info.cd).toFixed(1)}s</b></span>`
+       + `<span>✦ ${stTen} <b>×${(info.he || 1).toFixed(1)}</b></span>`
+       + `<span>◎ Phạm vi <b>${pham}</b></span><span>◈ Mana <b>${info.qi}</b></span>`;
+}
 function equippedSkillRowHtml(id, roleLabel){
   const info = skillInfo(id);
   return `<div class="skill-row${info.unlocked?'':' locked'}">
     <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='a'?'⚔':id==='tp'?'⚔':'✚'}</span>'" alt="">
     <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${roleLabel} — ${info.name}</b>
-      <span style="font-size:10.5px;opacity:.6"> · ${info.qi}Mana · ${effCd(id, info.cd).toFixed(1)}s</span>
+      <div class="sk-so">${skThongSo(info)}</div>
       <div class="sk-desc">${info.unlocked ? info.desc : '🔒 ' + info.lockTxt}</div></span>
     <span class="assign-btns">${info.unlocked ? upBtnHtml(id) : ''}</span></div>`;
 }
@@ -18985,11 +18980,11 @@ function renderSkillPanel(){
   let html = moBang({ tieu:'Kỹ Năng', dong:'4 ô cố định · phím 1-4' });
   html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%Sát Thương/cấp (Lumen) · mốc 20/40/60/80/100/120 thêm phù trợ · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · <span style="color:#7fd8e0">Bản Năng <b>${Math.floor(player.khi || 0).toLocaleString('vi-VN')}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
   {
-    html += `<div class="stat-sec">${SECTS[player.sect].name} — 1 chính · 1 phụ · 1 phù trợ · 1 tuyệt chiêu</div>`;
+    html += `<div class="stat-sec">${SECTS[player.sect].name} — 1 chính · 1 phụ · 1 ${BUFF_SKILL_ID[player.sect] ? 'phù trợ' : 'chiêu phụ nữa'} · 1 tuyệt chiêu</div>`;
     html += equippedSkillRowHtml('a', 'Chính');
     html += equippedSkillRowHtml('tp', 'Phụ');
-    const buffId = BUFF_SKILL_ID[player.sect], sigId = SIGNATURE_SKILL[player.sect];
-    html += buffId ? equippedSkillRowHtml(buffId, 'Phù Trợ')
+    const o3Id = O3_SKILL_ID[player.sect], sigId = SIGNATURE_SKILL[player.sect];
+    html += o3Id ? equippedSkillRowHtml(o3Id, BUFF_SKILL_ID[player.sect] ? 'Phù Trợ' : 'Phụ 2')
       : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10 để mở khoá bộ 4 chiêu riêng.</div>`;
     if (sigId) html += equippedSkillRowHtml(sigId, '★ Tuyệt Chiêu');
     html += `<div class="shop-row" title="${consumTip('sach')}"><span class="sr-ic">${consumIcon('sach', 'sr-img')}</span>
@@ -19057,16 +19052,24 @@ function castSkill(id){
   if (d.kind === 'sectTP'){ // Trấn Phái — big AoE
     if (SECT_SFX[player.sect]) sfxTag = 'smash_' + SECT_SFX[player.sect];
     const _tpR = TP_RADIUS + 15 * _st; // tiến hóa: trấn phái lan rộng
-    spawnSkillVfx('sx_' + player.sect + '_c', { color:sect.color, glyph:'⚔' }, 'aoe', player.face, _tpR);
-    addEffect({ type:'ring', x:player.x, y:player.y, r:_tpR, color:sect.color, big:true });
-    addEffect({ type:'ring', x:player.x, y:player.y, r:_tpR*0.6, color:sect.glow, big:true });
-    for (let i = 0; i < 6; i++){
-      const a = i * Math.PI/3 + player.face;
-      spawnSlash(player.x + Math.cos(a)*70, player.y + Math.sin(a)*70 - 10, a, 170, sect.color, sect.glow);
+    const _tpId = 'sx_' + player.sect + '_c';
+    const _tpA = CHIEU_TRANH[_tpId];
+    const _tpC = (_tpA && _tpA.neo === 'quai') ? diemGiang(info.tam || sect.range) : { x:player.x, y:player.y };
+    spawnSkillVfx(_tpId, { color:sect.color, glyph:'⚔' }, 'aoe', player.face, _tpR, _tpC.x, _tpC.y);
+    // Hai vòng và sáu nhát chém dưới đây là hình VẼ BẰNG MÃ. Lớp nào đã có gói art thì bỏ hẳn:
+    // tấm dán đã có vành nổ và tia sáng của chính nó, chồng thêm vòng vector lên là lộ ngay hai
+    // lớp lệch nhau — một lớp vẽ tay, một lớp hình học.
+    if (!CHIEU_TRANH[_tpId]){
+      addEffect({ type:'ring', x:player.x, y:player.y, r:_tpR, color:sect.color, big:true });
+      addEffect({ type:'ring', x:player.x, y:player.y, r:_tpR*0.6, color:sect.glow, big:true });
+      for (let i = 0; i < 6; i++){
+        const a = i * Math.PI/3 + player.face;
+        spawnSlash(player.x + Math.cos(a)*70, player.y + Math.sin(a)*70 - 10, a, 170, sect.color, sect.glow);
+      }
     }
     for (const m of mobs){
       if (m.dead) continue;
-      if (dist(player.x, player.y, m.x, m.y) < _tpR + m.def.size){
+      if (dist(_tpC.x, _tpC.y, m.x, m.y) < _tpR + m.def.size){
         // (Trấn Phái, ô 2 cố định của mọi lớp) bị bỏ sót, trái với mô tả "+%ST chiêu Lớp" ở panel.
         let dmg = player.atk * sect.tp.mult * rnd(0.95,1.1);
         if (Math.random() < player.crit) dmg *= (player.critDmgMult || 2);

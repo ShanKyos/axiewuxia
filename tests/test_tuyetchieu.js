@@ -76,11 +76,17 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     }
     // biểu tượng nào bị hai chiêu trở lên dùng chung — chấp nhận với nhóm khiên/bị động cùng dạng
     const chung = Object.entries(dung).filter(([, v]) => v.length > 1).map(([k, v]) => k + ':' + v.length);
-    const artMuon = [];
+    // Art MƯỢN TẠM = một tệp dùng cho nhiều ô, hoặc tệp không nạp được. Art RIÊNG của đúng
+    // chiêu ấy thì hoan nghênh — icon Meteorite chẳng hạn cắt thẳng ra từ tấm dán meteor_rain
+    // (tools/icon_chieu.py), nên ô kỹ năng và thứ nổ trên màn hình là một.
+    const artMuon = [], dem = {};
     for (const sk in SECT_ART){
       const a = SECT_ART[sk];
-      for (const k of ['iconA', 'iconTP'])
-        if (a[k] && !String(a[k]).startsWith('data:')) artMuon.push(sk + '.' + k + '=' + a[k]);
+      for (const k of ['iconA', 'iconTP']){
+        const v = a[k]; if (!v || String(v).startsWith('data:')) continue;
+        dem[v] = (dem[v] || 0) + 1;
+        if (dem[v] > 1) artMuon.push(sk + '.' + k + '=' + v);
+      }
     }
     return { soChieu: Object.keys(VOHOC_DEFS).length, soBieuTuong: Object.keys(SK_ICON_SYMS).length,
              thieu, chung, artMuon,
@@ -91,21 +97,28 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   if (r3.thieu.length) fail(`${r3.thieu.length} chiêu chưa có biểu tượng riêng: ${r3.thieu.join(', ')}`);
   if (r3.soBieuTuong < 20) fail(`chỉ có ${r3.soBieuTuong} biểu tượng cho ${r3.soChieu} chiêu — vẫn dùng chung quá nhiều`);
   if (r3.artMuon.length) fail(`còn ô kỹ năng trỏ vào art mượn tạm: ${r3.artMuon.join(', ')}`);
-  if (r3.oTaskbar.some(x => x !== 'vẽ')) fail(`taskbar lẫn lộn kiểu icon: ${JSON.stringify(r3.oTaskbar)}`);
+  if (r3.oTaskbar.some(x => x === 'TRỐNG')) fail(`taskbar còn ô không có icon: ${JSON.stringify(r3.oTaskbar)}`);
+  else console.log(`   4 ô taskbar đều có icon: ${JSON.stringify(r3.oTaskbar)}`);
 
   // ---- 4. Năm chiêu đặc trưng có hiệu ứng RIÊNG, không rơi về style mặc định theo kiểu chiêu ----
   const r4 = await p3.evaluate(() => {
     const MAC_DINH = ['crescents', 'suns', 'flash', 'wuxing', 'vajra'];
-    // spiritswarm → spiritdragon và firelines → firepillar sau đợt làm HOẠT ẢNH: bầy u linh lượn
-    // vòng đổi thành hai con rồng cuộn rồi lao ra, và ba vệt lửa nay dựng lên thành CỘT lửa.
+    // firelines → firepillar sau đợt làm HOẠT ẢNH: ba vệt lửa nay dựng lên thành CỘT lửa.
+    // Evil Spirit rời khỏi bảng này vì đã có tranh thật — xem vòng kiểm CHIEU_TRANH ngay dưới.
     // crowswarm → quakeburst ở đợt làm lại bộ chiêu 5 lớp: tuyệt chiêu của Dark Lord dùng CHUNG
     // bầy quạ với Dark Raven của chính lớp đó — hai chiêu một lớp trông y hệt nhau. Nay nó là
     // Earthquake, nền đất nứt theo vòng (xem docs/KY_NANG_5_LOP.md).
-    const dac = { dw_evilspirit:'spiritdragon', dk_ragefulblow:'groundburst',
+    const dac = { dk_ragefulblow:'groundburst',
                   mg_powerslash:'lightwave', dl_chaoticdiseier:'quakeburst' };
     const sai = [];
     for (const id in dac) if (!VH_VFX[id] || VH_VFX[id].style !== dac[id])
       sai.push(id + '=' + ((VH_VFX[id] && VH_VFX[id].style) || 'không có'));
+    // Chiêu đã có TRANH THẬT thì không khai style vector nữa (giữ cả hai là chồng hai lớp lên
+    // nhau) — chữ ký hình ảnh của nó nằm ở CHIEU_TRANH.
+    for (const id of ['dw_evilspirit', 'dw_inferno', 'sx_baidasan_c']){
+      if (!CHIEU_TRANH[id]) sai.push(id + '=chưa khai tranh');
+      else if (VH_VFX[id] || SECT_VFX[id]) sai.push(id + '=vừa có tranh vừa có hình vector');
+    }
     return { sai, fireScream: SECT_VFX.sx_bug_c.style, twistingSlash: SECT_VFX.sx_thieulam_a.style,
              penetrationProj: VH_VFX.elf_penetration && VH_VFX.elf_penetration.proj,
              deuKhacMacDinh: !MAC_DINH.includes(SECT_VFX.sx_bug_c.style) };

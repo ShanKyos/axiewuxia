@@ -344,10 +344,60 @@ Test: `node <scratchpad>/test_itemcompare.js`.
 
 ## Hệ thống kỹ năng (đã tối giản)
 
-Taskbar cố định **3 ô**: chiêu chính (`a`) · chiêu phụ (`tp`) · buff riêng từng lớp
-(`BUFF_SKILL_ID`). Không cho người chơi tự gán. Các chiêu cũ không còn bấm được đã quy thành
-**% Công Kích vĩnh viễn** (`LEGACY_SECT_SKILLS` / `legacyAtkPct` trong `calcDerived()`), hiện ở
-tab "Tuyệt Học Cũ" (panel K).
+Taskbar cố định **4 ô**: chiêu chính (`a`) · chiêu phụ (`tp`) · ô 3 riêng từng lớp
+(`O3_SKILL_ID`) · tuyệt chiêu (`SIGNATURE_SKILL`). Không cho người chơi tự gán. Các chiêu cũ
+không còn bấm được đã quy thành **% Công Kích vĩnh viễn** (`LEGACY_SECT_SKILLS` /
+`legacyAtkPct` trong `calcDerived()`), hiện ở mục Di Sản trong panel K.
+
+Ô 3 **không nhất thiết là chiêu buff**. Bộ bốn nút phải là bộ bốn chiêu mà lớp ấy thực sự nổi
+tiếng vì nó. Dark Wizard là Poison · Meteorite · Inferno · Evil Spirit, nên Soul Barrier
+nhường chỗ cho Inferno và chuyển sang Di Sản — y như chiêu buff của Dark Knight đã làm.
+`BUFF_SKILL_ID` nay **suy ra** từ `O3_SKILL_ID` (ô 3 nào có `type:'buff'`), không khai tay.
+
+Một chiêu **không được vừa bấm được vừa cộng %ST vĩnh viễn**. Đưa chiêu nào lên taskbar thì
+đồng thời gỡ nó khỏi `LEGACY_SECT_SKILLS`, và đẩy một chiêu khác vào thế chỗ sao cho mỗi lớp
+vẫn đúng **4 chiêu Di Sản = +8,0% Công Kích** (`test_kynang5lop` bắt lỗi lệch giữa các lớp).
+
+### ⚠ Quy ước kỹ năng: NĂM thông số bắt buộc
+
+Mọi chiêu, không trừ chiêu nào, phải khai và **hiện ra cho người chơi đọc** đủ năm con số.
+Thiếu một dòng là người chơi không so được hai chiêu với nhau, và cân bằng thì không ai kiểm
+được bằng mắt:
+
+| Thông số | Khoá | Ý nghĩa | Khi không khai |
+|---|---|---|---|
+| Khoảng cách sử dụng | `tam` | xa nhất tới chỗ chiêu phát ra; `0` = ngay tại chỗ đứng | lấy tầm của lớp (`SECTS[x].range`), chiêu quạt lấy 130 |
+| Thời gian hồi chiêu | `cd` | giây, trước khi trừ các mốc giảm hồi | bắt buộc khai |
+| Sức mạnh tấn công | `mult` | hệ số nhân Công Kích | 1.0 |
+| Phạm vi ảnh hưởng | `pham` | bán kính vùng trúng; `0` = trúng đúng một mục tiêu | `fx.r`, Trấn Phái lấy `TP_RADIUS` |
+| Mana tiêu hao | `qi` | trừ thẳng khi tung; gọi là **Mana**, không phải từ vựng kiếm hiệp (quy tắc số 1) | bắt buộc khai |
+
+`skillInfo()` trả đủ năm (`tam` · `cd` · `he` · `pham` · `qi`) và `skThongSo()` in chúng thành
+lưới 3 cột trong mỗi ô kỹ năng. **Dark Wizard đọc "Công Kích" thành "Sức Mạnh Phép Thuật"** — cùng
+một con số, nhưng gọi đúng tên thứ mà lớp ấy dùng để đánh.
+
+Hai luật đi kèm, vì chúng là chỗ dễ nói dối nhất:
+
+1. **`tam` phải là tầm THẬT.** Chiêu khai `tam` > 0 thì nó nổ ở chỗ mục tiêu, không phải dưới
+   chân người niệm — `diemGiang(tam)` chọn bầy quái gần nhất trong đúng tầm ấy. Đánh dấu
+   `neo:'quai'` trong `CHIEU_TRANH`.
+2. **`pham` phải khớp thứ vẽ ra.** Hình được phép nhỏ hơn vòng sát thương (`co` trong
+   `CHIEU_TRANH`, hiện 0,62 — vẽ đúng bán kính thật thì một con quái cao 70px lọt thỏm trong
+   đám cháy 370px), nhưng **không bao giờ lớn hơn**: vẽ trùm qua con quái mà nó không mất máu
+   là hứa suông.
+
+### Chiêu đã có art thì gom hết vào `CHIEU_TRANH`
+
+Một bảng duy nhất trong `game.js` khai mọi chiêu có tranh thật: `atlas` (tấm khung hình trong
+`VFX_ATLAS_DEFS`) hoặc `ve` (đường vẽ riêng như `vongKiem` / `uLinh`), kèm `neo` và `co`.
+`spawnSkillVfx()` gặp chiêu trong bảng là **dừng ngay** — không vẽ thêm hình nào nữa.
+Có mặt trong bảng nghĩa là chiêu ấy **không còn khai `style` ở `VH_VFX`/`SECT_VFX`**; giữ cả
+hai là chồng hai lớp lệch tâm lên nhau. Bài kiểm đọc thẳng bảng này, đừng chép danh sách sang
+chỗ khác.
+
+Đường nhập art: `tools/vfx_meowa.py` (gói Meowa → atlas, có `--caro` vá lưới ô caro trong suốt
+bị nướng vào tranh, `--cat/--neo/--sat` để neo theo vạch nền) và `tools/icon_chieu.py` (cắt
+icon **ra từ chính tấm dán của chiêu đó** — ô kỹ năng và thứ nổ trên màn hình phải là một).
 
 ## ⚠ QUY TẮC SỐ 3: KHÔNG DÙNG VECTOR. CHẤM HẾT.
 

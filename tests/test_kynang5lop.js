@@ -74,11 +74,11 @@ const PORT = process.argv[2] || '8853';
       const key = { 0:'sx_' + sect + '_a', 1:'sx_' + sect + '_c' };
       player.skillBar.forEach((id, i) => {
         if (!id) return;
-        // Chiêu có ĐƯỜNG VẼ RIÊNG (tấm khung hình thật thay cho hình vector chung) thì không
-        // khai trong VH_VFX — nhưng nó vẫn có chữ ký hình ảnh, thậm chí rõ hơn cả. Ghi tên
-        // đường vẽ đó ra để chỗ kiểm bên dưới không báo thiếu.
-        const RIENG = { dk_cyclone:'vongKiem' };
-        const c = RIENG[id] ? { style: RIENG[id] }
+        // Chiêu có TRANH THẬT không khai style vector ở đâu cả — chữ ký hình ảnh của nó là tên
+        // tấm dán / đường vẽ riêng, ghi trong CHIEU_TRANH. Đọc thẳng từ đó, đừng chép lại
+        // danh sách sang bên này: hai danh sách rồi sẽ lệch nhau.
+        const A = CHIEU_TRANH[id] || CHIEU_TRANH[key[i]];
+        const c = A ? { style: A.atlas || A.ve }
                 : VH_VFX[id] || SECT_VFX[key[i]] || SECT_VFX[id] || null;
         // Chữ ký hình ảnh = kiểu hoạt ảnh + kiểu đạn. Triple Shot và Penetration cùng dùng cú
         // loé 'flash' lúc xuất chiêu, nhưng thứ người chơi nhìn là viên đạn: ba mũi tên ngắn
@@ -139,19 +139,22 @@ const PORT = process.argv[2] || '8853';
   else pass('không tên chiêu nào dùng chung giữa hai lớp');
 
   // ── 2. buff ──
-  // BỐN lớp, không phải năm: Dark Knight không còn chiêu buff (xem chú thích ở mục 1).
+  // BA lớp, không phải năm: Dark Knight và Dark Wizard không có chiêu buff ở ô 3.
   const B = r.buff;
   if (B.thieulam) fail('Dark Knight lại có chiêu buff — nếu là cố ý thì siết luôn mục 1 lại');
   else pass('Dark Knight chưa có chiêu buff — đúng trạng thái sau khi gỡ hệ Thuần Thục');
+  // Dark Wizard cũng vậy: ô 3 của lớp này là Inferno (đúng bộ bốn nút Poison · Meteorite ·
+  // Inferno · Evil Spirit trong MU), còn Soul Barrier chuyển sang Di Sản.
+  if (B.baidasan) fail('Dark Wizard lại có chiêu buff ở ô 3 — ô đó nay là Inferno');
+  else pass('Dark Wizard ô 3 là Inferno, không phải chiêu buff');
   if (!(B.toanchan.hoiMau > 0 && B.toanchan.stX > 1)) fail('Bless (Sylvan Ranger) không hồi máu'); else pass(`Bless: +${B.toanchan.hoiMau} HP và ×${B.toanchan.stX} ST`);
-  if (!(B.baidasan.khien > 0)) fail('Soul Barrier (Dark Wizard) không tạo khiên'); else pass(`Soul Barrier: khiên ${B.baidasan.khien}`);
   if (!(B.minhgiao.tocDanhX > 1.1 && B.minhgiao.stX > 1)) fail('Battle Fury (Spellblade) không cộng tốc đánh'); else pass(`Battle Fury: ×${B.minhgiao.stX} ST và ×${B.minhgiao.tocDanhX} tốc đánh`);
   if (!(B.bug.baoKich > 0.3)) fail('Increase Critical Damage (Dark Lord) không cộng bạo kích'); else pass(`Increase Critical Damage: +${B.bug.baoKich} bạo kích`);
   // và không hai lớp nào cùng một hồ sơ hiệu ứng
   const hoSo = Object.entries(B).map(([k, v]) => [k, [v.hoiMau>0, v.khien>0, v.stX>1, v.tocDanhX>1.05, v.baoKich>0.3, v.giamST>0].join('')]);
   const dup = hoSo.filter(([k, h], i) => hoSo.findIndex(([, h2]) => h2 === h) !== i);
   if (dup.length) fail('hai lớp có buff cùng cơ chế: ' + dup.map(x=>B[x[0]].ten).join(', '));
-  else pass('5 ô buff = 5 cơ chế khác nhau');
+  else pass('mỗi ô buff một cơ chế khác nhau');
 
   // ── 3. hoạt ảnh ──
   const thieu = Object.entries(r.style).filter(([, v]) => !v).map(([k]) => k);

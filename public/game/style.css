@@ -1568,3 +1568,12 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 /* Màn hẹp: cột ô nhân vật rộng 520px nằm giữa, tranh cao 340px rộng chừng 270px — dưới 1080px
    là hai thứ chạm nhau. Ẩn hẳn còn hơn để nó thò một nửa ra sau danh sách. */
 @media (max-width:1080px){ #cc-hero, #cc-hero + .ss-inner::before { display:none } }
+
+/* Năm thông số bắt buộc của mọi chiêu — xem CLAUDE.md · Quy ước kỹ năng. Xếp thành lưới để
+   người chơi so hai chiêu theo cột, không phải dò trong một dòng chữ dài. */
+.skill-row .sk-so {
+  display:grid; grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:1px 10px; margin:3px 0 2px; font-size:10.5px; color:var(--text-muted);
+  font-variant-numeric:tabular-nums;
+}
+.skill-row .sk-so b { color:var(--accent-light); font-weight:600; }

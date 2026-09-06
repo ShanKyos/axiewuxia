@@ -15,14 +15,32 @@ một tấm sheet cộng một tệp `.tres` của Godot. Ba việc riêng ở �
    sáng nhất rồi cắt quanh CHÍNH NÓ, thế là quả cầu đứng im và chỉ tia điện động, đúng như
    mắt mong đợi ở một viên đạn bay.
 
-③ CHỌN ĐOẠN KHUNG. Meowa hay sinh cả đoạn "hình thành" lẫn đoạn "chạy vòng" trong một gói;
+③ VÁ Ô CARO. Gói xuất mà không bật 'preserve translucent areas' thì lưới ô vuông trong suốt
+   của trình vẽ bị nướng thẳng vào tranh — ô alpha 0 và ô đen thui giữa dải nền sáng, lưới mờ
+   giữa khói tối. `--caro` vá cả ba dạng, chỉ đụng vào chỗ đúng cỡ một ô.
+
+④ NEO THEO NỀN ĐẤT. Chiêu giáng xuống đất thì mốc neo là VẠCH NỀN, không phải tâm ô: `--cat`
+   cắt khung theo hộp cho trước, `--neo` chỉ chỗ chạm đất, `--sat` chỉ bán kính vùng nổ trên
+   nền — trong màn chỉ việc chia bán kính sát thương thật cho nó là ra tỉ lệ vẽ.
+
+⑤ CHỌN ĐOẠN KHUNG. Meowa hay sinh cả đoạn "hình thành" lẫn đoạn "chạy vòng" trong một gói;
    đạn bay chỉ cần đoạn chạy vòng, `--khung a:b` cắt lấy đúng đoạn đó.
 """
 import os, re, sys, argparse, glob
 import numpy as np
+from scipy import ndimage
 from PIL import Image
 
 Image.MAX_IMAGE_PIXELS = None
+
+
+def doc_day_png(thu):
+    """Thư mục PNG rời → danh sách khung theo thứ tự tên tệp. Meowa xuất kiểu này khi chọn
+    'PNG sequence', và nó AN TOÀN HƠN sheet Godot: không có lưới để khai sai, và không có
+    hàng xóm để nội dung khung này lấn sang khung kia."""
+    ps = sorted(p for p in glob.glob(os.path.join(thu, '*'))
+                if p.lower().endswith(('.png', '.webp')))
+    return [Image.open(p).convert('RGBA') for p in ps], [os.path.basename(p) for p in ps]
 
 
 def doc_luoi(thu):
@@ -49,6 +67,55 @@ def tam_loi(c):
     return int(xs.mean()), int(ys.mean())
 
 
+P_CARO = 11          # cạnh ô caro đo trên gói mưa thiên thạch
+O_CARO = 2 * P_CARO + 4   # rộng hơn hai ô thì không còn là ô caro
+
+
+def _va_o(rgb, al):
+    """Trả lại phần bị ô caro đục mất: ô alpha 0 và ô đục-nhưng-đen giữa vùng sáng. Chỉ vá mảng
+    đúng cỡ một ô — khoảng trống thật (lòng vòng sét) rộng hơn nhiều, đụng vào là bôi trắng."""
+    duc = al > 127
+    lum = rgb[..., 0] * .3 + rgb[..., 1] * .59 + rgb[..., 2] * .11
+    lo = ndimage.binary_fill_holes(duc) & ~duc
+    phu = ndimage.uniform_filter(duc.astype(float), 2 * P_CARO + 1)
+    quanh = ndimage.uniform_filter(np.where(duc, lum, 0.), 2 * P_CARO + 1) / np.maximum(phu, 1e-6)
+    xau = lo | (duc & (phu > .5) & (quanh - lum > 45))
+    lab, n = ndimage.label(xau)
+    if not n:
+        return rgb, al
+    giu = np.zeros(n + 1, bool)
+    for i, sl in enumerate(ndimage.find_objects(lab), 1):
+        giu[i] = (sl[0].stop - sl[0].start) <= O_CARO and (sl[1].stop - sl[1].start) <= O_CARO
+    xau = giu[lab]
+    if not xau.any():
+        return rgb, al
+    _, idx = ndimage.distance_transform_edt(~(duc & ~xau), return_indices=True)
+    r2 = rgb.copy()
+    for c in range(3):
+        r2[..., c] = np.where(xau, rgb[..., c][idx[0], idx[1]], rgb[..., c])
+    mem = np.stack([ndimage.uniform_filter(r2[..., c], P_CARO) for c in range(3)], -1)
+    return np.where(xau[..., None], mem, r2), np.where(xau, 255., al)
+
+
+def bo_o_caro(im):
+    """Dạng thứ ba: lưới ô caro đục hẳn giữa khói tối, chỉ chênh ~15/255. Làm mượt bằng hai lượt
+    hộp một chu kì (≈ tam giác hai chu kì), chỉ ở pixel TỐI mà phần dư quanh nó đúng tầm biên độ
+    ấy — bóng đổ thật có phần dư lớn hơn nhiều nên giữ nguyên."""
+    a = np.asarray(im).astype(float)
+    rgb, al = _va_o(a[..., :3], a[..., 3])
+    op = (al > 127).astype(float)
+    lum = rgb[..., 0] * .3 + rgb[..., 1] * .59 + rgb[..., 2] * .11
+    du = ndimage.uniform_filter(np.abs(lum - ndimage.uniform_filter(lum, 2 * P_CARO + 1)), P_CARO)
+    m = ((lum < 78) & (op > 0) & (du > 2.5) & (du < 11)
+         & (ndimage.uniform_filter(op, 2 * P_CARO + 1) > 0.995))
+    m = ndimage.binary_dilation(ndimage.binary_erosion(m, np.ones((5, 5))), np.ones((7, 7)))
+    out = rgb.copy()
+    for c in range(3):
+        v = ndimage.uniform_filter(ndimage.uniform_filter(rgb[..., c], P_CARO), P_CARO)
+        out[..., c] = np.where(m, v, rgb[..., c])
+    return Image.fromarray(np.clip(np.dstack([out, al]), 0, 255).astype('uint8'))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('goi'); ap.add_argument('id')
@@ -57,36 +124,65 @@ def main():
     ap.add_argument('--o', type=int, default=96)
     ap.add_argument('--fps', type=int, default=14)
     ap.add_argument('--khong-canh', action='store_true')   # cắt theo tâm ô thay vì theo lõi
+    ap.add_argument('--caro', action='store_true')         # vá lưới ô caro trong suốt bị nướng vào tranh
+    ap.add_argument('--cat', default='')                   # "x0,y0,x1,y1" — cắt theo hộp, bỏ qua --ban-kinh
+    ap.add_argument('--neo', default='')                   # "x,y" trên khung gốc — chỗ chiêu chạm đất
+    ap.add_argument('--sat', type=int, default=0)          # bán kính vùng nổ trên nền, tính bằng pixel gốc
+    ap.add_argument('--cot', type=int, default=0)          # số cột trên tấm dán; 0 = một hàng
     a = ap.parse_args()
 
     thu = a.goi
     if not glob.glob(os.path.join(thu, '*.tres')):
         c = glob.glob(os.path.join(thu, '*', '*.tres'))
         if c: thu = os.path.dirname(c[0])
-    png, o = doc_luoi(thu)
-    im = Image.open(png).convert('RGBA')
-    print('sheet %s · %d khung khai trong .tres · ô %dx%d'
-          % (im.size, len(o), o[0][2], o[0][3]))
+    if glob.glob(os.path.join(thu, '*.tres')):
+        png, o = doc_luoi(thu)
+        im = Image.open(png).convert('RGBA')
+        print('sheet %s · %d khung khai trong .tres · ô %dx%d'
+              % (im.size, len(o), o[0][2], o[0][3]))
+        khung = [im.crop((x, y, x + w, y + h)) for x, y, w, h in o]
+    else:
+        khung, ten = doc_day_png(thu)
+        print('%d tệp PNG rời · ô %dx%d · %s … %s'
+              % (len(khung), khung[0].width, khung[0].height, ten[0], ten[-1]))
 
-    i0, i1 = (0, len(o))
+    i0, i1 = (0, len(khung))
     if a.khung:
         i0, i1 = (int(v) for v in a.khung.split(':'))
+    khung = khung[i0:i1]
+    if a.caro:
+        khung = [bo_o_caro(c) for c in khung]
+
     R = a.ban_kinh
     ks = []
-    for x, y, w, h in o[i0:i1]:
-        c = im.crop((x, y, x + w, y + h))
-        cx, cy = (w // 2, h // 2) if a.khong_canh else tam_loi(c)
-        ks.append(c.crop((cx - R, cy - R, cx + R, cy + R)).resize((a.o, a.o), Image.LANCZOS))
+    if a.cat:
+        x0, y0, x1, y1 = (int(v) for v in a.cat.split(','))
+        if x1 - x0 != y1 - y0:
+            print('  ! hộp cắt %dx%d không vuông — ô atlas vuông sẽ bóp méo tranh'
+                  % (x1 - x0, y1 - y0))
+        ks = [c.crop((x0, y0, x1, y1)).resize((a.o, a.o), Image.LANCZOS) for c in khung]
+        ti = a.o / (x1 - x0)
+        nx, ny = (int(v) for v in a.neo.split(',')) if a.neo else ((x0 + x1) // 2, (y0 + y1) // 2)
+        neo = ((nx - x0) * ti, (ny - y0) * ti)
+        sat = a.sat * ti
+    else:
+        for c in khung:
+            cx, cy = (c.width // 2, c.height // 2) if a.khong_canh else tam_loi(c)
+            ks.append(c.crop((cx - R, cy - R, cx + R, cy + R)).resize((a.o, a.o), Image.LANCZOS))
+        neo, sat = (a.o / 2, a.o / 2), 0
 
     goc = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
     d = os.path.join(goc, 'public/game/assets/vfx', a.id); os.makedirs(d, exist_ok=True)
-    sh = Image.new('RGBA', (a.o * len(ks), a.o))
-    for i, k in enumerate(ks): sh.alpha_composite(k, (i * a.o, 0))
+    cot = a.cot or len(ks)
+    hang = -(-len(ks) // cot)
+    sh = Image.new('RGBA', (a.o * cot, a.o * hang))
+    for i, k in enumerate(ks): sh.alpha_composite(k, ((i % cot) * a.o, (i // cot) * a.o))
     p = os.path.join(d, 'atlas.png'); sh.save(p, optimize=True)
 
-    print('  %-16s{ k:1, cols:%d, rows:1, frameW:%d, frameH:%d, frames:%d, fps:%d,'
-          ' anchorX:%.1f, anchorY:%.1f },   // %d KB, %.1f MB giải nén'
-          % (a.id + ':', len(ks), a.o, a.o, len(ks), a.fps, a.o / 2, a.o / 2,
+    print('  %-16s{ k:1, cols:%d, rows:%d, frameW:%d, frameH:%d, frames:%d, fps:%d,'
+          ' anchorX:%.1f, anchorY:%.1f%s },   // %d KB, %.1f MB giải nén'
+          % (a.id + ':', cot, hang, a.o, a.o, len(ks), a.fps, neo[0], neo[1],
+             ', neoR:%.1f' % sat if sat else '',
              os.path.getsize(p) // 1024, a.o * len(ks) * a.o * 4 / 1048576))
     return 0
 
