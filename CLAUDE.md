@@ -72,6 +72,57 @@ INTRO_PAGES / QUESTS / CLUES / BOSS_LORE / SECTS / NPCS / MOBS / TB_TIER_NAMES.
 
 Dark Knight · Dark Wizard · Dark Lord **giữ nguyên** — là danh từ fantasy phổ thông.
 
+## 📌 CHẨN ĐOÁN GỐC: NỘI DUNG ĐANG ĐƯỢC LÀM BẰNG CÁCH NHÂN BẢN
+
+Đọc mục này TRƯỚC khi nhận bất kỳ việc nào có chữ "thêm map", "thêm phó bản",
+"thêm quái", "thêm cấp". Đây là kết luận chốt của phiên thiết kế, không phải ghi chú tuỳ hứng.
+
+**Bệnh:** game không thiếu nội dung — game có một lượng nội dung nhỏ được chép ra nhiều lần.
+Đo được từ ba phía độc lập, cả ba ra cùng một chỗ:
+
+| Đo cái gì | Con số | Nghĩa là |
+|---|---|---|
+| Số loài quái mỗi map | 7 → 3 khi lên cấp | càng chơi lâu, thế giới càng nghèo đi |
+| Cấp có hệ thống MỚI mở ra | 20 đầu có, 99 cấp sau **không có cấp nào** | mọi thứ dồn hết vào đoạn mở đầu |
+| Địa hình 7 phó bản | **1 địa hình** dùng 7 lần | bảy cửa, một căn phòng |
+
+Bằng chứng của dòng thứ ba nằm ngay trong `data/canbang.js`: cả bảy `pb_*` đều
+`spawn:{x:1300,y:1560}`, cửa ra đều `x:1300,y:1660`, đều `packs:[]`, đều `duhiep:null`.
+Chỉ khác `ground`/`patch` và số `trees`/`rocks`.
+
+**Chữa bằng cách thêm map thứ 8 là làm bệnh nặng thêm.** Chữa bằng máy sinh địa hình
++ từ khoá biến đổi phòng (đã đặc tả sẵn ở `docs/DE_XUAT_MAP.md`, mục C1/C2 và issue #90).
+
+### ⛔ ĐỪNG XOÁ PHÓ BẢN — có thứ treo trên đó mà nhìn map không thấy
+
+7 phó bản nhìn thì là một phòng, nhưng về cơ học là **bảy cái cửa khác nhau**. Mỗi cửa
+là nguồn ĐỘC NHẤT của một Dòng Cốt Chimera — người chơi chọn Dòng để nuôi **bằng cách
+chọn phòng để vào**. Xoá phòng = xoá luôn cơ chế chọn build đó, im lặng, không báo lỗi.
+
+| Phòng | Dòng Cốt độc quyền |
+|---|---|
+| `pb_daohoa` | Cánh Hoa |
+| `pb_ngoai` | Đồng Cỏ |
+| `pb_chungnam` | Rễ Gai |
+| `pb_comoc` | Vỏ Trứng |
+| `pb_tuyettinh` | Băng Vụn |
+| `pb_mongco` | Tro Tàn |
+| `pb_nhanmon` | Sấm Vụn |
+
+Còn treo trên phó bản: Sách Kỹ Năng (`sach`), Tinh Luyện (`tuLa`), Hồn (`hon`),
+Bản Năng (`khi`), `bacThem`, Box Kundun theo `boxTier` 1-5, vé gacha Chimera mỗi lượt
+thông quan, và `huntBoss` (7 boss săn). Thêm nữa: `const DEEP_MAP = 'pb_daohoa'` —
+Tầng Sâu 20 tầng **mượn địa hình phòng này**, xoá nó là mất luôn Tầng Sâu.
+
+**Việc đúng là GỘP, không phải XOÁ:** giữ 7 cửa + 7 ổ nguyên liệu, thay MỘT địa hình
+tĩnh dùng chung bằng máy sinh + từ khoá biến đổi.
+
+### Bốn tài liệu thiết kế — đọc theo thứ tự này
+1. `docs/CAU_TRUC_MAP.md` — đo map hiện tại, đối chiếu Ragnarok / Path of Exile
+2. `docs/DE_XUAT_MAP.md` — 10 hạng mục / 4 đợt, có C1 (từ khoá phòng) + C2 (máy sinh)
+3. `docs/NHIP_CAP_1_120.md` — nhịp cấp, chỗ 99 cấp trống
+4. `docs/BOSS_TO_DOI.md` — boss là nội dung TỔ ĐỘI, và boss phải mang bản sắc Axie
+
 ## Tên trang bị đi theo CHẤT LIỆU
 
 `ITEM_NAMES[slot][rarity]` — 5 tên mỗi ô, leo theo chất liệu như đồ MU: **da → sắt → thép →
