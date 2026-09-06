@@ -267,6 +267,41 @@ chuỗi cũ từ git — thiết kế lại từ đầu cùng với lore. Khuôn
 thích ở `data/canbang.js`. Máy chạy nhiệm vụ **giữ nguyên** và chạy theo dữ liệu: điền bảng là
 chuỗi sống lại.
 
+### 🧭 NỐI MAP BẰNG RÌA (B1) + ĐIỂM DỊCH CHUYỂN MỞ BẰNG ĐI BỘ (B2)
+
+**⚠ Đây trước hết là một BẢN VÁ LỖI.** Trước bản này, **Hollow Roost (40) · Ashen Steppe (80) ·
+Stormgate Pass (100) không có lối vào nào** cho một nhân vật mới:
+- `GATES` chỉ có bốn cổng thành + cổng Outskirts về thành ⇒ đi bộ chỉ tới được 5/8 vùng;
+- nút **Dịch Chuyển** chỉ hiện khi `player.wpUnlocked[id]`, mà cờ đó chỉ bật **khi đã tới** map
+  đó. Chưa tới được thì không bao giờ mở. Ba vùng cuối là **nội dung chết**.
+
+**⚠ BÀI HỌC VỀ CÁCH ĐO — tôi đã kết luận nhầm đúng lỗi này một lần.** Gọi `travelTo('mongco')`
+từ console thì chạy ngon, vì nó là hàm, không qua cửa nào. Phải lan theo **đường người chơi**:
+chỉ đi qua `GATES`, và chỉ dịch chuyển tới nơi `wpUnlocked`. `test_noimap.js` §1 đo đúng kiểu đó.
+
+**⚠ HÌNH HỌC DO TRÙM VÙNG QUYẾT ĐỊNH, KHÔNG DO LA BÀN.** Luật có sẵn (`test_bossplace`): mọi
+**điểm thả** phải cách Trùm Vùng ≥700px (260 truy đuổi + lề). Quét cả bốn rìa từng vùng theo
+đúng luật đó thì **Frostmire Vale không còn chỗ nào trên cả bốn rìa** — bốn con trùm phủ kín.
+Nên chuỗi đi **vòng qua** Frostmire, và Frostmire vẫn vào thẳng bằng cổng Bắc của thành:
+
+`Thornwood(20) ─Bắc→ Hollow Roost(40) ─Bắc→ Ashen Steppe(80) ─Đông→ Stormgate(100)`
+
+Tên lối ghi **hướng trên chính map đang đứng** (đi ra hướng nào), nên luôn đúng với thứ người
+chơi thấy và không hứa gì về vị trí tương đối giữa hai map. Đi qua lối rìa thì hiện ra **ngay
+cạnh cổng về** (`spawnFrom` trong `data/canbang.js`) — quay đầu là đi ngược lại được ngay.
+
+⚠ Khi thêm lối rìa mới: **quét bằng máy, đừng đoán toạ độ.** Ràng buộc là cổng *và* điểm tới đều
+phải đi được, cách bãi quái / Rương Canh / NPC / điểm thả, và cách Trùm Vùng ≥720px.
+
+**Cũng vá luôn:** ba cổng thành Bắc/Tây/Đông **vốn là một chiều** — sang Petalshade Isle /
+Thornwood / Frostmire rồi không có cổng nào về. Nay đủ đường về, đặt cạnh chính điểm thả.
+
+**B2:** cờ `wpUnlocked` đã tự bật khi tới map từ trước, nhưng **lời gợi ý nói sai** — nó bảo
+"cần được nhiệm vụ dẫn tới đó", trong khi nhiệm vụ đã gỡ sạch. Nay nói đúng: **tự đi bộ tới một
+lần là mở**. Bảng Bản Đồ thêm dòng `🧭 Đi bộ:` cho từng vùng, **suy thẳng từ `GATES`** qua
+`langGieng()` — đừng chép cứng một bảng láng giềng thứ hai, nó sẽ nói dối ngay lần đầu ai đó
+thêm cổng mà quên sửa.
+
 ### 🎥 Camera mặc định là **xa** (`zoom:'xa'`, 1,0×)
 
 Chủ dự án chốt sau khi chơi thử: vào game phải thấy rộng. Trước đó để `'vua'` (1,45×). Đổi ở

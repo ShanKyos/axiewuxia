@@ -139,6 +139,6 @@ với bộ tìm đường, không phải với câu đố.
    RƯƠNG CANH). Dựng khái niệm "vật thể thế giới có người canh". Đây là
    viên gạch mà A4 và B1 đều dựa vào.
 3. ~~**A4 dân số**~~ — **ĐÃ LÀM** (xem CLAUDE.md · MIỀN DÂN SỐ). Giờ mới làm, vì mỗi miền đã có thứ để canh.
-4. **B1 + B2** — cuối cùng, khi dọc đường đã có thứ đáng dừng lại.
+4. ~~**B1 + B2**~~ — **ĐÃ LÀM** (xem CLAUDE.md · NỐI MAP BẰNG RÌA). Cuối cùng, khi dọc đường đã có thứ đáng dừng lại.
 
 Đảo thứ tự này (làm B1 trước) là bắt người chơi đi bộ qua tám bãi trống.

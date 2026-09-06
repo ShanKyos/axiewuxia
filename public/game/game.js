@@ -1673,6 +1673,13 @@ const GATES = [
   { map:'tuongduong', x:580,  y:905,  to:'daohoa',     name:'Cổng Tây → Petalshade Isle' },
   { map:'tuongduong', x:2020, y:905,  to:'chungnam',   name:'Cổng Đông → Thornwood Reach' },
   { map:'ngoai',      x:1300, y:240,  to:'tuongduong', name:'Qua Cổng Thành → Lunaris City' },
+  // ⚠ Ba cổng thành Bắc/Tây/Đông VỐN LÀ MỘT CHIỀU: đi sang Petalshade Isle / Thornwood /
+  // Frostmire rồi không có cổng nào về, phải mở bảng Bản Đồ mà dịch chuyển. Chỉ cổng Nam
+  // (Outskirts) có đường về. Nay bù đủ, đặt cạnh chính điểm thả của từng vùng — đúng khuôn mà
+  // Outskirts đang dùng: bước ra khỏi chỗ vừa tới là thấy cổng về.
+  { map:'daohoa',    x:295, y:555,  to:'tuongduong', name:'Lối Về Thành → Lunaris City' },
+  { map:'chungnam',  x:270, y:1575, to:'tuongduong', name:'Lối Về Thành → Lunaris City' },
+  { map:'tuyettinh', x:216, y:999,  to:'tuongduong', name:'Lối Về Thành → Lunaris City' },
   // Tầng Sâu: giếng đá trong sân thành, góc tây-bắc quảng trường (cách Thợ Rèn ~800px).
   // KHÔNG dùng `to` — nó không dẫn tới một map cố định mà mở một lượt xuống tầng, xem deepStart().
   { map:'tuongduong', x:1080, y:620,  deep:true, portal:true, label:'Tầng Sâu',
@@ -1682,6 +1689,43 @@ const GATES = [
   // đi lên. Phím G ở đây chạy nhánh RÚT LUI (deepLeave) chứ không travelTo — `to` chỉ là chỗ về.
   { map:'deep', x:1300, y:1660, to:'tuongduong', portal:true, label:'Xuất Môn',
     name:'Rời Tầng Sâu → Lunaris City' },
+
+  // ── B1 · NỐI MAP BẰNG RÌA ────────────────────────────────────────────────
+  // ⚠ ĐÂY LÀ MỘT BẢN VÁ LỖI, KHÔNG CHỈ LÀ TÍNH NĂNG. Trước bản này, Hollow Roost (cấp 40),
+  // Ashen Steppe (80) và Stormgate Pass (100) KHÔNG CÓ LỐI VÀO NÀO cho một nhân vật mới:
+  //   · GATES chỉ có bốn cổng thành + cổng Outskirts về thành ⇒ đi bộ chỉ tới được
+  //     tuongduong · daohoa · ngoai · chungnam · tuyettinh
+  //   · nút "Dịch Chuyển" trong bảng Bản Đồ chỉ hiện khi `player.wpUnlocked[id]`, mà cờ đó chỉ
+  //     bật KHI ĐÃ TỚI map đó (travelTo). Chưa tới được thì không bao giờ mở.
+  // Tức là ba vùng đó là nội dung chết. `travelTo()` gọi thẳng từ console thì chạy — đó chính là
+  // cái bẫy làm tôi kết luận nhầm lần đầu: phải thử ĐƯỜNG NGƯỜI CHƠI, không phải thử hàm.
+  //
+  // Cách nối: mỗi map chỉ cần THÊM MỘT rìa, và toạ độ chọn bằng cách quét rìa map tìm ô đi được,
+  // cách mọi bãi quái / Rương Canh / Trùm Vùng / điểm thả. Thành thị vẫn là trục cho vùng đầu;
+  // vùng sâu nối thành chuỗi:
+  //     Thornwood ──Đông→ Hollow Roost      (cấp 20 → 40)
+  //     Frostmire ──Nam──→ Ashen Steppe     (cấp 60 → 80)
+  //     Ashen ─────Đông→ Stormgate Pass     (cấp 80 → 100)
+  // Cặp nào cũng hai chiều, và đi qua thì hiện ra ở ĐÚNG RÌA ĐỐI DIỆN (xem `spawnFrom` trong
+  // data/canbang.js) chứ không phải ở điểm thả — đi bộ sang phải ra đúng chỗ giáp ranh.
+  //
+  // ⚠ HÌNH HỌC BỊ TRÙM VÙNG QUYẾT ĐỊNH, KHÔNG PHẢI BỊ LA BÀN. Luật có sẵn (test_bossplace):
+  // mọi ĐIỂM THẢ phải cách Trùm Vùng ≥700px (260 truy đuổi + lề) — không thì vừa sang map đã bị
+  // một con trùm bám. Quét cả bốn rìa của từng vùng theo đúng luật đó thì:
+  //   · Frostmire Vale KHÔNG CÒN CHỖ NÀO trên cả bốn rìa — bốn con trùm của nó phủ kín. Nên nó
+  //     KHÔNG nhận lối rìa nào; nó đã có cổng Bắc của thành rồi, thế là đủ.
+  //   · các vùng khác chỉ còn vài rìa dùng được, nên chuỗi đi vòng qua Frostmire:
+  //         Thornwood(20) → Hollow Roost(40) → Ashen Steppe(80) → Stormgate(100)
+  //     Frostmire(60) vẫn vào thẳng từ cổng Bắc của thành. Không vùng nào bị bỏ lại.
+  // Tên lối ghi hướng TRÊN CHÍNH MAP ĐANG ĐỨNG (đi ra hướng nào), nên luôn đúng với thứ người
+  // chơi thấy — không hứa gì về vị trí tương đối giữa hai map, và game cũng không có bản đồ thế
+  // giới để mà mâu thuẫn.
+  { map:'chungnam',  x:1921, y:150,  to:'comoc',    name:'Lối Bắc → Hollow Roost' },
+  { map:'comoc',     x:150,  y:1366, to:'chungnam', name:'Lối Tây → Thornwood Reach' },
+  { map:'comoc',     x:1369, y:150,  to:'mongco',   name:'Lối Bắc → Ashen Steppe' },
+  { map:'mongco',    x:150,  y:1286, to:'comoc',    name:'Lối Tây → Hollow Roost' },
+  { map:'mongco',    x:2450, y:582,  to:'nhanmon',  name:'Lối Đông → Stormgate Pass' },
+  { map:'nhanmon',   x:1668, y:150,  to:'mongco',   name:'Lối Bắc → Ashen Steppe' },
 ];
 let nearGate = null;
 function cityWallRects(){
@@ -8220,7 +8264,23 @@ function throwBaoHap(tier, wx, wy){
   const d = Math.hypot(dx, dy) || 1;
   if (d > BOX_REACH){ dx = dx / d * BOX_REACH; dy = dy / d * BOX_REACH; }
   let tx = player.x + dx, ty = player.y + dy;
-  if (inObstacle(curMap, tx, ty, 12)){ const nf = nearestFree(curMap, tx, ty); tx = nf.x; ty = nf.y; }
+  if (inObstacle(curMap, tx, ty, 12)){
+    const nf = nearestFree(curMap, tx, ty);
+    tx = nf.x; ty = nf.y;
+    // nearestFree tìm ô trống GẦN NHẤT, và ô đó có thể nằm NGOÀI tầm ném — đo được 345px với
+    // trần 300. Nó phá đúng cái bảo đảm vừa kẹp ở trên, nên nếu vượt tầm thì lùi dần về phía
+    // người chơi cho tới khi vừa trống vừa trong tầm. (Lỗi này có sẵn; đổi zoom mặc định làm
+    // điểm rơi rơi vào chỗ khác nên nó mới lộ ra.)
+    if (Math.hypot(tx - player.x, ty - player.y) > BOX_REACH){
+      const ux = (tx - player.x), uy = (ty - player.y), ud = Math.hypot(ux, uy) || 1;
+      for (let r = BOX_REACH; r >= 40; r -= 20){
+        const px = player.x + ux / ud * r, py = player.y + uy / ud * r;
+        if (!inObstacle(curMap, px, py, 12)){ tx = px; ty = py; break; }
+      }
+      // vẫn không có chỗ nào trống trong tầm ⇒ thả ngay dưới chân, đừng quăng ra ngoài tầm
+      if (Math.hypot(tx - player.x, ty - player.y) > BOX_REACH){ tx = player.x; ty = player.y; }
+    }
+  }
   boxThrows.push({ tier, sx: player.x, sy: player.y - 14, tx, ty, x: player.x, y: player.y - 14,
                    fly: 0, z: 14, vz: 250, wait: 0, spin: 0, burst: false });
   player.face = Math.atan2(ty - player.y, tx - player.x);
@@ -21272,6 +21332,31 @@ window.travelTo = function(mapId, from){
 };
 
 // ---------- Map panel: vùng chưa mở = ??? ----------
+// ── B1/B2 · ĐỒ THỊ THẾ GIỚI ─────────────────────────────────────────────────
+// Suy THẲNG từ GATES, không chép cứng một bảng thứ hai — bảng thứ hai là thứ sẽ nói dối ngay lần
+// đầu ai đó thêm một cổng mà quên sửa nó.
+function langGieng(mid){
+  const ra = [];
+  for (const g of GATES){
+    if (g.map !== mid || !g.to || g.deep) continue;
+    if (ra.some(x => x.to === g.to)) continue;
+    ra.push({ to: g.to, ten: g.name || '', label: g.label || '' });
+  }
+  return ra;
+}
+// Một dòng "đi bộ từ đây tới đâu" cho mỗi vùng: đây là thứ biến danh sách phẳng thành BẢN ĐỒ.
+// Vùng nào chưa mở khoá điểm dịch chuyển thì dòng này chính là chỉ dẫn đường bộ duy nhất.
+function noiMapHtml(mid){
+  const ds = langGieng(mid);
+  if (!ds.length) return '';
+  const bit = ds.map(n => {
+    const md = MAPS[n.to]; if (!md) return '';
+    const ok = mapGate(n.to).ok;
+    const huong = (n.ten.match(/(Cổng|Lối)\s+(Bắc|Nam|Đông|Tây)/) || [])[2] || '';
+    return `<span style="color:${ok ? '#8fd18f' : '#6a6255'}">${huong ? huong + ' ' : ''}→ ${md.name}${ok ? '' : ' 🔒'}</span>`;
+  }).filter(Boolean).join(' · ');
+  return bit ? `<div class="m-desc" style="margin-top:2px;opacity:.9">🧭 Đi bộ: ${bit}</div>` : '';
+}
 function renderMapPanel(){
   const zt = zoneType();
   let html = moBang({ tieu:'Bản Đồ Lunacia' });
@@ -21295,7 +21380,7 @@ function renderMapPanel(){
         <span style="flex:1"><span class="m-name">${m.name}</span>${_badge(id)}
           <span style="font-size:10.5px;opacity:.6"> · cấp ${m.range}</span>
           <span class="zone-badge" style="color:${z2.color};border-color:${z2.color}">${m.dungeon ? 'PHÓ BẢN' : z2.name}</span>
-          <div class="m-desc">${m.desc}</div>${banSacHtml(id)}${bandSummaryHtml(m)}</span>
+          <div class="m-desc">${m.desc}</div>${banSacHtml(id)}${noiMapHtml(id)}${bandSummaryHtml(m)}</span>
         <span class="m-side">${cur ? '<span style="color:#7ecbff;font-size:11px">ĐANG Ở ĐÂY</span>'
           : `<button class="mini-btn" onclick="travelTo('${id}')">Dịch Chuyển</button>`}</span></div>`;
       continue;
@@ -21314,7 +21399,7 @@ function renderMapPanel(){
         <span style="flex:1"><span class="m-name" style="color:#8a8275">${m.name}</span>
           <span style="font-size:10.5px;opacity:.6"> · cấp ${m.range}</span>
           <span class="zone-badge" style="color:#6a6255;border-color:#6a6255">CHƯA MỞ</span>
-          <div class="m-desc" style="opacity:.55">🔒 ${hints.join('<br>🔒 ')}</div></span>
+          <div class="m-desc" style="opacity:.55">🔒 ${hints.join('<br>🔒 ')}</div>${noiMapHtml(id)}</span>
         <span class="m-side"><span style="font-size:16px;opacity:.5">🔒</span></span></div>`;
       continue;
     }
@@ -21323,10 +21408,10 @@ function renderMapPanel(){
       <span style="flex:1"><span class="m-name">${m.name}</span>${_badge(id)}
         <span style="font-size:10.5px;opacity:.6"> · cấp ${m.range}</span>
         <span class="zone-badge" style="color:${z2.color};border-color:${z2.color}">${z2.name}</span>
-        <div class="m-desc">${m.desc}${!wpOk && !cur ? '<br><span style="color:#f0a03a">🚩 Chưa mở khoá điểm dịch chuyển — cần được nhiệm vụ dẫn tới đó 1 lần trước</span>' : ''}</div>${banSacHtml(id)}${bandSummaryHtml(m)}</span>
+        <div class="m-desc">${m.desc}${!wpOk && !cur ? '<br><span style="color:#f0a03a">🚩 Chưa mở điểm dịch chuyển — <b>tự đi bộ tới đó một lần</b> là mở (theo lối 🧭 bên dưới)</span>' : ''}</div>${banSacHtml(id)}${noiMapHtml(id)}${bandSummaryHtml(m)}</span>
       <span class="m-side">${cur ? '<span style="color:#7ecbff;font-size:11px">ĐANG Ở ĐÂY</span>' : ''}
         ${wpOk && !cur ? `<button class="mini-btn" onclick="travelTo('${id}')">Dịch Chuyển</button>` : ''}
-        ${!wpOk ? '<span style="font-size:11px;color:#6a6255" title="Đã đủ điều kiện, nhưng chưa từng đặt chân tới">🚩 Chưa mở khoá</span>' : ''}
+        ${!wpOk ? '<span style="font-size:11px;color:#6a6255" title="Đã đủ cấp, nhưng chưa từng đặt chân tới — đi bộ tới một lần là mở">🚩 Đi bộ tới để mở</span>' : ''}
         ${wpOk && m.packs && m.packs.length ? `<button class="mini-btn" style="margin-left:4px" onclick="openStageSelect('${id}')" title="Vào đánh ngay 1 cụm quái — không cần đi bộ tới">⚔ Chọn Trận</button>` : ''}</span></div>`;
   }
   el('panel-map').innerHTML = html;
