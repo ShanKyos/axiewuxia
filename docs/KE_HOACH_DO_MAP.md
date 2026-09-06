@@ -38,7 +38,7 @@ Nên việc đầu tiên **không phải** vẽ map. Việc đầu tiên là **c
 | Mép vùng chặn có vật (`rimBuild`) | `game.js` ~1770 | vật cản MẮT THẤY = game THỰC THI |
 | Máy chạy phó bản | `game.js` (DGN…) | nguyên vẹn, chờ dữ liệu |
 | `MOB_ROLE` 6 vai | `game.js` | **12/30 loài có vai**, `phap` chưa ai dùng |
-| `el:` 5 hệ trên 52 quái | `game.js` | **không dòng code nào đọc** |
+| `el:` 5 hệ trên quái | `game.js` | **ĐANG CHẠY** — khắc hệ ±20%/−12% (`hurtMob` ~8200) và chiều ngược ±12%/−10% (~9951). Nhưng người chơi gần như không thấy: không lọc theo hệ ở bảng Bản Đồ, không map nào lấy hệ làm danh tính |
 | Dị Biến | `game.js` | chỉ elite |
 | Bài kiểm địa hình | `tests/test_diahinh.js` | đi thử tới mọi điểm nội dung |
 | Phòng bài kiểm | `tests/pbthu.js` | cắm một khoá là chạy |
@@ -126,5 +126,5 @@ rồi ba tháng sau lại ngồi đếm xem hỏng ở đâu.
 ## 4. Ngoài phạm vi đợt này
 
 Ba đòn bẩy đang nằm chết trong code — `MOB_ROLE` (18/30 loài chưa có vai), `el:` (5 hệ,
-không code nào đọc), Dị Biến (chỉ elite) — là **nội dung**, không phải **địa hình**. Chúng
+đang chạy nhưng vô hình với người chơi), Dị Biến (chỉ elite) — là **nội dung**, không phải **địa hình**. Chúng
 làm map dày lên sau khi map đã đúng hình, nên để đợt sau. Ghi ở đây để không quên.
