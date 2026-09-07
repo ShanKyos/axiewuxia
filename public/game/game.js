@@ -1089,8 +1089,22 @@ const MAP_BG_SRC = {
   ngoai:'assets/maps/bg_ngoai.jpg', chungnam:'assets/maps/bg_chungnam.jpg',
   comoc:'assets/maps/bg_comoc.jpg', tuyettinh:'assets/maps/bg_tuyettinh.jpg',
   mongco:'assets/maps/bg_mongco.jpg', nhanmon:'assets/maps/bg_nhanmon.jpg',
+  quangtruong:'assets/maps/bg_quangtruong.jpg',
   deep:'assets/maps/bg_dungeon_stone.jpg',   // Tầng Sâu — nền hầm duy nhất còn dùng
 };
+// VẬT TO — công trình rời chèn vào tranh nền (xem `vatTo` trong data/canbang.js). Ảnh đã nướng
+// SẴN ĐÚNG CỠ trong thế giới nên drawImage vẽ 1:1, không co giãn lúc chạy.
+const MAP_VAT_SRC = {
+  loren: 'assets/maps/vat_loren.png',   // Lò Rèn — Quảng Trường Cũ
+};
+const _vatIm = {};
+function vatTai(ten){
+  const src = MAP_VAT_SRC[ten];
+  if (!src) return null;
+  let im = _vatIm[ten];
+  if (!im){ im = _vatIm[ten] = new Image(); im.src = src; }
+  return (im.complete && im.naturalWidth) ? im : null;
+}
 // Nạp NỀN THEO NHU CẦU. Trước đây nạp cả 15 mục ngay khi tải trang — 3,2 MB ảnh nền cho 15 bản
 // đồ mà người chơi mới chỉ đứng ở đúng MỘT. Nay chỉ nạp map đang vào (và nạp trước những map đi
 // tới được từ đó, sau khi trang đã rảnh tay).
@@ -1673,6 +1687,11 @@ const GATES = [
   { map:'tuongduong', x:580,  y:905,  to:'daohoa',     name:'Cổng Tây → Petalshade Isle' },
   { map:'tuongduong', x:2020, y:905,  to:'chungnam',   name:'Cổng Đông → Thornwood Reach' },
   { map:'ngoai',      x:1300, y:240,  to:'tuongduong', name:'Qua Cổng Thành → Lunaris City' },
+  // Quảng Trường Cũ — thị trấn KHỞI ĐẦU. Nhân vật mới hiện ra giữa sân, đi lên vòm cổng phía
+  // bắc là ra Petalshade Isle mà đánh quái. Chọn Petalshade Isle chứ không phải Outskirts vì
+  // Outskirts để `min:10` — cho một nhân vật cấp 1 bước thẳng ra đó là ném nó vào bãi cấp 14.
+  { map:'quangtruong', x:1600, y:715, to:'daohoa',      name:'Cổng Bắc → Petalshade Isle' },
+  { map:'daohoa',      x:300,  y:260, to:'quangtruong', name:'Cổng Quảng Trường Cũ' },
   // ⚠ Ba cổng thành Bắc/Tây/Đông VỐN LÀ MỘT CHIỀU: đi sang Petalshade Isle / Thornwood /
   // Frostmire rồi không có cổng nào về, phải mở bảng Bản Đồ mà dịch chuyển. Chỉ cổng Nam
   // (Outskirts) có đường về. Nay bù đủ, đặt cạnh chính điểm thả của từng vùng — đúng khuôn mà
@@ -1987,7 +2006,37 @@ function obstaclesOf(mapId){
   // decor chỉ tồn tại cho map đang đứng — map khác thì chỉ có vật cản tĩnh
   return mapId === curMap && decorObs.length ? base.concat(decorObs) : base;
 }
+// ── ĐA GIÁC ĐI ĐƯỢC ────────────────────────────────────────────────────────────────────────
+// `md.diTrong` — danh sách đỉnh [x,y] của vùng ĐƯỢC PHÉP đứng. Có nó thì mọi điểm NGOÀI đa
+// giác là chặn, và MAP_OBSTACLES vẫn dùng tiếp cho những gì nằm TRONG (nhà cửa, giếng).
+//
+// Vì sao thêm loại này: nền của map quảng trường là art isometric, mặt đất là một HÌNH THOI
+// giữa khung. Chặn phần ngoài bằng ellipse thì phần bù của hình thoi là bốn tam giác — phải
+// vài chục ellipse xếp bậc thang mới kín, mà mỗi lần chỉnh art là chỉnh lại từng cái. Bốn
+// đỉnh thì sửa một lần là xong.
+function trongDaGiac(dg, x, y){
+  let trong = false;
+  for (let i = 0, j = dg.length - 1; i < dg.length; j = i++){
+    const xi = dg[i][0], yi = dg[i][1], xj = dg[j][0], yj = dg[j][1];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) trong = !trong;
+  }
+  return trong;
+}
+// Điểm gần nhất TRÊN VIỀN đa giác — dùng để đẩy nhân vật trở vào khi nó lấn ra ngoài.
+function epVaoDaGiac(dg, x, y){
+  let bx = x, by = y, bd = Infinity;
+  for (let i = 0, j = dg.length - 1; i < dg.length; j = i++){
+    const ax = dg[j][0], ay = dg[j][1], cx = dg[i][0], cy = dg[i][1];
+    const dx = cx - ax, dy = cy - ay, l2 = dx*dx + dy*dy || 1;
+    const t = clamp(((x - ax)*dx + (y - ay)*dy) / l2, 0, 1);
+    const px = ax + t*dx, py = ay + t*dy, d = (x-px)*(x-px) + (y-py)*(y-py);
+    if (d < bd){ bd = d; bx = px; by = py; }
+  }
+  return { x: bx, y: by };
+}
 function inObstacle(mapId, x, y, r){
+  const _md = MAPS[mapId];
+  if (_md && _md.diTrong && !trongDaGiac(_md.diTrong, x, y)) return true;
   for (const o of obstaclesOf(mapId)){
     if (o.wd){
       const cx = clamp(x, o.x, o.x + o.wd), cy = clamp(y, o.y, o.y + o.ht);
@@ -2005,6 +2054,14 @@ function inObstacle(mapId, x, y, r){
 // đường preview vẽ ra luôn khớp với đường nhân vật thật sự sẽ đi, không lệch.
 function resolveObstaclePoint(x, y, r){
   let px = x, py = y;
+  // Ra ngoài đa giác thì kéo về viền TRƯỚC, rồi mới xét vật cản trong sân — làm ngược lại
+  // thì nhà cửa sát viền đẩy nhân vật ra ngoài mà không có gì kéo nó vào lại.
+  const _md = MAPS[curMap];
+  if (_md && _md.diTrong && !trongDaGiac(_md.diTrong, px, py)){
+    const v = epVaoDaGiac(_md.diTrong, px, py);
+    const ux = v.x - px, uy = v.y - py, ud = Math.hypot(ux, uy) || 1;
+    px = v.x + ux / ud * (r + 1); py = v.y + uy / ud * (r + 1);   // vào hẳn trong, đừng dính viền
+  }
   for (const o of obstaclesOf(curMap)){
     if (o.wd){
       const cx = clamp(px, o.x, o.x + o.wd), cy = clamp(py, o.y, o.y + o.ht);
@@ -2233,6 +2290,59 @@ function collideAiPass(){
       }
     }
   }
+}
+// ── CHẾ ĐỘ ĐẶT ĐIỂM ─────────────────────────────────────────────────────────────────────────
+// `/diem` bật lên: chuột phải KHÔNG còn để đi, mà để CHẤM MỘT ĐIỂM. Mỗi lần chấm ghi lại toạ
+// độ thế giới, vẽ số thứ tự lên đó, và in ra dòng đã sẵn sàng dán vào dữ liệu.
+//
+// Vì sao cần: trước đó tôi lấy toạ độ bằng cách phủ lưới 100px lên tấm art, đọc bằng mắt rồi
+// nhân hệ số 1,5347. Được cho chín cái vật cản, nhưng chủ dự án còn phải tự đặt NPC — mà làm
+// theo lối đó thì mỗi điểm là một vòng: mở ảnh, đọc, nhân, sửa tệp, tải lại, xem lệch bao nhiêu.
+// Bấm thẳng trong game thì thấy ngay chỗ mình đứng.
+//
+// Bốn kiểu chấm:
+// Bật bằng `/diem <kiểu>` (KHÔNG phải `/dat` — tên đó đã dùng cho Đất Hồn).
+//   npc   → `{ id:'', name:'', map:'<map>', x, y, img:'', talk:'shop' }`
+//   can   → `{ x, y, rx:80, ry:60 }`   (vật cản, tự cho bán kính mặc định để chỉnh sau)
+//   vung  → `[x, y]`                   (đỉnh đa giác `diTrong` — chấm theo VÒNG, cùng chiều)
+//   toado → `{ x, y }`                 (điểm thả, cổng, bất cứ thứ gì chỉ cần một cặp số)
+window.DAT_KIEU = null;                  // null = tắt
+window.DAT_DS = [];
+function datChamDiem(wx, wy){
+  const x = Math.round(wx), y = Math.round(wy);
+  window.DAT_DS.push({ x, y });
+  cheatLog(`● ${window.DAT_DS.length}. ${x}, ${y}`, '#8fd18f');
+  return { x, y };
+}
+// Xuất ra ĐÚNG khuôn của kiểu đang chọn, để dán thẳng chứ không phải gõ lại.
+function datXuat(){
+  const ds = window.DAT_DS, k = window.DAT_KIEU || 'diem', m = curMap;
+  if (!ds.length) return '(chưa chấm điểm nào)';
+  if (k === 'vung') return `diTrong: [${ds.map(p => `[${p.x},${p.y}]`).join(',')}],`;
+  if (k === 'can')  return ds.map(p => `    { x:${p.x}, y:${p.y}, rx:80, ry:60 },`).join('\n');
+  if (k === 'npc')  return ds.map((p, i) =>
+      `  { id:'npc${i + 1}', name:'', map:'${m}', x:${p.x}, y:${p.y}, img:'', talk:'shop' },`).join('\n');
+  return ds.map(p => `{ x:${p.x}, y:${p.y} }`).join(', ');
+}
+// Vẽ điểm đã chấm: chấm tròn + số thứ tự, và nối lại thành đường nếu đang chấm đa giác.
+function drawDatDiem(){
+  if (!window.DAT_KIEU || !window.DAT_DS.length) return;
+  const ds = window.DAT_DS;
+  ctx.save();
+  if (window.DAT_KIEU === 'vung' && ds.length > 1){
+    ctx.strokeStyle = 'rgba(143,209,143,.9)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(ds[0].x, ds[0].y);
+    for (let i = 1; i < ds.length; i++) ctx.lineTo(ds[i].x, ds[i].y);
+    ctx.closePath(); ctx.stroke();
+  }
+  ctx.font = 'bold 15px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (let i = 0; i < ds.length; i++){
+    ctx.fillStyle = 'rgba(20,24,34,.85)';
+    ctx.beginPath(); ctx.arc(ds[i].x, ds[i].y, 13, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#8fd18f'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.fillStyle = '#d8f2d8'; ctx.fillText(String(i + 1), ds[i].x, ds[i].y + 1);
+  }
+  ctx.restore();
 }
 window.SHOW_OBSTACLES = false; // debug: /obstacles trong cheat console — vẽ vùng chặn địa hình để hiệu chỉnh theo art
 function drawObstaclesDebug(){
@@ -6802,9 +6912,14 @@ function newPlayer(sectKey){
   questIdx = 0; questProg = 0; questState = 'active'; // quest 1 auto-accepted
   sideStates = {};
   victory = false; dead = false;
-  curMap = 'tuongduong'; // tân thủ bắt đầu trong thành an toàn — không quái
+  curMap = 'quangtruong'; // tân thủ bắt đầu ở Quảng Trường Cũ — sân an toàn, không quái, ra Cổng Bắc là tới bãi săn
+  // Điểm thả LẤY TỪ chính map, đừng chép cứng. `x:1300, y:1040` ở trên là toạ độ của Lunaris
+  // City đời cũ; đổi map khởi đầu mà quên dòng này thì nhân vật mới hiện ra ĐÚNG TRONG lòng
+  // giếng giữa sân (đã dính một lần, bắt được bằng ảnh chụp chứ không phải bằng bài kiểm).
+  { const _sp = MAPS[curMap].spawn; player.x = _sp.x; player.y = _sp.y; }
   calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
   buildWorld();
+  { const _fp = nearestFree(curMap, player.x, player.y); player.x = _fp.x; player.y = _fp.y; }
 }
 // Save cũ không có `def` trên món nào, nên toàn bộ trang bị sẽ rơi về icon PNG dùng chung và
 // KHÔNG bị khoá lớp — một Dark Wizard save cũ đang cầm kiếm sẽ tiếp tục cầm được. Danh mục 220
@@ -7997,6 +8112,7 @@ function saveSettings(){ try { localStorage.setItem('vlcm_settings', JSON.string
 // files." Dự án đang dự vibeathon nên hợp lệ; ra ngoài khuôn khổ đó thì phải gỡ bộ nhạc này
 // (và cả 6 atlas hiệu ứng cùng 90 tệp sfx_*, vốn cũng từ kho này).
 const BGM_TRACKS = {
+  quangtruong:'bgm_tuongduong',  // dùng chung nhạc thành với Lunaris City — cùng một chất phố
   daohoa:     'bgm_daohoa',      // pve_1 — đảo mở đầu, sáng và yên
   tuongduong: 'bgm_tuongduong',  // home  — nhạc sảnh chính, hợp thành thị
   ngoai:      'bgm_ngoai',       // pve_2
@@ -8146,6 +8262,8 @@ canvas.addEventListener('contextmenu', e=>{
   if (!player || dead) return;
   closePanels();
   const wx = e.clientX / zoomNow() + camera.x, wy = e.clientY / zoomNow() + camera.y;
+  // Chế độ ĐẶT ĐIỂM chiếm luôn chuột phải — xem /diem. Chấm xong thoát ngay, đừng đi.
+  if (window.DAT_KIEU){ datChamDiem(wx, wy); return; }
   mouseWorld.x = wx; mouseWorld.y = wy; chuotDaRe = true;   // chuột phải cũng là một lần chỉ chỗ
   const npcHit = npcAt(wx, wy);
   if (npcHit){ walkToNpc(npcHit); return; }
@@ -10738,7 +10856,7 @@ function render(){
   ctx.globalAlpha = 1;
   drawTufts(); // cỏ/vết mực trên mặt đất — phá sự phẳng của nền
   drawWaterFx(); // gợn sóng & lấp lánh mặt nước (Gói F)
-  drawTranAiSeal(); drawAiPasses(); drawBeacon(); drawObstaclesDebug(); // GDD Đợt 2 A/B2
+  drawTranAiSeal(); drawAiPasses(); drawBeacon(); drawObstaclesDebug(); drawDatDiem(); // GDD Đợt 2 A/B2
   drawMoveTargetPath(); // Click-to-move: đường preview né vật cản + đích đến
 
   // Đào Hoa Đảo: cụm hoa đào tĩnh rụng dưới gốc cây (seed theo vị trí cây)
@@ -10867,6 +10985,10 @@ function render(){
   for (const h of horses) ents.push({ y:h.y, kind:'horse', h }); // GDD Đợt 2 B5
   for (const d of sortedDecor) if (d.type==='tree') ents.push({ y:d.y, kind:'tree', d });
   for (const g of gatesHere()) ents.push({ y:g.y, kind:'gate', g });
+  // Công trình rời xếp lớp bằng CHÂN nó (y+h), không phải nóc: người đứng phía trên (y nhỏ hơn)
+  // thì bị công trình vẽ đè lên — đúng chiều sâu của tranh isometric. Lấy nóc làm khoá thì
+  // ngược lại, nhân vật sẽ dán lên mái.
+  for (const v of (mapDef().vatTo || [])) ents.push({ y:v.y + v.h, kind:'vat', v });
   ents.sort((a,b)=>a.y-b.y);
 
   // Nửa SAU của Vòng Kiếm Lửa — phải nằm dưới lớp entity, nếu không thì cả vòng lửa dán bẹt
@@ -10876,6 +10998,7 @@ function render(){
 
   for (const e of ents){
     switch (e.kind){
+      case 'vat': { const im = vatTai(e.v.img); if (im) ctx.drawImage(im, e.v.x, e.v.y, e.v.w, e.v.h); break; }
       case 'mob': drawMob(e.m); break;
       case 'deadmob': {
         const m = e.m, k = Math.max(0, m.deadT/0.45);
@@ -11833,6 +11956,9 @@ function gearVisual(p){
     // cánh — và đó chính là lý do bảng Nhân Vật xưa nay vẽ ra một nhân vật không cánh trong
     // khi ngoài màn thì có. Trang bị mà không NHÌN THẤY được thì coi như chưa mặc.
     canh: p.equip.canh || null,
+    // Ô nào đang đeo bộ CÓ LỚP RỜI. Đây là chỗ bốn ô tách nhau ra: `t` ở trên là bậc gộp cả
+    // người, còn bảng này giữ nguyên TỪNG Ô, nên đeo mỗi đôi giày là đúng đôi giày đổi.
+    oLop: nvLopCuaEquip(p),
     setColor,
   };
 }
@@ -12516,7 +12642,10 @@ function heroGearSig(gv){
   // chung một hình vẽ; nay art nướng chọn cây trượng theo GIAI VŨ KHÍ nên nó lộ ra ngay.
   if (!gv) return '-';
   const w = (gv.wDef ? gv.wDef.id : '') + ':' + (gv.wTier || 0) + ':' + (gv.wPlus || 0);
-  return `${Math.round(gv.t*10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor||''}_${w}`;
+  // LỚP RỜI cũng phải nằm trong chữ ký, vì hai bộ đồ khác nhau có thể cho cùng `t`/`n`/`plus`
+  // (bốn ô, cùng giai, khác bộ) — thiếu dòng này là đổi mũ mà đầu vẫn cái mũ cũ.
+  const l = gv.oLop ? Object.keys(gv.oLop).sort().map(k => k + gv.oLop[k]).join('') : '';
+  return `${Math.round(gv.t*10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor||''}_${w}_${l}`;
 }
 // Tư thế của MỘT khung hình — dựng lại đúng từ chỉ số khung, để ảnh trong bộ nhớ đệm luôn khớp khoá.
 function heroFramePose(kind, idx, act, sw){
@@ -12541,9 +12670,23 @@ const NV_ANH = {};
 // Giai 1 bật cho CẢ NĂM lớp, không phải bật lẻ một lớp. Đó là điều kiện để không lạc quẻ:
 // đứng cạnh nhau ở cùng một giai thì cả năm cùng một phong cách. Giai 2 trở lên vẫn đi đường
 // dựng bằng đường cho tới khi có đủ art giáp. Cách dựng tệp: .claude/skills/spine-nuong/SKILL.md
+// Tên tệp = viết tắt lớp + viết tắt TÊN BỘ, để nhìn tên là biết đang xem thân nào:
+//   dkcw1 = Dark Knight · Crimson Warrior   · dwsc1 = Dark Wizard · Spellcaster
+//   sbhd1 = Spellblade  · Hybrid Duellist  · elfar1 = Sylvan Ranger · Archer
+//   dlcm1 = Dark Lord   · Commander
+// Ba bộ này thay hẳn dk1/dw1/sb1 đời cũ. Đời cũ sai hai chuyện, và cả hai đều KHÔNG sửa được
+// bằng mã:
+//   ① Áo/váy dài chấm gót vẽ vào khe THÂN (slot torso), mà thân vẽ SAU hai chân — nên hoặc áo phủ
+//      lên đôi giày (đập giày +9 cũng không thấy gì), hoặc ống chân đè mất vạt áo. Bộ mới cắt
+//      thân ở ngang hông, mọi thứ dưới hông thuộc về khe chân.
+//   ② Tóc lệch với tranh anh hùng ở màn chọn lớp: Dark Knight và Spellblade bị ĐỔI TÓC CHO
+//      NHAU (đỏ ↔ đen), Dark Wizard thì tranh tóc trắng dài mà chibi tóc xanh đen. Chủ dự án
+//      chốt lấy TRANH ANH HÙNG làm chuẩn.
+// Cả năm lớp nay cùng một hợp đồng: không mảnh nào rủ xuống dưới hông, tóc khớp tranh anh
+// hùng, 0/96 khung có mảnh rời khi nướng.
 const NV_BO = {                                    // lớp|giai -> tệp bảng khung THÂN
-  'thieulam|1': 'dk1', 'baidasan|1': 'dw1', 'minhgiao|1': 'sb1',
-  'toanchan|1': 'elf1', 'bug|1': 'dl1',
+  'thieulam|1': 'dkcw1', 'baidasan|1': 'dwsc1', 'minhgiao|1': 'sbhd1',
+  'toanchan|1': 'elfar1', 'bug|1': 'dlcm1',
 };
 // Art BỘ GIÁP, tách hẳn khỏi NV_BO. NV_BO là THÂN TRẦN của từng lớp — thứ hiện ra khi chưa
 // mặc gì. Còn đây là từng bộ giáp, tra theo `lớp|giai` của CHÍNH MÓN ĐỒ chứ không phải của
@@ -12555,6 +12698,8 @@ const NV_GIAP = {
   // thế mà KHÔNG chỗ nào được ghi cứng số giai: dùng giaiCoArt() để hỏi bảng này.
   'baidasan|7': 'dwsm1',
   'thieulam|1': 'dkgs1',
+  // Bộ ĐẦU TIÊN đi đường LỚP RỜI (xem NV_LOP_HOP): bốn ô vẽ tách nhau, không cần đủ bộ.
+  'baidasan|1': 'dwvt1',
 };
 // Lớp này có art giáp ở giai nào? Lấy giai CAO NHẤT có art. Có hàm này thì ?test=1 và bài kiểm
 // không ai phải thuộc lòng "Dark Wizard thì giai 7, Dark Knight thì giai 1", và thêm bộ mới
@@ -12579,12 +12724,83 @@ function nvBoGiap(sectKey, gv){
   // cũng đủ hiện nguyên bộ giáp. Bài kiểm test_giapicon mục 6 gác đúng chỗ này.
   const g = Math.round(gv.t);
   if (g < 1) return null;
-  return NV_GIAP[sectKey + '|' + clamp(g, 1, GIAI_MAX)] || null;
+  const ten = NV_GIAP[sectKey + '|' + clamp(g, 1, GIAI_MAX)] || null;
+  // Bộ CÓ LỚP RỜI không đi đường này. Nó không có tấm thân liền để mà đổi — chỉ có năm lớp,
+  // và chúng được đắp LÊN TRÊN thân của lớp trong nvVeLopRoi(). Trả tên ở đây là nvTai() đi
+  // xin `<tên>.webp` không tồn tại, 404, rồi nhân vật rơi về hình dựng bằng đường.
+  return (ten && NV_LOP_HOP[ten]) ? null : ten;
 }
 // Bốn ô trong dải icon, ĐÚNG thứ tự NHOM của tools/spine/nuong_icon.py. Ô `quan` không có mặt:
 // bản mẫu Spine không có khe quần riêng (áo choàng phủ luôn xuống chân, và nhóm `chan` đã gồm
 // cả ống quần lẫn giày), nên ô Quần chỉ tính chỉ số.
 const NV_ICON_O = { non: 0, ao: 1, tay: 2, chan: 3 };
+// ── BỐN Ô TRANG BỊ VẼ RỜI NHAU ─────────────────────────────────────────────────────────────
+// Chủ dự án chốt: KHÔNG bắt mặc đủ bộ mới hiện giáp. Bốn ô phải tách rời — đeo mỗi đôi giày
+// thì đúng đôi giày đổi, phần còn lại vẫn là thân của lớp.
+//
+// Đường cũ (`nvBoGiap`) đổi CẢ TẤM THÂN một lượt, nên không có cách nào thân một bộ mà tay áo
+// một bộ khác. Đường này nướng mỗi nhóm khe ra một tấm riêng rồi chồng lại lúc vẽ.
+//
+// ⚠ NĂM LỚP, KHÔNG PHẢI BỐN, và thứ tự dưới đây là THỨ TỰ VẼ CỦA BỘ XƯƠNG chứ không phải thứ
+// tự ô trang bị. Spine vẽ: tóc-sau · tay-XA · hai chân · thân · tay-GẦN · đầu — tức ô `tay`
+// nằm HAI BÊN ô `ao`. Gộp `tay` làm một lớp là tay xa nhảy ra trước ngực.
+// Phải trùng khít bảng LOP trong tools/spine/nuong_nv.py.
+const NV_LOP = [['h', 'non'], ['t1', 'tay'], ['c', 'chan'], ['a', 'ao'], ['t2', 'tay'], ['n', 'non']];
+// Hộp CẮT của từng lớp: [x1,y1,w1,h1, x2,y2,w2,h2] — bảng một rồi bảng hai, trong hệ ô 240x300.
+// Do chính `nuong_nv.py --lop` in ra sau khi nướng; sai một số là lớp dán lệch người.
+//
+// Vì sao phải cắt: không cắt thì năm lớp = 5 x 27,6 MB sau giải nén mỗi bộ. Cắt sát rồi thì
+// tổng năm lớp của BẢNG MỘT chỉ còn 79,5% một tấm thân liền — tách ô ra còn RẺ HƠN gộp, vì
+// mỗi ô chỉ nạp đúng lớp của nó dù người chơi mặc bốn bộ khác nhau.
+//
+// Vì sao hai bảng cắt hai hộp: bảng hai là chết/nhảy múa/bật người, tay chân văng rất xa. Ép
+// chung một hộp thì bảng một phải gánh hộp của bảng hai — đo được 79,5% phình lên 167%.
+//
+// Bộ nào CÓ MẶT ở bảng này thì đi đường lớp rời; bộ nào không có thì vẫn đổi cả tấm thân theo
+// đường cũ. Hai đường sống chung được, và đó là chủ ý: 7 bộ đã nướng từ trước không còn gói
+// Spine gốc để cắt lớp, mà cắt lớp từ một tấm đã dẹp thì không có cách nào.
+// Cả THÂN của lớp lẫn BỘ GIÁP đều nằm chung một bảng: lúc vẽ, mỗi lớp tra đúng một tên, không
+// cần biết tên đó là thân hay giáp. Tách hai bảng thì mọi chỗ dùng phải rẽ nhánh — mà chúng
+// hoàn toàn cùng một thứ.
+const NV_LOP_HOP = {
+  // ── THÂN của năm lớp nhân vật ────────────────────────────────────────────────────────
+  'dkcw1':  { t1:[65,131,124,95,42,105,168,120], c:[61,159,141,99,73,142,122,118],
+              a:[94,122,83,90,32,113,135,141], t2:[64,117,133,88,36,114,154,139],
+              n:[81,86,109,77,0,79,179,172] },
+  'dwsc1':  { h:[80,91,77,83,3,83,174,176], t1:[67,132,121,75,42,107,168,121],
+              c:[61,156,131,103,70,141,127,121], a:[95,121,53,71,31,111,136,146],
+              t2:[65,124,132,76,35,114,157,139], n:[83,87,75,57,0,79,178,173] },
+  'sbhd1':  { t1:[70,130,114,93,40,111,166,117], c:[63,154,142,105,68,141,130,120],
+              a:[89,123,92,94,31,113,140,137], t2:[67,123,124,76,31,115,158,137],
+              n:[81,86,109,75,0,79,180,172] },
+  'elfar1': { h:[74,84,81,92,0,77,175,186], t1:[67,128,123,80,41,108,167,119],
+              c:[62,151,128,107,67,143,128,120], a:[93,119,56,80,26,110,143,143],
+              t2:[65,124,132,79,39,115,150,141], n:[79,87,83,61,0,79,181,177] },
+  'dlcm1':  { t1:[55,134,146,87,43,97,178,135], c:[63,158,128,100,71,142,125,121],
+              a:[93,123,57,72,32,113,137,140], t2:[63,123,139,86,35,114,160,141],
+              n:[84,87,76,56,0,79,180,173] },
+  // ── BỘ GIÁP ──────────────────────────────────────────────────────────────────────────
+  'dwvt1':  { t1:[61,137,136,82,44,105,174,128], c:[64,154,135,114,67,136,141,125],
+              a:[65,121,129,122,28,111,163,142], t2:[68,125,130,81,31,116,163,139],
+              n:[87,88,80,55,0,79,187,172] },
+};
+// Ô nào đang đeo món của bộ CÓ LỚP RỜI? Tra theo `lớp|giai` của CHÍNH MÓN ĐỒ, không phải của
+// người chơi: trong túi có thể nằm cái nón giai 3 của lớp khác, và nó phải hiện đúng nón đó.
+// Trả null khi không ô nào có — người gọi khỏi phải tạo rác mỗi khung hình.
+function nvLopCuaEquip(p){
+  if (!p || !p.equip) return null;
+  let ra = null;
+  for (const k of HERO_ARMOR_SLOTS){
+    const it = p.equip[k];
+    if (!it || NV_ICON_O[k] == null) continue;
+    const d = itemDef(it), sk = d && d.sect;     // món khoá lớp mới có bộ art riêng
+    if (!sk) continue;
+    const ten = NV_GIAP[sk + '|' + (it.tier || 1)];
+    if (!ten || !NV_LOP_HOP[ten]) continue;      // bộ chưa nướng lớp rời — ô này về đường cũ
+    (ra || (ra = {}))[k] = ten;
+  }
+  return ra;
+}
 const NV_ICON_PX = 128;
 const NV_ICON_CAP = 80;
 const _nvIconCache = new Map();
@@ -12603,12 +12819,20 @@ function nvTen(sectKey, tier){ return NV_BO[sectKey + '|' + tier]; }
 // Tên bộ art đang mặc: bộ giáp nếu có, không thì thân trần của lớp. Mọi thứ vẽ theo bộ này —
 // thân, vũ khí, viền sáng — nên không có cách nào thân một bộ mà tay áo một bộ khác.
 function nvBoTen(sectKey, tier, gv){ return nvBoGiap(sectKey, gv) || nvTen(sectKey, tier); }
-function nvBo(sectKey, tier, gv){ return nvTai(nvBoTen(sectKey, tier, gv), 'webp'); }
+// ⚠ CHẶN NGAY Ở ĐÂY, đừng chặn ở từng chỗ gọi. Bộ đã cắt lớp thì KHÔNG CÒN tệp tấm liền, mà
+// nvKhungGop() trả null trong mấy khung đầu (lớp chưa tải xong) — mọi chỗ gọi đều có nhánh
+// `_gop || nvBo(...)` nên chúng lần lượt đi xin tấm liền và ăn 404. Đã lọt một cái đúng như
+// thế: `dlcm1.webp` 404 ở thẻ nhân vật trong khi trong màn thì không sao.
+function nvCoTamLien(ten){ return !!ten && !NV_LOP_HOP[ten]; }
+function nvBo(sectKey, tier, gv){
+  const t = nvBoTen(sectKey, tier, gv);
+  return nvCoTamLien(t) ? nvTai(t, 'webp') : null;
+}
 // Bảng chứa khối `kind`, và mốc khung trong CHÍNH bảng đó. Trả null khi bảng hai chưa về —
 // mọi chỗ gọi đều phải chịu được null và lui về khối đứng, y như hồi chưa có art.
 function nvBang(sectKey, tier, gv, kind){
   const ten = nvBoTen(sectKey, tier, gv);
-  if (!ten) return null;
+  if (!nvCoTamLien(ten)) return null;              // xem nvCoTamLien()
   return NV_BANG2[kind] ? nvTai(ten + '2', 'webp') : nvTai(ten, 'webp');
 }
 function nvMoc(kind){ return NV_BANG2[kind] ? NV_MOC2[kind] : NV_MOC[kind]; }
@@ -12629,7 +12853,23 @@ for (const k in NV_GIAP) nvTai(NV_GIAP[k] + '_icon', 'webp');   // icon món gi�
 // Kéo sẵn hai bảng của ĐÚNG bộ đang mặc. Gọi lúc vào game và mỗi lần đổi bộ giáp.
 function nvBoTruoc(sectKey, tier, gv){
   const t = nvBoTen(sectKey, tier, gv);
-  if (t){ nvTai(t, 'webp'); nvTai(t + '2', 'webp'); }
+  // Chỉ kéo TẤM LIỀN khi bộ đó thật sự có tấm liền. Bộ đã cắt lớp thì không còn tệp đó nữa.
+  if (t && !NV_LOP_HOP[t]){ nvTai(t, 'webp'); nvTai(t + '2', 'webp'); }
+  if (t && NV_LOP_HOP[t])
+    for (let i = 0; i < NV_LOP.length; i++){
+      const ml = NV_LOP[i][0];
+      if (!NV_LOP_HOP[t][ml]) continue;
+      nvTai(t + '_' + ml, 'webp'); nvTai(t + '_' + ml + '2', 'webp');
+    }
+  // Kéo luôn lớp rời của từng ô. Thiếu bước này thì mấy khung đầu sau khi mặc đồ vẫn là thân
+  // trần rồi món đồ mới "nảy" vào — nvVeLopRoi() bỏ qua lớp chưa tải xong.
+  const o = gv && gv.oLop;
+  if (!o) return;
+  for (let i = 0; i < NV_LOP.length; i++){
+    const ml = NV_LOP[i][0], ten = o[NV_LOP[i][1]];
+    if (!ten || !(NV_LOP_HOP[ten] && NV_LOP_HOP[ten][ml])) continue;
+    nvTai(ten + '_' + ml, 'webp'); nvTai(ten + '_' + ml + '2', 'webp');
+  }
 }
 // Icon một món giáp: cắt đúng ô của nó khỏi dải 4 ô. Trả về null khi chưa có art — mọi chỗ
 // gọi đều phải chịu được null và về đường cũ, vì 34 trong 35 bộ vẫn chưa có tranh.
@@ -12658,6 +12898,52 @@ function nvVeKhung(g, im, kind, idx){
   g.drawImage(im, (k % NV_COT) * NV_OW, ((k / NV_COT) | 0) * NV_OH, NV_OW, NV_OH,
                   -HS_PAD, -HS_PAD, NV_OW, NV_OH);
 }
+// Dựng NGUYÊN MỘT KHUNG bằng cách chồng năm lớp — xem NV_LOP / NV_LOP_HOP.
+//
+// Mỗi lớp lấy từ BỘ GIÁP của ô đó nếu ô ấy đang đeo đồ có lớp rời, không thì lấy từ THÂN của
+// lớp nhân vật. Nhờ vậy thứ tự vẽ luôn đúng: tay xa nằm sau thân dù tay là giáp còn thân là
+// da trần, và ngược lại.
+//
+// ⚠ Bản trước vẽ TẤM THÂN LIỀN rồi đắp lớp giáp lên trên. Cách đó sai thứ tự ở đúng một chỗ
+// nhưng chỗ đó thấy rõ: đeo mỗi đôi giày thì ống chân đè mất vạt áo của thân, vì thân là một
+// tấm dẹp không tách ra được. Nay thân cũng cắt lớp nên hết hẳn.
+//
+// Trả về canvas 240x300 (đúng cỡ MỘT Ô), hoặc null khi không đi được đường này — người gọi
+// phải chịu được null và lui về tấm liền.
+function nvKhungGop(sectKey, tier, gv, kind, idx){
+  // Bộ giáp đổi CẢ TẤM (Grand Soul, Dark Knight giai 1) không có lớp — để đường cũ lo.
+  if (nvBoGiap(sectKey, gv)) return null;
+  const than = nvTen(sectKey, tier);
+  if (!than || !NV_LOP_HOP[than]) return null;      // thân chưa cắt lớp
+  const b2 = !!NV_BANG2[kind];
+  const n  = HS_FRAMES[kind] || 1;
+  const k  = nvMoc(kind) + (idx % n);
+  const oL = (gv && gv.oLop) || {};
+  // Gom nguồn TRƯỚC. Thiếu một tấm thì bỏ cả lượt chứ đừng vẽ nửa người: bảng hai nạp khi
+  // cần nên nó có thể chưa về ở mấy khung đầu, mà một nhân vật cụt tay thì lộ hơn hẳn một
+  // khung lui về dáng đứng.
+  const ds = [];
+  for (let i = 0; i < NV_LOP.length; i++){
+    const ml = NV_LOP[i][0], bo = oL[NV_LOP[i][1]];
+    const ten = (bo && NV_LOP_HOP[bo] && NV_LOP_HOP[bo][ml]) ? bo : than;
+    const H = NV_LOP_HOP[ten][ml];
+    if (!H) continue;                               // lớp RỖNG ở bộ đó (tóc sau) — bỏ qua
+    const im = nvTai(ten + '_' + ml + (b2 ? '2' : ''), 'webp');
+    if (!im) return null;
+    ds.push(im, H);
+  }
+  if (!ds.length) return null;
+  const t = document.createElement('canvas');
+  t.width = NV_OW; t.height = NV_OH;
+  const q = t.getContext('2d');
+  for (let i = 0; i < ds.length; i += 2){
+    const im = ds[i], H = ds[i + 1];
+    const ox = H[b2 ? 4 : 0], oy = H[b2 ? 5 : 1], w = H[b2 ? 6 : 2], h = H[b2 ? 7 : 3];
+    q.drawImage(im, (k % NV_COT) * w, ((k / NV_COT) | 0) * h, w, h, ox, oy, w, h);
+  }
+  return t;
+}
+
 // Màu tô đè khi TEST_TO_PHANG bật. Hồng cánh sen thuần: không sắc nào trong game tới gần —
 // cảnh vật là xanh lam/xanh lá/xám đá, hiệu ứng là cam/vàng/xanh ngọc.
 const HS_MAU_DO = '#ff00ff';
@@ -12673,6 +12959,9 @@ function nvHaoQuangSau(g, sectKey, tier, gv, now){
 }
 // Cắt MỘT khung khỏi bảng khung ra canvas riêng — nền cho hai hiệu ứng bám bóng dáng bên dưới.
 function _nvKhungRa(im, kind, idx){
+  // Khung GỘP (nvKhungGop) rộng đúng một ô, còn bảng khung rộng 16 ô — phân biệt bằng bề
+  // rộng. Khung gộp đã là một khung rồi, cắt nữa là cắt vào chính nó.
+  if (im.width === NV_OW) return im;
   const t = document.createElement('canvas');
   t.width = NV_OW; t.height = NV_OH;
   const n = HS_FRAMES[kind] || 1;
@@ -12767,12 +13056,20 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk){
   // nên nướng vào là bị cắt cụt hai bên (đúng cái mà test_herosprite bắt được).
   // Tấm khung lấy theo KHỐI — khối ở bảng hai thì đọc tệp <bộ>2. Bảng hai nạp khi cần, nên
   // nó có thể CHƯA VỀ ở mấy khung đầu: lúc đó lui về bảng một khối đứng, không rơi về hình vẽ.
-  const _nvIm = nvBang(sectKey, tier, gv, blk) || (NV_BANG2[blk] ? nvBo(sectKey, tier, gv) : null);
-  const _blkVe = (NV_BANG2[blk] && !nvBang(sectKey, tier, gv, blk)) ? 'i' : blk;
+  // Hai đường dựng khung, thử ĐƯỜNG LỚP trước: bộ nào có lớp rời thì chồng lớp, không thì
+  // lấy nguyên tấm. `_gop` đứng đầu chuỗi `||` nên khi có nó, nvBang() không bị gọi — thân
+  // đã cắt lớp thì KHÔNG CÒN tệp `<thân>.webp`, hỏi tới là 404.
+  let _gop = nvKhungGop(sectKey, tier, gv, blk, idx);
+  // Khối ở bảng hai mà bảng hai chưa về: lui về dáng đứng ở bảng một, y như đường tấm liền.
+  const _blkVe = (NV_BANG2[blk] && !_gop && !nvBang(sectKey, tier, gv, blk)) ? 'i' : blk;
+  if (!_gop && _blkVe !== blk) _gop = nvKhungGop(sectKey, tier, gv, _blkVe, idx);
+  const _nvIm = _gop || nvBang(sectKey, tier, gv, blk)
+              || (NV_BANG2[blk] ? nvBo(sectKey, tier, gv) : null);
   if (_nvIm){
     const _now = heroFrameNow(kind, idx);
     nvHaoQuangSau(g, sectKey, tier, gv, _now);      // hào quang cường hoá nằm SAU lưng
-    nvVeKhung(g, _nvIm, _blkVe, idx);
+    if (_gop) g.drawImage(_gop, -HS_PAD, -HS_PAD);  // khung đã gộp sẵn, dán thẳng
+    else nvVeKhung(g, _nvIm, _blkVe, idx);          // bộ giáp đổi cả tấm
     nvHaoQuangTruoc(g, sectKey, tier, gv, _now, _nvIm, kind, idx);   // viền + quét + tàn lửa
   }
   else drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx), ps, canhBoRa(gv));
@@ -12898,7 +13195,10 @@ function heroCardUrl(sectKey, tier, gv){
   const sig = gv ? `${Math.round(gv.t * 10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor || ''}_${wsig}` : '-';
   // Bảng khung nướng sẵn cũng phải nằm trong chữ ký: nếu chưa tải xong thì thẻ đầu tiên nướng
   // bằng hình dựng đường rồi nằm lì trong bộ nhớ đệm — cùng cái bẫy đã gặp hai lần ở cánh.
-  const _nvIm = nvBo(sectKey, tier || 1, gv);
+  // Cùng hai đường như heroSprite(): thân đã cắt lớp thì gộp lớp, không thì lấy tấm liền.
+  // Thẻ nhân vật LUÔN vẽ khối đứng khung 0, nên chỉ cần gộp đúng một khung.
+  const _gopC = nvKhungGop(sectKey, tier || 1, gv, 'i', 0);
+  const _nvIm = _gopC || nvBo(sectKey, tier || 1, gv);
   // Khoá phải mang CẢ tên bộ LẪN "art đã tải xong chưa". Bản trước chỉ có tên bộ: bảng khung
   // nặng ~480 KB nên lượt dựng đầu tiên thường chạy lúc ảnh chưa về, rơi về hình vẽ vector —
   // rồi cất vào đệm DƯỚI ĐÚNG CÁI TÊN CỦA ART. Ảnh về sau đó cũng không đổi được khoá, nên
@@ -12919,7 +13219,8 @@ function heroCardUrl(sectKey, tier, gv){
     // Thẻ nhân vật và thẻ chọn lớp dùng CHUNG bảng khung với hình trong màn, nên không có cách
     // nào lệch nhau. Cánh vẫn vẽ rời như cũ — nó không nằm trong bảng khung.
     nvHaoQuangSau(hg, sectKey, tier || 1, gv, 0);
-    nvVeKhung(hg, _nvIm, 'i', 0);
+    if (_gopC) hg.drawImage(_gopC, -HS_PAD, -HS_PAD);
+    else nvVeKhung(hg, _nvIm, 'i', 0);
     if (gv && gv.canh) veCanh(hg, gv.canh, 80, 212, 0, 0, 1, 0);
     nvHaoQuangTruoc(hg, sectKey, tier || 1, gv, 0, _nvIm, 'i', 0);
   } else {
@@ -17126,6 +17427,9 @@ function cheatHelp(){
     '── nhân vật ──',
     '/max — mọi thứ tối đa: cấp 120, full đồ +11, mọi kỹ năng cấp 120, VÀ mở hết cổng tiến trình',
     '/lv <1-120> — đặt cấp · /speed <hệ số> — tốc chạy · /god — bật/tắt bất tử',
+    '── dựng map ──',
+    '/diem npc|can|vung|toado — bật chấm điểm bằng CHUỘT PHẢI, /diem xong in ra mã dán được',
+    '/obstacles — hiện lớp phủ vùng chặn',
     '── di chuyển ──',
     '/map <id> — ' + _maps,
     '/map <phó bản> — ' + _pb,
@@ -17487,6 +17791,21 @@ window.cheatExec = function(raw){
         cheatLog('Tầng Sâu: tầng ' + (DEEP ? DEEP.floor : 0), '#c07fe0'); return;
       }
       case 'obstacles': window.SHOW_OBSTACLES = !window.SHOW_OBSTACLES; cheatLog('Debug obstacle overlay: ' + (window.SHOW_OBSTACLES ? 'ON' : 'OFF'), '#cfe8ff'); return;
+      // ⚠ Tên lệnh là `diem`, KHÔNG phải `dat` — `/dat` đã là "cộng Đất Hồn" từ trước.
+      case 'diem': {
+        const k = (parts[1] || '').toLowerCase();
+        if (k === 'xong' || k === 'out'){ cheatLog(datXuat(), '#8fd18f'); return; }
+        if (k === 'xoa'){ window.DAT_DS = []; cheatLog('Đã xoá hết điểm.', '#cfe8ff'); return; }
+        if (k === 'lui'){ window.DAT_DS.pop(); cheatLog('Bỏ điểm cuối — còn ' + window.DAT_DS.length, '#cfe8ff'); return; }
+        if (k === 'tat' || (!k && window.DAT_KIEU)){
+          window.DAT_KIEU = null; cheatLog('Tắt chế độ đặt điểm — chuột phải về đi lại như cũ.', '#cfe8ff'); return; }
+        if (!['npc','can','vung','toado'].includes(k)){
+          cheatLog('/diem npc|can|vung|toado — bật · /diem xong — in mã · /diem lui · /diem xoa · /diem tat', '#ffd76a'); return; }
+        window.DAT_KIEU = k; window.DAT_DS = [];
+        window.SHOW_OBSTACLES = true;         // bật luôn lớp phủ, đặt điểm mà không thấy vùng chặn là đặt mù
+        cheatLog(`Đặt điểm kiểu "${k}" tại ${curMap}. Chuột phải để chấm · /diem xong để lấy mã.`, '#8fd18f');
+        return;
+      }
       default: cheatLog('Lệnh lạ "' + cmd + '" — gõ /help', '#ff7a6a'); return;
     }
     try { saveGame(); } catch { /* best-effort — bỏ qua nếu lỗi */ }
@@ -19953,6 +20272,13 @@ const SHOPS = {
       { id:'ruongvk', col:'#c8d4e8', name:'Rương Binh Khí',  price:800, desc:'Vũ khí ngẫu nhiên theo cấp của bạn — có thể ra hàng hiếm' },
       { id:'ruongpc', col:'#5aa0e8', name:'Rương Phòng Cụ', price:700, desc:'Giáp trụ ngẫu nhiên theo cấp — có thể ra trang bị Hoàn Hảo' },
     ]},
+  // Thị trấn khởi đầu phải bán được thuốc, nếu không thì "hiện ra ở đây rồi ra cổng đánh quái"
+  // là đi tay không. Cùng bảng hàng với Nhà Giả Kim trong Lunaris City — cùng một nghề.
+  qt_giakim: { quote:'"Lọ treo trên kia là hàng thật. Ra ngoài cổng thì mang hai lọ, đừng một."', junk:true, rows:[
+    { id:'thuoc',     icon:'🧪', name:'Bình Thuốc Đỏ',        price:150, desc:'Uống bằng phím R — túi đựng tối đa 5 lọ' },
+    { id:'trithuong', icon:'✚',  name:'Trị Thương Toàn Phần', price:100, desc:'Bào chế tại chỗ — dùng ngay' },
+    { id:'tukhi',     icon:'◎',  name:'Lọ Mana',              price:80,  desc:'Mana là tài nguyên tung chiêu' },
+  ]},
   trachu: { quote:'"Vào đây uống chén trà nóng đã — chuyện Lunacia để sau hẵng hay."', rows:[
     { id:'nghitro', icon:'🛏', name:'Nghỉ Trọ',    price:120, desc:'Nghỉ ngơi dưỡng thần' },
     { id:'ruou',    icon:'🍶', name:'Rượu Hổ Cốt', price:200, desc:'Men say bừng bừng sát khí' },
@@ -21923,8 +22249,58 @@ function tickBark(n){
   if (n._barkT > 0) return;
   if (dist(player.x, player.y, n.x, n.y) > BARK_R){ n._barkT = 1; return; }
   n._barkI = ((n._barkI | 0) + 1 + (Math.random() * 2 | 0)) % n.barks.length;
-  addFloat(n.x, n.y - 78, n.barks[n._barkI], '#cfd8ff', 12);
+  addFloat(n.x, n.y - (n._cao || 64) - 40, n.barks[n._barkI], '#cfd8ff', 12);
   n._barkT = BARK_CD + Math.random() * 10;
+}
+// ═══ CỠ NPC TRONG MÀN — đo theo NV_CAO, không chép cứng px ═══
+//
+// Cỡ cũ là `nh = 64` chép cứng, trong khi NV_CAO = 132: NPC chỉ cao BẰNG NỬA nhân vật, và cũng
+// bằng nửa những người vẽ sẵn trong tranh nền. Đứng cạnh nhau đọc ra thành người lớn nói chuyện
+// với trẻ con. Bắt được bằng ảnh chụp ở Quảng Trường Cũ, nơi tranh nền có sẵn người để so.
+//
+// Chỉ đổi 64 thành 132 thì chưa đủ, vì hai lý do đo được:
+//   ① 17 tấm tranh NPC có LỀ TRONG SUỐT khác nhau — nội dung chiếm 69%…93% chiều cao khung, lề
+//      trên chạy từ 5px tới 50px. Co cả khung về một chiều cao thì hình thật vẫn ra 17 cỡ khác
+//      nhau, và chân người thì kẻ lơ lửng kẻ lún xuống đất. Nên đo HỘP NỘI DUNG (alpha) rồi mới
+//      co, và neo ĐÁY hộp vào chân NPC.
+//   ② Năm NPC là thú Axie, tranh RỘNG HƠN CAO (tỉ lệ tới 1,35). Cho cao bằng nhân vật thì rộng
+//      gấp hơn hai lần bề ngang người. Nên khoá cả hai chiều — cùng một khuôn mà
+//      chiCoTrongMan() đã dùng cho Chimera.
+//
+// ⚠ VÀ ĐỪNG LẤY THẲNG NV_CAO LÀM CHUẨN. NV_CAO (132) là chiều cao Ô VẼ của nhân vật, còn THÂN
+// NGƯỜI vẽ ra chỉ 95px — đo được bằng TEST_TO_PHANG rồi đếm điểm ảnh hồng: 92px×38px. Lấy 132
+// thì NPC cao hơn nhân vật một cái đầu. Nên tính từ chiều cao thân đã nướng, y như SAI_CHAN.
+const NV_THAN_PX = CAO_THAN_NUONG * (NV_CAO / HERO_H);   // thân nhân vật VẼ RA ≈ 95px
+const NPC_CAO = 1.00;   // NPC cao bằng ngần này lần THÂN nhân vật…
+const NPC_TRAN = 1.30;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
+const _npcHop = {};
+function npcHop(id, im){
+  const cu = _npcHop[id];
+  if (cu) return cu;
+  const W = im.naturalWidth, H = im.naturalHeight;
+  const tron = { sx:0, sy:0, sw:W, sh:H };
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const q = c.getContext('2d', { willReadFrequently: true });
+  q.drawImage(im, 0, 0);
+  let d;
+  try { d = q.getImageData(0, 0, W, H).data; } catch { return (_npcHop[id] = tron); }
+  let x1 = W, y1 = H, x2 = -1, y2 = -1;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+    if (d[(y * W + x) * 4 + 3] <= 20) continue;
+    if (x < x1) x1 = x; if (x > x2) x2 = x;
+    if (y < y1) y1 = y; if (y > y2) y2 = y;
+  }
+  return (_npcHop[id] = x2 < 0 ? tron : { sx:x1, sy:y1, sw:x2 - x1 + 1, sh:y2 - y1 + 1 });
+}
+function npcCoTrongMan(id, im){
+  const H = npcHop(id, im);
+  let cao = NV_THAN_PX * NPC_CAO;
+  let rong = cao * (H.sw / H.sh);
+  const tran = NV_THAN_PX * NPC_TRAN;
+  const qua = Math.max(cao, rong) / tran;
+  if (qua > 1){ cao /= qua; rong /= qua; }
+  return { cao, rong, H };
 }
 let _dtBark = 0;
 function drawNpc(){
@@ -21938,15 +22314,21 @@ function drawNpc(){
     // đổi nằm quanh nhân vật — chín NPC trong thành đứng bất động tuyệt đối. Lệch pha theo toạ
     // độ để cả thành không thở cùng một nhịp.
     const _nb = SETTINGS.lowFx ? 0 : Math.sin(performance.now()/640 + n.x*0.031 + n.y*0.017) * 2.2;
+    const _co = (im && im.complete && im.naturalWidth) ? npcCoTrongMan(n.id, im) : null;
+    const _cao = _co ? _co.cao : NV_THAN_PX, _rong = _co ? _co.rong : NV_THAN_PX * 0.48;
+    n._cao = _cao;   // nhãn tên & dấu nhiệm vụ đo theo đây, xem dưới
     ctx.fillStyle = 'rgba(0,0,0,.18)';
-    ctx.beginPath(); ctx.ellipse(n.x, n.y+8, 14 - _nb*0.5, 5, 0, 0, 7); ctx.fill();
-    if (im && im.complete && im.naturalWidth){
-      const nh = 64, nw = nh * (im.naturalWidth/im.naturalHeight);
-      ctx.drawImage(im, n.x - nw/2, n.y - nh + 10 + _nb, nw, nh);
+    ctx.beginPath(); ctx.ellipse(n.x, n.y+4, _rong*0.34 - _nb*0.5, _rong*0.12, 0, 0, 7); ctx.fill();
+    if (_co){
+      const H = _co.H;
+      // Neo ĐÁY hộp nội dung vào chân NPC — không neo đáy KHUNG, vì lề dưới mỗi tranh một khác
+      // (2px tới 49px) và neo theo khung thì nửa số NPC lơ lửng trên không.
+      ctx.drawImage(im, H.sx, H.sy, H.sw, H.sh, n.x - _rong/2, n.y - _cao + 4 + _nb, _rong, _cao);
     } else {
       ctx.fillStyle = '#5a4a30';
-      ctx.beginPath(); ctx.ellipse(n.x, n.y-8, 11, 15, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = '#e8cfa8'; ctx.beginPath(); ctx.arc(n.x, n.y-28, 7, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(n.x, n.y - _cao*0.34, _rong*0.30, _cao*0.34, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = '#e8cfa8';
+      ctx.beginPath(); ctx.arc(n.x, n.y - _cao*0.79, _cao*0.16, 0, 7); ctx.fill();
     }
     ctx.font = '12px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
     ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 3;
@@ -21956,7 +22338,8 @@ function drawNpc(){
         ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
         ctx.fillStyle = mark === '!' ? '#ffd76a' : '#9fd0ff';
         fxShadow(ctx.fillStyle, 6);
-        ctx.strokeText(mark, n.x, n.y-64); ctx.fillText(mark, n.x, n.y-64);
+        const _my = n.y - (n._cao || 64) - 24;
+        ctx.strokeText(mark, n.x, _my); ctx.fillText(mark, n.x, _my);
         fxShadowOff();
         ctx.font = '12px "Be Vietnam Pro", sans-serif';
       }
@@ -21964,11 +22347,13 @@ function drawNpc(){
     if (n.talk === 'trunya' && player.truyna && player.truyna.state === 'killed'){
       ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
       ctx.fillStyle = '#ffd76a'; fxShadow('#ffd76a', 6);
-      ctx.strokeText('!', n.x, n.y-64); ctx.fillText('!', n.x, n.y-64);
+      const _my2 = n.y - (n._cao || 64) - 24;
+      ctx.strokeText('!', n.x, _my2); ctx.fillText('!', n.x, _my2);
       fxShadowOff(); ctx.font = '12px "Be Vietnam Pro", sans-serif';
     }
     ctx.fillStyle = '#fff';
-    ctx.strokeText(n.name, n.x, n.y-52); ctx.fillText(n.name, n.x, n.y-52);
+    const _ny = n.y - (n._cao || 64) - 8;
+    ctx.strokeText(n.name, n.x, _ny); ctx.fillText(n.name, n.x, _ny);
   }
 }
 

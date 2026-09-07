@@ -22,6 +22,10 @@ const { chromium } = require('playwright');
     // ── 1. Chiêu quạt KHÔNG được tự hất tung đội hình của mình ────────────
     // Dark Lord: skillA type 'cone'. 4 quái bất động ngay trong tầm, tung 12 lượt.
     startGame('bug', null); player.level = 100; vhAutoLearn(); calcDerived();
+    // Điểm thả nay là Quảng Trường Cũ — sân nhỏ có đa giác đi được, mà bài này dựng cảnh ở
+    // toạ độ CỨNG (600,600). Ngoài đa giác thì update() đẩy người trở vào sân và đòn không
+    // chạm. Sang map rộng rồi hẵng dựng cảnh.
+    travelTo('tuongduong');
     buildWorld(); mobs.length = 0;
     player.x = 600; player.y = 600; player.face = 0;
     const tgts = [];
@@ -82,19 +86,38 @@ const { chromium } = require('playwright');
     player.traits = [];
     calcDerived();
     player.eva = 0;
+    // ⚠ startGame() vừa gọi lại ở trên ĐƯA VỀ ĐIỂM THẢ = Quảng Trường Cũ. Sân đó có `diTrong`,
+    // nên (600,600) nằm NGOÀI đa giác và update() đẩy người chơi vào trong sân — đo được là
+    // (558,1036), tức là con quái đặt ở (600,800) hoá ra nằm PHÍA TRÊN người chơi và hướng rung
+    // lật ngược. Phải sang map rộng SAU MỖI LẦN startGame, không chỉ một lần ở đầu bài.
+    travelTo('tuongduong');
     buildWorld(); mobs.length = 0;
     player.x = 600; player.y = 600;
     // Hướng rung TRƯỚC khi ăn đòn — bất kể nó đang là gì (swingFeel có cửa sổ 60ms nên trong
     // một lượt evaluate đồng bộ không phải lúc nào cũng ghi được).
     o.rung_truocKhiAnDon = +shakeDir.toFixed(3);
+    // Người chơi phải ĐỨNG YÊN CHỊU ĐÒN trong đoạn này. Còn TỰ ĐÁNH bật hay còn một đòn đã hẹn
+    // từ mục trên thì chính đòn của người chơi cũng gọi rung (swingFeel trỏ về phía mục tiêu),
+    // và hướng đo được là hướng đòn ĐÁNH RA chứ không phải đòn ĂN VÀO. Bài này từng xanh chỉ vì
+    // may: mạch ngẫu nhiên xê dịch một nhịp là đọc trúng cái khác ngay.
+    player.auto = false; player.pendingHit = null; moveTarget = null;
     const duoi = put(600, 800, 9e8);        // ở PHÍA DƯỚI → kỳ vọng đẩy người chơi LÊN (≈ -π/2)
     duoi.def.atk = 50; duoi.def.range = 400; duoi.atkT = 0;
     // Đo bằng CÚ SỤT máu trong từng khung, không đo hp đầu-cuối: hồi máu thụ động nhanh hơn
     // đòn của con quái nên hiệu số đầu-cuối là số ÂM dù đòn có trúng.
-    let sutNhieuNhat = 0;
-    for (let i = 0; i < 40; i++){ const h = player.hp; update(0.05); sutNhieuNhat = Math.max(sutNhieuNhat, h - player.hp); }
+    // Chốt hướng rung NGAY KHUNG ăn đòn, đừng đọc sau cả 40 khung. Trong 40 khung đó còn
+    // những nguồn rung khác (đòn của chính người chơi, Chimera đi theo), nên khung cuối có phải
+    // của cú đánh này hay không là chuyện MAY RỦI — đúng cái bẫy đã làm bài này đỏ khi đổi map
+    // khởi đầu: mạch ngẫu nhiên xê dịch, cú đánh không còn rơi vào khung chót, hướng đo ra
+    // thành 1,748 thay vì -1,571 dù cơ chế không đổi gì.
+    let sutNhieuNhat = 0, huongLucAnDon = shakeDir;
+    for (let i = 0; i < 40; i++){
+      const h = player.hp; update(0.05);
+      const sut = h - player.hp;
+      if (sut > sutNhieuNhat){ sutNhieuNhat = sut; huongLucAnDon = shakeDir; }
+    }
     o.rung_matMau = +sutNhieuNhat.toFixed(1);
-    o.rung_sauKhiAnDon = +shakeDir.toFixed(3);   // kỳ vọng ≈ -π/2
+    o.rung_sauKhiAnDon = +huongLucAnDon.toFixed(3);   // kỳ vọng ≈ -π/2
     o.rung_bienDo = +shakeMag.toFixed(2);
 
     // ── 4. đòn thường đã hẹn không được sống sót qua cái chết ────────────

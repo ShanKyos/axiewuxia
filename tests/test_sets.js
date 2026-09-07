@@ -25,9 +25,17 @@ const { chromium } = require('playwright');
   // Phải hỏi `.complete && .naturalWidth`, không được chỉ hỏi nvTai() có trả về đối tượng hay
   // không: từ khi bảng khung nạp theo nhu cầu, nvTai() tạo Image RỖNG rồi trả về ngay, nên
   // phép thử `!!nvTai(...)` đúng ngay ở nhịp thăm dò đầu tiên và bài chạy trước lúc ảnh về.
+  // ⚠ Bộ đã cắt LỚP RỜI không còn tệp `<tên>.webp`. Chờ nó là chờ mãi tới hết 30 giây rồi
+  // rơi vào catch, và mục 5 đo trên hai canvas rỗng — vẫn ra một con số, vẫn báo xanh.
+  // Bộ có lớp thì chờ ĐỦ NĂM LỚP; bộ chưa cắt lớp thì chờ tấm liền như cũ.
   await p.waitForFunction(() => {
-    const ten = [...Object.values(NV_BO), ...Object.values(NV_GIAP)];
-    return ten.every(t => { const im = nvTai(t, 'webp'); return im && im.complete && im.naturalWidth; });
+    const xong = t => {
+      if (!t) return true;
+      const hop = NV_LOP_HOP[t];
+      const ds = hop ? Object.keys(hop).map(ml => t + '_' + ml) : [t];
+      return ds.every(n => { const im = nvTai(n, 'webp'); return im && im.complete && im.naturalWidth; });
+    };
+    return [...Object.values(NV_BO), ...Object.values(NV_GIAP)].every(xong);
   }, { timeout: 30000 }).catch(()=>{});
 
   const r = await p.evaluate(() => {
@@ -65,10 +73,14 @@ const { chromium } = require('playwright');
       o.traArt[k] = [];
       for (let t = 1; t <= GIAI_MAX; t++) o.traArt[k].push(nvBoGiap(k, gvOf(t)) || null);
     }
-    // khớp một-một với NV_GIAP, không thừa không thiếu
+    // Khớp một-một với NV_GIAP — TRỪ bộ đã cắt LỚP RỜI.
+    // ⚠ nvBoGiap() cố ý trả null cho bộ có mặt trong NV_LOP_HOP: bộ đó không có tấm thân liền
+    // để mà đổi, nó được chồng lớp trong nvKhungGop(). Trả tên ở đây là game đi xin một tệp
+    // `<tên>.webp` không tồn tại rồi ăn 404.
     o.traSai = [];
     for (const k of CL) for (let t = 1; t <= GIAI_MAX; t++){
-      const mong = NV_GIAP[k + '|' + t] || null;
+      const ten = NV_GIAP[k + '|' + t] || null;
+      const mong = (ten && NV_LOP_HOP[ten]) ? null : ten;
       if (o.traArt[k][t-1] !== mong) o.traSai.push(`${k}|${t}: ra ${o.traArt[k][t-1]}, mong ${mong}`);
     }
     // cởi trần phải về null dù heroTier kẹp sàn ở 1
@@ -83,13 +95,28 @@ const { chromium } = require('playwright');
     };
     const diff = (a, b) => { let n = 0; for (let i = 0; i < a.length; i += 4)
       if (a[i] !== b[i] || a[i+1] !== b[i+1] || a[i+2] !== b[i+2] || a[i+3] !== b[i+3]) n++; return n; };
+    // Dựng MỘT KHUNG cho một bộ, đi đúng hai đường như game: bộ có lớp rời thì chồng lớp,
+    // không thì cắt từ tấm liền. Bản trước chỉ biết đường tấm liền nên từ lúc thân được cắt
+    // lớp là nó đo trên `null` và báo -1 cho cả ba bộ.
+    const khungCua = (sect, tier, gv) => {
+      const gop = nvKhungGop(sect, tier, gv, 'i', 0);
+      if (gop){ const c = document.createElement('canvas'); c.width = NV_OW; c.height = NV_OH;
+                const q = c.getContext('2d'); q.drawImage(gop, 0, 0);
+                return q.getImageData(0, 0, NV_OW, NV_OH).data; }
+      const im = nvBo(sect, tier, gv);
+      return (im && im.complete && im.naturalWidth) ? pix(im, 'i', 0) : null;
+    };
     o.khacThanTran = {};
     for (const key of o.coArt){
       const [sect, g] = key.split('|');
-      const imGiap = nvTai(NV_GIAP[key], 'webp');
-      const imTran = nvTai(NV_BO[sect + '|1'], 'webp');
-      o.khacThanTran[key] = (imGiap && imTran && imGiap.complete && imTran.complete)
-        ? diff(pix(imGiap, 'i', 0), pix(imTran, 'i', 0)) : -1;
+      // gv phải mang `oLop`, nếu không nvKhungGop() chỉ thấy THÂN và lớp giáp không bao giờ
+      // được dùng — hai ảnh sẽ giống hệt nhau và bài báo "art giáp không khác thân trần".
+      const gvG = gvOf(+g);
+      if (NV_LOP_HOP[NV_GIAP[key]])
+        gvG.oLop = { non: NV_GIAP[key], ao: NV_GIAP[key], tay: NV_GIAP[key], chan: NV_GIAP[key] };
+      const aGiap = khungCua(sect, +g, gvG);
+      const aTran = khungCua(sect, 1, { n:0, t:0 });      // n:0 ⇒ cởi trần ⇒ thân của lớp
+      o.khacThanTran[key] = (aGiap && aTran) ? diff(aGiap, aTran) : -1;
     }
 
     // 6) không nổ khi chưa mặc gì / ở giai chưa có art

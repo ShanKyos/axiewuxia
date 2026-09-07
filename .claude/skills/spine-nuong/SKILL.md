@@ -22,6 +22,47 @@ Cánh rẻ hơn nhiều vì nhuộm được. Nhân vật thì không: `hSetMeta
 áp lên hình dựng bằng đường; art nướng nằm ngoài tầm với của nó, nên **mỗi giai một bộ ảnh**.
 Đó là chỗ con số "30 bộ" (14 giai gom thành 5 nấc dáng × 6 lớp) đến từ đâu.
 
+## Kiểm gói NGAY khi nhận, trước khi nướng
+
+`python3 tools/spine/kiem_goi.py <gói> '<tên-da>'`
+
+Ba lần nhận hàng vừa rồi là ba lỗi khác nhau, và cả ba chỉ lộ ra SAU khi nướng (25 giây mỗi
+lượt, cộng một vòng dựng ảnh so sánh). Bài này đọc thẳng `.json` + `.atlas` + `.png`, một giây.
+
+Bắt được: sai bộ xương · thiếu mảnh mặt (`头_痛苦` / `头_闭眼` / `头_开心`) · hoạt cảnh chỉ là
+tư thế giữ nguyên · vùng atlas quên vẽ · **nét vẽ lệch trong ô atlas**.
+
+Cái cuối là lỗi khó thấy nhất: xương cắm vào Ô atlas chứ không vào nét vẽ, nên vẽ trượt trong
+ô là bộ phận đó rời khỏi người ở MỌI khung hình. Gói đời 2 lệch 33-48 px và cánh tay xa bay
+hẳn ra ngoài vai. Mốc canh nằm trong `tools/spine/moc_vung.json` — tâm ĐẦU MÚT (18% dưới cùng)
+từng vùng, vì bàn tay/bàn chân là da trần ở mọi bộ đồ nên chúng bám xương, không đổi theo áo.
+
+⚠ Ngưỡng 23 px canh trên hai ca thật, đừng làm tròn cho đẹp: gói đời 1 (chạy đúng) lệch nhiều
+nhất 20 px, gói đời 2 (hỏng) lệch ít nhất 26 px. Bản đầu tôi đo "hai tay có cân nhau không"
+ngay trong gói cho khỏi cần mốc ngoài — vô dụng: gói hỏng ra 20 px, hai gói tốt ra 13 và 22.
+Không tách được tốt/xấu mà vẫn phát ra dấu ✓, tệ hơn là không đo.
+
+## Đường LỚP RỜI — bốn ô trang bị tách nhau
+
+`python3 tools/spine/nuong_nv.py <gói> '<da>' <tên> --danh <hoạt-cảnh> --lop`
+
+Thay vì một tấm THÂN LIỀN, nướng ra **năm lớp** theo đúng thứ tự vẽ của bộ xương
+(`tóc-sau · tay-XA · hai chân · thân · tay-GẦN · đầu`), mỗi lớp cắt sát hộp bao của chính nó.
+Game chồng lại lúc vẽ, nên bốn ô đọc bốn bộ khác nhau được.
+
+Hai việc phải làm sau khi nướng, quên là hỏng:
+1. Dán dòng `NV_LOP_HOP` mà công cụ **in sẵn ra cuối** vào `game.js` — đó là gốc cắt của từng
+   lớp; sai một số là lớp dán lệch người.
+2. Thêm `'<lớp>|<giai>': '<tên>'` vào `NV_GIAP`. Có mặt trong `NV_LOP_HOP` thì `nvBoGiap()` tự
+   trả `null` và bộ đi đường lớp rời — không cần sửa gì thêm.
+
+Kiểm: `tests/test_lopdo.js` (13 mục). Nó so **ĐIỂM ẢNH** của sprite chứ không so tên bộ — so
+tên thì bài nào cũng xanh trong khi màn hình có thể y nguyên.
+
+⚠ Chưa cắt lớp cho THÂN TRẦN của năm lớp nhân vật (ảnh đã dẹp, mất gói gốc), nên lớp của bộ
+đang đắp lên tấm thân liền: đeo mỗi ô `chan` là ống chân đè mất vạt áo dài. Xem
+`docs/PROMPT_GIAP_DARKWIZARD.md §7` để biết cần gói gì.
+
 ## Đường CÁNH
 
 Tệp tranh: vẽ **một bên** cánh, gốc cắm sát mép trái, thân chìa sang phải, tô **xám** (PNG chế

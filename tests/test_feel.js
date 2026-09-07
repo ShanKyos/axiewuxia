@@ -14,6 +14,10 @@ const { chromium } = require('playwright');
   const r = await p.evaluate(() => {
     window.TEST_MODE = true;
     startGame('thieulam', null);
+    // Điểm thả nay là Quảng Trường Cũ — sân nhỏ, có đa giác đi được, mà bài này đặt cả
+    // người lẫn quái ở toạ độ CỨNG (600,600). Ngoài đa giác thì update() đẩy người trở
+    // vào sân, đòn hẹn không bao giờ chạm. Sang map rộng rồi hẵng đo cảm giác đánh.
+    travelTo('tuongduong');
     player.level = 60; vhAutoLearn(); calcDerived();
     const o = {};
 

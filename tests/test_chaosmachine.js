@@ -30,6 +30,12 @@ const { chromium } = require('playwright');
   console.log('1) NPC mở cỗ máy:', JSON.stringify(setup));
 
   const ba = () => page.evaluate(() => {
+    // ⚠ Phải xoá forgeBonus Ở ĐÂY, không phải ở bước dựng. `player.forgeBonus = 0` đặt lúc dựng
+    // bị calcDerived() ghi đè ngay trong travelTo(): nó tính lại forgeBonus = danh hiệu + số dòng
+    // Vận trên đồ ĐANG MẶC (mỗi dòng +5%). Đồ khởi đầu thì sinh ngẫu nhiên, nên bài kiểm này
+    // trước đây xanh/đỏ tuỳ mắn: lượt nào bốc trúng một dòng Vận là tỉ lệ thành 65% chứ không
+    // phải 60%, và tôi đã dính đúng cái đó khi đổi map khởi đầu (đổi map ⇒ đổi mạch ngẫu nhiên).
+    player.forgeBonus = 0;
     chaosClear();
     const three = [];
     for (let i = 0; i < 3; i++){ const it = genItem(20, 0, 'mob'); it.tier = 2; rerollItemTier(it); player.inv.push(it); three.push(it); }

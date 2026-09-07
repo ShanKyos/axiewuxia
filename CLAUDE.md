@@ -512,6 +512,36 @@ góp từng lớp, và bắt buộc **đường viền thân đặc** phải ph�
 đo viền là **180**, không phải 8: hào quang là đĩa gradient bán trong suốt phủ kín khung, lấy
 ngưỡng thấp thì đo nhầm mép hào quang (ra 912 px trong khi thân chỉ đổi 117).
 
+### BỐN Ô TRANG BỊ VẼ RỜI NHAU — không đợi đủ bộ
+
+Chủ dự án chốt: **không bắt mặc đủ bộ mới hiện giáp**. Đeo mỗi đôi giày thì đúng đôi giày đổi.
+
+Đường cũ `nvBoGiap()` đổi **cả tấm thân** một lượt theo bậc hiệu dụng `gv.t`, nên thiếu một ô
+là tụt bộ hoặc về thân trần — và không có cách nào thân một bộ mà tay áo một bộ khác.
+
+Đường mới: `nuong_nv.py --lop` cắt gói Spine thành **năm lớp rời**, game chồng lại lúc vẽ.
+
+- **NĂM lớp, không phải bốn**, và thứ tự là **THỨ TỰ VẼ CỦA BỘ XƯƠNG**, không phải thứ tự ô:
+  `tóc-sau · tay-XA · hai chân · thân · tay-GẦN · đầu`. Ô `tay` nằm **hai bên** ô `ao` — gộp
+  `tay` làm một lớp là tay xa nhảy ra trước ngực. `NV_LOP` trong game.js phải trùng khít bảng
+  `LOP` trong `tools/spine/nuong_nv.py`; `tests/test_lopdo.js` §1 gác đúng chỗ này.
+- **Mỗi lớp CẮT SÁT hộp bao của chính nó**, gốc cắt ghi trong `NV_LOP_HOP` (8 số: bảng một rồi
+  bảng hai). Không cắt thì năm lớp = 5 × 27,6 MB mỗi bộ. Cắt rồi thì tổng năm lớp của **bảng
+  một chỉ còn 79,5%** một tấm thân liền — tách ô ra còn **rẻ hơn** gộp, vì mỗi ô chỉ nạp đúng
+  lớp của nó dù người chơi mặc bốn bộ khác nhau.
+- **Hai bảng cắt hai hộp khác nhau.** Bảng hai là chết/nhảy múa/bật người, tay chân văng rất
+  xa. Ép chung một hộp thì bảng một phải gánh hộp của bảng hai: đo được 79,5% phình lên 167%.
+- Bộ có mặt trong `NV_LOP_HOP` đi đường lớp rời; bộ không có vẫn đổi cả tấm như cũ. **Hai đường
+  sống chung là chủ ý**: 7 bộ nướng từ trước không còn gói Spine gốc, mà cắt lớp từ một tấm đã
+  dẹp thì không có cách nào. `nvBoGiap()` trả `null` cho bộ có lớp rời — trả tên là 404.
+- `heroGearSig()` phải mang `gv.oLop`, nếu không đổi mũ mà đầu vẫn cái mũ cũ.
+
+⚠ **NỢ CÒN LẠI — thân nền chưa cắt lớp.** Lớp của bộ đang đắp lên **tấm thân liền** `dw1`, nên
+một lớp có thể che nhầm phần thân đáng lẽ nằm TRƯỚC nó: đeo mỗi ô `chan` thì ống chân đè mất
+vạt áo dài của thân. Ba ô kia không dính vì đầu/thân/tay vốn vẽ sau cùng. Sửa dứt điểm cần
+**một gói Spine THÂN TRẦN cho mỗi lớp** để cắt ra năm lớp nền — xem
+`docs/PROMPT_GIAP_DARKWIZARD.md §7`.
+
 ### Bộ giáp RIÊNG từng lớp (`HERO_SETS`)
 
 Bốn lớp trên nếu vẽ generic cho cả 6 lớp thì pháp sư mặc áo choàng lại đeo vai giáp tấm của
@@ -1319,3 +1349,48 @@ tức thì → đường đi xoáy ra góc map, hụt đích **1954px**. Giữ c
 Và khi vật cản chặn thật, click-to-move **không được bỏ cuộc ngay lần kẹt đầu**: né cục bộ hay
 chui vào túi giữa mấy gốc cây, vứt waypoint tính lại là thoát. Bỏ cuộc ngay làm 1/3 số lần bấm
 đi xa bị huỷ giữa đường.
+
+## Map tranh isometric: chặn bằng ĐA GIÁC SÀN, không bằng ellipse
+
+`bg_quangtruong.jpg` (Quảng Trường Cũ) là tranh **isometric** — nhà có chiều cao, mái là hình
+thoi, còn game thì **nhìn từ trên xuống, không có trục cao**. Hai chuyện phải xử riêng:
+
+**1. Chặn.** Lần đầu tôi chặn tám khối nhà bằng tám hình `ellipse` trong `MAP_OBSTACLES`. Sai
+kiểu: mái nhà isometric là hình thoi, ellipse thì không — phình ra cho kín mái thì ăn mất mặt
+sân, thu lại cho chừa sân thì hở mái, và không có kích thước nào đúng cả hai. Cách đúng là đảo
+ngược bài toán: khai **`diTrong`** — đa giác MẶT SÀN ĐI ĐƯỢC (xem `trongDaGiac()` /
+`epVaoDaGiac()` trong game.js). Ngoài đa giác là chặn hết, nên mọi khối nhà được chặn miễn phí.
+`MAP_OBSTACLES` chỉ còn giữ thứ nằm **giữa** vùng đi được — ở đây đúng một cái giếng.
+
+**2. Không cần lớp phủ trước mặt.** Nhân vật đi ra sau nhà sẽ vẽ ĐÈ LÊN mái — đúng, nhưng chỉ
+thành lỗi nếu có đất đi được nằm SAU vật thể vẽ ở tiền cảnh. Đa giác đã ôm sát mặt sân và dừng
+**trên** mép mái nhà nam, nên không có ô nào như thế ⇒ không dựng lớp `fg_*.png` nào cả. Nếu
+sau này mở sân sau phía nam cho đi được thì mới cần, và lúc đó phải cắt lớp tiền cảnh thật.
+
+**Đo đa giác thế nào cho khỏi đoán:** phủ đa giác lên chính tấm art bằng PIL rồi mở ảnh ra soi
+từng mép. Đừng dò bằng phân loại màu — art này tối và đục, cobble/mái/tường/đá cùng dải sáng
+55–150, tôi đã thử flood-fill lẫn ngưỡng màu và cả hai đều lem. Mắt trên ảnh có lưới 100px là
+cách nhanh nhất và đúng nhất. Đặt NPC thì dùng `/diem` rồi kiểm lại bằng phép điểm-trong-đa-giác.
+
+### Quảng Trường Cũ là thị trấn KHỞI ĐẦU
+Nhân vật mới hiện ra giữa sân (`newGame()` đặt `curMap = 'quangtruong'`), 10 NPC quanh sân,
+một lò rèn và một quầy thuốc — rồi đi lên **Cổng Bắc** ra Petalshade Isle mà đánh quái. Cổng
+chọn Petalshade Isle chứ không phải Outskirts vì Outskirts để `min:10`.
+
+⚠ Cổng thị trấn thì đặt tên bắt đầu bằng **"Cổng"**, đừng đặt "Lối". `test_noimap` nhận diện
+"lối rìa hoang dã" bằng chính tiền tố `Lối ` rồi bắt điểm tới phải nằm cách rìa map <400px —
+cổng thành nằm giữa map nên sẽ trượt bài kiểm.
+
+### NPC cũng đo theo thân nhân vật — và đo HỘP NỘI DUNG, không đo khung ảnh
+Cỡ NPC từng là `nh = 64` chép cứng. Hai chỗ sai, và chỗ thứ hai mới là chỗ đau:
+1. **Chuẩn sai.** `NV_CAO = 132` là chiều cao **ô vẽ**, thân người vẽ ra chỉ **95px**
+   (`CAO_THAN_NUONG × NV_CAO / HERO_H`; đo lại bằng `TEST_TO_PHANG` rồi đếm điểm ảnh hồng ra
+   92×38). Lấy thẳng 132 làm cỡ NPC thì NPC cao hơn nhân vật cả một cái đầu.
+2. **Đo khung thay vì đo hình.** 17 tấm tranh NPC có lề trong suốt khác nhau — nội dung chiếm
+   69%…93% chiều cao khung, lề trên 5px…50px. Co cả khung về một chiều cao thì hình thật ra 17
+   cỡ khác nhau và chân người kẻ lơ lửng kẻ lún. Nên `npcHop()` đo **hộp alpha** một lần rồi
+   nhớ lại, và neo **đáy hộp** vào chân NPC.
+
+Năm NPC là thú Axie có tranh rộng hơn cao (tới 1,35), nên khoá cả hai chiều rồi thu phần vượt —
+đúng khuôn `chiCoTrongMan()` đã dùng cho Chimera. Nhãn tên, dấu nhiệm vụ và câu thoại bay lên
+đều đo theo `n._cao`, không chép cứng 52/64/78 nữa.

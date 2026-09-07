@@ -471,7 +471,7 @@ window.SECTS = {
 // packs: quái đứng thành cụm 5-7 con, đánh 1 con cả cụm lao vào (GDD Mob Mechanics)
 window.MAPS = {
   daohoa: { name:'Petalshade Isle', min:1, range:'1 - 12', type:'safe', ground:'#ece2c8', patch:'#7a86ad',
-    spawn:{ x:460, y:460 }, village:true, spring:true, herbs:true, boss:true, trees:70, rocks:26,
+    spawn:{ x:460, y:460 }, spawnFrom:{ quangtruong:{ x:300, y:330 } }, village:true, spring:true, herbs:true, boss:true, trees:70, rocks:26,
     desc:'Nơi đặt trại ấp Petalshade — bãi săn của người mới. Chimera yếu, đồ rơi nhập môn, chỗ hiền lành để học cách chơi.',
     // Cụm quái xếp theo vòng từ spawn ra: yếu (boar/hautu) gần nhất → mạnh dần (wolf/bandit/
     // caodo) → xa nhất (assassin, trannhan) gần Cổng Vực — người chơi mới thấy rõ "đi sâu = khó
@@ -499,6 +499,38 @@ window.MAPS = {
       { id:'trannhan', ten:'Hàng Tượng Canh Cổng', dai:[0.915,1.0], cung:[0,52], cum:[1,1],
         dan:[{ mob:'trannhan', n:5 }] },   // C12 · Tượng Đá Canh Cổng
     ], duhiep: null },
+  // ── QUẢNG TRƯỜNG · map THỬ NGHIỆM cách di chuyển trên nền art isometric ───────────────
+  // ⚠ Nền map này là art ISOMETRIC, còn engine thì NHÌN TỪ TRÊN XUỐNG. Hai thứ đó không khớp
+  // nhau ở một chỗ không sửa được bằng mã: trong art, nhà có CHIỀU CAO, mái nhà che mất phần
+  // đất phía sau nó. Game không có trục cao, nên nhân vật đi ra sau nhà vẫn vẽ ĐÈ LÊN mái.
+  // Cách sống chung: chặn nguyên khối nhà lại (MAP_OBSTACLES), chỉ chừa mặt sân.
+  //
+  // `diTrong` là ĐA GIÁC ĐI ĐƯỢC — mặt sàn hình thoi của khối isometric. Ngoài nó là vực,
+  // chặn hết. Xem trongDaGiac() trong game.js.
+  quangtruong: { name:'Quảng Trường Cũ', min:1, range:'—', type:'safe', ground:'#6d6455', patch:'#4a4438',
+    // ⚠ KHÔNG dùng `city:true`. Cờ đó gọi drawCityWalls/drawCityPlaza — bộ tường thành, đài
+    // phun nước và sáu biển hiệu VẼ TAY, toạ độ chép cứng theo Lunaris City. Bật lên là chúng
+    // vẽ đè lên art vốn đã có sẵn tường, giếng và cửa hiệu: hai cái thành chồng lên nhau.
+    // `type:'safe'` là đủ để cấm PK.
+    spawn:{ x:1279, y:1166 }, spawnFrom:{ daohoa:{ x:1600, y:780 } }, trees:0, rocks:0,
+    // ĐA GIÁC ĐI ĐƯỢC — đo bằng cách phủ đa giác lên chính tấm art rồi soi lại từng mép:
+    // bám sát mặt sân lát đá + vạt cỏ, KHÔNG lấn lên nền nhà, hàng rào tây, mái nhà nam hay
+    // vành đá nhạt quanh khối. Nhánh chìa lên phía bắc là lối dốc dẫn tới vòm cổng thành.
+    // Vì đa giác đã ôm sát sân nên map này KHÔNG cần vật cản khối nhà nào nữa (xem
+    // MAP_OBSTACLES.quangtruong) — chỉ còn cái giếng nằm GIỮA sân là thật sự chắn đường.
+    diTrong: [[545,1020],[700,1035],[780,1055],[860,970],[1050,870],[1300,800],[1450,745],
+              [1560,675],[1700,700],[1800,800],[1860,890],[1935,1085],[1995,1185],[2040,1265],
+              [2010,1300],[1830,1290],[1660,1240],[1420,1230],[1180,1265],[980,1270],[820,1250],
+              [700,1235],[640,1150]],
+    // VẬT TO — công trình rời vẽ chèn vào tranh nền, xếp lớp theo y như cây cối (xem nhánh
+    // `case 'vat'` trong game.js). Lò rèn đặt NGAY DƯỚI mép nam của `diTrong`: nóc nó cao hơn
+    // mép sân ~40px nên người đứng sát mép bị nóc che mất bàn chân — đúng chiều sâu của tranh
+    // isometric, và có được là nhờ khoá xếp lớp lấy CHÂN công trình (y+h) chứ không lấy nóc.
+    // Cỡ ×1,55 chọn theo NGƯỜI: ông thợ vẽ trong tranh cao 88px gốc, ×1,55 ra 136px — sát
+    // NV_CAO (132), nên đứng cạnh nhân vật không ai to hơn ai.
+    vatTo: [ { img:'loren', x:820, y:1215, w:348, h:339 } ],
+    desc:'Một khoảnh phố cũ bị vết nứt kéo nguyên khối sang: nhà còn nguyên mái, giếng còn nguyên gàu, và không ai biết dân của nó đi đâu. Ra Cổng Bắc là hết đất an toàn.',
+    packs: [], duhiep: null },
   tuongduong: { name:'Lunaris City', min:1, range:'—', type:'safe', ground:'#d8ccb0', patch:'#7a6a4a',
     spawn:{ x:1300, y:1100 }, spawnFrom:{ ngoai:{ x:1300, y:1460 }, daohoa:{ x:640, y:905 }, chungnam:{ x:1960, y:905 }, tuyettinh:{ x:1300, y:510 } }, city:true, trees:24, rocks:10,
     desc:'Cả khu phố Ardhaven bị vết nứt kéo sang, dân bản địa dựng lại quanh nó thành Lunaris City. Trong tường: Lò Rèn Hoàng Gia, Tiệm Thuốc, Vũ Khí Phường, Trà Quán, Sảnh Cầu May và Truy Nã Lệnh. An toàn tuyệt đối — không Chimera nào vào được. Ra Cổng Nam để săn ở Outskirts.',
@@ -648,6 +680,17 @@ window.MAPS = {
 // ═══════════ GDD Đợt 2 — A: ĐỊA HÌNH CẢN ĐƯỜNG + ẢI CẤP ═══════════
 // Chỉ chặn địa hình LỚN (hồ/sông/núi/tường), đường đi để rộng; rect {x,y,wd,ht} hoặc ellipse {x,y,rx,ry}
 window.MAP_OBSTACLES = {
+  // Chặn nguyên KHỐI NHÀ chứ không chỉ chân tường: art isometric vẽ cả mái, mà mái là thứ
+  // nhân vật sẽ đi đè lên nếu cho vào. Toạ độ đọc từ chính tấm art qua lưới 100px rồi nhân
+  // hệ số 1,5347 (art 1490px nội dung -> 2287px trong thế giới 2600x1900).
+  // Tám hình ellipse chặn nhà cửa đã BỎ HẲN. Chúng là cách sai để giải bài toán này: mái nhà
+  // trong tranh isometric là hình thoi, ellipse thì không — muốn phủ kín mái thì phải phình ra
+  // ăn mất mặt sân, muốn chừa sân thì hở mái. Nay `diTrong` (xem MAPS.quangtruong) ôm đúng mặt
+  // sân, nên mọi thứ ngoài sân đã bị chặn sẵn bởi chính đa giác — thêm ellipse chỉ chồng chéo.
+  // Chỉ còn cái giếng: nó nằm GIỮA vùng đi được nên đa giác không chặn hộ được.
+  quangtruong: [
+    { x:1279, y:1013, rx:58,  ry:64  },  // giếng giữa sân
+  ],
   daohoa: [
     // Hiệu chỉnh lại theo màu nước thật của art (bg_daohoa.jpg), đối chiếu từng pixel với
     // toàn bộ NPC/quái/thảo dược/suối/cổng phó bản của map — 2 hình ellipse cũ quá to,
@@ -749,6 +792,74 @@ window.NPCS = [
            '"Đồ hỏng thì mang đây, đừng vứt."','"Nghe tiếng thép là biết đồ thật hay giả."'] },
   // NV5 (cấp 5) bắt rèn +3, mà lò duy nhất nằm trong Lunaris City khoá tới NV10 — chính tuyến kẹt
   // cứng ở cấp 5, không có đường vòng. Bắt được qua chơi thử. Đặt một lò lưu vong ngay cạnh làng.
+  // ── QUẢNG TRƯỜNG CŨ — thị trấn khởi đầu ─────────────────────────────────────
+  // Toạ độ đặt bằng công cụ /diem: bật lên, chuột phải lên từng chỗ trong tranh, `/diem xong`
+  // in ra đúng mấy dòng dưới đây. Cả mười người đều nằm TRONG `diTrong` của map (đã đối chiếu
+  // lại bằng phép kiểm điểm-trong-đa-giác), và tránh vòng cấm của cái giếng giữa sân.
+  // Vị trí chọn theo thứ có sẵn TRONG TRANH: quán bia treo biển ở tây, quầy giả kim treo lọ ở
+  // bắc, giá binh khí ở đông, vòm cổng ở đông-bắc, giếng ở giữa.
+  { id:'qt_giakim', name:'Nhà Giả Kim Quảng Trường', map:'quangtruong', x:1120, y:880, img:'assets/npcs/duoclao.png', talk:'shop',
+    lore:'"Lọ treo trên kia là hàng thật, không phải đồ trang trí. Cứ vào, đừng đứng ngoài ngó."',
+    barks:['"Bình đỏ pha sáng nay, còn ấm."','"Ra ngoài cổng thì mang theo hai lọ, đừng một."','"Đừng uống khi đang chạy."'] },
+  { id:'qt_thoren', name:'Thợ Rèn Quảng Trường', map:'quangtruong', x:900,  y:1215, img:'assets/npcs/thoren.png', talk:'forge',
+    lore:'"Lò của ta rơi qua vết nứt cùng cả khu phố này. Cứ đưa đồ đây — còn than là còn rèn."',
+    barks:['"Đồ mới ra khỏi cổng là mẻ ngay, mang về ta vá."','"Đừng đập +7 khi trong túi chưa có ngọc."','"Nghe tiếng thép là biết đồ thật hay giả."'] },
+  { id:'qt_gaccong', name:'Đội Trưởng Gác Cổng', map:'quangtruong', x:1620, y:790, img:'assets/npcs/laotuong.png', talk:'quest',
+    lore:{
+      idle:  '"Trong tường này không có gì giết được ngươi. Bước qua vòm cổng kia thì khác — ta chỉ mở cửa, không đi theo."',
+      offer: '"Chưa vội. Đứng đây nhìn ra ngoài cổng một lúc đã, xem có sợ không rồi hẵng nhận việc."',
+      active:'"Việc ngoài kia còn dở. Cổng ta vẫn mở, về lúc nào cũng được."',
+      done:  '"Về đủ chân tay. Ta đếm người ra, đếm người về — hôm nay không lệch."' },
+    barks:['"Cổng mở suốt. Đóng lại thì cũng chẳng cản được thứ ngoài kia."','"Ra thì ra sớm, chiều sương xuống dày."','"Đếm người ra, đếm người về. Hôm nay lệch ba."'] },
+  { id:'qt_binhkhi', name:'Chủ Giá Binh Khí', map:'quangtruong', x:1745, y:1085, img:'assets/npcs/binhkhi.png', talk:'quest',
+    lore:{
+      idle:  '"Giá này toàn đồ của người không về. Ta lau sạch rồi mới dựng lên — cầm thử đi, đừng ngại."',
+      offer: '"Tay ngươi chưa quen thép. Cầm cho vững đã rồi ta mới dám nhờ."',
+      active:'"Cây ngươi mượn còn ngoài kia. Ta đợi cả nó lẫn ngươi."',
+      done:  '"Trả về nguyên vẹn. Ít người làm được thế, ta ghi tên ngươi lên giá."' },
+    barks:['"Cầm thử đi, đừng ngắm."','"Cây rìu kia nặng hơn nó nhìn."','"Đồ cũ nhưng chưa gãy lần nào."'] },
+  { id:'qt_quantro', name:'Chủ Quán Trọ', map:'quangtruong', x:900, y:1045, img:'assets/npcs/trachu.png', talk:'quest',
+    lore:{
+      idle:  '"Cả cái quán rơi qua đây mà không vỡ một chén. Đời còn cho gì thì ta nhận nấy."',
+      offer: '"Ngồi xuống ăn trước đã. Bụng đói thì nghe việc gì cũng thấy dễ."',
+      active:'"Phần của ngươi ta để phần rồi, nguội thì hâm lại."',
+      done:  '"Xong rồi hả. Ngồi đi, lần này ta rót, không tính tiền."' },
+    barks:['"Ngồi đi, ta rót."','"Trong này yên, ngoài kia ồn."','"Ai vào cũng kể một chuyện, chưa ai kể trùng."'] },
+  { id:'qt_thaythuoc', name:'Thầy Thuốc Già', map:'quangtruong', x:760, y:1140, img:'assets/npcs/duocsu.png', talk:'quest',
+    lore:{
+      idle:  '"Ta vá được da thịt. Cái ngươi mang về từ ngoài kia — thứ bám trong mắt ấy — ta chịu."',
+      offer: '"Người còn lành lặn thì đừng vội. Ta chỉ nhờ khi không còn ai lành hơn."',
+      active:'"Thuốc ta pha xong rồi, chỉ thiếu thứ ngươi đang đi lấy."',
+      done:  '"Đủ rồi. Ngồi xuống, ta xem vết trên tay ngươi trước đã."' },
+    barks:['"Vết này không phải do dao."','"Nghỉ một đêm rồi hẵng đi."','"Đừng để máu khô rồi mới tới."'] },
+  { id:'qt_balao', name:'Bà Lão Bên Giếng', map:'quangtruong', x:1230, y:1110, img:'assets/npcs/monkhach.png', talk:'quest',
+    lore:{
+      idle:  '"Giếng này vẫn có nước. Cả khu phố mất người mà cái gàu còn nguyên — ngươi giải thích được không?"',
+      offer: '"Ngươi mới tới, chưa nợ nơi này gì cả. Cứ đi chơi đi, việc của ta chờ được."',
+      active:'"Ta vẫn múc nước mỗi sáng. Ngươi cứ đi, ta không đi đâu mất."',
+      done:  '"Vậy là còn có người nghe bà già nói. Cảm ơn, thật đấy."' },
+    barks:['"Sáng nào ta cũng múc một gàu, sáng nào cũng thế."','"Đừng nhìn xuống lâu quá."','"Trước đây chỗ này đông lắm."'] },
+  { id:'qt_duatin', name:'Người Đưa Tin', map:'quangtruong', x:1330, y:1215, img:'assets/npcs/noiung.png', talk:'quest',
+    lore:{
+      idle:  '"Thư từ Lunaris City vẫn tới đều. Người gửi thì ta gặp, người nhận thì chưa gặp ai bao giờ."',
+      offer: '"Chân ngươi chưa quen đường. Đi vài vòng ngoài cổng đã rồi ta giao thư."',
+      active:'"Thư còn trong túi ngươi đấy. Đừng để ướt."',
+      done:  '"Tới nơi rồi hả. Vậy là hôm nay có một lá được đọc."' },
+    barks:['"Đường ra đảo đi được, chỉ hơi bẩn giày."','"Ta chạy nhanh hơn ngươi đấy."','"Thư này để ba tháng rồi."'] },
+  { id:'qt_laibuon', name:'Lái Buôn Lang Thang', map:'quangtruong', x:1120, y:1120, img:'assets/npcs/thantoan.png', talk:'quest',
+    lore:{
+      idle:  '"Ta buôn giữa hai bờ vết nứt. Hàng bên kia rẻ, chỉ tội mỗi chuyến mất một người kéo xe."',
+      offer: '"Ngươi chưa đủ nặng tay để đi cùng chuyến của ta. Cứ chờ."',
+      active:'"Xe ta đứng đây chờ. Hàng ngươi hứa vẫn chưa thấy đâu."',
+      done:  '"Đủ hàng. Chuyến này ta không mất ai — lâu lắm rồi mới nói được câu đó."' },
+    barks:['"Giá hôm nay khác hôm qua."','"Ta không nói thách, ta nói đúng."','"Bên kia vết nứt còn đắt hơn."'] },
+  { id:'qt_linhtuan', name:'Lính Tuần Tra', map:'quangtruong', x:1850, y:1140, img:'assets/npcs/bodau.png', talk:'quest',
+    lore:{
+      idle:  '"Ta đi vòng quanh sân này mười hai lượt một ngày. Mười hai lượt, không lượt nào thấy gì — và đó mới là chuyện đáng sợ."',
+      offer: '"Chưa cần tới ngươi. Sân còn sạch thì ta còn đi được một mình."',
+      active:'"Ta vẫn đi vòng của ta. Việc ngươi nhận thì ngươi lo."',
+      done:  '"Sạch rồi. Đêm nay ta bớt được một lượt — cảm ơn."' },
+    barks:['"Mười hai lượt, không thiếu lượt nào."','"Trong sân sạch. Ngoài cổng thì ta không hứa."','"Nghe thấy gì thì gọi ta."'] },
   { id:'thoren_dao', name:'Thợ Rèn Lưu Vong', map:'daohoa', x:520, y:560, img:'assets/npcs/thoren.png', talk:'forge',
     lore:'"Lò của ta rơi qua vết nứt cùng ta. Còn đỏ lửa là còn rèn — đưa đồ đây."',
     barks:['"Đảo này không có quặng, ta nấu lại đồ cũ."','"Còn đỏ lửa là còn rèn."',

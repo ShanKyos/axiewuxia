@@ -23,8 +23,13 @@ const fs = require('fs');
   await p.goto('http://localhost:8853/index.html');
   await p.waitForFunction(() => window.__gameReady).catch(()=>{});
   await p.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); });
-  // Bảng khung nặng ~480 KB. Chưa tải xong thì nvBo() trả null, mọi phép đo vẽ vào canvas rỗng.
-  await p.waitForFunction(() => !!nvTai('dkgs1', 'webp') && !!nvTai('dk1', 'webp'),
+  // Art nặng vài trăm KB mỗi tấm. Chưa tải xong thì mọi phép đo vẽ vào canvas rỗng.
+  // ⚠ THÂN nay là NĂM LỚP RỜI, không còn tấm `dk1.webp` để mà chờ — chờ nó là chờ mãi rồi
+  // rơi vào catch, và bài đo trên một canvas trắng mà vẫn báo xanh.
+  await p.evaluate(() => { player.level = 100; calcDerived();
+                           nvBoTruoc('thieulam', 1, gearVisual(player)); nvTai('dkgs1', 'webp'); });
+  await p.waitForFunction(() => !!nvTai('dkgs1', 'webp') &&
+                                !!nvKhungGop('thieulam', 1, gearVisual(player), 'i', 0),
                           { timeout: 20000 }).catch(()=>{});
 
   const res = await p.evaluate(() => {
@@ -39,10 +44,12 @@ const fs = require('fs');
     const shot = (gv, tier) => {
       const c = document.createElement('canvas'); c.width = NV_OW; c.height = NV_OH;
       const q = c.getContext('2d');
-      const im = nvBo('thieulam', tier, gv);
+      // ĐÚNG hai đường như heroSprite(): bộ có lớp rời thì gộp lớp, không thì lấy tấm liền.
+      const gop = nvKhungGop('thieulam', tier, gv, 'i', 0);
+      const im = gop || nvBo('thieulam', tier, gv);
       if (!im) return null;
       if (gv) nvHaoQuangSau(q, 'thieulam', tier, gv, 900);
-      nvVeKhung(q, im, 'i', 0);
+      if (gop) q.drawImage(gop, 0, 0); else nvVeKhung(q, im, 'i', 0);
       if (gv) nvHaoQuangTruoc(q, 'thieulam', tier, gv, 900, im, 'i', 0);
       return { data: q.getImageData(0, 0, NV_OW, NV_OH).data, url: c.toDataURL('image/png') };
     };
