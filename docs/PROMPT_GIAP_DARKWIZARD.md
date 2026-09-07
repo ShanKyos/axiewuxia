@@ -239,3 +239,127 @@ tự dò bảng, không chỗ nào ghi cứng số giai.
 2. **Tôi chưa gen thử prompt nào** — hộp cát này không ra được meowa.ai. Sáu prompt trên là suy
    từ đặc tả và từ chính tấm giai 7 đang có, chưa qua một vòng thử nào.
 3. **Điều 2 ở §0 cần bạn chọn A/B/C** trước khi art về, vì nó đổi cảm giác mặc đồ của cả game.
+
+---
+
+## 6. Bản v2 của giai 1 (Vải Thô) — gen LẠI, sau khi nướng thử gói ngày 07/09
+
+Gói `Rough Weave` bản 2 đã sửa được **ống tay áo** (bản 1 tay trần), nhưng nướng thử ở đúng cỡ
+trong game thì lộ hai chuyện, cả hai đều phải gen lại chứ không vá tay được:
+
+### ❶ Năm vùng tay phải bị vẽ LỆCH trong khung region
+
+`.json` và `.atlas` của bản 2 **giống bản 1 từng byte** — chỉ `.png` được vẽ lại. Nhưng nét vẽ
+trong năm ô `右手_*` bị đẩy sang trái, trong khi `左手_*` thì không. Kết quả: **cánh tay xa rời
+hẳn khỏi vai** ở mọi khung hình.
+
+Đo bằng trọng tâm bàn tay (18% dưới cùng của mảnh), so bản 1 với bản 2, cùng một khung region:
+
+| Region (bounds) | Bàn tay dịch |
+|---|---:|
+| `右手_放松` (1623,779,259,374) | **−45 px** |
+| `右手_张开朝内` (834,1473,259,374) | **−48 px** |
+| `右手_张开朝侧前` (834,1095,259,374) | **−43 px** |
+| `右手_张开朝外` (1097,779,259,374) | **−41 px** |
+| `右手_握拳` (1360,779,259,374) | **−33 px** |
+| `左手_放松` (1360,1157,259,374) | +6 px *(bình thường)* |
+| `左手_握拳` (1097,1535,259,374) | +9 px *(bình thường)* |
+
+Dời năm vùng đó sang phải 33–48 px thì tay dính lại vai — đã dựng thử để xác nhận đúng nguyên
+nhân, **không đưa vào repo** vì dịch pixel bằng máy thì viền vẽ vẫn sai một chút.
+
+### ❷ Đầu vẫn KHÔNG CÓ MŨ
+
+Bản 2 chỉ đổi **kiểu tóc** (dựng đứng, sẫm hơn). Ô `non` trong túi đồ vì thế vẫn là **đầu trần** —
+`nuong_icon.py` cắt icon nón từ đúng hai khe `头` + `背后头发`, không có mũ thì không có icon.
+
+⚠ Đây là **lỗi của prompt bản 1, không phải của Meowa.** Bản 1 tôi viết *"a soft hood pushed BACK
+off the head... resting in folds on the shoulders"* để giữ mặt sáng — và bộ gen giải bài toán đó
+bằng cách **bỏ luôn mũ trùm**. Bản v2 dưới đây bắt buộc phải có một khối HEADWEAR nói rõ: mũ nằm
+**TRÊN đầu**, ôm quanh mặt, và phải vẽ **y hệt lên cả bốn mảnh mặt**.
+
+### Prompt v2 — dán nguyên khối
+
+```
+A single 2D game character rig for a Spine skeletal-animation package: a slender adult
+spellcaster in a floor-length robe, three-quarter front view, neutral A-pose, fully
+transparent background.
+
+=== PART A · RIG CONTRACT (identical to the previous delivery) ===
+
+Keep the SAME skeleton and the SAME atlas layout as the package I am attaching:
+83 bones, 13 slots, 20 animations, one 2048x2048 texture page, and the same region names
+and bounds. Only the painted pixels inside each region may change. Deliver the outfit as a
+skin named exactly "Rough Weave".
+
+REGISTRATION — this is the part the last delivery got wrong. Inside each region box, the
+artwork must sit at the SAME anchor position as the reference package, because the bone
+attaches to the region box, not to the drawing. In the last delivery the five right-arm
+regions (右手_放松, 右手_握拳, 右手_张开朝内, 右手_张开朝侧前, 右手_张开朝外) were painted
+33-48 pixels too far LEFT inside their boxes, which detached the far arm from the shoulder
+in every frame. The left-arm regions were correct. Re-check every limb region against the
+reference: wrist, elbow and shoulder must land on the same pixel coordinates as before.
+
+=== PART B · HEADWEAR (mandatory — the last delivery omitted this entirely) ===
+
+The character MUST wear a visible piece of headwear, sitting ON the head, in every one of the
+four head attachments: 头 (neutral), 头_开心 (happy), 头_痛苦 (pained), 头_闭眼 (eyes closed).
+The headwear must be pixel-identical across all four; only the facial expression changes.
+
+Design for this rank: a strip of the same coarse sackcloth WRAPPED around the crown and
+knotted at the back of the head — a poor traveller's head-wrap. A second frayed strip crosses
+over the top. Hair escapes from under it at the temples and the nape. Optionally a small
+loose cowl of the same cloth folded around the base of the neck, sitting on the shoulders.
+
+The head-wrap must be obvious in SILHOUETTE from three-quarter front: it has to read as a
+worn object at 128x128 pixels with the body hidden, because the game cuts the helmet
+inventory icon from the head parts alone. A headband so thin it reads as a hairstyle fails
+this requirement.
+
+FACE STAYS FULLY OPEN. The wrap sits above the eyebrows and behind the cheekbones. No shadow
+mask over the eyes, no cloth across the nose or mouth, no full-face mask, nothing covering
+any part of the face. Both eyes, the nose line and the mouth must be clearly readable at
+160 pixels tall. This is a technical constraint, not a preference: the engine swaps in the
+pained / eyes-closed / happy face pieces during hurt, death, sitting and dancing animations,
+and a covered face makes all four invisible.
+
+=== PART C · THE OUTFIT (keep what the last delivery got right) ===
+
+SET: "Rough Weave", the lowest rank. A wandering apprentice with nothing but donated cloth.
+Coarse undyed sackcloth robe to the ankles, visibly woven texture, ragged saw-tooth hem,
+one square patch stitched on the skirt. Twisted hemp rope belt with a long hanging tail.
+SHORT SLEEVES of the same sackcloth, frayed at the cuff, ending above the elbow so the bare
+forearm shows; cloth wraps at both wrists. Cloth foot-wraps spiralling up the shin into
+simple soft shoes, no hard boots.
+NO shoulder pieces of any kind. NO metal anywhere. NO separate trousers — the robe and the
+leg wraps read as one unit.
+
+=== PART D · HARD REQUIREMENTS ===
+
+1. COMPLETE BODY UNDER THE CLOTHING. Draw a whole character first, then dress it. Hands,
+   forearms, neck and feet must exist as real anatomy underneath, not as empty holes inside
+   floating cloth.
+2. DESATURATED, NEUTRAL BASE COLOURS — the engine re-tints this artwork per rank at runtime.
+   PALETTE: #4a4038 base, #6b5c4c mid, #8a7a5c trim. No glow anywhere, no saturated colour.
+3. SAME PERSON as the reference package: same face shape, same skin tone, same hair colour
+   and length. Only the clothing and the head-wrap are new. This character appears beside six
+   other ranks of the same person; a different face per rank reads as a different character.
+4. STYLE: clean vector-like 2D game art, crisp dark outline, flat cel shading with one soft
+   ambient gradient. No photorealism, no painterly brushwork, no text, no watermark, no
+   ground shadow, no background scenery. Full body, head to feet, nothing cropped.
+```
+
+### Kiểm khi nhận hàng — ba việc, làm trước khi wire vào game
+
+```bash
+# 1. skeleton còn nguyên chưa (phải ra 83 · 13 · 20, và có skin "Rough Weave")
+python3 -c "
+import json,glob;d=json.load(open(glob.glob('<gói>/*.json')[0],encoding='utf-8'))
+print(len(d['bones']),len(d['slots']),len(d['animations']),[s['name'] for s in d['skins']])"
+
+# 2. tay phải đã về đúng chỗ chưa — nướng rồi nhìn khung 0/16/80
+python3 tools/spine/nuong_nv.py <gói> 'Rough Weave' _thu --danh 05_MagicAttack
+
+# 3. icon ô nón đã ra HÌNH MŨ chưa, hay vẫn là đầu trần
+python3 tools/spine/nuong_icon.py <gói> 'Rough Weave' _thu
+```

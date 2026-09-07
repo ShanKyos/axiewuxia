@@ -585,6 +585,24 @@ nên mọi lời gọi 6 tham số cũ vẫn chạy. Giữ nguyên quy ước đ
 Test: `node <scratchpad>/test_anim.js`. ⚠ Game **đã bỏ WASD** — di chuyển là click-to-move qua
 `moveTarget`; test nào đặt `keys.d = true` để bắt nhân vật chạy sẽ đo ra 0 mà không báo lỗi.
 
+### ĐI hay CHẠY — cửa là ĐÔI GIÀY, không phải tốc độ
+
+`dangChay(p)` là luật DUY NHẤT: `p.equip.chan.plus >= GIAY_CHAY_PLUS (6)` thì CHẠY (`00_Run`),
+dưới đó — kể cả chưa có giày — thì ĐI (`00_Walk`).
+
+- **Vì sao đổi.** Luật cũ đọc TỐC ĐỘ (`p.speed >= 1.271 × NV_CAO ≈ 168`), mà tốc độ nền của
+  người chơi là **209** — tức mọi nhân vật chạy ngay từ cấp 1, suốt đời, và 32 khung `00_Walk`
+  đã nướng nằm chết trong bảng. Chủ dự án chốt: vào game là ĐI, **Giày +6** mới mở dáng chạy.
+  Đổi được cả một thứ NHÌN THẤY ĐƯỢC khi đập giày — thứ mà các ô khác không có.
+- **⚠ HAI chỗ phải cùng gọi `dangChay()`**: `drawPlayer` chọn KHỐI VẼ, `update()` chọn SẢI CHÂN
+  (`SAI_CHAN.w` / `SAI_CHAN.r`) để tính `walkPh`. Tách ra hai luật là bàn chân **trượt đất
+  ~40% quãng đường mỗi vòng** — nhìn chỉ thấy "hình như đi hơi lạ", rất khó lần ra.
+- Nhánh `_bay` phải đứng TRƯỚC nhánh đi bộ trong chuỗi chọn khối, nếu không đang bay mà mang
+  Giày +6 cũng đổi khối.
+
+Test: `tests/test_walkrun.js` (13 mục). Mục 3 đo `walkPh` chuẩn hoá **theo px đã đi**, không
+theo thời gian — chia theo thời gian thì hai lượt đo không đi bằng nhau và sai số 11%.
+
 ### Cảm giác chiến đấu — 6 chỗ dễ làm sai
 
 - ⚠ **KHÔNG dùng `ctx.filter`** trong vòng vẽ. Nó buộc canvas dựng surface phụ, chi phí tuyến

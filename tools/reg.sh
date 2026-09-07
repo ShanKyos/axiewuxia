@@ -1,5 +1,5 @@
 #!/bin/bash
-# Hồi quy trình duyệt cho Axie Wuxia — 134 bài Playwright.
+# Hồi quy trình duyệt cho AXIE RIFT — 170 bài Playwright.
 #
 #   bash tools/reg.sh [thư-mục-kết-quả]
 #

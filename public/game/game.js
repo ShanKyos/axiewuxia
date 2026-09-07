@@ -10004,7 +10004,7 @@ function update(dt){
   // thì bước ngắn lại, có Cánh tăng tốc thì sải dài ra, không phải dò lại con số nào.
   {
     const _v = player.speed || 209;
-    const _sai = SAI_CHAN[_v >= CHAY_TU ? 'r' : 'w'];
+    const _sai = SAI_CHAN[dangChay(player) ? 'r' : 'w'];   // CÙNG luật với khối vẽ, xem dangChay()
     player.walkPh = (player.walkPh || 0) + dt * (player.moving ? (_v / _sai) * Math.PI * 2 : 2.2);
   }
   // ── QUÁN TÍNH PHỤ (secondary motion) ──
@@ -12468,10 +12468,22 @@ const CAO_THAN_NUONG = 159;                       // tools/spine/nuong_nv.py · 
 const SAI_CHAN_NUONG = { w: 126.6, r: 212.9 };    // px trên bảng khung
 const SAI_CHAN = { w: SAI_CHAN_NUONG.w * NV_CAO / CAO_THAN_NUONG,
                    r: SAI_CHAN_NUONG.r * NV_CAO / CAO_THAN_NUONG };
-// Trên ngưỡng này thì CHẠY. Dưới thì đi — dành cho lúc bị làm chậm. Viết theo THÂN NGƯỜI mỗi
-// giây chứ không theo px: người to hơn thì cùng một tốc độ px/giây đọc ra chậm hơn, nên ngưỡng
-// phải lớn lên theo. Tốc độ nền của người chơi là 209 px/giây, vẫn nằm trên ngưỡng.
-const CHAY_TU = 1.271 * NV_CAO;
+// ── ĐI hay CHẠY: quyết định bằng ĐÔI GIÀY, không bằng tốc độ ────────────────────────────────
+// Chủ dự án chốt: vào game là ĐI (`00_Walk`); lên **Giày +6** mới đổi sang CHẠY (`00_Run`).
+//
+// Trước bản này ngưỡng là TỐC ĐỘ (`p.speed >= 1.271 × NV_CAO ≈ 168`), mà tốc độ nền của người chơi là
+// 209 — tức nhân vật CHẠY ngay từ cấp 1 và khối `00_Walk` gần như không bao giờ được thấy, dù
+// đã nướng đủ 32 khung cho nó. Đổi sang cửa Giày +6 thì cả hai khối đều có lúc dùng, và người
+// chơi có một thứ NHÌN THẤY ĐƯỢC khi đập giày — thứ mà mọi ô khác không có.
+//
+// ⚠ PHẢI DÙNG CHUNG cho cả KHỐI VẼ (drawPlayer) lẫn NHỊP BƯỚC (update). Hai chỗ đó vốn cùng
+// đọc một ngưỡng tốc độ; tách chúng ra hai luật khác nhau là bàn chân trượt đất — vẽ khối đi mà
+// tính sải chân của khối chạy thì mỗi vòng hụt ~40% quãng đường.
+const GIAY_CHAY_PLUS = 6;
+function dangChay(p){
+  const gi = p && p.equip && p.equip.chan;
+  return !!gi && (gi.plus || 0) >= GIAY_CHAY_PLUS;
+}
 // CỬA SỔ LƠ LỬNG trong khối đi. Khối đi có 32 khung; khung khớp dáng bay nhất là 8/12 của hoạt
 // cảnh gốc, tức 8/12 × 32 ≈ 21. Lắc ±2 khung theo một nhịp chậm để nó còn thở, không đứng hình.
 const BAY_KHUNG = 21, BAY_LAC = 2;
@@ -14458,7 +14470,7 @@ function drawPlayer(){
                 : atkK > 0 ? 'a'
                 : _catCanh ? 'j'
                 : _bay ? 'w'
-                : _diBo ? ((p.speed || 209) >= CHAY_TU ? 'r' : 'w')
+                : _diBo ? (dangChay(p) ? 'r' : 'w')   // Giày +6 mới chạy — xem dangChay()
                 : (!p.moving && (p.nhayT || 0) > 0) ? 'e'
                 : _suoi ? 'q'
                 : _noi ? 'n'
