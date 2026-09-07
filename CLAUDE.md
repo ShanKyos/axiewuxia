@@ -1352,6 +1352,34 @@ chui vào túi giữa mấy gốc cây, vứt waypoint tính lại là thoát. B
 
 ## Map tranh isometric: chặn bằng ĐA GIÁC SÀN, không bằng ellipse
 
+> ⚠ **SÁU TRÊN TÁM TRANH NỀN ĐANG SAI PHÉP CHIẾU.** Đo được, không phải cảm giác: quét từ đáy
+> tấm lên tới hàng đầu tiên đổi chất liệu, tranh **nhìn từ trên xuống** không có dải đáy riêng
+> (cả tấm đã là đất — `daohoa` 2,9%, `comoc` 0%), còn tranh **nhìn ngang** có một dải sàn mỏng
+> 5–22% ở đáy, phần trên là trời/núi/tường cây. Sáu tấm thuộc loại sau: `tuongduong` 12,2% ·
+> `mongco` 21,9% · `nhanmon` 7,9% · `ngoai` 7,3% · `chungnam` 5,7% · `tuyettinh` 4,9%.
+> Vì `game.js` kéo tranh nền phủ kín thế giới rồi cho đi khắp mặt tranh (dòng ~10829), **tranh
+> nền CHÍNH LÀ mặt đất** — nên đi lên phía trên map là đi vào bầu trời. Đó là toàn bộ nguyên
+> nhân của lỗi "nhân vật như đang ở trên không trung".
+>
+> **Hướng đã chốt: regenerate từng map rồi lắp lại.** Prompt, ràng buộc hình học và công thức
+> lắp nằm ở `docs/PROMPT_MAP_ISOMETRIC.md`.
+>
+> **Đừng thử cứu bằng cách lát nền từ art có sẵn — đã thử ba lần, hỏng cả ba**, lý do từng lần
+> ghi ở §2 tài liệu trên. Tóm tắt: dải sàn ở đáy 6 tấm hiện tại là MÀU PHẲNG (sàn sân khấu 2D),
+> và lớp `*_Ground.png` của kho Axie là mặt đất vẽ theo phối cảnh cho sân khấu nhìn ngang —
+> cả hai đều không lát kín được một thế giới.
+>
+> **Kho Axie vẫn còn thứ dùng được, ba đợt khảo sát trước bỏ sót** vì chỉ mở `PvE/Backgrounds/
+> class/*` rồi kết luận cả thư mục: `story/` và `events/arena/` **tách LỚP**, cho ~12 vật thể
+> cắt sẵn alpha (`5_TREE1/2/3`, `10_TREE2`, `7/8/9/10_ROCK`, `8_TEMPLE`, `13_STATUE`, `6_WATER`)
+> — lắp thẳng vào lớp `vatTo` được.
+>
+> **`tests/test_sandat.js` gác hợp đồng này cho MỌI map.** Map nào khai `diTrong` là tự động bị
+> canh (điểm thả, 8 hướng đi ra, NPC/cổng/quái đứng trên sàn, đi bộ tới được cổng, và map đánh
+> nhau phải có sàn ≥55% khổ map). Dựng lại một map, chấm xong đa giác là có bảo hiểm ngay,
+> không phải viết bài kiểm mới.
+
+
 `bg_quangtruong.jpg` (Quảng Trường Cũ) là tranh **isometric** — nhà có chiều cao, mái là hình
 thoi, còn game thì **nhìn từ trên xuống, không có trục cao**. Hai chuyện phải xử riêng:
 
