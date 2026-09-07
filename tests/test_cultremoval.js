@@ -16,7 +16,7 @@ const { chromium } = require('playwright');
   // 2) Char panel renders fine at every remaining tab, no crash, no leftover Ascension mention
   const r2 = await page.evaluate(() => {
     window.TEST_MODE = true;
-    startGame('vophai', null);
+    startGame('thieulam', null);
     player.sect = 'thieulam'; player.level = 100; calcDerived();
     const out = {};
     for (const t of CHAR_TABS){
@@ -42,7 +42,7 @@ const { chromium } = require('playwright');
   // (unlockNotices staggers addFloat via setTimeout, so intercept for a bit before restoring)
   const r4 = await page.evaluate(async () => {
     window.TEST_MODE = true;
-    startGame('vophai', null);
+    startGame('thieulam', null);
     const seenByLevel = {};
     for (const lv of [7, 10, 20, 30]){
       player.level = lv;

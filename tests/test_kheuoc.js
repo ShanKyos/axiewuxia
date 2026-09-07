@@ -1,4 +1,4 @@
-// Khế Ước Chimera — gacha thay hẳn hệ Thú Chiến. Thiết kế: docs/GACHA_KHE_UOC.md
+// Khế Ước Ragoon — gacha thay hẳn hệ Thú Chiến. Thiết kế: docs/GACHA_KHE_UOC.md
 //
 // Bốn thứ phải gác, và cả bốn đều là chỗ một hệ gacha dễ hỏng nhất:
 //

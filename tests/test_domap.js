@@ -20,7 +20,7 @@ const SAN = {
 // Sàn cũ là 18%, chốt khi còn bộ trụ đá (trung bình 44,8%). Trụ đá đã bị GỠ vì nó chỉ là sprite
 // đá phóng to ~3 lần, nhìn xấu và chọi với nền tranh — chủ dự án xem ảnh chụp rồi yêu cầu bỏ.
 // Gỡ xong thì trung bình tụt 44,8% → 30,0% (phần lớn map vẫn còn địa hình), nhưng thiệt hại
-// dồn vào MỘT chỗ: Ashen Steppe — map trống nhất, 90,9% đi được — tụt còn 9,1%.
+// dồn vào MỘT chỗ: Reptile Sunstone Flats — map trống nhất, 90,9% đi được — tụt còn 9,1%.
 //
 // Sàn 8 dưới đây KHÔNG phải là "đạt". Nó là bánh cóc giữ cho đừng tụt tiếp, trong lúc chờ
 // TRANH RIÊNG cho khối đá cỡ lớn. Khi có tranh thật thì kéo sàn này về ≥18 và xoá đoạn ghi chú
@@ -143,7 +143,7 @@ const TRAN = {
   for (const id of ids){
     const m = r[id];
     if (m.hong.length) fail(`${id}: đi không tới ${m.hong.join(', ')}`);
-    // Map KHÔNG có bãi quái là thành, và tường thành LÀ thiết kế — 49% đi được ở Lunaris City
+    // Map KHÔNG có bãi quái là thành, và tường thành LÀ thiết kế — 49% đi được ở Sapidae Chiefdom
     // là đúng chứ không phải lỗi. Sàn này để bắt BÃI SĂN bị vật cản ăn mất, nên miễn cho thành.
     // (Nhận diện bằng "không có bãi quái" chứ không bằng cờ village: cờ đó nằm ở daohoa.)
     if (m.soLoai > 0 && m.thoang < SAN.thoang) fail(`${id}: chỉ ${m.thoang}% map đi được (sàn ${SAN.thoang}%) — vật cản ăn mất map`);

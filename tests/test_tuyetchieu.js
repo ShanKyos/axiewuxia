@@ -27,7 +27,6 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   const r1 = await p1.evaluate(() => {
     const out = {};
     for (const sk in SECTS){
-      if (sk === 'vophai') continue;
       const bar = defaultSkillBar(sk);
       out[sk] = { so: bar.length, o4: bar[3] };
     }

@@ -29,7 +29,7 @@ const fs = require('fs');
     const diff = (a, b) => { let n = 0; for (let i = 0; i < a.length; i += 4) if (a[i] !== b[i] || a[i+3] !== b[i+3]) n++; return n; };
     const ink = a => { let n = 0; for (let i = 3; i < a.length; i += 4) if (a[i] > 8) n++; return n; };
 
-    for (const sect of ['thieulam','toanchan','baidasan','minhgiao','bug','vophai']){
+    for (const sect of ['thieulam','toanchan','baidasan','minhgiao','bug']){
       const idle = shot(sect, 1, heroPose(0, false, 0, 0, 0));
       const walkA = shot(sect, 1, heroPose(0.9, true, 0, 0, 0));
       const walkB = shot(sect, 1, heroPose(0.9 + Math.PI, true, 0, 0, 0));
@@ -57,7 +57,7 @@ const fs = require('fs');
     if (v.pixels < 3000) { console.log('FAIL vẽ quá ít pixel:', k, v.pixels); bad++; }
     if (v.walkCycleMoves < 200) { console.log('FAIL sải chân không đổi:', k); bad++; }
     if (v.attackMoves < 200) { console.log('FAIL tư thế đánh không đổi:', k); bad++; }
-    if (v.tierChangesArmor < 100 && k !== 'vophai') { console.log('FAIL bậc Thần Binh không đổi giáp:', k); bad++; }
+    if (v.tierChangesArmor < 100) { console.log('FAIL bậc Thần Binh không đổi giáp:', k); bad++; }
   }
   console.log('errors:', JSON.stringify(errs));
   console.log(bad === 0 && errs.length === 0 ? 'PASS' : 'FAIL(' + bad + ')');

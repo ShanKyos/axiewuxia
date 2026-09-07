@@ -32,7 +32,7 @@ const pass = m => console.log('PASS ' + m);
       out.push({ n, tru: truDaGo(), attr: e.dataset.tru,
                  w: c.getPropertyValue('--nw').trim(), o: c.getPropertyValue('--no').trim() });
     }
-    // Cờ ta_* của vùng KHÔNG có trụ (Petalshade) không được làm vết nứt rộng thêm
+    // Cờ ta_* của vùng KHÔNG có trụ (Plant Tribe) không được làm vết nứt rộng thêm
     player.storyFlags = { ta_daohoa:1, ta_ngoai:1 }; capNhatVetNut();
     const lac = { tq: tuongQuanDaHa(), tru: truDaGo(),
                   attr: document.getElementById('fx-crack').dataset.tru };
@@ -107,8 +107,8 @@ const pass = m => console.log('PASS ' + m);
     return {
       ngoai: { cau: cau(MAPS.ngoai.desc), rung: /đang rung|lung lay/.test(MAPS.ngoai.desc || '') },
       vuc: NPCS.filter(n => /Vực Thẳm/.test(n.name || ''))
-              .map(n => ({ id:n.id, tru: /Trụ (Thornwood|Roost|Frostmire|Ashmark|Stormgate)/.test(n.lore || '') })),
-      // Chợ Đấu Giá đã bị xoá khỏi game; Dược Sư ở Petalshade chứ không ở Lunaris City
+              .map(n => ({ id:n.id, tru: /Trụ (Werebear Woods|Roost|Bird Tribe Heights|Ashmark|Dusk Marsh)/.test(n.lore || '') })),
+      // Chợ Đấu Giá đã bị xoá khỏi game; Dược Sư ở Plant Tribe chứ không ở Sapidae Chiefdom
       thanh: /Chợ Đấu Giá|Dược Sư/.test(MAPS.tuongduong.desc || ''),
     };
   });
@@ -118,8 +118,8 @@ const pass = m => console.log('PASS ' + m);
   const vucSai = noi.vuc.filter(x => !x.tru);
   if (vucSai.length) fail('Vực Thẳm chưa nối vào Trụ Khoá: ' + vucSai.map(x=>x.id).join(', '));
   else pass(`cả ${noi.vuc.length} Vực Thẳm nối vào cái trụ ở gần nó`);
-  if (noi.thanh) fail('mô tả Lunaris City vẫn quảng cáo thứ không tồn tại (Chợ Đấu Giá / Dược Sư)');
-  else pass('mô tả Lunaris City chỉ vào thứ có thật');
+  if (noi.thanh) fail('mô tả Sapidae Chiefdom vẫn quảng cáo thứ không tồn tại (Chợ Đấu Giá / Dược Sư)');
+  else pass('mô tả Sapidae Chiefdom chỉ vào thứ có thật');
 
   await b.close();
   console.log(bad ? `FAIL(${bad})` : 'ALL PASS');

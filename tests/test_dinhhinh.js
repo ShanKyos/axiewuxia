@@ -132,7 +132,7 @@ const PORT = process.argv[2] || '8853';
   else pass(`ô Vảy nuôi người chơi: HP ${r4.hp0} → ${r4.hp1}`);
   if (!(r4.atk1 > r4.atk0)) fail('dòng phụ atkPct trên Cốt không ăn vào Công người chơi');
   else pass(`dòng phụ phía người chơi ăn thật: Công ${r4.atk0} → ${r4.atk1}`);
-  if (!(r4.g1 > r4.g0)) fail('ô Sừng không cộng Công Chimera'); else pass(`ô Sừng nuôi Chimera: +${r4.g1}% Công`);
+  if (!(r4.g1 > r4.g0)) fail('ô Sừng không cộng Công Ragoon'); else pass(`ô Sừng nuôi Ragoon: +${r4.g1}% Công`);
 
   // ── 5. hiệu ứng bộ 2 mảnh và 4 mảnh ──
   const r5 = await p.evaluate(() => {
@@ -156,7 +156,7 @@ const PORT = process.argv[2] || '8853';
   else pass(`1 mảnh: chỉ có dòng chính của chính nó (+${r5.hai1}%), chưa có hiệu ứng bộ`);
   const themBo = +(r5.hai2 - r5.hai1).toFixed(1);
   if (themBo !== 8) fail(`2 mảnh phải cộng đúng +8% của bộ, đo được +${themBo}%`);
-  else pass('2 mảnh kích đúng hiệu ứng bộ: +8% Công Chimera');
+  else pass('2 mảnh kích đúng hiệu ứng bộ: +8% Công Ragoon');
   if (r5.bo4 !== 'regai') fail('4 mảnh không kích hiệu ứng đổi hành vi'); else pass('4 mảnh kích hiệu ứng đổi hành vi');
   if (r5.tron) fail('trộn 2+2 Dòng mà vẫn tính là đủ bộ'); else pass('trộn hai Dòng thì không tính đủ bộ');
   if (r5.soDong !== 7) fail('phải đúng 7 Dòng, đếm ' + r5.soDong); else pass('đủ 7 Dòng, mỗi phó bản một Dòng');

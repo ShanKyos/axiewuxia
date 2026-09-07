@@ -19,11 +19,15 @@ const { chromium } = require('playwright');
   const fail = m => { bad++; console.log('  ✗ ' + m); };
   const pass = m => console.log('  ✓ ' + m);
 
-  // 1) bảng nhiệm vụ đang thật sự rỗng
+  // 1) CHÍNH TUYẾN đã dựng lại (xem tests/test_chuoinv.js đo kỹ), PHỤ TUYẾN vẫn còn rỗng.
+  // Mốc cũ của bài này là "cả hai đều rỗng" — nay chính tuyến có 33 mục nên mốc ấy hết nghĩa.
+  // Đúng như dòng đầu tệp dặn: viết mốc mới theo thiết kế mới, đừng bới bản cũ trong git ra.
   const r1 = await page.evaluate(() => ({ side: SIDE_QUESTS.length, main: QUESTS.length }));
   console.log('1) số nhiệm vụ:', JSON.stringify(r1));
-  if (r1.side || r1.main) fail(`vẫn còn nhiệm vụ (${r1.main} chính / ${r1.side} phụ) — đợt gỡ chưa sạch`);
-  else pass('không còn nhiệm vụ nào trong game — đúng như đợt gỡ');
+  if (r1.side) fail(`phụ tuyến chưa dựng lại mà đã có ${r1.side} mục — bộ cũ lọt về?`);
+  else pass('phụ tuyến vẫn rỗng — chưa tới lượt dựng lại');
+  if (!r1.main) fail('chính tuyến rỗng — chuỗi nhiệm vụ biến mất');
+  else pass(`chính tuyến có ${r1.main} mục`);
 
   // 2) hai hành động thật mà phụ tuyến từng bám vào vẫn chạy
   const r2 = await page.evaluate(() => {

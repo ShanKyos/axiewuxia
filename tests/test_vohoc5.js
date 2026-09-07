@@ -23,7 +23,7 @@ const { chromium } = require('playwright');
   for (const key of ['thieulam','baidasan','toanchan','minhgiao','bug']){
     const r = await page.evaluate((key) => {
       window.TEST_MODE = true;
-      startGame('vophai', null);
+      startGame('thieulam', null);
       player.sect = key;
       player.level = 60; player.xp = 0; calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
       vhAutoLearn();
@@ -45,7 +45,7 @@ const { chromium } = require('playwright');
 
   // 3) tienthiencong (Undying Will, now Dark Knight) still triggers auto-revive on death
   const r3 = await page.evaluate(() => {
-    startGame('vophai', null);
+    startGame('thieulam', null);
     player.sect = 'thieulam'; player.level = 60; calcDerived();
     vhAutoLearn();
     const hasIt = vhLearned('tienthiencong');
@@ -57,7 +57,7 @@ const { chromium } = require('playwright');
 
   // 4) songthu (Arcane Insight, now Dark Wizard) free-cast-chance passive still reachable
   const r4 = await page.evaluate(() => {
-    startGame('vophai', null);
+    startGame('thieulam', null);
     player.sect = 'baidasan'; player.level = 60; calcDerived();
     vhAutoLearn();
     return { hasIt: vhLearned('songthu') };
@@ -66,7 +66,7 @@ const { chromium } = require('playwright');
 
   // 5) skill panel renders with only 2 tabs, no crash
   const r5 = await page.evaluate(() => {
-    startGame('vophai', null);
+    startGame('thieulam', null);
     player.sect = 'minhgiao'; player.level = 60; calcDerived();
     renderSkillPanel();
     const html1 = document.getElementById('panel-skill').innerHTML;
@@ -78,7 +78,7 @@ const { chromium } = require('playwright');
 
   // 6) tenuiFreeLearn (Té Núi) gracefully returns null now that no phai:null skills exist
   const r6 = await page.evaluate(() => {
-    startGame('vophai', null);
+    startGame('thieulam', null);
     player.sect = 'thieulam'; player.level = 60; calcDerived();
     player.level = Math.max(player.level, 84);
     const res = tenuiFreeLearn();

@@ -53,7 +53,7 @@ const EXACT = {
   // Sects & roles
   
   'Bạch Đà Sơn': 'White Camel Mt.', 'Minh Giáo': 'Ming Cult', 'Đoàn Thị': 'Duan Clan',
-  'Đào Hoa': 'Peach Blossom', 'Tán Nhân': 'Wanderer',
+  'Đào Hoa': 'Peach Blossom',
   // Elements
   'Kim': 'Metal', 'Mộc': 'Wood', 'Thủy': 'Water', 'Hỏa': 'Fire', 'Thổ': 'Earth',
   // Maps
@@ -94,7 +94,7 @@ const EXACT = {
   'Bấm để tháo · kéo từ Túi Đồ để mặc': 'Click to unequip · drag from Bag to equip',
   'Trang Bị': 'Equipment',
   // Materials & shop
-  'Mảnh Trang Bị': 'Gear Shard', 'Tịch Ma Thạch': 'Demon-Seal Stone', 'Ấn Trấn Ải': 'Pass-Guard Seal',
+  'Mảnh Trang Bị': 'Gear Shard', 'Đá Ấn Trụ': 'Pillar Seal Stone',
   'Mảnh Cổ Thần': 'Ancient God Shard', 'Huyền Thiết': 'Mystic Iron', 'Sách Kỹ Năng →': 'Tomes →',
   'Thảo Dược': 'Herb', 'Thảo Dược Quý': 'Rare Herb', 'Phong Linh Phù': 'Spirit-Seal Charm',
   'Thiên Mệnh Phù': 'Fate Charm', '☂ Thiên Mệnh Phù': '☂ Fate Charm',
@@ -132,14 +132,9 @@ const EXACT = {
   '⚡ Liên Trảm — miễn phí Mana!': '⚡ Chain Strike — free Mana!',
   'BẤT TỬ: BẬT': 'GODMODE: ON', 'BẤT TỬ: TẮT': 'GODMODE: OFF',
   'PK: BẬT': 'PK: ON', 'PK: Tắt': 'PK: OFF',
-  'ĐÃ MỞ VÙNG MỚI': 'NEW REGION UNLOCKED', '☯ BÁI SƯ THỤ NGHIỆP': '☯ TAKEN AS DISCIPLE',
-  '⚑ Kết Bái': '⚑ Sworn Oath', '⚑ KIM LAN KẾT NGHĨA': '⚑ SWORN BROTHERHOOD',
+  'ĐÃ MỞ VÙNG MỚI': 'NEW REGION UNLOCKED',
  '⚔ PHỤC KÍCH!': '⚔ AMBUSH!', '⚔TRUY THÙ': '⚔ VENDETTA',
-  '📖 LUẬN ĐẠO NGỘ PHÁP': '📖 DAO DISCOURSE', '🕊 HÒA GIẢI': '🕊 RECONCILED',
-  '☯ Trưởng Tộc': '☯ Mentor', '☯ Hậu Bối': '☯ Protégé',
-  '☬ TRẤN ẢI': '☬ PASS GUARDIAN', '⛨ THỦ VỆ': '⛨ WARDEN',
   'Thần Binh đã THỨC TỈNH — tối đa!': 'Divine Weapon AWAKENED — maxed!',
-  'Ngũ Ấn:': 'Five Seals:', '⚑ Kết Bái': '⚑ Sworn Oath',
   // Mounts & stable
   'Xuất Chiến (V)': 'Summon (V)', 'Thu Hồi (V)': 'Recall (V)', 'Thú Cưỡi → tầng': 'Mount → tier',
   '→ tầng': '→ tier', 'Trại Chủ Mục Đồng': 'Stable Master', 'Trại Ngựa Ngoại Ô': 'Outskirts Stable',

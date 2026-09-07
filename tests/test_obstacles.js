@@ -130,7 +130,7 @@ const { chromium } = require('playwright');
   for (const m in routes){
     const r = routes[m];
     // ⚠ Ngưỡng 1, không phải 2 — và đây là một BƯỚC LÙI có ghi sổ. Khi còn bộ trụ đá thì mọi map
-    //   đều ≥4 tuyến phải vòng; gỡ trụ xong Hollow Roost chỉ còn 1/66. Địa hình cỡ trận đánh
+    //   đều ≥4 tuyến phải vòng; gỡ trụ xong Bug Tribe Tunnels chỉ còn 1/66. Địa hình cỡ trận đánh
     //   đang là việc CÒN NỢ (xem SAN_CHE trong test_domap.js). Kéo lại ≥2 khi có tranh khối đá thật.
     if (r.phaiVong < 1) fail(`${m}: KHÔNG tuyến nào phải vòng trong ${r.soCap} tuyến — map phẳng lì`);
     if (r.lonNhat > 2.2) fail(`${m}: tuyến vòng nhất ${r.lonNhat} — đi vòng vô lý`);

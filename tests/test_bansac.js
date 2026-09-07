@@ -1,7 +1,7 @@
 // A1 (vai trò theo BÃI) + A2 (bản sắc map) — xem docs/DE_XUAT_MAP.md.
 //
 // Bệnh đo được trước đợt này: vai trò gắn theo LOÀI, mà ba map cuối chỉ có 3 loài, nên
-// Frostmire Vale và Stormgate Pass mỗi map đúng HAI vai — 'can' cộng Kẻ Tiếp Sức. Cả đoạn cấp
+// Bird Tribe Heights và Dusk Marsh mỗi map đúng HAI vai — 'can' cộng Kẻ Tiếp Sức. Cả đoạn cấp
 // 62-120 đánh y hệt nhau. Bài này chốt để nó không tụt lại.
 const { chromium } = require('playwright');
 const PORT = process.argv[2] || '8853';

@@ -9,30 +9,35 @@ const { chromium } = require('playwright');
   await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(500);
 
-  // 1) SECTS has exactly 5 classes + vophai, no dead species
+  // 1) SECTS has exactly 5 classes — lớp thứ sáu `vophai` đã gỡ hẳn
   const r1 = await page.evaluate(() => {
     const keys = Object.keys(SECTS);
     return { keys, count: keys.length, names: keys.map(k => SECTS[k].name) };
   });
   console.log('1) SECTS keys:', JSON.stringify(r1));
 
-  // 2) Start as Unclassed (vophai), reach level 10, open The Calling — should show exactly 5 cards
+  // 2) Chọn lớp ngay từ màn tạo nhân vật — không còn lễ nhập môn giữa chừng.
+  //    Cả bộ máy ấy (openSectCeremony/chooseSect/#sect-ceremony) đã gỡ cùng lớp `vophai`.
   const r2 = await page.evaluate(() => {
     window.TEST_MODE = true;
-    startGame('vophai', null);
+    startGame('thieulam', null);
     player.level = 10; calcDerived();
-    window.openSectCeremony();
-    const wrap = document.getElementById('ceremony-cards');
-    return { sect: player.sect, wrapChildren: wrap ? wrap.children.length : null, cardTexts: wrap ? Array.from(wrap.children).map(c => c.querySelector('.s-title')?.textContent) : null };
+    return {
+      sect: player.sect,
+      conLeNhapMon: typeof window.openSectCeremony === 'function' || typeof window.chooseSect === 'function',
+      conBangLe: !!document.getElementById('sect-ceremony') || !!document.getElementById('ceremony-cards'),
+      conVophai: !!SECTS.vophai,
+    };
   });
-  console.log('2) The Calling at level 10 — card count should be 5:', JSON.stringify(r2));
+  console.log('2) chọn lớp lúc tạo nhân vật, không còn lễ nhập môn:', JSON.stringify(r2));
+  if (r2.conLeNhapMon || r2.conBangLe || r2.conVophai) console.log('FAIL vẫn còn tàn dư lễ nhập môn / lớp vophai');
+  if (r1.count !== 5) console.log('FAIL phải đúng 5 lớp, đếm được ' + r1.count);
 
   // 3) For each of the 5 real classes, start fresh and verify: name, skillA/tp names, no console error, basic attack works
   const results = [];
   for (const key of ['thieulam','toanchan','baidasan','minhgiao','bug']){
     const r = await page.evaluate((key) => {
-      startGame('vophai', null);
-      player.sect = key; // simulate having answered The Calling
+      startGame(key, null);
       calcDerived(); player.hp = player.maxHp;
       const s = SECTS[key];
       // fire skill 'a' + skill 'tp' to make sure nothing crashes with new skill names/types

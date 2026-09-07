@@ -17,7 +17,7 @@ const { chromium } = require('playwright');
   // ---- 1. Lịch: đúng 4 mốc/ngày, luôn nhảy TỚI, cách nhau đúng 6 tiếng ----
   const sched = await p.evaluate(() => {
     window.TEST_MODE = true; startGame('thieulam', null);
-    travelTo('daohoa');   // Lunaris City không phải bãi săn — vực nứt cố tình KHÔNG mở trong thành
+    travelTo('daohoa');   // Sapidae Chiefdom không phải bãi săn — vực nứt cố tình KHÔNG mở trong thành
     player.level = 40; calcDerived();
     const hours = [], gaps = [];
     // rải 24 điểm xuất phát trong ngày, mỗi điểm lệch 37 phút cho khỏi rơi đúng đầu giờ
@@ -53,7 +53,7 @@ const { chromium } = require('playwright');
     return r;
   });
   console.log('thành an toàn:', JSON.stringify(city));
-  if (city.trongThanh) fail('vực nứt mở ngay trong Lunaris City (map an toàn, không có bãi quái)');
+  if (city.trongThanh) fail('vực nứt mở ngay trong Sapidae Chiefdom (map an toàn, không có bãi quái)');
   if (city.bossNgoaiBai !== 1) fail(`ra bãi săn mà hook vào-map dựng ${city.bossNgoaiBai} boss, cần đúng 1`);
 
   // ---- 1c. Chốt cấp: dưới RIFT_MIN_LV thì vực không nứt (ảnh chụp: lv1 bị boss đấm chết) ----

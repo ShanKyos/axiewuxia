@@ -34,7 +34,7 @@
     <div id="hud-vi" role="group" aria-label="Ví">
       <button class="vi-o vi-lumen" title="Lumen — tiền chính: tiệm, rèn, nâng kỹ năng. Bấm mở Túi Đồ · Vật Liệu"
               onclick="window.moViTien()"><i>◈</i><b id="hud-silver">0</b></button>
-      <button class="vi-o vi-ve" title="Ấn Giao Kết — vé quay Khế Ước Chimera. Bấm mở bảng Khế Ước"
+      <button class="vi-o vi-ve" title="Ấn Giao Kết — vé quay Khế Ước Ragoon. Bấm mở bảng Khế Ước"
               onclick="window.openKheUoc()"><i>✦</i><b id="hud-ve">0</b></button>
       <button class="vi-o vi-shard" title="Shard — tiền cao cấp: đổi vé quay, nới túi và kho. Bấm mở Quầy Shard"
               onclick="window.moQuayShard()"><i>♦</i><b id="hud-shard">0</b></button>
@@ -54,7 +54,7 @@
 </div>
 
 
-<!-- Thanh dưới kiểu MU Online/Võ Lâm Chi Mộng: viên đá Máu (đỏ) + Mana (xanh) hình cầu ở
+<!-- Thanh dưới kiểu MU Online: viên đá Máu (đỏ) + Mana (xanh) hình cầu ở
      2 đầu, thanh kỹ năng dàn ngang ở giữa, viền sáng chạy dọc theo % máu ở mép dưới cùng. -->
 <div id="bottom-hud" class="hidden">
   <div class="hud-btns hud-btns-left">
@@ -120,7 +120,7 @@
 <!-- Lò rèn: bảng RIÊNG, chỉ mở khi đứng cạnh Thợ Rèn (không còn là tab trong bảng Nhân Vật) -->
 <div id="panel-forge" class="panel hidden"></div>
 <div id="panel-stage" class="panel hidden"></div>
-<!-- Khế Ước Chimera: lớp phủ riêng cho hoạt ảnh quay (canvas riêng, không dùng chung với màn game) -->
+<!-- Khế Ước Ragoon: lớp phủ riêng cho hoạt ảnh quay (canvas riêng, không dùng chung với màn game) -->
 <div id="gacha-wrap" class="hidden"><canvas id="gacha-cv"></canvas>
   <div id="gacha-skip">Bấm phím bất kỳ để bỏ qua</div></div>
 
@@ -183,15 +183,6 @@
   </div>
 </div>
 
-<!-- The Calling: Unclassed chọn Tộc ở cấp 10 -->
-<div id="sect-ceremony" class="hidden">
-  <div class="ss-inner">
-    <h1>The Calling</h1>
-    <p class="ss-sub">Mười cấp trưởng thành đã đủ bản lĩnh — 5 lớp cùng mở cửa đón nhận.<br>Chọn một, con đường của ngươi sẽ đổi thay mãi mãi.</p>
-    <div id="ceremony-cards"></div>
-    <button id="btn-ceremony-later" class="big-btn" style="opacity:.75;font-size:14px">Để Sau — Ta Còn Muốn Lang Bạt</button>
-  </div>
-</div>
 
 <!-- Overlays -->
 <div id="boss-talk" class="hidden"></div>

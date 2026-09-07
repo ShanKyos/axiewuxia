@@ -3,7 +3,7 @@
 // Mỗi mục dưới đây là một lỗi người chơi THẬT đã vấp, không phải giả định:
 //   1. "Xoá tiến trình" không xoá — reload kích beforeunload → saveGame() ghi save trở lại. Người
 //      chơi bấm xác nhận, mở lại vẫn thấy nhân vật cũ, và menu không có nút tạo nhân vật mới.
-//   2. NV5 bắt rèn +1 nhưng Thợ Rèn duy nhất ở Lunaris City — thành khoá tới NV10. Kẹt cứng.
+//   2. NV5 bắt rèn +1 nhưng Thợ Rèn duy nhất ở Sapidae Chiefdom — thành khoá tới NV10. Kẹt cứng.
 //   3. Space ngoài tầm là IM LẶNG tuyệt đối (70 lần bấm ở cấp 1, 0 quái chết), trong khi tutorial
 //      ghi "đánh quái gần nhất".
 //   4. Cày AUTO lên cấp 120 mà bản đồ vẫn 7 tấm "???" — cổng chỉ mở theo NV, không có lối vòng.
@@ -30,7 +30,7 @@ const PORT = process.argv[2] || '8853';
     const o = {};
     o.autoEquip = player.autoEquip === true;
 
-    // ── 2. Thợ Rèn trên Petalshade Isle, và dẫn đường ưu tiên lò tại chỗ ──
+    // ── 2. Thợ Rèn trên Plant Tribe Glade, và dẫn đường ưu tiên lò tại chỗ ──
     const tr = NPCS.find(x => x.id === 'thoren_dao');
     o.thoRen = !!tr && tr.map === 'daohoa' && tr.talk === 'forge';
     curMap = 'daohoa'; buildWorld(); player.x = 460; player.y = 460; player.beacon = null;
@@ -120,20 +120,20 @@ const PORT = process.argv[2] || '8853';
   console.log(JSON.stringify(r, null, 1));
 
   if (!r.autoEquip) fail('nhân vật mới không bật tự mặc đồ'); else pass('nhân vật mới bật tự mặc đồ');
-  if (!r.thoRen) fail('không có Thợ Rèn trên Petalshade Isle (NV5 kẹt vì thành khoá)'); else pass('Thợ Rèn Lưu Vong đứng ở Petalshade Isle');
+  if (!r.thoRen) fail('không có Thợ Rèn trên Plant Tribe Glade (NV5 kẹt vì thành khoá)'); else pass('Thợ Rèn Lưu Vong đứng ở Plant Tribe Glade');
   if (r.beacon !== 'daohoa' || r.mapSauDanDuong !== 'daohoa') fail(`dẫn đường lò rèn trỏ về ${r.beacon}, map ${r.mapSauDanDuong} — phải ưu tiên lò tại chỗ`); else pass('dẫn đường lò rèn ưu tiên lò trên map đang đứng');
   if (!r.spaceQueued) fail('Space ngoài tầm không đặt mục tiêu chạy tới'); else pass('Space ngoài tầm → chạy tới quái gần nhất');
   if (!r.spaceHit || !r.spaceCoTat) fail(`Space chạy tới rồi không đánh (trúng ${r.spaceHit}, cờ tắt ${r.spaceCoTat}, ${r.spaceKhung} khung)`); else pass(`Space chạy tới rồi tự ra đòn sau ${r.spaceKhung} khung, cờ tắt`);
   if (!r.khongQuaiKhongChay) fail('không có quái mà Space vẫn đặt mục tiêu di chuyển'); else pass('không có quái: Space không chạy đi đâu');
-  if (!r.congDuoiCap || !r.congDuCap) fail(`cổng Outskirts sai: dưới cấp ${r.congDuoiCap}, đủ cấp ${r.congDuCap}`); else pass('Petalshade Outskirts: khoá dưới cấp 10, mở đúng cấp 10');
-  if (!r.cuaTheoCap || !r.chungnamMo) fail(`cổng Thornwood sai: lý do khoá ${r.cuaTheoCap}, mở ở cấp 20 ${r.chungnamMo}`); else pass('Thornwood Reach: khoá vì CẤP (không còn khoá vì nhiệm vụ), mở ở cấp 20');
+  if (!r.congDuoiCap || !r.congDuCap) fail(`cổng Outskirts sai: dưới cấp ${r.congDuoiCap}, đủ cấp ${r.congDuCap}`); else pass('Beast Herd Camp: khoá dưới cấp 10, mở đúng cấp 10');
+  if (!r.cuaTheoCap || !r.chungnamMo) fail(`cổng Werebear Woods sai: lý do khoá ${r.cuaTheoCap}, mở ở cấp 20 ${r.chungnamMo}`); else pass('Werebear Woods: khoá vì CẤP (không còn khoá vì nhiệm vụ), mở ở cấp 20');
   if (!r.xpTang || r.xpBuocMax > 1.5) fail(`EXP 49→60 không đều (bước lớn nhất ×${r.xpBuocMax})`); else pass(`EXP 49→60 tăng đều, bước lớn nhất ×${r.xpBuocMax}, mốc 60 giữ ${r.xp60}`);
   if (r.daily1.join() !== 'kills' || r.daily12 !== r.dailyTong) fail(`mục tiêu ngày: cấp 1 thấy ${r.daily1}, cấp 12 thấy ${r.daily12}/${r.dailyTong}`); else pass('mục tiêu ngày mở dần theo cấp');
   if (!/^3[.,]114$/.test(r.bac)) fail('HUD bạc in số lẻ: ' + r.bac); else pass('HUD bạc làm tròn: ' + r.bac);
   if (!r.tutDong) fail('bước tutorial cuối không tự đóng sau 25s'); else pass('bước tutorial cuối tự đóng');
   if (!r.goiYUong) fail('máu thấp không gợi ý uống thuốc'); else pass('máu thấp → gợi ý R uống thuốc');
   if (!r.moGanNhat) fail(`E không mở NPC gần nhất (hai NPC cách nhau ${r.npcCach}px)`); else pass('E mở đúng NPC đứng gần nhất');
-  if (!r.nhanBoss.includes('QUÁ DỄ') || r.nhanBoss.includes('VỪA SỨC')) fail('cấp 40 ở Petalshade mà nhãn: ' + r.nhanBoss.join(', ')); else pass('cấp 40: mọi bãi/boss Petalshade gắn QUÁ DỄ');
+  if (!r.nhanBoss.includes('QUÁ DỄ') || r.nhanBoss.includes('VỪA SỨC')) fail('cấp 40 ở Plant Tribe mà nhãn: ' + r.nhanBoss.join(', ')); else pass('cấp 40: mọi bãi/boss Plant Tribe gắn QUÁ DỄ');
   if (r.moTaLa.length) fail('mô tả bản đồ còn tiếng Anh/thuật ngữ lạ: ' + r.moTaLa); else pass('8 mô tả bản đồ tiếng Việt');
 
   // ── 1. Xoá tiến trình phải xoá THẬT, kể cả gọi từ trong game ──

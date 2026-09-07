@@ -171,7 +171,7 @@ const pass = m => console.log('PASS ' + m);
 
   // ── 5. Hai bộ chữ, và bộ thứ hai phải NẰM YÊN chỗ của nó ──────────────────
   // Mốc cũ là "đúng một Be Vietnam Pro". Nay có hai: Baloo 2 quay lại làm chữ hiển thị cho
-  // RIÊNG mặt Khế Ước Chimera (token --font-chi), vì chữ hiển thị chính chủ của Axie là Lilita
+  // RIÊNG mặt Khế Ước Ragoon (token --font-chi), vì chữ hiển thị chính chủ của Axie là Lilita
   // One mà nó không có bộ dấu tiếng Việt — "Khế Ước" ra thành "Kh   c".
   //
   // Cái phải gác không còn là SỐ bộ chữ mà là PHẠM VI: Baloo 2 từng bị gỡ khỏi --font-display

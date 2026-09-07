@@ -1,4 +1,4 @@
-// Chimera đi theo KHÔNG BAO GIỜ được lấn át nhân vật.
+// Ragoon đi theo KHÔNG BAO GIỜ được lấn át nhân vật.
 //
 // Chủ dự án chốt bằng đúng chữ "không bao giờ", nên bài này không kiểm một con mẫu mà kiểm CẢ
 // BỘ: 16 con nướng ra 16 cỡ ô khác nhau (tỉ lệ rộng/cao 1,07 → 1,52), và bản cũ chép cứng

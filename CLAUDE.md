@@ -213,8 +213,8 @@ Phóng to cả 8 map là nhân bản lần nữa, chỉ khác là nhân bản ch
 `MOB_ROLE` (loài → vai) là **lớp nền**, chỉ dùng cho quái không thuộc bãi nào. Bãi nào khai
 `vai:'phap'` thì bãi đó thắng — xem `buildWorld` chỗ `pk.vai`.
 
-Vì sao: vai theo loài là ngõ cụt. Ba map cuối chỉ có 3 loài, nên đo ra Frostmire Vale và
-Stormgate Pass mỗi map đúng **2 vai** — `can` cộng Kẻ Tiếp Sức. Cả đoạn cấp 62-120 đánh y hệt
+Vì sao: vai theo loài là ngõ cụt. Ba map cuối chỉ có 3 loài, nên đo ra Bird Tribe Heights và
+Dusk Marsh mỗi map đúng **2 vai** — `can` cộng Kẻ Tiếp Sức. Cả đoạn cấp 62-120 đánh y hệt
 nhau. Vai theo bãi cho **3 loài × 6 vai = 18 hồ sơ** mà không tốn một tệp art nào.
 
 Sau đợt gán: vai/map từ `3,3,3,4,2,4,2` lên `4,4,6,6,6,6,6` — **tăng dần**, không tụt.
@@ -269,8 +269,8 @@ chuỗi sống lại.
 
 ### 🧭 NỐI MAP BẰNG RÌA (B1) + ĐIỂM DỊCH CHUYỂN MỞ BẰNG ĐI BỘ (B2)
 
-**⚠ Đây trước hết là một BẢN VÁ LỖI.** Trước bản này, **Hollow Roost (40) · Ashen Steppe (80) ·
-Stormgate Pass (100) không có lối vào nào** cho một nhân vật mới:
+**⚠ Đây trước hết là một BẢN VÁ LỖI.** Trước bản này, **Bug Tribe Tunnels (40) · Reptile Sunstone Flats (80) ·
+Dusk Marsh (100) không có lối vào nào** cho một nhân vật mới:
 - `GATES` chỉ có bốn cổng thành + cổng Outskirts về thành ⇒ đi bộ chỉ tới được 5/8 vùng;
 - nút **Dịch Chuyển** chỉ hiện khi `player.wpUnlocked[id]`, mà cờ đó chỉ bật **khi đã tới** map
   đó. Chưa tới được thì không bao giờ mở. Ba vùng cuối là **nội dung chết**.
@@ -281,10 +281,10 @@ chỉ đi qua `GATES`, và chỉ dịch chuyển tới nơi `wpUnlocked`. `test_
 
 **⚠ HÌNH HỌC DO TRÙM VÙNG QUYẾT ĐỊNH, KHÔNG DO LA BÀN.** Luật có sẵn (`test_bossplace`): mọi
 **điểm thả** phải cách Trùm Vùng ≥700px (260 truy đuổi + lề). Quét cả bốn rìa từng vùng theo
-đúng luật đó thì **Frostmire Vale không còn chỗ nào trên cả bốn rìa** — bốn con trùm phủ kín.
-Nên chuỗi đi **vòng qua** Frostmire, và Frostmire vẫn vào thẳng bằng cổng Bắc của thành:
+đúng luật đó thì **Bird Tribe Heights không còn chỗ nào trên cả bốn rìa** — bốn con trùm phủ kín.
+Nên chuỗi đi **vòng qua** Bird Tribe Heights, và Bird Tribe Heights vẫn vào thẳng bằng cổng Bắc của thành:
 
-`Thornwood(20) ─Bắc→ Hollow Roost(40) ─Bắc→ Ashen Steppe(80) ─Đông→ Stormgate(100)`
+`Werebear Woods(20) ─Bắc→ Bug Tribe Tunnels(40) ─Bắc→ Reptile Sunstone Flats(80) ─Đông→ Dusk Marsh(100)`
 
 Tên lối ghi **hướng trên chính map đang đứng** (đi ra hướng nào), nên luôn đúng với thứ người
 chơi thấy và không hứa gì về vị trí tương đối giữa hai map. Đi qua lối rìa thì hiện ra **ngay
@@ -293,8 +293,8 @@ cạnh cổng về** (`spawnFrom` trong `data/canbang.js`) — quay đầu là �
 ⚠ Khi thêm lối rìa mới: **quét bằng máy, đừng đoán toạ độ.** Ràng buộc là cổng *và* điểm tới đều
 phải đi được, cách bãi quái / Rương Canh / NPC / điểm thả, và cách Trùm Vùng ≥720px.
 
-**Cũng vá luôn:** ba cổng thành Bắc/Tây/Đông **vốn là một chiều** — sang Petalshade Isle /
-Thornwood / Frostmire rồi không có cổng nào về. Nay đủ đường về, đặt cạnh chính điểm thả.
+**Cũng vá luôn:** ba cổng thành Bắc/Tây/Đông **vốn là một chiều** — sang Plant Tribe Glade /
+Werebear Woods / Bird Tribe Heights rồi không có cổng nào về. Nay đủ đường về, đặt cạnh chính điểm thả.
 
 **B2:** cờ `wpUnlocked` đã tự bật khi tới map từ trước, nhưng **lời gợi ý nói sai** — nó bảo
 "cần được nhiệm vụ dẫn tới đó", trong khi nhiệm vụ đã gỡ sạch. Nay nói đúng: **tự đi bộ tới một
@@ -316,8 +316,8 @@ Từng có `raiTruDa()` dựng vành đá quanh mỗi bãi quái và rào ngắn
 bẹt viền cứng, chọi hẳn với nền tranh sáng của Axie. Chủ dự án nhìn ảnh chụp và yêu cầu gỡ.
 
 **Cái giá, đo được, không giấu — nhưng cũng đừng nói quá:** vật che trung bình 44,8% → **30,0%**,
-tức phần lớn map vẫn còn địa hình. Thiệt hại dồn vào **một** chỗ: Ashen Steppe (map trống nhất,
-90,9% đi được) tụt còn **9%**, và Hollow Roost từ ≥4 tuyến phải đi vòng còn **1/66**.
+tức phần lớn map vẫn còn địa hình. Thiệt hại dồn vào **một** chỗ: Reptile Sunstone Flats (map trống nhất,
+90,9% đi được) tụt còn **9%**, và Bug Tribe Tunnels từ ≥4 tuyến phải đi vòng còn **1/66**.
 Vì vậy `SAN_CHE` trong `test_domap.js` hạ 18 → **8** và ngưỡng `phaiVong` trong
 `test_obstacles.js` hạ 2 → **1**. Cả hai là **bánh cóc tạm**, có ghi chú tại chỗ. Khi có tranh
 khối đá thật thì kéo lại và xoá ghi chú.
@@ -434,7 +434,7 @@ thế lên nhà người khác.
 Nhân vật chính thuộc một trong **5 môn phái Vaeldra**, nằm trong đội tiên phong
 vượt vết nứt sang sửa. Cú vượt biên xoá ký ức võ nghệ → khởi đầu Unclassed, tới
 **cấp 10 ký ức trở về** (the Calling). Cú giật ngược kéo cả khu phố **Ardhaven**
-sang, dân bản địa dựng lại quanh đó thành **Lunaris City**.
+sang, dân bản địa dựng lại quanh đó thành **Sapidae Chiefdom**.
 
 ⇒ Điều này *giải thích trong truyện* hai thứ vốn khập khiễng:
 tường thành phương Tây giữa thế giới Axie, và NPC hai phong cách
@@ -1374,8 +1374,8 @@ cách nhanh nhất và đúng nhất. Đặt NPC thì dùng `/diem` rồi kiểm
 
 ### Quảng Trường Cũ là thị trấn KHỞI ĐẦU
 Nhân vật mới hiện ra giữa sân (`newGame()` đặt `curMap = 'quangtruong'`), 10 NPC quanh sân,
-một lò rèn và một quầy thuốc — rồi đi lên **Cổng Bắc** ra Petalshade Isle mà đánh quái. Cổng
-chọn Petalshade Isle chứ không phải Outskirts vì Outskirts để `min:10`.
+một lò rèn và một quầy thuốc — rồi đi lên **Cổng Bắc** ra Plant Tribe Glade mà đánh quái. Cổng
+chọn Plant Tribe Glade chứ không phải Outskirts vì Outskirts để `min:10`.
 
 ⚠ Cổng thị trấn thì đặt tên bắt đầu bằng **"Cổng"**, đừng đặt "Lối". `test_noimap` nhận diện
 "lối rìa hoang dã" bằng chính tiền tố `Lối ` rồi bắt điểm tới phải nằm cách rìa map <400px —

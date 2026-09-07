@@ -63,18 +63,23 @@ const { chromium } = require('playwright');
   });
   console.log('5) Dược Lão NPC renamed to Nhà Giả Kim:', JSON.stringify(r5));
 
+  // Lễ nhập môn (openSectCeremony/chooseSect) đã gỡ cùng lớp thứ sáu `vophai` — chọn lớp
+  // nay nằm hẳn ở màn tạo nhân vật. Chỗ này vì thế đổi sang canh chính điều nó vốn canh:
+  // không còn chữ "Tộc" ở bất kỳ mặt chữ nào người chơi đọc được.
   const r6 = await page.evaluate(() => {
-    player.sect = 'vophai'; player.level = 10;
-    window.openSectCeremony ? window.openSectCeremony() : null;
-    const html = document.getElementById('ceremony-cards') ? document.getElementById('ceremony-cards').innerHTML : '';
-    window.chooseSect('thieulam');
+    const goc = [
+      ...Object.values(SECTS).flatMap(s => [s.name, s.desc, s.skillA && s.skillA.name, s.tp && s.tp.name]),
+      ...(window.QUESTS || []).flatMap(q => [q.name, q.desc]),
+      ...NPCS.map(n => n.name),
+      document.getElementById('hud') ? document.getElementById('hud').textContent : '',
+    ].filter(Boolean).join(' | ');
     return {
-      ceremonyMentionsClassSkill: html.includes('Tuyệt kỹ Lớp'),
-      bannerText: zoneBanner ? zoneBanner.text : null,
-      bannerSub: zoneBanner ? zoneBanner.sub : null,
+      conLeNhapMon: typeof window.openSectCeremony === 'function' || typeof window.chooseSect === 'function',
+      conChuToc: /\bTộc\b/.test(goc),
+      soLop: Object.keys(SECTS).length,
     };
   });
-  console.log('6) The Calling ceremony + join-class banner use "Lớp" not "Tộc":', JSON.stringify(r6));
+  console.log('6) hết chữ "Tộc" ở mặt chữ người chơi đọc, hết lễ nhập môn:', JSON.stringify(r6));
 
   console.log('errors:', JSON.stringify(errors.slice(0, 20)));
   await browser.close();

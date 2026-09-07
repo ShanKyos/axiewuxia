@@ -106,7 +106,7 @@ const { chromium } = require('playwright');
     // Đo bằng CÚ SỤT máu trong từng khung, không đo hp đầu-cuối: hồi máu thụ động nhanh hơn
     // đòn của con quái nên hiệu số đầu-cuối là số ÂM dù đòn có trúng.
     // Chốt hướng rung NGAY KHUNG ăn đòn, đừng đọc sau cả 40 khung. Trong 40 khung đó còn
-    // những nguồn rung khác (đòn của chính người chơi, Chimera đi theo), nên khung cuối có phải
+    // những nguồn rung khác (đòn của chính người chơi, Ragoon đi theo), nên khung cuối có phải
     // của cú đánh này hay không là chuyện MAY RỦI — đúng cái bẫy đã làm bài này đỏ khi đổi map
     // khởi đầu: mạch ngẫu nhiên xê dịch, cú đánh không còn rơi vào khung chót, hướng đo ra
     // thành 1,748 thay vì -1,571 dù cơ chế không đổi gì.

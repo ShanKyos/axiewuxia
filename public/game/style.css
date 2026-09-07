@@ -1,6 +1,6 @@
 /* ===== Axie Wuxia — playful Axie UI ===== */
 
-/* Baloo 2 — chữ hiển thị cho RIÊNG mặt Khế Ước Chimera và những chỗ mang art Axie.
+/* Baloo 2 — chữ hiển thị cho RIÊNG mặt Khế Ước Ragoon và những chỗ mang art Axie.
    Vì sao lại là nó: mặt chữ hiển thị trong gói starter chính chủ của Axie
    (axieinfinity/godot-axie-starter-3d) là Lilita One, mà Lilita One chỉ có latin + latin-ext —
    "Khế Ước" hiện ra thành "Kh   c". Baloo 2 cùng chất mập-tròn ấy và CÓ bộ dấu tiếng Việt.
@@ -145,7 +145,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   padding:6px 13px; margin-left:5px; border-radius:999px; font-family:inherit; font-size:var(--fs-md); font-weight:600; cursor:pointer; }
 .hbtn:hover { background:rgba(76,141,255,.28); border-color:var(--border-strong); }
 
-/* Cụm nút icon vuông kiểu Võ Lâm Chi Mộng, 2 bên viên đá Máu/Chân Khí ở #bottom-hud
+/* Cụm nút icon vuông 2 bên viên đá Máu/Mana ở #bottom-hud
    (khác .hbtn dạng viên thuốc vẫn dùng cho PK/AUTO ở góc trên phải, xem #hud-right .hbtn) */
 .hud-btns-left, .hud-btns-right { display:flex; gap:6px; pointer-events:auto; }
 #bottom-hud .hud-btns .hbtn { margin-left:0; padding:0; width:44px; height:44px; border-radius:var(--r-sm);
@@ -176,7 +176,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   color:var(--text-bright); background:rgba(18,20,44,.75); padding:5px 16px; border-radius:999px;
   font-size:var(--fs-md); border:1px solid var(--border-faint); white-space:nowrap; }
 
-/* Thanh dưới cùng kiểu MU Online/Võ Lâm Chi Mộng: viên Máu (đỏ)/Chân Khí (xanh) hình cầu
+/* Thanh dưới cùng kiểu MU Online: viên Máu (đỏ)/Mana (xanh) hình cầu
    2 đầu + thanh kỹ năng dàn ngang giữa + viền sáng theo % máu chạy dọc mép dưới màn hình. */
 #bottom-hud { position:fixed; left:50%; bottom:12px; transform:translateX(-50%); z-index:11;
   display:flex; align-items:center; gap:14px; pointer-events:none; }
@@ -202,7 +202,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .skill:active { transform:scale(.94); }
 .skill.flash { box-shadow:0 0 14px var(--accent-glow); }
 
-/* Viền sáng theo % máu, chạy dọc mép dưới cùng màn hình — chi tiết lấy từ tham chiếu Võ Lâm Chi Mộng */
+/* Viền sáng theo % máu, chạy dọc mép dưới cùng màn hình */
 #hp-accent-bar { position:fixed; left:0; right:0; bottom:0; height:4px; z-index:11;
   background:rgba(0,0,0,.55); pointer-events:none; }
 #hp-accent-fill { height:100%; width:100%; background:linear-gradient(90deg,#7a0f22,#e8425f,#ff9fae);
@@ -525,11 +525,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .sv-ghi { display:block; margin-top:14px; font-size:10.5px; color:#6f7a9c; font-style:normal; }
 @media (max-width:720px){ .sv-nut { min-width:0; flex:1 1 44%; } }
 
-/* Bái Sư Nhập Phái — chọn môn phái trong game ở cấp 10 */
-#sect-ceremony { position:fixed; inset:0; z-index:35; display:flex; align-items:center; justify-content:center;
-  background:radial-gradient(ellipse at 50% 30%, rgba(42,47,102,.97) 0%, rgba(14,15,32,.97) 70%); overflow-y:auto; }
-#ceremony-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; }
-#sect-ceremony .big-btn { margin-top:18px; }
+/* (đã gỡ cùng lớp thứ sáu — không còn nghi lễ chọn lớp trong game) */
 .ss-inner { text-align:center; padding:26px 16px; max-width:720px; }
 #sect-select .ss-inner { padding-bottom:34px; }
 .ss-inner h1 { font-family:var(--font-display); font-weight:700; color:var(--accent-light); font-size:clamp(30px,6vw,50px); letter-spacing:2px; }
@@ -621,7 +617,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .bag-mon .item-ic { position:relative; z-index:1; }
 .bag-cell .item-ic img, .bag-mon .item-ic img { width:82%; height:82%; }
 
-/* ── Thanh thoại trấn thủ (Cốt truyện Ngũ Ấn) ── */
+/* ── Thanh thoại boss vùng (cốt truyện Trụ Khoá) ── */
 #boss-talk { position:fixed; left:50%; bottom:86px; transform:translateX(-50%); z-index:15;
   max-width:min(560px, 88vw); pointer-events:none; text-align:center;
   background:linear-gradient(180deg, rgba(24,10,20,.88), rgba(10,5,10,.92));
@@ -898,7 +894,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .gem-socket img { width:40px; height:40px; flex:0 0 40px; image-rendering:auto;
   filter:drop-shadow(0 0 6px rgba(255,143,207,.5)); }
 
-/* Lò Bát Quái — danh sách trang bị Phá Thiên Kiếp */
+/* Lò Hỗn Độn — danh sách trang bị Phá Thiên Kiếp */
 
 /* ── Cốt truyện dẫn nhập ── */
 #intro-story { position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center;
@@ -988,7 +984,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .trait-row .t-name { font-weight:700; letter-spacing:.5px; }
 .trait-row .t-desc { opacity:.7; font-size:var(--fs-sm); margin-left:auto; text-align:right; }
 
-/* ── Võ Học Phổ ── */
+/* ── Sổ Kỹ Năng ── */
 .vh-learn-btn{ border-color:var(--gold) !important; color:var(--gold) !important; font-weight:bold; }
 .vh-learn-btn:disabled{ border-color:#5a5f7a !important; color:#5a5f7a !important; }
 
@@ -1517,7 +1513,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .box-row:active { cursor: grabbing; }
 .box-row:hover { border-color: var(--accent-light); background: rgba(76,141,255,.12); }
 
-/* ═══ Khế Ước Chimera — lớp phủ hoạt ảnh quay ═══ */
+/* ═══ Khế Ước Ragoon — lớp phủ hoạt ảnh quay ═══ */
 #gacha-wrap { position:fixed; inset:0; z-index:200; background:#04040a; }
 #gacha-wrap.hidden { display:none; }
 #gacha-cv { display:block; width:100%; height:100%; }

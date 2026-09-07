@@ -87,7 +87,7 @@ const XP_TABLE = [200,450,800,1300,1900,2600,3400,4300,5400]; // xp to next leve
 for (let l = 10; l < 120; l++) XP_TABLE.push(Math.round(5400 * Math.pow(1.08, l - 9))); // GDD 120 cấp: dốc 1.08 cho hành trình dài
 // Từ cấp 60: farm chậm lại rõ rệt, mục tiêu trung bình 1 tiếng treo AUTO/cấp. Mốc dưới đo trực
 // tiếp từ công thức chiến đấu của game (atk cơ bản theo calcDerived — không trang bị — × HP/DEF
-// quái đại diện 3 vùng farm cuối Frostmire Vale/Ashen Steppe/Stormgate Pass) ra EXP/giờ THUẦN AUTO
+// quái đại diện 3 vùng farm cuối Bird Tribe Heights/Reptile Sunstone Flats/Dusk Marsh) ra EXP/giờ THUẦN AUTO
 // ở mỗi mốc cấp, rồi quy đổi ngược: cần bao nhiêu EXP để 1 giờ farm đó vừa đúng lên 1 cấp. Trang bị
 // + kỹ năng tự động thực tế sẽ đẩy nhanh hơn mốc này — đúng như game idle: có đầu tư thì nhanh hơn.
 const XP60PLUS_ANCHORS = [
@@ -796,8 +796,6 @@ const WING_DEFS = {
                desc:'+12% Sát Thương · +6% tốc đánh · +5% bạo' },
   bug:  { art:'doi', to:1.0, chuKy:300, bien:2.2, id:'w1_dl', name:'Cánh Quỷ Hoang',   color:'#4a5320', hpPct:10, atkPct:8, silverPct:20,
                desc:'+10% Sinh Lực · +8% Sát Thương · +20% Lumen rơi' },
-  vophai:    { art:'rach',  chuKy:280, bien:2.4, id:'w1_tn', name:'Cánh Lữ Hành',   color:'#c0b49a', hpPct:8, evaPct:5, silverPct:10,
-               desc:'+8% Sinh Lực · +5% né · +10% Lumen rơi' },
 };
 // MỖI LỚP MỘT LOẠI CÁNH, KHOÁ CẢ BA BẬC. Bản cũ để Spellblade nhảy 'lai' → 'tia' và Dark Lord
 // nhảy 'doi' → 'ao' giữa chừng, nên lên bậc là đôi cánh hoá thành con khác — mà `art` mới là thứ
@@ -815,8 +813,6 @@ const WING2_DEFS = {
                desc:'+24% Sát Thương · +10% tốc đánh · +8% bạo · +4% hút sinh lực' },
   bug:       { art:'doi',  to:1.00, chuKy:290, bien:2.6, id:'w2_dl', name:'Dực Bạo Chúa',   color:'#8a9a3a', atkPct:18, hpPct:15, defPct:6, silverPct:25,
                desc:'+18% Sát Thương · +15% Sinh Lực · +6% Phòng Ngự · +25% Lumen rơi' },
-  vophai:    { art:'rach', chuKy:270, bien:2.8, id:'w2_tn', name:'Lữ Hành Dực',    color:'#b0762a', atkPct:16, hpPct:12, evaPct:8, silverPct:15,
-               desc:'+16% Sát Thương · +12% Sinh Lực · +8% né · +15% Lumen rơi' },
 };
 // Mọi đôi cánh bậc 3 đều mang CÙNG một dòng đặc biệt — xuyên giáp. Đó là thứ tách bậc 3 khỏi
 // bậc 2 về CƠ CHẾ chứ không chỉ về con số, và là lý do người ta còn muốn leo nốt bậc cuối.
@@ -831,8 +827,6 @@ const WING3_DEFS = {
                desc:'+34% Sát Thương · +14% tốc đánh · +12% bạo · +7% hút sinh lực · +5% xuyên giáp' },
   bug:       { art:'doi',  to:1.00, chuKy:280, bien:3.0, id:'w3_dl', name:'Thần Dực Ngai Đen', color:'#d0e07a', atkPct:28, hpPct:22, defPct:10, silverPct:35, pierce:5,
                desc:'+28% Sát Thương · +22% Sinh Lực · +10% Phòng Ngự · +35% Lumen rơi · +5% xuyên giáp' },
-  vophai:    { art:'rach', chuKy:260, bien:3.2, id:'w3_tn', name:'Thần Dực Lữ Hành', color:'#f2e6cc', atkPct:26, hpPct:20, evaPct:12, silverPct:25, pierce:5,
-               desc:'+26% Sát Thương · +20% Sinh Lực · +12% né · +25% Lumen rơi · +5% xuyên giáp' },
 };
 const WING_BANG = [WING_DEFS, WING2_DEFS, WING3_DEFS];
 // Độ cao lơ lửng theo bậc cánh, tính bằng pixel. Bậc 1 vừa đủ để thấy chân rời đất; bậc 3 thì
@@ -907,8 +901,7 @@ function hasElem(it){ return !!(it && !it.special && it.slot === 'vukhi' && ELEM
 // SECTS đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
 const SECTS = window.SECTS;
 // Sourced per-class combat SFX (axieinfinity/axie-origins-asset-kit web-vfx) — maps SECTS id to the
-// kit's class-name prefix (sfx_slash_<x>/sfx_cast_<x>/sfx_smash_<x>.mp3). No entry for vophai (pre-Calling,
-// Unclassed) — falls back to the generic 'slash'/'skill' sfx.
+// kit's class-name prefix (sfx_slash_<x>/sfx_cast_<x>/sfx_smash_<x>.mp3). Đủ cả năm lớp.
 const SECT_SFX = { thieulam:'mech', toanchan:'aquatic', baidasan:'reptile', minhgiao:'beast', bug:'bug' };
 
 // ═══ VAI TRÒ QUÁI (archetype) — xem docs/VUNG_VO_AN_ENDGAME.md §5 ═══
@@ -1008,7 +1001,7 @@ function dbSummon(m, n){
 // Vai MẶC ĐỊNH của loài. Đây là lớp nền — bãi nào khai `vai:` thì bãi đó thắng (xem buildWorld).
 //
 // ⚠ Vai theo LOÀI là ngõ cụt của đa dạng: 30 loài × 1 vai = 30 hồ sơ đánh nhau, và ba map cuối
-// chỉ có 3 loài nên chỉ có 3. Đo được: Frostmire Vale và Stormgate Pass mỗi map đúng 2 vai —
+// chỉ có 3 loài nên chỉ có 3. Đo được: Bird Tribe Heights và Dusk Marsh mỗi map đúng 2 vai —
 // 'can' cộng Kẻ Tiếp Sức. Cả đoạn cấp 62-120 đánh y hệt nhau.
 //
 // Vai theo BÃI gỡ đúng chỗ đó: cùng một loài, đứng bãi khác thì đánh khác. 3 loài × 6 vai = 18
@@ -1052,7 +1045,7 @@ Object.assign(MOBS, {
   hautu:    { name:'Axie Bí Ngô', lv:2, hp:70, atk:8, def:1, xp:36, silver:[5,10], speed:95, aggro:150, range:26, atkCd:1.1, size:13, color:'#7a6248', eye:'#ffe9a0', drop:0.14, el:'Mộc', img:'assets/mobs/hautu.png' },
   caodo:    { name:'Axie Cỏ Dại', lv:8, hp:300, atk:21, def:4, xp:175, silver:[13,26], speed:100, aggro:180, range:26, atkCd:1.1, size:13, color:'#b05030', eye:'#ffd76a', drop:0.18, el:'Hỏa', img:'assets/mobs/caodo.png' },
   trannhan: { name:'Tượng Đá Canh Cổng', lv:12, hp:440, atk:29, def:10, xp:230, silver:[25,46], speed:55, aggro:160, range:34, atkCd:1.5, size:17, color:'#c88aa8', eye:'#ffffff', drop:0.22, el:'Mộc', skel:'golem', skelPal:{main:'#7d8290',dark:'#565b69',trim:'#9aa2b4',glow:'#7fd0ff'}, img:'assets/mobs/trannhan.png'},
-  // ── Bậc 14-24: bộ quái RIÊNG của Petalshade Outskirts. Dùng lại tạo hình có sẵn theo
+  // ── Bậc 14-24: bộ quái RIÊNG của Beast Herd Camp. Dùng lại tạo hình có sẵn theo
   // đúng lối MU (Bull Fighter → Elite Bull Fighter): cùng sinh vật, bậc cựu binh mạnh hơn.
   // Trước đây map 2 dùng y hệt bộ quái lv1-9 của map 1 nên không có bậc nào cho khoảng 10-24.
   boar_tusk:  { name:'Heo Rừng Nhiễm Khí', lv:14, hp:520, atk:32, def:11, xp:295, silver:[31,56], speed:60, aggro:140, range:32, atkCd:1.3, size:16, color:'#7a5b48', eye:'#ff8a6a', drop:0.20, el:'Thổ', img:'assets/mobs/boar.png'},
@@ -1402,7 +1395,7 @@ function vkAnh(d){
 // phải nhớ sửa đủ ba chỗ — quên một chỗ là vũ khí đứng nguyên trong khi người lớn lên.
 // Gom về một hằng để chúng luôn đi cùng nhau, còn TỈ LỆ giữa chúng thì do TK_PHONG quyết.
 // 118 → 132 (phiên 2026-09-06): chủ dự án chốt nhân vật to lên một chút. Mọi thứ đo theo thân
-// người — thần khí, vòng kiếm, sải chân, chỗ bàn chân chạm đất, cỡ Chimera — đều DẪN XUẤT từ
+// người — thần khí, vòng kiếm, sải chân, chỗ bàn chân chạm đất, cỡ Ragoon — đều DẪN XUẤT từ
 // hằng này, nên đổi một chỗ là cả bộ đi theo. Chép cứng lại là mở đường cho chúng lệch nhau.
 const NV_CAO = 132;
 // Nhân vật vẽ ở (p.x, p.y − NV_LECH_Y) rồi mới thu tỉ lệ — xem veHero(). Tách ra thành hằng vì
@@ -1630,7 +1623,7 @@ function playStatusFx(sfxName, vfxId, x, y, vol, scale){
 }
 // Bản phát hành: khóa toàn bộ playtest/cheat — người chơi tự trải nghiệm từ đầu
 const RELEASE_BUILD = window.RELEASE_BUILD === true;
-// Cây cối & đá theo từng bản đồ (phong cách thủy mặc võ lâm)
+// Cây cối & đá theo từng bản đồ
 // Nạp theo nhu cầu: bộ cây của một bản đồ chỉ dùng khi đứng ở bản đồ đó, mà riêng comoc.png đã
 // 765 KB — nạp cả tám bộ ngay lúc mở trang là bắt người chơi tải bảy thứ chưa nhìn thấy.
 const TREE_IMGS = {};
@@ -1661,7 +1654,7 @@ const MAPS = window.MAPS;
 // "vết nứt rộng thêm" thành thứ người chơi CẢM THẤY chứ không chỉ nhìn thấy: +8% mỗi trụ, trần
 // +40% ở đủ năm trụ.
 //
-// Chỉ áp cho map type:'pk'. Petalshade Isle và Outskirts là đất luyện cấp của người mới, mà
+// Chỉ áp cho map type:'pk'. Plant Tribe Glade và Outskirts là đất luyện cấp của người mới, mà
 // người mới thì chưa gỡ trụ nào — nhưng sau Tái Sinh họ quay lại đó với truDaGo() đã đầy, và
 // tăng mật độ ở bãi tân thủ là phạt nhầm người.
 function bayCo(pk, md){
@@ -1682,23 +1675,23 @@ const CITY_WALL = { map:'tuongduong', x1:700, y1:560, x2:1900, y2:1250, t:24,
   gateX:1300, gateY:905, gateW:132 };   // gateX/gateY: tâm cổng ngang & dọc · gateW: bề rộng lối mở
 const GATES = [
   // Cổng đặt NGAY NGOÀI mỗi lối mở trên tường — bước ra khỏi thành là thấy cổng, bấm G để đi.
-  { map:'tuongduong', x:1300, y:1400, to:'ngoai',      name:'Cổng Nam → Petalshade Outskirts' },
-  { map:'tuongduong', x:1300, y:450,  to:'tuyettinh',  name:'Cổng Bắc → Frostmire Vale' },
-  { map:'tuongduong', x:580,  y:905,  to:'daohoa',     name:'Cổng Tây → Petalshade Isle' },
-  { map:'tuongduong', x:2020, y:905,  to:'chungnam',   name:'Cổng Đông → Thornwood Reach' },
-  { map:'ngoai',      x:1300, y:240,  to:'tuongduong', name:'Qua Cổng Thành → Lunaris City' },
+  { map:'tuongduong', x:1300, y:1400, to:'ngoai',      name:'Cổng Nam → Beast Herd Camp' },
+  { map:'tuongduong', x:1300, y:450,  to:'tuyettinh',  name:'Cổng Bắc → Bird Tribe Heights' },
+  { map:'tuongduong', x:580,  y:905,  to:'daohoa',     name:'Cổng Tây → Plant Tribe Glade' },
+  { map:'tuongduong', x:2020, y:905,  to:'chungnam',   name:'Cổng Đông → Werebear Woods' },
+  { map:'ngoai',      x:1300, y:240,  to:'tuongduong', name:'Qua Cổng Thành → Sapidae Chiefdom' },
   // Quảng Trường Cũ — thị trấn KHỞI ĐẦU. Nhân vật mới hiện ra giữa sân, đi lên vòm cổng phía
-  // bắc là ra Petalshade Isle mà đánh quái. Chọn Petalshade Isle chứ không phải Outskirts vì
+  // bắc là ra Plant Tribe Glade mà đánh quái. Chọn Plant Tribe Glade chứ không phải Outskirts vì
   // Outskirts để `min:10` — cho một nhân vật cấp 1 bước thẳng ra đó là ném nó vào bãi cấp 14.
-  { map:'quangtruong', x:1600, y:715, to:'daohoa',      name:'Cổng Bắc → Petalshade Isle' },
+  { map:'quangtruong', x:1600, y:715, to:'daohoa',      anGiau:true, name:'Cổng Bắc → Plant Tribe Glade' },
   { map:'daohoa',      x:300,  y:260, to:'quangtruong', name:'Cổng Quảng Trường Cũ' },
-  // ⚠ Ba cổng thành Bắc/Tây/Đông VỐN LÀ MỘT CHIỀU: đi sang Petalshade Isle / Thornwood /
-  // Frostmire rồi không có cổng nào về, phải mở bảng Bản Đồ mà dịch chuyển. Chỉ cổng Nam
+  // ⚠ Ba cổng thành Bắc/Tây/Đông VỐN LÀ MỘT CHIỀU: đi sang Plant Tribe Glade / Werebear Woods /
+  // Bird Tribe Heights rồi không có cổng nào về, phải mở bảng Bản Đồ mà dịch chuyển. Chỉ cổng Nam
   // (Outskirts) có đường về. Nay bù đủ, đặt cạnh chính điểm thả của từng vùng — đúng khuôn mà
   // Outskirts đang dùng: bước ra khỏi chỗ vừa tới là thấy cổng về.
-  { map:'daohoa',    x:295, y:555,  to:'tuongduong', name:'Lối Về Thành → Lunaris City' },
-  { map:'chungnam',  x:270, y:1575, to:'tuongduong', name:'Lối Về Thành → Lunaris City' },
-  { map:'tuyettinh', x:216, y:999,  to:'tuongduong', name:'Lối Về Thành → Lunaris City' },
+  { map:'daohoa',    x:295, y:555,  to:'tuongduong', name:'Lối Về Thành → Sapidae Chiefdom' },
+  { map:'chungnam',  x:270, y:1575, to:'tuongduong', name:'Lối Về Thành → Sapidae Chiefdom' },
+  { map:'tuyettinh', x:216, y:999,  to:'tuongduong', name:'Lối Về Thành → Sapidae Chiefdom' },
   // Tầng Sâu: giếng đá trong sân thành, góc tây-bắc quảng trường (cách Thợ Rèn ~800px).
   // KHÔNG dùng `to` — nó không dẫn tới một map cố định mà mở một lượt xuống tầng, xem deepStart().
   { map:'tuongduong', x:1080, y:620,  deep:true, portal:true, label:'Tầng Sâu',
@@ -1707,11 +1700,11 @@ const GATES = [
   // của phòng đó; gỡ bảy phó bản là mất luôn cửa ra, người chơi xuống rồi không có cổng nào để
   // đi lên. Phím G ở đây chạy nhánh RÚT LUI (deepLeave) chứ không travelTo — `to` chỉ là chỗ về.
   { map:'deep', x:1300, y:1660, to:'tuongduong', portal:true, label:'Xuất Môn',
-    name:'Rời Tầng Sâu → Lunaris City' },
+    name:'Rời Tầng Sâu → Sapidae Chiefdom' },
 
   // ── B1 · NỐI MAP BẰNG RÌA ────────────────────────────────────────────────
-  // ⚠ ĐÂY LÀ MỘT BẢN VÁ LỖI, KHÔNG CHỈ LÀ TÍNH NĂNG. Trước bản này, Hollow Roost (cấp 40),
-  // Ashen Steppe (80) và Stormgate Pass (100) KHÔNG CÓ LỐI VÀO NÀO cho một nhân vật mới:
+  // ⚠ ĐÂY LÀ MỘT BẢN VÁ LỖI, KHÔNG CHỈ LÀ TÍNH NĂNG. Trước bản này, Bug Tribe Tunnels (cấp 40),
+  // Reptile Sunstone Flats (80) và Dusk Marsh (100) KHÔNG CÓ LỐI VÀO NÀO cho một nhân vật mới:
   //   · GATES chỉ có bốn cổng thành + cổng Outskirts về thành ⇒ đi bộ chỉ tới được
   //     tuongduong · daohoa · ngoai · chungnam · tuyettinh
   //   · nút "Dịch Chuyển" trong bảng Bản Đồ chỉ hiện khi `player.wpUnlocked[id]`, mà cờ đó chỉ
@@ -1722,29 +1715,29 @@ const GATES = [
   // Cách nối: mỗi map chỉ cần THÊM MỘT rìa, và toạ độ chọn bằng cách quét rìa map tìm ô đi được,
   // cách mọi bãi quái / Rương Canh / Trùm Vùng / điểm thả. Thành thị vẫn là trục cho vùng đầu;
   // vùng sâu nối thành chuỗi:
-  //     Thornwood ──Đông→ Hollow Roost      (cấp 20 → 40)
-  //     Frostmire ──Nam──→ Ashen Steppe     (cấp 60 → 80)
-  //     Ashen ─────Đông→ Stormgate Pass     (cấp 80 → 100)
+  //     Werebear Woods ──Đông→ Bug Tribe Tunnels      (cấp 20 → 40)
+  //     Bird Tribe Heights ──Nam──→ Reptile Sunstone Flats     (cấp 60 → 80)
+  //     Reptile ──Đông→ Dusk Marsh     (cấp 80 → 100)
   // Cặp nào cũng hai chiều, và đi qua thì hiện ra ở ĐÚNG RÌA ĐỐI DIỆN (xem `spawnFrom` trong
   // data/canbang.js) chứ không phải ở điểm thả — đi bộ sang phải ra đúng chỗ giáp ranh.
   //
   // ⚠ HÌNH HỌC BỊ TRÙM VÙNG QUYẾT ĐỊNH, KHÔNG PHẢI BỊ LA BÀN. Luật có sẵn (test_bossplace):
   // mọi ĐIỂM THẢ phải cách Trùm Vùng ≥700px (260 truy đuổi + lề) — không thì vừa sang map đã bị
   // một con trùm bám. Quét cả bốn rìa của từng vùng theo đúng luật đó thì:
-  //   · Frostmire Vale KHÔNG CÒN CHỖ NÀO trên cả bốn rìa — bốn con trùm của nó phủ kín. Nên nó
+  //   · Bird Tribe Heights KHÔNG CÒN CHỖ NÀO trên cả bốn rìa — bốn con trùm của nó phủ kín. Nên nó
   //     KHÔNG nhận lối rìa nào; nó đã có cổng Bắc của thành rồi, thế là đủ.
-  //   · các vùng khác chỉ còn vài rìa dùng được, nên chuỗi đi vòng qua Frostmire:
-  //         Thornwood(20) → Hollow Roost(40) → Ashen Steppe(80) → Stormgate(100)
-  //     Frostmire(60) vẫn vào thẳng từ cổng Bắc của thành. Không vùng nào bị bỏ lại.
+  //   · các vùng khác chỉ còn vài rìa dùng được, nên chuỗi đi vòng qua Bird Tribe Heights:
+  //         Werebear Woods(20) → Bug Tribe Tunnels(40) → Reptile Sunstone Flats(80) → Dusk Marsh(100)
+  //     Bird Tribe Heights(60) vẫn vào thẳng từ cổng Bắc của thành. Không vùng nào bị bỏ lại.
   // Tên lối ghi hướng TRÊN CHÍNH MAP ĐANG ĐỨNG (đi ra hướng nào), nên luôn đúng với thứ người
   // chơi thấy — không hứa gì về vị trí tương đối giữa hai map, và game cũng không có bản đồ thế
   // giới để mà mâu thuẫn.
-  { map:'chungnam',  x:1921, y:150,  to:'comoc',    name:'Lối Bắc → Hollow Roost' },
-  { map:'comoc',     x:150,  y:1366, to:'chungnam', name:'Lối Tây → Thornwood Reach' },
-  { map:'comoc',     x:1369, y:150,  to:'mongco',   name:'Lối Bắc → Ashen Steppe' },
-  { map:'mongco',    x:150,  y:1286, to:'comoc',    name:'Lối Tây → Hollow Roost' },
-  { map:'mongco',    x:2450, y:582,  to:'nhanmon',  name:'Lối Đông → Stormgate Pass' },
-  { map:'nhanmon',   x:1668, y:150,  to:'mongco',   name:'Lối Bắc → Ashen Steppe' },
+  { map:'chungnam',  x:1921, y:150,  to:'comoc',    name:'Lối Bắc → Bug Tribe Tunnels' },
+  { map:'comoc',     x:150,  y:1366, to:'chungnam', name:'Lối Tây → Werebear Woods' },
+  { map:'comoc',     x:1369, y:150,  to:'mongco',   name:'Lối Bắc → Reptile Sunstone Flats' },
+  { map:'mongco',    x:150,  y:1286, to:'comoc',    name:'Lối Tây → Bug Tribe Tunnels' },
+  { map:'mongco',    x:2450, y:582,  to:'nhanmon',  name:'Lối Đông → Dusk Marsh' },
+  { map:'nhanmon',   x:1668, y:150,  to:'mongco',   name:'Lối Bắc → Reptile Sunstone Flats' },
 ];
 let nearGate = null;
 function cityWallRects(){
@@ -1936,7 +1929,7 @@ function _hatRng(hat){ let x = hat >>> 0 || 1; return () => { x ^= x << 13; x >>
 
 // ═══ CÂY/ĐÁ KHÔNG ĐƯỢC BỊT ĐƯỜNG ═════════════════════════════════════════
 // Danh sách "chừa trống" ở buildWorld() giữ decor cách xa ĐIỂM nội dung, nhưng không nói gì về
-// HÀNH LANG giữa chúng: ở Stormgate Pass, tường thành + núi bắc chỉ chừa một khe hẹp, và chỉ
+// HÀNH LANG giữa chúng: ở Dusk Marsh, tường thành + núi bắc chỉ chừa một khe hẹp, và chỉ
 // cần vài gốc cây rơi đúng khe đó là cả nửa map bị cắt rời. Đo bằng đi thử: 1-2 trong 4 lượt
 // rải decor làm người chơi kẹt ngay gần điểm thả, cách bãi quái 1.900px.
 // Cách sửa: sau khi rải xong, tìm đường từ điểm thả tới từng điểm nội dung bằng BFS 0-1 (ô
@@ -1984,7 +1977,7 @@ function decorUnblock(){
       }
     }
     // Mở đường cho MỌI đích còn phải phá, không chỉ đích tệ nhất: sửa từng cái một thì bốn vòng
-    // không đủ cho map nhiều ngõ cụt (đo được 1/4 lượt ở Stormgate Pass vẫn còn một NPC kẹt).
+    // không đủ cho map nhiều ngõ cụt (đo được 1/4 lượt ở Dusk Marsh vẫn còn một NPC kẹt).
     let con = 0;
     for (const d of dich){
       const i = idx(d.x, d.y);
@@ -2101,7 +2094,7 @@ function collideObstacles(ent, r){
 // của bộ giải, không phải của địa hình, nên cứu bằng BFS trên lưới thô là đủ và an toàn: nó chỉ
 // chạy ở đúng những tuyến mà hôm nay người chơi bấm rồi nhân vật đứng im.
 // 24 chứ không phải 40: ô 40px lấy mẫu ở TÂM ô nên một gốc cây nằm lọt giữa hai tâm bị bỏ
-// sót, và khe hẹp thật (vd khe 60px giữa dốc tây và tảng đá tây ở Thornwood Reach) lại bị
+// sót, và khe hẹp thật (vd khe 60px giữa dốc tây và tảng đá tây ở Werebear Woods) lại bị
 // chấm là bịt. Cả hai kiểu sai đều đẩy người chơi vào cảnh 'BFS bảo có đường mà đi không nổi'.
 const NAV_CELL = 24;
 let _navGrid = null, _navW = 0, _navH = 0, _navKey = '';
@@ -2197,7 +2190,7 @@ function simulateMovePath(sx, sy, tx, ty){
   let x = sx, y = sy;
   const stepLen = 30;
   // Bám mép khi bị chặn. Bản cũ ĐỔI BÊN mỗi bước kẹt (`stuck % 2`), nên gặp khối dài là nó dao
-  // động tại chỗ thay vì vòng qua — đo được một tuyến ở Thornwood Reach kẹt lại cách đích 555px.
+  // động tại chỗ thay vì vòng qua — đo được một tuyến ở Werebear Woods kẹt lại cách đích 555px.
   // Nay chọn HẲN một bên (bên nào thoáng hơn) rồi bám theo tới khi thoát.
   let stuck = 0, side = 0, lastX = sx, lastY = sy;
   const _probe = (px2, py2, base, sg) => {
@@ -2562,7 +2555,7 @@ function drawDeadTree(x, y, t){
   ctx.restore();
 }
 // Lớp sương mù + tàn lửa trôi — vẽ SAU cùng để phủ lên cả NPC/người chơi, tạo chiều sâu u ám.
-// Nhuộm tông chiều tà cho riêng Lunaris City: art nền vốn là ban ngày trời xanh rực rỡ, không hợp
+// Nhuộm tông chiều tà cho riêng Sapidae Chiefdom: art nền vốn là ban ngày trời xanh rực rỡ, không hợp
 // không khí ma mị — phủ lớp lam-tím tối + vignette để ánh đèn, sương và tàn lửa hiện rõ.
 function drawCityMood(){
   const vx = camera.x, vy = camera.y;
@@ -2634,7 +2627,7 @@ function drawPortal(g){
 // cột lửa đứng hai bên. Đá lạnh + sắt đen + lửa cam là đúng ba chất liệu của thể loại này.
 //
 // Phần TĨNH nướng sẵn một lần vào canvas phụ. Vẽ thẳng thì mỗi khung tốn ~80 nhát fill cho
-// MỖI cổng, mà Lunaris City có bốn cái cùng lúc — 320 nhát fill một khung chỉ để vẽ thứ
+// MỖI cổng, mà Sapidae Chiefdom có bốn cái cùng lúc — 320 nhát fill một khung chỉ để vẽ thứ
 // không bao giờ đổi. Chỉ hai ngọn lửa là vẽ sống.
 const GATE_PH = 66, GATE_PW = 34;                  // nửa khoảng cách trụ · bề rộng trụ
 const GATE_RO = GATE_PH + GATE_PW/2, GATE_RI = GATE_PH - GATE_PW/2;
@@ -2730,9 +2723,15 @@ function drawGateFlame(px, py, t, ph){
 function drawOneGate(g0){
   const t = performance.now() / 1000;
   const oy = g0.y - GATE_BASE;                     // gốc canvas phụ trong toạ độ thế giới
-  ctx.drawImage(gateSprite(), g0.x - GATE_SPRW/2, oy);
-  for (const s of [-1, 1]) drawGateFlame(g0.x + s * GATE_FX, oy + GATE_BOWL, t, s);
-  drawCalligraphy((g0.name || 'Cổng Thành').split(' → ')[0], g0.x, oy - 8, '#c9c6b4', 15);
+  // `anGiau` — TRANH NỀN ĐÃ CÓ CỔNG RỒI. Vòm đá + hai ngọn đuốc + biển tên là bộ vẽ tay cho
+  // những map mà nền chỉ là cỏ đất; dán nó lên một cổng thành đã vẽ sẵn trong tranh isometric
+  // là hai cái cổng chồng nhau, cái vẽ tay nhỏ hơn và lệch phối cảnh. Map như thế thì cổng
+  // thành ĐIỂM DỊCH CHUYỂN VÔ HÌNH: không vẽ gì, chỉ giữ vòng sáng khi lại gần và dòng "G — …".
+  if (!g0.anGiau){
+    ctx.drawImage(gateSprite(), g0.x - GATE_SPRW/2, oy);
+    for (const s of [-1, 1]) drawGateFlame(g0.x + s * GATE_FX, oy + GATE_BOWL, t, s);
+    drawCalligraphy((g0.name || 'Cổng Thành').split(' → ')[0], g0.x, oy - 8, '#c9c6b4', 15);
+  }
   if (nearGate === g0){
     ctx.strokeStyle = 'rgba(126,203,255,.55)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(g0.x, g0.y, 78 + Math.sin(t * 3) * 6, 22, 0, 0, 7); ctx.stroke();
@@ -2777,7 +2776,7 @@ const VH_TIER = {
 // MU Online-lite: mỗi lớp chỉ giữ đúng bộ chiêu gốc của lớp đó (không còn phiêu bạt tự do/dung hợp
 // liên phái — MU không có khái niệm này, vũ khí & chiêu thức LÀ bản sắc lớp). Tất cả phai-locked,
 // tự ngộ theo cấp độ giống hệt cơ chế sect-skill cũ, chỉ khác là giờ CẢ 5 LỚP đều có đủ bộ thay vì
-// chỉ 3/9 Tộc trước đây. skillA/tp (Twisting Slash/Death Stab v.v.) đã nằm ở SECTS, đây là 4-6 chiêu
+// chỉ 3/9 lớp của bản trước. skillA/tp (Twisting Slash/Death Stab v.v.) đã nằm ở SECTS, đây là 4-6 chiêu
 // bổ sung mỗi lớp — chỉ 1 trong số này (buff) còn nằm ở taskbar 3 ô, còn lại đã dồn thành % Công
 // Kích vĩnh viễn (xem LEGACY_SECT_SKILLS). Giữ nguyên 2 id 'tienthiencong'/'songthu' vì có code khác gọi thẳng
 // theo id (auto-hồi sinh & miễn hồi chiêu) — chỉ đổi tên hiển thị + đổi phai sang lớp mới.
@@ -3125,8 +3124,8 @@ const SECT_VFX = {
   // về style mặc định chung chung, là lớp DUY NHẤT không có hình ảnh nhận diện riêng khi tung chiêu.
   sx_bug_a:      { style:'windslash',    c2:'#d0e07a' },                      // Force Wave (Dark Lord) — sóng chấn quyền trượng
   sx_bug_c:      { style:'firepillar',   c2:'#ffb15c', dur:1.15 },            // Fire Scream (Dark Lord) — ba vệt lửa chạy ra rồi dựng cột lửa
-  sx_vophai_a:   { style:'fist',         c2:'#e8d8a8' },                      // Hatchling Strike (Unclassed) — cú đấm trần, chưa có binh khí
-  sx_vophai_c:   { style:'stormhost',    c2:'#e4ebff' },                      // Wanderer's Resolve (Unclassed) — dồn hết sức vào một đòn
+                      // Hatchling Strike (Unclassed) — cú đấm trần, chưa có binh khí
+                      // Wanderer's Resolve (Unclassed) — dồn hết sức vào một đòn
 };
 // VH_VFX: hình ảnh riêng cho chiêu Sổ Kỹ Năng. Sau đợt MU-hoá chỉ còn Dark Raven cần entry
 // riêng (các style khác đã gắn thẳng vào SECT_VFX theo lớp).
@@ -4180,7 +4179,7 @@ function skillInfo(id){
 // Thiết kế đầy đủ: docs/GACHA_KHE_UOC.md. Hoạt ảnh quay: docs/proto/khe_uoc_anim.html.
 //
 // Vì sao thay chứ không thêm: game đã có HAI hệ đồng hành (Thú Chiến + Linh Thú), thêm cái thứ ba
-// là ba ô, ba đường nâng cấp, ba bảng. Chủ dự án chốt cho Chimera nuốt Thú Chiến — hành vi chiến
+// là ba ô, ba đường nâng cấp, ba bảng. Chủ dự án chốt cho Ragoon nuốt Thú Chiến — hành vi chiến
 // đấu (đi theo, tự đánh) giữ nguyên, chỉ đổi CÁCH CÓ nó: quay được thay vì nâng giai.
 //
 // Art: cả 16 con là Axie thật, nướng từ 16 rig Spine KHÁC NHAU trong axie-origins-asset-kit
@@ -4204,7 +4203,7 @@ const CHI_4 = CHIMERA.filter(c => c.sao === 4).map(c => c.id);
 const GACHA_HARD5 = 90, GACHA_SOFT5 = 74, GACHA_HARD4 = 10;
 function gachaP5(n){ return n >= GACHA_HARD5 ? 1 : n >= GACHA_SOFT5 ? Math.min(1, 0.006 + 0.06*(n - GACHA_SOFT5 + 1)) : 0.006; }
 function gachaP4(n){ return n >= GACHA_HARD4 ? 1 : n >= GACHA_HARD4 - 1 ? Math.min(1, 0.051 + 0.51) : 0.051; }
-// Chimera đang lên kệ, đổi theo tuần (6 tuần một vòng) — không cần lịch server, tính từ mốc cố định.
+// Ragoon đang lên kệ, đổi theo tuần (6 tuần một vòng) — không cần lịch server, tính từ mốc cố định.
 const GACHA_MOC = Date.UTC(2026, 0, 5), GACHA_TUAN = 6;
 function gachaKe(){
   const tuan = Math.floor((Date.now() - GACHA_MOC) / (7*24*3600*1000));
@@ -4310,11 +4309,11 @@ function chiLvHeSo(lv){ return 0.20 + 0.16 * (lv - 1) / (CHI_LV_MAX - 1); }
 function chiHoaGia(hoa){ return { dat: 6 + hoa * 8, bac: 2000 * Math.pow(2.1, hoa) | 0 }; }
 
 // ── ② CỐT ───────────────────────────────────────────────────────────────────
-// Bốn ô đặt theo bộ phận thân Axie. HAI ô nuôi Chimera, HAI ô nuôi người chơi — để món đồ cày
+// Bốn ô đặt theo bộ phận thân Axie. HAI ô nuôi Ragoon, HAI ô nuôi người chơi — để món đồ cày
 // được cho thú cưỡi vẫn có nghĩa với build của chính người chơi.
 const COT_O = {
-  sung: { ten:'Sừng', glyph:'▲', chinh:'cAtk',   chinhTen:'Công Chimera' },
-  vuot: { ten:'Vuốt', glyph:'✦', chinh:'cCrit',  chinhTen:'Bạo Kích Chimera' },
+  sung: { ten:'Sừng', glyph:'▲', chinh:'cAtk',   chinhTen:'Công Ragoon' },
+  vuot: { ten:'Vuốt', glyph:'✦', chinh:'cCrit',  chinhTen:'Bạo Kích Ragoon' },
   vay:  { ten:'Vảy',  glyph:'◆', chinh:'hpPct',  chinhTen:'Sinh Lực người chơi' },
   duoi: { ten:'Đuôi', glyph:'≈', chinh:'cCd',    chinhTen:'Giảm hồi chiêu' },
 };
@@ -4328,9 +4327,9 @@ const COT_PHAM = {
 // sổ P của calcDerived — đã đối chiếu đủ, applyLine() lặng lẽ bỏ qua khoá lạ nên sai một chữ là
 // dòng vẫn hiện trên bảng mà không có tác dụng gì.
 const COT_PHU = [
-  { k:'cAtk',     ten:'Công Chimera',        lo:2.4, hi:5.2 },
-  { k:'cCrit',    ten:'Bạo Kích Chimera',    lo:1.8, hi:3.8 },
-  { k:'cCritDmg', ten:'Sát Thương Bạo Chimera',      lo:3.5, hi:7.5 },
+  { k:'cAtk',     ten:'Công Ragoon',        lo:2.4, hi:5.2 },
+  { k:'cCrit',    ten:'Bạo Kích Ragoon',    lo:1.8, hi:3.8 },
+  { k:'cCritDmg', ten:'Sát Thương Bạo Ragoon',      lo:3.5, hi:7.5 },
   { k:'cSkill',   ten:'Sát thương chiêu',    lo:2.2, hi:4.8 },
   { k:'cCd',      ten:'Giảm hồi chiêu',      lo:1.4, hi:3.0 },
   { k:'atkPct',   ten:'Công Kích',           lo:1.6, hi:3.4 },
@@ -4347,21 +4346,21 @@ const COT_PHU_MAP = {}; for (const d of COT_PHU) COT_PHU_MAP[d.k] = d;
 const COT_DONG = {
   canhhoa: { ten:'Cánh Hoa', map:'daohoa',    mau:'#e87ab0',
     hai:{ k:'hpPct', v:8 },   haiTxt:'+8% Sinh Lực tối đa',
-    bonTxt:'Chiêu của Chimera hồi cho bạn 8% Sinh Lực tối đa.' },
+    bonTxt:'Chiêu của Ragoon hồi cho bạn 8% Sinh Lực tối đa.' },
   dongco:  { ten:'Đồng Cỏ',  map:'ngoai',     mau:'#7ec850',
     hai:{ k:'aspdPct', v:6 }, haiTxt:'+6% tốc đánh',
     bonTxt:'6 giây sau khi tung chiêu, Chimera đánh nhanh gấp đôi.' },
   regai:   { ten:'Rễ Gai',   map:'chungnam',  mau:'#5a8a4a',
-    hai:{ k:'cAtk', v:8 },    haiTxt:'+8% Công Chimera',
+    hai:{ k:'cAtk', v:8 },    haiTxt:'+8% Công Ragoon',
     bonTxt:'Chiêu để lại vũng gai 4 giây, địch đi qua chậm 30%.' },
   votrung: { ten:'Vỏ Trứng', map:'comoc',     mau:'#e7dcc2',
     hai:{ k:'cSkill', v:10 }, haiTxt:'+10% sát thương chiêu',
     bonTxt:'Chiêu tung hai lần, lần sau 40% sức.' },
   bangvun: { ten:'Băng Vụn', map:'tuyettinh', mau:'#7ecbff',
-    hai:{ k:'cCrit', v:6 },   haiTxt:'+6% Bạo Kích Chimera',
+    hai:{ k:'cCrit', v:6 },   haiTxt:'+6% Bạo Kích Ragoon',
     bonTxt:'Chiêu đóng băng mục tiêu 1,2 giây — đổi lại hồi chiêu +2 giây.' },
   trotan:  { ten:'Tro Tàn',  map:'mongco',    mau:'#c0304a',
-    hai:{ k:'cCritDmg', v:10 }, haiTxt:'+10% Sát Thương Bạo Chimera',
+    hai:{ k:'cCritDmg', v:10 }, haiTxt:'+10% Sát Thương Bạo Ragoon',
     bonTxt:'Chimera hạ được một mục tiêu thì hồi chiêu giảm 1,5 giây.' },
   samvun:  { ten:'Sấm Vụn',  map:'nhanmon',   mau:'#b18cff',
     hai:{ k:'cCd', v:8 },     haiTxt:'−8% hồi chiêu',
@@ -4421,7 +4420,7 @@ function cotTen(c){
 window.cotTen = cotTen; window.chiCotGom = chiCotGom; window.chiO = chiO; window.cotMoiO = cotMoiO;
 
 // ── ③ KỸ NĂNG ĐỒNG HÀNH ─────────────────────────────────────────────────────
-// Học theo lối thú cưỡi Võ Lâm Chi Mộng: con thú không tự đánh mạnh lên, nó BUFF NGƯỜI CƯỠI.
+// Lối thú cưỡi quen thuộc của dòng MMO cày cuốc: con thú không tự đánh mạnh lên, nó BUFF NGƯỜI CƯỠI.
 // Bốn kỹ năng mở theo cấp Chimera, chung cho từng lớp Axie — hai kỹ năng luôn bật, hai kỹ năng
 // bật khi Chimera tung chiêu. Bị động riêng (`thu`) của từng con vẫn giữ nguyên, không đụng.
 const CHI_KY_MOC = [10, 25, 45, 70];
@@ -4943,7 +4942,6 @@ const SECT_ART = {
   baidasan: { iconTP:'assets/skills/meteorite.png' },
   minhgiao: { },
   bug:      { },
-  vophai:   { },
 };
 // ═══════════ ICON KỸ NĂNG TỰ SINH — phong cách MU Online ═══════════
 // Nhiều chiêu (cả 3 ô taskbar của Dark Lord + chiêu buff của 4 lớp còn lại) khai báo đường dẫn art
@@ -5759,8 +5757,8 @@ const SK_ICON_GLOW = {
 const SK_ICON_PLAIN = {};   // gangkhi gỡ cùng hệ Thuần Thục
 const SK_ICON_SECT_TP_COLOR = { thieulam:'#5a7ad8', bug:'#ff7a3a', minhgiao:'#ff7a3a', baidasan:'#ff9a3a', toanchan:'#5ac8e8' };
 // Chiêu chính & Trấn Phái của từng lớp — đúng chiêu MU mà lớp đó cầm (xem SECTS).
-const SK_ICON_SECT_A  = { thieulam:'spin_blade', toanchan:'arrowfan', baidasan:'poison', minhgiao:'fireslash', bug:'wave', vophai:'fury' };
-const SK_ICON_SECT_TP = { thieulam:'stab', toanchan:'icearrow', baidasan:'meteor', minhgiao:'flame', bug:'firescream', vophai:'blade_up' };
+const SK_ICON_SECT_A  = { thieulam:'spin_blade', toanchan:'arrowfan', baidasan:'poison', minhgiao:'fireslash', bug:'wave' };
+const SK_ICON_SECT_TP = { thieulam:'stab', toanchan:'icearrow', baidasan:'meteor', minhgiao:'flame', bug:'firescream' };
 // Thử nạp từng file art đã khai báo; file nào 404 thì thay bằng icon tự sinh (không đụng file có thật).
 function probeSkillIcons(){
   const swap = (get, set, sym, color, glow) => {
@@ -5903,7 +5901,7 @@ const MATON_THUONG = ['comoc','tuyettinh','mongco','nhanmon'];
 const TRUYNA_BANDS = [
   { max:14,  map:'daohoa',    name:'Đầu Lĩnh Gloam' },
   { max:29,  map:'ngoai',     name:'Đại Đầu Mục Gloam' },
-  { max:44,  map:'chungnam',  name:'Chỉ Huy Phản Loạn Thornwood' },
+  { max:44,  map:'chungnam',  name:'Chỉ Huy Phản Loạn Werebear Woods' },
   { max:59,  map:'comoc',     name:'Chúa Tể Hang Sâu' },
   { max:74,  map:'tuyettinh', name:'Độc Hoa Chúa Tể' },
   { max:89,  map:'mongco',    name:'Tàn Tướng Tro Tàn' },
@@ -5922,7 +5920,7 @@ const TITLES = [
   { id:'thientram',name:'Kẻ Diệt Ngàn Quái',  color:'#e84a3a', cond:p=>p.kills>=1000,            desc:'Tiêu diệt 1.000 quái', stats:{crit:10},       vfx:'máu' },
   { id:'thoren',  name:'Thợ Rèn Truyền Thuyết', color:'#5aa0e8', cond:p=>p.forged11,             desc:'Rèn thành công +11',   stats:{forgeRate:5},   vfx:'lửa' },
   { id:'honnguyen',name:'Bậc Thầy Resonance',  color:'#7ecbff', cond:p=>p.level>=96,            desc:'Đạt cấp 96', stats:{allPct:0.10}, vfx:'long' },
-  // Điều kiện cũ đòi giai Thú Chiến cao nhất; hệ đó đã thay bằng Khế Ước Chimera, nên nay đòi
+  // Điều kiện cũ đòi giai Thú Chiến cao nhất; hệ đó đã thay bằng Khế Ước Ragoon, nên nay đòi
   // sở hữu ít nhất một Chimera 5★ — cùng ý nghĩa "đã đi tới cuối một hệ thống".
   { id:'tuongduong',name:'Người Giữ Lunacia', color:'#ffd76a', cond:p=>p.level>=96 && !!(p.chimera && Object.keys(p.chimera.co||{}).some(id=>CHI_MAP[id] && CHI_MAP[id].sao===5)), desc:'Đỉnh cao mọi hệ thống', stats:{allPct:0.15}, vfx:'long' },
 ];
@@ -5968,7 +5966,7 @@ let movePlan = null, movePlanI = 0, movePlanT = 0;
 function movePlanClear(){ movePlan = null; movePlanI = 0; movePlanT = 0; }
 // Lập kế hoạch tới (tx,ty). `bfs` = đã kẹt một lần rồi, bỏ qua bám mép, đi thẳng bằng BFS.
 // GỠ KẸT GÓC LÕM. Trượt dọc mép chỉ cứu được mép THẲNG; lọt vào góc lõm (hai mép chụm lại, vd
-// khe giữa tảng đá tây và dốc tây ở Thornwood Reach) thì mọi hướng "về phía đích" đều bị đẩy
+// khe giữa tảng đá tây và dốc tây ở Werebear Woods) thì mọi hướng "về phía đích" đều bị đẩy
 // ngược, và tính lại đường bao nhiêu lần cũng vô ích vì đường nào cũng bắt đầu bằng bước đi thẳng
 // vào đá. Thử đủ 16 hướng, chọn hướng THỰC SỰ nhích được xa nhất rồi chạy theo nó nửa giây —
 // đủ để ra khỏi góc, sau đó kế hoạch cũ đi tiếp bình thường.
@@ -6007,9 +6005,9 @@ const BOSS_ARENA = { x: 2300, y: 500 };
 // QA bot playtest: NV3 (cấp 3) bắt nhặt thảo dược giữa bầy Tàn Lang (cấp 3) & Trận Nhân (cấp 9)
 // khiến tân thủ chết liên tục — dời bụi thuốc về rừng phía đông GẦN làng, ngoài tầm aggro của cụm quái mạnh
 // QA: trước đây chỉ có đúng 1 mảng dùng chung cho mọi map — mọi nhiệm vụ hái Thảo Dược (kể cả NV
-// chính #12, ngay sau khi vừa đặt chân tới Lunaris City lần đầu) đều bị dẫn ngược về đảo khởi đầu
-// Petalshade Isle dù người chơi đã đi xa. Đổi thành theo-từng-map (giống HORSE_ZONES bên dưới) —
-// thêm bãi Thảo Dược ở Petalshade Outskirts (ngoai), ngay ngoài cổng thành, tránh xa các bãi quái.
+// chính #12, ngay sau khi vừa đặt chân tới Sapidae Chiefdom lần đầu) đều bị dẫn ngược về đảo khởi đầu
+// Plant Tribe Glade dù người chơi đã đi xa. Đổi thành theo-từng-map (giống HORSE_ZONES bên dưới) —
+// thêm bãi Thảo Dược ở Beast Herd Camp (ngoai), ngay ngoài cổng thành, tránh xa các bãi quái.
 const HERB_SPOTS = {
   daohoa: [
     { x:620, y:560 }, { x:760, y:700 }, { x:950, y:640 }, { x:1080, y:820 },
@@ -6604,7 +6602,7 @@ window.toggleAutoEquip = function(v){ player.autoEquip = v; saveGame(); };
 // và chỗ chọn tư thế vẽ), nên thêm bất cứ thứ gì cộng tầm là phải nhớ sửa đủ ba — nhớ thiếu một
 // chỗ thì AUTO đứng sai khoảng cách so với tầm bắn thật. Gom về đây.
 function atkRange(){
-  const base = ((player && SECTS[player.sect]) || SECTS.vophai).range || 90;
+  const base = ((player && SECTS[player.sect]) || SECTS.thieulam).range || 90;
   return Math.round(base * (1 + ((player && player.rangePct) || 0)));
 }
 function isRanged(){ return atkRange() > 200; }
@@ -6864,7 +6862,7 @@ function newPlayer(sectKey){
     vhCritT:0, vhLeechT:0, vhShield:0, vhReviveCd:0,
     shieldBroken: 0, atkAnim: 0, dashT: 0,
     tutStep: 0, tutDist: 0,                     // hướng dẫn tân thủ từng bước
-    // Khế Ước Chimera thay hệ Thú Chiến — xem docs/GACHA_KHE_UOC.md
+    // Khế Ước Ragoon thay hệ Thú Chiến — xem docs/GACHA_KHE_UOC.md
     chimera: { eq:null, co:{}, out:true, ve:{ gk:3, cx:1 }, pity5:0, pity4:0, bd:false,
                pity5s:0, pity4s:0, nguyet:0, tinh:0, su:[], tanthu:20 },
     jewels: { chucPhuc: 0, linhHon: 0, sinhMenh: 0, honDon: 0 }, // Tứ Châu (Track HT)
@@ -6894,7 +6892,6 @@ function newPlayer(sectKey){
     shopStock: {},                           // kho hàng bày của từng tiệm — xem shopStock()
     maDao: false,                            // Sa Đọa — Tội Ác cao hắc hóa thành Ma Tu
     daily: { day:'', kills:0, dungeon:0, forge:0, claimed:false }, // Mục Tiêu Hôm Nay
-    sectOffered: false,                      // đã mời bái sư ở cấp 10 chưa (chỉ dành cho Tán Nhân)
     traits: [], personality: 'trung',          // The Hatching: 3 trait + tính cách
     dhHate: {}, revengeKills: 0,                 // A3: thù hận Du Hiệp (nemesis-lite)
     reviveUsed: false, quzeTitle: false,
@@ -6913,7 +6910,7 @@ function newPlayer(sectKey){
   sideStates = {};
   victory = false; dead = false;
   curMap = 'quangtruong'; // tân thủ bắt đầu ở Quảng Trường Cũ — sân an toàn, không quái, ra Cổng Bắc là tới bãi săn
-  // Điểm thả LẤY TỪ chính map, đừng chép cứng. `x:1300, y:1040` ở trên là toạ độ của Lunaris
+  // Điểm thả LẤY TỪ chính map, đừng chép cứng. `x:1300, y:1040` ở trên là toạ độ của Sapidae
   // City đời cũ; đổi map khởi đầu mà quên dòng này thì nhân vật mới hiện ra ĐÚNG TRONG lòng
   // giếng giữa sân (đã dính một lần, bắt được bằng ảnh chụp chứ không phải bằng bài kiểm).
   { const _sp = MAPS[curMap].spawn; player.x = _sp.x; player.y = _sp.y; }
@@ -7320,8 +7317,10 @@ function loadGame(idx){
     delete player.congHuan;
     if (!player.baohap) player.baohap = {};               // Box Kundun Ma Tôn: { tier: count }
     if (!player.truyna) player.truyna = { day:'', state:'none', map:null }; // Truy Nã Lệnh ngày
-    if (player.sectOffered == null) player.sectOffered = false;
-    if (!SECTS[player.sect]) player.sect = 'vophai'; // save lỗi phái → về Tán Nhân
+    // Save cũ mang khoá lớp không còn tồn tại (lớp thứ sáu `vophai` đã gỡ, hoặc tên lớp đời
+    // trước) thì kéo về lớp ĐẦU BẢNG. Trước kéo về `vophai` — lớp ấy không có thân trần trong
+    // NV_BO nên nhân vật rơi thẳng về LỐI VẼ VECTOR: khối áo bo tròn, đầu tròn, hai chấm mắt.
+    if (!SECTS[player.sect]) player.sect = 'thieulam';
     if (!player.traits || !player.traits.length){ // save cũ: trời ban quẻ bù một lần
       player.traits = rollTraitsSilent();
       player.personality = player.personality || 'trung';
@@ -7487,7 +7486,7 @@ function bandLvText(md, b){
 // đúng cái bệnh nhân bản đã chẩn đoán.
 //
 // Mỗi map ĐÃ CÓ SẴN một thứ độc quyền thật: một Dòng Cốt Chimera (COT_DONG_THEO_MAP), có nơi
-// tiêu thật (nuôi Chimera). Việc của A2 vì thế không phải THÊM mà là CHO THẤY.
+// tiêu thật (nuôi Ragoon). Việc của A2 vì thế không phải THÊM mà là CHO THẤY.
 //
 // Ba trường đều SUY RA từ dữ liệu chứ không chép cứng: chép cứng thì sửa `packs` một lần là
 // bảng Bản Đồ nói dối, mà nói dối kiểu đó không ai phát hiện được.
@@ -8112,7 +8111,7 @@ function saveSettings(){ try { localStorage.setItem('vlcm_settings', JSON.string
 // files." Dự án đang dự vibeathon nên hợp lệ; ra ngoài khuôn khổ đó thì phải gỡ bộ nhạc này
 // (và cả 6 atlas hiệu ứng cùng 90 tệp sfx_*, vốn cũng từ kho này).
 const BGM_TRACKS = {
-  quangtruong:'bgm_tuongduong',  // dùng chung nhạc thành với Lunaris City — cùng một chất phố
+  quangtruong:'bgm_tuongduong',  // dùng chung nhạc thành với Sapidae Chiefdom — cùng một chất phố
   daohoa:     'bgm_daohoa',      // pve_1 — đảo mở đầu, sáng và yên
   tuongduong: 'bgm_tuongduong',  // home  — nhạc sảnh chính, hợp thành thị
   ngoai:      'bgm_ngoai',       // pve_2
@@ -8952,7 +8951,7 @@ function applyRewards(rw, m){
   // Vật liệu vụn về NHẬT KÝ, không bay lên sân khấu: đo thật 300 con thì 229 chữ bay là vật liệu
   // còn 29 là tên trang bị — mà chữ trang bị lại nhỏ hơn và nhạt hơn. Sân khấu để cho đồ và ngọc.
   if (rw.mats.manh){ player.mats.manh += rw.mats.manh; logCombat('+1 ❖ Mảnh Trang Bị', '#7ec8d8'); }
-  if (rw.mats.tichMa){ player.mats.tichMa += rw.mats.tichMa; addFloat(m.x, m.y-92, `+${rw.mats.tichMa} ◆ Tịch Ma Thạch`, '#e84a6a', 13); }
+  if (rw.mats.tichMa){ player.mats.tichMa += rw.mats.tichMa; addFloat(m.x, m.y-92, `+${rw.mats.tichMa} ◆ Đá Ấn Trụ`, '#e84a6a', 13); }
   if (rw.chinhPhat){
     const _today = new Date().toDateString();
     if (!player.chinhPhat || player.chinhPhat.date !== _today) player.chinhPhat = { date:_today, count:0 };
@@ -9061,7 +9060,7 @@ function killMob(m, source){
   // Truy Nã Lệnh: mục tiêu ngày bị hạ
   if (m.truyna && player.truyna && player.truyna.state === 'hunting'){
     player.truyna.state = 'killed';
-    zoneBanner = { text:'⚖ TRUY NÃ HOÀN THÀNH', sub:'Mục tiêu đã phục pháp — về Lunaris City gặp Bổ Đầu nhận Công Huân Lệnh!', color:'#e8b04a', t:5 };
+    zoneBanner = { text:'⚖ TRUY NÃ HOÀN THÀNH', sub:'Mục tiêu đã phục pháp — về Sapidae Chiefdom gặp Bổ Đầu nhận Công Huân Lệnh!', color:'#e8b04a', t:5 };
     AudioSys.sfx('quest', 0.85); saveGame();
   }
   // ── Boss Vùng/Cổng Vực: mở ải + manh mối + cờ cốt truyện (GDD Boss v2.1 / Năm Trụ Khoá) ──
@@ -9133,10 +9132,10 @@ function unlockNotices(){
   const msgs = {
     3:['Mở khóa: Mục Tiêu Hôm Nay — xem góc trái màn hình, xong hết nhận thưởng lớn!'],
     4:['Mở khóa: Lò Hỗn Độn — tới gặp Thợ Rèn (phím F dẫn đường)'],
-    6:['Mở khóa: Khế Ước Chimera — quay Chimera đồng hành (C → Chimera)'],
+    6:['Mở khóa: Khế Ước Ragoon — quay Ragoon đồng hành (C → Chimera)'],
     7:['Mở khóa: Trấn Phái — tuyệt kỹ của lớp (phím 2)'],
-    10:[...(player.sect === 'vophai' ? ['Mở khóa: the Calling — 5 lớp để chọn!'] : []),'Mở khóa: Truy Nã Lệnh & Sảnh Cầu May — Bổ Đầu và Thương Nhân Vận May ở Lunaris City'],
-    40:['Mở khóa: Luyện Cánh bậc 1 — Lò Hỗn Độn tại Lò Rèn Hoàng Gia, Lunaris City'],
+    10:['Mở khóa: Truy Nã Lệnh & Sảnh Cầu May — Bổ Đầu và Thương Nhân Vận May ở Sapidae Chiefdom'],
+    40:['Mở khóa: Luyện Cánh bậc 1 — Lò Hỗn Độn tại Lò Rèn Hoàng Gia, Sapidae Chiefdom'],
     80:['Mở khóa: Thăng Linh Dực bậc 2 — cánh mạnh gấp đôi, cùng chỗ Lò Rèn Hoàng Gia'],
     100:['Mở khóa: Thần Dực bậc 3 — bậc cánh cuối, cần thêm một món Hoàn Hảo +9 hiến tế'],
     45:['Box Kundun IV trở lên từ Hung Thần có 5-8% mở ra trang bị CỔ THẦN THỦ HỘ — Hung Thần giáng thế mỗi 4 giờ!'],
@@ -9144,11 +9143,6 @@ function unlockNotices(){
   if (player.level % 10 === 0) chiVe(2, `mốc cấp ${player.level}`);
   const list = msgs[player.level];
   if (list) list.forEach((m, i)=> setTimeout(()=>{ if (player) addFloat(player.x, player.y-70, m, '#a0ffe9', 14); }, tre + i*800));
-  // Tán Nhân đạt cấp 10 → mở lễ Bái Sư một lần (sau đó tự chọn ở panel Nhân Vật)
-  if (player.level >= 10 && player.sect === 'vophai' && !player.sectOffered){
-    player.sectOffered = true;
-    setTimeout(()=>{ try{ openSectCeremony(); }catch { /* best-effort — bỏ qua nếu lỗi */ } }, 1800);
-  }
   vhAutoLearn(); // Sổ Kỹ Năng: kỹ năng riêng của lớp tự học khi đạt cấp
   checkTitles();
 }
@@ -9360,7 +9354,7 @@ function doSpace(){
 function doBasic(){
   if (!player || dead) return;
   if (player.cd.basic > 0) return;
-  const sect = SECTS[player.sect] || SECTS.vophai;
+  const sect = SECTS[player.sect] || SECTS.thieulam;
   const rng = atkRange();   // Đại Thành có nút cộng tầm — xem atkRange()
   const ranged = rng > 200; // Dark Wizard/Sylvan Ranger: đòn thường bắn đạn tầm xa (đánh xa kiểu vây), phái khác vung cận chiến như trước
   const t = nearestMob(rng);
@@ -9432,7 +9426,7 @@ function hintCandidates(){
   {
     const _C = player.chimera || {};
     if (!_C.eq && player.level >= 6)
-      out.push({ id:'chi0', pri:3, txt:'✦ Đã mở <b>Khế Ước Chimera</b> — quay một con đồng hành đi cùng và tự đánh quái!', btn:'Mở Khế Ước', act:"openKheUoc()" });
+      out.push({ id:'chi0', pri:3, txt:'✦ Đã mở <b>Khế Ước Ragoon</b> — quay một con đồng hành đi cùng và tự đánh quái!', btn:'Mở Khế Ước', act:"openKheUoc()" });
     else if (((_C.ve && _C.ve.gk) || 0) >= 10)
       out.push({ id:'chive', pri:4, txt:`✦ Đang có <b>${_C.ve.gk} Ấn Giao Kết</b> chưa dùng — quay thử một lượt ×10!`, btn:'Quay', act:"openKheUoc()" });
   }
@@ -9453,7 +9447,7 @@ window.hintGoStable = function(){
 };
 window.hintGoForge = function(){
   // Ưu tiên lò trên map đang đứng; không có thì lò ở map ĐI ĐƯỢC gần nhất trong danh sách; cuối
-  // cùng mới là Lò Rèn Hoàng Gia. Trước đây luôn trỏ về Lunaris City — thành đang khoá thì chỉ
+  // cùng mới là Lò Rèn Hoàng Gia. Trước đây luôn trỏ về Sapidae Chiefdom — thành đang khoá thì chỉ
   // đường vào một cánh cửa đóng.
   const all = NPCS.filter(x => x.talk === 'forge');
   const n = forgeNpcHere() || all.find(x => mapGate(x.map).ok) || all[0];
@@ -9501,7 +9495,7 @@ function questTarget(q){
   if (q.type === 'enhance'){ const n = NPCS.find(x => x.talk === 'forge'); if (n) return { map:n.map, x:n.x, y:n.y, label:'Lò Rèn Hoàng Gia', npcId:n.id }; }
   if (q.type === 'collect' && typeof HERB_SPOTS !== 'undefined'){
     // herbMap riêng, không dùng q.map — q.map trên vài NV chính (VD #12) là nơi trả NV (NPC ở
-    // Lunaris City), khác với nơi thật sự hái Thảo Dược.
+    // Sapidae Chiefdom), khác với nơi thật sự hái Thảo Dược.
     const hm = q.herbMap || 'daohoa';
     const hs = HERB_SPOTS[hm];
     if (hs) return { map:hm, x:hs[0].x, y:hs[0].y, label:'Bãi Thảo Dược' };
@@ -9822,8 +9816,8 @@ window.renderStable = function(){
   html += `<div class="mat-row"><span style="width:20px;text-align:center">🐎</span><span style="flex:1">Tuấn Mã đã bắt hôm nay</span><b>${caught}/5</b></div>`;
   { const _ce = (player.chimera && player.chimera.eq) ? CHI_MAP[player.chimera.eq] : null;
     html += `<div class="stat-sec">CHIMERA ĐỒNG HÀNH: ${_ce ? `<span style="color:${_ce.mau}">${_ce.ten}</span> ${'★'.repeat(_ce.sao)}` : '<span style="opacity:.6">chưa có con nào</span>'}</div>`;
-    html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:7px 16px" onclick="closePanels();openKheUoc()">Mở Khế Ước Chimera</button></div>`; }
-  html += `<div style="font-size:11.5px;opacity:.65;margin-top:8px">Tuấn Mã Hoang ở ba đồng cỏ Outskirts (và Ashen Steppe — phụ tuyến «Tuấn Mã Ashen Steppe» cấp 80).</div>`;
+    html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:7px 16px" onclick="closePanels();openKheUoc()">Mở Khế Ước Ragoon</button></div>`; }
+  html += `<div style="font-size:11.5px;opacity:.65;margin-top:8px">Tuấn Mã Hoang ở ba đồng cỏ Outskirts (và Reptile Sunstone Flats — phụ tuyến «Tuấn Mã Reptile Sunstone Flats» cấp 80).</div>`;
   p.innerHTML = html;
   closePanels(); p.classList.remove('hidden');
 };
@@ -10151,7 +10145,7 @@ function update(dt){
     // TRƯỢT DỌC MÉP. resolveObstaclePoint đẩy ngược lại đúng hướng vừa đi, nên khi hướng đi vuông
     // góc với mép vật cản thì lực đẩy triệt tiêu hoàn toàn bước chân: nhân vật đứng ép vào tảng đá,
     // mỗi khung nhích 0px, và bộ đi đường tính lại đường bao nhiêu lần cũng vô ích vì đường nào
-    // cũng bắt đầu bằng bước đi thẳng vào đá. Đo được 1/30 lượt tới Vệ Binh Trụ tây của Thornwood
+    // cũng bắt đầu bằng bước đi thẳng vào đá. Đo được 1/30 lượt tới Vệ Binh Trụ tây của Werebear Woods
     // Reach hỏng đúng kiểu này. Không nhích được thì thử lách sang ngang (đổi bên nếu bên này cũng bí).
     if (moveTarget && Math.hypot(player.x - _px0, player.y - _py0) < spd*dt*0.25){
       const _sd = player._slide || 1;
@@ -10700,7 +10694,7 @@ function onDeath(){
     <p>Ngươi bị <b style="color:#ff8f6b">${_kb}</b> đánh bại.<br><span style="color:#e8b060;font-size:12.5px">Mẹo: khi trấn thủ tụ chiêu (vùng đỏ), hãy chạy ra khỏi vùng đỏ — sau đó là 2.5 giây phản công tốt nhất.<br>Hoặc quay lại khi ngươi đã mạnh hơn.</span></p>
     <button class="big-btn" onclick="respawn()">Tái Chiến</button>` : `
     <h2>Trọng Thương!</h2>
-    <p>Ngươi bị đánh bại... Nhưng Lunacia chưa hề bỏ rơi kẻ có chí.<br>Hồi sinh tại làng trên Petalshade Isle với đầy đủ sinh lực.</p>
+    <p>Ngươi bị đánh bại... Nhưng Lunacia chưa hề bỏ rơi kẻ có chí.<br>Hồi sinh tại làng trên Plant Tribe Glade với đầy đủ sinh lực.</p>
     <button class="big-btn" onclick="respawn()">Hồi Sinh</button>`;
   ov.classList.remove('hidden');
 }
@@ -10719,9 +10713,7 @@ window.respawn = function(){
 };
 function showVictory(){
   const sect = SECTS[player.sect];
-  const sectLine = player.sect === 'vophai'
-    ? 'Một Unclassed vô danh — từ nay khắp Lunacia sẽ nhớ mặt ngươi.'
-    : `<span style="color:${sect.color}">${sect.name}</span> tự hào về người của mình.`;
+  const sectLine = `<span style="color:${sect.color}">${sect.name}</span> tự hào về người của mình.`;
   document.getElementById('overlay-inner').innerHTML = `
     <h2>PHÁ VỠ VỎ KÉN!</h2>
     <p>Thủ Lĩnh Gloam đã bại dưới tay ngươi.<br>
@@ -10878,7 +10870,7 @@ function render(){
   ctx.strokeStyle = 'rgba(43,38,32,.5)'; ctx.lineWidth = 14;
   ctx.strokeRect(7,7,MAP.w-14,MAP.h-14);
 
-  // spirit spring — Suối Ký Ức, chỉ có ở Petalshade Isle
+  // spirit spring — Suối Ký Ức, chỉ có ở Plant Tribe Glade
   if (md.spring) drawSpring();
 
   // vùng hoạt động của AUTO FARM — vòng neo mờ quanh điểm bật auto
@@ -10915,7 +10907,7 @@ function render(){
     drawCityMood();           // nhuộm tông chiều tà trước, để đèn/sương bên dưới nổi lên
     drawCityWalls();
     drawCityPlaza();          // quảng trường + đài phun nước trung tâm kiểu Lorencia
-    drawCalligraphy('Lunaris City', 1300, 612, '#6a5836', 20);
+    drawCalligraphy('Sapidae Chiefdom', 1300, 612, '#6a5836', 20);
     drawCalligraphy('Tiệm Thuốc', 830, 706, '#3a6a3e', 13);
     drawCalligraphy('Lò Rèn Hoàng Gia', 1780, 726, '#8a4a2e', 13);
     drawCalligraphy('Vũ Khí Phường', 1770, 1006, '#5a5a6a', 13);
@@ -12187,9 +12179,8 @@ const SECT_ACT = {
   toanchan: { basic:'shoot', a:'shoot', tp:'shoot',  buff:'raise' }, // cung: luôn giương rồi buông
   baidasan: { basic:'point', a:'point', tp:'raise',  buff:'raise' }, // trượng: chĩa → gọi thiên thạch
   bug:      { basic:'slash', a:'point', tp:'raise',  buff:'raise' }, // quyền trượng: vung → hiệu triệu
-  vophai:   { basic:'slash', a:'slash', tp:'thrust', buff:'guard' },
 };
-function heroActOf(sectKey, slot){ return (SECT_ACT[sectKey] || SECT_ACT.vophai)[slot] || 'slash'; }
+function heroActOf(sectKey, slot){ return (SECT_ACT[sectKey] || SECT_ACT.thieulam)[slot] || 'slash'; }
 
 // wph: pha bước chân · mv: đang di chuyển · atkK/castK 0..1 (đếm NGƯỢC về 0) · act: kiểu ra đòn
 function heroPose(wph, mv, atkK, castK, now, act, sway, swayDir){
@@ -12456,30 +12447,7 @@ const HERO_GEAR = {
       });
     },
   },
-  // Chưa chọn lớp — áo vải thô, kiếm ngắn tập sự
-  vophai: {
-    pal: { boot:'#3a3028', leg:'#4a4038', torso:'#6a5a48', skin:'#d8a878', skinSh:'#b0805a' },
-    cape: null,
-    upper(g, M, ps, P){
-      hTorso(g, P);
-      hPoly(g, [[56,96],[104,96],[104,150],[56,150]], '#7a6a52');
-      hPoly(g, [[80,96],[104,96],[104,150],[80,150]], '#61533f');
-      hPoly(g, [[54,140],[106,140],[106,150],[54,150]], '#4a3520');
-      hHead(g, P, ps);
-      hJoint(g, HERO_JOINT.neck[0], HERO_JOINT.neck[1], ps.head,
-        () => hPoly(g, [[60,62],[100,62],[98,44],[62,44]], '#4a3828'));
-      hArmL(g, P, ps);
-      hArmR(g, P, ps, () => {
-        hEll(g, 112, 116, 10, 17, P.skin);
-        hHeldWeapon(g, ps.gv, ps, 118, 132, 0.15, () => {
-          g.save(); g.translate(118 + ps.wpush, 132); g.rotate(0.15 + ps.wrot);
-          hPoly(g, [[-4,0],[4,0],[3,-58],[0,-68],[-3,-58]], '#c0c4cc');
-          hPoly(g, [[-12,0],[12,0],[11,8],[-11,8]], '#8a7a4a');
-          g.fillStyle = '#4a3520'; g.fillRect(-4, 8, 8, 22); g.restore();
-        });
-      });
-    },
-  },
+
 };
 // Vẽ nhân vật trong hộp 160×220. tier = bậc trang bị (đổi bảng màu giáp).
 // gv (tham số THỨ 6, thêm sau ps nên mọi lời gọi 5 tham số cũ vẫn chạy nguyên): chữ ký trang
@@ -13135,7 +13103,7 @@ function heroRimCanvas(sectKey, tier, now, ps, gv){
   return _rimCv;
 }
 function drawHeroFigure(g, sectKey, tier, now, ps, gv){
-  const M = hMetal(tier), G = HERO_GEAR[sectKey] || HERO_GEAR.vophai, P = G.pal;
+  const M = hMetal(tier), G = HERO_GEAR[sectKey] || HERO_GEAR.thieulam, P = G.pal;
   ps = ps || HERO_POSE0;
   gv = gv || null;
   // Bộ giáp riêng của lớp: đổi cả TẠO HÌNH (vai/mũ/chân/eo) lẫn BẢNG MÀU. Không có bộ
@@ -14372,7 +14340,7 @@ function veThuyTia(g, d, T, RX, RY){
   g.globalAlpha = a0;
 }
 // ── CÁNH VẢI RÁCH ───────────────────────────────────────────────────────────────────
-// Tán Nhân không có cánh của lớp nào cả: hai tấm vải bạt căng trên hai thanh nẹp, gấu xé
+// Cánh 'rach' — hai tấm vải bạt căng trên hai thanh nẹp, gấu xé
 // thành răng nhọn không đều, có đường chỉ khâu vá. Bóng gãy khúc, thô — đúng đồ tự chế.
 function veThuyRach(g, d, T, RX, RY){
   const a0 = g.globalAlpha;
@@ -14976,15 +14944,6 @@ function renderChar(){
   let html = `<div class="stat-sec">${sect.name} · Cấp ${p.level}</div>`;
   // chân dung = chính nhân vật trong game, ở đúng bậc trang bị đang mặc
   html += `<img class="char-portrait" src="${heroCardUrl(p.sect, heroTier(p), gearVisual(p))}" alt="${sect.name}">`;
-  // Tán Nhân: lối vào lễ Gia Nhập Lớp (cấp 10)
-  if (p.sect === 'vophai'){
-    html += `<div style="margin:8px 0;padding:10px;border:1px dashed rgba(126,203,255,.45);border-radius:6px;text-align:center">
-      <div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Unclassed lang bạt — chưa gia nhập Lớp nào</div>
-      ${p.level >= 10
-        ? `<button class="mini-btn" style="font-size:14px;padding:9px 22px;border-color:#7ecbff;color:#7ecbff" onclick="openSectCeremony()">⚔ GIA NHẬP LỚP</button>`
-        : `<div style="font-size:12px;opacity:.7">Bái sư mở khóa ở <b style="color:#7ecbff">cấp 10</b> (hiện cấp ${p.level})</div>`}
-    </div>`;
-  }
   // The Hatching: 3 trait + tính cách
   if (p.traits && p.traits.length){
     const pers = PERSONALITIES[p.personality] || PERSONALITIES.trung;
@@ -15106,7 +15065,7 @@ function forgeRule(target){
 // TẤN PHẨM (leo phẩm) đã GỠ từ trước, và nay cả hệ phẩm cũng gỡ: đó là trục thứ hai song song với +N,
 // cùng ăn một túi nguyên liệu, cùng ở Lò Rèn, và người chơi phải học hai bảng giá cho hai thứ
 // nghe na ná nhau. MU chỉ có MỘT trục trên món đồ: +N bằng ngọc. Phẩm nay do món rơi ra quyết định.
-// Mảnh Trang Bị và Tịch Ma Thạch KHÔNG chết theo — Kế Thừa vẫn ăn đúng hai thứ đó.
+// Mảnh Trang Bị và Đá Ấn Trụ KHÔNG chết theo — Kế Thừa vẫn ăn đúng hai thứ đó.
 function findItemByUid(uid){
   for (const s in player.equip){ const it = player.equip[s]; if (it && it.uid === uid) return it; }
   for (let i = 0; i < player.inv.length; i++) if (player.inv[i].uid === uid) return player.inv[i];
@@ -15386,7 +15345,7 @@ const CHAOS_RECIPES = [
       title: `[${giaiName(m.it.tier)}]→[${giaiName(m.it.tier+1)}]giữ Phẩm / +${m.it.plus} / dòng phụ`,
       rate: 100,
       cost: [ chaosCost('Mảnh Trang Bị', player.mats.manh, m.cost.manh, '❖'),
-              chaosCost('Tịch Ma Thạch', player.mats.tichMa, m.cost.tichMa, '◆'),
+              chaosCost('Đá Ấn Trụ', player.mats.tichMa, m.cost.tichMa, '◆'),
               chaosCost('Lumen', player.silver, m.cost.silver, '◈') ],
       warn: 'Chỉ số gốc của giai mới bằng 90% bản gốc — bù lại giữ trọn mọi dòng đã có.', charm:false }; },
     run(v, m){
@@ -16897,7 +16856,7 @@ function renderKheUoc(){
   const C = chiState(), p2 = el('panel-quest');
   const ke5 = CHI_MAP[gachaKe()], ke4 = gachaKe4().map(id => CHI_MAP[id]);
   const conBd = Math.max(0, GACHA_HARD5 - C.pity5);
-  let html = moBang({ tieu:'✦ Khế Ước Chimera' });
+  let html = moBang({ tieu:'✦ Khế Ước Ragoon' });
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Ấn Giao Kết <b style="color:#ffd76a">${C.ve.gk||0}</b> · Ấn Cổ Xưa <b style="color:#7ecbff">${C.ve.cx||0}</b> · Nguyệt Trần <b>${C.nguyet||0}</b> · Tinh Trần <b>${C.tinh||0}</b></div>`;
 
   html += `<div class="ku-banner"><h4>Giao Kết — ${ke5.ten} <span style="color:#ffb15c">★★★★★</span></h4>
@@ -16965,7 +16924,7 @@ function quayShardHang(){
   const C = chiState();
   return [
     { id:'ve_gk', gia:5,  ten:'Ấn Giao Kết ×1', ico:'✦', mau:'#ffd76a',
-      mo:'Vé quay banner Giao Kết ở Khế Ước Chimera.',
+      mo:'Vé quay banner Giao Kết ở Khế Ước Ragoon.',
       dong:`đang có ${C.ve.gk || 0}`, mua:()=>{ chiVe(1, 'Quầy Shard'); } },
     { id:'ve_cx', gia:40, ten:'Ấn Cổ Xưa ×1', ico:'✦', mau:'#7ecbff',
       mo:'Vé quay banner Vĩnh Cửu — banner có con Cổ.',
@@ -17132,7 +17091,7 @@ function startGame(sectKey, quze){
       tangDoThuNghiem();
       addFloat(player.x, player.y-72, 'Chế độ test — mặc sẵn nguyên bộ giai 1 và vũ khí của lớp', '#a0ffe9', 13);
     }
-    addFloat(player.x, player.y-50, 'Lunaris City — hãy đến gặp Trưởng Lão Rell (lại gần, nhấn E)!', '#7ecbff', 15);
+    addFloat(player.x, player.y-50, 'Sapidae Chiefdom — hãy đến gặp Trưởng Lão Rell (lại gần, nhấn E)!', '#7ecbff', 15);
   }
   if (window.TEST_MODE) addFloat(player.x, player.y-95, 'TEST MODE — nhấn ` (phím dưới Esc) mở console, gõ /help xem lệnh', '#7fd4ff', 12);
   el('intro-story').classList.add('hidden');
@@ -17165,7 +17124,7 @@ function startGame(sectKey, quze){
 const SERVERS = [
   { id:'lunacia', ten:'Lunacia',  mo:'Vùng trời nứt — nơi ngươi rơi xuống' },
   { id:'vaeldra', ten:'Vaeldra',  mo:'Cao nguyên của những kẻ còn nhớ' },
-  { id:'lunaris', ten:'Lunaris',  mo:'Thành phố dưới chân vách đá' },
+  { id:'lunaris', ten:'Sapidae',  mo:'Thành phố dưới chân vách đá' },
 ];
 // Tải giả lập: suy từ id chứ không random, để mỗi lần mở game con số không nhảy lung tung —
 // một cụm máy chủ đang đông thì phải đông ổn định, nếu không thì nó lộ ra là số bịa.
@@ -17278,7 +17237,7 @@ else setTimeout(showIntro, 0);        // người mới → cốt truyện (defe
     }
   });
 }
-// Video giới thiệu các Tộc removed — assets/video/sect_intro.mp4 never existed in the repo,
+// Video giới thiệu các lớp removed — assets/video/sect_intro.mp4 never existed in the repo,
 // the buttons that opened it were dead links. Re-add once real intro footage is sourced.
 window.addEventListener('beforeunload', saveGame);
 
@@ -17708,7 +17667,7 @@ window.cheatExec = function(raw){
       }
       case 'wipe': window.wipeSave(true); return;
       case 'deep': deepStart(); cheatLog('Tầng Sâu: bắt đầu', '#c07fe0'); return;
-      case 'dat': {                      // /dat <n> — Đất Hồn nuôi Chimera
+      case 'dat': {                      // /dat <n> — Đất Hồn nuôi Ragoon
         const n = clamp(Math.round(num(1, 100)), 0, 99999);
         player.mats = player.mats || {}; player.mats.datHon = (player.mats.datHon || 0) + n;
         cheatLog(`+${n} Đất Hồn (tổng ${player.mats.datHon})`, '#b8e87a'); break;
@@ -18943,7 +18902,7 @@ function itemDef(it){ return it && it.def ? ITEM_DB[it.def] : null; }
 // Gắn định nghĩa + TÊN theo danh mục. Lớp quyết định món nào rơi ra được: vũ khí và giáp đều
 // khoá lớp, nên nhặt được đồ lớp khác là chuyện cố ý (bán, hoặc ném vào Lò Hỗn Loạn).
 function assignDef(it, sect){
-  const d = pickItemDef(it.slot, sect || (player && player.sect) || 'vophai', bandOfTier(it.tier));
+  const d = pickItemDef(it.slot, sect || (player && player.sect) || 'thieulam', bandOfTier(it.tier));
   if (!d) return it;
   it.def = d.id;
   it.name = (it.perfect ? 'Hoàn Hảo ' : '') + d.name;
@@ -19116,7 +19075,7 @@ const MAT_ROWS = [
   { icon:'phu', name:'Thiên Mệnh Phù', get:()=>player.charms, color:'#7ecbff', desc:'bảo hiểm rèn' },
   { icon:'tanquyen', name:'Mảnh Cổ Thư (Thượng/Trung/Hạ)', get:()=>player.bikip ? player.bikip.pieces.join('/') : '0/0/0', color:'#e84a6a', desc:'dung hợp Huyết Ma Thôn Phệ' },
   { icon:'manhtrangbi', name:'Mảnh Trang Bị', get:()=>(player.mats&&player.mats.manh)||0, color:'#7ec8d8', desc:'Kế Thừa — rơi từ quái/tinh anh' },
-  { icon:'tichma', name:'Tịch Ma Thạch', get:()=>(player.mats&&player.mats.tichMa)||0, color:'#e84a6a', desc:'đá lõi ấn — Kế Thừa leo giai, rơi từ Vệ Binh Trụ' },
+  { icon:'tichma', name:'Đá Ấn Trụ', get:()=>(player.mats&&player.mats.tichMa)||0, color:'#e84a6a', desc:'đá lõi ấn — Kế Thừa leo giai, rơi từ Vệ Binh Trụ' },
 ];
 function fmtCount(n){
   n = n || 0;
@@ -20273,7 +20232,7 @@ const SHOPS = {
       { id:'ruongpc', col:'#5aa0e8', name:'Rương Phòng Cụ', price:700, desc:'Giáp trụ ngẫu nhiên theo cấp — có thể ra trang bị Hoàn Hảo' },
     ]},
   // Thị trấn khởi đầu phải bán được thuốc, nếu không thì "hiện ra ở đây rồi ra cổng đánh quái"
-  // là đi tay không. Cùng bảng hàng với Nhà Giả Kim trong Lunaris City — cùng một nghề.
+  // là đi tay không. Cùng bảng hàng với Nhà Giả Kim trong Sapidae Chiefdom — cùng một nghề.
   qt_giakim: { quote:'"Lọ treo trên kia là hàng thật. Ra ngoài cổng thì mang hai lọ, đừng một."', junk:true, rows:[
     { id:'thuoc',     icon:'🧪', name:'Bình Thuốc Đỏ',        price:150, desc:'Uống bằng phím R — túi đựng tối đa 5 lọ' },
     { id:'trithuong', icon:'✚',  name:'Trị Thương Toàn Phần', price:100, desc:'Bào chế tại chỗ — dùng ngay' },
@@ -20888,7 +20847,7 @@ el('is-skip').addEventListener('click', closeIntro);
 const TUT_STEPS = [
   { key:'move',  txt:'Bấm <b>chuột phải</b> trên nền đất hoặc bấm vào <b>bản đồ thu nhỏ</b> — nhân vật sẽ tự chạy tới đó, hãy thử một lần', },
   { key:'npc',   txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
-  { key:'map',   txt:'Bấm <b>Đi ngay</b> trên dải nhiệm vụ giữa màn hình (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để dịch chuyển tới <b>Petalshade Isle</b>' },
+  { key:'map',   txt:'Bấm <b>Đi ngay</b> trên dải nhiệm vụ giữa màn hình (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để dịch chuyển tới <b>Plant Tribe Glade</b>' },
   { key:'kill',  txt:'Nhấn <b>SPACE</b> — nhân vật tự chạy tới con quái gần nhất và đánh. Hãy hạ 1 con <b>Axie Heo Rừng</b>' },
   { key:'loot',  txt:'Quái chết có thể rơi đồ hoặc <b>Châu</b> xuống đất — <b>đi ngang qua</b>, bấm <b>J</b> hoặc <b>bấm chuột trúng món</b> để nhặt. Giữ <b>ALT</b> xem tên mọi món trên màn' },
   { key:'quest', txt:'Làm theo nhiệm vụ ở <b>góc phải màn hình</b> · <b>C</b> nhân vật · <b>K</b> kỹ năng · <b>B</b> túi đồ' },
@@ -21395,7 +21354,7 @@ NPCS.push(
     lore:{
       idle:  '"Rừng này ta giữ ba đời rồi. Người Vaeldra các ngươi tới được một tháng đã đốt mất nửa."',
       offer: '"Về đi. Rừng này ăn thịt kẻ vào sớm."',
-      active:'"Còn thở là còn đi được. Trụ Thornwood nằm sâu hơn ngươi tưởng."',
+      active:'"Còn thở là còn đi được. Trụ Werebear Woods nằm sâu hơn ngươi tưởng."',
       done:  '"Xong rồi đấy. Ngươi thấy nhẹ người chứ gì. Ta thì không."' },
     trang:[
       '"Wren báo trước là có người sẽ tới. Cô ấy không nói người đó lại đi ầm ĩ thế này."',
@@ -21418,7 +21377,7 @@ NPCS.push(
     barks:['"Một trăm chín mươi tư."','"Quả này gõ được ba nhịp rồi."',
            '"Đừng soi đèn vào tổ."','"Ta ngủ ba tiếng một ngày, đủ rồi."'] },
 
-  { id:'ttmon',     name:'Liora, Ẩn Sĩ Frostmire', map:'tuyettinh',  x:520,  y:950,  img:'assets/npcs/ttmon.png',     talk:'quest',
+  { id:'ttmon',     name:'Liora, Ẩn Sĩ Bird Tribe Heights', map:'tuyettinh',  x:520,  y:950,  img:'assets/npcs/ttmon.png',     talk:'quest',
     lore:{
       idle:  '"Mỗi sáng ta lại chép: hôm nay thung lũng giống Lunacia ít hơn hôm qua một chút."',
       offer: '"Ngồi cạnh lửa đã. Ra ngoài lúc này thì ta lại có thêm một dòng để chép."',
@@ -21426,7 +21385,7 @@ NPCS.push(
       done:  '"Ta chép xong dòng hôm nay rồi. Lần đầu tiên nó không phải là một dòng buồn."' },
     trang:[
       '"Sylas nhắn rằng ngươi bước nhẹ hơn ông ấy tưởng. Ở chỗ ông ấy, đó là lời khen cao nhất."',
-      '"Băng ở đây không phải thời tiết. Nó là vết sẹo. Trụ Frostmire nằm dưới kia, và đất Lunacia quanh nó đang bị viết lại thành đất Vaeldra."',
+      '"Băng ở đây không phải thời tiết. Nó là vết sẹo. Trụ Bird Tribe Heights nằm dưới kia, và đất Lunacia quanh nó đang bị viết lại thành đất Vaeldra."',
       '"Ta chép lại từng ngày để sau này còn có người biết chỗ này từng trông như thế nào. Ngươi gỡ trụ đi. Ta chép tiếp."'],
     barks:['"Hôm nay thêm bốn tấc băng."','"Chữ ta viết đông cứng trước khi ráo mực."',
            '"Ngươi nghe tiếng nứt dưới chân không?"','"Ngồi xuống, sưởi đã rồi đi."'] },
@@ -21453,13 +21412,13 @@ NPCS.push(
       done:  '"Trụ cuối gãy rồi. Đừng nhìn ta như vậy — ngươi làm đúng thứ ngươi phải làm."' },
     trang:[
       '"Rell, Wren, Corran, Sylas, Liora, Dax. Sáu người đưa ngươi tới đây. Ta là người thứ bảy, và ta là người cuối."',
-      '"Trụ Stormgate là trụ thứ năm. Gỡ nó xuống thì đường tới Morvahn thông — nhưng đường đó thông cả hai chiều."',
+      '"Trụ Dusk Marsh là trụ thứ năm. Gỡ nó xuống thì đường tới Morvahn thông — nhưng đường đó thông cả hai chiều."',
       '"Ta không bảo ngươi đừng gỡ. Ta chỉ muốn ngươi gỡ nó trong lúc còn tỉnh táo, chứ không phải trong lúc đang giận."'],
     chon:{ a:'"Tôi tỉnh táo."', b:'"Sáu người kia sẽ nói gì?"' },
     barks:['"Ải này chưa thủng lần nào."','"Đứng gác đủ lâu thì quên mất mình gác cái gì."',
            '"Mài kiếm đi, đừng mài lời."','"Trời bên kia đỏ hơn hôm qua."'] },
 
-  // (1050,700) nằm LỌT trong gờ đá tây của Petalshade Outskirts ({x:820,y:660,wd:380,ht:110}) —
+  // (1050,700) nằm LỌT trong gờ đá tây của Beast Herd Camp ({x:820,y:660,wd:380,ht:110}) —
   // đi thử 4/4 lượt đều khựng lại cách 72px, tức là Trại Ngựa không bao giờ mở được. Dời
   // xuống dưới chân gờ đá, vẫn cùng một khu.
   { id:'traichu',   name:'Trại Chủ Mục Đồng',      map:'ngoai',      x:1050, y:860,  img:'assets/npcs/traichu.png', talk:'stable',
@@ -21478,23 +21437,23 @@ NPCS.push(
     lore:'"Quán này rơi qua đây nguyên vẹn, cả ấm trà. Đời còn cho gì thì nhận nấy."',
     barks:['"Cả cái quán rơi qua mà không vỡ một chén."','"Ngồi đi, ta rót."','"Ngoài kia ồn quá, trong này yên."'] },
   { id:'bodau', name:'Bổ Đầu · Truy Nã Lệnh', map:'tuongduong', x:1600, y:690, img:'assets/npcs/bodau.png', talk:'trunya',
-    lore:'"Hội Đồng Lunaris treo thưởng lũ Chimera lộng hành — mỗi ngày một tên. Làm xong, đến Sảnh Cầu May thử vận."',
+    lore:'"Hội Đồng Sapidae treo thưởng lũ Chimera lộng hành — mỗi ngày một tên. Làm xong, đến Sảnh Cầu May thử vận."',
     barks:['"Lệnh hôm nay dán rồi đấy."','"Một ngày một tên, không hơn."','"Mang đầu về, đừng mang chuyện về."'] },
   { id:'thantoan', name:'Thương Nhân Vận May · Sảnh Cầu May', map:'tuongduong', x:820, y:1040, img:'assets/npcs/thantoan.png', talk:'vanduyen',
     lore:'"Một lệnh đổi một lượt quay. Tỉ lệ ta dán ngay trên vách — không giấu, cũng không hứa thêm gì."',
     barks:['"Tỉ lệ dán trên vách kia kìa."','"Ta không hứa gì cả, ta chỉ quay."','"Người vừa nãy quay chín lượt."'] },
-  // Ba Vực Thẳm nằm ở Thornwood · Frostmire · Stormgate — ĐÚNG ba vùng có Trụ Khoá. Trước đây
+  // Ba Vực Thẳm nằm ở Werebear Woods · Bird Tribe Heights · Dusk Marsh — ĐÚNG ba vùng có Trụ Khoá. Trước đây
   // mỗi vách một câu lore rời, không câu nào nối vào Morvahn hay Trụ Khoá, nên ba nơi nguy hiểm
   // nhất bản đồ đọc như ba câu tục ngữ. Nay cả ba nói cùng một điều: đất nứt ở đây là vì cái trụ
   // ở gần đó.
-  { id:'vandai', name:'Skyreach Ledge · Vực Thẳm', map:'chungnam', x:2300, y:350, img:'assets/npcs/vachda.png', talk:'tenui',
-    lore:'"Vách này không phải trời sinh. Đất nứt ra từ cái đêm Trụ Thornwood bị ngồi lên — kẻ liều mạng nhảy xuống, kẻ sợ chết quay đầu."',
+  { id:'vandai', name:'East Ravine · Vực Thẳm', map:'chungnam', x:2300, y:350, img:'assets/npcs/vachda.png', talk:'tenui',
+    lore:'"Vách này không phải trời sinh. Đất nứt ra từ cái đêm Trụ Werebear Woods bị ngồi lên — kẻ liều mạng nhảy xuống, kẻ sợ chết quay đầu."',
     barks:['"Nhìn xuống trước, rồi hẵng quyết."','"Dưới đó có gì thì ta không xuống bao giờ."'] },
-  { id:'doantruongnhai', name:'Sorrowfall Cliff · Vực Thẳm', map:'tuyettinh', x:350, y:1550, img:'assets/npcs/vachda.png', talk:'tenui',
-    lore:'"Trụ Frostmire cách đây không xa, và đất thì nứt theo nó. Vực đã nuốt không biết bao kẻ — dưới đáy, kẻ may mắn đổi đời."',
+  { id:'doantruongnhai', name:'North Ravine · Vực Thẳm', map:'tuyettinh', x:350, y:1550, img:'assets/npcs/vachda.png', talk:'tenui',
+    lore:'"Trụ Bird Tribe Heights cách đây không xa, và đất thì nứt theo nó. Vực đã nuốt không biết bao kẻ — dưới đáy, kẻ may mắn đổi đời."',
     barks:['"Gió dưới đáy thổi ngược lên."','"Kẻ may đổi đời, kẻ rủi đổi chỗ nằm."'] },
-  { id:'dinhbiennhai', name:'Frontier\'s Edge · Vực Thẳm', map:'nhanmon', x:2250, y:1500, img:'assets/npcs/vachda.png', talk:'tenui',
-    lore:'"Trụ Stormgate lung lay tới đâu, mép vực lở tới đó. Gió biên thùy cắt thịt — vận may chỉ dành cho kẻ dám nhảy."',
+  { id:'dinhbiennhai', name:'Deep Ravine · Vực Thẳm', map:'nhanmon', x:2250, y:1500, img:'assets/npcs/vachda.png', talk:'tenui',
+    lore:'"Trụ Dusk Marsh lung lay tới đâu, mép vực lở tới đó. Gió biên thùy cắt thịt — vận may chỉ dành cho kẻ dám nhảy."',
     barks:['"Gió ở đây cắt được da."','"Nhảy thì nhảy, đừng đứng ngó."'] },
 );
 for (const n of NPCS){ if (!NPC_IMGS[n.id]){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; } }
@@ -21611,7 +21570,7 @@ window.travelTo = function(mapId, from){
   // Đang ở Tầng Sâu mà rời map bằng BẤT KỲ đường nào — cổng, nút "Đi ngay" của banner dẫn
   // nhiệm vụ, nút Dịch Chuyển trong bảng Bản Đồ — đều tính là RÚT LUI. Trước đây chỉ updateGate()
   // có chốt này, nên teleport ra ngoài vẫn để DEEP sống: updateDeep() thấy map an toàn sạch quái
-  // liền coi như "dọn xong tầng", tự lên tầng và spawn quái Tầng Sâu ngay giữa Lunaris City.
+  // liền coi như "dọn xong tầng", tự lên tầng và spawn quái Tầng Sâu ngay giữa Sapidae Chiefdom.
   if (DEEP && mapId !== DEEP_MAP){ window.deepLeave(mapId); return; }
   const md = MAPS[mapId];
   if (!md || !player) return;
@@ -21924,7 +21883,7 @@ function aiChatBlock(npcId){
 }
 function aiNpcCtx(){
   const p = player;
-  const sect = SECTS[p.sect] ? SECTS[p.sect].name : 'Tán Nhân';
+  const sect = SECTS[p.sect] ? SECTS[p.sect].name : SECTS.thieulam.name;
   const traits = (p.traits || []).map(tid => { const t = TRAITS.find(x => x.id === tid); return t ? t.name : String(tid); });
   const pers = PERSONALITIES[p.personality] ? PERSONALITIES[p.personality].name : 'Trung Dung';
   const q = currentQuest();
@@ -22385,7 +22344,7 @@ function trackerHtml(){
     // "hoàn tất, tự do làm phụ tuyến" trong khi bảng nhiệm vụ rỗng sạch là nói dối người chơi.
     qt += QUESTS.length
       ? `<div class="q-title">★ Chính tuyến hoàn tất!</div><div>Bạn là Kẻ Mở Trụ Cuối — tự do rèn luyện.</div>`
-      : `<div class="q-title">✦ Chưa có nhiệm vụ</div><div>Chuỗi nhiệm vụ đang được dựng lại. Cứ đi săn, rèn đồ và nuôi Chimera — mọi hệ thống khác vẫn chạy.</div>`;
+      : `<div class="q-title">✦ Chưa có nhiệm vụ</div><div>Chuỗi nhiệm vụ đang được dựng lại. Cứ đi săn, rèn đồ và nuôi Ragoon — mọi hệ thống khác vẫn chạy.</div>`;
   }
   const act = SIDE_QUESTS.filter(sq => sideStates[sq.id] && sideStates[sq.id].st !== 'claimed').slice(0, 2);
   for (const sq of act){
@@ -22425,14 +22384,14 @@ const BOSS_LORE = window.BOSS_LORE;
 // sách cấm của phong cách, và bộ tên cũ tự đá nhau (Trụ Hỏa hiện ở CẢ trụ đầu lẫn trụ cuối, Trụ
 // Mộc hai lần, Trụ Thổ không lần nào — người chơi không thể đếm nổi mình đang ở trụ thứ mấy).
 //
-// Bảy vùng nhưng chỉ NĂM trụ: Petalshade Isle và Outskirts là đất tập, không có trụ. Đó là cách
+// Bảy vùng nhưng chỉ NĂM trụ: Plant Tribe Glade và Outskirts là đất tập, không có trụ. Đó là cách
 // duy nhất để "bảy Tướng Quân" và "năm Trụ Khoá" cùng đúng.
 const TRU_KHOA = {
-  chungnam:  'Trụ Thornwood',
+  chungnam:  'Trụ Werebear Woods',
   comoc:     'Trụ Roost',
-  tuyettinh: 'Trụ Frostmire',
+  tuyettinh: 'Trụ Bird Tribe Heights',
   mongco:    'Trụ Ashmark',
-  nhanmon:   'Trụ Stormgate',
+  nhanmon:   'Trụ Dusk Marsh',
 };
 const TRU_TONG = Object.keys(TRU_KHOA).length;
 // Số trụ đã gỡ. `ta_<map>` là dấu hạ Tướng Quân của vùng đó; chỉ năm vùng có trụ mới được tính.
@@ -22446,14 +22405,14 @@ function tuongQuanDaHa(){
   return Object.keys(f).filter(k => k.startsWith('ta_')).length;
 }
 const REGION_UNLOCK_LORE = {
-  tuongduong:{ sub:'Vỏ kén đã phá — trở về Lunaris City trong tiếng hoan hô, chính thức bước vào Chương II.' },
-  daohoa:    { sub:'Petalshade Isle — hòn đảo đã hứng ngươi khi ngươi rơi xuống. Chưa có trụ nào ở đây, chỉ có hậu quả.' },
+  tuongduong:{ sub:'Vỏ kén đã phá — trở về Sapidae Chiefdom trong tiếng hoan hô, chính thức bước vào Chương II.' },
+  daohoa:    { sub:'Plant Tribe Glade — hòn đảo đã hứng ngươi khi ngươi rơi xuống. Chưa có trụ nào ở đây, chỉ có hậu quả.' },
   ngoai:     { sub:'"Đất ngoài thành đang rung." Chưa phải trụ — nhưng là dấu hiệu đầu tiên rằng có trụ đang lung lay.' },
-  chungnam:  { sub:'"Trụ Thornwood do ta giữ." Một Tướng Quân đơn độc chống đỡ cả cánh rừng — trụ thứ nhất trong năm.' },
-  comoc:     { sub:'Trụ Roost đóng thẳng xuống giữa ổ ấp. Hollow Roost thì thầm: thứ nở ra ở đây không còn là Axie nữa.' },
-  tuyettinh: { sub:'Băng của Frostmire Vale là vết sẹo, không phải thời tiết — đất Lunacia đang bị viết lại quanh Trụ Frostmire.' },
+  chungnam:  { sub:'"Trụ Werebear Woods do ta giữ." Một Tướng Quân đơn độc chống đỡ cả cánh rừng — trụ thứ nhất trong năm.' },
+  comoc:     { sub:'Trụ Roost đóng thẳng xuống giữa ổ ấp. Bug Tribe Tunnels thì thầm: thứ nở ra ở đây không còn là Axie nữa.' },
+  tuyettinh: { sub:'Băng của Bird Tribe Heights là vết sẹo, không phải thời tiết — đất Lunacia đang bị viết lại quanh Trụ Bird Tribe Heights.' },
   mongco:    { sub:'Tướng Quân dựng đại bản doanh ngay trên Trụ Ashmark. Hắn thôi không giấu nữa.' },
-  nhanmon:   { sub:'Trụ Stormgate — trụ cuối cùng. Gỡ nó xuống là mở đúng cánh cửa Morvahn đang chờ.' },
+  nhanmon:   { sub:'Trụ Dusk Marsh — trụ cuối cùng. Gỡ nó xuống là mở đúng cánh cửa Morvahn đang chờ.' },
 };
 // Hàng thoại trấn thủ — thanh bar dưới màn hình, 3.4s/câu
 let _btQ = [], _btTimer = null;
@@ -22618,7 +22577,7 @@ const TRAITS = [
   { id:'vanvat',    name:'Duyên May',           tier:'thien', glyph:'💰', desc:'+15% Lumen rơi',                              late:p=>{ p.silverPct += 15; } },
 ];
 const PERSONALITIES = {
-  chinh: { name:'Ngay Thẳng', glyph:'⚖', desc:'Nói sao làm vậy. Dân Lunaris City chào ngươi trước khi ngươi kịp chào.' },
+  chinh: { name:'Ngay Thẳng', glyph:'⚖', desc:'Nói sao làm vậy. Dân Sapidae Chiefdom chào ngươi trước khi ngươi kịp chào.' },
   ta:    { name:'Tàn Nhẫn',   glyph:'☾', desc:'Việc cần làm thì làm, không hỏi giá. Kẻ khác tránh đường ngươi vì sợ, không vì nể.' },
   trung: { name:'Điềm Tĩnh',  glyph:'◑', desc:'Không ngả về bên nào cho tới khi biết đủ. Ít bạn, mà cũng ít kẻ thù.' },
 };
@@ -23512,59 +23471,9 @@ function dailyHtml(){
   return html;
 }
 
-// ==================== THE CALLING (Unclassed cấp 10 chọn Tộc) ====================
-// Người mới khởi đầu Unclassed (không mang hệ nào — không khắc cũng không bị khắc).
-// Tới cấp 10, 9 Tộc mở cửa: chọn 1, nhận quà nhập Tộc, chiêu thức đổi theo Tộc.
-window.openSectCeremony = function(){
-  if (!player || player.sect !== 'vophai') return;
-  if (player.level < 10){
-    addFloat(player.x, player.y-56, `The Calling mở khóa ở cấp 10 (hiện cấp ${player.level})`, '#a0ffe9', 13);
-    return;
-  }
-  const wrap = el('ceremony-cards');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  for (const key in SECTS){
-    if (key === 'vophai') continue;
-    const s = SECTS[key];
-    const card = document.createElement('div');
-    card.className = 'sect-card';
-    card.innerHTML = `<img class="portrait" src="${heroPickUrl(key)}" alt="${s.name}">
-      <div class="s-title" style="color:${s.color}">${s.name}</div>
-      <div class="s-role">${s.role} · hệ <b style="color:${elColor(s.element)}">${elName(s.element)}</b></div>
-      <div class="s-desc">${s.desc}<br><br><b>Kỹ năng khởi đầu:</b> ${s.skillA.name}<br><b>Tuyệt kỹ Lớp:</b> ${s.tp.name}</div>
-      <button class="mini-btn" style="margin-top:10px;font-size:13px;padding:7px 20px;border-color:${s.color};color:${s.color}">Gia Nhập</button>`;
-    card.addEventListener('click', ()=>chooseSect(key));
-    wrap.appendChild(card);
-  }
-  closePanels();
-  el('sect-ceremony').classList.remove('hidden');
-  AudioSys.sfx('quest', 0.7);
-};
-window.chooseSect = function(key){
-  if (!player || player.sect !== 'vophai' || !SECTS[key] || key === 'vophai') return;
-  player.sect = key;
-  const s = SECTS[key];
-  player.silver += 500; // quà nhập Tộc
-  const w = genItem(10, 0.25); w.slot = 'weapon'; w.slotName = 'Vũ Khí';
-  if (!bagThem(w)) player.silver += 300;
-  player.skillBar = defaultSkillBar(key); // gán sẵn 4 chiêu cố định của Lớp mới
-  applySkillIcons();
-  calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
-  el('sect-ceremony').classList.add('hidden');
-  zoneBanner = { text:`GIA NHẬP LỚP ${s.name.toUpperCase()}`,
-    sub:`Học được ${s.skillA.name} (phím 1) · ${s.tp.name} (phím 3) — quà nhập Lớp: 500◈ + vũ khí Lớp`,
-    color:s.color, t:5.5 };
-  addEffect({ type:'ring', x:player.x, y:player.y, r:130, color:s.color, big:true });
-  AudioSys.sfx('levelup', 0.9);
-  checkTitles(); saveGame();
-  if (!el('panel-char').classList.contains('hidden')) renderCharPanel();
-};
-el('btn-ceremony-later').addEventListener('click', ()=>{
-  el('sect-ceremony').classList.add('hidden');
-  addFloat(player.x, player.y-56, 'Unclassed tự do cũng tốt — muốn đáp lời Calling, mở Nhân Vật (C) bất cứ lúc nào!', '#9aa8d4', 13);
-  AudioSys.sfx('ui', 0.5);
-});
+// Nghi lễ THE CALLING đã gỡ cùng lớp thứ sáu. Game chỉ còn NĂM lớp, và cả năm đều chọn ngay
+// ở màn tạo nhân vật (ccApply bắt buộc chọn) — không còn trạng thái 'chưa có lớp' nào để mà
+// làm lễ gia nhập ở cấp 10 nữa.
 
 
 // ============================================================
@@ -24301,7 +24210,7 @@ function riftNextBoundary(after){
 }
 function riftBoxTier(){ return clamp(Math.floor(player.level/15) + 2, 1, 7); }
 // Ảnh chụp cho thấy vì sao hai chốt dưới đây là bắt buộc: bản đầu boss aggro toàn map + spawn
-// ở cả bãi tân thủ, nên nhân vật cấp 1 vừa vào Petalshade Isle đã bị nó băng qua nửa map đấm
+// ở cả bãi tân thủ, nên nhân vật cấp 1 vừa vào Plant Tribe Glade đã bị nó băng qua nửa map đấm
 // chết trong 2 nhịp. Vực Nứt là boss thế giới lớn nhất — nó phải là thứ NGƯƠI chọn xông tới.
 function riftCanSpawn(){
   return RIFT.active && RIFT.kills < RIFT_MAX_KILLS && !RIFT.done[curMap]

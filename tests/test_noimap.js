@@ -1,7 +1,7 @@
 // B1 + B2 · NỐI MAP BẰNG RÌA · ĐIỂM DỊCH CHUYỂN MỞ BẰNG ĐI BỘ
 //
-// ⚠ Bài này ra đời từ một LỖI THẬT, không phải từ một tính năng: Hollow Roost (40), Ashen Steppe
-// (80) và Stormgate Pass (100) từng KHÔNG CÓ LỐI VÀO NÀO cho nhân vật mới. Nút "Dịch Chuyển" chỉ
+// ⚠ Bài này ra đời từ một LỖI THẬT, không phải từ một tính năng: Bug Tribe Tunnels (40), Reptile Sunstone Flats
+// (80) và Dusk Marsh (100) từng KHÔNG CÓ LỐI VÀO NÀO cho nhân vật mới. Nút "Dịch Chuyển" chỉ
 // hiện khi player.wpUnlocked[id], mà cờ đó chỉ bật KHI ĐÃ TỚI map — chưa tới được thì không bao
 // giờ mở, và GATES không có cổng nào dẫn tới ba vùng đó.
 //
@@ -99,8 +99,8 @@ const { chromium } = require('playwright');
     startGame('thieulam', null);
     player.level = 120; player.lvPeak = 120; calcDerived();
     const truoc = !!(player.wpUnlocked || {}).mongco;
-    // Đi đúng chuỗi rìa thật: Thornwood → Hollow Roost → Ashen Steppe.
-    // (Frostmire KHÔNG có lối rìa — bốn con trùm của nó phủ kín cả bốn rìa, xem ghi chú ở GATES.)
+    // Đi đúng chuỗi rìa thật: Werebear Woods → Bug Tribe Tunnels → Reptile Sunstone Flats.
+    // (Bird Tribe Heights KHÔNG có lối rìa — bốn con trùm của nó phủ kín cả bốn rìa, xem ghi chú ở GATES.)
     travelTo('chungnam');
     travelTo('comoc', 'chungnam');
     travelTo('mongco', 'comoc');
@@ -126,7 +126,7 @@ const { chromium } = require('playwright');
     const t = document.getElementById('panel-map').innerText;
     return { coLa: /🧭 Đi bộ:/.test(t),
              soDong: (t.match(/🧭 Đi bộ:/g) || []).length,
-             coHollow: /Hollow Roost/.test(t),
+             coHollow: /Bug Tribe Tunnels/.test(t),
              noiSai: /cần được nhiệm vụ dẫn tới/.test(t),
              coDiBo: /tự đi bộ tới đó một lần/.test(t) };
   });

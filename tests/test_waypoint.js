@@ -18,7 +18,7 @@ const { chromium } = require('playwright');
   await page.evaluate(() => { togglePanel('map'); });
   await page.waitForTimeout(200);
   const mapHtmlBefore = await page.evaluate(() => document.getElementById('panel-map').innerHTML);
-  const daohoaLockedBefore = /daohoa/.test('') || mapHtmlBefore.includes('Petalshade Isle') && mapHtmlBefore.includes('Chưa mở khoá');
+  const daohoaLockedBefore = /daohoa/.test('') || mapHtmlBefore.includes('Plant Tribe Glade') && mapHtmlBefore.includes('Chưa mở khoá');
   console.log('daohoa shows locked-waypoint before travel:', mapHtmlBefore.includes('Chưa mở khoá'));
   await page.screenshot({ path: '/tmp/wp_map_before.png' });
 

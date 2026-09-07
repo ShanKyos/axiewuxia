@@ -6,9 +6,9 @@
 //     đó là Phong Ấn Năm Trụ (đúng thiết kế: phải hạ 3 Vệ Binh Trụ trước), nhưng nó CHỈ là một
 //     phép đẩy ngược trong update() cộng một banner 4 giây một lần. Người chơi thấy nhân vật
 //     khựng lại giữa bãi đất trống. Mục 1 đòi vòng phong ấn phải vẽ ra được và tắt đúng lúc.
-//  2. NPC NẰM TRONG ĐÁ. Trại Chủ Mục Đồng ở Petalshade Outskirts đứng lọt trong gờ đá tây —
+//  2. NPC NẰM TRONG ĐÁ. Trại Chủ Mục Đồng ở Beast Herd Camp đứng lọt trong gờ đá tây —
 //     4/4 lượt đi thử đều khựng cách 72px, tức Trại Ngựa không bao giờ mở được.
-//  3. CÂY RẢI NGẪU NHIÊN BỊT HÀNH LANG. Ở Stormgate Pass, tường thành + núi bắc chỉ chừa một
+//  3. CÂY RẢI NGẪU NHIÊN BỊT HÀNH LANG. Ở Dusk Marsh, tường thành + núi bắc chỉ chừa một
 //     khe hẹp; vài gốc cây rơi trúng khe là cắt rời nửa map (đo được 1-2/4 lượt rải decor).
 //  4. BỎ CUỘC SỚM. Bộ đi đường bám mép chui vào túi lõm rồi huỷ đích ở lần thử thứ 3, dù BFS
 //     vẫn tìm ra đường.

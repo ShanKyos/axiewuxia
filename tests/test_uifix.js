@@ -126,7 +126,7 @@ const over = (a, b) => a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y +
   console.log('deep ui:', JSON.stringify(r6));
   if (r6.giua) fail('nút RÚT LUI vẫn nằm giữa-trên, che dòng tiêu đề tầng');
   else pass('nút RÚT LUI đã dạt khỏi lằn giữa');
-  if (/Petalshade|Phó Bản|Trial Chamber/i.test(r6.hudMap)) fail('HUD vẫn gọi Tầng Sâu bằng tên map phó bản: ' + r6.hudMap);
+  if (/Plant Tribe|Phó Bản|Trial Chamber/i.test(r6.hudMap)) fail('HUD vẫn gọi Tầng Sâu bằng tên map phó bản: ' + r6.hudMap);
   else pass('HUD gọi đúng tên: ' + r6.hudMap.replace(/\n/g, ' · '));
   await p.screenshot({ path: 'qa_shots/fix_hd_deep.png' });
 

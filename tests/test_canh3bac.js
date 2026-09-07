@@ -1,7 +1,7 @@
 // BA BẬC CÁNH × NĂM LỚP — 15 đôi, khoá theo lớp, và phải NHÌN THẤY ĐƯỢC ở cả hai nơi.
 //
 // Bốn nhóm:
-//   1) Bảng: đủ 3 bậc × 6 lớp (5 lớp + Tán Nhân), id không trùng, chỉ số leo theo bậc.
+//   1) Bảng: đủ 3 bậc × 5 lớp, id không trùng, chỉ số leo theo bậc.
 //   2) Khoá lớp: đôi của lớp khác thì KHÔNG mặc được, và phải nói rõ vì sao.
 //   3) Chế tạo: bậc 1 → 2 → 3, thăng tại chỗ, bậc 3 có rủi ro và Thiên Mệnh Phù đỡ được.
 //   4) Vẽ: cánh hiện trên CẢ nhân vật trong màn LẪN chân dung bảng Nhân Vật, và chân dung
@@ -28,7 +28,7 @@ const { chromium } = require('playwright');
 
   // ── 1. BẢNG ────────────────────────────────────────────────────────────────
   const bang = await page.evaluate(() => {
-    const LOP = ['thieulam','toanchan','baidasan','minhgiao','bug','vophai'];
+    const LOP = ['thieulam','toanchan','baidasan','minhgiao','bug'];
     const ids = [], thieu = [], leo = [];
     for (let t = 0; t < 3; t++) for (const sk of LOP){
       const d = WING_BANG[t][sk];
@@ -51,7 +51,7 @@ const { chromium } = require('playwright');
              chuX: WING_TIERS.map(t => t.chuX || 0) };
   });
   console.log('bảng:', JSON.stringify(bang));
-  check('đủ 18 đôi (3 bậc × 6 lớp)', bang.so, 18);
+  check('đủ 15 đôi (3 bậc × 5 lớp)', bang.so, 15);
   check('không id nào trùng', bang.trung, 0);
   check('không lớp nào thiếu cánh', bang.thieu, []);
   check('dòng chính LEO theo bậc ở mọi lớp', bang.leo, []);

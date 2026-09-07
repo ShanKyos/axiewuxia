@@ -7,7 +7,7 @@
 //      liên tiếp phải ra cùng một số.
 //   3. AUTO vẫn đánh con gần nhất, bỏ qua Kẻ Tiếp Sức — nên nearestMob() phải trả về nó dù có con
 //      khác đứng gần hơn.
-// Kèm đối chứng: đai 0 (Petalshade Isle/Outskirts) KHÔNG được có Kẻ Tiếp Sức — đó là chỗ tân thủ học
+// Kèm đối chứng: đai 0 (Plant Tribe Glade/Outskirts) KHÔNG được có Kẻ Tiếp Sức — đó là chỗ tân thủ học
 // đánh nhau, không phải chỗ dạy chiến thuật.
 const { chromium } = require('playwright');
 const PORT = process.argv[2] || '8853';
@@ -47,7 +47,7 @@ const PORT = process.argv[2] || '8853';
                     baiSai: packs.filter(x => x.tiep !== 1).map(x => x.tiep) };
     }
 
-    // ── 3. buff thật: đo trên Thornwood Reach ──
+    // ── 3. buff thật: đo trên Werebear Woods ──
     curMap = 'chungnam'; buildWorld();
     const tiep = mobs.find(m => m.tiep);
     const mates = mobs.filter(m => !m.dead && !m.tiep && m.pack === tiep.pack);

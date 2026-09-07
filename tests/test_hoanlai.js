@@ -19,7 +19,7 @@ const { chromium } = require('playwright');
   await page.waitForTimeout(400);
 
   const seed = await page.evaluate(() => {
-    startGame('vophai', null);
+    startGame('thieulam', null);
     player.level = 60; player.silver = 0;
     player.gems = { tuLa:0, honNguyen:0 };
     player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };

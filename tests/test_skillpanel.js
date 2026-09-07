@@ -20,7 +20,7 @@ const pass = m => console.log('PASS ' + m);
   await p.waitForTimeout(800);
 
   // Mọi lớp phải ra một bảng đầy đủ — không lớp nào rơi vào trang trắng.
-  // Năm lớp CHƠI ĐƯỢC. 'vophai' (Unclassed) là trạng thái chưa chọn lớp, không phải một lớp —
+  // Năm lớp CHƠI ĐƯỢC. (Lớp thứ sáu 'vophai' đã gỡ hẳn.) Trạng thái chưa chọn lớp, không phải một lớp —
   // bảng của nó cố tình khác (chưa có bộ 4 chiêu), nên soi chung là bắt vạ oan.
   const LOP = ['thieulam', 'toanchan', 'baidasan', 'minhgiao', 'bug'];
   const ra = await p.evaluate(async (LOP) => {
@@ -49,7 +49,7 @@ const pass = m => console.log('PASS ' + m);
         tenLopKhac: (() => {
           const xau = [];
           for (const k of Object.keys(SECTS)){
-            if (k === lop || k === 'vophai') continue;
+            if (k === lop) continue;
             const ten = SECTS[k].name;
             if (!t.includes(ten)) continue;
             // Mọi dòng nhắc tên lớp đó có ghi "Kế Thừa" không?
