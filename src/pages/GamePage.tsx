@@ -31,7 +31,6 @@ const SECT_NAMES: Record<string, string> = {
   daohoa: "Plant",
   bug: "Bug",
   dawn: "Dawn",
-  vophai: "Unclassed",
 };
 
 export default function GamePage() {
@@ -172,7 +171,7 @@ export default function GamePage() {
       <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-[#3a2f22] bg-[#1d1712] px-4">
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold tracking-wide text-[#f0d68a]">
-            ⚔ Axie Wuxia
+            ⚔ Axie Rift
           </span>
           {isAuthenticated && cloudStatus && (
             <span className="hidden text-xs text-[#a0ffe9] sm:inline">
@@ -234,12 +233,12 @@ export default function GamePage() {
       <iframe
         ref={iframeRef}
         src="/game/index.html"
-        title="Axie Wuxia"
+        title="Axie Rift"
         className="w-full flex-1 border-0"
         allow="autoplay"
       />
 
-      {/* Bảng Xếp Hạng Võ Lâm */}
+      {/* Bảng Xếp Hạng */}
       {showLb && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"

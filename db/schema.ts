@@ -43,7 +43,7 @@ export const saves = mysqlTable("saves", {
 });
 
 /**
- * Bảng Xếp Hạng Võ Lâm — one row per user, refreshed on each cloud save.
+ * Bảng Xếp Hạng — one row per user, refreshed on each cloud save.
  */
 export const leaderboard = mysqlTable("leaderboard", {
   id: serial("id").primaryKey(),

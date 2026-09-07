@@ -1,9 +1,9 @@
 ---
 name: spine-nuong
-description: Đưa art nhân vật do Meowa sinh ra (gói Spine .json + .atlas + .png) vào Axie Wuxia — nướng thành bảng khung cho heroSprite, đắp vũ khí rời (pixel art) lên tay theo xương điểm cầm, tách bộ giáp thành 4 icon trang bị, và dùng ảnh vẽ tay thay hình dựng bằng đường cho Cánh. Dùng khi có gói Spine mới (giáp, vũ khí, cánh) cần ghép vào game, khi phải sửa lệch tỉ lệ hay lệch mặt đất của nhân vật, khi cần icon cho món giáp, hoặc khi cần hiểu vì sao art không hiện/hiện sai.
+description: Đưa art nhân vật do Meowa sinh ra (gói Spine .json + .atlas + .png) vào Axie Rift — nướng thành bảng khung cho heroSprite, đắp vũ khí rời (pixel art) lên tay theo xương điểm cầm, tách bộ giáp thành 4 icon trang bị, và dùng ảnh vẽ tay thay hình dựng bằng đường cho Cánh. Dùng khi có gói Spine mới (giáp, vũ khí, cánh) cần ghép vào game, khi phải sửa lệch tỉ lệ hay lệch mặt đất của nhân vật, khi cần icon cho món giáp, hoặc khi cần hiểu vì sao art không hiện/hiện sai.
 ---
 
-# Nướng art Spine vào Axie Wuxia
+# Nướng art Spine vào Axie Rift
 
 Meowa xuất ra rig Spine. Game này là canvas 2D không có runtime Spine, và sẽ không có —
 runtime chính chủ đòi giấy phép Spine, còn thứ mình cần chỉ là vài chục khung hình tĩnh.

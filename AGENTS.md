@@ -5,7 +5,10 @@ trước khi làm bất cứ việc gì.
 
 Tóm tắt những thứ dễ làm sai nhất:
 
-1. **Phong cách là MU Online, KHÔNG phải kiếm hiệp.** Tên thư mục `axie-wuxia` chỉ là di sản.
+1. **Phong cách là MU Online, KHÔNG phải kiếm hiệp.** Game tên **Axie Rift**. Tên thư mục
+   `axie-wuxia`, kho `axiewuxia` và đường dẫn deploy `/var/www/axiewuxia` là di sản — giữ vì
+   đổi sẽ vỡ deploy đang chạy, KHÔNG phải vì còn dùng. Khoá lớp/NPC (`thieulam`, `quachtinh`…)
+   cũng là di sản, giữ để save cũ không vỡ. Cả hai loại không bao giờ hiện ra cho người chơi.
 2. **Không dùng tên riêng của MU Online** trong text người chơi thấy (Kundun, Lorencia,
    Devil Square…). Có bảng tên thay thế trong `CLAUDE.md`.
 3. **Production = VPS `http://14.225.204.107/`**, tự kéo từ nhánh `main` mỗi 2 phút bằng cron.

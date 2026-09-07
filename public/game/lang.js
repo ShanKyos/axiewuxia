@@ -1,7 +1,7 @@
-/* ═══ Axie Wuxia legacy translator — covers content not yet migrated to i18n.js's t() ═══
+/* ═══ Axie Rift legacy translator — covers content not yet migrated to i18n.js's t() ═══
    Loaded AFTER i18n.js, BEFORE game.js. Patches canvas text + observes DOM.
    Lang stored in localStorage 'vlcm_lang', SHARED with i18n.js so both stay in sync on one
-   toggle. Axie Wuxia is English-first (default flipped from the wuxia prototype's 'vi'
+   toggle. Axie Rift is English-first (default flipped from the old prototype's 'vi'
    default) — un-migrated Vietnamese source text still gets translated to English by this
    regex/dictionary layer exactly as before; t()-driven content bypasses this entirely since
    its output is already correct for the locale. See docs/I18N_MIGRATION_GUIDE.md. */
@@ -57,7 +57,6 @@ const EXACT = {
   // Elements
   'Kim': 'Metal', 'Mộc': 'Wood', 'Thủy': 'Water', 'Hỏa': 'Fire', 'Thổ': 'Earth',
   // Maps
-  'Đào Hoa Đảo': 'Peach Blossom Island', 'Tương Dương Thành': 'Xiangyang City',
   'An Toàn': 'Safe Zone', 'Phó Bản': 'Dungeon',
   // Quality & tiers
   'Phàm': 'Common', 'Tinh': 'Fine', 'Linh': 'Spirit', 'Thần': 'Divine', 'Chí Tôn': 'Supreme',
@@ -165,7 +164,7 @@ const EXACT = {
   'Bổ Đầu · Truy Nã Lệnh': 'Constable · Bounties', 'Bổ Đầu': 'Constable',
   'Binh Khí Chủ · Vũ Khí Phường': 'Arms Dealer · Weapon Shop', 'Quản Gia · Nhà Riêng': 'Steward · Cave Estate',
   'Thần Toán Tử · Vạn Duyên Các': 'Diviner · Fate Pavilion', 'Biên Ải Vệ Binh': 'Border Guard',
-  'Quách Đại Hiệp': 'Great Hero Guo', 'Tân Binh Tập Luyện': 'Recruit Training', 'Thử Tài Tân Thủ': 'Trial of the Novice',
+  'Tân Binh Tập Luyện': 'Recruit Training', 'Thử Tài Tân Thủ': 'Trial of the Novice',
   // Misc UI
   'Cấp →': 'Lv →', 'Sách Kỹ Năng →': 'Tomes →', '(Tối đa)': '(Max)',
   'mạnh nhất vùng, cẩn thận!': 'strongest in the region — beware!', 'yếu nhất, hợp luyện công': 'weakest — good for practice',
@@ -256,11 +255,11 @@ const EXACT = {
 Object.assign(EXACT, {
   // ── Main quest descriptions (34) ──
   // ── Old side quests: 12 names + 16 descs ──
-  // ── Võ Học: 46 names ──
+  // ── Kỹ năng: 46 tên ──
   
   
   
-  // ── Võ Học: 46 descs ──
+  // ── Kỹ năng: 46 mô tả ──
   'Bị động: 30% chiêu vừa tung không tốn hồi chiêu.': 'Passive: 30% chance a cast skill costs no cooldown.',
   'Bị động: chết tự hồi sinh 50% Sinh Lực — mỗi 300s một lần.': 'Passive: revive at 50% HP on death — once every 300s.',
   'Phá kiếm thức — một kiếm bỏ qua phòng thủ, cắt đứt chiêu địch.': "Sword-breaking stance — one stroke ignores defense and severs the foe's move.",

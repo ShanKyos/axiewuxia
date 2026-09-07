@@ -35,7 +35,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     // chọn chiêu diện rộng để đo được bán kính, và phải có trong CẢ HAI bảng
     const id = Object.keys(VOHOC_DEFS).find(k => SKILL_DEFS[k] &&
       (VOHOC_DEFS[k].type === 'aoe' || VOHOC_DEFS[k].type === 'cone'));
-    if (!id) return { loi:'không có chiêu Võ Học trên thanh' };
+    if (!id) return { loi:'không có chiêu kỹ năng trên thanh' };
     // CỐ ĐỊNH cấp chiêu: evoStage() cũng nhân bán kính theo cấp (+12%/bậc), mà applyTestBoost()
     // nâng cấp chiêu — nên gọi ba lần liên tiếp thì lần sau bán kính to hơn lần trước vì lý do
     // chẳng liên quan gì tới nhánh đang đo. Bản đầu vấp đúng chỗ này: Bá Đạo cũng 'trúng nhiều

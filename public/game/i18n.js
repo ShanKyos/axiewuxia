@@ -1,4 +1,4 @@
-/* ═══ Axie Wuxia i18n v1 — key-based, English-first ═══
+/* ═══ Axie Rift i18n v1 — key-based, English-first ═══
    Replaces the old regex/substring translator (lang.js) for any content migrated to use it.
    Loaded AFTER strings/en.js and strings/vi.js, BEFORE lang.js and game.js.
 

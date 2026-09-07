@@ -8,12 +8,12 @@ describe("buildLoginMessage", () => {
     expect(msg).toContain("nonce-xyz");
   });
 
-  it("carries the current app name, not the old wuxia-prototype name", () => {
+  it("carries the current app name, not an older one", () => {
     // Regression guard for the app-shell rebrand — this exact string is what a user reads
     // and signs inside their wallet, so a stale brand name here is user-visible, not cosmetic.
     const msg = buildLoginMessage("0xABC123", "nonce-xyz");
-    expect(msg).toContain("Axie Wuxia");
-    expect(msg).not.toContain("Giang Hồ Huyễn Ảnh");
+    expect(msg).toContain("Axie Rift");
+    expect(msg).not.toContain("Axie Wuxia");
   });
 
   it("states plainly that signing costs nothing and grants no spending rights", () => {

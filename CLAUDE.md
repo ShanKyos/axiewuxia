@@ -1,4 +1,4 @@
-# Axie Wuxia — hướng dẫn cho Claude
+# Axie Rift — hướng dẫn cho Claude
 
 ## ⚠ QUY TẮC SỐ 1: PHONG CÁCH LÀ **MU ONLINE**, KHÔNG PHẢI WUXIA
 
@@ -431,9 +431,9 @@ không giữ nổi nên **bẻ lệch vết nứt** sang một thế giới bên
 "vô chủ" — hải đồ sai, đó là **Lunacia**. Vaeldra tự cứu mình bằng cách trút tận
 thế lên nhà người khác.
 
-Nhân vật chính thuộc một trong **5 môn phái Vaeldra**, nằm trong đội tiên phong
-vượt vết nứt sang sửa. Cú vượt biên xoá ký ức võ nghệ → khởi đầu Unclassed, tới
-**cấp 10 ký ức trở về** (the Calling). Cú giật ngược kéo cả khu phố **Ardhaven**
+Nhân vật chính thuộc một trong **5 lớp Vaeldra**, nằm trong đội tiên phong vượt
+vết nứt sang sửa. Người chơi CHỌN LỚP NGAY ở màn tạo nhân vật — lớp thứ sáu
+`vophai` và lễ nhập môn cấp 10 (the Calling) đã gỡ hẳn. Cú giật ngược kéo cả khu phố **Ardhaven**
 sang, dân bản địa dựng lại quanh đó thành **Sapidae Chiefdom**.
 
 ⇒ Điều này *giải thích trong truyện* hai thứ vốn khập khiễng:
@@ -1142,7 +1142,7 @@ Chiêu diện rộng mà đẩy địch ra thì chính nó phá tan đội hình
 gặp: một hiệu ứng cần "trúng ≥3 địch" ngừng kích hoạt vì con thứ ba bị đẩy ra đúng 1 pixel.
 Đừng chữa bằng cách đổi `source`: `source` còn chi phối bạo kích và âm thanh.
 **Bọc vòng lặp trúng-nhiều-mục-tiêu trong `aoeHit(() => { … })`.** Chiêu nào MUỐN hất lùi
-thì khai báo `fx.kb` như cũ. Hiện có 6 chỗ: sectA cone/selfaoe, Võ Học Phổ cone/aoe và 2 sóng
+thì khai báo `fx.kb` như cũ. Hiện có 6 chỗ: sectA cone/selfaoe, bảng kỹ năng cone/aoe và 2 sóng
 dư chấn của chúng.
 
 **2. `shakeDir` phải được đặt ở MỌI chỗ đặt `shakeT`.** Bỏ sót thì màn hình giật theo hướng

@@ -1,4 +1,4 @@
-/* ===== Axie Wuxia — playful Axie UI ===== */
+/* ===== Axie Rift — playful Axie UI ===== */
 
 /* Baloo 2 — chữ hiển thị cho RIÊNG mặt Khế Ước Ragoon và những chỗ mang art Axie.
    Vì sao lại là nó: mặt chữ hiển thị trong gói starter chính chủ của Axie
@@ -989,7 +989,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .vh-learn-btn:disabled{ border-color:#5a5f7a !important; color:#5a5f7a !important; }
 
 /* ── Thẻ Tiên Duyên: 16 thẻ úp, lật cùng lúc & chọn 3 (MU-Axie: viền/hào quang vàng thay cho
-   xanh-lam wuxia cũ, đọc gần với gem/Wing MU hơn) ── */
+   xanh-lam của bản trước, đọc gần với gem/Wing MU hơn) ── */
 /* Lật cả bàn cùng lúc: mỗi thẻ nhận animation-delay riêng (đặt qua JS theo chỉ số) để tạo hiệu ứng
    một làn sóng lật liên tiếp thay vì bật hiện tức thì cả 16 ô cùng lúc — dễ nhìn & giống MU hơn. */
 

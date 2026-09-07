@@ -50,7 +50,6 @@ export const SECT_EN: Record<string, string> = {
   daohoa: "Plant",
   bug: "Bug",
   dawn: "Dawn",
-  vophai: "Unclassed",
 };
 
 const dict = {

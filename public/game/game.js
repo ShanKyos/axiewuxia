@@ -1,8 +1,8 @@
 'use strict';
 /* =========================================================
-   AXIE WUXIA — webgame PvE nhập vai, tri ân MU Online (IP gốc)
-   Core loop: farm → mission → level 1→10 → gear (10 slots ×
-   6 attributes) → Rèn Luyện → Venom / Trấn Phái / Tấn Chức
+   AXIE RIFT — webgame PvE nhập vai, tri ân MU Online (IP gốc)
+   Core loop: farm → nhiệm vụ → cấp 1→120 → trang bị (14 giai,
+   ép ngọc, Lò Hỗn Loạn) → Cánh → Khế Ước Ragoon
    ========================================================= */
 
 // ---------- Canvas ----------
@@ -724,7 +724,7 @@ const EQUIP_DOLL = [
   ['tay',   { doi:['nhan1','nhan2'] }, 'chan'],
 ];
 // TÊN LUI theo Ô. Trước đây leo theo PHẨM (da → sắt → thép → vảy rồng → hắc nguyệt); hệ phẩm
-// vảy rồng → hắc nguyệt. Bộ tên cũ mượn thẳng binh khí kiếm hiệp (Huyền Thiết Trọng Kiếm,
+// vảy rồng → hắc nguyệt. Bộ tên cũ mượn thẳng binh khí của bản trước (Huyền Thiết Trọng Kiếm,
 // đã gỡ nên còn một tên mỗi ô. Tên thật của món lấy từ ITEM_DB qua assignDef().
 // TÊN LUI, cho ô nào không tra được món trong ITEM_DB. Trước đây là năm tên mỗi ô, chọn theo
 // phẩm; hệ phẩm đã gỡ nên còn đúng một tên. Gần như không bao giờ hiện: assignDef() ghi đè
@@ -882,7 +882,7 @@ function atkElem(){
 // tệ hơn, Lò Hỗn Độn còn bán công thức Đổi Hệ ăn 1 Hỗn Độn Châu để roll lại thứ vô dụng đó.
 function hasElem(it){ return !!(it && !it.special && it.slot === 'vukhi' && ELEM[it.element]); }
 // Internal object keys are stable identifiers (referenced throughout combat/save logic) and are
-// intentionally left unchanged by the Axie Wuxia reskin — only player-facing fields below (name,
+// intentionally left unchanged by the Axie reskin — only player-facing fields below (name,
 // role, desc, glyph, skill names) were rewritten. See docs/NAMING_MAP.md for the full class
 // roster mapping and reasoning (element/role match from each source sect → its Axie class).
 // MU Online-lite: 5 lớp gốc (Dark Knight/Dark Wizard/Sylvan Ranger/Spellblade/Dark Lord), mỗi lớp
@@ -1665,7 +1665,7 @@ function bayCo(pk, md){
 let curMap = 'daohoa';
 let zoneBanner = null; // { text, sub, color, t }
 
-// ---------- Tường thành & Cổng thành — Tương Dương / Ngoại Ô ----------
+// ---------- Tường thành & Cổng thành — Sapidae Chiefdom / Outskirts ----------
 // Thành là khu an toàn tuyệt đối: quái không spawn trong thành, tường chặn mọi lối đi,
 // chỉ có Cổng Nam dẫn ra Ngoại Ô (có quái). Ngoại Ô có cổng ngược để quay về.
 // Bố cục kiểu Lorencia (MU Online): quảng trường vuông rộng ở giữa, tường bao 4 mặt, MỖI MẶT MỘT
@@ -4014,7 +4014,7 @@ function tickWeather(dt){ // sấm chớp khi giông (Gói B)
 // khung hình. Chúng chỉ trôi ngang rất chậm, nên chuyển hẳn sang một lớp CSS có mix-blend-mode và
 // animation riêng: trình duyệt ghép trên tầng compositor, lượt vẽ không tốn gì.
 
-function drawLanternGlow(dk){ // đèn lồng Tương Dương về đêm — neo tọa độ thế giới
+function drawLanternGlow(dk){ // đèn lồng trong thành về đêm — neo tọa độ thế giới
   const t = performance.now()/1000;
   ctx.save(); ctx.globalCompositeOperation = 'screen';
   for (let i = 0; i < 12; i++){
@@ -5897,7 +5897,7 @@ const BAOHAP_TIERS = [ null,
 // Ma Tôn Giáng Thế: 0h/4h/8h/12h/16h/20h — Hạ Giới & Thượng Giới luân phiên
 const MATON_HA = ['daohoa','ngoai','chungnam'];
 const MATON_THUONG = ['comoc','tuyettinh','mongco','nhanmon'];
-// Truy Nã Lệnh — boss săn ngày theo vùng cấp (NPC Bổ Đầu · Tương Dương)
+// Truy Nã Lệnh — boss săn ngày theo vùng cấp (NPC Lính Tuần · Sapidae Chiefdom)
 const TRUYNA_BANDS = [
   { max:14,  map:'daohoa',    name:'Đầu Lĩnh Gloam' },
   { max:29,  map:'ngoai',     name:'Đại Đầu Mục Gloam' },
@@ -5909,7 +5909,7 @@ const TRUYNA_BANDS = [
 ];
 // Vạn Duyên Các — gacha NPC Thần Toán Tử: 5% sách kỹ năng hiếm / 15% châu / 25% trang bị / 30% vật liệu / 25% Lumen·kinh nghiệm (KHÔNG pity)
 const VANDUYEN_RATES = [ { k:'bikip', w:5 }, { k:'chau', w:15 }, { k:'trangbi', w:25 }, { k:'vatlieu', w:30 }, { k:'bac', w:25 } ];
-// ---------- Hệ thống mới theo GDD Dream of Wuxia ----------
+// ---------- Hệ thống thêm ở bản GDD đời trước ----------
 // Instinct Channels: 8 mạch × 20 đốt, tiêu hao Instinct (tích lũy thụ động)
 // MERIDIANS đã GỠ — cả cơ chế lẫn tám cái tên của nó đều lạc phong cách MU.
 
@@ -6843,7 +6843,7 @@ function applyLine(s, k, v, P){
 let sideStates = {}; // { [id]: { st:'active'|'done'|'claimed', prog } } — khai báo sớm để quick-start (?sect=) không dính TDZ
 function newPlayer(sectKey){
   player = {
-    sect: sectKey, x: 1300, y: 1040, face: 0,  // xuất phát: Tương Dương Thành, gần Quách Đại Hiệp
+    sect: sectKey, x: 1300, y: 1040, face: 0,  // toạ độ đời trước; newPlayer() nay đọc MAPS[curMap].spawn
     level: 1, xp: 0, str: 5, agi: 5, def: 5, vit: 5, ene: 5, free: 0,
     hp: 130, qi: 55, silver: 30,
     equip: {}, inv: [], cd: { basic:0, a:0, tp:0 },
@@ -6872,7 +6872,7 @@ function newPlayer(sectKey){
     lvPeak: 1,                             // cấp cao nhất từng đạt — cổng mở khoá bám vào đây
     resetCount: 0,                         // Tẩy Tủy (Reset kiểu MU) — số lần đã tẩy tủy, +2% Công/Mạng vĩnh viễn/lần
     mastery: {}, mpts: 0, mptsTotal: 0, mRespec: 0, // Đại Thành: {nút: điểm} · điểm chưa dùng · tổng đã nhận · số lần tẩy điểm
-    // Dream of Wuxia systems
+    // hệ thêm ở bản GDD đời trước
     khi: 0,                                    // Instinct — tiền tệ nâng cấp bậc cao
     gems: { tuLa: 0, honNguyen: 0 },           // Tu La Tinh Thạch / Hỗn Nguyên Thạch
     mats: { manh:0, tichMa:0 },   // Vật liệu Kế Thừa (Drop v2.0)
@@ -20540,7 +20540,7 @@ window.sellJunk = function(){
 };
 
 // ═══════════ LÒ BÁT QUÁI — Phá Thiên Kiếp (+9 → +11) ═══════════
-// GDD: chỉ Tông Sư Thợ Rèn tại Lò Rèn Hoàng Gia (Tương Dương Thành) mới rèn được +10/+11.
+// GDD: chỉ Tông Sư Thợ Rèn tại lò rèn trong thành mới rèn được +10/+11.
 // +10 = 50%, +11 = 45%. Thất bại → trang bị VỠ NÁT (Thiên Mệnh Phù bảo hộ).
 // Tông Sư Thợ Rèn không còn màn riêng nữa — NPC chỉ mở đúng cỗ máy ở tab Rèn. Trước đây đây là
 // màn THỨ HAI, trùng nội dung với bảng Rèn, và các
@@ -21553,7 +21553,7 @@ function mapGate(id){
   if (OPEN_ALL_MAPS) return { ok:true };
   const md = MAPS[id];
   if (player.level < md.min) return { ok:false, why:'lv', need:md.min };
-  // QA regression: NV1 (gặp Quách Đại Hiệp) diễn ra trong thành — tân thủ chưa xong NV1
+  // QA regression: NV1 (gặp Trưởng Lão Rell) diễn ra trong thành — tân thủ chưa xong NV1
   // thì không thể bị khóa ngoài cổng thành, tránh kẹt cứng chính tuyến ngay từ đầu.
   if (id === 'tuongduong' && questIdx < 1) return { ok:true };
   // Cổng chính tuyến có lối vòng theo CẤP: vượt md.min đủ xa (MAP_LV_BYPASS cấp) thì vào được dù
@@ -23488,7 +23488,7 @@ const MAP_AMBIENT = {
   chungnam:   { kind:'firefly', color:'#b8e87a', n:20 }, // đom đóm lăng mộ
   comoc:      { kind:'wisp',    color:'#9a86d8', n:18 }, // tà khí cổ mộc
   tuyettinh:  { kind:'petal',   color:'#e890a8', n:24 }, // cánh hoa tuyệt tình
-  mongco:     { kind:'sand',    color:'#d8c89a', n:26 }, // cát mông cổ
+  mongco:     { kind:'sand',    color:'#d8c89a', n:26 }, // cát thảo nguyên
   nhanmon:    { kind:'snow',    color:'#eef4ff', n:30 }, // tuyết nhạn môn
 };
 const DUNGEON_AMBIENT = { kind:'ember', color:'#ff9a5a', n:16 }; // than hồng phó bản
@@ -24383,7 +24383,7 @@ window.openEventBoard = function(){
 };
 
 
-// ---------- Truy Nã Lệnh (GDD §5.9) — Bổ Đầu · Tương Dương ----------
+// ---------- Truy Nã Lệnh (GDD §5.9) — Lính Tuần · Sapidae Chiefdom ----------
 function truynaBand(){
   let idx = TRUYNA_BANDS.findIndex(b => player.level <= b.max);
   if (idx < 0) idx = TRUYNA_BANDS.length - 1;

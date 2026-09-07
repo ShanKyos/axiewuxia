@@ -167,7 +167,7 @@ export default function Login() {
         <Card className="w-full max-w-md border-[#5a4a32] bg-[#1d1712]">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-[#f0d68a]">
-              ⚔ Axie Wuxia
+              ⚔ Axie Rift
             </CardTitle>
             <p className="mt-1 text-sm text-[#a89980]">{t("offlineSub")}</p>
           </CardHeader>
@@ -188,7 +188,7 @@ export default function Login() {
       <Card className="w-full max-w-md border-[#5a4a32] bg-[#1d1712]">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-[#f0d68a]">
-            ⚔ Axie Wuxia
+            ⚔ Axie Rift
           </CardTitle>
           <p className="mt-1 text-sm text-[#a89980]">{t("cloudSub")}</p>
         </CardHeader>

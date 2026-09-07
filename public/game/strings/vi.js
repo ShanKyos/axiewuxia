@@ -1,4 +1,4 @@
-/* Axie Wuxia — Vietnamese string dictionary (translation). Mirrors en.js key-for-key.
+/* Axie Rift — Vietnamese string dictionary (translation). Mirrors en.js key-for-key.
    Keep every key here that exists in en.js so the VN locale toggle stays complete for
    migrated content — see docs/I18N_MIGRATION_GUIDE.md. */
 window.I18N_VI = {

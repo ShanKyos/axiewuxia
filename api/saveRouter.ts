@@ -23,7 +23,7 @@ export const saveRouter = createRouter({
         return { ok: true as const, skipped: true as const, savedAt: existing.savedAt };
       }
       await upsertSave(ctx.user.id, input.data, input.savedAt);
-      // Cập nhật Bảng Xếp Hạng Võ Lâm từ snapshot vừa lưu (bỏ qua nếu payload lỗi, nhưng log lại
+      // Cập nhật Bảng Xếp Hạng từ snapshot vừa lưu (bỏ qua nếu payload lỗi, nhưng log lại
       // để không âm thầm mất cập nhật bảng xếp hạng khi schema save đổi mà không ai để ý)
       try {
         const p = JSON.parse(input.data)?.player;
