@@ -1174,7 +1174,7 @@ Máy này có **hai repo khác nhau** và tên nhánh trùng nhau — đã suýt
 
 | Đường dẫn | Repo | Dùng để |
 |---|---|---|
-| `/home/user/axie-wuxia` | `ShanKyos/axiewuxia` | **game — mọi việc ở đây** |
+| `/home/user/axie-wuxia` | `ShanKyos/axierift` | **game — mọi việc ở đây** |
 | `/home/user/Volamchimong1` | `ShanKyos/Volamchimong1` | repo KHÁC, không liên quan game |
 
 Cạm bẫy: shell của agent **mặc định mở ở `/home/user/Volamchimong1`**, và cả hai repo đều
@@ -1185,7 +1185,7 @@ nhầm repo.
 hoặc `git -C /home/user/axie-wuxia …`. Kiểm nhanh trước khi push:
 
 ```bash
-git -C /home/user/axie-wuxia remote get-url origin   # phải ra .../axiewuxia
+git -C /home/user/axie-wuxia remote get-url origin   # phải ra .../axierift
 ```
 
 ### Còn hai vết sẹo nữa, đừng lặp lại
@@ -1209,9 +1209,15 @@ nhưng đó là môi trường khác — đừng suy ra production từ chúng.
 | | |
 |---|---|
 | Live | **http://14.225.204.107/** |
+> ⚠ **Kho đã đổi tên `axiewuxia` → `axierift`.** Đường dẫn TRÊN VPS thì KHÔNG đổi —
+> `/var/www/axiewuxia`, `deploy-axiewuxia.sh`, hostname `axiewuxia-xiiz` là thư mục và tên máy
+> trên server, không phải tên kho. GitHub tự chuyển hướng tên cũ, nên `git fetch` trong bản sao
+> ở VPS vẫn chạy và **cron deploy 2 phút/lần không cần đụng tới**. Đổi mấy đường dẫn đó là tự
+> tay làm vỡ deploy đang chạy.
+
 | Máy chủ | VPS Vietnix, hostname `axiewuxia-xiiz`, nginx |
 | Thư mục phục vụ | `/var/www/axiewuxia/public/game` |
-| Bản sao git | `/var/www/axiewuxia` (clone của `ShanKyos/axiewuxia`) |
+| Bản sao git | `/var/www/axiewuxia` (clone của `ShanKyos/axierift`) |
 | Tự động | cron `*/2 * * * * /root/deploy-axiewuxia.sh` |
 | Script | `git fetch origin main --quiet && git reset --hard origin/main --quiet` |
 

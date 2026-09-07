@@ -6,9 +6,10 @@ no build step for the game itself. Original IP built on Axie Infinity lore; see
 
 The engine was migrated from a shipped wuxia action RPG rather than written from scratch. That
 migration is finished: the wuxia setting, vocabulary and systems have been removed. What still
-reads like the old game is deliberate — directory and deploy paths (`axie-wuxia`,
-`/var/www/axiewuxia`) kept because renaming them would break the live deploy, and class/NPC keys
-(`thieulam`, `quachtinh`, …) kept for save compatibility. Neither ever reaches player-visible text.
+reads like the old game is deliberate — the local working directory (`axie-wuxia`) and the
+server deploy path (`/var/www/axiewuxia`) kept because renaming them would break the live deploy,
+and class/NPC keys (`thieulam`, `quachtinh`, …) kept for save compatibility. Neither ever reaches
+player-visible text.
 
 - **[`CLAUDE.md`](CLAUDE.md)** — the working spec. Read it before changing anything: it carries the
   three standing rules (MU style not wuxia · no MU Online proper nouns in player text · no vector
@@ -38,8 +39,8 @@ are in [`docs/PROMPT_MAP_ISOMETRIC.md`](docs/PROMPT_MAP_ISOMETRIC.md).
 required for local play/testing). Clone the repo, then serve that folder with anything static:
 
 ```
-git clone https://github.com/ShanKyos/axiewuxia.git
-cd axiewuxia/public/game
+git clone https://github.com/ShanKyos/axierift.git
+cd axierift/public/game
 python3 -m http.server 8850
 # or: npx serve -l 8850
 ```
