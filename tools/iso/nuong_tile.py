@@ -59,7 +59,41 @@ def _sach():
     # Tranh sprite 2D cần đúng cái ngược lại: màu ra ĐÚNG như đặt. Nên dùng 'Standard'.
     sc.view_settings.view_transform = 'Standard'
     sc.view_settings.look = 'None'
+    _vien_but(sc)
     return sc
+
+
+def _vien_but(sc, day=1.7, mau=(0.16, 0.10, 0.08)):
+    """NÉT VIỀN — thứ nhận ra Axie từ xa hơn bất cứ chi tiết nào khác.
+
+    Soi lại chính tranh Axie trong repo (assets/chimera/*.webp) thì ngôn ngữ hình của nó gọn
+    trong ba điều: thân là MỘT KHỐI TRÒN MỀM, bảng màu kẹo sáng, và quanh mọi thứ là một NÉT
+    VIỀN ĐẬM màu nâu ấm — không phải đen. Bộ prop nướng trước đó không có điều nào: khối lồi
+    lõm mặt gãy, xanh rừng trầm, và không nét. Đúng phép chiếu, đúng bóng, mà vẫn không ra Axie.
+    (Đáng ghi thêm: bg_quangtruong.jpg — tấm map DUY NHẤT đã duyệt — hoá ra không mang chất Axie
+    chút nào, nó là diorama trung cổ tối kiểu MU. Nên nó không dùng làm chuẩn Axie được.)
+
+    Dùng Freestyle chứ không dùng vỏ lộn ngược: vỏ lộn ngược phải nhân đôi mọi vật rồi lật pháp
+    tuyến, mà bộ này có vật dựng bằng bộ đẩy DISPLACE — nhân đôi xong nét viền lệch khỏi hình.
+    Freestyle vẽ nét TỪ hình học đã dựng xong nên không lệch được.
+    """
+    sc.render.use_freestyle = True
+    sc.render.line_thickness_mode = 'ABSOLUTE'
+    sc.render.line_thickness = day
+    vl = sc.view_layers[0]
+    vl.use_freestyle = True
+    fs = vl.freestyle_settings
+    for ls in list(fs.linesets):
+        fs.linesets.remove(ls)
+    ls = fs.linesets.new('vien')
+    # CHỈ bóng ngoài và mép vật — KHÔNG lấy nếp gãy. Bật nếp gãy thì mọi mặt của khối lồi lõm
+    # đều được kẻ một nét, tán lá ra một mớ lưới rối chứ không ra hình.
+    ls.select_silhouette = True
+    ls.select_border = True
+    ls.select_crease = False
+    ls.select_edge_mark = False
+    ls.linestyle.color = mau
+    ls.linestyle.thickness = day
 
 
 def _lin(mau):
@@ -204,6 +238,11 @@ def nuong_nen(ten, mau, van, hat=0.0):
     """Một viên nền hình thoi. `hat` đổi vân để hai viên cùng loại không giống hệt nhau."""
     sc = _sach(); sc.render.resolution_x, sc.render.resolution_y = W_TILE, H_TILE
     sc.render.film_transparent = True
+    # ⚠ VIÊN NỀN KHÔNG ĐƯỢC CÓ NÉT VIỀN. Nét viền là thứ làm vật thể ra chất Axie, nhưng viên
+    # nền thì bốn cạnh của nó là chỗ nó GHÉP với viên bên cạnh — kẻ nét quanh đó là kẻ nguyên
+    # một lưới ô vuông chạy khắp map, đúng cái lỗi bàn cờ mà cả lối lát viên sinh ra để tránh.
+    # Thấy ngay ở ảnh thử đầu tiên có nét.
+    sc.render.use_freestyle = False
     bpy.ops.mesh.primitive_plane_add(size=1)
     o = bpy.context.object
     o.data.materials.append(_vatlieu(ten, mau, van=van, manh_van=0.32 + hat))
@@ -302,8 +341,15 @@ def _kiem_khong_rong(duong, ten, toi_thieu):
 # lởm chởm và KHÔNG cây nào trùng cây nào.
 
 def _cum_la(mau, tam, ban, hat, so_khoi=5, det=0.78):
-    """Tán lá: `so_khoi` khối cầu méo, mép bị nhiễu đẩy → bóng ngoài lởm chởm."""
+    """Tán lá: `so_khoi` khối cầu méo, mép bị nhiễu đẩy → bóng ngoài lởm chởm.
+
+    ⚠ NHẬP LÀM MỘT LƯỚI TRƯỚC KHI RỜI KHỎI HÀM. Freestyle kẻ nét theo bóng ngoài của TỪNG VẬT,
+    nên để năm khối rời thì năm khối ai cũng được một vòng nét — tán lá ra một mớ vòng tròn
+    chồng nhau, thấy rõ ở ảnh thử đầu tiên có nét. Nhập lại thì chỉ còn đúng bóng ngoài của cả
+    cụm, đúng thứ cần.
+    """
     rnd = random.Random(hat)
+    truoc = set(bpy.context.scene.objects)
     m = _vatlieu(f'la{hat}', mau, van=26, manh_van=0.45)
     for i in range(so_khoi):
         a = rnd.uniform(0, math.tau)
@@ -325,14 +371,15 @@ def _cum_la(mau, tam, ban, hat, so_khoi=5, det=0.78):
         md.strength = ban * 0.55
         md.mid_level = 0.42
         o.data.materials.append(m)
-        # ⚠ MẶT GÃY, KHÔNG LÀM MƯỢT. `shade_smooth` bình quân pháp tuyến nên khối lồi lõm ra
-        # một quả bóng nhẵn — đúng thứ thấy trong ảnh thử: cây như thú nhồi bông. Để mặt gãy
-        # thì mỗi mặt bắt nắng một kiểu, đọc ra thành TỪNG CHÙM LÁ. Đây cũng chính là lối tạo
-        # hình mà dòng game 2D đẳng cự dùng, không phải chỗ tôi đi tắt.
-        bpy.ops.object.shade_flat()
+        # ⚠ MẶT MƯỢT — và tôi đã đi qua đúng một vòng ở chỗ này. Ban đầu để mượt: ra quả bóng
+        # nhẵn như thú nhồi bông. Đổi sang mặt gãy: đọc ra từng chùm lá, đẹp hơn hẳn. Rồi soi
+        # tranh Axie thật thì hoá ra Axie KHÔNG dùng mặt gãy — nó là khối tròn mềm, và thứ tách
+        # khối ra khỏi nền không phải nếp gãy mà là NÉT VIỀN. Có nét viền rồi thì mặt mượt đọc
+        # ra "vẽ minh hoạ"; còn mặt gãy cộng nét viền thì thành một mớ đa diện.
+        bpy.ops.object.shade_smooth()
 
 
-def _than(cao, day=0.15, nghieng=0.0, mau=(0.34, 0.26, 0.19)):
+def _than(cao, day=0.15, nghieng=0.0, mau=(0.48, 0.34, 0.24)):
     bpy.ops.mesh.primitive_cone_add(radius1=day * 1.5, radius2=day * 0.8, depth=cao,
                                     location=(0, 0, cao / 2))
     o = bpy.context.object
@@ -377,7 +424,7 @@ def _da(co, meo, hat):
         t = bpy.data.textures.new(f'td{hat}', 'CLOUDS'); t.noise_scale = co * 0.55
         md = o.modifiers.new('d', 'DISPLACE'); md.texture = t
         md.texture_coords = 'GLOBAL'; md.strength = co * 0.34; md.mid_level = 0.45
-        o.data.materials.append(_vatlieu('da', (0.47, 0.45, 0.42), van=16, manh_van=0.30))
+        o.data.materials.append(_vatlieu('da', (0.66, 0.63, 0.60), van=16, manh_van=0.30))
         bpy.ops.object.shade_flat()      # đá là mặt gãy, KHÔNG làm mượt
     return f
 
@@ -412,6 +459,7 @@ def nuong_vet(ten, mau, van, hat, ban=2.2):
     sc.render.resolution_x = round(ban * W_TILE)
     sc.render.resolution_y = round(ban * H_TILE)          # dẹt 2:1 như hình thoi
     sc.render.film_transparent = True
+    sc.render.use_freestyle = False        # vệt nằm bẹp trên nền, kẻ nét là ra một mảng dán
     bpy.ops.mesh.primitive_plane_add(size=ban)
     o = bpy.context.object
     m = _vatlieu(ten, mau, van=van, manh_van=0.3 + hat)
@@ -468,8 +516,10 @@ def main():
     # Luật: biến thể đổi VÂN, KHÔNG đổi TÔNG. Muốn map có mảng đậm nhạt thì dùng vệt đất hoặc
     # vật thể, đừng dùng biến thể nền.
     # Bảng màu khai bằng sRGB (xem `_lin`) — đọc được, so được với tranh Quảng Trường Cũ.
-    CO  = (0.31, 0.43, 0.21)     # cỏ rừng
-    DAT = (0.63, 0.53, 0.38)     # đất mòn, ấm, tương phản rõ với cỏ
+    # Bảng màu KẸO, lấy thẳng từ tranh Axie: sáng, no màu, ngả ấm. Bản trước là xanh rừng trầm
+    # (0,31/0,43/0,21) — đúng màu một khu rừng thật, và sai hẳn màu một thế giới Axie.
+    CO  = (0.44, 0.62, 0.30)     # cỏ non
+    DAT = (0.76, 0.62, 0.42)     # đất ấm, ngả cát
     nuong_nen('nen_co1',  CO,  van=9,  hat=0.00)
     nuong_nen('nen_co2',  CO,  van=9,  hat=0.31)
     nuong_nen('nen_co3',  CO,  van=9,  hat=0.62)
@@ -487,7 +537,7 @@ def main():
     # Tán lá ĐẬM HƠN cỏ: tán nằm trong bóng của chính nó. Bản đầu lá sáng ngang cỏ nên cây
     # chìm vào nền, phải nhờ bóng đổ mới tách ra được.
     # Cỡ vẽ ra lấy theo thân nhân vật 95 px: cây lớn 3,0× · cây thường 2,6× · cây con 2,0×.
-    LA_A, LA_B, LA_C = (0.19, 0.32, 0.15), (0.25, 0.38, 0.17), (0.31, 0.37, 0.19)
+    LA_A, LA_B, LA_C = (0.29, 0.52, 0.26), (0.38, 0.62, 0.30), (0.50, 0.66, 0.31)
     nuong_vat('cay1', _cay_tan(1.7, 1.35, LA_A, 11),            cao_px=round(CAO_NV * 2.9))
     nuong_vat('cay2', _cay_tan(2.3, 1.15, LA_B, 27, so_khoi=6), cao_px=round(CAO_NV * 3.1))
     nuong_vat('cay3', _cay_tan(1.3, 1.55, LA_C, 43, det=0.62),  cao_px=round(CAO_NV * 2.4))
@@ -501,8 +551,8 @@ def main():
     nuong_vat('da1', _da(0.70, (1.0, 0.9, 0.72), 3), cao_px=round(CAO_NV * 0.62))
     nuong_vat('da2', _da(0.48, (1.2, 0.8, 0.60), 5), cao_px=round(CAO_NV * 0.42))
     nuong_vat('da3', _da(0.95, (0.9, 1.1, 0.58), 7), cao_px=round(CAO_NV * 0.86))
-    nuong_vat('co1', _co_bui(0.40, (0.34, 0.46, 0.22), 131), cao_px=round(CAO_NV * 0.34))
-    nuong_vat('co2', _co_bui(0.62, (0.38, 0.44, 0.24), 137), cao_px=round(CAO_NV * 0.48))
+    nuong_vat('co1', _co_bui(0.40, (0.50, 0.68, 0.32), 131), cao_px=round(CAO_NV * 0.34))
+    nuong_vat('co2', _co_bui(0.62, (0.55, 0.66, 0.34), 137), cao_px=round(CAO_NV * 0.48))
     # Toạ độ CHÂN từng sprite — trình ghép (và engine) neo theo đây, không đoán đáy-giữa khung.
     with open(os.path.join(RA, 'neo.json'), 'w', encoding='utf-8') as f:
         json.dump(NEO, f, indent=1)
