@@ -82,6 +82,27 @@ def phac(md, out):
 
     img.save(out, quality=92)
 
+    # ── Bản SẠCH để đưa cho model — CHỈ BA TÔNG, KHÔNG MÀU LẠ ──
+    # ⚠ Bản đầu tô lối ra bằng XANH DƯƠNG và tô vòng đấu trường bằng ĐỎ. Model đọc xanh dương
+    # là NƯỚC: bốn lối ra thành bốn con sông cắt hòn đảo làm 5-6 mảnh, sàn liền khối co lại còn
+    # ~1/4 khung. Mọi màu lạ trong ảnh tham chiếu đều bị model dịch thành VẬT LIỆU.
+    # Bản sạch vì thế chỉ giữ ba tông: ngoài / vành / sàn. Lối ra không phải một màu riêng —
+    # nó là chính vùng SÀN kéo dài chạm tới mép. Bản có chú giải ở trên chỉ để người xem.
+    sach = np.zeros((H, W, 3), 'uint8')
+    sach[:] = MAU['ngoai']
+    sach[dat] = MAU['vanh']
+    sach[san] = MAU['san']
+    ims = Image.fromarray(sach)
+    ds = ImageDraw.Draw(ims)
+    for x, y in cong:      # lối ra: kéo chính màu SÀN ra tới mép, không thêm màu nào khác
+        canh = min([(y, (x, 0)), (H - y, (x, H)), (x, (0, y)), (W - x, (W, y))])[1]
+        ds.line([(x, y), canh], fill=MAU['san'], width=260)
+    ims.save(out.replace('.jpg', '_sach.jpg'), quality=92)
+
+    k43s = Image.new('RGB', (W, round(W * 3 / 4)), MAU['ngoai'])
+    k43s.paste(ims, (0, (k43s.height - H) // 2))
+    k43s.save(out.replace('.jpg', '_sach_43.jpg'), quality=92)
+
     # Bản ĐỆM 4:3 — meowa/Nano Banana chỉ nhận vài tỉ lệ cố định, gần khổ 2600×1900 (1,368)
     # nhất là 4:3 (1,333). Đưa ảnh tham chiếu 1,368 rồi đòi ra 1,333 thì bố cục bị bóp lệch,
     # nên đệm sẵn: thêm nền ở trên và dưới cho đủ 2600×1950, sinh xong cắt lại 50px là khít.

@@ -322,27 +322,43 @@ Chiefdom là một cái THÀNH — tức là đúng trường hợp ảnh mẫu 
 `bg_comoc` cũng là rừng nhìn từ trên xuống, cùng chủ đề nên chuyển phong cách có cơ hội cao nhất.
 Chốt được phong cách ở tấm rừng rồi hãy làm thành.
 
+> ⚠ **BÀI HỌC TỪ LƯỢT SINH ĐẦU TIÊN — mặt nạ có màu lạ thì model dịch màu ấy thành VẬT LIỆU.**
+> Bản mặt nạ đầu tô lối ra bằng **xanh dương** (ý là "lối phải thông ra mép") và tô vòng đấu
+> trường bằng **đỏ**. Model đọc xanh dương là **NƯỚC**: bốn lối ra thành bốn con sông **cắt hòn
+> đảo thành 5-6 mảnh rời**, và sàn đi được liền khối co lại còn khoảng một phần tư khung.
+> Tấm ra nhìn đẹp, nhưng lắp vào là map vỡ vụn.
+>
+> Sửa ở gốc: `phac_bocuc.py` nay xuất thêm bản **`_sach`** chỉ có **ba tông** — ngoài / vành /
+> sàn. Lối ra KHÔNG phải một màu riêng nữa, nó là **chính vùng sàn kéo dài chạm tới mép**.
+> Bản có chú giải (xanh, đỏ) chỉ để NGƯỜI đọc, đừng bao giờ đưa cho model.
+
 **Hai ảnh tham chiếu, đúng thứ tự:**
 
 | | |
 |---|---|
-| ① `docs/phac_map/phac_chungnam_43.jpg` | bản đồ bố cục — sáng là sàn phải để trống (82,1%), nâu là chỗ được dựng vật, xanh là lối phải thông ra mép |
+| ① `docs/phac_map/phac_chungnam_sach_43.jpg` | bản đồ bố cục **bản sạch** — sáng là sàn phải để trống (82,1%), nâu là chỗ được dựng cây/đá, hết. |
 | ② `public/game/assets/maps/bg_comoc.jpg` | mẫu phong cách Axie — rừng nhìn từ trên xuống, bão hoà 0,47 |
 
 **Prompt** (ngắn, đúng luật meowa ở §5b):
 
 > Top-down diorama of a forest clearing on one landmass, seen from directly above. Use the first
-> reference as a layout map: the pale area is open mossy ground and leaf litter that must stay
-> clear and walkable, the blue channels are paths reaching the edge of the land, and only the dark
-> brown rim holds tall things — clustered round tree canopies, a few toppled stone markers, thorn
-> scrub. The land sits on a thick plinth of soil and rock, surrounded by flat empty space. No sky,
-> no horizon, no characters. Match the painting style and palette of the second reference.
+> reference as a layout map: the pale area is one single connected clearing of open mossy ground
+> and leaf litter, unbroken, reaching the edge of the land in several places; only the dark brown
+> rim holds tall things — clustered round tree canopies, a few toppled stone markers, thorn scrub.
+> No river or water crosses the clearing. The land sits on a thick plinth of soil and rock,
+> surrounded by flat empty space. No sky, no horizon, no characters. Match the painting style and
+> palette of the second reference.
 
-**Nếu tấm đầu chưa đạt, sửa ĐÚNG MỘT ràng buộc mỗi lần**, theo thứ tự hay hỏng nhất:
+⚠ **Độ phân giải phải ≥ 2600 rộng.** Lượt đầu ra 1024×768 — đó là mức mặc định `1K`, phóng lên
+khổ map 2600×1900 sẽ nhoè. Qua meowa thì `--resolution 4K`; qua giao diện Gemini thì chọn mức
+lớn nhất. Đây là nửa còn lại của cảm giác "nhỏ quá": một nửa do sông cắt vụn sàn, một nửa do ảnh
+bé hơn khổ map 2,5 lần.
+
+**Nếu tấm sau vẫn chưa đạt, sửa ĐÚNG MỘT ràng buộc mỗi lần**, theo thứ tự hay hỏng nhất:
 
 1. Cây mọc vào giữa sàn → thêm *"Keep the pale area completely free of trees."*
-2. Hiện ra trời hoặc chân trời → *"The camera looks straight down; no sky is visible anywhere."*
-3. Lối ra bị bịt → *"Each pale path stays open all the way to the edge of the land."*
+2. Sàn vẫn bị chia cắt → *"The clearing is one unbroken piece from edge to edge."*
+3. Hiện ra trời hoặc chân trời → *"The camera looks straight down; no sky is visible anywhere."*
 4. Màu tối/xám đi → **bớt** chữ trong prompt, đừng thêm; để ảnh tham chiếu ② nói.
 5. Ra viền đen kiểu hoạt hình → *"No black outlines; separate shapes by value and hue only."*
 
