@@ -340,8 +340,11 @@ window.BOSS_DEFS = {
   corran: { thuve:[
       { id:'co1', name:'Rễ Cổ Thức Giấc',    lv:34, el:'Mộc',  img:'mocnhan', x:0.1231, y:0.8842, moves:['vong','vach','cuong'] },
       { id:'co2', name:'Kẻ Canh Vòng Cổng',  lv:36, el:'Thổ',  img:'thinu',   x:0.4923, y:0.5053, moves:['vach','xung','goi'] },
-      { id:'co3', name:'Axie Sa Ngã Đầu Đàn',lv:38, el:'Thủy', img:'bandao',  x:0.9231, y:0.1684, moves:['xung','vong','cuong'] } ],
-    tranai: { id:'co4', name:'Người Giữ Rẻo Corran', lv:41, el:'Mộc', img:'boss_mochu', x:0.9231, y:0.8842, moves:['vong','vach','goi','cuong'] } },
+      { id:'co3', name:'Axie Sa Ngã Đầu Đàn',lv:38, el:'Thủy', img:'bandao',  x:0.7538, y:0.1263, moves:['xung','vong','cuong'] } ],
+    tranai: { id:'co4', name:'Người Giữ Rẻo Corran', lv:41, el:'Mộc', img:'boss_mochu', x:0.7538, y:0.8842, moves:['vong','vach','goi','cuong'] } },
+  // Trum Loi Mon dung o TAN CUNG lan -- di het duong moi gap. Do la phan thuong cua viec di het.
+  loimon: { thuve:[],
+    tranai: { id:'lm1', name:'Kẻ Chặn Cuối Lối', lv:50, el:'Thổ', img:'mocnhan', x:0.9300, y:0.5744, moves:['vach','vong','goi','cuong'] } },
   comoc: { thuve:[
       { id:'cm1', name:'Chỉ Huy Vong Binh',  lv:43, el:'Thổ',  img:'kybinh',   x:0.3654, y:0.4579, moves:['xung','vach','goi'] },
       { id:'cm2', name:'Kẻ An Táng Bóng Tối',lv:46, el:'Thủy', img:'thinu',    x:0.5654, y:0.8053, moves:['vong','xung','cuong'] },
@@ -781,8 +784,91 @@ window.MAPS = {
   // Vì sao là Corran: Người Gác Rừng Corran đã có sẵn trong game (NPC `daosi` ở Werebear Woods),
   // và dải cấp 38-42 đang TRỐNG giữa Werebear Woods (24-38) và Bug Tribe Tunnels (42-56) — nên
   // map này lấp một lỗ thật, không phải map thêm cho có.
+  // == LOI MON CORRAN -- map dang LAN dau tien. Xem docs/DUONG_DI_VA_GOC_NHIN.md ==
+  // Day la MAU THU co chu dich: hinh hoc sinh bang `tools/dung_lan.py`, con tranh nen thi muon
+  // tam cua Reo Rung Corran keo dan -- XAU, va co tinh xau. Muc dich la tra loi mot cau truoc khi
+  // dat bat ky tam art nao: di trong mot hanh lang co ra cam giac dung khong.
+  //
+  // Khac moi map cu o ba cho:
+  //   - `w`/`h` rieng -- 6400x1400, nam man chieu ngang. Truoc day ca game chung mot kho.
+  //   - `diTrong` la HANH LANG chu khong phai mat san -- san chi 33,9% kho map, va do la dung.
+  //   - `vatDat` dat cay theo TOA DO, hai hang men mep duong. Hang duoi (y lon) ve DE len nguoi
+  //     choi vi engine xep lop theo y -- do la thu cho cam giac dang o TRONG rung.
+  //
+  // Thang cap anh xa vao QUANG DUONG: C38 dau lan -> C42 giua -> C48 cuoi, roi trum o tan cung.
+  // Di xa hon = quai nang hon, khong can mot dong chu nao giai thich.
+  loimon: { name:'Lối Mòn Corran', min:40, range:'42 - 48', type:'pk', hinh:'hanhlang',
+    w:6400, h:1400, ground:'#cfd2ae', patch:'#6a7a52',
+    // Diem tha cach cong Tay 277px. Ban dau dat o x=200 -- chi 92px, ma ban kinh bat cong la 90:
+    // nguoi choi vao map bang duong khac la bi hut nguoc ve Reo Rung Corran ngay lap tuc.
+    spawnFrom:{ corran:{ x:330, y:779 } }, spawn:{ x:380, y:790 }, trees:0, rocks:0,
+    desc:'Lối mòn men theo rẻo rừng, chạy mãi về đông. Cây khép hai bên, không có đường tắt.',
+    voi: 6000,
+    vung: [
+      { id:'bandao', ten:'Khoảnh Đầu Lối', dai:[0.10,0.34], cung:[-10,10], cum:[2,2], tiep:true,
+        dan:[{ mob:'bandao', n:10, vai:['can','xa'] }] },        // C38
+      { id:'thinu', ten:'Khoảnh Giữa', dai:[0.40,0.64], cung:[-10,10], cum:[2,2], tiep:true,
+        dan:[{ mob:'thinu', n:11, vai:['can','phap'] }] },       // C42
+      { id:'mocnhan', ten:'Khoảnh Cuối Lối', dai:[0.70,0.95], cung:[-10,10], cum:[2,2], tiep:true,
+        dan:[{ mob:'mocnhan', n:11 }] },                          // C48
+    ],
+    diTrong: [
+      [60,465], [260,514], [460,557], [660,590], [860,612], [1060,620],
+      [1260,613], [1460,592], [1660,571], [1860,586], [2060,518], [2260,419],
+      [2460,371], [2660,331], [2860,301], [3060,284], [3260,281], [3460,292],
+      [3660,320], [3860,413], [4060,462], [4260,454], [4460,498], [4660,543],
+      [4860,580], [5060,606], [5260,619], [5460,617], [5660,601], [5860,571],
+      [6060,532], [6260,485], [6340,465], [6340,965], [6260,985], [6060,1032],
+      [5860,1071], [5660,1101], [5460,1117], [5260,1119], [5060,1106], [4860,1080],
+      [4660,1043], [4460,998], [4260,943], [4060,836], [3860,795], [3660,815],
+      [3460,792], [3260,781], [3060,784], [2860,801], [2660,831], [2460,871],
+      [2260,918], [2060,919], [1860,947], [1660,1047], [1460,1092], [1260,1113],
+      [1060,1120], [860,1112], [660,1090], [460,1057], [260,1014], [60,965]
+    ],
+    vatDat: [
+      { x:40, y:365, s:0.93 }, { x:40, y:1055, s:1.08 }, { x:205, y:406, s:1.0 }, { x:205, y:1096, s:1.14 }, { x:370, y:443, s:1.06 },
+      { x:370, y:1133, s:1.21 }, { x:535, y:476, s:0.95 }, { x:535, y:1166, s:1.1 }, { x:700, y:501, s:1.02 }, { x:700, y:1191, s:1.17 },
+      { x:865, y:518, s:1.08 }, { x:865, y:1208, s:1.23 }, { x:1030, y:525, s:0.96 }, { x:1030, y:1215, s:1.11 }, { x:1195, y:522, s:1.02 },
+      { x:1195, y:1212, s:1.17 }, { x:1360, y:509, s:1.08 }, { x:1360, y:1199, s:1.23 }, { x:1525, y:488, s:0.95 }, { x:1525, y:1178, s:1.1 },
+      { x:1690, y:478, s:1.01 }, { x:1690, y:1128, s:1.15 }, { x:1855, y:492, s:1.08 }, { x:1855, y:1044, s:1.19 }, { x:2020, y:444, s:0.95 },
+      { x:2020, y:1012, s:1.07 }, { x:2185, y:353, s:0.99 }, { x:2185, y:1021, s:1.13 }, { x:2350, y:302, s:1.03 }, { x:2350, y:992, s:1.18 },
+      { x:2515, y:264, s:0.91 }, { x:2515, y:954, s:1.05 }, { x:2680, y:232, s:0.96 }, { x:2680, y:922, s:1.11 }, { x:2845, y:208, s:1.01 },
+      { x:2845, y:898, s:1.16 }, { x:3010, y:192, s:0.89 }, { x:3010, y:882, s:1.04 }, { x:3175, y:185, s:0.95 }, { x:3175, y:875, s:1.1 },
+      { x:3340, y:189, s:1.01 }, { x:3340, y:879, s:1.16 }, { x:3505, y:202, s:0.89 }, { x:3505, y:892, s:1.04 }, { x:3670, y:228, s:0.96 },
+      { x:3670, y:910, s:1.1 }, { x:3835, y:306, s:1.04 }, { x:3835, y:893, s:1.16 }, { x:4000, y:363, s:0.93 }, { x:4000, y:906, s:1.04 },
+      { x:4165, y:360, s:0.99 }, { x:4165, y:989, s:1.12 }, { x:4330, y:371, s:1.05 }, { x:4330, y:1061, s:1.2 }, { x:4495, y:411, s:0.94 },
+      { x:4495, y:1101, s:1.09 }, { x:4660, y:448, s:1.01 }, { x:4660, y:1138, s:1.15 }, { x:4825, y:480, s:1.07 }, { x:4825, y:1170, s:1.22 },
+      { x:4990, y:504, s:0.96 }, { x:4990, y:1194, s:1.11 }, { x:5155, y:519, s:1.02 }, { x:5155, y:1209, s:1.17 }, { x:5320, y:525, s:1.08 },
+      { x:5320, y:1215, s:1.23 }, { x:5485, y:521, s:0.96 }, { x:5485, y:1211, s:1.11 }, { x:5650, y:507, s:1.02 }, { x:5650, y:1197, s:1.17 },
+      { x:5815, y:484, s:1.07 }, { x:5815, y:1174, s:1.22 }, { x:5980, y:454, s:0.95 }, { x:5980, y:1144, s:1.1 }, { x:6145, y:417, s:1.0 },
+      { x:6145, y:1107, s:1.15 }, { x:6310, y:377, s:1.05 }, { x:6310, y:1067, s:1.2 }, { x:122, y:235, s:0.9 }, { x:122, y:1225, s:1.11 },
+      { x:287, y:275, s:0.97 }, { x:287, y:1265, s:1.18 }, { x:452, y:310, s:1.04 }, { x:452, y:1300, s:1.25 }, { x:617, y:339, s:0.92 },
+      { x:617, y:1329, s:1.13 }, { x:782, y:360, s:0.99 }, { x:782, y:1350, s:1.2 }, { x:947, y:372, s:1.05 }, { x:1112, y:375, s:0.93 },
+      { x:1277, y:367, s:0.99 }, { x:1277, y:1357, s:1.2 }, { x:1442, y:350, s:1.04 }, { x:1442, y:1340, s:1.26 }, { x:1607, y:326, s:0.92 },
+      { x:1607, y:1312, s:1.13 }, { x:1772, y:338, s:0.98 }, { x:1772, y:1234, s:1.17 }, { x:1937, y:328, s:1.04 }, { x:1937, y:1169, s:1.22 },
+      { x:2102, y:248, s:0.9 }, { x:2102, y:1167, s:1.1 }, { x:2267, y:172, s:0.95 }, { x:2267, y:1162, s:1.16 }, { x:2432, y:133, s:1.0 },
+      { x:2432, y:1123, s:1.21 }, { x:2597, y:98, s:0.87 }, { x:2597, y:1088, s:1.08 }, { x:2762, y:69, s:0.92 }, { x:2762, y:1059, s:1.14 },
+      { x:2927, y:49, s:0.98 }, { x:2927, y:1039, s:1.19 }, { x:3092, y:1027, s:1.07 }, { x:3257, y:1026, s:1.13 }, { x:3422, y:44, s:0.98 },
+      { x:3422, y:1034, s:1.19 }, { x:3587, y:62, s:0.86 }, { x:3587, y:1052, s:1.08 }, { x:3752, y:113, s:0.93 }, { x:3752, y:1054, s:1.14 },
+      { x:3917, y:192, s:1.01 }, { x:3917, y:1040, s:1.19 }, { x:4082, y:217, s:0.9 }, { x:4082, y:1092, s:1.08 }, { x:4247, y:208, s:0.95 },
+      { x:4247, y:1182, s:1.16 }, { x:4412, y:241, s:1.02 }, { x:4412, y:1231, s:1.23 }, { x:4577, y:280, s:0.91 }, { x:4577, y:1270, s:1.12 },
+      { x:4742, y:315, s:0.98 }, { x:4742, y:1305, s:1.19 }, { x:4907, y:343, s:1.04 }, { x:4907, y:1333, s:1.26 }, { x:5072, y:363, s:0.93 },
+      { x:5072, y:1353, s:1.14 }, { x:5237, y:373, s:0.99 }, { x:5402, y:374, s:1.05 }, { x:5567, y:365, s:0.93 }, { x:5567, y:1355, s:1.14 },
+      { x:5732, y:347, s:0.98 }, { x:5732, y:1337, s:1.2 }, { x:5897, y:320, s:1.04 }, { x:5897, y:1310, s:1.25 }, { x:6062, y:286, s:0.91 },
+      { x:6062, y:1276, s:1.12 }, { x:6227, y:248, s:0.96 }, { x:6227, y:1238, s:1.18 }, { x:40, y:65, s:0.86 }, { x:40, y:1355, s:1.14 },
+      { x:205, y:106, s:0.93 }, { x:370, y:143, s:1.0 }, { x:535, y:176, s:0.89 }, { x:700, y:201, s:0.95 }, { x:865, y:218, s:1.02 },
+      { x:1030, y:225, s:0.9 }, { x:1195, y:222, s:0.96 }, { x:1360, y:209, s:1.01 }, { x:1525, y:188, s:0.89 }, { x:1690, y:178, s:0.95 },
+      { x:1855, y:192, s:1.01 }, { x:1855, y:1344, s:1.26 }, { x:2020, y:144, s:0.88 }, { x:2020, y:1312, s:1.13 }, { x:2185, y:53, s:0.92 },
+      { x:2185, y:1321, s:1.19 }, { x:2350, y:1292, s:1.25 }, { x:2515, y:1254, s:1.12 }, { x:2680, y:1222, s:1.17 }, { x:2845, y:1198, s:1.23 },
+      { x:3010, y:1182, s:1.1 }, { x:3175, y:1175, s:1.16 }, { x:3340, y:1179, s:1.22 }, { x:3505, y:1192, s:1.11 }, { x:3670, y:1210, s:1.17 },
+      { x:3835, y:1193, s:1.23 }, { x:4000, y:63, s:0.86 }, { x:4000, y:1206, s:1.11 }, { x:4165, y:60, s:0.92 }, { x:4165, y:1289, s:1.19 },
+      { x:4330, y:71, s:0.99 }, { x:4495, y:111, s:0.87 }, { x:4660, y:148, s:0.94 }, { x:4825, y:180, s:1.01 }, { x:4990, y:204, s:0.89 },
+      { x:5155, y:219, s:0.96 }, { x:5320, y:225, s:1.02 }, { x:5485, y:221, s:0.9 }, { x:5650, y:207, s:0.95 }, { x:5815, y:184, s:1.01 },
+      { x:5980, y:154, s:0.88 }, { x:6145, y:117, s:0.94 }, { x:6310, y:77, s:0.99 },
+    ],
+    duhiep:'duhiep2' },
   corran: { name:'Rẻo Rừng Corran', min:36, range:'38 - 42', type:'pk', ground:'#cfd2ae', patch:'#6a7a52',
-    spawnFrom:{ chungnam:{ x:330, y:700 } }, spawn:{ x:300, y:760 }, trees:34, rocks:18,
+    spawnFrom:{ chungnam:{ x:330, y:700 }, loimon:{ x:2550, y:620 } }, spawn:{ x:300, y:760 }, trees:34, rocks:18,
     desc:'Khoảnh rừng Corran giữ riêng, ngoài tầm bầy Werebear. Ông ấy không nói vì sao lại giữ.',
     voi: 1700,
     // Dải 38-42 bắc cầu giữa Werebear Woods (kết ở C38 `bandao`) và Bug Tribe Tunnels (mở ở
@@ -904,6 +990,20 @@ window.MAP_OBSTACLES = {
   // ⚠ Còn một chỗ sai nhìn thấy được: cổng torii sơn đỏ bị lớp tán lá nhận nhầm, nên lòng cổng
   // bị chặn. Cổng ấy chỉ là vật trang trí, đi vòng được, nên tôi KHÔNG thêm phép đo thứ tư để
   // chữa — xem `cham_map.py` để biết vì sao chế thêm phép thống kê là đường đã hỏng ba lần.
+  // LOI MON CORRAN -- 14 tang da NAM TRONG lan, khong phai o mep. Ba viec cung luc:
+  //   1. VAT CHE co tran danh -- lan khong co gi de nup la mot cai ong tran. test_domap doi >=8%
+  //      o luoi quanh vat can co duong kinh >= 0,40 x NV_CAO; da decor nho hon nguong nay nen
+  //      khong tinh (do la mon no #142: da co tran danh da bi go va chua ve lai).
+  //   2. rimBuild() lan theo MAP_OBSTACLES, nen chung TU CO vien da danh dau -- nhin thay duoc.
+  //   3. Cho tran danh mot hinh dang: vong ra sau tang da de tranh don xa.
+  // Dat le mot ben, va TRANH hai cho that: dat da o cho that la bit lan. Do lai: cho hep nhat
+  // con 392px sau khi khoet -- tren nguong 340 cua test_sandat.
+  loimon: [
+    { x:760, y:1023, rx:55, ry:28 }, { x:1060, y:700, rx:55, ry:28 }, { x:1360, y:1024, rx:55, ry:28 }, { x:2260, y:498, rx:55, ry:28 },
+    { x:2560, y:770, rx:55, ry:28 }, { x:2860, y:381, rx:55, ry:28 }, { x:3160, y:700, rx:55, ry:28 }, { x:3460, y:372, rx:55, ry:28 },
+    { x:4360, y:893, rx:55, ry:28 }, { x:4660, y:623, rx:55, ry:28 }, { x:4960, y:1015, rx:55, ry:28 }, { x:5260, y:699, rx:55, ry:28 },
+    { x:5560, y:1031, rx:55, ry:28 }, { x:5860, y:651, rx:55, ry:28 },
+  ],
   corran: [
     { x:7, y:7, wd:126, ht:1293 }, { x:1380, y:76, rx:25, ry:13 }, { x:1040, y:168, rx:40, ry:20 }, { x:174, y:230, rx:42, ry:21 },
     { x:2293, y:244, rx:42, ry:21 }, { x:2144, y:274, rx:65, ry:33 }, { x:1931, y:385, wd:220, ht:139 }, { x:2316, y:497, wd:94, ht:250 },

@@ -13,6 +13,7 @@ const SAN = {
   loai:      3,      // loài quái mỗi map có bãi quái — hiện thấp nhất đúng 3
   matDo:     1.30,   // điểm nội dung / 1000 ô đi được — hiện thấp nhất 1.39
   diemMap:  10,      // điểm nội dung mỗi map — hiện thấp nhất 11
+  thoangLan: 25,     // riêng map dạng LÀN — xem chỗ dùng. Lối Mòn Corran đo được 36,2%.
   thoang:   55,      // % ô lưới đi được — hiện thấp nhất 60,7% (comoc). Sàn này ĐO ĐƯỢC chứ
                      // không phải đoán: bản đầu tôi đặt 80 theo cảm giác và nó bắt vạ 5/8 map.
 };
@@ -43,7 +44,14 @@ const TRAN = {
 
   const r = await p.evaluate(() => {
     navEnsure();
-    const W = _navW, H = _navH, N = W * H, C = NAV_CELL;
+    // ⚠ Khổ lưới KHÔNG được chốt một lần ở đây. Bản đầu lấy `_navW/_navH` của map đang đứng lúc
+    // vào bài rồi dùng cho cả vòng lặp — hồi đó đúng, vì mọi map chung một khổ 2600x1900. Từ khi
+    // có map khổ riêng (Lối Mòn Corran 6400x1400) thì nó sai im lặng: mỗi map dựng lưới của
+    // riêng nó, còn W/H/N vẫn là số cũ, nên mọi điểm nội dung ở x > 2400 bị đọc lệch chỉ số và
+    // bài báo "đi không tới" cho những chỗ thật ra đi tới thoải mái.
+    let W = _navW, H = _navH, N = W * H;
+    const C = NAV_CELL;
+    const doLaiKhungLuoi = () => { W = _navW; H = _navH; N = W * H; };
     const oCua = (x, y) => navFreeCell(
       Math.min(W - 1, Math.max(0, Math.floor(x / C))),
       Math.min(H - 1, Math.max(0, Math.floor(y / C))));
@@ -68,7 +76,7 @@ const TRAN = {
     };
     const o = {};
     for (const id of Object.keys(MAPS).filter(k => !MAPS[k].dungeon)){
-      curMap = id; navInvalidate(); buildWorld(); navEnsure();
+      curMap = id; navInvalidate(); buildWorld(); navEnsure(); doLaiKhungLuoi();
       const M = MAPS[id], diem = [];
       for (const q of (M.packs || [])) diem.push({ k:'bãi quái', ten:q.mob, x:q.x, y:q.y });
       for (const n of NPCS.filter(n => n.map === id)) diem.push({ k:'NPC', ten:n.name, x:n.x, y:n.y });
@@ -120,6 +128,7 @@ const TRAN = {
         soLoai: new Set((M.packs || []).map(q => q.mob)).size,
         che: +(100*che/Math.max(trong,1)).toFixed(1),
         soTru: decor.filter(d => d.tru).length,
+        hinh: M.hinh || 'dongtrong',
         soDiem: diem.length,
         thoang: +(100 * thoang / N).toFixed(1),
         matDo: +(1000 * diem.length / Math.max(thoang, 1)).toFixed(2),
@@ -146,10 +155,20 @@ const TRAN = {
     // Map KHÔNG có bãi quái là thành, và tường thành LÀ thiết kế — 49% đi được ở Sapidae Chiefdom
     // là đúng chứ không phải lỗi. Sàn này để bắt BÃI SĂN bị vật cản ăn mất, nên miễn cho thành.
     // (Nhận diện bằng "không có bãi quái" chứ không bằng cờ village: cờ đó nằm ở daohoa.)
-    if (m.soLoai > 0 && m.thoang < SAN.thoang) fail(`${id}: chỉ ${m.thoang}% map đi được (sàn ${SAN.thoang}%) — vật cản ăn mất map`);
+    // Sàn "đi được ≥55%" đo trên map ĐỒNG TRỐNG. Map dạng LÀN (`hinh:'hanhlang'`) cố ý chỉ có
+    // ~34% — đó là định nghĩa của hành lang, không phải vật cản ăn mất map. Bề ngang làn do
+    // `test_sandat` gác (nó đo chỗ thắt nhất); ở đây chỉ cần chắc làn không hẹp tới mức không
+    // còn cõng nổi bãi quái, nên hạ sàn xuống một mức riêng thay vì bỏ hẳn phép đo.
+    const sanThoang = m.hinh === 'hanhlang' ? SAN.thoangLan : SAN.thoang;
+    if (m.soLoai > 0 && m.thoang < sanThoang) fail(`${id}: chỉ ${m.thoang}% map đi được (sàn ${sanThoang}%) — vật cản ăn mất map`);
     if (m.soDiem < SAN.diemMap) fail(`${id}: chỉ ${m.soDiem} điểm nội dung (sàn ${SAN.diemMap})`);
     if (m.matDo < SAN.matDo) fail(`${id}: mật độ ${m.matDo} (sàn ${SAN.matDo}) — map rỗng`);
-    if (m.duongKinh > TRAN.duongKinh) fail(`${id}: đường kính ${m.duongKinh}px (trần ${TRAN.duongKinh}) — đi bộ suông`);
+    // Trần ĐƯỜNG KÍNH hỏi "map có to tới mức đi bộ suông không" và chốt ở 2600 — đúng bằng bề
+    // ngang map hồi cả game chung một khổ. Map dạng LÀN dài 6400 nên đường kính của nó BẰNG chiều
+    // dài, và chiều dài chính là thứ được đặt hàng ("đi qua một đường chỉ định để tới cuối map").
+    // Thứ thật sự cần canh là NHỊP — khoảng cách giữa hai điểm nội dung KỀ NHAU — và `keNhau`
+    // ngay dưới đã canh đúng thứ đó cho mọi hình dạng map.
+    if (m.hinh !== 'hanhlang' && m.duongKinh > TRAN.duongKinh) fail(`${id}: đường kính ${m.duongKinh}px (trần ${TRAN.duongKinh}) — đi bộ suông`);
     if (m.keNhau > TRAN.keNhau) fail(`${id}: điểm kề ${m.keNhau}px (trần ${TRAN.keNhau}) — nhịp đánh thưa`);
     // Map không có bãi quái nào (thành) thì không xét số loài.
     if (m.soLoai > 0 && m.soLoai < SAN.loai) fail(`${id}: chỉ ${m.soLoai} loài (sàn ${SAN.loai})`);

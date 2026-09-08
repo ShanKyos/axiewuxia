@@ -1084,6 +1084,12 @@ const MAP_BG_SRC = {
   mongco:'assets/maps/bg_mongco.jpg', nhanmon:'assets/maps/bg_nhanmon.jpg',
   quangtruong:'assets/maps/bg_quangtruong.jpg',
   corran:'assets/maps/bg_corran.jpg',
+  // LOI MON CORRAN CO Y KHONG KHAI TRANH NEN. Vong dau muon tam tranh Reo Rung Corran keo dan ra
+  // kho lan, va no tra loi SAI cau hoi: tranh nhoe che mat hanh lang, nhin vao khong doc ra duong
+  // di dau ca. Bo han tranh thi con dung mau dat phang + hai hang cay -- tuc dung nhung gi ban
+  // that se co khi tranh chi-dat duoc ve. Do la thu mau thu nay can hoi.
+  // Khi co tranh chi-dat 6400x1400 thi mo dong duoi day.
+  // loimon:'assets/maps/bg_loimon.jpg',
   deep:'assets/maps/bg_dungeon_stone.jpg',   // Tầng Sâu — nền hầm duy nhất còn dùng
 };
 // VẬT TO — công trình rời chèn vào tranh nền (xem `vatTo` trong data/canbang.js). Ảnh đã nướng
@@ -1738,6 +1744,8 @@ const GATES = [
   // x=175 chứ không phải sát mép: dải nền tối ngoài khối đất chạy từ x=7 tới x=133 và đã thành
   // vật cản (xem MAP_OBSTACLES.corran) — cổng đặt trong đó thì không ai với tới được.
   { map:'corran',    x:175,  y:700,  to:'chungnam', name:'Lối Tây → Werebear Woods' },
+  { map:'corran',    x:2300, y:1000, to:'loimon',   name:'Lối Đông → Lối Mòn Corran' },
+  { map:'loimon',    x:110,  y:727,  to:'corran',   name:'Lối Tây → Rẻo Rừng Corran' },
   { map:'comoc',     x:150,  y:1366, to:'chungnam', name:'Lối Tây → Werebear Woods' },
   { map:'comoc',     x:1369, y:150,  to:'mongco',   name:'Lối Bắc → Reptile Sunstone Flats' },
   { map:'mongco',    x:150,  y:1286, to:'comoc',    name:'Lối Tây → Bug Tribe Tunnels' },
@@ -1867,6 +1875,22 @@ function rimBuild(){
       const per = Math.PI*(3*(o.rx + o.ry) - Math.sqrt((3*o.rx + o.ry)*(o.rx + 3*o.ry)));
       const n = Math.max(10, Math.round(per/STEP));
       for (let i = 0; i < n; i++){ const a = i/n*Math.PI*2; push(o.x + Math.cos(a)*o.rx, o.y + Math.sin(a)*o.ry); }
+    }
+  }
+  // MÉP ĐA GIÁC ĐI ĐƯỢC cũng phải có vật đánh dấu. Trước bản này rimBuild chỉ lần theo
+  // MAP_OBSTACLES, nên map chặn bằng `diTrong` mà không có vật cản rời nào thì mép của nó VÔ
+  // HÌNH — người chơi đâm vào một bức tường không nhìn thấy. Map dạng LÀN sống bằng chính cái
+  // mép ấy (nó LÀ con đường), nên thiếu nó là hỏng thứ quan trọng nhất của map.
+  if (md && md.diTrong && md.diTrong.length > 2){
+    const dg = md.diTrong;
+    for (let i = 0; i < dg.length; i++){
+      const a = dg[i], b = dg[(i + 1) % dg.length];
+      const d = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const n = Math.max(1, Math.round(d / STEP));
+      for (let k = 0; k < n; k++){
+        const t = k / n;
+        push(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t);
+      }
     }
   }
   // Chỉ giữ mép NGOÀI: điểm nào bốn phía đều nằm trong vùng chặn thì nó là mép trong của hai
@@ -4375,6 +4399,9 @@ const COT_DONG = {
   mamcoi:  { ten:'Mầm Cội',  map:'corran',    mau:'#9ec46a',
     hai:{ k:'hpLeech', v:4 }, haiTxt:'+4% Hút Sinh Lực',
     bonTxt:'Chiêu của Ragoon trúng thì hồi cho bạn 3% Sinh Lực tối đa.' },
+  vomon:   { ten:'Vỏ Mòn',   map:'loimon',    mau:'#a89878',
+    hai:{ k:'defPct', v:5 },  haiTxt:'+5% Giáp',
+    bonTxt:'Đứng yên 2 giây thì Ragoon dựng khiên chắn đòn kế tiếp.' },
 };
 const COT_DONG_IDS = Object.keys(COT_DONG);
 const COT_DONG_THEO_MAP = {}; for (const k of COT_DONG_IDS) COT_DONG_THEO_MAP[COT_DONG[k].map] = k;
@@ -6033,6 +6060,12 @@ const HERB_SPOTS = {
     { x:280, y:260 }, { x:280, y:820 }, { x:280, y:1380 }, { x:760, y:500 },
     { x:760, y:1620 }, { x:1240, y:260 }, { x:1240, y:1380 }, { x:1560, y:740 },
   ],
+  // Lối Mòn Corran: rải dọc TIM LÀN — y bám theo đường sin của tools/dung_lan.py, nếu không
+  // thì thảo dược mọc ngoài hành lang và không ai hái được.
+  loimon: [
+    { x:700, y:800 }, { x:1300, y:660 }, { x:2200, y:420 }, { x:2900, y:530 },
+    { x:3500, y:770 }, { x:4300, y:800 }, { x:5000, y:640 }, { x:5700, y:800 },
+  ],
 };
 
 // ---------- Item generation ----------
@@ -7575,6 +7608,12 @@ const VUNG_CUM_CACH = 300;   // hai cụm trong cùng một miền phải cách 
 const VUNG_CACH_THA = 280;   // và không cụm nào mọc ngay điểm thả
 function _vungDatCum(mid, sx, sy, voi, v, ra, daDat, noi){
   const md = MAPS[mid];
+  // Khổ đọc từ CHÍNH map đang bung, không phải từ `MAP` toàn cục. `MAP` mang khổ của map người
+  // chơi ĐANG ĐỨNG, mà hàm này bung miền dân số cho một map bất kỳ — và bảng bung có nhớ
+  // (`_vungDaBung`), nên bung nhầm một lần là sai vĩnh viễn cho tới khi tải lại trang.
+  // Đo được khi dựng Lối Mòn Corran (6400x1400): bung trong lúc `MAP` còn là 2600x1900 thì luật
+  // `x > MAP.w - 200` vứt sạch mọi mẫu có x > 2400 — hai trong ba miền dân số ra RỖNG, im lặng.
+  const mw = md.w || 2600, mh = md.h || 1900;
   const cam = [{ x:sx, y:sy, r:VUNG_CACH_THA }];
   for (const k in (md.spawnFrom || {})) cam.push({ x:md.spawnFrom[k].x, y:md.spawnFrom[k].y, r:VUNG_CACH_THA });
   if (typeof GATES !== 'undefined') for (const g of GATES) if (g.map === mid) cam.push({ x:g.x, y:g.y, r:200 });
@@ -7583,14 +7622,14 @@ function _vungDatCum(mid, sx, sy, voi, v, ra, daDat, noi){
   // không, đợt A4 này lặng lẽ đẩy 13 con trùm nằm đè lên tâm bãi trở lại.
   const _bd = (typeof BOSS_DEFS !== 'undefined') && BOSS_DEFS[mid];
   if (_bd){
-    for (const tv of (_bd.thuve || [])) cam.push({ x: tv.x * MAP.w, y: tv.y * MAP.h, r: 300 });
-    if (_bd.tranai) cam.push({ x: _bd.tranai.x * MAP.w, y: _bd.tranai.y * MAP.h, r: 340 });
+    for (const tv of (_bd.thuve || [])) cam.push({ x: tv.x * mw, y: tv.y * mh, r: 300 });
+    if (_bd.tranai) cam.push({ x: _bd.tranai.x * mw, y: _bd.tranai.y * mh, r: 340 });
   }
   for (let thu = 0; thu < 500; thu++){
     const t = v.dai[0] + ra() * (v.dai[1] - v.dai[0]);
     const g = (v.cung[0] + ra() * (v.cung[1] - v.cung[0])) * Math.PI / 180;
     const x = sx + Math.cos(g) * t * voi, y = sy + Math.sin(g) * t * voi;
-    if (x < 200 || y < 200 || x > MAP.w - 200 || y > MAP.h - 200) continue;
+    if (x < 200 || y < 200 || x > mw - 200 || y > mh - 200) continue;
     if (inObstacle(mid, x, y, 60 - noi * 0.5)) continue;
     if (cam.some(c => dist(x, y, c.x, c.y) < c.r - noi)) continue;
     if (daDat.some(o => dist(x, y, o.x, o.y) < VUNG_CUM_CACH - noi)) continue;
@@ -7687,6 +7726,15 @@ function bandSummaryHtml(md){
 }
 function buildWorld(){
   const md = mapDef();
+  // KHỔ MAP THEO TỪNG MAP. Trước đây `MAP` là một khổ 2600x1900 dùng chung cho cả game và không
+  // nơi nào gán lại — mọi map buộc phải cùng kích thước. Đặt ở ĐẦU buildWorld() chứ không phải
+  // trong travelTo() vì buildWorld() còn được gọi từ chín chỗ khác (khởi động, hồi sinh, bài
+  // kiểm gọi thẳng); đặt ở travelTo thì những đường đó dựng thế giới bằng khổ của map TRƯỚC.
+  //
+  // `const MAP` chỉ cấm gán lại TÊN, không cấm sửa thuộc tính — mà cả 124 chỗ đọc `MAP.w`/`MAP.h`
+  // đều đọc lúc gọi, nên hai dòng này làm đúng toàn bộ cùng lúc. Camera đã kẹp theo MAP sẵn.
+  MAP.w = md.w || 2600;  MAP.h = md.h || 1900;
+  capNhatKhungMinimap();   // khung bản đồ thu nhỏ chép cứng tỉ lệ 2600:1900 — xem hàm
   packsMd(md);   // A4: bung miền dân số thành bãi quái TRƯỚC mọi thứ khác đọc md.packs
   mobs = []; pickups = []; projectiles = []; effects = []; floats = []; groundLoot = []; // đồ dưới đất KHÔNG theo người sang map khác
   decorObs = [];   // xoá TRƯỚC khi rải decor mới — xem ghi chú ở rebuildDecorObs()
@@ -7734,7 +7782,18 @@ function buildWorld(){
     const nDH = md.type === 'freepk' ? 6 : 4;
     const hate = (player.dhHate && player.dhHate[md.duhiep]) || 0;
     for (let i = 0; i < nDH; i++){
-      const dh = spawnMob(md.duhiep, { x:rnd(400,MAP.w-400), y:rnd(400,MAP.h-400), r:60 }, null);
+      // Bốc lại tới khi rơi trúng chỗ đi được. Trước đây bốc MỘT lần rồi phó mặc cho nearestFree()
+      // trong spawnMob kéo về — mà nearestFree chỉ dò quanh một bán kính ngắn. Map đồng trống thì
+      // không sao (bốc đâu cũng gần sàn), nhưng map chặn bằng `diTrong` hẹp thì một điểm bốc ra có
+      // thể nằm cách hành lang 500px, ngoài tầm với: du hiệp đứng luôn ngoài vùng đi được.
+      let _dp = null;
+      for (let _t = 0; _t < 60 && !_dp; _t++){
+        const _x = rnd(400, MAP.w-400), _y = rnd(400, MAP.h-400);
+        // lề 110 chứ không phải 40: spawnMob còn rung điểm thêm +/-`r` (=60) nữa, nên một điểm
+        // chỉ cách mép 40px vẫn rơi ra ngoài hành lang sau cú rung.
+        if (!inObstacle(curMap, _x, _y, 110)) _dp = { x:_x, y:_y, r:60 };
+      }
+      const dh = spawnMob(md.duhiep, _dp || { x:rnd(400,MAP.w-400), y:rnd(400,MAP.h-400), r:60 }, null);
       dh.wanderT = 0; dh.wanderAng = rnd(0, Math.PI*2);
       // A3: có thù → hắn truy thù: chủ động săn người chơi, mạnh hơn, đánh được không cần PK
       if (hate >= 1 && i === 0){
@@ -7750,6 +7809,17 @@ function buildWorld(){
   viaThemPickup();   // Vỉa Cốt hôm nay (nếu vùng này có) — xem khối VỈA CỐT
   ruongDungTrai();   // trại canh cho các Rương Canh CHƯA mở — xem khối RƯƠNG CANH
   // decor: ink trees, rocks theo địa hình map
+  // VẬT THỂ ĐẶT TAY. `trees`/`rocks` là con số ĐẾM — rải ngẫu nhiên khắp khung, đủ dùng cho map
+  // đồng trống nhưng không dựng nổi một hàng cây men theo đường mòn. `md.vatDat` khai thẳng toạ
+  // độ, và hai đường dùng chung được: rải ngẫu nhiên để lấp nền, đặt tay ở chỗ có ý đồ.
+  // Đây là mảnh còn thiếu duy nhất của bố cục có chủ ý — engine đã xếp lớp theo y và đã cho
+  // decor sinh vật cản (xem obstaclesOf) từ trước; nó chỉ chưa bao giờ nhận được toạ độ.
+  // `dat:true` = ĐẶT TAY. Hai bộ lọc bên dưới sinh ra để dọn cây RẢI NGẪU NHIÊN mọc nhầm chỗ,
+  // và cả hai đều sai với vật thể đặt tay — nhất là bộ lọc `!inObstacle`: cây viền một hành lang
+  // nằm NGOÀI `diTrong` theo đúng thiết kế, nên bộ lọc ấy xoá sạch cả hai hàng cây. (Đo được:
+  // 193 cây khai ra, 0 cây còn lại.) Đặt tay thì tin người đặt.
+  for (const v of (md.vatDat || []))
+    decor.push({ type: v.t || 'tree', x: v.x, y: v.y, s: v.s || 1, dat: true });
   for (let i = 0; i < (md.trees ?? 70); i++)
     decor.push({ type:'tree', x:rnd(60,MAP.w-60), y:rnd(60,MAP.h-60), s:rnd(0.7,1.5) });
   for (let i = 0; i < (md.rocks ?? 26); i++)
@@ -7786,9 +7856,9 @@ function buildWorld(){
       if (_bd.tranai) _keep.push({ x:_bd.tranai.x*MAP.w, y:_bd.tranai.y*MAP.h, r:210 });
     }
     if (md.spring && typeof SPRING !== 'undefined') _keep.push({ x:SPRING.x, y:SPRING.y, r:140 });
-    decor = decor.filter(d => !_keep.some(k => dist(d.x, d.y, k.x, k.y) < k.r));
+    decor = decor.filter(d => d.dat || !_keep.some(k => dist(d.x, d.y, k.x, k.y) < k.r));
     // và không mọc chồng lên vật cản tĩnh (hồ, tường) — vẽ ra thì thành cây mọc giữa hồ
-    decor = decor.filter(d => !inObstacle(curMap, d.x, d.y, 4));
+    decor = decor.filter(d => d.dat || !inObstacle(curMap, d.x, d.y, 4));
   }
   // (Trụ đá từng rải ở đây — đã gỡ, xem khối "TRỤ ĐÁ ĐÃ GỠ".)
   rebuildDecorObs();
@@ -8133,6 +8203,7 @@ const BGM_TRACKS = {
   ngoai:      'bgm_ngoai',       // pve_2
   chungnam:   'bgm_chungnam',    // pve_3
   corran:     'bgm_chungnam',    // dùng chung nhạc Werebear Woods — cùng rẻo rừng
+  loimon:     'bgm_chungnam',
   comoc:      'bgm_comoc',       // halloween_battle_2023 — ổ ấp, tối và dồn
   tuyettinh:  'bgm_tuyettinh',   // lunar_bloodmoon — thung lũng băng
   mongco:     'bgm_mongco',      // lunar_battle — thảo nguyên tro
@@ -20996,6 +21067,25 @@ function drawOverheadTitle(p, yOff, riding, maxed){
 // 60 times/sec regardless. Render it once per map onto an offscreen canvas and blit that;
 // rebuilt automatically if the minimap canvas itself is ever resized.
 let _miniStaticCache = null, _miniStaticKey = null;
+// Khung bản đồ thu nhỏ phải theo TỈ LỆ map đang đứng. `index.html` khai cứng 200x146 — đúng
+// bằng 2600:1900, tức nó chép lại khổ map hồi cả game chỉ có một khổ. Map dạng LÀN (rộng 4-5 lần
+// chiều cao) nhét vào khung 1,37:1 thì bị bóp ngang hơn ba lần: nhìn ra một dải dẹt vô nghĩa, và
+// bấm vào minimap để chạy tới sẽ trỏ sai chỗ theo đúng tỉ lệ bóp ấy.
+// Giữ DIỆN TÍCH gần như cũ rồi chia lại hai cạnh theo tỉ lệ map, nên map 2600x1900 vẫn ra đúng
+// 200x146 như trước — không map cũ nào đổi hình.
+function capNhatKhungMinimap(){
+  if (!miniCvs) return;
+  const ti = MAP.w / MAP.h;
+  let w = Math.round(Math.sqrt(200 * 146 * ti));
+  let h = Math.round(w / ti);
+  if (w > 240){ w = 240; h = Math.round(w / ti); }
+  if (h > 170){ h = 170; w = Math.round(h * ti); }
+  if (miniCvs.width !== w || miniCvs.height !== h){
+    miniCvs.width = w; miniCvs.height = h;
+    miniCvs.style.width = w + 'px'; miniCvs.style.height = h + 'px';
+  }
+}
+
 function drawMinimapStatic(mw, mh, sx, sy, md){
   const key = curMap + '|' + mw + 'x' + mh;
   if (_miniStaticCache && _miniStaticKey === key) return _miniStaticCache;

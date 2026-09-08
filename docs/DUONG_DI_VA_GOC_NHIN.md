@@ -243,3 +243,95 @@ Nói rõ để không ai đọc tài liệu này như một bảo đảm:
   dọc map thay vì đánh tại chỗ.
 - **Con số 340px bề ngang tối thiểu là suy từ thân người 95px, chưa chơi thử.** Phải chỉnh lại
   sau bước 0.
+
+---
+
+## 9. Mẫu thử đã chạy — kết quả, và bốn con bọ nó lôi ra
+
+Bước 0 ở §7 đã làm xong: map **Lối Mòn Corran** (`loimon`), 6400×1400, hình học sinh bằng
+`tools/dung_lan.py`, **không có tranh nền** — cố ý.
+
+### 9.1 Máy móc thì chạy được
+
+| Đo được | Số |
+|---|---|
+| Khổ map riêng | 6400×1400 (5 màn ngang) |
+| Sàn đi được | 33,9% khổ map · **liền một khối 100%** (loang nước 9556/9557 ô) |
+| Bề ngang làn | 368-496px = **3,9-5,2 thân người**, thắt đúng hai chỗ đã thiết kế |
+| Quái | 53 con, 6 bãi, ba loài C38 → C42 → C48 xếp theo quãng đường |
+| Cây đặt tay | 193, hai hàng men mép |
+| Vật che trong làn | 14 tảng đá · 39,5% ô sàn nằm trong tầm 120px của một tảng |
+
+Băng qua nút thắt thì banner vùng nổi lên ("ĐẠI HẠT NHÂN · Quái C48-48 — mạnh nhất vùng") —
+tức nhịp "sang chặng mới" đọc ra được mà không cần thêm một dòng chữ nào.
+
+### 9.2 Nhưng NHÌN thì chưa ra con đường — và đó là câu trả lời cần có
+
+Chụp màn hình ở giữa làn: hai hàng cây có đó, nhưng là **những chấm nhỏ rời rạc**, không đọc ra
+là bức tường rừng. Mặt đất phẳng một màu nên **không phân biệt được chỗ đi được với chỗ không**.
+
+Đây đúng là thứ mẫu thử sinh ra để biết, và nó chốt được một điều: **hành lang có đọc ra hay
+không nằm ở ART, không nằm ở hình học.** Hình học đã đúng — đo được, gác được bằng bài kiểm.
+Cái còn thiếu là hai thứ đã nêu ở §2: nền chỉ-đất có vẽ đường mòn, và vật thể cắt alpha đủ to.
+
+Nói cách khác: **cây vector hiện tại quá nhỏ để làm mép đường.** Trả nợ Luật 3 không còn là việc
+dọn dẹp cho gọn — nó là việc chặn đường của cả hướng đi này.
+
+### 9.3 Bốn con bọ mẫu thử lôi ra — cả bốn đều có trước, chỉ chưa ai chạm tới
+
+1. **`_vungDatCum` đọc `MAP` TOÀN CỤC.** Nó bung miền dân số cho một map bất kỳ, nhưng lấy khổ
+   của map người chơi đang đứng. Bảng bung lại CÓ NHỚ, nên bung nhầm một lần là sai vĩnh viễn.
+   Hậu quả đo được: hai trong ba miền dân số của làn ra **rỗng, im lặng**.
+2. **Bộ lọc decor xoá sạch vật thể đặt tay.** `decor.filter(d => !inObstacle(...))` sinh ra để
+   dọn cây rải ngẫu nhiên mọc giữa hồ. Cây viền hành lang nằm NGOÀI `diTrong` theo đúng thiết
+   kế — 193 cây khai ra, **0 cây còn lại**.
+3. **`rimBuild` không biết `diTrong`.** Nó chỉ lần theo `MAP_OBSTACLES`, nên map chặn bằng đa
+   giác có mép **vô hình**. Với map dạng làn thì cái mép ấy CHÍNH LÀ con đường.
+4. **Du hiệp bốc điểm một lần rồi phó mặc `nearestFree`.** Bán kính dò ngắn, nên trên map hẹp
+   nó đứng luôn ngoài vùng đi được.
+
+Cả bốn đã vá. Còn một con **chưa vá, ghi thành việc riêng**: đòn lao/xung của quái không gọi
+`collideObstacles`, nên đuổi người chơi vài nghìn khung là quái xung ra ngoài hành lang.
+
+### 9.4 Ba bài kiểm chốt cứng giả định "đồng trống"
+
+Cùng một lỗi với hai con số 7 đã gỡ hôm nay: một số đo được ở MỘT hình dạng, bị hiểu thành luật
+cho MỌI hình dạng.
+
+| Bài | Chốt cứng | Nay hỏi gì |
+|---|---|---|
+| `test_sandat` | map PK phải ≥55% sàn | Làn thì đo **bề ngang chỗ hẹp nhất** ≥340px |
+| `test_domap` | đi được ≥55% · đường kính ≤2600px | Làn có sàn riêng 25%; trần đường kính bỏ qua vì **chiều dài chính là thứ được đặt hàng** — nhịp đã có `keNhau` canh |
+| `test_domap` | khổ lưới chốt một lần lúc vào bài | Dựng lại theo từng map (trước đó mọi điểm x>2400 bị đọc lệch chỉ số) |
+
+Và một sửa nữa không phải chuyện hình dạng: `test_sandat` đo vị trí quái SAU khi đi thử, nên nó
+thật ra đang hỏi "quái có đuổi ra khỏi làn không" chứ không phải "máy đặt đúng chỗ chưa". Đã dời
+phép đo lên TRƯỚC các lượt đi. Nhân vật cấp 1 cũng chết giữa 53 con C38-48 và cờ `dead` khoá
+`update()` vĩnh viễn — mọi lượt đi sau đó đứng im, mà bài lại báo "đa giác cắt sàn làm hai".
+
+### 9.5 Việc kế tiếp, theo thứ tự
+
+1. **Tranh nền chỉ-đất 6400×1400 có vẽ đường mòn.** Đây là thứ quyết định làn có đọc ra không.
+2. **Vật thể cắt alpha đủ to thay cây vector** — kể cả chỉ dùng ~12 cái có sẵn của bộ Axie.
+3. Chụp lại, so với ảnh hôm nay. Nếu vẫn không đọc ra thì vấn đề nằm ở GÓC NHÌN, và lúc đó mới
+   đáng bàn chuyện đổi sang 3/4 thật sự — chứ không phải bàn trước khi biết.
+
+### 9.6 Một bài kiểm chập chờn — đã chẩn, KHÔNG sửa
+
+`test_resscale` đỏ ngẫu nhiên, và **không liên quan gì tới đợt việc này** (xanh trên HEAD sạch,
+xanh 3/3 lượt riêng trên cây đã sửa, đỏ trong lượt chạy đầy đủ).
+
+Chẩn được chính xác: nó bắt bộ tự chỉnh chất lượng phải HẠ khi FPS tụt dưới 55, và không được hạ
+khi không tụt. Nhưng mẫu FPS luôn có một cú tụt xuống đúng 30,0 lúc nạp map — có mặt ở **mọi**
+lượt chạy, xanh lẫn đỏ. Ai rơi bên nào của ngưỡng là chuyện tải máy đúng một giây đó.
+
+Đã thử sửa hai vòng: (a) chỉ cho cửa sổ quan sát quyền kích, bỏ mẫu `before`; (b) bỏ 5 mẫu đầu
+rồi đòi tụt LÂU (≥3/25 mẫu). Vòng (b) chạy 4 lượt ra 3 xanh 1 đỏ — và lượt đỏ đỏ ở **nhánh
+ngược lại**: chỉ 2/25 mẫu dưới ngưỡng nên bài xếp là "máy khoẻ", trong khi bộ tự chỉnh vẫn hạ.
+
+Tức là mỗi lần sửa chỉ DỜI chỗ chập chờn, không bỏ được nó: đây là một hệ ồn, phụ thuộc máy, mà
+bài lại phán bằng một ngưỡng cứng hai chiều. **Đã trả bài về nguyên trạng HEAD** thay vì chỉnh
+tiếp — chỉnh một bài đo hiệu năng cho tới khi nó xanh là đúng cái bẫy `cham_map.py` đã ghi.
+
+Muốn chữa thật thì phải đổi câu hỏi, không đổi ngưỡng: cho bộ tự chỉnh ghi lại lý do nó hạ/không
+hạ, rồi bài đọc CHÍNH quyết định ấy, thay vì đoán ngược từ FPS.
