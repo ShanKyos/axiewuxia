@@ -1083,6 +1083,7 @@ const MAP_BG_SRC = {
   comoc:'assets/maps/bg_comoc.jpg', tuyettinh:'assets/maps/bg_tuyettinh.jpg',
   mongco:'assets/maps/bg_mongco.jpg', nhanmon:'assets/maps/bg_nhanmon.jpg',
   quangtruong:'assets/maps/bg_quangtruong.jpg',
+  corran:'assets/maps/bg_corran.jpg',
   deep:'assets/maps/bg_dungeon_stone.jpg',   // Tầng Sâu — nền hầm duy nhất còn dùng
 };
 // VẬT TO — công trình rời chèn vào tranh nền (xem `vatTo` trong data/canbang.js). Ảnh đã nướng
@@ -1733,6 +1734,10 @@ const GATES = [
   // chơi thấy — không hứa gì về vị trí tương đối giữa hai map, và game cũng không có bản đồ thế
   // giới để mà mâu thuẫn.
   { map:'chungnam',  x:1921, y:150,  to:'comoc',    name:'Lối Bắc → Bug Tribe Tunnels' },
+  { map:'chungnam',  x:2480, y:700,  to:'corran',   name:'Lối Đông → Rẻo Rừng Corran' },
+  // x=175 chứ không phải sát mép: dải nền tối ngoài khối đất chạy từ x=7 tới x=133 và đã thành
+  // vật cản (xem MAP_OBSTACLES.corran) — cổng đặt trong đó thì không ai với tới được.
+  { map:'corran',    x:175,  y:700,  to:'chungnam', name:'Lối Tây → Werebear Woods' },
   { map:'comoc',     x:150,  y:1366, to:'chungnam', name:'Lối Tây → Werebear Woods' },
   { map:'comoc',     x:1369, y:150,  to:'mongco',   name:'Lối Bắc → Reptile Sunstone Flats' },
   { map:'mongco',    x:150,  y:1286, to:'comoc',    name:'Lối Tây → Bug Tribe Tunnels' },
@@ -4365,6 +4370,11 @@ const COT_DONG = {
   samvun:  { ten:'Sấm Vụn',  map:'nhanmon',   mau:'#b18cff',
     hai:{ k:'cCd', v:8 },     haiTxt:'−8% hồi chiêu',
     bonTxt:'Chiêu nổ dây chuyền sang mục tiêu kề trong 200px.' },
+  // Năm khoá phía Ragoon (cAtk/cSkill/cCrit/cCritDmg/cCd) đã dùng hết ở bảy dòng trên, nên dòng
+  // thứ tám nuôi NGƯỜI CHƠI — applyLine() đẩy nó vào sổ P, chỗ hpLeech đã có ngăn sẵn.
+  mamcoi:  { ten:'Mầm Cội',  map:'corran',    mau:'#9ec46a',
+    hai:{ k:'hpLeech', v:4 }, haiTxt:'+4% Hút Sinh Lực',
+    bonTxt:'Chiêu của Ragoon trúng thì hồi cho bạn 3% Sinh Lực tối đa.' },
 };
 const COT_DONG_IDS = Object.keys(COT_DONG);
 const COT_DONG_THEO_MAP = {}; for (const k of COT_DONG_IDS) COT_DONG_THEO_MAP[COT_DONG[k].map] = k;
@@ -6017,6 +6027,12 @@ const HERB_SPOTS = {
     { x:1280, y:380 }, { x:1420, y:400 }, { x:1000, y:420 }, { x:1650, y:460 },
     { x:450, y:700 }, { x:550, y:950 }, { x:1300, y:1650 }, { x:2300, y:1000 },
   ],
+  // Chấm bằng máy trên bảng vật cản của Rẻo Rừng Corran: cách nhau ≥520px, cách mọi trùm vùng
+  // ≥300px, không rơi vào gốc cổ thụ hay bụi. Sửa tranh nền thì chấm lại, đừng dịch tay.
+  corran: [
+    { x:280, y:260 }, { x:280, y:820 }, { x:280, y:1380 }, { x:760, y:500 },
+    { x:760, y:1620 }, { x:1240, y:260 }, { x:1240, y:1380 }, { x:1560, y:740 },
+  ],
 };
 
 // ---------- Item generation ----------
@@ -7661,7 +7677,7 @@ window.debugVung = function(mid){
   MAPS[m]._vungDaBung = false; packsOf(m);
   _ruongCache = {}; _viaCache = { key:'', ds:[] };
   if (m === curMap){ buildWorld(); navInvalidate(); }
-  return MAPS[m].packs;
+  return MAPS[m].packs || [];
 };
 
 function bandSummaryHtml(md){
@@ -7687,7 +7703,7 @@ function buildWorld(){
   // .mob rồi tin .x/.y) đều dẫn sai chỗ — có lúc dẫn thẳng vào cạnh Vệ Binh Trụ vùng khiến AUTO đứng im
   // (phát hiện qua QA level 1→120). Dữ liệu md.packs mỗi map đã tự nhiên đặt quái yếu gần spawn,
   // quái mạnh/tinh anh xa hơn rồi — bỏ hẳn bước xáo trộn, spawn đúng như đã thiết kế.
-  for (const pk of md.packs){
+  for (const pk of packsMd(md)){   // KHÔNG đọc thẳng md.packs: map chưa có bãi quái thì nó là undefined
     const packId = packSeq++;
     const soCon = bayCo(pk, md);   // KHÔNG dùng thẳng pk.n — xem bayCo()
     const zone = { x:pk.x, y:pk.y, r: Math.max(100, pk.r || 115), count:soCon, tiep: !!pk.tiep };
@@ -8116,6 +8132,7 @@ const BGM_TRACKS = {
   tuongduong: 'bgm_tuongduong',  // home  — nhạc sảnh chính, hợp thành thị
   ngoai:      'bgm_ngoai',       // pve_2
   chungnam:   'bgm_chungnam',    // pve_3
+  corran:     'bgm_chungnam',    // dùng chung nhạc Werebear Woods — cùng rẻo rừng
   comoc:      'bgm_comoc',       // halloween_battle_2023 — ổ ấp, tối và dồn
   tuyettinh:  'bgm_tuyettinh',   // lunar_bloodmoon — thung lũng băng
   mongco:     'bgm_mongco',      // lunar_battle — thảo nguyên tro

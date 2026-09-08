@@ -23,14 +23,15 @@ quá 45 so với màu đáy — tức chỗ đổi chất liệu:
 | `daohoa` | Plant Tribe Glade | 2,9% | ✅ nhìn từ trên xuống thật |
 | `comoc` | Bug Tribe Tunnels | 0% | ✅ nhìn từ trên xuống thật |
 | `tuyettinh` | Bird Tribe Heights | 4,9% | ❌ backdrop nhìn ngang |
-| `chungnam` | Werebear Woods | 5,7% | ❌ backdrop nhìn ngang |
+| `chungnam` | Werebear Woods | — | ✅ **đã dựng lại** (xem §7) |
 | `ngoai` | Beast Herd Camp | 7,3% | ❌ backdrop nhìn ngang |
 | `nhanmon` | Dusk Marsh | 7,9% | ❌ backdrop nhìn ngang |
 | `tuongduong` | Sapidae Chiefdom | 12,2% | ❌ backdrop nhìn ngang |
 | `mongco` | Reptile Sunstone Flats | 21,9% | ❌ backdrop nhìn ngang |
 
 Tranh nhìn từ trên xuống **không có dải đáy riêng** vì cả tấm đã là đất. Tranh nhìn ngang thì có
-một dải sàn mỏng 5–22% ở đáy, phần còn lại là trời/núi/tường cây. **6 trên 8 map sai phép chiếu.**
+một dải sàn mỏng 5–22% ở đáy, phần còn lại là trời/núi/tường cây. Lúc đo là **6 trên 8 map sai
+phép chiếu**; Werebear Woods đã dựng lại xong, còn **5 map**.
 
 Nặng nhất là `tuongduong` — Sapidae Chiefdom là **thành an toàn**, mà nền hiện tại là trời xanh,
 mây, dãy núi xa và một thị trấn nằm ở đường chân trời.
@@ -396,3 +397,56 @@ Khi có tranh, việc lắp là cơ học. Làm đúng thứ tự này:
 - `newPlayer()` từng ghim cứng toạ độ điểm thả và đẻ nhân vật **vào trong giếng**. Điểm thả phải
   đọc từ chính `MAPS[map].spawn` rồi lọc qua `nearestFree()`.
 - Cổng đã vẽ sẵn trên tranh thì bật cờ `anGiau` — bỏ sprite, bỏ lửa, bỏ chữ, giữ nguyên vùng chạm.
+
+
+---
+
+## 7. Map đầu tiên đã dựng lại — những gì học được mà 6 mục trên không đoán ra
+
+Werebear Woods (`chungnam`) thay tranh, và bản sao của chính tranh ấy mở thêm một map mới
+`corran` (Rẻo Rừng Corran, C38-42) để thử nghiệm mà không đụng vào map đang chạy.
+
+### 7.1 Bản CẮT CẬN thắng bản TRỌN ĐẢO
+
+Vòng đầu tôi xin model vẽ trọn một hòn đảo nằm giữa khung. Kết quả nhìn đẹp nhưng **lắp không
+được**: mép đảo là vực, mà cổng nối map phải nằm sát mép khổ (§3.4) — nên bốn cổng đều rơi xuống
+vực. Bản dùng được là bản **cắt cận**: khung là một khoảnh rừng, đất chạy chạm cả bốn mép khổ,
+chỗ nào cũng đứng được. Prompt ở §5 vì thế phải nói rõ *"a cropped view, ground reaching all four
+edges"*, không phải *"an island"*.
+
+### 7.2 Máy KHÔNG đọc tranh để chặn đường — nên phải suy vật cản RA khỏi tranh
+
+`cham_map.py` đã ghi lại bài học này ở dạng phủ định (ba phép thống kê tự chế, ba lần hỏng). Mặt
+tích cực của nó là `tools/can_tu_tranh.py`: đọc tranh, tìm hai lớp vật liệu, sinh thẳng ra bảng
+`MAP_OBSTACLES`.
+
+    python3 tools/can_tu_tranh.py public/game/assets/maps/bg_corran.jpg corran --soi /tmp/soi.png
+
+Vì sao phép đo này chạy được trong khi ba phép kia hỏng: ba phép kia hỏi câu **ngữ nghĩa** ("tranh
+này nhìn từ trên xuống hay nhìn ngang"), còn phép này hỏi câu **vật liệu cục bộ** ("điểm này là
+tán lá hay mặt đất") — và câu sau kiểm lại được bằng mắt qua ảnh `--soi`.
+
+Ba luật hình học nằm trong đầu tệp công cụ. Luật thứ tư học từ chính map này:
+
+**Khối tối chặn KÍN, không chặn mỗi chân.** Luật ① nói ellipse đặt ở chân vệt lá, chừa chỗ đi ra
+sau cây — đúng cho bụi và vòm lá. Nhưng gốc cổ thụ thì không: engine vẽ tranh nền trước rồi vẽ
+nhân vật đè lên, **không sắp lớp theo trục y**. Nên đứng "sau" gốc cổ thụ hiện ra y hệt đứng
+"trên" nó. Chừa chỗ đi ra sau chỉ đổi một lỗi nhìn thấy lấy một lỗi nhìn thấy khác. Lớp khối tối
+vì thế xuất ra **chữ nhật trùm kín bóng khối**. Ngày nào có lớp vật thể tiền cảnh sắp theo y thì
+quay lại luật ①.
+
+Số đo trên `corran`: 62 vật cản (54 ellipse tán lá + 8 chữ nhật khối tối), phủ 15,3% khổ map,
+để lại **77,4% sàn đi được và liền một khối** (loang nước từ điểm thả tới 9556/9557 ô lưới 20px).
+
+### 7.3 Cổng phải né dải nền tối ngoài khối đất
+
+Dải tối chạy dọc mép trái tranh (x = 7…133) là *ngoài* khoảnh đất, và lớp khối tối chặn nó lại —
+đúng như phải thế. Cổng Tây ban đầu đặt ở x = 120 nên nằm luôn trong đó, không ai với tới. Đã dời
+ra x = 175. Khi dựng map sau, **đặt cổng xong thì chạy lại `can_tu_tranh.py` rồi kiểm cổng có bị
+trùm không**, đừng làm ngược lại.
+
+### 7.4 Còn một lỗi chưa chữa
+
+Cổng torii sơn đỏ bị lớp tán lá nhận nhầm (gỗ sơn đỏ trong bóng có cùng bão hoà với lá), nên lòng
+cổng bị chặn. Đây là vật trang trí, đi vòng được. Tôi **không** thêm phép đo thứ tư để chữa —
+`cham_map.py` ghi rõ vì sao chế thêm phép thống kê là đường đã hỏng ba lần.

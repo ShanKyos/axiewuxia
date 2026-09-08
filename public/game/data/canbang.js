@@ -333,6 +333,15 @@ window.BOSS_DEFS = {
       { id:'cn2', name:'Golem Gỗ Cổ Đại',    lv:26, el:'Thổ',  img:'mocnhan',  x:0.5731, y:0.4684, moves:['vong','vach','cuong'] },
       { id:'cn3', name:'Trưởng Lão Tha Hóa', lv:29, el:'Thủy', img:'boss_phando', x:.44, y:.80, moves:['xung','vach','vong'] } ],
     tranai: { id:'cn4', name:'Tướng Quân Werebear Woods', lv:32, el:'Thủy', img:'bandao', x:.86, y:.80, moves:['vach','xung','vong','cuong'] } },
+  // Rẻo Rừng Corran bắc cầu 32 → 43: trùm ở đây phải nằm GIỮA Tướng Quân Werebear Woods (C32)
+  // và Chỉ Huy Vong Binh (C43), nếu không người chơi rơi thẳng từ C32 sang C43.
+  // Bốn chỗ đứng chấm bằng máy trên chính bảng vật cản của map (xa điểm thả ≥700px theo luật
+  // test_bossplace, cách nhau ≥1200px, không đè gốc cổ thụ).
+  corran: { thuve:[
+      { id:'co1', name:'Rễ Cổ Thức Giấc',    lv:34, el:'Mộc',  img:'mocnhan', x:0.1231, y:0.8842, moves:['vong','vach','cuong'] },
+      { id:'co2', name:'Kẻ Canh Vòng Cổng',  lv:36, el:'Thổ',  img:'thinu',   x:0.4923, y:0.5053, moves:['vach','xung','goi'] },
+      { id:'co3', name:'Axie Sa Ngã Đầu Đàn',lv:38, el:'Thủy', img:'bandao',  x:0.9231, y:0.1684, moves:['xung','vong','cuong'] } ],
+    tranai: { id:'co4', name:'Người Giữ Rẻo Corran', lv:41, el:'Mộc', img:'boss_mochu', x:0.9231, y:0.8842, moves:['vong','vach','goi','cuong'] } },
   comoc: { thuve:[
       { id:'cm1', name:'Chỉ Huy Vong Binh',  lv:43, el:'Thổ',  img:'kybinh',   x:0.3654, y:0.4579, moves:['xung','vach','goi'] },
       { id:'cm2', name:'Kẻ An Táng Bóng Tối',lv:46, el:'Thủy', img:'thinu',    x:0.5654, y:0.8053, moves:['vong','xung','cuong'] },
@@ -744,7 +753,7 @@ window.MAPS = {
         dan:[{ mob:'chimera_bo', n:5 }] },   // C24 · Tượng Đá Vỡ Lệnh
     ], duhiep: null },
   chungnam: { name:'Werebear Woods', min:20, range:'24 - 38', type:'pk', ground:'#d4d0ac', patch:'#6a7a52',
-    spawnFrom:{ comoc:{ x:1921, y:260 } }, spawn:{ x:400, y:1500 }, trees:80, rocks:34,
+    spawnFrom:{ comoc:{ x:1921, y:260 }, corran:{ x:2450, y:700 } }, spawn:{ x:400, y:1500 }, trees:80, rocks:34,
     desc:'Từ đây là đất PK — hạ người khác được, bị hạ cũng được. Chimera ở đây rơi Cốt bậc đầu.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     voi: 1836,
@@ -764,6 +773,29 @@ window.MAPS = {
       { id:'bandao', ten:'Dốc Sa Ngã', dai:[0.855,1.0], cung:[-55,-3], cum:[1,1], tiep:true,
         dan:[{ mob:'bandao', n:5, vai:['bay'] }] },   // C38 · Axie Sa Ngã
     ], duhiep:'duhiep1' },
+  // ── RẺO RỪNG CORRAN — map dựng theo lối tranh mới, đang ở bước KIỂM HOẠT ẢNH ──
+  // Cố ý để TRỐNG: `vung: []`, trees 0, rocks 0, không có trùm vùng. Mục đích là đi bộ khắp map
+  // xem nhân vật có đọc ra là ĐỨNG TRÊN ĐẤT không, trước khi tốn công đặt bãi quái. Đặt quái và
+  // vật cản là bước sau, khi hoạt ảnh đã duyệt.
+  //
+  // Vì sao là Corran: Người Gác Rừng Corran đã có sẵn trong game (NPC `daosi` ở Werebear Woods),
+  // và dải cấp 38-42 đang TRỐNG giữa Werebear Woods (24-38) và Bug Tribe Tunnels (42-56) — nên
+  // map này lấp một lỗ thật, không phải map thêm cho có.
+  corran: { name:'Rẻo Rừng Corran', min:36, range:'38 - 42', type:'pk', ground:'#cfd2ae', patch:'#6a7a52',
+    spawnFrom:{ chungnam:{ x:330, y:700 } }, spawn:{ x:300, y:760 }, trees:34, rocks:18,
+    desc:'Khoảnh rừng Corran giữ riêng, ngoài tầm bầy Werebear. Ông ấy không nói vì sao lại giữ.',
+    voi: 1700,
+    // Dải 38-42 bắc cầu giữa Werebear Woods (kết ở C38 `bandao`) và Bug Tribe Tunnels (mở ở
+    // C42 `thinu`) — dùng lại đúng hai loài ấy nên người chơi đi qua thấy liền mạch, không
+    // gặp loài lạ chen ngang giữa hai vùng.
+    vung: [
+      { id:'bandao', ten:'Dốc Corran Giữ', dai:[0.14,0.40], cung:[-30,45], cum:[2,2], tiep:true,
+        dan:[{ mob:'bandao', n:10, vai:['can','xa'] }] },        // C38 · Axie Sa Ngã
+      { id:'mocnhan', ten:'Vạt Golem Ngủ', dai:[0.44,0.70], cung:[10,85], cum:[2,2], tiep:true,
+        dan:[{ mob:'mocnhan', n:10, vai:['can','phap'] }] },     // C48 · Axie Golem
+      { id:'thinu', ten:'Ổ Bỏ Lại', dai:[0.74,1.0], cung:[-15,60], cum:[2,2], tiep:true,
+        dan:[{ mob:'thinu', n:11 }] },                            // C42 · Oan Hồn Ổ Ấp
+    ], duhiep:'duhiep2' },
   comoc: { name:'Bug Tribe Tunnels', min:40, range:'42 - 56', type:'pk', ground:'#a89f86', patch:'#4a4436',
     spawnFrom:{ chungnam:{ x:260, y:1366 }, mongco:{ x:1369, y:260 } }, spawn:{ x:400, y:400 }, dark:true, trees:30, rocks:46,
     desc:'Hang ổ hẹp, ngoằn ngoèo. Bầy Chimera dày đặc rơi nguyên liệu thăng giai Thú Chiến — bãi săn tranh chấp.',
@@ -857,6 +889,40 @@ window.MAPS = {
 // ═══════════ GDD Đợt 2 — A: ĐỊA HÌNH CẢN ĐƯỜNG + ẢI CẤP ═══════════
 // Chỉ chặn địa hình LỚN (hồ/sông/núi/tường), đường đi để rộng; rect {x,y,wd,ht} hoặc ellipse {x,y,rx,ry}
 window.MAP_OBSTACLES = {
+  // ── RẺO RỪNG CORRAN — 62 vật cản SUY TỪ CHÍNH TRANH NỀN, không đặt tay ──
+  // Sinh bằng `python3 tools/can_tu_tranh.py public/game/assets/maps/bg_corran.jpg corran`.
+  // Sửa tranh thì chạy lại lệnh đó rồi dán đè, đừng sửa số ở đây bằng tay.
+  //
+  // Mỗi ellipse đặt ở CHÂN vệt chứ không trùm cả tán, và dẹt 2:1 — hai luật ấy là thứ làm nên
+  // cảm giác isometric: đi ra SAU cây được, mà không đi XUYÊN gốc được. Xem đầu tệp công cụ.
+  // Hai lớp vật liệu: 54 tán lá (ellipse ở chân) + 8 khối tối (CHỮ NHẬT trùm kín) — gốc cổ thụ,
+  // tảng đá, dải nền tối ngoài khối đất. Thiếu lớp khối tối thì quái và người chơi đứng ngay
+  // trên thân cây cổ thụ — lỗi thấy được trong ảnh chụp đợt đầu.
+  // Khối tối chặn KÍN chứ không chặn mỗi chân, vì engine vẽ tranh nền trước rồi vẽ nhân vật đè
+  // lên, không sắp lớp theo y: đứng "sau" gốc cổ thụ hiện ra y hệt đứng "trên" nó.
+  //
+  // ⚠ Còn một chỗ sai nhìn thấy được: cổng torii sơn đỏ bị lớp tán lá nhận nhầm, nên lòng cổng
+  // bị chặn. Cổng ấy chỉ là vật trang trí, đi vòng được, nên tôi KHÔNG thêm phép đo thứ tư để
+  // chữa — xem `cham_map.py` để biết vì sao chế thêm phép thống kê là đường đã hỏng ba lần.
+  corran: [
+    { x:7, y:7, wd:126, ht:1293 }, { x:1380, y:76, rx:25, ry:13 }, { x:1040, y:168, rx:40, ry:20 }, { x:174, y:230, rx:42, ry:21 },
+    { x:2293, y:244, rx:42, ry:21 }, { x:2144, y:274, rx:65, ry:33 }, { x:1931, y:385, wd:220, ht:139 }, { x:2316, y:497, wd:94, ht:250 },
+    { x:1232, y:498, rx:66, ry:33 }, { x:1414, y:518, rx:65, ry:33 }, { x:1596, y:518, rx:65, ry:33 }, { x:320, y:524, rx:65, ry:33 },
+    { x:1918, y:592, rx:33, ry:17 }, { x:1779, y:599, rx:66, ry:33 }, { x:1050, y:600, rx:65, ry:33 }, { x:502, y:619, rx:65, ry:33 },
+    { x:868, y:619, rx:65, ry:33 }, { x:2161, y:627, rx:78, ry:39 }, { x:685, y:644, rx:66, ry:33 }, { x:1246, y:656, rx:77, ry:38 },
+    { x:2286, y:722, rx:22, ry:11 }, { x:765, y:742, wd:180, ht:385 }, { x:584, y:750, wd:180, ht:331 }, { x:1826, y:765, rx:17, ry:8 },
+    { x:404, y:776, wd:179, ht:305 }, { x:2408, y:791, wd:184, ht:142 }, { x:568, y:813, rx:19, ry:10 }, { x:1682, y:848, rx:36, ry:18 },
+    { x:1588, y:854, rx:31, ry:15 }, { x:2444, y:954, rx:21, ry:10 }, { x:1764, y:1079, rx:64, ry:32 }, { x:1922, y:1080, rx:49, ry:25 },
+    { x:1032, y:1082, rx:55, ry:28 }, { x:286, y:1126, rx:68, ry:34 }, { x:477, y:1129, rx:68, ry:34 }, { x:2319, y:1132, rx:17, ry:9 },
+    { x:859, y:1133, rx:68, ry:34 }, { x:2577, y:1134, rx:14, ry:8 }, { x:668, y:1173, rx:68, ry:34 }, { x:1076, y:1232, rx:26, ry:13 },
+    { x:1511, y:1252, rx:14, ry:8 }, { x:1276, y:1258, rx:31, ry:15 }, { x:1408, y:1266, rx:64, ry:32 }, { x:2490, y:1364, wd:102, ht:528 },
+    { x:989, y:1378, rx:68, ry:34 }, { x:2209, y:1380, rx:40, ry:20 }, { x:800, y:1382, rx:67, ry:34 }, { x:2371, y:1420, rx:40, ry:20 },
+    { x:2078, y:1508, rx:41, ry:21 }, { x:1262, y:1818, rx:69, ry:35 }, { x:1455, y:1819, rx:69, ry:35 }, { x:101, y:1822, rx:69, ry:35 },
+    { x:1068, y:1822, rx:69, ry:35 }, { x:874, y:1824, rx:69, ry:35 }, { x:294, y:1834, rx:69, ry:35 }, { x:681, y:1834, rx:69, ry:35 },
+    { x:2229, y:1841, rx:69, ry:35 }, { x:488, y:1846, rx:69, ry:35 }, { x:1842, y:1851, rx:69, ry:35 }, { x:2412, y:1853, rx:62, ry:31 },
+    { x:2036, y:1854, rx:69, ry:35 }, { x:1648, y:1858, rx:69, ry:35 },
+  ],
+
   // Chặn nguyên KHỐI NHÀ chứ không chỉ chân tường: art isometric vẽ cả mái, mà mái là thứ
   // nhân vật sẽ đi đè lên nếu cho vào. Toạ độ đọc từ chính tấm art qua lưới 100px rồi nhân
   // hệ số 1,5347 (art 1490px nội dung -> 2287px trong thế giới 2600x1900).

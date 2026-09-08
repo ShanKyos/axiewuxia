@@ -23,15 +23,16 @@ player-visible text.
 | | |
 |---|---|
 | Classes | 5 — Dark Knight · Sylvan Ranger · Dark Wizard · Spellblade · Dark Lord |
-| Maps | starting town (Quảng Trường Cũ) · 2 safe hubs · 6 wilderness regions, levels 1–120 |
+| Maps | starting town (Quảng Trường Cũ) · 2 safe hubs · 7 wilderness regions, levels 1–120 |
 | Quests | 33-quest main chain across 5 chapters, grounded in Axie lore |
 | Gear | 14 tiers, per-class sets, socketing, Chaos Machine upgrades, 3 wing tiers |
 | Systems | Ragoon contracts (gacha), spirit pets, mastery, mob roles + elite mutations, wave arenas |
 | Tests | 174 Playwright regression tests (`tools/reg.sh`) + 7 vitest unit tests |
 
-⚠ Known gap: 6 of 8 region backgrounds are side-view battle backdrops used as ground, which makes
-the player read as floating in mid-air. Diagnosis, geometry constraints and regeneration prompts
-are in [`docs/PROMPT_MAP_ISOMETRIC.md`](docs/PROMPT_MAP_ISOMETRIC.md).
+⚠ Known gap: 5 of 8 region backgrounds are still side-view battle backdrops used as ground, which
+makes the player read as floating in mid-air. Werebear Woods has been rebuilt; diagnosis, geometry
+constraints, regeneration prompts and what the first rebuild taught are in
+[`docs/PROMPT_MAP_ISOMETRIC.md`](docs/PROMPT_MAP_ISOMETRIC.md).
 
 ## Quick start — just play the game
 

@@ -148,8 +148,15 @@ const PORT = process.argv[2] || '8853';
     o.cot = { sung:null, vuot:null, vay:null, duoi:null };
     COT_O_IDS.forEach((k, i) => { const c = cotMoiO(i < 2 ? 'regai' : 'samvun', 'tho', k); c.phu = []; o.cot[k] = c; });
     calcDerived();
+    // Số Dòng KHÔNG chốt cứng: nó phải bằng số map hoang dã có bãi quái. Bản đầu ghi thẳng số 7
+    // và con số ấy đóng băng thế giới ở đúng ngày viết bài — thêm một map hoang dã là bài đỏ,
+    // dù `test_bansac` lại ĐÒI mọi map có bãi quái phải có Dòng riêng. Hai bài chọi nhau, và bên
+    // sai là con số cứng. Nay suy ra từ chính bảng MAPS.
+    const hoangDa = Object.keys(MAPS).filter(k => (MAPS[k].vung || []).length);
     return { bo1:a.bo, hai1:a.c.cAtk, bo2:b2.bo, hai2:b2.c.cAtk, bo4:b4.bo, tron:chiBoHieu(),
-             soDong: COT_DONG_IDS.length };
+             soDong: COT_DONG_IDS.length, hoangDa: hoangDa.length,
+             thieu: hoangDa.filter(k => !COT_DONG_THEO_MAP[k]),
+             thua: COT_DONG_IDS.filter(d => !MAPS[COT_DONG[d].map]) };
   });
   console.log('5) bộ:', JSON.stringify(r5));
   if (r5.bo1) fail('1 mảnh mà đã tính là đủ bộ 4');
@@ -159,7 +166,10 @@ const PORT = process.argv[2] || '8853';
   else pass('2 mảnh kích đúng hiệu ứng bộ: +8% Công Ragoon');
   if (r5.bo4 !== 'regai') fail('4 mảnh không kích hiệu ứng đổi hành vi'); else pass('4 mảnh kích hiệu ứng đổi hành vi');
   if (r5.tron) fail('trộn 2+2 Dòng mà vẫn tính là đủ bộ'); else pass('trộn hai Dòng thì không tính đủ bộ');
-  if (r5.soDong !== 7) fail('phải đúng 7 Dòng, đếm ' + r5.soDong); else pass('đủ 7 Dòng, mỗi phó bản một Dòng');
+  if (r5.thieu.length) fail('map hoang dã không có Dòng Cốt: ' + r5.thieu.join(', '));
+  else if (r5.thua.length) fail('Dòng Cốt trỏ vào map không tồn tại: ' + r5.thua.join(', '));
+  else if (r5.soDong !== r5.hoangDa) fail(`${r5.soDong} Dòng cho ${r5.hoangDa} map hoang dã — phải một-một`);
+  else pass(`đủ ${r5.soDong} Dòng, mỗi map hoang dã một Dòng`);
 
   // ── 6. mỗi phó bản rơi ĐÚNG Dòng của nó ──
   const r6 = await p.evaluate(() => {
@@ -179,10 +189,10 @@ const PORT = process.argv[2] || '8853';
   });
   console.log('6) rơi:', JSON.stringify(r6));
   if (r6.sai.length) fail('vùng rơi sai Dòng: ' + r6.sai.join(', '));
-  else pass('cả 7 vùng rơi đúng Dòng của mình');
+  else pass(`cả ${Object.keys(r6.dem).length} vùng rơi đúng Dòng của mình`);
   if (!(r6.dau > r6.sau)) fail(`cửa mềm không hoạt động: lượt 1 rơi ${r6.dau}, lượt 9 rơi ${r6.sau}`);
   else pass(`cửa mềm: lượt đầu ${r6.dau} mảnh, lượt thứ 9 còn ${r6.sau}`);
-  if (r6.ngoai) fail('map ngoài bảy Dòng cũng rơi Cốt'); else pass('chỉ bảy vùng có Dòng mới rơi Cốt');
+  if (r6.ngoai) fail('map ngoài các Dòng cũng rơi Cốt'); else pass('chỉ vùng có Dòng mới rơi Cốt');
   if (!(r6.dat > 0)) fail('rơi Cốt mà không rơi Đất Hồn'); else pass(`rơi kèm Đất Hồn (${r6.dat} viên)`);
 
   // ── 7. kỹ năng đồng hành mở theo cấp và BUFF NGƯỜI CHƠI ──

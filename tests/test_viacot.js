@@ -130,11 +130,15 @@ const { chromium } = require('playwright');
     const khong = COT_DONG_IDS.map(k => COT_DONG[k].map).filter(m => !co.has(m));
     travelTo(khong[0]);
     return { map: khong[0], soKhong: khong.length,
+             soDong: COT_DONG_IDS.length, soVia: viaHomNay().length,
              pickup: pickups.filter(x => x.type === 'via').length,
              khai: viaKhai() };
   });
   console.log('5) vùng không vỉa:', JSON.stringify(r5));
-  if (r5.soKhong !== 4) fail(`7 vùng − 3 vỉa phải còn 4 vùng trống, đang ${r5.soKhong}`);
+  // Suy ra, không chốt cứng: bản đầu ghi thẳng số 4 (7 vùng − 3 vỉa) và con số ấy đóng băng thế
+  // giới ở đúng ngày viết bài — thêm một map hoang dã là bài đỏ mà không có gì hỏng cả.
+  if (r5.soKhong !== r5.soDong - r5.soVia)
+    fail(`${r5.soDong} vùng − ${r5.soVia} vỉa phải còn ${r5.soDong - r5.soVia} vùng trống, đang ${r5.soKhong}`);
   else pass('4/7 vùng hôm nay không có vỉa — nên chọn đi đâu là một quyết định');
   if (r5.pickup || r5.khai) fail(`${r5.map} không có vỉa mà vẫn thả/khai được`);
   else pass('vùng không có vỉa: không thả gì, không khai được gì');
