@@ -120,3 +120,77 @@ Diablo II vẫn làm, và mỗi tấm vẫn giữ được mật độ chi tiế
 * [Tiles and tilemaps overview — MDN](https://developer.mozilla.org/en-US/docs/Games/Techniques/Tilemaps)
 * [Top-down game pixel art: bóng và cảm giác khối — Sandro Maglione](https://www.sandromaglione.com/articles/pixel-art-top-down-game-sprite-design-and-animation)
 * [Parallax scrolling — Wikipedia](https://en.wikipedia.org/wiki/Parallax_scrolling)
+
+---
+
+# PHẦN HAI — các lối làm map khác, và một lối CHẠY ĐƯỢC NGAY TẠI ĐÂY
+
+> Chủ dự án bác cả ba lối ở §5 và bảo tra rộng hơn, đồng thời chốt **GIỮ LÀN, chỉ thay art**.
+> Phần này là kết quả tra tiếp — và một thứ tôi đã bỏ sót hoàn toàn.
+
+## 9. Thứ tôi bỏ sót: DỰNG 3D RỒI NƯỚNG RA 2D
+
+Đây là cách **Diablo II thật sự làm**: nhân vật và quái dựng 3D rồi nướng thành sprite 2D nhiều
+hướng; nền là tile isometric 2D. StarCraft, Age of Empires cũng vậy. Tôi bàn cả đợt về "vẽ tay
+hay lát tile" mà quên mất lối thứ ba — thứ chính các game trong thể loại này dùng.
+
+**Và nó chạy được ngay trong máy này.** `pip install bpy` xong là có Blender 5.0.1 dạng thư viện
+Python, chạy không cần màn hình. Tôi đã dựng thử và nướng thật:
+
+* `tools/iso/thu_canh.py` → `docs/thu.png` — một khúc làn: mặt đất, lối mòn, hai hàng cây, mấy
+  tảng đá. **7 giây** cho 768×560, tức khổ 6400×1400 mất khoảng **2-3 phút**.
+* `tools/iso/thu_vatthe.py` → `docs/cay_prop.png` — một cái cây rời, nền trong suốt.
+
+### Nó cho không ba thứ mà tôi đã chật vật cả tuần
+
+| Vấn đề đã vật lộn | 3D cho không |
+|---|---|
+| **Hai phép chiếu chọi nhau** | Một cảnh 3D, một camera trực giao → mọi vật TỰ ĐỘNG cùng phép chiếu. Không thể sai. |
+| **Không có bóng tiếp đất** | Mặt trời thật, bóng thật. Sprite vật thể nướng ra đã **mang sẵn bóng của chính nó** trong kênh alpha — đo được: 19% khung là bán trong suốt, đó chính là cái bóng. |
+| **Chi tiết thưa** | Chi tiết là hình học, không phải công vẽ tay. Map dài 6400px không tốn thêm công — chỉ tốn thời gian nướng. |
+
+**Điểm này lật ngược đề nghị bỏ làn của tôi.** Tôi khuyên bỏ làn vì "6400px không đủ ngân sách
+chi tiết" — đúng với tranh vẽ tay, **sai với 3D**. Giữ làn là quyết định hợp lý.
+
+⚠ Ghi để đừng tự bắn vào chân: `tools/go_vien.py` sẽ chấm sprite nướng từ 3D là **−132 "quầng
+tối"**. Đó KHÔNG phải lỗi — đó là cái bóng đổ, và nó phải tối. Đừng "chữa" nó.
+
+### Nó chưa cho cái gì
+
+Ảnh thử nhìn ra hình khối trơn, vì nó **đúng là hình khối trơn** — nón với trụ, không vân, không
+chất liệu. Muốn bằng Quảng Trường Cũ thì phải có mô hình và vân bề mặt tử tế. Đó là công việc
+thật, không phải bấm nút.
+
+## 10. Ba lối nữa, tra được nhưng chưa thử
+
+**E · 3D làm NỀN, AI vẽ đè lên.** Nướng cảnh 3D (khoá đúng phép chiếu, ánh sáng, bố cục), rồi
+đưa qua một lượt img2img để nó "vẽ" thành tranh. Lấy được cái chắc của 3D và cái đẹp của tranh.
+Đây nhiều khả năng là câu trả lời thật, nhưng cần công cụ img2img có điều khiển — Gemini nhận
+ảnh tham chiếu nên có cửa, phải thử mới biết giữ được bố cục tới đâu.
+
+**F · Bản đồ pháp tuyến + đèn động trong engine.** Vẽ tay thêm một tấm normal map cho mỗi sprite,
+engine chiếu đèn lên nó → art 2D phẳng bỗng có khối và đổ bóng theo đèn chạy. *The Siege and the
+Sandfox* làm thế. Rẻ hơn 3D, nhưng phải vẽ tay normal map cho từng thứ, và engine phải viết thêm
+lớp chiếu sáng.
+
+**G · Mua/lấy bộ art isometric có sẵn (CC0).** Không làm art nữa, dùng bộ đã có của người khác.
+Nhanh nhất, chắc nhất về chất lượng. Đổi lại: mất bản sắc riêng, và phải soi kỹ giấy phép.
+
+**H · Sinh tự động (WFC / nhiễu).** Hợp với map ngẫu nhiên vô hạn, không hợp với tám map có bố
+cục cố định và có nhiệm vụ neo vào. Loại.
+
+## 11. Đề nghị: D làm xương, E làm da — và làm thử một khúc trước
+
+1. **Dựng bộ mô hình 3D thô** cho làn: mặt đất, lối mòn, 3-4 dáng cây, 3 tảng đá. Thô thôi.
+2. **Nướng một khúc 1600×1400** (một màn hình), chưa nướng cả làn.
+3. **Đưa khúc ấy qua một lượt AI vẽ đè**, giữ nguyên bố cục.
+4. **Lắp vào game, chụp, so với ảnh Quảng Trường Cũ.** Nếu chưa bằng thì mới biết thiếu ở đâu —
+   và lần này thiếu chỗ nào sẽ nhìn ra được, vì phép chiếu và ánh sáng đã đúng sẵn.
+
+Một khúc chứ không cả làn: nếu sai thì mất một buổi, không mất cả đợt art.
+
+## 12. Nguồn phần hai
+
+* [Diablo II dựng 3D rồi nướng ra sprite 2D — GameDev.net](https://www.gamedev.net/forums/topic/487300-question-about-diablo-2s-sprites/4183301/)
+* [Nướng art isometric từ 3D — GameDev.net](https://gamedev.net/forums/topic/663241-isometric-assets-3d-to-2d/5195312)
+* [Normal map vẽ tay cho art 2D — The Siege and the Sandfox, Game Developer](https://www.gamedeveloper.com/art/adding-depth-to-2d-with-hand-drawn-normal-maps-in-i-the-siege-and-the-sandfox-i-)
