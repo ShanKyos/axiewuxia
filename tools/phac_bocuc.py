@@ -43,7 +43,8 @@ def phac(md, out):
     size = (W, H)
 
     quai  = [(q['x'], q['y']) for q in md['quai'] if not q['boss']]
-    boss  = [(q['x'], q['y']) for q in md['quai'] if q['boss']]
+    # trùm vùng lấy từ khoá `boss` riêng — xem ghi chú trong tools/dump_layout.js
+    boss  = [(b['x'], b['y']) for b in md.get('boss', [])]
     npc   = [(n['x'], n['y']) for n in md['npc']]
     cong  = [(g['x'], g['y']) for g in md['cong']]
     tha   = [(md['spawn']['x'], md['spawn']['y'])] if md.get('spawn') else []
@@ -80,6 +81,14 @@ def phac(md, out):
         d.ellipse([x - 90, y - 90, x + 90, y + 90], fill=MAU['cong'])
 
     img.save(out, quality=92)
+
+    # Bản ĐỆM 4:3 — meowa/Nano Banana chỉ nhận vài tỉ lệ cố định, gần khổ 2600×1900 (1,368)
+    # nhất là 4:3 (1,333). Đưa ảnh tham chiếu 1,368 rồi đòi ra 1,333 thì bố cục bị bóp lệch,
+    # nên đệm sẵn: thêm nền ở trên và dưới cho đủ 2600×1950, sinh xong cắt lại 50px là khít.
+    k43 = Image.new('RGB', (W, round(W * 3 / 4)), MAU['ngoai'])
+    k43.paste(img, (0, (k43.height - H) // 2))
+    k43.save(out.replace('.jpg', '_43.jpg'), quality=92)
+
     return {
         'san_pct': round(100 * san.mean(), 1),
         'dat_pct': round(100 * dat.mean(), 1),

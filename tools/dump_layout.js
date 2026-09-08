@@ -19,6 +19,18 @@ const { chromium } = require('playwright');
         npc: NPCS.filter(n=>n.map===key).map(n=>({x:n.x,y:n.y,name:n.name})),
         quai: mobs.map(m=>({x:Math.round(m.x),y:Math.round(m.y),boss:!!m.boss,elite:!!m.elite,ten:m.name||''})),
         canTro: (typeof MAP_OBSTACLES!=='undefined' && MAP_OBSTACLES[key]) ? MAP_OBSTACLES[key] : [],
+        // ⚠ Trùm vùng KHÔNG nằm trong `mobs` lúc buildWorld() — chúng ở bảng riêng BOSS_DEFS,
+        // và toạ độ khai theo TỈ LỆ khổ map, không phải pixel. Bản phác đầu tiên bỏ sót cả 32
+        // con vì chỉ đọc `mobs`, nên không chừa đấu trường nào.
+        boss: (function(){
+          const b = (window.BOSS_DEFS && window.BOSS_DEFS[key]) || {};
+          const ra = (b.thuve || []).concat(b.tranai ? [b.tranai] : []);
+          const o = ra.map(x => ({ x: Math.round(x.x * MAP.w), y: Math.round(x.y * MAP.h), ten: x.name, lv: x.lv }));
+          // daohoa còn một đấu trường cố định cho trận boss chương I (questIdx===9)
+          if (key === 'daohoa' && typeof BOSS_ARENA !== 'undefined')
+            o.push({ x: BOSS_ARENA.x, y: BOSS_ARENA.y, ten: 'Đấu trường chương I', lv: 10 });
+          return o;
+        })(),
       };
     }
     return res;

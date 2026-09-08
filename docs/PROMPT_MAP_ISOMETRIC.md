@@ -86,10 +86,15 @@ cảnh cho một sân khấu nhìn ngang, **không lát kín được một th�
 nhau.
 
 Map hoang dã hiện đang đi được **61–91%** khổ map, mỗi map cõng 11–25 điểm nội dung (3–4 bãi quái
-nhiều cụm, một đấu trường boss, cổng, NPC, rương, thảo dược). **Một tranh diorama chỉ chừa 11% sàn
+nhiều cụm, **4 trùm vùng**, cổng, NPC, rương, thảo dược). **Một tranh diorama chỉ chừa 11% sàn
 sẽ không đủ chỗ đặt bãi quái** — cả hệ `vung` (miền dân số) sập theo.
 
-> **Luật: mỗi map hoang dã phải chừa ≥ 60% khung là mặt đất trống, đi được, liền một khối.**
+> ⚠ **Số cũ ở đây là 60% và nó SAI VÌ THIẾU.** Bản đo đầu tiên chỉ đọc mảng `mobs`, mà trùm
+> vùng thì không nằm trong đó — chúng ở bảng riêng `BOSS_DEFS`, toạ độ khai theo TỈ LỆ khổ map.
+> Bỏ sót cả 29 con. Tính lại với bán kính 420px quanh mỗi trùm (tầm đuổi 260 + lề) thì sàn bắt
+> buộc trống của map hoang dã là **72–89%**, không phải 58–76%.
+>
+> **Luật: mỗi map hoang dã phải chừa ≥ 75% khung là mặt đất trống, đi được, liền một khối.**
 > Nhà cửa, vách đá, rừng rậm chỉ được đứng ở VÀNH ngoài để bịt mép map — không cắt đôi mặt sàn.
 > Thành an toàn (`tuongduong`) thì ngược lại, được phép chật như Quảng Trường Cũ.
 
@@ -213,6 +218,94 @@ Dán khối §4 trước, rồi nối đoạn riêng của map. Tệp ra đặt 
 > on, so keep it generous and easy to read. At the rim: a hatchery of woven seed-pods, pumpkin
 > rows, a low stone well, thorn hedges. Bright but soft palette — spring green, cream, pale pink
 > blossom, one warm gold path threading through.
+
+---
+
+## 5b. Chạy bằng meowa — lệnh thật, và một chỗ tôi viết sai ở §5
+
+⚠ **Prompt ở §5 viết theo lối XẾP MỆNH ĐỀ DÀI. meowa cấm đúng lối đó.** `SKILL.md` của họ ghi
+thẳng: *"Do not use legacy diffusion-style prompt engineering: no long keyword stacks, separate
+positive and negative prompt blocks, repeated quality terms… Start with the shortest sufficient
+prompt, inspect the result, and add one necessary constraint at a time only when the output proves
+it is needed."* Dùng meowa thì viết NGẮN, để hai ảnh tham chiếu gánh phần bố cục và phong cách.
+Prompt §5 vẫn dùng được cho đường gọi Gemini trực tiếp.
+
+**meowa chạy cảnh lớn bằng chính Nano Banana Pro.** Tra trong `meowart_api.py`: lệnh
+`nano-banana-run` phơi `--model` với ba lựa chọn, trong đó có `gemini-3-pro-image`. Nên đi qua
+meowa không đổi model — đổi chỗ quản tài khoản, tín dụng và vòng chờ việc.
+
+### Cài một lần
+
+```bash
+git clone https://github.com/Meowa-AI/meowa-skills
+cd meowa-skills && python3 -m pip install requests Pillow
+export MEOWART_API_KEY="ma_live_..."        # lấy ở meowa.ai → API Keys
+python3 skills/game-assets/meowart_api.py credits-balance
+```
+
+⚠ Khoá chỉ để trong biến môi trường hoặc `.env` đã ignore. Đừng dán vào prompt, tham số dòng
+lệnh, ảnh chụp hay repo — runner cũng không nhận khoá qua tham số.
+
+### Sinh một map
+
+```bash
+python3 skills/game-assets/meowart_api.py nano-banana-run \
+  --prompt "<xem §5c>" \
+  --reference-image docs/phac_map/phac_<map>_43.jpg \
+  --reference-image public/game/assets/maps/bg_quangtruong.jpg \
+  --model gemini-3-pro-image \
+  --resolution 4K \
+  --aspect-ratio 4:3 \
+  --output-dir out/map_<map>
+```
+
+Vì sao từng tham số:
+
+| | |
+|---|---|
+| `--reference-image` ①| bản phác bố cục — **đưa TRƯỚC**, nó là bản đồ chỉ chỗ nào phải trống |
+| `--reference-image` ②| `bg_quangtruong.jpg` — mẫu phong cách, ánh sáng, bảng màu |
+| `--aspect-ratio 4:3` | gần khổ 2600×1900 (1,368) nhất trong danh sách meowa nhận. Dùng bản phác `_43` đã đệm sẵn nền lên 2600×1950 để bố cục không bị bóp lệch; sinh xong cắt 50px là khít |
+| `--resolution 4K` | 4K ở 4:3 ra ~4096×3072, thu về 2600 vẫn dư nét. 1K/2K sẽ mờ khi phóng lên khổ map |
+| `--model gemini-3-pro-image` | Nano Banana Pro. Hai model `flash` rẻ hơn nhưng bám ảnh tham chiếu kém hơn |
+
+Việc rớt mạng giữa chừng thì **đừng gửi lại** (đã trừ tín dụng) — lấy lại bằng
+`nano-banana-poll --job-id <id> --output-dir <dir>`.
+
+### Nếu sau này chuyển sang hệ ô lát
+
+meowa mạnh hơn hẳn ở đây, và đó là thứ Nano Banana thô không có: `hd-isometric-gen-run` (mặt trên
+744×372, footprint `standard` 1×1 hoặc `tetraploid` 2×2), `isometric-tileset-run`,
+`isometric-texture-run`. Bắt buộc bắt đầu từ `map-reference-search` → `map-reference-download` rồi
+mới sinh — các bộ sinh này có hợp đồng cỡ ô và neo tâm chặt, ảnh tuỳ tiện sẽ ra ô sai lưới.
+Đổi sang hướng này thì phải viết bộ vẽ ô lát trong `game.js`, xem §3.2.
+
+⚠ `side-scrolling-map-run` / `hd-side-scrolling-map-run` là bộ sinh nền **NHÌN NGANG** — nhiều
+khả năng chính là thứ đã tạo ra 6 tấm nền hỏng hiện tại. Đừng gọi nhầm.
+
+---
+
+## 5c. Prompt mẫu — `bg_tuongduong.jpg` · Sapidae Chiefdom
+
+Viết theo luật meowa: ngắn, câu thường, để ảnh tham chiếu gánh bố cục.
+
+> Isometric diorama of a small fortified frontier town on one landmass, seen from above at a
+> single fixed angle. Use the first reference as a layout map: the pale area is an open stone
+> plaza that must stay clear and walkable, the blue channels are roads that reach the edge of the
+> land, and buildings belong only in the dark brown rim — a blacksmith forge with a lit furnace,
+> an apothecary, a stone gatehouse, market stalls, insect-folk houses with hexagonal windows. One
+> corner of the plaza is split by a thin luminous fissure. The land sits on a thick plinth of soil
+> and rock, surrounded by flat near-black empty space. No sky, no horizon, no characters. Match
+> the painting style, palette and lighting of the second reference.
+
+Sinh xong, đưa tôi tệp — tôi cắt về 2600×1900, chấm `diTrong`, kéo lại NPC/cổng/điểm thả, chạy
+`test_sandat` rồi gửi ảnh chụp trong game.
+
+**Nếu tấm đầu chưa đạt, sửa MỘT ràng buộc một lần** (đúng luật meowa), theo thứ tự hay hỏng nhất:
+1. Sàn bị nhà ăn mất → thêm đúng một câu: *"Keep the pale plaza completely empty of buildings."*
+2. Có trời / đường chân trời → *"The camera looks down; no sky is visible anywhere."*
+3. Lối ra bị bịt → *"Each blue road stays open all the way to the edge of the land."*
+4. Lệch phong cách → bỏ bớt chi tiết trong prompt, đừng thêm; để ảnh tham chiếu ② nói.
 
 ---
 
