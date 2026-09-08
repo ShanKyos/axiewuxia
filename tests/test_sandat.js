@@ -80,8 +80,7 @@ const HANH_LANG_HEP_NHAT = 340;
       //
       // Đo TRƯỚC các lượt đi thử, không phải sau. Bài này hỏi "máy đặt đúng chỗ chưa", mà nếu đo
       // sau thì nó thật ra đang hỏi "quái có đuổi theo người chơi ra khỏi hành lang không" —
-      // một câu khác hẳn. (Câu đó CÓ câu trả lời đáng lo: đòn lao/xung của quái không gọi
-      // collideObstacles, nên quái xung một cú là ra ngoài đa giác. Đã ghi thành việc riêng.)
+      // một câu khác hẳn. Câu đó được hỏi riêng ở khối ⑦, đúng vì nó là một câu khác.
       const dat = [];
       for (const n of NPCS.filter(n => n.map === key)) dat.push(['NPC ' + n.name, n.x, n.y, 20]);
       for (const g of GATES.filter(g => g.map === key)) dat.push(['cổng ' + g.name, g.x, g.y, 20]);
@@ -173,6 +172,41 @@ const HANH_LANG_HEP_NHAT = 340;
         }
       }
 
+      // ⑦ ĐUỔI DÀI: quái phải ở TRONG sàn cả sau khi đuổi, không chỉ lúc mới đặt.
+      //
+      // ④ đo lúc ĐẶT, và nó cố ý chỉ đo lúc đặt. Khối này đo cái còn lại: mỗi nhánh di chuyển của
+      // quái tự dịch toạ độ, nên nhánh nào quên gọi collideObstacles thì nhánh đó là một lỗ. Trên
+      // đồng trống không thấy được (không có `diTrong` thì gần như không có "ngoài sàn"), nên lỗ
+      // nằm im tới map dạng LÀN đầu tiên: đo trên Lối Mòn Corran, 7200 khung đuổi thì 2-3 con
+      // đứng hẳn trong rừng — cụ thể là nhánh Du Hiệp lang thang và lực đẩy mềm mobSeparate().
+      //
+      // Ghim máu CẢ QUÁI, không chỉ người chơi: bãi chết sạch thì phép đo thành rỗng và luôn
+      // XANH — nó sẽ không còn hỏi được câu nào. Giữ bãi sống mới có cụm dồn quanh người chơi,
+      // và chính cụm dồn đó là thứ ép con ngoài cùng ra ngoài đa giác.
+      if (mobs.length){
+        const chan = [];
+        for (let k = 0; k < 8; k++) chan.push({ x: 200 + (MAP.w - 400) * (k / 7), y: k % 2 ? MAP.h * 0.3 : MAP.h * 0.7 });
+        player.x = (sp || chan[0]).x; player.y = (sp || chan[0]).y;
+        let ngoaiNhat = 0, viDu = [];
+        for (const c of chan){
+          moveTarget = { x: c.x, y: c.y };
+          for (let i = 0; i < 450; i++){
+            player.hp = player.maxHp;
+            for (const m of mobs) if (!m.dead) m.hp = m.maxHp;
+            update(1/60);
+          }
+          const ngoai = mobs.filter(m => !m.dead && inObstacle(key, m.x, m.y, 0));
+          if (ngoai.length > ngoaiNhat){
+            ngoaiNhat = ngoai.length;
+            viDu = ngoai.slice(0, 4).map(m => `${m.name || m.type}(${Math.round(m.x)},${Math.round(m.y)})`);
+          }
+        }
+        o.khungDuoi = chan.length * 450;
+        o.quaiRaNgoai = ngoaiNhat;
+        if (ngoaiNhat)
+          o.loi.push(`sau ${o.khungDuoi} khung đuổi, ${ngoaiNhat} con nằm ngoài sàn: ${viDu.join(' · ')} — nhánh di chuyển nào đó thiếu collideObstacles`);
+      }
+
       ra.push(o);
     }
     return ra;
@@ -189,7 +223,7 @@ const HANH_LANG_HEP_NHAT = 340;
       for (const l of o.loi) console.log(`FAIL [${o.map}] ${l}`);
       bad += o.loi.length;
     } else {
-      console.log(`PASS [${o.map}] ${o.ten} — sàn ${o.san}% · ${o.dinh} đỉnh · ${o.soNpc} NPC · ${o.soCong} cổng · ${o.soQuai} quái đều đứng trên đất`);
+      console.log(`PASS [${o.map}] ${o.ten} — sàn ${o.san}% · ${o.dinh} đỉnh · ${o.soNpc} NPC · ${o.soCong} cổng · ${o.soQuai} quái đều đứng trên đất${o.khungDuoi ? `, kể cả sau ${o.khungDuoi} khung đuổi` : ''}`);
     }
   }
   console.log('errors:', JSON.stringify(errs));

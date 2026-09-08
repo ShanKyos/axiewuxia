@@ -3135,6 +3135,7 @@ function vhKnockback(m, ang, px){
   if (m.def.bossKind) px *= 0.35; // boss nặng cân — khó hất văng
   m.x = clamp(m.x + Math.cos(ang)*px, 30, MAP.w-30);
   m.y = clamp(m.y + Math.sin(ang)*px, 30, MAP.h-30);
+  collideObstacles(m, 13); // GDD Đợt 2 A — hất văng vào vách thì dừng ở vách
 }
 
 // ═══════════ VFX TUYỆT CHIÊU — mỗi thần công một hình ảnh riêng, không trùng lặp ═══════════
@@ -8089,6 +8090,7 @@ function bossExecMove(m){
     hit = d2 < mv.r && da < mv.arc;
   } else if (mvId === 'xung'){
     m.x = clamp(tele.px, 40, MAP.w-40); m.y = clamp(tele.py, 40, MAP.h-40);
+    collideObstacles(m, 13); // GDD Đợt 2 A — lao tới thì DỪNG ở vách, không lao xuyên qua
     addEffect({ type:'ring', x:m.x, y:m.y, r:70, color:'#ff5a3a', big:true });
     hit = dist(player.x, player.y, m.x, m.y) < mv.w + 26;
   }
@@ -9329,6 +9331,17 @@ function mobSeparate(dt){
       b2.x += ux*push; b2.y += uy*push;
     }
   }
+  // Lực đẩy mềm không biết gì về địa hình, và nó đẩy cả những con đang ĐỨNG ĐÁNH — nhánh đứng
+  // đánh không gọi collideObstacles, nên không có gì kéo về. Trên map dạng LÀN, một cụm sáu con
+  // dồn quanh người chơi ở sát mép hành lang nhích con ngoài cùng ra ngoài đa giác nửa pixel mỗi
+  // khung, và sau vài nghìn khung nó đứng hẳn trong rừng. Đo trên Lối Mòn Corran: 7200 khung
+  // đuổi thì 2-3 con ra ngoài, trong đó có con đẩy ra bằng đúng đường này.
+  // Quét cả `gan` chứ không chỉ cặp vừa bị đẩy: con đã lọt vào vật cản thì ĐỨNG IM trong đó
+  // (nhánh đứng đánh không dịch toạ độ, nên không nhánh nào kéo nó ra), và đo được đúng ca đó —
+  // một con nằm nguyên một chỗ trong rừng suốt 3.000 khung. Đây là cùng một cái lưới mà người
+  // chơi đã có ở collideObstacles(player, 14) mỗi khung: đứng yên cũng bị đẩy ra khỏi vùng cấm.
+  // `gan` đã lọc theo tầm nhìn nên số phép tính cùng hạng với nhánh truy đuổi vẫn đang gọi.
+  for (const m of gan) collideObstacles(m, 13); // GDD Đợt 2 A
 }
 // Quyết định con nào ĐƯỢC vẽ nhãn tên trong khung này. Chạy MỘT LẦN mỗi khung, trước khi vẽ.
 // Con bị bỏ nhãn được gom vào con đại diện gần nhất dưới dạng "×N" — vẫn cho biết có mấy con,
@@ -10451,9 +10464,10 @@ function update(dt){
       m.wanderT = (m.wanderT || 0) - dt;
       if (m.wanderT <= 0){ m.wanderT = rnd(2,5); m.wanderAng = Math.random() < 0.35 ? null : rnd(0, Math.PI*2); }
       if (m.wanderAng != null){
-        m.x = clamp(m.x + Math.cos(m.wanderAng)*26*dt, 40, MAP.w-40);
-        m.y = clamp(m.y + Math.sin(m.wanderAng)*26*dt, 40, MAP.h-40);
+        m.x += Math.cos(m.wanderAng)*26*dt;
+        m.y += Math.sin(m.wanderAng)*26*dt;
         m.faceT = m.wanderAng;
+        collideObstacles(m, 13); // GDD Đợt 2 A
       }
       continue;
     }
@@ -10475,6 +10489,7 @@ function update(dt){
           addEffect({ type:'ring', x:m.x, y:m.y, r:40, color:DIBIEN.dichanh.col });
           const a = Math.random() * Math.PI * 2;
           m.x = clamp(player.x + Math.cos(a) * 44, 40, MAP.w - 40); m.y = clamp(player.y + Math.sin(a) * 44, 40, MAP.h - 40);
+          collideObstacles(m, 13); // GDD Đợt 2 A
           m.atkT = Math.min(m.atkT, 0.35);
           addEffect({ type:'ring', x:m.x, y:m.y, r:40, color:DIBIEN.dichanh.col });
         }
@@ -10482,9 +10497,10 @@ function update(dt){
     }
     if ((m.fearT || 0) > 0){ // hoảng sợ: bỏ chạy xa người chơi
       const fa = Math.atan2(m.y-player.y, m.x-player.x);
-      m.x = clamp(m.x + Math.cos(fa)*m.def.speed*dt, 40, MAP.w-40);
-      m.y = clamp(m.y + Math.sin(fa)*m.def.speed*dt, 40, MAP.h-40);
+      m.x += Math.cos(fa)*m.def.speed*dt;
+      m.y += Math.sin(fa)*m.def.speed*dt;
       m.faceT = fa;
+      collideObstacles(m, 13); // GDD Đợt 2 A
     } else if (d < aggroR && d > m.def.range){
       const ang = Math.atan2(player.y-m.y, player.x-m.x);
       m.faceT = ang;
