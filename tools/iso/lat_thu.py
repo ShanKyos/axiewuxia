@@ -66,6 +66,17 @@ def _cach_mep(poly, x, y):
     return d
 
 
+def _cach_duong(duong, x, y):
+    """Khoảng cách tới đường mòn gần nhất. Xem duong_mon() trong tools/iso/vung_rong.py."""
+    d = 1e9
+    for tuyen in duong:
+        for a, b in zip(tuyen, tuyen[1:]):
+            vx, vy = b[0]-a[0], b[1]-a[1]
+            t = max(0.0, min(1.0, ((x-a[0])*vx + (y-a[1])*vy) / (vx*vx + vy*vy + 1e-9)))
+            d = min(d, math.hypot(x - a[0] - vx*t, y - a[1] - vy*t))
+    return d
+
+
 def _hat(x, y, o=0.0):
     """Nhiễu trơn rẻ tiền — chỉ để XÔ LỆCH ranh giới, không cần chất lượng."""
     def n(i, j):
@@ -82,6 +93,7 @@ def lat(md, anh, neo, ra):
     W, H = md['w'], md['h']
     poly = [tuple(p) for p in md['diTrong']]
     rnd = random.Random(7)
+    duong = md.get('isoDuong') or []
 
     nen = Image.new('RGBA', (W, H), (14, 13, 16, 255))
     co  = [anh[k] for k in ('nen_co1', 'nen_co2', 'nen_co3')]
@@ -103,7 +115,11 @@ def lat(md, anh, neo, ra):
             # Ngưỡng bị nhiễu XÔ ±85px, nếu không ranh giới cỏ/đất chạy đúng theo lưới hình thoi
             # và ra một dãy bậc thang răng cưa — đúng lỗi còn lại trong ảnh lát thử.
             nguong = 190 + (_hat(cx / 460, cy / 460) - 0.5) * 170
-            t = dat[rnd.randrange(len(dat))] if d > nguong else co[rnd.randrange(len(co))]
+            if duong:      # map RỘNG: đất bám theo đường mòn — xem _cach_duong()
+                la_dat = _cach_duong(duong, cx, cy) < 150 + (_hat(cx/300, cy/300) - 0.5) * 130
+            else:          # map LÀN: đất là dải giữa lối
+                la_dat = d > nguong
+            t = dat[rnd.randrange(len(dat))] if la_dat else co[rnd.randrange(len(co))]
             nen.alpha_composite(t, (cx - W_T // 2, cy - H_T // 2))
 
     # ── lớp 1b: vệt đất phá ranh giới cỏ/đường ──
@@ -113,8 +129,11 @@ def lat(md, anh, neo, ra):
             x = rnd.randrange(W); y = rnd.randrange(H)
             if not _trong(poly, x, y):
                 continue
-            d = _cach_mep(poly, x, y)
-            if not (110 < d < 285):          # đúng dải ranh giới, chỗ răng cưa lộ ra
+            if duong:
+                dd = _cach_duong(duong, x, y)
+                if not (110 < dd < 260):
+                    continue
+            elif not (110 < _cach_mep(poly, x, y) < 285):   # dải ranh giới, chỗ răng cưa lộ ra
                 continue
             v = vet[rnd.randrange(len(vet))]
             nen.alpha_composite(v, (x - v.width // 2, y - v.height // 2))
@@ -125,21 +144,33 @@ def lat(md, anh, neo, ra):
     vat = []
     for v in md.get('vatDat', []):           # cây tác giả đặt tay, men hai mép lối
         vat.append((v['x'], v['y'], cay[rnd.randrange(len(cay))]))
-    for _ in range(420):                     # rừng dày ngoài lối — chỗ người chơi không vào
+    dt = W * H / 1e6                         # triệu điểm — mật độ rải phải theo KHỔ map
+    for _ in range(int(47*dt)):              # rừng dày ngoài lối — chỗ người chơi không vào
         x = rnd.randrange(W); y = rnd.randrange(H)
         if _trong(poly, x, y) or _cach_mep(poly, x, y) > 420:
             continue
         vat.append((x, y, cay[rnd.randrange(len(cay))]))
-    for _ in range(520):                     # bụi/đá/cỏ rải TRONG lối cho mặt đất khỏi trơ
-        x = rnd.randrange(W); y = rnd.randrange(H)
-        if not _trong(poly, x, y) or _cach_mep(poly, x, y) < 60:
+    # ⚠ RẢI THEO CỤM, ĐỪNG RẢI ĐỀU — và tôi đã đi qua cả hai đầu sai.
+    # Rải thưa thì đồng cỏ trơ như thảm; nâng thẳng mật độ lên thì cả map lấm tấm sỏi với bụi
+    # đều tăm tắp, đọc ra thành NHIỄU chứ không thành địa hình. Mặt đất thật có mảng dày mảng
+    # trống: bụi mọc quanh bụi, sỏi nằm cạnh sỏi, và giữa chúng là khoảng trống để đánh nhau.
+    # Nên bốc TÂM CỤM trước, rồi rải quanh tâm.
+    for _ in range(int(11*dt)):
+        cx, cy = rnd.randrange(W), rnd.randrange(H)
+        if not _trong(poly, cx, cy) or _cach_mep(poly, cx, cy) < 90:
             continue
-        vat.append((x, y, nho[rnd.randrange(len(nho))]))
+        ban = rnd.uniform(120, 300)
+        for _ in range(rnd.randint(3, 9)):
+            a = rnd.uniform(0, 6.284); r = rnd.uniform(0, ban)
+            x, y = cx + math.cos(a)*r, cy + math.sin(a)*r*0.6
+            if not _trong(poly, x, y) or _cach_mep(poly, x, y) < 60:
+                continue
+            vat.append((x, y, nho[rnd.randrange(len(nho))]))
 
     vat.sort(key=lambda v: v[1])
     for x, y, k in vat:
         im = anh[k]; nx, ny = neo[k]
-        nen.alpha_composite(im, (x - nx, y - ny))
+        nen.alpha_composite(im, (round(x) - nx, round(y) - ny))
 
     nen.convert('RGB').save(ra, quality=94)
     print(f'{ra}  {W}×{H}  ·  {len(vat)} vật thể xếp theo y')

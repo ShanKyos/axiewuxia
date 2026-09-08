@@ -1669,6 +1669,168 @@ function treeImgOf(k, bien){
 const ROCK_IMGS = [];
 for (let i = 1; i <= 3; i++){ const im = new Image(); im.src = 'assets/trees/rock' + i + '.png'; ROCK_IMGS.push(im); }
 
+// ═══ SÀN LÁT VIÊN — nền đẳng cự ghép từ hình thoi 2:1 ══════════════════════════════════════
+// Bộ viên nướng bằng tools/iso/nuong_tile.py (Blender, không màn hình). Hình học ghi ở đầu tệp
+// đó; ở đây chỉ cần một điều: **KHÔNG CÓ HỆ TOẠ ĐỘ MỚI.** Toạ độ thế giới vẫn là toạ độ màn
+// hình, hình thoi xếp so le NGAY TRONG mặt phẳng ấy. Nhờ vậy `diTrong`, va chạm, lưới tìm
+// đường, `ents.sort` — không một dòng nào phải sửa. Nếu phải dựng hệ ô-lưới riêng rồi đổi qua
+// đổi lại thì việc này đã hỏng từ trong trứng.
+//
+// ⚠ VẼ TỪNG KHUNG, KHÔNG NƯỚNG SẴN CẢ MAP VÀO CANVAS.
+// Nướng Lối Mòn 6400×1400 vào một canvas ngoài màn hình là 8,96 triệu điểm × 4 byte = 35,8 MB
+// — NẶNG HƠN chính tấm JPEG nó thay, trên một dự án đã từng sập Chrome vì hết bộ nhớ renderer
+// (việc #107, và xem chú thích ở mapBgDon). Vẽ theo khung nhìn thì tốn đúng 12 tấm PNG nhỏ
+// (1,1 MB trên đĩa) và khoảng 70 lần drawImage mỗi khung — cùng tinh thần với việc chỉ vẽ MẢNH
+// tranh nền đang lọt khung ở drawWorld.
+const ISO_W = 256, ISO_H = 128;              // hình thoi 2:1 — đúng cỡ nướng ra, vẽ 1:1
+const ISO_CO  = ['nen_co1', 'nen_co2', 'nen_co3'];
+const ISO_DAT = ['nen_dat1', 'nen_dat2'];
+const ISO_VET = ['vet_dat1', 'vet_dat2'];
+const ISO_IMGS = {};
+function isoImg(ten){
+  let im = ISO_IMGS[ten];
+  if (!im){ im = ISO_IMGS[ten] = new Image(); im.src = 'assets/iso/' + ten + '.png'; }
+  return (im.complete && im.naturalWidth) ? im : null;
+}
+// Nhiễu trơn rẻ tiền — chỉ dùng để XÔ LỆCH ranh giới cỏ/đất, không cần chất lượng.
+function _isoHat(i, j){ const v = Math.sin(i*127.1 + j*311.7) * 43758.5453; return v - Math.floor(v); }
+function _isoNhieu(x, y){
+  const i = Math.floor(x), j = Math.floor(y);
+  let fx = x - i, fy = y - j;
+  fx = fx*fx*(3 - 2*fx); fy = fy*fy*(3 - 2*fy);
+  return (_isoHat(i, j)*(1-fx) + _isoHat(i+1, j)*fx)*(1-fy)
+       + (_isoHat(i, j+1)*(1-fx) + _isoHat(i+1, j+1)*fx)*fy;
+}
+// Khoảng cách tới mép vùng đi được. `epVaoDaGiac` vốn viết để đẩy nhân vật trở vào, nhưng nó
+// trả về đúng điểm gần nhất trên viền nên dùng lại được nguyên vẹn.
+function _isoCachMep(dg, x, y){ const m = epVaoDaGiac(dg, x, y); return Math.hypot(x - m.x, y - m.y); }
+
+// Bảng viên của map đang đứng. Tính MỘT LẦN lúc nạp map, không tính lại mỗi khung: Lối Mòn chỉ
+// có 25×25 ô nên cả bảng là 625 byte.
+let _sanIso = null;
+function sanIsoDung(){
+  _sanIso = null;
+  const md = mapDef();
+  if (!md.sanIso || !md.diTrong) return;
+  const cot = Math.ceil(MAP.w / ISO_W) + 3, hang = Math.ceil(MAP.h / (ISO_H/2)) + 3;
+  const o = new Uint8Array(cot * hang);
+  for (let j = 0; j < hang; j++){
+    for (let i = 0; i < cot; i++){
+      const cx = (i-1)*ISO_W + ((j & 1) ? ISO_W/2 : 0), cy = (j-1)*(ISO_H/2);
+      const d = _isoCachMep(md.diTrong, cx, cy);
+      // ⚠ LÁT RỘNG HƠN `diTrong` MỘT VÀNH 200px. Lát khít đa giác thì mép ngoài là một đường
+      // RĂNG CƯA hình thoi lộ trên nền trơn — thấy rõ ở ảnh lát thử đầu tiên. Nới ra thì mép
+      // ấy nằm lọt dưới hàng cây, không ai còn thấy. Đây thuần tuý là chuyện vẽ: vùng đi được
+      // vẫn đúng bằng `diTrong`, không rộng thêm một pixel nào.
+      if (!trongDaGiac(md.diTrong, cx, cy) && d > 200) continue;
+      // ĐƯỜNG MÒN suy thẳng từ hình học, không vẽ tay: chỗ nào xa mép nhất là chỗ giẫm nhiều
+      // nhất. Ngưỡng bị nhiễu xô ±85px — nếu không, ranh giới cỏ/đất chạy đúng theo lưới hình
+      // thoi và ra một dãy bậc thang răng cưa.
+      // HAI TẦNG nhiễu: tầng thô (460px) uốn cả con đường, tầng mịn (150px) gặm mép. Một tầng
+      // thôi thì ở khúc lối rộng, nhiễu trơn quá và ranh giới rơi đúng lưới hình thoi — ra một
+      // mảng đất bốn cạnh thẳng, thấy rõ ở ảnh chụp trong game chỗ đầu lối.
+      const nguong = 190 + (_isoNhieu(cx/460, cy/460) - 0.5) * 190
+                         + (_isoNhieu(cx/150, cy/150) - 0.5) * 95;
+      const k = ((i*73856093) ^ (j*19349663)) >>> 0;
+      o[j*cot + i] = (d > nguong) ? (1 + k % ISO_DAT.length)
+                                  : (1 + ISO_DAT.length + k % ISO_CO.length);
+    }
+  }
+  // ⚠ VỆT ĐẤT — thiếu cái này thì ranh giới cỏ/đường mòn ra một dãy BẬC THANG hình thoi, thấy
+  // rõ ở ảnh chụp trong game chỗ đầu lối. Bản lát thử bằng Python có rồi, engine thì tôi quên
+  // đưa sang. Rẻ hơn hẳn bộ 8 viên chuyển tiếp (4 cạnh + 4 góc) mà lại không ra đường biên
+  // thẳng — và không bắt trình vẽ phải biết tự-lát.
+  const vet = [];
+  const boc = _hatRng(_bamChuoi('vet:' + curMap));
+  // ⚠ SỐ NÀY LÀ MỘT NGÂN SÁCH VẼ, KHÔNG PHẢI MỘT LỰA CHỌN THẨM MỸ — và tôi đã chép nhầm nó
+  // từ bản lát thử. Bản Python nướng MỘT LẦN vào ảnh tĩnh nên 900 vệt là miễn phí; engine vẽ
+  // LẠI MỖI KHUNG, mà mỗi vệt là 563×281 điểm. Đo được: 900 vệt kéo Lối Mòn từ 33 xuống 8,5
+  // khung/giây, chậm gấp bốn — vì khoảng 264 vệt lọt khung, cộng thành 41,7 triệu điểm.
+  // Nay 170 vệt, và phần lồi lõm của ranh giới giao cho tầng nhiễu thứ hai ở trên, thứ không
+  // tốn một điểm ảnh nào lúc chạy.
+  for (let t = 0, dat = 0; t < 24000 && dat < 170; t++){
+    const x = boc()*MAP.w, y = boc()*MAP.h;
+    if (!trongDaGiac(md.diTrong, x, y)) continue;
+    const d = _isoCachMep(md.diTrong, x, y);
+    if (d < 110 || d > 285) continue;            // đúng dải ranh giới, chỗ răng cưa lộ ra
+    vet.push({ x, y, i: (boc()*ISO_VET.length)|0 });
+    dat++;
+  }
+  _sanIso = { cot, hang, o, vet };
+}
+// Vẽ phần sàn đang lọt khung nhìn. Trả về false nếu map này không lát viên, để nhánh tranh nền
+// một tấm chạy tiếp như cũ.
+function veSanIso(){
+  if (!_sanIso) return false;
+  const cot = _sanIso.cot, hang = _sanIso.hang, o = _sanIso.o;
+  const j0 = Math.max(0, Math.floor(camera.y / (ISO_H/2)) - 1);
+  const j1 = Math.min(hang - 1, Math.ceil((camera.y + VH) / (ISO_H/2)) + 2);
+  const i0 = Math.max(0, Math.floor(camera.x / ISO_W) - 1);
+  const i1 = Math.min(cot - 1, Math.ceil((camera.x + VW) / ISO_W) + 1);
+  for (let j = j0; j <= j1; j++){
+    for (let i = i0; i <= i1; i++){
+      const v = o[j*cot + i]; if (!v) continue;
+      const im = isoImg(v <= ISO_DAT.length ? ISO_DAT[v-1] : ISO_CO[v - 1 - ISO_DAT.length]);
+      if (!im) continue;
+      ctx.drawImage(im, (i-1)*ISO_W + ((j & 1) ? ISO_W/2 : 0) - ISO_W/2, (j-1)*(ISO_H/2) - ISO_H/2);
+    }
+  }
+  // vệt đất nằm BẸP trên nền, vẽ sau viên và trước mọi vật thể — không xếp lớp theo y
+  for (const v of _sanIso.vet){
+    if (v.x < camera.x - 300 || v.x > camera.x + VW + 300) continue;
+    if (v.y < camera.y - 200 || v.y > camera.y + VH + 200) continue;
+    const im = isoImg(ISO_VET[v.i]); if (!im) continue;
+    ctx.drawImage(im, v.x - im.naturalWidth/2, v.y - im.naturalHeight/2);
+  }
+  return true;
+}
+// Một vật thể lát viên: vẽ ĐÚNG CỠ NƯỚNG RA, neo theo toạ độ chân do bộ nướng ghi ra
+// (data/iso.js). Không co giãn — đó là cả cái luật khiến bộ này nét (xem "LUẬT KHUNG" trong
+// tools/iso/nuong_tile.py). Cũng KHÔNG lắc như drawTree: sprite mang sẵn bóng đổ của chính nó,
+// xoay cả sprite thì xoay luôn cái bóng, mà bóng thì nằm trên mặt đất nên không được nhúc nhích.
+function veVatIso(d){
+  const im = isoImg(d.img); if (!im) return;
+  const n = (window.ISO_NEO || {})[d.img]; if (!n) return;
+  ctx.drawImage(im, d.x - n[0], d.y - n[1]);
+}
+// Rải cây/bụi/đá cho map lát viên. Ba dải, mỗi dải một việc:
+//   · NGOÀI `diTrong`, trong vành 420px — rừng dày, chỗ người chơi không vào được. KHÔNG sinh
+//     vật cản: `diTrong` đã chặn sẵn rồi, thêm bốn trăm ellipse nữa chỉ làm lưới tìm đường
+//     nặng thêm mà không đổi được một bước chân nào.
+//   · TRONG lối, cách mép hơn 60px — bụi, đá, túm cỏ cho mặt đất khỏi trơ. Cũng không chặn:
+//     đây là chỗ đánh nhau, vấp phải một túm cỏ là lỗi chứ không phải địa hình.
+//   · `md.vatDat` đặt tay vẫn đi đường cũ — cây viền hai mép lối, có chặn.
+// Gọi SAU mọi bộ lọc decor: bộ lọc `!inObstacle` xoá sạch mọi thứ nằm ngoài `diTrong`, mà rừng
+// dày thì nằm ngoài `diTrong` theo đúng thiết kế. (Cùng cái bẫy đã xoá 193 cây đặt tay lần trước.)
+const ISO_CAY = ['cay1', 'cay2', 'cay3', 'cay4', 'cay5', 'cay6'];
+// ⚠ DANH SÁCH NÀY LÀ MỘT BẢNG TRỌNG SỐ, KHÔNG PHẢI MỘT TẬP HỢP. Bản đầu tôi liệt kê mỗi thứ
+// một lần — hoá ra đá chiếm 3/8, và ảnh chụp trong game ra một bãi sỏi xám lấm tấm khắp lối.
+// Nay lặp lại mục nào cần gặp nhiều: túm cỏ và bụi là thứ mọc khắp nơi, đá thì thi thoảng.
+const ISO_NHO = ['co1', 'co1', 'co1', 'co2', 'co2', 'co2',
+                 'buicay1', 'buicay1', 'buicay2', 'buicay2', 'buicay3',
+                 'da1', 'da2', 'da3'];
+function raiIso(md){
+  if (!md.sanIso || !md.diTrong) return;
+  // Bốc CỐ ĐỊNH theo tên map: bố cục phải giống nhau mọi lần vào, nếu không thì không ai học
+  // được bản đồ — cùng lý do đã ghi ở _hatRng.
+  const boc = _hatRng(_bamChuoi('iso:' + curMap));
+  const rai = (n, ds, hop) => {
+    for (let t = 0, dat = 0; t < n*30 && dat < n; t++){
+      const x = boc()*MAP.w, y = boc()*MAP.h;
+      if (!hop(trongDaGiac(md.diTrong, x, y), _isoCachMep(md.diTrong, x, y))) continue;
+      decor.push({ type:'iso', img: ds[(boc()*ds.length)|0], x, y, s:1 });
+      dat++;
+    }
+  };
+  // ⚠ MẬT ĐỘ CŨNG LÀ NGÂN SÁCH VẼ. Vành rừng 420px sâu nghe thì dày dặn, nhưng hàng sau bị
+  // hàng trước che gần hết — mắt không được thêm gì, mà máy vẫn phải tô đủ. Đo được: 274 sprite
+  // lọt khung, cộng 29,3 triệu điểm mỗi khung, kéo Lối Mòn xuống còn nửa nhịp so với map thường.
+  // Vành 300px và số cây ít hơn cho ra cùng một bức tường cây, vì thứ dựng nên bức tường ấy là
+  // hai hàng `vatDat` đặt tay ở ngay mép lối, không phải mấy hàng lẫn trong bóng phía sau.
+  rai(md.isoCay ?? 150, ISO_CAY, (trong, d) => !trong && d < 300);
+  rai(md.isoNho ?? 300, ISO_NHO, (trong, d) => trong && d > 60);
+}
+
 // ---------- Bản đồ thế giới (GDD): 3 loại khu vực ----------
 const ZONE_TYPES = {
   safe:   { name:'An Toàn', color:'#7ec850', desc:'Không thể PK — giao dịch, nhận nhiệm vụ, tĩnh dưỡng.' },
@@ -1930,6 +2092,10 @@ function rimBuild(){
   }
 }
 function drawObstacleRim(){
+  // Map lát viên KHÔNG dùng vành đá này. Nó vẽ bằng đường vector tô màu `md.patch` — đúng thứ
+  // lối lát viên sinh ra để thay — và trên hành lang 6400px thì nó chạy suốt hai mép. Mép vùng
+  // đi được ở đây đã có thứ báo rõ hơn hẳn: bức tường cây, và chỗ viên nền hết.
+  if (_sanIso) return;
   rimBuild();
   if (!_rimPts.length) return;
   const md = MAPS[curMap] || {};
@@ -1959,7 +2125,9 @@ function drawObstacleRim(){
 let decorObs = [];
 function rebuildDecorObs(){
   navInvalidate();   // cây vừa đổi chỗ ⇒ lưới tìm đường cũ không còn đúng
-  decorObs = decor.map(d => d.type === 'tree'
+  // Vật thể lát viên không sinh vật cản: rừng dày nằm ngoài `diTrong` (đã chặn sẵn), còn bụi
+  // và túm cỏ trong lối thì cố ý đi xuyên qua được. Xem raiIso().
+  decorObs = decor.filter(d => d.type !== 'iso').map(d => d.type === 'tree'
     ? { x:d.x, y:d.y, rx:10 + 8*d.s, ry:7 + 5*d.s }     // gốc cây: dẹt theo phối cảnh nhìn xuống
     : { x:d.x, y:d.y, rx:13*d.s,     ry:8*d.s });        // tảng đá (và trụ đá — cùng công thức, khác cỡ)
 }
@@ -7760,6 +7928,7 @@ function buildWorld(){
   // `const MAP` chỉ cấm gán lại TÊN, không cấm sửa thuộc tính — mà cả 124 chỗ đọc `MAP.w`/`MAP.h`
   // đều đọc lúc gọi, nên hai dòng này làm đúng toàn bộ cùng lúc. Camera đã kẹp theo MAP sẵn.
   MAP.w = md.w || 2600;  MAP.h = md.h || 1900;
+  sanIsoDung();          // bảng viên nền — phải sau khi MAP.w/h đã đúng, xem sanIsoDung()
   capNhatKhungMinimap();   // khung bản đồ thu nhỏ chép cứng tỉ lệ 2600:1900 — xem hàm
   packsMd(md);   // A4: bung miền dân số thành bãi quái TRƯỚC mọi thứ khác đọc md.packs
   mobs = []; pickups = []; projectiles = []; effects = []; floats = []; groundLoot = []; // đồ dưới đất KHÔNG theo người sang map khác
@@ -7844,8 +8013,16 @@ function buildWorld(){
   // và cả hai đều sai với vật thể đặt tay — nhất là bộ lọc `!inObstacle`: cây viền một hành lang
   // nằm NGOÀI `diTrong` theo đúng thiết kế, nên bộ lọc ấy xoá sạch cả hai hàng cây. (Đo được:
   // 193 cây khai ra, 0 cây còn lại.) Đặt tay thì tin người đặt.
-  for (const v of (md.vatDat || []))
-    decor.push({ type: v.t || 'tree', x: v.x, y: v.y, s: v.s || 1, dat: true });
+  // Trên map lát viên, cây đặt tay cũng dùng sprite lát viên: `s` (1,9-2,6) vốn chỉnh cho
+  // sprite cây cũ cao 100px, còn bộ mới nướng SẴN đúng cỡ nên không co giãn — xem veVatIso().
+  // Biến thể bốc theo TOẠ ĐỘ nên cố định giữa các lần vào map, giống cách drawTree bốc `bien`.
+  for (const v of (md.vatDat || [])){
+    if (md.sanIso && !v.t)
+      decor.push({ type:'iso', img: ISO_CAY[Math.abs((v.x*13 + v.y*7)|0) % ISO_CAY.length],
+                   x: v.x, y: v.y, s:1, dat: true });
+    else
+      decor.push({ type: v.t || 'tree', x: v.x, y: v.y, s: v.s || 1, dat: true });
+  }
   for (let i = 0; i < (md.trees ?? 70); i++)
     decor.push({ type:'tree', x:rnd(60,MAP.w-60), y:rnd(60,MAP.h-60), s:rnd(0.7,1.5) });
   for (let i = 0; i < (md.rocks ?? 26); i++)
@@ -7887,6 +8064,7 @@ function buildWorld(){
     decor = decor.filter(d => d.dat || !inObstacle(curMap, d.x, d.y, 4));
   }
   // (Trụ đá từng rải ở đây — đã gỡ, xem khối "TRỤ ĐÁ ĐÃ GỠ".)
+  raiIso(md);            // cây/bụi/đá của map lát viên — SAU bộ lọc, xem raiIso()
   rebuildDecorObs();
   decorUnblock();  // và nếu vẫn bịt mất một lối đi thì dọn đúng mấy gốc cây đang chắn
   spawnAmbients(); // hạt môi trường + cỏ mặt đất theo chủ đề bản đồ
@@ -10939,8 +11117,9 @@ function render(){
   ctx.scale(zoomNow(), zoomNow());
   ctx.translate(-camera.x, -camera.y);
 
-  // nền bản đồ vẽ tay — phủ toàn bộ thế giới, nằm dưới mọi decor/thực thể
-  const bg = mapBgOf(curMap);
+  // nền bản đồ — map lát viên ghép bằng hình thoi, còn lại vẫn là tranh nền một tấm
+  const _latVien = veSanIso();
+  const bg = _latVien ? null : mapBgOf(curMap);
   if (bg && bg.complete && bg.naturalWidth > 0){
     // Chỉ vẽ ĐÚNG mảnh ảnh đang lọt vào khung nhìn. Vẽ cả ảnh phóng ra 2600×1900 là bảo trình
     // duyệt lấy mẫu 4,94 triệu điểm cho một màn 1,05 triệu — riêng nó đã là 4,7 lần diện tích
@@ -10954,13 +11133,18 @@ function render(){
   }
 
   // ground texture: faint brush patches
-  ctx.globalAlpha = 0.05; ctx.fillStyle = md.patch;
-  for (let gx = Math.floor(camera.x/160)*160; gx < camera.x+VW+160; gx += 160)
-    for (let gy = Math.floor(camera.y/160)*160; gy < camera.y+VH+160; gy += 160){
-      ctx.beginPath(); ctx.ellipse(gx+80, gy+80, 55, 30, (gx*7+gy*13)%3, 0, 7); ctx.fill();
-    }
-  ctx.globalAlpha = 1;
-  drawTufts(); // cỏ/vết mực trên mặt đất — phá sự phẳng của nền
+  // Sàn lát viên KHÔNG dùng hai lớp này: chúng là ellipse và nét vẽ tay, đắp lên nền nướng 3D
+  // thì đúng là thứ phẳng bệt mà cả việc này sinh ra để thay. Nền lát viên đã có vân riêng
+  // (nhiễu 4D nướng vào từng viên) và túm cỏ riêng (sprite co1/co2, có bóng, xếp lớp theo y).
+  if (!_latVien){
+    ctx.globalAlpha = 0.05; ctx.fillStyle = md.patch;
+    for (let gx = Math.floor(camera.x/160)*160; gx < camera.x+VW+160; gx += 160)
+      for (let gy = Math.floor(camera.y/160)*160; gy < camera.y+VH+160; gy += 160){
+        ctx.beginPath(); ctx.ellipse(gx+80, gy+80, 55, 30, (gx*7+gy*13)%3, 0, 7); ctx.fill();
+      }
+    ctx.globalAlpha = 1;
+    drawTufts(); // cỏ/vết mực trên mặt đất — phá sự phẳng của nền
+  }
   drawWaterFx(); // gợn sóng & lấp lánh mặt nước (Gói F)
   drawTranAiSeal(); drawAiPasses(); drawBeacon(); drawObstaclesDebug(); drawDatDiem(); // GDD Đợt 2 A/B2
   drawMoveTargetPath(); // Click-to-move: đường preview né vật cản + đích đến
@@ -11034,7 +11218,12 @@ function render(){
   drawObstacleRim();   // hàng đá dọc mép vùng chặn — vẽ trước decor để cây/đá rải phủ lên tự nhiên
 
   // decor (behind entities)
-  const sortedDecor = decor.filter(d=>d.x>camera.x-80&&d.x<camera.x+VW+80&&d.y>camera.y-120&&d.y<camera.y+VH+80);
+  // ⚠ LỀ DƯỚI PHẢI RỘNG HƠN LỀ TRÊN, và đây là chỗ dễ đặt ngược. Sprite neo ở CHÂN và vươn
+  // LÊN trên, nên cái cây đứng THẤP HƠN đáy khung nhìn vẫn thò ngọn vào trong khung. Cây lát
+  // viên cao tới 313px trên chân, nên lề dưới phải ≥ chừng ấy; lề trên chỉ cần vài chục pixel
+  // (phần dưới chân sprite). Lề 80px cũ vừa đủ cho cây vector cao 100px, không đủ cho bộ này.
+  const _leD = _latVien ? 340 : 80, _leN = _latVien ? 200 : 80;
+  const sortedDecor = decor.filter(d=>d.x>camera.x-_leN&&d.x<camera.x+VW+_leN&&d.y>camera.y-120&&d.y<camera.y+VH+_leD);
   for (const d of sortedDecor){ if (d.type==='rock') drawRock(d); }
 
   // pickups (herbs) — bụi thuốc 5 lá + hoa, lấp lánh báo hái được; héo xám sau khi hái
@@ -11090,6 +11279,7 @@ function render(){
   if (mountObj) ents.push({ y:mountObj.y, kind:'mount' });
   for (const h of horses) ents.push({ y:h.y, kind:'horse', h }); // GDD Đợt 2 B5
   for (const d of sortedDecor) if (d.type==='tree') ents.push({ y:d.y, kind:'tree', d });
+  for (const d of sortedDecor) if (d.type==='iso') ents.push({ y:d.y, kind:'iso', d });
   for (const g of gatesHere()) ents.push({ y:g.y, kind:'gate', g });
   // Công trình rời xếp lớp bằng CHÂN nó (y+h), không phải nóc: người đứng phía trên (y nhỏ hơn)
   // thì bị công trình vẽ đè lên — đúng chiều sâu của tranh isometric. Lấy nóc làm khoá thì
@@ -11105,6 +11295,7 @@ function render(){
   for (const e of ents){
     switch (e.kind){
       case 'vat': { const im = vatTai(e.v.img); if (im) ctx.drawImage(im, e.v.x, e.v.y, e.v.w, e.v.h); break; }
+      case 'iso': veVatIso(e.d); break;
       case 'mob': drawMob(e.m); break;
       case 'deadmob': {
         const m = e.m, k = Math.max(0, m.deadT/0.45);

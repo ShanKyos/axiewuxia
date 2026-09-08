@@ -476,8 +476,13 @@ def main():
     nuong_nen('nen_dat1', DAT, van=11, hat=0.00)
     nuong_nen('nen_dat2', DAT, van=11, hat=0.44)
     # ── vệt chuyển tiếp ──
-    nuong_vet('vet_dat1', DAT, van=13, hat=0.11, ban=2.2)
-    nuong_vet('vet_dat2', DAT, van=13, hat=0.53, ban=1.4)
+    # ⚠ CỠ VỆT LÀ NGÂN SÁCH VẼ, KHÔNG PHẢI THẨM MỸ. Bản đầu để ban=2,2 → khung 563×281. Đo A/B
+    # trong game: chỉ chừng 50 vệt lọt khung mà ăn mất 12 khung/giây, trong khi 183 cây chỉ ăn
+    # 27 — vì vệt to, gần như không bị che, nên tô kín từng điểm một. Mà việc của vệt chỉ là
+    # GẶM cái mép giữa hai viên; bậc thang cần gặm rộng đúng một viên (256px), nên vệt to hơn
+    # một viên là tô thừa. ban=1,0 → đúng 256×128, rẻ đi 4,8 lần.
+    nuong_vet('vet_dat1', DAT, van=13, hat=0.11, ban=1.0)
+    nuong_vet('vet_dat2', DAT, van=13, hat=0.53, ban=0.7)
     # ── cây: sáu dáng, sáu hạt ngẫu nhiên, ba tông lá ──
     # Tán lá ĐẬM HƠN cỏ: tán nằm trong bóng của chính nó. Bản đầu lá sáng ngang cỏ nên cây
     # chìm vào nền, phải nhờ bóng đổ mới tách ra được.
@@ -501,6 +506,16 @@ def main():
     # Toạ độ CHÂN từng sprite — trình ghép (và engine) neo theo đây, không đoán đáy-giữa khung.
     with open(os.path.join(RA, 'neo.json'), 'w', encoding='utf-8') as f:
         json.dump(NEO, f, indent=1)
+    # ...và cùng bảng ấy dưới dạng TỆP DỮ LIỆU ANH EM cho game (lối `data/canbang.js`). Sinh ra
+    # từ chính lượt nướng này nên KHÔNG THỂ LỆCH với bộ PNG vừa xuất — chép tay vào game.js là
+    # cách chắc chắn để một ngày nào đó nướng lại rồi quên sửa, và cả rừng đứng lệch chân.
+    with open(os.path.join(RA, 'iso.js'), 'w', encoding='utf-8') as f:
+        f.write('// SINH TU DONG boi tools/iso/nuong_tile.py — DUNG SUA TAY.\n'
+                '// Toa do CHAN cua tung sprite trong khung cua no, tinh bang pixel.\n'
+                'window.ISO_NEO = {\n')
+        for k in sorted(NEO):
+            f.write(f'  {k}: [{NEO[k][0]}, {NEO[k][1]}],\n')
+        f.write('};\n')
     print('NUONG XONG →', RA)
 
 

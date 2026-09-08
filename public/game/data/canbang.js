@@ -799,6 +799,11 @@ window.MAPS = {
   // Di xa hon = quai nang hon, khong can mot dong chu nao giai thich.
   loimon: { name:'Lối Mòn Corran', min:40, range:'42 - 48', type:'pk', hinh:'hanhlang',
     w:6400, h:1400, ground:'#cfd2ae', patch:'#6a7a52',
+    // SAN LAT VIEN: nen ghep tu hinh thoi 2:1 nuong bang tools/iso/nuong_tile.py, thay cho
+    // tam tranh nen bg_loimon.jpg. Xem khoi "SAN LAT VIEN" trong game.js. Vung di duoc van la
+    // dung `diTrong` ben duoi -- lat vien chi la chuyen VE, khong doi mot buoc chan nao.
+    // `isoCay` de thap hon mac dinh vi `vatDat` ben duoi da dung san hai hang cay men mep loi.
+    sanIso:true, isoCay:150,
     // Diem tha cach cong Tay 277px. Ban dau dat o x=200 -- chi 92px, ma ban kinh bat cong la 90:
     // nguoi choi vao map bang duong khac la bi hut nguoc ve Reo Rung Corran ngay lap tuc.
     spawnFrom:{ corran:{ x:330, y:779 } }, spawn:{ x:380, y:790 }, trees:0, rocks:0,
