@@ -1084,12 +1084,16 @@ const MAP_BG_SRC = {
   mongco:'assets/maps/bg_mongco.jpg', nhanmon:'assets/maps/bg_nhanmon.jpg',
   quangtruong:'assets/maps/bg_quangtruong.jpg',
   corran:'assets/maps/bg_corran.jpg',
-  // LOI MON CORRAN CO Y KHONG KHAI TRANH NEN. Vong dau muon tam tranh Reo Rung Corran keo dan ra
-  // kho lan, va no tra loi SAI cau hoi: tranh nhoe che mat hanh lang, nhin vao khong doc ra duong
-  // di dau ca. Bo han tranh thi con dung mau dat phang + hai hang cay -- tuc dung nhung gi ban
-  // that se co khi tranh chi-dat duoc ve. Do la thu mau thu nay can hoi.
-  // Khi co tranh chi-dat 6400x1400 thi mo dong duoi day.
-  // loimon:'assets/maps/bg_loimon.jpg',
+  // LOI MON CORRAN dung tranh CHI-DAT: chi ve mat dat, khong ve mot cai cay nao. Cay/da la vat
+  // the ROI (`vatDat` trong canbang.js), engine xep lop theo truc y nen di ra SAU cay duoc -- thu
+  // ma tranh nen phang khong bao gio cho.
+  //
+  // ⚠ TAM DANG NAM O DAY LA HANG CHO, KHONG PHAI ART. No sinh bang cach phu hat nhieu len chinh
+  // mat na bo cuc (docs/phac_lan/) -- du de loi mon DOC RA duoc va de chay thu duong ong lap rap,
+  // nhung khong co chat lieu that: khong soi, khong vet banh xe, khong ro reu.
+  // Thay bang hang that: sinh hai tam theo docs/PROMPT_NEN_LAN.md roi
+  //   python3 tools/ghep_lan.py <tamA> <tamB> public/game/assets/maps/bg_loimon.jpg
+  loimon:'assets/maps/bg_loimon.jpg',
   deep:'assets/maps/bg_dungeon_stone.jpg',   // Tầng Sâu — nền hầm duy nhất còn dùng
 };
 // VẬT TO — công trình rời chèn vào tranh nền (xem `vatTo` trong data/canbang.js). Ảnh đã nướng
