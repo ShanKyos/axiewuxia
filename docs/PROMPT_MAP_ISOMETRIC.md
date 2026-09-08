@@ -119,19 +119,46 @@ xuyên qua chúng. Chỉ vẽ vào tranh những thứ **không bao giờ đi qu
 
 ---
 
-## 4. Khối phong cách dùng chung — dán vào đầu mọi prompt
+## 4. Khối phong cách dùng chung — NEO VÀO AXIE, KHÔNG NEO VÀO QUẢNG TRƯỜNG CŨ
 
-Bám đúng tấm Quảng Trường Cũ đã duyệt, nhưng nội dung là quần xã Axie:
+⚠ **Bản đầu tài liệu này neo phong cách vào `bg_quangtruong.jpg`. Đó là sai nếu muốn chất Axie**
+— tấm ấy là diorama trung cổ châu Âu, và đo ra thì nó nằm ở đầu đối nghịch với Axie:
 
-> Hand-painted isometric diorama of a single self-contained landmass, true 2:1 isometric
-> projection, one fixed camera angle across the whole image, **no horizon, no sky, no vanishing
-> point**. The landmass sits on a thick visible plinth of soil and layered rock — the cut edge of
-> the earth is clearly readable at the rim, so the ground has real depth. Surrounded by flat
-> near-black empty space (#1a171e). Painterly rendering with soft airbrushed volume plus crisp
-> line detail on hard edges; muted desaturated palette lifted by a few small warm light sources.
-> Readable from far above: shapes stay bold and legible when the whole diorama is seen at once.
-> Scale reference: an adult figure standing on the ground is about 1/20 of the image height.
-> Aspect ratio 2600:1900. No text, no UI, no frame, no watermark, no characters, no creatures.
+| tranh | bão hoà | độ sáng | 5 màu chính |
+|---|--:|--:|---|
+| `bg_daohoa` (Axie, nhìn từ trên xuống ✅) | **0,47** | 0,60 | `#629e88` `#446224` `#8bab67` `#bdcf98` `#62957d` |
+| `bg_comoc` (Axie, nhìn từ trên xuống ✅) | **0,47** | 0,50 | `#779071` `#416328` `#668e54` `#33462b` `#abbf8f` |
+| `bg_quangtruong` (trung cổ) | 0,23 | 0,27 | `#282221` `#493f37` `#3c322d` `#584d46` `#362926` |
+
+Axie **đậm gấp đôi và sáng gấp đôi**. Đưa `bg_quangtruong` làm ảnh mẫu rồi bảo model "vẽ cho ra
+chất Axie" là ra lệnh cho nó cãi chính ảnh mẫu.
+
+**Neo đúng: dùng `bg_daohoa.jpg` và `bg_comoc.jpg` làm ảnh mẫu phong cách.** Hai tấm ấy vừa là
+tranh Axie chính chủ, vừa đã đo ra ĐÚNG phép chiếu (dải đáy 2,9% và 0% — xem §1), vừa đang chạy
+trong game. Không phải đi tìm đâu xa.
+
+Còn giữ lại từ Quảng Trường Cũ đúng **một** thứ, và nó không thuộc về màu sắc: **cái bệ đất** —
+khối đất-đá dày lộ vân địa tầng ở rìa (§3.3). Đó là thủ pháp khiến người xem đọc ra "mặt đất có
+bề dày", và nó ghép được với bảng màu Axie.
+
+### Bố cục kiểu Axie — rút từ hai tấm trên
+
+- **Đường đi là dải cong mềm màu kem**, uốn qua khung, không phải đường thẳng hay lưới ô vuông.
+- **Cây cối là cụm tròn**, xếp thành chùm to nhỏ khác nhau, không phải hàng lối đều.
+- **Mặt nước là mảng phẳng viền mềm**, màu lam-lục nhạt, có đảo nhỏ nổi lên.
+- **Vật thể mốc thì to và ít** — một cây cổ thụ, một cổng đá — chứ không rải đều chi tiết vụn.
+- **Không viền đen đậm.** Khối tách nhau bằng chênh sáng và chênh sắc, không bằng nét viền.
+- **Bóng đổ nhẹ, mềm, một hướng.** Không có bóng cứng, không có tương phản gắt.
+
+### Khối dán chung
+
+> Hand-painted top-down diorama of one self-contained landmass, seen from directly above at a
+> single fixed angle. No horizon, no sky, no vanishing point. Bright saturated palette with soft
+> airbrushed volume and no hard outlines — rounded organic shapes, cream winding paths, clustered
+> round foliage, soft-edged water. The land sits on a thick plinth of soil and layered rock so the
+> ground reads as having real depth, surrounded by flat empty space. Readable when the whole
+> diorama is seen at once. An adult figure standing on the ground is about 1/20 of the image
+> height. No text, no UI, no frame, no watermark, no characters, no creatures.
 
 **Vì sao "no characters, no creatures":** quái và NPC do máy vẽ đè, vẽ sẵn vào nền là có hai lớp
 nhân vật chồng nhau.
@@ -140,8 +167,10 @@ nhân vật chồng nhau.
 
 ## 5. Tám prompt
 
-Dán khối §4 trước, rồi nối đoạn riêng của map. Tệp ra đặt đúng tên dưới đây, thả vào
-`public/game/assets/maps/` là xong phần art — phần lắp xem §6.
+⚠ **Tám prompt dưới đây viết theo lối XẾP MỆNH ĐỀ DÀI và neo vào bảng màu trung cổ.** Hai điều
+đó đều đã sửa ở chỗ khác: §4 đổi neo sang Axie, §5b giải thích vì sao meowa cấm lối viết dài.
+Giữ mục này lại vì phần **NỘI DUNG từng map** (có gì, ở đâu, vì sao) vẫn đúng và vẫn cần —
+nhưng khi dùng thì rút gọn theo khuôn §5c, đừng dán nguyên.
 
 ### 5.1 `bg_tuongduong.jpg` — Sapidae Chiefdom (thành an toàn) ⚠ ưu tiên 1
 
@@ -285,27 +314,44 @@ khả năng chính là thứ đã tạo ra 6 tấm nền hỏng hiện tại. Đ
 
 ---
 
-## 5c. Prompt mẫu — `bg_tuongduong.jpg` · Sapidae Chiefdom
+## 5c. Prompt mẫu — map đầu tiên
 
-Viết theo luật meowa: ngắn, câu thường, để ảnh tham chiếu gánh bố cục.
+**Làm `chungnam` (Werebear Woods) trước, không phải `tuongduong`.** Lý do đo được, không phải
+sở thích: hai ảnh mẫu Axie đang có đều là **thiên nhiên**, không có kiến trúc nào. Sapidae
+Chiefdom là một cái THÀNH — tức là đúng trường hợp ảnh mẫu yếu nhất. Werebear Woods là rừng, và
+`bg_comoc` cũng là rừng nhìn từ trên xuống, cùng chủ đề nên chuyển phong cách có cơ hội cao nhất.
+Chốt được phong cách ở tấm rừng rồi hãy làm thành.
 
-> Isometric diorama of a small fortified frontier town on one landmass, seen from above at a
-> single fixed angle. Use the first reference as a layout map: the pale area is an open stone
-> plaza that must stay clear and walkable, the blue channels are roads that reach the edge of the
-> land, and buildings belong only in the dark brown rim — a blacksmith forge with a lit furnace,
-> an apothecary, a stone gatehouse, market stalls, insect-folk houses with hexagonal windows. One
-> corner of the plaza is split by a thin luminous fissure. The land sits on a thick plinth of soil
-> and rock, surrounded by flat near-black empty space. No sky, no horizon, no characters. Match
-> the painting style, palette and lighting of the second reference.
+**Hai ảnh tham chiếu, đúng thứ tự:**
 
-Sinh xong, đưa tôi tệp — tôi cắt về 2600×1900, chấm `diTrong`, kéo lại NPC/cổng/điểm thả, chạy
-`test_sandat` rồi gửi ảnh chụp trong game.
+| | |
+|---|---|
+| ① `docs/phac_map/phac_chungnam_43.jpg` | bản đồ bố cục — sáng là sàn phải để trống (82,1%), nâu là chỗ được dựng vật, xanh là lối phải thông ra mép |
+| ② `public/game/assets/maps/bg_comoc.jpg` | mẫu phong cách Axie — rừng nhìn từ trên xuống, bão hoà 0,47 |
 
-**Nếu tấm đầu chưa đạt, sửa MỘT ràng buộc một lần** (đúng luật meowa), theo thứ tự hay hỏng nhất:
-1. Sàn bị nhà ăn mất → thêm đúng một câu: *"Keep the pale plaza completely empty of buildings."*
-2. Có trời / đường chân trời → *"The camera looks down; no sky is visible anywhere."*
-3. Lối ra bị bịt → *"Each blue road stays open all the way to the edge of the land."*
-4. Lệch phong cách → bỏ bớt chi tiết trong prompt, đừng thêm; để ảnh tham chiếu ② nói.
+**Prompt** (ngắn, đúng luật meowa ở §5b):
+
+> Top-down diorama of a forest clearing on one landmass, seen from directly above. Use the first
+> reference as a layout map: the pale area is open mossy ground and leaf litter that must stay
+> clear and walkable, the blue channels are paths reaching the edge of the land, and only the dark
+> brown rim holds tall things — clustered round tree canopies, a few toppled stone markers, thorn
+> scrub. The land sits on a thick plinth of soil and rock, surrounded by flat empty space. No sky,
+> no horizon, no characters. Match the painting style and palette of the second reference.
+
+**Nếu tấm đầu chưa đạt, sửa ĐÚNG MỘT ràng buộc mỗi lần**, theo thứ tự hay hỏng nhất:
+
+1. Cây mọc vào giữa sàn → thêm *"Keep the pale area completely free of trees."*
+2. Hiện ra trời hoặc chân trời → *"The camera looks straight down; no sky is visible anywhere."*
+3. Lối ra bị bịt → *"Each pale path stays open all the way to the edge of the land."*
+4. Màu tối/xám đi → **bớt** chữ trong prompt, đừng thêm; để ảnh tham chiếu ② nói.
+5. Ra viền đen kiểu hoạt hình → *"No black outlines; separate shapes by value and hue only."*
+
+### Rồi mới tới `tuongduong` — và nó cần thêm một ảnh mẫu
+
+Thành Sapidae Chiefdom không có ảnh mẫu kiến trúc Axie nào trong repo. Khảo sát Drive từng ghi
+nhận hai tấm **"Reptile Village"** và **"Garuda Village"** (xem `docs/ASSET_SOURCING.md`) nhưng
+chưa lấy về. Trước khi làm thành, kéo một trong hai tấm ấy về làm ảnh tham chiếu thứ ba — nếu
+không thì model phải tự bịa kiến trúc, và đó là chỗ dễ trôi khỏi chất Axie nhất.
 
 ---
 
