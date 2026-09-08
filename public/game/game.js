@@ -1638,11 +1638,33 @@ const RELEASE_BUILD = window.RELEASE_BUILD === true;
 // Nạp theo nhu cầu: bộ cây của một bản đồ chỉ dùng khi đứng ở bản đồ đó, mà riêng comoc.png đã
 // 765 KB — nạp cả tám bộ ngay lúc mở trang là bắt người chơi tải bảy thứ chưa nhìn thấy.
 const TREE_IMGS = {};
-function treeImgOf(k){
-  if (TREE_IMGS[k]) return TREE_IMGS[k];
-  if (!['daohoa','tuongduong','ngoai','chungnam','comoc','tuyettinh','mongco','nhanmon'].includes(k)) return null;
-  const im = new Image(); im.src = 'assets/trees/' + k + '.png'; TREE_IMGS[k] = im;
+// BỘ cây theo từng map, không phải MỘT cây. Bản cũ khoá cứng "map nào cũng đúng một sprite", và
+// trên map đồng trống 70 cây rải thưa thì nhìn ra được; nhưng làn cần 193 cây xếp thành hai hàng
+// liền mạch, mà 193 bản sao của cùng một hình thì ra giấy dán tường chứ không ra bìa rừng.
+//
+// Khoá của TREE_IMGS nay là TÊN SPRITE chứ không phải tên map, nên hai map dùng chung một hình
+// chỉ tải một lần.
+const TREE_SETS = {
+  daohoa:['daohoa'], tuongduong:['tuongduong'], ngoai:['ngoai'], chungnam:['chungnam'],
+  comoc:['comoc'], tuyettinh:['tuyettinh'], mongco:['mongco'], nhanmon:['nhanmon'],
+  // Rẻo Rừng Corran và Lối Mòn Corran: rừng lá xanh trên nền cát sáng, nên lấy ba hình XANH
+  // (hai lá kim + một lá rộng). Các hình còn lại ngả lam/chàm, đặt lên nền cát là lạc tông.
+  // Trước bản này hai map ấy KHÔNG có trong danh sách nên rơi xuống nhánh vẽ vector — đúng thứ
+  // Luật 3 cấm, và là lý do hàng cây trong ảnh chụp làn nhìn ra mấy cái kẹo mút.
+  corran:['tuongduong','mongco','daohoa'],
+  loimon:['tuongduong','mongco','daohoa'],
+};
+function treeSpriteOf(ten){
+  if (TREE_IMGS[ten]) return TREE_IMGS[ten];
+  const im = new Image(); im.src = 'assets/trees/' + ten + '.png'; TREE_IMGS[ten] = im;
   return im;
+}
+// `bien` là số hiệu biến thể của CHÍNH cái cây đó — bốc từ toạ độ nên cố định giữa các khung và
+// giữa các lần tải, không nhấp nháy đổi hình.
+function treeImgOf(k, bien){
+  const bo = TREE_SETS[k];
+  if (!bo || !bo.length) return null;
+  return treeSpriteOf(bo[(bien == null ? 0 : bien) % bo.length]);
 }
 const ROCK_IMGS = [];
 for (let i = 1; i <= 3; i++){ const im = new Image(); im.src = 'assets/trees/rock' + i + '.png'; ROCK_IMGS.push(im); }
@@ -23735,7 +23757,8 @@ function drawTree(d){
   const sway = (SETTINGS.lowFx) ? 0
     : (Math.sin(_t/900 + d.x*0.7) * 0.045 + Math.sin(_t/430 + d.y*0.31) * 0.014) * (0.7 + d.s*0.3);
   ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(sway); ctx.translate(-d.x, -d.y);
-  const tim = (typeof treeImgOf === 'function') && treeImgOf(curMap);
+  if (d.bien == null) d.bien = Math.abs(((d.x*13 + d.y*7)|0));
+  const tim = (typeof treeImgOf === 'function') && treeImgOf(curMap, d.bien);
   if (tim && tim.complete && tim.naturalWidth){
     const h = 100*d.s, w = h * (tim.naturalWidth/tim.naturalHeight);
     ctx.drawImage(tim, d.x-w/2, d.y-h*0.94, w, h);

@@ -34,6 +34,19 @@ const HANH_LANG_HEP_NHAT = 340;
   const r = await p.evaluate(([SAN_MIN, HANH_LANG_HEP_NHAT]) => {
     startGame('thieulam', { name: 'T' });
 
+    // Khoảng cách từ một điểm tới VIỀN đa giác — cần để phân biệt "đứng đúng trên mép" với
+    // "đi lọt ra ngoài". resolveObstaclePoint() đẩy nhân vật về ĐÚNG viền khi nó bị chặn, mà
+    // trongDaGiac() lại xét lọt-hẳn-vào-trong, nên một điểm nằm khít trên viền bị tính là NGOÀI.
+    const cachVien = (dg, x, y) => {
+      let m = Infinity;
+      for (let i = 0, j = dg.length - 1; i < dg.length; j = i++){
+        const ax = dg[j][0], ay = dg[j][1], bx = dg[i][0], by = dg[i][1];
+        const dx = bx - ax, dy = by - ay;
+        const t = Math.max(0, Math.min(1, ((x-ax)*dx + (y-ay)*dy) / Math.max(dx*dx + dy*dy, 1e-9)));
+        m = Math.min(m, Math.hypot(x - (ax + t*dx), y - (ay + t*dy)));
+      }
+      return m;
+    };
     const trong = (dg, x, y) => {
       let c = false;
       for (let i = 0, j = dg.length - 1; i < dg.length; j = i++){
@@ -119,8 +132,14 @@ const HANH_LANG_HEP_NHAT = 340;
                                 [MAP.w/2,60],[MAP.w/2,MAP.h-60],[60,MAP.h/2],[MAP.w-60,MAP.h/2]]){
           player.x = sp.x; player.y = sp.y;
           diThu(tx, ty, 480);
-          if (!trong(dg, player.x, player.y))
-            thoat.push(`→(${Math.round(tx)},${Math.round(ty)}) dừng ở (${Math.round(player.x)},${Math.round(player.y)})`);
+          // LỀ VIỀN 8px. Đo được: đi về góc tây Quảng Trường Cũ thì nhân vật dừng ở (563,1019),
+          // cách viền đúng 2,73px — nó bị chặn và đứng khít lên mép, không phải "đi lọt ra
+          // ngoài sàn". Không có lề thì bài đỏ ngẫu nhiên tuỳ nhịp khung: cấp thấp đi chậm nên
+          // dừng sớm hơn mép, cấp cao đi nhanh nên chạm tới mép.
+          // Lề này KHÔNG làm bài mất răng: kiểu hỏng nó sinh ra để bắt là đi lọt hàng TRĂM px
+          // (bản ghi cũ có ca dừng cách viền 223px), 8px không che nổi ca nào như thế.
+          if (!trong(dg, player.x, player.y) && cachVien(dg, player.x, player.y) > 8)
+            thoat.push(`→(${Math.round(tx)},${Math.round(ty)}) dừng ở (${Math.round(player.x)},${Math.round(player.y)}) — cách viền ${cachVien(dg, player.x, player.y).toFixed(1)}px`);
         }
         if (thoat.length) o.loi.push('đi lọt ra ngoài sàn: ' + thoat.join(' · '));
       }

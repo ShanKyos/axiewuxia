@@ -39,11 +39,16 @@ def da_giac(buoc=200):
     duoi = [(x, round(tim(x) + nua_rong(x))) for x in reversed(xs)]
     return tren + duoi
 
-def hang_cay(le=95, buoc=165, lop=3):
+def hang_cay(le=80, buoc=105, lop=3):
     """Hai hàng cây men theo mép làn, lùi ra ngoài `le` px để không mọc đè lên đường.
 
     `lop` hàng chồng lên nhau, mỗi hàng lùi thêm — hàng trong che chân, hàng ngoài dựng khối
     rừng. Hàng DƯỚI (y lớn) là thứ vẽ ĐÈ lên người chơi và cho ra cảm giác đang ở TRONG rừng.
+
+    ⚠ CỠ và MẬT ĐỘ quan trọng ngang art. Vòng đầu để bước 165px và cỡ 0,85-1,3 (tức cây cao
+    85-130px, xấp xỉ thân người 95px): ảnh chụp ra hai hàng cây con lơ thơ, hở toang từng mảng
+    nền tối giữa các gốc — không đọc ra bìa rừng, chỉ đọc ra mấy cái cây đứng rời. Cây bìa rừng
+    thật phải CAO GẤP ĐÔI người và đứng KHÍT nhau thì mắt mới thấy một bức tường.
     """
     ra = []
     for i in range(lop):
@@ -55,7 +60,7 @@ def hang_cay(le=95, buoc=165, lop=3):
                 y = tim(x) + phia * (r + lech)
                 if 40 < y < H - 40:
                     # cây xa (y nhỏ) vẽ nhỏ hơn một chút — gợi chiều sâu mà không cần phối cảnh thật
-                    s = 0.85 + 0.30 * (y / H) + 0.12 * ((x // buoc) % 3) / 2
+                    s = 1.75 + 0.55 * (y / H) + 0.22 * ((x // buoc) % 3)
                     ra.append((round(x), round(y), round(s, 2)))
     return ra
 
