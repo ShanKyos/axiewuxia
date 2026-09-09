@@ -21711,7 +21711,15 @@ function drawMinimap(){
     mc.fillStyle = '#ffd76a';
     mc.strokeStyle = 'rgba(0,0,0,.65)'; mc.lineWidth = 1;
     mc.beginPath(); mc.arc(nx, ny, 3, 0, 7); mc.fill(); mc.stroke();
-    // nhãn tên — thử bên phải, bên trái, bên dưới; bỏ qua nếu vẫn đụng nhãn khác
+    // ── NHÃN TÊN: CHỈ CHO NGƯỜI ĐÁNG GỌI TÊN ────────────────────────────────────────────
+    // Ardhaven có 26 NPC nhồi trong ô 150×110: gắn tên cho tất thì ra một mảng chữ đặc, không
+    // đọc nổi CHỮ NÀO — tệ hơn hẳn là không ghi gì. Luật tránh chồng bên dưới vẫn đúng, nó chỉ
+    // bó tay ở mật độ này. Nên lọc trước: chỉ gọi tên người ĐANG có việc (dấu ! hoặc …) và
+    // người đang được đèn hiệu ghim. Còn lại là chấm vàng — rê chuột lên bản đồ vẫn đọc được,
+    // và người chơi tới gần thì nhãn trong màn hiện đủ tên.
+    const dongDuc = mapNpcs.length > 8;
+    const dangGhim = player.beacon && player.beacon.npcId === n.id;
+    if (!dongDuc || mark || dangGhim){
     mc.font = '8px "Be Vietnam Pro", sans-serif';
     const lw = mc.measureText(n.name).width;
     const spots = [
@@ -21730,6 +21738,7 @@ function drawMinimap(){
       mc.fillStyle = '#ffe9a8';
       mc.fillText(n.name, sp.x, sp.y);
       break;
+    }
     }
     if (mark){
       mc.font = 'bold 11px "Be Vietnam Pro", sans-serif'; mc.textAlign = 'center';
@@ -22850,6 +22859,7 @@ let _dtBark = 0;
 function drawNpc(){
   _dtBark = Math.min(0.1, (performance.now() - (drawNpc._t || performance.now())) / 1000);
   drawNpc._t = performance.now();
+  const _nhanCho = [];          // gom lại, để veNhanNpc() đặt sau khi mọi hình đã vẽ xong
   for (const n of NPCS){
     if (n.map !== curMap) continue;
     tickBark(n);
@@ -22874,31 +22884,85 @@ function drawNpc(){
       ctx.fillStyle = '#e8cfa8';
       ctx.beginPath(); ctx.arc(n.x, n.y - _cao*0.79, _cao*0.16, 0, 7); ctx.fill();
     }
-    ctx.font = '12px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
-    ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 3;
-    if (n.talk === 'quest'){
-      const mark = npcMark(n);
-      if (mark){
-        ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
-        ctx.fillStyle = mark === '!' ? '#ffd76a' : '#9fd0ff';
-        fxShadow(ctx.fillStyle, 6);
-        const _my = n.y - (n._cao || 64) - 24;
-        ctx.strokeText(mark, n.x, _my); ctx.fillText(mark, n.x, _my);
-        fxShadowOff();
-        ctx.font = '12px "Be Vietnam Pro", sans-serif';
-      }
-    }
-    if (n.talk === 'trunya' && player.truyna && player.truyna.state === 'killed'){
-      ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
-      ctx.fillStyle = '#ffd76a'; fxShadow('#ffd76a', 6);
-      const _my2 = n.y - (n._cao || 64) - 24;
-      ctx.strokeText('!', n.x, _my2); ctx.fillText('!', n.x, _my2);
-      fxShadowOff(); ctx.font = '12px "Be Vietnam Pro", sans-serif';
-    }
-    ctx.fillStyle = '#fff';
-    const _ny = n.y - (n._cao || 64) - 8;
-    ctx.strokeText(n.name, n.x, _ny); ctx.fillText(n.name, n.x, _ny);
+    _nhanCho.push(n);   // nhãn để LƯỢT SAU đặt — xem chú thích ở đầu hàm
   }
+  veNhanNpc(_nhanCho);
+}
+
+/* ── ĐẶT NHÃN TÊN NPC ─────────────────────────────────────────────────────────────────────
+   Chạy thành LƯỢT RIÊNG sau khi mọi hình đã vẽ xong, vì hai lẽ:
+   ① nhãn của người đứng trên không bị hình của người đứng dưới đè lên;
+   ② tới đây mới biết đủ mặt để tránh nhau — trong một lượt thì người vẽ trước không thể biết
+      người vẽ sau sẽ đứng đâu.
+   Ardhaven có 26 NPC trong một màn, chỗ đông nhất bốn người sát nhau, nên khoảng ba chục nhãn
+   chen trong vài trăm điểm ảnh. Trước đây mỗi nhãn ghim cứng trên đỉnh đầu nên chúng chồng
+   thành một mảng chữ không đọc được chữ nào.
+
+   Thứ tự ưu tiên (ai giành chỗ trước): người có dấu nhiệm vụ → người ở gần → còn lại. Ai tới
+   sau mà không tìm được chỗ trống thì THÔI KHÔNG VẼ, chứ không vẽ đè: một nhãn đọc được đáng
+   giá hơn hai nhãn chồng nhau. Người gần nhất luôn có nhãn.                                  */
+const NHAN_CAO   = 15;   // chiều cao một dòng nhãn để tính đụng nhau
+const HUD_CHE    = 64;   // dải trên cùng màn hình có chữ HUD (tên nhân vật, tên map) đè xuống
+function veNhanNpc(ds){
+  if (!ds.length) return;
+  ctx.font = '12px "Be Vietnam Pro", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.lineWidth = 3;
+  // ⚠ CHỈ XÉT NGƯỜI ĐANG TRONG KHUNG NHÌN. drawNpc() duyệt mọi NPC của map (Ardhaven 6400×3200
+  // có 26 người, phần lớn nằm ngoài màn), mà người ngoài màn vẫn CHIẾM Ô trong `datRoi` và
+  // chặn mất nhãn của người đang hiện. Triệu chứng: chỉ dời camera mà số nhãn đặt được nhảy
+  // từ 15 lên 24 — chính bài test_nhanchong bắt ra chuyện này.
+  const LE = 140;   // chừa thêm rìa: người vừa khuất mép vẫn còn nhãn, không nháy khi đi ngang
+  ds = ds.filter(n => n.x > camera.x - LE && n.x < camera.x + VW + LE &&
+                      n.y > camera.y - LE && n.y < camera.y + VH + LE);
+  if (!ds.length) return;
+  const gan = n => dist(player.x, player.y, n.x, n.y);
+  const dau = n => (n.talk === 'quest' && npcMark(n)) ||
+                   (n.talk === 'trunya' && player.truyna && player.truyna.state === 'killed');
+  const thuTu = ds.slice().sort((a, b) => (dau(b) ? 1 : 0) - (dau(a) ? 1 : 0) || gan(a) - gan(b));
+  const datRoi = [];
+  const dung = (x, y, w) => datRoi.some(r =>
+    x - w/2 < r.x + r.w/2 && x + w/2 > r.x - r.w/2 && Math.abs(y - r.y) < NHAN_CAO);
+  // Mép trên khung nhìn, quy về toạ độ thế giới: nhãn không được trèo lên dải HUD.
+  const tranTren = camera.y + HUD_CHE;
+  thuTu.forEach((n, i) => {
+    const cao = n._cao || 64;
+    // ⚠ ĐO BỀ RỘNG CHỮ MỘT LẦN RỒI NHỚ LUÔN. ctx.measureText() phải dựng lại hộp chữ mỗi lần
+    // gọi; đặt nó trong vòng vẽ là mỗi NPC mỗi khung một lần đo — 26 người × 60 khung/giây là
+    // 1.560 lần đo mỗi giây, đủ để tụt khung hình. Tên NPC không đổi trong một phiên nên đo
+    // một lần là xong. (Bài test_sandat mô phỏng 3.600 khung đã treo hẳn vì chỗ này.)
+    if (n._nhanW == null || n._nhanTen !== n.name){
+      n._nhanW = ctx.measureText(n.name).width; n._nhanTen = n.name;
+    }
+    const w = n._nhanW;
+    // Thử lần lượt: trên đỉnh đầu → nhích cao dần → tụt xuống dưới chân.
+    let y = null;
+    for (const dy of [-8, -22, -36, -50, +18]){
+      const thu = n.y - (dy < 0 ? cao : 0) + dy;
+      if (thu < tranTren) continue;                 // chui vào dải HUD thì bỏ mức này
+      if (!dung(n.x, thu, w)) { y = thu; break; }
+    }
+    // i === 0 là người gần nhất (hoặc người đang có dấu nhiệm vụ): luôn phải có nhãn, kể cả
+    // khi phải vẽ đè — đó chính là người mà người chơi đang định nói chuyện.
+    if (y === null){ if (i > 0) return; y = Math.max(n.y - cao - 8, tranTren); }
+    datRoi.push({ x: n.x, y, w });
+    // Dấu nhiệm vụ bám THEO nhãn, không ghim theo đầu — nhãn dời thì dấu phải dời cùng, không
+    // thì dấu treo lơ lửng cách tên một quãng.
+    const mark = n.talk === 'quest' ? npcMark(n)
+               : (n.talk === 'trunya' && player.truyna && player.truyna.state === 'killed') ? '!' : '';
+    if (mark){
+      ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
+      ctx.fillStyle = mark === '!' ? '#ffd76a' : '#9fd0ff';
+      ctx.strokeStyle = 'rgba(0,0,0,.6)';
+      fxShadow(ctx.fillStyle, 6);
+      ctx.strokeText(mark, n.x, y - 16); ctx.fillText(mark, n.x, y - 16);
+      fxShadowOff();
+      ctx.font = '12px "Be Vietnam Pro", sans-serif';
+    }
+    ctx.strokeStyle = 'rgba(0,0,0,.6)';
+    ctx.fillStyle = '#fff';
+    ctx.strokeText(n.name, n.x, y); ctx.fillText(n.name, n.x, y);
+  });
 }
 
 // ---------- Quest tracker (HUD) ----------
