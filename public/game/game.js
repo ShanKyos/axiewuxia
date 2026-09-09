@@ -1060,6 +1060,10 @@ Object.assign(MOBS, {
   thinu:    { name:'Oan Hồn Ổ Ấp', lv:42, hp:2190, atk:89, def:26, xp:1440, silver:[120,195], speed:78, aggro:200, range:34, atkCd:1.2, size:15, color:'#d8d0e8', eye:'#9a86d8', drop:0.28, el:'Mộc', skel:'wraith', skelPal:{main:'#8fa8c0',dark:'#3a4458',cloth:'#5a6a86',bone:'#e0e6f0',glow:'#9fd0ff'}},
   mocnhan:  { name:'Axie Golem', lv:48, hp:3410, atk:101, def:43, xp:1880, silver:[143,230], speed:50, aggro:170, range:36, atkCd:1.5, size:19, color:'#8a6a42', eye:'#e8b04a', drop:0.3, el:'Thổ', img:'assets/mobs/mocnhan.png'},
   huyetbat: { name:'Dơi Chimera', lv:56, hp:2870, atk:122, def:26, xp:2465, silver:[174,275], speed:115, aggro:240, range:28, atkCd:0.95, size:14, color:'#6a1a24', eye:'#ff3a3a', drop:0.32, el:'Hỏa', img:'assets/mobs/huyetbat.png' },
+  // Loài RIÊNG của Aquatic Tribe Causeway, lấp đúng khoảng trống 56→62 của bảng quái ngoài
+  // trời. Dùng lại sprite xanu.png (Chimera Phun Độc) như satthuhy dùng lại assassin.png —
+  // cùng dáng Chimera bò, khác dải cấp và khác hệ.
+  reunuoc:  { name:'Chimera Rêu Nước', lv:59, hp:3520, atk:133, def:31, xp:2790, silver:[186,294], speed:82, aggro:225, range:32, atkCd:1.1, size:16, color:'#3a6a5a', eye:'#7ecbff', drop:0.32, el:'Thủy', img:'assets/mobs/xanu.png' },
   ttdetu:   { name:'Kẻ Cuồng Tín Lạc Lối', lv:62, hp:4320, atk:144, def:36, xp:3165, silver:[199,314], speed:84, aggro:210, range:34, atkCd:1.15, size:16, color:'#e0779a', eye:'#ffc0d8', sash:'#a04868', drop:0.3, el:'Thổ', skel:'cultist', skelPal:{main:'#c0c6d4',dark:'#2e2438',cloth:'#4a3a5e',trim:'#c8a84a',glow:'#8fe0a8'}},
   docyeu:   { name:'Chimera Cầu Gai', lv:70, hp:5390, atk:166, def:41, xp:4025, silver:[242,378], speed:74, aggro:220, range:38, atkCd:1.3, size:18, color:'#4a7a2a', eye:'#7ec850', drop:0.34, el:'Mộc', poisonHit:true, img:'assets/mobs/docyeu.png'},
   satthuhy: { name:'Sát Thủ Sương Mù', lv:78, hp:6800, atk:200, def:48, xp:5200, silver:[300,400], speed:100, aggro:240, range:34, atkCd:1.0, size:16, color:'#16121e', eye:'#c07fe0', elite:true, drop:0.45, el:'Thủy', img:'assets/mobs/assassin.png' },
@@ -1094,6 +1098,8 @@ const MAP_BG_SRC = {
   // Thay bang hang that: sinh hai tam theo docs/PROMPT_NEN_LAN.md roi
   //   python3 tools/ghep_lan.py <tamA> <tamB> public/game/assets/maps/bg_loimon.jpg
   loimon:'assets/maps/bg_loimon.jpg',
+  // Cắt ra từ chính bg_dungeon_stone.jpg bằng tools/iso/cat_caungam.py — xem MAPS.caungam.
+  caungam:'assets/maps/bg_caungam.jpg',
   deep:'assets/maps/bg_dungeon_stone.jpg',   // Tầng Sâu — nền hầm duy nhất còn dùng
 };
 // VẬT TO — công trình rời chèn vào tranh nền (xem `vatTo` trong data/canbang.js). Ảnh đã nướng
@@ -2016,6 +2022,15 @@ const GATES = [
   // hẳn bán kính bắt cổng 90px nên không cổng nào nuốt cổng nào. Chỗ đặt cũng dò bằng máy trong
   // game: comoc là map vẽ tay, có 46 vật cản suy từ chính tranh nền của nó.
   { map:'comoc',    x:150,  y:1700, to:'trungnut', name:'Lối Tây → Trũng Nứt Corran' },
+  // ── NHỊP ĐÁ: nối hang với đỉnh núi, lấp dải 56-62 ────────────────────────────────────
+  // Bird Tribe Heights trước nay CHỈ vào được bằng cổng thành (test_noimap ghi hẳn lý do: bốn
+  // con trùm của nó phủ kín cả bốn rìa). Đo lại thì góc bắc-đông vẫn còn một ô sạch — tt2 gần
+  // nhất 974px, trên ngưỡng 700 — nên lối rìa này đứng được. Hai đầu đặt ở hai rìa ĐỐI DIỆN
+  // theo đúng nếp cũ: Bug Tribe Tunnels 'Lối Đông' ↔ Nhịp Đá 'Lối Tây'.
+  { map:'comoc',    x:2150, y:560,  to:'caungam',   name:'Lối Đông → Aquatic Tribe Causeway' },
+  { map:'caungam',  x:320,  y:900,  to:'comoc',     name:'Lối Tây → Bug Tribe Tunnels' },
+  { map:'caungam',  x:1850, y:2380, to:'tuyettinh', name:'Lối Nam → Bird Tribe Heights' },
+  { map:'tuyettinh',x:2100, y:560,  to:'caungam',   name:'Lối Bắc → Aquatic Tribe Causeway' },
   { map:'comoc',     x:150,  y:1366, to:'chungnam', name:'Lối Tây → Werebear Woods' },
   { map:'comoc',     x:1369, y:150,  to:'mongco',   name:'Lối Bắc → Reptile Sunstone Flats' },
   { map:'mongco',    x:150,  y:1286, to:'comoc',    name:'Lối Tây → Bug Tribe Tunnels' },
@@ -4694,6 +4709,12 @@ const COT_DONG = {
   manhnut: { ten:'Mảnh Nứt', map:'trungnut',  mau:'#ff9a5c',
     hai:{ k:'atkPct', v:7 },  haiTxt:'+7% Công Kích',
     bonTxt:'Chiêu của Ragoon mạnh thêm theo phần Sinh Lực bạn đang THIẾU — cạn máu thì nặng đòn.' },
+  // Nhịp Đá là một LÀN: không đường vòng, không rút lui, nên thứ nó cho là thứ giữ bạn đứng
+  // được lâu — Mana. `qiLeech` là khoá còn trống trong sổ P; mảnh thứ tư hồi thẳng Mana mỗi lần
+  // Ragoon tung chiêu (cài ở khối chiêu Chimera, cạnh Cánh Hoa).
+  botngam: { ten:'Bọt Ngầm', map:'caungam',   mau:'#7ecbff',
+    hai:{ k:'qiLeech', v:4 }, haiTxt:'+4% Hút Mana',
+    bonTxt:'Chiêu của Ragoon hồi cho bạn 6% Mana tối đa.' },
 };
 const COT_DONG_IDS = Object.keys(COT_DONG);
 const COT_DONG_THEO_MAP = {}; for (const k of COT_DONG_IDS) COT_DONG_THEO_MAP[COT_DONG[k].map] = k;
@@ -6364,6 +6385,13 @@ const HERB_SPOTS = {
     { x:192, y:1984 }, { x:3264, y:1024 }, { x:2304, y:1216 }, { x:640, y:896 },
     { x:2880, y:1600 }, { x:1344, y:576 }, { x:1472, y:1600 }, { x:2176, y:1856 },
     { x:2688, y:448 }, { x:2944, y:2560 },
+  ],
+  // Nhịp Đá: 9 chỗ chấm trong đa giác, cách nhau ≥500px và tránh sẵn cổng, điểm thả, trùm vùng
+  // lẫn tám tảng đá — đi hái thuốc là đi hết chiều dài làn.
+  caungam: [
+    { x:480, y:240 }, { x:800, y:640 }, { x:480, y:1080 }, { x:1000, y:1160 },
+    { x:1360, y:1520 }, { x:720, y:1600 }, { x:1920, y:1600 }, { x:1760, y:2120 },
+    { x:2280, y:2120 },
   ],
   loimon: [
     { x:700, y:800 }, { x:1300, y:660 }, { x:2200, y:420 }, { x:2900, y:530 },
@@ -8520,6 +8548,7 @@ const BGM_TRACKS = {
   corran:     'bgm_chungnam',    // dùng chung nhạc Werebear Woods — cùng rẻo rừng
   loimon:     'bgm_chungnam',
   trungnut:   'bgm_chungnam',   // cùng rẻo Corran — dùng chung nhạc
+  caungam:    'bgm_dungeon',    // tranh vốn cắt ra từ hang Tầng Sâu — dùng luôn nhạc hang
   comoc:      'bgm_comoc',       // halloween_battle_2023 — ổ ấp, tối và dồn
   tuyettinh:  'bgm_tuyettinh',   // lunar_bloodmoon — thung lũng băng
   mongco:     'bgm_mongco',      // lunar_battle — thảo nguyên tro
@@ -24224,6 +24253,11 @@ function chiCastChieu(c, ch, near){
       const hp = Math.round(player.maxHp * 0.08);
       player.hp = Math.min(player.maxHp, player.hp + hp);
       addFloat(player.x, player.y - 52, `✚ ${hp}`, '#8fd18f', 13);
+    }
+    if (G.bo === 'botngam'){                                           // chiêu hồi Mana cho NGƯỜI CHƠI
+      const qi = Math.round(player.maxQi * 0.06);
+      player.qi = Math.min(player.maxQi, player.qi + qi);
+      addFloat(player.x, player.y - 52, `✦ ${qi}`, '#7ecbff', 13);
     }
     if (G.bo === 'dongco'){ mountObj._nhanhT = 6; }                    // đánh nhanh gấp đôi 6s
     if (G.bo === 'bangvun') for (const m of near.slice(0, 4)) m.freezeT = Math.max(m.freezeT || 0, 1.2);

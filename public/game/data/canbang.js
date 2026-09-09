@@ -356,6 +356,17 @@ window.BOSS_DEFS = {
       { id:'cm2', name:'Kẻ An Táng Bóng Tối',lv:46, el:'Thủy', img:'thinu',    x:0.5654, y:0.8053, moves:['vong','xung','cuong'] },
       { id:'cm3', name:'Chúa Tể Bất Tử',     lv:49, el:'Thổ',  img:'mocnhan',  x:.42, y:.80, moves:['vach','vong','goi'] } ],
     tranai: { id:'cm4', name:'Tướng Quân Bug Tribe Tunnels', lv:52, el:'Mộc', img:'boss_mochu', x:.85, y:.80, moves:['vong','xung','goi','cuong'] } },
+  // ⚠ BỐN TOẠ ĐỘ NÀY DÒ BẰNG MÁY, KHÔNG CHẤM TAY — và đã phải dò lại một lần. Bản đầu đặt trùm
+  // theo mắt, giữa các chặng của con đường; `test_bossplace` bắt hai con nằm cách tâm bãi quái
+  // 220px và 283px (ngưỡng 300). Trên map dạng LÀN thì trùm và bãi quái buộc phải xen kẽ trên
+  // CÙNG một đường, nên chỗ đặt phải rơi vào KHE giữa hai dải `dai` của hai miền dân số. Dò cả
+  // lưới rồi bung lại bãi quái để đo, chọn bộ tốt nhất: gần tâm bãi nhất 403px, gần điểm thả
+  // nhất 801px. Đổi `vung` hay thêm cổng thì bãi quái xê dịch — dò lại, đừng nhích tay.
+  caungam: { thuve:[
+      { id:'cg1', name:'Kẻ Gác Nhịp Đá',   lv:57, el:'Thủy', img:'xanu',     x:0.3710, y:0.5413, moves:['vach','vong','goi'] },
+      { id:'cg2', name:'Thứ Bám Chân Cầu', lv:59, el:'Thủy', img:'huyetbat', x:0.7135, y:0.5983, moves:['xung','vong','cuong'] },
+      { id:'cg3', name:'Kẻ Đếm Người Qua', lv:61, el:'Thổ',  img:'ttdetu',   x:0.9133, y:0.6980, moves:['vach','xung','goi'] } ],
+    tranai: { id:'cg4', name:'Thứ Ngoi Lên Từ Hồ Ngầm', lv:63, el:'Thủy', img:'boss_tinhhoa', x:0.8277, y:0.8903, moves:['vong','vach','xung','cuong'] } },
   tuyettinh: { thuve:[
       { id:'tt1', name:'Kẻ Lạc Lối Tuyệt Vọng',lv:63, el:'Thổ',  img:'ttdetu', x:0.3115, y:0.1947, moves:['vach','goi','cuong'] },
       { id:'tt2', name:'Cỏ Dại Băng Giá',     lv:66, el:'Hỏa',  img:'caodo',    x:0.6115, y:0.6158, moves:['xung','vong','goi'] },
@@ -1033,7 +1044,10 @@ window.MAPS = {
     ],
     duhiep:'duhiep2' },
   comoc: { name:'Bug Tribe Tunnels', min:40, range:'42 - 56', type:'pk', ground:'#a89f86', patch:'#4a4436',
-    spawnFrom:{ chungnam:{ x:260, y:1366 }, mongco:{ x:1369, y:260 }, trungnut:{ x:280, y:1660 } }, spawn:{ x:400, y:400 }, dark:true, trees:30, rocks:46,
+    spawnFrom:{ chungnam:{ x:260, y:1366 }, mongco:{ x:1369, y:260 }, trungnut:{ x:280, y:1660 }, caungam:{ x:2250, y:400 } }, spawn:{ x:400, y:400 }, dark:true, trees:44, rocks:60,   // 30/46 -> 44/60: thêm lối rìa
+    // đi Aquatic Tribe Causeway nghĩa là thêm một cổng và một điểm tới, mà decorUnblock() dọn
+    // cây đá quanh MỌI điểm nội dung. Bể ban đầu 76 cây đá lọc xong chỉ còn 19 — dưới sàn 20
+    // của test_obstacles ("map thành trọc"). Bộ lọc làm đúng việc của nó; thứ thiếu là bể đầu vào.
     desc:'Hang ổ hẹp, ngoằn ngoèo. Bầy Chimera dày đặc rơi nguyên liệu thăng giai Thú Chiến — bãi săn tranh chấp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     voi: 1789,
@@ -1051,7 +1065,69 @@ window.MAPS = {
       { id:'huyetbat', ten:'Hang Dơi Chimera', dai:[0.765,1.0], cung:[-10,50], cum:[2,2], tiep:true,
         dan:[{ mob:'huyetbat', n:13 }] },   // C56 · Dơi Chimera
     ], duhiep:'duhiep2' },
+  // ── AQUATIC TRIBE CAUSEWAY ────────────────────────────────────────────────────────────────
+  // Cắt từ chính tấm tranh hang Tầng Sâu (bg_dungeon_stone.jpg) bằng tools/iso/cat_caungam.py:
+  // lối đá SÁNG và NHẠT MÀU, nước thì tối và ngả lam, nên vùng đi được suy thẳng ra từ màu chứ
+  // không chấm tay. Sửa tranh hay đổi hệ số kéo thì CHẠY LẠI công cụ rồi dán đè, đừng sửa số.
+  //
+  // Vì sao map này là HÀNH LANG chứ không phải đồng trống: con đường trong tranh đi từ thềm
+  // tây-bắc xuống, bẻ qua cây cầu vòm, rồi sang thềm đông và thõng một mũi xuống nam. Sàn chỉ
+  // 30,5% khổ map — đúng định nghĩa hành lang, và `test_sandat` gác nó bằng phép khác (chỗ
+  // thắt nhất 376px, trên ngưỡng 340).
+  //
+  // Vì sao nó nối Bug Tribe Tunnels với Bird Tribe Heights: Bird Tribe Heights trước nay CHỈ tới
+  // được bằng cổng thành, không có lối rìa nào — cả dải 56-62 vì thế là một khoảng trống, người
+  // chơi rời hang là phải quay về thành. Lối này lấp đúng khoảng ấy.
+  caungam: { name:'Aquatic Tribe Causeway', min:54, range:'56 - 62', type:'pk', hinh:'hanhlang',
+    w:2803, h:2808, ground:'#3a4450', patch:'#2a3038',
+    spawnFrom:{ comoc:{ x:330, y:500 }, tuyettinh:{ x:1850, y:2600 } },
+    spawn:{ x:470, y:620 }, trees:0, rocks:0,
+    desc:'Nhịp đá vắt qua một hồ ngầm không đáy. Một lối, không có đường vòng — thứ chặn đường bạn phải dọn, không né được.',
+    voi: 2600,
+    vung: [
+      // ⚠ CUNG GÓC PHẢI RỘNG TRÊN MAP DẠNG LÀN. Bản đầu bó mỗi miền vào một quạt hẹp (50-72°…)
+      // theo đúng hướng con đường, và nó PHẢN TÁC DỤNG: làn đã chặt sẵn, quạt hẹp thì gần hết
+      // 500 lần bốc mẫu rơi ra ngoài đa giác, _vungDatCum() phải nới giãn cách hai lần, và cụm
+      // cuối cùng đậu cách trùm vùng 220px — `test_bossplace` bắt ngay ("boss đè lên tâm bãi").
+      // Để quạt rộng thì chính đa giác làm việc lọc, còn `dai` giữ nguyên bậc thang cấp quái.
+      { id:'huyetbat', ten:'Thềm Đá Ướt', dai:[0.14,0.42], cung:[15,95], cum:[2,3], tiep:true,
+        dan:[{ mob:'huyetbat', n:12, vai:['can','xa'] }] },        // C56
+      { id:'reunuoc', ten:'Đầu Cầu Rêu', dai:[0.46,0.72], cung:[15,95], cum:[3,3], tiep:true,
+        dan:[{ mob:'reunuoc', n:16, vai:['can','phap'] }] },       // C59 — loài riêng của map này
+      { id:'ttdetu', ten:'Thềm Đông', dai:[0.76,1.0], cung:[15,95], cum:[2,3], tiep:true,
+        dan:[{ mob:'ttdetu', n:12, vai:['can','nang'] }] },        // C62
+    ],
+    diTrong: [
+      [2226,2773], [1775,2773], [1774,2691], [1757,2685], [1757,2372], [1702,2370],
+      [1700,2359], [1627,2348], [1625,2304], [1614,2288], [1568,2278], [1567,2265],
+      [1555,2262], [1555,2041], [1543,2040], [1537,2026], [1512,2026], [1506,2001],
+      [1431,2001], [1411,1989], [1410,1963], [1396,1960], [1396,1932], [1385,1929],
+      [1378,1908], [1347,1908], [1341,1894], [1310,1894], [1292,1882], [1291,1863],
+      [1249,1863], [1210,1847], [1207,1746], [750,1746], [749,1688], [664,1684],
+      [662,1624], [645,1621], [645,1602], [613,1600], [608,1572], [571,1572],
+      [570,1554], [559,1551], [547,1372], [531,1369], [514,1319], [462,1317],
+      [420,1303], [406,1261], [294,1259], [284,1252], [284,1235], [256,1221],
+      [256,1173], [228,1156], [228,1140], [181,1134], [181,1056], [158,1053],
+      [155,918], [144,916], [144,473], [189,470], [189,288], [203,283],
+      [203,244], [276,241], [276,221], [290,207], [294,144], [687,146],
+      [687,336], [696,339], [699,386], [753,391], [764,407], [869,409],
+      [869,426], [892,448], [895,602], [925,605], [925,666], [962,669],
+      [965,714], [983,715], [984,734], [995,739], [995,907], [1071,910],
+      [1071,1002], [1085,1005], [1085,1184], [1100,1205], [1179,1208], [1204,1228],
+      [1208,1260], [1228,1268], [1229,1298], [1289,1299], [1294,1427], [1708,1427],
+      [1711,1469], [1887,1469], [1890,1491], [1915,1491], [1925,1501], [1926,1533],
+      [2041,1533], [2044,1611], [2470,1611], [2471,1669], [2520,1670], [2523,1709],
+      [2659,1714], [2659,2111], [2645,2114], [2643,2129], [2568,2129], [2531,2149],
+      [2489,2152], [2486,2177], [2407,2190], [2404,2565], [2376,2573], [2369,2605],
+      [2342,2607], [2342,2708], [2313,2709], [2310,2720], [2276,2720], [2274,2743],
+      [2229,2743],
+    ],
+    duhiep:'duhiep2' },
   tuyettinh: { name:'Bird Tribe Heights', min:60, range:'62 - 78', type:'pk', ground:'#ddc9a8', patch:'#8a5a6a',
+    // Điểm tới của lối rìa mới từ Aquatic Tribe Causeway. Chỗ này DÒ BẰNG MÁY: ba Vệ Binh Trụ của
+    // Bird Tribe Heights (tt1/tt2/tt3) phải cách ≥700px và vách bắc dày 280px, nên góc bắc-đông là
+    // ô duy nhất vừa sát rìa vừa đứng được — tt1 cách 1290px, gần nhất là tt2 974px.
+    spawnFrom:{ caungam:{ x:2100, y:340 } },
     spawn:{ x:400, y:950 }, trees:60, rocks:24,
     desc:'Bãi EXP khổng lồ. Mang theo kháng độc — Chimera ở đây cắn có nọc.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
@@ -1220,6 +1296,14 @@ window.MAP_OBSTACLES = {
     { x:900,  y:1150, rx:170, ry:120 }, // bộ rễ khổng lồ tây
     { x:1550, y:1500, wd:300, ht:130 }, // gò nam
     { x:1600, y:200,  wd:340, ht:130 }, // vách bắc-đông
+  ],
+  // AQUATIC TRIBE CAUSEWAY — 8 tảng đá do tools/iso/cat_caungam.py chấm, không đặt tay.
+  // Cùng ba ràng buộc như Lối Mòn Corran: `test_domap` đòi ≥8% ô đi được có chỗ nấp trong 120px,
+  // `test_sandat` đòi làn không thắt dưới 340px, và đá phải nằm hẳn trong đa giác. Công cụ đặt
+  // từng tảng LỆCH MỘT BÊN rồi ĐO LẠI làn, thắt quá thì trả tảng ấy lại — nên đừng thêm bằng tay.
+  caungam: [
+    { x:2310, y:1770, rx:62, ry:32 }, { x:2220, y:2580, rx:62, ry:32 }, { x:690, y:510, rx:62, ry:32 }, { x:690, y:1410, rx:62, ry:32 },
+    { x:1680, y:2040, rx:62, ry:32 }, { x:960, y:1050, rx:62, ry:32 }, { x:1770, y:1590, rx:62, ry:32 }, { x:330, y:1140, rx:62, ry:32 },
   ],
   tuyettinh: [
     { x:0, y:0, wd:2600, ht:280 },      // vách bắc
