@@ -10,3 +10,10 @@ dist/
 # Video nặng (không đưa lên repo)
 public/game/assets/video/
 tools/__pycache__/
+
+# Ảnh chụp QA — ĐẦU RA của bài kiểm, không phải tài sản dự án.
+# 4 bài (test_uifix, test_uidot5, test_skillpanel, test_khungbang) ghi vào đây; KHÔNG dòng code
+# nào đọc lại, và mỗi lần chạy hồi quy là sinh lại từ đầu. Trước đây 6 tấm này bị commit lại 201
+# lần, chiếm 222 MB — 48% cả kho — vì PNG không nén delta được: mỗi bản là một bản đầy đủ mới,
+# vĩnh viễn. (So sánh: game.js 283 phiên bản đóng gói lại chỉ còn 1,2 MB.)
+qa_shots/
