@@ -290,8 +290,10 @@ dọn dẹp cho gọn — nó là việc chặn đường của cả hướng đ
 4. **Du hiệp bốc điểm một lần rồi phó mặc `nearestFree`.** Bán kính dò ngắn, nên trên map hẹp
    nó đứng luôn ngoài vùng đi được.
 
-Cả bốn đã vá. Còn một con **chưa vá, ghi thành việc riêng**: đòn lao/xung của quái không gọi
-`collideObstacles`, nên đuổi người chơi vài nghìn khung là quái xung ra ngoài hành lang.
+Cả bốn đã vá. Con thứ năm — đòn lao/xung của quái không gọi `collideObstacles`, nên đuổi người
+chơi vài nghìn khung là quái ra ngoài hành lang — lúc đó ghi thành việc riêng; nay đã vá, xem
+§9.7. (Chẩn ban đầu chỉ đúng một nửa: `xung` thật sự thiếu lời gọi, nhưng hai con ra ngoài đo
+được trên làn lại ra bằng hai đường khác.)
 
 ### 9.4 Ba bài kiểm chốt cứng giả định "đồng trống"
 
@@ -335,3 +337,46 @@ tiếp — chỉnh một bài đo hiệu năng cho tới khi nó xanh là đúng
 
 Muốn chữa thật thì phải đổi câu hỏi, không đổi ngưỡng: cho bộ tự chỉnh ghi lại lý do nó hạ/không
 hạ, rồi bài đọc CHÍNH quyết định ấy, thay vì đoán ngược từ FPS.
+
+### 9.7 Con bọ thứ năm — vá xong, và nó KHÔNG nằm ở chỗ đã chẩn
+
+Việc riêng ghi ở §9.3 đã làm. Nhưng đo trước khi sửa thì cái ra ngoài hành lang không phải đòn
+`xung`: trùm Lối Mòn khai `moves:['vach','vong','goi','cuong']` — không có `xung` — mà 7.200 khung
+đuổi vẫn cho 2-3 con đứng trong rừng. Bám cờ từng khung mới thấy hai đường thật, cả hai đều nhích
+**dưới một pixel mỗi khung** nên không nhìn ra được bằng mắt:
+
+1. **Nhánh Du Hiệp lang thang** dịch toạ độ rồi kẹp theo KHỔ MAP (`clamp(…, 40, MAP.w-40)`) —
+   kẹp khổ map chặn được mép map, không chặn được mép sàn. 26px/s ÷ 60 = 0,43px mỗi khung, và
+   không có gì kéo về: bốn con `duhiep` là toàn bộ số còn đứng ngoài ở cuối lượt đo.
+2. **`mobSeparate()` — lực đẩy mềm cho nhãn tên khỏi chồng nhau.** Nó đẩy cả những con đang
+   ĐỨNG ĐÁNH, mà nhánh đứng đánh không dịch toạ độ nên không gọi `collideObstacles`. Một cụm sáu
+   con dồn quanh người chơi ở sát mép làn ép con ngoài cùng ra ngoài đa giác nửa pixel mỗi khung.
+   Đây là đường mà "đòn lao" bị nhận nhầm: cả hai đều xảy ra lúc đánh nhau sát mép.
+
+Còn một ca thứ ba đo được: một con nằm NGUYÊN MỘT CHỖ trong rừng suốt 3.000 khung. Con nào đã lọt
+vào trong thì đứng im ở đó — nhánh đứng đánh không dịch toạ độ, nên không nhánh nào kéo nó ra.
+
+Nên bản vá có hai phần. Năm lời gọi `collideObstacles(m, 13)` cho năm nhánh tự dịch toạ độ mà
+còn thiếu — Du Hiệp lang thang · hoảng sợ bỏ chạy · Dị Ảnh nhảy tới quanh người chơi · `xung` ·
+`vhKnockback` (hất văng) — và một lượt quét cuối `mobSeparate()` trên đúng những con trong tầm
+nhìn. Lượt quét là phần chữa ca thứ ba, và nó là cùng một cái lưới người chơi đã có từ trước:
+`collideObstacles(player, 14)` chạy mỗi khung, đứng yên cũng bị đẩy ra khỏi vùng cấm.
+
+Hai nhánh sửa từ `clamp` sang `collideObstacles` chứ không cộng thêm: `resolveObstaclePoint` đã
+kẹp về khổ map ở dòng cuối, nên giữ cả hai chỉ là kẹp hai lần bằng hai lề khác nhau.
+
+Đo lại trên Lối Mòn Corran, cùng lượt đuổi 8 chặng × 450 khung: **18 con ngoài sàn → 0**.
+
+Và bài kiểm cho nó: `test_sandat` khối ⑦. §9.4 đã dời phép đo vị trí quái lên TRƯỚC các lượt đi
+thử vì "đặt sai" và "đuổi ra ngoài" là hai câu khác nhau — khối ⑦ hỏi câu thứ hai, ở chỗ riêng
+của nó, sau các lượt đi. Nó ghim máu CẢ QUÁI: bãi chết sạch thì phép đo thành rỗng và luôn xanh,
+mà chính cụm quái còn sống dồn quanh người chơi mới là thứ ép con ngoài cùng ra ngoài.
+
+### 9.8 Một bài kiểm chập chờn nữa — chỉ ghi lại, KHÔNG sửa
+
+`test_sandat` khối ③ (tám lượt đi thử không được thoát khỏi sàn) đỏ ngẫu nhiên ở **Quảng Trường
+Cũ**: `→(60,950) dừng ở (563,1019)`. Chạy trên HEAD SẠCH, bài nguyên trạng, cùng một cổng: lượt
+1 đỏ, lượt 2 xanh. Tức là có trước đợt việc này và không liên quan tới nó.
+
+Chưa chẩn. Ghi lại để lần sau đỏ thì biết là đã thấy rồi — và để không ai nhận nhầm nó thành
+hậu quả của bản vá §9.7.
