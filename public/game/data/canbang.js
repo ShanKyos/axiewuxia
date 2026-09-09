@@ -342,6 +342,12 @@ window.BOSS_DEFS = {
       { id:'co2', name:'Kẻ Canh Vòng Cổng',  lv:36, el:'Thổ',  img:'thinu',   x:0.4923, y:0.5053, moves:['vach','xung','goi'] },
       { id:'co3', name:'Axie Sa Ngã Đầu Đàn',lv:38, el:'Thủy', img:'bandao',  x:0.7538, y:0.1263, moves:['xung','vong','cuong'] } ],
     tranai: { id:'co4', name:'Người Giữ Rẻo Corran', lv:41, el:'Mộc', img:'boss_mochu', x:0.7538, y:0.8842, moves:['vong','vach','goi','cuong'] } },
+  // Trum Trung Nut dat GIUA trung, khong dat canh cong: bo sinh tu kiem >=700px tinh tu moi
+  // diem toi (test_bossplace). Luot dau hai trum roi cach cong 466px va 401px -- bo kiem bat.
+  trungnut: { thuve:[
+      { id:'tn1', name:'Rễ Trũng Cựa Mình',   lv:46, el:'Mộc',  img:'mocnhan', x:0.22, y:0.52, moves:['vong','vach','cuong'] },
+      { id:'tn2', name:'Kẻ Nhặt Xác Mép Nứt', lv:48, el:'Thổ',  img:'thinu',   x:0.55, y:0.78, moves:['vach','xung','goi'] } ],
+    tranai: { id:'tn3', name:'Thứ Bò Ra Từ Nứt', lv:52, el:'Thuỷ', img:'bandao', x:0.78, y:0.66, moves:['vong','vach','goi','cuong'] } },
   // Trum Loi Mon dung o TAN CUNG lan -- di het duong moi gap. Do la phan thuong cua viec di het.
   loimon: { thuve:[],
     tranai: { id:'lm1', name:'Kẻ Chặn Cuối Lối', lv:50, el:'Thổ', img:'mocnhan', x:0.9300, y:0.5744, moves:['vach','vong','goi','cuong'] } },
@@ -912,7 +918,7 @@ window.MAPS = {
     // thuoc, 4 trum vung) phai nam TRONG da giac, va diem toi phai cach trum >=700px. Sua map
     // = sua tham so roi chay lai, dung sua tay toa do o day.
     w:5200, h:3800, sanIso:true,
-    spawnFrom:{ chungnam:{ x:311, y:973 }, loimon:{ x:4809, y:819 } },
+    spawnFrom:{ chungnam:{ x:311, y:973 }, loimon:{ x:4809, y:819 }, trungnut:{ x:574, y:384 } },
     spawn:{ x:506, y:1158 }, trees:0, rocks:0,
     desc:'Khoảnh rừng Corran giữ riêng, ngoài tầm bầy Werebear. Ông ấy không nói vì sao lại giữ.',
     voi: 3400,          // gap doi theo map -- `vung.dai` la ti le cua `voi`
@@ -967,8 +973,67 @@ window.MAPS = {
       [[4480,1792], [4377,2080], [4480,2368],],
     ],
     duhiep:'duhiep2' },
+  // ═══ NGA BA THAT ═══════════════════════════════════════════════════════════════════════
+  // Do do thi the gioi thi ra mot dieu bat ngo: no DA la hinh cay (Sapidae Chiefdom 4 nhanh,
+  // Werebear Woods 3 nhanh), NHUNG noi dung van la mot duong thang -- cac nhanh noi duoi nhau
+  // ve CAP, nen o bat ky cap nao cung chi dung mot nhanh hop. Re khong phai lua chon, no la
+  // duong di tiep khoac ao nga ba. Ca game chi co mot cap trung dai cap (corran 38-42 va
+  // loimon 42-48), ma loimon lai la dau cut cua corran.
+  //
+  // Map nay lam nga do thanh THAT: hai nhanh cung dai cap treo tren cung mot nga, khac nhau o
+  // thu chung CHO chu khong o cap.
+  //
+  //     corran (38-42)
+  //      ├─ DONG → Loi Mon Corran   42-48 · pk     · hanh lang · cut, phai quay lai
+  //      └─ BAC  → Trung Nut Corran 44-50 · freepk · rong      · DI TIEP sang comoc
+  //
+  // Chon theo HAI truc cung luc: an toan ↔ rui ro, va duong vong ↔ duong tat. Mot truc thoi
+  // thi chua thanh quyet dinh -- "nguy hiem hon nhung cung xa hon" thi khong ai chon, con
+  // "nguy hiem hon ma gan hon" thi co.
+  //
+  // Ba mang hinh hoc sinh bang tools/iso/sinh_trungnut.py, khong cham tay toa do nao. Bo sinh
+  // tu kiem truoc khi in: san >=58%, moi diem noi dung nam TRONG da giac, diem toi cach cong
+  // >90px (ban kinh bat cong) va <400px tinh tu ria map, va cach moi trum vung >=700px.
+  trungnut: { name:'Trũng Nứt Corran', min:44, range:'44 - 50', type:'freepk',
+    w:4200, h:3200, ground:'#2f3324', patch:'#6a7a52', sanIso:true,
+    spawnFrom:{ corran:{ x:706, y:2845 }, comoc:{ x:3805, y:770 } },
+    spawn:{ x:666, y:2640 }, trees:0, rocks:0,
+    desc:'Đất trũng xuống nơi vết nứt đi qua. Không ai giữ chỗ này, nên ai cũng lấy được — kể cả lấy của nhau.',
+    voi: 2800,
+    // Cung loai quai voi Loi Mon: hai nhanh phai la mot LUA CHON, khong phai hai vung xa la.
+    // Cai khac nhau la LUAT (freepk) va DUONG DI (di tiep duoc), khong phai bang quai.
+    vung: [
+      { id:'thinu', ten:'Miệng Trũng', dai:[0.16,0.42], cung:[-40,40], cum:[3,3], tiep:true,
+        dan:[{ mob:'thinu', n:13, vai:['can','phap'] }] },
+      { id:'mocnhan', ten:'Lòng Trũng', dai:[0.46,0.72], cung:[-25,55], cum:[3,3], tiep:true,
+        dan:[{ mob:'mocnhan', n:14, vai:['can','xa'] }] },
+      { id:'bandao', ten:'Mép Nứt Đông', dai:[0.74,1.0], cung:[-15,65], cum:[3,3], tiep:true,
+        dan:[{ mob:'bandao', n:14 }] },
+      { id:'mocnhan2', ten:'Vệt Nứt Nam', dai:[0.36,0.64], cung:[80,140], cum:[3,3], tiep:true,
+        dan:[{ mob:'mocnhan', n:13, vai:['can','phap'] }] },
+    ],
+    diTrong: [
+      [2624,3104], [2240,3104], [2176,3040], [2048,3040], [1760,2752], [1728,2656],
+      [1536,2656], [1024,3104], [384,3104], [320,3040], [128,3040], [32,2944],
+      [32,832], [192,800], [384,672], [448,736], [832,736], [928,640],
+      [928,448], [1088,224], [1152,288], [1344,288], [1408,224], [1472,224],
+      [1664,32], [1920,32], [2048,160], [2368,160], [2432,224], [2624,224],
+      [2688,288], [2880,288], [3136,96], [3520,96], [3584,160], [3648,160],
+      [3904,416], [4032,416], [4064,448], [4064,2240], [4032,2272], [3840,2272],
+      [3584,2592], [3520,2592], [3456,2656], [3264,2656], [3072,2912], [2880,2912],
+    ],
+    isoCum: [[3456,320], [3520,1600], [1216,2624], [2752,896], [3776,1984], [2496,2176], [1920,2624], [1664,2048], [3776,1280], [1792,640], [1856,1088], [2240,576], [3328,2496], [320,1600], [1152,1920], [1408,1024], [2048,2176], [256,1152], [2432,2816], [192,2688], [1792,192], [2496,1728],],
+    isoDuong: [
+      [[576,2880], [590,2596], [658,2315], [710,2033], [692,1748], [630,1463], [603,1178], [640,896], [865,1192], [1233,1319], [1472,1600], [1735,1441], [2065,1428], [2304,1216], [2634,1344], [2880,1600], [3117,1342], [3264,1024], [3572,862], [3840,640],],
+      [[576,2880], [525,2548], [350,2269], [192,1984],],
+      [[640,896], [1034,829], [1344,576],],
+      [[2304,1216], [2139,1515], [2176,1856],],
+      [[3264,1024], [3048,663], [2688,448],],
+      [[2880,1600], [2816,1925], [2890,2242], [2944,2560],],
+    ],
+    duhiep:'duhiep2' },
   comoc: { name:'Bug Tribe Tunnels', min:40, range:'42 - 56', type:'pk', ground:'#a89f86', patch:'#4a4436',
-    spawnFrom:{ chungnam:{ x:260, y:1366 }, mongco:{ x:1369, y:260 } }, spawn:{ x:400, y:400 }, dark:true, trees:30, rocks:46,
+    spawnFrom:{ chungnam:{ x:260, y:1366 }, mongco:{ x:1369, y:260 }, trungnut:{ x:280, y:1660 } }, spawn:{ x:400, y:400 }, dark:true, trees:30, rocks:46,
     desc:'Hang ổ hẹp, ngoằn ngoèo. Bầy Chimera dày đặc rơi nguyên liệu thăng giai Thú Chiến — bãi săn tranh chấp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     voi: 1789,

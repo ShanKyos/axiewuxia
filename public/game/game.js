@@ -1998,6 +1998,24 @@ const GATES = [
   { map:'corran',    x:256,  y:1088, to:'chungnam', name:'Lối Tây → Werebear Woods' },
   { map:'corran',    x:4864, y:704,  to:'loimon',   name:'Lối Đông → Lối Mòn Corran' },
   { map:'loimon',    x:110,  y:727,  to:'corran',   name:'Lối Tây → Rẻo Rừng Corran' },
+  // ── NGÃ BA CORRAN ── Từ Rẻo Rừng rẽ được hai lối CÙNG DẢI CẤP, khác nhau ở luật và ở việc
+  // có đi tiếp được không: lối đông vào hành lang `pk` rồi phải quay lại, lối bắc vào trũng
+  // `freepk` và đi thẳng tiếp sang Bug Tribe Tunnels. Xem khối "NGA BA THAT" trong canbang.js.
+  //
+  // ⚠ Hai đầu của MỘT lối phải nằm ở HAI MÉP ĐỐI NHAU — người chơi đọc hướng để định vị, và cả
+  // bảng GATES này giữ đúng nếp ấy (Werebear "Lối Đông" ↔ Corran "Lối Tây"). Nên corran mở ở
+  // mép BẮC thì đầu bên kia phải ở mép NAM của Trũng Nứt.
+  //
+  // Chỗ đặt cổng bên corran DÒ BẰNG MÁY, không chấm tay: hai thuỳ nam sâu của Rẻo Rừng đều đã
+  // có trùm vùng đứng sẵn, nên cổng nam đầu tiên tôi đặt rơi cách trùm `co1` đúng 216px và
+  // test_bossplace bắt ngay. Chỗ này cách trùm gần nhất 2.409px.
+  { map:'corran',   x:704,  y:384,  to:'trungnut', name:'Lối Bắc → Trũng Nứt Corran' },
+  { map:'trungnut', x:576,  y:2880, to:'corran',   name:'Lối Nam → Rẻo Rừng Corran' },
+  { map:'trungnut', x:3840, y:640,  to:'comoc',    name:'Lối Đông → Bug Tribe Tunnels' },
+  // Mép tây comoc đã có cổng đi Werebear Woods ở y=1366; cổng này ở y=1700, cách 334px — xa hơn
+  // hẳn bán kính bắt cổng 90px nên không cổng nào nuốt cổng nào. Chỗ đặt cũng dò bằng máy trong
+  // game: comoc là map vẽ tay, có 46 vật cản suy từ chính tranh nền của nó.
+  { map:'comoc',    x:150,  y:1700, to:'trungnut', name:'Lối Tây → Trũng Nứt Corran' },
   { map:'comoc',     x:150,  y:1366, to:'chungnam', name:'Lối Tây → Werebear Woods' },
   { map:'comoc',     x:1369, y:150,  to:'mongco',   name:'Lối Bắc → Reptile Sunstone Flats' },
   { map:'mongco',    x:150,  y:1286, to:'comoc',    name:'Lối Tây → Bug Tribe Tunnels' },
@@ -4667,6 +4685,15 @@ const COT_DONG = {
   vomon:   { ten:'Vỏ Mòn',   map:'loimon',    mau:'#a89878',
     hai:{ k:'defPct', v:5 },  haiTxt:'+5% Giáp',
     bonTxt:'Đứng yên 2 giây thì Ragoon dựng khiên chắn đòn kế tiếp.' },
+  // ⚠ CẶP NÀY LÀ CẢ LÝ DO NGÃ BA CORRAN TỒN TẠI. Hai map treo trên cùng một ngã, cùng dải cấp,
+  // nên thứ tách chúng ra phải là thứ chúng CHO. Lối Mòn (`pk`, hành lang, an toàn) cho THỦ:
+  // giáp và một cái khiên khi đứng yên. Trũng Nứt (`freepk`, rộng, ai cũng giết được bạn) cho
+  // CÔNG, và trả theo đúng mức nguy hiểm bạn đang chịu — máu càng cạn, chiêu càng nặng.
+  // Đọc hai dòng này là biết nên đi lối nào, không cần một dòng hướng dẫn nào.
+  // `atkPct` là khoá cuối còn trống trong COT_PHU; năm khoá phía Ragoon đã dùng hết ở trên.
+  manhnut: { ten:'Mảnh Nứt', map:'trungnut',  mau:'#ff9a5c',
+    hai:{ k:'atkPct', v:7 },  haiTxt:'+7% Công Kích',
+    bonTxt:'Chiêu của Ragoon mạnh thêm theo phần Sinh Lực bạn đang THIẾU — cạn máu thì nặng đòn.' },
 };
 const COT_DONG_IDS = Object.keys(COT_DONG);
 const COT_DONG_THEO_MAP = {}; for (const k of COT_DONG_IDS) COT_DONG_THEO_MAP[COT_DONG[k].map] = k;
@@ -6331,6 +6358,13 @@ const HERB_SPOTS = {
   ],
   // Lối Mòn Corran: rải dọc TIM LÀN — y bám theo đường sin của tools/dung_lan.py, nếu không
   // thì thảo dược mọc ngoài hành lang và không ai hái được.
+  // Trũng Nứt: 10 chỗ do tools/iso/sinh_trungnut.py chấm trong đa giác, cách nhau ≥520px, và
+  // chính chúng là mốc để bộ sinh kéo ĐƯỜNG MÒN đi qua — đi hái thuốc là đi dọc đường mòn.
+  trungnut: [
+    { x:192, y:1984 }, { x:3264, y:1024 }, { x:2304, y:1216 }, { x:640, y:896 },
+    { x:2880, y:1600 }, { x:1344, y:576 }, { x:1472, y:1600 }, { x:2176, y:1856 },
+    { x:2688, y:448 }, { x:2944, y:2560 },
+  ],
   loimon: [
     { x:700, y:800 }, { x:1300, y:660 }, { x:2200, y:420 }, { x:2900, y:530 },
     { x:3500, y:770 }, { x:4300, y:800 }, { x:5000, y:640 }, { x:5700, y:800 },
@@ -8485,6 +8519,7 @@ const BGM_TRACKS = {
   chungnam:   'bgm_chungnam',    // pve_3
   corran:     'bgm_chungnam',    // dùng chung nhạc Werebear Woods — cùng rẻo rừng
   loimon:     'bgm_chungnam',
+  trungnut:   'bgm_chungnam',   // cùng rẻo Corran — dùng chung nhạc
   comoc:      'bgm_comoc',       // halloween_battle_2023 — ổ ấp, tối và dồn
   tuyettinh:  'bgm_tuyettinh',   // lunar_bloodmoon — thung lũng băng
   mongco:     'bgm_mongco',      // lunar_battle — thảo nguyên tro

@@ -31,7 +31,7 @@ def _diem_phai_trong(W, H):
     return []
 
 
-def dung_mien(W, H, hat=7, buoc=64):
+def dung_mien(W, H, hat=7, buoc=64, song=None, thuy=None, vinh=None):
     """Trả về mặt nạ bool (H/buoc, W/buoc) của vùng đi được."""
     rng = np.random.default_rng(hat)
     gh, gw = H // buoc, W // buoc
@@ -39,28 +39,31 @@ def dung_mien(W, H, hat=7, buoc=64):
     m = np.zeros((gh, gw), bool)
 
     # ── SỐNG chính: uốn ngang map từ tây sang đông, chạm gần hai mép để hai cổng nối ra được ──
+    S = song or dict(x0=0.035, x1=0.965, y0=0.50, bd=0.20, ck=4.1, pha=0.7, r0=0.30, rbd=0.11)
     n = 26
     for i in range(n):
         t = i / (n - 1)
-        cx = (0.035 + 0.93 * t) * gw
-        cy = (0.50 + 0.20 * math.sin(t * 4.1 + 0.7) + 0.07 * math.sin(t * 9.3)) * gh
-        r = (0.30 + 0.11 * math.sin(t * 3.3 + 1.9)) * gh
+        cx = (S['x0'] + (S['x1'] - S['x0']) * t) * gw
+        cy = (S['y0'] + S['bd'] * math.sin(t * S['ck'] + S['pha']) + 0.07 * math.sin(t * 9.3)) * gh
+        r = (S['r0'] + S['rbd'] * math.sin(t * 3.3 + 1.9)) * gh
         m |= (xx - cx) ** 2 + (yy - cy) ** 2 < r * r
 
     # ── THUỲ lệch: mấy khoảnh phình ra trên/dưới, cho map có chỗ để lạc vào ──
     # Hai thuỳ cuối là để TRÙM VÙNG có đất mà đứng: BOSS_DEFS đặt hai trùm ở tỉ lệ y = 0,884,
     # sâu hơn mọi thuỳ khác. Không có chúng thì hai trùm nằm ngoài đa giác — bộ kiểm ở main()
     # bắt được, và đó là lý do hai thuỳ này có mặt chứ không phải vì bố cục cần.
-    for cx, cy, r in [(0.22, 0.19, 0.22), (0.46, 0.82, 0.24), (0.70, 0.16, 0.21),
-                      (0.86, 0.74, 0.20), (0.33, 0.62, 0.18), (0.60, 0.42, 0.19),
-                      (0.10, 0.55, 0.17), (0.93, 0.38, 0.17),
-                      (0.123, 0.884, 0.20), (0.754, 0.884, 0.20)]:
+    for cx, cy, r in (thuy if thuy is not None else
+                      [(0.22, 0.19, 0.22), (0.46, 0.82, 0.24), (0.70, 0.16, 0.21),
+                       (0.86, 0.74, 0.20), (0.33, 0.62, 0.18), (0.60, 0.42, 0.19),
+                       (0.10, 0.55, 0.17), (0.93, 0.38, 0.17),
+                       (0.123, 0.884, 0.20), (0.754, 0.884, 0.20)]):
         m |= (xx - cx * gw) ** 2 + (yy - cy * gh) ** 2 < (r * gh) ** 2
 
     # ── VỊNH khoét vào từ ngoài: mép mà không có chỗ lõm thì nhìn ra hình bầu dục ──
     # ⚠ Vịnh tây-nam trước ở (0,12 · 0,99) bán kính 0,12 — nó ăn đúng vào chỗ trùm `co1` đứng
     # (0,123 · 0,884), cách nhau 0,106 < 0,12. Dời sang trái và thu lại.
-    for cx, cy, r in [(0.30, -0.02, 0.13), (0.56, 1.03, 0.15), (0.79, -0.01, 0.12), (0.02, 1.02, 0.11)]:
+    for cx, cy, r in (vinh if vinh is not None else
+                      [(0.30, -0.02, 0.13), (0.56, 1.03, 0.15), (0.79, -0.01, 0.12), (0.02, 1.02, 0.11)]):
         m &= ~((xx - cx * gw) ** 2 + (yy - cy * gh) ** 2 < (r * gh) ** 2)
 
     m = ndimage.binary_closing(m, np.ones((3, 3)))
@@ -119,7 +122,7 @@ def _sau_nhat(m, buoc, phia, ban=3):
     """
     trong = ndimage.binary_erosion(m, np.ones((ban*2+1, ban*2+1)))
     oy, ox = np.nonzero(trong)
-    k = ox.argmin() if phia == 'tay' else ox.argmax()
+    k = {'tay': ox.argmin, 'dong': ox.argmax, 'bac': oy.argmin, 'nam': oy.argmax}[phia]()
     return int(ox[k] * buoc), int(oy[k] * buoc)
 
 
