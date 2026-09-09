@@ -798,7 +798,7 @@ window.MAPS = {
   // Thang cap anh xa vao QUANG DUONG: C38 dau lan -> C42 giua -> C48 cuoi, roi trum o tan cung.
   // Di xa hon = quai nang hon, khong can mot dong chu nao giai thich.
   loimon: { name:'Lối Mòn Corran', min:40, range:'42 - 48', type:'pk', hinh:'hanhlang',
-    w:6400, h:1400, ground:'#cfd2ae', patch:'#6a7a52',
+    w:6400, h:1400, ground:'#2f3324', patch:'#6a7a52',
     // SAN LAT VIEN: nen ghep tu hinh thoi 2:1 nuong bang tools/iso/nuong_tile.py, thay cho
     // tam tranh nen bg_loimon.jpg. Xem khoi "SAN LAT VIEN" trong game.js. Vung di duoc van la
     // dung `diTrong` ben duoi -- lat vien chi la chuyen VE, khong doi mot buoc chan nao.
@@ -896,21 +896,77 @@ window.MAPS = {
       { x:6025, y:159, s:1.81 }, { x:6130, y:136, s:2.02 }, { x:6235, y:111, s:2.23 }, { x:6340, y:85, s:1.78 }, { x:6340, y:1345, s:2.28 },
     ],
     duhiep:'duhiep2' },
-  corran: { name:'Rẻo Rừng Corran', min:36, range:'38 - 42', type:'pk', ground:'#cfd2ae', patch:'#6a7a52',
-    spawnFrom:{ chungnam:{ x:330, y:700 }, loimon:{ x:2550, y:620 } }, spawn:{ x:300, y:760 }, trees:34, rocks:18,
+  corran: { name:'Rẻo Rừng Corran', min:36, range:'38 - 42', type:'pk', ground:'#2f3324', patch:'#6a7a52',
+    // `ground` la mau to KIN canvas truoc khi ve bat cu thu gi -- tuc la mau cua phan NGOAI da
+    // giac `diTrong`, cho vien nen khong lat toi. O map lat vien, cho ay phai doc ra BONG RUNG
+    // SAU. Ban cu de '#cfd2ae' (cat nhat, hop voi tam tranh nen mot mieng ngay xua) va anh chup
+    // trong game ra mot vien dat trong bet chay quanh map. Loi Mon doi theo cung ly do.
+    // MAP KHAM PHA RONG -- 5200x3800, gap doi ban cu 2600x1900 theo ca hai chieu.
+    //
+    // Hinh HANH LANG cua Loi Mon hop PHO BAN, khong hop map kham pha: hai ben bit kin, mot
+    // duong tien, khong co cho de lech. Map nay di huong nguoc lai -- rong, san 80,7%, va thu
+    // tao ra lua chon la LUM CHAN nam TRONG long san (`isoCum`), khong phai vach o hai ben.
+    //
+    // Ca ba mang duoi day SINH BANG MAY, khong cham tay: tools/iso/vung_rong.py. Bo sinh tu
+    // kiem truoc khi in ra -- san >=58%, moi diem noi dung (cong, diem tha, diem toi, cho hai
+    // thuoc, 4 trum vung) phai nam TRONG da giac, va diem toi phai cach trum >=700px. Sua map
+    // = sua tham so roi chay lai, dung sua tay toa do o day.
+    w:5200, h:3800, sanIso:true,
+    spawnFrom:{ chungnam:{ x:311, y:973 }, loimon:{ x:4809, y:819 } },
+    spawn:{ x:506, y:1158 }, trees:0, rocks:0,
     desc:'Khoảnh rừng Corran giữ riêng, ngoài tầm bầy Werebear. Ông ấy không nói vì sao lại giữ.',
-    voi: 1700,
+    voi: 3400,          // gap doi theo map -- `vung.dai` la ti le cua `voi`
     // Dải 38-42 bắc cầu giữa Werebear Woods (kết ở C38 `bandao`) và Bug Tribe Tunnels (mở ở
     // C42 `thinu`) — dùng lại đúng hai loài ấy nên người chơi đi qua thấy liền mạch, không
     // gặp loài lạ chen ngang giữa hai vùng.
+    // ⚠ MAP TO RA THI NOI DUNG PHAI TO THEO. Map nay rong gap 3,6 lan ban cu ma van giu nguyen
+    // 3 mien x 2 cum = 6 bai quai; test_domap bat dung ca hai trieu chung: "mat do 0,82 (san
+    // 1,3) -- map rong" va "duong kinh 4680px -- di bo suong". Do la cai bay "rong = trong" da
+    // ghi o dau tools/iso/vung_rong.py, lan nay hien ra o so lieu chu khong o hinh anh.
+    //
+    // Nay 5 mien x 3 cum = 15 bai. Hai mien moi dat o hai CUNG GOC khac han (bac va nam) chu
+    // khong keo dai them theo truc dong-tay: keo dai truc thi duong kinh cang phinh, con rai
+    // ra hai ben thi lap day chinh cho dang trong.
     vung: [
-      { id:'bandao', ten:'Dốc Corran Giữ', dai:[0.14,0.40], cung:[-30,45], cum:[2,2], tiep:true,
-        dan:[{ mob:'bandao', n:10, vai:['can','xa'] }] },        // C38 · Axie Sa Ngã
-      { id:'mocnhan', ten:'Vạt Golem Ngủ', dai:[0.44,0.70], cung:[10,85], cum:[2,2], tiep:true,
-        dan:[{ mob:'mocnhan', n:10, vai:['can','phap'] }] },     // C48 · Axie Golem
-      { id:'thinu', ten:'Ổ Bỏ Lại', dai:[0.74,1.0], cung:[-15,60], cum:[2,2], tiep:true,
-        dan:[{ mob:'thinu', n:11 }] },                            // C42 · Oan Hồn Ổ Ấp
-    ], duhiep:'duhiep2' },
+      { id:'bandao', ten:'Dốc Corran Giữ', dai:[0.14,0.40], cung:[-30,45], cum:[3,3], tiep:true,
+        dan:[{ mob:'bandao', n:14, vai:['can','xa'] }] },        // C38 · Axie Sa Ngã
+      { id:'mocnhan', ten:'Vạt Golem Ngủ', dai:[0.44,0.70], cung:[10,85], cum:[3,3], tiep:true,
+        dan:[{ mob:'mocnhan', n:14, vai:['can','phap'] }] },     // C48 · Axie Golem
+      { id:'thinu', ten:'Ổ Bỏ Lại', dai:[0.74,1.0], cung:[-15,60], cum:[3,3], tiep:true,
+        dan:[{ mob:'thinu', n:15 }] },                            // C42 · Oan Hồn Ổ Ấp
+      { id:'bandao2', ten:'Trảng Bắc', dai:[0.30,0.58], cung:[-95,-35], cum:[3,3], tiep:true,
+        dan:[{ mob:'bandao', n:13, vai:['can','xa'] }] },        // C38 · rai ve phia bac
+      { id:'mocnhan2', ten:'Vũng Nam', dai:[0.34,0.66], cung:[95,155], cum:[3,3], tiep:true,
+        dan:[{ mob:'mocnhan', n:13, vai:['can','phap'] }] },     // C48 · rai ve phia nam
+    ],
+    diTrong: [
+      [4544,3680], [3456,3680], [3360,3584], [3360,3520], [3136,3360], [2688,3360],
+      [2528,3456], [2400,3584], [2368,3680], [512,3680], [320,3488], [256,3488],
+      [192,3424], [64,3424], [32,3392], [32,896], [288,832], [288,640],
+      [352,576], [352,384], [480,256], [480,192], [640,32], [1024,32],
+      [1120,128], [1152,224], [1408,416], [1664,416], [1856,288], [1952,448],
+      [1952,1024], [1984,1056], [2176,1056], [2240,992], [2368,992], [2432,928],
+      [2624,928], [2688,864], [2816,864], [2848,832], [2848,384], [2912,320],
+      [2976,128], [3072,32], [3648,32], [3680,192], [3840,352], [3904,352],
+      [3968,416], [4224,416], [4288,352], [4352,352], [4384,448], [4480,544],
+      [4608,544], [4800,416], [5056,416], [5088,448], [5088,1984], [4960,2112],
+      [4960,2240], [5088,2368], [5088,3200], [4992,3360], [4928,3360], [4800,3488],
+      [4672,3488], [4640,3584],
+    ],
+    // LUM CHAN nam TRONG long san -- thu lam mot map rong co nghia. Xem raiCum() trong game.js.
+    isoCum: [[3520,960], [2752,2880], [1984,2624], [3584,512], [2176,1728], [1024,3264], [4288,704], [1728,3456], [3200,3072], [4416,3264], [3520,3456], [3840,2944], [2176,1280], [2112,3136], [704,2560], [1792,2176], [320,3200], [704,1856], [4224,2688], [4864,2880], [3904,2048], [3072,768], [4800,2112], [2880,2368], [1344,2176], [1088,2816], [1536,2752], [1728,1344], [4160,1216], [3136,320], [896,1152], [3328,2304],],
+    // DUONG MON noi nhung cho nguoi choi that su di (cong, diem tha, cho hai thuoc). Tren map
+    // rong, luat "duong mon = dai xa mep nhat" cua map lan KHONG dung lai duoc -- xem sanIsoDung().
+    isoDuong: [
+      [[256,1088], [592,832], [768,448], [1043,717], [1344,960], [1572,804], [1728,576], [2020,687], [2315,796], [2547,1013], [2780,1229], [3072,1344], [3451,1430], [3840,1408], [4140,1631], [4480,1792], [4649,1545], [4699,1257], [4706,954], [4864,704],],
+      [[256,1088], [242,1383], [178,1681], [227,1974], [328,2264], [320,2560],],
+      [[1344,960], [1201,1282], [1053,1603], [1061,1969], [960,2304],],
+      [[1344,960], [1325,1256], [1440,1522], [1536,1792],],
+      [[3072,1344], [2908,1574], [2700,1778], [2591,2040], [2526,2327], [2368,2560],],
+      [[3072,1344], [3142,1681], [3392,1920],],
+      [[4480,1792], [4377,2080], [4480,2368],],
+    ],
+    duhiep:'duhiep2' },
   comoc: { name:'Bug Tribe Tunnels', min:40, range:'42 - 56', type:'pk', ground:'#a89f86', patch:'#4a4436',
     spawnFrom:{ chungnam:{ x:260, y:1366 }, mongco:{ x:1369, y:260 } }, spawn:{ x:400, y:400 }, dark:true, trees:30, rocks:46,
     desc:'Hang ổ hẹp, ngoằn ngoèo. Bầy Chimera dày đặc rơi nguyên liệu thăng giai Thú Chiến — bãi săn tranh chấp.',
@@ -1033,24 +1089,11 @@ window.MAP_OBSTACLES = {
     { x:4360, y:893, rx:55, ry:28 }, { x:4660, y:623, rx:55, ry:28 }, { x:4960, y:1015, rx:55, ry:28 }, { x:5260, y:699, rx:55, ry:28 },
     { x:5560, y:1031, rx:55, ry:28 }, { x:5860, y:651, rx:55, ry:28 },
   ],
-  corran: [
-    { x:7, y:7, wd:126, ht:1293 }, { x:1380, y:76, rx:25, ry:13 }, { x:1040, y:168, rx:40, ry:20 }, { x:174, y:230, rx:42, ry:21 },
-    { x:2293, y:244, rx:42, ry:21 }, { x:2144, y:274, rx:65, ry:33 }, { x:1931, y:385, wd:220, ht:139 }, { x:2316, y:497, wd:94, ht:250 },
-    { x:1232, y:498, rx:66, ry:33 }, { x:1414, y:518, rx:65, ry:33 }, { x:1596, y:518, rx:65, ry:33 }, { x:320, y:524, rx:65, ry:33 },
-    { x:1918, y:592, rx:33, ry:17 }, { x:1779, y:599, rx:66, ry:33 }, { x:1050, y:600, rx:65, ry:33 }, { x:502, y:619, rx:65, ry:33 },
-    { x:868, y:619, rx:65, ry:33 }, { x:2161, y:627, rx:78, ry:39 }, { x:685, y:644, rx:66, ry:33 }, { x:1246, y:656, rx:77, ry:38 },
-    { x:2286, y:722, rx:22, ry:11 }, { x:765, y:742, wd:180, ht:385 }, { x:584, y:750, wd:180, ht:331 }, { x:1826, y:765, rx:17, ry:8 },
-    { x:404, y:776, wd:179, ht:305 }, { x:2408, y:791, wd:184, ht:142 }, { x:568, y:813, rx:19, ry:10 }, { x:1682, y:848, rx:36, ry:18 },
-    { x:1588, y:854, rx:31, ry:15 }, { x:2444, y:954, rx:21, ry:10 }, { x:1764, y:1079, rx:64, ry:32 }, { x:1922, y:1080, rx:49, ry:25 },
-    { x:1032, y:1082, rx:55, ry:28 }, { x:286, y:1126, rx:68, ry:34 }, { x:477, y:1129, rx:68, ry:34 }, { x:2319, y:1132, rx:17, ry:9 },
-    { x:859, y:1133, rx:68, ry:34 }, { x:2577, y:1134, rx:14, ry:8 }, { x:668, y:1173, rx:68, ry:34 }, { x:1076, y:1232, rx:26, ry:13 },
-    { x:1511, y:1252, rx:14, ry:8 }, { x:1276, y:1258, rx:31, ry:15 }, { x:1408, y:1266, rx:64, ry:32 }, { x:2490, y:1364, wd:102, ht:528 },
-    { x:989, y:1378, rx:68, ry:34 }, { x:2209, y:1380, rx:40, ry:20 }, { x:800, y:1382, rx:67, ry:34 }, { x:2371, y:1420, rx:40, ry:20 },
-    { x:2078, y:1508, rx:41, ry:21 }, { x:1262, y:1818, rx:69, ry:35 }, { x:1455, y:1819, rx:69, ry:35 }, { x:101, y:1822, rx:69, ry:35 },
-    { x:1068, y:1822, rx:69, ry:35 }, { x:874, y:1824, rx:69, ry:35 }, { x:294, y:1834, rx:69, ry:35 }, { x:681, y:1834, rx:69, ry:35 },
-    { x:2229, y:1841, rx:69, ry:35 }, { x:488, y:1846, rx:69, ry:35 }, { x:1842, y:1851, rx:69, ry:35 }, { x:2412, y:1853, rx:62, ry:31 },
-    { x:2036, y:1854, rx:69, ry:35 }, { x:1648, y:1858, rx:69, ry:35 },
-  ],
+  // RONG CO CHU DINH. 63 vat can cu o day suy tu chinh tam bg_corran.jpg 2600x1900 bang
+  // tools/can_tu_tranh.py. Map nay nay lat vien va rong 5200x3800, khong con dung tam tranh ay
+  // nua -- giu lai thi 63 khoi chan vo hinh nam rai giua dong co trong, va quai se bi nhot
+  // trong nhung cho nhin ra khong co gi. Vung di duoc gio do `diTrong` quyet dinh mot minh.
+  corran: [],
 
   // Chặn nguyên KHỐI NHÀ chứ không chỉ chân tường: art isometric vẽ cả mái, mà mái là thứ
   // nhân vật sẽ đi đè lên nếu cho vào. Toạ độ đọc từ chính tấm art qua lưới 100px rồi nhân

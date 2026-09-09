@@ -1704,6 +1704,19 @@ function _isoNhieu(x, y){
 // Khoảng cách tới mép vùng đi được. `epVaoDaGiac` vốn viết để đẩy nhân vật trở vào, nhưng nó
 // trả về đúng điểm gần nhất trên viền nên dùng lại được nguyên vẹn.
 function _isoCachMep(dg, x, y){ const m = epVaoDaGiac(dg, x, y); return Math.hypot(x - m.x, y - m.y); }
+// Khoảng cách tới ĐƯỜNG MÒN gần nhất (`md.isoDuong`, sinh bằng tools/iso/vung_rong.py).
+function _isoCachDuong(duong, x, y){
+  let d = Infinity;
+  for (const tuyen of duong){
+    for (let i = 1; i < tuyen.length; i++){
+      const ax = tuyen[i-1][0], ay = tuyen[i-1][1];
+      const vx = tuyen[i][0] - ax, vy = tuyen[i][1] - ay;
+      const t = clamp(((x-ax)*vx + (y-ay)*vy) / (vx*vx + vy*vy || 1), 0, 1);
+      d = Math.min(d, Math.hypot(x - ax - vx*t, y - ay - vy*t));
+    }
+  }
+  return d;
+}
 
 // Bảng viên của map đang đứng. Tính MỘT LẦN lúc nạp map, không tính lại mỗi khung: Lối Mòn chỉ
 // có 25×25 ô nên cả bảng là 625 byte.
@@ -1714,6 +1727,7 @@ function sanIsoDung(){
   if (!md.sanIso || !md.diTrong) return;
   const cot = Math.ceil(MAP.w / ISO_W) + 3, hang = Math.ceil(MAP.h / (ISO_H/2)) + 3;
   const o = new Uint8Array(cot * hang);
+  const duong = (md.isoDuong && md.isoDuong.length) ? md.isoDuong : null;
   for (let j = 0; j < hang; j++){
     for (let i = 0; i < cot; i++){
       const cx = (i-1)*ISO_W + ((j & 1) ? ISO_W/2 : 0), cy = (j-1)*(ISO_H/2);
@@ -1729,11 +1743,19 @@ function sanIsoDung(){
       // HAI TẦNG nhiễu: tầng thô (460px) uốn cả con đường, tầng mịn (150px) gặm mép. Một tầng
       // thôi thì ở khúc lối rộng, nhiễu trơn quá và ranh giới rơi đúng lưới hình thoi — ra một
       // mảng đất bốn cạnh thẳng, thấy rõ ở ảnh chụp trong game chỗ đầu lối.
-      const nguong = 190 + (_isoNhieu(cx/460, cy/460) - 0.5) * 190
-                         + (_isoNhieu(cx/150, cy/150) - 0.5) * 95;
+      //
+      // ⚠ HAI LUẬT KHÁC NHAU CHO HAI KIỂU MAP, và luật của map làn KHÔNG bê sang được.
+      // Map LÀN: đất là dải xa mép nhất — chỗ xa hai bìa rừng nhất chính là chỗ người ta giẫm.
+      // Map RỘNG: gần như CẢ MAP đều xa mép, nên luật ấy biến cả map thành một bãi đất mênh
+      // mông viền một vành cỏ mỏng. Ở đó đường mòn phải nối những chỗ NGƯỜI CHƠI THẬT SỰ ĐI
+      // (cổng, điểm thả, chỗ hái thuốc) — vừa hợp lý vừa CHỈ ĐƯỜNG, không cần một dòng chữ nào.
+      const laDat = duong
+        ? _isoCachDuong(duong, cx, cy) < 150 + (_isoNhieu(cx/300, cy/300) - 0.5) * 130
+        : d > 190 + (_isoNhieu(cx/460, cy/460) - 0.5) * 190
+                  + (_isoNhieu(cx/150, cy/150) - 0.5) * 95;
       const k = ((i*73856093) ^ (j*19349663)) >>> 0;
-      o[j*cot + i] = (d > nguong) ? (1 + k % ISO_DAT.length)
-                                  : (1 + ISO_DAT.length + k % ISO_CO.length);
+      o[j*cot + i] = laDat ? (1 + k % ISO_DAT.length)
+                           : (1 + ISO_DAT.length + k % ISO_CO.length);
     }
   }
   // ⚠ VỆT ĐẤT — thiếu cái này thì ranh giới cỏ/đường mòn ra một dãy BẬC THANG hình thoi, thấy
@@ -1751,8 +1773,8 @@ function sanIsoDung(){
   for (let t = 0, dat = 0; t < 24000 && dat < 170; t++){
     const x = boc()*MAP.w, y = boc()*MAP.h;
     if (!trongDaGiac(md.diTrong, x, y)) continue;
-    const d = _isoCachMep(md.diTrong, x, y);
-    if (d < 110 || d > 285) continue;            // đúng dải ranh giới, chỗ răng cưa lộ ra
+    const d = duong ? _isoCachDuong(duong, x, y) : _isoCachMep(md.diTrong, x, y);
+    if (d < 110 || d > (duong ? 260 : 285)) continue;   // đúng dải ranh giới, chỗ răng cưa lộ ra
     vet.push({ x, y, i: (boc()*ISO_VET.length)|0 });
     dat++;
   }
@@ -1827,9 +1849,51 @@ function raiIso(md){
   // lọt khung, cộng 29,3 triệu điểm mỗi khung, kéo Lối Mòn xuống còn nửa nhịp so với map thường.
   // Vành 300px và số cây ít hơn cho ra cùng một bức tường cây, vì thứ dựng nên bức tường ấy là
   // hai hàng `vatDat` đặt tay ở ngay mép lối, không phải mấy hàng lẫn trong bóng phía sau.
-  rai(md.isoCay ?? 150, ISO_CAY, (trong, d) => !trong && d < 300);
-  rai(md.isoNho ?? 300, ISO_NHO, (trong, d) => trong && d > 60);
+  rai(md.isoCay ?? Math.round(MAP.w * MAP.h / 6e4), ISO_CAY, (trong, d) => !trong && d < 300);
+  rai(md.isoNho ?? Math.round(MAP.w * MAP.h / 3e4), ISO_NHO, (trong, d) => trong && d > 60);
+  raiCum(md, boc);
 }
+// LÙM CHẶN nằm TRONG lòng vùng đi được — thứ làm một map rộng có nghĩa.
+//
+// ⚠ Một map rộng mà trống thì đi đâu cũng như nhau, và cái "rộng" ấy đọc ra thành nhàm chứ
+// không thành tự do. Thứ tạo ra lựa chọn là vật cản NẰM GIỮA sàn: phải vòng, phải chọn lối,
+// phải kéo quái quanh một gốc cây. Nên khác mọi vật thể lát viên còn lại, lùm CÓ sinh vật cản
+// (xem rebuildDecorObs) — đó là cả lý do nó tồn tại.
+//
+// Tâm lùm do tools/iso/vung_rong.py chấm sẵn, đã tránh đường mòn và mọi điểm nội dung: lùm mọc
+// giữa đường thì đường mòn dẫn thẳng vào bụi cây, còn lùm mọc đè cổng thì người chơi vào map
+// là kẹt trong một bụi cây.
+function raiCum(md, boc){
+  // ⚠ TÂM LÙM PHẢI TRÁNH BÃI QUÁI, VÀ CHỖ NÀY CHỈ KIỂM ĐƯỢC LÚC CHẠY.
+  // tools/iso/vung_rong.py đã cho tâm lùm tránh cổng, điểm thả, chỗ hái thuốc và đường mòn —
+  // nhưng BÃI QUÁI thì nó không biết: bãi sinh ra lúc chạy từ `vung` (xem banRaiVung), không
+  // có trong dữ liệu tĩnh. Hậu quả đo được: test_diahinh báo 4/528 tuyến đi thử không tới nơi,
+  // cả bốn cùng một bãi `mocnhan` ở (313,3160) — người chơi dừng cách đúng 125px, tức là bãi
+  // nằm lọt trong vùng chặn của một lùm. Nên lọc lại ở đây, nơi `md.packs` đã có thật.
+  const tranh = [];
+  for (const q of (md.packs || [])) tranh.push({ x:q.x, y:q.y, r:(q.r || 90) + 210 });
+  if (md.spawn) tranh.push({ x:md.spawn.x, y:md.spawn.y, r:260 });
+  for (const k in (md.spawnFrom || {})) tranh.push({ x:md.spawnFrom[k].x, y:md.spawnFrom[k].y, r:260 });
+  for (const g of GATES) if (g.map === curMap) tranh.push({ x:g.x, y:g.y, r:260 });
+  for (const h of (HERB_SPOTS[curMap] || [])) tranh.push({ x:h.x, y:h.y, r:200 });
+  const bd = BOSS_DEFS[curMap];
+  if (bd){
+    for (const tv of (bd.thuve || [])) tranh.push({ x:tv.x*MAP.w, y:tv.y*MAP.h, r:300 });
+    if (bd.tranai) tranh.push({ x:bd.tranai.x*MAP.w, y:bd.tranai.y*MAP.h, r:340 });
+  }
+  for (const [cx, cy] of (md.isoCum || [])){
+    if (tranh.some(k => dist(cx, cy, k.x, k.y) < k.r)) continue;
+    for (let i = 0; i < 14; i++){
+      const a = boc()*Math.PI*2, r = boc()*190;
+      decor.push({ type:'iso', img: ISO_CAY[(boc()*ISO_CAY.length)|0],
+                   x: cx + Math.cos(a)*r, y: cy + Math.sin(a)*r*0.58, s:1 });
+    }
+    // MỘT vật cản cho cả lùm, không phải một cho mỗi gốc: mười bốn ellipse chồng nhau thì lưới
+    // tìm đường nặng thêm mà hình dạng vùng chặn không khác gì một khối.
+    decorObsCum.push({ x:cx, y:cy, rx:150, ry:88 });
+  }
+}
+let decorObsCum = [];
 
 // ---------- Bản đồ thế giới (GDD): 3 loại khu vực ----------
 const ZONE_TYPES = {
@@ -1931,8 +1995,8 @@ const GATES = [
   { map:'chungnam',  x:2480, y:700,  to:'corran',   name:'Lối Đông → Rẻo Rừng Corran' },
   // x=175 chứ không phải sát mép: dải nền tối ngoài khối đất chạy từ x=7 tới x=133 và đã thành
   // vật cản (xem MAP_OBSTACLES.corran) — cổng đặt trong đó thì không ai với tới được.
-  { map:'corran',    x:175,  y:700,  to:'chungnam', name:'Lối Tây → Werebear Woods' },
-  { map:'corran',    x:2300, y:1000, to:'loimon',   name:'Lối Đông → Lối Mòn Corran' },
+  { map:'corran',    x:256,  y:1088, to:'chungnam', name:'Lối Tây → Werebear Woods' },
+  { map:'corran',    x:4864, y:704,  to:'loimon',   name:'Lối Đông → Lối Mòn Corran' },
   { map:'loimon',    x:110,  y:727,  to:'corran',   name:'Lối Tây → Rẻo Rừng Corran' },
   { map:'comoc',     x:150,  y:1366, to:'chungnam', name:'Lối Tây → Werebear Woods' },
   { map:'comoc',     x:1369, y:150,  to:'mongco',   name:'Lối Bắc → Reptile Sunstone Flats' },
@@ -2129,7 +2193,8 @@ function rebuildDecorObs(){
   // và túm cỏ trong lối thì cố ý đi xuyên qua được. Xem raiIso().
   decorObs = decor.filter(d => d.type !== 'iso').map(d => d.type === 'tree'
     ? { x:d.x, y:d.y, rx:10 + 8*d.s, ry:7 + 5*d.s }     // gốc cây: dẹt theo phối cảnh nhìn xuống
-    : { x:d.x, y:d.y, rx:13*d.s,     ry:8*d.s });        // tảng đá (và trụ đá — cùng công thức, khác cỡ)
+    : { x:d.x, y:d.y, rx:13*d.s,     ry:8*d.s })        // tảng đá (và trụ đá — cùng công thức, khác cỡ)
+    .concat(decorObsCum);                               // ...cộng LÙM CHẶN, xem raiCum()
 }
 // ── HẠT BỐC CỐ ĐỊNH ──────────────────────────────────────────────────────
 // Băm chuỗi → hạt, và một bộ sinh số giả ngẫu nhiên ĐỊNH TRƯỚC. Dùng ở khắp nơi cần "bốc ngẫu
@@ -2211,9 +2276,14 @@ function decorUnblock(){
     if (!con) break;                                            // mọi đích đã thông
   }
   if (!phaBo.size) return;
-  const truoc = decor.length;
+  const truoc = decor.length, truocCum = decorObsCum.length;
   decor = decor.filter(d => !phaBo.has(idx(d.x, d.y)));
-  if (decor.length !== truoc) rebuildDecorObs();
+  // ⚠ LÙM CHẶN PHẢI DỌN Ở CẢ HAI CHỖ. Cây của lùm nằm trong `decor`, còn vùng chặn của nó nằm
+  // riêng ở `decorObsCum` (một ellipse cho cả lùm — xem raiCum). Chỉ lọc `decor` thì hàm này
+  // dọn mất mấy gốc cây mà vùng chặn vẫn nguyên: người chơi thấy một khoảng trống, đi vào, và
+  // bị chặn bởi không có gì. Đúng kiểu lỗi "tường vô hình" đã phải sửa ở đợt trước.
+  decorObsCum = decorObsCum.filter(o => !phaBo.has(idx(o.x, o.y)));
+  if (decor.length !== truoc || decorObsCum.length !== truocCum) rebuildDecorObs();
 }
 function obstaclesOf(mapId){
   const md = MAPS[mapId];
@@ -6250,9 +6320,13 @@ const HERB_SPOTS = {
   ],
   // Chấm bằng máy trên bảng vật cản của Rẻo Rừng Corran: cách nhau ≥520px, cách mọi trùm vùng
   // ≥300px, không rơi vào gốc cổ thụ hay bụi. Sửa tranh nền thì chấm lại, đừng dịch tay.
+  // Rẻo Rừng Corran nay là map RỘNG lát viên: 8 chỗ này do tools/iso/vung_rong.py chấm bên
+  // trong đa giác `diTrong`, cách nhau ≥620px, và chính chúng là mốc để bộ sinh kéo ĐƯỜNG MÒN
+  // đi qua. Nên đi hái thuốc là đi dọc đường mòn — không phải lội bừa giữa đồng.
   corran: [
-    { x:280, y:260 }, { x:280, y:820 }, { x:280, y:1380 }, { x:760, y:500 },
-    { x:760, y:1620 }, { x:1240, y:260 }, { x:1240, y:1380 }, { x:1560, y:740 },
+    { x:1728, y:576 }, { x:2368, y:2560 }, { x:1536, y:1792 }, { x:4480, y:2368 },
+    { x:3072, y:1344 }, { x:1344, y:960 }, { x:960, y:2304 }, { x:4480, y:1792 },
+    { x:320, y:2560 }, { x:3392, y:1920 }, { x:768, y:448 }, { x:3840, y:1408 },
   ],
   // Lối Mòn Corran: rải dọc TIM LÀN — y bám theo đường sin của tools/dung_lan.py, nếu không
   // thì thảo dược mọc ngoài hành lang và không ai hái được.
@@ -7933,6 +8007,7 @@ function buildWorld(){
   packsMd(md);   // A4: bung miền dân số thành bãi quái TRƯỚC mọi thứ khác đọc md.packs
   mobs = []; pickups = []; projectiles = []; effects = []; floats = []; groundLoot = []; // đồ dưới đất KHÔNG theo người sang map khác
   decorObs = [];   // xoá TRƯỚC khi rải decor mới — xem ghi chú ở rebuildDecorObs()
+  decorObsCum = [];   // ...và cả bảng lùm chặn, nếu không lùm của map vừa rời chặn map vừa vào
   if (player) player.pendingHit = null;   // cùng lý do: đòn thường đã hẹn ở map cũ
   mountObj = null; // Thú Chiến xuất hiện lại ở map mới
   moveTarget = null; moveWaypoint = null; movePlanClear(); // Click-to-move: đích ở map cũ không còn ý nghĩa khi đổi map

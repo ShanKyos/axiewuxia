@@ -28,7 +28,17 @@ const SAN = {
 // này. ĐỪNG hạ nó thêm lần nữa để cho bài kiểm xanh.
 const SAN_CHE = 8;
 const TRAN = {
-  duongKinh: 2600,   // px đi bộ giữa hai điểm xa nhau nhất — hiện cao nhất 2352
+  // ⚠ TRẦN NÀY GIÃN THEO KHỔ MAP, không còn là một con số tuyệt đối.
+  // Con số 2600 cũ là bề ngang map hồi CẢ GAME CHUNG MỘT KHỔ 2600×1900 — nó không phải một
+  // luật thiết kế, nó là một di sản. Bằng chứng nằm ngay trong tệp này: map dạng LÀN đã phải
+  // miễn trừ khỏi nó, kèm ghi chú "thứ thật sự cần canh là NHỊP, và `keNhau` đã canh đúng thứ
+  // đó cho mọi hình dạng map". Lý lẽ ấy đúng y hệt với map KHÁM PHÁ rộng.
+  //
+  // Nên neo theo đường chéo map: 2600 / đường-chéo(2600×1900) = 0,807. Map chuẩn giữ nguyên
+  // đúng 2600 như cũ, map rộng được nới đúng theo tỉ lệ nó to ra. Cái bẫy "map to mà rỗng" thì
+  // KHÔNG được nới — `matDo` bên dưới vẫn là một con số tuyệt đối, và nó chính là phép đã bắt
+  // Rẻo Rừng Corran khi map ấy to ra 3,6 lần mà số bãi quái giữ nguyên.
+  duongKinhTiLe: 2600 / Math.hypot(2600, 1900),
   keNhau:     700,   // px trung vị tới điểm gần nhất — nhịp giữa hai lần đánh
 };
 
@@ -125,6 +135,7 @@ const TRAN = {
       gan.sort((x, y) => x - y);
       o[id] = {
         min: M.min,
+        w: MAP.w, h: MAP.h,
         soLoai: new Set((M.packs || []).map(q => q.mob)).size,
         che: +(100*che/Math.max(trong,1)).toFixed(1),
         soTru: decor.filter(d => d.tru).length,
@@ -168,14 +179,15 @@ const TRAN = {
     // dài, và chiều dài chính là thứ được đặt hàng ("đi qua một đường chỉ định để tới cuối map").
     // Thứ thật sự cần canh là NHỊP — khoảng cách giữa hai điểm nội dung KỀ NHAU — và `keNhau`
     // ngay dưới đã canh đúng thứ đó cho mọi hình dạng map.
-    if (m.hinh !== 'hanhlang' && m.duongKinh > TRAN.duongKinh) fail(`${id}: đường kính ${m.duongKinh}px (trần ${TRAN.duongKinh}) — đi bộ suông`);
+    const tranKinh = Math.round(TRAN.duongKinhTiLe * Math.hypot(m.w, m.h));
+    if (m.hinh !== 'hanhlang' && m.duongKinh > tranKinh) fail(`${id}: đường kính ${m.duongKinh}px (trần ${tranKinh}) — đi bộ suông`);
     if (m.keNhau > TRAN.keNhau) fail(`${id}: điểm kề ${m.keNhau}px (trần ${TRAN.keNhau}) — nhịp đánh thưa`);
     // Map không có bãi quái nào (thành) thì không xét số loài.
     if (m.soLoai > 0 && m.soLoai < SAN.loai) fail(`${id}: chỉ ${m.soLoai} loài (sàn ${SAN.loai})`);
     // Chỉ map có bãi quái mới cần địa hình đánh nhau — thành thì không.
     if (m.soLoai > 0 && m.che < SAN_CHE) fail(`${id}: vật che ${m.che}% (sàn ${SAN_CHE}%) — không có địa hình cỡ trận đánh`);
   }
-  if (!bad) pass(`${ids.length} map đều qua bánh cóc: loài ≥${SAN.loai} · mật độ ≥${SAN.matDo} · đi được ≥${SAN.thoang}% · vật che ≥${SAN_CHE}% (sàn TẠM, xem ghi chú) · kính ≤${TRAN.duongKinh}px`);
+  if (!bad) pass(`${ids.length} map đều qua bánh cóc: loài ≥${SAN.loai} · mật độ ≥${SAN.matDo} · đi được ≥${SAN.thoang}% · vật che ≥${SAN_CHE}% (sàn TẠM, xem ghi chú) · kính ≤${(TRAN.duongKinhTiLe*100).toFixed(0)}% đường chéo map`);
 
   // ── BÁNH CÓC THEO TỪNG MAP ────────────────────────────────────────────────
   // Đây mới là chỗ đo cái bệnh chính: số loài TỤT khi lên cấp (7 xuống 3). Hiện trạng đang

@@ -48,13 +48,19 @@ def dung_mien(W, H, hat=7, buoc=64):
         m |= (xx - cx) ** 2 + (yy - cy) ** 2 < r * r
 
     # ── THUỲ lệch: mấy khoảnh phình ra trên/dưới, cho map có chỗ để lạc vào ──
+    # Hai thuỳ cuối là để TRÙM VÙNG có đất mà đứng: BOSS_DEFS đặt hai trùm ở tỉ lệ y = 0,884,
+    # sâu hơn mọi thuỳ khác. Không có chúng thì hai trùm nằm ngoài đa giác — bộ kiểm ở main()
+    # bắt được, và đó là lý do hai thuỳ này có mặt chứ không phải vì bố cục cần.
     for cx, cy, r in [(0.22, 0.19, 0.22), (0.46, 0.82, 0.24), (0.70, 0.16, 0.21),
                       (0.86, 0.74, 0.20), (0.33, 0.62, 0.18), (0.60, 0.42, 0.19),
-                      (0.10, 0.55, 0.17), (0.93, 0.38, 0.17)]:
+                      (0.10, 0.55, 0.17), (0.93, 0.38, 0.17),
+                      (0.123, 0.884, 0.20), (0.754, 0.884, 0.20)]:
         m |= (xx - cx * gw) ** 2 + (yy - cy * gh) ** 2 < (r * gh) ** 2
 
     # ── VỊNH khoét vào từ ngoài: mép mà không có chỗ lõm thì nhìn ra hình bầu dục ──
-    for cx, cy, r in [(0.30, -0.02, 0.13), (0.56, 1.03, 0.15), (0.79, -0.01, 0.12), (0.12, 0.99, 0.12)]:
+    # ⚠ Vịnh tây-nam trước ở (0,12 · 0,99) bán kính 0,12 — nó ăn đúng vào chỗ trùm `co1` đứng
+    # (0,123 · 0,884), cách nhau 0,106 < 0,12. Dời sang trái và thu lại.
+    for cx, cy, r in [(0.30, -0.02, 0.13), (0.56, 1.03, 0.15), (0.79, -0.01, 0.12), (0.02, 1.02, 0.11)]:
         m &= ~((xx - cx * gw) ** 2 + (yy - cy * gh) ** 2 < (r * gh) ** 2)
 
     m = ndimage.binary_closing(m, np.ones((3, 3)))
@@ -191,12 +197,22 @@ def main():
     # nội dung đặt sau, theo đúng hình nó có.
     tay = _sau_nhat(m, BUOC, 'tay')
     dong = _sau_nhat(m, BUOC, 'dong')
-    # điểm thả và hai điểm tới nằm lùi vào trong so với cổng, để vào map không bị hút ngược ra
-    tha = (tay[0] + 260, tay[1] + 60)
-    tu_chungnam = (tay[0] + 190, tay[1] - 40)
-    tu_loimon = (dong[0] - 210, dong[1] + 40)
-    moc = [tay, dong, tha, tu_chungnam, tu_loimon]
-    thuoc = _rai_deu(m, BUOC, 8, 620, moc)
+    # ⚠ ĐIỂM TỚI LÙI THEO TRỤC DỌC, KHÔNG LÙI THEO TRỤC NGANG.
+    # Nó phải thoả HAI điều kéo ngược nhau: cách cổng >90px (bán kính bắt cổng — gần hơn thì
+    # vào map là bị hút ngược trở ra), NHƯNG vẫn <400px tính từ rìa map (test_noimap: cổng tên
+    # "Lối ..." là cổng RÌA, tới nơi mà đứng giữa map thì không đọc ra là giáp ranh). Lùi ngang
+    # 190px thoả điều kiện đầu và phá điều kiện sau — đo được 446px từ rìa tây, bài kiểm đỏ.
+    # Lùi CHÉO, phần lớn theo trục dọc: xa cổng đủ mà vẫn sát rìa.
+    tha = (tay[0] + 250, tay[1] + 70)
+    tu_chungnam = (tay[0] + 55, tay[1] - 115)
+    tu_loimon = (dong[0] - 55, dong[1] + 115)
+    # ⚠ TRÙM VÙNG CŨNG PHẢI NẰM TRONG SÀN. BOSS_DEFS khai toạ độ theo TỈ LỆ nên đổi khổ map
+    # là chúng tự dời — không phải sửa, nhưng CÓ THỂ rơi ra ngoài đa giác mới. test_sandat ④
+    # bắt đúng ca đó ("thứ nằm ngoài sàn"), và test_bossplace còn đòi điểm tới cách trùm ≥700px.
+    trum = [(round(fx*W), round(fy*H)) for fx, fy in
+            [(0.1231, 0.8842), (0.4923, 0.5053), (0.7538, 0.1263), (0.7538, 0.8842)]]
+    moc = [tay, dong, tha, tu_chungnam, tu_loimon] + trum
+    thuoc = _rai_deu(m, BUOC, 12, 540, moc)
     TRANH = moc + thuoc
     dg = vien(m, BUOC)
     duong = duong_mon(m, BUOC, tay, dong, thuoc)
@@ -223,11 +239,20 @@ def main():
         return c
 
     ngoai = [p for p in TRANH if not trong_dg(*p)]
+    # test_bossplace: điểm tới (cổng/điểm thả) phải cách MỌI trùm vùng ≥700px
+    gan = [(q, t, round(math.dist(q, t)))
+           for q in (tay, dong, tha, tu_chungnam, tu_loimon) for t in trum
+           if math.dist(q, t) < 700]
     print(f'khổ {W}×{H} · {len(dg)} đỉnh · sàn {pct:.1f}% '
           f'(test_sandat đòi ≥55% cho map hoang dã)', file=sys.stderr)
     print(f'{len(cum)} lùm chặn · {len(ngoai)} điểm nội dung nằm NGOÀI sàn'
           + (': ' + str(ngoai) if ngoai else ''), file=sys.stderr)
-    if ngoai or pct < 58:
+    if gan:
+        print('✗ điểm tới quá gần trùm (cần ≥700px): ' + str(gan), file=sys.stderr)
+    print(f'{len(trum)} trùm vùng · điểm tới gần trùm nhất '
+          f'{min(round(math.dist(q, t)) for q in (tay, dong, tha) for t in trum)}px',
+          file=sys.stderr)
+    if ngoai or gan or pct < 58:
         print('✗ CHƯA ĐẠT — chỉnh sống/thuỳ rồi chạy lại', file=sys.stderr)
         sys.exit(1)
 
