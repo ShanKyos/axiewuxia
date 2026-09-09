@@ -59,6 +59,22 @@ def tu_thoi(duong):
     return ra
 
 
+def lam_lap(o):
+    """Hoà chéo bọc vòng: trộn ảnh với chính nó đã dịch nửa khổ, trọng số về 0 ở mép.
+
+    ⚠ ĐỪNG TIN GEMINI GEN RA TEXTURE LẶP. Đã đặt hàng hai lần, ghi hoa "CRITICAL SEAMLESS
+    TILING", và cả hai lần đều không lặp: đo chênh lệch giữa hai mép đối diện ra 10-19 trong
+    khi nhiễu nền chỉ ~1, tức lệch gấp 10-15 lần ngưỡng. Lượt hoà chéo này kéo về 1,0-1,5 —
+    đúng ngưỡng nhiễu. Nhờ nó mà prompt bỏ hẳn được đoạn đòi lặp, để model lo phần NỘI DUNG.
+    """
+    h, w, _ = o.shape
+    b = np.roll(np.roll(o, w//2, axis=1), h//2, axis=0)
+    wx = 0.5 - 0.5*np.cos(2*np.pi*np.arange(w)/w)
+    wy = 0.5 - 0.5*np.cos(2*np.pi*np.arange(h)/h)
+    m = (wx[None, :]*wy[:, None])[:, :, None]
+    return (o*m + b*(1-m)).clip(0, 255)
+
+
 def tu_vuong(duong):
     """Ô vuông lặp liền mạch → hình thoi 2:1, bằng ÁNH XẠ NGƯỢC (không xoay ảnh).
 
@@ -83,7 +99,7 @@ def tu_vuong(duong):
     v0 = (yy + 0.5) / ISO_H - (xx + 0.5) / ISO_W + 0.5
     for i, ten in enumerate(O_VUONG):
         c, r = i % 2, i // 2
-        o = np.asarray(im.crop((c*cw, r*ch, (c+1)*cw, (r+1)*ch))).astype('uint8')
+        o = lam_lap(np.asarray(im.crop((c*cw, r*ch, (c+1)*cw, (r+1)*ch))).astype(float)).astype('uint8')
         for k in range(4):
             du, dv = (k % 2) * 0.5, (k // 2) * 0.5      # bốn biến thể = bốn gốc lấy mẫu khác nhau
             su = np.mod(u0 + du, 1.0) * cw

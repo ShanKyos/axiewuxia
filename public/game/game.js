@@ -1082,11 +1082,10 @@ const MOB_IMGS = {};
 
 // Nền bản đồ vẽ tay (thủy mặc sơn thủy) — nạp lười, fallback màu phẳng khi chưa tải xong
 const MAP_BG_SRC = {
-  daohoa:'assets/maps/bg_daohoa.jpg', tuongduong:'assets/maps/bg_tuongduong.jpg',
+  daohoa:'assets/maps/bg_daohoa.jpg',
   ngoai:'assets/maps/bg_ngoai.jpg', chungnam:'assets/maps/bg_chungnam.jpg',
   comoc:'assets/maps/bg_comoc.jpg', tuyettinh:'assets/maps/bg_tuyettinh.jpg',
   mongco:'assets/maps/bg_mongco.jpg', nhanmon:'assets/maps/bg_nhanmon.jpg',
-  quangtruong:'assets/maps/bg_quangtruong.jpg',
   corran:'assets/maps/bg_corran.jpg',
   // LOI MON CORRAN dung tranh CHI-DAT: chi ve mat dat, khong ve mot cai cay nao. Cay/da la vat
   // the ROI (`vatDat` trong canbang.js), engine xep lop theo truc y nen di ra SAU cay duoc -- thu
@@ -1105,7 +1104,12 @@ const MAP_BG_SRC = {
 // VẬT TO — công trình rời chèn vào tranh nền (xem `vatTo` trong data/canbang.js). Ảnh đã nướng
 // SẴN ĐÚNG CỠ trong thế giới nên drawImage vẽ 1:1, không co giãn lúc chạy.
 const MAP_VAT_SRC = {
-  loren: 'assets/maps/vat_loren.png',   // Lò Rèn — Quảng Trường Cũ
+  // Công trình Ardhaven — cắt từ tranh Gemini bằng tools/iso/cat_congtrinh.py. Ảnh đã ép về
+  // đúng phép chiếu 2:1 và thu theo số ô chân đế, nên drawImage vẽ 1:1 không co giãn.
+  ct_cong:  'assets/iso/ct_cong.png',    // cổng thành — dùng cho cả bốn hướng
+  ct_loren: 'assets/iso/ct_loren.png',   // Lò Rèn Hoàng Gia
+  ct_duoc:  'assets/iso/ct_duoc.png',    // Tiệm Thuốc
+  ct_vukhi: 'assets/iso/ct_vukhi.png',   // Vũ Khí Phường
 };
 const _vatIm = {};
 function vatTai(ten){
@@ -1651,14 +1655,14 @@ const TREE_IMGS = {};
 // Khoá của TREE_IMGS nay là TÊN SPRITE chứ không phải tên map, nên hai map dùng chung một hình
 // chỉ tải một lần.
 const TREE_SETS = {
-  daohoa:['daohoa'], tuongduong:['tuongduong'], ngoai:['ngoai'], chungnam:['chungnam'],
+  daohoa:['daohoa'], ardhaven:['ardhaven'], ngoai:['ngoai'], chungnam:['chungnam'],
   comoc:['comoc'], tuyettinh:['tuyettinh'], mongco:['mongco'], nhanmon:['nhanmon'],
   // Rẻo Rừng Corran và Lối Mòn Corran: rừng lá xanh trên nền cát sáng, nên lấy ba hình XANH
   // (hai lá kim + một lá rộng). Các hình còn lại ngả lam/chàm, đặt lên nền cát là lạc tông.
   // Trước bản này hai map ấy KHÔNG có trong danh sách nên rơi xuống nhánh vẽ vector — đúng thứ
   // Luật 3 cấm, và là lý do hàng cây trong ảnh chụp làn nhìn ra mấy cái kẹo mút.
-  corran:['tuongduong','mongco','daohoa'],
-  loimon:['tuongduong','mongco','daohoa'],
+  corran:['ardhaven','mongco','daohoa'],
+  loimon:['ardhaven','mongco','daohoa'],
 };
 function treeSpriteOf(ten){
   if (TREE_IMGS[ten]) return TREE_IMGS[ten];
@@ -1689,6 +1693,9 @@ for (let i = 1; i <= 3; i++){ const im = new Image(); im.src = 'assets/trees/roc
 // (1,1 MB trên đĩa) và khoảng 70 lần drawImage mỗi khung — cùng tinh thần với việc chỉ vẽ MẢNH
 // tranh nền đang lọt khung ở drawWorld.
 const ISO_W = 256, ISO_H = 128;              // hình thoi 2:1 — đúng cỡ nướng ra, vẽ 1:1
+// Hai vai, không phải hai chất liệu: `ISO_CO` là mặt NỀN (chỗ không ai giẫm), `ISO_DAT` là mặt
+// ĐƯỜNG (chỗ giẫm nhiều). Ở map hoang dã hai vai đó là cỏ và đất; trong thành chúng là đá phiến
+// và sỏi đường. Map nào muốn đổi thì khai `isoCo`/`isoDat` trong MAPS — xem MAPS.ardhaven.
 const ISO_CO  = ['nen_co1', 'nen_co2', 'nen_co3'];
 const ISO_DAT = ['nen_dat1', 'nen_dat2'];
 const ISO_VET = ['vet_dat1', 'vet_dat2'];
@@ -1733,6 +1740,7 @@ function sanIsoDung(){
   if (!md.sanIso || !md.diTrong) return;
   const cot = Math.ceil(MAP.w / ISO_W) + 3, hang = Math.ceil(MAP.h / (ISO_H/2)) + 3;
   const o = new Uint8Array(cot * hang);
+  const dsDat = md.isoDat || ISO_DAT, dsCo = md.isoCo || ISO_CO;
   const duong = (md.isoDuong && md.isoDuong.length) ? md.isoDuong : null;
   for (let j = 0; j < hang; j++){
     for (let i = 0; i < cot; i++){
@@ -1760,8 +1768,8 @@ function sanIsoDung(){
         : d > 190 + (_isoNhieu(cx/460, cy/460) - 0.5) * 190
                   + (_isoNhieu(cx/150, cy/150) - 0.5) * 95;
       const k = ((i*73856093) ^ (j*19349663)) >>> 0;
-      o[j*cot + i] = laDat ? (1 + k % ISO_DAT.length)
-                           : (1 + ISO_DAT.length + k % ISO_CO.length);
+      o[j*cot + i] = laDat ? (1 + k % dsDat.length)
+                           : (1 + dsDat.length + k % dsCo.length);
     }
   }
   // ⚠ VỆT ĐẤT — thiếu cái này thì ranh giới cỏ/đường mòn ra một dãy BẬC THANG hình thoi, thấy
@@ -1784,7 +1792,7 @@ function sanIsoDung(){
     vet.push({ x, y, i: (boc()*ISO_VET.length)|0 });
     dat++;
   }
-  _sanIso = { cot, hang, o, vet };
+  _sanIso = { cot, hang, o, vet, dsDat, dsCo };
 }
 // Vẽ phần sàn đang lọt khung nhìn. Trả về false nếu map này không lát viên, để nhánh tranh nền
 // một tấm chạy tiếp như cũ.
@@ -1798,7 +1806,8 @@ function veSanIso(){
   for (let j = j0; j <= j1; j++){
     for (let i = i0; i <= i1; i++){
       const v = o[j*cot + i]; if (!v) continue;
-      const im = isoImg(v <= ISO_DAT.length ? ISO_DAT[v-1] : ISO_CO[v - 1 - ISO_DAT.length]);
+      const im = isoImg(v <= _sanIso.dsDat.length ? _sanIso.dsDat[v-1]
+                                                  : _sanIso.dsCo[v - 1 - _sanIso.dsDat.length]);
       if (!im) continue;
       ctx.drawImage(im, (i-1)*ISO_W + ((j & 1) ? ISO_W/2 : 0) - ISO_W/2, (j-1)*(ISO_H/2) - ISO_H/2);
     }
@@ -1936,42 +1945,47 @@ let zoneBanner = null; // { text, sub, color, t }
 // Bố cục kiểu Lorencia (MU Online): quảng trường vuông rộng ở giữa, tường bao 4 mặt, MỖI MẶT MỘT
 // CỔNG (Bắc/Nam/Đông/Tây) toả ra 4 hướng thế giới — thay cho thành hộp kín chỉ có 1 cổng Nam cũ,
 // vốn khiến toàn bộ NPC phải chen chúc trong một góc nhỏ.
-const CITY_WALL = { map:'tuongduong', x1:700, y1:560, x2:1900, y2:1250, t:24,
-  gateX:1300, gateY:905, gateW:132 };   // gateX/gateY: tâm cổng ngang & dọc · gateW: bề rộng lối mở
 const GATES = [
-  // Cổng đặt NGAY NGOÀI mỗi lối mở trên tường — bước ra khỏi thành là thấy cổng, bấm G để đi.
-  { map:'tuongduong', x:1300, y:1400, to:'ngoai',      name:'Cổng Nam → Beast Herd Camp' },
-  { map:'tuongduong', x:1300, y:450,  to:'tuyettinh',  name:'Cổng Bắc → Bird Tribe Heights' },
-  { map:'tuongduong', x:580,  y:905,  to:'daohoa',     name:'Cổng Tây → Plant Tribe Glade' },
-  { map:'tuongduong', x:2020, y:905,  to:'chungnam',   name:'Cổng Đông → Werebear Woods' },
-  { map:'ngoai',      x:1300, y:240,  to:'tuongduong', name:'Qua Cổng Thành → Sapidae Chiefdom' },
-  // Quảng Trường Cũ — thị trấn KHỞI ĐẦU. Nhân vật mới hiện ra giữa sân, đi lên vòm cổng phía
-  // bắc là ra Plant Tribe Glade mà đánh quái. Chọn Plant Tribe Glade chứ không phải Outskirts vì
-  // Outskirts để `min:10` — cho một nhân vật cấp 1 bước thẳng ra đó là ném nó vào bãi cấp 14.
-  { map:'quangtruong', x:1600, y:715, to:'daohoa',      anGiau:true, name:'Cổng Bắc → Plant Tribe Glade' },
-  { map:'daohoa',      x:300,  y:260, to:'quangtruong', name:'Cổng Quảng Trường Cũ' },
+  // ── BỐN CỔNG ARDHAVEN ─────────────────────────────────────────────────────
+  // ⚠ BỐN CỘT MỐC NÀY LÙI VÀO TRONG, KHÔNG ĐỨNG NGAY MIỆNG VẤU CỔNG — và đó là một RÀNG BUỘC
+  // ĐO ĐƯỢC, không phải gu thẩm mỹ. `test_domap` chặn ĐƯỜNG KÍNH (khoảng cách xa nhất giữa hai
+  // điểm nội dung) ở 80,7% đường chéo map. Với khung 2:1, bề ngang chiếm 89,4% đường chéo — tức
+  // là BẤT KỲ map tỉ lệ 2:1 nào có nội dung trải hết bề ngang đều trượt. Đặt hai cổng đông/tây
+  // ở x 480 và 5920 cho khẩu độ 5440px, dưới trần 5777px.
+  //
+  // Điểm hiện ra khi đi ngược về (`spawnFrom` của MAPS.ardhaven) nằm NGOÀI cột mốc, tức trong
+  // lòng vấu cổng: `test_noimap` đòi nó cách mép map dưới 400px. Đứng đó bấm G là quay lại —
+  // cổng chỉ kích hoạt bằng phím G (xem updateGate), đứng gần không tự dịch chuyển, nên không
+  // có chuyện vừa sang đã bị hất ngược.
+  { map:'ardhaven', x:3200, y:2910, to:'ngoai',      name:'Cổng Nam → Beast Herd Camp' },
+  { map:'ardhaven', x:3200, y:290,  to:'tuyettinh',  name:'Cổng Bắc → Bird Tribe Heights' },
+  { map:'ardhaven', x:480,  y:1600, to:'daohoa',     name:'Cổng Tây → Plant Tribe Glade' },
+  { map:'ardhaven', x:5920, y:1600, to:'chungnam',   name:'Cổng Đông → Werebear Woods' },
+  { map:'ngoai',      x:1300, y:240,  to:'ardhaven', name:'Qua Cổng Thành → Sapidae Chiefdom' },
   // ⚠ Ba cổng thành Bắc/Tây/Đông VỐN LÀ MỘT CHIỀU: đi sang Plant Tribe Glade / Werebear Woods /
   // Bird Tribe Heights rồi không có cổng nào về, phải mở bảng Bản Đồ mà dịch chuyển. Chỉ cổng Nam
   // (Outskirts) có đường về. Nay bù đủ, đặt cạnh chính điểm thả của từng vùng — đúng khuôn mà
   // Outskirts đang dùng: bước ra khỏi chỗ vừa tới là thấy cổng về.
-  { map:'daohoa',    x:295, y:555,  to:'tuongduong', name:'Lối Về Thành → Sapidae Chiefdom' },
-  { map:'chungnam',  x:270, y:1575, to:'tuongduong', name:'Lối Về Thành → Sapidae Chiefdom' },
-  { map:'tuyettinh', x:216, y:999,  to:'tuongduong', name:'Lối Về Thành → Sapidae Chiefdom' },
-  // Tầng Sâu: giếng đá trong sân thành, góc tây-bắc quảng trường (cách Thợ Rèn ~800px).
+  { map:'daohoa',    x:295, y:555,  to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
+  { map:'chungnam',  x:270, y:1575, to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
+  { map:'tuyettinh', x:216, y:999,  to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
+  // Tầng Sâu: miệng giếng ở góc tây-nam Quảng Trường Atia, cách điểm thả ~750px. Rơi vào khoảng
+  // trống giữa hai dãy nhà (x 2720-3680) nên không đè khối nào. Bản đầu đặt ở (2820,2150) —
+  // cách Trinh Sát Wren đúng 71px, tức là đứng nói chuyện với anh ta là lọt vào vòng bắt cổng.
   // KHÔNG dùng `to` — nó không dẫn tới một map cố định mà mở một lượt xuống tầng, xem deepStart().
-  { map:'tuongduong', x:1080, y:620,  deep:true, portal:true, label:'Tầng Sâu',
+  { map:'ardhaven', x:2820, y:2500, deep:true, portal:true, label:'Tầng Sâu',
     name:'Giếng Vực Sâu — xuống Tầng Sâu (cấp 20+)' },
   // Cửa ra của Tầng Sâu. Trước đây Tầng Sâu mượn địa hình pb_daohoa nên dùng ké cổng "Xuất Môn"
   // của phòng đó; gỡ bảy phó bản là mất luôn cửa ra, người chơi xuống rồi không có cổng nào để
   // đi lên. Phím G ở đây chạy nhánh RÚT LUI (deepLeave) chứ không travelTo — `to` chỉ là chỗ về.
-  { map:'deep', x:1300, y:1660, to:'tuongduong', portal:true, label:'Xuất Môn',
+  { map:'deep', x:1300, y:1660, to:'ardhaven', portal:true, label:'Xuất Môn',
     name:'Rời Tầng Sâu → Sapidae Chiefdom' },
 
   // ── B1 · NỐI MAP BẰNG RÌA ────────────────────────────────────────────────
   // ⚠ ĐÂY LÀ MỘT BẢN VÁ LỖI, KHÔNG CHỈ LÀ TÍNH NĂNG. Trước bản này, Bug Tribe Tunnels (cấp 40),
   // Reptile Sunstone Flats (80) và Dusk Marsh (100) KHÔNG CÓ LỐI VÀO NÀO cho một nhân vật mới:
   //   · GATES chỉ có bốn cổng thành + cổng Outskirts về thành ⇒ đi bộ chỉ tới được
-  //     tuongduong · daohoa · ngoai · chungnam · tuyettinh
+  //     ardhaven · daohoa · ngoai · chungnam · tuyettinh
   //   · nút "Dịch Chuyển" trong bảng Bản Đồ chỉ hiện khi `player.wpUnlocked[id]`, mà cờ đó chỉ
   //     bật KHI ĐÃ TỚI map đó (travelTo). Chưa tới được thì không bao giờ mở.
   // Tức là ba vùng đó là nội dung chết. `travelTo()` gọi thẳng từ console thì chạy — đó chính là
@@ -2038,34 +2052,6 @@ const GATES = [
   { map:'nhanmon',   x:1668, y:150,  to:'mongco',   name:'Lối Bắc → Reptile Sunstone Flats' },
 ];
 let nearGate = null;
-function cityWallRects(){
-  const w = CITY_WALL, h = w.gateW/2;
-  const gx1 = w.gateX - h, gx2 = w.gateX + h;   // lối mở cổng Bắc & Nam
-  const gy1 = w.gateY - h, gy2 = w.gateY + h;   // lối mở cổng Tây & Đông
-  return [
-    { x:w.x1-w.t, y:w.y1-w.t, wd:gx1-(w.x1-w.t), ht:w.t },              // bắc-trái (ôm cả góc)
-    { x:gx2,      y:w.y1-w.t, wd:(w.x2+w.t)-gx2, ht:w.t },              // bắc-phải
-    { x:w.x1-w.t, y:w.y2,     wd:gx1-(w.x1-w.t), ht:w.t },              // nam-trái
-    { x:gx2,      y:w.y2,     wd:(w.x2+w.t)-gx2, ht:w.t },              // nam-phải
-    { x:w.x1-w.t, y:w.y1,     wd:w.t, ht:gy1-w.y1 },                    // tây-trên
-    { x:w.x1-w.t, y:gy2,      wd:w.t, ht:w.y2-gy2 },                    // tây-dưới
-    { x:w.x2,     y:w.y1,     wd:w.t, ht:gy1-w.y1 },                    // đông-trên
-    { x:w.x2,     y:gy2,      wd:w.t, ht:w.y2-gy2 },                    // đông-dưới
-  ];
-}
-function collideCityWalls(){
-  if (!player || curMap !== CITY_WALL.map) return;
-  const r = 13;
-  for (const rc of cityWallRects()){
-    const cx = clamp(player.x, rc.x, rc.x+rc.wd), cy = clamp(player.y, rc.y, rc.y+rc.ht);
-    const d = dist(player.x, player.y, cx, cy);
-    if (d < r){
-      if (d === 0){ player.y = rc.y - r; continue; }
-      player.x = cx + (player.x-cx)/d*r;
-      player.y = cy + (player.y-cy)/d*r;
-    }
-  }
-}
 // ═══════════ GDD Đợt 2 — A: ĐỊA HÌNH CẢN ĐƯỜNG + ẢI CẤP ═══════════
 // Chỉ chặn địa hình LỚN (hồ/sông/núi/tường), đường đi để rộng; rect {x,y,wd,ht} hoặc ellipse {x,y,rx,ry}
 // MAP_OBSTACLES đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
@@ -2780,147 +2766,6 @@ function updateGate(){
     if (g.map !== curMap) continue;
     if (dist(player.x, player.y, g.x, g.y) < 90){ nearGate = g; break; }
   }
-}
-function drawCityWalls(){
-  for (const rc of cityWallRects()){
-    ctx.fillStyle = '#8a7a5e'; ctx.fillRect(rc.x, rc.y, rc.wd, rc.ht);
-    ctx.fillStyle = '#6e6046'; ctx.fillRect(rc.x, rc.y + rc.ht - 6, rc.wd, 6);
-    ctx.strokeStyle = 'rgba(60,48,30,.5)'; ctx.lineWidth = 1.5;
-    ctx.strokeRect(rc.x+.5, rc.y+.5, rc.wd-1, rc.ht-1);
-    ctx.strokeStyle = 'rgba(60,48,30,.28)'; ctx.lineWidth = 1;
-    for (let bx = rc.x + 22; bx < rc.x + rc.wd; bx += 44){
-      ctx.beginPath(); ctx.moveTo(bx, rc.y+2); ctx.lineTo(bx, rc.y + rc.ht - 2); ctx.stroke();
-    }
-  }
-}
-// ═══════════ QUẢNG TRƯỜNG LUNARIS — bố cục Lorencia + không khí ma mị ═══════════
-// Đài phun nước giữa quảng trường, lối lát đá toả ra 4 cổng, trụ đèn + cây khô, quạ đậu trên tường.
-function drawCityPlaza(){
-  const w = CITY_WALL, cx = w.gateX, cy = w.gateY, t = performance.now()/1000;
-  // nền quảng trường lát đá
-  ctx.fillStyle = 'rgba(96,88,74,.28)';
-  ctx.beginPath(); ctx.ellipse(cx, cy, 300, 210, 0, 0, 7); ctx.fill();
-  ctx.strokeStyle = 'rgba(70,62,50,.34)'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.ellipse(cx, cy, 300, 210, 0, 0, 7); ctx.stroke();
-  // 4 lối lát đá chạy thẳng ra 4 cổng
-  ctx.strokeStyle = 'rgba(112,102,84,.32)'; ctx.lineWidth = 74;
-  ctx.beginPath();
-  ctx.moveTo(cx, w.y1); ctx.lineTo(cx, w.y2);
-  ctx.moveTo(w.x1, cy); ctx.lineTo(w.x2, cy);
-  ctx.stroke();
-  ctx.strokeStyle = 'rgba(60,54,44,.22)'; ctx.lineWidth = 1.4;   // mạch đá
-  for (let i = -4; i <= 4; i++){
-    ctx.beginPath(); ctx.moveTo(cx + i*34, w.y1); ctx.lineTo(cx + i*34, w.y2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(w.x1, cy + i*34); ctx.lineTo(w.x2, cy + i*34); ctx.stroke();
-  }
-  // ── đài phun nước trung tâm ──
-  ctx.fillStyle = '#6a6152';
-  ctx.beginPath(); ctx.ellipse(cx, cy, 74, 44, 0, 0, 7); ctx.fill();
-  ctx.fillStyle = '#4e4738';
-  ctx.beginPath(); ctx.ellipse(cx, cy, 64, 36, 0, 0, 7); ctx.fill();
-  const wg = ctx.createRadialGradient(cx, cy-6, 3, cx, cy, 60);   // mặt nước ánh lam ma mị
-  wg.addColorStop(0, 'rgba(150,210,255,.62)'); wg.addColorStop(1, 'rgba(40,80,130,.55)');
-  ctx.fillStyle = wg; ctx.beginPath(); ctx.ellipse(cx, cy, 58, 31, 0, 0, 7); ctx.fill();
-  for (let i = 0; i < 3; i++){                                     // gợn sóng lan
-    const k = ((t/2.4) + i/3) % 1;
-    ctx.strokeStyle = `rgba(190,235,255,${(1-k)*0.34})`; ctx.lineWidth = 1.6;
-    ctx.beginPath(); ctx.ellipse(cx, cy, 10 + k*46, 6 + k*25, 0, 0, 7); ctx.stroke();
-  }
-  ctx.fillStyle = '#78705e';                                       // trụ đá giữa
-  ctx.beginPath(); ctx.moveTo(cx-13, cy-4); ctx.lineTo(cx+13, cy-4);
-  ctx.lineTo(cx+8, cy-52); ctx.lineTo(cx-8, cy-52); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#8c8474';
-  ctx.beginPath(); ctx.ellipse(cx, cy-54, 22, 8, 0, 0, 7); ctx.fill();
-  const og = ctx.createRadialGradient(cx, cy-74, 2, cx, cy-74, 26); // quả cầu linh lực trên đỉnh
-  og.addColorStop(0, '#dff2ff'); og.addColorStop(0.45, 'rgba(122,190,255,.75)');
-  og.addColorStop(1, 'rgba(90,150,230,0)');
-  ctx.fillStyle = og; ctx.beginPath(); ctx.arc(cx, cy-74, 26 + Math.sin(t*1.6)*2.5, 0, 7); ctx.fill();
-  for (let i = 0; i < 4; i++){                                     // nước chảy xuống 4 phía
-    const a = i*Math.PI/2 + Math.PI/4;
-    ctx.strokeStyle = 'rgba(200,240,255,.42)'; ctx.lineWidth = 2.4;
-    ctx.beginPath(); ctx.moveTo(cx + Math.cos(a)*16, cy-52);
-    ctx.quadraticCurveTo(cx + Math.cos(a)*34, cy-28, cx + Math.cos(a)*44, cy - 4 + Math.sin(a)*8); ctx.stroke();
-  }
-  // ── trụ đèn 4 góc quảng trường: quầng sáng ấm nhấp nháy ──
-  for (const [lx, ly] of [[cx-250, cy-150],[cx+250, cy-150],[cx-250, cy+150],[cx+250, cy+150]]){
-    ctx.fillStyle = '#3a3226'; ctx.fillRect(lx-3, ly-46, 6, 46);
-    ctx.fillStyle = '#2e2a20';
-    ctx.beginPath(); ctx.ellipse(lx, ly+2, 10, 4, 0, 0, 7); ctx.fill();
-    const fl = 0.78 + Math.sin(t*7 + lx*0.03)*0.16;                 // ngọn lửa lay động
-    const lg = ctx.createRadialGradient(lx, ly-54, 1, lx, ly-54, 46*fl);
-    lg.addColorStop(0, `rgba(255,214,140,${0.62*fl})`);
-    lg.addColorStop(1, 'rgba(255,170,70,0)');
-    ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(lx, ly-54, 46*fl, 0, 7); ctx.fill();
-    ctx.fillStyle = '#ffca6a'; ctx.beginPath(); ctx.ellipse(lx, ly-54, 5, 7*fl, 0, 0, 7); ctx.fill();
-  }
-  // ── cây khô trơ cành cạnh quảng trường (chất u ám) ──
-  drawDeadTree(cx - 330, cy + 190, t);
-  drawDeadTree(cx + 342, cy - 176, t + 2);
-  // ── quạ đậu trên tường bắc, thỉnh thoảng vỗ cánh ──
-  for (let i = 0; i < 5; i++){
-    const bx = w.x1 + 150 + i*230, by = w.y1 - 30;
-    const flap = Math.sin(t*2.2 + i*1.7) > 0.93 ? 4 : 0;
-    ctx.fillStyle = '#17141f';
-    ctx.beginPath(); ctx.ellipse(bx, by - flap, 6, 4.6, 0, 0, 7); ctx.fill();
-    ctx.beginPath(); ctx.arc(bx + 5, by - 4 - flap, 3, 0, 7); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(bx+8, by-4-flap); ctx.lineTo(bx+13, by-3-flap); ctx.lineTo(bx+8, by-2-flap); ctx.closePath(); ctx.fill();
-    if (flap){ ctx.beginPath(); ctx.ellipse(bx-3, by-8, 7, 3, -0.5, 0, 7); ctx.fill(); }
-  }
-}
-function drawDeadTree(x, y, t){
-  const sway = Math.sin(t*0.5)*0.02;
-  ctx.save(); ctx.translate(x, y); ctx.rotate(sway);
-  ctx.fillStyle = 'rgba(0,0,0,.22)';
-  ctx.beginPath(); ctx.ellipse(0, 2, 26, 8, 0, 0, 7); ctx.fill();
-  ctx.strokeStyle = '#2f2822'; ctx.lineCap = 'round';
-  ctx.lineWidth = 11; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-3, -74); ctx.stroke();
-  const limb = (bx, by, ex, ey, w2) => { ctx.lineWidth = w2; ctx.beginPath();
-    ctx.moveTo(bx, by); ctx.quadraticCurveTo((bx+ex)/2 + 6, (by+ey)/2, ex, ey); ctx.stroke(); };
-  limb(-2, -50, -40, -84, 6); limb(-2, -58, 34, -92, 6); limb(-3, -70, -22, -110, 4.5);
-  limb(-3, -72, 20, -116, 4.5); limb(-30, -76, -48, -100, 3); limb(26, -84, 44, -108, 3);
-  ctx.restore();
-}
-// Lớp sương mù + tàn lửa trôi — vẽ SAU cùng để phủ lên cả NPC/người chơi, tạo chiều sâu u ám.
-// Nhuộm tông chiều tà cho riêng Sapidae Chiefdom: art nền vốn là ban ngày trời xanh rực rỡ, không hợp
-// không khí ma mị — phủ lớp lam-tím tối + vignette để ánh đèn, sương và tàn lửa hiện rõ.
-function drawCityMood(){
-  const vx = camera.x, vy = camera.y;
-  ctx.save();
-  ctx.globalCompositeOperation = 'multiply';
-  const g = ctx.createLinearGradient(vx, vy, vx, vy + H);
-  g.addColorStop(0, 'rgba(96,104,158,1)');    // trời ngả tím
-  g.addColorStop(0.55, 'rgba(124,120,152,1)');
-  g.addColorStop(1, 'rgba(86,84,116,1)');     // mặt đất chìm bóng
-  ctx.fillStyle = g; ctx.fillRect(vx, vy, W, H);
-  ctx.globalCompositeOperation = 'source-over';
-  const vg = ctx.createRadialGradient(vx + W/2, vy + H/2, Math.min(W,H)*0.32,
-                                      vx + W/2, vy + H/2, Math.max(W,H)*0.78);
-  vg.addColorStop(0, 'rgba(10,8,20,0)'); vg.addColorStop(1, 'rgba(10,8,20,.52)');
-  ctx.fillStyle = vg; ctx.fillRect(vx, vy, W, H);
-  ctx.restore();
-}
-function drawCityHaze(){
-  const w = CITY_WALL, t = performance.now()/1000;
-  ctx.save();
-  for (let i = 0; i < 9; i++){                       // dải sương mỏng trôi ngang chậm sát mặt đất
-    const seed = i*97.3;
-    const fx = w.x1 - 200 + ((t*11 + seed*7) % (w.x2 - w.x1 + 520));
-    const fy = w.y1 + 90 + ((seed*13) % (w.y2 - w.y1 - 120));
-    const rw = 96 + (seed % 54), rh = 15 + (seed % 9);
-    const fg = ctx.createRadialGradient(fx, fy, 2, fx, fy, rw);
-    fg.addColorStop(0, 'rgba(172,186,220,.085)'); fg.addColorStop(1, 'rgba(172,186,220,0)');
-    ctx.fillStyle = fg; ctx.beginPath(); ctx.ellipse(fx, fy, rw, rh, 0, 0, 7); ctx.fill();
-  }
-  for (let i = 0; i < 22; i++){                      // tàn lửa/đom đóm linh hồn bay lên
-    const seed = i*53.7;
-    const life = ((t*0.32 + seed*0.11) % 1);
-    const ex = w.x1 + 60 + ((seed*29) % (w.x2 - w.x1 - 120)) + Math.sin(t*1.1 + seed)*12;
-    const ey = w.y2 - 40 - life*(w.y2 - w.y1 - 120);
-    const a = Math.sin(life*Math.PI) * 0.55;
-    ctx.fillStyle = `rgba(${i%3 ? '190,225,255' : '255,205,140'},${a})`;
-    ctx.beginPath(); ctx.arc(ex, ey, 1.6 + (seed % 2), 0, 7); ctx.fill();
-  }
-  ctx.restore();
 }
 function drawPortal(g){
   const t = performance.now()/1000;
@@ -4466,7 +4311,7 @@ function drawSkyOverlay(){ // screen-space — gọi sau vignette, trước zone
   }
   // ── Ánh sáng động (Gói C) ──
   if (_skyTick-- <= 0){ _skyTick = 30; fxRays(); }   // trời/thời tiết đổi theo phút, không theo khung
-  if (dk > 0.15 && curMap === 'tuongduong' && FXQ >= 1 && typeof camera !== 'undefined') drawLanternGlow(dk);
+  if (dk > 0.15 && curMap === 'ardhaven' && FXQ >= 1 && typeof camera !== 'undefined') drawLanternGlow(dk);
 }
 
 // Tầm mặc định theo loại chiêu, cho những chiêu không khai `tam` riêng. 'lop' = lấy tầm của lớp.
@@ -6272,7 +6117,7 @@ const TITLES = [
   { id:'honnguyen',name:'Bậc Thầy Resonance',  color:'#7ecbff', cond:p=>p.level>=96,            desc:'Đạt cấp 96', stats:{allPct:0.10}, vfx:'long' },
   // Điều kiện cũ đòi giai Thú Chiến cao nhất; hệ đó đã thay bằng Khế Ước Ragoon, nên nay đòi
   // sở hữu ít nhất một Chimera 5★ — cùng ý nghĩa "đã đi tới cuối một hệ thống".
-  { id:'tuongduong',name:'Người Giữ Lunacia', color:'#ffd76a', cond:p=>p.level>=96 && !!(p.chimera && Object.keys(p.chimera.co||{}).some(id=>CHI_MAP[id] && CHI_MAP[id].sao===5)), desc:'Đỉnh cao mọi hệ thống', stats:{allPct:0.15}, vfx:'long' },
+  { id:'ardhaven',name:'Người Giữ Lunacia', color:'#ffd76a', cond:p=>p.level>=96 && !!(p.chimera && Object.keys(p.chimera.co||{}).some(id=>CHI_MAP[id] && CHI_MAP[id].sao===5)), desc:'Đỉnh cao mọi hệ thống', stats:{allPct:0.15}, vfx:'long' },
 ];
 const TAN_QUYEN = ['Thượng','Trung','Hạ']; // Mảnh sách kỹ năng Huyết Ma Thôn Phệ (boss drop)
 
@@ -6359,6 +6204,18 @@ const BOSS_ARENA = { x: 2300, y: 500 };
 // Plant Tribe Glade dù người chơi đã đi xa. Đổi thành theo-từng-map (giống HORSE_ZONES bên dưới) —
 // thêm bãi Thảo Dược ở Beast Herd Camp (ngoai), ngay ngoài cổng thành, tránh xa các bãi quái.
 const HERB_SPOTS = {
+  // ARDHAVEN — luống thuốc men theo hai phố vòng bắc và nam, nằm trong khe 200px giữa các khối
+  // nhà nên không đè lên nhà nào và không lấn vào ngõ đi. Đây là vườn của Nhà Giả Kim và của bà
+  // bán hoa, hai người có nhà ở đúng hai dãy này — không phải cỏ dại mọc giữa phố.
+  //
+  // ⚠ TÁM CHỖ NÀY CÒN GÁNH MỘT VIỆC ĐO ĐƯỢC: `test_domap` đòi mật độ ≥1,30 điểm nội dung trên
+  // 1000 ô đi được, mà thành 6400×3200 có ~24900 ô ⇒ cần ≥32,4 điểm. 26 NPC + 5 cổng mới được
+  // 31. Thiếu đúng hai điểm — nên nếu gỡ mấy luống này thì phải bù bằng nội dung khác, đừng gỡ
+  // suông. `herbs:true` của MAPS.ardhaven là thứ làm chúng mọc thật (xem chỗ dùng ở buildWorld).
+  ardhaven: [
+    { x:840, y:380 },  { x:1500, y:380 },  { x:4240, y:380 },  { x:5560, y:380 },
+    { x:840, y:2830 }, { x:1500, y:2830 }, { x:4900, y:2830 }, { x:5560, y:2830 },
+  ],
   daohoa: [
     { x:620, y:560 }, { x:760, y:700 }, { x:950, y:640 }, { x:1080, y:820 },
     { x:900, y:1180 }, { x:1200, y:900 }, { x:1350, y:1050 }, { x:1550, y:950 },
@@ -7248,7 +7105,7 @@ function newPlayer(sectKey){
     jewels: { chucPhuc: 0, linhHon: 0, sinhMenh: 0, honDon: 0 }, // Tứ Châu (Track HT)
     baohap: {},                            // Box Kundun Ma Tôn Giáng Thế { tier: số lượng }
     truyna: { day:'', state:'none', map:null }, // Truy Nã Lệnh ngày
-    wpUnlocked: { tuongduong: true },      // Điểm dịch chuyển (bảng đồ M) — mở khoá khi đã từng đặt chân tới, xem travelTo()
+    wpUnlocked: { ardhaven: true },      // Điểm dịch chuyển (bảng đồ M) — mở khoá khi đã từng đặt chân tới, xem travelTo()
     lvPeak: 1,                             // cấp cao nhất từng đạt — cổng mở khoá bám vào đây
     resetCount: 0,                         // Tẩy Tủy (Reset kiểu MU) — số lần đã tẩy tủy, +2% Công/Mạng vĩnh viễn/lần
     mastery: {}, mpts: 0, mptsTotal: 0, mRespec: 0, // Đại Thành: {nút: điểm} · điểm chưa dùng · tổng đã nhận · số lần tẩy điểm
@@ -7262,6 +7119,7 @@ function newPlayer(sectKey){
     storySeen: {}, clues: [], storyFlags: {},  // Cốt truyện Năm Trụ Khoá
     charms: 0,                                 // Thiên Mệnh Phù (bảo hiểm rèn đồ)
     potions: 3, potionCd: 0,                   // P0: Bình Thuốc Đỏ — hồi 40% máu, cd 20s, tối đa 5 lọ
+    manaPots: 2, manaCd: 0,                    // Lọ Mana — hồi 40% Mana, cd 20s, tối đa 5 lọ
     buffAtkT: 0,                             // Rượu Hổ Cốt — +12% công lực có thời hạn
     loidonT: 0,                              // Bùa Chắn Sét — giảm 40% ST thiên lôi có thời hạn
     kho: [],                                 // Kho: chỗ cất trang bị cho khỏi đầy túi — xem KHO_SIZE
@@ -7289,7 +7147,7 @@ function newPlayer(sectKey){
   questIdx = 0; questProg = 0; questState = 'active'; // quest 1 auto-accepted
   sideStates = {};
   victory = false; dead = false;
-  curMap = 'quangtruong'; // tân thủ bắt đầu ở Quảng Trường Cũ — sân an toàn, không quái, ra Cổng Bắc là tới bãi săn
+  curMap = 'ardhaven';   // tân thủ bắt đầu giữa Ardhaven — thành an toàn, không quái, bốn cổng ra bốn hướng
   // Điểm thả LẤY TỪ chính map, đừng chép cứng. `x:1300, y:1040` ở trên là toạ độ của Sapidae
   // City đời cũ; đổi map khởi đầu mà quên dòng này thì nhân vật mới hiện ra ĐÚNG TRONG lòng
   // giếng giữa sân (đã dính một lần, bắt được bằng ảnh chụp chứ không phải bằng bài kiểm).
@@ -7558,6 +7416,12 @@ function loadGame(idx){
     if (!player.dhHate) player.dhHate = {};
     if (player.revengeKills == null) player.revengeKills = 0;
     if (player.potionCd == null) player.potionCd = 0;
+    // Lọ Mana TRƯỚC ĐÂY KHÔNG PHẢI MÓN MANG THEO — mua ở tiệm là hồi đầy ngay tại quầy, không
+    // có số nào để đếm. Save cũ vì thế không có hai khoá này. Cho 2 lọ chứ không cho 0: người
+    // chơi cũ đã trả tiền cho cái nút "hồi Mana" nhiều lần rồi, mở game lên thấy ô rỗng thì
+    // đọc ra như bị lấy mất đồ.
+    if (player.manaPots == null) player.manaPots = 2;
+    if (player.manaCd == null) player.manaCd = 0;
     if (player.buffAtkT == null) player.buffAtkT = 0;
     if (player.loidonT == null) player.loidonT = 0;
     // ═══ VỀ MÔ HÌNH MU — hoàn lại sáu hệ đã gỡ + Huyền Thiết ══════════════════════════
@@ -7731,7 +7595,16 @@ function loadGame(idx){
     migrateBoPham();                                      // gỡ hệ phẩm — xem hàm để biết vì sao không đền bù
     migrateBoQuan();                                      // ô Quần bị gỡ — đồ quần cũ thành đồ chân
     migrateBoLoi();                                       // hệ Lõi Nguyên Tố bị gỡ
-    if (d.curMap && MAPS[d.curMap]) curMap = d.curMap;
+    // Hai sân an toàn cũ đã bị XOÁ HẲN khỏi bảng MAPS: 'quangtruong' (Quảng Trường Cũ) và
+    // 'tuongduong' (thành khung 2600×1900, đổi khoá thành 'ardhaven'). Save đang đứng ở một
+    // trong hai chỗ đó phải được DẪN VỀ Ardhaven bằng tên. Không có dòng này thì nhánh
+    // `MAPS[d.curMap]` chỉ đơn giản không nhận ra map rồi bỏ qua — người chơi vẫn về được
+    // Ardhaven, nhưng vì một sự tình cờ chứ không vì một quyết định, và lần sau đổi tên map
+    // khác thì cái tình cờ ấy không lặp lại. Save chỉ giữ tên map, không giữ toạ độ, nên
+    // không có gì phải quy đổi từ khung 2600×1900 sang 6400×3200.
+    const MAP_DOI_TEN = { quangtruong:'ardhaven', tuongduong:'ardhaven' };
+    const _mSave = MAP_DOI_TEN[d.curMap] || d.curMap;
+    if (_mSave && MAPS[_mSave]) curMap = _mSave;
     // Migrate trang bị cũ (10 ô) sang hệ 12 ô GDD
     const SLOT_MIGRATE = { weapon:'vukhi', helm:'non', armor:'ao', bracer:'tay', belt:null,
                            boots:'chan', neck:'daychuyen', ring:'nhan1', jade:'nhan2' };
@@ -8168,15 +8041,6 @@ function buildWorld(){
   for (let i = 0; i < 14; i++) mists.push({ x:rnd(0,VW), y:rnd(0,VH), r:rnd(120,300), v:rnd(4,14), a:rnd(0.04,0.1) });
   // giữ khu làng & suối trống
   if (md.village) decor = decor.filter(d => dist(d.x,d.y,NPC.x,NPC.y) > 160 && dist(d.x,d.y,SPRING.x,SPRING.y) > 120);
-  // Thành: chừa trống quảng trường + 4 lối lát đá ra cổng — trước đây cây rải ngẫu nhiên mọc đè cả
-  // lên đài phun nước giữa quảng trường và chắn ngang lối đi ra cổng.
-  if (md.city){
-    const w = CITY_WALL, gh = w.gateW/2 + 30;
-    decor = decor.filter(d =>
-      dist(d.x, d.y, w.gateX, w.gateY) > 330 &&                                   // lòng quảng trường
-      !(Math.abs(d.x - w.gateX) < gh && d.y > w.y1 - 60 && d.y < w.y2 + 60) &&     // lối Bắc-Nam
-      !(Math.abs(d.y - w.gateY) < gh && d.x > w.x1 - 60 && d.x < w.x2 + 60));      // lối Tây-Đông
-  }
   decor = decor.filter(d => !NPCS.some(n => n.map === curMap && dist(d.x,d.y,n.x,n.y) < 150));
   // ── Cây/đá nay CHẶN ĐƯỜNG (xem obstaclesOf), nên phải dọn khỏi mọi điểm nội dung. ──
   // Trước bản này chúng rải hoàn toàn ngẫu nhiên và chỉ né NPC/làng/thành — vô hại khi không
@@ -8540,9 +8404,8 @@ function saveSettings(){ try { localStorage.setItem('vlcm_settings', JSON.string
 // files." Dự án đang dự vibeathon nên hợp lệ; ra ngoài khuôn khổ đó thì phải gỡ bộ nhạc này
 // (và cả 6 atlas hiệu ứng cùng 90 tệp sfx_*, vốn cũng từ kho này).
 const BGM_TRACKS = {
-  quangtruong:'bgm_tuongduong',  // dùng chung nhạc thành với Sapidae Chiefdom — cùng một chất phố
   daohoa:     'bgm_daohoa',      // pve_1 — đảo mở đầu, sáng và yên
-  tuongduong: 'bgm_tuongduong',  // home  — nhạc sảnh chính, hợp thành thị
+  ardhaven: 'bgm_tuongduong',  // home  — nhạc sảnh chính, hợp thành thị
   ngoai:      'bgm_ngoai',       // pve_2
   chungnam:   'bgm_chungnam',    // pve_3
   corran:     'bgm_chungnam',    // dùng chung nhạc Werebear Woods — cùng rẻo rừng
@@ -8629,6 +8492,10 @@ window.addEventListener('keydown', e=>{
   if (e.target && e.target.tagName === 'INPUT') return; // đang gõ console playtest
   keys[e.key.toLowerCase()] = true;
   if (e.key === ' ') { e.preventDefault(); doSpace(); }
+  // ENTER Ở LÒ HỖN ĐỘN. Cả cái nghi lễ máy yêu tinh nằm ở chỗ này: người chơi nhìn con yêu
+  // tinh tung đồ rồi tự chọn lúc bấm. Bắt phím chỉ khi bảng lò đang mở, nên không giẫm lên
+  // ô gõ nào khác (ô nhập đã thoát ở dòng đầu hàm).
+  if (e.key === 'Enter' && typeof loMo === 'function' && loMo()){ e.preventDefault(); window.doChaos(); return; }
   if (e.key >= '1' && e.key <= '4' && player){ // taskbar 4 ô kỹ năng (chính/phụ/buff/tuyệt chiêu)
     const id = player.skillBar[+e.key - 1];
     if (id) castSkill(id); else togglePanel('skill');
@@ -8657,6 +8524,7 @@ window.addEventListener('keydown', e=>{
   if (e.key.toLowerCase()==='z' && player && !dead) toggleAuto();
   if (e.key === '`' && window.TEST_MODE){ e.preventDefault(); window.toggleCheatConsole(); }
   if (e.key.toLowerCase()==='r') usePotion();
+  if (e.key.toLowerCase()==='t') useManaPot();   // T kề R trên bàn phím — hai ô thuốc kề nhau trên thanh
   if (e.key.toLowerCase()==='g' && nearGate && player && !dead){
     if (nearGate.deep) deepStart();
     // Đang trong Tầng Sâu mà đi cổng thoát: coi như RÚT LUI, đừng để mất trắng kho tạm chỉ vì
@@ -8664,7 +8532,10 @@ window.addEventListener('keydown', e=>{
     else if (DEEP) window.deepLeave();
     else travelTo(nearGate.to, curMap);
   }
-  if (e.key === 'Escape'){ if (window.ngocCam) window.buongNgoc(); else closePanels(); }
+  // ⚠ ESC ĐÓNG MỘT CỬA, KHÔNG DỌN CẢ BÀN. Trước đây một phát ESC quét sạch mọi bảng đang mở,
+  // nên mở Túi Đồ lên xem giữa lúc đang dở bảng Kỹ Năng thì bấm ESC là mất cả hai. Nay đóng
+  // đúng cửa MỞ SAU CÙNG (đỉnh chồng `_bangChong`), muốn dọn sạch thì bấm tiếp.
+  if (e.key === 'Escape'){ if (window.ngocCam) window.buongNgoc(); else dongBangTrenCung(); }
 });
 window.addEventListener('keyup', e=> keys[e.key.toLowerCase()] = false);
 // Giữ ALT: hiện nhãn tên MỌI món dưới đất, không chỉ món gần. Nhả ra là về như cũ.
@@ -9769,6 +9640,26 @@ function motifBurst(x, y, ang){
 function spawnSlash(x, y, face, s, color, glow){
   addEffect({ type:'slash', x, y, face, s: s || 110, color, glow });
 }
+// Lọ Mana — hồi 40% Mana tối đa, cooldown 20s (phím T). Cùng khuôn với Bình Thuốc Đỏ ngay
+// bên dưới: cùng trần 5 lọ, cùng nhịp hồi, cùng cách báo khi hết hoặc khi còn chờ. Hai món
+// đứng cạnh nhau trên thanh chiến đấu thì phải cư xử giống nhau, nếu không người chơi phải
+// học hai luật cho hai ô nhìn y hệt nhau.
+function useManaPot(){
+  if (!player || dead) return;
+  if ((player.manaPots || 0) <= 0){ addFloat(player.x, player.y-40, 'Hết Lọ Mana — mua ở Nhà Giả Kim!', '#8a8a8a', 12); AudioSys.sfx('ui', 0.4); return; }
+  if ((player.manaCd || 0) > 0){ addFloat(player.x, player.y-40, `Lọ Mana còn hồi ${Math.ceil(player.manaCd)}s`, '#8a8a8a', 11); return; }
+  if (player.qi >= player.maxQi){ addFloat(player.x, player.y-40, 'Mana đã đầy!', '#8a8a8a', 11); return; }
+  player.manaPots--; player.manaCd = 20;
+  const hoi = Math.round(player.maxQi * 0.4);
+  player.qi = Math.min(player.maxQi, player.qi + hoi);
+  addFloat(player.x, player.y-40, `+${hoi} Mana`, '#7ecbff', 16);
+  addEffect({ type:'ring', x:player.x, y:player.y, r:46, color:'#7ecbff' });
+  for (let i=0;i<5;i++) addEffect({ type:'ink', x:player.x, y:player.y-10, vx:rnd(-40,40), vy:rnd(-70,-20), color:'#7ecbff' });
+  AudioSys.sfx('quest', 0.45);
+  saveGame();
+}
+window.useManaPot = useManaPot;
+
 // P0: Bình Thuốc Đỏ — hồi 40% max HP, cooldown 20s (phím R)
 function usePotion(){
   if (!player || dead) return;
@@ -9859,6 +9750,8 @@ function hintCandidates(){
   // Chơi thử: 215 quái, 19 món trong túi, 12/12 ô trang bị TRỐNG; chết ở cấp 2 với 3 bình còn nguyên.
   if (player.potions > 0 && player.hp < player.maxHp * 0.4 && player.combatT > 0)
     out.push({ id:'uongthuoc', pri:0, txt:`🧪 Máu thấp — bấm <b>R</b> uống Bình Thuốc (còn ${player.potions})`, btn:'Uống (R)', act:'usePotion()' });
+  if ((player.manaPots || 0) > 0 && player.qi < player.maxQi * 0.25 && player.combatT > 0)
+    out.push({ id:'uongmana', pri:1, txt:`◎ Cạn Mana — bấm <b>T</b> uống Lọ Mana (còn ${player.manaPots})`, btn:'Uống (T)', act:'useManaPot()' });
   { const _co = (player.inv || []).some(it => it && it.slot && !it.special && !player.equip[it.slot]);
     if (_co) out.push({ id:'macdo', pri:1, txt:'🛡 Trong túi có đồ mà ô trang bị còn trống — mặc vào là mạnh lên ngay', btn:'Mặc Đồ Tốt Nhất', act:'autoEquipBest();hintHide()' }); }
   if ((player.free || 0) >= 5 && player.level <= 20)
@@ -10448,6 +10341,10 @@ function update(dt){
       if (_bdd > 0){ mx += (player.x - _nb.x)/_bdd; my += (player.y - _nb.y)/_bdd; }
     }
     if (_ac.potion && player.hp < player.maxHp*(_ac.potionPct/100) && player.potions > 0 && (player.potionCd || 0) <= 0) usePotion();
+    // Cạn Mana thì TỰ ĐÁNH chỉ còn đánh thường — tức là treo máy mà mất gần hết sát thương.
+    // Ngưỡng 30% cố định, không mượn `potionPct` (ngưỡng máu là chuyện sống chết, ngưỡng Mana
+    // là chuyện guồng chiêu — hai việc khác nhau nên đừng buộc chung một con số).
+    if (_ac.potion && player.qi < player.maxQi*0.3 && (player.manaPots || 0) > 0 && (player.manaCd || 0) <= 0) useManaPot();
   }
   if (player.auto && !dead && !_bossNear){
     if (player._autoAX == null){ player._autoAX = player.x; player._autoAY = player.y; }
@@ -10532,6 +10429,10 @@ function update(dt){
     }
     // tự uống Bình Thuốc Đỏ khi máu dưới 40% (còn thuốc & hết hồi)
     if (_ac.potion && player.hp < player.maxHp*(_ac.potionPct/100) && player.potions > 0 && (player.potionCd || 0) <= 0) usePotion();
+    // Cạn Mana thì TỰ ĐÁNH chỉ còn đánh thường — tức là treo máy mà mất gần hết sát thương.
+    // Ngưỡng 30% cố định, không mượn `potionPct` (ngưỡng máu là chuyện sống chết, ngưỡng Mana
+    // là chuyện guồng chiêu — hai việc khác nhau nên đừng buộc chung một con số).
+    if (_ac.potion && player.qi < player.maxQi*0.3 && (player.manaPots || 0) > 0 && (player.manaCd || 0) <= 0) useManaPot();
     if (player.potions <= 0 && player.hp < player.maxHp*0.5){
       player._autoWarnT = (player._autoWarnT || 0) - dt;
       if (player._autoWarnT <= 0){ player._autoWarnT = 30; addFloat(player.x, player.y-70, '⚠ Hết thuốc — chế độ tự đánh không tự hồi máu được!', '#ff9a6a', 12); }
@@ -10584,7 +10485,6 @@ function update(dt){
     const _px0 = player.x, _py0 = player.y;
     player.x = clamp(player.x + mx*spd*dt, 20, MAP.w-20);
     player.y = clamp(player.y + my*spd*dt, 20, MAP.h-20);
-    collideCityWalls();
     collideObstacles(player, 14); collideAiPass(); // GDD Đợt 2 A: địa hình + ải cấp
     // TRƯỢT DỌC MÉP. resolveObstaclePoint đẩy ngược lại đúng hướng vừa đi, nên khi hướng đi vuông
     // góc với mép vật cản thì lực đẩy triệt tiêu hoàn toàn bước chân: nhân vật đứng ép vào tảng đá,
@@ -10633,6 +10533,7 @@ function update(dt){
   // qi regen + hp regen (P0: hồi máu nhanh hơn — base ×3, ngoài combat thêm 5% max HP/s)
   player.combatT = Math.max(0, (player.combatT || 0) - dt);
   player.potionCd = Math.max(0, (player.potionCd || 0) - dt); // P0: Bình Thuốc Đỏ cooldown
+  player.manaCd   = Math.max(0, (player.manaCd || 0) - dt);  // Lọ Mana cooldown
   if (player.hp <= 0 && !dead){ player.hp = 0; onDeath(); } // thiên lôi cũng giết được người
   updateKyngo(dt); // A2: Kỳ ngộ trên đường
   if (DGN) updateDungeon(dt); // Phó bản: đợt quái → boss → thưởng
@@ -11356,18 +11257,6 @@ function render(){
 
   // village / city labels
   if (md.village) drawCalligraphy('Thanh Ngưu Thôn', 400, 310, '#6a5836', 18);
-  if (md.city){
-    drawCityMood();           // nhuộm tông chiều tà trước, để đèn/sương bên dưới nổi lên
-    drawCityWalls();
-    drawCityPlaza();          // quảng trường + đài phun nước trung tâm kiểu Lorencia
-    drawCalligraphy('Sapidae Chiefdom', 1300, 612, '#6a5836', 20);
-    drawCalligraphy('Tiệm Thuốc', 830, 706, '#3a6a3e', 13);
-    drawCalligraphy('Lò Rèn Hoàng Gia', 1780, 726, '#8a4a2e', 13);
-    drawCalligraphy('Vũ Khí Phường', 1770, 1006, '#5a5a6a', 13);
-    drawCalligraphy('Trà Quán', 980, 1096, '#8a6a2e', 13);
-    drawCalligraphy('Sảnh Cầu May', 820, 986, '#7a5a9a', 13);
-    drawCityHaze();           // lớp sương/tàn lửa ma mị phủ lên trên (vẽ sau cùng)
-  }
   // cổng KHÔNG vẽ ở đây nữa — nó đi vào danh sách sắp theo y bên dưới (xem drawOneGate)
 
   drawObstacleRim();   // hàng đá dọc mép vùng chặn — vẽ trước decor để cây/đá rải phủ lên tự nhiên
@@ -15315,15 +15204,56 @@ function setSkillIcon(id, url){
   b.classList.add('has-img');
 }
 // ---------- Panels ----------
-el('btn-char').addEventListener('click', ()=>togglePanel('char'));
-el('btn-inv').addEventListener('click', ()=>togglePanel('inv'));
-el('btn-bag').addEventListener('click', ()=>togglePanel('bag'));
-el('btn-skill').addEventListener('click', ()=>togglePanel('skill'));
-el('btn-map').addEventListener('click', ()=>togglePanel('map'));
-const btnSet = el('btn-settings');
-if (btnSet) btnSet.addEventListener('click', ()=>togglePanel('settings'));
-const btnQlog = el('btn-qlog');
-if (btnQlog) btnQlog.addEventListener('click', ()=>togglePanel('qlog'));
+// ⚠ NỐI BẰNG VÒNG LẶP CÓ KIỂM NULL, không nối từng dòng. `btn-inv` đã RỜI khỏi thanh HUD —
+// Trang Bị nay nằm trong chính bảng Nhân Vật (xem BANG_NHOM), nên phần tử đó không còn trên
+// DOM. Dòng `el('btn-inv').addEventListener(...)` cũ sẽ ném "Cannot read properties of null"
+// NGAY LÚC NẠP TRANG và giết chết mọi thứ đăng ký phía sau nó.
+for (const [_id, _pn] of [['btn-char','char'], ['btn-inv','inv'], ['btn-bag','bag'],
+                          ['btn-skill','skill'], ['btn-map','map'],
+                          ['btn-settings','settings'], ['btn-qlog','qlog']]){
+  const _b = el(_id);
+  if (_b) _b.addEventListener('click', () => togglePanel(_pn));
+}
+// ── CỘT MENU: thu gọn · thả xuống · Bảng Sự Kiện ──────────────────────────
+{
+  const thu = el('mc-thu'), cot = el('menu-cot'), drop = el('mc-drop'), bmenu = el('btn-menu');
+  if (thu && cot) thu.addEventListener('click', () => {
+    const dangThu = cot.classList.toggle('thu');
+    thu.textContent = dangThu ? '◂' : '▸';
+    thu.title = dangThu ? 'Mở lại thanh menu' : 'Thu gọn thanh menu';
+    SETTINGS.menuCot = !dangThu; saveSettings();
+    AudioSys.sfx('ui', 0.5);
+  });
+  if (bmenu && drop) bmenu.addEventListener('click', (e2) => {
+    e2.stopPropagation();
+    drop.classList.toggle('hidden');
+    AudioSys.sfx('ui', 0.5);
+  });
+  // Bấm ra ngoài là đóng — thả xuống mà phải bấm đúng nút mới đóng được thì nó thành cái bảng.
+  if (drop) document.addEventListener('click', (e2) => {
+    if (!drop.classList.contains('hidden') && !drop.contains(e2.target) && e2.target !== bmenu)
+      drop.classList.add('hidden');
+  });
+  const bsk = el('btn-sukien');
+  if (bsk) bsk.addEventListener('click', () => { if (window.openEventBoard) window.openEventBoard(); });
+  // Khôi phục trạng thái thu gọn đã lưu
+  if (cot && thu && SETTINGS.menuCot === false){ cot.classList.add('thu'); thu.textContent = '◂'; }
+}
+// Ô thuốc bấm được bằng chuột, không chỉ bằng phím R — thanh dưới là nơi người chơi NHÌN,
+// và thứ nhìn thấy mà bấm không được thì đọc ra như hỏng.
+{ const b = el('sk-thuoc'); if (b) b.addEventListener('click', () => usePotion()); }
+{ const b = el('sk-mana'); if (b) b.addEventListener('click', () => useManaPot()); }
+// TRỢ THỦ: bấm trái bật/tắt TỰ ĐÁNH, bấm phải mở thẳng bảng chỉnh (auto-nhặt/auto-chiêu nằm
+// trong Cài Đặt). Nút cũ ⚔ AUTO ở góc trên phải vẫn còn và vẫn chạy — hai chỗ cùng một cờ.
+{ const b = el('sk-helper');
+  if (b){
+    b.addEventListener('click', () => { const a = el('btn-auto'); if (a) a.click(); });
+    // Chuột phải mở bảng Cài Đặt, nơi bộ chỉnh Trợ Thủ đã nằm sẵn (auto-chiêu · auto-thuốc ·
+    // ngưỡng máu · tầm · có đánh trùm không — xem khối `_acS`/`togA` trong renderSettings).
+    // KHÔNG đặt một biến `settingsTab` giả ở đây: bảng Cài Đặt là một trang liền, không có tab,
+    // nên biến đó sẽ chẳng ai đọc và lần sau người sửa lại tưởng là có cơ chế tab thật.
+    b.addEventListener('contextmenu', (e2) => { e2.preventDefault(); togglePanel('settings'); });
+  } }
 const btnMini = el('btn-minimap');
 if (btnMini) btnMini.addEventListener('click', ()=>{
   SETTINGS.minimap = !SETTINGS.minimap; saveSettings();
@@ -15345,7 +15275,10 @@ const btnCl = el('btn-combatlog');
 if (btnCl) btnCl.addEventListener('click', ()=>{
   SETTINGS.combatLog = !SETTINGS.combatLog; saveSettings();
   el('combat-log').classList.toggle('cl-closed', !SETTINGS.combatLog);
-  el('cl-arrow').textContent = SETTINGS.combatLog ? '▾' : '▸';
+  // Nút đã dời vào thả xuống nên nó KHÔNG còn nằm cạnh cái nhật ký nữa; tắt mà chỉ thu nội
+  // dung thì góc màn hình vẫn còn một khung rỗng không ai gọi ra được. Giấu cả khối.
+  const w = el('combat-log-wrap'); if (w) w.classList.toggle('an', !SETTINGS.combatLog);
+  const a = el('cl-arrow'); if (a) a.textContent = SETTINGS.combatLog ? '▾' : '▸';
   AudioSys.sfx('ui', 0.5);
 });
 if (el('combat-log')){
@@ -15944,7 +15877,7 @@ const CHAOS_RECIPES = [
         newItem = genItem(avgLevel, 0, 'mob');
         newItem.tier = m.r + 1; rerollItemTier(newItem);
       }
-      playChaosAnim(snapshot, m.r, success, () => {
+      loKetQua(success, () => {
         if (success){
           if (bagThem(newItem)){ tryAutoEquip(newItem); }
           zoneBanner = { text:'◑ LÒ HỖN LOẠN — THÀNH CÔNG!', sub:`3 món hoá thành ${newItem.name}!`, color:giaiMau(newItem.tier), t:5 };
@@ -15953,9 +15886,10 @@ const CHAOS_RECIPES = [
           zoneBanner = { text:'◑ LÒ HỖN LOẠN — THẤT BẠI', sub:'3 món đã tan thành tro bụi — Hỗn Loạn vô thường.', color:'#ff5a4a', t:5 };
           addFloat(player.x, player.y-56, 'Thất bại — mất sạch!', '#ff5a4a', 16);
         }
-        calcDerived(); saveGame(); refreshEqPanels(); renderForge();
-        return { newItem };   // playChaosAnim đọc để hiện tên món mới; thiếu là báo THẤT BẠI dù thành
+        calcDerived(); saveGame(); refreshEqPanels();
+        return { newItem };   // loKetQua đọc để nhả món mới ra sân; thiếu là sân trống dù thành
       });
+      AudioSys.sfx(success ? 'forge_ok' : 'forge_fail', 0.95);
       chaosSay(success ? '◑ Lò nhả ra thứ tốt hơn!' : '◑ Lò nuốt sạch — chẳng nhả gì cả.', success ? '#8fd18f' : '#ff5a4a');
       return true;
     } },
@@ -16088,15 +16022,70 @@ window.chaosAddJewel = function(j){
 };
 window.chaosTrayPop = function(i){ forgeTray.splice(i, 1); chaosPick = null; renderForge(); };
 window.chaosClear = function(){ forgeTray = []; chaosPick = null; renderForge(); };
+// HAI NHỊP. Bấm → yêu tinh chộp lấy quả cầu và giữ (LO_KHUI) → mới bốc kết quả.
+// Bốc SAU nhịp nín thở chứ không phải trước, vì mọi tiếng động và dòng chữ của công thức đều
+// nổ ra ngay trong `run()`; bốc trước thì tai nghe kết quả xong mắt mới thấy yêu tinh diễn.
+// (Nhịp này KHÔNG đụng tới tỉ lệ — xem ghi chú "canh nhịp là mê tín" ở khối SÂN LÒ.)
 window.doChaos = function(){
+  if (_loBan) return;
   const cur = chaosCurrent();
   if (!cur || !cur.p.ready) return;
+  _loBan = true;
+  clearInterval(_loGio); _loGio = null;
+  const s2 = loSan();
+  if (s2){ s2.classList.remove('lo-tung', 'lo-cho'); s2.classList.add('lo-khui'); }
+  const loi = document.getElementById('lo-loi');
+  if (loi) loi.innerHTML = 'Yêu tinh chộp lấy — nín thở…';
+  AudioSys.sfx('ui', 0.55);
+  setTimeout(_loChot, LO_KHUI);
+};
+
+// Ảnh chụp món trước khi rèn, để suy ra THẮNG hay BẠI mà không phải sửa một công thức nào:
+// `run()` của mỗi công thức trả về "chạy được", không trả về "thành công".
+function _loChup(cur){
+  const it = cur.m && cur.m.it;
+  return it ? { uid: it.uid, plus: it.plus || 0, life: it.life || 0 } : null;
+}
+function _loChot(){
+  // ⚠ KHOÁ VẪN GIỮ TỚI KHI VẼ LẠI BẢNG. Nhả khoá ngay ở đây là mở ra một cách MẤT ĐỒ: rèn
+  // thắng xong, món +10 vẫn nằm nguyên trong khay và công thức +10→+11 lập tức hợp lệ — ai
+  // lỡ bấm Enter thêm một cái trong lúc còn đang nhìn kết quả là đi luôn món vừa rèn được,
+  // mà không kịp thấy tỉ lệ mới lẫn lời cảnh báo mới.
+  const cur = chaosCurrent();
+  const nha = () => { _loBan = false; renderForge(); };
+  if (!cur || !cur.p.ready){ nha(); return; }
+  const truoc = _loChup(cur);
   let ok = false;
   try { ok = cur.rec.run(cur.v, cur.m, cur.p); }
   catch (e){ console.error('Lò Hỗn Độn ' + cur.rec.id, e); chaosSay('✘ Kết hợp lỗi — xem console', '#ff7a6a'); }
   if (ok){ calcDerived(); saveGame(); }
-  setTimeout(renderForge, 700);
-};
+  const s2 = loSan();
+  // Công thức tự lo phần diễn (Lò Hỗn Loạn ba món) đã gắn lớp rồi — đừng đè lên.
+  if (s2 && !s2.classList.contains('lo-thang') && !s2.classList.contains('lo-bai')){
+    let thang = ok, con = null;
+    if (truoc){
+      con = findItemByUid(truoc.uid);
+      thang = !!con && ((con.plus || 0) > truoc.plus || (con.life || 0) > truoc.life);
+    }
+    s2.classList.remove('lo-tung', 'lo-khui', 'lo-cho');
+    s2.classList.add(thang ? 'lo-thang' : 'lo-bai');
+    // MÓN ĐỔI MÀU. Đây là nửa còn lại của cái nghi lễ: bấm xong phải THẤY món khác đi ngay tại
+    // chỗ vừa bấm, chứ không phải mở túi ra kiểm. Icon dựng lại từ món SAU khi rèn nên nó mang
+    // luôn bậc mới — khung phẩm, ấn giai và số +N đều đã đổi.
+    const ra = document.getElementById('lo-ra');
+    if (ra && thang && con){
+      ra.innerHTML = `${slotIcon(con, 'chaos-ic')}<b class="chaos-plus">+${con.plus || 0}</b>`;
+      ra.style.setProperty('--oc', giaiMau(con.tier || 1));
+    }
+    if (truoc){
+      loLoi(thang ? `✔ <b>${con.name}</b> lên <b>+${con.plus}</b>!`
+                  : (con ? `✘ Thất bại — ${con.name} còn +${con.plus || 0}.`
+                         : '✘ VỠ VỤN — món đồ mất vĩnh viễn.'),
+            thang ? '#8fd18f' : '#ff5a4a');
+    }
+  }
+  setTimeout(nha, 1000);
+}
 function chaosRateColor(r){ return r >= 100 ? '#8fd18f' : r >= 50 ? '#7ecbff' : r >= 40 ? '#e8b04a' : '#ff7a6a'; }
 // Lò rèn nay có BẢNG RIÊNG và chỉ mở khi đứng cạnh Thợ Rèn. Trước đây nó là một tab trong bảng
 // Nhân Vật, mở được từ giữa bãi quái — trái hẳn MU, nơi phải về thành tìm thợ rèn. Mà chính code
@@ -16127,6 +16116,10 @@ function renderForge(){
       <button class="mini-btn" style="padding:1px 6px;font-size:10px" onclick="buyCharm()" ${player.silver<500?'disabled':''}>Mua 500◈</button></span>
     ${player.forgeBonus?`<span style="color:#5aa0e8">Thợ Rèn Truyền Thuyết +${player.forgeBonus}%</span>`:''}
   </div>`;
+
+  // ── SÂN LÒ: con yêu tinh tung đồ, thứ người chơi nhìn để canh nhịp ──
+  if (loVanTay() !== _loVan){ _loVan = loVanTay(); _loDem = 0; }
+  h += loSanHtml(cur);
 
   // ── tab nhóm ──
   h += `<div class="bang-tabs">`;
@@ -16210,7 +16203,7 @@ function renderForge(){
         <input type="checkbox" ${forgeUseCharm?'checked':''} onchange="forgeUseCharm=this.checked" ${player.charms>0?'':'disabled'}>
         Dùng ☂ Thiên Mệnh Phù — thất bại vẫn giữ nguyên (còn ${player.charms})</label>`;
     }
-    h += `<button class="chaos-go" onclick="doChaos()" ${p.ready?'':'disabled'}>⟳ KẾT HỢP</button>
+    h += `<button class="chaos-go" onclick="doChaos()" ${p.ready?'':'disabled'}>⟳ KẾT HỢP <i>Enter</i></button>
       <div id="chaos-msg" class="chaos-msg"></div></div>`;
   }
 
@@ -16228,6 +16221,7 @@ function renderForge(){
   if (!bag.length) h += `<div class="chaos-empty">Chưa có trang bị nào.</div>`;
   h += `</div>`;
   FE().innerHTML = h;
+  loNhipChay();   // DOM vừa dựng lại — đồng hồ cũ trỏ vào nút đã chết, phải nối lại
 }
 window.buyCharm = function(){
   if (player.silver < 500) return;
@@ -17558,6 +17552,7 @@ function startGame(sectKey, quze){
   el('sect-select').classList.add('hidden'); titleStop();
   el('hud').classList.remove('hidden');
   el('bottom-hud').classList.remove('hidden');
+  { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden'); }
   el('xp-strip').classList.remove('hidden');
   el('combat-log-wrap').classList.remove('hidden');
   fxLoad();   // mức hiệu ứng đã lưu (hoặc Tự Chỉnh) + bật lớp phủ CSS đúng bản đồ
@@ -17688,6 +17683,7 @@ else setTimeout(showIntro, 0);        // người mới → cốt truyện (defe
       el('sect-select').classList.add('hidden'); titleStop(); titleStop();
       el('hud').classList.remove('hidden');
       el('bottom-hud').classList.remove('hidden');
+  { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden'); }
       el('xp-strip').classList.remove('hidden');
       el('combat-log-wrap').classList.remove('hidden');
       if (el('ghha-lang-toggle')) el('ghha-lang-toggle').style.display = 'none';
@@ -18323,7 +18319,7 @@ function fxApply(){   // đồng bộ lớp phủ CSS theo FXQ + bản đồ hi�
 function fxRays(){
   const e = el('fx-rays'); if (!e || !player) return;
   const md0 = mapDef(), wx = weatherNow();
-  e.classList.toggle('on', FXQ >= 2 && skyDarkness() === 0 && !md0.city && !md0.dark
+  e.classList.toggle('on', FXQ >= 2 && skyDarkness() === 0 && curMap !== 'ardhaven' && !md0.dark
                            && (!wx || wx.id === 'sun' || wx.id === 'sunhot'));
 }
 // Ghi opacity là việc của tầng ghép ảnh, không phải của tầng tô điểm ảnh — rẻ hơn fillRect toàn
@@ -18542,13 +18538,18 @@ function togglePanel(which){
   }
   if (wasHidden){
     AudioSys.sfx('ui', 0.6); renderPanel(which); p.classList.remove('hidden'); if (which==='char') tutAdvance('panel');
+    bangGhiChong(id); bangDatCho(p); bangGanKeo(p);
     // Trang Bị + Túi Đồ: trên màn hình đủ rộng, mở cùng lúc cả 2 (side-by-side, xem CSS) để
     // kéo-thả đồ từ Túi Đồ sang ô Trang Bị được — kéo-thả HTML5 cần cả 2 cùng có mặt trên DOM.
     // Màn hình hẹp/mobile giữ nguyên hành vi cũ (1 bảng tại 1 thời điểm — kéo-thả vốn không chạy trên chạm).
-    if ((which === 'inv' || which === 'bag') && window.innerWidth >= 1000){
-      const otherKey = which === 'inv' ? 'bag' : 'inv';
+    // Nhân Vật ⇄ Trang Bị là HAI NỬA của một cửa sổ: mở nửa nào cũng kéo nửa kia ra cùng.
+    // Màn hẹp thì thôi — hai nửa cạnh nhau cần bề ngang, mà kéo-thả vốn không chạy trên chạm.
+    if ((which === 'char' || which === 'inv') && window.innerWidth >= 1000){
+      const otherKey = which === 'char' ? 'inv' : 'char';
       renderPanel(otherKey);
-      el(map[otherKey]).classList.remove('hidden');
+      const po = el(map[otherKey]);
+      po.classList.remove('hidden');
+      bangGhiChong(map[otherKey]); bangDatCho(po); bangGanKeo(po);
     }
   } else {
     // Bấm lại phím của nhóm đang mở ⇒ đóng cả nhóm, không để sót một nửa nằm lại.
@@ -18558,15 +18559,24 @@ function togglePanel(which){
     }
   }
   capNhatCotBang();
+  capNhatMenuCot();
 }
 // Nhóm bảng: cùng nhóm thì mở chung được, khác nhóm thì loại nhau.
 //   'nv' — Nhân Vật (phím C): chỉ số, tiềm năng, các hệ con
 //   'do' — Trang Bị + Túi Đồ (phím V): hai bảng luôn đi cùng nhau
 // Bảng còn lại mỗi cái một nhóm riêng nên vẫn loại mọi thứ khác, y như trước.
-const BANG_NHOM = { char:'nv', inv:'do', bag:'do', skill:'kn', map:'bd', settings:'cd', qlog:'nv2' };
-// Hai nhóm này ở chung màn hình được — đó là bố cục kiểu Diablo/MU mà chủ dự án muốn:
-// chỉ số bên trái, hình nhân vật mặc đồ và túi đồ bên phải, nhìn một lúc cả ba.
-const BANG_SONG = { nv:1, do:1 };
+// ⚠ TRANG BỊ NAY LÀ MỘT PHẦN CỦA NHÂN VẬT, không phải một cửa sổ riêng.
+// Bản trước cho ba bảng (Nhân Vật · Trang Bị · Túi Đồ) mở cùng lúc thành ba cột. Nó tiện,
+// nhưng không phải cách game gốc làm và cũng không phải cách người chơi nhớ: ở đó phím C mở
+// ĐÚNG MỘT cửa sổ — bên trái là hình người mặc đồ, bên phải là chỉ số — còn Túi Đồ là cửa sổ
+// khác, và mở cái này thì cái kia tự đóng. Ba cột chồng nhau là thứ làm màn hình rối dần.
+//
+// Cho `inv` cùng nhóm 'nv' với `char`: hai bảng vẫn mở KÈM nhau (kéo-thả HTML5 cần cả hai
+// cùng có mặt trên DOM), nhưng chúng đọc ra như MỘT cửa sổ hai nửa. Túi Đồ tách hẳn ra nhóm
+// riêng nên mở Túi Đồ là bộ đôi kia đóng, và ngược lại.
+const BANG_NHOM = { char:'nv', inv:'nv', bag:'tui', skill:'kn', map:'bd', settings:'cd', qlog:'nv2' };
+// CHỈ nhóm 'nv' được ở chung màn hình, và nó là hai nửa của cùng một cửa sổ.
+const BANG_SONG = { nv:1 };
 // Ba bảng mở cùng lúc thì phải xếp thành ba cột, không chồng lên nhau. Gắn class lên <body>
 // để CSS lo phần xếp chỗ — JS không nên biết toạ độ.
 function capNhatCotBang(){
@@ -18586,14 +18596,107 @@ function renderPanel(which){
   else if (which==='map') renderMapPanel();
   else renderCharPanel();
 }
+// CHỒNG CỬA SỔ. Ghi thứ tự MỞ để ESC biết cái nào là trên cùng. Chỉ chứa id bảng, và luôn
+// lọc lại theo thực tế trước khi dùng — bảng có thể bị đóng bằng nút ✕ mà không qua đây.
+let _bangChong = [];
+const _MOI_BANG = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest',
+                   'panel-settings','panel-qlog','panel-stage','panel-forge'];
+function bangDangMo(){ return _MOI_BANG.filter(id => { const e2 = el(id); return e2 && !e2.classList.contains('hidden'); }); }
+function bangGhiChong(id){
+  _bangChong = _bangChong.filter(x => x !== id);
+  _bangChong.push(id);
+}
+function dongBangTrenCung(){
+  const mo = bangDangMo();
+  if (!mo.length) return;
+  // Đỉnh chồng = cái mở sau cùng mà vẫn còn mở. Không tìm được thì lấy đại cái cuối danh sách.
+  let dinh = null;
+  for (let i = _bangChong.length - 1; i >= 0; i--) if (mo.includes(_bangChong[i])){ dinh = _bangChong[i]; break; }
+  dinh = dinh || mo[mo.length - 1];
+  // Nhân Vật và Trang Bị là hai nửa một cửa — đóng nửa này thì đóng luôn nửa kia.
+  const cap = (dinh === 'panel-char' || dinh === 'panel-inv') ? ['panel-char','panel-inv'] : [dinh];
+  for (const id of cap){ const e2 = el(id); if (e2) e2.classList.add('hidden'); }
+  _bangChong = _bangChong.filter(x => !cap.includes(x));
+  if (typeof capNhatCotBang === 'function') capNhatCotBang();
+  if (typeof capNhatMenuCot === 'function') capNhatMenuCot();
+  AudioSys.sfx('ui', 0.45);
+}
+window.dongBangTrenCung = dongBangTrenCung;
+
 function closePanels(){
-  for (const id of ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-stage','panel-forge']){
+  for (const id of _MOI_BANG){
     const e2 = document.getElementById(id);
     if (e2) e2.classList.add('hidden');
   }
+  _bangChong = [];
+  if (typeof _loGio !== 'undefined' && _loGio){ clearInterval(_loGio); _loGio = null; }
   document.body.classList.remove('bang-ba-cot');
+  capNhatMenuCot();
 }
 window.closePanels = closePanels;
+
+// ── CỘT MENU sáng theo bảng đang mở ────────────────────────────────────────
+// Không có cái này thì người chơi không đọc được mình đang đứng ở cửa nào — mà đó chính là
+// việc của một thanh menu.
+const MC_BANG = { 'btn-char':'panel-char', 'btn-bag':'panel-bag', 'btn-skill':'panel-skill',
+                  'btn-qlog':'panel-qlog', 'btn-map':'panel-map', 'btn-settings':'panel-settings' };
+function capNhatMenuCot(){
+  for (const bid in MC_BANG){
+    const b = el(bid), pn = el(MC_BANG[bid]);
+    if (b) b.classList.toggle('on', !!pn && !pn.classList.contains('hidden'));
+  }
+}
+window.capNhatMenuCot = capNhatMenuCot;
+
+// ── C3 + C4 · KÉO BẢNG, NHỚ CHỖ, THU GỌN ───────────────────────────────────
+// Vị trí nhớ theo TỪNG BẢNG trong SETTINGS, nên đóng mở lại vẫn nằm đúng chỗ người chơi kéo
+// tới. Kẹp lại trong khung nhìn mỗi lần đặt: đổi cỡ cửa sổ trình duyệt xong mà bảng nằm ngoài
+// màn hình thì coi như mất bảng, không có cách nào lôi về.
+function bangKepVaoMan(x, y, e2){
+  const w = e2.offsetWidth || 320, h = e2.offsetHeight || 200;
+  return { x: clamp(x, 4, Math.max(4, innerWidth - w - 4)),
+           y: clamp(y, 4, Math.max(4, innerHeight - Math.min(h, innerHeight - 8) - 4)) };
+}
+function bangDatCho(e2){
+  const vt = (SETTINGS.bangVT || {})[e2.id];
+  if (!vt) return;
+  const k = bangKepVaoMan(vt.x, vt.y, e2);
+  e2.classList.add('da-keo');
+  e2.style.left = k.x + 'px'; e2.style.top = k.y + 'px';
+}
+function bangGanKeo(e2){
+  if (!e2 || e2._daGanKeo) return;
+  e2._daGanKeo = true;
+  e2.addEventListener('pointerdown', (ev) => {
+    const tieu = ev.target.closest && ev.target.closest('.bang-tieu');
+    if (!tieu || !e2.contains(tieu)) return;
+    if (ev.target.closest('button')) return;          // ✕ và — không phải tay cầm để kéo
+    const r = e2.getBoundingClientRect();
+    const dx = ev.clientX - r.left, dy = ev.clientY - r.top;
+    e2.classList.add('da-keo', 'dang-keo');
+    e2.style.left = r.left + 'px'; e2.style.top = r.top + 'px';
+    const di = (m) => {
+      const k = bangKepVaoMan(m.clientX - dx, m.clientY - dy, e2);
+      e2.style.left = k.x + 'px'; e2.style.top = k.y + 'px';
+    };
+    const thoi = () => {
+      e2.classList.remove('dang-keo');
+      removeEventListener('pointermove', di); removeEventListener('pointerup', thoi);
+      if (!SETTINGS.bangVT) SETTINGS.bangVT = {};
+      SETTINGS.bangVT[e2.id] = { x: parseInt(e2.style.left, 10) || 0, y: parseInt(e2.style.top, 10) || 0 };
+      saveSettings();
+    };
+    addEventListener('pointermove', di); addEventListener('pointerup', thoi);
+    ev.preventDefault();
+  });
+}
+window.bangThuGon = function(id){
+  const e2 = el(id); if (!e2) return;
+  const thu = e2.classList.toggle('thu');
+  const b = e2.querySelector('.bang-thu');
+  if (b){ b.textContent = thu ? '▢' : '—'; b.title = thu ? 'Mở lại bảng' : 'Thu về thanh tiêu đề'; }
+  AudioSys.sfx('ui', 0.45);
+};
 
 // ---------- Icon trang bị / vật liệu ----------
 // Chỉ còn PET. Trang bị thường xưa cũng có tệp PNG riêng ở đây, nhưng từ khi mọi món đều đi
@@ -18854,8 +18957,8 @@ const CONSUM_DB = {
   thuoc:     { art:'flask',    col:'#e8434a', name:'Bình Thuốc Đỏ',   use:'Uống bằng phím R',
                have:()=>player.potions, cap:5,
                info:()=>`Hồi ${Math.round((player.potionPct||0.4)*100)}% máu (~${Math.round(player.maxHp*(player.potionPct||0.4)).toLocaleString('vi-VN')})` },
-  tukhi:     { art:'flask',    col:'#4a86e8', name:'Lọ Mana',         use:'Mana là tài nguyên tung chiêu',
-               info:()=>`Hồi đầy Mana — đang ${Math.round(player.qi)}/${player.maxQi}` },
+  tukhi:     { art:'flask',    col:'#4a86e8', name:'Lọ Mana',         use:'Hồi 40% Mana — bấm T, tối đa 5 lọ',
+               info:()=>`Mang theo ${player.manaPots || 0}/5 lọ — Mana đang ${Math.round(player.qi)}/${player.maxQi}` },
   trithuong: { art:'flask',    col:'#5db86a', name:'Trị Thương Toàn Phần', use:'Dùng ngay tại chỗ',
                info:()=>`Hồi đầy máu — đang ${Math.round(player.hp).toLocaleString('vi-VN')}/${player.maxHp.toLocaleString('vi-VN')}` },
   ruou:      { art:'gourd',    col:'#e8a04a', name:'Rượu Hổ Cốt',     use:'Men say bừng bừng sát khí',
@@ -20672,6 +20775,27 @@ function updateHud(){
     const cd = player.cd[id] || 0;
     b.querySelector('.sk-cd').style.height = (cd>0 ? (100*cd/info.cd) : 0) + '%';
   }
+  // Ô Bình Thuốc Đỏ — cùng hàng với chiêu vì nó là thao tác CHIẾN ĐẤU, không phải món trong túi.
+  { const b = el('sk-thuoc');
+    if (b){
+      const n = player.potions || 0, cd2 = player.potionCd || 0;
+      el('sk-thuoc-so').textContent = n;
+      b.classList.toggle('het', n <= 0 || cd2 > 0);
+      b.title = n <= 0 ? 'Hết Bình Thuốc Đỏ — mua ở Nhà Giả Kim'
+              : cd2 > 0 ? `Bình Thuốc Đỏ ×${n} — còn chờ ${Math.ceil(cd2)}s`
+                        : `Bình Thuốc Đỏ ×${n} — hồi 40% máu (R)`;
+    } }
+  { const b = el('sk-mana');
+    if (b){
+      const n = player.manaPots || 0, cd3 = player.manaCd || 0;
+      el('sk-mana-so').textContent = n;
+      b.classList.toggle('het', n <= 0 || cd3 > 0);
+      b.title = n <= 0 ? 'Hết Lọ Mana — mua ở Nhà Giả Kim'
+              : cd3 > 0 ? `Lọ Mana ×${n} — còn chờ ${Math.ceil(cd3)}s`
+                        : `Lọ Mana ×${n} — hồi 40% Mana (T)`;
+    } }
+  // Trợ Thủ — sáng lên khi TỰ ĐÁNH đang bật.
+  { const b = el('sk-helper'); if (b) b.classList.toggle('on', !!player.auto); }
 }
 function applySkillIcons(){
   setSkillIcon('sk-basic', 'assets/skills/basic.png');
@@ -20681,7 +20805,7 @@ const SHOPS = {
   duoclao: { quote:'"Thuốc bổ hay thuốc độc — khác nhau ở liều lượng thôi, khách quân ạ."', junk:true, rows:[
     { id:'thuoc',     icon:'🧪', name:'Bình Thuốc Đỏ',        price:150, desc:'Uống bằng phím R — túi đựng tối đa 5 lọ' },
     { id:'trithuong', icon:'✚',  name:'Trị Thương Toàn Phần', price:100, desc:'Nhà Giả Kim tự tay bào chế — dùng ngay tại chỗ' },
-    { id:'tukhi',     icon:'◎',  name:'Lọ Mana',              price:80,  desc:'Mana là tài nguyên tung chiêu' },
+    { id:'tukhi',     icon:'◎',  name:'Lọ Mana',              price:80,  desc:'Hồi 40% Mana — bấm T, mang tối đa 5 lọ' },
     { id:'loidon',    icon:'⚡', name:'Bùa Chắn Sét',         price:600, desc:'Mang theo khi vào vùng bão' },
   ]},
   // Tiệm binh khí là tiệm DUY NHẤT bày hàng thật — đúng vai của nó, và cũng để hàng bày không
@@ -20691,13 +20815,6 @@ const SHOPS = {
       { id:'ruongvk', col:'#c8d4e8', name:'Rương Binh Khí',  price:800, desc:'Vũ khí ngẫu nhiên theo cấp của bạn — có thể ra hàng hiếm' },
       { id:'ruongpc', col:'#5aa0e8', name:'Rương Phòng Cụ', price:700, desc:'Giáp trụ ngẫu nhiên theo cấp — có thể ra trang bị Hoàn Hảo' },
     ]},
-  // Thị trấn khởi đầu phải bán được thuốc, nếu không thì "hiện ra ở đây rồi ra cổng đánh quái"
-  // là đi tay không. Cùng bảng hàng với Nhà Giả Kim trong Sapidae Chiefdom — cùng một nghề.
-  qt_giakim: { quote:'"Lọ treo trên kia là hàng thật. Ra ngoài cổng thì mang hai lọ, đừng một."', junk:true, rows:[
-    { id:'thuoc',     icon:'🧪', name:'Bình Thuốc Đỏ',        price:150, desc:'Uống bằng phím R — túi đựng tối đa 5 lọ' },
-    { id:'trithuong', icon:'✚',  name:'Trị Thương Toàn Phần', price:100, desc:'Bào chế tại chỗ — dùng ngay' },
-    { id:'tukhi',     icon:'◎',  name:'Lọ Mana',              price:80,  desc:'Mana là tài nguyên tung chiêu' },
-  ]},
   trachu: { quote:'"Vào đây uống chén trà nóng đã — chuyện Lunacia để sau hẵng hay."', rows:[
     { id:'nghitro', icon:'🛏', name:'Nghỉ Trọ',    price:120, desc:'Nghỉ ngơi dưỡng thần' },
     { id:'ruou',    icon:'🍶', name:'Rượu Hổ Cốt', price:200, desc:'Men say bừng bừng sát khí' },
@@ -20921,7 +21038,7 @@ function shopRowInfo(id){
     case 'thuoc':     return { stat:`Hồi ${Math.round((P.potionPct || 0.4) * 100)}% máu (~${Math.round(P.maxHp * (P.potionPct || 0.4)).toLocaleString('vi-VN')}) · đang có ${P.potions}/5`,
                                blocked: P.potions >= 5 };
     case 'trithuong': return { stat:`Hồi đầy máu — đang ${Math.round(P.hp).toLocaleString('vi-VN')}/${P.maxHp.toLocaleString('vi-VN')}`, blocked: P.hp >= P.maxHp };
-    case 'tukhi':     return { stat:`Hồi đầy Mana — đang ${Math.round(P.qi)}/${P.maxQi}`, blocked: P.qi >= P.maxQi };
+    case 'tukhi':     return { stat:`Mang theo ${P.manaPots || 0}/5 lọ — Mana ${Math.round(P.qi)}/${P.maxQi}`, blocked: (P.manaPots || 0) >= 5 };
     case 'nghitro':   return { stat:`Hồi đầy máu và Mana — đang ${Math.round(P.hp).toLocaleString('vi-VN')}/${P.maxHp.toLocaleString('vi-VN')} máu · ${Math.round(P.qi)}/${P.maxQi} Mana`,
                                blocked: P.hp >= P.maxHp && P.qi >= P.maxQi };
     case 'ruou':      return { stat:`+12% công lực trong 3 phút${(P.buffAtkT||0) > 0 ? ` · còn ${Math.ceil(P.buffAtkT)}s` : ''}` };
@@ -20949,9 +21066,11 @@ window.buyFromShop = function(what){
     addEffect({ type:'ring', x:player.x, y:player.y, r:60, color:'#6ae88a' });
   }
   else if (what==='tukhi'){
-    if (player.qi >= player.maxQi){ addFloat(player.x, player.y-34, 'Mana đã đầy!', '#8a8a8a', 12); return; }
-    player.silver -= row.price; player.qi = player.maxQi;
-    addEffect({ type:'ring', x:player.x, y:player.y, r:60, color:'#7fd8e0' });
+    // ⚠ ĐỔI HÀNH VI: trước đây mua là HỒI ĐẦY MANA NGAY TẠI QUẦY. Nghĩa là món này chỉ dùng
+    // được khi đang đứng trong thành, đúng lúc KHÔNG ai cần Mana — ra bãi quái cạn Mana thì
+    // nó vô dụng. Nay là món MANG THEO, cùng luật với Bình Thuốc Đỏ.
+    if ((player.manaPots || 0) >= 5){ addFloat(player.x, player.y-34, 'Túi Lọ Mana đã đầy (tối đa 5 lọ)!', '#8a8a8a', 12); return; }
+    player.silver -= row.price; player.manaPots = (player.manaPots || 0) + 1;
   }
   else if (what==='nghitro'){
     player.silver -= row.price; player.hp = player.maxHp; player.qi = player.maxQi;
@@ -21020,10 +21139,12 @@ window.openForgePanel = function(){
     return;
   }
   chaosGroup = 'ren'; chaosPick = null;
+  _loBan = false; _loDem = 0; _loVan = '';   // mở lại bảng là một cỗ máy sạch, không mang khoá cũ sang
   closePanels();
   el('panel-forge').innerHTML = `<div id="forge-content"></div>`;
   renderForge();
   el('panel-forge').classList.remove('hidden');
+  bangGhiChong('panel-forge'); bangDatCho(el('panel-forge')); bangGanKeo(el('panel-forge'));
   AudioSys.sfx('ui', 0.6);
 };
 
@@ -21525,11 +21646,6 @@ function drawMinimapStatic(mw, mh, sx, sy, md){
     sc.strokeStyle = 'rgba(0,0,0,.6)'; sc.lineWidth = 1;
     sc.strokeRect(_r.x*sx - 3, _r.y*sy - 2.4, 6, 4.8);
   }
-  // Tường thành + cổng thành
-  if (curMap === CITY_WALL.map){
-    sc.strokeStyle = 'rgba(168,118,58,.85)'; sc.lineWidth = 1.5;
-    sc.strokeRect(CITY_WALL.x1*sx, CITY_WALL.y1*sy, (CITY_WALL.x2-CITY_WALL.x1)*sx, (CITY_WALL.y2-CITY_WALL.y1)*sy);
-  }
   // Mép vùng chặn: chấm xám dọc đúng đường biên đi không qua được — nhìn minimap là thấy hình
   // dạng hồ/vách núi, khỏi phải đi tới nơi mới biết cụt đường.
   {
@@ -21682,7 +21798,10 @@ function drawMinimap(){
 function moBang({ tieu, dong, mat, tabs, chon, ham, dongX = true }){
   let h = `<h3 class="bang-tieu">${mat || ''}${mat ? `<span>${tieu}</span>` : tieu}`
         + `${dong ? `<span class="bang-dong">${dong}</span>` : ''}</h3>`;
-  if (dongX) h += `<button class="close-x" onclick="closePanels()">✕</button>`;
+  // Nút thu gọn "—" đi kèm nút ✕: cùng một góc, cùng một cỡ, và cùng một thói quen từ mọi
+  // cửa sổ có thanh tiêu đề. `dongX:false` là bảng không có nút đóng nên cũng không có nút thu.
+  if (dongX) h += `<button class="bang-thu" title="Thu về thanh tiêu đề" onclick="bangThuGon(this.closest('.panel').id)">—</button>`
+                + `<button class="close-x" onclick="dongBangTrenCung()">✕</button>`;
   if (tabs && tabs.length){
     h += `<div class="bang-tabs">`;
     for (const t of tabs){
@@ -21802,7 +21921,7 @@ NPCS.push(
     barks:['"Rễ này mọc ngược từ hôm trời nứt."','"Ai ho ba ngày thì tới đây, đừng để tới ngày thứ tư."',
            '"Thuốc hay cứu người, thuốc độc cũng cứu người — tuỳ ai dùng."','"Đừng giẫm lên luống kia."'] },
 
-  { id:'quachtinh', name:'Trưởng Lão Rell',      map:'tuongduong', x:1300, y:722,  img:'assets/npcs/quachtinh.png', talk:'quest',
+  { id:'quachtinh', name:'Trưởng Lão Rell',      map:'ardhaven', x:3200, y:1600,  img:'assets/npcs/quachtinh.png', talk:'quest',
     lore:{
       idle:  '"Ta chỉ huy đội tiên phong vượt vết nứt. Sáu người theo ta. Ngươi là người duy nhất còn đứng."',
       offer: '"Ngồi xuống. Ngươi chưa đủ sức cho việc ta định giao, và ta đã chôn đủ người rồi."',
@@ -21816,7 +21935,7 @@ NPCS.push(
     barks:['"Bên kia vết nứt giờ mấy giờ rồi nhỉ."','"Sáu cái tên. Ta còn nhớ đủ sáu."',
            '"Đừng gọi ta là chỉ huy nữa."','"Cái chân này báo trời sắp đổi."'] },
 
-  { id:'monkhach',  name:'Trinh Sát Wren',       map:'tuongduong', x:1300, y:1120, img:'assets/npcs/monkhach.png',  talk:'quest',
+  { id:'monkhach',  name:'Trinh Sát Wren',       map:'ardhaven', x:2870, y:2100, img:'assets/npcs/monkhach.png',  talk:'quest',
     lore:{
       idle:  '"Ta sinh ra ở đây. Các ngươi thì rơi xuống đây. Nhớ cho kỹ sự khác nhau đó."',
       offer: '"Chưa. Ngươi đi theo ta bây giờ thì ta phải quay lại kéo ngươi ra."',
@@ -21906,21 +22025,9 @@ NPCS.push(
            '"Cỏ ngoài này ngọt hơn cỏ trong thành."'] }, // GDD Đợt 2 B5
 );
 NPCS.push(
-  { id:'duoclao', name:'Nhà Giả Kim · Tiệm Thuốc', map:'tuongduong', x:830, y:760, img:'assets/npcs/duoclao.png', talk:'shop',
-    lore:'"Thuốc hay cứu người — nhưng không trả tiền thì thuốc cũng hóa độc đấy."',
-    barks:['"Bình đỏ còn hàng, bình xanh hết."','"Đừng uống hai bình một lúc."','"Trả tiền rồi hẵng mở nút."'] },
-  { id:'binhkhi', name:'Binh Khí Chủ · Vũ Khí Phường', map:'tuongduong', x:1770, y:1060, img:'assets/npcs/binhkhi.png', talk:'shop',
-    lore:'"Thép Ardhaven, rèn bên kia vết nứt. Hết lô này là hết, đừng hỏi thêm."',
-    barks:['"Lô này là lô cuối, ta nói thật đấy."','"Thép bên này mềm hơn, ta không nhận."','"Cầm thử đi, đừng ngắm."'] },
-  { id:'trachu',  name:'Trà Quán Chủ', map:'tuongduong', x:980, y:1150, img:'assets/npcs/trachu.png', talk:'shop',
-    lore:'"Quán này rơi qua đây nguyên vẹn, cả ấm trà. Đời còn cho gì thì nhận nấy."',
-    barks:['"Cả cái quán rơi qua mà không vỡ một chén."','"Ngồi đi, ta rót."','"Ngoài kia ồn quá, trong này yên."'] },
-  { id:'bodau', name:'Bổ Đầu · Truy Nã Lệnh', map:'tuongduong', x:1600, y:690, img:'assets/npcs/bodau.png', talk:'trunya',
-    lore:'"Hội Đồng Sapidae treo thưởng lũ Chimera lộng hành — mỗi ngày một tên. Làm xong, đến Sảnh Cầu May thử vận."',
-    barks:['"Lệnh hôm nay dán rồi đấy."','"Một ngày một tên, không hơn."','"Mang đầu về, đừng mang chuyện về."'] },
-  { id:'thantoan', name:'Thương Nhân Vận May · Sảnh Cầu May', map:'tuongduong', x:820, y:1040, img:'assets/npcs/thantoan.png', talk:'vanduyen',
-    lore:'"Một lệnh đổi một lượt quay. Tỉ lệ ta dán ngay trên vách — không giấu, cũng không hứa thêm gì."',
-    barks:['"Tỉ lệ dán trên vách kia kìa."','"Ta không hứa gì cả, ta chỉ quay."','"Người vừa nãy quay chín lượt."'] },
+  // Năm NPC thành (Nhà Giả Kim · Binh Khí Chủ · Trà Quán Chủ · Bổ Đầu · Thương Nhân Vận May)
+  // đã dời sang data/canbang.js cùng cả bộ 24 NPC Ardhaven. ID giữ nguyên — SHOPS, renderTruyNa()
+  // và renderVanDuyen() đều tìm cứng theo id.
   // Ba Vực Thẳm nằm ở Werebear Woods · Bird Tribe Heights · Dusk Marsh — ĐÚNG ba vùng có Trụ Khoá. Trước đây
   // mỗi vách một câu lore rời, không câu nào nối vào Morvahn hay Trụ Khoá, nên ba nơi nguy hiểm
   // nhất bản đồ đọc như ba câu tục ngữ. Nay cả ba nói cùng một điều: đất nứt ở đây là vì cái trụ
@@ -22034,7 +22141,7 @@ function mapGate(id){
   if (player.level < md.min) return { ok:false, why:'lv', need:md.min };
   // QA regression: NV1 (gặp Trưởng Lão Rell) diễn ra trong thành — tân thủ chưa xong NV1
   // thì không thể bị khóa ngoài cổng thành, tránh kẹt cứng chính tuyến ngay từ đầu.
-  if (id === 'tuongduong' && questIdx < 1) return { ok:true };
+  if (id === 'ardhaven' && questIdx < 1) return { ok:true };
   // Cổng chính tuyến có lối vòng theo CẤP: vượt md.min đủ xa (MAP_LV_BYPASS cấp) thì vào được dù
   // chưa xong chương trước. Chơi thử: cày AUTO lên cấp 120 mà bản đồ vẫn 7 tấm "???" và NV treo
   // vẫn là NV cấp 3 — cày cho EXP mà không cho tiến độ thì đoạn 20-60 vô hướng hoàn toàn.
@@ -22083,7 +22190,6 @@ window.travelTo = function(mapId, from){
   setTimeout(fxApply, 0);   // lớp phủ CSS theo bản đồ mới (tối / vignette)
   const sp = (from && md.spawnFrom && md.spawnFrom[from]) || md.spawn;
   player.x = sp.x; player.y = sp.y;
-  collideCityWalls(); // chắc chắn không spawn lọt tường
   const _fp = nearestFree(curMap, player.x, player.y); player.x = _fp.x; player.y = _fp.y; // GDD Đợt 2 A: không spawn vào vùng cấm
   player.hintOff = {}; // B3: qua map mới → các Nhắc Việc đã tắt hiện lại
   snapCamera(); // đổi map: camera đặt thẳng vào vị trí mới, không pan từ map cũ
@@ -22884,7 +22990,7 @@ function tuongQuanDaHa(){
   return Object.keys(f).filter(k => k.startsWith('ta_')).length;
 }
 const REGION_UNLOCK_LORE = {
-  tuongduong:{ sub:'Vỏ kén đã phá — trở về Sapidae Chiefdom trong tiếng hoan hô, chính thức bước vào Chương II.' },
+  ardhaven:{ sub:'Vỏ kén đã phá — trở về Sapidae Chiefdom trong tiếng hoan hô, chính thức bước vào Chương II.' },
   daohoa:    { sub:'Plant Tribe Glade — hòn đảo đã hứng ngươi khi ngươi rơi xuống. Chưa có trụ nào ở đây, chỉ có hậu quả.' },
   ngoai:     { sub:'"Đất ngoài thành đang rung." Chưa phải trụ — nhưng là dấu hiệu đầu tiên rằng có trụ đang lung lay.' },
   chungnam:  { sub:'"Trụ Werebear Woods do ta giữ." Một Tướng Quân đơn độc chống đỡ cả cánh rừng — trụ thứ nhất trong năm.' },
@@ -23554,7 +23660,7 @@ window.deepLeave = function(dest){
     color:'#6ae88a', t:6 };
   AudioSys.sfx('levelup', 1);
   DEEP = null; calcDerived(); saveGame();
-  travelTo(dest || 'tuongduong');
+  travelTo(dest || 'ardhaven');
 };
 // Chết trong Tầng Sâu: mất SẠCH kho tạm. Không có nửa vời — đó là thứ làm quyết định "xuống
 // thêm một tầng nữa" có sức nặng.
@@ -23962,7 +24068,7 @@ function dailyHtml(){
 // ============================================================
 const MAP_AMBIENT = {
   daohoa:     { kind:'petal',   color:'#f0a8c0', n:26 }, // hoa đào rơi
-  tuongduong: { kind:'mote',    color:'#7ecbff', n:18 }, // bụi vàng thành thị
+  ardhaven: { kind:'mote',    color:'#7ecbff', n:18 }, // bụi vàng thành thị
   ngoai:      { kind:'leaf',    color:'#9ab86a', n:22 }, // lá rụng ngoại ô
   chungnam:   { kind:'firefly', color:'#b8e87a', n:20 }, // đom đóm lăng mộ
   comoc:      { kind:'wisp',    color:'#9a86d8', n:18 }, // tà khí cổ mộc
@@ -24394,48 +24500,99 @@ const CHAOS_RATE         = [0, 70, 60, 50, 40, 30, 22];
 const CHAOS_HON_COST     = [0,  2,  3,  5,  7, 10, 14];
 const CHAOS_SILVER_COST  = [0, 300, 600, 1200, 2200, 3800, 6000];
 // Cảnh ghép đồ kiểu MU Online: yêu tinh tung quả cầu Hỗn Nguyên trong lúc luyện —
-// mutation & lưu game đã chạy synchronous ở chaosCombine, hàm này chỉ diễn hoạt rồi gọi onReveal
-// để lấy dữ liệu hiển thị (tên/màu vật phẩm mới) đúng lúc "khui" kết quả.
-function playChaosAnim(items, r, success, onReveal){
-  const nextColor = giaiMau(r + 1);
-  const slotsHtml = items.map(it => `<div class="chaos-slot">${slotIcon(it)}</div>`).join('');
-  document.getElementById('overlay-inner').innerHTML = `
-    <h2 style="color:${giaiMau(r)}">◑ Lò Hỗn Loạn</h2>
-    <p style="margin-bottom:10px">Yêu tinh giữ lò đang tung Hỗn Nguyên Thạch, luyện hoá 3 món...</p>
-    <div class="chaos-scene" id="chaos-scene" style="--oc:${nextColor}">
-      <div class="chaos-slots">${slotsHtml}</div>
-      <div class="chaos-goblin">👺</div>
-      <div class="chaos-orb"></div>
-      <div class="chaos-result-item" id="chaos-result-item"></div>
-    </div>
-    <div class="chaos-result-text" id="chaos-result-text"></div>`;
-  document.getElementById('overlay').classList.remove('hidden');
-  const scene = document.getElementById('chaos-scene');
-  requestAnimationFrame(() => requestAnimationFrame(() => { if (scene) scene.classList.add('brewing'); }));
-  AudioSys.sfx('ui', 0.5);
-  setTimeout(() => {
-    if (!scene) return;
-    scene.classList.remove('brewing');
-    scene.classList.add(success ? 'chaos-success' : 'chaos-fail');
-    const data = onReveal() || {};
-    const txt = document.getElementById('chaos-result-text');
-    if (success && data.newItem){
-      document.getElementById('chaos-result-item').innerHTML = slotIcon(data.newItem);
-      txt.textContent = `THÀNH CÔNG! → ${data.newItem.name}`;
-      txt.style.color = giaiMau(data.newItem.tier);
-      AudioSys.sfx('forge_ok', 0.95);
+// ═══════════ SÂN LÒ — cỗ máy yêu tinh, diễn NGAY TRONG bảng Lò Hỗn Độn ═══════════
+// Bản trước diễn bằng một overlay TOÀN MÀN HÌNH bật lên SAU khi bấm. Cái đó hỏng đúng thứ
+// người chơi nhớ nhất về máy yêu tinh: ở đó con yêu tinh tung đồ LIÊN TỤC ngay trong khung
+// NPC, và người chơi NHÌN NÓ rồi tự chọn lúc bấm. Hoạt cảnh chạy sau cú bấm chỉ là một màn
+// chờ; hoạt cảnh chạy TRƯỚC cú bấm mới là cái nghi lễ.
+//
+// ⚠ CANH NHỊP LÀ MÊ TÍN, VÀ ĐÓ LÀ CHỦ Ý — chốt cùng chủ dự án. Bấm ở nhịp nào cũng ra đúng
+// tỉ lệ dán trên bảng: kết quả bốc tại `_loChot`, sau khi nhịp nín thở đã chạy xong, và không
+// một dòng nào trong tệp này đọc `_loDem` để tính tỉ lệ. Người chơi sẽ tự nghĩ ra luật canh
+// nhịp của riêng họ — ở game gốc cũng vậy, và chính cái đó là thứ đáng giữ.
+const CHAOS_NHIP = 550;    // một vòng tung — PHẢI khớp `chaos-goblin-toss` trong style.css
+const LO_KHUI    = 1150;   // nhịp nín thở từ lúc bấm tới lúc lộ kết quả
+
+let _loDem = 0;            // số vòng tung đã đếm từ khi khay đổi
+let _loGio = null;         // đồng hồ đếm nhịp
+let _loBan = false;        // đang trong nhịp khui — khoá cả nút lẫn phím Enter
+let _loVan = '';           // vân tay khay: đổi thì bộ đếm về 0
+
+function loSan(){ return document.getElementById('lo-san'); }
+function loMo(){ const e2 = document.getElementById('panel-forge'); return e2 && !e2.classList.contains('hidden'); }
+
+// Vẽ sân. `cur` là công thức đang chọn (có thể null).
+function loSanHtml(cur){
+  const san = cur && cur.p.ready ? 'lo-tung' : 'lo-cho';
+  const mau = cur && cur.m && cur.m.it ? giaiMau(cur.m.it.tier || 1) : '#ffd76a';
+  let khay = '';
+  for (const e of forgeTray.slice(0, 6)){
+    if (e.k === 'item'){
+      const it = findItemByUid(e.uid);
+      if (it) khay += `<div class="lo-mon">${slotIcon(it, 'chaos-ic')}${it.plus?`<b class="chaos-plus">+${it.plus}</b>`:''}</div>`;
     } else {
-      txt.textContent = 'THẤT BẠI — mất sạch!';
-      txt.style.color = '#ff5a4a';
-      AudioSys.sfx('forge_fail', 0.8);
+      const d = CHAOS_JEWELS.find(x => x.k === e.j) || CHAOS_JEWELS[0];
+      khay += `<div class="lo-mon"><span class="chaos-gem" style="color:${d.color}">${d.glyph}</span></div>`;
     }
-    setTimeout(() => {
-      document.getElementById('overlay').classList.add('hidden');
-      renderForge();
-    }, 1400);
-  }, 1300);
+  }
+  const loi = cur && cur.p.ready
+    ? 'Yêu tinh đang tung — bấm <b>Enter</b> lúc ngươi thấy được.'
+    : (forgeTray.length ? 'Khay chưa khớp công thức nào chạy được.' : 'Bỏ trang bị và ngọc vào khay bên dưới.');
+  return `<div class="lo-san ${san}" id="lo-san" style="--oc:${mau}">
+    <div class="lo-khay">${khay}</div>
+    <div class="lo-yeutinh">👺</div>
+    <div class="lo-cau"></div>
+    <div class="lo-ra" id="lo-ra"></div>
+    <div class="lo-nhip"><span>Lượt tung</span><b id="lo-dem">${_loDem}</b></div>
+  </div>
+  <div class="lo-loi" id="lo-loi">${loi}</div>`;
 }
 
+// Đồng hồ đếm nhịp. Gọi lại sau MỖI lần vẽ bảng — vẽ lại là dựng DOM mới, đồng hồ cũ trỏ vào
+// nút đã chết. Vòng tung do CSS lo (`animation: … infinite`), đây chỉ đếm và điểm tiếng.
+function loNhipChay(){
+  clearInterval(_loGio); _loGio = null;
+  const s2 = loSan();
+  if (!s2 || !s2.classList.contains('lo-tung')) return;
+  _loGio = setInterval(() => {
+    const s3 = loSan();
+    if (!s3 || !s3.classList.contains('lo-tung') || !loMo()){ clearInterval(_loGio); _loGio = null; return; }
+    _loDem++;
+    const d = document.getElementById('lo-dem');
+    if (d) d.textContent = _loDem;
+    // Tiếng RẤT nhỏ: đủ để đếm nhịp bằng tai mà không phải dán mắt vào bảng, chưa tới mức
+    // thành tiếng ồn khi người chơi ngồi cân nhắc cả phút. Vẫn đi qua SETTINGS.sfx như mọi
+    // âm khác nên tắt được.
+    AudioSys.sfx('ui', 0.09);
+  }, CHAOS_NHIP);
+}
+
+// Khay đổi thì đếm lại từ 0; vẽ lại vì lý do khác (đổi tab, bật Thiên Mệnh Phù) thì giữ số.
+function loVanTay(){ return forgeTray.map(e => e.k === 'item' ? 'i' + e.uid : 'j' + e.j).join(',') + '|' + chaosPick; }
+
+// LỘ KẾT QUẢ. Nhịp nín thở đã chạy xong ở `_loChot` rồi, nên hàm này không chờ thêm — nó chỉ
+// gắn lớp thắng/bại và nhả món mới ra. Công thức nào tự lo phần diễn của mình (Lò Hỗn Loạn ba
+// món) thì gọi thẳng vào đây.
+function loLoi(t, c){
+  const e2 = document.getElementById('lo-loi');
+  if (!e2) return;
+  e2.innerHTML = t;
+  e2.style.color = c || '';
+  e2.style.opacity = c ? '1' : '';
+}
+function loKetQua(success, onReveal){
+  const data = (onReveal && onReveal()) || {};
+  const s2 = loSan();
+  if (s2){
+    s2.classList.remove('lo-tung', 'lo-khui', 'lo-cho');
+    s2.classList.add(success ? 'lo-thang' : 'lo-bai');
+  }
+  const ra = document.getElementById('lo-ra');
+  if (ra && success && data.newItem) ra.innerHTML = slotIcon(data.newItem, 'chaos-ic');
+  loLoi(success && data.newItem ? `✔ Lò nhả ra <b>${data.newItem.name}</b>!` : '✘ Lò nuốt sạch — chẳng nhả gì cả.',
+        success ? '#8fd18f' : '#ff5a4a');
+  return data;
+}
 // ---------- Bảo Hạp (mở từ Túi Đồ) ----------
 // Nội dung phần thưởng giữ NGUYÊN như bản cũ (tỉ lệ Hoàn Hảo, châu, Lumen) —
 // chỉ đổi ĐƯỜNG ĐI: thay vì nhảy thẳng vào túi kèm một bảng chữ, mọi thứ văng ra đất qua

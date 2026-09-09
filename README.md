@@ -23,7 +23,7 @@ player-visible text.
 | | |
 |---|---|
 | Classes | 5 — Dark Knight · Sylvan Ranger · Dark Wizard · Spellblade · Dark Lord |
-| Maps | starting town (Quảng Trường Cũ) · 2 safe hubs · 7 wilderness regions, levels 1–120 |
+| Maps | Ardhaven — a 6400×3200 walled town that is both spawn point and hub · 7 wilderness regions, levels 1–120 |
 | Quests | 33-quest main chain across 5 chapters, grounded in Axie lore |
 | Gear | 14 tiers, per-class sets, socketing, Chaos Machine upgrades, 3 wing tiers |
 | Systems | Ragoon contracts (gacha), spirit pets, mastery, mob roles + elite mutations, wave arenas |
@@ -40,8 +40,8 @@ constraints, regeneration prompts and what the first rebuild taught are in
 required for local play/testing). Clone the repo, then serve that folder with anything static:
 
 ```
-git clone https://github.com/ShanKyos/axierift.git
-cd axierift/public/game
+git clone https://github.com/ShanKyos/axiewuxia.git
+cd axiewuxia/public/game
 python3 -m http.server 8850
 # or: npx serve -l 8850
 ```

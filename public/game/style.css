@@ -32,13 +32,21 @@
 :root {
   --font-chi: 'Baloo 2', 'Be Vietnam Pro', 'Segoe UI', sans-serif;
   --bg-deep: #10122a;
-  --bg-panel-1: #262c58;
-  --bg-panel-2: #14163a;
+  /* ⚠ ĐỔI TỪ XANH NAVY SANG ĐÁ TỐI — đây là đổi TÔNG cả giao diện, không phải một chỗ.
+     Bản cũ dùng #262c58/#14163a: xanh navy đặc, đúng gu bảng điều khiển hiện đại nhưng chọi
+     hẳn với ngôn ngữ hình ảnh MU S6, vốn là đá tối / da thuộc với viền vàng đồng chảy. Hai
+     màu dưới đây giữ nguyên độ sáng (nên chữ vẫn đủ tương phản) mà xoay hue về nâu-đá, và
+     hạ độ đục xuống ~0,88 để nhìn thấy cảnh phía sau — bảng nay là một tấm kính đá, không
+     phải một hộp kín. */
+  --bg-panel-1: rgba(46,39,29,.90);
+  --bg-panel-2: rgba(22,18,13,.94);
+  --vien-dong: rgba(198,158,74,.62);
+  --vien-dong-manh: #c69e4a;
   --cell: rgba(180,205,255,.07);
   --cell-hover: rgba(180,205,255,.16);
-  --border: rgba(140,175,255,.35);
-  --border-strong: rgba(140,175,255,.6);
-  --border-faint: rgba(140,175,255,.18);
+  --border: rgba(198,158,74,.42);
+  --border-strong: rgba(198,158,74,.72);
+  --border-faint: rgba(198,158,74,.2);
   --text-bright: #eef2ff;
   --text-dim: #9aa8d4;
   --text-dimmer: #7a86ad;
@@ -140,16 +148,62 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .shard-ten { display:flex; flex-direction:column; gap:2px; font-size:var(--fs-md); }
 .shard-ten em { font-style:normal; font-size:var(--fs-xs); color:var(--text-dim); }
 .shard-dong { font-size:var(--fs-xs); color:var(--text-dim); white-space:nowrap; }
-.hud-btns { margin-top:2px; }
+/* Nút viên thuốc — nay chỉ còn PK và TỰ ĐÁNH ở góc trên phải. Cụm nút vuông cạnh viên đá
+   Máu/Mana đã dọn hẳn: menu hệ thống chuyển sang cột dọc mép trái (#menu-cot). */
 .hbtn { pointer-events:auto; background:rgba(30,32,64,.88); color:var(--text-body); border:1px solid var(--border);
   padding:6px 13px; margin-left:5px; border-radius:999px; font-family:inherit; font-size:var(--fs-md); font-weight:600; cursor:pointer; }
 .hbtn:hover { background:rgba(76,141,255,.28); border-color:var(--border-strong); }
 
-/* Cụm nút icon vuông 2 bên viên đá Máu/Mana ở #bottom-hud
-   (khác .hbtn dạng viên thuốc vẫn dùng cho PK/AUTO ở góc trên phải, xem #hud-right .hbtn) */
-.hud-btns-left, .hud-btns-right { display:flex; gap:6px; pointer-events:auto; }
-#bottom-hud .hud-btns .hbtn { margin-left:0; padding:0; width:44px; height:44px; border-radius:var(--r-sm);
-  font-size:var(--fs-2xl); display:flex; align-items:center; justify-content:center; border-width:2px; }
+/* ══ CỘT MENU HỆ THỐNG — dọc sát mép phải, thu gọn được ══
+   Khung icon theo đúng công thức MU S6: ô vuông nền kim loại tối, viền vàng đồng mảnh, góc bo
+   nhẹ. Tranh bên trong đã tự mang nền + viền (bộ ic_*.png), nên nút KHÔNG vẽ nền riêng — vẽ
+   thêm là khung lồng khung. Nút chỉ lo ba trạng thái: thường · rê chuột · đang mở. */
+/* ⚠ DỌC MÉP TRÁI, KHÔNG PHẢI MÉP PHẢI — và đó là chuyện chỗ trống, không phải gu.
+   Mép phải đã kín: ví ba loại tiền, nút PK/TỰ ĐÁNH, bản đồ thu nhỏ, bảng theo dõi nhiệm vụ.
+   Đặt cột menu vào đó là nó nằm đè lên bảng nhiệm vụ (đã thấy đúng vậy ở ảnh chụp đầu tiên).
+   Mép trái chỉ có cụm tên + đồng hồ ở sát đỉnh, từ đó xuống dưới trống trơn. */
+#menu-cot { position:fixed; left:10px; top:50%; transform:translateY(-50%); z-index:12;
+  display:flex; flex-direction:column; align-items:flex-start; gap:5px; pointer-events:auto; }
+#mc-thu { width:22px; height:26px; padding:0; cursor:pointer; font-size:11px; line-height:1;
+  color:var(--gold); background:linear-gradient(180deg,rgba(38,32,22,.92),rgba(18,15,10,.94));
+  border:1px solid rgba(198,158,74,.55); border-radius:4px; }
+#mc-thu:hover { border-color:var(--gold); background:rgba(58,46,28,.95); }
+#mc-list { display:flex; flex-direction:column; gap:5px; }
+.mc-btn { position:relative; width:52px; height:52px; padding:0; cursor:pointer; border:none;
+  background:none; border-radius:7px; display:flex; align-items:center; justify-content:center;
+  font-family:inherit; color:var(--gold); font-size:11px; font-weight:700; }
+.mc-btn img { width:100%; height:100%; object-fit:contain; display:block;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.6)); transition:filter .14s, transform .14s; }
+/* Nhãn chữ chỉ hiện lúc rê chuột — cột phải gọn, mà vẫn không bắt người chơi đoán icon. */
+.mc-btn span { position:absolute; left:calc(100% + 7px); top:50%; transform:translateY(-50%);
+  white-space:nowrap; padding:3px 9px; border-radius:4px; opacity:0; pointer-events:none;
+  background:rgba(12,10,8,.94); border:1px solid rgba(198,158,74,.5); color:#f0e2c0;
+  font-size:11.5px; font-weight:600; transition:opacity .12s; }
+.mc-btn:hover span { opacity:1; }
+.mc-btn:hover img { transform:scale(1.06); filter:drop-shadow(0 0 7px rgba(255,206,110,.75)); }
+/* ĐANG MỞ — quầng vàng nhạt, đúng cách MU báo một cửa đang bật. */
+.mc-btn.on img { filter:drop-shadow(0 0 9px rgba(255,206,110,.95)) brightness(1.12); }
+/* KHOÁ — xám hẳn + ổ khoá nhỏ góc dưới-phải. Mờ suông thì đọc ra như đang tải. */
+.mc-btn.khoa { cursor:not-allowed; }
+.mc-btn.khoa img { filter:grayscale(1) brightness(.5); }
+.mc-btn.khoa::after { content:'🔒'; position:absolute; right:2px; bottom:1px; font-size:12px;
+  line-height:1; text-shadow:0 1px 2px #000; }
+.mc-menu { font-size:11px; letter-spacing:.3px; height:30px; width:52px; border-radius:5px;
+  background:linear-gradient(180deg,rgba(38,32,22,.94),rgba(18,15,10,.96));
+  box-shadow:inset 0 0 0 1px rgba(198,158,74,.5); }
+.mc-menu:hover { box-shadow:inset 0 0 0 1px var(--gold); color:#ffe9b0; }
+#mc-drop { position:absolute; left:calc(100% + 8px); bottom:0; display:flex; flex-direction:column;
+  gap:3px; min-width:200px; padding:6px; border-radius:6px;
+  background:linear-gradient(180deg,rgba(28,23,16,.97),rgba(14,11,8,.98));
+  box-shadow:inset 0 0 0 1px rgba(198,158,74,.55), 0 8px 24px rgba(0,0,0,.7); }
+#mc-drop button { display:flex; align-items:center; gap:8px; padding:6px 9px; cursor:pointer;
+  background:none; border:none; border-radius:4px; color:#e8dcc0; font-family:inherit;
+  font-size:12px; font-weight:600; text-align:left; }
+#mc-drop button:hover { background:rgba(198,158,74,.2); color:#fff3d6; }
+#mc-drop button img { width:22px; height:22px; object-fit:contain; }
+/* THU GỌN — cả cột biến mất, chỉ còn cái mũi tên làm tab kéo ra lại. */
+#menu-cot.thu #mc-list, #menu-cot.thu #mc-drop { display:none; }
+
 
 /* Quest tracker — nằm trong luồng cột phải, dưới minimap */
 #quest-tracker-wrap { pointer-events:auto; }
@@ -180,10 +234,29 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    2 đầu + thanh kỹ năng dàn ngang giữa + viền sáng theo % máu chạy dọc mép dưới màn hình. */
 #bottom-hud { position:fixed; left:50%; bottom:12px; transform:translateX(-50%); z-index:11;
   display:flex; align-items:center; gap:14px; pointer-events:none; }
-.orb { pointer-events:auto; position:relative; width:72px; height:72px; border-radius:50%; overflow:hidden;
-  flex:none; cursor:default; border:3px solid #0c0c14;
-  box-shadow:0 0 0 2px rgba(210,225,255,.16), 0 4px 16px rgba(0,0,0,.65), inset 0 2px 8px rgba(0,0,0,.7);
+/* Vành cầu KHẮC HOA VĂN, không phải một vòng đen trơn. Vành dựng bằng conic-gradient trên
+   pseudo-element: mười hai nan đồng sáng-tối xen kẽ ⇒ mắt đọc ra một cái vòng ĐÚC, có mặt.
+   Vòng viền đơn sắc của bản cũ đọc ra như một khối màu, và đó là chỗ khác nhau giữa "khung
+   được vẽ" với "khung là màu đặc". */
+.orb { pointer-events:auto; position:relative; width:72px; height:72px; border-radius:50%;
+  flex:none; cursor:default; border:none;
+  box-shadow:0 4px 16px rgba(0,0,0,.65);
   background:radial-gradient(circle at 36% 28%, rgba(255,255,255,.14), rgba(0,0,0,.6) 72%); }
+.orb::before { content:''; position:absolute; inset:-5px; border-radius:50%; z-index:3; pointer-events:none;
+  background:conic-gradient(#8a6a2e, #e6c477 8%, #7a5c26 16%, #d8b467 25%, #6b4f20 33%,
+                            #e6c477 42%, #7a5c26 50%, #d8b467 58%, #6b4f20 66%,
+                            #e6c477 75%, #7a5c26 83%, #d8b467 92%, #8a6a2e);
+  -webkit-mask:radial-gradient(circle, transparent 0 calc(50% - 5px), #000 calc(50% - 5px));
+          mask:radial-gradient(circle, transparent 0 calc(50% - 5px), #000 calc(50% - 5px));
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.8)); }
+/* Mặt kính: chóa sáng nằm TRÊN dung dịch, dưới vành. */
+.orb::after { content:''; position:absolute; inset:0; border-radius:50%; z-index:2; pointer-events:none;
+  background:radial-gradient(circle at 34% 22%, rgba(255,255,255,.34), transparent 46%),
+             inset 0 0 0 0 transparent;
+  box-shadow:inset 0 3px 10px rgba(0,0,0,.75); }
+.orb-fill, .orb-val { border-radius:50%; }
+.orb { overflow:visible; }
+.orb-fill { clip-path:circle(50% at 50% 50%); }
 .orb-fill { position:absolute; left:0; right:0; bottom:0; height:0%; transition:height .18s; }
 .orb-hp .orb-fill { background:radial-gradient(circle at 42% 22%, #ff9fae, #e8324f 55%, #6e0e20 100%); }
 .orb-qi .orb-fill { background:radial-gradient(circle at 42% 22%, #9ed4ff, #2f6fe0 55%, #0d2a6e 100%); }
@@ -199,6 +272,31 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .skill .sk-key { display:block; font-size:9px; opacity:.7; }
 .skill .sk-cd { position:absolute; left:0; bottom:0; width:100%; height:0%; background:rgba(0,0,0,.65); pointer-events:none; }
 .skill.locked { opacity:.38; filter:grayscale(.8); }
+/* Ô CHIÊU TRỐNG — khung vàng NÉT ĐỨT + dấu cộng, không phải ô mờ.
+   Ô mờ đọc ra y hệt ô "đang tải" hoặc ô hỏng, nên người chơi tưởng game lỗi thay vì hiểu là
+   chỗ này còn để trống. Nét đứt là quy ước "thả vào đây" mà mọi game bày ô đồ đều dùng. */
+.skill.sk-empty { background:rgba(20,17,12,.55); border:2px dashed rgba(198,158,74,.6);
+  color:rgba(240,214,150,.8); opacity:1; filter:none; }
+.skill.sk-empty .sk-ico { font-size:22px; line-height:34px; opacity:.85; }
+.skill.sk-empty:hover { border-color:var(--gold); background:rgba(58,46,28,.6);
+  box-shadow:0 0 10px rgba(255,206,110,.35); }
+/* Vạch ngăn NHÓM trong thanh chiêu: chiêu | vật phẩm | trợ thủ. Cùng một hàng nhưng ba việc
+   khác nhau, và trong lúc đánh nhau người ta tìm theo CỤM chứ không đếm từng ô. */
+.sk-vach { width:2px; height:34px; align-self:center; flex:none; border-radius:1px;
+  background:linear-gradient(180deg,transparent,rgba(198,158,74,.55),transparent); }
+.sk-vat { display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+  background-size:74%; background-position:center 3px; background-repeat:no-repeat; }
+#sk-thuoc { background-image:url(assets/ui/ic_binhmau.png); }
+#sk-mana  { background-image:url(assets/ui/ic_lomana.png); }
+.sk-so { position:absolute; right:3px; bottom:2px; font-size:12px; font-weight:700; color:#fff;
+  text-shadow:0 1px 3px #000, 0 0 6px rgba(0,0,0,.9); font-variant-numeric:tabular-nums; }
+.sk-vat.het { filter:grayscale(1) brightness(.55); }
+.sk-vat.het .sk-so { color:#ff8f8f; }
+/* TRỢ THỦ — chỗ của Mu Helper: ngay cạnh thanh chiêu, không nằm lẫn trong menu hệ thống. */
+.sk-troly.on { border-color:var(--gold); box-shadow:0 0 12px rgba(255,206,110,.6), inset 0 0 12px rgba(255,206,110,.2); }
+.sk-troly.on .sk-ico { animation:troly-quay 3.4s linear infinite; }
+@keyframes troly-quay { to { transform:rotate(360deg); } }
+@media (prefers-reduced-motion: reduce){ .sk-troly.on .sk-ico { animation:none; } }
 .skill:active { transform:scale(.94); }
 .skill.flash { box-shadow:0 0 14px var(--accent-glow); }
 
@@ -212,6 +310,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 
 /* Nhật ký chiến đấu — góc dưới trái, thay cho số sát thương/thông báo bay rối mắt lúc AUTO
    đánh nhiều quái cùng lúc; dòng mới nhất nằm trên cùng, cuộn được, tự bỏ dòng cũ khi đầy */
+#combat-log-wrap.an { display:none; }
 #combat-log-wrap { position:fixed; left:16px; bottom:64px; width:min(260px,40vw); z-index:11; pointer-events:auto; }
 #btn-combatlog { pointer-events:auto; width:100%; display:flex; justify-content:space-between; align-items:center;
   background:rgba(30,32,64,.88); color:var(--text-body); border:1px solid var(--border); border-radius:var(--r-sm);
@@ -569,35 +668,69 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #overlay-inner h2 { font-family:var(--font-display); font-weight:700; color:var(--accent-light); letter-spacing:1px; font-size:28px; margin-bottom:14px; }
 #overlay-inner p { font-size:14px; line-height:1.8; margin-bottom:20px; }
 /* ── Lò Hỗn Loạn: cảnh ghép đồ kiểu MU Online — bỏ đồ vào, yêu tinh tung quả cầu, rồi bung kết quả ── */
-.chaos-scene { position:relative; height:170px; display:flex; align-items:flex-end; justify-content:center; gap:22px; margin-bottom:6px; }
-.chaos-slots { display:flex; gap:10px; align-items:center; z-index:1; }
-.chaos-slot { opacity:0; transform:translateY(-26px); animation:chaos-drop .45s ease forwards; }
-.chaos-slot:nth-child(1){ animation-delay:.05s; } .chaos-slot:nth-child(2){ animation-delay:.22s; } .chaos-slot:nth-child(3){ animation-delay:.4s; }
-@keyframes chaos-drop { to { opacity:1; transform:translateY(0); } }
-.chaos-goblin { font-size:46px; line-height:1; transform-origin:bottom center; filter:drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
-.chaos-orb { position:absolute; width:20px; height:20px; border-radius:50%; left:50%; bottom:78px; margin-left:54px;
+/* ══ SÂN LÒ — cỗ máy yêu tinh nằm NGAY TRONG bảng Lò Hỗn Độn ══
+   Không còn overlay toàn màn hình bật lên sau cú bấm: con yêu tinh phải tung đồ SẴN, trước
+   khi người chơi bấm, thì mới có cái để nhìn mà canh nhịp. Vòng tung do CSS lo (infinite),
+   JS chỉ đếm — xem khối SÂN LÒ trong game.js. */
+.lo-san { position:relative; height:132px; display:flex; align-items:flex-end; justify-content:center;
+  gap:18px; margin:2px 0 4px; border-radius:var(--r-md); overflow:hidden;
+  background:radial-gradient(ellipse at 50% 118%, rgba(255,177,92,.16), rgba(10,10,26,.5) 62%);
+  box-shadow:inset 0 0 0 1px rgba(140,175,255,.18); }
+.lo-khay { display:flex; gap:7px; align-items:flex-end; z-index:1; padding-bottom:14px; }
+.lo-mon { position:relative; font-size:20px; line-height:1; }
+.lo-yeutinh { font-size:44px; line-height:1; transform-origin:bottom center; padding-bottom:10px;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+.lo-cau { position:absolute; width:18px; height:18px; border-radius:50%; left:50%; bottom:66px; margin-left:50px;
   background:radial-gradient(circle at 35% 30%, #fff, var(--oc,#ffd76a) 55%, transparent 78%);
-  box-shadow:0 0 14px 4px var(--oc,#ffd76a); }
-.chaos-result-item { opacity:0; transform:scale(0); z-index:1; }
-.chaos-scene.brewing .chaos-goblin { animation:chaos-goblin-toss .55s ease-in-out infinite; }
-.chaos-scene.brewing .chaos-orb { animation:chaos-orb-toss .55s ease-in-out infinite; }
+  box-shadow:0 0 14px 4px var(--oc,#ffd76a); opacity:.25; }
+.lo-ra { position:absolute; left:50%; bottom:22px; margin-left:-19px; opacity:0; transform:scale(0); z-index:2; }
+.lo-nhip { position:absolute; top:6px; right:10px; font-size:11px; opacity:.62; display:flex; gap:6px; align-items:baseline; }
+.lo-nhip b { font-size:15px; font-variant-numeric:tabular-nums; color:var(--oc,#ffd76a); }
+.lo-loi { font-size:11.5px; opacity:.78; text-align:center; min-height:16px; margin-bottom:6px; }
+
+/* ĐANG TUNG — trạng thái mặc định khi khay đã khớp một công thức chạy được. */
+.lo-san.lo-tung .lo-cau { opacity:1; animation:chaos-orb-toss .55s ease-in-out infinite; }
+.lo-san.lo-tung .lo-yeutinh { animation:chaos-goblin-toss .55s ease-in-out infinite; }
 @keyframes chaos-goblin-toss { 0%,100% { transform:translateY(0) rotate(-4deg); } 50% { transform:translateY(-9px) rotate(4deg); } }
-@keyframes chaos-orb-toss { 0% { transform:translateY(0) scale(.9); } 50% { transform:translateY(-44px) scale(1.15); } 100% { transform:translateY(0) scale(.9); } }
-.chaos-scene.chaos-success .chaos-orb { animation:chaos-orb-burst .5s ease forwards; }
+@keyframes chaos-orb-toss { 0% { transform:translateY(0) scale(.9); } 50% { transform:translateY(-40px) scale(1.15); } 100% { transform:translateY(0) scale(.9); } }
+
+/* NÍN THỞ — yêu tinh đã chộp quả cầu, ôm khư khư, run lên. */
+.lo-san.lo-khui .lo-cau { opacity:1; animation:lo-cau-nen 1.15s ease-in forwards; }
+.lo-san.lo-khui .lo-yeutinh { animation:lo-run .16s ease-in-out infinite; }
+@keyframes lo-cau-nen { 0% { transform:translateY(0) scale(1); } 100% { transform:translateY(14px) scale(.55); filter:brightness(1.9); } }
+@keyframes lo-run { 0%,100% { transform:translateX(-1.5px) rotate(-1.5deg); } 50% { transform:translateX(1.5px) rotate(1.5deg); } }
+
+/* THẮNG / BẠI */
+.lo-san.lo-thang .lo-cau { animation:chaos-orb-burst .5s ease forwards; }
 @keyframes chaos-orb-burst { 0% { transform:scale(1); opacity:1; } 60% { transform:scale(2.8); opacity:.9; box-shadow:0 0 40px 18px var(--oc,#ffd76a); } 100% { transform:scale(3.2); opacity:0; } }
-.chaos-scene.chaos-success .chaos-goblin { animation:chaos-goblin-cheer .6s ease; }
+.lo-san.lo-thang .lo-yeutinh { animation:chaos-goblin-cheer .6s ease; }
 @keyframes chaos-goblin-cheer { 0%,100% { transform:translateY(0) rotate(0); } 40% { transform:translateY(-15px) rotate(-10deg); } }
-.chaos-scene.chaos-success .chaos-slot { animation:chaos-slot-fade .45s ease forwards; }
+.lo-san.lo-thang .lo-mon { animation:chaos-slot-fade .45s ease forwards; }
 @keyframes chaos-slot-fade { to { transform:translateY(-14px) scale(.3); opacity:0; } }
-.chaos-scene.chaos-success .chaos-result-item { animation:chaos-result-pop .55s ease .25s forwards; }
+.lo-san.lo-thang .lo-ra { animation:chaos-result-pop .55s ease .25s forwards; }
 @keyframes chaos-result-pop { 0% { opacity:0; transform:scale(0); } 65% { opacity:1; transform:scale(1.25); } 100% { opacity:1; transform:scale(1); } }
-.chaos-scene.chaos-fail .chaos-orb { animation:chaos-orb-die .5s ease forwards; }
+.lo-san.lo-thang { animation:lo-sang .7s ease; }
+@keyframes lo-sang { 0% { box-shadow:inset 0 0 0 1px rgba(140,175,255,.18); } 35% { box-shadow:inset 0 0 40px 6px var(--oc,#ffd76a), inset 0 0 0 1px var(--oc,#ffd76a); } 100% { box-shadow:inset 0 0 0 1px rgba(140,175,255,.18); } }
+
+.lo-san.lo-bai .lo-cau { animation:chaos-orb-die .5s ease forwards; }
 @keyframes chaos-orb-die { to { filter:grayscale(1) brightness(.4); transform:scale(.6); opacity:.35; } }
-.chaos-scene.chaos-fail .chaos-goblin { animation:chaos-goblin-shrug .6s ease; }
+.lo-san.lo-bai .lo-yeutinh { animation:chaos-goblin-shrug .6s ease; }
 @keyframes chaos-goblin-shrug { 0%,100% { transform:rotate(0); } 30%,70% { transform:rotate(-9deg); } 50% { transform:rotate(9deg); } }
-.chaos-scene.chaos-fail .chaos-slot { animation:chaos-slot-crumble .65s ease forwards; }
+.lo-san.lo-bai .lo-mon { animation:chaos-slot-crumble .65s ease forwards; }
 @keyframes chaos-slot-crumble { to { transform:translateY(28px) rotate(18deg) scale(.4); opacity:0; filter:grayscale(1); } }
-.chaos-result-text { font-size:19px; font-weight:700; min-height:28px; letter-spacing:.5px; }
+.lo-san.lo-bai { animation:lo-do .5s ease; }
+@keyframes lo-do { 0%,100% { box-shadow:inset 0 0 0 1px rgba(140,175,255,.18); } 40% { box-shadow:inset 0 0 34px 6px rgba(255,107,107,.55), inset 0 0 0 1px rgba(255,107,107,.8); } }
+
+/* Máy đứng im khi khay chưa khớp công thức nào — quả cầu chỉ âm ỉ. */
+.lo-san.lo-cho .lo-yeutinh { opacity:.55; filter:grayscale(.5) drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+
+@media (prefers-reduced-motion: reduce){
+  .lo-san .lo-cau, .lo-san .lo-yeutinh, .lo-san .lo-mon, .lo-san .lo-ra, .lo-san { animation:none !important; }
+  .lo-san.lo-tung .lo-cau, .lo-san.lo-khui .lo-cau { opacity:1; }
+  .lo-san.lo-thang .lo-ra { opacity:1; transform:scale(1); }
+}
+.chaos-go i { font-style:normal; font-size:10.5px; opacity:.6; margin-left:6px;
+  padding:1px 5px; border-radius:4px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.28); }
 /* ── Khung phẩm chất + ấn giai cho icon trang bị (Drop v2.0) ── */
 .item-ic { position:relative; display:inline-flex; align-items:center; justify-content:center;
   width:38px; height:38px; border-radius:var(--r-sm); border:1.5px solid rgba(190,205,240,.45);
@@ -645,14 +778,14 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .qd-quest .q-rew { color:var(--mint); font-size:11.5px; margin-top:6px; }
 
 @media (max-width:720px){
-  /* Thanh dưới là MỘT hàng flex 14 phần tử không co, không xuống dòng: cần ~838px, mà điện thoại
-     chỉ có 390px và không cuộn ngang được ⇒ 8 nút nằm hẳn ngoài màn hình, trong đó có nút ✋ NHẶT
-     ĐỒ — trên điện thoại không có bàn phím nên đó là đường DUY NHẤT nhặt đồ dưới đất. Tách làm
-     hai hàng: hàng trên 9 nút menu, hàng dưới hai viên đá + 5 ô kỹ năng. */
+  /* Thanh dưới là MỘT hàng flex không co, không cuộn ngang được: ở khổ 390px thì mấy ô cuối
+     (trong đó có ✋ NHẶT ĐỒ — không bàn phím thì đó là đường DUY NHẤT nhặt đồ dưới đất) rơi hẳn
+     ra ngoài mép. Cho hai viên đá đứng riêng một hàng, thanh chiêu chiếm trọn hàng dưới và TỰ
+     XUỐNG DÒNG. Vạch ngăn nhóm ẩn đi: nó chỉ là dấu phân cụm, còn ở khổ hẹp nó cắt nhầm chỗ
+     xuống dòng và đẩy thêm một ô ra ngoài. */
   #bottom-hud { gap:6px; bottom:8px; max-width:100vw; width:100vw; flex-wrap:wrap; justify-content:center; }
-  .hud-btns-left, .hud-btns-right { order:-1; gap:5px; }
-  #bottom-hud .hud-btns .hbtn { width:36px; height:36px; font-size:var(--fs-xl); }
-  #skillbar { gap:5px; }
+  #skillbar { gap:5px; flex:1 1 100%; flex-wrap:wrap; justify-content:center; max-width:100vw; }
+  .sk-vach { display:none; }
   .skill { width:42px; height:42px; }
   .skill .sk-ico { font-size:17px; line-height:26px; }
   .orb { width:48px; height:48px; }
@@ -1573,3 +1706,17 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   font-variant-numeric:tabular-nums;
 }
 .skill-row .sk-so b { color:var(--accent-light); font-weight:600; }
+
+/* ══ C · CỬA SỔ KIỂU MU: kéo được · thu gọn được · nhớ chỗ ══ */
+.bang-tieu { cursor:grab; user-select:none; }
+.panel.dang-keo .bang-tieu { cursor:grabbing; }
+/* Bảng đã bị kéo: bỏ căn giữa, toạ độ do JS ghi thẳng vào left/top. */
+.panel.da-keo { transform:none; }
+/* THU GỌN — chỉ còn thanh tiêu đề. max-height 0 không dùng được vì tiêu đề phải ở lại, nên
+   giấu mọi con TRỪ tiêu đề và hai cái nút góc. */
+.panel.thu { max-height:none; overflow:visible; padding-bottom:0; }
+.panel.thu > *:not(.bang-tieu):not(.close-x):not(.bang-thu) { display:none !important; }
+.bang-thu { position:absolute; top:8px; right:38px; width:24px; height:24px; padding:0; cursor:pointer;
+  background:rgba(20,17,12,.8); color:var(--gold); border:1px solid var(--vien-dong);
+  border-radius:4px; font-size:14px; line-height:1; font-family:inherit; }
+.bang-thu:hover { border-color:var(--vien-dong-manh); background:rgba(58,46,28,.9); }

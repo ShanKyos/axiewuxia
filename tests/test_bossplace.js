@@ -18,7 +18,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     const out = { viPham: [], deBai: [], soBoss: 0, aggro: null };
     for (const id in BOSS_DEFS){
       const md = MAPS[id]; if (!md) continue;
-      travelTo('tuongduong'); travelTo(id);
+      travelTo('ardhaven'); travelTo(id);
       const W = MAP.w, H = MAP.h;
       const arrivals = [md.spawn].concat(Object.values(md.spawnFrom || {}));
       const packs = (md.packs || []).map(k => ({ x:k.x, y:k.y }));
@@ -34,7 +34,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
       });
     }
     // đọc thẳng tầm truy đuổi thật trong code, đừng tin hằng số chép tay
-    travelTo('tuongduong'); travelTo('daohoa');
+    travelTo('ardhaven'); travelTo('daohoa');
     spawnZoneBosses();
     const bo = mobs.find(m => m.def.bossKind);
     out.aggro = bo ? bo.def.aggro : null;
@@ -51,7 +51,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 
   // Bãi quái đầu tiên phải tới được mà không đi qua tầm boss
   const near = await p.evaluate(() => {
-    travelTo('tuongduong'); travelTo('daohoa');
+    travelTo('ardhaven'); travelTo('daohoa');
     const md = MAPS.daohoa, sp = md.spawn;
     const pk = md.packs.map(k => ({ mob:k.mob, d: Math.round(Math.hypot(k.x-sp.x, k.y-sp.y)) }))
                        .sort((a,b) => a.d - b.d)[0];

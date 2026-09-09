@@ -184,7 +184,7 @@ const PORT = process.argv[2] || '8853';
     }
     C.kho = [];
     const dau = cotRoi('daohoa', 1).length, sau = cotRoi('daohoa', 9).length;
-    const ngoai = cotRoi('tuongduong', 1).length;  // map KHÔNG thuộc Dòng nào thì không rơi Cốt
+    const ngoai = cotRoi('ardhaven', 1).length;  // map KHÔNG thuộc Dòng nào thì không rơi Cốt
     return { sai, dem, dau, sau, ngoai, dat: player.mats.datHon };
   });
   console.log('6) rơi:', JSON.stringify(r6));

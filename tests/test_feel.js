@@ -14,10 +14,12 @@ const { chromium } = require('playwright');
   const r = await p.evaluate(() => {
     window.TEST_MODE = true;
     startGame('thieulam', null);
-    // Điểm thả nay là Quảng Trường Cũ — sân nhỏ, có đa giác đi được, mà bài này đặt cả
-    // người lẫn quái ở toạ độ CỨNG (600,600). Ngoài đa giác thì update() đẩy người trở
-    // vào sân, đòn hẹn không bao giờ chạm. Sang map rộng rồi hẵng đo cảm giác đánh.
-    travelTo('tuongduong');
+    // ⚠ ĐO Ở MAP HOANG DÃ, KHÔNG ĐO TRONG THÀNH. Bài này đặt cả người lẫn quái ở toạ độ CỨNG
+    // (600,600) rồi đo cú hất lùi. Ardhaven nay có đa giác đi được VÀ 16 khối nhà — mà (600,600)
+    // rơi đúng vào lòng khối #0 (x 280-740, y 520-860). Quái bị vật cản chặn nên cả ba phép đo
+    // ra cùng một con số 93, và đòn hẹn thì không bao giờ chạm tới ai.
+    // Werebear Woods trống ở đúng chỗ đó: vách bắc kết thúc ở y=540, dốc tây ở x=320.
+    travelTo('chungnam');
     player.level = 60; vhAutoLearn(); calcDerived();
     const o = {};
 

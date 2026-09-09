@@ -16,20 +16,20 @@ const { chromium } = require('playwright');
   console.log('QUESTS.length (expect 35):', qlen);
 
   // 1) daohoa first-visit lore banner
-  await page.evaluate(() => { player.wpUnlocked = { tuongduong: true }; travelTo('daohoa'); });
+  await page.evaluate(() => { player.wpUnlocked = { ardhaven: true }; travelTo('daohoa'); });
   await page.waitForTimeout(100);
   const daohoaBanner = await page.evaluate(() => zoneBanner);
   console.log('daohoa first-visit banner:', JSON.stringify(daohoaBanner));
 
   // second visit should NOT show the lore line anymore (wpUnlocked.daohoa now true)
-  await page.evaluate(() => { travelTo('tuongduong'); });
+  await page.evaluate(() => { travelTo('ardhaven'); });
   await page.waitForTimeout(50);
   await page.evaluate(() => { travelTo('daohoa'); });
   await page.waitForTimeout(100);
   const daohoaBanner2 = await page.evaluate(() => zoneBanner);
   console.log('daohoa second-visit banner (should be generic, no lore):', JSON.stringify(daohoaBanner2));
 
-  // 2) simulate reaching questIdx=10 (quests 1-10 done) to trigger the reqMain:10 banners (tuongduong + ngoai)
+  // 2) simulate reaching questIdx=10 (quests 1-10 done) to trigger the reqMain:10 banners (ardhaven + ngoai)
   const setupAndTurnIn = await page.evaluate(() => {
     questIdx = 9; questProg = 0; questState = 'done';
     player.level = 20; calcDerived();

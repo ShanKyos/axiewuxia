@@ -24,7 +24,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   const r = await p.evaluate(() => {
     // danh hiệu tối thượng phải đạt được khi đã max mọi thứ
     chiState().co.aurelion = { con:0 }; chiState().eq = 'aurelion'; player.level = 120; calcDerived();
-    const t = TITLES.find(x => x.id === 'tuongduong');
+    const t = TITLES.find(x => x.id === 'ardhaven');
     return { datDuoc: !!t.cond(player), so5: CHIMERA.filter(c => c.sao === 5).length,
              tuvi: 'tuvi' in (player.dantian||{}), ch: 'congHuan' in player };
   });

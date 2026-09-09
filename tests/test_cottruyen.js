@@ -34,12 +34,12 @@ const PORT = process.argv[2] || '8853';
                  ...TITLES.map(t => t.name), ...TRAITS.map(t => t.name + ' ' + t.desc),
                  ...Object.values(TRAIT_TIERS).map(t => t.name),
                  ...Object.values(PERSONALITIES).map(x => x.name + ' ' + x.desc),
-                 MAPS.tuongduong.desc].join(' | ');
+                 MAPS.ardhaven.desc].join(' | ');
     return { tau: /con tàu|cập bến|chiếc lồng/i.test(ss),
              nut: /vết nứt|trời nứt/i.test(ss), ss: ss.slice(0, 70),
              khep: all.includes('Kẻ Khép Vết Nứt'),
              nguHanh: /Trụ (Hỏa|Mộc|Thủy|Kim|Thổ)/.test(all),
-             cho: /Chợ Đấu Giá/.test(MAPS.tuongduong.desc),
+             cho: /Chợ Đấu Giá/.test(MAPS.ardhaven.desc),
              cam: ['mạch lực','Võ Hồn','Long Tích','Bách Bộ','Nhục Thân','Tà Khí','Trung Dung','PHÀM','HUYỀN','THIÊN']
                     .filter(w => all.includes(w)),
              kyHieu: (document.body.innerHTML.match(/☬/g) || []).length };
@@ -76,8 +76,16 @@ const PORT = process.argv[2] || '8853';
   const r3 = await p.evaluate(() => {
     startGame('thieulam', null);
     const tl = NPCS.find(n => n.id === 'truonglang');
+    // ⚠ LUẬT SIẾT VÀO ĐÚNG NGƯỜI GIAO NHIỆM VỤ, KHÔNG PHẢI MỌI NGƯỜI BẤM E ĐƯỢC.
+    // Tội mà bài này gác là "NPC NHIỆM VỤ nói đúng một câu cả đời" — người giao việc mà lúc
+    // chưa nhận, đang làm và đã xong đều nói y hệt thì hỏng. Nhưng `talk:'quest'` còn là cách
+    // DUY NHẤT để một NPC bấm E ra được khung thoại, nên cả dân phố cũng phải mang cờ đó: bà
+    // bán hoa, thợ nhuộm, kẻ hát rong. Họ KHÔNG giao việc gì, và bắt họ có bốn trạng thái là
+    // bịa ra ba câu cho một thứ không bao giờ đổi trạng thái.
+    // Mốc đúng: NPC có tên trong `QUESTS[].npc` — người thật sự giao việc.
+    const giaoViec = new Set((window.QUESTS || []).map(x => x.npc).filter(Boolean));
     const co4 = NPCS.filter(n => n.talk === 'quest' && n.lore && typeof n.lore === 'object').length;
-    const cauCoDinh = NPCS.filter(n => n.talk === 'quest' && typeof n.lore === 'string').length;
+    const cauCoDinh = NPCS.filter(n => giaoViec.has(n.id) && typeof n.lore === 'string').map(n => n.id);
     // ⚠ Trước đây lái questState để bắt npcLoi() trả 4 câu khác nhau. Nhiệm vụ đã gỡ sạch
     // (CLAUDE.md · NHIỆM VỤ ĐÃ GỠ SẠCH) nên currentQuest() luôn rỗng và npcLoi() luôn về câu
     // idle — không còn nhánh để đo. Giữ lại phần DỮ LIỆU: bốn câu trong lore vẫn phải khác nhau,
@@ -92,8 +100,8 @@ const PORT = process.argv[2] || '8853';
     return { co4, cauCoDinh, i, khac, thieu4, barks, tongBark, npc: NPCS.length };
   });
   console.log('3) thoại:', JSON.stringify({ co4:r3.co4, khac:r3.khac, barks:r3.barks, tongBark:r3.tongBark }));
-  if (r3.cauCoDinh) fail(`còn ${r3.cauCoDinh} NPC nhiệm vụ chỉ có một câu cố định`);
-  else pass(`cả ${r3.co4} NPC nhiệm vụ đều có thoại 4 trạng thái`);
+  if (r3.cauCoDinh.length) fail(`còn ${r3.cauCoDinh.length} NGƯỜI GIAO NHIỆM VỤ chỉ có một câu cố định: ${r3.cauCoDinh.join(', ')}`);
+  else pass(`mọi người giao nhiệm vụ đều có thoại 4 trạng thái (${r3.co4} NPC dùng khuôn 4 câu)`);
   if (r3.khac !== 4) fail('bốn trạng thái trong lore không phải bốn câu khác nhau, chỉ ' + r3.khac);
   else pass('lore Trưởng Làng: bốn trạng thái → bốn câu khác nhau');
   if (r3.thieu4.length) fail('NPC nhiệm vụ thiếu trạng thái lore: ' + r3.thieu4.join(','));

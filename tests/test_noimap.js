@@ -56,8 +56,12 @@ const { chromium } = require('playwright');
       // "điểm tới phải sát rìa" không áp cho nó. (Bẫy này bắt được ngay lần chạy đầu.)
       const laRia = /^Lối /.test(g.name || '') && !MAPS[g.to].city;
       if (laRia && !sf) veTha.push(`${g.map}→${g.to}`);
+      // ⚠ Đo theo khổ của map ĐÍCH (md), không phải MAP toàn cục — MAP là map ĐANG đứng. Hồi
+      // map đầu game còn 2600×1900 thì hai con số trùng nhau nên lỗi này nằm im; tới lúc điểm
+      // thả dời sang Ardhaven 6400×3200, ngưỡng nhảy lên 6000 và sáu lối rìa hợp lệ bị báo sai.
+      const mw = md.w || 2600, mh = md.h || 1900;
       if (laRia && sf) doi.push({ tu:g.map, den:g.to, x:sf.x, y:sf.y,
-        satRia: sf.x < 400 || sf.y < 400 || sf.x > MAP.w-400 || sf.y > MAP.h-400,
+        satRia: sf.x < 400 || sf.y < 400 || sf.x > mw-400 || sf.y > mh-400,
         trongDa: inObstacle(g.to, sf.x, sf.y, 30) });
     }
     return { doi, motChieu, veTha };

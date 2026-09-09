@@ -71,7 +71,7 @@ const { chromium } = require('playwright');
 
   // Bug #4: stale moveTarget cleared when AUTO is toggled on
   const r4 = await page.evaluate(() => {
-    travelTo('tuongduong'); // safe city — no wild mobs to confound the drift measurement
+    travelTo('ardhaven'); // safe city — no wild mobs to confound the drift measurement
     player.auto = false;
     setMoveTarget(player.x + 900, player.y); // queue a manual move far away
     toggleAuto(); // turn AUTO on — should clear the pending manual move

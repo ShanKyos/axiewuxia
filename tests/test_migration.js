@@ -30,12 +30,12 @@ const { chromium } = require('playwright');
     wpUnlocked: player.wpUnlocked,
     chungnamGateOk: mapGate('chungnam').ok,
     nhanmonGateOk: mapGate('nhanmon').ok,
-    tuongduongGateOk: mapGate('tuongduong').ok,
+    ardhavenGateOk: mapGate('ardhaven').ok,
     questIdx: questIdx,
-    tuongduongMin: MAPS.tuongduong.min,
-    tuongduongReqMain: MAPS.tuongduong.reqMain,
+    ardhavenMin: MAPS.ardhaven.min,
+    ardhavenReqMain: MAPS.ardhaven.reqMain,
     daohoaDungeon: !!MAPS.daohoa.dungeon,
-    tuongduongDungeon: !!MAPS.tuongduong.dungeon,
+    ardhavenDungeon: !!MAPS.ardhaven.dungeon,
     allMapIds: Object.keys(MAPS),
   }));
   console.log('post-migration state:', JSON.stringify(state));

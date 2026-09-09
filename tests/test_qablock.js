@@ -22,10 +22,10 @@ const { chromium } = require('playwright');
     // ── 1. Chiêu quạt KHÔNG được tự hất tung đội hình của mình ────────────
     // Dark Lord: skillA type 'cone'. 4 quái bất động ngay trong tầm, tung 12 lượt.
     startGame('bug', null); player.level = 100; vhAutoLearn(); calcDerived();
-    // Điểm thả nay là Quảng Trường Cũ — sân nhỏ có đa giác đi được, mà bài này dựng cảnh ở
+    // Điểm thả nay là Ardhaven — thành có đa giác đi được, mà bài này dựng cảnh ở
     // toạ độ CỨNG (600,600). Ngoài đa giác thì update() đẩy người trở vào sân và đòn không
     // chạm. Sang map rộng rồi hẵng dựng cảnh.
-    travelTo('tuongduong');
+    travelTo('ardhaven');
     buildWorld(); mobs.length = 0;
     player.x = 600; player.y = 600; player.face = 0;
     const tgts = [];
@@ -86,11 +86,11 @@ const { chromium } = require('playwright');
     player.traits = [];
     calcDerived();
     player.eva = 0;
-    // ⚠ startGame() vừa gọi lại ở trên ĐƯA VỀ ĐIỂM THẢ = Quảng Trường Cũ. Sân đó có `diTrong`,
+    // ⚠ startGame() vừa gọi lại ở trên ĐƯA VỀ ĐIỂM THẢ = Ardhaven. Thành đó có `diTrong`,
     // nên (600,600) nằm NGOÀI đa giác và update() đẩy người chơi vào trong sân — đo được là
     // (558,1036), tức là con quái đặt ở (600,800) hoá ra nằm PHÍA TRÊN người chơi và hướng rung
     // lật ngược. Phải sang map rộng SAU MỖI LẦN startGame, không chỉ một lần ở đầu bài.
-    travelTo('tuongduong');
+    travelTo('ardhaven');
     buildWorld(); mobs.length = 0;
     player.x = 600; player.y = 600;
     // Hướng rung TRƯỚC khi ăn đòn — bất kể nó đang là gì (swingFeel có cửa sổ 60ms nên trong

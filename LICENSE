@@ -1,0 +1,25 @@
+Copyright (c) 2026 ShanKyos. All rights reserved.
+
+This repository is source-available, not open source. No licence is granted to use,
+copy, modify, merge, publish, distribute, sublicense, or sell any part of it.
+
+This file does not take any right away: a public repository with no LICENSE already
+defaults to "all rights reserved" under copyright law. It only says so out loud, so
+that anyone who finds the repo knows where they stand instead of having to guess.
+
+Two reasons it is written this way rather than as MIT:
+
+  1. The game is built on Axie Infinity lore under the Axie Infinity Builder's
+     Program. Some of the source material it draws on is distributed to Builder's
+     Program teams under "do not distribute" terms. A permissive licence on this
+     repository would read as granting rights over material that is not the
+     copyright holder's to grant.
+
+  2. Third-party assets vendored here (fonts, audio, Spine art packages) arrive
+     under their own terms, which a repository-wide MIT grant would misstate.
+
+If you want the code opened later, replace this file with the licence you choose and
+say so in README.md. Do the asset audit in point 2 first — the code and the assets
+may well need different answers.
+
+For permission to use any part of this work, contact the repository owner.

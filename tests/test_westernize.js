@@ -54,7 +54,7 @@ const { chromium } = require('playwright');
   console.log('4) forge redirect uses new "Lò Rèn Hoàng Gia" name, old name gone:', JSON.stringify(r4));
 
   const r5 = await page.evaluate(() => {
-    curMap = 'tuongduong'; buildWorld();
+    curMap = 'ardhaven'; buildWorld();
     const n = NPCS.find(x => x.id === 'duoclao');
     player.x = n.x; player.y = n.y;
     tryTalk();

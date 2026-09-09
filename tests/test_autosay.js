@@ -37,7 +37,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   // trạng thái cần đo: xoá sạch quái thường, để lại đúng một boss trong tầm nhìn.
   const p1 = await boot();
   await p1.evaluate(() => { applyTestBoost && applyTestBoost();
-    travelTo('tuongduong'); travelTo('pb_thu');
+    travelTo('ardhaven'); travelTo('pb_thu');
     mobs.length = 0;
     spawnMob('boss_hacphong', { x: player.x + 340, y: player.y, r: 1, count: 1 }, null);
     mobs.forEach(m => { m.hp = m.maxHp = 1e9; });

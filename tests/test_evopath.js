@@ -24,7 +24,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   // 2. Chọn Lan Toả phải TRÚNG NHIỀU MỤC TIÊU HƠN — đo bằng số quái ăn đòn
   const demTrung = (path) => p.evaluate(async (pa) => {
     applyTestBoost && applyTestBoost();
-    travelTo('tuongduong'); travelTo('daohoa');
+    travelTo('ardhaven'); travelTo('daohoa');
     mobs.length = 0;
     // xếp một hàng quái giãn đều để đo bán kính chạm
     // Hàng phải DÀI hơn bán kính lớn nhất, nếu không mọi cấu hình đều trúng hết và phép đo mù:

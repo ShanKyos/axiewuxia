@@ -44,11 +44,15 @@ const { chromium } = require('playwright');
     player.inv = [];
     for (let i = 0; i < 3; i++){ const it = genItem(30, 0.9, 'mob'); it.rarity = 1; player.inv.push(it); }
     chaosClear(); player.inv.forEach(it => chaosAddItem(it.uid)); chaosPickRecipe('hopnhat');
-    const truoc = player.inv.length;
+    out.chaos = { truoc: player.inv.length };
     window.doChaos();
-    out.chaos = { truoc, sau: player.inv.length };
     return out;
   });
+  // Máy Chaos nay HAI THÌ: bấm xong con yêu tinh còn nín thở LO_KHUI (1150ms) rồi mới bóc kết
+  // quả, và khoá _loBan giữ thêm 1000ms nữa. Đọc túi ngay trong cùng lượt evaluate là đọc lúc
+  // nguyên liệu chưa bị tiêu — đó chính là nhịp hồi hộp mà bài test_chaosanim canh giữ.
+  await page.waitForTimeout(2400);
+  r2.chaos.sau = await page.evaluate(() => player.inv.length);
   console.log('2) hành động thật:', JSON.stringify(r2));
   if (r2.shard.conShard >= 99) fail('mua ở Quầy Shard mà không trừ shard');
   else pass(`Quầy Shard trừ shard đúng (còn ${r2.shard.conShard})`);

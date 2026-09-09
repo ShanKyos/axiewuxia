@@ -109,7 +109,7 @@ const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài 
   const gate = await p.evaluate(() => {
     const g = GATES.find(x => x.deep);
     if (!g) return { co:false };
-    travelTo('tuongduong'); player.level = 60; calcDerived();
+    travelTo('ardhaven'); player.level = 60; calcDerived();
     DEEP = null;
     player.x = g.x; player.y = g.y; updateGate();
     const batDuoc = nearGate === g;
@@ -124,8 +124,8 @@ const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài 
     if (nearGate && !nearGate.deep && DEEP) window.deepLeave();
     return { co:true, viTri:[g.x,g.y], batDuoc, vaoDuoc, khoTruoc: kho,
              conDEEP: !!DEEP, tuiTang: player.silver - s0,
-             deLenNPC: NPCS.some(nn => nn.map === 'tuongduong' && dist(nn.x, nn.y, g.x, g.y) < 200),
-             trongVatCan: inObstacle('tuongduong', g.x, g.y, 20) };
+             deLenNPC: NPCS.some(nn => nn.map === 'ardhaven' && dist(nn.x, nn.y, g.x, g.y) < 200),
+             trongVatCan: inObstacle('ardhaven', g.x, g.y, 20) };
   });
   console.log('cổng Tầng Sâu:', JSON.stringify(gate));
   if (!gate.co) fail('không có cổng dịch chuyển nào cho Tầng Sâu');
@@ -138,7 +138,7 @@ const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài 
 
   // ── 6. Tầng Sâu CÓ ĐÁY: 20 tầng, tầng boss mỗi 5, xuống hết thì tự trao thưởng ──
   const cap = await p.evaluate(() => {
-    DEEP = null; travelTo('tuongduong'); player.level = 100; calcDerived();
+    DEEP = null; travelTo('ardhaven'); player.level = 100; calcDerived();
     const s0 = player.silver;
     deepStart();
     const o = { max: DEEP_MAX, tangBoss: [], tangThuong: 0, dungO: null };

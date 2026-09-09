@@ -47,35 +47,45 @@ const { chromium } = require('playwright');
 
   // 2) Thiên Mệnh Phù ép 100% — 3 món phải biến mất, nguyên liệu bị trừ, món mới phẩm +1
   const pre2 = await ba();
+  // ⚠ ĐO SAU NHỊP, KHÔNG ĐO NGAY. Cỗ máy nay giữ một nhịp nín thở (LO_KHUI) giữa cú bấm và
+  // lúc bốc kết quả, nên ngay sau doChaos() thì CHƯA có gì bị trừ và chưa món nào mất — đó là
+  // thiết kế, không phải lỗi. Ghi lại số "trước", bấm, chờ, rồi mới đọc số "sau".
   const r2 = await page.evaluate(() => {
     forgeUseCharm = true;
-    const invBefore = player.inv.length, honBefore = player.gems.honNguyen,
-          silverBefore = player.silver, charmsBefore = player.charms;
+    window.__t = { invBefore: player.inv.length, honBefore: player.gems.honNguyen,
+                   silverBefore: player.silver, charmsBefore: player.charms };
     doChaos();
-    return { invBefore, invNgaySau: player.inv.length, honBefore, honAfter: player.gems.honNguyen,
-             silverBefore, silverAfter: player.silver, charmsBefore, charmsAfter: player.charms,
-             khay: forgeTray.length };
+    return { ...window.__t };
   });
-  await page.waitForTimeout(3200); // chờ hoạt cảnh lò nhả đồ
+  await page.waitForTimeout(3200); // hết nhịp nín thở + hoạt cảnh nhả đồ
   const r2b = await page.evaluate(() => {
     const it = player.inv[player.inv.length - 1];
-    return { invSauHoatCanh: player.inv.length, giaiMoi: it ? it.tier : null, tenMoi: it ? it.name : null };
+    return { invNgaySau: player.inv.length, honAfter: player.gems.honNguyen,
+             silverAfter: player.silver, charmsAfter: player.charms, khay: forgeTray.length,
+             invSauHoatCanh: player.inv.length, giaiMoi: it ? it.tier : null, tenMoi: it ? it.name : null };
   });
-  console.log('2) ép thành công (Phù):', JSON.stringify({ ...pre2, ...r2, ...r2b }));
+  Object.assign(r2, r2b);   // gộp lại: "trước" đo lúc bấm, "sau" đo sau nhịp nín thở
+  console.log('2) ép thành công (Phù):', JSON.stringify({ ...pre2, ...r2 }));
 
   // 3) Ép trật — 3 món vẫn mất sạch, không có món mới
   const pre3 = await ba();
+  // ⚠ Math.random PHẢI GIỮ NGUYÊN QUA CẢ NHỊP. Kết quả bốc ở nửa sau, nên trả Math.random về
+  // ngay trong lượt evaluate này là ép trượt bằng thừa — lượt bốc thật vẫn dùng hàm gốc.
   const r3 = await page.evaluate(() => {
     forgeUseCharm = false; player.charms = 0;
-    const invBefore = player.inv.length, honBefore = player.gems.honNguyen;
-    const orig = Math.random; Math.random = () => 0.999; // rate Phàm 70% < 99.9% → chắc chắn trật
+    window.__o = Math.random; Math.random = () => 0.999;   // rate Phàm 70% < 99.9% → chắc chắn trật
+    window.__t3 = { invBefore: player.inv.length, honBefore: player.gems.honNguyen };
     doChaos();
-    Math.random = orig;
-    return { invBefore, invNgaySau: player.inv.length, honBefore, honAfter: player.gems.honNguyen };
+    return { ...window.__t3 };
   });
   await page.waitForTimeout(3200);
-  const r3b = await page.evaluate(() => ({ invSauHoatCanh: player.inv.length, banner: zoneBanner ? zoneBanner.text : null }));
-  console.log('3) ép thất bại:', JSON.stringify({ ...pre3, ...r3, ...r3b }));
+  const r3b = await page.evaluate(() => {
+    Math.random = window.__o;
+    return { invNgaySau: player.inv.length, honAfter: player.gems.honNguyen,
+             invSauHoatCanh: player.inv.length, banner: zoneBanner ? zoneBanner.text : null };
+  });
+  Object.assign(r3, r3b);
+  console.log('3) ép thất bại:', JSON.stringify({ ...pre3, ...r3 }));
 
   // 4) Chốt chặn phẩm lệch: khay 3 món KHÁC phẩm thì công thức KHÔNG được hiện ra
   const r4 = await page.evaluate(() => {
@@ -98,13 +108,19 @@ const { chromium } = require('playwright');
   // Ba món GIAI 2 (bài dựng ở trên) ⇒ tra CHAOS_RATE[2] = 60%. Bảng nay đánh chỉ số theo
   // GIAI chứ không theo phẩm — hệ phẩm đã gỡ, lò chuyển sang nâng giai.
   if (pre2.tiLe !== 60) fail(`tỉ lệ nâng giai 2 phải 60%, đo ${pre2.tiLe}`);
-  if (r2.invBefore - r2.invNgaySau !== 3) fail(`3 món hiến tế chưa biến mất ngay (${r2.invBefore}→${r2.invNgaySau})`);
+  // ⚠ PHÉP TRỪ ĐỔI VÌ CẢ HAI VIỆC NAY XẢY RA TRONG CÙNG MỘT LƯỢT ĐO. Trước đây bài này đo túi
+  // NGAY sau cú bấm (3 món mất, món mới chưa nhả ⇒ 3−0=3). Nay kết quả bốc sau nhịp nín thở,
+  // nên lượt đo duy nhất bắt được cả hai: 3 món vào lò, 1 món ra ⇒ túi còn đúng 1.
+  // (Chuyện "chưa mất gì NGAY lúc bấm" do test_chaosanim.js gác — nó bấm bằng phím Enter thật
+  //  rồi đo ngay, đúng đường người chơi đi.)
+  if (r2.invBefore !== 3 || r2.invNgaySau !== 1) fail(`3 món vào lò phải ra đúng 1 món (${r2.invBefore}→${r2.invNgaySau})`);
   if (r2.khay !== 0) fail('khay không được dọn sau khi ném vào lò');
   if (r2.honAfter >= r2.honBefore) fail('không trừ Hỗn Nguyên');
   if (r2.silverAfter >= r2.silverBefore) fail('không trừ bạc');
   if (r2.charmsAfter !== r2.charmsBefore - 1) fail('Thiên Mệnh Phù không bị tiêu');
-  if (r2b.giaiMoi !== 3) fail(`món mới phải giai 3, đo ${r2b.giaiMoi}`);
-  if (r2b.invSauHoatCanh !== r2.invNgaySau + 1) fail('hoạt cảnh không nhả món mới ra túi');
+  if (r2.giaiMoi !== 3) fail(`món mới phải giai 3, đo ${r2.giaiMoi}`);
+  // Món mới đã nằm trong `invNgaySau` (cùng một lượt đo sau nhịp) — đếm là 1 món trong túi.
+  if (r2.invSauHoatCanh !== 1) fail(`hoạt cảnh không nhả món mới ra túi (túi còn ${r2.invSauHoatCanh})`);
   if (r3.invBefore - r3.invNgaySau !== 3) fail('thất bại mà 3 món không mất');
   if (r3b.invSauHoatCanh !== r3.invNgaySau) fail('thất bại mà vẫn nhả ra món mới');
   if (!/THẤT BẠI/.test(r3b.banner || '')) fail(`không báo thất bại: ${r3b.banner}`);

@@ -3,7 +3,7 @@
 // Bài này KHÔNG gắn với một map nào. Nó quét cả bảng MAPS, và map nào khai `diTrong` thì map đó
 // bị gác. Nghĩa là: dựng lại một map, chấm xong đa giác sàn, dán vào `data/canbang.js` — bài này
 // tự động bắt đầu canh nó, không phải viết bài mới. Map chưa có `diTrong` thì bỏ qua, nên hôm nay
-// nó chỉ gác Quảng Trường Cũ.
+// nó chỉ gác thành Ardhaven.
 //
 // Vì sao đây là bài đáng có: cảm giác "đi trên không trung" mà chủ dự án báo có đúng MỘT nguyên
 // nhân — tranh nền vẽ theo lối nhìn ngang bị dùng làm mặt đất, rồi người chơi đi khắp mặt tranh,
@@ -16,7 +16,7 @@ const PORT = process.argv[2] || '8853';
 
 // §3.2 — map hoang dã phải chừa ≥ 60% khung là sàn đi được, nếu không thì không đủ chỗ đặt bãi
 // quái. Ngưỡng kiểm để ở 55%, chừa lề cho đa giác chấm tay. Thành an toàn được phép chật
-// (Quảng Trường Cũ chỉ 10,9%) nên không áp luật này.
+// (thành Ardhaven chỉ 10,9%) nên không áp luật này.
 const SAN_TOI_THIEU_HOANG_DA = 0.55;
 
 // Map dạng LÀN đo bằng BỀ NGANG chứ không bằng % sàn — xem khối ⑥ bên dưới. Thân nhân vật vẽ ra
@@ -109,7 +109,7 @@ const HANH_LANG_HEP_NHAT = 340;
       o.soQuai = mobs.length; o.soNpc = NPCS.filter(n => n.map === key).length;
 
       // Bài này đo HÌNH HỌC, không đo sống sót. Trước Lối Mòn Corran, map duy nhất khai `diTrong`
-      // là Quảng Trường Cũ — thành an toàn, không có quái. Map hoang dã đầu tiên có `diTrong` thì
+      // là Ardhaven — thành an toàn, không có quái. Map hoang dã đầu tiên có `diTrong` thì
       // tám lượt đi thử ở ③ kéo nhân vật cấp 1 xuyên qua 53 con C38-C48 suốt 3840 khung: nó chết
       // giữa chừng, và ⑤ đi tiếp không nhúc nhích được — bài báo "đa giác cắt sàn làm hai" trong
       // khi đa giác hoàn toàn liền. Ghim máu để phép đo hỏi đúng câu nó định hỏi.
@@ -131,7 +131,7 @@ const HANH_LANG_HEP_NHAT = 340;
                                 [MAP.w/2,60],[MAP.w/2,MAP.h-60],[60,MAP.h/2],[MAP.w-60,MAP.h/2]]){
           player.x = sp.x; player.y = sp.y;
           diThu(tx, ty, 480);
-          // LỀ VIỀN 8px. Đo được: đi về góc tây Quảng Trường Cũ thì nhân vật dừng ở (563,1019),
+          // LỀ VIỀN 8px. Đo được: đi về góc tây sân cũ thì nhân vật dừng ở (563,1019),
           // cách viền đúng 2,73px — nó bị chặn và đứng khít lên mép, không phải "đi lọt ra
           // ngoài sàn". Không có lề thì bài đỏ ngẫu nhiên tuỳ nhịp khung: cấp thấp đi chậm nên
           // dừng sớm hơn mép, cấp cao đi nhanh nên chạm tới mép.
@@ -234,7 +234,7 @@ const HANH_LANG_HEP_NHAT = 340;
   console.log(JSON.stringify(r, null, 1));
   let bad = 0;
   if (!r.length){
-    console.log('FAIL không map nào khai `diTrong` — bài này lẽ ra phải gác ít nhất Quảng Trường Cũ');
+    console.log('FAIL không map nào khai `diTrong` — bài này lẽ ra phải gác ít nhất Ardhaven');
     bad++;
   }
   for (const o of r){

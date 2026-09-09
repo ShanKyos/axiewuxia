@@ -46,6 +46,18 @@ Bộ viên nướng bằng `tools/iso/nuong_tile.py` (Blender headless). Ba lu�
 Chi phí đo được: bộ lát nền gần như miễn phí; tiền trả cho sprite alpha to. 900 vệt đất kéo FPS
 33 → 8,5; cắt còn 170 vệt + một tầng nhiễu thứ hai thì hết.
 
+**Bảng viên đổi được theo TỪNG MAP.** `ISO_CO` và `ISO_DAT` không phải hai chất liệu mà là hai
+VAI: `ISO_CO` là mặt NỀN (chỗ không ai giẫm), `ISO_DAT` là mặt ĐƯỜNG (chỗ giẫm nhiều). Ở map
+hoang dã hai vai đó là cỏ và đất; trong thành chúng là đá phiến và sỏi. Khai `isoCo` / `isoDat`
+trong MAPS là đổi được, không phải sửa engine — xem `MAPS.ardhaven`.
+
+**Map RỘNG bắt buộc khai `isoDuong`.** Luật mặc định "đường mòn = dải xa mép nhất" chỉ đúng với
+map dạng LÀN. Map rộng thì gần như cả map đều xa mép, nên luật ấy biến cả map thành một bãi đất
+mênh mông viền một vành cỏ mỏng. Khai tuyến đường thật, nối những chỗ người chơi thật sự đi.
+
+**`isoNho` mặc định là `w*h/3e4`.** Ở khổ 6400×3200 con số đó ra 683 túm cỏ — quá dày cho một
+mặt phố lát đá. Map thành nên hạ về ~260.
+
 ## 3. Đặt nội dung — thứ tự BẮT BUỘC
 
 Có phụ thuộc vòng: bãi quái tránh trùm/cổng/điểm thả, mà trùm lại phải tránh bãi quái. Cách
@@ -102,7 +114,15 @@ Kiểm CJK phải in ra 0:
 python3 -c "import re;print(sum(1 for l in open('public/game/game.js',encoding='utf-8') if re.search(r'[　-〿一-鿿＀-￯゠-ヿ぀-ゟ]',l)))"
 ```
 
-## 6. Ba cái bẫy đã sập, đừng sập lại
+## 6. Bốn cái bẫy đã sập, đừng sập lại
+
+- **⚠ KHUNG TỈ LỆ 2:1 GẦN NHƯ CHẮC CHẮN TRƯỢT `test_domap`.** Bài đó chặn ĐƯỜNG KÍNH — hai điểm
+  nội dung xa nhau nhất — ở 80,7% đường chéo map. Mà bề ngang của một khung 2:1 chiếm 89,4%
+  đường chéo. Nghĩa là mọi map 2:1 có nội dung trải hết bề ngang đều đỏ, không cần làm gì sai.
+  Ngưỡng an toàn là tỉ lệ ≤ 1,37. Muốn giữ 2:1 thì phải kéo các điểm nội dung ngoài cùng lùi
+  vào — ở Ardhaven, bốn cột mốc cổng lùi vào x 480 và 5920 cho khẩu độ 5440 < trần 5777, còn
+  điểm hiện ra khi đi ngược về vẫn nằm ngoài chúng để `test_noimap` chấp nhận là lối rìa.
+  (Cổng chỉ kích hoạt bằng phím G, đứng gần không tự dịch chuyển, nên đặt lệch nhau được.)
 
 - **Vá theo chỉ số là vá mù.** `spawnFrom:{ corran:{ x:` khớp `loimon` trước; `trungnut: {` khớp
   khối `BOSS_DEFS`. Luôn khẳng định mỗi mốc khớp ĐÚNG MỘT LẦN rồi mới thay.

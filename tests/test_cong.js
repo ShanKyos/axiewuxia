@@ -38,11 +38,11 @@ const URL = 'http://localhost:8871/index.html';
   const out = await p.evaluate(async () => {
     window.TEST_MODE = true; window.TEST_TO_PHANG = true;
     startGame('baidasan', { name:'Đo' });
-    curMap = 'tuongduong'; DGN = null; buildWorld();
+    curMap = 'ardhaven'; DGN = null; buildWorld();
     player.tutStep = -1;
     FXQ_AUTO = false; FXQ = 2; RES_AUTO = false; SETTINGS.lowFx = false;
     const o = (() => {
-      const g = GATES.find(x => x.map === 'tuongduong' && x.to === 'ngoai');
+      const g = GATES.find(x => x.map === 'ardhaven' && x.to === 'ngoai');
       return { gx: g.x, gy: g.y, ph: GATE_PH };
     })();
     // Ô đo = ĐÚNG cột trụ trái: rộng 34px (bằng bề rộng trụ), cao 96px (bằng thân trụ).

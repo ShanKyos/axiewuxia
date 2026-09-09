@@ -175,13 +175,13 @@ window.CHI_KY = {
 // `tpkill` bắt hạ quái bằng đòn Trấn Phái, để người chơi thật sự dùng chiêu riêng của lớp.
 window.QUESTS = [
   // ── CHƯƠNG I · NGỌN ĐÈN TẮT (cấp 1–10) ────────────────────────────────────
-  { id:'c1q1', chapter:'I · Ngọn Đèn Tắt', lv:1, npc:'qt_gaccong', map:'quangtruong',
-    type:'talk', targetNpc:'qt_balao', need:1,
-    name:'Ngọn Đèn Bên Giếng', desc:'Đội Trưởng Gác Cổng nói cái đèn cạnh giếng tắt ba đêm liền, mà dầu vẫn còn đầy. Bà lão múc nước mỗi sáng — hỏi bà.',
+  { id:'c1q1', chapter:'I · Ngọn Đèn Tắt', lv:1, npc:'ah_gac_tay', map:'ardhaven',
+    type:'talk', targetNpc:'ah_ganhnuoc', need:1,
+    name:'Ngọn Đèn Bên Giếng', desc:'Lính Gác Cổng Tây nói cái đèn cạnh giếng tắt ba đêm liền, mà dầu vẫn còn đầy. Người gánh nước qua đó mười hai chuyến một ngày — hỏi ông ta.',
     rew:{ xp:220, silver:120 } },
-  { id:'c1q2', chapter:'I · Ngọn Đèn Tắt', lv:2, npc:'qt_gaccong', map:'daohoa',
+  { id:'c1q2', chapter:'I · Ngọn Đèn Tắt', lv:2, npc:'ah_gac_tay', map:'daohoa',
     type:'kill', mob:'boar', need:6,
-    name:'Ra Ngoài Cổng Bắc', desc:'Bà lão bảo: đèn tắt thì thứ ngoài kia dạn hơn. Ra Cổng Bắc, dọn bầy heo rừng đang lấn tới sát chân tường.',
+    name:'Ra Ngoài Cổng Tây', desc:'Người gánh nước bảo: đèn tắt thì thứ ngoài kia dạn hơn. Ra Cổng Tây, dọn bầy heo rừng đang lấn tới sát chân tường.',
     rew:{ xp:340, silver:180 } },
   { id:'c1q3', chapter:'I · Ngọn Đèn Tắt', lv:3, npc:'truonglang', map:'daohoa',
     type:'talk', targetNpc:'duocsu', need:1,
@@ -195,7 +195,7 @@ window.QUESTS = [
     type:'kill', mob:'hautu', need:8,
     name:'Thứ Ăn Hồn Kẹt', desc:'Đèn tắt thì hồn không về được Cây Hồn, kẹt lại giữa đường. Lũ này tụ quanh chỗ hồn kẹt mà ăn. Dọn sạch.',
     rew:{ xp:640, silver:300 } },
-  { id:'c1q6', chapter:'I · Ngọn Đèn Tắt', lv:6, npc:'qt_gaccong', map:'quangtruong',
+  { id:'c1q6', chapter:'I · Ngọn Đèn Tắt', lv:6, npc:'ah_gac_tay', map:'ardhaven',
     type:'enhance', need:3,
     name:'Thép Chịu Được Bóng', desc:'"Đồ thường chém vào chúng như chém sương." Mang một món tới lò rèn, đập lên +3 rồi quay lại.',
     rew:{ xp:760, silver:400 } },
@@ -217,7 +217,7 @@ window.QUESTS = [
     rew:{ xp:2600, silver:1200, item:'vukhi' } },
 
   // ── CHƯƠNG II · LỬA CỦA THỢ RÈN (cấp 14–24) ───────────────────────────────
-  { id:'c2q1', chapter:'II · Lửa Của Thợ Rèn', lv:14, npc:'quachtinh', map:'tuongduong',
+  { id:'c2q1', chapter:'II · Lửa Của Thợ Rèn', lv:14, npc:'quachtinh', map:'ardhaven',
     type:'talk', targetNpc:'monkhach', need:1,
     name:'Tin Từ Trại Chăn', desc:'Trưởng Lão Rell đọc xong mảnh khắc lấy từ xác Thủ Lĩnh Gloam thì im rất lâu. "Đèn tắt không phải một chỗ. Gặp Trinh Sát Wren."',
     rew:{ xp:2200, silver:900 } },
@@ -233,7 +233,7 @@ window.QUESTS = [
     type:'kill', mob:'boar_tusk', need:14,
     name:'Đàn Bị Dồn', desc:'Beast axie sống nhờ đàn gia súc. Thứ dồn đàn chạy loạn không phải sói — nó đang lùa chúng về phía một ngọn đèn tắt.',
     rew:{ xp:3400, silver:1300 } },
-  { id:'c2q5', chapter:'II · Lửa Của Thợ Rèn', lv:21, npc:'quachtinh', map:'tuongduong',
+  { id:'c2q5', chapter:'II · Lửa Của Thợ Rèn', lv:21, npc:'quachtinh', map:'ardhaven',
     type:'enhance', need:6,
     name:'Lò Của Reptile', desc:'"Thợ rèn giỏi nhất Lunacia là Reptile axie — chúng tạo ra lửa chứ không mượn lửa. Bí quyết ấy nằm trong tay ngươi rồi." Đập một món lên +6.',
     rew:{ xp:3900, silver:1600, item:'ao' } },
@@ -677,7 +677,7 @@ window.SECTS = {
 // packs: quái đứng thành cụm 5-7 con, đánh 1 con cả cụm lao vào (GDD Mob Mechanics)
 window.MAPS = {
   daohoa: { name:'Plant Tribe Glade', min:1, range:'1 - 12', type:'safe', ground:'#ece2c8', patch:'#7a86ad',
-    spawn:{ x:460, y:460 }, spawnFrom:{ quangtruong:{ x:300, y:330 } }, village:true, spring:true, herbs:true, boss:true, trees:70, rocks:26,
+    spawn:{ x:460, y:460 }, spawnFrom:{ ardhaven:{ x:300, y:330 } }, village:true, spring:true, herbs:true, boss:true, trees:70, rocks:26,
     desc:'Nơi đặt trại ấp Plant Tribe — bãi săn của người mới. Chimera yếu, đồ rơi nhập môn, chỗ hiền lành để học cách chơi.',
     // Cụm quái xếp theo vòng từ spawn ra: yếu (boar/hautu) gần nhất → mạnh dần (wolf/bandit/
     // caodo) → xa nhất (assassin, trannhan) gần Cổng Vực — người chơi mới thấy rõ "đi sâu = khó
@@ -705,41 +705,102 @@ window.MAPS = {
       { id:'trannhan', ten:'Hàng Tượng Canh Cổng', dai:[0.915,1.0], cung:[0,52], cum:[1,1],
         dan:[{ mob:'trannhan', n:5 }] },   // C12 · Tượng Đá Canh Cổng
     ], duhiep: null },
-  // ── QUẢNG TRƯỜNG · map THỬ NGHIỆM cách di chuyển trên nền art isometric ───────────────
-  // ⚠ Nền map này là art ISOMETRIC, còn engine thì NHÌN TỪ TRÊN XUỐNG. Hai thứ đó không khớp
-  // nhau ở một chỗ không sửa được bằng mã: trong art, nhà có CHIỀU CAO, mái nhà che mất phần
-  // đất phía sau nó. Game không có trục cao, nên nhân vật đi ra sau nhà vẫn vẽ ĐÈ LÊN mái.
-  // Cách sống chung: chặn nguyên khối nhà lại (MAP_OBSTACLES), chỉ chừa mặt sân.
+  // ── ARDHAVEN · SAPIDAE CHIEFDOM · thành an toàn RỘNG BẰNG MỘT MAP THẬT ───────────────
+  // Thay hẳn HAI sân an toàn cũ: "Quảng Trường Cũ" (2600×1900, một khoảnh sân lát đá) và
+  // thành cũ cùng khung. Cả hai đều NHỎ HƠN một map hoang dã, nên "vào thành" trước đây là
+  // bước từ thế giới rộng vào một cái sân — đúng thứ làm thành mất trọng lượng.
   //
-  // `diTrong` là ĐA GIÁC ĐI ĐƯỢC — mặt sàn hình thoi của khối isometric. Ngoài nó là vực,
-  // chặn hết. Xem trongDaGiac() trong game.js.
-  quangtruong: { name:'Quảng Trường Cũ', min:1, range:'—', type:'safe', ground:'#6d6455', patch:'#4a4438',
-    // ⚠ KHÔNG dùng `city:true`. Cờ đó gọi drawCityWalls/drawCityPlaza — bộ tường thành, đài
-    // phun nước và sáu biển hiệu VẼ TAY, toạ độ chép cứng theo Sapidae Chiefdom. Bật lên là chúng
-    // vẽ đè lên art vốn đã có sẵn tường, giếng và cửa hiệu: hai cái thành chồng lên nhau.
-    // `type:'safe'` là đủ để cấm PK.
-    spawn:{ x:1279, y:1166 }, spawnFrom:{ daohoa:{ x:1600, y:780 } }, trees:0, rocks:0,
-    // ĐA GIÁC ĐI ĐƯỢC — đo bằng cách phủ đa giác lên chính tấm art rồi soi lại từng mép:
-    // bám sát mặt sân lát đá + vạt cỏ, KHÔNG lấn lên nền nhà, hàng rào tây, mái nhà nam hay
-    // vành đá nhạt quanh khối. Nhánh chìa lên phía bắc là lối dốc dẫn tới vòm cổng thành.
-    // Vì đa giác đã ôm sát sân nên map này KHÔNG cần vật cản khối nhà nào nữa (xem
-    // MAP_OBSTACLES.quangtruong) — chỉ còn cái giếng nằm GIỮA sân là thật sự chắn đường.
-    diTrong: [[545,1020],[700,1035],[780,1055],[860,970],[1050,870],[1300,800],[1450,745],
-              [1560,675],[1700,700],[1800,800],[1860,890],[1935,1085],[1995,1185],[2040,1265],
-              [2010,1300],[1830,1290],[1660,1240],[1420,1230],[1180,1265],[980,1270],[820,1250],
-              [700,1235],[640,1150]],
-    // VẬT TO — công trình rời vẽ chèn vào tranh nền, xếp lớp theo y như cây cối (xem nhánh
-    // `case 'vat'` trong game.js). Lò rèn đặt NGAY DƯỚI mép nam của `diTrong`: nóc nó cao hơn
-    // mép sân ~40px nên người đứng sát mép bị nóc che mất bàn chân — đúng chiều sâu của tranh
-    // isometric, và có được là nhờ khoá xếp lớp lấy CHÂN công trình (y+h) chứ không lấy nóc.
-    // Cỡ ×1,55 chọn theo NGƯỜI: ông thợ vẽ trong tranh cao 88px gốc, ×1,55 ra 136px — sát
-    // NV_CAO (132), nên đứng cạnh nhân vật không ai to hơn ai.
-    vatTo: [ { img:'loren', x:820, y:1215, w:348, h:339 } ],
-    desc:'Một khoảnh phố cũ bị vết nứt kéo nguyên khối sang: nhà còn nguyên mái, giếng còn nguyên gàu, và không ai biết dân của nó đi đâu. Ra Cổng Bắc là hết đất an toàn.',
-    packs: [], duhiep: null },
-  tuongduong: { name:'Sapidae Chiefdom', min:1, range:'—', type:'safe', ground:'#d8ccb0', patch:'#7a6a4a',
-    spawn:{ x:1300, y:1100 }, spawnFrom:{ ngoai:{ x:1300, y:1460 }, daohoa:{ x:640, y:905 }, chungnam:{ x:1960, y:905 }, tuyettinh:{ x:1300, y:510 } }, city:true, trees:24, rocks:10,
-    desc:'Cả khu phố Ardhaven bị vết nứt kéo sang, dân bản địa dựng lại quanh nó thành Sapidae Chiefdom. Trong tường: Lò Rèn Hoàng Gia, Tiệm Thuốc, Vũ Khí Phường, Trà Quán, Sảnh Cầu May và Truy Nã Lệnh. An toàn tuyệt đối — không Chimera nào vào được. Ra Cổng Nam để săn ở Outskirts.',
+  // KHUNG 6400×3200 · TỈ LỆ 2,0. Tỉ lệ lấy từ khung một toà thành lớn trong một game 2D cùng
+  // dòng, suy ngược từ toạ độ NPC công bố (x 35→285, y 100→161 ⇒ 250/125 = 2,0). Chỉ mượn
+  // TỈ LỆ KHUNG và nhịp chia khu — không mượn bố cục, không mượn art.
+  //
+  // 16 KHỐI NHÀ là con số bị `test_domap` ÉP RA, không phải chọn cho đẹp: bài đó không tha
+  // map thành, vẫn đòi mật độ ≥1,30 điểm nội dung trên 1000 ô đi được. Sàn 80% ⇒ ~28500 ô ⇒
+  // cần 37 điểm; sàn 70% ⇒ ~24900 ô ⇒ cần 32,4 điểm. Chọn sàn 70% (16 khối) vì mỗi khối còn
+  // phải nuôi được NPC + vật to quanh nó — 37 điểm là đơn hàng art gấp rưỡi cho cùng một thành.
+  //
+  // ⚠ KHÔNG bật `city:true`. Cờ đó gọi drawCityWalls/drawCityPlaza — tường thành, đài phun
+  // nước và sáu biển hiệu VẼ TAY, toạ độ chép cứng theo khung 2600×1900. Ở 6400×3200 chúng
+  // rơi gọn vào góc tây-bắc và đè lên sàn lát. `type:'safe'` đã đủ để cấm PK.
+  //
+  // `diTrong` (36 đỉnh) do tools/iso/dung_thanh.py dựng: khung chữ nhật bo bốn góc, cộng bốn
+  // vấu cổng thò ra bốn mép — `test_noimap` đòi điểm đến của một "Lối ..." phải cách mép map
+  // dưới 400px, nên cổng phải nằm HẲN trên mép chứ không lùi vào trong.
+  ardhaven: { name:'Sapidae Chiefdom', min:1, range:'—', type:'safe', ground:'#3a4230', patch:'#4a4438',
+    w:6400, h:3200,
+    // Sàn lát viên isometric. `isoCo` là mặt lát nền (đá phiến), `isoDat` là mặt đường (sỏi) —
+    // hai bộ này KHÁC map hoang dã, nơi hai vai ấy là cỏ và đất. Xem sanIsoDung().
+    sanIso:true, isoCo:['nen_da1','nen_da2','nen_da3','nen_da4'],
+    isoDat:['nen_duong1','nen_duong2','nen_duong3','nen_duong4'],
+    // `isoCay` mọc NGOÀI đa giác, trong vành 300px quanh mép — tức là hàng cây bên ngoài tường
+    // thành, không phải cây mọc giữa phố. `isoNho` (cỏ dại, sỏi vụn) thì mọc trong lòng thành:
+    // mặc định của nó là w*h/3e4 = 683 cho khổ này, quá dày cho một mặt phố lát đá — hạ về 260,
+    // đủ để mặt lát không trơ mà không biến quảng trường thành bãi cỏ.
+    isoCay:200, isoNho:260,
+    // LƯỚI PHỐ. Map rộng thì luật "đường mòn = dải xa mép nhất" biến cả thành một bãi sỏi
+    // mênh mông, nên phải khai đường thật. Hai đại lộ nối thẳng bốn cổng, bốn ngõ dọc rơi
+    // đúng khe 200px giữa các khối nhà, hai phố vòng chạy men dãy nhà bắc và nam.
+    isoDuong: [
+      [[230,1600],[6170,1600]], [[3200,210],[3200,2990]],
+      [[1500,370],[1500,2830]], [[2160,370],[2160,2830]],
+      [[4240,370],[4240,2830]], [[4900,370],[4900,2830]],
+      [[400,370],[6000,370]],   [[400,2830],[6000,2830]],
+    ],
+    spawn:{ x:3200, y:1900 },
+    spawnFrom:{ ngoai:{ x:3200, y:3080 }, daohoa:{ x:250, y:1600 },
+                chungnam:{ x:6150, y:1600 }, tuyettinh:{ x:3200, y:120 } },
+    trees:0, rocks:0, herbs:true,
+    desc:'Khu phố Ardhaven rơi qua vết nứt còn nguyên khối — nguyên mái, nguyên giếng, nguyên cả biển hiệu. Dân bản địa dựng tường quanh nó và gọi chỗ này là Sapidae Chiefdom. Trong tường: Quảng Trường Atia, Phố Chợ, Phố Lò, Sân Chuồng, Sảnh Lệnh, Vách Gió và Xóm Trọ. Không Chimera nào vào được. Bốn cổng ra bốn hướng.',
+    diTrong: [
+              [3480,3150], [2920,3150], [2900,2990], [600,2990], [400,2930], [270,2800],
+              [230,2720], [230,2620], [210,2600], [210,1900], [50,1880], [50,1320],
+              [210,1300], [210,600], [270,400], [400,270], [600,210], [2900,210],
+              [2920,50], [3480,50], [3500,210], [5800,210], [6000,270], [6130,400],
+              [6170,480], [6170,580], [6190,600], [6190,1300], [6350,1320], [6350,1880],
+              [6190,1900], [6190,2600], [6130,2800], [6000,2930], [5800,2990], [3500,2990] ],
+  vatTo: [
+    // ── BỐN CỔNG THÀNH ────────────────────────────────────────────────────────
+    // Đặt LỆCH hẳn sang MỘT BÊN cuống cổng, mép trong của ảnh CHẠM ĐÚNG mép cuống
+    // (chồng lấn 0 px2 — đã đo). Cuống cổng đọc thẳng từ `diTrong`:
+    //   Bắc  x 2920-3480, y   50- 210      Nam   x 2920-3480, y 2990-3150
+    //   Tây  x   50- 210, y 1320-1880      Đông  x 6190-6350, y 1320-1880
+    // Bốn tháp lệch theo một chiều KIM ĐỒNG HỒ: Bắc lệch đông · Đông lệch nam ·
+    // Nam lệch tây · Tây lệch bắc. Người chơi luôn đi lọt giữa cuống.
+    { img:'ct_cong',  x:3520, y:14,   w:472, h:435 },  // Cổng Bắc  — lệch ĐÔNG, chân y=449
+    { img:'ct_cong',  x:5878, y:1880, w:472, h:435 },  // Cổng Đông — lệch NAM,  chân y=2315
+    { img:'ct_cong',  x:2448, y:2680, w:472, h:435 },  // Cổng Nam  — lệch TÂY,  chân y=3115
+    { img:'ct_cong',  x:140,  y:854,  w:472, h:435 },  // Cổng Tây  — lệch BẮC,  chân y=1289
+
+    // ── BA CÔNG TRÌNH CÓ ẢNH ──────────────────────────────────────────────────
+    // Cả ba đặt trên HÀNG NHÀ BẮC (khối y 520-860), CHÂN ảnh trùng đúng mép dưới
+    // khối (y+h = 860). Đây là chủ ý, không phải tiện tay: mặt tiền của sprite
+    // isometric luôn quay xuống dưới, nên nhà hàng bắc quay mặt ra PHỐ LỚN
+    // (y≈1600), còn NPC bán hàng đứng ngay phía nam ảnh nên không bị ảnh che.
+    // Đặt cùng bộ ảnh này lên hàng nhà nam thì mặt tiền quay ra tường thành và
+    // NPC đứng phía bắc sẽ chui ra sau lưng công trình.
+    { img:'ct_loren', x:4992, y:368,  w:473, h:472 },  // Lò Rèn Hoàng Gia — khối #10 (5000,520) · Phố Lò
+    { img:'ct_duoc',  x:1600, y:436,  w:460, h:424 },  // Tiệm Thuốc       — khối #2  (1600,520) · Phố Chợ
+    { img:'ct_vukhi', x:5686, y:526,  w:409, h:334 },  // Vũ Khí Phường    — khối #11 (5660,520) · Phố Lò
+  ],
+    // ── MƯỜI BA KHỐI CÒN TRỐNG · ĐANG CHỜ ART ────────────────────────────────
+    // 16 khối, mới 3 có ảnh (ct_cong dùng hết cho bốn cuống cổng). Khuôn đặt cho mọi khối
+    // 460×340:  x = khoi.x − (w − 460)/2   ·   y = khoi.y + 340 − h   (chân trùng mép dưới khối)
+    //
+    // ĐÃ CÓ NPC ĐỨNG TRƯỚC CỬA, CHỈ THIẾU NHÀ — năm cái này ưu tiên, vì mỗi cái là một
+    // chức năng người chơi đã dùng được mà chưa nhìn ra:
+    //   #9  (4340, 520) hàng BẮC · ct_caumay    — Sảnh Cầu May   (NPC `thantoan` ở 4570,990)
+    //   #8  (3680, 520) hàng BẮC · ct_quantro   — Quán Trọ       (NPC `trachu`   ở 4150,1010)
+    //   #3  (2260, 520) hàng BẮC · ct_thapvach  — chòi trông vách (NPC `ah_vachgio` ở 2160,380)
+    //   #12 (3680,2340) hàng NAM · ct_saanhlenh — Sảnh Lệnh      (NPC `bodau`     ở 4150,2100)
+    //   #7  (2260,2340) hàng NAM · ct_chuong    — dãy chuồng     (NPC `ah_mucdong` ở 2160,2450)
+    // ⚠ HAI CÁI HÀNG NAM: mặt tiền sprite isometric luôn quay XUỐNG DƯỚI, nên nhà ở hàng nam
+    //   quay mặt ra tường thành. Khi có art thì hoặc xin bản quay ngược, hoặc dời NPC xuống
+    //   phía nam khối (y ≥ 2700).
+    //
+    // CHƯA GÁN VAI — nhà dân nền, một hai kiểu lặp lại là đủ:
+    //   #0 (280,520)  #1 (940,520)              hàng bắc, đầu tây
+    //   #4 (280,2340) #5 (940,2340) #6 (1600,2340)   hàng nam, đầu tây
+    //   #13 (4340,2340) #14 (5000,2340) #15 (5660,2340)  hàng nam, đầu đông
     packs: [], duhiep: null },
   ngoai: { name:'Beast Herd Camp', min:10, range:'14 - 24', type:'safe', ground:'#ddd2ae', patch:'#7a7048',
     spawn:{ x:1300, y:330 }, trees:56, rocks:22, herbs:true,
@@ -1236,17 +1297,6 @@ window.MAP_OBSTACLES = {
   // trong nhung cho nhin ra khong co gi. Vung di duoc gio do `diTrong` quyet dinh mot minh.
   corran: [],
 
-  // Chặn nguyên KHỐI NHÀ chứ không chỉ chân tường: art isometric vẽ cả mái, mà mái là thứ
-  // nhân vật sẽ đi đè lên nếu cho vào. Toạ độ đọc từ chính tấm art qua lưới 100px rồi nhân
-  // hệ số 1,5347 (art 1490px nội dung -> 2287px trong thế giới 2600x1900).
-  // Tám hình ellipse chặn nhà cửa đã BỎ HẲN. Chúng là cách sai để giải bài toán này: mái nhà
-  // trong tranh isometric là hình thoi, ellipse thì không — muốn phủ kín mái thì phải phình ra
-  // ăn mất mặt sân, muốn chừa sân thì hở mái. Nay `diTrong` (xem MAPS.quangtruong) ôm đúng mặt
-  // sân, nên mọi thứ ngoài sân đã bị chặn sẵn bởi chính đa giác — thêm ellipse chỉ chồng chéo.
-  // Chỉ còn cái giếng: nó nằm GIỮA vùng đi được nên đa giác không chặn hộ được.
-  quangtruong: [
-    { x:1279, y:1013, rx:58,  ry:64  },  // giếng giữa sân
-  ],
   daohoa: [
     // Hiệu chỉnh lại theo màu nước thật của art (bg_daohoa.jpg), đối chiếu từng pixel với
     // toàn bộ NPC/quái/thảo dược/suối/cổng phó bản của map — 2 hình ellipse cũ quá to,
@@ -1327,11 +1377,19 @@ window.MAP_OBSTACLES = {
     { x:0, y:0, wd:1400, ht:380 },      // núi bắc
     { x:0, y:0, wd:260, ht:1200 },      // vách tây
   ],
-  tuongduong: [
-    { x:0, y:0, wd:2600, ht:340 },       // núi/nền trời phía sau
-    // Hiệu chỉnh theo art làng mới (bg_tuongduong.jpg) — dãy nhà chạy dọc mép dưới, chừa cổng thành giữa
-    { x:0, y:1280, wd:1200, ht:620 },    // dãy nhà trái
-    { x:1400, y:1280, wd:1200, ht:620 }, // dãy nhà phải
+  // ARDHAVEN — 16 KHỐI NHÀ, do tools/iso/dung_thanh.py chấm chứ không đặt tay. Hai dãy tám
+  // căn ôm hai bên đại lộ đông-tây, chừa quãng giữa 2720→3680 làm Quảng Trường Atia và chừa
+  // khe 200px giữa hai căn liền nhau làm ngõ. Mỗi khối 460×340 = đúng bề ngang một sprite
+  // công trình cắt ra ở tỉ lệ 1,8 ô (xem tools/iso/cat_congtrinh.py), nên nhà đặt lên vừa khít.
+  // Chặn nguyên KHỐI chứ không chỉ chân tường: art isometric vẽ cả mái, mà mái là thứ nhân vật
+  // sẽ đi đè lên nếu cho vào.
+  ardhaven: [
+    { x:280, y:520, wd:460, ht:340 }, { x:940, y:520, wd:460, ht:340 }, { x:1600, y:520, wd:460, ht:340 },
+    { x:2260, y:520, wd:460, ht:340 }, { x:280, y:2340, wd:460, ht:340 }, { x:940, y:2340, wd:460, ht:340 },
+    { x:1600, y:2340, wd:460, ht:340 }, { x:2260, y:2340, wd:460, ht:340 }, { x:3680, y:520, wd:460, ht:340 },
+    { x:4340, y:520, wd:460, ht:340 }, { x:5000, y:520, wd:460, ht:340 }, { x:5660, y:520, wd:460, ht:340 },
+    { x:3680, y:2340, wd:460, ht:340 }, { x:4340, y:2340, wd:460, ht:340 }, { x:5000, y:2340, wd:460, ht:340 },
+    { x:5660, y:2340, wd:460, ht:340 },
   ],
 };
 
@@ -1346,84 +1404,174 @@ window.NPCS = [
       done:  '"Về rồi. Ta nấu sẵn nồi cháo — ngồi xuống ăn trước đã, chuyện nói sau."' },
     barks:['"Bầy nhỏ hôm nay không chịu ra khỏi tổ."','"Đảo này nuôi được ta ba đời, nuôi thêm ngươi có sao đâu."',
            '"Đêm trời nứt, biển sáng như ban ngày."','"Ăn gì chưa? Hỏi thật đấy."'] },
-  // QA rà soát NPC Sapidae Chiefdom: Thương Nhân · Chợ Đấu Giá đã bị xoá — cả 3 món trong tiệm đều
-  // trùng chỗ khác (Bình Thuốc Đỏ = Dược Sư, Thiên Mệnh Phù = mua thẳng trong Rèn Luyện qua buyCharm()),
-  // và "Chợ Đấu Giá" chưa từng có cơ chế đấu giá thật — chỉ là tiệm giá cố định như 3 tiệm kia.
-  // Đá Thăng Cấp đã gỡ hẳn cùng hệ Thuần Thục — nó không còn nơi tiêu.
-  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'tuongduong', x:1780, y:780, img:'assets/npcs/thoren.png', talk:'forge',
-    lore:'"Lò này cháy suốt từ hôm khu phố rơi qua. Ta không dám để nó tắt — sợ nhóm lại không được."',
-    barks:['"Búa này theo ta qua cả vết nứt."','"Đợi lò đỏ đã, đừng giục."',
-           '"Đồ hỏng thì mang đây, đừng vứt."','"Nghe tiếng thép là biết đồ thật hay giả."'] },
-  // NV5 (cấp 5) bắt rèn +3, mà lò duy nhất nằm trong Sapidae Chiefdom khoá tới NV10 — chính tuyến kẹt
-  // cứng ở cấp 5, không có đường vòng. Bắt được qua chơi thử. Đặt một lò lưu vong ngay cạnh làng.
-  // ── QUẢNG TRƯỜNG CŨ — thị trấn khởi đầu ─────────────────────────────────────
-  // Toạ độ đặt bằng công cụ /diem: bật lên, chuột phải lên từng chỗ trong tranh, `/diem xong`
-  // in ra đúng mấy dòng dưới đây. Cả mười người đều nằm TRONG `diTrong` của map (đã đối chiếu
-  // lại bằng phép kiểm điểm-trong-đa-giác), và tránh vòng cấm của cái giếng giữa sân.
-  // Vị trí chọn theo thứ có sẵn TRONG TRANH: quán bia treo biển ở tây, quầy giả kim treo lọ ở
-  // bắc, giá binh khí ở đông, vòm cổng ở đông-bắc, giếng ở giữa.
-  { id:'qt_giakim', name:'Nhà Giả Kim Quảng Trường', map:'quangtruong', x:1120, y:880, img:'assets/npcs/duoclao.png', talk:'shop',
-    lore:'"Lọ treo trên kia là hàng thật, không phải đồ trang trí. Cứ vào, đừng đứng ngoài ngó."',
-    barks:['"Bình đỏ pha sáng nay, còn ấm."','"Ra ngoài cổng thì mang theo hai lọ, đừng một."','"Đừng uống khi đang chạy."'] },
-  { id:'qt_thoren', name:'Thợ Rèn Quảng Trường', map:'quangtruong', x:900,  y:1215, img:'assets/npcs/thoren.png', talk:'forge',
-    lore:'"Lò của ta rơi qua vết nứt cùng cả khu phố này. Cứ đưa đồ đây — còn than là còn rèn."',
-    barks:['"Đồ mới ra khỏi cổng là mẻ ngay, mang về ta vá."','"Đừng đập +7 khi trong túi chưa có ngọc."','"Nghe tiếng thép là biết đồ thật hay giả."'] },
-  { id:'qt_gaccong', name:'Đội Trưởng Gác Cổng', map:'quangtruong', x:1620, y:790, img:'assets/npcs/laotuong.png', talk:'quest',
+  // ══ ARDHAVEN · SAPIDAE CHIEFDOM — 24 NPC ═══════════════════════════════════
+  // Thay hẳn hai bộ cũ: bộ 10 NPC "qt_*" của Quảng Trường Cũ (map đã xoá) và bộ 5 NPC khai
+  // bằng NPCS.push trong game.js. Năm id cũ được GIỮ NGUYÊN vì có mã tìm cứng theo id:
+  //   duoclao/binhkhi/trachu → khoá của bảng SHOPS · bodau → renderTruyNa() · thantoan → renderVanDuyen()
+  // Đổi id năm người đó là hỏng năm cái quầy, không phải hỏng một cái tên.
+  //
+  // Bốn `talk` sau đây LẦN ĐẦU có người đứng trong thành: `stable` · `trunya` · `vanduyen` ·
+  // `tenui`. Trước bản này chúng là bốn hệ thống không có cửa nào ở nơi người chơi hay đứng.
+  //
+  // Toạ độ không chấm tay: chạy phép kiểm điểm-trong-đa-giác trên `diTrong` 36 đỉnh + kiểm hộp
+  // 16 khối nhà + ma trận khoảng cách đôi một. Xem tools/iso/dung_thanh.py cho hình học.
+  // ── 7 NPC CHỨC NĂNG — mỗi người một `talk` ───────────────────────────────────
+  // Bốn loại `stable` · `trunya` · `vanduyen` · `tenui` trước nay CHƯA CÓ CỬA NÀO
+  // đứng ở thành. Lore của bốn người dưới đây viết cho ra chuyện đó: mỗi cái cửa
+  // phải nói được vì sao nó tồn tại, không chỉ là một cái nút bấm.
+
+  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'ardhaven', x:5230, y:990, img:'assets/npcs/thoren.png', talk:'forge',
+    lore:'"Lò này nhóm lại lần thứ ba rồi. Hai lần trước tắt vì hết than — lần này ta dặn xe than đi hai chuyến một tuần, tắt nữa thì là lỗi của ta."',
+    barks:['"Đợi lò đỏ đã, đừng giục."','"Đồ mẻ thì mang đây, đừng vứt."',
+           '"Búa nhỏ để khảm, búa lớn để nắn. Cầm nhầm là hỏng cả món."','"Nghe tiếng thép là biết đồ thật hay giả."'] },
+
+  { id:'duoclao', name:'Nhà Giả Kim · Tiệm Thuốc', map:'ardhaven', x:1830, y:990, img:'assets/npcs/duocsu.png', talk:'shop',
+    lore:'"Giá dán ngay cửa. Ta không nói thách cũng không bớt — bớt cho một người là hôm sau cả phố tới đòi bớt."',
+    barks:['"Bình đỏ pha sáng nay, còn ấm."','"Ra khỏi cổng thì mang hai lọ, đừng mang một."',
+           '"Đừng uống lúc đang chạy, sặc thì phí cả lọ."','"Nút bần bịt kín rồi, nhưng đừng để nghiêng trong túi."'] },
+
+  { id:'binhkhi', name:'Binh Khí Chủ · Vũ Khí Phường', map:'ardhaven', x:5890, y:990, img:'assets/npcs/binhkhi.png', talk:'shop',
+    lore:'"Giá gỗ này ta đóng lại tuần trước — cây cũ mọt ăn, gãy làm đôi lúc nửa đêm, đổ hết cả hàng xuống sân. Cầm thử đi, cây nào cũng còn nguyên lưỡi."',
+    barks:['"Cầm thử đi, đừng ngắm."','"Cây rìu kia nặng hơn nó nhìn."',
+           '"Chuôi quấn da mới, chưa trơn tay đâu."','"Đồ cũ nhưng chưa gãy lần nào."'] },
+
+  // talk:'stable' — CỬA ĐẦU TIÊN của hệ Trại Ngựa / Mã Thầu / Khế Ước Ragoon đứng
+  // trong tường thành. Trước đây hệ này chỉ có một cửa duy nhất ở Beast Herd Camp.
+  { id:'ah_mucdong', name:'Người Giữ Chuồng', map:'ardhaven', x:2160, y:2450, img:'assets/npcs/traichu.png', talk:'stable',
+    lore:'"Chuồng trong thành có bốn ô, mà ngoài đồng thì cả bầy chạy hoang. Ai rượt được con nào thì dắt về đây — ta ghi tên, ta cho ăn, và ta không hỏi trước đó nó thuộc về ai."',
+    barks:['"Rượt cho nó mệt, đừng rượt cho mình mệt."','"Con nâu ô ngoài cùng cắn người lạ, nhớ đấy."',
+           '"Cỏ ngoài thành ngọt hơn cỏ trong sân, nên chúng nó mới không chịu về."','"Dây thừng ta cho mượn, nhớ trả."'] },
+
+  // talk:'trunya' — Truy Nã Lệnh mỗi ngày một tên. ⚠ XEM CHÚ Ý KỸ THUẬT cuối tệp:
+  // renderTruyNa() đang tìm CỨNG id 'bodau'.
+  { id:'bodau', name:'Quan Truy Nã', map:'ardhaven', x:4150, y:2100, img:'assets/npcs/bodau.png', talk:'trunya',
+    lore:'"Vách này mỗi sáng ta dán một tờ, mỗi chiều gỡ một tờ. Trước đây gỡ vì hết hạn. Dạo này thì gỡ vì có người mang việc về xong — ta thích cách gỡ đó hơn."',
+    barks:['"Lệnh hôm nay dán rồi đấy."','"Một ngày một tên, không hơn. Ta cũng phải ngủ."',
+           '"Tiền thưởng trả bằng Lumen, đếm tại chỗ, đếm xong đừng kêu thiếu."','"Đừng vác nguyên con về sân ta. Kể lại là đủ."'] },
+
+  // talk:'vanduyen' — Sảnh Cầu May. Tỉ lệ công khai, không cộng dồn may mắn.
+  // ⚠ renderVanDuyen() đang tìm CỨNG id 'thantoan' — xem chú ý kỹ thuật cuối tệp.
+  { id:'thantoan', name:'Chủ Sảnh Cầu May', map:'ardhaven', x:4570, y:990, img:'assets/npcs/thantoan.png', talk:'vanduyen',
+    lore:'"Tỉ lệ ta dán trên vách, chữ to bằng bàn tay, ai đứng ngoài cửa cũng đọc được. Đọc xong mà vẫn quay thì đó là việc của ngươi, không phải lỗi của ta."',
+    barks:['"Tỉ lệ dán trên vách kia kìa, đọc trước đi."','"Ta không hứa gì cả. Ta chỉ quay."',
+           '"Người vừa nãy quay chín lượt rồi về tay không. Ngươi vẫn muốn quay chứ?"','"Lumen đặt lên bàn, đừng đưa tận tay ta."'] },
+
+  // talk:'tenui' — Vực Thẳm. Trước nay ba cái vách duy nhất đều nằm ở vùng ngoài;
+  // đây là cái đầu tiên nằm ngay trong tường thành, nên nó phải giải thích được vì
+  // sao giữa một cái thành lại có một cái vực.
+  { id:'ah_vachgio', name:'Kẻ Trông Vách', map:'ardhaven', x:2160, y:380, img:'assets/npcs/vachda.png', talk:'tenui',
+    lore:'"Vết nứt xé qua chỗ này thì kéo đi một mảng đất, và chỗ đất mất đi để lại cái vực đằng sau lưng ta. Ta ngồi đây đếm người nhảy xuống. Ai đủ cứng — từ cấp 60 trở lên — thì còn leo lên lại được."',
+    barks:['"Nhìn xuống trước, rồi hẵng quyết."','"Gió dưới đáy thổi ngược lên. Lạ, mà ta quen rồi."',
+           '"Ta trông cái vách, không trông người. Ngươi nhảy hay không là chuyện của ngươi."','"Sáng nay hai đứa nhảy. Một đứa về."'] },
+
+  // ── 4 NPC GÁC CỔNG — mỗi hướng một người, nói rõ ra cổng đó là đi đâu ─────────
+  // Đứng cách cổng của mình 280-290px về phía trong thành (đã đo).
+
+  { id:'ah_gac_bac', name:'Lính Gác Cổng Bắc', map:'ardhaven', x:3200, y:540, img:'assets/npcs/laotuong.png', talk:'quest',
     lore:{
-      idle:  '"Trong tường này không có gì giết được ngươi. Bước qua vòm cổng kia thì khác — ta chỉ mở cửa, không đi theo."',
-      offer: '"Chưa vội. Đứng đây nhìn ra ngoài cổng một lúc đã, xem có sợ không rồi hẵng nhận việc."',
-      active:'"Việc ngoài kia còn dở. Cổng ta vẫn mở, về lúc nào cũng được."',
-      done:  '"Về đủ chân tay. Ta đếm người ra, đếm người về — hôm nay không lệch."' },
-    barks:['"Cổng mở suốt. Đóng lại thì cũng chẳng cản được thứ ngoài kia."','"Ra thì ra sớm, chiều sương xuống dày."','"Đếm người ra, đếm người về. Hôm nay lệch ba."'] },
-  { id:'qt_binhkhi', name:'Chủ Giá Binh Khí', map:'quangtruong', x:1745, y:1085, img:'assets/npcs/binhkhi.png', talk:'quest',
+      idle:  '"Qua cổng này là đường lên Bird Tribe Heights. Dốc, gió ngược, và trên đó chim làm tổ trên đá chứ không làm trên cây — cứ nhìn tổ là biết mình lên tới đâu."',
+      offer: '"Chưa vội. Đứng đây nhìn lên cái dốc kia một lúc đã, rồi hẵng nhận việc."',
+      active:'"Việc trên Bird Tribe Heights còn dở. Cổng ta vẫn mở, về lúc nào cũng được."',
+      done:  '"Về rồi. Ta đếm người ra, đếm người về — hôm nay không lệch."' },
+    barks:['"Ra sớm đi, quá trưa là gió trên đó đổi hướng."','"Đường lên dốc, đừng chạy. Chạy là phải dừng."',
+           '"Ta đứng đây từ lúc trời còn tối."'] },
+
+  { id:'ah_gac_nam', name:'Lính Gác Cổng Nam', map:'ardhaven', x:3200, y:2660, img:'assets/npcs/laotuong.png', talk:'quest',
     lore:{
-      idle:  '"Giá này toàn đồ của người không về. Ta lau sạch rồi mới dựng lên — cầm thử đi, đừng ngại."',
-      offer: '"Tay ngươi chưa quen thép. Cầm cho vững đã rồi ta mới dám nhờ."',
-      active:'"Cây ngươi mượn còn ngoài kia. Ta đợi cả nó lẫn ngươi."',
-      done:  '"Trả về nguyên vẹn. Ít người làm được thế, ta ghi tên ngươi lên giá."' },
-    barks:['"Cầm thử đi, đừng ngắm."','"Cây rìu kia nặng hơn nó nhìn."','"Đồ cũ nhưng chưa gãy lần nào."'] },
-  { id:'qt_quantro', name:'Chủ Quán Trọ', map:'quangtruong', x:900, y:1045, img:'assets/npcs/trachu.png', talk:'quest',
+      idle:  '"Cổng Nam mở ra Beast Herd Camp. Đất bằng, cỏ cao ngang thắt lưng, và bầy thú ngoài đó không sợ người nữa — đó mới là chỗ đáng ngại."',
+      offer: '"Ngươi chưa quen mùi cỏ cháy ngoài kia. Ra ngó một vòng đã."',
+      active:'"Ngoài Beast Herd Camp còn việc của ngươi. Ta không đi theo được."',
+      done:  '"Về đủ chân tay. Tốt. Ngồi xuống thở đã."' },
+    barks:['"Cỏ cao che được người, cũng che được thứ khác."','"Ngoài kia không có tường. Nhớ giùm ta câu đó."',
+           '"Đếm người ra, đếm người về."'] },
+
+  { id:'ah_gac_tay', name:'Lính Gác Cổng Tây', map:'ardhaven', x:700, y:1450, img:'assets/npcs/laotuong.png', talk:'quest',
     lore:{
-      idle:  '"Cả cái quán rơi qua đây mà không vỡ một chén. Đời còn cho gì thì ta nhận nấy."',
-      offer: '"Ngồi xuống ăn trước đã. Bụng đói thì nghe việc gì cũng thấy dễ."',
-      active:'"Phần của ngươi ta để phần rồi, nguội thì hâm lại."',
-      done:  '"Xong rồi hả. Ngồi đi, lần này ta rót, không tính tiền."' },
-    barks:['"Ngồi đi, ta rót."','"Trong này yên, ngoài kia ồn."','"Ai vào cũng kể một chuyện, chưa ai kể trùng."'] },
-  { id:'qt_thaythuoc', name:'Thầy Thuốc Già', map:'quangtruong', x:760, y:1140, img:'assets/npcs/duocsu.png', talk:'quest',
+      idle:  '"Ra Cổng Tây rồi đi thẳng là tới Plant Tribe Glade. Rừng thấp, nhiều lối, mà lối nào cũng giống lối nào. Nhớ đường về hơn là nhớ đường đi."',
+      offer: '"Chưa cần tới ngươi. Cổng này ngày nào cũng mở, mai quay lại cũng được."',
+      active:'"Trong Plant Tribe Glade còn thứ ngươi phải làm cho xong."',
+      done:  '"Xong rồi hả. Ngồi nghỉ đi, ta rót cho ngụm nước."' },
+    barks:['"Lối nào cũng giống lối nào. Nhớ đường về."','"Đừng bẻ cành làm dấu — cành mọc lại, dấu thì không."',
+           '"Trong tường thì yên. Ngoài kia thì tùy hôm."'] },
+
+  { id:'ah_gac_dong', name:'Lính Gác Cổng Đông', map:'ardhaven', x:5640, y:1600, img:'assets/npcs/laotuong.png', talk:'quest',
     lore:{
-      idle:  '"Ta vá được da thịt. Cái ngươi mang về từ ngoài kia — thứ bám trong mắt ấy — ta chịu."',
-      offer: '"Người còn lành lặn thì đừng vội. Ta chỉ nhờ khi không còn ai lành hơn."',
-      active:'"Thuốc ta pha xong rồi, chỉ thiếu thứ ngươi đang đi lấy."',
-      done:  '"Đủ rồi. Ngồi xuống, ta xem vết trên tay ngươi trước đã."' },
-    barks:['"Vết này không phải do dao."','"Nghỉ một đêm rồi hẵng đi."','"Đừng để máu khô rồi mới tới."'] },
-  { id:'qt_balao', name:'Bà Lão Bên Giếng', map:'quangtruong', x:1230, y:1110, img:'assets/npcs/monkhach.png', talk:'quest',
-    lore:{
-      idle:  '"Giếng này vẫn có nước. Cả khu phố mất người mà cái gàu còn nguyên — ngươi giải thích được không?"',
-      offer: '"Ngươi mới tới, chưa nợ nơi này gì cả. Cứ đi chơi đi, việc của ta chờ được."',
-      active:'"Ta vẫn múc nước mỗi sáng. Ngươi cứ đi, ta không đi đâu mất."',
-      done:  '"Vậy là còn có người nghe bà già nói. Cảm ơn, thật đấy."' },
-    barks:['"Sáng nào ta cũng múc một gàu, sáng nào cũng thế."','"Đừng nhìn xuống lâu quá."','"Trước đây chỗ này đông lắm."'] },
-  { id:'qt_duatin', name:'Người Đưa Tin', map:'quangtruong', x:1330, y:1215, img:'assets/npcs/noiung.png', talk:'quest',
-    lore:{
-      idle:  '"Thư từ Sapidae Chiefdom vẫn tới đều. Người gửi thì ta gặp, người nhận thì chưa gặp ai bao giờ."',
-      offer: '"Chân ngươi chưa quen đường. Đi vài vòng ngoài cổng đã rồi ta giao thư."',
-      active:'"Thư còn trong túi ngươi đấy. Đừng để ướt."',
-      done:  '"Tới nơi rồi hả. Vậy là hôm nay có một lá được đọc."' },
-    barks:['"Đường ra đảo đi được, chỉ hơi bẩn giày."','"Ta chạy nhanh hơn ngươi đấy."','"Thư này để ba tháng rồi."'] },
-  { id:'qt_laibuon', name:'Lái Buôn Lang Thang', map:'quangtruong', x:1120, y:1120, img:'assets/npcs/thantoan.png', talk:'quest',
-    lore:{
-      idle:  '"Ta buôn giữa hai bờ vết nứt. Hàng bên kia rẻ, chỉ tội mỗi chuyến mất một người kéo xe."',
-      offer: '"Ngươi chưa đủ nặng tay để đi cùng chuyến của ta. Cứ chờ."',
-      active:'"Xe ta đứng đây chờ. Hàng ngươi hứa vẫn chưa thấy đâu."',
-      done:  '"Đủ hàng. Chuyến này ta không mất ai — lâu lắm rồi mới nói được câu đó."' },
-    barks:['"Giá hôm nay khác hôm qua."','"Ta không nói thách, ta nói đúng."','"Bên kia vết nứt còn đắt hơn."'] },
-  { id:'qt_linhtuan', name:'Lính Tuần Tra', map:'quangtruong', x:1850, y:1140, img:'assets/npcs/bodau.png', talk:'quest',
-    lore:{
-      idle:  '"Ta đi vòng quanh sân này mười hai lượt một ngày. Mười hai lượt, không lượt nào thấy gì — và đó mới là chuyện đáng sợ."',
-      offer: '"Chưa cần tới ngươi. Sân còn sạch thì ta còn đi được một mình."',
-      active:'"Ta vẫn đi vòng của ta. Việc ngươi nhận thì ngươi lo."',
-      done:  '"Sạch rồi. Đêm nay ta bớt được một lượt — cảm ơn."' },
-    barks:['"Mười hai lượt, không thiếu lượt nào."','"Trong sân sạch. Ngoài cổng thì ta không hứa."','"Nghe thấy gì thì gọi ta."'] },
+      idle:  '"Cổng Đông dẫn vào Werebear Woods. Rừng già, cây to hai người ôm, và giữa ban ngày trong đó tối như lúc chập tối."',
+      offer: '"Vào rừng đó thì nên đi cùng người biết đường. Chưa phải hôm nay."',
+      active:'"Ngươi còn nợ Werebear Woods một chuyến. Ta nhớ đấy."',
+      done:  '"Ra được khỏi rừng đó là ta phục rồi. Thật, không phải nói cho vui."' },
+    barks:['"Trong rừng đó ban ngày cũng phải cầm đuốc."','"Nghe tiếng gãy cành thì đứng yên, đừng quay đầu."',
+           '"Cổng khép lúc nửa đêm. Ai gõ thì ta mở."'] },
+
+  // ── 13 NPC DÂN PHỐ — phần lớn chỉ đang sống đời của họ ───────────────────────
+  // Cố ý CHỈ HAI người nhắc tới vết nứt (kẻ hát rong, người gánh nước) — một cái
+  // thành mà ai cũng nói về đại hoạ thì không phải một cái thành, nó là một bảng
+  // thông báo có chân.
+
+  { id:'ah_banrong', name:'Người Bán Rong', map:'ardhaven', x:1450, y:1520, img:'assets/npcs/monkhach.png', talk:'quest',
+    lore:'"Ta gánh hai thúng, một thúng bánh một thúng chè. Thúng nào bán hết trước thì sáng mai ta gánh thúng đó nặng hơn. Đơn giản thế thôi."',
+    barks:['"Bánh còn nóng, mua đi."','"Chè hôm nay đắt hơn hôm qua — đường lên giá, không phải ta."',
+           '"Ta đứng đây tới trưa thôi đấy."'] },
+
+  { id:'ah_thomoc', name:'Thợ Mộc', map:'ardhaven', x:1100, y:2100, img:'assets/npcs/thumo.png', talk:'quest',
+    lore:'"Cả phố đặt ta đóng cửa mới. Cửa cũ vẫn tốt cả — chỉ là ai cũng muốn cái then dày hơn ngón tay cái. Ta đóng, ta không hỏi vì sao."',
+    barks:['"Gỗ này còn ướt, phải phơi thêm mười ngày."','"Đừng dựa vào đó, keo chưa khô."',
+           '"Đóng thì đóng ba đinh, đừng đóng hai."'] },
+
+  { id:'ah_ganhnuoc', name:'Người Gánh Nước', map:'ardhaven', x:860, y:1700, img:'assets/npcs/noiung.png', talk:'quest',
+    lore:'"Giếng ở đầu phố, nhà ta ở cuối phố. Mười hai chuyến một ngày, và ta thuộc từng viên đá lát trên đoạn đường đó — kể cả viên bị nứt từ hôm khu phố này rơi sang."',
+    barks:['"Tránh ra, ướt giày bây giờ."','"Nước múc sáng trong hơn nước múc chiều."',
+           '"Cái đòn gánh này ta dùng từ hồi còn ở bên kia."'] },
+
+  { id:'ah_treem', name:'Lũ Trẻ Chạy Quanh', map:'ardhaven', x:3020, y:1820, img:'assets/npcs/quachtinh.png', talk:'quest',
+    lore:'"Bọn cháu chơi đuổi bắt. Ai chạm vào bậc thềm nhà bác thợ rèn là thua, vì bác ấy sẽ ra mắng — luật do bác ấy đặt, không phải bọn cháu."',
+    barks:['"Đuổi kịp cháu thì cháu cho cái này!"','"Chú đừng mách mẹ cháu nhé."',
+           '"Chú cao thế, chú nhìn qua nóc nhà kia được không?"'] },
+
+  { id:'ah_linhtuan', name:'Lính Tuần Phố', map:'ardhaven', x:2560, y:1600, img:'assets/npcs/bodau.png', talk:'quest',
+    lore:'"Ta đi từ Cổng Tây sang Cổng Đông rồi quay lại, mỗi vòng đúng một khắc. Việc chán lắm. Nhưng chán là dấu hiệu tốt, ngươi cứ tin ta."',
+    barks:['"Trong tường thì yên."','"Ai còn để xe hàng giữa lòng phố nữa là ta thu."',
+           '"Đi qua đi lại mỏi chân hơn đánh nhau."'] },
+
+  { id:'ah_quetpho', name:'Người Quét Phố', map:'ardhaven', x:3620, y:1470, img:'assets/npcs/ttmon.png', talk:'quest',
+    lore:'"Sáng quét lá, chiều quét bụi, tối quét thứ khách say làm rơi. Phố sạch thì không ai khen. Phố bẩn thì ai cũng biết là ta."',
+    barks:['"Dịch sang bên một tí, ta quét."','"Lá năm nay rụng nhiều hơn mọi năm."',
+           '"Chổi này ta tự bó, bền hơn chổi mua ngoài chợ."'] },
+
+  { id:'trachu', name:'Chủ Quán Trọ · Trà Quán', map:'ardhaven', x:4150, y:1010, img:'assets/npcs/trachu.png', talk:'shop',
+    lore:'"Mười hai phòng, tám phòng có người. Bốn phòng còn lại ta để trống cho ai về muộn — về muộn mà không có chỗ nằm thì tội lắm."',
+    barks:['"Còn phòng, đừng lo."','"Cơm dọn lúc trời chạng vạng, đừng tới trễ."',
+           '"Ai ngáy to thì ta xếp lên gác. Không giận nhé."'] },
+
+  { id:'ah_duatin', name:'Người Đưa Tin', map:'ardhaven', x:4300, y:1620, img:'assets/npcs/noiung.png', talk:'quest',
+    lore:'"Ta chạy tin giữa bốn cổng, trong tường thôi. Thư gửi ra ngoài thành thì ta không nhận — ngoài đó không có ai đứng đợi ở đầu đường cả."',
+    barks:['"Tránh đường, ta đang vội."','"Lá này để ba ngày rồi, chưa ai tới lấy."',
+           '"Ta chạy nhanh hơn ngươi đấy, cá không?"'] },
+
+  { id:'ah_banhoa', name:'Bà Bán Hoa', map:'ardhaven', x:3400, y:1930, img:'assets/npcs/duoclao.png', talk:'quest',
+    lore:'"Hoa của ta trồng ở luống sau nhà, không phải hàng gánh từ ngoài đồng vào. Cành ngắn hơn thật, nhưng cắm trong nhà được bảy ngày."',
+    barks:['"Mua một bó về cắm, nhà sáng hẳn ra."','"Cành trắng hết rồi, còn cành đỏ thôi."',
+           '"Cắt buổi sáng thì tươi lâu hơn cắt buổi chiều."'] },
+
+  { id:'ah_onglao', name:'Ông Lão Ngồi Ghế Đá', map:'ardhaven', x:2870, y:1340, img:'assets/npcs/truonglang.png', talk:'quest',
+    lore:'"Cái ghế này quay mặt ra phố lớn. Ta ngồi từ lúc mặt trời chưa qua nóc nhà đối diện, tới lúc nó khuất sau đó. Ngày nào cũng vậy, và ta chưa chán ngày nào."',
+    barks:['"Ngồi xuống đi, ghế còn chỗ."','"Trước đây chỗ này là bãi đất trống."',
+           '"Cứ đi đi. Ta không giữ ai lại bao giờ."'] },
+
+  { id:'ah_chimera', name:'Người Luyện Chimera', map:'ardhaven', x:2500, y:2100, img:'assets/npcs/traichu.png', talk:'quest',
+    lore:'"Con này ta nhặt lúc nó còn nhỏ bằng bàn tay. Nó không hiền đâu — nó chỉ quen ta thôi. Quen với hiền là hai chuyện khác nhau, nhớ cho kỹ."',
+    barks:['"Đừng đưa tay ra trước mặt nó."','"Nó ăn hai bữa, sáng và tối. Cho ăn thêm là nó lười."',
+           '"Con này nghe tiếng huýt, không nghe tên."'] },
+
+  { id:'ah_thonhuom', name:'Thợ Nhuộm', map:'ardhaven', x:1170, y:1010, img:'assets/npcs/daosi.png', talk:'quest',
+    lore:'"Tay ta xanh tới khuỷu, rửa cách gì cũng không ra. Khách nhìn tay ta rồi mới tin mấy tấm vải treo kia là màu thật chứ không phải màu quét."',
+    barks:['"Đừng chạm vào, vải chưa khô."','"Màu chàm phải nhuộm bảy lượt mới ăn."',
+           '"Nước nhuộm đổ ra rãnh kia, đừng giẫm vào."'] },
+
+  { id:'ah_hatrong', name:'Kẻ Hát Rong', map:'ardhaven', x:3200, y:1300, img:'assets/npcs/quachtinh.png', talk:'quest',
+    lore:'"Ta hát bài nào cũng được, trừ bài về cái đêm trời nứt. Hát bài đó thì có người bỏ về, có người ngồi lại khóc — mà cả hai hạng đều không bỏ tiền."',
+    barks:['"Nghe một bài không mất gì cả."','"Dây thứ ba lại chùng rồi."',
+           '"Hôm qua có người trả ta bằng một quả táo. Ta vẫn hát."'] },
   { id:'thoren_dao', name:'Thợ Rèn Lưu Vong', map:'daohoa', x:520, y:560, img:'assets/npcs/thoren.png', talk:'forge',
     lore:'"Lò của ta rơi qua vết nứt cùng ta. Còn đỏ lửa là còn rèn — đưa đồ đây."',
     barks:['"Đảo này không có quặng, ta nấu lại đồ cũ."','"Còn đỏ lửa là còn rèn."',

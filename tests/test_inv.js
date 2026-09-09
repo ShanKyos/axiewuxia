@@ -93,10 +93,16 @@ const { chromium } = require('playwright');
     if (!go) return { error: 'không thấy nút KẾT HỢP' };
     const disabled = go.disabled;
     go.click();
-    return { disabled, plus: player.equip[slot] && player.equip[slot].plus, chucPhuc: player.jewels.chucPhuc };
+    return { disabled };
   });
+  // Máy Chaos nay HAI THÌ: cú bấm chỉ mở nhịp nín thở, kết quả bóc sau LO_KHUI (1150ms) rồi
+  // khoá _loBan còn giữ thêm 1000ms. Phải đọc món và số ngọc Ở LƯỢT SAU, không đọc kèm cú bấm.
+  await page.waitForTimeout(2400);
+  Object.assign(combineResult, await page.evaluate(() => {
+    const slot = window._forgeSlot;
+    return { plus: player.equip[slot] && player.equip[slot].plus, chucPhuc: player.jewels.chucPhuc };
+  }));
   console.log('combine via DOM:', JSON.stringify(combineResult));
-  await page.waitForTimeout(400);
   await page.screenshot({ path: '/tmp/forge_after_jewel_drag.png' });
 
   let bad = 0;

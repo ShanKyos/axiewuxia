@@ -13,7 +13,7 @@ const { chromium } = require('playwright');
   const r1 = await page.evaluate(() => ({
     npcGone: !NPCS.some(n => n.id === 'thuongnhan'),
     shopGone: !SHOPS.thuongnhan,
-    tuongduongNpcCount: NPCS.filter(n => n.map === 'tuongduong').length,
+    ardhavenNpcCount: NPCS.filter(n => n.map === 'ardhaven').length,
   }));
   console.log('1) thuongnhan removed from NPCS + SHOPS:', JSON.stringify(r1));
 
@@ -31,7 +31,7 @@ const { chromium } = require('playwright');
     window.TEST_MODE = true;
     startGame('thieulam', null);
     player.level = 20; calcDerived(); player.silver = 99999; player.tienDan = 0;
-    travelTo('tuongduong');
+    travelTo('ardhaven');
     const n = NPCS.find(x => x.id === 'duoclao');
     player.x = n.x; player.y = n.y;
     tryTalk();

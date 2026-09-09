@@ -18,7 +18,7 @@ const { chromium } = require('playwright');
   const r1 = await page.evaluate(async () => {
     player.level = 60; calcDerived(); player.hp = player.maxHp;
     questIdx = 35; questState = 'active';
-    const maps = ['daohoa', 'tuongduong', 'ngoai', 'chungnam', 'comoc', 'tuyettinh', 'mongco', 'nhanmon'];
+    const maps = ['daohoa', 'ardhaven', 'ngoai', 'chungnam', 'comoc', 'tuyettinh', 'mongco', 'nhanmon'];
     for (const m of maps){ travelTo(m); for (let i = 0; i < 40; i++) update(0.05); render(); }
     return { finalMap: curMap };
   });

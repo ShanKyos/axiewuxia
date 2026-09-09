@@ -15,10 +15,18 @@ const { chromium } = require('playwright');
   await p.waitForFunction(() => window.__gameReady).catch(()=>{});
   await p.waitForTimeout(800);
 
-  const r = await p.evaluate(() => {
+  const r = await p.evaluate(async () => {
     window.TEST_MODE = true;
     startGame('thieulam', null);
     const o = {};
+    // ⚠ doChaos() KHÔNG CÒN CHẠY XONG NGAY LÚC GỌI. Cỗ máy nay có nhịp nín thở (LO_KHUI
+    // 1150ms) giữa cú bấm và lúc bốc kết quả — cả tiếng động lẫn dòng chữ của công thức đều
+    // nổ ra ở NỬA SAU. Bài này đo KẾT QUẢ công thức, không đo hoạt cảnh, nên chỉ cần đợi cho
+    // hết nhịp rồi mới đọc. (Phần hoạt cảnh do test_chaosanim.js gác riêng.)
+    // ⚠ 2400ms, KHÔNG PHẢI 1200. Khoá `_loBan` giữ tới khi bảng VẼ LẠI, tức LO_KHUI (1150ms)
+    // cộng thêm 1000ms nữa — tổng ~2150ms. Chờ ngắn hơn thì cú bấm KẾ TIẾP bị khoá nuốt mất,
+    // và bài đọc ra thành "công thức không chạy" trong khi thật ra nó chưa được bấm.
+    const xong = () => new Promise(r2 => setTimeout(r2, 2400));
     const reset = () => {
       applyTestBoost(); calcDerived(); chaosClear(); chaosGroup = 'ren'; chaosPick = null;
       player.forgeBonus = 0; forgeUseCharm = false;
@@ -55,18 +63,18 @@ const { chromium } = require('playwright');
     o.plus9_taiLoRen = chaosMatches().filter(x => x.rec.id === 'phathien').map(x => x.p.ready ? 'mở' : 'vẫn khoá');
 
     // ── 3. CHẠY THẬT từng công thức ───────────────────────────────────
-    const chay = (dung, sau) => { const before = dung(); doChaos(); return sau(before); };
+    const chay = async (dung, sau) => { const before = dung(); doChaos(); await xong(); return sau(before); };
     // 3a Chúc Phúc: +1 chắc chắn, trừ đúng 1 viên
     reset(); goRoyal(false);
     { const it = player.equip.non; it.plus = 2; const j0 = player.jewels.chucPhuc;
-      chaosAddItem(it.uid); chaosAddJewel('chucPhuc'); chaosPickRecipe('bless'); doChaos();
+      chaosAddItem(it.uid); chaosAddJewel('chucPhuc'); chaosPickRecipe('bless'); doChaos(); await xong();
       o.chucPhuc = { plus: it.plus, ngocTru: j0 - player.jewels.chucPhuc,
         khayConNgoc: forgeTray.filter(e => e.k === 'jewel').length,
         khayConDo: forgeTray.filter(e => e.k === 'item').length }; }
     // 3b Đổi hệ — chỉ VŨ KHÍ mới có hệ (giáp không còn mang hệ từ bản "hệ vũ khí có tác dụng")
     reset();
     { const it = player.equip.vukhi; const e0 = it.element;
-      chaosAddItem(it.uid); chaosAddJewel('honDon'); chaosPickRecipe('element'); doChaos();
+      chaosAddItem(it.uid); chaosAddJewel('honDon'); chaosPickRecipe('element'); doChaos(); await xong();
       o.doiHe = { doi: it.element !== e0, heCu: e0, heMoi: it.element }; }
     reset();
     { const rec = CHAOS_RECIPES.find(x => x.id === 'element');
@@ -77,18 +85,18 @@ const { chromium } = require('playwright');
     // nên chỗ thử ngọc Sinh Mệnh cũng dời sang ô Chân.
     { const it = player.equip.chan; it.life = 0;
       chaosAddItem(it.uid); chaosAddJewel('sinhMenh'); chaosPickRecipe('life');
-      const rate = chaosCurrent().p.rate; doChaos();
+      const rate = chaosCurrent().p.rate; doChaos(); await xong();
       o.sinhMenh = { rate, bac: it.life }; }
     // 3d Rèn thường: Huyền Thiết đã gỡ, phí rèn nay TRỌN VẸN bằng Lumen (xem GO_HUYENTHIET)
     reset();
     { const it = player.equip.tay; it.plus = 0; const s0 = player.silver;
-      chaosAddItem(it.uid); chaosPickRecipe('ren'); doChaos();
+      chaosAddItem(it.uid); chaosPickRecipe('ren'); doChaos(); await xong();
       o.renThuong = { plus: it.plus, truBac: s0 - player.silver > 0 }; }
     // (3e Tấn Phẩm đã gỡ cùng công thức.)
     // 3f Kế Thừa
     reset();
     { const it = player.inv.find(x => !x.special && x.tier != null && x.tier < GIAI_MAX);
-      if (it){ const t0 = it.tier; chaosAddItem(it.uid); chaosPickRecipe('kethua'); doChaos();
+      if (it){ const t0 = it.tier; chaosAddItem(it.uid); chaosPickRecipe('kethua'); doChaos(); await xong();
         o.keThua = { tu: t0, den: it.tier }; } else o.keThua = '(không có đồ dưới giai X)'; }
     // 3g Lò Hỗn Loạn: 3 món cùng phẩm phải BIẾN MẤT dù thành hay bại
     reset();
@@ -98,7 +106,7 @@ const { chromium } = require('playwright');
         for (const it of three) chaosAddItem(it.uid);
         const co = !!chaosMatches().find(x => x.rec.id === 'hopnhat');
         const n0 = player.inv.length;
-        chaosPickRecipe('hopnhat'); doChaos();
+        chaosPickRecipe('hopnhat'); doChaos(); await xong();
         o.honLoan = { co, conLai: three.filter(x => player.inv.includes(x)).length, tuiGiam: n0 - player.inv.length, khaySach: forgeTray.length };
       } }
     // (3h Đổi Cổ Thần đã gỡ cùng hệ Cổ Thần.)

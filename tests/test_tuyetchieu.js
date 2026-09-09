@@ -45,7 +45,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   // ---- 2. Tuyệt chiêu phải BẤM ĐƯỢC và gây sát thương, không chỉ là +%ST ----
   const r2 = await p1.evaluate(async () => {
     applyTestBoost && applyTestBoost();
-    travelTo('tuongduong'); travelTo('daohoa');
+    travelTo('ardhaven'); travelTo('daohoa');
     mobs.length = 0;
     for (let i = 0; i < 6; i++)
       spawnMob('boar', { x: player.x + 60 + i*40, y: player.y, r:1, count:1 }, null);
@@ -135,7 +135,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     const cua = Object.entries(VOHOC_DEFS).filter(([, v]) => v.phai === 'toanchan');
     const chuDong = cua.filter(([, v]) => v.type !== 'passive' && v.type !== 'buff').map(([k]) => k);
     applyTestBoost && applyTestBoost();
-    travelTo('tuongduong'); travelTo('daohoa');
+    travelTo('ardhaven'); travelTo('daohoa');
     mobs.length = 0;
     // xếp một HÀNG THẲNG: chiêu xuyên phải trúng nhiều con, chiêu thường chỉ trúng con đầu
     for (let i = 0; i < 6; i++)

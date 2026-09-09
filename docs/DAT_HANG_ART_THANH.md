@@ -1,7 +1,26 @@
 # Đặt hàng art cho Thành Lớn Ardhaven + map ngoại ô
 
 Danh sách việc gen còn nợ, kèm prompt copy-paste thẳng vào Gemini. Cập nhật lần cuối:
-sau khi đẩy Nhịp Đá (`7c2647c`).
+sau khi Ardhaven 6400×3200 lên map thật (thay hẳn Quảng Trường Cũ + thành khung 2600×1900).
+
+## TÌNH TRẠNG — cái gì đã vào game, cái gì còn nợ
+
+| Hạng mục | Tình trạng |
+|---|---|
+| §1 mặt đất, 4 loại × 4 biến thể | **XONG** — 16 tệp `nen_{co,dat,da,duong}{1..4}.png`. Thành dùng `nen_da` làm mặt phố, `nen_duong` làm mặt đường (khai bằng `isoCo`/`isoDat` trong MAPS). |
+| §2 cổng thành · lò rèn · tiệm thuốc · vũ khí phường | **XONG** — 4 tệp `ct_*.png`, đã đặt trong `MAPS.ardhaven.vatTo`. |
+| §2 sáu công trình còn lại | **CÒN NỢ** |
+| §3 tấm 12 vật nhỏ | **CÒN NỢ** |
+| Khổ thành | **CHỐT 6400×3200** — xem §6. |
+
+**Thành hiện có 16 khối nhà, mới 3 khối có ảnh.** Mười ba khối còn trống, danh sách kèm
+toạ độ đặt sẵn nằm cuối `MAPS.ardhaven.vatTo` trong `data/canbang.js`. Khuôn đặt cho mọi
+khối 460×340: `x = khoi.x − (w−460)/2`, `y = khoi.y + 340 − h`.
+
+⚠ **Gemini vẽ kèm BỆ ĐÁ BẸT dưới công trình dù prompt đã cấm.** Hai trong bốn tấm đầu dính:
+`ct_cong` còn nguyên mặt bệ màu be, `ct_loren` còn nét viền hình thoi. `tools/iso/don_congtrinh.py`
+bóc nốt — chạy nó sau `cat_congtrinh.py`, và nhớ cộng bù độ lệch gốc mà nó in ra vào `x`/`y`
+của `vatTo`, nếu không công trình tự dời chỗ.
 
 ---
 
@@ -150,7 +169,12 @@ Hard rules: no characters, no text, no watermark, no cell borders, no ground.
 
 ---
 
-## 4. Vì sao thành lớn đáng làm — bốn hệ đang KHÔNG có cửa nào
+## 4. Vì sao thành lớn đáng làm — bốn hệ TỪNG không có cửa nào
+
+> **ĐÃ GIẢI QUYẾT.** Ardhaven nay có đủ bốn cái cửa: `ah_mucdong` (stable) · `bodau` (trunya)
+> · `thantoan` (vanduyen) · `ah_vachgio` (tenui). Bảng dưới giữ lại làm chứng cứ vì sao thành
+> lớn đáng làm, không phải hiện trạng.
+
 
 Engine có 7 loại NPC. Đếm trong `data/canbang.js`:
 
@@ -170,19 +194,33 @@ nhau" có giá trị thật chứ không phải trang trí.
 
 ---
 
-## 5. Thứ tự nên gen
+## 5. Thứ tự nên gen — phần CÒN LẠI
 
-1. **§1 mặt đất** — chặn mọi thứ khác.
-2. **§2 số 7 (cổng thành)** — bốn hướng của thành phụ thuộc nó.
-3. **§2 số 1, 2, 9, 10** — bốn cái mở ra chức năng thật.
-4. **§3 vật nhỏ** — làm phố có người ở.
-5. **§2 số 3–6, 8** — phần còn lại.
+1. **Năm khối đã có NPC đứng trước cửa mà thiếu nhà** — mỗi cái là một chức năng người chơi
+   đã dùng được, chỉ thiếu cái nhà để nhìn ra:
+   `ct_caumay` (Sảnh Cầu May, khối #9) · `ct_quantro` (Quán Trọ, #8) · `ct_saanhlenh`
+   (Sảnh Lệnh / bảng Truy Nã, #12) · `ct_chuong` (dãy chuồng, #7) · `ct_thapvach` (chòi
+   trông vách, #3). Cỡ xin **512×492**.
+   ⚠ #12 và #7 nằm ở **hàng nhà NAM**: mặt tiền sprite isometric luôn quay xuống dưới, tức
+   quay ra tường thành. Hoặc xin art quay mặt ngược, hoặc dời NPC xuống phía nam khối.
+2. **§3 vật nhỏ** — làm phố có người ở.
+3. **Tám khối nhà dân nền** (#0 #1 #4 #5 #6 #13 #14 #15) — chỉ cần một hai kiểu nhà thường,
+   lặp lại được.
 
 ---
 
-## 6. Còn chờ quyết định
+## 6. Quyết định đã chốt
 
-- **Khổ thành.** 6400×3200 (tỉ lệ 2,0 — đo từ toạ độ NPC thành Tương Dương của Võ Lâm Chi Mộng:
-  x trải 35→285, y chỉ 100→161) hay 5200×3800 (bằng Rẻo Rừng Corran, map chủ dự án đã ưng).
+- **Khổ thành: 6400×3200**, tỉ lệ 2,0 — chủ dự án chốt. Tỉ lệ suy từ khung một thành lớn cùng
+  dòng (toạ độ NPC công bố trải x 35→285, y 100→161 ⇒ 250/125 = 2,0). Chỉ mượn tỉ lệ khung và
+  nhịp chia khu; bố cục và art tự dựng.
+- **Số khối nhà: 16.** Không phải chọn cho đẹp — `test_domap` đòi ≥1,30 điểm nội dung trên
+  1000 ô đi được, và không tha map thành. Sàn 80% ⇒ ~28500 ô ⇒ cần 37 điểm; sàn 70% ⇒ ~24900 ô
+  ⇒ cần 32,4 điểm. Chọn sàn 70% vì 37 điểm là đơn hàng art gấp rưỡi cho cùng một thành.
+- **⚠ Một ràng buộc bất ngờ của khung 2:1.** `test_domap` chặn ĐƯỜNG KÍNH (hai điểm nội dung
+  xa nhau nhất) ở 80,7% đường chéo map, mà bề ngang của khung 2:1 chiếm tới 89,4% đường chéo.
+  Nghĩa là **mọi map 2:1 có nội dung trải hết bề ngang đều trượt bài này**. Cách sống chung:
+  bốn cột mốc cổng lùi vào x 480 và 5920 (khẩu độ 5440 < trần 5777), còn điểm hiện ra khi đi
+  ngược về thì vẫn nằm ngoài chúng, trong lòng vấu cổng, để `test_noimap` chấp nhận là lối rìa.
 - **Map ngoại ô cấp 20-30** dựng theo khuôn Rẻo Rừng Corran — dùng chung bộ viên lát ở §1,
-  không cần đặt hàng art riêng.
+  không cần đặt hàng art riêng. **Còn nợ.**

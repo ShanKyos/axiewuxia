@@ -109,7 +109,7 @@ const pass = m => console.log('PASS ' + m);
       vuc: NPCS.filter(n => /Vực Thẳm/.test(n.name || ''))
               .map(n => ({ id:n.id, tru: /Trụ (Werebear Woods|Roost|Bird Tribe Heights|Ashmark|Dusk Marsh)/.test(n.lore || '') })),
       // Chợ Đấu Giá đã bị xoá khỏi game; Dược Sư ở Plant Tribe chứ không ở Sapidae Chiefdom
-      thanh: /Chợ Đấu Giá|Dược Sư/.test(MAPS.tuongduong.desc || ''),
+      thanh: /Chợ Đấu Giá|Dược Sư/.test(MAPS.ardhaven.desc || ''),
     };
   });
   console.log('nơi chốn:', JSON.stringify(noi));

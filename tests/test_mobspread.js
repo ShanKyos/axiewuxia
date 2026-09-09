@@ -62,7 +62,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 
   // 4. Boss luôn có nhãn riêng, không bao giờ bị gộp
   const r4 = await p.evaluate(() => {
-    travelTo('tuongduong'); travelTo('daohoa'); spawnZoneBosses();
+    travelTo('ardhaven'); travelTo('daohoa'); spawnZoneBosses();
     const bo = mobs.find(m => !m.dead && m.def.bossKind);
     const q = mobs.filter(m => !m.dead && !m.def.bossKind).slice(0,3);
     q.forEach((m,i) => { m.x = bo.x + i*6; m.y = bo.y; });

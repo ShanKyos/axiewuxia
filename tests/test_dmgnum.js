@@ -82,7 +82,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   const r5 = await p.evaluate(async () => {
     SETTINGS.dmgNum = true;
     applyTestBoost && applyTestBoost();
-    travelTo('tuongduong'); travelTo('daohoa');
+    travelTo('ardhaven'); travelTo('daohoa');
     const k = MAPS.daohoa.packs[0];
     player.x=k.x; player.y=k.y; player.auto=true;
     player._autoAX=null; player._autoAY=null; player._autoZoneLocked=false; player._autoPack=null;

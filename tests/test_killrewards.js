@@ -22,7 +22,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 
   // ---- 1. HỢP ĐỒNG: gọi computeKillRewards 200 lần không được đổi player một byte nào ----
   const r1 = await p.evaluate(() => {
-    applyTestBoost(); travelTo('tuongduong'); travelTo('daohoa');
+    applyTestBoost(); travelTo('ardhaven'); travelTo('daohoa');
     mobs.length = 0;
     const m = spawnMob('boar', { x: player.x + 40, y: player.y, r:1, count:1 }, null);
     // chụp TOÀN BỘ player, không chỉ vài trường — thứ rò rỉ thường là trường không ai ngờ

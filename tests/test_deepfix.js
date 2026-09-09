@@ -75,7 +75,7 @@ const pass = (m) => console.log('PASS ' + m);
 
   // ── 4. phó bản THƯỜNG vẫn phải chạy đúng như cũ ─────────────────────────
   const r4 = await p.evaluate(() => {
-    travelTo('tuongduong');
+    travelTo('ardhaven');
     travelTo('pb_thu');
     return { conDGN: !!DGN, wave: DGN && DGN.wave, tuong: dgnWallObs().length, conDEEP: !!DEEP };
   });

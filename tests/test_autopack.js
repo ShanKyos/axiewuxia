@@ -16,7 +16,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 
   // 1. Cấu trúc: cả cụm phải dùng CHUNG một mã bãi, dù zone là các object khác nhau
   const r1 = await p.evaluate(() => {
-    travelTo('tuongduong'); travelTo('daohoa');
+    travelTo('ardhaven'); travelTo('daohoa');
     const k = MAPS.daohoa.packs[0];
     const cum = mobs.filter(m => !m.dead && m.zone &&
       Math.abs(m.zone.x - k.x) < 2 && Math.abs(m.zone.y - k.y) < 2);

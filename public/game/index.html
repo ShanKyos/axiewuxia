@@ -24,7 +24,8 @@
 <div id="hud" class="hidden">
   <div id="hud-left">
     <div id="hud-name">—</div>
-    <div id="hud-potion" title="Bình Thuốc Đỏ — hồi 40% máu (phím R)">🧪 x0 (R)</div>
+    <!-- Số Bình Thuốc đã dời xuống ô thuốc trong thanh chiến đấu (#sk-thuoc) — cùng một con
+         số bày hai chỗ thì chỗ nào cũng bị liếc qua, mà không chỗ nào được tin. -->
     <div id="hud-buff" title="Rượu Hổ Cốt — tạm thời +12% công lực" style="display:none">🍶</div>
     <div id="hud-loidon" title="Bùa Chắn Sét — giảm 40% sát thương sét" style="display:none">⚡</div>
     <div id="hud-time" title="Đồng Hồ Thế Giới — bấm mở Bảng Sự Kiện" onclick="openEventBoard()" style="cursor:pointer">⏱ --:--</div>
@@ -56,13 +57,12 @@
 
 <!-- Thanh dưới kiểu MU Online: viên đá Máu (đỏ) + Mana (xanh) hình cầu ở
      2 đầu, thanh kỹ năng dàn ngang ở giữa, viền sáng chạy dọc theo % máu ở mép dưới cùng. -->
+<!-- ⚠ HAI TẦNG, KHÔNG PHẢI MỘT HÀNG. Bản trước nhét menu hệ thống xen giữa thanh chiêu —
+     tức là nút "Cài Đặt" nằm ngay cạnh nút tung chiêu, cùng cỡ, cùng kiểu. Đang đánh nhau mà
+     trượt tay một ô là mở bảng cài đặt. Nay tách hẳn theo lối MU S6:
+       · #bottom-hud  = CHIẾN TRƯỜNG — chỉ thứ dùng lúc đánh: hai viên đá, ô chiêu, thuốc, Trợ Thủ
+       · #menu-cot    = MENU HỆ THỐNG — cột dọc sát mép phải, thu gọn được về một tab nhỏ -->
 <div id="bottom-hud" class="hidden">
-  <div class="hud-btns hud-btns-left">
-    <button class="hbtn" id="btn-char" title="Nhân vật (C) — Chimera · Ascension · Rèn Luyện · Tấn Chức">🧙</button>
-    <button class="hbtn" id="btn-inv" title="Trang bị (I)">🛡️</button>
-    <button class="hbtn" id="btn-bag" title="Túi đồ (B)">🎒</button>
-    <button class="hbtn" id="btn-skill" title="Kỹ năng (K)">📖</button>
-  </div>
   <div class="orb orb-hp" id="orb-hp" title="Sinh Lực"><div class="orb-fill" id="bar-hp"></div><span class="orb-val" id="txt-hp"></span></div>
   <div id="skillbar">
     <button class="skill" id="sk-basic"><span class="sk-ico">⚔</span><span class="sk-key">Space</span><span class="sk-cd"></span></button>
@@ -70,14 +70,36 @@
     <button class="skill sk-slot" data-slot="1" id="sk-1" title="Chiêu phụ"><span class="sk-ico">+</span><span class="sk-key">2</span><span class="sk-cd"></span></button>
     <button class="skill sk-slot" data-slot="2" id="sk-2" title="Buff"><span class="sk-ico">+</span><span class="sk-key">3</span><span class="sk-cd"></span></button>
     <button class="skill sk-slot" data-slot="3" id="sk-3" title="Tuyệt Chiêu"><span class="sk-ico">+</span><span class="sk-key">4</span><span class="sk-cd"></span></button>
+    <i class="sk-vach"></i>
+    <!-- Hai ô thuốc, hai phím kề nhau: R hồi máu, T hồi Mana. Lọ Mana nay là món MANG THEO
+         (trước đây mua ở tiệm là hồi đầy ngay tại quầy — tức là chỉ dùng được đúng lúc không
+         ai cần nó). Cùng trần 5 lọ, cùng nhịp hồi 20s, cùng cách báo hết — xem useManaPot(). -->
+    <button class="skill sk-vat" id="sk-thuoc" title="Bình Thuốc Đỏ — hồi 40% máu (R)"><span class="sk-key">R</span><b class="sk-so" id="sk-thuoc-so">0</b></button>
+    <button class="skill sk-vat" id="sk-mana" title="Lọ Mana — hồi 40% Mana (T)"><span class="sk-key">T</span><b class="sk-so" id="sk-mana-so">0</b></button>
     <button class="skill" id="sk-loot" title="Nhặt đồ dưới đất (J)"><span class="sk-ico">✋</span><span class="sk-key">J</span><span class="sk-cd"></span></button>
+    <i class="sk-vach"></i>
+    <button class="skill sk-troly" id="sk-helper" title="Trợ Thủ — bật/tắt TỰ ĐÁNH (Z) · chuột phải để chỉnh"><span class="sk-ico">⚙</span><span class="sk-key">Z</span></button>
   </div>
   <div class="orb orb-qi" id="orb-qi" title="Mana"><div class="orb-fill" id="bar-qi"></div><span class="orb-val" id="txt-qi"></span></div>
-  <div class="hud-btns hud-btns-right">
-    <button class="hbtn" id="btn-map" title="Bản đồ thế giới (M)">🧭</button>
-    <button class="hbtn" id="btn-music" title="Nhạc nền">♪</button>
-    <button class="hbtn" id="btn-qlog" title="Nhật ký nhiệm vụ (Q)">📜</button>
-    <button class="hbtn" id="btn-settings" title="Cài đặt (O)">⚙</button>
+</div>
+
+<!-- Cột menu hệ thống. Sáu cửa hay dùng nhất, mỗi cửa một icon 32px trong khung kim loại;
+     mũi tên trên đầu thu cả cột về một tab nhỏ, thứ còn lại dồn vào nút Menu ▾. -->
+<div id="menu-cot" class="hidden">
+  <button id="mc-thu" title="Thu gọn thanh menu">▸</button>
+  <div id="mc-list">
+    <button class="mc-btn" id="btn-char"     title="Nhân Vật (C) — trang bị + chỉ số"><img src="assets/ui/ic_nhanvat.png" alt=""><span>Nhân Vật</span></button>
+    <button class="mc-btn" id="btn-bag"      title="Túi Đồ (V)"><img src="assets/ui/ic_tuido.png" alt=""><span>Túi Đồ</span></button>
+    <button class="mc-btn" id="btn-skill"    title="Kỹ Năng (K)"><img src="assets/ui/ic_kynang.png" alt=""><span>Kỹ Năng</span></button>
+    <button class="mc-btn" id="btn-qlog"     title="Nhiệm Vụ (Q)"><img src="assets/ui/ic_nhiemvu.png" alt=""><span>Nhiệm Vụ</span></button>
+    <button class="mc-btn" id="btn-map"      title="Bản Đồ (M)"><img src="assets/ui/ic_bando.png" alt=""><span>Bản Đồ</span></button>
+    <button class="mc-btn" id="btn-settings" title="Cài Đặt (O)"><img src="assets/ui/ic_caidat.png" alt=""><span>Cài Đặt</span></button>
+    <button class="mc-btn mc-menu" id="btn-menu" title="Thêm">Menu ▾</button>
+  </div>
+  <div id="mc-drop" class="hidden">
+    <button id="btn-combatlog"><img src="assets/ui/ic_nhatky.png" alt="">Nhật Ký Chiến Đấu <span id="cl-arrow">▾</span></button>
+    <button id="btn-sukien">⏱ Bảng Sự Kiện</button>
+    <button id="btn-music" title="Nhạc nền">♪ Nhạc Nền</button>
   </div>
 </div>
 <!-- Thanh EXP nằm NGAY DƯỚI viên đá Máu, mép dưới màn hình — đúng chỗ MU đặt nó. -->
@@ -104,7 +126,6 @@
 <!-- Nhật ký chiến đấu: thay cho số sát thương/thông báo bay đầy màn hình lúc tự đánh nhiều quái —
      gộp lại thành 1 dòng chữ ở góc, đọc được thay vì rối mắt -->
 <div id="combat-log-wrap" class="hidden">
-  <button id="btn-combatlog" title="Ẩn/hiện nhật ký chiến đấu">📜 Nhật Ký Chiến Đấu <span id="cl-arrow">▾</span></button>
   <div id="combat-log"></div>
 </div>
 

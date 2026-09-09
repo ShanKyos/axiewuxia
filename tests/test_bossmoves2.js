@@ -41,7 +41,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 
   // 2. Vỡ Giáp: 4 cầu giáp, phá hết thì đòn bị huỷ
   const r2 = await p.evaluate(async () => {
-    travelTo('tuongduong'); travelTo('ngoai');
+    travelTo('ardhaven'); travelTo('ngoai');
     applyTestBoost && applyTestBoost();
     mobs.length = 0;
     const bo = spawnMob('boss_hacphong', { x: player.x + 150, y: player.y, r: 1, count: 1 }, null);

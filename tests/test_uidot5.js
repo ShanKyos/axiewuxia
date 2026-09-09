@@ -29,8 +29,12 @@ const pass = m => console.log('PASS ' + m);
   await p.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); applyTestBoost(); moHetCong(); });
   await p.waitForTimeout(500);
 
-  // ═══ ② PHÍM C / V / K — BA BẢNG KHÁC NHAU ═════════════════════════════════
-  // Trước đây C và V cùng gọi togglePanel('char'): hai phím một cửa sổ.
+  // ═══ ② PHÍM C / V / K / B ═════════════════════════════════════════════════
+  // ⚠ LUẬT ĐÃ ĐỔI. Trước đây bài này đòi C và V ra hai cửa sổ RỜI, vì hồi đó cả hai cùng gọi
+  // togglePanel('char') nên bấm phím nào cũng chỉ được một bảng. Nay theo lối MU S6, Nhân Vật
+  // và Trang Bị là HAI NỬA của một cửa sổ (chỉ số bên này, hình nộm mặc đồ bên kia) nên trên
+  // màn ≥1000px mở nửa nào cũng kéo nửa kia ra cùng — xem togglePanel(). Cái còn phải giữ là:
+  // mỗi phím vẫn dựng đúng nửa của nó, và cặp Nhân Vật không lôi theo Kỹ Năng hay Túi Đồ.
   const phim = {};
   for (const k of ['c', 'v', 'k', 'b']){
     await p.evaluate(() => closePanels());
@@ -44,9 +48,15 @@ const pass = m => console.log('PASS ' + m);
     if (!phim[k].includes(id)) fail(`phím ${k.toUpperCase()} không mở ${id} (mở: ${phim[k].join(',') || 'không gì'})`);
   };
   mot('c', 'panel-char'); mot('v', 'panel-inv'); mot('k', 'panel-skill'); mot('b', 'panel-bag');
-  if (phim.c.includes('panel-inv') || phim.v.includes('panel-char'))
-    fail('C và V vẫn mở chung một bảng');
-  if (!bad) pass('C → Nhân Vật · V → Trang Bị · K → Kỹ Năng · B → Túi Đồ, bốn bảng khác nhau');
+  const lan = (k, id) => {
+    if (phim[k].includes(id)) fail(`phím ${k.toUpperCase()} lôi theo ${id} — không cùng cửa sổ`);
+  };
+  // Cặp Nhân Vật ⇄ Trang Bị được phép đứng chung; mọi bảng khác thì không.
+  lan('c', 'panel-skill'); lan('c', 'panel-bag');
+  lan('v', 'panel-skill'); lan('v', 'panel-bag');
+  lan('k', 'panel-char');  lan('k', 'panel-inv');  lan('k', 'panel-bag');
+  lan('b', 'panel-char');  lan('b', 'panel-inv');  lan('b', 'panel-skill');
+  if (!bad) pass('C/V → cặp Nhân Vật+Trang Bị · K → Kỹ Năng · B → Túi Đồ, không bảng nào lẫn nhóm');
 
   // ═══ ③ BẢNG KỸ NĂNG — MỘT TRANG ═══════════════════════════════════════════
   const kn = await p.evaluate(() => {

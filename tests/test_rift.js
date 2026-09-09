@@ -44,7 +44,7 @@ const { chromium } = require('playwright');
   // ---- 1b. Trong thành thì KHÔNG được nứt ----
   const city = await p.evaluate(() => {
     RIFT = { next: 0, warned: false, active: true, endsAt: Date.now() + 600000, done: {}, kills: 0 };
-    const cur = curMap; travelTo('tuongduong');
+    const cur = curMap; travelTo('ardhaven');
     const r = { trongThanh: riftCanSpawn(), map: curMap };
     mobs = mobs.filter(m => m.type !== 'rift');
     travelTo(cur);                       // vào lại bãi săn → hook vào-map phải dựng boss ngay
