@@ -10,3 +10,4 @@ dist/
 # Video nặng (không đưa lên repo)
 public/game/assets/video/
 tools/__pycache__/
+tools/iso/__pycache__/

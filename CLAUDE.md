@@ -93,7 +93,73 @@ Chỉ khác `ground`/`patch` và số `trees`/`rocks`.
 **Chữa bằng cách thêm map thứ 8 là làm bệnh nặng thêm.** Chữa bằng máy sinh địa hình
 + từ khoá biến đổi phòng (đã đặc tả sẵn ở `docs/DE_XUAT_MAP.md`, mục C1/C2 và issue #90).
 
-Trạng thái hiện tại: **bảy phòng đã gỡ hẳn** (mục kế tiếp), tầng map đang chờ dựng lại.
+Trạng thái hiện tại: **bảy phòng đã gỡ hẳn** (mục kế tiếp), tầng map **đang dựng lại bằng khuôn
+hành lang** — phòng đầu tiên đã chạy (mục dưới).
+
+### 🌲 TẦNG PHÓ BẢN DỰNG LẠI — khuôn HÀNH LANG, không phải phòng-nối-phòng
+
+Chủ dự án xem Lối Mòn Corran dựng xong theo lối lát viên đẳng cự rồi nói: *"map này khá ổn để
+làm phó bản"*. Nhận xét đúng, và lý do đúng thì đo được — nên tầng phó bản dựng lại bằng chính
+khuôn ấy, thay cho kiểu phòng-nối-phòng của bảy phòng cũ.
+
+**Vì sao hành lang.** Map đồng trống cho người chơi tản ra mọi hướng, nên NHỊP do người chơi đặt.
+Hành lang chỉ có một đường tiến, nên nhịp do MAP đặt: đi tới, gặp đợt, dọn xong cửa mới mở. Đó
+đúng là nhịp máy phó bản đang chờ — và ở đây nó là HÌNH DẠNG, không phải một luật viết thêm vào máy.
+
+**MỘT hành lang dài chia đoạn, không phải vài hành lang ngắn nối nhau.** Ba lý do, không phải
+thẩm mỹ:
+
+1. Khuôn làn đã sẵn có **nút thắt** (`Lan.nut`), vốn sinh ra để chia làn thành khoảnh mà không
+   cần một dòng chữ nào. Chỗ hành lang thắt lại cũng đúng là chỗ duy nhất đặt được một cánh cửa
+   đá cho ra hồn. Cửa không phải thứ dán thêm vào map — nó mọc ra từ hình học đã có.
+2. Lối Mòn Corran đã chia sẵn **ba khoảnh dân số** (`vung`) dọc lối — đúng dạng "ba đợt" mà máy
+   đang chờ. Ba đoạn ↔ ba đợt ↔ hai cửa, một-đổi-một, không phải quy đổi gì.
+3. Máy phó bản chạy MỘT map cho MỘT lượt, có đồng hồ đếm ngược. Vài hành lang ngắn nối nhau
+   nghĩa là đổi map giữa lượt — thứ máy không làm được, và cũng không nên: đổi map là cắt mạch,
+   mà mạch liền chính là thứ hành lang đang bán.
+
+**Đúc lại, không chép lại.** Nếu tầng mới chép nguyên đa giác của Lối Mòn Corran thì nó đúng là
+cái bệnh "một địa hình dùng bảy lần" mặc áo mới. Nên thứ được dùng lại là cái **KHUÔN**, không
+phải cái hình nó đúc ra:
+
+| Tệp | Việc |
+|---|---|
+| `tools/dung_lan.py` | lớp `Lan` — khuôn hành lang có tham số. `LOIMON` là instance đang chạy |
+| `tools/iso/lan_phoban.py` | đúc tầng phó bản từ khuôn ấy với bộ số riêng, và **tự đo** mọi ràng buộc `test_sandat` sẽ soi |
+| `tests/test_pblan.js` | gác một lượt chạy thật trên khuôn làn |
+
+Phó bản tiếp theo là **một bộ số nữa**, không phải một lần dán nữa.
+
+**Máy đã hết chép cứng hình phòng.** Trước đây `DGN_ROOMS`/`DGN_WALLS`/`DGN_GATE` nằm trong
+game.js, nên mọi phó bản buộc phải cùng một hình — "cắm lại bảy phòng" cũng chỉ là bảy lần cùng
+cái sân ấy. Nay hình phòng là DỮ LIỆU: map khai `dgnKhuon` (`truc` `'x'`/`'y'` · `phong` · `tuong`
+· `can`), thiếu thì rơi về khuôn dọc cũ. Ba hằng ấy vẫn còn, đúng nguyên giá trị cũ, và vẫn là
+mặc định — `tests/pbthu.js` không phải sửa một dòng.
+
+| | Khuôn DỌC (cũ, mặc định) | Khuôn LÀN (mới) |
+|---|---|---|
+| Sân | 2600×1900 | 6400×1400 |
+| Tiến theo | y giảm — lên bắc | x tăng — sang đông |
+| Giữ người chơi trong sân | `DGN_OBSTACLES` | `diTrong` |
+| Tranh nền | một tấm | **không cần** — `sanIso` lát viên |
+
+⚠ **TỈ LỆ LÀ THỨ LÀM NÊN HÀNH LANG — giữ đúng bằng map cha.** `pb_loimon` để 6400 dài · lối
+500px · thắt 350px, ra **13,3:1**, khớp Lối Mòn Corran (13,4:1). Bản đầu tôi để 5600×1300 lối
+530px: nghe chỉ là "gọn lại một chút", đo ra thì tụt còn **11,0:1** — nới ngang và cắt dài thì
+hành lang trượt dần về đồng trống, tức về đúng cái hình việc này sinh ra để tránh. Phó bản khác
+map cha ở **đường đi** (tim uốn khác, nút thắt chỗ khác), không khác ở tỉ lệ. Chủ dự án bắt được
+chỗ này khi xem bản đầu.
+
+Phòng đầu tiên: **`pb_loimon` · Lối Mòn Sâu** (cấp 46+, ba đoạn, trùm `boss_mochu` ở cuối lối).
+Bảy tấm nền của bảy phòng cũ đã gỡ, và tầng dựng lại **không xin lại tấm nào**.
+
+⚠ Còn nợ, đừng tưởng đã xong: `cotBossVung` **vẫn là cầu tạm**. Lối Mòn Corran không nằm trong
+bảy `vung` có Dòng Cốt độc quyền, nên phòng này không trả được cửa Cốt nào về chỗ cũ. Cầu tạm chỉ
+gỡ được khi tầng phó bản phủ đủ bảy vùng ấy.
+
+⚠ Số thưởng của `pb_loimon` là **nội suy**, không phải số cũ: bảng thưởng bảy phòng cũ đã bị gỡ
+theo chúng và không còn ở đâu trong repo. Suy từ phòng bài kiểm và bạc rơi của chính con trùm —
+hợp lý chứ chưa phải đã cân. Xem chú thích tại chỗ trong `data/canbang.js`.
 
 ### 🗑 BẢY PHÓ BẢN ĐÃ GỠ — và những gì đã phải gỡ theo
 

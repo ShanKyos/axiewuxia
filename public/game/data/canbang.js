@@ -594,15 +594,41 @@ window.WEAPON_LINES = [
 // Cấu hình từng phó bản: 3 đợt quái (quái của map cha) → Boss → thưởng nguyên liệu nâng tầng kỹ năng
 // timeLimit (giây): học Devil Square/Blood Castle của MU Online — phó bản có đồng hồ đếm ngược,
 // hết giờ là thất bại mất trắng, thay vì AUTO đứng farm vô thời hạn như trước.
-// Bảy phó bản tĩnh ĐÃ GỠ (xem CLAUDE.md · CHẨN ĐOÁN GỐC). Chúng là một địa hình dùng bảy lần;
-// map sẽ được dựng lại từ đầu ở phần đo map, rồi cắm lại vào đây. Máy chạy phó bản trong
-// game.js (DGN · startDungeonRun · updateDungeon · boss săn · thưởng) GIỮ NGUYÊN, đang nằm chờ:
-// thêm một khoá vào bảng này cùng một map type:'dungeon' là nó chạy lại ngay.
+// Bảy phó bản tĩnh ĐÃ GỠ (xem CLAUDE.md · CHẨN ĐOÁN GỐC). Chúng là một địa hình dùng bảy lần.
+// Tầng map đang được dựng lại bằng KHUÔN HÀNH LANG, và mục đầu tiên (`pb_loimon`) đã cắm xong
+// ngay dưới — máy chạy phó bản trong game.js (DGN · startDungeonRun · updateDungeon · boss săn ·
+// thưởng) không phải sửa một dòng nào để nhận nó.
 //
-// Khuôn một mục, để dựng lại đúng hình cũ:
+// Hình PHÒNG nay cũng là dữ liệu: map khai `dgnKhuon` (xem khối "KHUÔN PHÒNG" trong game.js) thì
+// ba đoạn nằm dọc hành lang thay vì ba phòng chồng lên nhau; không khai thì rơi về khuôn dọc cũ.
+// Nên "thêm một phó bản" giờ đúng nghĩa là điền dữ liệu: một khoá ở `MAPS` + một khoá ở đây.
+//
+// Khuôn một mục:
 //   <mapId>: { boss, bossName, waves:[[3 loài],[3],[3]], huntBoss, boxTier:1-5, timeLimit,
 //              rewards:{ sach:[lo,hi], tuLa:[lo,hi], hon:[lo,hi], khi, bacThem, silver:[lo,hi] } }
-window.DUNGEONS = {};
+window.DUNGEONS = {
+  // LỐI MÒN SÂU — mục đầu tiên cắm lại sau khi gỡ bảy phòng. Ba đợt lấy đúng ba loài của map cha
+  // (`loimon`), leo theo đúng thang C38 → C42 → C48 mà lối mòn ngoài trời đã dạy: đi sâu hơn thì
+  // gặp thứ nặng hơn, không cần một dòng chữ nào giải thích.
+  //
+  // ⚠ SỐ THƯỞNG LÀ NỘI SUY, KHÔNG PHẢI SỐ CŨ. Bảng thưởng của bảy phòng cũ đã bị gỡ theo chúng và
+  // không còn ở đâu trong repo để chép lại. Bộ số dưới đây suy từ hai mốc còn sống: phòng bài
+  // kiểm `tests/pbthu.js` (cấp 12 → bạc 850-1450, khí 40, sách 1-2) và bạc rơi của chính con trùm
+  // (`boss_mochu` 1300-1800), giữ nguyên tỉ lệ ~2,5 lần bạc trùm mà phòng bài kiểm đang dùng.
+  // Nó hợp lý chứ chưa phải đã cân — chơi thử rồi chỉnh, và chỉnh ở đây thì không phải mở game.js.
+  pb_loimon: {
+    boss:'boss_mochu', bossName:'Chúa Tể Hầm Mộ',
+    waves: [ ['bandao','bandao','thinu'],      // đoạn đầu — C38, đúng loài Khoảnh Đầu Lối
+             ['thinu','thinu','mocnhan'],      // đoạn giữa — C42
+             ['mocnhan','mocnhan','thinu'] ],  // đoạn cuối — C48, ngay trước sảnh trùm
+    huntBoss:'boss_hacnu2', boxTier:3,
+    // 10 phút. Khuôn làn bắt đi bộ nhiều hơn khuôn dọc — 6400px một chiều, ~31 giây đi suông ở
+    // player.speed=209 — nên đồng hồ phải rộng hơn mức 480 của phòng bài kiểm, nếu không thì thứ
+    // bị tính giờ là quãng đường chứ không phải trận đánh.
+    timeLimit: 600,
+    rewards: { sach:[2,4], tuLa:[1,2], hon:[0,1], khi:110, bacThem:500, silver:[3300,4600] },
+  },
+};
 
 // Internal object keys are stable identifiers (referenced throughout combat/save logic) and are
 // intentionally left unchanged by the Axie reskin — only player-facing fields below (name,
@@ -991,6 +1017,136 @@ window.MAPS = {
   // Bảy map pb_* đã xoá — xem CLAUDE.md · CHẨN ĐOÁN GỐC. Bảy cửa nhưng chung MỘT địa hình:
   // cả bảy cùng spawn 1300,1560 · cùng cửa ra 1300,1660 · cùng packs:[] · cùng duhiep:null,
   // chỉ khác hai mã màu và số cây/đá. Tầng map sẽ dựng lại từ đầu ở phần đo map.
+
+  // ══ LỐI MÒN SÂU — tầng phó bản đầu tiên dựng trên KHUÔN HÀNH LANG ══
+  //
+  // Bảy phó bản cũ là "một địa hình dùng bảy lần": một cái sân trống, ba đợt quái rơi xuống giữa
+  // sân, hạ xong thì trùm rơi xuống đúng chỗ ấy. Chẩn đoán ở CLAUDE.md nói rõ chữa bằng cách
+  // thêm map thứ tám là làm bệnh nặng thêm. Nên phòng này KHÔNG phải map thứ tám: nó là map đầu
+  // tiên đúc từ một cái KHUÔN, và khuôn ấy đẻ ra được cái tiếp theo mà không cần chép lại gì.
+  //
+  // Vì sao là hành lang. Map đồng trống để người chơi tản ra mọi hướng, nên NHỊP do người chơi
+  // đặt; hành lang chỉ có một đường tiến, nên nhịp do MAP đặt — đi tới, gặp đợt, dọn xong cửa mới
+  // mở. Đó đúng là nhịp máy phó bản đang chờ, và ở đây nó là HÌNH DẠNG chứ không phải một luật
+  // viết thêm. Ba đoạn ↔ ba đợt ↔ hai cửa, một-đổi-một.
+  //
+  // Cửa đá đặt ĐÚNG hai nút thắt của khuôn làn. Nút thắt vốn sinh ra để chia làn thành khoảnh mà
+  // không cần một dòng chữ nào — mà chỗ hành lang thắt lại cũng đúng là chỗ duy nhất đặt được
+  // một cánh cửa cho ra hồn. Cửa không phải thứ dán thêm vào map; nó mọc ra từ hình học đã có.
+  //
+  // ⚠ TỈ LỆ GIỮ ĐÚNG BẰNG MAP CHA: 6400 dài, lối 500px, chỗ thắt 350px — dài:ngang 13,4:1. Bản
+  //   đầu tôi để 5600×1300 lối 530px, nghe chỉ là "gọn lại một chút", đo ra thì tỉ lệ tụt còn
+  //   11,0:1. Chính cái tỉ lệ ấy làm nên hành lang: nới ngang ra và cắt dài đi thì nó trượt dần
+  //   về phía đồng trống, tức về đúng cái hình việc này sinh ra để tránh. Phó bản khác map cha ở
+  //   ĐƯỜNG ĐI (tim uốn khác, nút thắt chỗ khác), không khác ở tỉ lệ.
+  //
+  // ⚠ SINH RA, ĐỪNG SỬA TAY. Cả `dgnKhuon` · `diTrong` · `vatDat` bên dưới đều in ra bằng
+  //   `python3 tools/iso/lan_phoban.py`. Sửa hình thì sửa bộ số ở đầu tệp ấy rồi chạy lại và dán
+  //   đè — chỉnh tay một con số ở đây là tường, khe cửa, tâm đợt quái và mép đa giác lệch nhau.
+  //   Tệp ấy tự đo lấy mọi ràng buộc `tests/test_sandat.js` sẽ soi, nên chạy nó rẻ hơn chạy bài.
+  //
+  // Không cần một tấm tranh nền nào: `sanIso` lát nền bằng bộ tile hình thoi, đúng như Lối Mòn
+  // Corran. Bảy tấm nền của bảy phòng cũ đã gỡ, và tầng dựng lại không xin lại tấm nào.
+  //
+  // điểm thả: (240,752)
+  // cổng Xuất Môn: (430,791)
+  // đoạn 1: tâm (1118,886)
+  // đoạn 2: tâm (3232,605)
+  // đoạn 3: tâm (5314,645)
+  // tường 1: x=2176 dày 60 · phủ y 522..1115 · khe y 743..893 (150px)
+  // tường 2: x=4288 dày 60 · phủ y 211..804 · khe y 433..583 (150px)
+  // chỗ thắt nhất: 350px
+  // đa giác 66 đỉnh · sàn 34.0% khổ map 6400x1400
+  pb_loimon: { name:'Lối Mòn Sâu', min:46, range:'46 - 52', type:'dungeon', hinh:'hanhlang',
+    w:6400, h:1400, ground:'#cfd2ae', patch:'#6a7a52',
+    sanIso:true, isoCay:150, dungeon:true, trees:0, rocks:0,
+    spawn:{ x:240, y:752 },
+    desc:'Một nhánh rẽ khỏi lối mòn, ăn sâu vào chỗ rừng khép hẳn. Hai bận đường thắt lại, và ở mỗi bận có một cánh cửa đá người ta dựng để nhốt thứ gì đó phía trong.',
+    dgnKhuon: {
+      truc:'x', huong:'sang phía Đông',
+      phong: [ { cx:1118, cy:886 }, { cx:3232, cy:605 }, { cx:5314, cy:645 } ],
+      tuong: [
+        { t:2176, d:60, a:522, b:1115, k0:743, k1:893 },
+        { t:4288, d:60, a:211, b:804, k0:433, k1:583 },
+      ],
+    },
+    diTrong: [
+      [60,463], [260,506], [460,547], [660,582], [860,611], [1060,632],
+      [1260,643], [1460,644], [1660,636], [1860,618], [2060,645], [2260,621],
+      [2460,522], [2660,477], [2860,433], [3060,390], [3260,350], [3460,315],
+      [3660,287], [3860,267], [4060,271], [4260,330], [4460,298], [4660,284],
+      [4860,311], [5060,345], [5260,384], [5460,427], [5660,471], [5860,514],
+      [6060,553], [6260,588], [6340,600], [6340,1100], [6260,1088], [6060,1053],
+      [5860,1014], [5660,971], [5460,927], [5260,884], [5060,845], [4860,811],
+      [4660,784], [4460,732], [4260,682], [4060,742], [3860,767], [3660,787],
+      [3460,815], [3260,850], [3060,890], [2860,933], [2660,977], [2460,1017],
+      [2260,996], [2060,1039], [1860,1118], [1660,1136], [1460,1144], [1260,1143],
+      [1060,1132], [860,1111], [660,1082], [460,1047], [260,1006], [60,963]
+    ],
+    vatDat: [
+      { x:40, y:379, s:1.9 }, { x:40, y:1039, s:2.16 }, { x:145, y:402, s:2.13 }, { x:145, y:1062, s:2.39 }, { x:250, y:424, s:2.36 },
+      { x:250, y:1084, s:2.62 }, { x:355, y:446, s:1.93 }, { x:355, y:1106, s:2.18 }, { x:460, y:467, s:2.15 }, { x:460, y:1127, s:2.41 },
+      { x:565, y:486, s:2.38 }, { x:565, y:1146, s:2.64 }, { x:670, y:504, s:1.95 }, { x:670, y:1164, s:2.21 }, { x:775, y:520, s:2.17 },
+      { x:775, y:1180, s:2.43 }, { x:880, y:533, s:2.4 }, { x:880, y:1193, s:2.66 }, { x:985, y:545, s:1.96 }, { x:985, y:1205, s:2.22 },
+      { x:1090, y:554, s:2.19 }, { x:1090, y:1214, s:2.45 }, { x:1195, y:560, s:2.41 }, { x:1195, y:1220, s:2.67 }, { x:1300, y:564, s:1.97 },
+      { x:1300, y:1224, s:2.23 }, { x:1405, y:565, s:2.19 }, { x:1405, y:1225, s:2.45 }, { x:1510, y:563, s:2.41 }, { x:1510, y:1223, s:2.67 },
+      { x:1615, y:559, s:1.97 }, { x:1615, y:1219, s:2.23 }, { x:1720, y:552, s:2.19 }, { x:1720, y:1212, s:2.45 }, { x:1825, y:542, s:2.4 },
+      { x:1825, y:1202, s:2.66 }, { x:1930, y:540, s:1.96 }, { x:1930, y:1181, s:2.21 }, { x:2035, y:560, s:2.19 }, { x:2035, y:1131, s:2.41 },
+      { x:2140, y:572, s:2.41 }, { x:2140, y:1087, s:2.62 }, { x:2245, y:548, s:1.97 }, { x:2245, y:1075, s:2.17 }, { x:2350, y:494, s:2.16 },
+      { x:2350, y:1089, s:2.4 }, { x:2455, y:443, s:2.36 }, { x:2455, y:1097, s:2.62 }, { x:2560, y:418, s:1.91 }, { x:2560, y:1078, s:2.17 },
+      { x:2665, y:396, s:2.13 }, { x:2665, y:1056, s:2.38 }, { x:2770, y:373, s:2.34 }, { x:2770, y:1033, s:2.6 }, { x:2875, y:350, s:1.89 },
+      { x:2875, y:1010, s:2.15 }, { x:2980, y:327, s:2.1 }, { x:2980, y:987, s:2.36 }, { x:3085, y:305, s:2.31 }, { x:3085, y:965, s:2.57 },
+      { x:3190, y:283, s:1.86 }, { x:3190, y:943, s:2.12 }, { x:3295, y:263, s:2.07 }, { x:3295, y:923, s:2.33 }, { x:3400, y:245, s:2.29 },
+      { x:3400, y:905, s:2.55 }, { x:3505, y:228, s:1.84 }, { x:3505, y:888, s:2.1 }, { x:3610, y:213, s:2.05 }, { x:3610, y:873, s:2.31 },
+      { x:3715, y:201, s:2.27 }, { x:3715, y:861, s:2.53 }, { x:3820, y:190, s:1.82 }, { x:3820, y:850, s:2.08 }, { x:3925, y:183, s:2.04 },
+      { x:3925, y:843, s:2.3 }, { x:4030, y:184, s:2.26 }, { x:4030, y:831, s:2.52 }, { x:4135, y:215, s:1.83 }, { x:4135, y:795, s:2.06 },
+      { x:4240, y:246, s:2.07 }, { x:4240, y:765, s:2.27 }, { x:4345, y:248, s:2.29 }, { x:4345, y:769, s:2.49 }, { x:4450, y:221, s:1.84 },
+      { x:4450, y:808, s:2.07 }, { x:4555, y:198, s:2.05 }, { x:4555, y:848, s:2.3 }, { x:4660, y:204, s:2.27 }, { x:4660, y:864, s:2.53 },
+      { x:4765, y:217, s:1.84 }, { x:4765, y:877, s:2.09 }, { x:4870, y:232, s:2.06 }, { x:4870, y:892, s:2.32 }, { x:4975, y:249, s:2.29 },
+      { x:4975, y:909, s:2.55 }, { x:5080, y:268, s:1.86 }, { x:5080, y:928, s:2.11 }, { x:5185, y:289, s:2.08 }, { x:5185, y:949, s:2.34 },
+      { x:5290, y:310, s:2.31 }, { x:5290, y:970, s:2.57 }, { x:5395, y:333, s:1.88 }, { x:5395, y:993, s:2.14 }, { x:5500, y:356, s:2.11 },
+      { x:5500, y:1016, s:2.37 }, { x:5605, y:379, s:2.34 }, { x:5605, y:1039, s:2.6 }, { x:5710, y:402, s:1.91 }, { x:5710, y:1062, s:2.17 },
+      { x:5815, y:424, s:2.14 }, { x:5815, y:1084, s:2.4 }, { x:5920, y:446, s:2.37 }, { x:5920, y:1106, s:2.62 }, { x:6025, y:467, s:1.93 },
+      { x:6025, y:1127, s:2.19 }, { x:6130, y:486, s:2.16 }, { x:6130, y:1146, s:2.42 }, { x:6235, y:504, s:2.39 }, { x:6235, y:1164, s:2.65 },
+      { x:6340, y:520, s:1.95 }, { x:6340, y:1180, s:2.21 }, { x:92, y:240, s:1.84 }, { x:92, y:1200, s:2.22 }, { x:197, y:263, s:2.07 },
+      { x:197, y:1223, s:2.45 }, { x:302, y:285, s:2.3 }, { x:302, y:1245, s:2.68 }, { x:407, y:306, s:1.87 }, { x:407, y:1266, s:2.25 },
+      { x:512, y:327, s:2.1 }, { x:512, y:1287, s:2.48 }, { x:617, y:345, s:2.33 }, { x:617, y:1305, s:2.7 }, { x:722, y:362, s:1.89 },
+      { x:722, y:1322, s:2.27 }, { x:827, y:377, s:2.12 }, { x:827, y:1337, s:2.5 }, { x:932, y:389, s:2.34 }, { x:932, y:1349, s:2.72 },
+      { x:1037, y:400, s:1.91 }, { x:1037, y:1360, s:2.28 }, { x:1142, y:407, s:2.13 }, { x:1247, y:412, s:2.35 }, { x:1352, y:415, s:1.91 },
+      { x:1457, y:414, s:2.13 }, { x:1562, y:411, s:2.35 }, { x:1667, y:406, s:1.91 }, { x:1772, y:397, s:2.13 }, { x:1772, y:1357, s:2.5 },
+      { x:1877, y:387, s:2.34 }, { x:1877, y:1346, s:2.72 }, { x:1982, y:398, s:1.91 }, { x:1982, y:1308, s:2.26 }, { x:2087, y:419, s:2.13 },
+      { x:2087, y:1256, s:2.46 }, { x:2192, y:415, s:2.35 }, { x:2192, y:1226, s:2.67 }, { x:2297, y:373, s:1.9 }, { x:2297, y:1230, s:2.23 },
+      { x:2402, y:316, s:2.09 }, { x:2402, y:1246, s:2.46 }, { x:2507, y:280, s:2.3 }, { x:2507, y:1240, s:2.68 }, { x:2612, y:257, s:1.85 },
+      { x:2612, y:1217, s:2.23 }, { x:2717, y:234, s:2.06 }, { x:2717, y:1194, s:2.44 }, { x:2822, y:211, s:2.27 }, { x:2822, y:1171, s:2.65 },
+      { x:2927, y:188, s:1.82 }, { x:2927, y:1148, s:2.2 }, { x:3032, y:166, s:2.04 }, { x:3032, y:1126, s:2.41 }, { x:3137, y:144, s:2.25 },
+      { x:3137, y:1104, s:2.62 }, { x:3242, y:123, s:1.8 }, { x:3242, y:1083, s:2.18 }, { x:3347, y:104, s:2.01 }, { x:3347, y:1064, s:2.39 },
+      { x:3452, y:86, s:2.22 }, { x:3452, y:1046, s:2.6 }, { x:3557, y:70, s:1.78 }, { x:3557, y:1030, s:2.15 }, { x:3662, y:57, s:1.99 },
+      { x:3662, y:1017, s:2.37 }, { x:3767, y:45, s:2.21 }, { x:3767, y:1005, s:2.58 }, { x:3872, y:996, s:2.14 }, { x:3977, y:990, s:2.36 },
+      { x:4082, y:47, s:2.21 }, { x:4082, y:965, s:2.57 }, { x:4187, y:83, s:1.78 }, { x:4187, y:927, s:2.11 }, { x:4292, y:102, s:2.01 },
+      { x:4292, y:912, s:2.33 }, { x:4397, y:87, s:2.22 }, { x:4397, y:936, s:2.56 }, { x:4502, y:57, s:1.77 }, { x:4502, y:980, s:2.13 },
+      { x:4607, y:48, s:1.99 }, { x:4607, y:1008, s:2.37 }, { x:4712, y:60, s:2.21 }, { x:4712, y:1020, s:2.59 }, { x:4817, y:74, s:1.78 },
+      { x:4817, y:1034, s:2.16 }, { x:4922, y:91, s:2.01 }, { x:4922, y:1051, s:2.38 }, { x:5027, y:109, s:2.23 }, { x:5027, y:1069, s:2.61 },
+      { x:5132, y:128, s:1.8 }, { x:5132, y:1088, s:2.18 }, { x:5237, y:149, s:2.03 }, { x:5237, y:1109, s:2.41 }, { x:5342, y:171, s:2.26 },
+      { x:5342, y:1131, s:2.63 }, { x:5447, y:194, s:1.83 }, { x:5447, y:1154, s:2.2 }, { x:5552, y:217, s:2.06 }, { x:5552, y:1177, s:2.43 },
+      { x:5657, y:240, s:2.28 }, { x:5657, y:1200, s:2.66 }, { x:5762, y:263, s:1.85 }, { x:5762, y:1223, s:2.23 }, { x:5867, y:285, s:2.08 },
+      { x:5867, y:1245, s:2.46 }, { x:5972, y:306, s:2.31 }, { x:5972, y:1266, s:2.69 }, { x:6077, y:327, s:1.88 }, { x:6077, y:1287, s:2.26 },
+      { x:6182, y:345, s:2.11 }, { x:6182, y:1305, s:2.48 }, { x:6287, y:362, s:2.33 }, { x:6287, y:1322, s:2.71 }, { x:40, y:79, s:1.78 },
+      { x:40, y:1339, s:2.28 }, { x:145, y:102, s:2.01 }, { x:250, y:124, s:2.24 }, { x:355, y:146, s:1.81 }, { x:460, y:167, s:2.04 },
+      { x:565, y:186, s:2.26 }, { x:670, y:204, s:1.83 }, { x:775, y:220, s:2.06 }, { x:880, y:233, s:2.28 }, { x:985, y:245, s:1.85 },
+      { x:1090, y:254, s:2.07 }, { x:1195, y:260, s:2.29 }, { x:1300, y:264, s:1.85 }, { x:1405, y:265, s:2.07 }, { x:1510, y:263, s:2.29 },
+      { x:1615, y:259, s:1.85 }, { x:1720, y:252, s:2.07 }, { x:1825, y:242, s:2.29 }, { x:1930, y:240, s:1.84 }, { x:2035, y:260, s:2.07 },
+      { x:2140, y:272, s:2.3 }, { x:2245, y:248, s:1.85 }, { x:2350, y:194, s:2.05 }, { x:2455, y:143, s:2.25 }, { x:2560, y:118, s:1.8 },
+      { x:2665, y:96, s:2.01 }, { x:2665, y:1356, s:2.5 }, { x:2770, y:73, s:2.22 }, { x:2770, y:1333, s:2.71 }, { x:2875, y:50, s:1.77 },
+      { x:2875, y:1310, s:2.26 }, { x:2980, y:1287, s:2.48 }, { x:3085, y:1265, s:2.69 }, { x:3190, y:1243, s:2.24 }, { x:3295, y:1223, s:2.45 },
+      { x:3400, y:1205, s:2.66 }, { x:3505, y:1188, s:2.22 }, { x:3610, y:1173, s:2.43 }, { x:3715, y:1161, s:2.65 }, { x:3820, y:1150, s:2.2 },
+      { x:3925, y:1143, s:2.42 }, { x:4030, y:1131, s:2.63 }, { x:4135, y:1095, s:2.18 }, { x:4240, y:1065, s:2.39 }, { x:4345, y:1069, s:2.61 },
+      { x:4450, y:1108, s:2.19 }, { x:4555, y:1148, s:2.42 }, { x:4660, y:1164, s:2.65 }, { x:4765, y:1177, s:2.21 }, { x:4870, y:1192, s:2.44 },
+      { x:4975, y:1209, s:2.67 }, { x:5080, y:1228, s:2.23 }, { x:5185, y:1249, s:2.46 }, { x:5290, y:1270, s:2.69 }, { x:5395, y:1293, s:2.26 },
+      { x:5500, y:56, s:1.99 }, { x:5500, y:1316, s:2.49 }, { x:5605, y:79, s:2.22 }, { x:5605, y:1339, s:2.72 }, { x:5710, y:102, s:1.79 },
+      { x:5815, y:124, s:2.02 }, { x:5920, y:146, s:2.25 }, { x:6025, y:167, s:1.82 }, { x:6130, y:186, s:2.04 }, { x:6235, y:204, s:2.27 },
+      { x:6340, y:220, s:1.84 },
+    ],
+    packs: [], duhiep: null },
 
   // Tầng Sâu TỰ ĐỨNG, không mượn địa hình phó bản nữa. Trước đây DEEP_MAP='pb_daohoa' nên
   // xoá phòng đầu là mất luôn 20 tầng — nay nó có map riêng, không ai gỡ nhầm được.

@@ -1934,6 +1934,13 @@ const GATES = [
   { map:'corran',    x:175,  y:700,  to:'chungnam', name:'Lối Tây → Werebear Woods' },
   { map:'corran',    x:2300, y:1000, to:'loimon',   name:'Lối Đông → Lối Mòn Corran' },
   { map:'loimon',    x:110,  y:727,  to:'corran',   name:'Lối Tây → Rẻo Rừng Corran' },
+  // Lối Mòn Sâu — nhánh rẽ ở tận cùng phía đông lối mòn, đúng chỗ con đường hết. Đặt SAU cổng
+  // Lối Tây trong bảng này là cố ý: `test_sandat` ⑤ đo đường đi bộ tới cổng ĐẦU TIÊN của map, nên
+  // chen lên trước là lặng lẽ đổi mất câu hỏi mà bài ấy đang hỏi về Lối Mòn Corran.
+  { map:'loimon',    x:6180, y:754,  to:'pb_loimon', portal:true, label:'Phó Bản',
+    name:'Cửa Đá Lối Mòn Sâu (cấp 46+)' },
+  { map:'pb_loimon', x:430,  y:791,  to:'loimon',    portal:true, label:'Xuất Môn',
+    name:'Rời Lối Mòn Sâu → Lối Mòn Corran' },
   { map:'comoc',     x:150,  y:1366, to:'chungnam', name:'Lối Tây → Werebear Woods' },
   { map:'comoc',     x:1369, y:150,  to:'mongco',   name:'Lối Bắc → Reptile Sunstone Flats' },
   { map:'mongco',    x:150,  y:1286, to:'comoc',    name:'Lối Tây → Bug Tribe Tunnels' },
@@ -1992,41 +1999,90 @@ const DGN_ROOMS = [
 ];
 const DGN_WALLS = [ { y:1140, h:60 }, { y:690, h:60 } ];  // hai bức tường ngăn
 const DGN_GATE = { x0:1230, x1:1370 };                    // khe cửa giữa mỗi tường
-function dgnWallObs(){
+// ═══ KHUÔN PHÒNG — cùng một máy, hai hình dạng ═══
+// Ba hằng trên là khuôn DỌC: sân 2600×1900, ba phòng chồng lên nhau, tiến lên phía bắc. Nó vẫn
+// là mặc định, và `tests/pbthu.js` vẫn cắm phòng bài kiểm theo đúng khuôn ấy.
+//
+// Nhưng HÌNH DẠNG phòng không phải chuyện của máy, nó là chuyện của map — nên map được khai
+// khuôn riêng qua `md.dgnKhuon`. Lối Mòn Sâu dùng khuôn LÀN: một hành lang 6400px chia ba đoạn,
+// tiến sang phía đông. Đổi trục là đủ; đợt quái, cửa, trùm, đồng hồ, thưởng không đổi một dòng.
+//
+// Vì sao đáng đổi: bệnh đã chẩn ở CLAUDE.md là "một địa hình dùng bảy lần". Chừng nào hình phòng
+// còn nằm trong ba hằng số của MÁY thì mọi phó bản buộc phải cùng một hình — cắm lại bảy phòng
+// cũng chỉ là bảy lần cùng cái sân ấy. Dời hình sang DỮ LIỆU thì "thêm một phó bản" mới thật sự
+// là điền dữ liệu, đúng như lời hứa ghi trong data/canbang.js.
+//
+// Một khuôn gồm:
+//   truc  — trục tiến: 'y' (khuôn dọc, tiến lên bắc) hoặc 'x' (khuôn làn, tiến sang đông)
+//   huong — chữ điền vào biểu ngữ lúc cửa mở
+//   phong — tâm mỗi phòng/đoạn theo thứ tự đi vào; mục cuối là sảnh trùm
+//   tuong — mỗi bức: `t` chỗ đặt trên trục tiến · `d` bề dày · `a`..`b` bề ngang phủ kín lối ·
+//           `k0`..`k1` khe cửa nằm trong bề ngang ấy
+//   can   — vật cản bao quanh sân. Khuôn dọc CẦN (không còn gì khác giữ người chơi trong sân);
+//           khuôn làn KHÔNG, vì `diTrong` đã chặn sẵn — thêm nữa chỉ làm lưới tìm đường nặng lên.
+const DGN_KHUON_DOC = {
+  truc:'y', huong:'lên phía Bắc', can: DGN_OBSTACLES, phong: DGN_ROOMS,
+  tuong: DGN_WALLS.map(w => ({ t:w.y, d:w.h, a:330, b:2270, k0:DGN_GATE.x0, k1:DGN_GATE.x1 })),
+};
+function dgnKhuon(mapId){
+  const md = MAPS[mapId || curMap];
+  return (md && md.dgnKhuon) || DGN_KHUON_DOC;
+}
+// Hình học MỘT bức tường: hai cánh hai bên + khe cửa ở giữa, một phép tính cho cả hai trục.
+// Trước đây dgnWallObs() và drawDgnWalls() mỗi hàm tự tính lấy toạ độ, nên sửa một bên là tường
+// VẼ và tường CHẶN lệch nhau — đúng kiểu "thấy một đằng, chạy một nẻo" đã ghi ở khối rimBuild
+// bên dưới. Nay cả hai đọc chung một hàm.
+function dgnTuongO(w, truc){
+  if (truc === 'x') return {                    // tường đứng, khe mở theo trục dọc
+    canh: [ { x:w.t, y:w.a, wd:w.d, ht:w.k0 - w.a }, { x:w.t, y:w.k1, wd:w.d, ht:w.b - w.k1 } ],
+    khe:  { x:w.t, y:w.k0, wd:w.d, ht:w.k1 - w.k0 },
+  };
+  return {                                      // tường nằm, khe mở theo trục ngang
+    canh: [ { x:w.a, y:w.t, wd:w.k0 - w.a, ht:w.d }, { x:w.k1, y:w.t, wd:w.b - w.k1, ht:w.d } ],
+    khe:  { x:w.k0, y:w.t, wd:w.k1 - w.k0, ht:w.d },
+  };
+}
+function dgnWallObs(mapId){
   if (DEEP) return [];   // Tầng Sâu: sảnh mở, dọn sạch là xuống tầng — không có cửa để mở
-  const out = [];
-  DGN_WALLS.forEach((w, i) => {
-    out.push({ x:330, y:w.y, wd: DGN_GATE.x0 - 330, ht: w.h });
-    out.push({ x:DGN_GATE.x1, y:w.y, wd: 2270 - DGN_GATE.x1, ht: w.h });
-    if (!(DGN && DGN.doorOpen && DGN.doorOpen[i]))          // cửa đóng → bịt luôn khe
-      out.push({ x:DGN_GATE.x0, y:w.y, wd: DGN_GATE.x1 - DGN_GATE.x0, ht: w.h });
+  const id = mapId || curMap, kh = dgnKhuon(id), out = [];
+  // Chỉ lượt ĐANG chạy trên chính map này mới được mở cửa của nó. Thiếu `DGN.id === id` thì hỏi
+  // vật cản của một phó bản khác lúc đang chạy phó bản này sẽ trả về cửa đã mở. Máy chỉ chạy một
+  // lượt một lúc nên chưa lộ ra — nhưng đó là may, không phải đúng.
+  const mo = (DGN && DGN.id === id && DGN.doorOpen) || null;
+  kh.tuong.forEach((w, i) => {
+    const g = dgnTuongO(w, kh.truc);
+    out.push(g.canh[0], g.canh[1]);
+    if (!(mo && mo[i])) out.push(g.khe);        // cửa đóng → bịt luôn khe
   });
   return out;
 }
 // Tường và cửa vẽ trên mặt đất — tường vô hình là lỗi tệ nhất của kiểu phó bản này.
 function drawDgnWalls(){
   if (!DGN) return;
-  DGN_WALLS.forEach((w, i) => {
+  const kh = dgnKhuon(DGN.id), doc = kh.truc === 'x';   // doc: khe mở theo trục dọc
+  kh.tuong.forEach((w, i) => {
     const open = !!(DGN.doorOpen && DGN.doorOpen[i]);
+    const g = dgnTuongO(w, kh.truc), R = g.khe;
     ctx.fillStyle = '#2a2432'; ctx.strokeStyle = '#4a4256'; ctx.lineWidth = 2;
-    ctx.fillRect(330, w.y, DGN_GATE.x0 - 330, w.h);
-    ctx.strokeRect(330, w.y, DGN_GATE.x0 - 330, w.h);
-    ctx.fillRect(DGN_GATE.x1, w.y, 2270 - DGN_GATE.x1, w.h);
-    ctx.strokeRect(DGN_GATE.x1, w.y, 2270 - DGN_GATE.x1, w.h);
-    const gw = DGN_GATE.x1 - DGN_GATE.x0;
+    for (const c of g.canh){ ctx.fillRect(c.x, c.y, c.wd, c.ht); ctx.strokeRect(c.x, c.y, c.wd, c.ht); }
     if (open){   // cửa mở: hai cánh nép sang hai bên + luồng sáng chỉ đường
       ctx.fillStyle = '#3a3446';
-      ctx.fillRect(DGN_GATE.x0, w.y, 14, w.h); ctx.fillRect(DGN_GATE.x1 - 14, w.y, 14, w.h);
-      const g2 = ctx.createLinearGradient(0, w.y, 0, w.y + w.h);
+      if (doc){ ctx.fillRect(R.x, R.y, R.wd, 14); ctx.fillRect(R.x, R.y + R.ht - 14, R.wd, 14); }
+      else    { ctx.fillRect(R.x, R.y, 14, R.ht); ctx.fillRect(R.x + R.wd - 14, R.y, 14, R.ht); }
+      // Luồng sáng chạy dọc HƯỚNG ĐI QUA cửa, không phải dọc bề rộng khe — nó là thứ chỉ đường.
+      const g2 = doc ? ctx.createLinearGradient(R.x, 0, R.x + R.wd, 0)
+                     : ctx.createLinearGradient(0, R.y, 0, R.y + R.ht);
       g2.addColorStop(0, 'rgba(126,203,255,0)'); g2.addColorStop(.5, 'rgba(126,203,255,.35)');
       g2.addColorStop(1, 'rgba(126,203,255,0)');
-      ctx.fillStyle = g2; ctx.fillRect(DGN_GATE.x0 + 14, w.y, gw - 28, w.h);
+      ctx.fillStyle = g2;
+      if (doc) ctx.fillRect(R.x, R.y + 14, R.wd, R.ht - 28);
+      else     ctx.fillRect(R.x + 14, R.y, R.wd - 28, R.ht);
     } else {
-      ctx.fillStyle = '#4a2a2a'; ctx.fillRect(DGN_GATE.x0, w.y, gw, w.h);
-      ctx.strokeStyle = '#8a4a4a'; ctx.strokeRect(DGN_GATE.x0, w.y, gw, w.h);
+      ctx.fillStyle = '#4a2a2a'; ctx.fillRect(R.x, R.y, R.wd, R.ht);
+      ctx.strokeStyle = '#8a4a4a'; ctx.strokeRect(R.x, R.y, R.wd, R.ht);
       ctx.fillStyle = 'rgba(255,120,90,.85)';
       ctx.font = 'bold 13px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('⛨ CỬA KHOÁ', DGN_GATE.x0 + gw/2, w.y + w.h/2 + 5);
+      ctx.fillText('⛨ CỬA KHOÁ', R.x + R.wd/2, R.y + R.ht/2 + 5);
       ctx.textAlign = 'left';
     }
   });
@@ -2217,7 +2273,7 @@ function decorUnblock(){
 }
 function obstaclesOf(mapId){
   const md = MAPS[mapId];
-  if (md && md.dungeon) return DGN_OBSTACLES.concat(dgnWallObs());
+  if (md && md.dungeon) return (dgnKhuon(mapId).can || []).concat(dgnWallObs(mapId));
   const base = MAP_OBSTACLES[mapId] || [];
   // decor chỉ tồn tại cho map đang đứng — map khác thì chỉ có vật cản tĩnh
   return mapId === curMap && decorObs.length ? base.concat(decorObs) : base;
@@ -8412,6 +8468,7 @@ const BGM_TRACKS = {
   tuyettinh:  'bgm_tuyettinh',   // lunar_bloodmoon — thung lũng băng
   mongco:     'bgm_mongco',      // lunar_battle — thảo nguyên tro
   nhanmon:    'bgm_nhanmon',     // pvp — ải cuối, căng nhất
+  pb_loimon:  'bgm_dungeon',     // Lối Mòn Sâu — nhạc hầm, để tai biết đây không còn là ngoài trời
   deep: 'bgm_dungeon',         // Tầng Sâu
 };
 const BGM_INTRO = 'bgm_intro';   // màn mở đầu & chọn nhân vật
@@ -15218,10 +15275,11 @@ window.toggleAuto = function(){
   }
   player.auto = !player.auto;
   if (player.auto){
-    // Trong phó bản, quái đợt luôn spawn ở (1300,800) — cách xa cửa vào (1300,1560) hơn tầm AUTO
-    // mặc định. Bật AUTO ngay cửa vào trước đây neo tại chỗ đứng, đứng im không đánh gì (QA phát hiện).
+    // Trong phó bản, quái đợt rơi ở tâm phòng/đoạn đang đánh — xa cửa vào hơn tầm AUTO mặc định
+    // (khuôn dọc ~760px, khuôn làn còn xa hơn). Bật AUTO ngay cửa vào trước đây neo tại chỗ đứng,
+    // đứng im không đánh gì (QA phát hiện). Neo theo `dgnPhongDot()` nên đúng cho cả hai khuôn.
     if (DEEP){ player._autoAX = DEEP_HALL.cx; player._autoAY = DEEP_HALL.cy; }
-    else if (DGN && mapDef().dungeon){ player._autoAX = 1300; player._autoAY = 800; }
+    else if (DGN && mapDef().dungeon){ const _R = dgnPhongDot(); player._autoAX = _R.cx; player._autoAY = _R.cy; }
     else { player._autoAX = player.x; player._autoAY = player.y; } // neo tại chỗ bật — auto chỉ ôm 1-2 bãi quái quanh neo
     // QA: bật AUTO khi còn 1 lệnh click-di-chuyển tay đang treo (chưa tới đích) — nếu không huỷ ở
     // đây, tắt AUTO lại sau đó sẽ khiến nhân vật tự đi tiếp theo lệnh cũ dù không có input mới.
@@ -23438,11 +23496,17 @@ function startDungeonRun(mapId){
   const def = DUNGEONS[mapId]; if (!def) return;
   navInvalidate();   // lượt phó bản dựng tường ngăn phòng — địa hình đổi ngay tại đây
   DGN = { id: mapId, def, wave: 0, bossRef: null, cleared: false, timeLeft: def.timeLimit, failed: false,
-          doorOpen: [false, false] };
+          doorOpen: dgnKhuon(mapId).tuong.map(() => false) };
   nextDungeonWave();
+}
+// Phòng của đợt ĐANG đánh. Đợt cuối cùng trở đi (kể cả pha Trùm Săn) neo ở sảnh trong cùng.
+function dgnPhongDot(){
+  const ph = dgnKhuon(DGN && DGN.id).phong;
+  return ph[clamp((DGN ? DGN.wave : 1) - 1, 0, ph.length - 1)];
 }
 function nextDungeonWave(){
   if (!DGN) return;
+  const _kh = dgnKhuon(DGN.id);
   DGN.wave++;
   const w = DGN.def.waves[DGN.wave - 1];
   // Dọn xong đợt trước → mở cửa sang phòng kế tiếp
@@ -23450,13 +23514,13 @@ function nextDungeonWave(){
   if (_prevDoor >= 0 && _prevDoor < DGN.doorOpen.length && !DGN.doorOpen[_prevDoor]){
     DGN.doorOpen[_prevDoor] = true;
     navInvalidate();   // cửa đá vừa mở ⇒ lưới tìm đường phải biết khe đó đã thông
-    const _w2 = DGN_WALLS[_prevDoor];
-    addEffect({ type:'ring', x:(DGN_GATE.x0+DGN_GATE.x1)/2, y:_w2.y + _w2.h/2, r:110, color:'#7ecbff', big:true });
-    zoneBanner = { text:'⛨ CỬA ĐÁ MỞ', sub:'Phòng kế tiếp đã thông — tiến lên phía Bắc!', color:'#7ecbff', t:3 };
+    const _khe = dgnTuongO(_kh.tuong[_prevDoor], _kh.truc).khe;
+    addEffect({ type:'ring', x:_khe.x + _khe.wd/2, y:_khe.y + _khe.ht/2, r:110, color:'#7ecbff', big:true });
+    zoneBanner = { text:'⛨ CỬA ĐÁ MỞ', sub:`Phòng kế tiếp đã thông — tiến ${_kh.huong}!`, color:'#7ecbff', t:3 };
     AudioSys.sfx('forge_ok', 0.8);
   }
   if (!w){ // hết 3 đợt → triệu hồi Boss ở sảnh trong cùng
-    const R3 = DGN_ROOMS[2];
+    const R3 = _kh.phong[_kh.phong.length - 1];
     const b = spawnMob(DGN.def.boss, { x:R3.cx, y:R3.cy, r:40, count:1 }, null);
     b.zone = null; // không hồi sinh lại theo zone
     DGN.bossRef = b;
@@ -23465,14 +23529,15 @@ function nextDungeonWave(){
     AudioSys.sfx('crit', 0.7);
     return;
   }
-  const R = DGN_ROOMS[Math.min(DGN.wave - 1, DGN_ROOMS.length - 1)];
+  const R = dgnPhongDot();
   for (const t of w){
     const m = spawnMob(t, { x:R.cx, y:R.cy, r:170, count:w.length }, null);
     m.zone = null; // quái phó bản chết là chết hẳn — không respawn
   }
-  // Cửa vào phó bản (1300,1560) cách chỗ quái đợt spawn (1300,800) tới ~760px, ngoài tầm AUTO mặc
-  // định (430px) — bật AUTO ngay cửa vào trước đây đứng im không đánh gì (phát hiện qua QA). Dời
-  // điểm neo AUTO về đúng chỗ quái mỗi đợt để AUTO tự chạy tới như phần overworld đã làm.
+  // Cửa vào phó bản cách chỗ quái đợt 1 xa hơn tầm AUTO mặc định (430px) — khuôn dọc đo được
+  // ~760px, khuôn làn còn xa hơn nữa. Bật AUTO ngay cửa vào trước đây đứng im không đánh gì
+  // (phát hiện qua QA). Dời điểm neo AUTO về đúng chỗ quái mỗi đợt để AUTO tự chạy tới như
+  // phần overworld đã làm.
   if (player && player.auto){ player._autoAX = R.cx; player._autoAY = R.cy; }
   if (player) addFloat(player.x, player.y - 60, `Phòng ${DGN.wave}/${DGN.def.waves.length}`, '#b08ae8', 16);
 }
@@ -23547,7 +23612,7 @@ function spawnHuntBoss(){
   const hb = DGN.def.huntBoss;
   const def = MOBS[hb];
   if (!def){ DGN.huntCleared = true; return; }
-  const _R3 = DGN_ROOMS[2];
+  const _kh = dgnKhuon(DGN.id), _R3 = _kh.phong[_kh.phong.length - 1];
   const b = spawnMob(hb, { x:_R3.cx, y:_R3.cy, r:40, count:1 }, null);
   b.zone = null; // Boss Săn chết là chết hẳn, không hồi sinh
   // Não moveset Boss Vùng/Cổng Vực (telegraph AoE, vòng lãnh địa, tự hồi khi rời xa) cần các field
@@ -23814,6 +23879,9 @@ const MAP_AMBIENT = {
   tuyettinh:  { kind:'petal',   color:'#e890a8', n:24 }, // cánh hoa tuyệt tình
   mongco:     { kind:'sand',    color:'#d8c89a', n:26 }, // cát thảo nguyên
   nhanmon:    { kind:'snow',    color:'#eef4ff', n:30 }, // tuyết nhạn môn
+  // Lối Mòn Sâu là phó bản nhưng vẫn là RỪNG — mặc định phó bản là than hồng, mà than hồng giữa
+  // rừng thì đọc ra là cháy rừng chứ không ra hầm tối. Đom đóm giữ đúng chỗ này là chỗ nào.
+  pb_loimon:  { kind:'firefly', color:'#8ad8a0', n:22 },
 };
 const DUNGEON_AMBIENT = { kind:'ember', color:'#ff9a5a', n:16 }; // than hồng phó bản
 
