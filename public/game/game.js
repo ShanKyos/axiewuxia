@@ -15360,8 +15360,11 @@ function renderChar(){
   for (const k of ['str','agi','def','vit','ene']){
     const a = ATTR_INFO[k];
     const isDmgStat = !!_atkSrc[k];
-    html += `<div class="attr-row"><span>${a.name}${isDmgStat?' <span style="color:#ffd76a;font-size:10.5px">★</span>':''} <span style="opacity:.6;font-size:11px">(${a.desc})</span></span>
-      <span><b>${drv[k]}</b>${drv[k]!==base[k]?` <span style="color:#5ea0e8;font-size:11px">(${base[k]}+${drv[k]-base[k]})</span>`:''}
+    // Hai NỬA có vai rõ ràng: nửa trái co giãn và được phép xuống dòng, nửa phải KHÔNG co và
+    // KHÔNG xuống dòng. Trước đây cả hai đều là <span> trơn, nên mô tả dài một chút là cụm
+    // ô-số/+/Max bị đẩy vỡ thành mấy dòng so le. Xem .attr-ten / .attr-dieu trong style.css.
+    html += `<div class="attr-row"><span class="attr-ten">${a.name}${isDmgStat?' <span class="attr-sao">★</span>':''} <span class="attr-mo">(${a.desc})</span></span>
+      <span class="attr-dieu"><span class="attr-gt"><b class="attr-so">${drv[k]}</b>${drv[k]!==base[k]?`<span class="attr-them">(${base[k]}+${drv[k]-base[k]})</span>`:''}</span>
       <input type="number" class="attr-qty" id="qty-${k}" min="1" max="${p.free||1}" value="${Math.min(10, p.free||1)||1}" ${p.free<=0?'disabled':''}>
       <button class="plus-btn" onclick="addAttr('${k}', qtyOf('${k}'))" ${p.free<=0?'disabled':''} title="Cộng theo ô số">+</button>
       <button class="plus-btn max-btn" onclick="addAttr('${k}', player.free)" ${p.free<=0?'disabled':''} title="Dồn hết điểm còn lại">Max</button></span></div>`;

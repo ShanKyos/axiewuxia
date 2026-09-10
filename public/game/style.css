@@ -414,11 +414,34 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   color:var(--text-body); font-size:18px; cursor:pointer; }
 .panel .close-x:hover { background:rgba(255,107,107,.55); color:#fff; }
 .attr-row, .stat-row { display:flex; justify-content:space-between; align-items:center;
-  padding:5px 2px; font-size:var(--fs-lg); border-bottom:1px dashed var(--border-faint); }
+  gap:10px; padding:5px 2px; font-size:var(--fs-lg); border-bottom:1px dashed var(--border-faint); }
+/* ── DÒNG CHỈ SỐ: nửa trái co được, nửa phải thì không ─────────────────────────────────────
+   Nửa trái mang tên + mô tả (dài ngắn tuỳ chỉ số), nửa phải là cụm điều khiển cố định: số ·
+   ô nhập · + · Max. Trước đây cả hai đều là <span> trơn nên trình duyệt tự do bẻ dòng chỗ
+   nào cũng được — mô tả dài như "Giảm sát thương nhận vào" là đẩy nút Max rơi xuống dòng
+   riêng, mỗi dòng chỉ số vỡ một kiểu. `min-width:0` là bắt buộc: không có nó thì ô flex
+   không chịu hẹp hơn nội dung và nửa trái vẫn ép vỡ nửa phải. */
+.attr-row .attr-ten { flex:1 1 auto; min-width:0; }
+.attr-row .attr-mo  { opacity:.6; font-size:11px; }
+.attr-row .attr-sao { color:var(--gold); font-size:10.5px; }
+.attr-row .attr-dieu { flex:0 0 auto; display:flex; align-items:center; gap:5px; white-space:nowrap; }
+/* Số căn phải trên một bề ngang cố định ⇒ hàng đơn vị của cả năm dòng thẳng cột.
+   tabular-nums giữ mọi chữ số cùng bề ngang, không thì 1 hẹp hơn 8 và cột lại lệch. */
+/* Ô GIÁ TRỊ bề ngang CỐ ĐỊNH, dồn phải. Phần "(5+6)" chỉ hiện khi có điểm cộng thêm, nên nếu
+   không bọc lại thì dòng nào thiếu nó sẽ hẹp hơn và cả cụm trôi sang phải — đo được Linh Lực
+   lệch 36px so với bốn dòng kia. Bọc vào một ô cố định thì ô nhập · + · Max của cả năm dòng
+   bắt đầu đúng một mốc. */
+/* Ô GIÁ TRỊ bề ngang CỐ ĐỊNH, và CON SỐ mới là thứ neo cột — không phải cả ô.
+   Dồn phải cả ô thì dòng nào thiếu phần "(5+6)" sẽ đẩy con số ra tận mép (đo được Linh Lực
+   lệch 35px). Nên: ô đứng yên, con số chiếm 30px đầu dồn phải, phần cộng thêm chảy ra sau.
+   Vậy hàng đơn vị của cả năm dòng nằm đúng một mốc dù có hay không có điểm cộng. */
+.attr-row .attr-gt { flex:0 0 84px; display:inline-flex; align-items:baseline; gap:4px; }
+.attr-row .attr-so { flex:0 0 30px; text-align:right; font-variant-numeric:tabular-nums; }
+.attr-row .attr-them { color:var(--accent); font-size:11px; font-variant-numeric:tabular-nums; }
 .attr-row .plus-btn { width:26px; height:26px; border-radius:999px; border:1px solid var(--accent);
   background:rgba(var(--rgb-vang),.18); color:var(--accent-light); font-size:var(--fs-xl); cursor:pointer; }
 .attr-row .plus-btn:disabled { opacity:.3; cursor:default; }
-.attr-row .attr-qty { width:46px; height:24px; border-radius:6px; border:1px solid var(--border-faint);
+.attr-row .attr-qty { width:38px; height:24px; border-radius:6px; border:1px solid var(--border-faint);
   background:rgba(10,14,26,.6); color:var(--text-body); font-size:var(--fs-md); text-align:center; margin-right:2px; }
 .attr-row .attr-qty:disabled { opacity:.3; }
 .attr-row .max-btn { width:auto; border-radius:6px; padding:0 8px; font-size:var(--fs-sm); }
