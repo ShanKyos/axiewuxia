@@ -692,7 +692,7 @@ window.MAPS = {
       [2512,1120], [2448,1312], [2512,1376], [2512,1664],
     ],
     isoCum: [[2240,672], [352,960], [1440,1696], [160,672], [2496,448], [128,1248],],
-    spawn:{ x:460, y:460 }, spawnFrom:{ ardhaven:{ x:300, y:330 } }, village:true, spring:true, herbs:true, boss:true, trees:70, rocks:26,
+    spawn:{ x:460, y:460 }, spawnFrom:{ ardhaven:{ x:300, y:330 } }, village:true, spring:true, herbs:true, boss:true, trees:0, rocks:0,
     desc:'Nơi đặt trại ấp Plant Tribe — bãi săn của người mới. Chimera yếu, đồ rơi nhập môn, chỗ hiền lành để học cách chơi.',
     // Cụm quái xếp theo vòng từ spawn ra: yếu (boar/hautu) gần nhất → mạnh dần (wolf/bandit/
     // caodo) → xa nhất (assassin, trannhan) gần Cổng Vực — người chơi mới thấy rõ "đi sâu = khó
@@ -833,7 +833,7 @@ window.MAPS = {
       [2512,1216], [2512,1568], [2304,1776], [1824,1712],
     ],
     isoCum: [[480,1568], [2400,576], [1568,1056],],
-    spawn:{ x:1300, y:330 }, trees:56, rocks:22, herbs:true,
+    spawn:{ x:1300, y:330 }, trees:0, rocks:0, herbs:true,
     // Câu đầu vốn nằm ở REGION_UNLOCK_LORE.ngoai và chỉ hiện ĐÚNG MỘT LẦN lúc mở khoá vùng.
     // Dòng người chơi đọc mỗi lần mở Bản Đồ lại là dòng "đất an toàn để luyện cấp" — tức là
     // vùng đầu tiên báo hiệu chuỗi năm trụ bị giới thiệu như một bãi cỏ giữa hai nhiệm vụ.
@@ -880,7 +880,7 @@ window.MAPS = {
       [2368,48], [2512,128], [2512,1376], [2512,1664],
     ],
     isoCum: [[352,960], [768,1024], [2400,1088], [128,1248],],
-    spawnFrom:{ comoc:{ x:1921, y:260 }, corran:{ x:2450, y:700 } }, spawn:{ x:400, y:1500 }, trees:80, rocks:34,
+    spawnFrom:{ comoc:{ x:1921, y:260 }, corran:{ x:2450, y:700 } }, spawn:{ x:400, y:1500 }, trees:0, rocks:0,
     desc:'Từ đây là đất PK — hạ người khác được, bị hạ cũng được. Chimera ở đây rơi Cốt bậc đầu.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     voi: 1836,
@@ -1167,7 +1167,7 @@ window.MAPS = {
       [2496,144], [2512,1120], [2416,1312], [2512,1600],
     ],
     isoCum: [[2112,896], [1696,928], [1280,640], [576,1152], [224,1024], [2432,704], [1632,576],],
-    spawnFrom:{ chungnam:{ x:260, y:1366 }, mongco:{ x:1369, y:260 }, trungnut:{ x:280, y:1660 }, caungam:{ x:2250, y:400 } }, spawn:{ x:400, y:400 }, dark:true, trees:44, rocks:60,   // 30/46 -> 44/60: thêm lối rìa
+    spawnFrom:{ chungnam:{ x:260, y:1366 }, mongco:{ x:1369, y:260 }, trungnut:{ x:280, y:1660 }, caungam:{ x:2250, y:400 } }, spawn:{ x:400, y:400 }, dark:true, trees:0, rocks:0,   // 30/46 -> 44/60: thêm lối rìa
     // đi Aquatic Tribe Causeway nghĩa là thêm một cổng và một điểm tới, mà decorUnblock() dọn
     // cây đá quanh MỌI điểm nội dung. Bể ban đầu 76 cây đá lọc xong chỉ còn 19 — dưới sàn 20
     // của test_obstacles ("map thành trọc"). Bộ lọc làm đúng việc của nó; thứ thiếu là bể đầu vào.
@@ -1287,7 +1287,7 @@ window.MAPS = {
     // Bird Tribe Heights (tt1/tt2/tt3) phải cách ≥700px và vách bắc dày 280px, nên góc bắc-đông là
     // ô duy nhất vừa sát rìa vừa đứng được — tt1 cách 1290px, gần nhất là tt2 974px.
     spawnFrom:{ caungam:{ x:2100, y:340 } },
-    spawn:{ x:400, y:950 }, trees:60, rocks:24,
+    spawn:{ x:400, y:950 }, trees:0, rocks:0,
     desc:'Bãi EXP khổng lồ. Mang theo kháng độc — Chimera ở đây cắn có nọc.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     voi: 1759,
@@ -1322,7 +1322,7 @@ window.MAPS = {
       [2208,48], [2272,144], [2496,144], [2512,1664],
     ],
     isoCum: [[2048,928], [2400,1088], [480,1568], [1728,1120], [864,896], [1344,1792],],
-    spawnFrom:{ tuyettinh:{ x:1139, y:260 }, nhanmon:{ x:2340, y:678 } }, spawnFrom:{ comoc:{ x:260, y:1286 }, nhanmon:{ x:2340, y:582 } }, spawn:{ x:400, y:950 }, trees:36, rocks:30,
+    spawnFrom:{ tuyettinh:{ x:1139, y:260 }, nhanmon:{ x:2340, y:678 } }, spawnFrom:{ comoc:{ x:260, y:1286 }, nhanmon:{ x:2340, y:582 } }, spawn:{ x:400, y:950 }, trees:0, rocks:0,
     desc:'Thảo nguyên mở rộng, Chimera trâu bò đánh đau. Rơi nguyên liệu nâng chiêu tầm xa và đao pháp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     voi: 1736,
@@ -1357,7 +1357,7 @@ window.MAPS = {
       [2496,144], [2512,1120], [2512,1344], [2512,1664],
     ],
     isoCum: [[1120,1248], [2144,1024], [2400,576], [192,1248], [1568,608], [864,896], [1152,1728], [1952,1312],],
-    spawnFrom:{ mongco:{ x:1668, y:260 } }, spawn:{ x:400, y:950 }, trees:44, rocks:38,
+    spawnFrom:{ mongco:{ x:1668, y:260 } }, spawn:{ x:400, y:950 }, trees:0, rocks:0,
     desc:'Bãi luyện cuối game, ngoài biên ải Lunacia. PK ở đây không cộng Tai Tiếng. Chimera rơi trang bị bậc vàng.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     voi: 1856,
@@ -1400,7 +1400,7 @@ window.MAPS = {
       [2512,1120], [2272,1200], [1856,1200], [1840,1600],
     ],
     isoCum: [[2048,928], [1504,1120], [352,960], [1120,1248], [640,1248], [1856,416], [768,800], [2400,576], [1696,832], [320,1504], [1152,832], [96,1248], [1632,1440],],
-    spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:10, rocks:40,
+    spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:0, rocks:0,
     desc:'Đường nứt Thủ Hộ Vaeldra không kịp bịt, ăn thẳng xuống dưới lớp đá nền. Càng xuống sâu khí Morvahn càng đặc, và không tầng nào giống tầng nào.',
     packs: [], duhiep: null },
 };

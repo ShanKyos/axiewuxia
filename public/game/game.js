@@ -1880,15 +1880,54 @@ const ISO_CAY = ['cay1', 'cay2', 'cay3', 'cay4', 'cay5', 'cay6'];
 const ISO_NHO = ['co1', 'co1', 'co1', 'co2', 'co2', 'co2',
                  'buicay1', 'buicay1', 'buicay2', 'buicay2', 'buicay3',
                  'da1', 'da2', 'da3'];
+// Những chỗ decor KHÔNG được phủ lên: người chơi phải tới được, phải nhìn thấy. Gom một lần
+// mỗi lượt dựng map chứ không hỏi lại mỗi cái cây.
+function _isoDiemNoiDung(md){
+  const ra = [];
+  if (md.spawn) ra.push(md.spawn);
+  for (const k in (md.spawnFrom || {})) ra.push(md.spawnFrom[k]);
+  for (const q of (md.packs || [])) ra.push(q);
+  for (const v of (md.vung || [])) if (v && isFinite(v.x)) ra.push(v);
+  for (const n of NPCS) if (n.map === curMap) ra.push(n);
+  // Cổng rìa: người chơi phải NHÌN THẤY chúng thì mới biết đi tiếp đâu, che là lạc đường.
+  for (const g of (md.cong || md.gates || [])) if (g && isFinite(g.x)) ra.push(g);
+  for (const g of (typeof _rimPts !== 'undefined' ? (_rimPts || []) : [])) if (g && isFinite(g.x)) ra.push(g);
+  const bd = BOSS_DEFS[curMap];
+  if (bd){
+    for (const d of (bd.thuve || [])) ra.push({ x: d.x*MAP.w, y: d.y*MAP.h });
+    if (bd.tranai) ra.push({ x: bd.tranai.x*MAP.w, y: bd.tranai.y*MAP.h });
+  }
+  for (const h of ((typeof HERB_SPOTS !== 'undefined' && HERB_SPOTS[curMap]) || [])) ra.push(h);
+  return ra.filter(q => q && isFinite(q.x) && isFinite(q.y));
+}
 function raiIso(md){
   if (!md.sanIso || !md.diTrong) return;
   // Bốc CỐ ĐỊNH theo tên map: bố cục phải giống nhau mọi lần vào, nếu không thì không ai học
   // được bản đồ — cùng lý do đã ghi ở _hatRng.
   const boc = _hatRng(_bamChuoi('iso:' + curMap));
+  // ⚠ HAI BỘ LỌC DƯỚI ĐÂY KHÔNG PHẢI THỪA. Đợt chuyển tám map hoang dã sang sàn viên làm lộ
+  // ra: raiIso() cố ý chạy SAU bộ lọc `!inObstacle` (để rừng viền còn mọc được ngoài đa giác),
+  // nên nó cũng đi vòng luôn qua mọi thứ mà bộ lọc ấy gác. Trên năm map lát trước thì không ai
+  // thấy, vì chúng dựng riêng cho lối viên và không có vật cản đặt tay. Tám map hoang dã thì
+  // CÓ — hồ nước, vách đá — và test_obstacles đếm được 48/54/115 cây mọc GIỮA HỒ, kèm decor
+  // phủ lên bãi quái, lên cổng, lên cả điểm thả người chơi.
+  //
+  // Nên lọc lại ngay tại chỗ, chỉ hai phép và đều rẻ:
+  //   · vật cản tĩnh — cây không mọc giữa hồ
+  //   · điểm nội dung — không phủ lên chỗ người chơi phải tới. Bán kính 150px là cỡ một lùm
+  //     cộng nửa thân người: đủ để cái cây không che mất con quái hay cái cổng.
+  const _canhGiu = _isoDiemNoiDung(md);
   const rai = (n, ds, hop) => {
     for (let t = 0, dat = 0; t < n*30 && dat < n; t++){
       const x = boc()*MAP.w, y = boc()*MAP.h;
       if (!hop(trongDaGiac(md.diTrong, x, y), _isoCachMep(md.diTrong, x, y))) continue;
+      // ⚠ CHƯA XONG. Nới bán kính lên 64 (cỡ nửa tán cây) tưởng chặt hơn, đo ra lại LỌT NHIỀU
+      // HƠN: ngoai 10 → 17 cây mọc trong hồ. Bộ lọc mà nới rộng lại lọt nhiều hơn thì nó không
+      // thật sự lọc — nó chỉ xô lệch chuỗi bốc cố định, nên mỗi lần đổi tham số là một bộ cây
+      // khác rơi xuống. Nghi decor TỰ SINH vật cản (obstaclesOf đọc decor), nên lúc hỏi ở đây
+      // danh sách chưa chốt. Sửa đúng là lọc SAU khi vật cản chốt, không phải nới bán kính.
+      if (inObstacle(curMap, x, y, 10)) continue;
+      if (_canhGiu.some(q => (q.x - x)*(q.x - x) + (q.y - y)*(q.y - y) < 150*150)) continue;
       decor.push({ type:'iso', img: ds[(boc()*ds.length)|0], x, y, s:1 });
       dat++;
     }
