@@ -1038,19 +1038,19 @@ window.MAPS = {
     // sàn cho map này: trục đông (-43..67), quạt bắc (-95..-35) và quạt nam (95..155).
     vung: [
       { id:'boar', ten:'Đồng Heo Rừng', dai:[0.14,0.26], cung:[-30,45], cum:[3,3],
-        dan:[{ mob:'boar', n:14 }] },   // C1 · Axie Heo Rừng
+        dan:[{ mob:'boar', n:15 }] },   // C1 · Axie Heo Rừng
       { id:'hautu', ten:'Ruộng Bí Ngô', dai:[0.30,0.38], cung:[-95,-35], cum:[2,2],
-        dan:[{ mob:'hautu', n:10 }] },   // C2 · Axie Bí Ngô
+        dan:[{ mob:'hautu', n:8 }] },   // C2 · Axie Bí Ngô
       { id:'wolf', ten:'Bìa Rừng Gai Tím', dai:[0.42,0.52], cung:[10,85], cum:[3,3],
-        dan:[{ mob:'wolf', n:15 }] },   // C4 · Axie Gai Tím
+        dan:[{ mob:'wolf', n:16 }] },   // C4 · Axie Gai Tím
       { id:'bandit', ten:'Trại Tay Sai Gloam', dai:[0.56,0.64], cung:[-15,60], cum:[3,3],
-        dan:[{ mob:'bandit', n:15, vai:['can','xa'] }] },   // C6 · Tay Sai Gloam
-      { id:'caodo', ten:'Vạt Cỏ Dại', dai:[0.68,0.76], cung:[95,155], cum:[2,2],
-        dan:[{ mob:'caodo', n:10 }] },   // C8 · Axie Cỏ Dại
+        dan:[{ mob:'bandit', n:20, vai:['can','xa'] }] },   // C6 · Tay Sai Gloam — loài chủ đạo của map
+      { id:'caodo', ten:'Vạt Cỏ Dại', dai:[0.68,0.76], cung:[55,110], cum:[2,2],
+        dan:[{ mob:'caodo', n:8 }] },   // C8 · Axie Cỏ Dại
       { id:'assassin', ten:'Ngã Ba Cướp Đường', dai:[0.80,0.86], cung:[10,85], cum:[2,2],
-        dan:[{ mob:'assassin', n:4 }] },   // C10 · Cướp Đường Gloam
+        dan:[{ mob:'assassin', n:3 }] },   // C10 · Cướp Đường Gloam (elite — giữ thưa)
       { id:'trannhan', ten:'Hàng Tượng Canh Cổng', dai:[0.90,1.0], cung:[-15,60], cum:[3,3],
-        dan:[{ mob:'trannhan', n:9 }] },   // C12 · Tượng Đá Canh Cổng
+        dan:[{ mob:'trannhan', n:7 }] },   // C12 · Tượng Đá Canh Cổng
     ],
     diTrong: [
       [4544,3680], [3456,3680], [3360,3584], [3360,3520], [3136,3360], [2688,3360],

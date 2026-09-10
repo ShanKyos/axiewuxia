@@ -28,7 +28,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 
   // di chuyển bằng chuột phải vẫn phải chạy — đó là lối duy nhất còn lại
   const r2 = await p.evaluate(async () => {
-    travelTo('ardhaven'); travelTo('daohoa');
+    travelTo('ardhaven'); travelTo('corran');   // bãi tân thủ nay là Rẻo Rừng Corran
     const x0 = player.x, y0 = player.y;
     canvas.dispatchEvent(new MouseEvent('contextmenu', {
       clientX: Math.round(player.x - camera.x + 220), clientY: Math.round(player.y - camera.y), bubbles: true }));

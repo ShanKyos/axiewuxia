@@ -16,8 +16,8 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 
   // 1. Cấu trúc: cả cụm phải dùng CHUNG một mã bãi, dù zone là các object khác nhau
   const r1 = await p.evaluate(() => {
-    travelTo('ardhaven'); travelTo('daohoa');
-    const k = MAPS.daohoa.packs[0];
+    travelTo('ardhaven'); travelTo('corran');   // bãi tân thủ nay là Rẻo Rừng Corran
+    const k = MAPS.corran.packs[0];
     const cum = mobs.filter(m => !m.dead && m.zone &&
       Math.abs(m.zone.x - k.x) < 2 && Math.abs(m.zone.y - k.y) < 2);
     return { soCon: cum.length,
@@ -41,8 +41,8 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     await q.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); });
     await q.waitForTimeout(800);
     await q.evaluate((ep) => {
-      travelTo('daohoa');
-      const k = MAPS.daohoa.packs[0];
+      travelTo('corran');
+      const k = MAPS.corran.packs[0];
       player.x = k.x; player.y = k.y; player.hp = player.maxHp; player.potions = 3;
       player.auto = true; player._autoAX = null; player._autoAY = null;
       player._autoZoneLocked = false; player._autoPack = null; player._fleeTo = null;

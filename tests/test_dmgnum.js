@@ -14,7 +14,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 
   // 1. Một cú đánh → hiện đúng MỘT số, và số đó bằng sát thương thật
   const r1 = await p.evaluate(async () => {
-    travelTo('daohoa'); player.auto = false;
+    travelTo('corran'); player.auto = false;   // bãi tân thủ nay là Rẻo Rừng Corran
     const m = mobs.find(x => !x.dead && !x.def.bossKind);
     m.hp = m.maxHp = 999999;                       // đừng để nó chết giữa phép đo
     floats.length = 0;
@@ -82,8 +82,8 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   const r5 = await p.evaluate(async () => {
     SETTINGS.dmgNum = true;
     applyTestBoost && applyTestBoost();
-    travelTo('ardhaven'); travelTo('daohoa');
-    const k = MAPS.daohoa.packs[0];
+    travelTo('ardhaven'); travelTo('corran');
+    const k = MAPS.corran.packs[0];
     player.x=k.x; player.y=k.y; player.auto=true;
     player._autoAX=null; player._autoAY=null; player._autoZoneLocked=false; player._autoPack=null;
     floats.length = 0;

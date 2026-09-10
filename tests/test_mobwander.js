@@ -13,8 +13,11 @@ const { chromium } = require('playwright');
 
   // Move player far from all mobs so nothing aggros, then sample a few mob positions over time.
   const sample0 = await page.evaluate(() => {
-    travelTo('daohoa');
-    player.x = 2500; player.y = 50; // far corner, away from packs
+    travelTo('corran');   // bãi tân thủ nay là Rẻo Rừng Corran
+    // Góc xa nhất mọi bãi quái trên khổ 5200x3800 — dò bằng máy trên chính đa giác sàn của map
+    // (cách bãi gần nhất 1678px, quá xa mọi tầm truy đuổi). Toạ độ cũ (2500,50) là góc của khổ
+    // 2600x1900 và nằm NGOÀI sàn map này.
+    player.x = 4950; player.y = 3350; // far corner, away from packs
     return mobs.filter(m => !m.dead).slice(0, 5).map(m => ({ id: m.type, x: Math.round(m.x), y: Math.round(m.y), homeX: Math.round(m.homeX), homeY: Math.round(m.homeY) }));
   });
   console.log('sample @ t=0:', JSON.stringify(sample0));
