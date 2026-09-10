@@ -12891,6 +12891,10 @@ window.drawHeroLit = drawHeroLit;
 // trạng thái riêng, nên nó là TỆP RIÊNG và nạp khi cần: một bảng sau giải nén là 27,6 MB,
 // nhân bảy bộ là 193 MB — mà đo được cả 193 MB đó đang nạp sẵn lúc mở trang trong khi người
 // chơi chỉ vẽ đúng lớp của mình.
+// Chỉ ba trạng thái DI CHUYỂN LẶP mới được hoà hình khi chuyển qua lại — xem drawPlayer().
+// Đòn đánh đã vào-ra liên tục qua atkK; trúng đòn và chết phải đọc ra ngay, không được nhoè.
+const NHOA_DUOC = { i:1, w:1, r:1 };
+const NHOA_MS   = 140;   // trong hoạt hình chuyên nghiệp, transition lặp thường 150-300ms
 const HS_FRAMES = { i: 16, w: 32, a: 16, c: 16, r: 16,          // BẢNG MỘT
                     h: 8, p: 12, s: 16, d: 10, j: 10, q: 6, n: 6, t: 6, e: 10 };  // BẢNG HAI
 // Khối nào nằm ở bảng hai. Thứ tự trong NV_MOC2 phải trùng KHUNG2 của tools/spine/nuong_nv.py.
@@ -13435,6 +13439,23 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk){
   return cv;
 }
 function heroBlit(g, spr){ g.drawImage(spr, spr._ox, spr._oy, spr._ow, spr._oh); }
+/* Vẽ thân, có hoà hình nếu vừa đổi trạng thái di chuyển. Khung CŨ vẽ đục hoàn toàn trước, rồi
+   chồng khung MỚI với alpha tăng dần — thứ tự này bắt buộc. Làm ngược lại (cũ mờ dần đè lên
+   mới) thì giữa chừng độ phủ chỉ còn 1-t(1-t), tức nhân vật hở nền tới 25% ở khoảng giữa. */
+function _veThanHoa(g, p, spr, now, tier, gv, act, ps, sw){
+  const t = p._nhoaT0 ? Math.min(1, (now - p._nhoaT0) / NHOA_MS) : 1;
+  if (t < 1 && p._nhoaBlk){
+    const cu = heroSprite(p.sect, tier, gv, p._nhoaKind, p._nhoaIdx, act, ps.back, sw, p._nhoaBlk);
+    // Đổi trạng thái ĐÈ LÊN pha khung: đang hoà đứng→chạy thì hoà trạng thái quan trọng hơn,
+    // và chồng ba lớp thì lớp thứ ba gần như không đọc ra mà vẫn tốn một nhát vẽ.
+    if (cu){ heroBlit(g, cu); g.globalAlpha = t; heroBlit(g, spr); g.globalAlpha = 1; return; }
+  }
+  if (t >= 1) p._nhoaT0 = 0;      // hết hoà thì thôi tra bảng khung cũ mỗi lượt vẽ
+  heroBlit(g, spr);
+  if (p._phaSau && p._phaLe > 0.02){
+    g.globalAlpha = p._phaLe; heroBlit(g, p._phaSau); g.globalAlpha = 1;
+  }
+}
 window.heroSpriteStats = () => ({ cache: _hsCache.size, hit: _hsHit, miss: _hsMiss });
 
 // Canvas phụ dùng lại giữa các khung — dựng mới mỗi khung thì lại tốn hơn cái vừa tiết kiệm được.
@@ -15042,6 +15063,9 @@ function drawPlayer(){
     _ps.bob  -= 2.2 * _hurt;
   }
   const _tier = heroTier(p), _gv = gearVisual(p);
+  // Khai ở đây chứ không trong khối vẽ sprite: chỗ hoà hình (_veThanHoa) nằm NGOÀI khối đó
+  // mà vẫn phải dựng lại khung cũ bằng đúng bộ tham số này.
+  const _sw = (p.sway || 0) > 0.35 ? 2 : (p.sway || 0) < -0.35 ? 1 : 0;
   // Chọn khung hình. Sprite dùng ở MỌI mức hiệu ứng: sau khi nâng lên 32 khung đi và dựng ở
   // đúng hộp gốc, nó đo được lệch 0–0,03% pixel so với bản vẽ thẳng, và nhịp giật 15,4% so với
   // 13,5% của bản liên tục — tức không còn khác biệt để mà đánh đổi.
@@ -15114,13 +15138,46 @@ function drawPlayer(){
                    ? (_bay ? BAY_KHUNG + Math.round(Math.sin(now / 700) * BAY_LAC)
                            : ((((wph % _TAU) + _TAU) % _TAU) / _TAU * _n) | 0)
                : ((((now / 620) % _TAU) + _TAU) % _TAU) / _TAU * _n | 0;
-    const _sw = (p.sway || 0) > 0.35 ? 2 : (p.sway || 0) < -0.35 ? 1 : 0;
     // Dark Wizard KHÔNG vung kiếm. Bản mẫu Spine có sẵn '05_MagicAttack' — nướng rồi, nằm ở
     // khối 'c'. Đổi khối vẽ mà GIỮ NGUYÊN `_kind` semantics: chỉ số khung vẫn tính theo atkK,
     // chỉ có tấm khung đọc từ chỗ khác. Gán thẳng _kind='c' thì chỉ số rơi về nhánh castK — mà
     // castK = 0 lúc đánh thường — nên khung đứng im ở 0.
     _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back, _sw, _blk);
     window.__khoiVe = _blk;   // bài kiểm đọc cờ này
+    // ── NỘI SUY GIỮA HAI KHUNG LIỀN NHAU — chỉ cho khối CHẠY ─────────────────────────
+    // ĐO: sải chân một vòng / số khung = quãng bàn chân dịch mỗi khung.
+    //     đi   126,6px / 32 khung =  3,96px
+    //     chạy 212,9px / 16 khung = 13,31px   ← gấp 3,4 lần
+    // Chú thích ở HS_FRAMES kể rằng mốc 12 khung cho ĐI đã bị loại vì "thô hơn 7-10 lần";
+    // nhưng CHẠY thì lại để 16 khung với sải dài hơn, hoá ra còn thô hơn cả cái đã loại.
+    // Nướng lại 32 khung là đường đúng nhất, nhưng cần gói Spine gốc (không có trong kho).
+    // Trong lúc chờ: pha hai khung liền nhau theo phần lẻ của chỉ số — mắt đọc ra chuyển
+    // động liên tục thay vì giật từng nấc. ĐI không cần (3,96px đã ngang mức vẽ thẳng), nên
+    // không pha, khỏi tốn thêm một nhát vẽ mỗi khung hình cho không.
+    if (_kind === 'r' && !_bay){
+      const _fx = (((wph % _TAU) + _TAU) % _TAU) / _TAU * _n;
+      p._phaLe  = _fx - Math.floor(_fx);
+      p._phaSau = heroSprite(p.sect, _tier, _gv, _kind, (Math.floor(_fx) + 1) % _n,
+                             _act, _ps.back, _sw, _blk);
+    } else { p._phaLe = 0; p._phaSau = null; }
+    // ── HOÀ HÌNH KHI ĐỔI TRẠNG THÁI ───────────────────────────────────────────────────
+    // Đứng ↔ đi ↔ chạy trước đây CẮT PHỰT sang khung mới: đang đứng yên hai chân khép, bấm
+    // phím một cái là nhảy thẳng vào khung giữa sải bước. Mắt bắt được cú giật đó rõ hơn cả
+    // độ mượt trong lòng mỗi vòng.
+    //
+    // Làm ở tầng BLIT chứ không ở tầng tư thế, vì tư thế đã bị nướng thành bảng khung theo
+    // CHỈ SỐ KHUNG — nội suy ở đó thì phải nướng lại toàn bộ. Ở đây chỉ là vẽ chồng hai
+    // khung có sẵn, bộ nhớ đệm sprite đã giữ cả hai nên không tốn thêm gì.
+    //
+    // ⚠ Chỉ hoà giữa các trạng thái DI CHUYỂN LẶP (đứng · đi · chạy). Không hoà vào/ra đòn
+    // đánh: đòn đã vào-ra liên tục sẵn qua atkK 0→1, hoà thêm là nhoè mất khung chạm. Càng
+    // không hoà lúc trúng đòn hay chết — phản hồi đó phải đọc được NGAY.
+    if (p._veBlk !== _blk){
+      p._nhoaT0 = (NHOA_DUOC[p._veBlk] && NHOA_DUOC[_blk]) ? now : 0;
+      p._nhoaBlk = p._veBlk; p._nhoaKind = p._veKind; p._nhoaIdx = p._veIdx;
+      p._veBlk = _blk; p._veKind = _kind;
+    }
+    p._veIdx = clamp(_idx, 0, _n - 1);
   }
   // Thần Hiệp: viền kim quang quanh thân. Trước đây làm bằng cách đặt shadowBlur rồi để nguyên
   // suốt cả dáng người — đo được 166 trong 204 nhát fill của drawPlayer() bị làm mờ, mỗi nhát là
@@ -15150,9 +15207,9 @@ function drawPlayer(){
       ctx.translate(HERO_GOT_X, HERO_GOT_Y);         // dời gốc về gót
       ctx.rotate(-0.14 * _hurt);                     // ngửa ra sau
       ctx.translate(-HERO_GOT_X, -HERO_GOT_Y - 2.2 * _hurt);   // trả gốc + nhấc thân đúng biên độ `bob` cũ
-      heroBlit(ctx, _spr);
+      _veThanHoa(ctx, p, _spr, now, _tier, _gv, _act, _ps, _sw);
       ctx.restore();
-    } else heroBlit(ctx, _spr);
+    } else _veThanHoa(ctx, p, _spr, now, _tier, _gv, _act, _ps, _sw);
   }
   else drawHeroLit(ctx, p.sect, _tier, now, _ps, _gv);
   ctx.restore();
