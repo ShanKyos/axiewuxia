@@ -74,8 +74,7 @@ const PORT = process.argv[2] || '8853';
 
   // ── ③ NỘI SUY KHUNG CHO KHỐI CHẠY ────────────────────────────────────────────────────
   const r3 = await page.evaluate(() => {
-    player.equip = player.equip || {};
-    player.equip.chan = { slot:'chan', plus: GIAY_CHAY_PLUS, tier:1, rarity:1, uid:'z', name:'giày' };
+    player.speed = 209;                  // trên CHAY_TOCDO → khối CHẠY
     player.moving = true; player._nhoaT0 = 0;
     const le = [];
     // ⚠ CHỌN GIÁ TRỊ CHO RA PHẦN LẺ KHÁC NHAU. Khối chạy có 16 khung, nên w × 16 mới là chỉ số;
@@ -93,16 +92,26 @@ const PORT = process.argv[2] || '8853';
   else if (new Set(r3.le).size < 2) fail('phần lẻ chỉ số khung đứng im: ' + JSON.stringify(r3.le));
   else pass(`khối chạy có nội suy, phần lẻ chạy ${JSON.stringify(r3.le)}`);
 
-  // ── ④ ĐI BỘ KHÔNG nội suy — 3,96px/khung đã đủ mượt, pha thêm là tốn nhát vẽ ─────────
+  // ── ④ ĐI BỘ CŨNG nội suy ─────────────────────────────────────────────────────────────
+  // Khối ĐI nay chỉ chạy DƯỚI CHAY_TOCDO (126 px/s). Ở 90 px/s nó ra 27 khung/giây trên màn
+  // 60 Hz — mỗi khung bảng đứng yên hơn hai lượt vẽ liền, nhìn ra nấc ngay. Nên phải pha.
   const r4 = await page.evaluate(() => {
-    delete player.equip.chan;
-    player.moving = true; player._nhoaT0 = 0; player.walkPh = 1.0;
-    drawPlayer();
-    return { khoi: window.__khoiVe, coPhaSau: !!player._phaSau };
+    player.speed = 90;                   // dưới ngưỡng → khối ĐI
+    player.moving = true; player._nhoaT0 = 0;
+    const le = [];
+    // Khối đi có 32 khung; chọn pha cho ra phần lẻ khác nhau (xem bẫy ở ③).
+    for (const w of [0.005, 0.015, 0.035, 0.065]){
+      player.walkPh = w * Math.PI * 2;
+      drawPlayer();
+      le.push(player._phaLe == null ? null : +player._phaLe.toFixed(2));
+    }
+    return { khoi: window.__khoiVe, le, chay: dangChay(player), coPhaSau: !!player._phaSau };
   });
-  console.log('④ đi bộ:', JSON.stringify(r4));
-  if (r4.khoi === 'w' && r4.coPhaSau) fail('khối ĐI cũng pha khung — thừa, 3,96px/khung đã ngang mức vẽ thẳng');
-  else pass('khối đi không pha khung, không tốn nhát vẽ thừa');
+  console.log('④ nội suy khối đi:', JSON.stringify(r4));
+  if (r4.chay || r4.khoi !== 'w') fail(`chưa vào được khối ĐI (khối=${r4.khoi}) — không kiểm được nội suy`);
+  else if (!r4.coPhaSau) fail('khối ĐI không pha khung — dưới ngưỡng chỉ 27 khung/giây, sẽ thấy nấc');
+  else if (new Set(r4.le).size < 2) fail('phần lẻ chỉ số khung đứng im: ' + JSON.stringify(r4.le));
+  else pass(`khối đi có nội suy, phần lẻ chạy ${JSON.stringify(r4.le)}`);
 
   console.log('lỗi trang:', JSON.stringify(loi.slice(0, 4)));
   if (loi.length) fail(loi.length + ' lỗi runtime');

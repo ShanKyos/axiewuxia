@@ -12916,20 +12916,38 @@ const SAI_CHAN_NUONG = { w: 126.6, r: 212.9 };    // px trên bảng khung
 const SAI_CHAN = { w: SAI_CHAN_NUONG.w * NV_CAO / CAO_THAN_NUONG,
                    r: SAI_CHAN_NUONG.r * NV_CAO / CAO_THAN_NUONG };
 // ── ĐI hay CHẠY: quyết định bằng ĐÔI GIÀY, không bằng tốc độ ────────────────────────────────
-// Chủ dự án chốt: vào game là ĐI (`00_Walk`); lên **Giày +6** mới đổi sang CHẠY (`00_Run`).
+// Khối ĐI (`00_Walk`) hay khối CHẠY (`00_Run`) — chọn theo TỐC ĐỘ THẬT, không theo trang bị.
 //
-// Trước bản này ngưỡng là TỐC ĐỘ (`p.speed >= 1.271 × NV_CAO ≈ 168`), mà tốc độ nền của người chơi là
-// 209 — tức nhân vật CHẠY ngay từ cấp 1 và khối `00_Walk` gần như không bao giờ được thấy, dù
-// đã nướng đủ 32 khung cho nó. Đổi sang cửa Giày +6 thì cả hai khối đều có lúc dùng, và người
-// chơi có một thứ NHÌN THẤY ĐƯỢC khi đập giày — thứ mà mọi ô khác không có.
+// Bản trước lấy **Giày +6** làm cửa, để đập giày lên là thấy dáng đổi. Ý thì hay, nhưng ĐO ra
+// thì cái giá phải trả nằm ở người chưa có giày, tức gần như mọi người chơi:
+//
+//     sải chân khối ĐI  = 126,6 × NV_CAO/CAO_THAN_NUONG = 105,1 px
+//     sải chân khối CHẠY= 212,9 × NV_CAO/CAO_THAN_NUONG = 176,7 px
+//     tốc độ nền        = 209 px/giây
+//
+//     ĐI  ở 209 px/s → 1,99 vòng/giây = 3,98 BƯỚC/GIÂY · 63,6 khung/giây
+//     CHẠY ở 209 px/s → 1,18 vòng/giây = 2,36 bước/giây · 18,9 khung/giây
+//
+// Hai con số hỏng, cả hai đều thấy được bằng mắt:
+//
+//  · 3,98 bước/giây là NHỊP NƯỚC RÚT đặt lên một dáng ĐI THONG THẢ. Chân quay tít trong khi
+//    thân người không có độ nhún tương ứng, nên mắt không đọc ra "đang đi nhanh" mà đọc ra
+//    "vòng lặp máy móc" — đúng cái cảm giác cứng.
+//  · 63,6 khung/giây trên màn 60 Hz thì mỗi giây có ~4 nhịp bảng khung nhảy HAI khung còn lại
+//    nhảy một. Giật không đều, và giật không đều thì lộ hơn hẳn giật đều.
+//
+// Ngưỡng dưới lấy từ chính sải chân: người đi bộ tự nhiên tối đa ~2,4 bước/giây, tức
+// 2,4/2 × 105,1 ≈ 126 px/giây. Trên mức đó khối ĐI không còn tả nổi chuyển động nữa.
+//
+// Giày +6 vì thế KHÔNG còn là cửa hoạt ảnh. Muốn giày vẫn có thứ nhìn thấy được thì cho nó
+// cộng tốc độ thật — đó là việc cân bằng, để chủ dự án quyết, không tự ý gài vào đây.
 //
 // ⚠ PHẢI DÙNG CHUNG cho cả KHỐI VẼ (drawPlayer) lẫn NHỊP BƯỚC (update). Hai chỗ đó vốn cùng
 // đọc một ngưỡng tốc độ; tách chúng ra hai luật khác nhau là bàn chân trượt đất — vẽ khối đi mà
 // tính sải chân của khối chạy thì mỗi vòng hụt ~40% quãng đường.
-const GIAY_CHAY_PLUS = 6;
+const CHAY_TOCDO = 126;          // px/giây — xem tính toán ở trên
 function dangChay(p){
-  const gi = p && p.equip && p.equip.chan;
-  return !!gi && (gi.plus || 0) >= GIAY_CHAY_PLUS;
+  return !!p && (p.speed || 0) >= CHAY_TOCDO;
 }
 // CỬA SỔ LƠ LỬNG trong khối đi. Khối đi có 32 khung; khung khớp dáng bay nhất là 8/12 của hoạt
 // cảnh gốc, tức 8/12 × 32 ≈ 21. Lắc ±2 khung theo một nhịp chậm để nó còn thở, không đứng hình.
@@ -15112,7 +15130,7 @@ function drawPlayer(){
                 : atkK > 0 ? 'a'
                 : _catCanh ? 'j'
                 : _bay ? 'w'
-                : _diBo ? (dangChay(p) ? 'r' : 'w')   // Giày +6 mới chạy — xem dangChay()
+                : _diBo ? (dangChay(p) ? 'r' : 'w')   // ngưỡng TỐC ĐỘ, xem dangChay()
                 : (!p.moving && (p.nhayT || 0) > 0) ? 'e'
                 : _suoi ? 'q'
                 : _noi ? 'n'
@@ -15152,9 +15170,13 @@ function drawPlayer(){
     // nhưng CHẠY thì lại để 16 khung với sải dài hơn, hoá ra còn thô hơn cả cái đã loại.
     // Nướng lại 32 khung là đường đúng nhất, nhưng cần gói Spine gốc (không có trong kho).
     // Trong lúc chờ: pha hai khung liền nhau theo phần lẻ của chỉ số — mắt đọc ra chuyển
-    // động liên tục thay vì giật từng nấc. ĐI không cần (3,96px đã ngang mức vẽ thẳng), nên
-    // không pha, khỏi tốn thêm một nhát vẽ mỗi khung hình cho không.
-    if (_kind === 'r' && !_bay){
+    // động liên tục thay vì giật từng nấc.
+    //
+    // ĐI cũng pha, dù 3,96px/khung nghe như đã đủ mịn. Lý do là khối ĐI nay CHỈ chạy dưới
+    // 126 px/giây (xem dangChay): ở 90 px/s nó ra 27 khung/giây trên màn 60 Hz, tức mỗi khung
+    // bảng đứng yên hơn hai lượt vẽ liền — nhìn ra nấc ngay. Pha khung lấp đúng chỗ đó, và
+    // vì cả hai khung đều nằm sẵn trong bộ nhớ đệm sprite nên chỉ tốn thêm một nhát blit.
+    if ((_kind === 'r' || _kind === 'w') && !_bay){
       const _fx = (((wph % _TAU) + _TAU) % _TAU) / _TAU * _n;
       p._phaLe  = _fx - Math.floor(_fx);
       p._phaSau = heroSprite(p.sect, _tier, _gv, _kind, (Math.floor(_fx) + 1) % _n,
