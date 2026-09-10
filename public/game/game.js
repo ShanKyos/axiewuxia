@@ -1917,9 +1917,19 @@ function raiIso(md){
   //   · điểm nội dung — không phủ lên chỗ người chơi phải tới. Bán kính 150px là cỡ một lùm
   //     cộng nửa thân người: đủ để cái cây không che mất con quái hay cái cổng.
   const _canhGiu = _isoDiemNoiDung(md);
+  const _W = md.w || 2600, _H = md.h || 1900;
   const rai = (n, ds, hop) => {
     for (let t = 0, dat = 0; t < n*30 && dat < n; t++){
-      const x = boc()*MAP.w, y = boc()*MAP.h;
+      // Đọc khổ từ `md` chứ không từ `MAP` toàn cục — bền hơn, vì `MAP` dùng chung và thứ tự
+      // gán của nó phụ thuộc đường vào map (startGame khác travelTo).
+      //
+      // ⚠ NHƯNG ĐÂY KHÔNG PHẢI GỐC CỦA LỖI test_obstacles, đã đo: đổi xong số cây bị đếm là
+      // "mọc trong vật cản" vẫn y nguyên 214/260. Hướng đúng có lẽ nằm ở chính ĐỊNH NGHĨA:
+      // `inObstacle` tính MỌI ĐIỂM NGOÀI `diTrong` là chặn, mà rừng viền (`ISO_CAY`) thì
+      // CỐ Ý mọc ngoài đa giác (`!trong && d < 300`). Nếu vậy thì cả bộ lọc của tôi lẫn phép
+      // đếm của bài kiểm đang hỏi sai câu, và phải tách "ngoài đa giác" khỏi "trong hồ" trước
+      // khi sửa tiếp. Chưa xác nhận — đừng vá thêm trước khi đo chỗ này.
+      const x = boc()*_W, y = boc()*_H;
       if (!hop(trongDaGiac(md.diTrong, x, y), _isoCachMep(md.diTrong, x, y))) continue;
       // ⚠ CHƯA XONG. Nới bán kính lên 64 (cỡ nửa tán cây) tưởng chặt hơn, đo ra lại LỌT NHIỀU
       // HƠN: ngoai 10 → 17 cây mọc trong hồ. Bộ lọc mà nới rộng lại lọt nhiều hơn thì nó không
