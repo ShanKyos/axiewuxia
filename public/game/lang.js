@@ -48,12 +48,156 @@ function trFrag(s) {
 
 /* ---- EXACT dictionary: full-string VI -> EN ---- */
 const EXACT = {
+
+  /* ══ LỚP TỰ SỰ — NPC · nhiệm vụ · trùm · vật phẩm cốt truyện ═══════════════════════════
+     Lớp lớp/chiêu/map đã Tây hoá từ đợt trước (Dark Knight · Werebear Woods · Poison Arrow),
+     nhưng lớp KỂ CHUYỆN thì chưa: tên nhiệm vụ, tên trùm, vật phẩm lore và bốn map Corran
+     vẫn ra tiếng Việt khi người chơi bật English.
+     Bám đúng bộ danh từ riêng đã chốt — Corran · Gloam · Sapidae · Atia · Lunacia · Vaeldra
+     — và giữ giọng MU S6: mộc, hơi cổ, không một chữ kiếm hiệp. "Tướng Quân" canh vùng dịch
+     là Warden (người trấn giữ) chứ không phải General: chúng canh một nơi chốn, không chỉ
+     huy quân đội. */
+
+  // ── NPC trong thành ──
+  'Trưởng Làng': 'Village Elder',
+  'Thợ Rèn · Lò Rèn Hoàng Gia': 'Blacksmith · Royal Forge',
+  'Nhà Giả Kim · Tiệm Thuốc': 'Alchemist · Apothecary',
+  'Binh Khí Chủ · Vũ Khí Phường': 'Weaponmaster · Armoury',
+  'Người Giữ Chuồng': 'Stablekeeper',
+  'Quan Truy Nã': 'Bounty Officer',
+  'Chủ Sảnh Cầu May': 'Keeper of the Fortune Hall',
+  'Kẻ Trông Vách': 'Wallwatcher',
+  'Lính Gác Cổng Bắc': 'North Gate Guard',
+  'Lính Gác Cổng Nam': 'South Gate Guard',
+  'Lính Gác Cổng Tây': 'West Gate Guard',
+  'Lính Gác Cổng Đông': 'East Gate Guard',
+  'Người Bán Rong': 'Pedlar',
+  'Thợ Mộc': 'Carpenter',
+  'Người Gánh Nước': 'Water Carrier',
+  'Lũ Trẻ Chạy Quanh': 'Children at Play',
+  'Lính Tuần Phố': 'Street Patrol',
+  'Người Quét Phố': 'Street Sweeper',
+  'Chủ Quán Trọ · Trà Quán': 'Innkeeper · Teahouse',
+  'Người Đưa Tin': 'Courier',
+  'Bà Bán Hoa': 'Flower Seller',
+  'Ông Lão Ngồi Ghế Đá': 'Old Man on the Stone Bench',
+  'Người Luyện Chimera': 'Chimera Binder',
+  'Thợ Nhuộm': 'Dyer',
+  'Kẻ Hát Rong': 'Wandering Singer',
+  'Thợ Rèn Lưu Vong': 'Exiled Smith',
+
+  // ── NPC cốt truyện, thêm bằng NPCS.push() trong game.js (không nằm ở canbang.js) ──
+  // Mấy cái này suýt lọt: bảng NPC nằm ở HAI chỗ. canbang.js khai 26 người trong thành, rồi
+  // game.js push thêm 12 người cốt truyện rải các map. Rút tên mà chỉ đọc canbang là thiếu
+  // đúng những người dẫn chuyện.
+  'Trưởng Lão Rell': 'Elder Rell',
+  'Trinh Sát Wren': 'Scout Wren',
+  'Lão Tướng Brann': 'Old Warden Brann',
+  'Dax, Kẻ Do Thám': 'Dax the Scout',
+  'Sylas, Người Giữ Tổ': 'Sylas, Keeper of the Nest',
+  'Liora, Ẩn Sĩ Bird Tribe Heights': 'Liora, Hermit of Bird Tribe Heights',
+  'Người Gác Rừng Corran': 'Corran Forest Keeper',
+  'Deep Ravine · Vực Thẳm': 'Deep Ravine · The Abyss',
+  'East Ravine · Vực Thẳm': 'East Ravine · The Abyss',
+  'North Ravine · Vực Thẳm': 'North Ravine · The Abyss',
+
+  // ── Bốn map còn tiếng Việt ──
+  'Lối Mòn Corran': 'Corran Trail',
+  'Rẻo Rừng Corran': 'Corran Fringe',
+  'Trũng Nứt Corran': 'Corran Rift Hollow',
+  'Tầng Sâu': 'The Deep',
+
+  // ── Nhiệm vụ chính tuyến, chương I-V ──
+  'Ngọn Đèn Bên Giếng': 'The Lamp by the Well',
+  'Ra Ngoài Cổng Tây': 'Out the West Gate',
+  'Người Giữ Đèn': 'The Lampkeeper',
+  'Dầu Cho Ngọn Đèn': 'Oil for the Lamp',
+  'Thứ Ăn Hồn Kẹt': 'What Eats the Stranded Souls',
+  'Thép Chịu Được Bóng': 'Steel That Holds Against Shadow',
+  'Ngồi Ở Miếu Atia': 'Sitting at the Atia Shrine',
+  'Đòn Của Riêng Ngươi': 'A Blow of Your Own',
+  'Kẻ Canh Miếu': 'The Shrine Watcher',
+  'Thủ Lĩnh Gloam': 'The Gloam Chieftain',
+  'Tin Từ Trại Chăn': 'Word from the Herd Camp',
+  'Kẻ Đi Trước': 'The One Who Went Ahead',
+  'Dầu Cho Cả Vùng': 'Oil for the Whole Region',
+  'Đàn Bị Dồn': 'The Driven Herd',
+  'Lò Của Reptile': 'The Reptile Forge',
+  'Thứ Sinh Ra Từ Vết Nứt': 'Born of the Rift',
+  'Rừng Của Werebear': "The Werebear's Wood",
+  'Đường Xuống Địa Đạo': 'The Way Down to the Tunnels',
+  'Bẫy Bị Đọc Vị': 'The Trap, Read',
+  'Tầng Dưới Cùng': 'The Lowest Floor',
+  'Rune Trong Thép': 'The Rune in the Steel',
+  'Kẻ Đào Ngược': 'The One Who Dug Upward',
+  'Nhà Trên Ngọn Thông': 'Houses in the Pine Crowns',
+  'Bài Hát Bị Cắt': 'The Song Cut Short',
+  'Kẻ Săn Người Giữ Đèn': 'Hunter of Lampkeepers',
+  'Đủ Sức Đi Tiếp': 'Strong Enough to Go On',
+  'Đá Nóng Quanh Năm': 'Stone Hot All Year',
+  'Mỏ Đã Tắt Lửa': 'The Mine Gone Cold',
+  'Đếm Ngược Tới Đầm': 'Counting Down to the Marsh',
+  'Đầm Của Dusk': "Dusk's Marsh",
+  'Vòng Trong Cùng': 'The Innermost Ring',
+  'Chỗ Hồn Quay Về': 'Where the Souls Return',
+
+  // ── Trùm vùng ──
+  'Chúa Heo Rừng': 'Boar Lord',
+  'Chúa Bầy Gai Tím': 'Lord of the Violet Thorns',
+  'Chấp Sự Gloam': 'Gloam Deacon',
+  'Thủ Lĩnh Đoàn Gloam': 'Gloam Warband Chief',
+  'Đầu Mục Gloam': 'Gloam Headman',
+  'Gai Tím Độc Nhãn': 'One-Eyed Violet Thorn',
+  'Đặc Vụ Gloam': 'Gloam Agent',
+  'Ma Sói Sương Trắng': 'Whitemist Werewolf',
+  'Kẻ Đổi Phe': 'The Turncoat',
+  'Golem Gỗ Cổ Đại': 'Ancient Wood Golem',
+  'Trưởng Lão Tha Hóa': 'The Corrupted Elder',
+  'Chỉ Huy Vong Binh': 'Wraith Commander',
+  'Kẻ An Táng Bóng Tối': 'Gravedigger of Shadows',
+  'Chúa Tể Bất Tử': 'The Undying Lord',
+  'Kẻ Lạc Lối Tuyệt Vọng': 'The Despairing Lost',
+  'Cỏ Dại Băng Giá': 'Frostweed',
+  'Xoáy Sương Nguyền': 'The Cursed Mistwhirl',
+  'Kỵ Sĩ Trưởng Tro Tàn': 'Ashen Knight-Captain',
+  'Cung Thủ Tinh Nhuệ Tro Tàn': 'Ashen Elite Archer',
+  'Thống Lĩnh Tro Tàn': 'Ashen Overlord',
+  'Tướng Quân Bão Tố': 'Storm Warden',
+  'Huyết Sát Bão Tố': 'Storm Bloodreaver',
+  'Tướng Quân Cửa Ải': 'Warden of the Pass',
+  'Tướng Quân Werebear Woods': 'Warden of Werebear Woods',
+  'Tướng Quân Bug Tribe Tunnels': 'Warden of Bug Tribe Tunnels',
+  'Tướng Quân Bird Tribe Heights': 'Warden of Bird Tribe Heights',
+  'Tướng Quân Reptile Sunstone Flats': 'Warden of Reptile Sunstone Flats',
+  'Tướng Quân Dusk Marsh': 'Warden of Dusk Marsh',
+
+  // ── Vật phẩm cốt truyện (đọc được trong Nhật Ký) ──
+  'Nửa Quân Bài Gloam': 'Half a Gloam Token',
+  'Bản Đồ Vẽ Sai': 'The Wrongly Drawn Map',
+  'Tàn Quyển «Ngũ Trụ Ký»': 'Fragment · «Chronicle of the Five Pillars»',
+  'Xương Chim Khắc Chữ': 'Inscribed Bird Bone',
+  'Thư Mời Không Địa Chỉ': 'Invitation Without an Address',
+  'Trang Nhật Ký Thủ Hộ': "Warden's Journal Page",
+  'Di Thư Người Gác Rừng': "The Forest Keeper's Bequest",
+  'Lệnh Điều Quân': 'Marching Orders',
+  'Bích Họa Ngũ Trụ': 'Mural of the Five Pillars',
+  'Lá Thư Chưa Kịp Gửi': 'The Letter Never Sent',
+  'Bảng Tên Đội Tiên Phong': 'Vanguard Nameplate',
+  'Bộ Giáp Đứng Nguyên': 'The Armour Still Standing',
+  'Nhật Ký Viết Dở': 'The Unfinished Journal',
+  'Huy Hiệu Gỡ Từ Xác': 'Badge Taken from a Body',
+  'Bia Tự Khắc': 'The Self-Carved Stone',
+  'Chỗ Trống Thứ Bảy': 'The Seventh Empty Place',
+  'Quân Lệnh Cũ': 'An Old Marching Order',
+  'Đá Khắc Lời Trăng Trối': 'Stone of Last Words',
+  'Mật Lệnh Rách': 'A Torn Secret Order',
+  'Thư Cuối Của Tướng Quân': "The Warden's Final Letter",
   // Brand & chapters
   'KẺ KHÉP VẾT NỨT': 'THE RIFTCLOSER',
-  // Sects & roles
-  
-  'Bạch Đà Sơn': 'White Camel Mt.', 'Minh Giáo': 'Ming Cult', 'Đoàn Thị': 'Duan Clan',
-  'Đào Hoa': 'Peach Blossom',
+  // Bốn mục môn phái kiếm hiệp đời đầu (Bạch Đà Sơn · Minh Giáo · Đoàn Thị · Đào Hoa) ĐÃ GỠ.
+  // Đã đếm: bốn chuỗi nguồn đó không còn xuất hiện ở đâu người chơi nhìn thấy — canbang.js 0
+  // lần, game.js chỉ còn 3 lần trong CHÚ THÍCH. Giữ lại thì chúng nằm im vô hại, nhưng chúng
+  // mã hoá sẵn đúng thứ từ vựng mà Quy tắc 1 cấm, chờ ngày ai đó chép lại.
   // Elements
   'Kim': 'Metal', 'Mộc': 'Wood', 'Thủy': 'Water', 'Hỏa': 'Fire', 'Thổ': 'Earth',
   // Maps
