@@ -2,7 +2,13 @@
 // (2) gradient tăng dần theo khoảng cách từ spawn, (3) mỗi map có bộ quái riêng,
 // (4) mọi quái nhiệm vụ đều spawn được, (5) chỉ số tăng đơn điệu theo cấp.
 const { chromium } = require('playwright');
-const FIELD = ['daohoa','ngoai','chungnam','comoc','tuyettinh','mongco','nhanmon'];
+// FIELD là THANG CHÍNH TUYẾN, không phải "mọi map ngoài trời": nó đo dải cấp nối tiếp nhau, nên
+// hai map treo bên nhánh (Lối Mòn · Trũng Nứt) chưa bao giờ có tên ở đây.
+// Ô đầu thang nay là Rẻo Rừng Corran chứ không phải Plant Tribe Glade — hai map ấy đã hoán dải
+// cấp (xem MAPS trong data/canbang.js). Plant Tribe Glade rơi xuống đúng vai trò nhánh mà Rẻo
+// Rừng Corran vốn giữ: dải 38-48 rẽ ra từ Werebear Woods, dùng chung bộ quái với Bug Tribe
+// Tunnels nên KHÔNG nằm kề nó trên thang được (luật "map liền kề không trùng bộ quái" bên dưới).
+const FIELD = ['corran','ngoai','chungnam','comoc','tuyettinh','mongco','nhanmon'];
 
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });

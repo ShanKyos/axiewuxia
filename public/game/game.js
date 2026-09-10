@@ -1936,7 +1936,7 @@ function bayCo(pk, md){
   return Math.floor(pk.n * (1 + Math.min(5, truDaGo()) * 0.08));
 }
 
-let curMap = 'daohoa';
+let curMap = 'corran';
 let zoneBanner = null; // { text, sub, color, t }
 
 // ---------- Tường thành & Cổng thành — Sapidae Chiefdom / Outskirts ----------
@@ -1959,14 +1959,14 @@ const GATES = [
   // có chuyện vừa sang đã bị hất ngược.
   { map:'ardhaven', x:3200, y:2910, to:'ngoai',      name:'Cổng Nam → Beast Herd Camp' },
   { map:'ardhaven', x:3200, y:290,  to:'tuyettinh',  name:'Cổng Bắc → Bird Tribe Heights' },
-  { map:'ardhaven', x:480,  y:1600, to:'daohoa',     name:'Cổng Tây → Plant Tribe Glade' },
+  { map:'ardhaven', x:480,  y:1600, to:'corran',     name:'Cổng Tây → Rẻo Rừng Corran' },
   { map:'ardhaven', x:5920, y:1600, to:'chungnam',   name:'Cổng Đông → Werebear Woods' },
   { map:'ngoai',      x:1300, y:240,  to:'ardhaven', name:'Qua Cổng Thành → Sapidae Chiefdom' },
   // ⚠ Ba cổng thành Bắc/Tây/Đông VỐN LÀ MỘT CHIỀU: đi sang Plant Tribe Glade / Werebear Woods /
   // Bird Tribe Heights rồi không có cổng nào về, phải mở bảng Bản Đồ mà dịch chuyển. Chỉ cổng Nam
   // (Outskirts) có đường về. Nay bù đủ, đặt cạnh chính điểm thả của từng vùng — đúng khuôn mà
   // Outskirts đang dùng: bước ra khỏi chỗ vừa tới là thấy cổng về.
-  { map:'daohoa',    x:295, y:555,  to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
+  { map:'corran',    x:256, y:1088, to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
   { map:'chungnam',  x:270, y:1575, to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
   { map:'tuyettinh', x:216, y:999,  to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
   // Tầng Sâu: miệng giếng ở góc tây-nam Quảng Trường Atia, cách điểm thả ~750px. Rơi vào khoảng
@@ -2012,12 +2012,21 @@ const GATES = [
   // chơi thấy — không hứa gì về vị trí tương đối giữa hai map, và game cũng không có bản đồ thế
   // giới để mà mâu thuẫn.
   { map:'chungnam',  x:1921, y:150,  to:'comoc',    name:'Lối Bắc → Bug Tribe Tunnels' },
-  { map:'chungnam',  x:2480, y:700,  to:'corran',   name:'Lối Đông → Rẻo Rừng Corran' },
-  // x=175 chứ không phải sát mép: dải nền tối ngoài khối đất chạy từ x=7 tới x=133 và đã thành
-  // vật cản (xem MAP_OBSTACLES.corran) — cổng đặt trong đó thì không ai với tới được.
-  { map:'corran',    x:256,  y:1088, to:'chungnam', name:'Lối Tây → Werebear Woods' },
-  { map:'corran',    x:4864, y:704,  to:'loimon',   name:'Lối Đông → Lối Mòn Corran' },
-  { map:'loimon',    x:110,  y:727,  to:'corran',   name:'Lối Tây → Rẻo Rừng Corran' },
+  { map:'chungnam',  x:2480, y:700,  to:'daohoa',   name:'Lối Đông → Plant Tribe Glade' },
+  // ⚠ BA LỐI RÌA NÀY THEO DẢI CẤP, KHÔNG THEO TẤM NỀN. Chúng vốn mọc trên Rẻo Rừng Corran hồi
+  // map ấy còn giữ dải 38-42; khi hai map hoán dải, chúng phải sang Plant Tribe Glade — nếu
+  // không thì người chơi cấp 1 vừa bước qua Cổng Tây đã đứng cạnh một cái cổng dẫn thẳng vào
+  // Lối Mòn Corran cấp 42.
+  //
+  // Chỗ đặt trên khổ 2600x1900 chọn theo hai ràng buộc ĐO ĐƯỢC, không theo mắt:
+  //   · `test_noimap` đòi ĐIỂM TỚI của lối rìa nằm trong 400px tính từ mép map;
+  //   · `test_bossplace` đòi mọi điểm tới cách Trùm Vùng ≥700px — mà `dh1` đứng ngay (1130,670)
+  //     giữa nửa bắc và `dh4` ở (2236,1520) góc đông-nam. Nên lối bắc phải lùi hẳn sang đông
+  //     (1900,190), còn lối đông phải nằm TRÊN dh4 chứ không dưới.
+  // Cả ba đều tránh năm hồ trong MAP_OBSTACLES.daohoa.
+  { map:'daohoa',    x:256,  y:600,  to:'chungnam', name:'Lối Tây → Werebear Woods' },
+  { map:'daohoa',    x:2400, y:760,  to:'loimon',   name:'Lối Đông → Lối Mòn Corran' },
+  { map:'loimon',    x:110,  y:727,  to:'daohoa',   name:'Lối Tây → Plant Tribe Glade' },
   // ── NGÃ BA CORRAN ── Từ Rẻo Rừng rẽ được hai lối CÙNG DẢI CẤP, khác nhau ở luật và ở việc
   // có đi tiếp được không: lối đông vào hành lang `pk` rồi phải quay lại, lối bắc vào trũng
   // `freepk` và đi thẳng tiếp sang Bug Tribe Tunnels. Xem khối "NGA BA THAT" trong canbang.js.
@@ -2029,8 +2038,8 @@ const GATES = [
   // Chỗ đặt cổng bên corran DÒ BẰNG MÁY, không chấm tay: hai thuỳ nam sâu của Rẻo Rừng đều đã
   // có trùm vùng đứng sẵn, nên cổng nam đầu tiên tôi đặt rơi cách trùm `co1` đúng 216px và
   // test_bossplace bắt ngay. Chỗ này cách trùm gần nhất 2.409px.
-  { map:'corran',   x:704,  y:384,  to:'trungnut', name:'Lối Bắc → Trũng Nứt Corran' },
-  { map:'trungnut', x:576,  y:2880, to:'corran',   name:'Lối Nam → Rẻo Rừng Corran' },
+  { map:'daohoa',   x:1900, y:190,  to:'trungnut', name:'Lối Bắc → Trũng Nứt Corran' },
+  { map:'trungnut', x:576,  y:2880, to:'daohoa',   name:'Lối Nam → Plant Tribe Glade' },
   { map:'trungnut', x:3840, y:640,  to:'comoc',    name:'Lối Đông → Bug Tribe Tunnels' },
   // Mép tây comoc đã có cổng đi Werebear Woods ở y=1366; cổng này ở y=1700, cách 334px — xa hơn
   // hẳn bán kính bắt cổng 90px nên không cổng nào nuốt cổng nào. Chỗ đặt cũng dò bằng máy trong
@@ -6090,11 +6099,11 @@ const BAOHAP_TIERS = [ null,
     })),
 ];
 // Ma Tôn Giáng Thế: 0h/4h/8h/12h/16h/20h — Hạ Giới & Thượng Giới luân phiên
-const MATON_HA = ['daohoa','ngoai','chungnam'];
-const MATON_THUONG = ['comoc','tuyettinh','mongco','nhanmon'];
+const MATON_HA = ['corran','ngoai','chungnam'];
+const MATON_THUONG = ['daohoa','comoc','tuyettinh','mongco','nhanmon'];
 // Truy Nã Lệnh — boss săn ngày theo vùng cấp (NPC Lính Tuần · Sapidae Chiefdom)
 const TRUYNA_BANDS = [
-  { max:14,  map:'daohoa',    name:'Đầu Lĩnh Gloam' },
+  { max:14,  map:'corran',    name:'Đầu Lĩnh Gloam' },
   { max:29,  map:'ngoai',     name:'Đại Đầu Mục Gloam' },
   { max:44,  map:'chungnam',  name:'Chỉ Huy Phản Loạn Werebear Woods' },
   { max:59,  map:'comoc',     name:'Chúa Tể Hang Sâu' },
@@ -6195,7 +6204,7 @@ let saveTimer = 0;
 
 const SPRING = { x: 500, y: 620, r: 70 };
 const NPC = { x: 400, y: 400, name:'Trưởng Làng' };
-const BOSS_ARENA = { x: 2300, y: 500 };
+const BOSS_ARENA = { x: 3451, y: 1430 };
 
 // QA bot playtest: NV3 (cấp 3) bắt nhặt thảo dược giữa bầy Tàn Lang (cấp 3) & Trận Nhân (cấp 9)
 // khiến tân thủ chết liên tục — dời bụi thuốc về rừng phía đông GẦN làng, ngoài tầm aggro của cụm quái mạnh
@@ -8176,7 +8185,7 @@ function spawnZoneBoss(bd, kind){
   if (!def.skel && !MOB_IMGS[m.type]){ const im = new Image(); im.src = def.img; MOB_IMGS[m.type] = im; }
   mobs.push(m); return m;
 }
-const BOSS_MINION = { daohoa:'bandit', ngoai:'bandit', chungnam:'phando', comoc:'thinu', tuyettinh:'ttdetu', mongco:'cuongbinh', nhanmon:'daokhach' };
+const BOSS_MINION = { corran:'bandit', daohoa:'bandao', ngoai:'bandit', chungnam:'phando', comoc:'thinu', tuyettinh:'ttdetu', mongco:'cuongbinh', nhanmon:'daokhach' };
 function bossStartTele(m, mvId){
   const mv = BOSS_MOVES[mvId]; if (!mv) return;
   if (mvId === 'cuong' && m.hp > m.maxHp*0.5){ m.moveT = 2; return; } // Cuồng Hóa chỉ khi dưới nửa máu
@@ -9828,16 +9837,16 @@ function questTarget(q){
     const n = NPCS.find(x => x.id === npcId);
     if (n) return { map:n.map, x:n.x, y:n.y, label:'Gặp ' + n.name, npcId:n.id };
   }
-  if (q.type === 'meditate' && typeof SPRING !== 'undefined') return { map:'daohoa', x:SPRING.x, y:SPRING.y, label:'Suối Ký Ức' };
+  if (q.type === 'meditate' && typeof SPRING !== 'undefined') return { map:'corran', x:SPRING.x, y:SPRING.y, label:'Suối Ký Ức' };
   if (q.type === 'enhance'){ const n = NPCS.find(x => x.talk === 'forge'); if (n) return { map:n.map, x:n.x, y:n.y, label:'Lò Rèn Hoàng Gia', npcId:n.id }; }
   if (q.type === 'collect' && typeof HERB_SPOTS !== 'undefined'){
     // herbMap riêng, không dùng q.map — q.map trên vài NV chính (VD #12) là nơi trả NV (NPC ở
     // Sapidae Chiefdom), khác với nơi thật sự hái Thảo Dược.
-    const hm = q.herbMap || 'daohoa';
+    const hm = q.herbMap || 'corran';
     const hs = HERB_SPOTS[hm];
     if (hs) return { map:hm, x:hs[0].x, y:hs[0].y, label:'Bãi Thảo Dược' };
   }
-  if (q.type === 'boss' && typeof BOSS_ARENA !== 'undefined') return { map:'daohoa', x:BOSS_ARENA.x, y:BOSS_ARENA.y, label:'Đài Bình Cảnh' };
+  if (q.type === 'boss' && typeof BOSS_ARENA !== 'undefined') return { map:'corran', x:BOSS_ARENA.x, y:BOSS_ARENA.y, label:'Đài Bình Cảnh' };
   if (q.mob){
     let best = null;
     for (const id in MAPS){
@@ -11047,9 +11056,9 @@ function onDeath(){
   ov.classList.remove('hidden');
 }
 window.respawn = function(){
-  // Hồi sinh về điểm an toàn: làng Đào Hoa nếu chết ở map PK, còn lại tại chỗ spawn của map
+  // Hồi sinh về điểm an toàn: làng trên map khởi đầu nếu chết ở map PK, còn lại tại chỗ spawn
   const md = mapDef();
-  if (md.type !== 'safe' && !md.dungeon){ curMap = 'daohoa'; buildWorld(); }
+  if (md.type !== 'safe' && !md.dungeon){ curMap = 'corran'; buildWorld(); }
   const sp = mapDef().spawn;
   player.x = sp.x + 40; player.y = sp.y + 40;
   player.hp = player.maxHp; player.qi = player.maxQi;
@@ -11256,7 +11265,7 @@ function render(){
   }
 
   // village / city labels
-  if (md.village) drawCalligraphy('Thanh Ngưu Thôn', 400, 310, '#6a5836', 18);
+  if (md.village) drawCalligraphy('Thanh Ngưu Thôn', 430, 340, '#6a5836', 18);
   // cổng KHÔNG vẽ ở đây nữa — nó đi vào danh sách sắp theo y bên dưới (xem drawOneGate)
 
   drawObstacleRim();   // hàng đá dọc mép vùng chặn — vẽ trước decor để cây/đá rải phủ lên tự nhiên
@@ -22038,7 +22047,7 @@ window.wipeSave = function(confirmed){
 // Bảy người dẫn chương mỗi người gọi tên người trước, và Brann ở chương cuối gọi tên cả sáu:
 // trước đây mỗi người giữ đúng một chương rồi tắt hẳn, không ai nhắc tới ai.
 NPCS.push(
-  { id:'duocsu',    name:'Dược Sư',              map:'daohoa',     x:560,  y:430,  img:'assets/npcs/duocsu.png',    talk:'quest',
+  { id:'duocsu',    name:'Dược Sư',              map:'corran',     x:560,  y:430,  img:'assets/npcs/duocsu.png',    talk:'quest',
     lore:{
       idle:  '"Ta pha thuốc cho cả đảo này từ trước khi trời nứt. Giờ nửa số bệnh ta chữa không có trong sách nào cả."',
       offer: '"Chưa tới lúc. Ngươi còn chưa đứng vững thì ta đưa thuốc cho ai uống?"',
@@ -22321,10 +22330,11 @@ window.travelTo = function(mapId, from){
   snapCamera(); // đổi map: camera đặt thẳng vào vị trí mới, không pan từ map cũ
   if (md.type === 'safe') player.pk = false;
   const zt = zoneType();
-  // daohoa không bị khoá theo reqMain (mở sẵn từ đầu) nên câu dẫn nhập Ngũ Trụ của nó
-  // được gắn vào đúng thời điểm đặt chân tới lần đầu, thay cho banner tên vùng thường
-  const _daohoaFirst = mapId === 'daohoa' && !(player.wpUnlocked && player.wpUnlocked.daohoa);
-  const _rlore = _daohoaFirst && typeof REGION_UNLOCK_LORE !== 'undefined' ? REGION_UNLOCK_LORE.daohoa : null;
+  // Map khởi đầu không bị khoá theo reqMain (mở sẵn từ đầu) nên câu dẫn nhập Ngũ Trụ của nó
+  // được gắn vào đúng thời điểm đặt chân tới lần đầu, thay cho banner tên vùng thường.
+  // Sau khi hoán dải cấp, map ấy là Rẻo Rừng Corran chứ không còn là Plant Tribe Glade.
+  const _dauTienFirst = mapId === 'corran' && !(player.wpUnlocked && player.wpUnlocked.corran);
+  const _rlore = _dauTienFirst && typeof REGION_UNLOCK_LORE !== 'undefined' ? REGION_UNLOCK_LORE.corran : null;
   zoneBanner = _rlore ? { text:'🗺 ' + md.name, sub:_rlore.sub, color:'#ffd76a', t:4.5 }
                        : { text: md.name, sub: `${zt.name} — ${md.desc}`, color: zt.color, t: 3.2 };
   addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:zt.color, big:true });
@@ -23172,6 +23182,10 @@ function tuongQuanDaHa(){
 }
 const REGION_UNLOCK_LORE = {
   ardhaven:{ sub:'Vỏ kén đã phá — trở về Sapidae Chiefdom trong tiếng hoan hô, chính thức bước vào Chương II.' },
+  // Rẻo Rừng Corran nay là vùng đầu tiên ngoài tường thành (hoán dải cấp với Plant Tribe Glade),
+  // nên câu dẫn nhập Ngũ Trụ đọc ở đây. Câu của Plant Tribe Glade giữ nguyên bên dưới — nó vẫn
+  // hiện khi người chơi đặt chân tới vùng ấy ở dải 38-48.
+  corran:    { sub:'Rẻo Rừng Corran — khoảnh rừng đầu tiên ngoài tường thành. Chưa có trụ nào ở đây, chỉ có thứ đang lấn tới sát chân tường.' },
   daohoa:    { sub:'Plant Tribe Glade — hòn đảo đã hứng ngươi khi ngươi rơi xuống. Chưa có trụ nào ở đây, chỉ có hậu quả.' },
   ngoai:     { sub:'"Đất ngoài thành đang rung." Chưa phải trụ — nhưng là dấu hiệu đầu tiên rằng có trụ đang lung lay.' },
   chungnam:  { sub:'"Trụ Werebear Woods do ta giữ." Một Tướng Quân đơn độc chống đỡ cả cánh rừng — trụ thứ nhất trong năm.' },
@@ -24930,8 +24944,10 @@ window.debugMaTon = function(sec){ MATON.next = Date.now() + (sec || 5)*1000; MA
 // Xâm Lăng Vàng). Một đàn quái dát vàng tràn vào 1 map thường trong 12 phút; mỗi con
 // CHẮC CHẮN rơi Bảo Hạp theo bậc map (I-V), Chúa Đàn Vàng rơi hạp cao hơn 1 bậc.
 // Không lưu state — mốc giờ tính lại được từ đồng hồ thật, đến trễ coi như lỡ chuyến.
-const GOLDEN_FIELD = ['daohoa','ngoai','chungnam','comoc','tuyettinh','mongco','nhanmon'];
-const GOLDEN_BOX = { daohoa:1, ngoai:2, chungnam:2, comoc:3, tuyettinh:4, mongco:4, nhanmon:5 };
+const GOLDEN_FIELD = ['corran','ngoai','chungnam','daohoa','comoc','tuyettinh','mongco','nhanmon'];
+// Bậc hộp đi theo DẢI CẤP: Plant Tribe Glade lên 38-48 nên nó rời bậc 1 sang bậc 3, đứng cạnh
+// Bug Tribe Tunnels (42-56); Rẻo Rừng Corran nhận bậc 1 cùng với dải 1-12.
+const GOLDEN_BOX = { corran:1, ngoai:2, chungnam:2, daohoa:3, comoc:3, tuyettinh:4, mongco:4, nhanmon:5 };
 let GOLDEN = { next: 0, warned: false, active: false, map: null, endsAt: 0, spawnedOn: null, left: 0 };
 function goldenNextBoundary(after){
   const d = new Date(after); d.setMinutes(0, 0, 0); d.setHours(d.getHours() + 1);
@@ -25019,7 +25035,7 @@ window.debugGolden = function(sec){ GOLDEN.next = Date.now() + (sec || 5)*1000; 
 // Boss thế giới lớn nhất game. Khác hai sự kiện kia ở chỗ nó KHÔNG chọn một map: khi cửa vực
 // mở, mọi bãi săn đều nứt — người chơi cấp nào cũng có phần, boss lên cấp theo map đang đứng.
 // Mốc giờ tính lại được từ đồng hồ thật nên không cần lưu; đến trễ là lỡ chuyến, đúng nhịp MU.
-const RIFT_FIELD = ['daohoa','ngoai','chungnam','comoc','tuyettinh','mongco','nhanmon'];
+const RIFT_FIELD = ['corran','ngoai','chungnam','daohoa','comoc','tuyettinh','mongco','nhanmon'];
 const RIFT_WINDOW_MS = 45*60000;   // cửa vực mở 45 phút
 const RIFT_WARN_MS   = 15*60000;   // báo trước 15 phút — sự kiện lớn nhất nên báo sớm nhất
 const RIFT_MAX_KILLS = 3;          // chạy map kiếm thêm được, nhưng tối đa 3 con/lượt
