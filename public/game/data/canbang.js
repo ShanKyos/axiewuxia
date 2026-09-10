@@ -677,6 +677,21 @@ window.SECTS = {
 // packs: quái đứng thành cụm 5-7 con, đánh 1 con cả cụm lao vào (GDD Mob Mechanics)
 window.MAPS = {
   daohoa: { name:'Plant Tribe Glade', min:1, range:'1 - 12', type:'safe', ground:'#ece2c8', patch:'#7a86ad',
+    // ── SÀN ISOMETRIC ──────────────────────────────────────────────────────────────────
+    // Sinh bằng tools/iso/vung_map.py, KHÔNG chạm tay. Đa giác MỌC RA TỪ chính các điểm
+    // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
+    // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
+    // lại, đừng sửa tay toạ độ ở đây.
+    //   sàn 83.4%  ·  22 đỉnh  ·  6 lùm chặn
+    sanIso:true, isoCo:['nen_co1','nen_co2','nen_co3','nen_co4'],
+    isoDat:['nen_dat1','nen_dat2','nen_dat3','nen_dat4'],
+    diTrong: [
+      [2336,1808], [992,1808], [864,1712], [576,1776], [320,1776], [64,1680],
+      [48,160], [192,48], [416,48], [672,144], [736,48], [1184,48],
+      [1248,112], [1472,112], [1728,176], [1984,48], [2176,144], [2496,144],
+      [2512,1120], [2448,1312], [2512,1376], [2512,1664],
+    ],
+    isoCum: [[2240,672], [352,960], [1440,1696], [160,672], [2496,448], [128,1248],],
     spawn:{ x:460, y:460 }, spawnFrom:{ ardhaven:{ x:300, y:330 } }, village:true, spring:true, herbs:true, boss:true, trees:70, rocks:26,
     desc:'Nơi đặt trại ấp Plant Tribe — bãi săn của người mới. Chimera yếu, đồ rơi nhập môn, chỗ hiền lành để học cách chơi.',
     // Cụm quái xếp theo vòng từ spawn ra: yếu (boar/hautu) gần nhất → mạnh dần (wolf/bandit/
@@ -803,6 +818,21 @@ window.MAPS = {
     //   #13 (4340,2340) #14 (5000,2340) #15 (5660,2340)  hàng nam, đầu đông
     packs: [], duhiep: null },
   ngoai: { name:'Beast Herd Camp', min:10, range:'14 - 24', type:'safe', ground:'#ddd2ae', patch:'#7a7048',
+    // ── SÀN ISOMETRIC ──────────────────────────────────────────────────────────────────
+    // Sinh bằng tools/iso/vung_map.py, KHÔNG chạm tay. Đa giác MỌC RA TỪ chính các điểm
+    // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
+    // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
+    // lại, đừng sửa tay toạ độ ở đây.
+    //   sàn 75.6%  ·  22 đỉnh  ·  3 lùm chặn
+    sanIso:true, isoCo:['nen_co1','nen_co2','nen_co3','nen_co4'],
+    isoDat:['nen_dat1','nen_dat2','nen_dat3','nen_dat4'],
+    diTrong: [
+      [1632,1808], [928,1808], [832,1744], [320,1776], [64,1680], [48,672],
+      [144,640], [288,432], [672,368], [864,144], [1184,48], [1408,48],
+      [1632,176], [1760,176], [1888,272], [2048,272], [2272,144], [2496,144],
+      [2512,1216], [2512,1568], [2304,1776], [1824,1712],
+    ],
+    isoCum: [[480,1568], [2400,576], [1568,1056],],
     spawn:{ x:1300, y:330 }, trees:56, rocks:22, herbs:true,
     // Câu đầu vốn nằm ở REGION_UNLOCK_LORE.ngoai và chỉ hiện ĐÚNG MỘT LẦN lúc mở khoá vùng.
     // Dòng người chơi đọc mỗi lần mở Bản Đồ lại là dòng "đất an toàn để luyện cấp" — tức là
@@ -833,7 +863,23 @@ window.MAPS = {
       { id:'chimera_bo', ten:'Bãi Tượng Vỡ Lệnh', dai:[0.975,1.0], cung:[94,146], cum:[1,1],
         dan:[{ mob:'chimera_bo', n:5 }] },   // C24 · Tượng Đá Vỡ Lệnh
     ], duhiep: null },
-  chungnam: { name:'Werebear Woods', min:20, range:'24 - 38', type:'pk', ground:'#d4d0ac', patch:'#6a7a52',
+  chungnam: { name:'Werebear Woods', min:20, range:'24 - 38', type:'pk', ground:'#232b1c', patch:'#6a7a52',
+    // ── SÀN ISOMETRIC ──────────────────────────────────────────────────────────────────
+    // Sinh bằng tools/iso/vung_map.py, KHÔNG chạm tay. Đa giác MỌC RA TỪ chính các điểm
+    // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
+    // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
+    // lại, đừng sửa tay toạ độ ở đây.
+    //   sàn 71.7%  ·  22 đỉnh  ·  4 lùm chặn
+    sanIso:true, isoCo:['nen_co1','nen_co2','nen_co3','nen_co4'],
+    isoDat:['nen_dat1','nen_dat2','nen_dat3','nen_dat4'],
+    isoNhuom:{ mau:'#3d5230', do:0.34 },
+    diTrong: [
+      [2336,1808], [2112,1808], [1952,1616], [1824,1616], [1632,1808], [352,1808],
+      [48,1664], [48,672], [416,656], [496,448], [704,304], [864,304],
+      [1024,432], [1344,464], [1440,560], [1648,512], [1616,192], [1696,48],
+      [2368,48], [2512,128], [2512,1376], [2512,1664],
+    ],
+    isoCum: [[352,960], [768,1024], [2400,1088], [128,1248],],
     spawnFrom:{ comoc:{ x:1921, y:260 }, corran:{ x:2450, y:700 } }, spawn:{ x:400, y:1500 }, trees:80, rocks:34,
     desc:'Từ đây là đất PK — hạ người khác được, bị hạ cũng được. Chimera ở đây rơi Cốt bậc đầu.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
@@ -1104,7 +1150,23 @@ window.MAPS = {
       [[2880,1600], [2816,1925], [2890,2242], [2944,2560],],
     ],
     duhiep:'duhiep2' },
-  comoc: { name:'Bug Tribe Tunnels', min:40, range:'42 - 56', type:'pk', ground:'#a89f86', patch:'#4a4436',
+  comoc: { name:'Bug Tribe Tunnels', min:40, range:'42 - 56', type:'pk', ground:'#241c12', patch:'#4a4436',
+    // ── SÀN ISOMETRIC ──────────────────────────────────────────────────────────────────
+    // Sinh bằng tools/iso/vung_map.py, KHÔNG chạm tay. Đa giác MỌC RA TỪ chính các điểm
+    // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
+    // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
+    // lại, đừng sửa tay toạ độ ở đây.
+    //   sàn 79.9%  ·  22 đỉnh  ·  7 lùm chặn
+    sanIso:true, isoCo:['nen_da1','nen_da2','nen_da3','nen_da4'],
+    isoDat:['nen_da1','nen_da2','nen_da3','nen_da4'],
+    isoNhuom:{ mau:'#4a3a26', do:0.46 },
+    diTrong: [
+      [2336,1808], [2112,1808], [1792,1680], [1632,1808], [896,1776], [64,1808],
+      [48,672], [112,640], [144,224], [288,112], [512,112], [768,272],
+      [1056,208], [1152,48], [1568,48], [1664,176], [2048,176], [2144,112],
+      [2496,144], [2512,1120], [2416,1312], [2512,1600],
+    ],
+    isoCum: [[2112,896], [1696,928], [1280,640], [576,1152], [224,1024], [2432,704], [1632,576],],
     spawnFrom:{ chungnam:{ x:260, y:1366 }, mongco:{ x:1369, y:260 }, trungnut:{ x:280, y:1660 }, caungam:{ x:2250, y:400 } }, spawn:{ x:400, y:400 }, dark:true, trees:44, rocks:60,   // 30/46 -> 44/60: thêm lối rìa
     // đi Aquatic Tribe Causeway nghĩa là thêm một cổng và một điểm tới, mà decorUnblock() dọn
     // cây đá quanh MỌI điểm nội dung. Bể ban đầu 76 cây đá lọc xong chỉ còn 19 — dưới sàn 20
@@ -1204,7 +1266,23 @@ window.MAPS = {
       [2229,2743],
     ],
     duhiep:'duhiep2' },
-  tuyettinh: { name:'Bird Tribe Heights', min:60, range:'62 - 78', type:'pk', ground:'#ddc9a8', patch:'#8a5a6a',
+  tuyettinh: { name:'Bird Tribe Heights', min:60, range:'62 - 78', type:'pk', ground:'#8fa8bd', patch:'#8a5a6a',
+    // ── SÀN ISOMETRIC ──────────────────────────────────────────────────────────────────
+    // Sinh bằng tools/iso/vung_map.py, KHÔNG chạm tay. Đa giác MỌC RA TỪ chính các điểm
+    // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
+    // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
+    // lại, đừng sửa tay toạ độ ở đây.
+    //   sàn 76.1%  ·  22 đỉnh  ·  8 lùm chặn
+    sanIso:true, isoCo:['nen_da1','nen_da2','nen_da3','nen_da4'],
+    isoDat:['nen_da1','nen_da2','nen_da3','nen_da4'],
+    isoNhuom:{ mau:'#cfe4f5', do:0.62 },
+    diTrong: [
+      [2336,1808], [2112,1808], [1952,1616], [1824,1616], [1632,1808], [896,1776],
+      [192,1808], [48,1664], [48,672], [416,656], [528,256], [704,80],
+      [928,80], [1120,336], [1408,272], [1600,80], [2208,48], [2496,144],
+      [2512,1120], [2448,1312], [2512,1376], [2512,1664],
+    ],
+    isoCum: [[2240,672], [1504,1504], [1856,864], [192,1248], [2496,448], [608,1280], [1152,1184], [1312,1792],],
     // Điểm tới của lối rìa mới từ Aquatic Tribe Causeway. Chỗ này DÒ BẰNG MÁY: ba Vệ Binh Trụ của
     // Bird Tribe Heights (tt1/tt2/tt3) phải cách ≥700px và vách bắc dày 280px, nên góc bắc-đông là
     // ô duy nhất vừa sát rìa vừa đứng được — tt1 cách 1290px, gần nhất là tt2 974px.
@@ -1227,7 +1305,23 @@ window.MAPS = {
       { id:'satthuhy', ten:'Rẻo Sương Mù', dai:[0.735,1.0], cung:[-33,35], cum:[2,2], tiep:true,
         dan:[{ mob:'satthuhy', n:10, vai:['bay','xa'] }] },   // C78 · Sát Thủ Sương Mù
     ], duhiep:'duhiep2' },
-  mongco: { name:'Reptile Sunstone Flats', min:80, range:'84 - 100', type:'pk', ground:'#cfc09a', patch:'#7a6a42',
+  mongco: { name:'Reptile Sunstone Flats', min:80, range:'84 - 100', type:'pk', ground:'#b99a63', patch:'#7a6a42',
+    // ── SÀN ISOMETRIC ──────────────────────────────────────────────────────────────────
+    // Sinh bằng tools/iso/vung_map.py, KHÔNG chạm tay. Đa giác MỌC RA TỪ chính các điểm
+    // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
+    // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
+    // lại, đừng sửa tay toạ độ ở đây.
+    //   sàn 74.1%  ·  22 đỉnh  ·  6 lùm chặn
+    sanIso:true, isoCo:['nen_dat1','nen_dat2','nen_dat3','nen_dat4'],
+    isoDat:['nen_dat1','nen_dat2','nen_dat3','nen_dat4'],
+    isoNhuom:{ mau:'#e8c483', do:0.55 },
+    diTrong: [
+      [2336,1808], [2112,1808], [1984,1680], [1792,1680], [1632,1808], [992,1808],
+      [864,1712], [320,1776], [48,1664], [48,672], [224,656], [384,432],
+      [768,112], [1072,192], [1152,368], [1536,432], [1680,320], [1760,48],
+      [2208,48], [2272,144], [2496,144], [2512,1664],
+    ],
+    isoCum: [[2048,928], [2400,1088], [480,1568], [1728,1120], [864,896], [1344,1792],],
     spawnFrom:{ tuyettinh:{ x:1139, y:260 }, nhanmon:{ x:2340, y:678 } }, spawnFrom:{ comoc:{ x:260, y:1286 }, nhanmon:{ x:2340, y:582 } }, spawn:{ x:400, y:950 }, trees:36, rocks:30,
     desc:'Thảo nguyên mở rộng, Chimera trâu bò đánh đau. Rơi nguyên liệu nâng chiêu tầm xa và đao pháp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
@@ -1246,7 +1340,23 @@ window.MAPS = {
       { id:'kybinh', ten:'Bãi Ngựa Tro Tàn', dai:[0.765,1.0], cung:[-30,35], cum:[2,2], tiep:true,
         dan:[{ mob:'kybinh', n:10, vai:['can','bay'] }] },   // C100 · Kỵ Sĩ Tro Tàn
     ], duhiep:'duhiep3' },
-  nhanmon: { name:'Dusk Marsh', min:100, range:'102 - 120', type:'freepk', ground:'#b8a68a', patch:'#6a3a2a',
+  nhanmon: { name:'Dusk Marsh', min:100, range:'102 - 120', type:'freepk', ground:'#2e2c1c', patch:'#6a3a2a',
+    // ── SÀN ISOMETRIC ──────────────────────────────────────────────────────────────────
+    // Sinh bằng tools/iso/vung_map.py, KHÔNG chạm tay. Đa giác MỌC RA TỪ chính các điểm
+    // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
+    // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
+    // lại, đừng sửa tay toạ độ ở đây.
+    //   sàn 75.4%  ·  22 đỉnh  ·  8 lùm chặn
+    sanIso:true, isoCo:['nen_dat1','nen_dat2','nen_dat3','nen_dat4'],
+    isoDat:['nen_co1','nen_co2','nen_co3','nen_co4'],
+    isoNhuom:{ mau:'#4a4526', do:0.58 },
+    diTrong: [
+      [2336,1808], [2112,1808], [1952,1616], [1824,1616], [1632,1808], [512,1808],
+      [48,1664], [48,672], [416,656], [432,544], [624,288], [832,144],
+      [1024,176], [1152,304], [1344,304], [1472,48], [1888,48], [1920,112],
+      [2496,144], [2512,1120], [2512,1344], [2512,1664],
+    ],
+    isoCum: [[1120,1248], [2144,1024], [2400,576], [192,1248], [1568,608], [864,896], [1152,1728], [1952,1312],],
     spawnFrom:{ mongco:{ x:1668, y:260 } }, spawn:{ x:400, y:950 }, trees:44, rocks:38,
     desc:'Bãi luyện cuối game, ngoài biên ải Lunacia. PK ở đây không cộng Tai Tiếng. Chimera rơi trang bị bậc vàng.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
@@ -1273,7 +1383,23 @@ window.MAPS = {
   // Tầng Sâu TỰ ĐỨNG, không mượn địa hình phó bản nữa. Trước đây DEEP_MAP='pb_daohoa' nên
   // xoá phòng đầu là mất luôn 20 tầng — nay nó có map riêng, không ai gỡ nhầm được.
   // Không có cổng nào trỏ tới đây: chỉ vào bằng deepStart().
-  deep: { name:'Tầng Sâu', min:1, range:'—', type:'dungeon', ground:'#6a6458', patch:'#241f1a',
+  deep: { name:'Tầng Sâu', min:1, range:'—', type:'dungeon', ground:'#161a26', patch:'#241f1a',
+    // ── SÀN ISOMETRIC ──────────────────────────────────────────────────────────────────
+    // Sinh bằng tools/iso/vung_map.py, KHÔNG chạm tay. Đa giác MỌC RA TỪ chính các điểm
+    // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
+    // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
+    // lại, đừng sửa tay toạ độ ở đây.
+    //   sàn 58.0%  ·  22 đỉnh  ·  13 lùm chặn
+    sanIso:true, isoCo:['nen_da1','nen_da2','nen_da3','nen_da4'],
+    isoDat:['nen_da1','nen_da2','nen_da3','nen_da4'],
+    isoNhuom:{ mau:'#2a2f42', do:0.60 },
+    diTrong: [
+      [1632,1808], [1120,1808], [992,1648], [864,1648], [576,1776], [320,1776],
+      [64,1680], [48,672], [416,656], [496,448], [704,336], [832,336],
+      [1024,464], [1344,464], [1440,560], [1600,560], [2272,144], [2496,144],
+      [2512,1120], [2272,1200], [1856,1200], [1840,1600],
+    ],
+    isoCum: [[2048,928], [1504,1120], [352,960], [1120,1248], [640,1248], [1856,416], [768,800], [2400,576], [1696,832], [320,1504], [1152,832], [96,1248], [1632,1440],],
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:10, rocks:40,
     desc:'Đường nứt Thủ Hộ Vaeldra không kịp bịt, ăn thẳng xuống dưới lớp đá nền. Càng xuống sâu khí Morvahn càng đặc, và không tầng nào giống tầng nào.',
     packs: [], duhiep: null },

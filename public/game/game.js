@@ -1703,7 +1703,41 @@ const ISO_IMGS = {};
 function isoImg(ten){
   let im = ISO_IMGS[ten];
   if (!im){ im = ISO_IMGS[ten] = new Image(); im.src = 'assets/iso/' + ten + '.png'; }
-  return (im.complete && im.naturalWidth) ? im : null;
+  if (!(im.complete && im.naturalWidth)) return null;
+  const nh = mapDef().isoNhuom;
+  return nh ? isoNhuom(ten, im, nh) : im;
+}
+/* ── NHUỘM VIÊN GẠCH THEO VÙNG ────────────────────────────────────────────────────────────
+   Bộ gạch nướng từ Blender chỉ có bốn loại mặt: cỏ · đất · đá · đường. Nướng thêm bộ cho
+   băng, cát, nham cần chạy Blender thật — mà bản `bpy` cài từ pip KHÔNG tái tạo được bộ đã
+   có (đo ra lệch màu trung bình 75/255, và mất sạch chi tiết lá cỏ), nên nướng ở đây là tự
+   tạo ra đúng cái lạc tông đang đi sửa.
+
+   Nhuộm là đường vòng THẬT THÀ: nó đổi được SẮC của một vùng, và không giả vờ đổi được CHẤT.
+   Đá xám nhuộm lam-trắng đọc ra đá phủ tuyết; nhuộm đỏ-nâu sẫm đọc ra đá bazan. Nhưng cồn
+   tuyết hay vết nứt dung nham thì phải nướng viên mới — nhuộm không dựng nổi hình dạng.
+
+   `source-atop` chứ không phải vẽ đè: nó chỉ tô chỗ viên gạch ĐANG ĐỤC, nên hình thoi giữ
+   nguyên alpha bốn mép. Vẽ đè một hình chữ nhật màu là mất luôn cái mép ấy, và lưới kẻ quay
+   lại — đúng lỗi mà tràn-mép 1,5% lúc nướng sinh ra để tránh.
+
+   Nhuộm MỘT LẦN mỗi viên rồi giữ, không nhuộm lại mỗi khung: một map chỉ có 8 viên nền. */
+const _isoNhuomBo = new Map();
+function isoNhuom(ten, im, nh){
+  const mau = nh.mau || nh, do_ = (nh.do != null ? nh.do : 0.45);
+  const khoa = ten + '|' + mau + '|' + do_;
+  let cv = _isoNhuomBo.get(khoa);
+  if (cv) return cv;
+  cv = document.createElement('canvas');
+  cv.width = im.naturalWidth; cv.height = im.naturalHeight;
+  const g = cv.getContext('2d');
+  g.drawImage(im, 0, 0);
+  g.globalCompositeOperation = 'source-atop';
+  g.globalAlpha = do_;
+  g.fillStyle = mau;
+  g.fillRect(0, 0, cv.width, cv.height);
+  _isoNhuomBo.set(khoa, cv);
+  return cv;
 }
 // Nhiễu trơn rẻ tiền — chỉ dùng để XÔ LỆCH ranh giới cỏ/đất, không cần chất lượng.
 function _isoHat(i, j){ const v = Math.sin(i*127.1 + j*311.7) * 43758.5453; return v - Math.floor(v); }
