@@ -12987,19 +12987,23 @@ function heroGearSig(gv){
   return `${Math.round(gv.t*10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor||''}_${w}_${l}`;
 }
 // Tư thế của MỘT khung hình — dựng lại đúng từ chỉ số khung, để ảnh trong bộ nhớ đệm luôn khớp khoá.
-function heroFramePose(kind, idx, act, sw){
+function heroFramePose(kind, idx, act, sw, n){
   const TAU = Math.PI * 2;
   const sway = HS_SWAY[sw] || 0;
-  const ps = kind === 'c' ? heroPose(0, false, 0, (idx + 0.5) / HS_FRAMES.c, 0, act, sway, sway)
-           : kind === 'a' ? heroPose(0, false, (idx + 0.5) / HS_FRAMES.a, 0, 0, act, sway, sway)
-           : (kind === 'w' || kind === 'r') ? heroPose((idx + 0.5) / HS_FRAMES[kind] * TAU, true, 0, 0, 0, act, sway, sway)
-           : heroPose(0, false, 0, 0, (idx + 0.5) / HS_FRAMES.i * TAU * 620, act, sway, sway); // nhịp thở
+  // `n` là số khung THẬT của khối đang vẽ. Khối chạy nay khai theo từng bộ (xem NV_KHUNG_R)
+  // nên không đọc thẳng HS_FRAMES được nữa: bộ 32 khung mà chia cho 16 thì pha chạy hai vòng
+  // trong một vòng chân, tư thế dựng lại lệch hẳn so với khoá trong bộ nhớ đệm.
+  const nk = n || HS_FRAMES[kind] || 1;
+  const ps = kind === 'c' ? heroPose(0, false, 0, (idx + 0.5) / nk, 0, act, sway, sway)
+           : kind === 'a' ? heroPose(0, false, (idx + 0.5) / nk, 0, 0, act, sway, sway)
+           : (kind === 'w' || kind === 'r') ? heroPose((idx + 0.5) / nk * TAU, true, 0, 0, 0, act, sway, sway)
+           : heroPose(0, false, 0, 0, (idx + 0.5) / nk * TAU * 620, act, sway, sway); // nhịp thở
   return ps;
 }
 // `now` giả của khung: giữ cho hào quang +10 (hPlusAura/Sweep/Spark) vẫn nhúc nhích theo chu kỳ
 // thay vì đứng chết một kiểu.
-function heroFrameNow(kind, idx){
-  return (idx + 0.5) / (HS_FRAMES[kind] || 8) * Math.PI * 2 * 620;
+function heroFrameNow(kind, idx, n){
+  return (idx + 0.5) / (n || HS_FRAMES[kind] || 8) * Math.PI * 2 * 620;
 }
 // ── THỬ: bộ khung nướng sẵn từ art Spine ────────────────────────────────────────────
 // Bảng khung xếp 16 cột, ô 240x300 = HERO_W+HS_PAD*2 x HERO_H+HS_PAD*2, và gốc (80,212) của
@@ -13106,14 +13110,14 @@ const NV_LOP_HOP = {
   'dkcw1':  { t1:[65,131,124,95,42,105,168,120], c:[61,159,141,99,73,142,122,118],
               a:[94,122,83,90,32,113,135,141], t2:[64,117,133,88,36,114,154,139],
               n:[81,86,109,77,0,79,179,172] },
-  'dwsc1':  { h:[81,91,75,83,3,83,174,185], t1:[67,132,121,75,42,107,168,121],
+  'dwsc1':  { h:[82,91,74,83,3,83,174,185], t1:[67,132,121,75,42,107,168,121],
               c:[61,156,131,103,70,141,127,121], a:[95,121,53,71,31,111,136,146],
               t2:[65,124,132,76,35,114,157,139], n:[83,87,75,57,0,79,178,173] },
   'sbhd1':  { t1:[70,130,114,93,40,111,166,117], c:[63,154,142,105,68,141,130,120],
               a:[89,123,92,94,31,113,140,137], t2:[67,123,124,76,31,115,158,137],
               n:[81,86,109,75,0,79,180,172] },
   'elfar1': { h:[75,84,80,92,0,77,175,194], t1:[67,128,123,80,41,108,167,119],
-              c:[62,151,128,107,67,143,128,120], a:[93,119,56,80,26,110,143,143],
+              c:[62,151,128,108,67,143,128,120], a:[93,119,57,80,26,110,143,143],
               t2:[65,124,132,79,39,115,150,141], n:[79,87,83,61,0,79,181,177] },
   'dlcm1':  { t1:[55,134,146,87,43,97,178,135], c:[63,158,128,100,71,142,125,121],
               a:[93,123,57,72,32,113,137,140], t2:[63,123,139,86,35,114,160,141],
@@ -13175,6 +13179,24 @@ function nvBang(sectKey, tier, gv, kind){
   return NV_BANG2[kind] ? nvTai(ten + '2', 'webp') : nvTai(ten, 'webp');
 }
 function nvMoc(kind){ return NV_BANG2[kind] ? NV_MOC2[kind] : NV_MOC[kind]; }
+// ── SỐ KHUNG KHỐI CHẠY — KHAI THEO TỪNG BỘ ────────────────────────────────────────────────
+// Nguồn `00_Run` dài 0,600 giây, khoá đặt trên lưới 30 khung/giây → 18 KHUNG GỐC. Nướng 16
+// mẫu là LẤY DƯỚI bản gốc, và bàn chân dịch 13,31px mỗi khung — thô gấp 3,4 lần khối đi
+// (3,96px). Nướng 32 thì mọi tư thế gốc đều có mặt, khỏi phải pha khung che chỗ thưa.
+//
+// Nhưng bảng khung dài thêm một hàng: 96 ô (6 hàng) → 112 ô (7 hàng). Bộ nào CHƯA nướng lại
+// vẫn chỉ có 6 hàng, đọc ô 96 trở đi là rơi ra ngoài ảnh — nhân vật MẤT HÌNH nửa vòng chạy.
+// Nên số khung khai theo TỪNG BỘ chứ không phải một hằng dùng chung: bộ đã có gói Spine gốc
+// thì 32, bộ chưa có giữ 16, và hai đời cùng chạy được trong một trận.
+//
+// Mốc bắt đầu (NV_MOC.r = 80) GIỮ NGUYÊN cho cả hai đời, nên chỉ khác SỐ khung chứ không lệch
+// mốc. Chỗ chồng lớp thì quy về PHA 0..1 rồi mới nhân với số khung của chính lớp đó — xem
+// nvKhungGop(), đó là chỗ duy nhất một khung hình đọc nhiều bộ khác số khung cùng lúc.
+const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32 };
+function nvSoKhung(ten, kind){
+  if (kind === 'r' && ten && NV_KHUNG_R[ten]) return NV_KHUNG_R[ten];
+  return HS_FRAMES[kind] || 1;
+}
 // ĐƯỜNG VŨ KHÍ NƯỚNG SẴN ĐÃ GỠ. Trước đây `nvVuKhi()` trả bảng khung <bộ>_vk<N>.png để đắp
 // lên thân. Từ khi có thần khí (vũ khí rời tay, vẽ từ món ĐANG trang bị) nó thoát ở dòng chặn
 // trước khi dùng tới bảng — và đó là mọi trường hợp: cả 15 dòng vũ khí đều thuộc 4 loại art
@@ -13231,8 +13253,8 @@ function nvIconUrl(it){
                                0, 0, NV_ICON_PX, NV_ICON_PX);
   return lruDat(_nvIconCache, key, c.toDataURL('image/png'), NV_ICON_CAP);
 }
-function nvVeKhung(g, im, kind, idx){
-  const n = HS_FRAMES[kind] || 1;
+function nvVeKhung(g, im, kind, idx, ten){
+  const n = nvSoKhung(ten, kind);
   const k = nvMoc(kind) + (idx % n);
   g.drawImage(im, (k % NV_COT) * NV_OW, ((k / NV_COT) | 0) * NV_OH, NV_OW, NV_OH,
                   -HS_PAD, -HS_PAD, NV_OW, NV_OH);
@@ -13255,8 +13277,13 @@ function nvKhungGop(sectKey, tier, gv, kind, idx){
   const than = nvTen(sectKey, tier);
   if (!than || !NV_LOP_HOP[than]) return null;      // thân chưa cắt lớp
   const b2 = !!NV_BANG2[kind];
-  const n  = HS_FRAMES[kind] || 1;
-  const k  = nvMoc(kind) + (idx % n);
+  // `idx` do người gọi tính theo số khung của THÂN. Mỗi lớp có thể lấy từ một bộ khác — và
+  // hai bộ có thể khác số khung ở khối chạy (xem NV_KHUNG_R). Nên quy về PHA 0..1 ở đây rồi
+  // mỗi lớp tự nhân với số khung của CHÍNH nó: thân 32 khung và giáp 16 khung vẫn dừng ở
+  // cùng một thời điểm trong vòng chạy, chỉ khác độ mịn. Lấy chung một `k` như bản trước thì
+  // lớp 16 khung nhận chỉ số tới 31, chia dư ra thành đi ngược nửa vòng — tay rời khỏi thân.
+  const nRef = nvSoKhung(than, kind);
+  const pha  = (((idx % nRef) + nRef) % nRef) / nRef;
   const oL = (gv && gv.oLop) || {};
   // Gom nguồn TRƯỚC. Thiếu một tấm thì bỏ cả lượt chứ đừng vẽ nửa người: bảng hai nạp khi
   // cần nên nó có thể chưa về ở mấy khung đầu, mà một nhân vật cụt tay thì lộ hơn hẳn một
@@ -13269,14 +13296,15 @@ function nvKhungGop(sectKey, tier, gv, kind, idx){
     if (!H) continue;                               // lớp RỖNG ở bộ đó (tóc sau) — bỏ qua
     const im = nvTai(ten + '_' + ml + (b2 ? '2' : ''), 'webp');
     if (!im) return null;
-    ds.push(im, H);
+    const nL = nvSoKhung(ten, kind);
+    ds.push(im, H, nvMoc(kind) + Math.min(nL - 1, (pha * nL) | 0));
   }
   if (!ds.length) return null;
   const t = document.createElement('canvas');
   t.width = NV_OW; t.height = NV_OH;
   const q = t.getContext('2d');
-  for (let i = 0; i < ds.length; i += 2){
-    const im = ds[i], H = ds[i + 1];
+  for (let i = 0; i < ds.length; i += 3){
+    const im = ds[i], H = ds[i + 1], k = ds[i + 2];
     const ox = H[b2 ? 4 : 0], oy = H[b2 ? 5 : 1], w = H[b2 ? 6 : 2], h = H[b2 ? 7 : 3];
     q.drawImage(im, (k % NV_COT) * w, ((k / NV_COT) | 0) * h, w, h, ox, oy, w, h);
   }
@@ -13297,13 +13325,13 @@ function nvHaoQuangSau(g, sectKey, tier, gv, now){
   hPlusAura(g, hSetMetal(hMetal(tier), S), gv, now);
 }
 // Cắt MỘT khung khỏi bảng khung ra canvas riêng — nền cho hai hiệu ứng bám bóng dáng bên dưới.
-function _nvKhungRa(im, kind, idx){
+function _nvKhungRa(im, kind, idx, ten){
   // Khung GỘP (nvKhungGop) rộng đúng một ô, còn bảng khung rộng 16 ô — phân biệt bằng bề
   // rộng. Khung gộp đã là một khung rồi, cắt nữa là cắt vào chính nó.
   if (im.width === NV_OW) return im;
   const t = document.createElement('canvas');
   t.width = NV_OW; t.height = NV_OH;
-  const n = HS_FRAMES[kind] || 1;
+  const n = nvSoKhung(ten, kind);
   const k = NV_MOC[kind] + (idx % n);
   t.getContext('2d').drawImage(im, (k % NV_COT) * NV_OW, ((k / NV_COT) | 0) * NV_OH,
                                NV_OW, NV_OH, 0, 0, NV_OW, NV_OH);
@@ -13313,8 +13341,8 @@ function _nvKhungRa(im, kind, idx){
 // mảnh giáp nó tự dựng — art nướng không có mảnh nào để mà bám vào, nên nếu chỉ gọi lại mấy
 // hàm đó thì từ +0 tới +6 KHÔNG CÓ GÌ ĐỔI (đo được: đúng 0 điểm ảnh khác nhau). Ở đây dựng
 // viền từ chính BÓNG DÁNG của khung: vẽ khung lệch ra tám hướng rồi khoét chính nó ở giữa.
-function nvVienSang(g, im, kind, idx, mau, dam){
-  const kh = _nvKhungRa(im, kind, idx);
+function nvVienSang(g, im, kind, idx, mau, dam, ten){
+  const kh = _nvKhungRa(im, kind, idx, ten);
   const t = document.createElement('canvas'); t.width = NV_OW; t.height = NV_OH;
   const q = t.getContext('2d');
   for (let a = 0; a < 8; a++){
@@ -13334,8 +13362,8 @@ function nvVienSang(g, im, kind, idx, mau, dam){
 // Dải sáng quét thân (+10). hPlusSweep() cắt theo một hình chữ nhật đo trên thân người VECTOR;
 // đặt lên art nướng thì nó tràn ra ngoài người và đọc ra một hộp xám bẹt. Ở đây cắt theo đúng
 // alpha của khung, nên dải sáng chỉ chạy TRÊN người.
-function nvDaiQuet(g, im, kind, idx, now){
-  const kh = _nvKhungRa(im, kind, idx);
+function nvDaiQuet(g, im, kind, idx, now, ten){
+  const kh = _nvKhungRa(im, kind, idx, ten);
   const t = document.createElement('canvas'); t.width = NV_OW; t.height = NV_OH;
   const q = t.getContext('2d');
   const y0 = HS_PAD + 58 + ((now % 2200) / 2200) * 116;
@@ -13357,8 +13385,11 @@ function nvHaoQuangTruoc(g, sectKey, tier, gv, now, im, kind, idx){
   if (st < 1) return;
   const SM = hSetMetal(hMetal(tier), heroSet(sectKey, gv.t));
   const k = clamp(((gv.plus || 0) - 3) / 8, 0, 1);          // 0 ở +4, 1 ở +11
-  nvVienSang(g, im, kind, idx, (gv.setColor || SM.glow || '#ffe9a8'), 0.16 + st * 0.09 + k * 0.14);
-  if (st >= 3) nvDaiQuet(g, im, kind, idx, now);
+  // Tên bộ để biết khối chạy của CHÍNH nó có bao nhiêu khung — hai hiệu ứng dưới đây cắt
+  // theo alpha của đúng ô khung, cắt nhầm ô là viền sáng bám vào một tư thế khác.
+  const _ten = nvBoTen(sectKey, tier, gv);
+  nvVienSang(g, im, kind, idx, (gv.setColor || SM.glow || '#ffe9a8'), 0.16 + st * 0.09 + k * 0.14, _ten);
+  if (st >= 3) nvDaiQuet(g, im, kind, idx, now, _ten);
   hPlusSpark(g, SM, gv, now);                              // tàn lửa, từ +7
 }
 // `blk` — KHỐI KHUNG để đọc trên bảng art nướng, mặc định trùng `kind`. Tách đôi vì hai thứ trả
@@ -13385,7 +13416,9 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk){
   const g = big.getContext('2d');
   g.scale(HS_SCALE, HS_SCALE);
   g.translate(HS_PAD, HS_PAD);
-  const ps = heroFramePose(kind, idx, act, sw);
+  // Số khung của KHỐI ĐANG ĐỌC, theo chính bộ art này (khối chạy khai riêng — xem NV_KHUNG_R).
+  const _nk = nvSoKhung(nvBoTen(sectKey, tier, gv), blk);
+  const ps = heroFramePose(kind, idx, act, sw, _nk);
   ps.back = !!back;
   // Cánh KHÔNG nướng vào sprite: drawPlayer đã vẽ nó riêng bằng veCanh(). Nướng vào đây là vẽ
   // HAI đôi cánh chồng lên nhau — và tệ hơn, heroGearSig() không có cánh trong chữ ký, nên tấm
@@ -13405,13 +13438,13 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk){
   const _nvIm = _gop || nvBang(sectKey, tier, gv, blk)
               || (NV_BANG2[blk] ? nvBo(sectKey, tier, gv) : null);
   if (_nvIm){
-    const _now = heroFrameNow(kind, idx);
+    const _now = heroFrameNow(kind, idx, _nk);
     nvHaoQuangSau(g, sectKey, tier, gv, _now);      // hào quang cường hoá nằm SAU lưng
     if (_gop) g.drawImage(_gop, -HS_PAD, -HS_PAD);  // khung đã gộp sẵn, dán thẳng
-    else nvVeKhung(g, _nvIm, _blkVe, idx);          // bộ giáp đổi cả tấm
+    else nvVeKhung(g, _nvIm, _blkVe, idx, nvBoTen(sectKey, tier, gv));  // bộ giáp đổi cả tấm
     nvHaoQuangTruoc(g, sectKey, tier, gv, _now, _nvIm, kind, idx);   // viền + quét + tàn lửa
   }
-  else drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx), ps, canhBoRa(gv));
+  else drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx, _nk), ps, canhBoRa(gv));
   // ── CHẾ ĐỘ TÔ PHẲNG, CHỈ DÀNH CHO PHÉP ĐO ──────────────────────────────────────────────
   // Bài kiểm nào cần biết "nhân vật có nằm ở chỗ này của khung hình không" đều phải nhận ra
   // nhân vật bằng MÀU — không có cách nào khác rẻ hơn (trừ khung, so byte, dựng lại thế giới:
@@ -13576,7 +13609,7 @@ function heroCardUrl(sectKey, tier, gv){
     // nào lệch nhau. Cánh vẫn vẽ rời như cũ — nó không nằm trong bảng khung.
     nvHaoQuangSau(hg, sectKey, tier || 1, gv, 0);
     if (_gopC) hg.drawImage(_gopC, -HS_PAD, -HS_PAD);
-    else nvVeKhung(hg, _nvIm, 'i', 0);
+    else nvVeKhung(hg, _nvIm, 'i', 0, nvBoTen(sectKey, tier || 1, gv));
     if (gv && gv.canh) veCanh(hg, gv.canh, 80, 212, 0, 0, 1, 0);
     nvHaoQuangTruoc(hg, sectKey, tier || 1, gv, 0, _nvIm, 'i', 0);
   } else {
@@ -15145,7 +15178,9 @@ function drawPlayer(){
                : (DANH_HAI_NHAT[p.sect] && p.nhat2) ? 's' : 'a';
     // Số khung lấy theo KHỐI VẼ, không theo _kind: khối đấm có 12 khung còn khối chém 16,
     // tính chỉ số bằng 16 rồi chia dư cho 12 là thứ tự khung đảo lộn giữa cú đấm.
-    const _n = HS_FRAMES[_blk] || HS_FRAMES[_kind];
+    // Số khung phải hỏi CHÍNH bộ art đang mặc: khối chạy của bộ nướng lại có 32 khung, bộ cũ
+    // 16. Đọc thẳng HS_FRAMES là bộ 32 khung chỉ chạy được nửa vòng rồi lặp.
+    const _n = nvSoKhung(nvBoTen(p.sect, _tier, _gv), _blk) || HS_FRAMES[_kind];
     const _TAU = Math.PI * 2;
     const _idx = _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
                : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)

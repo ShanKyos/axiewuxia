@@ -29,8 +29,12 @@ KHE_TOC = ('背后头发',)                              # tóc sau, chỉ dùng
 # Khối mới đứng CUỐI, không chen vào giữa: các khối cũ giữ nguyên vị trí nên bảng đời cũ và
 # đời mới cùng đọc được bằng một bộ mốc.
 # 'DANH' là chỗ trống, thay bằng hoạt cảnh đánh RIÊNG CỦA TỪNG LỚP (xem --danh).
+# `00_Run` lấy 32 mẫu chứ không phải 16. Nguồn dài 0,600 giây với khoá đặt trên lưới 30
+# khung/giây, tức 18 KHUNG GỐC — lấy 16 là dưới bản gốc, mất tư thế, và bàn chân dịch 13,31px
+# mỗi khung (khối đi chỉ 3,96px). Bảng vì thế dài 112 ô thay vì 96; game đọc số khung theo
+# TỪNG BỘ (`NV_KHUNG_R` trong game.js) nên bảng đời cũ 96 ô vẫn chạy song song được.
 KHUNG   = [('00_Idle', 16), ('00_Walk', 32), ('DANH', 16), ('05_MagicAttack', 16),
-           ('00_Run', 16)]
+           ('00_Run', 32)]
 
 # BẢNG HAI — những khối chỉ hiện trong chốc lát hoặc ở một trạng thái riêng. Tách ra bảng
 # riêng để game NẠP KHI CẦN: bảng một đã 27,6 MB sau giải nén, nhân bảy bộ là 193 MB, mà đo
