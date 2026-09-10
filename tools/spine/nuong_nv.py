@@ -19,7 +19,7 @@ HỢP ĐỒNG TOẠ ĐỘ với game — sai một trong bốn dòng này là nh
 """
 import sys, os, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from hoatcanh import doc_goi, TuThe, ve_khung
+from hoatcanh import doc_goi, TuThe, ve_khung, bo_vat_ly, lang_vat_ly
 from PIL import Image
 
 KHE_VK  = ('左手武器', '左手武器2b', '左手武器2c')   # vũ khí bị cắt 4 mảnh trên 3 khe
@@ -86,6 +86,26 @@ def dai(hc):
 def _do(d, im, R, tt, skin, bo, **kw):
     return ve_khung(d, im, R, tt, d['animations']['00_Idle'], 0, skin, bo_khe=bo, **kw)
 
+# ── nướng MỘT khối hoạt cảnh, có chạy ràng buộc vật lý ─────────────────────────────────────
+# Hoạt cảnh LẶP thì lò xo phải được quay trước cho lắng, nếu không khung 0 có váy đứng cứng
+# còn khung cuối váy đang bay — chỗ nối vòng lặp giật, và giật mãi. Hoạt cảnh MỘT LẦN (đánh,
+# trúng đòn, chết) thì bắt đầu từ trạng thái nghỉ là đúng: trong game nó nối vào từ dáng đứng.
+LAP = {'00_Idle', '00_Walk', '00_Run', '01_Dance', '01_Dance2', '07_StatusEffect'}
+
+def _day_khung(d, im, R, tt, hc, ten, n, skin, phong, oy, bo, doi=None):
+    """Trả n khung của một khối, đã áp khoá + IK + vật lý."""
+    T = dai(hc)
+    vl = bo_vat_ly(d, tt)
+    if vl:
+        for c in vl: c.dat_lai()
+        if ten in LAP: lang_vat_ly(vl, tt, d, hc, T, n)
+    ra = []
+    for i in range(n):
+        ra.append(ve_khung(d, im, R, tt, hc, i*T/n, skin, W=O_W, H=O_H,
+                           phong=phong, ox=120/O_W, oy=oy, bo_khe=bo, doi_manh=doi,
+                           bo_vl=vl, dt_vl=T/n))
+    return ra
+
 def nuong(goi, skin, danh='08_SwordAttack'):
     d, im, R = doc_goi(goi); tt = TuThe(d)
     moiKhe  = tuple(s['name'] for s in d['slots'])
@@ -105,18 +125,13 @@ def nuong(goi, skin, danh='08_SwordAttack'):
                     ('vukhi', tuple(k for k in moiKhe if k not in KHE_VK))):
         ks = []
         for ten, n in KHUNG:
-            hc = d['animations'][danh if ten == 'DANH' else ten]; T = dai(hc)
-            for i in range(n):
-                ks.append(ve_khung(d, im, R, tt, hc, i*T/n, skin, W=O_W, H=O_H,
-                                   phong=phong, ox=120/O_W, oy=oy, bo_khe=bo))
+            tenTh = danh if ten == 'DANH' else ten
+            ks += _day_khung(d, im, R, tt, d['animations'][tenTh], tenTh, n, skin, phong, oy, bo)
         ra[lop] = ks
     # BẢNG HAI — cùng hệ toạ độ, cùng cỡ ô, chỉ khác chỗ chứa.
     ks2 = []
     for ten, n, doi in KHUNG2:
-        hc = d['animations'][ten]; T = dai(hc)
-        for i in range(n):
-            ks2.append(ve_khung(d, im, R, tt, hc, i*T/n, skin, W=O_W, H=O_H,
-                                phong=phong, ox=120/O_W, oy=oy, bo_khe=bo_than, doi_manh=doi))
+        ks2 += _day_khung(d, im, R, tt, d['animations'][ten], ten, n, skin, phong, oy, bo_than, doi)
     ra['than2'] = ks2
     # Thêm MỘT ảnh tư thế GỐC (không áp hoạt cảnh nào) cho thẻ chọn lớp: hoạt cảnh 00_Idle
     # chùng gối và dồn trọng tâm sang một bên, đứng cạnh nhau năm lớp thì nhìn ra lệch hết.
@@ -132,16 +147,11 @@ def _do_khung(d, im, R, tt, skin, phong, oy, bo, danh):
     """Mọi khung của CẢ HAI bảng, cùng một hệ toạ độ — trả (khung bảng một, khung bảng hai)."""
     k1 = []
     for ten, n in KHUNG:
-        hc = d['animations'][danh if ten == 'DANH' else ten]; T = dai(hc)
-        for i in range(n):
-            k1.append(ve_khung(d, im, R, tt, hc, i*T/n, skin, W=O_W, H=O_H,
-                               phong=phong, ox=120/O_W, oy=oy, bo_khe=bo))
+        tenTh = danh if ten == 'DANH' else ten
+        k1 += _day_khung(d, im, R, tt, d['animations'][tenTh], tenTh, n, skin, phong, oy, bo)
     k2 = []
     for ten, n, doi in KHUNG2:
-        hc = d['animations'][ten]; T = dai(hc)
-        for i in range(n):
-            k2.append(ve_khung(d, im, R, tt, hc, i*T/n, skin, W=O_W, H=O_H,
-                               phong=phong, ox=120/O_W, oy=oy, bo_khe=bo, doi_manh=doi))
+        k2 += _day_khung(d, im, R, tt, d['animations'][ten], ten, n, skin, phong, oy, bo, doi)
     return k1, k2
 
 

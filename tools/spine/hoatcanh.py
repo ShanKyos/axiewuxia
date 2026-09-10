@@ -73,6 +73,10 @@ class TuThe:
         s.ten = [b['name'] for b in s.bones]
         s.chiSo = {n: i for i, n in enumerate(s.ten)}
         s.cha = [s.chiSo[b['parent']] if b.get('parent') else -1 for b in s.bones]
+        s.dai = [b.get('length', 0) for b in s.bones]
+        s.con = [[] for _ in s.bones]
+        for i, p in enumerate(s.cha):
+            if p >= 0: s.con[p].append(i)
         s.dat_nghi()
     def dat_nghi(s):
         s.x, s.y, s.rot, s.sx, s.sy, s.shx, s.shy = ([] for _ in range(7))
@@ -85,27 +89,39 @@ class TuThe:
     def tinh(s):
         """Ma trận thế giới (a,b,c,d,wx,wy) cho từng xương, theo thứ tự khai báo (cha luôn đứng trước)."""
         s.W = [None] * len(s.bones)
-        for i in range(len(s.bones)):
-            r = math.radians(s.rot[i] + s.shx[i]); r2 = math.radians(s.rot[i] + 90 + s.shy[i])
-            la = math.cos(r) * s.sx[i];  lc = math.sin(r) * s.sx[i]
-            lb = math.cos(r2) * s.sy[i]; ld = math.sin(r2) * s.sy[i]
-            p = s.cha[i]
-            if p < 0:
-                s.W[i] = (la, lb, lc, ld, s.x[i], s.y[i]); continue
-            pa, pb, pc, pd, px, py = s.W[p]
-            wx = pa * s.x[i] + pb * s.y[i] + px
-            wy = pc * s.x[i] + pd * s.y[i] + py
-            t = s.thua[i]
-            if t == 'noRotationOrReflection':
-                # giữ hướng của cha nhưng bỏ phần quay: dùng cho tóc/áo không xoay theo thân
-                pa, pb, pc, pd = 1, 0, 0, 1
-            elif t in ('noScale', 'noScaleOrReflection'):
-                n = math.hypot(pa, pc) or 1
-                pa, pc = pa / n, pc / n
-                n2 = math.hypot(pb, pd) or 1
-                pb, pd = pb / n2, pd / n2
-            s.W[i] = (pa*la + pb*lc, pa*lb + pb*ld, pc*la + pd*lc, pc*lb + pd*ld, wx, wy)
+        for i in range(len(s.bones)): s.tinh_mot(i)
         return s.W
+    def tinh_mot(s, i):
+        """Ma trận thế giới của MỘT xương, đọc ma trận cha đang có trong s.W.
+
+        Tách ra khỏi tinh() để ràng buộc physics ghi đè ma trận thế giới của một xương rồi
+        dựng lại riêng nhánh con của nó, thay vì tính lại cả bộ 83 xương sau mỗi ràng buộc."""
+        r = math.radians(s.rot[i] + s.shx[i]); r2 = math.radians(s.rot[i] + 90 + s.shy[i])
+        la = math.cos(r) * s.sx[i];  lc = math.sin(r) * s.sx[i]
+        lb = math.cos(r2) * s.sy[i]; ld = math.sin(r2) * s.sy[i]
+        p = s.cha[i]
+        if p < 0:
+            s.W[i] = (la, lb, lc, ld, s.x[i], s.y[i]); return
+        pa, pb, pc, pd, px, py = s.W[p]
+        wx = pa * s.x[i] + pb * s.y[i] + px
+        wy = pc * s.x[i] + pd * s.y[i] + py
+        t = s.thua[i]
+        if t == 'noRotationOrReflection':
+            # giữ hướng của cha nhưng bỏ phần quay: dùng cho tóc/áo không xoay theo thân
+            pa, pb, pc, pd = 1, 0, 0, 1
+        elif t in ('noScale', 'noScaleOrReflection'):
+            n = math.hypot(pa, pc) or 1
+            pa, pc = pa / n, pc / n
+            n2 = math.hypot(pb, pd) or 1
+            pb, pd = pb / n2, pd / n2
+        s.W[i] = (pa*la + pb*lc, pa*lb + pb*ld, pc*la + pd*lc, pc*lb + pd*ld, wx, wy)
+    def tinh_cay(s, i):
+        """Dựng lại ma trận thế giới của TOÀN BỘ nhánh con của xương i (không tính chính nó)."""
+        ngan = list(s.con[i])
+        while ngan:
+            j = ngan.pop()
+            s.tinh_mot(j)
+            ngan.extend(s.con[j])
     def theoTen(s):
         return {n: s.W[i] for i, n in enumerate(s.ten)}
 
@@ -260,6 +276,184 @@ def ap_ik(tt, d, hc, t, bo_qua=()):
         else:                    ik1(tt, c['bones'][0], c['target'], mix)
     tt.tinh()
 
+# ── ràng buộc VẬT LÝ (physics) ─────────────────────────────────────────────────
+# VÌ SAO PHẢI CÓ. Gói Spellcaster có 28 ràng buộc physics, và chúng KHÔNG chỉ lái tóc bay:
+#     6  trên chuỗi đầu   (头2..头7)
+#     14 trên váy         (控制短裙的* · 控制长裙的*)
+#     8  trên tóc sau     (背后头发*)
+# Bỏ qua chúng thì thân và chân cử động theo khoá + IK, còn chỏm đầu và cả cái váy thì đứng
+# cứng như nhựa. Mắt đọc ra ngay: nửa người dưới đang bước mà nửa trên không hưởng ứng — đúng
+# cái "người không phải một thể thống nhất". Đây là hiệu ứng theo sau (follow-through), thứ
+# gắn các mảnh rời thành một cơ thể.
+#
+# Chép đúng thuật toán của Spine 4.2 (PhysicsConstraint.update, nhánh `update`), gồm cả:
+#   · quán tính: chênh lệch vị trí thế giới của xương giữa hai bước, nhân `inertia`
+#   · lò xo giảm chấn chạy ở BƯỚC CỐ ĐỊNH `step` (mặc định 1/60 giây), không theo khung hình
+#   · `damping` luỹ thừa 60×step, để giảm chấn không đổi khi đổi bước
+#   · tx/ty giữ lại từ bước trước (l×a, l×c) — thiếu nó thì góc mục tiêu lệch
+#
+# ⚠ CÓ TRẠNG THÁI THEO THỜI GIAN. Không lấy mẫu ngẫu nhiên từng khung được: phải chạy tuần tự
+# từ đầu. Với hoạt cảnh lặp thì quay vài vòng cho lò xo lắng rồi mới nướng vòng cuối — xem
+# `nuong_vong_lap`, nếu không khung 0 sẽ đứng yên còn khung cuối đang đung đưa, và chỗ nối
+# vòng lặp giật một cái.
+_PI2 = math.pi * 2
+
+class VatLy:
+    """Một ràng buộc physics, giữ nguyên trạng thái lò xo giữa các bước thời gian."""
+    def __init__(s, c, tt):
+        s.ten  = c['name']
+        s.i    = tt.chiSo.get(c['bone'], -1)
+        s.thu  = c.get('order', 0)
+        s.gx   = c.get('x', 0);      s.gy    = c.get('y', 0)
+        s.gr   = c.get('rotate', 0); s.gsx   = c.get('scaleX', 0); s.gshx = c.get('shearX', 0)
+        s.gioi = c.get('limit', 5000)
+        s.buoc = 1.0 / c.get('fps', 60)
+        s.qt   = c.get('inertia', 1)
+        s.manh = c.get('strength', 100)
+        s.tat  = c.get('damping', 1)
+        s.mNgh = 1.0 / c.get('mass', 1)
+        s.gio  = c.get('wind', 0);   s.trlc  = c.get('gravity', 0)
+        s.tron = c.get('mix', 1)
+        s.dat_lai()
+    def dat_lai(s):
+        s.con_lai = 0.0; s.moi = True
+        s.ux = s.uy = s.cx = s.cy = s.tx = s.ty = 0.0
+        s.xL = s.xV = s.yL = s.yV = 0.0
+        s.rL = s.rV = s.sL = s.sV = 0.0
+
+    def cap_nhat(s, tt, dt, quy_chieu=100.0):
+        if s.i < 0 or s.tron == 0: return
+        co_x  = s.gx > 0; co_y = s.gy > 0
+        co_qu = s.gr > 0 or s.gshx > 0
+        co_ti = s.gsx > 0
+        l = tt.dai[s.i]
+        a_, b_, c_, d_, wx, wy = tt.W[s.i]
+
+        # Spine tính `delta = skeleton.time - lastTime`. Ở đây nhận thẳng `dt` thay vì mốc
+        # thời gian tuyệt đối: cộng dồn `thoi += dai/n` qua vài trăm khung thì số thực trôi,
+        # bộ đếm dư `con_lai` vượt ngưỡng lệch nhịp và chèn thêm một bước 1/60 giây — đo được
+        # là chu kỳ giới hạn nhảy 0,9° sau khoảng 25 vòng, tức bảng khung nướng ra lệch tuỳ
+        # vào việc lắng bao lâu. Nhận dt hằng số thì không có chỗ nào để trôi.
+        dt = max(dt, 0.0)
+        s.con_lai += dt
+        if s.moi:
+            s.moi = False; s.ux = wx; s.uy = wy
+        else:
+            a = s.con_lai; qt = s.qt; t = s.buoc; f = quy_chieu; giam = None
+            q = s.gioi * dt
+            if co_x or co_y:
+                if co_x:
+                    u = (s.ux - wx) * qt; s.xL += min(q, max(-q, u)); s.ux = wx
+                if co_y:
+                    u = (s.uy - wy) * qt; s.yL += min(q, max(-q, u)); s.uy = wy
+                if a >= t:
+                    giam = s.tat ** (60 * t)
+                    m = s.mNgh * t; e = s.manh; w = s.gio * f; g = s.trlc * f
+                    while a >= t:
+                        if co_x:
+                            s.xV += (w - s.xL * e) * m; s.xL += s.xV * t; s.xV *= giam
+                        if co_y:
+                            s.yV -= (g + s.yL * e) * m; s.yL += s.yV * t; s.yV *= giam
+                        a -= t
+                if co_x: wx += s.xL * s.tron * s.gx
+                if co_y: wy += s.yL * s.tron * s.gy
+            if co_qu or co_ti:
+                ca = math.atan2(c_, a_)
+                dx = min(q, max(-q, s.cx - wx))
+                dy = min(q, max(-q, s.cy - wy))
+                mr = 0.0
+                if co_qu:
+                    mr = (s.gr + s.gshx) * s.tron
+                    r = math.atan2(dy + s.ty, dx + s.tx) - ca - s.rL * mr
+                    s.rL += (r - math.ceil(r / _PI2 - 0.5) * _PI2) * qt
+                    r = s.rL * mr + ca
+                    co = math.cos(r); si = math.sin(r)
+                    if co_ti:
+                        rr = l * math.hypot(a_, c_)
+                        if rr > 0: s.sL += (dx * co + dy * si) * qt / rr
+                else:
+                    co = math.cos(ca); si = math.sin(ca)
+                    rr = l * math.hypot(a_, c_)
+                    if rr > 0: s.sL += (dx * co + dy * si) * qt / rr
+                a = s.con_lai
+                if a >= t:
+                    if giam is None: giam = s.tat ** (60 * t)
+                    m = s.mNgh * t; e = s.manh; w = s.gio; g = s.trlc; h = l / f
+                    while True:
+                        a -= t
+                        if co_ti:
+                            s.sV += (w * co - g * si - s.sL * e) * m
+                            s.sL += s.sV * t; s.sV *= giam
+                        if co_qu:
+                            s.rV -= ((w * si + g * co) * h + s.rL * e) * m
+                            s.rL += s.rV * t; s.rV *= giam
+                            if a < t: break
+                            r = s.rL * mr + ca
+                            co = math.cos(r); si = math.sin(r)
+                        elif a < t:
+                            break
+                s.con_lai = a
+        s.cx = wx; s.cy = wy
+
+        # ── ghi kết quả vào ma trận thế giới ──
+        if co_qu:
+            o = s.rL * s.tron
+            if s.gshx > 0:
+                r = 0.0
+                if s.gr > 0:
+                    r = o * s.gr
+                    si = math.sin(r); co = math.cos(r)
+                    t0 = b_; b_ = co * t0 - si * d_; d_ = si * t0 + co * d_
+                r += o * s.gshx
+                si = math.sin(r); co = math.cos(r)
+                t0 = a_; a_ = co * t0 - si * c_; c_ = si * t0 + co * c_
+            else:
+                o *= s.gr
+                si = math.sin(o); co = math.cos(o)
+                t0 = a_; a_ = co * t0 - si * c_; c_ = si * t0 + co * c_
+                t0 = b_; b_ = co * t0 - si * d_; d_ = si * t0 + co * d_
+        if co_ti:
+            k = 1 + s.sL * s.tron * s.gsx
+            a_ *= k; c_ *= k
+        s.tx = l * a_; s.ty = l * c_
+        tt.W[s.i] = (a_, b_, c_, d_, wx, wy)
+        tt.tinh_cay(s.i)
+
+def bo_vat_ly(d, tt):
+    """Dựng danh sách ràng buộc physics, đã xếp theo `order` — trả về [] nếu gói không có."""
+    return [VatLy(c, tt) for c in sorted(d.get('physics', []), key=lambda c: c.get('order', 0))]
+
+def ap_vat_ly(bo, tt, dt, quy_chieu=100.0):
+    """Chạy cả bộ ràng buộc physics, `dt` là thời gian trôi qua từ lượt gọi trước (giây)."""
+    for c in bo: c.cap_nhat(tt, dt, quy_chieu)
+
+def lang_vat_ly(bo, tt, d, hc, dai, n_khung, toi_da=60, eps=1e-6):
+    """Quay một hoạt cảnh LẶP tới khi lò xo physics vào trạng thái ổn định.
+
+    Nướng vòng đầu tiên là sai: lúc t=0 mọi lò xo đứng yên, nên khung 0 có váy cứng đờ còn
+    khung cuối váy đang bay — chỗ nối vòng lặp giật một cái, và cái giật đó lặp lại mãi.
+    Quay trước vài vòng thì trạng thái đầu vòng và cuối vòng trùng nhau, bảng khung khép kín.
+
+    Dừng khi trạng thái đầu vòng gần như không đổi so với vòng trước (chuẩn vô cùng < `eps`),
+    chứ không quay đủ một số vòng cố định: chuỗi váy dài lắng chậm hơn chuỗi tóc nhiều.
+    ⚠ `n_khung` PHẢI đúng bằng số khung lượt nướng sẽ lấy. Lò xo chạy ở bước cố định 1/60
+    giây với một bộ đếm dư, nên lấy mẫu 40 khung/giây thì mỗi khung ăn 1 rồi 2 bước xen kẽ,
+    còn 60 khung/giây thì đều 1 bước. Hai nhịp khác nhau ra hai chu kỳ giới hạn khác nhau:
+    lắng ở nhịp này rồi nướng ở nhịp kia thì chỗ nối vòng lặp vẫn lệch (đo được 1,07°)."""
+    if not bo: return
+    n = max(1, int(n_khung))
+    buoc = dai / n
+    truoc = None
+    for _ in range(toi_da):
+        for k in range(n):
+            u = k * buoc
+            ap_hoat_canh(tt, hc, u); tt.tinh(); ap_ik(tt, d, hc, u)
+            ap_vat_ly(bo, tt, buoc)
+        nay = [v for c in bo for v in (c.rL, c.rV, c.xL, c.yL)]
+        if truoc is not None and max(abs(a - b) for a, b in zip(nay, truoc)) < eps:
+            break
+        truoc = nay
+
 # ── dựng hình ──────────────────────────────────────────────────────────────────
 import numpy as np
 
@@ -313,7 +507,7 @@ def _tam_giac(dst, src, P, Q, tris):
         dst[mny:mxy, mnx:mxx] = (khung*(1-a) + lay_[..., :4].astype(np.float32)*a).astype(np.uint8)
 
 def ve_khung(d, im, R, tt, hc, t, skinName, W=900, H=1100, phong=1.0, ox=0.5, oy=0.94,
-             bo_khe=(), doi_manh=None):
+             bo_khe=(), doi_manh=None, bo_vl=None, dt_vl=None):
     """`doi_manh` — ép một KHE dùng mảnh khác mảnh hoạt cảnh chọn, dạng {tên khe: tên mảnh}.
 
     Dùng để đổi KHUÔN MẶT: khe đầu có sẵn bốn mảnh (thường · vui · đau đớn · nhắm mắt) ở
@@ -321,6 +515,9 @@ def ve_khung(d, im, R, tt, hc, t, skinName, W=900, H=1100, phong=1.0, ox=0.5, oy
     ép sang mặt đau, khối 'chết' và 'ngồi' thì ép sang nhắm mắt — không tốn khung nào.
     """
     ap_hoat_canh(tt, hc, t); tt.tinh(); ap_ik(tt, d, hc, t)
+    # physics chạy SAU cùng, đúng thứ tự của Spine: khoá → IK → vật lý. `dt_vl` là khoảng
+    # thời gian giữa hai khung nướng, KHÔNG phải `t` (vị trí trong vòng lặp hoạt cảnh).
+    if bo_vl and dt_vl: ap_vat_ly(bo_vl, tt, dt_vl)
     manh   = mảnh_theo_khe(d, hc, t)
     if doi_manh:
         for _k, _v in doi_manh.items():
