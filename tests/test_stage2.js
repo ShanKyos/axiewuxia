@@ -12,10 +12,10 @@ const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài 
   await page.evaluate(dungPbThu);   // 7 map pb_* đã gỡ — bài kiểm tự cắm phòng của mình
   await page.evaluate(() => { startGame('thieulam', null); });
   await page.waitForTimeout(800);
-  await page.evaluate(() => { travelTo('daohoa'); });
+  await page.evaluate(() => { travelTo('corran'); });
   await page.waitForTimeout(300);
 
-  await page.evaluate(() => { openStageSelect('daohoa'); });
+  await page.evaluate(() => { openStageSelect('corran'); });
   await page.waitForTimeout(200);
   const stageHtml = await page.evaluate(() => document.getElementById('panel-stage').innerHTML);
   console.log('has TRÙM VÙNG section:', stageHtml.includes('TRÙM VÙNG'));
@@ -30,8 +30,8 @@ const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài 
 
   // click "Đến Gần" on the first boss (thủ vệ #1), verify AUTO stays off
   await page.evaluate(() => { player.auto = false; updateAutoBtn(); });
-  const bd = await page.evaluate(() => BOSS_DEFS['daohoa'].thuve[0].id);
-  await page.evaluate((bossId) => { enterBossStage('daohoa', bossId); }, bd);
+  const bd = await page.evaluate(() => BOSS_DEFS['corran'].thuve[0].id);
+  await page.evaluate((bossId) => { enterBossStage('corran', bossId); }, bd);
   await page.waitForTimeout(300);
   const afterBoss = await page.evaluate(() => ({ x: Math.round(player.x), y: Math.round(player.y), auto: player.auto }));
   console.log('after enterBossStage (auto should stay false):', JSON.stringify(afterBoss));

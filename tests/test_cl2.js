@@ -7,9 +7,10 @@ const { chromium } = require('playwright');
   await page.waitForTimeout(500);
   await page.evaluate(() => { startGame('thieulam', null); });
   await page.waitForTimeout(500);
-  await page.evaluate(() => { travelTo('daohoa'); });
+  // bãi tân thủ nay là Rẻo Rừng Corran (hoán dải cấp)
+  await page.evaluate(() => { travelTo('corran'); });
   await page.waitForTimeout(300);
-  await page.evaluate(() => { enterStage('daohoa', 0); });
+  await page.evaluate(() => { enterStage('corran', 0); });
   await page.waitForTimeout(9000);
   const rows = await page.evaluate(() => Array.from(document.querySelectorAll('#combat-log .cl-row')).map(r => r.textContent));
   console.log(JSON.stringify(rows, null, 2));
