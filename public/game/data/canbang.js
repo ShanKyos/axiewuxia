@@ -1143,6 +1143,26 @@ window.MAPS = {
     w:2803, h:2808, ground:'#3a4450', patch:'#2a3038',
     spawnFrom:{ comoc:{ x:330, y:500 }, tuyettinh:{ x:1850, y:2600 } },
     spawn:{ x:470, y:620 }, trees:0, rocks:0,
+    // ── SÀN LÁT VIÊN ISOMETRIC ────────────────────────────────────────────────────────────
+    // Map đầu tiên chuyển khỏi nền tranh nhìn ngang. Chọn caungam mở màn vì nó ĐÃ có sẵn đa
+    // giác 133 đỉnh — phần tốn công nhất đã xong, nên nếu cơ chế có chỗ hụt thì lộ ra ngay mà
+    // không tốn công chấm lại.
+    //
+    // Đây là NHỊP ĐÁ VẮT QUA HỒ NGẦM, nên:
+    //   isoCo  = sỏi vụn  — vai "rìa", vành sát mép cầu nơi đá vỡ dồn lại
+    //   isoDat = phiến đá — vai "lối mòn", tức LÒNG CẦU
+    //
+    // ⚠ HAI VAI NÀY DỄ GÁN NGƯỢC, và mình đã gán ngược lần đầu. Trên map dạng LÀN, sanIsoDung()
+    // coi "đất" là dải XA MÉP NHẤT — tức lối người ta giẫm. Nhịp đá thì gần như cả lòng cầu là
+    // lối, nên vai "đất" phủ gần hết map. Gán isoDat = sỏi thì cả cây cầu ngập một sắc nâu cát,
+    // nhìn ra một cái sân chứ không ra nhịp đá bắc qua hồ. Đảo lại: lòng cầu là phiến đá, sỏi
+    // lùi về rìa — đúng chỗ đá vỡ thật sự dồn.
+    //   isoCay = 0 — cây mọc NGOÀI đa giác trong vành 300px, mà ngoài đa giác ở đây là MẶT
+    //            NƯỚC. Để mặc định là mọc một hàng cây giữa lòng hồ.
+    //   isoNho — rêu và đá vụn trong lòng lối, đúng thứ bám trên đá ướt.
+    sanIso:true, isoCo:['nen_duong1','nen_duong2','nen_duong3','nen_duong4'],
+    isoDat:['nen_da1','nen_da2','nen_da3','nen_da4'],
+    isoCay:0, isoNho:170,
     desc:'Nhịp đá vắt qua một hồ ngầm không đáy. Một lối, không có đường vòng — thứ chặn đường bạn phải dọn, không né được.',
     voi: 2600,
     vung: [
