@@ -1228,20 +1228,26 @@ window.MAPS = {
     spawnFrom:{ chungnam:{ x:1608, y:3309 }, trungnut:{ x:211, y:776 }, caungam:{ x:4525, y:1144 }, mongco:{ x:2936, y:211 } },
     spawn:{ x:1658, y:3014 },
     voi: 3900,          // `vung.dai` là tỉ lệ của `voi` — đo từ điểm thả tới đỉnh xa nhất
+    // ⚠ CUNG GÓC PHẢI QUAY VỀ PHÍA MAP THẬT SỰ TRẢI RA. Điểm thả của map này nằm giữa mép NAM,
+    // nên đất nằm ở phía BẮC — góc tới các đỉnh xa của đa giác đo được là −119°…−36° (0° = đông,
+    // 90° = nam). Bản đầu tôi chép cung [−15,90] của map cũ, hồi điểm thả còn ở góc TÂY-BẮC:
+    // quạt ấy trỏ ra đông/nam, tức ra ngoài bản đồ. Miền gần còn bốc được chỗ, miền xa nhất
+    // (`huyetbat_bay`, dai 0,82-1,0) hết sạch 500 lần bốc × 3 vòng nới ⇒ ra 0 cụm, im lặng —
+    // test_vung bắt bằng "dân số trôi khỏi khai báo: huyetbat 18≠30".
     // Sáu miền từ BA loài: thinu 42 → mocnhan 48 → huyetbat 56. Một miền của mỗi loài giữ
     // nguyên vai gốc, miền kia đổi hồ sơ vai — đúng cơ chế A1 (vai gán theo BÃI, không theo loài).
     vung: [
-      { id:'thinu', ten:'Ổ Ấp Thị Nữ', dai:[0.12,0.22], cung:[-15,90], cum:[3,3], tiep:true,
+      { id:'thinu', ten:'Ổ Ấp Thị Nữ', dai:[0.12,0.22], cung:[-125,-25], cum:[3,3], tiep:true,
         dan:[{ mob:'thinu', n:18, vai:['can','phap'] }] },
-      { id:'thinu_nang', ten:'Buồng Kén Dày', dai:[0.25,0.35], cung:[-5,95], cum:[3,3], tiep:true,
+      { id:'thinu_nang', ten:'Buồng Kén Dày', dai:[0.25,0.35], cung:[-115,-20], cum:[3,3], tiep:true,
         dan:[{ mob:'thinu', n:15, vai:['nang','can'] }] },
-      { id:'mocnhan', ten:'Mạng Mộc Nhân', dai:[0.38,0.49], cung:[-15,90], cum:[3,3], tiep:true,
+      { id:'mocnhan', ten:'Mạng Mộc Nhân', dai:[0.38,0.49], cung:[-125,-25], cum:[3,3], tiep:true,
         dan:[{ mob:'mocnhan', n:18, vai:['can','xa'] }] },
-      { id:'mocnhan_phap', ten:'Hốc Nhả Tơ', dai:[0.52,0.62], cung:[-5,95], cum:[3,3], tiep:true,
+      { id:'mocnhan_phap', ten:'Hốc Nhả Tơ', dai:[0.52,0.62], cung:[-115,-20], cum:[3,3], tiep:true,
         dan:[{ mob:'mocnhan', n:15, vai:['phap','xa'] }] },
-      { id:'huyetbat', ten:'Hang Huyết Bức', dai:[0.65,0.79], cung:[-15,90], cum:[3,3], tiep:true,
+      { id:'huyetbat', ten:'Hang Huyết Bức', dai:[0.65,0.79], cung:[-125,-30], cum:[3,3], tiep:true,
         dan:[{ mob:'huyetbat', n:18, vai:['bay','can'] }] },
-      { id:'huyetbat_bay', ten:'Vòm Treo Ngược', dai:[0.82,1.0], cung:[-5,95], cum:[3,3], tiep:true,
+      { id:'huyetbat_bay', ten:'Vòm Treo Ngược', dai:[0.82,1.0], cung:[-120,-35], cum:[3,3], tiep:true,
         dan:[{ mob:'huyetbat', n:12, vai:['bay','nang'] }] },
     ],
     diTrong: [
