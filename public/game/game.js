@@ -3142,14 +3142,14 @@ function showEvoChoice(id, stageIdx){
           <b style="font-size:15px;color:#7ecbff">${p.name}</b><br><span style="font-weight:400;opacity:.9">${p.desc}</span>
         </button>`).join('')}
     </div>`;
-  document.getElementById('overlay').classList.remove('hidden');
+  lopPhuMo();
 }
 window.chooseEvoPath = function(id, stageIdx, path){
   if (!EVO_PATHS[path]) return;
   if (!player.skillEvo) player.skillEvo = {};
   if (!player.skillEvo[id]) player.skillEvo[id] = [];
   player.skillEvo[id][stageIdx] = path;
-  document.getElementById('overlay').classList.add('hidden');
+  lopPhuDong(true);
   addFloat(player.x, player.y-58, `⚡ ${skName(id)} — ${EVO_PATHS[path].name}!`, '#ffd76a', 13);
   AudioSys.sfx('levelup', 0.6);
   addEffect({ type:'ring', x:player.x, y:player.y, r:70, color:'#ffd76a' });
@@ -11047,16 +11047,15 @@ function onDeath(){
   player.pendingHit = null; // đòn thường đã hẹn cũng phải huỷ: update() return sớm khi dead nên
                             // nó đóng băng nguyên vẹn rồi nổ vào con quái đứng cạnh điểm hồi sinh
   dead = true; player.deadT = 0;
-  const ov = document.getElementById('overlay');
   const _kb = player._killedByBoss; player._killedByBoss = null;
-  document.getElementById('overlay-inner').innerHTML = _kb ? `
+  // khoa=true: màn Bại Trận là lớp phủ CHẶN — chỉ respawn() tắt được nó.
+  lopPhuMo(true).innerHTML = _kb ? `
     <h2 style="color:#ff6b6b">Bại Trận!</h2>
     <p>Ngươi bị <b style="color:#ff8f6b">${_kb}</b> đánh bại.<br><span style="color:#e8b060;font-size:12.5px">Mẹo: khi trấn thủ tụ chiêu (vùng đỏ), hãy chạy ra khỏi vùng đỏ — sau đó là 2.5 giây phản công tốt nhất.<br>Hoặc quay lại khi ngươi đã mạnh hơn.</span></p>
     <button class="big-btn" onclick="respawn()">Tái Chiến</button>` : `
     <h2>Trọng Thương!</h2>
     <p>Ngươi bị đánh bại... Nhưng Lunacia chưa hề bỏ rơi kẻ có chí.<br>Hồi sinh tại làng trên Rẻo Rừng Corran với đầy đủ sinh lực.</p>
     <button class="big-btn" onclick="respawn()">Hồi Sinh</button>`;
-  ov.classList.remove('hidden');
 }
 window.respawn = function(){
   // Hồi sinh về điểm an toàn: làng trên map khởi đầu nếu chết ở map PK, còn lại tại chỗ spawn
@@ -11069,7 +11068,7 @@ window.respawn = function(){
   player._autoAX = null; player._autoAY = null; // QA: đừng để auto farm kéo người mới hồi sinh về neo cũ (map/vị trí khác)
   player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0;
   dead = false;
-  document.getElementById('overlay').classList.add('hidden');
+  lopPhuDong(true);      // màn Bại Trận khai `khoa` nên chỉ tắt được bằng đường này
 };
 function showVictory(){
   const sect = SECTS[player.sect];
@@ -11080,8 +11079,8 @@ function showVictory(){
     Từ một hatchling vô danh, ngươi đã bước qua cánh cửa đầu tiên của hành trình.<br><br>
     ${sectLine}<br><br>
     <i>Lunacia còn dài: rèn Khai Quang +11 · nuôi Linh Thú lên +11 · săn tướng quân của Morvahn mở Box Kundun · thu thập thủ bút từ Sát Thủ · giành danh hiệu Người Giữ Lunacia!</i></p>
-    <button class="big-btn" onclick="document.getElementById('overlay').classList.add('hidden')">Tiếp Tục Hành Trình</button>`;
-  document.getElementById('overlay').classList.remove('hidden');
+    <button class="big-btn" onclick="lopPhuDong()">Tiếp Tục Hành Trình</button>`;
+  lopPhuMo();
   saveGame();
 }
 
@@ -18656,6 +18655,12 @@ function refreshEqPanels(){
 
 // ---------- Panel routing (override) ----------
 function togglePanel(which){
+  // Lớp phủ CHẶN (màn Bại Trận) thì không mở bảng nào cả — phím C/V/B/K/M/Q/O không có chốt
+  // `!dead` nào, nên thiếu dòng này là bấm phím lúc đang chết sẽ luồn một cái bảng xuống dưới
+  // màn hình bại trận. Lớp phủ bỏ qua được thì nhường chỗ (closePanels cũng làm, nhưng
+  // togglePanel không đi qua closePanels — nó tự tắt từng bảng một).
+  if (lopPhuChan()) return;
+  lopPhuDong();
   const tabbed = { mount:'mount' };   // forge đã tách ra bảng riêng
   if (tabbed[which]){ // các hệ thống con → mở khung Nhân Vật đúng tab
     if (!sysUnlocked(tabbed[which])){ // hệ thống chưa mở theo tầng cấp
@@ -18783,6 +18788,45 @@ function dongBangTrenCung(){
 }
 window.dongBangTrenCung = dongBangTrenCung;
 
+// ── TẦNG NỔI: một cửa duy nhất được chạm vào #overlay ─────────────────────────────────────
+// `#overlay` là z-index 40, `.panel` là 20 — lớp phủ LUÔN nằm trên bảng. Trước đây mỗi chỗ mở
+// lớp phủ phải tự nhớ lấy điều đó: showKetMo() nhớ (nó gọi closePanels kèm hẳn một dòng chú
+// thích), openEventBoard() thì quên. Hậu quả đo được: mở Bảng Sự Kiện rồi gọi moQuayShard()
+// thì Quầy Shard hiện ra SAU tấm kính đen — thấy mờ mờ, bấm không được, và không có dấu hiệu
+// nào cho biết vì sao. Quản lý một tầng giao diện bằng cách nhớ từng con số thì sẽ còn tái phát.
+//
+// Nay chỉ ba hàm dưới đây động tới #overlay, và `closePanels()` tự nhường chỗ — nên mọi bảng
+// mở qua closePanels (lò rèn, Chọn Trận, NPC, Quầy Shard…) được sửa cùng một lượt.
+//
+// `khoa` = lớp phủ CHẶN: màn Bại Trận. Nó không tự tắt, và chặn luôn việc mở bảng — nếu không
+// thì bấm C lúc đang chết là màn hình bại trận biến mất, để lại một nhân vật chết mà không có
+// nút hồi sinh nào. Mọi lớp phủ còn lại đều bỏ qua được, kể cả bảng chọn nhánh Tiến Hoá: nó
+// có đường mở lại (nút `?` trong bảng Kỹ Năng → reopenEvoChoiceUI), nên bỏ qua không mất gì.
+function lopPhuMo(khoa){
+  const ov = document.getElementById('overlay');
+  if (!ov) return null;
+  // Lớp phủ chặn không bị lớp phủ thường hất đi. Chip đồng hồ và nút Bảng Sự Kiện vẫn bấm được
+  // lúc đang chết, nên thiếu dòng này thì mở Bảng Sự Kiện là xoá mất màn Bại Trận lẫn nút hồi sinh.
+  if (lopPhuChan() && !khoa) return null;
+  closePanels();                                  // gọi TRƯỚC khi hiện: closePanels tắt lớp phủ cũ
+  if (khoa) ov.dataset.khoa = '1'; else delete ov.dataset.khoa;
+  ov.classList.remove('hidden');
+  return document.getElementById('overlay-inner');
+}
+// ep = tắt cho bằng được, kể cả lớp phủ chặn. Chỉ hai chỗ được dùng: respawn() và chooseEvoPath().
+function lopPhuDong(ep){
+  const ov = document.getElementById('overlay');
+  if (!ov) return;
+  if (ov.dataset.khoa && !ep) return;
+  delete ov.dataset.khoa;
+  ov.classList.add('hidden');
+}
+function lopPhuChan(){
+  const ov = document.getElementById('overlay');
+  return !!(ov && !ov.classList.contains('hidden') && ov.dataset.khoa);
+}
+window.lopPhuMo = lopPhuMo; window.lopPhuDong = lopPhuDong; window.lopPhuChan = lopPhuChan;
+
 function closePanels(){
   for (const id of _MOI_BANG){
     const e2 = document.getElementById(id);
@@ -18791,6 +18835,7 @@ function closePanels(){
   _bangChong = [];
   if (typeof _loGio !== 'undefined' && _loGio){ clearInterval(_loGio); _loGio = null; }
   document.body.classList.remove('bang-ba-cot');
+  lopPhuDong();          // bảng nào chiếm màn hình thì lớp phủ bỏ qua được phải nhường chỗ
   capNhatMenuCot();
 }
 window.closePanels = closePanels;
@@ -20591,7 +20636,7 @@ function equippedSkillRowHtml(id, roleLabel){
   return `<div class="skill-row${info.unlocked?'':' locked'}">
     <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='a'?'⚔':id==='tp'?'⚔':'✚'}</span>'" alt="">
     <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${roleLabel} — ${info.name}</b>
-      <div class="sk-so">${skThongSo(info)}</div>
+      <div class="sk-thongso">${skThongSo(info)}</div>
       <div class="sk-desc">${info.unlocked ? info.desc : '🔒 ' + info.lockTxt}</div></span>
     <span class="assign-btns">${info.unlocked ? upBtnHtml(id) : ''}</span></div>`;
 }
@@ -23277,17 +23322,15 @@ function npcStoryLine(){
 }
 // Kết mở — ấn cuối vỡ, Hung Thần sắp giáng thế
 function showKetMo(){
-  const ov = document.getElementById('overlay');
-  if (!ov) return;
-  closePanels(); // overlay z-index 40 nằm TRÊN .panel (20): mở khi bảng bản đồ đang mở là hai lớp chữ chồng nhau
-  document.getElementById('overlay-inner').innerHTML = `
+  const inner = lopPhuMo();   // lopPhuMo tự closePanels: lớp phủ z 40 nằm trên .panel z 20
+  if (!inner) return;
+  inner.innerHTML = `
     <h2 style="color:#ff6b6b">☠ TRỤ CUỐI ĐÃ GÃY</h2>
     <p style="line-height:1.9;font-size:14px">Trụ Khóa thứ năm đổ xuống. Vết Nứt trên bầu trời Lunacia toác ra hết cỡ — <b style="color:#ff8f6b">Morvahn đang bước qua</b>.<br>
     <span style="opacity:.85">Ngươi vượt vết nứt để sửa lại thứ thế giới mình đã gây ra.<br>
     Và để tới được hắn, ngươi vừa tự tay mở toang cánh cửa hắn cần.</span><br>
     <span style="color:#e8b060">Những Axie ở đây chưa từng làm gì nên tội. Giờ chỉ còn ngươi đứng giữa chúng và hắn.<br><i>Chạy về Vaeldra… hay ở lại? Đó là lựa chọn của ngươi.</i></span></p>
-    <button class="big-btn" onclick="document.getElementById('overlay').classList.add('hidden')">Ở Lại</button>`;
-  ov.classList.remove('hidden');
+    <button class="big-btn" onclick="lopPhuDong()">Ở Lại</button>`;
   AudioSys.sfx('levelup', 0.9);
 }
 
@@ -25247,7 +25290,7 @@ function nextEventInfo(now){
   return evs[0] || null;
 }
 window.goEventMap = function(id){
-  document.getElementById('overlay').classList.add('hidden');
+  lopPhuDong();
   const g = mapGate(id);
   if (!g.ok){
     const msg = g.why === 'lv' ? `Cần cấp ${g.need} để vào ${MAPS[id].name}!` : `Chưa mở đường đến ${MAPS[id].name} — hoàn thành "${g.quest}"!`;
@@ -25256,7 +25299,7 @@ window.goEventMap = function(id){
   travelTo(id);
 };
 window.openEventBoard = function(){
-  const ov = document.getElementById('overlay'); if (!ov || !player) return;
+  if (!player) return;
   const now = Date.now();
   let rows = '';
   for (const e of eventList(now)){
@@ -25267,12 +25310,13 @@ window.openEventBoard = function(){
         <span style="font-size:12px;opacity:.8">${e.sub}</span></span>
       ${e.map ? `<button class="mini-btn" onclick="goEventMap('${e.map}')">${e.active ? 'Tới Ngay' : 'Xem Map'}</button>` : ''}</div>`;
   }
-  document.getElementById('overlay-inner').innerHTML = `
+  const inner = lopPhuMo();   // lopPhuMo tự closePanels rồi mới hiện — xem ghi chú ở tầng nổi
+  if (!inner) return;
+  inner.innerHTML = `
     <h2 style="color:#ffd76a">⏱ BẢNG SỰ KIỆN</h2>
     <div style="font-size:12.5px;opacity:.75;margin-bottom:4px">Chạy theo giờ thật: Hung Thần 0h·4h·8h… · Xâm Lăng Vàng 2h·6h·10h… · <b style="color:#a06aff">Chúa Tể Vực Nứt 0h·6h·12h·18h</b> (4 lượt/ngày, nứt ở mọi bãi săn)</div>
     ${rows}
-    <button class="big-btn" style="margin-top:10px" onclick="document.getElementById('overlay').classList.add('hidden')">Đóng</button>`;
-  ov.classList.remove('hidden');
+    <button class="big-btn" style="margin-top:10px" onclick="lopPhuDong()">Đóng</button>`;
 };
 
 
