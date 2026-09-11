@@ -1,9 +1,32 @@
-# Khế Ước Chimera — hệ gacha đồng hành
+# Khế Ước Cổ Vật — hệ gacha bộ giáp
 
-Bản thiết kế. **Chưa code gì cả** — chốt xong tài liệu này mới làm.
+> ⚠ **ĐÃ ĐỔI THỨ QUAY RA.** Tài liệu này viết hồi gacha quay ra **Chimera đồng hành**. Chủ dự
+> án chốt: *"giữ lại phần gacha sao cho sẽ đổi thành gacha bộ giáp và đồ; xoá phần gacha ra
+> chimera thôi là ổn."*
+>
+> **Mọi con số và cơ chế dưới đây vẫn đúng nguyên** — tỉ lệ, đường cong pity, 50/50, bảo đảm,
+> bản trùng, quầy đổi, hai banner, vòng 6 tuần. Đợt chuyển đổi **không đụng một con số nào**:
+> phân bố bị động của 16 xác giáp trùng khít 16 con Chimera cũ (`tests/test_covat.js §1` gác).
+> Chỉ có **thứ rơi ra** là khác:
+>
+> | Đọc là | Nay là |
+> |---|---|
+> | Chimera đồng hành | **Cổ Vật** — bộ giáp còn sót của Vaeldra (`window.COVAT`, 16 cái) |
+> | Huyết Thống C0–C6 | **Cộng Hưởng R0–R6** (cùng cơ chế bản trùng) |
+> | Mảnh Huyết Thống (3★) | **Mảnh Giáp Vụn** |
+> | lớp Axie (Beast/Dusk…) | **dòng giáp** (`CV_DONG`, 8 dòng) — kỹ năng tra theo dòng |
+> | art `<id>_q.webp` | icon món thật trong `ITEM_DB` (`cvVe` / `cvIconUrl`) |
+>
+> **Bảng `CHIMERA` không chết** — nó rút về đúng một việc: danh mục **avatar** (thân Axie người
+> chơi nhìn thấy khi đi lại). Gacha không đẻ ra avatar nữa; mọi NFT đều dùng được.
+>
+> Save đời cũ đổi **một-đổi-một** qua `CV_CU`, giữ nguyên Cộng Hưởng · cấp · Hoá · mảnh Cốt đã
+> khảm · pity · vé · lịch sử quay (`tests/test_covat.js §3` gác).
 
-Yêu cầu: dựng lại đúng bộ máy gacha của Genshin Impact, từ A đến Z, nhưng quay ra **Chimera
-đồng hành** thay vì nhân vật, và **vé chỉ cày được trong game** (không bán bằng tiền thật).
+Bản thiết kế gốc dưới đây giữ nguyên làm hồ sơ của bộ máy.
+
+Yêu cầu: dựng lại đúng bộ máy gacha của Genshin Impact, từ A đến Z, nhưng quay ra **đồ**
+thay vì nhân vật, và **vé chỉ cày được trong game** (không bán bằng tiền thật).
 
 ---
 

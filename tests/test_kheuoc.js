@@ -40,7 +40,7 @@ const PORT = process.argv[2] || '8853';
     return { p5:+(n5/N*100).toFixed(3), p4:+(n4/N*100).toFixed(2),
              tb5:+tb(gap).toFixed(1), tbF:+tb(gapF).toFixed(1),
              max5:Math.max(...gap), maxF:Math.max(...gapF), quaHan,
-             soChimera: CHIMERA.length, so5: CHIMERA.filter(c=>c.sao===5).length };
+             soChimera: COVAT.length, so5: COVAT.filter(c=>c.sao===5).length };
   });
   console.log('1) tỉ lệ:', JSON.stringify(r));
   if (Math.abs(r.p5 - 1.6) > 0.08) fail(`5★ gộp pity ${r.p5}% — tài liệu ghi 1,6%`);
@@ -53,7 +53,7 @@ const PORT = process.argv[2] || '8853';
   if (r.quaHan) fail(`${r.quaHan} lần cần hơn 180 lượt mới ra con lên kệ — trần 180 bị vỡ`);
   else pass(`trần 180 lượt đứng vững: lượt xấu nhất ${r.maxF}`);
   if (r.soChimera !== 16 || r.so5 !== 6) fail(`roster ${r.soChimera} con (${r.so5} con 5★) — thiết kế là 16 (6 con 5★)`);
-  else pass('roster 16 Chimera, 6 con 5★');
+  else pass('roster 16 Cổ Vật, 6 cái 5★');
 
   // ── 3. bảo đảm + pity sống qua reload ──
   const r3 = await p.evaluate(() => {
@@ -107,21 +107,21 @@ const PORT = process.argv[2] || '8853';
   else pass(`bù ${r4.ve} Ấn Giao Kết cho tiến trình cũ`);
   if (r4.conMount) fail('player.mount cũ vẫn còn trong save sau khi chuyển đổi');
 
-  // ── 5. bị động nối vào chỉ số, Huyết Thống dày thêm, đổi con thì đổi chỉ số ──
+  // ── 5. bị động nối vào chỉ số, Cộng Hưởng dày thêm, đổi con thì đổi chỉ số ──
   const r5 = await p.evaluate(() => {
     startGame('thieulam', null); player.level = 60; player.lvPeak = 60;
     const C = chiState(); C.co = {}; C.eq = null; calcDerived();
     const hp0 = player.maxHp;
-    C.co.tidewarden = { con:0 }; C.eq = 'tidewarden'; calcDerived(); const hp1 = player.maxHp;
-    C.co.tidewarden.con = 5; calcDerived(); const hp2 = player.maxHp;
-    C.eq = 'crimsonmaw'; C.co.crimsonmaw = { con:0 }; calcDerived(); const atk1 = player.atk;
+    C.co.cv_haicot = { con:0 }; C.eq = 'cv_haicot'; calcDerived(); const hp1 = player.maxHp;
+    C.co.cv_haicot.con = 5; calcDerived(); const hp2 = player.maxHp;
+    C.eq = 'cv_gangthep'; C.co.cv_gangthep = { con:0 }; calcDerived(); const atk1 = player.atk;
     C.eq = null; calcDerived(); const atk0 = player.atk;
     return { hp0, hp1, hp2, atk0, atk1 };
   });
   console.log('5) bị động:', JSON.stringify(r5));
   if (!(r5.hp1 > r5.hp0)) fail('bị động Tidewarden (+15% HP) không nối vào chỉ số');
-  else if (!(r5.hp2 > r5.hp1)) fail('Huyết Thống C5 không làm bị động dày thêm');
-  else if (!(r5.atk1 > r5.atk0)) fail('đổi sang Crimsonmaw (+5% Công Kích) mà Công Kích không đổi');
+  else if (!(r5.hp2 > r5.hp1)) fail('Cộng Hưởng C5 không làm bị động dày thêm');
+  else if (!(r5.atk1 > r5.atk0)) fail('đổi sang Găng Thép Câm (+5% Công Kích) mà Công Kích không đổi');
   else pass(`bị động chạy thật: HP ${r5.hp0}→${r5.hp1}→${r5.hp2} (C0→C5) · đổi con thì Công Kích ${r5.atk0}→${r5.atk1}`);
 
   // ── 6. quay thật qua UI: trừ vé, hiện lớp phủ, thế giới DỪNG trong lúc quay ──

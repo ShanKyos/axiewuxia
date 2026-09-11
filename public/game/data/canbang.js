@@ -129,6 +129,151 @@ window.CHI_KY = {
             { ten:'Nuốt Bóng',   tam:{ k:'hpLeech', v:7, t:7 }, txt:'Chiêu nổ: hút 7% sát thương thành Sinh Lực trong 7 giây' }],
 };
 
+// ═══ CỔ VẬT — 16 bộ xác giáp quay ra từ Khế Ước ═══════════════════════════════
+// Thay hẳn bảng quay ra Chimera. Chủ dự án chốt: "giữ lại phần gacha sao cho sẽ đổi thành
+// gacha bộ giáp và đồ; xoá phần gacha ra chimera thôi là ổn."
+//
+// ⚠ CHIMERA BÊN TRÊN **KHÔNG CHẾT** — nó nay chỉ còn là AVATAR (thân Axie người chơi nhìn
+// thấy, xem avatarId trong game.js). Gacha không đẻ ra nó nữa; người chơi chọn avatar tự do.
+//
+// Khuôn một mục cố ý TRÙNG KHÍT khuôn CHIMERA cũ ({id,ten,sao,mau,thu,thuTxt,moTa}) để cả bộ
+// máy gacha — pity, 50/50, bản trùng, Định Hình, bốn ô Cốt — chạy tiếp không sửa một dòng nào.
+// Hai trường đổi tên vì chúng nói về GIÁP chứ không về con vật:
+//   lop → dong   : dòng giáp, khoá tra CV_KY (kỹ năng của xác)
+//   chieu → (gỡ) : chiêu của con pet, mà pet đã gỡ. Giữ lại là hứa suông trên bảng.
+// Thêm `art` + `giai`: trỏ thẳng vào một món trong ITEM_DB để icon xác giáp DÙNG CHUNG đường
+// vẽ với túi đồ — không có cách nào lệch nhau, cùng lý do ARMOR_PIECES sinh từ HERO_SETS.
+//
+// Phân bố `thu` giữ ĐÚNG như 16 con Chimera cũ (★5: skillPct12 · hpLeech6 · hpPct15 ·
+// aspdPct10 · evaPct8 · dmgred10 — ★4: hpPct6 · atkPct5 · crit4 ×2 · hpPct5 · aspdPct4 ·
+// dmgred4 ×2 · atkPct4 ×2), nên đợt này KHÔNG đổi cân bằng, chỉ đổi thứ quay ra.
+window.COVAT = [
+  // ── 5★ ──────────────────────────────────────────────────────────────────────
+  { id:'cv_vuonggiap', ten:'Vương Giáp Không Chủ', sao:5, dong:'vuongkim', mau:'#7ecbff',
+    art:'baidasan_6_ao', giai:7,
+    thu:{ k:'skillPct', v:12 }, thuTxt:'+12% sát thương chiêu thức',
+    moTa:'Bộ giáp của một ông vua không ai nhớ tên. Nó vẫn đứng thẳng khi người mặc đã đổ.' },
+  { id:'cv_mutruhuvo', ten:'Mũ Trụ Không Mặt', sao:5, dong:'hacnguyet', mau:'#6ff0ff',
+    art:'baidasan_6_non', giai:7,
+    thu:{ k:'hpLeech', v:6 }, thuTxt:'hút 6% sát thương gây ra thành Sinh Lực',
+    moTa:'Tấm che mặt không có khe nhìn. Kẻ đội nó không cần nhìn mới đánh trúng.' },
+  { id:'cv_haicot', ten:'Hài Cốt Vệ Binh Trụ', sao:5, dong:'cotxuong', mau:'#8a92a4',
+    art:'thieulam_0_ao', giai:1,
+    thu:{ k:'hpPct', v:15 }, thuTxt:'+15% Sinh Lực tối đa',
+    moTa:'Kẻ canh Trụ Khoá chết đứng tại chỗ. Xương và giáp đã dính liền thành một khối.' },
+  { id:'cv_tramdao', ten:'Trảm Đao Tướng Quân Thứ Năm', sao:5, dong:'thanlua', mau:'#ff8000',
+    art:'minhgiao_makiem_6', giai:7,
+    thu:{ k:'aspdPct', v:10 }, thuTxt:'+10% tốc đánh',
+    moTa:'Lưỡi cong dùng để chặt đầu chính chủ tướng của mình. Nó vẫn còn ấm.' },
+  { id:'cv_nolongung', ten:'Nỏ Lông Ưng Bạc', sao:5, dong:'lonvu', mau:'#c0e0f8',
+    art:'toanchan_no_6', giai:7,
+    thu:{ k:'evaPct', v:8 }, thuTxt:'+8% né đòn',
+    moTa:'Nhẹ tới mức gió thổi là lệch. Đó chính là chỗ nó giữ mạng cho người cầm.' },
+  { id:'cv_mutruvay', ten:'Mũ Trụ Vảy Rồng', sao:5, dong:'vaythan', mau:'#c8a84a',
+    art:'thieulam_0_non', giai:1,
+    thu:{ k:'dmgred', v:10 }, thuTxt:'−10% sát thương gánh chịu',
+    moTa:'Vảy xếp ngược chiều đòn. Thứ gì chém vào cũng trượt ra ngoài một nhịp.' },
+  // ── 4★ ──────────────────────────────────────────────────────────────────────
+  { id:'cv_vosoi', ten:'Áo Vỏ Sồi', sao:4, dong:'davo', mau:'#8a7a5c',
+    art:'baidasan_0_ao', giai:1,
+    thu:{ k:'hpPct', v:6 }, thuTxt:'+6% Sinh Lực tối đa',
+    moTa:'Vỏ cây ép chặt rồi nung. Rẻ, nặng, và chưa bao giờ vỡ giữa trận.' },
+  { id:'cv_gangthep', ten:'Găng Thép Câm', sao:4, dong:'thep', mau:'#8a92a4',
+    art:'thieulam_0_tay', giai:1,
+    thu:{ k:'atkPct', v:5 }, thuTxt:'+5% Công Kích',
+    moTa:'Không một khe hở, không một lỗ thở. Người rèn nó không định cho ai nói chuyện.' },
+  { id:'cv_baotayren', ten:'Bao Tay Thợ Rèn Chết', sao:4, dong:'davo', mau:'#6b5c4c',
+    art:'baidasan_0_tay', giai:1,
+    thu:{ k:'crit', v:4 }, thuTxt:'+4% Bạo Kích',
+    moTa:'Lòng bàn tay mòn thành hình cái búa. Ông ta rèn tới lúc lò tắt hẳn.' },
+  { id:'cv_gangghichep', ten:'Găng Kẻ Ghi Chép', sao:4, dong:'hacnguyet', mau:'#7ecbff',
+    art:'baidasan_6_tay', giai:7,
+    thu:{ k:'hpPct', v:5 }, thuTxt:'+5% Sinh Lực tối đa',
+    moTa:'Mặt trong chi chít chữ. Kẻ đeo nó ghi lại mọi thứ, kể cả lúc đang chết.' },
+  { id:'cv_daikiemtro', ten:'Đại Kiếm Tro Tàn', sao:4, dong:'thanlua', mau:'#c0b4a8',
+    art:'minhgiao_daikiem_3', giai:4,
+    thu:{ k:'aspdPct', v:4 }, thuTxt:'+4% tốc đánh',
+    moTa:'Rũ mấy cũng còn tro. Nó rơi ra từ chỗ thanh kiếm này từng nằm trong đám cháy.' },
+  { id:'cv_ungsan', ten:'Ủng Săn Đoàn Gloam', sao:4, dong:'cotxuong', mau:'#8a7a5c',
+    art:'baidasan_0_chan', giai:1,
+    thu:{ k:'dmgred', v:4 }, thuTxt:'−4% sát thương gánh chịu',
+    moTa:'Người ta rèn nó để đi săn chính đồng đội cũ. Nó làm tốt việc đó.' },
+  { id:'cv_ungxich', ten:'Ủng Xích Mắt Lệch', sao:4, dong:'thep', mau:'#5c6270',
+    art:'thieulam_0_chan', giai:1,
+    thu:{ k:'atkPct', v:4 }, thuTxt:'+4% Công Kích',
+    moTa:'Mắt xích nối sai một nhịp suốt ống chân. Lỗi ấy lại làm nó mềm đúng chỗ cần mềm.' },
+  { id:'cv_ungkhien', ten:'Ủng Vệ Binh Sứt', sao:4, dong:'vaythan', mau:'#3a2a6a',
+    art:'baidasan_6_chan', giai:7,
+    thu:{ k:'dmgred', v:4 }, thuTxt:'−4% sát thương gánh chịu',
+    moTa:'Nửa bộ giáp vệ binh. Nửa kia còn cắm ở đâu đó, và không ai đi tìm.' },
+  { id:'cv_mutrudua', ten:'Mũ Người Đưa Tin', sao:4, dong:'lonvu', mau:'#6b5c4c',
+    art:'baidasan_0_non', giai:1,
+    thu:{ k:'crit', v:4 }, thuTxt:'+4% Bạo Kích',
+    moTa:'Vành mũ mòn vẹt một bên. Tin tới nơi, người đưa tin thì không.' },
+  { id:'cv_kiemkhongchu', ten:'Trường Kiếm Không Chủ', sao:4, dong:'vuongkim', mau:'#c6d0dc',
+    art:'thieulam_kiem_4', giai:5,
+    thu:{ k:'atkPct', v:4 }, thuTxt:'+4% Công Kích',
+    moTa:'Chuôi còn vết tay của bốn đời người. Không đời nào chết vì tuổi già.' },
+];
+// Tên dòng giáp cho bảng — tra bằng COVAT[].dong.
+window.CV_DONG = {
+  vuongkim:  { ten:'Vương Kim',  mau:'#f0e4b0' },
+  hacnguyet: { ten:'Hắc Nguyệt', mau:'#9a9ac0' },
+  cotxuong:  { ten:'Cốt Xương',  mau:'#e0cfa8' },
+  thanlua:   { ten:'Thân Lửa',   mau:'#ff8000' },
+  lonvu:     { ten:'Lông Vũ',    mau:'#c0e0f8' },
+  vaythan:   { ten:'Vảy Thần',   mau:'#c8703a' },
+  thep:      { ten:'Thép Nện',   mau:'#aebdcc' },
+  davo:      { ten:'Da & Vỏ',    mau:'#8a7448' },
+};
+// Kỹ năng của XÁC GIÁP, mở dần theo cấp — thay CHI_KY (khoá theo lớp Axie) bằng khoá theo
+// DÒNG GIÁP. Hai dòng đầu luôn bật; hai dòng sau nổ theo cú tung chiêu của người chơi.
+// Giữ nguyên khuôn {ten,k,v,txt} / {ten,tam:{k,v,t},txt} nên chiKyCua/chiKyMo không đổi.
+window.CV_KY = {
+  vuongkim:  [{ ten:'Lệnh Vua',    k:'expPct', v:8,  txt:'+8% Kinh Nghiệm' },
+              { ten:'Khảm Vàng',   k:'crit',   v:3,  txt:'+3% Bạo Kích' },
+              { ten:'Đăng Cơ',     tam:{ k:'atkPct', v:13, t:7 }, txt:'Chiêu nổ: +13% Công Kích trong 7 giây' },
+              { ten:'Chói Miện',   tam:{ k:'evaPct', v:10, t:6 }, txt:'Chiêu nổ: +10% né đòn trong 6 giây' }],
+  hacnguyet: [{ ten:'Bóng Đổ',     k:'evaPct', v:4,  txt:'+4% né đòn' },
+              { ten:'Hút Đêm',     k:'hpLeech', v:3, txt:'hút 3% sát thương thành Sinh Lực' },
+              { ten:'Màn Sương',   tam:{ k:'evaPct', v:14, t:6 }, txt:'Chiêu nổ: +14% né đòn trong 6 giây' },
+              { ten:'Nuốt Bóng',   tam:{ k:'hpLeech', v:7, t:7 }, txt:'Chiêu nổ: hút 7% sát thương thành Sinh Lực trong 7 giây' }],
+  cotxuong:  [{ ten:'Cốt Nhọn',    k:'pierce', v:5,  txt:'+5% xuyên giáp' },
+              { ten:'Xương Dày',   k:'hpPct',  v:5,  txt:'+5% Sinh Lực tối đa' },
+              { ten:'Găm Sâu',     tam:{ k:'pierce', v:14, t:6 }, txt:'Chiêu nổ: +14% xuyên giáp trong 6 giây' },
+              { ten:'Rút Tuỷ',     tam:{ k:'hpLeech', v:6, t:6 }, txt:'Chiêu nổ: hút 6% sát thương thành Sinh Lực trong 6 giây' }],
+  thanlua:   [{ ten:'Lò Chưa Tắt', k:'atkPct', v:5,  txt:'+5% Công Kích' },
+              { ten:'Vỏ Nung',     k:'aspdPct', v:4, txt:'+4% tốc đánh' },
+              { ten:'Bùng Lò',     tam:{ k:'atkPct', v:16, t:5 }, txt:'Chiêu nổ: +16% Công Kích trong 5 giây' },
+              { ten:'Nện Đe',      tam:{ k:'aspdPct', v:18, t:6 }, txt:'Chiêu nổ: +18% tốc đánh trong 6 giây' }],
+  lonvu:     [{ ten:'Sải Cánh',    k:'aspdPct', v:5, txt:'+5% tốc đánh' },
+              { ten:'Mắt Diều',    k:'crit',   v:4,  txt:'+4% Bạo Kích' },
+              { ten:'Bổ Nhào',     tam:{ k:'crit', v:15, t:5 }, txt:'Chiêu nổ: +15% Bạo Kích trong 5 giây' },
+              { ten:'Gió Ngược',   tam:{ k:'aspdPct', v:20, t:5 }, txt:'Chiêu nổ: +20% tốc đánh trong 5 giây' }],
+  vaythan:   [{ ten:'Vảy Xếp',     k:'dmgred', v:6,  txt:'−6% sát thương gánh chịu' },
+              { ten:'Máu Lạnh',    k:'hpPct',  v:5,  txt:'+5% Sinh Lực tối đa' },
+              { ten:'Thủ Thế',     tam:{ k:'dmgred', v:14, t:8 }, txt:'Chiêu nổ: −14% sát thương gánh chịu trong 8 giây' },
+              { ten:'Phản Vảy',    tam:{ k:'hpLeech', v:6, t:6 }, txt:'Chiêu nổ: hút 6% sát thương thành Sinh Lực trong 6 giây' }],
+  thep:      [{ ten:'Tấm Dày',     k:'dmgred', v:5,  txt:'−5% sát thương gánh chịu' },
+              { ten:'Đối Trọng',   k:'atkPct', v:5,  txt:'+5% Công Kích' },
+              { ten:'Ép Tấm',      tam:{ k:'dmgred', v:12, t:6 }, txt:'Chiêu nổ: −12% sát thương gánh chịu trong 6 giây' },
+              { ten:'Dồn Lực',     tam:{ k:'atkPct', v:12, t:7 }, txt:'Chiêu nổ: +12% Công Kích trong 7 giây' }],
+  davo:      [{ ten:'Vỏ Bám',      k:'hpPct',  v:7,  txt:'+7% Sinh Lực tối đa' },
+              { ten:'Lót Da',      k:'qireg',  v:4,  txt:'+4 hồi Mana' },
+              { ten:'Nứt Vỏ',      tam:{ k:'crit', v:13, t:7 }, txt:'Chiêu nổ: +13% Bạo Kích trong 7 giây' },
+              { ten:'Dày Lên',     tam:{ k:'hpPct', v:16, t:8 }, txt:'Chiêu nổ: +16% Sinh Lực tối đa trong 8 giây' }],
+};
+// Di trú save: 16 con Chimera cũ trong player.chimera.co → 16 xác giáp, ĐÚNG bậc sao cũ.
+// Một-đổi-một nên không ai mất bản trùng, mất cấp hay mất mảnh Cốt đã khảm.
+window.CV_CU = {
+  aurelion:'cv_vuonggiap', netherfang:'cv_mutruhuvo', tidewarden:'cv_haicot',
+  emberjaw:'cv_tramdao', voltcrest:'cv_nolongung', ironshell:'cv_mutruvay',
+  petalkin:'cv_vosoi', crimsonmaw:'cv_gangthep', thornpaw:'cv_baotayren',
+  inkmane:'cv_gangghichep', cinderbeak:'cv_daikiemtro', mossback:'cv_ungsan',
+  hexmite:'cv_ungxich', ridgehorn:'cv_ungkhien', coghound:'cv_mutrudua',
+  sunspur:'cv_kiemkhongchu',
+};
+
 // ═══ NHIỆM VỤ CHÍNH TUYẾN — ĐÃ GỠ SẠCH, CHỜ DỰNG LẠI ═══════════════════════
 // Chủ dự án gỡ toàn bộ nhiệm vụ để thiết kế lại: lối chơi đã đổi khá nhiều (bỏ 7 phó bản, vai
 // trò theo bãi, bản sắc map, zoom camera), nên chuỗi nhiệm vụ cũ dẫn người chơi đi qua một game

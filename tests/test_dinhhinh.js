@@ -1,4 +1,4 @@
-// Định Hình Chimera — cấp · bốn ô Cốt · kỹ năng đồng hành. Thiết kế: docs/DINH_HINH_CHIMERA.md
+// Định Hình Cổ Vật — cấp · bốn ô Cốt · kỹ năng của xác giáp. Thiết kế: docs/DINH_HINH_CHIMERA.md
 //
 // Năm thứ phải gác, đều là chỗ một hệ nuôi thú dễ hỏng nhất:
 //
@@ -29,16 +29,16 @@ const PORT = process.argv[2] || '8853';
   const r1 = await p.evaluate(() => {
     window.TEST_MODE = true; startGame('thieulam', null);
     player.level = 60; player.lvPeak = 60; calcDerived();
-    const C = chiState(); C.co = {}; chiNhan('aurelion'); C.eq = 'aurelion';
-    const o = chiO('aurelion');
+    const C = chiState(); C.co = {}; chiNhan('cv_vuonggiap'); C.eq = 'cv_vuonggiap';
+    const o = chiO('cv_vuonggiap');
     const lv0 = o.lv, tran0 = chiTranCap(o);
     player.mats.datHon = 400;
-    const an = window.chiAnDat('aurelion', 400);
+    const an = window.chiAnDat('cv_vuonggiap', 400);
     const sauAn = { lv:o.lv, con:player.mats.datHon, tran:chiTranCap(o) };
     // Hoá rồi ăn tiếp
     player.silver = 9e8; player.mats.datHon = 400;
-    const h = window.chiHoa('aurelion');
-    window.chiAnDat('aurelion', 400);
+    const h = window.chiHoa('cv_vuonggiap');
+    window.chiAnDat('cv_vuonggiap', 400);
     return { lv0, tran0, an, sauAn, hoa:h, lv2:o.lv, tran2:chiTranCap(o) };
   });
   console.log('1) cấp:', JSON.stringify(r1));
@@ -57,8 +57,8 @@ const PORT = process.argv[2] || '8853';
   // người chơi đổ Đất Hồn lên cấp mà không được gì — đúng thứ bài này sinh ra để chặn.
   const r2 = await p.evaluate(() => {
     startGame('thieulam', null); player.level = 60; player.lvPeak = 60; calcDerived();
-    const C = chiState(); C.co = {}; chiNhan('aurelion'); C.eq = 'aurelion';
-    const o = chiO('aurelion');
+    const C = chiState(); C.co = {}; chiNhan('cv_vuonggiap'); C.eq = 'cv_vuonggiap';
+    const o = chiO('cv_vuonggiap');
     // Đo bằng chính hệ số áp vào bị động, và bằng CHỈ SỐ THẬT sau calcDerived.
     const dm = lv => { o.lv = lv; calcDerived(); return +chiThuMul().toFixed(4); };
     const a = dm(1), z = dm(CHI_LV_MAX);
@@ -72,7 +72,7 @@ const PORT = process.argv[2] || '8853';
   // ── 3. bốn ô Cốt: dòng chính cố định theo ô, nâng +3 mở dòng phụ, trần theo phẩm ──
   const r3 = await p.evaluate(() => {
     startGame('thieulam', null); player.silver = 9e8;
-    const C = chiState(); C.co = {}; chiNhan('aurelion'); C.eq = 'aurelion'; C.kho = [];
+    const C = chiState(); C.co = {}; chiNhan('cv_vuonggiap'); C.eq = 'cv_vuonggiap'; C.kho = [];
     // mỗi ô đúng một dòng chính?
     const sai = [];
     for (let i = 0; i < 300; i++){
@@ -115,18 +115,18 @@ const PORT = process.argv[2] || '8853';
   // ── 4. Cốt phải ăn vào CHỈ SỐ THẬT, cả phía Chimera lẫn phía người chơi ──
   const r4 = await p.evaluate(() => {
     startGame('thieulam', null); player.level = 60; player.lvPeak = 60;
-    const C = chiState(); C.co = {}; chiNhan('aurelion'); C.eq = 'aurelion'; C.kho = [];
-    const o = chiO('aurelion'); o.lv = 40;
+    const C = chiState(); C.co = {}; chiNhan('cv_vuonggiap'); C.eq = 'cv_vuonggiap'; C.kho = [];
+    const o = chiO('cv_vuonggiap'); o.lv = 40;
     calcDerived(); const hp0 = player.maxHp, atk0 = player.atk;
-    const g0 = chiCotGom('aurelion').c.cAtk;
-    // ô Vảy nuôi NGƯỜI CHƠI (hpPct), ô Sừng nuôi CHIMERA (cAtk)
+    const g0 = chiCotGom('cv_vuonggiap').c.cAtk;
+    // ô Vảy nuôi NGƯỜI CHƠI (hpPct), ô Sừng nuôi CHÍNH CÁI XÁC (cAtk)
     for (const k of ['vay','sung']){
       const c = cotMoiO('votrung', 'co', k); c.plus = 12; c.chinhV = 20;
       c.phu = [{ k:'atkPct', v:6 }];
       o.cot[k] = c;
     }
     calcDerived();
-    return { hp0, hp1:player.maxHp, atk0, atk1:player.atk, g0, g1:chiCotGom('aurelion').c.cAtk };
+    return { hp0, hp1:player.maxHp, atk0, atk1:player.atk, g0, g1:chiCotGom('cv_vuonggiap').c.cAtk };
   });
   console.log('4) Cốt vào chỉ số:', JSON.stringify(r4));
   if (!(r4.hp1 > r4.hp0)) fail('ô Vảy (HP người chơi) không ăn vào chỉ số người chơi');
@@ -138,12 +138,12 @@ const PORT = process.argv[2] || '8853';
   // ── 5. hiệu ứng bộ 2 mảnh và 4 mảnh ──
   const r5 = await p.evaluate(() => {
     startGame('thieulam', null); player.level = 60;
-    const C = chiState(); C.co = {}; chiNhan('aurelion'); C.eq = 'aurelion';
-    const o = chiO('aurelion');
+    const C = chiState(); C.co = {}; chiNhan('cv_vuonggiap'); C.eq = 'cv_vuonggiap';
+    const o = chiO('cv_vuonggiap');
     // chinhV cố định: nếu để nó bốc ngẫu nhiên thì phép trừ giữa hai lần đo lẫn cả phần bốc
     const dat = n => { o.cot = { sung:null, vuot:null, vay:null, duoi:null };
       COT_O_IDS.slice(0, n).forEach(k => { const c = cotMoiO('regai', 'tho', k); c.phu = []; c.chinhV = 4; o.cot[k] = c; });
-      calcDerived(); return chiCotGom('aurelion'); };
+      calcDerived(); return chiCotGom('cv_vuonggiap'); };
     const a = dat(1), b2 = dat(2), b4 = dat(4);
     // trộn hai Dòng thì KHÔNG được tính đủ bộ
     o.cot = { sung:null, vuot:null, vay:null, duoi:null };
@@ -175,7 +175,7 @@ const PORT = process.argv[2] || '8853';
   // ── 6. mỗi phó bản rơi ĐÚNG Dòng của nó ──
   const r6 = await p.evaluate(() => {
     startGame('thieulam', null);
-    const C = chiState(); C.kho = []; C.co = {}; chiNhan('aurelion'); C.eq = 'aurelion';
+    const C = chiState(); C.kho = []; C.co = {}; chiNhan('cv_vuonggiap'); C.eq = 'cv_vuonggiap';
     const sai = [], dem = {};
     for (const mapId in COT_DONG_THEO_MAP){
       C.kho = [];
@@ -199,16 +199,16 @@ const PORT = process.argv[2] || '8853';
   // ── 7. kỹ năng đồng hành mở theo cấp và BUFF NGƯỜI CHƠI ──
   const r7 = await p.evaluate(() => {
     startGame('thieulam', null); player.level = 60; player.lvPeak = 60;
-    const C = chiState(); C.co = {}; chiNhan('emberjaw'); C.eq = 'emberjaw';  // Beast
-    const o = chiO('emberjaw');
-    const doc = lv => { o.lv = lv; calcDerived(); return { mo:chiKyMo('emberjaw'), atk:player.atk, hp:player.maxHp }; };
+    const C = chiState(); C.co = {}; chiNhan('cv_tramdao'); C.eq = 'cv_tramdao';  // dòng Thân Lửa
+    const o = chiO('cv_tramdao');
+    const doc = lv => { o.lv = lv; calcDerived(); return { mo:chiKyMo('cv_tramdao'), atk:player.atk, hp:player.maxHp }; };
     const a = doc(1), b2 = doc(10), c = doc(25), d = doc(70);
     // kỹ năng loại "chiêu nổ thì buff"
     o.lv = 70; calcDerived(); const truoc = player.atk;
     chiBatTam('atkPct', 14, 6); const trong = player.atk;
     player.chiTam = null; calcDerived(); const sau = player.atk;
     const soLop = Object.keys(CHI_KY).length;
-    const duLop = CHIMERA.every(x => CHI_KY[x.lop]);
+    const duLop = COVAT.every(x => CHI_KY[x.dong]);
     return { a, b2, c, d, truoc, trong, sau, soLop, duLop,
              so4: Object.values(CHI_KY).every(x => x.length === 4) };
   });
@@ -221,19 +221,19 @@ const PORT = process.argv[2] || '8853';
   if (!(r7.trong > r7.truoc) || r7.sau !== r7.truoc)
     fail(`buff tạm sai: ${r7.truoc} → ${r7.trong} → ${r7.sau}`);
   else pass(`buff tạm bật rồi tắt sạch: ${r7.truoc} → ${r7.trong} → ${r7.sau}`);
-  if (!r7.duLop || r7.soLop !== 9 || !r7.so4) fail('thiếu bộ kỹ năng cho lớp Axie nào đó');
-  else pass('đủ 9 lớp Axie × 4 kỹ năng, mọi Chimera đều có bộ của mình');
+  if (!r7.duLop || r7.soLop !== 8 || !r7.so4) fail(`thiếu bộ kỹ năng cho dòng giáp nào đó (${r7.soLop} dòng, duLop=${r7.duLop}, so4=${r7.so4})`);
+  else pass('đủ 8 dòng giáp × 4 kỹ năng, mọi Cổ Vật đều có bộ của mình');
 
   // ── 8. lưu/nạp giữ nguyên cấp, Cốt đang đeo và kho ──
   const r8 = await p.evaluate(() => {
     startGame('thieulam', null); player.level = 60;
-    const C = chiState(); C.co = {}; chiNhan('aurelion'); C.eq = 'aurelion'; C.kho = [];
-    const o = chiO('aurelion'); o.lv = 55; o.hoa = 3;
+    const C = chiState(); C.co = {}; chiNhan('cv_vuonggiap'); C.eq = 'cv_vuonggiap'; C.kho = [];
+    const o = chiO('cv_vuonggiap'); o.lv = 55; o.hoa = 3;
     for (const k of COT_O_IDS){ const c = cotMoiO('bangvun', 'co', k); c.plus = 9; o.cot[k] = c; }
     for (let i = 0; i < 5; i++) C.kho.push(cotMoi('regai', 'tinh'));
     player.mats.datHon = 77;
     saveGame(); const ok = loadGame();
-    const o2 = chiO('aurelion');
+    const o2 = chiO('cv_vuonggiap');
     return { ok, lv:o2.lv, hoa:o2.hoa, deo:COT_O_IDS.filter(k => o2.cot[k]).length,
              plus:o2.cot.sung && o2.cot.sung.plus, kho:chiState().kho.length,
              bo:chiBoHieu(), dat:player.mats.datHon };
@@ -250,9 +250,9 @@ const PORT = process.argv[2] || '8853';
   const r9 = await p.evaluate(() => {
     startGame('thieulam', null);
     const C = chiState();
-    C.co = { aurelion:{ con:2 } };           // đúng hình dạng save trước bản này
-    C.eq = 'aurelion'; delete C.kho;
-    const o = chiO('aurelion');
+    C.co = { cv_vuonggiap:{ con:2 } };           // đúng hình dạng save trước bản này
+    C.eq = 'cv_vuonggiap'; delete C.kho;
+    const o = chiO('cv_vuonggiap');
     calcDerived();
     // Pet đi theo đã gỡ, nên không còn mountDmg() để đo. Thứ cần chứng minh vẫn y nguyên:
     // save đời cũ được VÁ đủ hình dạng mới và vẫn cho ra chỉ số, không ném lỗi.
@@ -275,14 +275,14 @@ const PORT = process.argv[2] || '8853';
   await p.waitForTimeout(400);
   const r10 = await p.evaluate(() => {
     const h = el('panel-char').innerHTML;
-    window.moKhoCot('aurelion');
+    window.moKhoCot('cv_vuonggiap');
     const k = el('panel-quest').innerHTML;
-    return { cap:/Cấp \d+/.test(h), cot:/CỐT —/.test(h), ky:/KỸ NĂNG ĐỒNG HÀNH/.test(h),
+    return { cap:/Cấp \d+/.test(h), cot:/CỐT —/.test(h), ky:/KỸ NĂNG XÁC GIÁP/.test(h),
              boTxt:/Vỏ Trứng/.test(h), kho:/Kho Cốt/.test(k), coManh:/Đeo/.test(k) };
   });
   console.log('10) giao diện:', JSON.stringify(r10));
   if (!r10.cap || !r10.cot || !r10.ky) fail('bảng nuôi thiếu phần: ' + JSON.stringify(r10));
-  else pass('bảng nuôi có đủ thanh cấp · bốn ô Cốt · kỹ năng đồng hành');
+  else pass('bảng nuôi có đủ thanh cấp · bốn ô Cốt · kỹ năng xác giáp');
   if (!r10.boTxt) fail('không hiện tên bộ đang đủ 4 mảnh'); else pass('hiện tên bộ đang đủ 4 mảnh');
   if (!r10.kho || !r10.coManh) fail('kho Cốt không mở được'); else pass('kho Cốt mở được, có nút đeo');
 

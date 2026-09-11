@@ -4,7 +4,7 @@
 // theo" — đúng một loại lỗi, ba chỗ khác nhau:
 //   1. Danh hiệu "Người Giữ Lunacia" đòi mount.tier >= 8 trong khi bảng chỉ còn 5 giai, nên
 //      nó KHÔNG THỂ đạt được kể cả khi đã max mọi thứ. Hệ Thú Chiến nay đã thay bằng Khế Ước
-//      Chimera, nên điều kiện là sở hữu một Chimera 5★ (xem docs/GACHA_KHE_UOC.md).
+//      Cổ Vật, nên điều kiện là sở hữu một Cổ Vật 5★ (xem docs/GACHA_KHE_UOC.md).
 //   2. Anima và Công Huân Lệnh đã bị gỡ khỏi hệ tiền tệ — không được sống lại trong player.
 //   3. Từ vựng tu tiên không được xuất hiện trên bất kỳ bảng nào người chơi mở ra.
 //
@@ -25,11 +25,11 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     // danh hiệu tối thượng phải đạt được khi đã max mọi thứ
     chiState().co.aurelion = { con:0 }; chiState().eq = 'aurelion'; player.level = 120; calcDerived();
     const t = TITLES.find(x => x.id === 'ardhaven');
-    return { datDuoc: !!t.cond(player), so5: CHIMERA.filter(c => c.sao === 5).length,
+    return { datDuoc: !!t.cond(player), so5: COVAT.filter(c => c.sao === 5).length,
              tuvi: 'tuvi' in (player.dantian||{}), ch: 'congHuan' in player };
   });
   console.log('1) danh hiệu tối thượng + tàn dư:', JSON.stringify(r));
-  if (!r.datDuoc) fail(`"Người Giữ Lunacia" vẫn không đạt được dù đã max (roster ${r.so5} con 5★)`);
+  if (!r.datDuoc) fail(`"Người Giữ Lunacia" vẫn không đạt được dù đã max (roster ${r.so5} cái 5★)`);
   if (r.tuvi) fail('Anima chưa xoá');
   if (r.ch) fail('Công Huân Lệnh chưa xoá');
   // quét lại từ vựng tu tiên trên UI thật

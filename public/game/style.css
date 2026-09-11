@@ -991,24 +991,9 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   border-top:1px solid var(--border-faint); padding-top:10px; flex-wrap:wrap; }
 .npc-trang-so { margin-right:auto; font-size:var(--fs-sm); color:var(--text-dimmer);
   font-variant-numeric:tabular-nums; }
-/* Ô Chimera — DẢI 16 khung nhịp thở xếp 8 cột × 2 hàng, không phải một tấm ảnh. Chạy bằng hai
-   animation steps() lồng nhau: một cái nhảy cột trong 0,889s, một cái nhảy hàng ở nhịp chậm gấp
-   đôi, nên hết một vòng cột là sang hàng — đúng 16 khung trong 1,778s, khớp CHI_THO_FPS = 9.
-   --w/--h do chiO34() ghi vào thẻ vì mỗi con một tỉ lệ ô riêng. */
-.skill-row i.chi-anh {
-  display:block; flex:0 0 auto; width:var(--w); height:var(--h);
-  border:2px solid; border-radius:var(--r-sm);
-  background:rgba(18,20,44,.9) var(--sh) no-repeat 0 0;
-  background-size:calc(var(--w) * 8) calc(var(--h) * 2);
-  animation:chi-tho-x .889s steps(8) infinite, chi-tho-y 1.778s steps(2) infinite;
-}
-@keyframes chi-tho-x { from { background-position-x:0 } to { background-position-x:calc(var(--w) * -8) } }
-@keyframes chi-tho-y { from { background-position-y:0 } to { background-position-y:calc(var(--h) * -2) } }
-@media (prefers-reduced-motion: reduce) { .skill-row i.chi-anh { animation:none } }
-/* Huy hiệu lớp Axie chính chủ — dải 9 ô 48px, thứ tự khớp LOP_DAI trong game.js. */
-.lop-hd { display:inline-block; width:13px; height:13px; vertical-align:-2px; margin-right:3px;
-  background:url(assets/ui/lop.webp) no-repeat; background-size:calc(13px * 9) 13px;
-  background-position:calc(var(--i) * -13px) 0; }
+/* Đã gỡ: `.chi-anh` (ô Chimera 16 khung thở) và `.lop-hd` (huy hiệu lớp Axie). Cả hai chỉ phục
+   vụ danh sách của màn Khế Ước hồi gacha còn quay ra con vật; nay danh sách hiện ICON MÓN thật
+   (cvIconUrl → nvIconUrl, cùng tấm với túi đồ) nên hai lớp này không còn ai gắn vào thẻ nào. */
 .skill-row .assign-btns { display:flex; gap:3px; }
 .skill-row .assign-btns button { width:24px; height:24px; font-size:var(--fs-sm); padding:0; margin:0; }
 .skill-row.locked { opacity:.5; }

@@ -4,6 +4,17 @@
 > phần quyết định game vui hay chán, và là phần độc lập với code nhất.
 >
 > **Trạng thái: ĐỀ XUẤT.** Con số là điểm xuất phát để đo, trừ trần 16% — cái đó là hợp đồng.
+>
+> ### ⇒ ĐÃ THI CÔNG MỘT NỬA (đợt đổi gacha sang Cổ Vật)
+>
+> Khế Ước nay **quay ra 16 Cổ Vật** thật (`window.COVAT`), thay chỗ 16 Chimera. Nhưng đợt đó cố
+> ý **chỉ đổi thứ quay ra, không đổi cân bằng**, nên 16 xác hiện tại mang **bị động một dòng**
+> (`thu`) đúng bằng 16 con cũ — chưa phải 15 cơ chế ở §1/§3 của tài liệu này.
+>
+> **Còn nợ, và nó là phần hay nhất:** mỗi xác **một BURST riêng**. Đây không chỉ là nội dung —
+> nó là chỗ về của năm khoá Cốt `cAtk · cCrit · cCritDmg · cSkill · cCd` (hai ô Sừng/Vuốt và
+> 5/12 hiệu ứng 2 mảnh) hiện **chưa có ai tiêu thụ** kể từ khi gỡ con pet. Dựng burst là nối
+> lại một nửa hệ Cốt, không phải thêm một hệ mới.
 
 ---
 

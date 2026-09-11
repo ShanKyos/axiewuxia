@@ -137,6 +137,59 @@ avatar mới là thứ họ chọn hoặc mua.
 
 **Nợ:** rig có sẵn `defense/hit-by-normal` và chưa nướng. Nướng rồi thì Axie giật được khi trúng.
 
+### 🎰 KHẾ ƯỚC NAY QUAY RA **CỔ VẬT (BỘ GIÁP)**, KHÔNG QUAY RA CHIMERA
+
+Chủ dự án chốt: *"giữ lại phần gacha sao cho sẽ đổi thành gacha bộ giáp và đồ. Hãy xoá phần
+gacha ra chimera thôi là ổn."*
+
+**Bộ máy gacha KHÔNG đụng một dòng nào** — pity 90 / soft 74 / 4★ pity 10 / 50-50 / hai banner /
+vòng 6 tuần / Ấn Giao Kết / Định Hình / bốn ô Cốt đều chạy nguyên. Chỉ **thứ rơi ra** là khác.
+
+| Trước | Nay |
+|---|---|
+| 16 Chimera (`window.CHIMERA`) | **16 Cổ Vật** (`window.COVAT`) — bộ giáp còn sót của Vaeldra |
+| Huyết Thống C0–C6 | **Cộng Hưởng R0–R6** |
+| Mảnh Huyết Thống (3★) | **Mảnh Giáp Vụn** |
+| `lop` = lớp Axie, tra `CHI_KY` | `dong` = **dòng giáp**, tra `CV_KY` (8 dòng × 4 kỹ năng) |
+| art `<id>_q.webp` (bảng khung) | **icon món thật trong `ITEM_DB`** (`cvVe` · `cvIconUrl`) |
+
+**⚠ ĐỢT NÀY KHÔNG ĐỔI CÂN BẰNG, CỐ Ý.** Phân bố `thu` của 16 xác trùng khít 16 con cũ
+(★5: skillPct12 · hpLeech6 · hpPct15 · aspdPct10 · evaPct8 · dmgred10 — ★4: hpPct6 · atkPct5 ·
+crit4 ×2 · hpPct5 · aspdPct4 · dmgred4 ×2 · atkPct4 ×2). `test_covat.js §1` khoá lại: đổi một
+con số là bài đỏ. Muốn cân lại thì làm một đợt riêng, đừng trộn vào đợt đổi thứ quay ra.
+
+**⚠ `CHIMERA` KHÔNG CHẾT — nó là danh mục AVATAR.** Thân Axie người chơi nhìn thấy đọc thẳng
+`CHI_MAP` · `CHI_ANH` · 16 bảng khung đứng + 16 bảng khung chạy. Xoá bảng đó là vỡ con Axie
+đang chạy trên màn. Gacha chỉ thôi *đẻ ra* nó; người chơi chọn avatar tự do (mọi NFT đều dùng
+được), đúng quyết định đã chốt ở mục ĐỔI VAI.
+
+**⚠ TÊN TRƯỜNG SAVE GIỮ NGUYÊN `player.chimera`, hàm vẫn mang tiền tố `chi`.** Cùng lý do
+`player.silver` vẫn là `silver` trong khi người chơi đọc "Lumen": mọi save đang chạy và 12 chỗ
+trong `loadGame` đọc khoá đó. **Đổi CHỮ người chơi thấy, đừng đổi khoá.**
+
+**Di trú save đi qua `CV_CU`, MỘT-ĐỔI-MỘT và đúng bậc sao**, ở **bốn** chỗ: `co` (túi) · `eq`
+(đang khoác) · `su` (lịch sử quay) · mảnh Cốt thì nằm sẵn trong `co[id].cot` nên đi theo miễn
+phí. Bỏ sót `eq` thì `calcDerived` tra `CV_MAP` ra `null` ⇒ mất trắng bị động mà không báo gì.
+Nó chạy **sau** đường di trú Thú Chiến → Chimera, nên save đời Thú Chiến đi qua hai chặng và
+vẫn tới đích (`test_kheuoc §4`).
+
+**Đã gỡ theo, đừng dựng lại:** `chiQuayImg` · `chiVeQuay` · `chiQuayDon` · `CHI_QUAY` +
+`CHI_QUAY_DUNG` + `CHI_QUAY_TOI_DA` (bộ đệm ba khe cho bảng quay) · `chiVeBong` · `veLop` +
+`LOP_DAI` · `lopHuyHieu`. Tất cả chỉ phục vụ màn quay ra con vật. **16 tệp `<id>_q.webp` thì
+GIỮ LẠI** — chúng là bản nướng của `nuong_chi.py` và là đúng thứ màn **chọn avatar** sẽ cần
+(hoạt cảnh `appear`). `test_chianh.js §4` gác chiều ngược lại: gọi lại mấy tên đó là bài đỏ.
+
+**⚠ NĂM KHOÁ `c*` CỦA CỐT VẪN CHƯA CÓ AI TIÊU THỤ** (`cAtk` · `cCrit` · `cCritDmg` · `cSkill` ·
+`cCd`, tức hai ô Sừng/Vuốt và 5/12 hiệu ứng 2 mảnh). Chúng từng nuôi con pet; pet đã gỡ. Chỗ
+đúng của chúng theo thiết kế đã duyệt là **burst của Cổ Vật** (`docs/CO_VAT_15.md` — mỗi xác
+một chiêu nổ), và burst thì **chưa dựng**. Nhãn đã đổi "Ragoon" → "Cổ Vật" cho khỏi gọi tên một
+con pet đã chết, nhưng **đừng "chữa" bằng cách đổ thẳng chúng vào sổ P của người chơi**: đó là
+một đợt cân bằng riêng (4 ô × 4 dòng phụ), không phải một phép đổi tên. Và `cCd` thì chưa có
+chỗ nào để đổ — game **không có** chỉ số giảm hồi chiêu trên người chơi.
+
+**Bài kiểm:** `tests/test_covat.js` (5 mục: hình dạng bảng · không rơi ra Chimera · di trú save
+không mất tiến trình · icon dùng chung nguồn với túi đồ · avatar còn sống).
+
 ### 🔑 KIT AXIE CÓ 41 HOẠT CẢNH, GAME MỚI DÙNG 2
 
 Khảo sát `axieinfinity/axie-origins-asset-kit` (clone về `/home/user/axieinfinity/...`, 2,2 GB).

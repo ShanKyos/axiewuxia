@@ -38,7 +38,7 @@ function check(name, ok, extra){
   const tabs = await page.evaluate(() => {
     player.level = 100; calcDerived();
     togglePanel('char');
-    // Ba tab (Chimera · Linh Thú · Đại Thành) nay nằm trong tab mẹ ✦ Nâng Cấp,
+    // Ba tab (Cổ Vật · Linh Thú · Đại Thành) nay nằm trong tab mẹ ✦ Nâng Cấp,
     // hàng con chỉ hiện KHI đang ở trong nhóm. Nên phải gom nhãn của CẢ HAI trạng thái.
     const nhan = () => Array.from(document.querySelectorAll('#panel-char .bang-tab')).map(b => b.textContent.trim());
     const hangDau = nhan();
