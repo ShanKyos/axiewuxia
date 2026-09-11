@@ -347,31 +347,43 @@ phải **thêm**.
 Đây cũng là chỗ chữa cho khắc hệ: `el:` chạy trong `hurtMob` (±20% / −12%) từ lâu nhưng người
 chơi không có cách nào biết map nào hệ gì. Nay hệ trội nằm ngay trên bảng Bản Đồ.
 
-### 📌 NHIỆM VỤ ĐÃ GỠ SẠCH — VIỆC CÒN NỢ, PHẢI DỰNG LẠI
+### 📌 CHÍNH TUYẾN ĐÃ DỰNG LẠI (33 nhiệm vụ) — PHỤ TUYẾN THÌ CHƯA
 
-`QUESTS` và `SIDE_QUESTS` nay đều **rỗng**. Đây **không phải** dọn dẹp — đây là một hệ thống bị
-tháo ra để thiết kế lại, và **nó phải được dựng lại**. Đừng đọc bảng rỗng rồi kết luận game này
-không cần nhiệm vụ.
+> ⚠ Mục này từng mở đầu bằng câu "`QUESTS` và `SIDE_QUESTS` nay đều **rỗng**". Câu đó **đã sai**
+> kể từ khi chuỗi được dựng lại, và nó vẫn nằm đây đủ lâu để làm một phiên (2026-09-11) kết luận
+> nhầm rằng bảng Đại Thành "không có cửa vào" — vì cổng đó đọc `player.mongChiTon`, và cờ ấy chỉ
+> bật khi xong chính tuyến. Đọc CLAUDE.md xong vẫn phải **đo**: `node -e` đếm thẳng `QUESTS.length`.
 
-**Vì sao gỡ:** lối chơi đã đổi quá nhiều so với lúc viết chuỗi — bỏ 7 phó bản, vai trò theo bãi,
-bản sắc map, zoom camera, cổng map bỏ `reqMain`. Chuỗi cũ dẫn người chơi đi qua một game không
-còn tồn tại. Giữ một chuỗi sai còn tệ hơn không có chuỗi nào.
+Đo được hôm nay: **`QUESTS` = 33 mục · 5 chương · cấp 1 → 118**, khai hết trong
+`data/canbang.js`. **`SIDE_QUESTS` vẫn = 0** — phụ tuyến còn nợ, và phần dưới đây nói về nó.
 
-**⚠ GỠ Ở HAI NƠI, KHÔNG PHẢI MỘT.** `data/canbang.js` khai 10 mục, rồi `game.js` `QUESTS.push(...)`
-thêm **6 chương / 25 mục nữa**. Rỗng bảng dữ liệu mà quên phần push thì `QUESTS.length` vẫn ra
-**25** — đã mắc đúng lỗi đó một lần trong chính đợt gỡ này.
+Đừng đọc `SIDE_QUESTS` rỗng rồi kết luận game này không cần phụ tuyến: đó là một hệ bị tháo ra
+để thiết kế lại, không phải bị bỏ.
 
-**Đã đổi theo:**
+**Vì sao đợt gỡ ban đầu xảy ra:** lối chơi đã đổi quá nhiều so với lúc viết chuỗi cũ — bỏ 7 phó
+bản, vai trò theo bãi, bản sắc map, zoom camera, cổng map bỏ `reqMain`. Chuỗi cũ dẫn người chơi
+đi qua một game không còn tồn tại. Giữ một chuỗi sai còn tệ hơn không có chuỗi nào.
+
+**⚠ NẾU LẠI GỠ: GỠ Ở HAI NƠI, KHÔNG PHẢI MỘT.** `game.js` từng có một `QUESTS.push(...)` nối thêm
+6 chương / 25 mục sau phần khai trong `data/canbang.js`. Rỗng bảng dữ liệu mà quên phần push thì
+`QUESTS.length` vẫn ra **25** — đã mắc đúng lỗi đó một lần. Phần push nay chỉ còn là **chú thích**
+ở `game.js` (~dòng 22489); cả 33 mục hiện tại đều từ `data/canbang.js`.
+
+**Đã đổi theo, và vẫn còn đúng:**
 - `reqMain` gỡ khỏi **mọi** map (kể cả một cái khai lẫn trong `MAPS.ngoai`). Map nay mở khoá bằng
   **cấp** là đủ. Nhánh đọc `md.reqMain` trong `mapGate()` vẫn còn — cắm lại một giá trị là khoá
   sống lại. *Cân nhắc kỹ: khoá map sau một nhiệm vụ nghĩa là nhiệm vụ hỏng thì map mất.*
 - Bảng theo dõi và Nhật Ký Nhiệm Vụ nói **"chưa có nhiệm vụ"**, không nói "hoàn tất". Một bảng
   rỗng mà khoe "chính tuyến hoàn tất, tự do làm phụ tuyến" là nói dối người chơi.
 
-**Khi dựng lại:** chủ dự án đã nói có thể **xây lại cả hệ thống lore** cùng lúc, nên đừng vá
-chuỗi cũ từ git — thiết kế lại từ đầu cùng với lore. Khuôn dữ liệu của cả hai bảng nằm trong chú
-thích ở `data/canbang.js`. Máy chạy nhiệm vụ **giữ nguyên** và chạy theo dữ liệu: điền bảng là
-chuỗi sống lại.
+**Khi dựng phụ tuyến:** chủ dự án đã nói có thể **xây lại cả hệ thống lore** cùng lúc, nên đừng
+vá chuỗi cũ từ git — thiết kế lại từ đầu cùng với lore. Khuôn dữ liệu của cả hai bảng nằm trong
+chú thích ở `data/canbang.js`. Máy chạy nhiệm vụ **giữ nguyên** và chạy theo dữ liệu: điền bảng
+là chuỗi sống lại — chính tuyến 33 mục đã sống lại đúng bằng cách đó.
+
+**Ai đọc mục này cũng nên biết:** chính tuyến nay là **cổng của bảng Đại Thành**
+(`masteryOpen()` đòi cấp 120 **và** `player.mongChiTon`). Chuỗi hỏng thì cả hệ Đại Thành mất cửa
+— đúng cái rủi ro mà dòng cảnh báo về `reqMain` ở trên đang nói, chỉ khác là nó đã thành thật.
 
 ### 🧭 NỐI MAP BẰNG RÌA (B1) + ĐIỂM DỊCH CHUYỂN MỞ BẰNG ĐI BỘ (B2)
 
