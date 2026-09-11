@@ -28,10 +28,24 @@ import numpy as np
 from scipy import ndimage
 from skimage import measure
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import cham_map
+
 BUOC = 32                 # ô lưới, px. Nhỏ hơn vung_rong.py (64) vì map 2600x1900 bé hơn nhiều
 BAN_DIEM = 300            # bán kính đĩa quanh một điểm nội dung
 BAN_NOI = 190             # bề rộng nửa dải nối hai điểm
 SAN_TOI_THIEU = 55.0      # %, ngưỡng test_sandat cho map hoang dã
+
+# Ngưỡng NHẬN của một map, đo bằng chính lưới tìm đường của game (xem cham_map.py) chứ không
+# bằng diện tích đa giác. Ba con số này là ba bài kiểm đang gác, đã chừa lề:
+MUC_O_TRONG = 58.0        # % ô lưới còn trống — test_domap đòi ≥55, chừa 3 điểm lề
+TRAN_VONG = 2.0           # tỉ lệ vòng xấu nhất, đo trên lưới 5x4 như test_obstacles ③
+LE_NO = 6.0               # lề nở thêm trên MUC_O_TRONG, để dành cho lùm ăn vào
+TRAN_DIEN = 88.0          # % khung, trần diện tích đa giác — quá đây thì hình thành khung map
+SAN_CUNG = 56.0           # sàn CỨNG khi phải hạ để đủ lùm — vẫn trên ngưỡng 55 của test_domap
+LUM_TOI_THIEU = 5         # map hoang dã ít hơn chừng này lùm thì đi đâu cũng như nhau
+def TRAN_KINH(W, H):      # trần đường kính giãn theo đường chéo map — khớp TRAN.duongKinhTiLe
+    return (2600 / math.hypot(2600, 1900)) * math.hypot(W, H)
 
 
 def _dia(m, gw, gh, cx, cy, r):
@@ -118,8 +132,36 @@ def trong_dg(dg, x, y):
     return c
 
 
-def lum_cay(m, dg, tranh, n=26, cach=340, hat=11):
-    """Tâm lùm chặn NẰM TRONG sàn, tránh mọi điểm nội dung — thứ làm map rộng có nghĩa."""
+def _trong_vat_can(vatcan, x, y, r=170):
+    """Điểm có nằm trong (hoặc sát) một vật cản tĩnh không — hồ, vách, nhà."""
+    for o in vatcan:
+        if o.get('hop'):
+            cx = min(max(x, o['x']), o['x'] + o['wd']); cy = min(max(y, o['y']), o['y'] + o['ht'])
+            if (x - cx) ** 2 + (y - cy) ** 2 < r * r: return True
+        else:
+            dx = (x - o['x']) / (o['rx'] + r); dy = (y - o['y']) / (o['ry'] + r)
+            if dx * dx + dy * dy < 1: return True
+    return False
+
+
+# Bán kính cấm đặt tâm lùm ĐI KÈM TỪNG ĐIỂM, do lay_diem.cjs tính ngay trong game (phần tử
+# thứ tư của mỗi điểm). Không có bảng hằng số ở đây — chép tay là sai, đã đo.
+def _ban_cam(q):
+    return q[3] if len(q) > 3 else 260
+
+
+def lum_cay(m, dg, tranh, vatcan=(), n=26, cach=340, mep=260, hat=11):
+    """Tâm lùm chặn NẰM TRONG sàn, tránh mọi điểm nội dung — thứ làm map rộng có nghĩa.
+
+    `tranh` là danh sách [nhãn, x, y] của lay_diem.cjs; mỗi nhãn có bán kính cấm riêng (xem
+    CAM ở trên), và `cach` chỉ là khoảng cách giữa hai lùm với nhau.
+
+    ⚠ `vatcan` KHÔNG phải tham số trang trí. Bản đầu không có nó, và hậu quả đo được ở
+    test_obstacles là 16 · 10 · 6 · 24 · 41 · 22 · 56 cây "mọc giữa hồ" trên bảy map —
+    100% đến từ lùm, không một cây nào đến từ rai(). Tâm lùm rơi vào hồ thì cả mười bốn
+    gốc của nó rơi theo. Bán kính đệm 170px vì tán lùm rộng 190px: tâm cách mép hồ chừng
+    ấy thì phần với tay vào hồ còn lại đủ nhỏ để bộ lọc lúc chạy trong raiCum() dọn nốt.
+    """
     rng = np.random.default_rng(hat)
     gh, gw = m.shape
     ra = []
@@ -129,9 +171,11 @@ def lum_cay(m, dg, tranh, n=26, cach=340, hat=11):
         if not m[gy, gx]: continue
         x, y = int(gx * BUOC), int(gy * BUOC)
         if not trong_dg(dg, x, y): continue
-        if any(math.dist((x, y), q) < cach for q in tranh + ra): continue
+        if _trong_vat_can(vatcan, x, y): continue
+        if any(math.dist((x, y), (q[1], q[2])) < _ban_cam(q) for q in tranh): continue
+        if any(math.dist((x, y), q) < cach for q in ra): continue
         # cách MÉP một quãng, không thì lùm dính vào rìa và không tạo được lối vòng
-        if min(math.dist((x, y), d) for d in dg) < 260: continue
+        if min(math.dist((x, y), d) for d in dg) < mep: continue
         ra.append((x, y))
     return ra
 
@@ -146,19 +190,87 @@ def dien_tich(dg, W, H):
 
 def lam(khoa, d):
     W, H = d['w'], d['h']
-    diem = [(x, y) for _, x, y in d['diem']]
+    diem = [(q[1], q[2]) for q in d['diem']]
+    vatcan = d.get('vatCan', [])
     if not diem:
         diem = [(W * 0.25, H * 0.5), (W * 0.5, H * 0.5), (W * 0.75, H * 0.5)]
     m = dung_mien(W, H, diem)
+
+    # ── ① NỞ ĐA GIÁC CHO TỚI KHI SÀN ĐI ĐƯỢC ĐẠT NGƯỠNG ───────────────────────────────────
+    # Bản đầu đo "sàn" bằng DIỆN TÍCH ĐA GIÁC và dừng ở 75%. Nhưng thứ test_domap đo là % ô
+    # lưới tìm đường CÒN TRỐNG, và giữa hai số ấy là toàn bộ MAP_OBSTACLES. Đo ra khoảng cách:
+    # Dusk Marsh 73,9% diện tích → 50,8% ô trống, mất 23,1 điểm cho đúng sáu cái hộp; Bird Tribe
+    # Heights mất 19,6; Bug Tribe Tunnels 18,6. Ba map ấy đỏ vì đa giác cắt thêm lần nữa vào chỗ
+    # vật cản đã cắt rồi.
+    #
+    # Nên đo bằng chính công thức của lưới (cham_map.cham) và NỞ dần tới khi đạt. Nở giữ nguyên
+    # vịnh và mũi của hình, chỉ làm chúng nông đi — vẫn là hình hữu cơ, không thành hình chữ nhật.
+    #
+    # Nở tới ngưỡng CỘNG LỀ chứ không tới đúng ngưỡng: lùm sẽ ăn tiếp vào phần này, và lùm mới
+    # là thứ làm map có lối vòng. Nở vừa đủ 58% rồi thì không còn chỗ nhận lùm nào — đã thử,
+    # ra Beast Herd Camp đúng MỘT lùm và Werebear Woods tỉ lệ vòng 1,008, tức map phẳng lì.
+    # Dừng sớm khi mặt nạ hết nở được (đã kín khung) để khỏi quay không.
+    #
+    # Nở tới ngưỡng CỘNG LỀ chứ không tới đúng ngưỡng: lùm sẽ ăn tiếp vào phần này, và lùm mới
+    # là thứ làm map có lối vòng. Nở vừa đủ 58% rồi thì không còn chỗ nhận lùm nào — đã thử,
+    # ra Beast Herd Camp đúng MỘT lùm và Werebear Woods tỉ lệ vòng 1,008, tức map phẳng lì.
+    #
+    # ⚠ VÀ CÓ TRẦN DIỆN TÍCH, vì nở không giới hạn thì hình tan ra thành KHUNG MAP. Đã đo:
+    # bỏ trần thì Bug Tribe Tunnels · Bird Tribe Heights · Dusk Marsh đều dừng ở 97,7% diện
+    # tích với ĐÚNG BỐN ĐỈNH — tức một hình chữ nhật. Chúng là ba map có tường đá chạy dọc
+    # mép khung, nên nở tới đâu cũng còn "đi được", và phép đo không hề kêu. Sàn viên mà viền
+    # là khung máy thì mất sạch cái nó sinh ra để có.
+    #
+    # Trần là ƯU TIÊN, ba phép đo là YÊU CẦU: chừng nào còn một phép đo đỏ thì vẫn nở tiếp,
+    # kể cả quá trần. Dusk Marsh đúng vào diện này — bốn khối đá giữa map ép đường vòng lên
+    # 2856px, phải nở tới 92,0% (16 đỉnh) mới kéo được xuống 2424px.
     dg = vien(m)
+    for _ in range(18):
+        do = cham_map.cham(W, H, dg, [], vatcan, d['diem'])
+        dat = (do['thoang'] >= MUC_O_TRONG and do['duongKinh'] <= TRAN_KINH(W, H)
+               and do['vongMax'] <= TRAN_VONG)
+        dien = dien_tich(dg, W, H)
+        if dat and (do['thoang'] >= MUC_O_TRONG + LE_NO or dien >= TRAN_DIEN): break
+        if dien >= 97.0: break                     # kín khung rồi, nở nữa cũng không đổi gì
+        m2 = ndimage.binary_dilation(m, np.ones((3, 3)))
+        if m2.sum() == m.sum(): break
+        m = m2; dg = vien(m)
+    do = cham_map.cham(W, H, dg, [], vatcan, d['diem'])
+
+    # ── ② NGÂN SÁCH LÙM: nhận từng cái một, chừng nào các phép đo còn đứng ────────────────
+    # Lùm là thứ làm map rộng có nghĩa, nên KHÔNG chốt cứng một con số. Nhưng mỗi lùm cũng ăn
+    # mất sàn và kéo dài đường đi, mà map nào vật cản tĩnh đã dày thì nó ăn vào đúng phần mỏng
+    # còn lại. Nên rải dư rồi nhận dần: giữ lùm nào vẫn để ba phép đo đứng trên ngưỡng.
+    #
+    # Hai lượt, vì hai điều cùng đúng mà kéo ngược nhau. Lượt một giữ sàn rộng rãi (58%). Lượt
+    # hai lo cho map nào lượt một để lại quá ít lùm: một map hoang dã chỉ có MỘT lùm thì đi đâu
+    # cũng như nhau — đo được Bird Tribe Heights nhận đúng 1/10 và Bug Tribe Tunnels 3/9, trong
+    # khi Beast Herd Camp nhận 6. Nên hạ sàn xuống mức CỨNG 56% (vẫn trên ngưỡng 55 của
+    # test_domap) cho tới khi đủ số lùm tối thiểu, thay vì để map thành bãi phẳng.
+    ung = lum_cay(m, dg, d['diem'], vatcan, n=16, cach=300, mep=200)
+    cum, dat = [], do
+    for san in (MUC_O_TRONG, SAN_CUNG):
+        if san is SAN_CUNG and len(cum) >= LUM_TOI_THIEU: break
+        for c in ung:
+            if c in cum: continue
+            if san is SAN_CUNG and len(cum) >= LUM_TOI_THIEU: break
+            thu = cham_map.cham(W, H, dg, cum + [c], vatcan, d['diem'])
+            if thu['thoang'] < san: continue
+            if thu['duongKinh'] > TRAN_KINH(W, H): continue
+            if thu['vongMax'] > TRAN_VONG: continue
+            cum.append(c); dat = thu
+
     pct = dien_tich(dg, W, H)
-    ngoai = [(n, x, y) for n, x, y in d['diem'] if not trong_dg(dg, x, y)]
-    cum = lum_cay(m, dg, diem)
-    ok = not ngoai and pct >= SAN_TOI_THIEU
-    print(f'{khoa:<10} {W}x{H} · {len(dg)} đỉnh · sàn {pct:5.1f}% · {len(cum)} lùm · '
+    ngoai = [(q[0], q[1], q[2]) for q in d['diem'] if not trong_dg(dg, q[1], q[2])]
+    ok = bool(not ngoai and dat['thoang'] >= SAN_CUNG and dat['hong'] == 0
+          and dat['duongKinh'] <= TRAN_KINH(W, H) and dat['vongMax'] <= TRAN_VONG)
+    print(f'{khoa:<10} {W}x{H} · {len(dg)} đỉnh · diện tích {pct:5.1f}% · ô trống {dat["thoang"]:5.1f}% · '
+          f'{len(cum)}/{len(ung)} lùm · kính {dat["duongKinh"]} · vòng {dat["vongMax"]} · '
           f'{len(ngoai)} điểm ngoài sàn' + ('' if ok else '   ✗ CHƯA ĐẠT'), file=sys.stderr)
     if ngoai: print('           ngoài: ' + str(ngoai[:6]), file=sys.stderr)
-    return {'khoa': khoa, 'w': W, 'h': H, 'diTrong': dg, 'isoCum': cum, 'san': pct, 'ok': ok}
+    return {'khoa': khoa, 'w': W, 'h': H, 'diTrong': dg, 'isoCum': cum,
+            'san': pct, 'oTrong': dat['thoang'], 'kinh': dat['duongKinh'],
+            'vong': dat['vongMax'], 'ok': ok}
 
 
 def main():

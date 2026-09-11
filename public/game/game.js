@@ -1882,6 +1882,29 @@ const ISO_NHO = ['co1', 'co1', 'co1', 'co2', 'co2', 'co2',
                  'da1', 'da2', 'da3'];
 // Những chỗ decor KHÔNG được phủ lên: người chơi phải tới được, phải nhìn thấy. Gom một lần
 // mỗi lượt dựng map chứ không hỏi lại mỗi cái cây.
+// Vật cản TĨNH của map — hồ, vách, nhà — KHÔNG kèm đa giác sàn, KHÔNG kèm decor.
+//
+// ⚠ Vì sao không dùng thẳng inObstacle() ở đây, dù nó có sẵn: nó trộn ba thứ vào một câu trả
+// lời, và hai trong ba thứ ấy sai chỗ với việc rải decor.
+//   · nó tính MỌI ĐIỂM NGOÀI `diTrong` là chặn, mà rừng viền thì CỐ Ý mọc ngoài đa giác
+//   · nó đọc `decorObs`, thứ chỉ được dựng lại ở rebuildDecorObs(). Lúc raiIso() chạy thì
+//     `decorObs` còn là decor của MAP TRƯỚC. Đo được: bốn tâm lùm của Beast Herd Camp ·
+//     Werebear Woods · Bird Tribe Heights bị loại vì "vật cản", mà cả ba đều không nằm ngoài
+//     đa giác lẫn trong hồ — chúng va vào bóng ma của map vừa rời.
+// Đây cũng là lời giải cho chỗ khó hiểu ghi trong raiIso: nới bán kính 10 → 64 mà lại lọt
+// NHIỀU HƠN. Bộ lọc không đo thứ nó tưởng đang đo.
+function _vatCanTinh(mid, x, y, r){
+  for (const o of (MAP_OBSTACLES[mid] || [])){
+    if (o.wd){
+      const cx = clamp(x, o.x, o.x + o.wd), cy = clamp(y, o.y, o.y + o.ht);
+      if ((x-cx)*(x-cx) + (y-cy)*(y-cy) < r*r) return true;
+    } else {
+      const dx = (x - o.x)/(o.rx + r), dy = (y - o.y)/(o.ry + r);
+      if (dx*dx + dy*dy < 1) return true;
+    }
+  }
+  return false;
+}
 function _isoDiemNoiDung(md){
   const ra = [];
   if (md.spawn) ra.push(md.spawn);
@@ -1890,7 +1913,12 @@ function _isoDiemNoiDung(md){
   for (const v of (md.vung || [])) if (v && isFinite(v.x)) ra.push(v);
   for (const n of NPCS) if (n.map === curMap) ra.push(n);
   // Cổng rìa: người chơi phải NHÌN THẤY chúng thì mới biết đi tiếp đâu, che là lạc đường.
-  for (const g of (md.cong || md.gates || [])) if (g && isFinite(g.x)) ra.push(g);
+  //
+  // ⚠ Bản trước đọc `md.cong || md.gates` — KHÔNG map nào có hai khoá ấy. Cổng nằm ở mảng
+  // toàn cục `GATES`, lọc theo `map`. Nghĩa là suốt đợt trước, dòng này duyệt một mảng rỗng
+  // và cổng chưa từng được canh: đo được decor phủ lên cổng ở Plant Tribe Glade (chungnam ·
+  // loimon), Bug Tribe Tunnels (caungam) và Bird Tribe Heights (ardhaven · caungam).
+  for (const g of GATES) if (g.map === curMap) ra.push(g);
   for (const g of (typeof _rimPts !== 'undefined' ? (_rimPts || []) : [])) if (g && isFinite(g.x)) ra.push(g);
   const bd = BOSS_DEFS[curMap];
   if (bd){
@@ -1922,21 +1950,12 @@ function raiIso(md){
     for (let t = 0, dat = 0; t < n*30 && dat < n; t++){
       // Đọc khổ từ `md` chứ không từ `MAP` toàn cục — bền hơn, vì `MAP` dùng chung và thứ tự
       // gán của nó phụ thuộc đường vào map (startGame khác travelTo).
-      //
-      // ⚠ NHƯNG ĐÂY KHÔNG PHẢI GỐC CỦA LỖI test_obstacles, đã đo: đổi xong số cây bị đếm là
-      // "mọc trong vật cản" vẫn y nguyên 214/260. Hướng đúng có lẽ nằm ở chính ĐỊNH NGHĨA:
-      // `inObstacle` tính MỌI ĐIỂM NGOÀI `diTrong` là chặn, mà rừng viền (`ISO_CAY`) thì
-      // CỐ Ý mọc ngoài đa giác (`!trong && d < 300`). Nếu vậy thì cả bộ lọc của tôi lẫn phép
-      // đếm của bài kiểm đang hỏi sai câu, và phải tách "ngoài đa giác" khỏi "trong hồ" trước
-      // khi sửa tiếp. Chưa xác nhận — đừng vá thêm trước khi đo chỗ này.
       const x = boc()*_W, y = boc()*_H;
       if (!hop(trongDaGiac(md.diTrong, x, y), _isoCachMep(md.diTrong, x, y))) continue;
-      // ⚠ CHƯA XONG. Nới bán kính lên 64 (cỡ nửa tán cây) tưởng chặt hơn, đo ra lại LỌT NHIỀU
-      // HƠN: ngoai 10 → 17 cây mọc trong hồ. Bộ lọc mà nới rộng lại lọt nhiều hơn thì nó không
-      // thật sự lọc — nó chỉ xô lệch chuỗi bốc cố định, nên mỗi lần đổi tham số là một bộ cây
-      // khác rơi xuống. Nghi decor TỰ SINH vật cản (obstaclesOf đọc decor), nên lúc hỏi ở đây
-      // danh sách chưa chốt. Sửa đúng là lọc SAU khi vật cản chốt, không phải nới bán kính.
-      if (inObstacle(curMap, x, y, 10)) continue;
+      // Hỏi vật cản TĨNH, không hỏi inObstacle: xem ghi chú ở _vatCanTinh. Có lần nới bán
+      // kính 10 → 64 rồi đo ra LỌT NHIỀU HƠN (10 → 17 cây trong hồ ở Beast Herd Camp) — vì
+      // inObstacle khi ấy đang trả lời một câu khác, và vì số cây trong hồ vốn đến từ raiCum().
+      if (_vatCanTinh(curMap, x, y, 10)) continue;
       if (_canhGiu.some(q => (q.x - x)*(q.x - x) + (q.y - y)*(q.y - y) < 150*150)) continue;
       decor.push({ type:'iso', img: ds[(boc()*ds.length)|0], x, y, s:1 });
       dat++;
@@ -1949,7 +1968,7 @@ function raiIso(md){
   // hai hàng `vatDat` đặt tay ở ngay mép lối, không phải mấy hàng lẫn trong bóng phía sau.
   rai(md.isoCay ?? Math.round(MAP.w * MAP.h / 6e4), ISO_CAY, (trong, d) => !trong && d < 300);
   rai(md.isoNho ?? Math.round(MAP.w * MAP.h / 3e4), ISO_NHO, (trong, d) => trong && d > 60);
-  raiCum(md, boc);
+  raiCum(md, boc, _canhGiu);
 }
 // LÙM CHẶN nằm TRONG lòng vùng đi được — thứ làm một map rộng có nghĩa.
 //
@@ -1961,7 +1980,7 @@ function raiIso(md){
 // Tâm lùm do tools/iso/vung_rong.py chấm sẵn, đã tránh đường mòn và mọi điểm nội dung: lùm mọc
 // giữa đường thì đường mòn dẫn thẳng vào bụi cây, còn lùm mọc đè cổng thì người chơi vào map
 // là kẹt trong một bụi cây.
-function raiCum(md, boc){
+function raiCum(md, boc, canhGiu){
   // ⚠ TÂM LÙM PHẢI TRÁNH BÃI QUÁI, VÀ CHỖ NÀY CHỈ KIỂM ĐƯỢC LÚC CHẠY.
   // tools/iso/vung_rong.py đã cho tâm lùm tránh cổng, điểm thả, chỗ hái thuốc và đường mòn —
   // nhưng BÃI QUÁI thì nó không biết: bãi sinh ra lúc chạy từ `vung` (xem banRaiVung), không
@@ -1979,12 +1998,31 @@ function raiCum(md, boc){
     for (const tv of (bd.thuve || [])) tranh.push({ x:tv.x*MAP.w, y:tv.y*MAP.h, r:300 });
     if (bd.tranai) tranh.push({ x:bd.tranai.x*MAP.w, y:bd.tranai.y*MAP.h, r:340 });
   }
+  const _canh = canhGiu || [];
   for (const [cx, cy] of (md.isoCum || [])){
     if (tranh.some(k => dist(cx, cy, k.x, k.y) < k.r)) continue;
+    // ── TÂM LÙM NẰM TRONG VẬT CẢN TĨNH THÌ BỎ CẢ LÙM ────────────────────────────────────
+    // ĐÂY LÀ GỐC CỦA LỖI "cây mọc giữa hồ", và nó được tìm ra bằng phép đếm chứ không bằng
+    // suy đoán: phân loại từng cây bị test_obstacles bắt xem nó thuộc lùm nào, ra kết quả
+    // 16/16 · 10/10 · 6/6 · 24/24 · 41/41 · 22/22 · 56/56 — KHÔNG một cây nào đến từ rai(),
+    // toàn bộ đến từ đây. Lý do: rai() có lọc `inObstacle`, raiCum() thì chưa từng có.
+    //
+    // Lọc HAI TẦNG vì hai kiểu hỏng khác nhau, đã đếm riêng được:
+    //   · tâm lùm rơi hẳn vào hồ (Bird Tribe Heights 3/8 lùm) → bỏ cả lùm, kể cả vật cản của
+    //     nó: dựng một khối chặn chồng lên khối chặn sẵn có là làm lưới tìm đường nặng thêm
+    //     mà không đổi hình dạng gì.
+    //   · tâm ở ngoài mà tán rộng 190px với tay vào (Werebear Woods 6 cây, lùm 0) → giữ lùm,
+    //     bỏ từng gốc rơi vào.
+    if (_vatCanTinh(curMap, cx, cy, 10)) continue;
     for (let i = 0; i < 14; i++){
       const a = boc()*Math.PI*2, r = boc()*190;
-      decor.push({ type:'iso', img: ISO_CAY[(boc()*ISO_CAY.length)|0],
-                   x: cx + Math.cos(a)*r, y: cy + Math.sin(a)*r*0.58, s:1 });
+      const x = cx + Math.cos(a)*r, y = cy + Math.sin(a)*r*0.58;
+      if (_vatCanTinh(curMap, x, y, 10)) continue;
+      // Bán kính 110 chứ không 150 như rai(): tâm lùm đã đứng cách điểm nội dung ≥200-340px ở
+      // `tranh` bên trên, nên 110 chỉ cắt đúng phần tán với tay tới — đủ vượt ngưỡng 90px mà
+      // test_obstacles đo cho bãi quái/cổng và 100px cho điểm thả, mà không khoét rỗng lùm.
+      if (_canh.some(q => (q.x - x)*(q.x - x) + (q.y - y)*(q.y - y) < 110*110)) continue;
+      decor.push({ type:'iso', img: ISO_CAY[(boc()*ISO_CAY.length)|0], x, y, s:1 });
     }
     // MỘT vật cản cho cả lùm, không phải một cho mỗi gốc: mười bốn ellipse chồng nhau thì lưới
     // tìm đường nặng thêm mà hình dạng vùng chặn không khác gì một khối.

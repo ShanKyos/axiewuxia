@@ -702,16 +702,15 @@ window.MAPS = {
     // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
     // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
     // lại, đừng sửa tay toạ độ ở đây.
-    //   sàn 83.4%  ·  22 đỉnh  ·  6 lùm chặn
+    //   ô trống 62.0%  ·  18 đỉnh  ·  8 lùm chặn  ·  kính 2160  ·  vòng 1.578
     sanIso:true, isoCo:['nen_co1','nen_co2','nen_co3','nen_co4'],
     isoDat:['nen_dat1','nen_dat2','nen_dat3','nen_dat4'],
     diTrong: [
       [2336,1808], [992,1808], [864,1712], [576,1776], [320,1776], [64,1680],
-      [48,160], [192,48], [416,48], [672,144], [736,48], [1184,48],
-      [1248,112], [1472,112], [1728,176], [1984,48], [2176,144], [2496,144],
-      [2512,1120], [2448,1312], [2512,1376], [2512,1664],
+      [48,384], [352,176], [1120,144], [1184,48], [2144,48], [2208,144],
+      [2496,144], [2512,1120], [2448,1152], [2448,1312], [2512,1376], [2512,1664],
     ],
-    isoCum: [[2240,672], [352,960], [1440,1696], [160,672], [2496,448], [128,1248],],
+    isoCum: [[1600,1312], [480,1568], [768,1376], [192,1472], [2272,992], [2496,352], [1632,512], [2176,352],],
     spawn:{ x:460, y:460 },
     // Ba lối rìa nhận từ Rẻo Rừng Corran, đặt lại trên khổ 2600x1900: tây↔Werebear Woods,
     // đông↔Lối Mòn Corran, bắc↔Trũng Nứt Corran. Điểm tới phải cách MỌI Trùm Vùng ≥700px
@@ -841,16 +840,16 @@ window.MAPS = {
     // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
     // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
     // lại, đừng sửa tay toạ độ ở đây.
-    //   sàn 75.6%  ·  22 đỉnh  ·  3 lùm chặn
+    //   ô trống 60.7%  ·  22 đỉnh  ·  7 lùm chặn  ·  kính 2064  ·  vòng 1.938
     sanIso:true, isoCo:['nen_co1','nen_co2','nen_co3','nen_co4'],
     isoDat:['nen_dat1','nen_dat2','nen_dat3','nen_dat4'],
     diTrong: [
-      [1632,1808], [928,1808], [832,1744], [320,1776], [64,1680], [48,672],
-      [144,640], [288,432], [672,368], [864,144], [1184,48], [1408,48],
-      [1632,176], [1760,176], [1888,272], [2048,272], [2272,144], [2496,144],
-      [2512,1216], [2512,1568], [2304,1776], [1824,1712],
+      [1664,1840], [896,1840], [800,1776], [288,1808], [32,1712], [16,640],
+      [96,624], [256,400], [640,336], [832,112], [1056,16], [1568,16],
+      [1664,144], [1792,144], [2016,240], [2240,112], [2528,112], [2544,1248],
+      [2544,1600], [2336,1808], [2080,1808], [1856,1744],
     ],
-    isoCum: [[480,1568], [2400,576], [1568,1056],],
+    isoCum: [[480,1568], [768,1376], [1184,1824], [192,832], [160,1504], [1600,1184], [544,512],],
     spawn:{ x:1300, y:330 }, trees:0, rocks:0, herbs:true,
     // Câu đầu vốn nằm ở REGION_UNLOCK_LORE.ngoai và chỉ hiện ĐÚNG MỘT LẦN lúc mở khoá vùng.
     // Dòng người chơi đọc mỗi lần mở Bản Đồ lại là dòng "đất an toàn để luyện cấp" — tức là
@@ -887,17 +886,17 @@ window.MAPS = {
     // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
     // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
     // lại, đừng sửa tay toạ độ ở đây.
-    //   sàn 71.7%  ·  22 đỉnh  ·  4 lùm chặn
+    //   ô trống 60.5%  ·  22 đỉnh  ·  4 lùm chặn  ·  kính 2208  ·  vòng 1.163
     sanIso:true, isoCo:['nen_co1','nen_co2','nen_co3','nen_co4'],
     isoDat:['nen_dat1','nen_dat2','nen_dat3','nen_dat4'],
     isoNhuom:{ mau:'#3d5230', do:0.34 },
     diTrong: [
-      [2336,1808], [2112,1808], [1952,1616], [1824,1616], [1632,1808], [352,1808],
-      [48,1664], [48,672], [416,656], [496,448], [704,304], [864,304],
-      [1024,432], [1344,464], [1440,560], [1648,512], [1616,192], [1696,48],
-      [2368,48], [2512,128], [2512,1376], [2512,1664],
+      [2368,1840], [2080,1840], [1856,1648], [1664,1840], [640,1840], [608,1808],
+      [32,1840], [16,640], [384,624], [464,416], [672,272], [896,272],
+      [1056,400], [1376,432], [1472,528], [1616,480], [1584,64], [1632,16],
+      [2400,16], [2528,80], [2544,1152], [2544,1696],
     ],
-    isoCum: [[352,960], [768,1024], [2400,1088], [128,1248],],
+    isoCum: [[1440,1696], [1024,1824], [192,1248], [2336,1056],],
     spawnFrom:{ comoc:{ x:1921, y:260 }, daohoa:{ x:2450, y:700 } }, spawn:{ x:400, y:1500 }, trees:0, rocks:0,
     desc:'Từ đây là đất PK — hạ người khác được, bị hạ cũng được. Chimera ở đây rơi Cốt bậc đầu.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
@@ -1193,17 +1192,17 @@ window.MAPS = {
     // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
     // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
     // lại, đừng sửa tay toạ độ ở đây.
-    //   sàn 79.9%  ·  22 đỉnh  ·  7 lùm chặn
+    //   ô trống 56.6%  ·  22 đỉnh  ·  5 lùm chặn  ·  kính 2208  ·  vòng 1.306
     sanIso:true, isoCo:['nen_da1','nen_da2','nen_da3','nen_da4'],
     isoDat:['nen_da1','nen_da2','nen_da3','nen_da4'],
     isoNhuom:{ mau:'#4a3a26', do:0.46 },
     diTrong: [
-      [2336,1808], [2112,1808], [1792,1680], [1632,1808], [896,1776], [64,1808],
-      [48,672], [112,640], [144,224], [288,112], [512,112], [768,272],
-      [1056,208], [1152,48], [1568,48], [1664,176], [2048,176], [2144,112],
-      [2496,144], [2512,1120], [2416,1312], [2512,1600],
+      [2400,1872], [2048,1872], [1888,1744], [1696,1872], [832,1872], [0,1872],
+      [-16,608], [48,576], [80,160], [224,48], [576,48], [992,272],
+      [1024,-16], [1696,-16], [1760,112], [1984,112], [2080,48], [2560,80],
+      [2576,1184], [2480,1248], [2576,1376], [2576,1664],
     ],
-    isoCum: [[2112,896], [1696,928], [1280,640], [576,1152], [224,1024], [2432,704], [1632,576],],
+    isoCum: [[2112,896], [1696,928], [1216,480], [1568,608], [512,1152],],
     spawnFrom:{ chungnam:{ x:260, y:1366 }, mongco:{ x:1369, y:260 }, trungnut:{ x:280, y:1660 }, caungam:{ x:2250, y:400 } }, spawn:{ x:400, y:400 }, dark:true, trees:0, rocks:0,   // 30/46 -> 44/60: thêm lối rìa
     // đi Aquatic Tribe Causeway nghĩa là thêm một cổng và một điểm tới, mà decorUnblock() dọn
     // cây đá quanh MỌI điểm nội dung. Bể ban đầu 76 cây đá lọc xong chỉ còn 19 — dưới sàn 20
@@ -1309,17 +1308,17 @@ window.MAPS = {
     // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
     // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
     // lại, đừng sửa tay toạ độ ở đây.
-    //   sàn 76.1%  ·  22 đỉnh  ·  8 lùm chặn
+    //   ô trống 56.5%  ·  22 đỉnh  ·  3 lùm chặn  ·  kính 2016  ·  vòng 1.152
     sanIso:true, isoCo:['nen_da1','nen_da2','nen_da3','nen_da4'],
     isoDat:['nen_da1','nen_da2','nen_da3','nen_da4'],
     isoNhuom:{ mau:'#cfe4f5', do:0.62 },
     diTrong: [
-      [2336,1808], [2112,1808], [1952,1616], [1824,1616], [1632,1808], [896,1776],
-      [192,1808], [48,1664], [48,672], [416,656], [528,256], [704,80],
-      [928,80], [1120,336], [1408,272], [1600,80], [2208,48], [2496,144],
-      [2512,1120], [2448,1312], [2512,1376], [2512,1664],
+      [2400,1872], [2048,1872], [1888,1680], [1696,1872], [128,1872], [-16,1728],
+      [-16,608], [352,592], [432,416], [464,192], [640,16], [992,16],
+      [1104,96], [1184,272], [1344,208], [1536,16], [2272,-16], [2400,80],
+      [2560,80], [2576,1184], [2576,1312], [2576,1728],
     ],
-    isoCum: [[2240,672], [1504,1504], [1856,864], [192,1248], [2496,448], [608,1280], [1152,1184], [1312,1792],],
+    isoCum: [[2112,896], [1696,832], [384,1280],],
     // Điểm tới của lối rìa mới từ Aquatic Tribe Causeway. Chỗ này DÒ BẰNG MÁY: ba Vệ Binh Trụ của
     // Bird Tribe Heights (tt1/tt2/tt3) phải cách ≥700px và vách bắc dày 280px, nên góc bắc-đông là
     // ô duy nhất vừa sát rìa vừa đứng được — tt1 cách 1290px, gần nhất là tt2 974px.
@@ -1348,7 +1347,7 @@ window.MAPS = {
     // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
     // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
     // lại, đừng sửa tay toạ độ ở đây.
-    //   sàn 74.1%  ·  22 đỉnh  ·  6 lùm chặn
+    //   ô trống 60.7%  ·  22 đỉnh  ·  7 lùm chặn  ·  kính 2304  ·  vòng 1.056
     sanIso:true, isoCo:['nen_dat1','nen_dat2','nen_dat3','nen_dat4'],
     isoDat:['nen_dat1','nen_dat2','nen_dat3','nen_dat4'],
     isoNhuom:{ mau:'#e8c483', do:0.55 },
@@ -1358,7 +1357,7 @@ window.MAPS = {
       [768,112], [1072,192], [1152,368], [1536,432], [1680,320], [1760,48],
       [2208,48], [2272,144], [2496,144], [2512,1664],
     ],
-    isoCum: [[2048,928], [2400,1088], [480,1568], [1728,1120], [864,896], [1344,1792],],
+    isoCum: [[480,1568], [1888,1504], [1728,1120], [864,896], [96,960], [1408,1760], [2080,576],],
     spawnFrom:{ tuyettinh:{ x:1139, y:260 }, nhanmon:{ x:2340, y:678 } }, spawnFrom:{ comoc:{ x:260, y:1286 }, nhanmon:{ x:2340, y:582 } }, spawn:{ x:400, y:950 }, trees:0, rocks:0,
     desc:'Thảo nguyên mở rộng, Chimera trâu bò đánh đau. Rơi nguyên liệu nâng chiêu tầm xa và đao pháp.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
@@ -1383,17 +1382,16 @@ window.MAPS = {
     // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
     // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
     // lại, đừng sửa tay toạ độ ở đây.
-    //   sàn 75.4%  ·  22 đỉnh  ·  8 lùm chặn
+    //   ô trống 56.8%  ·  16 đỉnh  ·  5 lùm chặn  ·  kính 2424  ·  vòng 1.922
     sanIso:true, isoCo:['nen_dat1','nen_dat2','nen_dat3','nen_dat4'],
     isoDat:['nen_co1','nen_co2','nen_co3','nen_co4'],
     isoNhuom:{ mau:'#4a4526', do:0.58 },
     diTrong: [
-      [2336,1808], [2112,1808], [1952,1616], [1824,1616], [1632,1808], [512,1808],
-      [48,1664], [48,672], [416,656], [432,544], [624,288], [832,144],
-      [1024,176], [1152,304], [1344,304], [1472,48], [1888,48], [1920,112],
-      [2496,144], [2512,1120], [2512,1344], [2512,1664],
+      [2560,1872], [1920,1872], [1888,1840], [1856,1872], [96,1872], [0,1840],
+      [-16,544], [288,528], [304,416], [464,256], [496,160], [704,16],
+      [1088,16], [1216,112], [1248,-16], [2560,16],
     ],
-    isoCum: [[1120,1248], [2144,1024], [2400,576], [192,1248], [1568,608], [864,896], [1152,1728], [1952,1312],],
+    isoCum: [[2528,1152], [2240,672], [2496,224], [2208,96], [32,1568],],
     spawnFrom:{ mongco:{ x:1668, y:260 } }, spawn:{ x:400, y:950 }, trees:0, rocks:0,
     desc:'Bãi luyện cuối game, ngoài biên ải Lunacia. PK ở đây không cộng Tai Tiếng. Chimera rơi trang bị bậc vàng.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
@@ -1426,17 +1424,17 @@ window.MAPS = {
     // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
     // bao trùm chúng theo cấu tạo chứ không phải nhờ may. Sửa map = sửa tham số rồi chạy
     // lại, đừng sửa tay toạ độ ở đây.
-    //   sàn 58.0%  ·  22 đỉnh  ·  13 lùm chặn
+    //   ô trống 58.1%  ·  20 đỉnh  ·  11 lùm chặn  ·  kính 96  ·  vòng 1.088
     sanIso:true, isoCo:['nen_da1','nen_da2','nen_da3','nen_da4'],
     isoDat:['nen_da1','nen_da2','nen_da3','nen_da4'],
     isoNhuom:{ mau:'#2a2f42', do:0.60 },
     diTrong: [
-      [1632,1808], [1120,1808], [992,1648], [864,1648], [576,1776], [320,1776],
-      [64,1680], [48,672], [416,656], [496,448], [704,336], [832,336],
-      [1024,464], [1344,464], [1440,560], [1600,560], [2272,144], [2496,144],
-      [2512,1120], [2272,1200], [1856,1200], [1840,1600],
+      [1696,1872], [992,1872], [928,1712], [640,1840], [256,1840], [0,1744],
+      [-16,608], [352,592], [432,384], [640,272], [896,272], [1088,400],
+      [1408,400], [1536,496], [2208,80], [2560,80], [2576,1184], [2336,1264],
+      [1920,1264], [1904,1664],
     ],
-    isoCum: [[2048,928], [1504,1120], [352,960], [1120,1248], [640,1248], [1856,416], [768,800], [2400,576], [1696,832], [320,1504], [1152,832], [96,1248], [1632,1440],],
+    isoCum: [[2048,928], [1504,1120], [2240,672], [352,960], [1120,1248], [2560,512], [896,1472], [640,1248], [1856,416], [768,800], [0,864],],
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:0, rocks:0,
     desc:'Đường nứt Thủ Hộ Vaeldra không kịp bịt, ăn thẳng xuống dưới lớp đá nền. Càng xuống sâu khí Morvahn càng đặc, và không tầng nào giống tầng nào.',
     packs: [], duhiep: null },
