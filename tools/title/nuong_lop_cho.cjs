@@ -78,6 +78,11 @@ const DATA = path.join(GOC, 'public/game/data/lop_cho.js');
       }
       return {
         cw, ch,
+        // Mép TRÁI của ô, trong hệ Ô VẼ (HERO_W x HERO_H). Có số này thì dải khung đặt được
+        // vào ĐÚNG hệ toạ độ mà heroSprite() dùng — nhờ vậy hình nướng sẵn và hình dựng sống
+        // (có trang bị) chồng khít lên nhau, đổi qua lại không nhảy một điểm ảnh nào.
+        // Căn theo TÂM Ô CẮT thì không làm được: mặc giáp vào là hộp bao rộng ra, tâm dời đi.
+        x: x1,
         // Gót chân trong ô, tính từ mép trên ô. HERO_GOT là gót trong hệ Ô VẼ.
         got: HERO_GOT - y1,
         // Chiều cao THÂN đo trên bảng nướng — game thu theo số này để ra cỡ trên màn.
@@ -88,15 +93,15 @@ const DATA = path.join(GOC, 'public/game/data/lop_cho.js');
     if (r.loi) { console.error(`${sect}: ${r.loi}`); process.exitCode = 1; continue; }
     const tam = path.join(DICH, sect + '.png');
     fs.writeFileSync(tam, Buffer.from(r.png.split(',')[1], 'base64'));
-    meta[sect] = { cw: r.cw, ch: r.ch, got: r.got, than: r.than };
-    console.log(`  ${sect.padEnd(9)} ô ${r.cw}x${r.ch}  gót ${r.got}  -> ${sect}.png`);
+    meta[sect] = { cw: r.cw, ch: r.ch, x: r.x, got: r.got, than: r.than };
+    console.log(`  ${sect.padEnd(9)} ô ${r.cw}x${r.ch}  x ${r.x}  gót ${r.got}  -> ${sect}.png`);
   }
   await b.close();
 
   fs.writeFileSync(DATA,
     '/* SINH RA TỰ ĐỘNG bởi tools/title/nuong_lop_cho.js — đừng sửa tay.\n' +
-    '   Hình học dải khung NĂM LỚP ở màn hình chờ: cỡ ô, chỗ gót chân trong ô, và chiều cao\n' +
-    '   THÂN đo trên bảng nướng (game thu theo số này, không theo chiều cao ô). */\n' +
+    '   Hình học dải khung NĂM LỚP ở màn hình chờ: cỡ ô, chỗ ô nằm trong Ô VẼ (x, got), và\n' +
+    '   chiều cao THÂN đo trên bảng nướng (game thu theo số này, không theo chiều cao ô). */\n' +
     'window.LOP_CHO = ' + JSON.stringify({ nKhung: KHUNG, o: meta }, null, 1) + ';\n');
   console.log('bảng hình học -> ' + path.relative(GOC, DATA));
   console.log('\n⚠ Còn một bước THỦ CÔNG: chuyển PNG sang WEBP rồi xoá PNG —\n' +

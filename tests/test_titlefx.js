@@ -10,6 +10,7 @@
 //      từng lớp, đừng nhìn tổng thể.
 //   4. Sân khấu phải vẽ NHÂN VẬT THẬT (dải khung nướng từ heroSprite), không phải bộ tranh
 //      anh hùng `pick_*` — và không được kéo bảng khung 159px lên cho đầy khung.
+//   4b. Trang bị phải HIỆN LÊN người, mà vẫn không được rơi về hình dựng bằng đường.
 //   5. Tấm phủ dìm-đêm PHẢI trong suốt một phần. Dựng nó bằng 'multiply' trên canvas trống ra
 //      một ô màu ĐẶC, và lúc ấy cả cảnh biến mất dưới một mảng tím — triệu chứng trông hệt như
 //      "art chưa tải". Đã dẫm đúng bẫy đó một lần.
@@ -187,6 +188,54 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     fail('sân khấu không dùng dải khung nhân vật thật: ' + r7.nguon.join(' '));
   if (r7.phong.some(k => k > r7.tran + 1e-6))
     fail(`phóng bảng khung quá trần ${r7.tran}: ${r7.phong.join(', ')}`);
+
+  // ── 8) TRANG BỊ phải hiện lên người — và KHÔNG được rơi về hình dựng bằng đường ─────────
+  // Ba chuyện khác nhau, dễ lẫn:
+  //   · Lớp CÓ art giáp cho đúng giai ấy (mới 3/35 tổ hợp) thì dựng sống, thấy nguyên bộ giáp.
+  //   · Lớp CHƯA có art giáp thì `ccArtSan()` phải trả FALSE. Đây là cái van quan trọng nhất
+  //     của cả đợt: `heroSprite()` không có art thì nó dựng hình bằng ĐƯỜNG, tức trả về đúng
+  //     "nhân vật fake" mà đợt này sinh ra để gỡ — chỉ khác là nay nó chớp một nhịp rồi biến.
+  //   · Dù có art giáp hay không, CÁNH và HÀO QUANG +N vẫn phải hiện: chúng là art/hiệu ứng
+  //     thật, có cho mọi lớp, và trong MU chúng mới là thứ đọc ra "người này có đồ".
+  await p.goto('http://localhost:8853/index.html', { waitUntil:'load' });
+  await p.waitForFunction(() => window.__gameReady).catch(()=>{});
+  await p.waitForTimeout(900);
+  const r8 = await p.evaluate(async () => {
+    window.TEST_MODE = true;
+    const dem = async (sect, boost) => {
+      startGame(sect, { name:'T' });
+      if (boost) applyTestBoost();
+      const pl = JSON.parse(JSON.stringify(player));
+      const gv = gearVisual(pl), tier = heroTier(pl);
+      // chờ art (dải nướng + bộ giáp nếu có)
+      for (let i = 0; i < 50; i++){
+        if (ccLopAnh(sect) && (ccArtSan(sect, tier, gv) || i > 25)) break;
+        await new Promise(r => setTimeout(r, 100));
+      }
+      const c = document.createElement('canvas'); c.width = 420; c.height = 340;
+      const g = c.getContext('2d', { willReadFrequently:true });
+      ccVeNguoiBo(g, { k:sect, cx:210, fy:300, than:150, pl }, 0);
+      const d = g.getImageData(0, 0, 420, 340).data;
+      let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 24) n++;
+      return { px:n, artSan: ccArtSan(sect, tier, gv), giap: nvBoGiap(sect, gv) || null,
+               canh: !!(gv && gv.canh), plus: gv ? Math.round(gv.plus) : 0 };
+    };
+    return { dwTran: await dem('baidasan', false), dwDo: await dem('baidasan', true),
+             sbTran: await dem('minhgiao', false), sbDo: await dem('minhgiao', true) };
+  });
+  console.log('8) trang bị:', JSON.stringify(r8));
+  // Dark Wizard giai 7 CÓ art giáp (NV_GIAP['baidasan|7']) — đường dựng sống phải chạy.
+  if (!r8.dwDo.artSan || r8.dwDo.giap !== 'dwsm1')
+    fail(`Dark Wizard full đồ phải dựng sống bằng bộ giáp dwsm1, nhận: ${JSON.stringify(r8.dwDo)}`);
+  // Spellblade CHƯA có art giáp ⇒ cái van phải đóng, nếu không là rơi về hình dựng bằng đường.
+  if (r8.sbDo.artSan)
+    fail('Spellblade chưa có art giáp mà ccArtSan() vẫn mở — sân khấu sẽ rơi về hình vẽ đường');
+  // Cả hai lớp, có đồ phải KHÁC HẲN trần: cánh + hào quang +N là art/hiệu ứng thật cho mọi lớp.
+  for (const [ten, a, b2] of [['Dark Wizard', r8.dwTran, r8.dwDo], ['Spellblade', r8.sbTran, r8.sbDo]]){
+    if (!b2.canh || b2.plus < 7) fail(`${ten}: applyTestBoost lẽ ra cho cánh và +11, nhận ${JSON.stringify(b2)}`);
+    if (b2.px < a.px * 1.35)
+      fail(`${ten}: mặc đồ vào mà sân khấu gần như không đổi (${a.px} -> ${b2.px} điểm ảnh)`);
+  }
 
   await p.waitForTimeout(300);
   console.log('errors:', JSON.stringify(errs));

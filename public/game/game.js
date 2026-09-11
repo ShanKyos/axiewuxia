@@ -22213,11 +22213,16 @@ function ccThan(h, ty){
   return Math.min(h * ty, (A ? A.than : 159) * CC_PHONG_TRAN);
 }
 
-// Lớp của ô đang chọn. Trả null khi chưa có nhân vật nào — đó là tín hiệu chuyển sang hàng năm lớp.
-function ccHeroLop(){
+// Nhân vật của ô đang chọn — MỘT cửa, ba chỗ dùng (lớp, con Axie, trang bị).
+function ccHeroNV(){
   const ds = (typeof danhSachO === 'function') ? danhSachO() : [];
   const o = ds[ccSlot];
-  return (o && o.player && SECTS[o.player.sect]) ? o.player.sect : null;
+  return (o && o.player && SECTS[o.player.sect]) ? o.player : null;
+}
+// Lớp của ô đang chọn. Trả null khi chưa có nhân vật nào — đó là tín hiệu chuyển sang hàng năm lớp.
+function ccHeroLop(){
+  const pl = ccHeroNV();
+  return pl ? pl.sect : null;
 }
 // Con Axie của ô đang chọn — hỏi ĐÚNG cửa mà trong màn dùng (`avatarId`), nên màn chờ hiện
 // đúng con sẽ chạy theo người chơi. Bản trước đọc `player.chimera.eq`, tức con thú đi theo —
@@ -22226,8 +22231,7 @@ function ccHeroLop(){
 // `avatarId` trả null khi người chơi đã tắt bằng `/avatar off`; tôn trọng, đừng lấp chỗ bằng
 // con mặc định. Trong màn họ không thấy Axie thì màn chờ cũng không được vẽ thêm một con.
 function ccHeroAxie(sect){
-  const ds = (typeof danhSachO === 'function') ? danhSachO() : [];
-  const pl = ds[ccSlot] && ds[ccSlot].player;
+  const pl = ccHeroNV();
   return pl ? avatarId(pl) : (CC_AXIE_LOP[sect] || null);
 }
 // Vũng bóng. Không có nó thì mọi thứ trong khung lơ lửng trước bức tranh chứ không đứng lên nó.
@@ -22255,15 +22259,110 @@ function ccChoAnh(im){
 // `than` là chiều cao THÂN vẽ ra, không phải chiều cao ô — ô còn chừa chỗ cho tóc và vũ khí
 // nhô ra, mà thứ mắt đọc là thân người. Gót chân neo theo `got` trong bảng hình học, do chính
 // bộ nướng đo rồi ghi ra.
+// Khung đứng thứ mấy, tại thời điểm t. MỘT công thức cho cả hình nướng lẫn hình dựng sống —
+// hai đường phải luôn ở cùng một khung, nếu không thì lúc art về xong, nhân vật nhảy một cái.
+function ccKhung(t){
+  const nK = window.LOP_CHO ? window.LOP_CHO.nKhung : 16;
+  return Math.floor(((t || 0) / CC_NHIP) * nK) % nK;
+}
+// Dải khung nướng sẵn — THÂN TRẦN của lớp. Đặt vào ĐÚNG hệ Ô VẼ (HERO_W x HERO_H) bằng
+// `A.x`/`A.got`, không căn theo tâm ô cắt: mặc giáp vào là hộp bao rộng ra và tâm dời đi, nên
+// căn theo tâm thì hình nướng và hình dựng sống lệch nhau vài điểm ảnh lúc đổi qua lại.
 function ccVeNguoi(g, sect, cx, fy, than, mo, t){
   const A = ccLopHinh(sect), im = ccLopAnh(sect);
   if (!A || !im) return false;
-  const k = than / A.than;
-  const nK = window.LOP_CHO.nKhung;
-  const i = Math.floor(((t || 0) / CC_NHIP) * nK) % nK;
+  const k = than / A.than, x0 = cx - HERO_W / 2 * k;
   g.save(); g.globalAlpha = mo == null ? 1 : mo;
+  g.drawImage(im, ccKhung(t) * A.cw, 0, A.cw, A.ch,
+              x0 + A.x * k, fy - A.got * k, A.cw * k, A.ch * k);
+  g.restore();
+  return true;
+}
+
+// ── TRANG BỊ HIỆN LÊN NGƯỜI ───────────────────────────────────────────────────────────────
+// Dải khung nướng là thân TRẦN của lớp. Đúng cho hàng năm lớp (tài khoản trống thì chưa ai
+// mặc gì), nhưng sai hẳn với một nhân vật cấp 80 mặc đủ bộ: màn chờ hiện thân trần trong khi
+// trong game người ta đang mặc giáp — lại đúng cái lỗi "màn chờ hứa một đằng" của đợt này.
+//
+// Nên ô ĐANG CHỌN dựng SỐNG bằng `heroSprite()` với `player.equip` thật, còn dải nướng lùi về
+// làm hình lót cho mấy trăm mili giây đầu. Không phí băng thông: 640 KB art của lớp đó đúng là
+// thứ game cần ngay sau khi bấm Vào Game, nên kéo ở đây là kéo TRƯỚC, không phải kéo thừa.
+//
+// ⚠ ĐỪNG gọi thẳng `heroSprite()` rồi vẽ. Nó LUÔN trả về một canvas: art chưa về thì nó dựng
+// hình bằng ĐƯỜNG — hiệp sĩ xám, mũ sừng, áo choàng đỏ, tức đúng cái "nhân vật fake" mà cả
+// đợt này sinh ra để gỡ, chỉ khác là nay nó chớp một nhịp rồi biến. Phải hỏi art có sẵn chưa.
+const _ccArtOk = {};
+function ccArtSan(sect, tier, gv){
+  const kh = sect + '|' + tier + '|' + heroGearSig(gv);
+  if (_ccArtOk[kh]) return true;
+  // Cùng biểu thức mà `heroSprite()` dùng để quyết định vẽ bằng ART hay bằng ĐƯỜNG (`_nvIm`),
+  // thu về khối đứng. `nvKhungGop` dựng hẳn một canvas mỗi lần hỏi, nên nhớ lại NGAY khi đạt.
+  if (nvKhungGop(sect, tier, gv, 'i', 0, '') || nvBang(sect, tier, gv, 'i', '')){
+    _ccArtOk[kh] = 1;
+    return true;
+  }
+  // Art tới sau thì phải vẽ lại — ở chế độ giảm chuyển động chỉ có ĐÚNG MỘT khung được vẽ.
+  // Không cần biết lớp nào còn thiếu: mọi tấm art nhân vật đều nằm trong `NV_ANH`, mà
+  // `ccChoAnh()` tự chống hẹn trùng, nên rải lời hẹn lên cả bảng là đủ và không tốn gì.
+  for (const k2 in NV_ANH) ccChoAnh(NV_ANH[k2]);
+  return false;
+}
+// Dựng lại MỘT khung 240x300 từ dải nướng, ĐÚNG hệ toạ độ mà `nvKhungGop()` trả ra: điểm ảnh
+// (px,py) của tấm này là toạ độ Ô VẼ (px−HS_PAD, py−HS_PAD). Có nó thì hai hàm hào quang (+N)
+// bám được vào bóng dáng của dải nướng y như bám vào art thật.
+//
+// Dùng CHUNG một canvas nháp, xoá rồi vẽ lại mỗi khung: nhớ sẵn 16 khung × 240×300 là 4,6 MB
+// cho mỗi lớp, mà cả màn chờ chỉ vẽ đúng một người.
+let _ccFrameCv = null;
+function ccKhungNuong(sect, i){
+  const A = ccLopHinh(sect), im = ccLopAnh(sect);
+  if (!A || !im) return null;
+  if (!_ccFrameCv){
+    _ccFrameCv = document.createElement('canvas');
+    _ccFrameCv.width = NV_OW; _ccFrameCv.height = NV_OH;
+  }
+  const g = _ccFrameCv.getContext('2d');
+  g.clearRect(0, 0, NV_OW, NV_OH);
   g.drawImage(im, i * A.cw, 0, A.cw, A.ch,
-              cx - A.cw * k / 2, fy - A.got * k, A.cw * k, A.ch * k);
+              A.x + HS_PAD, HERO_GOT - A.got + HS_PAD, A.cw, A.ch);
+  return _ccFrameCv;
+}
+
+// Vẽ nhân vật của một ô save KÈM trang bị. Ba tín hiệu, và chúng KHÔNG cùng nguồn:
+//
+//   · BỘ GIÁP  — chỉ hiện khi `NV_GIAP` có art cho đúng `lớp|giai` ấy. Hiện mới 3/35 tổ hợp,
+//                nên phần lớn nhân vật vẫn là thân của lớp. Đây là khoảng trống ART, không
+//                phải chỗ để chữa bằng mã: `heroSprite()` không có art thì nó dựng hình bằng
+//                ĐƯỜNG, tức đúng cái "nhân vật fake" mà cả đợt này sinh ra để gỡ. `ccArtSan()`
+//                chặn ngay chỗ đó — thà thân trần còn hơn một hiệp sĩ xám không ai nhận ra.
+//   · CÁNH     — art thật, có cho MỌI lớp, và không nằm trong sprite (xem heroSprite) nên
+//                phải vẽ riêng. Vẽ TRƯỚC thân: cánh ở sau lưng.
+//   · HÀO QUANG +N — hiệu ứng dựng theo bóng dáng, chạy được trên cả dải nướng lẫn art thật.
+//                Trong MU đây mới là thứ đọc ra "người này có đồ", nên nó phải có mặt kể cả
+//                khi lớp ấy chưa có art giáp.
+//
+// ⚠ Đường ART THẬT đã nướng sẵn hào quang VÀO trong sprite (xem heroSprite), nên nhánh đó
+// tuyệt đối không được gọi lại hai hàm hào quang — gọi là chồng hai lớp, +11 cháy trắng xoá.
+function ccVeNguoiBo(g, n, t){
+  const pl = n.pl;
+  if (!pl || !SECTS[pl.sect]) return ccVeNguoi(g, n.k, n.cx, n.fy, n.than, n.mo, t);
+  const gv = gearVisual(pl), tier = heroTier(pl);
+  const k = n.than / CAO_THAN_NUONG, i = ccKhung(t), now = performance.now();
+  const song = ccArtSan(pl.sect, tier, gv)
+    && heroSprite(pl.sect, tier, gv, 'i', i, '', false, 0, 'i', '');
+  g.save();
+  // Vào hệ Ô VẼ: gốc ở góc trên-trái ô, gót chân ở HERO_GOT, thân cao CAO_THAN_NUONG.
+  g.translate(n.cx, n.fy); g.scale(k, k); g.translate(-HERO_W / 2, -HERO_GOT);
+  if (!song) nvHaoQuangSau(g, pl.sect, tier, gv, now);
+  if (gv && gv.canh) veCanh(g, gv.canh, HERO_W / 2, HERO_GOT, 0, 0, 1, 0);
+  if (song) heroBlit(g, song);
+  else {
+    const A = ccLopHinh(pl.sect), im = ccLopAnh(pl.sect);
+    if (!A || !im){ g.restore(); return false; }
+    g.drawImage(im, i * A.cw, 0, A.cw, A.ch, A.x, HERO_GOT - A.got, A.cw, A.ch);
+    const kh = ccKhungNuong(pl.sect, i);
+    if (kh) nvHaoQuangTruoc(g, pl.sect, tier, gv, now, kh, 'i', i);
+  }
   g.restore();
   return true;
 }
@@ -22324,11 +22423,11 @@ function ccAxieThan(id, than){
 }
 function ccBoCuc(w, h, sect){
   if (sect){
-    const than = ccThan(h, 0.60), fy = h * 0.74, id = ccHeroAxie(sect);
+    const than = ccThan(h, 0.60), fy = h * 0.74, id = ccHeroAxie(sect), pl = ccHeroNV();
     // `id` rỗng = người chơi đã tắt avatar. Vẫn đẩy một mục vào là vẽ ra một vũng bóng không
     // có gì đứng trên nó — ccVeAxie() bỏ qua id rỗng, còn ccVeBong() thì không.
-    if (!id) return { nguoi: [{ k: sect, cx: w * 0.50, fy, than }], axie: [] };
-    return { nguoi: [{ k: sect, cx: w * 0.40, fy, than }],
+    if (!id) return { nguoi: [{ k: sect, cx: w * 0.50, fy, than, pl }], axie: [] };
+    return { nguoi: [{ k: sect, cx: w * 0.40, fy, than, pl }],
              // Axie đứng TRƯỚC và THẤP hơn một chút — nó gần ống kính hơn, mà gần hơn thì
              // gót chân phải nằm thấp hơn, nếu không hai thứ trông như dán trên cùng một
              // mặt phẳng.
@@ -22413,7 +22512,9 @@ function ccHeroVe(cv, t){
   // Người TRƯỚC, Axie SAU — năm con Axie đứng ở hàng trước thì con nào cũng phải nằm trên mọi
   // thân người, kể cả thân người của lớp bên cạnh. Vẽ xen kẽ từng cặp thì lớp sau che mất con
   // Axie của lớp trước.
-  for (const n of bc.nguoi) ccVeNguoi(g, n.k, n.cx, n.fy, n.than, n.mo, t);
+  // Ô đang chọn vẽ KÈM TRANG BỊ (ccVeNguoiBo); hàng năm lớp thì không có `pl` nên nó tự lùi
+  // về dải nướng — cùng một cửa, không phải hai đường vẽ song song.
+  for (const n of bc.nguoi) ccVeNguoiBo(g, n, t);
   for (const a of bc.axie) ccVeAxie(g, a.id, a.cx, a.fy, a.than, t + a.pha);
 }
 

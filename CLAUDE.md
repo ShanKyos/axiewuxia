@@ -1182,10 +1182,39 @@ học `data/lop_cho.js`, nướng bằng `tools/title/nuong_lop_cho.cjs`.
   "Axie cao 0,72 lần thân người" mà là "0,72 lần VÀ hộp vẽ ra không quá 0,95 lần theo CẢ HAI
   chiều" — 16 con có 16 tỉ lệ rộng/cao (1,07 → 1,52) nên con bè nhất bị vế thứ hai thu lại
   đáng kể. Bỏ vế đó thì con bè nhất trông như đang dắt người đi.
-- **Nợ:** dải khung là THÂN TRẦN của lớp, chưa mang trang bị. Nhân vật cấp 80 mặc đủ bộ vẫn
-  hiện thân trần trên màn chờ. Muốn đúng thì phải dựng sống bằng `heroSprite()` cho ô đang
-  chọn (640 KB cho MỘT lớp — mà đó đúng là bộ art game sẽ cần ngay sau khi bấm Vào Game, nên
-  không phí), giữ dải nướng làm hình lót lúc art chưa về.
+### Trang bị hiện lên người — BA tín hiệu, ba nguồn khác nhau
+
+Ô ĐANG CHỌN vẽ bằng `ccVeNguoiBo()`, gom ba thứ mà `player.equip` đổi được:
+
+| Tín hiệu | Nguồn | Phủ tới đâu |
+|---|---|---|
+| **Bộ giáp** | `heroSprite()` dựng sống, qua `NV_GIAP` | **3/35** tổ hợp `lớp\|giai` |
+| **Cánh** | `veCanh()` — art thật, KHÔNG nằm trong sprite | mọi lớp |
+| **Hào quang +N** | `nvHaoQuangSau/Truoc()` — dựng theo bóng dáng | mọi lớp |
+
+⚠ **`ccArtSan()` là cái van, đừng gỡ.** `heroSprite()` **luôn** trả về một canvas: không có
+art thì nó dựng hình bằng ĐƯỜNG — hiệp sĩ xám, mũ sừng, áo choàng đỏ, tức đúng "nhân vật fake"
+mà cả đợt này sinh ra để gỡ, chỉ khác là nay nó chớp một nhịp rồi biến. Van đóng thì lùi về
+dải nướng: **thà thân trần còn hơn một nhân vật khác hẳn.**
+
+⚠ **Đường art thật đã nướng hào quang VÀO sprite.** Nhánh đó tuyệt đối không gọi lại hai hàm
+hào quang — gọi là chồng hai lớp, +11 cháy trắng xoá.
+
+Đo được (`test_titlefx §8`, nhân vật full `applyTestBoost`): Dark Wizard 6.348 → **31.609** điểm
+ảnh (có `dwsm1`, thấy nguyên bộ giáp); Spellblade 5.602 → **34.688** (chưa có art giáp, nhưng
+cánh + hào quang +11 vẫn hiện). Van đóng đúng ở Spellblade, mở đúng ở Dark Wizard.
+
+> **Nợ thật sự nằm ở ART, không ở mã.** `NV_BO` chỉ khai `lớp|1`, nên `nvTen(lớp, giai≥2)` trả
+> `undefined`. Tức chỉ cần chưa có mục `NV_GIAP` khớp là **cả game** (không riêng màn chờ) rơi
+> về hình dựng bằng đường — đo được ở chế độ `applyTestBoost`: 4/5 lớp ra hộp vẽ 236×236 thay vì
+> 64×159. Chưa xác nhận ở nhịp chơi thường (giai 2-3), nhưng nếu đúng thì đó là một lỗ thủng
+> của Quy tắc số 3 nằm ngay trong `drawPlayer`, đáng một đợt riêng.
+
+### Chân dung ô nhân vật CHƯA mang trang bị
+
+`ccLopIcon()` cắt từ dải nướng nên nó luôn là thân trần, khoá đệm chỉ theo lớp. Ở khổ 46px thì
+gần như chỉ thấy đầu và vai, nên chênh lệch nhỏ — nhưng mũ và vương miện thì có đổi. Muốn đúng
+thì khoá đệm phải gồm `heroGearSig(gv)` và cắt từ sprite dựng sống.
 
 `tests/test_titlefx.js §7` gác: art phải đến từ `lop/*.webp`, đủ số ô, và không phóng quá trần.
 
