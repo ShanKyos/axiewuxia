@@ -12,6 +12,9 @@ const { chromium } = require('playwright');
     }
   });
   await page.goto('http://localhost:8850/?max=1', { waitUntil: 'networkidle' });
+  // Chờ game.js chạy xong hẳn (`window.__gameReady` đặt ở dòng cuối tệp) thay vì tin một
+  // khoảng ngủ cứng — 170/175 bài đã làm thế, năm bài này là chỗ còn sót.
+  await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(1000);
 
   await page.evaluate(() => {
