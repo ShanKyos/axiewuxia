@@ -90,29 +90,42 @@ const PORT = process.argv[2] || '8853';
   else pass('cotGom().bo nhận đúng Dòng đủ 4 mảnh');
   const r4 = await p.evaluate(async () => {
     const out = {};
-    // Cánh Hoa: chiêu hồi 6% Sinh Lực tối đa.
+    // ⚠ HAI điều kiện dựng cảnh mà bỏ sót thì bài xanh/đỏ sai, không phải game sai:
+    //  1. `castSkill` thoát NGAY ở `if (player.cd[id] > 0) return`. Bốn phép thử dưới đây đều
+    //     tung cùng chiêu 'a', nên phải dọn `player.cd.a = 0` TRƯỚC MỖI LẦN — không dọn thì
+    //     phép thử đầu chạy, ba phép sau im lặng đo ra 0 và trông y như game hỏng.
+    //  2. Phải đứng ở map CÓ QUÁI. `startGame` thả người chơi ở thị trấn (`mobs` rỗng), nên
+    //     `mobs.find(...)` trả undefined và hai mục Băng Vụn / Tro Tàn bị BỎ QUA hoàn toàn —
+    //     khoá đo không có trong kết quả, mà một khoá thiếu thì mọi phép so đều là `undefined`.
+    travelTo('corran'); player.level = 60; calcDerived();
+    const nap = () => { player.qi = player.maxQi; player.cd.a = 0; };
     const O = cotO();
-    for (const k of COT_O_IDS){ const c = cotMoiO('canhhoa', 'co', k); c.plus = 12; O[k] = c; }
-    calcDerived();
-    out.bo = player.cotBo;
-    player.hp = Math.round(player.maxHp * 0.4); player.qi = player.maxQi;
+    const dat = dong => { for (const k of COT_O_IDS){ const c = cotMoiO(dong, 'co', k); c.plus = 12; O[k] = c; }
+                          calcDerived(); return player.cotBo; };
+    // Cánh Hoa: chiêu hồi 6% Sinh Lực tối đa.
+    out.bo = dat('canhhoa');
+    player.hp = Math.round(player.maxHp * 0.4); nap();
     const hp0 = player.hp; castSkill('a'); out.hoiHp = player.hp - hp0;
     // Đồng Cỏ: 5 giây đánh nhanh thêm 40% — aspd là ĐỘ TRỄ nên phải NHỎ đi.
-    for (const k of COT_O_IDS){ const c = cotMoiO('dongco', 'co', k); c.plus = 12; O[k] = c; }
-    calcDerived(); out.boDc = player.cotBo;
-    const a0 = player.aspd; player.qi = player.maxQi; castSkill('a');
+    out.boDc = dat('dongco');
+    const a0 = player.aspd; nap(); castSkill('a');
     out.nhanhT = player.cotNhanhT || 0; calcDerived();
     out.aspd = { truoc:+a0.toFixed(4), sau:+player.aspd.toFixed(4) };
     // Băng Vụn: phải dùng `stunT` (cơ chế thật), KHÔNG phải `freezeT` (không ai đọc).
-    for (const k of COT_O_IDS){ const c = cotMoiO('bangvun', 'co', k); c.plus = 12; O[k] = c; }
-    calcDerived();
+    out.boBv = dat('bangvun');
+    out.soQuai = mobs.filter(x => !x.dead).length;
     const m = mobs.find(x => !x.dead);
+    // ⚠ Con quái phải SỐNG QUA CÚ ĐÁNH. Nhân vật cấp 60 một chiêu là xoá sạch quái Rẻo Rừng
+    // Corran, mà `cotBoCast` chạy ở CUỐI castSkill và lọc `!m.dead` — nên con ta đang giữ tham
+    // chiếu đã chết trước lúc hiệu ứng bộ nhìn tới nó, và `stunT` của nó ở lại 0. Đọc ra thì
+    // trông y như "Băng Vụn không chạy". Bơm máu để nó đứng lại mà nhận hiệu ứng.
     if (m){ m.x = player.x + 40; m.y = player.y; m.stunT = 0; m.freezeT = 0;
-      player.qi = player.maxQi; player.cd.a = 0; castSkill('a');
-      out.stun = +(m.stunT || 0).toFixed(2); out.freeze = +(m.freezeT || 0).toFixed(2); }
+      m.maxHp = 1e7; m.hp = 1e7;
+      nap(); castSkill('a');
+      out.stun = +(m.stunT || 0).toFixed(2); out.freeze = +(m.freezeT || 0).toFixed(2);
+      out.mSong = !m.dead; }
     // Tro Tàn: hạ một mục tiêu thì mọi chiêu giảm 1 giây hồi.
-    for (const k of COT_O_IDS){ const c = cotMoiO('trotan', 'co', k); c.plus = 12; O[k] = c; }
-    calcDerived();
+    out.boTt = dat('trotan');
     const m2 = mobs.find(x => !x.dead);
     if (m2){ player.cd.a = 5; killMob(m2, 'hit'); out.cdSau = +(player.cd.a).toFixed(2); }
     return out;
@@ -123,7 +136,9 @@ const PORT = process.argv[2] || '8853';
   if (!(r4.nhanhT > 0)) fail('Đồng Cỏ đủ 4 mảnh: tung chiêu không bật cờ cotNhanhT');
   else if (!(r4.aspd.sau < r4.aspd.truoc)) fail(`Đồng Cỏ: aspd ${r4.aspd.truoc} → ${r4.aspd.sau}, không nhanh lên (aspd là ĐỘ TRỄ, phải NHỎ đi)`);
   else pass(`Đồng Cỏ: aspd ${r4.aspd.truoc} → ${r4.aspd.sau} trong ${r4.nhanhT.toFixed(1)}s`);
-  if (!(r4.stun > 0)) fail('Băng Vụn đủ 4 mảnh: quái không đứng hình — kiểm xem có ghi `freezeT` (không ai đọc) thay vì `stunT` không');
+  if (!r4.soQuai) fail('dựng cảnh hỏng: map không có quái nào, hai mục dưới không đo được gì');
+  else if (!r4.mSong) fail('dựng cảnh hỏng: con quái chết trước khi hiệu ứng bộ nhìn tới nó');
+  else if (!(r4.stun > 0)) fail('Băng Vụn đủ 4 mảnh: quái không đứng hình — kiểm xem có ghi `freezeT` (không ai đọc) thay vì `stunT` không');
   else pass(`Băng Vụn: quái stunT = ${r4.stun}s (đúng cơ chế thật, không phải freezeT ${r4.freeze})`);
   if (!(r4.cdSau < 5)) fail('Tro Tàn đủ 4 mảnh: hạ mục tiêu không cắt hồi chiêu của người chơi');
   else pass(`Tro Tàn: hạ một con → hồi chiêu 5,00s còn ${r4.cdSau}s`);

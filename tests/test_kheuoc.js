@@ -107,22 +107,33 @@ const PORT = process.argv[2] || '8853';
   else pass(`bù ${r4.ve} Ấn Giao Kết cho tiến trình cũ`);
   if (r4.conMount) fail('player.mount cũ vẫn còn trong save sau khi chuyển đổi');
 
-  // ── 5. bị động nối vào chỉ số, Huyết Thống dày thêm, đổi con thì đổi chỉ số ──
+  // ── 5. QUAY RA MỘT CON KHÔNG ĐƯỢC LÀM NHÂN VẬT MẠNH LÊN ──────────────────
+  //
+  // ⚠ MỤC NÀY ĐÃ ĐẢO CHIỀU. Bản cũ khẳng định đúng điều NGƯỢC LẠI: bị động Tidewarden +15% HP
+  // phải nối vào chỉ số, Huyết Thống C5 phải làm nó dày thêm, đổi con phải đổi Công Kích.
+  //
+  // Chủ dự án chốt 2026-09-11: *"Chỉ số tới từ 5 class. Axie chỉ đơn thuần là avatar thôi."* Con
+  // Axie nay là THÂN NHÌN THẤY, và một cái thân thì không cộng chỉ số. Cho quay gacha ra +15% HP
+  // là dựng lại đúng trục sức mạnh MUA ĐƯỢC mà cả đợt Đổi Vai đang tháo — nên đây là chỗ khoá
+  // lại, chứ không phải chỗ xoá bỏ. Xoá mục này đi thì lần sau ai đó nối `CHIMERA[].thu` trở
+  // lại sẽ không có gì kêu.
   const r5 = await p.evaluate(() => {
     startGame('thieulam', null); player.level = 60; player.lvPeak = 60;
-    const C = chiState(); C.co = {}; C.eq = null; calcDerived();
-    const hp0 = player.maxHp;
+    const C = chiState(); C.co = {}; C.eq = null; player.avatar = null; calcDerived();
+    const hp0 = player.maxHp, atkA = player.atk;
     C.co.tidewarden = { con:0 }; C.eq = 'tidewarden'; calcDerived(); const hp1 = player.maxHp;
-    C.co.tidewarden.con = 5; calcDerived(); const hp2 = player.maxHp;
-    C.eq = 'crimsonmaw'; C.co.crimsonmaw = { con:0 }; calcDerived(); const atk1 = player.atk;
-    C.eq = null; calcDerived(); const atk0 = player.atk;
-    return { hp0, hp1, hp2, atk0, atk1 };
+    C.co.tidewarden.con = 6; calcDerived(); const hp2 = player.maxHp;
+    C.eq = 'crimsonmaw'; C.co.crimsonmaw = { con:6 }; calcDerived(); const atk1 = player.atk;
+    // …và cắm nó làm avatar cũng không được cộng gì.
+    player.avatar = 'crimsonmaw'; calcDerived(); const atk2 = player.atk, hp3 = player.maxHp;
+    return { hp0, hp1, hp2, hp3, atkA, atk1, atk2 };
   });
-  console.log('5) bị động:', JSON.stringify(r5));
-  if (!(r5.hp1 > r5.hp0)) fail('bị động Tidewarden (+15% HP) không nối vào chỉ số');
-  else if (!(r5.hp2 > r5.hp1)) fail('Huyết Thống C5 không làm bị động dày thêm');
-  else if (!(r5.atk1 > r5.atk0)) fail('đổi sang Crimsonmaw (+5% Công Kích) mà Công Kích không đổi');
-  else pass(`bị động chạy thật: HP ${r5.hp0}→${r5.hp1}→${r5.hp2} (C0→C5) · đổi con thì Công Kích ${r5.atk0}→${r5.atk1}`);
+  console.log('5) thân Axie không cộng chỉ số:', JSON.stringify(r5));
+  if (r5.hp1 !== r5.hp0) fail(`sở hữu Tidewarden đổi Sinh Lực ${r5.hp0}→${r5.hp1} — bị động \`thu\` đã nối lại`);
+  else if (r5.hp2 !== r5.hp0) fail(`Huyết Thống C6 đổi Sinh Lực ${r5.hp0}→${r5.hp2} — ba hệ số Huyết Thống đã nối lại`);
+  else if (r5.atk1 !== r5.atkA) fail(`đổi con đổi Công Kích ${r5.atkA}→${r5.atk1} — bị động theo con đã nối lại`);
+  else if (r5.atk2 !== r5.atkA || r5.hp3 !== r5.hp0) fail(`CẮM làm avatar đổi chỉ số (công ${r5.atkA}→${r5.atk2}, máu ${r5.hp0}→${r5.hp3})`);
+  else pass(`quay/đổi/cắm thân Axie đổi ĐÚNG 0 chỉ số (công ${r5.atkA} · máu ${r5.hp0} qua cả 4 phép thử)`);
 
   // ── 6. quay thật qua UI: trừ vé, hiện lớp phủ, thế giới DỪNG trong lúc quay ──
   await p.evaluate(() => {

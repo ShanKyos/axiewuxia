@@ -4426,7 +4426,8 @@ function chiNhan(id){
   if (!C.co[id]){
     C.co[id] = { con:0 };
     if (!C.eq) C.eq = id;
-    if (player && !player.avatar) player.avatar = id;   // con đầu tiên thành thân luôn
+    // ⚠ KHÔNG tự cắm làm avatar. Cùng lý do như ở /max: avatar là thứ người chơi BẬT, và nhiệm
+    // vụ `c1q3` (moc:'khe') là chỗ nói cho họ biết cái nút đó ở đâu.
     return { moi:true, con:0 };
   }
   const tran = C.co[id].con >= 6;
@@ -4706,7 +4707,12 @@ function cotBoCast(id){
   if (!player || dead) return;
   const bo = player.cotBo; if (!bo) return;
   const R = Math.max(COT_BO_R, (skillInfo(id) || {}).pham || 0);
-  const gan = mobs.filter(m => !m.dead && !m.def.duHiep && dist(player.x, player.y, m.x, m.y) < R);
+  // ⚠ SẮP THEO KHOẢNG CÁCH. `mobs.filter(...)` trả về theo thứ tự MẢNG, nên `gan.slice(0,4)`
+  // của Băng Vụn và `gan[0]` của Sấm Vụn sẽ bốc "bốn con có chỉ số nhỏ nhất trong mảng" chứ
+  // không phải "bốn con gần nhất" — trên một map 103 con thì con đang đứng sát mặt người chơi
+  // gần như chắc chắn KHÔNG nằm trong bốn con đó. Nhìn ra là "chiêu đóng băng con ở đâu đó".
+  const gan = mobs.filter(m => !m.dead && !m.def.duHiep && dist(player.x, player.y, m.x, m.y) < R)
+                  .sort((a, b) => dist(player.x, player.y, a.x, a.y) - dist(player.x, player.y, b.x, b.y));
   const mau = (COT_DONG[bo] || {}).mau || '#ffd76a';
   if (bo === 'canhhoa'){                                   // chiêu hồi 6% Sinh Lực tối đa
     const hp = Math.round(player.maxHp * 0.06);
@@ -4804,7 +4810,6 @@ function cotDiTru(){
     delete o.lv; delete o.xp; delete o.hoa;      // vòng nuôi đã gỡ — đừng để trường chết trong save
   }
   if (K.length > COT_KHO_MAX) K.length = COT_KHO_MAX;
-  if (!player.avatar && C.eq && CHI_MAP[C.eq]) player.avatar = C.eq;   // con từng xuất trận thành thân
   if (player.mats) delete player.mats.datHon;    // nhiên liệu của vòng nuôi, không còn chỗ tiêu
 }
 function cotTim(uid){
@@ -6324,6 +6329,65 @@ const QUESTS = window.QUESTS;
 // người chơi nhận nhiệm vụ "hạ trùm" rồi đi khắp map không thấy con nào.
 // Fallback là Infinity chứ không phải -1: chuỗi không có nhiệm vụ `boss` nào thì đừng spawn,
 // chứ `questIdx >= -1` là luôn đúng ⇒ trùm hiện ra từ cấp 1.
+// ── LOẠI NHIỆM VỤ `moc` — đòi người chơi CHẠM vào một hệ thống, không đòi đánh ──────
+//
+// Vì sao cần: đo chuỗi 46 nhiệm vụ ra **70% là đánh quái** (kill · tpkill · boss · tranai), và
+// toàn bộ 30% còn lại thì `enhance` gánh 7 chỗ — cùng MỘT nhiệm vụ "đập một món lên +N", khác
+// đúng con số (+3 +5 +6 +7 +9 +11 +11, hai cái cuối trùng số). Đó đúng là bệnh nhân bản mà
+// CLAUDE.md chẩn đoán ở đầu tài liệu: một lượng nội dung nhỏ chép ra nhiều lần.
+//
+// ⚠ Và luật tôi tự viết ở docs/LORE_RUNE.md §6 — *"không quá 60% là `kill`"* — viết HẸP hơn ý
+// định của chính nó: đếm đúng chữ `kill` thì ra 41% và luật PASS, trong khi chuỗi thật 70% là
+// đánh. `tranai` còn là loại tôi thêm SAU khi viết luật đó. Luật đã sửa lại cho đếm mọi loại
+// đánh; bảng này là thứ kéo tỉ lệ xuống mà không phải thêm một `enhance` thứ tám.
+//
+// Vì sao MỘT loại chứ không năm loại: năm cửa cần gác (Vỉa Cốt · Rương Canh · Tinh Luyện · Box
+// Kundun · Khế Ước) đều có cùng một hình dạng — "đã làm việc đó mấy lần rồi". Thêm năm `type`
+// là năm nhánh trong killMob, năm nhánh trong questTarget, năm nhánh trong bảng hiện tiến độ.
+// Một loại + một bảng thì thêm cửa thứ sáu chỉ là thêm một dòng dữ liệu.
+//
+// ⚠ `dem()` phải ĐẾM TỪ TRẠNG THÁI, không đếm từ sự kiện. Nếu móc vào chỗ "vừa mở rương" thì
+// người chơi mở rương TRƯỚC khi nhận nhiệm vụ là nhiệm vụ không bao giờ xong — và họ không có
+// cách nào biết vì sao. Đếm từ trạng thái thì nhận nhiệm vụ xong là nó đã đủ luôn, đúng như một
+// nhiệm vụ "hãy chạm vào hệ thống này" nên hành xử.
+const MOC_NV = {
+  via:   { ten:'khai Vỉa Cốt',            dem:() => { const v = (player && player.via) || {};
+             return Object.keys(v).filter(k => k !== 'day' && v[k]).length; } },
+  ruong: { ten:'mở Rương Canh',           dem:() => Object.keys((player && player.ruong) || {}).length },
+  hap:   { ten:'mở Box Kundun',           dem:() => (player && player.hapMo) || 0 },
+  khe:   { ten:'quay Khế Ước',            dem:() => Object.keys(((player && player.chimera) || {}).co || {}).length },
+  // ⚠ §6 của docs/LORE_RUNE.md hứa một cửa "Tinh Luyện" — hứa sai: Tinh Luyện là một NÚT trong
+  // bảng Đại Thành (`sr_tinhluyen`, +0,18% hiệu lực mỗi cấp rèn), không phải một hệ có hành
+  // động để chạm vào. Không có gì đếm được, nên cửa đó đổi sang **Đại Thành** — thứ mà nút Tinh
+  // Luyện nằm trong, và thứ người chơi thật sự phải mở ra rồi bấm.
+  mastery: { ten:'phân điểm Đại Thành',  dem:() => Object.keys((player && player.mastery) || {}).length },
+  cot:   { ten:'cắm mảnh Cốt vào người',  dem:() => { if (!player || !player.cot) return 0;
+             return COT_O_IDS.filter(k => player.cot[k]).length; } },
+  // Bản Năng (`player.khi`) không có bảng riêng — chỗ tiêu DUY NHẤT của nó là nâng cấp kỹ năng
+  // (xem upgradeSkillUI). Nên cửa dạy Bản Năng phải đếm ở đúng chỗ tiêu, không đếm số dư: đếm
+  // số dư thì người chơi đánh quái vài phút là tự đủ mà chẳng học được nó dùng để làm gì.
+  nangky: { ten:'nâng cấp kỹ năng',       dem:() => { const L = (player && player.skillLv) || {};
+             return Object.keys(L).reduce((a, k) => a + Math.max(0, (L[k] || 1) - 1), 0); } },
+};
+// Nhịp kiểm: gọi trong update(). Rẻ (sáu phép đếm trên object nhỏ) và không phải móc vào sáu
+// chỗ khác nhau trong game — mỗi chỗ móc thiếu là một nhiệm vụ không bao giờ xong.
+let _mocT = 0;
+function mocTick(dt){
+  if (!player || dead) return;
+  _mocT -= dt; if (_mocT > 0) return;
+  _mocT = 0.5;
+  const q = currentQuest();
+  if (!q || q.type !== 'moc' || questState !== 'active') return;
+  const M = MOC_NV[q.moc]; if (!M) return;
+  const n = M.dem();
+  if (n === questProg) return;
+  questProg = Math.min(n, q.need);
+  if (questProg >= q.need){
+    questState = 'done';
+    addFloat(player.x, player.y - 60, `Nhiệm vụ hoàn thành — về gặp ${npcName(q.npc)}`, '#8fd18f', 13);
+    AudioSys.sfx('quest', 0.8);
+  }
+}
 const QUEST_BOSS_IDX = (() => {
   const i = QUESTS.findIndex(q => q.type === 'boss');
   return i < 0 ? Infinity : i;
@@ -7106,11 +7170,16 @@ function calcDerived(){
   // `if (_eq)` ở trên, nên chưa quay được con nào là bốn ô Cốt cộng 0 — mà Cốt thì rơi ngay từ
   // vùng đầu. Hai khoá `skillPct`/`cdCut` không có ngăn trong sổ P nên đi đường riêng, đúng
   // đường mà Đại Thành đã dùng (xem chỗ MZ.skillPct / MZ.cdCut).
-  let _cotCd = 0;
+  let _cotCd = 0, _cotSk = 0;
   {
     const _cg = cotGom();
     for (const _l of _cg.p){
-      if (_l.k === 'skillPct') player.skillDmgPct = (player.skillDmgPct || 0) + _l.v/100;
+      // ⚠ HAI khoá này KHÔNG được ghi thẳng vào player ở đây — chỉ GOM lại rồi áp ở CUỐI hàm.
+      // Khối The Hatching bên dưới đặt `player.skillDmgPct = 0`, nên ghi sớm là bị xoá sạch.
+      // Đã dính đúng lỗi đó: `skillPct` của Cốt cộng 23% mà đo ra 0,120 → 0,120, không lệch một
+      // phần nghìn, và không một lỗi nào trên console. Cùng cái bẫy mà chú thích ở khối Đại
+      // Thành cuối hàm đã ghi cho `vhCdMult`.
+      if (_l.k === 'skillPct') _cotSk += _l.v;
       else if (_l.k === 'cdCut') _cotCd += _l.v;
       else applyLine(s, _l.k, _l.v, P);
     }
@@ -7252,6 +7321,7 @@ function calcDerived(){
   // skillDmgPct/dropBonus/shieldBonus/potionPct về 0 và khối Sổ Kỹ Năng gán thẳng
   // vhCdMult = 0.7 — viết sớm hơn thì bị hai khối đó xoá sạch.
   if (MZ.skillPct) player.skillDmgPct = (player.skillDmgPct || 0) + MZ.skillPct/100;
+  if (_cotSk) player.skillDmgPct = (player.skillDmgPct || 0) + _cotSk/100;   // Cốt: dòng skillPct
   if (MZ.cdCut) player.vhCdMult = Math.max(0.35, (player.vhCdMult || 1) * (1 - MZ.cdCut/100));
   // Cốt ô Đuôi + hiệu ứng 2 mảnh Sấm Vụn. Nhân chứ không trừ, và dùng CÙNG sàn 0,35 với Đại
   // Thành — hai nguồn cộng dồn kiểu trừ thẳng thì đủ Cổ +12 là hồi chiêu về 0.
@@ -8896,6 +8966,10 @@ function throwBaoHap(tier, wx, wy){
   const bh = player.baohap || {};
   if (!bh[tier] || bh[tier] <= 0) return false;
   bh[tier]--;
+  // Bộ đếm cho nhiệm vụ loại `moc` (xem MOC_NV). Đếm ở ĐÂY chứ không ở openBaoHap: kéo-thả hạp
+  // ra màn hình đi thẳng qua throwBaoHap, không qua openBaoHap — móc ở kia là người chơi kéo hạp
+  // (đường mà chính bảng Túi Đồ khuyên dùng) thì nhiệm vụ không bao giờ đếm.
+  player.hapMo = (player.hapMo || 0) + 1;
   // kẹp điểm rơi vào tầm với, và tránh ném vào vật cản
   let dx = wx - player.x, dy = wy - player.y;
   const d = Math.hypot(dx, dy) || 1;
@@ -10782,6 +10856,7 @@ function update(dt){
   if (DGN) updateDungeon(dt); // Phó bản: đợt quái → boss → thưởng
   if (DEEP) updateDeep();   // Tầng Sâu: dọn sạch tầng → gửi kho tạm → xuống tầng kế
   cotBoTick(dt);   // hiệu ứng đủ 4 mảnh Cốt cần nhịp: vũng gai, khiên đứng yên, buff tốc đánh
+  mocTick(dt);     // nhiệm vụ loại `moc` — đếm từ TRẠNG THÁI, xem MOC_NV
   updateHorses(dt); // GDD Đợt 2 B5
   player.qi = Math.min(player.maxQi, player.qi + (player.qireg + player.maxQi*(player.combatT <= 0 ? 0.01 : 0.0025))*dt); // GDD Đợt 2 B1: +1% maxQi/s ngoài combat, +0.25% trong combat
   // Heal (Sylvan Ranger, bị động): +1% HP tối đa mỗi giây, chạy CẢ trong combat — đây là thứ
@@ -17190,7 +17265,11 @@ function applyTestBoost(){
   // Khế Ước: sở hữu hết 16 thân + một nắm vé để thử quay. Không còn cấp/Hoá/Đất Hồn để tối đa.
   { const C = chiState();
     for (const c of CHIMERA) C.co[c.id] = { con: 6 };
-    C.eq = 'aurelion'; player.avatar = 'aurelion'; C.ve.gk = 120; C.ve.cx = 40; C.nguyet = 200; C.tinh = 500; }
+    // ⚠ KHÔNG đặt `player.avatar` ở đây. CLAUDE.md chốt: avatar là thứ **bật lên**, không phải
+    // thứ thay thế — `player.avatar` rỗng ⇒ hành vi cũ y nguyên. /max là cheat SỨC MẠNH; âm thầm
+    // đổi luôn cái thân nhìn thấy làm mọi bài kiểm đọc `__veThan` thấy 'avatar' thay vì 'sprite'
+    // (test_khoihinh bắt được). Cửa đổi thân là nút "Đổi thân" ở bảng Khế Ước và lệnh /avatar.
+    C.eq = 'aurelion'; C.ve.gk = 120; C.ve.cx = 40; C.nguyet = 200; C.tinh = 500; }
   // Cốt: đủ bốn ô một Dòng để thấy ngay hiệu ứng bộ, cộng một nắm mảnh thừa để thử nâng.
   // ⚠ Đeo vào NGƯỜI CHƠI (`player.cot`), không vào con nào — bốn ô đã rời khỏi player.chimera.
   { const O = cotO();
@@ -23000,7 +23079,9 @@ function renderQuestNpc(n){
         <div class="q-rew">Thưởng: ${q.rew.xp} EXP · ${q.rew.silver||0}◈</div>
         <div style="text-align:center;margin-top:8px"><button class="mini-btn" onclick="turnInQuest()">Nhận Thưởng</button></div></div>`;
     } else {
-      const prog = q.type==='talk' ? '—' : (q.type==='meditate' ? `${Math.floor(questProg)}/${q.need}s` : `${questProg}/${q.need}`);
+      const prog = q.type==='talk' ? '—' : (q.type==='meditate' ? `${Math.floor(questProg)}/${q.need}s`
+                 : q.type==='moc' ? `${questProg}/${q.need} — ${(MOC_NV[q.moc] || {}).ten || q.moc}`
+                 : `${questProg}/${q.need}`);
       // NV đang KHOÁ cấp: killMob không đếm, nên đừng in "Tiến độ 0/6" như đang chạy — người chơi
       // đi giết đủ 6 con rồi quay lại thấy vẫn 0/6.
       html += questState === 'locked'
