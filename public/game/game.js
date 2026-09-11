@@ -5156,9 +5156,23 @@ function chiChayImg(id){
   if (!im){ im = new Image(); im.src = 'assets/chimera/' + id + '_r.webp'; CHI_CHAY_IMGS[id] = im; }
   return im;
 }
+// Avatar MẶC ĐỊNH theo lớp — chủ dự án chốt: bản này người chơi vào là thấy Axie luôn,
+// không phải gõ lệnh mới có. Mỗi lớp một con khác nhau cho dễ phân biệt ngoài đường.
+const AVA_MAC_DINH = {
+  thieulam:'emberjaw', baidasan:'tidewarden', toanchan:'cinderbeak',
+  minhgiao:'netherfang', bug:'mossback',
+};
 // Con Axie đang làm avatar, hoặc null. Một cửa duy nhất — đừng đọc thẳng p.avatar ở chỗ khác.
+//
+// ⚠ PHÂN BIỆT `undefined` VỚI `null`, đây là cả cơ chế:
+//   · `undefined` = người chơi CHƯA từng chọn (nhân vật mới, hoặc save cũ từ trước bản này)
+//                   ⇒ lấy con mặc định của lớp. Nhờ vậy save cũ cũng thấy Axie ngay.
+//   · `null`      = người chơi ĐÃ TẮT bằng `/avatar off` ⇒ tôn trọng, vẽ lớp nhân vật như cũ.
+// Gộp hai cái thành một phép `!p.avatar` là tắt xong vào lại thấy nó tự bật — tức là cái nút
+// tắt không tắt được gì.
 function avatarId(p){
-  const id = p && p.avatar;
+  if (!p) return null;
+  const id = p.avatar === undefined ? (AVA_MAC_DINH[p.sect] || null) : p.avatar;
   return (id && CHI_MAP[id] && CHI_ANH.o[id]) ? id : null;
 }
 function chiVeChay(g, id, i, x, y, thanPx){
@@ -18676,7 +18690,8 @@ window.cheatExec = function(raw){
       case 'avatar': {                    // /avatar <id|off|ds> — đổi thân NHÌN THẤY của người chơi
         const t = (parts[1] || '').toLowerCase();
         if (!t || t === 'ds'){
-          cheatLog(`Avatar hiện tại: ${player.avatar || '(tắt — vẽ lớp nhân vật như cũ)'}`, '#ffd76a');
+          cheatLog(`Avatar hiện tại: ${avatarId(player) || '(đã tắt — vẽ lớp nhân vật như cũ)'}`
+                   + (player.avatar === undefined ? ' (mặc định của lớp)' : ''), '#ffd76a');
           cheatLog('  ' + CHIMERA.map(c => c.id).join(' · '), '#9ecbff');
           cheatLog('  /avatar <id> để bật · /avatar off để tắt', '#8c93ab');
           break;
