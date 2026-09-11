@@ -145,11 +145,12 @@ Bảy NPC dẫn chương đã có, giữ nguyên tên và chỗ đứng. Chỉ g
 | **Người Gác Rừng Corran** | Werebear Woods | Giữ **bờ** — chính cái luật của Rune Giữ Bờ. ⚠ Tên "Corran" là vì bờ hắn giữ chạy từ rẻo Corran sang; nếu thấy rối thì đổi thành **Người Gác Bờ**. |
 | **Liora** Ẩn Sĩ | Bird Tribe Heights | Người chép khúc hát. Rune Giữ Khúc mỏng đi thì ba tổ ngừng hát. |
 | **Dax** Kẻ Do Thám | Reptile Sunstone Flats | Đếm lò đã tắt. Không đi tiếp vào đầm — *"chỗ đó là việc của ngươi"*. |
-| **Lão Tướng Brann** | Dusk Marsh | **Người thứ sáu trong bảy.** Ông nhớ được vài thứ — và ông biết người thứ bảy là ai. |
+| **Lão Tướng Brann** | Dusk Marsh | Người thứ bảy trong bảy NGƯỜI DẪN CHƯƠNG, nhưng **KHÔNG** có tên trên Bảng Tên — ông sinh ra ở Lunacia, giữ cửa này từ trước khi trời nứt. Chính ông nói ra chỗ tách đó, và đó là cách gỡ "hai cái bảy" đang đá nhau. |
 | **DRUE** | — (chưa có NPC) | Người thứ bảy. Chỉ hiện ở chương cuối. |
 
-**Năm cái tên bị gạch** (`td_*` — HALLA · MEV · ORIN · SERR · Chỗ Trống Thứ Bảy) nay có chỗ:
-bảy người qua Nhát Gọi = ngươi + Brann + DRUE + bốn người kia. Clue `td_trong` — *"cái tên thứ
+**Năm manh mối `td_*`** (HALLA · MEV · ORIN · SERR · nét khắc thứ bảy) nay có chỗ. Bảy cái tên
+trên bảng: **bốn đã gạch** (bốn manh mối đầu) · **thứ năm là RELL** (còn sống, mất một chân) ·
+**thứ sáu là người chơi** · **thứ bảy là DRUE**, khắc SAU sáu cái kia bằng một bàn tay khác. Clue `td_trong` — *"cái tên thứ
 bảy vẫn chưa bị gạch, vì chưa ai chứng minh được là nó nên bị gạch"* — **là mũi nhọn của cả
 chuỗi**, không phải một mẩu trang trí. Và `manh_lenh` (*"mặt sau ai đó khắc thêm một con mắt
 không có tròng"*) là **dấu của DRUE**: con mắt không tròng = một Rune khắc lên một thứ đang sống.
@@ -192,7 +193,24 @@ kết bằng **hạ Trùm Vùng → thu Rune**, tức cờ `rune_<map>` — thay
 
 ---
 
-## 7. Hợp đồng thi công — mọi chỗ phải sửa
+## 7. Hợp đồng thi công — **ĐÃ THI CÔNG XONG** (commit `3941526`)
+
+> Bảng dưới là bảng gốc, giữ lại cột "hiện tại" để đọc được VÌ SAO từng chỗ phải đổi.
+> Tất cả đã làm, trừ hai mục ghi rõ là còn nợ.
+>
+> **Ba lỗi tìm ra TRONG LÚC thi công, không nằm trong bảng:**
+> 1. `style.css` chỉ khai nấc `#fx-crack[data-tru="N"]` tới **5**. Đi từ 5 lên 7 Rune thì hai nấc
+>    cuối không có `--nw`, `getComputedStyle` trả chuỗi rỗng, `parseFloat` ra `NaN`, và lớp vết
+>    nứt **tụt về 0 đúng ở hai nấc cuối cùng của cả ván chơi** — không một lỗi nào trên console.
+>    Bắt được vì `test_dot4` đọc số nấc từ `RUNE_TONG` thay vì chép cứng.
+> 2. `tests/test_nowuxia2.js` đọc `/home/user/axie-wuxia/...` chép cứng — thư mục đó không tồn
+>    tại (kho nằm ở `/home/user/axiewuxia`), và `tools/reg.sh` còn chạy trên một bản chụp ở
+>    `/tmp`, nên chép cứng đường dẫn kho sai cả hai đường. Nay suy từ `__dirname`.
+> 3. Bảng Tên tự đá nhau: manh mối ghi người thứ năm là BRANN, nhưng thoại của chính Brann nói
+>    ông **không** có tên trên bảng (ông sinh ra ở Lunacia, giữ cửa từ trước khi trời nứt). Người
+>    thứ năm là **RELL** — khớp thoại của Rell ("Ta dẫn sáu người qua Nhát Gọi").
+
+
 
 | Chỗ | Hiện tại | Đổi thành |
 |---|---|---|
@@ -210,8 +228,8 @@ kết bằng **hạ Trùm Vùng → thu Rune**, tức cờ `rune_<map>` — thay
 | `npcStoryLine()` | đếm trụ, nhắc Morvahn | đếm Rune |
 | `game.js:22866` băng-rôn | `KẺ KHÉP VẾT NỨT` | `KẺ GỠ RUNE CUỐI` (khớp `TITLES.mochiton`) |
 | `TITLES.mochiton` | `Kẻ Mở Trụ Cuối` | `Kẻ Gỡ Rune Cuối` |
-| `QUESTS` 33 mục / 5 chương | 0 lần nhắc canon · 67% là kill · 10 NV dồn vào cấp 1-10 | 8 chương theo §6 |
-| `SIDE_QUESTS` | rỗng | phụ tuyến cho 3 map lối + Tầng Sâu |
+| `QUESTS` 33 mục / 5 chương | 0 lần nhắc canon · 67% là kill · 10 NV dồn vào cấp 1-10 | **46 mục / 8 chương.** Ba luật đo được: khoảng cách ≤4 cấp · quái lệch ≤±4 cấp · ≤60% đánh quái (nay 52%). Mỗi chương đóng bằng loại nhiệm vụ MỚI `tranai` |
+| `SIDE_QUESTS` | rỗng | **CÒN NỢ** — phụ tuyến cho 3 map lối + Tầng Sâu. Ba map đó cố ý không có chương nào vì chúng là "chỗ không có luật nào giữ"; đó là chỗ phụ tuyến thuộc về |
 | `BOSS_DEFS.trungnut.tn3` `el:'Thuỷ'` | sai dấu ⇒ nằm ngoài toàn bộ hệ khắc hệ | `el:'Thủy'` |
 | `BOSS_DEFS.nhanmon` nm1 · nm3 | Vệ Binh Trụ mà mang tên "Tướng Quân" | đổi tên; "Tướng Quân" chỉ dành cho Trấn Ải |
 | lệnh `/seal` | 7 map cứng, thiếu 4 map | `/rune <0-7>` theo `RUNE_CO` |
@@ -220,6 +238,23 @@ kết bằng **hạ Trùm Vùng → thu Rune**, tức cờ `rune_<map>` — thay
 | `docs/THUAT_NGU.md` | tên map đã chết · "The Calling" đã gỡ | cập nhật |
 
 ---
+
+## 7b. Hai chỗ máy chạy phải nhớ khi sửa tiếp
+
+**Loại nhiệm vụ `tranai`** (mới). Đếm ở `killMob`: `m.def.bossKind==='tranai' && curMap===q.map`
+— nên nó KHÔNG đếm Vệ Binh Rune, và cũng không đếm Trấn Ải ở map khác. La bàn `questTarget()`
+nhân toạ độ TỈ LỆ của `BOSS_DEFS[map].tranai` với khổ map của chính vùng đó; dùng khổ mặc định
+2600×1900 là dẫn lệch cả nghìn pixel trên Rẻo Rừng Corran (5200×3800).
+
+**Ba con số KHÔNG được chép cứng nữa**, cả ba đều đã từng nói dối:
+
+| Con số | Đọc từ | Từng chép cứng thành |
+|---|---|---|
+| số Rune | `RUNE_TONG` | `5` |
+| số Trấn Ải | `TRAN_AI_TONG` (suy từ `BOSS_DEFS`) | `7` → in ra "11/7" |
+| số mục `BOSS_LORE` | `Object.keys(BOSS_LORE).length` | `28` (thật là 40) |
+| mốc trùm chương | `QUEST_BOSS_IDX` (suy từ `QUESTS`) | `9`, ở ba chỗ |
+| số nấc vết nứt | `RUNE_TONG` (test) + `style.css` | 5 nấc CSS, thiếu 2 |
 
 ## 8. Chỗ vẫn cần chủ dự án quyết
 

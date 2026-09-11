@@ -2,7 +2,11 @@
 //
 // Bảng QUESTS là dữ liệu thuần, mà máy chạy nhiệm vụ thì có BA chỗ ghép cứng dễ vỡ khi ai đó
 // chèn/xoá một mục mà không đọc code:
-//   ① `questIdx === 9` gọi spawnBoss() ⇒ mục THỨ 10 phải là trận đấu trùm, không thể là mục khác.
+//   ① Trùm chương mở màn phải khớp mốc mà spawnBoss() dùng. Mốc đó TRƯỚC ĐÂY là `questIdx === 9`
+//      chép cứng ở ba chỗ, nên bài này đòi "mục thứ 10". Nay mốc SUY TỪ DỮ LIỆU
+//      (`QUEST_BOSS_IDX = QUESTS.findIndex(q => q.type === 'boss')`), nên bài đòi thứ khác và
+//      đòi chặt hơn: mốc đọc từ game phải trỏ đúng vào mục `type:'boss'` — đảo thứ tự nhiệm vụ
+//      bao nhiêu lần cũng không làm trùm biến mất.
 //   ② `type:'boss'` bật victory + showVictory() ⇒ chỉ được có ĐÚNG MỘT mục loại đó.
 //   ③ `q.npc` phải là NPC `talk:'quest'`, nếu không thì không có bảng nào để trả nhiệm vụ —
 //      người chơi làm xong mà không nộp được, chuỗi kẹt vĩnh viễn ở đó.
@@ -33,6 +37,10 @@ const PORT = process.argv[2] || '8853';
     });
     const ids = QUESTS.map(q => q.id);
     return { so: QUESTS.length, hong, bocLui, boss, bossO,
+             // Mốc trùm ĐỌC TỪ GAME, không tính lại trong bài kiểm — nếu bài tự tính thì nó chỉ
+             // xác nhận chính phép tính của nó, chứ không xác nhận thứ game dùng.
+             bossIdx: typeof QUEST_BOSS_IDX === 'number' ? QUEST_BOSS_IDX : null,
+             bossId: bossO >= 0 ? QUESTS[bossO].id : null,
              trungId: ids.length - new Set(ids).size,
              chuong: [...new Set(QUESTS.map(q => q.chapter))].length,
              npcThieuArt: [...new Set(QUESTS.map(q => q.npc))].filter(id => {
@@ -53,8 +61,9 @@ const PORT = process.argv[2] || '8853';
   if (r.bocLui) fail(`${r.bocLui} chỗ cấp yêu cầu TỤT so với mục trước — chuỗi sẽ tự khoá`);
   else pass('cấp yêu cầu tăng dần suốt chuỗi');
   if (r.boss !== 1) fail(`có ${r.boss} mục type:'boss' — phải đúng 1, vì nó bật showVictory()`);
-  else if (r.bossO !== 9) fail(`mục type:'boss' nằm ở vị trí ${r.bossO + 1}, mà spawnBoss() gọi ở questIdx===9 ⇒ phải là mục thứ 10`);
-  else pass("mục thứ 10 là trận trùm — khớp chỗ ghép cứng questIdx===9");
+  else if (r.bossIdx !== r.bossO) fail(`QUEST_BOSS_IDX=${r.bossIdx} nhưng mục type:'boss' nằm ở chỉ số ${r.bossO} — trùm chương sẽ không spawn, và không báo gì cả`);
+  else if (!Number.isFinite(r.bossIdx)) fail('QUEST_BOSS_IDX là Infinity — chuỗi không có mục type:\'boss\' nào');
+  else pass(`QUEST_BOSS_IDX=${r.bossIdx} trỏ đúng mục type:'boss' (${r.bossId}) — mốc suy từ dữ liệu, không chép cứng`);
   if (r.npcThieuArt.length) fail('NPC giao việc thiếu art: ' + r.npcThieuArt.join(', '));
   else pass('mọi NPC giao việc đều có tranh');
 
