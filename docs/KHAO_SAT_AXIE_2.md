@@ -13,7 +13,7 @@ một câu khác: *kho có thứ gì mà game đang THIẾU một tính năng v�
 
 ---
 
-## 0. ⚠ MỘT CÁI BẪY PHẢI ĐỌC TRƯỚC: `skelbin.py` NÓI DỐI VỀ CHIMERA
+## 0. ⚠ `read_skel()` CHƯA BAO GIỜ ĐỌC HOẠT CẢNH — của rig nào cũng vậy
 
 Chạy `read_skel()` của dự án lên cả 20 rig Chimera thì **cả 20 đều trả `0 hoạt cảnh`**:
 
@@ -36,9 +36,16 @@ action/idle/normal · attack/melee/normal-attack · action/random-01..03
 `werewolf.skel` nặng **323 KB** trong khi rig Axie `21.skel` (28 xương, cũng "0 hoạt cảnh")
 chỉ **88 KB** — cỡ tệp đã tố cáo là có dữ liệu mà trình đọc không lấy ra.
 
-**Nguồn sự thật là `Assets/OriginsKit/Catalogs/pve-chimeras.json` → `extractedSkeletons[].unityClips`,**
-không phải `skelbin.py`. Kho tự liệt kê clip của từng rig. Sửa/mở rộng `skelbin.py` là việc
-phải làm TRƯỚC khi nướng, nhưng đừng để nó chặn khâu khảo sát.
+**Lý do thật, và nó KHÔNG phải một con bọ:** `read_skel()` kết thúc bằng
+`return {'bones', 'slots', 'skins'}` — **không có `animations`, và không có dòng nào đọc phần
+hoạt cảnh của tệp.** Nên `.get('animations')` rỗng với **mọi** `.skel`, Axie hay Chimera.
+
+⇒ Phải **viết mới** phần đọc hoạt cảnh Spine 3.8 nhị phân, không phải sửa một chỗ hỏng. Ước
+lượng công sức vì thế khác hẳn — xem `docs/LAM_DUOC_GI.md`.
+
+**Nguồn sự thật trong lúc chưa có trình đọc:** `Catalogs/pve-chimeras.json` →
+`extractedSkeletons[].unityClips` — kho tự liệt kê clip của từng rig, và đó cũng là **đáp án để
+đối chiếu** khi viết trình đọc.
 
 *(Rig Axie `.skel` trả 0 hoạt cảnh là ĐÚNG — chúng thật sự bị tước hoạt cảnh, và đó là lý do
 `nuong_chi.py` mượn từ một rig `.json` cùng bộ xương 28 khớp. Với Chimera thì **không mượn

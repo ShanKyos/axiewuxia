@@ -219,18 +219,20 @@ Khảo sát `axieinfinity/axie-origins-asset-kit` (clone về `/home/user/axiein
 appear+idle) rồi mới đem đi cắt khung chạy — tốn 28 khung nướng thừa mỗi con, đổi lại không
 phải tin vào một con số chép tay nào.
 
-### 🐺 22 RIG CHIMERA CÓ HOẠT CẢNH ĐANG NẰM KHÔNG — và `skelbin.py` nói dối về chúng
+### 🐺 22 RIG CHIMERA CÓ HOẠT CẢNH ĐANG NẰM KHÔNG — nhưng `read_skel()` chưa đọc được
 
 Khảo sát lần 2: **`docs/KHAO_SAT_AXIE_2.md`** (2026-09-11). Kho đã clone sẵn ở
 `/home/user/axieinfinity/axie-origins-asset-kit`, `git fetch` xác nhận không có commit mới.
 
-**⚠ CÁI BẪY:** chạy `read_skel()` của dự án lên 20 rig `PvE/Chimeras/*.skel` thì **cả 20 đều
-trả `0 hoạt cảnh`** (số xương 89–227 thì đọc đúng, nên nhìn qua rất dễ tin). Hoạt cảnh **có
-thật** — `strings werewolf.skel` ra `attack/melee/bite-attack`, `defense/hit-by-normal`,
-`defense/hit-die`, `action/move-forward`… và tệp nặng 323 KB so với 88 KB của rig Axie
-`21.skel`. **Nguồn sự thật là `Catalogs/pve-chimeras.json → extractedSkeletons[].unityClips`,
-không phải `skelbin.py`.** Ai tin trình đọc sẽ kết luận "Chimera chỉ có tư thế tĩnh" và bỏ mất
-cả một đợt nội dung.
+**⚠ CÁI BẪY:** `read_skel()` trả `0 hoạt cảnh` cho **mọi** `.skel` (số xương thì đọc đúng, nên
+nhìn qua rất dễ tin là rig không có hoạt cảnh). Lý do **không phải một con bọ**: hàm đó kết thúc
+bằng `return {'bones','slots','skins'}` — nó **chưa bao giờ có phần đọc hoạt cảnh**. Hoạt cảnh
+có thật trong tệp: `strings werewolf.skel` ra `attack/melee/bite-attack`, `defense/hit-by-normal`,
+`defense/hit-die`… và tệp nặng 323 KB so với 88 KB của rig Axie `21.skel`.
+
+⇒ Muốn nướng Chimera thì phải **viết mới** phần đọc hoạt cảnh Spine 3.8 nhị phân (cả kho là
+3.8.99, một định dạng duy nhất). Đáp án để đối chiếu có sẵn:
+`Catalogs/pve-chimeras.json → extractedSkeletons[].unityClips` liệt kê tên clip của cả 22 rig.
 
 *(Rig Axie `.skel` trả 0 là ĐÚNG — chúng bị tước hoạt cảnh thật, nên `nuong_chi.py` mượn từ rig
 `.json` cùng bộ xương 28 khớp. Chimera **không mượn được**: bộ xương khác hẳn, phải dùng clip
@@ -254,6 +256,11 @@ cụ thì trả luôn món nợ `hit-by-normal` của avatar ghi ở mục ĐỔ
 | **10** vật thể cắt sẵn (đo lại: 10/12, `8_TEMPLE` 9% và `6_WATER` 7% KHÔNG phải vật thể) | trụ đá đã gỡ | lớp `vatTo` — kéo `SAN_CHE` 8→18. **CHỈ làm vật thể, tuyệt đối không lát nền** |
 | 35 **node** + 41 **đội hình** (`Catalogs/pve-chimeras.json`) | 7 phó bản vừa gỡ | lấy KHUÔN (node→nền+nhạc+hạng), **đừng chép 35 node** — đó là nhân bản |
 | 43 chân dung + 166 tranh thẻ | 0 | nhiệm vụ đang dựng lại · burst Cổ Vật |
+
+**⚠ Món nợ "Axie giật khi trúng đòn" KHÔNG bị chặn** — `nuong_chi.py` mượn hoạt cảnh từ rig
+`.json` vốn có đủ 41 clip, nên `defense/hit-by-normal` chỉ là thêm một hằng vào dòng
+`IDLE, APPEAR = …`. Danh sách việc chốt (làm ngay được / bị chặn / phải thiết kế / không nên
+làm): **`docs/LAM_DUOC_GI.md`**.
 
 **Rà cả 54 repo `axieinfinity`: không còn kho nào khác có art dùng được.** Phần còn lại là
 blockchain/hạ tầng, hoặc runtime/starter 3D mà game 2D nướng sẵn không dùng tới.
