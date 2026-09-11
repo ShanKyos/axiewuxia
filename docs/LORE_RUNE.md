@@ -215,7 +215,37 @@ từ sự kiện, nên nhận nhiệm vụ sau khi đã chạm vào hệ thống
 > Đầu Tiên"). Chương V nhận cửa **nâng cấp kỹ năng** — chỗ tiêu duy nhất của Bản Năng, và `c5q2`
 > vốn đã mang tên "Bản Năng" mà lại là một nhiệm vụ đánh quái.
 
-**Bảy nhiệm vụ `moc` đang chạy:**
+### Chương VIII · Người Thứ Bảy — chương KHÔNG có Rune
+
+> Đo được: DRUE được nhắc **2/46** nhiệm vụ, cả hai chỉ là một câu tả cảnh trong mô tả boss vùng.
+> §5 gọi manh mối `td_trong` về hắn là "mũi nhọn của cả chuỗi" — mũi nhọn đó chưa đâm vào đâu, và
+> người chơi xong 100% chính tuyến mà chưa từng gặp mặt kẻ thù của mình.
+
+| | |
+|---|---|
+| Cấp | 116-120, sau khi bảy phiến đã về lò |
+| Vùng | Dusk Marsh → **Trũng Nứt** (đáy, ngay dưới Nhát Gọi) |
+| Rune | **không có, và đó là cả điểm của nó** |
+| Đóng bằng | `c8q4` · `type:'boss'` · trùm `MOBS.drue` |
+
+⚠ **Đừng biến nó thành Rune thứ tám.** `RUNE_TONG` = 7 khớp cứng với số nấc
+`#fx-crack[data-tru="N"]` trong `style.css` — thêm phiến thứ tám là lớp vết nứt tụt về 0 ở nấc
+cuối mà không một lỗi nào trên console (đã dính đúng bẫy đó khi đi từ 5 lên 7). DRUE cũng **không
+phải Trấn Ải**: mỗi map đúng MỘT con, `TRAN_AI_TONG` suy từ `BOSS_DEFS`.
+
+⚠ **Kết Mở vẫn ở `c7q6`, KHÔNG dời.** Chương VIII là thứ xảy ra SAU cái kết mở đó. `showKetDrue()`
+cố ý không phải một màn "ngươi đã thắng" — đèn vẫn tắt sau trận này, vì bảy phiến vẫn nằm trong
+lò. **Gỡ Rune là việc của người chơi, không phải của hắn**, và chương VIII không được xoá tội đó.
+
+Chỗ đặt đấu trường **quét bằng máy, không đoán**: Dusk Marsh đã bão hoà (quét cả map theo luật
+`test_bossplace` ra đúng **3** điểm hợp lệ, lề 2-15px). Trũng Nứt có **2100** điểm; lấy điểm lề
+lớn nhất (1320px), ở mép TRÊN map — đúng canon, vì Nhát Gọi là vết cắt trên **trời** và Trũng Nứt
+là đất ngay dưới nó ("cắm đá xuống đấy là đá nứt", cũng là lý do map này `type:'freepk'`).
+
+Chương VII nén 104-118 → **104-114** để lấy chỗ, trong dung sai cấp quái ±4; `c7q5` đổi quái
+`daokhach` C120 → `kylan` C112 vì ở cấp 112 con cũ lệch +8.
+
+**Tám nhiệm vụ `moc` đang chạy:**
 
 | | Cửa | Nhiệm vụ | Cần |
 |---|---|---|---|
@@ -226,6 +256,7 @@ từ sự kiện, nên nhận nhiệm vụ sau khi đã chạm vào hệ thống
 | IV | Đại Thành | `c4q3` Thứ Không Ai Dạy Được | 1 điểm |
 | V | Bản Năng → cấp kỹ năng | `c5q2` Bản Năng | nâng 3 |
 | VI | Box Kundun | `c6q4` Mỏ Đã Tắt Lửa | mở 2 |
+| VIII | Khế Ước (lần hai) | `c8q3` Trả Bằng Thứ Nó Dịch Chuyển | quay 3 |
 
 **Luật đóng chương:** `tranai` phải là nhiệm vụ **CUỐI** của chương. Chương IV từng thu phiến gốc
 ở ô 3/5 rồi còn hai nhiệm vụ nữa trên `caungam` — mà ba map LỐI ĐI cố ý không có chương (chúng là

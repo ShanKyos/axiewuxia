@@ -400,7 +400,7 @@ chơi không có cách nào biết map nào hệ gì. Nay hệ trội nằm ngay
 
 | | Trạng thái |
 |---|---|
-| `QUESTS` | **ĐANG CHẠY** — 8 chương / 46 nhiệm vụ, canon Nhát Gọi. Xem mục "Cốt truyện (canon)" và `docs/LORE_RUNE.md` |
+| `QUESTS` | **ĐANG CHẠY** — 9 chương / 50 nhiệm vụ (thêm chương VIII · Người Thứ Bảy), canon Nhát Gọi. Xem mục "Cốt truyện (canon)" và `docs/LORE_RUNE.md` |
 | `SIDE_QUESTS` | **ĐANG CHẠY** — 9 nhiệm vụ trên ba map LỐI ĐI. Không còn rỗng. |
 
 **Vì sao chuỗi CŨ bị gỡ (ghi lại để đừng vá nó từ git):** lối chơi đã đổi quá nhiều so với lúc
@@ -428,6 +428,59 @@ nội dung ở đó phải là nội dung TỰ CHỌN. `Tầng Sâu` vẫn trố
   `reqMain` trượt. Để mốc thấp hơn chỗ cần một chút, đừng khoá sát.
 - Trần **3 nhiệm vụ phụ cùng lúc** (`sideAvail` trả `'full'`). Chín mục rải cấp 40→62 nên không
   bao giờ quá ba cái mở cùng lúc — thêm mục mới thì kiểm lại chỗ đó.
+
+### ☀ TẦNG NGÀY THEO DẢI CẤP (`DAILY_BANDS`)
+
+Đo được: chuỗi nhiệm vụ cho **1% tổng XP** lên cấp 120 — tức 99% hành trình là cày. Nên tầng
+NGÀY là thứ **duy nhất** chạm vào mọi ngày chơi ở 70 cấp cuối. Mà bản cũ là **ba mục cố định**
+(`Hạ 10 Chimera` · `Rèn 1 lần` · `Hạ 1 Trùm Vùng`) với `minLv` 1/5/12 — từ cấp 12 tới 120,
+**108 cấp**, người chơi mở bảng ra thấy đúng ba dòng đó, cùng con số đó.
+
+Nay 7 dải, **dùng lại đúng khuôn `TRUYNA_BANDS`** — đừng dựng khuôn dải thứ hai, hai bảng cùng
+ý nghĩa là bảo đảm chúng lệch nhau sau vài đợt sửa. Từ 1 mục / thưởng ×1 lên 5 mục / thưởng ×13
+(300 → 3.900 Lumen · 100 → 1.300 Bản Năng · 2 → 6 Shard).
+
+- ⚠ **CHỈ THÊM MỤC TIÊU NÀO ĐÃ CÓ NHỊP NGÀY SẴN.** `via` (Vỉa Cốt) và `truyna` (Truy Nã Lệnh)
+  vốn đã là nội dung ngày — đưa vào đây là **cho thấy** thứ đã có. Dựng một hệ lặp thứ tư cạnh
+  Truy Nã + Vỉa + ba sự kiện theo giờ thật là đúng bệnh nhân bản ở đầu tài liệu này.
+- ⚠ **MỖI khoá phải có một chỗ gọi `dailyTrack()`.** Thiếu một chỗ móc là mục đó đứng 0 vĩnh
+  viễn, và vì thưởng đòi xong **HẾT** nên nó khoá luôn thưởng ngày — im lặng, không lỗi nào.
+- ⚠ **`dailyReset()` dựng khuôn TỪ `DAILY_META`**, không viết tay từng khoá. Thêm mục mà quên
+  thêm ngăn thì `d[g.id]` là `undefined` và `||0` che mất. Save cũ cũng được vá mà giữ tiến độ.
+
+Bài kiểm: `tests/test_muctieu.js` — lái từng mục tới đích bằng **chính hàm của game**
+(`viaKhai()` / `truynaClaim()` thật, không chỉ gọi `dailyTrack`), vì đó là thứ bắt được chỗ móc
+thiếu.
+
+### ☠ CHƯƠNG VIII · NGƯỜI THỨ BẢY — và trùm nhiệm vụ nay THEO MAP
+
+DRUE được nhắc **2/46** nhiệm vụ, cả hai chỉ là một câu tả cảnh trong mô tả boss vùng — kẻ thù
+chính của canon chưa bao giờ bị đối đầu. Chương VIII (4 nhiệm vụ, cấp 116-120) trả nốt chỗ đó.
+
+- ⚠ **KHÔNG phải Rune thứ tám.** `RUNE_TONG` = 7 khớp cứng với số nấc `#fx-crack[data-tru="N"]`
+  trong `style.css`; thêm phiến thứ tám là lớp vết nứt tụt về 0 ở nấc cuối mà không báo gì.
+  DRUE cũng **không phải Trấn Ải** — mỗi map đúng một con, `TRAN_AI_TONG` suy từ `BOSS_DEFS`.
+- ⚠ **Kết Mở vẫn ở `c7q6`, không dời.** Chương VIII là thứ xảy ra SAU cái kết mở đó. `showKetDrue()`
+  cố ý không phải màn "ngươi đã thắng": đèn vẫn tắt, vì bảy phiến vẫn trong lò.
+- Chỗ đặt **quét bằng máy**: Dusk Marsh đã bão hoà (cả map chỉ còn 3 điểm hợp lệ, lề 2-15px).
+  Trũng Nứt có 2100 điểm, lấy điểm lề lớn nhất 1320px. Mép TRÊN map là đúng canon — Nhát Gọi là
+  vết cắt trên **trời**, Trũng Nứt là đất ngay dưới nó.
+- `MOBS.drue` vẽ bằng khung xương `fiend`, **không thêm tệp ảnh nào**.
+
+**Trùm nhiệm vụ nay theo map**: `BOSS_ARENAS` · `bossMobKey(md)` · `questBossIdx(mid)`;
+`md.boss` là `true` (tương thích, ⇒ `MOBS.boss`) hoặc một khoá trong `MOBS`.
+
+⚠ **Guard là `questIdx === questBossIdx(map)`, KHÔNG phải `>= idx && !victory`.** `victory` là
+cờ **toàn cục**: nó bật ở `c0q8` — **cấp 12** — rồi chặn vĩnh viễn con thứ hai ở cấp 120. Tức
+DRUE không bao giờ hiện với người chơi đi đường tự nhiên, và không lỗi nào báo. So sánh bằng thì
+tự đúng cho mọi map và tự tắt khi nhiệm vụ trôi qua.
+
+⚠ **`showVictory()` chép cứng "Thủ Lĩnh Gloam đã bại"** — câu của trùm cấp 12. Chỉ con ở
+`corran` được gọi nó.
+
+⚠ **BÀI KIỂM PHẢI ĐI ĐƯỜNG TỰ NHIÊN.** Bài đầu của tôi nhảy thẳng `questIdx` tới chương VIII rồi
+đo — xanh, và bỏ sót đúng lỗi `victory` ở trên. `test_nhiemvu §9` nay bắt buộc hạ trùm chương 0
+trước. *Bài kiểm nhảy cóc qua đoạn đầu game sẽ không bao giờ thấy cờ nào bật ở đoạn đầu game.*
 
 ### 📍 LOẠI NHIỆM VỤ `moc` — cửa cơ chế phải có người GÁC, không phải một câu nhắc
 
