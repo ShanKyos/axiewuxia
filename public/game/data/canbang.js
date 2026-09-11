@@ -1544,9 +1544,9 @@ window.NPCS = [
 
   { id:'ah_gac_tay', name:'Lính Gác Cổng Tây', map:'ardhaven', x:700, y:1450, img:'assets/npcs/laotuong.png', talk:'quest',
     lore:{
-      idle:  '"Ra Cổng Tây rồi đi thẳng là tới Plant Tribe Glade. Rừng thấp, nhiều lối, mà lối nào cũng giống lối nào. Nhớ đường về hơn là nhớ đường đi."',
+      idle:  '"Ra Cổng Tây rồi đi thẳng là tới Rẻo Rừng Corran. Rừng thấp, nhiều lối, mà lối nào cũng giống lối nào. Nhớ đường về hơn là nhớ đường đi."',
       offer: '"Chưa cần tới ngươi. Cổng này ngày nào cũng mở, mai quay lại cũng được."',
-      active:'"Trong Plant Tribe Glade còn thứ ngươi phải làm cho xong."',
+      active:'"Trong Rẻo Rừng Corran còn thứ ngươi phải làm cho xong."',
       done:  '"Xong rồi hả. Ngồi nghỉ đi, ta rót cho ngụm nước."' },
     barks:['"Lối nào cũng giống lối nào. Nhớ đường về."','"Đừng bẻ cành làm dấu — cành mọc lại, dấu thì không."',
            '"Trong tường thì yên. Ngoài kia thì tùy hôm."'] },
@@ -1762,7 +1762,7 @@ Ngươi thuộc một trong <b>năm lớp chiến binh của Vaeldra</b>, nằm 
 
 Cuộc vượt biên tước sạch của ngươi mọi thứ — tên tuổi, ký ức, đồng đội — trừ một điều: bản năng chiến đấu của lớp mình. <b>Dark Knight</b> ◆ · <b>Dark Wizard</b> ❄ · <b>Sylvan Ranger</b> ❄ · <b>Spellblade</b> ☼ · <b>Dark Lord</b> ▲ — hãy chọn lại con đường ấy.
 
-Ngươi dạt vào <b>Plant Tribe Glade</b>, được một Trưởng Làng Axie nhặt về nuôi. Võ nghệ sẽ trở lại theo từng cấp — và Lunacia cần nó.
+Ngươi dạt vào <b>Rẻo Rừng Corran</b>, được một Trưởng Làng Axie nhặt về nuôi. Võ nghệ sẽ trở lại theo từng cấp — và Lunacia cần nó.
 
 Mỗi lớp mang một <b>hệ nguyên tố</b> — khắc hệ gây thêm <b>+20% sát thương</b> lên Chimera bị khắc.`,
   `<span class="is-title">NĂM TRỤ KHÓA</span>
@@ -1770,7 +1770,7 @@ Mỗi lớp mang một <b>hệ nguyên tố</b> — khắc hệ gây thêm <b>+2
 
 Tướng quân của Morvahn đã chiếm cả năm trụ. Muốn tiến sâu, ngươi phải hạ chúng — nhưng <b>mỗi trụ được gỡ là vết nứt lại toác thêm</b>.
 
-<i>"Từ Plant Tribe Glade, qua Werebear Woods, vào Bug Tribe Tunnels, lên Bird Tribe Heights, ra Reptile Sunstone Flats… cho tới Dusk Marsh, nơi vết nứt hà xuống."</i>
+<i>"Từ Rẻo Rừng Corran, qua Werebear Woods, vào Bug Tribe Tunnels, lên Bird Tribe Heights, ra Reptile Sunstone Flats… cho tới Dusk Marsh, nơi vết nứt hà xuống."</i>
 
 Muốn tới được Morvahn, ngươi phải tự tay mở toang cánh cửa hắn đang bước qua.
 

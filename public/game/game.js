@@ -1928,9 +1928,11 @@ const MAPS = window.MAPS;
 // "vết nứt rộng thêm" thành thứ người chơi CẢM THẤY chứ không chỉ nhìn thấy: +8% mỗi trụ, trần
 // +40% ở đủ năm trụ.
 //
-// Chỉ áp cho map type:'pk'. Plant Tribe Glade và Outskirts là đất luyện cấp của người mới, mà
+// Chỉ áp cho map type:'pk'. Rẻo Rừng Corran và Outskirts là đất luyện cấp của người mới, mà
 // người mới thì chưa gỡ trụ nào — nhưng sau Tái Sinh họ quay lại đó với truDaGo() đã đầy, và
-// tăng mật độ ở bãi tân thủ là phạt nhầm người.
+// tăng mật độ ở bãi tân thủ là phạt nhầm người. Sau khi hoán dải cấp, map tân thủ mang
+// type:'safe' nên nhánh này tự bỏ qua nó; Plant Tribe Glade thành `pk` thì CÓ áp — đúng vai trò
+// mới của nó.
 function bayCo(pk, md){
   if (!md || md.type !== 'pk') return pk.n;
   return Math.floor(pk.n * (1 + Math.min(5, truDaGo()) * 0.08));
@@ -11051,7 +11053,7 @@ function onDeath(){
     <p>Ngươi bị <b style="color:#ff8f6b">${_kb}</b> đánh bại.<br><span style="color:#e8b060;font-size:12.5px">Mẹo: khi trấn thủ tụ chiêu (vùng đỏ), hãy chạy ra khỏi vùng đỏ — sau đó là 2.5 giây phản công tốt nhất.<br>Hoặc quay lại khi ngươi đã mạnh hơn.</span></p>
     <button class="big-btn" onclick="respawn()">Tái Chiến</button>` : `
     <h2>Trọng Thương!</h2>
-    <p>Ngươi bị đánh bại... Nhưng Lunacia chưa hề bỏ rơi kẻ có chí.<br>Hồi sinh tại làng trên Plant Tribe Glade với đầy đủ sinh lực.</p>
+    <p>Ngươi bị đánh bại... Nhưng Lunacia chưa hề bỏ rơi kẻ có chí.<br>Hồi sinh tại làng trên Rẻo Rừng Corran với đầy đủ sinh lực.</p>
     <button class="big-btn" onclick="respawn()">Hồi Sinh</button>`;
   ov.classList.remove('hidden');
 }
@@ -21554,7 +21556,7 @@ el('is-skip').addEventListener('click', closeIntro);
 const TUT_STEPS = [
   { key:'move',  txt:'Bấm <b>chuột phải</b> trên nền đất hoặc bấm vào <b>bản đồ thu nhỏ</b> — nhân vật sẽ tự chạy tới đó, hãy thử một lần', },
   { key:'npc',   txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
-  { key:'map',   txt:'Bấm <b>Đi ngay</b> trên dải nhiệm vụ giữa màn hình (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để dịch chuyển tới <b>Plant Tribe Glade</b>' },
+  { key:'map',   txt:'Bấm <b>Đi ngay</b> trên dải nhiệm vụ giữa màn hình (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để dịch chuyển tới <b>Rẻo Rừng Corran</b>' },
   { key:'kill',  txt:'Nhấn <b>SPACE</b> — nhân vật tự chạy tới con quái gần nhất và đánh. Hãy hạ 1 con <b>Axie Heo Rừng</b>' },
   { key:'loot',  txt:'Quái chết có thể rơi đồ hoặc <b>Châu</b> xuống đất — <b>đi ngang qua</b>, bấm <b>J</b> hoặc <b>bấm chuột trúng món</b> để nhặt. Giữ <b>ALT</b> xem tên mọi món trên màn' },
   { key:'quest', txt:'Làm theo nhiệm vụ ở <b>góc phải màn hình</b> · <b>C</b> nhân vật · <b>K</b> kỹ năng · <b>B</b> túi đồ' },
@@ -23160,8 +23162,9 @@ const BOSS_LORE = window.BOSS_LORE;
 // sách cấm của phong cách, và bộ tên cũ tự đá nhau (Trụ Hỏa hiện ở CẢ trụ đầu lẫn trụ cuối, Trụ
 // Mộc hai lần, Trụ Thổ không lần nào — người chơi không thể đếm nổi mình đang ở trụ thứ mấy).
 //
-// Bảy vùng nhưng chỉ NĂM trụ: Plant Tribe Glade và Outskirts là đất tập, không có trụ. Đó là cách
-// duy nhất để "bảy Tướng Quân" và "năm Trụ Khoá" cùng đúng.
+// Bảy vùng nhưng chỉ NĂM trụ: hai vùng dải thấp nhất không có trụ. Đó là cách duy nhất để "bảy
+// Tướng Quân" và "năm Trụ Khoá" cùng đúng. Bộ khoá dưới đây KHÔNG đổi khi Rẻo Rừng Corran và
+// Plant Tribe Glade hoán dải cấp — trụ gắn với mạch truyện của vùng, không gắn với dải cấp.
 const TRU_KHOA = {
   chungnam:  'Trụ Werebear Woods',
   comoc:     'Trụ Roost',
@@ -23183,10 +23186,13 @@ function tuongQuanDaHa(){
 const REGION_UNLOCK_LORE = {
   ardhaven:{ sub:'Vỏ kén đã phá — trở về Sapidae Chiefdom trong tiếng hoan hô, chính thức bước vào Chương II.' },
   // Rẻo Rừng Corran nay là vùng đầu tiên ngoài tường thành (hoán dải cấp với Plant Tribe Glade),
-  // nên câu dẫn nhập Ngũ Trụ đọc ở đây. Câu của Plant Tribe Glade giữ nguyên bên dưới — nó vẫn
-  // hiện khi người chơi đặt chân tới vùng ấy ở dải 38-48.
+  // nên câu dẫn nhập Ngũ Trụ đọc ở đây.
   corran:    { sub:'Rẻo Rừng Corran — khoảnh rừng đầu tiên ngoài tường thành. Chưa có trụ nào ở đây, chỉ có thứ đang lấn tới sát chân tường.' },
-  daohoa:    { sub:'Plant Tribe Glade — hòn đảo đã hứng ngươi khi ngươi rơi xuống. Chưa có trụ nào ở đây, chỉ có hậu quả.' },
+  // ⚠ Câu cũ ở đây là "hòn đảo đã hứng ngươi khi ngươi rơi xuống" — đúng hồi map này còn là chỗ
+  // khởi đầu, sai từ lúc hoán dải cấp: người chơi nay dạt vào Rẻo Rừng Corran, và chỉ đặt chân
+  // tới đây ở cấp 38. Giữ nguyên vế "Chưa có trụ nào ở đây" vì nó là mệnh đề ĐẾM ĐƯỢC (truDaGo
+  // chỉ tính năm vùng có trụ, xem TRU_KHOA), và giữ cả cái kết "chỉ có hậu quả".
+  daohoa:    { sub:'Plant Tribe Glade — hòn đảo Plant Tribe bỏ lại từ hôm trời nứt, nay Axie Sa Ngã chiếm. Chưa có trụ nào ở đây, chỉ có hậu quả.' },
   ngoai:     { sub:'"Đất ngoài thành đang rung." Chưa phải trụ — nhưng là dấu hiệu đầu tiên rằng có trụ đang lung lay.' },
   chungnam:  { sub:'"Trụ Werebear Woods do ta giữ." Một Tướng Quân đơn độc chống đỡ cả cánh rừng — trụ thứ nhất trong năm.' },
   comoc:     { sub:'Trụ Roost đóng thẳng xuống giữa ổ ấp. Bug Tribe Tunnels thì thầm: thứ nở ra ở đây không còn là Axie nữa.' },
