@@ -158,6 +158,59 @@ Khảo sát `axieinfinity/axie-origins-asset-kit` (clone về `/home/user/axiein
 appear+idle) rồi mới đem đi cắt khung chạy — tốn 28 khung nướng thừa mỗi con, đổi lại không
 phải tin vào một con số chép tay nào.
 
+### ⚠ RAGOON ĐÃ GỠ — gacha thì KHÔNG, nó chỉ đổi thứ nó trao
+
+Chủ dự án chốt: *"Bỏ luôn phần Ragoon. Nếu gacha là sẽ gacha nhân vật."* Cái chết là **CON THÚ**,
+không phải cái máy. Đường cắt hoá ra **ba tầng** (đặc tả: `docs/DOI_VAI_AXIE.md §11b`):
+
+| Tầng | Quyết định |
+|---|---|
+| Tầng vẽ — `CHIMERA` `CHI_ANH` `CHI_MAP` `_chiVe` `chiVeNho` `chiChayImg` `chiSan` `CHI_THO_FPS` | **GIỮ.** Avatar đọc đúng bộ này. Gỡ là gỡ luôn avatar. |
+| Máy gacha — `chiState` `chiNhan` `gachaMotLuot` `gachaQuay` pity banner `player.chimera.co` | **GIỮ, đổi thứ nó TRAO** → thân Axie. 16 con đã có sẵn 16 bảng khung avatar; gỡ máy rồi dựng bộ chọn avatar mới là nhân bản đúng cái vừa xoá. |
+| Con thú + hai vòng nuôi nó | **GỠ HẾT** (danh sách đầy đủ trong chú thích tại chỗ cũ trong `game.js`) |
+
+**Ba nguồn chỉ số từ con Axie đã gỡ khỏi `calcDerived`**: bị động `thu` (× `chiThuMul`), bốn kỹ
+năng đồng hành, buff tạm `chiTam`. ⚠ **Đừng nối lại.** `CHIMERA[].thu` / `.chieu` trong
+`canbang.js` vẫn còn nhưng **không được đọc ở đâu nữa** — một cái thân thì không cộng chỉ số, và
+cho quay gacha ra +25% sát thương là dựng lại đúng trục sức mạnh mua được mà đợt này đang tháo.
+
+**`chiCoTrongMan` / `CHI_THAN` 0,45 / `CHI_TRAN` 0,55 đã gỡ** — luật *"Chimera đi theo không bao
+giờ được lấn át nhân vật"* cần HAI cái thân đứng cạnh nhau mới có nghĩa. Nay chỉ còn một. ⚠ Cỡ
+avatar do `AVA_TY` 0,72 / `AVA_TRAN` 0,95 quản, và hai số đó khớp theo luật **ngược lại**: avatar
+và lớp nhân vật THAY CHỖ NHAU lúc ra đòn nên khối nhìn thấy phải **bằng nhau**, không nhỏ hơn.
+Chép `CHI_THAN`/`CHI_TRAN` sang đấy là mỗi cú đánh một cú giật cỡ. `tests/test_cothu.js` gác.
+
+### ◆ BỐN Ô CỐT NAY CẮM TRÊN NGƯỜI CHƠI
+
+`player.cot` (4 ô) + `player.cotKho`, thay cho `player.chimera.co[id].cot`. Năm khoá `c*` của
+Ragoon đổi sang khoá thật: `cAtk→atkPct` · `cCrit→crit` · `cCritDmg→critDmg` · `cSkill→skillPct`
+· `cCd→cdCut`. Dải lấy theo **dải người chơi** (thấp hơn dải Ragoon cũ) — Cốt nay cộng thẳng vào
+đòn của chính mình, không đi qua một con thú có sát thương riêng.
+
+- `chiCotGom(id)` → **`cotGom()`**: MỘT sổ, không còn sổ `c` mất đích. Đừng dựng lại sổ thứ hai.
+- ⚠ **Tám khoá `COT_PHU` phải KHÁC NHAU đôi một.** `cAtk→atkPct` trùng dòng `atkPct` có sẵn thì
+  `cotThemPhu()` (lọc trùng theo khoá) chỉ còn **bảy** khoá để bốc trong khi trần là bốn dòng
+  phụ — không lỗi, không báo gì, chỉ là bể hẹp đi. Dòng dôi ra đổi sang `pierce`.
+- ⚠ **`skillPct` và `cdCut` KHÔNG có ngăn trong sổ P** — chúng đi đường riêng vào
+  `player.skillDmgPct` / `player.vhCdMult`, đúng đường Đại Thành đã dùng.
+- ⚠ **Mười một hiệu ứng "đủ 4 mảnh" đã DỜI** từ `chiCastChieu()` sang chiêu NGƯỜI CHƠI:
+  `cotBoCast(id)` gọi **một lần** ở cuối `castSkill` (hơn mười nhánh, vài nhánh thoát bằng
+  `return` — rắc vào từng nhánh là đảm bảo bỏ sót) · `cotBoTick(dt)` · `cotDmgMul()` ·
+  `cotCdMul()`; Tro Tàn trong `killMob`, Mầm Cội trong `hurtMob`. Không dời thì bốn ô Cốt chỉ
+  còn là bốn dòng chỉ số, mất đúng cái làm Cốt khác trang bị.
+- ⚠ **`cotDiTru()` phải TRẢ MẢNH VỀ KHO.** Save cũ có một bộ bốn ô cho TỪNG con; nay chỉ còn một
+  bộ. Giữ bộ của con đang cắm, mọi mảnh khác về kho. Bỏ bước đó là người chơi mất trắng.
+
+**Hai lỗi CÓ SẴN, lộ ra lúc dời** — cả hai đều im lặng:
+1. Băng Vụn đủ 4 mảnh ghi `m.freezeT`, mà **không chỗ nào trong game đọc `freezeT`**. Cơ chế
+   đứng hình thật là `m.stunT`. Bảng Cốt hứa "đóng băng 1,2 giây" và chưa con quái nào từng đứng
+   lại. Trước khi thêm một trạng thái mới lên quái, grep xem có ai ĐỌC nó không.
+2. Gacha trùng con chỉ trả Nguyệt Trần **sau** khi đủ C6, vì sáu lần đầu còn nuôi Huyết Thống.
+   Ba hệ số đó gỡ rồi nên sáu lần trùng đầu thành trắng tay. Nay trùng có thưởng ngay từ lần đầu.
+
+Bài kiểm: **`tests/test_cotnguoi.js`** (thay cho `test_dinhhinh.js` đã gỡ — bài cũ gác hệ Định
+Hình Chimera, tức gác một cái xác: nó xanh mãi mãi và không bảo vệ gì).
+
 ### Còn treo
 
 | | |
@@ -213,7 +266,7 @@ Ba thứ từng treo trên phó bản, đã phải rời chỗ khi gỡ — **nh
 | Thứ | Trước | Nay |
 |---|---|---|
 | Địa hình Tầng Sâu | `DEEP_MAP = 'pb_daohoa'` | map riêng `deep` trong `MAPS` |
-| Nguồn Cốt Chimera | thông quan phòng | **cầu tạm**: boss vùng của 7 map cha (`cotBossVung`) |
+| Nguồn Cốt (nay của NGƯỜI CHƠI) | thông quan phòng | **cầu tạm**: boss vùng của 7 map cha (`cotBossVung`) |
 | `COT_DONG[*].map` | `pb_*` | map cha ngoài trời |
 
 `cotBossVung` là **cầu tạm, không phải thiết kế**. Nó tồn tại vì một hệ không còn cửa
@@ -333,7 +386,7 @@ là bảng Bản Đồ nói dối — mà nói dối kiểu đó không ai phát
 **Cố ý KHÔNG làm `monRoi`** (món chỉ rơi ở map này) như đề xuất gốc: chính đề xuất đó cảnh báo
 món độc quyền phải thật sự cần cho một thứ gì đó, không thì chỉ là "món rác mang tên đẹp".
 Dựng bảy nền kinh tế mới cho bảy món là đúng cái bệnh nhân bản. Mỗi map **đã có sẵn** một thứ
-độc quyền thật — một Dòng Cốt Chimera, có nơi tiêu thật. Việc của A2 là **cho thấy**, không
+độc quyền thật — một Dòng Cốt, có nơi tiêu thật (bốn ô Cốt của người chơi). Việc của A2 là **cho thấy**, không
 phải **thêm**.
 
 Đây cũng là chỗ chữa cho khắc hệ: `el:` chạy trong `hurtMob` (±20% / −12%) từ lâu nhưng người
@@ -1076,7 +1129,7 @@ ngựa (vẽ cung hở), găng ra thanh sô-cô-la (4 khối chữ nhật bằng
 
 `NV_CAO` (hiện **132**) là chiều cao nhân vật trên màn. Nó là **thước đo chung**: thần khí
 (`TK_PHONG`), hình học Vòng Kiếm Lửa (`VONGKIEM_TAM/RX/RY/VKX/VKY`), sải chân (`SAI_CHAN`),
-ngưỡng chạy (`CHAY_TU`), chỗ bàn chân chạm đất (`chanDy()`) và cỡ Chimera đi theo — **tất cả
+ngưỡng chạy (`CHAY_TU`), chỗ bàn chân chạm đất (`chanDy()`) và cỡ avatar (`avaCo`) — **tất cả
 đều dẫn xuất từ nó**. Chép cứng lại một con số đã thu sẵn là mở đường cho chúng lệch nhau, và
 kiểu lệch ấy rất khó lần: phóng to nhân vật thì bàn chân trượt đất, vòng lửa quét ngang đầu,
 chiêu giáng xuống nổ ngang bụng — mà nhìn thì chỉ thấy "hình như hơi lạ".
@@ -1089,21 +1142,22 @@ mới thu theo `NV_CAO`; nhịp bước = quãng đường ÷ sải chân nên s
 khác ở tận dưới ("Cannot access 'X' before initialization"). eslint và tsc **không** bắt được;
 chỉ mở trang mới thấy. Đã mắc một lần với `VONGKIEM_TAM`.
 
-## Chimera đi theo KHÔNG BAO GIỜ được lấn át nhân vật
+## ~~Chimera đi theo KHÔNG BAO GIỜ được lấn át nhân vật~~ — luật đã GỠ
 
-Chủ dự án chốt bằng đúng chữ "không bao giờ", nên luật phải là **cấu trúc**, không phải một
-con số dò tay. 16 con nướng ra 16 cỡ ô khác nhau (tỉ lệ rộng/cao 1,07 → 1,52), nên khoá theo
-"thân cao 84px" như bản cũ là chưa đủ: con rộng nhất vẽ ra **146px ngang** trong khi nhân vật
-chỉ chiếm ~45px — mắt đọc thành "con thú dắt theo một người".
+> ⚠ Giữ đúng cái tiêu đề này để cảnh báo, thay vì xoá trắng rồi để người sau đọc `CHI_THAN`
+> trong lịch sử git mà tưởng nó còn. Cùng kiểu bẫy đã ghi ở mục "~~Khắc Ấn~~".
 
-`chiCoTrongMan(id)` khoá theo **hộp vẽ ra**, cả cao lẫn rộng, và khoá **tương đối với
-`NV_CAO`**: `CHI_THAN` = 0,45 (thân cao mấy phần thân người) và `CHI_TRAN` = 0,55 (trần cho
-chiều nào cũng vậy). Con nào vượt thì tự thu đúng phần vượt — nên lời hứa đúng cho cả 16 con
-hiện có lẫn mọi con nướng thêm sau này. `test_cothu.js` quét cả bộ, không kiểm một con mẫu.
+Luật cũ (`chiCoTrongMan` · `CHI_THAN` 0,45 · `CHI_TRAN` 0,55) khoá cỡ con thú đi theo theo **hộp
+vẽ ra**, cả cao lẫn rộng, tương đối với `NV_CAO`. Nó tồn tại vì có **HAI cái thân** đứng cạnh
+nhau trong màn, và câu hỏi "con nào là ngươi" là câu hỏi thật.
 
-Gót chân neo cố định ở `mountObj.y + 12` bất kể con to nhỏ (`_chiVe()` đặt gót ở
-`y + than*0,38` nên chỗ vẽ phải trừ ngược lại), và vũng bóng co theo chính con vật — thu nhỏ
-con thú mà để nguyên elip bóng thì nó thành ra đứng trên một cái đĩa.
+**Ragoon đã gỡ** (xem mục Đổi Vai). Nay chỉ còn MỘT thân: con Axie **LÀ** thân người chơi. Một
+cái thân không lấn át được chính nó.
+
+⚠ **Cỡ avatar đi theo luật NGƯỢC LẠI, đừng chép số cũ sang.** `AVA_TY` 0,72 / `AVA_TRAN` 0,95:
+avatar và lớp nhân vật **THAY CHỖ NHAU** lúc ra đòn, nên khối nhìn thấy phải **bằng nhau**, không
+phải nhỏ hơn. `CHI_THAN`/`CHI_TRAN` cố ý nhỏ hơn người — chép sang là mỗi cú đánh một cú giật cỡ.
+`tests/test_cothu.js` nay gác đúng luật mới đó (và gác luôn việc Ragoon không sống lại).
 
 ## Hai lối vẽ nhân vật — ĐỪNG TRỘN VÀO NHAU
 
@@ -1296,7 +1350,7 @@ gác chuyện đó (cả ba đường mặc đồ đều đi qua đó).
 | Tên người chơi thấy | Ký hiệu | Trường | Kiếm ở đâu | Tiêu ở đâu |
 |---|---|---|---|---|
 | **Lumen** | `◈` | `player.silver` | rơi từ quái, bán đồ, nhiệm vụ | tiệm · rèn · nâng kỹ năng · Lò Hỗn Độn |
-| **Ấn Giao Kết** | `✦` | `player.chimera.ve.gk` | boss vùng lần đầu · điểm danh · phó bản | quay Khế Ước Chimera |
+| **Ấn Giao Kết** | `✦` | `player.chimera.ve.gk` | boss vùng lần đầu · điểm danh · phó bản | quay Khế Ước (ra **thân Axie**, không ra thú đồng hành) |
 | **Shard** | `♦` | `player.shard` | KHÔNG rơi từ quái — chỉ mốc mỗi ngày và thông quan | Quầy Shard: vé quay · nới túi · nới kho |
 
 - `player.silver` **giữ nguyên tên trường**; chỉ chữ người chơi thấy đổi thành "Lumen". Đừng đổi
@@ -1609,5 +1663,5 @@ Cỡ NPC từng là `nh = 64` chép cứng. Hai chỗ sai, và chỗ thứ hai m
    nhớ lại, và neo **đáy hộp** vào chân NPC.
 
 Năm NPC là thú Axie có tranh rộng hơn cao (tới 1,35), nên khoá cả hai chiều rồi thu phần vượt —
-đúng khuôn `chiCoTrongMan()` đã dùng cho Chimera. Nhãn tên, dấu nhiệm vụ và câu thoại bay lên
+đúng khuôn `avaCo()` đã dùng cho avatar (trước là `chiCoTrongMan()`, đã gỡ). Nhãn tên, dấu nhiệm vụ và câu thoại bay lên
 đều đo theo `n._cao`, không chép cứng 52/64/78 nữa.

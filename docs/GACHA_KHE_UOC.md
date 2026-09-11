@@ -1,6 +1,28 @@
-# Khế Ước Chimera — hệ gacha đồng hành
+# Khế Ước — hệ gacha (nay trao THÂN AXIE, không trao thú đồng hành)
 
-Bản thiết kế. **Chưa code gì cả** — chốt xong tài liệu này mới làm.
+> ## ⚠ MÁY GACHA CÒN NGUYÊN. THỨ NÓ TRAO THÌ ĐỔI.
+>
+> Chủ dự án chốt 2026-09-11: *"Bỏ luôn phần Ragoon. Nếu gacha là sẽ gacha nhân vật."*
+>
+> **Còn nguyên, dùng được như tài liệu này mô tả:** tỉ lệ · pity cứng/mềm · 50/50 · hai banner ·
+> vòng kệ 6 tuần · `chiState` · `chiNhan` · `gachaMotLuot` · `gachaQuay` · `player.chimera.co`.
+> Gỡ máy này rồi dựng một bộ chọn avatar mới là nhân bản đúng cái vừa xoá — 16 con đã có sẵn 16
+> bảng khung avatar đang chạy.
+>
+> **Đã đổi:**
+> - quay ra một con = nhận một **thân Axie** cắm được làm avatar. Nó **không cộng chỉ số, không
+>   tự đánh, không có chiêu**. `CHIMERA[].thu` / `.chieu` trong `canbang.js` còn đó nhưng
+>   **không được đọc ở đâu nữa**.
+> - **Huyết Thống (`con`, 0-6) không còn là sức mạnh** — chỉ là con số sưu tầm in trên thẻ. Ba
+>   hệ số cũ (`chiThuMul` +40% bị động · `chiCdMul` −10% hồi · `chiDmgMul` +25% ST) đã gỡ.
+> - ⚠ **Trùng con nay có thưởng NGAY từ lần đầu.** Bản cũ chỉ trả Nguyệt Trần *sau* khi đủ C6,
+>   vì sáu lần đầu còn nuôi Huyết Thống. Ba hệ số đó gỡ rồi, nên giữ nguyên là sáu lần trùng đầu
+>   thành **trắng tay** — không lỗi nào báo, chỉ là người chơi thấy vô lý.
+>
+> Đặc tả đầy đủ đường cắt: `docs/DOI_VAI_AXIE.md §11b`.
+
+Bản thiết kế gốc. **Chưa code gì cả** — chốt xong tài liệu này mới làm. *(Câu này là lịch sử:
+hệ đã code và đang chạy.)*
 
 Yêu cầu: dựng lại đúng bộ máy gacha của Genshin Impact, từ A đến Z, nhưng quay ra **Chimera
 đồng hành** thay vì nhân vật, và **vé chỉ cày được trong game** (không bán bằng tiền thật).

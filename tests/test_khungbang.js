@@ -54,7 +54,7 @@ const pass = m => console.log('PASS ' + m);
     // Kho Cốt mượn khung phủ dùng chung #panel-quest
     ['panel-quest',    () => { if (!Object.keys(chiState().co).length) chiNhan(Object.keys(CHI_MAP)[0]);
                                if (!cotKho().length) cotKho().push(cotMoi(COT_DONG_IDS[0], 'tinh'));
-                               window.moKhoCot(Object.keys(chiState().co)[0]); }, 'panel-quest (Kho Cốt)'],
+                               window.moKhoCot(); }, 'panel-quest (Kho Cốt)'],
     ['panel-forge',    () => { const n = forgeNpcHere();
                                if (n){ player.x = n.x; player.y = n.y; }
                                window.openForgePanel(); }],
@@ -138,12 +138,11 @@ const pass = m => console.log('PASS ' + m);
     closePanels();
     let boCot = 0;
     try {
-      // Phải SỞ HỮU một con Chimera thì chiO() mới trả về ô, và kho phải có mảnh thì nút "Bỏ"
-      // mới được vẽ ra.
-      if (!Object.keys(chiState().co).length) chiNhan(Object.keys(CHI_MAP)[0]);
-      const id = Object.keys(chiState().co)[0];
+      // Kho phải có mảnh thì nút "Bỏ" mới được vẽ ra.
+      // ⚠ Trước đợt gỡ Ragoon còn phải SỞ HỮU một con Chimera (chiO() mới trả về ô). Bốn ô Cốt
+      // nay của người chơi, nên điều kiện đó hết cần — và `moKhoCot()` không nhận id nữa.
       if (!cotKho().length) cotKho().push(cotMoi(COT_DONG_IDS[0], 'tinh'));
-      window.moKhoCot(id);
+      window.moKhoCot();
       for (const d of document.querySelectorAll('#panel-quest button.danger')){
         boCot++; ra.push(d.textContent.trim().slice(0, 24));
       }

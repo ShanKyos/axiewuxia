@@ -428,7 +428,7 @@ cần nhiều xác, nên sở hữu rộng có giá trị hơn sở hữu một 
 | Cần | Đã có sẵn trong code | Phải làm |
 |---|---|---|
 | xác **hiện ra rồi tan** lúc tung chiêu | `player.castAct` + `atkAnim` (⚠ ĐẾM NGƯỢC — xem ba cái bẫy trong `CLAUDE.md`) | đã thi công đợt 1 |
-| ~~xác đi theo, tự đánh, taunt~~ | ~~`updateMount()`~~ | **KHÔNG còn cần** — hai cái thân thì không có đơn vị nào đi theo. `updateMount()` để lại cho Thú Cưỡi, đừng mượn nó cho cái xác. |
+| ~~xác đi theo, tự đánh, taunt~~ | ~~`updateMount()`~~ | **ĐÃ GỠ HẲN** (`5706cb7`) cùng `mountObj` · `drawMount` · `chiCastChieu`. ⚠ Dòng này trước đây viết *"để lại cho Thú Cưỡi"* — **sai**: `updateMount`/`mountObj` CHÍNH LÀ Ragoon đồng hành, còn Thú Cưỡi chạy bằng `updateHorses`. Hai hệ khác nhau, tên gần nhau. |
 | gacha 3/4/5★, pity 90 / soft 74 / mốc 10, 50-50, 2 banner, kệ xoay 6 tuần | `KHẾ ƯỚC CHIMERA` (`game.js:4361`) | đổi bảng dữ liệu |
 | nuôi xác (cấp, bản trùng, nhiên liệu) | `Định Hình Chimera` + `test_dinhhinh.js` | thừa kế |
 | 25 bộ giáp × 5 lớp | `HERO_SETS` + `heroSet(sect, t)` | nối `sectKey` vào xác đang triệu |
@@ -450,7 +450,72 @@ cần nhiều xác, nên sở hữu rộng có giá trị hơn sở hữu một 
 | `chiCoTrongMan()` 0,45 / 0,55 | **GỠ** — luật đó tồn tại để con thú đi theo không lấn át nhân vật, mà nay không có con thú nào đi theo. Đừng "đảo chiều" nó như bản đầu ghi: cái xác chỉ hiện trong ~0,3s lúc tung chiêu nên nó không tranh chỗ với ai. |
 | Ngũ Hành (40 nhãn) | tam giác Axie |
 | `player.chimera` | đổi nghĩa: từ "con thú quay được" sang **"nhân vật quay được"** — giữ tên trường để save cũ đọc được (cùng tiền lệ `player.silver` → "Lumen") |
-| Hệ **Ragoon** (16 hình dạng · `chiVe` · `CHI_KY` · Khế Ước) | **GỠ.** Đo được ~100 chỗ trong `game.js`. ⚠ Nhưng **ĐỪNG gỡ luôn Cốt** (~160 chỗ nữa): Cốt là thứ duy nhất đang cho người chơi lý do **chọn vùng để cày** (11 Dòng, mỗi map một Dòng) và lý do **đi bộ tới một toạ độ** (Vỉa Cốt). Gỡ Ragoon thì Cốt mất người ăn ⇒ trỏ nó sang nhân vật, đừng xoá. |
+| Hệ **Ragoon** (con thú đi theo) | **ĐÃ GỠ** (`5706cb7`). Đường cắt hoá ra **ba tầng, không phải một** — xem §11b. ⚠ **ĐỪNG gỡ luôn Cốt**: Cốt là thứ duy nhất cho người chơi lý do **chọn vùng để cày** (11 Dòng, mỗi map một Dòng) và lý do **đi bộ tới một toạ độ** (Vỉa Cốt). Đã trỏ nó sang nhân vật, không xoá. |
+
+---
+
+## 11b. Đường cắt Ragoon — BA tầng, không phải một (đã thi công `5706cb7`)
+
+Con số tôi báo lúc đầu (*"~100 chỗ"*) **sai**: kiểm kê đầy đủ ra **435 lần nhắc trên ~60 ký
+hiệu** (`mountObj` 79 · `CHI_MAP` 37 · `CHI_ANH` 25 · `chiState` 22 · `CHIMERA` 19 ·
+`player.chimera` 19 · `chiO` 16 · `chiCotGom` 10…). Và quan trọng hơn con số: **không cắt đôi
+được**, vì avatar dùng chung tầng vẽ với Ragoon.
+
+| Tầng | Gì | Quyết định |
+|---|---|---|
+| **① Tầng vẽ** | `CHIMERA` · `CHI_ANH` · `CHI_MAP` · `_chiVe` · `chiVeNho` · `chiChayImg` · `chiSan` · `CHI_THO_FPS` | **GIỮ NGUYÊN.** Avatar đọc đúng bộ này. Gỡ là gỡ luôn avatar. |
+| **② Máy gacha** | `chiState` · `chiNhan` · `gachaMotLuot` · `gachaQuay` · pity · banner · `player.chimera.co` | **GIỮ, đổi thứ nó TRAO.** Chủ dự án nói *"nếu gacha là sẽ gacha nhân vật"* — 16 con đã có sẵn 16 bảng khung avatar, nên gacha nay trao **thân Axie**. Gỡ nó rồi dựng một bộ chọn avatar mới là nhân bản đúng cái máy vừa xoá. |
+| **③ Con thú + hai vòng nuôi nó** | `mountObj` · `ensureMount` · `mountDmg` · `updateMount` · `drawMount` · `chiCastChieu` · `chiBatTam` · `player.chiTam` · `chiCon`/`chiThuMul`/`chiCdMul`/`chiDmgMul` · `chiCoTrongMan`/`CHI_THAN`/`CHI_TRAN` · `CHI_LV_MAX`/`CHI_HOA`/`chiXpCan`/`chiTranCap`/`chiLvNen`/`chiLvHeSo`/`chiHoaGia`/`chiAnDat`/`chiHoa`/`datHon` · `CHI_KY`/`CHI_KY_MOC`/`chiKyCua`/`chiKyMo` | **GỠ HẾT.** Cả hai vòng nuôi tồn tại để làm **một con thú** mạnh lên; không còn con thú thì cấp 80, sáu lần Hoá và bốn kỹ năng đồng hành đều không có đích. |
+
+### Cốt: một sổ, không hai
+
+`chiCotGom(id)` trả **hai** sổ — `c` (năm chỉ số riêng của Ragoon: `cAtk` `cCrit` `cCritDmg`
+`cSkill` `cCd`) và `p` (dòng đẩy sang sổ P của người chơi). Sổ `c` mất đích cùng con thú, nên
+`cotGom()` nay chỉ còn **một** sổ, và năm khoá đổi sang khoá thật:
+
+`cAtk → atkPct` · `cCrit → crit` · `cCritDmg → critDmg` · `cSkill → skillPct` · `cCd → cdCut`
+
+⚠ **Dải lấy theo dải NGƯỜI CHƠI, thấp hơn dải Ragoon cũ** (`cAtk` 2,4-5,2 → `atkPct` 1,6-3,4).
+Cốt nay cộng thẳng vào đòn của chính mình, không đi qua một con thú có sát thương riêng.
+
+⚠ **`cAtk → atkPct` trùng dòng `atkPct` đã có trong `COT_PHU`.** `cotThemPhu()` lọc trùng theo
+khoá, nên giữ cả hai là bể chỉ còn **bảy** khoá khác nhau trong khi trần là bốn dòng phụ — không
+lỗi, không báo gì, chỉ là bể hẹp đi. Dòng dôi ra đổi sang `pierce`.
+
+⚠ **`skillPct` và `cdCut` KHÔNG có ngăn trong sổ P.** Chúng đi đường riêng (`player.skillDmgPct`
+và `player.vhCdMult`), đúng đường Đại Thành đã dùng. Quên là hai trong tám dòng phụ thành mã chết.
+
+### Mười một hiệu ứng "đủ 4 mảnh" phải DỜI, không được bỏ
+
+Cả 11 hiệu ứng bộ nằm **hết** trong `chiCastChieu()` — tức trong chiêu của con thú. Gỡ con thú mà
+không dời chúng thì bốn ô Cốt chỉ còn là bốn dòng chỉ số, mất đúng cái làm Cốt khác trang bị:
+Cốt **đổi cách chiêu chạy**, không cộng thêm một con số nữa.
+
+Nay chúng chạy trên chiêu của **người chơi**: `cotBoCast(id)` (gọi MỘT LẦN ở cuối `castSkill`,
+không rắc vào từng nhánh — có hơn mười nhánh và vài nhánh thoát bằng `return`), `cotBoTick(dt)`
+(vũng gai · khiên đứng yên · hết giờ buff tốc đánh), `cotDmgMul()` (Mảnh Nứt), `cotCdMul()`
+(Băng Vụn). Tro Tàn trong `killMob`, Mầm Cội trong `hurtMob`.
+
+**Tám trong mười một dời sang gần như nguyên văn** — chúng vốn nhắm vào người chơi hoặc vào mục
+tiêu. Đó là bằng chứng hướng đi đúng.
+
+### Hai lỗi CÓ SẴN, lộ ra lúc dời
+
+1. **Băng Vụn đủ 4 mảnh ghi `m.freezeT`, mà không một chỗ nào trong game đọc `freezeT`.** Cơ chế
+   đứng hình thật là `m.stunT` (`if (m.stunT > 0) continue` trong vòng quái). Bảng Cốt hứa
+   *"đóng băng 1,2 giây"* và chưa con quái nào từng đứng lại. Bản mới dùng `stunT`.
+2. **Gacha trùng con chỉ trả Nguyệt Trần SAU khi đủ C6.** Sáu lần trùng đầu tiên vốn dùng để nâng
+   Huyết Thống (C1 −10% hồi chiêu, C3 +25% ST…). Ba hệ số đó gỡ rồi, nên sáu lần trùng đầu thành
+   **trắng tay** — không lỗi nào báo, chỉ là người chơi thấy vô lý. Nay trùng có thưởng ngay từ
+   lần đầu, `con` chỉ còn là con số sưu tầm in trên thẻ.
+
+### Di trú save: TRẢ MẢNH VỀ KHO, đừng xoá
+
+Save cũ có **một bộ bốn ô cho TỪNG con** (`chimera.co[<id>].cot`) và một kho dùng chung. Người
+chơi có thể đang đeo bốn mảnh trên con A và bốn mảnh nữa trên con B — nay chỉ còn một bộ. Nên
+`cotDiTru()` giữ bộ của con **đang cắm** (`eq`) và **trả mọi mảnh của các con khác về kho**. Bỏ
+bước đó là người chơi mất trắng. Nó cũng dọn `lv`/`xp`/`hoa`/`datHon` khỏi save và biến con từng
+xuất trận thành `player.avatar`.
 
 ---
 

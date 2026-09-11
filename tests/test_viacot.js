@@ -91,7 +91,7 @@ const { chromium } = require('playwright');
     viaThemPickup();
     const coPickup = pickups.filter(x => x.type === 'via').length;
     player.x = v.x + 10; player.y = v.y;
-    const khoTruoc = cotKho().length, honTruoc = ((player.mats || {}).datHon || 0);
+    const khoTruoc = cotKho().length;
     const lan1 = viaKhai();
     const khoGiua = cotKho().length;
     const lan2 = viaKhai();
@@ -101,7 +101,6 @@ const { chromium } = require('playwright');
     player.x = v.x + 400; player.y = v.y;
     const xa = viaKhai();
     return { map:v.map, coPickup, lan1, lan2, xa, khoTruoc, khoGiua, khoSau,
-             honThem: ((player.mats || {}).datHon || 0) - honTruoc,
              dong: cotKho().slice(khoTruoc, khoGiua).map(c => c.dong),
              dungDong: cotKho().slice(khoTruoc, khoGiua).every(c => c.dong === v.dong),
              heo: pickups.filter(x => x.type === 'via' && x.respawn > 0).length };
@@ -115,8 +114,8 @@ const { chromium } = require('playwright');
   else pass('mỗi vỉa cho đúng 3 mảnh Cốt');
   if (!r4.dungDong) fail('Cốt rơi ra sai Dòng: ' + r4.dong.join('/'));
   else pass('Cốt rơi đúng Dòng của vùng');
-  if (r4.honThem <= 0) fail('khai vỉa không cho Đất Hồn');
-  else pass(`kèm +${r4.honThem} Đất Hồn`);
+  // ⚠ Bỏ khẳng định "khai vỉa kèm Đất Hồn": Đất Hồn là nhiên liệu của vòng nuôi Ragoon và đã
+  // gỡ cùng nó. Thứ vỉa cho nay chỉ có Cốt — đúng ba mảnh, đúng Dòng, đã kiểm ở hai mục trên.
   if (r4.lan2 || r4.khoSau !== r4.khoGiua) fail('khai lần hai trong cùng ngày VẪN ăn — AUTO đứng đó là xong');
   else pass('lần hai trong ngày: không ăn gì (một lần/ngày/vùng)');
   if (!r4.heo) fail('khai xong vỉa vẫn sáng như chưa khai');

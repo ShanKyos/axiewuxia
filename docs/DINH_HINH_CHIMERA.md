@@ -1,9 +1,24 @@
-# Định Hình Chimera — thiết kế vòng lặp sau khi quay
+# ~~Định Hình Chimera~~ — HAI TRONG BA VÒNG ĐÃ GỠ
 
-> Quay ra một con Chimera rồi làm gì tiếp? Hiện tại: không làm gì cả. Tài liệu này thiết kế
-> phần còn thiếu, lấy vòng lặp hậu-gacha của Genshin làm khuôn.
+> ## ⚠ TÀI LIỆU NÀY PHẦN LỚN LÀ LỊCH SỬ. Đọc `docs/DOI_VAI_AXIE.md §11b` trước.
 >
-> Trạng thái: **ĐÃ THI CÔNG.** Gác bằng `tests/test_dinhhinh.js` (36 chốt).
+> Chủ dự án chốt 2026-09-11: *"Bỏ luôn phần Ragoon. Nếu gacha là sẽ gacha nhân vật."* Con Axie
+> nay là **AVATAR** — thân nhìn thấy của người chơi — không phải một con thú đi cạnh.
+>
+> | Ba vòng của tài liệu này | Trạng thái |
+> |---|---|
+> | ① **CẤP** (cấp 80 · sáu lần Hoá · Đất Hồn) | **GỠ.** Nó tồn tại để làm sát thương của một CON THÚ nhích lên. Không còn con thú thì không còn đích. |
+> | ② **CỐT** (bốn ô · 11 Dòng · hiệu ứng 2/4 mảnh) | **CÒN, nhưng cắm trên NGƯỜI CHƠI** — `player.cot`, không `player.chimera.co[id].cot`. Năm khoá `c*` đổi sang khoá thật; 11 hiệu ứng đủ 4 mảnh dời sang chiêu của người chơi. |
+> | ③ **KỸ NĂNG ĐỒNG HÀNH** (`CHI_KY`, 4 mốc cấp) | **GỠ.** Cùng lý do như ①. |
+>
+> Vì sao giữ ② mà gỡ ①③: Cốt là vòng duy nhất có quan hệ **một-đổi-một với bảy vùng**, tức nó là
+> cơ chế chọn build bằng cách chọn nơi cày. Hai vòng kia chỉ là hai thanh tiến độ.
+>
+> `tests/test_dinhhinh.js` **đã gỡ** — nó gác một hệ đã chết, tức xanh mãi mãi mà không bảo vệ
+> gì. Thay bằng `tests/test_cotnguoi.js`, gác phần còn sống ở chỗ mới.
+>
+> Phần dưới giữ nguyên để tra lý lẽ thiết kế của ②. Mọi câu nói về cấp Chimera, Đất Hồn, Hoá,
+> Huyết Thống hay kỹ năng đồng hành đều **không còn đúng với code**.
 >
 > Hai chỗ khác bản thiết kế ban đầu, do chủ dự án chốt lại:
 > - **Tinh Trần và Nguyệt Trần không đụng tới** — hai loại đó dành cho cửa hàng đổi vật phẩm.
