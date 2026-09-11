@@ -187,6 +187,35 @@ const DANH = ['kill', 'tpkill', 'boss', 'tranai'];
          : pass('không cấp nào mở quá 3 phụ tuyến cùng lúc');
   }
 
+  // ── 8. BẢNG NPC phải NÓI RA người chơi cần làm gì ──────────────────────────
+  //     Một nhiệm vụ `moc` mà chỉ in "Tiến độ: 0/2" thì người chơi không có cách nào biết 2 cái
+  //     GÌ. Dòng tiến độ phải kèm tên cơ chế (`MOC_NV[...].ten`).
+  const r8 = await p.evaluate(() => {
+    const out = [];
+    for (const q of QUESTS.filter(x => x.type === 'moc')){
+      startGame('thieulam', null);
+      player.level = q.lv; player.lvPeak = q.lv; calcDerived();
+      questIdx = QUESTS.indexOf(q); questProg = 1; questState = 'active';
+      const n = NPCS.find(x => x.id === q.npc);
+      if (!n){ out.push({ id:q.id, hien:null }); continue; }
+      // ⚠ Bỏ qua ba trang thoại LẦN GẶP ĐẦU — cửa là `player.gapNpc[id]`. Không đặt cờ này thì
+      // renderQuestNpc() dừng ở trang thoại và bài đo ra "(không có dòng tiến độ)" cho MỌI mục,
+      // trông y như phần hiện tiến độ chưa được viết.
+      player.gapNpc = player.gapNpc || {}; player.gapNpc[n.id] = true;
+      renderQuestNpc(n);
+      const m = el('panel-quest').innerHTML.match(/Tiến độ: ([^<·]*)/);
+      out.push({ id:q.id, moc:q.moc, ten:(MOC_NV[q.moc] || {}).ten, hien: m ? m[1].trim() : null });
+    }
+    return out;
+  });
+  console.log('8)', JSON.stringify(r8));
+  const thieu = r8.filter(x => !x.hien);
+  const khongTen = r8.filter(x => x.hien && x.ten && !x.hien.includes(x.ten));
+  if (thieu.length) fail(`bảng NPC không in dòng tiến độ: ${thieu.map(x => x.id).join(', ')}`);
+  else if (khongTen.length) fail(`dòng tiến độ không nói ra cần làm GÌ: ` +
+    khongTen.map(x => `${x.id} in "${x.hien}" (thiếu "${x.ten}")`).join(' · '));
+  else pass(`cả ${r8.length} nhiệm vụ \`moc\` in tiến độ kèm tên cơ chế (vd "${r8[0].hien}")`);
+
   console.log('errors:', JSON.stringify(errs.slice(0, 8)));
   if (errs.length) fail(`${errs.length} lỗi JS trong lúc chạy`);
   console.log(bad ? `\nđỏ: ${bad}` : '\nTẤT CẢ XANH');
