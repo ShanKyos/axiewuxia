@@ -188,8 +188,52 @@ chương — chúng là chỗ "không có luật nào giữ", nên nội dung �
 kết bằng **hạ Trùm Vùng → thu Rune**, tức cờ `rune_<map>` — thay `ta_<map>`, và bộ đếm thành
 đúng 7.
 
-**Luật loại nhiệm vụ:** không quá 60% là `kill`. Mỗi chương phải có ít nhất một nhiệm vụ dạng
-**không phải đánh** (`talk` · `collect` · `enhance` · `meditate` · hoặc loại mới dạy hệ thống).
+**Luật loại nhiệm vụ:** không quá 60% là **ĐÁNH QUÁI** — đếm cả `kill` · `tpkill` · `boss` ·
+`tranai`, và **không chương nào vượt 70%**. Mỗi chương phải có ít nhất một nhiệm vụ dạng không
+phải đánh (`talk` · `collect` · `enhance` · `meditate` · `moc`).
+
+> ⚠ **CÂU TRÊN ĐÃ SỬA, và đây là chỗ tôi viết luật sai.** Bản đầu ghi *"không quá 60% là `kill`"*
+> — đúng chữ `kill`. Đếm như vậy thì chuỗi ra **41%** và luật PASS, trong khi chuỗi thật có
+> **70%** nhiệm vụ là đánh quái: `tpkill`, `boss` và `tranai` cũng là đi giết, mà `tranai` còn là
+> loại tôi thêm SAU khi viết luật này. Một luật đếm hẹp hơn ý định của nó thì tệ hơn không có
+> luật: nó xanh và nó bảo đảm sai.
+>
+> Số đo sau khi sửa chuỗi (thêm loại `moc`, xem dưới): **54% toàn chuỗi, chương cao nhất 67%**.
+
+**Luật cửa cơ chế:** cửa nào bảng trên hứa thì phải có nhiệm vụ THẬT gác, không phải một câu
+nhắc trong `desc`. Loại `moc` + bảng `MOC_NV` làm việc đó — `dem()` đếm từ **trạng thái**, không
+từ sự kiện, nên nhận nhiệm vụ sau khi đã chạm vào hệ thống thì nó đã đủ luôn.
+
+> ⚠ **Bảng trên hứa một cửa "Tinh Luyện" — hứa sai.** Tinh Luyện là một NÚT trong bảng Đại Thành
+> (`sr_tinhluyen`, +0,18% hiệu lực mỗi cấp rèn), không phải một hệ có hành động nào đếm được.
+> Cửa đó đã đổi sang **Đại Thành** — thứ mà nút Tinh Luyện nằm trong, và thứ người chơi thật sự
+> phải mở ra rồi bấm.
+>
+> ⚠ **Bảng trên còn hứa "Khế Ước Ragoon" ở chương III.** Ragoon đã gỡ (xem
+> `docs/DOI_VAI_AXIE.md §11b`); cửa Khế Ước dời về **chương I** vì sau đợt đó nó là cửa **duy
+> nhất** vào hệ avatar, và chương III nhận cửa **bốn ô Cốt** (`c3q3`, tên nó vốn đã là "Mảnh Cốt
+> Đầu Tiên"). Chương V nhận cửa **nâng cấp kỹ năng** — chỗ tiêu duy nhất của Bản Năng, và `c5q2`
+> vốn đã mang tên "Bản Năng" mà lại là một nhiệm vụ đánh quái.
+
+**Bảy nhiệm vụ `moc` đang chạy:**
+
+| | Cửa | Nhiệm vụ | Cần |
+|---|---|---|---|
+| I | Khế Ước (thân Axie) | `c1q3` Kẻ Đi Trước | quay 1 |
+| II | Vỉa Cốt | `c2q2` Bụi Đá Dưới Chân Phiến | khai 1 |
+| III | bốn ô Cốt | `c3q3` Mảnh Cốt Đầu Tiên | cắm 4 |
+| IV | Rương Canh | `c4q2` Hòm Có Người Canh | mở 2 |
+| IV | Đại Thành | `c4q3` Thứ Không Ai Dạy Được | 1 điểm |
+| V | Bản Năng → cấp kỹ năng | `c5q2` Bản Năng | nâng 3 |
+| VI | Box Kundun | `c6q4` Mỏ Đã Tắt Lửa | mở 2 |
+
+**Luật đóng chương:** `tranai` phải là nhiệm vụ **CUỐI** của chương. Chương IV từng thu phiến gốc
+ở ô 3/5 rồi còn hai nhiệm vụ nữa trên `caungam` — mà ba map LỐI ĐI cố ý không có chương (chúng là
+"chỗ không có luật nào giữ"), tức hai nhiệm vụ chính tuyến đang ngồi trên đất phụ tuyến. Hai
+nhiệm vụ đó nay là `sl_cn1`/`sl_cn2` trong `SIDE_QUESTS`.
+
+**Phụ tuyến: 9 nhiệm vụ, ba map LỐI ĐI.** 3 đánh · 3 hái · 2 đưa tin · 1 dùng lò — không map nào
+quá **một** nhiệm vụ đánh quái. (66 nhiệm vụ phụ đời trước gần 80% là "diệt N con X".)
 
 ---
 

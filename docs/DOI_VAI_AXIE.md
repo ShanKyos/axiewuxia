@@ -514,8 +514,14 @@ tiêu. Đó là bằng chứng hướng đi đúng.
 Save cũ có **một bộ bốn ô cho TỪNG con** (`chimera.co[<id>].cot`) và một kho dùng chung. Người
 chơi có thể đang đeo bốn mảnh trên con A và bốn mảnh nữa trên con B — nay chỉ còn một bộ. Nên
 `cotDiTru()` giữ bộ của con **đang cắm** (`eq`) và **trả mọi mảnh của các con khác về kho**. Bỏ
-bước đó là người chơi mất trắng. Nó cũng dọn `lv`/`xp`/`hoa`/`datHon` khỏi save và biến con từng
-xuất trận thành `player.avatar`.
+bước đó là người chơi mất trắng. Nó cũng dọn `lv`/`xp`/`hoa`/`datHon` khỏi save.
+
+⚠ **Và nó KHÔNG tự cắm con từng xuất trận làm `player.avatar`.** Bản đầu tôi viết thế (cùng với
+`/max` và `chiNhan` tự bật avatar) và nó vi phạm đúng cái luật ghi ở đầu mục này: *`player.avatar`
+rỗng ⇒ hành vi cũ y nguyên; avatar là thứ **bật lên**, không phải thứ thay thế.* Hệ quả đo được:
+`/max` âm thầm đổi cái thân nhìn thấy, nên mọi bài kiểm đọc `window.__veThan` thấy `'avatar'`
+thay vì `'sprite'` — `test_khoihinh` bắt được. Cửa đổi thân là nút "Đổi thân" ở bảng Khế Ước,
+lệnh `/avatar`, và nhiệm vụ `c1q3` (loại `moc`, cửa Khế Ước) là chỗ nói cho người chơi biết.
 
 ---
 

@@ -401,7 +401,7 @@ chơi không có cách nào biết map nào hệ gì. Nay hệ trội nằm ngay
 | | Trạng thái |
 |---|---|
 | `QUESTS` | **ĐANG CHẠY** — 8 chương / 46 nhiệm vụ, canon Nhát Gọi. Xem mục "Cốt truyện (canon)" và `docs/LORE_RUNE.md` |
-| `SIDE_QUESTS` | **vẫn rỗng** — việc còn nợ thật. Khuôn một mục nằm trong chú thích ở `data/canbang.js` |
+| `SIDE_QUESTS` | **ĐANG CHẠY** — 9 nhiệm vụ trên ba map LỐI ĐI. Không còn rỗng. |
 
 **Vì sao chuỗi CŨ bị gỡ (ghi lại để đừng vá nó từ git):** lối chơi đã đổi quá nhiều so với lúc
 viết — bỏ 7 phó bản, vai trò theo bãi, bản sắc map, zoom camera, cổng map bỏ `reqMain`. Rồi bản
@@ -414,9 +414,49 @@ vào nhau — đó là lý do có đợt gộp này.
 `QUESTS.length` vẫn ra 25 — đã mắc đúng lỗi đó. Nay **toàn bộ 46 mục nằm trong `data/canbang.js`**
 và `game.js` không push nhiệm vụ chính nào. Giữ đúng nếp đó.
 
-**Phụ tuyến khi dựng lại — ba chỗ đang trống có sẵn chỗ đứng:** ba map LỐI ĐI (`loimon` ·
-`trungnut` · `caungam`) và `Tầng Sâu` cố ý không có chương nào, vì chúng là "chỗ không có luật
-nào giữ". Đó là chỗ phụ tuyến thuộc về, không phải chỗ nhồi thêm chương.
+**Phụ tuyến ĐÃ DỰNG — 9 nhiệm vụ, ba map LỐI ĐI.** `loimon` · `trungnut` · `caungam` cố ý không
+có chương chính tuyến vì chúng là "chỗ không có luật nào giữ" (không phiến Rune nào cắm được), nên
+nội dung ở đó phải là nội dung TỰ CHỌN. `Tầng Sâu` vẫn trống — nợ còn lại.
+
+- **3 đánh · 3 hái · 2 đưa tin · 1 dùng lò**, và **không map nào quá MỘT nhiệm vụ đánh quái**.
+  Đếm lại bất cứ lúc nào; vượt 50% là đang đi lại vết cũ (66 nhiệm vụ phụ đời trước gần 80% là
+  "diệt N con X").
+- ⚠ **`sl_cn1`/`sl_cn2` chính là `c4q4`/`c4q5` cũ**, kéo ra khỏi chính tuyến. Chương IV từng thu
+  phiến gốc ở nhiệm vụ 3/5 rồi còn hai nhiệm vụ nữa trên `caungam` — tức chính tuyến ngồi trên
+  đất phụ tuyến, và `tranai` không đóng chương. Nay `tranai` là ô CUỐI ở cả bảy chương.
+- ⚠ **`reqMain` là CHỈ SỐ (0-based), không phải số thứ tự.** Thêm/bớt một nhiệm vụ chính là mọi
+  `reqMain` trượt. Để mốc thấp hơn chỗ cần một chút, đừng khoá sát.
+- Trần **3 nhiệm vụ phụ cùng lúc** (`sideAvail` trả `'full'`). Chín mục rải cấp 40→62 nên không
+  bao giờ quá ba cái mở cùng lúc — thêm mục mới thì kiểm lại chỗ đó.
+
+### 📍 LOẠI NHIỆM VỤ `moc` — cửa cơ chế phải có người GÁC, không phải một câu nhắc
+
+Đo được: chuỗi 46 nhiệm vụ có **70% là đánh quái**, và toàn bộ phần còn lại thì `enhance` gánh 7
+chỗ — cùng MỘT nhiệm vụ "đập một món lên +N", khác đúng con số (`+3 +5 +6 +7 +9 +11 +11`, hai cái
+cuối trùng). Đúng bệnh nhân bản mà mục chẩn đoán ở đầu tài liệu này nói tới.
+
+⚠ **Và luật ở `docs/LORE_RUNE.md §6` mà chính tôi viết thì viết SAI:** *"không quá 60% là `kill`"*
+— đếm đúng chữ `kill` ra 41% và luật PASS, trong khi chuỗi thật 70% là đánh (`tpkill` · `boss` ·
+`tranai` cũng là đi giết, mà `tranai` còn là loại thêm SAU khi viết luật). **Một luật đếm hẹp hơn
+ý định của nó thì tệ hơn không có luật: nó xanh và nó bảo đảm sai.** Luật đã sửa: đếm mọi loại
+đánh, ≤60% toàn chuỗi và ≤70% mỗi chương. Số đo nay: **54% · cao nhất 67%**.
+
+`MOC_NV` + `type:'moc'` là thứ kéo tỉ lệ xuống mà không phải thêm một `enhance` thứ tám:
+
+- **MỘT loại, không năm loại.** Năm cửa cần gác (Vỉa Cốt · Rương Canh · Box Kundun · Khế Ước ·
+  Đại Thành) đều cùng một hình dạng — "đã làm việc đó mấy lần rồi". Năm `type` là năm nhánh trong
+  `killMob`, năm nhánh trong `questTarget`, năm nhánh trong bảng hiện tiến độ.
+- ⚠ **`dem()` đếm từ TRẠNG THÁI, không từ sự kiện.** Móc vào chỗ "vừa mở rương" thì người chơi mở
+  rương TRƯỚC khi nhận nhiệm vụ là nhiệm vụ **không bao giờ xong**, và họ không có cách nào biết
+  vì sao. Đếm từ trạng thái thì nhận xong là nó đã đủ luôn — đúng như một nhiệm vụ "hãy chạm vào
+  hệ thống này" nên hành xử.
+- ⚠ **Nhịp kiểm ở `mocTick(dt)` trong `update()`, không móc vào sáu chỗ.** Mỗi chỗ móc thiếu là
+  một nhiệm vụ không bao giờ xong.
+- ⚠ **`player.hapMo` đếm ở `throwBaoHap`, KHÔNG ở `openBaoHap`.** Kéo-thả hạp ra màn hình — đường
+  mà chính bảng Túi Đồ khuyên dùng — đi thẳng qua `throwBaoHap`. Móc ở `openBaoHap` là người chơi
+  làm đúng lời khuyên thì nhiệm vụ không đếm.
+- **§6 hứa một cửa "Tinh Luyện" — hứa sai:** đó là một NÚT trong bảng Đại Thành (`sr_tinhluyen`),
+  không có hành động nào đếm được. Cửa đó đổi sang **Đại Thành**.
 
 **Đã đổi theo:**
 - `reqMain` gỡ khỏi **mọi** map. Map mở khoá bằng **cấp** (`md.min`) là đủ. Nhánh đọc `md.reqMain`
@@ -684,8 +724,22 @@ Ba luật của chuỗi, đo được bằng máy (xem script kiểm trong `docs
 2. cấp quái lệch cấp nhiệm vụ **≤ ±4** (bản cũ có chỗ lệch +16);
 3. **≤ 60%** nhiệm vụ là đánh quái (bản cũ 67%), và **không chương nào toàn đánh quái**.
 
-Mỗi chương mở đúng một cửa cơ chế — bản cũ nhắc **0 lần** tới Ragoon · Cốt · Vỉa · Rương · Box
-Kundun · Tinh Luyện · Bản Năng · Tái Sinh · Tầng Sâu · Cánh · ngọc · Lò Hỗn Độn.
+Mỗi chương mở đúng một cửa cơ chế, và **cửa nào hứa thì phải có nhiệm vụ THẬT gác** — xem mục
+"LOẠI NHIỆM VỤ `moc`" ở trên. Bảy cửa đang có người gác:
+
+| Ch | Cửa | Nhiệm vụ |
+|---|---|---|
+| I | Khế Ước (thân Axie) | `c1q3` Kẻ Đi Trước — quay 1 |
+| II | Vỉa Cốt | `c2q2` Bụi Đá Dưới Chân Phiến — khai 1 |
+| III | bốn ô Cốt | `c3q3` Mảnh Cốt Đầu Tiên — cắm 4 |
+| IV | Rương Canh | `c4q2` Hòm Có Người Canh — mở 2 |
+| IV | Đại Thành | `c4q3` Thứ Không Ai Dạy Được — 1 điểm |
+| V | Bản Năng → cấp kỹ năng | `c5q2` Bản Năng — nâng 3 |
+| VI | Box Kundun | `c6q4` Mỏ Đã Tắt Lửa — mở 2 |
+
+⚠ Cửa **Khế Ước** nặng hơn sáu cửa kia: sau đợt gỡ Ragoon đó là cửa **duy nhất** vào hệ avatar,
+tức tính năng đầu bảng của cả đợt Đổi Vai. Không có nó thì người chơi xong 100% chính tuyến mà
+không ai nói cho họ biết là đổi được thân.
 
 ## Kiến trúc
 
