@@ -219,6 +219,45 @@ Khảo sát `axieinfinity/axie-origins-asset-kit` (clone về `/home/user/axiein
 appear+idle) rồi mới đem đi cắt khung chạy — tốn 28 khung nướng thừa mỗi con, đổi lại không
 phải tin vào một con số chép tay nào.
 
+### 🐺 22 RIG CHIMERA CÓ HOẠT CẢNH ĐANG NẰM KHÔNG — và `skelbin.py` nói dối về chúng
+
+Khảo sát lần 2: **`docs/KHAO_SAT_AXIE_2.md`** (2026-09-11). Kho đã clone sẵn ở
+`/home/user/axieinfinity/axie-origins-asset-kit`, `git fetch` xác nhận không có commit mới.
+
+**⚠ CÁI BẪY:** chạy `read_skel()` của dự án lên 20 rig `PvE/Chimeras/*.skel` thì **cả 20 đều
+trả `0 hoạt cảnh`** (số xương 89–227 thì đọc đúng, nên nhìn qua rất dễ tin). Hoạt cảnh **có
+thật** — `strings werewolf.skel` ra `attack/melee/bite-attack`, `defense/hit-by-normal`,
+`defense/hit-die`, `action/move-forward`… và tệp nặng 323 KB so với 88 KB của rig Axie
+`21.skel`. **Nguồn sự thật là `Catalogs/pve-chimeras.json → extractedSkeletons[].unityClips`,
+không phải `skelbin.py`.** Ai tin trình đọc sẽ kết luận "Chimera chỉ có tư thế tĩnh" và bỏ mất
+cả một đợt nội dung.
+
+*(Rig Axie `.skel` trả 0 là ĐÚNG — chúng bị tước hoạt cảnh thật, nên `nuong_chi.py` mượn từ rig
+`.json` cùng bộ xương 28 khớp. Chimera **không mượn được**: bộ xương khác hẳn, phải dùng clip
+của chính nó. Đó là bớt một bước, không phải thêm.)*
+
+**Vì sao đáng làm trước:** `MOBS` có **27 loài** dùng **21 ảnh PNG TĨNH**, và **6 loài đi mượn
+ảnh của loài khác**. Không con nào có khung hình thứ hai. Trong khi clip của 22 rig phủ đúng
+cái một con quái cần: `idle`·`move-forward/back` 21/22 · `normal-attack` 20/22 ·
+**`hit-by-normal` 19/22** · **`hit-die` 17/22** · `get-buff/debuff` 22/22 · ranged `cast-high`
+12/22. (`machito` và `shilin` có đủ 41 clip — chúng dùng bộ xương Axie.)
+`swingFeel()` đang đổ hitstop/rung/loé lên một tấm ảnh đứng im; quái giật khi trúng và đổ khi
+chết là nửa còn lại của cảm giác chiến đấu, **không tốn một dòng cân bằng nào**. Cùng đợt công
+cụ thì trả luôn món nợ `hit-by-normal` của avatar ghi ở mục ĐỔI VAI.
+
+**Năm thứ khác trong kho, mỗi thứ lấp một lỗ đã biết** (chi tiết + số đo ở tài liệu trên):
+
+| Kho có | Game đang | Lấp vào |
+|---|---|---|
+| 17 icon **ý định** (`PvE/Intents`) | 0 | ánh xạ `MOB_ROLE` — làm Pháp Sư/Kẻ Tiếp Sức ĐỌC ĐƯỢC, đúng lý do "người chơi phải tự cầm chuột" |
+| 131 icon **trạng thái** | 0 | `player.chiTam`, `vh*T`, độc, choáng đang chạy mà không có mặt chữ |
+| **10** vật thể cắt sẵn (đo lại: 10/12, `8_TEMPLE` 9% và `6_WATER` 7% KHÔNG phải vật thể) | trụ đá đã gỡ | lớp `vatTo` — kéo `SAN_CHE` 8→18. **CHỈ làm vật thể, tuyệt đối không lát nền** |
+| 35 **node** + 41 **đội hình** (`Catalogs/pve-chimeras.json`) | 7 phó bản vừa gỡ | lấy KHUÔN (node→nền+nhạc+hạng), **đừng chép 35 node** — đó là nhân bản |
+| 43 chân dung + 166 tranh thẻ | 0 | nhiệm vụ đang dựng lại · burst Cổ Vật |
+
+**Rà cả 54 repo `axieinfinity`: không còn kho nào khác có art dùng được.** Phần còn lại là
+blockchain/hạ tầng, hoặc runtime/starter 3D mà game 2D nướng sẵn không dùng tới.
+
 ### Còn treo
 
 | | |
