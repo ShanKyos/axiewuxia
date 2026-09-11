@@ -2960,16 +2960,16 @@ const VOHOC_DEFS = window.VOHOC_DEFS;
 // Nova, Flame Storm...) + hệ Tấn Chức phụ (Ám Khí/Đạn Chỉ/Linh Tiễn/Tiêu Hồn) không mất giá trị — dồn
 // thành % Công Kích vĩnh viễn, tự động theo cấp/điều kiện đã có, không cần bấm nút nữa (xem calcDerived()
 // và LEGACY_SECT_SKILLS bên dưới).
-// Ô BUFF CỦA DARK KNIGHT ĐANG TRỐNG — có chủ ý, không phải bỏ sót.
-// Nó vốn trỏ vào 'gangkhi' (Defense), mà chiêu đó đi cùng hệ Thuần Thục vừa gỡ. Cây kỹ năng
-// Dark Knight không còn chiêu buff CHỦ ĐỘNG nào khác: dk_fortitude (Swell Life) đang là bị
-// động. defaultSkillBar() chịu được null nên ô thứ ba chỉ đơn giản là trống.
-// Muốn lấp thì cách sát MU nhất là đổi Swell Life thành buff chủ động — chờ chủ dự án chốt.
+// Ô BUFF CỦA DARK KNIGHT ĐÃ ĐƯỢC LẤP (trước đây trống vì 'gangkhi'/Defense đi cùng hệ Thuần Thục
+// đã gỡ). Không lấp bằng cách đổi Swell Life thành buff chủ động như ghi chú cũ đề nghị: làm thế
+// thì lớp mất bị động riêng và bài kiểm bị động (+15% Sinh Lực) mất chỗ bám. Thay vào đó thêm
+// HẲN một chiêu thứ sáu — Bulwark — vì Dark Knight là lớp duy nhất chỉ có 5 chiêu chủ động trong
+// khi bốn lớp kia có 6. Xem chú thích tại dk_bulwark trong data/canbang.js.
 // Ô 3 của từng lớp. KHÔNG nhất thiết là chiêu phù trợ: bộ bốn nút của Dark Wizard trong MU là
 // Poison · Meteorite · Inferno · Dragon Spirit, nên ô 3 của lớp này là Inferno chứ không phải Soul
 // Barrier. Soul Barrier chuyển sang Di Sản (+%Công Kích vĩnh viễn) đúng như chiêu buff của Dark
 // Knight đã làm — một chiêu không thể vừa bấm được vừa cộng %ST vĩnh viễn.
-const O3_SKILL_ID = { thieulam:null, toanchan:'elf_greaterdmg', baidasan:'dw_inferno', minhgiao:'mg_battlefury', bug:'dl_commandaura' };
+const O3_SKILL_ID = { thieulam:'dk_bulwark', toanchan:'elf_greaterdmg', baidasan:'dw_inferno', minhgiao:'mg_battlefury', bug:'dl_commandaura' };
 // Lớp nào có chiêu PHÙ TRỢ thật ở ô 3 — suy ra từ chính kiểu chiêu, không khai tay hai lần.
 const BUFF_SKILL_ID = {};
 for (const _sk in O3_SKILL_ID){
@@ -3307,6 +3307,7 @@ const VH_VFX = {
   elf_greaterdmg:  { style:'sunwheel',  c2:'#fff0be', dur:1.1 },  // Bless (Sylvan Ranger) — vòng sáng ban phước
   mg_battlefury:   { style:'phoenix',   c2:'#ffcf7a', dur:1.1 },  // Battle Fury (Spellblade) — song dực liệt hỏa
   dl_commandaura:  { style:'galaxy',    c2:'#ffb0a0', dur:1.1, spin:1.4 }, // Increase Critical Damage (Dark Lord) — hào quang chỉ huy xoay quanh
+  dk_bulwark:      { style:'novaburst', c2:'#cfe8ff', dur:1.0 },  // Bulwark (Dark Knight) — năng lượng dồn lại rồi bung thành vòm khiên
   // Bốn TUYỆT CHIÊU ô 4 (xem SIGNATURE_SKILL) — mỗi chiêu một hình riêng, không dùng chung style
   // mặc định theo kiểu chiêu nữa. Tuyệt chiêu mà bung ra y hệt chiêu thường thì không ai nhớ nổi.
   dw_lightning:     { style:'boltdown',    c2:'#eaffb0', dur:0.75 }, // sét giáng từ trên trời xuống
@@ -5913,7 +5914,7 @@ function shade(hex, amt){ // amt>0 sáng lên, <0 tối đi
 const SK_ICON_FOR = {
   // Dark Knight
   dk_cyclone:'cyclone', dk_lunge:'stab', dk_impale:'pierce', dk_fallingslash:'crescent',
-  dk_ragefulblow:'groundslam', dk_fortitude:'plate', tienthiencong:'revive',
+  dk_ragefulblow:'groundslam', dk_fortitude:'plate', dk_bulwark:'pauldron', tienthiencong:'revive',
   // Sylvan Ranger
   elf_poisonarrow:'poison', elf_greaterdef:'barrier', elf_holybolt:'nova', elf_fiveshot:'arrowfan',
   elf_greaterdmg:'rune', elf_penetration:'pierce', elf_heal:'heal',
@@ -5932,7 +5933,7 @@ const SK_ICON_FOR = {
 // chứ không phải ô-liu như màu lớp (đúng quy ước MU: ổ tô theo hệ, khung mới mang màu lớp).
 const SK_ICON_COLOR = {
   dk_cyclone:'#4c8dff', dk_lunge:'#6aa0ff', dk_impale:'#8ab8ff', dk_fallingslash:'#3a6fd8',
-  dk_ragefulblow:'#3a6fd8', dk_fortitude:'#a0d8ff', tienthiencong:'#ffe9a8',
+  dk_ragefulblow:'#3a6fd8', dk_fortitude:'#a0d8ff', dk_bulwark:'#6aa8ff', tienthiencong:'#ffe9a8',
   elf_poisonarrow:'#7ec850', elf_greaterdef:'#5ac8b8', elf_holybolt:'#ffe9a8', elf_fiveshot:'#a0ffe9',
   elf_greaterdmg:'#ffd76a', elf_penetration:'#a0ffe9', elf_heal:'#3a9d8b',
   dw_lightning:'#d8e84a', dw_ice:'#5ac8e8', dw_twister:'#8ac850', dw_inferno:'#ff7a3a',
@@ -11256,7 +11257,10 @@ function render(){
   }
 
   // village / city labels
-  if (md.village) drawCalligraphy('Thanh Ngưu Thôn', 400, 310, '#6a5836', 18);
+  // Tên cũ 'Thanh Ngưu Thôn' là tàn dư bản kiếm hiệp — vi phạm Quy tắc số 1 và nó hiện THẲNG
+  // trên bản đồ khởi đầu, tức là thứ đầu tiên người chơi đọc. Xóm này thuộc Plant Tribe, nên
+  // tên mới đi cùng họ với 'Sapidae Chiefdom' / 'Plant Tribe Glade'.
+  if (md.village) drawCalligraphy('Sapwood Hamlet', 400, 310, '#6a5836', 18);
   // cổng KHÔNG vẽ ở đây nữa — nó đi vào danh sách sắp theo y bên dưới (xem drawOneGate)
 
   drawObstacleRim();   // hàng đá dọc mép vùng chặn — vẽ trước decor để cây/đá rải phủ lên tự nhiên
@@ -16877,9 +16881,35 @@ function tangDoThuNghiem(){
   calcDerived();
   player.hp = player.maxHp; player.qi = player.maxQi;
 }
+// ═══════════ ĐỒ KHỞI ĐẦU CỦA NHÂN VẬT MỚI ═══════════
+// Trước bản này, nhân vật vừa tạo có CẢ MƯỜI MỘT ô trang bị rỗng: cởi trần, quần cộc, tay không —
+// ngay sau màn chọn lớp vừa cho xem một hiệp sĩ giáp đầy đủ cầm đại kiếm. Đó là khoảng cách lớn
+// nhất giữa thứ game hứa và thứ game giao, và nó rơi đúng vào giây người chơi quyết định ở lại.
+//
+// PHẢI phát ĐỦ BỐN Ô GIÁP + vũ khí, không phát được ít hơn: nvBoGiap() chỉ đổi sang thân mặc
+// giáp khi đủ độ phủ, nên phát mỗi áo thì nhân vật VẪN cởi trần (đã thử và chụp lại). Thiếu ô
+// nào là bản vá này không vá được gì cả.
+//
+// Nhưng KHÔNG dùng genSpecific() như tangDoThuNghiem(): hàm đó là hàm sinh ĐỒ THỬ — mọi dòng phụ
+// đều ở mức tối đa và giáp luôn mang cờ perfect ('Hoàn Hảo'). Phát thứ đó cho mọi người chơi mới
+// là vừa thổi cân bằng vừa làm hỏng khoảnh khắc nhặt được món Hoàn Hảo THẬT về sau.
+// Dùng genItem() — đúng đường đồ rơi từ quái — ép perfect:0 và plus9:0, cấp 1. Đây là bộ đồ vải
+// tầm thường: đủ để nhân vật hiện ra có mặc gì đó, không đủ để ai thấy mình mạnh sẵn.
+function phatDoKhoiDau(){
+  for (const _id of ['vukhi', 'non', 'ao', 'tay', 'chan']){
+    const sl = SLOTS.find(s2 => s2.id === _id);
+    if (!sl || sl.special) continue;
+    const it = genItem(1, null, null, { slots: [_id], perfect: 0, plus9: 0 });
+    if (!it) continue;
+    it.plus = 0;
+    player.equip[_id] = it;
+  }
+  calcDerived();
+  player.hp = player.maxHp; player.qi = player.maxQi;
+}
 function applyTestBoost(){
   // ===== CHẾ ĐỘ THỬ NGHIỆM: MỌI TÍNH NĂNG TỐI ĐA =====
-  player.level = MAX_LV; player.xp = 0;            // cấp 100 — mở hết mọi hệ thống & map
+  player.level = MAX_LV; player.xp = 0;            // cấp tối đa (MAX_LV) — mở hết mọi hệ thống & map
   player.str = 50; player.agi = 50; player.def = 50; player.vit = 50; player.ene = 50;
   player.free = 500;                               // điểm tiềm năng dư để cộng thử
   player.silver = 999999;
@@ -17661,6 +17691,11 @@ function startGame(sectKey, quze){
     if (window.TEST_DO){
       tangDoThuNghiem();
       addFloat(player.x, player.y-72, 'Chế độ test — mặc sẵn nguyên bộ giai 1 và vũ khí của lớp', '#a0ffe9', 13);
+    } else if (!window.TEST_MODE){
+      // Người chơi THẬT: phát bộ khởi đầu hai ô (xem phatDoKhoiDau). Loại trừ TEST_MODE vì hơn
+      // trăm bài kiểm tự đặt cờ đó rồi gọi startGame để mở cổng dịch chuyển — bài cân bằng nào
+      // cũng đo trên nhân vật TRẦN, treo đồ vào đây là cả bộ đo đổi mốc trong im lặng.
+      phatDoKhoiDau();
     }
     addFloat(player.x, player.y-50, 'Sapidae Chiefdom — hãy đến gặp Trưởng Lão Rell (lại gần, nhấn E)!', '#7ecbff', 15);
   }
@@ -17698,13 +17733,11 @@ const SERVERS = [
   { id:'vaeldra', ten:'Vaeldra',  mo:'Cao nguyên của những kẻ còn nhớ' },
   { id:'lunaris', ten:'Sapidae',  mo:'Thành phố dưới chân vách đá' },
 ];
-// Tải giả lập: suy từ id chứ không random, để mỗi lần mở game con số không nhảy lung tung —
-// một cụm máy chủ đang đông thì phải đông ổn định, nếu không thì nó lộ ra là số bịa.
-function svTai(id){
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return 0.28 + (h % 55) / 100;                      // 28% … 82%
-}
+// Thanh "Tiếp nhận 28%…82%" ĐÃ GỠ. Nó suy từ hàm băm của id nên ổn định qua các lần mở, và
+// đúng vì thế mà nó thuyết phục: người chơi đọc ra một cụm máy chủ đang đông. Không có cụm nào
+// cả — không kết nối, không người chơi khác, save nằm ở máy người chơi. Một con số bịa mà trông
+// như số thật là thứ người ta bắt được trong ba mươi giây và là thứ định nghĩa bài đánh giá.
+// Ba cụm giữ lại làm LỰA CHỌN BỐI CẢNH (lưu ở SETTINGS.server), không hứa hạ tầng nào.
 function svDangChon(){ return SETTINGS.server || SERVERS[0].id; }
 window.svChon = function(id){
   if (!SERVERS.some(s2 => s2.id === id)) return;
@@ -17738,15 +17771,12 @@ function svRender(){
     <div class="sv-logo"><span class="sv-logo-a">AXIE</span><span class="sv-logo-b">RIFT</span></div>
     <div class="sv-nhan">Chọn máy chủ</div>
     <div class="sv-hang">` + SERVERS.map(sv => {
-      const t = svTai(sv.id), pct = Math.round(t * 100);
-      const mau = t < 0.5 ? 'thap' : t < 0.75 ? 'vua' : 'cao';
       return `<button class="sv-nut${sv.id === dang ? ' on' : ''}" type="button" onclick="window.svChon('${sv.id}')">
         <b class="sv-ten">${sv.ten}</b>
         <span class="sv-mo">${sv.mo}</span>
-        <span class="sv-thanh"><i class="sv-${mau}" style="width:${pct}%"></i></span>
-        <span class="sv-tt">Tiếp nhận · ${pct}%</span></button>`;
+        <span class="sv-tt sv-off">◆ Ngoại tuyến</span></button>`;
     }).join('') + `</div>
-    <i class="sv-ghi">Máy chủ ở đây chỉ là nghi thức — game chạy trên máy của bạn, nhân vật lưu tại chỗ.</i>`;
+    <i class="sv-ghi">Axie Rift hiện chạy hoàn toàn trên máy của bạn — không có người chơi khác, nhân vật lưu tại chỗ. Ba cụm trên chỉ là bối cảnh mở đầu, chọn cụm nào cũng vào cùng một thế giới.</i>`;
 }
 function showMainMenu(){
   // Ô này đổi tên thành #cc-classes khi dựng màn tạo nhân vật. Bỏ sót ở đây là NGƯỜI CHƠI CŨ
@@ -20588,7 +20618,7 @@ function renderSkillPanel(){
     html += equippedSkillRowHtml('tp', 'Phụ');
     const o3Id = O3_SKILL_ID[player.sect], sigId = SIGNATURE_SKILL[player.sect];
     html += o3Id ? equippedSkillRowHtml(o3Id, BUFF_SKILL_ID[player.sect] ? 'Phù Trợ' : 'Phụ 2')
-      : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10 để mở khoá bộ 4 chiêu riêng.</div>`;
+      : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Lớp này chưa khai chiêu cho ô thứ ba.</div>`;
     if (sigId) html += equippedSkillRowHtml(sigId, '★ Tuyệt Chiêu');
     html += `<div class="shop-row" title="${consumTip('sach')}"><span class="sr-ic">${consumIcon('sach', 'sr-img')}</span>
         <span class="sr-body"><b style="color:#ffb15c">Sách Kỹ Năng</b>
@@ -20607,7 +20637,7 @@ function renderSkillPanel(){
     html += `<div style="font-size:11px;color:#9aa8d4;padding:2px 4px 8px">Thanh chiêu chỉ có 4 ô, nhưng các chiêu dưới đây không hề mất giá trị — tự động dồn thành % Công Kích vĩnh viễn (hiện <b style="color:#ffd76a">+${(player.legacyAtkPct||0).toFixed(1)}%</b>), tự ngộ theo cấp, không cần bấm nút.</div>`;
     html += `<div class="stat-sec">DI SẢN LỚP — ${SECTS[player.sect].name}</div>`;
     const own = LEGACY_SECT_SKILLS.filter(sid => VOHOC_DEFS[sid] && VOHOC_DEFS[sid].phai === player.sect);
-    html += own.length ? own.map(legacySkillRowHtml).join('') : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10.</div>`;
+    html += own.length ? own.map(legacySkillRowHtml).join('') : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Lớp này chưa có chiêu Di Sản nào.</div>`;
     // Bị động riêng của lớp — có tác dụng THẬT (xem CLASS_PASSIVES trong calcDerived), không quy
     // đổi thành %ST, nên phải tách khỏi mục di sản để người chơi không tưởng chúng cũng chỉ là %ST.
     const _pas = CLASS_PASSIVES.filter(sid => VOHOC_DEFS[sid] && VOHOC_DEFS[sid].phai === player.sect);
@@ -20879,7 +20909,7 @@ function updateHud(){
       b.classList.add('sk-empty'); b.classList.remove('locked','has-img');
       b.style.backgroundImage = '';
       b.querySelector('.sk-ico').textContent = '+';
-      b.title = 'Chưa gia nhập lớp — trả lời The Calling ở cấp 10 (K)';
+      b.title = 'Ô trống — lớp này chưa khai chiêu cho ô đó (bấm K để xem bảng Kỹ Năng)';
       b.querySelector('.sk-cd').style.height = '0%';
       continue;
     }
@@ -23677,11 +23707,27 @@ TITLES.push({ id:'tctk', name:'Kẻ Báo Thù', cond:p=>(p.revengeKills||0) >= 3
 // ==================== PHÓ BẢN & BOSS (Request P) ====================
 // Boss tương ứng cấp từng map — ảnh riêng vẽ bằng AI, phong cách thủy mặc
 Object.assign(MOBS, {
-  boss_hacphong:  { name:'Thủ Lĩnh Đoàn Gloam',    lv:16,  hp:3500,   atk:55,  def:20,  xp:3200,  silver:[350,500],   speed:80, aggro:9999, range:40, atkCd:1.2,  size:24, color:'#181420', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_hacphong', moves:['vach','xung','daovung'], drop:1, el:'Hỏa',  img:'assets/mobs/boss_hacphong.png' },
+  // ⚠ ART CÒN NỢ. assets/mobs/boss_hacphong.png là TRANH THẺ chứ không phải sprite: đục 100%,
+  // không một điểm trong suốt nào, và con vật bị khung cắt ở cả bốn mép — đắp vào thế giới thì
+  // hiện ra đúng một ô vuông dán lên nền. Đây là trùm ĐẦU TIÊN mọi người chơi gặp (Plant
+  // Tribe Glade, cấp 14). Tách nền không cứu được: cắt xong vẫn cụt bốn mép.
+  // Nay vẽ khung xương như boss_sontac — hợp thế giới hơn một tấm thẻ dán.
+  // ⚠ skel còn là đường DƯ PHÒNG của TRÙM VÙNG: BOSS_DEFS trỏ vào khoá này rồi kế thừa
+  // skel/skelPal (xem `_src.skel` trong hàm dựng trùm vùng) — bỏ skel là trùm vùng rơi về hình
+  // mực dự phòng. Có sprite thật (nền trong suốt, trọn con) thì thêm lại img, giữ nguyên skel.
+  boss_hacphong:  { name:'Thủ Lĩnh Đoàn Gloam',    lv:16,  hp:3500,   atk:55,  def:20,  xp:3200,  silver:[350,500],   speed:80, aggro:9999, range:40, atkCd:1.2,  size:24, color:'#181420', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_hacphong', moves:['vach','xung','daovung'], drop:1, el:'Hỏa', skel:'knight', skelPal:{main:'#4a4450',dark:'#2a2632',trim:'#c8a84a',cloth:'#6a2a24',glow:'#ff6a3a'} },
   boss_sontac:    { name:'Thủ Lĩnh Sói Hoang',  lv:22,  hp:6000,   atk:75,  def:28,  xp:5200,  silver:[500,700],   speed:76, aggro:9999, range:42, atkCd:1.25, size:25, color:'#241a12', eye:'#ff9a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_sontac', moves:['vach','goi','vogiap'], drop:1, el:'Thổ', skel:'hound', skelPal:{main:'#5f5348',dark:'#3d342c',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}, img:'assets/mobs/boss_sontac.png'},
   boss_phando:    { name:'Đại Tướng Phản Loạn',     lv:34,  hp:11000,  atk:110, def:40,  xp:9000,  silver:[800,1100],  speed:82, aggro:9999, range:44, atkCd:1.2,  size:25, color:'#12201c', eye:'#a0ffe9', boss:true, elite:true, bossKind:'dgn', bossId:'boss_phando', moves:['vong','xung','cuong','daovung'], drop:1, el:'Thủy', skel:'knight', skelPal:{main:'#4f7a70',dark:'#2e4a44',trim:'#a0ffe9',cloth:'#1e3a34',glow:'#6ae8c0'}},
   boss_mochu:     { name:'Chúa Tể Hầm Mộ',          lv:52,  hp:22000,  atk:170, def:70,  xp:16000, silver:[1300,1800], speed:70, aggro:9999, range:46, atkCd:1.3,  size:26, color:'#1c1a14', eye:'#9a86d8', boss:true, elite:true, bossKind:'dgn', bossId:'boss_mochu', moves:['vach','goi','cuong','vogiap'], drop:1, el:'Thổ', skel:'cultist', skelPal:{main:'#b0a890',dark:'#332a24',cloth:'#4a3a2a',trim:'#c8a84a',glow:'#8fe0a8'}},
-  boss_tinhhoa:   { name:'Xoáy Lá Nguyền',      lv:72,  hp:40000,  atk:240, def:95,  xp:28000, silver:[2000,2800], speed:88, aggro:9999, range:48, atkCd:1.15, size:26, color:'#2a1218', eye:'#7ec850', boss:true, elite:true, bossKind:'dgn', bossId:'boss_tinhhoa', moves:['vong','xung','daovung','vogiap'], drop:1, el:'Mộc', poisonHit:true, img:'assets/mobs/boss_tinhhoa.png' },
+  // ⚠ ART CÒN NỢ. assets/mobs/boss_tinhhoa.png là TRANH THẺ chứ không phải sprite: đục 100%,
+  // không một điểm trong suốt nào, và con vật bị khung cắt ở cả bốn mép — đắp vào thế giới thì
+  // hiện ra đúng một ô vuông dán lên nền. Đây là trùm ĐẦU TIÊN mọi người chơi gặp (Plant
+  // Tribe Glade, cấp 14). Tách nền không cứu được: cắt xong vẫn cụt bốn mép.
+  // Nay vẽ khung xương như boss_sontac — hợp thế giới hơn một tấm thẻ dán.
+  // ⚠ skel còn là đường DƯ PHÒNG của TRÙM VÙNG: BOSS_DEFS trỏ vào khoá này rồi kế thừa
+  // skel/skelPal (xem `_src.skel` trong hàm dựng trùm vùng) — bỏ skel là trùm vùng rơi về hình
+  // mực dự phòng. Có sprite thật (nền trong suốt, trọn con) thì thêm lại img, giữ nguyên skel.
+  boss_tinhhoa:   { name:'Xoáy Lá Nguyền',      lv:72,  hp:40000,  atk:240, def:95,  xp:28000, silver:[2000,2800], speed:88, aggro:9999, range:48, atkCd:1.15, size:26, color:'#2a1218', eye:'#7ec850', boss:true, elite:true, bossKind:'dgn', bossId:'boss_tinhhoa', moves:['vong','xung','daovung','vogiap'], drop:1, el:'Mộc', skel:'wraith', skelPal:{main:'#7fbf8f',dark:'#2e4a38',cloth:'#3f6a4e',bone:'#dff0d8',glow:'#7ec850'}, poisonHit:true },
   boss_dothong:   { name:'Chúa Sói Thảo Nguyên',   lv:92,  hp:68000,  atk:340, def:130, xp:45000, silver:[3200,4200], speed:84, aggro:9999, range:50, atkCd:1.1,  size:27, color:'#1a1410', eye:'#ffd76a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_dothong', moves:['vach','xung','goi','cuong','vogiap'], drop:1, el:'Kim', skel:'hound', skelPal:{main:'#6a6050',dark:'#443c30',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}},
   boss_thienbinh: { name:'Thống Soái Thiên Giáp', lv:108, hp:100000, atk:420, def:160, xp:70000, silver:[4500,6000], speed:92, aggro:9999, range:52, atkCd:1.0,  size:27, color:'#101018', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_thienbinh', moves:['vong','vach','xung','goi','cuong','daovung','vogiap'], drop:1, el:'Hỏa', skel:'knight', skelPal:{main:'#d0c8b0',dark:'#8a8068',trim:'#ffe9a8',cloth:'#c04a2a',glow:'#ffb15c'}},
   // Boss Săn (MU Online-style): xuất hiện SAU khi hạ Cổng Vực phó bản — hoạt động phụ, không bắt

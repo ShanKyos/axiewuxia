@@ -1625,6 +1625,15 @@ window.VOHOC_DEFS = {
   // thêm nửa phần trăm vĩnh viễn chỉ vì hai chiêu hoán chỗ cho nhau.
   dk_ragefulblow: { name:'Rageful Blow', school:'Dark Knight', phai:'thieulam', tier:'so', cat:'Binh Khí', type:'aoe', unlock:25, cd:8, qi:24, mult:2.2, color:'#3a6fd8', glyph:'✹', fx:{ r:170, kb:55, stun:0.8 }, desc:'Giáng vũ khí xuống đất — chấn động, hất văng & choáng nhẹ.' },
   dk_fortitude:   { name:'Swell Life', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Bị Động', type:'passive', unlock:45, color:'#a0d8ff', glyph:'♦', desc:'Bị động: +15% Sinh Lực tối đa — sức vóc Dark Knight dày lên theo từng trận sống sót.' },
+  // Ô 3 của Dark Knight. Trước đây TRỐNG: lớp này là lớp DUY NHẤT có 5 chiêu chủ động trong khi
+  // bốn lớp kia đều có 6, nên không còn chiêu nào để đưa lên ô thứ ba. Thêm chiêu thứ sáu là cách
+  // duy nhất lấp ô mà KHÔNG phá ba lời hứa đang được test_kynang5lop gác: Di Sản vẫn đúng 4 chiêu
+  // (= 8,0% Công Kích như bốn lớp kia), lớp vẫn còn bị động riêng (Swell Life ở trên), và không
+  // tên chiêu nào trùng giữa hai lớp.
+  // Cơ chế chọn KHIÊN vì đó là thứ duy nhất trong năm kiểu buff chưa lớp nào dùng — Bless hồi máu,
+  // Battle Fury tốc đánh, Increase Critical Damage bạo kích. Khiên cũng đúng bản sắc "Chịu Đòn"
+  // của Dark Knight. fx.shieldPct đã có sẵn đường chạy trong castSkill, không phải thêm cơ chế mới.
+  dk_bulwark:     { name:'Bulwark', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Binh Khí', type:'buff', unlock:15, cd:12, qi:26, tam:0, pham:0, color:'#6aa8ff', glyph:'▲', fx:{ shieldPct:28, dmgPct:12, t:8 }, desc:'Dựng thế thủ — một lớp khiên dày bằng 28% Sinh Lực tối đa bọc quanh thân, kèm +12% sát thương trong 8 giây.' },
   tienthiencong:  { name:'Undying Will', school:'Dark Knight', phai:'thieulam', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#ffe9a8', glyph:'✦', desc:'Bị động: chết tự hồi sinh 50% Sinh Lực — mỗi 300s một lần.' },
 
   // ── Sylvan Ranger — cung tên & hỗ trợ ──

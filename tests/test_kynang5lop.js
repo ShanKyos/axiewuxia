@@ -114,14 +114,12 @@ const PORT = process.argv[2] || '8853';
     const la = d.hienLan.filter(n => !(sect === 'minhgiao' && KE_THUA.includes(n)));
     if (la.length) fail(`bảng K của ${d.ten} hiện chiêu lớp khác: ${la.join(', ')}`);
     if (d.conNutHoc) fail(`bảng K của ${d.ten} vẫn còn mục/nút học di sản NGOẠI LỚP`);
-    // Ô 3 (buff) của Dark Knight ĐANG TRỐNG CÓ CHỦ Ý: nó vốn trỏ vào 'gangkhi' (Defense), mà
-    // chiêu đó đi cùng hệ Thuần Thục đã gỡ theo yêu cầu chủ dự án. Cây kỹ năng Dark Knight
-    // không còn chiêu buff CHỦ ĐỘNG nào khác (dk_fortitude/Swell Life đang là bị động). Lấp lại
-    // là việc của đợt rework kỹ năng 5 lớp — tới lúc đó dòng gác này phải siết lại thành
-    // `d.bar.some(x => !x)` cho cả năm lớp.
-    const _oTrong = d.bar.map((x, i) => x ? -1 : i).filter(i => i >= 0);
-    const _choPhep = sect === 'thieulam' ? [2] : [];
-    const _thieu = _oTrong.filter(i => !_choPhep.includes(i));
+    // Ô 3 của Dark Knight TỪNG trống có chủ ý (chiêu 'gangkhi'/Defense đi cùng hệ Thuần Thục đã
+    // gỡ). Nay đã lấp bằng Bulwark — chiêu chủ động thứ sáu của lớp, xem dk_bulwark trong
+    // data/canbang.js — nên dòng gác này đã siết lại cho cả NĂM lớp, đúng như ghi chú cũ hẹn.
+    // Không nới lại ngoại lệ cho lớp nào: một ô trống trên thanh 4 ô là một nút người chơi bấm
+    // vào không có gì xảy ra.
+    const _thieu = d.bar.map((x, i) => x ? -1 : i).filter(i => i >= 0);
     if (_thieu.length) fail(`${d.ten} thiếu chiêu ở ô ${_thieu.join(',')} của thanh 4 ô: ${JSON.stringify(d.bar)}`);
     if (d.diSan.length !== 4) fail(`${d.ten} có ${d.diSan.length} chiêu di sản, phải là 4`);
     if (!d.biDong.length) fail(`${d.ten} không có bị động riêng`);
