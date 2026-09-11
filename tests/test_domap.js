@@ -17,16 +17,25 @@ const SAN = {
   thoang:   55,      // % ô lưới đi được — hiện thấp nhất 60,7% (comoc). Sàn này ĐO ĐƯỢC chứ
                      // không phải đoán: bản đầu tôi đặt 80 theo cảm giác và nó bắt vạ 5/8 map.
 };
-// ⚠ VẬT CHE — SÀN NÀY ĐÃ TỤT, VÀ ĐÓ LÀ MỘT VIỆC CÒN NỢ, KHÔNG PHẢI MỘT KẾT QUẢ.
-// Sàn cũ là 18%, chốt khi còn bộ trụ đá (trung bình 44,8%). Trụ đá đã bị GỠ vì nó chỉ là sprite
-// đá phóng to ~3 lần, nhìn xấu và chọi với nền tranh — chủ dự án xem ảnh chụp rồi yêu cầu bỏ.
-// Gỡ xong thì trung bình tụt 44,8% → 30,0% (phần lớn map vẫn còn địa hình), nhưng thiệt hại
-// dồn vào MỘT chỗ: Reptile Sunstone Flats — map trống nhất, 90,9% đi được — tụt còn 9,1%.
+// ⚠ VẬT CHE — SÀN ĐÃ KÉO LẠI VỀ 18. Đoạn ghi chú "bánh cóc tạm" cũ đã xoá vì việc nợ đã trả.
 //
-// Sàn 8 dưới đây KHÔNG phải là "đạt". Nó là bánh cóc giữ cho đừng tụt tiếp, trong lúc chờ
-// TRANH RIÊNG cho khối đá cỡ lớn. Khi có tranh thật thì kéo sàn này về ≥18 và xoá đoạn ghi chú
-// này. ĐỪNG hạ nó thêm lần nữa để cho bài kiểm xanh.
-const SAN_CHE = 8;
+// Lịch sử, để đừng ai hạ lại: sàn cũ 18% chốt khi còn bộ trụ đá; trụ đá bị GỠ vì nó chỉ là
+// sprite đá phóng to ~3 lần, chọi với nền tranh. Gỡ xong thì Reptile Sunstone Flats tụt còn
+// 8,8% nên sàn phải hạ tạm xuống 8.
+//
+// Nay có TRANH THẬT: bốn tảng cắt từ kho Axie ở 894-1024px, thu về 220px rồi vẽ ra ~118px —
+// tức THU XUỐNG, không kéo giãn (xem `TANG_IMGS` trong game.js và tools/cat_tangda.py).
+// Đo lại trước/sau khi rải tảng, cùng một máy đo, cùng một ngày:
+//   cấp   1 · 27,3% → 33,1%      cấp  40 · 39,5% → 50,2%      cấp  60 · 39,3% → 53,2%
+//   cấp  10 · 28,9% → 47,9%      cấp  40 · 48,9% → 57,5%      cấp  80 ·  8,8% → 36,4%
+//   cấp  20 · 26,9% → 44,0%      cấp  44 · 30,8% → 37,7%      cấp 100 · 34,5% → 48,2%
+//   cấp  36 · 24,3% → 37,2%      cấp  54 · 34,1% → 35,9%
+// Thấp nhất 8,8% → 33,1%, và chính Reptile Sunstone Flats (cấp 80) là chỗ lên nhiều nhất.
+//
+// Vì sao 18 chứ không phải 30: 18 là con số ĐÃ CHỐT hồi còn trụ đá, và nay thừa sức đạt. Kê
+// sát mức đo được (33) thì bài đỏ ngay lần đầu ai đó dời một bãi quái — bánh cóc là để chặn
+// TỤT, không phải để khoe con số hôm nay.
+const SAN_CHE = 18;
 const TRAN = {
   // ⚠ TRẦN NÀY GIÃN THEO KHỔ MAP, không còn là một con số tuyệt đối.
   // Con số 2600 cũ là bề ngang map hồi CẢ GAME CHUNG MỘT KHỔ 2600×1900 — nó không phải một
@@ -187,7 +196,7 @@ const TRAN = {
     // Chỉ map có bãi quái mới cần địa hình đánh nhau — thành thì không.
     if (m.soLoai > 0 && m.che < SAN_CHE) fail(`${id}: vật che ${m.che}% (sàn ${SAN_CHE}%) — không có địa hình cỡ trận đánh`);
   }
-  if (!bad) pass(`${ids.length} map đều qua bánh cóc: loài ≥${SAN.loai} · mật độ ≥${SAN.matDo} · đi được ≥${SAN.thoang}% · vật che ≥${SAN_CHE}% (sàn TẠM, xem ghi chú) · kính ≤${(TRAN.duongKinhTiLe*100).toFixed(0)}% đường chéo map`);
+  if (!bad) pass(`${ids.length} map đều qua bánh cóc: loài ≥${SAN.loai} · mật độ ≥${SAN.matDo} · đi được ≥${SAN.thoang}% · vật che ≥${SAN_CHE}% · kính ≤${(TRAN.duongKinhTiLe*100).toFixed(0)}% đường chéo map`);
 
   // ── BÁNH CÓC THEO TỪNG MAP ────────────────────────────────────────────────
   // Đây mới là chỗ đo cái bệnh chính: số loài TỤT khi lên cấp (7 xuống 3). Hiện trạng đang

@@ -26,8 +26,9 @@
     <div id="hud-name">—</div>
     <!-- Số Bình Thuốc đã dời xuống ô thuốc trong thanh chiến đấu (#sk-thuoc) — cùng một con
          số bày hai chỗ thì chỗ nào cũng bị liếc qua, mà không chỗ nào được tin. -->
-    <div id="hud-buff" title="Rượu Hổ Cốt — tạm thời +12% công lực" style="display:none">🍶</div>
-    <div id="hud-loidon" title="Bùa Chắn Sét — giảm 40% sát thương sét" style="display:none">⚡</div>
+    <!-- Dải trạng thái: một khung rỗng, game.js đổ icon vào theo bảng TRANG_THAI. Trước đây
+         đây là hai thẻ chép cứng (🍶 và ⚡) cho hai trong mười hai trạng thái đang chạy. -->
+    <div id="hud-tt" aria-label="Trạng thái" style="display:none"></div>
     <div id="hud-time" title="Đồng Hồ Thế Giới — bấm mở Bảng Sự Kiện" onclick="openEventBoard()" style="cursor:pointer">⏱ --:--</div>
   </div>
   <div id="hud-map"></div>

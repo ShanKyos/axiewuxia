@@ -1766,3 +1766,22 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   background:rgba(20,17,12,.8); color:var(--gold); border:1px solid var(--vien-dong);
   border-radius:4px; font-size:14px; line-height:1; font-family:inherit; }
 .bang-thu:hover { border-color:var(--vien-dong-manh); background:rgba(58,46,28,.9); }
+
+/* ═══ Dải trạng thái — icon cắt từ MỘT dải 12 ô (assets/ui/trangthai.webp) ═══
+   --i là chỉ số ô; bề rộng nền phải là 12 × bề rộng ô, cùng lối .lop-hd đời trước đã dùng. */
+#hud-tt { display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; }
+#hud-tt .tt-o {
+  position:relative; display:block; width:26px; height:26px;
+  border:1px solid rgba(140,150,200,.5); border-radius:var(--r-sm);
+  background:rgba(12,14,30,.78) url(assets/ui/trangthai.webp) no-repeat;
+  background-size:calc(26px * 12) 26px;
+  background-position:calc(var(--i) * -26px) 0;
+}
+#hud-tt .tt-o.xau { border-color:rgba(200,80,80,.7); }
+/* Số giây đặt ĐÈ mép dưới chứ không nằm cạnh: dải này phải gọn theo chiều ngang, không thì
+   mười hai trạng thái cùng bật là một hàng chữ dài hơn cả thanh máu. */
+#hud-tt .tt-o b {
+  position:absolute; left:0; right:0; bottom:-1px; text-align:center;
+  font-size:9px; font-weight:700; line-height:1.1; color:#eef2ff;
+  text-shadow:0 1px 2px #000, 0 0 3px #000;
+}

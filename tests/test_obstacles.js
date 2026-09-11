@@ -129,10 +129,11 @@ const { chromium } = require('playwright');
   console.log('tỉ lệ vòng:', JSON.stringify(routes));
   for (const m in routes){
     const r = routes[m];
-    // ⚠ Ngưỡng 1, không phải 2 — và đây là một BƯỚC LÙI có ghi sổ. Khi còn bộ trụ đá thì mọi map
-    //   đều ≥4 tuyến phải vòng; gỡ trụ xong Bug Tribe Tunnels chỉ còn 1/66. Địa hình cỡ trận đánh
-    //   đang là việc CÒN NỢ (xem SAN_CHE trong test_domap.js). Kéo lại ≥2 khi có tranh khối đá thật.
-    if (r.phaiVong < 1) fail(`${m}: KHÔNG tuyến nào phải vòng trong ${r.soCap} tuyến — map phẳng lì`);
+    // ⚠ Ngưỡng đã KÉO LẠI về 2. Bước lùi cũ (hạ 2→1) ghi sổ từ hồi gỡ trụ đá, khi Bug Tribe
+    //   Tunnels chỉ còn 1/66 tuyến phải vòng. Nay có tảng đá tranh thật (xem TANG_IMGS), đo lại
+    //   được: ngoai 3 · chungnam 7 · comoc 4 · tuyettinh 10 · mongco 8 · nhanmon 32 · daohoa 18.
+    //   Thấp nhất là 3, nên sàn 2 vẫn còn lề. ĐỪNG hạ lại để cho bài xanh.
+    if (r.phaiVong < 2) fail(`${m}: chỉ ${r.phaiVong}/${r.soCap} tuyến phải vòng — map phẳng lì`);
     if (r.lonNhat > 2.2) fail(`${m}: tuyến vòng nhất ${r.lonNhat} — đi vòng vô lý`);
     if (r.khongToi) fail(`${m}: ${r.khongToi} tuyến KHÔNG tới nơi — bị khoá đường`);
   }

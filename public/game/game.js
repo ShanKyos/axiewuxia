@@ -1678,6 +1678,23 @@ function treeImgOf(k, bien){
 }
 const ROCK_IMGS = [];
 for (let i = 1; i <= 3; i++){ const im = new Image(); im.src = 'assets/trees/rock' + i + '.png'; ROCK_IMGS.push(im); }
+// ═══ TẢNG ĐÁ — địa hình cỡ TRẬN ĐÁNH ═══════════════════════════════════════════════════════
+// Đây là `raiTruDa()` quay lại, nhưng lần này có TRANH ĐÚNG cho việc đó.
+//
+// Đời trước dựng vành đá quanh bãi quái bằng cách PHÓNG TO sprite `rock1..3` lên ~3 lần (s≈3,1
+// so với 0,6-1,4 của đá trang trí). Phóng to một sprite 46px lên gấp ba thì ra khối hộp bẹt
+// viền cứng, và chủ dự án nhìn ảnh chụp rồi yêu cầu gỡ. Bốn tấm dưới đây là tranh gốc
+// 894-1024px của kho Axie, cắt sát alpha rồi thu về 220px — vẽ ra ~110px là THU XUỐNG.
+//
+// ⚠ VÌ SAO PHẢI ≥52,8px: `tools/do_map.js` chấm "vật che" bằng khối có CẠNH NGẮN ≥ 0,40×NV_CAO
+// (= 52,8px) trong tầm 120px. Đá trang trí hiện có cạnh ngắn 9,6-22,4px nên nó đóng góp ĐÚNG
+// BẰNG KHÔNG vào chỉ số ấy, dù rải bao nhiêu viên. Muốn chỉ số nhúc nhích thì vật cản phải to
+// thật, không phải nhiều thật.
+const TANG_IMGS = [];
+for (let i = 1; i <= 4; i++){ const im = new Image(); im.src = 'assets/trees/tang' + i + '.png'; TANG_IMGS.push(im); }
+const TANG_RONG = 118;    // bề rộng vẽ ra, px thế giới
+const TANG_SO = 22;       // mỗi map bao nhiêu tảng khi map không tự khai `tangs`
+const TANG_RX = 40, TANG_RY = 28;   // bán trục va chạm ở s=1 ⇒ cạnh ngắn 56px, vượt sàn 52,8
 
 // ═══ SÀN LÁT VIÊN — nền đẳng cự ghép từ hình thoi 2:1 ══════════════════════════════════════
 // Bộ viên nướng bằng tools/iso/nuong_tile.py (Blender, không màn hình). Hình học ghi ở đầu tệp
@@ -2223,7 +2240,9 @@ function rebuildDecorObs(){
   // và túm cỏ trong lối thì cố ý đi xuyên qua được. Xem raiIso().
   decorObs = decor.filter(d => d.type !== 'iso').map(d => d.type === 'tree'
     ? { x:d.x, y:d.y, rx:10 + 8*d.s, ry:7 + 5*d.s }     // gốc cây: dẹt theo phối cảnh nhìn xuống
-    : { x:d.x, y:d.y, rx:13*d.s,     ry:8*d.s })        // tảng đá (và trụ đá — cùng công thức, khác cỡ)
+    : d.type === 'tang'
+    ? { x:d.x, y:d.y, rx:TANG_RX*d.s, ry:TANG_RY*d.s }  // TẢNG: cạnh ngắn ≥52,8px — xem TANG_IMGS
+    : { x:d.x, y:d.y, rx:13*d.s,     ry:8*d.s })        // đá trang trí (sỏi)
     .concat(decorObsCum);                               // ...cộng LÙM CHẶN, xem raiCum()
 }
 // ── HẠT BỐC CỐ ĐỊNH ──────────────────────────────────────────────────────
@@ -5241,6 +5260,20 @@ function chiChayImg(id){
   if (!im){ im = new Image(); im.src = 'assets/chimera/' + id + '_r.webp'; CHI_CHAY_IMGS[id] = im; }
   return im;
 }
+// Khối TRÚNG ĐÒN (tools/spine/nuong_chi_don.py → <id>_h.webp), cùng hộp cắt với bảng nhỏ.
+//
+// ⚠ Khối này thuộc về AVATAR, không thuộc về lớp nhân vật — và đó là cả lý do nó tồn tại.
+// CLAUDE.md chốt "Trúng đòn và chết vẫn giữ AXIE — cố ý": lớp nhân vật KHÔNG được nháy ra mỗi
+// lần ăn đòn, nếu không trong một trận đông quái người chơi gần như không còn thấy avatar của
+// mình. Nhưng thế thì lúc trúng đòn con Axie đứng trơ. Khối này trám đúng chỗ đó.
+const CHI_DON = { n: 8, cot: 8 };
+const CHI_DON_IMGS = {};
+function chiDonImg(id){
+  if (!CHI_MAP[id]) return null;
+  let im = CHI_DON_IMGS[id];
+  if (!im){ im = new Image(); im.src = 'assets/chimera/' + id + '_h.webp'; CHI_DON_IMGS[id] = im; }
+  return im;
+}
 // Avatar MẶC ĐỊNH theo lớp — chủ dự án chốt: bản này người chơi vào là thấy Axie luôn,
 // không phải gõ lệnh mới có. Mỗi lớp một con khác nhau cho dễ phân biệt ngoài đường.
 const AVA_MAC_DINH = {
@@ -5267,19 +5300,36 @@ function chiVeChay(g, id, i, x, y, thanPx){
          ((i % CHI_CHAY.n) + CHI_CHAY.n) % CHI_CHAY.n, x, y, thanPx);
   return true;
 }
+// Một LƯỢT, không phải vòng lặp: `i` bị kẹp vào [0, n-1] thay vì lấy dư. Cú giật chạy hết
+// khối rồi dừng ở khung cuối cho tới khi hurtT về 0 — lấy dư thì nó giật lại từ đầu giữa chừng.
+function chiVeDon(g, id, i, x, y, thanPx){
+  const A = CHI_ANH.o[id], im = chiDonImg(id);
+  if (!A || !chiSan(im)) return false;
+  _chiVe(g, im, A, CHI_DON.cot, A.nhoRong, A.nhoCao,
+         clamp(i | 0, 0, CHI_DON.n - 1), x, y, thanPx);
+  return true;
+}
 // Vẽ avatar ở TOẠ ĐỘ THẾ GIỚI (không phải hệ cục bộ của bộ xương).
 // Art nướng quay PHẢI, đi sang trái thì lật.
 // Chưa có bảng chạy (chưa nướng / chưa tải) thì lui về bảng thở — hơi trượt một nhịp, nhưng
 // không bao giờ để trống chỗ đứng của nhân vật.
+// Thứ tự chọn khối: TRÚNG ĐÒN > CHẠY > ĐỨNG. Cú giật thắng cả hai cái kia — đang chạy mà ăn
+// đòn thì thứ người chơi cần thấy là cú giật, không phải sải chân tiếp theo.
+// ⚠ `hurtT` ĐẾM NGƯỢC (0,3 → 0), nên tiến độ là `1 − hurtT/0,3`. Dùng thẳng hurtT thì cú giật
+// chạy NGƯỢC — cùng họ với bẫy `atkAnim` đã ghi ở mục ĐỔI VAI.
+const AVA_DON_T = 0.3;
 function veAvatar(g, p, dangDiChuyen, now){
   const id = avatarId(p); if (!id) return false;
   const than = avaCo(id);
   g.save();
   g.translate(p.x, p.y + 12 - than * 0.38);
   if (Math.cos(p.face) < 0) g.scale(-1, 1);
-  const ok = dangDiChuyen
-    ? chiVeChay(g, id, Math.floor(((p.walkPh || 0) / (Math.PI * 2)) * CHI_CHAY.n), 0, 0, than)
-    : false;
+  const _hT = p.hurtT || 0;
+  let ok = false;
+  if (_hT > 0)
+    ok = chiVeDon(g, id, ((AVA_DON_T - Math.min(_hT, AVA_DON_T)) / AVA_DON_T) * CHI_DON.n, 0, 0, than);
+  if (!ok && dangDiChuyen)
+    ok = chiVeChay(g, id, Math.floor(((p.walkPh || 0) / (Math.PI * 2)) * CHI_CHAY.n), 0, 0, than);
   if (!ok) chiVeNho(g, id, Math.floor(now / 1000 * CHI_THO_FPS), 0, 0, than);
   g.restore();
   return true;
@@ -8270,6 +8320,19 @@ function buildWorld(){
     decor.push({ type:'tree', x:rnd(60,MAP.w-60), y:rnd(60,MAP.h-60), s:rnd(0.7,1.5) });
   for (let i = 0; i < (md.rocks ?? 26); i++)
     decor.push({ type:'rock', x:rnd(60,MAP.w-60), y:rnd(60,MAP.h-60), s:rnd(0.6,1.4) });
+  // ── TẢNG ĐÁ: bố cục cỡ trận đánh, HẠT CỐ ĐỊNH theo tên map ──────────────────────────────
+  // Cây và sỏi rải bằng Math.random và điều đó đúng — chúng là TRANG TRÍ. Tảng thì không: nó
+  // là thứ người chơi nấp sau, vòng qua, kéo quái quanh nó. Bố cục ấy phải GIỐNG NHAU mọi lần
+  // vào map, nếu không thì không ai học được địa hình — mà học được mới là chỗ địa hình có
+  // nghĩa. (Cùng luật với Rương Canh và trại quái; xem mục LUẬT MAP, điều 1.)
+  { const _rT = _hatRng(_bamChuoi('tang:' + curMap));
+    for (let i = 0; i < (md.tangs ?? TANG_SO); i++)
+      // ⚠ `s` KHÔNG ĐƯỢC XUỐNG DƯỚI 1. Cạnh ngắn vật cản là 2×TANG_RY×s = 56×s, mà ngưỡng
+      // "vật che" của tools/do_map.js là 0,40×NV_CAO = 52,8px. Để s=0,9 thì ra 50,4px — tảng
+      // vẽ ra vẫn to đùng nhưng KHÔNG được tính, tức công sức rải nó đổ sông. `test_tangda`
+      // bắt được đúng ca đó ở Dusk Marsh (52px).
+      decor.push({ type:'tang', x: 90 + _rT()*(MAP.w-180), y: 90 + _rT()*(MAP.h-180),
+                   s: 1 + _rT()*0.45, bien: (_rT()*4) | 0 }); }
   for (let i = 0; i < 14; i++) mists.push({ x:rnd(0,VW), y:rnd(0,VH), r:rnd(120,300), v:rnd(4,14), a:rnd(0.04,0.1) });
   // giữ khu làng & suối trống
   if (md.village) decor = decor.filter(d => dist(d.x,d.y,NPC.x,NPC.y) > 160 && dist(d.x,d.y,SPRING.x,SPRING.y) > 120);
@@ -8293,7 +8356,27 @@ function buildWorld(){
       if (_bd.tranai) _keep.push({ x:_bd.tranai.x*MAP.w, y:_bd.tranai.y*MAP.h, r:210 });
     }
     if (md.spring && typeof SPRING !== 'undefined') _keep.push({ x:SPRING.x, y:SPRING.y, r:140 });
-    decor = decor.filter(d => d.dat || !_keep.some(k => dist(d.x, d.y, k.x, k.y) < k.r));
+    // ⚠ TẢNG PHẢI CHỪA RỘNG HƠN CÂY. Bán trục va chạm của tảng là 40x28, của gốc cây là 18x12
+    // — hơn gấp đôi. Dùng chung một lề chừa thì một tảng đậu ngay rìa vùng chừa vẫn bịt được
+    // lối vào bãi quái, và né cục bộ không vòng nổi: `test_obstacles` bắt được đúng ca đó
+    // (đi 9s còn cách đích 176px). Cộng thêm đúng phần bán trục lớn, nhân 1,6 cho lối đi lọt.
+    const _leTang = TANG_RX * 1.6;
+    decor = decor.filter(d => d.dat ||
+      !_keep.some(k => dist(d.x, d.y, k.x, k.y) < k.r + (d.type === 'tang' ? _leTang : 0)));
+    // …và tảng không được đứng chắn ngang TRỤC NỐI hai bãi quái kề nhau. Đây là luật đã ghi ở
+    // CLAUDE.md ("đừng đặt khối chắn ngang trục nối hai bãi quái"): né cục bộ chỉ vòng nổi khối
+    // ngắn, còn một khối đậu đúng giữa trục thì đường đi kẹt lại cách đích vài trăm pixel.
+    { const _tam = (md.packs || []);
+      if (_tam.length > 1) decor = decor.filter(d => {
+        if (d.dat || d.type !== 'tang') return true;
+        for (let i = 0; i < _tam.length; i++) for (let j = i+1; j < _tam.length; j++){
+          const a = _tam[i], b = _tam[j];
+          const vx = b.x-a.x, vy = b.y-a.y, L2 = vx*vx + vy*vy; if (!L2) continue;
+          const t = Math.max(0, Math.min(1, ((d.x-a.x)*vx + (d.y-a.y)*vy) / L2));
+          if (dist(d.x, d.y, a.x + vx*t, a.y + vy*t) < _leTang) return false;
+        }
+        return true;
+      }); }
     // và không mọc chồng lên vật cản tĩnh (hồ, tường) — vẽ ra thì thành cây mọc giữa hồ
     decor = decor.filter(d => d.dat || !inObstacle(curMap, d.x, d.y, 4));
   }
@@ -11553,6 +11636,9 @@ function render(){
   ents.push({ y:player.y, kind:'player' });
   for (const h of horses) ents.push({ y:h.y, kind:'horse', h }); // GDD Đợt 2 B5
   for (const d of sortedDecor) if (d.type==='tree') ents.push({ y:d.y, kind:'tree', d });
+  // Tảng CAO nên phải xếp lớp theo y như cây, không vẽ bẹt trước mọi thứ như sỏi: đứng phía
+  // trên tảng thì phải bị nó che, không thì cái tảng hoá ra một hình dán trên mặt đất.
+  for (const d of sortedDecor) if (d.type==='tang') ents.push({ y:d.y, kind:'tang', d });
   for (const d of sortedDecor) if (d.type==='iso') ents.push({ y:d.y, kind:'iso', d });
   for (const g of gatesHere()) ents.push({ y:g.y, kind:'gate', g });
   // Công trình rời xếp lớp bằng CHÂN nó (y+h), không phải nóc: người đứng phía trên (y nhỏ hơn)
@@ -11589,6 +11675,7 @@ function render(){
         break;
       case 'horse': drawHorse(e.h); break;
       case 'tree': drawTree(e.d); break;
+      case 'tang': drawTang(e.d); break;
       case 'gate': e.g.portal ? drawPortal(e.g) : drawOneGate(e.g); break;
     }
   }
@@ -11882,6 +11969,13 @@ function veRuong(r, t){
   ctx.fillStyle = '#fff0be';
   ctx.beginPath(); ctx.rect(-20, -18, 40, 3); ctx.fill();
   ctx.restore();
+}
+// Tảng vẽ neo CHÂN ở d.y (mép dưới ảnh), giống cây — nếu neo tâm thì nó trôi lên trên vật cản.
+function drawTang(d){
+  const im = TANG_IMGS[(d.bien || 0) % TANG_IMGS.length];
+  if (!(im && im.complete && im.naturalWidth)) return;
+  const w = TANG_RONG * d.s, h = w * (im.naturalHeight / im.naturalWidth);
+  ctx.drawImage(im, d.x - w/2, d.y + TANG_RY*d.s - h, w, h);
 }
 function drawRock(d){
   const rim = (typeof ROCK_IMGS !== 'undefined') && ROCK_IMGS[Math.abs(((d.x*7+d.y*13)|0)) % ROCK_IMGS.length];
@@ -12342,6 +12436,36 @@ function drawMobFigure(m, d, dx, dy, now, g){
   return true;
 }
 
+// ═══ HUY HIỆU VAI QUÁI — dải 7 ô, tools/icon_ydinh.py ═══
+//
+// Thứ tự này LÀ thứ tự trong `assets/ui/ydinh.webp`; đổi một chỗ phải đổi cả hai.
+//
+// ⚠ GỌI CHO ĐÚNG TÊN: sáu ô đầu là HUY HIỆU VAI, không phải "ý định". Vai của một con quái cố
+// định từ lúc nó sinh ra, nên nó nói "con này đánh xa", chứ không nói "con này SẮP làm gì".
+// Ô thứ bảy (`nguy`) mới là ý định thật: chỉ hiện trong lúc trùm đang lấy đà một chiêu.
+//
+// Vì sao đáng vẽ: CLAUDE.md chốt "từ cấp 24 mỗi map phải có ≥1 bãi Pháp Sư và ≥1 Kẻ Tiếp Sức —
+// hai thứ AUTO xử lý dở nhất, cũng là lý do người chơi phải tự cầm chuột". Đó là một lời hứa mà
+// trước bản này KHÔNG có mặt hình ảnh nào: người chơi phải tự cầm chuột vì hai vai đó nguy hiểm,
+// nhưng không có cách nào BIẾT con nào là con nào cho tới lúc đã ăn đòn.
+const YDINH_DAI = ['nang','phap','can','xa','bay','tiep','nguy'];
+const YDINH_O = 64;                 // cạnh ô trong dải nguồn
+const YDINH_CAO = 15;               // cao bao nhiêu px THẾ GIỚI khi vẽ ra
+let _ydinhIm = null;
+function veYDinh(g, khoa, x, y, cao, mau){
+  const i = YDINH_DAI.indexOf(khoa); if (i < 0) return false;
+  if (!_ydinhIm){ _ydinhIm = new Image(); _ydinhIm.src = 'assets/ui/ydinh.webp'; }
+  const im = _ydinhIm; if (!chiSan(im)) return false;
+  // Nền tối bo tròn: icon gốc vẽ cho nền phẳng của Origins, thả thẳng lên bãi cỏ sáng là mất
+  // hút — cùng lý do món đồ dưới đất phải có tấm nền tối (xem mục "Đồ rơi").
+  g.save();
+  g.fillStyle = 'rgba(10,10,22,.55)';
+  g.beginPath(); g.roundRect(x - cao*0.62, y - cao*0.62, cao*1.24, cao*1.24, 3); g.fill();
+  if (mau){ g.strokeStyle = mau; g.lineWidth = 1; g.stroke(); }
+  g.drawImage(im, i * YDINH_O, 0, YDINH_O, YDINH_O, x - cao/2, y - cao/2, cao, cao);
+  g.restore();
+  return true;
+}
 function drawMob(m){
   const d = m.def;
   const bob = Math.sin(m.wob)*2;
@@ -12430,6 +12554,15 @@ function drawMob(m){
   ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(dx-bw/2, topY-10, bw, 4);
   ctx.fillStyle = d.boss ? '#ff3a3a' : '#c0392b';
   ctx.fillRect(dx-bw/2, topY-10, bw*Math.max(0,m.hp/m.maxHp), 4);
+  // Huy hiệu vai, nằm BÊN TRÁI thanh máu. Không đặt bên trên: chỗ đó đã có tên quái và dãy Dị
+  // Biến, chồng thêm một tầng nữa là ba tầng chữ trên đầu mỗi con.
+  // `nguy` (trùm đang lấy đà) THẮNG vai — lúc đó thứ người chơi cần biết là "né ngay", không
+  // phải "con này thuộc vai gì".
+  { const _vk = m.tele ? 'nguy' : (m.tiep ? 'tiep' : m.role);
+    if (_vk && (m.tele || SETTINGS.mobName))
+      veYDinh(ctx, _vk, dx - bw/2 - YDINH_CAO*0.8, topY - 8,
+              m.tele ? YDINH_CAO*1.3 : YDINH_CAO,
+              _vk === 'nguy' ? '#ff5a4a' : (ROLE[_vk] && ROLE[_vk].col) || null); }
   // huy hiệu nguyên tố (◆♣❄☼▲) + tên quái
   if (!SETTINGS.mobName || m._lbl === false) return;
   const _sl = (m._lblN || 1) > 1 ? ` ×${m._lblN}` : '';
@@ -21381,6 +21514,51 @@ function flashSkillSlot(skillId){
 }
 
 // ---------- HUD (override): mana · danh hiệu/lớp/cấp trên thanh ----------
+// ═══ DẢI TRẠNG THÁI — dải icon 12 ô, tools/icon_trangthai.py ═══
+//
+// Trước bản này HUD có đúng HAI trạng thái, mỗi cái một thẻ <div> chép cứng với một emoji
+// (🍶 và ⚡) và một khối `if` riêng. Mười trạng thái còn lại — độc, Trọng Thương, khiên, phản
+// đòn, bạo kích, hút máu, né, tốc đánh, sát thương, buff Cổ Vật — CHẠY THẬT trong calcDerived
+// mà người chơi không có cách nào biết cái nào đang bật, còn bao lâu.
+//
+// Nay là một BẢNG: thêm trạng thái = thêm một dòng, không viết thêm khối `if` nào.
+//
+// ⚠ `i` phải trùng khít thứ tự trong `tools/icon_trangthai.py` — dải là MỘT tấm ảnh, lệch một
+// ô là mọi trạng thái từ đó trở đi hiện nhầm icon mà không ai báo.
+// ⚠ `con(p)` trả GIÂY CÒN LẠI, 0 nghĩa là tắt. Khiên không đếm giờ nên khai `soLuong:true` để
+// đừng in ra "12s" cho một con số điểm máu.
+const TRANG_THAI = [
+  { i:0,  id:'cong',    ten:'Rượu Hổ Cốt',   mo:'+12% Công Kích',         con:p => p.buffAtkT || 0 },
+  { i:1,  id:'setchan', ten:'Bùa Chắn Sét',  mo:'−40% sát thương sét',    con:p => p.loidonT || 0 },
+  { i:3,  id:'covat',   ten:'Cổ Vật',        mo:'bị động tạm của xác đang khoác',
+    con:p => (p.chiTam && p.chiTam.t) || 0 },
+  { i:4,  id:'st',      ten:'Sát Thương',    mo:'+% sát thương',          con:p => p.vhDmgT || 0 },
+  { i:5,  id:'ne',      ten:'Né Đòn',        mo:'+% né đòn',              con:p => p.vhEvaT || 0 },
+  { i:6,  id:'tocdanh', ten:'Tốc Đánh',      mo:'+% tốc đánh',            con:p => p.vhAspdT || 0 },
+  { i:7,  id:'bao',     ten:'Bạo Kích',      mo:'đòn nào cũng bạo kích',  con:p => p.vhCritT || 0 },
+  { i:8,  id:'hut',     ten:'Hút Sinh Lực',  mo:'hút máu từ sát thương',  con:p => p.vhLeechT || 0 },
+  { i:9,  id:'phan',    ten:'Phản Đòn',      mo:'dội ngược sát thương',   con:p => p.vhReflT || 0 },
+  { i:10, id:'khien',   ten:'Khiên',         mo:'chắn sát thương',        con:p => p.vhShield || 0, soLuong:true },
+  { i:2,  id:'doc',     ten:'Trúng Độc',     mo:'mất máu theo thời gian', con:p => p.poisonT || 0, xau:true },
+  { i:11, id:'trong',   ten:'Trọng Thương',  mo:'chỉ số sút cho tới khi hết',
+    con:p => Math.max(0, ((p.tenuiTT || 0) - Date.now()) / 1000), xau:true },
+];
+function ttGio(g){    // 90 → "1:30" · 12 → "12s"
+  return g >= 60 ? `${Math.floor(g/60)}:${String(Math.floor(g%60)).padStart(2,'0')}` : `${Math.ceil(g)}s`;
+}
+function veDaiTrangThai(){
+  const wrap = el('hud-tt'); if (!wrap || !player) return;
+  let html = '';
+  for (const t of TRANG_THAI){
+    const v = t.con(player); if (!(v > 0)) continue;
+    const nhan = t.soLuong ? Math.round(v).toLocaleString('vi-VN') : ttGio(v);
+    html += `<i class="tt-o${t.xau ? ' xau' : ''}" style="--i:${t.i}" title="${t.ten} — ${t.mo}"><b>${nhan}</b></i>`;
+  }
+  // Hàm này chạy MỖI KHUNG HÌNH. Chỉ ghi vào DOM khi chuỗi đổi — ghi đè innerHTML 60 lần/giây
+  // là dựng lại cả cây thẻ mỗi khung, và tooltip đang mở thì bị đóng ngay.
+  if (wrap._h !== html){ wrap.innerHTML = html; wrap._h = html; }
+  wrap.style.display = html ? '' : 'none';
+}
 function updateHud(){
   const sect = SECTS[player.sect];
   const tt = player.titles && player.titles.equipped && TITLES.find(x=>x.id===player.titles.equipped);
@@ -21404,20 +21582,7 @@ function updateHud(){
          el('txt-xp').textContent = `${Math.floor(player.xp)} / ${XP_TABLE[player.level-1]} EXP`; }
   const potEl = el('hud-potion');
   if (potEl){ potEl.textContent = `🧪 x${player.potions || 0} (R)${player.potionCd > 0 ? ` · ${Math.ceil(player.potionCd)}s` : ''}`; potEl.style.opacity = (player.potions > 0 && player.potionCd <= 0) ? 1 : 0.45; }
-  const buffEl = el('hud-buff');
-  if (buffEl){
-    if ((player.buffAtkT || 0) > 0){
-      buffEl.style.display = '';
-      buffEl.textContent = `🍶 +12% công · ${Math.floor(player.buffAtkT/60)}:${String(Math.floor(player.buffAtkT%60)).padStart(2,'0')}`;
-    } else buffEl.style.display = 'none';
-  }
-  const loiEl = el('hud-loidon');
-  if (loiEl){
-    if ((player.loidonT || 0) > 0){
-      loiEl.style.display = '';
-      loiEl.textContent = `⚡ -40% lôi · ${Math.floor(player.loidonT/60)}:${String(Math.floor(player.loidonT%60)).padStart(2,'0')}`;
-    } else loiEl.style.display = 'none';
-  }
+  veDaiTrangThai();
   { const _ve = el('hud-ve'); if (_ve) _ve.textContent = ((player.chimera && player.chimera.ve && player.chimera.ve.gk) || 0).toLocaleString('vi-VN'); }
   { const _sh = el('hud-shard'); if (_sh) _sh.textContent = shardCo().toLocaleString('vi-VN'); }
   el('hud-silver').textContent = Math.floor(player.silver).toLocaleString('vi-VN');   // Tụ Linh cộng số lẻ mỗi khung — HUD từng in 3114.5463199999385 (ký hiệu ◈ nằm trong index.html)

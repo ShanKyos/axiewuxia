@@ -66,9 +66,11 @@ Mười tệp đã đo (trong suốt 31–82%): `5_TREE1/2/3` · `10_TREE2` · `
 được `SAN_CHE` trong `test_domap.js` từ 8 lên 18 và ngưỡng `phaiVong` từ 1 lên 2.
 ⚠ `8_TEMPLE` (9% trong suốt) và `6_WATER` (7%) **không phải vật thể** — đừng lấy.
 
-### 1.5 · `BGM_BOSS` ← `boss.wav`
-Khảo sát lần 1 đã chỉ ra: `spawnBoss()` **đã gọi** `AudioSys.playBgm(BGM_BOSS)`, mà hằng đó đang
-`null`. Điền một hằng số là ba sự kiện lớn nhất game có nhạc riêng.
+### 1.5 · ~~`BGM_BOSS` ← `boss.wav`~~ — ĐÃ XONG TỪ TRƯỚC, em ghi nhầm
+Khi viết mục này em dựa vào ảnh chụp của khảo sát lần 1 (2026-09-03), lúc đó `BGM_BOSS` còn
+`null`. Kiểm lại trên mã hiện tại thì **đã có người làm rồi**: `const BGM_BOSS = 'bgm_boss'`
+và `assets/music/bgm_boss.mp3` (1,9 MB, ID3 hợp lệ, ghi ngày 10-09) đều nằm sẵn.
+Bài học: đừng chép việc còn nợ từ một tài liệu khảo sát mà không kiểm lại mã.
 
 ---
 
@@ -119,8 +121,8 @@ Kho cho **nguyên liệu**, không cho quyết định. Mấy thứ này cần a
 
 ## Đề nghị thứ tự
 
-**Đợt 1 (an toàn, đẩy thẳng `main` được):** 1.1 → 1.2 → 1.4 → 1.3 → 1.5.
-Không đụng một con số cân bằng nào, và 1.2 + 1.4 là hai thứ đổi cảm giác chơi rõ nhất.
+**Đợt 1 — ĐÃ LÀM XONG** (1.1 · 1.2 · 1.3 · 1.4; 1.5 hoá ra đã xong từ trước).
+Không đụng một con số cân bằng nào. Kết quả đo được ghi ở CLAUDE.md, mục "ĐỢT 1 ĐÃ LÀM".
 
 **Đợt 2 (một mình một đợt):** 2.1 — trình đọc hoạt cảnh, làm hai chặng, chặng một có đáp án
 để đối chiếu.

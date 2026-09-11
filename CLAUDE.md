@@ -190,6 +190,64 @@ chỗ nào để đổ — game **không có** chỉ số giảm hồi chiêu tr
 **Bài kiểm:** `tests/test_covat.js` (5 mục: hình dạng bảng · không rơi ra Chimera · di trú save
 không mất tiến trình · icon dùng chung nguồn với túi đồ · avatar còn sống).
 
+### ✅ ĐỢT 1 ĐÃ LÀM — bốn thứ lấy thẳng từ kho Axie, không đụng một con số cân bằng nào
+
+Danh sách gốc + lý do chọn: `docs/LAM_DUOC_GI.md`. Bốn thứ dưới đây đã chạy.
+
+**① Axie GIẬT khi trúng đòn** — `defense/hit-by-normal`, 8 khung, `<id>_h.webp` (0,91 MB cả 16
+con), nướng bằng `tools/spine/nuong_chi_don.py`. Khối này thuộc về **AVATAR**, không thuộc lớp
+nhân vật: CLAUDE.md chốt "trúng đòn và chết vẫn giữ AXIE", nên trước bản này lúc ăn đòn con Axie
+đứng trơ trong khi `swingFeel()` đã đổ hitstop/rung/loé lên nó.
+- ⚠ Thứ tự khối: **TRÚNG ĐÒN > CHẠY > ĐỨNG**. Đang chạy mà ăn đòn thì thứ phải thấy là cú giật.
+- ⚠ `hurtT` **ĐẾM NGƯỢC** (0,3 → 0) nên tiến độ là `1 − hurtT/0,3` — dùng thẳng là chạy ngược,
+  cùng họ với bẫy `atkAnim`.
+- ⚠ Khung vượt trần **KẸP** vào khung cuối, không lấy dư: cú giật chạy MỘT lượt rồi dừng.
+
+**② Huy hiệu VAI trên đầu quái** — `assets/ui/ydinh.webp`, dải 7 ô, 11 KB (`tools/icon_ydinh.py`).
+Ánh xạ thẳng `ROLE`; vẽ bên TRÁI thanh máu (bên trên đã có tên quái + dãy Dị Biến).
+- ⚠ **Gọi cho đúng tên: sáu ô đầu là HUY HIỆU VAI, không phải "ý định".** Vai cố định từ lúc
+  quái sinh ra — nó nói "con này đánh xa", không nói "con này SẮP làm gì". Chỉ ô `nguy` mới là
+  ý định thật: hiện đúng lúc trùm đang lấy đà (`m.tele`), và nó THẮNG huy hiệu vai.
+- `phap` và `xa` **cố ý dùng chung hình**, phân biệt bằng màu viền lấy từ `ROLE[].col`.
+
+**③ Dải trạng thái** — `assets/ui/trangthai.webp`, dải 12 ô, 18 KB (`tools/icon_trangthai.py`).
+Trước bản này HUD có **đúng hai** trạng thái, mỗi cái một `<div>` chép cứng với một emoji (🍶
+và ⚡); mười cái còn lại — độc, Trọng Thương, khiên, phản đòn, bạo kích, hút máu, né, tốc đánh,
+sát thương, buff Cổ Vật — **chạy thật trong `calcDerived`** mà người chơi không biết cái nào
+đang bật. Nay là bảng `TRANG_THAI`: thêm trạng thái = thêm một dòng.
+- ⚠ `i` phải trùng khít thứ tự trong `tools/icon_trangthai.py` — lệch một ô là mọi trạng thái từ
+  đó trở đi hiện nhầm icon mà **không ai báo**. `test_huyhieu` gác chỗ này.
+- ⚠ `veDaiTrangThai()` chạy **mỗi khung hình** nên chỉ ghi `innerHTML` khi chuỗi ĐỔI.
+
+**④ TẢNG ĐÁ — `raiTruDa()` quay lại, lần này có tranh thật.** Bốn tấm cắt từ kho ở 894–1024px,
+thu về 220px, vẽ ra ~118px ⇒ **THU XUỐNG**, không kéo giãn như lần trước (`tools/cat_tangda.py`).
+
+| | trước | sau |
+|---|---|---|
+| vật che thấp nhất (thang `test_domap`) | **8,8%** (Reptile Sunstone Flats) | **33,1%** |
+| Reptile Sunstone Flats | 8,8% | **36,4%** |
+| `SAN_CHE` | 8 (bánh cóc tạm) | **18** — kéo lại bằng mốc gốc |
+| `phaiVong` (`test_obstacles`) | 1 (bước lùi) | **2** — kéo lại |
+
+- ⚠ **Lọc theo TỈ LỆ, không chỉ theo độ trong suốt.** `7_ROCK`/`8_ROCK` trong suốt 81–82% nhưng
+  hộp bao 1024×230 (4,5:1) — đó là DẢI đá viền mép sân khấu, rải vào map ra mấy vệt kẻ ngang.
+- ⚠ **Tảng là BỐ CỤC, không phải trang trí** ⇒ hạt cố định từ tên map (`_bamChuoi('tang:'+map)`).
+  Cây/sỏi vẫn `Math.random` và điều đó đúng. `test_tangda` kiểm cả hai vế.
+- ⚠ **`s` không được xuống dưới 1.** Cạnh ngắn vật cản là 56×s, mà ngưỡng "vật che" của
+  `tools/do_map.js` là 0,40×`NV_CAO` = 52,8px. `s=0,9` ra 50,4px — tảng vẽ ra vẫn to đùng nhưng
+  **không được tính**. `test_tangda` bắt đúng ca đó ở Dusk Marsh.
+- ⚠ **Tảng phải chừa RỘNG HƠN cây** (bán trục 40×28 so với 18×12) và **không được chắn ngang
+  trục nối hai bãi quái**. Thiếu hai lớp lọc đó thì `test_obstacles` đỏ với "đi 9s còn cách đích
+  176px" — đúng cái lỗi CLAUDE.md đã cảnh báo.
+
+**Bài kiểm mới:** `tests/test_huyhieu.js` · `tests/test_tangda.js`; `tests/test_avatar.js` thêm
+mục khối trúng đòn.
+
+**Còn treo, cần chủ dự án nhìn ảnh chụp:** tảng đá là tranh Axie thật nhưng TỐI hơn nền cát sáng
+của Reptile Sunstone Flats. Lần trước trụ đá bị gỡ vì "chọi với nền tranh sáng" — lần này khác
+về bản chất (tranh gốc cùng hoạ sĩ, thu xuống chứ không phóng to), nhưng vẫn là chuyện phải
+NHÌN mới chốt được.
+
 ### 🔑 KIT AXIE CÓ 41 HOẠT CẢNH, GAME MỚI DÙNG 2
 
 Khảo sát `axieinfinity/axie-origins-asset-kit` (clone về `/home/user/axieinfinity/...`, 2,2 GB).
