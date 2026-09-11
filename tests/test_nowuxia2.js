@@ -11,6 +11,23 @@
 // thông tin thật (người sau không biết bố cục quảng trường lấy từ đâu).
 const { chromium } = require('playwright');
 const fs = require('fs');
+// ⚠ GỐC KHO PHẢI SUY RA, ĐỪNG CHÉP CỨNG. Hai dòng dưới từng ghi thẳng '/home/user/axie-wuxia/'.
+// Kho đã đổi tên, và bộ chạy hồi quy còn chép bài kiểm sang thư mục khác trước khi chạy — nên
+// mục A âm thầm bỏ qua mọi tệp (`catch { continue }`) còn mục D ném ENOENT. Nhìn vào log thì
+// ba mục đầu vẫn XANH, y như một bài kiểm khoẻ mạnh. Tìm ngược lên từ chính tệp này.
+const path = require('path');
+function timGoc(){
+  let d = __dirname;
+  for (let i = 0; i < 6; i++){
+    if (fs.existsSync(path.join(d, 'public/game/game.js'))) return d;
+    d = path.dirname(d);
+  }
+  // Bài chạy từ bản chép ngoài kho (tools/reg.sh) — thử vài chỗ quen thuộc.
+  for (const g of ['/home/user/axiewuxia', '/home/user/axie-wuxia'])
+    if (fs.existsSync(path.join(g, 'public/game/game.js'))) return g;
+  return null;
+}
+const GOC = timGoc();
 let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch','yêu thú',
              'Hồ Lô','hồ lô','Thôn phệ','thôn phệ','chân khí','Chân Khí','cảnh giới',
@@ -22,7 +39,7 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
                  'public/game/strings/vi.js','public/game/strings/en.js'];
   const dinh = [];
   for (const f of files){
-    let txt; try { txt = fs.readFileSync('/home/user/axie-wuxia/' + f, 'utf-8'); } catch { continue; }
+    let txt; try { txt = fs.readFileSync(path.join(GOC, f), 'utf-8'); } catch { continue; }
     // Bóc comment TRƯỚC rồi mới tìm. Bản đầu quét theo từng dòng và tìm trong dấu nháy — nên
     // template nhiều dòng (backtick mở ở dòng trên) lọt lưới hoàn toàn: quét tĩnh báo 0 trong
     // khi giao diện thật vẫn hiện "Nội Đan" ở hai chỗ.
@@ -88,7 +105,7 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
 
   // D. quét CHÚ THÍCH của game.js — xem đầu tệp để biết vì sao mục này tồn tại
   {
-    const txt = fs.readFileSync('/home/user/axie-wuxia/public/game/game.js', 'utf-8');
+    const txt = fs.readFileSync(path.join(GOC, 'public/game/game.js'), 'utf-8');
     const ct = [];
     // Lấy RA phần chú thích (ngược với mục A, vốn bóc chú thích đi)
     for (const m of txt.matchAll(/\/\*[\s\S]*?\*\//g)) ct.push(m[0]);
