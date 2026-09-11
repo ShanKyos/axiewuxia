@@ -5,6 +5,53 @@ sai**. Phần thứ hai mới là thứ có giá trị về sau — nó là danh
 
 ---
 
+## 2026-09-11 — Tướng đi: nhịp bước, tám hướng nhìn, khung nhiễm độc
+
+Commit: `7047240` · Nền: `b619e20`
+
+Phiên thiết kế nhân vật cho hợp với game. Đo trước, đề xuất sau — công cụ đo mới là
+`tools/do_dang.js` (sảiBọc · tảiĐất · đốiXứng · nhún), chạy lại là ra.
+
+### Số đo hiện trạng
+
+| | đo được |
+|---|---|
+| `heroSprite(back=true)` vs `back=false` | **0 / 52.000 điểm ảnh** lệch — không có hướng lưng, mà cờ `back` vẫn nằm trong khoá đệm ⇒ trả gấp đôi ô nhớ cho hai tấm giống hệt nhau |
+| Số bước mỗi vòng, cả 10 khối (5 bộ × đi/chạy) | `đốiXứng` **0,48–0,64** ⇒ **một** bước một vòng (vòng hai bước phải ≥0,85) |
+| Bàn chân chống đất chở được | `tảiĐất` 42,5/59 px so với `sảiBọc` 91/120 ⇒ **51% là trượt chân nằm trong bản vẽ** |
+| Khung nhiễm độc trong đệm sprite | **5/5 lớp**, khung `i4` đếm 12.828 px trong khi hàng xóm 6.606/6.733; ép tràn LRU dựng lại ra 6.678 |
+| Nhịp chạy ở 209 px/giây | **1,18** bước/giây trước sửa, **2,90** sau |
+| Bảng khung Spellblade | `sbhd1` **96 ô (6 hàng)** trong khi bốn bộ kia 112 ⇒ khối chạy chỉ 16 khung |
+
+### Những chỗ đã đoán sai trong phiên này
+
+- **Tưởng khối chạy có HAI bước một vòng.** Thước đo đầu tiên đếm số lần độ mở hai bàn chân
+  vượt ngưỡng, và nó ra 2 cho bốn bộ. Sai: trong pha bay một bàn chân nhấc khỏi dải sát đất
+  nên bề rộng đo được **sập xuống giả**, và cú sập đó bị đếm thành một bước. Thước đúng là độ
+  chồng khít bóng dáng giữa khung `i` và `i+n/2` — ra 0,48–0,64, tức một bước. Đã ghi cảnh
+  báo ngay trong `tools/do_dang.js` để đừng ai quay lại cách đếm cũ.
+- **Tưởng khung nhiễm độc là chuyện ngẫu nhiên theo thời điểm tải.** Hai lượt đầu ra khung 13
+  rồi 5–6 nên tưởng chỉ số nhảy lung tung; quét cả 5 lớp thì luôn ra khung 4. Vẫn là một cuộc
+  đua, chỉ là nhịp tải ổn định nên nó rơi vào cùng một chỗ. Kết luận "ngẫu nhiên" suýt làm bỏ
+  qua việc viết bài kiểm — mà bài kiểm thì bắt được đều 5/5.
+- **Cắm sai một ô trong bảng tám hướng** (`Đông-Bắc` khai `lat: true`, phải là `false`). Chính
+  bài kiểm mới bắt được ở lượt chạy đầu, bằng khẳng định "8 hướng phải là 8 tổ hợp khác nhau".
+- **Bản đầu của `nvChonHuong()` làm tròn góc về một trong tám nấc TRƯỚC rồi mới đo khoảng cách
+  để lui.** Ở dải 90°–112,5° nó chọn Đông trong khi luật cũ chọn Tây — nhân vật quay ngược ở
+  một dải góc, **dù chưa có tệp art mới nào**. Thử ngược lại: cắm lỗi đó vào thì bài kiểm đỏ
+  **88/720** góc. Vì thế bài quét 720 góc chứ không quét 8 mốc — chỗ hỏng nằm GIỮA hai mốc.
+- **`tests/test_nowuxia2.js` ghi cứng `/home/user/axie-wuxia/`.** Kho đã đổi tên, nên mục A âm
+  thầm bỏ qua mọi tệp (`catch { continue }`) còn mục D ném ENOENT — mà ba mục đầu vẫn XANH,
+  nhìn y như một bài khoẻ mạnh. Đã đổi sang tìm ngược gốc kho từ chính tệp bài kiểm.
+
+### Còn nợ
+
+- **51% trượt chân nằm trong bản vẽ** — không giá trị `SAI_CHAN` nào chữa được. Bản đặt hàng
+  art và ngưỡng nghiệm thu: `docs/DAT_HANG_TUONG_DI.md`.
+- **Năm bản vẽ cho tám hướng** chưa có tấm nào; máy đã xong, thêm một hướng = ba dòng dữ liệu.
+- **Spellblade thiếu một hàng bảng khung**, cần gói Spine gốc để nướng lại.
+- **Vai lệch của Spellblade sẽ đổi bên khi lật ngang** — cần chủ dự án chốt: chấp nhận, hay vẽ
+  đủ 8 hướng riêng cho mình lớp đó.
 ## 2026-09-11 — Đại Thành thành CÂY hai nhánh
 
 Nền: `f1af955`
@@ -55,6 +102,12 @@ riêng hạ `MST_DINH_NHANH` từ 15 xuống **0** vẫn xanh cả bài — tứ
 nó. Phải dựng thêm đúng kịch bản nó sinh ra để bịt: nuôi trọn nhánh A (18 điểm), nút chung nhận
 **một** nhánh bất kỳ nên qua, rồi vơ nút đỉnh của nhánh B vốn 0 điểm. *Cơ chế nào chỉ chặn một
 đường đi hiếm thì bài kiểm phải đi đúng đường đó, không có đường nào khác chạm tới nó.*
+
+**Vá trùng với một phiên khác, cùng một lỗi, cách nhau vài chục phút.** Sửa xong đường dẫn chép
+cứng trong `test_nowuxia2` rồi mới `git fetch` — `origin/main` đã có bản vá của phiên "tướng đi"
+cho đúng lỗi đó. Bản của họ dò gốc từ `__dirname` (đúng hơn cho worktree), bản của tôi bỏ
+`catch { continue }` và in số tệp đã quét. Hoà lại lấy cả hai. *Trên nhánh triển khai dùng chung,
+`git fetch` phải chạy TRƯỚC khi sửa thứ nằm ngoài phạm vi việc của mình, không phải lúc sắp push.*
 
 **Rà soát save suýt ăn cả build hợp lệ.** `masteryRaSoat()` tạm gỡ nút đang xét ra rồi mới hỏi —
 nếu không, nút đỉnh tự thoả điều kiện "nhánh đủ 15 điểm" bằng chính điểm của mình. Nhưng gỡ ra

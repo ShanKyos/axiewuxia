@@ -12952,40 +12952,52 @@ const NV_MOC2  = { h:0, p:8, s:20, d:36, j:46, q:56, n:62, t:68, e:74 };
 // khối lúc vẽ nữa: Sylvan Ranger bắn nỏ, Dark Wizard và Dark Lord niệm chú, ngay trong khối 'a'.
 // Lớp nào có nhát thứ hai thì đòn thường luân phiên 'a' ↔ 's'.
 const DANH_HAI_NHAT = { thieulam: 1, minhgiao: 1 };
-// SẢI CHÂN mỗi VÒNG hoạt cảnh. Đo trên chính bảng khung: lấy dải 10px sát đất của từng khung
-// (= bàn chân), gom hết 32/16 khung rồi lấy khoảng x lớn nhất. Một VÒNG là HAI BƯỚC, nên quãng
-// đường một vòng tải được = 2 × khoảng đó.
+// SẢI CHÂN mỗi VÒNG hoạt cảnh — quãng đường thế giới mà MỘT vòng bảng khung chở được.
+// Đo bằng máy: `tools/do_dang.js`. ĐỪNG chép tay lại, và đừng ước lượng.
 //
-// Giữ con số ĐO TRÊN BẢNG KHUNG (cao CAO_THAN_NUONG) rồi mới thu theo NV_CAO, chứ không chép
-// con số đã thu sẵn: nhịp bước = quãng đường / sải chân, nên đổi NV_CAO mà quên sửa hai số này
-// là bàn chân trượt đất ngay — mà nhìn thì chỉ thấy "hình như đi hơi lạ", rất khó lần ra.
+// ⚠ HAI CHỖ TRƯỚC ĐÂY SAI, cộng lại thành hệ số 2,77 — tức vòng chạy quay CHẬM 2,77 lần so
+// với quãng đường, và đó là toàn bộ cảm giác "nhân vật trượt trên băng":
+//
+//  ① HỆ SỐ QUY ĐỔI. Bảng khung → màn hình là NV_CAO/HERO_H = 132/220 = 0,600 (thu cả Ô VẼ).
+//     Bản trước dùng NV_CAO/CAO_THAN_NUONG = 132/159 = 0,830 — lấy chiều cao Ô chia cho
+//     chiều cao THÂN, hai đại lượng khác nhau, lệch 38%. Chỗ khác trong tệp này lại quy đổi
+//     đúng (`NV_THAN_PX`), nên nhìn qua rất khó thấy hai dòng đang cãi nhau.
+//  ② SỐ BƯỚC MỖI VÒNG. Chú thích cũ khai "một VÒNG là HAI BƯỚC" rồi nhân đôi số đo. Đo lại
+//     cả 10 khối (5 bộ × đi/chạy): **không khối nào có hai bước**. Độ chồng khít giữa khung
+//     i và khung i+n/2 ra 0,48–0,64, trong khi vòng hai bước phải ≥0,85 (nửa vòng sau là
+//     cùng dáng, chỉ đổi chân). Nửa vòng sau ở đây là dáng ĐỨNG, không phải bước kia.
+//
+// Lấy sảiBỌC (khoảng x xa nhất bàn chân với tới trong cả vòng), KHÔNG lấy tảiĐẤT (bàn chân
+// chống đất lùi được bao nhiêu, đo ra chỉ 42,5/59 px). Hai lý do:
+//   · sảiBọc là thứ MẮT đọc ra là "bước dài chừng này"; khớp nhịp với nó thì mắt thấy khớp.
+//   · lấy tảiĐất thì nhịp ra 5,9 bước/giây — nhoè thành một vũng. Khoảng cách giữa hai số đó
+//     (51%) là TRƯỢT CHÂN NẰM SẴN TRONG BẢN VẼ: không con số nào ở đây chữa được, phải vẽ
+//     lại vòng đi/chạy mới hết. Xem docs/DAT_HANG_TUONG_DI.md.
 const CAO_THAN_NUONG = 159;                       // tools/spine/nuong_nv.py · CAO_THAN
-const SAI_CHAN_NUONG = { w: 126.6, r: 212.9 };    // px trên bảng khung
-const SAI_CHAN = { w: SAI_CHAN_NUONG.w * NV_CAO / CAO_THAN_NUONG,
-                   r: SAI_CHAN_NUONG.r * NV_CAO / CAO_THAN_NUONG };
+const SAI_CHAN_NUONG = { w: 91, r: 120 };         // sảiBọc, trung vị 5 bộ, px BẢNG KHUNG
+const SAI_CHAN = { w: SAI_CHAN_NUONG.w * NV_CAO / HERO_H,
+                   r: SAI_CHAN_NUONG.r * NV_CAO / HERO_H };
 // ── ĐI hay CHẠY: quyết định bằng ĐÔI GIÀY, không bằng tốc độ ────────────────────────────────
 // Khối ĐI (`00_Walk`) hay khối CHẠY (`00_Run`) — chọn theo TỐC ĐỘ THẬT, không theo trang bị.
 //
 // Bản trước lấy **Giày +6** làm cửa, để đập giày lên là thấy dáng đổi. Ý thì hay, nhưng ĐO ra
 // thì cái giá phải trả nằm ở người chưa có giày, tức gần như mọi người chơi:
 //
-//     sải chân khối ĐI  = 126,6 × NV_CAO/CAO_THAN_NUONG = 105,1 px
-//     sải chân khối CHẠY= 212,9 × NV_CAO/CAO_THAN_NUONG = 176,7 px
+//     sải chân khối ĐI  = 91  × 0,600 = 54,6 px thế giới mỗi vòng = mỗi BƯỚC
+//     sải chân khối CHẠY= 120 × 0,600 = 72,0 px
 //     tốc độ nền        = 209 px/giây
 //
-//     ĐI  ở 209 px/s → 1,99 vòng/giây = 3,98 BƯỚC/GIÂY · 63,6 khung/giây
-//     CHẠY ở 209 px/s → 1,18 vòng/giây = 2,36 bước/giây · 18,9 khung/giây
+//     CHẠY ở 209 px/s → 2,90 bước/giây (trước bản sửa SAI_CHAN: 1,18 — chậm 2,45 lần)
+//     ĐI   ở  90 px/s → 1,65 bước/giây
 //
-// Hai con số hỏng, cả hai đều thấy được bằng mắt:
+// 2,90 bước/giây ở 209 px/s không phải con số dò tay, nó bị hình học ép: thân người vẽ ra
+// 95 px nên 209 px/s là 2,2 THÂN NGƯỜI mỗi giây, mà sải chân chỉ 0,76 thân ⇒ nhịp buộc phải
+// là 2,2/0,76. Muốn nhịp thong thả hơn thì phải sải chân dài hơn (art) hoặc chạy chậm lại
+// (cân bằng) — không phải chỉnh con số ở đây.
 //
-//  · 3,98 bước/giây là NHỊP NƯỚC RÚT đặt lên một dáng ĐI THONG THẢ. Chân quay tít trong khi
-//    thân người không có độ nhún tương ứng, nên mắt không đọc ra "đang đi nhanh" mà đọc ra
-//    "vòng lặp máy móc" — đúng cái cảm giác cứng.
-//  · 63,6 khung/giây trên màn 60 Hz thì mỗi giây có ~4 nhịp bảng khung nhảy HAI khung còn lại
-//    nhảy một. Giật không đều, và giật không đều thì lộ hơn hẳn giật đều.
-//
-// Ngưỡng dưới lấy từ chính sải chân: người đi bộ tự nhiên tối đa ~2,4 bước/giây, tức
-// 2,4/2 × 105,1 ≈ 126 px/giây. Trên mức đó khối ĐI không còn tả nổi chuyển động nữa.
+// Ngưỡng ĐI/CHẠY lấy từ chính sải chân: người đi bộ tự nhiên tối đa ~2,4 bước/giây, mà một
+// vòng là MỘT bước, nên 2,4 × 54,6 ≈ 131 px/giây. Trên mức đó khối ĐI không tả nổi nữa.
+// (Ngưỡng cũ 126 gần bằng, nhưng là do hai cái sai ở trên tự triệt nhau — không phải do đúng.)
 //
 // Giày +6 vì thế KHÔNG còn là cửa hoạt ảnh. Muốn giày vẫn có thứ nhìn thấy được thì cho nó
 // cộng tốc độ thật — đó là việc cân bằng, để chủ dự án quyết, không tự ý gài vào đây.
@@ -12993,7 +13005,7 @@ const SAI_CHAN = { w: SAI_CHAN_NUONG.w * NV_CAO / CAO_THAN_NUONG,
 // ⚠ PHẢI DÙNG CHUNG cho cả KHỐI VẼ (drawPlayer) lẫn NHỊP BƯỚC (update). Hai chỗ đó vốn cùng
 // đọc một ngưỡng tốc độ; tách chúng ra hai luật khác nhau là bàn chân trượt đất — vẽ khối đi mà
 // tính sải chân của khối chạy thì mỗi vòng hụt ~40% quãng đường.
-const CHAY_TOCDO = 126;          // px/giây — xem tính toán ở trên
+const CHAY_TOCDO = 131;          // px/giây = 2,4 bước/giây × SAI_CHAN.w — xem tính toán ở trên
 function dangChay(p){
   return !!p && (p.speed || 0) >= CHAY_TOCDO;
 }
@@ -13206,23 +13218,85 @@ function nvTai(ten, duoi){
   if (!im){ im = new Image(); im.src = 'assets/nv/' + k; NV_ANH[k] = im; }
   return (im.complete && im.naturalWidth) ? im : null;
 }
-function nvTen(sectKey, tier){ return NV_BO[sectKey + '|' + tier]; }
+// ── TÁM HƯỚNG NHÌN — TÊN BỘ MANG LUÔN HƯỚNG ───────────────────────────────────────────────
+// Thế giới nhìn từ trên xuống, còn art thì CHỈ CÓ MỘT hướng nghiêng. Đo được trước bản này:
+// `heroSprite(..., back=true)` và `back=false` lệch **0 trên 52.000 điểm ảnh** — tức cờ
+// `_ps.back` mà drawPlayer tính ra rồi nhét vào khoá đệm (gấp đôi số ô nhớ) không đổi lấy một
+// điểm ảnh nào. Đi lên phía Bắc vẫn thấy nhân vật nghiêng người, y như đi sang Đông.
+//
+// ⚠ TÁM HƯỚNG CHỈ TỐN NĂM BẢN VẼ, không phải tám. Đông↔Tây, ĐB↔TB, ĐN↔TN lật ngang là ra
+// nhau; chỉ Bắc và Nam là phải vẽ riêng. Đây là cách Ragnarok và Diablo II làm, và nó cắt
+// 8 lượt sinh art xuống còn 5.
+//
+// HƯỚNG NẰM TRONG TÊN BỘ, không phải một tham số riêng chạy song song: `dkcw1` + `'b'` =
+// `dkcw1b`, rồi mọi thứ phía sau (`NV_LOP_HOP`, `NV_KHUNG_R`, tên tệp lớp rời, bảng hai) tự
+// tra đúng bộ đó. Nhờ vậy mỗi hướng được phép có hộp cắt riêng, số khung riêng, và **thêm
+// một hướng = thêm một dòng dữ liệu**, không sửa một dòng máy nào.
+// Hướng nghiêng hiện có mang mã '' để 89 tệp art đang chạy không phải đổi tên.
+const NV_HUONG = [
+  { ten: 'Đông',     goc:  0,               ban: '',   lat: false },
+  { ten: 'Đông-Nam', goc:  Math.PI / 4,     ban: 'nd', lat: false },
+  { ten: 'Nam',      goc:  Math.PI / 2,     ban: 'n',  lat: false },
+  { ten: 'Tây-Nam',  goc:  Math.PI * 3 / 4, ban: 'nd', lat: true  },
+  { ten: 'Tây',      goc:  Math.PI,         ban: '',   lat: true  },
+  { ten: 'Tây-Bắc',  goc: -Math.PI * 3 / 4, ban: 'bd', lat: true  },
+  { ten: 'Bắc',      goc: -Math.PI / 2,     ban: 'b',  lat: false },
+  { ten: 'Đông-Bắc', goc: -Math.PI / 4,     ban: 'bd', lat: false },
+];
+// Bộ nào có SẴN những bản vẽ nào. Không khai = chỉ có bản nghiêng, tức đúng hiện trạng.
+// Nướng xong một hướng thì thêm mã của nó vào đây là hướng ấy sống ngay.
+const NV_BANVE = {};
+function nvBanVeCo(base){ return (base && NV_BANVE[base]) || ['']; }
+// Góc → hướng nào trong tám hướng. Trục x là Đông, y DƯƠNG là xuống màn hình (= Nam).
+function nvHuongSo(face){
+  const TAU = Math.PI * 2;
+  return Math.round((((face % TAU) + TAU) % TAU) / (TAU / 8)) % 8;
+}
+// Chọn BẢN VẼ tốt nhất bộ này đang có cho một góc, kèm chuyện có lật ngang không.
+//
+// ⚠ Lui về bản gần nhất theo GÓC, không phải theo thứ tự khai. Bộ chỉ có bản nghiêng thì hai
+// ứng viên là Đông (0°) và Tây (180°, lật) — đi hướng Tây-Bắc lấy Tây, đúng y như luật
+// `Math.cos(face) < 0` đang chạy. Hoà thì lấy bản KHÔNG lật, cũng đúng luật cũ ở mốc ±90°
+// (cos = 0 ⇒ không lật). Nhờ chỗ này mà bật hướng mới lên không làm đổi gì ở bộ chưa có art.
+function nvChonHuong(base, face){
+  const co = nvBanVeCo(base);
+  const h = NV_HUONG[nvHuongSo(face)];
+  if (co.indexOf(h.ban) >= 0) return h;
+  // ⚠ Lúc phải lui thì đo từ GÓC THẬT, không từ góc đã làm tròn về một trong tám nấc. Làm
+  // tròn trước rồi mới đo là ở khoảng 90°–112,5° máy chọn Đông trong khi luật cũ chọn Tây —
+  // tức bật tầng hướng lên là nhân vật quay ngược ở một dải góc, dù chưa có art mới nào.
+  let tot = NV_HUONG[0], xa = Infinity;
+  for (const u of NV_HUONG){
+    if (co.indexOf(u.ban) < 0) continue;
+    let d = Math.abs(u.goc - face) % (Math.PI * 2);
+    if (d > Math.PI) d = Math.PI * 2 - d;
+    if (d < xa - 1e-9 || (Math.abs(d - xa) < 1e-9 && !u.lat)){ xa = d; tot = u; }
+  }
+  return tot;
+}
+function nvTen(sectKey, tier, hw){ const t = NV_BO[sectKey + '|' + tier]; return t ? t + (hw || '') : t; }
 // Tên bộ art đang mặc: bộ giáp nếu có, không thì thân trần của lớp. Mọi thứ vẽ theo bộ này —
 // thân, vũ khí, viền sáng — nên không có cách nào thân một bộ mà tay áo một bộ khác.
-function nvBoTen(sectKey, tier, gv){ return nvBoGiap(sectKey, gv) || nvTen(sectKey, tier); }
+// `hw` là MÃ BẢN VẼ (xem NV_HUONG); bỏ trống = bản nghiêng, tức mọi lời gọi cũ vẫn đúng.
+function nvBoTen(sectKey, tier, gv, hw){
+  const g = nvBoGiap(sectKey, gv);
+  return g ? g + (hw || '') : nvTen(sectKey, tier, hw);
+}
+// Tên bộ KHÔNG kèm hướng — dùng để hỏi bộ này có những bản vẽ nào.
+function nvBoGoc(sectKey, tier, gv){ return nvBoGiap(sectKey, gv) || nvTen(sectKey, tier); }
 // ⚠ CHẶN NGAY Ở ĐÂY, đừng chặn ở từng chỗ gọi. Bộ đã cắt lớp thì KHÔNG CÒN tệp tấm liền, mà
 // nvKhungGop() trả null trong mấy khung đầu (lớp chưa tải xong) — mọi chỗ gọi đều có nhánh
 // `_gop || nvBo(...)` nên chúng lần lượt đi xin tấm liền và ăn 404. Đã lọt một cái đúng như
 // thế: `dlcm1.webp` 404 ở thẻ nhân vật trong khi trong màn thì không sao.
 function nvCoTamLien(ten){ return !!ten && !NV_LOP_HOP[ten]; }
-function nvBo(sectKey, tier, gv){
-  const t = nvBoTen(sectKey, tier, gv);
+function nvBo(sectKey, tier, gv, hw){
+  const t = nvBoTen(sectKey, tier, gv, hw);
   return nvCoTamLien(t) ? nvTai(t, 'webp') : null;
 }
 // Bảng chứa khối `kind`, và mốc khung trong CHÍNH bảng đó. Trả null khi bảng hai chưa về —
 // mọi chỗ gọi đều phải chịu được null và lui về khối đứng, y như hồi chưa có art.
-function nvBang(sectKey, tier, gv, kind){
-  const ten = nvBoTen(sectKey, tier, gv);
+function nvBang(sectKey, tier, gv, kind, hw){
+  const ten = nvBoTen(sectKey, tier, gv, hw);
   if (!nvCoTamLien(ten)) return null;              // xem nvCoTamLien()
   return NV_BANG2[kind] ? nvTai(ten + '2', 'webp') : nvTai(ten, 'webp');
 }
@@ -13260,8 +13334,13 @@ for (const k in NV_PICK) nvTai('pick_' + k, 'webp');   // tranh chọn lớp —
 for (const k in VK_ANH) nvTai(VK_ANH[k].tep, 'png');   // tranh vũ khí
 for (const k in NV_GIAP) nvTai(NV_GIAP[k] + '_icon', 'webp');   // icon món giáp trong túi
 // Kéo sẵn hai bảng của ĐÚNG bộ đang mặc. Gọi lúc vào game và mỗi lần đổi bộ giáp.
+// Kéo sẵn MỌI bản vẽ bộ này có, không phải mỗi bản nghiêng: người chơi xoay hướng liên tục,
+// nạp muộn là quay sang Bắc thì lỡ một nhịp rồi mới hiện đúng lưng.
 function nvBoTruoc(sectKey, tier, gv){
-  const t = nvBoTen(sectKey, tier, gv);
+  for (const hw of nvBanVeCo(nvBoGoc(sectKey, tier, gv))) nvBoTruocMot(sectKey, tier, gv, hw);
+}
+function nvBoTruocMot(sectKey, tier, gv, hw){
+  const t = nvBoTen(sectKey, tier, gv, hw);
   // Chỉ kéo TẤM LIỀN khi bộ đó thật sự có tấm liền. Bộ đã cắt lớp thì không còn tệp đó nữa.
   if (t && !NV_LOP_HOP[t]){ nvTai(t, 'webp'); nvTai(t + '2', 'webp'); }
   if (t && NV_LOP_HOP[t])
@@ -13275,7 +13354,7 @@ function nvBoTruoc(sectKey, tier, gv){
   const o = gv && gv.oLop;
   if (!o) return;
   for (let i = 0; i < NV_LOP.length; i++){
-    const ml = NV_LOP[i][0], ten = o[NV_LOP[i][1]];
+    const ml = NV_LOP[i][0], ten = o[NV_LOP[i][1]] ? o[NV_LOP[i][1]] + (hw || '') : null;
     if (!ten || !(NV_LOP_HOP[ten] && NV_LOP_HOP[ten][ml])) continue;
     nvTai(ten + '_' + ml, 'webp'); nvTai(ten + '_' + ml + '2', 'webp');
   }
@@ -13319,10 +13398,11 @@ function nvVeKhung(g, im, kind, idx, ten){
 //
 // Trả về canvas 240x300 (đúng cỡ MỘT Ô), hoặc null khi không đi được đường này — người gọi
 // phải chịu được null và lui về tấm liền.
-function nvKhungGop(sectKey, tier, gv, kind, idx){
+function nvKhungGop(sectKey, tier, gv, kind, idx, hw){
   // Bộ giáp đổi CẢ TẤM (Grand Soul, Dark Knight giai 1) không có lớp — để đường cũ lo.
   if (nvBoGiap(sectKey, gv)) return null;
-  const than = nvTen(sectKey, tier);
+  hw = hw || '';
+  const than = nvTen(sectKey, tier, hw);
   if (!than || !NV_LOP_HOP[than]) return null;      // thân chưa cắt lớp
   const b2 = !!NV_BANG2[kind];
   // `idx` do người gọi tính theo số khung của THÂN. Mỗi lớp có thể lấy từ một bộ khác — và
@@ -13338,7 +13418,9 @@ function nvKhungGop(sectKey, tier, gv, kind, idx){
   // khung lui về dáng đứng.
   const ds = [];
   for (let i = 0; i < NV_LOP.length; i++){
-    const ml = NV_LOP[i][0], bo = oL[NV_LOP[i][1]];
+    // Lớp giáp cũng phải lấy ĐÚNG BẢN VẼ của hướng đang quay: bộ giáp có hướng đó thì dùng,
+    // không thì lớp ấy lui về thân — thà một ô về thân trần còn hơn một ô quay mặt đi hướng khác.
+    const ml = NV_LOP[i][0], bo = oL[NV_LOP[i][1]] ? oL[NV_LOP[i][1]] + hw : null;
     const ten = (bo && NV_LOP_HOP[bo] && NV_LOP_HOP[bo][ml]) ? bo : than;
     const H = NV_LOP_HOP[ten][ml];
     if (!H) continue;                               // lớp RỖNG ở bộ đó (tóc sau) — bỏ qua
@@ -13443,13 +13525,20 @@ function nvHaoQuangTruoc(g, sectKey, tier, gv, now, im, kind, idx){
 // `blk` — KHỐI KHUNG để đọc trên bảng art nướng, mặc định trùng `kind`. Tách đôi vì hai thứ trả
 // lời hai câu khác nhau: `kind` là "nhân vật đang LÀM GÌ" (quyết định chỉ số khung, tư thế vector,
 // khoá cache), `blk` là "lấy tấm khung TỪ ĐÂU" (xem KHOI_DANH).
-function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk){
+// `hw` thêm SAU CÙNG nên mọi lời gọi chín tham số cũ vẫn chạy — giữ đúng quy ước đã dùng khi
+// thêm `sway` vào heroPose().
+function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw){
   sw = sw || 0;
   blk = blk || kind;
+  hw = hw || '';
+  // Bộ CÓ art thì `back` không đổi lấy một điểm ảnh (art quyết hướng, xem NV_HUONG) — để nó
+  // trong khoá là nhân đôi số ô đệm để đổi lấy hai tấm ảnh giống hệt nhau. Bộ KHÔNG có art
+  // mới rơi về hình dựng bằng đường, và đường ấy thì `ps.back` có đổi thật (gáy, mũ trùm).
+  const _coArt = !!nvBoTen(sectKey, tier, gv, hw);
   // `act` phải nằm trong khoá cho CẢ đánh lẫn tung chiêu: heroFramePose() đọc act ở cả hai nhánh
   // (mỗi lớp một bộ khung tay/vũ khí riêng), nên bỏ nó ra khỏi khoá ở nhánh 'c' là hai tuyệt kỹ
   // khác nhau dùng chung một ảnh.
-  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${blk}|${back ? 1 : 0}|${sw}|${nvBoTen(sectKey, tier, gv) || ''}${nvBo(sectKey, tier, gv) ? '' : '?'}${NV_BANG2[blk] && !nvBang(sectKey, tier, gv, blk) ? '!' : ''}|${window.TEST_TO_PHANG ? 'D' : ''}`;
+  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${blk}|${_coArt ? hw : (back ? 'B' : '')}|${sw}|${nvBoTen(sectKey, tier, gv, hw) || ''}${nvBo(sectKey, tier, gv, hw) ? '' : '?'}${NV_BANG2[blk] && !nvBang(sectKey, tier, gv, blk, hw) ? '!' : ''}|${window.TEST_TO_PHANG ? 'D' : ''}`;
   let cv = _hsCache.get(key);
   if (cv){                       // chạm — đẩy lên cuối để LRU giữ lại
     _hsHit++;
@@ -13465,7 +13554,7 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk){
   g.scale(HS_SCALE, HS_SCALE);
   g.translate(HS_PAD, HS_PAD);
   // Số khung của KHỐI ĐANG ĐỌC, theo chính bộ art này (khối chạy khai riêng — xem NV_KHUNG_R).
-  const _nk = nvSoKhung(nvBoTen(sectKey, tier, gv), blk);
+  const _nk = nvSoKhung(nvBoTen(sectKey, tier, gv, hw), blk);
   const ps = heroFramePose(kind, idx, act, sw, _nk);
   ps.back = !!back;
   // Cánh KHÔNG nướng vào sprite: drawPlayer đã vẽ nó riêng bằng veCanh(). Nướng vào đây là vẽ
@@ -13479,17 +13568,33 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk){
   // Hai đường dựng khung, thử ĐƯỜNG LỚP trước: bộ nào có lớp rời thì chồng lớp, không thì
   // lấy nguyên tấm. `_gop` đứng đầu chuỗi `||` nên khi có nó, nvBang() không bị gọi — thân
   // đã cắt lớp thì KHÔNG CÒN tệp `<thân>.webp`, hỏi tới là 404.
-  let _gop = nvKhungGop(sectKey, tier, gv, blk, idx);
+  let _gop = nvKhungGop(sectKey, tier, gv, blk, idx, hw);
   // Khối ở bảng hai mà bảng hai chưa về: lui về dáng đứng ở bảng một, y như đường tấm liền.
-  const _blkVe = (NV_BANG2[blk] && !_gop && !nvBang(sectKey, tier, gv, blk)) ? 'i' : blk;
-  if (!_gop && _blkVe !== blk) _gop = nvKhungGop(sectKey, tier, gv, _blkVe, idx);
-  const _nvIm = _gop || nvBang(sectKey, tier, gv, blk)
-              || (NV_BANG2[blk] ? nvBo(sectKey, tier, gv) : null);
+  const _blkVe = (NV_BANG2[blk] && !_gop && !nvBang(sectKey, tier, gv, blk, hw)) ? 'i' : blk;
+  if (!_gop && _blkVe !== blk) _gop = nvKhungGop(sectKey, tier, gv, _blkVe, idx, hw);
+  const _nvIm = _gop || nvBang(sectKey, tier, gv, blk, hw)
+              || (NV_BANG2[blk] ? nvBo(sectKey, tier, gv, hw) : null);
+  // ── KHUNG DỰNG LÚC ART CHƯA VỀ THÌ KHÔNG ĐƯỢC NHỚ LẠI ──────────────────────────────────
+  // Bộ đã cắt lớp (cả năm thân trần) đi đường nvKhungGop(), mà hàm đó trả null khi MỘT lớp
+  // chưa tải xong. Khoá bộ nhớ đệm chỉ ghi được chuyện "thiếu TẤM LIỀN" (dấu `?`) — mà bộ
+  // cắt lớp thì không bao giờ có tấm liền, nên dấu đó BẬT SẴN ở cả hai trường hợp. Hệ quả:
+  // khung nào lỡ dựng trong mấy trăm mili giây đầu sẽ nằm lại trong đệm dưới ĐÚNG cái khoá
+  // mà lượt vẽ sau dùng — và nó là hình dựng bằng đường, tức một NHÂN VẬT KHÁC HẲN.
+  //
+  // ĐO ĐƯỢC (cả 5 lớp, nhân vật mới tạo): khối đứng có 1-2 khung nhiễm, khung i4 đếm 12.828
+  // điểm ảnh trong khi hàng xóm 6.606/6.733 — gần gấp đôi, vì hình vẽ đường to hơn hẳn. Ép
+  // tràn LRU rồi dựng lại chính khung đó ra 6.678, tức art vẫn đúng, chỉ bộ nhớ đệm hỏng.
+  // Khối đứng lặp ~4 giây một vòng, nên người chơi thấy một hiệp sĩ xám nhấp nháy MÃI MÃI.
+  //
+  // Chữa ở chỗ NHỚ, không ở chỗ vẽ: bộ có tên art mà chưa dựng được bằng art thì vẫn vẽ tạm
+  // như cũ, chỉ là đừng nhớ lại. Lượt vẽ sau art đã về là tự đúng. Vài khung đầu phải dựng
+  // lại mỗi lượt — rẻ hơn nhiều so với một khung sai nằm đó cả phiên chơi.
+  const _choArt = !_nvIm && _coArt;
   if (_nvIm){
     const _now = heroFrameNow(kind, idx, _nk);
     nvHaoQuangSau(g, sectKey, tier, gv, _now);      // hào quang cường hoá nằm SAU lưng
     if (_gop) g.drawImage(_gop, -HS_PAD, -HS_PAD);  // khung đã gộp sẵn, dán thẳng
-    else nvVeKhung(g, _nvIm, _blkVe, idx, nvBoTen(sectKey, tier, gv));  // bộ giáp đổi cả tấm
+    else nvVeKhung(g, _nvIm, _blkVe, idx, nvBoTen(sectKey, tier, gv, hw));  // bộ giáp đổi cả tấm
     nvHaoQuangTruoc(g, sectKey, tier, gv, _now, _nvIm, kind, idx);   // viền + quét + tàn lửa
   }
   else drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx, _nk), ps, canhBoRa(gv));
@@ -13533,8 +13638,10 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk){
   cv._oy = y0 / HS_SCALE - HS_PAD;
   cv._ow = cw / HS_SCALE;
   cv._oh = ch / HS_SCALE;
-  _hsCache.set(key, cv);
-  if (_hsCache.size > HS_CAP) _hsCache.delete(_hsCache.keys().next().value);
+  if (!_choArt){                                   // xem _choArt: đang chờ art thì đừng nhớ
+    _hsCache.set(key, cv);
+    if (_hsCache.size > HS_CAP) _hsCache.delete(_hsCache.keys().next().value);
+  }
   return cv;
 }
 function heroBlit(g, spr){ g.drawImage(spr, spr._ox, spr._oy, spr._ow, spr._oh); }
@@ -13544,7 +13651,7 @@ function heroBlit(g, spr){ g.drawImage(spr, spr._ox, spr._oy, spr._ow, spr._oh);
 function _veThanHoa(g, p, spr, now, tier, gv, act, ps, sw){
   const t = p._nhoaT0 ? Math.min(1, (now - p._nhoaT0) / NHOA_MS) : 1;
   if (t < 1 && p._nhoaBlk){
-    const cu = heroSprite(p.sect, tier, gv, p._nhoaKind, p._nhoaIdx, act, ps.back, sw, p._nhoaBlk);
+    const cu = heroSprite(p.sect, tier, gv, p._nhoaKind, p._nhoaIdx, act, ps.back, sw, p._nhoaBlk, p._hw);
     // Đổi trạng thái ĐÈ LÊN pha khung: đang hoà đứng→chạy thì hoà trạng thái quan trọng hơn,
     // và chồng ba lớp thì lớp thứ ba gần như không đọc ra mà vẫn tốn một nhát vẽ.
     if (cu){ heroBlit(g, cu); g.globalAlpha = t; heroBlit(g, spr); g.globalAlpha = 1; return; }
@@ -15120,7 +15227,13 @@ function drawPlayer(){
   // Nhân vật dựng bằng khớp xương.
   // Nhân vật dựng bằng khớp xương.
   const sh = NV_CAO;
-  const flip = Math.cos(p.face) < 0;
+  // ── HƯỚNG NHÌN ─────────────────────────────────────────────────────────────────────
+  // Bản vẽ nào và có lật ngang không là DO BẢNG NV_HUONG quyết, không phải một phép so dấu
+  // cosin nằm rời. Bộ chỉ có bản nghiêng thì nvChonHuong() trả về đúng Đông/Tây như luật cũ,
+  // nên hôm nay không đổi một điểm ảnh; nướng thêm một hướng là hướng ấy hiện ra ngay.
+  const _hInfo = nvChonHuong(nvBoGoc(p.sect, heroTier(p), gearVisual(p)), p.face);
+  p._hw = _hInfo.ban;
+  const flip = _hInfo.lat;
   ctx.save();
   ctx.translate(p.x + Math.cos(p.face)*lungeK*7,
                 (p.y - NV_LECH_Y) + Math.sin(p.face)*lungeK*3);
@@ -15228,7 +15341,7 @@ function drawPlayer(){
     // tính chỉ số bằng 16 rồi chia dư cho 12 là thứ tự khung đảo lộn giữa cú đấm.
     // Số khung phải hỏi CHÍNH bộ art đang mặc: khối chạy của bộ nướng lại có 32 khung, bộ cũ
     // 16. Đọc thẳng HS_FRAMES là bộ 32 khung chỉ chạy được nửa vòng rồi lặp.
-    const _n = nvSoKhung(nvBoTen(p.sect, _tier, _gv), _blk) || HS_FRAMES[_kind];
+    const _n = nvSoKhung(nvBoTen(p.sect, _tier, _gv, p._hw), _blk) || HS_FRAMES[_kind];
     const _TAU = Math.PI * 2;
     const _idx = _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
                : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)
@@ -15243,7 +15356,7 @@ function drawPlayer(){
     // khối 'c'. Đổi khối vẽ mà GIỮ NGUYÊN `_kind` semantics: chỉ số khung vẫn tính theo atkK,
     // chỉ có tấm khung đọc từ chỗ khác. Gán thẳng _kind='c' thì chỉ số rơi về nhánh castK — mà
     // castK = 0 lúc đánh thường — nên khung đứng im ở 0.
-    _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back, _sw, _blk);
+    _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back, _sw, _blk, p._hw);
     window.__khoiVe = _blk;   // bài kiểm đọc cờ này
     // ── NỘI SUY GIỮA HAI KHUNG LIỀN NHAU — chỉ cho khối CHẠY ─────────────────────────
     // ĐO: sải chân một vòng / số khung = quãng bàn chân dịch mỗi khung.
@@ -15263,7 +15376,7 @@ function drawPlayer(){
       const _fx = (((wph % _TAU) + _TAU) % _TAU) / _TAU * _n;
       p._phaLe  = _fx - Math.floor(_fx);
       p._phaSau = heroSprite(p.sect, _tier, _gv, _kind, (Math.floor(_fx) + 1) % _n,
-                             _act, _ps.back, _sw, _blk);
+                             _act, _ps.back, _sw, _blk, p._hw);
     } else { p._phaLe = 0; p._phaSau = null; }
     // ── HOÀ HÌNH KHI ĐỔI TRẠNG THÁI ───────────────────────────────────────────────────
     // Đứng ↔ đi ↔ chạy trước đây CẮT PHỰT sang khung mới: đang đứng yên hai chân khép, bấm

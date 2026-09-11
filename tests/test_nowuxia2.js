@@ -11,20 +11,25 @@
 // thông tin thật (người sau không biết bố cục quảng trường lấy từ đâu).
 const { chromium } = require('playwright');
 const fs = require('fs');
+// ⚠ GỐC KHO PHẢI SUY RA, ĐỪNG CHÉP CỨNG. Hai dòng dưới từng ghi thẳng '/home/user/axie-wuxia/'.
+// Kho đã đổi tên, và bộ chạy hồi quy còn chép bài kiểm sang thư mục khác trước khi chạy — nên
+// mục A âm thầm bỏ qua mọi tệp (`catch { continue }`) còn mục D ném ENOENT. Nhìn vào log thì
+// ba mục đầu vẫn XANH, y như một bài kiểm khoẻ mạnh. Tìm ngược lên từ chính tệp này.
 const path = require('path');
+function timGoc(){
+  let d = __dirname;
+  for (let i = 0; i < 6; i++){
+    if (fs.existsSync(path.join(d, 'public/game/game.js'))) return d;
+    d = path.dirname(d);
+  }
+  // Bài chạy từ bản chép ngoài kho (tools/reg.sh) — thử vài chỗ quen thuộc.
+  for (const g of ['/home/user/axiewuxia', '/home/user/axie-wuxia'])
+    if (fs.existsSync(path.join(g, 'public/game/game.js'))) return g;
+  return null;
+}
 let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
-// ⚠ GỐC KHO PHẢI DÒ, ĐỪNG CHÉP CỨNG. Hai mục A và D trước đây đọc thẳng
-// '/home/user/axie-wuxia/...'. Bản sao hoàn toàn có thể nằm ở đường dẫn khác — và khi đó mục A
-// KHÔNG báo lỗi gì: nó bọc readFileSync trong try/catch rồi `continue`, tức quét 0 tệp xong vẫn
-// in "0 chuỗi dính từ cấm". Xanh giả trọn vẹn, đúng ở bài gác Quy tắc số 1. Mục D thì ném ENOENT
-// làm cả bài đỏ vì một lý do chẳng liên quan gì tới từ vựng. Nay dò một lần, và không thấy thì
-// ĐỎ chứ không im lặng bỏ qua.
-const GOC = [process.env.AXIE_ROOT, process.cwd(), path.join(__dirname, '..'),
-             '/home/user/axiewuxia', '/home/user/axie-wuxia']
-  .filter(Boolean)
-  .find(d => { try { return fs.statSync(path.join(d, 'public/game/game.js')).isFile(); } catch { return false; } });
-if (!GOC) fail('không dò ra gốc kho — hai mục quét tệp sẽ rỗng ruột, đặt AXIE_ROOT để chỉ đường');
-const doc = (f) => fs.readFileSync(path.join(GOC, f), 'utf-8');
+const GOC = timGoc();
+if (!GOC) fail('không dò ra gốc kho — hai mục quét tệp sẽ rỗng ruột');
 const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch','yêu thú',
              'Hồ Lô','hồ lô','Thôn phệ','thôn phệ','chân khí','Chân Khí','cảnh giới',
              'đan điền','kinh mạch','độ kiếp','phi thăng','tiên hiệp','Bí Kíp'];
@@ -35,8 +40,11 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
                  'public/game/strings/vi.js','public/game/strings/en.js'];
   const dinh = []; let daDoc = 0;
   for (const f of files){
-    // Đọc HỎNG là ĐỎ, không `continue`: bỏ qua lặng lẽ chính là cách mục này từng xanh giả.
-    let txt; try { txt = doc(f); daDoc++; } catch { fail('không đọc được ' + f + ' — mục A rỗng ruột'); continue; }
+    // ⚠ Đọc hỏng là ĐỎ, KHÔNG `continue`. Bỏ qua lặng lẽ chính là nửa còn lại của cái bẫy mà
+    // timGoc() vừa gỡ: dò sai gốc thì mục này quét 0 tệp rồi vẫn in "0 chuỗi dính từ cấm".
+    let txt;
+    try { txt = fs.readFileSync(path.join(GOC || '', f), 'utf-8'); daDoc++; }
+    catch { fail('không đọc được ' + f + ' — mục A rỗng ruột, không phải sạch'); continue; }
     // Bóc comment TRƯỚC rồi mới tìm. Bản đầu quét theo từng dòng và tìm trong dấu nháy — nên
     // template nhiều dòng (backtick mở ở dòng trên) lọt lưới hoàn toàn: quét tĩnh báo 0 trong
     // khi giao diện thật vẫn hiện "Nội Đan" ở hai chỗ.
@@ -102,7 +110,7 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
 
   // D. quét CHÚ THÍCH của game.js — xem đầu tệp để biết vì sao mục này tồn tại
   {
-    const txt = doc('public/game/game.js');
+    const txt = fs.readFileSync(path.join(GOC, 'public/game/game.js'), 'utf-8');
     const ct = [];
     // Lấy RA phần chú thích (ngược với mục A, vốn bóc chú thích đi)
     for (const m of txt.matchAll(/\/\*[\s\S]*?\*\//g)) ct.push(m[0]);

@@ -33,8 +33,11 @@ const { chromium } = require('playwright');
       // sải chân khối ĐI, đo trên bảng khung rồi thu về cỡ trong game
       saiW:    SAI_CHAN.w,
       trong:   dangChay({}),                       // không có trường speed
-      v0: dangChay(v(0)), v90: dangChay(v(90)), v125: dangChay(v(125)),
-      v126: dangChay(v(126)), v209: dangChay(v(209)),
+      // ⚠ ĐỌC NGƯỠNG TỪ GAME, đừng chép cứng con số. Bản đầu kiểm thẳng 126 px/s; sửa lại
+      // SAI_CHAN cho đúng số đo là ngưỡng thành 131 và bài đỏ ở một chỗ chẳng liên quan gì
+      // tới thứ nó định gác. (Cùng bài học với chanDy = 13 ở CLAUDE.md.)
+      v0: dangChay(v(0)), v90: dangChay(v(90)),
+      duoi: dangChay(v(CHAY_TOCDO - 1)), tai: dangChay(v(CHAY_TOCDO)), v209: dangChay(v(209)),
       // trang bị KHÔNG còn là cửa: giày +9 mà đứng yên vẫn không phải khối chạy
       giayP9: dangChay({ speed: 0, equip: { chan: { plus: 9 } } })
     };
@@ -43,35 +46,40 @@ const { chromium } = require('playwright');
   if (!r1.coHam) fail('không có hàm dangChay() — luật đi/chạy chưa gom về một chỗ');
   else pass('có dangChay() dùng chung');
   // Ngưỡng phải BÁM SẢI CHÂN, không phải một con số dò tay: người đi bộ tự nhiên tối đa
-  // ~2,4 bước/giây, tức 2,4/2 × sải chân khối ĐI. Lệch quá 8% là khối ĐI lại bị ép chạy
-  // ở nhịp nước rút — đúng cái lỗi bản này sinh ra để chữa.
-  const canNguong = 1.2 * r1.saiW;
+  // ~2,4 bước/giây. Lệch quá 8% là khối ĐI lại bị ép chạy ở nhịp nước rút — đúng cái lỗi
+  // bản này sinh ra để chữa.
+  //
+  // ⚠ HỆ SỐ LÀ 2,4 CHỨ KHÔNG PHẢI 1,2. Bản đầu chia đôi vì tin chú thích cũ "một VÒNG là HAI
+  // BƯỚC". Đo lại bằng tools/do_dang.js: cả 10 khối (5 bộ × đi/chạy) đều MỘT bước một vòng —
+  // độ chồng khít giữa khung i và i+n/2 ra 0,48–0,64, vòng hai bước phải ≥0,85. Nửa vòng sau
+  // của mấy bảng khung này là dáng ĐỨNG, không phải bước của chân kia.
+  const canNguong = 2.4 * r1.saiW;
   if (r1.nguong === null) fail('không có hằng CHAY_TOCDO — ngưỡng chưa gom về một chỗ');
   else if (Math.abs(r1.nguong - canNguong) / canNguong > 0.08)
     fail(`CHAY_TOCDO = ${r1.nguong} px/s, mà sải chân ${r1.saiW.toFixed(1)}px đòi ` +
          `~${canNguong.toFixed(0)} px/s — khối ĐI sẽ phải quay chân quá 2,4 bước/giây`);
   else pass(`ngưỡng ${r1.nguong} px/s bám đúng sải chân ${r1.saiW.toFixed(1)}px (~2,4 bước/giây)`);
-  if (r1.trong || r1.v0 || r1.v90 || r1.v125)
+  if (r1.trong || r1.v0 || r1.v90 || r1.duoi)
     fail('dưới ngưỡng mà đã CHẠY — khối 00_Walk lại nằm chết');
-  else pass('không có tốc độ · 0 · 90 · 125 px/s → ĐI');
-  if (!r1.v126 || !r1.v209) fail('từ ngưỡng trở lên vẫn chưa CHẠY');
-  else pass('126 và 209 px/s → CHẠY');
+  else pass(`không có tốc độ · 0 · 90 · ${r1.nguong - 1} px/s → ĐI`);
+  if (!r1.tai || !r1.v209) fail('từ ngưỡng trở lên vẫn chưa CHẠY');
+  else pass(`${r1.nguong} và 209 px/s → CHẠY`);
   if (r1.giayP9) fail('Giày +9 vẫn mở cửa chạy — luật phải đọc TỐC ĐỘ, không đọc trang bị');
   else pass('trang bị không còn quyết định khối vẽ, chỉ tốc độ');
 
   // ── 2. Nhân vật MỚI TẠO phải CHẠY ─────────────────────────────────────────────────────
-  // Tốc độ nền 209 px/s vượt xa cái sải chân 105px của khối ĐI. Ép khối ĐI gánh tốc độ đó
-  // là 3,98 bước/giây (nhịp nước rút) và 63,6 khung/giây trên màn 60 Hz (giật không đều).
+  // Tốc độ nền 209 px/s vượt xa cái sải chân 54,6px của khối ĐI. Ép khối ĐI gánh tốc độ đó
+  // là 3,8 bước/giây — nhịp nước rút đặt lên một dáng đi thong thả.
   const r2 = await p.evaluate(() => {
     startGame('thieulam', null);
     return { chay: dangChay(player), speed: player.speed,
-             buocGiay: 2 * player.speed / SAI_CHAN.w };
+             buocGiay: player.speed / SAI_CHAN.w };      // MỘT bước mỗi vòng, xem mục 1
   });
   console.log('2) nhân vật mới:', JSON.stringify(r2));
   if (!r2.chay)
     fail(`tốc độ nền ${r2.speed} px/s mà vẫn vẽ khối ĐI — ${r2.buocGiay.toFixed(2)} bước/giây, ` +
          'chân quay tít trên một dáng đi thong thả');
-  else pass(`tốc độ nền ${r2.speed} px/s → khối CHẠY (2,36 bước/giây, 18,9 khung/giây)`);
+  else pass(`tốc độ nền ${r2.speed} px/s → khối CHẠY (${(r2.speed / 72).toFixed(2)} bước/giây)`);
 
   // ── 3. NHỊP BƯỚC đổi theo ĐÚNG cái luật đó ────────────────────────────────────────────
   // walkPh cộng dt × (v / sải) × 2π. Chuẩn hoá theo QUÃNG ĐƯỜNG thì thương số còn đúng
