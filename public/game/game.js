@@ -8325,8 +8325,13 @@ function buildWorld(){
   // là thứ người chơi nấp sau, vòng qua, kéo quái quanh nó. Bố cục ấy phải GIỐNG NHAU mọi lần
   // vào map, nếu không thì không ai học được địa hình — mà học được mới là chỗ địa hình có
   // nghĩa. (Cùng luật với Rương Canh và trại quái; xem mục LUẬT MAP, điều 1.)
+  // ⚠ MAP DẠNG LÀN KHÔNG NHẬN TẢNG. Bề ngang của một hành lang CHÍNH LÀ nội dung của nó:
+  // `test_sandat` đòi chỗ hẹp nhất còn ≥340px (≈3,5 thân người) thì mới còn đánh nhau được.
+  // Thả một tảng rộng 118px vào một làn rộng ~400px là ăn mất phần lớn chỗ ấy — và đó không
+  // phải chuyện chỉnh số cho vừa, nó đúng theo định nghĩa. Đã đỏ thật ở Lối Mòn Corran
+  // (thắt còn 176px ở x=2520).
   { const _rT = _hatRng(_bamChuoi('tang:' + curMap));
-    for (let i = 0; i < (md.tangs ?? TANG_SO); i++)
+    for (let i = 0; md.hinh !== 'hanhlang' && i < (md.tangs ?? TANG_SO); i++)
       // ⚠ `s` KHÔNG ĐƯỢC XUỐNG DƯỚI 1. Cạnh ngắn vật cản là 2×TANG_RY×s = 56×s, mà ngưỡng
       // "vật che" của tools/do_map.js là 0,40×NV_CAO = 52,8px. Để s=0,9 thì ra 50,4px — tảng
       // vẽ ra vẫn to đùng nhưng KHÔNG được tính, tức công sức rải nó đổ sông. `test_tangda`

@@ -239,9 +239,22 @@ thu về 220px, vẽ ra ~118px ⇒ **THU XUỐNG**, không kéo giãn như lần
 - ⚠ **Tảng phải chừa RỘNG HƠN cây** (bán trục 40×28 so với 18×12) và **không được chắn ngang
   trục nối hai bãi quái**. Thiếu hai lớp lọc đó thì `test_obstacles` đỏ với "đi 9s còn cách đích
   176px" — đúng cái lỗi CLAUDE.md đã cảnh báo.
+- ⚠ **MAP DẠNG LÀN (`hinh:'hanhlang'`) KHÔNG NHẬN TẢNG.** Bề ngang của hành lang CHÍNH LÀ nội
+  dung của nó — `test_sandat` đòi chỗ hẹp nhất còn ≥340px. Thả một tảng rộng 118px vào làn rộng
+  ~400px là ăn mất phần lớn chỗ đó, và không phải chuyện chỉnh số cho vừa. Đã đỏ thật ở Lối Mòn
+  Corran (thắt còn 176px ở x=2520). Hai map dính: `loimon` · `caungam`.
 
 **Bài kiểm mới:** `tests/test_huyhieu.js` · `tests/test_tangda.js`; `tests/test_avatar.js` thêm
 mục khối trúng đòn.
+
+**⚠ `test_obstacles` mục 6 đã đổi CÁCH ĐO, và đây là bài học đáng giữ.** Bản cũ chờ đúng 9 giây
+rồi chấm theo khoảng cách còn lại. Ngân sách ấy đo THỜI GIAN THỰC, mà quãng đường đó ~1350px ở
+~209px/s là 6,5 giây đi thẳng — chỉ dư 38%. Chạy một mình thì tới nơi chính xác (8/8 lượt, còn
+0–16px), nhưng trong lượt hồi quy 180 bài thì khung hình thưa đi và cùng một đường đi ra "còn
+138px": **bài đỏ vì máy bận, không vì địa hình** (tỉ lệ vòng trung vị của chính map đó là 1,004
+— đường gần như thẳng). Nay đo nửa giây một lần, tới nơi là xong ngay, chỉ đỏ khi người chơi
+**ngừng nhích** 3 giây liền mà còn xa. Cùng bài học đã ghi ở mục vật cản: đo bằng quãng đường
+đã nhích, đừng đo bằng mức gần đích — và đừng đo bằng đồng hồ treo tường.
 
 **Còn treo, cần chủ dự án nhìn ảnh chụp:** tảng đá là tranh Axie thật nhưng TỐI hơn nền cát sáng
 của Reptile Sunstone Flats. Lần trước trụ đá bị gỡ vì "chọi với nền tranh sáng" — lần này khác

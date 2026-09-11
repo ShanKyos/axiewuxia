@@ -199,17 +199,36 @@ const { chromium } = require('playwright');
     setMoveTarget(c.x, c.y);
     return { dat: !!moveTarget, tu:[a.x,a.y], toi:[c.x,c.y] };
   });
-  await p.waitForTimeout(9000);
-  const walked = await p.evaluate(() => ({
-    x: Math.round(player.x), y: Math.round(player.y),
-    conDich: !!moveTarget,
-    cachDich: moveTarget ? Math.round(dist(player.x, player.y, moveTarget.x, moveTarget.y)) : 0,
-    toiNoi: dist(player.x, player.y, MAPS.comoc.packs[4].x, MAPS.comoc.packs[4].y) < 120,
-  }));
+  // ⚠ "KHOÁ ĐƯỜNG" NGHĨA LÀ NGỪNG NHÍCH, KHÔNG PHẢI "CHƯA XONG SAU N GIÂY".
+  // Bản cũ chờ đúng 9 giây rồi chấm theo khoảng cách còn lại. Ngân sách ấy đo THỜI GIAN THỰC,
+  // mà quãng đường này ~1350px ở tốc độ ~209px/s là 6,5 giây đi thẳng — chỉ dư 38%. Chạy một
+  // mình thì tới nơi chính xác (đo 8/8 lượt, còn 0-16px), nhưng trong lượt hồi quy 180 bài thì
+  // khung hình thưa đi và cùng một đường đi ra "còn 138px" — bài đỏ vì MÁY BẬN, không vì địa
+  // hình. (Tỉ lệ vòng trung vị của chính map này là 1,004: đường gần như thẳng.)
+  //
+  // Nay hỏi đúng câu cần hỏi: cứ nửa giây đo một lần, tới nơi là xong ngay; chỉ đỏ khi người
+  // chơi NGỪNG LẠI GẦN mà vẫn còn xa. Cùng bài học đã ghi ở CLAUDE.md — đo bằng quãng đường đã
+  // nhích, đừng đo bằng mức gần đích.
+  const DICH = { x: 0, y: 0 };
+  Object.assign(DICH, await p.evaluate(() => ({ x: MAPS.comoc.packs[4].x, y: MAPS.comoc.packs[4].y })));
+  let walked = null, totNhat = Infinity, dungYen = 0;
+  for (let i = 0; i < 40; i++){                       // trần 20 giây
+    await p.waitForTimeout(500);
+    walked = await p.evaluate(d => ({
+      x: Math.round(player.x), y: Math.round(player.y),
+      conDich: !!moveTarget,
+      cachDich: moveTarget ? Math.round(dist(player.x, player.y, moveTarget.x, moveTarget.y)) : 0,
+      cach: Math.round(dist(player.x, player.y, d.x, d.y)),
+    }), DICH);
+    if (walked.cach < 120){ walked.toiNoi = true; walked.giay = (i+1)/2; break; }
+    // còn nhích được ≥12px mỗi nửa giây thì chưa gọi là kẹt
+    if (totNhat - walked.cach > 12){ totNhat = walked.cach; dungYen = 0; }
+    else if (++dungYen >= 6) break;                   // 3 giây liền không nhích thêm ⇒ kẹt thật
+  }
   const pass = m => console.log('PASS ' + m);
   console.log('đi thật:', JSON.stringify(walk), '→', JSON.stringify(walked));
-  if (!walked.toiNoi) fail(`đi 9s vẫn chưa tới bãi quái (còn cách ${walked.cachDich}px) — vật cản khoá đường`);
-  else pass('đi thật xuyên map: tới được bãi quái ở đầu kia, địa hình không khoá đường');
+  if (!walked.toiNoi) fail(`đứng yên ${dungYen*0.5}s mà còn cách bãi quái ${walked.cach}px — vật cản khoá đường`);
+  else pass(`đi thật xuyên map: tới nơi sau ${walked.giay}s, địa hình không khoá đường`);
 
   console.log('errors:', JSON.stringify(errs));
   console.log(bad === 0 && errs.length === 0 ? 'PASS' : 'FAIL(' + bad + ')');
