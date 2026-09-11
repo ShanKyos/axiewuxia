@@ -72,6 +72,104 @@ INTRO_PAGES / QUESTS / CLUES / BOSS_LORE / SECTS / NPCS / MOBS / TB_TIER_NAMES.
 
 Dark Knight · Dark Wizard · Dark Lord **giữ nguyên** — là danh từ fantasy phổ thông.
 
+## 🔄 ĐỔI VAI: AXIE LÀ AVATAR, 5 LỚP LÀ SỨC MẠNH — đang thi công
+
+> Đặc tả đầy đủ: **`docs/DOI_VAI_AXIE.md`** · Danh mục Cổ Vật: **`docs/CO_VAT_15.md`**
+> Nhìn thử: **`public/game/proto_doivai.html`** (mở bằng máy chủ tĩnh, không nạp `game.js`)
+
+**Chủ dự án chốt (nguyên văn):** *"Chỉ số tới từ 5 class. Axie chỉ đơn thuần là avatar thôi,
+khi tấn công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu."*
+
+| | |
+|---|---|
+| **Axie** | thân NHÌN THẤY. **0 chỉ số, 0 kỹ năng, 0 trang bị.** Là ô để cắm NFT. |
+| **5 lớp** | nơi chứa **toàn bộ** chỉ số, trang bị, kỹ năng, Tiến Hoá, Di Sản |
+| **Lúc đánh** | lớp nhân vật **vật chất hoá**, tung chiêu, rồi tan |
+| **Khoá lớp** | chọn một lần lúc tạo nhân vật. **Avatar thì tự do** — mọi NFT đều cắm được. |
+
+### ⇒ Đây KHÔNG phải đổi kiến trúc. Là đổi LỚP VẼ.
+
+`calcDerived()` · `hurtMob()` · `castSkill()` · `SECTS` · `HERO_SETS` · `player.equip` ·
+`player.sect` — **không đụng một dòng nào.** Save cũ đọc được nguyên vẹn.
+
+### Đã thi công
+
+| Thứ | Ở đâu |
+|---|---|
+| `player.avatar` · `avatarId()` · `veAvatar()` · `chiVeChay()` · `veVongTrieu()` | `game.js`, ngay trên `chiVeNho` |
+| Móc vào `drawPlayer()` | 5 chỗ, **tất cả đều qua cửa `avatarId(p)`** |
+| Lệnh `/avatar <id> · ds · off` | bảng lệnh gỡ rối |
+| 16 bảng khung CHẠY `<id>_r.webp` | 1,29 MB, **nạp theo nhu cầu** (chỉ con đang dùng) |
+| Công cụ nướng | `tools/spine/nuong_chi_chay.py` |
+
+> ⚠ **`player.avatar` rỗng ⇒ HÀNH VI CŨ Y NGUYÊN.** Đây là chủ ý, không phải làm dở: đợt này
+> phải cắm vào một trò chơi đang chạy mà không bài nào trong 177 bài đỏ. Avatar là thứ **bật
+> lên**, không phải thứ thay thế. Đừng "dọn dẹp" cái cửa đó đi.
+
+**Cờ bài kiểm đọc được:** `window.__veThan` nay có ba giá trị — `'avatar'` · `'sprite'` ·
+`'vector'`. Bài cũ nào khẳng định nó phải là `'sprite'` thì vẫn đúng khi avatar tắt.
+
+### Ba cái bẫy đã dẫm, ghi lại
+
+1. **`atkAnim` ĐẾM NGƯỢC** — `atkK` = 1 ở khung ĐẦU. Tiến độ vật chất hoá là `1 − atkK`. Dùng
+   thẳng `atkK` thì lớp nhân vật mờ dần ĐI trong lúc vung, tức ngược hẳn. (Cùng họ với bẫy
+   `lungeK = hSwing(1 - atkK)` đã ghi ở mục cảm giác chiến đấu.)
+2. **Avatar phải vẽ SAU `ctx.restore()`** của khối thân người. Bên trong đó là hệ toạ độ cục bộ
+   của bộ xương (đã dời về `p.x/p.y`, lật theo hướng, thu theo tỉ lệ) — avatar tự lo cả ba thứ
+   đó nên vẽ trong đấy là lật hai lần và thu hai lần.
+3. **`AVA_TY` là số trần, `avaCao()` là HÀM.** Nhân thẳng `NV_THAN_PX` ở chỗ khai (dòng ~5110)
+   là rơi vùng chết của `const` — `NV_THAN_PX` khai tận dòng 22987. Đúng cái bẫy đã ghi ở mục
+   `NV_CAO`.
+
+### Trúng đòn và chết vẫn giữ AXIE — cố ý
+
+Chỉ `'a'` (đánh) và `'c'` (niệm chú) mới gọi lớp nhân vật ra. Nếu lớp nhân vật nháy ra mỗi lần
+ăn đòn thì trong một trận đông quái người chơi gần như không còn thấy avatar của mình — mà
+avatar mới là thứ họ chọn hoặc mua.
+
+**Nợ:** rig có sẵn `defense/hit-by-normal` và chưa nướng. Nướng rồi thì Axie giật được khi trúng.
+
+### 🔑 KIT AXIE CÓ 41 HOẠT CẢNH, GAME MỚI DÙNG 2
+
+Khảo sát `axieinfinity/axie-origins-asset-kit` (clone về `/home/user/axieinfinity/...`, 2,2 GB).
+Đây là thứ đáng nhớ nhất của đợt này:
+
+| Nhóm | Có sẵn trong rig |
+|---|---|
+| Di chuyển | `action/run` · `move-forward` · `move-back` · 5 idle ngẫu nhiên |
+| Đánh gần | **8 đòn** — `horn-gore` `mouth-bite` `tail-smash` `tail-roll` `tail-thrash` `multi-attack` `normal-attack` `shrimp` |
+| Đánh xa | **5 đòn** — `cast-fly` `cast-high` `cast-low` `cast-multi` `cast-tail` |
+| Phòng thủ | `evade` · `hit-by-normal`(+`crit`/`dramatic`) · `hit-by-ranged` · `hit-with-shield` |
+| Khác | `get-buff` · `get-debuff` · `evolve` · `victory-pose-back-flip` · `sleep` · `eat` · `bath` |
+
+- Bộ 41 này **giống hệt nhau ở cả 12 rig `.json`**; 26 rig `.skel` mượn được, y như
+  `nuong_chi.py` đã mượn cho idle+appear.
+- **Kit tự có rig `.json`** ⇒ `nuong_chi_chay.py` không cần repo `cc-axie-gtk2d` nữa.
+- Kit còn **108 clip VFX** xếp theo **9 lớp Axie × 7 kiểu đòn** (`bite`/`cast`/`gore`/
+  `projectile`/`slash`/`smash`/`throw`) — tức VFX và hoạt cảnh là MỘT BỘ KHỚP SẴN. Kèm
+  `shield` · `shield_boost` · `shield_break` · `taunt` · `reflect_damage` · `heal` · `cleanse`.
+- Và **8 rig Summoner** chính chủ (`clover` `mavis` `sparrow` `trunk` `mushroom` `littlerobin`
+  `fruitsloth` `truefanhermitcrab`).
+
+⚠ Nướng cần `pillow` + `numpy` (`pip install pillow numpy`) — máy sạch không có sẵn.
+
+⚠ **Hộp cắt của bảng chạy phải GIỐNG HỆT bảng nhỏ**, nếu không con vật nhảy một cái mỗi lần
+đứng ↔ chạy. `nuong_chi_chay.py` dựng lại đúng phép tính hộp của `nuong_chi.py` (bb trên
+appear+idle) rồi mới đem đi cắt khung chạy — tốn 28 khung nướng thừa mỗi con, đổi lại không
+phải tin vào một con số chép tay nào.
+
+### Còn treo
+
+| | |
+|---|---|
+| Hai kiểu hiện | **"hiện khi đánh"** đã chốt và đã thi công. Kiểu "thường trực" (xác đứng chắn) còn trong proto để so. |
+| Lớp gacha Cổ Vật | `docs/CO_VAT_15.md` mới là ĐỀ XUẤT, chưa chốt. Trần 16% chỉ quản lớp đó — **chỉ số từ 5 lớp KHÔNG có trần**. |
+| Chibi 5 class Axie ở màn tạo nhân vật | chưa thiết kế. `CHIBI_CFG` hiện phân biệt bằng bóng dáng NGƯỜI. |
+| Mốc thay "Giày +6 mở dáng chạy" | avatar bay/chạy thì mốc cũ mất ý nghĩa |
+| Ngũ Hành → tam giác Axie | chưa làm. 40 nhãn `el:` trong `data/canbang.js` vẫn là Kim/Mộc/Thuỷ/Hoả/Thổ — **tàn dư kiếm hiệp, vi phạm Quy tắc số 1**. Kèm một lỗi lệch dấu: 1 con khai `'Thuỷ'` còn 10 con khai `'Thủy'`. |
+
+---
+
 ## 📌 CHẨN ĐOÁN GỐC: NỘI DUNG ĐANG ĐƯỢC LÀM BẰNG CÁCH NHÂN BẢN
 
 Đọc mục này TRƯỚC khi nhận bất kỳ việc nào có chữ "thêm map", "thêm phó bản",

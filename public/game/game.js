@@ -5110,6 +5110,92 @@ function chiVeQuay(g, id, i, x, y, thanPx){
          clamp(i | 0, 0, CHI_ANH.nQuay - 1), x, y, thanPx);
   return true;
 }
+// ═══════════ AVATAR AXIE — thân người chơi NHÌN THẤY, không mang chỉ số ═══════════
+//
+// Chủ dự án chốt: "Chỉ số tới từ 5 class. Axie chỉ đơn thuần là avatar thôi, khi tấn công thì
+// ví dụ Dark Wizard sẽ xuất hiện và tung chiêu."  Đặc tả: docs/DOI_VAI_AXIE.md §2b.
+//
+// ⇒ Đây KHÔNG phải đổi kiến trúc, chỉ đổi LỚP VẼ. `player` vẫn nguyên là nhân vật của một
+//   trong 5 lớp — calcDerived / hurtMob / castSkill / player.equip / player.sect không đụng
+//   một dòng nào. Đi lại thì thấy con Axie; đánh và niệm chú thì lớp nhân vật hiện ra.
+//
+// ⚠ `player.avatar` rỗng ⇒ HÀNH VI CŨ Y NGUYÊN. Đây là chủ ý, không phải làm dở: đợt này phải
+//   cắm được vào một trò chơi đang chạy mà không bài kiểm nào trong 177 bài đỏ. Avatar là thứ
+//   BẬT LÊN (lệnh /avatar), không phải thứ thay thế.
+//
+// Bảng khung chạy do tools/spine/nuong_chi_chay.py ghi ra, dùng CHUNG cỡ ô với bảng nhỏ
+// (nhoRong × nhoCao trong CHI_ANH) — cùng hộp cắt nên đứng ↔ chạy không nhảy hình.
+const CHI_CHAY = { n: 12, cot: 6 };
+// ⚠ KHOÁ THEO HỘP VẼ RA, CẢ CAO LẪN RỘNG — y khuôn chiCoTrongMan().
+// Khoá mỗi chiều cao THÂN là chưa đủ: 16 con nướng ra 16 tỉ lệ rộng/cao (1,07 → 1,52), nên
+// cùng một chiều cao thân thì con rộng nhất vẽ ra gần gấp đôi con hẹp nhất. Bản đầu để
+// AVA_TY = 1,0 (thân Axie cao BẰNG thân người) và chủ dự án nhìn ảnh là thấy ngay nó quá to:
+// thân người vẽ ra 92×38 px, còn con Axie cùng chiều cao thân thì rộng tới ~107 px.
+//
+// Cái phải khớp không phải chiều cao, mà là KHỐI NHÌN THẤY — vì avatar và lớp nhân vật THAY
+// CHỖ NHAU lúc ra đòn. Lệch khối thì mỗi cú đánh là một cú giật cỡ.
+//
+// Số trần ở đây, không nhân hằng nào: NV_THAN_PX khai tận dòng ~22987, chạm vào là rơi vùng
+// chết của const. Nhân lúc GỌI, trong avaCo().
+const AVA_TY  = 0.72;   // thân Axie cao mấy phần thân người…
+const AVA_TRAN = 0.95;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
+function avaCo(id){
+  const A = CHI_ANH.o[id];
+  let than = NV_THAN_PX * AVA_TY;
+  if (!A) return than;
+  const tran = NV_THAN_PX * AVA_TRAN;
+  const cao = than / A.thanCao, rong = cao * (A.nhoRong / A.nhoCao);
+  const qua = Math.max(cao, rong) / tran;
+  return qua > 1 ? than / qua : than;     // vượt trần thì tự thu đúng phần vượt
+}
+const CHI_CHAY_IMGS = {};
+function chiChayImg(id){
+  if (!CHI_MAP[id]) return null;
+  let im = CHI_CHAY_IMGS[id];
+  if (!im){ im = new Image(); im.src = 'assets/chimera/' + id + '_r.webp'; CHI_CHAY_IMGS[id] = im; }
+  return im;
+}
+// Con Axie đang làm avatar, hoặc null. Một cửa duy nhất — đừng đọc thẳng p.avatar ở chỗ khác.
+function avatarId(p){
+  const id = p && p.avatar;
+  return (id && CHI_MAP[id] && CHI_ANH.o[id]) ? id : null;
+}
+function chiVeChay(g, id, i, x, y, thanPx){
+  const A = CHI_ANH.o[id], im = chiChayImg(id);
+  if (!A || !chiSan(im)) return false;
+  _chiVe(g, im, A, CHI_CHAY.cot, A.nhoRong, A.nhoCao,
+         ((i % CHI_CHAY.n) + CHI_CHAY.n) % CHI_CHAY.n, x, y, thanPx);
+  return true;
+}
+// Vẽ avatar ở TOẠ ĐỘ THẾ GIỚI (không phải hệ cục bộ của bộ xương). Cùng quy ước với drawMount:
+// art nướng quay PHẢI, đi sang trái thì lật.
+// Chưa có bảng chạy (chưa nướng / chưa tải) thì lui về bảng thở — hơi trượt một nhịp, nhưng
+// không bao giờ để trống chỗ đứng của nhân vật.
+function veAvatar(g, p, dangDiChuyen, now){
+  const id = avatarId(p); if (!id) return false;
+  const than = avaCo(id);
+  g.save();
+  g.translate(p.x, p.y + 12 - than * 0.38);
+  if (Math.cos(p.face) < 0) g.scale(-1, 1);
+  const ok = dangDiChuyen
+    ? chiVeChay(g, id, Math.floor(((p.walkPh || 0) / (Math.PI * 2)) * CHI_CHAY.n), 0, 0, than)
+    : false;
+  if (!ok) chiVeNho(g, id, Math.floor(now / 1000 * CHI_THO_FPS), 0, 0, than);
+  g.restore();
+  return true;
+}
+// Vòng triệu hồi dưới chân lúc lớp nhân vật vật chất hoá. Không có vòng này thì nó chỉ là một
+// hình mờ dần — mắt đọc ra "lag", không đọc ra "được gọi tới". (Đo bằng mắt trên proto.)
+function veVongTrieu(g, p, k){
+  if (!(k > 0) || k >= 1) return;
+  g.save(); g.globalCompositeOperation = 'lighter';
+  g.strokeStyle = 'rgba(150,200,255,' + (0.55 * (1 - k)).toFixed(3) + ')';
+  g.lineWidth = 2;
+  const r = 20 + (1 - k) * 26;
+  g.beginPath(); g.ellipse(p.x, p.y + 8, r, r * 0.34, 0, 0, 7); g.stroke();
+  g.restore();
+}
+
 // Bóng đen cùng hình — lúc con vật chưa lộ mặt. drawImage không tô màu được, nên vẽ ra một
 // canvas phụ rồi phủ đen theo đúng vùng đặc. Canvas phụ dùng lại, không tạo mới mỗi khung.
 let _chiBongCv = null;
@@ -15185,7 +15271,8 @@ function drawPlayer(){
   // sprite nướng sẵn không nhận tư thế. Nay làm bằng PHÉP BIẾN HÌNH lúc blit: xoay quanh gót
   // chân + nhấc thân lên, đúng hướng và đúng biên độ cũ. Đổi lại là các khớp không bung riêng
   // lẻ — cái giá rẻ hơn nhiều so với đổi hẳn nhân vật.
-  let _spr = null;
+  // AVATAR (xem veAvatar): đi lại thì thấy Axie, đánh/niệm chú thì lớp nhân vật hiện ra.
+  let _spr = null, _veAva = false, _hienLop = 1;
   {
     // BAY không có khối khung riêng, và không cần. Đo bằng chỉ số chồng khít giữa tư thế bay
     // mong muốn với cả 20 hoạt cảnh × 12 khung của bản mẫu: khớp nhất là chính '00_Walk' khung
@@ -15218,6 +15305,21 @@ function drawPlayer(){
                 : _noi ? 'n'
                 : _tt ? 't'
                 : 'i';
+    // ── AVATAR: ai đang đứng trên màn ────────────────────────────────────────────────
+    // Chỉ 'a' (đánh) và 'c' (niệm chú) mới gọi lớp nhân vật ra. TRÚNG ĐÒN và CHẾT vẫn giữ
+    // Axie: nếu lớp nhân vật nháy ra mỗi lần ăn đòn thì trong một trận đông quái người chơi
+    // gần như không còn thấy avatar của mình đâu nữa — mà avatar mới là thứ họ chọn/mua.
+    // (Nợ: rig có sẵn defense/hit-by-normal và chưa nướng. Nướng rồi thì Axie giật được.)
+    if (avatarId(p)){
+      _veAva = _kind !== 'a' && _kind !== 'c';
+      if (!_veAva){
+        // Vật chất hoá trong 28% đầu. ⚠ atkAnim ĐẾM NGƯỢC nên atkK = 1 ở khung đầu — tiến độ
+        // là 1 − atkK, không phải atkK. Dùng thẳng atkK thì lớp nhân vật mờ dần ĐI trong lúc
+        // vung, tức ngược hẳn.
+        const _tien = _kind === 'c' ? Math.min(1, castK) : (1 - atkK);
+        _hienLop = clamp(_tien / 0.28, 0, 1);
+      }
+    }
     // KHỐI vẽ khác KHỐI tính chỉ số ở đúng một chỗ: đòn thường.
     //   tay không          → 'p' (đấm)  — nhân vật mới tạo không có vũ khí nào
     //   Dark Knight/Spellblade → luân phiên 'a' ↔ 's' cho hai nhát khác nhau
@@ -15289,7 +15391,7 @@ function drawPlayer(){
   // suốt cả dáng người — đo được 166 trong 204 nhát fill của drawPlayer() bị làm mờ, mỗi nhát là
   // một mặt vẽ phụ + một lượt ghép riêng. Chi phí KHÔNG phụ thuộc bán kính mờ (thử hạ còn 1/4 chỉ
   // được 22,8 → 25,6 FPS) mà phụ thuộc SỐ NHÁT vẽ có bóng. Một nhát mờ trên sprite là đủ.
-  if (maxed){
+  if (maxed && !_veAva){
     ctx.save();
     ctx.shadowColor = '#ffd76a'; ctx.shadowBlur = 15;
     if (_spr) heroBlit(ctx, _spr);
@@ -15298,8 +15400,14 @@ function drawPlayer(){
   }
   // Bài kiểm đọc cờ này để gác đúng lỗi vừa sửa: trúng đòn KHÔNG được rơi về hình vẽ đường.
   // Một phép gán chuỗi mỗi khung — rẻ hơn nhiều so với để lỗi đó quay lại mà không ai thấy.
-  window.__veThan = _spr ? 'sprite' : 'vector';
-  if (_spr){
+  window.__veThan = _veAva ? 'avatar' : _spr ? 'sprite' : 'vector';
+  if (_veAva){ /* thân người không vẽ — avatar vẽ ở toạ độ thế giới, sau ctx.restore() */ }
+  else if (_hienLop < 1){
+    ctx.save(); ctx.globalAlpha = _hienLop;
+    _veThanHoa(ctx, p, _spr, now, _tier, _gv, _act, _ps, _sw);
+    ctx.restore();
+  }
+  else if (_spr){
     // Cú xoay ngửa dưới đây là bản CHỮA CHÁY hồi chưa có khối trúng đòn: sprite nướng sẵn không
     // nhận tư thế, nên phải giả bằng phép biến hình lúc blit. Nay khối 'h' đã nướng từ chính
     // '03_Hurt' của gói, có cả mặt đau — nên khi khối đó vẽ được thì KHÔNG xoay nữa, xoay thêm
@@ -15317,8 +15425,13 @@ function drawPlayer(){
       ctx.restore();
     } else _veThanHoa(ctx, p, _spr, now, _tier, _gv, _act, _ps, _sw);
   }
-  else drawHeroLit(ctx, p.sect, _tier, now, _ps, _gv);
+  else if (!_veAva && _hienLop >= 1) drawHeroLit(ctx, p.sect, _tier, now, _ps, _gv);
   ctx.restore();
+  // ── AVATAR vẽ ở TOẠ ĐỘ THẾ GIỚI ──────────────────────────────────────────────────────
+  // Phải nằm SAU ctx.restore() ở trên: bên trong đó là hệ cục bộ của bộ xương (đã dời về
+  // p.x/p.y, lật theo hướng và thu theo tỉ lệ), còn avatar thì tự lo cả ba thứ đó.
+  if (_veAva) veAvatar(ctx, p, !!p.moving, now);
+  else if (avatarId(p) && _hienLop < 1) veVongTrieu(ctx, p, _hienLop);
   if (_tk && _tk.truoc) veThanKhi(ctx, _tk, p);        // quét ra trước mặt: vẽ SAU thân
   // weapon arc while attacking
   if (p.atkAnim > 0){
@@ -18065,6 +18178,7 @@ function cheatHelp(){
     '/kill [bán kính=350] — hạ quái quanh mình · /rune <0-7> — số Rune Cổ đã thu (7 = Kết Mở)',
     '/time [ngày=10] — nhảy thời gian thế giới · /obstacles — lớp debug vùng chặn địa hình',
     '/via — kéo Vỉa Cốt hôm nay về sát chân (và mở lại) · /via ds — ba vùng nào có vỉa hôm nay',
+    '/avatar <id> — đổi thân nhìn thấy sang một con Axie · /avatar ds — danh sách · /avatar off',
     '/ruong — kéo Rương Canh chưa mở gần nhất về sát chân + dọn trại · /ruong ds — rương của mọi vùng',
     '── tranh ──',
     `/art [lớp=${Object.keys(SPLASH_CFG).join('|')}] [mavuong] — mở tranh minh hoạ + chibi của lớp`,
@@ -18285,6 +18399,26 @@ window.cheatExec = function(raw){
         const r = window.debugRuong();
         if (!r){ cheatLog(`${MAPS[curMap].name} không còn rương nào chưa mở.`, '#ff7a6a'); break; }
         cheatLog(`Rương đã dời về cạnh chân và trại canh đã dọn — nhấn J để mở.`, '#ffd76a'); break;
+      }
+      case 'avatar': {                    // /avatar <id|off|ds> — đổi thân NHÌN THẤY của người chơi
+        const t = (parts[1] || '').toLowerCase();
+        if (!t || t === 'ds'){
+          cheatLog(`Avatar hiện tại: ${player.avatar || '(tắt — vẽ lớp nhân vật như cũ)'}`, '#ffd76a');
+          cheatLog('  ' + CHIMERA.map(c => c.id).join(' · '), '#9ecbff');
+          cheatLog('  /avatar <id> để bật · /avatar off để tắt', '#8c93ab');
+          break;
+        }
+        if (t === 'off' || t === 'tat'){
+          player.avatar = null; cheatLog('Đã tắt avatar — về lớp nhân vật như cũ.', '#ffd76a'); break;
+        }
+        if (!CHI_MAP[t] || !CHI_ANH.o[t]){
+          cheatLog(`Không có Axie nào tên "${t}". Gõ /avatar ds để xem danh sách.`, '#ff7a6a'); break;
+        }
+        player.avatar = t;
+        chiChayImg(t);                    // nạp trước bảng chạy, khỏi trượt một nhịp đầu
+        cheatLog(`Avatar → ${CHI_MAP[t].ten}. Đi lại thấy Axie; đánh thì ${SECTS[player.sect].name} hiện ra.`,
+                 CHI_MAP[t].mau || '#ffd76a');
+        break;
       }
       case 'via': {                       // /via — kéo Vỉa Cốt hôm nay về sát chân, /via ds — liệt kê cả ba
         if ((parts[1] || '').toLowerCase() === 'ds'){
