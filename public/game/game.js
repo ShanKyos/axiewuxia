@@ -8379,7 +8379,7 @@ function drawBossTele(m){
 // shake: 0 TẮT · 1 NHẸ (mặc định) · 2 ĐẦY. Trước đây là boolean và mặc định `false` để chống
 // chóng mặt — nhưng bật/tắt là quá thô, và hậu quả là TOÀN BỘ 12 chỗ đặt shakeT/shakeMag trong
 // game không ai nhìn thấy. Diablo luôn rung, chỉ là rung rất khẽ và CÓ HƯỚNG.
-const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:true, minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto', dmgNum:true, zoom:'xa' },
+const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:'gon', minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto', dmgNum:true, zoom:'xa' },
   (()=>{ try { return JSON.parse(localStorage.getItem('vlcm_settings') || '{}'); } catch { return {}; } })());
 // Save cũ lưu `shake` là boolean. Không di trú thì Object.assign ghi đè `false` lên mặc định
 // mới và người chơi cũ mắc kẹt ở mức TẮT vĩnh viễn — mà họ chưa từng chọn tắt, đó chỉ là
@@ -9572,19 +9572,69 @@ function mobSeparate(dt){
 // Quyết định con nào ĐƯỢC vẽ nhãn tên trong khung này. Chạy MỘT LẦN mỗi khung, trước khi vẽ.
 // Con bị bỏ nhãn được gom vào con đại diện gần nhất dưới dạng "×N" — vẫn cho biết có mấy con,
 // nhưng không còn sáu dòng chữ chồng lên nhau.
+// Ở MỨC ĐỘ: nhãn tên quái có BA mức, không phải hai. Bật/tắt là lựa chọn giả — tắt thì mất
+// luôn tên trùm và Kẻ Tiếp Sức (hai thứ PHẢI đọc được trước khi chạm vào), còn bật thì một bầy
+// tám con rải ra thành tám dòng chữ chồng lên nhau. Đo được ở Plant Tribe Glade: tám nhãn
+// "Axie Heo Rừng · C1" trong một khung hình, và nhân vật người chơi nằm khuất dưới đó.
+const MOB_LBL_NGANG = 78;   // nửa bề ngang vùng cấm quanh nhân vật
+const MOB_LBL_DOC   = 132;  // nhãn rơi trong khoảng này (tính từ chân nhân vật lên) thì bỏ
+const MOB_LBL_HOVER = 96;   // bán kính con trỏ “chạm” tới một con
+function mobLabelMode(){
+  const v = SETTINGS.mobName;
+  if (v === true  || v === 'day') return 'day';
+  if (v === false || v === 'tat') return 'tat';
+  return 'gon';
+}
+// Con nào LUÔN có tên, ở mọi mức: trùm, tinh anh, Kẻ Tiếp Sức, kẻ truy thù, con mang Dị Biến.
+// Đúng là những con mà đọc tên trước khi chạm vào là có lợi — còn lại chỉ là bầy.
+function mobLblQuanTrong(m){
+  return !!(m.def.bossKind || m.def.boss || m.type === 'boss' || m.eliteName
+            || m.tiep || m.revenge || (m.db && m.db.length));
+}
 function mobLabelPass(){
+  const mode = mobLabelMode();
+  if (mode === 'tat'){ for (const m of mobs) m._lbl = false; return; }
+  // Con gần con trỏ nhất. Ở mức Gọn đây là cách duy nhất đọc tên một con thường, nên nó phải
+  // có — không thì Gọn thành Tắt trá hình. mouseWorld khởi tạo (0,0) = góc bản đồ nên phải hỏi
+  // chuotDaRe trước khi tin nó.
+  let hover = null, hd = MOB_LBL_HOVER;
+  if (chuotDaRe) for (const m of mobs){
+    if (m.dead) continue;
+    const d = dist(mouseWorld.x, mouseWorld.y, m.x, m.y);
+    if (d < hd){ hd = d; hover = m; }
+  }
+  const px = player ? player.x : 0, py = player ? player.y : 0;
   const nhan = [];
   for (const m of mobs){
     if (m.dead){ m._lbl = false; continue; }
+    // Cắt ngoài khung phải đo bằng VW/VH (cỡ THẾ GIỚI lọt trong khung), không phải W/H (cỡ
+    // MÀN HÌNH) — xem cảnh báo trong CLAUDE.md. Trước đây dùng W/H nên mức zoom GẦN vẫn tính
+    // nhãn cho quái đã nằm ngoài màn.
     const sx = m.x - camera.x, sy = m.y - camera.y;
-    if (sx < -80 || sy < -80 || sx > W + 80 || sy > H + 80){ m._lbl = false; continue; }
+    if (sx < -80 || sy < -80 || sx > VW + 80 || sy > VH + 80){ m._lbl = false; continue; }
+    const quanTrong = mobLblQuanTrong(m) || m === hover;
+    if (mode === 'gon' && !quanTrong){ m._lbl = false; continue; }
+    // VÙNG CẤM QUANH NHÂN VẬT. Nhãn vẽ PHÍA TRÊN con quái, nên con đứng ngang hoặc hơi dưới
+    // người chơi là con có nhãn đâm thẳng vào thân.
+    // ⚠ Miễn trừ HẸP HƠN danh sách quanTrong: chỉ TRÙM và con DƯỚI CON TRỎ được vẽ đè. Lần
+    // đầu em miễn trừ cả Kẻ Tiếp Sức và tinh anh, chụp lại thì ba nhãn "TIẾP SỨC" vẫn nằm đè
+    // lên nhân vật — đúng cái bệnh đang chữa. Kẻ Tiếp Sức đứng sát người chơi thì đã đọc ra
+    // bằng ký hiệu ◈ và tia hồi máu của nó; cái tên không thêm được gì mà lấy mất thân người chơi.
+    const _deLen = (m.def.bossKind || m.def.boss || m.type === 'boss' || m === hover);
+    if (!_deLen){
+      const lblY = m.y - (m.def.size || 14) - 14;
+      if (Math.abs(m.x - px) < MOB_LBL_NGANG && lblY > py - MOB_LBL_DOC && lblY < py + 12){
+        m._lbl = false; continue;
+      }
+    }
     m._lbl = true; m._lblN = 1;
-    // Boss luôn có nhãn riêng — chúng là mục tiêu, không phải bầy
-    if (m.def.bossKind || m.type === 'boss'){ nhan.push(m); continue; }
+    if (quanTrong){ nhan.push(m); continue; }   // con quan trọng không gộp vào bầy
     let gop = null;
     for (const q of nhan){
-      if (q.def !== m.def) continue;                       // chỉ gộp con CÙNG LOẠI
-      if (Math.abs(q.x - m.x) > 96 || Math.abs(q.y - m.y) > 30) continue;
+      if (q.def !== m.def || mobLblQuanTrong(q) || q === hover) continue;   // chỉ gộp con CÙNG LOẠI
+      // Cửa sổ gộp cũ là 96×30px — hẹp hơn chính một bãi quái, nên một bãi vẫn đẻ ra năm sáu
+      // nhãn. Nới theo cỡ bãi thật thì cả bãi gọn về một dòng "Tên ×8".
+      if (Math.abs(q.x - m.x) > 190 || Math.abs(q.y - m.y) > 96) continue;
       gop = q; break;
     }
     if (gop){ m._lbl = false; gop._lblN++; }
@@ -12219,7 +12269,7 @@ function drawMob(m){
   ctx.fillStyle = d.boss ? '#ff3a3a' : '#c0392b';
   ctx.fillRect(dx-bw/2, topY-10, bw*Math.max(0,m.hp/m.maxHp), 4);
   // huy hiệu nguyên tố (◆♣❄☼▲) + tên quái
-  if (!SETTINGS.mobName || m._lbl === false) return;
+  if (m._lbl === false || mobLabelMode() === 'tat') return;   // 'tat' là CHUỖI — truthy, đừng hỏi !SETTINGS.mobName
   const _sl = (m._lblN || 1) > 1 ? ` ×${m._lblN}` : '';
   const nameTxt = `${d.bossKind === 'tranai' ? '✦ TƯỚNG QUÂN ' : d.bossKind === 'thuve' ? '◆ VỆ BINH TRỤ ' : m.tiep ? '◈ TIẾP SỨC ' : ''}${m.eliteName ? m.eliteName + ' · ' : ''}${m.name}${m.revenge ? ' ⚔TRUY THÙ' : ''} · C${d.lv}${_sl}`;
   // Dị Biến hiện dưới tên: elite đủ danh sách, quái thường trong bầy một ký hiệu mờ. Hệ hay mà vô
@@ -21585,13 +21635,22 @@ el('is-next').addEventListener('click', ()=>{
 el('is-skip').addEventListener('click', closeIntro);
 
 // ═══════════ HƯỚNG DẪN TÂN THỦ TỪNG BƯỚC ═══════════
+// ⚠ MỖI BƯỚC PHẢI CÓ ĐIỀU KIỆN HOÀN TẤT ĐỌC ĐƯỢC TỪ TRẠNG THÁI (`xong`), không chỉ một
+// lời gọi tutAdvance() đặt đúng một chỗ. Đo được trước khi sửa: sau 45 giây, 26 con quái và sáu
+// cấp, hộp hướng dẫn vẫn nằm giữa màn hình nói "Bấm chuột phải trên nền đất… hãy thử một lần".
+// Lý do: bước 1 cộng quãng đường trong nhánh DI CHUYỂN TAY, mà TỰ ĐÁNH không đi qua nhánh đó.
+// Người chơi có thể vượt qua toàn bộ nội dung mà bước 1 vẫn đứng nguyên.
+// Kèm theo: TRẦN THỌI GIAN cho MỌI bước. Bản cũ chỉ có trần cho bước cuối — và chú thích ở
+// đó ghi rõ vì sao: nó từng "treo mãi, chơi thử: còn nguyên ở cấp 120". Năm bước kia treo được
+// theo đúng kiểu đó, chỉ là chưa ai đo.
+const TUT_TRAN = 90;   // giây — trần mặc định mỗi bước
 const TUT_STEPS = [
-  { key:'move',  txt:'Bấm <b>chuột phải</b> trên nền đất hoặc bấm vào <b>bản đồ thu nhỏ</b> — nhân vật sẽ tự chạy tới đó, hãy thử một lần', },
-  { key:'npc',   txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
-  { key:'map',   txt:'Bấm <b>Đi ngay</b> trên dải nhiệm vụ giữa màn hình (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để dịch chuyển tới <b>Rẻo Rừng Corran</b>' },
-  { key:'kill',  txt:'Nhấn <b>SPACE</b> — nhân vật tự chạy tới con quái gần nhất và đánh. Hãy hạ 1 con <b>Axie Heo Rừng</b>' },
-  { key:'loot',  txt:'Quái chết có thể rơi đồ hoặc <b>Châu</b> xuống đất — <b>đi ngang qua</b>, bấm <b>J</b> hoặc <b>bấm chuột trúng món</b> để nhặt. Giữ <b>ALT</b> xem tên mọi món trên màn' },
-  { key:'quest', txt:'Làm theo nhiệm vụ ở <b>góc phải màn hình</b> · <b>C</b> nhân vật · <b>K</b> kỹ năng · <b>B</b> túi đồ' },
+  { key:'move',  xong:() => (player.tutDist || 0) > 150 || (player.level || 1) >= 2, txt:'Bấm <b>chuột phải</b> trên nền đất hoặc bấm vào <b>bản đồ thu nhỏ</b> — nhân vật sẽ tự chạy tới đó, hãy thử một lần', },
+  { key:'npc',   xong:() => (player.level || 1) >= 3, txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
+  { key:'map',   xong:() => curMap !== 'ardhaven', txt:'Bấm <b>Đi ngay</b> trên dải nhiệm vụ giữa màn hình (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để dịch chuyển tới <b>Rẻo Rừng Corran</b>' },
+  { key:'kill',  xong:() => (player.kills || 0) > 0, txt:'Nhấn <b>SPACE</b> — nhân vật tự chạy tới con quái gần nhất và đánh. Hãy hạ 1 con <b>Axie Heo Rừng</b>' },
+  { key:'loot',  xong:() => (player.inv && player.inv.length > 0), txt:'Quái chết có thể rơi đồ hoặc <b>Châu</b> xuống đất — <b>đi ngang qua</b>, bấm <b>J</b> hoặc <b>bấm chuột trúng món</b> để nhặt. Giữ <b>ALT</b> xem tên mọi món trên màn' },
+  { key:'quest', tran:25, txt:'Làm theo nhiệm vụ ở <b>góc phải màn hình</b> · <b>C</b> nhân vật · <b>K</b> kỹ năng · <b>B</b> túi đồ' },
 ];
 function updateTut(){
   const box = el('tut-hint');
@@ -21612,16 +21671,26 @@ function updateTut(){
 // mãi (chơi thử: còn nguyên ở cấp 120) và che mất prompt "Nhấn J — Hái Thảo Dược" vẽ cùng chỗ.
 // Tự tắt sau 25 giây kể từ khi tới bước đó.
 function tutTick(dt){
-  if (!player || player.tutStep < 0) return;
-  if (TUT_STEPS[player.tutStep] && TUT_STEPS[player.tutStep].key === 'quest'){
-    player._tutQuestT = (player._tutQuestT || 0) + dt;
-    if (player._tutQuestT > 25) tutAdvance('quest');
+  if (!player || player.tutStep == null || player.tutStep < 0) return;
+  const s = TUT_STEPS[player.tutStep];
+  if (!s) return;
+  // Quãng đường cộng Ở ĐÂY, theo toạ độ thực, nên nó đếm MỌI kiểu di chuyển — bấm chuột
+  // phải, bấm bản đồ thu nhỏ, TỰ ĐÁNH kéo đi, hay dịch chuyển. Nhánh cũ nằm trong khối di
+  // chuyển tay nên ba kiểu sau không tính.
+  if (player._tutLX != null){
+    const d = Math.hypot(player.x - player._tutLX, player.y - player._tutLY);
+    if (d < 400) player.tutDist = (player.tutDist || 0) + d;   // >400 là dịch chuyển, không phải đi
   }
+  player._tutLX = player.x; player._tutLY = player.y;
+  player._tutT = (player._tutT || 0) + dt;
+  if (s.xong){ let ok = false; try { ok = !!s.xong(); } catch { ok = false; } if (ok){ tutAdvance(s.key); return; } }
+  if (player._tutT > (s.tran || TUT_TRAN)) tutAdvance(s.key);
 }
 function tutAdvance(stepKey){
   if (!player || player.tutStep < 0) return;
   if (TUT_STEPS[player.tutStep].key === stepKey){
     player.tutStep++;
+    player._tutT = 0;   // bước mới, đồng hồ trần đếm lại từ đầu
     if (player.tutStep >= TUT_STEPS.length){
       player.tutStep = -1;
       addFloat(player.x, player.y-70, 'Hướng dẫn hoàn tất — chúc hành trình phi nước đại!', '#7ecbff', 14);
@@ -21998,7 +22067,9 @@ function renderSettings(){
       [['gan','GẦN'],['vua','VỪA'],['xa','XA']].map(([v,t]) =>
       `<button class="mini-btn ${SETTINGS.zoom === v ? '' : 'tat'}" onclick="setZoom('${v}')">${t}</button>`).join(' ')}</span></div>
     <div class="set-row"><span>🗺 Bản đồ thu nhỏ <i>(phím U)</i></span>${tog('minimap')}</div>
-    <div class="set-row"><span>🏷 Tên quái vật</span>${tog('mobName')}</div>
+    <div class="set-row"><span>🏷 Tên quái vật <i>(Gọn: chỉ trùm, tinh anh, Tiếp Sức và con dưới con trỏ)</i></span><span>${
+      [['tat','TẮT'],['gon','GỌN'],['day','ĐẦY']].map(([v,t]) =>
+      `<button class="mini-btn ${mobLabelMode() === v ? '' : 'tat'}" onclick="setMobName('${v}')">${t}</button>`).join(' ')}</span></div>
     <div class="set-row"><span>💥 Số sát thương trên đầu quái</span>${tog('dmgNum')}</div>
     <div class="set-row"><span>📳 Rung màn hình</span><span>${[[0,'TẮT'],[1,'NHẸ'],[2,'ĐẦY']].map(([v,t]) =>
       `<button class="mini-btn ${(SETTINGS.shake|0) === v ? '' : 'tat'}" onclick="setShake(${v})">${t}</button>`).join(' ')}</span></div>
@@ -22022,6 +22093,7 @@ function renderSettings(){
     <div class="set-row" style="border-bottom:none"><span style="color:#c05a4a">🚪 Đổi nhân vật <i>(lưu lại rồi về màn chọn — xóa nhân vật chỉ làm được ở đó)</i></span><button class="mini-btn" onclick="veManChon()">VỀ MÀN CHỌN NHÂN VẬT</button></div>
     <div style="font-size:11px;color:#9aa8d4;margin-top:8px;line-height:1.5">Âm thanh sẽ phát sau thao tác đầu tiên của bạn (quy định trình duyệt). Mọi cài đặt được lưu tự động.</div>`;
 }
+window.setMobName = function(v){ SETTINGS.mobName = (v === 'tat' || v === 'day') ? v : 'gon'; saveSettings(); renderSettings(); };
 window.setShake = function(v){ SETTINGS.shake = clamp(v|0, 0, 2); saveSettings(); renderSettings(); };
 // Đổi zoom phải cập nhật VW/VH NGAY: camera kẹp theo chúng, để lệch một khung là giật một cái.
 window.setZoom = function(v){ SETTINGS.zoom = ZOOM_CHON = ZOOM_MUC[v] ? v : 'vua'; capNhatTamNhin(); navInvalidate();
