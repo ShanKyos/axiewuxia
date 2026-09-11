@@ -4968,6 +4968,7 @@ function viaKhai(){
   const today = viaNgay();
   if (!player.via || player.via.day !== today) player.via = { day: today };
   player.via[curMap] = 1;
+  dailyTrack('via');            // Mục Tiêu Hôm Nay — xem DAILY_BANDS
   const D = COT_DONG[v.dong], ra = [];
   for (let i = 0; i < 3; i++){
     if (cotKho().length >= COT_KHO_MAX) break;
@@ -24612,18 +24613,65 @@ function hintText(){
 // thành được: bảy phó bản đã gỡ, nên một mục tiêu "thông quan phó bản" sẽ khoá luôn cả phần
 // thưởng ngày cho mọi người từ cấp 12 trở lên. Nay đếm theo trùm vùng — cùng cái cửa đang thả
 // Cốt Chimera (cotBossVung). Dựng lại phó bản thì đổi chữ về, đừng đổi khoá.
-const DAILY_GOALS = [
-  { id:'kills',   icon:'⚔', name:'Hạ 10 Chimera',        need:10, minLv:1 },
-  { id:'forge',   icon:'🔨', name:'Rèn / nâng tầng / khảm ngọc 1 lần', need:1, minLv:5 },
-  { id:'dungeon', icon:'🏯', name:'Hạ 1 Trùm Vùng',      need:1, minLv:12 },
+// ── MỤC TIÊU HÔM NAY — theo DẢI CẤP, không phải một bảng đứng yên ───────────
+//
+// ⚠ Bản cũ là ba mục CỐ ĐỊNH (`Hạ 10 Chimera` · `Rèn 1 lần` · `Hạ 1 Trùm Vùng`) với `minLv`
+// 1/5/12. Nghĩa là từ cấp 12 tới cấp 120 — **108 cấp** — người chơi mở bảng ra và thấy đúng ba
+// dòng đó, cùng con số đó, suốt. Đo cùng lúc với chuỗi nhiệm vụ: nhiệm vụ cho 1% tổng XP lên
+// cấp, tức 99% hành trình là cày; mà tầng NGÀY — thứ duy nhất chạm vào mọi ngày chơi — thì đứng
+// yên. Đó là chỗ mỏng nhất của cả vòng lặp cuối game.
+//
+// Dùng lại đúng khuôn `TRUYNA_BANDS` ở trên: một mảng dải, tra bằng `lvPeak()`. Đừng dựng khuôn
+// thứ hai — hai bảng dải cùng ý nghĩa là bảo đảm chúng lệch nhau sau vài đợt sửa.
+//
+// ⚠ CHỈ THÊM MỤC TIÊU NÀO ĐÃ CÓ NHỊP NGÀY SẴN. `via` (Vỉa Cốt, một lần/ngày/vùng) và `truyna`
+// (Truy Nã Lệnh, một lần/ngày) đã là nội dung ngày từ trước — đưa chúng vào đây là CHO THẤY thứ
+// đã có, không phải thêm hệ mới. Dựng một hệ lặp thứ tư cạnh Truy Nã + Vỉa + sự kiện theo giờ
+// thật là đúng bệnh nhân bản mà CLAUDE.md chẩn đoán ở đầu tài liệu.
+//
+// ⚠ MỖI KHOÁ PHẢI CÓ MỘT CHỖ GỌI `dailyTrack()`. Thiếu một chỗ móc là một mục tiêu KHÔNG BAO
+// GIỜ xong, và vì phần thưởng đòi xong HẾT nên nó khoá luôn cả phần thưởng ngày — im lặng, không
+// lỗi nào. `tests/test_muctieu.js` lái từng mục tới đích bằng chính hàm của game để bắt chỗ đó.
+const DAILY_META = {
+  kills:   { icon:'⚔',  ten:n => `Hạ ${n} Chimera` },
+  forge:   { icon:'🔨', ten:n => n > 1 ? `Rèn / nâng tầng / khảm ngọc ${n} lần` : 'Rèn / nâng tầng / khảm ngọc 1 lần' },
+  dungeon: { icon:'🏯', ten:n => `Hạ ${n} Trùm Vùng` },
+  via:     { icon:'◆',  ten:n => n > 1 ? `Khai ${n} Vỉa Cốt` : 'Khai 1 Vỉa Cốt' },
+  truyna:  { icon:'⚑',  ten:() => 'Xong Truy Nã Lệnh' },
+};
+// Bảy dải, cùng mốc với TRUYNA_BANDS. `thuong` nhân vào phần thưởng ngày — cày 50 con ở cấp 100
+// mà vẫn lấy đúng 300 Lumen như hồi cấp 5 thì mục tiêu ngày là một cái bẫy thời gian.
+const DAILY_BANDS = [
+  { max:11,  muc:{ kills:10 },                                          thuong:1 },
+  { max:24,  muc:{ kills:15, forge:1 },                                 thuong:1.5 },
+  { max:39,  muc:{ kills:20, forge:1, dungeon:1 },                      thuong:2.5 },
+  { max:59,  muc:{ kills:30, forge:1, dungeon:1, via:1 },               thuong:4 },
+  { max:79,  muc:{ kills:40, forge:2, dungeon:1, via:1, truyna:1 },     thuong:6 },
+  { max:99,  muc:{ kills:50, forge:2, dungeon:2, via:2, truyna:1 },     thuong:9 },
+  { max:999, muc:{ kills:60, forge:3, dungeon:2, via:2, truyna:1 },     thuong:13 },
 ];
-function dailyGoalsNow(){ return DAILY_GOALS.filter(g => lvPeak() >= (g.minLv || 1)); }
+function dailyBand(){
+  const lv = lvPeak();
+  return DAILY_BANDS.find(b => lv <= b.max) || DAILY_BANDS[DAILY_BANDS.length - 1];
+}
+function dailyGoalsNow(){
+  const B = dailyBand();
+  return Object.keys(B.muc).map(id => {
+    const M = DAILY_META[id] || { icon:'·', ten:() => id };
+    return { id, icon:M.icon, need:B.muc[id], name:M.ten(B.muc[id]) };
+  });
+}
 function dailyReset(){
   if (!player) return;
-  if (!player.daily) player.daily = { day:'', kills:0, dungeon:0, forge:0, claimed:false };
+  // ⚠ Mọi khoá trong DAILY_META phải có ngăn ở đây. Dựng khuôn TỪ bảng thay vì viết tay: thêm
+  // một mục tiêu mà quên thêm ngăn thì `d[g.id]` là undefined, `||0` che mất, và mục tiêu đó
+  // đứng 0 mãi — khoá luôn phần thưởng ngày vì thưởng đòi xong HẾT.
+  const _khuon = () => { const o = { day:'', claimed:false };
+    for (const k in DAILY_META) o[k] = 0; return o; };
+  if (!player.daily) player.daily = _khuon();
   const today = new Date().toDateString();
-  if (player.daily.day !== today)
-    player.daily = { day:today, kills:0, dungeon:0, forge:0, claimed:false };
+  if (player.daily.day !== today){ player.daily = _khuon(); player.daily.day = today; }
+  else for (const k in DAILY_META) if (player.daily[k] == null) player.daily[k] = 0;  // save cũ
   if (!player.truyna || player.truyna.day !== today)
     player.truyna = { day: today, state:'none', map: null };
 }
@@ -24631,7 +24679,7 @@ function dailyTrack(key, n){
   if (!player || dead) return;
   dailyReset();
   player.daily[key] = (player.daily[key] || 0) + (n || 1);
-  const g = DAILY_GOALS.find(x=>x.id===key);
+  const g = dailyGoalsNow().find(x => x.id === key);
   if (g && player.daily[key] === g.need)
     addFloat(player.x, player.y-92, `☀ Mục tiêu: ${g.name} — XONG!`, '#7ec850', 13);
   dailyCheckReward();
@@ -24641,11 +24689,13 @@ function dailyCheckReward(){
   if (!d || d.claimed) return;
   if (!dailyGoalsNow().every(g => (d[g.id] || 0) >= g.need)) return;
   d.claimed = true;
-  player.silver += 300; player.khi += 100;
+  const B = dailyBand(), k = B.thuong;
+  const bac = Math.round(300 * k), ban = Math.round(100 * k), sh = 2 + Math.floor(k / 3);
+  player.silver += bac; player.khi += ban;
   chiVe(1, 'Mục Tiêu Hôm Nay');
-  themShard(2, 'Mục Tiêu Hôm Nay');
+  themShard(sh, 'Mục Tiêu Hôm Nay');
   zoneBanner = { text:'☀ HOÀN THÀNH MỤC TIÊU HÔM NAY!',
-    sub:'+300◈ Lumen · +100 Bản Năng · +1 ✦ Ấn Giao Kết · +2 ♦ Shard — quay lại ngày mai nhé!',
+    sub:`+${bac.toLocaleString('vi-VN')}◈ Lumen · +${ban} Bản Năng · +1 ✦ Ấn Giao Kết · +${sh} ♦ Shard — quay lại ngày mai nhé!`,
     color:'#7ec850', t:4.5 };
   AudioSys.sfx('levelup', 0.85);
   saveGame();
@@ -25514,6 +25564,8 @@ window.truynaClaim = function(){
   const tn = player.truyna;
   if (!tn || tn.state !== 'killed') return;
   tn.state = 'claimed';
+  dailyTrack('truyna');         // Mục Tiêu Hôm Nay — đếm lúc LĨNH THƯỞNG, không lúc hạ mục tiêu:
+                                // mục tiêu tên là "Xong Truy Nã Lệnh", tức xong cả vòng
   player.silver += GO_CONGHUAN;
   player.silver += 300 + player.level*20;
   player.silver += 120 + player.level*4;
