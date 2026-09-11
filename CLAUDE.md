@@ -1458,33 +1458,32 @@ chui vào túi giữa mấy gốc cây, vứt waypoint tính lại là thoát. B
 
 ## Map tranh isometric: chặn bằng ĐA GIÁC SÀN, không bằng ellipse
 
-> ⚠ **SÁU TRÊN TÁM TRANH NỀN ĐANG SAI PHÉP CHIẾU.** Đo được, không phải cảm giác: quét từ đáy
-> tấm lên tới hàng đầu tiên đổi chất liệu, tranh **nhìn từ trên xuống** không có dải đáy riêng
-> (cả tấm đã là đất — `daohoa` 2,9%, `comoc` 0%), còn tranh **nhìn ngang** có một dải sàn mỏng
-> 5–22% ở đáy, phần trên là trời/núi/tường cây. Sáu tấm thuộc loại sau: `tuongduong` 12,2% ·
-> `mongco` 21,9% · `nhanmon` 7,9% · `ngoai` 7,3% · `chungnam` 5,7% · `tuyettinh` 4,9%.
-> Vì `game.js` kéo tranh nền phủ kín thế giới rồi cho đi khắp mặt tranh (dòng ~10829), **tranh
-> nền CHÍNH LÀ mặt đất** — nên đi lên phía trên map là đi vào bầu trời. Đó là toàn bộ nguyên
-> nhân của lỗi "nhân vật như đang ở trên không trung".
+> ⚠ **BỐN TRANH NỀN SAI PHÉP CHIẾU — ĐÃ DỰNG LẠI. Xem `docs/DUNG_LAI_BON_MAP.md`.**
 >
-> **Hướng đã chốt: regenerate từng map rồi lắp lại.** Prompt, ràng buộc hình học và công thức
-> lắp nằm ở `docs/PROMPT_MAP_ISOMETRIC.md`.
+> Vì `game.js` kéo tranh nền phủ kín thế giới rồi cho đi khắp mặt tranh (dòng ~10829), **tranh
+> nền CHÍNH LÀ mặt đất** — nên tấm nào vẽ trời ở nửa trên thì đi lên phía bắc map là đi vào bầu
+> trời. Đó là toàn bộ nguyên nhân của lỗi "nhân vật như đang ở trên không trung".
+>
+> **Bốn map ấy nay lát viên (`sanIso`) theo đúng khuôn Rẻo Rừng Corran**, khổ 4400×3300 →
+> 5200×3800, sàn 78-85%, hình sinh bằng `tools/iso/vung_bon.py`:
+> `ngoai` · `tuyettinh` · `mongco` · `nhanmon`.
+>
+> ⚠ **BẢNG CŨ Ở ĐÂY TỪNG LIỆT SÁU TẤM, VÀ NÓ SAI MỘT DÒNG — `chungnam`.** Đo lại thì
+> `bg_chungnam.jpg` và `bg_corran.jpg` là **cùng một tệp** (md5 `9310c07f…`), thay từ commit
+> `26dff8d`; nó nhìn TỪ TRÊN XUỐNG. Con số "5,7%" trong bảng cũ đo trên tấm đã bị thay. Bài học
+> chung: **số đo có hạn dùng** — tài sản đổi thì số đo cũ thành lời nói dối, mà kiểu nói dối này
+> không ai phát hiện được vì nó nằm trong tài liệu chứ không nằm trong bài kiểm.
+> Cách đo lại: dải sàn ở đáy + tỉ lệ nhiễu 1/4-trên ÷ đáy (trời phẳng thì tỉ lệ vọt lên).
+>
+> **Còn nợ:** `chungnam` và `comoc` nhìn từ trên xuống nên KHÔNG lơ lửng, nhưng vẫn là JPEG phẳng
+> 2600×1900 chưa có `diTrong` — nợ tầng máy, không nợ phép chiếu.
+>
+> **Cũng còn nợ: viên nền theo biome.** Kho chỉ có bốn bộ (`co`·`dat`·`da`·`duong`) — không có
+> tuyết, tro, bùn. Ba map cuối đang mượn tạm, bản sắc nằm ở `ground`/`patch` và ở bộ quái chứ
+> chưa nằm ở chất liệu sàn. Nướng thêm cần Blender, sandbox không có.
 >
 > **Đừng thử cứu bằng cách lát nền từ art có sẵn — đã thử ba lần, hỏng cả ba**, lý do từng lần
-> ghi ở §2 tài liệu trên. Tóm tắt: dải sàn ở đáy 6 tấm hiện tại là MÀU PHẲNG (sàn sân khấu 2D),
-> và lớp `*_Ground.png` của kho Axie là mặt đất vẽ theo phối cảnh cho sân khấu nhìn ngang —
-> cả hai đều không lát kín được một thế giới.
->
-> **Kho Axie vẫn còn thứ dùng được, ba đợt khảo sát trước bỏ sót** vì chỉ mở `PvE/Backgrounds/
-> class/*` rồi kết luận cả thư mục: `story/` và `events/arena/` **tách LỚP**, cho ~12 vật thể
-> cắt sẵn alpha (`5_TREE1/2/3`, `10_TREE2`, `7/8/9/10_ROCK`, `8_TEMPLE`, `13_STATUE`, `6_WATER`)
-> — lắp thẳng vào lớp `vatTo` được.
->
-> **`tests/test_sandat.js` gác hợp đồng này cho MỌI map.** Map nào khai `diTrong` là tự động bị
-> canh (điểm thả, 8 hướng đi ra, NPC/cổng/quái đứng trên sàn, đi bộ tới được cổng, và map đánh
-> nhau phải có sàn ≥55% khổ map). Dựng lại một map, chấm xong đa giác là có bảo hiểm ngay,
-> không phải viết bài kiểm mới.
-
+> ghi ở §2 của `docs/PROMPT_MAP_ISOMETRIC.md`.
 
 `bg_quangtruong.jpg` (Quảng Trường Cũ) là tranh **isometric** — nhà có chiều cao, mái là hình
 thoi, còn game thì **nhìn từ trên xuống, không có trục cao**. Hai chuyện phải xử riêng:
