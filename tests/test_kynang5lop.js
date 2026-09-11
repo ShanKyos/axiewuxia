@@ -52,7 +52,7 @@ const PORT = process.argv[2] || '8853';
 
     // ── 2. năm ô buff, năm cơ chế ──
     for (const [sect, bid] of Object.entries(BUFF_SKILL_ID)){
-      if (!bid) continue;   // lớp chưa có chiêu buff (Dark Knight sau khi gỡ hệ Thuần Thục)
+      if (!bid) continue;   // lớp chưa có chiêu buff (nay chỉ còn Dark Wizard — ô 3 là Inferno)
       startGame(sect, null); player.traits = []; player.level = 60; player.lvPeak = 60;
       vhAutoLearn(); calcDerived();
       const t0 = { atk:player.atk, aspd:player.aspd, crit:player.crit, shield:player.vhShield || 0, gk:player.gkBuffT || 0 };
@@ -137,10 +137,15 @@ const PORT = process.argv[2] || '8853';
   else pass('không tên chiêu nào dùng chung giữa hai lớp');
 
   // ── 2. buff ──
-  // BA lớp, không phải năm: Dark Knight và Dark Wizard không có chiêu buff ở ô 3.
+  // BỐN lớp, không phải năm: chỉ Dark Wizard không có chiêu buff ở ô 3.
+  // Dark Knight TỪNG nằm trong nhóm không buff (ô 3 trống sau khi gỡ hệ Thuần Thục). Ô đó nay
+  // là Bulwark — chiêu chủ động thứ sáu thêm riêng cho lớp, xem dk_bulwark trong canbang.js.
+  // Dòng gác cũ ('Dark Knight lại có chiêu buff — nếu là cố ý thì siết luôn mục 1 lại') đã làm
+  // đúng việc của nó: mục 1 siết rồi, nên dòng này lật lại thành khẳng định dương.
   const B = r.buff;
-  if (B.thieulam) fail('Dark Knight lại có chiêu buff — nếu là cố ý thì siết luôn mục 1 lại');
-  else pass('Dark Knight chưa có chiêu buff — đúng trạng thái sau khi gỡ hệ Thuần Thục');
+  if (!B.thieulam) fail('Dark Knight mất chiêu buff ở ô 3 — Bulwark phải là chiêu bấm được');
+  else if (!(B.thieulam.khien > 0)) fail('Bulwark (Dark Knight) không dựng khiên');
+  else pass(`Bulwark: khiên ${B.thieulam.khien} — cơ chế không lớp nào khác dùng`);
   // Dark Wizard cũng vậy: ô 3 của lớp này là Inferno (đúng bộ bốn nút Poison · Meteorite ·
   // Inferno · Dragon Spirit), còn Soul Barrier chuyển sang Di Sản.
   if (B.baidasan) fail('Dark Wizard lại có chiêu buff ở ô 3 — ô đó nay là Inferno');
