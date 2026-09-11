@@ -347,26 +347,60 @@ window.QUESTS = [
     type:'kill', mob:'cuongbinh', need:18,
     name:'Đầm Của Dusk', desc:'Lão Tướng Brann gọi tên cả sáu người đã dẫn ngươi tới đây, rồi nói ông không có tên trên bảng gỗ kia. "Dusk axie canh Cây Hồn. Chúng chưa bỏ chạy — nghĩa là còn thứ đáng canh."',
     rew:{ xp:158000, silver:64000 } },
-  { id:'c7q2', chapter:'VII · Rune Giữ Đường', lv:107, npc:'laotuong', map:'ardhaven',
+  { id:'c7q2', chapter:'VII · Rune Giữ Đường', lv:106, npc:'laotuong', map:'ardhaven',
     type:'talk', targetNpc:'quachtinh', need:1,
     name:'Mang Bảng Tên Về Thành', desc:'"Bốn cái tên bị gạch. Cái thứ năm là RELL. Cái thứ sáu là tên ngươi. Còn cái thứ bảy thì khắc SAU sáu cái kia, bằng một bàn tay khác." Mang bảng về cho Rell. Ông ấy là người duy nhất còn nhớ đủ bốn cái tên đầu.',
     rew:{ xp:170000, silver:70000 } },
-  { id:'c7q3', chapter:'VII · Rune Giữ Đường', lv:110, npc:'laotuong', map:'nhanmon',
+  { id:'c7q3', chapter:'VII · Rune Giữ Đường', lv:108, npc:'laotuong', map:'nhanmon',
     type:'tpkill', mob:'kylan', need:12,
     name:'Vòng Trong Cùng', desc:'Nhà Dusk axie tàng hình được, nên thứ vây quanh đây không tìm nhà — nó vây chính Cây Hồn. Phá vòng vây bằng Trấn Phái.',
     rew:{ xp:184000, silver:76000 } },
-  { id:'c7q4', chapter:'VII · Rune Giữ Đường', lv:112, npc:'laotuong', map:'ardhaven',
+  { id:'c7q4', chapter:'VII · Rune Giữ Đường', lv:110, npc:'laotuong', map:'ardhaven',
     type:'enhance', need:11,
     name:'Tái Sinh', desc:'"Thép của ngươi tới trần rồi. Con đường còn lại thì không." Đập một món lên +11 và hỏi lò về Tái Sinh — trả lại cấp để đi lại từ đầu với một thân thể nặng hơn. Brann đã làm chuyện đó hai lần.',
     rew:{ xp:200000, silver:84000 } },
-  { id:'c7q5', chapter:'VII · Rune Giữ Đường', lv:116, npc:'laotuong', map:'nhanmon',
-    type:'kill', mob:'daokhach', need:14,
-    name:'Chỗ Hồn Quay Về', desc:'Đèn thắp lại được hết rồi, trừ những ngọn có nét khắc đã bị gỡ. Hồn bắt đầu về được tới mép đầm rồi dừng lại ở đó. Thứ chặn ở cửa Cây Hồn biết điều đó, và nó không định nhường đường.',
-    rew:{ xp:220000, silver:92000 } },
-  { id:'c7q6', chapter:'VII · Rune Giữ Đường', lv:118, npc:'laotuong', map:'nhanmon',
+  { id:'c7q5', chapter:'VII · Rune Giữ Đường', lv:112, npc:'laotuong', map:'nhanmon',
+    type:'kill', mob:'kylan', need:18,
+    name:'Chỗ Hồn Quay Về', desc:'"Đường về Cây Hồn đi qua vòng trong cùng, và vòng đó đang bị chặn hai đầu. Ta lo đầu bên kia." Dọn đầu bên này. Kỳ Lân Bão Tố đứng thành hàng — không con nào rời chỗ, vì chúng được lệnh đứng đó.',
+    rew:{ xp:150000, silver:62000 } },
+  { id:'c7q6', chapter:'VII · Rune Giữ Đường', lv:114, npc:'laotuong', map:'nhanmon',
     type:'tranai', need:1,
     name:'Thu Phiến Thứ Bảy', desc:'⚠ Đọc hết trước khi đi. Rune Giữ Đường là thứ chỉ đường cho hồn quay về Cây Hồn — những ngọn đèn tắt ở Rẻo Rừng Corran hồi ngươi mới tới là đầu xa của chính phiến này. Gỡ nó ra thì suốt thời gian nó nằm trong lò, không một hồn nào ở Lunacia tìm được đường. Brann không cản. Ông chỉ xin ngươi làm chuyện đó trong lúc còn tỉnh táo.',
     rew:{ xp:260000, silver:110000, item:'daychuyen' } },
+
+  // ── CHƯƠNG VIII · NGƯỜI THỨ BẢY (cấp 116-120 · Dusk Marsh → Trũng Nứt) ───────────
+  //
+  // ⚠ CHƯƠNG NÀY KHÔNG CÓ RUNE, và đó là cả điểm của nó. Bảy phiến đã về lò ở `c7q6` — Kết Mở
+  // đã bật, đèn đã tắt. Chương VIII là thứ xảy ra SAU cái kết mở đó: đi tìm kẻ đã làm bảy cái
+  // luật hỏng nhanh hơn Chimera làm.
+  //
+  // Vì sao phải có: đo chuỗi 46 nhiệm vụ ra DRUE chỉ được nhắc **2 lần**, cả hai là một câu tả
+  // cảnh trong mô tả boss vùng. CLAUDE.md gọi manh mối `td_trong` về hắn là "mũi nhọn của cả
+  // chuỗi" — người chơi xong 100% chính tuyến mà chưa từng gặp mặt kẻ thù của chính mình.
+  //
+  // ⚠ Đừng biến nó thành "Rune thứ tám". `RUNE_TONG` = 7 và số nấc vết nứt trong style.css khớp
+  // cứng với nó; thêm phiến thứ tám là lớp vết nứt tụt về 0 ở nấc cuối mà không lỗi nào báo.
+  // Cũng đừng cho DRUE làm Trấn Ải: mỗi map đúng MỘT con, `TRAN_AI_TONG` suy từ BOSS_DEFS.
+  { id:'c8q1', chapter:'VIII · Người Thứ Bảy', lv:116, npc:'laotuong', map:'nhanmon',
+    type:'talk', targetNpc:'thumo',
+    name:'Bảng Gỗ Bảy Cái Tên',
+    desc:'"Ta giữ cái bảng từ hôm hạ Tướng Quân Reptile Sunstone Flats. Bảy cái tên, bốn cái đã bị gạch. Cái thứ năm là RELL. Cái thứ sáu là ngươi." Brann đưa bảng gỗ, rồi ngồi xuống. "Cái thứ bảy chưa bị gạch, vì chưa ai chứng minh được là nó nên bị gạch. Mang xuống cho Sylas — ông ấy khắc, ông ấy đọc được nét ai."',
+    rew:{ xp:160000, silver:66000 } },
+  { id:'c8q2', chapter:'VIII · Người Thứ Bảy', lv:118, npc:'thumo', map:'nhanmon',
+    type:'kill', mob:'daokhach', need:16,
+    name:'Nét Khắc Trên Người',
+    desc:'"Bảy cái tên này khắc bằng một tay. Sáu cái khắc lên gỗ. Cái thứ bảy…" Sylas dừng rất lâu. "…khắc lên chính nó. Ta chưa từng thấy ai làm thế, vì gỗ thì gánh được một cái luật, còn người thì không." Đoàn Gloam theo hắn đang rút về phía trũng — chặn chúng lại mà hỏi.',
+    rew:{ xp:180000, silver:74000 } },
+  { id:'c8q3', chapter:'VIII · Người Thứ Bảy', lv:119, npc:'thumo', map:'nhanmon',
+    type:'moc', moc:'khe', need:3,
+    name:'Trả Bằng Thứ Nó Dịch Chuyển',
+    desc:'"Rune đòi trả bằng thứ nó dịch chuyển. Ngươi trả bằng ký ức, nên ngươi quên. Hắn giữ được ký ức vì hắn trả bằng ký ức của NGƯỜI KHÁC." Sylas nhìn cái thân ngươi đang đeo. "Muốn đứng nổi trước hắn thì phải biết cái thân này là thứ được TRẢ LẠI, không phải thứ mượn." Ký đủ ba Khế Ước trước khi xuống trũng.',
+    rew:{ xp:200000, silver:82000 } },
+  { id:'c8q4', chapter:'VIII · Người Thứ Bảy', lv:120, npc:'thumo', map:'trungnut',
+    type:'boss', need:1,
+    name:'Dưới Nhát Gọi',
+    desc:'Hắn đợi ở đáy Trũng Nứt, ngay dưới vết cắt trên trời — chỗ duy nhất ở Lunacia không phiến đá nào cắm nổi, nên cũng là chỗ duy nhất không cái luật nào chạm tới hắn. Một con mắt không có tròng. "Ngươi gỡ bảy cái luật xuống rồi mang tới đây để hỏi ta vì sao?" ⚠ Đèn vẫn tắt sau trận này. Gỡ Rune là việc của ngươi, không phải của hắn.',
+    rew:{ xp:240000, silver:100000, item:'nhan1' } },
 ];
 
 
@@ -1155,7 +1189,10 @@ window.MAPS = {
   // Ba mang hinh hoc sinh bang tools/iso/sinh_trungnut.py, khong cham tay toa do nao. Bo sinh
   // tu kiem truoc khi in: san >=58%, moi diem noi dung nam TRONG da giac, diem toi cach cong
   // >90px (ban kinh bat cong) va <400px tinh tu ria map, va cach moi trum vung >=700px.
-  trungnut: { name:'Trũng Nứt Corran', min:44, range:'44 - 50', type:'freepk',
+  // ⚠ `boss:'drue'` — trùm NHIỆM VỤ chương VIII. Map này min 44 nhưng trùm chỉ hiện khi
+  // `questIdx >= questBossIdx('trungnut')`, tức từ nhiệm vụ cấp 120 — y khuôn con ở Rẻo Rừng
+  // Corran (map min 1, trùm hiện ở nhiệm vụ cấp 12). Người cấp 50 đi ngang không gặp hắn.
+  trungnut: { boss:'drue', name:'Trũng Nứt Corran', min:44, range:'44 - 50', type:'freepk',
     w:4200, h:3200, ground:'#2f3324', patch:'#6a7a52', sanIso:true,
     spawnFrom:{ daohoa:{ x:706, y:2845 }, comoc:{ x:3805, y:770 } },
     spawn:{ x:666, y:2640 }, trees:0, rocks:0,

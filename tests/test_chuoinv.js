@@ -42,7 +42,11 @@ const PORT = process.argv[2] || '8853';
     return { so: QUESTS.length, hong, bocLui, boss, bossO,
              // Mốc trùm ĐỌC TỪ GAME, không tính lại trong bài kiểm — nếu bài tự tính thì nó chỉ
              // xác nhận chính phép tính của nó, chứ không xác nhận thứ game dùng.
-             bossIdx: typeof QUEST_BOSS_IDX === 'number' ? QUEST_BOSS_IDX : null,
+             // ⚠ Đọc qua `questBossIdx(map)` — thứ game THẬT SỰ gọi. Trước đây bài đọc hằng
+             // `QUEST_BOSS_IDX`, và hằng đó đã gỡ khi trùm nhiệm vụ thành theo-map: giữ một
+             // hằng sống chỉ để chiều bài kiểm thì bài chỉ còn xác nhận chính nó.
+             bossMap: QUESTS.filter(q => q.type === 'boss').map(q => ({
+               id:q.id, map:q.map || 'corran', o:QUESTS.indexOf(q), idx:questBossIdx(q.map || 'corran') })),
              bossId: bossO >= 0 ? QUESTS[bossO].id : null,
              trungId: ids.length - new Set(ids).size,
              chuong: [...new Set(QUESTS.map(q => q.chapter))].length,
@@ -63,10 +67,18 @@ const PORT = process.argv[2] || '8853';
   else pass('id không trùng');
   if (r.bocLui) fail(`${r.bocLui} chỗ cấp yêu cầu TỤT so với mục trước — chuỗi sẽ tự khoá`);
   else pass('cấp yêu cầu tăng dần suốt chuỗi');
-  if (r.boss !== 1) fail(`có ${r.boss} mục type:'boss' — phải đúng 1, vì nó bật showVictory()`);
-  else if (r.bossIdx !== r.bossO) fail(`QUEST_BOSS_IDX=${r.bossIdx} nhưng mục type:'boss' nằm ở chỉ số ${r.bossO} — trùm chương sẽ không spawn, và không báo gì cả`);
-  else if (!Number.isFinite(r.bossIdx)) fail('QUEST_BOSS_IDX là Infinity — chuỗi không có mục type:\'boss\' nào');
-  else pass(`QUEST_BOSS_IDX=${r.bossIdx} trỏ đúng mục type:'boss' (${r.bossId}) — mốc suy từ dữ liệu, không chép cứng`);
+  // ⚠ Bản cũ đòi ĐÚNG MỘT mục `type:'boss'` ("vì nó bật showVictory()"). Nay có hai — con ở
+  // Rẻo Rừng Corran (chương 0) và DRUE ở Trũng Nứt (chương VIII) — và `showVictory()` chỉ còn
+  // gọi cho con đầu; con sau có màn kết riêng. Thứ phải gác nay là: MỖI MAP nhiều nhất một con,
+  // và chỉ số suy từ dữ liệu phải trỏ đúng chỗ.
+  const theoMap = {};
+  for (const x of r.bossMap) theoMap[x.map] = (theoMap[x.map] || 0) + 1;
+  const day = Object.keys(theoMap).filter(m => theoMap[m] > 1);
+  const lech = r.bossMap.filter(x => x.idx !== x.o);
+  if (!r.boss) fail(`chuỗi không có mục type:'boss' nào`);
+  else if (day.length) fail(`map có quá 1 trùm nhiệm vụ: ${day.join(', ')} — spawnBoss chỉ dựng được một con mỗi map`);
+  else if (lech.length) fail(`questBossIdx() trỏ sai: ` + lech.map(x => `${x.id}@${x.map} idx=${x.idx} nhưng nằm ở ${x.o}`).join(' · ') + ' — trùm sẽ không spawn, và không báo gì cả');
+  else pass(`${r.boss} trùm nhiệm vụ, mỗi map một con, questBossIdx() trỏ đúng: ` + r.bossMap.map(x => `${x.id}@${x.map}=${x.idx}`).join(' · '));
   if (r.npcThieuArt.length) fail('NPC giao việc thiếu art: ' + r.npcThieuArt.join(', '));
   else pass('mọi NPC giao việc đều có tranh');
 

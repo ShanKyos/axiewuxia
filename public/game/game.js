@@ -6389,10 +6389,17 @@ function mocTick(dt){
     AudioSys.sfx('quest', 0.8);
   }
 }
-const QUEST_BOSS_IDX = (() => {
-  const i = QUESTS.findIndex(q => q.type === 'boss');
-  return i < 0 ? Infinity : i;
-})();
+// Chỉ số nhiệm vụ `type:'boss'` của TỪNG map. `Infinity` khi map đó không có, chứ KHÔNG phải
+// `-1`: `questIdx >= -1` luôn đúng ⇒ trùm hiện ra từ cấp 1.
+//
+// ⚠ Là CHỈ SỐ, nên đảo thứ tự nhiệm vụ là trùm không spawn mà không báo gì. Ba chỗ đọc nó
+// (spawnBoss, vòng dựng thế giới, vòng vẽ đài) phải dùng cùng một hàm.
+const _QBI = {};
+function questBossIdx(mid){
+  if (_QBI[mid] != null) return _QBI[mid];
+  const i = QUESTS.findIndex(q => q.type === 'boss' && (q.map || 'corran') === mid);
+  return (_QBI[mid] = i < 0 ? Infinity : i);
+}
 
 // ---------- State ----------
 let player = null;
@@ -6465,7 +6472,21 @@ let saveTimer = 0;
 
 const SPRING = { x: 500, y: 620, r: 70 };
 const NPC = { x: 400, y: 400, name:'Trưởng Làng' };
-const BOSS_ARENA = { x: 3451, y: 1430 };
+// Đấu trường trùm NHIỆM VỤ. Một map nhiều nhất MỘT con — khai bằng `md.boss`.
+//
+// ⚠ Trước bản này cả ba thứ (đấu trường · khoá quái · chỉ số nhiệm vụ) đều CỨNG vào một con duy
+// nhất ở Rẻo Rừng Corran, nên thêm trùm nhiệm vụ thứ hai là phải sửa năm chỗ. Nay tra theo map.
+// `BOSS_ARENA` giữ lại làm bí danh của corran — vài chỗ cũ đọc thẳng `.x`/`.y` của nó.
+//
+// Toạ độ Trũng Nứt KHÔNG đoán: quét cả map theo đúng luật `test_bossplace` (cách trùm vùng
+// ≥720px, cách bãi quái/cổng/điểm thả, phải đi được) ra 2100 điểm hợp lệ, lấy điểm lề lớn nhất
+// (1320px). Mép TRÊN map là đúng chỗ theo canon: Nhát Gọi là vết cắt trên TRỜI, và Trũng Nứt là
+// đất ngay dưới nó — "cắm đá xuống đấy là đá nứt", đó cũng là lý do map này `type:'freepk'`.
+const BOSS_ARENAS = { corran: { x: 3451, y: 1430 }, trungnut: { x: 2420, y: 260 } };
+const BOSS_ARENA = BOSS_ARENAS.corran;
+function bossArena(mid){ return BOSS_ARENAS[mid] || BOSS_ARENAS.corran; }
+// `md.boss` là `true` (⇒ con `MOBS.boss`, giữ tương thích) hoặc một KHOÁ trong MOBS.
+function bossMobKey(md){ return (md && md.boss) ? (md.boss === true ? 'boss' : md.boss) : null; }
 
 // QA bot playtest: NV3 (cấp 3) bắt nhặt thảo dược giữa bầy Tàn Lang (cấp 3) & Trận Nhân (cấp 9)
 // khiến tân thủ chết liên tục — dời bụi thuốc về rừng phía đông GẦN làng, ngoài tầm aggro của cụm quái mạnh
@@ -8297,7 +8318,14 @@ function buildWorld(){
       }
     }
   }
-  if (md.boss && questIdx >= QUEST_BOSS_IDX && questState !== 'all' && !victory) spawnBoss();
+  // ⚠ `questIdx === idx(map)`, KHÔNG phải `>= idx && !victory`.
+  //
+  // Bản cũ chỉ có MỘT trùm nhiệm vụ nên `!victory` đủ làm cờ "đã hạ rồi". Nay có hai, và cờ đó
+  // là cờ TOÀN CỤC: nó bật ở nhiệm vụ `c0q8` — **cấp 12** — rồi chặn vĩnh viễn con thứ hai ở
+  // cấp 120. Tức DRUE sẽ không bao giờ hiện với người chơi đi đường tự nhiên, mà không lỗi nào
+  // báo. So sánh bằng thì tự đúng cho mọi map: hiện đúng lúc đang làm nhiệm vụ đó, biến mất khi
+  // nhiệm vụ trôi qua.
+  if (md.boss && questIdx === questBossIdx(curMap) && questState !== 'all') spawnBoss(curMap);
   if (md.herbs) for (const s of (HERB_SPOTS[curMap] || [])) pickups.push({ type:'herb', x:s.x, y:s.y, respawn:0 });
   viaThemPickup();   // Vỉa Cốt hôm nay (nếu vùng này có) — xem khối VỈA CỐT
   ruongDungTrai();   // trại canh cho các Rương Canh CHƯA mở — xem khối RƯƠNG CANH
@@ -8397,9 +8425,12 @@ function spawnMob(type, zone, pack, vfx, opts){
   }
   return m;
 }
-function spawnBoss(){
-  if (mobs.some(m=>m.type==='boss'&&!m.dead)) return;
-  spawnMob('boss', { x:BOSS_ARENA.x, y:BOSS_ARENA.y, r:40, count:1 });
+function spawnBoss(mid){
+  mid = mid || curMap;
+  const key = bossMobKey(MAPS[mid]); if (!key) return;
+  if (mobs.some(m => m.type === key && !m.dead)) return;
+  const A = bossArena(mid);
+  spawnMob(key, { x:A.x, y:A.y, r:40, count:1 });
   AudioSys.playBgm(BGM_BOSS); // nhạc trùm nổi lên — trận chiến sinh tử
 }
 
@@ -9638,7 +9669,7 @@ function killMob(m, source){
   if (q && questState==='active'){
     if (q.type==='kill' && q.mob===m.type) questProg++;
     if (q.type==='tpkill' && q.mob===m.type && source==='tp') questProg++;
-    if (q.type==='boss' && m.type==='boss') questProg++;
+    if (q.type==='boss' && m.type === bossMobKey(MAPS[q.map || 'corran'])) questProg++;
     // `tranai` — thu phiến Rune của vùng, tức hạ Tướng Quân đang ngồi lên nó.
     // ⚠ ĐÂY LÀ CHỖ NỐI HAI MẠCH LẠI. Trước bản này KẾT TRUYỆN do một con trùm quyết định
     // (killMob đặt cờ `ta_<map>`, hạ Trấn Ải Dusk Marsh là bật showKetMo) nhưng KHÔNG MỘT
@@ -9649,7 +9680,12 @@ function killMob(m, source){
     if (q.type==='tranai' && m.def.bossKind==='tranai' && curMap===q.map) questProg++;
     if (questProg >= q.need && (q.type==='kill'||q.type==='tpkill'||q.type==='boss'||q.type==='tranai')){
       questState = 'done';
-      if (q.type==='boss'){ victory = true; showVictory(); }
+      // ⚠ `showVictory()` chép cứng "Thủ Lĩnh Gloam đã bại" — đó là câu của trùm chương 0 ở
+      // cấp 12. Hạ DRUE ở cấp 120 mà gọi lại nó là in đúng câu ấy lần thứ hai.
+      if (q.type==='boss'){
+        if ((q.map || 'corran') === 'corran'){ victory = true; showVictory(); }
+        else showKetDrue();
+      }
       else addFloat(player.x, player.y-46, `Nhiệm vụ hoàn thành — về gặp ${npcName(q.npc)}`, '#8fd18f', 13);
     }
   }
@@ -10145,7 +10181,10 @@ function questTarget(q){
     const hs = HERB_SPOTS[hm];
     if (hs) return { map:hm, x:hs[0].x, y:hs[0].y, label:'Bãi Thảo Dược' };
   }
-  if (q.type === 'boss' && typeof BOSS_ARENA !== 'undefined') return { map:'corran', x:BOSS_ARENA.x, y:BOSS_ARENA.y, label:'Đài Bình Cảnh' };
+  if (q.type === 'boss'){
+    const _m = q.map || 'corran', _A = bossArena(_m);
+    return { map:_m, x:_A.x, y:_A.y, label: _m === 'corran' ? 'Đài Bình Cảnh' : 'Dưới Nhát Gọi' };
+  }
   // `tranai`: chỗ đứng của Tướng Quân là toạ độ TỈ LỆ trong BOSS_DEFS, phải nhân khổ map của
   // chính vùng đó — dùng khổ mặc định là dẫn lệch cả nghìn pixel trên map 5200x3800.
   if (q.type === 'tranai'){
@@ -11378,6 +11417,19 @@ window.respawn = function(){
   dead = false;
   document.getElementById('overlay').classList.add('hidden');
 };
+// Hạ DRUE — chương VIII. CỐ Ý không phải một màn "ngươi đã thắng": canon chốt Kết Mở, và
+// `c7q6` đã bật cờ `ketMo` từ trước. Đèn vẫn tắt sau trận này, vì bảy phiến vẫn nằm trong lò —
+// đó là việc của người chơi, không phải của hắn. Đừng đổi thành màn thắng.
+function showKetDrue(){
+  const f = (player && player.storyFlags) || {};
+  zoneBanner = { text:'☠ NGƯỜI THỨ BẢY ĐÃ NGÃ',
+    sub: f.ketMo ? 'Cái tên thứ bảy trên bảng gỗ đã bị gạch. Đèn vẫn tắt — bảy phiến còn trong lò.'
+                 : 'Cái tên thứ bảy đã bị gạch. Còn bảy phiến Rune thì vẫn ở nguyên chỗ của chúng.',
+    color:'#e8e8f0', t:6 };
+  AudioSys.sfx('levelup', 0.95);
+  if (player){ player.storyFlags = player.storyFlags || {}; player.storyFlags.drue = true; }
+  saveGame();
+}
 function showVictory(){
   const sect = SECTS[player.sect];
   const sectLine = `<span style="color:${sect.color}">${sect.name}</span> tự hào về người của mình.`;
@@ -11556,8 +11608,9 @@ function render(){
   }
 
   // boss arena marker
-  if (md.boss && questIdx >= QUEST_BOSS_IDX && !victory){
-    ctx.beginPath(); ctx.arc(BOSS_ARENA.x, BOSS_ARENA.y, 90, 0, 7);
+  if (md.boss && questIdx === questBossIdx(curMap)){   // xem chú thích ở chỗ spawnBoss
+    const _BA = bossArena(curMap);
+    ctx.beginPath(); ctx.arc(_BA.x, _BA.y, 90, 0, 7);
     ctx.strokeStyle = 'rgba(180,40,40,.5)'; ctx.setLineDash([8,8]); ctx.lineWidth = 3; ctx.stroke();
     ctx.setLineDash([]);
     drawCalligraphy('Sát Đài', BOSS_ARENA.x, BOSS_ARENA.y - 104, '#8a2020', 15);
@@ -23184,7 +23237,7 @@ window.turnInQuest = function(){
   // Trùm chương mở màn: map nào khai `boss:true` thì con trùm cốt truyện hiện ra ở đúng mốc này.
   // ⚠ `QUEST_BOSS_IDX` là CHỈ SỐ, nên đảo thứ tự nhiệm vụ là trùm không spawn mà không báo gì.
   // Ba chỗ đọc nó (spawnBoss ở đây, updateGate, và vòng dựng thế giới) phải dùng cùng một hằng.
-  if (questIdx === QUEST_BOSS_IDX && questState === 'active') spawnBoss();
+  if (questIdx === questBossIdx(curMap) && questState === 'active') spawnBoss(curMap);
   // Câu dẫn nhập vùng mới KHÔNG còn treo ở đây: `reqMain` đã gỡ khỏi mọi map nên vòng lọc cũ
   // (`MAPS[id].reqMain === questIdx`) luôn rỗng và 8/9 câu REGION_UNLOCK_LORE là nội dung chết.
   // Nay travelTo() bắn chúng theo lần đầu đặt chân — xem nhánh `_dauTienFirst` ở đó.
@@ -24130,6 +24183,19 @@ Object.assign(MOBS, {
   boss_hacnu2:   { name:'Nữ Vu Bóng Tối',   lv:54,  hp:35200,  atk:272, def:112, xp:25600, silver:[2100,2900], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu2', moves:['vong','vach','goi','cuong'], drop:0, el:'Mộc', poisonHit:true, skel:'wraith', skelPal:{main:'#a88ae0',dark:'#3a2a5a',cloth:'#5a3a86',bone:'#e8dcff',glow:'#c07fe0'}},
   boss_hoangkim1:{ name:'Tướng Quân Vàng', lv:74,  hp:64000,  atk:384, def:152, xp:44800, silver:[3200,4500], speed:80, aggro:9999, range:48, atkCd:1.15, size:36, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim1', moves:['vach','xung','vong'], drop:0, el:'Kim', skel:'knight', skelPal:{main:'#c8a84a',dark:'#8a6a20',trim:'#ffe9a8',cloth:'#6a2a1a',glow:'#ffd76a'}},
   boss_hoangkim2:{ name:'Tướng Quân Vàng', lv:94,  hp:108800, atk:544, def:208, xp:72000, silver:[5100,6700], speed:80, aggro:9999, range:48, atkCd:1.1,  size:38, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim2', moves:['vach','xung','vong','cuong'], drop:0, el:'Kim', skel:'knight', skelPal:{main:'#c8a84a',dark:'#8a6a20',trim:'#ffe9a8',cloth:'#6a2a1a',glow:'#ffd76a'}},
+  // ── DRUE — người thứ bảy. Trùm NHIỆM VỤ của chương VIII, đứng dưới Nhát Gọi ở Trũng Nứt.
+  //
+  // ⚠ Vì sao hắn tồn tại: đo chuỗi 46 nhiệm vụ ra DRUE chỉ được nhắc **2 lần**, cả hai đều là
+  // một câu tả cảnh trong mô tả boss vùng — hắn chưa bao giờ bị đối đầu. CLAUDE.md gọi manh mối
+  // `td_trong` về hắn là "mũi nhọn của cả chuỗi"; mũi nhọn đó chưa đâm vào đâu.
+  //
+  // ⚠ KHÔNG phải Trấn Ải và KHÔNG phải Rune thứ tám. Mỗi map đúng MỘT Trấn Ải (`TRAN_AI_TONG`
+  // suy từ BOSS_DEFS) và đúng BẢY Rune (`RUNE_TONG`, kèm số nấc vết nứt trong style.css). Hắn là
+  // trùm `type:'boss'` — cùng hạng với con ở Rẻo Rừng Corran, chỉ khác map.
+  //
+  // Art: vẽ bằng khung xương `fiend` như boss_amthan, KHÔNG thêm tệp ảnh nào. Bảng màu riêng và
+  // `eye` trắng đục không tròng — đúng dấu của hắn trong manh mối `manh_lenh`.
+  drue:          { name:'DRUE, Người Thứ Bảy', lv:120, hp:260000, atk:820, def:300, xp:190000, silver:[12000,16000], speed:96, aggro:520, range:50, atkCd:0.95, size:46, color:'#0a0a12', eye:'#e8e8f0', boss:true, elite:true, bossId:'drue', moves:['vach','xung','vong','goi','cuong'], drop:1, el:'Kim', skel:'fiend', skelPal:{main:'#2a2a38',dark:'#15151f',trim:'#8e8ea8',bone:'#d8d8e4',glow:'#e8e8f0'}},
   boss_amthan:   { name:'Ác Thần Bóng Tối',     lv:112, hp:180000, atk:680, def:260, xp:126000,silver:[8000,11000],speed:90, aggro:9999, range:52, atkCd:1.0,  size:44, color:'#0c0810', eye:'#ff2a2a', huntBoss:true, bossKind:'hunt', bossId:'boss_amthan', moves:['vach','xung','vong','goi','cuong'], drop:0, el:'Hỏa', skel:'fiend', skelPal:{main:'#5a2a3a',dark:'#331824',trim:'#ff6a5a',bone:'#e8c0b0',glow:'#ff4a3a'}},
 });
 // Ảnh boss nạp thủ công — chạy SAU khi MOBS đã có đủ mob boss (MOB_IMGS ở đầu file chỉ

@@ -216,6 +216,47 @@ const DANH = ['kill', 'tpkill', 'boss', 'tranai'];
     khongTen.map(x => `${x.id} in "${x.hien}" (thiếu "${x.ten}")`).join(' · '));
   else pass(`cả ${r8.length} nhiệm vụ \`moc\` in tiến độ kèm tên cơ chế (vd "${r8[0].hien}")`);
 
+  // ── 9. TRÙM NHIỆM VỤ THEO MAP — và phải đi ĐƯỜNG TỰ NHIÊN mà kiểm ────────────
+  //
+  // ⚠ ĐÂY LÀ CHỖ BÀI KIỂM ĐẦU CỦA TÔI TRƯỢT. Bản đầu nhảy thẳng `questIdx` tới chương VIII rồi
+  // đo — xanh. Nhưng người chơi thật đi qua `c0q8` ở **cấp 12** trước, và nhiệm vụ đó bật cờ
+  // TOÀN CỤC `victory`, mà guard cũ là `questIdx >= idx && !victory` ⇒ DRUE không bao giờ hiện.
+  // Bài nhảy cóc không bao giờ thấy lỗi đó. Nên mục này BẮT BUỘC hạ trùm chương 0 trước.
+  const r9 = await p.evaluate(() => {
+    startGame('thieulam', null);
+    const out = {}, i0 = questBossIdx('corran'), i8 = questBossIdx('trungnut');
+    out.idx = { corran:i0, trungnut:i8 };
+    // (a) trước nhiệm vụ của nó: KHÔNG được hiện
+    player.level = 60; player.lvPeak = 120; calcDerived();
+    questIdx = 0; questState = 'active'; travelTo('trungnut');
+    out.truoc = mobs.filter(m => m.type === 'drue' && !m.dead).length;
+    // (b) ĐƯỜNG TỰ NHIÊN: hạ trùm chương 0 trước
+    player.level = 20; calcDerived();
+    questIdx = i0; questProg = 0; questState = 'active'; travelTo('corran');
+    const b0 = mobs.find(m => m.type === 'boss' && !m.dead);
+    out.trumCh0 = !!b0; if (b0) killMob(b0, 'hit');
+    // (c) rồi mới tới chương VIII — phải hiện
+    player.level = 120; calcDerived();
+    questIdx = i8; questProg = 0; questState = 'active'; travelTo('trungnut');
+    const d = mobs.find(m => m.type === 'drue' && !m.dead);
+    out.hien = !!d;
+    if (d){ out.lv = d.def.lv; killMob(d, 'hit');
+      out.sau = { prog:questProg, st:questState, banner: zoneBanner && zoneBanner.text }; }
+    // (d) qua nhiệm vụ rồi thì phải biến mất
+    questIdx = i8 + 1; travelTo('trungnut');
+    out.sauKhiQua = mobs.filter(m => m.type === 'drue' && !m.dead).length;
+    return out;
+  });
+  console.log('9)', JSON.stringify(r9));
+  if (!isFinite(r9.idx.trungnut)) fail('không tìm thấy nhiệm vụ `type:boss` nào ở Trũng Nứt');
+  else if (r9.truoc) fail('DRUE hiện ra TRƯỚC chương VIII — người cấp 44 đi ngang là gặp trùm cấp 120');
+  else if (!r9.trumCh0) fail('trùm chương 0 không spawn — dựng cảnh hỏng, mục này không kiểm được gì');
+  else if (!r9.hien) fail('hạ trùm chương 0 xong thì DRUE KHÔNG hiện — cờ `victory` toàn cục lại chặn con thứ hai');
+  else if (r9.sau.st !== 'done') fail(`hạ DRUE mà nhiệm vụ không xong (${r9.sau.st})`);
+  else if (/VỎ KÉN/.test(r9.sau.banner || '')) fail(`hạ DRUE mà hiện màn kết của trùm chương 0: "${r9.sau.banner}"`);
+  else if (r9.sauKhiQua) fail('qua nhiệm vụ rồi DRUE vẫn đứng đó');
+  else pass(`trùm nhiệm vụ theo map chạy đúng qua ĐƯỜNG TỰ NHIÊN (chương 0 → DRUE C${r9.lv} → "${r9.sau.banner}")`);
+
   console.log('errors:', JSON.stringify(errs.slice(0, 8)));
   if (errs.length) fail(`${errs.length} lỗi JS trong lúc chạy`);
   console.log(bad ? `\nđỏ: ${bad}` : '\nTẤT CẢ XANH');
