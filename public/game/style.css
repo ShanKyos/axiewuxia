@@ -646,13 +646,9 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .sv-ten { font-family:var(--font-display); font-size:15px; font-weight:700; color:var(--text-bright); }
 .sv-nut.on .sv-ten { color:var(--accent-light); }
 .sv-mo { font-size:11px; color:var(--text-dim); line-height:1.4; }
-.sv-thanh { display:block; width:100%; height:4px; margin-top:5px; border-radius:999px;
-  background:rgba(10,12,28,.9); overflow:hidden; }
-.sv-thanh i { display:block; height:100%; border-radius:999px; }
-.sv-thap { background:#8fd18f; }
-.sv-vua  { background:#ffd76a; }
-.sv-cao  { background:#ff8a5c; }
 .sv-tt { font-size:10.5px; color:var(--text-dim); letter-spacing:.03em; }
+/* Thay cho thanh "Tiếp nhận %" đã gỡ — nói đúng trạng thái thay vì bịa một con số. */
+.sv-off { display:inline-block; margin-top:6px; color:#8fa8b8; }
 /* Nói thẳng đây là nghi thức chứ không phải máy chủ thật — người chơi tưởng có người khác
    trong đó rồi đi tìm mới là thứ đáng trách. */
 /* Nút đổi máy chủ nằm lẫn trong dòng chú thích dưới danh sách nhân vật — nó là lối đi phụ,

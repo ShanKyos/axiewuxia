@@ -154,7 +154,7 @@
         <button id="is-skip" class="is-skip">Bỏ qua ▸▸</button>
         <button id="is-next" class="big-btn">Tiếp ▸</button>
       </div>
-      <label id="max-mode-intro" style="display:none"><input type="checkbox" id="chk-max-intro"> 🧪 Chế độ thử nghiệm — vào game cấp 100, full trang bị &amp; mọi tính năng mở sẵn</label>
+      <label id="max-mode-intro" style="display:none"><input type="checkbox" id="chk-max-intro"> 🧪 Chế độ thử nghiệm — vào game ở cấp tối đa, đầy đủ trang bị &amp; mọi tính năng mở sẵn</label>
     </div>
   </div>
 </div>
@@ -196,7 +196,7 @@
       <button id="btn-name-random" type="button" title="Gợi ý một cái tên">🎲</button>
     </div>
     <div id="cc-name-warn" class="cc-warn"></div>
-    <label id="max-mode" style="display:none"><input type="checkbox" id="chk-max"> Chế độ thử nghiệm — bắt đầu cấp 60, đầy đủ trang bị &amp; vật liệu</label>
+    <label id="max-mode" style="display:none"><input type="checkbox" id="chk-max"> Chế độ thử nghiệm — vào game ở cấp tối đa, đầy đủ trang bị &amp; vật liệu</label>
     <button id="btn-create" class="big-btn" disabled>Tạo Nhân Vật</button>
     <button id="btn-continue" class="big-btn hidden">Vào Game</button>
     <button id="btn-newchar" class="big-btn hidden" style="opacity:.8">Tạo Nhân Vật Mới</button>
@@ -209,7 +209,12 @@
 <div id="boss-talk" class="hidden"></div>
 <div id="cheat-console" class="hidden"><div id="cheat-log"></div><input id="cheat-input" placeholder="/help — lenh playtest" autocomplete="off" onkeydown="if(event.key==='Enter'){cheatExec(this.value);this.value='';}if(event.key==='Escape'){toggleCheatConsole();}"></div>
 <div id="overlay" class="hidden"><div id="overlay-inner"></div></div>
-<script>window.RELEASE_BUILD = true;</script>
+<!-- RELEASE_BUILD=true TẮT HẲN chế độ thử nghiệm, nhưng ô đánh dấu vẫn hiện ra (nó gắn với
+     TEST_MODE — suy từ URL, không suy từ cờ này). Hậu quả: nút hứa "vào game cấp tối đa" mà bấm
+     vào không có gì xảy ra, và chính đường dẫn ?test=1 dùng để trình diễn game cũng chỉ ra một
+     nhân vật cấp 1. Đặt false để nút làm đúng điều nó ghi. Chế độ này vẫn chỉ bật khi URL có
+     ?test=1 hoặc ?max=1 — người chơi thường không bao giờ chạm tới. -->
+<script>window.RELEASE_BUILD = false;</script>
 <script src="strings/en.js"></script>
 <script src="strings/vi.js"></script>
 <script src="i18n.js"></script>
