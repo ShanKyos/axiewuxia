@@ -250,8 +250,21 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 
 /* Thanh dưới cùng kiểu MU Online: viên Máu (đỏ)/Mana (xanh) hình cầu
    2 đầu + thanh kỹ năng dàn ngang giữa + viền sáng theo % máu chạy dọc mép dưới màn hình. */
-#bottom-hud { position:fixed; left:50%; bottom:12px; transform:translateX(-50%); z-index:11;
-  display:flex; align-items:center; gap:14px; pointer-events:none; }
+/* ⚠ TẤM NỀN LIỀN, không phải mấy ô rời nổi trên mặt đất. Trước bản này #bottom-hud trong suốt
+   hoàn toàn, nên nền map lọt qua giữa hai viên đá và giữa các cụm nút: độ tương phản của thanh
+   đổi theo chỗ đang đứng — đá sáng ở thị trấn thì khung đồng nhạt biến mất, cỏ tối thì lại rõ.
+   MU đặt cả thanh trên MỘT tấm kim loại chính vì lý do đó.
+   `pointer-events` đổi none → auto theo: đã có tấm đặc thì bấm vào nó không được lọt xuống
+   dưới bắt nhân vật chạy tới. Các nút con vốn đã tự khai auto nên không đổi gì thêm.
+   `bottom` 12 → 24: thanh EXP nằm ở bottom:6 cao 13 (tức chiếm 6..19) và trước đây cắt ngang
+   đáy các ô chiêu. Nay nó nằm gọn DƯỚI tấm nền, thành một làn riêng. */
+#bottom-hud { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:11;
+  display:flex; align-items:center; gap:14px; pointer-events:auto;
+  padding:7px 14px; border-radius:14px;
+  background:linear-gradient(180deg, rgba(42,34,24,.84), rgba(15,12,8,.92));
+  border:1px solid rgba(198,158,74,.40);
+  box-shadow:0 8px 24px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,231,180,.10),
+             inset 0 -1px 0 rgba(0,0,0,.55); }
 /* Vành cầu KHẮC HOA VĂN, không phải một vòng đen trơn. Vành dựng bằng conic-gradient trên
    pseudo-element: mười hai nan đồng sáng-tối xen kẽ ⇒ mắt đọc ra một cái vòng ĐÚC, có mặt.
    Vòng viền đơn sắc của bản cũ đọc ra như một khối màu, và đó là chỗ khác nhau giữa "khung
@@ -283,11 +296,46 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   text-shadow:0 1px 3px #000, 0 0 8px rgba(0,0,0,.85); letter-spacing:.3px; }
 
 #skillbar { display:flex; gap:8px; pointer-events:auto; }
+/* Khung ĐẬM cho MỌI ô, không riêng bốn ô chiêu. Trước đây `--border` (đồng, alpha .42) đủ đọc
+   trên icon nền tối, nhưng ô Space dùng `basic.png` — một nắm đấm trắng kem trên nền SÁNG — nên
+   khung nhạt chìm hẳn vào ảnh: nút bấm nhiều nhất game lại là nút duy nhất trông không có khung.
+   Thêm một vành tối phía trong để ảnh sáng nào cũng có mép. */
 .skill { position:relative; width:56px; height:56px; border-radius:var(--r-md); cursor:pointer;
-  background:rgba(var(--rgb-da),.88); border:2px solid var(--border); color:var(--text-body);
-  font-family:inherit; overflow:hidden; }
+  /* ⚠ NỀN Ô PHẢI ĐỤC VÀ SÁNG HƠN TẤM NỀN. Trước khi có tấm nền, ô để .88 và 12% còn lại là
+     nền map SÁNG lọt qua — nó vô tình soi sáng mấy tấm icon vốn tối. Dựng tấm nền tối phía sau
+     là mất nguồn sáng chùa đó, chụp ra thấy cả tám icon xỉn hẳn đi. Nay ô tự mang nền riêng,
+     đục hẳn và sáng hơn tấm nền một bậc, nên icon đọc GIỐNG NHAU ở mọi map thay vì đổi theo
+     chỗ đang đứng — đó mới là thứ tấm nền sinh ra để làm.
+     ⚠ Giữ là MÀU, đừng đổi thành gradient: `background-image` được gán thẳng bằng JS cho ô có
+     icon, mà gradient cũng là background-image — khai gradient ở đây là icon đè mất nó. */
+  background:rgb(62,51,36); border:2px solid var(--border-strong); color:var(--text-body);
+  font-family:inherit; overflow:hidden;
+  /* CHỈ một nét tối 1px sát khung. Bản đầu thêm `inset 0 0 10px rgba(0,0,0,.45)` cho "có
+     chiều sâu" — chụp ra thì nó dìm hẳn cả tám icon, đọc còn khó hơn lúc chưa sửa. Thứ làm
+     ảnh sáng có mép là cái nét 1px, không phải vùng tối lan vào giữa. */
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.55); }
 .skill .sk-ico { display:block; font-size:var(--fs-2xl); line-height:34px; }
-.skill .sk-key { display:block; font-size:9px; opacity:.7; }
+/* PHÍM TẮT phải đọc được giữa lúc đánh nhau. Bản cũ là chữ 9px mờ .7 nằm dưới đáy ô, trên nền
+   icon — gần như vô hình, mà đây lại là thứ dạy người chơi bỏ chuột ra mà gõ phím. Nay là một
+   con tem ở góc trên-trái, có nền tối riêng nên không phụ thuộc icon bên dưới sáng hay tối. */
+/* ⚠ MỘT rule duy nhất cho .sk-key, và PHẢI khai đủ bốn cạnh. Trước đây có HAI rule cùng
+   selector cách nhau 450 dòng: cái ở dưới khai `bottom:1px; right:3px`. Thêm `top`+`left` vào
+   cái ở trên là bốn cạnh cùng được đặt — mà một phần tử absolute đặt đủ bốn cạnh với kích
+   thước auto thì bị KÉO GIÃN phủ kín ô. Cái nền đen .78 của con tem hoá ra một tấm phủ lên
+   toàn bộ icon: đo được độ sáng ô chiêu tụt 79,1 → 22,7, tức tối đi hơn ba lần, mà nhìn thì
+   chỉ thấy "icon hơi tối" chứ không ra nguyên nhân. Cùng một họ với lỗi `.sk-so` đã sửa hôm
+   nay: một selector, hai chỗ khai. */
+.skill .sk-key { position:absolute; left:2px; top:2px; right:auto; bottom:auto; z-index:3;
+  font-size:11px; font-weight:700; line-height:1; letter-spacing:.2px;
+  padding:2px 4px; border-radius:4px; opacity:1;
+  background:rgba(6,5,3,.78); color:#f3e3bb; text-shadow:0 1px 2px #000; }
+/* Vạch màu theo NGUYÊN TỐ của chiêu. Bốn ô chiêu của Dark Knight đều là nét trắng trên nền
+   xanh — cùng một tông, nên giữa trận không phân biệt được ô 2 với ô 3. Không tô đè lên tranh
+   (đó là art thật, xem Quy tắc số 3), mà thêm MỘT kênh màu nữa quanh ô. */
+.skill.sk-he { border-color:var(--sk-he);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.55),
+             0 0 0 1px color-mix(in srgb, var(--sk-he) 45%, transparent),
+             0 0 9px color-mix(in srgb, var(--sk-he) 40%, transparent); }
 .skill .sk-cd { position:absolute; left:0; bottom:0; width:100%; height:0%; background:rgba(0,0,0,.65); pointer-events:none; }
 .skill.locked { opacity:.38; filter:grayscale(.8); }
 /* Ô CHIÊU TRỐNG — khung vàng NÉT ĐỨT + dấu cộng, không phải ô mờ.
@@ -695,7 +743,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   filter:drop-shadow(0 4px 8px rgba(0,0,0,.4)); margin-bottom:6px; }
 .skill.has-img { background-size:cover; background-position:center; }
 .skill.has-img .sk-ico { display:none; }
-.skill .sk-key { position:absolute; bottom:1px; right:3px; text-shadow:0 1px 2px #000; }
 .char-portrait { display:block; width:142px; margin:0 auto 6px; filter:drop-shadow(0 4px 8px rgba(0,0,0,.4)); }
 .sect-card .s-title { font-size:17px; letter-spacing:.5px; margin-bottom:4px; font-weight:700; }
 .sect-card .s-role { font-size:var(--fs-sm); color:var(--text-dim); margin-bottom:8px; }

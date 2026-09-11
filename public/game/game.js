@@ -13648,6 +13648,11 @@ function heroBlit(g, spr){ g.drawImage(spr, spr._ox, spr._oy, spr._ow, spr._oh);
    chồng khung MỚI với alpha tăng dần — thứ tự này bắt buộc. Làm ngược lại (cũ mờ dần đè lên
    mới) thì giữa chừng độ phủ chỉ còn 1-t(1-t), tức nhân vật hở nền tới 25% ở khoảng giữa. */
 function _veThanHoa(g, p, spr, now, tier, gv, act, ps, sw){
+  // Vành tách nền — nửa trên của DẤU NEO NHÂN VẬT. Đặt ở đây chứ không ở chỗ gọi, vì nhánh
+  // trúng đòn bọc lời gọi trong một phép xoay quanh gót: để ngoài là vành đứng yên trong khi
+  // thân ngửa ra sau. Vẽ đúng MỘT lần cho tấm đang hiện, không vẽ cho khung cũ đang hoà lẫn
+  // cho vệt pha sau — hai cái đó là bóng mờ, viền quanh chúng thành ra bốn lớp viền chồng nhau.
+  heroVienVe(g, spr);
   const t = p._nhoaT0 ? Math.min(1, (now - p._nhoaT0) / NHOA_MS) : 1;
   if (t < 1 && p._nhoaBlk){
     const cu = heroSprite(p.sect, tier, gv, p._nhoaKind, p._nhoaIdx, act, ps.back, sw, p._nhoaBlk, p._hw);
@@ -15130,6 +15135,78 @@ function veCanhAo(g, d, T, swayDir, now, B){
   g.restore();
   if (T.hao) canhHaoQuang(g, d, T, now);
 }
+// ── DẤU NEO NHÂN VẬT ─────────────────────────────────────────────────────────────────────
+// Đo bằng ảnh chụp, không phải cảm giác: nhân vật vẽ ra ~45px ngang, giáp tối, đứng giữa một
+// màn hình toàn thứ TO HƠN và SÁNG HƠN nó — slime đỏ, mèo cam, trùm tím, NPC áo màu. Lúc đánh
+// nhau còn bị loé trúng đòn và Chimera đi theo phủ lên. Có khung hình không đọc ra mình đứng
+// đâu, mà thể loại này thì đòi người chơi tìm ra mình TỨC THÌ, mọi lúc.
+//
+// Hai lớp, CẢ HAI NẰM NGOÀI đường bao nhân vật — điều kiện bắt buộc, không phải tuỳ chọn:
+//   · vòng chân dưới đất (ngay sau bóng đổ trong drawPlayer)
+//   · vành tách nền quanh bóng (heroVienCanvas)
+// Luật "trang bị giữ nguyên màu ở mọi mức rèn" đã bác HAI LẦN cái lối cộng sáng đè lên chính
+// nhân vật: da và tóc cũng là vùng sáng, lên +9 là mặt bợt hẳn. Cùng nguyên lý với quầng +N và
+// với rìa sáng ở mục "Đổ khối": lấy bóng NỞ RA trừ đi bóng gốc, còn đúng một dải mép ngoài.
+//
+// Vành phải HAI MÀU — sáng ngoài, tối trong — chứ không một màu. Chỉ tối thì tàng hình trên nền
+// tối, chỉ sáng thì tàng hình trên nền sáng; map của game có cả hai. Đây đúng là bài học đã rút
+// khi dựng viền chibi ("trắng dày ngoài, đen mỏng trong").
+// ⚠ VÒNG PHẢI RỘNG HƠN CHỖ NHÂN VẬT ĐỨNG. Bản đầu để 0,150·NV_CAO (≈40px ngang) — thân nhân
+// vật vẽ ra đã ~45px, nên vòng nằm gọn SAU người và chỉ hở hai mẩu bên sườn: chụp ở thị trấn
+// thì gần như không thấy. Nó chỉ làm được việc khi mắt bắt được cả cái vòng khép kín.
+const NEO_RX = NV_CAO * 0.205;          // vòng chân — đo theo NV_CAO, đừng chép cứng px
+const NEO_RY = NV_CAO * 0.077;
+// ⚠ Bề dày vành khai bằng PIXEL MÀN HÌNH rồi mới quy về hệ 160×220, không khai thẳng số trong
+// hệ đó. Thân vẽ ra chỉ cao NV_CAO nên tỉ lệ là 0,6: khai 1,6 trong hệ sprite thì ra dưới 1px
+// trên màn và biến mất sạch — đúng cái bẫy đã ghi ở mục "Sáng theo +N".
+const VIEN_MAN = 1.7;
+const VIEN_SPR = VIEN_MAN * HERO_H / NV_CAO;
+const VIEN_SANG = 'rgba(255,247,228,.50)';
+const VIEN_TOI  = 'rgba(10,7,4,.55)';
+const _vienCache = new WeakMap();
+// Một DẢI mép: in bóng ở 12 hướng quanh tâm để nở ra, tô đặc một màu, rồi trừ đi bóng gốc.
+// 12 hướng chứ không 4 — in bốn hướng thì bốn góc chéo hở ra thành răng cưa.
+function _vienDai(spr, r, mau, pad){
+  const W = spr.width + pad * 2, H = spr.height + pad * 2;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  for (let i = 0; i < 12; i++){
+    const a = i / 12 * Math.PI * 2;
+    g.drawImage(spr, pad + Math.cos(a) * r, pad + Math.sin(a) * r);
+  }
+  g.globalCompositeOperation = 'source-in';
+  g.fillStyle = mau; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'destination-out';
+  g.drawImage(spr, pad, pad);               // trừ bóng gốc ⇒ chỉ còn vành ngoài
+  return c;
+}
+// Dựng MỘT LẦN cho mỗi tấm khung rồi nhớ lại: 12 nhát vẽ × 2 dải mà làm mỗi khung hình thì
+// đắt hơn cả phần còn lại của drawPlayer. WeakMap khoá theo chính tấm sprite, nên khi bộ đệm
+// sprite (LRU) nhả tấm nào ra thì vành của nó được thu hồi theo, không phải dọn tay.
+function heroVienCanvas(spr){
+  let cv = _vienCache.get(spr);
+  if (cv) return cv;
+  const d = VIEN_SPR, pad = Math.ceil(d) + 1;
+  cv = document.createElement('canvas');
+  cv.width = spr.width + pad * 2; cv.height = spr.height + pad * 2;
+  const g = cv.getContext('2d');
+  g.drawImage(_vienDai(spr, d, VIEN_SANG, pad), 0, 0);        // sáng, dày, ngoài cùng
+  g.drawImage(_vienDai(spr, d * 0.45, VIEN_TOI, pad), 0, 0);  // tối, mỏng, sát bóng
+  // HS_SCALE = 1 nên 1px canvas = 1 đơn vị hệ 160×220; lề nở ra bao nhiêu thì lùi bấy nhiêu.
+  cv._ox = spr._ox - pad; cv._oy = spr._oy - pad;
+  cv._ow = spr._ow + pad * 2; cv._oh = spr._oh + pad * 2;
+  _vienCache.set(spr, cv);
+  return cv;
+}
+// TEST_TO_PHANG tô đè MÀU để bài kiểm đo bóng dáng từng điểm ảnh — vành nằm ngoài bóng nên nó
+// sẽ làm sai đúng phép đo đó. Tắt trong chế độ ấy.
+function heroVienVe(g, spr){
+  if (window.TEST_TO_PHANG) return;
+  const v = heroVienCanvas(spr);
+  g.drawImage(v, v._ox, v._oy, v._ow, v._oh);
+}
+
 function drawPlayer(){
   const sect = SECTS[player.sect];
   const p = player;
@@ -15168,6 +15245,20 @@ function drawPlayer(){
   ctx.ellipse(p.x + _shDx, p.y+8, _shRx*1.5, _shRy*1.5, 0, 0, 7); ctx.fill();
   ctx.fillStyle = 'rgba(0,0,0,' + (0.20*_shAl*_shK).toFixed(3) + ')'; ctx.beginPath();
   ctx.ellipse(p.x + _shDx*0.45, p.y+8, _shRx, _shRy, 0, 0, 7); ctx.fill();
+  // Vòng chân — nửa dưới của DẤU NEO NHÂN VẬT (xem chú thích trên drawPlayer). Vẽ SAU bóng đổ
+  // nên nó nổi trên bóng, và vẫn nằm dưới thân người. Co + nhạt theo `bayK` y như bóng: đang
+  // lơ lửng mà vòng vẫn nguyên cỡ thì nó dính xuống đất trong khi người đã bay lên.
+  // Màu lấy theo LỚP, nên nó vừa chỉ chỗ vừa nhắc mình đang chơi lớp nào.
+  if (!dead){
+    const _neoK = 1 - bayK * 0.55;
+    ctx.save();
+    ctx.globalAlpha = 0.52 * _neoK * _shAl;
+    ctx.strokeStyle = sect.color; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y + 8, NEO_RX * _neoK, NEO_RY * _neoK, 0, 0, 7);
+    ctx.stroke();
+    ctx.restore();
+  }
   // Bụi gót chân: nổ ĐÚNG LÚC bàn chân chạm đất, không phải rắc ngẫu nhiên 8% số khung.
   // Bàn chân chạm khi sải chân mở hết cỡ — tức cos(pha) đổi dấu. Bắt đúng lần đổi dấu
   // đó thì tiếng bước và bụi trùng nhau, chân mới có cảm giác BÁM đất.
@@ -15476,6 +15567,24 @@ function setSkillIcon(id, url){
   const b = el(id);
   b.style.backgroundImage = `url(${url})`;
   b.classList.add('has-img');
+}
+// Màu NGUYÊN TỐ của một chiêu, cho vạch màu quanh ô trên thanh chiến đấu.
+// ⚠ Đọc thẳng bảng định nghĩa, KHÔNG thêm trường vào skillInfo(): hàm đó là hợp đồng "năm
+// thông số bắt buộc" và có bài kiểm gác: nhét một khoá hình ảnh vào đấy là trộn chuyện trình
+// bày vào chuyện cân bằng. Chiêu nào không khai màu thì trả null và ô giữ khung đồng như cũ.
+function skMau(id){
+  const d = SKILL_DEFS[id];
+  if (!d) return null;
+  if (d.kind === 'vh'){
+    const v = VOHOC_DEFS[id] || (typeof FUSION_DEFS !== 'undefined' && FUSION_DEFS[id]);
+    return (v && v.color) || null;
+  }
+  const sect = SECTS[player.sect];
+  // Hai chiêu lớp không khai màu riêng — lấy hai sắc KHÁC NHAU của chính lớp, nếu không ô 1
+  // và ô 2 lại về cùng một màu và vạch màu chẳng nói thêm được gì.
+  if (d.kind === 'sectA') return sect.color;
+  if (d.kind === 'sectTP') return sect.glow;
+  return d.color || null;
 }
 // ---------- Panels ----------
 // ⚠ NỐI BẰNG VÒNG LẶP CÓ KIỂM NULL, không nối từng dòng. `btn-inv` đã RỜI khỏi thanh HUD —
@@ -21235,7 +21344,7 @@ function updateHud(){
     const b = el('sk-'+i); if (!b) continue;
     const id = (player.skillBar || [])[i];
     if (!id){
-      b.classList.add('sk-empty'); b.classList.remove('locked','has-img');
+      b.classList.add('sk-empty'); b.classList.remove('locked','has-img','sk-he');
       b.style.backgroundImage = '';
       b.querySelector('.sk-ico').textContent = '+';
       b.title = 'Ô trống — lớp này chưa khai chiêu cho ô đó (bấm K để xem bảng Kỹ Năng)';
@@ -21247,6 +21356,11 @@ function updateHud(){
     b.classList.toggle('locked', !info.unlocked);
     b.classList.add('has-img');
     b.style.backgroundImage = `url(${info.icon})`;
+    // Vạch màu nguyên tố — chỉ khi chiêu đã mở. Ô còn khoá thì để khung đồng xám như cũ, không
+    // thì cái vạch màu lại đọc thành "dùng được".
+    const _mau = info.unlocked ? skMau(id) : null;
+    b.classList.toggle('sk-he', !!_mau);
+    if (_mau) b.style.setProperty('--sk-he', _mau); else b.style.removeProperty('--sk-he');
     b.title = info.unlocked ? `${info.name} — ${info.qi} Mana · ${info.cd}s` : `${info.name} — ${info.lockTxt}`;
     const cd = player.cd[id] || 0;
     b.querySelector('.sk-cd').style.height = (cd>0 ? (100*cd/info.cd) : 0) + '%';
