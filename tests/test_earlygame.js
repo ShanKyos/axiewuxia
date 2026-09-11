@@ -71,8 +71,12 @@ const PORT = process.argv[2] || '8853';
     o.xp60 = XP_TABLE[59];
 
     // ── 6. Mục tiêu ngày mở theo cấp ──
-    dat(1);  o.daily1 = dailyGoalsNow().map(g => g.id);
-    dat(12); o.daily12 = dailyGoalsNow().length; o.dailyTong = DAILY_GOALS.length;
+    // ⚠ Bản cũ đọc `DAILY_GOALS.length` và đòi cấp 12 phải thấy ĐỦ mọi mục. Bảng phẳng đó đã
+    // thay bằng `DAILY_BANDS` (7 dải) vì nó đóng băng 3 mục suốt 108 cấp — xem test_muctieu.js.
+    // Mốc mới đo đúng thứ đáng đo: bảng phải LỚN DẦN, và cấp 12 KHÔNG được thấy hết.
+    dat(1);   o.daily1   = dailyGoalsNow().map(g => g.id);
+    dat(12);  o.daily12  = dailyGoalsNow().length;
+    dat(120); o.daily120 = dailyGoalsNow().length;
 
     // ── 7. NV phụ — ĐÃ BỎ ──
     // ⚠ Phần đo NHIỆM VỤ đã gỡ khỏi bài này: chuỗi nhiệm vụ đã xoá sạch để dựng lại (CLAUDE.md ·
@@ -130,7 +134,10 @@ const PORT = process.argv[2] || '8853';
   if (!r.congDuoiCap || !r.congDuCap) fail(`cổng Outskirts sai: dưới cấp ${r.congDuoiCap}, đủ cấp ${r.congDuCap}`); else pass('Beast Herd Camp: khoá dưới cấp 10, mở đúng cấp 10');
   if (!r.cuaTheoCap || !r.chungnamMo) fail(`cổng Werebear Woods sai: lý do khoá ${r.cuaTheoCap}, mở ở cấp 20 ${r.chungnamMo}`); else pass('Werebear Woods: khoá vì CẤP (không còn khoá vì nhiệm vụ), mở ở cấp 20');
   if (!r.xpTang || r.xpBuocMax > 1.5) fail(`EXP 49→60 không đều (bước lớn nhất ×${r.xpBuocMax})`); else pass(`EXP 49→60 tăng đều, bước lớn nhất ×${r.xpBuocMax}, mốc 60 giữ ${r.xp60}`);
-  if (r.daily1.join() !== 'kills' || r.daily12 !== r.dailyTong) fail(`mục tiêu ngày: cấp 1 thấy ${r.daily1}, cấp 12 thấy ${r.daily12}/${r.dailyTong}`); else pass('mục tiêu ngày mở dần theo cấp');
+  if (r.daily1.join() !== 'kills') fail(`cấp 1 phải thấy đúng một mục 'kills', đo được [${r.daily1}]`);
+  else if (!(r.daily12 > r.daily1.length)) fail(`cấp 12 (${r.daily12} mục) không nhiều hơn cấp 1 (${r.daily1.length})`);
+  else if (!(r.daily120 > r.daily12)) fail(`cấp 120 (${r.daily120} mục) không nhiều hơn cấp 12 (${r.daily12}) — bảng đóng băng giữa chừng`);
+  else pass(`mục tiêu ngày lớn dần: cấp 1 → ${r.daily1.length} mục · cấp 12 → ${r.daily12} · cấp 120 → ${r.daily120}`);
   if (!/^3[.,]114$/.test(r.bac)) fail('HUD bạc in số lẻ: ' + r.bac); else pass('HUD bạc làm tròn: ' + r.bac);
   if (!r.tutDong) fail('bước tutorial cuối không tự đóng sau 25s'); else pass('bước tutorial cuối tự đóng');
   if (!r.goiYUong) fail('máu thấp không gợi ý uống thuốc'); else pass('máu thấp → gợi ý R uống thuốc');
