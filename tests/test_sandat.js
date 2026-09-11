@@ -29,6 +29,9 @@ const HANH_LANG_HEP_NHAT = 340;
   const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
   const errs = []; p.on('pageerror', e => errs.push(String(e)));
   await p.goto(`http://localhost:${PORT}/index.html?max=1`, { waitUntil: 'load' });
+  // Chờ game.js chạy xong hẳn (`window.__gameReady` đặt ở dòng cuối tệp) thay vì tin một
+  // khoảng ngủ cứng — 170/175 bài đã làm thế, năm bài này là chỗ còn sót.
+  await p.waitForFunction(() => window.__gameReady).catch(()=>{});
   await p.waitForTimeout(1500);
 
   const r = await p.evaluate(([SAN_MIN, HANH_LANG_HEP_NHAT]) => {
