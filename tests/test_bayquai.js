@@ -82,6 +82,20 @@ const PORT = process.argv[2] || '8853';
     // nhiều con và tỉ lệ đo ra vô nghĩa (lần đầu đo ra ×1.446 vì đúng lỗi này).
     const chiGiu = (giu) => { for (const m of mobs) if (!giu.includes(m)){ m.x = -9000; m.y = -9000; m.homeX = m.x; m.homeY = m.y; } };
     chiGiu([mates[0], tiep]); tiep.x = -9000; tiep.y = -9000;   // Kẻ Tiếp Sức sống nhưng ở xa — buff tính theo mã bãi, không theo khoảng cách
+    // ⚠ NEO NGƯỜI CHƠI VỀ ĐIỂM THẢ TRƯỚC KHI ĐO.
+    // Bài này dựng cảnh bằng `curMap = ...; buildWorld()` chứ không bằng travelTo(), mà
+    // buildWorld() KHÔNG đặt lại vị trí người chơi — nên lúc đo, `player` còn nằm ở chỗ khúc
+    // trước bỏ lại. Đo được: (3200,1900), tức NGOÀI hẳn khổ map 2600x1900.
+    //
+    // Trước đây không ai thấy, vì Werebear Woods chưa có sàn `diTrong`: doDon() đặt quái ở
+    // player.x+20, cũng ngoài map, và không có gì kéo nó về. Từ khi map có sàn thì
+    // collideObstacles() lôi con quái trở lại trong sàn (3220 → 2503 chỉ trong MỘT khung) còn
+    // người chơi thì vẫn đứng ngoài, nên hai bên cách nhau 129-158px suốt sáu khung và phép đo
+    // ra 0 sát thương. Đo lại với người chơi đứng ở điểm thả: 220.
+    //
+    // Neo lại KHÔNG nới lỏng bài kiểm — mọi ngưỡng giữ nguyên; nó chỉ đưa phép đo vào trong
+    // vùng chơi được, đúng chỗ nó vẫn định đo.
+    player.x = MAPS[curMap].spawn.x; player.y = MAPS[curMap].spawn.y;
     player.eva = 0; player.defRed = 0; player.excBlock = 0; player.gkBuffT = 0;
     const _rnd = Math.random; Math.random = () => 0.5;
     // Ép defRed/eva = 0 TRONG từng khung: killMob → thưởng → có thể gọi calcDerived() và trả
