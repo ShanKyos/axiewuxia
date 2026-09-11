@@ -23339,7 +23339,9 @@ function renderQlog(){
       html += `<div class="ql-row"><span style="color:#e8b060">✦</span> <b>${c.name}</b><div style="opacity:.65;font-size:11px;padding-left:18px;line-height:1.4">${c.desc}</div></div>`;
     }
     const seen = Object.keys(player.storySeen || {});
-    html += `<div class="ql-ch">⚑ Tướng Quân Đã Gặp <span style="opacity:.6">· ${seen.length}/28</span></div>`;
+    // Tổng đọc thẳng từ BOSS_LORE, không chép cứng: bảng đó đã 28 mục rồi 40 rồi lại đổi nữa,
+    // và mỗi lần đổi thì con số chép cứng lại nói dối mà không bài kiểm nào bắt được.
+    html += `<div class="ql-ch">⚑ Tướng Quân Đã Gặp <span style="opacity:.6">· ${seen.length}/${Object.keys(BOSS_LORE).length}</span></div>`;
     if (!seen.length) html += `<div class="ql-row" style="opacity:.5">Chưa gặp Tướng Quân nào.</div>`;
     for (const bid of seen){
       const L = BOSS_LORE[bid]; if (!L) continue;

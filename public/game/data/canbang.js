@@ -355,7 +355,7 @@ window.BOSS_DEFS = {
   trungnut: { thuve:[
       { id:'tn1', name:'Rễ Trũng Cựa Mình',   lv:46, el:'Mộc',  img:'mocnhan', x:0.22, y:0.52, moves:['vong','vach','cuong'] },
       { id:'tn2', name:'Kẻ Nhặt Xác Mép Nứt', lv:48, el:'Thổ',  img:'thinu',   x:0.55, y:0.78, moves:['vach','xung','goi'] } ],
-    tranai: { id:'tn3', name:'Thứ Bò Ra Từ Nứt', lv:52, el:'Thuỷ', img:'bandao', x:0.78, y:0.66, moves:['vong','vach','goi','cuong'] } },
+    tranai: { id:'tn3', name:'Thứ Bò Ra Từ Nứt', lv:52, el:'Thủy', img:'bandao', x:0.78, y:0.66, moves:['vong','vach','goi','cuong'] } },
   // Trum Loi Mon dung o TAN CUNG lan -- di het duong moi gap. Do la phan thuong cua viec di het.
   loimon: { thuve:[],
     tranai: { id:'lm1', name:'Kẻ Chặn Cuối Lối', lv:50, el:'Thổ', img:'mocnhan', x:0.9300, y:0.5744, moves:['vach','vong','goi','cuong'] } },
