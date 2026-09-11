@@ -49,6 +49,15 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   // 3. Bạo kích phải NỔI BẬT hơn
   const r3 = await p.evaluate(async () => {
     const m = mobs.find(x => !x.dead && !x.def.bossKind);
+    // Đòn "thường" phải THẬT là thường. hurtMob() không tự roll bạo kích (source quyết định)
+    // nhưng có HAI nguồn khác đổi màu/cỡ số bay, cả hai đều ngẫu nhiên theo trận:
+    //  1. Sát Thương Hoàn Hảo (player.perfectProc) — tô số y hệt bạo kích;
+    //  2. Khắc hệ (_dmgCounter) — tô XANH đè lên cả bạo kích lẫn đòn thường, nên hai bên ra
+    //     cùng một màu và phép so màu mất nghĩa.
+    // Nhân vật trần thì perfectProc = 0 nên bài này xanh do MAY, không do chặt chẽ; từ khi
+    // ?max=1 phát đồ thật thì nó đỏ ngẫu nhiên. Tắt cả hai nguồn khi đo.
+    const _pp = player.perfectProc; player.perfectProc = 0;
+    const _def = m.def; m.def = Object.assign({}, m.def, { el: null });
     m.hp = m.maxHp = 999999; floats.length = 0;
     hurtMob(m, 40, 'crit');
     await new Promise(r => setTimeout(r, 500));
@@ -57,6 +66,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     hurtMob(m, 40, 'hit');
     await new Promise(r => setTimeout(r, 500));
     const g = floats.find(f => /^-\d+$/.test(f.text));
+    player.perfectProc = _pp; m.def = _def;
     return { bao: f ? { co:f.size, mau:f.color } : null, thuong: g ? { co:g.size, mau:g.color } : null };
   });
   console.log('3) bạo kích vs đòn thường:', JSON.stringify(r3));
