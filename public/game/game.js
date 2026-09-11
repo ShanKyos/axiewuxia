@@ -1083,8 +1083,6 @@ const MOB_IMGS = {};
 // Nền bản đồ vẽ tay (thủy mặc sơn thủy) — nạp lười, fallback màu phẳng khi chưa tải xong
 const MAP_BG_SRC = {
   daohoa:'assets/maps/bg_daohoa.jpg',
-  chungnam:'assets/maps/bg_chungnam.jpg',
-  comoc:'assets/maps/bg_comoc.jpg',
   // ⚠ BỐN TẤM ĐÃ GỠ — `ngoai` · `tuyettinh` · `mongco` · `nhanmon`. Chúng là tranh SÂN KHẤU
   // nhìn ngang: đáy tấm có một dải sàn mỏng 6-32%, phần trên là trời/núi/tường cây. Mà hàm vẽ
   // nền kéo tấm phủ kín thế giới rồi cho người chơi đi khắp mặt tranh, nên TRANH NỀN CHÍNH LÀ
@@ -1703,6 +1701,9 @@ const ISO_W = 256, ISO_H = 128;              // hình thoi 2:1 — đúng cỡ n
 // và sỏi đường. Map nào muốn đổi thì khai `isoCo`/`isoDat` trong MAPS — xem MAPS.ardhaven.
 const ISO_CO  = ['nen_co1', 'nen_co2', 'nen_co3'];
 const ISO_DAT = ['nen_dat1', 'nen_dat2'];
+// VỆT CHUYỂN TIẾP mặc định. ⚠ ĐỔI ĐƯỢC THEO TỪNG MAP qua `isoVet`, cùng lối `isoCo`/`isoDat`:
+// vệt phải cùng tông với vai ĐƯỜNG của vùng, nếu không Bird Tribe Heights hiện ra một vệt bùn
+// nâu vắt ngang tuyết. Bộ nướng ở tools/iso/nuong_biome.py.
 const ISO_VET = ['vet_dat1', 'vet_dat2'];
 const ISO_IMGS = {};
 function isoImg(ten){
@@ -1745,7 +1746,7 @@ function sanIsoDung(){
   if (!md.sanIso || !md.diTrong) return;
   const cot = Math.ceil(MAP.w / ISO_W) + 3, hang = Math.ceil(MAP.h / (ISO_H/2)) + 3;
   const o = new Uint8Array(cot * hang);
-  const dsDat = md.isoDat || ISO_DAT, dsCo = md.isoCo || ISO_CO;
+  const dsDat = md.isoDat || ISO_DAT, dsCo = md.isoCo || ISO_CO, dsVet = md.isoVet || ISO_VET;
   const duong = (md.isoDuong && md.isoDuong.length) ? md.isoDuong : null;
   for (let j = 0; j < hang; j++){
     for (let i = 0; i < cot; i++){
@@ -1794,10 +1795,10 @@ function sanIsoDung(){
     if (!trongDaGiac(md.diTrong, x, y)) continue;
     const d = duong ? _isoCachDuong(duong, x, y) : _isoCachMep(md.diTrong, x, y);
     if (d < 110 || d > (duong ? 260 : 285)) continue;   // đúng dải ranh giới, chỗ răng cưa lộ ra
-    vet.push({ x, y, i: (boc()*ISO_VET.length)|0 });
+    vet.push({ x, y, i: (boc()*dsVet.length)|0 });
     dat++;
   }
-  _sanIso = { cot, hang, o, vet, dsDat, dsCo };
+  _sanIso = { cot, hang, o, vet, dsDat, dsCo, dsVet };
 }
 // Vẽ phần sàn đang lọt khung nhìn. Trả về false nếu map này không lát viên, để nhánh tranh nền
 // một tấm chạy tiếp như cũ.
@@ -1821,7 +1822,7 @@ function veSanIso(){
   for (const v of _sanIso.vet){
     if (v.x < camera.x - 300 || v.x > camera.x + VW + 300) continue;
     if (v.y < camera.y - 200 || v.y > camera.y + VH + 200) continue;
-    const im = isoImg(ISO_VET[v.i]); if (!im) continue;
+    const im = isoImg(_sanIso.dsVet[v.i]); if (!im) continue;
     ctx.drawImage(im, v.x - im.naturalWidth/2, v.y - im.naturalHeight/2);
   }
   return true;
@@ -1974,7 +1975,7 @@ const GATES = [
   // (Outskirts) có đường về. Nay bù đủ, đặt cạnh chính điểm thả của từng vùng — đúng khuôn mà
   // Outskirts đang dùng: bước ra khỏi chỗ vừa tới là thấy cổng về.
   { map:'corran',    x:256, y:1088, to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
-  { map:'chungnam',    x:270, y:1575, to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
+  { map:'chungnam',    x:256, y:896, to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
   { map:'tuyettinh',   x:256, y:896,  to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
   // Tầng Sâu: miệng giếng ở góc tây-nam Quảng Trường Atia, cách điểm thả ~750px. Rơi vào khoảng
   // trống giữa hai dãy nhà (x 2720-3680) nên không đè khối nào. Bản đầu đặt ở (2820,2150) —
@@ -2018,8 +2019,8 @@ const GATES = [
   // Tên lối ghi hướng TRÊN CHÍNH MAP ĐANG ĐỨNG (đi ra hướng nào), nên luôn đúng với thứ người
   // chơi thấy — không hứa gì về vị trí tương đối giữa hai map, và game cũng không có bản đồ thế
   // giới để mà mâu thuẫn.
-  { map:'chungnam',    x:1921, y:150,  to:'comoc',    name:'Lối Bắc → Bug Tribe Tunnels' },
-  { map:'chungnam',    x:2480, y:700,  to:'daohoa',   name:'Lối Đông → Plant Tribe Glade' },
+  { map:'chungnam',    x:2304, y:256,  to:'comoc',    name:'Lối Bắc → Bug Tribe Tunnels' },
+  { map:'chungnam',    x:4224, y:960,  to:'daohoa',   name:'Lối Đông → Plant Tribe Glade' },
   // ⚠ BA LỐI RÌA NÀY THEO DẢI CẤP, KHÔNG THEO TẤM NỀN. Chúng vốn mọc trên Rẻo Rừng Corran hồi
   // map ấy còn giữ dải 38-42; khi hai map hoán dải, chúng phải sang Plant Tribe Glade — nếu
   // không thì người chơi cấp 1 vừa bước qua Cổng Tây đã đứng cạnh một cái cổng dẫn thẳng vào
@@ -2051,18 +2052,18 @@ const GATES = [
   // Mép tây comoc đã có cổng đi Werebear Woods ở y=1366; cổng này ở y=1700, cách 334px — xa hơn
   // hẳn bán kính bắt cổng 90px nên không cổng nào nuốt cổng nào. Chỗ đặt cũng dò bằng máy trong
   // game: comoc là map vẽ tay, có 46 vật cản suy từ chính tranh nền của nó.
-  { map:'comoc',       x:150,  y:1700, to:'trungnut', name:'Lối Tây → Trũng Nứt Corran' },
+  { map:'comoc',       x:256,  y:896, to:'trungnut', name:'Lối Tây → Trũng Nứt Corran' },
   // ── NHỊP ĐÁ: nối hang với đỉnh núi, lấp dải 56-62 ────────────────────────────────────
   // Bird Tribe Heights trước nay CHỈ vào được bằng cổng thành (test_noimap ghi hẳn lý do: bốn
   // con trùm của nó phủ kín cả bốn rìa). Đo lại thì góc bắc-đông vẫn còn một ô sạch — tt2 gần
   // nhất 974px, trên ngưỡng 700 — nên lối rìa này đứng được. Hai đầu đặt ở hai rìa ĐỐI DIỆN
   // theo đúng nếp cũ: Bug Tribe Tunnels 'Lối Đông' ↔ Nhịp Đá 'Lối Tây'.
-  { map:'comoc',       x:2150, y:560,  to:'caungam',   name:'Lối Đông → Aquatic Tribe Causeway' },
+  { map:'comoc',       x:4480, y:1024,  to:'caungam',   name:'Lối Đông → Aquatic Tribe Causeway' },
   { map:'caungam',  x:320,  y:900,  to:'comoc',     name:'Lối Tây → Bug Tribe Tunnels' },
   { map:'caungam',  x:1850, y:2380, to:'tuyettinh', name:'Lối Nam → Bird Tribe Heights' },
   { map:'tuyettinh',x:2112, y:256, to:'caungam',   name:'Lối Bắc → Aquatic Tribe Causeway' },
-  { map:'comoc',       x:150,  y:1366, to:'chungnam', name:'Lối Tây → Werebear Woods' },
-  { map:'comoc',       x:1369, y:150,  to:'mongco',   name:'Lối Bắc → Reptile Sunstone Flats' },
+  { map:'comoc',       x:1728, y:3264, to:'chungnam', name:'Lối Nam → Werebear Woods' },
+  { map:'comoc',       x:2816, y:256,  to:'mongco',   name:'Lối Bắc → Reptile Sunstone Flats' },
   { map:'mongco',      x:1792, y:3328, to:'comoc',    name:'Lối Nam → Bug Tribe Tunnels' },
   { map:'mongco',      x:4672, y:1024, to:'nhanmon',  name:'Lối Đông → Dusk Marsh' },
   { map:'nhanmon',     x:256,  y:960,  to:'mongco',   name:'Lối Tây → Reptile Sunstone Flats' },
@@ -2600,8 +2601,8 @@ function nearestFree(mapId, x, y){
 // thì tưởng cổng hỏng chứ không ai nghĩ tới ải cấp.
 const AI_PASSES = [
   { map:'ngoai',       x:3196, y:1739, r:95,  reqLv:14,  name:'Trại Gloam' },
-  { map:'chungnam',    x:1620, y:640,  r:100, reqLv:26,  name:'Cổng Rừng Gai' },
-  { map:'comoc',       x:2100, y:400,  r:90,  reqLv:50,  name:'Cửa Tổ Sâu' },
+  { map:'chungnam',    x:860, y:2048,  r:100, reqLv:26,  name:'Cổng Rừng Gai' },
+  { map:'comoc',       x:2267, y:673,  r:90,  reqLv:50,  name:'Cửa Tổ Sâu' },
   { map:'tuyettinh',   x:2048, y:1792, r:100, reqLv:68,  name:'Cổng Đầm Sương' },
   { map:'mongco',      x:2971, y:2251, r:100, reqLv:88,  name:'Vòng Vây Tro Tàn' },
   { map:'nhanmon',     x:2267, y:1419, r:110, reqLv:104, name:'Cổng Bão Tố' },
@@ -6272,6 +6273,30 @@ const HERB_SPOTS = {
   daohoa: [
     { x:620, y:560 }, { x:760, y:700 }, { x:950, y:640 }, { x:1080, y:820 },
     { x:900, y:1180 }, { x:1200, y:900 }, { x:1350, y:1050 }, { x:1550, y:950 },
+  ],
+  chungnam: [
+    { x:3136, y:2112 },
+    { x:2048, y:1408 },
+    { x:1792, y:1920 },
+    { x:3648, y:576 },
+    { x:1024, y:640 },
+    { x:1152, y:2048 },
+    { x:1664, y:2560 },
+    { x:704, y:1472 },
+    { x:2432, y:2176 },
+    { x:640, y:2240 },
+  ],
+  comoc: [
+    { x:1088, y:2240 },
+    { x:1344, y:704 },
+    { x:3520, y:1984 },
+    { x:3712, y:640 },
+    { x:3008, y:1536 },
+    { x:2240, y:1600 },
+    { x:512, y:320 },
+    { x:896, y:1152 },
+    { x:2560, y:3008 },
+    { x:2112, y:640 },
   ],
   // ⚠ BA MAP CUỐI NAY CŨNG CÓ CHỖ HÁI THUỐC, và đó là một phép ĐO chứ không phải một ý thích.
   // test_domap đòi mật độ ≥1,30 điểm nội dung / 1000 ô đi được. Dựng lại bốn map theo khổ rộng
@@ -22470,7 +22495,7 @@ NPCS.push(
     barks:['"Cây này ta trồng năm mười lăm tuổi."','"Đất chỗ kia lún thêm ba tấc rồi."',
            '"Chim không hót từ hôm trụ rung."','"Đi nhẹ thôi. Rừng đang nghe."'] },
 
-  { id:'thumo',     name:'Sylas, Người Giữ Tổ',  map:'comoc',      x:520,  y:480,  img:'assets/npcs/thumo.png',     talk:'quest',
+  { id:'thumo',     name:'Sylas, Người Giữ Tổ',  map:'comoc',      x:2071, y:3171,  img:'assets/npcs/thumo.png',     talk:'quest',
     lore:{
       idle:  '"Còn hai trăm quả trứng chưa nở. Ta ở lại vì thế. Ngươi ở lại vì cái gì?"',
       offer: '"Đừng vào trong. Ngươi chưa đủ sức, mà trong đó không có chỗ để lùi."',

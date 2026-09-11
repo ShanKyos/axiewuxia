@@ -88,6 +88,29 @@ MAPS = {
     tha='tay',
     ntrum=4, thuoc=0,
   ),
+  # ── Hai map NHÌN TỪ TRÊN XUỐNG — không lơ lửng, nhưng vẫn là JPEG phẳng 2600×1900 chưa có
+  # `diTrong`. Nợ TẦNG MÁY, không nợ phép chiếu. Nâng nốt cho cả game một chuẩn.
+  #
+  # ⚠ comoc mở cổng ra CẢ BỐN mép, và hai trong số đó vốn chen nhau trên mép TÂY (trungnut ở
+  # y=1700, chungnam ở y=1366). Quy ước hai đầu một lối nằm ở hai mép ĐỐI NHAU: chungnam đi ra
+  # hướng BẮC sang comoc thì đầu bên comoc phải ở mép NAM.
+  'chungnam': dict(
+    W=4600, H=3400, hat=37,
+    ria={'tay':  ('ardhaven', 'Lối Về Thành → Sapidae Chiefdom'),
+         'bac':  ('comoc',    'Lối Bắc → Bug Tribe Tunnels'),
+         'dong': ('daohoa',   'Lối Đông → Plant Tribe Glade')},
+    tha='tay',
+    ntrum=4, thuoc=10,
+  ),
+  'comoc': dict(
+    W=4800, H=3600, hat=43,
+    ria={'nam':  ('chungnam', 'Lối Nam → Werebear Woods'),
+         'tay':  ('trungnut', 'Lối Tây → Trũng Nứt Corran'),
+         'dong': ('caungam',  'Lối Đông → Aquatic Tribe Causeway'),
+         'bac':  ('mongco',   'Lối Bắc → Reptile Sunstone Flats')},
+    tha='nam',
+    ntrum=4, thuoc=10,
+  ),
 }
 
 # ⚠ ĐIỂM TỚI LÙI DỌC MÉP, VÀ LÙI VỀ PHÍA MÉP — không lùi vào trong.
@@ -271,4 +294,7 @@ def lam(mid, C):
 
 
 if __name__ == '__main__':
-    print(json.dumps({k: lam(k, C) for k, C in MAPS.items()}, ensure_ascii=False))
+    # Lọc theo tên map ở dòng lệnh: sinh lại CẢ BỘ khi chỉ cần thêm một map là trả lại phần đã
+    # nghiệm thu để lấy một thứ. `python3 tools/iso/vung_bon.py chungnam comoc`
+    chon = [a for a in sys.argv[1:] if a in MAPS] or list(MAPS)
+    print(json.dumps({k: lam(k, MAPS[k]) for k in chon}, ensure_ascii=False))

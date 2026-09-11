@@ -92,31 +92,90 @@ Map rộng mà mọi thứ đáng làm đều nằm trên trục chính thì "r�
 
 ---
 
-## 4. NỢ CÒN LẠI — đọc trước khi làm tiếp
+## 4. Đợt hai: nâng nốt `chungnam` + `comoc`, và bộ viên theo biome
 
-### 4.1 Chưa có bộ viên riêng cho ba biome — **nợ art, không sửa được bằng mã**
+### 4.1 Blender — HOÁ RA CÓ, chỉ là chưa cài
 
-Kho chỉ có **bốn** bộ viên: `nen_co` · `nen_dat` · `nen_da` · `nen_duong`. Không có tuyết, không
-có tro, không có bùn. Bốn map phải chia nhau bốn bộ ấy:
+Đợt một tôi ghi "sandbox không có Blender, nướng viên là việc của chủ dự án". **Sai.** Blender
+phát hành trên PyPI dưới dạng **mô-đun Python** (`pip install bpy==4.2.0`, bánh xe 519 MB, khớp
+Python 3.11 của máy này). Mà `tools/iso/nuong_tile.py` vốn đã viết theo lối `import bpy` rồi chạy
+bằng `python3`, chứ không phải `blender --background` — tức đường ống đã sẵn sàng cho đúng cách
+cài này từ đầu.
 
-| Map | mặt NỀN (`isoCo`) | mặt ĐƯỜNG (`isoDat`) | đáng lẽ phải là |
+Đo được: **1,9 giây một viên**. Nướng cả 50 viên mới của đợt này hết chưa tới hai phút.
+
+> **Bài học:** "công cụ X không có" là một khẳng định phải KIỂM, không phải suy ra từ việc gõ
+> `which x` một lần. Tôi đã suy ra và báo cáo nó như một ràng buộc cứng, làm ba map phải đi mượn
+> chất liệu sàn cả một đợt.
+
+Cài lại khi mở phiên mới:
+```
+pip install bpy==4.2.0
+python3 tools/iso/nuong_biome.py          # 50 viên + 10 vệt, ~2 phút
+```
+
+### 4.2 Bộ viên theo BIOME — hết mượn
+
+`tools/iso/nuong_biome.py` nướng LẠI TỪ CẢNH 3D qua `nuong_nen`, không tô màu lại viên cũ
+(CLAUDE.md cấm đúng chuyện đó). Cùng hướng nắng, cùng phép chiếu, nên ghép chung map không lệch.
+
+| Map | vai NỀN (`isoCo`) | vai ĐƯỜNG (`isoDat`) | vệt (`isoVet`) |
 |---|---|---|---|
-| `ngoai` | cỏ | đất | ✅ đúng chất — đồng cỏ chăn thả |
-| `tuyettinh` | đá | đường lát | ❄ **tuyết + băng** |
-| `mongco` | đất | đường lát | 🔥 **đá nung + tro** |
-| `nhanmon` | cỏ | đá | 🌫 **bùn + nước đọng** |
+| Beast Herd Camp | cỏ *(mặc định)* | đất *(mặc định)* | `vet_dat` |
+| Werebear Woods | `nen_rung` lá mục | `nen_mon` lối mòn | `vet_mon` |
+| Bug Tribe Tunnels | `nen_to` vỏ kitin | `nen_hang` lối hang | `vet_hang` |
+| Bird Tribe Heights | `nen_tuyet` | `nen_bang` tuyết nện | `vet_bang` |
+| Reptile Sunstone Flats | `nen_tro` đá nung | `nen_nung` lối cháy sém | `vet_nung` |
+| Dusk Marsh | `nen_reu` rêu đầm | `nen_bun` bùn giẫm | `vet_bun` |
 
-Bản sắc ba vùng ấy hiện nằm ở `ground`/`patch` và ở bộ quái, **chưa nằm ở chất liệu sàn**.
-Nướng thêm viên cần Blender (`tools/iso/nuong_tile.py`) — **sandbox không có Blender**, nên đây
-là việc của chủ dự án. Khai `isoCo`/`isoDat` trong `MAPS` là đổi được ngay, không phải sửa engine.
+`isoVet` là khoá MỚI thêm vào engine (trước đó `ISO_VET` là hằng toàn cục). Thiếu nó thì Bird
+Tribe Heights hiện ra một vệt bùn nâu vắt ngang tuyết.
 
-### 4.2 Hai map còn nợ TẦNG MÁY (không nợ phép chiếu)
+### 4.3 Hai map cuối lên chuẩn
 
-`chungnam` và `comoc` nhìn từ trên xuống nên **không lơ lửng**, nhưng vẫn là JPEG phẳng
-2600×1900, không có `diTrong`, không lát viên. Nâng chúng lên chuẩn Corran là đợt kế tiếp — và
-`chungnam` sẵn dùng chính tranh của `corran` nên nó gần đích hơn cả.
+| | `chungnam` | `comoc` |
+|---|---|---|
+| Khổ | 2600×1900 → **4600×3400** | 2600×1900 → **4800×3600** |
+| Sàn đi được | — → **78,5%** | — → **79,3%** |
+| Bãi quái | 4 miền × 1-2 cụm → **6 × 3** | 3 miền × 2 cụm → **6 × 3** |
+| Cổng | 3 | 4 (đủ bốn mép) |
 
-### 4.3 Bốn tấm JPEG cũ còn nằm trong kho
+`comoc` từng có **hai lối chen nhau trên mép TÂY** (Trũng Nứt ở y=1700, Werebear Woods ở y=1366,
+cách nhau 334px). Quy ước là hai đầu một lối nằm ở hai mép ĐỐI NHAU — Werebear Woods đi ra hướng
+BẮC thì đầu bên `comoc` phải ở mép NAM. Nay mỗi mép đúng một lối.
 
-`bg_ngoai.jpg` · `bg_tuyettinh.jpg` · `bg_mongco.jpg` · `bg_nhanmon.jpg` đã gỡ khỏi `MAP_BG_SRC`
-nhưng chưa xoá khỏi đĩa — giữ lại một đợt để đối chiếu. Xoá được khi đã chốt.
+**Trạng thái: 11/12 map lát viên.** Còn đúng `daohoa` (Plant Tribe Glade) là JPEG phẳng
+2600×1900 — nó nhìn từ trên xuống nên không lơ lửng, và nay là map phẳng duy nhất còn lại.
+
+---
+
+## 5. NỢ CÒN LẠI — đọc trước khi làm tiếp
+
+### 5.1 ~~Chưa có bộ viên riêng cho ba biome~~ — ĐÃ XONG ở đợt hai, xem §4.2
+
+### 5.2 ~~Hai map còn nợ TẦNG MÁY~~ — ĐÃ XONG ở đợt hai, xem §4.3
+
+### 5.3 CÂY/ĐÁ VẪN DÙNG CHUNG MỘT BỘ — nợ còn lại lớn nhất
+
+`ISO_CAY` (6 dáng cây), `ISO_BUI`, `ISO_DA`, `ISO_NHO` là hằng **toàn cục**, không đổi theo map.
+Nên Bird Tribe Heights có tuyết phủ kín sàn mà vẫn mọc cây lá xanh, Reptile Sunstone Flats cháy
+đỏ mà cũng cây lá xanh ấy. Sàn đã ra đúng vùng, vật thể đứng trên sàn thì chưa.
+
+Chữa giống hệt cách đã chữa cho sàn: thêm khoá `isoCay` / `isoNho` đọc theo map (ba dòng, cùng
+lối `isoCo`/`isoDat`/`isoVet`), rồi nướng thêm bộ cây theo biome bằng `nuong_biome.py` —
+`nuong_vat` + `_cay_thong`/`_cay_tan`/`_da` đã nhận màu lá và hạt làm tham số, nên thêm một bộ
+là thêm vài dòng. Nay có Blender rồi thì đây là việc làm được ngay.
+
+### 5.4 Sáu tấm JPEG cũ còn nằm trong kho
+
+`bg_ngoai.jpg` · `bg_tuyettinh.jpg` · `bg_mongco.jpg` · `bg_nhanmon.jpg` · `bg_chungnam.jpg` ·
+`bg_comoc.jpg` đã gỡ khỏi `MAP_BG_SRC` nhưng chưa xoá khỏi đĩa — giữ lại một đợt để đối chiếu.
+Xoá được khi đã chốt (≈4,0 MB).
+
+### 5.5 Bốn bộ viên cũ KHÔNG có trong bộ nướng
+
+`nen_da1-4` · `nen_duong1-4` · `nen_co4` · `nen_dat3-4` nằm trên đĩa nhưng **không script nào
+trong repo sinh ra chúng** — `nuong_tile.py` chỉ nướng `nen_co1-3` và `nen_dat1-2`. Chúng là di
+sản của một bản công cụ đã bị sửa đi. Nướng lại cả bộ thì bốn bộ ấy sẽ biến mất, mà Sapidae
+Chiefdom và Aquatic Tribe Causeway đang dùng chúng. Bổ sung vào `main()` trước khi ai đó chạy
+lại `nuong_tile.py`.

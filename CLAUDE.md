@@ -1458,29 +1458,40 @@ chui vào túi giữa mấy gốc cây, vứt waypoint tính lại là thoát. B
 
 ## Map tranh isometric: chặn bằng ĐA GIÁC SÀN, không bằng ellipse
 
-> ⚠ **BỐN TRANH NỀN SAI PHÉP CHIẾU — ĐÃ DỰNG LẠI. Xem `docs/DUNG_LAI_BON_MAP.md`.**
+> ⚠ **TRANH NỀN PHẲNG ĐÃ GỠ GẦN HẾT — 11/12 map nay LÁT VIÊN. Xem `docs/DUNG_LAI_BON_MAP.md`.**
 >
-> Vì `game.js` kéo tranh nền phủ kín thế giới rồi cho đi khắp mặt tranh (dòng ~10829), **tranh
-> nền CHÍNH LÀ mặt đất** — nên tấm nào vẽ trời ở nửa trên thì đi lên phía bắc map là đi vào bầu
-> trời. Đó là toàn bộ nguyên nhân của lỗi "nhân vật như đang ở trên không trung".
+> Vì `game.js` kéo tranh nền phủ kín thế giới rồi cho đi khắp mặt tranh, **tranh nền CHÍNH LÀ
+> mặt đất** — tấm nào vẽ trời ở nửa trên thì đi lên phía bắc map là đi vào bầu trời. Đó là toàn
+> bộ nguyên nhân của lỗi "nhân vật như đang ở trên không trung".
 >
-> **Bốn map ấy nay lát viên (`sanIso`) theo đúng khuôn Rẻo Rừng Corran**, khổ 4400×3300 →
-> 5200×3800, sàn 78-85%, hình sinh bằng `tools/iso/vung_bon.py`:
-> `ngoai` · `tuyettinh` · `mongco` · `nhanmon`.
+> Sáu map đã dựng lại theo khuôn Rẻo Rừng Corran (`sanIso` + `diTrong` + `isoCum` + `isoDuong`,
+> hình sinh bằng `tools/iso/vung_bon.py`), khổ 4400×3300 → 5200×3800, sàn đi được 78-85%:
+> `ngoai` · `chungnam` · `comoc` · `tuyettinh` · `mongco` · `nhanmon`.
+> **Còn đúng `daohoa` là JPEG phẳng 2600×1900** — nó nhìn từ trên xuống nên không lơ lửng.
 >
-> ⚠ **BẢNG CŨ Ở ĐÂY TỪNG LIỆT SÁU TẤM, VÀ NÓ SAI MỘT DÒNG — `chungnam`.** Đo lại thì
-> `bg_chungnam.jpg` và `bg_corran.jpg` là **cùng một tệp** (md5 `9310c07f…`), thay từ commit
-> `26dff8d`; nó nhìn TỪ TRÊN XUỐNG. Con số "5,7%" trong bảng cũ đo trên tấm đã bị thay. Bài học
-> chung: **số đo có hạn dùng** — tài sản đổi thì số đo cũ thành lời nói dối, mà kiểu nói dối này
-> không ai phát hiện được vì nó nằm trong tài liệu chứ không nằm trong bài kiểm.
-> Cách đo lại: dải sàn ở đáy + tỉ lệ nhiễu 1/4-trên ÷ đáy (trời phẳng thì tỉ lệ vọt lên).
+> ⚠ **BẢNG CŨ Ở ĐÂY TỪNG LIỆT SÁU TẤM "SAI PHÉP CHIẾU", VÀ NÓ SAI MỘT DÒNG — `chungnam`.** Đo
+> lại thì `bg_chungnam.jpg` và `bg_corran.jpg` là **cùng một tệp** (md5 `9310c07f…`, thay từ
+> commit `26dff8d`); nó nhìn TỪ TRÊN XUỐNG. Con số "5,7%" đo trên tấm đã bị thay. Bài học chung:
+> **số đo có hạn dùng** — tài sản đổi thì số đo cũ thành lời nói dối, mà kiểu nói dối này không
+> ai phát hiện được vì nó nằm trong tài liệu chứ không nằm trong bài kiểm.
 >
-> **Còn nợ:** `chungnam` và `comoc` nhìn từ trên xuống nên KHÔNG lơ lửng, nhưng vẫn là JPEG phẳng
-> 2600×1900 chưa có `diTrong` — nợ tầng máy, không nợ phép chiếu.
+> ### ⚠ BLENDER CÓ, ĐỪNG BÁO LÀ KHÔNG
 >
-> **Cũng còn nợ: viên nền theo biome.** Kho chỉ có bốn bộ (`co`·`dat`·`da`·`duong`) — không có
-> tuyết, tro, bùn. Ba map cuối đang mượn tạm, bản sắc nằm ở `ground`/`patch` và ở bộ quái chứ
-> chưa nằm ở chất liệu sàn. Nướng thêm cần Blender, sandbox không có.
+> `which blender` trượt, nhưng Blender phát hành trên PyPI dưới dạng **mô-đun Python**:
+> `pip install bpy==4.2.0` (519 MB, khớp Python 3.11 của máy này). Mà `tools/iso/nuong_tile.py`
+> vốn viết theo lối `import bpy` chạy bằng `python3` chứ không phải `blender --background` — tức
+> đường ống đã sẵn sàng cho đúng cách cài ấy từ đầu. Đo được **1,9 giây một viên**.
+>
+> Tôi đã suy từ `which` ra "sandbox không có Blender" và báo cáo nó như một ràng buộc cứng, làm
+> ba map phải đi mượn chất liệu sàn suốt một đợt. **"Công cụ X không có" là khẳng định phải KIỂM.**
+>
+> Bộ viên theo biome: `python3 tools/iso/nuong_biome.py` (tuyết · băng · đá nung · lối cháy ·
+> rêu đầm · bùn · nền rừng · lối mòn · sàn tổ · lối hang). Khai `isoCo`/`isoDat`/`isoVet` trong
+> `MAPS` là đổi được, không phải sửa engine.
+>
+> **Nợ lớn nhất còn lại: CÂY/ĐÁ vẫn dùng chung một bộ.** `ISO_CAY`/`ISO_BUI`/`ISO_DA`/`ISO_NHO`
+> là hằng toàn cục, nên Bird Tribe Heights tuyết phủ kín sàn mà vẫn mọc cây lá xanh. Chữa y như
+> đã chữa cho sàn: thêm khoá đọc theo map rồi nướng thêm bộ cây theo biome.
 >
 > **Đừng thử cứu bằng cách lát nền từ art có sẵn — đã thử ba lần, hỏng cả ba**, lý do từng lần
 > ghi ở §2 của `docs/PROMPT_MAP_ISOMETRIC.md`.
