@@ -9,42 +9,51 @@
 // KHÁC BIỆT quan trọng: tên riêng của MU Online (Lorencia, Devil Square, Blood Castle) trong
 // chú thích thì VẪN ĐƯỢC — CLAUDE.md cho phép ghi công nguồn cảm hứng, và bỏ đi thì mất luôn
 // thông tin thật (người sau không biết bố cục quảng trường lấy từ đâu).
+//
+// ⚠ LẤY TỆP QUA HTTP, KHÔNG ĐỌC ĐĨA. Đây là bài DUY NHẤT trong bộ từng đọc `fs.readFileSync`
+// theo một đường dẫn TUYỆT ĐỐI chép cứng vào mã, và nó hỏng theo HAI kiểu ở bất kỳ
+// bản sao nào nằm chỗ khác: mục D ném ENOENT (đỏ, thấy ngay), còn mục A `catch { continue }`
+// rồi vẫn in "0 chuỗi dính từ cấm" — BÁO XANH GIẢ, đúng cái bẫy "3 cổng CI đều xanh trong khi
+// không cổng nào chạy" mà CLAUDE.md đã ghi lại. Dò ngược gốc kho từ __dirname cũng không cứu
+// được: `tools/reg.sh` chép bài kiểm sang $OUT/src và phục vụ một BẢN CHỤP ĐÓNG BĂNG của
+// public/game, nên đọc đĩa là đọc thư mục SỐNG — vừa chạy vừa sửa là kết quả không khớp commit.
+// 176 bài còn lại đều lấy game qua HTTP; bài này nay cũng vậy.
 const { chromium } = require('playwright');
-const fs = require('fs');
-// ⚠ GỐC KHO PHẢI SUY RA, ĐỪNG CHÉP CỨNG. Hai dòng dưới từng ghi thẳng '/home/user/axie-wuxia/'.
-// Kho đã đổi tên, và bộ chạy hồi quy còn chép bài kiểm sang thư mục khác trước khi chạy — nên
-// mục A âm thầm bỏ qua mọi tệp (`catch { continue }`) còn mục D ném ENOENT. Nhìn vào log thì
-// ba mục đầu vẫn XANH, y như một bài kiểm khoẻ mạnh. Tìm ngược lên từ chính tệp này.
-const path = require('path');
-function timGoc(){
-  let d = __dirname;
-  for (let i = 0; i < 6; i++){
-    if (fs.existsSync(path.join(d, 'public/game/game.js'))) return d;
-    d = path.dirname(d);
-  }
-  // Bài chạy từ bản chép ngoài kho (tools/reg.sh) — thử vài chỗ quen thuộc.
-  for (const g of ['/home/user/axiewuxia', '/home/user/axie-wuxia'])
-    if (fs.existsSync(path.join(g, 'public/game/game.js'))) return g;
-  return null;
-}
+// Cổng: reg.sh vừa `sed` mọi 'localhost:8xxx' sang cổng thật, vừa truyền cổng qua argv[2].
+// Nhận cả hai đường để bài chạy được cả trong bộ hồi quy lẫn khi gọi tay.
+const BASE = process.argv[2] ? 'http://localhost:' + process.argv[2] : 'http://localhost:8861';
 let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
-const GOC = timGoc();
-if (!GOC) fail('không dò ra gốc kho — hai mục quét tệp sẽ rỗng ruột');
 const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch','yêu thú',
              'Hồ Lô','hồ lô','Thôn phệ','thôn phệ','chân khí','Chân Khí','cảnh giới',
              'đan điền','kinh mạch','độ kiếp','phi thăng','tiên hiệp','Bí Kíp'];
 
 (async () => {
+  const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+  const p = await b.newPage({ viewport:{width:1280,height:900} });
+  const errs = []; p.on('pageerror', e => errs.push(String(e).split('\n')[0]));
+  await p.goto(BASE + '/index.html?max=1', { waitUntil:'load' });
+  await p.waitForFunction(() => window.__gameReady).catch(()=>{});
+
+  // Lấy nguyên văn một tệp từ chính bản chụp đang được phục vụ. Cùng gốc với trang nên
+  // fetch không vướng CORS. `r.ok` là bắt buộc: python http.server trả 404 kèm một trang HTML,
+  // nhận bừa thì mục A quét nhầm trang báo lỗi và lại ra "0 vi phạm".
+  const layTep = u => p.evaluate(async url => {
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.text();
+  }, BASE + u);
+
   // A. quét TĨNH: chỉ trong chuỗi, bỏ qua comment
-  const files = ['public/game/game.js','public/game/lang.js','public/game/index.html',
-                 'public/game/strings/vi.js','public/game/strings/en.js'];
+  // Đường dẫn tính từ public/game (gốc phục vụ), nên public/game/game.js xin là '/game.js'.
+  const files = ['/game.js','/lang.js','/index.html','/strings/vi.js','/strings/en.js'];
+  const nguon = new Map();
   const dinh = []; let daDoc = 0;
   for (const f of files){
-    // ⚠ Đọc hỏng là ĐỎ, KHÔNG `continue`. Bỏ qua lặng lẽ chính là nửa còn lại của cái bẫy mà
-    // timGoc() vừa gỡ: dò sai gốc thì mục này quét 0 tệp rồi vẫn in "0 chuỗi dính từ cấm".
+    // ⚠ Lấy hỏng là ĐỎ, KHÔNG `continue`. Bỏ qua lặng lẽ chính là nửa còn lại của cái bẫy:
+    // một mục quét mà im lặng bỏ qua thì tệ hơn hẳn là không có mục đó.
     let txt;
-    try { txt = fs.readFileSync(path.join(GOC || '', f), 'utf-8'); daDoc++; }
-    catch { fail('không đọc được ' + f + ' — mục A rỗng ruột, không phải sạch'); continue; }
+    try { txt = await layTep(f); daDoc++; nguon.set(f, txt); }
+    catch (e) { fail('không lấy được ' + f + ' (' + String(e.message).split('\n')[0] + ') — mục A rỗng ruột, không phải sạch'); continue; }
     // Bóc comment TRƯỚC rồi mới tìm. Bản đầu quét theo từng dòng và tìm trong dấu nháy — nên
     // template nhiều dòng (backtick mở ở dòng trên) lọt lưới hoàn toàn: quét tĩnh báo 0 trong
     // khi giao diện thật vẫn hiện "Nội Đan" ở hai chỗ.
@@ -52,10 +61,10 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
                     .split('\n').map(l => {
                       const c = l.indexOf('//');
                       if (c < 0) return l;
-                      const b = l.slice(0, c);
-                      const nhay = (b.split("'").length-1)%2 || (b.split('"').length-1)%2
-                                || (b.split('`').length-1)%2;
-                      return nhay ? l : b;
+                      const b2 = l.slice(0, c);
+                      const nhay = (b2.split("'").length-1)%2 || (b2.split('"').length-1)%2
+                                || (b2.split('`').length-1)%2;
+                      return nhay ? l : b2;
                     }).join('\n');
     sach.split('\n').forEach((l, i) => {
       for (const w of CAM) if (l.includes(w))
@@ -67,11 +76,6 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
   if (dinh.length) fail(`${dinh.length} chuỗi người chơi thấy còn từ vựng tu tiên`);
 
   // B. quét ĐỘNG: mở game thật, đọc chữ trên các bảng
-  const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
-  const p = await b.newPage({ viewport:{width:1280,height:900} });
-  const errs = []; p.on('pageerror', e => errs.push(String(e).split('\n')[0]));
-  await p.goto('http://localhost:8861/index.html?max=1', { waitUntil:'load' });
-  await p.waitForFunction(() => window.__gameReady).catch(()=>{});
   await p.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); });
   await p.waitForTimeout(1200);
   const thay = await p.evaluate(async (CAM) => {
@@ -110,16 +114,18 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
 
   // D. quét CHÚ THÍCH của game.js — xem đầu tệp để biết vì sao mục này tồn tại
   {
-    const txt = fs.readFileSync(path.join(GOC, 'public/game/game.js'), 'utf-8');
+    const txt = nguon.get('/game.js');
+    if (!txt) fail('không có game.js để quét chú thích — mục D không chạy');
+    else {
     const ct = [];
     // Lấy RA phần chú thích (ngược với mục A, vốn bóc chú thích đi)
     for (const m of txt.matchAll(/\/\*[\s\S]*?\*\//g)) ct.push(m[0]);
     txt.split('\n').forEach((l, i) => {
       const c = l.indexOf('//');
       if (c < 0) return;
-      const b = l.slice(0, c);
+      const b2 = l.slice(0, c);
       // '//' nằm trong chuỗi (https://) thì không phải mở chú thích
-      const nhay = (b.split("'").length-1)%2 || (b.split('"').length-1)%2 || (b.split('`').length-1)%2;
+      const nhay = (b2.split("'").length-1)%2 || (b2.split('"').length-1)%2 || (b2.split('`').length-1)%2;
       if (!nhay) ct.push(`@${i+1} ${l.slice(c)}`);
     });
     const dinhCt = [];
@@ -133,6 +139,7 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
     const muCt = ct.filter(d => /Lorencia|Devil Square|Blood Castle/.test(d)).length;
     console.log(`   (tên riêng MU trong chú thích: ${muCt} — được phép, ghi công nguồn cảm hứng)`);
     if (!muCt) fail('chú thích ghi công nguồn cảm hứng MU Online đã bị xoá mất — đó là thông tin thật');
+    }
   }
 
   console.log('errors:', JSON.stringify(errs));
