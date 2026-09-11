@@ -20206,9 +20206,14 @@ function bagSecGear(){
   // Một hàng duy nhất. Bản cũ có hàng tuỳ chọn RỒI thêm một dòng chú thích giải nghĩa ▲ ◆ 🔒
   // dài hai dòng — cả ba ký hiệu đó nay thẻ rê chuột đều nói rõ, chú thích thành thừa.
   const cam = window.ngocCam;
+  // Hai ô đánh dấu "tự bán" và "tự mặc" là CÀI ĐẶT — đặt một lần rồi quên — nhưng chúng
+  // đứng đầu hàng, ngang hàng với hai nút HÀNH ĐỘNG bấm thường xuyên. Đếm trên lưới 64 ô:
+  // chín thứ điều khiển nằm trên một cái túi mà sau 25 giây cày chỉ có một món. Thu hai cái đó vào
+  // một cụm mở ra được: vẫn tìm thấy, vẫn nằm trong DOM, nhưng thôi tranh chỗ với nút bấm.
   let h = `<div class="bag-bar">
-    <label><input type="checkbox" ${player.autoSell?'checked':''} onchange="window.toggleAutoSell(this.checked)"> Tự bán trắng/lục</label>
-    <label><input type="checkbox" ${player.autoEquip?'checked':''} onchange="window.toggleAutoEquip(this.checked)"> Tự mặc đồ mạnh</label>
+    <details class="bag-auto"><summary title="Tự bán đồ rác · tự mặc đồ mạnh hơn khi nhặt được">⚙ Tự động</summary>
+      <label><input type="checkbox" ${player.autoSell?'checked':''} onchange="window.toggleAutoSell(this.checked)"> Tự bán trắng/lục</label>
+      <label><input type="checkbox" ${player.autoEquip?'checked':''} onchange="window.toggleAutoEquip(this.checked)"> Tự mặc đồ mạnh</label></details>
     <button class="mini-btn" onclick="autoEquipBest()">⚡ Mặc Đồ Tốt Nhất</button>
     <button class="mini-btn" onclick="window.xepGonTui()" title="Xếp lại lưới: món to lên trước, dồn hết kẽ trống">🧩 Xếp Gọn</button>
     <i class="bag-tip">bấm ô = mặc · kéo để dời chỗ · <b>⋯</b> = bán / phân giải / vứt</i></div>
@@ -23607,6 +23612,9 @@ function ccSlotsRender(){
 }
 function ccRender(){
   const wrap = el('cc-classes'); if (!wrap) return;
+  // Cờ cho CSS biết đã có lớp được chọn hay chưa — chưa chọn thì cả năm đứng ngang nhau,
+  // chọn rồi thì bốn lớp còn lại lùi lại (xem #cc-classes.da-chon trong style.css).
+  wrap.classList.toggle('da-chon', !!ccSect);
   wrap.innerHTML = '';
   for (const k of CC_ORDER){
     const sc = SECTS[k]; if (!sc) continue;

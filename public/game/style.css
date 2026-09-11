@@ -1649,7 +1649,25 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    theo tỉ lệ canvas thì gót chân vẫn rơi vào 134px như cũ, nên phiến đá, bóng đổ và quầng chọn
    không phải canh lại. Cột thẻ rộng 820/5 = 164px nên 157 vẫn lọt. */
 .cc-art { display:block; width:100%; max-width:250px; height:auto; margin:0 auto 64px;
-  filter:drop-shadow(0 6px 12px rgba(0,0,0,.6)); }
+  filter:drop-shadow(0 6px 12px rgba(0,0,0,.6));
+  transition:filter .22s ease, transform .22s ease; }
+/* ══ ĐANG CHỌN LỚP NÀO — đọc được mà KHÔNG cần viền hộp ══
+   Quầng dưới chân một mình là không đủ: chụp hai ảnh trước/sau khi bấm Dark Wizard thì HÌNH
+   NHÂN VẬT không đổi một điểm ảnh nào, chỉ cái tên đổi màu và một quầng nhỏ dưới chân. Trên màn
+   1600px với năm nhân vật đứng cạnh nhau thì không ai đọc ra mình đang chọn ai.
+   Chữa bằng TƯƠNG PHẢN chứ không thêm khung: bốn lớp còn lại xám bớt và tối đi, lớp đang chọn
+   sáng lên và to ra một chút. Giữ đúng chủ ý cũ ghi ở .cc-card.sel::after — "hộp thì lại thành
+   thẻ", nên ở đây không có hộp nào.
+   ⚠ Phóng to lấy gốc ở GÓT CHÂN (134px, xem chú thích bề ngang thẻ phía trên), không lấy tâm:
+   lấy tâm thì nhân vật nhấc khỏi phiến đá và thành ra đang lơ lửng. */
+#cc-classes.da-chon .cc-card:not(.sel) .cc-art {
+  filter:drop-shadow(0 6px 12px rgba(0,0,0,.6)) saturate(.42) brightness(.60); }
+#cc-classes.da-chon .cc-card:not(.sel) .cc-nm,
+#cc-classes.da-chon .cc-card:not(.sel) .cc-tag { opacity:.45; }
+.cc-card.sel .cc-art {
+  filter:drop-shadow(0 9px 18px rgba(0,0,0,.7)) brightness(1.10) saturate(1.06);
+  transform:scale(1.07); transform-origin:50% 134px; }
+@media (prefers-reduced-motion:reduce){ .cc-art { transition:none; } }
 /* Tên lớp là thứ người chơi đọc đầu tiên — cho nó cỡ của một cái TÊN, không phải một nhãn phụ.
    Dòng vai trò trước đây 10,5px và gãy làm ba dòng lệch nhau giữa năm thẻ; nới cỡ, giãn dòng
    và khoá hai dòng để năm thẻ cao bằng nhau. */
@@ -1757,3 +1775,23 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   background:rgba(20,17,12,.8); color:var(--gold); border:1px solid var(--vien-dong);
   border-radius:4px; font-size:14px; line-height:1; font-family:inherit; }
 .bang-thu:hover { border-color:var(--vien-dong-manh); background:rgba(58,46,28,.9); }
+
+/* Cụm "Tự động" trong Túi Đồ — hai công tắc đặt-một-lần thu vào một chỗ mở ra được, để hàng
+   trên cùng chỉ còn nút bấm thật. Mở ra thì hai ô đánh dấu xuống dòng ngay dưới. */
+.bag-auto { position:relative; }
+.bag-auto > summary { list-style:none; cursor:pointer; user-select:none;
+  font-size:var(--fs-xs); color:var(--text-soft); padding:3px 8px; border-radius:999px;
+  border:1px solid var(--border-faint); background:rgba(0,0,0,.18); }
+.bag-auto > summary::-webkit-details-marker { display:none; }
+.bag-auto > summary:hover { color:var(--text-bright); border-color:var(--border); }
+.bag-auto[open] > summary { color:var(--text-bright); border-color:var(--border-strong); }
+.bag-auto[open] { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+/* ⚠ Luật có sẵn `.bag-bar label { display:inline-flex }` (xem trên) ĐÈ LÊN cơ chế ẩn của
+   <details>: đặt display thẳng lên con của một details đang ĐÓNG thì trình duyệt vẫn vẽ nó.
+   Đo được: đóng hay mở cụm cũng cao đúng 21px và hai ô đánh dấu đều hiện — thu gọn xong mà
+   không thu được gì. Phải chặn tường minh, đừng trông vào mặc định của thẻ. */
+.bag-auto:not([open]) label { display:none; }
+/* ⚠ PHẢI khoá theo [open]. Đặt display thẳng lên con của một <details> ĐANG ĐÓNG thì chính
+   nó đè mất cơ chế ẩn của trình duyệt — đo được: đóng hay mở cũng ra đúng 17 điều khiển
+   nhìn thấy, tức là thu gọn xong mà chẳng thu được gì. */
+.bag-auto[open] label { display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
