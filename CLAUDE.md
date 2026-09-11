@@ -1178,16 +1178,36 @@ học `data/lop_cho.js`, nướng bằng `tools/title/nuong_lop_cho.cjs`.
   phải một lựa chọn. Kéo lên 400px cho đầy khung thì ra một bóng người nhoè đứng cạnh nền vẽ
   tay sắc nét. Thà để nhân vật nhỏ trong một thế giới rộng — đó cũng đúng nhịp art Axie. Vì
   thế `#cc-hero` là khung THẤP VÀ RỘNG (1040×420), không phải khung cao nửa màn hình.
-- **Tỉ lệ người ↔ Axie hỏi thẳng `chiCoTrongMan()`**, cùng hàm mà trong màn dùng. Luật thật
-  không phải "Axie cao 0,45 lần nhân vật" mà là "0,45 lần VÀ hộp vẽ ra không quá 0,55 lần theo
-  CẢ HAI chiều" — 16 con có 16 tỉ lệ rộng/cao (1,07 → 1,52) nên con bè nhất bị vế thứ hai thu
-  lại đáng kể. Bỏ vế đó thì con bè nhất trông như đang dắt người đi.
+- **Tỉ lệ người ↔ Axie hỏi thẳng `avaCo()`**, cùng hàm mà trong màn dùng. Luật thật không phải
+  "Axie cao 0,72 lần thân người" mà là "0,72 lần VÀ hộp vẽ ra không quá 0,95 lần theo CẢ HAI
+  chiều" — 16 con có 16 tỉ lệ rộng/cao (1,07 → 1,52) nên con bè nhất bị vế thứ hai thu lại
+  đáng kể. Bỏ vế đó thì con bè nhất trông như đang dắt người đi.
 - **Nợ:** dải khung là THÂN TRẦN của lớp, chưa mang trang bị. Nhân vật cấp 80 mặc đủ bộ vẫn
   hiện thân trần trên màn chờ. Muốn đúng thì phải dựng sống bằng `heroSprite()` cho ô đang
   chọn (640 KB cho MỘT lớp — mà đó đúng là bộ art game sẽ cần ngay sau khi bấm Vào Game, nên
   không phí), giữ dải nướng làm hình lót lúc art chưa về.
 
 `tests/test_titlefx.js §7` gác: art phải đến từ `lop/*.webp`, đủ số ô, và không phóng quá trần.
+
+### ⚠ MÀN CHỜ PHẢI HỎI CÙNG CÁI HÀM MÀ TRONG MÀN DÙNG
+
+Ba thứ trên sân khấu đều là bản sao của một luật đang sống, nên cả ba phải TRA chứ không được
+chép: con Axie nào thuộc lớp nào (`AVA_MAC_DINH`), con Axie của nhân vật đang chọn
+(`avatarId(pl)`), và Axie to bằng mấy phần người (`avaCo`). Chép ra bảng riêng là màn chờ hứa
+một đằng, vào game ra một nẻo — đúng cái lỗi mà cả đợt này sinh ra để sửa.
+
+Đã suýt ship đúng lỗi đó: bản đầu khai `CC_AXIE_LOP` riêng (Dark Knight → Ironshell) trong khi
+game khai Emberjaw.
+
+**Và đây là chỗ đau: `git merge` KHÔNG báo gì cả.** Nhánh `main` trong lúc đó gỡ hẳn
+`chiCoTrongMan()` · `CHI_THAN` · `CHI_TRAN` · `tests/test_cothu.js` (con thú đi theo bị thay
+bằng avatar). Màn chờ gọi `chiCoTrongMan()`. Hai bên sửa hai vùng khác nhau của `game.js` nên
+git ghép êm ru, `node --check` xanh, và thứ còn lại là **một lời gọi tới hàm không còn tồn
+tại** — chỉ ném lỗi lúc chạy, mà lại ném trong vòng vẽ màn chờ.
+
+⇒ **Trộn nhánh xong, đừng tin `node --check`.** Đếm lại từng hàm mà mã mới dựa vào:
+`for f in <danh sách>; do grep -c "function $f" public/game/game.js; done`. Rồi chạy đủ bốn
+cổng TRÊN BẢN ĐÃ TRỘN — bản đã trộn là mã mà **chưa bên nào từng kiểm**.
 
 ### Tông màu — ẤM và SÁNG, đây là chỗ "cute" của game
 

@@ -22129,8 +22129,11 @@ function drawTitleScene(g, W, H, t){
 //
 // ⚠ Vẽ trong CÙNG vòng rAF của cảnh nền (titleStart). Mở một vòng lặp thứ hai là hai vòng
 // cùng sống sau khi vào game nếu quên huỷ một cái — mà quên đúng một cái thì không ai thấy.
-const CC_AXIE_LOP = { thieulam:'ironshell', toanchan:'voltcrest', baidasan:'netherfang',
-                      minhgiao:'emberjaw',  bug:'aurelion' };
+// ⚠ KHÔNG khai bảng lớp→Axie riêng cho màn chờ. Bản đầu có một bảng như thế và nó lệch ngay
+// với `AVA_MAC_DINH` của game (màn chờ cho Dark Knight con Ironshell, vào game ra Emberjaw) —
+// tức là tái phạm đúng lỗi "màn chờ hứa một đằng, game ra một nẻo" vừa phải sửa. Một bảng,
+// một nguồn.
+const CC_AXIE_LOP = AVA_MAC_DINH;
 // ── NĂM LỚP LÀ NHÂN VẬT THẬT TRONG GAME, KHÔNG PHẢI TRANH QUẢNG CÁO ────────────────────
 // Bản trước vẽ `assets/nv/pick_<lớp>.webp` — bộ tranh anh hùng tỉ lệ tám đầu, giáp nhiều lớp,
 // vũ khí to bằng người. Đẹp, nhưng người chơi bấm Vào Game rồi nhận một nhân vật KHÁC HẲN:
@@ -22216,12 +22219,16 @@ function ccHeroLop(){
   const o = ds[ccSlot];
   return (o && o.player && SECTS[o.player.sect]) ? o.player.sect : null;
 }
-// Con Ragoon của ô đang chọn; chưa có con nào thì lấy con mặc định của lớp.
+// Con Axie của ô đang chọn — hỏi ĐÚNG cửa mà trong màn dùng (`avatarId`), nên màn chờ hiện
+// đúng con sẽ chạy theo người chơi. Bản trước đọc `player.chimera.eq`, tức con thú đi theo —
+// mà con thú đi theo đã bị gỡ khỏi game trong đợt avatar.
+//
+// `avatarId` trả null khi người chơi đã tắt bằng `/avatar off`; tôn trọng, đừng lấp chỗ bằng
+// con mặc định. Trong màn họ không thấy Axie thì màn chờ cũng không được vẽ thêm một con.
 function ccHeroAxie(sect){
   const ds = (typeof danhSachO === 'function') ? danhSachO() : [];
-  const o = ds[ccSlot];
-  const eq = o && o.player && o.player.chimera && o.player.chimera.eq;
-  return (eq && CHI_MAP[eq]) ? eq : CC_AXIE_LOP[sect];
+  const pl = ds[ccSlot] && ds[ccSlot].player;
+  return pl ? avatarId(pl) : (CC_AXIE_LOP[sect] || null);
 }
 // Vũng bóng. Không có nó thì mọi thứ trong khung lơ lửng trước bức tranh chứ không đứng lên nó.
 function ccVeBong(g, cx, fy, r, dam){
@@ -22302,19 +22309,25 @@ function ccVeDen(g, cx, fy, cao){
 // Axie). Tách làm hai bảng toạ độ là kiểu lệch không ai nhìn ra — vũng bóng nằm lệch khỏi gót
 // đúng vài điểm ảnh, và chỉ lộ ra khi đổi cỡ cửa sổ.
 //
-// Tỉ lệ NGƯỜI ↔ AXIE hỏi thẳng `chiCoTrongMan()` — cùng cái hàm mà trong màn dùng. Đừng tự
-// nhân một hệ số: luật thật không phải "Axie cao 0,45 lần nhân vật" mà là "cao 0,45 lần VÀ
-// hộp vẽ ra không quá 0,55 lần theo CẢ HAI chiều", và 16 con có 16 tỉ lệ rộng/cao (1,07 →
-// 1,52) nên con bè nhất bị luật thứ hai thu lại đáng kể. Bỏ qua vế đó thì màn chờ hứa một cỡ
-// còn vào game ra một cỡ — mà con bè nhất chính là con trông như đang dắt người đi.
+// Tỉ lệ NGƯỜI ↔ AXIE hỏi thẳng `avaCo()` — cùng cái hàm mà trong màn dùng. Đừng tự nhân một
+// hệ số: luật thật không phải "Axie cao 0,72 lần thân người" mà là "0,72 lần VÀ hộp vẽ ra
+// không quá 0,95 lần theo CẢ HAI chiều", và 16 con có 16 tỉ lệ rộng/cao (1,07 → 1,52) nên con
+// bè nhất bị vế thứ hai thu lại đáng kể. Bỏ vế đó thì con bè nhất trông như đang dắt người đi.
+//
+// ⚠ Bản trước gọi `chiCoTrongMan()`. Hàm đó đã bị GỠ khỏi game trong đợt avatar (cùng với
+// CHI_THAN/CHI_TRAN và tests/test_cothu.js) vì con thú đi theo không còn nữa — avatar mới là
+// con Axie đứng cạnh người. Lần trộn nhánh KHÔNG báo xung đột: hai bên sửa hai vùng khác nhau
+// của tệp, nên git ghép êm và để lại một lời gọi tới hàm không còn tồn tại.
 function ccAxieThan(id, than){
-  const co = chiCoTrongMan(id);
-  // `than` là thân NGƯỜI trên sân khấu; quy ngược ra NV_CAO tương đương rồi mới thu.
-  return co.than * ((than * HERO_H / CAO_THAN_NUONG) / NV_CAO);
+  // `avaCo` trả cỡ theo NV_THAN_PX (thân người TRONG MÀN); đổi sang thân người TRÊN SÂN KHẤU.
+  return avaCo(id) * (than / NV_THAN_PX);
 }
 function ccBoCuc(w, h, sect){
   if (sect){
     const than = ccThan(h, 0.60), fy = h * 0.74, id = ccHeroAxie(sect);
+    // `id` rỗng = người chơi đã tắt avatar. Vẫn đẩy một mục vào là vẽ ra một vũng bóng không
+    // có gì đứng trên nó — ccVeAxie() bỏ qua id rỗng, còn ccVeBong() thì không.
+    if (!id) return { nguoi: [{ k: sect, cx: w * 0.50, fy, than }], axie: [] };
     return { nguoi: [{ k: sect, cx: w * 0.40, fy, than }],
              // Axie đứng TRƯỚC và THẤP hơn một chút — nó gần ống kính hơn, mà gần hơn thì
              // gót chân phải nằm thấp hơn, nếu không hai thứ trông như dán trên cùng một
@@ -22323,7 +22336,7 @@ function ccBoCuc(w, h, sect){
   }
   // Hàng năm lớp. Chừa lề hai bên rồi mới chia năm: chia thẳng bề rộng khung thì hai người
   // ngoài cùng đứng ở tâm ô đầu/cuối và nửa con Axie của họ bị cắt ngay ở mép canvas.
-  const than = ccThan(h, 0.50), fy = h * 0.72;
+  const than = ccThan(h, 0.46), fy = h * 0.68;
   // Lề trái/phải phải ĐỦ CHỨA VŨNG ĐÈN của người ngoài cùng, không chỉ đủ chứa thân người.
   // Đèn có bán kính 0,62×thân; lề hẹp hơn thế thì vũng sáng bị mép canvas cắt phựt và hiện ra
   // thành một cạnh dọc sáng hơn nền — cùng họ với cái bẫy ghi ở ccVeDen.
@@ -22333,8 +22346,8 @@ function ccBoCuc(w, h, sect){
   const le = i => (i % 2 ? 1 : -1) * h * 0.025;
   return {
     nguoi: CC_ORDER.map((k, i) => ({ k, cx: le0 + b * (i + 0.5) - b * 0.12, fy: fy + le(i), than })),
-    axie:  CC_ORDER.map((k, i) => ({ id: CC_AXIE_LOP[k], cx: le0 + b * (i + 0.5) + b * 0.26,
-                                     fy: fy + le(i) + h * 0.085,
+    axie:  CC_ORDER.map((k, i) => ({ id: CC_AXIE_LOP[k], cx: le0 + b * (i + 0.5) + b * 0.34,
+                                     fy: fy + le(i) + h * 0.125,
                                      than: ccAxieThan(CC_AXIE_LOP[k], than), pha: i * 0.37 })),
   };
 }
