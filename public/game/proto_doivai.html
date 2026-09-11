@@ -90,9 +90,11 @@
     <div class="o">
       <h2>Đối chiếu</h2>
       <div class="hang">
+        <button id="btnKieu" class="bat">Hiện khi đánh</button>
         <button id="btnCu">Bố cục CŨ</button>
         <button id="btnBurst">Burst</button>
       </div>
+      <label style="margin-top:11px"><b style="color:#d8dced">Hiện khi đánh</b> = Axie đi một mình, lớp nhân vật chỉ hiện ra lúc tung chiêu rồi tan. Tắt nút này thì xác đứng chắn thường trực.</label>
       <label style="margin-top:11px">Bố cục cũ = người to đi bộ, Axie nhỏ khoá ở 0,45 thân người (<code>CHI_THAN</code>). Bật lên để so trực tiếp.</label>
     </div>
   </div>
@@ -138,7 +140,7 @@ const REN = [
 const S = {
   axie: 'aurelion', xac: 'dkgs1',
   axieCao: 118, xacCao: 78, bayCao: 46, doMo: 1,
-  ren: 0, boCucCu: false,
+  ren: 0, boCucCu: false, hienKhiDanh: true,
   t: 0, burstT: 0,        // burstT đếm NGƯỢC: 1 → 0 là một lượt burst
   cuaSoT: 0,              // cửa sổ còn lại trên mục tiêu, giây
 };
@@ -355,12 +357,34 @@ function khung(now){
       kind = 'a'; idx = Math.floor(k * HS_FRAMES.a);
     }
 
+    // Độ HIỆN của cái xác. Ở kiểu "hiện khi đánh" nó chỉ vật chất hoá trong lúc tung chiêu:
+    // mờ dần lên ở pha lấy đà, rõ hẳn lúc chạm, rồi tan. Ở kiểu thường trực thì luôn là 1.
+    const dangDanh = p > 0 || pha < 0.42;
+    let hien = 1;
+    if (S.hienKhiDanh){
+      hien = p > 0 ? Math.min(1, (1 - p) * 3.2) * Math.min(1, p * 4 + 0.25)
+           : pha < 0.42 ? Math.sin((pha / 0.42) * Math.PI)
+           : 0;
+      hien = Math.max(0, Math.min(1, hien * 1.35));
+    }
+    window.__hien = hien;          // để bài chụp ảnh bắt đúng khoảnh khắc
     const k0 = Math.max(0, 1 - S.bayCao / 110);
-    veBong(g, xx, chanY, 12 + 16 * k0, 5 + 5 * k0, .14 + .28 * k0);
     const R = REN[S.ren];
-    const hopXac = veXac(g, S.xac, kind, idx, xx, xy, S.xacCao,
-                         { mo: S.doMo, mau: R.mau, manh: 1 + (p > 0.3 ? 0.7 : 0),
-                           nghieng: (p > 0 || pha < 0.42) ? 0 : nghieng });
+    let hopXac = null;
+    if (hien > 0.02){
+      veBong(g, xx, chanY, 12 + 16 * k0, 5 + 5 * k0, (.14 + .28 * k0) * hien);
+      // Vòng triệu hồi dưới chân lúc vật chất hoá — nếu không có thì nó chỉ là hình mờ dần,
+      // đọc ra "lag" chứ không đọc ra "được gọi tới".
+      if (S.hienKhiDanh && hien < 0.98){
+        g.save(); g.globalCompositeOperation = 'lighter';
+        g.strokeStyle = `rgba(150,200,255,${0.5 * (1 - hien)})`; g.lineWidth = 2;
+        const rr = 30 + (1 - hien) * 34;
+        g.beginPath(); g.ellipse(xx, chanY, rr, rr * .32, 0, 0, 7); g.stroke(); g.restore();
+      }
+      hopXac = veXac(g, S.xac, kind, idx, xx, xy, S.xacCao,
+                     { mo: S.doMo * hien, mau: R.mau, manh: (1 + (p > 0.3 ? 0.7 : 0)) * hien,
+                       nghieng: dangDanh ? 0 : nghieng });
+    }
 
     // ③ AXIE — vẽ SAU nên nằm trên: nó là nhân vật chính, không bị ai che.
     //    Chạy bằng bảng khung THẬT vừa nướng; thỉnh thoảng tự ra một đòn phụ.
@@ -382,16 +406,21 @@ function khung(now){
       g.fillStyle = gr; g.beginPath(); g.arc(biaX, chanY - 40, 120, 0, 7); g.fill(); g.restore();
     }
     g.fillStyle = 'rgba(180,200,255,.72)'; g.font = '600 13px system-ui,sans-serif'; g.textAlign = 'left';
-    g.fillText('Axie = NHÂN VẬT CHÍNH  ·  Cổ Vật = phụ, nhưng đứng CHẮN và RA ĐÒN CHÍNH', 18, 28);
+    g.fillText(S.hienKhiDanh
+      ? 'Axie = AVATAR (không chỉ số)  ·  lớp nhân vật HIỆN RA lúc tung chiêu — chỉ số ở đây'
+      : 'Axie = AVATAR  ·  lớp nhân vật đứng CHẮN thường trực và ra đòn chính', 18, 28);
     const A = window.CHI_ANH && CHI_ANH.o[S.axie];
-    if (A && hopXac){
+    if (A){
+      hopXac = hopXac || { w: 0, h: 0 };
       const D = AXIE_DONG, du = oke && tai(D.tep);
       const hh = S.axieCao / (du ? D.thanCao : A.thanCao);
       const aw = hh * (du ? D.oW / D.oH : A.nhoRong / A.nhoCao);
       g.font = '12px ui-monospace,monospace'; g.fillStyle = 'rgba(200,210,235,.55)';
       g.fillText(`Axie  ${Math.round(aw)}×${Math.round(hh)} px` +
                  (du ? '  ·  bảng khung THẬT: action/run + attack/melee/normal-attack' : '  ·  bảng thở'), 18, H - 34);
-      g.fillText(`Xác   ${Math.round(hopXac.w)}×${Math.round(hopXac.h)} px  ·  rộng bằng ${(hopXac.w / aw * 100) | 0}% Axie`, 18, H - 16);
+      g.fillText(hopXac.w
+        ? `Xác   ${Math.round(hopXac.w)}×${Math.round(hopXac.h)} px  ·  rộng bằng ${(hopXac.w / aw * 100) | 0}% Axie`
+        : 'Xác   (đã tan — chỉ hiện lúc tung chiêu)', 18, H - 16);
     }
   }
 
@@ -441,6 +470,7 @@ noi('bayCao',  'nhanBay',     'bayCao');
 noi('doMo',    'nhanMo',      'doMo', v => v / 100);
 
 el('btnBurst').onclick = burst;
+el('btnKieu').onclick = e => { S.hienKhiDanh = !S.hienKhiDanh; e.target.className = S.hienKhiDanh ? 'bat' : ''; };
 el('btnCu').onclick = e => { S.boCucCu = !S.boCucCu; e.target.className = S.boCucCu ? 'bat' : ''; };
 addEventListener('keydown', e => {
   if (e.code === 'Space'){ e.preventDefault(); burst(); }

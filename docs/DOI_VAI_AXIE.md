@@ -34,6 +34,50 @@ Vaeldra — **bộ giáp, không phải con người** — buộc mình vào anh
 
 ---
 
+## 2b. ⚠ CHỐT LẠI (bản sau) — Axie là AVATAR THUẦN, chỉ số ở 5 lớp
+
+Chủ dự án chốt bằng chữ: *"Chỉ số của nó tới từ 5 class. Axie chỉ đơn thuần là avatar thôi,
+khi tấn công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu."*
+
+Câu đó **đơn giản hoá cả đợt việc**, và nó đè lên vài chỗ viết trước ở §3/§5 — chỗ nào lệch thì
+mục này thắng.
+
+| | |
+|---|---|
+| `player` | **vẫn nguyên là nhân vật của một trong 5 lớp**, không đổi gì |
+| Chỉ số · trang bị · kỹ năng · Tiến Hoá · Di Sản | **ở lớp**, không ở Axie |
+| Axie | **avatar thuần** — 0 chỉ số, 0 kỹ năng, 0 trang bị. Là ô để cắm NFT. |
+| Lúc đánh | lớp nhân vật **hiện ra** và tung chiêu |
+
+### ⇒ Đây không còn là đổi kiến trúc. Là đổi LỚP VẼ.
+
+| Không phải sửa | Phải sửa |
+|---|---|
+| `calcDerived()` · `hurtMob()` · `castSkill()` | `drawPlayer()` — đi thì vẽ Axie, đánh thì lớp nhân vật hiện ra |
+| `player.sect` · `player.equip` · `SECTS` · `HERO_SETS` | thêm một ô `player.avatar` (id Axie) |
+| Save cũ | *(đọc được nguyên vẹn — không đổi tên trường nào)* |
+
+Luật "MỘT bộ chỉ số, HAI cái thân" ở §3 **vẫn đúng và nay còn đúng hơn**: chỉ có một bộ chỉ số
+thật, và nó nằm ở lớp nhân vật. Cái phải sửa là **bảng chia việc** — xem ngay dưới.
+
+### Hai kiểu hiện, chưa chốt cái nào
+
+`public/game/proto_doivai.html` dựng cả hai, bấm nút để đổi:
+
+| Kiểu | Lớp nhân vật | Đọc ra |
+|---|---|---|
+| **Hiện khi đánh** | chỉ vật chất hoá lúc tung chiêu rồi tan | Axie là nhân vật; lớp là **sức mạnh được gọi tới** |
+| **Thường trực** | đứng chắn giữa Axie và mục tiêu, tự đánh | Axie là nhân vật; lớp là **người bảo vệ** đi cùng |
+
+### Còn treo: NFT có khoá theo lớp không
+
+Nếu avatar khoá 1-1 với lớp (Aquatic ⇔ Dark Wizard) thì **một NFT chỉ dùng được khi nó trùng lớp
+người chơi đang chơi** — phần lớn NFT trong ví thành vô dụng. Nếu avatar tự do thì chơi Dark
+Wizard mà cưỡi Axie hệ Beast được, NFT nào cũng dùng được, nhưng mất đường đọc lớp bằng mắt.
+**Chưa chốt.** Nó là câu hỏi về giá trị NFT chứ không phải về cân bằng.
+
+---
+
 ## 3. Luật nền, chốt trước mọi thứ khác
 
 > ### MỘT bộ chỉ số. HAI cái thân.
@@ -52,17 +96,17 @@ tách `calcDerived`, tách thanh máu, tách chỗ tính sát thương, và mỗ
 |---|---|---|
 | Di chuyển | ✓ click-to-move | bám theo, tự động |
 | Thanh máu | ✓ **duy nhất** | **không có** — không chết, không hồi, không trông em bé |
-| 4 nút chiêu | ✓ | — |
-| Đòn đánh thường | ✓ (~75-80% sát thương) | ✓ tự đánh (~20%) |
+| 4 nút chiêu | người chơi bấm, nhưng **lớp nhân vật là bên thi triển** | ✓ thi triển |
+| Đòn đánh thường | ✗ — Axie không gây sát thương | ✓ **toàn bộ sát thương** |
 | **Burst** | — | ✓ **nút riêng, người chơi bấm** |
 | Mặc giáp (hình) | ✗ **skin thuần** — để dành NFT | ✓ mặc bộ người chơi cày được |
-| Chỉ số của giáp | ✓ chảy vào bảng chỉ số chung | — |
-| Hệ khắc chế | ✓ quyết định | — |
-| Lên cấp | cấp nhân vật | cấp riêng → **chỉ** làm mạnh burst |
+| Chỉ số của giáp | — | ✓ **đây là bảng chỉ số duy nhất** |
+| Hệ khắc chế | ✓ quyết định (thứ duy nhất Axie còn nắm ngoài ngoại hình) | — |
+| Lên cấp | — | cấp nhân vật |
 
-Đọc cột phải từ trên xuống: cái xác **không sở hữu một con số nào của người chơi**. Nó sở hữu
-đúng hai thứ — **cái nút burst** và **chỗ treo bộ giáp cho người ta nhìn**. Nên thêm bao nhiêu
-Cổ Vật cũng không làm phình bảng chỉ số.
+⚠ **Bảng này đã sửa theo §2b.** Bản đầu chia sát thương 75-80% cho Axie và ~20% cho cái xác —
+sai hẳn chiều. Nay Axie **không gây sát thương**; nó giữ đúng hai thứ: **ngoại hình** và **hệ
+khắc chế**.
 
 ---
 
@@ -96,7 +140,13 @@ Thiết kế nào không nhét được vào một câu như thế thì nó là 
 
 ---
 
-## 5. Cái xác — trần 16%, và đó là hợp đồng
+## 5. Trần 16% — quản LỚP GACHA, không quản lớp nhân vật
+
+> ⚠ **Đọc §2b trước.** Chỉ số cơ bản đến từ **5 lớp** và **không bị trần** — đó là tiến độ người
+> chơi cày ra. Trần 16% dưới đây chỉ quản **lớp Cổ Vật quay từ banner**, nếu về sau có thêm lớp
+> đó. Lẫn hai thứ là hoặc bóp chết tiến độ, hoặc mở cửa cho P2W.
+
+### Cái xác (lớp gacha) — trần 16%, và đó là hợp đồng
 
 Anh xác định cái xác **có chỉ số riêng và thế mạnh riêng**. Đúng, nhưng phải chốt bao nhiêu,
 nếu không nó tự trôi thành nguồn sức mạnh chính trong vòng ba đợt cân bằng.
