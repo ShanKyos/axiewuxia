@@ -5134,6 +5134,10 @@ const CHI_CHAY = { n: 12, cot: 6 };
 //
 // Số trần ở đây, không nhân hằng nào: NV_THAN_PX khai tận dòng ~22987, chạm vào là rơi vùng
 // chết của const. Nhân lúc GỌI, trong avaCo().
+// Lớp nhân vật đứng KẾ BÊN Axie: dời tới trước theo hướng mặt (đứng chắn) rồi lệch sang bên
+// (cho cả hai cùng đọc được). Số trần, đơn vị pixel thế giới — xem chỗ dùng trong drawPlayer.
+const AVA_CHAN_TRUOC = 30;   // chắn phía trước bao nhiêu
+const AVA_CHAN_BEN   = 27;   // lệch sang bên bao nhiêu
 const AVA_TY  = 0.72;   // thân Axie cao mấy phần thân người…
 const AVA_TRAN = 0.95;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
 function avaCo(id){
@@ -15319,13 +15323,41 @@ function drawPlayer(){
   const _hInfo = nvChonHuong(nvBoGoc(p.sect, heroTier(p), gearVisual(p)), p.face);
   p._hw = _hInfo.ban;
   const flip = _hInfo.lat;
+  // ── AVATAR: lớp nhân vật đứng KẾ BÊN, không đứng đè lên Axie ────────────────────────
+  // Chủ dự án chốt sau khi chơi thử: "nhân vật xuất hiện kế bên Axie… đi theo để bảo kê".
+  // Nên Axie KHÔNG biến mất lúc đánh nữa; lớp nhân vật hiện ra ở một chỗ khác, chắn phía
+  // trước theo hướng mặt rồi lệch sang bên cho cả hai cùng đọc được.
+  //
+  // ⚠ `_lopHien` phải tính Ở ĐÂY dù `_kind` mãi dưới mới có: phép dời gốc toạ độ nằm TRÊN
+  // chỗ tính `_kind`. Điều kiện dưới đây là đúng chuỗi ưu tiên của `_kind` (chết > trúng đòn
+  // > niệm chú > đánh), và `_veAva` bên dưới đọc lại chính nó — một nguồn sự thật, không
+  // phải hai điều kiện song song rồi lệch nhau lúc ai đó sửa một bên.
+  const _lopHien = !dead && !((p.hurtT || 0) > 0) && (castK > 0 || atkK > 0);
+  const _coAva = !!avatarId(p);
+  // Trục sâu nén 0,55 — cùng lối với bóng đổ: game nhìn chếch từ trên nên dời dọc phải ngắn
+  // hơn dời ngang, không thì nhân vật nhảy lên cao hẳn khi Axie quay mặt lên.
+  const _avaDx = _coAva ? Math.cos(p.face)*AVA_CHAN_TRUOC - Math.sin(p.face)*AVA_CHAN_BEN : 0;
+  const _avaDy = _coAva ? (Math.sin(p.face)*AVA_CHAN_TRUOC + Math.cos(p.face)*AVA_CHAN_BEN)*0.55 : 0;
+  // Độ VẬT CHẤT HOÁ, cũng tính sớm vì vòng triệu hồi phải vẽ TRƯỚC thân người.
+  // ⚠ `atkAnim` ĐẾM NGƯỢC nên tiến độ là 1 − atkK, không phải atkK.
+  let _hienLop = 1;
+  if (_coAva && _lopHien)
+    _hienLop = clamp((castK > 0 ? Math.min(1, castK) : 1 - Math.min(1, atkK)) / 0.28, 0, 1);
+  // ── THỨ TỰ VẼ THEO CHIỀU SÂU ───────────────────────────────────────────────────────
+  // Ai đứng THẤP hơn trên màn thì vẽ SAU. `_avaDy > 0` nghĩa là lớp nhân vật đứng thấp hơn
+  // Axie ⇒ Axie phải vẽ TRƯỚC. Bản đầu vẽ Axie sau cùng ở mọi hướng, nên quay mặt xuống là
+  // con Axie che mất nửa người — nhìn ra một lỗi hiển thị chứ không ra "đứng kế bên".
+  if (_coAva && _avaDy > 0) veAvatar(ctx, p, !!p.moving, now);
+  // Vòng triệu hồi nổ dưới chân LỚP NHÂN VẬT (thứ đang được gọi tới), và phải nằm DƯỚI nó.
+  if (_coAva && _lopHien && _hienLop < 1)
+    veVongTrieu(ctx, { x: p.x + _avaDx, y: p.y + _avaDy }, _hienLop);
   ctx.save();
-  ctx.translate(p.x + Math.cos(p.face)*lungeK*7,
-                (p.y - NV_LECH_Y) + Math.sin(p.face)*lungeK*3);
+  ctx.translate(p.x + _avaDx + Math.cos(p.face)*lungeK*7,
+                (p.y - NV_LECH_Y) + _avaDy + Math.sin(p.face)*lungeK*3);
   if (flip) ctx.scale(-1, 1);
   ctx.scale(pulse, pulse);
   // Thần Hiệp: hào quang vàng rực sau lưng + viền kim quang quanh thân
-  if (maxed){
+  if (maxed && (!_coAva || _lopHien)){
     const hg = ctx.createRadialGradient(0, -8, 6, 0, -8, 64);
     hg.addColorStop(0, 'rgba(255,228,150,.55)'); hg.addColorStop(0.55, 'rgba(255,177,92,.16)'); hg.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.globalAlpha = 0.85 + 0.15*Math.sin(now/300); ctx.fillStyle = hg;
@@ -15383,7 +15415,7 @@ function drawPlayer(){
   // chân + nhấc thân lên, đúng hướng và đúng biên độ cũ. Đổi lại là các khớp không bung riêng
   // lẻ — cái giá rẻ hơn nhiều so với đổi hẳn nhân vật.
   // AVATAR (xem veAvatar): đi lại thì thấy Axie, đánh/niệm chú thì lớp nhân vật hiện ra.
-  let _spr = null, _veAva = false, _hienLop = 1;
+  let _spr = null, _veAva = _coAva && !_lopHien;   // xem _lopHien/_hienLop tính ở trên
   {
     // BAY không có khối khung riêng, và không cần. Đo bằng chỉ số chồng khít giữa tư thế bay
     // mong muốn với cả 20 hoạt cảnh × 12 khung của bản mẫu: khớp nhất là chính '00_Walk' khung
@@ -15421,16 +15453,17 @@ function drawPlayer(){
     // Axie: nếu lớp nhân vật nháy ra mỗi lần ăn đòn thì trong một trận đông quái người chơi
     // gần như không còn thấy avatar của mình đâu nữa — mà avatar mới là thứ họ chọn/mua.
     // (Nợ: rig có sẵn defense/hit-by-normal và chưa nướng. Nướng rồi thì Axie giật được.)
-    if (avatarId(p)){
-      _veAva = _kind !== 'a' && _kind !== 'c';
-      if (!_veAva){
-        // Vật chất hoá trong 28% đầu. ⚠ atkAnim ĐẾM NGƯỢC nên atkK = 1 ở khung đầu — tiến độ
-        // là 1 − atkK, không phải atkK. Dùng thẳng atkK thì lớp nhân vật mờ dần ĐI trong lúc
-        // vung, tức ngược hẳn.
-        const _tien = _kind === 'c' ? Math.min(1, castK) : (1 - atkK);
-        _hienLop = clamp(_tien / 0.28, 0, 1);
-      }
-    }
+    // ⚠ `_veAva` và `_hienLop` tính ở KHỐI TRÊN, không tính ở đây — phép dời gốc toạ độ của
+    // thân người nằm phía trên chỗ tính `_kind`, nên chúng phải có trước.
+    //
+    // Điều đó đặt ra một ràng buộc phải giữ bằng tay: `_lopHien` ở trên PHẢI luôn đúng bằng
+    // `_kind === 'a' || _kind === 'c'`. Hôm nay đúng, vì cả hai đọc cùng bộ điều kiện và cùng
+    // thứ tự ưu tiên (chết > trúng đòn > niệm chú > đánh). **Thêm một trạng thái mới vào chuỗi
+    // `_kind` phía trên 'c' thì phải sửa `_lopHien` theo**, nếu không lớp nhân vật hiện ra ở
+    // một chỗ mà vòng triệu hồi lại nổ ở chỗ khác.
+    //
+    // (Bản đầu em vá bằng một dòng "nếu lệch thì gán lại". Sai kiểu: nó làm chỗ lệch CHẠY
+    //  ĐƯỢC nên không ai biết mà sửa. Thà để nó hỏng ra mặt.)
     // KHỐI vẽ khác KHỐI tính chỉ số ở đúng một chỗ: đòn thường.
     //   tay không          → 'p' (đấm)  — nhân vật mới tạo không có vũ khí nào
     //   Dark Knight/Spellblade → luân phiên 'a' ↔ 's' cho hai nhát khác nhau
@@ -15541,8 +15574,10 @@ function drawPlayer(){
   // ── AVATAR vẽ ở TOẠ ĐỘ THẾ GIỚI ──────────────────────────────────────────────────────
   // Phải nằm SAU ctx.restore() ở trên: bên trong đó là hệ cục bộ của bộ xương (đã dời về
   // p.x/p.y, lật theo hướng và thu theo tỉ lệ), còn avatar thì tự lo cả ba thứ đó.
-  if (_veAva) veAvatar(ctx, p, !!p.moving, now);
-  else if (avatarId(p) && _hienLop < 1) veVongTrieu(ctx, p, _hienLop);
+  // Axie là THÂN của người chơi nên vẽ ở MỌI trạng thái — kể cả lúc lớp nhân vật đang hiện.
+  // Bản trước cho nó biến mất lúc đánh (đổi chỗ cho nhau), chủ dự án chốt lại là đứng cạnh.
+  // Nửa còn lại của phép xếp chiều sâu ở trên: lớp nhân vật đứng CAO hơn ⇒ Axie vẽ SAU.
+  if (_coAva && _avaDy <= 0) veAvatar(ctx, p, !!p.moving, now);
   if (_tk && _tk.truoc) veThanKhi(ctx, _tk, p);        // quét ra trước mặt: vẽ SAU thân
   // weapon arc while attacking
   if (p.atkAnim > 0){
