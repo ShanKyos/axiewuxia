@@ -18144,8 +18144,11 @@ window.svChon = function(id){
 // Ẩn màn chọn máy chủ, hiện danh sách nhân vật.
 function svAn(){
   { const e = el('sv-pick'); if (e) e.classList.add('hidden'); }
-  { const h = el('cc-hero'); if (h) h.classList.remove('hidden'); }   // tranh anh hùng: chỉ ở màn này
-  { const _ss = el('sect-select'); if (_ss) _ss.classList.remove('man-server'); }
+  { const h = el('cc-hero'); if (h) h.classList.remove('hidden'); }   // sân khấu: chỉ ở màn này
+  // `man-cho` dồn cột ô nhân vật sang phải để sân khấu có cả nửa trái mà đứng. Ba màn, ba bố
+  // cục: chọn máy chủ canh giữa, màn chờ lệch phải, màn tạo nhân vật neo đáy — cùng một khối
+  // HTML nên phải có cờ, không thể suy ra từ thứ gì khác.
+  { const _ss = el('sect-select'); if (_ss){ _ss.classList.remove('man-server'); _ss.classList.add('man-cho'); } }
   for (const _id of ['cc-slots', 'cc-slots-note']){ const _e = el(_id); if (_e) _e.style.display = ''; }
   for (const _id of ['btn-continue', 'btn-newchar']){ const _e = el(_id); if (_e) _e.classList.remove('hidden'); }
   ccSlotsRender();
@@ -18154,7 +18157,7 @@ window.svHien = function(){
   for (const _id of ['cc-slots', 'cc-slots-note']){ const _e = el(_id); if (_e) _e.style.display = 'none'; }
   { const h = el('cc-hero'); if (h) h.classList.add('hidden'); }      // màn máy chủ: logo là chính, không chen tranh
   { const _sv = el('sv-pick'); if (_sv) _sv.classList.add('hidden'); }
-  { const _ss = el('sect-select'); if (_ss) _ss.classList.remove('man-server'); }
+  { const _ss = el('sect-select'); if (_ss){ _ss.classList.remove('man-server'); _ss.classList.remove('man-cho'); } }
   for (const _id of ['btn-continue', 'btn-newchar']){ const _e = el(_id); if (_e) _e.classList.add('hidden'); }
   svRender();
   { const e = el('sv-pick'); if (e) e.classList.remove('hidden'); }
@@ -21758,46 +21761,220 @@ window.openForgePanel = function(){
   AudioSys.sfx('ui', 0.6);
 };
 
-// ═══════════ MÀN HÌNH MỞ ĐẦU — DÃY NÚI ĐÊM ═══════════
-// Bản trước là một bến cảng vẽ tay: ba con tàu, lồng giam, sóng, ảnh phản chiếu. Nó có nhiều
-// thứ để xem, và đó chính là chỗ hỏng — khối chọn lớp nằm đè lên giữa màn, nên mọi chi tiết
-// phía sau chỉ còn là nhiễu sau lưng chữ, còn năm nhân vật thì không ai nhìn.
+// ═══════════ MÀN HÌNH CHỜ — LUNACIA, ART CHÍNH CHỦ AXIE ═══════════
+// Trước bản này nền là một dãy núi ĐÊM vẽ tay kiểu MU: bốn tầng núi gấp khúc dựng bằng
+// đường, một vầng trăng, sương xám. Nó không sai với Quy tắc số 1 — nhưng người mở game ra
+// lần đầu nhìn thấy một thế giới dark-fantasy chung chung, không có một dấu hiệu nào cho
+// biết đây là game Axie. Chủ dự án chốt: màn chờ phải mang hơi hướng Axie rõ nhất có thể.
 //
-// Nay nền lùi hẳn về làm KHÔNG KHÍ: bốn tầng núi xa dần, sương chen giữa các tầng, một vầng
-// trăng. Không một chi tiết nào đòi được nhìn. Sân khấu duy nhất là dải đá dưới chân năm nhân
-// vật — và dải đá đó nằm ở lớp HTML ngay dưới hàng thẻ (#cc-classes::before), không vẽ ở đây,
-// để gót chân đứng đúng lên mặt đá thay vì đứng lên một dải vẽ ở toạ độ khác.
+// Nay nền là art CHÍNH CHỦ, lấy từ axieinfinity/axie-origins-asset-kit —
+// `PvE/Backgrounds/story/9-rocky-mountain-1`: một cảnh Lunacia ĐÃ TÁCH LỚP. Chọn cảnh này
+// chứ không phải mấy tấm `Backgrounds/class/*.jpg` 1920px vì chúng là nền PHẲNG vẽ cho sân
+// khấu đánh bài — đặt sau một màn chờ thì không có xa gần, mà xa gần mới là thứ làm màn chờ
+// sống. Mười lớp nướng sẵn bằng tools/title/nuong_nen_axie.py (674 KB tổng).
 //
-// Chỉ chạy khi màn tạo nhân vật đang mở: rời màn là huỷ vòng lặp, không đốt pin nền.
-const TITLE_SKY = [
-  [0.00, '#05060f'],   // đỉnh trời: gần như đen
-  [0.34, '#0d1230'],   // xanh mực
-  [0.62, '#1b2350'],   // xanh tím
-  [0.84, '#33396d'],
-  [1.00, '#565a8c'],   // chân trời sáng nhất — hơi bạc, không phải ráng đỏ
+// ⚠ ĐỪNG hạ tông bằng cách nướng lại tệp. Art nướng ra giữ NGUYÊN màu gốc; phần dìm về đêm
+// nằm ở nenPhu() dưới đây — sửa tông là sửa một hàm, không phải nướng lại mười tệp, và art
+// gốc còn nguyên thì đợt sau đổi hướng vẫn còn chỗ lui.
+//
+// Chỉ chạy khi màn chờ hoặc trang dẫn truyện đang mở: rời màn là huỷ vòng lặp, không đốt pin nền.
+
+// Khung gốc của bộ lớp. Mọi toạ độ `y` bên dưới đo trong khung này, không phải trên màn hình.
+const NEN_KHUNG = { w: 1024, h: 661 };
+// Phải TRÙNG KHÍT bảng LOP trong tools/title/nuong_nen_axie.py — cùng thứ tự, cùng `y`.
+// `troi:[biênNgang, chuKì giây, biênDọc]` — lớp nào có thì vẽ lại mỗi khung, lớp nào không
+// thì nằm trong bộ đệm. Mây và sương trôi; núi, cây, mặt đất thì đứng yên.
+//
+// ⚠ Lớp trôi phải vẽ RỘNG HƠN khung đúng 2×biênNgang. Ba tầng mây đều phủ kín 1024 điểm ảnh
+// ngang (đo alpha: cols 0..1023), nên đẩy ngang mà không nới bề rộng là hở một dải trời trần
+// ở mép — lỗi chỉ lộ ra ở đúng hai đầu chu kì, tức là rất dễ nghiệm thu nhầm.
+const NEN_LOP = [
+  { t:'bg',       y:0,   h:661 },
+  { t:'mountain', y:188, h:473 },
+  { t:'cloud3',   y:40,  h:252, troi:[-17, 41, 4] },
+  { t:'cloud2',   y:120, h:212, troi:[ 23, 57, 5] },
+  { t:'cloud1',   y:100, h:421, troi:[-31, 73, 6] },
+  { t:'rock',     y:58,  h:603 },
+  { t:'fog',      y:250, h:313, troi:[ 38, 29, 4] },
+  { t:'ground',   y:310, h:351 },
+  { t:'front2',   y:457, h:204 },
+  { t:'front1',   y:325, h:336 },
 ];
-// Trạng thái vòng lặp cất trên window, KHÔNG phải `let` ở tầng module. Lý do: khối này nằm cuối
-// file, mà titleStop() bị gọi từ đoạn nạp save ở phía TRÊN. Người chơi có save cũ thì lúc khởi
-// động, titleStop() chạy trước khi câu `let` này kịp thực thi → TDZ ném ReferenceError → script
-// chết giữa chừng → mọi const phía sau (ITEM_DB, …) không bao giờ khởi tạo. Một dòng `let` đặt
-// sai chỗ làm hỏng 10 bài hồi quy theo kiểu rất khó lần ra.
-// window.* không có vùng chết, nên gọi sớm bao nhiêu cũng an toàn.
+const NEN_IMG = {};
+function nenTai(t){
+  let im = NEN_IMG[t];
+  if (!im){
+    im = new Image(); im.src = 'assets/title/lunacia/' + t + '.webp';
+    // Art về sau lúc dựng bộ đệm ⇒ vứt bộ đệm để khung sau dựng lại CÓ art. Không có dòng
+    // này thì lớp nào về trễ vài trăm mili giây sẽ vắng mặt suốt phiên.
+    im.addEventListener('load', () => { _nenNhom = null; _nenKhoa = ''; });
+    NEN_IMG[t] = im;
+  }
+  return im;
+}
+for (const l of NEN_LOP) nenTai(l.t);
+function nenSan(im){ return !!(im && im.complete && im.naturalWidth); }
+
+// Phủ kín khung hình theo lối `cover`, rồi CẮT 25% ở đỉnh và 75% ở đáy phần thừa: tán cây
+// thế giới nằm sát mép trên khung gốc nên cắt đều tay là mất ngọn — mà ngọn cây chính là
+// thứ đắt nhất trong bức. Phần đáy thừa chỉ là gai tiền cảnh, mất bao nhiêu cũng không sao.
+function nenHinh(W, H){
+  const k = Math.max(W / NEN_KHUNG.w, H / NEN_KHUNG.h);
+  return { k, ox: (W - NEN_KHUNG.w * k) / 2, oy: -(NEN_KHUNG.h * k - H) * 0.25 };
+}
+function nenVeLop(g, l, hh, t){
+  const im = NEN_IMG[l.t];
+  if (!nenSan(im)) return;
+  const bien = l.troi ? Math.abs(l.troi[0]) : 0;
+  let dx = 0, dy = 0;
+  if (l.troi && t != null){
+    const w2 = Math.PI * 2 * t;
+    dx = Math.sin(w2 / l.troi[1]) * l.troi[0];
+    dy = Math.sin(w2 / (l.troi[1] * 1.7) + 1.3) * (l.troi[2] || 0);
+  }
+  g.drawImage(im,
+    hh.ox + (dx - bien) * hh.k, hh.oy + (l.y + dy) * hh.k,
+    (NEN_KHUNG.w + bien * 2) * hh.k, l.h * hh.k);
+}
+
+// Cả mười lớp đều DỰNG SẴN, để mỗi khung chỉ còn bảy lượt dán 1:1 thay vì mười lượt vẽ có
+// co giãn. Sáu lớp đứng yên gom thành từng MẢNG LIỀN KỀ (một canvas cho cả mảng); bốn lớp
+// trôi thì mỗi lớp một tấm riêng đúng bằng cỡ vẽ ra của nó.
+//
+// ⚠ Phải gom theo MẢNG LIỀN KỀ chứ không gộp hết sáu lớp đứng yên vào một tấm: thứ tự chồng
+// lớp là cả thiết kế (mây phải nằm GIỮA núi và cây, sương phải nằm GIỮA cây và mặt đất).
+let _nenNhom = null, _nenKhoa = '';
+function nenNhom(W, H){
+  const khoa = Math.round(W) + 'x' + Math.round(H);
+  if (_nenNhom && _nenKhoa === khoa) return _nenNhom;
+  const hh = nenHinh(W, H);
+  const ds = [];
+  let dung = null;
+  for (const l of NEN_LOP){
+    if (l.troi){
+      dung = null;
+      // Lớp TRÔI cũng dựng sẵn, chỉ khác là dựng vào một tấm đúng bằng CỠ VẼ RA của nó rồi
+      // mỗi khung chỉ dời chỗ. Vì sao đáng làm: drawImage có co giãn đắt hơn hẳn drawImage
+      // 1:1 khi trình duyệt phải tự tô bằng CPU (máy không có GPU, máy ảo, tab nền) — đo
+      // được ở 1920x1080 phần mềm: bảy lượt vẽ co giãn mỗi khung là chỗ tốn nhất của cả cảnh,
+      // tốn hơn cả phép nhân màu phủ kín màn hình (chỉ 1,6 ms).
+      const bien = Math.abs(l.troi[0]);
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round((NEN_KHUNG.w + bien * 2) * hh.k));
+      c.height = Math.max(1, Math.round(l.h * hh.k));
+      const im = NEN_IMG[l.t];
+      if (nenSan(im)) c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      ds.push({ lop: l, cv: c, x: hh.ox - bien * hh.k, y: hh.oy + l.y * hh.k });
+      continue;
+    }
+    if (!dung){
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(W)); c.height = Math.max(1, Math.round(H));
+      dung = { cv: c, g: c.getContext('2d') };
+      ds.push(dung);
+    }
+    nenVeLop(dung.g, l, hh, null);
+  }
+  _nenNhom = { ds, hh }; _nenKhoa = khoa;
+  return _nenNhom;
+}
+
+// Lớp dìm về đêm + tối bốn góc. Dựng MỘT LẦN rồi blit — nó không đổi theo thời gian, mà ba
+// gradient phủ kín màn hình mỗi khung thì đúng bằng chi phí của cả phần còn lại cộng lại.
+let _nenPhuCv = null, _nenPhuKhoa = '';
+function nenPhu(W, H){
+  const khoa = Math.round(W) + 'x' + Math.round(H);
+  if (_nenPhuCv && _nenPhuKhoa === khoa) return _nenPhuCv;
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(W)); c.height = Math.max(1, Math.round(H));
+  const q = c.getContext('2d');
+  // Dải tối ở ĐỈNH cho dòng tựa đọc được, dải tối ở ĐÁY cho cột ô nhân vật và nút đọc được.
+  // Giữa khung để trống — chỗ đó là cây thế giới, dìm nó đi là dìm luôn lý do đổi nền.
+  const d = q.createLinearGradient(0, 0, 0, H);
+  d.addColorStop(0.00, 'rgba(7,10,28,.50)');
+  d.addColorStop(0.20, 'rgba(7,10,28,.04)');
+  d.addColorStop(0.58, 'rgba(6,9,24,.06)');
+  d.addColorStop(1.00, 'rgba(4,6,18,.52)');
+  q.fillStyle = d; q.fillRect(0, 0, W, H);
+  const v = q.createRadialGradient(W / 2, H * 0.46, Math.min(W, H) * 0.28,
+                                   W / 2, H * 0.46, Math.max(W, H) * 0.76);
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(2,4,14,.40)');
+  q.fillStyle = v; q.fillRect(0, 0, W, H);
+  _nenPhuCv = c; _nenPhuKhoa = khoa;
+  return c;
+}
+
+// ── VẾT NỨT ──────────────────────────────────────────────────────────────────────────
+// Game tên là Axie Rift và câu mở đầu là "Bầu trời nứt ra, và ngươi rơi qua" — nên trên
+// trời phải có một vết nứt. Dùng ĐÚNG hình gãy khúc và đúng dải màu của #fx-crack trong
+// game (style.css) để hai chỗ là một thứ, không phải hai thứ na ná nhau.
+//
+// Đây là ÁNH SÁNG, không phải một vật thể vẽ bằng đường — Quy tắc số 3 cấm dựng hình đồ
+// vật bằng ctx.beginPath(), không cấm tô một vệt sáng lên trời.
+const NUT_HINH = [[0.44,0],[0.52,0],[0.66,0.21],[0.55,0.34],[0.71,0.55],[0.61,0.72],
+                  [0.74,1],[0.47,1],[0.38,0.70],[0.49,0.52],[0.33,0.31],[0.41,0.18]];
+function nenVetNut(g, W, H, t){
+  const x = W * 0.175, w = Math.max(30, W * 0.036), h = H * 0.42;
+  g.save();
+  g.globalCompositeOperation = 'lighter';
+  g.globalAlpha = 0.60 + 0.12 * Math.sin(t * 0.55) + 0.05 * Math.sin(t * 2.3);
+  const gr = g.createLinearGradient(0, 0, 0, h);
+  gr.addColorStop(0.00, 'rgba(255,178,96,.95)');
+  gr.addColorStop(0.28, 'rgba(255,116,58,.62)');
+  gr.addColorStop(0.62, 'rgba(206,54,88,.28)');
+  gr.addColorStop(1.00, 'rgba(206,54,88,0)');
+  g.fillStyle = gr;
+  g.beginPath();
+  NUT_HINH.forEach(([u, v], i) => { const px = x + u * w, py = v * h; i ? g.lineTo(px, py) : g.moveTo(px, py); });
+  g.closePath(); g.fill();
+  // Quầng: cùng hình, thổi to và mờ hẳn. Không có quầng thì vết nứt là một miếng dán, có
+  // quầng thì nó rọi sáng cả vùng trời quanh nó.
+  g.globalAlpha *= 0.22;
+  g.translate(x + w / 2, h * 0.30); g.scale(2.8, 1.35); g.translate(-(x + w / 2), -h * 0.30);
+  g.beginPath();
+  NUT_HINH.forEach(([u, v], i) => { const px = x + u * w, py = v * h; i ? g.lineTo(px, py) : g.moveTo(px, py); });
+  g.closePath(); g.fill();
+  g.restore();
+}
+
+// ── BỤI SÁNG ─────────────────────────────────────────────────────────────────────────
+// Cùng họ với những đốm phát sáng vẽ sẵn dưới chân cây trong bức gốc — chúng bay lên thì
+// cảnh có sự sống, mà một tấm sprite dựng sẵn thì rẻ hơn 30 lượt createRadialGradient/khung.
+let _buiCv = null;
+function nenBui(){
+  if (_buiCv) return _buiCv;
+  const c = document.createElement('canvas'); c.width = c.height = 32;
+  const q = c.getContext('2d');
+  const gr = q.createRadialGradient(16, 16, 0, 16, 16, 16);
+  gr.addColorStop(0, 'rgba(214,255,246,.95)');
+  gr.addColorStop(0.35, 'rgba(122,226,214,.42)');
+  gr.addColorStop(1, 'rgba(96,196,200,0)');
+  q.fillStyle = gr; q.fillRect(0, 0, 32, 32);
+  _buiCv = c; return c;
+}
+
 function titleStop(){
   if (window._titleRAF) cancelAnimationFrame(window._titleRAF);
   window._titleRAF = 0;
-  // Canvas nay nằm NGOÀI #sect-select (để trang dẫn truyện dùng chung), nên .hidden của màn
-  // kia không còn ẩn hộ nữa — không tự ẩn ở đây thì cảnh biển đêm treo đè lên cả game.
+  // Canvas nằm NGOÀI #sect-select (để trang dẫn truyện dùng chung), nên .hidden của màn kia
+  // không còn ẩn hộ nữa — không tự ẩn ở đây thì cảnh Lunacia treo đè lên cả game.
   const cv = document.getElementById('title-fx');
   if (cv) cv.classList.add('hidden');
 }
 
-// Cảnh nền chạy khi MÀN CHỌN LỚP hoặc TRANG DẪN TRUYỆN đang mở — hai màn dùng chung một nền.
+// Cảnh nền chạy khi MÀN CHỜ hoặc TRANG DẪN TRUYỆN đang mở — hai màn dùng chung một nền.
 function titleAlive(){
   for (const id of ['sect-select', 'intro-story']){
     const e = document.getElementById(id);
     if (e && !e.classList.contains('hidden')) return true;
   }
   return false;
+}
+// Người tắt hoạt ảnh vẫn phải THẤY cảnh. Bản trước ẩn hẳn #title-fx bằng CSS ở
+// prefers-reduced-motion, tức là họ nhận được một trang đen trơn — đó không phải giảm
+// chuyển động, đó là gỡ mất nền. Nay vẽ đúng MỘT khung rồi dừng.
+function titleItDong(){
+  return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 }
 function titleStart(){
   const cv = document.getElementById('title-fx');
@@ -21806,201 +21983,236 @@ function titleStart(){
   cv.classList.remove('hidden');
   window._titleT0 = performance.now();
   const g = cv.getContext('2d');
-  const step = () => {
-    if (!titleAlive()){ window._titleRAF = 0; cv.classList.add('hidden'); return; }  // rời cả hai màn → dừng hẳn
+  const khung = () => {
     const w = cv.clientWidth, h = cv.clientHeight;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    if (cv.width !== Math.round(w*dpr) || cv.height !== Math.round(h*dpr)){
-      cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)){
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
     }
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    drawTitleScene(g, w, h, (performance.now() - window._titleT0) / 1000);
+    const t = (performance.now() - window._titleT0) / 1000;
+    drawTitleScene(g, w, h, t);
+    const sk = document.getElementById('cc-hero');
+    if (sk && !sk.classList.contains('hidden')) ccHeroVe(sk, t);
+  };
+  // Giữ lại hàm vẽ một khung để titleVeLai() gọi được. Cất trên window vì khối này nằm cuối
+  // tệp mà svAn()/ccSlotsRender() ở phía trên — cùng lý do với window._titleRAF.
+  window._titleKhung = khung;
+  if (titleItDong()){ khung(); return; }
+  const step = () => {
+    if (!titleAlive()){ window._titleRAF = 0; cv.classList.add('hidden'); return; }
+    khung();
     window._titleRAF = requestAnimationFrame(step);
   };
   window._titleRAF = requestAnimationFrame(step);
 }
-
-// Dãy núi là TRANH THẬT (art Meowa, lớp background của bộ side-scrolling). Phần vẽ tay bên
-// dưới vẫn giữ làm đường lui: tranh chưa tải xong — hoặc tải hỏng — thì cảnh vẫn có núi chứ
-// không hở ra một mảng gradient trống.
-const TITLE_NUI = new Image(); TITLE_NUI.src = 'assets/title/nui.webp';
-
-// Bốn tầng núi, xa → gần. Càng xa càng nhạt và càng ngả về màu trời: đó là toàn bộ mẹo của
-// "chiều sâu không khí", và là lý do một dãy núi hai màu thì phẳng còn bốn tầng thì có xa gần.
-const NUI_LOP = [
-  { day: 0.68, cao: 0.30, dinh: 5, mau: ['#4a5490', '#333c72'], vien: 0.30, hat: 41  },
-  { day: 0.77, cao: 0.34, dinh: 4, mau: ['#333c72', '#232a55'], vien: 0.20, hat: 907 },
-  { day: 0.87, cao: 0.36, dinh: 4, mau: ['#1f2549', '#151a35'], vien: 0.12, hat: 233 },
-  { day: 1.03, cao: 0.34, dinh: 3, mau: ['#121527', '#080a15'], vien: 0,    hat: 617 },
-];
-// Ngẫu nhiên CÓ HẠT: dãy núi phải giống hệt nhau giữa hai lần dựng lại (người chơi kéo cạnh
-// cửa sổ), nếu không thì mỗi lần đổi cỡ là núi nhảy sang một hình khác.
-function _nuiRnd(s){ const x = Math.sin(s * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
-// Một tầng núi = mấy chóp TAM GIÁC chồng nhau, lấy chóp cao nhất tại mỗi x. Tam giác cho cạnh
-// thẳng — thứ phân biệt núi đá với đồi cỏ; ghép bằng hàm sin thì lượn tròn ra đồi.
-function _nuiChop(hat, n){
-  const ds = [];
-  for (let i = 0; i < n; i++){
-    const x = (i + 0.5) / n + (_nuiRnd(hat + i) - 0.5) * 0.8 / n;
-    const r = (0.62 + _nuiRnd(hat + i + 91) * 0.85) / n;
-    const h = 0.45 + _nuiRnd(hat + i + 307) * 0.55;
-    ds.push([x, r, h]);
-  }
-  return ds;
+// Vẽ lại MỘT khung khi vòng lặp không chạy. Ở chế độ giảm chuyển động, titleStart() vẽ đúng
+// một khung rồi dừng — mà lúc ấy sân khấu (#cc-hero) còn đang ẩn, và ô nhân vật thì chưa ai
+// chọn. Không có hàm này thì người bật tuỳ chọn đó chỉ thấy nền, không bao giờ thấy nhân vật
+// của mình. Vòng lặp đang chạy thì hàm này không làm gì: khung sau tự lo.
+function titleVeLai(){
+  if (!window._titleRAF && typeof window._titleKhung === 'function') window._titleKhung();
 }
-function _nuiCao(chop, u){
-  let m = 0;
-  for (const [x, r, h] of chop){
-    const k = 1 - Math.abs(u - x) / r;
-    if (k > 0){ const v = h * k * (0.72 + 0.28 * k); if (v > m) m = v; }  // hơi lõm về chân: sườn núi không thẳng đuột
-  }
-  return m;
-}
-
-// Cả phần TĨNH của cảnh — trời, sao nền, trăng, bốn tầng núi, tối bốn góc — dựng MỘT LẦN vào
-// một canvas rồi mỗi khung chỉ blit lại. Núi không nhúc nhích, nên tính lại 60 lần/giây một
-// đống đường gấp khúc là đốt pin không đổi lấy gì. Chỉ sương, sao nhấp nháy và bụi là động.
-let _nenCv = null, _nenKhoa = '';
-function titleNen(W, H){
-  const coArt = (TITLE_NUI.complete && TITLE_NUI.naturalWidth) ? 1 : 0;
-  const khoa = W + 'x' + H + '|' + coArt;
-  if (_nenCv && _nenKhoa === khoa) return _nenCv;
-  const c = document.createElement('canvas');
-  c.width = Math.max(1, Math.round(W)); c.height = Math.max(1, Math.round(H));
-  const q = c.getContext('2d');
-
-  // ── trời ──
-  const sky = q.createLinearGradient(0, 0, 0, H * 0.92);
-  for (const [p, cc] of TITLE_SKY) sky.addColorStop(p, cc);
-  q.fillStyle = sky; q.fillRect(0, 0, W, H);
-
-  // ── núi ──
-  if (coArt){
-    // Tranh phủ kín khung, neo mép TRÊN: toà thành đổ nằm ở nửa trên bức tranh, kê đáy xuống
-    // thì nó tụt ra khỏi màn và cả bức chỉ còn mấy sườn đá.
-    // Neo theo TOÀ THÀNH ĐỔ, không theo mép tranh. Chỉ khoảng 150px trên cùng của màn hình là
-    // còn nhìn thấy được (dưới nữa đã có tán rừng che), mà toà thành — thứ đắt nhất trong bức
-    // — nằm ở dải 0,20-0,42 chiều cao tranh. Kê tranh theo mép nào cũng đẩy nó ra khỏi dải đó.
-    // Nên: phóng đủ to để 0,80 phần còn lại vẫn phủ kín khung, rồi dịch sao cho 0,20 rơi đúng
-    // vào y = 30px. Đo bằng tỉ lệ nên đổi cỡ cửa sổ thế nào toà thành cũng vẫn ở chỗ ấy.
-    const NUI_MAI = 0.20, NUI_Y = 30;
-    const sc = Math.max(W / TITLE_NUI.naturalWidth, (H - NUI_Y) / ((1 - NUI_MAI) * TITLE_NUI.naturalHeight));
-    const dw = TITLE_NUI.naturalWidth * sc, dh = TITLE_NUI.naturalHeight * sc;
-    q.drawImage(TITLE_NUI, (W - dw) / 2, NUI_Y - NUI_MAI * dh, dw, dh);
-    // HẠ TÔNG VỀ ĐÊM. Bức gốc là ban ngày, tím nhạt — đặt nguyên vào thì màn chọn lớp sáng
-    // hơn cả game, và chữ trắng trên nền nhạt thì không đọc nổi. Hai nước: nhân màu để dìm và
-    // kéo về xanh mực, rồi phủ thêm một lớp mờ cho các đỉnh xa lùi hẳn ra sau.
-    q.save();
-    q.globalCompositeOperation = 'multiply';
-    q.fillStyle = '#7b82c4'; q.fillRect(0, 0, W, H);
-    q.restore();
-    // Chỉ dìm ĐỈNH và ĐÁY. Dìm đều tay thì toà thành đổ — thứ đắt nhất trong bức tranh — mờ
-    // đi cùng với mọi thứ khác, và cả cảnh thành một mảng xanh không có gì để nhìn.
-    const dem = q.createLinearGradient(0, 0, 0, H);
-    dem.addColorStop(0, 'rgba(8,10,30,.28)'); dem.addColorStop(0.42, 'rgba(10,13,36,0)');
-    dem.addColorStop(1, 'rgba(6,7,20,.30)');
-    q.fillStyle = dem; q.fillRect(0, 0, W, H);
-  } else {
-    for (const lop of NUI_LOP){
-      const day = H * lop.day, cao = H * lop.cao;
-      const chop = _nuiChop(lop.hat, lop.dinh);
-      // sương ĐỌNG ở chân tầng — mỗi tầng một dải mờ, đó là thứ tách hai tầng ra khỏi nhau
-      const sg = q.createLinearGradient(0, day - cao * 0.55, 0, day + 6);
-      sg.addColorStop(0, 'rgba(120,140,200,0)'); sg.addColorStop(1, 'rgba(120,140,200,.16)');
-      q.fillStyle = sg; q.fillRect(0, day - cao * 0.55, W, cao * 0.55 + 6);
-
-      q.beginPath(); q.moveTo(0, H);
-      q.lineTo(0, day - cao * _nuiCao(chop, 0));
-      for (let x = 3; x <= W; x += 3) q.lineTo(x, day - cao * _nuiCao(chop, x / W));
-      q.lineTo(W, H); q.closePath();
-      const gd = q.createLinearGradient(0, day - cao, 0, day + cao * 0.3);
-      gd.addColorStop(0, lop.mau[0]); gd.addColorStop(1, lop.mau[1]);
-      q.fillStyle = gd; q.fill();
-
-      // viền sáng trên sống núi — trăng hắt vào cạnh. Chỉ các tầng xa mới có: tầng gần nằm
-      // trong bóng của chính nó, cho nó viền sáng là cảnh mất chiều sâu ngay.
-      if (lop.vien > 0){
-        q.strokeStyle = `rgba(198,214,255,${lop.vien})`; q.lineWidth = 1.4;
-        q.beginPath();
-        q.moveTo(0, day - cao * _nuiCao(chop, 0));
-        for (let x = 3; x <= W; x += 3) q.lineTo(x, day - cao * _nuiCao(chop, x / W));
-        q.stroke();
-      }
-    }
-  }
-
-  // Trăng và sao vẽ SAU núi. Tranh núi là một bức phủ kín khung — đặt trăng trước thì
-  // tranh đè lên và không còn gì. Toạ độ trăng nằm ở dải trời quang phía trên mọi đỉnh.
-  // ── sao ── dày ở đỉnh trời, tắt dần xuống chân núi
-  // Chỉ rải trong DẢI TRỜI QUANG phía trên: dưới nữa là đỉnh núi, sao rơi vào đó thành
-  // những chấm sáng lơ lửng giữa vách đá.
-  for (let i = 0; i < 110; i++){
-    const sx = ((i * 97.13) % 1) * W, sy = ((i * 41.7) % 1) * H * 0.30;
-    const r = _nuiRnd(i + 5) < 0.12 ? 1.7 : 1;
-    q.globalAlpha = (0.20 + _nuiRnd(i) * 0.5) * (1 - sy / (H * 0.36));
-    q.fillStyle = '#dfe6ff';
-    q.fillRect(sx, sy, r, r);
-  }
-  q.globalAlpha = 1;
-
-  // ── trăng ── bên phải, cao hơn mọi đỉnh núi
-  const mx = W * 0.17, my = H * 0.13, mr = Math.max(18, Math.min(W, H) * 0.030);
-  const halo = q.createRadialGradient(mx, my, mr * 0.6, mx, my, mr * 8);
-  halo.addColorStop(0, 'rgba(226,232,255,.26)'); halo.addColorStop(0.35, 'rgba(180,196,255,.09)');
-  halo.addColorStop(1, 'rgba(140,160,255,0)');
-  q.fillStyle = halo; q.beginPath(); q.arc(mx, my, mr * 8, 0, 7); q.fill();
-  q.fillStyle = '#eef1ff'; q.beginPath(); q.arc(mx, my, mr, 0, 7); q.fill();
-  q.fillStyle = 'rgba(150,160,205,.28)';                      // vài hố trăng cho đỡ phẳng
-  q.beginPath(); q.arc(mx - mr*0.30, my - mr*0.22, mr*0.24, 0, 7); q.fill();
-  q.beginPath(); q.arc(mx + mr*0.26, my + mr*0.28, mr*0.17, 0, 7); q.fill();
-  q.beginPath(); q.arc(mx + mr*0.10, my - mr*0.44, mr*0.12, 0, 7); q.fill();
-
-  // tối bốn góc — kéo mắt về giữa, chỗ năm nhân vật đứng
-  const vg = q.createRadialGradient(W/2, H*0.48, Math.min(W,H)*0.30, W/2, H*0.48, Math.max(W,H)*0.74);
-  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,6,.52)');
-  q.fillStyle = vg; q.fillRect(0, 0, W, H);
-
-  _nenCv = c; _nenKhoa = khoa;
-  return c;
-}
-// Tranh núi tới sau lúc dựng nền → vứt bộ nhớ đệm để khung sau dựng lại có tranh.
-TITLE_NUI.addEventListener('load', () => { _nenCv = null; _nenKhoa = ''; });
 
 function drawTitleScene(g, W, H, t){
   g.clearRect(0, 0, W, H);
-  g.drawImage(titleNen(W, H), 0, 0, W, H);
-
-  // ── sao nhấp nháy ── chỉ ở dải trời cao, nơi chắc chắn không có đỉnh núi nào chạm tới
-  for (let i = 0; i < 22; i++){
-    const sx = ((i * 173.7) % 1) * W, sy = ((i * 57.3) % 1) * H * 0.22;
-    g.globalAlpha = Math.max(0, Math.sin(t * 1.4 + i * 1.9)) * 0.55;
-    g.fillStyle = '#eef3ff'; g.fillRect(sx, sy, 1.6, 1.6);
+  const nh = nenNhom(W, H);
+  for (const m of nh.ds){
+    if (!m.lop){ g.drawImage(m.cv, 0, 0); continue; }   // mảng lớp đứng yên: dán thẳng
+    const l = m.lop, w2 = Math.PI * 2 * t;
+    g.drawImage(m.cv,
+      m.x + Math.sin(w2 / l.troi[1]) * l.troi[0] * nh.hh.k,
+      m.y + Math.sin(w2 / (l.troi[1] * 1.7) + 1.3) * (l.troi[2] || 0) * nh.hh.k);
   }
-  g.globalAlpha = 1;
+  // Nhuốm chàm cho cảnh về cùng một thế giới với HUD. Bức gốc là hoàng hôn xanh ngọc, sáng
+  // hơn hẳn phần còn lại của game — nhân màu chứ không phủ đen, vì phủ đen thì mấy đốm phát
+  // sáng dưới chân cây tắt theo, mà chúng mới là thứ làm cảnh này ra Lunacia.
+  //
+  // ⚠ PHẢI nhân Ở ĐÂY, không nướng sẵn vào tấm phủ. 'multiply' trên một canvas TRỐNG không
+  // ra "màu nhân", nó ra đúng ô màu đặc: nền trong suốt thì không có gì để mà nhân, nguồn
+  // giữ nguyên. Tấm phủ khi ấy thành một mảng tím đục phủ kín cảnh — đã dẫm đúng bẫy này,
+  // và triệu chứng (chỉ còn lớp trời, mất sạch núi/cây/đất) trông hệt như "art chưa tải".
+  g.save();
+  g.globalCompositeOperation = 'multiply';
+  g.fillStyle = '#aab3ea'; g.fillRect(0, 0, W, H);
+  g.restore();
+  g.drawImage(nenPhu(W, H), 0, 0);
+  nenVetNut(g, W, H, t);
 
-  // ── sương trôi ── ba dải ngược chiều nhau, vắt ngang chân các tầng núi
-  for (let L = 0; L < 3; L++){
-    const yy = H * (0.66 + L * 0.10);
-    const sp = (L % 2 ? -1 : 1) * (5 + L * 4);
-    const fg = g.createLinearGradient(0, yy - 36, 0, yy + 36);
-    fg.addColorStop(0, 'rgba(152,170,224,0)');
-    fg.addColorStop(0.5, `rgba(152,170,224,${0.11 - L * 0.02})`);
-    fg.addColorStop(1, 'rgba(152,170,224,0)');
-    g.fillStyle = fg;
-    for (let i = -1; i < 5; i++){
-      const cx = ((i * 430 + t * sp) % (W + 860) + (W + 860)) % (W + 860) - 430;
-      g.beginPath(); g.ellipse(cx, yy + Math.sin(t * 0.35 + i) * 4, 250 + L * 70, 26 + L * 8, 0, 0, 7); g.fill();
-    }
+  // ── bụi sáng bay lên ──
+  const bui = nenBui();
+  g.save();
+  g.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 34; i++){
+    const x = (((i * 137.5) % W) + Math.sin(t * 0.22 + i * 1.7) * 26 + W) % W;
+    const y = H * 1.02 - ((t * (9 + (i % 5) * 5) + i * 233) % (H * 1.06));
+    const r = 5 + (i % 4) * 2.6;
+    g.globalAlpha = 0.16 + 0.26 * Math.abs(Math.sin(t * 0.6 + i));
+    g.drawImage(bui, x - r, y - r, r * 2, r * 2);
   }
+  g.restore();
+}
 
-  // ── bụi sáng bay lên ── một chút chuyển động ở tiền cảnh cho cảnh khỏi chết cứng
-  for (let i = 0; i < 30; i++){
-    const x = (((i * 137.5) % W) + Math.sin(t * 0.25 + i) * 24 + W) % W;
-    const y = H - ((t * (7 + (i % 5) * 4) + i * 211) % (H * 1.1));
-    g.globalAlpha = 0.05 + 0.15 * Math.abs(Math.sin(t * 0.7 + i));
-    g.fillStyle = '#cfe0ff'; g.fillRect(x, y, 2, 2);
+// ═══════════ SÂN KHẤU MÀN CHỜ — LỚP CỦA BẠN, VÀ CON AXIE CỦA BẠN ═══════════
+// Trước bản này chỗ này là MỘT tấm PNG: `title/anhhung.webp`, một hiệp sĩ Dark Knight, đứng
+// đó bất kể người chơi đang chọn ô nào. Màn chờ nói dối về chính nhân vật của người chơi —
+// và nó cũng là thứ duy nhất to bằng nửa màn hình trong cả màn, nên nói dối rất to.
+//
+// Nay là canvas, và nó vẽ ĐÚNG thứ đang được chọn: lớp của ô đó, kèm con Ragoon nó đang
+// mang. Đấy là mô hình đã chốt của game — "Axie là avatar, 5 lớp là sức mạnh" — dựng thành
+// hình ngay ở màn đầu tiên người chơi nhìn thấy.
+//
+// Tài khoản chưa có nhân vật nào thì cả NĂM lớp đứng thành hàng, mỗi lớp một con Axie. Màn
+// chờ của một tài khoản trống là tấm áp phích của game; bốc đại một lớp ra đứng đó thì vừa
+// không nói được gì, vừa làm người mới tưởng mình đã bị gán lớp.
+//
+// ⚠ Vẽ trong CÙNG vòng rAF của cảnh nền (titleStart). Mở một vòng lặp thứ hai là hai vòng
+// cùng sống sau khi vào game nếu quên huỷ một cái — mà quên đúng một cái thì không ai thấy.
+const CC_AXIE_LOP = { thieulam:'ironshell', toanchan:'voltcrest', baidasan:'netherfang',
+                      minhgiao:'emberjaw',  bug:'aurelion' };
+// Gót chân nằm ở đâu trong tranh `pick_*` (khổ 320x300) — ĐO trên art, không đoán. Bóng đổ,
+// mặt đất và con Axie đứng cạnh đều neo theo con số này; lệch một chút là nhân vật lún chân
+// hoặc lơ lửng, mà nhìn thì chỉ thấy "hình như hơi lạ".
+const CC_HERO_GOT = 0.84;
+
+// Lớp của ô đang chọn. Trả null khi chưa có nhân vật nào — đó là tín hiệu chuyển sang hàng năm lớp.
+function ccHeroLop(){
+  const ds = (typeof danhSachO === 'function') ? danhSachO() : [];
+  const o = ds[ccSlot];
+  return (o && o.player && SECTS[o.player.sect]) ? o.player.sect : null;
+}
+// Con Ragoon của ô đang chọn; chưa có con nào thì lấy con mặc định của lớp.
+function ccHeroAxie(sect){
+  const ds = (typeof danhSachO === 'function') ? danhSachO() : [];
+  const o = ds[ccSlot];
+  const eq = o && o.player && o.player.chimera && o.player.chimera.eq;
+  return (eq && CHI_MAP[eq]) ? eq : CC_AXIE_LOP[sect];
+}
+// Vũng bóng. Không có nó thì mọi thứ trong khung lơ lửng trước bức tranh chứ không đứng lên nó.
+function ccVeBong(g, cx, fy, r, dam){
+  const gr = g.createRadialGradient(cx, fy, 0, cx, fy, r);
+  gr.addColorStop(0, `rgba(4,7,18,${dam})`);
+  gr.addColorStop(0.6, `rgba(4,7,18,${dam * 0.45})`);
+  gr.addColorStop(1, 'rgba(4,7,18,0)');
+  g.save(); g.translate(cx, fy); g.scale(1, 0.30); g.translate(-cx, -fy);
+  g.fillStyle = gr; g.beginPath(); g.arc(cx, fy, r, 0, 7); g.fill(); g.restore();
+}
+// Art chưa về thì ĐẶT HẸN vẽ lại, đừng bỏ qua im lặng. Vòng lặp rAF tự thử lại mỗi khung nên
+// không cần gì cả — nhưng ở chế độ giảm chuyển động chỉ có ĐÚNG MỘT khung được vẽ, và nếu nó
+// rơi vào lúc ảnh chưa tải xong thì chỗ đó trống vĩnh viễn. Đã dựng đúng kiểu đó một lần: năm
+// lớp hiện ra còn năm con Axie thì không.
+function ccChoAnh(im){
+  if (!im || im._ccCho) return;
+  im._ccCho = 1;
+  im.addEventListener('load', () => {
+    im._ccCho = 0;
+    _ccNenCv = null; _ccNenKhoa = '';   // tấm dựng sẵn đang thiếu đúng lớp này — vứt đi
+    titleVeLai();
+  }, { once: true });
+}
+// `cao` là chiều cao của TẤM TRANH vẽ ra, không phải của người — gót chân neo theo CC_HERO_GOT.
+function ccVeNguoi(g, sect, cx, fy, cao, mo){
+  const im = nvTai('pick_' + sect, 'webp');
+  if (!im){ ccChoAnh(NV_ANH['pick_' + sect + '.webp']); return false; }
+  const w = cao * im.naturalWidth / im.naturalHeight;
+  g.save(); g.globalAlpha = mo == null ? 1 : mo;
+  g.drawImage(im, cx - w / 2, fy - CC_HERO_GOT * cao, w, cao);
+  g.restore();
+  return true;
+}
+function ccVeAxie(g, id, cx, fy, than, t){
+  if (!id) return false;
+  // Nhịp thở đi kèm một cái dập dềnh rất nhẹ: bảng khung nhỏ chỉ thở tại chỗ, thêm chút nhún
+  // thì con vật ra đang ĐỨNG CHỜ chứ không phải một tấm sticker có hoạt ảnh.
+  const nhun = Math.sin(t * 1.5 + 0.6) * than * 0.025;
+  const ok = chiVeNho(g, id, Math.floor(t * CHI_THO_FPS), cx, fy - than * 0.38 + nhun, than);
+  if (!ok) ccChoAnh(chiImg(id));
+  return ok;
+}
+
+// Đèn hắt sau lưng TỪNG bóng hình, không phải một vệt sáng trải khắp sân khấu. Ba trong năm
+// lớp mặc đồ tối, mà cảnh Lunacia phía sau cũng tối — không có đèn thì họ chỉ còn là mấy
+// mảng đen trên nền đen.
+//
+// ⚠ Đừng làm thành MỘT vầng sáng lớn phủ cả khung: canvas này chỉ chiếm nửa trái màn hình,
+// nên một vầng sáng rộng hơn khung bị mép canvas cắt ngang — và thứ hiện ra là một HÌNH CHỮ
+// NHẬT sáng hơn nền, thấy rõ mồn một. Đã dựng đúng kiểu đó một lần rồi mới chụp ra thấy.
+// Vầng nhỏ đặt sau từng người thì tắt hẳn trước khi chạm mép.
+function ccVeDen(g, cx, fy, cao){
+  const cy = fy - cao * 0.34, r = cao * 0.34;
+  const gr = g.createRadialGradient(cx, cy, 0, cx, cy, r);
+  gr.addColorStop(0, 'rgba(148,206,226,.30)');
+  gr.addColorStop(0.5, 'rgba(120,176,220,.12)');
+  gr.addColorStop(1, 'rgba(120,176,220,0)');
+  g.save(); g.globalCompositeOperation = 'lighter';
+  g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fill(); g.restore();
+}
+// ── BỐ CỤC SÂN KHẤU ─────────────────────────────────────────────────────────────────
+// MỘT chỗ tính toạ độ, hai chỗ dùng: tấm dựng sẵn (người + bóng + đèn) và lượt vẽ mỗi khung
+// (Axie). Tách làm hai bảng toạ độ là kiểu lệch không ai nhìn ra — con Axie đứng lệch khỏi
+// người nó đi cùng đúng vài điểm ảnh, và chỉ lộ ra khi đổi cỡ cửa sổ.
+function ccBoCuc(w, h, sect){
+  const fy = h * 0.83;                         // đường đất chung cho mọi thứ đứng trong khung
+  if (sect){
+    const cao = h * 0.92, than = h * 0.21;
+    return { nguoi: [{ k: sect, cx: w * 0.42, fy, cao }],
+             // Axie đứng TRƯỚC và THẤP hơn một chút — nó gần ống kính hơn, mà gần hơn thì
+             // gót chân phải nằm thấp hơn, nếu không hai thứ trông như dán trên cùng một
+             // mặt phẳng.
+             axie: [{ id: ccHeroAxie(sect), cx: w * 0.66, fy: fy + h * 0.085, than, pha: 0 }] };
   }
-  g.globalAlpha = 1;
+  // Hàng năm lớp. Chừa lề 5% hai bên rồi mới chia năm: chia thẳng bề rộng khung thì hai
+  // người ngoài cùng đứng ở tâm ô đầu/cuối, mà tranh `pick_*` rộng gấp rưỡi ô — nửa người
+  // ngoài cùng bị cắt mất ngay ở mép canvas.
+  const le0 = w * 0.05, b = (w - le0 * 2) / CC_ORDER.length;
+  const cao = h * 0.72, than = h * 0.17;
+  // So le lên xuống: năm bóng người cao bằng nhau xếp thẳng một hàng thì thành dải răng lược.
+  // Lệch nhau một chút là ra một NHÓM đứng cạnh nhau.
+  const le = i => (i % 2 ? 1 : -1) * h * 0.022;
+  return {
+    nguoi: CC_ORDER.map((k, i) => ({ k, cx: le0 + b * (i + 0.5), fy: fy + le(i), cao, mo: 0.97 })),
+    axie:  CC_ORDER.map((k, i) => ({ id: CC_AXIE_LOP[k], cx: le0 + b * (i + 0.5) + b * 0.28,
+                                     fy: fy + le(i) + h * 0.09, than, pha: i * 0.37 })),
+  };
+}
+
+// Người + bóng + đèn KHÔNG nhúc nhích — dựng sẵn một lần rồi mỗi khung chỉ dán lại. Vẽ lại
+// năm tranh có co giãn cộng mười lăm gradient mỗi khung là chỗ tốn nhất của cả màn chờ (đo ở
+// 1920x1080 chạy bằng CPU: sân khấu ăn ~7 ms/khung, nhiều hơn cả mười lớp nền cộng lại).
+// Chỉ con Axie là động, và nó vẽ SAU tấm dựng sẵn nên vẫn đứng trước mọi thân người.
+let _ccNenCv = null, _ccNenKhoa = '';
+function ccNenSan(w, h, sect, bc){
+  const khoa = Math.round(w) + 'x' + Math.round(h) + '|' + (sect || 'dan');
+  if (_ccNenCv && _ccNenKhoa === khoa) return _ccNenCv;
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h));
+  const g = c.getContext('2d');
+  for (const n of bc.nguoi){
+    ccVeDen(g, n.cx, n.fy, n.cao);
+    ccVeBong(g, n.cx, n.fy, n.cao * (sect ? 0.26 : 0.22), sect ? 0.62 : 0.5);
+    ccVeNguoi(g, n.k, n.cx, n.fy, n.cao, n.mo);
+  }
+  _ccNenCv = c; _ccNenKhoa = khoa;
+  return c;
+}
+
+function ccHeroVe(cv, t){
+  const w = cv.clientWidth, h = cv.clientHeight;
+  if (!w || !h) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)){
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  }
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+  const sect = ccHeroLop();
+  const bc = ccBoCuc(w, h, sect);
+  g.drawImage(ccNenSan(w, h, sect, bc), 0, 0, w, h);
+  for (const a of bc.axie){
+    ccVeBong(g, a.cx, a.fy, a.than * (sect ? 0.6 : 0.58), sect ? 0.55 : 0.45);
+    ccVeAxie(g, a.id, a.cx, a.fy, a.than, t + a.pha);
+  }
 }
 
 // ═══════════ VŨ KHÍ DANH TÍNH — mỗi lớp một binh khí riêng ═══════════
@@ -23938,7 +24150,11 @@ function ccSlotsRender(){
     row.className = 'cc-slot' + (ccSlot === i ? ' sel' : '');
     row.setAttribute('role', 'button'); row.tabIndex = 0;
     const noi = (MAPS[sv.curMap] && MAPS[sv.curMap].name) || '—';
-    row.innerHTML = `<img class="cc-slot-art" src="${heroCardUrl(pl.sect)}" alt="" onerror="this.style.visibility='hidden'">
+    // Chân dung lấy từ ART LỚP (`pick_*.webp`) chứ không phải thẻ dựng bằng đường.
+    // ⚠ PHẢI có khung bọc `.cc-slot-anh`: `pick_*` là tranh CẢ NGƯỜI cao 300px, nhét nguyên
+    // bức vào ô 48px thì cái đầu còn 7px và năm lớp trông y hệt nhau. Khung bọc cắt bớt, còn
+    // tấm ảnh bên trong phóng to lên 150px và trượt lên — chỉ chừa lại đầu với vai.
+    row.innerHTML = `<span class="cc-slot-anh"><img class="cc-slot-art" src="${heroPickUrl(pl.sect)}" alt="" onerror="this.style.visibility='hidden'"></span>
       <div class="cc-slot-txt">
         <div class="cc-slot-nm">${pl.name || '—'}</div>
         <div class="cc-slot-sub">Cấp <b>${pl.level || 1}</b> · <span style="color:${sc.color || 'var(--text-dim)'}">${sc.name || '—'}</span></div>
@@ -23971,6 +24187,9 @@ function ccSlotsRender(){
           : `${slots.filter(Boolean).length}/${MAX_CHARS} ô đã dùng.`)
         + ` · <button type="button" class="sv-doi" onclick="window.svHien()">Máy chủ: <b>${_sv.ten}</b> — đổi</button>`;
     } }
+  // Sân khấu vẽ theo ô ĐANG CHỌN, nên đổi ô là phải vẽ lại. Vòng lặp đang chạy thì đây là
+  // lệnh rỗng; ở chế độ giảm chuyển động thì đây là lần vẽ duy nhất.
+  titleVeLai();
 }
 function ccRender(){
   const wrap = el('cc-classes'); if (!wrap) return;
@@ -24037,6 +24256,7 @@ function openCreate(o){
   // Màn TẠO nhân vật có hàng 5 thẻ lớp đứng trên phiến đá — đó mới là thứ phải nhìn ở đây.
   // Để tranh anh hùng đứng cạnh thì nó vừa che mất một thẻ, vừa nói dối: nó là Dark Knight.
   { const h = el('cc-hero'); if (h) h.classList.add('hidden'); }
+  { const _ss = el('sect-select'); if (_ss) _ss.classList.remove('man-cho'); }
   // Chỉ có đường quay lại khi đã có nhân vật để quay về. Người chơi mới tinh không có gì phía sau.
   { const _b = el('cc-back'); if (_b) _b.style.display = soNhanVat() > 0 ? '' : 'none'; }
   const sub = document.querySelector('#sect-select .ss-sub');

@@ -1120,6 +1120,84 @@ Gót chân neo cố định ở `mountObj.y + 12` bất kể con to nhỏ (`_chi
 `y + than*0,38` nên chỗ vẽ phải trừ ngược lại), và vũng bóng co theo chính con vật — thu nhỏ
 con thú mà để nguyên elip bóng thì nó thành ra đứng trên một cái đĩa.
 
+## 🌌 MÀN HÌNH CHỜ — ART CHÍNH CHỦ AXIE, ĐÂY LÀ NGOẠI LỆ CÓ PHẠM VI
+
+Chủ dự án chốt: **màn hình chờ phải mang hơi hướng Axie rõ nhất có thể.** Trước đợt này nó là
+một dãy núi đêm dựng bằng đường + một tấm PNG hiệp sĩ Dark Knight — người mở game lần đầu nhìn
+thấy một thế giới dark-fantasy chung chung, không một dấu hiệu nào cho biết đây là game Axie.
+
+**⚠ NGOẠI LỆ CHỈ TRONG `#sect-select`.** Phần còn lại của game vẫn là MU — Quy tắc số 1 không
+đổi. Đừng lấy khối CSS `MÀN CHỜ KIỂU AXIE` ở cuối `style.css` làm cớ để bo tròn cả game.
+
+### Ba mảnh, mỗi mảnh một chỗ
+
+| Mảnh | Ở đâu |
+|---|---|
+| Nền Lunacia tách mười lớp, có xa gần | `NEN_LOP` · `nenNhom()` · `drawTitleScene()` trong `game.js` |
+| Sân khấu: lớp nhân vật + con Axie | `ccBoCuc()` · `ccNenSan()` · `ccHeroVe()`; canvas `#cc-hero` |
+| Khung giao diện kiểu Axie | khối cuối `style.css`, scope `#sect-select` |
+
+Nướng art: `python3 tools/title/nuong_nen_axie.py` → `public/game/assets/title/lunacia/` (700 KB
+cho 10 lớp + 1 bệ đứng). Gác: `tests/test_titlefx.js` (6 mục).
+
+### Vì sao chọn cảnh TÁCH LỚP chứ không phải tấm 1920px
+
+Kit có sẵn `PvE/Backgrounds/class/bg-*.jpg` ở 1920×1080 — nhưng chúng là nền PHẲNG vẽ cho sân
+khấu đánh bài, đặt sau một màn chờ thì không có xa gần. `PvE/Backgrounds/story/9-rocky-mountain-1`
+chỉ 1024px nhưng **tách mười lớp**: trời · núi · ba tầng mây · sương · cây thế giới · mặt đất ·
+hai tầng tiền cảnh. Mây và sương trôi được, và đó mới là thứ làm màn chờ sống.
+
+> Bộ kit **không kèm prefab nào** cho mấy cảnh `story/`, nên `y` của từng lớp là **đo bằng mắt
+> trên ảnh dựng lại**, không tra được ở đâu. Bảng `LOP` trong công cụ nướng và `NEN_LOP` trong
+> `game.js` phải TRÙNG KHÍT.
+
+### Hai chế độ của sân khấu — cả hai đều phải sống
+
+- **Có nhân vật đang chọn** → vẽ lớp của ô đó + con Ragoon nó đang mang. Đây là mô hình đã chốt
+  của game ("Axie là avatar, 5 lớp là sức mạnh") dựng thành hình ngay màn đầu tiên.
+- **Tài khoản trống** → cả năm lớp đứng thành hàng, mỗi lớp một con Axie (`CC_AXIE_LOP`, năm
+  con 5★ thuộc năm lớp Axie khác nhau). Màn chờ của tài khoản trống là tấm áp phích của game;
+  bốc đại một lớp ra đứng đó thì vừa không nói được gì, vừa làm người mới tưởng mình bị gán lớp.
+
+`tests/test_titlefx.js` kiểm RIÊNG hai chế độ. ⚠ Mục 3 của bài gọi `startGame` nên localStorage
+có nhân vật — nạp lại trang là rơi vào chế độ một người. Bản đầu quên điều đó rồi đi đo hàng
+năm lớp trên một khung chỉ có một người: hai cột ngoài cùng ra 0, trông y như lỗi bố cục.
+
+### Bốn cái bẫy đã dẫm, ghi lại
+
+1. **`'multiply'` trên canvas TRỐNG không ra "màu nhân", nó ra ô màu ĐẶC.** Nền trong suốt thì
+   không có gì để mà nhân, nguồn giữ nguyên. Nướng phép nhuốm màu vào tấm phủ vì thế biến tấm
+   phủ thành một mảng tím phủ kín cảnh — và triệu chứng (chỉ còn lớp trời, mất sạch núi/cây/đất)
+   trông **hệt như "art chưa tải"**. Nhân màu phải làm trên canvas ĐÃ CÓ CẢNH.
+2. **Lớp trôi phải vẽ RỘNG HƠN khung đúng 2×biên độ.** Ba tầng mây đều phủ kín 1024 điểm ảnh
+   ngang, nên đẩy ngang mà không nới bề rộng là hở một dải trời trần ở mép — lỗi chỉ lộ ra ở
+   đúng hai đầu chu kì, tức rất dễ nghiệm thu nhầm.
+3. **Đèn sân khấu phải là vầng NHỎ sau từng bóng hình, không phải một vầng lớn phủ cả khung.**
+   `#cc-hero` chỉ chiếm nửa trái màn hình, nên vầng sáng rộng hơn khung bị mép canvas cắt ngang
+   — thứ hiện ra là một HÌNH CHỮ NHẬT sáng hơn nền, thấy rõ mồn một.
+4. **Các nấc của lớp phủ CSS phải chuyển dần.** `#sect-select::before` cũ có hai nấc sát nhau;
+   trên nền núi mờ mịt thì không ai thấy, nhưng nền nay có chi tiết đều khắp khung nên chỗ nấc
+   gấp hiện ra thành một **đường kẻ ngang chạy suốt bề rộng màn hình**.
+
+### Giảm chuyển động KHÔNG có nghĩa là gỡ mất nền
+
+Luật CSS cũ ẩn hẳn `#title-fx` ở `prefers-reduced-motion` — người bật tuỳ chọn đó nhận một trang
+đen trơn. Nay `titleStart()` vẽ đúng một khung rồi dừng (`titleItDong()`), và `titleVeLai()` vẽ
+lại một khung mỗi khi thứ cần vẽ đổi (chọn máy chủ xong, đổi ô nhân vật, art vừa tải xong qua
+`ccChoAnh`). **Thiếu một trong ba chỗ gọi đó là người dùng reduced-motion thấy nền mà không thấy
+nhân vật** — đã dẫm đúng thế: năm lớp hiện ra còn năm con Axie thì không.
+
+### Đo trước khi tối ưu — chỗ tốn không nằm ở chỗ tưởng
+
+Ở 1920×1080 chạy bằng CPU (headless, không GPU): cả cảnh + sân khấu tụt 60 → 28 fps.
+- Phép **nhân màu phủ kín màn hình** chỉ tốn **1,6 ms** — bỏ nó đi chỉ được 2 fps. Không đáng
+  đánh đổi lấy việc nướng tông màu chết vào tệp art.
+- Chỗ tốn thật là **drawImage CÓ CO GIÃN**. Dựng sẵn mỗi lớp trôi vào một tấm đúng cỡ vẽ ra
+  (mỗi khung chỉ dời chỗ) và dựng sẵn cả phần đứng yên của sân khấu (người + bóng + đèn): 28 → 32.
+
+**Đã gỡ theo:** `assets/title/{nui,rung,san_da,anhhung}.webp` · `NUI_LOP`/`_nuiChop`/`_nuiCao`
+(dãy núi dựng bằng đường — Quy tắc số 3) · vầng trăng và trường sao vẽ tay.
+
 ## Hai lối vẽ nhân vật — ĐỪNG TRỘN VÀO NHAU
 
 Game có **ba** bộ dựng nhân vật, mỗi bộ một việc. Nhầm chỗ là ra hình lạc quẻ.

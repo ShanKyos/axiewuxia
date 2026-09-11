@@ -1,11 +1,16 @@
-// Màn hình mở đầu phải CHẠY, và phải DỪNG khi rời màn.
+// Màn hình chờ phải CHẠY, phải DỪNG khi rời màn, và phải vẽ ĐÚNG BỘ ART AXIE.
 //
-// Trước đây màn tạo nhân vật chỉ là khối HTML trên nền gradient tĩnh. Nay có hoạt cảnh canvas:
-// dãy núi đêm, sương trôi ngang chân núi, sao nhấp nháy, bụi sáng bay lên.
+// Nền nay là cảnh Lunacia chính chủ, tách mười lớp (assets/title/lunacia/*.webp, nướng bằng
+// tools/title/nuong_nen_axie.py), và trên đó là sân khấu #cc-hero vẽ lớp nhân vật + con Axie.
 //
-// Hai thứ dễ hỏng nhất với một hoạt cảnh nền, và đây là chỗ gác chúng:
+// Bốn thứ dễ hỏng nhất, và đây là chỗ gác chúng:
 //   1. "Có canvas" không có nghĩa là "đang chạy" — phải so hai khung xem điểm ảnh có đổi không.
 //   2. Vòng lặp rAF quên huỷ thì nó chạy mãi sau khi vào game, đốt pin suốt phiên chơi.
+//   3. Một lớp art 404 hoặc một lớp vẽ hụt thì cảnh vẫn hiện ra "trông có vẻ được" — phải đếm
+//      từng lớp, đừng nhìn tổng thể.
+//   4. Tấm phủ dìm-đêm PHẢI trong suốt một phần. Dựng nó bằng 'multiply' trên canvas trống ra
+//      một ô màu ĐẶC, và lúc ấy cả cảnh biến mất dưới một mảng tím — triệu chứng trông hệt như
+//      "art chưa tải". Đã dẫm đúng bẫy đó một lần.
 const { chromium } = require('playwright');
 let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 (async () => {
@@ -68,6 +73,85 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   console.log('3) sau khi vào game:', JSON.stringify(r3));
   if (!r3.manAn) fail('vào game rồi mà màn tạo nhân vật vẫn hiện');
   if (r3.khac > 0) fail(`vòng lặp hoạt cảnh chưa dừng — ${r3.khac} điểm ảnh vẫn đổi sau khi vào game`);
+
+  // ── 4) Mười lớp art Axie phải TẢI ĐỦ và lớp nào cũng phải vẽ ra điểm ảnh ──
+  // Nạp lại trang: mục 3 đã vào game nên cảnh nền không còn chạy nữa.
+  await p.goto('http://localhost:8853/index.html', { waitUntil:'load' });
+  await p.waitForFunction(() => window.__gameReady).catch(()=>{});
+  await p.waitForTimeout(1500);
+  const r4 = await p.evaluate(async () => {
+    // Chờ cả mười lớp về — mạng chậm thì khung đầu vẽ thiếu, mà đó không phải lỗi sản phẩm.
+    const xong = () => NEN_LOP.every(l => { const im = NEN_IMG[l.t]; return im && im.complete; });
+    for (let i = 0; i < 60 && !xong(); i++) await new Promise(r => setTimeout(r, 100));
+    const hong = NEN_LOP.filter(l => { const im = NEN_IMG[l.t]; return !(im && im.complete && im.naturalWidth); });
+    // Vẽ riêng từng lớp vào một canvas sạch rồi đếm điểm ảnh đục. Lớp nào ra 0 là lớp đó
+    // rơi ra ngoài khung (sai `y`, sai phép co giãn) — nhìn cả cảnh thì không bao giờ thấy.
+    const hh = nenHinh(1100, 760);
+    const trong = [];
+    for (const l of NEN_LOP){
+      const c = document.createElement('canvas'); c.width = 1100; c.height = 760;
+      const g = c.getContext('2d', { willReadFrequently:true });
+      nenVeLop(g, l, hh, 0);
+      const d = g.getImageData(0, 0, 1100, 760).data;
+      let n = 0;
+      for (let i = 3; i < d.length; i += 4 * 41) if (d[i] > 10) n++;
+      if (n < 20) trong.push(l.t + ':' + n);
+    }
+    // Tấm phủ: đếm tỉ lệ điểm ảnh ĐẶC HOÀN TOÀN. 'multiply' trên canvas trống cho ra 100%.
+    const pc = nenPhu(600, 400);
+    const pd = pc.getContext('2d', { willReadFrequently:true }).getImageData(0, 0, 600, 400).data;
+    let dac = 0, tong = 0;
+    for (let i = 3; i < pd.length; i += 4 * 17){ tong++; if (pd[i] > 250) dac++; }
+    return { hong: hong.map(l => l.t), trong, phuDac: dac / tong };
+  });
+  console.log('4) art nền:', JSON.stringify(r4));
+  if (r4.hong.length) fail('lớp nền không tải được: ' + r4.hong.join(', '));
+  if (r4.trong.length) fail('lớp nền vẽ ra gần như trống: ' + r4.trong.join(', '));
+  if (r4.phuDac > 0.5) fail(`tấm phủ dìm-đêm đặc ${Math.round(r4.phuDac*100)}% — nó sẽ che kín cảnh`);
+
+  // ── 5) Sân khấu #cc-hero ──
+  // HAI chế độ, và chúng phải được kiểm RIÊNG: có nhân vật thì vẽ ĐÚNG lớp của ô đang chọn,
+  // chưa có ai thì vẽ cả năm lớp thành hàng. Mục 3 vừa startGame nên localStorage ĐANG có một
+  // nhân vật — nạp lại trang là rơi vào chế độ một người. (Bản đầu của mục này quên mất điều
+  // đó và đi đo hàng-năm-lớp trên một khung chỉ có một người: hai cột ngoài cùng ra 0, trông
+  // y như lỗi bố cục.)
+  const doSanKhau = async () => await p.evaluate(async () => {
+    document.getElementById('intro-story').classList.add('hidden');
+    showMainMenu(); window.svChon(SERVERS[0].id);
+    // Ảnh Axie nạp theo nhu cầu, mỗi con một tệp — phải chờ, không thì đo vào lúc chưa có gì.
+    for (let i = 0; i < 60; i++){
+      const du = CC_ORDER.every(k => { const im = chiImg(CC_AXIE_LOP[k]); return im && im.complete && im.naturalWidth; });
+      if (du) break;
+      await new Promise(r => setTimeout(r, 100));
+    }
+    await new Promise(r => setTimeout(r, 400));
+    const cv = document.getElementById('cc-hero');
+    const g = cv.getContext('2d', { willReadFrequently:true });
+    const d = g.getImageData(0, 0, cv.width, cv.height).data;
+    // Chia khung làm năm cột. Đếm tổng thì bốn cột trống vẫn ra một con số to và vẫn xanh.
+    const cot = [0, 0, 0, 0, 0], bw = cv.width / 5;
+    for (let y = 0; y < cv.height; y += 3) for (let x = 0; x < cv.width; x += 3)
+      if (d[(y * cv.width + x) * 4 + 3] > 40) cot[Math.min(4, Math.floor(x / bw))]++;
+    return { an: cv.classList.contains('hidden'), cot, lop: ccHeroLop(),
+             axie: CC_ORDER.map(k => CC_AXIE_LOP[k]) };
+  });
+
+  const r5 = await doSanKhau();
+  console.log('5) sân khấu · một nhân vật:', JSON.stringify(r5));
+  if (r5.an) fail('sân khấu #cc-hero vẫn ẩn ở màn chờ');
+  if (r5.lop !== 'thieulam') fail(`ô đang chọn là Dark Knight mà sân khấu vẽ lớp "${r5.lop}"`);
+  if (r5.cot.reduce((a, c) => a + c, 0) < 1500) fail('sân khấu gần như trống ở chế độ một nhân vật');
+  if (new Set(r5.axie).size !== 5) fail('năm lớp phải có năm con Axie KHÁC nhau: ' + r5.axie.join(','));
+
+  // ── 6) Tài khoản trống → cả NĂM lớp đứng thành hàng, cột nào cũng phải có người ──
+  await p.evaluate(() => { try { localStorage.clear(); } catch { /* bỏ qua */ } });
+  await p.goto('http://localhost:8853/index.html', { waitUntil:'load' });
+  await p.waitForFunction(() => window.__gameReady).catch(()=>{});
+  await p.waitForTimeout(1200);
+  const r6 = await doSanKhau();
+  console.log('6) sân khấu · tài khoản trống:', JSON.stringify(r6));
+  if (r6.lop) fail(`tài khoản trống mà ccHeroLop() vẫn trả "${r6.lop}"`);
+  r6.cot.forEach((n, i) => { if (n < 200) fail(`cột ${i + 1} của hàng năm lớp gần như trống (${n} điểm ảnh)`); });
 
   await p.waitForTimeout(300);
   console.log('errors:', JSON.stringify(errs));
