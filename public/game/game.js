@@ -15196,6 +15196,11 @@ function heroVienCanvas(spr){
   // HS_SCALE = 1 nên 1px canvas = 1 đơn vị hệ 160×220; lề nở ra bao nhiêu thì lùi bấy nhiêu.
   cv._ox = spr._ox - pad; cv._oy = spr._oy - pad;
   cv._ow = spr._ow + pad * 2; cv._oh = spr._oh + pad * 2;
+  // Cờ để bài kiểm ĐẾM NHÁT VẼ THÂN bỏ qua nhát này. `test_muothinh` gác cơ chế hoà hình bằng
+  // cách đếm mọi lượt drawImage của drawPlayer — vành là một nhát nữa nhưng KHÔNG phải nhát
+  // vẽ thân, nên nếu không tách ra thì mọi con số của bài ấy lệch đúng 1 và nó đỏ vì một lý do
+  // chẳng liên quan gì tới thứ nó định canh.
+  cv._vanh = true;
   _vienCache.set(spr, cv);
   return cv;
 }

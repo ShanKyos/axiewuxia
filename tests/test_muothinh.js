@@ -66,7 +66,13 @@ const PORT = process.argv[2] || '8853';
   const r1 = await page.evaluate(() => {
     const ghi = [];
     const cu = ctx.drawImage.bind(ctx);
-    ctx.drawImage = function(...a){ ghi.push(+ctx.globalAlpha.toFixed(3)); return cu(...a); };
+    // Bỏ qua tấm VÀNH TÁCH NỀN (dấu neo nhân vật, mục 05): nó cũng đi qua drawImage nhưng
+    // không phải nhát vẽ THÂN — mà thân mới là thứ bài này đếm. Không lọc thì mọi con số dưới
+    // đây lệch đúng 1 và bài đỏ vì một lý do chẳng liên quan tới hoà hình.
+    ctx.drawImage = function(...a){
+      if (a[0] && a[0]._vanh) return cu(...a);
+      ghi.push(+ctx.globalAlpha.toFixed(3)); return cu(...a);
+    };
     const chup = () => { ghi.length = 0; drawPlayer(); return { a: ghi.slice(), khoi: window.__khoiVe }; };
     window.__cachLy();
     player.moving = false; player._phaSau = null;
