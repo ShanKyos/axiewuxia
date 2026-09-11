@@ -5,6 +5,62 @@ sai**. Phần thứ hai mới là thứ có giá trị về sau — nó là danh
 
 ---
 
+## 2026-09-11 — `test_nowuxia2` lấy tệp qua HTTP, thôi đọc đĩa
+
+Commit: `e3b7707` · Nền: `5213be2`
+
+Vòng thứ ba của cùng một lỗi. Hai phiên trước đã vá nó bằng cách **dò gốc kho** (`timGoc()` tìm
+ngược từ `__dirname`, rồi lui về một danh sách đường dẫn quen thuộc). Vá đó chữa được triệu
+chứng trên máy này nhưng sai nguyên tắc, và cái sai chỉ lộ ra khi đọc `tools/reg.sh`:
+
+**Bộ hồi quy chạy trên một BẢN CHỤP ĐÓNG BĂNG.** `reg.sh` chép `public/game` sang `$OUT/snap`,
+phục vụ bản chụp đó, rồi chép bài kiểm sang `$OUT/src`. Cả hai bước là cố ý — chú thích trong
+script ghi rõ "vừa chạy vừa sửa tiếp vẫn an toàn, và kết quả luôn khớp với đúng commit ghi trong
+`commit.txt`". Một bài đọc đĩa thì đọc thư mục **SỐNG**, tức là bài duy nhất trong 177 bài không
+giữ được lời hứa đó. Dò gốc kho càng giỏi thì càng chắc chắn đọc nhầm chỗ.
+
+⇒ Nay lấy cả năm tệp bằng `fetch` cùng gốc với trang, đường dẫn tính từ `public/game`
+(`public/game/game.js` xin là `/game.js`). Mục D dùng lại chính nội dung `game.js` mục A đã lấy.
+`grep -rn "/home/user/axie-wuxia" tests/` nay không còn kết quả nào.
+
+### Đo được
+
+| | |
+|---|---|
+| Bài đọc tệp từ đĩa trong `tests/` | **1 / 177** — 176 bài kia đã đi qua HTTP từ trước |
+| Mục A trước khi vá, trên bản sao đặt sai chỗ | quét **0** tệp, in `0 chuỗi dính từ cấm` |
+| Mục A sau khi vá | `5/5 tệp · 0 chuỗi` |
+| Mục D sau khi vá | `0 chỗ` · 4 tên riêng MU trong chú thích (được phép) |
+| Vi phạm nội dung thật tìm thấy | **0** — 39 chỗ ghi ở đầu tệp đã dọn từ các đợt trước |
+
+### Chỗ đã đoán sai / đã học
+
+- **`catch { continue }` là nửa còn lại của cái bẫy, không phải một chi tiết phụ.** Mục A hỏng
+  theo kiểu XANH GIẢ còn mục D hỏng theo kiểu ĐỎ — cùng một nguyên nhân, hai triệu chứng ngược
+  nhau, và người đọc log chỉ thấy mục D. Nay lấy hỏng là `fail()`, và dòng kết quả in `daDoc/5`
+  nên con số 0 không bao giờ đọc nhầm thành sạch.
+- **`r.ok` là bắt buộc, không phải phòng xa.** `python3 -m http.server` trả 404 kèm một trang
+  HTML hợp lệ. Nhận bừa thì mục A quét nhầm trang báo lỗi rồi lại ra "0 vi phạm" — đúng cái bẫy
+  vừa gỡ, mọc lại ở một chỗ khác.
+- **Thử ngược mới biết bài có chạy hay không.** Chèn `"hồi chân khí"` (chuỗi) và
+  `// … cảnh giới …` (chú thích) vào `game.js` của bản chụp, thêm `"Bí Kíp"` vào
+  `strings/vi.js`: mục A bắt **2** chỗ ở hai tệp khác nhau, mục D bắt **1**. Giấu
+  `strings/vi.js` đi thì ra `không lấy được /strings/vi.js (HTTP 404)` + `A) 4/5 tệp`.
+  *Một bài kiểm mới sửa mà chưa thấy nó ĐỎ vì đúng lý do thì chưa biết nó có chạy.*
+- **Ba cổng CI đỏ vì `node_modules` rỗng, không phải vì mã.** `npm run lint` / `check` / `test`
+  ra rc 2 / 1 / 127 khi mới vào máy. `npm ci` xong thì cả ba xanh. *Đọc thông điệp lỗi trước khi
+  tin con số thoát — `vitest: not found` không phải một bài kiểm hỏng.*
+- **`test_sandat` đỏ trong bộ hồi quy nhưng xanh khi chạy riêng — 35 giây, `ALL PASS`.** Lỗi là
+  `Target page, context or browser has been closed`, tức trình duyệt **chết giữa `p.evaluate`**,
+  chứ không phải hết giờ (trần của `reg.sh` là 260s, bài chỉ cần 35s). Đây là bài nặng nhất bộ
+  (flood fill trên cả bảng `MAPS`) và nó đứng gần cuối 177 lượt mở/đóng trình duyệt liên tiếp.
+  Không liên quan tới đợt sửa này: đợt này chỉ chạm đúng `tests/test_nowuxia2.js`.
+  *Đừng đọc "browser has been closed" thành "bài hỏng" — chạy lại một lượt là phân biệt được.*
+- **`time -p` không có trong shell này** (`/bin/bash: time: command not found`), và nó nuốt luôn
+  lượt chạy nó bọc — trả `rc=127` trông hệt như một lượt đỏ.
+
+---
+
 ## 2026-09-11 — Tướng đi: nhịp bước, tám hướng nhìn, khung nhiễm độc
 
 Commit: `7047240` · Nền: `b619e20`
