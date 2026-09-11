@@ -1,0 +1,484 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Proto — Đổi Vai: Axie làm thân, Cổ Vật làm xác</title>
+<!--
+  PROTOTYPE, KHÔNG PHẢI GAME. Đặc tả: docs/DOI_VAI_AXIE.md · docs/CO_VAT_15.md
+
+  Mục đích DUY NHẤT: trả lời bằng MẮT câu hỏi mà đọc code không trả lời được —
+  con Axie đứng giữa màn với một bộ giáp rỗng bên cạnh thì ra một game, hay ra một lỗi hiển thị.
+
+  Trang này KHÔNG nạp game.js. Nó tự đọc đúng hai thứ dữ liệu thật:
+    · data/chi_anh.js      → hình học bảng khung Chimera (do nuong_chi.py sinh)
+    · assets/nv/*.webp     → bảng khung nhân vật, 16 cột × 6 hàng, ô 240×300
+  Mọi hằng số dưới đây CHÉP từ game.js và có ghi số dòng — nếu game.js đổi thì đây lệch,
+  đó là chấp nhận được với một trang proto nhưng đừng chép ngược chiều.
+-->
+<style>
+  :root{
+    --nen:#12131a; --khung:#1c1e29; --vien:#2f3344; --chu:#d8dced; --mo:#8c93ab;
+    --nhan:#ffd76a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--nen);color:var(--chu);
+       font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .boc{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
+  h1{font-size:19px;margin:0 0 2px}
+  .phu{color:var(--mo);font-size:13px;margin:0 0 16px}
+  .san{position:relative;border:1px solid var(--vien);border-radius:10px;overflow:hidden;
+       background:#0d0e14}
+  canvas{display:block;width:100%;height:auto}
+  .bang{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin-top:14px}
+  .o{background:var(--khung);border:1px solid var(--vien);border-radius:9px;padding:11px 12px}
+  .o h2{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--mo);
+        margin:0 0 9px;font-weight:600}
+  label{display:block;font-size:12px;color:var(--mo);margin:8px 0 3px}
+  label:first-of-type{margin-top:0}
+  select,input[type=range]{width:100%}
+  select{background:#0e0f16;color:var(--chu);border:1px solid var(--vien);
+         border-radius:6px;padding:5px 7px;font-size:13px}
+  input[type=range]{accent-color:var(--nhan)}
+  .hang{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+  button{background:#232636;color:var(--chu);border:1px solid var(--vien);border-radius:6px;
+         padding:6px 11px;font-size:13px;cursor:pointer;font-family:inherit}
+  button:hover{border-color:var(--nhan);color:var(--nhan)}
+  button.bat{background:var(--nhan);color:#15161d;border-color:var(--nhan);font-weight:600}
+  .so{font-variant-numeric:tabular-nums;color:var(--chu)}
+  .ghi{margin-top:18px;padding:13px 15px;background:var(--khung);border:1px solid var(--vien);
+       border-radius:9px;font-size:13px;color:var(--mo)}
+  .ghi b{color:var(--chu)}
+  .ghi ul{margin:7px 0 0;padding-left:19px}
+  .ghi li{margin:3px 0}
+  kbd{background:#0e0f16;border:1px solid var(--vien);border-radius:4px;padding:1px 6px;
+      font:12px ui-monospace,monospace;color:var(--chu)}
+</style>
+
+<div class="boc">
+  <h1>Đổi Vai — Axie làm thân, Cổ Vật làm xác</h1>
+  <p class="phu">Prototype nhìn thử. Bấm <kbd>Space</kbd> để tung burst · <kbd>1</kbd>…<kbd>4</kbd> đổi mức rèn.</p>
+
+  <div class="san"><canvas id="cv" width="1120" height="430"></canvas></div>
+
+  <div class="bang">
+    <div class="o">
+      <h2>Thân — Axie</h2>
+      <label>Con nào</label>
+      <select id="chonAxie"></select>
+      <label>Thân cao <span class="so" id="nhanAxieCao"></span> px</label>
+      <input type="range" id="axieCao" min="60" max="180" value="118">
+    </div>
+
+    <div class="o">
+      <h2>Xác — Cổ Vật</h2>
+      <label>Bộ giáp hiện ra</label>
+      <select id="chonXac">
+        <option value="dkgs1">Dark Knight — tấm liền</option>
+        <option value="dwsm1">Dark Wizard — tấm liền</option>
+      </select>
+      <label>Thân cao <span class="so" id="nhanXacCao"></span> px</label>
+      <input type="range" id="xacCao" min="50" max="140" value="78">
+      <label>Bay cao <span class="so" id="nhanBay"></span> px</label>
+      <input type="range" id="bayCao" min="0" max="90" value="46">
+    </div>
+
+    <div class="o">
+      <h2>Mức rèn</h2>
+      <div class="hang" id="hangRen"></div>
+      <label style="margin-top:11px">Độ mờ của xác <span class="so" id="nhanMo"></span></label>
+      <input type="range" id="doMo" min="55" max="100" value="100">
+    </div>
+
+    <div class="o">
+      <h2>Đối chiếu</h2>
+      <div class="hang">
+        <button id="btnKieu" class="bat">Hiện khi đánh</button>
+        <button id="btnCu">Bố cục CŨ</button>
+        <button id="btnBurst">Burst</button>
+      </div>
+      <label style="margin-top:11px"><b style="color:#d8dced">Hiện khi đánh</b> = Axie đi một mình, lớp nhân vật chỉ hiện ra lúc tung chiêu rồi tan. Tắt nút này thì xác đứng chắn thường trực.</label>
+      <label style="margin-top:11px">Bố cục cũ = người to đi bộ, Axie nhỏ khoá ở 0,45 thân người (<code>CHI_THAN</code>). Bật lên để so trực tiếp.</label>
+    </div>
+  </div>
+
+  <div class="ghi">
+    <b>Đọc gì trên tấm này</b>
+    <ul>
+      <li><b>Cỡ.</b> Axie có ra dáng nhân vật chính không, hay vẫn ra dáng con thú? Kéo hai thanh "thân cao" để tìm tỉ lệ đúng.</li>
+      <li><b>Cái xác có đọc ra là RỖNG không</b> — nó phải trông như bộ giáp không người, không phải như một người mờ. Chỉnh "độ mờ" và "bay cao".</li>
+      <li><b>Mức rèn đọc bằng SẮC, không bằng độ chói</b> — +7 vàng → +9 lam băng → +10 tím → +11 cam. Quầng nằm HOÀN TOÀN ngoài đường bao, không tô đè lên giáp (luật trong CLAUDE.md).</li>
+      <li><b>Burst.</b> Xác lao tới, nổ, để lại vòng cửa sổ trên mục tiêu, rồi lùi về. Cửa sổ đó là thứ cho phép xoay vòng.</li>
+    </ul>
+  </div>
+</div>
+
+<script src="data/chi_anh.js"></script>
+<script>
+// ── Hằng CHÉP từ game.js ──────────────────────────────────────────────────────────────────
+const NV_COT = 16, NV_OW = 240, NV_OH = 300;          // game.js:13167
+const NV_MOC = { i:0, w:16, a:48, c:64, r:80 };       // game.js:13168
+const HS_FRAMES = { i:16, w:32, a:16, c:16, r:16 };   // game.js:12915
+const HS_PAD = 40;                                    // game.js:12988
+const HERO_H = 220, HERO_GOT = 212;                   // game.js:12261
+const CAO_THAN_NUONG = 159;                           // game.js:12931 — thân cao bao nhiêu trong ô
+const CHI_THAN = 0.45;                                // game.js — khoá cỡ Chimera của bố cục CŨ
+// Bảng khung ĐỘNG của Axie — nướng từ chính rig Spine của kit bằng tools/spine/nuong_chi.py.
+// Rig Chimera có 41 hoạt cảnh; game hiện mới nướng 2 (idle + appear). Đây là 2 cái nữa.
+const AXIE_DONG = {
+  tep:'assets/chimera/proto_aurelion_dong.webp', cho:'aurelion',
+  oW:153, oH:132, cot:8, thanCao:0.8258, neoY:1.0,
+  moc:{ r:0, a:12 }, so:{ r:12, a:12 },      // r = action/run · a = attack/melee/normal-attack
+};
+// Thang màu mức rèn — CLAUDE.md "Sáng theo +N": đọc bằng SẮC chứ không bằng độ chói.
+const REN = [
+  { plus:0,  ten:'+0',  mau:null },
+  { plus:7,  ten:'+7',  mau:'#ffd76a' },
+  { plus:9,  ten:'+9',  mau:'#9ef2ff' },
+  { plus:10, ten:'+10', mau:'#c07fe0' },
+  { plus:11, ten:'+11', mau:'#ff9a4d' },
+];
+
+// ── Trạng thái ────────────────────────────────────────────────────────────────────────────
+const S = {
+  axie: 'aurelion', xac: 'dkgs1',
+  axieCao: 118, xacCao: 78, bayCao: 46, doMo: 1,
+  ren: 0, boCucCu: false, hienKhiDanh: true,
+  t: 0, burstT: 0,        // burstT đếm NGƯỢC: 1 → 0 là một lượt burst
+  cuaSoT: 0,              // cửa sổ còn lại trên mục tiêu, giây
+};
+const ANH = {};
+function tai(duong){
+  let im = ANH[duong];
+  if (!im){ im = new Image(); im.src = duong; ANH[duong] = im; }
+  return (im.complete && im.naturalWidth) ? im : null;
+}
+const chiImg = id => tai('assets/chimera/' + id + '.webp');
+const xacImg = t  => tai('assets/nv/' + t + '.webp');
+
+// ── Bóng đơn sắc của một khung, có nhớ lại ────────────────────────────────────────────────
+// Dùng cho QUẦNG và VIỀN mức rèn. Hai thứ đó phải nằm NGOÀI đường bao — nên phải có bóng đặc
+// một màu để thổi to, chứ không được tô đè lên chính món đồ.
+// (Bản game dùng phép nở-alpha rồi trừ alpha gốc; ở proto này chồng nhiều lớp thu nhỏ dần cho
+//  gọn — nhìn ra cùng một thứ, rẻ hơn, và vẫn không chạm vào một pixel nào của giáp.)
+const _bongCache = new Map();
+function bongKhung(ten, k, mau){
+  const khoa = ten + '|' + k + '|' + mau;
+  let c = _bongCache.get(khoa);
+  if (c) return c;
+  const im = xacImg(ten); if (!im) return null;
+  c = document.createElement('canvas'); c.width = NV_OW; c.height = NV_OH;
+  const g = c.getContext('2d');
+  g.drawImage(im, (k % NV_COT) * NV_OW, ((k / NV_COT) | 0) * NV_OH, NV_OW, NV_OH, 0, 0, NV_OW, NV_OH);
+  g.globalCompositeOperation = 'source-in';
+  g.fillStyle = mau; g.fillRect(0, 0, NV_OW, NV_OH);
+  _bongCache.set(khoa, c);
+  return c;
+}
+// VÀNH NGOÀI của một khung: nở bóng ra `d` rồi TRỪ ĐI chính bóng gốc.
+// Đây là phép đúng theo CLAUDE.md ("Sáng theo +N") — phủ nguyên bóng dời đi thì ruột món đồ bị
+// tô đè và giáp mất màu. Bản đầu của proto này làm sai đúng chỗ đó: giáp +11 hoá cam.
+const _vanhCache = new Map();
+function vanhKhung(ten, k, mau, d){
+  d = Math.max(1, Math.round(d));
+  const khoa = ten + '|' + k + '|' + mau + '|' + d;
+  let c = _vanhCache.get(khoa);
+  if (c) return c;
+  const b = bongKhung(ten, k, mau); if (!b) return null;
+  c = document.createElement('canvas'); c.width = NV_OW + d * 2; c.height = NV_OH + d * 2;
+  const g = c.getContext('2d');
+  for (let i = 0; i < 16; i++){                       // nở: in bóng quanh một vòng tròn
+    const a = i / 16 * Math.PI * 2;
+    g.drawImage(b, d + Math.cos(a) * d, d + Math.sin(a) * d);
+  }
+  g.globalCompositeOperation = 'destination-out';     // rồi KHOÉT chính nó ra
+  g.drawImage(b, d, d);
+  _vanhCache.set(khoa, c);
+  return c;
+}
+
+// ── Vẽ Axie ───────────────────────────────────────────────────────────────────────────────
+// Chép đúng phép của _chiVe() (game.js:5064): gót ở y + thanPx*0.38, neo theo A.neoY.
+function veAxie(g, id, i, x, y, thanPx){
+  const A = window.CHI_ANH && CHI_ANH.o[id], im = chiImg(id);
+  if (!A || !im) return false;
+  const cot = CHI_ANH.cotNho, oW = A.nhoRong, oH = A.nhoCao;
+  const hh = thanPx / A.thanCao, hw = hh * (oW / oH);
+  const chan = y + thanPx * 0.38;
+  const k = ((i % CHI_ANH.nKhung) + CHI_ANH.nKhung) % CHI_ANH.nKhung;
+  g.drawImage(im, (k % cot) * oW, ((k / cot) | 0) * oH, oW, oH,
+              x - hw / 2, chan - hh * A.neoY, hw, hh);
+  return true;
+}
+
+// Vẽ Axie bằng bảng ĐỘNG. Cùng phép neo với _chiVe(): gót ở y + thanPx*0.38.
+function veAxieDong(g, khoi, idx, x, y, thanPx, lat){
+  const D = AXIE_DONG, im = tai(D.tep); if (!im) return false;
+  const n = D.so[khoi] || 1, k = D.moc[khoi] + (((idx % n) + n) % n);
+  const hh = thanPx / D.thanCao, hw = hh * (D.oW / D.oH);
+  const chan = y + thanPx * 0.38;
+  g.save();
+  if (lat){ g.translate(x, 0); g.scale(-1, 1); g.translate(-x, 0); }
+  g.drawImage(im, (k % D.cot) * D.oW, ((k / D.cot) | 0) * D.oH, D.oW, D.oH,
+              x - hw / 2, chan - hh * D.neoY, hw, hh);
+  g.restore();
+  return true;
+}
+// ── Vẽ cái xác ────────────────────────────────────────────────────────────────────────────
+// Ô 240×300 = hộp nhân vật 160×220 cộng lề HS_PAD=40 mỗi bên. Gót nằm ở HERO_GOT=212 trong
+// hộp ⇒ trong ô là 40+212 = 252. Thân cao CAO_THAN_NUONG=159 đơn vị ô.
+function veXac(g, ten, kind, idx, x, yChan, thanPx, opt){
+  const im = xacImg(ten); if (!im) return false;
+  const s = thanPx / CAO_THAN_NUONG;
+  const w = NV_OW * s, h = NV_OH * s;
+  const ox = x - w / 2;
+  const oy = yChan - (HS_PAD + HERO_GOT) * s;
+  const n = HS_FRAMES[kind] || 1;
+  const k = NV_MOC[kind] + (idx % n);
+  const mau = opt && opt.mau;
+  const ngh = (opt && opt.nghieng) || 0;
+  g.save();
+  if (ngh){ g.translate(x, oy + h * 0.55); g.rotate(ngh); g.translate(-x, -(oy + h * 0.55)); }
+
+  // ① QUẦNG + VIỀN — cả hai nằm HOÀN TOÀN ngoài đường bao, không chạm một pixel nào của giáp.
+  // ⚠ Bề dày khai bằng PIXEL MÀN HÌNH rồi mới quy về đơn vị ô: khai thẳng theo ô thì ở cỡ
+  // trong màn (thân ~90px, s≈0.57) một dải 3 ô chỉ còn 1,7px và biến mất sạch.
+  if (mau){
+    const manh = (opt.manh || 1);
+    for (const [dayPx, a] of [[11, 0.20], [4.5, 0.34], [2.0, 0.72]]){
+      const d = dayPx / s;                            // px màn hình → đơn vị ô
+      const v = vanhKhung(ten, k, mau, d);
+      if (!v) continue;
+      g.save(); g.globalCompositeOperation = 'lighter';
+      g.globalAlpha = Math.min(1, a * manh);
+      g.drawImage(v, ox - d * s, oy - d * s, v.width * s, v.height * s);
+      g.restore();
+    }
+  }
+  // ② CHÍNH MÓN ĐỒ — giữ nguyên màu, không tô đè gì lên.
+  g.save();
+  g.globalAlpha = (opt && opt.mo !== undefined) ? opt.mo : 1;
+  g.drawImage(im, (k % NV_COT) * NV_OW, ((k / NV_COT) | 0) * NV_OH, NV_OW, NV_OH, ox, oy, w, h);
+  g.restore();
+  g.restore();
+  return { w, h };            // trả HỘP VẼ RA — dùng để đọc cỡ bằng số, xem §đo dưới
+}
+
+// ── Nền ───────────────────────────────────────────────────────────────────────────────────
+function veNen(g, W, H, chanY){
+  const tr = g.createLinearGradient(0, 0, 0, H);
+  tr.addColorStop(0, '#151824'); tr.addColorStop(1, '#0d0e14');
+  g.fillStyle = tr; g.fillRect(0, 0, W, H);
+  const dat = g.createLinearGradient(0, chanY - 90, 0, H);
+  dat.addColorStop(0, '#1b2030'); dat.addColorStop(1, '#0f1119');
+  g.fillStyle = dat; g.fillRect(0, chanY - 90, W, H - chanY + 90);
+  // lưới 100px để đọc được cỡ bằng mắt
+  g.strokeStyle = 'rgba(255,255,255,.045)'; g.lineWidth = 1;
+  for (let x = 0; x < W; x += 100){ g.beginPath(); g.moveTo(x + .5, chanY - 90); g.lineTo(x + .5, H); g.stroke(); }
+  g.strokeStyle = 'rgba(255,255,255,.10)';
+  g.beginPath(); g.moveTo(0, chanY + .5); g.lineTo(W, chanY + .5); g.stroke();
+}
+function veBong(g, x, y, rx, ry, dam){
+  const gr = g.createRadialGradient(x, y, 0, x, y, rx);
+  gr.addColorStop(0, `rgba(0,0,0,${dam})`); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  g.save(); g.translate(x, y); g.scale(1, ry / rx); g.translate(-x, -y);
+  g.fillStyle = gr; g.beginPath(); g.arc(x, y, rx, 0, 7); g.fill(); g.restore();
+}
+// Bia tập — để burst có chỗ mà nổ vào.
+function veBia(g, x, chanY, cuaSo){
+  veBong(g, x, chanY, 34, 12, .42);
+  g.fillStyle = '#39405a'; g.strokeStyle = '#525c7e'; g.lineWidth = 2;
+  g.beginPath(); g.roundRect(x - 21, chanY - 74, 42, 74, 6); g.fill(); g.stroke();
+  if (cuaSo > 0){
+    const a = Math.min(1, cuaSo / 1.2);
+    g.save(); g.globalCompositeOperation = 'lighter';
+    g.strokeStyle = `rgba(255,120,90,${.75 * a})`; g.lineWidth = 3;
+    const r = 40 + (1 - Math.min(1, cuaSo / 6)) * 12;
+    g.beginPath(); g.ellipse(x, chanY - 6, r, r * .34, 0, 0, 7); g.stroke();
+    g.restore();
+    g.fillStyle = `rgba(255,160,120,${a})`;
+    g.font = '600 12px system-ui,sans-serif'; g.textAlign = 'center';
+    g.fillText('VỠ GIÁP ' + cuaSo.toFixed(1) + 's', x + 40, chanY - 104);
+  }
+}
+
+// ── Vòng vẽ ───────────────────────────────────────────────────────────────────────────────
+const cv = document.getElementById('cv'), g = cv.getContext('2d');
+let truoc = performance.now();
+
+function khung(now){
+  const dt = Math.min(0.05, (now - truoc) / 1000); truoc = now;
+  S.t += dt;
+  if (S.burstT > 0) S.burstT = Math.max(0, S.burstT - dt / 0.9);
+  if (S.cuaSoT > 0) S.cuaSoT = Math.max(0, S.cuaSoT - dt);
+
+  const W = cv.width, H = cv.height, chanY = H - 96;
+  const biaX = W * 0.74;
+  veNen(g, W, H, chanY);
+
+  // Axie đi qua đi lại quanh tâm trái
+  const goc = W * 0.34 + Math.sin(S.t * 0.5) * 110;
+  const nhipTho = Math.floor(S.t * 8);
+
+  if (S.boCucCu){
+    // ── BỐ CỤC CŨ: người to đi bộ trên đất, Axie nhỏ khoá ở 0,45 ──────────────────────────
+    const nguoiCao = CAO_THAN_NUONG * (132 / HERO_H);           // ≈95px, đúng NV_THAN_PX
+    const buoc = Math.floor(S.t * 11);
+    veBong(g, goc, chanY, 30, 10, .45);
+    veXac(g, S.xac, 'w', buoc, goc, chanY, nguoiCao, { mo: 1, mau: null });
+    const nhoCao = 132 * CHI_THAN;                               // thân Axie = 0,45 thân người
+    veBong(g, goc + 54, chanY + 8, 20, 7, .35);
+    veAxie(g, S.axie, nhipTho, goc + 54, chanY + 8 - nhoCao * 0.38, nhoCao);
+    g.fillStyle = 'rgba(255,120,120,.85)'; g.font = '600 13px system-ui,sans-serif'; g.textAlign = 'left';
+    g.fillText('BỐ CỤC CŨ — người là nhân vật chính, Axie khoá ở 0,45 thân người', 18, 28);
+  } else {
+    // ── BỐ CỤC MỚI: Axie là NHÂN VẬT CHÍNH · cái xác là NGƯỜI BẢO VỆ ────────────────────
+    // Vai chốt theo ảnh chụp của chủ dự án: Axie là nhân vật chính (thứ người chơi điều
+    // khiển, thứ câu chuyện xoay quanh), còn lớp nhân vật là PHỤ nhưng là NGƯỜI RA ĐÒN CHÍNH.
+    // Nên ở đây cái xác vừa đứng CHẮN giữa Axie và mục tiêu, vừa là bên đánh đều đặn.
+    const p = S.burstT;
+    const huong = Math.sign(biaX - goc) || 1;
+
+    // ① CHẮN: xác đứng trên đoạn nối Axie → bia, lệch về phía bia. Đó là toàn bộ tín hiệu
+    //    "người bảo vệ" — đứng sau lưng thì nó chỉ là kẻ đi cùng.
+    const nhapNho = Math.sin(S.t * 1.7) * 7;
+    const nghieng = Math.sin(S.t * 1.25) * 0.045;
+    const nghi = { x: goc + huong * 74, y: chanY - S.bayCao + nhapNho };
+
+    // ② RA ĐÒN CHÍNH: đánh đều đặn, không cần người chơi bấm. Burst mới là nút.
+    let xx = nghi.x, xy = nghi.y, kind = 'i', idx = Math.floor(S.t * 9);
+    const chuKy = 1.45, pha = (S.t % chuKy) / chuKy;
+    if (p > 0){                                    // BURST — người chơi bấm
+      const k = p > 0.55 ? (1 - p) / 0.45 : p > 0.30 ? 1 : p / 0.30;
+      const eo = k * k * (3 - 2 * k);
+      xx = nghi.x + (biaX - 62 - nghi.x) * eo;
+      xy = nghi.y + ((chanY - S.bayCao * 0.45) - nghi.y) * eo;
+      kind = 'a'; idx = Math.floor((1 - p) * HS_FRAMES.a * 1.15);
+    } else if (pha < 0.42){                        // đòn thường của xác — máy tự làm
+      const k = pha / 0.42;
+      xx = nghi.x + huong * Math.sin(k * Math.PI) * 26;
+      kind = 'a'; idx = Math.floor(k * HS_FRAMES.a);
+    }
+
+    // Độ HIỆN của cái xác. Ở kiểu "hiện khi đánh" nó chỉ vật chất hoá trong lúc tung chiêu:
+    // mờ dần lên ở pha lấy đà, rõ hẳn lúc chạm, rồi tan. Ở kiểu thường trực thì luôn là 1.
+    const dangDanh = p > 0 || pha < 0.42;
+    let hien = 1;
+    if (S.hienKhiDanh){
+      hien = p > 0 ? Math.min(1, (1 - p) * 3.2) * Math.min(1, p * 4 + 0.25)
+           : pha < 0.42 ? Math.sin((pha / 0.42) * Math.PI)
+           : 0;
+      hien = Math.max(0, Math.min(1, hien * 1.35));
+    }
+    window.__hien = hien;          // để bài chụp ảnh bắt đúng khoảnh khắc
+    const k0 = Math.max(0, 1 - S.bayCao / 110);
+    const R = REN[S.ren];
+    let hopXac = null;
+    if (hien > 0.02){
+      veBong(g, xx, chanY, 12 + 16 * k0, 5 + 5 * k0, (.14 + .28 * k0) * hien);
+      // Vòng triệu hồi dưới chân lúc vật chất hoá — nếu không có thì nó chỉ là hình mờ dần,
+      // đọc ra "lag" chứ không đọc ra "được gọi tới".
+      if (S.hienKhiDanh && hien < 0.98){
+        g.save(); g.globalCompositeOperation = 'lighter';
+        g.strokeStyle = `rgba(150,200,255,${0.5 * (1 - hien)})`; g.lineWidth = 2;
+        const rr = 30 + (1 - hien) * 34;
+        g.beginPath(); g.ellipse(xx, chanY, rr, rr * .32, 0, 0, 7); g.stroke(); g.restore();
+      }
+      hopXac = veXac(g, S.xac, kind, idx, xx, xy, S.xacCao,
+                     { mo: S.doMo * hien, mau: R.mau, manh: (1 + (p > 0.3 ? 0.7 : 0)) * hien,
+                       nghieng: dangDanh ? 0 : nghieng });
+    }
+
+    // ③ AXIE — vẽ SAU nên nằm trên: nó là nhân vật chính, không bị ai che.
+    //    Chạy bằng bảng khung THẬT vừa nướng; thỉnh thoảng tự ra một đòn phụ.
+    const chay = Math.abs(Math.cos(S.t * 0.5)) > 0.12;      // đang dịch chuyển?
+    const axPha = (S.t % 4.6) / 4.6;
+    const axDanh = axPha < 0.22;
+    veBong(g, goc, chanY, 30, 10, .45);
+    const yA = chanY - S.axieCao * 0.38;
+    const oke = veAxieDong(g, axDanh ? 'a' : 'r',
+                           Math.floor(S.t * (axDanh ? 14 : 16)), goc, yA, S.axieCao,
+                           Math.cos(S.t * 0.5) < 0)
+             || veAxie(g, S.axie, Math.floor(S.t * 8), goc, yA, S.axieCao);
+
+    if (p > 0.30 && p < 0.60){
+      g.save(); g.globalCompositeOperation = 'lighter';
+      const a = 1 - Math.abs(p - 0.45) / 0.15;
+      const gr = g.createRadialGradient(biaX, chanY - 40, 0, biaX, chanY - 40, 120);
+      gr.addColorStop(0, `rgba(255,214,150,${.55 * a})`); gr.addColorStop(1, 'rgba(255,180,90,0)');
+      g.fillStyle = gr; g.beginPath(); g.arc(biaX, chanY - 40, 120, 0, 7); g.fill(); g.restore();
+    }
+    g.fillStyle = 'rgba(180,200,255,.72)'; g.font = '600 13px system-ui,sans-serif'; g.textAlign = 'left';
+    g.fillText(S.hienKhiDanh
+      ? 'Axie = AVATAR (không chỉ số)  ·  lớp nhân vật HIỆN RA lúc tung chiêu — chỉ số ở đây'
+      : 'Axie = AVATAR  ·  lớp nhân vật đứng CHẮN thường trực và ra đòn chính', 18, 28);
+    const A = window.CHI_ANH && CHI_ANH.o[S.axie];
+    if (A){
+      hopXac = hopXac || { w: 0, h: 0 };
+      const D = AXIE_DONG, du = oke && tai(D.tep);
+      const hh = S.axieCao / (du ? D.thanCao : A.thanCao);
+      const aw = hh * (du ? D.oW / D.oH : A.nhoRong / A.nhoCao);
+      g.font = '12px ui-monospace,monospace'; g.fillStyle = 'rgba(200,210,235,.55)';
+      g.fillText(`Axie  ${Math.round(aw)}×${Math.round(hh)} px` +
+                 (du ? '  ·  bảng khung THẬT: action/run + attack/melee/normal-attack' : '  ·  bảng thở'), 18, H - 34);
+      g.fillText(hopXac.w
+        ? `Xác   ${Math.round(hopXac.w)}×${Math.round(hopXac.h)} px  ·  rộng bằng ${(hopXac.w / aw * 100) | 0}% Axie`
+        : 'Xác   (đã tan — chỉ hiện lúc tung chiêu)', 18, H - 16);
+    }
+  }
+
+  veBia(g, biaX, chanY, S.cuaSoT);
+  requestAnimationFrame(khung);
+}
+
+// ── Điều khiển ────────────────────────────────────────────────────────────────────────────
+function burst(){
+  if (S.burstT > 0) return;
+  S.burstT = 1; S.cuaSoT = 6;              // cửa sổ VỠ GIÁP 6s, đúng Cổ Vật #6 Vỏ Thép Câm
+}
+const el = id => document.getElementById(id);
+
+(function dungChon(){
+  const ds = (window.CHI_ANH && Object.keys(CHI_ANH.o)) || [];
+  const sel = el('chonAxie');
+  for (const id of ds){
+    const o = document.createElement('option');
+    o.value = id; o.textContent = id;
+    sel.appendChild(o);
+  }
+  if (ds.length && !ds.includes(S.axie)) S.axie = ds[0];
+  sel.value = S.axie;
+  sel.onchange = e => S.axie = e.target.value;
+  el('chonXac').onchange = e => S.xac = e.target.value;
+
+  const hang = el('hangRen');
+  REN.forEach((r, i) => {
+    const b = document.createElement('button');
+    b.textContent = r.ten; b.dataset.i = i;
+    if (i === S.ren) b.className = 'bat';
+    b.onclick = () => { S.ren = i; [...hang.children].forEach((c, j) => c.className = j === i ? 'bat' : ''); };
+    hang.appendChild(b);
+  });
+})();
+
+function noi(idSlider, idNhan, khoa, bien){
+  const s = el(idSlider), n = el(idNhan);
+  const ve = () => { S[khoa] = bien ? bien(+s.value) : +s.value;
+                     n.textContent = bien ? S[khoa].toFixed(2) : s.value; };
+  s.oninput = ve; ve();
+}
+noi('axieCao', 'nhanAxieCao', 'axieCao');
+noi('xacCao',  'nhanXacCao',  'xacCao');
+noi('bayCao',  'nhanBay',     'bayCao');
+noi('doMo',    'nhanMo',      'doMo', v => v / 100);
+
+el('btnBurst').onclick = burst;
+el('btnKieu').onclick = e => { S.hienKhiDanh = !S.hienKhiDanh; e.target.className = S.hienKhiDanh ? 'bat' : ''; };
+el('btnCu').onclick = e => { S.boCucCu = !S.boCucCu; e.target.className = S.boCucCu ? 'bat' : ''; };
+addEventListener('keydown', e => {
+  if (e.code === 'Space'){ e.preventDefault(); burst(); }
+  const n = +e.key;
+  if (n >= 1 && n <= REN.length){
+    S.ren = n - 1;
+    [...el('hangRen').children].forEach((c, j) => c.className = j === S.ren ? 'bat' : '');
+  }
+});
+requestAnimationFrame(khung);
+</script>

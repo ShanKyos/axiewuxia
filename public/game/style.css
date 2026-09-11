@@ -546,12 +546,30 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .mst-tabs button:hover { background:rgba(var(--rgb-vang),.12); color:#dbe6ff; }
 .mst-tabs button.active:hover { background:linear-gradient(180deg,var(--tab-on-1),var(--tab-on-2)); color:var(--on-light); }
 .mst-note { font-size:var(--fs-sm); color:var(--orange); line-height:1.5; margin-bottom:8px; }
+/* Đầu bảng: hai nhánh và số điểm đang nuôi mỗi bên — người chơi phải thấy mình đang nghiêng về
+   đâu TRƯỚC khi bấm, không phải sau khi đã tiêu điểm. */
+.mst-nhanh { display:flex; justify-content:center; align-items:center; gap:8px; margin-bottom:4px; }
+.mst-nhanh s { text-decoration:none; font-size:10px; color:var(--text-dim); letter-spacing:.6px; }
+.mst-nh { display:flex; align-items:baseline; gap:5px; padding:3px 10px; border-radius:999px;
+  border:1px solid rgba(var(--rgb-vang),.22); background:rgba(var(--rgb-vang),.05); }
+.mst-nh i { font-style:normal; font-size:11px; font-weight:600; color:var(--text-body); }
+.mst-nh b { font-size:var(--fs-sm); color:var(--gold); font-variant-numeric:tabular-nums; }
+.mst-nh.da { border-color:rgba(var(--rgb-vang),.7); background:rgba(var(--rgb-vang),.14); }
+.mst-nh.da i { color:var(--accent-light); }
 .mst-tree { display:flex; flex-direction:column; align-items:center; gap:2px; }
-.mst-link { color:#dfcaac; font-size:var(--fs-sm); line-height:1; opacity:.55; }
-.mst-link.off { opacity:.2; }
+.mst-link { color:#dfcaac; font-size:var(--fs-sm); line-height:1; opacity:.55;
+  display:flex; justify-content:center; }
+/* Hai mũi tên của một hàng hai nhánh phải rơi đúng trên hai cột ô (76px + 10px khe). */
+.mst-link s { display:inline-block; width:76px; text-decoration:none; }
 .mst-row { display:flex; justify-content:center; align-items:flex-start; gap:10px;
   flex-wrap:wrap; padding:6px 4px; }
-.mst-row.locked .mst-cell { opacity:.34; }
+/* Hàng chốt: hai nút đỉnh loại trừ nhau — vẽ hẳn dấu rẽ đôi giữa chúng. */
+.mst-row.chot { gap:4px; }
+.mst-hoac { align-self:center; font-size:9px; line-height:1.15; font-weight:700; text-align:center;
+  letter-spacing:.5px; color:var(--orange); padding:4px 5px; border-radius:6px;
+  border:1px dashed rgba(var(--rgb-cam),.55); background:rgba(var(--rgb-cam),.08); }
+.mst-cell.khoa img { filter:grayscale(1) brightness(.38); }
+.mst-cell.khoa .mst-c-name { color:var(--text-dim); }
 .mst-lock { width:100%; text-align:center; font-size:10.5px; color:var(--text-dim); }
 .mst-cell { position:relative; width:76px; padding:0; background:none; border:0;
   font-family:inherit; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; }
@@ -584,8 +602,9 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #mount-msg, #dantian-msg { text-align:center; min-height:18px; font-size:12.5px; margin-top:8px; }
 
 /* Sect select */
-/* Neo ĐÁY chứ không canh giữa. Canh giữa thì khối chọn lớp trôi lên đúng dải trời — chỗ duy
-   nhất trong bức tranh có toà thành đổ để mà nhìn — và cả bức chỉ còn là bóng tối sau tán rừng. */
+/* Neo ĐÁY chứ không canh giữa. Canh giữa thì khối chọn lớp trôi lên đúng chỗ cây thế giới —
+   thứ đắt nhất trong bức tranh — và cả bức chỉ còn là mặt đất tối phía dưới.
+   (Hai màn kia đè lại: .man-server canh giữa, .man-cho canh giữa + dồn phải.) */
 #sect-select { position:fixed; inset:0; z-index:30; display:flex; align-items:flex-end; justify-content:center;
   background:transparent; overflow-y:auto; }   /* nền là canvas #title-fx nằm phía sau */
 /* Hoạt cảnh mở đầu nằm DƯỚI khối chọn lớp, phủ kín màn hình */
@@ -597,26 +616,38 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #sect-select .ss-inner { background:none; border-radius:0; max-width:900px; }
 /* Màn mờ nằm ở #sect-select chứ không ở .ss-inner: khối trong chỉ rộng 900px, đặt vầng mờ vào
    đó là nó có MÉP — và một cái mép dọc chạy suốt màn hình thì mắt đọc ra ngay cái hộp. */
+/* ⚠ CÁC NẤC PHẢI CHUYỂN DẦN. Bản cũ có hai nấc sát nhau (trong suốt ở 46%, rồi .72 ở 62%)
+   — trên nền núi vẽ tay mờ mịt thì không ai thấy, nhưng nền nay là tranh có chi tiết đều
+   khắp khung, và chỗ nấc gấp hiện ra thành một ĐƯỜNG KẺ NGANG chạy suốt bề rộng màn hình.
+   Nền cũng đã được dìm sẵn trong canvas (nenPhu), nên lớp này chỉ còn phải lo phần đáy. */
 #sect-select::before { content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
-  background:linear-gradient(180deg, rgba(5,7,20,.42) 0%, rgba(5,7,20,0) 14%,
-             rgba(5,7,20,0) 46%, rgba(4,5,16,.72) 62%, rgba(3,4,12,.93) 78%, rgba(3,4,12,.96) 100%); }
+  background:linear-gradient(180deg, rgba(5,7,20,.30) 0%, rgba(5,7,20,.05) 22%,
+             rgba(5,7,20,0) 44%, rgba(4,5,16,.22) 64%, rgba(3,4,12,.58) 84%, rgba(3,4,12,.78) 100%); }
+/* Màn TẠO NHÂN VẬT cần đáy tối hơn hẳn: dưới hàng thẻ còn bảng chi tiết lớp, ô nhập tên và
+   nút — bốn khối chữ chồng lên nhau, mà nửa dưới của cảnh Lunacia là bãi cỏ sáng. Ba màn
+   dùng chung một khối HTML nên phân biệt bằng cờ: không man-cho, không man-server = màn tạo. */
+#sect-select:not(.man-cho):not(.man-server)::before {
+  background:linear-gradient(180deg, rgba(5,7,20,.32) 0%, rgba(5,7,20,.05) 18%,
+             rgba(5,7,20,0) 38%, rgba(4,5,16,.46) 58%, rgba(3,4,12,.88) 76%, rgba(3,4,12,.95) 100%); }
 /* Dòng dẫn duy nhất còn lại: nhỏ, giãn chữ, không phát sáng — chú thích cho bức tranh, không
    phải tiêu đề. Ghim lên đỉnh màn hình chứ không để trong dòng chảy: trong dòng chảy thì nó
-   nằm ngay sau tán rừng và chìm mất, mà đẩy rừng xuống để nhường chỗ thì mất luôn dãy núi. */
+   nằm ngay trong dải sáng nhất của cảnh và chìm mất. */
 #sect-select .ss-inner h2, #sect-select .ss-sub { position:fixed; left:0; right:0; z-index:3;
   margin:0; padding:0 16px; text-align:center; pointer-events:none;
   text-shadow:0 1px 12px rgba(4,5,16,.95), 0 0 30px rgba(4,5,16,.8); }
 #sect-select .ss-inner h2 { top:20px; font-family:var(--font-display); font-size:14px;
   font-weight:600; letter-spacing:.24em; text-transform:uppercase; color:#dccab1; }
 #sect-select .ss-sub { top:44px; color:#b1a38f; font-size:12.5px; line-height:1.55; }
-@media (prefers-reduced-motion: reduce){ #title-fx { display:none; } }
+/* Giảm chuyển động KHÔNG có nghĩa là gỡ mất nền. Luật cũ ẩn hẳn canvas, tức người bật
+   tuỳ chọn đó nhận một trang đen trơn. Nay titleStart() vẽ đúng một khung rồi dừng —
+   cảnh vẫn ở đó, chỉ là không nhúc nhích. Xem titleItDong() trong game.js. */
 /* ── CHỌN MÁY CHỦ ────────────────────────────────────────────────────────────
    Nhịp của MU: tên game chiếm hẳn phần trên, cụm máy chủ nằm thành một hàng bên dưới. Chữ
    dựng bằng gradient kim loại lạnh — đó là thứ làm nên cái logo MU, không phải font nào cả:
    một dải sáng ở trên, một vệt tối ở giữa thân chữ, rồi sáng lại ở chân. */
 #sv-pick { display:flex; flex-direction:column; align-items:center; gap:0; margin:0 auto 8px; }
 /* Màn chọn máy chủ canh GIỮA, không neo đáy. Neo đáy là luật của sân khấu chọn lớp — ở đó
-   năm nhân vật phải đứng trên phiến đá nên khối chữ buộc phải tụt xuống. Màn này không có
+   năm nhân vật phải đứng trên bệ đất nên khối chữ buộc phải tụt xuống. Màn này không có
    sân khấu nào, dồn xuống đáy chỉ làm nó trông như bị rơi. */
 #sect-select.man-server { align-items:center; }
 #sect-select.man-server .ss-inner { padding-bottom:26px; }
@@ -1586,18 +1617,17 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .cc-slot-no { border:1px solid var(--border); background:rgba(var(--rgb-da),.9); color:var(--text-soft); }
 .cc-slot-no:hover { background:rgba(var(--rgb-vang),.28); }
 /* Màn chọn lớp là MỘT SÂN KHẤU, không phải năm cái thẻ rời. Năm nhân vật đứng chung trên một
-   phiến đá, sau lưng là rừng, sau rừng nữa là dãy núi — đúng ba lớp của bộ art side-scrolling,
-   và là bố cục của màn chọn nhân vật trong MU.
+   bệ đất, sau lưng là cảnh Lunacia — đó là bố cục của màn chọn nhân vật trong MU.
 
-   Núi vẽ ở canvas (#title-fx) vì nó phủ cả màn. Còn RỪNG và PHIẾN ĐÁ thì dán thẳng vào
+   Cảnh vẽ ở canvas (#title-fx) vì nó phủ cả màn. Còn VẦNG TỐI và BỆ ĐỨNG thì dán thẳng vào
    #cc-classes bằng ::after và ::before: chúng phải đứng yên SO VỚI GÓT CHÂN, mà gót chân thì
    trôi theo bố cục dòng chảy của .ss-inner. Neo vào canvas là mỗi cỡ cửa sổ lại lệch một kiểu;
    neo vào chính hàng thẻ thì cả ba đi cùng nhau, khỏi cần một dòng JS nào canh lại.
 
-   Mép trên phiến đá canh đúng vào gót chân: ảnh thẻ cao 300 đơn vị, gót ở 252, thu về bề rộng
+   Mép trên bệ đứng canh đúng vào gót chân: ảnh thẻ cao 300 đơn vị, gót ở 252, thu về bề rộng
    118 px ⇒ gót nằm cách đỉnh ảnh 124 px, cộng 10 px đệm trên của thẻ là 134 px.
    Sân khấu chỉ hiện khi hàng thẻ hiện — tức chỉ trong lúc tạo nhân vật. Ở màn danh sách nhân
-   vật, hàng thẻ bị ẩn nên rừng và đá biến mất theo, chỉ còn dãy núi. */
+   vật, hàng thẻ bị ẩn nên bệ đứng biến mất theo, chỉ còn cảnh Lunacia. */
 /* PHÁ KHUNG .ss-inner (rộng 900px). Hàng thẻ nay là art anh hùng vẽ tay chứ không phải hình
    chibi phẳng: ở bề rộng 820px mỗi thẻ chỉ được 164px, nhân vật cao 146px, và ở cỡ đó thì giáp
    nhiều lớp với hoa văn vàng chỉ còn là một vệt tối — đúng thứ bộ art này sinh ra để tránh.
@@ -1606,29 +1636,33 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   display:grid; grid-template-columns:repeat(5,1fr); gap:0;
   margin:16px auto 12px; width:min(1300px, 96vw); max-width:none;
   left:50%; transform:translateX(-50%); }
-/* RỪNG — tràn ra ngoài bề ngang hàng thẻ để không thấy hai mép cắt. Cắt lấy phần ĐÁY của bức
-   (gốc rễ và dương xỉ): đó là phần nằm ngay sau lưng nhân vật; ngọn cây phía trên đã có núi lo. */
-/* Thu bức rừng còn 310px chiều cao rồi LẶP NGANG. Đặt nguyên cỡ (1280px ngang ⇒ 569px cao)
-   thì cả khung hình chỉ còn rễ cây, và dãy núi — thứ vừa thay vào — không còn chỗ nào để thấy.
-   Thu nhỏ cũng đúng về phối cảnh: rừng ở XA hơn nhân vật. Hai mép trái/phải của bức khớp nhau
-   (đo được lệch 5,6/255) nên lặp ngang không để lại đường nối. */
+/* TÁN RỪNG (assets/title/rung.webp) ĐÃ GỠ. Nó là một dải cây tối vẽ cho cảnh núi đêm cũ;
+   trên nền Lunacia mới nó cắt ngang bức tranh thành hai nửa và mang tông xám-lục chọi hẳn
+   với xanh ngọc của cảnh. Nay chỉ còn một vầng tối hắt sau lưng hàng thẻ — đủ để năm bóng
+   người tách khỏi nền, không thêm một bức tranh thứ hai vào khung. */
 #cc-classes::after { content:''; position:absolute; left:50%; transform:translateX(-50%);
-  width:100vw; top:-86px; height:220px; z-index:0; pointer-events:none;
-  background:var(--den), url(assets/title/rung.webp) center bottom / auto 220px repeat-x;
-  filter:brightness(.66) saturate(.75);
-  -webkit-mask-image:linear-gradient(180deg, transparent, #000 22%);
-  mask-image:linear-gradient(180deg, transparent, #000 22%); }
-/* Đèn sân khấu: một vệt sáng lạnh hắt lên từ mặt đá. Rừng phía sau gần như đen, mà ba trong
-   năm lớp mặc đồ tối — không có vệt sáng này thì họ chỉ còn là những vệt lờ mờ trên nền đen. */
+  width:100vw; top:-70px; height:290px; z-index:0; pointer-events:none;
+  background:radial-gradient(54% 74% at 50% 74%, rgba(5,9,24,.62) 0%,
+             rgba(5,9,24,.30) 52%, rgba(5,9,24,0) 100%), var(--den); }
+/* Đèn sân khấu: một vệt sáng ấm hắt lên từ mặt đất. Vầng tối ở ::after dìm nền phía sau, mà
+   ba trong năm lớp cũng mặc đồ tối — không có vệt sáng này thì họ chỉ còn là những vệt lờ mờ. */
 #cc-classes { --den:radial-gradient(58% 100% at 50% 100%, rgba(226,207,179,.20) 0%, rgba(226,207,179,.07) 45%, rgba(226,207,179,0) 100%); }
 #cc-detail { position:relative; z-index:2; }
-/* PHIẾN ĐÁ — cũng tràn hết bề ngang cửa sổ. Mặt đá là thứ nhân vật ĐỨNG LÊN, nên mép trên của
-   nó phải trùng đúng gót chân, không xê một điểm ảnh nào. */
+/* BỆ ĐỨNG — tràn hết bề ngang cửa sổ; nó là thứ nhân vật ĐỨNG LÊN nên mép trên phải trùng
+   đúng gót chân, không xê một điểm ảnh nào.
+   BỆ ĐỨNG — nay cắt từ CHÍNH lớp mặt đất của cảnh Lunacia (tools/title/nuong_nen_axie.py),
+   thay cho dải đá cuội xám ấm `san_da.webp` vẽ cho cảnh núi đêm cũ. Bệ và nền là một bức
+   nên không có cách nào lệch tông. Mép trên tấm ảnh là đường cỏ, và nó phải trùng đúng gót
+   chân — top:179px giữ nguyên như cũ, đừng đổi nếu chưa đo lại gót. */
 #cc-classes::before { content:''; position:absolute; left:50%; transform:translateX(-50%);
-  width:100vw; top:179px; height:110px; z-index:1; pointer-events:none;
-  background:linear-gradient(180deg, rgba(6,7,20,0) 52%, rgba(6,7,20,.9) 100%),
-             url(assets/title/san_da.webp) center top / 100vw auto no-repeat;
-  filter:brightness(.94) saturate(.95); }
+  width:100vw; top:179px; height:112px; z-index:1; pointer-events:none;
+  background:linear-gradient(180deg, rgba(6,7,20,0) 48%, rgba(6,7,20,.92) 100%),
+             url(assets/title/lunacia/san.webp) center top / 100vw auto no-repeat;
+  filter:brightness(1.02) saturate(1.02);
+  /* Làm mờ 7% trên cùng: mép cắt của tấm ảnh là một ĐƯỜNG THẲNG chạy suốt bề rộng màn hình,
+     mà cảnh phía sau thì không có đường nào thẳng như thế. Tan dần vào là hết đường kẻ. */
+  -webkit-mask-image:linear-gradient(180deg, transparent 0%, #000 7%);
+  mask-image:linear-gradient(180deg, transparent 0%, #000 7%); }
 /* Bóng đổ dưới chân: không có nó thì nhân vật lơ lửng ngay trên nền đá chứ không đứng lên nó. */
 .cc-card::before { content:''; position:absolute; left:50%; transform:translateX(-50%);
   top:204px; width:104px; height:20px; border-radius:50%; z-index:-1;
@@ -1643,10 +1677,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   background:radial-gradient(ellipse at center, rgba(var(--rgb-vang),.55), rgba(var(--rgb-vang),0) 70%); }
 .cc-card.sel .cc-nm { text-shadow:0 0 12px rgba(var(--rgb-vang),.7); }
 /* 118px bề ngang ⇒ ảnh cao 147px, gót ở 124px tính từ đỉnh ảnh. Đệm dưới đẩy tên lớp xuống
-   quá mép dưới phiến đá (gót +96px) — tên đè lên mặt đá thì cả sân khấu thành một cái nhãn. */
+   quá mép dưới bệ đứng (gót +96px) — tên đè lên mặt đất thì cả sân khấu thành một cái nhãn. */
 .cc-card /* 157px chứ không 118px: tranh lớp nay đóng trên canvas rộng 320 thay vì 240 (áo choàng và
    vũ khí của bộ art anh hùng xoè rộng hơn hình chibi cũ nhiều). 118 × 320/240 = 157 — nới ĐÚNG
-   theo tỉ lệ canvas thì gót chân vẫn rơi vào 134px như cũ, nên phiến đá, bóng đổ và quầng chọn
+   theo tỉ lệ canvas thì gót chân vẫn rơi vào 134px như cũ, nên bệ đứng, bóng đổ và quầng chọn
    không phải canh lại. Cột thẻ rộng 820/5 = 164px nên 157 vẫn lọt. */
 .cc-art { display:block; width:100%; max-width:250px; height:auto; margin:0 auto 64px;
   filter:drop-shadow(0 6px 12px rgba(0,0,0,.6));
@@ -1718,49 +1752,63 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .ku-ke span { font-size:var(--fs-sm); border:1px solid var(--border); border-radius:999px; padding:2px 9px; }
 
 
-/* ═══ Tranh anh hùng ở màn danh sách nhân vật ═══
-   Năm hình chibi trên phiến đá là THẺ CHỌN LỚP — chúng phải nhỏ và phải có năm cái. Nhưng ở màn
-   danh sách nhân vật thì hàng thẻ đó đã ẩn, mặt tiền trống hẳn: chỉ còn dãy núi và một cột ô
-   nhân vật. Đây là chỗ đặt được một bức to mà không phá thứ gì.
-
-   Neo theo MÉP MÀN HÌNH chứ không theo cột .ss-inner (rộng 900px): bức tranh phải đứng lệch hẳn
-   sang trái cột ô, và cột ô thì luôn ở giữa. Dùng calc từ 50% để hai thứ không bao giờ chồng.
+/* ═══ Sân khấu ở màn danh sách nhân vật ═══
+   Năm thẻ lớp là chuyện của màn TẠO nhân vật. Ở màn chờ, hàng thẻ đó đã ẩn nên mặt tiền trống
+   hẳn — chỉ còn cảnh Lunacia và một cột ô nhân vật. Đây là chỗ đặt được sân khấu mà không phá
+   thứ gì: xem ccHeroVe() trong game.js.
 
    Chiều cao dùng clamp thay vì một số cứng: màn 720p và màn 1440p mà cùng 470px thì cái thứ hai
-   nhìn như dán tem. 62vh giữ tỉ lệ so với cảnh, hai đầu kẹp lại cho khỏi quá lố. */
+   nhìn như dán tem. 50vh giữ tỉ lệ so với cảnh, hai đầu kẹp lại cho khỏi quá lố. */
+/* Sân khấu neo GÓC DƯỚI TRÁI và chiếm hẳn nửa màn. Bản trước nó là một tấm PNG một người,
+   nhét vào khe 260px bên trái cột ô nhân vật đặt giữa màn — đủ cho một hiệp sĩ đứng, không
+   đủ cho năm lớp đứng thành hàng. Nay cột ô dồn sang phải (#sect-select.man-cho) và sân
+   khấu lấy chỗ trống bên trái.
+   Hào quang vàng của bản cũ đã bỏ: trong khung nay có tới mười bóng hình (năm lớp + năm
+   Axie), một vầng sáng ôm cả khung chỉ làm chúng dính vào nhau thành một mảng. */
 #cc-hero {
-  /* Neo theo MÉP PHẢI của chính bức tranh, không theo mép trái. Cột ô nhân vật rộng 520px nằm
-     giữa màn, tức mép trái của nó luôn ở 50% − 260px. Neo trái thì bề ngang tranh đổi theo
-     chiều cao màn (width:auto), và ở màn cao thì mũi kiếm thò sang chui sau thẻ nhân vật — đã
-     chụp lại thấy rõ. Neo phải thì mép tranh đứng yên cách cột ô đúng 8px dù cao bao nhiêu. */
-  position:fixed; bottom:0; right:calc(50% + 268px);
-  height:clamp(340px, 62vh, 560px); width:auto;
+  position:fixed; bottom:0; left:0;
+  /* Thấp và RỘNG, không cao và hẹp. Nhân vật thật chỉ cao 159 điểm ảnh trong kho art, nên
+     khung cao nửa màn hình chỉ để trống hai phần ba — mà nới người cho đầy khung là kéo
+     nhoè (xem CC_PHONG_TRAN trong game.js). */
+  height:clamp(230px, 38vh, 360px); width:auto; max-width:64vw;
   z-index:1; pointer-events:none; user-select:none;
-  filter:drop-shadow(0 0 26px rgba(210,179,135,.34)) drop-shadow(0 6px 14px rgba(0,0,0,.55));
+  filter:drop-shadow(0 8px 18px rgba(0,0,0,.6));
   animation:hero-in .9s ease-out both;
 }
-/* Bóng đổ dưới chân: bức tranh cắt sát nên không có nền, không có bóng — thiếu nó thì nhân vật
-   trông như đang lơ lửng trước dãy núi chứ không đứng trên mặt đất. */
-#cc-hero + .ss-inner::before {
-  content:''; position:fixed; bottom:6px; right:calc(50% + 360px);
-  width:clamp(150px, 22vh, 250px); height:clamp(20px, 3.4vh, 34px);
-  border-radius:50%; z-index:0; pointer-events:none;
-  background:radial-gradient(50% 50% at 50% 50%, rgba(6,8,20,.62) 0%, rgba(6,8,20,.28) 55%, rgba(6,8,20,0) 100%);
-}
+/* MÀN CHỜ — cột ô nhân vật dồn sang phải, nhường nửa trái cho sân khấu. Canh giữa theo chiều
+   dọc chứ không neo đáy: neo đáy là luật của màn TẠO nhân vật, nơi năm thẻ phải đứng đúng
+   trên bệ đất. Ở đây không có bệ nào, dồn xuống đáy chỉ làm cột ô trông như bị rơi. */
+#sect-select.man-cho { align-items:center; justify-content:flex-end; }
+#sect-select.man-cho .ss-inner { padding-right:clamp(16px, 6vw, 96px); padding-bottom:26px; }
+/* Bóng đổ dưới chân nay vẽ TRONG canvas (ccVeBong) — mỗi bóng hình một vũng riêng, đặt đúng
+   dưới gót nó. Một vũng CSS cố định thì chỉ đúng khi trong khung có đúng một người đứng đúng
+   một chỗ, mà khung này có lúc sáu bóng hình. */
 @keyframes hero-in { from { opacity:0; transform:translateY(22px) } to { opacity:1; transform:none } }
 @media (prefers-reduced-motion:reduce){ #cc-hero { animation:none } }
 /* Màn hẹp: cột ô nhân vật rộng 520px nằm giữa, tranh cao 340px rộng chừng 270px — dưới 1080px
    là hai thứ chạm nhau. Ẩn hẳn còn hơn để nó thò một nửa ra sau danh sách. */
-@media (max-width:1080px){ #cc-hero, #cc-hero + .ss-inner::before { display:none } }
+/* Màn hẹp: cột ô rộng 520px, sân khấu rộng chừng 0,9×chiều cao — dưới 1080px là hai thứ
+   chồng nhau. Trả cột về giữa và ẩn sân khấu, còn hơn để nó thò một nửa ra sau danh sách. */
+@media (max-width:1080px){
+  #cc-hero { display:none }
+  #sect-select.man-cho { justify-content:center }
+  #sect-select.man-cho .ss-inner { padding-right:16px }
+}
 
 /* Năm thông số bắt buộc của mọi chiêu — xem CLAUDE.md · Quy ước kỹ năng. Xếp thành lưới để
-   người chơi so hai chiêu theo cột, không phải dò trong một dòng chữ dài. */
-.skill-row .sk-so {
+   người chơi so hai chiêu theo cột, không phải dò trong một dòng chữ dài.
+   ⚠ TÊN CLASS PHẢI KHÁC `.sk-so`. Lưới này từng mang đúng tên đó, mà `.sk-so` là ô ĐẾM LỌ
+   THUỐC ở thanh dưới (dòng ~309) nên nó khai `position:absolute; right:3px; bottom:2px`.
+   Khối dưới đây chỉ đè `display`, KHÔNG đè `position` — nên cả bốn lưới thông số bị bứt khỏi
+   dòng chảy và rơi về cùng một góc bảng, in đè lên nhau: đo được 4 phần tử ở (919,961)
+   (911,961) (865,961) (912,961), tức 0/4 chiêu đọc được thông số. Không ném lỗi, không ai
+   thấy, sống rất lâu. Đừng gộp lại hai cái tên. */
+.skill-row .sk-thongso {
   display:grid; grid-template-columns:repeat(3, minmax(0, 1fr));
   gap:1px 10px; margin:3px 0 2px; font-size:10.5px; color:var(--text-muted);
   font-variant-numeric:tabular-nums;
 }
-.skill-row .sk-so b { color:var(--accent-light); font-weight:600; }
+.skill-row .sk-thongso b { color:var(--accent-light); font-weight:600; }
 
 /* ══ C · CỬA SỔ KIỂU MU: kéo được · thu gọn được · nhớ chỗ ══ */
 .bang-tieu { cursor:grab; user-select:none; }
@@ -1791,7 +1839,102 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    Đo được: đóng hay mở cụm cũng cao đúng 21px và hai ô đánh dấu đều hiện — thu gọn xong mà
    không thu được gì. Phải chặn tường minh, đừng trông vào mặc định của thẻ. */
 .bag-auto:not([open]) label { display:none; }
-/* ⚠ PHẢI khoá theo [open]. Đặt display thẳng lên con của một <details> ĐANG ĐÓNG thì chính
-   nó đè mất cơ chế ẩn của trình duyệt — đo được: đóng hay mở cũng ra đúng 17 điều khiển
-   nhìn thấy, tức là thu gọn xong mà chẳng thu được gì. */
 .bag-auto[open] label { display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+   MÀN CHỜ KIỂU AXIE — khối này CỐ Ý đè lên các kiểu chung, và chỉ trong #sect-select
+   ─────────────────────────────────────────────────────────────────────────────────────
+   Chủ dự án chốt: màn chờ phải mang hơi hướng Axie rõ nhất có thể. Nền nay là art chính chủ
+   (cảnh Lunacia tách lớp từ axie-origins-asset-kit) và trong khung có năm con Axie đứng —
+   nhưng nếu khung giao diện vẫn là viền vàng mảnh kiểu MU thì cả màn thành hai ngôn ngữ
+   hình ảnh chửi nhau, đúng cái lỗi từng mắc khi đặt Baloo 2 lên khung thép đinh tán.
+
+   Ngôn ngữ của Axie Origins, rút gọn còn ba điều: bo góc TO, viền TỐI dày, và một GỜ DƯỚI
+   đặc (không phải đổ bóng mờ) làm mọi thứ trông như nút bấm dày có bề dày thật.
+
+   ⚠ CHỈ trong #sect-select. Phần còn lại của game vẫn là MU — Quy tắc số 1 không đổi, và
+   đây là ngoại lệ có phạm vi, không phải một đợt đổi tông toàn cục.
+
+   ⚠ Baloo 2 (--font-chi) dùng cho LOGO và NÚT LỚN của màn này. Luật cũ ("chỉ dùng ở chỗ có
+   con Axie đứng cạnh") sinh ra vì chữ bo tròn kiểu hoạt hình đặt trên khung thép đinh tán là
+   hai ngôn ngữ chửi nhau — ở đây khung đã là khung Axie bo tròn, nên chữ và khung nói cùng
+   một thứ tiếng. Đừng đổi ngược về --font-display mà không đổi luôn cả khung.
+   ═════════════════════════════════════════════════════════════════════════════════════ */
+#sect-select {
+  --ax-than:  linear-gradient(180deg, rgba(48,63,112,.90), rgba(20,27,54,.94));
+  --ax-vien:  rgba(8,12,28,.92);
+  --ax-go:    rgba(6,9,22,.85);          /* gờ dưới — màu đặc, không phải bóng mờ */
+  --ax-lap:   inset 0 1px 0 rgba(186,220,255,.20);
+  --ax-vang:  linear-gradient(180deg, #ffd98a, #eaa94a 52%, #d9902f);
+}
+/* ── Ô nhân vật ── */
+#sect-select .cc-slot {
+  gap:11px; padding:9px 46px 9px 10px;
+  border:2px solid var(--ax-vien); border-radius:16px;
+  background:var(--ax-than);
+  box-shadow:0 4px 0 var(--ax-go), var(--ax-lap);
+  transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+}
+#sect-select .cc-slot:hover { transform:translateY(-2px); border-color:rgba(120,190,230,.75);
+  box-shadow:0 6px 0 var(--ax-go), var(--ax-lap); }
+#sect-select .cc-slot.sel {
+  border-color:#7fd4e8;
+  background:linear-gradient(180deg, rgba(70,104,158,.92), rgba(24,36,70,.95));
+  box-shadow:0 4px 0 var(--ax-go), 0 0 22px rgba(127,212,232,.34), var(--ax-lap); }
+#sect-select .cc-slot.empty {
+  padding:13px; border-style:dashed; border-color:rgba(140,178,220,.34);
+  background:rgba(14,20,42,.55); box-shadow:none; }
+#sect-select .cc-slot.empty:hover { border-color:rgba(180,222,255,.62); box-shadow:none; }
+/* Chân dung: ô vuông bo góc, cắt lấy ĐẦU VÀ VAI. `pick_*.webp` là tranh cả người cao 300px —
+   thu nguyên bức vào 48px thì đầu chỉ còn 7px, không phân biệt nổi lớp nào. Nên phóng ảnh lên
+   150px trong một khung 48px có overflow:hidden, rồi trượt lên cho đúng tầm đầu (đo trên art:
+   đầu nằm ở dải y 17..70 của khổ 300, tức 8..35 sau khi thu về 150 — trượt lên 4px là vừa). */
+#sect-select .cc-slot-anh {
+  position:relative; flex:0 0 48px; width:48px; height:48px; overflow:hidden;
+  border-radius:13px; border:2px solid rgba(10,14,32,.9);
+  background:radial-gradient(70% 70% at 50% 30%, rgba(72,102,160,.75), rgba(10,15,34,.9)); }
+/* Ảnh nay là CHÂN DUNG VUÔNG cắt sẵn từ dải khung nhân vật thật (ccLopIcon) — đã là đầu và
+   vai rồi, nên phủ kín ô là xong. Bản trước nhét nguyên bức `pick_*` cao 300px vào đây
+   rồi phóng lên 150px và trượt lên để lấy phần đầu; nay không cần mẹo đó nữa. */
+#sect-select .cc-slot-art {
+  position:absolute; inset:0; width:100%; height:100%; max-width:none; }
+#sect-select .cc-slot-del {
+  right:9px; width:26px; height:26px; border-radius:9px;
+  border:2px solid rgba(10,14,32,.8); background:rgba(16,22,46,.85); }
+#sect-select .cc-slot.hoi-xoa { border-color:var(--red); background:rgba(56,20,30,.88);
+  box-shadow:0 4px 0 rgba(28,6,12,.8), var(--ax-lap); }
+#sect-select .cc-slot-yes, #sect-select .cc-slot-no { border-radius:11px; border-width:2px; }
+/* ── Nút lớn ── */
+#sect-select .big-btn {
+  border-radius:16px; padding:12px 30px; letter-spacing:.4px;
+  font-family:var(--font-chi); font-size:18px;
+  background:var(--ax-vang); color:#3c2408;
+  border:2px solid rgba(92,52,10,.85);
+  box-shadow:0 5px 0 #a1671f, 0 8px 18px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,246,222,.6);
+  text-shadow:0 1px 0 rgba(255,240,206,.5); }
+#sect-select .big-btn:active { transform:translateY(4px);
+  box-shadow:0 1px 0 #a1671f, 0 2px 8px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,246,222,.6); }
+#sect-select #btn-newchar, #sect-select #cc-back {
+  background:linear-gradient(180deg, rgba(60,80,132,.95), rgba(26,36,70,.96));
+  color:var(--text-bright); border-color:rgba(8,12,28,.9); opacity:1;
+  box-shadow:0 5px 0 var(--ax-go), 0 8px 16px rgba(0,0,0,.36), var(--ax-lap);
+  text-shadow:0 1px 2px rgba(0,0,0,.5); }
+#sect-select #btn-newchar:active, #sect-select #cc-back:active {
+  box-shadow:0 1px 0 var(--ax-go), 0 2px 8px rgba(0,0,0,.36), var(--ax-lap); }
+/* ── Chọn máy chủ ── */
+#sect-select .sv-nut {
+  border:2px solid var(--ax-vien); border-radius:16px;
+  background:var(--ax-than); box-shadow:0 4px 0 var(--ax-go), var(--ax-lap); }
+#sect-select .sv-nut:hover { border-color:rgba(120,190,230,.75); box-shadow:0 6px 0 var(--ax-go), var(--ax-lap); }
+#sect-select .sv-nut.on { border-color:#7fd4e8; box-shadow:0 4px 0 var(--ax-go), 0 0 20px rgba(127,212,232,.32), var(--ax-lap); }
+#sect-select .sv-nut.on .sv-ten { color:#bdf0ff; }
+/* Logo: đây là chỗ DUY NHẤT trong màn dùng Baloo 2, và nó hợp lệ theo đúng luật đã ghi —
+   "chỉ dùng ở chỗ có con Axie đứng cạnh". Trong khung này có năm con.
+   Dải kim loại lạnh của bản cũ đổi sang vàng ấm + nét viền tối dày: logo Axie đọc được bằng
+   ĐƯỜNG BAO trước khi đọc bằng màu, mà một dải chuyển màu mảnh thì không có đường bao nào. */
+#sect-select .sv-logo { font-family:var(--font-chi); font-weight:800; gap:.50em; }
+#sect-select .sv-logo span {
+  background:linear-gradient(180deg,#fff6df 6%,#ffd98a 42%,#f0a93f 62%,#ffe7b4 96%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  -webkit-text-stroke:3.5px rgba(10,14,30,.92); paint-order:stroke fill;
+  filter:drop-shadow(0 4px 0 rgba(8,11,26,.55)) drop-shadow(0 0 26px rgba(255,190,90,.34)); }

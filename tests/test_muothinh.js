@@ -32,37 +32,71 @@ const PORT = process.argv[2] || '8853';
 
   await page.evaluate(() => {
     window.TEST_MODE = true; startGame('thieulam', null); travelTo('chungnam');
+    player.avatar = null;   // bài này đo THÂN NGƯỜI; avatar bật mặc định nên phải tắt đi
+    // ⚠ BÀI NÀY TỪNG ĐỨNG ĐO GIỮA BÃI QUÁI SỐNG, và đó là cả nguyên nhân chập chờn: 3/5 lượt
+    // đỏ trên CÙNG một commit, đỏ theo hai kiểu khác nhau ("vẽ 1 nhát — phải 2" và "chưa vào
+    // được khối CHẠY (khối=h)"). Cả hai là một chuyện: quái đánh trúng thì `p.hurtT > 0`, mà
+    // thứ tự chọn khối trong drawPlayer cho 'h' đè lên 'w'/'r' — khối 'h' KHÔNG nằm trong
+    // NHOA_DUOC nên không hoà, và khối đo được là 'h' chứ không phải khối di chuyển.
+    // Dọn sạch mọi thứ có thể đè lên khối di chuyển, ngay trước mỗi phép đo. Đo xong trong
+    // CÙNG một lượt evaluate (đồng bộ) nên vòng lặp game không chen vào giữa được.
+    window.__cachLy = () => {
+      mobs.length = 0;
+      dead = false;
+      player.deadT = 0; player.hurtT = 0;      // 'd' và 'h' đè lên mọi khối khác
+      player.atkAnim = 0; player.castT = 0;    // 'a' và 'c'
+      player.nhayT = 0; player.noiT = 0;       // 'e' và 'n' (chỉ khi đứng yên)
+      player.poisonT = 0; player.buffAtkT = 0; // 't' (chỉ khi đứng yên)
+      player.walkPh = 0;                       // phần lẻ chỉ số = 0 ⇒ không có nhát pha khung
+      player.speed = 90;                       // dưới CHAY_TOCDO ⇒ khối ĐI
+    };
   });
   await page.waitForTimeout(500);
 
   // ── ① HOÀ HÌNH KHI ĐỔI TRẠNG THÁI ────────────────────────────────────────────────────
-  const r1 = await page.evaluate(async () => {
+  // ⚠ KHÔNG NGỦ CHỜ ĐỂ RƠI VÀO GIỮA QUÃNG HOÀ. Bản cũ setTimeout(70) rồi mong mình còn nằm
+  // trong cửa sổ 140ms; máy bận một nhịp là quãng hoà đã đóng, bài đỏ mà tính năng không sai.
+  // Quãng hoà đọc đồng hồ qua `p._nhoaT0` (xem _veThanHoa), nên ĐẶT THẲNG mốc đó là tới đúng
+  // điểm muốn đo, tức thì và lặp lại được. Vẫn là đúng phép đo cũ: đếm nhát blit và alpha.
+  //
+  // Ba mệnh đề tách bạch, và chỉ mệnh đề GIỮA dùng đồng hồ đặt tay:
+  //   · `vuaDoi` — quãng hoà TỰ BẮT ĐẦU khi trạng thái đổi thật, không đụng vào _nhoaT0;
+  //   · `giua`   — vẽ đúng alpha ở giữa quãng (đồng hồ đặt tay, t = 0,5);
+  //   · `xong`   — quãng hoà KẾT THÚC khi quá hạn.
+  // Gỡ hoà hình đi thì `vuaDoi` đỏ ngay — đã thử bằng cách xoá sạch NHOA_DUOC.
+  const r1 = await page.evaluate(() => {
     const ghi = [];
     const cu = ctx.drawImage.bind(ctx);
     ctx.drawImage = function(...a){ ghi.push(+ctx.globalAlpha.toFixed(3)); return cu(...a); };
-    const chup = () => { ghi.length = 0; drawPlayer(); return ghi.slice(); };
-    player.moving = false; player._nhoaT0 = 0; player._phaSau = null;
+    const chup = () => { ghi.length = 0; drawPlayer(); return { a: ghi.slice(), khoi: window.__khoiVe }; };
+    window.__cachLy();
+    player.moving = false; player._phaSau = null;
+    drawPlayer();                              // lắng về khối ĐỨNG trước khi đo
+    player._nhoaT0 = 0;
     const dung = chup();                       // đứng yên: một nhát
     player.moving = true;                      // đổi trạng thái
-    const vuaDoi = chup();
-    await new Promise(r => setTimeout(r, 70));
+    const vuaDoi = chup();                     // t ≈ 0
+    player._nhoaT0 = performance.now() - NHOA_MS * 0.5;   // đúng giữa quãng
     const giua = chup();
-    await new Promise(r => setTimeout(r, 120));
+    player._nhoaT0 = performance.now() - NHOA_MS * 1.5;   // quá hạn
     const xong = chup();
     ctx.drawImage = cu;
     return { dung, vuaDoi, giua, xong };
   });
   console.log('① hoà hình:', JSON.stringify(r1));
-  if (r1.dung.length !== 1) fail(`đứng yên mà vẽ ${r1.dung.length} nhát — phải đúng 1`);
+  if (r1.dung.khoi !== 'i' || r1.vuaDoi.khoi !== 'w')
+    fail(`không dựng được cảnh đo: khối đứng=${r1.dung.khoi} (mong 'i'), khối động=${r1.vuaDoi.khoi} (mong 'w')`);
+  else pass("dựng được cảnh: khối 'i' → 'w', không bị trạng thái khác đè");
+  if (r1.dung.a.length !== 1) fail(`đứng yên mà vẽ ${r1.dung.a.length} nhát — phải đúng 1`);
   else pass('đứng yên: một nhát vẽ, không hoà gì');
-  if (r1.vuaDoi.length !== 2) fail(`vừa đổi trạng thái mà vẽ ${r1.vuaDoi.length} nhát — phải 2 (khung cũ + khung mới)`);
-  else if (r1.vuaDoi[0] !== 1) fail(`nhát ĐẦU phải đục hoàn toàn (alpha 1), đang là ${r1.vuaDoi[0]} — vẽ ngược thứ tự thì giữa chừng nhân vật hở nền tới 25%`);
+  if (r1.vuaDoi.a.length !== 2) fail(`vừa đổi trạng thái mà vẽ ${r1.vuaDoi.a.length} nhát — phải 2 (khung cũ + khung mới)`);
+  else if (r1.vuaDoi.a[0] !== 1) fail(`nhát ĐẦU phải đục hoàn toàn (alpha 1), đang là ${r1.vuaDoi.a[0]} — vẽ ngược thứ tự thì giữa chừng nhân vật hở nền tới 25%`);
   else pass('vừa đổi: khung cũ đục, khung mới chồng lên alpha 0');
-  if (r1.giua.length === 2 && r1.giua[1] > 0.2 && r1.giua[1] < 0.95)
-    pass(`giữa quãng hoà: khung mới đã lên alpha ${r1.giua[1]}`);
-  else fail(`giữa quãng hoà không thấy alpha trung gian: ${JSON.stringify(r1.giua)}`);
-  if (r1.xong.length === 1) pass('quá 140ms: hoà xong, về một nhát vẽ');
-  else fail(`quá 140ms vẫn còn ${r1.xong.length} nhát — quãng hoà không kết thúc`);
+  if (r1.giua.a.length === 2 && r1.giua.a[1] > 0.2 && r1.giua.a[1] < 0.95)
+    pass(`giữa quãng hoà: khung mới đã lên alpha ${r1.giua.a[1]}`);
+  else fail(`giữa quãng hoà không thấy alpha trung gian: ${JSON.stringify(r1.giua.a)}`);
+  if (r1.xong.a.length === 1) pass('quá 140ms: hoà xong, về một nhát vẽ');
+  else fail(`quá 140ms vẫn còn ${r1.xong.a.length} nhát — quãng hoà không kết thúc`);
 
   // ── ② KHỐI ĐÁNH KHÔNG ĐƯỢC HOÀ ───────────────────────────────────────────────────────
   // Đòn đánh đã vào-ra liên tục sẵn qua atkK 0→1. Hoà thêm là nhoè mất khung chạm.
@@ -74,6 +108,7 @@ const PORT = process.argv[2] || '8853';
 
   // ── ③ NỘI SUY KHUNG CHO KHỐI CHẠY ────────────────────────────────────────────────────
   const r3 = await page.evaluate(() => {
+    window.__cachLy();
     player.speed = 209;                  // trên CHAY_TOCDO → khối CHẠY
     player.moving = true; player._nhoaT0 = 0;
     const le = [];
@@ -96,6 +131,7 @@ const PORT = process.argv[2] || '8853';
   // Khối ĐI nay chỉ chạy DƯỚI CHAY_TOCDO (126 px/s). Ở 90 px/s nó ra 27 khung/giây trên màn
   // 60 Hz — mỗi khung bảng đứng yên hơn hai lượt vẽ liền, nhìn ra nấc ngay. Nên phải pha.
   const r4 = await page.evaluate(() => {
+    window.__cachLy();
     player.speed = 90;                   // dưới ngưỡng → khối ĐI
     player.moving = true; player._nhoaT0 = 0;
     const le = [];

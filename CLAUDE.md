@@ -72,6 +72,112 @@ INTRO_PAGES / QUESTS / CLUES / BOSS_LORE / SECTS / NPCS / MOBS / TB_TIER_NAMES.
 
 Dark Knight · Dark Wizard · Dark Lord **giữ nguyên** — là danh từ fantasy phổ thông.
 
+## 🔄 ĐỔI VAI: AXIE LÀ AVATAR, 5 LỚP LÀ SỨC MẠNH — đang thi công
+
+> Đặc tả đầy đủ: **`docs/DOI_VAI_AXIE.md`** · Danh mục Cổ Vật: **`docs/CO_VAT_15.md`**
+> Nhìn thử: **`public/game/proto_doivai.html`** (mở bằng máy chủ tĩnh, không nạp `game.js`)
+
+**Chủ dự án chốt (nguyên văn):** *"Chỉ số tới từ 5 class. Axie chỉ đơn thuần là avatar thôi,
+khi tấn công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu."*
+
+| | |
+|---|---|
+| **Axie** | thân NHÌN THẤY. **0 chỉ số, 0 kỹ năng, 0 trang bị.** Là ô để cắm NFT. |
+| **5 lớp** | nơi chứa **toàn bộ** chỉ số, trang bị, kỹ năng, Tiến Hoá, Di Sản |
+| **Lúc đánh** | lớp nhân vật **vật chất hoá KẾ BÊN Axie**, tung chiêu, rồi tan. Axie **không** biến mất — nhân vật đi theo bảo kê. |
+| **Khoá lớp** | chọn một lần lúc tạo nhân vật. **Avatar thì tự do** — mọi NFT đều cắm được. |
+
+### ⇒ Đây KHÔNG phải đổi kiến trúc. Là đổi LỚP VẼ.
+
+`calcDerived()` · `hurtMob()` · `castSkill()` · `SECTS` · `HERO_SETS` · `player.equip` ·
+`player.sect` — **không đụng một dòng nào.** Save cũ đọc được nguyên vẹn.
+
+### Đã thi công
+
+| Thứ | Ở đâu |
+|---|---|
+| `player.avatar` · `avatarId()` · `veAvatar()` · `chiVeChay()` · `veVongTrieu()` | `game.js`, ngay trên `chiVeNho` |
+| Móc vào `drawPlayer()` | 5 chỗ, **tất cả đều qua cửa `avatarId(p)`** |
+| Lệnh `/avatar <id> · ds · off` | bảng lệnh gỡ rối |
+| 16 bảng khung CHẠY `<id>_r.webp` | 1,29 MB, **nạp theo nhu cầu** (chỉ con đang dùng) |
+| Công cụ nướng | `tools/spine/nuong_chi_chay.py` |
+
+> ⚠ **`player.avatar` rỗng ⇒ HÀNH VI CŨ Y NGUYÊN.** Đây là chủ ý, không phải làm dở: đợt này
+> phải cắm vào một trò chơi đang chạy mà không bài nào trong 177 bài đỏ. Avatar là thứ **bật
+> lên**, không phải thứ thay thế. Đừng "dọn dẹp" cái cửa đó đi.
+
+**Cờ bài kiểm đọc được:** `window.__veThan` nay có ba giá trị — `'avatar'` · `'sprite'` ·
+`'vector'`. Bài cũ nào khẳng định nó phải là `'sprite'` thì vẫn đúng khi avatar tắt.
+
+### Ba cái bẫy đã dẫm, ghi lại
+
+1. **`atkAnim` ĐẾM NGƯỢC** — `atkK` = 1 ở khung ĐẦU. Tiến độ vật chất hoá là `1 − atkK`. Dùng
+   thẳng `atkK` thì lớp nhân vật mờ dần ĐI trong lúc vung, tức ngược hẳn. (Cùng họ với bẫy
+   `lungeK = hSwing(1 - atkK)` đã ghi ở mục cảm giác chiến đấu.)
+2. **Avatar phải vẽ SAU `ctx.restore()`** của khối thân người. Bên trong đó là hệ toạ độ cục bộ
+   của bộ xương (đã dời về `p.x/p.y`, lật theo hướng, thu theo tỉ lệ) — avatar tự lo cả ba thứ
+   đó nên vẽ trong đấy là lật hai lần và thu hai lần.
+3. **`AVA_TY` là số trần, `avaCao()` là HÀM.** Nhân thẳng `NV_THAN_PX` ở chỗ khai (dòng ~5110)
+   là rơi vùng chết của `const` — `NV_THAN_PX` khai tận dòng 22987. Đúng cái bẫy đã ghi ở mục
+   `NV_CAO`.
+
+4. **Lớp nhân vật đứng KẾ BÊN, nên phải xếp CHIỀU SÂU.** `_avaDx/_avaDy` dời nó ra trước +
+   sang bên; ai đứng THẤP hơn thì vẽ SAU. Vẽ Axie sau cùng ở mọi hướng (bản đầu) thì quay mặt
+   xuống là con Axie che mất nửa người. Trục sâu nén 0,55 — cùng lối với bóng đổ.
+5. **`_lopHien` PHẢI luôn đúng bằng `_kind === 'a' || 'c'`.** Nó tính SỚM vì phép dời gốc toạ
+   độ nằm trên chỗ tính `_kind`. Thêm trạng thái mới vào chuỗi `_kind` phía trên `'c'` thì
+   phải sửa `_lopHien` theo — không thì thân người hiện một chỗ, vòng triệu hồi nổ chỗ khác.
+   *Đừng vá bằng "nếu lệch thì gán lại": nó làm chỗ lệch chạy được nên không ai biết mà sửa.*
+
+### Trúng đòn và chết vẫn giữ AXIE — cố ý
+
+Chỉ `'a'` (đánh) và `'c'` (niệm chú) mới gọi lớp nhân vật ra. Nếu lớp nhân vật nháy ra mỗi lần
+ăn đòn thì trong một trận đông quái người chơi gần như không còn thấy avatar của mình — mà
+avatar mới là thứ họ chọn hoặc mua.
+
+**Nợ:** rig có sẵn `defense/hit-by-normal` và chưa nướng. Nướng rồi thì Axie giật được khi trúng.
+
+### 🔑 KIT AXIE CÓ 41 HOẠT CẢNH, GAME MỚI DÙNG 2
+
+Khảo sát `axieinfinity/axie-origins-asset-kit` (clone về `/home/user/axieinfinity/...`, 2,2 GB).
+Đây là thứ đáng nhớ nhất của đợt này:
+
+| Nhóm | Có sẵn trong rig |
+|---|---|
+| Di chuyển | `action/run` · `move-forward` · `move-back` · 5 idle ngẫu nhiên |
+| Đánh gần | **8 đòn** — `horn-gore` `mouth-bite` `tail-smash` `tail-roll` `tail-thrash` `multi-attack` `normal-attack` `shrimp` |
+| Đánh xa | **5 đòn** — `cast-fly` `cast-high` `cast-low` `cast-multi` `cast-tail` |
+| Phòng thủ | `evade` · `hit-by-normal`(+`crit`/`dramatic`) · `hit-by-ranged` · `hit-with-shield` |
+| Khác | `get-buff` · `get-debuff` · `evolve` · `victory-pose-back-flip` · `sleep` · `eat` · `bath` |
+
+- Bộ 41 này **giống hệt nhau ở cả 12 rig `.json`**; 26 rig `.skel` mượn được, y như
+  `nuong_chi.py` đã mượn cho idle+appear.
+- **Kit tự có rig `.json`** ⇒ `nuong_chi_chay.py` không cần repo `cc-axie-gtk2d` nữa.
+- Kit còn **108 clip VFX** xếp theo **9 lớp Axie × 7 kiểu đòn** (`bite`/`cast`/`gore`/
+  `projectile`/`slash`/`smash`/`throw`) — tức VFX và hoạt cảnh là MỘT BỘ KHỚP SẴN. Kèm
+  `shield` · `shield_boost` · `shield_break` · `taunt` · `reflect_damage` · `heal` · `cleanse`.
+- Và **8 rig Summoner** chính chủ (`clover` `mavis` `sparrow` `trunk` `mushroom` `littlerobin`
+  `fruitsloth` `truefanhermitcrab`).
+
+⚠ Nướng cần `pillow` + `numpy` (`pip install pillow numpy`) — máy sạch không có sẵn.
+
+⚠ **Hộp cắt của bảng chạy phải GIỐNG HỆT bảng nhỏ**, nếu không con vật nhảy một cái mỗi lần
+đứng ↔ chạy. `nuong_chi_chay.py` dựng lại đúng phép tính hộp của `nuong_chi.py` (bb trên
+appear+idle) rồi mới đem đi cắt khung chạy — tốn 28 khung nướng thừa mỗi con, đổi lại không
+phải tin vào một con số chép tay nào.
+
+### Còn treo
+
+| | |
+|---|---|
+| Hai kiểu hiện | **"hiện khi đánh"** đã chốt và đã thi công. Kiểu "thường trực" (xác đứng chắn) còn trong proto để so. |
+| Lớp gacha Cổ Vật | `docs/CO_VAT_15.md` mới là ĐỀ XUẤT, chưa chốt. Trần 16% chỉ quản lớp đó — **chỉ số từ 5 lớp KHÔNG có trần**. |
+| Chibi 5 class Axie ở màn tạo nhân vật | chưa thiết kế. `CHIBI_CFG` hiện phân biệt bằng bóng dáng NGƯỜI. |
+| Mốc thay "Giày +6 mở dáng chạy" | avatar bay/chạy thì mốc cũ mất ý nghĩa |
+| Ngũ Hành → tam giác Axie | chưa làm. 40 nhãn `el:` trong `data/canbang.js` vẫn là Kim/Mộc/Thuỷ/Hoả/Thổ — **tàn dư kiếm hiệp, vi phạm Quy tắc số 1**. Kèm một lỗi lệch dấu: 1 con khai `'Thuỷ'` còn 10 con khai `'Thủy'`. |
+
+---
+
 ## 📌 CHẨN ĐOÁN GỐC: NỘI DUNG ĐANG ĐƯỢC LÀM BẰNG CÁCH NHÂN BẢN
 
 Đọc mục này TRƯỚC khi nhận bất kỳ việc nào có chữ "thêm map", "thêm phó bản",
@@ -615,23 +721,85 @@ nên mọi lời gọi 6 tham số cũ vẫn chạy. Giữ nguyên quy ước đ
 Test: `node <scratchpad>/test_anim.js`. ⚠ Game **đã bỏ WASD** — di chuyển là click-to-move qua
 `moveTarget`; test nào đặt `keys.d = true` để bắt nhân vật chạy sẽ đo ra 0 mà không báo lỗi.
 
-### ĐI hay CHẠY — cửa là ĐÔI GIÀY, không phải tốc độ
+### ĐI hay CHẠY — cửa là TỐC ĐỘ, và nhịp bước phải ĐO chứ đừng đoán
 
-`dangChay(p)` là luật DUY NHẤT: `p.equip.chan.plus >= GIAY_CHAY_PLUS (6)` thì CHẠY (`00_Run`),
-dưới đó — kể cả chưa có giày — thì ĐI (`00_Walk`).
+`dangChay(p)` là luật DUY NHẤT: `p.speed >= CHAY_TOCDO (131)` thì CHẠY (`00_Run`), dưới đó ĐI
+(`00_Walk`). Cửa **Giày +6** đời trước đã gỡ (`GIAY_CHAY_PLUS` không còn) — nó đổi dáng theo
+trang bị nên ai chưa có giày cũng bị khối ĐI gánh tốc độ 209 px/giây.
 
-- **Vì sao đổi.** Luật cũ đọc TỐC ĐỘ (`p.speed >= 1.271 × NV_CAO ≈ 168`), mà tốc độ nền của
-  người chơi là **209** — tức mọi nhân vật chạy ngay từ cấp 1, suốt đời, và 32 khung `00_Walk`
-  đã nướng nằm chết trong bảng. Chủ dự án chốt: vào game là ĐI, **Giày +6** mới mở dáng chạy.
-  Đổi được cả một thứ NHÌN THẤY ĐƯỢC khi đập giày — thứ mà các ô khác không có.
+**Số đo sinh bằng `tools/do_dang.js`, đừng chép tay.** Bốn cột, mỗi cột một câu hỏi khác nhau:
+`sảiBọc` (mắt đọc ra bước dài chừng nào) · `tảiĐất` (bàn chân chống đất lùi được bao nhiêu) ·
+`đốiXứng` (mấy bước một vòng) · `nhún`.
+
 - **⚠ HAI chỗ phải cùng gọi `dangChay()`**: `drawPlayer` chọn KHỐI VẼ, `update()` chọn SẢI CHÂN
   (`SAI_CHAN.w` / `SAI_CHAN.r`) để tính `walkPh`. Tách ra hai luật là bàn chân **trượt đất
   ~40% quãng đường mỗi vòng** — nhìn chỉ thấy "hình như đi hơi lạ", rất khó lần ra.
-- Nhánh `_bay` phải đứng TRƯỚC nhánh đi bộ trong chuỗi chọn khối, nếu không đang bay mà mang
-  Giày +6 cũng đổi khối.
+- Nhánh `_bay` phải đứng TRƯỚC nhánh đi bộ trong chuỗi chọn khối.
 
-Test: `tests/test_walkrun.js` (13 mục). Mục 3 đo `walkPh` chuẩn hoá **theo px đã đi**, không
-theo thời gian — chia theo thời gian thì hai lượt đo không đi bằng nhau và sai số 11%.
+**⚠ HAI CÁI SAI ĐÃ SỬA, cộng lại thành hệ số 2,77 — nhịp chạy 1,18 thay vì 2,90 bước/giây:**
+
+1. **Hệ số quy đổi bảng khung → màn hình là `NV_CAO/HERO_H` = 0,600**, không phải
+   `NV_CAO/CAO_THAN_NUONG` = 0,830. Một bên là chiều cao Ô VẼ, bên kia là chiều cao THÂN —
+   lệch 38%. Chỗ khác trong tệp (`NV_THAN_PX`) vốn đã quy đổi đúng, nên hai dòng cãi nhau mà
+   nhìn qua không thấy.
+2. **Một vòng bảng khung là MỘT bước, không phải hai.** Chú thích cũ khai hai rồi nhân đôi số
+   đo. Đo lại cả 10 khối (5 bộ × đi/chạy): `đốiXứng` ra **0,48–0,64**, trong khi vòng hai bước
+   phải ≥0,85. Nửa vòng sau của mấy bảng này là dáng **ĐỨNG**, không phải bước của chân kia.
+
+**Còn nợ, mã KHÔNG chữa được:** `tảiĐất` chỉ bằng ~49% `sảiBọc` — tức **51% quãng đường là
+trượt chân nằm sẵn trong bản vẽ**. Bàn chân chống đất gần như đứng yên tại chỗ trong 16/32
+khung. Không giá trị `SAI_CHAN` nào chữa nổi; phải vẽ lại vòng đi/chạy.
+Bản đặt hàng + ngưỡng nghiệm thu: `docs/DAT_HANG_TUONG_DI.md`.
+**Spellblade còn thiếu hẳn một hàng bảng khung** — `sbhd1` có 96 ô (6 hàng) trong khi bốn bộ
+kia 112 ô, nên khối chạy của nó chỉ đọc được **nửa đầu** vòng.
+
+Test: `tests/test_walkrun.js`. Mục 3 đo `walkPh` chuẩn hoá **theo px đã đi**, không theo thời
+gian — chia theo thời gian thì hai lượt đo không đi bằng nhau và sai số 11%.
+⚠ Mục 1 **đọc ngưỡng từ game**, đừng chép cứng con số: bản đầu kiểm thẳng `126` và khi sửa
+`SAI_CHAN` cho đúng số đo thì bài đỏ ở một chỗ chẳng liên quan gì tới thứ nó định gác.
+
+### 🧭 TÁM HƯỚNG NHÌN — hướng nằm TRONG TÊN BỘ
+
+Chủ dự án chốt đủ 8 hướng như MU Online. **8 hướng chỉ tốn NĂM bản vẽ**: Đông↔Tây, ĐB↔TB,
+ĐN↔TN lật ngang là ra nhau; chỉ Bắc và Nam phải vẽ riêng (cách Ragnarok và Diablo II làm).
+
+Trước bản này art chỉ có một hướng nghiêng, mà `drawPlayer` vẫn tính cờ `_ps.back` rồi nhét
+vào khoá đệm sprite — đo được `back=true` và `back=false` lệch **0 trên 52.000 điểm ảnh**, tức
+trả gấp đôi ô nhớ để lấy hai tấm giống hệt nhau. `back` nay chỉ còn trong khoá khi bộ **không**
+có art (đường vẽ bằng đường thì `ps.back` đổi thật: gáy, mũ trùm).
+
+- `NV_HUONG` — 8 hướng → `{ban, lat}`. Mã bản vẽ: `''` (nghiêng) · `bd` · `b` · `nd` · `n`.
+- `NV_BANVE[bộ]` — bộ đó có sẵn những bản nào. Không khai = chỉ có bản nghiêng.
+- `nvChonHuong(bộ, góc)` — chọn bản tốt nhất bộ **đang có**, lui về bản gần nhất khi chưa có.
+- **Hướng nằm trong TÊN BỘ** (`dkcw1` + `'b'` = `dkcw1b`), nên mỗi hướng có hộp cắt
+  (`NV_LOP_HOP`) và số khung (`NV_KHUNG_R`) riêng. **Thêm một hướng = ba dòng dữ liệu**, không
+  sửa một dòng máy nào.
+
+⚠ **Lui về bản gần nhất phải đo từ GÓC THẬT, không từ góc đã làm tròn về một trong tám nấc.**
+Làm tròn trước thì ở dải 90°–112,5° máy chọn Đông trong khi luật cũ `Math.cos(face) < 0` chọn
+Tây — tức bật tầng hướng lên là nhân vật quay ngược ở một dải góc, **dù chưa có tệp art mới
+nào**. `tests/test_huongnhin.js` quét **720 góc** chứ không quét 8 mốc, vì chỗ hỏng nằm GIỮA
+hai mốc.
+
+⚠ **Chi tiết bất đối xứng nhảy sang bên kia khi lật.** Spellblade lấy vai lệch làm chữ ký lớp
+(`halfplate`): quay sang Tây là giáp đổi vai. Chấp nhận hay vẽ đủ 8 hướng riêng cho Spellblade
+là việc của chủ dự án — máy đỡ được cả hai.
+
+### ⚠ KHUNG DỰNG LÚC ART CHƯA VỀ THÌ KHÔNG ĐƯỢC NHỚ LẠI
+
+Bộ đã cắt lớp (**cả năm thân trần**) đi đường `nvKhungGop()`, mà hàm đó trả `null` khi một lớp
+chưa tải xong. Khoá đệm sprite chỉ ghi được chuyện "thiếu TẤM LIỀN" (dấu `?`) — mà bộ cắt lớp
+thì **không bao giờ** có tấm liền, nên dấu đó bật sẵn ở cả hai trường hợp. Khung nào lỡ dựng
+trong mấy trăm mili giây đầu nằm lại trong đệm dưới ĐÚNG cái khoá mà lượt vẽ sau dùng — và nó
+là hình dựng bằng đường, tức **một nhân vật khác hẳn** (hiệp sĩ xám, mũ sừng, áo choàng đỏ).
+
+Đo được: **cả 5/5 lớp** đều dính, khối đứng 1 khung nhiễm. Khung `i4` đếm 12.828 điểm ảnh
+trong khi hai khung kề bên 6.606/6.733. Khối đứng lặp ~4 giây một vòng ⇒ nhấp nháy suốt phiên.
+
+Chữa ở chỗ **NHỚ**, không ở chỗ vẽ: `_choArt` trong `heroSprite()`. `tests/test_khungdoc.js`
+gác — và nó **không đặt ngưỡng phần trăm**, nó dựng lại chính khung đó dưới một khoá khác
+(bật `TEST_TO_PHANG`, cờ này nằm trong khoá và chỉ tô đè MÀU nên bóng dáng giữ nguyên từng
+điểm ảnh) rồi so alpha: lệch một điểm ảnh cũng bắt.
 
 ### Cảm giác chiến đấu — 6 chỗ dễ làm sai
 
@@ -733,6 +901,42 @@ nhường chỗ cho Inferno và chuyển sang Di Sản — y như chiêu buff c�
 Một chiêu **không được vừa bấm được vừa cộng %ST vĩnh viễn**. Đưa chiêu nào lên taskbar thì
 đồng thời gỡ nó khỏi `LEGACY_SECT_SKILLS`, và đẩy một chiêu khác vào thế chỗ sao cho mỗi lớp
 vẫn đúng **4 chiêu Di Sản = +8,0% Công Kích** (`test_kynang5lop` bắt lỗi lệch giữa các lớp).
+
+### 🌳 ĐẠI THÀNH LÀ MỘT CÂY HAI NHÁNH — đừng biến nó lại thành danh sách
+
+`MASTERY_COMMON` + `MASTERY_CLASS` = **16 bảng** (1 chung + 3 riêng × 5 lớp), **144 nút**, mở ở
+cấp 120 sau khi xong chính tuyến. Mỗi bảng là một **cây**, không phải một danh sách nút.
+
+**Vì sao đổi.** Cổng cũ (`MASTERY_RANK_GATE`) chỉ đếm **tổng điểm đã tiêu trong bảng**: dồn đủ 40
+điểm vào bất cứ đâu là mở được mọi nút. Bảng vẽ ra hình cái cây mà luật thì là một cái thùng —
+người chơi không "chọn hướng" được gì, chỉ rải điểm mỏng ra.
+
+**Khuôn bắt buộc của MỌI bảng: `2 · 2 · 2 · 1 · 2`.**
+
+| rank | nút | luật |
+|---|---|---|
+| 1 | 1 nút mỗi nhánh | vào tự do |
+| 2-3 | 1 nút mỗi nhánh | cần **nút cha CÙNG NHÁNH** đủ `MST_CAN[rank]` điểm |
+| 4 | **1 nút chung** (`nh:null`) | đủ **một nhánh bất kỳ** ở rank 3 là qua |
+| 5 | **2 nút đỉnh, LOẠI TRỪ NHAU** | cần nút chung ≥ `MST_CAN[5]` **và** nhánh của nó ≥ `MST_DINH_NHANH` |
+
+- Tab khai `nhanh:[{id,name},{id,name}]`; mỗi nút khai `nh:'<id>'` (hoặc `nh:null` cho nút chung).
+- **Cặp loại trừ SUY TỪ HÌNH DẠNG**, không khai tay: hai nút cùng rank cuối khác nhánh
+  (`masteryDoi`). Thêm bảng mới mà quên nút đỉnh thứ hai là **mất im lặng** cả cơ chế chọn hướng
+  — `tests/test_mastery.js` §1 gác đúng khuôn trên, nên nó sẽ đỏ chứ không im.
+- **`masteryKhoa(tab, nd)` là cửa DUY NHẤT.** Cả `masteryAdd()` lẫn phần vẽ đều gọi nó, nên thứ
+  người chơi ĐỌC trong tooltip và thứ máy THỰC THI không thể lệch nhau. Đừng viết lại luật ở
+  phần vẽ.
+- **`MST_DINH_NHANH` không thừa** dù chuỗi cha đã bắt tiêu ≥18 điểm: nó chặn đúng cái ca đi trọn
+  nhánh A rồi vơ nút đỉnh của nhánh B (nút chung nhận **một** nhánh bất kỳ nên đường đó có thật).
+- **Save cũ vi phạm luật thì HOÀN ĐIỂM, không khoá chết** (`masteryRaSoat`, gọi trong `loadGame`).
+  Phải lặp tới khi ổn định — gỡ một nút làm nút khác mất cha, một lượt không đủ. Và phải **tạm gỡ
+  chính nút đang xét ra** trước khi hỏi, nếu không nút đỉnh tự thoả điều kiện "nhánh đủ điểm"
+  bằng chính số điểm của mình.
+
+**Ngân sách là một nửa của thiết kế.** Bảng chứa 720 ô điểm; một vòng Tái Sinh kiếm ~139. Đi trọn
+một hướng trong một bảng tốn 28 điểm mở đường + tới 20 điểm cho nút đỉnh. Đừng nới điểm cấp phát
+mà không nới luôn số nút — hết khan hiếm là hết lựa chọn, và cây lại thành danh sách.
 
 ### ⚠ Quy ước kỹ năng: NĂM thông số bắt buộc
 
@@ -898,8 +1102,10 @@ ngưỡng chạy (`CHAY_TU`), chỗ bàn chân chạm đất (`chanDy()`) và c�
 kiểu lệch ấy rất khó lần: phóng to nhân vật thì bàn chân trượt đất, vòng lửa quét ngang đầu,
 chiêu giáng xuống nổ ngang bụng — mà nhìn thì chỉ thấy "hình như hơi lạ".
 
-Sải chân giữ con số **đo trên bảng khung** (`SAI_CHAN_NUONG`, ở `CAO_THAN_NUONG` = 159px) rồi
-mới thu theo `NV_CAO`; nhịp bước = quãng đường ÷ sải chân nên sai một chút là trượt chân ngay.
+Sải chân giữ con số **đo trên bảng khung** (`SAI_CHAN_NUONG`) rồi mới thu theo `NV_CAO`; nhịp
+bước = quãng đường ÷ sải chân nên sai một chút là trượt chân ngay. ⚠ Thu bằng
+`NV_CAO/HERO_H` = 0,600 (chiều cao Ô VẼ), **không** bằng `NV_CAO/CAO_THAN_NUONG` = 0,830
+(chiều cao THÂN) — đã lẫn hai cái đó một lần, lệch 38%. Xem mục "ĐI hay CHẠY".
 
 ⚠ **Thứ tự khai báo**: hằng nào nhân với `NV_CAO` thì phải nằm **dưới** nó trong `game.js`.
 `const` có vùng chết — đặt ở trên là cả tệp chết ngay lúc nạp, mà lỗi báo ra lại là một hằng
@@ -921,6 +1127,191 @@ hiện có lẫn mọi con nướng thêm sau này. `test_cothu.js` quét cả b
 Gót chân neo cố định ở `mountObj.y + 12` bất kể con to nhỏ (`_chiVe()` đặt gót ở
 `y + than*0,38` nên chỗ vẽ phải trừ ngược lại), và vũng bóng co theo chính con vật — thu nhỏ
 con thú mà để nguyên elip bóng thì nó thành ra đứng trên một cái đĩa.
+
+## 🌌 MÀN HÌNH CHỜ — ART CHÍNH CHỦ AXIE, ĐÂY LÀ NGOẠI LỆ CÓ PHẠM VI
+
+Chủ dự án chốt: **màn hình chờ phải mang hơi hướng Axie rõ nhất có thể.** Trước đợt này nó là
+một dãy núi đêm dựng bằng đường + một tấm PNG hiệp sĩ Dark Knight — người mở game lần đầu nhìn
+thấy một thế giới dark-fantasy chung chung, không một dấu hiệu nào cho biết đây là game Axie.
+
+**⚠ NGOẠI LỆ CHỈ TRONG `#sect-select`.** Phần còn lại của game vẫn là MU — Quy tắc số 1 không
+đổi. Đừng lấy khối CSS `MÀN CHỜ KIỂU AXIE` ở cuối `style.css` làm cớ để bo tròn cả game.
+
+### Ba mảnh, mỗi mảnh một chỗ
+
+| Mảnh | Ở đâu |
+|---|---|
+| Nền Lunacia tách mười lớp, có xa gần | `NEN_LOP` · `nenNhom()` · `drawTitleScene()` trong `game.js` |
+| Sân khấu: lớp nhân vật + con Axie | `ccBoCuc()` · `ccNenSan()` · `ccHeroVe()`; canvas `#cc-hero` |
+| Khung giao diện kiểu Axie | khối cuối `style.css`, scope `#sect-select` |
+
+Nướng art: `python3 tools/title/nuong_nen_axie.py` → `public/game/assets/title/lunacia/` (700 KB
+cho 10 lớp + 1 bệ đứng). Gác: `tests/test_titlefx.js` (6 mục).
+
+### Vì sao chọn cảnh TÁCH LỚP chứ không phải tấm 1920px
+
+Kit có sẵn `PvE/Backgrounds/class/bg-*.jpg` ở 1920×1080 — nhưng chúng là nền PHẲNG vẽ cho sân
+khấu đánh bài, đặt sau một màn chờ thì không có xa gần. `PvE/Backgrounds/story/9-rocky-mountain-1`
+chỉ 1024px nhưng **tách mười lớp**: trời · núi · ba tầng mây · sương · cây thế giới · mặt đất ·
+hai tầng tiền cảnh. Mây và sương trôi được, và đó mới là thứ làm màn chờ sống.
+
+> Bộ kit **không kèm prefab nào** cho mấy cảnh `story/`, nên `y` của từng lớp là **đo bằng mắt
+> trên ảnh dựng lại**, không tra được ở đâu. Bảng `LOP` trong công cụ nướng và `NEN_LOP` trong
+> `game.js` phải TRÙNG KHÍT.
+
+### ⚠ NĂM LỚP TRÊN SÂN KHẤU LÀ NHÂN VẬT THẬT, KHÔNG PHẢI `pick_*.webp`
+
+Bản đầu vẽ bộ tranh anh hùng `assets/nv/pick_<lớp>.webp` — tỉ lệ tám đầu, giáp nhiều lớp, vũ
+khí to bằng người. Chủ dự án gọi thẳng đó là "nhân vật fake": bấm Vào Game xong thì nhận một
+nhân vật KHÁC HẲN — thân nướng từ Spine, đầu to, mắt to, **cao đúng 159 điểm ảnh**.
+
+Nay sân khấu và chân dung trong ô nhân vật đều đọc `assets/title/lop/<lớp>.webp` + bảng hình
+học `data/lop_cho.js`, nướng bằng `tools/title/nuong_lop_cho.cjs`.
+
+- **Nướng bằng chính `heroSprite()` chạy trong trình duyệt thật.** Chép phép chồng lớp
+  (`NV_LOP` × `NV_LOP_HOP`) sang Python là dựng bản sao thứ hai của một luật đang sống — sửa
+  một lần là hai bên lệch, mà lệch kiểu đó chỉ lộ ra khi nhìn ảnh chụp.
+- **Vì sao phải nướng:** thân của năm lớp là các lớp rời, cộng lại **3,3 MB**. Màn chờ là thứ
+  TẢI ĐẦU TIÊN. Năm dải khung nướng sẵn chỉ **399 KB** (webp `quality=90`, `alpha_quality=100`
+  — alpha phải lossless, mất mát ở alpha hiện thành quầng xám quanh mọi mép).
+- **⚠ `CC_PHONG_TRAN` = 1,5.** 159px là TOÀN BỘ độ phân giải nhân vật này có trong kho, không
+  phải một lựa chọn. Kéo lên 400px cho đầy khung thì ra một bóng người nhoè đứng cạnh nền vẽ
+  tay sắc nét. Thà để nhân vật nhỏ trong một thế giới rộng — đó cũng đúng nhịp art Axie. Vì
+  thế `#cc-hero` là khung THẤP VÀ RỘNG (1040×420), không phải khung cao nửa màn hình.
+- **Tỉ lệ người ↔ Axie hỏi thẳng `avaCo()`**, cùng hàm mà trong màn dùng. Luật thật không phải
+  "Axie cao 0,72 lần thân người" mà là "0,72 lần VÀ hộp vẽ ra không quá 0,95 lần theo CẢ HAI
+  chiều" — 16 con có 16 tỉ lệ rộng/cao (1,07 → 1,52) nên con bè nhất bị vế thứ hai thu lại
+  đáng kể. Bỏ vế đó thì con bè nhất trông như đang dắt người đi.
+### Trang bị hiện lên người — BA tín hiệu, ba nguồn khác nhau
+
+Ô ĐANG CHỌN vẽ bằng `ccVeNguoiBo()`, gom ba thứ mà `player.equip` đổi được:
+
+| Tín hiệu | Nguồn | Phủ tới đâu |
+|---|---|---|
+| **Bộ giáp** | `heroSprite()` dựng sống, qua `NV_GIAP` | **3/35** tổ hợp `lớp\|giai` |
+| **Cánh** | `veCanh()` — art thật, KHÔNG nằm trong sprite | mọi lớp |
+| **Hào quang +N** | `nvHaoQuangSau/Truoc()` — dựng theo bóng dáng | mọi lớp |
+
+⚠ **`ccArtSan()` là cái van, đừng gỡ.** `heroSprite()` **luôn** trả về một canvas: không có
+art thì nó dựng hình bằng ĐƯỜNG — hiệp sĩ xám, mũ sừng, áo choàng đỏ, tức đúng "nhân vật fake"
+mà cả đợt này sinh ra để gỡ, chỉ khác là nay nó chớp một nhịp rồi biến. Van đóng thì lùi về
+dải nướng: **thà thân trần còn hơn một nhân vật khác hẳn.**
+
+⚠ **Đường art thật đã nướng hào quang VÀO sprite.** Nhánh đó tuyệt đối không gọi lại hai hàm
+hào quang — gọi là chồng hai lớp, +11 cháy trắng xoá.
+
+Đo được (`test_titlefx §8`, nhân vật full `applyTestBoost`): Dark Wizard 6.348 → **31.609** điểm
+ảnh (có `dwsm1`, thấy nguyên bộ giáp); Spellblade 5.602 → **34.688** (chưa có art giáp, nhưng
+cánh + hào quang +11 vẫn hiện). Van đóng đúng ở Spellblade, mở đúng ở Dark Wizard.
+
+> **Nợ thật sự nằm ở ART, không ở mã.** `NV_BO` chỉ khai `lớp|1`, nên `nvTen(lớp, giai≥2)` trả
+> `undefined`. Tức chỉ cần chưa có mục `NV_GIAP` khớp là **cả game** (không riêng màn chờ) rơi
+> về hình dựng bằng đường — đo được ở chế độ `applyTestBoost`: 4/5 lớp ra hộp vẽ 236×236 thay vì
+> 64×159. Chưa xác nhận ở nhịp chơi thường (giai 2-3), nhưng nếu đúng thì đó là một lỗ thủng
+> của Quy tắc số 3 nằm ngay trong `drawPlayer`, đáng một đợt riêng.
+
+### Chân dung ô nhân vật CHƯA mang trang bị
+
+`ccLopIcon()` cắt từ dải nướng nên nó luôn là thân trần, khoá đệm chỉ theo lớp. Ở khổ 46px thì
+gần như chỉ thấy đầu và vai, nên chênh lệch nhỏ — nhưng mũ và vương miện thì có đổi. Muốn đúng
+thì khoá đệm phải gồm `heroGearSig(gv)` và cắt từ sprite dựng sống.
+
+`tests/test_titlefx.js §7` gác: art phải đến từ `lop/*.webp`, đủ số ô, và không phóng quá trần.
+
+### ⚠ MÀN CHỜ PHẢI HỎI CÙNG CÁI HÀM MÀ TRONG MÀN DÙNG
+
+Ba thứ trên sân khấu đều là bản sao của một luật đang sống, nên cả ba phải TRA chứ không được
+chép: con Axie nào thuộc lớp nào (`AVA_MAC_DINH`), con Axie của nhân vật đang chọn
+(`avatarId(pl)`), và Axie to bằng mấy phần người (`avaCo`). Chép ra bảng riêng là màn chờ hứa
+một đằng, vào game ra một nẻo — đúng cái lỗi mà cả đợt này sinh ra để sửa.
+
+Đã suýt ship đúng lỗi đó: bản đầu khai `CC_AXIE_LOP` riêng (Dark Knight → Ironshell) trong khi
+game khai Emberjaw.
+
+**Và đây là chỗ đau: `git merge` KHÔNG báo gì cả.** Nhánh `main` trong lúc đó gỡ hẳn
+`chiCoTrongMan()` · `CHI_THAN` · `CHI_TRAN` · `tests/test_cothu.js` (con thú đi theo bị thay
+bằng avatar). Màn chờ gọi `chiCoTrongMan()`. Hai bên sửa hai vùng khác nhau của `game.js` nên
+git ghép êm ru, `node --check` xanh, và thứ còn lại là **một lời gọi tới hàm không còn tồn
+tại** — chỉ ném lỗi lúc chạy, mà lại ném trong vòng vẽ màn chờ.
+
+⇒ **Trộn nhánh xong, đừng tin `node --check`.** Đếm lại từng hàm mà mã mới dựa vào:
+`for f in <danh sách>; do grep -c "function $f" public/game/game.js; done`. Rồi chạy đủ bốn
+cổng TRÊN BẢN ĐÃ TRỘN — bản đã trộn là mã mà **chưa bên nào từng kiểm**.
+
+### Tông màu — ẤM và SÁNG, đây là chỗ "cute" của game
+
+Bản đầu dìm cả cảnh về xanh mực cho hợp HUD: đo được vùng trời/cây chỉ còn ~60/255 trong khi
+bản gốc là 94. Năm nhân vật mắt to đứng trên một vũng sáng xanh lạnh thì đọc ra **bóng ma**,
+không ra dễ thương. Nay nhuốm màu rất nhạt (`#eceafb`), viền tối chỉ còn ở đỉnh và đáy để chữ
+đọc được, và **đo lại vùng trời/cây ra 95 — đúng bằng bản gốc chưa chỉnh tông**.
+
+Đèn sân khấu đổi từ xanh lạnh sang **đào + bạc hà**, kèm một vệt hắt từ mặt đất lên chân. Đây
+là chỗ DUY NHẤT của game được phép ấm hơn phần còn lại: nó nằm SAU nhân vật, không phải trên
+khung giao diện.
+
+⚠ **Vũng sáng phải tắt dần về MỌI phía trước khi chạm mép canvas.** Đã dẫm bẫy này HAI lần:
+một lần bằng vầng sáng lớn hơn khung, một lần bằng `createLinearGradient` chạy suốt bề rộng.
+Cả hai lần thứ hiện ra là một **hình chữ nhật sáng hơn nền**, mép thẳng đứng thấy rõ mồn một.
+Nên `ccBoCuc` chừa lề ≥ `than*0.68` (bán kính đèn) và vũng sáng mặt đất lấy `r = min(cx, w−cx)`.
+
+### Hai chế độ của sân khấu — cả hai đều phải sống
+
+- **Có nhân vật đang chọn** → vẽ lớp của ô đó + con Ragoon nó đang mang. Đây là mô hình đã chốt
+  của game ("Axie là avatar, 5 lớp là sức mạnh") dựng thành hình ngay màn đầu tiên.
+- **Tài khoản trống** → cả năm lớp đứng thành hàng, mỗi lớp một con Axie (`CC_AXIE_LOP`, năm
+  con 5★ thuộc năm lớp Axie khác nhau). Màn chờ của tài khoản trống là tấm áp phích của game;
+  bốc đại một lớp ra đứng đó thì vừa không nói được gì, vừa làm người mới tưởng mình bị gán lớp.
+
+`tests/test_titlefx.js` kiểm RIÊNG hai chế độ. ⚠ Mục 3 của bài gọi `startGame` nên localStorage
+có nhân vật — nạp lại trang là rơi vào chế độ một người. Bản đầu quên điều đó rồi đi đo hàng
+năm lớp trên một khung chỉ có một người: hai cột ngoài cùng ra 0, trông y như lỗi bố cục.
+
+### Bốn cái bẫy đã dẫm, ghi lại
+
+1. **`'multiply'` trên canvas TRỐNG không ra "màu nhân", nó ra ô màu ĐẶC.** Nền trong suốt thì
+   không có gì để mà nhân, nguồn giữ nguyên. Nướng phép nhuốm màu vào tấm phủ vì thế biến tấm
+   phủ thành một mảng tím phủ kín cảnh — và triệu chứng (chỉ còn lớp trời, mất sạch núi/cây/đất)
+   trông **hệt như "art chưa tải"**. Nhân màu phải làm trên canvas ĐÃ CÓ CẢNH.
+2. **Lớp trôi phải vẽ RỘNG HƠN khung đúng 2×biên độ.** Ba tầng mây đều phủ kín 1024 điểm ảnh
+   ngang, nên đẩy ngang mà không nới bề rộng là hở một dải trời trần ở mép — lỗi chỉ lộ ra ở
+   đúng hai đầu chu kì, tức rất dễ nghiệm thu nhầm.
+3. **Đèn sân khấu phải là vầng NHỎ sau từng bóng hình, không phải một vầng lớn phủ cả khung.**
+   `#cc-hero` chỉ chiếm nửa trái màn hình, nên vầng sáng rộng hơn khung bị mép canvas cắt ngang
+   — thứ hiện ra là một HÌNH CHỮ NHẬT sáng hơn nền, thấy rõ mồn một.
+4. **Các nấc của lớp phủ CSS phải chuyển dần.** `#sect-select::before` cũ có hai nấc sát nhau;
+   trên nền núi mờ mịt thì không ai thấy, nhưng nền nay có chi tiết đều khắp khung nên chỗ nấc
+   gấp hiện ra thành một **đường kẻ ngang chạy suốt bề rộng màn hình**.
+
+### ⚠ `startGame()` PHẢI tắt cảnh màn chờ — đừng trông vào chỗ gọi
+
+`titleAlive()` tắt vòng lặp khi **cả hai** màn (`#sect-select`, `#intro-story`) đã ẩn. Mà mọi
+đường vào game chỉ ẩn đúng MỘT cái rồi gọi `startGame` — nên chỉ cần một đường quên ẩn cái kia
+là cảnh Lunacia mười lớp chạy **song song với vòng game suốt phiên**. Nay `startGame()` gọi
+`titleStop()` ngay dòng đầu: đó là cửa duy nhất vào thế giới, nên nó là chỗ đúng để tắt.
+
+Lỗi này **không ném lỗi và không hiện ra** — nó chỉ ăn CPU. Chỗ nó lộ ra là `test_sandat`: bài
+gọi thẳng `startGame` trong lúc trang dẫn truyện còn hiện, và 3600 khung mô phỏng phải chia CPU
+với cảnh nền → trình duyệt **sập** (`Target page... has been closed`), không phải đỏ một khẳng
+định nào. Nền cũ nhẹ nên chạy kèm vẫn lọt; nền mười lớp thì không.
+
+### Giảm chuyển động KHÔNG có nghĩa là gỡ mất nền
+
+Luật CSS cũ ẩn hẳn `#title-fx` ở `prefers-reduced-motion` — người bật tuỳ chọn đó nhận một trang
+đen trơn. Nay `titleStart()` vẽ đúng một khung rồi dừng (`titleItDong()`), và `titleVeLai()` vẽ
+lại một khung mỗi khi thứ cần vẽ đổi (chọn máy chủ xong, đổi ô nhân vật, art vừa tải xong qua
+`ccChoAnh`). **Thiếu một trong ba chỗ gọi đó là người dùng reduced-motion thấy nền mà không thấy
+nhân vật** — đã dẫm đúng thế: năm lớp hiện ra còn năm con Axie thì không.
+
+### Đo trước khi tối ưu — chỗ tốn không nằm ở chỗ tưởng
+
+Ở 1920×1080 chạy bằng CPU (headless, không GPU): cả cảnh + sân khấu tụt 60 → 28 fps.
+- Phép **nhân màu phủ kín màn hình** chỉ tốn **1,6 ms** — bỏ nó đi chỉ được 2 fps. Không đáng
+  đánh đổi lấy việc nướng tông màu chết vào tệp art.
+- Chỗ tốn thật là **drawImage CÓ CO GIÃN**. Dựng sẵn mỗi lớp trôi vào một tấm đúng cỡ vẽ ra
+  (mỗi khung chỉ dời chỗ) và dựng sẵn cả phần đứng yên của sân khấu (người + bóng + đèn): 28 → 32.
+
+**Đã gỡ theo:** `assets/title/{nui,rung,san_da,anhhung}.webp` · `NUI_LOP`/`_nuiChop`/`_nuiCao`
+(dãy núi dựng bằng đường — Quy tắc số 3) · vầng trăng và trường sao vẽ tay.
 
 ## Hai lối vẽ nhân vật — ĐỪNG TRỘN VÀO NHAU
 

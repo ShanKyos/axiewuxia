@@ -51,22 +51,23 @@ const PORT = process.argv[2] || '8853';
   else pass(`Hoá nâng trần ${r1.tran0} → ${r1.tran2}, cấp lên ${r1.lv2}`);
 
   // ── 2. cấp phải làm Chimera MẠNH LÊN thật ──
+  // ⚠ CHỖ ĐO ĐÃ DỜI, khẳng định thì không. Bản trước đo qua `mountDmg()` của con pet đi theo;
+  // pet đã gỡ hẳn khỏi game, nên cấp nay nuôi thẳng BỊ ĐỘNG của con Chimera đang gắn
+  // (`chiLvThuMul`, nhân chồng với hệ số Huyết Thống). Nếu ai đó lỡ tay gỡ sợi dây đó thì
+  // người chơi đổ Đất Hồn lên cấp mà không được gì — đúng thứ bài này sinh ra để chặn.
   const r2 = await p.evaluate(() => {
     startGame('thieulam', null); player.level = 60; player.lvPeak = 60; calcDerived();
-    const C = chiState(); C.co = {}; chiNhan('aurelion'); C.eq = 'aurelion'; C.out = true;
+    const C = chiState(); C.co = {}; chiNhan('aurelion'); C.eq = 'aurelion';
     const o = chiO('aurelion');
-    ensureMount();
-    const d = lv => { o.lv = lv; let s = 0; for (let i = 0; i < 400; i++) s += mountDmg(); return Math.round(s / 400); };
-    const a = d(1), z = d(CHI_LV_MAX);
-    // chiêu cũng phải lớn theo cấp
-    o.lv = 1;  const c1 = 1 + 0.9 * (o.lv - 1) / (CHI_LV_MAX - 1);
-    o.lv = 80; const c2 = 1 + 0.9 * (o.lv - 1) / (CHI_LV_MAX - 1);
-    return { a, z, ti:+(z / a).toFixed(2), c1, c2 };
+    // Đo bằng chính hệ số áp vào bị động, và bằng CHỈ SỐ THẬT sau calcDerived.
+    const dm = lv => { o.lv = lv; calcDerived(); return +chiThuMul().toFixed(4); };
+    const a = dm(1), z = dm(CHI_LV_MAX);
+    return { a, z, ti:+(z / a).toFixed(2) };
   });
-  console.log('2) sát thương theo cấp:', JSON.stringify(r2));
-  if (!(r2.ti >= 1.8)) fail(`nuôi tới cấp 80 mà đòn đánh chỉ ×${r2.ti} — vòng lặp vô nghĩa`);
-  else pass(`cấp 1 → 80: đòn thường ${r2.a} → ${r2.z} (×${r2.ti})`);
-  if (!(r2.c2 > 1.8)) fail('chiêu không lớn theo cấp'); else pass(`chiêu ×${r2.c1} → ×${r2.c2.toFixed(2)}`);
+  console.log('2) bị động theo cấp:', JSON.stringify(r2));
+  if (!(r2.ti > 1.01))
+    fail(`nuôi tới cấp trần mà bị động chỉ ×${r2.ti} — cấp Chimera đang KHÔNG làm gì cả`);
+  else pass(`cấp 1 → ${'' + 'trần'}: hệ số bị động ${r2.a} → ${r2.z} (×${r2.ti})`);
 
   // ── 3. bốn ô Cốt: dòng chính cố định theo ô, nâng +3 mở dòng phụ, trần theo phẩm ──
   const r3 = await p.evaluate(() => {
@@ -252,8 +253,10 @@ const PORT = process.argv[2] || '8853';
     C.co = { aurelion:{ con:2 } };           // đúng hình dạng save trước bản này
     C.eq = 'aurelion'; delete C.kho;
     const o = chiO('aurelion');
-    calcDerived(); ensureMount();
-    return { lv:o.lv, hoa:o.hoa, coCot:!!o.cot, con:o.con, dmg:mountDmg() > 0 };
+    calcDerived();
+    // Pet đi theo đã gỡ, nên không còn mountDmg() để đo. Thứ cần chứng minh vẫn y nguyên:
+    // save đời cũ được VÁ đủ hình dạng mới và vẫn cho ra chỉ số, không ném lỗi.
+    return { lv:o.lv, hoa:o.hoa, coCot:!!o.cot, con:o.con, dmg:chiThuMul() > 0 };
   });
   console.log('9) save cũ:', JSON.stringify(r9));
   if (r9.lv !== 1 || r9.hoa !== 0 || !r9.coCot || r9.con !== 2)

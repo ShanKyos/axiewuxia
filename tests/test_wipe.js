@@ -26,6 +26,9 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     localStorage.setItem('vlcm_settings', JSON.stringify({ bgm: 0.3, lang: 'vi' }));
   });
   await p1.reload({ waitUntil:'load' });
+  // Chờ game.js chạy xong hẳn (`window.__gameReady` đặt ở dòng cuối tệp) thay vì tin một
+  // khoảng ngủ cứng — 170/175 bài đã làm thế, năm bài này là chỗ còn sót.
+  await p1.waitForFunction(() => window.__gameReady).catch(()=>{});
   await p1.waitForTimeout(1400);
   const r1 = await p1.evaluate(() => ({
     conSave: !!localStorage.getItem('vlcm_save'),
@@ -48,6 +51,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   const p2 = await c2.newPage();
   p2.on('pageerror', e => errs.push(String(e).split('\n')[0]));
   await p2.goto('http://localhost:8853/index.html', { waitUntil:'load' });
+  await p2.waitForFunction(() => window.__gameReady).catch(()=>{});
   await p2.waitForTimeout(1200);
   const r2 = await p2.evaluate(async () => {
     window.postMessage({ type:'vlcm:cloud-load', data: JSON.stringify({

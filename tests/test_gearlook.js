@@ -124,6 +124,7 @@ const fs = require('fs');
   // đúng bộ đồ đang mặc. Gác bằng cờ window.__veThan mà drawPlayer đặt mỗi khung.
   await p.evaluate(() => {
     startGame('baidasan', null);
+    player.avatar = null;   // bài này đo THÂN NGƯỜI; avatar nay bật mặc định nên phải tắt đi
     for (const sl of SLOTS){ if (sl.special) continue;
       const it = genSpecific(sl.id, 1); it.plus = 0; player.equip[sl.id] = it; }
     calcDerived(); player.hurtT = 0;
