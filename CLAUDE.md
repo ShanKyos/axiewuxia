@@ -166,7 +166,7 @@ phải tin vào một con số chép tay nào.
 | Lớp gacha Cổ Vật | `docs/CO_VAT_15.md` mới là ĐỀ XUẤT, chưa chốt. Trần 16% chỉ quản lớp đó — **chỉ số từ 5 lớp KHÔNG có trần**. |
 | Chibi 5 class Axie ở màn tạo nhân vật | chưa thiết kế. `CHIBI_CFG` hiện phân biệt bằng bóng dáng NGƯỜI. |
 | Mốc thay "Giày +6 mở dáng chạy" | avatar bay/chạy thì mốc cũ mất ý nghĩa |
-| Ngũ Hành → tam giác Axie | chưa làm. 40 nhãn `el:` trong `data/canbang.js` vẫn là Kim/Mộc/Thuỷ/Hoả/Thổ — **tàn dư kiếm hiệp, vi phạm Quy tắc số 1**. Kèm một lỗi lệch dấu: 1 con khai `'Thuỷ'` còn 10 con khai `'Thủy'`. |
+| Ngũ Hành → tam giác Axie | chưa làm. 40 nhãn `el:` trong `data/canbang.js` vẫn là Kim/Mộc/Thuỷ/Hoả/Thổ — **tàn dư kiếm hiệp, vi phạm Quy tắc số 1**. Đặc tả ở `docs/DOI_VAI_AXIE.md` §7; `hurtMob` không đổi công thức, chỉ đổi nhãn. ~~Lỗi lệch dấu `'Thuỷ'`~~ **đã vá** (`bb2a1bd`) — con Trấn Ải Trũng Nứt từng nằm ngoài toàn bộ hệ khắc hệ. |
 
 ---
 

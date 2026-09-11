@@ -1,6 +1,8 @@
 # Đổi Vai — Axie làm thân, Cổ Vật làm xác
 
-> **Trạng thái: ĐẶC TẢ, chưa thi công.** Prototype nhìn thử: `public/game/proto_doivai.html`.
+> **Trạng thái: ĐẶC TẢ · đợt 1 ĐÃ THI CÔNG một phần** (lớp vẽ avatar + 16 bảng khung chạy —
+> xem bảng "Đã thi công" ở mục Đổi Vai trong `CLAUDE.md`). Header cũ ghi "chưa thi công" và đã
+> lỗi thời so với chính commit của nhánh này. Prototype nhìn thử: `public/game/proto_doivai.html`.
 > Danh mục 15 Cổ Vật: `docs/CO_VAT_15.md`.
 >
 > Tài liệu này chốt **kiến trúc**. Nó không chốt con số cân bằng — mọi con số dưới đây là
@@ -11,9 +13,13 @@
 ## 1. Đổi cái gì, trong một câu
 
 Hôm nay: **người cầm vũ khí, Axie chạy theo.**
-Từ nay: **Axie cầm vũ khí, một bộ giáp rỗng chạy theo.**
+Từ nay: **Axie đứng giữa màn hình, và cái đánh thì do một bộ giáp rỗng vật chất hoá ra mà làm.**
 
 Và bộ giáp rỗng đó là thứ quay ra từ banner.
+
+> ⚠ Câu này đã sửa. Bản đầu viết *"Axie cầm vũ khí, một bộ giáp rỗng chạy theo"* — sai hai chỗ
+> sau khi §2b chốt: Axie **không** gây sát thương, và bộ giáp **không chạy theo** (nó không có
+> mặt trên màn cho tới lúc đánh). Xem §3.
 
 ---
 
@@ -27,10 +33,36 @@ Và bộ giáp rỗng đó là thứ quay ra từ banner.
 
 Ba chỗ này cùng được chữa bằng một lần đổi vai, chứ không phải ba đợt việc rời nhau.
 
-Và cốt truyện thì **vốn đã** đứng sẵn ở phía này: canon ghi Vaeldra trút tận thế lên Lunacia
-rồi mới cử đội tiên phong sang. Nghĩa là vai người chơi hiện nay là **kẻ gây hoạ dắt theo một
-nạn nhân**. Đổi vai xong thì đúng chiều: anh là Lunacia, và những gì còn lại của đội tiên phong
-Vaeldra — **bộ giáp, không phải con người** — buộc mình vào anh để chuộc.
+### ⚠ Lý lẽ cốt truyện — đã VIẾT LẠI, bản cũ dựa trên canon đã bỏ
+
+> Bản đầu của mục này lập luận: *"canon ghi Vaeldra trút tận thế lên Lunacia rồi mới cử đội tiên
+> phong sang, nên vai người chơi hiện nay là kẻ gây hoạ dắt theo một nạn nhân."* **Canon đó không
+> còn tồn tại** — mạch Morvahn / Năm Trụ Khoá / "trút tận thế lên nhà người khác" đã bỏ hẳn
+> (chủ dự án chốt 2026-09-11, xem `docs/LORE_RUNE.md` và mục Cốt truyện trong `CLAUDE.md`).
+> Giữ lại đoạn cảnh báo này thay vì xoá trắng, vì một lý lẽ đã chết mà còn nằm trong tài liệu
+> thiết kế thì lần sau có người dựa vào nó mà quyết.
+
+Canon **hiện hành** cho một lý lẽ mạnh hơn hẳn, và nó không cần thêm một chữ lore nào:
+
+Lunacia khắc một Rune lên trời (**Nhát Gọi**) để xin một người thợ biết khắc Rune bền hơn đá.
+Nhát cắt đó chở được **vật** — nguyên khu phố Ardhaven, đá lát và cái lò — nhưng **nghề thì không
+có hình**, nên năm cái nghề của Vaeldra đi qua mà không có thân nào để ở. Bảy con Axie được khắc
+để chứa chúng.
+
+⇒ **Ngươi là một con Axie mang một nét khắc không thuộc về mình.**
+
+Và đó chính là cơ chế ở §2b, phát biểu bằng lời kể:
+
+| Cơ chế (§2b) | Cùng một câu, kể bằng truyện |
+|---|---|
+| Axie là thân nhìn thấy, 0 chỉ số | cái thân là của Lunacia |
+| Chỉ số/kỹ năng ở 5 lớp Vaeldra | cái nghề là của Vaeldra |
+| Lúc đánh, lớp nhân vật **vật chất hoá rồi tan** | **nét khắc trồi lên qua một cái thân không phải của nó** |
+| Mất ký ức, võ nghệ về theo cấp | nghề khắc sâu hơn ký ức, nên nghề quay lại |
+
+Hai đợt việc này được thiết kế **độc lập với nhau** và rơi đúng vào cùng một chỗ — nên không bên
+nào phải uốn theo bên nào. Cái mà đặc tả này còn thiếu là *vì sao* lớp nhân vật nháy ra rồi tan;
+canon trả lời đúng câu đó.
 
 ---
 
@@ -60,7 +92,15 @@ mục này thắng.
 Luật "MỘT bộ chỉ số, HAI cái thân" ở §3 **vẫn đúng và nay còn đúng hơn**: chỉ có một bộ chỉ số
 thật, và nó nằm ở lớp nhân vật. Cái phải sửa là **bảng chia việc** — xem ngay dưới.
 
-### Hai kiểu hiện, chưa chốt cái nào
+### Hai kiểu hiện — **"hiện khi đánh" ĐÃ CHỐT và đã thi công**
+
+⚠ Mục này trước ghi "chưa chốt cái nào", trong khi `CLAUDE.md` đã ghi kiểu **hiện khi đánh** là
+chốt rồi và đã cắm vào `drawPlayer()`. Hai tài liệu nói khác nhau về cùng một quyết định — nay
+thống nhất theo `CLAUDE.md`. Kiểu "thường trực" còn trong proto **để so**, không phải để chọn.
+
+⚠ Và nếu sau này có ai muốn quay lại kiểu "thường trực", nhớ hai cái giá: nó dựng lại đúng nỗi
+lo AUTO ở §10 (một đơn vị luôn có mặt là một đơn vị máy điều khiển hộ), và ở zoom `xa` (1,0×) thì
+hai cái thân đứng cạnh nhau suốt trận là hai bóng dáng tranh chỗ đọc.
 
 `public/game/proto_doivai.html` dựng cả hai, bấm nút để đổi:
 
@@ -90,23 +130,59 @@ Wizard mà cưỡi Axie hệ Beast được, NFT nào cũng dùng được, như
 Đây là chỗ mọi thiết kế "pet mạnh" khác chết: chúng cho con pet một bảng chỉ số riêng, rồi phải
 tách `calcDerived`, tách thanh máu, tách chỗ tính sát thương, và mỗi lần cân bằng là cân hai lần.
 
+### ⚠ HAI cái thân, không phải ba — pivot §2b nay làm cho xong
+
+Bản trước của bảng này để lại **ba** cái thân cùng lúc, và đó là một cái thân thừa:
+
+| | |
+|---|---|
+| Axie | avatar |
+| lớp nhân vật | vật chất hoá khi đánh (§2b) |
+| Cổ Vật | một thứ ĐI THEO riêng, *"✓ toàn bộ sát thương"* |
+
+Ba thứ đó không cùng đứng được: §2b đã chốt sát thương tới từ **lớp nhân vật vật chất hoá**, nên
+không còn chỗ cho một cái xác thứ ba cũng gây toàn bộ sát thương. Bảng cũ có ghi *"⚠ đã sửa theo
+§2b"* nhưng thực tế chỉ sửa nửa: nó lấy sát thương khỏi Axie mà chưa gộp cái xác vào lớp nhân vật.
+
+**Chủ dự án chốt thêm (2026-09-11):** *"Bỏ luôn phần Ragoon. Nếu gacha là sẽ gacha nhân vật."*
+Câu đó gộp nốt hai cái còn lại:
+
+> ### **"Cổ Vật" và "lớp nhân vật vật chất hoá" là CÙNG MỘT vật thể.**
+>
+> Thứ banner quay ra là một **nhân vật** — có tên, có burst, mặc bộ giáp người chơi cày được, và
+> là thứ hiện ra khi đánh. 15 mục trong `docs/CO_VAT_15.md` là **15 nhân vật**, không phải 15 con
+> thú đi theo.
+
+⇒ **Hệ Ragoon (bạn đồng hành khác loài) BỎ.** Với hai cái thân thì không còn chỗ cho một con thú
+thứ ba, và luật `CHI_THAN = 0,45` (*"Chimera đi theo không bao giờ được lấn át nhân vật"*) mất
+luôn lý do tồn tại — cùng với câu hỏi "hai con Axie trên màn hình, con nào là ngươi".
+
 ### Bảng chia việc
 
-| | **Axie** (người chơi điều khiển) | **Cổ Vật** (cái xác, đi theo) |
+| | **Axie** — thân nhìn thấy | **Nhân vật** — lớp vật chất hoá |
 |---|---|---|
-| Di chuyển | ✓ click-to-move | bám theo, tự động |
-| Thanh máu | ✓ **duy nhất** | **không có** — không chết, không hồi, không trông em bé |
-| 4 nút chiêu | người chơi bấm, nhưng **lớp nhân vật là bên thi triển** | ✓ thi triển |
-| Đòn đánh thường | ✗ — Axie không gây sát thương | ✓ **toàn bộ sát thương** |
-| **Burst** | — | ✓ **nút riêng, người chơi bấm** |
-| Mặc giáp (hình) | ✗ **skin thuần** — để dành NFT | ✓ mặc bộ người chơi cày được |
-| Chỉ số của giáp | — | ✓ **đây là bảng chỉ số duy nhất** |
-| Hệ khắc chế | ✓ quyết định (thứ duy nhất Axie còn nắm ngoài ngoại hình) | — |
+| Di chuyển | ✓ click-to-move | không có mặt |
+| Thanh máu | ✓ **duy nhất** | — |
+| 4 nút chiêu | người chơi bấm | ✓ **thi triển** |
+| Đòn đánh thường | ✗ không gây sát thương | ✓ **toàn bộ sát thương** |
+| **Burst** | — | ✓ nút riêng, người chơi bấm |
+| Trang bị (chỉ số) | ✗ | ✓ **`player.equip` — bảng chỉ số duy nhất** |
+| Mặc giáp (hình) | ✗ **skin thuần** — để dành NFT | ✓ `heroSet(sectKey, t)` |
+| Hệ khắc chế | ✓ quyết định (thứ duy nhất Axie nắm ngoài ngoại hình) | — |
 | Lên cấp | — | cấp nhân vật |
 
-⚠ **Bảng này đã sửa theo §2b.** Bản đầu chia sát thương 75-80% cho Axie và ~20% cho cái xác —
-sai hẳn chiều. Nay Axie **không gây sát thương**; nó giữ đúng hai thứ: **ngoại hình** và **hệ
-khắc chế**.
+### ⚠ MỘT câu còn treo, và nó là câu đắt nhất của cả tài liệu
+
+Nếu thứ gacha quay ra **là** thứ gây sát thương, thì **trần 16% ở §5 không sống được** — một thứ
+gây *toàn bộ* sát thương không thể chỉ đóng góp 16% lực chiến. Hai đường, chọn một:
+
+| | Hậu quả |
+|---|---|
+| **(a)** giữ trần 16% ⇒ nhân vật gacha chỉ mang **burst + cơ chế**, còn chỉ số vẫn ở lớp đã khoá lúc tạo nhân vật | giữ được hợp đồng §5: *"3★ + đồ cày kỹ luôn thắng 5★ + đồ rác"* |
+| **(b)** bỏ trần ⇒ gacha thành nguồn sức mạnh chính | chính §5 cảnh báo đích danh đây là đường trượt thành P2W trong ba đợt cân bằng |
+
+**CHƯA CHỐT.** Đây là quyết định kinh doanh, không phải cân bằng — đừng tự chọn giúp. Mọi con số
+ở §5 và `CO_VAT_15.md` đang viết theo **(a)**.
 
 ---
 
@@ -323,14 +399,18 @@ Và bộ máy này **đã có sẵn**, thừa kế nguyên si từ `Định Hìn
 
 ## 10. Chống AUTO — tách "nó tự làm" khỏi "người chơi bấm"
 
-Dự án đã tự chẩn: *"AUTO nuốt trọn được game"*. Một cái xác đi theo tự đánh là **thêm một đơn vị
-cho máy chơi hộ**. Cách chữa không phải bỏ mô hình đi theo, mà là chia đôi nó:
+Dự án đã tự chẩn: *"AUTO nuốt trọn được game"*.
 
-| Cái xác TỰ làm | Người chơi BẤM |
+> ⚠ Mục này đã sửa theo §3. Bản đầu lo *"một cái xác đi theo tự đánh là thêm một đơn vị cho máy
+> chơi hộ"* — nhưng với **hai** cái thân thì không có đơn vị nào đi theo cả: cái xác chỉ có mặt
+> đúng lúc tung chiêu. Nỗi lo cũ hết, còn nỗi lo thật thì vẫn nguyên và nằm ở chỗ khác: bốn nút
+> chiêu thì AUTO bấm được hết. Nên thứ phải giữ cho người chơi là **burst và đổi xác**, đúng như
+> bảng dưới — chỉ là lý do đã đổi.
+
+| Máy làm được | Người chơi phải BẤM |
 |---|---|
-| bám theo | **burst** — để lại cửa sổ 5-6s (vỡ giáp / đóng băng / đánh dấu) |
-| đánh thường lặt vặt (~20%) | **đổi xác** — cooldown ~8s |
-| bị động luôn chạy | |
+| 4 nút chiêu (AUTO đã bấm được từ trước) | **burst** — để lại cửa sổ 5-6s (vỡ giáp / đóng băng / đánh dấu) |
+| bị động luôn chạy | **đổi xác** — cooldown ~8s |
 
 **Xoay vòng chính là việc đổi xác.** Gọi xác A phá giáp → đổi sang xác B nện vào cửa sổ đó. Máy
 canh được cooldown, nhưng không canh được *ba cửa sổ chồng đúng lúc bầy quái gom lại*.
@@ -347,7 +427,8 @@ cần nhiều xác, nên sở hữu rộng có giá trị hơn sở hữu một 
 
 | Cần | Đã có sẵn trong code | Phải làm |
 |---|---|---|
-| xác đi theo, tự đánh, tự tung chiêu, taunt | `updateMount()` — **và nó không có thanh máu, không chết được** | đổi nội dung, không đổi máy |
+| xác **hiện ra rồi tan** lúc tung chiêu | `player.castAct` + `atkAnim` (⚠ ĐẾM NGƯỢC — xem ba cái bẫy trong `CLAUDE.md`) | đã thi công đợt 1 |
+| ~~xác đi theo, tự đánh, taunt~~ | ~~`updateMount()`~~ | **KHÔNG còn cần** — hai cái thân thì không có đơn vị nào đi theo. `updateMount()` để lại cho Thú Cưỡi, đừng mượn nó cho cái xác. |
 | gacha 3/4/5★, pity 90 / soft 74 / mốc 10, 50-50, 2 banner, kệ xoay 6 tuần | `KHẾ ƯỚC CHIMERA` (`game.js:4361`) | đổi bảng dữ liệu |
 | nuôi xác (cấp, bản trùng, nhiên liệu) | `Định Hình Chimera` + `test_dinhhinh.js` | thừa kế |
 | 25 bộ giáp × 5 lớp | `HERO_SETS` + `heroSet(sect, t)` | nối `sectKey` vào xác đang triệu |
@@ -366,9 +447,10 @@ cần nhiều xác, nên sở hữu rộng có giá trị hơn sở hữu một 
 | `drawPlayer()` vẽ người | vẽ Axie; đường vẽ người chuyển sang phục vụ cái xác |
 | Màn chọn lớp 5 thẻ chibi | **chọn Axie** (5 class) — chibi phải vẽ lại, đây là món art đắt nhất của đợt |
 | `dangChay()` — Giày +6 mở dáng chạy | mốc tiến bộ nhìn thấy được này **chết**. Phải có mốc thay thế trên cái xác. |
-| `chiCoTrongMan()` 0,45 / 0,55 | đảo chiều: nay **cái xác** là thứ không được lấn át |
+| `chiCoTrongMan()` 0,45 / 0,55 | **GỠ** — luật đó tồn tại để con thú đi theo không lấn át nhân vật, mà nay không có con thú nào đi theo. Đừng "đảo chiều" nó như bản đầu ghi: cái xác chỉ hiện trong ~0,3s lúc tung chiêu nên nó không tranh chỗ với ai. |
 | Ngũ Hành (40 nhãn) | tam giác Axie |
-| `player.chimera` | đổi nghĩa: từ "con thú quay được" sang "cái xác quay được" — giữ tên trường để save cũ đọc được |
+| `player.chimera` | đổi nghĩa: từ "con thú quay được" sang **"nhân vật quay được"** — giữ tên trường để save cũ đọc được (cùng tiền lệ `player.silver` → "Lumen") |
+| Hệ **Ragoon** (16 hình dạng · `chiVe` · `CHI_KY` · Khế Ước) | **GỠ.** Đo được ~100 chỗ trong `game.js`. ⚠ Nhưng **ĐỪNG gỡ luôn Cốt** (~160 chỗ nữa): Cốt là thứ duy nhất đang cho người chơi lý do **chọn vùng để cày** (11 Dòng, mỗi map một Dòng) và lý do **đi bộ tới một toạ độ** (Vỉa Cốt). Gỡ Ragoon thì Cốt mất người ăn ⇒ trỏ nó sang nhân vật, đừng xoá. |
 
 ---
 
@@ -410,7 +492,7 @@ nuôi mà không được báo là chuyện lớn hơn cân bằng.
 
 | Đợt | Làm gì | Cửa sinh tử |
 |---|---|---|
-| **1** | Axie thành avatar (5 class, ánh xạ 1-1, **zero chỉ số**) · một cái xác đi theo mặc đồ đang cày · **1 burst** | **Nhìn có đẹp không.** Phải chụp ảnh ra xem, không đọc code mà biết được. |
+| **1** | Axie thành avatar (5 class, ánh xạ 1-1, **zero chỉ số**) · lớp nhân vật **hiện ra lúc đánh** mặc đồ đang cày · **1 burst** | **Nhìn có đẹp không.** Phải chụp ảnh ra xem, không đọc code mà biết được. |
 | **2** | Ngũ Hành → tam giác Axie · Cổ Vật lên banner (đổi nội dung gacha Khế Ước, **không thêm gacha**) · 3 ô xác + xoay vòng | roster có làm người chơi xoay không, hay vẫn chốt một con |
 | **3** | Tầng Sâu thành thang điểm (tầng đòi hệ khác nhau) · dòng phụ kiểu D4 · NFT avatar cắm vào ô skin | endgame có giữ người quá 30 ngày không |
 
