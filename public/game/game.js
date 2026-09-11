@@ -5854,6 +5854,33 @@ const SK_ICON_SYMS = {
     g.fillStyle = c1; g.globalAlpha = 0.85;
     g.fillRect(-R*0.62, -R*0.34, R*1.32, R*0.13); g.globalAlpha = 1;
   },
+  halo(g, R, c1, c2){             // hai vành hào quang lệch trục — Huyền Ảnh (nhánh Khí Cảnh)
+    g.lineWidth = R*0.15;
+    for (const [rx, ry, rot, c] of [[R*0.88, R*0.34, -0.38, c2], [R*0.7, R*0.9, 0.5, c1]]){
+      g.strokeStyle = c; g.globalAlpha = 0.9;
+      g.beginPath(); g.ellipse(0, 0, rx, ry, rot, 0, 7); g.stroke();
+    }
+    g.globalAlpha = 1;
+    const cg = g.createRadialGradient(0, 0, 0, 0, 0, R*0.46);
+    cg.addColorStop(0, '#ffffff'); cg.addColorStop(0.5, c1); cg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = cg; g.beginPath(); g.arc(0, 0, R*0.46, 0, 7); g.fill();
+  },
+  ghost(g, R, c1, c2){            // ba bóng chồng mờ dần — Vô Hình (nhánh Vô Ảnh)
+    for (let i = 2; i >= 0; i--){
+      g.globalAlpha = [1, 0.44, 0.2][i];
+      g.fillStyle = i ? c2 : c1;
+      g.save(); g.translate(i*R*0.3, i*R*0.1);
+      g.beginPath();
+      g.moveTo(0, -R*0.86);
+      g.quadraticCurveTo(R*0.5, -R*0.76, R*0.5, -R*0.08);
+      g.lineTo(R*0.5, R*0.7); g.lineTo(R*0.22, R*0.42); g.lineTo(0, R*0.72);
+      g.lineTo(-R*0.22, R*0.42); g.lineTo(-R*0.5, R*0.7); g.lineTo(-R*0.5, -R*0.08);
+      g.quadraticCurveTo(-R*0.5, -R*0.76, 0, -R*0.86);
+      g.closePath(); g.fill();
+      g.restore();
+    }
+    g.globalAlpha = 1;
+  },
   coin(g, R, c1, c2){             // chồng tiền — Lộc Lợi
     for (let i = 2; i >= 0; i--){
       const y = R*0.42 - i*R*0.32;
@@ -7601,6 +7628,10 @@ function loadGame(idx){
     // Cấp đỉnh cho save cũ: ai đã Tái Sinh ít nhất một lần thì chắc chắn từng chạm tối đa cấp,
     // nếu không đã không Tái Sinh được — trả lại đúng quyền họ đã mở, không bắt cày lại.
     if (!player.lvPeak) player.lvPeak = player.resetCount > 0 ? MAX_LV : player.level;
+    // Luật cây mới có thể làm điểm cũ nằm ở chỗ không tới được — hoàn lại thay vì khoá chết.
+    const _mHoan = masteryRaSoat();
+    if (_mHoan) setTimeout(() => { if (player) addFloat(player.x, player.y - 70,
+      `↺ Hoàn ${_mHoan} điểm ${MASTERY_NAME} — bảng nay đi theo nhánh`, '#7ecbff', 14); }, 1200);
     if (player.ene == null) player.ene = 5; // Linh Lực (stat mới) backfill (save cũ chưa có) — mức khởi điểm giống str/agi/def/vit
     migrateGiai14();                                      // 10 giai → 14 giai, xem hàm để biết vì sao
     migrateGiai7();                                       // 14 giai → 7 giai, phải chạy SAU bước trên
@@ -16508,7 +16539,16 @@ const MASTERY_LABEL = { hpPct:'Sinh Lực', dmgred:'Giảm Sát Thương', defPc
   spdPct:'Tốc Chạy', rangePct:'Tầm Đánh', potionPct:'Hiệu Quả Bình Thuốc',
   shieldSec:'Cửa Sổ Phá Giáp', dropPct:'Tỉ Lệ Rơi Đồ', ltPct:'Sát Thương Liên Trảm' };
 const MASTERY_MAX_NODE = 20;    // trần điểm mỗi nút — đúng luật MU
-const MASTERY_RANK_GATE = 10;   // rank R mở khi đã tiêu (R-1)×10 điểm trong CÙNG bảng
+// ══ CÂY: hai nhánh chạy song song, chụm vào một nút chung, rồi HAI NÚT ĐỈNH LOẠI TRỪ NHAU ══
+// Cổng cũ chỉ đếm TỔNG điểm đã tiêu trong bảng — nghĩa là không có đường đi nào cả: dồn đủ 40
+// điểm vào bất cứ đâu là mở được mọi nút. Bảng có hình cái cây mà luật thì là một cái thùng.
+// Nay mỗi nút đòi ĐÚNG nút cha cùng nhánh của nó, nên "chọn hướng" mới có nghĩa thật.
+//
+// ⚠ Nút đối (cặp loại trừ) SUY TỪ CẤU TRÚC, không khai tay: hai nút cùng rank cuối khác nhánh.
+// Mọi bảng phải đúng hình 2·2·2·1·2 — tests/test_mastery.js §1 gác hình dạng đó, nên thêm bảng
+// mới mà quên nút đỉnh thứ hai là bài đỏ chứ không phải im lặng mất cặp loại trừ.
+const MST_CAN = [0, 0, 5, 5, 8, 10];   // nút ở rank r cần CHA có bấy nhiêu điểm
+const MST_DINH_NHANH = 15;             // nút đỉnh còn cần cả NHÁNH của nó đủ bấy nhiêu điểm
 const MASTERY_PER_RESET = 20;   // thưởng thêm mỗi lần Tái Sinh
 // Cổng mở bảng — chủ dự án chốt: cấp 120 VÀ đã đi hết chính tuyến (Chương VII, Trụ Khóa cuối).
 // Tách khỏi Tái Sinh, vì Tái Sinh sẽ dời lên MAX_LV = 400 cùng Vùng Vỡ Ấn — buộc mastery vào
@@ -16517,8 +16557,8 @@ const MASTERY_LV = 120;
 const MASTERY_OPEN_GRANT = 20;  // điểm khởi đầu lúc bảng vừa mở — mở ra mà 0 điểm thì bảng trống
 const MASTERY_RESPEC_COST = 3000; // phí tẩy điểm (Lumen) — nhân theo số lần đã tẩy
 // Bảng CHUNG — cả 5 lớp đều xài, y như tab Protection của MU.
-const MASTERY_COMMON = { id:'hothe', name:'Hộ Thể', glyph:'⛨', nodes:[
-  { id:'ht_thietbi', ico:'plate', col:'#8ab8ff',   name:'Thiết Bì',   rank:1, per:'+1.2% Sinh Lực',      eff:(A,v)=>{ A.hpPct += 1.2*v; } },
+const MASTERY_COMMON = { id:'hothe', name:'Hộ Thể', glyph:'⛨', nhanh:[{id:'than',name:'Nhục Thân'},{id:'khi',name:'Khí Cảnh'}], nodes:[
+  { id:'ht_thietbi', nh:'than', ico:'plate', col:'#8ab8ff',   name:'Thiết Bì',   rank:1, per:'+1.2% Sinh Lực',      eff:(A,v)=>{ A.hpPct += 1.2*v; } },
   // ⚠ Hai nút này KHÔNG được chỉ có phần Phòng Ngự. player.defRed đụng trần cứng 0.78 ở
   // calcDerived, mà defRed = def/(def+60) đã chạm 0.78 từ khoảng def ≈ 213 — một bộ giáp giai 5
   // đập +9 đã vượt xa mốc đó. Bảng Đại Thành chỉ mở cho nhân vật đã Tái Sinh, tức là TOÀN BỘ
@@ -16534,103 +16574,118 @@ const MASTERY_COMMON = { id:'hothe', name:'Hộ Thể', glyph:'⛨', nodes:[
   //     crit   0.590/0.65  → Dark Knight/Wizard/Spellblade chỉ còn 6 điểm phần trăm
   // Nên MỌI nút thuần Phòng Ngự / thuần Né trong bảng này đều ghép thêm một khoản KHÔNG CÓ
   // TRẦN. Sửa tận gốc mấy cái trần đó là việc riêng, đụng vào sức chịu đòn ở mọi cấp.
-  { id:'ht_noiliem', ico:'ironwill', col:'#7ecbff',   name:'Nội Liễm',   rank:1, per:'+0.35% Giảm Sát Thương và +0.5% Sinh Lực',
+  { id:'ht_noiliem', nh:'than', ico:'ironwill', col:'#7ecbff',   name:'Nội Liễm',   rank:2, per:'+0.35% Giảm Sát Thương và +0.5% Sinh Lực',
     eff:(A,v)=>{ A.dmgred += 0.35*v; A.hpPct += 0.5*v; } },
-  { id:'ht_cuongkien', ico:'barrier', col:'#5ea0e8', name:'Cường Kiện', rank:2, per:'+0.6% Phòng Ngự và +0.4% Sinh Lực',
+  { id:'ht_cuongkien', nh:'than', ico:'barrier', col:'#5ea0e8', name:'Cường Kiện', rank:3, per:'+0.6% Phòng Ngự và +0.4% Sinh Lực',
     eff:(A,v)=>{ A.defPct += 0.6*v; A.hpPct += 0.4*v; } },
-  { id:'ht_hoikhi', ico:'manaorb', col:'#5ac8e8',    name:'Hồi Mana',   rank:2, per:'+0.4 Hồi Mana',       eff:(A,v)=>{ A.qireg += 0.4*v; } },
-  { id:'ht_phankich', ico:'nova', col:'#ffd76a',  name:'Phản Kích',  rank:3, per:'+0.7% Phản Đòn',      eff:(A,v)=>{ A.reflectPct += 0.7*v; } },
-  { id:'ht_netranh', ico:'wind', col:'#a0ffe9',   name:'Né Tránh',   rank:3, per:'+0.35% Né Tránh và +0.2% Tốc Đánh',
+  { id:'ht_hoikhi', nh:'khi', ico:'manaorb', col:'#5ac8e8',    name:'Hồi Mana',   rank:1, per:'+0.4 Hồi Mana',       eff:(A,v)=>{ A.qireg += 0.4*v; } },
+  { id:'ht_phankich', nh:'khi', ico:'nova', col:'#ffd76a',  name:'Phản Kích',  rank:3, per:'+0.7% Phản Đòn',      eff:(A,v)=>{ A.reflectPct += 0.7*v; } },
+  { id:'ht_netranh', nh:'khi', ico:'wind', col:'#a0ffe9',   name:'Né Tránh',   rank:2, per:'+0.35% Né Tránh và +0.2% Tốc Đánh',
     eff:(A,v)=>{ A.evaPct += 0.35*v; A.aspdPct += 0.2*v; } },
-  { id:'ht_haphuyet', ico:'heal', col:'#ff6b6b',  name:'Hấp Huyết',  rank:4, per:'+0.22% Hút Máu',      eff:(A,v)=>{ A.hpLeech += 0.22*v; } },
-  { id:'ht_batdiet', ico:'revive', col:'#ffe9a8',   name:'Bất Diệt',   rank:5, per:'+1.4% Sinh Lực và +0.25% Giảm Sát Thương',
+  { id:'ht_haphuyet', nh:null, ico:'heal', col:'#ff6b6b',  name:'Hấp Huyết',  rank:4, per:'+0.22% Hút Máu',      eff:(A,v)=>{ A.hpLeech += 0.22*v; } },
+  { id:'ht_batdiet', nh:'than', ico:'revive', col:'#ffe9a8',   name:'Bất Diệt',   rank:5, per:'+1.4% Sinh Lực và +0.25% Giảm Sát Thương',
     eff:(A,v)=>{ A.hpPct += 1.4*v; A.dmgred += 0.25*v; } },
+  { id:'ht_huyenanh', nh:'khi', ico:'halo', col:'#c8b6ff', name:'Huyền Ảnh', rank:5, per:'+0.7% Né Tránh và +0.7% Phản Đòn',
+    eff:(A,v)=>{ A.evaPct += 0.7*v; A.reflectPct += 0.7*v; } },
 ]};
-// Ba bảng RIÊNG của lớp. Bản thử nghiệm này mới vẽ cho Dark Knight — bốn lớp còn lại vẫn dùng
-// được bảng chung, ba bảng riêng của họ sẽ theo sau cùng khuôn này.
+// Ba bảng RIÊNG của mỗi lớp — ĐỦ CẢ NĂM LỚP (chú thích cũ ghi "mới vẽ cho Dark Knight" đã lạc
+// hậu từ lâu, và phần vẽ còn in hẳn dòng cảnh báo đó ra màn hình cho bốn lớp kia).
+// Mỗi bảng là một CÂY hai nhánh, xem khối MST_CAN ở trên để biết luật đi.
 const MASTERY_CLASS = {
   thieulam: [
-    { id:'dk_satphat', name:'Sát Phạt', glyph:'⚔', nodes:[
-      { id:'dk_cuongluc', ico:'fury', col:'#4c8dff',   name:'Cuồng Lực',   rank:1, per:'+0.7% Công Kích',      eff:(A,v)=>{ A.atkPct += 0.7*v; } },
-      { id:'dk_trongkich', ico:'groundslam', col:'#3a6fd8',  name:'Trọng Kích',  rank:1, per:'+1.6% Sát Thương Bạo Kích', eff:(A,v)=>{ A.critDmg += 1.6*v; } },
-      { id:'dk_phagiap', ico:'pierce', col:'#6aa0ff',    name:'Phá Giáp',    rank:2, per:'+0.5% Xuyên Giáp',     eff:(A,v)=>{ A.pierce += 0.5*v; } },
-      { id:'dk_chuanxac', ico:'stab', col:'#9ed4ff',   name:'Chuẩn Xác',   rank:2, per:'+0.3% Bạo Kích',       eff:(A,v)=>{ A.crit += 0.3*v; } },
-      { id:'dk_lientram', ico:'spin_blade', col:'#5ea0e8',   name:'Liên Trảm',   rank:3, per:'+0.45% Tốc Đánh',      eff:(A,v)=>{ A.aspdPct += 0.45*v; } },
-      { id:'dk_nohoa', ico:'fireslash', col:'#ff7a3a',      name:'Nộ Hỏa',      rank:3, per:'+0.85% Công Kích',     eff:(A,v)=>{ A.atkPct += 0.85*v; } },
-      { id:'dk_huyetchien', ico:'crescent', col:'#e8552a', name:'Huyết Chiến', rank:4, per:'+1.1% Công Kích và +0.15% Hút Máu',
+    { id:'dk_satphat', name:'Sát Phạt', glyph:'⚔', nhanh:[{id:'luc',name:'Cường Lực'},{id:'hiem',name:'Nhanh & Hiểm'}], nodes:[
+      { id:'dk_cuongluc', nh:'luc', ico:'fury', col:'#4c8dff',   name:'Cuồng Lực',   rank:1, per:'+0.7% Công Kích',      eff:(A,v)=>{ A.atkPct += 0.7*v; } },
+      { id:'dk_trongkich', nh:'hiem', ico:'groundslam', col:'#3a6fd8',  name:'Trọng Kích',  rank:1, per:'+1.6% Sát Thương Bạo Kích', eff:(A,v)=>{ A.critDmg += 1.6*v; } },
+      { id:'dk_phagiap', nh:'luc', ico:'pierce', col:'#6aa0ff',    name:'Phá Giáp',    rank:2, per:'+0.5% Xuyên Giáp',     eff:(A,v)=>{ A.pierce += 0.5*v; } },
+      { id:'dk_chuanxac', nh:'hiem', ico:'stab', col:'#9ed4ff',   name:'Chuẩn Xác',   rank:2, per:'+0.3% Bạo Kích',       eff:(A,v)=>{ A.crit += 0.3*v; } },
+      { id:'dk_lientram', nh:'hiem', ico:'spin_blade', col:'#5ea0e8',   name:'Liên Trảm',   rank:3, per:'+0.45% Tốc Đánh',      eff:(A,v)=>{ A.aspdPct += 0.45*v; } },
+      { id:'dk_nohoa', nh:'luc', ico:'fireslash', col:'#ff7a3a',      name:'Nộ Hỏa',      rank:3, per:'+0.85% Công Kích',     eff:(A,v)=>{ A.atkPct += 0.85*v; } },
+      { id:'dk_huyetchien', nh:null, ico:'crescent', col:'#e8552a', name:'Huyết Chiến', rank:4, per:'+1.1% Công Kích và +0.15% Hút Máu',
         eff:(A,v)=>{ A.atkPct += 1.1*v; A.hpLeech += 0.15*v; } },
-      { id:'dk_vosong', ico:'cyclone', col:'#4c8dff',     name:'Vô Song Kích',rank:5, per:'+1.8% Công Kích',      eff:(A,v)=>{ A.atkPct += 1.8*v; } },
+      { id:'dk_vosong', nh:'luc', ico:'cyclone', col:'#4c8dff',     name:'Vô Song Kích',rank:5, per:'+1.8% Công Kích',      eff:(A,v)=>{ A.atkPct += 1.8*v; } },
+      { id:'dk_satcot', nh:'hiem', ico:'raven', col:'#7ecbff', name:'Sát Cốt', rank:5, per:'+0.5% Bạo Kích và +1.6% Sát Thương Bạo Kích',
+        eff:(A,v)=>{ A.crit += 0.5*v; A.critDmg += 1.6*v; } },
     ]},
-    { id:'dk_binhkhi', name:'Binh Khí', glyph:'⚒', nodes:[
-      { id:'dk_maluyen', ico:'anvil', col:'#ffb15c',    name:'Ma Luyện',    rank:1, per:'+1.3% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.3*v; } },
-      { id:'dk_cuonghoa', ico:'helm', col:'#8ab8ff',   name:'Cường Hóa Giáp', rank:1, per:'+0.7% chỉ số chính của Giáp', eff:(A,v)=>{ A.armPct += 0.7*v; } },
-      { id:'dk_thamluyen', ico:'hammer', col:'#ffcf7a',  name:'Thâm Luyện',  rank:2, per:'mỗi cấp rèn (+N) có thêm 0.2% hiệu lực', eff:(A,v)=>{ A.plusStep += 0.002*v; } },
-      { id:'dk_ngoctinh', ico:'gem', col:'#7ec850',   name:'Ngọc Tinh',   rank:2, per:'+1.5% hiệu lực dòng Hoàn Hảo',  eff:(A,v)=>{ A.excPct += 1.5*v; } },
-      { id:'dk_trongkiem', ico:'greatsword', col:'#5ea0e8',  name:'Trọng Kiếm',  rank:3, per:'+1.6% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.6*v; } },
-      { id:'dk_thietgiap', ico:'pauldron', col:'#7ecbff',  name:'Thiết Giáp',  rank:3, per:'+0.9% chỉ số chính của Giáp',   eff:(A,v)=>{ A.armPct += 0.9*v; } },
-      { id:'dk_luyenthe', ico:'flame', col:'#ff9a5a',   name:'Luyện Thể',   rank:4, per:'mỗi cấp rèn có thêm 0.15% hiệu lực, và +0.5% Sinh Lực',
+    { id:'dk_binhkhi', name:'Binh Khí', glyph:'⚒', nhanh:[{id:'khi',name:'Binh Khí'},{id:'giap',name:'Trọng Giáp'}], nodes:[
+      { id:'dk_maluyen', nh:'khi', ico:'anvil', col:'#ffb15c',    name:'Ma Luyện',    rank:1, per:'+1.3% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.3*v; } },
+      { id:'dk_cuonghoa', nh:'giap', ico:'helm', col:'#8ab8ff',   name:'Cường Hóa Giáp', rank:1, per:'+0.7% chỉ số chính của Giáp', eff:(A,v)=>{ A.armPct += 0.7*v; } },
+      { id:'dk_thamluyen', nh:'khi', ico:'hammer', col:'#ffcf7a',  name:'Thâm Luyện',  rank:2, per:'mỗi cấp rèn (+N) có thêm 0.2% hiệu lực', eff:(A,v)=>{ A.plusStep += 0.002*v; } },
+      { id:'dk_ngoctinh', nh:'giap', ico:'gem', col:'#7ec850',   name:'Ngọc Tinh',   rank:2, per:'+1.5% hiệu lực dòng Hoàn Hảo',  eff:(A,v)=>{ A.excPct += 1.5*v; } },
+      { id:'dk_trongkiem', nh:'khi', ico:'greatsword', col:'#5ea0e8',  name:'Trọng Kiếm',  rank:3, per:'+1.6% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.6*v; } },
+      { id:'dk_thietgiap', nh:'giap', ico:'pauldron', col:'#7ecbff',  name:'Thiết Giáp',  rank:3, per:'+0.9% chỉ số chính của Giáp',   eff:(A,v)=>{ A.armPct += 0.9*v; } },
+      { id:'dk_luyenthe', nh:null, ico:'flame', col:'#ff9a5a',   name:'Luyện Thể',   rank:4, per:'mỗi cấp rèn có thêm 0.15% hiệu lực, và +0.5% Sinh Lực',
         eff:(A,v)=>{ A.plusStep += 0.0015*v; A.hpPct += 0.5*v; } },
-      { id:'dk_hopnhat', ico:'fusion', col:'#ffe9a8',    name:'Binh Nhân Hợp Nhất', rank:5, per:'+2.2% chỉ số Vũ Khí và +1.2% chỉ số Giáp',
+      { id:'dk_hopnhat', nh:'khi', ico:'fusion', col:'#ffe9a8',    name:'Binh Nhân Hợp Nhất', rank:5, per:'+2.2% chỉ số Vũ Khí và +1.2% chỉ số Giáp',
         eff:(A,v)=>{ A.wpnPct += 2.2*v; A.armPct += 1.2*v; } },
+      { id:'dk_thietbich', nh:'giap', ico:'wave', col:'#8ab8ff', name:'Thiết Bích', rank:5, per:'+2.0% chỉ số chính của Giáp và +0.4% Giảm Sát Thương',
+        eff:(A,v)=>{ A.armPct += 2.0*v; A.dmgred += 0.4*v; } },
     ]},
-    { id:'dk_tuyetky', name:'Tuyệt Kỹ', glyph:'✦', nodes:[
-      { id:'dk_tuyetdinh', ico:'bolt', col:'#7ecbff',  name:'Tuyệt Đỉnh',  rank:1, per:'+1.2% Sát Thương Kỹ Năng', eff:(A,v)=>{ A.skillPct += 1.2*v; } },
-      { id:'dk_thutuc', ico:'hourglass', col:'#9ed4ff',     name:'Thu Túc',     rank:1, per:'-0.6% thời gian hồi chiêu', eff:(A,v)=>{ A.cdCut += 0.6*v; } },
-      { id:'dk_khingung', ico:'spirit', col:'#5ac8e8',   name:'Khí Ngưng',   rank:2, per:'+0.5% Mana tối đa',      eff:(A,v)=>{ A.qiPct += 0.5*v; } },
+    { id:'dk_tuyetky', name:'Tuyệt Kỹ', glyph:'✦', nhanh:[{id:'uy',name:'Uy Lực'},{id:'ben',name:'Bền Bỉ'}], nodes:[
+      { id:'dk_tuyetdinh', nh:'uy', ico:'bolt', col:'#7ecbff',  name:'Tuyệt Đỉnh',  rank:1, per:'+1.2% Sát Thương Kỹ Năng', eff:(A,v)=>{ A.skillPct += 1.2*v; } },
+      { id:'dk_thutuc', nh:'ben', ico:'hourglass', col:'#9ed4ff',     name:'Thu Túc',     rank:1, per:'-0.6% thời gian hồi chiêu', eff:(A,v)=>{ A.cdCut += 0.6*v; } },
+      { id:'dk_khingung', nh:'ben', ico:'spirit', col:'#5ac8e8',   name:'Khí Ngưng',   rank:2, per:'+0.5% Mana tối đa',      eff:(A,v)=>{ A.qiPct += 0.5*v; } },
       // Đặc trưng RIÊNG của Dark Knight: cửa sổ Liên Trảm. SECTS gọi lớp này là "Tank / Combo
       // cận chiến", và Liên Trảm (hurtMob: trong cửa sổ mọi đòn +30% ST) là cơ chế combo duy
       // nhất trong game — không lớp nào khác mua được nút này.
-      { id:'dk_noidon',  ico:'twister', col:'#ffd76a',  name:'Nối Đòn',     rank:2, per:'+1.0% sát thương trong cửa sổ Liên Trảm', eff:(A,v)=>{ A.ltPct += 1.0*v; } },
-      { id:'dk_batkhuat', ico:'fist', col:'#ffb15c',   name:'Bất Khuất',   rank:3, per:'+0.8% Sát Thương Kỹ Năng', eff:(A,v)=>{ A.skillPct += 0.8*v; } },
-      { id:'dk_kiencuong', ico:'rune', col:'#8ab8ff',  name:'Kiên Cường',  rank:3, per:'+0.9% Sinh Lực và +0.35% Phòng Ngự',
+      { id:'dk_noidon', nh:'uy', ico:'twister', col:'#ffd76a',  name:'Nối Đòn',     rank:2, per:'+1.0% sát thương trong cửa sổ Liên Trảm', eff:(A,v)=>{ A.ltPct += 1.0*v; } },
+      { id:'dk_batkhuat', nh:'uy', ico:'fist', col:'#ffb15c',   name:'Bất Khuất',   rank:3, per:'+0.8% Sát Thương Kỹ Năng', eff:(A,v)=>{ A.skillPct += 0.8*v; } },
+      { id:'dk_kiencuong', nh:'ben', ico:'rune', col:'#8ab8ff',  name:'Kiên Cường',  rank:3, per:'+0.9% Sinh Lực và +0.35% Phòng Ngự',
         eff:(A,v)=>{ A.hpPct += 0.9*v; A.defPct += 0.35*v; } },
-      { id:'dk_nghiengiap', ico:'lightslash', col:'#c8d8ff', name:'Nghiền Giáp', rank:4, per:'+0.4% Xuyên Giáp',       eff:(A,v)=>{ A.pierce += 0.4*v; } },
-      { id:'dk_daithanh', ico:'crown', col:'#ffe9a8',   name:'Đại Thành Kích', rank:5, per:'+1.5% Sát Thương Kỹ Năng và +0.6% Công Kích',
+      { id:'dk_nghiengiap', nh:null, ico:'lightslash', col:'#c8d8ff', name:'Nghiền Giáp', rank:4, per:'+0.4% Xuyên Giáp',       eff:(A,v)=>{ A.pierce += 0.4*v; } },
+      { id:'dk_daithanh', nh:'uy', ico:'crown', col:'#ffe9a8',   name:'Đại Thành Kích', rank:5, per:'+1.5% Sát Thương Kỹ Năng và +0.6% Công Kích',
         eff:(A,v)=>{ A.skillPct += 1.5*v; A.atkPct += 0.6*v; } },
+      { id:'dk_tinhthan', nh:'ben', ico:'book', col:'#9ed4ff', name:'Tĩnh Thần', rank:5, per:'-0.7% hồi chiêu và +1.2% Mana tối đa',
+        eff:(A,v)=>{ A.cdCut += 0.7*v; A.qiPct += 1.2*v; } },
     ]},
   ],
   // ── Sylvan Ranger: tầm xa, nhanh, mỏng. Đặc trưng RIÊNG: Tốc Chạy và Tầm Đánh (Dark Wizard
   // cũng chạm được Tầm Đánh — hai lớp duy nhất đánh xa thật, xem SECTS.range). Không có nút
   // %Sinh Lực nặng và không có nút kinh tế: Ranger đổi máu lấy nhịp đánh.
   toanchan: [
-    { id:'sr_cungphap', name:'Cung Pháp', glyph:'⚔', nodes:[
-      { id:'sr_xathuat',  ico:'arrowfan',  col:'#3a9d8b', name:'Xạ Thuật',   rank:1, per:'+0.75% Tốc Đánh',  eff:(A,v)=>{ A.aspdPct += 0.75*v; } },
-      { id:'sr_ungnhan',  ico:'raven',     col:'#5ac8b8', name:'Ưng Nhãn',   rank:1, per:'+0.4% Bạo Kích',   eff:(A,v)=>{ A.crit += 0.4*v; } },
-      { id:'sr_truongxa', ico:'icearrow',  col:'#a0ffe9', name:'Trường Xạ',  rank:2, per:'+1.2% tầm đánh',   eff:(A,v)=>{ A.rangePct += 1.2*v; } },
-      { id:'sr_xuyenvan', ico:'pierce',    col:'#5ac8e8', name:'Xuyên Vân',  rank:2, per:'+0.45% Xuyên Giáp',eff:(A,v)=>{ A.pierce += 0.45*v; } },
-      { id:'sr_lienchau', ico:'lightslash',col:'#7ecbff', name:'Liên Châu',  rank:3, per:'+0.6% Tốc Đánh',   eff:(A,v)=>{ A.aspdPct += 0.6*v; } },
-      { id:'sr_trimang',  ico:'stab',      col:'#9ed4ff', name:'Trí Mạng',   rank:3, per:'+1.3% Sát Thương Bạo Kích',eff:(A,v)=>{ A.critDmg += 1.3*v; } },
-      { id:'sr_phongnhan',ico:'crescent',  col:'#3a9d8b', name:'Phong Nhận', rank:4, per:'+0.5% Công Kích và +0.25% Né',
+    { id:'sr_cungphap', name:'Cung Pháp', glyph:'⚔', nhanh:[{id:'lien',name:'Liên Xạ'},{id:'hiem',name:'Nhất Kích'}], nodes:[
+      { id:'sr_xathuat', nh:'lien', ico:'arrowfan',  col:'#3a9d8b', name:'Xạ Thuật',   rank:1, per:'+0.75% Tốc Đánh',  eff:(A,v)=>{ A.aspdPct += 0.75*v; } },
+      { id:'sr_ungnhan', nh:'hiem', ico:'raven',     col:'#5ac8b8', name:'Ưng Nhãn',   rank:1, per:'+0.4% Bạo Kích',   eff:(A,v)=>{ A.crit += 0.4*v; } },
+      { id:'sr_truongxa', nh:'lien', ico:'icearrow',  col:'#a0ffe9', name:'Trường Xạ',  rank:2, per:'+1.2% tầm đánh',   eff:(A,v)=>{ A.rangePct += 1.2*v; } },
+      { id:'sr_xuyenvan', nh:'hiem', ico:'pierce',    col:'#5ac8e8', name:'Xuyên Vân',  rank:2, per:'+0.45% Xuyên Giáp',eff:(A,v)=>{ A.pierce += 0.45*v; } },
+      { id:'sr_lienchau', nh:'lien', ico:'lightslash',col:'#7ecbff', name:'Liên Châu',  rank:3, per:'+0.6% Tốc Đánh',   eff:(A,v)=>{ A.aspdPct += 0.6*v; } },
+      { id:'sr_trimang', nh:'hiem', ico:'stab',      col:'#9ed4ff', name:'Trí Mạng',   rank:3, per:'+1.3% Sát Thương Bạo Kích',eff:(A,v)=>{ A.critDmg += 1.3*v; } },
+      { id:'sr_phongnhan', nh:null, ico:'crescent',  col:'#3a9d8b', name:'Phong Nhận', rank:4, per:'+0.5% Công Kích và +0.25% Né',
         eff:(A,v)=>{ A.atkPct += 0.5*v; A.evaPct += 0.25*v; } },
-      { id:'sr_vantien',  ico:'cyclone',   col:'#a0ffe9', name:'Vạn Tiễn',   rank:5, per:'+1.4% Công Kích và +0.35% Tốc Đánh',
+      { id:'sr_vantien', nh:'lien', ico:'cyclone',   col:'#a0ffe9', name:'Vạn Tiễn',   rank:5, per:'+1.4% Công Kích và +0.35% Tốc Đánh',
         eff:(A,v)=>{ A.atkPct += 1.4*v; A.aspdPct += 0.35*v; } },
+      { id:'sr_satien', nh:'hiem', ico:'fury', col:'#ffd76a', name:'Sát Tiễn', rank:5, per:'+0.45% Bạo Kích và +0.5% Xuyên Giáp',
+        eff:(A,v)=>{ A.crit += 0.45*v; A.pierce += 0.5*v; } },
     ]},
-    { id:'sr_thanphap', name:'Thân Pháp', glyph:'✦', nodes:[
-      { id:'sr_bophap',   ico:'wave',      col:'#5ac8b8', name:'Bộ Pháp',    rank:1, per:'+0.5% Né và +0.15% Tốc Chạy',
+    { id:'sr_thanphap', name:'Thân Pháp', glyph:'✦', nhanh:[{id:'ne',name:'Vô Ảnh'},{id:'toc',name:'Truy Phong'}], nodes:[
+      { id:'sr_bophap', nh:'ne', ico:'wave',      col:'#5ac8b8', name:'Bộ Pháp',    rank:1, per:'+0.5% Né và +0.15% Tốc Chạy',
         eff:(A,v)=>{ A.evaPct += 0.5*v; A.spdPct += 0.15*v; } },
-      { id:'sr_truyphong',ico:'twister',   col:'#a0ffe9', name:'Truy Phong', rank:1, per:'+0.4% Tốc Chạy',   eff:(A,v)=>{ A.spdPct += 0.4*v; } },
-      { id:'sr_voanh',    ico:'spirit',    col:'#7ecbff', name:'Vô Ảnh',     rank:2, per:'+0.35% Né và +0.25% Tốc Chạy',
+      { id:'sr_truyphong', nh:'toc', ico:'twister',   col:'#a0ffe9', name:'Truy Phong', rank:1, per:'+0.4% Tốc Chạy',   eff:(A,v)=>{ A.spdPct += 0.4*v; } },
+      { id:'sr_voanh', nh:'ne', ico:'spirit',    col:'#7ecbff', name:'Vô Ảnh',     rank:2, per:'+0.35% Né và +0.25% Tốc Chạy',
         eff:(A,v)=>{ A.evaPct += 0.35*v; A.spdPct += 0.25*v; } },
-      { id:'sr_khinhthan',ico:'frostnova', col:'#9ed4ff', name:'Khinh Thân', rank:2, per:'+0.55% Tốc Chạy',  eff:(A,v)=>{ A.spdPct += 0.55*v; } },
-      { id:'sr_thaukhi',  ico:'iceshard',  col:'#5ac8e8', name:'Thấu Khí',   rank:3, per:'+0.4% Hút Mana',   eff:(A,v)=>{ A.qiLeech += 0.4*v; } },
-      { id:'sr_hoibo',    ico:'rune',      col:'#8fd18f', name:'Hồi Bộ',     rank:3, per:'+1.0% Sinh Lực và +0.3% Né',
+      { id:'sr_khinhthan', nh:'toc', ico:'frostnova', col:'#9ed4ff', name:'Khinh Thân', rank:2, per:'+0.55% Tốc Chạy',  eff:(A,v)=>{ A.spdPct += 0.55*v; } },
+      { id:'sr_thaukhi', nh:'toc', ico:'iceshard',  col:'#5ac8e8', name:'Thấu Khí',   rank:3, per:'+0.4% Hút Mana',   eff:(A,v)=>{ A.qiLeech += 0.4*v; } },
+      { id:'sr_hoibo', nh:'ne', ico:'rune',      col:'#8fd18f', name:'Hồi Bộ',     rank:3, per:'+1.0% Sinh Lực và +0.3% Né',
         eff:(A,v)=>{ A.hpPct += 1.0*v; A.evaPct += 0.3*v; } },
-      { id:'sr_antich',   ico:'crowstorm', col:'#3a9d8b', name:'Ẩn Tích',    rank:4, per:'+0.6% Né và +0.3% Hút Mana',
+      { id:'sr_antich', nh:null, ico:'crowstorm', col:'#3a9d8b', name:'Ẩn Tích',    rank:4, per:'+0.6% Né và +0.3% Hút Mana',
         eff:(A,v)=>{ A.evaPct += 0.6*v; A.qiLeech += 0.3*v; } },
-      { id:'sr_phonghanh',ico:'bolt',      col:'#a0ffe9', name:'Phong Hành', rank:5, per:'+0.6% Tốc Chạy và +0.5% Tốc Đánh',
+      { id:'sr_phonghanh', nh:'toc', ico:'bolt',      col:'#a0ffe9', name:'Phong Hành', rank:5, per:'+0.6% Tốc Chạy và +0.5% Tốc Đánh',
         eff:(A,v)=>{ A.spdPct += 0.6*v; A.aspdPct += 0.5*v; } },
+      { id:'sr_vohinh', nh:'ne', ico:'ghost', col:'#a0ffe9', name:'Vô Hình', rank:5, per:'+0.9% Né Tránh và +0.7% Sinh Lực',
+        eff:(A,v)=>{ A.evaPct += 0.9*v; A.hpPct += 0.7*v; } },
     ]},
-    { id:'sr_cungky', name:'Cung Kỹ', glyph:'⚒', nodes:[
-      { id:'sr_luyencung',ico:'anvil',     col:'#ffb15c', name:'Luyện Cung', rank:1, per:'+1.5% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.5*v; } },
-      { id:'sr_dagiap',   ico:'pauldron',  col:'#8a9a3a', name:'Da Giáp',    rank:1, per:'+0.5% chỉ số chính của Giáp',   eff:(A,v)=>{ A.armPct += 0.5*v; } },
-      { id:'sr_tinhluyen',ico:'hammer',    col:'#ffcf7a', name:'Tinh Luyện', rank:2, per:'mỗi cấp rèn (+N) có thêm 0.18% hiệu lực', eff:(A,v)=>{ A.plusStep += 0.0018*v; } },
-      { id:'sr_ngoctien', ico:'gem',       col:'#3a9d8b', name:'Ngọc Tiễn',  rank:2, per:'+1.8% hiệu lực dòng Hoàn Hảo',  eff:(A,v)=>{ A.excPct += 1.8*v; } },
-      { id:'sr_thancung', ico:'greatsword',col:'#5ea0e8', name:'Thần Cung',  rank:3, per:'+1.9% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.9*v; } },
-      { id:'sr_nhelongvu',ico:'helm',      col:'#a0ffe9', name:'Nhẹ Tựa Lông', rank:3, per:'+0.6% chỉ số chính của Giáp và +0.3% Né',
+    { id:'sr_cungky', name:'Cung Kỹ', glyph:'⚒', nhanh:[{id:'cung',name:'Cung'},{id:'giap',name:'Giáp'}], nodes:[
+      { id:'sr_luyencung', nh:'cung', ico:'anvil',     col:'#ffb15c', name:'Luyện Cung', rank:1, per:'+1.5% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.5*v; } },
+      { id:'sr_dagiap', nh:'giap', ico:'pauldron',  col:'#8a9a3a', name:'Da Giáp',    rank:1, per:'+0.5% chỉ số chính của Giáp',   eff:(A,v)=>{ A.armPct += 0.5*v; } },
+      { id:'sr_tinhluyen', nh:'cung', ico:'hammer',    col:'#ffcf7a', name:'Tinh Luyện', rank:2, per:'mỗi cấp rèn (+N) có thêm 0.18% hiệu lực', eff:(A,v)=>{ A.plusStep += 0.0018*v; } },
+      { id:'sr_ngoctien', nh:'giap', ico:'gem',       col:'#3a9d8b', name:'Ngọc Tiễn',  rank:2, per:'+1.8% hiệu lực dòng Hoàn Hảo',  eff:(A,v)=>{ A.excPct += 1.8*v; } },
+      { id:'sr_thancung', nh:'cung', ico:'greatsword',col:'#5ea0e8', name:'Thần Cung',  rank:3, per:'+1.9% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.9*v; } },
+      { id:'sr_nhelongvu', nh:'giap', ico:'helm',      col:'#a0ffe9', name:'Nhẹ Tựa Lông', rank:3, per:'+0.6% chỉ số chính của Giáp và +0.3% Né',
         eff:(A,v)=>{ A.armPct += 0.6*v; A.evaPct += 0.3*v; } },
-      { id:'sr_tamdoc',   ico:'poison',    col:'#7ec850', name:'Tẩm Độc',    rank:4, per:'+0.5% tỉ lệ Sát Thương Hoàn Hảo (×2 sát thương)', eff:(A,v)=>{ A.perfect += 0.5*v; } },
-      { id:'sr_hopnhat',  ico:'fusion',    col:'#a0ffe9', name:'Cung Thần Hợp Nhất', rank:5, per:'+2.4% chỉ số Vũ Khí và +0.4% Tốc Đánh',
+      { id:'sr_tamdoc', nh:null, ico:'poison',    col:'#7ec850', name:'Tẩm Độc',    rank:4, per:'+0.5% tỉ lệ Sát Thương Hoàn Hảo (×2 sát thương)', eff:(A,v)=>{ A.perfect += 0.5*v; } },
+      { id:'sr_hopnhat', nh:'cung', ico:'fusion',    col:'#a0ffe9', name:'Cung Thần Hợp Nhất', rank:5, per:'+2.4% chỉ số Vũ Khí và +0.4% Tốc Đánh',
         eff:(A,v)=>{ A.wpnPct += 2.4*v; A.aspdPct += 0.4*v; } },
+      { id:'sr_thiengiap', nh:'giap', ico:'fist', col:'#7ec850', name:'Thiên Vũ Giáp', rank:5, per:'+1.6% chỉ số chính của Giáp và +0.4% Né Tránh',
+        eff:(A,v)=>{ A.armPct += 1.6*v; A.evaPct += 0.4*v; } },
     ]},
   ],
   // ── Dark Wizard: sát thương KỸ NĂNG là trục chính, không phải đòn thường. Đặc trưng RIÊNG:
@@ -16639,129 +16694,147 @@ const MASTERY_CLASS = {
   // (Nút Độc Nhiễm trước đây là đặc trưng thứ hai — "+ST Venom Dart" — nhưng Venom Dart đã gỡ
   //  cùng hệ Thuần Thục, nên nay nó cộng vào %ST Kỹ Năng như ba nút cùng bảng.)
   baidasan: [
-    { id:'dw_phapthuat', name:'Pháp Thuật', glyph:'⚔', nodes:[
-      { id:'dw_maluc',    ico:'meteor',    col:'#7ec850', name:'Ma Lực',     rank:1, per:'+1.5% Sát Thương Kỹ Năng', eff:(A,v)=>{ A.skillPct += 1.5*v; } },
-      { id:'dw_docnhiem', ico:'poison',    col:'#8ac850', name:'Độc Nhiễm',  rank:1, per:'+1.0% Sát Thương Kỹ Năng', eff:(A,v)=>{ A.skillPct += 1.0*v; } },
-      { id:'dw_tocniem',  ico:'hourglass', col:'#9ed4ff', name:'Tốc Niệm',   rank:2, per:'-0.8% thời gian hồi chiêu', eff:(A,v)=>{ A.cdCut += 0.8*v; } },
-      { id:'dw_vienphap', ico:'icearrow',  col:'#5ac8e8', name:'Viễn Pháp',  rank:2, per:'+1.4% tầm đánh',      eff:(A,v)=>{ A.rangePct += 1.4*v; } },
-      { id:'dw_cuongphap',ico:'firescream',col:'#c07fe0', name:'Cuồng Pháp', rank:3, per:'+1.1% Sát Thương Kỹ Năng', eff:(A,v)=>{ A.skillPct += 1.1*v; } },
-      { id:'dw_phama',    ico:'pierce',    col:'#7ec850', name:'Phá Ma',     rank:3, per:'+0.55% Xuyên Giáp',   eff:(A,v)=>{ A.pierce += 0.55*v; } },
-      { id:'dw_hacchu',   ico:'crowstorm', col:'#8a5ad8', name:'Hắc Chú',    rank:4, per:'+1.2% Sát Thương Kỹ Năng và +0.35% Hút Mana',
+    { id:'dw_phapthuat', name:'Pháp Thuật', glyph:'⚔', nhanh:[{id:'bao',name:'Bạo Pháp'},{id:'xao',name:'Xảo Pháp'}], nodes:[
+      { id:'dw_maluc', nh:'bao', ico:'meteor',    col:'#7ec850', name:'Ma Lực',     rank:1, per:'+1.5% Sát Thương Kỹ Năng', eff:(A,v)=>{ A.skillPct += 1.5*v; } },
+      { id:'dw_docnhiem', nh:'bao', ico:'poison',    col:'#8ac850', name:'Độc Nhiễm',  rank:2, per:'+1.0% Sát Thương Kỹ Năng', eff:(A,v)=>{ A.skillPct += 1.0*v; } },
+      { id:'dw_tocniem', nh:'xao', ico:'hourglass', col:'#9ed4ff', name:'Tốc Niệm',   rank:1, per:'-0.8% thời gian hồi chiêu', eff:(A,v)=>{ A.cdCut += 0.8*v; } },
+      { id:'dw_vienphap', nh:'xao', ico:'icearrow',  col:'#5ac8e8', name:'Viễn Pháp',  rank:2, per:'+1.4% tầm đánh',      eff:(A,v)=>{ A.rangePct += 1.4*v; } },
+      { id:'dw_cuongphap', nh:'bao', ico:'firescream',col:'#c07fe0', name:'Cuồng Pháp', rank:3, per:'+1.1% Sát Thương Kỹ Năng', eff:(A,v)=>{ A.skillPct += 1.1*v; } },
+      { id:'dw_phama', nh:'xao', ico:'pierce',    col:'#7ec850', name:'Phá Ma',     rank:3, per:'+0.55% Xuyên Giáp',   eff:(A,v)=>{ A.pierce += 0.55*v; } },
+      { id:'dw_hacchu', nh:null, ico:'crowstorm', col:'#8a5ad8', name:'Hắc Chú',    rank:4, per:'+1.2% Sát Thương Kỹ Năng và +0.35% Hút Mana',
         eff:(A,v)=>{ A.skillPct += 1.2*v; A.qiLeech += 0.35*v; } },
-      { id:'dw_thientai', ico:'bolt',      col:'#ffd76a', name:'Thiên Tai',  rank:5, per:'+2.0% Sát Thương Kỹ Năng', eff:(A,v)=>{ A.skillPct += 2.0*v; } },
+      { id:'dw_thientai', nh:'bao', ico:'bolt',      col:'#ffd76a', name:'Thiên Tai',  rank:5, per:'+2.0% Sát Thương Kỹ Năng', eff:(A,v)=>{ A.skillPct += 2.0*v; } },
+      { id:'dw_vanphap', nh:'xao', ico:'arrowfan', col:'#b08ae8', name:'Vạn Pháp', rank:5, per:'-0.7% hồi chiêu và +0.6% Xuyên Giáp',
+        eff:(A,v)=>{ A.cdCut += 0.7*v; A.pierce += 0.6*v; } },
     ]},
-    { id:'dw_linhkhi', name:'Linh Khí', glyph:'✦', nodes:[
-      { id:'dw_khihai',   ico:'spirit',    col:'#5ac8e8', name:'Khí Hải',    rank:1, per:'+1.0% Mana tối đa',   eff:(A,v)=>{ A.qiPct += 1.0*v; } },
-      { id:'dw_dankhi',   ico:'wave',      col:'#7ecbff', name:'Dẫn Khí',    rank:1, per:'+0.6 Hồi Mana',       eff:(A,v)=>{ A.qireg += 0.6*v; } },
-      { id:'dw_hapkhi',   ico:'iceshard',  col:'#9ed4ff', name:'Hấp Khí',    rank:2, per:'+0.4% Hút Mana',      eff:(A,v)=>{ A.qiLeech += 0.4*v; } },
-      { id:'dw_tukhi',    ico:'frostnova', col:'#5ea0e8', name:'Tụ Khí',     rank:2, per:'+1.2% Mana tối đa',   eff:(A,v)=>{ A.qiPct += 1.2*v; } },
-      { id:'dw_ngungthan',ico:'rune',      col:'#c07fe0', name:'Ngưng Thần', rank:3, per:'-0.5% thời gian hồi chiêu', eff:(A,v)=>{ A.cdCut += 0.5*v; } },
-      { id:'dw_linhdan',  ico:'flame',     col:'#8fd18f', name:'Linh Đan',   rank:3, per:'+0.8% lượng máu bình thuốc hồi', eff:(A,v)=>{ A.potionPct += 0.8*v; } },
-      { id:'dw_vohankhi', ico:'twister',   col:'#7ec850', name:'Vô Hạn Khí', rank:4, per:'+1.5% Mana tối đa và +0.4 Hồi Mana',
+    { id:'dw_linhkhi', name:'Linh Khí', glyph:'✦', nhanh:[{id:'hai',name:'Khí Hải'},{id:'luu',name:'Khí Lưu'}], nodes:[
+      { id:'dw_khihai', nh:'hai', ico:'spirit',    col:'#5ac8e8', name:'Khí Hải',    rank:1, per:'+1.0% Mana tối đa',   eff:(A,v)=>{ A.qiPct += 1.0*v; } },
+      { id:'dw_dankhi', nh:'luu', ico:'wave',      col:'#7ecbff', name:'Dẫn Khí',    rank:1, per:'+0.6 Hồi Mana',       eff:(A,v)=>{ A.qireg += 0.6*v; } },
+      { id:'dw_hapkhi', nh:'luu', ico:'iceshard',  col:'#9ed4ff', name:'Hấp Khí',    rank:2, per:'+0.4% Hút Mana',      eff:(A,v)=>{ A.qiLeech += 0.4*v; } },
+      { id:'dw_tukhi', nh:'hai', ico:'frostnova', col:'#5ea0e8', name:'Tụ Khí',     rank:2, per:'+1.2% Mana tối đa',   eff:(A,v)=>{ A.qiPct += 1.2*v; } },
+      { id:'dw_ngungthan', nh:'luu', ico:'rune',      col:'#c07fe0', name:'Ngưng Thần', rank:3, per:'-0.5% thời gian hồi chiêu', eff:(A,v)=>{ A.cdCut += 0.5*v; } },
+      { id:'dw_linhdan', nh:'hai', ico:'flame',     col:'#8fd18f', name:'Linh Đan',   rank:3, per:'+0.8% lượng máu bình thuốc hồi', eff:(A,v)=>{ A.potionPct += 0.8*v; } },
+      { id:'dw_vohankhi', nh:null, ico:'twister',   col:'#7ec850', name:'Vô Hạn Khí', rank:4, per:'+1.5% Mana tối đa và +0.4 Hồi Mana',
         eff:(A,v)=>{ A.qiPct += 1.5*v; A.qireg += 0.4*v; } },
-      { id:'dw_daotam',   ico:'book',      col:'#ffd76a', name:'Đạo Tâm',    rank:5, per:'+0.9% Sát Thương Kỹ Năng và -0.4% hồi chiêu',
+      { id:'dw_daotam', nh:'luu', ico:'book',      col:'#ffd76a', name:'Đạo Tâm',    rank:5, per:'+0.9% Sát Thương Kỹ Năng và -0.4% hồi chiêu',
         eff:(A,v)=>{ A.skillPct += 0.9*v; A.cdCut += 0.4*v; } },
+      { id:'dw_khitoan', nh:'hai', ico:'cyclone', col:'#5ac8e8', name:'Khí Toàn', rank:5, per:'+2.2% Mana tối đa và +0.5% Sát Thương Kỹ Năng',
+        eff:(A,v)=>{ A.qiPct += 2.2*v; A.skillPct += 0.5*v; } },
     ]},
-    { id:'dw_phapbao', name:'Pháp Bảo', glyph:'⚒', nodes:[
-      { id:'dw_luyentruong',ico:'anvil',   col:'#ffb15c', name:'Luyện Trượng', rank:1, per:'+1.7% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.7*v; } },
-      { id:'dw_phapy',    ico:'pauldron',  col:'#7ec850', name:'Pháp Y',     rank:1, per:'+0.45% chỉ số chính của Giáp',  eff:(A,v)=>{ A.armPct += 0.45*v; } },
-      { id:'dw_khacan',   ico:'hammer',    col:'#ffcf7a', name:'Ấn Rèn',     rank:2, per:'mỗi cấp rèn (+N) có thêm 0.15% hiệu lực', eff:(A,v)=>{ A.plusStep += 0.0015*v; } },
-      { id:'dw_ngochon',  ico:'gem',       col:'#c07fe0', name:'Ngọc Hồn',   rank:2, per:'+2.0% hiệu lực dòng Hoàn Hảo',  eff:(A,v)=>{ A.excPct += 2.0*v; } },
-      { id:'dw_thantruong',ico:'greatsword',col:'#7ec850',name:'Thần Trượng',rank:3, per:'+2.1% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 2.1*v; } },
-      { id:'dw_hothanphu',ico:'helm',      col:'#5ac8e8', name:'Hộ Thân Phù',rank:3, per:'+0.7% chỉ số chính của Giáp và +0.6% Sinh Lực',
+    { id:'dw_phapbao', name:'Pháp Bảo', glyph:'⚒', nhanh:[{id:'truong',name:'Trượng'},{id:'y',name:'Pháp Y'}], nodes:[
+      { id:'dw_luyentruong', nh:'truong', ico:'anvil',   col:'#ffb15c', name:'Luyện Trượng', rank:1, per:'+1.7% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.7*v; } },
+      { id:'dw_phapy', nh:'y', ico:'pauldron',  col:'#7ec850', name:'Pháp Y',     rank:1, per:'+0.45% chỉ số chính của Giáp',  eff:(A,v)=>{ A.armPct += 0.45*v; } },
+      { id:'dw_khacan', nh:'truong', ico:'hammer',    col:'#ffcf7a', name:'Ấn Rèn',     rank:2, per:'mỗi cấp rèn (+N) có thêm 0.15% hiệu lực', eff:(A,v)=>{ A.plusStep += 0.0015*v; } },
+      { id:'dw_ngochon', nh:'y', ico:'gem',       col:'#c07fe0', name:'Ngọc Hồn',   rank:2, per:'+2.0% hiệu lực dòng Hoàn Hảo',  eff:(A,v)=>{ A.excPct += 2.0*v; } },
+      { id:'dw_thantruong', nh:'truong', ico:'greatsword',col:'#7ec850',name:'Thần Trượng',rank:3, per:'+2.1% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 2.1*v; } },
+      { id:'dw_hothanphu', nh:'y', ico:'helm',      col:'#5ac8e8', name:'Hộ Thân Phù',rank:3, per:'+0.7% chỉ số chính của Giáp và +0.6% Sinh Lực',
         eff:(A,v)=>{ A.armPct += 0.7*v; A.hpPct += 0.6*v; } },
-      { id:'dw_phagiaptran',ico:'lightslash',col:'#8ac850',name:'Phá Giáp Trận', rank:4, per:'+0.5% Xuyên Giáp và +0.4% Sát Thương Kỹ Năng',
+      { id:'dw_phagiaptran', nh:null, ico:'lightslash',col:'#8ac850',name:'Phá Giáp Trận', rank:4, per:'+0.5% Xuyên Giáp và +0.4% Sát Thương Kỹ Năng',
         eff:(A,v)=>{ A.pierce += 0.5*v; A.skillPct += 0.4*v; } },
-      { id:'dw_hopnhat',  ico:'fusion',    col:'#c07fe0', name:'Pháp Thân Hợp Nhất', rank:5, per:'+2.6% chỉ số Vũ Khí và +0.8% Sát Thương Kỹ Năng',
+      { id:'dw_hopnhat', nh:'truong', ico:'fusion',    col:'#c07fe0', name:'Pháp Thân Hợp Nhất', rank:5, per:'+2.6% chỉ số Vũ Khí và +0.8% Sát Thương Kỹ Năng',
         eff:(A,v)=>{ A.wpnPct += 2.6*v; A.skillPct += 0.8*v; } },
+      { id:'dw_hophap', nh:'y', ico:'crescent', col:'#8ab8ff', name:'Hộ Pháp Thân', rank:5, per:'+1.8% chỉ số chính của Giáp và +0.7% Sinh Lực',
+        eff:(A,v)=>{ A.armPct += 1.8*v; A.hpPct += 0.7*v; } },
     ]},
   ],
   // ── Spellblade: nửa đao nửa pháp. Gần như nút nào cũng cho HAI thứ cùng lúc (Công Kích +
   // Sát Thương Kỹ Năng, Hút Máu + Hút Mana) — đó chính là hình dạng của lớp lai. Đặc trưng
   // RIÊNG: Cửa Sổ Phá Giáp, và bước rèn (plusStep) cao nhất trong năm lớp — lớp của lò lửa.
   minhgiao: [
-    { id:'sb_hoakich', name:'Hỏa Kích', glyph:'⚔', nodes:[
-      { id:'sb_liethoa',  ico:'fireslash', col:'#e8552a', name:'Liệt Hỏa',   rank:1, per:'+0.6% Công Kích và +0.6% Sát Thương Kỹ Năng',
+    { id:'sb_hoakich', name:'Hỏa Kích', glyph:'⚔', nhanh:[{id:'thieu',name:'Thiêu Đốt'},{id:'boc',name:'Bộc Phát'}], nodes:[
+      { id:'sb_liethoa', nh:'thieu', ico:'fireslash', col:'#e8552a', name:'Liệt Hỏa',   rank:1, per:'+0.6% Công Kích và +0.6% Sát Thương Kỹ Năng',
         eff:(A,v)=>{ A.atkPct += 0.6*v; A.skillPct += 0.6*v; } },
-      { id:'sb_bocphat', ico:'firescream', col:'#ff7a3a', name:'Bộc Phát',   rank:1, per:'+0.45% tỉ lệ Sát Thương Hoàn Hảo (×2 sát thương)', eff:(A,v)=>{ A.perfect += 0.45*v; } },
-      { id:'sb_thieuthan',ico:'flame',     col:'#ffb15c', name:'Thiêu Thân', rank:2, per:'+1.4% Sát Thương Bạo Kích', eff:(A,v)=>{ A.critDmg += 1.4*v; } },
-      { id:'sb_nhiethuyet',ico:'crescent', col:'#ff6b6b', name:'Nhiệt Huyết',rank:2, per:'+0.3% Hút Máu và +0.5% Công Kích',
+      { id:'sb_bocphat', nh:'boc', ico:'firescream', col:'#ff7a3a', name:'Bộc Phát',   rank:1, per:'+0.45% tỉ lệ Sát Thương Hoàn Hảo (×2 sát thương)', eff:(A,v)=>{ A.perfect += 0.45*v; } },
+      { id:'sb_thieuthan', nh:'boc', ico:'flame',     col:'#ffb15c', name:'Thiêu Thân', rank:2, per:'+1.4% Sát Thương Bạo Kích', eff:(A,v)=>{ A.critDmg += 1.4*v; } },
+      { id:'sb_nhiethuyet', nh:'thieu', ico:'crescent', col:'#ff6b6b', name:'Nhiệt Huyết',rank:2, per:'+0.3% Hút Máu và +0.5% Công Kích',
         eff:(A,v)=>{ A.hpLeech += 0.3*v; A.atkPct += 0.5*v; } },
-      { id:'sb_cuongviem',ico:'meteor',    col:'#e8552a', name:'Cuồng Viêm', rank:3, per:'+0.7% Công Kích và +0.7% Sát Thương Kỹ Năng',
+      { id:'sb_cuongviem', nh:'thieu', ico:'meteor',    col:'#e8552a', name:'Cuồng Viêm', rank:3, per:'+0.7% Công Kích và +0.7% Sát Thương Kỹ Năng',
         eff:(A,v)=>{ A.atkPct += 0.7*v; A.skillPct += 0.7*v; } },
-      { id:'sb_xichdiem', ico:'pierce',    col:'#ff9a5a', name:'Xích Diễm',  rank:3, per:'+0.4% Xuyên Giáp',    eff:(A,v)=>{ A.pierce += 0.4*v; } },
-      { id:'sb_phanthien',ico:'stab',      col:'#ffcf7a', name:'Phần Thiên', rank:4, per:'+0.5% tỉ lệ Sát Thương Hoàn Hảo và +0.35% Bạo Kích',
+      { id:'sb_xichdiem', nh:'boc', ico:'pierce',    col:'#ff9a5a', name:'Xích Diễm',  rank:3, per:'+0.4% Xuyên Giáp',    eff:(A,v)=>{ A.pierce += 0.4*v; } },
+      { id:'sb_phanthien', nh:null, ico:'stab',      col:'#ffcf7a', name:'Phần Thiên', rank:4, per:'+0.5% tỉ lệ Sát Thương Hoàn Hảo và +0.35% Bạo Kích',
         eff:(A,v)=>{ A.perfect += 0.5*v; A.crit += 0.35*v; } },
-      { id:'sb_hoathan',  ico:'cyclone',   col:'#ff7a3a', name:'Hỏa Thần',   rank:5, per:'+1.3% Công Kích và +1.3% Sát Thương Kỹ Năng',
+      { id:'sb_hoathan', nh:'thieu', ico:'cyclone',   col:'#ff7a3a', name:'Hỏa Thần',   rank:5, per:'+1.3% Công Kích và +1.3% Sát Thương Kỹ Năng',
         eff:(A,v)=>{ A.atkPct += 1.3*v; A.skillPct += 1.3*v; } },
+      { id:'sb_lietboc', nh:'boc', ico:'bolt', col:'#ff9a4d', name:'Liệt Bộc', rank:5, per:'+0.6% tỉ lệ Sát Thương Hoàn Hảo và +1.4% Sát Thương Bạo Kích',
+        eff:(A,v)=>{ A.perfect += 0.6*v; A.critDmg += 1.4*v; } },
     ]},
-    { id:'sb_cuongnhu', name:'Cương Nhu', glyph:'✦', nodes:[
-      { id:'sb_noingoai', ico:'rune',      col:'#ffb15c', name:'Nội Ngoại',  rank:1, per:'+0.7% Sinh Lực và +0.5% Mana tối đa',
+    { id:'sb_cuongnhu', name:'Cương Nhu', glyph:'✦', nhanh:[{id:'cuong',name:'Cương'},{id:'nhu',name:'Nhu'}], nodes:[
+      { id:'sb_noingoai', nh:'cuong', ico:'rune',      col:'#ffb15c', name:'Nội Ngoại',  rank:1, per:'+0.7% Sinh Lực và +0.5% Mana tối đa',
         eff:(A,v)=>{ A.hpPct += 0.7*v; A.qiPct += 0.5*v; } },
-      { id:'sb_huyetam',  ico:'crowstorm', col:'#ff6b6b', name:'Huyết Ẩm',   rank:1, per:'+0.28% Hút Máu',      eff:(A,v)=>{ A.hpLeech += 0.28*v; } },
-      { id:'sb_khiam',    ico:'iceshard',  col:'#5ac8e8', name:'Khí Ẩm',     rank:2, per:'+0.35% Hút Mana',     eff:(A,v)=>{ A.qiLeech += 0.35*v; } },
-      { id:'sb_cuongthan',ico:'frostnova', col:'#8ab8ff', name:'Cương Thân', rank:2, per:'+0.5% Phòng Ngự và +0.5% Sinh Lực',
+      { id:'sb_huyetam', nh:'nhu', ico:'crowstorm', col:'#ff6b6b', name:'Huyết Ẩm',   rank:1, per:'+0.28% Hút Máu',      eff:(A,v)=>{ A.hpLeech += 0.28*v; } },
+      { id:'sb_khiam', nh:'nhu', ico:'iceshard',  col:'#5ac8e8', name:'Khí Ẩm',     rank:2, per:'+0.35% Hút Mana',     eff:(A,v)=>{ A.qiLeech += 0.35*v; } },
+      { id:'sb_cuongthan', nh:'cuong', ico:'frostnova', col:'#8ab8ff', name:'Cương Thân', rank:2, per:'+0.5% Phòng Ngự và +0.5% Sinh Lực',
         eff:(A,v)=>{ A.defPct += 0.5*v; A.hpPct += 0.5*v; } },
-      { id:'sb_phathuan', ico:'groundslam',col:'#c07fe0', name:'Phá Thuẫn',  rank:3, per:'+0.7 giây cửa sổ phá giáp quái', eff:(A,v)=>{ A.shieldSec += 0.7*v; } },
-      { id:'sb_tocchien', ico:'hourglass', col:'#9ed4ff', name:'Tốc Chiến',  rank:3, per:'-0.5% thời gian hồi chiêu', eff:(A,v)=>{ A.cdCut += 0.5*v; } },
-      { id:'sb_sinhsinh', ico:'wave',      col:'#8fd18f', name:'Sinh Sinh',  rank:4, per:'+0.3% Hút Máu và +0.3% Hút Mana',
+      { id:'sb_phathuan', nh:'cuong', ico:'groundslam',col:'#c07fe0', name:'Phá Thuẫn',  rank:3, per:'+0.7 giây cửa sổ phá giáp quái', eff:(A,v)=>{ A.shieldSec += 0.7*v; } },
+      { id:'sb_tocchien', nh:'nhu', ico:'hourglass', col:'#9ed4ff', name:'Tốc Chiến',  rank:3, per:'-0.5% thời gian hồi chiêu', eff:(A,v)=>{ A.cdCut += 0.5*v; } },
+      { id:'sb_sinhsinh', nh:null, ico:'wave',      col:'#8fd18f', name:'Sinh Sinh',  rank:4, per:'+0.3% Hút Máu và +0.3% Hút Mana',
         eff:(A,v)=>{ A.hpLeech += 0.3*v; A.qiLeech += 0.3*v; } },
-      { id:'sb_amduong',  ico:'twister',   col:'#ffe9a8', name:'Âm Dương',   rank:5, per:'+1.0% Sinh Lực và +0.9% Công Kích',
+      { id:'sb_amduong', nh:'cuong', ico:'twister',   col:'#ffe9a8', name:'Âm Dương',   rank:5, per:'+1.0% Sinh Lực và +0.9% Công Kích',
         eff:(A,v)=>{ A.hpPct += 1.0*v; A.atkPct += 0.9*v; } },
+      { id:'sb_nhukinh', nh:'nhu', ico:'spirit', col:'#7ecbff', name:'Nhu Kình', rank:5, per:'+0.35% Hút Máu và +0.35% Hút Mana',
+        eff:(A,v)=>{ A.hpLeech += 0.35*v; A.qiLeech += 0.35*v; } },
     ]},
-    { id:'sb_daophap', name:'Đao Pháp', glyph:'⚒', nodes:[
-      { id:'sb_luyendao', ico:'anvil',     col:'#ffb15c', name:'Luyện Đao',  rank:1, per:'+1.4% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.4*v; } },
-      { id:'sb_bangiap',  ico:'pauldron',  col:'#e8552a', name:'Bán Giáp',   rank:1, per:'+0.6% chỉ số chính của Giáp',   eff:(A,v)=>{ A.armPct += 0.6*v; } },
-      { id:'sb_hoaluyen', ico:'hammer',    col:'#ff7a3a', name:'Hỏa Luyện',  rank:2, per:'mỗi cấp rèn (+N) có thêm 0.22% hiệu lực', eff:(A,v)=>{ A.plusStep += 0.0022*v; } },
-      { id:'sb_ngocviem', ico:'gem',       col:'#ffcf7a', name:'Ngọc Viêm',  rank:2, per:'+1.4% hiệu lực dòng Hoàn Hảo',  eff:(A,v)=>{ A.excPct += 1.4*v; } },
-      { id:'sb_thandao',  ico:'greatsword',col:'#e8552a', name:'Thần Đao',   rank:3, per:'+1.7% chỉ số chính của Vũ Khí và +0.3% Sát Thương Kỹ Năng',
+    { id:'sb_daophap', name:'Đao Pháp', glyph:'⚒', nhanh:[{id:'dao',name:'Đao'},{id:'giap',name:'Giáp'}], nodes:[
+      { id:'sb_luyendao', nh:'dao', ico:'anvil',     col:'#ffb15c', name:'Luyện Đao',  rank:1, per:'+1.4% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.4*v; } },
+      { id:'sb_bangiap', nh:'giap', ico:'pauldron',  col:'#e8552a', name:'Bán Giáp',   rank:1, per:'+0.6% chỉ số chính của Giáp',   eff:(A,v)=>{ A.armPct += 0.6*v; } },
+      { id:'sb_hoaluyen', nh:'dao', ico:'hammer',    col:'#ff7a3a', name:'Hỏa Luyện',  rank:2, per:'mỗi cấp rèn (+N) có thêm 0.22% hiệu lực', eff:(A,v)=>{ A.plusStep += 0.0022*v; } },
+      { id:'sb_ngocviem', nh:'giap', ico:'gem',       col:'#ffcf7a', name:'Ngọc Viêm',  rank:2, per:'+1.4% hiệu lực dòng Hoàn Hảo',  eff:(A,v)=>{ A.excPct += 1.4*v; } },
+      { id:'sb_thandao', nh:'dao', ico:'greatsword',col:'#e8552a', name:'Thần Đao',   rank:3, per:'+1.7% chỉ số chính của Vũ Khí và +0.3% Sát Thương Kỹ Năng',
         eff:(A,v)=>{ A.wpnPct += 1.7*v; A.skillPct += 0.3*v; } },
-      { id:'sb_tronggiap',ico:'helm',      col:'#8ab8ff', name:'Trọng Giáp', rank:3, per:'+0.8% chỉ số chính của Giáp',   eff:(A,v)=>{ A.armPct += 0.8*v; } },
-      { id:'sb_luyenhoa', ico:'blade_up',  col:'#ff9a5a', name:'Luyện Hỏa',  rank:4, per:'mỗi cấp rèn có thêm 0.16% hiệu lực, và +0.4% Công Kích',
+      { id:'sb_tronggiap', nh:'giap', ico:'helm',      col:'#8ab8ff', name:'Trọng Giáp', rank:3, per:'+0.8% chỉ số chính của Giáp',   eff:(A,v)=>{ A.armPct += 0.8*v; } },
+      { id:'sb_luyenhoa', nh:null, ico:'blade_up',  col:'#ff9a5a', name:'Luyện Hỏa',  rank:4, per:'mỗi cấp rèn có thêm 0.16% hiệu lực, và +0.4% Công Kích',
         eff:(A,v)=>{ A.plusStep += 0.0016*v; A.atkPct += 0.4*v; } },
-      { id:'sb_hopnhat',  ico:'fusion',    col:'#ffe9a8', name:'Đao Hồn Hợp Nhất', rank:5, per:'+2.0% chỉ số Vũ Khí và +1.0% chỉ số Giáp',
+      { id:'sb_hopnhat', nh:'dao', ico:'fusion',    col:'#ffe9a8', name:'Đao Hồn Hợp Nhất', rank:5, per:'+2.0% chỉ số Vũ Khí và +1.0% chỉ số Giáp',
         eff:(A,v)=>{ A.wpnPct += 2.0*v; A.armPct += 1.0*v; } },
+      { id:'sb_thietthan', nh:'giap', ico:'fist', col:'#ffb15c', name:'Thiết Thân', rank:5, per:'+1.8% chỉ số chính của Giáp và +0.6% Sinh Lực',
+        eff:(A,v)=>{ A.armPct += 1.8*v; A.hpPct += 0.6*v; } },
     ]},
   ],
   // ── Dark Lord: lớp chỉ huy. Đặc trưng RIÊNG: cả một bảng KINH TẾ (tỉ lệ rơi đồ · Lumen · EXP)
   // mà bốn lớp kia không có lấy một nút — Dark Lord không đánh nhanh nhất hay mạnh nhất, nó
   // farm hiệu quả nhất. Kèm Phản Đòn và chỉ số Giáp cao nhất trong năm lớp.
   bug: [
-    { id:'dl_thongsoai', name:'Thống Soái', glyph:'⚔', nodes:[
-      { id:'dl_hieutrieu',ico:'crown',     col:'#c8a83a', name:'Hiệu Triệu', rank:1, per:'+0.65% Công Kích',    eff:(A,v)=>{ A.atkPct += 0.65*v; } },
-      { id:'dl_uyap',     ico:'firescream',col:'#ff7a3a', name:'Uy Áp',      rank:1, per:'+0.9% Sát Thương Kỹ Năng', eff:(A,v)=>{ A.skillPct += 0.9*v; } },
-      { id:'dl_tranap',   ico:'groundslam',col:'#8a9a3a', name:'Trấn Áp',    rank:2, per:'+0.45% Xuyên Giáp',   eff:(A,v)=>{ A.pierce += 0.45*v; } },
-      { id:'dl_chieny',   ico:'fury',      col:'#d0e07a', name:'Chiến Ý',    rank:2, per:'+1.4% Sát Thương Bạo Kích', eff:(A,v)=>{ A.critDmg += 1.4*v; } },
-      { id:'dl_cuongno',  ico:'raven',     col:'#6a4a8a', name:'Cuồng Nộ Lệnh', rank:3, per:'+0.8% Công Kích',  eff:(A,v)=>{ A.atkPct += 0.8*v; } },
-      { id:'dl_vaysat',   ico:'spin_blade',col:'#a8b85a', name:'Vây Sát',    rank:3, per:'+0.4% Tốc Đánh',      eff:(A,v)=>{ A.aspdPct += 0.4*v; } },
-      { id:'dl_quanlenh', ico:'crowstorm', col:'#8a9a3a', name:'Quân Lệnh',  rank:4, per:'+1.0% Công Kích và +0.5% Sát Thương Kỹ Năng',
+    { id:'dl_thongsoai', name:'Thống Soái', glyph:'⚔', nhanh:[{id:'menh',name:'Quân Lệnh'},{id:'uy',name:'Uy Sát'}], nodes:[
+      { id:'dl_hieutrieu', nh:'menh', ico:'crown',     col:'#c8a83a', name:'Hiệu Triệu', rank:1, per:'+0.65% Công Kích',    eff:(A,v)=>{ A.atkPct += 0.65*v; } },
+      { id:'dl_uyap', nh:'uy', ico:'firescream',col:'#ff7a3a', name:'Uy Áp',      rank:1, per:'+0.9% Sát Thương Kỹ Năng', eff:(A,v)=>{ A.skillPct += 0.9*v; } },
+      { id:'dl_tranap', nh:'menh', ico:'groundslam',col:'#8a9a3a', name:'Trấn Áp',    rank:2, per:'+0.45% Xuyên Giáp',   eff:(A,v)=>{ A.pierce += 0.45*v; } },
+      { id:'dl_chieny', nh:'uy', ico:'fury',      col:'#d0e07a', name:'Chiến Ý',    rank:2, per:'+1.4% Sát Thương Bạo Kích', eff:(A,v)=>{ A.critDmg += 1.4*v; } },
+      { id:'dl_cuongno', nh:'menh', ico:'raven',     col:'#6a4a8a', name:'Cuồng Nộ Lệnh', rank:3, per:'+0.8% Công Kích',  eff:(A,v)=>{ A.atkPct += 0.8*v; } },
+      { id:'dl_vaysat', nh:'uy', ico:'spin_blade',col:'#a8b85a', name:'Vây Sát',    rank:3, per:'+0.4% Tốc Đánh',      eff:(A,v)=>{ A.aspdPct += 0.4*v; } },
+      { id:'dl_quanlenh', nh:null, ico:'crowstorm', col:'#8a9a3a', name:'Quân Lệnh',  rank:4, per:'+1.0% Công Kích và +0.5% Sát Thương Kỹ Năng',
         eff:(A,v)=>{ A.atkPct += 1.0*v; A.skillPct += 0.5*v; } },
-      { id:'dl_bavuong',  ico:'cyclone',   col:'#d0e07a', name:'Bá Vương Lệnh', rank:5, per:'+1.7% Công Kích',  eff:(A,v)=>{ A.atkPct += 1.7*v; } },
+      { id:'dl_bavuong', nh:'menh', ico:'cyclone',   col:'#d0e07a', name:'Bá Vương Lệnh', rank:5, per:'+1.7% Công Kích',  eff:(A,v)=>{ A.atkPct += 1.7*v; } },
+      { id:'dl_thienuy', nh:'uy', ico:'meteor', col:'#d0e07a', name:'Thiên Uy Lệnh', rank:5, per:'+1.8% Sát Thương Kỹ Năng và +0.5% Xuyên Giáp',
+        eff:(A,v)=>{ A.skillPct += 1.8*v; A.pierce += 0.5*v; } },
     ]},
-    { id:'dl_locmenh', name:'Lộc Mệnh', glyph:'✦', nodes:[
-      { id:'dl_thuluom',  ico:'rune',      col:'#8fd18f', name:'Thu Lượm',   rank:1, per:'+0.35% tỉ lệ quái rớt đồ', eff:(A,v)=>{ A.dropPct += 0.35*v; } },
-      { id:'dl_khodun',   ico:'coin',      col:'#ffd76a', name:'Kho Đụn',    rank:1, per:'+1.0% Lumen nhặt được', eff:(A,v)=>{ A.silverPct += 1.0*v; } },
-      { id:'dl_hocrong',  ico:'book',      col:'#9ed4ff', name:'Học Rộng',   rank:2, per:'+0.8% EXP',           eff:(A,v)=>{ A.expPct += 0.8*v; } },
-      { id:'dl_baovat',   ico:'gem',       col:'#c07fe0', name:'Bảo Vật',    rank:2, per:'+0.3% tỉ lệ quái rớt đồ', eff:(A,v)=>{ A.dropPct += 0.3*v; } },
-      { id:'dl_phanuy',   ico:'frostnova', col:'#8ab8ff', name:'Phản Uy',    rank:3, per:'+0.9% Phản Đòn',      eff:(A,v)=>{ A.reflectPct += 0.9*v; } },
-      { id:'dl_trongthuong',ico:'wave',    col:'#ffe9a8', name:'Trọng Thưởng', rank:3, per:'+1.2% Lumen nhặt được', eff:(A,v)=>{ A.silverPct += 1.2*v; } },
-      { id:'dl_thienmenh',ico:'twister',   col:'#a8b85a', name:'Thiên Mệnh', rank:4, per:'+0.9% EXP và +0.25% tỉ lệ quái rớt đồ',
+    { id:'dl_locmenh', name:'Lộc Mệnh', glyph:'✦', nhanh:[{id:'loc',name:'Tài Lộc'},{id:'menh',name:'Mệnh Vận'}], nodes:[
+      { id:'dl_thuluom', nh:'menh', ico:'rune',      col:'#8fd18f', name:'Thu Lượm',   rank:1, per:'+0.35% tỉ lệ quái rớt đồ', eff:(A,v)=>{ A.dropPct += 0.35*v; } },
+      { id:'dl_khodun', nh:'loc', ico:'coin',      col:'#ffd76a', name:'Kho Đụn',    rank:1, per:'+1.0% Lumen nhặt được', eff:(A,v)=>{ A.silverPct += 1.0*v; } },
+      { id:'dl_hocrong', nh:'menh', ico:'book',      col:'#9ed4ff', name:'Học Rộng',   rank:2, per:'+0.8% EXP',           eff:(A,v)=>{ A.expPct += 0.8*v; } },
+      { id:'dl_baovat', nh:'loc', ico:'gem',       col:'#c07fe0', name:'Bảo Vật',    rank:2, per:'+0.3% tỉ lệ quái rớt đồ', eff:(A,v)=>{ A.dropPct += 0.3*v; } },
+      { id:'dl_phanuy', nh:'menh', ico:'frostnova', col:'#8ab8ff', name:'Phản Uy',    rank:3, per:'+0.9% Phản Đòn',      eff:(A,v)=>{ A.reflectPct += 0.9*v; } },
+      { id:'dl_trongthuong', nh:'loc', ico:'wave',    col:'#ffe9a8', name:'Trọng Thưởng', rank:3, per:'+1.2% Lumen nhặt được', eff:(A,v)=>{ A.silverPct += 1.2*v; } },
+      { id:'dl_thienmenh', nh:null, ico:'twister',   col:'#a8b85a', name:'Thiên Mệnh', rank:4, per:'+0.9% EXP và +0.25% tỉ lệ quái rớt đồ',
         eff:(A,v)=>{ A.expPct += 0.9*v; A.dropPct += 0.25*v; } },
-      { id:'dl_vuongkho', ico:'spirit',    col:'#c8a83a', name:'Vương Khố',  rank:5, per:'+1.5% Lumen và +1.0% EXP',
+      { id:'dl_vuongkho', nh:'loc', ico:'spirit',    col:'#c8a83a', name:'Vương Khố',  rank:5, per:'+1.5% Lumen và +1.0% EXP',
         eff:(A,v)=>{ A.silverPct += 1.5*v; A.expPct += 1.0*v; } },
+      { id:'dl_truongmenh', nh:'menh', ico:'hourglass', col:'#7ec850', name:'Trường Mệnh', rank:5, per:'+1.3% EXP và +1.0% Phản Đòn',
+        eff:(A,v)=>{ A.expPct += 1.3*v; A.reflectPct += 1.0*v; } },
     ]},
-    { id:'dl_vuongkhi', name:'Vương Khí', glyph:'⚒', nodes:[
-      { id:'dl_luyenlenh',ico:'anvil',     col:'#ffb15c', name:'Luyện Lệnh Trượng', rank:1, per:'+1.2% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.2*v; } },
-      { id:'dl_hacgiap',  ico:'pauldron',  col:'#6a4a8a', name:'Hắc Giáp',   rank:1, per:'+0.85% chỉ số chính của Giáp',  eff:(A,v)=>{ A.armPct += 0.85*v; } },
-      { id:'dl_uyluyen',  ico:'hammer',    col:'#ffcf7a', name:'Uy Luyện',   rank:2, per:'mỗi cấp rèn (+N) có thêm 0.17% hiệu lực', eff:(A,v)=>{ A.plusStep += 0.0017*v; } },
-      { id:'dl_ngocvuong',ico:'iceshard',  col:'#9ed4ff', name:'Ngọc Vương', rank:2, per:'+1.6% hiệu lực dòng Hoàn Hảo',  eff:(A,v)=>{ A.excPct += 1.6*v; } },
-      { id:'dl_vuongtruong',ico:'greatsword',col:'#c8a83a',name:'Vương Trượng', rank:3, per:'+1.5% chỉ số chính của Vũ Khí và +0.3% Phản Đòn',
+    { id:'dl_vuongkhi', name:'Vương Khí', glyph:'⚒', nhanh:[{id:'truong',name:'Lệnh Trượng'},{id:'giap',name:'Hắc Giáp'}], nodes:[
+      { id:'dl_luyenlenh', nh:'truong', ico:'anvil',     col:'#ffb15c', name:'Luyện Lệnh Trượng', rank:1, per:'+1.2% chỉ số chính của Vũ Khí', eff:(A,v)=>{ A.wpnPct += 1.2*v; } },
+      { id:'dl_hacgiap', nh:'giap', ico:'pauldron',  col:'#6a4a8a', name:'Hắc Giáp',   rank:1, per:'+0.85% chỉ số chính của Giáp',  eff:(A,v)=>{ A.armPct += 0.85*v; } },
+      { id:'dl_uyluyen', nh:'truong', ico:'hammer',    col:'#ffcf7a', name:'Uy Luyện',   rank:2, per:'mỗi cấp rèn (+N) có thêm 0.17% hiệu lực', eff:(A,v)=>{ A.plusStep += 0.0017*v; } },
+      { id:'dl_ngocvuong', nh:'giap', ico:'iceshard',  col:'#9ed4ff', name:'Ngọc Vương', rank:2, per:'+1.6% hiệu lực dòng Hoàn Hảo',  eff:(A,v)=>{ A.excPct += 1.6*v; } },
+      { id:'dl_vuongtruong', nh:'truong', ico:'greatsword',col:'#c8a83a',name:'Vương Trượng', rank:3, per:'+1.5% chỉ số chính của Vũ Khí và +0.3% Phản Đòn',
         eff:(A,v)=>{ A.wpnPct += 1.5*v; A.reflectPct += 0.3*v; } },
-      { id:'dl_longgiap', ico:'helm',      col:'#8a9a3a', name:'Long Giáp',  rank:3, per:'+1.1% chỉ số chính của Giáp',   eff:(A,v)=>{ A.armPct += 1.1*v; } },
-      { id:'dl_kimthan',  ico:'fist',      col:'#ffd76a', name:'Kim Thân',   rank:4, per:'+0.7% chỉ số chính của Giáp và +0.8% Sinh Lực',
+      { id:'dl_longgiap', nh:'giap', ico:'helm',      col:'#8a9a3a', name:'Long Giáp',  rank:3, per:'+1.1% chỉ số chính của Giáp',   eff:(A,v)=>{ A.armPct += 1.1*v; } },
+      { id:'dl_kimthan', nh:null, ico:'fist',      col:'#ffd76a', name:'Kim Thân',   rank:4, per:'+0.7% chỉ số chính của Giáp và +0.8% Sinh Lực',
         eff:(A,v)=>{ A.armPct += 0.7*v; A.hpPct += 0.8*v; } },
-      { id:'dl_hopnhat',  ico:'fusion',    col:'#d0e07a', name:'Vương Giả Hợp Nhất', rank:5, per:'+1.9% chỉ số Vũ Khí và +1.4% chỉ số Giáp',
+      { id:'dl_hopnhat', nh:'truong', ico:'fusion',    col:'#d0e07a', name:'Vương Giả Hợp Nhất', rank:5, per:'+1.9% chỉ số Vũ Khí và +1.4% chỉ số Giáp',
         eff:(A,v)=>{ A.wpnPct += 1.9*v; A.armPct += 1.4*v; } },
+      { id:'dl_longlan', nh:'giap', ico:'crescent', col:'#8ab8ff', name:'Long Lân', rank:5, per:'+1.7% chỉ số chính của Giáp và +0.9% Sinh Lực',
+        eff:(A,v)=>{ A.armPct += 1.7*v; A.hpPct += 0.9*v; } },
     ]},
   ],
 };
@@ -16781,10 +16854,76 @@ function masteryCap(){ let n = 0; for (const t of masteryTabs()) n += t.nodes.le
 function masteryPut(id){ return (player && player.mastery && player.mastery[id]) || 0; }
 function masterySpentTab(tab){ let n = 0; for (const nd of tab.nodes) n += masteryPut(nd.id); return n; }
 function masterySpentAll(){ let n = 0; for (const t of masteryTabs()) n += masterySpentTab(t); return n; }
-// Rank R mở khi bảng đó đã tiêu (R-1)×10 điểm — đếm TẤT CẢ điểm của bảng, không riêng rank trước,
-// vì đếm riêng rank trước sẽ khoá cứng người đã lỡ dồn hết vào một nhánh rồi tẩy điểm giữa chừng.
-function masteryRankNeed(rank){ return (rank - 1) * MASTERY_RANK_GATE; }
-function masteryRankOpen(tab, rank){ return masterySpentTab(tab) >= masteryRankNeed(rank); }
+function mstNutRank(tab, r){ return tab.nodes.filter(n => n.rank === r); }
+function mstTenNhanh(tab, nh){ return ((tab.nhanh || []).find(x => x.id === nh) || {}).name || nh; }
+function masteryTieuNhanh(tab, nh){
+  let n = 0; for (const nd of tab.nodes) if (nd.nh === nh) n += masteryPut(nd.id); return n;
+}
+// CHA của một nút = nút ở rank liền trước thuộc CÙNG nhánh. Nút chung (nh:null) không thuộc
+// nhánh nào nên nhận cả hai nút trước nó — đủ MỘT nhánh là qua; và nút đỉnh nhận chính nút
+// chung đó (nó lọt vào nhánh nào cũng được vì `!n.nh`).
+function masteryCha(tab, nd){
+  if (nd.rank <= 1) return [];
+  const truoc = mstNutRank(tab, nd.rank - 1);
+  const cung = nd.nh ? truoc.filter(n => !n.nh || n.nh === nd.nh) : truoc;
+  return cung.length ? cung : truoc;
+}
+// Nút ĐỐI: cùng rank cuối, khác nhánh. Bỏ điểm vào một nút là nút kia khoá lại — đây chính là
+// chỗ người chơi CHỌN HƯỚNG, và tẩy điểm là đường lui duy nhất.
+function masteryDoi(tab, nd){
+  if (!nd.nh || nd.rank < mstDinhRank(tab)) return null;
+  return tab.nodes.find(n => n !== nd && n.rank === nd.rank && n.nh && n.nh !== nd.nh) || null;
+}
+function mstDinhRank(tab){ let r = 0; for (const n of tab.nodes) if (n.rank > r) r = n.rank; return r; }
+// VÌ SAO nút này đang khoá — trả câu giải thích, null nghĩa là mở. Một hàm duy nhất cho cả
+// masteryAdd() lẫn phần vẽ, nên thứ người chơi ĐỌC và thứ máy THỰC THI không thể lệch nhau.
+function masteryKhoa(tab, nd){
+  const doi = masteryDoi(tab, nd);
+  if (doi && masteryPut(doi.id) > 0)
+    return `đã chọn hướng ${mstTenNhanh(tab, doi.nh)} (${doi.name}) — phải tẩy điểm mới đổi được`;
+  const can = MST_CAN[nd.rank] || 0;
+  if (can){
+    const cha = masteryCha(tab, nd);
+    if (cha.length && !cha.some(c => masteryPut(c.id) >= can))
+      return `cần ${can} điểm ở ${cha.map(c => c.name).join(' hoặc ')}`;
+  }
+  if (nd.nh && nd.rank >= mstDinhRank(tab)){
+    const tieu = masteryTieuNhanh(tab, nd.nh);
+    if (tieu < MST_DINH_NHANH)
+      return `cần ${MST_DINH_NHANH} điểm trong nhánh ${mstTenNhanh(tab, nd.nh)} (đang có ${tieu})`;
+  }
+  return null;
+}
+// Save cũ không có luật cây nào cả, nên nó có thể giữ điểm ở chỗ nay không tới được — hoặc
+// giữ điểm ở CẢ HAI nút đỉnh. HOÀN ĐIỂM chứ không khoá chết: một bảng hiện ra trạng thái không
+// hợp lệ mà không sửa được là thứ người chơi không có cách nào thoát ra.
+// Lặp tới khi ổn định — gỡ một nút có thể làm nút khác mất cha, một lượt là không đủ.
+function masteryRaSoat(){
+  if (!player || !player.mastery) return 0;
+  let hoan = 0;
+  const tra = (id) => { const v = masteryPut(id); if (!v) return;
+    hoan += v; player.mpts = (player.mpts || 0) + v; delete player.mastery[id]; };
+  // Xung đột hai nút đỉnh: giữ nút đang nhiều điểm hơn, trả nút kia.
+  for (const tab of masteryTabs()){
+    const dinh = mstNutRank(tab, mstDinhRank(tab)).filter(n => masteryPut(n.id) > 0);
+    if (dinh.length > 1){
+      dinh.sort((a, b) => masteryPut(b.id) - masteryPut(a.id));
+      for (const n of dinh.slice(1)) tra(n.id);
+    }
+  }
+  for (let vong = 0, doi = true; doi && vong < 12; vong++){
+    doi = false;
+    for (const tab of masteryTabs()) for (const nd of tab.nodes){
+      const v = masteryPut(nd.id); if (!v) continue;
+      // Tạm gỡ chính nó ra rồi mới hỏi: nếu không, nút đỉnh tự thoả điều kiện "nhánh đủ điểm"
+      // bằng chính số điểm của mình.
+      player.mastery[nd.id] = 0;
+      if (masteryKhoa(tab, nd)){ player.mastery[nd.id] = v; tra(nd.id); doi = true; }
+      else player.mastery[nd.id] = v;
+    }
+  }
+  return hoan;
+}
 // Gom toàn bộ hiệu lực mastery về một sổ. Khoá nào TRÙNG TÊN với sổ P của calcDerived thì được
 // đổ thẳng vào P; bốn khoá còn lại (wpnPct/armPct/plusStep/excPct) và hai khoá kỹ năng
 // (skillPct/cdCut) có đường đi riêng — xem chỗ gọi trong calcDerived.
@@ -16813,7 +16952,7 @@ window.masteryAdd = function(id, n){
   for (const t of masteryTabs()){ const f = t.nodes.find(x => x.id === id); if (f){ nd = f; tab = t; break; } }
   if (!nd) return;
   const cur = masteryPut(id);
-  if (!masteryRankOpen(tab, nd.rank)) return;
+  if (masteryKhoa(tab, nd)) return;
   n = Math.max(1, Math.min(Math.floor(n) || 1, player.mpts || 0, MASTERY_MAX_NODE - cur));
   if (n <= 0) return;
   if (!player.mastery) player.mastery = {};
@@ -16865,12 +17004,13 @@ function renderMastery(){
         <b style="color:#ffd76a">đi hết chính tuyến</b> (Chương VII — Trụ Khóa cuối).<br>
       ◆ Khai mở: <b>+${MASTERY_OPEN_GRANT}</b> điểm. Sau đó mỗi cấp thăng thêm <b>1</b> điểm, mỗi lần Tái Sinh thêm <b>${MASTERY_PER_RESET}</b>.<br>
       ◆ Điểm ${MASTERY_NAME} <b style="color:#7ec850">không mất</b> khi Tái Sinh tiếp.<br>
+      ◆ Mỗi bảng là một <b style="color:#ffd76a">cây hai nhánh</b>: nút sau mở khi nút cha cùng nhánh
+      đủ điểm, và <b>hai nút cuối loại trừ nhau</b> — mỗi bảng chỉ đi trọn được một hướng.<br>
       ◆ Bảng có <b>${masteryCap()}</b> ô điểm — một vòng Tái Sinh chỉ kiếm được khoảng
       <b>${MASTERY_PER_RESET + MAX_LV - 1}</b>. Không ai tô kín được: phải chọn.</div>
       <div style="font-size:12px;color:#9aa8d4;margin-top:6px">Hiện tại: cấp đỉnh <b>${lvPeak()}</b>/${MASTERY_LV} · chính tuyến ${player.mongChiTon ? '<b style="color:#7ec850">đã xong</b>' : '<b style="color:#ff9a6a">chưa xong</b>'}</div>`;
     CE().innerHTML = html; return;
   }
-  const nClass = (MASTERY_CLASS[player.sect] || []).length;
   html += `<div class="mst-head">
     <span>Điểm chưa dùng <b class="mst-pts">${player.mpts || 0}</b></span>
     <span>đã dùng <b>${masterySpentAll()}</b>/${masteryCap()}</span>
@@ -16881,41 +17021,59 @@ function renderMastery(){
       title="${t.name}">${t.glyph}<span>${t.name}</span><i>${masterySpentTab(t)}</i></button>`;
   }
   html += `</div>`;
-  if (!nClass){
-    html += `<div class="mst-note">◆ Bản thử nghiệm: ba bảng riêng của <b>${SECTS[player.sect].name}</b>
-      chưa vẽ — hiện mới có <b>Dark Knight</b>. Bảng Hộ Thể dùng chung cho mọi lớp.</div>`;
-  }
   const tab = tabs.find(t => t.id === window.mTab);
+  const NH = tab.nhanh || [];
+  const dinhR = mstDinhRank(tab);
+  // Đầu bảng: hai nhánh và số điểm đang nuôi mỗi nhánh. Không có dòng này thì cây vẽ ra hai cột
+  // mà người chơi không biết cột nào là cột nào, và cũng không thấy mình đang nghiêng về đâu.
+  const chon = NH.map(b => tab.nodes.some(n => n.nh === b.id && n.rank === dinhR && masteryPut(n.id) > 0));
+  html += `<div class="mst-nhanh">` + NH.map((b, i) =>
+      `<span class="mst-nh${chon[i] ? ' da' : ''}"><i>${b.name}</i><b>${masteryTieuNhanh(tab, b.id)}</b></span>`)
+    .join(`<s>hoặc</s>`) + `</div>`;
   html += `<div class="mst-tree">`;
-  for (let r = 1; r <= 5; r++){
-    const nodes = tab.nodes.filter(n => n.rank === r);
+  for (let r = 1; r <= dinhR; r++){
+    // Xếp theo THỨ TỰ NHÁNH, không theo thứ tự khai trong mảng: cột trái phải luôn là cùng một
+    // nhánh ở mọi hàng, nếu không thì đường nối cha–con vẽ ra bắt chéo nhau.
+    const nodes = mstNutRank(tab, r).slice()
+      .sort((a, b) => NH.findIndex(x => x.id === a.nh) - NH.findIndex(x => x.id === b.nh));
     if (!nodes.length) continue;
-    const open = masteryRankOpen(tab, r);
-    const need = masteryRankNeed(r);
-    if (r > 1) html += `<div class="mst-link${open?'':' off'}">▼</div>`;
-    html += `<div class="mst-row${open?'':' locked'}">`;
-    for (const nd of nodes){
+    if (r > 1) html += `<div class="mst-link">${nodes.length > 1 ? '▼<s></s>▼' : '▼'}</div>`;
+    const chot = r === dinhR && nodes.length > 1;
+    html += `<div class="mst-row${chot ? ' chot' : ''}">`;
+    nodes.forEach((nd, i) => {
+      if (chot && i) html += `<span class="mst-hoac">CHỌN<br>MỘT</span>`;
       const v = masteryPut(nd.id);
       const full = v >= MASTERY_MAX_NODE;
-      const can = open && !full && (player.mpts || 0) > 0;
+      const khoa = masteryKhoa(tab, nd);
+      const can = !khoa && !full && (player.mpts || 0) > 0;
       // Cả phần chữ dồn vào tooltip: tên · hiệu lực mỗi điểm · tổng đang có · lý do đang khoá.
-      const tip = `${nd.name} — ${v}/${MASTERY_MAX_NODE}\nMỗi điểm: ${nd.per}`
+      const tip = `${nd.name} — ${v}/${MASTERY_MAX_NODE}`
+        + (nd.nh ? ` · nhánh ${mstTenNhanh(tab, nd.nh)}` : ' · nút chung hai nhánh')
+        + `\nMỗi điểm: ${nd.per}`
         + (v > 0 ? `\nĐang có: ${masteryLine(nd, v)}` : '')
-        + (open ? (full ? '\n✔ Đã tối đa' : can ? '\nBấm +1 · Shift +5 · Ctrl tô kín' : '\nHết điểm')
-                : `\n🔒 Cần ${need} điểm trong bảng ${tab.name}`);
-      html += `<button class="mst-cell${v>0?' on':''}${full?' full':''}" title="${mstEsc(tip)}"
+        + (khoa ? `\n🔒 ${khoa}`
+                : full ? '\n✔ Đã tối đa' : can ? '\nBấm +1 · Shift +5 · Ctrl tô kín' : '\nHết điểm');
+      html += `<button class="mst-cell${v>0?' on':''}${full?' full':''}${khoa?' khoa':''}" title="${mstEsc(tip)}"
         ${can?`onclick="masteryClick(event,'${nd.id}')"`:'disabled'}>
         <img src="${masteryIco(nd)}" alt="">
         <i class="mst-c-pt">${v}<span>/${MASTERY_MAX_NODE}</span></i>
         <b class="mst-c-name">${nd.name}</b>
         <em class="mst-c-bar"><s style="width:${v/MASTERY_MAX_NODE*100}%"></s></em>
       </button>`;
-    }
-    if (!open) html += `<div class="mst-lock">🔒 cần ${need} điểm trong bảng ${tab.name}</div>`;
+    });
     html += `</div>`;
+    // Lý do khoá viết thẳng dưới hàng, không bắt rê chuột mới biết. Chỉ hiện khi CẢ hàng khoá —
+    // còn một ô bấm được thì dòng này là tiếng ồn.
+    // ⚠ Đếm số NÚT bị khoá, đừng đếm số LÝ DO khác nhau: hai nút đỉnh thường khoá vì cùng một
+    // câu ("cần 10 điểm ở <nút chung>"), gộp lại còn 1 nên phép so 1 === 2 nuốt mất cả dòng.
+    const lyDo = nodes.map(n => masteryKhoa(tab, n));
+    if (lyDo.every(Boolean))
+      html += `<div class="mst-lock">🔒 ${[...new Set(lyDo)].join(' · ')}</div>`;
   }
   html += `</div>`;
-  html += `<div class="mst-help">Bấm ô: <b>+1</b> · Shift: <b>+5</b> · Ctrl: <b>tô kín</b> · di chuột lên ô để xem chi tiết</div>`;
+  html += `<div class="mst-help">Bấm ô: <b>+1</b> · Shift: <b>+5</b> · Ctrl: <b>tô kín</b><br>
+    Mỗi nút mở khi <b>nút cha cùng nhánh</b> đủ điểm — hai nút cuối bảng <b>loại trừ nhau</b>,
+    chọn rồi thì phải tẩy điểm mới đổi hướng.</div>`;
   const spent = masterySpentAll();
   if (spent > 0){
     const cost = MASTERY_RESPEC_COST * (1 + (player.mRespec || 0));

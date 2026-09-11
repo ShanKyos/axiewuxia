@@ -796,6 +796,42 @@ Một chiêu **không được vừa bấm được vừa cộng %ST vĩnh viễ
 đồng thời gỡ nó khỏi `LEGACY_SECT_SKILLS`, và đẩy một chiêu khác vào thế chỗ sao cho mỗi lớp
 vẫn đúng **4 chiêu Di Sản = +8,0% Công Kích** (`test_kynang5lop` bắt lỗi lệch giữa các lớp).
 
+### 🌳 ĐẠI THÀNH LÀ MỘT CÂY HAI NHÁNH — đừng biến nó lại thành danh sách
+
+`MASTERY_COMMON` + `MASTERY_CLASS` = **16 bảng** (1 chung + 3 riêng × 5 lớp), **144 nút**, mở ở
+cấp 120 sau khi xong chính tuyến. Mỗi bảng là một **cây**, không phải một danh sách nút.
+
+**Vì sao đổi.** Cổng cũ (`MASTERY_RANK_GATE`) chỉ đếm **tổng điểm đã tiêu trong bảng**: dồn đủ 40
+điểm vào bất cứ đâu là mở được mọi nút. Bảng vẽ ra hình cái cây mà luật thì là một cái thùng —
+người chơi không "chọn hướng" được gì, chỉ rải điểm mỏng ra.
+
+**Khuôn bắt buộc của MỌI bảng: `2 · 2 · 2 · 1 · 2`.**
+
+| rank | nút | luật |
+|---|---|---|
+| 1 | 1 nút mỗi nhánh | vào tự do |
+| 2-3 | 1 nút mỗi nhánh | cần **nút cha CÙNG NHÁNH** đủ `MST_CAN[rank]` điểm |
+| 4 | **1 nút chung** (`nh:null`) | đủ **một nhánh bất kỳ** ở rank 3 là qua |
+| 5 | **2 nút đỉnh, LOẠI TRỪ NHAU** | cần nút chung ≥ `MST_CAN[5]` **và** nhánh của nó ≥ `MST_DINH_NHANH` |
+
+- Tab khai `nhanh:[{id,name},{id,name}]`; mỗi nút khai `nh:'<id>'` (hoặc `nh:null` cho nút chung).
+- **Cặp loại trừ SUY TỪ HÌNH DẠNG**, không khai tay: hai nút cùng rank cuối khác nhánh
+  (`masteryDoi`). Thêm bảng mới mà quên nút đỉnh thứ hai là **mất im lặng** cả cơ chế chọn hướng
+  — `tests/test_mastery.js` §1 gác đúng khuôn trên, nên nó sẽ đỏ chứ không im.
+- **`masteryKhoa(tab, nd)` là cửa DUY NHẤT.** Cả `masteryAdd()` lẫn phần vẽ đều gọi nó, nên thứ
+  người chơi ĐỌC trong tooltip và thứ máy THỰC THI không thể lệch nhau. Đừng viết lại luật ở
+  phần vẽ.
+- **`MST_DINH_NHANH` không thừa** dù chuỗi cha đã bắt tiêu ≥18 điểm: nó chặn đúng cái ca đi trọn
+  nhánh A rồi vơ nút đỉnh của nhánh B (nút chung nhận **một** nhánh bất kỳ nên đường đó có thật).
+- **Save cũ vi phạm luật thì HOÀN ĐIỂM, không khoá chết** (`masteryRaSoat`, gọi trong `loadGame`).
+  Phải lặp tới khi ổn định — gỡ một nút làm nút khác mất cha, một lượt không đủ. Và phải **tạm gỡ
+  chính nút đang xét ra** trước khi hỏi, nếu không nút đỉnh tự thoả điều kiện "nhánh đủ điểm"
+  bằng chính số điểm của mình.
+
+**Ngân sách là một nửa của thiết kế.** Bảng chứa 720 ô điểm; một vòng Tái Sinh kiếm ~139. Đi trọn
+một hướng trong một bảng tốn 28 điểm mở đường + tới 20 điểm cho nút đỉnh. Đừng nới điểm cấp phát
+mà không nới luôn số nút — hết khan hiếm là hết lựa chọn, và cây lại thành danh sách.
+
 ### ⚠ Quy ước kỹ năng: NĂM thông số bắt buộc
 
 Mọi chiêu, không trừ chiêu nào, phải khai và **hiện ra cho người chơi đọc** đủ năm con số.
