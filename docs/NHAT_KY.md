@@ -5,6 +5,118 @@ sai**. Phần thứ hai mới là thứ có giá trị về sau — nó là danh
 
 ---
 
+## 2026-09-11 — Tướng đi: nhịp bước, tám hướng nhìn, khung nhiễm độc
+
+Commit: `7047240` · Nền: `b619e20`
+
+Phiên thiết kế nhân vật cho hợp với game. Đo trước, đề xuất sau — công cụ đo mới là
+`tools/do_dang.js` (sảiBọc · tảiĐất · đốiXứng · nhún), chạy lại là ra.
+
+### Số đo hiện trạng
+
+| | đo được |
+|---|---|
+| `heroSprite(back=true)` vs `back=false` | **0 / 52.000 điểm ảnh** lệch — không có hướng lưng, mà cờ `back` vẫn nằm trong khoá đệm ⇒ trả gấp đôi ô nhớ cho hai tấm giống hệt nhau |
+| Số bước mỗi vòng, cả 10 khối (5 bộ × đi/chạy) | `đốiXứng` **0,48–0,64** ⇒ **một** bước một vòng (vòng hai bước phải ≥0,85) |
+| Bàn chân chống đất chở được | `tảiĐất` 42,5/59 px so với `sảiBọc` 91/120 ⇒ **51% là trượt chân nằm trong bản vẽ** |
+| Khung nhiễm độc trong đệm sprite | **5/5 lớp**, khung `i4` đếm 12.828 px trong khi hàng xóm 6.606/6.733; ép tràn LRU dựng lại ra 6.678 |
+| Nhịp chạy ở 209 px/giây | **1,18** bước/giây trước sửa, **2,90** sau |
+| Bảng khung Spellblade | `sbhd1` **96 ô (6 hàng)** trong khi bốn bộ kia 112 ⇒ khối chạy chỉ 16 khung |
+
+### Những chỗ đã đoán sai trong phiên này
+
+- **Tưởng khối chạy có HAI bước một vòng.** Thước đo đầu tiên đếm số lần độ mở hai bàn chân
+  vượt ngưỡng, và nó ra 2 cho bốn bộ. Sai: trong pha bay một bàn chân nhấc khỏi dải sát đất
+  nên bề rộng đo được **sập xuống giả**, và cú sập đó bị đếm thành một bước. Thước đúng là độ
+  chồng khít bóng dáng giữa khung `i` và `i+n/2` — ra 0,48–0,64, tức một bước. Đã ghi cảnh
+  báo ngay trong `tools/do_dang.js` để đừng ai quay lại cách đếm cũ.
+- **Tưởng khung nhiễm độc là chuyện ngẫu nhiên theo thời điểm tải.** Hai lượt đầu ra khung 13
+  rồi 5–6 nên tưởng chỉ số nhảy lung tung; quét cả 5 lớp thì luôn ra khung 4. Vẫn là một cuộc
+  đua, chỉ là nhịp tải ổn định nên nó rơi vào cùng một chỗ. Kết luận "ngẫu nhiên" suýt làm bỏ
+  qua việc viết bài kiểm — mà bài kiểm thì bắt được đều 5/5.
+- **Cắm sai một ô trong bảng tám hướng** (`Đông-Bắc` khai `lat: true`, phải là `false`). Chính
+  bài kiểm mới bắt được ở lượt chạy đầu, bằng khẳng định "8 hướng phải là 8 tổ hợp khác nhau".
+- **Bản đầu của `nvChonHuong()` làm tròn góc về một trong tám nấc TRƯỚC rồi mới đo khoảng cách
+  để lui.** Ở dải 90°–112,5° nó chọn Đông trong khi luật cũ chọn Tây — nhân vật quay ngược ở
+  một dải góc, **dù chưa có tệp art mới nào**. Thử ngược lại: cắm lỗi đó vào thì bài kiểm đỏ
+  **88/720** góc. Vì thế bài quét 720 góc chứ không quét 8 mốc — chỗ hỏng nằm GIỮA hai mốc.
+- **`tests/test_nowuxia2.js` ghi cứng `/home/user/axie-wuxia/`.** Kho đã đổi tên, nên mục A âm
+  thầm bỏ qua mọi tệp (`catch { continue }`) còn mục D ném ENOENT — mà ba mục đầu vẫn XANH,
+  nhìn y như một bài khoẻ mạnh. Đã đổi sang tìm ngược gốc kho từ chính tệp bài kiểm.
+
+### Còn nợ
+
+- **51% trượt chân nằm trong bản vẽ** — không giá trị `SAI_CHAN` nào chữa được. Bản đặt hàng
+  art và ngưỡng nghiệm thu: `docs/DAT_HANG_TUONG_DI.md`.
+- **Năm bản vẽ cho tám hướng** chưa có tấm nào; máy đã xong, thêm một hướng = ba dòng dữ liệu.
+- **Spellblade thiếu một hàng bảng khung**, cần gói Spine gốc để nướng lại.
+- **Vai lệch của Spellblade sẽ đổi bên khi lật ngang** — cần chủ dự án chốt: chấp nhận, hay vẽ
+  đủ 8 hướng riêng cho mình lớp đó.
+## 2026-09-11 — Đại Thành thành CÂY hai nhánh
+
+Nền: `f1af955`
+
+### Bệnh: bảng vẽ hình cái cây, luật thì là cái thùng
+
+`MASTERY_RANK_GATE` chỉ đếm **tổng điểm đã tiêu trong bảng** — rank R mở khi bảng có (R−1)×10
+điểm, bất kể điểm đó nằm ở đâu. Nghĩa là không có đường đi nào cả: dồn 40 điểm vào một nút bất kỳ
+là mở được cả bảng. Người chơi không "chọn hướng" được gì, chỉ rải điểm mỏng ra.
+
+### Chữa: cấu trúc, không phải con số
+
+| | trước | sau |
+|---|---|---|
+| nút | 128 (16 bảng × 8) | **144** (16 bảng × 9) |
+| khuôn bảng | 5 hàng phẳng | **2·2·2·1·2** |
+| điều kiện mở | tổng điểm trong bảng | **nút cha CÙNG NHÁNH** (`MST_CAN`) |
+| nút đỉnh | 1 | **2, loại trừ nhau** |
+| ô điểm cả bảng | 640 | **720** · một vòng Tái Sinh kiếm 139 |
+
+Mỗi nút mang `nh:'<nhánh>'`, mỗi bảng khai `nhanh:[…2 mục]`. Cặp loại trừ **suy từ hình dạng**
+(hai nút cùng rank cuối, khác nhánh) chứ không khai tay — nên bảng mới lệch khuôn là bài kiểm đỏ,
+không phải mất im lặng cơ chế chọn hướng.
+
+Đi trọn một hướng trong một bảng: **28 điểm mở đường** (5+5+8+10) rồi tới 20 điểm cho nút đỉnh.
+
+### Những chỗ đã đoán sai trong phiên này
+
+**Đọc CLAUDE.md thay vì đo.** Mục "NHIỆM VỤ ĐÃ GỠ SẠCH" ghi `QUESTS` và `SIDE_QUESTS` đều rỗng.
+Tin theo, lần ra `masteryOpen()` đòi `player.mongChiTon` — cờ chỉ bật khi `questState === 'all'` —
+rồi kết luận chắc nịch rằng bảng Đại Thành **không có cửa vào**, và viết hẳn một bản vá cổng kèm
+chú thích dài. Đo thật: `QUESTS` có **33 nhiệm vụ**, chuỗi đã được dựng lại từ lâu. Cổng vẫn chạy
+bình thường; bản vá đã gỡ. *Tài liệu là ảnh chụp một thời điểm — cái nào kiểm được bằng một dòng
+`node -e` thì kiểm, đừng trích dẫn.*
+
+**Tin chú thích trong chính mã.** `MASTERY_CLASS` mở đầu bằng *"Bản thử nghiệm này mới vẽ cho Dark
+Knight — bốn lớp còn lại vẫn dùng được bảng chung"*, và `renderMastery()` còn **in hẳn dòng đó ra
+màn hình** cho bốn lớp kia. Thực tế cả 5 lớp đã đủ 3 bảng riêng. Chú thích sai thì còn đỡ; chú
+thích sai mà được in ra cho người chơi đọc thì là lỗi hiển thị.
+
+**So số LÝ DO thay vì số NÚT.** Dòng "lý do khoá" dưới mỗi hàng chỉ hiện khi cả hàng khoá, viết
+thành `ly.length === nodes.length` với `ly` là `Set` các lý do **khác nhau**. Hai nút đỉnh gần như
+luôn khoá vì cùng một câu ("cần 10 điểm ở <nút chung>"), gộp lại còn 1, nên `1 === 2` nuốt mất cả
+dòng — đúng ở hàng quan trọng nhất. Chỉ lộ khi **chụp màn hình ra nhìn**, không lộ khi đọc mã.
+
+**Bài kiểm xanh giả ở đúng cái ngưỡng tinh tế nhất.** Thử ngược năm cơ chế: bốn cái phá là đỏ,
+riêng hạ `MST_DINH_NHANH` từ 15 xuống **0** vẫn xanh cả bài — tức chưa có khẳng định nào bám vào
+nó. Phải dựng thêm đúng kịch bản nó sinh ra để bịt: nuôi trọn nhánh A (18 điểm), nút chung nhận
+**một** nhánh bất kỳ nên qua, rồi vơ nút đỉnh của nhánh B vốn 0 điểm. *Cơ chế nào chỉ chặn một
+đường đi hiếm thì bài kiểm phải đi đúng đường đó, không có đường nào khác chạm tới nó.*
+
+**Vá trùng với một phiên khác, cùng một lỗi, cách nhau vài chục phút.** Sửa xong đường dẫn chép
+cứng trong `test_nowuxia2` rồi mới `git fetch` — `origin/main` đã có bản vá của phiên "tướng đi"
+cho đúng lỗi đó. Bản của họ dò gốc từ `__dirname` (đúng hơn cho worktree), bản của tôi bỏ
+`catch { continue }` và in số tệp đã quét. Hoà lại lấy cả hai. *Trên nhánh triển khai dùng chung,
+`git fetch` phải chạy TRƯỚC khi sửa thứ nằm ngoài phạm vi việc của mình, không phải lúc sắp push.*
+
+**Rà soát save suýt ăn cả build hợp lệ.** `masteryRaSoat()` tạm gỡ nút đang xét ra rồi mới hỏi —
+nếu không, nút đỉnh tự thoả điều kiện "nhánh đủ 15 điểm" bằng chính điểm của mình. Nhưng gỡ ra
+thì lại có nguy cơ hoàn nhầm điểm hợp lệ; chỉ an toàn vì chuỗi cha ép nhánh phải có **≥18** điểm
+trước khi nút đỉnh nhận được điểm đầu tiên, tức luôn dư 3 so với ngưỡng. Quan hệ 18 > 15 đó là
+thứ giữ cho hàm không ăn oan — đổi `MST_CAN` mà quên nó là hoàn điểm của người chơi đang chơi đúng.
+
+---
+
 ## 2026-09-04 — Thần khí · Soul Master · U Linh · cánh · tách bảng cân bằng
 
 Commit: `305e573`, `3f201d6` · Nền: `7c1490b`

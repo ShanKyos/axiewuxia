@@ -546,12 +546,30 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .mst-tabs button:hover { background:rgba(var(--rgb-vang),.12); color:#dbe6ff; }
 .mst-tabs button.active:hover { background:linear-gradient(180deg,var(--tab-on-1),var(--tab-on-2)); color:var(--on-light); }
 .mst-note { font-size:var(--fs-sm); color:var(--orange); line-height:1.5; margin-bottom:8px; }
+/* Đầu bảng: hai nhánh và số điểm đang nuôi mỗi bên — người chơi phải thấy mình đang nghiêng về
+   đâu TRƯỚC khi bấm, không phải sau khi đã tiêu điểm. */
+.mst-nhanh { display:flex; justify-content:center; align-items:center; gap:8px; margin-bottom:4px; }
+.mst-nhanh s { text-decoration:none; font-size:10px; color:var(--text-dim); letter-spacing:.6px; }
+.mst-nh { display:flex; align-items:baseline; gap:5px; padding:3px 10px; border-radius:999px;
+  border:1px solid rgba(var(--rgb-vang),.22); background:rgba(var(--rgb-vang),.05); }
+.mst-nh i { font-style:normal; font-size:11px; font-weight:600; color:var(--text-body); }
+.mst-nh b { font-size:var(--fs-sm); color:var(--gold); font-variant-numeric:tabular-nums; }
+.mst-nh.da { border-color:rgba(var(--rgb-vang),.7); background:rgba(var(--rgb-vang),.14); }
+.mst-nh.da i { color:var(--accent-light); }
 .mst-tree { display:flex; flex-direction:column; align-items:center; gap:2px; }
-.mst-link { color:#dfcaac; font-size:var(--fs-sm); line-height:1; opacity:.55; }
-.mst-link.off { opacity:.2; }
+.mst-link { color:#dfcaac; font-size:var(--fs-sm); line-height:1; opacity:.55;
+  display:flex; justify-content:center; }
+/* Hai mũi tên của một hàng hai nhánh phải rơi đúng trên hai cột ô (76px + 10px khe). */
+.mst-link s { display:inline-block; width:76px; text-decoration:none; }
 .mst-row { display:flex; justify-content:center; align-items:flex-start; gap:10px;
   flex-wrap:wrap; padding:6px 4px; }
-.mst-row.locked .mst-cell { opacity:.34; }
+/* Hàng chốt: hai nút đỉnh loại trừ nhau — vẽ hẳn dấu rẽ đôi giữa chúng. */
+.mst-row.chot { gap:4px; }
+.mst-hoac { align-self:center; font-size:9px; line-height:1.15; font-weight:700; text-align:center;
+  letter-spacing:.5px; color:var(--orange); padding:4px 5px; border-radius:6px;
+  border:1px dashed rgba(var(--rgb-cam),.55); background:rgba(var(--rgb-cam),.08); }
+.mst-cell.khoa img { filter:grayscale(1) brightness(.38); }
+.mst-cell.khoa .mst-c-name { color:var(--text-dim); }
 .mst-lock { width:100%; text-align:center; font-size:10.5px; color:var(--text-dim); }
 .mst-cell { position:relative; width:76px; padding:0; background:none; border:0;
   font-family:inherit; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; }
@@ -1736,13 +1754,19 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 @media (max-width:1080px){ #cc-hero, #cc-hero + .ss-inner::before { display:none } }
 
 /* Năm thông số bắt buộc của mọi chiêu — xem CLAUDE.md · Quy ước kỹ năng. Xếp thành lưới để
-   người chơi so hai chiêu theo cột, không phải dò trong một dòng chữ dài. */
-.skill-row .sk-so {
+   người chơi so hai chiêu theo cột, không phải dò trong một dòng chữ dài.
+   ⚠ TÊN CLASS PHẢI KHÁC `.sk-so`. Lưới này từng mang đúng tên đó, mà `.sk-so` là ô ĐẾM LỌ
+   THUỐC ở thanh dưới (dòng ~309) nên nó khai `position:absolute; right:3px; bottom:2px`.
+   Khối dưới đây chỉ đè `display`, KHÔNG đè `position` — nên cả bốn lưới thông số bị bứt khỏi
+   dòng chảy và rơi về cùng một góc bảng, in đè lên nhau: đo được 4 phần tử ở (919,961)
+   (911,961) (865,961) (912,961), tức 0/4 chiêu đọc được thông số. Không ném lỗi, không ai
+   thấy, sống rất lâu. Đừng gộp lại hai cái tên. */
+.skill-row .sk-thongso {
   display:grid; grid-template-columns:repeat(3, minmax(0, 1fr));
   gap:1px 10px; margin:3px 0 2px; font-size:10.5px; color:var(--text-muted);
   font-variant-numeric:tabular-nums;
 }
-.skill-row .sk-so b { color:var(--accent-light); font-weight:600; }
+.skill-row .sk-thongso b { color:var(--accent-light); font-weight:600; }
 
 /* ══ C · CỬA SỔ KIỂU MU: kéo được · thu gọn được · nhớ chỗ ══ */
 .bang-tieu { cursor:grab; user-select:none; }
