@@ -139,20 +139,35 @@ const fail = m => { console.log('FAIL ' + m); loi++; };
       if (Math.abs(bg.dac - a.dac) > a.dac * 0.02 || bg.sang > bg.dac * 0.02)
         hoBong.push(`${c.id}:${bg.sang}/${bg.dac} vs ${a.dac}`);
     }
-    // cùng nguồn với túi đồ: URL icon của xác phải TRÙNG KHÍT itemArtUrl của chính món đó
-    const c0 = COVAT[0];
-    const chung = cvIconUrl(c0.id) === itemArtUrl(ITEM_DB[c0.art], c0.giai, 0, 0, 1);
-    return { trong, thieuArt, hoBong, chung };
+    // CÙNG NGUỒN VỚI TÚI ĐỒ — và phải đúng theo THỨ TỰ ƯU TIÊN của slotIcon(): art giáp
+    // Spine (nvIconUrl) thắng, chưa có thì mới rơi về ô chờ art (itemArtUrl). So thẳng với
+    // itemArtUrl là sai: 12/16 xác đi đường Spine nên sẽ không bao giờ khớp.
+    const lech = [];
+    for (const c of COVAT){
+      const d = ITEM_DB[c.art]; if (!d) continue;
+      const it = { slot: d.slot, tier: c.giai, def: d.id };
+      const cho = nvIconUrl(it) || itemArtUrl(d, c.giai, 0, 0, 1);
+      if (cvIconUrl(c.id) !== cho) lech.push(c.id);
+    }
+    // …và ít nhất một xác PHẢI thật sự đi đường Spine, nếu không câu trên chỉ chứng minh
+    // "hai chỗ cùng rơi về ô chờ art" — tức là xanh mà chẳng gác được gì.
+    const soSpine = COVAT.filter(c => {
+      const d = ITEM_DB[c.art]; if (!d) return false;
+      return !!nvIconUrl({ slot: d.slot, tier: c.giai, def: d.id });
+    }).length;
+    return { trong, thieuArt, hoBong, lech, soSpine };
   });
-  console.log('4)', JSON.stringify({ trong:r4.trong, thieuArt:r4.thieuArt, hoBong:r4.hoBong, chung:r4.chung }));
+  console.log('4)', JSON.stringify({ trong:r4.trong, thieuArt:r4.thieuArt, hoBong:r4.hoBong, lech:r4.lech, soSpine:r4.soSpine }));
   r4.thieuArt.length ? fail('trỏ vào món không có trong ITEM_DB: ' + r4.thieuArt.join(', '))
                      : pass('cả 16 xác trỏ vào một món thật trong ITEM_DB');
   r4.trong.length ? fail('icon vẽ ra gần như trống: ' + r4.trong.join(', '))
                   : pass('cả 16 icon vẽ ra hình đặc');
   r4.hoBong.length ? fail('bóng đen lệch đường bao hoặc hở màu: ' + r4.hoBong.join(', '))
                    : pass('bóng đen ôm đúng đường bao và phủ kín');
-  r4.chung ? pass('icon xác giáp DÙNG CHUNG đường vẽ với túi đồ')
-           : fail('icon xác giáp dựng bằng một đường riêng — hai chỗ sẽ lệch nhau');
+  r4.lech.length ? fail('icon xác giáp lệch với thứ túi đồ vẽ: ' + r4.lech.join(', '))
+                 : pass('cả 16 icon DÙNG CHUNG đường vẽ với túi đồ');
+  (r4.soSpine >= 8) ? pass(`${r4.soSpine}/16 xác đi thẳng art giáp Spine, không phải ô chờ art`)
+                    : fail(`chỉ ${r4.soSpine}/16 xác có art thật — phần lớn màn quay ra ô chờ art`);
 
   // ── 5. avatar không chết theo ────────────────────────────────────────────
   const r5 = await p.evaluate(() => ({
