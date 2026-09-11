@@ -18,47 +18,48 @@ const pass = m => console.log('PASS ' + m);
   await p.waitForTimeout(400);
 
   // ═══ ① VẾT NỨT ═══════════════════════════════════════════════════════════
-  // Mốc phải là truDaGo() (5 Trụ Khoá), KHÔNG phải tuongQuanDaHa() (7 Tướng Quân). Hai con số
+  // Mốc phải là runeDaThu() (7 Rune Cổ), KHÔNG phải tuongQuanDaHa() (11 Trấn Ải). Hai con số
   // này khác nhau, và bản cũ đếm nhầm cái thứ hai trong khi chú thích nói cái thứ nhất.
+  // ⚠ Số nấc đọc từ RUNE_TONG, không chép cứng: bảng đã đi từ 5 lên 7 mục một lần rồi.
   const nut = await p.evaluate(() => {
-    const TRU = ['chungnam','comoc','tuyettinh','mongco','nhanmon'];
+    const RUNE = Object.keys(RUNE_CO);
     const out = [];
     SETTINGS.lowFx = false;
-    for (let n = 0; n <= 5; n++){
+    for (let n = 0; n <= RUNE_TONG; n++){
       player.storyFlags = {};
-      for (let i = 0; i < n; i++) player.storyFlags['ta_' + TRU[i]] = 1;
+      for (let i = 0; i < n; i++) player.storyFlags['ta_' + RUNE[i]] = 1;
       capNhatVetNut();
       const e = document.getElementById('fx-crack'), c = getComputedStyle(e);
-      out.push({ n, tru: truDaGo(), attr: e.dataset.tru,
+      out.push({ n, tru: runeDaThu(), attr: e.dataset.tru,
                  w: c.getPropertyValue('--nw').trim(), o: c.getPropertyValue('--no').trim() });
     }
-    // Cờ ta_* của vùng KHÔNG có trụ (Plant Tribe) không được làm vết nứt rộng thêm
-    player.storyFlags = { ta_daohoa:1, ta_ngoai:1 }; capNhatVetNut();
-    const lac = { tq: tuongQuanDaHa(), tru: truDaGo(),
+    // Cờ ta_* của map LỐI ĐI (không có Rune) không được làm vết nứt rộng thêm
+    player.storyFlags = { ta_corran:1, ta_trungnut:1 }; capNhatVetNut();
+    const lac = { tq: tuongQuanDaHa(), tru: runeDaThu(),
                   attr: document.getElementById('fx-crack').dataset.tru };
     // lowFx phải tắt hẳn
-    player.storyFlags = {}; for (const m of TRU) player.storyFlags['ta_' + m] = 1;
+    player.storyFlags = {}; for (const m of RUNE) player.storyFlags['ta_' + m] = 1;
     SETTINGS.lowFx = true; capNhatVetNut();
     const tat = document.getElementById('fx-crack').dataset.tru;
     SETTINGS.lowFx = false;
     return { out, lac, tat };
   });
   console.log('vết nứt:', JSON.stringify(nut));
-  if (!nut.out.every(x => x.attr === String(x.n))) fail('nấc vết nứt không khớp số trụ đã gỡ');
-  else pass('vết nứt đi đúng 6 nấc 0→5 theo truDaGo()');
+  if (!nut.out.every(x => x.attr === String(x.n))) fail('nấc vết nứt không khớp số Rune đã thu');
+  else pass(`vết nứt đi đúng ${nut.out.length} nấc 0→${nut.out.length - 1} theo runeDaThu()`);
   const rong = nut.out.slice(1).map(x => parseFloat(x.w));
   if (!rong.every((v, i) => i === 0 || v > rong[i-1])) fail('bề rộng vết nứt không tăng đơn điệu: ' + rong.join('/'));
   else if (rong[0] < 40) fail(`nấc đầu chỉ ${rong[0]}px — clip-path còn cắt bớt ~60%, không ai nhận ra`);
   else pass(`bề rộng tăng dần ${rong.join(' → ')}px`);
   if (nut.lac.tq !== 2 || nut.lac.tru !== 0 || nut.lac.attr !== '0')
-    fail(`hạ Tướng Quân ở vùng KHÔNG có trụ vẫn làm nứt rộng thêm: ${JSON.stringify(nut.lac)}`);
-  else pass('chỉ Trụ Khoá mới làm vết nứt rộng — Tướng Quân vùng không trụ thì không');
+    fail(`hạ Trấn Ải ở map LỐI ĐI (không có Rune) vẫn làm nứt rộng thêm: ${JSON.stringify(nut.lac)}`);
+  else pass('chỉ Rune Cổ mới làm vết nứt rộng — Trấn Ải ở map lối đi thì không');
   if (nut.tat !== '0') fail('bật lowFx mà vết nứt vẫn hiện');
   else pass('lowFx tắt được vết nứt');
 
   // Mật độ quái: tăng theo trụ ở map PK, KHÔNG tăng ở đất luyện cấp của tân thủ.
   const mat = await p.evaluate(() => {
-    const TRU = ['chungnam','comoc','tuyettinh','mongco','nhanmon'];
+    const TRU = Object.keys(RUNE_CO);
     const doc = n => {
       player.storyFlags = {};
       for (let i = 0; i < n; i++) player.storyFlags['ta_' + TRU[i]] = 1;
@@ -66,21 +67,21 @@ const pass = m => console.log('PASS ' + m);
       return { pk: pkm.packs.map(x => bayCo(x, pkm)), an: anm.packs.map(x => bayCo(x, anm)) };
     };
     const g = MAPS.chungnam.packs.map(x => x.n), ga = MAPS.ngoai.packs.map(x => x.n);
-    return { goc:g, gocAn:ga, t0:doc(0), t5:doc(5) };
+    return { goc:g, gocAn:ga, t0:doc(0), t5:doc(TRU.length) };
   });
   console.log('mật độ:', JSON.stringify(mat));
-  if (JSON.stringify(mat.t0.pk) !== JSON.stringify(mat.goc)) fail('chưa gỡ trụ nào mà mật độ đã đổi');
-  else pass('0 trụ: mật độ đúng như dữ liệu gốc');
+  if (JSON.stringify(mat.t0.pk) !== JSON.stringify(mat.goc)) fail('chưa thu Rune nào mà mật độ đã đổi');
+  else pass('0 Rune: mật độ đúng như dữ liệu gốc');
   if (!mat.t5.pk.every((v, i) => v >= mat.goc[i]) || JSON.stringify(mat.t5.pk) === JSON.stringify(mat.goc))
-    fail('5 trụ mà map PK không đông thêm: ' + mat.t5.pk.join('/'));
-  else pass(`5 trụ: map PK ${mat.goc.join('/')} → ${mat.t5.pk.join('/')}`);
+    fail('thu hết Rune mà map PK không đông thêm: ' + mat.t5.pk.join('/'));
+  else pass(`thu hết Rune: map PK ${mat.goc.join('/')} → ${mat.t5.pk.join('/')}`);
   if (JSON.stringify(mat.t5.an) !== JSON.stringify(mat.gocAn))
     fail('đất luyện cấp tân thủ (Outskirts) cũng bị tăng mật độ — sau Tái Sinh là phạt nhầm người');
-  else pass('Outskirts giữ nguyên mật độ ở mọi mốc trụ');
+  else pass('Outskirts giữ nguyên mật độ ở mọi mốc Rune');
 
   // Bảng Bản Đồ phải in ĐÚNG con số ngoài màn, không phải pk.n thô.
   const bang = await p.evaluate(() => {
-    const TRU = ['chungnam','comoc','tuyettinh','mongco','nhanmon'];
+    const TRU = Object.keys(RUNE_CO);
     player.storyFlags = {}; for (const m of TRU) player.storyFlags['ta_' + m] = 1;
     player.level = 120; player.lvPeak = 120; questIdx = QUESTS.length;
     closePanels(); renderStageSelect('chungnam');
@@ -105,19 +106,21 @@ const pass = m => console.log('PASS ' + m);
     // ⚠ Phần đo phó bản (pb_*) đã gỡ: 7 map phó bản đã xoá để dựng lại bằng phần dọn map.
     const cau = t => (t || '').split(/[.!?—]\s+/).filter(x => x.trim().length > 8).length;
     return {
-      ngoai: { cau: cau(MAPS.ngoai.desc), rung: /đang rung|lung lay/.test(MAPS.ngoai.desc || '') },
+      // Ý của khẳng định KHÔNG đổi: vùng này phải nói ra lý do nó tồn tại trong truyện, không
+      // chỉ là một bãi luyện cấp. Chỉ từ khoá đổi — nay nó là vùng giữ phiến Rune đầu tiên.
+      ngoai: { cau: cau(MAPS.ngoai.desc), rung: /Rune Giữ Đàn/.test(MAPS.ngoai.desc || '') },
       vuc: NPCS.filter(n => /Vực Thẳm/.test(n.name || ''))
-              .map(n => ({ id:n.id, tru: /Trụ (Werebear Woods|Roost|Bird Tribe Heights|Ashmark|Dusk Marsh)/.test(n.lore || '') })),
+              .map(n => ({ id:n.id, tru: /phiến Rune|Rune Giữ|phiến thứ bảy/i.test(n.lore || '') })),
       // Chợ Đấu Giá đã bị xoá khỏi game; Dược Sư ở Plant Tribe chứ không ở Sapidae Chiefdom
       thanh: /Chợ Đấu Giá|Dược Sư/.test(MAPS.ardhaven.desc || ''),
     };
   });
   console.log('nơi chốn:', JSON.stringify(noi));
   if (!noi.ngoai.rung || noi.ngoai.cau < 3) fail('Outskirts vẫn chỉ là bãi luyện cấp');
-  else pass('Outskirts là vùng đầu tiên báo hiệu chuỗi năm trụ');
+  else pass('Outskirts nói ra phiến Rune nó giữ, không chỉ là bãi luyện cấp');
   const vucSai = noi.vuc.filter(x => !x.tru);
-  if (vucSai.length) fail('Vực Thẳm chưa nối vào Trụ Khoá: ' + vucSai.map(x=>x.id).join(', '));
-  else pass(`cả ${noi.vuc.length} Vực Thẳm nối vào cái trụ ở gần nó`);
+  if (vucSai.length) fail('Vực Thẳm chưa nối vào phiến Rune nào: ' + vucSai.map(x=>x.id).join(', '));
+  else pass(`cả ${noi.vuc.length} Vực Thẳm nối vào phiến Rune ở gần nó`);
   if (noi.thanh) fail('mô tả Sapidae Chiefdom vẫn quảng cáo thứ không tồn tại (Chợ Đấu Giá / Dược Sư)');
   else pass('mô tả Sapidae Chiefdom chỉ vào thứ có thật');
 

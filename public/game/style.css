@@ -1504,6 +1504,13 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #fx-crack[data-tru="3"] { --nw:112px; --nh:28vh; --no:.64; }
 #fx-crack[data-tru="4"] { --nw:138px; --nh:34vh; --no:.72; }
 #fx-crack[data-tru="5"] { --nw:170px; --nh:42vh; --no:.84; }
+/* ⚠ SỐ NẤC PHẢI KHỚP RUNE_TONG. Bảng xương sống đi từ 5 (Năm Trụ Khoá) lên 7 (Bảy Rune Cổ), và
+   bộ chọn `[data-tru="N"]` khớp CHÍNH XÁC — nên hai nấc cuối thiếu ở đây là `--nw` không được
+   khai, `getComputedStyle` trả chuỗi rỗng, parseFloat ra NaN, và lớp vết nứt TỤT VỀ 0 đúng ở hai
+   nấc cuối cùng của cả ván chơi. Không có lỗi nào trên console. test_dot4 đọc số nấc từ
+   RUNE_TONG nên nó bắt được — đổi RUNE_CO thì chạy lại bài đó. */
+#fx-crack[data-tru="6"] { --nw:198px; --nh:49vh; --no:.90; }
+#fx-crack[data-tru="7"] { --nw:224px; --nh:56vh; --no:.96; }
 /* Nấc cuối vẫn hiện, chỉ bỏ đoạn chuyển tiếp — người tắt hiệu ứng chuyển động vẫn phải ĐỌC ĐƯỢC
    trạng thái thế giới, chứ không phải bị giấu mất một nửa cốt truyện. */
 @media (prefers-reduced-motion: reduce){ #fx-crack { transition:none; } }

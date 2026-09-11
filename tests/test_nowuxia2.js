@@ -11,6 +11,13 @@
 // thông tin thật (người sau không biết bố cục quảng trường lấy từ đâu).
 const { chromium } = require('playwright');
 const fs = require('fs');
+const path = require('path');
+// ⚠ ĐƯỜNG DẪN SUY TỪ CHỖ ĐỨNG CỦA CHÍNH BÀI KIỂM, KHÔNG CHÉP CỨNG.
+// Bản cũ đọc '/home/user/axie-wuxia/...' — thư mục đó không tồn tại ở mọi máy (ở đây kho nằm
+// tại /home/user/axiewuxia), nên readFileSync ném ENOENT và bài đỏ vì LÝ DO MÔI TRƯỜNG chứ
+// không phải vì sản phẩm. tools/reg.sh còn chạy trên một BẢN CHỤP ở /tmp, nên chép cứng đường
+// dẫn kho là sai ngay cả khi tên thư mục đúng.
+const REPO = path.resolve(__dirname, '..');
 let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch','yêu thú',
              'Hồ Lô','hồ lô','Thôn phệ','thôn phệ','chân khí','Chân Khí','cảnh giới',
@@ -22,7 +29,7 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
                  'public/game/strings/vi.js','public/game/strings/en.js'];
   const dinh = [];
   for (const f of files){
-    let txt; try { txt = fs.readFileSync('/home/user/axie-wuxia/' + f, 'utf-8'); } catch { continue; }
+    let txt; try { txt = fs.readFileSync(path.join(REPO, f), 'utf-8'); } catch { continue; }
     // Bóc comment TRƯỚC rồi mới tìm. Bản đầu quét theo từng dòng và tìm trong dấu nháy — nên
     // template nhiều dòng (backtick mở ở dòng trên) lọt lưới hoàn toàn: quét tĩnh báo 0 trong
     // khi giao diện thật vẫn hiện "Nội Đan" ở hai chỗ.
@@ -88,7 +95,7 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
 
   // D. quét CHÚ THÍCH của game.js — xem đầu tệp để biết vì sao mục này tồn tại
   {
-    const txt = fs.readFileSync('/home/user/axie-wuxia/public/game/game.js', 'utf-8');
+    const txt = fs.readFileSync(path.join(REPO, 'public/game/game.js'), 'utf-8');
     const ct = [];
     // Lấy RA phần chú thích (ngược với mục A, vốn bóc chú thích đi)
     for (const m of txt.matchAll(/\/\*[\s\S]*?\*\//g)) ct.push(m[0]);

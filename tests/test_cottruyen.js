@@ -6,8 +6,11 @@
 //     vật rơi qua vết nứt; kẻ thù cuối lúc là Morvahn lúc là Hung Thần (mà canon định nghĩa Hung
 //     Thần là boss thế giới định kỳ, KHÔNG phải Morvahn); danh hiệu trao cho người chơi là "Kẻ
 //     Khép Vết Nứt" trong khi cả bi kịch là họ MỞ nó. Mục 1 quét thẳng chuỗi hiển thị.
-//  2. TRỤ KHOÁ KHÔNG ĐẾM ĐƯỢC. Bảy vùng, năm trụ, mà bộ tên cũ theo ngũ hành tự đá nhau: Trụ Hỏa
-//     ở CẢ trụ đầu lẫn trụ cuối, Trụ Thổ không lần nào. Mục 2 đếm lại bằng chính hàm của game.
+//  2. XƯƠNG SỐNG KHÔNG ĐẾM ĐƯỢC. Bộ tên cũ theo ngũ hành tự đá nhau (Trụ Hỏa ở CẢ trụ đầu lẫn
+//     trụ cuối, Trụ Thổ không lần nào), rồi bản thay nó lại có hai tên trỏ vào nơi KHÔNG TỒN TẠI
+//     trong MAPS ("Trụ Roost" · "Trụ Ashmark"). Nặng hơn: bảng chỉ 5 mục mà cờ `ta_*` thì 11 map
+//     đều set được, nên panel in ra đúng chữ "11/7 Tướng Quân đã hạ". Nay là BẢY RUNE CỔ, và mục
+//     2 đòi CẢ HAI con số phải đếm được và không con nào vượt tổng của chính nó.
 //  3. NPC NÓI ĐÚNG MỘT CÂU CẢ ĐỜI. `lore` là chuỗi nên in y hệt lúc chưa nhận, đang làm và đã
 //     xong nhiệm vụ. Mục 3 lái trạng thái nhiệm vụ rồi so từng câu.
 //  4. CUỘC GẶP RỖNG. Nhiệm vụ type:'talk' dựng hẳn một chặng để đi gặp một người, mà gặp xong
@@ -38,7 +41,11 @@ const PORT = process.argv[2] || '8853';
     return { tau: /con tàu|cập bến|chiếc lồng/i.test(ss),
              nut: /vết nứt|trời nứt/i.test(ss), ss: ss.slice(0, 70),
              khep: all.includes('Kẻ Khép Vết Nứt'),
-             nguHanh: /Trụ (Hỏa|Mộc|Thủy|Kim|Thổ)/.test(all),
+             nguHanh: /Trụ (Hỏa|Mộc|Thủy|Kim|Thổ)|Rune (Hỏa|Mộc|Thủy|Kim|Thổ)/.test(all),
+             // Canon cũ đã bỏ: không một danh từ nào của nó được còn trong chữ người chơi thấy.
+             cuKy: ['Morvahn','Trụ Khoá','Trụ Khóa','Thủ Hộ Vaeldra','Vệ Binh Trụ'].filter(w => all.includes(w)),
+             // Hai địa danh mồ côi của bảng tên cũ — chúng không có trong MAPS.
+             moCoi: ['Trụ Roost','Trụ Ashmark'].filter(w => all.includes(w)),
              cho: /Chợ Đấu Giá/.test(MAPS.ardhaven.desc),
              cam: ['mạch lực','Võ Hồn','Long Tích','Bách Bộ','Nhục Thân','Tà Khí','Trung Dung','PHÀM','HUYỀN','THIÊN']
                     .filter(w => all.includes(w)),
@@ -48,29 +55,56 @@ const PORT = process.argv[2] || '8853';
   if (r1.tau || !r1.nut) fail('màn chọn lớp vẫn kể chuyện ba con tàu'); else pass('màn chọn lớp kể đúng vết nứt');
   if (r1.khep) fail('còn danh hiệu "Kẻ Khép Vết Nứt" — nó phủ nhận chính kết truyện');
   else pass('danh hiệu khớp kết truyện');
-  if (r1.nguHanh) fail('Trụ Khoá vẫn đặt tên theo ngũ hành'); else pass('Trụ Khoá đặt tên theo địa danh');
+  if (r1.nguHanh) fail('Rune Cổ vẫn đặt tên theo ngũ hành'); else pass('Rune Cổ không đặt tên theo ngũ hành');
+  if (r1.cuKy.length) fail('canon cũ còn sống trong chữ người chơi thấy: ' + r1.cuKy.join(', '));
+  else pass('không còn danh từ nào của canon cũ (Morvahn · Trụ Khoá · Thủ Hộ Vaeldra)');
+  if (r1.moCoi.length) fail('còn địa danh mồ côi không có trong MAPS: ' + r1.moCoi.join(', '));
+  else pass('không còn tên Rune trỏ vào nơi không tồn tại');
   if (r1.cho) fail('mô tả Sapidae Chiefdom còn chỉ vào Chợ Đấu Giá đã xoá'); else pass('mô tả Sapidae Chiefdom khớp NPC thật');
   if (r1.cam.length) fail('còn từ vựng kiếm hiệp trong text người chơi thấy: ' + r1.cam.join(', '));
   else pass('không còn từ vựng kiếm hiệp trong Đặc Điểm / Tính Cách');
   if (r1.kyHieu) fail('còn ký hiệu ☬ ngoài bộ đã duyệt'); else pass('hết ký hiệu ☬');
 
-  // ── 2. Năm Trụ Khoá đếm được ──
+  // ── 2. Bảy Rune Cổ đếm được, và KHÔNG con số nào vượt tổng của chính nó ──
   const r2 = await p.evaluate(() => {
     startGame('thieulam', null);
-    const t0 = truDaGo();
-    player.storyFlags = { ta_daohoa:true, ta_ngoai:true };   // hai vùng KHÔNG có trụ
-    const t1 = truDaGo(), q1 = tuongQuanDaHa();
+    const t0 = runeDaThu();
+    // Hai map LỐI ĐI, cố ý không có Rune — hạ Trấn Ải ở đó không được tính là thu Rune.
+    player.storyFlags = { ta_corran:true, ta_trungnut:true };
+    const t1 = runeDaThu(), q1 = tuongQuanDaHa();
     player.storyFlags.ta_chungnam = true; player.storyFlags.ta_comoc = true;
-    return { t0, t1, q1, t2: truDaGo(), q2: tuongQuanDaHa(),
-             tong: TRU_TONG, ten: Object.values(TRU_KHOA), trung: new Set(Object.values(TRU_KHOA)).size };
+    const t2 = runeDaThu(), q2 = tuongQuanDaHa();
+    // Vét sạch: đây là chỗ từng in ra "11/7".
+    const het = Object.keys(BOSS_DEFS).filter(m => BOSS_DEFS[m].tranai);
+    player.storyFlags = {}; for (const m of het) player.storyFlags['ta_' + m] = true;
+    window.qlogTab = 'story'; renderQlog();
+    const bang = document.getElementById('panel-qlog').innerText.replace(/\s+/g, ' ');
+    const ten = Object.values(RUNE_CO).map(r => r.ten);
+    return { t0, t1, q1, t2, q2, tong: RUNE_TONG, taTong: TRAN_AI_TONG,
+             runeHet: runeDaThu(), taHet: tuongQuanDaHa(), soMapTranAi: het.length,
+             ten, trung: new Set(ten).size,
+             luatDu: Object.values(RUNE_CO).filter(r => !r.luat).length,
+             // Mỗi vùng có Rune phải nói ra Rune của nó ở desc — dòng người chơi đọc mỗi lần vào map.
+             descThieu: Object.keys(RUNE_CO).filter(m => !MAPS[m].desc.includes('Rune')),
+             vuotTran: /\b(\d+)\/(\d+)\b/.test(bang) && [...bang.matchAll(/(\d+)\/(\d+)/g)]
+                          .filter(m => +m[1] > +m[2]).map(m => m[0]) };
   });
-  console.log('2) Trụ Khoá:', JSON.stringify(r2));
-  if (r2.tong !== 5) fail('phải đúng 5 Trụ Khoá, đếm được ' + r2.tong); else pass('đúng 5 Trụ Khoá');
-  if (r2.trung !== 5) fail('có tên Trụ Khoá bị trùng'); else pass('5 tên trụ không trùng nhau');
-  if (r2.t1 !== 0) fail('Plant Tribe/Outskirts không có trụ mà vẫn đếm ' + r2.t1);
-  else pass('hai vùng đất tập không tính vào bộ đếm trụ');
-  if (r2.t2 !== 2 || r2.q2 !== 4) fail(`đếm sai: ${r2.t2}/5 trụ, ${r2.q2}/7 Tướng Quân`);
-  else pass('đếm tách bạch: 2/5 Trụ Khoá · 4/7 Tướng Quân');
+  console.log('2) Rune Cổ:', JSON.stringify(r2));
+  if (r2.tong !== 7) fail('phải đúng 7 Rune Cổ, đếm được ' + r2.tong); else pass('đúng 7 Rune Cổ');
+  if (r2.trung !== 7) fail('có tên Rune bị trùng'); else pass('7 tên Rune không trùng nhau');
+  if (r2.luatDu) fail(r2.luatDu + ' Rune không khai `luat` — người chơi không biết nó giữ cái gì');
+  else pass('mỗi Rune nói được cái luật nó giữ');
+  if (r2.t1 !== 0) fail('map lối đi không có Rune mà vẫn đếm ' + r2.t1);
+  else pass('bốn map lối đi không tính vào bộ đếm Rune');
+  if (r2.t2 !== 2 || r2.q2 !== 4) fail(`đếm sai: ${r2.t2}/7 Rune, ${r2.q2} Tướng Quân`);
+  else pass('đếm tách bạch: 2/7 Rune Cổ · 4 Tướng Quân');
+  if (r2.taTong !== r2.soMapTranAi) fail(`TRAN_AI_TONG=${r2.taTong} nhưng có ${r2.soMapTranAi} map mang Trấn Ải`);
+  else pass(`tổng Tướng Quân suy từ BOSS_DEFS (${r2.taTong}), không chép cứng`);
+  // ⚠ ĐÂY LÀ BÀI GÁC CHÍNH: vét sạch game thì không phân số nào được vượt trần.
+  if (r2.vuotTran && r2.vuotTran.length) fail('Nhật Ký in phân số vượt trần: ' + r2.vuotTran.join(', '));
+  else pass('vét sạch 11 Trấn Ải: 7/7 Rune · 11/11 Tướng Quân, không phân số nào vượt trần');
+  if (r2.descThieu.length) fail('vùng có Rune mà desc không nhắc Rune nào: ' + r2.descThieu.join(', '));
+  else pass('cả 7 vùng có Rune đều nói ra phiến của mình ở mô tả map');
 
   // ── 3. NPC nói khác nhau theo trạng thái nhiệm vụ ──
   const r3 = await p.evaluate(() => {

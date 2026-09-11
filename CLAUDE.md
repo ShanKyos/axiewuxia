@@ -64,7 +64,7 @@ INTRO_PAGES / QUESTS / CLUES / BOSS_LORE / SECTS / NPCS / MOBS / TB_TIER_NAMES.
 | Thay cho | Dùng |
 |---|---|
 | MU (thế giới) | **Vaeldra** — lục địa thép và tro |
-| Kundun | **Morvahn** |
+| Kundun | ~~Morvahn~~ — **đã bỏ cùng mạch cũ.** Canon nay không có đại ma đầu bị chôn; kẻ thù là **DRUE**, người thứ bảy đi qua Nhát Gọi (xem mục Cốt truyện) |
 | Lorencia | **Ardhaven** |
 | Fairy Elf / Magic Gladiator | **Sylvan Ranger** / **Spellblade** |
 | Devil Square / Blood Castle | **Đấu Trường Tế Thần** / **Pháo Đài Máu** |
@@ -241,31 +241,44 @@ phải **thêm**.
 Đây cũng là chỗ chữa cho khắc hệ: `el:` chạy trong `hurtMob` (±20% / −12%) từ lâu nhưng người
 chơi không có cách nào biết map nào hệ gì. Nay hệ trội nằm ngay trên bảng Bản Đồ.
 
-### 📌 NHIỆM VỤ ĐÃ GỠ SẠCH — VIỆC CÒN NỢ, PHẢI DỰNG LẠI
+### 📌 CHÍNH TUYẾN ĐÃ DỰNG LẠI · PHỤ TUYẾN THÌ CHƯA
 
-`QUESTS` và `SIDE_QUESTS` nay đều **rỗng**. Đây **không phải** dọn dẹp — đây là một hệ thống bị
-tháo ra để thiết kế lại, và **nó phải được dựng lại**. Đừng đọc bảng rỗng rồi kết luận game này
-không cần nhiệm vụ.
+> ⚠ Mục này **trước đây ghi cả hai bảng đều rỗng và chờ dựng lại**. Nửa đầu không còn đúng —
+> giữ lại đúng cái tiêu đề này để cảnh báo, thay vì xoá trắng rồi để người sau đọc lịch sử git
+> mà tưởng chuỗi vẫn rỗng. Cùng một kiểu bẫy đã ghi ở mục "~~Khắc Ấn~~".
 
-**Vì sao gỡ:** lối chơi đã đổi quá nhiều so với lúc viết chuỗi — bỏ 7 phó bản, vai trò theo bãi,
-bản sắc map, zoom camera, cổng map bỏ `reqMain`. Chuỗi cũ dẫn người chơi đi qua một game không
-còn tồn tại. Giữ một chuỗi sai còn tệ hơn không có chuỗi nào.
+| | Trạng thái |
+|---|---|
+| `QUESTS` | **ĐANG CHẠY** — 8 chương / 46 nhiệm vụ, canon Nhát Gọi. Xem mục "Cốt truyện (canon)" và `docs/LORE_RUNE.md` |
+| `SIDE_QUESTS` | **vẫn rỗng** — việc còn nợ thật. Khuôn một mục nằm trong chú thích ở `data/canbang.js` |
 
-**⚠ GỠ Ở HAI NƠI, KHÔNG PHẢI MỘT.** `data/canbang.js` khai 10 mục, rồi `game.js` `QUESTS.push(...)`
-thêm **6 chương / 25 mục nữa**. Rỗng bảng dữ liệu mà quên phần push thì `QUESTS.length` vẫn ra
-**25** — đã mắc đúng lỗi đó một lần trong chính đợt gỡ này.
+**Vì sao chuỗi CŨ bị gỡ (ghi lại để đừng vá nó từ git):** lối chơi đã đổi quá nhiều so với lúc
+viết — bỏ 7 phó bản, vai trò theo bãi, bản sắc map, zoom camera, cổng map bỏ `reqMain`. Rồi bản
+dựng lại lần đầu (5 chương / 33 nhiệm vụ) lại **không nhắc canon một lần nào**: đếm trên toàn
+khối ra 0 lần cho Trụ Khoá · Morvahn · Vaeldra · Tướng Quân. Hai mạch chạy song song không nối
+vào nhau — đó là lý do có đợt gộp này.
+
+**⚠ CHUỖI KHAI Ở MỘT NƠI, KHÔNG PHẢI HAI.** Trước đây `data/canbang.js` khai 10 mục rồi `game.js`
+`QUESTS.push(...)` thêm 6 chương/25 mục nữa, nên rỗng bảng dữ liệu mà quên phần push thì
+`QUESTS.length` vẫn ra 25 — đã mắc đúng lỗi đó. Nay **toàn bộ 46 mục nằm trong `data/canbang.js`**
+và `game.js` không push nhiệm vụ chính nào. Giữ đúng nếp đó.
+
+**Phụ tuyến khi dựng lại — ba chỗ đang trống có sẵn chỗ đứng:** ba map LỐI ĐI (`loimon` ·
+`trungnut` · `caungam`) và `Tầng Sâu` cố ý không có chương nào, vì chúng là "chỗ không có luật
+nào giữ". Đó là chỗ phụ tuyến thuộc về, không phải chỗ nhồi thêm chương.
 
 **Đã đổi theo:**
-- `reqMain` gỡ khỏi **mọi** map (kể cả một cái khai lẫn trong `MAPS.ngoai`). Map nay mở khoá bằng
-  **cấp** là đủ. Nhánh đọc `md.reqMain` trong `mapGate()` vẫn còn — cắm lại một giá trị là khoá
-  sống lại. *Cân nhắc kỹ: khoá map sau một nhiệm vụ nghĩa là nhiệm vụ hỏng thì map mất.*
-- Bảng theo dõi và Nhật Ký Nhiệm Vụ nói **"chưa có nhiệm vụ"**, không nói "hoàn tất". Một bảng
-  rỗng mà khoe "chính tuyến hoàn tất, tự do làm phụ tuyến" là nói dối người chơi.
-
-**Khi dựng lại:** chủ dự án đã nói có thể **xây lại cả hệ thống lore** cùng lúc, nên đừng vá
-chuỗi cũ từ git — thiết kế lại từ đầu cùng với lore. Khuôn dữ liệu của cả hai bảng nằm trong chú
-thích ở `data/canbang.js`. Máy chạy nhiệm vụ **giữ nguyên** và chạy theo dữ liệu: điền bảng là
-chuỗi sống lại.
+- `reqMain` gỡ khỏi **mọi** map. Map mở khoá bằng **cấp** (`md.min`) là đủ. Nhánh đọc `md.reqMain`
+  trong `mapGate()` vẫn còn — cắm lại một giá trị là khoá sống lại. *Cân nhắc kỹ: khoá map sau
+  một nhiệm vụ nghĩa là nhiệm vụ hỏng thì map mất.*
+- ⚠ **Vòng lọc `MAPS[id].reqMain === questIdx` trong `turnInQuest()` đã GỠ.** `reqMain` không còn
+  ở map nào nên mảng đó luôn rỗng, và hệ quả là **8/9 câu `REGION_UNLOCK_LORE` là nội dung chết**
+  — kể cả bốn câu giới thiệu phiến Rune. Nay `travelTo()` bắn chúng theo **lần đầu đặt chân**
+  (`!player.wpUnlocked[mapId]`, đọc TRƯỚC khi đặt cờ).
+- ⚠ **Mốc trùm chương suy từ dữ liệu, không chép cứng.** Ba chỗ từng viết thẳng `questIdx >= 9`
+  ("nhiệm vụ thứ 10") kèm một chú thích đã lạc ("boss Đào Hoa" — con đó nay ở Rẻo Rừng Corran).
+  Nay là `QUEST_BOSS_IDX = QUESTS.findIndex(q => q.type === 'boss')`, fallback `Infinity` chứ
+  không phải `-1` (vì `questIdx >= -1` là luôn đúng ⇒ trùm hiện ra từ cấp 1).
 
 ### 🧭 NỐI MAP BẰNG RÌA (B1) + ĐIỂM DỊCH CHUYỂN MỞ BẰNG ĐI BỘ (B2)
 
@@ -424,32 +437,104 @@ vảy rồng → hắc nguyệt**. Bộ tên cũ mượn thẳng binh khí kiế
 Lăng Ba Hài, Chí Tôn Long Giáp, Thiên Tôn Miện…) — vi phạm Quy tắc số 1. Tên mới phải là
 danh từ trang bị thuần, đừng mượn tên chiêu thức hay bảo vật tiểu thuyết.
 
-## Cốt truyện (canon)
+## Cốt truyện (canon) — **NHÁT GỌI · BẢY RUNE CỔ**
 
-Hai vũ trụ giao thoa. Phong ấn giam **Morvahn** ở **Vaeldra** vỡ; Thủ Hộ Vaeldra
-không giữ nổi nên **bẻ lệch vết nứt** sang một thế giới bên cạnh mà hải đồ ghi là
-"vô chủ" — hải đồ sai, đó là **Lunacia**. Vaeldra tự cứu mình bằng cách trút tận
-thế lên nhà người khác.
+> Canon đầy đủ, kèm hợp đồng thi công: **`docs/LORE_RUNE.md`**.
+> Mạch cũ (**Morvahn · Năm Trụ Khoá · Vaeldra trút tận thế lên nhà người khác**) đã BỎ HẲN —
+> chủ dự án chốt 2026-09-11. Đừng dựng lại từ git: không một danh từ riêng nào của nó còn dùng.
+> Hai tài liệu nhiệm vụ cũ (`docs/LORE_AXIE_VA_NHIEM_VU.md` §5, `docs/THIET_KE_NHIEM_VU.md`)
+> cũng lỗi thời ở TÊN MAP và spine — chỉ còn §2-3 của tài liệu đầu (khảo sát lore Axie có nguồn)
+> là dùng được.
 
-Nhân vật chính thuộc một trong **5 lớp Vaeldra**, nằm trong đội tiên phong vượt
-vết nứt sang sửa. Người chơi CHỌN LỚP NGAY ở màn tạo nhân vật — lớp thứ sáu
-`vophai` và lễ nhập môn cấp 10 (the Calling) đã gỡ hẳn. Cú giật ngược kéo cả khu phố **Ardhaven**
-sang, dân bản địa dựng lại quanh đó thành **Sapidae Chiefdom**.
+**Rune** là nghề của Bug axie: khắc lên **đá**. Một phiến Rune dựng ở một nơi thì **giữ một cái
+luật** ở nơi đó. Giáo lý là **Nếp Khắc Vừa**: khắc vừa đúng cái phiến đá gánh nổi, và đừng bao
+giờ khắc một cái luật phải giữ mãi mãi.
 
-⇒ Điều này *giải thích trong truyện* hai thứ vốn khập khiễng:
-tường thành phương Tây giữa thế giới Axie, và NPC hai phong cách
-(**NPC chức năng = người Ardhaven sống sót**, **NPC cốt truyện = người Lunacia bản địa**).
+**Bảy Rune Cổ** cắm khắp Lunacia, mỗi vùng một phiến. Chimera áp biên không phá nổi Rune nhưng
+**mài** nó; bảy trăm năm thì đá mỏng, mà người biết khắc sâu thì hết. Nên **Sylas** (NPC đã có ở
+Bug Tribe Tunnels) làm đúng cái việc giáo lý cấm: khắc một Rune **lên trời** để xin một người thợ
+biết làm Rune bền hơn đá. Nhát cắt đó là **NHÁT GỌI**, và thứ đi qua nó là nguyên khu phố
+**Ardhaven** của **Vaeldra** — đá lát, lò rèn, và bảy người lính.
 
-Khí Morvahn chạm vào sinh vật Lunacia thì bẻ nó thành **Chimera**.
+⇒ Canon này *giải thích trong truyện* ba thứ vốn khập khiễng, **bằng chính cơ chế đã có**:
 
-**Năm Trụ Khóa** (thay cho Ngũ Ấn) do Thủ Hộ Vaeldra đóng xuống để ghim miệng vết
-nứt. Tướng quân Morvahn chiếm cả năm. **Gỡ trụ thì đi tiếp được, nhưng vết nứt
-toác thêm** — muốn tới Morvahn phải tự tay mở cánh cửa hắn cần. Đó là bi kịch
-trung tâm, và là lý do của kết mở.
+| Thứ cần giải thích | Canon nói |
+|---|---|
+| Vì sao nhân vật là **Dark Knight / Dark Wizard** giữa thế giới Axie | **Lunacia gọi ngươi tới** — không phải ngươi sang xâm chiếm, cũng không phải sang sửa lỗi của mình |
+| Vì sao **Ardhaven** là phố đá phương Tây có lò rèn | **cái lò CHÍNH LÀ thứ Lunacia cầu**; thành là câu trả lời, không phải đống đổ nát |
+| Vì sao **mất ký ức** rồi võ nghệ trở lại theo cấp | **Rune đòi trả bằng thứ nó dịch chuyển**; nghề khắc sâu hơn ký ức nên nghề quay lại |
+| Vì sao đập trang bị lên **+N** lại quan trọng | **Vaeldra khắc Rune vào THÉP** — mỗi lần rèn là một lần khắc |
 
-Thuật ngữ: Tướng Quân (boss cuối map) · Vệ Binh Trụ (3 boss phụ) · Trụ Khóa ·
-Cổng Vực · Hung Thần (boss thế giới định kỳ, **không phải** Morvahn) · Đoàn Gloam
-(lính Vaeldra đào ngũ).
+**Chimera KHÔNG đổi định nghĩa**: lore Axie chính thức nói chimera sinh ra từ dạng tha hoá của
+thần **Atia**. Đừng chạm vào đó — đúng lý do mà hệ bạn đồng hành đã phải đổi tên sang **Ragoon**
+(xem chú thích đầu `CHIMERA` trong `canbang.js`). Việc của kẻ thù chỉ là làm bảy cái luật hỏng
+nhanh hơn Chimera làm.
+
+**Kẻ thù: DRUE — người thứ bảy.** Hắn qua Nhát Gọi cùng ngươi và giữ được ký ức, vì hắn trả bằng
+ký ức của người khác. Hắn không khắc vào đá, không khắc vào thép: **hắn khắc vào chính mình**.
+Manh mối `td_trong` (*"cái tên thứ bảy chưa bị gạch, vì chưa ai chứng minh được là nó nên bị
+gạch"*) là mũi nhọn của cả chuỗi; `manh_lenh` (*"một con mắt không có tròng"*) là dấu của hắn.
+
+**Bi kịch trung tâm — giữ nguyên HÌNH DẠNG của mạch cũ, đổi hẳn nội dung:** thu Rune về lò thì
+Rune bền thêm nghìn năm, **nhưng trong lúc phiến đá nằm trong lò, cái luật nó giữ thì TRỐNG**.
+Phiến thứ bảy (**Rune Giữ Đường**) là thứ thắp đường cho hồn quay về Cây Hồn — nên nhiệm vụ cuối
+của chuỗi vừa đóng chính tuyến vừa bật Kết Mở. Danh hiệu: **Kẻ Gỡ Rune Cuối**.
+
+Và **chương 0 đóng lại ở đó**: đèn dẫn hồn tắt khắp Rẻo Rừng Corran là đầu xa của phiến thứ bảy.
+`c0q2` đã viết đúng câu cần thiết — *"Ba đêm liền, mà **dầu vẫn còn đầy**"*. Đèn tắt không vì hết
+dầu; nét khắc bị lấy đi.
+
+### Bảy phiến — mỗi vùng một, đếm được
+
+| Vùng | Rune Cổ | Luật nó giữ | Dòng Cốt (đã có) |
+|---|---|---|---|
+| Beast Herd Camp | Rune Giữ Đàn | đàn không tan khi hoảng | Đồng Cỏ |
+| Werebear Woods | Rune Giữ Bờ | rừng không lấn qua bờ | Rễ Gai |
+| Plant Tribe Glade | Rune Giữ Mùa | luống ấp nở đúng mùa | Cánh Hoa |
+| Bug Tribe Tunnels | Rune Giữ Tên | axie vừa nở được nhận tên (**phiến GỐC**) | Vỏ Trứng |
+| Bird Tribe Heights | Rune Giữ Khúc | khúc hát không tắt theo người hát | Băng Vụn |
+| Reptile Sunstone Flats | Rune Giữ Lửa | lò không nguội qua đêm | Tro Tàn |
+| Dusk Marsh | Rune Giữ Đường | đường về Cây Hồn còn sáng | Sấm Vụn |
+
+**Bốn map còn lại KHÔNG có Rune, và đó là chủ ý** — `corran` (rễ Cây Hồn chạy ngầm, không ai dám
+khắc đá lên rễ) · `loimon` (một lối mòn không phải một nơi) · `trungnut` (đất trũng ngay dưới
+Nhát Gọi, cắm đá là nứt ⇒ **giải thích luôn `type:'freepk'`**) · `caungam` (không có nền để cắm).
+
+⚠ **HAI CON SỐ, HAI TỔNG, ĐỌC TỪ HAI NGUỒN.** `runeDaThu()` đếm trên `RUNE_CO` (7);
+`tuongQuanDaHa()` đếm cờ `ta_*` và in kèm `TRAN_AI_TONG` suy từ `BOSS_DEFS` (11). Bản cũ in cả
+hai theo mẫu `/7` chép cứng, nên vét sạch game là panel Nhật Ký in ra đúng chữ **"11/7 Tướng
+Quân đã hạ"**. `test_cottruyen.js §2` gác đúng chỗ đó: vét hết rồi quét cả panel, không phân số
+nào được vượt trần.
+
+⚠ **Cờ lưu vẫn là `ta_<map>`**, không đổi tiền tố — save cũ không phải di trú. Chỉ bộ ĐẾM đổi.
+
+⚠ **Số nấc lớp vết nứt (`#fx-crack[data-tru="N"]` trong `style.css`) phải khớp `RUNE_TONG`.**
+Bộ chọn khớp chính xác, nên thiếu một nấc là `--nw` không được khai, `parseFloat` ra `NaN`, và
+lớp vết nứt TỤT VỀ 0 đúng ở nấc cuối — không một lỗi nào trên console. Đã dính khi đi từ 5 lên 7.
+
+Thuật ngữ chốt: **Rune Cổ** · **Nếp Khắc Vừa** · **Nhát Gọi** · **Cây Hồn** · Tướng Quân (Trấn Ải,
+mỗi map ĐÚNG MỘT con) · **Vệ Binh Rune** (3 boss phụ, canh Cổng Vực) · Cổng Vực · **Đá Ấn Rune** ·
+Hung Thần (boss thế giới định kỳ, **không** dính cốt truyện) · Đoàn Gloam (kẻ qua Nhát Gọi rồi đi
+theo người thứ bảy) · **DRUE**.
+
+### Chuỗi nhiệm vụ — 8 chương, 46 nhiệm vụ, **ĐANG CHẠY**
+
+⚠ Mục này trước đây ghi `QUESTS` và `SIDE_QUESTS` đều rỗng "chờ dựng lại". `QUESTS` **đã dựng
+lại**: 8 chương / 46 nhiệm vụ trong `data/canbang.js`. `SIDE_QUESTS` thì **vẫn rỗng** — đó là
+việc còn nợ thật.
+
+Mỗi chương = một Rune, và **đóng bằng loại nhiệm vụ `tranai`** (hạ Trấn Ải của chính vùng đó).
+Loại đó là mới, và nó tồn tại để vá đúng một lỗi: trước bản này Kết Mở do `killMob` quyết định
+(hạ Trấn Ải Dusk Marsh bật cờ `ketMo`) nhưng **không một nhiệm vụ nào bảo đi hạ nó** — nên người
+chơi xong 100% chính tuyến mà chưa chắc thấy kết, hoặc thấy kết trước khi xong chính tuyến.
+
+Ba luật của chuỗi, đo được bằng máy (xem script kiểm trong `docs/LORE_RUNE.md §6`):
+1. khoảng cách hai nhiệm vụ liền nhau **≤ 4 cấp** (bản cũ có chỗ hở 8 cấp);
+2. cấp quái lệch cấp nhiệm vụ **≤ ±4** (bản cũ có chỗ lệch +16);
+3. **≤ 60%** nhiệm vụ là đánh quái (bản cũ 67%), và **không chương nào toàn đánh quái**.
+
+Mỗi chương mở đúng một cửa cơ chế — bản cũ nhắc **0 lần** tới Ragoon · Cốt · Vỉa · Rương · Box
+Kundun · Tinh Luyện · Bản Năng · Tái Sinh · Tầng Sâu · Cánh · ngọc · Lò Hỗn Độn.
 
 ## Kiến trúc
 

@@ -1,4 +1,9 @@
-# Bảng thuật ngữ — Axie Wuxia
+# Bảng thuật ngữ — Axie Rift
+
+> ⚠ **Cập nhật 2026-09-11 theo canon Nhát Gọi** (`docs/LORE_RUNE.md`). Bảng này từng liệt một bộ
+> địa danh đã chết hết (Lunaris City · Petalshade Isle · Thornwood Reach · Hollow Roost ·
+> Frostmire Vale · Ashen Steppe · Stormgate Pass) và một sự kiện đã gỡ ("The Calling") — dùng nó
+> làm chuẩn sẽ viết sai toàn bộ.
 
 Một khái niệm, một cách gọi. Tệp này là nguồn duy nhất; khi hai chỗ trong game gọi khác nhau
 thì chỗ nào lệch bảng này là chỗ sai.
@@ -35,7 +40,14 @@ Cơ sở: `docs/KHAO_SAT_NGON_NGU.md` §5, đếm trên chuỗi người chơi t
 | Bản đồ nhỏ | **bản đồ thu nhỏ** | `minimap` · `Minimap` |
 | Tiền nâng kỹ năng | **Bản Năng** | `Instinct` |
 | Hệ thăng bậc | **Ascension** (tên hệ, danh từ riêng) · lượng từ là **bậc** | lượng từ `cảnh` |
-| Sự kiện chọn lớp cấp 10 | **The Calling** (đủ chữ, viết hoa cả cụm) | `the Calling` · `Calling` |
+| ~~Sự kiện chọn lớp cấp 10~~ | **ĐÃ GỠ** — người chơi chọn lớp ngay ở màn tạo nhân vật; lớp thứ sáu `vophai` và lễ nhập môn cấp 10 đã bỏ hẳn | `The Calling` · `the Calling` |
+| Nhát cắt trên trời | **Nhát Gọi** (danh từ riêng) · **vết nứt** (văn nói) | `the Rift` · `Rift` |
+| Phiến đá giữ một cái luật | **Rune Cổ** · lượng từ là **phiến** | `Trụ Khoá` · `Trụ Khóa` · `Ngũ Ấn` |
+| Giáo lý của nghề khắc | **Nếp Khắc Vừa** | — |
+| 3 boss phụ mỗi map | **Vệ Binh Rune** | `Vệ Binh Trụ` |
+| Boss cuối map | **Tướng Quân** (mỗi map ĐÚNG MỘT con) | `Trấn Ải` trong chữ người chơi thấy · gọi Vệ Binh là Tướng Quân |
+| Vật liệu rơi từ Vệ Binh | **Đá Ấn Rune** | `Đá Ấn Trụ` |
+| Cây hồn quay về | **Cây Hồn** | `Spirit Tree` |
 | Bạn đồng hành | **Chimera** (sinh vật) · **Linh Thú** (hệ thống/ô trang bị) | `Thú Chiến` · `pet` |
 | Thú cưỡi | **Thú Cưỡi** (hệ thống) · **Tuấn Mã Hoang** (con bắt được) | dùng lẫn hai thứ |
 | Lớp nhân vật | **Lớp** · **lớp** | `Phái` · `phái`² |
@@ -54,11 +66,15 @@ thống nhất theo số đông. *Mô tả* kỹ năng thì vẫn tiếng Việt
 
 Đây không phải lỗi lẫn ngôn ngữ, và đừng ai "sửa" chúng:
 
-- **Vùng đất:** Lunaris City · Petalshade Isle · Petalshade Outskirts · Thornwood Reach ·
-  Hollow Roost · Frostmire Vale · Ashen Steppe · Stormgate Pass · Trial Chamber
+- **Vùng đất** (bộ HIỆN HÀNH — đọc từ `MAPS`, đừng chép từ tài liệu cũ): Sapidae Chiefdom ·
+  Rẻo Rừng Corran · Beast Herd Camp · Werebear Woods · Plant Tribe Glade · Lối Mòn Corran ·
+  Trũng Nứt Corran · Bug Tribe Tunnels · Aquatic Tribe Causeway · Bird Tribe Heights ·
+  Reptile Sunstone Flats · Dusk Marsh · Tầng Sâu
 - **Lớp nhân vật:** Dark Knight · Dark Wizard · Sylvan Ranger · Spellblade · Dark Lord
-- **Thế giới Axie:** Chimera · Atia · Lunacia · Sigil · Vaeldra
-- **Nhân vật:** Morvahn · Rell · Wren · Corran · Sylas · Liora · Dax · Brann
+- **Thế giới Axie:** Chimera · Atia · Lunacia · Vaeldra · Ardhaven · Sapidae · Rune · Ragoon
+  (~~Sigil~~ đã gỡ cùng canon Sigil/Warden — xem `docs/LORE_BIBLE.md`, tài liệu đã bỏ)
+- **Nhân vật:** Rell · Wren · Corran · Sylas · Liora · Dax · Brann · **DRUE** (người thứ bảy,
+  kẻ thù của chuỗi). ~~Morvahn~~ đã bỏ cùng mạch cũ — canon nay không có đại ma đầu bị chôn.
 - **Tên kỹ năng** (xem mục trên) và **tên riêng của quái** (Thủ Lĩnh Gloam, Chúa Tể…)
 - **Box Kundun** — ngoại lệ MU Online đã được duyệt
 
