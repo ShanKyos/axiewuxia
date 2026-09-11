@@ -105,6 +105,7 @@ const { chromium } = require('playwright');
   for (const sect of ['thieulam','baidasan','toanchan','minhgiao','bug']){
     r5[sect] = await p.evaluate(async (sk) => {
       startGame(sk, null);
+      player.avatar = null;   // bài này đo THÂN NGƯỜI; avatar nay bật mặc định nên phải tắt đi
       await new Promise(r => setTimeout(r, 1400));
       applyTestBoost(); calcDerived();
       await new Promise(r => setTimeout(r, 900));

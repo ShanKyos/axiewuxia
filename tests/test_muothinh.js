@@ -32,6 +32,7 @@ const PORT = process.argv[2] || '8853';
 
   await page.evaluate(() => {
     window.TEST_MODE = true; startGame('thieulam', null); travelTo('chungnam');
+    player.avatar = null;   // bài này đo THÂN NGƯỜI; avatar bật mặc định nên phải tắt đi
     // ⚠ BÀI NÀY TỪNG ĐỨNG ĐO GIỮA BÃI QUÁI SỐNG, và đó là cả nguyên nhân chập chờn: 3/5 lượt
     // đỏ trên CÙNG một commit, đỏ theo hai kiểu khác nhau ("vẽ 1 nhát — phải 2" và "chưa vào
     // được khối CHẠY (khối=h)"). Cả hai là một chuyện: quái đánh trúng thì `p.hurtT > 0`, mà

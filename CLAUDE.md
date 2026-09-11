@@ -84,7 +84,7 @@ khi tấn công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu."*
 |---|---|
 | **Axie** | thân NHÌN THẤY. **0 chỉ số, 0 kỹ năng, 0 trang bị.** Là ô để cắm NFT. |
 | **5 lớp** | nơi chứa **toàn bộ** chỉ số, trang bị, kỹ năng, Tiến Hoá, Di Sản |
-| **Lúc đánh** | lớp nhân vật **vật chất hoá**, tung chiêu, rồi tan |
+| **Lúc đánh** | lớp nhân vật **vật chất hoá KẾ BÊN Axie**, tung chiêu, rồi tan. Axie **không** biến mất — nhân vật đi theo bảo kê. |
 | **Khoá lớp** | chọn một lần lúc tạo nhân vật. **Avatar thì tự do** — mọi NFT đều cắm được. |
 
 ### ⇒ Đây KHÔNG phải đổi kiến trúc. Là đổi LỚP VẼ.
@@ -120,6 +120,14 @@ khi tấn công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu."*
 3. **`AVA_TY` là số trần, `avaCao()` là HÀM.** Nhân thẳng `NV_THAN_PX` ở chỗ khai (dòng ~5110)
    là rơi vùng chết của `const` — `NV_THAN_PX` khai tận dòng 22987. Đúng cái bẫy đã ghi ở mục
    `NV_CAO`.
+
+4. **Lớp nhân vật đứng KẾ BÊN, nên phải xếp CHIỀU SÂU.** `_avaDx/_avaDy` dời nó ra trước +
+   sang bên; ai đứng THẤP hơn thì vẽ SAU. Vẽ Axie sau cùng ở mọi hướng (bản đầu) thì quay mặt
+   xuống là con Axie che mất nửa người. Trục sâu nén 0,55 — cùng lối với bóng đổ.
+5. **`_lopHien` PHẢI luôn đúng bằng `_kind === 'a' || 'c'`.** Nó tính SỚM vì phép dời gốc toạ
+   độ nằm trên chỗ tính `_kind`. Thêm trạng thái mới vào chuỗi `_kind` phía trên `'c'` thì
+   phải sửa `_lopHien` theo — không thì thân người hiện một chỗ, vòng triệu hồi nổ chỗ khác.
+   *Đừng vá bằng "nếu lệch thì gán lại": nó làm chỗ lệch chạy được nên không ai biết mà sửa.*
 
 ### Trúng đòn và chết vẫn giữ AXIE — cố ý
 
