@@ -23136,6 +23136,10 @@ function drawNpc(){
    giá hơn hai nhãn chồng nhau. Người gần nhất luôn có nhãn.                                  */
 const NHAN_CAO   = 15;   // chiều cao một dòng nhãn để tính đụng nhau
 const HUD_CHE    = 64;   // dải trên cùng màn hình có chữ HUD (tên nhân vật, tên map) đè xuống
+// DẢI TRÁI cũng bị chắn, và trước bản này không ai chừa chỗ cho nó: cột biểu tượng #menu-cot
+// (left:10px, rộng ~56px) nằm đè lên canvas, nên tên NPC đứng gần mép trái bị cắt cụt — chụp
+// được ở Sapidae Chiefdom: 'Người Luyện Chimera' hiện ra thành 'ời Luyện Chimera'.
+const HUD_TRAI   = 76;   // 10 (lề) + 56 (cột) + 10 (khoảng thở)
 function veNhanNpc(ds){
   if (!ds.length) return;
   ctx.font = '12px "Be Vietnam Pro", sans-serif';
@@ -23194,7 +23198,12 @@ function veNhanNpc(ds){
     }
     ctx.strokeStyle = 'rgba(0,0,0,.6)';
     ctx.fillStyle = '#fff';
-    ctx.strokeText(n.name, n.x, y); ctx.fillText(n.name, n.x, y);
+    // KẸP vào trong cột an toàn bên trái. Nhãn vẽ canh GIỮA n.x nên mép trái của nó là n.x - w/2;
+    // đẩy sang phải vừa đủ để mép đó không chui xuống dưới cột biểu tượng. Chỉ đẩy, không ẩn:
+    // tên NPC là thứ phải đọc được, và dịch vài chục pixel thì vẫn rõ nó thuộc về ai.
+    const _minX = camera.x + HUD_TRAI + w / 2;
+    const _nx = Math.max(n.x, _minX);
+    ctx.strokeText(n.name, _nx, y); ctx.fillText(n.name, _nx, y);
   });
 }
 
