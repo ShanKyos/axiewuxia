@@ -615,23 +615,85 @@ nên mọi lời gọi 6 tham số cũ vẫn chạy. Giữ nguyên quy ước đ
 Test: `node <scratchpad>/test_anim.js`. ⚠ Game **đã bỏ WASD** — di chuyển là click-to-move qua
 `moveTarget`; test nào đặt `keys.d = true` để bắt nhân vật chạy sẽ đo ra 0 mà không báo lỗi.
 
-### ĐI hay CHẠY — cửa là ĐÔI GIÀY, không phải tốc độ
+### ĐI hay CHẠY — cửa là TỐC ĐỘ, và nhịp bước phải ĐO chứ đừng đoán
 
-`dangChay(p)` là luật DUY NHẤT: `p.equip.chan.plus >= GIAY_CHAY_PLUS (6)` thì CHẠY (`00_Run`),
-dưới đó — kể cả chưa có giày — thì ĐI (`00_Walk`).
+`dangChay(p)` là luật DUY NHẤT: `p.speed >= CHAY_TOCDO (131)` thì CHẠY (`00_Run`), dưới đó ĐI
+(`00_Walk`). Cửa **Giày +6** đời trước đã gỡ (`GIAY_CHAY_PLUS` không còn) — nó đổi dáng theo
+trang bị nên ai chưa có giày cũng bị khối ĐI gánh tốc độ 209 px/giây.
 
-- **Vì sao đổi.** Luật cũ đọc TỐC ĐỘ (`p.speed >= 1.271 × NV_CAO ≈ 168`), mà tốc độ nền của
-  người chơi là **209** — tức mọi nhân vật chạy ngay từ cấp 1, suốt đời, và 32 khung `00_Walk`
-  đã nướng nằm chết trong bảng. Chủ dự án chốt: vào game là ĐI, **Giày +6** mới mở dáng chạy.
-  Đổi được cả một thứ NHÌN THẤY ĐƯỢC khi đập giày — thứ mà các ô khác không có.
+**Số đo sinh bằng `tools/do_dang.js`, đừng chép tay.** Bốn cột, mỗi cột một câu hỏi khác nhau:
+`sảiBọc` (mắt đọc ra bước dài chừng nào) · `tảiĐất` (bàn chân chống đất lùi được bao nhiêu) ·
+`đốiXứng` (mấy bước một vòng) · `nhún`.
+
 - **⚠ HAI chỗ phải cùng gọi `dangChay()`**: `drawPlayer` chọn KHỐI VẼ, `update()` chọn SẢI CHÂN
   (`SAI_CHAN.w` / `SAI_CHAN.r`) để tính `walkPh`. Tách ra hai luật là bàn chân **trượt đất
   ~40% quãng đường mỗi vòng** — nhìn chỉ thấy "hình như đi hơi lạ", rất khó lần ra.
-- Nhánh `_bay` phải đứng TRƯỚC nhánh đi bộ trong chuỗi chọn khối, nếu không đang bay mà mang
-  Giày +6 cũng đổi khối.
+- Nhánh `_bay` phải đứng TRƯỚC nhánh đi bộ trong chuỗi chọn khối.
 
-Test: `tests/test_walkrun.js` (13 mục). Mục 3 đo `walkPh` chuẩn hoá **theo px đã đi**, không
-theo thời gian — chia theo thời gian thì hai lượt đo không đi bằng nhau và sai số 11%.
+**⚠ HAI CÁI SAI ĐÃ SỬA, cộng lại thành hệ số 2,77 — nhịp chạy 1,18 thay vì 2,90 bước/giây:**
+
+1. **Hệ số quy đổi bảng khung → màn hình là `NV_CAO/HERO_H` = 0,600**, không phải
+   `NV_CAO/CAO_THAN_NUONG` = 0,830. Một bên là chiều cao Ô VẼ, bên kia là chiều cao THÂN —
+   lệch 38%. Chỗ khác trong tệp (`NV_THAN_PX`) vốn đã quy đổi đúng, nên hai dòng cãi nhau mà
+   nhìn qua không thấy.
+2. **Một vòng bảng khung là MỘT bước, không phải hai.** Chú thích cũ khai hai rồi nhân đôi số
+   đo. Đo lại cả 10 khối (5 bộ × đi/chạy): `đốiXứng` ra **0,48–0,64**, trong khi vòng hai bước
+   phải ≥0,85. Nửa vòng sau của mấy bảng này là dáng **ĐỨNG**, không phải bước của chân kia.
+
+**Còn nợ, mã KHÔNG chữa được:** `tảiĐất` chỉ bằng ~49% `sảiBọc` — tức **51% quãng đường là
+trượt chân nằm sẵn trong bản vẽ**. Bàn chân chống đất gần như đứng yên tại chỗ trong 16/32
+khung. Không giá trị `SAI_CHAN` nào chữa nổi; phải vẽ lại vòng đi/chạy.
+Bản đặt hàng + ngưỡng nghiệm thu: `docs/DAT_HANG_TUONG_DI.md`.
+**Spellblade còn thiếu hẳn một hàng bảng khung** — `sbhd1` có 96 ô (6 hàng) trong khi bốn bộ
+kia 112 ô, nên khối chạy của nó chỉ đọc được **nửa đầu** vòng.
+
+Test: `tests/test_walkrun.js`. Mục 3 đo `walkPh` chuẩn hoá **theo px đã đi**, không theo thời
+gian — chia theo thời gian thì hai lượt đo không đi bằng nhau và sai số 11%.
+⚠ Mục 1 **đọc ngưỡng từ game**, đừng chép cứng con số: bản đầu kiểm thẳng `126` và khi sửa
+`SAI_CHAN` cho đúng số đo thì bài đỏ ở một chỗ chẳng liên quan gì tới thứ nó định gác.
+
+### 🧭 TÁM HƯỚNG NHÌN — hướng nằm TRONG TÊN BỘ
+
+Chủ dự án chốt đủ 8 hướng như MU Online. **8 hướng chỉ tốn NĂM bản vẽ**: Đông↔Tây, ĐB↔TB,
+ĐN↔TN lật ngang là ra nhau; chỉ Bắc và Nam phải vẽ riêng (cách Ragnarok và Diablo II làm).
+
+Trước bản này art chỉ có một hướng nghiêng, mà `drawPlayer` vẫn tính cờ `_ps.back` rồi nhét
+vào khoá đệm sprite — đo được `back=true` và `back=false` lệch **0 trên 52.000 điểm ảnh**, tức
+trả gấp đôi ô nhớ để lấy hai tấm giống hệt nhau. `back` nay chỉ còn trong khoá khi bộ **không**
+có art (đường vẽ bằng đường thì `ps.back` đổi thật: gáy, mũ trùm).
+
+- `NV_HUONG` — 8 hướng → `{ban, lat}`. Mã bản vẽ: `''` (nghiêng) · `bd` · `b` · `nd` · `n`.
+- `NV_BANVE[bộ]` — bộ đó có sẵn những bản nào. Không khai = chỉ có bản nghiêng.
+- `nvChonHuong(bộ, góc)` — chọn bản tốt nhất bộ **đang có**, lui về bản gần nhất khi chưa có.
+- **Hướng nằm trong TÊN BỘ** (`dkcw1` + `'b'` = `dkcw1b`), nên mỗi hướng có hộp cắt
+  (`NV_LOP_HOP`) và số khung (`NV_KHUNG_R`) riêng. **Thêm một hướng = ba dòng dữ liệu**, không
+  sửa một dòng máy nào.
+
+⚠ **Lui về bản gần nhất phải đo từ GÓC THẬT, không từ góc đã làm tròn về một trong tám nấc.**
+Làm tròn trước thì ở dải 90°–112,5° máy chọn Đông trong khi luật cũ `Math.cos(face) < 0` chọn
+Tây — tức bật tầng hướng lên là nhân vật quay ngược ở một dải góc, **dù chưa có tệp art mới
+nào**. `tests/test_huongnhin.js` quét **720 góc** chứ không quét 8 mốc, vì chỗ hỏng nằm GIỮA
+hai mốc.
+
+⚠ **Chi tiết bất đối xứng nhảy sang bên kia khi lật.** Spellblade lấy vai lệch làm chữ ký lớp
+(`halfplate`): quay sang Tây là giáp đổi vai. Chấp nhận hay vẽ đủ 8 hướng riêng cho Spellblade
+là việc của chủ dự án — máy đỡ được cả hai.
+
+### ⚠ KHUNG DỰNG LÚC ART CHƯA VỀ THÌ KHÔNG ĐƯỢC NHỚ LẠI
+
+Bộ đã cắt lớp (**cả năm thân trần**) đi đường `nvKhungGop()`, mà hàm đó trả `null` khi một lớp
+chưa tải xong. Khoá đệm sprite chỉ ghi được chuyện "thiếu TẤM LIỀN" (dấu `?`) — mà bộ cắt lớp
+thì **không bao giờ** có tấm liền, nên dấu đó bật sẵn ở cả hai trường hợp. Khung nào lỡ dựng
+trong mấy trăm mili giây đầu nằm lại trong đệm dưới ĐÚNG cái khoá mà lượt vẽ sau dùng — và nó
+là hình dựng bằng đường, tức **một nhân vật khác hẳn** (hiệp sĩ xám, mũ sừng, áo choàng đỏ).
+
+Đo được: **cả 5/5 lớp** đều dính, khối đứng 1 khung nhiễm. Khung `i4` đếm 12.828 điểm ảnh
+trong khi hai khung kề bên 6.606/6.733. Khối đứng lặp ~4 giây một vòng ⇒ nhấp nháy suốt phiên.
+
+Chữa ở chỗ **NHỚ**, không ở chỗ vẽ: `_choArt` trong `heroSprite()`. `tests/test_khungdoc.js`
+gác — và nó **không đặt ngưỡng phần trăm**, nó dựng lại chính khung đó dưới một khoá khác
+(bật `TEST_TO_PHANG`, cờ này nằm trong khoá và chỉ tô đè MÀU nên bóng dáng giữ nguyên từng
+điểm ảnh) rồi so alpha: lệch một điểm ảnh cũng bắt.
 
 ### Cảm giác chiến đấu — 6 chỗ dễ làm sai
 
@@ -898,8 +960,10 @@ ngưỡng chạy (`CHAY_TU`), chỗ bàn chân chạm đất (`chanDy()`) và c�
 kiểu lệch ấy rất khó lần: phóng to nhân vật thì bàn chân trượt đất, vòng lửa quét ngang đầu,
 chiêu giáng xuống nổ ngang bụng — mà nhìn thì chỉ thấy "hình như hơi lạ".
 
-Sải chân giữ con số **đo trên bảng khung** (`SAI_CHAN_NUONG`, ở `CAO_THAN_NUONG` = 159px) rồi
-mới thu theo `NV_CAO`; nhịp bước = quãng đường ÷ sải chân nên sai một chút là trượt chân ngay.
+Sải chân giữ con số **đo trên bảng khung** (`SAI_CHAN_NUONG`) rồi mới thu theo `NV_CAO`; nhịp
+bước = quãng đường ÷ sải chân nên sai một chút là trượt chân ngay. ⚠ Thu bằng
+`NV_CAO/HERO_H` = 0,600 (chiều cao Ô VẼ), **không** bằng `NV_CAO/CAO_THAN_NUONG` = 0,830
+(chiều cao THÂN) — đã lẫn hai cái đó một lần, lệch 38%. Xem mục "ĐI hay CHẠY".
 
 ⚠ **Thứ tự khai báo**: hằng nào nhân với `NV_CAO` thì phải nằm **dưới** nó trong `game.js`.
 `const` có vùng chết — đặt ở trên là cả tệp chết ngay lúc nạp, mà lỗi báo ra lại là một hằng

@@ -28,6 +28,9 @@ function check(name, ok, extra){
   });
   page.on('requestfailed', r => netA.push('net: ' + r.url()));
   await page.goto(URL, { waitUntil: 'networkidle' });
+  // Chờ game.js chạy xong hẳn (`window.__gameReady` đặt ở dòng cuối tệp) thay vì tin một
+  // khoảng ngủ cứng — 170/175 bài đã làm thế, năm bài này là chỗ còn sót.
+  await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(400);
   await page.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); });
   await page.waitForTimeout(400);
@@ -171,6 +174,7 @@ function check(name, ok, extra){
     if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errC.push('console: ' + m.text());
   });
   await page2.reload({ waitUntil: 'networkidle' });   // beforeunload sẽ ghi đè save…
+  await page2.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page2.waitForTimeout(500);
   const loaded = await page2.evaluate((raw) => {
     localStorage.setItem('vlcm_save', raw);           // …nên đặt lại save CŨ sau khi tải xong
