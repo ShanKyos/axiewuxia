@@ -854,9 +854,10 @@ window.MAPS = {
       { id:'caodo_fire', ten:'Vạt Cỏ Cháy', dai:[0.55,0.66], cung:[70,180], cum:[2,2],
         dan:[{ mob:'caodo_fire', n:10 }] },
       { id:'gloam_scout', ten:'Chốt Trinh Sát Gloam', dai:[0.69,0.82], cung:[45,160], cum:[3,3],
-        dan:[{ mob:'gloam_scout', n:9, vai:['xa'] }] },
+        // n chia hết cho số cụm thì _vungChiaDan bù về đều tăm tắp (9/3 → 3·3·3). 12/3 → 5·4·3.
+        dan:[{ mob:'gloam_scout', n:12, vai:['xa'] }] },
       { id:'chimera_bo', ten:'Bãi Tượng Vỡ Lệnh', dai:[0.85,1.0], cung:[80,190], cum:[2,2],
-        dan:[{ mob:'chimera_bo', n:8, vai:['nang'] }] },
+        dan:[{ mob:'chimera_bo', n:10, vai:['nang'] }] },
     ],
     diTrong: [
       [2048,3168], [1408,3168], [1248,2944], [1248,2624], [1024,2464], [192,2464],
@@ -1419,8 +1420,12 @@ window.MAPS = {
         dan:[{ mob:'daokhach', n:15, vai:['can','xa'] }] },
       { id:'daokhach_phap', ten:'Bàn Thờ Ngập Nước', dai:[0.74,0.85], cung:[-15,85], cum:[3,3], tiep:true,
         dan:[{ mob:'daokhach', n:12, vai:['phap','can'] }] },
-      { id:'cuongbinh_cuoi', ten:'Chân Trụ Dusk Marsh', dai:[0.88,1.0], cung:[-20,80], cum:[3,3], tiep:true,
-        dan:[{ mob:'cuongbinh', n:12, vai:['nang','xa'] }] },
+      // ⚠ MIỀN XA NHẤT PHẢI LÀ LOÀI MẠNH NHẤT. Bản đầu tôi để `cuongbinh` (C102) ở dải 0,88-1,0
+      // trong khi `daokhach` (C120) đứng gần hơn — test_vung §2 bắt ngay: "1 cụm ở xa hơn mà yếu
+      // hơn tới 18 cấp". Dải `dai` rời nhau mới chỉ đảm bảo THỨ TỰ KHOẢNG CÁCH; thứ tự CẤP còn
+      // phải nằm ở chính bảng loài. Ba loài của map này: cuongbinh 102 → kylan 112 → daokhach 120.
+      { id:'daokhach_cuoi', ten:'Chân Trụ Dusk Marsh', dai:[0.88,1.0], cung:[-20,80], cum:[3,3], tiep:true,
+        dan:[{ mob:'daokhach', n:12, vai:['nang','xa'] }] },
     ],
     diTrong: [
       [2496,3680], [576,3680], [384,3488], [64,3488], [32,3456], [32,640],

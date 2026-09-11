@@ -21,7 +21,15 @@ const { chromium } = require('playwright');
     };
     // Liên thông: lưới 40px, ô nào đi được thì nối nhau; mọi điểm nội dung phải cùng MỘT vùng.
     window.reachAll = (mid) => {
-      const S = 40, W2 = Math.floor(MAP.w/S), H2 = Math.floor(MAP.h/S);
+      // ⚠ KHỔ ĐỌC TỪ CHÍNH MAP ĐANG SOI, KHÔNG TỪ `MAP` TOÀN CỤC. `MAP` mang khổ map người chơi
+      // ĐANG ĐỨNG, mà hàm này soi một map bất kỳ qua tham số `mid`. Lỗi này nằm im được lâu vì
+      // cả game từng chung một khổ 2600×1900 — `MAP` luôn đúng một cách tình cờ. Từ lúc map có
+      // khổ riêng thì lưới bị cắt cụt: soi Dusk Marsh (5200×3800) trong lúc đứng ở Sapidae
+      // Chiefdom (6400×3200) thì mọi điểm có y > 3200 rơi NGOÀI lưới, và hàm báo "bị vật cản cô
+      // lập" cho những chỗ thật ra không có lấy một vật cản nào. Cùng họ với cái bẫy đã ghi ở
+      // `_vungDatCum` trong game.js.
+      const _md0 = MAPS[mid];
+      const S = 40, W2 = Math.floor((_md0.w || 2600)/S), H2 = Math.floor((_md0.h || 1900)/S);
       const ok = (i,j) => !inStatic(mid, i*S + S/2, j*S + S/2, 16);
       const md = MAPS[mid], pts = [];
       const add = (nm,x,y) => pts.push({ nm, i: Math.floor(x/S), j: Math.floor(y/S) });
@@ -171,10 +179,19 @@ const { chromium } = require('playwright');
     for (const mid of ['ngoai','chungnam','comoc','daohoa']){
       travelTo(mid);
       const md = MAPS[mid], bad2 = [];
-      for (const q of (md.packs || [])) if (decor.some(d => dist(d.x,d.y,q.x,q.y) < 90)) bad2.push('bãi ' + q.mob);
-      for (const h of (HERB_SPOTS[mid] || [])) if (decor.some(d => dist(d.x,d.y,h.x,h.y) < 40)) bad2.push('thảo dược');
-      for (const g of GATES) if (g.map === mid && decor.some(d => dist(d.x,d.y,g.x,g.y) < 90)) bad2.push('cổng ' + g.to);
-      if (md.spawn && decor.some(d => dist(d.x,d.y,md.spawn.x,md.spawn.y) < 100)) bad2.push('spawn');
+      // ⚠ CHỈ TÍNH DECOR CÓ CHẶN. `rebuildDecorObs()` lọc `d.type !== 'iso'` — tức túm cỏ và
+      // gốc cây của map lát viên KHÔNG sinh vật cản nào (lùm chặn đi riêng qua `decorObsCum`).
+      // Bài này viết từ hồi mọi map đều là tranh phẳng với decor `tree`/`rock` chặn thật, nên nó
+      // đếm cả decor thuần trang trí: Beast Herd Camp sau khi dựng lại có 936 túm cỏ rải khắp
+      // map và bài báo "decor mọc đè lên" gần như mọi thứ — trong khi không một túm nào chặn
+      // đường ai. Đo đúng thứ engine THỰC THI, không đo thứ nó chỉ VẼ.
+      const chan = decor.filter(d => d.type !== 'iso');
+      for (const q of (md.packs || [])) if (chan.some(d => dist(d.x,d.y,q.x,q.y) < 90)) bad2.push('bãi ' + q.mob);
+      for (const h of (HERB_SPOTS[mid] || [])) if (chan.some(d => dist(d.x,d.y,h.x,h.y) < 40)) bad2.push('thảo dược');
+      for (const g of GATES) if (g.map === mid && chan.some(d => dist(d.x,d.y,g.x,g.y) < 90)) bad2.push('cổng ' + g.to);
+      if (md.spawn && chan.some(d => dist(d.x,d.y,md.spawn.x,md.spawn.y) < 100)) bad2.push('spawn');
+      // ...nhưng LÙM CHẶN thì vẫn phải tránh bãi quái: nó là vật cản thật (xem raiCum).
+      for (const q of (md.packs || [])) if (decorObsCum.some(o => dist(o.x,o.y,q.x,q.y) < 150)) bad2.push('lùm chặn đè bãi ' + q.mob);
       const trongVatCan = decor.filter(d => inStatic(mid, d.x, d.y, 2)).length;
       out[mid] = { soDecor: decor.length, deLen: bad2, mocTrongVatCan: trongVatCan };
     }

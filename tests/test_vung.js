@@ -87,7 +87,11 @@ const { chromium } = require('playwright');
       const md = MAPS[m], ds = packsOf(m);
       out[m] = {
         trongDa: ds.filter(q => inObstacle(m, q.x, q.y, 40)).length,
-        tranMep: ds.filter(q => q.x < 150 || q.y < 150 || q.x > MAP.w-150 || q.y > MAP.h-150).length,
+        // ⚠ Khổ đọc từ CHÍNH map đang soi. `MAP` mang khổ map người chơi ĐANG ĐỨNG — đo Dusk
+        // Marsh (5200×3800) trong lúc đứng ở Sapidae Chiefdom (6400×3200) thì phép này báo
+        // "tràn mép" cho những cụm nằm gọn trong bản đồ. Đo lại bằng w/h thật: 0 cụm tràn.
+        tranMep: ds.filter(q => q.x < 150 || q.y < 150
+                             || q.x > (md.w||2600)-150 || q.y > (md.h||1900)-150).length,
         chongNhau: ds.flatMap((a,i) => ds.slice(i+1).map(c => dist(a.x,a.y,c.x,c.y))).filter(d => d < 240).length,
         deTha: ds.filter(q => dist(q.x, q.y, md.spawn.x, md.spawn.y) < 260).length,
         deRuong: ds.filter(q => ruongCuaMap(m).some(r => dist(q.x,q.y,r.x,r.y) < 150)).length,
