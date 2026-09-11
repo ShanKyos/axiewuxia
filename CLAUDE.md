@@ -1179,6 +1179,18 @@ năm lớp trên một khung chỉ có một người: hai cột ngoài cùng ra
    trên nền núi mờ mịt thì không ai thấy, nhưng nền nay có chi tiết đều khắp khung nên chỗ nấc
    gấp hiện ra thành một **đường kẻ ngang chạy suốt bề rộng màn hình**.
 
+### ⚠ `startGame()` PHẢI tắt cảnh màn chờ — đừng trông vào chỗ gọi
+
+`titleAlive()` tắt vòng lặp khi **cả hai** màn (`#sect-select`, `#intro-story`) đã ẩn. Mà mọi
+đường vào game chỉ ẩn đúng MỘT cái rồi gọi `startGame` — nên chỉ cần một đường quên ẩn cái kia
+là cảnh Lunacia mười lớp chạy **song song với vòng game suốt phiên**. Nay `startGame()` gọi
+`titleStop()` ngay dòng đầu: đó là cửa duy nhất vào thế giới, nên nó là chỗ đúng để tắt.
+
+Lỗi này **không ném lỗi và không hiện ra** — nó chỉ ăn CPU. Chỗ nó lộ ra là `test_sandat`: bài
+gọi thẳng `startGame` trong lúc trang dẫn truyện còn hiện, và 3600 khung mô phỏng phải chia CPU
+với cảnh nền → trình duyệt **sập** (`Target page... has been closed`), không phải đỏ một khẳng
+định nào. Nền cũ nhẹ nên chạy kèm vẫn lọt; nền mười lớp thì không.
+
 ### Giảm chuyển động KHÔNG có nghĩa là gỡ mất nền
 
 Luật CSS cũ ẩn hẳn `#title-fx` ở `prefers-reduced-motion` — người bật tuỳ chọn đó nhận một trang

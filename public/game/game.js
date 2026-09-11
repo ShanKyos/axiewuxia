@@ -18042,6 +18042,13 @@ window.doTayTuy = function(confirmed){
 };
 // ---------- Sect select / boot ----------
 function startGame(sectKey, quze){
+  // ⚠ DỪNG cảnh màn chờ NGAY Ở ĐÂY, đừng trông vào chỗ gọi. titleAlive() tắt vòng lặp khi CẢ
+  // HAI màn (#sect-select, #intro-story) đã ẩn — mà đường vào game nào cũng chỉ ẩn đúng một
+  // cái rồi gọi startGame, nên chỉ cần một đường quên ẩn cái kia là cảnh Lunacia mười lớp
+  // chạy song song với vòng game suốt phiên. Đây là cửa DUY NHẤT vào thế giới, nên nó là chỗ
+  // đúng để tắt. (Đã lộ ra ở test_sandat: bài gọi thẳng startGame trong lúc trang dẫn truyện
+  // còn hiện — 3600 khung mô phỏng phải chia CPU với cảnh nền, và trình duyệt sập.)
+  titleStop();
   bungMoiVung();   // A4: bung miền của MỌI map ngay ở đây, xem ghi chú tại bungMoiVung()
   newPlayer(sectKey);
   player.name = (quze && quze.name) || genCharName(); // danh tính phiêu bạt (bước đặt tên)
