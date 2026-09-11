@@ -170,28 +170,31 @@ window.CHI_KY = {
 //      qua cánh cửa đầu tiên" rồi có nút Tiếp Tục — nó là kết CHƯƠNG I. Chuỗi chạy tiếp bình thường.
 //   ③ `q.npc` phải là NPC `talk:'quest'`, nếu không thì không có bảng để trả nhiệm vụ.
 //
-// `collect` chỉ chạy ở map có HERB_SPOTS (Plant Tribe Glade · Beast Herd Camp).
-// `meditate` neo vào SPRING trên Plant Tribe Glade — trong chuỗi này nó LÀ một Atia Shrine.
+// `collect` chỉ chạy ở map có HERB_SPOTS (Rẻo Rừng Corran · Beast Herd Camp).
+// `meditate` neo vào SPRING trên Rẻo Rừng Corran — trong chuỗi này nó LÀ một Atia Shrine.
 // `tpkill` bắt hạ quái bằng đòn Trấn Phái, để người chơi thật sự dùng chiêu riêng của lớp.
 window.QUESTS = [
   // ── CHƯƠNG I · NGỌN ĐÈN TẮT (cấp 1–10) ────────────────────────────────────
-  { id:'c1q1', chapter:'I · Ngọn Đèn Tắt', lv:1, npc:'ah_gac_tay', map:'ardhaven',
-    type:'talk', targetNpc:'ah_ganhnuoc', need:1,
-    name:'Ngọn Đèn Bên Giếng', desc:'Lính Gác Cổng Tây nói cái đèn cạnh giếng tắt ba đêm liền, mà dầu vẫn còn đầy. Người gánh nước qua đó mười hai chuyến một ngày — hỏi ông ta.',
-    rew:{ xp:220, silver:120 } },
-  { id:'c1q2', chapter:'I · Ngọn Đèn Tắt', lv:2, npc:'ah_gac_tay', map:'daohoa',
+  // ⚠ VIỆC ĐẦU TIÊN LÀ RA KHỎI THÀNH MÀ ĐÁNH, KHÔNG PHẢI ĐI HỎI CHUYỆN. Chủ dự án chốt: nhiệm
+  // vụ mở màn phải đẩy người chơi qua Cổng Tây ra bìa Rẻo Rừng Corran. Chặng nói chuyện
+  // "Ngọn Đèn Bên Giếng" KHÔNG bị xoá — nó lùi xuống làm c1q2, và mạch đèn vẫn chạy từ đó.
+  { id:'c1q1', chapter:'I · Ngọn Đèn Tắt', lv:1, npc:'ah_gac_tay', map:'corran',
     type:'kill', mob:'boar', need:6,
-    name:'Ra Ngoài Cổng Tây', desc:'Người gánh nước bảo: đèn tắt thì thứ ngoài kia dạn hơn. Ra Cổng Tây, dọn bầy heo rừng đang lấn tới sát chân tường.',
+    name:'Ra Bìa Rẻo Rừng Corran', desc:'Lính Gác Cổng Tây chặn ngươi lại: "Bầy heo rừng lấn tới sát chân tường ba đêm nay." Ra Cổng Tây, vào bìa Rẻo Rừng Corran mà dọn chúng.',
+    rew:{ xp:220, silver:120 } },
+  { id:'c1q2', chapter:'I · Ngọn Đèn Tắt', lv:2, npc:'ah_gac_tay', map:'ardhaven',
+    type:'talk', targetNpc:'ah_ganhnuoc', need:1,
+    name:'Ngọn Đèn Bên Giếng', desc:'"Chúng nó chỉ dạn thế từ hôm cái đèn cạnh giếng tắt. Ba đêm liền, mà dầu vẫn còn đầy." Người gánh nước qua đó mười hai chuyến một ngày — hỏi ông ta.',
     rew:{ xp:340, silver:180 } },
-  { id:'c1q3', chapter:'I · Ngọn Đèn Tắt', lv:3, npc:'truonglang', map:'daohoa',
+  { id:'c1q3', chapter:'I · Ngọn Đèn Tắt', lv:3, npc:'truonglang', map:'corran',
     type:'talk', targetNpc:'duocsu', need:1,
     name:'Người Giữ Đèn', desc:'Trưởng Làng nhận ra ngay: đó là đèn dẫn hồn, do Dawn axie trông coi. Dược Sư từng phụ họ pha dầu — hỏi cho ra công thức.',
     rew:{ xp:420, silver:200 } },
-  { id:'c1q4', chapter:'I · Ngọn Đèn Tắt', lv:4, npc:'duocsu', map:'daohoa',
-    type:'collect', herbMap:'daohoa', need:5,
+  { id:'c1q4', chapter:'I · Ngọn Đèn Tắt', lv:4, npc:'duocsu', map:'corran',
+    type:'collect', herbMap:'corran', need:5,
     name:'Dầu Cho Ngọn Đèn', desc:'"Dầu đèn không mua được. Nó là nhựa cây trong rừng thưa, mà chỉ Plant axie mới biết chỗ." Hái đủ năm bụi.',
     rew:{ xp:520, silver:240 } },
-  { id:'c1q5', chapter:'I · Ngọn Đèn Tắt', lv:5, npc:'truonglang', map:'daohoa',
+  { id:'c1q5', chapter:'I · Ngọn Đèn Tắt', lv:5, npc:'truonglang', map:'corran',
     type:'kill', mob:'hautu', need:8,
     name:'Thứ Ăn Hồn Kẹt', desc:'Đèn tắt thì hồn không về được Cây Hồn, kẹt lại giữa đường. Lũ này tụ quanh chỗ hồn kẹt mà ăn. Dọn sạch.',
     rew:{ xp:640, silver:300 } },
@@ -199,19 +202,19 @@ window.QUESTS = [
     type:'enhance', need:3,
     name:'Thép Chịu Được Bóng', desc:'"Đồ thường chém vào chúng như chém sương." Mang một món tới lò rèn, đập lên +3 rồi quay lại.',
     rew:{ xp:760, silver:400 } },
-  { id:'c1q7', chapter:'I · Ngọn Đèn Tắt', lv:7, npc:'duocsu', map:'daohoa',
+  { id:'c1q7', chapter:'I · Ngọn Đèn Tắt', lv:7, npc:'duocsu', map:'corran',
     type:'meditate', need:20,
     name:'Ngồi Ở Miếu Atia', desc:'"Miếu bên suối vẫn còn. Atia không cho ai vàng bạc — nhưng ngồi đủ lâu thì ngài cho ngươi biết ngọn đèn kế tiếp tắt ở đâu."',
     rew:{ xp:900, silver:420 } },
-  { id:'c1q8', chapter:'I · Ngọn Đèn Tắt', lv:8, npc:'truonglang', map:'daohoa',
+  { id:'c1q8', chapter:'I · Ngọn Đèn Tắt', lv:8, npc:'truonglang', map:'corran',
     type:'tpkill', mob:'wolf', need:6,
     name:'Đòn Của Riêng Ngươi', desc:'"Đòn thường không đủ nữa." Hạ sáu con bằng chính Trấn Phái tuyệt kỹ của lớp ngươi.',
     rew:{ xp:1100, silver:500 } },
-  { id:'c1q9', chapter:'I · Ngọn Đèn Tắt', lv:9, npc:'duocsu', map:'daohoa',
+  { id:'c1q9', chapter:'I · Ngọn Đèn Tắt', lv:9, npc:'duocsu', map:'corran',
     type:'kill', mob:'caodo', need:12,
     name:'Kẻ Canh Miếu', desc:'Miếu Atia phía đông bị chiếm. Bọn Gloam dựng trại ngay trên nền miếu — dọn chúng đi thì đèn mới thắp lại được.',
     rew:{ xp:1400, silver:650 } },
-  { id:'c1q10', chapter:'I · Ngọn Đèn Tắt', lv:10, npc:'truonglang', map:'daohoa',
+  { id:'c1q10', chapter:'I · Ngọn Đèn Tắt', lv:10, npc:'truonglang', map:'corran',
     type:'boss', mob:'boss', need:1,
     name:'Thủ Lĩnh Gloam', desc:'Kẻ ngồi trên nền miếu không phải quái đi lạc — nó biết chính xác ngọn đèn nào cần dập. Hạ nó.',
     rew:{ xp:2600, silver:1200, item:'vukhi' } },
@@ -318,11 +321,15 @@ window.QUESTS = [
 ];
 
 window.BOSS_DEFS = {
+  // ⚠ HOÁN DẢI CẤP (xem MAPS): bốn con này giữ nguyên TÊN, CHỖ ĐỨNG và tạo hình của Plant Tribe
+  // Glade — chỗ đứng là toạ độ tỉ lệ đã dò cho chính khổ map ấy, dời đi là hỏng test_bossplace.
+  // Chỉ CẤP đổi, từ 6/9/12/14 lên bắc cầu giữa Werebear Woods (Trấn Ải C32) và Bug Tribe
+  // Tunnels (Vệ Binh Trụ đầu C43).
   daohoa: { thuve:[
-      { id:'dh1', name:'Chúa Heo Rừng',       lv:6,  el:'Thổ',  img:'boar',     x:0.4346, y:0.3526, moves:['vach','xung','cuong'] },
-      { id:'dh2', name:'Chúa Bầy Gai Tím',        lv:9,  el:'Mộc',  img:'wolf',     x:0.7077, y:0.8842, moves:['xung','goi','vach'] },
-      { id:'dh3', name:'Chấp Sự Gloam',  lv:12, el:'Thủy', img:'assassin', x:.42, y:.80, moves:['vach','vong','cuong'] } ],
-    tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:14, el:'Hỏa', img:'boss_hacphong', x:.86, y:.80, moves:['vong','vach','goi','cuong'] } },
+      { id:'dh1', name:'Chúa Heo Rừng',       lv:40, el:'Thổ',  img:'boar',     x:0.4346, y:0.3526, moves:['vach','xung','cuong'] },
+      { id:'dh2', name:'Chúa Bầy Gai Tím',        lv:43, el:'Mộc',  img:'wolf',     x:0.7077, y:0.8842, moves:['xung','goi','vach'] },
+      { id:'dh3', name:'Chấp Sự Gloam',  lv:46, el:'Thủy', img:'assassin', x:.42, y:.80, moves:['vach','vong','cuong'] } ],
+    tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:50, el:'Hỏa', img:'boss_hacphong', x:.86, y:.80, moves:['vong','vach','goi','cuong'] } },
   ngoai: { thuve:[
       { id:'ng1', name:'Đầu Mục Gloam',    lv:13, el:'Kim',  img:'bandit',   x:0.2885, y:0.4053, moves:['vach','xung','cuong'] },
       { id:'ng2', name:'Gai Tím Độc Nhãn',lv:16, el:'Mộc',  img:'wolf',     x:0.5423, y:0.7526, moves:['xung','vong','goi'] },
@@ -333,15 +340,16 @@ window.BOSS_DEFS = {
       { id:'cn2', name:'Golem Gỗ Cổ Đại',    lv:26, el:'Thổ',  img:'mocnhan',  x:0.5731, y:0.4684, moves:['vong','vach','cuong'] },
       { id:'cn3', name:'Trưởng Lão Tha Hóa', lv:29, el:'Thủy', img:'boss_phando', x:.44, y:.80, moves:['xung','vach','vong'] } ],
     tranai: { id:'cn4', name:'Tướng Quân Werebear Woods', lv:32, el:'Thủy', img:'bandao', x:.86, y:.80, moves:['vach','xung','vong','cuong'] } },
-  // Rẻo Rừng Corran bắc cầu 32 → 43: trùm ở đây phải nằm GIỮA Tướng Quân Werebear Woods (C32)
-  // và Chỉ Huy Vong Binh (C43), nếu không người chơi rơi thẳng từ C32 sang C43.
   // Bốn chỗ đứng chấm bằng máy trên chính bảng vật cản của map (xa điểm thả ≥700px theo luật
-  // test_bossplace, cách nhau ≥1200px, không đè gốc cổ thụ).
+  // test_bossplace, cách nhau ≥1200px, không đè gốc cổ thụ) — GIỮ NGUYÊN.
+  // ⚠ HOÁN DẢI CẤP (xem MAPS): map này nay là map khởi đầu 1-12, nên bốn con này hạ cấp theo,
+  // xuống đúng nhịp mà chuỗi nhiệm vụ chương I bám vào (Trấn Ải C14 là mốc đóng chương). TÊN
+  // giữ nguyên tất cả — kể cả Trấn Ải "Người Giữ Rẻo Corran".
   corran: { thuve:[
-      { id:'co1', name:'Rễ Cổ Thức Giấc',    lv:34, el:'Mộc',  img:'mocnhan', x:0.1231, y:0.8842, moves:['vong','vach','cuong'] },
-      { id:'co2', name:'Kẻ Canh Vòng Cổng',  lv:36, el:'Thổ',  img:'thinu',   x:0.4923, y:0.5053, moves:['vach','xung','goi'] },
-      { id:'co3', name:'Axie Sa Ngã Đầu Đàn',lv:38, el:'Thủy', img:'bandao',  x:0.7538, y:0.1263, moves:['xung','vong','cuong'] } ],
-    tranai: { id:'co4', name:'Người Giữ Rẻo Corran', lv:41, el:'Mộc', img:'boss_mochu', x:0.7538, y:0.8842, moves:['vong','vach','goi','cuong'] } },
+      { id:'co1', name:'Rễ Cổ Thức Giấc',    lv:6,  el:'Mộc',  img:'mocnhan', x:0.1231, y:0.8842, moves:['vong','vach','cuong'] },
+      { id:'co2', name:'Kẻ Canh Vòng Cổng',  lv:9,  el:'Thổ',  img:'thinu',   x:0.4923, y:0.5053, moves:['vach','xung','goi'] },
+      { id:'co3', name:'Axie Sa Ngã Đầu Đàn',lv:12, el:'Thủy', img:'bandao',  x:0.7538, y:0.1263, moves:['xung','vong','cuong'] } ],
+    tranai: { id:'co4', name:'Người Giữ Rẻo Corran', lv:14, el:'Mộc', img:'boss_mochu', x:0.7538, y:0.8842, moves:['vong','vach','goi','cuong'] } },
   // Trum Trung Nut dat GIUA trung, khong dat canh cong: bo sinh tu kiem >=700px tinh tu moi
   // diem toi (test_bossplace). Luot dau hai trum roi cach cong 466px va 401px -- bo kiem bat.
   trungnut: { thuve:[
@@ -676,7 +684,19 @@ window.SECTS = {
 
 // packs: quái đứng thành cụm 5-7 con, đánh 1 con cả cụm lao vào (GDD Mob Mechanics)
 window.MAPS = {
-  daohoa: { name:'Plant Tribe Glade', min:1, range:'1 - 12', type:'safe', ground:'#ece2c8', patch:'#7a86ad',
+  // ── HOÁN DẢI CẤP VỚI RẺO RỪNG CORRAN ──────────────────────────────────────────────────
+  // Chủ dự án chốt: Rẻo Rừng Corran xuống làm map khởi đầu (1-12), Plant Tribe Glade lên dải
+  // trên. TÊN và LORE của cả hai map giữ nguyên — chỉ dải cấp, bộ quái và bốn cờ làng
+  // (village/spring/herbs/boss) đổi chỗ cho nhau. Địa hình thì Ở LẠI với map của nó: khổ
+  // 2600x1900, năm hồ trong MAP_OBSTACLES và 70 cây/26 đá vẫn là của Plant Tribe Glade.
+  //
+  // ⚠ `range` ghi '38 - 48' chứ KHÔNG phải '38 - 42' như bảng cũ của Rẻo Rừng Corran.
+  // Bộ ba quái của dải này là bandao(C38) · thinu(C42) · mocnhan(C48), mà `test_domap` đòi mỗi
+  // map có bãi quái phải mang ĐỦ BA LOÀI (sàn `loai`) — bỏ mocnhan ra thì chỉ còn hai. Bảng
+  // '38 - 42' cũ của Rẻo Rừng Corran vốn đã lệch với chính quái của nó; map ấy nằm ngoài danh
+  // sách đo của test_moblevels nên chỗ lệch nằm im. Nay map này VÀO danh sách đó, nên bảng phải
+  // nói đúng thứ người chơi gặp.
+  daohoa: { name:'Plant Tribe Glade', min:36, range:'38 - 48', type:'pk', ground:'#ece2c8', patch:'#7a86ad',
     // ── SÀN ISOMETRIC ──────────────────────────────────────────────────────────────────
     // Sinh bằng tools/iso/vung_map.py, KHÔNG chạm tay. Đa giác MỌC RA TỪ chính các điểm
     // nội dung của map (điểm thả · cổng · trùm vùng · bãi quái · NPC · chỗ hái thuốc), nên
@@ -692,11 +712,17 @@ window.MAPS = {
       [2512,1120], [2448,1312], [2512,1376], [2512,1664],
     ],
     isoCum: [[2240,672], [352,960], [1440,1696], [160,672], [2496,448], [128,1248],],
-    spawn:{ x:460, y:460 }, spawnFrom:{ ardhaven:{ x:300, y:330 } }, village:true, spring:true, herbs:true, boss:true, trees:0, rocks:0,
-    desc:'Nơi đặt trại ấp Plant Tribe — bãi săn của người mới. Chimera yếu, đồ rơi nhập môn, chỗ hiền lành để học cách chơi.',
-    // Cụm quái xếp theo vòng từ spawn ra: yếu (boar/hautu) gần nhất → mạnh dần (wolf/bandit/
-    // caodo) → xa nhất (assassin, trannhan) gần Cổng Vực — người chơi mới thấy rõ "đi sâu = khó
-    // hơn" thay vì gặp ngẫu nhiên cả cụm yếu lẫn cụm elite lẫn lộn quanh spawn.
+    spawn:{ x:460, y:460 },
+    // Ba lối rìa nhận từ Rẻo Rừng Corran, đặt lại trên khổ 2600x1900: tây↔Werebear Woods,
+    // đông↔Lối Mòn Corran, bắc↔Trũng Nứt Corran. Điểm tới phải cách MỌI Trùm Vùng ≥700px
+    // (test_bossplace) — mà `dh1` đứng ngay giữa bắc map (1130,670), nên lối bắc phải lùi hẳn
+    // sang đông và lối đông phải nằm TRÊN `dh4` (2236,1520), không nằm dưới.
+    spawnFrom:{ chungnam:{ x:330, y:700 }, loimon:{ x:2290, y:600 }, trungnut:{ x:1880, y:300 } },
+    trees:0, rocks:0,
+    desc:'Trại ấp Plant Tribe bỏ lại giữa rừng thưa — nay là đất PK, hạ người khác được mà bị hạ cũng được. Axie Sa Ngã dạt về từ phía rẻo rừng, Golem thì ngủ ngay trên luống cũ.',
+    // Cụm quái xếp theo vòng từ spawn ra: gần nhất là bandao (C38) → thinu (C42) → xa nhất là
+    // mocnhan (C48). Ba dải `dai` RỜI NHAU và tăng dần, vì `test_moblevels` không tha một cụm
+    // nào ở xa hơn mà yếu hơn.
     voi: 1765,
     // ── A4 · MIỀN DÂN SỐ ──────────────────────────────────────────────────
     // Bãi quái KHÔNG còn chép cứng toạ độ. Mỗi miền là một DẢI KHOẢNG CÁCH (`dai`, tỉ lệ của
@@ -705,21 +731,13 @@ window.MAPS = {
     // Sửa cân bằng = sửa `n` của miền hoặc kéo `dai`; không phải đi dịch từng toạ độ.
     // `vai` là danh sách rải theo lượt cho các cụm: cùng loài, cụm này Cận Chiến, cụm kia Xạ Thủ.
     vung: [
-      { id:'boar', ten:'Đồng Heo Rừng', dai:[0.12,0.315], cung:[-43,67], cum:[2,2],
-        dan:[{ mob:'boar', n:11 }] },   // C1 · Axie Heo Rừng
-      { id:'hautu', ten:'Ruộng Bí Ngô', dai:[0.345,0.505], cung:[19,71], cum:[1,1],
-        dan:[{ mob:'hautu', n:6 }] },   // C2 · Axie Bí Ngô
-      { id:'wolf', ten:'Bìa Rừng Gai Tím', dai:[0.535,0.625], cung:[-13,93], cum:[2,2],
-        dan:[{ mob:'wolf', n:13 }] },   // C4 · Axie Gai Tím
-      { id:'bandit', ten:'Trại Tay Sai Gloam', dai:[0.655,0.705], cung:[-5,61], cum:[2,2],
-        dan:[{ mob:'bandit', n:14, vai:['can','xa'] }] },   // C6 · Tay Sai Gloam
-      { id:'caodo', ten:'Vạt Cỏ Dại', dai:[0.735,0.785], cung:[20,72], cum:[1,1],
-        dan:[{ mob:'caodo', n:6 }] },   // C8 · Axie Cỏ Dại
-      { id:'assassin', ten:'Ngã Ba Cướp Đường', dai:[0.815,0.885], cung:[-28,24], cum:[1,1],
-        dan:[{ mob:'assassin', n:1 }] },   // C10 · Cướp Đường Gloam
-      { id:'trannhan', ten:'Hàng Tượng Canh Cổng', dai:[0.915,1.0], cung:[0,52], cum:[1,1],
-        dan:[{ mob:'trannhan', n:5 }] },   // C12 · Tượng Đá Canh Cổng
-    ], duhiep: null },
+      { id:'bandao', ten:'Dốc Sa Ngã Plant Tribe', dai:[0.12,0.38], cung:[-43,67], cum:[3,3], tiep:true,
+        dan:[{ mob:'bandao', n:13, vai:['can','xa'] }] },   // C38 · Axie Sa Ngã
+      { id:'thinu', ten:'Ổ Ấp Bỏ Lại', dai:[0.42,0.68], cung:[-13,93], cum:[3,3], tiep:true,
+        dan:[{ mob:'thinu', n:13, vai:['can','phap'] }] },   // C42 · Oan Hồn Ổ Ấp
+      { id:'mocnhan', ten:'Vạt Golem Ngủ', dai:[0.72,1.0], cung:[19,71], cum:[3,3], tiep:true,
+        dan:[{ mob:'mocnhan', n:13 }] },   // C48 · Axie Golem
+    ], duhiep:'duhiep2' },
   // ── ARDHAVEN · SAPIDAE CHIEFDOM · thành an toàn RỘNG BẰNG MỘT MAP THẬT ───────────────
   // Thay hẳn HAI sân an toàn cũ: "Quảng Trường Cũ" (2600×1900, một khoảnh sân lát đá) và
   // thành cũ cùng khung. Cả hai đều NHỎ HƠN một map hoang dã, nên "vào thành" trước đây là
@@ -762,7 +780,7 @@ window.MAPS = {
       [[400,370],[6000,370]],   [[400,2830],[6000,2830]],
     ],
     spawn:{ x:3200, y:1900 },
-    spawnFrom:{ ngoai:{ x:3200, y:3080 }, daohoa:{ x:250, y:1600 },
+    spawnFrom:{ ngoai:{ x:3200, y:3080 }, corran:{ x:250, y:1600 },
                 chungnam:{ x:6150, y:1600 }, tuyettinh:{ x:3200, y:120 } },
     trees:0, rocks:0, herbs:true,
     desc:'Khu phố Ardhaven rơi qua vết nứt còn nguyên khối — nguyên mái, nguyên giếng, nguyên cả biển hiệu. Dân bản địa dựng tường quanh nó và gọi chỗ này là Sapidae Chiefdom. Trong tường: Quảng Trường Atia, Phố Chợ, Phố Lò, Sân Chuồng, Sảnh Lệnh, Vách Gió và Xóm Trọ. Không Chimera nào vào được. Bốn cổng ra bốn hướng.',
@@ -880,7 +898,7 @@ window.MAPS = {
       [2368,48], [2512,128], [2512,1376], [2512,1664],
     ],
     isoCum: [[352,960], [768,1024], [2400,1088], [128,1248],],
-    spawnFrom:{ comoc:{ x:1921, y:260 }, corran:{ x:2450, y:700 } }, spawn:{ x:400, y:1500 }, trees:0, rocks:0,
+    spawnFrom:{ comoc:{ x:1921, y:260 }, daohoa:{ x:2450, y:700 } }, spawn:{ x:400, y:1500 }, trees:0, rocks:0,
     desc:'Từ đây là đất PK — hạ người khác được, bị hạ cũng được. Chimera ở đây rơi Cốt bậc đầu.',
     // Xếp theo vòng từ spawn ra — xem ghi chú ở daohoa
     voi: 1836,
@@ -930,7 +948,7 @@ window.MAPS = {
     sanIso:true, isoCay:150,
     // Diem tha cach cong Tay 277px. Ban dau dat o x=200 -- chi 92px, ma ban kinh bat cong la 90:
     // nguoi choi vao map bang duong khac la bi hut nguoc ve Reo Rung Corran ngay lap tuc.
-    spawnFrom:{ corran:{ x:330, y:779 } }, spawn:{ x:380, y:790 }, trees:0, rocks:0,
+    spawnFrom:{ daohoa:{ x:330, y:779 } }, spawn:{ x:380, y:790 }, trees:0, rocks:0,
     desc:'Lối mòn men theo rẻo rừng, chạy mãi về đông. Cây khép hai bên, không có đường tắt.',
     voi: 6000,
     vung: [
@@ -1020,7 +1038,11 @@ window.MAPS = {
       { x:6025, y:159, s:1.81 }, { x:6130, y:136, s:2.02 }, { x:6235, y:111, s:2.23 }, { x:6340, y:85, s:1.78 }, { x:6340, y:1345, s:2.28 },
     ],
     duhiep:'duhiep2' },
-  corran: { name:'Rẻo Rừng Corran', min:36, range:'38 - 42', type:'pk', ground:'#2f3324', patch:'#6a7a52',
+  // ── MAP KHỞI ĐẦU ─────────────────────────────────────────────────────────────────────
+  // Xem ghi chú "HOÁN DẢI CẤP" ở Plant Tribe Glade phía trên: map này nhận dải 1-12, bộ quái
+  // nhập môn và bốn cờ làng; tên và lore giữ nguyên. Địa hình (5200x3800, sàn lát viên,
+  // `diTrong`/`isoCum`/`isoDuong`) KHÔNG đổi — chúng sinh bằng máy cho chính tấm nền này.
+  corran: { name:'Rẻo Rừng Corran', min:1, range:'1 - 12', type:'safe', ground:'#2f3324', patch:'#6a7a52',
     // `ground` la mau to KIN canvas truoc khi ve bat cu thu gi -- tuc la mau cua phan NGOAI da
     // giac `diTrong`, cho vien nen khong lat toi. O map lat vien, cho ay phai doc ra BONG RUNG
     // SAU. Ban cu de '#cfd2ae' (cat nhat, hop voi tam tranh nen mot mieng ngay xua) va anh chup
@@ -1036,9 +1058,12 @@ window.MAPS = {
     // thuoc, 4 trum vung) phai nam TRONG da giac, va diem toi phai cach trum >=700px. Sua map
     // = sua tham so roi chay lai, dung sua tay toa do o day.
     w:5200, h:3800, sanIso:true,
-    spawnFrom:{ chungnam:{ x:311, y:973 }, loimon:{ x:4809, y:819 }, trungnut:{ x:574, y:384 } },
-    spawn:{ x:506, y:1158 }, trees:0, rocks:0,
-    desc:'Khoảnh rừng Corran giữ riêng, ngoài tầm bầy Werebear. Ông ấy không nói vì sao lại giữ.',
+    // Ba lối rìa cũ (Werebear Woods · Lối Mòn · Trũng Nứt) đã theo dải cấp sang Plant Tribe
+    // Glade. Còn đúng MỘT cửa: Cổng Tây của thành. Điểm tới dùng lại chỗ (311,973) mà bộ sinh
+    // đã dò cho cổng tây cũ — nó nằm trong đa giác sàn và cách cổng 127px.
+    spawnFrom:{ ardhaven:{ x:311, y:973 } },
+    spawn:{ x:506, y:1158 }, village:true, spring:true, herbs:true, boss:true, trees:0, rocks:0,
+    desc:'Khoảnh rừng Corran giữ riêng — bãi săn của người mới. Chimera yếu, đồ rơi nhập môn, chỗ hiền lành để học cách chơi. Ông ấy không nói vì sao lại giữ.',
     voi: 3400,          // gap doi theo map -- `vung.dai` la ti le cua `voi`
     // Dải 38-42 bắc cầu giữa Werebear Woods (kết ở C38 `bandao`) và Bug Tribe Tunnels (mở ở
     // C42 `thinu`) — dùng lại đúng hai loài ấy nên người chơi đi qua thấy liền mạch, không
@@ -1051,17 +1076,27 @@ window.MAPS = {
     // Nay 5 mien x 3 cum = 15 bai. Hai mien moi dat o hai CUNG GOC khac han (bac va nam) chu
     // khong keo dai them theo truc dong-tay: keo dai truc thi duong kinh cang phinh, con rai
     // ra hai ben thi lap day chinh cho dang trong.
+    // ⚠ KHÔNG miền nào mang `tiep:true`. "Đai 0" (map tân thủ) không được có Kẻ Tiếp Sức —
+    // test_bayquai gác đúng chỗ đó, và bộ quái 1-12 này vốn chưa bao giờ có.
+    // Bảy miền, dải `dai` RỜI NHAU và tăng dần theo cấp — đây là điều kiện của `test_moblevels`
+    // (cụm ở xa hơn không được yếu hơn) và nó chặt hơn bộ năm miền cũ, vốn để hai miền phụ đè
+    // dải lên nhau vì cả hai cùng cấp. Cung góc lấy lại đúng ba hướng mà bộ sinh đã dò được
+    // sàn cho map này: trục đông (-43..67), quạt bắc (-95..-35) và quạt nam (95..155).
     vung: [
-      { id:'bandao', ten:'Dốc Corran Giữ', dai:[0.14,0.40], cung:[-30,45], cum:[3,3], tiep:true,
-        dan:[{ mob:'bandao', n:14, vai:['can','xa'] }] },        // C38 · Axie Sa Ngã
-      { id:'mocnhan', ten:'Vạt Golem Ngủ', dai:[0.44,0.70], cung:[10,85], cum:[3,3], tiep:true,
-        dan:[{ mob:'mocnhan', n:14, vai:['can','phap'] }] },     // C48 · Axie Golem
-      { id:'thinu', ten:'Ổ Bỏ Lại', dai:[0.74,1.0], cung:[-15,60], cum:[3,3], tiep:true,
-        dan:[{ mob:'thinu', n:15 }] },                            // C42 · Oan Hồn Ổ Ấp
-      { id:'bandao2', ten:'Trảng Bắc', dai:[0.30,0.58], cung:[-95,-35], cum:[3,3], tiep:true,
-        dan:[{ mob:'bandao', n:13, vai:['can','xa'] }] },        // C38 · rai ve phia bac
-      { id:'mocnhan2', ten:'Vũng Nam', dai:[0.34,0.66], cung:[95,155], cum:[3,3], tiep:true,
-        dan:[{ mob:'mocnhan', n:13, vai:['can','phap'] }] },     // C48 · rai ve phia nam
+      { id:'boar', ten:'Đồng Heo Rừng', dai:[0.14,0.26], cung:[-30,45], cum:[3,3],
+        dan:[{ mob:'boar', n:15 }] },   // C1 · Axie Heo Rừng
+      { id:'hautu', ten:'Ruộng Bí Ngô', dai:[0.30,0.38], cung:[-95,-35], cum:[2,2],
+        dan:[{ mob:'hautu', n:8 }] },   // C2 · Axie Bí Ngô
+      { id:'wolf', ten:'Bìa Rừng Gai Tím', dai:[0.42,0.52], cung:[10,85], cum:[3,3],
+        dan:[{ mob:'wolf', n:16 }] },   // C4 · Axie Gai Tím
+      { id:'bandit', ten:'Trại Tay Sai Gloam', dai:[0.56,0.64], cung:[-15,60], cum:[3,3],
+        dan:[{ mob:'bandit', n:20, vai:['can','xa'] }] },   // C6 · Tay Sai Gloam — loài chủ đạo của map
+      { id:'caodo', ten:'Vạt Cỏ Dại', dai:[0.68,0.76], cung:[55,110], cum:[2,2],
+        dan:[{ mob:'caodo', n:8 }] },   // C8 · Axie Cỏ Dại
+      { id:'assassin', ten:'Ngã Ba Cướp Đường', dai:[0.80,0.86], cung:[10,85], cum:[2,2],
+        dan:[{ mob:'assassin', n:3 }] },   // C10 · Cướp Đường Gloam (elite — giữ thưa)
+      { id:'trannhan', ten:'Hàng Tượng Canh Cổng', dai:[0.90,1.0], cung:[-15,60], cum:[3,3],
+        dan:[{ mob:'trannhan', n:7 }] },   // C12 · Tượng Đá Canh Cổng
     ],
     diTrong: [
       [4544,3680], [3456,3680], [3360,3584], [3360,3520], [3136,3360], [2688,3360],
@@ -1090,7 +1125,9 @@ window.MAPS = {
       [[3072,1344], [3142,1681], [3392,1920],],
       [[4480,1792], [4377,2080], [4480,2368],],
     ],
-    duhiep:'duhiep2' },
+    // Map an toàn cấp 1-12 thì không có Axie Lang Thang để PK — cờ này theo dải cấp sang
+    // Plant Tribe Glade cùng với `type:'pk'`.
+    duhiep: null },
   // ═══ NGA BA THAT ═══════════════════════════════════════════════════════════════════════
   // Do do thi the gioi thi ra mot dieu bat ngo: no DA la hinh cay (Sapidae Chiefdom 4 nhanh,
   // Werebear Woods 3 nhanh), NHUNG noi dung van la mot duong thang -- cac nhanh noi duoi nhau
@@ -1114,7 +1151,7 @@ window.MAPS = {
   // >90px (ban kinh bat cong) va <400px tinh tu ria map, va cach moi trum vung >=700px.
   trungnut: { name:'Trũng Nứt Corran', min:44, range:'44 - 50', type:'freepk',
     w:4200, h:3200, ground:'#2f3324', patch:'#6a7a52', sanIso:true,
-    spawnFrom:{ corran:{ x:706, y:2845 }, comoc:{ x:3805, y:770 } },
+    spawnFrom:{ daohoa:{ x:706, y:2845 }, comoc:{ x:3805, y:770 } },
     spawn:{ x:666, y:2640 }, trees:0, rocks:0,
     desc:'Đất trũng xuống nơi vết nứt đi qua. Không ai giữ chỗ này, nên ai cũng lấy được — kể cả lấy của nhau.',
     voi: 2800,
@@ -1540,7 +1577,7 @@ window.MAP_OBSTACLES = {
 };
 
 window.NPCS = [
-  { id:'truonglang', name:'Trưởng Làng', map:'daohoa', x:400, y:400, img:'assets/npcs/truonglang.png', talk:'quest',
+  { id:'truonglang', name:'Trưởng Làng', map:'corran', x:400, y:400, img:'assets/npcs/truonglang.png', talk:'quest',
     // Ông giao 9 trong 10 nhiệm vụ đầu và dẫn truyện gọi ông là người "nhặt ngươi về nuôi" —
     // vậy mà suốt giờ chơi đầu tiên ông không có một câu nào.
     lore:{
@@ -1633,9 +1670,9 @@ window.NPCS = [
 
   { id:'ah_gac_tay', name:'Lính Gác Cổng Tây', map:'ardhaven', x:700, y:1450, img:'assets/npcs/laotuong.png', talk:'quest',
     lore:{
-      idle:  '"Ra Cổng Tây rồi đi thẳng là tới Plant Tribe Glade. Rừng thấp, nhiều lối, mà lối nào cũng giống lối nào. Nhớ đường về hơn là nhớ đường đi."',
+      idle:  '"Ra Cổng Tây rồi đi thẳng là tới Rẻo Rừng Corran. Rừng thấp, nhiều lối, mà lối nào cũng giống lối nào. Nhớ đường về hơn là nhớ đường đi."',
       offer: '"Chưa cần tới ngươi. Cổng này ngày nào cũng mở, mai quay lại cũng được."',
-      active:'"Trong Plant Tribe Glade còn thứ ngươi phải làm cho xong."',
+      active:'"Trong Rẻo Rừng Corran còn thứ ngươi phải làm cho xong."',
       done:  '"Xong rồi hả. Ngồi nghỉ đi, ta rót cho ngụm nước."' },
     barks:['"Lối nào cũng giống lối nào. Nhớ đường về."','"Đừng bẻ cành làm dấu — cành mọc lại, dấu thì không."',
            '"Trong tường thì yên. Ngoài kia thì tùy hôm."'] },
@@ -1718,7 +1755,7 @@ window.NPCS = [
     lore:'"Ta hát bài nào cũng được, trừ bài về cái đêm trời nứt. Hát bài đó thì có người bỏ về, có người ngồi lại khóc — mà cả hai hạng đều không bỏ tiền."',
     barks:['"Nghe một bài không mất gì cả."','"Dây thứ ba lại chùng rồi."',
            '"Hôm qua có người trả ta bằng một quả táo. Ta vẫn hát."'] },
-  { id:'thoren_dao', name:'Thợ Rèn Lưu Vong', map:'daohoa', x:520, y:560, img:'assets/npcs/thoren.png', talk:'forge',
+  { id:'thoren_dao', name:'Thợ Rèn Lưu Vong', map:'corran', x:520, y:560, img:'assets/npcs/thoren.png', talk:'forge',
     lore:'"Lò của ta rơi qua vết nứt cùng ta. Còn đỏ lửa là còn rèn — đưa đồ đây."',
     barks:['"Đảo này không có quặng, ta nấu lại đồ cũ."','"Còn đỏ lửa là còn rèn."',
            '"Ngươi cầm kiếm sai tay rồi đấy."'] },
@@ -1751,6 +1788,15 @@ window.VOHOC_DEFS = {
   // thêm nửa phần trăm vĩnh viễn chỉ vì hai chiêu hoán chỗ cho nhau.
   dk_ragefulblow: { name:'Rageful Blow', school:'Dark Knight', phai:'thieulam', tier:'so', cat:'Binh Khí', type:'aoe', unlock:25, cd:8, qi:24, mult:2.2, color:'#3a6fd8', glyph:'✹', fx:{ r:170, kb:55, stun:0.8 }, desc:'Giáng vũ khí xuống đất — chấn động, hất văng & choáng nhẹ.' },
   dk_fortitude:   { name:'Swell Life', school:'Dark Knight', phai:'thieulam', tier:'cao', cat:'Bị Động', type:'passive', unlock:45, color:'#a0d8ff', glyph:'♦', desc:'Bị động: +15% Sinh Lực tối đa — sức vóc Dark Knight dày lên theo từng trận sống sót.' },
+  // Ô 3 của Dark Knight. Trước đây TRỐNG: lớp này là lớp DUY NHẤT có 5 chiêu chủ động trong khi
+  // bốn lớp kia đều có 6, nên không còn chiêu nào để đưa lên ô thứ ba. Thêm chiêu thứ sáu là cách
+  // duy nhất lấp ô mà KHÔNG phá ba lời hứa đang được test_kynang5lop gác: Di Sản vẫn đúng 4 chiêu
+  // (= 8,0% Công Kích như bốn lớp kia), lớp vẫn còn bị động riêng (Swell Life ở trên), và không
+  // tên chiêu nào trùng giữa hai lớp.
+  // Cơ chế chọn KHIÊN vì đó là thứ duy nhất trong năm kiểu buff chưa lớp nào dùng — Bless hồi máu,
+  // Battle Fury tốc đánh, Increase Critical Damage bạo kích. Khiên cũng đúng bản sắc "Chịu Đòn"
+  // của Dark Knight. fx.shieldPct đã có sẵn đường chạy trong castSkill, không phải thêm cơ chế mới.
+  dk_bulwark:     { name:'Bulwark', school:'Dark Knight', phai:'thieulam', tier:'trung', cat:'Binh Khí', type:'buff', unlock:15, cd:12, qi:26, tam:0, pham:0, color:'#6aa8ff', glyph:'▲', fx:{ shieldPct:28, dmgPct:12, t:8 }, desc:'Dựng thế thủ — một lớp khiên dày bằng 28% Sinh Lực tối đa bọc quanh thân, kèm +12% sát thương trong 8 giây.' },
   tienthiencong:  { name:'Undying Will', school:'Dark Knight', phai:'thieulam', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#ffe9a8', glyph:'✦', desc:'Bị động: chết tự hồi sinh 50% Sinh Lực — mỗi 300s một lần.' },
 
   // ── Sylvan Ranger — cung tên & hỗ trợ ──
@@ -1851,7 +1897,7 @@ Ngươi thuộc một trong <b>năm lớp chiến binh của Vaeldra</b>, nằm 
 
 Cuộc vượt biên tước sạch của ngươi mọi thứ — tên tuổi, ký ức, đồng đội — trừ một điều: bản năng chiến đấu của lớp mình. <b>Dark Knight</b> ◆ · <b>Dark Wizard</b> ❄ · <b>Sylvan Ranger</b> ❄ · <b>Spellblade</b> ☼ · <b>Dark Lord</b> ▲ — hãy chọn lại con đường ấy.
 
-Ngươi dạt vào <b>Plant Tribe Glade</b>, được một Trưởng Làng Axie nhặt về nuôi. Võ nghệ sẽ trở lại theo từng cấp — và Lunacia cần nó.
+Ngươi dạt vào <b>Rẻo Rừng Corran</b>, được một Trưởng Làng Axie nhặt về nuôi. Võ nghệ sẽ trở lại theo từng cấp — và Lunacia cần nó.
 
 Mỗi lớp mang một <b>hệ nguyên tố</b> — khắc hệ gây thêm <b>+20% sát thương</b> lên Chimera bị khắc.`,
   `<span class="is-title">NĂM TRỤ KHÓA</span>
@@ -1859,7 +1905,7 @@ Mỗi lớp mang một <b>hệ nguyên tố</b> — khắc hệ gây thêm <b>+2
 
 Tướng quân của Morvahn đã chiếm cả năm trụ. Muốn tiến sâu, ngươi phải hạ chúng — nhưng <b>mỗi trụ được gỡ là vết nứt lại toác thêm</b>.
 
-<i>"Từ Plant Tribe Glade, qua Werebear Woods, vào Bug Tribe Tunnels, lên Bird Tribe Heights, ra Reptile Sunstone Flats… cho tới Dusk Marsh, nơi vết nứt hà xuống."</i>
+<i>"Từ Rẻo Rừng Corran, qua Werebear Woods, vào Bug Tribe Tunnels, lên Bird Tribe Heights, ra Reptile Sunstone Flats… cho tới Dusk Marsh, nơi vết nứt hà xuống."</i>
 
 Muốn tới được Morvahn, ngươi phải tự tay mở toang cánh cửa hắn đang bước qua.
 

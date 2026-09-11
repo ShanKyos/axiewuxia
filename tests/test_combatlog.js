@@ -15,10 +15,10 @@ const { chromium } = require('playwright');
   const wrapVisible = await page.evaluate(() => !document.getElementById('combat-log-wrap').classList.contains('hidden'));
   console.log('combat-log-wrap visible after start:', wrapVisible);
 
-  // engage AUTO farm on daohoa stage
-  await page.evaluate(() => { travelTo('daohoa'); });
+  // engage AUTO farm on corran stage
+  await page.evaluate(() => { travelTo('corran'); });
   await page.waitForTimeout(300);
-  await page.evaluate(() => { enterStage('daohoa', 0); });
+  await page.evaluate(() => { enterStage('corran', 0); });
   await page.waitForTimeout(5000); // let combat run for a while
 
   const logState = await page.evaluate(() => {

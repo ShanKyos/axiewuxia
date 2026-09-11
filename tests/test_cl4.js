@@ -9,7 +9,7 @@ const { chromium } = require('playwright');
   await page.waitForTimeout(500);
   await page.evaluate(() => { startGame('thieulam', null); });
   await page.waitForTimeout(500);
-  await page.evaluate(() => { travelTo('daohoa'); });
+  await page.evaluate(() => { travelTo('corran'); });
   await page.waitForTimeout(300);
 
   // directly invoke hurtMob on a live mob to test ⚔ + ☠ log lines, bypassing AUTO/boss-proximity noise

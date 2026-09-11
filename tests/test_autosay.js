@@ -74,7 +74,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 
   // 3. Sạch quái hẳn → phải gợi ý đi bãi khác
   const p3 = await boot();
-  await p3.evaluate(() => { applyTestBoost && applyTestBoost(); travelTo('daohoa');
+  await p3.evaluate(() => { applyTestBoost && applyTestBoost(); travelTo('corran');   // bãi tân thủ nay là Rẻo Rừng Corran
     mobs.length = 0; player.auto = true;
     player._autoAX=player.x; player._autoAY=player.y;
     player._autoZoneLocked=false; player._autoPack=null; });
@@ -85,8 +85,8 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 
   // 4. Đang cày bình thường thì KHÔNG được spam
   const p4 = await boot();
-  await p4.evaluate(() => { applyTestBoost && applyTestBoost(); travelTo('daohoa');
-    const k = MAPS.daohoa.packs[0]; player.x=k.x; player.y=k.y;
+  await p4.evaluate(() => { applyTestBoost && applyTestBoost(); travelTo('corran');   // bãi tân thủ nay là Rẻo Rừng Corran
+    const k = MAPS.corran.packs[0]; player.x=k.x; player.y=k.y;
     player.auto = true; player._autoAX=null; player._autoAY=null;
     player._autoZoneLocked=false; player._autoPack=null; });
   await p4.waitForTimeout(1500);

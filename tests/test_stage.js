@@ -11,19 +11,19 @@ const { chromium } = require('playwright');
   await page.evaluate(() => { startGame('thieulam', null); });
   await page.waitForTimeout(800);
 
-  // Unlock daohoa waypoint via a real travel first (simulating having been sent there once)
-  await page.evaluate(() => { travelTo('daohoa'); });
+  // Unlock corran waypoint via a real travel first (simulating having been sent there once)
+  await page.evaluate(() => { travelTo('corran'); });
   await page.waitForTimeout(300);
 
-  // Open world map panel, check for the Chọn Trận button on daohoa
+  // Open world map panel, check for the Chọn Trận button on corran
   await page.evaluate(() => { togglePanel('map'); });
   await page.waitForTimeout(200);
   const mapHtml = await page.evaluate(() => document.getElementById('panel-map').innerHTML);
-  console.log('has Chọn Trận button for daohoa:', mapHtml.includes("openStageSelect('daohoa')"));
+  console.log('has Chọn Trận button for corran:', mapHtml.includes("openStageSelect('corran')"));
   await page.screenshot({ path: '/tmp/stage_mappanel.png' });
 
-  // Open stage select for daohoa
-  await page.evaluate(() => { openStageSelect('daohoa'); });
+  // Open stage select for corran
+  await page.evaluate(() => { openStageSelect('corran'); });
   await page.waitForTimeout(200);
   const stageHtml = await page.evaluate(() => document.getElementById('panel-stage').innerHTML);
   console.log('stage list length (rows w/ Vào Đánh):', (stageHtml.match(/Vào Đánh/g) || []).length);
@@ -31,7 +31,7 @@ const { chromium } = require('playwright');
 
   // Enter the first stage (index 0)
   const before = await page.evaluate(() => ({ x: player.x, y: player.y, auto: player.auto, hp: player.hp }));
-  await page.evaluate(() => { enterStage('daohoa', 0); });
+  await page.evaluate(() => { enterStage('corran', 0); });
   await page.waitForTimeout(200);
   const after = await page.evaluate(() => ({ x: player.x, y: player.y, auto: player.auto, curMap }));
   console.log('before:', JSON.stringify(before));

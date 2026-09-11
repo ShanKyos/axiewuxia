@@ -2011,15 +2011,17 @@ const MAPS = window.MAPS;
 // "vết nứt rộng thêm" thành thứ người chơi CẢM THẤY chứ không chỉ nhìn thấy: +8% mỗi trụ, trần
 // +40% ở đủ năm trụ.
 //
-// Chỉ áp cho map type:'pk'. Plant Tribe Glade và Outskirts là đất luyện cấp của người mới, mà
+// Chỉ áp cho map type:'pk'. Rẻo Rừng Corran và Outskirts là đất luyện cấp của người mới, mà
 // người mới thì chưa gỡ trụ nào — nhưng sau Tái Sinh họ quay lại đó với truDaGo() đã đầy, và
-// tăng mật độ ở bãi tân thủ là phạt nhầm người.
+// tăng mật độ ở bãi tân thủ là phạt nhầm người. Sau khi hoán dải cấp, map tân thủ mang
+// type:'safe' nên nhánh này tự bỏ qua nó; Plant Tribe Glade thành `pk` thì CÓ áp — đúng vai trò
+// mới của nó.
 function bayCo(pk, md){
   if (!md || md.type !== 'pk') return pk.n;
   return Math.floor(pk.n * (1 + Math.min(5, truDaGo()) * 0.08));
 }
 
-let curMap = 'daohoa';
+let curMap = 'corran';
 let zoneBanner = null; // { text, sub, color, t }
 
 // ---------- Tường thành & Cổng thành — Sapidae Chiefdom / Outskirts ----------
@@ -2042,14 +2044,14 @@ const GATES = [
   // có chuyện vừa sang đã bị hất ngược.
   { map:'ardhaven', x:3200, y:2910, to:'ngoai',      name:'Cổng Nam → Beast Herd Camp' },
   { map:'ardhaven', x:3200, y:290,  to:'tuyettinh',  name:'Cổng Bắc → Bird Tribe Heights' },
-  { map:'ardhaven', x:480,  y:1600, to:'daohoa',     name:'Cổng Tây → Plant Tribe Glade' },
+  { map:'ardhaven', x:480,  y:1600, to:'corran',     name:'Cổng Tây → Rẻo Rừng Corran' },
   { map:'ardhaven', x:5920, y:1600, to:'chungnam',   name:'Cổng Đông → Werebear Woods' },
   { map:'ngoai',      x:1300, y:240,  to:'ardhaven', name:'Qua Cổng Thành → Sapidae Chiefdom' },
   // ⚠ Ba cổng thành Bắc/Tây/Đông VỐN LÀ MỘT CHIỀU: đi sang Plant Tribe Glade / Werebear Woods /
   // Bird Tribe Heights rồi không có cổng nào về, phải mở bảng Bản Đồ mà dịch chuyển. Chỉ cổng Nam
   // (Outskirts) có đường về. Nay bù đủ, đặt cạnh chính điểm thả của từng vùng — đúng khuôn mà
   // Outskirts đang dùng: bước ra khỏi chỗ vừa tới là thấy cổng về.
-  { map:'daohoa',    x:295, y:555,  to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
+  { map:'corran',    x:256, y:1088, to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
   { map:'chungnam',  x:270, y:1575, to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
   { map:'tuyettinh', x:216, y:999,  to:'ardhaven', name:'Lối Về Thành → Sapidae Chiefdom' },
   // Tầng Sâu: miệng giếng ở góc tây-nam Quảng Trường Atia, cách điểm thả ~750px. Rơi vào khoảng
@@ -2095,12 +2097,21 @@ const GATES = [
   // chơi thấy — không hứa gì về vị trí tương đối giữa hai map, và game cũng không có bản đồ thế
   // giới để mà mâu thuẫn.
   { map:'chungnam',  x:1921, y:150,  to:'comoc',    name:'Lối Bắc → Bug Tribe Tunnels' },
-  { map:'chungnam',  x:2480, y:700,  to:'corran',   name:'Lối Đông → Rẻo Rừng Corran' },
-  // x=175 chứ không phải sát mép: dải nền tối ngoài khối đất chạy từ x=7 tới x=133 và đã thành
-  // vật cản (xem MAP_OBSTACLES.corran) — cổng đặt trong đó thì không ai với tới được.
-  { map:'corran',    x:256,  y:1088, to:'chungnam', name:'Lối Tây → Werebear Woods' },
-  { map:'corran',    x:4864, y:704,  to:'loimon',   name:'Lối Đông → Lối Mòn Corran' },
-  { map:'loimon',    x:110,  y:727,  to:'corran',   name:'Lối Tây → Rẻo Rừng Corran' },
+  { map:'chungnam',  x:2480, y:700,  to:'daohoa',   name:'Lối Đông → Plant Tribe Glade' },
+  // ⚠ BA LỐI RÌA NÀY THEO DẢI CẤP, KHÔNG THEO TẤM NỀN. Chúng vốn mọc trên Rẻo Rừng Corran hồi
+  // map ấy còn giữ dải 38-42; khi hai map hoán dải, chúng phải sang Plant Tribe Glade — nếu
+  // không thì người chơi cấp 1 vừa bước qua Cổng Tây đã đứng cạnh một cái cổng dẫn thẳng vào
+  // Lối Mòn Corran cấp 42.
+  //
+  // Chỗ đặt trên khổ 2600x1900 chọn theo hai ràng buộc ĐO ĐƯỢC, không theo mắt:
+  //   · `test_noimap` đòi ĐIỂM TỚI của lối rìa nằm trong 400px tính từ mép map;
+  //   · `test_bossplace` đòi mọi điểm tới cách Trùm Vùng ≥700px — mà `dh1` đứng ngay (1130,670)
+  //     giữa nửa bắc và `dh4` ở (2236,1520) góc đông-nam. Nên lối bắc phải lùi hẳn sang đông
+  //     (1900,190), còn lối đông phải nằm TRÊN dh4 chứ không dưới.
+  // Cả ba đều tránh năm hồ trong MAP_OBSTACLES.daohoa.
+  { map:'daohoa',    x:256,  y:600,  to:'chungnam', name:'Lối Tây → Werebear Woods' },
+  { map:'daohoa',    x:2400, y:760,  to:'loimon',   name:'Lối Đông → Lối Mòn Corran' },
+  { map:'loimon',    x:110,  y:727,  to:'daohoa',   name:'Lối Tây → Plant Tribe Glade' },
   // ── NGÃ BA CORRAN ── Từ Rẻo Rừng rẽ được hai lối CÙNG DẢI CẤP, khác nhau ở luật và ở việc
   // có đi tiếp được không: lối đông vào hành lang `pk` rồi phải quay lại, lối bắc vào trũng
   // `freepk` và đi thẳng tiếp sang Bug Tribe Tunnels. Xem khối "NGA BA THAT" trong canbang.js.
@@ -2112,8 +2123,8 @@ const GATES = [
   // Chỗ đặt cổng bên corran DÒ BẰNG MÁY, không chấm tay: hai thuỳ nam sâu của Rẻo Rừng đều đã
   // có trùm vùng đứng sẵn, nên cổng nam đầu tiên tôi đặt rơi cách trùm `co1` đúng 216px và
   // test_bossplace bắt ngay. Chỗ này cách trùm gần nhất 2.409px.
-  { map:'corran',   x:704,  y:384,  to:'trungnut', name:'Lối Bắc → Trũng Nứt Corran' },
-  { map:'trungnut', x:576,  y:2880, to:'corran',   name:'Lối Nam → Rẻo Rừng Corran' },
+  { map:'daohoa',   x:1900, y:190,  to:'trungnut', name:'Lối Bắc → Trũng Nứt Corran' },
+  { map:'trungnut', x:576,  y:2880, to:'daohoa',   name:'Lối Nam → Plant Tribe Glade' },
   { map:'trungnut', x:3840, y:640,  to:'comoc',    name:'Lối Đông → Bug Tribe Tunnels' },
   // Mép tây comoc đã có cổng đi Werebear Woods ở y=1366; cổng này ở y=1700, cách 334px — xa hơn
   // hẳn bán kính bắt cổng 90px nên không cổng nào nuốt cổng nào. Chỗ đặt cũng dò bằng máy trong
@@ -3043,16 +3054,16 @@ const VOHOC_DEFS = window.VOHOC_DEFS;
 // Nova, Flame Storm...) + hệ Tấn Chức phụ (Ám Khí/Đạn Chỉ/Linh Tiễn/Tiêu Hồn) không mất giá trị — dồn
 // thành % Công Kích vĩnh viễn, tự động theo cấp/điều kiện đã có, không cần bấm nút nữa (xem calcDerived()
 // và LEGACY_SECT_SKILLS bên dưới).
-// Ô BUFF CỦA DARK KNIGHT ĐANG TRỐNG — có chủ ý, không phải bỏ sót.
-// Nó vốn trỏ vào 'gangkhi' (Defense), mà chiêu đó đi cùng hệ Thuần Thục vừa gỡ. Cây kỹ năng
-// Dark Knight không còn chiêu buff CHỦ ĐỘNG nào khác: dk_fortitude (Swell Life) đang là bị
-// động. defaultSkillBar() chịu được null nên ô thứ ba chỉ đơn giản là trống.
-// Muốn lấp thì cách sát MU nhất là đổi Swell Life thành buff chủ động — chờ chủ dự án chốt.
+// Ô BUFF CỦA DARK KNIGHT ĐÃ ĐƯỢC LẤP (trước đây trống vì 'gangkhi'/Defense đi cùng hệ Thuần Thục
+// đã gỡ). Không lấp bằng cách đổi Swell Life thành buff chủ động như ghi chú cũ đề nghị: làm thế
+// thì lớp mất bị động riêng và bài kiểm bị động (+15% Sinh Lực) mất chỗ bám. Thay vào đó thêm
+// HẲN một chiêu thứ sáu — Bulwark — vì Dark Knight là lớp duy nhất chỉ có 5 chiêu chủ động trong
+// khi bốn lớp kia có 6. Xem chú thích tại dk_bulwark trong data/canbang.js.
 // Ô 3 của từng lớp. KHÔNG nhất thiết là chiêu phù trợ: bộ bốn nút của Dark Wizard trong MU là
 // Poison · Meteorite · Inferno · Dragon Spirit, nên ô 3 của lớp này là Inferno chứ không phải Soul
 // Barrier. Soul Barrier chuyển sang Di Sản (+%Công Kích vĩnh viễn) đúng như chiêu buff của Dark
 // Knight đã làm — một chiêu không thể vừa bấm được vừa cộng %ST vĩnh viễn.
-const O3_SKILL_ID = { thieulam:null, toanchan:'elf_greaterdmg', baidasan:'dw_inferno', minhgiao:'mg_battlefury', bug:'dl_commandaura' };
+const O3_SKILL_ID = { thieulam:'dk_bulwark', toanchan:'elf_greaterdmg', baidasan:'dw_inferno', minhgiao:'mg_battlefury', bug:'dl_commandaura' };
 // Lớp nào có chiêu PHÙ TRỢ thật ở ô 3 — suy ra từ chính kiểu chiêu, không khai tay hai lần.
 const BUFF_SKILL_ID = {};
 for (const _sk in O3_SKILL_ID){
@@ -3390,6 +3401,7 @@ const VH_VFX = {
   elf_greaterdmg:  { style:'sunwheel',  c2:'#fff0be', dur:1.1 },  // Bless (Sylvan Ranger) — vòng sáng ban phước
   mg_battlefury:   { style:'phoenix',   c2:'#ffcf7a', dur:1.1 },  // Battle Fury (Spellblade) — song dực liệt hỏa
   dl_commandaura:  { style:'galaxy',    c2:'#ffb0a0', dur:1.1, spin:1.4 }, // Increase Critical Damage (Dark Lord) — hào quang chỉ huy xoay quanh
+  dk_bulwark:      { style:'novaburst', c2:'#cfe8ff', dur:1.0 },  // Bulwark (Dark Knight) — năng lượng dồn lại rồi bung thành vòm khiên
   // Bốn TUYỆT CHIÊU ô 4 (xem SIGNATURE_SKILL) — mỗi chiêu một hình riêng, không dùng chung style
   // mặc định theo kiểu chiêu nữa. Tuyệt chiêu mà bung ra y hệt chiêu thường thì không ai nhớ nổi.
   dw_lightning:     { style:'boltdown',    c2:'#eaffb0', dur:0.75 }, // sét giáng từ trên trời xuống
@@ -5996,7 +6008,7 @@ function shade(hex, amt){ // amt>0 sáng lên, <0 tối đi
 const SK_ICON_FOR = {
   // Dark Knight
   dk_cyclone:'cyclone', dk_lunge:'stab', dk_impale:'pierce', dk_fallingslash:'crescent',
-  dk_ragefulblow:'groundslam', dk_fortitude:'plate', tienthiencong:'revive',
+  dk_ragefulblow:'groundslam', dk_fortitude:'plate', dk_bulwark:'pauldron', tienthiencong:'revive',
   // Sylvan Ranger
   elf_poisonarrow:'poison', elf_greaterdef:'barrier', elf_holybolt:'nova', elf_fiveshot:'arrowfan',
   elf_greaterdmg:'rune', elf_penetration:'pierce', elf_heal:'heal',
@@ -6015,7 +6027,7 @@ const SK_ICON_FOR = {
 // chứ không phải ô-liu như màu lớp (đúng quy ước MU: ổ tô theo hệ, khung mới mang màu lớp).
 const SK_ICON_COLOR = {
   dk_cyclone:'#4c8dff', dk_lunge:'#6aa0ff', dk_impale:'#8ab8ff', dk_fallingslash:'#3a6fd8',
-  dk_ragefulblow:'#3a6fd8', dk_fortitude:'#a0d8ff', tienthiencong:'#ffe9a8',
+  dk_ragefulblow:'#3a6fd8', dk_fortitude:'#a0d8ff', dk_bulwark:'#6aa8ff', tienthiencong:'#ffe9a8',
   elf_poisonarrow:'#7ec850', elf_greaterdef:'#5ac8b8', elf_holybolt:'#ffe9a8', elf_fiveshot:'#a0ffe9',
   elf_greaterdmg:'#ffd76a', elf_penetration:'#a0ffe9', elf_heal:'#3a9d8b',
   dw_lightning:'#d8e84a', dw_ice:'#5ac8e8', dw_twister:'#8ac850', dw_inferno:'#ff7a3a',
@@ -6173,11 +6185,11 @@ const BAOHAP_TIERS = [ null,
     })),
 ];
 // Ma Tôn Giáng Thế: 0h/4h/8h/12h/16h/20h — Hạ Giới & Thượng Giới luân phiên
-const MATON_HA = ['daohoa','ngoai','chungnam'];
-const MATON_THUONG = ['comoc','tuyettinh','mongco','nhanmon'];
+const MATON_HA = ['corran','ngoai','chungnam'];
+const MATON_THUONG = ['daohoa','comoc','tuyettinh','mongco','nhanmon'];
 // Truy Nã Lệnh — boss săn ngày theo vùng cấp (NPC Lính Tuần · Sapidae Chiefdom)
 const TRUYNA_BANDS = [
-  { max:14,  map:'daohoa',    name:'Đầu Lĩnh Gloam' },
+  { max:14,  map:'corran',    name:'Đầu Lĩnh Gloam' },
   { max:29,  map:'ngoai',     name:'Đại Đầu Mục Gloam' },
   { max:44,  map:'chungnam',  name:'Chỉ Huy Phản Loạn Werebear Woods' },
   { max:59,  map:'comoc',     name:'Chúa Tể Hang Sâu' },
@@ -6278,7 +6290,7 @@ let saveTimer = 0;
 
 const SPRING = { x: 500, y: 620, r: 70 };
 const NPC = { x: 400, y: 400, name:'Trưởng Làng' };
-const BOSS_ARENA = { x: 2300, y: 500 };
+const BOSS_ARENA = { x: 3451, y: 1430 };
 
 // QA bot playtest: NV3 (cấp 3) bắt nhặt thảo dược giữa bầy Tàn Lang (cấp 3) & Trận Nhân (cấp 9)
 // khiến tân thủ chết liên tục — dời bụi thuốc về rừng phía đông GẦN làng, ngoài tầm aggro của cụm quái mạnh
@@ -8259,7 +8271,7 @@ function spawnZoneBoss(bd, kind){
   if (!def.skel && !MOB_IMGS[m.type]){ const im = new Image(); im.src = def.img; MOB_IMGS[m.type] = im; }
   mobs.push(m); return m;
 }
-const BOSS_MINION = { daohoa:'bandit', ngoai:'bandit', chungnam:'phando', comoc:'thinu', tuyettinh:'ttdetu', mongco:'cuongbinh', nhanmon:'daokhach' };
+const BOSS_MINION = { corran:'bandit', daohoa:'bandao', ngoai:'bandit', chungnam:'phando', comoc:'thinu', tuyettinh:'ttdetu', mongco:'cuongbinh', nhanmon:'daokhach' };
 function bossStartTele(m, mvId){
   const mv = BOSS_MOVES[mvId]; if (!mv) return;
   if (mvId === 'cuong' && m.hp > m.maxHp*0.5){ m.moveT = 2; return; } // Cuồng Hóa chỉ khi dưới nửa máu
@@ -9911,16 +9923,16 @@ function questTarget(q){
     const n = NPCS.find(x => x.id === npcId);
     if (n) return { map:n.map, x:n.x, y:n.y, label:'Gặp ' + n.name, npcId:n.id };
   }
-  if (q.type === 'meditate' && typeof SPRING !== 'undefined') return { map:'daohoa', x:SPRING.x, y:SPRING.y, label:'Suối Ký Ức' };
+  if (q.type === 'meditate' && typeof SPRING !== 'undefined') return { map:'corran', x:SPRING.x, y:SPRING.y, label:'Suối Ký Ức' };
   if (q.type === 'enhance'){ const n = NPCS.find(x => x.talk === 'forge'); if (n) return { map:n.map, x:n.x, y:n.y, label:'Lò Rèn Hoàng Gia', npcId:n.id }; }
   if (q.type === 'collect' && typeof HERB_SPOTS !== 'undefined'){
     // herbMap riêng, không dùng q.map — q.map trên vài NV chính (VD #12) là nơi trả NV (NPC ở
     // Sapidae Chiefdom), khác với nơi thật sự hái Thảo Dược.
-    const hm = q.herbMap || 'daohoa';
+    const hm = q.herbMap || 'corran';
     const hs = HERB_SPOTS[hm];
     if (hs) return { map:hm, x:hs[0].x, y:hs[0].y, label:'Bãi Thảo Dược' };
   }
-  if (q.type === 'boss' && typeof BOSS_ARENA !== 'undefined') return { map:'daohoa', x:BOSS_ARENA.x, y:BOSS_ARENA.y, label:'Đài Bình Cảnh' };
+  if (q.type === 'boss' && typeof BOSS_ARENA !== 'undefined') return { map:'corran', x:BOSS_ARENA.x, y:BOSS_ARENA.y, label:'Đài Bình Cảnh' };
   if (q.mob){
     let best = null;
     for (const id in MAPS){
@@ -11125,14 +11137,14 @@ function onDeath(){
     <p>Ngươi bị <b style="color:#ff8f6b">${_kb}</b> đánh bại.<br><span style="color:#e8b060;font-size:12.5px">Mẹo: khi trấn thủ tụ chiêu (vùng đỏ), hãy chạy ra khỏi vùng đỏ — sau đó là 2.5 giây phản công tốt nhất.<br>Hoặc quay lại khi ngươi đã mạnh hơn.</span></p>
     <button class="big-btn" onclick="respawn()">Tái Chiến</button>` : `
     <h2>Trọng Thương!</h2>
-    <p>Ngươi bị đánh bại... Nhưng Lunacia chưa hề bỏ rơi kẻ có chí.<br>Hồi sinh tại làng trên Plant Tribe Glade với đầy đủ sinh lực.</p>
+    <p>Ngươi bị đánh bại... Nhưng Lunacia chưa hề bỏ rơi kẻ có chí.<br>Hồi sinh tại làng trên Rẻo Rừng Corran với đầy đủ sinh lực.</p>
     <button class="big-btn" onclick="respawn()">Hồi Sinh</button>`;
   ov.classList.remove('hidden');
 }
 window.respawn = function(){
-  // Hồi sinh về điểm an toàn: làng Đào Hoa nếu chết ở map PK, còn lại tại chỗ spawn của map
+  // Hồi sinh về điểm an toàn: làng trên map khởi đầu nếu chết ở map PK, còn lại tại chỗ spawn
   const md = mapDef();
-  if (md.type !== 'safe' && !md.dungeon){ curMap = 'daohoa'; buildWorld(); }
+  if (md.type !== 'safe' && !md.dungeon){ curMap = 'corran'; buildWorld(); }
   const sp = mapDef().spawn;
   player.x = sp.x + 40; player.y = sp.y + 40;
   player.hp = player.maxHp; player.qi = player.maxQi;
@@ -11339,7 +11351,12 @@ function render(){
   }
 
   // village / city labels
-  if (md.village) drawCalligraphy('Thanh Ngưu Thôn', 400, 310, '#6a5836', 18);
+  // Tên cũ 'Thanh Ngưu Thôn' là tàn dư bản kiếm hiệp — vi phạm Quy tắc số 1, và nó vẽ
+  // thẳng lên mặt bản đồ bằng lối thư pháp, trên chính bản đồ KHỞI ĐẦU — một trong những
+  // chữ đầu tiên người chơi đọc. Sau đợt hoán dải cấp, cờ `village` nằm ở Rẻo Rừng Corran
+  // (cấp 1-12) chứ không còn ở Plant Tribe Glade. Tên mới đi cùng họ với 'Sapidae Chiefdom'
+  // và hợp với một rẻo rừng. Toạ độ giữ theo bản trên main.
+  if (md.village) drawCalligraphy('Sapwood Hamlet', 430, 340, '#6a5836', 18);
   // cổng KHÔNG vẽ ở đây nữa — nó đi vào danh sách sắp theo y bên dưới (xem drawOneGate)
 
   drawObstacleRim();   // hàng đá dọc mép vùng chặn — vẽ trước decor để cây/đá rải phủ lên tự nhiên
@@ -16960,9 +16977,35 @@ function tangDoThuNghiem(){
   calcDerived();
   player.hp = player.maxHp; player.qi = player.maxQi;
 }
+// ═══════════ ĐỒ KHỞI ĐẦU CỦA NHÂN VẬT MỚI ═══════════
+// Trước bản này, nhân vật vừa tạo có CẢ MƯỜI MỘT ô trang bị rỗng: cởi trần, quần cộc, tay không —
+// ngay sau màn chọn lớp vừa cho xem một hiệp sĩ giáp đầy đủ cầm đại kiếm. Đó là khoảng cách lớn
+// nhất giữa thứ game hứa và thứ game giao, và nó rơi đúng vào giây người chơi quyết định ở lại.
+//
+// PHẢI phát ĐỦ BỐN Ô GIÁP + vũ khí, không phát được ít hơn: nvBoGiap() chỉ đổi sang thân mặc
+// giáp khi đủ độ phủ, nên phát mỗi áo thì nhân vật VẪN cởi trần (đã thử và chụp lại). Thiếu ô
+// nào là bản vá này không vá được gì cả.
+//
+// Nhưng KHÔNG dùng genSpecific() như tangDoThuNghiem(): hàm đó là hàm sinh ĐỒ THỬ — mọi dòng phụ
+// đều ở mức tối đa và giáp luôn mang cờ perfect ('Hoàn Hảo'). Phát thứ đó cho mọi người chơi mới
+// là vừa thổi cân bằng vừa làm hỏng khoảnh khắc nhặt được món Hoàn Hảo THẬT về sau.
+// Dùng genItem() — đúng đường đồ rơi từ quái — ép perfect:0 và plus9:0, cấp 1. Đây là bộ đồ vải
+// tầm thường: đủ để nhân vật hiện ra có mặc gì đó, không đủ để ai thấy mình mạnh sẵn.
+function phatDoKhoiDau(){
+  for (const _id of ['vukhi', 'non', 'ao', 'tay', 'chan']){
+    const sl = SLOTS.find(s2 => s2.id === _id);
+    if (!sl || sl.special) continue;
+    const it = genItem(1, null, null, { slots: [_id], perfect: 0, plus9: 0 });
+    if (!it) continue;
+    it.plus = 0;
+    player.equip[_id] = it;
+  }
+  calcDerived();
+  player.hp = player.maxHp; player.qi = player.maxQi;
+}
 function applyTestBoost(){
   // ===== CHẾ ĐỘ THỬ NGHIỆM: MỌI TÍNH NĂNG TỐI ĐA =====
-  player.level = MAX_LV; player.xp = 0;            // cấp 100 — mở hết mọi hệ thống & map
+  player.level = MAX_LV; player.xp = 0;            // cấp tối đa (MAX_LV) — mở hết mọi hệ thống & map
   player.str = 50; player.agi = 50; player.def = 50; player.vit = 50; player.ene = 50;
   player.free = 500;                               // điểm tiềm năng dư để cộng thử
   player.silver = 999999;
@@ -17744,6 +17787,11 @@ function startGame(sectKey, quze){
     if (window.TEST_DO){
       tangDoThuNghiem();
       addFloat(player.x, player.y-72, 'Chế độ test — mặc sẵn nguyên bộ giai 1 và vũ khí của lớp', '#a0ffe9', 13);
+    } else if (!window.TEST_MODE){
+      // Người chơi THẬT: phát bộ khởi đầu hai ô (xem phatDoKhoiDau). Loại trừ TEST_MODE vì hơn
+      // trăm bài kiểm tự đặt cờ đó rồi gọi startGame để mở cổng dịch chuyển — bài cân bằng nào
+      // cũng đo trên nhân vật TRẦN, treo đồ vào đây là cả bộ đo đổi mốc trong im lặng.
+      phatDoKhoiDau();
     }
     addFloat(player.x, player.y-50, 'Sapidae Chiefdom — hãy đến gặp Trưởng Lão Rell (lại gần, nhấn E)!', '#7ecbff', 15);
   }
@@ -17781,13 +17829,11 @@ const SERVERS = [
   { id:'vaeldra', ten:'Vaeldra',  mo:'Cao nguyên của những kẻ còn nhớ' },
   { id:'lunaris', ten:'Sapidae',  mo:'Thành phố dưới chân vách đá' },
 ];
-// Tải giả lập: suy từ id chứ không random, để mỗi lần mở game con số không nhảy lung tung —
-// một cụm máy chủ đang đông thì phải đông ổn định, nếu không thì nó lộ ra là số bịa.
-function svTai(id){
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return 0.28 + (h % 55) / 100;                      // 28% … 82%
-}
+// Thanh "Tiếp nhận 28%…82%" ĐÃ GỠ. Nó suy từ hàm băm của id nên ổn định qua các lần mở, và
+// đúng vì thế mà nó thuyết phục: người chơi đọc ra một cụm máy chủ đang đông. Không có cụm nào
+// cả — không kết nối, không người chơi khác, save nằm ở máy người chơi. Một con số bịa mà trông
+// như số thật là thứ người ta bắt được trong ba mươi giây và là thứ định nghĩa bài đánh giá.
+// Ba cụm giữ lại làm LỰA CHỌN BỐI CẢNH (lưu ở SETTINGS.server), không hứa hạ tầng nào.
 function svDangChon(){ return SETTINGS.server || SERVERS[0].id; }
 window.svChon = function(id){
   if (!SERVERS.some(s2 => s2.id === id)) return;
@@ -17821,15 +17867,12 @@ function svRender(){
     <div class="sv-logo"><span class="sv-logo-a">AXIE</span><span class="sv-logo-b">RIFT</span></div>
     <div class="sv-nhan">Chọn máy chủ</div>
     <div class="sv-hang">` + SERVERS.map(sv => {
-      const t = svTai(sv.id), pct = Math.round(t * 100);
-      const mau = t < 0.5 ? 'thap' : t < 0.75 ? 'vua' : 'cao';
       return `<button class="sv-nut${sv.id === dang ? ' on' : ''}" type="button" onclick="window.svChon('${sv.id}')">
         <b class="sv-ten">${sv.ten}</b>
         <span class="sv-mo">${sv.mo}</span>
-        <span class="sv-thanh"><i class="sv-${mau}" style="width:${pct}%"></i></span>
-        <span class="sv-tt">Tiếp nhận · ${pct}%</span></button>`;
+        <span class="sv-tt sv-off">◆ Ngoại tuyến</span></button>`;
     }).join('') + `</div>
-    <i class="sv-ghi">Máy chủ ở đây chỉ là nghi thức — game chạy trên máy của bạn, nhân vật lưu tại chỗ.</i>`;
+    <i class="sv-ghi">Axie Rift hiện chạy hoàn toàn trên máy của bạn — không có người chơi khác, nhân vật lưu tại chỗ. Ba cụm trên chỉ là bối cảnh mở đầu, chọn cụm nào cũng vào cùng một thế giới.</i>`;
 }
 function showMainMenu(){
   // Ô này đổi tên thành #cc-classes khi dựng màn tạo nhân vật. Bỏ sót ở đây là NGƯỜI CHƠI CŨ
@@ -20671,7 +20714,7 @@ function renderSkillPanel(){
     html += equippedSkillRowHtml('tp', 'Phụ');
     const o3Id = O3_SKILL_ID[player.sect], sigId = SIGNATURE_SKILL[player.sect];
     html += o3Id ? equippedSkillRowHtml(o3Id, BUFF_SKILL_ID[player.sect] ? 'Phù Trợ' : 'Phụ 2')
-      : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10 để mở khoá bộ 4 chiêu riêng.</div>`;
+      : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Lớp này chưa khai chiêu cho ô thứ ba.</div>`;
     if (sigId) html += equippedSkillRowHtml(sigId, '★ Tuyệt Chiêu');
     html += `<div class="shop-row" title="${consumTip('sach')}"><span class="sr-ic">${consumIcon('sach', 'sr-img')}</span>
         <span class="sr-body"><b style="color:#ffb15c">Sách Kỹ Năng</b>
@@ -20690,7 +20733,7 @@ function renderSkillPanel(){
     html += `<div style="font-size:11px;color:#9aa8d4;padding:2px 4px 8px">Thanh chiêu chỉ có 4 ô, nhưng các chiêu dưới đây không hề mất giá trị — tự động dồn thành % Công Kích vĩnh viễn (hiện <b style="color:#ffd76a">+${(player.legacyAtkPct||0).toFixed(1)}%</b>), tự ngộ theo cấp, không cần bấm nút.</div>`;
     html += `<div class="stat-sec">DI SẢN LỚP — ${SECTS[player.sect].name}</div>`;
     const own = LEGACY_SECT_SKILLS.filter(sid => VOHOC_DEFS[sid] && VOHOC_DEFS[sid].phai === player.sect);
-    html += own.length ? own.map(legacySkillRowHtml).join('') : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Chưa gia nhập lớp nào — trả lời The Calling ở cấp 10.</div>`;
+    html += own.length ? own.map(legacySkillRowHtml).join('') : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Lớp này chưa có chiêu Di Sản nào.</div>`;
     // Bị động riêng của lớp — có tác dụng THẬT (xem CLASS_PASSIVES trong calcDerived), không quy
     // đổi thành %ST, nên phải tách khỏi mục di sản để người chơi không tưởng chúng cũng chỉ là %ST.
     const _pas = CLASS_PASSIVES.filter(sid => VOHOC_DEFS[sid] && VOHOC_DEFS[sid].phai === player.sect);
@@ -20962,7 +21005,7 @@ function updateHud(){
       b.classList.add('sk-empty'); b.classList.remove('locked','has-img');
       b.style.backgroundImage = '';
       b.querySelector('.sk-ico').textContent = '+';
-      b.title = 'Chưa gia nhập lớp — trả lời The Calling ở cấp 10 (K)';
+      b.title = 'Ô trống — lớp này chưa khai chiêu cho ô đó (bấm K để xem bảng Kỹ Năng)';
       b.querySelector('.sk-cd').style.height = '0%';
       continue;
     }
@@ -21628,7 +21671,7 @@ el('is-skip').addEventListener('click', closeIntro);
 const TUT_STEPS = [
   { key:'move',  txt:'Bấm <b>chuột phải</b> trên nền đất hoặc bấm vào <b>bản đồ thu nhỏ</b> — nhân vật sẽ tự chạy tới đó, hãy thử một lần', },
   { key:'npc',   txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
-  { key:'map',   txt:'Bấm <b>Đi ngay</b> trên dải nhiệm vụ giữa màn hình (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để dịch chuyển tới <b>Plant Tribe Glade</b>' },
+  { key:'map',   txt:'Bấm <b>Đi ngay</b> trên dải nhiệm vụ giữa màn hình (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để dịch chuyển tới <b>Rẻo Rừng Corran</b>' },
   { key:'kill',  txt:'Nhấn <b>SPACE</b> — nhân vật tự chạy tới con quái gần nhất và đánh. Hãy hạ 1 con <b>Axie Heo Rừng</b>' },
   { key:'loot',  txt:'Quái chết có thể rơi đồ hoặc <b>Châu</b> xuống đất — <b>đi ngang qua</b>, bấm <b>J</b> hoặc <b>bấm chuột trúng món</b> để nhặt. Giữ <b>ALT</b> xem tên mọi món trên màn' },
   { key:'quest', txt:'Làm theo nhiệm vụ ở <b>góc phải màn hình</b> · <b>C</b> nhân vật · <b>K</b> kỹ năng · <b>B</b> túi đồ' },
@@ -22121,7 +22164,7 @@ window.wipeSave = function(confirmed){
 // Bảy người dẫn chương mỗi người gọi tên người trước, và Brann ở chương cuối gọi tên cả sáu:
 // trước đây mỗi người giữ đúng một chương rồi tắt hẳn, không ai nhắc tới ai.
 NPCS.push(
-  { id:'duocsu',    name:'Dược Sư',              map:'daohoa',     x:560,  y:430,  img:'assets/npcs/duocsu.png',    talk:'quest',
+  { id:'duocsu',    name:'Dược Sư',              map:'corran',     x:560,  y:430,  img:'assets/npcs/duocsu.png',    talk:'quest',
     lore:{
       idle:  '"Ta pha thuốc cho cả đảo này từ trước khi trời nứt. Giờ nửa số bệnh ta chữa không có trong sách nào cả."',
       offer: '"Chưa tới lúc. Ngươi còn chưa đứng vững thì ta đưa thuốc cho ai uống?"',
@@ -22404,10 +22447,11 @@ window.travelTo = function(mapId, from){
   snapCamera(); // đổi map: camera đặt thẳng vào vị trí mới, không pan từ map cũ
   if (md.type === 'safe') player.pk = false;
   const zt = zoneType();
-  // daohoa không bị khoá theo reqMain (mở sẵn từ đầu) nên câu dẫn nhập Ngũ Trụ của nó
-  // được gắn vào đúng thời điểm đặt chân tới lần đầu, thay cho banner tên vùng thường
-  const _daohoaFirst = mapId === 'daohoa' && !(player.wpUnlocked && player.wpUnlocked.daohoa);
-  const _rlore = _daohoaFirst && typeof REGION_UNLOCK_LORE !== 'undefined' ? REGION_UNLOCK_LORE.daohoa : null;
+  // Map khởi đầu không bị khoá theo reqMain (mở sẵn từ đầu) nên câu dẫn nhập Ngũ Trụ của nó
+  // được gắn vào đúng thời điểm đặt chân tới lần đầu, thay cho banner tên vùng thường.
+  // Sau khi hoán dải cấp, map ấy là Rẻo Rừng Corran chứ không còn là Plant Tribe Glade.
+  const _dauTienFirst = mapId === 'corran' && !(player.wpUnlocked && player.wpUnlocked.corran);
+  const _rlore = _dauTienFirst && typeof REGION_UNLOCK_LORE !== 'undefined' ? REGION_UNLOCK_LORE.corran : null;
   zoneBanner = _rlore ? { text:'🗺 ' + md.name, sub:_rlore.sub, color:'#ffd76a', t:4.5 }
                        : { text: md.name, sub: `${zt.name} — ${md.desc}`, color: zt.color, t: 3.2 };
   addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:zt.color, big:true });
@@ -23233,8 +23277,9 @@ const BOSS_LORE = window.BOSS_LORE;
 // sách cấm của phong cách, và bộ tên cũ tự đá nhau (Trụ Hỏa hiện ở CẢ trụ đầu lẫn trụ cuối, Trụ
 // Mộc hai lần, Trụ Thổ không lần nào — người chơi không thể đếm nổi mình đang ở trụ thứ mấy).
 //
-// Bảy vùng nhưng chỉ NĂM trụ: Plant Tribe Glade và Outskirts là đất tập, không có trụ. Đó là cách
-// duy nhất để "bảy Tướng Quân" và "năm Trụ Khoá" cùng đúng.
+// Bảy vùng nhưng chỉ NĂM trụ: hai vùng dải thấp nhất không có trụ. Đó là cách duy nhất để "bảy
+// Tướng Quân" và "năm Trụ Khoá" cùng đúng. Bộ khoá dưới đây KHÔNG đổi khi Rẻo Rừng Corran và
+// Plant Tribe Glade hoán dải cấp — trụ gắn với mạch truyện của vùng, không gắn với dải cấp.
 const TRU_KHOA = {
   chungnam:  'Trụ Werebear Woods',
   comoc:     'Trụ Roost',
@@ -23255,7 +23300,14 @@ function tuongQuanDaHa(){
 }
 const REGION_UNLOCK_LORE = {
   ardhaven:{ sub:'Vỏ kén đã phá — trở về Sapidae Chiefdom trong tiếng hoan hô, chính thức bước vào Chương II.' },
-  daohoa:    { sub:'Plant Tribe Glade — hòn đảo đã hứng ngươi khi ngươi rơi xuống. Chưa có trụ nào ở đây, chỉ có hậu quả.' },
+  // Rẻo Rừng Corran nay là vùng đầu tiên ngoài tường thành (hoán dải cấp với Plant Tribe Glade),
+  // nên câu dẫn nhập Ngũ Trụ đọc ở đây.
+  corran:    { sub:'Rẻo Rừng Corran — khoảnh rừng đầu tiên ngoài tường thành. Chưa có trụ nào ở đây, chỉ có thứ đang lấn tới sát chân tường.' },
+  // ⚠ Câu cũ ở đây là "hòn đảo đã hứng ngươi khi ngươi rơi xuống" — đúng hồi map này còn là chỗ
+  // khởi đầu, sai từ lúc hoán dải cấp: người chơi nay dạt vào Rẻo Rừng Corran, và chỉ đặt chân
+  // tới đây ở cấp 38. Giữ nguyên vế "Chưa có trụ nào ở đây" vì nó là mệnh đề ĐẾM ĐƯỢC (truDaGo
+  // chỉ tính năm vùng có trụ, xem TRU_KHOA), và giữ cả cái kết "chỉ có hậu quả".
+  daohoa:    { sub:'Plant Tribe Glade — hòn đảo Plant Tribe bỏ lại từ hôm trời nứt, nay Axie Sa Ngã chiếm. Chưa có trụ nào ở đây, chỉ có hậu quả.' },
   ngoai:     { sub:'"Đất ngoài thành đang rung." Chưa phải trụ — nhưng là dấu hiệu đầu tiên rằng có trụ đang lung lay.' },
   chungnam:  { sub:'"Trụ Werebear Woods do ta giữ." Một Tướng Quân đơn độc chống đỡ cả cánh rừng — trụ thứ nhất trong năm.' },
   comoc:     { sub:'Trụ Roost đóng thẳng xuống giữa ổ ấp. Bug Tribe Tunnels thì thầm: thứ nở ra ở đây không còn là Axie nữa.' },
@@ -23760,11 +23812,27 @@ TITLES.push({ id:'tctk', name:'Kẻ Báo Thù', cond:p=>(p.revengeKills||0) >= 3
 // ==================== PHÓ BẢN & BOSS (Request P) ====================
 // Boss tương ứng cấp từng map — ảnh riêng vẽ bằng AI, phong cách thủy mặc
 Object.assign(MOBS, {
-  boss_hacphong:  { name:'Thủ Lĩnh Đoàn Gloam',    lv:16,  hp:3500,   atk:55,  def:20,  xp:3200,  silver:[350,500],   speed:80, aggro:9999, range:40, atkCd:1.2,  size:24, color:'#181420', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_hacphong', moves:['vach','xung','daovung'], drop:1, el:'Hỏa',  img:'assets/mobs/boss_hacphong.png' },
+  // ⚠ ART CÒN NỢ. assets/mobs/boss_hacphong.png là TRANH THẺ chứ không phải sprite: đục 100%,
+  // không một điểm trong suốt nào, và con vật bị khung cắt ở cả bốn mép — đắp vào thế giới thì
+  // hiện ra đúng một ô vuông dán lên nền — chụp lại được giữa đồng cỏ pastel của Plant
+  // Tribe Glade. Tách nền không cứu được: cắt xong vẫn cụt bốn mép.
+  // Nay vẽ khung xương như boss_sontac — hợp thế giới hơn một tấm thẻ dán.
+  // ⚠ skel còn là đường DƯ PHÒNG của TRÙM VÙNG: BOSS_DEFS trỏ vào khoá này rồi kế thừa
+  // skel/skelPal (xem `_src.skel` trong hàm dựng trùm vùng) — bỏ skel là trùm vùng rơi về hình
+  // mực dự phòng. Có sprite thật (nền trong suốt, trọn con) thì thêm lại img, giữ nguyên skel.
+  boss_hacphong:  { name:'Thủ Lĩnh Đoàn Gloam',    lv:16,  hp:3500,   atk:55,  def:20,  xp:3200,  silver:[350,500],   speed:80, aggro:9999, range:40, atkCd:1.2,  size:24, color:'#181420', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_hacphong', moves:['vach','xung','daovung'], drop:1, el:'Hỏa', skel:'knight', skelPal:{main:'#4a4450',dark:'#2a2632',trim:'#c8a84a',cloth:'#6a2a24',glow:'#ff6a3a'} },
   boss_sontac:    { name:'Thủ Lĩnh Sói Hoang',  lv:22,  hp:6000,   atk:75,  def:28,  xp:5200,  silver:[500,700],   speed:76, aggro:9999, range:42, atkCd:1.25, size:25, color:'#241a12', eye:'#ff9a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_sontac', moves:['vach','goi','vogiap'], drop:1, el:'Thổ', skel:'hound', skelPal:{main:'#5f5348',dark:'#3d342c',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}, img:'assets/mobs/boss_sontac.png'},
   boss_phando:    { name:'Đại Tướng Phản Loạn',     lv:34,  hp:11000,  atk:110, def:40,  xp:9000,  silver:[800,1100],  speed:82, aggro:9999, range:44, atkCd:1.2,  size:25, color:'#12201c', eye:'#a0ffe9', boss:true, elite:true, bossKind:'dgn', bossId:'boss_phando', moves:['vong','xung','cuong','daovung'], drop:1, el:'Thủy', skel:'knight', skelPal:{main:'#4f7a70',dark:'#2e4a44',trim:'#a0ffe9',cloth:'#1e3a34',glow:'#6ae8c0'}},
   boss_mochu:     { name:'Chúa Tể Hầm Mộ',          lv:52,  hp:22000,  atk:170, def:70,  xp:16000, silver:[1300,1800], speed:70, aggro:9999, range:46, atkCd:1.3,  size:26, color:'#1c1a14', eye:'#9a86d8', boss:true, elite:true, bossKind:'dgn', bossId:'boss_mochu', moves:['vach','goi','cuong','vogiap'], drop:1, el:'Thổ', skel:'cultist', skelPal:{main:'#b0a890',dark:'#332a24',cloth:'#4a3a2a',trim:'#c8a84a',glow:'#8fe0a8'}},
-  boss_tinhhoa:   { name:'Xoáy Lá Nguyền',      lv:72,  hp:40000,  atk:240, def:95,  xp:28000, silver:[2000,2800], speed:88, aggro:9999, range:48, atkCd:1.15, size:26, color:'#2a1218', eye:'#7ec850', boss:true, elite:true, bossKind:'dgn', bossId:'boss_tinhhoa', moves:['vong','xung','daovung','vogiap'], drop:1, el:'Mộc', poisonHit:true, img:'assets/mobs/boss_tinhhoa.png' },
+  // ⚠ ART CÒN NỢ. assets/mobs/boss_tinhhoa.png là TRANH THẺ chứ không phải sprite: đục 100%,
+  // không một điểm trong suốt nào, và con vật bị khung cắt ở cả bốn mép — đắp vào thế giới thì
+  // hiện ra đúng một ô vuông dán lên nền — chụp lại được giữa đồng cỏ pastel của Plant
+  // Tribe Glade. Tách nền không cứu được: cắt xong vẫn cụt bốn mép.
+  // Nay vẽ khung xương như boss_sontac — hợp thế giới hơn một tấm thẻ dán.
+  // ⚠ skel còn là đường DƯ PHÒNG của TRÙM VÙNG: BOSS_DEFS trỏ vào khoá này rồi kế thừa
+  // skel/skelPal (xem `_src.skel` trong hàm dựng trùm vùng) — bỏ skel là trùm vùng rơi về hình
+  // mực dự phòng. Có sprite thật (nền trong suốt, trọn con) thì thêm lại img, giữ nguyên skel.
+  boss_tinhhoa:   { name:'Xoáy Lá Nguyền',      lv:72,  hp:40000,  atk:240, def:95,  xp:28000, silver:[2000,2800], speed:88, aggro:9999, range:48, atkCd:1.15, size:26, color:'#2a1218', eye:'#7ec850', boss:true, elite:true, bossKind:'dgn', bossId:'boss_tinhhoa', moves:['vong','xung','daovung','vogiap'], drop:1, el:'Mộc', skel:'wraith', skelPal:{main:'#7fbf8f',dark:'#2e4a38',cloth:'#3f6a4e',bone:'#dff0d8',glow:'#7ec850'}, poisonHit:true },
   boss_dothong:   { name:'Chúa Sói Thảo Nguyên',   lv:92,  hp:68000,  atk:340, def:130, xp:45000, silver:[3200,4200], speed:84, aggro:9999, range:50, atkCd:1.1,  size:27, color:'#1a1410', eye:'#ffd76a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_dothong', moves:['vach','xung','goi','cuong','vogiap'], drop:1, el:'Kim', skel:'hound', skelPal:{main:'#6a6050',dark:'#443c30',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}},
   boss_thienbinh: { name:'Thống Soái Thiên Giáp', lv:108, hp:100000, atk:420, def:160, xp:70000, silver:[4500,6000], speed:92, aggro:9999, range:52, atkCd:1.0,  size:27, color:'#101018', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_thienbinh', moves:['vong','vach','xung','goi','cuong','daovung','vogiap'], drop:1, el:'Hỏa', skel:'knight', skelPal:{main:'#d0c8b0',dark:'#8a8068',trim:'#ffe9a8',cloth:'#c04a2a',glow:'#ffb15c'}},
   // Boss Săn (MU Online-style): xuất hiện SAU khi hạ Cổng Vực phó bản — hoạt động phụ, không bắt
@@ -25013,8 +25081,10 @@ window.debugMaTon = function(sec){ MATON.next = Date.now() + (sec || 5)*1000; MA
 // Xâm Lăng Vàng). Một đàn quái dát vàng tràn vào 1 map thường trong 12 phút; mỗi con
 // CHẮC CHẮN rơi Bảo Hạp theo bậc map (I-V), Chúa Đàn Vàng rơi hạp cao hơn 1 bậc.
 // Không lưu state — mốc giờ tính lại được từ đồng hồ thật, đến trễ coi như lỡ chuyến.
-const GOLDEN_FIELD = ['daohoa','ngoai','chungnam','comoc','tuyettinh','mongco','nhanmon'];
-const GOLDEN_BOX = { daohoa:1, ngoai:2, chungnam:2, comoc:3, tuyettinh:4, mongco:4, nhanmon:5 };
+const GOLDEN_FIELD = ['corran','ngoai','chungnam','daohoa','comoc','tuyettinh','mongco','nhanmon'];
+// Bậc hộp đi theo DẢI CẤP: Plant Tribe Glade lên 38-48 nên nó rời bậc 1 sang bậc 3, đứng cạnh
+// Bug Tribe Tunnels (42-56); Rẻo Rừng Corran nhận bậc 1 cùng với dải 1-12.
+const GOLDEN_BOX = { corran:1, ngoai:2, chungnam:2, daohoa:3, comoc:3, tuyettinh:4, mongco:4, nhanmon:5 };
 let GOLDEN = { next: 0, warned: false, active: false, map: null, endsAt: 0, spawnedOn: null, left: 0 };
 function goldenNextBoundary(after){
   const d = new Date(after); d.setMinutes(0, 0, 0); d.setHours(d.getHours() + 1);
@@ -25102,7 +25172,7 @@ window.debugGolden = function(sec){ GOLDEN.next = Date.now() + (sec || 5)*1000; 
 // Boss thế giới lớn nhất game. Khác hai sự kiện kia ở chỗ nó KHÔNG chọn một map: khi cửa vực
 // mở, mọi bãi săn đều nứt — người chơi cấp nào cũng có phần, boss lên cấp theo map đang đứng.
 // Mốc giờ tính lại được từ đồng hồ thật nên không cần lưu; đến trễ là lỡ chuyến, đúng nhịp MU.
-const RIFT_FIELD = ['daohoa','ngoai','chungnam','comoc','tuyettinh','mongco','nhanmon'];
+const RIFT_FIELD = ['corran','ngoai','chungnam','daohoa','comoc','tuyettinh','mongco','nhanmon'];
 const RIFT_WINDOW_MS = 45*60000;   // cửa vực mở 45 phút
 const RIFT_WARN_MS   = 15*60000;   // báo trước 15 phút — sự kiện lớn nhất nên báo sớm nhất
 const RIFT_MAX_KILLS = 3;          // chạy map kiếm thêm được, nhưng tối đa 3 con/lượt

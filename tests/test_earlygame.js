@@ -30,10 +30,12 @@ const PORT = process.argv[2] || '8853';
     const o = {};
     o.autoEquip = player.autoEquip === true;
 
-    // ── 2. Thợ Rèn trên Plant Tribe Glade, và dẫn đường ưu tiên lò tại chỗ ──
+    // ── 2. Thợ Rèn ở làng trên MAP TÂN THỦ, và dẫn đường ưu tiên lò tại chỗ ──
+    // Làng (Trưởng Làng · Dược Sư · Thợ Rèn) đã theo dải cấp sang Rẻo Rừng Corran; Plant Tribe
+    // Glade nay là map PK 38-48, đứng ở đó mà đo chặng tân thủ là đo nhầm map.
     const tr = NPCS.find(x => x.id === 'thoren_dao');
-    o.thoRen = !!tr && tr.map === 'daohoa' && tr.talk === 'forge';
-    curMap = 'daohoa'; buildWorld(); player.x = 460; player.y = 460; player.beacon = null;
+    o.thoRen = !!tr && tr.map === 'corran' && tr.talk === 'forge';
+    curMap = 'corran'; buildWorld(); player.x = 506; player.y = 1158; player.beacon = null;
     window.hintGoForge();
     o.beacon = player.beacon ? player.beacon.map : null; o.mapSauDanDuong = curMap;
 
@@ -93,7 +95,7 @@ const PORT = process.argv[2] || '8853';
     // ── ĐÃ BỎ: E chọn NPC có VIỆC, không phải NPC gần nhất ──
     // Không còn nhiệm vụ nào nên không NPC nào "có việc" — phép đo mất mất đối tượng. Giữ lại
     // phần còn đo được: E vẫn mở đúng NPC ĐỨNG GẦN NHẤT.
-    curMap = 'daohoa'; buildWorld();
+    curMap = 'corran'; buildWorld();   // hai NPC làng nay đứng trên map tân thủ
     const tl = NPCS.find(x => x.id === 'truonglang'), ds = NPCS.find(x => x.id === 'duocsu');
     o.npcCach = Math.round(dist(tl.x, tl.y, ds.x, ds.y));
     sideStates = {};
@@ -104,7 +106,7 @@ const PORT = process.argv[2] || '8853';
     closePanels();
 
     // ── 11. Nhãn boss vùng có bậc QUÁ DỄ ──
-    dat(40); renderStageSelect('daohoa');
+    dat(40); renderStageSelect('corran');   // map tân thủ 1-12: cấp 40 phải đọc ra QUÁ DỄ sạch bảng
     o.nhanBoss = [...el('panel-stage').querySelectorAll('.zone-badge')].map(e => e.textContent.trim());
     closePanels(); dat(1);
 
@@ -120,8 +122,8 @@ const PORT = process.argv[2] || '8853';
   console.log(JSON.stringify(r, null, 1));
 
   if (!r.autoEquip) fail('nhân vật mới không bật tự mặc đồ'); else pass('nhân vật mới bật tự mặc đồ');
-  if (!r.thoRen) fail('không có Thợ Rèn trên Plant Tribe Glade (NV5 kẹt vì thành khoá)'); else pass('Thợ Rèn Lưu Vong đứng ở Plant Tribe Glade');
-  if (r.beacon !== 'daohoa' || r.mapSauDanDuong !== 'daohoa') fail(`dẫn đường lò rèn trỏ về ${r.beacon}, map ${r.mapSauDanDuong} — phải ưu tiên lò tại chỗ`); else pass('dẫn đường lò rèn ưu tiên lò trên map đang đứng');
+  if (!r.thoRen) fail('không có Thợ Rèn ở làng trên map tân thủ (NV5 kẹt vì thành khoá)'); else pass('Thợ Rèn Lưu Vong đứng ở làng trên Rẻo Rừng Corran');
+  if (r.beacon !== 'corran' || r.mapSauDanDuong !== 'corran') fail(`dẫn đường lò rèn trỏ về ${r.beacon}, map ${r.mapSauDanDuong} — phải ưu tiên lò tại chỗ`); else pass('dẫn đường lò rèn ưu tiên lò trên map đang đứng');
   if (!r.spaceQueued) fail('Space ngoài tầm không đặt mục tiêu chạy tới'); else pass('Space ngoài tầm → chạy tới quái gần nhất');
   if (!r.spaceHit || !r.spaceCoTat) fail(`Space chạy tới rồi không đánh (trúng ${r.spaceHit}, cờ tắt ${r.spaceCoTat}, ${r.spaceKhung} khung)`); else pass(`Space chạy tới rồi tự ra đòn sau ${r.spaceKhung} khung, cờ tắt`);
   if (!r.khongQuaiKhongChay) fail('không có quái mà Space vẫn đặt mục tiêu di chuyển'); else pass('không có quái: Space không chạy đi đâu');
@@ -133,7 +135,7 @@ const PORT = process.argv[2] || '8853';
   if (!r.tutDong) fail('bước tutorial cuối không tự đóng sau 25s'); else pass('bước tutorial cuối tự đóng');
   if (!r.goiYUong) fail('máu thấp không gợi ý uống thuốc'); else pass('máu thấp → gợi ý R uống thuốc');
   if (!r.moGanNhat) fail(`E không mở NPC gần nhất (hai NPC cách nhau ${r.npcCach}px)`); else pass('E mở đúng NPC đứng gần nhất');
-  if (!r.nhanBoss.includes('QUÁ DỄ') || r.nhanBoss.includes('VỪA SỨC')) fail('cấp 40 ở Plant Tribe mà nhãn: ' + r.nhanBoss.join(', ')); else pass('cấp 40: mọi bãi/boss Plant Tribe gắn QUÁ DỄ');
+  if (!r.nhanBoss.includes('QUÁ DỄ') || r.nhanBoss.includes('VỪA SỨC')) fail('cấp 40 ở map tân thủ mà nhãn: ' + r.nhanBoss.join(', ')); else pass('cấp 40: mọi bãi/boss trên map tân thủ gắn QUÁ DỄ');
   if (r.moTaLa.length) fail('mô tả bản đồ còn tiếng Anh/thuật ngữ lạ: ' + r.moTaLa); else pass('8 mô tả bản đồ tiếng Việt');
 
   // ── 1. Xoá tiến trình phải xoá THẬT, kể cả gọi từ trong game ──

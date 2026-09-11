@@ -12,13 +12,13 @@ const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài 
   await page.evaluate(dungPbThu);   // 7 map pb_* đã gỡ — bài kiểm tự cắm phòng của mình
   await page.evaluate(() => { startGame('thieulam', null); });
   await page.waitForTimeout(500);
-  await page.evaluate(() => { travelTo('daohoa'); });
+  await page.evaluate(() => { travelTo('corran'); });   // bãi tân thủ nay là Rẻo Rừng Corran
   await page.waitForTimeout(300);
 
   // 1) buildWorld fix: mobs spawned at each pack's authored (x,y) should match pk.mob
   const spawnCheck = await page.evaluate(() => {
     const results = [];
-    for (const pk of MAPS.daohoa.packs){
+    for (const pk of MAPS.corran.packs){
       const nearby = mobs.filter(m => !m.dead && dist(m.x, m.y, pk.x, pk.y) < 150);
       const types = [...new Set(nearby.map(m => m.type))];
       results.push({ pack: pk.mob, at: `${pk.x},${pk.y}`, foundTypes: types, correct: types.includes(pk.mob) });
@@ -29,14 +29,14 @@ const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài 
   spawnCheck.forEach(r => console.log('   ', JSON.stringify(r)));
   console.log('   ALL CORRECT:', spawnCheck.every(r => r.correct));
 
-  // 2) enterStage boss-proximity nudge: packIdx 0 (boar @ 800,520) is ~54px from dh1 boss (780,570)
-  const boarPackIdx = await page.evaluate(() => MAPS.daohoa.packs.findIndex(p => p.mob === 'boar'));
+  // 2) enterStage boss-proximity nudge: the boar pack sits near zone boss co1
+  const boarPackIdx = await page.evaluate(() => MAPS.corran.packs.findIndex(p => p.mob === 'boar'));
   console.log('2) boar pack index:', boarPackIdx);
-  await page.evaluate((idx) => { enterStage('daohoa', idx); }, boarPackIdx);
+  await page.evaluate((idx) => { enterStage('corran', idx); }, boarPackIdx);
   await page.waitForTimeout(200);
   const afterEnter = await page.evaluate(() => {
-    const dh1 = BOSS_DEFS.daohoa.thuve[0];
-    const bx = dh1.x * MAP.w, by = dh1.y * MAP.h;
+    const co1 = BOSS_DEFS.corran.thuve[0];
+    const bx = co1.x * MAP.w, by = co1.y * MAP.h;
     return { playerX: Math.round(player.x), playerY: Math.round(player.y), distToBoss: Math.round(dist(player.x, player.y, bx, by)), bossPos: {x: bx, y: by} };
   });
   console.log('   after entering boar pack stage (dist to dh1 boss should be >= ~340):', JSON.stringify(afterEnter));

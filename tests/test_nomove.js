@@ -42,9 +42,9 @@ const { chromium } = require('playwright');
   console.log('after goToBeacon same-map auto-walk:', JSON.stringify(afterBeacon));
 
   // 5) AUTO farm via Chọn Trận should still work (travelTo + enterStage movement untouched)
-  await page.evaluate(() => { travelTo('daohoa'); });
+  await page.evaluate(() => { travelTo('corran'); });
   await page.waitForTimeout(300);
-  await page.evaluate(() => { enterStage('daohoa', 0); });
+  await page.evaluate(() => { enterStage('corran', 0); });
   await page.waitForTimeout(300);
   const autoState1 = await page.evaluate(() => ({ auto: player.auto, x: Math.round(player.x), y: Math.round(player.y) }));
   await page.waitForTimeout(4000);
@@ -54,8 +54,8 @@ const { chromium } = require('playwright');
 
   // 6) boss approach (enterBossStage) should still work, auto stays off
   await page.evaluate(() => { player.auto = false; updateAutoBtn(); });
-  const bd = await page.evaluate(() => BOSS_DEFS['daohoa'].thuve[0].id);
-  await page.evaluate((bossId) => { enterBossStage('daohoa', bossId); }, bd);
+  const bd = await page.evaluate(() => BOSS_DEFS['corran'].thuve[0].id);
+  await page.evaluate((bossId) => { enterBossStage('corran', bossId); }, bd);
   await page.waitForTimeout(300);
   const bossState = await page.evaluate(() => ({ x: Math.round(player.x), y: Math.round(player.y), auto: player.auto }));
   console.log('after enterBossStage:', JSON.stringify(bossState));

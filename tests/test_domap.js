@@ -193,7 +193,12 @@ const TRAN = {
   // Đây mới là chỗ đo cái bệnh chính: số loài TỤT khi lên cấp (7 xuống 3). Hiện trạng đang
   // SAI, nên mốc dưới đây không phải mục tiêu — nó chỉ chặn "tệ thêm". Khi máy sinh địa hình
   // (KE_HOACH_DO_MAP bước 3) nâng được map nào thì NÂNG MỐC map đó lên, đừng để nguyên.
-  const MOC_LOAI = { daohoa:7, ngoai:6, chungnam:4, comoc:3, tuyettinh:3, mongco:3, nhanmon:3 };
+  // ⚠ MỐC ĐI THEO BỘ QUÁI, KHÔNG ĐI THEO TÊN MAP. Bảy loài nhập môn đã chuyển từ Plant Tribe
+  // Glade sang Rẻo Rừng Corran khi hai map hoán dải cấp, nên mốc 7 chuyển theo chúng. Plant
+  // Tribe Glade nhận bộ ba của dải 38-48 (bandao · thinu · mocnhan) nên mốc của nó là 3 —
+  // KHÔNG phải hạ bánh cóc: tổng số loài trong game không đổi, chỉ đổi map nào cõng bộ nào.
+  // Cả game không có đủ bảy loài nào trong khoảng 38-48 để mốc cũ còn giữ được ở đây.
+  const MOC_LOAI = { corran:7, ngoai:6, chungnam:4, daohoa:3, comoc:3, tuyettinh:3, mongco:3, nhanmon:3 };
   for (const id in MOC_LOAI){
     if (!r[id]) { fail(`mất map ${id} khỏi phép đo`); continue; }
     if (r[id].soLoai < MOC_LOAI[id])

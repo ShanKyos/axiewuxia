@@ -101,7 +101,12 @@ const measure = (p, ms=3000) => p.evaluate(async (ms) => {
   // 7. Tự chỉnh phải THẬT SỰ chạy: máy này không có card đồ hoạ nên mức Đầy ở 100% chắc chắn
   //    tụt dưới 60 — bộ tự chỉnh phải hạ hiệu ứng TRƯỚC, hết đường rồi mới hạ độ nét.
   await p.evaluate(() => { setFxq('auto'); setRes('auto'); FXQ = 2; RES = 1; resize();
-    SETTINGS.perfHud = false; travelTo('daohoa'); });
+    SETTINGS.perfHud = false; travelTo('daohoa');
+    // ⚠ GHI MỨC KHỞI ĐIỂM NGAY LÚC ĐẶT, không đợi đo xong rồi mới đọc. Bản cũ lấy `before` sau
+    // 3 giây và so mọi thứ với nó — mà bộ tự chỉnh có thể đã hạ MỘT NẤC trong chính 3 giây ấy.
+    // Bắt được thật: một lượt chạy ghi `before.fxq = 1` trong khi dòng ngay trên vừa đặt FXQ = 2,
+    // rồi kết luận "không hạ gì cả". Lấy kết quả của việc hạ để phủ nhận rằng đã hạ.
+    window.__q0 = { fxq: FXQ, res: RES }; });
   //    Phải đo FPS *TRƯỚC* khi bộ tự chỉnh kịp làm gì. Bản cũ đo ở CUỐI 30 giây rồi lấy con số
   //    đó phán xét: máy chạy 59.9 FPS thì "không được hạ gì". Nhưng máy chạy được 59.9 CHÍNH LÀ
   //    NHỜ nó vừa hạ hiệu ứng — lấy kết quả để phủ nhận nguyên nhân. Bài chỉ đỏ khi bộ tự chỉnh
@@ -123,20 +128,35 @@ const measure = (p, ms=3000) => p.evaluate(async (ms) => {
     const f = await p.evaluate(() => _perf.fps);
     if (f) mau.push(f);
   }
-  const day = mau.length ? Math.min(...mau) : 0;
+  if (before.fps) mau.push(before.fps);
+  const sx = mau.slice().sort((a,b)=>a-b);
+  const day = sx.length ? sx[0] : 0;                    // thấp nhất
+  const giua = sx.length ? sx[sx.length >> 1] : 0;      // TRUNG VỊ
+  const q0 = await p.evaluate(() => window.__q0);
   const tuned = await p.evaluate(() => ({ fxq: FXQ, res: RES, fps: _perf.fps,
     cw: document.getElementById('game').width, W }));
-  console.log('7) tự chỉnh:', JSON.stringify(before), '→', JSON.stringify(tuned),
-              `· FPS thấp nhất trong cửa sổ = ${day} (${mau.length} mẫu)`);
-  const yeu = (before.fps && before.fps < 55) || (day && day < 55);
-  if (yeu){
-    if (tuned.fxq >= before.fxq && tuned.res >= before.res)
-      fail(`lúc đầy hiệu ứng chỉ đạt ${before.fps} FPS mà bộ tự chỉnh không hạ gì cả`);
-    else console.log(`   (đuối ở ${before.fps} FPS → đã hạ xuống fxq ${tuned.fxq}, nay ${tuned.fps} FPS)`);
-  } else {
-    console.log(`   (chưa từng tụt dưới 55 FPS — thấp nhất ${day} — nên không hạ gì là đúng)`);
-    if (tuned.fxq < before.fxq || tuned.res < before.res)
+  console.log('7) tự chỉnh:', JSON.stringify(q0), '→', JSON.stringify(tuned),
+              `· FPS trung vị = ${giua}, thấp nhất = ${day} (${mau.length} mẫu)`);
+  // ⚠ ĐÒI HỎI PHẢI KHỚP VỚI ĐIỀU KIỆN KÍCH HOẠT CỦA CHÍNH TÍNH NĂNG, không được chặt hơn.
+  // fxAutoTune() gom 90 khung rồi xét TRUNG VỊ: hạ một nấc khi med > 21ms (≈47,6 FPS), và sau
+  // mỗi nấc còn nghỉ 240 khung. Nó CỐ Ý không phản ứng với một cú tụt lẻ — "hạ nhanh, nâng
+  // chậm" là để chất lượng đừng nhấp nháy quanh ngưỡng.
+  // Bản cũ lại bắt: hễ MỘT mẫu 1 giây bất kỳ trong 33 giây tụt dưới 55 thì bộ tự chỉnh BẮT BUỘC
+  // phải hạ. Đó là đòi hỏi chặt hơn thiết kế, nên nó đỏ đúng vào lúc tính năng hành xử đúng —
+  // và đỏ ngẫu nhiên theo tải của máy chạy bài kiểm. Nay dùng cùng một thống kê với tính năng.
+  const NGUONG_HA = 1000 / 21;   // ngưỡng hạ nấc của fxAutoTune, đọc thẳng từ mã
+  if (giua && giua < NGUONG_HA){
+    if (tuned.fxq >= q0.fxq && tuned.res >= q0.res)
+      fail(`FPS trung vị chỉ ${giua} (dưới ngưỡng hạ nấc ${NGUONG_HA.toFixed(1)}) mà bộ tự chỉnh không hạ gì cả`);
+    else console.log(`   (đuối bền, trung vị ${giua} FPS → đã hạ xuống fxq ${tuned.fxq} · res ${tuned.res}, nay ${tuned.fps} FPS)`);
+  } else if (day >= 55){
+    console.log(`   (chưa lúc nào tụt dưới 55 FPS — thấp nhất ${day} — nên không hạ gì là đúng)`);
+    if (tuned.fxq < q0.fxq || tuned.res < q0.res)
       fail(`suốt cửa sổ chưa lúc nào tụt dưới 55 FPS (thấp nhất ${day}) mà bộ tự chỉnh vẫn hạ chất lượng`);
+  } else {
+    // Có tụt nhưng không tụt bền: đúng vùng bộ tự chỉnh được quyền làm gì cũng được. Không
+    // khẳng định gì ở đây — khẳng định bừa chính là chỗ bài này chập chờn bấy lâu.
+    console.log(`   (tụt lẻ nhưng không bền — trung vị ${giua}, thấp nhất ${day} — bộ tự chỉnh hạ hay không đều hợp lệ)`);
   }
   if (tuned.res < 1 && tuned.fxq !== 0)
     fail(`hạ độ nét xuống ${tuned.res} khi hiệu ứng còn ở mức ${tuned.fxq} — phải hạ hiệu ứng trước`);

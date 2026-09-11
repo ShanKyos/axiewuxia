@@ -8,7 +8,7 @@ const PORT = process.argv[2] || '8853';
 
 // Sàn vai trò theo dải cấp. CỐ Ý tăng dần: map đầu để người mới học, map sau phải dày hơn —
 // đây chính là chiều đang bị đảo ngược.
-const SAN_VAI = { daohoa:4, ngoai:4, chungnam:5, comoc:5, tuyettinh:5, mongco:5, nhanmon:5 };
+const SAN_VAI = { corran:4, daohoa:4, ngoai:4, chungnam:5, comoc:5, tuyettinh:5, mongco:5, nhanmon:5 };
 // Từ map này trở đi phải có Pháp Sư và Kẻ Tiếp Sức: hai thứ AUTO xử lý dở nhất, cũng là lý do
 // người chơi phải tự cầm chuột.
 const CAN_PHAP = ['chungnam','comoc','tuyettinh','mongco','nhanmon'];

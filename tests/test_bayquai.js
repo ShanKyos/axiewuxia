@@ -33,7 +33,10 @@ const PORT = process.argv[2] || '8853';
     o.heSoMauMax = Math.max(...Object.values(ROLE).map(v => v.hp));
 
     // ── 2. đai 0 không có Kẻ Tiếp Sức, đai 1+ (map min ≥ 20) mỗi bãi đúng một ──
-    o.dai0Tiep = ['daohoa','ngoai'].map(k => (MAPS[k].packs || []).filter(pk => pk.tiep).length);
+    // Hai map ĐAI 0 là map tân thủ, không phải hai cái tên cố định: sau khi Rẻo Rừng Corran và
+    // Plant Tribe Glade hoán dải cấp, map mở đầu là corran (Plant Tribe Glade nay ở dải 38-48
+    // và CÓ Kẻ Tiếp Sức, đúng như mọi map đai 1+).
+    o.dai0Tiep = ['corran','ngoai'].map(k => (MAPS[k].packs || []).filter(pk => pk.tiep).length);
     o.dai1 = {};
     for (const k of ['chungnam','comoc','tuyettinh','mongco','nhanmon']){
       curMap = k; buildWorld();

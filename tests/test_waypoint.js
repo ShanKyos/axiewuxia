@@ -14,26 +14,26 @@ const { chromium } = require('playwright');
   const initial = await page.evaluate(() => ({ curMap, wpUnlocked: player.wpUnlocked }));
   console.log('initial:', JSON.stringify(initial));
 
-  // open map panel, check daohoa row html for lock state
+  // open map panel, check the starter-map row html for lock state
   await page.evaluate(() => { togglePanel('map'); });
   await page.waitForTimeout(200);
   const mapHtmlBefore = await page.evaluate(() => document.getElementById('panel-map').innerHTML);
-  const daohoaLockedBefore = /daohoa/.test('') || mapHtmlBefore.includes('Plant Tribe Glade') && mapHtmlBefore.includes('Chưa mở khoá');
-  console.log('daohoa shows locked-waypoint before travel:', mapHtmlBefore.includes('Chưa mở khoá'));
+  const corranLockedBefore = mapHtmlBefore.includes('Rẻo Rừng Corran') && mapHtmlBefore.includes('Chưa mở khoá');
+  console.log('corran shows locked-waypoint before travel:', mapHtmlBefore.includes('Chưa mở khoá'), corranLockedBefore);
   await page.screenshot({ path: '/tmp/wp_map_before.png' });
 
-  // simulate quest-guided travel to daohoa (like goQuest/goToBeacon would)
-  await page.evaluate(() => { closePanels(); travelTo('daohoa'); });
+  // simulate quest-guided travel to the starter map (like goQuest/goToBeacon would)
+  await page.evaluate(() => { closePanels(); travelTo('corran'); });
   await page.waitForTimeout(500);
   const afterTravel = await page.evaluate(() => ({ curMap, wpUnlocked: player.wpUnlocked }));
   console.log('after travel:', JSON.stringify(afterTravel));
   await page.screenshot({ path: '/tmp/wp_after_travel_toast.png' });
 
-  // reopen map panel, daohoa row should now show real Dịch Chuyển button
+  // reopen map panel, the starter-map row should now show a real Dịch Chuyển button
   await page.evaluate(() => { togglePanel('map'); });
   await page.waitForTimeout(200);
   const mapHtmlAfter = await page.evaluate(() => document.getElementById('panel-map').innerHTML);
-  console.log('daohoa still locked after travel:', mapHtmlAfter.includes('Chưa mở khoá'));
+  console.log('corran still locked after travel:', mapHtmlAfter.includes('Chưa mở khoá'));
   await page.screenshot({ path: '/tmp/wp_map_after.png' });
 
   console.log('errors:', JSON.stringify(errors.slice(0,10)));

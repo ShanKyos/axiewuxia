@@ -15,13 +15,13 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 
   // 1. Có quái thường lẫn boss cùng trong tầm → phải chọn quái thường
   const r1 = await p.evaluate(() => {
-    travelTo('daohoa'); player.auto = false;
+    travelTo('corran'); player.auto = false;   // bãi tân thủ nay là Rẻo Rừng Corran
     mobs.length = 0;
     player.x = 1000; player.y = 1000;
     spawnZoneBosses();
     const bo = mobs.find(m => m.def.bossKind);
     bo.x = 1060; bo.y = 1000;                       // boss SÁT người chơi (60px)
-    const md = MAPS.daohoa;
+    const md = MAPS.corran;
     spawnMob('boar', { x:1000, y:1150, r:1, count:1 }, null);  // quái thường XA hơn (150px)
     const normal = mobs.find(m => !m.def.bossKind);
     const t = nearestMob(300);
@@ -66,8 +66,8 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     await q.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); });
     await q.waitForTimeout(800);
     await q.evaluate(() => {
-      travelTo('daohoa');
-      const k = MAPS.daohoa.packs[0];
+      travelTo('corran');
+      const k = MAPS.corran.packs[0];
       player.x = k.x; player.y = k.y; player.hp = player.maxHp; player.potions = 3;
       spawnZoneBosses();
       const bo = mobs.find(m => m.def.bossKind);

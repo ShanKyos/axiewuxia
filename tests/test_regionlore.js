@@ -15,19 +15,19 @@ const { chromium } = require('playwright');
   const qlen = await page.evaluate(() => QUESTS.length);
   console.log('QUESTS.length (expect 35):', qlen);
 
-  // 1) daohoa first-visit lore banner
-  await page.evaluate(() => { player.wpUnlocked = { ardhaven: true }; travelTo('daohoa'); });
+  // 1) banner lore lần đầu đặt chân — nay là corran, map khởi đầu sau khi hoán dải cấp
+  await page.evaluate(() => { player.wpUnlocked = { ardhaven: true }; travelTo('corran'); });
   await page.waitForTimeout(100);
-  const daohoaBanner = await page.evaluate(() => zoneBanner);
-  console.log('daohoa first-visit banner:', JSON.stringify(daohoaBanner));
+  const corranBanner = await page.evaluate(() => zoneBanner);
+  console.log('corran first-visit banner:', JSON.stringify(corranBanner));
 
-  // second visit should NOT show the lore line anymore (wpUnlocked.daohoa now true)
+  // second visit should NOT show the lore line anymore (wpUnlocked.corran now true)
   await page.evaluate(() => { travelTo('ardhaven'); });
   await page.waitForTimeout(50);
-  await page.evaluate(() => { travelTo('daohoa'); });
+  await page.evaluate(() => { travelTo('corran'); });
   await page.waitForTimeout(100);
-  const daohoaBanner2 = await page.evaluate(() => zoneBanner);
-  console.log('daohoa second-visit banner (should be generic, no lore):', JSON.stringify(daohoaBanner2));
+  const corranBanner2 = await page.evaluate(() => zoneBanner);
+  console.log('corran second-visit banner (should be generic, no lore):', JSON.stringify(corranBanner2));
 
   // 2) simulate reaching questIdx=10 (quests 1-10 done) to trigger the reqMain:10 banners (ardhaven + ngoai)
   const setupAndTurnIn = await page.evaluate(() => {
