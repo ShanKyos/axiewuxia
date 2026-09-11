@@ -8,7 +8,9 @@
 //   2. Vòng lặp rAF quên huỷ thì nó chạy mãi sau khi vào game, đốt pin suốt phiên chơi.
 //   3. Một lớp art 404 hoặc một lớp vẽ hụt thì cảnh vẫn hiện ra "trông có vẻ được" — phải đếm
 //      từng lớp, đừng nhìn tổng thể.
-//   4. Tấm phủ dìm-đêm PHẢI trong suốt một phần. Dựng nó bằng 'multiply' trên canvas trống ra
+//   4. Sân khấu phải vẽ NHÂN VẬT THẬT (dải khung nướng từ heroSprite), không phải bộ tranh
+//      anh hùng `pick_*` — và không được kéo bảng khung 159px lên cho đầy khung.
+//   5. Tấm phủ dìm-đêm PHẢI trong suốt một phần. Dựng nó bằng 'multiply' trên canvas trống ra
 //      một ô màu ĐẶC, và lúc ấy cả cảnh biến mất dưới một mảng tím — triệu chứng trông hệt như
 //      "art chưa tải". Đã dẫm đúng bẫy đó một lần.
 const { chromium } = require('playwright');
@@ -152,6 +154,39 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   console.log('6) sân khấu · tài khoản trống:', JSON.stringify(r6));
   if (r6.lop) fail(`tài khoản trống mà ccHeroLop() vẫn trả "${r6.lop}"`);
   r6.cot.forEach((n, i) => { if (n < 200) fail(`cột ${i + 1} của hàng năm lớp gần như trống (${n} điểm ảnh)`); });
+
+  // ── 7) Năm lớp phải là NHÂN VẬT THẬT, và không được phóng to quá mức ──────────────────
+  // Trước bản này sân khấu vẽ `assets/nv/pick_*.webp` — bộ tranh anh hùng tỉ lệ tám đầu, tức
+  // màn chờ quảng cáo một nhân vật khác hẳn thứ hiện ra khi bấm Vào Game. Bài này khoá hai
+  // điều: art phải là dải khung nướng từ chính heroSprite(), và bảng khung cao 159 điểm ảnh
+  // KHÔNG được kéo quá CC_PHONG_TRAN lần — kéo quá là một bóng người nhoè đứng cạnh một bức
+  // nền vẽ tay sắc nét, mà đó là thứ chỉ lộ ra khi chụp màn hình.
+  const r7 = await p.evaluate(async () => {
+    const cv = document.getElementById('cc-hero');
+    for (let i = 0; i < 60; i++){
+      if (CC_ORDER.every(k => ccLopAnh(k))) break;
+      await new Promise(r => setTimeout(r, 100));
+    }
+    const bc = ccBoCuc(cv.clientWidth, cv.clientHeight, null);
+    return {
+      thieu: CC_ORDER.filter(k => !ccLopAnh(k)),
+      // Mỗi dải phải đủ `nKhung` ô: nướng hụt một ô là vòng thở giật một nhịp mỗi vòng.
+      leKhung: CC_ORDER.filter(k => {
+        const A = ccLopHinh(k), im = ccLopAnh(k);
+        return !A || !im || im.naturalWidth !== A.cw * window.LOP_CHO.nKhung;
+      }),
+      nguon: CC_ORDER.map(k => (ccLopAnh(k) || {}).src || '').map(u => u.split('/').slice(-2).join('/')),
+      phong: bc.nguoi.map(n => +(n.than / ccLopHinh(n.k).than).toFixed(3)),
+      tran: CC_PHONG_TRAN,
+    };
+  });
+  console.log('7) art năm lớp:', JSON.stringify(r7));
+  if (r7.thieu.length) fail('dải khung lớp chưa tải được: ' + r7.thieu.join(','));
+  if (r7.leKhung.length) fail('dải khung thiếu/thừa ô: ' + r7.leKhung.join(','));
+  if (!r7.nguon.every(u => /^lop\/[a-z]+\.webp$/.test(u)))
+    fail('sân khấu không dùng dải khung nhân vật thật: ' + r7.nguon.join(' '));
+  if (r7.phong.some(k => k > r7.tran + 1e-6))
+    fail(`phóng bảng khung quá trần ${r7.tran}: ${r7.phong.join(', ')}`);
 
   await p.waitForTimeout(300);
   console.log('errors:', JSON.stringify(errs));

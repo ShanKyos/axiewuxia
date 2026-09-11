@@ -1749,7 +1749,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    Axie), một vầng sáng ôm cả khung chỉ làm chúng dính vào nhau thành một mảng. */
 #cc-hero {
   position:fixed; bottom:0; left:0;
-  height:clamp(300px, 50vh, 470px); width:auto; max-width:64vw;
+  /* Thấp và RỘNG, không cao và hẹp. Nhân vật thật chỉ cao 159 điểm ảnh trong kho art, nên
+     khung cao nửa màn hình chỉ để trống hai phần ba — mà nới người cho đầy khung là kéo
+     nhoè (xem CC_PHONG_TRAN trong game.js). */
+  height:clamp(230px, 38vh, 360px); width:auto; max-width:64vw;
   z-index:1; pointer-events:none; user-select:none;
   filter:drop-shadow(0 8px 18px rgba(0,0,0,.6));
   animation:hero-in .9s ease-out both;
@@ -1855,9 +1858,11 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   position:relative; flex:0 0 48px; width:48px; height:48px; overflow:hidden;
   border-radius:13px; border:2px solid rgba(10,14,32,.9);
   background:radial-gradient(70% 70% at 50% 30%, rgba(72,102,160,.75), rgba(10,15,34,.9)); }
+/* Ảnh nay là CHÂN DUNG VUÔNG cắt sẵn từ dải khung nhân vật thật (ccLopIcon) — đã là đầu và
+   vai rồi, nên phủ kín ô là xong. Bản trước nhét nguyên bức `pick_*` cao 300px vào đây
+   rồi phóng lên 150px và trượt lên để lấy phần đầu; nay không cần mẹo đó nữa. */
 #sect-select .cc-slot-art {
-  position:absolute; left:50%; top:-4px; width:150px; max-width:none; height:auto;
-  transform:translateX(-50%); }
+  position:absolute; inset:0; width:100%; height:100%; max-width:none; }
 #sect-select .cc-slot-del {
   right:9px; width:26px; height:26px; border-radius:9px;
   border:2px solid rgba(10,14,32,.8); background:rgba(16,22,46,.85); }

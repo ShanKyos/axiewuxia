@@ -1151,6 +1151,52 @@ hai tầng tiền cảnh. Mây và sương trôi được, và đó mới là th
 > trên ảnh dựng lại**, không tra được ở đâu. Bảng `LOP` trong công cụ nướng và `NEN_LOP` trong
 > `game.js` phải TRÙNG KHÍT.
 
+### ⚠ NĂM LỚP TRÊN SÂN KHẤU LÀ NHÂN VẬT THẬT, KHÔNG PHẢI `pick_*.webp`
+
+Bản đầu vẽ bộ tranh anh hùng `assets/nv/pick_<lớp>.webp` — tỉ lệ tám đầu, giáp nhiều lớp, vũ
+khí to bằng người. Chủ dự án gọi thẳng đó là "nhân vật fake": bấm Vào Game xong thì nhận một
+nhân vật KHÁC HẲN — thân nướng từ Spine, đầu to, mắt to, **cao đúng 159 điểm ảnh**.
+
+Nay sân khấu và chân dung trong ô nhân vật đều đọc `assets/title/lop/<lớp>.webp` + bảng hình
+học `data/lop_cho.js`, nướng bằng `tools/title/nuong_lop_cho.cjs`.
+
+- **Nướng bằng chính `heroSprite()` chạy trong trình duyệt thật.** Chép phép chồng lớp
+  (`NV_LOP` × `NV_LOP_HOP`) sang Python là dựng bản sao thứ hai của một luật đang sống — sửa
+  một lần là hai bên lệch, mà lệch kiểu đó chỉ lộ ra khi nhìn ảnh chụp.
+- **Vì sao phải nướng:** thân của năm lớp là các lớp rời, cộng lại **3,3 MB**. Màn chờ là thứ
+  TẢI ĐẦU TIÊN. Năm dải khung nướng sẵn chỉ **399 KB** (webp `quality=90`, `alpha_quality=100`
+  — alpha phải lossless, mất mát ở alpha hiện thành quầng xám quanh mọi mép).
+- **⚠ `CC_PHONG_TRAN` = 1,5.** 159px là TOÀN BỘ độ phân giải nhân vật này có trong kho, không
+  phải một lựa chọn. Kéo lên 400px cho đầy khung thì ra một bóng người nhoè đứng cạnh nền vẽ
+  tay sắc nét. Thà để nhân vật nhỏ trong một thế giới rộng — đó cũng đúng nhịp art Axie. Vì
+  thế `#cc-hero` là khung THẤP VÀ RỘNG (1040×420), không phải khung cao nửa màn hình.
+- **Tỉ lệ người ↔ Axie hỏi thẳng `chiCoTrongMan()`**, cùng hàm mà trong màn dùng. Luật thật
+  không phải "Axie cao 0,45 lần nhân vật" mà là "0,45 lần VÀ hộp vẽ ra không quá 0,55 lần theo
+  CẢ HAI chiều" — 16 con có 16 tỉ lệ rộng/cao (1,07 → 1,52) nên con bè nhất bị vế thứ hai thu
+  lại đáng kể. Bỏ vế đó thì con bè nhất trông như đang dắt người đi.
+- **Nợ:** dải khung là THÂN TRẦN của lớp, chưa mang trang bị. Nhân vật cấp 80 mặc đủ bộ vẫn
+  hiện thân trần trên màn chờ. Muốn đúng thì phải dựng sống bằng `heroSprite()` cho ô đang
+  chọn (640 KB cho MỘT lớp — mà đó đúng là bộ art game sẽ cần ngay sau khi bấm Vào Game, nên
+  không phí), giữ dải nướng làm hình lót lúc art chưa về.
+
+`tests/test_titlefx.js §7` gác: art phải đến từ `lop/*.webp`, đủ số ô, và không phóng quá trần.
+
+### Tông màu — ẤM và SÁNG, đây là chỗ "cute" của game
+
+Bản đầu dìm cả cảnh về xanh mực cho hợp HUD: đo được vùng trời/cây chỉ còn ~60/255 trong khi
+bản gốc là 94. Năm nhân vật mắt to đứng trên một vũng sáng xanh lạnh thì đọc ra **bóng ma**,
+không ra dễ thương. Nay nhuốm màu rất nhạt (`#eceafb`), viền tối chỉ còn ở đỉnh và đáy để chữ
+đọc được, và **đo lại vùng trời/cây ra 95 — đúng bằng bản gốc chưa chỉnh tông**.
+
+Đèn sân khấu đổi từ xanh lạnh sang **đào + bạc hà**, kèm một vệt hắt từ mặt đất lên chân. Đây
+là chỗ DUY NHẤT của game được phép ấm hơn phần còn lại: nó nằm SAU nhân vật, không phải trên
+khung giao diện.
+
+⚠ **Vũng sáng phải tắt dần về MỌI phía trước khi chạm mép canvas.** Đã dẫm bẫy này HAI lần:
+một lần bằng vầng sáng lớn hơn khung, một lần bằng `createLinearGradient` chạy suốt bề rộng.
+Cả hai lần thứ hiện ra là một **hình chữ nhật sáng hơn nền**, mép thẳng đứng thấy rõ mồn một.
+Nên `ccBoCuc` chừa lề ≥ `than*0.68` (bán kính đèn) và vũng sáng mặt đất lấy `r = min(cx, w−cx)`.
+
 ### Hai chế độ của sân khấu — cả hai đều phải sống
 
 - **Có nhân vật đang chọn** → vẽ lớp của ô đó + con Ragoon nó đang mang. Đây là mô hình đã chốt

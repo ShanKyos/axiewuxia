@@ -21898,14 +21898,14 @@ function nenPhu(W, H){
   // Dải tối ở ĐỈNH cho dòng tựa đọc được, dải tối ở ĐÁY cho cột ô nhân vật và nút đọc được.
   // Giữa khung để trống — chỗ đó là cây thế giới, dìm nó đi là dìm luôn lý do đổi nền.
   const d = q.createLinearGradient(0, 0, 0, H);
-  d.addColorStop(0.00, 'rgba(7,10,28,.50)');
-  d.addColorStop(0.20, 'rgba(7,10,28,.04)');
-  d.addColorStop(0.58, 'rgba(6,9,24,.06)');
-  d.addColorStop(1.00, 'rgba(4,6,18,.52)');
+  d.addColorStop(0.00, 'rgba(12,18,44,.38)');
+  d.addColorStop(0.24, 'rgba(12,18,44,.00)');
+  d.addColorStop(0.62, 'rgba(10,16,38,.00)');
+  d.addColorStop(1.00, 'rgba(8,14,32,.20)');
   q.fillStyle = d; q.fillRect(0, 0, W, H);
   const v = q.createRadialGradient(W / 2, H * 0.46, Math.min(W, H) * 0.28,
                                    W / 2, H * 0.46, Math.max(W, H) * 0.76);
-  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(2,4,14,.40)');
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(6,12,28,.14)');
   q.fillStyle = v; q.fillRect(0, 0, W, H);
   _nenPhuCv = c; _nenPhuKhoa = khoa;
   return c;
@@ -22041,7 +22041,7 @@ function drawTitleScene(g, W, H, t){
   // và triệu chứng (chỉ còn lớp trời, mất sạch núi/cây/đất) trông hệt như "art chưa tải".
   g.save();
   g.globalCompositeOperation = 'multiply';
-  g.fillStyle = '#aab3ea'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#eceafb'; g.fillRect(0, 0, W, H);
   g.restore();
   g.drawImage(nenPhu(W, H), 0, 0);
   nenVetNut(g, W, H, t);
@@ -22077,10 +22077,84 @@ function drawTitleScene(g, W, H, t){
 // cùng sống sau khi vào game nếu quên huỷ một cái — mà quên đúng một cái thì không ai thấy.
 const CC_AXIE_LOP = { thieulam:'ironshell', toanchan:'voltcrest', baidasan:'netherfang',
                       minhgiao:'emberjaw',  bug:'aurelion' };
-// Gót chân nằm ở đâu trong tranh `pick_*` (khổ 320x300) — ĐO trên art, không đoán. Bóng đổ,
-// mặt đất và con Axie đứng cạnh đều neo theo con số này; lệch một chút là nhân vật lún chân
-// hoặc lơ lửng, mà nhìn thì chỉ thấy "hình như hơi lạ".
-const CC_HERO_GOT = 0.84;
+// ── NĂM LỚP LÀ NHÂN VẬT THẬT TRONG GAME, KHÔNG PHẢI TRANH QUẢNG CÁO ────────────────────
+// Bản trước vẽ `assets/nv/pick_<lớp>.webp` — bộ tranh anh hùng tỉ lệ tám đầu, giáp nhiều lớp,
+// vũ khí to bằng người. Đẹp, nhưng người chơi bấm Vào Game rồi nhận một nhân vật KHÁC HẲN:
+// thân vẽ từ gói Spine, đầu to, mắt to, cao 159 điểm ảnh. Màn chờ quảng cáo một trò chơi
+// không tồn tại, và đó là lời phàn nàn của chủ dự án.
+//
+// Nay vẽ CHÍNH bảng khung của nhân vật trong màn — nướng sẵn qua `tools/title/nuong_lop_cho.cjs`
+// (chạy `heroSprite()` thật trong trình duyệt, xem chú thích ở đầu công cụ đó).
+//
+// ⚠ NƯỚNG chứ không dựng thẳng bằng `heroSprite()`: thân của năm lớp là các LỚP RỜI, cộng lại
+// 3,3 MB. Bắt màn hình ĐẦU TIÊN kéo ngần ấy để vẽ năm bóng người cao hai trăm điểm ảnh là
+// không đáng — năm dải khung nướng sẵn chỉ 399 KB.
+//
+// ⚠ ĐỪNG PHÓNG TO QUÁ `CC_PHONG_TRAN`. Bảng khung gốc chỉ cao 159 điểm ảnh (`CAO_THAN_NUONG`)
+// — đó là toàn bộ độ phân giải mà nhân vật này CÓ trong kho, không phải một lựa chọn. Kéo nó
+// lên 400 điểm ảnh cho đầy khung thì ra một bóng người nhoè, mà cạnh đó là nền vẽ tay sắc nét.
+// Thà để nhân vật nhỏ và đứng trong một thế giới rộng — đó cũng đúng nhịp của art Axie.
+const CC_PHONG_TRAN = 1.5;
+const CC_NHIP = 3.9;              // giây cho một vòng thở, lấy đúng nhịp khối đứng trong game
+const CC_LOP_IMG = {};
+// Bảng hình học do bộ nướng sinh ra, nạp từ data/lop_cho.js. Đọc qua `window.` y như
+// CHI_ANH/CHIMERA: game.js là script cổ điển, mà tệp dữ liệu là một thẻ <script> KHÁC —
+// tham chiếu trần thì eslint không thấy nó ở đâu, và mở game.js mà quên thẻ kia thì lỗi
+// ném ra ở giữa vòng vẽ chứ không phải ở chỗ thiếu.
+function ccLopHinh(sect){ return (window.LOP_CHO && window.LOP_CHO.o[sect]) || null; }
+function ccLopAnh(sect){
+  if (!ccLopHinh(sect)) return null;
+  let im = CC_LOP_IMG[sect];
+  if (!im){ im = new Image(); im.src = 'assets/title/lop/' + sect + '.webp'; CC_LOP_IMG[sect] = im; }
+  if (im.complete && im.naturalWidth) return im;
+  ccChoAnh(im);
+  return null;
+}
+// Chân dung vuông cho ô nhân vật — cắt ĐẦU VÀ VAI ra từ chính dải khung đã nướng, nên thứ
+// trong ô ĐÚNG là nhân vật sẽ hiện ra khi bấm Vào Game.
+const _ccIcon = {};
+function ccLopIcon(sect){
+  if (_ccIcon[sect]) return _ccIcon[sect];
+  const A = ccLopHinh(sect), im = ccLopAnh(sect);
+  if (!A || !im) return '';        // art chưa về — chỗ gọi tự lui về tranh cũ một nhịp
+  const n = 96, c = document.createElement('canvas');
+  c.width = c.height = n;
+  // Ô vuông cạnh bằng BỀ NGANG khung, lấy từ đỉnh xuống: đầu chiếm chừng một phần ba chiều
+  // cao thân nên ô này ôm gọn đầu và vai. Cắt theo chiều cao thân thì ra cả người, bé như hạt.
+  c.getContext('2d').drawImage(im, 0, 0, A.cw, A.cw, 0, 0, n, n);
+  return (_ccIcon[sect] = c.toDataURL('image/png'));
+}
+
+// Thẻ CHỌN LỚP ở màn tạo nhân vật — cùng nguồn art với sân khấu, nhưng đóng trong một khung
+// GIỮ NGUYÊN TỈ LỆ của bộ tranh cũ (320:300, gót ở 0,84 chiều cao). Nhờ vậy phiến đá, vũng
+// bóng và quầng chọn trong style.css — cả ba đều canh theo gót chân — không phải chỉnh một
+// con số nào.
+//
+// Khổ khung chọn 212x199 chứ không phải 320x300: ở khổ đó thân 159px chiếm 0,80 chiều cao,
+// tức vẽ ĐÚNG TỈ LỆ GỐC, không phóng. Trình duyệt thu/phóng một lần khi hiện thẻ là hết —
+// phóng ở đây rồi để CSS thu lại là hai lần lấy mẫu cho cùng một bức.
+const _ccThe = {};
+function ccLopThe(sect){
+  if (_ccThe[sect]) return _ccThe[sect];
+  const A = ccLopHinh(sect), im = ccLopAnh(sect);
+  if (!A || !im) return '';
+  const H = Math.round(A.than / 0.80), W = Math.round(H * 320 / 300);
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  // Gót chân rơi đúng 0,84 chiều cao — cùng mốc mà bộ tranh cũ có, và là mốc mà style.css
+  // đã canh phiến đá theo.
+  g.drawImage(im, 0, 0, A.cw, A.ch, Math.round((W - A.cw) / 2), Math.round(H * 0.84 - A.got),
+              A.cw, A.ch);
+  return (_ccThe[sect] = c.toDataURL('image/png'));
+}
+
+// Chiều cao THÂN vẽ ra, tính từ chiều cao khung. Kẹp theo `CC_PHONG_TRAN` nên dù cửa sổ cao
+// bao nhiêu thì bảng khung cũng không bị kéo nhoè.
+function ccThan(h, ty){
+  const A = ccLopHinh(CC_ORDER[0]);
+  return Math.min(h * ty, (A ? A.than : 159) * CC_PHONG_TRAN);
+}
 
 // Lớp của ô đang chọn. Trả null khi chưa có nhân vật nào — đó là tín hiệu chuyển sang hàng năm lớp.
 function ccHeroLop(){
@@ -22117,13 +22191,18 @@ function ccChoAnh(im){
     titleVeLai();
   }, { once: true });
 }
-// `cao` là chiều cao của TẤM TRANH vẽ ra, không phải của người — gót chân neo theo CC_HERO_GOT.
-function ccVeNguoi(g, sect, cx, fy, cao, mo){
-  const im = nvTai('pick_' + sect, 'webp');
-  if (!im){ ccChoAnh(NV_ANH['pick_' + sect + '.webp']); return false; }
-  const w = cao * im.naturalWidth / im.naturalHeight;
+// `than` là chiều cao THÂN vẽ ra, không phải chiều cao ô — ô còn chừa chỗ cho tóc và vũ khí
+// nhô ra, mà thứ mắt đọc là thân người. Gót chân neo theo `got` trong bảng hình học, do chính
+// bộ nướng đo rồi ghi ra.
+function ccVeNguoi(g, sect, cx, fy, than, mo, t){
+  const A = ccLopHinh(sect), im = ccLopAnh(sect);
+  if (!A || !im) return false;
+  const k = than / A.than;
+  const nK = window.LOP_CHO.nKhung;
+  const i = Math.floor(((t || 0) / CC_NHIP) * nK) % nK;
   g.save(); g.globalAlpha = mo == null ? 1 : mo;
-  g.drawImage(im, cx - w / 2, fy - CC_HERO_GOT * cao, w, cao);
+  g.drawImage(im, i * A.cw, 0, A.cw, A.ch,
+              cx - A.cw * k / 2, fy - A.got * k, A.cw * k, A.ch * k);
   g.restore();
   return true;
 }
@@ -22145,48 +22224,73 @@ function ccVeAxie(g, id, cx, fy, than, t){
 // nên một vầng sáng rộng hơn khung bị mép canvas cắt ngang — và thứ hiện ra là một HÌNH CHỮ
 // NHẬT sáng hơn nền, thấy rõ mồn một. Đã dựng đúng kiểu đó một lần rồi mới chụp ra thấy.
 // Vầng nhỏ đặt sau từng người thì tắt hẳn trước khi chạm mép.
+// Bảng màu ở đây cố ý ẤM và NHẠT — đào, bạc hà — chứ không phải xanh lạnh như bản trước.
+// Art Axie đọc ra "dễ thương" bằng sắc ấm và độ sáng cao; đặt năm nhân vật mắt to lên một
+// vũng sáng xanh mực thì chúng đọc thành bóng ma. Đây cũng là chỗ DUY NHẤT của màn chờ được
+// phép ấm hơn phần còn lại của game: nó nằm sau nhân vật, không phải trên khung giao diện.
 function ccVeDen(g, cx, fy, cao){
-  const cy = fy - cao * 0.34, r = cao * 0.34;
+  const cy = fy - cao * 0.42, r = cao * 0.62;
   const gr = g.createRadialGradient(cx, cy, 0, cx, cy, r);
-  gr.addColorStop(0, 'rgba(148,206,226,.30)');
-  gr.addColorStop(0.5, 'rgba(120,176,220,.12)');
-  gr.addColorStop(1, 'rgba(120,176,220,0)');
+  gr.addColorStop(0.00, 'rgba(255,214,180,.52)');
+  gr.addColorStop(0.42, 'rgba(168,236,222,.24)');
+  gr.addColorStop(1.00, 'rgba(130,200,220,0)');
   g.save(); g.globalCompositeOperation = 'lighter';
-  g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fill(); g.restore();
+  g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fill();
+  // Ánh hắt từ mặt đất lên chân — không có nó thì hai ống chân chìm hẳn vào vũng bóng.
+  const sn = g.createRadialGradient(cx, fy, 0, cx, fy, cao * 0.46);
+  sn.addColorStop(0.00, 'rgba(255,196,158,.34)');
+  sn.addColorStop(1.00, 'rgba(255,190,150,0)');
+  g.fillStyle = sn; g.beginPath(); g.arc(cx, fy, cao * 0.46, 0, 7); g.fill();
+  g.restore();
 }
 // ── BỐ CỤC SÂN KHẤU ─────────────────────────────────────────────────────────────────
-// MỘT chỗ tính toạ độ, hai chỗ dùng: tấm dựng sẵn (người + bóng + đèn) và lượt vẽ mỗi khung
-// (Axie). Tách làm hai bảng toạ độ là kiểu lệch không ai nhìn ra — con Axie đứng lệch khỏi
-// người nó đi cùng đúng vài điểm ảnh, và chỉ lộ ra khi đổi cỡ cửa sổ.
+// MỘT chỗ tính toạ độ, hai chỗ dùng: tấm dựng sẵn (bóng + đèn) và lượt vẽ mỗi khung (người +
+// Axie). Tách làm hai bảng toạ độ là kiểu lệch không ai nhìn ra — vũng bóng nằm lệch khỏi gót
+// đúng vài điểm ảnh, và chỉ lộ ra khi đổi cỡ cửa sổ.
+//
+// Tỉ lệ NGƯỜI ↔ AXIE hỏi thẳng `chiCoTrongMan()` — cùng cái hàm mà trong màn dùng. Đừng tự
+// nhân một hệ số: luật thật không phải "Axie cao 0,45 lần nhân vật" mà là "cao 0,45 lần VÀ
+// hộp vẽ ra không quá 0,55 lần theo CẢ HAI chiều", và 16 con có 16 tỉ lệ rộng/cao (1,07 →
+// 1,52) nên con bè nhất bị luật thứ hai thu lại đáng kể. Bỏ qua vế đó thì màn chờ hứa một cỡ
+// còn vào game ra một cỡ — mà con bè nhất chính là con trông như đang dắt người đi.
+function ccAxieThan(id, than){
+  const co = chiCoTrongMan(id);
+  // `than` là thân NGƯỜI trên sân khấu; quy ngược ra NV_CAO tương đương rồi mới thu.
+  return co.than * ((than * HERO_H / CAO_THAN_NUONG) / NV_CAO);
+}
 function ccBoCuc(w, h, sect){
-  const fy = h * 0.83;                         // đường đất chung cho mọi thứ đứng trong khung
   if (sect){
-    const cao = h * 0.92, than = h * 0.21;
-    return { nguoi: [{ k: sect, cx: w * 0.42, fy, cao }],
+    const than = ccThan(h, 0.60), fy = h * 0.74, id = ccHeroAxie(sect);
+    return { nguoi: [{ k: sect, cx: w * 0.40, fy, than }],
              // Axie đứng TRƯỚC và THẤP hơn một chút — nó gần ống kính hơn, mà gần hơn thì
              // gót chân phải nằm thấp hơn, nếu không hai thứ trông như dán trên cùng một
              // mặt phẳng.
-             axie: [{ id: ccHeroAxie(sect), cx: w * 0.66, fy: fy + h * 0.085, than, pha: 0 }] };
+             axie: [{ id, cx: w * 0.60, fy: fy + h * 0.085, than: ccAxieThan(id, than), pha: 0 }] };
   }
-  // Hàng năm lớp. Chừa lề 5% hai bên rồi mới chia năm: chia thẳng bề rộng khung thì hai
-  // người ngoài cùng đứng ở tâm ô đầu/cuối, mà tranh `pick_*` rộng gấp rưỡi ô — nửa người
-  // ngoài cùng bị cắt mất ngay ở mép canvas.
-  const le0 = w * 0.05, b = (w - le0 * 2) / CC_ORDER.length;
-  const cao = h * 0.72, than = h * 0.17;
+  // Hàng năm lớp. Chừa lề hai bên rồi mới chia năm: chia thẳng bề rộng khung thì hai người
+  // ngoài cùng đứng ở tâm ô đầu/cuối và nửa con Axie của họ bị cắt ngay ở mép canvas.
+  const than = ccThan(h, 0.50), fy = h * 0.72;
+  // Lề trái/phải phải ĐỦ CHỨA VŨNG ĐÈN của người ngoài cùng, không chỉ đủ chứa thân người.
+  // Đèn có bán kính 0,62×thân; lề hẹp hơn thế thì vũng sáng bị mép canvas cắt phựt và hiện ra
+  // thành một cạnh dọc sáng hơn nền — cùng họ với cái bẫy ghi ở ccVeDen.
+  const le0 = Math.max(w * 0.04, than * 0.68), b = (w - le0 * 2) / CC_ORDER.length;
   // So le lên xuống: năm bóng người cao bằng nhau xếp thẳng một hàng thì thành dải răng lược.
   // Lệch nhau một chút là ra một NHÓM đứng cạnh nhau.
-  const le = i => (i % 2 ? 1 : -1) * h * 0.022;
+  const le = i => (i % 2 ? 1 : -1) * h * 0.025;
   return {
-    nguoi: CC_ORDER.map((k, i) => ({ k, cx: le0 + b * (i + 0.5), fy: fy + le(i), cao, mo: 0.97 })),
-    axie:  CC_ORDER.map((k, i) => ({ id: CC_AXIE_LOP[k], cx: le0 + b * (i + 0.5) + b * 0.28,
-                                     fy: fy + le(i) + h * 0.09, than, pha: i * 0.37 })),
+    nguoi: CC_ORDER.map((k, i) => ({ k, cx: le0 + b * (i + 0.5) - b * 0.12, fy: fy + le(i), than })),
+    axie:  CC_ORDER.map((k, i) => ({ id: CC_AXIE_LOP[k], cx: le0 + b * (i + 0.5) + b * 0.26,
+                                     fy: fy + le(i) + h * 0.085,
+                                     than: ccAxieThan(CC_AXIE_LOP[k], than), pha: i * 0.37 })),
   };
 }
 
-// Người + bóng + đèn KHÔNG nhúc nhích — dựng sẵn một lần rồi mỗi khung chỉ dán lại. Vẽ lại
-// năm tranh có co giãn cộng mười lăm gradient mỗi khung là chỗ tốn nhất của cả màn chờ (đo ở
-// 1920x1080 chạy bằng CPU: sân khấu ăn ~7 ms/khung, nhiều hơn cả mười lớp nền cộng lại).
-// Chỉ con Axie là động, và nó vẽ SAU tấm dựng sẵn nên vẫn đứng trước mọi thân người.
+// Bóng đổ và đèn hắt KHÔNG nhúc nhích — dựng sẵn một lần rồi mỗi khung chỉ dán lại. Mười lăm
+// gradient phủ kín mỗi khung là chỗ tốn nhất của cả màn chờ; còn bản thân NGƯỜI và AXIE thì vẽ
+// sống, vì bảng khung của chúng bé tí (ô 71x159) nên một nhát blit gần như không tốn gì.
+//
+// ⚠ Bản trước dựng sẵn cả người vào tấm này, hồi người còn là một tấm tranh tĩnh. Nay người
+// THỞ — dựng sẵn là đóng băng họ lại ở khung 0, mà triệu chứng thì chỉ là "hình như hơi đơ".
 let _ccNenCv = null, _ccNenKhoa = '';
 function ccNenSan(w, h, sect, bc){
   const khoa = Math.round(w) + 'x' + Math.round(h) + '|' + (sect || 'dan');
@@ -22194,11 +22298,34 @@ function ccNenSan(w, h, sect, bc){
   const c = document.createElement('canvas');
   c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h));
   const g = c.getContext('2d');
-  for (const n of bc.nguoi){
-    ccVeDen(g, n.cx, n.fy, n.cao);
-    ccVeBong(g, n.cx, n.fy, n.cao * (sect ? 0.26 : 0.22), sect ? 0.62 : 0.5);
-    ccVeNguoi(g, n.k, n.cx, n.fy, n.cao, n.mo);
+  // Vũng sáng MẶT ĐẤT ôm cả nhóm, vẽ trước mọi thứ. Dải dưới của bức Lunacia là tiền cảnh gai
+  // gần như đen — thiếu vũng này thì năm nhân vật đứng trên một mảng đen và cả nhóm chìm
+  // nghỉm, dù mỗi người đã có đèn riêng.
+  //
+  // ⚠ PHẢI là vũng TẮT DẦN VỀ MỌI PHÍA, không phải một dải ngang chạy suốt bề rộng. Canvas
+  // này chỉ chiếm nửa trái màn hình, nên một dải sáng đều tay bị mép canvas cắt phựt — thứ
+  // hiện ra là một HÌNH CHỮ NHẬT sáng hơn nền, thấy rõ mồn một. Đúng cái bẫy đã ghi ở ccVeDen,
+  // và tôi vừa dẫm lại nó một lần nữa bằng createLinearGradient.
+  {
+    const xs = bc.nguoi.map(n => n.cx);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+    const fy = bc.nguoi.reduce((m, n) => m + n.fy, 0) / bc.nguoi.length;
+    // Bán kính KHÔNG được vượt quá khoảng cách tới mép gần nhất: vượt là vũng sáng bị cắt ở
+    // mép canvas, đúng thứ vừa phải sửa. Lấy min với cả hai phía rồi mới vẽ.
+    const r = Math.min(cx, w - cx);
+    const gr = g.createRadialGradient(cx, fy, 0, cx, fy, r);
+    gr.addColorStop(0.00, 'rgba(172,232,220,.20)');
+    gr.addColorStop(0.45, 'rgba(150,210,216,.10)');
+    gr.addColorStop(1.00, 'rgba(120,180,210,0)');
+    g.save(); g.globalCompositeOperation = 'lighter';
+    g.translate(cx, fy); g.scale(1, 0.42); g.translate(-cx, -fy);
+    g.fillStyle = gr; g.beginPath(); g.arc(cx, fy, r, 0, 7); g.fill(); g.restore();
   }
+  for (const n of bc.nguoi){
+    ccVeDen(g, n.cx, n.fy, n.than);
+    ccVeBong(g, n.cx, n.fy, n.than * 0.38, 0.6);
+  }
+  for (const a of bc.axie) ccVeBong(g, a.cx, a.fy, a.than * 0.62, 0.5);
   _ccNenCv = c; _ccNenKhoa = khoa;
   return c;
 }
@@ -22216,10 +22343,11 @@ function ccHeroVe(cv, t){
   const sect = ccHeroLop();
   const bc = ccBoCuc(w, h, sect);
   g.drawImage(ccNenSan(w, h, sect, bc), 0, 0, w, h);
-  for (const a of bc.axie){
-    ccVeBong(g, a.cx, a.fy, a.than * (sect ? 0.6 : 0.58), sect ? 0.55 : 0.45);
-    ccVeAxie(g, a.id, a.cx, a.fy, a.than, t + a.pha);
-  }
+  // Người TRƯỚC, Axie SAU — năm con Axie đứng ở hàng trước thì con nào cũng phải nằm trên mọi
+  // thân người, kể cả thân người của lớp bên cạnh. Vẽ xen kẽ từng cặp thì lớp sau che mất con
+  // Axie của lớp trước.
+  for (const n of bc.nguoi) ccVeNguoi(g, n.k, n.cx, n.fy, n.than, n.mo, t);
+  for (const a of bc.axie) ccVeAxie(g, a.id, a.cx, a.fy, a.than, t + a.pha);
 }
 
 // ═══════════ VŨ KHÍ DANH TÍNH — mỗi lớp một binh khí riêng ═══════════
@@ -24157,11 +24285,11 @@ function ccSlotsRender(){
     row.className = 'cc-slot' + (ccSlot === i ? ' sel' : '');
     row.setAttribute('role', 'button'); row.tabIndex = 0;
     const noi = (MAPS[sv.curMap] && MAPS[sv.curMap].name) || '—';
-    // Chân dung lấy từ ART LỚP (`pick_*.webp`) chứ không phải thẻ dựng bằng đường.
-    // ⚠ PHẢI có khung bọc `.cc-slot-anh`: `pick_*` là tranh CẢ NGƯỜI cao 300px, nhét nguyên
-    // bức vào ô 48px thì cái đầu còn 7px và năm lớp trông y hệt nhau. Khung bọc cắt bớt, còn
-    // tấm ảnh bên trong phóng to lên 150px và trượt lên — chỉ chừa lại đầu với vai.
-    row.innerHTML = `<span class="cc-slot-anh"><img class="cc-slot-art" src="${heroPickUrl(pl.sect)}" alt="" onerror="this.style.visibility='hidden'"></span>
+    // Chân dung cắt từ dải khung NHÂN VẬT THẬT, cùng nguồn với sân khấu — xem ccLopIcon().
+    // Trước đây là `pick_*.webp`, bộ tranh anh hùng: ô nhân vật hứa một dáng người mà bấm Vào
+    // Game thì ra một dáng khác. Dải khung chưa tải xong thì tạm lui về art cũ, chứ không để
+    // ô trống — `ccLopIcon` trả rỗng đúng mấy trăm mili giây đầu.
+    row.innerHTML = `<span class="cc-slot-anh"><img class="cc-slot-art" src="${ccLopIcon(pl.sect) || heroPickUrl(pl.sect)}" alt="" onerror="this.style.visibility='hidden'"></span>
       <div class="cc-slot-txt">
         <div class="cc-slot-nm">${pl.name || '—'}</div>
         <div class="cc-slot-sub">Cấp <b>${pl.level || 1}</b> · <span style="color:${sc.color || 'var(--text-dim)'}">${sc.name || '—'}</span></div>
@@ -24207,7 +24335,9 @@ function ccRender(){
     d.className = 'cc-card' + (ccSect === k ? ' sel' : '');
     d.setAttribute('role', 'button');
     d.tabIndex = 0;
-    d.innerHTML = `<img class="cc-art" src="${heroPickUrl(k)}" alt="">
+    // Ảnh thẻ là NHÂN VẬT THẬT (ccLopThe), không còn là bộ tranh anh hùng `pick_*`: người chơi
+    // chọn cái gì thì phải nhận đúng cái đó. Dải khung chưa tải xong thì tạm lui về art cũ.
+    d.innerHTML = `<img class="cc-art" src="${ccLopThe(k) || heroPickUrl(k)}" alt="">
       <div class="cc-nm" style="color:${sc.color}">${sc.name}</div>
       <div class="cc-tag">${sc.role || ''}</div>`;
     const pick = () => { ccSect = k; AudioSys.sfx('ui', 0.5); ccRender(); };
