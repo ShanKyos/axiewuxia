@@ -9591,8 +9591,11 @@ function mobLblQuanTrong(m){
   return !!(m.def.bossKind || m.def.boss || m.type === 'boss' || m.eliteName
             || m.tiep || m.revenge || (m.db && m.db.length));
 }
+let _lblMode = 'gon';   // mức nhãn của KHUNG NÀY — tính một lần trong mobLabelPass(), chỗ vẽ đọc lại.
+// Hỏi mobLabelMode() trong vòng vẽ là một lời gọi hàm + hai phép so chuỗi cho MỖI con quái mỗi
+// khung — 90 con × 60 khung = 5.400 lần mỗi giây cho một giá trị không đổi trong cả khung.
 function mobLabelPass(){
-  const mode = mobLabelMode();
+  const mode = _lblMode = mobLabelMode();
   if (mode === 'tat'){ for (const m of mobs) m._lbl = false; return; }
   // Con gần con trỏ nhất. Ở mức Gọn đây là cách duy nhất đọc tên một con thường, nên nó phải
   // có — không thì Gọn thành Tắt trá hình. mouseWorld khởi tạo (0,0) = góc bản đồ nên phải hỏi
@@ -12269,7 +12272,7 @@ function drawMob(m){
   ctx.fillStyle = d.boss ? '#ff3a3a' : '#c0392b';
   ctx.fillRect(dx-bw/2, topY-10, bw*Math.max(0,m.hp/m.maxHp), 4);
   // huy hiệu nguyên tố (◆♣❄☼▲) + tên quái
-  if (m._lbl === false || mobLabelMode() === 'tat') return;   // 'tat' là CHUỖI — truthy, đừng hỏi !SETTINGS.mobName
+  if (m._lbl === false || _lblMode === 'tat') return;   // 'tat' là CHUỖI — truthy, đừng hỏi !SETTINGS.mobName
   const _sl = (m._lblN || 1) > 1 ? ` ×${m._lblN}` : '';
   const nameTxt = `${d.bossKind === 'tranai' ? '✦ TƯỚNG QUÂN ' : d.bossKind === 'thuve' ? '◆ VỆ BINH TRỤ ' : m.tiep ? '◈ TIẾP SỨC ' : ''}${m.eliteName ? m.eliteName + ' · ' : ''}${m.name}${m.revenge ? ' ⚔TRUY THÙ' : ''} · C${d.lv}${_sl}`;
   // Dị Biến hiện dưới tên: elite đủ danh sách, quái thường trong bầy một ký hiệu mờ. Hệ hay mà vô
