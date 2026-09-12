@@ -102,6 +102,18 @@ MAPS = {
     tha='tay',
     ntrum=4, thuoc=10,
   ),
+  # Map PHẲNG CUỐI CÙNG. Không sai phép chiếu (nhìn từ trên xuống), nhưng tấm nền là một cảnh
+  # ĐẦM SEN: lá súng, hoa sen, mặt nước xanh nhạt trải kín. Kéo phủ thế giới rồi cho đi khắp mặt
+  # tranh thì cả người chơi lẫn bầy quái đứng TRÊN MẶT NƯỚC — cùng một triệu chứng "lơ lửng",
+  # chỉ khác là lơ lửng trên nước thay vì trên trời.
+  'daohoa': dict(
+    W=4600, H=3400, hat=53,
+    ria={'tay':  ('chungnam', 'Lối Tây → Werebear Woods'),
+         'dong': ('loimon',   'Lối Đông → Lối Mòn Corran'),
+         'bac':  ('trungnut', 'Lối Bắc → Trũng Nứt Corran')},
+    tha='tay',
+    ntrum=4, thuoc=10,
+  ),
   'comoc': dict(
     W=4800, H=3600, hat=43,
     ria={'nam':  ('chungnam', 'Lối Nam → Werebear Woods'),

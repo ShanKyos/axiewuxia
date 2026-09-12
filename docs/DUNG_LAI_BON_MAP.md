@@ -149,30 +149,86 @@ BẮC thì đầu bên `comoc` phải ở mép NAM. Nay mỗi mép đúng một 
 
 ---
 
-## 5. NỢ CÒN LẠI — đọc trước khi làm tiếp
+## 5. Đợt ba: cây/đá theo biome, snow-đọc-ra-trời, và map phẳng cuối cùng
 
-### 5.1 ~~Chưa có bộ viên riêng cho ba biome~~ — ĐÃ XONG ở đợt hai, xem §4.2
+### 5.1 ⚠ TÔI ĐÃ CHỮA LỖI "LƠ LỬNG" RỒI TẠO LẠI NÓ BẰNG MÀU
 
-### 5.2 ~~Hai map còn nợ TẦNG MÁY~~ — ĐÃ XONG ở đợt hai, xem §4.3
+Chụp lại cả 13 map sau đợt hai thì **Bird Tribe Heights đọc ra đúng một khoảng TRỜI CÓ MÂY**:
+nhân vật và cả bầy quái lơ lửng giữa nền lam nhạt, còn vệt lối mòn thì thành dải mây.
 
-### 5.3 CÂY/ĐÁ VẪN DÙNG CHUNG MỘT BỘ — nợ còn lại lớn nhất
+Nguyên nhân là **màu tôi tự chọn**, không phải phép chiếu: viên tuyết để `(0,86 0,90 0,97)` —
+trắng ngả lam rất sáng — còn lối mòn `(0,68 0,80 0,92)` chỉ đậm hơn một chút, nên cả mặt sàn nằm
+gọn trong dải màu mà mắt đọc là bầu trời. Tệ hơn: **vật nhỏ trên tuyết cũng màu lam nhạt**
+(đá `(0,74 0,80 0,88)`), tức tàng hình — mặt phẳng sáng đều mà không một mốc tương phản nào thì
+không có gì nói rằng đó là một BỀ MẶT.
 
-`ISO_CAY` (6 dáng cây), `ISO_BUI`, `ISO_DA`, `ISO_NHO` là hằng **toàn cục**, không đổi theo map.
-Nên Bird Tribe Heights có tuyết phủ kín sàn mà vẫn mọc cây lá xanh, Reptile Sunstone Flats cháy
-đỏ mà cũng cây lá xanh ấy. Sàn đã ra đúng vùng, vật thể đứng trên sàn thì chưa.
+Đây đúng bài học đã ghi ở lớp phủ tối, chỉ đổi chiều: *đừng để màu nói một đằng còn hình học nói
+một nẻo.* Sửa bằng ba việc, và việc thứ ba mới là việc chính:
 
-Chữa giống hệt cách đã chữa cho sàn: thêm khoá `isoCay` / `isoNho` đọc theo map (ba dòng, cùng
-lối `isoCo`/`isoDat`/`isoVet`), rồi nướng thêm bộ cây theo biome bằng `nuong_biome.py` —
-`nuong_vat` + `_cay_thong`/`_cay_tan`/`_da` đã nhận màu lá và hạt làm tham số, nên thêm một bộ
-là thêm vài dòng. Nay có Blender rồi thì đây là việc làm được ngay.
+1. kéo nền xuống `(0,78 0,79 0,84)` — ra khỏi dải "trắng chói";
+2. đẩy lối mòn xuống `(0,56 0,58 0,66)` — **mở rộng khoảng cách sáng** giữa nền và lối, vì một
+   lối mòn sẫm cắt ngang chính là thứ nói "đây là mặt đất";
+3. cho đá **xám sẫm** và túm cỏ khô nâu chõi lên — mốc tương phản để mắt bám vào.
 
-### 5.4 Sáu tấm JPEG cũ còn nằm trong kho
+### 5.2 Cây/đá theo biome — `isoCayBo` · `isoNhoBo`
 
-`bg_ngoai.jpg` · `bg_tuyettinh.jpg` · `bg_mongco.jpg` · `bg_nhanmon.jpg` · `bg_chungnam.jpg` ·
-`bg_comoc.jpg` đã gỡ khỏi `MAP_BG_SRC` nhưng chưa xoá khỏi đĩa — giữ lại một đợt để đối chiếu.
-Xoá được khi đã chốt (≈4,0 MB).
+`ISO_CAY`/`ISO_NHO` là hằng toàn cục, nên sàn đã ra đúng vùng mà vật thể đứng trên sàn thì chưa:
+Bird Tribe Heights tuyết phủ kín vẫn mọc cây lá xanh. Mà **vật thể mới là thứ mắt bắt trước**, vì
+nó có đường viền.
 
-### 5.5 Bốn bộ viên cũ KHÔNG có trong bộ nướng
+⚠ **Hai cặp khoá rất dễ lẫn:** `isoCay`/`isoNho` là **số lượng** (vốn đã có), `isoCayBo`/`isoNhoBo`
+là **bộ sprite** (mới). Đọc theo map cùng lối `isoCo`/`isoDat`/`isoVet`.
+
+| Map | bộ cây | bộ vật nhỏ |
+|---|---|---|
+| Plant Tribe Glade | `cay_vuon` tán hoa hồng | cỏ trảng + bụi hoa + đá |
+| Werebear Woods | `cay_rung` lá sẫm | cỏ rừng + bụi + đá |
+| Bug Tribe Tunnels | `cay_to` **cột măng đá** | đá kitin |
+| Bird Tribe Heights | `cay_tuyet` lá kim trĩu tuyết | cỏ khô + **đá xám sẫm** |
+| Reptile Sunstone Flats | `cay_tro` cây cháy sém | cỏ khô + đá nung đỏ |
+| Dusk Marsh | `cay_bun` cây rủ | cỏ lác + đá phủ rêu |
+
+⚠ Tên khoá nói "cây" nhưng **nó không hứa phải là cây**: tường của một cái tổ thì không làm bằng
+cây, nên Bug Tribe Tunnels khai cột măng đá. `isoCayBo` là *bộ vật DỰNG TƯỜNG VÙNG*.
+
+### 5.3 Plant Tribe Glade — map phẳng cuối cùng
+
+Không sai phép chiếu (nhìn từ trên xuống), nhưng tấm nền là một cảnh **đầm sen**: lá súng, hoa
+sen, mặt nước xanh nhạt trải kín. Kéo phủ thế giới rồi cho đi khắp mặt tranh thì cả người chơi
+lẫn bầy quái **đứng trên mặt nước** — cùng triệu chứng "lơ lửng", chỉ khác là lơ lửng trên nước.
+
+Nay 2600×1900 → **4600×3400**, sàn **79,6%**, 3 miền × 3 cụm → **6 × 3**, bộ viên trảng cây +
+lối sỏi riêng. Chất "có hoa" của tấm cũ giữ lại bằng **bộ cây tán hồng**, chứ không bằng cách
+bắt ai đứng trên mặt nước.
+
+**⇒ 12/12 map ngoài trời nay lát viên. Không còn tranh nền phẳng kéo giãn nào.**
+
+### 5.4 Bảng map sinh bằng máy
+
+`tools/bang_map.js` → `docs/BANG_MAP.md`: thống kê từng map xếp theo dải cấp và theo vai trò
+chính tuyến, đọc từ **game đang chạy** (`packsOf` · `_navGrid` · `mapBanSac`). Bảng chép tay chỉ
+đúng tới lần sửa `vung` kế tiếp — cùng luật đã áp cho `mapBanSac()`.
+
+⚠ `docs/DO_MAP_HIEN_TRANG.md` là **mốc so ĐÓNG BĂNG** của một đợt đo cũ (còn liệt `tuongduong`
+và tên "Petalshade" đã bỏ). Cố ý không cập nhật — đừng nhầm nó với bảng hiện trạng.
+
+---
+
+## 6. NỢ CÒN LẠI — đọc trước khi làm tiếp
+
+### 6.1 ~~Chưa có bộ viên riêng cho ba biome~~ — ĐÃ XONG ở đợt hai, xem §4.2
+
+### 6.2 ~~Hai map còn nợ TẦNG MÁY~~ — ĐÃ XONG ở đợt hai, xem §4.3
+
+### 6.3 ~~CÂY/ĐÁ VẪN DÙNG CHUNG MỘT BỘ~~ — ĐÃ XONG ở đợt ba, xem §5.2
+
+### 6.4 Bảy tấm JPEG cũ còn nằm trong kho
+
+`bg_ngoai` · `bg_tuyettinh` · `bg_mongco` · `bg_nhanmon` · `bg_chungnam` · `bg_comoc` ·
+`bg_daohoa` đã gỡ khỏi `MAP_BG_SRC` nhưng chưa xoá khỏi đĩa — giữ lại một đợt để đối chiếu.
+Xoá được khi đã chốt (≈4,4 MB).
+
+### 6.5 Bốn bộ viên cũ KHÔNG có trong bộ nướng
 
 `nen_da1-4` · `nen_duong1-4` · `nen_co4` · `nen_dat3-4` nằm trên đĩa nhưng **không script nào
 trong repo sinh ra chúng** — `nuong_tile.py` chỉ nướng `nen_co1-3` và `nen_dat1-2`. Chúng là di

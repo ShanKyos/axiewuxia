@@ -1458,40 +1458,44 @@ chui vào túi giữa mấy gốc cây, vứt waypoint tính lại là thoát. B
 
 ## Map tranh isometric: chặn bằng ĐA GIÁC SÀN, không bằng ellipse
 
-> ⚠ **TRANH NỀN PHẲNG ĐÃ GỠ GẦN HẾT — 11/12 map nay LÁT VIÊN. Xem `docs/DUNG_LAI_BON_MAP.md`.**
+> ⚠ **TRANH NỀN PHẲNG ĐÃ GỠ HẾT — 12/12 map ngoài trời LÁT VIÊN.** Xem `docs/DUNG_LAI_BON_MAP.md`
+> và bảng hiện trạng `docs/BANG_MAP.md` (sinh bằng `tools/bang_map.js`, **đừng sửa tay**).
 >
 > Vì `game.js` kéo tranh nền phủ kín thế giới rồi cho đi khắp mặt tranh, **tranh nền CHÍNH LÀ
-> mặt đất** — tấm nào vẽ trời ở nửa trên thì đi lên phía bắc map là đi vào bầu trời. Đó là toàn
-> bộ nguyên nhân của lỗi "nhân vật như đang ở trên không trung".
+> mặt đất**. Tấm nào vẽ trời ở nửa trên thì đi lên phía bắc map là đi vào bầu trời; tấm vẽ mặt
+> nước thì cả bầy quái đứng trên nước. Đó là toàn bộ nguyên nhân của lỗi "lơ lửng".
 >
-> Sáu map đã dựng lại theo khuôn Rẻo Rừng Corran (`sanIso` + `diTrong` + `isoCum` + `isoDuong`,
-> hình sinh bằng `tools/iso/vung_bon.py`), khổ 4400×3300 → 5200×3800, sàn đi được 78-85%:
-> `ngoai` · `chungnam` · `comoc` · `tuyettinh` · `mongco` · `nhanmon`.
-> **Còn đúng `daohoa` là JPEG phẳng 2600×1900** — nó nhìn từ trên xuống nên không lơ lửng.
+> Bảy map đã dựng lại theo khuôn Rẻo Rừng Corran (`sanIso` + `diTrong` + `isoCum` + `isoDuong`,
+> hình sinh bằng `tools/iso/vung_bon.py`), sàn đi được 72-85%: `ngoai` · `chungnam` · `daohoa` ·
+> `comoc` · `tuyettinh` · `mongco` · `nhanmon`.
 >
-> ⚠ **BẢNG CŨ Ở ĐÂY TỪNG LIỆT SÁU TẤM "SAI PHÉP CHIẾU", VÀ NÓ SAI MỘT DÒNG — `chungnam`.** Đo
-> lại thì `bg_chungnam.jpg` và `bg_corran.jpg` là **cùng một tệp** (md5 `9310c07f…`, thay từ
-> commit `26dff8d`); nó nhìn TỪ TRÊN XUỐNG. Con số "5,7%" đo trên tấm đã bị thay. Bài học chung:
-> **số đo có hạn dùng** — tài sản đổi thì số đo cũ thành lời nói dối, mà kiểu nói dối này không
-> ai phát hiện được vì nó nằm trong tài liệu chứ không nằm trong bài kiểm.
+> ### ⚠ HAI LẦN TÔI TỰ TẠO LẠI CHÍNH LỖI VỪA CHỮA
+>
+> 1. **Bảng cũ ở đây liệt sáu tấm "sai phép chiếu" và SAI một dòng — `chungnam`.** Đo lại thì
+>    `bg_chungnam.jpg` và `bg_corran.jpg` là **cùng một tệp** (md5 `9310c07f…`, thay từ commit
+>    `26dff8d`). Con số "5,7%" đo trên tấm đã bị thay. **Số đo có hạn dùng** — tài sản đổi thì
+>    số đo cũ thành lời nói dối, mà kiểu nói dối này nằm trong tài liệu chứ không trong bài kiểm.
+> 2. **Chữa xong lỗi lơ lửng do PHÉP CHIẾU thì tôi tạo lại đúng lỗi ấy bằng MÀU.** Viên tuyết
+>    tự chọn `(0,86 0,90 0,97)` với lối mòn chỉ đậm hơn chút, cộng đá cũng màu lam nhạt (tàng
+>    hình) ⇒ Bird Tribe Heights chụp ra đúng một khoảng TRỜI CÓ MÂY. Ba luật rút ra cho mọi mặt
+>    sàn SÁNG: ra khỏi dải trắng chói · **mở rộng khoảng cách sáng giữa nền và lối mòn** · có mốc
+>    tương phản sẫm (đá, cỏ khô) để mắt bám. Mặt phẳng sáng đều không mốc thì đọc ra khoảng không.
+>    *Đừng để màu nói một đằng còn hình học nói một nẻo* — cùng bài học với lớp phủ tối đã gỡ.
 >
 > ### ⚠ BLENDER CÓ, ĐỪNG BÁO LÀ KHÔNG
 >
 > `which blender` trượt, nhưng Blender phát hành trên PyPI dưới dạng **mô-đun Python**:
-> `pip install bpy==4.2.0` (519 MB, khớp Python 3.11 của máy này). Mà `tools/iso/nuong_tile.py`
-> vốn viết theo lối `import bpy` chạy bằng `python3` chứ không phải `blender --background` — tức
-> đường ống đã sẵn sàng cho đúng cách cài ấy từ đầu. Đo được **1,9 giây một viên**.
+> `pip install bpy==4.2.0` (khớp Python 3.11 của máy này). Mà `tools/iso/nuong_tile.py` vốn viết
+> theo lối `import bpy` chạy bằng `python3` chứ không phải `blender --background` — đường ống đã
+> sẵn sàng cho đúng cách cài ấy từ đầu. Đo được **1,9 giây một viên**. Tôi đã suy từ `which` ra
+> "sandbox không có Blender" và báo cáo nó như ràng buộc cứng, làm ba map phải đi mượn chất liệu
+> sàn suốt một đợt. **"Công cụ X không có" là khẳng định phải KIỂM.**
 >
-> Tôi đã suy từ `which` ra "sandbox không có Blender" và báo cáo nó như một ràng buộc cứng, làm
-> ba map phải đi mượn chất liệu sàn suốt một đợt. **"Công cụ X không có" là khẳng định phải KIỂM.**
->
-> Bộ viên theo biome: `python3 tools/iso/nuong_biome.py` (tuyết · băng · đá nung · lối cháy ·
-> rêu đầm · bùn · nền rừng · lối mòn · sàn tổ · lối hang). Khai `isoCo`/`isoDat`/`isoVet` trong
-> `MAPS` là đổi được, không phải sửa engine.
->
-> **Nợ lớn nhất còn lại: CÂY/ĐÁ vẫn dùng chung một bộ.** `ISO_CAY`/`ISO_BUI`/`ISO_DA`/`ISO_NHO`
-> là hằng toàn cục, nên Bird Tribe Heights tuyết phủ kín sàn mà vẫn mọc cây lá xanh. Chữa y như
-> đã chữa cho sàn: thêm khoá đọc theo map rồi nướng thêm bộ cây theo biome.
+> Bộ viên + vật thể theo biome: `python3 tools/iso/nuong_biome.py`. Khai trong `MAPS` là đổi được,
+> không phải sửa engine — **`isoCo`/`isoDat`/`isoVet`** (viên nền) và **`isoCayBo`/`isoNhoBo`**
+> (vật thể). ⚠ `isoCay`/`isoNho` là **SỐ LƯỢNG**, `isoCayBo`/`isoNhoBo` là **BỘ SPRITE** — hai
+> cặp khoá rất dễ lẫn. Và `isoCayBo` không hứa phải là cây: Bug Tribe Tunnels khai cột măng đá,
+> vì tường của một cái tổ thì không làm bằng cây.
 >
 > **Đừng thử cứu bằng cách lát nền từ art có sẵn — đã thử ba lần, hỏng cả ba**, lý do từng lần
 > ghi ở §2 của `docs/PROMPT_MAP_ISOMETRIC.md`.

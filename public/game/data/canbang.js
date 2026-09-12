@@ -326,10 +326,10 @@ window.BOSS_DEFS = {
   // Chỉ CẤP đổi, từ 6/9/12/14 lên bắc cầu giữa Werebear Woods (Trấn Ải C32) và Bug Tribe
   // Tunnels (Vệ Binh Trụ đầu C43).
   daohoa: { thuve:[
-      { id:'dh1', name:'Chúa Heo Rừng',       lv:40, el:'Thổ',  img:'boar',     x:0.4346, y:0.3526, moves:['vach','xung','cuong'] },
-      { id:'dh2', name:'Chúa Bầy Gai Tím',        lv:43, el:'Mộc',  img:'wolf',     x:0.7077, y:0.8842, moves:['xung','goi','vach'] },
-      { id:'dh3', name:'Chấp Sự Gloam',  lv:46, el:'Thủy', img:'assassin', x:.42, y:.80, moves:['vach','vong','cuong'] } ],
-    tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:50, el:'Hỏa', img:'boss_hacphong', x:.86, y:.80, moves:['vong','vach','goi','cuong'] } },
+      { id:'dh1', name:'Chúa Heo Rừng',       lv:40, el:'Thổ',  img:'boar',     x:0.3617, y:0.32, moves:['vach','xung','cuong'] },
+      { id:'dh2', name:'Chúa Bầy Gai Tím',        lv:43, el:'Mộc',  img:'wolf',     x:0.4313, y:0.6212, moves:['xung','goi','vach'] },
+      { id:'dh3', name:'Chấp Sự Gloam',  lv:46, el:'Thủy', img:'assassin', x:0.7096, y:0.3953, moves:['vach','vong','cuong'] } ],
+    tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:50, el:'Hỏa', img:'boss_hacphong', x:0.7235, y:0.8094, moves:['vong','vach','goi','cuong'] } },
   ngoai: { thuve:[
       { id:'ng1', name:'Đầu Mục Gloam',    lv:13, el:'Kim',  img:'bandit',   x:0.6691, y:0.5042, moves:['vach','xung','cuong'] },
       { id:'ng2', name:'Gai Tím Độc Nhãn',lv:16, el:'Mộc',  img:'wolf',     x:0.2618, y:0.1939, moves:['xung','vong','goi'] },
@@ -696,33 +696,65 @@ window.MAPS = {
   // '38 - 42' cũ của Rẻo Rừng Corran vốn đã lệch với chính quái của nó; map ấy nằm ngoài danh
   // sách đo của test_moblevels nên chỗ lệch nằm im. Nay map này VÀO danh sách đó, nên bảng phải
   // nói đúng thứ người chơi gặp.
-  daohoa: { name:'Plant Tribe Glade', min:36, range:'38 - 48', type:'pk', ground:'#ece2c8', patch:'#7a86ad',
-    spawn:{ x:460, y:460 },
-    // Ba lối rìa nhận từ Rẻo Rừng Corran, đặt lại trên khổ 2600x1900: tây↔Werebear Woods,
-    // đông↔Lối Mòn Corran, bắc↔Trũng Nứt Corran. Điểm tới phải cách MỌI Trùm Vùng ≥700px
-    // (test_bossplace) — mà `dh1` đứng ngay giữa bắc map (1130,670), nên lối bắc phải lùi hẳn
-    // sang đông và lối đông phải nằm TRÊN `dh4` (2236,1520), không nằm dưới.
-    spawnFrom:{ chungnam:{ x:330, y:700 }, loimon:{ x:2290, y:600 }, trungnut:{ x:1880, y:300 } },
-    trees:70, rocks:26,
-    desc:'Trại ấp Plant Tribe bỏ lại giữa rừng thưa — nay là đất PK, hạ người khác được mà bị hạ cũng được. Axie Sa Ngã dạt về từ phía rẻo rừng, Golem thì ngủ ngay trên luống cũ.',
-    // Cụm quái xếp theo vòng từ spawn ra: gần nhất là bandao (C38) → thinu (C42) → xa nhất là
-    // mocnhan (C48). Ba dải `dai` RỜI NHAU và tăng dần, vì `test_moblevels` không tha một cụm
-    // nào ở xa hơn mà yếu hơn.
-    voi: 1765,
-    // ── A4 · MIỀN DÂN SỐ ──────────────────────────────────────────────────
-    // Bãi quái KHÔNG còn chép cứng toạ độ. Mỗi miền là một DẢI KHOẢNG CÁCH (`dai`, tỉ lệ của
-    // `voi`) × một CUNG GÓC (`cung`, độ, quanh điểm thả) mang một dân số. banRaiVung() bung nó
-    // thành các cụm trại, hạt bốc từ tên map nên bố cục CỐ ĐỊNH — xem khối A4 trong game.js.
-    // Sửa cân bằng = sửa `n` của miền hoặc kéo `dai`; không phải đi dịch từng toạ độ.
-    // `vai` là danh sách rải theo lượt cho các cụm: cùng loài, cụm này Cận Chiến, cụm kia Xạ Thủ.
+  daohoa: { name:'Plant Tribe Glade', min:36, range:'38 - 48', type:'pk', ground:'#1d2a1c', patch:'#5a7a3e',
+    // ⚠ MAP PHẲNG CUỐI CÙNG, NAY ĐÃ LÊN CHUẨN CORRAN — xem docs/DUNG_LAI_BON_MAP.md.
+    // Nó KHÔNG sai phép chiếu (tranh nhìn từ trên xuống), nhưng tấm nền là một cảnh ĐẦM SEN:
+    // lá súng, hoa sen, mặt nước xanh nhạt trải kín khung. Mà hàm vẽ nền kéo tấm phủ kín thế
+    // giới rồi cho đi khắp mặt tranh, nên cả người chơi lẫn bầy quái đứng TRÊN MẶT NƯỚC — đúng
+    // cùng một triệu chứng "lơ lửng", chỉ khác là lơ lửng trên nước thay vì trên trời.
+    //
+    // Ba mảng hình học dưới đây SINH BẰNG MÁY: tools/iso/vung_bon.py. Bộ sinh tự kiểm trước khi
+    // in — sàn ≥58%, mọi điểm nội dung nằm TRONG đa giác, điểm tới cách cổng >90px và <400px
+    // tính từ rìa map, và cách MỌI trùm vùng ≥700px.
+    w:4600, h:3400,
+    // Bộ viên TRẢNG CÂY riêng — cỏ xanh non ngả vàng + lối sỏi. Giữ lại chất "có hoa" của tấm
+    // nền cũ bằng BỘ CÂY (`cay_vuon` tán hồng), chứ không bằng cách bắt ai đứng trên mặt nước.
+    sanIso:true, isoCo:['nen_vuon1','nen_vuon2','nen_vuon3','nen_vuon4'],
+    isoDat:['nen_soi1','nen_soi2','nen_soi3','nen_soi4'],
+    isoVet:['vet_soi1','vet_soi2'],
+    isoCayBo:['cay_vuon1','cay_vuon2','cay_vuon3','cay_vuon4'],
+    isoNhoBo:['nho_vuon1','nho_vuon1','nho_vuon1','nho_vuon2','nho_vuon3'],
+    herbs:true, boss:true, trees:0, rocks:0,
+    desc:'Plant Tribe Glade — trảng đất Plant Tribe bỏ lại từ hôm trời nứt, nay Axie Sa Ngã chiếm. Chưa có trụ nào ở đây, chỉ có hậu quả.',
+    spawnFrom:{ chungnam:{ x:211, y:776 }, loimon:{ x:4269, y:1016 }, trungnut:{ x:2104, y:211 } },
+    spawn:{ x:506, y:966 },
+    voi: 4400,          // `vung.dai` là tỉ lệ của `voi` — đo từ điểm thả tới đỉnh xa nhất
+    // Sáu miền từ BA loài, dải `dai` RỜI NHAU và cấp tăng dần: bandao 38 → thinu 42 → mocnhan 48.
+    // Bản cũ 3 miền × 3 cụm = 9 bãi trên khổ 2600×1900; khổ mới rộng gấp 3,2 lần nên phải dày theo.
     vung: [
-      { id:'bandao', ten:'Dốc Sa Ngã Plant Tribe', dai:[0.12,0.38], cung:[-43,67], cum:[3,3], tiep:true,
-        dan:[{ mob:'bandao', n:13, vai:['can','xa'] }] },   // C38 · Axie Sa Ngã
-      { id:'thinu', ten:'Ổ Ấp Bỏ Lại', dai:[0.42,0.68], cung:[-13,93], cum:[3,3], tiep:true,
-        dan:[{ mob:'thinu', n:13, vai:['can','phap'] }] },   // C42 · Oan Hồn Ổ Ấp
-      { id:'mocnhan', ten:'Vạt Golem Ngủ', dai:[0.72,1.0], cung:[19,71], cum:[3,3], tiep:true,
-        dan:[{ mob:'mocnhan', n:13 }] },   // C48 · Axie Golem
-    ], duhiep:'duhiep2' },
+      { id:'bandao', ten:'Dốc Sa Ngã', dai:[0.12,0.22], cung:[-30,75], cum:[3,3], tiep:true,
+        dan:[{ mob:'bandao', n:15, vai:['can','xa'] }] },
+      { id:'bandao_bay', ten:'Rẻo Cánh Gãy', dai:[0.25,0.35], cung:[-20,80], cum:[3,3], tiep:true,
+        dan:[{ mob:'bandao', n:12, vai:['bay','nang'] }] },
+      { id:'thinu', ten:'Vườn Thị Nữ', dai:[0.38,0.49], cung:[-30,75], cum:[3,3], tiep:true,
+        dan:[{ mob:'thinu', n:18, vai:['can','phap'] }] },
+      { id:'thinu_nang', ten:'Lùm Kén Dày', dai:[0.52,0.62], cung:[-20,80], cum:[3,3], tiep:true,
+        dan:[{ mob:'thinu', n:15, vai:['nang','can'] }] },
+      { id:'mocnhan', ten:'Mạng Mộc Nhân', dai:[0.65,0.79], cung:[-30,75], cum:[3,3], tiep:true,
+        dan:[{ mob:'mocnhan', n:18 }] },
+      { id:'mocnhan_xa', ten:'Hốc Nhả Tơ', dai:[0.82,1.0], cung:[-20,80], cum:[3,3], tiep:true,
+        dan:[{ mob:'mocnhan', n:15, vai:['xa','phap'] }] },
+    ],
+    diTrong: [
+      [3264,3296], [3072,3296], [3008,3168], [2816,3040], [2432,3040], [2176,3296],
+      [512,3296], [256,3104], [128,3104], [64,3168], [32,3136], [32,384],
+      [64,352], [320,352], [416,192], [448,32], [896,32], [1152,288],
+      [1216,288], [1280,352], [1472,352], [1536,288], [1600,288], [1760,128],
+      [1792,32], [2304,32], [2368,96], [2624,96], [2688,32], [3200,32],
+      [3296,128], [3296,192], [3520,352], [3712,352], [3776,288], [3840,288],
+      [3904,544], [4096,544], [4160,480], [4416,480], [4448,512], [4448,2944],
+      [4160,3168], [3648,3168], [3584,3104], [3456,3104],
+    ],
+    isoCum: [[320,1920], [384,2752], [2176,1024], [2816,2624], [3968,3008], [960,3008], [2688,1088], [960,2496], [3776,1408], [576,448], [1408,2624], [1664,3008], [2112,2752], [2304,2304], [4224,2176], [384,1408], [3008,192], [3392,1664], [1920,640], [3200,3072], [3456,2432]],
+    isoDuong: [
+      [[256,896], [521,1102], [840,1182], [1152,1280], [1331,1485], [1536,1664], [1869,1691], [2163,1875], [2478,1978], [2816,1984], [3128,1932], [3412,2077], [3712,2112], [4037,1897], [4288,1600], [4293,1245], [4224,896], [3953,783], [3685,661], [3406,579], [3112,548], [2814,531], [2526,479], [2252,376], [1984,256], [1665,349], [1393,541], [1136,763], [826,876], [506,966]],
+      [[1152,1280], [909,1513], [783,1818], [640,2112]],
+      [[1536,1664], [1372,1930], [1408,2240]],
+      [[2816,1984], [2739,1700], [2496,1536]],
+      [[4224,896], [3876,749], [3504,736], [3136,704]],
+      [[3712,2112], [3859,2436], [4160,2624]],
+    ],
+    duhiep:'duhiep2' },
   // ── ARDHAVEN · SAPIDAE CHIEFDOM · thành an toàn RỘNG BẰNG MỘT MAP THẬT ───────────────
   // Thay hẳn HAI sân an toàn cũ: "Quảng Trường Cũ" (2600×1900, một khoảnh sân lát đá) và
   // thành cũ cùng khung. Cả hai đều NHỎ HƠN một map hoang dã, nên "vào thành" trước đây là
@@ -897,6 +929,8 @@ window.MAPS = {
     sanIso:true, isoCo:['nen_rung1','nen_rung2','nen_rung3','nen_rung4'],
     isoDat:['nen_mon1','nen_mon2','nen_mon3','nen_mon4'],
     isoVet:['vet_mon1','vet_mon2'],
+    isoCayBo:['cay_rung1','cay_rung2','cay_rung3','cay_rung4'],
+    isoNhoBo:['nho_rung1','nho_rung1','nho_rung1','nho_rung2','nho_rung3'],
     herbs:true, boss:true, trees:0, rocks:0,
     desc:'"Trụ Werebear Woods do ta giữ." Một Tướng Quân đơn độc chống đỡ cả cánh rừng — trụ thứ nhất trong năm. Werebear vẫn sống theo bầy ở đây, và chúng hiền cho tới lúc bị chọc.',
     spawnFrom:{ ardhaven:{ x:211, y:776 }, comoc:{ x:2424, y:211 }, daohoa:{ x:4269, y:1080 } },
@@ -1223,6 +1257,10 @@ window.MAPS = {
     sanIso:true, isoCo:['nen_to1','nen_to2','nen_to3','nen_to4'],
     isoDat:['nen_hang1','nen_hang2','nen_hang3','nen_hang4'],
     isoVet:['vet_hang1','vet_hang2'],
+    // ⚠ Tổ thì không có cây. "Cây" ở đây là cột măng đá — `isoCayBo` là BỘ VẬT DỰNG TƯỜNG VÙNG,
+    // không hứa phải là cây.
+    isoCayBo:['cay_to1','cay_to2','cay_to3','cay_to4'],
+    isoNhoBo:['nho_to1','nho_to1','nho_to2','nho_to3'],
     herbs:true, boss:true, trees:0, rocks:0,
     desc:'Trụ Roost đóng thẳng xuống giữa ổ ấp. Bug Tribe Tunnels thì thầm: thứ nở ra ở đây không còn là Axie nữa.',
     spawnFrom:{ chungnam:{ x:1608, y:3309 }, trungnut:{ x:211, y:776 }, caungam:{ x:4525, y:1144 }, mongco:{ x:2936, y:211 } },
@@ -1366,6 +1404,8 @@ window.MAPS = {
     sanIso:true, isoCo:['nen_tuyet1','nen_tuyet2','nen_tuyet3','nen_tuyet4'],
     isoDat:['nen_bang1','nen_bang2','nen_bang3','nen_bang4'],
     isoVet:['vet_bang1','vet_bang2'],
+    isoCayBo:['cay_tuyet1','cay_tuyet2','cay_tuyet3','cay_tuyet4'],
+    isoNhoBo:['nho_tuyet1','nho_tuyet1','nho_tuyet1','nho_tuyet2','nho_tuyet3'],
     herbs:true, boss:true, trees:0, rocks:0,
     desc:'Băng của Bird Tribe Heights là vết sẹo, không phải thời tiết. Bãi EXP khổng lồ — mang theo kháng độc, Chimera ở đây cắn có nọc.',
     spawnFrom:{ ardhaven:{ x:211, y:776 }, caungam:{ x:2232, y:211 } },
@@ -1426,6 +1466,8 @@ window.MAPS = {
     sanIso:true, isoCo:['nen_tro1','nen_tro2','nen_tro3','nen_tro4'],
     isoDat:['nen_nung1','nen_nung2','nen_nung3','nen_nung4'],
     isoVet:['vet_nung1','vet_nung2'],
+    isoCayBo:['cay_tro1','cay_tro2','cay_tro3','cay_tro4'],
+    isoNhoBo:['nho_tro1','nho_tro1','nho_tro1','nho_tro2','nho_tro3'],
     herbs:true, boss:true, trees:0, rocks:0,
     desc:'Tướng Quân dựng đại bản doanh ngay trên Trụ Ashmark — hắn thôi không giấu nữa. Thảo nguyên đá nung, Chimera trâu bò đánh đau.',
     spawnFrom:{ comoc:{ x:1672, y:3373 }, nhanmon:{ x:4717, y:1144 } },
@@ -1487,6 +1529,8 @@ window.MAPS = {
     sanIso:true, isoCo:['nen_reu1','nen_reu2','nen_reu3','nen_reu4'],
     isoDat:['nen_bun1','nen_bun2','nen_bun3','nen_bun4'],
     isoVet:['vet_bun1','vet_bun2'],
+    isoCayBo:['cay_bun1','cay_bun2','cay_bun3','cay_bun4'],
+    isoNhoBo:['nho_bun1','nho_bun1','nho_bun1','nho_bun2','nho_bun3'],
     herbs:true, boss:true, trees:0, rocks:0,
     desc:'Trụ Dusk Marsh — trụ cuối cùng. Gỡ nó xuống là mở đúng cánh cửa Morvahn đang chờ. PK ở đây không cộng Tai Tiếng.',
     spawnFrom:{ mongco:{ x:211, y:840 } },
@@ -1587,18 +1631,7 @@ window.MAP_OBSTACLES = {
   // trong nhung cho nhin ra khong co gi. Vung di duoc gio do `diTrong` quyet dinh mot minh.
   corran: [],
 
-  daohoa: [
-    // Hiệu chỉnh lại theo màu nước thật của art (bg_daohoa.jpg), đối chiếu từng pixel với
-    // toàn bộ NPC/quái/thảo dược/suối/cổng phó bản của map — 2 hình ellipse cũ quá to,
-    // đè lên gần 2/3 điểm nội dung (suối tịnh tâm, cổng phó bản, 6/8 bãi thảo dược, hầu hết
-    // cụm quái) khiến người chơi bị chặn ngay giữa nơi cần đến. Bộ 5 vùng dưới đây chỉ che
-    // đúng phần nước sâu không có nội dung xung quanh — đã kiểm tra không đè lên điểm nào.
-    { x:464,  y:146,  rx:192, ry:106 }, // hồ sen góc tây-bắc
-    { x:324,  y:1027, rx:229, ry:199 }, // vũng nước tây (cạnh Hầu Tử)
-    { x:842,  y:854,  rx:178, ry:139 }, // vũng nước giữa-tây — thu rx, mép cũ chạm bãi boar (632,876)
-    { x:1433, y:796,  rx:112, ry:205 }, // dải nước giữa — thu ry, mép cũ nuốt bãi wolf (1500,560)
-    { x:1910, y:767,  rx:126, ry:300 }, // vũng nước đông — thu ry, mép cũ nuốt bãi assassin (1900,420)
-  ],
+  daohoa: [],   // lát viên: chặn bằng đa giác `diTrong` + lùm `isoCum`, xem corran
   // Ba map dưới đây từng có 0-1 vật cản TRONG LÒNG map: đo tỉ lệ vòng giữa mọi cặp bãi quái ra
   // đúng 1,000 — nghĩa là suốt vòng đời người chơi không có một đoạn đường nào phải né gì cả.
   // Các khối thêm vào chia bãi săn thành "phòng" và ép vài lối đi hẹp, bám theo địa hình trong
