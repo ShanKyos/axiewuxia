@@ -510,6 +510,52 @@ vừa phá mốc định hướng vừa làm Vỉa Cốt hết đặc biệt.
 vai** (cùng loài, cụm này Xạ Thủ cụm kia Pháp Sư — đúng cơ chế A1), và bảng **Chọn Trận** gom
 theo miền thay vì một danh sách phẳng. QA: `window.debugVung(map)`.
 
+### 🐑 ĐÀN THÚ HOANG — thứ trong map KHÔNG phải để đánh
+
+Đo trước khi làm: **mọi thứ cựa quậy** trong một map ngoài trời đều muốn giết người chơi (quái ·
+du hiệp · trùm vùng · trại canh Rương), còn cây và đá thì đứng im tuyệt đối. Nên một vùng hoang
+đọc ra là *một cái sân có mấy bầy địch*, không đọc ra là **một nơi chốn**. Đàn thú là bằng chứng
+duy nhất rằng thế giới có sống trước khi người chơi tới.
+
+Khai bằng dữ liệu, một dòng trong `MAPS`: `thu: { loai:[…], dan: 14 }`. Hiện có **một** map —
+`ngoai` (Beast Herd Camp), mà chính `desc` của nó đã hứa *"đàn thú của người bản địa vẫn gặm cỏ
+ở đây"* từ lâu trong khi trong map không có một con thú nào. Thêm map khác = thêm một dòng.
+
+**⚠ ĐỪNG BIẾN NÓ THÀNH NỘI DUNG.** Cho săn được là nó thành một bãi quái yếu, mà bãi quái yếu
+thì AUTO dọn sạch trong một phút — mất cả cái nền lẫn cái nội dung. Nó **không** có máu, **không**
+nằm trong `mobs`, **không** bị nhắm, **không** rơi gì. Giá trị của nó nằm đúng ở chỗ nó vô dụng.
+
+Cái làm đàn thú "sống" không phải hoạt ảnh mà là **hai hành vi**:
+- mỗi con tự đổi việc đang làm (gặm · đứng ngó · đi vài bước) theo nhịp riêng;
+- và cả đàn **bỏ chạy LÂY NHAU thành SÓNG**. Lây một vòng từ những con thấy người chơi thì con ở
+  rìa xa không bao giờ động đậy — người chơi thấy "mấy con gần mình chạy", không thấy "cả đàn
+  giật mình". Nên con vừa hoảng vì lây cũng vào hàng đợi; vòng tự dừng vì `st==='chay'` là cửa vào.
+- Lây phải chạy ở **lượt riêng**, sau vòng cập nhật. Lây tại chỗ thì con cuối mảng nhận sóng ngay
+  trong khung này còn con đầu mảng đợi khung sau ⇒ cả đàn nghiêng theo **thứ tự mảng**, thứ chẳng
+  có nghĩa gì trên màn hình.
+
+**Bãi cỏ đứng yên, từng con thì không.** Bãi bốc từ *tên map* (như Rương Canh) nên là mốc định
+hướng; vị trí từng con bốc lại mỗi lần vào map, vì một con vật đứng đúng một chỗ qua nhiều phiên
+đọc ra là một bức tượng. Vỉa Cốt vẫn là thứ **duy nhất** được phép đổi chỗ theo ngày.
+
+**⚠ `thuDungDan()` phải gọi SAU khi rải decor**, không trước. Cây/đá rải sau mọc đè lên con vật
+đã đứng sẵn — đo được **3/14** con nằm trong vật cản, mà con nằm trong vật cản thì bước đầu tiên
+bị chặn nên nó đứng chết một chỗ suốt phiên, hỏng đúng cái thứ duy nhất hệ này có.
+
+Art: `tools/spine/nuong_thu.py` nướng từ rig Spine của kit Axie — cùng đường ống với
+`nuong_chi.py`. Ba loài chọn theo **bóng dáng** (cừu xù · bò đốm · sóc đuôi cong) để ở cỡ 48px
+vẫn đọc ra ba con khác nhau; ba dáng (`gam` · `dung` · `chay`), mỗi dáng 8 khung, tổng **0,35 MB**.
+
+**⚠ BỐN TRONG 38 RIG HỎNG khi mượn hoạt cảnh** (`14 · 14-1 · 20 · 20-1`): mất hẳn phần thân, chỉ
+còn mấy mảnh phụ kiện trôi lơ lửng. Quét bằng **độ đặc** (điểm ảnh đặc ÷ diện tích hộp bao) ở
+khung idle — 34 rig lành ra 0,52-0,78, bốn rig hỏng ra 0,25-0,31, hai cụm tách hẳn nhau.
+`python3 tools/spine/nuong_thu.py --quet` in lại bảng đó. **Đừng chọn rig bằng mắt trên ảnh thu
+nhỏ**: ở cỡ 60px một con mất thân trông vẫn "có gì đó".
+
+Gác: `tests/test_danthu.js` (7 mệnh đề). Mệnh đề ⑤ **tự kiểm cảnh dựng trước khi chấm** — nó
+khẳng định con cuối hàng cách người chơi > `THU_SO` rồi mới đòi nó phải chạy, nếu không thì bài
+"kiểm sóng lây" thật ra chỉ kiểm chuyện con đó nhìn thấy người chơi.
+
 ### ◈ BÃI FARM — khái niệm "spot" của MU, và **HẠ SÀN KHÔNG PHẢI LÀ ĐẶT TRẦN**
 
 Một miền dân số khai `farm:true` là thành Bãi Farm. Không bảng thứ hai, không toạ độ chép cứng —

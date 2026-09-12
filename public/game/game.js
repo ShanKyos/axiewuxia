@@ -8329,6 +8329,161 @@ function bandSummaryHtml(md){
   return `<div class="m-desc" style="opacity:.85;margin-top:2px">` +
     BAND_NAMES.map((n,b)=>`<span style="color:${BAND_COLORS[b]}">●</span> ${n} ${bandLvText(md,b)}`).join(' · ') + `</div>`;
 }
+// ═══════════ ĐÀN THÚ HOANG — thứ trong map KHÔNG phải để đánh ═══════════
+//
+// Đo trước khi làm: mọi thứ cựa quậy trong một map ngoài trời của game này đều muốn giết người
+// chơi. Quái, du hiệp, trùm vùng, trại canh Rương — hết. Cây và đá thì đứng im tuyệt đối. Nên
+// một vùng hoang đọc ra là "một cái sân có mấy bầy địch", không đọc ra là một NƠI CHỐN.
+//
+// Thứ các game thế giới mở dùng để chữa đúng chỗ này đều là một: sinh vật nền KHÔNG tham chiến.
+// Nó rẻ (không AI chiến đấu, không máu, không rơi đồ, không cân bằng) mà đổi hẳn cảm giác, vì
+// nó là bằng chứng duy nhất rằng thế giới có sống trước khi người chơi tới.
+//
+// ⚠ ĐỪNG BIẾN NÓ THÀNH NỘI DUNG. Cho săn được là nó thành một bãi quái yếu, và bãi quái yếu thì
+// AUTO dọn sạch trong một phút — hết luôn cả cái nền lẫn cái nội dung. Nó KHÔNG có máu, KHÔNG
+// bị nhắm, KHÔNG rơi gì. Giá trị của nó nằm đúng ở chỗ nó vô dụng.
+//
+// Cái làm đàn thú "sống" không phải hoạt ảnh mà là HAI hành vi:
+//   · mỗi con tự đổi việc đang làm (gặm · đứng ngó · đi vài bước) theo nhịp riêng của nó
+//   · và cả đàn BỎ CHẠY LÂY NHAU — một con hoảng thì con bên cạnh hoảng theo. Đây mới là chỗ
+//     người chơi đọc ra "đàn", chứ không phải "mấy con vật rải gần nhau".
+const THU_CAO   = Math.round(NV_CAO * 0.36);   // cao mấy phần thân người — không chép cứng px
+const THU_BAN   = 300;    // bán kính bãi cỏ: con vật lang thang trong chừng này quanh nhà nó
+const THU_SO    = 210;    // người chơi tới gần chừng này thì nó bỏ chạy
+const THU_LAY   = 170;    // …và con nào đứng trong chừng này của con vừa chạy thì chạy theo
+const THU_DI    = 26;     // tốc độ đi gặm
+const THU_CHAY  = 132;    // tốc độ bỏ chạy — nhanh hơn người đi bộ, nên không tóm được, cố ý
+const THU_CACH_BAI = 300; // đàn thú tránh xa bãi quái: chỗ nào đánh nhau thì chỗ đó không có thú
+let thuDan = [];
+let THU_IMGS = {};
+// Bảng hình do tools/spine/nuong_thu.py ghi ra, nạp bằng thẻ script riêng như CHI_ANH.
+const THU_ANH = window.THU_ANH;
+function thuImg(id){
+  let im = THU_IMGS[id];
+  if (!im){ im = new Image(); im.src = 'assets/thu/' + id + '.webp'; THU_IMGS[id] = im; }
+  return im;
+}
+// Bãi cỏ của một map: MỘT chỗ, bốc từ TÊN MAP nên không bao giờ đổi. Cùng lý do với Rương Canh —
+// một thứ đứng yên thì học thuộc được, mà học thuộc được mới thành mốc định hướng. (Vỉa Cốt là
+// thứ DUY NHẤT trong game được phép đổi chỗ mỗi ngày; đừng cho cái thứ hai.)
+let _thuBaiCache = {};
+function thuBaiCo(mid){
+  if (_thuBaiCache[mid]) return _thuBaiCache[mid];
+  const md = MAPS[mid];
+  if (!md || !md.thu){ _thuBaiCache[mid] = null; return null; }
+  const ra = _hatRng(_bamChuoi('thu:' + mid));
+  const tranh = [];
+  for (const q of packsOf(mid)) tranh.push({ x:q.x, y:q.y, r:THU_CACH_BAI });
+  if (md.spawn) tranh.push({ x:md.spawn.x, y:md.spawn.y, r:220 });
+  for (const k in (md.spawnFrom || {})) tranh.push({ x:md.spawnFrom[k].x, y:md.spawnFrom[k].y, r:220 });
+  if (typeof GATES !== 'undefined') for (const g of GATES) if (g.map === mid) tranh.push({ x:g.x, y:g.y, r:220 });
+  const mw = md.w || 2600, mh = md.h || 1900;
+  let dat = null;
+  for (let thu = 0, noi = 0; thu < 900 && !dat; thu++){
+    if (thu === 450) noi = 90;   // map chật thì nới dần, thà bãi hơi gần bãi quái còn hơn không có
+    const x = 260 + ra() * (mw - 520), y = 260 + ra() * (mh - 520);
+    if (inObstacle(mid, x, y, 70)) continue;
+    if (tranh.some(t => dist(x, y, t.x, t.y) < t.r - noi)) continue;
+    dat = { x: Math.round(x), y: Math.round(y) };
+  }
+  _thuBaiCache[mid] = dat;
+  return dat;
+}
+// Dựng đàn cho map đang đứng. Vị trí từng con bốc lại mỗi lần vào map — CỐ Ý khác Rương Canh:
+// cái đứng yên là BÃI CỎ, còn từng con thì không, vì một con vật đứng đúng một chỗ qua nhiều
+// phiên đọc ra là một bức tượng.
+function thuDungDan(){
+  thuDan = [];
+  const md = mapDef(); if (!md || !md.thu) return;
+  const bai = thuBaiCo(curMap); if (!bai) return;
+  const loai = md.thu.loai || [];
+  const n = md.thu.dan || 10;
+  for (let i = 0; i < n && loai.length; i++){
+    let x = 0, y = 0, ok = false;
+    for (let t = 0; t < 40 && !ok; t++){
+      const a = Math.random() * Math.PI * 2, d = Math.sqrt(Math.random()) * THU_BAN;
+      x = bai.x + Math.cos(a) * d; y = bai.y + Math.sin(a) * d;
+      ok = !inObstacle(curMap, x, y, 22);
+    }
+    if (!ok) continue;
+    thuDan.push({ loai: loai[i % loai.length], x, y, hx: bai.x, hy: bai.y,
+                  st: 'gam', t: 0.4 + Math.random() * 3, dir: Math.random() < 0.5 ? -1 : 1,
+                  ph: Math.random() * 100, tx: x, ty: y });
+  }
+}
+function thuHoang(t, gx, gy){
+  t.st = 'chay'; t.t = 0.9 + Math.random() * 0.6;
+  const a = Math.atan2(t.y - gy, t.x - gx) + (Math.random() - 0.5) * 0.8;
+  t.tx = t.x + Math.cos(a) * 300; t.ty = t.y + Math.sin(a) * 300;
+  t.dir = Math.cos(a) < 0 ? -1 : 1;
+}
+function thuCapNhat(dt){
+  if (!thuDan.length) return;
+  const hoangMoi = [];
+  for (const t of thuDan){
+    t.ph += dt;
+    if ((t.st !== 'chay') && player && dist(t.x, t.y, player.x, player.y) < THU_SO){
+      thuHoang(t, player.x, player.y); hoangMoi.push(t);
+    }
+    t.t -= dt;
+    if (t.t <= 0){
+      if (t.st === 'chay'){ t.st = 'dung'; t.t = 0.6 + Math.random() * 1.2; }
+      else if (t.st === 'gam'){ t.st = Math.random() < 0.55 ? 'di' : 'dung'; t.t = 1 + Math.random() * 2.2; }
+      else if (t.st === 'dung'){ t.st = Math.random() < 0.5 ? 'gam' : 'di'; t.t = 1.6 + Math.random() * 3; }
+      else { t.st = 'gam'; t.t = 2 + Math.random() * 3.4; }
+      if (t.st === 'di'){
+        const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 120;
+        t.tx = t.hx + Math.cos(a) * Math.min(THU_BAN, d + dist(t.hx, t.hy, t.x, t.y) * 0.3);
+        t.ty = t.hy + Math.sin(a) * Math.min(THU_BAN, d);
+        t.dir = t.tx < t.x ? -1 : 1;
+      }
+    }
+    if (t.st === 'di' || t.st === 'chay'){
+      const v = t.st === 'chay' ? THU_CHAY : THU_DI;
+      const dx = t.tx - t.x, dy = t.ty - t.y, L = Math.hypot(dx, dy) || 1;
+      if (L > 4){
+        const nx = t.x + dx / L * v * dt, ny = t.y + dy / L * v * dt;
+        // Không đi xuyên tường, cũng không đi ra khỏi khổ map. Kẹt thì đứng lại gặm — đàn thú
+        // không đáng có thuật toán tìm đường, và một con húc đầu vào đá trông tệ hơn một con đứng.
+        if (!inObstacle(curMap, nx, ny, 18)){ t.x = nx; t.y = ny; }
+        else { t.st = 'gam'; t.t = 1 + Math.random() * 2; }
+      } else if (t.st === 'di'){ t.st = 'gam'; t.t = 2 + Math.random() * 3; }
+    }
+  }
+  // …rồi mới LÂY, và lây thành SÓNG. Hai chi tiết, cả hai đều là chỗ dễ làm hụt:
+  //
+  // · Tách khỏi vòng trên. Lây tại chỗ thì con đứng cuối mảng nhận sóng hoảng của con đầu mảng
+  //   NGAY trong cùng một khung còn con đứng đầu phải đợi khung sau — cả đàn nghiêng về một
+  //   phía theo thứ tự mảng, mà thứ tự mảng chẳng có nghĩa gì trên màn hình.
+  // · Truyền tiếp. Nếu chỉ lây MỘT vòng từ những con thấy người chơi thì con ở rìa xa không bao
+  //   giờ động đậy, và cái người chơi thấy là "mấy con gần mình chạy" chứ không phải "cả đàn
+  //   giật mình". Nên con vừa hoảng vì lây cũng vào hàng đợi. Vòng lặp tự dừng: `st==='chay'`
+  //   là cửa vào, mà thuHoang() đặt đúng cờ đó, nên mỗi con vào hàng nhiều nhất một lần.
+  for (let i = 0; i < hoangMoi.length; i++){
+    const g = hoangMoi[i];
+    for (const t of thuDan)
+      if (t.st !== 'chay' && dist(t.x, t.y, g.x, g.y) < THU_LAY){ thuHoang(t, g.x, g.y); hoangMoi.push(t); }
+  }
+}
+function veThu(t){
+  const A = THU_ANH && THU_ANH.o[t.loai];
+  const im = thuImg(t.loai);
+  if (!A || !im.complete || !im.naturalWidth) return;
+  const dang = t.st === 'chay' ? 2 : t.st === 'gam' ? 0 : 1;
+  const nhip = t.st === 'chay' ? 12 : t.st === 'gam' ? 7 : 5;
+  const i = ((t.ph * nhip) | 0) % THU_ANH.nKhung;
+  const o = dang * THU_ANH.nKhung + i;
+  const hh = THU_CAO / A.thanCao, hw = hh * (A.oRong / A.oCao);
+  const chan = t.y + THU_CAO * 0.38;
+  ctx.save();
+  ctx.globalAlpha = 0.26; ctx.fillStyle = '#1b1710';
+  ctx.beginPath(); ctx.ellipse(t.x, t.y + 3, hw * 0.30, hw * 0.13, 0, 0, 7); ctx.fill();
+  ctx.globalAlpha = 1;
+  if (t.dir < 0){ ctx.translate(t.x, 0); ctx.scale(-1, 1); ctx.translate(-t.x, 0); }
+  ctx.drawImage(im, (o % THU_ANH.cot) * A.oRong, ((o / THU_ANH.cot) | 0) * A.oCao, A.oRong, A.oCao,
+                t.x - hw / 2, chan - hh * A.neoY, hw, hh);
+  ctx.restore();
+}
 function buildWorld(){
   const md = mapDef();
   // KHỔ MAP THEO TỪNG MAP. Trước đây `MAP` là một khổ 2600x1900 dùng chung cho cả game và không
@@ -8476,6 +8631,10 @@ function buildWorld(){
   raiIso(md);            // cây/bụi/đá của map lát viên — SAU bộ lọc, xem raiIso()
   rebuildDecorObs();
   decorUnblock();  // và nếu vẫn bịt mất một lối đi thì dọn đúng mấy gốc cây đang chắn
+  // Đàn thú SAU decor, không trước. Cây/đá rải sau sẽ mọc đè lên con vật đã đứng sẵn: đo được
+  // 3/14 con nằm trong vật cản, và con nằm trong vật cản thì bước đầu tiên của nó bị chặn nên
+  // nó đứng chết một chỗ suốt phiên — hỏng đúng cái thứ duy nhất hệ này có, là cựa quậy.
+  thuDungDan();    // đàn thú nền — xem khối ĐÀN THÚ HOANG
   spawnAmbients(); // hạt môi trường + cỏ mặt đất theo chủ đề bản đồ
   spawnHorses(); // GDD Đợt 2 B5: Tuấn Mã Hoang
   // Ma Tôn Giáng Thế & Truy Nã Lệnh: tái xuất hiện khi người chơi vào đúng bản đồ
@@ -11115,6 +11274,7 @@ function update(dt){
   for (const p of pickups) if (p.respawn > 0) p.respawn -= dt;
   updateGroundLoot(dt);
   updateBoxThrows(dt);
+  thuCapNhat(dt);      // đàn thú nền — xem khối ĐÀN THÚ HOANG
 
   tutTick(dt);
   // Space bấm khi quái ngoài tầm: đang chạy tới, vào tầm thì tự ra đòn đúng một lần
@@ -11827,6 +11987,7 @@ function render(){
   }
   ents.push({ y:player.y, kind:'player' });
   for (const h of horses) ents.push({ y:h.y, kind:'horse', h }); // GDD Đợt 2 B5
+  for (const t of thuDan) ents.push({ y:t.y, kind:'thu', t });   // thú nền xếp lớp như mọi thứ khác
   for (const d of sortedDecor) if (d.type==='tree') ents.push({ y:d.y, kind:'tree', d });
   for (const d of sortedDecor) if (d.type==='iso') ents.push({ y:d.y, kind:'iso', d });
   for (const g of gatesHere()) ents.push({ y:g.y, kind:'gate', g });
@@ -11863,6 +12024,7 @@ function render(){
         }
         break;
       case 'horse': drawHorse(e.h); break;
+      case 'thu': veThu(e.t); break;
       case 'tree': drawTree(e.d); break;
       case 'gate': e.g.portal ? drawPortal(e.g) : drawOneGate(e.g); break;
     }

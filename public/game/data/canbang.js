@@ -870,6 +870,11 @@ window.MAPS = {
     desc:'Đất ngoài thành đang rung — chưa phải trụ, nhưng là dấu hiệu đầu tiên rằng có trụ đang lung lay. Đàn thú của người bản địa vẫn gặm cỏ ở đây, và vẫn chưa ai nói cho chúng biết.',
     spawnFrom:{ ardhaven:{ x:2808, y:211 } },
     spawn:{ x:2758, y:506 },
+    // ĐÀN THÚ HOANG. Tên map là "Beast Herd Camp" và chính dòng `desc` ngay trên đã hứa "đàn thú
+    // của người bản địa vẫn gặm cỏ ở đây" — suốt từ lúc viết tới giờ trong map không có một con
+    // thú nào. Đây là chỗ trả nợ lời hứa đó. Ba loài chọn theo BÓNG DÁNG (cừu xù · bò đốm ·
+    // sóc đuôi cong) để ở cỡ 48px vẫn đọc ra ba con khác nhau — xem tools/spine/nuong_thu.py.
+    thu: { loai:['cuu_bong','bo_dom','soc_hat'], dan: 14 },
     voi: 3400,          // `vung.dai` là tỉ lệ của `voi` — đo từ điểm thả tới đỉnh xa nhất
     // ⚠ KHÔNG miền nào mang `tiep:true`. Đây vẫn là "đai 0" — test_bayquai gác đúng chỗ đó
     // (`['corran','ngoai']`), và Kẻ Tiếp Sức là thứ để dành cho map từ cấp 24 trở lên.
