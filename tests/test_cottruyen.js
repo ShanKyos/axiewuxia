@@ -168,6 +168,16 @@ const PORT = process.argv[2] || '8853';
              // ⚠ Trước đo /qd-quest/ — khối nhiệm vụ. Nhiệm vụ đã gỡ sạch nên khối đó không
              // còn vẽ ra; phần còn thật là: gặp xong thì THOÁT hẳn chế độ phân trang.
              veViec: !/npc-trang-nav/.test(sau) && sau.length > 40,
+             // ⚠ MỐC NÀY TỪNG LÀ MỘT CON SỐ ĐẾM ("phải đúng 7 người có trang thoại"), và nó đỏ
+             // đúng lúc việc làm ĐÚNG: thêm một NPC được viết tử tế cho Plant Tribe Glade — map
+             // đánh nhau duy nhất không có ai — là con số thành 8. Đếm "bao nhiêu NPC có trang
+             // thoại" không phải thứ bài này muốn bảo vệ; thứ nó muốn bảo vệ là KHÔNG NGƯỜI DẪN
+             // CHƯƠNG NÀO BỊ BỎ TRỐNG. Nên nay suy thẳng từ QUESTS, và ai cũng được phép có
+             // thêm trang thoại mà không làm đỏ bài.
+             // Chương 0 CỐ Ý không có trang thoại: đó là đoạn dạy chơi, ba trang độc thoại trước
+             // khi người chơi kịp cầm chuột là chặn ngay ở cửa. Nên chỉ soi từ chương I trở đi.
+             thieuTrang: [...new Set(QUESTS.filter(q => !/^0 /.test(q.chapter || '')).map(q => q.npc))]
+               .filter(id => { const n = NPCS.find(x => x.id === id); return !n || !(n.trang && n.trang.length >= 3); }),
              coTrang: NPCS.filter(n => n.trang && n.trang.length).length };
   });
   console.log('5) nhiều trang:', JSON.stringify(r5));
@@ -175,8 +185,8 @@ const PORT = process.argv[2] || '8853';
   if (!r5.coChon) fail('trang cuối không hỏi thái độ'); else pass('trang cuối hỏi một câu thái độ');
   if (r5.nho !== 'a' || !r5.daGap) fail('game không nhớ lựa chọn'); else pass('game nhớ lựa chọn, không hỏi lại lần sau');
   if (!r5.veViec) fail('gặp xong vẫn kẹt ở chế độ phân trang'); else pass('gặp xong thoát phân trang, về bảng NPC thường');
-  if (r5.coTrang !== 7) fail(`phải 7 người dẫn chương có trang thoại, đếm ${r5.coTrang}`);
-  else pass('đủ 7 người dẫn chương có trang thoại lần gặp đầu');
+  if (r5.thieuTrang.length) fail(`người dẫn chương không có trang thoại lần gặp đầu: ${r5.thieuTrang.join(', ')}`);
+  else pass(`mọi người dẫn chương đều có trang thoại (tổng ${r5.coTrang} NPC có trang)`);
 
   // ── 6. Dược Sư hết là NPC chết — ĐÃ BỎ ──
   // ⚠ Bài này đo "mọi NPC talk:'quest' đều có ít nhất một nhiệm vụ". Toàn bộ nhiệm vụ đã gỡ
