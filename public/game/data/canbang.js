@@ -153,81 +153,81 @@ window.QUESTS = [
   { id:'c0q1', chapter:'0 · Ngọn Đèn Tắt', lv:1, npc:'ah_gac_tay', map:'corran',
     type:'kill', mob:'boar', need:6,
     name:'Ra Bìa Rẻo Rừng Corran', desc:'Lính Gác Cổng Tây chặn ngươi lại: "Bầy heo rừng lấn tới sát chân tường ba đêm nay." Ra Cổng Tây, vào bìa Rẻo Rừng Corran mà dọn chúng.',
-    rew:{ xp:220, silver:120 } },
+    rew:{ xp:7, silver:120 } },
   { id:'c0q2', chapter:'0 · Ngọn Đèn Tắt', lv:2, npc:'ah_gac_tay', map:'ardhaven',
     type:'talk', targetNpc:'ah_ganhnuoc', need:1,
     name:'Ngọn Đèn Bên Giếng', desc:'"Chúng nó chỉ dạn thế từ hôm cái đèn cạnh giếng tắt. Ba đêm liền, mà dầu vẫn còn đầy." Người gánh nước qua đó mười hai chuyến một ngày — hỏi ông ta.',
-    rew:{ xp:340, silver:180 } },
+    rew:{ xp:28, silver:180 } },
   { id:'c0q3', chapter:'0 · Ngọn Đèn Tắt', lv:4, npc:'truonglang', map:'corran',
     type:'talk', targetNpc:'duocsu', need:1,
     name:'Người Giữ Đèn', desc:'Trưởng Làng nhận ra ngay: đó là đèn dẫn hồn, Dawn axie trông coi. Nhưng thứ giữ cho đèn cháy không phải dầu — là một nét khắc nhỏ dưới chân đèn, do Bug axie khắc. Dược Sư từng phụ pha dầu cho họ; hỏi cho ra.',
-    rew:{ xp:420, silver:200 } },
+    rew:{ xp:111, silver:200 } },
   { id:'c0q4', chapter:'0 · Ngọn Đèn Tắt', lv:5, npc:'duocsu', map:'corran',
     type:'collect', herbMap:'corran', need:5,
     name:'Dầu Cho Ngọn Đèn', desc:'"Dầu đèn không mua được. Nó là nhựa cây trong rừng thưa, mà chỉ Plant axie mới biết chỗ." Hái đủ năm bụi — rồi ngươi sẽ thấy dầu không phải thứ đang thiếu.',
-    rew:{ xp:520, silver:240 } },
+    rew:{ xp:174, silver:240 } },
   { id:'c0q5', chapter:'0 · Ngọn Đèn Tắt', lv:6, npc:'truonglang', map:'corran',
     type:'kill', mob:'hautu', need:8,
     name:'Thứ Ăn Hồn Kẹt', desc:'Đèn tắt thì hồn không về được Cây Hồn, kẹt lại giữa đường. Lũ này tụ quanh chỗ hồn kẹt mà ăn. Dọn sạch.',
-    rew:{ xp:640, silver:300 } },
+    rew:{ xp:253, silver:300 } },
   { id:'c0q6', chapter:'0 · Ngọn Đèn Tắt', lv:8, npc:'ah_gac_tay', map:'ardhaven',
     type:'enhance', need:3,
     name:'Nét Khắc Đầu Tiên', desc:'"Đồ thường chém vào chúng như chém sương." Người Ardhaven không khắc lên đá — họ khắc vào thép, và thép giữ nét khắc lâu hơn đá rất nhiều. Mang một món tới lò, đập lên +3 rồi quay lại. Đó là nét khắc đầu tiên của ngươi.',
-    rew:{ xp:760, silver:400 } },
+    rew:{ xp:458, silver:400, ngoc:{ chucPhuc:1 } } },
   { id:'c0q7', chapter:'0 · Ngọn Đèn Tắt', lv:10, npc:'duocsu', map:'corran',
     type:'meditate', need:20,
     name:'Ngồi Ở Miếu Atia', desc:'"Miếu bên suối vẫn còn. Atia không cho ai vàng bạc — nhưng ngồi đủ lâu thì ngài cho ngươi biết ngọn đèn kế tiếp tắt ở đâu."',
-    rew:{ xp:900, silver:420 } },
+    rew:{ xp:731, silver:420 } },
   { id:'c0q8', chapter:'0 · Ngọn Đèn Tắt', lv:12, npc:'truonglang', map:'corran',
     type:'boss', mob:'boss', need:1,
     name:'Kẻ Lấy Nét Khắc', desc:'Kẻ ngồi trên nền miếu không phải quái đi lạc. Trong tay nó có ba nét khắc gỡ từ ba chân đèn, xếp gọn như người ta xếp mẫu vật. Nó biết chính xác ngọn nào cần dập — và nó đang HỌC cách khắc lại.',
-    rew:{ xp:2600, silver:1200, item:'vukhi' } },
+    rew:{ xp:2159, silver:1200, item:'vukhi' } },
 
   // ── CHƯƠNG I · RUNE GIỮ ĐÀN (cấp 14-22 · Beast Herd Camp) ────────────────────────
   // Phiến Rune đầu tiên người chơi nhìn thấy, và cũng là phiến mỏng nhất. Dạy: Lò Hỗn Độn.
   { id:'c1q1', chapter:'I · Rune Giữ Đàn', lv:14, npc:'quachtinh', map:'ngoai',
     type:'kill', mob:'boar_tusk', need:14,
     name:'Đàn Bị Dồn', desc:'Trưởng Lão Rell đọc xong ba nét khắc lấy từ xác kẻ kia thì im rất lâu. "Nét này gỡ từ chân đèn. Còn thứ đang dồn đàn gia súc ngoài trại chăn thì gỡ từ chỗ khác." Ra dọn chúng.',
-    rew:{ xp:2200, silver:900 } },
+    rew:{ xp:1510, silver:900 } },
   { id:'c1q2', chapter:'I · Rune Giữ Đàn', lv:16, npc:'monkhach', map:'ngoai',
     type:'collect', herbMap:'ngoai', need:8,
     name:'Phiến Đá Giữa Đồng', desc:'Trinh Sát Wren dẫn ngươi tới một phiến đá cắm giữa đồng cỏ, mặt khắc dày đặc. "Đây. Nó giữ cho đàn không tan khi hoảng — bảy trăm năm nay. Người khắc gọi nó là Rune Giữ Đàn." Gom nhựa cây quanh phiến để rửa lớp bụi trên mặt khắc.',
-    rew:{ xp:2600, silver:1000 } },
+    rew:{ xp:2028, silver:1000, cot:{ dong:'dongco',  n:1, pham:'tho' } } },
   { id:'c1q3', chapter:'I · Rune Giữ Đàn', lv:18, npc:'monkhach', map:'ngoai',
     type:'moc', moc:'khe', need:1,
     name:'Kẻ Đi Trước', desc:'"Sáu người qua Nhát Gọi cùng ngươi. Sáu người ĐEO một cái thân của đất này rồi mới đi được — Rune đòi trả bằng thứ nó dịch chuyển, và cái thân là thứ nó trả lại." Ký một Khế Ước đi. Cái thân đó là của ngươi, không phải con vật đi cạnh ngươi.',
-    rew:{ xp:11000, silver:4600 } },
+    rew:{ xp:2644, silver:4600, gk:3 } },
   { id:'c1q4', chapter:'I · Rune Giữ Đàn', lv:20, npc:'quachtinh', map:'ardhaven',
     type:'enhance', need:5,
     name:'Lò Hỗn Độn', desc:'"Phiến đá mỏng thì phải khắc lại vào thép. Cái lò ta mang từ Ardhaven sang làm được đúng việc đó — bỏ đồ và ngọc vào khay, máy tự nói cho ngươi biết khay đó thoả công thức nào." Đập một món lên +5 rồi quay lại.',
-    rew:{ xp:3400, silver:1300 } },
+    rew:{ xp:3366, silver:1300 } },
   { id:'c1q5', chapter:'I · Rune Giữ Đàn', lv:22, npc:'quachtinh', map:'ngoai',
     type:'tranai', need:1,
     name:'Thu Phiến Thứ Nhất', desc:'Con Ma Sói Sương Trắng đã ngồi lên phiến đá. Hạ nó và mang phiến về lò. ⚠ Rell nói thẳng cái giá: từ lúc phiến rời chỗ tới lúc thép nguội, KHÔNG CÓ AI giữ cho đàn khỏi tan.',
-    rew:{ xp:4600, silver:1900, item:'ao' } },
+    rew:{ xp:8404, silver:1900, item:'ao' } },
 
   // ── CHƯƠNG II · RUNE GIỮ BỜ (cấp 24-35 · Werebear Woods) ────────────────────────
   // Dạy: Dòng Cốt + Vỉa Cốt. Cốt là bụi đá một phiến Rune rụng ra — mỗi vùng một loại.
   { id:'c2q1', chapter:'II · Rune Giữ Bờ', lv:24, npc:'daosi', map:'chungnam',
     type:'kill', mob:'chimera_bo', need:14,
     name:'Bờ Đang Lấn', desc:'Người Gác Rừng Corran giữ cái bờ giữa rừng già và đất người ở. "Ba đời nay bờ đứng yên. Tháng này nó lấn vào ba trượng." Dọn lũ tượng đá vỡ lệnh đang đi theo mép bờ.',
-    rew:{ xp:5200, silver:2100 } },
+    rew:{ xp:5164, silver:2100 } },
   { id:'c2q2', chapter:'II · Rune Giữ Bờ', lv:26, npc:'daosi', map:'chungnam',
     type:'moc', moc:'via', need:1,
     name:'Bụi Đá Dưới Chân Phiến', desc:'"Phiến bị mài thì phải rụng ra cái gì. Cái đó chúng ta gọi là Cốt — và nó không nằm một chỗ: mỗi ngày đất trồi lên một vỉa ở một CHỖ KHÁC." Tìm vỉa hôm nay mà khai. Đi tới tận nơi, không có cách nào khác.',
-    rew:{ xp:9000, silver:3800 } },
+    rew:{ xp:6262, silver:3800, cot:{ dong:'regai',  n:1, pham:'tinh' } } },
   { id:'c2q3', chapter:'II · Rune Giữ Bờ', lv:29, npc:'daosi', map:'chungnam',
     type:'tpkill', mob:'xanu', need:12,
     name:'Đòn Đủ Nặng Cho Rừng Già', desc:'"Đòn thường chỉ làm chúng giận." Hạ mười hai con bằng chính Trấn Phái tuyệt kỹ của lớp ngươi — Corran muốn thấy tận mắt ngươi làm được trước khi ông dẫn ngươi tới phiến đá.',
-    rew:{ xp:6800, silver:2800 } },
+    rew:{ xp:8192, silver:2800, cot:{ dong:'regai',   n:1, pham:'tinh' } } },
   { id:'c2q4', chapter:'II · Rune Giữ Bờ', lv:32, npc:'daosi', map:'chungnam',
     type:'enhance', need:6,
     name:'Cốt Vào Thép', desc:'"Cốt của rừng này là Rễ Gai — mỗi vùng rụng ra một loại khác nhau, vì mặt khắc mỗi phiến mỗi khác. Bỏ nó vào lò cùng miếng thép thì thép nhớ được cái luật." Đập một món lên +6.',
-    rew:{ xp:7600, silver:3200 } },
+    rew:{ xp:10500, silver:3200 } },
   { id:'c2q5', chapter:'II · Rune Giữ Bờ', lv:35, npc:'daosi', map:'chungnam',
     type:'tranai', need:1,
     name:'Thu Phiến Thứ Hai', desc:'Tướng Quân Werebear Woods ngồi lên Rune Giữ Bờ và không giấu chuyện đó. Hạ nó, mang phiến về lò. Corran nói đúng một câu rồi quay đi: "Đêm nay ta ngủ ngoài bờ."',
-    rew:{ xp:9500, silver:3800, item:'tay' } },
+    rew:{ xp:26471, silver:3800, item:'tay' } },
 
   // ── CHƯƠNG III · RUNE GIỮ MÙA (cấp 38-50 · Plant Tribe Glade) ───────────────────
   // ⚠ Vùng này TRƯỚC ĐÂY không có nhiệm vụ nào — một map PK đủ 4 trùm, đủ BOSS_LORE, đủ một
@@ -237,23 +237,23 @@ window.QUESTS = [
   { id:'c3q1', chapter:'III · Rune Giữ Mùa', lv:38, npc:'monkhach', map:'daohoa',
     type:'kill', mob:'bandao', need:14,
     name:'Luống Ấp Không Nở', desc:'"Luống ấp Plant Tribe lẽ ra nở tháng trước." Wren đưa ngươi một nhánh mầm đã đen đầu. Axie Sa Ngã dạt về chiếm nền trại cũ — mở đường vào.',
-    rew:{ xp:11000, silver:4600 } },
+    rew:{ xp:16454, silver:4600 } },
   { id:'c3q2', chapter:'III · Rune Giữ Mùa', lv:41, npc:'monkhach', map:'daohoa',
     type:'kill', mob:'thinu', need:14,
     name:'Ổ Ấp Bỏ Lại', desc:'Oan hồn tụ trên luống cũ. Không con nào rời khỏi vạt đất ấy quá mười bước — chúng đang chờ một thứ mà chỗ này từng hứa với chúng.',
-    rew:{ xp:13000, silver:5400 } },
+    rew:{ xp:20217, silver:5400, cot:{ dong:'canhhoa', n:1, pham:'tinh' } } },
   { id:'c3q3', chapter:'III · Rune Giữ Mùa', lv:44, npc:'monkhach', map:'daohoa',
     type:'moc', moc:'cot', need:4,
     name:'Mảnh Cốt Đầu Tiên', desc:'"Cốt là xương của thứ đã từng giữ một cái luật. Cắm đủ bốn ô cùng một Dòng thì chiêu của ngươi ĐỔI CÁCH CHẠY — không mạnh thêm, mà khác đi." Cắm cho đủ bốn ô. Mỗi vùng một Dòng, nên chọn nơi cày là chọn build.',
-    rew:{ xp:15000, silver:6200 } },
+    rew:{ xp:24593, silver:6200, cot:{ dong:'canhhoa',n:2, pham:'tinh' } } },
   { id:'c3q4', chapter:'III · Rune Giữ Mùa', lv:47, npc:'monkhach', map:'daohoa',
     type:'enhance', need:7,
     name:'Thép Chịu Được Mùa', desc:'"Phiến ở đây giữ cho luống nở đúng mùa. Cái luật ấy nặng hơn cái luật giữ một cái đàn." Đập một món lên +7 trước khi tới gần nó.',
-    rew:{ xp:17000, silver:7000 } },
+    rew:{ xp:29659, silver:7000 } },
   { id:'c3q5', chapter:'III · Rune Giữ Mùa', lv:50, npc:'monkhach', map:'daohoa',
     type:'tranai', need:1,
     name:'Thu Phiến Thứ Ba', desc:'Thủ Lĩnh Đoàn Gloam ngồi trên Rune Giữ Mùa, và hắn từng mặc bộ giáp giống ngươi. Hắn sẽ nói thế, và hắn nói thật. Hạ hắn, mang phiến về lò.',
-    rew:{ xp:20000, silver:8200, item:'non' } },
+    rew:{ xp:70996, silver:8200, item:'non' } },
 
   // ── CHƯƠNG IV · RUNE GIỮ TÊN (cấp 52-60 · Bug Tribe Tunnels → Aquatic Causeway) ──
   // Phiến GỐC — nghề khắc Rune bắt đầu ở đây, và Sylas nhận ra mình đã khắc cái gì.
@@ -261,52 +261,52 @@ window.QUESTS = [
   { id:'c4q1', chapter:'IV · Rune Giữ Tên', lv:52, npc:'thumo', map:'comoc',
     type:'kill', mob:'mocnhan', need:16,
     name:'Hai Trăm Quả Chưa Nở', desc:'Sylas đếm trứng suốt ba năm. "Dưới ổ ấp này là phiến GỐC — Rune Giữ Tên. Trứng nào nở cũng phải xin nó một cái tên. Ba tuần nay không quả nào xin được." Dọn lũ Golem đang đè lên lối xuống.',
-    rew:{ xp:23000, silver:9500 } },
+    rew:{ xp:39867, silver:9500 } },
   { id:'c4q2', chapter:'IV · Rune Giữ Tên', lv:54, npc:'thumo', map:'comoc',
     type:'moc', moc:'ruong', need:2,
     name:'Hòm Có Người Canh', desc:'"Người vùng này không cất đồ trong nhà. Họ cất trong hòm, rồi để bốn con canh cái hòm — vì một cái tên mất thì tìm lại được, một cái hòm mất thì không." Mở hai cái. Trại canh còn sống thì hòm còn khoá.',
-    rew:{ xp:26000, silver:11000 } },
+    rew:{ xp:44651, silver:11000, ngoc:{ chucPhuc:2 } } },
   { id:'c4q3', chapter:'IV · Rune Giữ Tên', lv:56, npc:'thumo', map:'comoc',
     type:'moc', moc:'mastery', need:1,
     name:'Thứ Không Ai Dạy Được', desc:'"Nét khắc không dán lên đồ, và nghề không dán lên người. Ngươi mất ký ức chứ không mất nghề — nên mở cái bảng trong đầu mình ra mà xem, nó đã đầy chữ sẵn rồi." Phân một điểm Đại Thành.',
-    rew:{ xp:29000, silver:12000 } },
+    rew:{ xp:49883, silver:12000, cot:{ dong:'votrung',n:1, pham:'co' } } },
   { id:'c4q4', chapter:'IV · Rune Giữ Tên', lv:58, npc:'thumo', map:'comoc',
     type:'enhance', need:9,
     name:'Rune Trong Thép', desc:'"Vaeldra khắc vào thép, chúng ta khắc vào đá. Cùng một nghề, khác cái phiến." Đập một món lên +9 rồi mang xuống cho ta xem nét khắc.',
-    rew:{ xp:33000, silver:13500 } },
+    rew:{ xp:55599, silver:13500 } },
   { id:'c4q5', chapter:'IV · Rune Giữ Tên', lv:60, npc:'thumo', map:'comoc',
     type:'tranai', need:1,
     name:'Thu Phiến Gốc', desc:'Tướng Quân ngồi trên phiến gốc và không cho trứng nào xin tên. Hạ nó. ⚠ Và nghe cho hết câu Sylas nói sau đó — ông ấy sẽ nói ai đã khắc nét trên trời.',
-    rew:{ xp:38000, silver:15500, item:'chan' } },
+    rew:{ xp:160780, silver:15500, item:'chan' } },
 
   // ── CHƯƠNG V · RUNE GIỮ KHÚC (cấp 62-78 · Bird Tribe Heights) ───────────────────
   // Dạy: Bản Năng + Tầng Sâu.
   { id:'c5q1', chapter:'V · Rune Giữ Khúc', lv:62, npc:'ttmon', map:'tuyettinh',
     type:'kill', mob:'ttdetu', need:18,
     name:'Ba Tổ Ngừng Hát', desc:'Liora sống ở độ cao Bird axie chọn để tránh Chimera. "Phiến dưới kia giữ cho một khúc hát không tắt theo người hát nó. Ba tổ trên cao đã ngừng hát." Năm nay lũ cuồng tín leo được lên tới nơi.',
-    rew:{ xp:43000, silver:17500 } },
+    rew:{ xp:88714, silver:17500 } },
   { id:'c5q2', chapter:'V · Rune Giữ Khúc', lv:65, npc:'ttmon', map:'tuyettinh',
     type:'moc', moc:'nangky', need:3,
     name:'Bản Năng', desc:'"Ngươi mất ký ức, không mất nghề. Cái nghề ấy không nằm trong đầu — nó nằm trong tay, và mỗi lần tay nhớ ra thêm một nhát thì ta gọi là Bản Năng." Nâng ba cấp kỹ năng. Bản Năng là thứ trả cho những nhát đó, và đánh quái là cách tay nhớ lại.',
-    rew:{ xp:52000, silver:21000 } },
+    rew:{ xp:102481, silver:21000, ngoc:{ linhHon:1 } } },
   { id:'c5q3', chapter:'V · Rune Giữ Khúc', lv:68, npc:'ttmon', map:'tuyettinh',
     type:'kill', mob:'docyeu', need:18,
     name:'Bài Hát Bị Cắt', desc:'Bird axie hát những khúc chỉ chúng hiểu, có khúc dùng ngay trong lúc đánh. Thứ này cắt khúc giữa câu — và nó làm thế có chủ đích.',
-    rew:{ xp:54000, silver:22000 } },
+    rew:{ xp:117928, silver:22000 } },
   { id:'c5q4', chapter:'V · Rune Giữ Khúc', lv:72, npc:'ttmon', map:'tuyettinh',
     type:'enhance', need:11,
     name:'Đủ Sức Đi Tiếp', desc:'"Chỗ ngươi sắp tới không có đèn nào cả. Đừng mang thép nửa vời xuống đó." Đập một món lên +11. Muốn nhanh thì xuống Tầng Sâu — càng sâu càng xa mọi phiến Rune, nên không tầng nào có luật, và không tầng nào giống tầng nào.',
-    rew:{ xp:60000, silver:25000 } },
+    rew:{ xp:141433, silver:25000, cot:{ dong:'bangvun', n:1, pham:'co' } } },
   // ⚠ Sát Thủ Sương Mù là C78, nên nhiệm vụ này phải nằm ở cấp 75 chứ không phải 72: bản đầu
   // tôi đặt nó ở 72 và phép kiểm bắt lệch +6. Ngưỡng là ±4 cấp — đừng nới ngưỡng, dịch cấp.
   { id:'c5q5', chapter:'V · Rune Giữ Khúc', lv:75, npc:'ttmon', map:'tuyettinh',
     type:'kill', mob:'satthuhy', need:14,
     name:'Kẻ Săn Người Giữ Đèn', desc:'Chúng không săn bừa. Chúng săn đúng những con còn biết thắp đèn, và còn biết khúc hát nào đi với ngọn nào. Mười bốn con.',
-    rew:{ xp:67000, silver:28000 } },
+    rew:{ xp:161490, silver:28000 } },
   { id:'c5q6', chapter:'V · Rune Giữ Khúc', lv:78, npc:'ttmon', map:'tuyettinh',
     type:'tranai', need:1,
     name:'Thu Phiến Thứ Năm', desc:'Tướng Quân ngồi trên đúng cái phiến lẽ ra giữ khúc của ba tổ đã im. Hạ nó, mang phiến về lò. "Ta chép nhanh hơn," Liora nói. Bà biết bà đang chép cái gì.',
-    rew:{ xp:75000, silver:32000, item:'daychuyen' } },
+    rew:{ xp:367721, silver:32000, item:'daychuyen' } },
 
   // ── CHƯƠNG VI · RUNE GIỮ LỬA (cấp 80-100 · Reptile Sunstone Flats) ─────────────
   // ⚠ NV mở chương là `talk`, KHÔNG phải đánh — cố ý. Bird Tribe Heights hết ở cấp 78 còn
@@ -316,27 +316,27 @@ window.QUESTS = [
   { id:'c6q1', chapter:'VI · Rune Giữ Lửa', lv:80, npc:'quachtinh', map:'mongco',
     type:'talk', targetNpc:'noiung', need:1,
     name:'Xuống Vùng Đá Nóng', desc:'Rell gọi ngươi về thành một lần nữa. "Dax nằm ngoài vùng đá ba năm để đếm quân. Hôm qua hắn gửi than viết lên đá: mỏ nào cũng tắt lửa qua đêm." Đi tìm hắn — và đừng đứng thẳng lưng khi tới.',
-    rew:{ xp:82000, silver:34000 } },
+    rew:{ xp:200172, silver:34000 } },
   { id:'c6q2', chapter:'VI · Rune Giữ Lửa', lv:84, npc:'noiung', map:'mongco',
     type:'kill', mob:'thamtu', need:20,
     name:'Đá Nóng Quanh Năm', desc:'Reptile axie dựng nhà trên tảng lớn, mở ra đóng vào theo nắng — vì phiến Rune ở đây giữ cho lò không nguội qua đêm. Nay có thứ đóng chúng lại từ bên ngoài. Dọn lũ trinh sát trước.',
-    rew:{ xp:92000, silver:38000 } },
+    rew:{ xp:236479, silver:38000, cot:{ dong:'trotan',  n:1, pham:'co' } } },
   { id:'c6q3', chapter:'VI · Rune Giữ Lửa', lv:88, npc:'noiung', map:'mongco',
     type:'tpkill', mob:'thamtu', need:14,
     name:'Đôi Cánh', desc:'"Bình nguyên này rộng, và ngươi thì chạy bằng chân." Ghép một đôi cánh ở lò rồi quay lại hạ mười bốn con bằng Trấn Phái — Dax muốn thấy ngươi rời được mặt đất.',
-    rew:{ xp:102000, silver:42000 } },
+    rew:{ xp:278238, silver:42000 } },
   { id:'c6q4', chapter:'VI · Rune Giữ Lửa', lv:92, npc:'noiung', map:'mongco',
     type:'moc', moc:'hap', need:2,
     name:'Mỏ Đã Tắt Lửa', desc:'"Reptile axie đào quặng và TẠO ra lửa, không mượn lửa. Mỏ tắt lửa nghĩa là không còn ai dưới đó — nhưng hòm của họ thì vẫn còn." Hung Thần thả hòm xuống đây. Ném hai cái ra mà mở.',
-    rew:{ xp:112000, silver:46000 } },
+    rew:{ xp:326165, silver:46000, ngoc:{ chucPhuc:3, linhHon:1 } } },
   { id:'c6q5', chapter:'VI · Rune Giữ Lửa', lv:96, npc:'noiung', map:'mongco',
     type:'kill', mob:'kybinh', need:16,
     name:'Bốn Nghìn Hai Trăm', desc:'"Ta đếm được bốn nghìn hai trăm quân. Ngươi có một người." Dax vẫn nằm. Phá đúng một chỗ: hàng kỵ sĩ giữa lều Tướng Quân và phiến đá.',
-    rew:{ xp:124000, silver:52000 } },
+    rew:{ xp:381061, silver:52000 } },
   { id:'c6q6', chapter:'VI · Rune Giữ Lửa', lv:100, npc:'noiung', map:'mongco',
     type:'tranai', need:1,
     name:'Thu Phiến Thứ Sáu', desc:'Tướng Quân dựng lều ngay trên Rune Giữ Lửa và ngồi lên nó như ngồi lên ghế. Hạ hắn, mang phiến về lò. Trên xác hắn có một bảng gỗ khắc bảy cái tên — bốn cái đã bị gạch.',
-    rew:{ xp:140000, silver:58000, item:'nhan1' } },
+    rew:{ xp:887643, silver:58000, item:'nhan1' } },
 
   // ── CHƯƠNG VII · RUNE GIỮ ĐƯỜNG (cấp 104-116 · Dusk Marsh) ────────────────────
   // Phiến thứ bảy, ở cửa Cây Hồn. NV CUỐI của cả chuỗi là `tranai` — nên hạ con Trấn Ải ở đây
@@ -346,27 +346,27 @@ window.QUESTS = [
   { id:'c7q1', chapter:'VII · Rune Giữ Đường', lv:104, npc:'laotuong', map:'nhanmon',
     type:'kill', mob:'cuongbinh', need:18,
     name:'Đầm Của Dusk', desc:'Lão Tướng Brann gọi tên cả sáu người đã dẫn ngươi tới đây, rồi nói ông không có tên trên bảng gỗ kia. "Dusk axie canh Cây Hồn. Chúng chưa bỏ chạy — nghĩa là còn thứ đáng canh."',
-    rew:{ xp:158000, silver:64000 } },
+    rew:{ xp:515451, silver:64000 } },
   { id:'c7q2', chapter:'VII · Rune Giữ Đường', lv:106, npc:'laotuong', map:'ardhaven',
     type:'talk', targetNpc:'quachtinh', need:1,
     name:'Mang Bảng Tên Về Thành', desc:'"Bốn cái tên bị gạch. Cái thứ năm là RELL. Cái thứ sáu là tên ngươi. Còn cái thứ bảy thì khắc SAU sáu cái kia, bằng một bàn tay khác." Mang bảng về cho Rell. Ông ấy là người duy nhất còn nhớ đủ bốn cái tên đầu.',
-    rew:{ xp:170000, silver:70000 } },
+    rew:{ xp:554938, silver:70000, cot:{ dong:'samvun',  n:1, pham:'co' } } },
   { id:'c7q3', chapter:'VII · Rune Giữ Đường', lv:108, npc:'laotuong', map:'nhanmon',
     type:'tpkill', mob:'kylan', need:12,
     name:'Vòng Trong Cùng', desc:'Nhà Dusk axie tàng hình được, nên thứ vây quanh đây không tìm nhà — nó vây chính Cây Hồn. Phá vòng vây bằng Trấn Phái.',
-    rew:{ xp:184000, silver:76000 } },
+    rew:{ xp:597073, silver:76000 } },
   { id:'c7q4', chapter:'VII · Rune Giữ Đường', lv:110, npc:'laotuong', map:'ardhaven',
     type:'enhance', need:11,
     name:'Tái Sinh', desc:'"Thép của ngươi tới trần rồi. Con đường còn lại thì không." Đập một món lên +11 và hỏi lò về Tái Sinh — trả lại cấp để đi lại từ đầu với một thân thể nặng hơn. Brann đã làm chuyện đó hai lần.',
-    rew:{ xp:200000, silver:84000 } },
+    rew:{ xp:642017, silver:84000 } },
   { id:'c7q5', chapter:'VII · Rune Giữ Đường', lv:112, npc:'laotuong', map:'nhanmon',
     type:'kill', mob:'kylan', need:18,
     name:'Chỗ Hồn Quay Về', desc:'"Đường về Cây Hồn đi qua vòng trong cùng, và vòng đó đang bị chặn hai đầu. Ta lo đầu bên kia." Dọn đầu bên này. Kỳ Lân Bão Tố đứng thành hàng — không con nào rời chỗ, vì chúng được lệnh đứng đó.',
-    rew:{ xp:150000, silver:62000 } },
+    rew:{ xp:689940, silver:62000 } },
   { id:'c7q6', chapter:'VII · Rune Giữ Đường', lv:114, npc:'laotuong', map:'nhanmon',
     type:'tranai', need:1,
     name:'Thu Phiến Thứ Bảy', desc:'⚠ Đọc hết trước khi đi. Rune Giữ Đường là thứ chỉ đường cho hồn quay về Cây Hồn — những ngọn đèn tắt ở Rẻo Rừng Corran hồi ngươi mới tới là đầu xa của chính phiến này. Gỡ nó ra thì suốt thời gian nó nằm trong lò, không một hồn nào ở Lunacia tìm được đường. Brann không cản. Ông chỉ xin ngươi làm chuyện đó trong lúc còn tỉnh táo.',
-    rew:{ xp:260000, silver:110000, item:'daychuyen' } },
+    rew:{ xp:1482045, silver:110000, item:'daychuyen' } },
 
   // ── CHƯƠNG VIII · NGƯỜI THỨ BẢY (cấp 116-120 · Dusk Marsh → Trũng Nứt) ───────────
   //
@@ -385,22 +385,22 @@ window.QUESTS = [
     type:'talk', targetNpc:'thumo',
     name:'Bảng Gỗ Bảy Cái Tên',
     desc:'"Ta giữ cái bảng từ hôm hạ Tướng Quân Reptile Sunstone Flats. Bảy cái tên, bốn cái đã bị gạch. Cái thứ năm là RELL. Cái thứ sáu là ngươi." Brann đưa bảng gỗ, rồi ngồi xuống. "Cái thứ bảy chưa bị gạch, vì chưa ai chứng minh được là nó nên bị gạch. Mang xuống cho Sylas — ông ấy khắc, ông ấy đọc được nét ai."',
-    rew:{ xp:160000, silver:66000 } },
+    rew:{ xp:795454, silver:66000 } },
   { id:'c8q2', chapter:'VIII · Người Thứ Bảy', lv:118, npc:'thumo', map:'nhanmon',
     type:'kill', mob:'daokhach', need:16,
     name:'Nét Khắc Trên Người',
     desc:'"Bảy cái tên này khắc bằng một tay. Sáu cái khắc lên gỗ. Cái thứ bảy…" Sylas dừng rất lâu. "…khắc lên chính nó. Ta chưa từng thấy ai làm thế, vì gỗ thì gánh được một cái luật, còn người thì không." Đoàn Gloam theo hắn đang rút về phía trũng — chặn chúng lại mà hỏi.',
-    rew:{ xp:180000, silver:74000 } },
+    rew:{ xp:853435, silver:74000 } },
   { id:'c8q3', chapter:'VIII · Người Thứ Bảy', lv:119, npc:'thumo', map:'nhanmon',
     type:'moc', moc:'khe', need:3,
     name:'Trả Bằng Thứ Nó Dịch Chuyển',
     desc:'"Rune đòi trả bằng thứ nó dịch chuyển. Ngươi trả bằng ký ức, nên ngươi quên. Hắn giữ được ký ức vì hắn trả bằng ký ức của NGƯỜI KHÁC." Sylas nhìn cái thân ngươi đang đeo. "Muốn đứng nổi trước hắn thì phải biết cái thân này là thứ được TRẢ LẠI, không phải thứ mượn." Ký đủ ba Khế Ước trước khi xuống trũng.',
-    rew:{ xp:200000, silver:82000 } },
+    rew:{ xp:883823, silver:82000, gk:10 } },
   { id:'c8q4', chapter:'VIII · Người Thứ Bảy', lv:120, npc:'thumo', map:'trungnut',
     type:'boss', need:1,
     name:'Dưới Nhát Gọi',
     desc:'Hắn đợi ở đáy Trũng Nứt, ngay dưới vết cắt trên trời — chỗ duy nhất ở Lunacia không phiến đá nào cắm nổi, nên cũng là chỗ duy nhất không cái luật nào chạm tới hắn. Một con mắt không có tròng. "Ngươi gỡ bảy cái luật xuống rồi mang tới đây để hỏi ta vì sao?" ⚠ Đèn vẫn tắt sau trận này. Gỡ Rune là việc của ngươi, không phải của hắn.',
-    rew:{ xp:240000, silver:100000, item:'nhan1' } },
+    rew:{ xp:1767646, silver:100000, item:'nhan1' } },
 ];
 
 
@@ -789,6 +789,10 @@ window.MAPS = {
     // (test_bossplace) — mà `dh1` đứng ngay giữa bắc map (1130,670), nên lối bắc phải lùi hẳn
     // sang đông và lối đông phải nằm TRÊN `dh4` (2236,1520), không nằm dưới.
     spawnFrom:{ chungnam:{ x:330, y:700 }, loimon:{ x:2290, y:600 }, trungnut:{ x:1880, y:300 } },
+    // ⚠ `HERB_SPOTS` (game.js) ĐÃ có toạ độ chấm bằng máy cho map này từ lâu, chỉ thiếu đúng
+    // cờ này nên không bụi nào mọc — và nhiệm vụ hái ở đây là lời hứa suông. Cờ và bảng toạ
+    // độ là HAI chỗ: có bảng mà quên cờ thì không lỗi nào báo.
+    herbs:true,
     trees:70, rocks:26,
     desc:'Luống ấp Plant Tribe lẽ ra nở tháng trước — Rune Giữ Mùa ở đây đã mỏng. Nay là đất PK, hạ người khác được mà bị hạ cũng được. Axie Sa Ngã dạt về từ phía rẻo rừng, Golem thì ngủ ngay trên luống cũ.',
     // Cụm quái xếp theo vòng từ spawn ra: gần nhất là bandao (C38) → thinu (C42) → xa nhất là
@@ -988,6 +992,10 @@ window.MAPS = {
     sanIso:true, isoCay:150,
     // Diem tha cach cong Tay 277px. Ban dau dat o x=200 -- chi 92px, ma ban kinh bat cong la 90:
     // nguoi choi vao map bang duong khac la bi hut nguoc ve Reo Rung Corran ngay lap tuc.
+    // ⚠ `HERB_SPOTS` (game.js) ĐÃ có toạ độ chấm bằng máy cho map này từ lâu, chỉ thiếu đúng
+    // cờ này nên không bụi nào mọc — và nhiệm vụ hái ở đây là lời hứa suông. Cờ và bảng toạ
+    // độ là HAI chỗ: có bảng mà quên cờ thì không lỗi nào báo.
+    herbs:true,
     spawnFrom:{ daohoa:{ x:330, y:779 } }, spawn:{ x:380, y:790 }, trees:0, rocks:0,
     desc:'Lối mòn men theo rẻo rừng, chạy mãi về đông. Một lối mòn không phải một nơi, nên không có cái luật nào để mà khắc — cây khép hai bên, không đường tắt.',
     voi: 6000,
@@ -1195,6 +1203,10 @@ window.MAPS = {
   trungnut: { boss:'drue', name:'Trũng Nứt Corran', min:44, range:'44 - 50', type:'freepk',
     w:4200, h:3200, ground:'#2f3324', patch:'#6a7a52', sanIso:true,
     spawnFrom:{ daohoa:{ x:706, y:2845 }, comoc:{ x:3805, y:770 } },
+    // ⚠ `HERB_SPOTS` (game.js) ĐÃ có toạ độ chấm bằng máy cho map này từ lâu, chỉ thiếu đúng
+    // cờ này nên không bụi nào mọc — và nhiệm vụ hái ở đây là lời hứa suông. Cờ và bảng toạ
+    // độ là HAI chỗ: có bảng mà quên cờ thì không lỗi nào báo.
+    herbs:true,
     spawn:{ x:666, y:2640 }, trees:0, rocks:0,
     desc:'Đất trũng xuống ngay dưới Nhát Gọi — cắm đá xuống đây thì đá nứt, nên không phiến Rune nào giữ chỗ này. Không luật nào giữ thì ai cũng lấy được, kể cả lấy của nhau.',
     voi: 2800,
@@ -1268,6 +1280,10 @@ window.MAPS = {
   caungam: { name:'Aquatic Tribe Causeway', min:54, range:'56 - 62', type:'pk', hinh:'hanhlang',
     w:2803, h:2808, ground:'#3a4450', patch:'#2a3038',
     spawnFrom:{ comoc:{ x:330, y:500 }, tuyettinh:{ x:1850, y:2600 } },
+    // ⚠ `HERB_SPOTS` (game.js) ĐÃ có toạ độ chấm bằng máy cho map này từ lâu, chỉ thiếu đúng
+    // cờ này nên không bụi nào mọc — và nhiệm vụ hái ở đây là lời hứa suông. Cờ và bảng toạ
+    // độ là HAI chỗ: có bảng mà quên cờ thì không lỗi nào báo.
+    herbs:true,
     spawn:{ x:470, y:620 }, trees:0, rocks:0,
     // ── SÀN LÁT VIÊN ISOMETRIC ────────────────────────────────────────────────────────────
     // Map đầu tiên chuyển khỏi nền tranh nhìn ngang. Chọn caungam mở màn vì nó ĐÃ có sẵn đa
@@ -1909,56 +1925,177 @@ Những Axie ở đây không gọi ngươi tới để chứng kiến chuyện 
 // dưới đây là **4 đánh / 3 hái / 1 đưa tin / 1 dùng lò** — không map nào có quá MỘT nhiệm vụ
 // đánh quái. Đếm lại bất cứ lúc nào; tỉ lệ vượt 50% là đang đi lại vết cũ.
 //
+// SỐ ĐO HIỆN TẠI — 32 mục / 10 map: collect 6 · kill 10 · talk 6 · moc 6 · tranai 2 · chaos 2.
+// Đánh nhau 12/32 = 38%. **Mỗi map đúng MỘT mục `kill`** — luật đó vẫn giữ nguyên. Hai map
+// `loimon`/`caungam` có thêm một mục `tranai`, nhưng hạ một con trùm không phải là cày N con:
+// nó là một trận, một lần. Đừng đọc hai thứ đó thành cùng một loại khi đếm lại.
+//
+// ⚠ `moc` dùng CHUNG bảng `MOC_NV` với chính tuyến và đếm TỪ TRẠNG THÁI, nên một mục `moc` mà
+// người chơi đã làm đủ từ trước là XONG NGAY lúc nhận. Đó là chủ ý (xem CLAUDE.md mục MOC_NV):
+// nhiệm vụ kiểu "hãy chạm vào hệ thống này" thì đếm theo sự kiện là bẫy người chơi làm trước.
+//
 // ⚠ `reqMain` là CHỈ SỐ nhiệm vụ chính (0-based), không phải số thứ tự. Mốc chương hiện tại:
 // ch0 = 0-7 · I = 8-12 · II = 13-17 · III = 18-22 · IV = 23-27 · V = 28-33 · VI = 34-39 ·
 // VII = 40-45. Thêm/bớt một nhiệm vụ chính là mọi `reqMain` dưới đây trượt — nên để mốc THẤP
 // hơn chỗ cần một chút, đừng khoá sát.
 //
-// ⚠ Trần 3 nhiệm vụ phụ cùng lúc (`sideAvail` trả 'full'). Chín mục rải theo cấp 40→62 nên
-// không bao giờ có quá ba cái mở cùng lúc — nếu thêm mục mới thì kiểm lại chỗ đó.
+// ⚠ Trần **5** mục cầm cùng lúc (`SIDE_TRAN` trong game.js, `sideAvail` trả 'full'). Trước là 3,
+// hợp khi cả bảng có 9 mục rải cấp 40→62; nay 32 mục phủ cấp 3→116 và MỖI VÙNG CÓ ĐÚNG BA MỤC,
+// nên trần 3 nghĩa là nhận trọn một vùng rồi thì không cầm nổi mục nào của vùng khác.
 window.SIDE_QUESTS = [
+  // ── RẺO RỪNG CORRAN (`corran`, 1-12) — nơi học chơi, nên không mục nào ép cày ──
+  { id:'sd_co1', map:'corran', npc:'duocsu', reqLv:3, reqMain:1, type:'collect', herbMap:'corran', need:5,
+    name:'Thứ Mọc Được Thì Còn Kịp',
+    desc:'"Ngươi rơi xuống đây trần trụi, đúng không. Vậy thì học cái rẻ nhất trước: cúi xuống mà hái." Năm bụi quanh rẻo rừng. Không con nào cắn ngươi ở đó cả — đấy là chỗ duy nhất trong vùng ta dám nói câu ấy.',
+    rew:{ xp:62, silver:160 } },
+  { id:'sd_co2', map:'corran', npc:'duocsu', reqLv:7, reqMain:1, type:'kill', mob:'wolf', need:14,
+    name:'Bầy Tới Sớm Hơn Mọi Năm',
+    desc:'"Sói xuống bìa rừng sớm hơn mọi năm hai tháng. Người ta bảo tại thời tiết. Ta trộn thuốc ba mươi năm, ta biết mùi thời tiết — cái này không phải." Dọn mười bốn con, rồi ta nói tiếp.',
+    rew:{ xp:347, silver:340 } },
+  { id:'sd_co3', map:'corran', npc:'duocsu', reqLv:10, reqMain:1, type:'talk', targetNpc:'thoren_dao', need:1,
+    name:'Cái Lò Ở Đâu',
+    desc:'"Ngươi sẽ cần cái lò trước khi ngươi biết là mình cần nó. Đi hỏi Thoren ở lò rèn ngoài rẻo — nói ta gửi." Đi một chuyến, nhớ đường. Phần còn lại của cuộc đời ngươi ở đây sẽ đi đi lại lại con đường đó.',
+    rew:{ xp:731, silver:520, ngoc:{ chucPhuc:1 } } },
+
+  // ── BEAST HERD CAMP (`ngoai`, 14-24) — vùng an toàn nhưng là bãi săn tám bãi ──
+  { id:'sd_ng1', map:'ngoai', npc:'traichu', reqLv:14, reqMain:7, type:'collect', herbMap:'ngoai', need:7,
+    name:'Cỏ Đàn Không Chịu Ăn',
+    desc:'"Đàn của ta bỏ bảy vạt cỏ. Không phải cỏ độc — ta nếm rồi. Chúng chỉ không chịu ăn." Hái bảy bụi ở đúng bảy vạt đó mang về đây. Ta muốn biết đàn nó ngửi thấy cái gì mà ta thì không.',
+    rew:{ xp:1510, silver:900 } },
+  { id:'sd_ng2', map:'ngoai', npc:'traichu', reqLv:18, reqMain:7, type:'kill', mob:'bandit_vet', need:16,
+    name:'Kẻ Đi Theo Người Thứ Bảy',
+    desc:'"Đám Gloam cũ không cướp. Đám này thì cướp, mà không lấy gì ăn được — chúng lục tìm đá khắc." Mười sáu tên quanh trại. Lục túi chúng nếu ngươi muốn, ta thì hết muốn rồi.',
+    rew:{ xp:2644, silver:1300 } },
+  { id:'sd_ng3', map:'ngoai', npc:'traichu', reqLv:22, reqMain:7, type:'moc', moc:'ruong', need:1,
+    name:'Hòm Của Người Đã Không Về',
+    desc:'"Khắp mấy vùng này có hòm chôn sẵn, đời trước để lại, và mỗi cái có một trại canh. Mở được một cái thì ngươi hiểu vì sao ta không bao giờ đi một mình." Tìm một Rương Canh bất kỳ, dọn trại canh, mở nó ra.',
+    rew:{ xp:4202, silver:1900, ngoc:{ chucPhuc:1 } } },
+
+  // ── WEREBEAR WOODS (`chungnam`, 24-38) — Rune Giữ Bờ ──
+  { id:'sd_ch1', map:'chungnam', npc:'daosi', reqLv:26, reqMain:12, type:'kill', mob:'phando', need:18,
+    name:'Bờ Đang Lấn',
+    desc:'"Phiến đá giữ cho rừng đừng lấn qua bờ. Nay bờ lấn, mà phiến vẫn đứng đó — nghĩa là phiến đã mỏng tới mức giữ không nổi nữa." Mười tám con đã qua bờ. Đẩy chúng lại chỗ của chúng.',
+    rew:{ xp:6262, silver:2600 } },
+  { id:'sd_ch2', map:'chungnam', npc:'daosi', reqLv:30, reqMain:12, type:'moc', moc:'hap', need:1,
+    name:'Thứ Người Ta Chôn Cùng Hòm',
+    desc:'"Đám buôn Ardhaven bán mấy cái hộp khoá kín, gọi là Box Kundun. Ta không tin thứ mình không mở ra xem được." Mở một cái. Ngươi mở, ta nhìn. Ta muốn biết bên trong là đồ thật hay là trò.',
+    rew:{ xp:8917, silver:3300, item:'tay' } },
+  { id:'sd_ch3', map:'chungnam', npc:'daosi', reqLv:34, reqMain:12, type:'talk', targetNpc:'vandai', need:1,
+    name:'Người Bên Kia Vực',
+    desc:'"Có kẻ ngồi bên mép vực đông, ba năm nay không xuống. Ta không qua được — ta còn phải đi vòng quanh phiến đá." Mang câu này sang: *bờ đã lấn tới gốc cây thứ chín rồi.* Ông ta sẽ hiểu.',
+    rew:{ xp:12273, silver:4100 } },
+
+  // ── PLANT TRIBE GLADE (`daohoa`, 38-48) — Rune Giữ Mùa ──
+  { id:'sd_dh1', map:'daohoa', npc:'uomluong', reqLv:38, reqMain:17, type:'collect', herbMap:'daohoa', need:8,
+    name:'Tám Dòng Giống Nhau',
+    desc:'"Ta ghi ba mùa liền một dòng: NỞ SỚM. Ghi mà không hiểu thì cũng như không ghi." Hái tám bụi ở tám luống khác nhau mang về — ta muốn xem chúng có nở sớm giống nhau không, hay mỗi luống một kiểu.',
+    rew:{ xp:16454, silver:5200 } },
+  { id:'sd_dh2', map:'daohoa', npc:'uomluong', reqLv:42, reqMain:17, type:'kill', mob:'thinu', need:18,
+    name:'Thứ Nở Ra Từ Luống Hỏng',
+    desc:'"Luống nở sai mùa thì thứ nở ra cũng sai. Mười tám con đang bò quanh mép bãi, và ta không nhận ra con nào trong số đó." Dọn chúng đi. Ta vẫn sẽ ghi lại, vì ghi là việc của ta.',
+    rew:{ xp:21604, silver:6300 } },
+  { id:'sd_dh3', map:'daohoa', npc:'uomluong', reqLv:46, reqMain:17, type:'moc', moc:'nangky', need:2,
+    name:'Thứ Không Nằm Trong Sổ',
+    desc:'"Ta ghi được mọi thứ trừ một chuyện: ngươi mạnh lên bằng cách nào. Người Vaeldra các ngươi không ăn, không ngủ thêm, mà tuần sau đánh khác tuần trước." Nâng hai chiêu lên một bậc rồi về đây. Ta muốn ghi đúng ngày nó xảy ra.',
+    rew:{ xp:27889, silver:7500, ngoc:{ linhHon:1 } } },
+
+  // ── TRẤN ẢI KHÔNG CHƯƠNG NÀO DẪN TỚI ────────────────────────────────────────────
+  // ⚠ `loimon` và `caungam` cố ý KHÔNG có chương chính tuyến (không phiến Rune nào cắm được ở
+  // một lối đi hay một nhịp đá không nền). Nhưng Tướng Quân thì vẫn đứng đó — hai con DUY NHẤT
+  // trong mười một con mà không một nhiệm vụ nào trỏ tới. Đây là chỗ trả nốt.
+  { id:'sd_lm4', map:'loimon', npc:'vandai', reqLv:50, reqMain:20, type:'tranai', need:1,
+    name:'Kẻ Chặn Cuối Lối',
+    desc:'"Lối mòn không có phiến đá nào giữ, nên không có Tướng Quân nào NÊN ngồi ở đấy. Vậy mà có một con ngồi ở cuối lối, và nó không giữ gì cả — nó chỉ chặn." Đi hết lối. Xem thứ chặn ở cuối là cái gì.',
+    rew:{ xp:70996, silver:11000, item:'vukhi' } },
+  { id:'sd_cg1', map:'caungam', npc:'doantruongnhai', reqLv:64, reqMain:27, type:'tranai', need:1,
+    name:'Thứ Ngồi Trên Nhịp Đá',
+    desc:'"Nhịp đá không có nền, nên không phiến nào cắm được, nên đáng lẽ không có gì phải canh ở đó." Nhưng có một con ngồi giữa nhịp, ngay trên hồ không đáy. Nó canh cái gì thì ngươi hỏi nó — ta thì không định hỏi.',
+    rew:{ xp:195427, silver:21000, item:'ao' } },
+
+  // ── BIRD TRIBE HEIGHTS (`tuyettinh`, 62-78) — Rune Giữ Khúc ──
+  { id:'sd_tt1', map:'tuyettinh', npc:'ttmon', reqLv:64, reqMain:27, type:'kill', mob:'ttdetu', need:20,
+    name:'Khúc Hát Tắt Theo Người Hát',
+    desc:'"Phiến đá trên này giữ một cái luật mỏng nhất trong bảy cái: khúc hát không tắt theo người hát." Nay người hát chết là khúc tắt theo. Hai mươi con đang ở chỗ lẽ ra là chỗ tập hát. Dọn đi cho ta.',
+    rew:{ xp:97714, silver:23000 } },
+  { id:'sd_tt2', map:'tuyettinh', npc:'ttmon', reqLv:68, reqMain:27, type:'moc', moc:'via', need:3,
+    name:'Đất Nhả Ra Mỗi Ngày Một Chỗ',
+    desc:'"Từ ngày phiến mỏng đi, đất nhả xương ra — mỗi ngày một chỗ khác, không bao giờ hai ngày cùng một nơi." Khai ba vỉa, ba ngày cũng được, ba vùng cũng được. Ta muốn biết đất chọn chỗ theo luật gì, hay là không theo gì cả.',
+    rew:{ xp:117928, silver:26000, cot:{ dong:'bangvun', n:2, pham:'tinh' } } },
+  { id:'sd_tt3', map:'tuyettinh', npc:'ttmon', reqLv:74, reqMain:27, type:'talk', targetNpc:'doantruongnhai', need:1,
+    name:'Người Ngồi Mép Vực Bắc',
+    desc:'"Dưới mép vực bắc có kẻ ngồi đếm. Đếm cái gì thì ta không biết, nhưng ba năm nay chưa sai một ngày nào." Xuống hỏi giúp ta đúng một câu: *khúc hát cuối cùng ông nghe được là ngày nào.*',
+    rew:{ xp:154558, silver:29000 } },
+
+  // ── REPTILE SUNSTONE FLATS (`mongco`, 84-100) — Rune Giữ Lửa ──
+  { id:'sd_mc1', map:'mongco', npc:'noiung', reqLv:84, reqMain:33, type:'kill', mob:'thamtu', need:22,
+    name:'Lò Nguội Qua Đêm',
+    desc:'"Cái luật trên đất này gọn lắm: lò không nguội qua đêm. Ba tuần nay đêm nào cũng nguội." Hai mươi hai tên trinh sát đang đếm số lò còn đỏ — đếm giúp ai thì ngươi tự đoán. Đừng để chúng đếm xong.',
+    rew:{ xp:236479, silver:38000 } },
+  { id:'sd_mc2', map:'mongco', npc:'noiung', reqLv:90, reqMain:33, type:'moc', moc:'ruong', need:6,
+    name:'Sáu Cái Hòm Còn Nguyên',
+    desc:'"Đời trước chôn hòm khắp Lunacia rồi để lại một trại canh trên mỗi cái. Trại thì mục, hòm thì còn." Mở đủ sáu cái, bất kể vùng nào. Ta không cần thứ bên trong — ta cần biết còn bao nhiêu cái chưa ai đụng tới.',
+    rew:{ xp:301383, silver:43000, cot:{ dong:'trotan',  n:2, pham:'co' } } },
+  { id:'sd_mc3', map:'mongco', npc:'noiung', reqLv:96, reqMain:33, type:'chaos', need:2,
+    name:'Thứ Chỉ Cái Lò Làm Được',
+    desc:'"Người Vaeldra khắc Rune vào THÉP. Bọn ta khắc vào đá, và đá thì mòn." Vào Lò Hỗn Độn hai lần — hỏng cũng được. Ta chỉ cần ngươi thấy tận mắt cái mà cả Lunacia này không làm nổi.',
+    rew:{ xp:381061, silver:49000 } },
+
+  // ── DUSK MARSH (`nhanmon`, 102-120) — Rune Giữ Đường ──
+  { id:'sd_nm1', map:'nhanmon', npc:'laotuong', reqLv:104, reqMain:39, type:'kill', mob:'cuongbinh', need:24,
+    name:'Đường Về Cây Hồn Đã Tối',
+    desc:'"Ta đánh trận sáu mươi năm. Chuyện duy nhất ta sợ là chết ở chỗ không có đèn." Hai mươi bốn tên đang đứng chắn đúng đoạn đường hồn phải đi qua. Chúng không biết chúng đang chắn cái gì — nhưng kẻ sai chúng thì biết.',
+    rew:{ xp:515451, silver:66000 } },
+  { id:'sd_nm2', map:'nhanmon', npc:'laotuong', reqLv:110, reqMain:39, type:'moc', moc:'hap', need:5,
+    name:'Đếm Xem Còn Lại Gì',
+    desc:'"Mỗi cái hộp khoá kín là một người đã không quay lại lấy nó." Mở năm cái. Ta không cần đồ trong đó — ta muốn biết năm người ấy mang theo gì khi họ nghĩ mình sẽ về.',
+    rew:{ xp:642017, silver:74000, ngoc:{ chucPhuc:3, linhHon:2 } } },
+  { id:'sd_nm3', map:'nhanmon', npc:'laotuong', reqLv:116, reqMain:39, type:'talk', targetNpc:'dinhbiennhai', need:1,
+    name:'Kẻ Đếm Ở Đáy Vực',
+    desc:'"Dưới đáy vực sâu nhất có một kẻ vẫn ngồi đếm, dù trên này không còn ai nghe hắn đếm nữa." Xuống đó. Hỏi hắn một câu duy nhất: *cái tên thứ bảy trên bảng gỗ, ông có đọc được không.*',
+    rew:{ xp:795454, silver:83000 } },
+
   // ── LỐI MÒN CORRAN (`loimon`, min 40, pk) — một hành lang, không phải một nơi ──
-  { id:'sl_lm1', npc:'vandai', reqLv:40, reqMain:16, type:'kill', mob:'bandao', need:20,
+  { id:'sl_lm1', map:'loimon', npc:'vandai', reqLv:40, reqMain:16, type:'kill', mob:'bandao', need:20,
     name:'Lối Không Ai Giữ',
     desc:'"Lối mòn đó không phải một NƠI — không ai dựng phiến đá trên một lối đi. Nên thứ gì đi qua đó cũng không phải xin phép ai." Dọn khoảnh đầu lối cho người sau còn đi được.',
-    rew:{ xp:16000, silver:6600 } },
-  { id:'sl_lm2', npc:'vandai', reqLv:43, reqMain:16, type:'collect', herbMap:'loimon', need:8,
+    rew:{ xp:18898, silver:6600 } },
+  { id:'sl_lm2', map:'loimon', npc:'vandai', reqLv:43, reqMain:16, type:'collect', herbMap:'loimon', need:8,
     name:'Thuốc Mọc Ven Lối',
     desc:'"Chỗ nào không có luật giữ thì cỏ mọc theo ý nó. Mấy thứ mọc ven lối đó không có ở vùng nào khác — hái tám bụi về đây cho ta." Đi bộ, cúi xuống, hái. Không cần đánh ai.',
-    rew:{ xp:18000, silver:7400 } },
-  { id:'sl_lm3', npc:'vandai', reqLv:46, reqMain:16, type:'chaos', need:1,
+    rew:{ xp:23062, silver:7400 } },
+  { id:'sl_lm3', map:'loimon', npc:'vandai', reqLv:46, reqMain:16, type:'chaos', need:1,
     name:'Thứ Lối Mòn Không Cho',
     desc:'"Lối mòn cho ngươi đường đi, không cho ngươi cái gì bền. Cái bền thì phải vào lò mà lấy." Bỏ gì đó vào Lò Hỗn Độn một lần — thắng hay hỏng không quan trọng, ta chỉ cần ngươi biết cái lò ở đâu.',
-    rew:{ xp:21000, silver:8600 } },
+    rew:{ xp:27889, silver:8600 } },
 
   // ── TRŨNG NỨT CORRAN (`trungnut`, min 44, freepk) — ngay dưới Nhát Gọi ──
-  { id:'sl_tn1', npc:'thumo', reqLv:44, reqMain:20, type:'kill', mob:'thinu', need:22,
+  { id:'sl_tn1', map:'trungnut', npc:'thumo', reqLv:44, reqMain:20, type:'kill', mob:'thinu', need:22,
     name:'Đất Không Chịu Nổi Một Nét Khắc',
     desc:'"Trũng đó nằm ngay dưới chỗ Sylas cắt trời. Cắm đá xuống đấy là đá NỨT — nên không phiến nào giữ được gì ở đó, kể cả cái luật ai được giết ai." Miệng trũng đang đông. Vào cẩn thận: dưới đó người cũng giết được người.',
-    rew:{ xp:19000, silver:7800 } },
-  { id:'sl_tn2', npc:'thumo', reqLv:48, reqMain:20, type:'collect', herbMap:'trungnut', need:9,
+    rew:{ xp:24593, silver:7800 } },
+  { id:'sl_tn2', map:'trungnut', npc:'thumo', reqLv:48, reqMain:20, type:'collect', herbMap:'trungnut', need:9,
     name:'Cỏ Mọc Trên Vết Nứt',
     desc:'"Có thứ chỉ mọc được ở chỗ đá đã nứt. Ta cần chín bụi — không phải để chữa ai, để xem cái nứt đó sâu tới đâu." Chín bụi rải khắp lòng trũng, và không ai giữ giúp ngươi chỗ nào.',
-    rew:{ xp:23000, silver:9400 } },
-  { id:'sl_tn3', npc:'thumo', reqLv:52, reqMain:20, type:'talk', targetNpc:'vandai', need:1,
+    rew:{ xp:31515, silver:9400 } },
+  { id:'sl_tn3', map:'trungnut', npc:'thumo', reqLv:52, reqMain:20, type:'talk', targetNpc:'vandai', need:1,
     name:'Nhắn Qua Chỗ Không Có Luật',
     desc:'"Vandai bên kia trũng. Ta không qua được — ta còn phải đếm trứng. Ngươi qua thì mang câu này: *đá dưới chân tôi đã mỏng tới mức nghe được tiếng bên dưới.*" Một câu, hai bờ, và không phiến nào bảo đảm ngươi tới được.',
-    rew:{ xp:26000, silver:10600 } },
+    rew:{ xp:39867, silver:10600 } },
 
   // ── AQUATIC TRIBE CAUSEWAY (`caungam`, min 54, pk) — không có nền để cắm phiến ──
   // Hai mục đầu là `c4q4`/`c4q5` cũ, kéo ra khỏi chính tuyến. Giữ nguyên ý, đổi hạng.
-  { id:'sl_cn1', npc:'doantruongnhai', reqLv:54, reqMain:24, type:'kill', mob:'huyetbat', need:18,
+  { id:'sl_cn1', map:'caungam', npc:'doantruongnhai', reqLv:54, reqMain:24, type:'kill', mob:'huyetbat', need:18,
     name:'Nhịp Đá Không Có Nền',
     desc:'"Đường lên đỉnh đi qua một nhịp đá vắt trên hồ ngầm không đáy. Chỗ đó không có NỀN để cắm phiến nào, nên thứ dưới đó trồi lên lúc nào cũng được." Một lối, không đường vòng. Dọn thềm đá ướt.',
-    rew:{ xp:30000, silver:12400 } },
-  { id:'sl_cn2', npc:'doantruongnhai', reqLv:58, reqMain:24, type:'collect', herbMap:'caungam', need:10,
+    rew:{ xp:44651, silver:12400 } },
+  { id:'sl_cn2', map:'caungam', npc:'doantruongnhai', reqLv:58, reqMain:24, type:'collect', herbMap:'caungam', need:10,
     name:'Hồ Không Thuộc Vùng Nào',
     desc:'"Cái hồ đó không thuộc vùng nào, nên nó không có Dòng Cốt nào, nên chẳng ai xuống đó cày. Vì thế thứ mọc ở đó còn nguyên." Mười bụi trên đầu cầu rêu — trượt chân thì hồ dưới đó không có đáy.',
-    rew:{ xp:34000, silver:14000 } },
-  { id:'sl_cn3', npc:'doantruongnhai', reqLv:62, reqMain:24, type:'talk', targetNpc:'thumo', need:1,
+    rew:{ xp:55599, silver:14000 } },
+  { id:'sl_cn3', map:'caungam', npc:'doantruongnhai', reqLv:62, reqMain:24, type:'talk', targetNpc:'thumo', need:1,
     name:'Người Đếm Trứng Muốn Biết',
     desc:'"Sylas hỏi ta cái hồ dưới nhịp đá sâu bao nhiêu. Ta không biết, và đó chính là câu trả lời — nói với ông ấy đúng như thế." Đi ngược lại qua nhịp đá mà mang câu ấy về.',
-    rew:{ xp:38000, silver:15600 } },
+    rew:{ xp:88714, silver:15600 } },
 ];
 
 // ═══════════ CỐT TRUYỆN NGŨ ẤN × TÔNG MÔN — manh mối, lời thoại trấn thủ, kết mở ═══════════

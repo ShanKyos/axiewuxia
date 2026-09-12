@@ -392,7 +392,7 @@ phải **thêm**.
 Đây cũng là chỗ chữa cho khắc hệ: `el:` chạy trong `hurtMob` (±20% / −12%) từ lâu nhưng người
 chơi không có cách nào biết map nào hệ gì. Nay hệ trội nằm ngay trên bảng Bản Đồ.
 
-### 📌 CHÍNH TUYẾN ĐÃ DỰNG LẠI · PHỤ TUYẾN THÌ CHƯA
+### 📌 CHÍNH TUYẾN ĐÃ DỰNG LẠI · PHỤ TUYẾN CŨNG ĐÃ DỰNG XONG
 
 > ⚠ Mục này **trước đây ghi cả hai bảng đều rỗng và chờ dựng lại**. Nửa đầu không còn đúng —
 > giữ lại đúng cái tiêu đề này để cảnh báo, thay vì xoá trắng rồi để người sau đọc lịch sử git
@@ -401,7 +401,7 @@ chơi không có cách nào biết map nào hệ gì. Nay hệ trội nằm ngay
 | | Trạng thái |
 |---|---|
 | `QUESTS` | **ĐANG CHẠY** — 9 chương / 50 nhiệm vụ (thêm chương VIII · Người Thứ Bảy), canon Nhát Gọi. Xem mục "Cốt truyện (canon)" và `docs/LORE_RUNE.md` |
-| `SIDE_QUESTS` | **ĐANG CHẠY** — 9 nhiệm vụ trên ba map LỐI ĐI. Không còn rỗng. |
+| `SIDE_QUESTS` | **ĐANG CHẠY** — **32 nhiệm vụ / 10 map**, phủ cấp 3→116. Trước là 9 mục chỉ trên ba map lối đi. |
 
 **Vì sao chuỗi CŨ bị gỡ (ghi lại để đừng vá nó từ git):** lối chơi đã đổi quá nhiều so với lúc
 viết — bỏ 7 phó bản, vai trò theo bãi, bản sắc map, zoom camera, cổng map bỏ `reqMain`. Rồi bản
@@ -414,20 +414,141 @@ vào nhau — đó là lý do có đợt gộp này.
 `QUESTS.length` vẫn ra 25 — đã mắc đúng lỗi đó. Nay **toàn bộ 46 mục nằm trong `data/canbang.js`**
 và `game.js` không push nhiệm vụ chính nào. Giữ đúng nếp đó.
 
-**Phụ tuyến ĐÃ DỰNG — 9 nhiệm vụ, ba map LỐI ĐI.** `loimon` · `trungnut` · `caungam` cố ý không
-có chương chính tuyến vì chúng là "chỗ không có luật nào giữ" (không phiến Rune nào cắm được), nên
-nội dung ở đó phải là nội dung TỰ CHỌN. `Tầng Sâu` vẫn trống — nợ còn lại.
+**Phụ tuyến — 32 mục / 10 map.** Bản đầu chỉ có 9 mục trên ba map LỐI ĐI (`loimon` · `trungnut`
+· `caungam`), phủ đúng dải cấp 40→62. Nay phủ **cấp 3 → 116**: mỗi map đánh nhau có ba mục do NPC
+của chính vùng đó giao. `Tầng Sâu` vẫn trống — nợ còn lại duy nhất.
 
-- **3 đánh · 3 hái · 2 đưa tin · 1 dùng lò**, và **không map nào quá MỘT nhiệm vụ đánh quái**.
-  Đếm lại bất cứ lúc nào; vượt 50% là đang đi lại vết cũ (66 nhiệm vụ phụ đời trước gần 80% là
-  "diệt N con X").
+| loại | số | | loại | số |
+|---|---|---|---|---|
+| `kill` | 10 | | `moc` | 6 |
+| `collect` | 6 | | `tranai` | 2 |
+| `talk` | 6 | | `chaos` | 2 |
+
+- **Đánh nhau 12/32 = 38%**, và **mỗi map đúng MỘT mục `kill`**. Hai mục `tranai` không tính vào
+  luật đó: hạ một con trùm là một trận một lần, không phải cày N con. `tests/test_phutuyen.js` gác.
+- **Hai mục `tranai` tồn tại vì một lỗ có thật**: `loimon` và `caungam` cố ý không có chương chính
+  tuyến (không phiến Rune nào cắm được ở một lối đi hay một nhịp đá không nền), nhưng Tướng Quân
+  thì vẫn đứng đó — **hai con DUY NHẤT trong mười một con mà không nhiệm vụ nào trỏ tới**.
 - ⚠ **`sl_cn1`/`sl_cn2` chính là `c4q4`/`c4q5` cũ**, kéo ra khỏi chính tuyến. Chương IV từng thu
   phiến gốc ở nhiệm vụ 3/5 rồi còn hai nhiệm vụ nữa trên `caungam` — tức chính tuyến ngồi trên
-  đất phụ tuyến, và `tranai` không đóng chương. Nay `tranai` là ô CUỐI ở cả bảy chương.
+  đất phụ tuyến. Nay `tranai` là ô CUỐI ở cả bảy chương.
 - ⚠ **`reqMain` là CHỈ SỐ (0-based), không phải số thứ tự.** Thêm/bớt một nhiệm vụ chính là mọi
   `reqMain` trượt. Để mốc thấp hơn chỗ cần một chút, đừng khoá sát.
-- Trần **3 nhiệm vụ phụ cùng lúc** (`sideAvail` trả `'full'`). Chín mục rải cấp 40→62 nên không
-  bao giờ quá ba cái mở cùng lúc — thêm mục mới thì kiểm lại chỗ đó.
+- Trần **`SIDE_TRAN` = 5** mục cầm cùng lúc (trước là 3 chép cứng). Mỗi vùng có ba mục, nên trần 3
+  nghĩa là nhận trọn một vùng rồi thì không cầm nổi mục nào của vùng khác.
+
+#### ⚠ BA LỖI IM LẶNG CỦA BẢN 9-MỤC — đã vá, đừng dựng lại
+
+Cả ba đều **không ném lỗi, không làm đỏ bài kiểm nào**, và cả ba đều là cùng một dạng: dữ liệu
+khai một đằng, máy đọc một nẻo.
+
+1. **Không mục nào khai `map:`** — mà bảng Nhật Ký lọc phụ tuyến bằng `SIDE_QUESTS.filter(sq =>
+   sq.map === mapId)`. Tức tab Phụ Tuyến **trống trơn** suốt, dù có 9 nhiệm vụ đang chạy.
+2. **`herbMap` là dữ liệu chết** — `sideOnEvent('collect')` chỉ gác map cho loại `catch`. Nhiệm vụ
+   ghi "hái ở Lối Mòn" mà hái ở bãi thuốc ngoài cổng thành cũng đếm.
+3. **Bốn map có sẵn `HERB_SPOTS` nhưng `herbs:false`** (`daohoa` `loimon` `trungnut` `caungam`) —
+   toạ độ đã chấm từ lâu, chỉ thiếu đúng cái cờ, nên không bụi nào mọc ở chỗ nhiệm vụ chỉ tới.
+   **Cờ và bảng toạ độ là HAI chỗ**: có bảng mà quên cờ thì không lỗi nào báo.
+
+⇒ Bài kiểm mới **lái bằng hàm thật** (`acceptSide` · `tryHarvestHerb` · `sideOnKill` · `mocTick` ·
+`turnInSide`) chứ không đọc bảng rồi tự kết luận: chỗ hỏng nằm ở sợi dây nối, không nằm ở bảng.
+
+#### Máy phụ tuyến nhận thêm hai loại
+
+- **`tranai`** — `sideOnKill` nay nhận cả ĐỐI TƯỢNG quái chứ không chỉ `m.type`, vì Trấn Ải của mọi
+  vùng dựng động trong `spawnZoneBoss` nên không có khoá nào trong `MOBS` để so; phải đọc
+  `def.bossKind`.
+- **`moc`** — dùng CHUNG bảng `MOC_NV` với chính tuyến và đi qua ĐÚNG nhịp `mocTick(dt)`, không móc
+  thêm chỗ nào. Đếm **từ trạng thái**, nên mục nào người chơi đã làm đủ từ trước là xong ngay lúc
+  nhận — đó là chủ ý, xem mục `MOC_NV`.
+
+#### 🌱 `daohoa` NAY CÓ NPC — trước đó là map đánh nhau DUY NHẤT không ai nói một câu
+
+`uomluong` (Kẻ Coi Luống) ở `(200,200)`. Chỗ đứng **chấm bằng máy**, không đoán: đi được, trống
+8 hướng, lề 108px tới mọi thứ phải tránh (bãi quái 340 · Vệ Binh 520 · Tướng Quân 760 · cổng 300 ·
+điểm thả 260 · Rương Canh 260 · bụi thuốc 180), và cách điểm thả 368px nên người chơi đi ngang qua
+chứ không phải đi tìm. Cả map chỉ có **41 điểm** thoả bộ ràng buộc đó — đừng dịch tay, quét lại.
+
+### 🎁 THƯỞNG NHIỆM VỤ — MỘT cửa trao, MỘT cửa hiện
+
+`traoThuong(rew)` (trao) và `rewMoTa(rew)` (hiện) dùng chung cho cả chính tuyến lẫn phụ tuyến.
+
+⚠ **Hai lỗi có sẵn mà việc gộp này lộ ra:**
+- `turnInSide` **không đọc `rew.item`** — mọi nhiệm vụ phụ khai thưởng vật phẩm sẽ im lặng nuốt mất
+  món đó.
+- Bốn chỗ in thưởng chỉ in `xp` và `silver`, nên **chín nhiệm vụ đã khai `rew.item` từ lâu vẫn hứa
+  suông trên bảng**: người chơi nhận được món mà không chỗ nào nói trước là có. *Trao thưởng và
+  HIỆN thưởng là hai việc — sửa một cái mà quên cái kia thì không lỗi nào báo.*
+
+Bốn nhánh thưởng, **đều trỏ vào hệ đang chạy**, không đẻ tiền tệ mới: `item` (ô trang bị) ·
+`cot` (Dòng Cốt độc quyền của vùng) · `ngoc` (ép thẳng vào đồ) · `gk` (vé quay Khế Ước). **Shard
+CỐ Ý không có mặt** — nó chỉ tới từ mốc mỗi ngày và thông quan, cho nhiệm vụ nhả Shard là phá đúng
+luật đó. Nay **24/50 chính tuyến + 9/32 phụ tuyến** có thưởng vật phẩm (trước: 9/50 + 0/32).
+
+### ⏱ NHỊP CẤP — `XP_TABLE` NAY DẪN TỪ SỐ ĐO, KHÔNG TỪ CẢM GIÁC
+
+Mốc chủ dự án chốt: **~3 giờ tới cấp 60**. Đo lại được, và **hai nửa của phép tính nằm ở hai tệp**
+— bảng cấp trong `game.js`, XP nhiệm vụ trong `data/canbang.js`. ⚠ **Sửa một nửa là mốc nói dối
+ngay mà không lỗi nào báo.** `tests/test_nhipcap.js` là thứ duy nhất bắt được chuyện đó.
+
+| công cụ | việc |
+|---|---|
+| `tools/do_nhipcap.cjs` | ĐO XP/giờ thật trong chính vòng chơi (đặt cấp, mặc đồ đúng cấp, bật AUTO, tick `update`) |
+| `tools/can_exp.cjs` | từ số đo dẫn ra `XP_TABLE` + XP của cả 82 nhiệm vụ |
+
+```
+cd public/game && python3 -m http.server 8853
+NODE_PATH=/opt/node22/lib/node_modules node tools/do_nhipcap.cjs --giay 150 --lap 3 --json do.json
+node tools/can_exp.cjs do.json --tile 8 --gio60 2.94 --gio120 29.5 --tile120 7 --nvDau 30 --nvCuoi 6 --ghi
+```
+
+**Trước / sau:**
+
+| | cũ | mới |
+|---|---|---|
+| tới cấp 60 | 4,36 giờ | **3,00 giờ** (làm hết NV) · 3,60 (bỏ hết) |
+| tới cấp 120 | 29,9 giờ | 33,4 giờ |
+| dốc nhất giữa hai cấp | **×9,8 ở mốc 60** (253.269 → 2.472.993) | ×1,39 |
+| nhiệm vụ gánh tới cấp 60 | 9,1% | 15,0% |
+| nhiệm vụ cấp 100 thưởng | 140.000 = **2,5% một cấp** | 887.643 = 12% một cấp |
+
+**Ba thứ quyết định hình dạng — đọc trước khi chạm vào một con số nào:**
+
+1. **XP/giờ đo được khớp đúng luật luỹ thừa `rate(l) = 1694 · l^1,945`** — gần đúng lv², hợp với
+   việc XP mỗi con ≈ 0,8-1,1 × lv² trên cả 29 loài.
+2. **Ngân sách THỜI GIAN mỗi cấp** tăng theo cấp số nhân (cấp 59 tốn gấp 8 lần cấp 1).
+3. **Nhiệm vụ gánh 30% một cấp ở cấp 1, nhạt dần còn 6% ở cấp 120.** Tỉ lệ PHẲNG thì hoặc cấp 1
+   thưởng 1 EXP (đọc như nhiệm vụ hỏng), hoặc cấp 120 nhiệm vụ gánh hộ quá nhiều. Đây chính là
+   thứ trả lời "càng về sau càng phải cày".
+
+⚠ **`XP_TABLE` đặt theo CÀY THUẦN rồi chia cho (1 − phần nhiệm vụ)**, KHÔNG phải `= cày + nhiệm
+vụ`. Đã thử cách sau: cấp nào có nhiệm vụ rơi vào thì **99% là quà** (đo ở cấp 1), và ai bỏ qua
+chuỗi thì kẹt cứng.
+
+⚠ **ĐỪNG lấy `max(đường khớp, số đo)`.** Số đo có đỉnh do bốc trúng bộ đồ ngon — cấp 45 đo 7,67
+triệu/giờ còn cấp 50 chỉ 5,13 — nên `max` đẻ ra bảng **không tăng dần**. Và lấy thẳng số đo ở chỗ
+HỤT thì biến hố nội dung thành "cấp rẻ bất thường", tức giấu lỗi thay vì chữa.
+
+⚠ **Tính giờ THEO TỪNG CẤP**, đừng lấy tổng rồi nhân tỉ lệ nhiệm vụ trung bình: XP nhiệm vụ rơi
+thành CỤC ở vài cấp lẻ. Phép xấp xỉ trung bình báo 3,00 giờ trong khi tính đúng ra **3,60**.
+
+⚠ **`XP60PLUS_ANCHORS` và `xp60PlusHourlyRate` ĐÃ GỠ.** Chú thích của chúng ghi là đo "không trang
+bị" — đo lại kiểu đó thì từ cấp 10 trở lên nhân vật **CHẾT trước khi giết được con nào** (atk 35 vs
+quái 1.052 máu), tức mốc cũ không thể sinh ra từ phép đo mà nó tự mô tả.
+
+#### 🕳 BỐN HỐ XP CÒN LẠI — nợ NỘI DUNG, cố ý không nướng vào bảng cấp
+
+Số đo thấp hơn đường khớp >55% ở **cấp 5 · 35 · 55 · 70 · 119** — tất cả đều ở NÓC một dải map.
+Nguyên nhân đã truy ra, và nó không nằm ở XP:
+
+- **AUTO cắm chốt đúng MỘT bãi mỗi map và không bao giờ lên bãi cao hơn.** Đo được: cấp 55 đứng
+  trên `comoc` vẫn cày `thinu` (cấp 42, 1.440 XP) trong khi `huyetbat` (cấp 56, 2.465 XP) nằm đó
+  không ai đụng. Cấp 35 trên `chungnam` vẫn cày `chimera_bo` (cấp 24).
+- **Chênh trang bị ngẫu nhiên bị khuếch đại bởi giáp trừ thẳng.** Cùng cấp 50, cùng map, cùng loài:
+  atk 100 → **30 mạng**/2 phút, atk 120 → **96 mạng**. Chênh 18% công ra chênh 3,2 lần tốc độ.
+
+Cả hai là việc riêng, không phải việc của bảng XP. `tools/can_exp.cjs` in danh sách hố ở cuối mỗi
+lượt chạy — đó là danh sách việc, không phải nhiễu đo.
 
 ### ☀ TẦNG NGÀY THEO DẢI CẤP (`DAILY_BANDS`)
 

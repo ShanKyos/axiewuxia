@@ -82,32 +82,39 @@ function resize(){
 window.addEventListener('resize', resize); resize();
 
 // ---------- Balance data ----------
+// ── BẢNG CẤP — dẫn từ SỐ ĐO, không từ cảm giác ──────────────────────────────────────────────
+// Sinh bằng: `node tools/do_nhipcap.cjs` (đo XP/giờ thật trong chính vòng chơi) rồi
+//            `node tools/can_exp.cjs <đo>.json --tile 8 --gio60 2.94 --gio120 29.5 --tile120 7
+//                                      --nvDau 30 --nvCuoi 6`
+// ⚠ ĐỪNG SỬA TAY MỘT Ô. Bảng này và XP nhiệm vụ trong data/canbang.js là HAI NỬA của cùng một
+// phép tính — sửa một bên là mốc "3 giờ tới cấp 60" nói dối ngay, mà không lỗi nào báo.
+//
+// Ba thứ quyết định hình dạng:
+//   · XP/giờ đo được khớp đúng luật luỹ thừa `rate(l) = 1694 · l^1,945` — tức gần đúng lv²,
+//     hợp với việc XP mỗi con ≈ 0,8-1,1 × lv² trên cả 29 loài.
+//   · Ngân sách THỜI GIAN mỗi cấp tăng theo cấp số nhân: cấp 59 tốn gấp 8 lần cấp 1.
+//   · Nhiệm vụ gánh 30% một cấp ở đầu game, nhạt dần còn 6% ở cấp 120 — đó là lý do càng về
+//     sau càng phải cày, và cũng là lý do nhiệm vụ cấp 100 không còn thưởng 2% một cấp như cũ.
+//
+// Mốc đo lại được (tests/test_nhipcap.js gác): 3,00 giờ tới cấp 60 nếu làm hết nhiệm vụ ·
+// 3,60 giờ nếu bỏ hết · 33,3 giờ tới cấp 120. Bản cũ: 4,36 giờ tới 60 và một bức tường ở
+// mốc 60 (cấp 59 cần 253.269, cấp 60 cần 2.472.993 — gấp 9,8 lần trong ĐÚNG một cấp).
 const MAX_LV = 120; // max cấp theo cấp boss endgame (GDD: 120)
-const XP_TABLE = [200,450,800,1300,1900,2600,3400,4300,5400]; // xp to next level (index = lv-1)
-for (let l = 10; l < 120; l++) XP_TABLE.push(Math.round(5400 * Math.pow(1.08, l - 9))); // GDD 120 cấp: dốc 1.08 cho hành trình dài
-// Từ cấp 60: farm chậm lại rõ rệt, mục tiêu trung bình 1 tiếng treo AUTO/cấp. Mốc dưới đo trực
-// tiếp từ công thức chiến đấu của game (atk cơ bản theo calcDerived — không trang bị — × HP/DEF
-// quái đại diện 3 vùng farm cuối Bird Tribe Heights/Reptile Sunstone Flats/Dusk Marsh) ra EXP/giờ THUẦN AUTO
-// ở mỗi mốc cấp, rồi quy đổi ngược: cần bao nhiêu EXP để 1 giờ farm đó vừa đúng lên 1 cấp. Trang bị
-// + kỹ năng tự động thực tế sẽ đẩy nhanh hơn mốc này — đúng như game idle: có đầu tư thì nhanh hơn.
-const XP60PLUS_ANCHORS = [
-  [60,2472993],[65,2825065],[70,3218638],[75,3660353],[80,4712812],[85,5353775],
-  [90,6085261],[95,6925890],[100,8485085],[105,9651109],[110,10205747],[115,10771241],[120,11248196],
-];
-function xp60PlusHourlyRate(l){
-  for (let i = 0; i < XP60PLUS_ANCHORS.length - 1; i++){
-    const [l0, v0] = XP60PLUS_ANCHORS[i], [l1, v1] = XP60PLUS_ANCHORS[i+1];
-    if (l >= l0 && l <= l1) return v0 + (v1 - v0) * (l - l0) / (l1 - l0);
-  }
-  return XP60PLUS_ANCHORS[XP60PLUS_ANCHORS.length - 1][1];
-}
-for (let l = 60; l < 120; l++) XP_TABLE[l-1] = Math.round(xp60PlusHourlyRate(l));
-// Mốc 60 nhảy ×9,8 so với 59 (253.269 → 2.472.993) trong ĐÚNG MỘT cấp, không báo trước — chỗ người
-// chơi bỏ game. Rải phần chênh ra cấp 50→60 theo cấp số nhân: mỗi cấp ×~1,35, tới 60 khớp mốc cũ.
-{ const a = XP_TABLE[48], b = XP_TABLE[59];
-  for (let l = 49; l < 59; l++) XP_TABLE[l] = Math.round(a * Math.pow(b / a, (l - 48) / 11)); }
-// Sàn sát thương: dù giáp quái trừ thẳng nặng tới đâu, một đòn vẫn gây được ngần này phần trăm
-// sát thương gốc. Không có sàn thì người chơi lỡ tay bán mất vũ khí là kẹt cứng vĩnh viễn.
+const XP_TABLE = [
+  36,141,321,578,920,1352,1881,2515,3262,4130,
+  5127,6264,7551,8999,10619,12423,14425,16638,19078,21759,
+  24698,27912,31420,35241,39397,43909,48799,54093,59816,65996,
+  72661,79843,87572,95883,104812,114397,124678,135696,147497,160127,
+  173635,188074,203499,219966,237539,256279,276256,297541,320208,344337,
+  370011,397317,426348,457200,489976,524783,561734,600948,642550,892728,
+  950810,1012175,1076989,1145428,1217676,1293924,1374373,1459235,1548729,1643087,
+  1742550,1847372,1957817,2074162,2196698,2325728,2461569,2604555,2755032,2913364,
+  3079931,3255132,3439381,3633115,3836789,4050876,4275876,4512308,4760715,5021665,
+  5295753,5583598,5885849,6203185,6536312,6885972,7252937,7638014,8042049,8465921,
+  8910552,9376904,9865981,10378832,10916552,11480285,12071227,12690623,13339776,14020046,
+  14732852,15479676,16262064,17081630,17940059,18839110,19780619,20766500,21798752
+]; // xp để lên cấp kế (chỉ số = cấp-1)
+
 const DMG_FLOOR = 0.08;
 // Mỗi mức cường hoá cộng bao nhiêu phần chỉ số món. Nâng 0,08 lên 0,13 để cái cổng "+9 mới qua"
 // cắn được ở GIAI THẤP, nơi trang bị còn chiếm ít tổng công nên nhân 1,72 lần gần như vô hình.
@@ -6378,15 +6385,35 @@ function mocTick(dt){
   _mocT -= dt; if (_mocT > 0) return;
   _mocT = 0.5;
   const q = currentQuest();
-  if (!q || q.type !== 'moc' || questState !== 'active') return;
-  const M = MOC_NV[q.moc]; if (!M) return;
-  const n = M.dem();
-  if (n === questProg) return;
-  questProg = Math.min(n, q.need);
-  if (questProg >= q.need){
-    questState = 'done';
-    addFloat(player.x, player.y - 60, `Nhiệm vụ hoàn thành — về gặp ${npcName(q.npc)}`, '#8fd18f', 13);
-    AudioSys.sfx('quest', 0.8);
+  if (q && q.type === 'moc' && questState === 'active'){
+    const M = MOC_NV[q.moc];
+    if (M){
+      const n = M.dem();
+      if (n !== questProg){
+        questProg = Math.min(n, q.need);
+        if (questProg >= q.need){
+          questState = 'done';
+          addFloat(player.x, player.y - 60, `Nhiệm vụ hoàn thành — về gặp ${npcName(q.npc)}`, '#8fd18f', 13);
+          AudioSys.sfx('quest', 0.8);
+        }
+      }
+    }
+  }
+  // Phụ tuyến loại `moc` đi qua ĐÚNG nhịp kiểm này, không móc thêm chỗ nào. Cùng lý do đã ghi ở
+  // MOC_NV: mỗi chỗ móc thiếu là một nhiệm vụ không bao giờ xong, và không lỗi nào báo.
+  if (typeof SIDE_QUESTS === 'undefined') return;
+  for (const sq of SIDE_QUESTS){
+    if (sq.type !== 'moc') continue;
+    const st = sideStates[sq.id]; if (!st || st.st !== 'active') continue;
+    const M2 = MOC_NV[sq.moc]; if (!M2) continue;
+    const n2 = Math.min(M2.dem(), sq.need);
+    if (n2 === st.prog) continue;
+    st.prog = n2;
+    if (st.prog >= sq.need){
+      st.st = 'done';
+      addFloat(player.x, player.y - 60, `Phụ tuyến hoàn thành — về gặp ${npcName(sq.npc)}`, '#8fd18f', 13);
+      AudioSys.sfx('quest', 0.8);
+    }
   }
 }
 // Chỉ số nhiệm vụ `type:'boss'` của TỪNG map. `Infinity` khi map đó không có, chứ KHÔNG phải
@@ -9689,7 +9716,7 @@ function killMob(m, source){
       else addFloat(player.x, player.y-46, `Nhiệm vụ hoàn thành — về gặp ${npcName(q.npc)}`, '#8fd18f', 13);
     }
   }
-  sideOnKill(m.type, source);
+  sideOnKill(m, source);
   if (m.def.boss) AudioSys.nhacMap(curMap); // hạ boss — trở lại nhạc map
   // Boss: Tàn Quyển sách kỹ năng Huyết Ma Thôn Phệ (Thượng 40% / Trung 40% / Hạ 20%)
   if (m.def.boss && player.bikip && !player.bikip.hmtp){
@@ -10234,9 +10261,23 @@ function sideQuestTarget(sq){
     if (hz) return { map:sq.map, x:hz[0].x, y:hz[0].y, label:'Đồng Tuấn Mã' };
   }
   if (sq.type === 'collect' && typeof HERB_SPOTS !== 'undefined'){
-    const hs = HERB_SPOTS[sq.map];
-    if (hs) return { map:sq.map, x:hs[0].x, y:hs[0].y, label:'Bãi Thảo Dược' };
+    const hs = HERB_SPOTS[sq.herbMap || sq.map];
+    if (hs) return { map:sq.herbMap || sq.map, x:hs[0].x, y:hs[0].y, label:'Bãi Thảo Dược' };
   }
+  // `tranai` phụ tuyến — hai con Tướng Quân của `loimon` và `caungam` là hai con DUY NHẤT không
+  // chương chính tuyến nào trỏ tới (hai map đó cố ý không có phiến Rune). Toạ độ trong BOSS_DEFS
+  // là TỈ LỆ, phải nhân khổ map của chính vùng đó.
+  if (sq.type === 'tranai'){
+    const bd = BOSS_DEFS[sq.map] && BOSS_DEFS[sq.map].tranai;
+    if (bd){
+      const md = MAPS[sq.map];
+      return { map:sq.map, x:Math.round(bd.x * (md.w || 2600)), y:Math.round(bd.y * (md.h || 1900)),
+               label:'Tướng Quân ' + bd.name };
+    }
+  }
+  // `moc` — cửa cơ chế, không có một toạ độ nào để chỉ. Trả về NPC giao việc còn hơn ghim bừa
+  // một chỗ trên bản đồ rồi người chơi đi tới đó và không thấy gì.
+  if (sq.type === 'moc' && n) return { map:n.map, x:n.x, y:n.y, label:'Hỏi lại ' + n.name, npcId:n.id };
   if (sq.mob){
     const md = MAPS[sq.map];
     const pk = md ? packsOf(sq.map).find(p => p.mob === sq.mob) : null;
@@ -22499,6 +22540,24 @@ NPCS.push(
     barks:['"Gió đổi hướng từ trưa."','"Cổng Nam có dấu chân lạ, ba bộ."',
            '"Ta đếm được mười bảy con hôm nay. Hôm qua mười hai."','"Đừng đứng dưới tàng cây đó."'] },
 
+  // Plant Tribe Glade là map ĐÁNH NHAU DUY NHẤT không có lấy một NPC — cả vùng cấp 38-48 không ai
+  // nói một câu nào. Chỗ đứng (200,200) do `tools/` chấm bằng máy: đi được, có khoảng trống 8
+  // hướng, lề 108px tới mọi thứ phải tránh (bãi quái 340 · Vệ Binh 520 · Tướng Quân 760 · cổng
+  // 300 · điểm thả 260 · Rương Canh 260 · bụi thuốc 180), và cách điểm thả 368px nên người chơi
+  // đi ngang qua chứ không phải đi tìm. ĐỪNG dịch tay: quét lại bằng cùng bộ ràng buộc đó.
+  { id:'uomluong',  name:'Kẻ Coi Luống',         map:'daohoa',     x:200,  y:200,  img:'assets/npcs/duocsu.png',    talk:'quest',
+    lore:{
+      idle:  '"Luống này ấp theo mùa, không theo ta. Ta chỉ đếm và ghi lại."',
+      offer: '"Chưa tới lượt ngươi. Cứ đi vòng đi, đừng giẫm lên mép luống."',
+      active:'"Ngươi cứ làm việc của ngươi. Ta ở đây, luống cũng ở đây."',
+      done:  '"Ghi rồi. Ta ghi mọi thứ — ngày nào cũng có một dòng, kể cả ngày không có gì."' },
+    trang:[
+      '"Ngươi là người thứ hai ta thấy mặc đồ sắt trong vòng một năm. Người thứ nhất không nói gì cả."',
+      '"Việc của ta là coi luống ấp. Trước kia coi cũng như không coi — phiến đá giữa bãi giữ cho luống nở đúng mùa, ta chỉ ghi lại. Rune Giữ Mùa, người khắc nó gọi thế."',
+      '"Ba mùa nay ta ghi ba dòng giống hệt nhau: NỞ SỚM. Ta vẫn ghi, vì đó là việc của ta. Nhưng ghi ba dòng giống nhau thì không còn là ghi nữa — là đếm ngược."'],
+    barks:['"Luống bảy nở sớm mười một ngày."','"Đừng giẫm lên mép luống."',
+           '"Ta ghi rồi. Ghi rồi thì nó có thật."','"Mùa này không giống mùa nào ta từng ghi."'] },
+
   { id:'daosi',     name:'Người Gác Rừng Corran', map:'chungnam',   x:520,  y:1420, img:'assets/npcs/daosi.png',     talk:'quest',
     lore:{
       idle:  '"Rừng này ta giữ ba đời rồi. Nửa vạt phía tây là ta tự đốt — đừng để ai nói với ngươi là người Vaeldra đốt."',
@@ -22618,18 +22677,34 @@ function npcName(id){ const n = NPCS.find(x => x.id === id); return n ? n.name :
 // SIDE_QUESTS đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
 const SIDE_QUESTS = window.SIDE_QUESTS;
 
+// Trần số phụ tuyến cầm cùng lúc. Từ 3 lên 5 khi bộ phụ tuyến đi từ 9 lên 32 mục: một vùng có
+// ĐÚNG BA mục, nên trần 3 nghĩa là nhận đủ một vùng rồi thì không cầm nổi thêm mục nào của vùng
+// khác — mà người chơi cấp 50 thì đang đứng chân ở hai ba vùng cùng lúc. 5 = trọn một vùng + hai.
+// ⚠ Trần là để người chơi phải CHỌN, không phải để chặn. Nới quá thì bảng phụ tuyến thành danh
+// sách việc vặt nhận hết một lượt rồi cày một lượt, đúng thứ mà cả đợt này đang tránh.
+const SIDE_TRAN = 5;
 function sideActive(){ return Object.keys(sideStates).filter(id => sideStates[id].st === 'active' || sideStates[id].st === 'done'); }
 function sideAvail(q){
   const st = sideStates[q.id];
   if (st) return st.st; // active | done | claimed
   if (player.level < q.reqLv || questIdx < q.reqMain) return 'locked';
-  if (sideActive().length >= 3) return 'full';
+  if (sideActive().length >= SIDE_TRAN) return 'full';
   return 'avail';
 }
-function sideOnKill(mobType, _source){
+// ⚠ Nhận cả ĐỐI TƯỢNG quái, không chỉ `m.type`: loại `tranai` phải đọc `def.bossKind`, mà Trấn
+// Ải của mọi vùng đều dựng động trong `spawnZoneBoss` nên không có khoá nào trong `MOBS` để so.
+function sideOnKill(m, _source){
+  const mobType = m.type;
   for (const q of SIDE_QUESTS){
     const st = sideStates[q.id];
-    if (!st || st.st !== 'active' || q.type !== 'kill' || q.mob !== mobType) continue;
+    if (!st || st.st !== 'active') continue;
+    // Nay mọi mục đều khai `map`, nên cửa map là thật: nhiệm vụ bảo dọn Lối Mòn thì giết đúng
+    // loài ấy ở vùng khác KHÔNG tính. Trước đây ba loài của phụ tuyến đều có mặt ở 3-4 map nên
+    // mô tả nói một nơi mà máy đếm ở mọi nơi.
+    if (q.map && q.map !== curMap) continue;
+    if (q.type === 'kill'){ if (q.mob !== mobType) continue; }
+    else if (q.type === 'tranai'){ if (!m.def || m.def.bossKind !== 'tranai') continue; }
+    else continue;
     st.prog++;
     if (st.prog >= q.need){
       st.st = 'done';
@@ -22642,7 +22717,13 @@ function sideOnEvent(type){
   for (const q of SIDE_QUESTS){
     const st = sideStates[q.id];
     if (!st || st.st !== 'active' || q.type !== type) continue;
+    // ⚠ CỬA MAP PHẢI THEO TỪNG LOẠI, đừng dùng chung `q.map`. Nay mọi mục phụ tuyến đều khai
+    // `map` (bảng Nhật Ký nhóm theo đúng khoá đó), nhưng `chaos` và `shard` thì làm ở THÀNH —
+    // lấy `q.map` gác cả ba loại là hai loại kia không bao giờ đếm được lần nào.
     if (type === 'catch' && q.map && q.map !== curMap) continue; // GDD Đợt 2 B5: ngựa phải đúng vùng
+    // `herbMap` từng là dữ liệu chết: nhiệm vụ ghi "hái ở Lối Mòn" mà hái ở bãi thuốc ngoài cổng
+    // thành cũng đếm. Mô tả nói một đằng, máy làm một nẻo — không lỗi nào báo.
+    if (type === 'collect' && q.herbMap && q.herbMap !== curMap) continue;
     st.prog++;
     addFloat(player.x, player.y-40, `${q.name} ${st.prog}/${q.need}`, '#8fd18f', 12);
     if (st.prog >= q.need){
@@ -22670,9 +22751,7 @@ window.acceptSide = function(id){
 window.turnInSide = function(id){
   const q = SIDE_QUESTS.find(x => x.id === id);
   if (!q || !sideStates[id] || sideStates[id].st !== 'done') return;
-  player.silver += q.rew.silver || 0;
-  if (q.rew.thau){ player.maThau = (player.maThau || 0) + q.rew.thau; addFloat(player.x, player.y-62, `+${q.rew.thau} 🪢 Mã Thầu`, '#7fd8e0', 13); } // GDD Đợt 2 B5
-  gainXp(q.rew.xp || 0);
+  traoThuong(q.rew);
   sideStates[id] = { st:'claimed', prog:q.need };
   AudioSys.sfx('quest', 0.9);
   addFloat(player.x, player.y-46, `Hoàn thành phụ tuyến: ${q.name}!`, '#7ecbff', 14);
@@ -23089,6 +23168,20 @@ function nhacThaiDo(){
     ? `${ten} có nhắn lại: ngươi trả lời không do dự. Ông ấy bảo đó vừa là điểm mạnh vừa là chỗ đáng lo.`
     : `${ten} có nhắn lại: ngươi hỏi lại trước khi gật. Ông ấy bảo hiếm ai còn hỏi nữa.`;
 }
+// Một dòng thưởng ĐỌC ĐƯỢC cho cả chính tuyến lẫn phụ tuyến.
+// ⚠ Bốn chỗ in thưởng trước đây chỉ in `xp` và `silver`, nên CHÍN nhiệm vụ đã khai `rew.item` từ
+// lâu vẫn hứa suông trên bảng: người chơi nhận được món đồ mà không chỗ nào nói trước là có.
+// Trao thưởng và HIỆN thưởng là hai việc — sửa một cái mà quên cái kia thì không lỗi nào báo.
+function rewMoTa(rew){
+  if (!rew) return '';
+  const ra = [`${(rew.xp||0).toLocaleString('vi-VN')} EXP`, `${(rew.silver||0).toLocaleString('vi-VN')}◈`];
+  if (rew.item){ const sl = SLOTS.find(x => x.id === rew.item); ra.push(`1 ${sl ? sl.name : rew.item}`); }
+  if (rew.cot){ const D = COT_DONG[rew.cot.dong] || {}; ra.push(`${rew.cot.n||1} ◆ Mảnh Cốt ${D.ten || ''}`.trim()); }
+  if (rew.ngoc) for (const k in rew.ngoc) ra.push(`${rew.ngoc[k]} ${(JEWEL_NAMES[k]||k)}`);
+  if (rew.gk) ra.push(`${rew.gk} ✦ Ấn Giao Kết`);
+  if (rew.thau) ra.push(`${rew.thau} 🪢 Mã Thầu`);
+  return ra.join(' · ');
+}
 function renderQuestNpc(n){
   questOnTalk(n);
   const panel = el('panel-quest');
@@ -23130,7 +23223,7 @@ function renderQuestNpc(n){
   if (q && q.npc === n.id){
     if (questState === 'done'){
       html += `<div class="qd-quest" style="border-color:#7ecbff"><div class="q-name" style="color:#7ecbff">★ ${q.name} — Hoàn thành!</div>${q.desc}
-        <div class="q-rew">Thưởng: ${q.rew.xp} EXP · ${q.rew.silver||0}◈</div>
+        <div class="q-rew">Thưởng: ${rewMoTa(q.rew)}</div>
         <div style="text-align:center;margin-top:8px"><button class="mini-btn" onclick="turnInQuest()">Nhận Thưởng</button></div></div>`;
     } else {
       const prog = q.type==='talk' ? '—' : (q.type==='meditate' ? `${Math.floor(questProg)}/${q.need}s`
@@ -23140,9 +23233,9 @@ function renderQuestNpc(n){
       // đi giết đủ 6 con rồi quay lại thấy vẫn 0/6.
       html += questState === 'locked'
         ? `<div class="qd-quest" style="border-color:#f0a03a"><div class="q-name" style="color:#f0a03a">🔒 Chính tuyến ${q.id}: ${q.name} — cần cấp ${q.lv}</div>${q.desc}
-        <div class="q-rew">Đủ cấp ${q.lv} thì nhiệm vụ tự mở · Thưởng: ${q.rew.xp} EXP · ${q.rew.silver||0}◈</div></div>`
+        <div class="q-rew">Đủ cấp ${q.lv} thì nhiệm vụ tự mở · Thưởng: ${rewMoTa(q.rew)}</div></div>`
         : `<div class="qd-quest"><div class="q-name">★ Chính tuyến ${q.id}: ${q.name}</div>${q.desc}
-        <div class="q-rew">Tiến độ: ${prog} · Thưởng: ${q.rew.xp} EXP · ${q.rew.silver||0}◈</div></div>`;
+        <div class="q-rew">Tiến độ: ${prog} · Thưởng: ${rewMoTa(q.rew)}</div></div>`;
     }
   } else if (q && q.type === 'talk' && q.targetNpc === n.id){
     // Người chơi đang đứng trước ĐÚNG người mà nhiệm vụ bảo đi gặp. Trước đây nhánh này không
@@ -23166,7 +23259,7 @@ function renderQuestNpc(n){
       const st = sideAvail(sq);
       const sts = sideStates[sq.id];
       const prog = sts ? ` ${sts.prog}/${sq.need}` : '';
-      const rew = `${sq.rew.xp} EXP · ${sq.rew.silver||0}◈`;
+      const rew = rewMoTa(sq.rew);
       if (st === 'claimed')
         html += `<div class="qd-quest" style="opacity:.55"><div class="q-name" style="color:#8fd18f">✔ ${sq.name}</div>${sq.desc}</div>`;
       else if (st === 'done')
@@ -23212,19 +23305,53 @@ function renderQuestNpc(n){
 }
 
 // ---------- Trả nhiệm vụ chính tuyến (override — thêm mở khóa map) ----------
+// ═══ TRAO THƯỞNG NHIỆM VỤ — MỘT cửa cho cả chính tuyến lẫn phụ tuyến ═══
+// Trước đây `turnInQuest` và `turnInSide` mỗi hàm tự trao một kiểu, và `turnInSide` thì KHÔNG
+// đọc `rew.item` — nên mọi nhiệm vụ phụ khai thưởng vật phẩm sẽ im lặng nuốt mất món đó. Đúng
+// loại lỗi không báo gì: người chơi chỉ thấy "ít quá", không ai thấy là thiếu hẳn một nhánh.
+//
+// ⚠ Thưởng phải là THỨ ĐÃ CÓ NƠI TIÊU, đừng đẻ tiền tệ mới. Bốn nhánh dưới đây đều trỏ vào hệ
+// đang chạy: ô trang bị (`item`), Dòng Cốt độc quyền của vùng (`cot`), ngọc ép thẳng vào đồ
+// (`ngoc`), vé quay Khế Ước (`gk`). Shard CỐ Ý không có mặt ở đây — nó chỉ tới từ mốc mỗi ngày
+// và thông quan, và cho nhiệm vụ nhả Shard là phá đúng cái luật đó.
+function traoThuong(rew){
+  if (!rew) return;
+  player.silver += rew.silver || 0;
+  if (rew.thau){ player.maThau = (player.maThau || 0) + rew.thau; addFloat(player.x, player.y-62, `+${rew.thau} 🪢 Mã Thầu`, '#7fd8e0', 13); }
+  if (rew.item){
+    const gi = genSpecific(rew.item, Math.max(1, player.level));
+    // Túi chật thì thả xuống đất chứ đừng nuốt phần thưởng cốt truyện.
+    if (gi){
+      if (bagThem(gi)) addFloat(player.x, player.y-64, `Nhận được: ${gi.name}!`, '#9fd0ff', 14);
+      else { dropToGround({ k:'item', it:gi }, player.x, player.y);
+             addFloat(player.x, player.y-64, `Túi chật — ${gi.name} rơi xuống đất!`, '#ffb15c', 14); }
+    }
+  }
+  // Mảnh Cốt: `cot:{ dong, pham, n }`. `dong` bỏ trống thì lấy Dòng của chính map đang đứng —
+  // giữ đúng luật "chọn Dòng bằng cách chọn nơi cày" (xem cotRoi).
+  if (rew.cot){
+    const R = rew.cot, dong = R.dong || COT_DONG_THEO_MAP[curMap];
+    if (dong) for (let i = 0; i < (R.n || 1); i++){
+      if (cotKho().length >= COT_KHO_MAX){ addFloat(player.x, player.y-70, 'Kho Cốt đã đầy!', '#ffb15c', 13); break; }
+      const c = cotMoi(dong, R.pham || 'tinh'); cotKho().push(c);
+      addFloat(player.x, player.y-70-i*16, `◆ Mảnh Cốt · ${(COT_DONG[dong]||{}).ten || dong}`, (COT_DONG[dong]||{}).mau || '#9fd0ff', 13);
+    }
+  }
+  if (rew.ngoc){
+    if (!player.jewels) player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
+    for (const k in rew.ngoc){
+      player.jewels[k] = (player.jewels[k] || 0) + rew.ngoc[k];
+      addFloat(player.x, player.y-78, `+${rew.ngoc[k]} ${JEWEL_NAMES[k] || k}`, JEWEL_COLORS[k] || '#b08ae8', 13);
+    }
+  }
+  if (rew.gk) chiVe(rew.gk, 'nhiệm vụ');
+  gainXp(rew.xp || 0);
+}
 window.turnInQuest = function(){
   AudioSys.sfx('quest', 0.9);
   const q = currentQuest();
   if (!q || questState !== 'done') return;
-  player.silver += q.rew.silver || 0;
-  if (q.rew.item){
-    const gi = genSpecific(q.rew.item, Math.max(1, player.level));
-    // Túi chật thì thả xuống đất chứ đừng nuốt phần thưởng cốt truyện.
-    if (bagThem(gi)) addFloat(player.x, player.y-64, `Nhận được: ${gi.name}!`, '#9fd0ff', 14);
-    else { dropToGround({ k:'item', it:gi }, player.x, player.y);
-           addFloat(player.x, player.y-64, `Túi chật — ${gi.name} rơi xuống đất!`, '#ffb15c', 14); }
-  }
-  gainXp(q.rew.xp);
+  traoThuong(q.rew);
   questIdx++;
   questProg = 0;
   questState = questIdx < QUESTS.length ? 'active' : 'all';

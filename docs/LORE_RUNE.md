@@ -263,8 +263,14 @@ Chương VII nén 104-118 → **104-114** để lấy chỗ, trong dung sai cấ
 "chỗ không có luật nào giữ"), tức hai nhiệm vụ chính tuyến đang ngồi trên đất phụ tuyến. Hai
 nhiệm vụ đó nay là `sl_cn1`/`sl_cn2` trong `SIDE_QUESTS`.
 
-**Phụ tuyến: 9 nhiệm vụ, ba map LỐI ĐI.** 3 đánh · 3 hái · 2 đưa tin · 1 dùng lò — không map nào
-quá **một** nhiệm vụ đánh quái. (66 nhiệm vụ phụ đời trước gần 80% là "diệt N con X".)
+**Phụ tuyến: 32 nhiệm vụ / 10 map, phủ cấp 3→116.** Bản đầu chỉ có 9 mục trên ba map LỐI ĐI
+(cấp 40→62); nay mỗi map đánh nhau có ba mục do NPC của chính vùng đó giao.
+
+`kill` 10 · `collect` 6 · `talk` 6 · `moc` 6 · `tranai` 2 · `chaos` 2 — **đánh nhau 12/32 = 38%**,
+và **không map nào quá MỘT mục `kill`**. (66 nhiệm vụ phụ đời trước gần 80% là "diệt N con X".)
+
+Hai mục `tranai` vá một lỗ có thật: `loimon` và `caungam` không có chương chính tuyến, nhưng Tướng
+Quân thì vẫn đứng đó — **hai con duy nhất trong mười một con mà không nhiệm vụ nào trỏ tới**.
 
 ---
 
@@ -304,7 +310,7 @@ quá **một** nhiệm vụ đánh quái. (66 nhiệm vụ phụ đời trước
 | `game.js:22866` băng-rôn | `KẺ KHÉP VẾT NỨT` | `KẺ GỠ RUNE CUỐI` (khớp `TITLES.mochiton`) |
 | `TITLES.mochiton` | `Kẻ Mở Trụ Cuối` | `Kẻ Gỡ Rune Cuối` |
 | `QUESTS` 33 mục / 5 chương | 0 lần nhắc canon · 67% là kill · 10 NV dồn vào cấp 1-10 | **46 mục / 8 chương.** Ba luật đo được: khoảng cách ≤4 cấp · quái lệch ≤±4 cấp · ≤60% đánh quái (nay 52%). Mỗi chương đóng bằng loại nhiệm vụ MỚI `tranai` |
-| `SIDE_QUESTS` | rỗng | **CÒN NỢ** — phụ tuyến cho 3 map lối + Tầng Sâu. Ba map đó cố ý không có chương nào vì chúng là "chỗ không có luật nào giữ"; đó là chỗ phụ tuyến thuộc về |
+| `SIDE_QUESTS` | rỗng | **32 mục / 10 map**, phủ cấp 3→116 · 38% là đánh nhau · mỗi map đúng một mục `kill`. Còn nợ: **Tầng Sâu** |
 | `BOSS_DEFS.trungnut.tn3` `el:'Thuỷ'` | sai dấu ⇒ nằm ngoài toàn bộ hệ khắc hệ | `el:'Thủy'` |
 | `BOSS_DEFS.nhanmon` nm1 · nm3 | Vệ Binh Trụ mà mang tên "Tướng Quân" | đổi tên; "Tướng Quân" chỉ dành cho Trấn Ải |
 | lệnh `/seal` | 7 map cứng, thiếu 4 map | `/rune <0-7>` theo `RUNE_CO` |
