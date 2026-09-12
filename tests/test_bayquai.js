@@ -60,23 +60,7 @@ const PORT = process.argv[2] || '8853';
     // đồng bộ lại hai lần: không được nhân chồng
     syncTiepHp(tiep.pack); syncTiepHp(tiep.pack);
     o.mau.sauDongBo2Lan = mates[0].maxHp;
-    // Kẻ Tiếp Sức đứng rìa, không ở giữa bầy.
-    // Đo trên MỌI bãi có Kẻ Tiếp Sức rồi lấy trung vị, chứ không đo một mẫu: vị trí thả là ngẫu
-    // nhiên, nên một lượt rơi vào đuôi phân phối (đo được 63px) làm cả bài kiểm đỏ dù luật vẫn
-    // đúng. Chốt luật bằng trung vị, và cho đuôi một biên độ.
-    {
-      const ds = [];
-      for (const t of mobs.filter(m => !m.dead && m.tiep)){
-        const b = mobs.filter(m => !m.dead && !m.tiep && m.pack === t.pack);
-        if (b.length < 2) continue;
-        const bx = b.reduce((a,m)=>a+m.x,0)/b.length, by = b.reduce((a,m)=>a+m.y,0)/b.length;
-        ds.push(Math.round(dist(t.x, t.y, bx, by)));
-      }
-      ds.sort((a,b)=>a-b);
-      o.tiepCachTam = ds.length ? ds[ds.length >> 1] : 0;    // trung vị
-      o.tiepMin = ds[0] || 0; o.tiepSo = ds.length;
-      o.tiepGanTam = ds.filter(d => d < 60).length;          // đuôi: bao nhiêu con lọt vào giữa bầy
-    }
+    // (phép đo "Kẻ Tiếp Sức đứng rìa" dời xuống evaluate riêng bên dưới — cần đi nhiều map)
     // sát thương quái gây ra: đo TRƯỚC/SAU khi giết Kẻ Tiếp Sức, tắt né và ngẫu nhiên.
     // Chỉ MỘT con được ở gần người chơi — cả bầy đứng sát nách thì hiệu số máu gộp đòn của
     // nhiều con và tỉ lệ đo ra vô nghĩa (lần đầu đo ra ×1.446 vì đúng lỗi này).
@@ -127,6 +111,35 @@ const PORT = process.argv[2] || '8853';
     return o;
   });
   console.log(JSON.stringify(r, null, 1));
+
+  // ── Kẻ Tiếp Sức đứng RÌA bầy, không ở giữa ──────────────────────────────────────────────
+  // ⚠ Phép đo này TỪNG chỉ lấy 6 bãi của map đang đứng, rồi đòi "không quá 25% lọt vào giữa".
+  // Vị trí thả trong bãi là ngẫu nhiên, nên với n=6 thì MỘT con lọt là qua mà HAI con là đỏ —
+  // bài kiểm xanh-đỏ theo xúc xắc, không phải một cái gác. (Đã đỏ đúng kiểu đó một lần: 2/6.)
+  // Nay quét MỌI map có Kẻ Tiếp Sức ⇒ ~30 mẫu, và ngưỡng 25% mới có nghĩa thống kê.
+  //
+  // ⚠ Phải chạy trong evaluate RIÊNG và chạy SAU cùng: `travelTo` dựng lại thế giới, nên đo
+  // xen vào giữa là các phép đo buff máu / sát thương ở trên mất sạch bầy của chúng.
+  const rv = await p.evaluate(() => {
+    const ds = [];
+    for (const k in MAPS){
+      const md = MAPS[k];
+      if (md.dungeon || !(packsOf(k) || []).some(pk => pk.tiep)) continue;
+      travelTo(k);
+      for (const t of mobs.filter(m => !m.dead && m.tiep)){
+        // ⚠ bỏ trại canh Rương Canh: `m.pack` của chúng mang tiền tố `ruong:`, không phải bãi quái
+        if (String(t.pack).startsWith('ruong:')) continue;
+        const b = mobs.filter(m => !m.dead && !m.tiep && m.pack === t.pack);
+        if (b.length < 2) continue;
+        const bx = b.reduce((a,m)=>a+m.x,0)/b.length, by = b.reduce((a,m)=>a+m.y,0)/b.length;
+        ds.push(Math.round(dist(t.x, t.y, bx, by)));
+      }
+    }
+    ds.sort((a,b)=>a-b);
+    return { tiepCachTam: ds.length ? ds[ds.length >> 1] : 0, tiepMin: ds[0] || 0,
+             tiepSo: ds.length, tiepGanTam: ds.filter(d => d < 60).length };
+  });
+  Object.assign(r, rv);
 
   if (r.vaiTroLa.length) fail(`vai trò lạ trong bãi: ${r.vaiTroLa}`); else pass(`${r.soBai} bãi, vai trò đều hợp lệ`);
   if (r.heSoMauMax > 1.6) fail(`hệ số máu vai trò tới ${r.heSoMauMax} — phồng số ngầm`); else pass('hệ số máu vai trò ≤ 1.6');
