@@ -55,6 +55,12 @@ const PORT = process.argv[2] || '8853';
       const e = spawnMob('bandao', { x:600, y:600, r:0, count:1 }, 777, false, {});
       e.db = []; e.dbChamp = true; e.dbT = {};
       player.x = 640; player.y = 600; player.hp = player.maxHp; player.eva = 0; player.defRed = 0; player.excBlock = 0; player.poisonT = 0;
+      // ⚠ PHẢI GỠ CỜ `dead` TOÀN CỤC, KHÔNG CHỈ ĐỔ LẠI MÁU.
+      // `update()` có `if (dead) return;` ngay đầu hàm — và `dead` là biến TOÀN CỤC, khác
+      // `player.dead`. Đổ máu đầy mà quên cờ này thì thế giới ĐỨNG IM: mọi phép đo sau đó trả về
+      // 0 và bài kiểm báo "Dị Biến bật lên mà KHÔNG đổi gì", tức là nó chỉ đúng vào chỗ SAI.
+      // Đã mất một lượt dò vì đúng chuyện này: đo `player.dead` (false) rồi kết luận nhầm.
+      dead = false; player.dead = false; player.deadT = 0;
       return e;
     };
     // Ghim Math.random = 0.5 CHỈ trong từng khung của phép đo sát thương (rnd(0.85,1.15) → 1.0),
@@ -73,20 +79,28 @@ const PORT = process.argv[2] || '8853';
       return 0;
     };
     o.hieuLuc = {};
+    // Cột chống thất bại IM LẶNG: bước nào để `dead` bật lên thì ghi lại, đừng để nó lặng lẽ
+    // biến mọi phép đo sau thành 0.
+    o.chetGiuaChung = [];
     let e0 = dung(); const mocDmg = danhToi(e0, 30), mocHp = e0.maxHp;
     for (const k of NHOM_CHI_SO){
       console.log('[buoc]', k);
       const e = dung(); e.db = [k];
       if (k === 'cuongthe'){ const t = spawnMob('bandao', {x:600,y:700,r:0,count:1}, 778, false, {}); rollDiBien(t); t.db = ['cuongthe']; t.maxHp = t.hp = Math.round(mobHp(MOBS.bandao) * DIBIEN.cuongthe.hp); o.hieuLuc[k] = { doi: t.maxHp !== mocHp, ghiChu:`máu ${mocHp} → ${t.maxHp}` }; continue; }
       if (k === 'hutsinh'){ e.hp = Math.round(e.maxHp * 0.3); const hp0 = e.hp; danhToi(e, 30); o.hieuLuc[k] = { doi: e.hp > hp0, ghiChu:`máu quái ${hp0} → ${Math.round(e.hp)}` }; continue; }
-      if (k === 'chieubinh'){ const n0 = mobs.filter(m=>!m.dead && m.summonedBy === e).length; for (let i = 0; i < 160; i++) update(0.05); const n1 = mobs.filter(m=>!m.dead && m.summonedBy === e).length; o.hieuLuc[k] = { doi: n1 > n0, ghiChu:`triệu ${n1} con` }; continue; }
+      // ⚠ HAI NHÁNH DƯỚI ĐÂY CHẠY VÒNG DÀI (160 và 100 khung) mà KHÔNG đổ lại máu mỗi khung như
+      // `danhToi` — nên con elite đứng cạnh đủ 8 giây là giết được người chơi, và từ đó `dead`
+      // bật lên, `update()` return sớm, MỌI phép đo còn lại của vòng lặp trả về 0. Triệu chứng
+      // đọc ra là "6 Dị Biến không đổi gì", che mất nguyên nhân thật. Giữ máu đầy trong lúc đo.
+      if (k === 'chieubinh'){ const n0 = mobs.filter(m=>!m.dead && m.summonedBy === e).length; for (let i = 0; i < 160; i++){ player.hp = player.maxHp; update(0.05); } const n1 = mobs.filter(m=>!m.dead && m.summonedBy === e).length; o.hieuLuc[k] = { doi: n1 > n0, ghiChu:`triệu ${n1} con` }; continue; }
       if (k === 'nhiemdoc'){ danhToi(e, 30); o.hieuLuc[k] = { doi: player.poisonT > 0, ghiChu:`độc ${player.poisonT.toFixed(1)}s` }; continue; }
       if (k === 'noxac'){ player.hp = player.maxHp; e.x = player.x + 20; e.hp = 0; killMob(e, 'hit'); o.hieuLuc[k] = { doi: player.hp < player.maxHp, ghiChu:`mất ${player.maxHp - player.hp} khi xác nổ cạnh` }; continue; }
       if (k === 'phanthan'){ const c = spawnClone(e); o.hieuLuc[k] = { doi: !!c && c.clone && c.maxHp < e.maxHp, ghiChu:`bản sao máu ${c.maxHp}/${e.maxHp}` }; continue; }
-      if (k === 'dichanh'){ e.x = 300; e.y = 600; const d0 = dist(e.x,e.y,player.x,player.y); for (let i = 0; i < 100; i++){ update(0.05); e.x = Math.max(e.x, 300); } const d1 = dist(e.x,e.y,player.x,player.y); o.hieuLuc[k] = { doi: d1 < d0 - 100, ghiChu:`cách ${Math.round(d0)} → ${Math.round(d1)}` }; continue; }
+      if (k === 'dichanh'){ e.x = 300; e.y = 600; const d0 = dist(e.x,e.y,player.x,player.y); for (let i = 0; i < 100; i++){ player.hp = player.maxHp; update(0.05); e.x = Math.max(e.x, 300); } const d1 = dist(e.x,e.y,player.x,player.y); o.hieuLuc[k] = { doi: d1 < d0 - 100, ghiChu:`cách ${Math.round(d0)} → ${Math.round(d1)}` }; continue; }
       const dmg = danhToi(e, 30);
       o.hieuLuc[k] = { doi: dmg > mocDmg * 1.03, ghiChu:`ST ${mocDmg} → ${dmg} (×${(dmg/Math.max(1,mocDmg)).toFixed(2)})` };
     }
+    if (dead) o.chetGiuaChung.push('còn bật sau vòng đo');
     // ── thừa hưởng: quái thường cùng bãi lấy đúng Dị Biến đầu của elite, sức 0.4 ──
     const e = dung(); e.db = ['loantien','hutsinh'];
     e.x = -9000; e.y = -9000;   // elite sống nhưng ở xa: thừa hưởng tính theo mã bãi, còn đòn của nó không được lẫn vào phép đo

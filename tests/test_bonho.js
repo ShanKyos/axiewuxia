@@ -60,6 +60,7 @@ const TRAN_ANH_GIU_MB = 170;   // tổng ảnh giải nén sau khi đi hết map
     const bgMB = mb(Object.values(MAP_BG).reduce((n, im) => n + (im.naturalWidth ? im.naturalWidth*im.naturalHeight : 0), 0));
     _bgTruoc = null; mapBgDon(curMap);
     const bgSauDon = Object.keys(MAP_BG).length;
+    const bgCoTranh = Object.keys(MAP_BG_SRC).filter(k => MAPS[k] && !MAPS[k].dungeon).length;
 
     // ③ 1200 món khác nhau + 400 lần đổi trang bị ⇒ hai kho ảnh phải chạm trần rồi dừng
     for (let i = 0; i < 1200; i++){
@@ -76,7 +77,7 @@ const TRAN_ANH_GIU_MB = 170;   // tổng ảnh giải nén sau khi đi hết map
       atlas, giuSauKhiXinHet, giuTamDangChay, tranSoLuong: VFX_ATLAS_TOI_DA,
       nangNhatMB: +atlas.map(a => a.mb).sort((x, y) => y - x)
                         .slice(0, VFX_ATLAS_TOI_DA).reduce((n, v) => n + v, 0).toFixed(1),
-      bgTruocDon, bgSauDon, bgMB,
+      bgTruocDon, bgCoTranh, bgSauDon, bgMB,
       itemArt: _itemArtCache.size, tranItemArt: ITEM_ART_CAP,
       heroCard: _heroCardCache.size, tranHeroCard: HERO_CARD_CAP,
       hs: _hsCache.size, tranHs: HS_CAP,
@@ -111,7 +112,12 @@ const TRAN_ANH_GIU_MB = 170;   // tổng ảnh giải nén sau khi đi hết map
   if (out.conAtlas !== 0)
     fail(`dọn atlas hỏng: còn ${out.conAtlas} tấm sau khi ép mọi tấm thành lâu không dùng`);
   else pass(`dọn sạch atlas không dùng (bỏ ${out.daBo} tấm đang giữ)`);
-  if (out.bgTruocDon < 5) fail(`chỉ nạp được ${out.bgTruocDon} ảnh nền — phép đo dọn ảnh nền rỗng`);
+  // ⚠ NGƯỠNG NÀY SUY TỪ DỮ LIỆU, KHÔNG CHÉP CỨNG. Nó chỉ là cột chống "phép đo rỗng": phải nạp
+  // được vài tấm thì mới chứng minh được là bước DỌN có tác dụng. Con số 5 cũ là số map có tranh
+  // nền hồi cả game còn dùng tranh phẳng; sáu map đã chuyển sang lát viên (`sanIso`) nên chúng
+  // không nạp tranh nào nữa, và bài đỏ trong khi việc nó gác vẫn đúng y nguyên.
+  // Đọc thẳng từ MAP_BG_SRC: map nào còn khai tranh nền thì mới đếm.
+  if (out.bgTruocDon < Math.min(3, out.bgCoTranh)) fail(`chỉ nạp được ${out.bgTruocDon}/${out.bgCoTranh} ảnh nền — phép đo dọn ảnh nền rỗng`);
   if (out.bgSauDon > 2) fail(`dọn xong vẫn giữ ${out.bgSauDon} ảnh nền map (chỉ được giữ map đang đứng + map vừa rời)`);
   if (out.itemArt > out.tranItemArt) fail(`kho ảnh vật phẩm ${out.itemArt} vượt trần ${out.tranItemArt}`);
   if (out.heroCard > out.tranHeroCard) fail(`kho thẻ nhân vật ${out.heroCard} vượt trần ${out.tranHeroCard}`);

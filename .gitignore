@@ -10,6 +10,7 @@ dist/
 # Video nặng (không đưa lên repo)
 public/game/assets/video/
 tools/__pycache__/
+tools/**/__pycache__/
 
 # Ảnh chụp QA — ĐẦU RA của bài kiểm, không phải tài sản dự án.
 # 4 bài (test_uifix, test_uidot5, test_skillpanel, test_khungbang) ghi vào đây; KHÔNG dòng code
