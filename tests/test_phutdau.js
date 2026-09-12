@@ -27,14 +27,21 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 
   // 2. Quái đầu tiên phải THẤY được từ điểm thả, không phải đi tìm
   const r2 = await p.evaluate(() => {
-    const md = MAPS.daohoa, sp = md.spawn;
-    const g = md.packs.map(k => ({ mob:k.mob, n:k.n,
+    // ⚠ MAP KHỞI ĐẦU SUY TỪ DỮ LIỆU, KHÔNG CHÉP CỨNG. Bài này khoá thẳng `MAPS.daohoa` từ hồi
+    // Plant Tribe Glade còn là map mở màn. Nay tân thủ hiện ra ở Sapidae Chiefdom (thành, không
+    // quái) rồi qua Cổng Tây sang Rẻo Rừng Corran, còn Plant Tribe Glade đã dời lên dải 38-48.
+    // Tức là suốt nhiều đợt bài này đo "phút đầu tiên của người mới" trên một map cấp 38 —
+    // canh đúng thứ cần canh, nhưng canh nhầm chỗ. Map mở màn = map có bãi quái, `min` thấp nhất.
+    const id = Object.keys(MAPS).filter(k => packsOf(k).length)
+                     .sort((a, c) => MAPS[a].min - MAPS[c].min)[0];
+    const md = MAPS[id], sp = md.spawn;
+    const g = packsOf(id).map(k => ({ mob:k.mob, n:k.n,
       cach: Math.round(dist(sp.x, sp.y, k.x, k.y)) })).sort((a,c)=>a.cach-c.cach)[0];
-    return { baiGanNhat: g, nuaManHinh: Math.round(Math.min(W,H)/2) };
+    return { map: id, baiGanNhat: g, nuaManHinh: Math.round(Math.min(W,H)/2) };
   });
   console.log('2) bãi quái gần điểm thả nhất:', JSON.stringify(r2));
   if (r2.baiGanNhat.cach > 400)
-    fail(`bãi đầu tiên cách ${r2.baiGanNhat.cach}px — người mới phải đi bộ trong im lặng trước khi thấy quái`);
+    fail(`[${r2.map}] bãi đầu tiên cách ${r2.baiGanNhat.cach}px — người mới phải đi bộ trong im lặng trước khi thấy quái`);
 
   // 3. Món đồ đầu tiên phải rơi trong vài con đầu, không phải sau ~17 con
   const r3 = await p.evaluate(async () => {

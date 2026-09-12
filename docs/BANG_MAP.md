@@ -10,15 +10,15 @@
 | # | Map | Dải cấp | Mở ở | Loại | Khổ | Sàn | Miền | Bãi | Loài | Quái | Thuốc | NPC | Hệ trội |
 |--:|---|---|--:|---|---|--:|--:|--:|--:|--:|--:|--:|---|
 | 1 | **Rẻo Rừng Corran**<br>`corran` | 1 - 12 | 1 | An Toàn | 5200×3800 | 74% | 7 | 18 | 7 | 103 | 12 | 3 | Mộc |
-| 2 | **Beast Herd Camp**<br>`ngoai` | 14 - 24 | 10 | An Toàn | 4400×3300 | 72.3% | 6 | 16 | 6 | 105 | 8 | 1 | Thủy |
-| 3 | **Werebear Woods**<br>`chungnam` | 24 - 38 | 20 | PK | 4600×3400 | 74.4% | 6 | 18 | 4 | 118 | 10 | 2 | Thủy |
+| 2 | **Beast Herd Camp**<br>`ngoai` | 14 - 24 | 10 | An Toàn | 4400×3300 | 72.3% | 6 | 16 | 6 | 103 | 8 | 1 | Thủy |
+| 3 | **Werebear Woods**<br>`chungnam` | 24 - 38 | 20 | PK | 4600×3400 | 74.4% | 6 | 18 | 4 | 117 | 10 | 2 | Thủy |
 | 4 | **Plant Tribe Glade**<br>`daohoa` | 38 - 48 | 36 | PK | 4600×3400 | 79.6% | 6 | 18 | 3 | 118 | 10 | 0 | Mộc |
-| 5 | **Lối Mòn Corran**<br>`loimon` | 42 - 48 | 40 | PK | 6400×1400 | 31.9% | 3 | 6 | 3 | 54 | 8 | 0 | Mộc |
+| 5 | **Lối Mòn Corran**<br>`loimon` | 42 - 48 | 40 | PK | 6400×1400 | 31.9% | 3 | 6 | 3 | 53 | 8 | 0 | Mộc |
 | 6 | **Bug Tribe Tunnels**<br>`comoc` | 42 - 56 | 40 | PK | 4800×3600 | 75.1% | 6 | 18 | 3 | 120 | 10 | 1 | Mộc |
 | 7 | **Trũng Nứt Corran**<br>`trungnut` | 44 - 50 | 44 | Free PK | 4200×3200 | 69.3% | 4 | 9 | 3 | 67 | 10 | 0 | Thổ |
 | 8 | **Aquatic Tribe Causeway**<br>`caungam` | 56 - 62 | 54 | PK | 2803×2808 | 29.5% | 3 | 9 | 3 | 64 | 9 | 0 | Thủy |
 | 9 | **Bird Tribe Heights**<br>`tuyettinh` | 62 - 78 | 60 | PK | 4800×3600 | 77.5% | 6 | 18 | 3 | 119 | 10 | 2 | Thổ |
-| 10 | **Reptile Sunstone Flats**<br>`mongco` | 84 - 100 | 80 | PK | 5000×3700 | 74.4% | 6 | 18 | 3 | 120 | 10 | 1 | Thổ |
+| 10 | **Reptile Sunstone Flats**<br>`mongco` | 84 - 100 | 80 | PK | 5000×3700 | 74.4% | 6 | 18 | 3 | 118 | 10 | 1 | Thổ |
 | 11 | **Dusk Marsh**<br>`nhanmon` | 102 - 120 | 100 | Free PK | 5200×3800 | 78.7% | 7 | 21 | 3 | 129 | 10 | 2 | Hỏa |
 
 *Ngoài dải cấp:* **Sapidae Chiefdom** `ardhaven` — An Toàn, 6400×3200, sàn 68.2%, 26 NPC.
@@ -84,6 +84,6 @@ deep       → ardhaven
 ## 4. Tổng
 
 - **13 map**, 12 lát viên isometric, 1 chưa.
-- **169 bãi quái** · 1117 con · 115 chỗ hái thuốc · 38 NPC.
+- **169 bãi quái** · 1111 con · 115 chỗ hái thuốc · 38 NPC.
 - Sàn đi được: thấp nhất 29.5%, cao nhất 79.6%.
 - ⚠ **Còn dùng tranh nền phẳng:** deep.

@@ -1138,7 +1138,14 @@ window.MAPS = {
     // dải lên nhau vì cả hai cùng cấp. Cung góc lấy lại đúng ba hướng mà bộ sinh đã dò được
     // sàn cho map này: trục đông (-43..67), quạt bắc (-95..-35) và quạt nam (95..155).
     vung: [
-      { id:'boar', ten:'Đồng Heo Rừng', dai:[0.14,0.26], cung:[-30,45], cum:[3,3],
+      // ⚠ DẢI ĐẦU CỦA MAP KHỞI ĐẦU PHẢI VỚI TỚI TRONG MỘT MÀN HÌNH.
+      // `dai[0]` = 0,14 × voi 3400 = 476px, tức KHÔNG cụm nào có thể gần hơn thế — mà nửa màn
+      // hình ở zoom xa chỉ 400px. Người chơi cấp 1 vừa qua Cổng Tây là phải đi bộ trong im lặng
+      // một đoạn trước khi thấy con quái đầu tiên. `test_phutdau` gác đúng chỗ này, nhưng nó
+      // trỏ nhầm sang `daohoa` (map khởi đầu ĐỜI TRƯỚC) nên chuyện này lọt suốt nhiều đợt.
+      // 0,085 × 3400 = 289px — vẫn ngoài vòng cấm quanh điểm thả (VUNG_CACH_THA 280), và đo lại
+      // trong game thì cụm gần nhất rơi vào 330px, lọt trong nửa màn hình 400px.
+      { id:'boar', ten:'Đồng Heo Rừng', dai:[0.085,0.22], cung:[-30,45], cum:[3,3],
         dan:[{ mob:'boar', n:15 }] },   // C1 · Axie Heo Rừng
       { id:'hautu', ten:'Ruộng Bí Ngô', dai:[0.30,0.38], cung:[-95,-35], cum:[2,2],
         dan:[{ mob:'hautu', n:8 }] },   // C2 · Axie Bí Ngô
