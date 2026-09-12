@@ -8329,6 +8329,72 @@ function bandSummaryHtml(md){
   return `<div class="m-desc" style="opacity:.85;margin-top:2px">` +
     BAND_NAMES.map((n,b)=>`<span style="color:${BAND_COLORS[b]}">●</span> ${n} ${bandLvText(md,b)}`).join(' · ') + `</div>`;
 }
+// ── BỘ MẶT CỦA BÃI FARM ───────────────────────────────────────────────────
+// Bãi Farm đã có tên trên bảng Bản Đồ, quái đã dày, rơi đã đậm — nhưng ĐỨNG TRONG MAP mà nhìn
+// thì nó giống hệt ba trại quái thường đứng gần nhau. Trong MU, một *spot* nhận ra được bằng
+// MẮT trước khi nhận ra bằng bảng: ở đó có một cái gì đó của người.
+//
+// Đồ trại là decor `type:'iso'` nên KHÔNG sinh vật cản (xem rebuildDecorObs) — cố ý: đây là chỗ
+// đánh nhau, vấp phải một cái thùng là lỗi chứ không phải địa hình.
+//
+// Bố cục bốc từ TOẠ ĐỘ TRẠI, không từ Math.random: trại đứng yên thì đồ trại cũng phải đứng yên,
+// nếu không mỗi lần vào map cái lều lại nhảy sang chỗ khác và chỗ ấy hết là một chỗ.
+const TRAI_DO = ['trai_leu', 'trai_thung', 'trai_leu', 'trai_coc'];
+let traiLua = [];
+function traiFarmDung(md){
+  traiLua = [];
+  for (const pk of packsMd(md)){
+    if (!pk.farm) continue;
+    const ra = _hatRng(_bamChuoi('trai:' + curMap + ':' + Math.round(pk.x) + ':' + Math.round(pk.y)));
+    // Đống lửa lệch khỏi TÂM trại: tâm là chỗ quái đứng đông nhất, đặt lửa đúng đó thì nó bị
+    // che suốt và cả cụm đồ trại nhìn như mọc ra từ trong bầy.
+    const a0 = ra() * Math.PI * 2, r0 = pk.r * 0.42;
+    const lx = pk.x + Math.cos(a0) * r0, ly = pk.y + Math.sin(a0) * r0;
+    decor.push({ type:'iso', img:'trai_lua', x:lx, y:ly, s:1, dat:true });
+    traiLua.push({ x:lx, y:ly });
+    const n = 2 + ((ra() * 2) | 0);
+    for (let i = 0; i < n; i++){
+      const a = a0 + (i + 1) * (Math.PI * 2 / (n + 1)) + (ra() - 0.5) * 0.5;
+      const r = pk.r * (0.66 + ra() * 0.3);
+      const x = pk.x + Math.cos(a) * r, y = pk.y + Math.sin(a) * r;
+      if (inObstacle(curMap, x, y, 20)) continue;
+      decor.push({ type:'iso', img: TRAI_DO[(ra() * TRAI_DO.length) | 0], x, y, s:1, dat:true });
+    }
+  }
+}
+// Ngọn lửa KHÔNG nằm trong tranh (xem tools/iso/nuong_trai.py): một ngọn lửa nướng sẵn là một
+// vệt cam đứng chết. Game vẽ đè bằng cộng sáng nên nó nhấp nháy và hắt sáng đúng như mọi nguồn
+// sáng khác trong trò chơi.
+function veTraiLua(){
+  if (!traiLua.length) return;
+  const t = performance.now() / 1000;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < traiLua.length; i++){
+    const f = traiLua[i];
+    // Hai dao động lệch pha và lệch chu kì — một dao động đơn ra nhịp máy móc, mà lửa thì không
+    // có nhịp. Pha bốc theo chỉ số nên hai đống lửa cạnh nhau không thở cùng lúc.
+    const nh = 0.78 + Math.sin(t * 6.1 + i * 2.3) * 0.13 + Math.sin(t * 11.7 + i) * 0.07;
+    const R = 76 * nh;
+    const g = ctx.createRadialGradient(f.x, f.y - 6, 2, f.x, f.y - 6, R);
+    g.addColorStop(0,   'rgba(255,212,132,.62)');
+    g.addColorStop(0.32,'rgba(255,146,52,.28)');
+    g.addColorStop(0.66,'rgba(255,108,28,.11)');
+    g.addColorStop(1,   'rgba(255,90,20,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(f.x, f.y - 6, R, 0, 7); ctx.fill();
+    // lõi lửa: ba lưỡi nhỏ, cao thấp khác nhau
+    for (let k = 0; k < 3; k++){
+      const p = Math.sin(t * (7 + k * 1.9) + i * 3 + k * 2.1) * 0.5 + 0.5;
+      const h = (9 + k * 3) * (0.6 + p * 0.7), w = 4.4 - k * 0.9;
+      ctx.fillStyle = k === 0 ? 'rgba(255,236,190,.85)' : 'rgba(255,158,54,.55)';
+      ctx.beginPath();
+      ctx.ellipse(f.x + (k - 1) * 3.4, f.y - 6 - h * 0.45, w, h * 0.55, 0, 0, 7);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
 // ═══════════ ĐÀN THÚ HOANG — thứ trong map KHÔNG phải để đánh ═══════════
 //
 // Đo trước khi làm: mọi thứ cựa quậy trong một map ngoài trời của game này đều muốn giết người
@@ -8631,6 +8697,7 @@ function buildWorld(){
   raiIso(md);            // cây/bụi/đá của map lát viên — SAU bộ lọc, xem raiIso()
   rebuildDecorObs();
   decorUnblock();  // và nếu vẫn bịt mất một lối đi thì dọn đúng mấy gốc cây đang chắn
+  traiFarmDung(md);// đồ trại của Bãi Farm — xem khối BỘ MẶT CỦA BÃI FARM
   // Đàn thú SAU decor, không trước. Cây/đá rải sau sẽ mọc đè lên con vật đã đứng sẵn: đo được
   // 3/14 con nằm trong vật cản, và con nằm trong vật cản thì bước đầu tiên của nó bị chặn nên
   // nó đứng chết một chỗ suốt phiên — hỏng đúng cái thứ duy nhất hệ này có, là cựa quậy.
@@ -12029,6 +12096,11 @@ function render(){
       case 'gate': e.g.portal ? drawPortal(e.g) : drawOneGate(e.g); break;
     }
   }
+
+  // Lửa trại vẽ SAU lớp entity, không nằm trong nó: nó là ÁNH SÁNG, mà ánh sáng thì hắt lên cả
+  // thứ đứng trước lẫn thứ đứng sau. Nhét vào danh sách xếp lớp theo y là quái đứng dưới đống
+  // lửa che mất quầng sáng của chính đống lửa đó.
+  veTraiLua();
 
 
   // projectiles — mỗi tuyệt chiêu một kiểu đạn riêng

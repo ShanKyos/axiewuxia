@@ -505,6 +505,32 @@ def nuong_vet(ten, mau, van, hat, ban=2.2):
     _kiem_khong_rong(os.path.join(RA, f'{ten}.png'), ten, toi_thieu=8)
 
 
+
+# ⚠ BẢNG NEO GHI THẲNG VÀO `public/game/data/iso.js` — TỆP MÀ GAME THẬT SỰ NẠP.
+# Trước đây bảng này ghi vào `assets/iso/iso.js` rồi phải CHÉP TAY sang `data/iso.js`. Bước chép
+# tay đó đã bị quên đúng một lần, và cái giá là: sáu map (daohoa · chungnam · comoc · tuyettinh ·
+# mongco · nhanmon) khai cây/bụi theo biome mà `veVatIso()` không tra được neo nên **không vẽ
+# một cái cây nào cả**. Cả đợt việc "cây/đá theo biome" nằm im trong kho, không ai thấy, và
+# không bài kiểm nào đỏ. Nay chỉ còn MỘT tệp đích; `assets/iso/neo.json` giữ lại cho công cụ.
+def ghi_neo(ra, neo):
+    goc = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
+    duong = os.path.join(ra, 'neo.json')
+    cu = json.load(open(duong, encoding='utf-8')) if os.path.exists(duong) else {}
+    cu.update(neo)
+    json.dump(cu, open(duong, 'w', encoding='utf-8'), indent=1)
+    dich = os.path.join(goc, 'public/game/data/iso.js')
+    with open(dich, 'w', encoding='utf-8') as f:
+        f.write('// SINH TU DONG boi tools/iso/nuong_tile.py + nuong_biome.py + nuong_trai.py'
+                ' — DUNG SUA TAY.\n'
+                '// Toa do CHAN cua tung sprite trong khung cua no, tinh bang pixel.\n'
+                'window.ISO_NEO = {\n')
+        for k in sorted(cu):
+            f.write(f'  {k}: [{cu[k][0]}, {cu[k][1]}],\n')
+        f.write('};\n')
+    print('  neo → %s (%d sprite)' % (dich, len(cu)))
+    return cu
+
+
 def main():
     os.makedirs(RA, exist_ok=True)
     # ── nền: cỏ (3 biến thể) + đất mòn (2 biến thể) ──
@@ -554,18 +580,7 @@ def main():
     nuong_vat('co1', _co_bui(0.40, (0.50, 0.68, 0.32), 131), cao_px=round(CAO_NV * 0.34))
     nuong_vat('co2', _co_bui(0.62, (0.55, 0.66, 0.34), 137), cao_px=round(CAO_NV * 0.48))
     # Toạ độ CHÂN từng sprite — trình ghép (và engine) neo theo đây, không đoán đáy-giữa khung.
-    with open(os.path.join(RA, 'neo.json'), 'w', encoding='utf-8') as f:
-        json.dump(NEO, f, indent=1)
-    # ...và cùng bảng ấy dưới dạng TỆP DỮ LIỆU ANH EM cho game (lối `data/canbang.js`). Sinh ra
-    # từ chính lượt nướng này nên KHÔNG THỂ LỆCH với bộ PNG vừa xuất — chép tay vào game.js là
-    # cách chắc chắn để một ngày nào đó nướng lại rồi quên sửa, và cả rừng đứng lệch chân.
-    with open(os.path.join(RA, 'iso.js'), 'w', encoding='utf-8') as f:
-        f.write('// SINH TU DONG boi tools/iso/nuong_tile.py — DUNG SUA TAY.\n'
-                '// Toa do CHAN cua tung sprite trong khung cua no, tinh bang pixel.\n'
-                'window.ISO_NEO = {\n')
-        for k in sorted(NEO):
-            f.write(f'  {k}: [{NEO[k][0]}, {NEO[k][1]}],\n')
-        f.write('};\n')
+    ghi_neo(RA, NEO)
     print('NUONG XONG →', RA)
 
 

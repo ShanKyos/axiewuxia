@@ -180,19 +180,7 @@ def main():
         nuong_vet(f'{ten}2', mau, van=van, hat=0.53, ban=0.7)
         n += 2
     n += nuong_vat_biome()
-    # Toạ độ CHÂN của vật thể mới phải nối vào bảng neo CHUNG, nếu không engine neo sai gốc.
-    import json
-    duong = os.path.join(RA, 'neo.json')
-    cu = json.load(open(duong, encoding='utf-8')) if os.path.exists(duong) else {}
-    cu.update(NT['NEO'])
-    json.dump(cu, open(duong, 'w', encoding='utf-8'), indent=1)
-    with open(os.path.join(RA, 'iso.js'), 'w', encoding='utf-8') as f:
-        f.write('// SINH TU DONG boi tools/iso/nuong_tile.py + nuong_biome.py — DUNG SUA TAY.\n'
-                '// Toa do CHAN cua tung sprite trong khung cua no, tinh bang pixel.\n'
-                'window.ISO_NEO = {\n')
-        for k in sorted(cu):
-            f.write(f'  {k}: [{cu[k][0]}, {cu[k][1]}],\n')
-        f.write('};\n')
+    NT['ghi_neo'](RA, NT['NEO'])   # một tệp đích duy nhất — xem ghi_neo() trong nuong_tile.py
     print(f'NUONG XONG {n} vien/vet/vat → {RA}')
 
 
