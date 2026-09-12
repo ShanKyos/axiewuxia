@@ -5160,8 +5160,16 @@ const CHI_CHAY = { n: 12, cot: 6 };
 // Chủ dự án nhìn ảnh chụp: 30/27 vẫn dính vào nhau, nhân vật đứng đè lên lưng Axie.
 // Hộp vẽ của Axie rộng tới ~88px (avaCo), nên muốn ĐỨNG RỜI thì tổng độ lệch phải vượt
 // nửa hộp đó cộng nửa bề ngang người (~19px) — tức quanh 64px. Lấy dư một chút cho thoáng.
-const AVA_CHAN_TRUOC = 58;   // chắn phía trước bao nhiêu
+const AVA_CHAN_TRUOC = 58;   // chắn phía trước bao nhiêu — CHỖ ĐỨNG LÚC RA ĐÒN
 const AVA_CHAN_BEN   = 52;   // lệch sang bên bao nhiêu
+// ── LÚC THƯỜNG thì lớp nhân vật ĐI THEO SAU, nhỏ lại ───────────────────────────────────────
+// Chủ dự án chốt: "cho nhân vật nhỏ lại và đi theo sau người chơi. Khi ra đòn, nhân vật ở đằng
+// sau biến mất và xuất hiện đằng trước tung chiêu — như một cách bảo vệ người chơi."
+// Bản trước chỉ gọi lớp nhân vật ra LÚC ĐÁNH rồi cho tan; nay nó có mặt suốt, và cú ra đòn là
+// một cú ĐỔI CHỖ (sau → trước) chứ không phải một lần hiện ra từ hư không.
+const AVA_THEO_SAU = 54;     // lùi lại bao nhiêu so với Axie
+const AVA_THEO_BEN = 30;     // …và lệch sang bên, để không bị Axie che kín
+const AVA_THEO_CO  = 0.60;   // …và thu còn mấy phần. Nhỏ hơn Axie thì mắt đọc ra "kẻ hộ tống".
 const AVA_TY  = 0.72;   // thân Axie cao mấy phần thân người…
 const AVA_TRAN = 0.95;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
 function avaCo(id){
@@ -15373,8 +15381,9 @@ function drawPlayer(){
   const wingIt = p.equip && p.equip.canh;
   // (p.x, p.y + CANH_CHAN_MAN) là điểm ứng với hero (80, 212) sau khi thu bộ xương 220 px
   // xuống 104 px — tức là ĐÚNG giữa hai bàn chân, cùng gốc mà chân dung dùng.
-  if (wingIt) veCanh(ctx, wingIt, p.x, p.y + CANH_CHAN_MAN, p.sway || 0, p.swayDir || 0,
-                     CANH_CO_MAN, bayK);
+  // ⚠ CÁNH VẼ Ở ĐÂU: xem chỗ gọi thật bên dưới, sau khi biết lớp nhân vật đứng đâu. Trước bản
+  // này nó vẽ thẳng ở (p.x, p.y) không qua cửa nào — nên bật avatar lên là đôi cánh mọc ra từ
+  // con Axie trong khi thân người đứng chỗ khác. Chủ dự án chụp màn hình đúng lỗi đó.
 
   const wph = p.walkPh || 0;
   // ═══ THẦN KHÍ — vũ khí KHÔNG nằm trong tay, nó bay theo người ═══
@@ -15387,7 +15396,8 @@ function drawPlayer(){
   // Và bỏ vũ khí ra khỏi khung hình KHÔNG để lại bàn tay hụt — bộ xương nắm đấm rồi vung theo
   // cung, đọc thành "ra hiệu điều khiển" chứ không phải "quên cầm đồ". Đã chụp lại đối chiếu.
   const _tk = thanKhiTuThe(p, (p.atkAnim || 0) / 0.22, (p.castT || 0) / 0.38, p.walkPh || 0, now);
-  if (_tk && !_tk.truoc) veThanKhi(ctx, _tk, p);        // nằm sau lưng: vẽ TRƯỚC thân
+  // ⚠ CHỖ VẼ cũng dời xuống, cùng lý do với cánh: nó bám neo người chơi nên bật avatar lên là
+  // cây vũ khí lơ lửng trên đầu con Axie.
 
   const castK = (p.castT || 0) / 0.38;
   const atkK = (p.atkAnim || 0) / 0.22;
@@ -15419,8 +15429,17 @@ function drawPlayer(){
   const _coAva = !!avatarId(p);
   // Trục sâu nén 0,55 — cùng lối với bóng đổ: game nhìn chếch từ trên nên dời dọc phải ngắn
   // hơn dời ngang, không thì nhân vật nhảy lên cao hẳn khi Axie quay mặt lên.
-  const _avaDx = _coAva ? Math.cos(p.face)*AVA_CHAN_TRUOC - Math.sin(p.face)*AVA_CHAN_BEN : 0;
-  const _avaDy = _coAva ? (Math.sin(p.face)*AVA_CHAN_TRUOC + Math.cos(p.face)*AVA_CHAN_BEN)*0.55 : 0;
+  // RA TRƯỚC khi tung chiêu · ĐI THEO SAU lúc thường. Một phép nội suy thì mượt hơn, nhưng chủ
+  // dự án nói rõ "biến mất rồi xuất hiện" — nên đổi chỗ TỨC THÌ, và cú hiện ra do `_hienLop` +
+  // vòng triệu hồi lo. Trượt từ sau ra trước đọc thành "chạy vòng lên", không ra "hộ pháp".
+  const _lopT  = _lopHien ? AVA_CHAN_TRUOC : -AVA_THEO_SAU;
+  const _lopB  = _lopHien ? AVA_CHAN_BEN   :  AVA_THEO_BEN;
+  const _lopCo = _coAva ? (_lopHien ? 1 : AVA_THEO_CO) : 1;
+  const _avaDx = _coAva ? Math.cos(p.face)*_lopT - Math.sin(p.face)*_lopB : 0;
+  const _avaDy = _coAva ? (Math.sin(p.face)*_lopT + Math.cos(p.face)*_lopB)*0.55 : 0;
+  // Thu quanh BÀN CHÂN, không quanh tâm hộp. Hộp 160x220 vẽ quanh tâm nên gót nằm thấp hơn neo
+  // đúng ngần này; thu thẳng là hai bàn chân nhấc khỏi đất mà nhìn chỉ thấy "hơi lửng lơ".
+  const _lopChan = (HERO_GOT - HERO_H/2) * (NV_CAO / HERO_H) * (1 - _lopCo);
   // Độ VẬT CHẤT HOÁ, cũng tính sớm vì vòng triệu hồi phải vẽ TRƯỚC thân người.
   // ⚠ `atkAnim` ĐẾM NGƯỢC nên tiến độ là 1 − atkK, không phải atkK.
   let _hienLop = 1;
@@ -15434,9 +15453,29 @@ function drawPlayer(){
   // Vòng triệu hồi nổ dưới chân LỚP NHÂN VẬT (thứ đang được gọi tới), và phải nằm DƯỚI nó.
   if (_coAva && _lopHien && _hienLop < 1)
     veVongTrieu(ctx, { x: p.x + _avaDx, y: p.y + _avaDy }, _hienLop);
+  // ── CÁNH và THẦN KHÍ đi theo LỚP NHÂN VẬT, không theo neo người chơi ────────────────
+  // Cả hai là trang bị CỦA NGƯỜI. Trước bản này chúng vẽ thẳng ở (p.x, p.y) không hỏi avatar,
+  // nên bật avatar lên là cánh mọc ra từ con Axie và cây vũ khí treo lơ lửng trên đầu nó — hai
+  // thứ "trùng lắp" mà chủ dự án chụp lại. Nay chúng nằm đúng chỗ lớp nhân vật đang đứng và
+  // thu đúng cỡ lớp ấy, nên chỉ có MỘT đôi cánh và MỘT cây vũ khí trên màn.
+  //
+  // Thần khí thì còn phải TẮT lúc đi theo sau: vũ khí XUẤT HIỆN cùng cú ra đòn, đó là nửa còn
+  // lại của "xuất hiện đằng trước tung chiêu kèm vũ khí".
+  const _tkHien = !_coAva || _lopHien;
+  {
+    ctx.save();
+    ctx.translate(p.x + _avaDx, p.y + _avaDy + _lopChan);
+    ctx.scale(_lopCo, _lopCo);
+    ctx.translate(-p.x, -p.y);
+    if (wingIt) veCanh(ctx, wingIt, p.x, p.y + CANH_CHAN_MAN, p.sway || 0, p.swayDir || 0,
+                       CANH_CO_MAN, bayK);
+    if (_tk && !_tk.truoc && _tkHien) veThanKhi(ctx, _tk, p);   // nằm sau lưng: vẽ TRƯỚC thân
+    ctx.restore();
+  }
   ctx.save();
   ctx.translate(p.x + _avaDx + Math.cos(p.face)*lungeK*7,
-                (p.y - NV_LECH_Y) + _avaDy + Math.sin(p.face)*lungeK*3);
+                (p.y - NV_LECH_Y) + _avaDy + _lopChan + Math.sin(p.face)*lungeK*3);
+  ctx.scale(_lopCo, _lopCo);
   if (flip) ctx.scale(-1, 1);
   ctx.scale(pulse, pulse);
   // Thần Hiệp: hào quang vàng rực sau lưng + viền kim quang quanh thân
@@ -15498,7 +15537,10 @@ function drawPlayer(){
   // chân + nhấc thân lên, đúng hướng và đúng biên độ cũ. Đổi lại là các khớp không bung riêng
   // lẻ — cái giá rẻ hơn nhiều so với đổi hẳn nhân vật.
   // AVATAR (xem veAvatar): đi lại thì thấy Axie, đánh/niệm chú thì lớp nhân vật hiện ra.
-  let _spr = null, _veAva = _coAva && !_lopHien;   // xem _lopHien/_hienLop tính ở trên
+  // `_veAva` nay KHÔNG còn nghĩa "bỏ vẽ thân người" — thân luôn vẽ. Nó chỉ còn hai việc: báo
+  // cho bài kiểm biết THÂN CỦA NGƯỜI CHƠI là con Axie, và chặn viền Thần Hiệp khỏi dán lên kẻ
+  // hộ tống (ấn đó đánh dấu tiến độ của người chơi, mà người chơi giờ là con Axie).
+  let _spr = null; const _veAva = _coAva;
   {
     // BAY không có khối khung riêng, và không cần. Đo bằng chỉ số chồng khít giữa tư thế bay
     // mong muốn với cả 20 hoạt cảnh × 12 khung của bản mẫu: khớp nhất là chính '00_Walk' khung
@@ -15628,8 +15670,15 @@ function drawPlayer(){
   // Bài kiểm đọc cờ này để gác đúng lỗi vừa sửa: trúng đòn KHÔNG được rơi về hình vẽ đường.
   // Một phép gán chuỗi mỗi khung — rẻ hơn nhiều so với để lỗi đó quay lại mà không ai thấy.
   window.__veThan = _veAva ? 'avatar' : _spr ? 'sprite' : 'vector';
-  if (_veAva){ /* thân người không vẽ — avatar vẽ ở toạ độ thế giới, sau ctx.restore() */ }
-  else if (_hienLop < 1){
+  // Chỗ đứng và cỡ của LỚP NHÂN VẬT, phơi ra cho bài kiểm — cùng nếp với `__veThan`/`__khoiVe`.
+  // Đây là hình học mà mắt không đo được: "ra trước hay ra sau" là dấu của tích vô hướng với
+  // hướng mặt, không phải cảm giác nhìn ảnh. Ghi ba số mỗi khung, rẻ hơn nhiều so với để cú
+  // đổi chỗ sau→trước lặng lẽ hỏng.
+  window.__lopVe = { dx: _avaDx, dy: _avaDy, co: _lopCo, truoc: !!(_coAva && _lopHien) };
+  // Thân người LUÔN vẽ — kể cả khi có avatar. Bản trước bỏ hẳn nhánh này lúc không đánh, vì
+  // lớp nhân vật chỉ được gọi ra trong cú đòn. Nay nó đi theo sau suốt, nên không còn chỗ nào
+  // được phép bỏ vẽ; chỗ đứng và cỡ đã do `_avaDx/_avaDy/_lopCo` lo.
+  if (_hienLop < 1){
     ctx.save(); ctx.globalAlpha = _hienLop;
     _veThanHoa(ctx, p, _spr, now, _tier, _gv, _act, _ps, _sw);
     ctx.restore();
@@ -15652,7 +15701,7 @@ function drawPlayer(){
       ctx.restore();
     } else _veThanHoa(ctx, p, _spr, now, _tier, _gv, _act, _ps, _sw);
   }
-  else if (!_veAva && _hienLop >= 1) drawHeroLit(ctx, p.sect, _tier, now, _ps, _gv);
+  else if (_hienLop >= 1) drawHeroLit(ctx, p.sect, _tier, now, _ps, _gv);
   ctx.restore();
   // ── AVATAR vẽ ở TOẠ ĐỘ THẾ GIỚI ──────────────────────────────────────────────────────
   // Phải nằm SAU ctx.restore() ở trên: bên trong đó là hệ cục bộ của bộ xương (đã dời về
@@ -15661,7 +15710,14 @@ function drawPlayer(){
   // Bản trước cho nó biến mất lúc đánh (đổi chỗ cho nhau), chủ dự án chốt lại là đứng cạnh.
   // Nửa còn lại của phép xếp chiều sâu ở trên: lớp nhân vật đứng CAO hơn ⇒ Axie vẽ SAU.
   if (_coAva && _avaDy <= 0) veAvatar(ctx, p, !!p.moving, now);
-  if (_tk && _tk.truoc) veThanKhi(ctx, _tk, p);        // quét ra trước mặt: vẽ SAU thân
+  if (_tk && _tk.truoc && _tkHien){                   // quét ra trước mặt: vẽ SAU thân
+    ctx.save();
+    ctx.translate(p.x + _avaDx, p.y + _avaDy + _lopChan);
+    ctx.scale(_lopCo, _lopCo);
+    ctx.translate(-p.x, -p.y);
+    veThanKhi(ctx, _tk, p);
+    ctx.restore();
+  }
   // weapon arc while attacking
   if (p.atkAnim > 0){
     const k = p.atkAnim/0.22;
