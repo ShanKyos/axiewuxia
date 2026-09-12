@@ -1633,6 +1633,39 @@ Trong test: `window.TEST_MODE = true; startGame('<sect>', null);` rồi gọi th
 ⚠ Khi nhảy thẳng `player.level` trong test, phải tự gọi `vhAutoLearn()` — game thật gọi nó qua
 `gainXp()` → `unlockNotices()` mỗi lần lên cấp.
 
+### ⏱ `rc=124` TRONG HỒI QUY LÀ ĐỒNG HỒ CỦA BỘ CHẠY, KHÔNG PHẢI MỘT KHẲNG ĐỊNH ĐỎ
+
+Log của bài dính kiểu này **cụt giữa chừng** với `Target page … has been closed` chứ không có
+dòng `FAIL` nào. Đã gặp **bốn bài khác nhau qua bốn lượt** — `test_chianh` · `test_bossplace` ·
+`test_sandat` · `test_hudv` — và mỗi bài chạy RIÊNG xong trong **3-28 giây** với rc=0.
+
+**Bốn giả thuyết đã kiểm và LOẠI** (ghi lại để đừng kiểm lại từ đầu):
+
+| nghi | đo được |
+|---|---|
+| chạy chung với một lượt đo dài | tiến trình đó đã chết TRƯỚC lượt hồi quy đầu |
+| máy hết RAM / đĩa | còn 14 GB rỗng · đĩa 29 GB |
+| trình duyệt mồ côi tích lại | `ps` sau lượt chạy: 0 tiến trình chrome |
+| server tĩnh nghẽn một luồng | `python3 -m http.server` đã là `ThreadingHTTPServer` từ Python 3.7 |
+
+Nguyên nhân cuối cùng **chưa tìm ra** — đừng giả vờ là đã. `tools/reg.sh` nay xử đúng mức đó:
+gặp `rc=124` thì **chạy lại đúng một lần**, ghi tên vào `chaylai.txt` và **in ra cuối** dòng
+`ĐÃ CHẠY LẠI`. Lượt hai vẫn 124 thì vẫn tính đỏ. *Một bộ kiểm im lặng nuốt lỗi thì tệ hơn một
+bộ kiểm nói ra là nó đã phải chạy lại.*
+
+⚠ **Dọn trình duyệt mồ côi bằng lọc `ppid=1`, TUYỆT ĐỐI không `pkill -f chrom`.** Mẫu đó khớp
+luôn dòng lệnh của chính shell đang chạy rồi giết nó (thoát 144) — cùng vết sẹo đã ghi ở mục
+git bên dưới, và nó đã bị dẫm lại một lần nữa trong phiên gần đây.
+
+⚠ **Bài kiểm mỏng mẫu thì đỏ theo xúc xắc, không phải theo lỗi.** Hai chỗ đã phải sửa:
+- `test_bayquai` đo vị trí Kẻ Tiếp Sức trên **6 bãi của một map** rồi đòi "không quá 25% lọt vào
+  giữa" — một con lọt là qua, hai con là đỏ. Nay quét mọi map ⇒ **63 mẫu**.
+- `test_cottruyen` chốt bằng con số đếm *"đúng 7 NPC có trang thoại"*, nên **thêm một NPC viết tử
+  tế là bài đỏ**. Nay suy thẳng từ `QUESTS`: gác *"không người dẫn chương nào bị bỏ trống"*.
+
+Cùng một bệnh với luật `≤60% là kill` ở `docs/LORE_RUNE.md §6`: **một cái chốt hẹp hơn ý định của
+nó thì xanh, và nó bảo đảm sai.**
+
 ## ⚠ ĐỨNG ĐÚNG CHỖ TRƯỚC KHI CHẠY GIT
 
 Máy này có **hai repo khác nhau** và tên nhánh trùng nhau — đã suýt push nhầm vì chuyện đó.
