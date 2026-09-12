@@ -965,6 +965,44 @@ function rollDiBien(m){
   if (db.includes('cuongthe')){ m.maxHp = Math.round(m.maxHp * A.hp); m.hp = m.maxHp; }
   return m;
 }
+// ═══ DỊ BIẾN CỦA BÃI — mỗi bãi một bản sắc, không chỉ bãi nào có elite ═══
+// Đo trước đợt này: 1.112 quái trên 12 map, chỉ 46 con (4,1%) mang Dị Biến, và `comoc`/`caungam`
+// có ĐÚNG 0 con. Tức là game đã xây xong cả một hệ hành vi rồi đem cho 4% dân số dùng; 96% còn
+// lại là một khối chỉ số với năm con số (`speed`·`aggro`·`range`·`atkCd`·`eye`).
+// Nguyên nhân: elite chỉ mọc ở loài khai `elite:true`, mà chỉ 9/47 loài có cờ ấy.
+//
+// Nay MỌI bãi mang một Dị Biến ở sức `mini` — đúng cường độ mà quái thường vẫn thừa hưởng từ
+// elite, nên không phải cân lại. Bãi nào CÓ elite thì elite vẫn cuộn 2-4 cái đầy đủ như cũ.
+// Cùng lối mà A1 (vai theo bãi) đã đi và đã chứng minh chạy được: cùng một loài, bãi khác thì
+// đánh khác — không tốn một tệp art nào.
+//
+// ⚠ BẢY CÁI, KHÔNG PHẢI MƯỜI MỘT. Bốn cái bị loại, mỗi cái một lý do khác nhau:
+//   · `chieubinh` · `phanthan` — NHÂN SỐ LƯỢNG QUÁI. Cả hai đi qua cùng cửa `dbOf` (xem vòng
+//     update), nên cho cả bãi mang là mỗi con tự triệu thêm 2 con mỗi 12 giây. Một bãi 6 con
+//     thành 18, rồi 18 thành 54.
+//   · `dichanh` — cả bãi chớp tới cạnh người chơi thì không còn cách nào kite, mà kite là một
+//     trong hai thứ người chơi có (cái kia là chọn mục tiêu).
+//   · `cuongthe` — ×1,6 máu cho TOÀN BỘ quái của 9 map là đổi nhịp cả game, không phải thêm
+//     bản sắc. Đó là một quyết định cân bằng, phải đo riêng.
+const DB_BAI = ['hutsinh', 'loantien', 'nhiemdoc', 'hoaphu', 'bangphu', 'loiphu', 'noxac'];
+// ⚠ BỐC THEO HẠT CỐ ĐỊNH TỪ TÊN MAP + MÃ BÃI, không `Math.random`. Cùng lý do đã ghi ở trại quái
+// và Rương Canh: bố cục một bãi phải giống nhau mọi lần vào, nếu không thì không ai học được, mà
+// học được mới là chỗ nó có nghĩa. "Bãi này hút máu" phải là một sự thật về NƠI CHỐN.
+let _baiDb = {};
+function xoaDiBienBai(){ _baiDb = {}; }
+// ⚠ HẠT BỐC TỪ CHÍNH BÃI (loài + toạ độ), KHÔNG từ `packId`. `packId` là một bộ đếm chạy
+// (`packSeq++`), nên nó phụ thuộc thứ tự dựng chứ không phải danh tính cái bãi — thêm một bãi ở
+// map khác là mọi bãi sau đó đổi Dị Biến. Toạ độ bãi thì cố định (bốc từ tên map, xem banRaiVung),
+// nên bốc theo nó là "bãi này hút máu" thành một sự thật về NƠI CHỐN, học được.
+function ganDiBienBai(mid, packId, pk){
+  const md = MAPS[mid];
+  // Đai 0 (map tân thủ) đứng ngoài: đó là chỗ học cách chơi, cùng lý do map 1-24 cố ý không có
+  // Pháp Sư và không có Kẻ Tiếp Sức.
+  if (!md || (md.min || 1) < 20) return;
+  const boc = _hatRng(_bamChuoi('dibai:' + mid + ':' + pk.mob + ':' + Math.round(pk.x) + ':' + Math.round(pk.y)));
+  _baiDb[packId] = DB_BAI[(boc() * DB_BAI.length) | 0];
+}
+function baiDb(pack){ return (pack == null) ? null : (_baiDb[pack] || null); }
 // Elite mang Dị Biến của bầy này (mỗi bầy đúng một — xem buildWorld). Không có thì null.
 function packChamp(pack){
   if (pack == null) return null;
@@ -977,7 +1015,9 @@ function dbOf(m, k){
   if (!m || m.tiep) return 0;
   if (m.db) return m.db.includes(k) ? 1 : 0;
   const c = packChamp(m.pack);
-  return (c && c.db && c.db[0] === k) ? 0.4 : 0;
+  if (c) return (c.db && c.db[0] === k) ? 0.4 : 0;
+  // Bãi không có elite thì mang Dị Biến của BÃI, cũng ở 0.4 — xem DB_BAI.
+  return baiDb(m.pack) === k ? 0.4 : 0;
 }
 // Bản sao Phân Thân: đứng cạnh chủ, không hồi sinh, không thưởng riêng (drop: 0)
 function spawnClone(m){
@@ -4897,13 +4937,15 @@ function viaKhai(){
     cotKho().push(c); ra.push(c);
   }
   themDatHon(6 + Math.floor(Math.random() * 4));
+  const xpV = expViec(EXP_VIEC.via);
+  gainXp(xpV);
   for (const p of pickups) if (p.type === 'via'){ p.respawn = 999999; }
   addEffect({ type:'spark', x:v.x, y:v.y - 8, r:70, color:D.mau });
   if (ra.length){
     const co = ra.filter(c => c.pham === 'co').length;
-    addFloat(v.x, v.y - 120, `◆ Khai vỉa: +${ra.length} Cốt ${D.ten}${co ? ` (${co} Cổ!)` : ''}`, D.mau, 15);
+    addFloat(v.x, v.y - 120, `◆ Khai vỉa: +${ra.length} Cốt ${D.ten}${co ? ` (${co} Cổ!)` : ''} · +${xpV.toLocaleString('vi-VN')} EXP`, D.mau, 15);
   } else {
-    addFloat(v.x, v.y - 120, 'Kho Cốt đã đầy — nung bớt rồi quay lại', '#ffd76a', 14);
+    addFloat(v.x, v.y - 120, `Kho Cốt đã đầy — nung bớt rồi quay lại · +${xpV.toLocaleString('vi-VN')} EXP`, '#ffd76a', 14);
   }
   zoneBanner = { text:'◆ VỈA CỐT ĐÃ KHAI', sub:`Vỉa ${D.ten} tại ${MAPS[curMap].name} — hôm nay hết phần ở vùng này.`, color:D.mau, t:4 };
   AudioSys.sfx('levelup', 0.85);
@@ -5011,6 +5053,8 @@ function ruongMo(){
   for (let i = 0; i < 2; i++) dropToGround({ k:'item', it: genItem(lv, 1.15, 'ruong') }, r.x, r.y - 6);
   const bac = 400 + lv * 55;
   player.silver += bac;
+  const xpR = expViec(EXP_VIEC.ruong);
+  gainXp(xpR);
   let hop = 0;
   if (Math.random() < 0.35){
     const t = clamp((typeof GOLDEN_BOX !== 'undefined' && GOLDEN_BOX[curMap]) || 1, 1, 7);
@@ -5018,7 +5062,7 @@ function ruongMo(){
     hop = t;
   }
   addEffect({ type:'ring', x:r.x, y:r.y, r:90, color:'#ffd76a', big:true });
-  addFloat(r.x, r.y - 96, `+${bac.toLocaleString('vi-VN')}◈${hop ? ` · +1 ${BAOHAP_TIERS[hop].name}` : ''}`, '#ffd76a', 15);
+  addFloat(r.x, r.y - 96, `+${xpR.toLocaleString('vi-VN')} EXP · +${bac.toLocaleString('vi-VN')}◈${hop ? ` · +1 ${BAOHAP_TIERS[hop].name}` : ''}`, '#ffd76a', 15);
   zoneBanner = { text:'▣ RƯƠNG CANH ĐÃ MỞ',
     sub:`${MAPS[curMap].name} — còn ${ruongConLai(curMap)}/${RUONG_MOI_MAP} rương chưa ai chạm tới.`,
     color:'#ffd76a', t:4 };
@@ -8259,8 +8303,14 @@ function buildWorld(){
   // .mob rồi tin .x/.y) đều dẫn sai chỗ — có lúc dẫn thẳng vào cạnh Vệ Binh Trụ vùng khiến AUTO đứng im
   // (phát hiện qua QA level 1→120). Dữ liệu md.packs mỗi map đã tự nhiên đặt quái yếu gần spawn,
   // quái mạnh/tinh anh xa hơn rồi — bỏ hẳn bước xáo trộn, spawn đúng như đã thiết kế.
+  xoaDiBienBai();   // bảng Dị Biến của bãi thuộc về MAP này — không mang sang map sau
+  // ⚠ Sổ "bãi đã sạch" cũng phải xoá: mã bãi là một bộ đếm chạy (`packSeq`), nên giữ lại là bãi
+  // của map mới trùng mã với bãi đã dọn ở map cũ và mất luôn phần thưởng. Cùng họ với luật
+  // "xoá decorObs NGAY khi dựng lại thế giới".
+  _baiDaSach.clear();
   for (const pk of packsMd(md)){   // KHÔNG đọc thẳng md.packs: map chưa có bãi quái thì nó là undefined
     const packId = packSeq++;
+    ganDiBienBai(curMap, packId, pk);
     const soCon = bayCo(pk, md);   // KHÔNG dùng thẳng pk.n — xem bayCo()
     const zone = { x:pk.x, y:pk.y, r: Math.max(100, pk.r || 115), count:soCon, tiep: !!pk.tiep };
     // Bãi có Kẻ Tiếp Sức: một trong n con là nó. Đặt ở RÌA bầy chứ không giữa — đứng giữa thì
@@ -9562,6 +9612,45 @@ function applyRewards(rw, m){
   }
 }
 
+// ═══ EXP TỪ VIỆC LÀM XONG, KHÔNG CHỈ TỪ SỐ XÁC ═══
+// Đo trước đợt này: để đi hết dải cấp của chính map đó, người chơi phải QUÉT SẠCH cả map
+//   Rẻo Rừng Corran 2,0 lần · Werebear Woods 3,8 · Bug Tribe Tunnels 10,2
+//   Aquatic Tribe Causeway 60,6 · Bird Tribe Heights 91,0 · Reptile Sunstone Flats 95,7 · Dusk Marsh 92,0
+// Đoạn đầu 2-4 lần là hợp lý — map là một NƠI CHỐN đi qua. Từ cấp 56 vọt lên 60-96: map thôi là
+// nơi chốn, nó thành một cỗ máy đếm. Lệch ~30 lần, tức đường cong cấp và EXP quái là hai đường
+// không liên quan gì nhau ở nửa sau.
+//
+// Nguồn EXP trước nay chỉ có MỘT: xác quái. Nên đường cong dốc lên thì cách duy nhất là giết
+// nhiều hơn. Nay chia nguồn — xác quái giữ nguyên làm nền, cộng thêm ba khoản trả cho VIỆC LÀM
+// XONG. Hai khoản sau đã có sẵn hệ và vốn đã đi đúng hướng này (Rương Canh mở một lần vĩnh viễn,
+// Vỉa Cốt một lần mỗi ngày mỗi vùng), chỉ chưa gánh EXP.
+//
+// ⚠ TÍNH THEO CẤP NGƯỜI CHƠI, KẸP BỞI TRẦN CỦA MAP. Tính theo cấp map thì phần thưởng hoá vô
+// nghĩa với người chơi cao cấp; tính thuần theo cấp người chơi thì cấp 120 về map tân thủ vét
+// rương là lên cấp. Kẹp bởi trần dải cấp của map bịt đúng chỗ đó. (Cùng bài học đã ghi ở
+// BAOHAP_TIERS: thưởng phải tính theo cấp NGƯỜI CHƠI, nhưng nội dung thấp cấp không được nuôi
+// người chơi cao cấp.)
+const EXP_VIEC = { bai: 0.06, ruong: 0.60, via: 0.80 };   // phần của MỘT cấp
+function expViec(phan){
+  if (!player) return 0;
+  const md = mapDef();
+  const tran = (md && md.range && md.range !== '—') ? (+md.range.split('-')[1].trim() || 120) : 120;
+  const lv = clamp(player.level, 1, clamp(tran, 1, MAX_LV));
+  return Math.max(1, Math.round(XP_TABLE[lv - 1] * phan));
+}
+// Bãi vừa sạch chưa? Gọi SAU khi con này đã chết. Bãi Rương Canh không tính — nó có phần thưởng
+// riêng (chính cái rương), cộng thêm EXP dọn bãi là trả hai lần cho một việc.
+const _baiDaSach = new Set();
+function baiSachXong(pack){
+  if (pack == null || (typeof pack === 'string' && pack.startsWith('ruong:'))) return;
+  if (_baiDaSach.has(pack)) return;
+  for (const x of mobs) if (x.pack === pack && !x.dead && !x.clone && !x.summonedBy) return;
+  _baiDaSach.add(pack);
+  const xp = expViec(EXP_VIEC.bai);
+  gainXp(xp);
+  addFloat(player.x, player.y - 64, `✦ Dọn sạch bãi +${xp.toLocaleString('vi-VN')} EXP`, '#a0ffe9', 14);
+}
+
 function killMob(m, source){
   m.dead = true; m.deadT = 0.45; // xác tan dần thành mực thay vì biến mất tức thì
   // Cầu Giáp (chiêu Vỡ Giáp) chỉ là mục tiêu bấm có hạn giờ — không exp, không Lumen, không đồ,
@@ -9631,6 +9720,9 @@ function killMob(m, source){
   for (let i=0;i<Math.round(8*_kb);i++) addEffect({ type:'ink', x:m.x, y:m.y, vx:rnd(-70,70)*_kb, vy:rnd(-90,-20)*_kb, color:m.def.color });
   // Phần thưởng: QUYẾT ĐỊNH tách khỏi GHI VÀO — xem computeKillRewards() ngay trên killMob().
   applyRewards(computeKillRewards(m, source, player), m);
+  // ...và nếu con này là con cuối của bãi thì trả thêm cho VIỆC LÀM XONG. Gọi SAU applyRewards
+  // để dòng log đọc đúng thứ tự: hạ con cuối rồi mới tới "dọn sạch bãi".
+  baiSachXong(m.pack);
   // quests
   const q = QUESTS[questIdx];
   if (q && questState==='active'){
