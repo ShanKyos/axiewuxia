@@ -881,8 +881,14 @@ window.MAPS = {
         dan:[{ mob:'boar_tusk', n:18, vai:['nang','can'] }] },
       { id:'wolf_alpha', ten:'Đồi Sói Đầu Đàn', dai:[0.27,0.38], cung:[75,185], cum:[3,3],
         dan:[{ mob:'wolf_alpha', n:18, vai:['can','bay'] }] },
-      { id:'bandit_vet', ten:'Trại Cựu Binh Gloam', dai:[0.41,0.52], cung:[40,150], cum:[3,3],
-        dan:[{ mob:'bandit_vet', n:15, vai:['xa','can'] }] },
+      // ◈ BÃI FARM của Beast Herd Camp — khái niệm "spot" của MU. Chọn miền GIỮA chứ không phải
+      // miền xa nhất: một chỗ đáng cày phải VỚI TỚI ĐƯỢC ở đầu dải cấp của map, nếu không nó chỉ
+      // là phần thưởng cho người đã qua map này rồi. Trại Cựu Binh nằm ở 0,41-0,52 × voi, tức
+      // quãng giữa — đi bộ tới được từ cấp 14, và vẫn đáng đứng tới cấp 24.
+      // Gloam là lính Vaeldra đào ngũ: một cái TRẠI đông người là hình ảnh đúng cho bãi farm,
+      // hợp hơn hẳn một đàn thú tình cờ đứng gần nhau.
+      { id:'bandit_vet', ten:'Trại Cựu Binh Gloam', dai:[0.41,0.52], cung:[40,150], cum:[3,3], farm:true,
+        dan:[{ mob:'bandit_vet', n:21, vai:['xa','can','nang'] }] },
       { id:'caodo_fire', ten:'Vạt Cỏ Cháy', dai:[0.55,0.66], cung:[70,180], cum:[2,2],
         dan:[{ mob:'caodo_fire', n:10 }] },
       { id:'gloam_scout', ten:'Chốt Trinh Sát Gloam', dai:[0.69,0.82], cung:[45,160], cum:[3,3],

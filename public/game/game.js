@@ -989,7 +989,11 @@ const DB_BAI = ['hutsinh', 'loantien', 'nhiemdoc', 'hoaphu', 'bangphu', 'loiphu'
 // và Rương Canh: bố cục một bãi phải giống nhau mọi lần vào, nếu không thì không ai học được, mà
 // học được mới là chỗ nó có nghĩa. "Bãi này hút máu" phải là một sự thật về NƠI CHỐN.
 let _baiDb = {};
-function xoaDiBienBai(){ _baiDb = {}; }
+// Mã những bãi thuộc Bãi Farm của map đang đứng. Cùng lối `_baiDaSach`: mã bãi là bộ đếm chạy
+// nên sổ này phải xoá khi dựng lại thế giới.
+const _baiFarm = new Set();
+function laBaiFarm(pack){ return pack != null && _baiFarm.has(pack); }
+function xoaDiBienBai(){ _baiDb = {}; _baiFarm.clear(); }
 // ⚠ HẠT BỐC TỪ CHÍNH BÃI (loài + toạ độ), KHÔNG từ `packId`. `packId` là một bộ đếm chạy
 // (`packSeq++`), nên nó phụ thuộc thứ tự dựng chứ không phải danh tính cái bãi — thêm một bãi ở
 // map khác là mọi bãi sau đó đổi Dị Biến. Toạ độ bãi thì cố định (bốc từ tên map, xem banRaiVung),
@@ -8125,6 +8129,19 @@ function banSacHtml(id){
                    : `▣ Rương Canh: đã vét sạch ${ds.length}/${ds.length}`) + `</div>`;
     }
   }
+  // ③ của Bãi Farm: CÓ TÊN. Một chỗ dày và đáng mà không ai gọi tên được thì không ai rủ nhau
+  // tới, và không ai học thuộc. Hiện thẳng trên bảng Bản Đồ cạnh Rương Canh và Vỉa Cốt.
+  let farm = '';
+  {
+    const vf = (typeof vungFarm === 'function') ? vungFarm(id) : null;
+    if (vf){
+      const md0 = MAPS[id], pk = (typeof packsOf === 'function') ? packsOf(id).filter(q => q.vung === vf.id) : [];
+      const con = pk.reduce((a2, q) => a2 + (q.n || 0), 0);
+      farm = `<div class="m-desc" style="margin-top:2px;color:#ff9a4d">` +
+             `◈ <b>BÃI FARM — ${vf.ten}</b>: ${pk.length} trại sát nhau · ${con} con · rơi đồ và Lumen ×${FARM_THUONG}` +
+             (md0 && md0.type !== 'safe' ? ` · <span style="opacity:.75">chỗ đáng tranh</span>` : '') + `</div>`;
+    }
+  }
   let via = '';
   if (typeof viaCuaMap === 'function'){
     const v = viaCuaMap(id);
@@ -8135,7 +8152,7 @@ function banSacHtml(id){
                  : `◆ <b>Vỉa Cốt ${D.ten} HÔM NAY</b> mọc ở vùng này — mỗi ngày một lần`) + `</div>`;
     }
   }
-  return `<div class="m-desc" style="margin-top:3px">◆ ${bits.join(' · ')}</div>` + via + ruong;
+  return `<div class="m-desc" style="margin-top:3px">◆ ${bits.join(' · ')}</div>` + farm + via + ruong;
 }
 // ═══════════════ A4 · MIỀN DÂN SỐ — bãi quái sinh ra từ vùng, không chép cứng toạ độ ═══════════
 // Đo trước khi làm: cả bảy map ngoài trời VỐN ĐÃ là một gradient theo khoảng cách từ điểm thả —
@@ -8156,8 +8173,39 @@ function banSacHtml(id){
 // ⚠ md.packs nay là KẾT QUẢ BUNG RA, không phải nguồn. Mọi chỗ đọc bãi quái của MỘT MAP KHÁC
 // (Vỉa Cốt, Rương Canh, bảng Bản Đồ) phải gọi packsOf(mid) trước, nếu không sẽ đọc mảng rỗng.
 const VUNG_CUM_CACH = 300;   // hai cụm trong cùng một miền phải cách nhau chừng này
+// ═══ BÃI FARM — khái niệm "spot" của MU Online ═══
+// Trong MU, một map không phải một mặt phẳng đều: nó có mấy CHỖ mà ai cũng biết tên, ai cũng
+// muốn đứng, và người ta tranh nhau. Đó là thứ biến một bãi quái thành một ĐỊA DANH.
+//
+// Đo trước: 43 miền dân số trên 11 map, và không miền nào khác miền nào về LÝ DO ĐỨNG. Cụm cách
+// nhau đều 300px, dân số chia lệch nhẹ, thưởng y hệt. Người chơi chọn bãi bằng cách chọn bãi gần
+// nhất — tức là không chọn gì cả.
+//
+// Một Bãi Farm khác bãi thường ở BỐN điều, và thiếu điều nào thì nó lại thành một bãi thường:
+//   ① DÀY  — cụm sát nhau (`VUNG_CUM_CACH_FARM`), kéo được liên tục, không phải đi bộ giữa hai lần đánh
+//   ② ĐÁNG — quái rơi nhiều hơn (`FARM_THUONG`), tức có LÝ DO đi xa hơn để tới
+//   ③ CÓ TÊN — hiện trên bảng Bản Đồ và bản đồ nhỏ, nên học thuộc được và rủ nhau được
+//   ④ TRANH NHAU — ở map PK thì nó là chỗ đáng tranh; đó là hệ quả của ①②③, không phải mã riêng
+//
+// ⚠ ĐÁNH DẤU BẰNG DỮ LIỆU: một miền khai `farm:true` là xong. Không bảng thứ hai, không toạ độ
+// chép cứng — cùng lý do `mapBanSac()` suy từ `packs` chứ không chép cứng: bảng thứ hai là bảng
+// sẽ nói dối ngay lần đầu ai đó sửa `vung` mà quên.
+// ⚠ HẠ SÀN GIÃN CÁCH LÀ CHƯA ĐỦ — ĐÃ ĐO VÀ NÓ KHÔNG LÀM GÌ CẢ.
+// `VUNG_CUM_CACH_FARM` chỉ là mức TỐI THIỂU. Chỗ đặt cụm bốc ngẫu nhiên trong cả dải×cung của
+// miền, nên hạ sàn từ 300 xuống 190 không kéo ba cái trại lại gần nhau — nó chỉ CHO PHÉP chúng
+// gần nhau. Đo ra ba trại của Bãi Farm cách nhau 266 · 826 · 638 px, trung bình 577, trong khi
+// miền thường của cùng map ra 426 và 623. Tức bãi farm còn THƯA hơn một miền thường.
+// ⇒ Phải có cả TRẦN: mọi trại của miền farm nằm trong `VUNG_FARM_BAN` quanh trại ĐẦU TIÊN.
+// Sàn giữ cho chúng không chồng lên nhau, trần giữ cho chúng là MỘT chỗ.
+const VUNG_CUM_CACH_FARM = 190;   // cụm trong Bãi Farm sát nhau hơn — xem ① ở trên
+const VUNG_FARM_BAN = 460;        // …và không cụm nào được rời trại đầu quá chừng này
+const FARM_THUONG = 1.6;          // hệ số rơi đồ / Lumen của quái trong Bãi Farm
+function vungFarm(mid){
+  const md = MAPS[mid];
+  return (md && md.vung) ? (md.vung.find(v => v.farm) || null) : null;
+}
 const VUNG_CACH_THA = 280;   // và không cụm nào mọc ngay điểm thả
-function _vungDatCum(mid, sx, sy, voi, v, ra, daDat, noi){
+function _vungDatCum(mid, sx, sy, voi, v, ra, daDat, noi, neo){
   const md = MAPS[mid];
   // Khổ đọc từ CHÍNH map đang bung, không phải từ `MAP` toàn cục. `MAP` mang khổ của map người
   // chơi ĐANG ĐỨNG, mà hàm này bung miền dân số cho một map bất kỳ — và bảng bung có nhớ
@@ -8183,7 +8231,10 @@ function _vungDatCum(mid, sx, sy, voi, v, ra, daDat, noi){
     if (x < 200 || y < 200 || x > mw - 200 || y > mh - 200) continue;
     if (inObstacle(mid, x, y, 60 - noi * 0.5)) continue;
     if (cam.some(c => dist(x, y, c.x, c.y) < c.r - noi)) continue;
-    if (daDat.some(o => dist(x, y, o.x, o.y) < VUNG_CUM_CACH - noi)) continue;
+    if (daDat.some(o => dist(x, y, o.x, o.y) < (v.farm ? VUNG_CUM_CACH_FARM : VUNG_CUM_CACH) - noi)) continue;
+    // TRẦN của Bãi Farm: `neo` là trại đầu tiên của chính miền này. Nới theo `noi` như mọi ràng
+    // buộc khác, để ba lần thử dần-nới ở `banRaiVung` vẫn còn đường ra thay vì rơi về `null`.
+    if (neo && dist(x, y, neo.x, neo.y) > VUNG_FARM_BAN + noi) continue;
     return { x: Math.round(x), y: Math.round(y) };
   }
   return null;
@@ -8221,20 +8272,23 @@ function banRaiVung(mid){
     const conLai = {};
     for (const d of v.dan) conLai[d.mob] = _vungChiaDan(d.n, demLoai[d.mob] || 1);
     const chiSo = {};
+    const datMien = [];          // các trại đã đặt CỦA RIÊNG miền này (daDat gom cả map)
     for (let k = 0; k < nCum; k++){
       const d = loai[k];
-      let p = _vungDatCum(mid, sx, sy, voi, v, ra, daDat, 0);
-      if (!p) p = _vungDatCum(mid, sx, sy, voi, v, ra, daDat, 120);   // miền chật thì nới dần
-      if (!p) p = _vungDatCum(mid, sx, sy, voi, v, ra, [], 220);      // và cuối cùng bỏ luôn giãn cách
+      // Trại đầu của miền farm làm NEO cho mấy trại sau — xem VUNG_FARM_BAN.
+      const neo = v.farm ? (datMien[0] || null) : null;
+      let p = _vungDatCum(mid, sx, sy, voi, v, ra, daDat, 0, neo);
+      if (!p) p = _vungDatCum(mid, sx, sy, voi, v, ra, daDat, 120, neo);   // miền chật thì nới dần
+      if (!p) p = _vungDatCum(mid, sx, sy, voi, v, ra, [], 220, neo);      // và cuối cùng bỏ luôn giãn cách
       if (!p) continue;                                              // thà thiếu một cụm còn hơn đặt vào tường
       const i = (chiSo[d.mob] = (chiSo[d.mob] || 0));
       chiSo[d.mob]++;
       const n = conLai[d.mob][i] || 3;
       const vai = d.vai ? d.vai[i % d.vai.length] : null;
-      const pk = { mob: d.mob, x: p.x, y: p.y, n, r: 90 + n * 4, vung: v.id };
+      const pk = { mob: d.mob, x: p.x, y: p.y, n, r: 90 + n * 4, vung: v.id, farm: !!v.farm };
       if (vai) pk.vai = vai;
       if (v.tiep) pk.tiep = true;
-      out.push(pk); daDat.push(p);
+      out.push(pk); daDat.push(p); datMien.push(p);
     }
   }
   return out;
@@ -8318,6 +8372,7 @@ function buildWorld(){
     // `pk.vai` (nếu có) THẮNG vai mặc định của loài — đây là toàn bộ cơ chế A1: cùng một loài,
     // bãi khác thì vai khác, nên map ba loài vẫn có sáu kiểu đánh.
     const _vai = pk.vai ? { role: pk.vai } : undefined;
+    if (pk.farm) _baiFarm.add(packId);   // Bãi Farm: quái ở đây rơi đậm hơn — xem FARM_THUONG
     for (let j = 0; j < soCon - (pk.tiep ? 1 : 0); j++) spawnMob(pk.mob, zone, packId, false, _vai); // dàn trải cụm quái, tránh chồng hình
     if (pk.tiep){
       const t = spawnMob(pk.mob, zone, packId, false, { role:'tiep' });
@@ -9489,7 +9544,8 @@ function computeKillRewards(m, source, P, rng){
   const _diff = P.level - d.lv;
   rw.xpMul = _diff <= 5 ? 1 : Math.max(0.1, 1 - 0.15*(_diff - 5));
   rw.xp = Math.round(d.xp * rw.xpMul);
-  rw.silver = Math.round((d.silver[0] + R()*(d.silver[1] - d.silver[0])) * (1 + (P.silverPct || 0)/100));
+  rw.silver = Math.round((d.silver[0] + R()*(d.silver[1] - d.silver[0])) * (1 + (P.silverPct || 0)/100)
+                          * (laBaiFarm(m && m.pack) ? FARM_THUONG : 1));
   rw.silver += 4;                      // Anima cũ quy đổi 1:2 sang Lumen — xem GO_ANIMA
   // Instinct từ chiến đấu. Trước đây 10 đều cho mọi con — nay theo loại quái, vì Instinct đã
   // nhận luôn vai trò của Tâm Đắc (phí cấp mốc). Tâm Đắc buộc người chơi đi săn tinh anh/boss;
@@ -9519,7 +9575,11 @@ function computeKillRewards(m, source, P, rng){
   rw.dropSrc = d.huntBoss ? null : d.bossKind === 'tranai' ? 'tranai'
     : (d.boss || d.bossKind) ? 'thuve' : (d.elite ? 'elite' : 'mob');
   if (rw.dropSrc){
-    const _dn = mobDropCount(d, rw.dropSrc), _dr = mobDropRate(d, rw.dropSrc);
+    // ② của Bãi Farm: quái ở đây rơi đậm hơn — đó là LÝ DO đi xa hơn để tới. Nhân vào TỈ LỆ chứ
+    // không nhân vào số lượt bốc: nhân số lượt thì con nào cũng rơi ít nhất một món và bảng rơi
+    // đồ mất hết ý nghĩa; nhân tỉ lệ thì nó vẫn là một cái bảng, chỉ nghiêng hơn.
+    const _farm = laBaiFarm(m && m.pack) ? FARM_THUONG : 1;
+    const _dn = mobDropCount(d, rw.dropSrc), _dr = mobDropRate(d, rw.dropSrc) * _farm;
     // Ba con đầu đời BẢO ĐẢM rơi một món — tỉ lệ thường 5,99%/con nghĩa là ~17 con mới thấy món
     // đầu tiên, đúng lúc người chơi mới đang quyết định có ở lại hay không.
     const _phatDau = (P.kills || 0) <= 3 && !P._daRoiMonDau;

@@ -510,6 +510,53 @@ vừa phá mốc định hướng vừa làm Vỉa Cốt hết đặc biệt.
 vai** (cùng loài, cụm này Xạ Thủ cụm kia Pháp Sư — đúng cơ chế A1), và bảng **Chọn Trận** gom
 theo miền thay vì một danh sách phẳng. QA: `window.debugVung(map)`.
 
+### ◈ BÃI FARM — khái niệm "spot" của MU, và **HẠ SÀN KHÔNG PHẢI LÀ ĐẶT TRẦN**
+
+Một miền dân số khai `farm:true` là thành Bãi Farm. Không bảng thứ hai, không toạ độ chép cứng —
+cùng lý do `mapBanSac()` suy từ `packs`. Hiện có **một** chỗ: `bandit_vet` / *Trại Cựu Binh Gloam*
+ở Beast Herd Camp (`ngoai`).
+
+Bốn tính chất, **thiếu một là nó tụt về một bãi thường mang tên đẹp** — và kiểu hỏng đó người
+chơi không mô tả được, họ chỉ thấy "chỗ này chán":
+
+| | | máy làm ở đâu |
+|---|---|---|
+| ① DÀY | trại sát nhau, kéo liên tục | `VUNG_CUM_CACH_FARM` **+ `VUNG_FARM_BAN`** |
+| ② ĐÁNG | rơi đồ và Lumen ×1,6 | `FARM_THUONG` trong `computeKillRewards` |
+| ③ CÓ TÊN | bảng Bản Đồ gọi thẳng tên | `banSacHtml()` |
+| ④ TỚI ĐƯỢC | miền GIỮA, không phải miền xa nhất | `dai:[0.41,0.52]` trong dữ liệu |
+
+**⚠ Bản đầu của ① KHÔNG LÀM GÌ CẢ, và đo mới biết.** Tôi hạ sàn giãn cách 300 → 190 rồi tưởng
+xong. Nhưng sàn chỉ **cho phép** gần, chỗ đặt trại vẫn bốc ngẫu nhiên trong cả dải×cung. Đo ra
+ba trại cách nhau 266 · 826 · 638 (TB **577**), trong khi miền thường cùng map ra 426 và 623 —
+tức bãi farm còn **thưa hơn** một bãi thường. Phải thêm **trần**: mọi trại nằm trong
+`VUNG_FARM_BAN` quanh trại ĐẦU của miền (`datMien[0]`, khác `daDat` vốn gom cả map). Sau khi thêm:
+266 · 343 · 268, TB **292**, bán kính trại 118 ⇒ ba trại chạm nhau. *Luật chung: ràng buộc dạng
+"tối thiểu" không bao giờ tạo ra được hình dạng; nó chỉ loại bớt hình dạng.*
+
+**⚠ BA PHÉP ĐO ĐÃ THỬ, HAI CÁI MÙ.** Đừng lặp lại:
+
+| đo gì | ra gì | vì sao mù |
+|---|---|---|
+| `n/(πr²)` từng trại | 0,16 vs 0,13 | `r = 90 + n*4` ⇒ mật độ trong trại gần như hằng số |
+| con/1000px² trên hộp bao miền | 0,03 vs 0,02 (miền thường có cái 0,04!) | hộp bao theo cung rộng/hẹp, không theo trại sát hay thưa |
+| **TB khoảng cách từng cặp trại** | **292 vs 781** | đúng cái mà hằng số điều khiển |
+
+**⚠ BẪY ĐO CỦA ②, mất nguyên một vòng chẩn đoán sai.** `computeKillRewards()` là hàm **THUẦN**
+(`test_killrewards` gác), nên nó không bao giờ ghi `_daRoiMonDau`. Mà nhánh phát đầu
+`(P.kills||0) <= 3 && !P._daRoiMonDau` **bảo đảm** rơi một món. Gọi 4000 lần trên nhân vật mới ⇒
+cả 4000 lần đều là "ba con đầu đời" ⇒ ~1,0 món/con ở **cả hai** phía, tỉ lệ ra **đúng 1,00**.
+Trông y hệt "hệ số farm không chạy", trong khi nó chạy hoàn hảo. Đặt `player.kills` lớn +
+`_daRoiMonDau = true` trước khi đo.
+
+**⚠ Và đừng chấm ② bằng TỈ LỆ.** Hai vế đều cộng những khoản **không** nhân hệ số: `dropBonus`
+cộng thẳng vào tỉ lệ, cuộn phụ kiện là lượt riêng, Lumen cộng `+4` phẳng. Cùng một mã đo ra
+×1,24 khi `dropBonus` lớn và ×1,53 khi nhỏ. Chấm bằng phần **CHÊNH**:
+`doFarm − doThuong ≈ soLuot × rate × (FARM_THUONG − 1)`.
+
+Gác: `tests/test_baifarm.js` (4 mệnh đề, một cho mỗi tính chất). Nó cũng chặn **hai miền farm
+trên cùng một map** — nhiều chỗ thì không chỗ nào là *cái chỗ* nữa.
+
 ### ◆ VỈA CỐT (B3.3) — thứ đầu tiên trong game buộc phải ĐI TỚI một toạ độ
 
 `viaHomNay()` bốc **ba** trong bảy vùng có Dòng, mỗi vùng **một điểm**, hạt từ chính chuỗi
