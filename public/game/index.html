@@ -89,7 +89,7 @@
   <button id="mc-thu" title="Thu gọn thanh menu">▸</button>
   <div id="mc-list">
     <button class="mc-btn" id="btn-char"     title="Nhân Vật (C) — trang bị + chỉ số"><img src="assets/ui/ic_nhanvat.png" alt=""><span>Nhân Vật</span></button>
-    <button class="mc-btn" id="btn-bag"      title="Túi Đồ (V)"><img src="assets/ui/ic_tuido.png" alt=""><span>Túi Đồ</span></button>
+    <button class="mc-btn" id="btn-bag"      title="Túi Đồ (B)"><img src="assets/ui/ic_tuido.png" alt=""><span>Túi Đồ</span></button>
     <button class="mc-btn" id="btn-skill"    title="Kỹ Năng (K)"><img src="assets/ui/ic_kynang.png" alt=""><span>Kỹ Năng</span></button>
     <button class="mc-btn" id="btn-qlog"     title="Nhiệm Vụ (Q)"><img src="assets/ui/ic_nhiemvu.png" alt=""><span>Nhiệm Vụ</span></button>
     <button class="mc-btn" id="btn-map"      title="Bản Đồ (M)"><img src="assets/ui/ic_bando.png" alt=""><span>Bản Đồ</span></button>
@@ -171,10 +171,12 @@
 <div id="sect-select" class="hidden">
   <!-- Tranh minh hoạ lớp: hiện khi đã chọn một lớp. Vẽ bằng canvas (splashUrl) -->
   <img id="cc-splash" class="hidden" alt="">
-  <!-- TRANH ANH HÙNG — chỉ hiện ở màn DANH SÁCH nhân vật, nơi hàng thẻ 5 lớp đã ẩn đi. Đặt
+  <!-- SÂN KHẤU MÀN CHỜ — chỉ hiện ở màn DANH SÁCH nhân vật, nơi hàng thẻ 5 lớp đã ẩn đi. Đặt
        ngoài .ss-inner để nó đứng theo mép màn hình chứ không theo cột nội dung 900px, và nằm
-       TRƯỚC trong DOM để luôn ở sau danh sách ô. -->
-  <img id="cc-hero" class="hidden" src="assets/title/anhhung.webp" alt="">
+       TRƯỚC trong DOM để luôn ở sau danh sách ô.
+       Là CANVAS chứ không còn là một tấm PNG: nó vẽ lớp của ô đang chọn kèm con Ragoon của
+       nhân vật đó (ccHeroVe trong game.js), và vẽ cả năm lớp khi tài khoản chưa có ai. -->
+  <canvas id="cc-hero" class="hidden" width="1000" height="470" aria-hidden="true"></canvas>
   <div class="ss-inner">
     <!-- Không còn khối chữ lớn ở đây. Bức tranh phía sau và năm nhân vật đứng trên phiến đá
          mới là thứ đáng nhìn; chồng thêm một cái tên game cao 74px cùng ba dòng dẫn truyện thì
@@ -221,6 +223,7 @@
 <script src="lang.js"></script>
 <script src="data/canbang.js"></script>
 <script src="data/chi_anh.js"></script>
+<script src="data/lop_cho.js"></script>
 <script src="data/iso.js"></script>
 <script src="game.js"></script>
 </body>

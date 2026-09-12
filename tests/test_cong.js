@@ -38,6 +38,7 @@ const URL = 'http://localhost:8871/index.html';
   const out = await p.evaluate(async () => {
     window.TEST_MODE = true; window.TEST_TO_PHANG = true;
     startGame('baidasan', { name:'Đo' });
+    player.avatar = null;   // bài này đo THÂN NGƯỜI; avatar bật mặc định nên phải tắt đi
     curMap = 'ardhaven'; DGN = null; buildWorld();
     player.tutStep = -1;
     FXQ_AUTO = false; FXQ = 2; RES_AUTO = false; SETTINGS.lowFx = false;

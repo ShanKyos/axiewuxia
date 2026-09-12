@@ -27,8 +27,9 @@ function timGoc(){
     if (fs.existsSync(path.join(g, 'public/game/game.js'))) return g;
   return null;
 }
-const GOC = timGoc();
 let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
+const GOC = timGoc();
+if (!GOC) fail('không dò ra gốc kho — hai mục quét tệp sẽ rỗng ruột');
 const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch','yêu thú',
              'Hồ Lô','hồ lô','Thôn phệ','thôn phệ','chân khí','Chân Khí','cảnh giới',
              'đan điền','kinh mạch','độ kiếp','phi thăng','tiên hiệp','Bí Kíp'];
@@ -37,9 +38,13 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
   // A. quét TĨNH: chỉ trong chuỗi, bỏ qua comment
   const files = ['public/game/game.js','public/game/lang.js','public/game/index.html',
                  'public/game/strings/vi.js','public/game/strings/en.js'];
-  const dinh = [];
+  const dinh = []; let daDoc = 0;
   for (const f of files){
-    let txt; try { txt = fs.readFileSync(path.join(GOC, f), 'utf-8'); } catch { continue; }
+    // ⚠ Đọc hỏng là ĐỎ, KHÔNG `continue`. Bỏ qua lặng lẽ chính là nửa còn lại của cái bẫy mà
+    // timGoc() vừa gỡ: dò sai gốc thì mục này quét 0 tệp rồi vẫn in "0 chuỗi dính từ cấm".
+    let txt;
+    try { txt = fs.readFileSync(path.join(GOC || '', f), 'utf-8'); daDoc++; }
+    catch { fail('không đọc được ' + f + ' — mục A rỗng ruột, không phải sạch'); continue; }
     // Bóc comment TRƯỚC rồi mới tìm. Bản đầu quét theo từng dòng và tìm trong dấu nháy — nên
     // template nhiều dòng (backtick mở ở dòng trên) lọt lưới hoàn toàn: quét tĩnh báo 0 trong
     // khi giao diện thật vẫn hiện "Nội Đan" ở hai chỗ.
@@ -57,7 +62,7 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
         dinh.push(`${f.split('/').pop()}:${i+1} [${w}] ${l.trim().slice(0,70)}`);
     });
   }
-  console.log(`A) quét tĩnh: ${dinh.length} chuỗi dính từ cấm`);
+  console.log(`A) quét tĩnh: ${daDoc}/${files.length} tệp · ${dinh.length} chuỗi dính từ cấm`);
   dinh.slice(0,8).forEach(d => console.log('   ' + d));
   if (dinh.length) fail(`${dinh.length} chuỗi người chơi thấy còn từ vựng tu tiên`);
 

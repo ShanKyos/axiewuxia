@@ -40,7 +40,7 @@ const PORT = process.argv[2] || '8853';
       return A;
     };
     o.lop = {};
-    o.trungMa = 0; o.trungAnhTrongLop = []; o.thieuIco = [];
+    o.trungMa = 0; o.trungAnhTrongLop = []; o.thieuIco = []; o.cayHong = [];
     for (const sect of LOP){
       startGame(sect, null);
       const tabs2 = masteryTabs();
@@ -52,6 +52,24 @@ const PORT = process.argv[2] || '8853';
         const u = masteryIco(n); (anh2[u] = anh2[u] || []).push(n.id);
       }
       for (const v of Object.values(anh2)) if (v.length > 1) o.trungAnhTrongLop.push(sect + ': ' + v.join('='));
+      // Hình dạng CÂY: hai nhánh, mỗi nhánh đúng một nút ở rank 1-3, một nút chung ở rank 4,
+      // hai nút đỉnh ở rank cuối. masteryDoi() suy cặp loại trừ từ chính hình dạng này, nên
+      // bảng nào lệch khuôn là mất cặp loại trừ mà không báo gì.
+      for (const t of tabs2){
+        const nh = (t.nhanh || []).map(x => x.id);
+        const dinh = Math.max(...t.nodes.map(n => n.rank));
+        if (nh.length !== 2){ o.cayHong.push(`${sect}/${t.id}: khai ${nh.length} nhánh`); continue; }
+        for (const n of t.nodes){
+          if (n.nh === undefined) o.cayHong.push(`${sect}/${t.id}/${n.id}: chưa gán nhánh`);
+          else if (n.nh !== null && !nh.includes(n.nh)) o.cayHong.push(`${sect}/${t.id}/${n.id}: nhánh lạ '${n.nh}'`);
+        }
+        for (let rk = 1; rk <= dinh; rk++){
+          const hang = t.nodes.filter(n => n.rank === rk);
+          const mong = rk === dinh || rk < 4 ? nh.slice().sort().join(',') : 'null';
+          const co = hang.map(n => n.nh === null ? 'null' : n.nh).sort().join(',');
+          if (co !== mong) o.cayHong.push(`${sect}/${t.id} rank${rk}: [${co}] — mong [${mong}]`);
+        }
+      }
       o.lop[sect] = {
         soTab: tabs2.length,
         tenTab: tabs2.map(t => t.name),
@@ -86,6 +104,9 @@ const PORT = process.argv[2] || '8853';
 
     // ── cổng: cấp MASTERY_LV VÀ xong chính tuyến — thiếu một trong hai là đóng ──
     o.capMo = MASTERY_LV; o.thuongMo = MASTERY_OPEN_GRANT; o.thuongMoiLan = MASTERY_PER_RESET;
+    // Vế "xong chính tuyến" chỉ tồn tại khi CÒN chính tuyến. QUESTS đã gỡ sạch một lần rồi, và
+    // lần đó bảng này thành phòng không cửa — hỏi thẳng bảng nhiệm vụ thay vì chép cứng luật.
+    o.coChuoiNV = QUESTS.length > 0;
     o.moTruoc = masteryOpen();
     masteryAdd('ht_thietbi', 5);
     o.tieuDuocKhiChuaMo = masteryPut('ht_thietbi');
@@ -112,18 +133,68 @@ const PORT = process.argv[2] || '8853';
     window.doTayTuy(true);
     o.taiSinh = { conMo: masteryOpen(), cong: player.mpts - _truocTS };
 
-    // ── cổng rank ──
+    // ── cổng CÂY ──
+    // Bảng Hộ Thể: nhánh `than` = Thiết Bì → Nội Liễm → Cường Kiện → (Hấp Huyết) → Bất Diệt
+    //              nhánh `khi`  = Hồi Mana → Né Tránh → Phản Kích → (Hấp Huyết) → Huyền Ảnh
+    // Bốn thứ phải gác, vì bốn thứ đó mới là cái biến một danh sách nút thành một cái cây:
+    // cha cùng nhánh · nhánh chéo không mở hộ · nút chung nhận một nhánh bất kỳ · đỉnh loại trừ.
     const tab = tabs[0];
-    o.rankGate = MASTERY_RANK_GATE;
-    masteryAdd('ht_cuongkien', 5);              // rank 2, bảng đang có 0 điểm
-    o.rank2SomKhiChua = masteryPut('ht_cuongkien');
-    masteryAdd('ht_thietbi', MASTERY_RANK_GATE); // đủ 10 điểm trong bảng
-    masteryAdd('ht_cuongkien', 5);
-    o.rank2SauKhiDu = masteryPut('ht_cuongkien');
+    player.mastery = {}; player.mpts = 400;
+    o.canCha = MST_CAN.slice(); o.canNhanhDinh = MST_DINH_NHANH;
+    masteryAdd('ht_noiliem', 5);                 // rank 2 nhánh than — cha chưa có điểm nào
+    o.r2SomKhiChua = masteryPut('ht_noiliem');
+    masteryAdd('ht_thietbi', 4);                 // cha mới 4 điểm, còn thiếu đúng 1
+    masteryAdd('ht_noiliem', 5);
+    o.r2ThieuMotDiem = masteryPut('ht_noiliem');
+    masteryAdd('ht_thietbi', 1);                 // đủ 5
+    masteryAdd('ht_noiliem', 5);
+    o.r2SauKhiDu = masteryPut('ht_noiliem');
+    // NHÁNH CHÉO: nuôi nhánh `than` không được mở hộ nút rank 2 của nhánh `khi`
+    masteryAdd('ht_netranh', 5);
+    o.nhanhCheo = masteryPut('ht_netranh');
+    // nút CHUNG rank 4: đủ MỘT nhánh là qua
+    masteryAdd('ht_cuongkien', 8);
+    masteryAdd('ht_haphuyet', 5);
+    o.nutChungMotNhanh = masteryPut('ht_haphuyet');
+    // nút ĐỈNH: cần nút chung đủ MST_CAN[5] và cả nhánh của nó đủ MST_DINH_NHANH
+    masteryAdd('ht_batdiet', 3);
+    o.dinhThieuNutChung = masteryPut('ht_batdiet');
+    masteryAdd('ht_haphuyet', 5);                // nút chung lên 10
+    masteryAdd('ht_batdiet', 3);
+    o.dinhSauKhiDu = masteryPut('ht_batdiet');
+    o.nhanhThan = masteryTieuNhanh(tab, 'than');
+    // LOẠI TRỪ: mở trọn đường nhánh `khi` rồi, nút đỉnh bên đó VẪN phải câm
+    masteryAdd('ht_hoikhi', 20); masteryAdd('ht_netranh', 20); masteryAdd('ht_phankich', 20);
+    masteryAdd('ht_huyenanh', 5);
+    o.dinhDoiBiKhoa = masteryPut('ht_huyenanh');
+    o.nhanhKhi = masteryTieuNhanh(tab, 'khi');
     // trần mỗi nút
     masteryAdd('ht_thietbi', 999);
     o.tranMotNut = masteryPut('ht_thietbi');
     o.tieuTrongBang = masterySpentTab(tab);
+
+    // ── NGƯỠNG NHÁNH của nút đỉnh ──
+    // Nút chung rank 4 nhận MỘT nhánh bất kỳ, nên đường "nuôi trọn nhánh A rồi vơ nút đỉnh của
+    // nhánh B" là đường CÓ THẬT. MST_DINH_NHANH sinh ra để bịt đúng nó. Không có mục này thì hạ
+    // ngưỡng đó xuống 0 vẫn xanh cả bài — đã đo đúng như vậy khi thử ngược.
+    player.mastery = {}; player.mpts = 400;
+    masteryAdd('ht_thietbi', 5); masteryAdd('ht_noiliem', 5);
+    masteryAdd('ht_cuongkien', 8); masteryAdd('ht_haphuyet', 10);
+    o.dinhNhanh = { khi: masteryTieuNhanh(tab, 'khi'), than: masteryTieuNhanh(tab, 'than') };
+    masteryAdd('ht_huyenanh', 4);           // đỉnh nhánh Khí Cảnh — nhánh đó chưa có điểm nào
+    o.dinhNhanhRong = masteryPut('ht_huyenanh');
+    masteryAdd('ht_batdiet', 4);            // đỉnh nhánh Nhục Thân — nhánh đó đã 18 điểm
+    o.dinhNhanhDay = masteryPut('ht_batdiet');
+
+    // ── rà soát save cũ: điểm nằm ở chỗ nay không tới được thì HOÀN, không khoá chết ──
+    // Save trước bản cây chỉ bị chặn theo TỔNG điểm trong bảng, nên nó hoàn toàn có thể giữ
+    // điểm ở cả hai nút đỉnh cùng lúc, và giữ nút mồ côi không có cha.
+    player.mastery = { ht_batdiet:9, ht_huyenanh:4, ht_phankich:6 };
+    player.mpts = 0;
+    o.raSoat = { hoan: masteryRaSoat(), conNut: masterySpentAll(), traVe: player.mpts };
+    // dựng lại ít điểm để mục tẩy điểm bên dưới có cái mà tẩy
+    player.mastery = {}; player.mpts = 100;
+    masteryAdd('ht_thietbi', 20); masteryAdd('ht_noiliem', 10);
 
     // ── tẩy điểm ──
     const bacTruoc = player.silver = 999999;
@@ -227,9 +298,11 @@ const PORT = process.argv[2] || '8853';
   const xau = LOP.filter(k => r.lop[k].soTab !== 4);
   if (xau.length) fail(`${xau.join(', ')} không đủ 4 bảng: ${xau.map(k=>r.lop[k].soTab).join(',')}`);
   else pass(`cả ${LOP.length} lớp đều có 4 bảng (1 chung + 3 riêng)`);
-  const xau2 = LOP.filter(k => r.lop[k].nutMoiTab.some(n => n !== 8));
+  const xau2 = LOP.filter(k => r.lop[k].nutMoiTab.some(n => n !== 9));
   if (xau2.length) fail(`${xau2.join(', ')} có bảng lệch số nút`);
-  else pass('mọi bảng của mọi lớp đều 8 nút — 32 nút/lớp');
+  else pass('mọi bảng của mọi lớp đều 9 nút — 36 nút/lớp');
+  if (r.cayHong.length) fail(`${r.cayHong.length} chỗ sai hình dạng cây: ${r.cayHong.slice(0,6).join(' · ')}`);
+  else pass('cả 16 bảng đúng khuôn cây: 2 nhánh · 1 nút mỗi nhánh ở rank 1-3 · nút chung rank 4 · 2 nút đỉnh');
   const xau3 = LOP.filter(k => r.lop[k].rankMoiTab.some(x => x !== '1,2,3,4,5'));
   if (xau3.length) fail(`${xau3.join(', ')} có bảng thiếu rank`);
   else pass('đủ 5 rank ở mọi bảng của mọi lớp');
@@ -273,9 +346,17 @@ const PORT = process.argv[2] || '8853';
   else pass('cấp 1 thì bảng đóng');
   if (r.tieuDuocKhiChuaMo) fail(`tiêu được ${r.tieuDuocKhiChuaMo} điểm vào bảng chưa mở`);
   else pass('bảng đóng thì masteryAdd() từ chối');
-  if (r.moDuCapThieuTruyen || r.diemKhiChuaMo)
-    fail(`đủ cấp ${r.capSauCay} nhưng CHƯA xong chính tuyến mà bảng mở/cấp ${r.diemKhiChuaMo} điểm`);
-  else pass(`cấp ${r.capSauCay} mà chưa xong chính tuyến thì vẫn đóng, 0 điểm`);
+  // Đây là mục bắt được lỗi "phòng không có cửa": QUESTS rỗng thì `mongChiTon` không bao giờ bật,
+  // nên nếu cổng vẫn đòi nó thì bảng chỉ mở được bằng lệnh cheat.
+  if (r.coChuoiNV){
+    if (r.moDuCapThieuTruyen || r.diemKhiChuaMo)
+      fail(`đủ cấp ${r.capSauCay} nhưng CHƯA xong chính tuyến mà bảng mở/cấp ${r.diemKhiChuaMo} điểm`);
+    else pass(`còn chính tuyến: cấp ${r.capSauCay} mà chưa xong thì vẫn đóng, 0 điểm`);
+  } else {
+    if (!r.moDuCapThieuTruyen)
+      fail(`QUESTS rỗng mà cấp ${r.capSauCay} vẫn không mở được bảng — bảng khoá sau một chuỗi nhiệm vụ KHÔNG TỒN TẠI`);
+    else pass(`QUESTS rỗng → cấp ${r.capSauCay} là đủ để mở bảng (không khoá sau chuỗi đã gỡ)`);
+  }
   if (r.moDuTruyenThieuCap || r.diemKhiThieuCap)
     fail(`xong chính tuyến nhưng cấp 1 mà bảng mở/cấp ${r.diemKhiThieuCap} điểm`);
   else pass('xong chính tuyến mà chưa đủ cấp thì vẫn đóng');
@@ -292,11 +373,37 @@ const PORT = process.argv[2] || '8853';
     fail(`Tái Sinh: bảng ${r.taiSinh.conMo ? 'còn mở' : 'BỊ ĐÓNG'}, cộng ${r.taiSinh.cong} điểm (mong ${r.thuongMoiLan})`);
   else pass(`Tái Sinh không đóng bảng và vẫn +${r.thuongMoiLan} điểm`);
 
-  // ── 4. cổng rank + trần nút + tẩy điểm ──
-  if (r.rank2SomKhiChua) fail(`rank 2 mở sớm: đã đặt được ${r.rank2SomKhiChua} điểm khi bảng còn trống`);
-  else pass(`rank 2 khoá tới khi bảng đủ ${r.rankGate} điểm`);
-  if (r.rank2SauKhiDu !== 5) fail(`đủ điểm rồi rank 2 vẫn không nhận: ${r.rank2SauKhiDu}`);
-  else pass('đủ điểm rank trước thì rank sau mở');
+  // ── 4. cổng CÂY + trần nút + tẩy điểm ──
+  if (r.r2SomKhiChua) fail(`nút rank 2 nhận ${r.r2SomKhiChua} điểm khi nút CHA chưa có điểm nào`);
+  else pass('nút rank 2 khoá khi cha cùng nhánh còn trống');
+  if (r.r2ThieuMotDiem) fail(`cha mới ${r.canCha[2]-1} điểm mà nút con đã nhận ${r.r2ThieuMotDiem}`);
+  else pass(`cha thiếu đúng 1 điểm thì con vẫn khoá (cần ${r.canCha[2]})`);
+  if (r.r2SauKhiDu !== 5) fail(`cha đủ ${r.canCha[2]} điểm rồi mà con vẫn không nhận: ${r.r2SauKhiDu}`);
+  else pass(`cha đủ ${r.canCha[2]} điểm → con mở`);
+  // Đây mới là chỗ phân biệt CÂY với DANH SÁCH: nuôi nhánh này không mở hộ nhánh kia.
+  if (r.nhanhCheo) fail(`nuôi nhánh Nhục Thân lại mở luôn nút rank 2 của nhánh Khí Cảnh (${r.nhanhCheo} điểm)`);
+  else pass('nhánh chéo không mở hộ — hai nhánh thật sự tách nhau');
+  if (r.nutChungMotNhanh !== 5)
+    fail(`nút chung rank 4 không nhận điểm dù một nhánh đã đủ ${r.canCha[4]}: ${r.nutChungMotNhanh}`);
+  else pass(`nút chung rank 4 mở khi MỘT nhánh bất kỳ đủ ${r.canCha[4]} điểm`);
+  if (r.dinhThieuNutChung)
+    fail(`nút đỉnh nhận ${r.dinhThieuNutChung} điểm khi nút chung chưa đủ ${r.canCha[5]}`);
+  else pass(`nút đỉnh khoá khi nút chung chưa đủ ${r.canCha[5]} điểm`);
+  if (r.dinhSauKhiDu !== 3)
+    fail(`đủ nút chung ${r.canCha[5]} + nhánh ${r.nhanhThan}/${r.canNhanhDinh} mà đỉnh vẫn không nhận: ${r.dinhSauKhiDu}`);
+  else pass(`nút đỉnh mở khi nút chung ≥${r.canCha[5]} và nhánh ≥${r.canNhanhDinh} điểm`);
+  // LOẠI TRỪ — lời hứa trung tâm của đợt này: mỗi bảng chỉ đi trọn được MỘT hướng.
+  if (r.dinhDoiBiKhoa)
+    fail(`chọn xong hướng này rồi vẫn đặt được ${r.dinhDoiBiKhoa} điểm vào nút đỉnh hướng kia (nhánh kia đã có ${r.nhanhKhi} điểm)`);
+  else pass(`hai nút đỉnh loại trừ nhau — nhánh kia nuôi tới ${r.nhanhKhi} điểm vẫn không mở được đỉnh thứ hai`);
+  if (r.dinhNhanhRong)
+    fail(`vơ được ${r.dinhNhanhRong} điểm vào nút đỉnh nhánh Khí Cảnh dù nhánh đó mới ${r.dinhNhanh.khi} điểm (ngưỡng ${r.canNhanhDinh})`);
+  else if (r.dinhNhanhDay !== 4)
+    fail(`nhánh Nhục Thân đã ${r.dinhNhanh.than} điểm mà nút đỉnh của chính nó vẫn khoá: ${r.dinhNhanhDay}`);
+  else pass(`nút đỉnh đòi đúng NHÁNH CỦA NÓ ≥${r.canNhanhDinh} điểm — nuôi trọn nhánh kia (${r.dinhNhanh.than}đ) không vơ được`);
+  if (r.raSoat.hoan !== 19 || r.raSoat.conNut !== 0 || r.raSoat.traVe !== 19)
+    fail(`rà soát save cũ sai: hoàn ${r.raSoat.hoan}/19, còn ${r.raSoat.conNut} điểm kẹt trên bảng, trả về ví ${r.raSoat.traVe}`);
+  else pass('save cũ vi phạm luật cây được HOÀN ĐIỂM (19đ) chứ không kẹt lại trên bảng');
   if (r.tranMotNut !== 20) fail(`nút nhận tới ${r.tranMotNut} điểm, trần phải là 20`);
   else pass('không nút nào vượt trần 20');
   if (r.respec.hoanLai !== r.respec.daTieu || r.respec.conNut !== 0)
@@ -309,7 +416,7 @@ const PORT = process.argv[2] || '8853';
   // ── 5. không nút chết ──
   if (r.nutChet.length)
     fail(`${r.nutChet.length} nút tô kín 20 điểm mà KHÔNG đổi một chỉ số nào: ${r.nutChet.join(', ')}`);
-  else pass(`cả ${LOP.length*32} nút (5 lớp × 32) đều đổi được chỉ số thật`);
+  else pass(`cả ${LOP.length*36} nút (5 lớp × 36) đều đổi được chỉ số thật`);
 
   // ── 6. bảng Binh Khí bám vào trang bị ──
   if (r.bamDoSai.length)
