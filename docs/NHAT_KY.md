@@ -5,6 +5,47 @@ sai**. Phần thứ hai mới là thứ có giá trị về sau — nó là danh
 
 ---
 
+## 2026-09-12 — Cánh tụt khỏi vai, và tỉ lệ Axie ↔ kẻ hộ tống
+
+Nền: `7772e3e` (kẻ hộ tống đã lên `main`)
+
+Hai yêu cầu của chủ dự án, nhìn thì rời nhau mà hoá ra chung một gốc — **cỡ thu**:
+*"cánh khi đi theo vẫn chưa fit với nhân vật"* và *"kéo scale Axie lớn, kéo thân người lúc ra
+tuyệt chiêu cho nó nhỏ lại"*.
+
+### Số đo
+
+| | đo được |
+|---|---|
+| Gốc cắm cánh so với khớp vai, cỡ 1,00 | lệch **0,6 px** — nên không ai thấy |
+| …cỡ đi theo 0,60 | lệch **17,1 px** trên một hình cao 57 px |
+| Nguyên nhân | hai khối thu quanh HAI TÂM: thân quanh `p.y − NV_LECH_Y`, cánh quanh `p.y` ⇒ sai số `(1 − co)·NV_LECH_Y` = 0,4 × 42 = **16,8** |
+| Số hạng lấy đà bị bỏ quên | `lungeK` = **1 lúc đứng yên** ⇒ cánh lệch **7 px suốt**, không chỉ lúc đánh |
+| Sau sửa | 0,3 · 0,5 · 0,6 px ở ba trạng thái (đi theo · ra đòn · tắt avatar) |
+| `AVA_TY` có bó con nào không | **KHÔNG** — cả 16 con chạm trần ở chiều RỘNG; thứ điều khiển cỡ Axie là `AVA_TRAN` |
+| Hộp Axie, trước → sau | 90,6 → **133,6 px** ngang |
+| Thân người lúc ra đòn | 95,4 → **76,3 px** (`AVA_DANH_CO` 0,80) |
+
+### Những chỗ đã đoán sai trong phiên này
+
+- **Tưởng nới `AVA_TY` là Axie to lên.** Nới 0,72 → 0,95 rồi đo lại: không con nào đổi quá vài
+  px, vì `AVA_TRAN` đang bó cả 16 con ở chiều rộng (tỉ lệ rộng/cao 1,07–1,52). Phải nới trần
+  mới có tác dụng. Ghi vào CLAUDE.md để đừng ai chỉnh nhầm cái kia lần nữa.
+- **Bài kiểm `test_avatar` đỏ vì phép làm tròn của chính nó.** Trần `95,4 × 1,4` = 133,56 mà
+  giá trị đã `toFixed(1)` ra 133,6 ⇒ 14/16 con "vượt trần". Không phải lỗi sản phẩm. Sửa bằng
+  cách giữ nguyên số, chỉ làm tròn lúc IN — đúng bài học "đừng chép cứng số đã có hàm".
+- **Bài kiểm `test_hopve §3` đỏ vì cửa sổ 420 ký tự.** Thêm một dòng chú thích vào giữa khối vẽ
+  là lời gọi trôi ra ngoài cửa sổ. Đổi sang cắt theo khối `ctx.save()` gần nhất.
+
+### Cách gác chỗ này về sau
+
+`_doNeo()` (chỉ chạy khi `TEST_MODE`) đưa gốc cắm cánh và khớp vai qua **đúng ma trận mà vòng
+vẽ đang dùng** rồi phơi ra `window.__neoVe`. Bài kiểm so hai điểm, không chép lại phép biến
+hình — chép là dựng bản sao thứ hai của một luật đang sống. Thử ngược: quay lại đúng hai dòng
+cũ thì bài đỏ ngay với dx=−7,0 dy=17,1 — đúng con số đã tiên đoán.
+
+---
+
 ## 2026-09-11 — Tướng đi: nhịp bước, tám hướng nhìn, khung nhiễm độc
 
 Commit: `7047240` · Nền: `b619e20`

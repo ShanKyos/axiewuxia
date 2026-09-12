@@ -8,9 +8,15 @@
 //
 //   ① avatar TẮT ⇒ không đổi một chút nào (dx=dy=0, cỡ=1). Đây là điều kiện để cắm được vào
 //      một trò chơi đang chạy mà 177 bài không đỏ — xem mục ĐỔI VAI trong CLAUDE.md.
-//   ② avatar BẬT ⇒ lúc thường đứng SAU và nhỏ lại; lúc đánh đứng TRƯỚC và về cỡ thật.
+//   ② avatar BẬT ⇒ lúc thường đứng SAU và nhỏ hơn; lúc đánh đứng TRƯỚC và lớn lên — nhưng
+//      VẪN nhỏ hơn cỡ thật. Chủ dự án nhìn ảnh chụp: ở cỡ 1,00 hai hình đọc ra "hai nhân vật
+//      ngang hàng", không ra "Axie là thân, lớp nhân vật là sức mạnh được gọi tới".
 //      "Trước/sau" đo bằng DẤU của tích vô hướng với hướng mặt, không đoán theo ảnh.
 //   ③ CÁNH và VŨ KHÍ đi theo lớp nhân vật, KHÔNG dính vào neo người chơi.
+//   ④ CÁNH NGỒI TRÊN VAI Ở MỌI CỠ THU. Đây là lỗi thứ hai chủ dự án chụp lại: khối cánh thu
+//      quanh (p.x, p.y) còn khối thân thu quanh (p.x, p.y − NV_LECH_Y), nên ở cỡ thật hai tâm
+//      cho cùng kết quả mà ở cỡ 0,60 thì cánh tụt (1−co)·NV_LECH_Y = 16,8 px — ngang hông của
+//      một hình chỉ cao 57 px.
 //      Trước bản này cả hai vẽ thẳng ở (p.x, p.y) không qua cửa nào, nên bật avatar lên là
 //      đôi cánh mọc ra từ con Axie và cây vũ khí treo lơ lửng trên đầu nó — chủ dự án chụp
 //      màn hình đúng lỗi đó. Đo THẲNG TRÊN MÃ — xem chú thích ở mục ③ để biết vì sao hai phép
@@ -56,8 +62,11 @@ const { chromium } = require('playwright');
   else pass(`lúc thường nhỏ lại còn ${(sau.co*100).toFixed(0)}%`);
   if (!(truoc.dx > 0)) fail(`lúc đánh lớp nhân vật phải ra TRƯỚC (dx>0), đo được dx=${truoc.dx.toFixed(1)}`);
   else pass(`lúc đánh ra trước: dx=${truoc.dx.toFixed(1)}`);
-  if (truoc.co !== 1) fail(`lúc đánh phải về cỡ thật, đo được ${truoc.co}`);
-  else pass('lúc đánh về cỡ thật');
+  if (!(truoc.co > sau.co)) fail(`lúc đánh phải LỚN HƠN lúc đi theo (${sau.co}), đo được ${truoc.co}`);
+  else if (!(truoc.co < 1))
+    fail(`lúc đánh vẫn phải nhỏ hơn cỡ thật — cỡ 1,00 đọc ra "hai nhân vật ngang hàng", ` +
+         `đo được ${truoc.co}`);
+  else pass(`lúc đánh lớn lên ${(sau.co*100).toFixed(0)}% → ${(truoc.co*100).toFixed(0)}%, vẫn dưới cỡ thật`);
   if (!truoc.truoc || sau.truoc) fail('cờ `truoc` không khớp trạng thái đánh');
   else pass('cờ `truoc` khớp trạng thái');
 
@@ -78,7 +87,13 @@ const { chromium } = require('playwright');
   if (goi.length < 2) fail(`chỉ thấy ${goi.length} lời gọi veCanh/veThanKhi trong vòng vẽ — ` +
                            'bài kiểm không còn bám đúng chỗ nó định gác');
   else {
-    const hong = goi.filter(m => !/ctx\.translate\(p\.x \+ _avaDx/.test(src.slice(Math.max(0, m.index - 420), m.index)));
+    // Cắt theo KHỐI `ctx.save()` gần nhất, không theo một cửa sổ N ký tự: cửa sổ cố định thì
+    // thêm một dòng chú thích vào giữa khối là bài đỏ ở chỗ chẳng liên quan gì tới thứ nó gác.
+    const hong = goi.filter(m => {
+      const truoc = src.slice(0, m.index);
+      const mo = truoc.lastIndexOf('ctx.save()');
+      return mo < 0 || !/ctx\.translate\(p\.x \+ _avaDx/.test(truoc.slice(mo));
+    });
     if (hong.length)
       fail(`${hong.length}/${goi.length} lời gọi vẽ cánh/thần khí KHÔNG nằm trong phép dời về ` +
            'neo lớp nhân vật — thứ đó sẽ vẽ đè lên con Axie');
@@ -90,6 +105,30 @@ const { chromium } = require('playwright');
   else if (!/_tk && !_tk\.truoc && _tkHien/.test(src) || !/_tk && _tk\.truoc && _tkHien/.test(src))
     fail('một trong hai lớp thần khí (trước/sau thân) chưa đi qua cửa `_tkHien`');
   else pass('thần khí chỉ hiện khi lớp nhân vật ra trước — cả hai lớp vẽ đều qua cửa');
+
+  // ── ④ Cánh phải NGỒI TRÊN VAI ở mọi cỡ thu ────────────────────────────────────────────
+  // Không đo bằng điểm ảnh, và cũng không chép lại phép biến hình sang đây: game tự đưa hai
+  // điểm qua ĐÚNG ma trận nó đang vẽ (`_doNeo`, chỉ bật trong TEST_MODE) rồi phơi ra
+  // `window.__neoVe` — `canh` là gốc cắm cánh, `vai` là khớp vai của bộ xương. Chép công thức
+  // sang bài kiểm là dựng bản sao thứ hai của một phép biến hình đang sống: sửa một bên thì
+  // hai bên lệch mà bài vẫn xanh.
+  const neo = (dat) => p.evaluate((dat) => new Promise(r => {
+    Object.assign(player, dat);
+    requestAnimationFrame(() => requestAnimationFrame(() => r(window.__neoVe)));
+  }), dat);
+  await p.evaluate(() => { player.equip.canh = genWing(player.sect, 3); });
+  for (const [ten, dat] of [['đi theo', { avatar: 'aurelion', atkAnim: 0, castT: 0, face: 0 }],
+                            ['ra đòn',  { avatar: 'aurelion', atkAnim: 0.16, castT: 0, face: 0 }],
+                            ['tắt avatar', { avatar: null, atkAnim: 0, castT: 0, face: 0 }]]){
+    const n = await neo(dat);
+    if (!n || !n.canh || !n.vai){ fail(`không đọc được window.__neoVe ở trạng thái ${ten}`); continue; }
+    const dx = n.canh.x - n.vai.x, dy = n.canh.y - n.vai.y;
+    // 2 px trên một hình cao 57 px: mắt chưa đọc ra là lệch, mà lỗi cũ thì lệch 17 px.
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2)
+      fail(`${ten}: gốc cánh lệch khỏi vai dx=${dx.toFixed(1)} dy=${dy.toFixed(1)} px — ` +
+           'khối cánh và khối thân đang thu quanh hai tâm khác nhau');
+    else pass(`${ten}: gốc cánh trùng vai (lệch ${Math.hypot(dx, dy).toFixed(1)} px)`);
+  }
 
   if (errs.length) fail('lỗi trang — ' + errs[0]);
   await b.close();

@@ -109,7 +109,26 @@ khi tấn công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu."*
 **Cờ bài kiểm đọc được:** `window.__veThan` nay có ba giá trị — `'avatar'` · `'sprite'` ·
 `'vector'`. Bài cũ nào khẳng định nó phải là `'sprite'` thì vẫn đúng khi avatar tắt.
 
-### Ba cái bẫy đã dẫm, ghi lại
+### ⚖ TỈ LỆ: AXIE LÀ THÂN, LỚP NHÂN VẬT LÀ KẺ HỘ TỐNG — cả hai cỡ đều DƯỚI 1
+
+Chủ dự án chốt sau khi nhìn ảnh chụp: *"kéo scale Axie lớn và kéo thân người lúc ra tuyệt chiêu
+cho nó nhỏ lại"*. Ở cỡ thật (1,00) hai hình đọc ra **hai nhân vật ngang hàng**, không ra "Axie
+là thân, lớp nhân vật là sức mạnh được gọi tới".
+
+| | đi theo | ra đòn |
+|---|---|---|
+| cỡ lớp nhân vật | `AVA_THEO_CO` 0,60 | `AVA_DANH_CO` **0,80** — không còn 1,00 |
+| chỗ đứng | sau 78 · bên 34 | trước 78 · bên 62 |
+
+`AVA_TY` 0,72 → **1,08** và `AVA_TRAN` 0,95 → **1,40**. ⚠ Đo trước khi chỉnh: **`AVA_TY` không
+bó con nào** — cả 5 con mặc định đều chạm `AVA_TRAN` ở chiều RỘNG (16 con có tỉ lệ rộng/cao
+1,07–1,52). Nới `AVA_TY` một mình là không đổi lấy một điểm ảnh; thứ thật sự điều khiển cỡ Axie
+là `AVA_TRAN`.
+
+Khoảng cách đứng phải nới THEO: tổng độ lệch phải vượt nửa hộp Axie (nay ~67px) cộng nửa bề
+ngang người. Quên bước này là Axie to ra rồi nuốt luôn kẻ hộ tống.
+
+### Sáu cái bẫy đã dẫm, ghi lại
 
 1. **`atkAnim` ĐẾM NGƯỢC** — `atkK` = 1 ở khung ĐẦU. Tiến độ vật chất hoá là `1 − atkK`. Dùng
    thẳng `atkK` thì lớp nhân vật mờ dần ĐI trong lúc vung, tức ngược hẳn. (Cùng họ với bẫy
@@ -128,6 +147,19 @@ khi tấn công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu."*
    độ nằm trên chỗ tính `_kind`. Thêm trạng thái mới vào chuỗi `_kind` phía trên `'c'` thì
    phải sửa `_lopHien` theo — không thì thân người hiện một chỗ, vòng triệu hồi nổ chỗ khác.
    *Đừng vá bằng "nếu lệch thì gán lại": nó làm chỗ lệch chạy được nên không ai biết mà sửa.*
+6. **CÁNH · THẦN KHÍ · THÂN NGƯỜI phải thu quanh CÙNG MỘT TÂM.** Khối thân thu quanh
+   `(p.x, p.y − NV_LECH_Y)` — đó là chỗ hộp 160×220 của bộ xương neo vào. Khối cánh/thần khí
+   từng thu quanh `(p.x, p.y)`. Ở cỡ 1,00 hai tâm cho cùng kết quả nên **không ai thấy**; thu
+   còn `co` thì sai số bung ra đúng `(1 − co)·NV_LECH_Y` — ở cỡ đi theo (0,60) là **16,8 px**,
+   tức đôi cánh rơi xuống ngang hông của một hình chỉ cao 57 px. Chủ dự án chụp lại và gọi
+   đúng tên: *"cánh chưa fit với nhân vật theo sau"*. Dùng `_lopNeoY`.
+   Và phải mang theo cả số hạng **lấy đà** `Math.cos(p.face)*lungeK*7`: `lungeK` bằng 1 lúc
+   đứng yên (xem `hSwing`), nên thiếu nó là cánh lệch 7 px **suốt**, không chỉ lúc đánh.
+
+   Cách gác: `_doNeo()` (chỉ chạy khi `TEST_MODE`) đưa gốc cắm cánh và khớp vai qua **đúng ma
+   trận vòng vẽ đang dùng** rồi phơi ra `window.__neoVe`; `tests/test_hopve.js §4` so hai điểm.
+   Đừng chép công thức biến hình sang bài kiểm — đó là dựng bản sao thứ hai của một luật đang
+   sống, sửa một bên là hai bên lệch mà bài vẫn xanh.
 
 ### Trúng đòn và chết vẫn giữ AXIE — cố ý
 
