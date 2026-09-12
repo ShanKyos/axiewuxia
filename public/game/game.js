@@ -5231,23 +5231,23 @@ const CHI_CHAY = { n: 12, cot: 6 };
 // Chủ dự án nhìn ảnh chụp: 30/27 vẫn dính vào nhau, nhân vật đứng đè lên lưng Axie.
 // Hộp vẽ của Axie rộng tới ~88px (avaCo), nên muốn ĐỨNG RỜI thì tổng độ lệch phải vượt
 // nửa hộp đó cộng nửa bề ngang người (~19px) — tức quanh 64px. Lấy dư một chút cho thoáng.
-const AVA_CHAN_TRUOC = 78;   // chắn phía trước bao nhiêu — CHỖ ĐỨNG LÚC RA ĐÒN
-const AVA_CHAN_BEN   = 62;   // lệch sang bên bao nhiêu
+const AVA_CHAN_TRUOC = 72;   // chắn phía trước bao nhiêu — CHỖ ĐỨNG LÚC RA ĐÒN
+const AVA_CHAN_BEN   = 56;   // lệch sang bên bao nhiêu
 // ── LÚC THƯỜNG thì lớp nhân vật ĐI THEO SAU, nhỏ lại ───────────────────────────────────────
 // Chủ dự án chốt: "cho nhân vật nhỏ lại và đi theo sau người chơi. Khi ra đòn, nhân vật ở đằng
 // sau biến mất và xuất hiện đằng trước tung chiêu — như một cách bảo vệ người chơi."
 // Bản trước chỉ gọi lớp nhân vật ra LÚC ĐÁNH rồi cho tan; nay nó có mặt suốt, và cú ra đòn là
 // một cú ĐỔI CHỖ (sau → trước) chứ không phải một lần hiện ra từ hư không.
-const AVA_THEO_SAU = 78;     // lùi lại bao nhiêu so với Axie
+const AVA_THEO_SAU = 70;     // lùi lại bao nhiêu so với Axie
 const AVA_THEO_BEN = 34;     // …và lệch sang bên, để không bị Axie che kín
-const AVA_THEO_CO  = 0.60;   // …và thu còn mấy phần. Nhỏ hơn Axie thì mắt đọc ra "kẻ hộ tống".
+const AVA_THEO_CO  = 0.72;   // …và thu còn mấy phần. Nhỏ hơn Axie thì mắt đọc ra "kẻ hộ tống".
 // …và thu còn mấy phần LÚC RA ĐÒN. Chủ dự án nhìn ảnh chụp: cỡ thật (1,00) vẫn đọc ra "hai
 // nhân vật ngang hàng", không ra "Axie là thân, người là sức mạnh được gọi tới". Nhỏ hơn Axie
 // ở CẢ HAI trạng thái mới giữ được thứ bậc đó; cú đổi 0,60 → 0,80 vẫn đủ để mắt thấy nó lớn
 // lên khi xông ra.
-const AVA_DANH_CO  = 0.80;
-const AVA_TY  = 1.08;   // thân Axie cao mấy phần thân người…
-const AVA_TRAN = 1.40;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
+const AVA_DANH_CO  = 0.90;
+const AVA_TY  = 0.95;   // thân Axie cao mấy phần thân người…
+const AVA_TRAN = 1.18;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
 function avaCo(id){
   const A = CHI_ANH.o[id];
   let than = NV_THAN_PX * AVA_TY;

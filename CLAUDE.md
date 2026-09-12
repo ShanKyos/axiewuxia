@@ -117,10 +117,14 @@ là thân, lớp nhân vật là sức mạnh được gọi tới".
 
 | | đi theo | ra đòn |
 |---|---|---|
-| cỡ lớp nhân vật | `AVA_THEO_CO` 0,60 | `AVA_DANH_CO` **0,80** — không còn 1,00 |
-| chỗ đứng | sau 78 · bên 34 | trước 78 · bên 62 |
+| cỡ lớp nhân vật | `AVA_THEO_CO` **0,72** | `AVA_DANH_CO` **0,90** — không còn 1,00 |
+| chỗ đứng | sau 70 · bên 34 | trước 72 · bên 56 |
 
-`AVA_TY` 0,72 → **1,08** và `AVA_TRAN` 0,95 → **1,40**. ⚠ Đo trước khi chỉnh: **`AVA_TY` không
+`AVA_TY` 0,72 → **0,95** và `AVA_TRAN` 0,95 → **1,18** (hộp Axie 90,6 → **112,6 px**).
+⚠ Lượt chỉnh đầu đẩy tới 1,08/1,40 (hộp 133,6) và chủ dự án nhìn ảnh chụp nói ngay
+*"không cân đối lắm"* — Axie nuốt mất kẻ hộ tống. Số hiện tại là lượt kéo lại: Axie to hơn
+bản gốc ~24%, người cũng to hơn ~20%, tỉ lệ giữa hai bên mới là thứ phải nhìn, không phải
+cỡ của riêng cái nào. ⚠ Đo trước khi chỉnh: **`AVA_TY` không
 bó con nào** — cả 5 con mặc định đều chạm `AVA_TRAN` ở chiều RỘNG (16 con có tỉ lệ rộng/cao
 1,07–1,52). Nới `AVA_TY` một mình là không đổi lấy một điểm ảnh; thứ thật sự điều khiển cỡ Axie
 là `AVA_TRAN`.
