@@ -5160,18 +5160,23 @@ const CHI_CHAY = { n: 12, cot: 6 };
 // Chủ dự án nhìn ảnh chụp: 30/27 vẫn dính vào nhau, nhân vật đứng đè lên lưng Axie.
 // Hộp vẽ của Axie rộng tới ~88px (avaCo), nên muốn ĐỨNG RỜI thì tổng độ lệch phải vượt
 // nửa hộp đó cộng nửa bề ngang người (~19px) — tức quanh 64px. Lấy dư một chút cho thoáng.
-const AVA_CHAN_TRUOC = 58;   // chắn phía trước bao nhiêu — CHỖ ĐỨNG LÚC RA ĐÒN
-const AVA_CHAN_BEN   = 52;   // lệch sang bên bao nhiêu
+const AVA_CHAN_TRUOC = 78;   // chắn phía trước bao nhiêu — CHỖ ĐỨNG LÚC RA ĐÒN
+const AVA_CHAN_BEN   = 62;   // lệch sang bên bao nhiêu
 // ── LÚC THƯỜNG thì lớp nhân vật ĐI THEO SAU, nhỏ lại ───────────────────────────────────────
 // Chủ dự án chốt: "cho nhân vật nhỏ lại và đi theo sau người chơi. Khi ra đòn, nhân vật ở đằng
 // sau biến mất và xuất hiện đằng trước tung chiêu — như một cách bảo vệ người chơi."
 // Bản trước chỉ gọi lớp nhân vật ra LÚC ĐÁNH rồi cho tan; nay nó có mặt suốt, và cú ra đòn là
 // một cú ĐỔI CHỖ (sau → trước) chứ không phải một lần hiện ra từ hư không.
-const AVA_THEO_SAU = 54;     // lùi lại bao nhiêu so với Axie
-const AVA_THEO_BEN = 30;     // …và lệch sang bên, để không bị Axie che kín
+const AVA_THEO_SAU = 78;     // lùi lại bao nhiêu so với Axie
+const AVA_THEO_BEN = 34;     // …và lệch sang bên, để không bị Axie che kín
 const AVA_THEO_CO  = 0.60;   // …và thu còn mấy phần. Nhỏ hơn Axie thì mắt đọc ra "kẻ hộ tống".
-const AVA_TY  = 0.72;   // thân Axie cao mấy phần thân người…
-const AVA_TRAN = 0.95;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
+// …và thu còn mấy phần LÚC RA ĐÒN. Chủ dự án nhìn ảnh chụp: cỡ thật (1,00) vẫn đọc ra "hai
+// nhân vật ngang hàng", không ra "Axie là thân, người là sức mạnh được gọi tới". Nhỏ hơn Axie
+// ở CẢ HAI trạng thái mới giữ được thứ bậc đó; cú đổi 0,60 → 0,80 vẫn đủ để mắt thấy nó lớn
+// lên khi xông ra.
+const AVA_DANH_CO  = 0.80;
+const AVA_TY  = 1.08;   // thân Axie cao mấy phần thân người…
+const AVA_TRAN = 1.40;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
 function avaCo(id){
   const A = CHI_ANH.o[id];
   let than = NV_THAN_PX * AVA_TY;
@@ -5230,6 +5235,16 @@ function veAvatar(g, p, dangDiChuyen, now){
   if (!ok) chiVeNho(g, id, Math.floor(now / 1000 * CHI_THO_FPS), 0, 0, than);
   g.restore();
   return true;
+}
+// ĐO CHỖ MỘT ĐIỂM THẬT SỰ RƠI VÀO, qua đúng ma trận mà vòng vẽ đang dùng.
+// Vì sao phải đo chứ không tính lại trong bài kiểm: chép công thức sang bài kiểm là dựng bản
+// sao thứ hai của một phép biến hình đang sống — sửa một bên là hai bên lệch, mà bài vẫn xanh.
+// Chỉ bật trong TEST_MODE: getTransform() cấp phát một DOMMatrix mỗi lần gọi.
+const _neoVe = {};
+function _doNeo(ten, g, x, y){
+  const m = g.getTransform();
+  _neoVe[ten] = { x: m.a*x + m.c*y + m.e, y: m.b*x + m.d*y + m.f };
+  window.__neoVe = _neoVe;
 }
 // Vòng triệu hồi dưới chân lúc lớp nhân vật vật chất hoá. Không có vòng này thì nó chỉ là một
 // hình mờ dần — mắt đọc ra "lag", không đọc ra "được gọi tới". (Đo bằng mắt trên proto.)
@@ -15434,12 +15449,19 @@ function drawPlayer(){
   // vòng triệu hồi lo. Trượt từ sau ra trước đọc thành "chạy vòng lên", không ra "hộ pháp".
   const _lopT  = _lopHien ? AVA_CHAN_TRUOC : -AVA_THEO_SAU;
   const _lopB  = _lopHien ? AVA_CHAN_BEN   :  AVA_THEO_BEN;
-  const _lopCo = _coAva ? (_lopHien ? 1 : AVA_THEO_CO) : 1;
+  const _lopCo = _coAva ? (_lopHien ? AVA_DANH_CO : AVA_THEO_CO) : 1;
   const _avaDx = _coAva ? Math.cos(p.face)*_lopT - Math.sin(p.face)*_lopB : 0;
   const _avaDy = _coAva ? (Math.sin(p.face)*_lopT + Math.cos(p.face)*_lopB)*0.55 : 0;
   // Thu quanh BÀN CHÂN, không quanh tâm hộp. Hộp 160x220 vẽ quanh tâm nên gót nằm thấp hơn neo
   // đúng ngần này; thu thẳng là hai bàn chân nhấc khỏi đất mà nhìn chỉ thấy "hơi lửng lơ".
   const _lopChan = (HERO_GOT - HERO_H/2) * (NV_CAO / HERO_H) * (1 - _lopCo);
+  // ⚠ TÂM THU PHÓNG PHẢI GIỐNG THÂN NGƯỜI, nếu không cánh tụt khỏi vai đúng lúc thu nhỏ.
+  // Khối thân vẽ quanh (p.x, p.y − NV_LECH_Y) — đó là chỗ hộp 160×220 của bộ xương neo vào.
+  // Khối cánh/thần khí trước bản này thu quanh (p.x, p.y), tức LỆCH NV_LECH_Y. Ở cỡ thật hai
+  // tâm trùng kết quả nên không ai thấy; thu còn `co` thì sai số bung ra đúng (1−co)·NV_LECH_Y
+  // — ở cỡ đi theo (0,60) là 16,8 px, tức đôi cánh rơi xuống ngang hông của một hình chỉ cao
+  // 57 px. Chủ dự án nhìn ảnh chụp gọi đúng tên: "cánh chưa fit với nhân vật theo sau".
+  const _lopNeoY = p.y - NV_LECH_Y;
   // Độ VẬT CHẤT HOÁ, cũng tính sớm vì vòng triệu hồi phải vẽ TRƯỚC thân người.
   // ⚠ `atkAnim` ĐẾM NGƯỢC nên tiến độ là 1 − atkK, không phải atkK.
   let _hienLop = 1;
@@ -15464,11 +15486,16 @@ function drawPlayer(){
   const _tkHien = !_coAva || _lopHien;
   {
     ctx.save();
-    ctx.translate(p.x + _avaDx, p.y + _avaDy + _lopChan);
+    // Cùng cả phép LẤY ĐÀ của khối thân: cánh cắm vào lưng, thân lùi lại lấy đà rồi bổ tới mà
+    // đôi cánh đứng yên thì nó thành một tấm bảng treo sau lưng. `lungeK` bằng 1 lúc đứng yên
+    // (xem hSwing) nên thiếu số hạng này là cánh lệch 7 px SUỐT, không chỉ lúc đánh.
+    ctx.translate(p.x + _avaDx + Math.cos(p.face)*lungeK*7,
+                  _lopNeoY + _avaDy + _lopChan + Math.sin(p.face)*lungeK*3);
     ctx.scale(_lopCo, _lopCo);
-    ctx.translate(-p.x, -p.y);
+    ctx.translate(-p.x, -_lopNeoY);
     if (wingIt) veCanh(ctx, wingIt, p.x, p.y + CANH_CHAN_MAN, p.sway || 0, p.swayDir || 0,
                        CANH_CO_MAN, bayK);
+    if (window.TEST_MODE) _doNeo('canh', ctx, p.x, p.y + CANH_CHAN_MAN + CANH_CO_MAN * CANH_GOC_Y);
     if (_tk && !_tk.truoc && _tkHien) veThanKhi(ctx, _tk, p);   // nằm sau lưng: vẽ TRƯỚC thân
     ctx.restore();
   }
@@ -15497,6 +15524,9 @@ function drawPlayer(){
   }
   const s = sh / HERO_H;
   ctx.scale(s, s); ctx.translate(-HERO_W/2, -HERO_H/2);
+  // Vai của bộ xương — cùng điểm mà CANH_GOC_Y mô tả, nhưng đo trong hệ THÂN NGƯỜI.
+  // So hai con số này với nhau là biết đôi cánh có ngồi trên vai hay không, ở mọi cỡ thu.
+  if (window.TEST_MODE) _doNeo('vai', ctx, HERO_W/2, HERO_GOT + CANH_GOC_Y);
   const _act = castK > 0 ? (p.castAct || heroActOf(p.sect, 'a'))
                          : (p.atkAct  || heroActOf(p.sect, 'basic'));
   const _ps = heroPose(wph, !!p.moving, atkK, Math.min(1, castK), now, _act, p.sway, p.swayDir);
@@ -15712,9 +15742,9 @@ function drawPlayer(){
   if (_coAva && _avaDy <= 0) veAvatar(ctx, p, !!p.moving, now);
   if (_tk && _tk.truoc && _tkHien){                   // quét ra trước mặt: vẽ SAU thân
     ctx.save();
-    ctx.translate(p.x + _avaDx, p.y + _avaDy + _lopChan);
+    ctx.translate(p.x + _avaDx, _lopNeoY + _avaDy + _lopChan);
     ctx.scale(_lopCo, _lopCo);
-    ctx.translate(-p.x, -p.y);
+    ctx.translate(-p.x, -_lopNeoY);
     veThanKhi(ctx, _tk, p);
     ctx.restore();
   }

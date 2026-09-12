@@ -29,19 +29,23 @@ const pass = m => console.log('PASS ' + m);
     for (const id in CHI_ANH.o){
       const A = CHI_ANH.o[id], t = avaCo(id);
       const cao = t / A.thanCao, rong = cao * (A.nhoRong / A.nhoCao);
-      o.con.push({ id, than:+t.toFixed(1), cao:+cao.toFixed(1), rong:+rong.toFixed(1),
-                   ty:+(A.nhoRong / A.nhoCao).toFixed(3) });
+      // ⚠ ĐỪNG làm tròn trước khi so với trần. Trần là `NV_THAN_PX × AVA_TRAN` = 133,56 mà
+      // 133,559 làm tròn một chữ số ra 133,6 — tức bài đỏ vì phép làm tròn của chính nó, đúng
+      // ở con nằm SÁT mép, tức 14/16 con. Giữ nguyên số, chỉ làm tròn lúc IN.
+      o.con.push({ id, than: t, cao, rong, ty: A.nhoRong / A.nhoCao });
     }
     // Mỗi lớp phải có một avatar mặc định, và nó phải là con CÓ THẬT.
     for (const sk in SECTS) o.macDinh[sk] = AVA_MAC_DINH[sk] || null;
     return o;
   });
-  console.log('cỡ 16 con:', JSON.stringify(r.con.slice(0, 3)), '… (' + r.con.length + ' con)');
+  const in1 = c => ({ id: c.id, than: +c.than.toFixed(1), cao: +c.cao.toFixed(1),
+                      rong: +c.rong.toFixed(1), ty: +c.ty.toFixed(3) });
+  console.log('cỡ 16 con:', JSON.stringify(r.con.slice(0, 3).map(in1)), '… (' + r.con.length + ' con)');
   const tran = r.than * r.tran;
 
   const qua = r.con.filter(c => c.cao > tran + 0.01 || c.rong > tran + 0.01);
   if (qua.length) fail(`${qua.length} con vượt trần ${tran.toFixed(0)}px: ` +
-    qua.map(c => `${c.id} ${c.rong}×${c.cao}`).join(', '));
+    qua.map(c => `${c.id} ${c.rong.toFixed(1)}×${c.cao.toFixed(1)}`).join(', '));
   else pass(`cả ${r.con.length} con nằm trong trần ${tran.toFixed(0)}px = ${r.tran}×thân người`);
 
   // Trần phải THỰC SỰ bó ai đó. Nếu không con nào chạm trần thì nó chỉ là một con số trang trí,
