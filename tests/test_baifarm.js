@@ -101,7 +101,9 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     return { loai:m.type, he: FARM_THUONG, rate: mobDropRate(MOBS[m.type], 'mob'),
       soLuot: mobDropCount(MOBS[m.type], 'mob'),
       doFarm:+A.it.toFixed(4), doThuong:+B.it.toFixed(4), tyLeDo:+(A.it/B.it).toFixed(3),
-      agFarm:Math.round(A.ag), agThuong:Math.round(B.ag), tyLeAg:+(A.ag/B.ag).toFixed(3) };
+      // phần Lumen CỘNG THẲNG, không nhân hệ số farm — đọc từ game, đừng chép cứng
+      phang: 4 + 0.3 * GO_HUYENTHIET,
+      agFarm:+A.ag.toFixed(2), agThuong:+B.ag.toFixed(2), tyLeAg:+(A.ag/B.ag).toFixed(3) };
   }, MAP);
   console.log('2) thưởng:', JSON.stringify(r2));
   if (r2.thieuQuai) fail('② không sinh ra con quái nào thuộc bãi farm — cờ pk.farm không tới được buildWorld');
@@ -119,10 +121,16 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     console.log(`   chênh rơi đồ: thực ${thuc.toFixed(4)} / chờ ${cho.toFixed(4)} = ${lech}`);
     if (!(lech >= 0.72 && lech <= 1.28))
       fail(`② phần rơi thêm của bãi farm lệch hẳn: ${lech}× mức chờ (thực ${thuc.toFixed(4)}, chờ ${cho.toFixed(4)})`);
-    // Lumen thì nhân thẳng rồi mới cộng +4, nên tỉ lệ chỉ TỤT chứ không vọt.
-    const sanAg = 1 + (r2.he - 1) * 0.7;
-    if (!(r2.tyLeAg >= sanAg)) fail(`② Lumen chỉ ×${r2.tyLeAg}, cần ≥${sanAg.toFixed(2)} (FARM_THUONG=${r2.he})`);
-    if (r2.tyLeAg > r2.he + 0.05) fail(`② Lumen ×${r2.tyLeAg} VƯỢT hệ số ${r2.he} — nhân hai lần ở đâu đó`);
+    // ⚠ LUMEN CŨNG PHẢI CHẤM BẰNG CHÊNH — tôi đã chừa nó lại một lần và nó đỏ ngay ở lượt hồi
+    // quy tiếp theo. `rw.silver` = base×(1+silverPct/100)×he + 4 + 30%×GO_HUYENTHIET; hai khoản
+    // cộng KHÔNG nhân hệ số, nên tỉ lệ phụ thuộc `silverPct` của bộ đồ mà applyTestBoost() bốc
+    // ra lúc ấy — đo ra ×1,449 ở máy này và ×1,399 ở lượt hồi quy, cùng một mã.
+    //     agFarm − agThuong  ≈  (agThuong − phẳng) × (FARM_THUONG − 1)
+    const choAg = (r2.agThuong - r2.phang) * (r2.he - 1);
+    const lechAg = +((r2.agFarm - r2.agThuong) / choAg).toFixed(3);
+    console.log(`   chênh Lumen: thực ${r2.agFarm - r2.agThuong} / chờ ${choAg.toFixed(1)} = ${lechAg}`);
+    if (!(lechAg >= 0.9 && lechAg <= 1.1))
+      fail(`② phần Lumen thêm của bãi farm lệch hẳn: ${lechAg}× mức chờ (phẳng ${r2.phang})`);
   }
 
   // ---- ③ CÓ TÊN: bảng Bản Đồ phải gọi tên nó ----

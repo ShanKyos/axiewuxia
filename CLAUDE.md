@@ -638,10 +638,17 @@ cả 4000 lần đều là "ba con đầu đời" ⇒ ~1,0 món/con ở **cả h
 Trông y hệt "hệ số farm không chạy", trong khi nó chạy hoàn hảo. Đặt `player.kills` lớn +
 `_daRoiMonDau = true` trước khi đo.
 
-**⚠ Và đừng chấm ② bằng TỈ LỆ.** Hai vế đều cộng những khoản **không** nhân hệ số: `dropBonus`
-cộng thẳng vào tỉ lệ, cuộn phụ kiện là lượt riêng, Lumen cộng `+4` phẳng. Cùng một mã đo ra
-×1,24 khi `dropBonus` lớn và ×1,53 khi nhỏ. Chấm bằng phần **CHÊNH**:
-`doFarm − doThuong ≈ soLuot × rate × (FARM_THUONG − 1)`.
+**⚠ Và đừng chấm ② bằng TỈ LỆ — CẢ HAI vế, không chỉ vế rơi đồ.** Hai vế đều cộng những khoản
+**không** nhân hệ số: `dropBonus` cộng thẳng vào tỉ lệ, cuộn phụ kiện là lượt riêng, Lumen cộng
+`+4` và 30% × `GO_HUYENTHIET`. Cùng một mã đo ra ×1,24 khi `dropBonus` lớn và ×1,53 khi nhỏ.
+Chấm bằng phần **CHÊNH**:
+
+    doFarm − doThuong  ≈  soLuot × rate × (FARM_THUONG − 1)
+    agFarm  − agThuong ≈  (agThuong − phẳng) × (FARM_THUONG − 1),  phẳng = 4 + 0,3 × GO_HUYENTHIET
+
+⚠ Tôi đã sửa vế rơi đồ mà **chừa vế Lumen lại**, và nó đỏ ngay ở lượt hồi quy kế tiếp: ×1,449 ở
+máy đang làm, ×1,399 trong hồi quy, cùng một mã — khác nhau chỉ vì `silverPct` của bộ đồ mà
+`applyTestBoost()` bốc ra. *Sửa một nửa một lỗi đo là để lại đúng cái lỗi ấy ở nửa kia.*
 
 Gác: `tests/test_baifarm.js` (4 mệnh đề, một cho mỗi tính chất). Nó cũng chặn **hai miền farm
 trên cùng một map** — nhiều chỗ thì không chỗ nào là *cái chỗ* nữa.
